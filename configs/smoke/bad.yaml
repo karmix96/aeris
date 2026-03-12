@@ -1,0 +1,4 @@
+run:
+  name: bad
+geometry:
+  span: [1, 2

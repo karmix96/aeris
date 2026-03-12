@@ -1,0 +1,10 @@
+run:
+  name: wing_basic
+  mode: dev
+
+geometry:
+  span: 1.6
+  aspect_ratio: 6.0
+  taper_ratio: 0.45
+  sweep_deg: 25.0
+  dihedral_deg: 3.0

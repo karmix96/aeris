@@ -1,4 +1,32 @@
-.venv/
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build
+build/
+dist/
+*.egg-info/
+
+# Logs
+*.log
+
+# Data outputs
+data/runs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editors
 .vscode/
+.idea/
+
+# Temporary
+*.tmp

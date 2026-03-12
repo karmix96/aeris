@@ -1,0 +1,13 @@
+run:
+  name: smoke
+  mode: dev
+
+geometry:
+  generator: placeholder
+  span: 1.5
+  aspect_ratio: 6.0
+
+tools:
+  avl_exe: ""
+  xfoil_exe: ""
+  openvsp_exe: ""

@@ -1,25 +1,31 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "aeris"
 version = "0.1.0"
-description = "Cross-platform aircraft design and simulation workflow platform"
+description = "Cross-platform Python platform for aircraft design, geometry generation, simulation workflows, datasets, AI models, and optimization."
 readme = "README.md"
 requires-python = ">=3.13"
 authors = [
-  { name = "Mike Karalis" }
+  { name = "Michail Karalis" }
 ]
 dependencies = [
-  "typer>=0.12,<1.0",
-  "pyyaml>=6.0"
+  "typer>=0.12",
+  "PyYAML>=6.0",
+  "numpy>=1.26",
+  "scipy>=1.13",
+  "matplotlib>=3.8",
+  "aerosandbox>=4.2"
 ]
 
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0",
-  "ruff>=0.6"
+  "ruff>=0.6",
+  "black>=24.0",
+  "mypy>=1.10"
 ]
 
 [project.scripts]
@@ -31,5 +37,17 @@ package-dir = {"" = "src"}
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.black]
+line-length = 100
+target-version = ["py313"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src"]

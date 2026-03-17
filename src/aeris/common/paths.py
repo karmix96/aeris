@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from pathlib import Path
 
 
@@ -16,6 +16,7 @@ INTERIM_DIR = DATA_DIR / "interim"
 PROCESSED_DIR = DATA_DIR / "processed"
 DEBUG_DIR = DATA_DIR / "debug"
 RUNS_DIR = DATA_DIR / "runs"
+DATASETS_DIR = DATA_DIR / "datasets"
 
 
 @dataclass(frozen=True)
@@ -36,6 +37,7 @@ def ensure_base_directories() -> None:
         PROCESSED_DIR,
         DEBUG_DIR,
         RUNS_DIR,
+        DATASETS_DIR,
     ):
         path.mkdir(parents=True, exist_ok=True)
 

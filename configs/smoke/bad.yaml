@@ -1,4 +1,80 @@
-run:
-  name: bad
+name: bad_config
+
 geometry:
-  span: [1, 2
+  generator:
+    family: bwb_segmented
+    version: v1
+    seed: 42
+
+  controls:
+    n_iter: 1
+    n_points: 3
+    n_spline_inboard: 1
+    n_spline_outboard: 1
+    desired_curvature_strength: -0.1
+    spline_split_ratio: 1.5
+    segment_length_variation: -0.2
+    sweep_variation: -0.1
+
+  planform_bounds:
+    c1_m:
+      min: 2.0
+      max: 1.2
+    c2_ratio:
+      min: 0.65
+      max: 0.45
+    c3_ratio:
+      min: 0.45
+      max: 0.30
+    c4_ratio:
+      min: 0.20
+      max: 0.07
+    b_total_m:
+      min: 2.0
+      max: 1.2
+    b3_ratio:
+      min: 0.8
+      max: 1.2
+    split_ratio:
+      min: -0.2
+      max: 1.5
+    sw1_deg:
+      min: 60.0
+      max: 25.0
+    sw2_deg:
+      min: 60.0
+      max: 10.0
+    sw3_deg:
+      min: 40.0
+      max: 0.0
+
+  section_bounds:
+    airfoil_name: ""
+    dihedral_root_deg: 0.0
+
+    twist_b0_deg:
+      min: 5.0
+      max: -5.0
+    twist_b1_deg:
+      min: 5.0
+      max: -5.0
+    twist_b2_deg:
+      min: 5.0
+      max: -5.0
+    twist_b3_deg:
+      min: 5.0
+      max: -5.0
+
+    dihedral_b1_deg:
+      min: 5.0
+      max: -5.0
+    dihedral_b2_deg:
+      min: 5.0
+      max: -5.0
+    dihedral_b3_deg:
+      min: 5.0
+      max: -5.0
+
+  outputs:
+    save_plot: true
+    build_aerosandbox: true

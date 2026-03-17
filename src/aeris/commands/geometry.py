@@ -18,7 +18,9 @@ def geometry_callback() -> None:
 @geometry_app.command("info")
 def geometry_info() -> None:
     """Show the current status of geometry tooling."""
-    typer.echo("Geometry module scaffold is ready. Use 'aeris geometry generate --config ...'.")
+    typer.echo(
+        "Geometry module is ready. Use 'aeris geometry generate --config configs/geometry/wing_bwb.yaml'."
+    )
 
 
 @geometry_app.command("generate")
@@ -35,6 +37,6 @@ def geometry_generate(
         help="Path to the YAML geometry config file.",
     ),
 ) -> None:
-    """Generate placeholder geometry artifacts from config."""
+    """Generate geometry artifacts from config."""
     exit_code = run_geometry_generation(config)
     raise typer.Exit(code=exit_code)

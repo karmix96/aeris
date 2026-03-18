@@ -1,32 +1,23 @@
-# Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Virtual environments
-.venv/
-venv/
-env/
-
-# Build
-build/
-dist/
+*.py[cod]
 *.egg-info/
 
-# Logs
-*.log
+.venv/
+venv/
 
-# Data outputs
-data/
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Editors
 .vscode/
 .idea/
+.DS_Store
 
-# Temporary
-*.tmp
+build/
+dist/
+
+data/runs/
+data/datasets/
+data/raw/
+data/interim/
+data/processed/
+data/debug/
+
+*.log
+*.png

@@ -1,27 +1,68 @@
-﻿# S_U_Roadmap
+# AERIS
 
-Cross-platform Python-first software platform for aircraft design, geometry generation, simulation workflows, dataset generation, AI models and optimization.
+AI-Driven Engineering and Rapid Integrated Synthesis
 
-## Goals
+AERIS is a modular aircraft design platform for deterministic geometry generation, dataset creation, and future aero/ML workflows.
 
-- Work on Linux and Windows
-- Use a single clean CLI
-- Support config-driven execution
-- Preserve reproducibility through structured run folders, logging, and manifests
-- Provide a maintainable base for geometry, simulation, ML, and optimization workflows
+## Current Status
 
-## Planned architecture
+- BWB geometry generator (bwb_segmented_v1)
+- Modular sampling (lhs_v1, random_v1)
+- Dataset pipeline with metadata + failures
+- Optional AeroSandbox geometry build
+- Plotting can be disabled for fast batch runs
 
-- `src/` — application source code
-- `tests/` — automated tests
-- `configs/` — configuration files for runs
-- `data/` — local data and generated artifacts
-- `documents/` — planning and architecture documents
+## Quick Start
 
-## Development principles
+Install:
 
-- Python-first
-- OS-agnostic
-- Config-driven
-- Reproducible by default
-- Maintainable over flashy
+python -m venv .venv
+source .venv/bin/activate
+pip install -U pip
+pip install -e .
+
+Run geometry:
+
+aeris geometry generate -c configs/geometry/baseline_bwb.yaml
+
+Run dataset:
+
+aeris dataset generate \
+  -c configs/geometry/wing_bwb.yaml \
+  --n 20 \
+  --sampler lhs_v1 \
+  --sampler-seed 123
+
+Fast dataset (no plots):
+
+aeris dataset generate \
+  -c configs/geometry/wing_bwb.yaml \
+  --n 500 \
+  --sampler lhs_v1 \
+  --sampler-seed 123 \
+  --no-save-plot
+
+With AeroSandbox:
+
+aeris dataset generate \
+  -c configs/geometry/wing_bwb.yaml \
+  --n 20 \
+  --sampler lhs_v1 \
+  --sampler-seed 123 \
+  --no-save-plot \
+  --build-aerosandbox
+
+Inspect dataset:
+
+aeris dataset inspect --dataset <path>
+
+## Principles
+
+- modular
+- deterministic
+- CLI-first
+- artifact-driven
+
+## Next Phase
+
+Checkpoint 6 — Aero Architecture

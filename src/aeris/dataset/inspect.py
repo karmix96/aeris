@@ -42,6 +42,8 @@ def inspect_dataset(dataset_root: Path) -> dict[str, Any]:
     required_columns = [
         "geometry_id",
         "status",
+        "sampler_id",
+        "sampler_seed",
         "full_span_m",
         "approx_area_m2",
         "approx_aspect_ratio_planform",
@@ -95,6 +97,9 @@ def inspect_dataset(dataset_root: Path) -> dict[str, Any]:
         "attempted_n": manifest.get("attempted_n"),
         "succeeded_n": manifest.get("succeeded_n"),
         "failed_n": manifest.get("failed_n"),
+        "sampler_id": manifest.get("sampler_id"),
+        "sampler_seed": manifest.get("sampler_seed"),
+        "lhs_seed": manifest.get("lhs_seed"),
         "metadata_rows": int(len(metadata)),
         "failure_rows": int(len(failures)),
         "geometry_dir_count": int(len(geometry_dirs)),

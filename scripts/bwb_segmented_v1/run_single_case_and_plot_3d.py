@@ -134,7 +134,6 @@ def run_single_case(
     result = generate_geometry_case_from_sample(
         config=bwb_config,
         sample=sample,
-        rng=rng,
         output_dir=output_dir,
         save_plot=save_planform_plot,
         build_aerosandbox=build_aerosandbox,

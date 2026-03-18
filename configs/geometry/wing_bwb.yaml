@@ -86,3 +86,8 @@ geometry:
   outputs:
     save_plot: true
     build_aerosandbox: true
+
+dataset:
+  sampling:
+    method: lhs_v1
+    seed: 123

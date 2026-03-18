@@ -34,34 +34,50 @@ def dataset_generate(
         ...,
         "--n",
         min=1,
-        help="Number of geometries to generate using Latin Hypercube Sampling.",
+        help="Number of geometries to generate.",
+    ),
+    sampler: str | None = typer.Option(
+        None,
+        "--sampler",
+        help="Dataset sampler (e.g. lhs_v1). Defaults to config or lhs_v1.",
+    ),
+    sampler_seed: int | None = typer.Option(
+        None,
+        "--sampler-seed",
+        help="Seed for the selected sampler.",
     ),
     lhs_seed: int | None = typer.Option(
         None,
         "--lhs-seed",
-        help="Seed for Latin Hypercube Sampling.",
+        help="(Deprecated) Seed for Latin Hypercube Sampling.",
     ),
     name: str | None = typer.Option(
         None,
         "--name",
-        help="Optional dataset folder name. If omitted, a default deterministic name is used.",
+        help="Optional dataset folder name. If omitted, a deterministic name is used.",
     ),
     save_plot: bool | None = typer.Option(
         None,
         "--save-plot/--no-save-plot",
-        help="Override config plotting behavior. If omitted, uses YAML config.",
+        help="Override config plotting behavior.",
     ),
     build_aerosandbox: bool | None = typer.Option(
         None,
         "--build-aerosandbox/--no-build-aerosandbox",
-        help="Override config AeroSandbox behavior. If omitted, uses YAML config.",
+        help="Override config AeroSandbox behavior.",
     ),
 ) -> None:
-    """Generate a batch geometry dataset using Latin Hypercube Sampling."""
+    """Generate a batch geometry dataset using a modular sampling strategy."""
+    if lhs_seed is not None and sampler_seed is not None:
+        typer.echo("ERROR: Use either --lhs-seed or --sampler-seed, not both.")
+        raise typer.Exit(code=1)
+
     exit_code = run_dataset_generation(
         config_path=config,
         n_samples=n,
         lhs_seed=lhs_seed,
+        sampler=sampler,
+        sampler_seed=sampler_seed,
         dataset_name=name,
         save_plot=save_plot,
         build_aerosandbox=build_aerosandbox,

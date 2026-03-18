@@ -61,7 +61,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 RUNS_DIR = PROJECT_ROOT / "data" / "runs"
 
 rows = []

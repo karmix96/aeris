@@ -5,7 +5,7 @@ from typing import Any, Mapping
 from aeris.aero.base import AeroSolver
 from aeris.aero.registry import register_aero_solver
 
-from aeris.geometry.aerosandbox_adapter import build_aerosandbox_geometry
+from aeris.generators.bwb_segmented_v1.aerosandbox_adapter import build_aerosandbox_geometry
 
 
 @register_aero_solver

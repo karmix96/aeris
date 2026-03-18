@@ -6,8 +6,8 @@ from typing import Any
 
 import numpy as np
 
-from aeris.geometry.case import GeometryCaseResult
-from aeris.geometry.params import BWBGeneratorConfig
+from aeris.generators.bwb_segmented_v1.case import GeometryCaseResult
+from aeris.generators.bwb_segmented_v1.params import BWBGeneratorConfig
 
 
 def metadata_fieldnames() -> list[str]:
@@ -16,6 +16,8 @@ def metadata_fieldnames() -> list[str]:
         "case_index",
         "dataset_name",
         "status",
+        "sampler_id",
+        "sampler_seed",
         "lhs_seed",
         "realization_seed",
         "realization_mode",
@@ -24,7 +26,6 @@ def metadata_fieldnames() -> list[str]:
         "generator_id",
         "config_name",
         "airfoil_name",
-        # 17 design variables
         "c1_m",
         "c2_ratio",
         "c3_ratio",
@@ -42,7 +43,6 @@ def metadata_fieldnames() -> list[str]:
         "dihedral_b1_deg",
         "dihedral_b2_deg",
         "dihedral_b3_deg",
-        # derived geometry
         "semi_span_m",
         "full_span_m",
         "approx_area_m2",
@@ -50,14 +50,12 @@ def metadata_fieldnames() -> list[str]:
         "aspect_ratio_aerosandbox",
         "num_sections",
         "n_xsecs_aerosandbox",
-        # section stats
         "twist_min_deg",
         "twist_max_deg",
         "twist_mean_deg",
         "dihedral_min_deg",
         "dihedral_max_deg",
         "dihedral_mean_deg",
-        # artifact paths
         "geometry_dir",
         "summary_path",
         "control_points_path",
@@ -72,11 +70,14 @@ def failure_fieldnames() -> list[str]:
         "geometry_id",
         "case_index",
         "dataset_name",
+        "sampler_id",
+        "sampler_seed",
         "lhs_seed",
         "realization_seed",
         "realization_mode",
         "generator_family",
         "generator_version",
+        "generator_id",
         "error_type",
         "error_message",
     ]
@@ -87,6 +88,8 @@ def build_metadata_row(
     dataset_name: str,
     geometry_id: str,
     case_index: int,
+    sampler_id: str,
+    sampler_seed: int | None,
     lhs_seed: int | None,
     realization_seed: int | None,
     config: BWBGeneratorConfig,
@@ -102,6 +105,8 @@ def build_metadata_row(
         "case_index": case_index,
         "dataset_name": dataset_name,
         "status": "success",
+        "sampler_id": sampler_id,
+        "sampler_seed": sampler_seed,
         "lhs_seed": lhs_seed,
         "realization_seed": realization_seed,
         "realization_mode": "deterministic_from_sample",
@@ -144,6 +149,8 @@ def build_failure_row(
     dataset_name: str,
     geometry_id: str,
     case_index: int,
+    sampler_id: str,
+    sampler_seed: int | None,
     lhs_seed: int | None,
     realization_seed: int | None,
     config: BWBGeneratorConfig,
@@ -153,11 +160,14 @@ def build_failure_row(
         "geometry_id": geometry_id,
         "case_index": case_index,
         "dataset_name": dataset_name,
+        "sampler_id": sampler_id,
+        "sampler_seed": sampler_seed,
         "lhs_seed": lhs_seed,
         "realization_seed": realization_seed,
         "realization_mode": "deterministic_from_sample",
         "generator_family": config.generator.family,
         "generator_version": config.generator.version,
+        "generator_id": f"{config.generator.family}_{config.generator.version}",
         "error_type": type(exc).__name__,
         "error_message": str(exc),
     }

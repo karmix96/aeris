@@ -84,7 +84,7 @@ geometry:
       max: 5.0
 
   outputs:
-    save_plot: true
+    save_plot: false
     build_aerosandbox: true
 
 dataset:

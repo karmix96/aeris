@@ -48,6 +48,8 @@ class BwbSegmentedV1Generator(GeometryGenerator):
         sample: Any,
         config: Any,
         output_dir: Path,
+        save_plot: bool | None = None,
+        build_aerosandbox: bool | None = None,
     ) -> Any:
         if not isinstance(config, BWBGeneratorConfig):
             raise TypeError(
@@ -62,6 +64,8 @@ class BwbSegmentedV1Generator(GeometryGenerator):
             config=config,
             sample=sample,
             output_dir=output_dir,
+            save_plot=save_plot,
+            build_aerosandbox=build_aerosandbox,
         )
 
     def summarize_case(self, case: Any) -> dict[str, Any]:

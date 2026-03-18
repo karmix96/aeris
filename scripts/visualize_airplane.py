@@ -12,8 +12,8 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from aeris.common.config import load_yaml_config
-from aeris.geometry.case import generate_geometry_case_from_sample
-from aeris.geometry.params import BWBDesignSample, build_bwb_generator_config
+from aeris.generators.bwb_segmented_v1.case import generate_geometry_case_from_sample
+from aeris.generators.bwb_segmented_v1.params import BWBDesignSample, build_bwb_generator_config
 
 
 DEFAULT_CONFIG = PROJECT_ROOT / "configs" / "geometry" / "wing_bwb.yaml"

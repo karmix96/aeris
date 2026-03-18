@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from aeris.common.config import load_yaml_config
-from aeris.geometry.params import build_bwb_generator_config
+from aeris.generators.bwb_segmented_v1.params import build_bwb_generator_config
 
 
 def main() -> None:

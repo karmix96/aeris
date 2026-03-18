@@ -5,16 +5,16 @@ from pathlib import Path
 import numpy as np
 
 from aeris.common.config import load_yaml_config
-from aeris.geometry.params import build_bwb_generator_config
-from aeris.geometry.planform import generate_bwb_planform_from_sample
-from aeris.geometry.sections import build_section_geometry_from_sample
-from aeris.geometry.validation import (
+from aeris.generators.bwb_segmented_v1.params import build_bwb_generator_config
+from aeris.generators.bwb_segmented_v1.planform import generate_bwb_planform_from_sample
+from aeris.generators.bwb_segmented_v1.sections import build_section_geometry_from_sample
+from aeris.generators.bwb_segmented_v1.validation import (
     validate_bwb_generator_config,
     validate_planform_result,
     validate_section_geometry,
 )
-from aeris.geometry.export import build_geometry_summary
-from aeris.geometry.aerosandbox_adapter import build_aerosandbox_geometry
+from aeris.generators.bwb_segmented_v1.export import build_geometry_summary
+from aeris.generators.bwb_segmented_v1.aerosandbox_adapter import build_aerosandbox_geometry
 from aeris.dataset.lhs import generate_lhs_samples
 
 

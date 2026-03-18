@@ -19,12 +19,12 @@ from aeris.common.config import load_yaml_config
 from aeris.dataset.dataset_run import run_dataset_generation
 from aeris.dataset.inspect import inspect_dataset
 from aeris.dataset.lhs import generate_lhs_samples
-from aeris.geometry.case import generate_geometry_case_from_sample
-from aeris.geometry.params import build_bwb_generator_config
-from aeris.geometry.planform import generate_bwb_planform_from_sample
-from aeris.geometry.sampling import sample_bwb_design
-from aeris.geometry.sections import build_section_geometry_from_sample
-from aeris.geometry.validation import (
+from aeris.generators.bwb_segmented_v1.case import generate_geometry_case_from_sample
+from aeris.generators.bwb_segmented_v1.params import build_bwb_generator_config
+from aeris.generators.bwb_segmented_v1.planform import generate_bwb_planform_from_sample
+from aeris.generators.bwb_segmented_v1.sampling import sample_bwb_design
+from aeris.generators.bwb_segmented_v1.sections import build_section_geometry_from_sample
+from aeris.generators.bwb_segmented_v1.validation import (
     validate_bwb_generator_config,
     validate_planform_result,
     validate_section_geometry,

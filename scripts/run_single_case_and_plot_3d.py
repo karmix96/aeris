@@ -9,10 +9,10 @@ import numpy as np
 import pandas as pd
 
 from aeris.common.config import load_yaml_config
-from aeris.geometry.case import generate_geometry_case_from_sample
-from aeris.geometry.params import build_bwb_generator_config
-from aeris.geometry.sampling import sample_bwb_design
-from aeris.geometry.validation import validate_bwb_generator_config
+from aeris.generators.bwb_segmented_v1.case import generate_geometry_case_from_sample
+from aeris.generators.bwb_segmented_v1.params import build_bwb_generator_config
+from aeris.generators.bwb_segmented_v1.sampling import sample_bwb_design
+from aeris.generators.bwb_segmented_v1.validation import validate_bwb_generator_config
 
 
 def pick_column(df: pd.DataFrame, candidates: list[str]) -> str:

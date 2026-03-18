@@ -15,9 +15,8 @@ import numpy as np
 from aeris.common.config import load_yaml_config
 from aeris.common.logging_utils import setup_logger
 from aeris.common.paths import create_run_folder
-from aeris.geometry.params import build_bwb_generator_config
+from aeris.geometry.config_resolver import resolve_generator_and_config
 from aeris.geometry.registry import get_geometry_generator
-from aeris.geometry.validation import validate_bwb_generator_config
 
 
 def _utc_now_iso() -> str:
@@ -74,7 +73,6 @@ def run_geometry_generation(config_path: str | Path) -> int:
 
     manifest_path = run_paths.root / "manifest.json"
     copied_config_path = run_paths.root / "input_config.yaml"
-
     geometry_dir = run_paths.artifacts / "geometry"
 
     manifest: dict[str, Any] = {
@@ -106,26 +104,21 @@ def run_geometry_generation(config_path: str | Path) -> int:
 
         geometry_dir.mkdir(parents=True, exist_ok=True)
 
-        # Transitional compatibility path:
-        # current configs still map to the validated BWB segmented generator.
-        bwb_config = build_bwb_generator_config(raw_config)
-        validate_bwb_generator_config(bwb_config)
-
-        generator_id = f"{bwb_config.generator.family}_{bwb_config.generator.version}"
+        generator_id, generator_config = resolve_generator_and_config(raw_config)
         generator = get_geometry_generator(generator_id)
 
-        design_sampling_seed = bwb_config.generator.seed
+        design_sampling_seed = generator_config.generator.seed
 
         logger.info(
             "Generator selected: family=%s version=%s id=%s",
-            bwb_config.generator.family,
-            bwb_config.generator.version,
+            generator_config.generator.family,
+            generator_config.generator.version,
             generator_id,
         )
         logger.info("Design sampling seed: %s", design_sampling_seed)
         logger.info("Geometry realization mode: deterministic from explicit design sample")
 
-        design_sample = generator.sample_one(bwb_config, seed=design_sampling_seed)
+        design_sample = generator.sample_one(generator_config, seed=design_sampling_seed)
         logger.info("Design sample generated successfully")
 
         if not hasattr(generator, "run_full_case"):
@@ -135,15 +128,15 @@ def run_geometry_generation(config_path: str | Path) -> int:
 
         case_result = generator.run_full_case(
             sample=design_sample,
-            config=bwb_config,
+            config=generator_config,
             output_dir=geometry_dir,
         )
         logger.info("Geometry case generated successfully")
 
         manifest["geometry"] = {
-            "name": bwb_config.name,
-            "generator_family": bwb_config.generator.family,
-            "generator_version": bwb_config.generator.version,
+            "name": generator_config.name,
+            "generator_family": generator_config.generator.family,
+            "generator_version": generator_config.generator.version,
             "generator_id": generator_id,
             "design_sampling_seed": design_sampling_seed,
             "geometry_deterministic": True,

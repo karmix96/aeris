@@ -21,9 +21,9 @@ from aeris.dataset.metadata import (
     failure_fieldnames,
     metadata_fieldnames,
 )
-from aeris.geometry.params import BWBGeneratorConfig, build_bwb_generator_config
+from aeris.geometry.config_resolver import resolve_generator_and_config
+from aeris.geometry.params import BWBGeneratorConfig
 from aeris.geometry.registry import get_geometry_generator
-from aeris.geometry.validation import validate_bwb_generator_config
 
 
 def _utc_now_iso() -> str:
@@ -109,10 +109,7 @@ def run_dataset_generation(
 
     raw_config = load_yaml_config(resolved_config_path)
 
-    # Transitional compatibility path:
-    # current configs still map to the validated BWB segmented generator.
-    base_config = build_bwb_generator_config(raw_config)
-    validate_bwb_generator_config(base_config)
+    generator_id, base_config = resolve_generator_and_config(raw_config)
 
     effective_config = _make_effective_dataset_config(
         base_config,
@@ -120,9 +117,6 @@ def run_dataset_generation(
         build_aerosandbox=build_aerosandbox,
     )
 
-    generator_id = (
-        f"{effective_config.generator.family}_{effective_config.generator.version}"
-    )
     generator = get_geometry_generator(generator_id)
 
     effective_dataset_name = dataset_name or _default_dataset_name(

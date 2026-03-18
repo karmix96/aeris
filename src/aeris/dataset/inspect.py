@@ -99,7 +99,6 @@ def inspect_dataset(dataset_root: Path) -> dict[str, Any]:
         "failed_n": manifest.get("failed_n"),
         "sampler_id": manifest.get("sampler_id"),
         "sampler_seed": manifest.get("sampler_seed"),
-        "lhs_seed": manifest.get("lhs_seed"),
         "metadata_rows": int(len(metadata)),
         "failure_rows": int(len(failures)),
         "geometry_dir_count": int(len(geometry_dirs)),

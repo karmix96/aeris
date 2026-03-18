@@ -101,9 +101,9 @@ def lhs_matrix_to_samples(matrix: np.ndarray) -> list[BWBDesignSample]:
 def generate_lhs_samples(
     config: BWBGeneratorConfig,
     n_samples: int,
-    lhs_seed: int | None = None,
+    sampler_seed: int | None = None,
 ) -> list[BWBDesignSample]:
-    rng = np.random.default_rng(lhs_seed)
+    rng = np.random.default_rng(sampler_seed)
     matrix = build_lhs_design_matrix(config=config, n_samples=n_samples, rng=rng)
     return lhs_matrix_to_samples(matrix)
 
@@ -134,5 +134,5 @@ class LhsV1Sampler(DatasetSampler):
         return generate_lhs_samples(
             config=config,
             n_samples=n_samples,
-            lhs_seed=sampler_seed,
+            sampler_seed=sampler_seed,
         )

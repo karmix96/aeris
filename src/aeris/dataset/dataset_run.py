@@ -3,6 +3,7 @@ from __future__ import annotations
 import platform
 import shutil
 import sys
+from dataclasses import asdict, is_dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -25,7 +26,6 @@ from aeris.dataset.metadata import (
 from aeris.dataset.sampling.registry import get_dataset_sampler
 from aeris.dataset.sampling.resolver import resolve_dataset_sampler
 from aeris.geometry.config_resolver import resolve_generator_and_config
-from aeris.generators.bwb_segmented_v1.params import BWBGeneratorConfig
 from aeris.geometry.registry import get_geometry_generator
 
 
@@ -33,9 +33,19 @@ def _utc_now_iso() -> str:
     return datetime.now(UTC).isoformat()
 
 
+def _config_to_dict(config: Any) -> dict[str, Any]:
+    if hasattr(config, "to_dict"):
+        return dict(config.to_dict())
+    if is_dataclass(config):
+        return asdict(config)
+    if isinstance(config, dict):
+        return dict(config)
+    raise TypeError(f"Unsupported config type: {type(config)}")
+
+
 def _default_dataset_name(
     config_path: Path,
-    config: BWBGeneratorConfig,
+    config: Any,
     n_samples: int,
     sampler_id: str,
     sampler_seed: int | None,
@@ -55,11 +65,11 @@ def _default_dataset_name(
 
 
 def _make_effective_dataset_config(
-    config: BWBGeneratorConfig,
+    config: Any,
     *,
     save_plot: bool | None = None,
     build_aerosandbox: bool | None = None,
-) -> BWBGeneratorConfig:
+) -> Any:
     outputs = config.outputs
 
     if save_plot is not None or build_aerosandbox is not None:
@@ -83,48 +93,34 @@ def _make_effective_dataset_config(
     return replace(config, outputs=outputs)
 
 
-def run_dataset_generation(
+def _resolve_dataset_request(
     *,
     config_path: str | Path,
     n_samples: int,
-    lhs_seed: int | None,
-    dataset_name: str | None = None,
-    save_plot: bool | None = None,
-    build_aerosandbox: bool | None = None,
-    sampler: str | None = None,
-    sampler_seed: int | None = None,
-) -> int:
-    """
-    Generate a geometry dataset using a modular dataset sampler and the
-    selected generator's deterministic realization path.
-
-    Backward compatibility:
-    - lhs_seed is still accepted and mapped to sampler_seed for lhs_v1.
-    """
+    dataset_name: str | None,
+    save_plot: bool | None,
+    build_aerosandbox: bool | None,
+    sampler: str | None,
+    sampler_seed: int | None,
+) -> dict[str, Any]:
     resolved_config_path = Path(config_path).expanduser().resolve()
 
     if n_samples < 1:
         raise ValueError("n_samples must be >= 1")
 
     raw_config = load_yaml_config(resolved_config_path)
-
     generator_id, base_config = resolve_generator_and_config(raw_config)
-
     effective_config = _make_effective_dataset_config(
         base_config,
         save_plot=save_plot,
         build_aerosandbox=build_aerosandbox,
     )
 
-    generator = get_geometry_generator(generator_id)
-
     sampler_id, resolved_sampler_seed = resolve_dataset_sampler(
         raw_config,
         sampler_override=sampler,
         sampler_seed_override=sampler_seed,
-        legacy_lhs_seed=lhs_seed,
     )
-    sampler_obj = get_dataset_sampler(sampler_id)
 
     effective_dataset_name = dataset_name or _default_dataset_name(
         resolved_config_path,
@@ -134,6 +130,50 @@ def run_dataset_generation(
         resolved_sampler_seed,
     )
 
+    return {
+        "resolved_config_path": resolved_config_path,
+        "generator_id": generator_id,
+        "effective_config": effective_config,
+        "sampler_id": sampler_id,
+        "sampler_seed": resolved_sampler_seed,
+        "dataset_name": effective_dataset_name,
+    }
+
+
+def run_dataset_generation(
+    *,
+    config_path: str | Path,
+    n_samples: int,
+    dataset_name: str | None = None,
+    save_plot: bool | None = None,
+    build_aerosandbox: bool | None = None,
+    sampler: str | None = None,
+    sampler_seed: int | None = None,
+) -> int:
+    """
+    Generate a geometry dataset using the selected dataset sampler and the
+    selected generator's deterministic realization path.
+    """
+    request = _resolve_dataset_request(
+        config_path=config_path,
+        n_samples=n_samples,
+        dataset_name=dataset_name,
+        save_plot=save_plot,
+        build_aerosandbox=build_aerosandbox,
+        sampler=sampler,
+        sampler_seed=sampler_seed,
+    )
+
+    resolved_config_path = request["resolved_config_path"]
+    generator_id = request["generator_id"]
+    effective_config = request["effective_config"]
+    sampler_id = request["sampler_id"]
+    resolved_sampler_seed = request["sampler_seed"]
+    effective_dataset_name = request["dataset_name"]
+
+    generator = get_geometry_generator(generator_id)
+    sampler_obj = get_dataset_sampler(sampler_id)
+
     dataset_paths = ensure_dataset_paths(effective_dataset_name)
     logger = setup_logger(
         dataset_paths.logs_dir / "dataset.log",
@@ -141,12 +181,10 @@ def run_dataset_generation(
     )
 
     shutil.copy2(resolved_config_path, dataset_paths.input_config_path)
-    write_json(dataset_paths.resolved_config_json_path, effective_config.to_dict())
+    write_json(dataset_paths.resolved_config_json_path, _config_to_dict(effective_config))
 
     ensure_csv_with_header(dataset_paths.metadata_csv_path, metadata_fieldnames())
     ensure_csv_with_header(dataset_paths.failures_csv_path, failure_fieldnames())
-
-    legacy_lhs_seed_value = resolved_sampler_seed if sampler_id == "lhs_v1" else None
 
     manifest: dict[str, Any] = {
         "dataset_name": effective_dataset_name,
@@ -169,7 +207,6 @@ def run_dataset_generation(
         "failed_n": 0,
         "sampler_id": sampler_id,
         "sampler_seed": resolved_sampler_seed,
-        "lhs_seed": legacy_lhs_seed_value,
         "geometry_deterministic": True,
         "generator_family": effective_config.generator.family,
         "generator_version": effective_config.generator.version,
@@ -211,11 +248,6 @@ def run_dataset_generation(
         )
         logger.info("Generated %d batch design samples", len(samples))
 
-        if not hasattr(generator, "run_full_case"):
-            raise AttributeError(
-                f"Generator '{generator_id}' does not implement run_full_case()."
-            )
-
         for case_index, sample in enumerate(samples, start=1):
             geometry_id = f"geom_{case_index:05d}"
             case_geometry_dir = dataset_paths.geometry_dir / geometry_id
@@ -238,7 +270,6 @@ def run_dataset_generation(
                     case_index=case_index,
                     sampler_id=sampler_id,
                     sampler_seed=resolved_sampler_seed,
-                    lhs_seed=legacy_lhs_seed_value,
                     realization_seed=None,
                     config=effective_config,
                     result=result,
@@ -266,7 +297,6 @@ def run_dataset_generation(
                     case_index=case_index,
                     sampler_id=sampler_id,
                     sampler_seed=resolved_sampler_seed,
-                    lhs_seed=legacy_lhs_seed_value,
                     realization_seed=None,
                     config=effective_config,
                     exc=exc,

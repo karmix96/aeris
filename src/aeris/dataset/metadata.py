@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import asdict
+from dataclasses import asdict, is_dataclass
 from pathlib import Path
 from typing import Any
 
 import numpy as np
-
-from aeris.generators.bwb_segmented_v1.case import GeometryCaseResult
-from aeris.generators.bwb_segmented_v1.params import BWBGeneratorConfig
 
 
 def metadata_fieldnames() -> list[str]:
@@ -18,7 +15,6 @@ def metadata_fieldnames() -> list[str]:
         "status",
         "sampler_id",
         "sampler_seed",
-        "lhs_seed",
         "realization_seed",
         "realization_mode",
         "generator_family",
@@ -72,7 +68,6 @@ def failure_fieldnames() -> list[str]:
         "dataset_name",
         "sampler_id",
         "sampler_seed",
-        "lhs_seed",
         "realization_seed",
         "realization_mode",
         "generator_family",
@@ -83,6 +78,16 @@ def failure_fieldnames() -> list[str]:
     ]
 
 
+def _sample_to_dict(sample: Any) -> dict[str, Any]:
+    if hasattr(sample, "to_dict"):
+        return dict(sample.to_dict())
+    if is_dataclass(sample):
+        return asdict(sample)
+    if isinstance(sample, dict):
+        return dict(sample)
+    raise TypeError(f"Unsupported sample type for metadata: {type(sample)}")
+
+
 def build_metadata_row(
     *,
     dataset_name: str,
@@ -90,13 +95,12 @@ def build_metadata_row(
     case_index: int,
     sampler_id: str,
     sampler_seed: int | None,
-    lhs_seed: int | None,
     realization_seed: int | None,
-    config: BWBGeneratorConfig,
-    result: GeometryCaseResult,
+    config: Any,
+    result: Any,
     geometry_dir: Path,
 ) -> dict[str, Any]:
-    sample_dict = asdict(result.sample)
+    sample_dict = _sample_to_dict(result.sample)
     twists = np.asarray(result.section_geometry.twist_array_deg, dtype=float)
     dihedrals = np.asarray(result.section_geometry.dihedral_array_deg, dtype=float)
 
@@ -107,7 +111,6 @@ def build_metadata_row(
         "status": "success",
         "sampler_id": sampler_id,
         "sampler_seed": sampler_seed,
-        "lhs_seed": lhs_seed,
         "realization_seed": realization_seed,
         "realization_mode": "deterministic_from_sample",
         "generator_family": config.generator.family,
@@ -151,9 +154,8 @@ def build_failure_row(
     case_index: int,
     sampler_id: str,
     sampler_seed: int | None,
-    lhs_seed: int | None,
     realization_seed: int | None,
-    config: BWBGeneratorConfig,
+    config: Any,
     exc: Exception,
 ) -> dict[str, Any]:
     return {
@@ -162,7 +164,6 @@ def build_failure_row(
         "dataset_name": dataset_name,
         "sampler_id": sampler_id,
         "sampler_seed": sampler_seed,
-        "lhs_seed": lhs_seed,
         "realization_seed": realization_seed,
         "realization_mode": "deterministic_from_sample",
         "generator_family": config.generator.family,

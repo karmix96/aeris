@@ -1,0 +1,181 @@
+{
+  "name": "wing_bwb",
+  "generator": {
+    "family": "bwb_segmented",
+    "version": "v1",
+    "seed": 100
+  },
+  "controls": {
+    "n_points": 10,
+    "n_spline_inboard": 50,
+    "n_spline_outboard": 50,
+    "curvature_strength": 0.3,
+    "spline_split_ratio": 0.55,
+    "segment_length_variation": 0.25,
+    "sweep_variation": 0.1
+  },
+  "config": {
+    "name": "wing_bwb",
+    "generator": {
+      "family": "bwb_segmented",
+      "version": "v1",
+      "seed": 100
+    },
+    "controls": {
+      "n_points": 10,
+      "n_spline_inboard": 50,
+      "n_spline_outboard": 50,
+      "curvature_strength": 0.3,
+      "spline_split_ratio": 0.55,
+      "segment_length_variation": 0.25,
+      "sweep_variation": 0.1
+    },
+    "planform_bounds": {
+      "c1_m": {
+        "min": 1.2,
+        "max": 2.0
+      },
+      "c2_ratio": {
+        "min": 0.45,
+        "max": 0.65
+      },
+      "c3_ratio": {
+        "min": 0.3,
+        "max": 0.45
+      },
+      "c4_ratio": {
+        "min": 0.07,
+        "max": 0.2
+      },
+      "b_total_m": {
+        "min": 1.2,
+        "max": 2.0
+      },
+      "b3_ratio": {
+        "min": 0.45,
+        "max": 0.55
+      },
+      "split_ratio": {
+        "min": 0.35,
+        "max": 0.55
+      },
+      "sw1_deg": {
+        "min": 25.0,
+        "max": 60.0
+      },
+      "sw2_deg": {
+        "min": 10.0,
+        "max": 60.0
+      },
+      "sw3_deg": {
+        "min": 0.0,
+        "max": 40.0
+      }
+    },
+    "section_bounds": {
+      "airfoil_name": "naca4412",
+      "dihedral_root_deg": 0.0,
+      "twist_b0_deg": {
+        "min": -5.0,
+        "max": 5.0
+      },
+      "twist_b1_deg": {
+        "min": -5.0,
+        "max": 5.0
+      },
+      "twist_b2_deg": {
+        "min": -5.0,
+        "max": 5.0
+      },
+      "twist_b3_deg": {
+        "min": -5.0,
+        "max": 5.0
+      },
+      "dihedral_b1_deg": {
+        "min": -5.0,
+        "max": 5.0
+      },
+      "dihedral_b2_deg": {
+        "min": -5.0,
+        "max": 5.0
+      },
+      "dihedral_b3_deg": {
+        "min": -5.0,
+        "max": 5.0
+      }
+    },
+    "outputs": {
+      "save_plot": true,
+      "build_aerosandbox": true
+    }
+  },
+  "sampled_planform": {
+    "c1_m": 1.3091762981197028,
+    "c2_ratio": 0.4610629759118843,
+    "c3_ratio": 0.31889820613769043,
+    "c4_ratio": 0.14838726783576606,
+    "c2_m": 0.6036127200043744,
+    "c3_m": 0.41749397298835544,
+    "c4_m": 0.19426509399332506,
+    "b_total_m": 1.9569203098194006,
+    "b3_ratio": 0.5416647682030212,
+    "b1_m": 0.46201316553256677,
+    "b2_m": 0.4349123582767238,
+    "b3_m": 1.05999478601011,
+    "split_ratio": 0.5151076129156992,
+    "sw1_deg": -57.33252576528927,
+    "sw2_deg": -19.777647120801213,
+    "sw3_deg": -28.517391358676107
+  },
+  "sampled_sections": {
+    "airfoil_name": "naca4412",
+    "twist_b0_deg": 3.605604265444768,
+    "twist_b1_deg": -4.844848059602847,
+    "twist_b2_deg": 1.457406909551211,
+    "twist_b3_deg": 3.8576125067040383,
+    "dihedral_b0_deg": 0.0,
+    "dihedral_b1_deg": -4.279292601216385,
+    "dihedral_b2_deg": -0.5403571243101659,
+    "dihedral_b3_deg": 0.921107456750061,
+    "twist_boundaries_deg": [
+      3.605604265444768,
+      -4.844848059602847,
+      1.457406909551211,
+      3.8576125067040383
+    ],
+    "dihedral_boundaries_deg": [
+      0.0,
+      -4.279292601216385,
+      -0.5403571243101659,
+      0.921107456750061
+    ],
+    "group_boundary_y_m": [
+      0.0,
+      0.46201316553256677,
+      0.8969255238092906,
+      1.9569203098194006
+    ]
+  },
+  "discretization": {
+    "N1": 2,
+    "N2": 2,
+    "N3": 5,
+    "split_idx": 5,
+    "num_sections": 99
+  },
+  "metrics": {
+    "semi_span_m": 1.9569203098194006,
+    "full_span_m": 3.913840619638801,
+    "approx_area_m2": 2.1699782974088193,
+    "approx_aspect_ratio_planform": 7.05912516001939,
+    "aspect_ratio_aerosandbox": 7.06573161119517,
+    "n_xsecs_aerosandbox": 99
+  },
+  "artifacts": {
+    "summary_path": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/datasets/wing_bwb_bwb_segmented_v1_n5_lhs123/geometry/geom_00003/geometry_summary.json",
+    "control_points_path": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/datasets/wing_bwb_bwb_segmented_v1_n5_lhs123/geometry/geom_00003/control_points.csv",
+    "planform_sections_path": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/datasets/wing_bwb_bwb_segmented_v1_n5_lhs123/geometry/geom_00003/planform_sections.csv",
+    "section_3d_path": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/datasets/wing_bwb_bwb_segmented_v1_n5_lhs123/geometry/geom_00003/section_3d.csv",
+    "plot_path": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/datasets/wing_bwb_bwb_segmented_v1_n5_lhs123/geometry/geom_00003/plots/planform.png"
+  }
+}

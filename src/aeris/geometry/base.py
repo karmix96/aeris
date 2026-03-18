@@ -1,76 +1,51 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Any, Mapping
 
 
 class GeometryGenerator(ABC):
     """
-    Minimal contract for a geometry generator.
+    External contract for geometry generators.
 
-    Important:
-    - This contract is intentionally small.
-    - Different generator families may have completely different internal
-      philosophies, parameterizations, and intermediate representations.
-    - The pipeline should depend only on this external contract.
+    Pipelines should depend on this contract, not on generator-specific files.
     """
 
     @property
     @abstractmethod
     def generator_id(self) -> str:
-        """Stable unique identifier for the generator family/version."""
         raise NotImplementedError
 
     @property
     def display_name(self) -> str:
-        """Human-friendly generator name."""
         return self.generator_id
 
-    def get_default_config(self) -> Mapping[str, Any]:
-        """
-        Optional generator-specific default config.
-        Keep empty unless there is a real need.
-        """
-        return {}
-
     @abstractmethod
-    def sample_one(self, config: Mapping[str, Any], seed: int | None = None) -> Mapping[str, Any]:
+    def build_config(self, raw_config: dict[str, Any]) -> Any:
         """
-        Produce one explicit design sample for this generator.
-
-        Returns a fully explicit sample dictionary suitable for deterministic
-        geometry reconstruction.
+        Build and validate the generator-specific typed config object.
         """
         raise NotImplementedError
 
     @abstractmethod
-    def build_case_from_sample(
+    def sample_one(self, config: Any, seed: int | None = None) -> Any:
+        """
+        Produce one explicit sampled design vector.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def run_full_case(
         self,
-        sample: Mapping[str, Any],
-        config: Mapping[str, Any],
+        sample: Any,
+        config: Any,
+        output_dir: Path,
     ) -> Any:
         """
-        Build the generator's geometry case from an explicit sample.
-
-        The returned object may be generator-specific internally.
+        Run the full deterministic geometry realization from an explicit sample.
         """
         raise NotImplementedError
 
-    def export_case_artifacts(
-        self,
-        case: Any,
-        output_dir: str,
-        config: Mapping[str, Any],
-    ) -> Mapping[str, Any]:
-        """
-        Optional artifact export hook.
-
-        Returns a dictionary summary of what was exported.
-        """
-        return {}
-
     def summarize_case(self, case: Any) -> Mapping[str, Any]:
-        """
-        Optional summary hook for metadata/reporting.
-        """
         return {}

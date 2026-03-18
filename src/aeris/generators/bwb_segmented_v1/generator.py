@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import numpy as np
 
@@ -35,53 +35,36 @@ class BwbSegmentedV1Generator(GeometryGenerator):
         validate_bwb_generator_config(config)
         return config
 
-    def sample_one(
-        self,
-        config: Mapping[str, Any],
-        seed: int | None = None,
-    ) -> Mapping[str, Any]:
+    def sample_one(self, config: Any, seed: int | None = None) -> BWBDesignSample:
         if not isinstance(config, BWBGeneratorConfig):
             raise TypeError(
                 f"BwbSegmentedV1Generator expects BWBGeneratorConfig, got {type(config)}"
             )
         rng = np.random.default_rng(seed)
-        sample: BWBDesignSample = sample_bwb_design(config, rng)
-        return sample
-
-    def generate_dataset_samples(
-        self,
-        config: BWBGeneratorConfig,
-        n_samples: int,
-        lhs_seed: int | None,
-    ):
-        from aeris.dataset.lhs import generate_lhs_samples
-
-        return generate_lhs_samples(
-            config=config,
-            n_samples=n_samples,
-            lhs_seed=lhs_seed,
-        )
-
-    def build_case_from_sample(
-        self,
-        sample: Mapping[str, Any],
-        config: Mapping[str, Any],
-    ) -> Any:
-        return sample
+        return sample_bwb_design(config, rng)
 
     def run_full_case(
         self,
-        sample: BWBDesignSample,
-        config: BWBGeneratorConfig,
+        sample: Any,
+        config: Any,
         output_dir: Path,
-    ):
+    ) -> Any:
+        if not isinstance(config, BWBGeneratorConfig):
+            raise TypeError(
+                f"BwbSegmentedV1Generator expects BWBGeneratorConfig, got {type(config)}"
+            )
+        if not isinstance(sample, BWBDesignSample):
+            raise TypeError(
+                f"BwbSegmentedV1Generator expects BWBDesignSample, got {type(sample)}"
+            )
+
         return generate_geometry_case_from_sample(
             config=config,
             sample=sample,
             output_dir=output_dir,
         )
 
-    def summarize_case(self, case: Any) -> Mapping[str, Any]:
+    def summarize_case(self, case: Any) -> dict[str, Any]:
         if hasattr(case, "summary"):
             return case.summary
         return {}

@@ -8,16 +8,14 @@ def resolve_dataset_sampler(
     *,
     sampler_override: str | None = None,
     sampler_seed_override: int | None = None,
-    legacy_lhs_seed: int | None = None,
 ) -> tuple[str, int | None]:
     """
     Resolve dataset sampler identity and seed.
 
     Priority:
     1. explicit sampler_override / sampler_seed_override
-    2. legacy lhs_seed
-    3. config file dataset.sampling.{method, seed}
-    4. defaults -> lhs_v1 / None
+    2. config file dataset.sampling.{method, seed}
+    3. defaults -> lhs_v1 / None
     """
     dataset_cfg = raw_config.get("dataset", {})
     sampling_cfg = dataset_cfg.get("sampling", {})
@@ -29,8 +27,6 @@ def resolve_dataset_sampler(
 
     if sampler_seed_override is not None:
         sampler_seed = sampler_seed_override
-    elif legacy_lhs_seed is not None:
-        sampler_seed = legacy_lhs_seed
     elif cfg_seed is not None:
         sampler_seed = int(cfg_seed)
     else:

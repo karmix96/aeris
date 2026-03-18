@@ -121,11 +121,6 @@ def run_geometry_generation(config_path: str | Path) -> int:
         design_sample = generator.sample_one(generator_config, seed=design_sampling_seed)
         logger.info("Design sample generated successfully")
 
-        if not hasattr(generator, "run_full_case"):
-            raise AttributeError(
-                f"Generator '{generator_id}' does not implement run_full_case()."
-            )
-
         case_result = generator.run_full_case(
             sample=design_sample,
             config=generator_config,

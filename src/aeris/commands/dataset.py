@@ -46,11 +46,6 @@ def dataset_generate(
         "--sampler-seed",
         help="Seed for the selected sampler.",
     ),
-    lhs_seed: int | None = typer.Option(
-        None,
-        "--lhs-seed",
-        help="(Deprecated) Seed for Latin Hypercube Sampling.",
-    ),
     name: str | None = typer.Option(
         None,
         "--name",
@@ -68,14 +63,9 @@ def dataset_generate(
     ),
 ) -> None:
     """Generate a batch geometry dataset using a modular sampling strategy."""
-    if lhs_seed is not None and sampler_seed is not None:
-        typer.echo("ERROR: Use either --lhs-seed or --sampler-seed, not both.")
-        raise typer.Exit(code=1)
-
     exit_code = run_dataset_generation(
         config_path=config,
         n_samples=n,
-        lhs_seed=lhs_seed,
         sampler=sampler,
         sampler_seed=sampler_seed,
         dataset_name=name,

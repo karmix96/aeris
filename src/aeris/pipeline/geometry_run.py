@@ -15,24 +15,9 @@ import numpy as np
 from aeris.common.config import load_yaml_config
 from aeris.common.logging_utils import setup_logger
 from aeris.common.paths import create_run_folder
-from aeris.geometry.aerosandbox_adapter import build_aerosandbox_geometry
-from aeris.geometry.export import (
-    build_geometry_summary,
-    export_control_points_csv,
-    export_geometry_summary,
-    export_planform_sections_csv,
-    export_section_3d_csv,
-)
 from aeris.geometry.params import build_bwb_generator_config
-from aeris.geometry.planform import generate_bwb_planform_from_sample
-from aeris.geometry.plotting import save_planform_plot
-from aeris.geometry.sampling import sample_bwb_design
-from aeris.geometry.sections import build_section_geometry_from_sample
-from aeris.geometry.validation import (
-    validate_bwb_generator_config,
-    validate_planform_result,
-    validate_section_geometry,
-)
+from aeris.geometry.registry import get_geometry_generator
+from aeris.geometry.validation import validate_bwb_generator_config
 
 
 def _utc_now_iso() -> str:
@@ -91,7 +76,6 @@ def run_geometry_generation(config_path: str | Path) -> int:
     copied_config_path = run_paths.root / "input_config.yaml"
 
     geometry_dir = run_paths.artifacts / "geometry"
-    plots_dir = geometry_dir / "plots"
 
     manifest: dict[str, Any] = {
         "run_id": run_paths.run_id,
@@ -121,96 +105,63 @@ def run_geometry_generation(config_path: str | Path) -> int:
         shutil.copy2(resolved_config_path, copied_config_path)
 
         geometry_dir.mkdir(parents=True, exist_ok=True)
-        plots_dir.mkdir(parents=True, exist_ok=True)
 
+        # Transitional compatibility path:
+        # current configs still map to the validated BWB segmented generator.
         bwb_config = build_bwb_generator_config(raw_config)
         validate_bwb_generator_config(bwb_config)
 
+        generator_id = f"{bwb_config.generator.family}_{bwb_config.generator.version}"
+        generator = get_geometry_generator(generator_id)
+
         design_sampling_seed = bwb_config.generator.seed
-        design_rng = np.random.default_rng(design_sampling_seed)
 
         logger.info(
-            "Generator selected: family=%s version=%s",
+            "Generator selected: family=%s version=%s id=%s",
             bwb_config.generator.family,
             bwb_config.generator.version,
+            generator_id,
         )
         logger.info("Design sampling seed: %s", design_sampling_seed)
         logger.info("Geometry realization mode: deterministic from explicit design sample")
 
-        design_sample = sample_bwb_design(bwb_config, design_rng)
+        design_sample = generator.sample_one(bwb_config, seed=design_sampling_seed)
         logger.info("Design sample generated successfully")
 
-        planform = generate_bwb_planform_from_sample(design_sample, bwb_config)
-        validate_planform_result(planform)
-        logger.info("Planform generated and validated")
-
-        section_geometry = build_section_geometry_from_sample(
-            planform,
-            design_sample,
-            bwb_config,
-        )
-        validate_section_geometry(section_geometry)
-        logger.info("Section geometry generated and validated")
-
-        aerosandbox_result = None
-        if bwb_config.outputs.build_aerosandbox:
-            aerosandbox_result = build_aerosandbox_geometry(section_geometry, bwb_config)
-            logger.info(
-                "AeroSandbox geometry built successfully (AR=%.6f)",
-                aerosandbox_result.aspect_ratio,
+        if not hasattr(generator, "run_full_case"):
+            raise AttributeError(
+                f"Generator '{generator_id}' does not implement run_full_case()."
             )
 
-        summary_path = geometry_dir / "geometry_summary.json"
-        control_points_path = geometry_dir / "control_points.csv"
-        planform_sections_path = geometry_dir / "planform_sections.csv"
-        section_3d_path = geometry_dir / "section_3d.csv"
-        plot_path = plots_dir / "planform.png"
-
-        export_control_points_csv(planform, control_points_path)
-        export_planform_sections_csv(planform, planform_sections_path)
-        export_section_3d_csv(section_geometry, section_3d_path)
-
-        logger.info("Control points written: %s", control_points_path)
-        logger.info("Planform sections written: %s", planform_sections_path)
-        logger.info("3D section definitions written: %s", section_3d_path)
-
-        if bwb_config.outputs.save_plot:
-            save_planform_plot(planform, section_geometry, bwb_config, plot_path)
-            logger.info("Planform plot written: %s", plot_path)
-
-        artifact_paths = {
-            "summary_path": str(summary_path),
-            "control_points_path": str(control_points_path),
-            "planform_sections_path": str(planform_sections_path),
-            "section_3d_path": str(section_3d_path),
-            "plot_path": str(plot_path) if bwb_config.outputs.save_plot else None,
-        }
-
-        summary = build_geometry_summary(
+        case_result = generator.run_full_case(
+            sample=design_sample,
             config=bwb_config,
-            planform=planform,
-            section_geometry=section_geometry,
-            aerosandbox_result=aerosandbox_result,
-            artifact_paths=artifact_paths,
+            output_dir=geometry_dir,
         )
-        export_geometry_summary(summary, summary_path)
-        logger.info("Geometry summary written: %s", summary_path)
+        logger.info("Geometry case generated successfully")
 
         manifest["geometry"] = {
             "name": bwb_config.name,
             "generator_family": bwb_config.generator.family,
             "generator_version": bwb_config.generator.version,
+            "generator_id": generator_id,
             "design_sampling_seed": design_sampling_seed,
             "geometry_deterministic": True,
             "design_sample": _to_jsonable(design_sample),
-            "num_sections": planform.num_sections,
-            "summary_path": str(summary_path),
-            "control_points_path": str(control_points_path),
-            "planform_sections_path": str(planform_sections_path),
-            "section_3d_path": str(section_3d_path),
-            "plot_path": str(plot_path) if bwb_config.outputs.save_plot else None,
+            "num_sections": case_result.planform.num_sections,
+            "summary_path": str(case_result.artifact_paths.summary_path),
+            "control_points_path": str(case_result.artifact_paths.control_points_path),
+            "planform_sections_path": str(case_result.artifact_paths.planform_sections_path),
+            "section_3d_path": str(case_result.artifact_paths.section_3d_path),
+            "plot_path": (
+                None
+                if case_result.artifact_paths.plot_path is None
+                else str(case_result.artifact_paths.plot_path)
+            ),
             "aspect_ratio_aerosandbox": (
-                None if aerosandbox_result is None else aerosandbox_result.aspect_ratio
+                None
+                if case_result.aerosandbox_result is None
+                else case_result.aerosandbox_result.aspect_ratio
             ),
         }
         manifest["status"] = "success"

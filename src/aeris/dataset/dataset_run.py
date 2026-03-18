@@ -15,15 +15,14 @@ from aeris.dataset.io import (
     ensure_dataset_paths,
     write_json,
 )
-from aeris.dataset.lhs import generate_lhs_samples
 from aeris.dataset.metadata import (
     build_failure_row,
     build_metadata_row,
     failure_fieldnames,
     metadata_fieldnames,
 )
-from aeris.geometry.case import generate_geometry_case_from_sample
 from aeris.geometry.params import BWBGeneratorConfig, build_bwb_generator_config
+from aeris.geometry.registry import get_geometry_generator
 from aeris.geometry.validation import validate_bwb_generator_config
 
 
@@ -96,10 +95,11 @@ def run_dataset_generation(
     build_aerosandbox: bool | None = None,
 ) -> int:
     """
-    Generate a geometry dataset using LHS over the explicit design variables.
+    Generate a geometry dataset using the selected generator's batch-sampling
+    mechanism and deterministic geometry realization path.
 
     Architecture rule:
-    - LHS seed controls only the design-space sampling.
+    - Sampling policy belongs to the generator family.
     - Each sampled design is then realized deterministically into geometry.
     """
     resolved_config_path = Path(config_path).expanduser().resolve()
@@ -108,6 +108,9 @@ def run_dataset_generation(
         raise ValueError("n_samples must be >= 1")
 
     raw_config = load_yaml_config(resolved_config_path)
+
+    # Transitional compatibility path:
+    # current configs still map to the validated BWB segmented generator.
     base_config = build_bwb_generator_config(raw_config)
     validate_bwb_generator_config(base_config)
 
@@ -116,6 +119,11 @@ def run_dataset_generation(
         save_plot=save_plot,
         build_aerosandbox=build_aerosandbox,
     )
+
+    generator_id = (
+        f"{effective_config.generator.family}_{effective_config.generator.version}"
+    )
+    generator = get_geometry_generator(generator_id)
 
     effective_dataset_name = dataset_name or _default_dataset_name(
         resolved_config_path,
@@ -159,9 +167,7 @@ def run_dataset_generation(
         "geometry_deterministic": True,
         "generator_family": effective_config.generator.family,
         "generator_version": effective_config.generator.version,
-        "generator_id": (
-            f"{effective_config.generator.family}_{effective_config.generator.version}"
-        ),
+        "generator_id": generator_id,
         "outputs": {
             "save_plot": effective_config.outputs.save_plot,
             "build_aerosandbox": effective_config.outputs.build_aerosandbox,
@@ -183,19 +189,30 @@ def run_dataset_generation(
         logger.info("Dataset root: %s", dataset_paths.root)
         logger.info("Requested samples: %d", n_samples)
         logger.info(
-            "Generator: family=%s version=%s",
+            "Generator selected: family=%s version=%s id=%s",
             effective_config.generator.family,
             effective_config.generator.version,
+            generator_id,
         )
-        logger.info("LHS seed: %s", lhs_seed)
+        logger.info("Batch sampling seed: %s", lhs_seed)
         logger.info("Geometry realization mode: deterministic from explicit design sample")
 
-        samples = generate_lhs_samples(
+        if not hasattr(generator, "generate_dataset_samples"):
+            raise AttributeError(
+                f"Generator '{generator_id}' does not implement generate_dataset_samples()."
+            )
+
+        samples = generator.generate_dataset_samples(
             config=effective_config,
             n_samples=n_samples,
             lhs_seed=lhs_seed,
         )
-        logger.info("Generated %d LHS design samples", len(samples))
+        logger.info("Generated %d batch design samples", len(samples))
+
+        if not hasattr(generator, "run_full_case"):
+            raise AttributeError(
+                f"Generator '{generator_id}' does not implement run_full_case()."
+            )
 
         for case_index, sample in enumerate(samples, start=1):
             geometry_id = f"geom_{case_index:05d}"
@@ -207,12 +224,10 @@ def run_dataset_generation(
             try:
                 logger.info("Generating %s", geometry_id)
 
-                result = generate_geometry_case_from_sample(
-                    config=effective_config,
+                result = generator.run_full_case(
                     sample=sample,
+                    config=effective_config,
                     output_dir=case_geometry_dir,
-                    save_plot=effective_config.outputs.save_plot,
-                    build_aerosandbox=effective_config.outputs.build_aerosandbox,
                 )
 
                 row = build_metadata_row(

@@ -84,19 +84,25 @@ def build_geometry_summary(
         "dihedral_b1_deg": section_geometry.dihedral_b1_deg,
         "dihedral_b2_deg": section_geometry.dihedral_b2_deg,
         "dihedral_b3_deg": section_geometry.dihedral_b3_deg,
-        "twist_boundaries_deg": section_geometry.twist_boundaries_deg.tolist(),
-        "dihedral_boundaries_deg": section_geometry.dihedral_boundaries_deg.tolist(),
-        "group_boundary_y_m": section_geometry.group_boundary_y.tolist(),
+        "twist_boundaries_deg": None if section_geometry.twist_boundaries_deg is None else section_geometry.twist_boundaries_deg.tolist(),
+        "dihedral_boundaries_deg": None if section_geometry.dihedral_boundaries_deg is None else section_geometry.dihedral_boundaries_deg.tolist(),
+        "group_boundary_y_m": None if section_geometry.group_boundary_y is None else section_geometry.group_boundary_y.tolist(),
     }
 
     metrics = {
-        "semi_span_m": planform.semi_span_m,
-        "full_span_m": planform.full_span_m,
-        "approx_area_m2": planform.approx_area_m2,
-        "approx_aspect_ratio_planform": planform.approx_aspect_ratio,
-        "aspect_ratio_aerosandbox": None if aerosandbox_result is None else aerosandbox_result.aspect_ratio,
-        "n_xsecs_aerosandbox": None if aerosandbox_result is None else aerosandbox_result.n_xsecs,
+    "semi_span_m": planform.semi_span_m,
+    "full_span_m": planform.full_span_m,
+    "approx_area_m2": planform.approx_area_m2,
+    "approx_aspect_ratio_planform": planform.approx_aspect_ratio,
+    "aspect_ratio_aerosandbox": None if aerosandbox_result is None else aerosandbox_result.aspect_ratio,
+    "n_xsecs_aerosandbox": None if aerosandbox_result is None else aerosandbox_result.n_xsecs,
     }
+
+    reference_values = None if aerosandbox_result is None else aerosandbox_result.reference_values
+    mean_angles_deg = None if aerosandbox_result is None else aerosandbox_result.mean_angles_deg
+    aerodynamic_center = None if aerosandbox_result is None else aerosandbox_result.aerodynamic_center
+    sectional_metrics = None if aerosandbox_result is None else aerosandbox_result.sectional_metrics
+    geometry_info = None if aerosandbox_result is None else aerosandbox_result.geometry_info
 
     return {
         "name": config.name,
@@ -107,7 +113,20 @@ def build_geometry_summary(
         "sampled_sections": sampled_sections,
         "discretization": discretization,
         "metrics": metrics,
+        "reference_values": reference_values,
+        "mean_angles_deg": mean_angles_deg,
+        "aerodynamic_center": aerodynamic_center,
+        "sectional_metrics": sectional_metrics,
         "artifacts": artifact_paths,
+        "geometry_info": geometry_info,
+        "reference_conventions": {
+        "geometry_axes_origin": "aircraft geometry origin used to define section xyz_le coordinates",
+        "moment_reference_point_xyz_m": [0.0, 0.0, 0.0],
+        "x_axis_positive_direction": "aft",
+        "reference_area_definition": "wing planform area from AeroSandbox wing.area()",
+        "reference_span_definition": "wing span from AeroSandbox wing.span()",
+        "reference_chord_definition": "mean aerodynamic chord from AeroSandbox wing.mean_aerodynamic_chord()",
+    },
     }
 
 

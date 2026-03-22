@@ -20,6 +20,7 @@ from aeris.generators.bwb_segmented_v1.planform import PlanformResult, generate_
 from aeris.generators.bwb_segmented_v1.plotting import save_planform_plot
 from aeris.generators.bwb_segmented_v1.sections import SectionGeometryResult, build_section_geometry_from_sample
 from aeris.generators.bwb_segmented_v1.validation import validate_planform_result, validate_section_geometry
+from aeris.generators.bwb_segmented_v1.reconstruction_export import export_reconstruction_artifacts
 
 
 @dataclass(frozen=True)
@@ -49,6 +50,18 @@ class GeometryCaseResult:
     artifact_paths: GeometryArtifactPaths
     summary: dict[str, Any]
 
+    @property
+    def airplane(self):
+        if self.aerosandbox_result is None:
+            return None
+        return self.aerosandbox_result.airplane
+
+    @property
+    def wing(self):
+        if self.aerosandbox_result is None:
+            return None
+        return self.aerosandbox_result.wing
+
 
 def generate_geometry_case_from_sample(
     *,
@@ -77,6 +90,13 @@ def generate_geometry_case_from_sample(
     aerosandbox_result = None
     if effective_build_aerosandbox:
         aerosandbox_result = build_aerosandbox_geometry(section_geometry, config)
+    
+    reconstruction_artifacts = None
+    if aerosandbox_result is not None:
+        reconstruction_artifacts = export_reconstruction_artifacts(
+            airplane=aerosandbox_result.airplane,
+            output_dir=output_dir,
+        )
 
     summary_path = output_dir / "geometry_summary.json"
     control_points_path = output_dir / "control_points.csv"
@@ -111,6 +131,10 @@ def generate_geometry_case_from_sample(
         aerosandbox_result=aerosandbox_result,
         artifact_paths=artifact_paths.to_dict(),
     )
+
+    if reconstruction_artifacts is not None:
+        summary["reconstruction_artifacts"] = reconstruction_artifacts
+
     export_geometry_summary(summary, summary_path)
 
     return GeometryCaseResult(

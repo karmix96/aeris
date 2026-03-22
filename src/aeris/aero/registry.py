@@ -1,49 +1,34 @@
 from __future__ import annotations
 
-from typing import Dict, Type
+from typing import Type
 
-from aeris.aero.base import AeroSolver
+from .base import AeroSolver
+
+_SOLVER_REGISTRY: dict[str, Type[AeroSolver]] = {}
 
 
-_AERO_SOLVERS: Dict[str, Type[AeroSolver]] = {}
-
-
-def register_aero_solver(solver_cls: Type[AeroSolver]) -> Type[AeroSolver]:
-    """
-    Class decorator for registering aero solvers.
-    """
-    solver_id = getattr(solver_cls, "SOLVER_ID", None)
+def register_solver(solver_cls: Type[AeroSolver]) -> Type[AeroSolver]:
+    solver_id = getattr(solver_cls, "solver_id", None)
     if not solver_id:
-        raise ValueError(
-            f"Cannot register aero solver {solver_cls.__name__}: "
-            "missing class attribute 'SOLVER_ID'."
-        )
-
-    if solver_id in _AERO_SOLVERS:
-        raise ValueError(f"Aero solver '{solver_id}' is already registered.")
-
-    _AERO_SOLVERS[solver_id] = solver_cls
+        raise ValueError("Solver class must define a non-empty solver_id.")
+    if solver_id in _SOLVER_REGISTRY:
+        raise ValueError(f"Solver '{solver_id}' is already registered.")
+    _SOLVER_REGISTRY[solver_id] = solver_cls
     return solver_cls
 
 
-def get_aero_solver(solver_id: str) -> AeroSolver:
-    """
-    Instantiate and return a registered aero solver by ID.
-    """
+def get_solver_class(solver_id: str) -> Type[AeroSolver]:
     try:
-        solver_cls = _AERO_SOLVERS[solver_id]
+        return _SOLVER_REGISTRY[solver_id]
     except KeyError as exc:
-        available = ", ".join(sorted(_AERO_SOLVERS)) or "<none>"
-        raise KeyError(
-            f"Unknown aero solver '{solver_id}'. "
-            f"Available solvers: {available}"
-        ) from exc
+        available = ", ".join(sorted(_SOLVER_REGISTRY)) or "<none>"
+        raise KeyError(f"Unknown aero solver '{solver_id}'. Available: {available}") from exc
 
+
+def create_solver(solver_id: str) -> AeroSolver:
+    solver_cls = get_solver_class(solver_id)
     return solver_cls()
 
 
-def list_aero_solvers() -> list[str]:
-    """
-    Return sorted registered aero solver IDs.
-    """
-    return sorted(_AERO_SOLVERS.keys())
+def list_solvers() -> list[str]:
+    return sorted(_SOLVER_REGISTRY.keys())

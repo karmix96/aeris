@@ -1,6 +1,32 @@
-"""
-Aerodynamic solver abstraction layer for AERIS.
-"""
+from .base import AeroSolver
+from .models import (
+    AeroFailure,
+    AeroGeometryView,
+    AeroInput,
+    AeroResult,
+    AeroSolverSettings,
+    AeroStatus,
+    FlightCondition,
+)
+from .registry import create_solver, get_solver_class, list_solvers, register_solver
 
-# Ensure built-in solvers register on import.
-from aeris.aero.solvers import aerosandbox_avl  # noqa: F401
+# Force registration of built-in solvers.
+from .solvers.aerosandbox_avl import AeroSandboxAVLSolver
+from .io import find_aero_result_json, load_aero_result, load_aero_result_from_run_dir
+
+
+__all__ = [
+    "AeroSolver",
+    "AeroFailure",
+    "AeroGeometryView",
+    "AeroInput",
+    "AeroResult",
+    "AeroSolverSettings",
+    "AeroStatus",
+    "FlightCondition",
+    "create_solver",
+    "get_solver_class",
+    "list_solvers",
+    "register_solver",
+    "AeroSandboxAVLSolver",
+]

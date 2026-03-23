@@ -1,0 +1,8 @@
+mass_properties:
+  mass_kg: 12.5
+  x_cg_m: 0.40
+  y_cg_m: 0.0
+  z_cg_m: 0.0
+  ixx_kg_m2: 0.80
+  iyy_kg_m2: 1.50
+  izz_kg_m2: 2.10

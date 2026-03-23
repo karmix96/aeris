@@ -20,6 +20,40 @@ from aeris.generators.bwb_segmented_v1.params import (
     build_bwb_generator_config,
 )
 
+import copy
+import math
+import numpy as np
+
+
+def rotate_point_about_y(xyz, alpha_deg):
+    a = math.radians(alpha_deg)
+    x, y, z = xyz
+    x_new = x * math.cos(a) + z * math.sin(a)
+    y_new = y
+    z_new = -x * math.sin(a) + z * math.cos(a)
+    return np.array([x_new, y_new, z_new])
+
+
+def rotate_airplane_geometry_about_y(airplane, alpha_deg):
+    """
+    Returns a deep-copied airplane with wing/fuselage geometry rotated about the global y-axis.
+    This is for visualization only.
+    """
+    rotated = copy.deepcopy(airplane)
+
+    for wing in rotated.wings:
+        for xsec in wing.xsecs:
+            xsec.xyz_le = rotate_point_about_y(xsec.xyz_le, alpha_deg)
+
+    for fuse in rotated.fuselages:
+        for xsec in fuse.xsecs:
+            xsec.xyz_c = rotate_point_about_y(xsec.xyz_c, alpha_deg)
+
+    if hasattr(rotated, "xyz_ref"):
+        rotated.xyz_ref = rotate_point_about_y(rotated.xyz_ref, alpha_deg)
+
+    return rotated
+
 DEFAULT_CONFIG = PROJECT_ROOT / "configs" / "geometry" / "wing_bwb.yaml"
 DEFAULT_DATASET = PROJECT_ROOT / "data" / "datasets" / "wing_bwb_bwb_segmented_v1_n10_lhs123"
 
@@ -168,6 +202,47 @@ def build_tag(mode: str, config_path: Path | None, dataset_root: Path | None, ge
         return f"{dataset_root.name}_{geometry_id}"
     raise ValueError(f"Unsupported mode: {mode}")
 
+def sample_from_run(run_root: Path) -> BWBDesignSample:
+    summary_path = run_root / "geometry" / "geometry_summary.json"
+    if not summary_path.exists():
+        raise FileNotFoundError(f"Missing geometry summary: {summary_path}")
+
+    data = json.loads(summary_path.read_text(encoding="utf-8"))
+
+    sampled_planform = data["sampled_planform"]
+    sampled_sections = data["sampled_sections"]
+
+    return BWBDesignSample(
+        c1_m=float(sampled_planform["c1_m"]),
+        c2_ratio=float(sampled_planform["c2_ratio"]),
+        c3_ratio=float(sampled_planform["c3_ratio"]),
+        c4_ratio=float(sampled_planform["c4_ratio"]),
+        b_total_m=float(sampled_planform["b_total_m"]),
+        b3_ratio=float(sampled_planform["b3_ratio"]),
+        split_ratio=float(sampled_planform["split_ratio"]),
+        sw1_deg=float(abs(sampled_planform["sw1_deg"])),
+        sw2_deg=float(abs(sampled_planform["sw2_deg"])),
+        sw3_deg=float(abs(sampled_planform["sw3_deg"])),
+        twist_b0_deg=float(sampled_sections["twist_b0_deg"]),
+        twist_b1_deg=float(sampled_sections["twist_b1_deg"]),
+        twist_b2_deg=float(sampled_sections["twist_b2_deg"]),
+        twist_b3_deg=float(sampled_sections["twist_b3_deg"]),
+        dihedral_b1_deg=float(sampled_sections["dihedral_b1_deg"]),
+        dihedral_b2_deg=float(sampled_sections["dihedral_b2_deg"]),
+        dihedral_b3_deg=float(sampled_sections["dihedral_b3_deg"]),
+    )
+
+def trim_alpha_from_run(run_root: Path) -> float | None:
+    trim_path = run_root / "dynamics" / "trim_result.json"
+    if not trim_path.exists():
+        return None
+
+    data = json.loads(trim_path.read_text(encoding="utf-8"))
+    longitudinal = data.get("longitudinal", {})
+    if not longitudinal.get("valid", False):
+        return None
+
+    return longitudinal.get("alpha_trim_deg")
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -181,7 +256,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--mode",
-        choices=["baseline", "config", "dataset"],
+        choices=["baseline", "config", "dataset", "run"],
         default="baseline",
         help="Visualization source: hardcoded baseline, direct config, or dataset metadata.",
     )
@@ -202,6 +277,18 @@ def main() -> None:
         action="store_true",
         help="Also save the 2D planform plot/artifacts under data/debug/visualization_runs/.",
     )
+    parser.add_argument(
+    "--run-dir",
+    type=Path,
+    default=None,
+    help="AERIS run directory containing geometry/ and optionally dynamics/trim_result.json (used only in --mode run).",
+    )
+    parser.add_argument(
+        "--rotate-alpha-deg",
+        type=float,
+        default=None,
+        help="Rotate the displayed airplane by this angle in degrees for visualization. If omitted in run mode, uses trim_result.json if available.",
+    )
     args = parser.parse_args()
 
     config_path = args.config.expanduser().resolve()
@@ -221,7 +308,24 @@ def main() -> None:
             "Config mode requires an explicit sample definition path. "
             "Use baseline mode or dataset mode for now, or extend this script to define how config-only sampling should work."
         )
+    elif args.mode == "run":
+        if args.run_dir is None:
+            raise ValueError("--run-dir is required when --mode run")
 
+        run_root = args.run_dir.expanduser().resolve()
+        if not run_root.exists():
+            raise FileNotFoundError(f"Run directory does not exist: {run_root}")
+
+        cfg_path = run_root / "baseline_bwb_25.yaml"
+        if cfg_path.exists():
+            raw = load_yaml_config(cfg_path)
+            cfg = build_bwb_generator_config(raw)
+        else:
+            raw = load_yaml_config(config_path)
+            cfg = build_bwb_generator_config(raw)
+
+        sample = sample_from_run(run_root)
+        tag = f"run_{run_root.name}"
     else:
         dataset_root = args.dataset.expanduser().resolve()
         if not args.geometry_id:
@@ -257,6 +361,15 @@ def main() -> None:
         raise RuntimeError("AeroSandbox result was not built.")
 
     airplane = result.aerosandbox_result.airplane
+
+    alpha_to_show_deg = args.rotate_alpha_deg
+    if alpha_to_show_deg is None and args.mode == "run":
+        alpha_to_show_deg = trim_alpha_from_run(run_root)
+
+    if alpha_to_show_deg is not None:
+        print(f"\nApplying visualization rotation of alpha = {alpha_to_show_deg:.6f} deg")
+        airplane = rotate_airplane_geometry_about_y(airplane, alpha_to_show_deg)
+
     print("\nOpening AeroSandbox draw window...")
     airplane.draw()
 

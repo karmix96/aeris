@@ -16,8 +16,10 @@ class FakeAeroResult:
 
 def test_compute_static_margin():
     sm, sm_pct = compute_static_margin(x_np_m=0.80, x_cg_m=0.72, mac_m=0.40)
-    assert sm == 0.2
-    assert sm_pct == 20.0
+    assert sm is not None
+    assert sm_pct is not None
+    assert abs(sm - 0.2) < 1e-12
+    assert abs(sm_pct - 20.0) < 1e-12
 
 
 def test_build_dynamics_foundation_result():
@@ -26,6 +28,7 @@ def test_build_dynamics_foundation_result():
         mass_properties=MassProperties(mass_kg=12.5, x_cg_m=0.72),
         source_run_dir="data/runs/example",
     )
-    assert result.stability_metrics.static_margin == 0.2
+    assert result.stability_metrics.static_margin is not None
+    assert abs(result.stability_metrics.static_margin - 0.2) < 1e-12
     assert result.stability_metrics.cma_consistent_with_static_margin is True
     assert result.state_space_preparation.ready_for_eigenanalysis is False

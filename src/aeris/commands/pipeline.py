@@ -1,3 +1,14 @@
+"""
+Version command registration for the AERIS CLI.
+
+Responsibilities:
+    - Expose the version subcommand
+    - Report installed package version metadata
+
+Notes:
+    - Keep version reporting independent from domain command groups
+"""
+
 from __future__ import annotations
 
 from pathlib import Path

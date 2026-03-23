@@ -1,3 +1,14 @@
+"""
+Registry for geometry generator implementations.
+
+Provides:
+- decorator-based registration of generator classes
+- lookup and instantiation by generator ID
+- listing of available generators
+
+This registry decouples the framework layer from concrete generator implementations.
+"""
+
 from __future__ import annotations
 
 from typing import Dict, Type

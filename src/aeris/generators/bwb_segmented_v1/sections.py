@@ -1,3 +1,10 @@
+"""
+Section-level 3D geometry realization for bwb_segmented_v1.
+
+Builds spanwise section records from a deterministic planform result and a
+sampled set of twist/dihedral boundary values.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

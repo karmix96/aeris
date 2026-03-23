@@ -1,3 +1,14 @@
+"""
+Deterministic 2D planform generation for bwb_segmented_v1.
+
+This module converts an explicit sampled BWB design vector into a planform
+representation containing:
+- control-point geometry
+- spline/linear discretized leading and trailing edges
+- spanwise segmentation metadata
+- basic geometric summary metrics
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -6,7 +17,6 @@ import numpy as np
 from scipy.interpolate import CubicSpline
 
 from aeris.generators.bwb_segmented_v1.params import BWBDesignSample, BWBGeneratorConfig
-
 
 @dataclass(frozen=True)
 class PlanformResult:
@@ -175,6 +185,7 @@ def compute_le_curve(
 
 
 def _validate_controls(config: BWBGeneratorConfig) -> None:
+    """Validate control/discretization settings needed by planform generation."""
     ctrl = config.controls
 
     if ctrl.n_points < 4:
@@ -183,27 +194,22 @@ def _validate_controls(config: BWBGeneratorConfig) -> None:
         )
 
     if ctrl.n_spline_inboard < 2:
-        raise ValueError(
-            "controls.n_spline_inboard must be at least 2."
-        )
+        raise ValueError("controls.n_spline_inboard must be at least 2.")
 
     if ctrl.n_spline_outboard < 2:
-        raise ValueError(
-            "controls.n_spline_outboard must be at least 2."
-        )
+        raise ValueError("controls.n_spline_outboard must be at least 2.")
 
     if not (0.0 < ctrl.spline_split_ratio < 1.0):
         raise ValueError(
             f"controls.spline_split_ratio must be in (0, 1), got {ctrl.spline_split_ratio}."
         )
 
-
 def generate_bwb_planform_from_sample(
     sample: BWBDesignSample,
     config: BWBGeneratorConfig,
 ) -> PlanformResult:
-    _validate_controls(config)
 
+    _validate_controls(config)
     ctrl = config.controls
 
     c1 = sample.c1_m

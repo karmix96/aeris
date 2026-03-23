@@ -1,5 +1,5 @@
 from aeris.generators.bwb_segmented_v1.export import build_geometry_summary
-from tests.generators.test_export_summary_enriched import (
+from tests.generators.bwb_segmented_v1.test_export_summary_enriched import (
     make_aerosandbox_result,
     make_config,
     make_planform,

@@ -1,3 +1,14 @@
+"""
+Resolves geometry generator identity and constructs typed configuration objects.
+
+This module:
+- extracts generator selection from raw configuration
+- retrieves the corresponding generator from the registry
+- delegates configuration validation and construction to the generator
+
+Acts as the boundary between raw YAML input and typed generator logic.
+"""
+
 from __future__ import annotations
 
 from typing import Any

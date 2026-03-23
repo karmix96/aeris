@@ -1,3 +1,15 @@
+"""
+CLI commands for dataset generation and inspection.
+
+Responsibilities:
+    - Expose dataset-related user commands
+    - Validate basic CLI arguments
+    - Delegate sampling, generation, and inspection to dataset workflows
+
+Notes:
+    - This module should not implement sampling or geometry logic directly
+"""
+
 from __future__ import annotations
 
 import json

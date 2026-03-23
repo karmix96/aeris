@@ -1,3 +1,13 @@
+"""
+Registered GeometryGenerator implementation for the bwb_segmented_v1 family.
+
+This module adapts the framework-level GeometryGenerator contract to the
+concrete BWB segmented generator implementation by delegating to:
+- config construction and validation
+- design sampling
+- deterministic case generation
+"""
+
 from __future__ import annotations
 
 from pathlib import Path

@@ -1,3 +1,13 @@
+"""
+Artifact export helpers for bwb_segmented_v1 geometry cases.
+
+Writes structured JSON and CSV outputs describing:
+- control points
+- discretized planform sections
+- 3D section geometry
+- overall geometry summary
+"""
+
 from __future__ import annotations
 
 import csv

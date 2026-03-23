@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import typer
 
-from aeris.commands.aero import app as aero_app
+from aeris.commands.aero import aero_app
 from aeris.commands.dataset import dataset_app
+from aeris.commands.dynamics import dynamics_app
 from aeris.commands.geometry import geometry_app
 from aeris.commands.pipeline import pipeline_app
-from aeris.commands.version import register as register_version
-from aeris.commands.dynamics import app as dynamics_app
+from aeris.commands.version import version_app
 
 app = typer.Typer(help="AERIS command-line interface.")
 
@@ -18,12 +18,13 @@ def app_callback() -> None:
     pass
 
 
-register_version(app)
+app.add_typer(version_app, name="version")
 app.add_typer(geometry_app, name="geometry")
 app.add_typer(dataset_app, name="dataset")
 app.add_typer(pipeline_app, name="pipeline")
 app.add_typer(aero_app, name="aero")
 app.add_typer(dynamics_app, name="dynamics")
+
 
 def main() -> None:
     """CLI entrypoint."""

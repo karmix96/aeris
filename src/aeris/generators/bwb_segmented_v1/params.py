@@ -1,3 +1,12 @@
+"""
+Typed configuration and sampled design-variable models for bwb_segmented_v1.
+
+Defines:
+- immutable generator configuration dataclasses
+- immutable sampled design vectors
+- conversion from raw config dictionaries into typed configuration objects
+"""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
@@ -161,8 +170,8 @@ def build_bwb_generator_config(config: dict[str, Any]) -> BWBGeneratorConfig:
     return BWBGeneratorConfig(
         name=str(config.get("name", "wing_bwb")),
         generator=GeneratorConfig(
-            family=str(generator_cfg.get("family", "bwb_segmented")),
-            version=str(generator_cfg.get("version", "v1")),
+            family = str(_require(generator_cfg, "family")),
+            version = str(_require(generator_cfg, "version")),
             seed=None if generator_cfg.get("seed") is None else int(generator_cfg["seed"]),
         ),
         controls=ControlsConfig(

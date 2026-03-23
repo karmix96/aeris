@@ -1,3 +1,11 @@
+"""
+Quality-audit helpers for bwb_segmented_v1 geometry results.
+
+Unlike validation.py, this module supports richer post-generation auditing,
+including warnings, quality metrics, and smoothness-oriented checks that are
+useful for dataset QA and debugging.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -1,3 +1,13 @@
+"""
+Exports reconstruction artifacts for downstream external-geometry workflows.
+
+Currently writes:
+- OpenVSP-style section CSV metadata
+- XFOIL-compatible airfoil .dat files
+
+This module is aligned with the existing legacy reconstruction workflow.
+"""
+
 from __future__ import annotations
 
 import csv

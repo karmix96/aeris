@@ -1,3 +1,27 @@
+"""
+Module: config
+
+Purpose:
+    Load YAML configuration files safely.
+
+Responsibilities:
+    - Validate file existence and extension
+    - Parse YAML into dictionary
+    - Perform minimal structural validation
+
+Guarantees:
+    - Output is a dictionary
+    - Invalid files fail early
+
+Caveats:
+    - No schema validation
+    - No type enforcement
+
+Future Improvements:
+    - Add schema validation layer (Pydantic/dataclasses)
+    - Validate parameter bounds
+"""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -25,4 +49,8 @@ def load_yaml_config(config_path: str | Path) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise ValueError(f"Top-level config must be a mapping/dictionary: {path}")
 
-    return data
+    for key in data:
+        if not isinstance(key, str):
+            raise ValueError(f"Config keys must be strings: {path}")
+
+    return data  # ✅ THIS MUST EXIST

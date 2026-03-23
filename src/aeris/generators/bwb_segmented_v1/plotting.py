@@ -1,3 +1,10 @@
+"""
+Debug plotting utilities for bwb_segmented_v1 geometry cases.
+
+Produces human-readable visual summaries of generated planform and section
+distributions for inspection and troubleshooting.
+"""
+
 from __future__ import annotations
 
 from pathlib import Path

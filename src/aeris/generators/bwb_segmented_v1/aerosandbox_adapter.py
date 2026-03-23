@@ -1,3 +1,10 @@
+"""
+AeroSandbox conversion adapter for bwb_segmented_v1 geometry.
+
+Transforms section-level geometry into AeroSandbox Wing and Airplane objects
+and extracts derived wing metadata for downstream reporting and analysis.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -1,3 +1,11 @@
+"""
+Hard validation checks for bwb_segmented_v1 configuration and geometry outputs.
+
+These checks enforce conditions that should fail execution, such as invalid
+bounds, malformed arrays, non-finite values, non-positive chord lengths, and
+inconsistent geometry dimensions.
+"""
+
 from __future__ import annotations
 
 import math
@@ -167,6 +175,19 @@ def validate_planform_result(planform: PlanformResult) -> None:
     if not math.isfinite(planform.approx_aspect_ratio) or planform.approx_aspect_ratio <= 0.0:
         raise ValueError("approx_aspect_ratio must be finite and > 0")
 
+def validate_planform_controls(config: BWBGeneratorConfig) -> None:
+    ctrl = config.controls
+
+    if ctrl.n_points < 4:
+        raise ValueError(f"controls.n_points must be at least 4, got {ctrl.n_points}.")
+    if ctrl.n_spline_inboard < 2:
+        raise ValueError("controls.n_spline_inboard must be at least 2.")
+    if ctrl.n_spline_outboard < 2:
+        raise ValueError("controls.n_spline_outboard must be at least 2.")
+    if not (0.0 < ctrl.spline_split_ratio < 1.0):
+        raise ValueError(
+            f"controls.spline_split_ratio must be in (0, 1), got {ctrl.spline_split_ratio}."
+        )
 
 def validate_section_geometry(section_geometry: SectionGeometryResult) -> None:
     if len(section_geometry.sections) == 0:
@@ -220,3 +241,26 @@ def validate_section_geometry(section_geometry: SectionGeometryResult) -> None:
 
         if not record.airfoil_name.strip():
             raise ValueError("section airfoil_name must not be empty")
+
+def _validate_controls(config: BWBGeneratorConfig) -> None:
+    ctrl = config.controls
+
+    if ctrl.n_points < 4:
+        raise ValueError(
+            f"controls.n_points must be at least 4, got {ctrl.n_points}."
+        )
+
+    if ctrl.n_spline_inboard < 2:
+        raise ValueError(
+            "controls.n_spline_inboard must be at least 2."
+        )
+
+    if ctrl.n_spline_outboard < 2:
+        raise ValueError(
+            "controls.n_spline_outboard must be at least 2."
+        )
+
+    if not (0.0 < ctrl.spline_split_ratio < 1.0):
+        raise ValueError(
+            f"controls.spline_split_ratio must be in (0, 1), got {ctrl.spline_split_ratio}."
+        )

@@ -1,3 +1,15 @@
+"""
+Defines the abstract contract for all geometry generators.
+
+A geometry generator in AERIS must implement:
+- configuration construction from raw YAML input
+- sampling of explicit design vectors
+- deterministic geometry realization from a sample
+
+Pipelines and higher-level systems depend only on this interface,
+allowing multiple geometry families and implementations to coexist.
+"""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

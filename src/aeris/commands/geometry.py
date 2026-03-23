@@ -1,3 +1,16 @@
+"""
+CLI commands for geometry generation.
+
+Responsibilities:
+    - Expose user-facing geometry subcommands
+    - Validate basic CLI inputs
+    - Delegate execution to geometry workflows
+
+Notes:
+    - This module should remain thin
+    - No generator-specific geometry logic should live here
+"""
+
 from __future__ import annotations
 
 from pathlib import Path

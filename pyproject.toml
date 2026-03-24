@@ -51,3 +51,7 @@ select = ["E", "F", "I", "B"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+markers = [
+    "integration: marks integration tests",
+    "avl: marks tests that require AVL",
+]

@@ -1,3 +1,11 @@
+"""
+Inspection and quality checks for persisted AERIS datasets.
+
+This module reads an existing dataset folder, validates expected structure,
+checks metadata completeness and artifact-path integrity, and returns a compact
+summary suitable for CLI inspection and operator-facing QC.
+"""
+
 from __future__ import annotations
 
 import json
@@ -5,6 +13,8 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+
+from aeris.dataset.metadata import failure_fieldnames, metadata_fieldnames
 
 
 def _safe_float(value: Any) -> float | None:
@@ -39,24 +49,13 @@ def inspect_dataset(dataset_root: Path) -> dict[str, Any]:
 
     geometry_dirs = sorted([p for p in geometry_dir.iterdir() if p.is_dir()])
 
-    required_columns = [
-        "geometry_id",
-        "status",
-        "sampler_id",
-        "sampler_seed",
-        "full_span_m",
-        "approx_area_m2",
-        "approx_aspect_ratio_planform",
-        "aspect_ratio_aerosandbox",
-        "num_sections",
-        "summary_path",
-        "control_points_path",
-        "planform_sections_path",
-        "section_3d_path",
-        "plot_path",
-    ]
-
+    required_columns = metadata_fieldnames()
     missing_columns = [c for c in required_columns if c not in metadata.columns]
+
+    expected_failure_columns = failure_fieldnames()
+    missing_failure_columns = [
+        c for c in expected_failure_columns if not failures.empty and c not in failures.columns
+    ]
 
     duplicate_geometry_ids = []
     if "geometry_id" in metadata.columns:
@@ -90,22 +89,42 @@ def inspect_dataset(dataset_root: Path) -> dict[str, Any]:
                     {"geometry_id": geometry_id, "kind": "plot_path", "path": str(plot_path)}
                 )
 
+    metadata_rows = int(len(metadata))
+    failure_rows = int(len(failures))
+    geometry_dir_count = int(len(geometry_dirs))
+
+    requested_n = manifest.get("requested_n")
+    attempted_n = manifest.get("attempted_n")
+    succeeded_n = manifest.get("succeeded_n")
+    failed_n = manifest.get("failed_n")
+
+    count_consistency = {
+        "manifest_succeeded_matches_metadata_rows": succeeded_n == metadata_rows,
+        "manifest_failed_matches_failure_rows": failed_n == failure_rows,
+        "manifest_attempted_matches_success_plus_failure": attempted_n == (metadata_rows + failure_rows),
+        "manifest_requested_matches_attempted": requested_n == attempted_n,
+        "geometry_dir_count_matches_metadata_rows": geometry_dir_count == metadata_rows,
+    }
+
     summary = {
         "dataset_root": str(dataset_root),
         "manifest_status": manifest.get("status"),
-        "requested_n": manifest.get("requested_n"),
-        "attempted_n": manifest.get("attempted_n"),
-        "succeeded_n": manifest.get("succeeded_n"),
-        "failed_n": manifest.get("failed_n"),
+        "requested_n": requested_n,
+        "attempted_n": attempted_n,
+        "succeeded_n": succeeded_n,
+        "failed_n": failed_n,
         "sampler_id": manifest.get("sampler_id"),
         "sampler_seed": manifest.get("sampler_seed"),
-        "metadata_rows": int(len(metadata)),
-        "failure_rows": int(len(failures)),
-        "geometry_dir_count": int(len(geometry_dirs)),
+        "metadata_rows": metadata_rows,
+        "failure_rows": failure_rows,
+        "geometry_dir_count": geometry_dir_count,
         "missing_columns": missing_columns,
+        "missing_failure_columns": missing_failure_columns,
         "duplicate_geometry_ids": duplicate_geometry_ids,
         "missing_file_count": len(missing_files),
         "missing_files_preview": missing_files[:20],
+        "count_consistency": count_consistency,
+        "all_count_checks_pass": all(count_consistency.values()),
         "metrics": {
             "full_span_m": {
                 "min": _safe_float(metadata["full_span_m"].min()) if "full_span_m" in metadata else None,

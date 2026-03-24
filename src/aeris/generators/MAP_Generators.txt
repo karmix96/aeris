@@ -1,0 +1,37 @@
+GENERATORS FOLDER — IMPLEMENTATION LAYER
+
+Purpose:
+Actual geometry generation logic (engineering core).
+
+Key Flow:
+config → sample → planform → sections → validation → export
+
+Key Modules:
+- params.py → config
+- sampling.py → stochastic design sampling
+- planform.py → 2D geometry
+- sections.py → 3D geometry
+- validation.py → hard checks
+- validators.py → soft checks
+- services.py → orchestration
+- export.py → outputs
+- aerosandbox_adapter.py → ASB conversion
+- generator.py → interface binding
+
+Key Concept:
+sample = stochastic
+geometry = deterministic
+
+CLI Trigger:
+aeris geometry generate
+
+Outputs:
+- geometry_summary.json
+- control_points.csv
+- planform_sections.csv
+- section_3d.csv
+
+TODO:
+- multi-geometry families
+- better constraints
+- validation hardening

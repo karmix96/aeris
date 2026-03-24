@@ -1,0 +1,305 @@
+AERIS PIPELINE — OVERVIEW
+========================
+
+Folder:
+src/aeris/pipeline/
+
+Files:
+- geometry_run.py
+- smoke.py
+
+Purpose:
+--------
+The pipeline layer is the orchestration layer of AERIS.
+
+It connects:
+CLI → framework → generators → artifacts
+
+It is NOT:
+- business logic
+- geometry logic
+- aero logic
+
+It IS:
+- execution coordinator
+- reproducibility enforcer
+- manifest/logger manager
+
+Think of it as:
+“the production line controller of the factory”
+
+
+--------------------------------------------------
+CORE RESPONSIBILITIES
+--------------------------------------------------
+
+1) Load config
+2) Create run folder (reproducibility)
+3) Setup logging
+4) Resolve generator (via registry)
+5) Sample design (controlled randomness)
+6) Run deterministic generation
+7) Store artifacts
+8) Write manifest (traceability)
+9) Handle failures cleanly
+
+
+--------------------------------------------------
+FILES BREAKDOWN
+--------------------------------------------------
+
+1) geometry_run.py
+------------------
+
+Main production pipeline for geometry generation.
+
+ENTRYPOINT:
+run_geometry_generation(config_path)
+
+FLOW:
+------
+config_path
+  ↓
+load_yaml_config()
+  ↓
+create_run_folder()
+  ↓
+setup_logger()
+  ↓
+resolve_generator_and_config()
+  ↓
+get_geometry_generator()
+  ↓
+generator.sample_one()
+  ↓
+generator.run_full_case()
+  ↓
+generator.summarize_case()
+  ↓
+write manifest.json
+
+IMPORTANT CONCEPT:
+------------------
+Sampling = stochastic (seeded)
+Geometry = deterministic
+
+This separation is CRITICAL.
+
+
+HELPER FUNCTIONS:
+----------------
+- _utc_now_iso()
+  → timestamp generation
+
+- _to_jsonable()
+  → converts dataclasses, numpy, Path → JSON-safe
+
+- _write_manifest()
+  → writes manifest.json
+
+- _mark_manifest_failed()
+  → standardized failure structure
+
+
+OUTPUT:
+-------
+Run folder:
+data/runs/<run_id>/
+
+Contains:
+- input_config.yaml
+- logs/app.log
+- artifacts/geometry/*
+- manifest.json
+
+
+MANIFEST STRUCTURE:
+-------------------
+{
+  run_id
+  phase
+  status
+  timestamps
+  platform
+  python_version
+  geometry: {
+    generator info
+    sample
+    summary
+  }
+}
+
+
+--------------------------------------------------
+
+2) smoke.py
+-----------
+
+Minimal validation pipeline.
+
+Purpose:
+--------
+Quick sanity check of full system without full dataset or heavy runs.
+
+FLOW:
+------
+Same as geometry_run BUT:
+- simpler manifest
+- minimal outputs
+- no extended metadata
+- used for testing/debugging
+
+
+ENTRYPOINT:
+run_smoke_pipeline(config_path)
+
+
+KEY DIFFERENCE FROM geometry_run:
+--------------------------------
+geometry_run → production-grade
+smoke        → lightweight validation
+
+
+--------------------------------------------------
+IMPORTANT DESIGN PATTERNS
+--------------------------------------------------
+
+1) PIPELINE ≠ LOGIC
+
+Pipeline never:
+- computes geometry
+- defines sampling rules
+- performs validation logic
+
+It delegates EVERYTHING.
+
+
+2) REGISTRY-BASED RESOLUTION
+
+No hardcoded generators.
+
+generator_id → registry → implementation
+
+
+3) REPRODUCIBILITY FIRST
+
+Every run:
+- has unique run_id
+- stores input config
+- logs everything
+- produces manifest
+
+
+4) MANIFEST AS SOURCE OF TRUTH
+
+Everything important is written to manifest.json:
+- inputs
+- outputs
+- errors
+- metadata
+
+This is future ML / audit backbone.
+
+
+--------------------------------------------------
+IMPORTANT FUNCTIONS / OBJECTS
+--------------------------------------------------
+
+From common:
+- load_yaml_config
+- setup_logger
+- create_run_folder
+
+From geometry:
+- resolve_generator_and_config
+- get_geometry_generator
+
+From generator:
+- sample_one()
+- run_full_case()
+- summarize_case()
+
+
+--------------------------------------------------
+CLI USAGE (CHEAT SHEET)
+--------------------------------------------------
+
+Run geometry:
+-------------
+aeris geometry generate -c configs/geometry/baseline.yaml
+
+Run smoke pipeline:
+-------------------
+aeris pipeline smoke -c configs/smoke/dev.yaml
+
+
+--------------------------------------------------
+KNOWN LIMITATIONS (CURRENT)
+--------------------------------------------------
+
+- Pipeline still depends on generator_config.generator.*
+- Manifest structure not yet standardized across all pipelines
+- No shared pipeline utilities yet (duplication between geometry_run and smoke)
+- No config validation phase separation in manifest
+- No dataset/aero pipeline unification yet
+
+
+--------------------------------------------------
+TODO (FUTURE — DO NOT RUSH)
+--------------------------------------------------
+
+HIGH PRIORITY:
+--------------
+- Define minimal generator metadata interface
+- Standardize manifest schema across all pipelines
+- Reduce dependence on generator-specific fields
+- Add config-validation phase reporting in manifest
+
+MEDIUM:
+-------
+- Introduce shared pipeline utilities ONLY if duplication grows
+- Add richer environment capture (OS, CPU, etc.)
+- Standardize success/failure handling across all pipelines
+
+LOW:
+----
+- Structured logging (JSON logs)
+- Return typed pipeline result (not just int)
+- Pipeline-level reporting utilities
+
+
+--------------------------------------------------
+MENTAL MODEL
+--------------------------------------------------
+
+CLI
+ ↓
+COMMAND
+ ↓
+PIPELINE (THIS LAYER)
+ ↓
+FRAMEWORK (registry, resolver)
+ ↓
+GENERATOR (implementation)
+ ↓
+SERVICES (planform, sections, export, etc.)
+ ↓
+ARTIFACTS + MANIFEST
+
+
+--------------------------------------------------
+BOTTOM LINE
+--------------------------------------------------
+
+Pipeline = glue + discipline
+
+If this layer breaks:
+→ everything becomes scripts again
+
+If this layer stays clean:
+→ system scales to:
+   - datasets
+   - aero
+   - ML
+   - optimization
+   - cloud execution

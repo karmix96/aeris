@@ -1,3 +1,11 @@
+"""
+Dataset sampler registry for AERIS.
+
+This module stores the mapping from sampler ids to sampler implementation
+classes, supports registration at import time, and provides lookup/listing
+helpers used by dataset orchestration and config resolution.
+"""
+
 from __future__ import annotations
 
 from typing import Dict, Type

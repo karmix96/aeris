@@ -1,0 +1,135 @@
+AERIS DATASET TEST COVERAGE SUMMARY
+Checkpoint: Dataset Stabilization
+
+--------------------------------------------------
+1. WHAT IS CURRENTLY TESTED
+--------------------------------------------------
+
+A. dataset_run.py (pipeline behavior)
+
+✔ Happy path:
+    - full dataset generation succeeds
+    - metadata written
+    - manifest updated correctly
+
+✔ Partial success:
+    - some cases fail
+    - failures recorded
+    - manifest status = partial_success
+
+✔ Failure behavior:
+    - sampler returns wrong number of samples
+    - pipeline does NOT crash
+    - manifest status = failed
+    - return code = 1
+
+✔ Dataset naming validation:
+    - rejects:
+        "", ".", "..", paths, invalid separators
+
+--------------------------------------------------
+B. IO LAYER (io.py)
+
+✔ CSV handling:
+    - header written once
+    - append is safe
+    - rejects:
+        - missing keys
+        - extra keys
+
+✔ Path handling:
+    - dataset folder structure created correctly
+    - collisions rejected
+
+--------------------------------------------------
+C. METADATA LAYER (metadata.py)
+
+✔ sample_to_dict:
+    - supports:
+        - dataclass
+        - to_dict()
+        - dict
+    - rejects unsupported types
+
+✔ metadata row:
+    - schema matches expected fields
+    - handles missing aero results
+    - validates twist/dihedral arrays
+
+✔ failure row:
+    - schema correctness verified
+
+--------------------------------------------------
+D. INSPECT LAYER (inspect.py)
+
+✔ detects:
+    - missing metadata columns
+    - duplicate geometry IDs
+    - missing artifact files
+    - manifest mismatch
+    - missing dataset root
+
+--------------------------------------------------
+E. SAMPLING LAYER
+
+✔ resolver:
+    - default behavior
+    - config override
+    - CLI override priority
+    - rejects invalid config structure
+    - rejects unknown sampler
+
+✔ registry:
+    - lists samplers
+    - rejects duplicates
+    - rejects missing SAMPLER_ID
+
+✔ LHS sampler:
+    - matrix shape correctness
+    - reproducibility (same seed)
+    - bounds respected
+    - invalid inputs rejected
+
+✔ random sampler:
+    - reproducibility (same seed)
+    - bounds respected
+    - invalid n_samples rejected
+
+✔ interface:
+    - samplers reject wrong config types
+
+--------------------------------------------------
+2. WHAT THIS MEANS (REALISTICALLY)
+--------------------------------------------------
+
+✔ High confidence in:
+    - dataset generation correctness
+    - reproducibility
+    - failure handling
+    - file integrity
+
+✔ Safe for:
+    - generating datasets of 10–1000 samples
+    - feeding ML pipelines
+    - debugging geometry space
+
+⚠ Not yet covering:
+    - performance scaling (large datasets)
+    - parallel execution
+    - multi-generator scenarios
+    - multi-fidelity coupling
+
+--------------------------------------------------
+3. IMPORTANT INSIGHT
+--------------------------------------------------
+
+Tests now reflect REAL system behavior:
+- real config used
+- real generator contract respected
+- real pipeline semantics verified
+
+This is not “toy testing” anymore.
+
+--------------------------------------------------
+END OF SUMMARY
+--------------------------------------------------

@@ -1,0 +1,32 @@
+GEOMETRY FOLDER — FRAMEWORK LAYER
+
+Purpose:
+Defines how geometry generators integrate into AERIS.
+
+Key Responsibilities:
+- Define generator interface
+- Register generators
+- Resolve config → generator
+
+Core Interface:
+- build_config()
+- sample_one()
+- run_full_case()
+- summarize_case()
+
+Key Modules:
+- base.py → interface
+- registry.py → generator lookup
+- config_resolver.py → config → generator
+
+Workflow:
+pipeline → resolve → registry → generator
+
+Key Concept:
+geometry/ = rules
+generators/ = implementations
+
+TODO:
+- multi-generator support
+- plugin system
+- validation improvements

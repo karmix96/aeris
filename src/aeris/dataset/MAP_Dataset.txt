@@ -1,0 +1,175 @@
+AERIS DATASET DOMAIN REPORT
+Checkpoint: Dataset Layer Stabilization
+Status: TESTED, FUNCTIONALLY CORRECT, ARCHITECTURALLY SOUND (WITH LIMITATIONS)
+
+--------------------------------------------------
+1. PURPOSE OF DATASET DOMAIN
+--------------------------------------------------
+
+The dataset domain is responsible for transforming:
+
+    generator + sampler + config
+        ↓
+    reproducible batch of geometry realizations
+        ↓
+    structured dataset artifacts (CSV, JSON, geometry folders)
+
+It acts as the first "production pipeline" of AERIS.
+
+Core responsibilities:
+- resolve generator + config
+- resolve dataset sampler (LHS / random)
+- generate explicit design samples (stochastic but reproducible)
+- run deterministic geometry realization per sample
+- capture outputs, metadata, failures
+- maintain dataset-level manifest and logs
+
+--------------------------------------------------
+2. ARCHITECTURE OVERVIEW
+--------------------------------------------------
+
+CLI
+  ↓
+commands/dataset.py
+  ↓
+dataset/dataset_run.py  ← orchestration core
+  ↓
+geometry + sampling + IO + metadata
+
+Key modules:
+
+- dataset_run.py     → pipeline orchestration
+- io.py              → file writing (CSV/JSON/path structure)
+- metadata.py        → metadata row + failure row construction
+- inspect.py         → dataset validation / integrity checks
+- sampling/
+    - base.py        → sampler interface
+    - registry.py    → sampler registry
+    - resolver.py    → config → sampler resolution
+    - samplers/
+        - lhs_v1.py
+        - random_v1.py
+
+--------------------------------------------------
+3. DATA FLOW (MENTAL MODEL)
+--------------------------------------------------
+
+config.yaml
+    ↓
+resolve_generator_and_config()
+    ↓
+resolve_dataset_sampler()
+    ↓
+sampler.sample()
+    ↓
+for each sample:
+    generator.run_full_case()
+    ↓
+    metadata row OR failure row
+    ↓
+update manifest
+
+Outputs:
+- geometry/geom_XXXXX/
+- metadata.csv
+- failures.csv
+- dataset_manifest.json
+- logs/dataset.log
+- copied config + resolved config JSON
+
+--------------------------------------------------
+4. WHAT WORKS WELL
+--------------------------------------------------
+
+✔ Clear separation:
+    - sampling (stochastic)
+    - realization (deterministic)
+
+✔ Reproducibility:
+    - seed-controlled sampling
+    - deterministic generator execution
+
+✔ Failure isolation:
+    - per-case failures do not stop dataset generation
+    - failures.csv + manifest tracking
+
+✔ Manifest correctness:
+    - running → success / partial_success / failed
+    - counts tracked: requested / attempted / succeeded / failed
+
+✔ IO safety:
+    - CSV schema enforcement
+    - idempotent header writing
+    - dataset path collision protection
+
+✔ Sampling layer:
+    - registry-based extensibility
+    - LHS + random implemented cleanly
+    - bounds respected
+    - reproducibility verified
+
+✔ Validation:
+    - inspect.py detects:
+        - missing files
+        - duplicate IDs
+        - metadata inconsistencies
+        - manifest mismatches
+
+--------------------------------------------------
+5. ARCHITECTURAL LIMITATIONS (KNOWN, ACCEPTED)
+--------------------------------------------------
+
+⚠ Sampling is not truly generic
+    - hard-coupled to BWBGeneratorConfig
+    - variable mapping duplicated in samplers
+
+⚠ Manifest structure is generator-aware
+    - contains controls/outputs fields from BWB config
+
+⚠ Sampling-variable schema is not centralized
+    - LHS and random duplicate ordering logic
+
+⚠ Side-effect import for sampler registration
+    - acceptable but not elegant
+
+⚠ dataset_run still owns too much orchestration logic
+    - future extraction to service layer likely
+
+--------------------------------------------------
+6. DESIGN DECISIONS (IMPORTANT)
+--------------------------------------------------
+
+✔ DO NOT break:
+    sample_one() vs run_full_case() separation
+
+✔ DO NOT over-generalize yet:
+    system is intentionally BWB-first
+
+✔ DO NOT move logic prematurely:
+    wait for second generator family before abstraction
+
+✔ FAIL EARLY:
+    - invalid sampler IDs now validated at resolver level
+
+✔ PIPELINE CONTRACT:
+    - return code 0 = success/partial_success
+    - return code 1 = pipeline-level failure
+
+--------------------------------------------------
+7. CURRENT STATE
+--------------------------------------------------
+
+- Dataset pipeline: STABLE
+- Sampling layer: FUNCTIONALLY CORRECT
+- IO + metadata: HARDENED
+- Inspect tools: RELIABLE
+- Tests: PASSING
+
+This is a solid foundation for:
+- aero dataset generation
+- ML training datasets
+- multi-fidelity pipelines
+
+--------------------------------------------------
+END OF REPORT
+--------------------------------------------------

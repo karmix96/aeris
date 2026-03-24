@@ -1,0 +1,37 @@
+COMMANDS FOLDER — CLI LAYER
+
+Purpose:
+User interface of AERIS. Converts CLI commands into pipeline execution.
+
+Key Responsibilities:
+- Parse CLI input
+- Validate arguments
+- Call pipelines/services
+
+Key Modules:
+- geometry.py
+- dataset.py
+- aero.py
+- dynamics.py
+- pipeline.py
+- version.py
+
+Workflow:
+CLI → commands → pipeline/services
+
+CLI Cheat Sheet:
+aeris version
+aeris geometry generate --config <file>
+aeris dataset generate --config <file>
+aeris dataset inspect --dataset <path>
+aeris aero run
+aeris dynamics
+
+Key Principles:
+- Commands must stay thin
+- No business logic here
+
+TODO:
+- list-generators / solvers commands
+- config validation command
+- unified JSON output

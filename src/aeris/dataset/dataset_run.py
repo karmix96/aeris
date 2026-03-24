@@ -1,3 +1,17 @@
+"""
+Dataset generation orchestration for AERIS.
+
+This module resolves a geometry generator and dataset sampler from config,
+generates an explicit batch of design samples, realizes each sample through
+the generator's deterministic full-case path, and persists dataset-level
+artifacts such as manifest, metadata, failures, copied config, and logs.
+
+Design intent:
+- sampling is stochastic but reproducible
+- geometry realization is deterministic from explicit sample
+- per-case failures are isolated and recorded without aborting the whole dataset
+"""
+
 from __future__ import annotations
 
 import platform
@@ -42,6 +56,19 @@ def _config_to_dict(config: Any) -> dict[str, Any]:
         return dict(config)
     raise TypeError(f"Unsupported config type: {type(config)}")
 
+def _validate_dataset_name(dataset_name: str) -> None:
+    if dataset_name == "":
+        raise ValueError("dataset_name must not be empty.")
+
+    forbidden = {"/", "\\", "\0"}
+    bad_chars = sorted(ch for ch in forbidden if ch in dataset_name)
+    if bad_chars:
+        raise ValueError(
+            f"dataset_name contains forbidden characters {bad_chars}: {dataset_name!r}"
+        )
+
+    if dataset_name in {".", ".."}:
+        raise ValueError(f"dataset_name is not valid: {dataset_name!r}")
 
 def _default_dataset_name(
     config_path: Path,
@@ -122,13 +149,17 @@ def _resolve_dataset_request(
         sampler_seed_override=sampler_seed,
     )
 
-    effective_dataset_name = dataset_name or _default_dataset_name(
-        resolved_config_path,
-        effective_config,
-        n_samples,
-        sampler_id,
-        resolved_sampler_seed,
-    )
+    if dataset_name is None:
+        effective_dataset_name = _default_dataset_name(
+            resolved_config_path,
+            effective_config,
+            n_samples,
+            sampler_id,
+            resolved_sampler_seed,
+        )
+    else:
+        _validate_dataset_name(dataset_name)
+        effective_dataset_name = dataset_name
 
     return {
         "resolved_config_path": resolved_config_path,
@@ -248,6 +279,13 @@ def run_dataset_generation(
         )
         logger.info("Generated %d batch design samples", len(samples))
 
+        if len(samples) != n_samples:
+            raise ValueError(
+                "Dataset sampler returned the wrong number of samples: "
+                f"expected {n_samples}, got {len(samples)} "
+                f"(sampler_id={sampler_id})"
+            )
+
         for case_index, sample in enumerate(samples, start=1):
             geometry_id = f"geom_{case_index:05d}"
             case_geometry_dir = dataset_paths.geometry_dir / geometry_id
@@ -271,6 +309,7 @@ def run_dataset_generation(
                     sampler_id=sampler_id,
                     sampler_seed=resolved_sampler_seed,
                     realization_seed=None,
+                    generator_id=generator_id,
                     config=effective_config,
                     result=result,
                     geometry_dir=case_geometry_dir,
@@ -285,9 +324,9 @@ def run_dataset_generation(
                 logger.info(
                     "Success %s | span=%.6f area=%.6f AR_planform=%.6f",
                     geometry_id,
-                    result.planform.full_span_m,
-                    result.planform.approx_area_m2,
-                    result.planform.approx_aspect_ratio,
+                    row["full_span_m"],
+                    row["approx_area_m2"],
+                    row["approx_aspect_ratio_planform"],
                 )
 
             except Exception as exc:
@@ -298,6 +337,7 @@ def run_dataset_generation(
                     sampler_id=sampler_id,
                     sampler_seed=resolved_sampler_seed,
                     realization_seed=None,
+                    generator_id=generator_id,
                     config=effective_config,
                     exc=exc,
                 )
@@ -312,7 +352,11 @@ def run_dataset_generation(
 
             write_json(dataset_paths.manifest_path, manifest)
 
-        manifest["status"] = "success"
+        manifest["status"] = (
+            "success"
+            if manifest["failed_n"] == 0
+            else "partial_success"
+        )
         manifest["completed_at_utc"] = _utc_now_iso()
         write_json(dataset_paths.manifest_path, manifest)
 

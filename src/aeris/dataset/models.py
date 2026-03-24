@@ -1,3 +1,10 @@
+"""
+Small immutable models for dataset orchestration.
+
+These dataclasses provide typed containers for dataset filesystem layout and,
+optionally, run-level counters used by orchestration or reporting layers.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

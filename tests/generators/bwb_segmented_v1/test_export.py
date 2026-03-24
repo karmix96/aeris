@@ -89,3 +89,4 @@ def test_export_geometry_summary_writes_json(config, planform, section_geometry,
     assert "controls" in payload
     assert "metrics" in payload
     assert "reference_conventions" in payload
+

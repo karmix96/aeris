@@ -1,3 +1,11 @@
+"""
+Abstract base contract for dataset samplers.
+
+A dataset sampler receives a resolved generator config, the requested number of
+samples, and an optional seed, then returns explicit design samples ready to be
+passed into the generator's deterministic realization path.
+"""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -5,6 +13,8 @@ from typing import Any
 
 
 class DatasetSampler(ABC):
+    """Abstract interface for dataset-sampling implementations."""
+
     @property
     @abstractmethod
     def sampler_id(self) -> str:

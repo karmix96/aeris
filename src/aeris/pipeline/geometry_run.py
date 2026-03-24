@@ -1,10 +1,25 @@
+"""
+Pipeline runner for single-case geometry generation.
+
+This module coordinates the end-to-end geometry workflow for one config-driven
+run:
+- load configuration
+- create a reproducible run folder
+- resolve the geometry generator
+- sample one explicit design vector
+- generate one deterministic geometry case
+- persist logs, artifacts, and manifest metadata
+
+It acts as the orchestration boundary between CLI commands and generator
+implementations.
+"""
+
 from __future__ import annotations
 
 import json
 import platform
 import shutil
 import sys
-import traceback
 from dataclasses import asdict, is_dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -20,19 +35,14 @@ from aeris.geometry.registry import get_geometry_generator
 
 
 def _utc_now_iso() -> str:
-    """Return the current UTC timestamp as an ISO-8601 string."""
+    """Return the current UTC timestamp in ISO-8601 format."""
     return datetime.now(UTC).isoformat()
 
 
 def _to_jsonable(value: Any) -> Any:
-    """
-    Convert supported Python objects into JSON-serializable structures.
-
-    This is mainly used so manifests can safely store dataclass-based
-    samples/config fragments without exploding at write time.
-    """
+    """Convert common Python/project values into JSON-serializable structures."""
     if is_dataclass(value):
-        return {k: _to_jsonable(v) for k, v in asdict(value).items()}
+        return _to_jsonable(asdict(value))
 
     if isinstance(value, dict):
         return {str(k): _to_jsonable(v) for k, v in value.items()}
@@ -49,13 +59,23 @@ def _to_jsonable(value: Any) -> Any:
     return value
 
 
-def write_manifest(manifest_path: Path, payload: dict[str, Any]) -> None:
-    """Write a manifest JSON file to disk."""
-    manifest_path.write_text(
-        json.dumps(_to_jsonable(payload), indent=2),
-        encoding="utf-8",
-    )
+def _write_manifest(manifest_path: Path, manifest: dict[str, Any]) -> None:
+    """Write the run manifest JSON to disk."""
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
+def _mark_manifest_failed(
+    manifest: dict[str, Any],
+    *,
+    exc: Exception,
+) -> None:
+    """Mark a manifest as failed and attach structured error information."""
+    manifest["status"] = "failed"
+    manifest["completed_at_utc"] = _utc_now_iso()
+    manifest["error"] = {
+        "type": type(exc).__name__,
+        "message": str(exc),
+    }
 
 def run_geometry_generation(config_path: str | Path) -> int:
     """
@@ -92,7 +112,7 @@ def run_geometry_generation(config_path: str | Path) -> int:
         "geometry": None,
     }
 
-    write_manifest(manifest_path, manifest)
+    _write_manifest(manifest_path, manifest)
 
     try:
         logger.info("Starting geometry generation")
@@ -126,49 +146,29 @@ def run_geometry_generation(config_path: str | Path) -> int:
             config=generator_config,
             output_dir=geometry_dir,
         )
+        case_summary = generator.summarize_case(case_result)
         logger.info("Geometry case generated successfully")
 
         manifest["geometry"] = {
-            "name": generator_config.name,
-            "generator_family": generator_config.generator.family,
-            "generator_version": generator_config.generator.version,
-            "generator_id": generator_id,
-            "design_sampling_seed": design_sampling_seed,
-            "geometry_deterministic": True,
-            "design_sample": _to_jsonable(design_sample),
-            "num_sections": case_result.planform.num_sections,
-            "summary_path": str(case_result.artifact_paths.summary_path),
-            "control_points_path": str(case_result.artifact_paths.control_points_path),
-            "planform_sections_path": str(case_result.artifact_paths.planform_sections_path),
-            "section_3d_path": str(case_result.artifact_paths.section_3d_path),
-            "plot_path": (
-                None
-                if case_result.artifact_paths.plot_path is None
-                else str(case_result.artifact_paths.plot_path)
-            ),
-            "aspect_ratio_aerosandbox": (
-                None
-                if case_result.aerosandbox_result is None
-                else case_result.aerosandbox_result.aspect_ratio
-            ),
-        }
+        "name": getattr(generator_config, "name", None),
+        "generator_family": getattr(getattr(generator_config, "generator", None), "family", None),
+        "generator_version": getattr(getattr(generator_config, "generator", None), "version", None),
+        "generator_id": generator_id,
+        "design_sampling_seed": design_sampling_seed,
+        "geometry_deterministic": True,
+        "design_sample": _to_jsonable(design_sample),
+        "case_summary": _to_jsonable(case_summary),
+        }   
         manifest["status"] = "success"
         manifest["completed_at_utc"] = _utc_now_iso()
 
-        write_manifest(manifest_path, manifest)
+        _write_manifest(manifest_path, manifest)
 
         logger.info("Geometry generation completed successfully")
         return 0
 
     except Exception as exc:
-        manifest["status"] = "failed"
-        manifest["completed_at_utc"] = _utc_now_iso()
-        manifest["error"] = {
-            "type": type(exc).__name__,
-            "message": str(exc),
-            "traceback": traceback.format_exc(),
-        }
-
-        write_manifest(manifest_path, manifest)
-        logger.exception("Geometry generation failed")
+        logger.exception("Geometry run failed.")
+        _mark_manifest_failed(manifest, exc=exc)
+        _write_manifest(manifest_path, manifest)
         return 1

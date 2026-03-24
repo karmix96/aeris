@@ -1,3 +1,11 @@
+"""
+Latin hypercube dataset sampler for the current BWB segmented generator.
+
+This module generates reproducible Latin hypercube samples over the active
+BWB design-variable bounds and converts sampled rows into explicit
+BWBDesignSample objects for deterministic geometry realization.
+"""
+
 from __future__ import annotations
 
 from dataclasses import asdict
@@ -8,6 +16,8 @@ import numpy as np
 from aeris.dataset.sampling.base import DatasetSampler
 from aeris.dataset.sampling.registry import register_dataset_sampler
 from aeris.generators.bwb_segmented_v1.params import BWBDesignSample, BWBGeneratorConfig
+
+_BWB_SAMPLE_DIM = 17
 
 
 def _lhs_unit(n_samples: int, n_dim: int, rng: np.random.Generator) -> np.ndarray:
@@ -27,14 +37,12 @@ def _lhs_unit(n_samples: int, n_dim: int, rng: np.random.Generator) -> np.ndarra
 
 
 def _scale_column(unit_values: np.ndarray, min_value: float, max_value: float) -> np.ndarray:
+    if max_value < min_value:
+        raise ValueError(f"Invalid bounds: min_value={min_value}, max_value={max_value}")
     return min_value + unit_values * (max_value - min_value)
 
 
-def build_lhs_design_matrix(
-    config: BWBGeneratorConfig,
-    n_samples: int,
-    rng: np.random.Generator,
-) -> np.ndarray:
+def _bwb_bounds(config: BWBGeneratorConfig) -> list[tuple[float, float]]:
     pb = config.planform_bounds
     sb = config.section_bounds
 
@@ -58,6 +66,20 @@ def build_lhs_design_matrix(
         (sb.dihedral_b3_deg.min, sb.dihedral_b3_deg.max),
     ]
 
+    if len(bounds) != _BWB_SAMPLE_DIM:
+        raise ValueError(
+            f"BWB bounds definition mismatch: expected {_BWB_SAMPLE_DIM} variables, got {len(bounds)}"
+        )
+
+    return bounds
+
+
+def build_lhs_design_matrix(
+    config: BWBGeneratorConfig,
+    n_samples: int,
+    rng: np.random.Generator,
+) -> np.ndarray:
+    bounds = _bwb_bounds(config)
     unit = _lhs_unit(n_samples=n_samples, n_dim=len(bounds), rng=rng)
     scaled = np.empty_like(unit)
 
@@ -68,8 +90,8 @@ def build_lhs_design_matrix(
 
 
 def lhs_matrix_to_samples(matrix: np.ndarray) -> list[BWBDesignSample]:
-    if matrix.ndim != 2 or matrix.shape[1] != 17:
-        raise ValueError(f"Expected matrix shape (n, 17), got {matrix.shape}")
+    if matrix.ndim != 2 or matrix.shape[1] != _BWB_SAMPLE_DIM:
+        raise ValueError(f"Expected matrix shape (n, {_BWB_SAMPLE_DIM}), got {matrix.shape}")
 
     samples: list[BWBDesignSample] = []
     for row in matrix:
@@ -114,6 +136,8 @@ def sample_to_flat_dict(sample: BWBDesignSample) -> dict[str, Any]:
 
 @register_dataset_sampler
 class LhsV1Sampler(DatasetSampler):
+    """Latin hypercube sampler for the current BWB segmented generator."""
+
     SAMPLER_ID = "lhs_v1"
 
     @property

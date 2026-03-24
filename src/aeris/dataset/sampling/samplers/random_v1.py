@@ -1,3 +1,11 @@
+"""
+Uniform-random dataset sampler for the current BWB segmented generator.
+
+This module generates reproducible independent random samples over the active
+BWB design-variable bounds and converts them into explicit BWBDesignSample
+objects for deterministic geometry realization.
+"""
+
 from __future__ import annotations
 
 from typing import Any
@@ -9,11 +17,24 @@ from aeris.dataset.sampling.registry import register_dataset_sampler
 from aeris.generators.bwb_segmented_v1.params import BWBDesignSample, BWBGeneratorConfig
 
 
+def _uniform_between(
+    rng: np.random.Generator,
+    min_value: float,
+    max_value: float,
+) -> float:
+    if max_value < min_value:
+        raise ValueError(f"Invalid bounds: min_value={min_value}, max_value={max_value}")
+    return float(rng.uniform(min_value, max_value))
+
+
 def generate_random_samples(
     config: BWBGeneratorConfig,
     n_samples: int,
     sampler_seed: int | None = None,
 ) -> list[BWBDesignSample]:
+    if n_samples < 1:
+        raise ValueError("n_samples must be >= 1")
+
     rng = np.random.default_rng(sampler_seed)
 
     pb = config.planform_bounds
@@ -23,23 +44,23 @@ def generate_random_samples(
     for _ in range(n_samples):
         samples.append(
             BWBDesignSample(
-                c1_m=float(rng.uniform(pb.c1_m.min, pb.c1_m.max)),
-                c2_ratio=float(rng.uniform(pb.c2_ratio.min, pb.c2_ratio.max)),
-                c3_ratio=float(rng.uniform(pb.c3_ratio.min, pb.c3_ratio.max)),
-                c4_ratio=float(rng.uniform(pb.c4_ratio.min, pb.c4_ratio.max)),
-                b_total_m=float(rng.uniform(pb.b_total_m.min, pb.b_total_m.max)),
-                b3_ratio=float(rng.uniform(pb.b3_ratio.min, pb.b3_ratio.max)),
-                split_ratio=float(rng.uniform(pb.split_ratio.min, pb.split_ratio.max)),
-                sw1_deg=float(rng.uniform(-pb.sw1_deg.max, -pb.sw1_deg.min)),
-                sw2_deg=float(rng.uniform(-pb.sw2_deg.max, -pb.sw2_deg.min)),
-                sw3_deg=float(rng.uniform(-pb.sw3_deg.max, -pb.sw3_deg.min)),
-                twist_b0_deg=float(rng.uniform(sb.twist_b0_deg.min, sb.twist_b0_deg.max)),
-                twist_b1_deg=float(rng.uniform(sb.twist_b1_deg.min, sb.twist_b1_deg.max)),
-                twist_b2_deg=float(rng.uniform(sb.twist_b2_deg.min, sb.twist_b2_deg.max)),
-                twist_b3_deg=float(rng.uniform(sb.twist_b3_deg.min, sb.twist_b3_deg.max)),
-                dihedral_b1_deg=float(rng.uniform(sb.dihedral_b1_deg.min, sb.dihedral_b1_deg.max)),
-                dihedral_b2_deg=float(rng.uniform(sb.dihedral_b2_deg.min, sb.dihedral_b2_deg.max)),
-                dihedral_b3_deg=float(rng.uniform(sb.dihedral_b3_deg.min, sb.dihedral_b3_deg.max)),
+                c1_m=_uniform_between(rng, pb.c1_m.min, pb.c1_m.max),
+                c2_ratio=_uniform_between(rng, pb.c2_ratio.min, pb.c2_ratio.max),
+                c3_ratio=_uniform_between(rng, pb.c3_ratio.min, pb.c3_ratio.max),
+                c4_ratio=_uniform_between(rng, pb.c4_ratio.min, pb.c4_ratio.max),
+                b_total_m=_uniform_between(rng, pb.b_total_m.min, pb.b_total_m.max),
+                b3_ratio=_uniform_between(rng, pb.b3_ratio.min, pb.b3_ratio.max),
+                split_ratio=_uniform_between(rng, pb.split_ratio.min, pb.split_ratio.max),
+                sw1_deg=_uniform_between(rng, -pb.sw1_deg.max, -pb.sw1_deg.min),
+                sw2_deg=_uniform_between(rng, -pb.sw2_deg.max, -pb.sw2_deg.min),
+                sw3_deg=_uniform_between(rng, -pb.sw3_deg.max, -pb.sw3_deg.min),
+                twist_b0_deg=_uniform_between(rng, sb.twist_b0_deg.min, sb.twist_b0_deg.max),
+                twist_b1_deg=_uniform_between(rng, sb.twist_b1_deg.min, sb.twist_b1_deg.max),
+                twist_b2_deg=_uniform_between(rng, sb.twist_b2_deg.min, sb.twist_b2_deg.max),
+                twist_b3_deg=_uniform_between(rng, sb.twist_b3_deg.min, sb.twist_b3_deg.max),
+                dihedral_b1_deg=_uniform_between(rng, sb.dihedral_b1_deg.min, sb.dihedral_b1_deg.max),
+                dihedral_b2_deg=_uniform_between(rng, sb.dihedral_b2_deg.min, sb.dihedral_b2_deg.max),
+                dihedral_b3_deg=_uniform_between(rng, sb.dihedral_b3_deg.min, sb.dihedral_b3_deg.max),
             )
         )
 
@@ -48,6 +69,8 @@ def generate_random_samples(
 
 @register_dataset_sampler
 class RandomV1Sampler(DatasetSampler):
+    """Uniform-random sampler for the current BWB segmented generator."""
+
     SAMPLER_ID = "random_v1"
 
     @property

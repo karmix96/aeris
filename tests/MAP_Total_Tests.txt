@@ -1,0 +1,285 @@
+AERIS TEST COVERAGE REPORT
+Checkpoint: Dataset + Geometry + CLI Stabilization
+
+--------------------------------------------------
+GLOBAL STATUS
+--------------------------------------------------
+
+✔ Full test suite passes
+✔ ~100+ tests across domains
+✔ Coverage includes:
+    - CLI behavior
+    - config handling
+    - geometry generation
+    - dataset generation
+    - sampling
+    - IO + metadata
+    - validation + inspection
+
+This is NOT superficial testing.
+This is functional + structural validation.
+
+--------------------------------------------------
+1. COMMON DOMAIN TESTS
+--------------------------------------------------
+
+FILES:
+- test_config.py
+- test_logging.py
+- test_paths.py
+
+WHAT IS TESTED
+
+✔ Config loading
+    - valid YAML parsing
+    - malformed YAML handling
+    - missing file handling
+
+✔ Logging
+    - log file creation
+    - directory auto-creation
+    - log writing works
+    - no crash on repeated logger setup
+
+✔ Paths
+    - run directory creation
+    - uniqueness (timestamp + retry)
+    - structure correctness
+
+CONFIDENCE
+
+✔ High for:
+    - basic infrastructure stability
+    - reproducible runs
+    - logging persistence
+
+⚠ Not covered:
+    - schema validation
+    - environment overrides
+    - edge filesystem cases (permissions, disk full)
+
+--------------------------------------------------
+2. COMMANDS (CLI) TESTS
+--------------------------------------------------
+
+FILES:
+- test_version.py
+- test_geometry.py
+- test_dataset.py
+- test_aero.py
+- test_dynamics.py
+- test_dynamics_cli.py
+
+WHAT IS TESTED
+
+✔ CLI invocation works
+    - commands execute without crash
+    - output captured correctly (result.output)
+
+✔ Geometry command
+    - runs pipeline correctly
+    - produces outputs
+
+✔ Dataset command
+    - triggers dataset pipeline
+    - integrates with config + sampling
+
+✔ Aero command
+    - basic execution
+    - argument handling
+
+✔ Dynamics command
+    - trim / cg sweep logic
+    - CLI interface correctness
+
+CONFIDENCE
+
+✔ High for:
+    - CLI wiring
+    - argument parsing
+    - command entrypoints
+
+⚠ Not covered deeply:
+    - complex workflows
+    - large runs
+    - cross-command orchestration
+
+--------------------------------------------------
+3. GEOMETRY / GENERATOR DOMAIN TESTS
+--------------------------------------------------
+
+FILES:
+- test_registry.py
+- bwb_segmented_v1/* tests
+
+WHAT IS TESTED
+
+✔ Registry
+    - generator registration works
+    - duplicate prevention
+    - lookup correctness
+
+✔ Sampling (inside generator)
+    - deterministic behavior from seed
+    - bounds respected
+
+✔ Planform + sections
+    - geometry structure valid
+    - no crashes during generation
+
+✔ Validation
+    - invalid inputs rejected
+
+✔ Export
+    - files created correctly
+
+✔ Reconstruction/export
+    - round-trip behavior (partial)
+
+CONFIDENCE
+
+✔ High for:
+    - deterministic geometry pipeline
+    - config → geometry mapping
+    - generator correctness
+
+⚠ Risks:
+    - no golden-reference geometry tests
+    - no geometric invariants testing
+    - limited numerical validation
+
+--------------------------------------------------
+4. PIPELINE (GEOMETRY_RUN) TESTS
+--------------------------------------------------
+
+FILES:
+- test_geometry_run.py
+
+WHAT IS TESTED
+
+✔ Happy path:
+    - pipeline executes
+    - manifest written
+    - outputs created
+
+✔ Failure path:
+    - errors captured
+    - manifest marked failed
+    - no crash propagation
+
+✔ Serialization:
+    - JSON-safe conversion works
+
+CONFIDENCE
+
+✔ High for:
+    - orchestration correctness
+    - manifest behavior
+
+⚠ Not covered:
+    - multi-generator scenarios
+    - large batch runs
+
+--------------------------------------------------
+5. DATASET DOMAIN TESTS
+--------------------------------------------------
+
+FILES:
+- test_dataset_run.py
+- test_sampling.py
+- test_io.py
+- test_metadata.py
+- test_inspect.py
+
+WHAT IS TESTED
+
+✔ Pipeline behavior
+    - success
+    - partial success
+    - failure handling
+
+✔ Sampling
+    - LHS correctness
+    - random sampling correctness
+    - reproducibility
+    - bounds compliance
+
+✔ IO
+    - CSV schema enforcement
+    - append correctness
+    - path structure
+
+✔ Metadata
+    - schema correctness
+    - data integrity
+
+✔ Inspect
+    - dataset validation
+    - detection of corruption/inconsistency
+
+CONFIDENCE
+
+✔ Very high for:
+    - dataset generation reliability
+    - reproducibility
+    - failure handling
+
+⚠ Not covered:
+    - performance scaling
+    - parallel runs
+
+--------------------------------------------------
+6. CROSS-DOMAIN CONFIDENCE
+--------------------------------------------------
+
+✔ STRONG AREAS
+- dataset pipeline
+- sampling reproducibility
+- CLI backbone
+- deterministic geometry generation
+
+✔ MEDIUM AREAS
+- aero (early stage)
+- dynamics (partially validated)
+
+✔ WEAK / UNTESTED AREAS
+- multi-fidelity workflows
+- ML integration
+- cloud/parallel execution
+- performance at scale
+
+--------------------------------------------------
+7. REAL-WORLD VALIDITY
+--------------------------------------------------
+
+This system is now safe for:
+
+✔ generating datasets (10–1000 samples)
+✔ debugging geometry space
+✔ building ML-ready datasets
+✔ running controlled experiments
+
+NOT yet safe for:
+
+✘ production-scale HPC pipelines
+✘ certification-level traceability
+✘ large multi-fidelity campaigns
+
+--------------------------------------------------
+8. KEY INSIGHT
+--------------------------------------------------
+
+You are no longer in “prototype code”.
+
+You are in:
+
+→ structured, test-backed engineering software
+
+This is the transition point where:
+- changes must be deliberate
+- regressions must be caught
+- architecture must be respected
+
+--------------------------------------------------
+END OF REPORT
+--------------------------------------------------

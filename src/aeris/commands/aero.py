@@ -282,35 +282,132 @@ def _resolve_sweep_case_dir(
 
 @aero_app.command("run")
 def run_aero(
-    config: Path | None = typer.Option(None, "--config", "-c", help="Generate fresh geometry from config."),
-    run_dir: Path | None = typer.Option(None, "--run-dir", help="Existing geometry run directory."),
-    dataset: Path | None = typer.Option(None, "--dataset", help="Existing dataset root."),
-    geometry_id: str = typer.Option("", "--geometry-id", help="Geometry ID inside dataset root."),
-    geometry_source: str = typer.Option("auto", "--geometry-source", help="auto | native | reconstruct"),
+    config: Path | None = typer.Option(
+        None,
+        "--config",
+        "-c",
+        help="Fresh geometry config. Use this to generate geometry and run aero immediately.",
+    ),
+    run_dir: Path | None = typer.Option(
+        None,
+        "--run-dir",
+        help="Existing geometry run directory to reuse.",
+    ),
+    dataset: Path | None = typer.Option(
+        None,
+        "--dataset",
+        help="Existing dataset root to reuse geometry from.",
+    ),
+    geometry_id: str = typer.Option(
+        "",
+        "--geometry-id",
+        help="Geometry ID inside dataset root, e.g. geom_00001.",
+    ),
+    geometry_source: str = typer.Option(
+        "auto",
+        "--geometry-source",
+        help="Geometry source mode. auto=config->native, run/dataset->reconstruct.",
+    ),
     generator_id: str = typer.Option(
         "",
         "--generator-id",
         help="Generator ID required for --run-dir and --dataset modes. Ignored for --config.",
     ),
-    alpha: float = typer.Option(..., "--alpha"),
-    velocity: float = typer.Option(28.0, "--velocity"),
-    altitude: float = typer.Option(0.0, "--altitude"),
-    beta: float = typer.Option(0.0, "--beta"),
-    mach: float = typer.Option(0.0, "--mach"),
-    p: float = typer.Option(0.0, "--p", help="Body roll rate in rad/s."),
-    q: float = typer.Option(0.0, "--q", help="Body pitch rate in rad/s."),
-    r: float = typer.Option(0.0, "--r", help="Body yaw rate in rad/s."),
-    solver: str = typer.Option("aerosandbox_avl", "--solver"),
-    avl_command: str = typer.Option("", "--avl-command"),
-    timeout_sec: int = typer.Option(180, "--timeout-sec"),
-    spanwise_resolution: int = typer.Option(4, "--spanwise-resolution"),
-    chordwise_resolution: int = typer.Option(8, "--chordwise-resolution"),
-    spanwise_spacing: str = typer.Option("equal", "--spanwise-spacing"),
-    chordwise_spacing: str = typer.Option("cosine", "--chordwise-spacing"),
-    save_surface_forces: bool = typer.Option(False, "--save-surface-forces"),
-    save_element_forces: bool = typer.Option(False, "--save-element-forces"),
-    seed: int = typer.Option(0, "--seed"),
-    output_name: str = typer.Option("", "--output-name"),
+    alpha: float = typer.Option(
+        ...,
+        "--alpha",
+        help="Angle of attack in degrees for a single aero run.",
+    ),
+    velocity: float = typer.Option(
+        28.0,
+        "--velocity",
+        help="Freestream velocity in m/s.",
+    ),
+    altitude: float = typer.Option(
+        0.0,
+        "--altitude",
+        help="Altitude in meters.",
+    ),
+    beta: float = typer.Option(
+        0.0,
+        "--beta",
+        help="Sideslip angle in degrees.",
+    ),
+    mach: float | None = typer.Option(
+        None,
+        "--mach",
+        help="Optional Mach metadata/QC value. Velocity and altitude remain authoritative.",
+    ),
+    p: float = typer.Option(
+        0.0,
+        "--p",
+        help="Body roll rate in rad/s.",
+    ),
+    q: float = typer.Option(
+        0.0,
+        "--q",
+        help="Body pitch rate in rad/s.",
+    ),
+    r: float = typer.Option(
+        0.0,
+        "--r",
+        help="Body yaw rate in rad/s.",
+    ),
+    solver: str = typer.Option(
+        "aerosandbox_avl",
+        "--solver",
+        help="Registered aero solver ID.",
+    ),
+    avl_command: str = typer.Option(
+        "",
+        "--avl-command",
+        help="Optional AVL executable path/command. If omitted, AERIS tries PATH.",
+    ),
+    timeout_sec: int = typer.Option(
+        180,
+        "--timeout-sec",
+        help="Solver timeout in seconds.",
+    ),
+    spanwise_resolution: int = typer.Option(
+        4,
+        "--spanwise-resolution",
+        help="AVL spanwise panel resolution override.",
+    ),
+    chordwise_resolution: int = typer.Option(
+        8,
+        "--chordwise-resolution",
+        help="AVL chordwise panel resolution override.",
+    ),
+    spanwise_spacing: str = typer.Option(
+        "equal",
+        "--spanwise-spacing",
+        help="AVL spanwise spacing override: equal or cosine.",
+    ),
+    chordwise_spacing: str = typer.Option(
+        "cosine",
+        "--chordwise-spacing",
+        help="AVL chordwise spacing override: equal or cosine.",
+    ),
+    save_surface_forces: bool = typer.Option(
+        False,
+        "--save-surface-forces",
+        help="Write AVL surface force output files.",
+    ),
+    save_element_forces: bool = typer.Option(
+        False,
+        "--save-element-forces",
+        help="Write AVL element force output files.",
+    ),
+    seed: int = typer.Option(
+        0,
+        "--seed",
+        help="Random seed used when generating fresh geometry from config.",
+    ),
+    output_name: str = typer.Option(
+        "",
+        "--output-name",
+        help="Optional run-name suffix for the created output folder.",
+    ),
 ) -> None:
     _validate_source_selection(
         config=config,
@@ -372,12 +469,12 @@ def inspect_aero(
         file_okay=False,
         dir_okay=True,
         resolve_path=True,
-        help="Path to an existing aero run directory or its nested aero/ directory.",
+        help="Existing aero run directory or nested aero/ directory.",
     ),
     as_json: bool = typer.Option(
         False,
         "--json",
-        help="Print the saved aero result as machine-readable JSON.",
+        help="Print saved aero result as machine-readable JSON.",
     ),
 ) -> None:
     result = load_aero_result_from_run_dir(run_dir)
@@ -393,42 +490,172 @@ def inspect_aero(
 
 @aero_app.command("sweep")
 def sweep_aero(
-    config: Path | None = typer.Option(None, "--config", "-c", help="Generate fresh geometry from config."),
-    run_dir: Path | None = typer.Option(None, "--run-dir", help="Existing geometry run directory."),
-    dataset: Path | None = typer.Option(None, "--dataset", help="Existing dataset root."),
-    geometry_id: str = typer.Option("", "--geometry-id", help="Geometry ID inside dataset root."),
-    geometry_source: str = typer.Option("auto", "--geometry-source", help="auto | native | reconstruct"),
+    config: Path | None = typer.Option(
+        None,
+        "--config",
+        "-c",
+        help="Fresh geometry config. Use this to generate geometry and run an aero sweep immediately.",
+    ),
+    run_dir: Path | None = typer.Option(
+        None,
+        "--run-dir",
+        help="Existing geometry run directory to reuse.",
+    ),
+    dataset: Path | None = typer.Option(
+        None,
+        "--dataset",
+        help="Existing dataset root to reuse geometry from.",
+    ),
+    geometry_id: str = typer.Option(
+        "",
+        "--geometry-id",
+        help="Geometry ID inside dataset root, e.g. geom_00001.",
+    ),
+    geometry_source: str = typer.Option(
+        "auto",
+        "--geometry-source",
+        help="Geometry source mode. auto=config->native, run/dataset->reconstruct.",
+    ),
     generator_id: str = typer.Option(
         "",
         "--generator-id",
         help="Generator ID required for --run-dir and --dataset modes. Ignored for --config.",
     ),
-    alpha: float = typer.Option(0.0, "--alpha"),
-    velocity: float = typer.Option(28.0, "--velocity"),
-    altitude: float = typer.Option(0.0, "--altitude"),
-    beta: float = typer.Option(0.0, "--beta"),
-    mach: float = typer.Option(0.0, "--mach"),
-    p: float = typer.Option(0.0, "--p", help="Body roll rate in rad/s."),
-    q: float = typer.Option(0.0, "--q", help="Body pitch rate in rad/s."),
-    r: float = typer.Option(0.0, "--r", help="Body yaw rate in rad/s."),
-    alpha_values: str = typer.Option("", "--alpha-values", help="Comma-separated alpha sweep values."),
-    beta_values: str = typer.Option("", "--beta-values", help="Comma-separated beta sweep values."),
-    velocity_values: str = typer.Option("", "--velocity-values", help="Comma-separated velocity sweep values."),
-    altitude_values: str = typer.Option("", "--altitude-values", help="Comma-separated altitude sweep values."),
-    p_values: str = typer.Option("", "--p-values", help="Comma-separated p sweep values."),
-    q_values: str = typer.Option("", "--q-values", help="Comma-separated q sweep values."),
-    r_values: str = typer.Option("", "--r-values", help="Comma-separated r sweep values."),
-    solver: str = typer.Option("aerosandbox_avl", "--solver"),
-    avl_command: str = typer.Option("", "--avl-command"),
-    timeout_sec: int = typer.Option(180, "--timeout-sec"),
-    spanwise_resolution: int = typer.Option(4, "--spanwise-resolution"),
-    chordwise_resolution: int = typer.Option(8, "--chordwise-resolution"),
-    spanwise_spacing: str = typer.Option("equal", "--spanwise-spacing"),
-    chordwise_spacing: str = typer.Option("cosine", "--chordwise-spacing"),
-    save_surface_forces: bool = typer.Option(False, "--save-surface-forces"),
-    save_element_forces: bool = typer.Option(False, "--save-element-forces"),
-    seed: int = typer.Option(0, "--seed"),
-    output_name: str = typer.Option("", "--output-name"),
+    alpha: float = typer.Option(
+        0.0,
+        "--alpha",
+        help="Base alpha value used when --alpha-values is not provided.",
+    ),
+    velocity: float = typer.Option(
+        28.0,
+        "--velocity",
+        help="Base velocity in m/s used when --velocity-values is not provided.",
+    ),
+    altitude: float = typer.Option(
+        0.0,
+        "--altitude",
+        help="Base altitude in meters used when --altitude-values is not provided.",
+    ),
+    beta: float = typer.Option(
+        0.0,
+        "--beta",
+        help="Base beta value used when --beta-values is not provided.",
+    ),
+    mach: float | None = typer.Option(
+        None,
+        "--mach",
+        help="Optional Mach metadata/QC value. Velocity and altitude remain authoritative.",
+    ),
+    p: float = typer.Option(
+        0.0,
+        "--p",
+        help="Base body roll rate in rad/s used when --p-values is not provided.",
+    ),
+    q: float = typer.Option(
+        0.0,
+        "--q",
+        help="Base body pitch rate in rad/s used when --q-values is not provided.",
+    ),
+    r: float = typer.Option(
+        0.0,
+        "--r",
+        help="Base body yaw rate in rad/s used when --r-values is not provided.",
+    ),
+    alpha_values: str = typer.Option(
+        "",
+        "--alpha-values",
+        help="Comma-separated alpha sweep values, e.g. -2,0,2,4,6",
+    ),
+    beta_values: str = typer.Option(
+        "",
+        "--beta-values",
+        help="Comma-separated beta sweep values, e.g. 0,2,4",
+    ),
+    velocity_values: str = typer.Option(
+        "",
+        "--velocity-values",
+        help="Comma-separated velocity sweep values, e.g. 20,25,30",
+    ),
+    altitude_values: str = typer.Option(
+        "",
+        "--altitude-values",
+        help="Comma-separated altitude sweep values, e.g. 0,1500,3000",
+    ),
+    p_values: str = typer.Option(
+        "",
+        "--p-values",
+        help="Comma-separated p sweep values, e.g. 0,0.05",
+    ),
+    q_values: str = typer.Option(
+        "",
+        "--q-values",
+        help="Comma-separated q sweep values, e.g. 0,0.05",
+    ),
+    r_values: str = typer.Option(
+        "",
+        "--r-values",
+        help="Comma-separated r sweep values, e.g. 0,0.05",
+    ),
+    solver: str = typer.Option(
+        "aerosandbox_avl",
+        "--solver",
+        help="Registered aero solver ID.",
+    ),
+    avl_command: str = typer.Option(
+        "",
+        "--avl-command",
+        help="Optional AVL executable path/command. If omitted, AERIS tries PATH.",
+    ),
+    timeout_sec: int = typer.Option(
+        180,
+        "--timeout-sec",
+        help="Solver timeout in seconds.",
+    ),
+    spanwise_resolution: int = typer.Option(
+        4,
+        "--spanwise-resolution",
+        help="AVL spanwise panel resolution override.",
+    ),
+    chordwise_resolution: int = typer.Option(
+        8,
+        "--chordwise-resolution",
+        help="AVL chordwise panel resolution override.",
+    ),
+    spanwise_spacing: str = typer.Option(
+        "equal",
+        "--spanwise-spacing",
+        help="AVL spanwise spacing override: equal or cosine.",
+    ),
+    chordwise_spacing: str = typer.Option(
+        "cosine",
+        "--chordwise-spacing",
+        help="AVL chordwise spacing override: equal or cosine.",
+    ),
+    save_surface_forces: bool = typer.Option(
+        False,
+        "--save-surface-forces",
+        help="Write AVL surface force output files.",
+    ),
+    save_element_forces: bool = typer.Option(
+        False,
+        "--save-element-forces",
+        help="Write AVL element force output files.",
+    ),
+    seed: int = typer.Option(
+        0,
+        "--seed",
+        help="Random seed used when generating fresh geometry from config.",
+    ),
+    output_name: str = typer.Option(
+        "",
+        "--output-name",
+        help="Optional run-name suffix for the created output folder.",
+    ),
+    max_cases: int | None = typer.Option(
+        None,
+        "--max-cases",
+        help="Optional safety cap on total expanded sweep cases.",
+    ),
 ) -> None:
     _validate_source_selection(
         config=config,
@@ -489,7 +716,7 @@ def sweep_aero(
         save_element_forces=save_element_forces,
         seed=seed,
         output_name=output_name,
-        max_cases=None,
+        max_cases=max_cases,
     )
 
     typer.echo("")
@@ -509,12 +736,12 @@ def inspect_aero_sweep(
         file_okay=False,
         dir_okay=True,
         resolve_path=True,
-        help="Path to an existing aero sweep run directory or its nested aero_sweep/ directory.",
+        help="Existing aero sweep run directory or nested aero_sweep/ directory.",
     ),
     as_json: bool = typer.Option(
         False,
         "--json",
-        help="Print the saved aero sweep manifest as machine-readable JSON.",
+        help="Print saved aero sweep manifest/result as machine-readable JSON.",
     ),
 ) -> None:
     manifest = _load_aero_sweep_manifest(run_dir)
@@ -538,11 +765,23 @@ def inspect_aero_sweep_case(
         file_okay=False,
         dir_okay=True,
         resolve_path=True,
-        help="Path to an existing aero sweep run directory or its nested aero_sweep/ directory.",
+        help="Existing aero sweep run directory or nested aero_sweep/ directory.",
     ),
-    case_label: str = typer.Option("", "--case-label", help="Exact sweep case label to inspect."),
-    case_index: int | None = typer.Option(None, "--case-index", help="Sweep case index to inspect."),
-    as_json: bool = typer.Option(False, "--json", help="Print the saved aero case result as machine-readable JSON."),
+    case_label: str = typer.Option(
+        "",
+        "--case-label",
+        help="Exact sweep case label to inspect.",
+    ),
+    case_index: int | None = typer.Option(
+        None,
+        "--case-index",
+        help="Sweep case index to inspect.",
+    ),
+    as_json: bool = typer.Option(
+        False,
+        "--json",
+        help="Print saved aero case result as machine-readable JSON.",
+    ),
 ) -> None:
     case_dir = _resolve_sweep_case_dir(
         run_dir=run_dir,

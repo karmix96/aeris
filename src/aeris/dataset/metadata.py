@@ -1,3 +1,14 @@
+"""
+Dataset metadata schema and row builders.
+
+This module defines the CSV column layout used for successful and failed dataset
+cases and builds normalized row dictionaries from generator inputs and outputs.
+
+Current implementation is geometry-result aware and assumes the active
+generator exposes planform, section-geometry, optional AeroSandbox summary,
+and artifact-path fields.
+"""
+
 from __future__ import annotations
 
 from dataclasses import asdict, is_dataclass
@@ -88,6 +99,29 @@ def _sample_to_dict(sample: Any) -> dict[str, Any]:
     raise TypeError(f"Unsupported sample type for metadata: {type(sample)}")
 
 
+def _require_nonempty_numeric_array(name: str, values: Any) -> np.ndarray:
+    array = np.asarray(values, dtype=float)
+    if array.size == 0:
+        raise ValueError(f"{name} must be non-empty for dataset metadata generation.")
+    return array
+
+
+def _validate_row_matches_fieldnames(row: dict[str, Any], fieldnames: list[str], *, context: str) -> None:
+    row_keys = set(row.keys())
+    expected_keys = set(fieldnames)
+
+    extra = sorted(row_keys - expected_keys)
+    missing = sorted(expected_keys - row_keys)
+
+    if extra or missing:
+        problems: list[str] = []
+        if extra:
+            problems.append(f"extra keys: {extra}")
+        if missing:
+            problems.append(f"missing keys: {missing}")
+        raise ValueError(f"{context} does not match schema: " + "; ".join(problems))
+
+
 def build_metadata_row(
     *,
     dataset_name: str,
@@ -96,15 +130,22 @@ def build_metadata_row(
     sampler_id: str,
     sampler_seed: int | None,
     realization_seed: int | None,
+    generator_id: str,
     config: Any,
     result: Any,
     geometry_dir: Path,
 ) -> dict[str, Any]:
     sample_dict = _sample_to_dict(result.sample)
-    twists = np.asarray(result.section_geometry.twist_array_deg, dtype=float)
-    dihedrals = np.asarray(result.section_geometry.dihedral_array_deg, dtype=float)
+    twists = _require_nonempty_numeric_array(
+        "result.section_geometry.twist_array_deg",
+        result.section_geometry.twist_array_deg,
+    )
+    dihedrals = _require_nonempty_numeric_array(
+        "result.section_geometry.dihedral_array_deg",
+        result.section_geometry.dihedral_array_deg,
+    )
 
-    return {
+    row = {
         "geometry_id": geometry_id,
         "case_index": case_index,
         "dataset_name": dataset_name,
@@ -115,7 +156,7 @@ def build_metadata_row(
         "realization_mode": "deterministic_from_sample",
         "generator_family": config.generator.family,
         "generator_version": config.generator.version,
-        "generator_id": f"{config.generator.family}_{config.generator.version}",
+        "generator_id": generator_id,
         "config_name": config.name,
         "airfoil_name": config.section_bounds.airfoil_name,
         **sample_dict,
@@ -146,6 +187,13 @@ def build_metadata_row(
         ),
     }
 
+    _validate_row_matches_fieldnames(
+        row,
+        metadata_fieldnames(),
+        context="Metadata row",
+    )
+    return row
+
 
 def build_failure_row(
     *,
@@ -155,10 +203,11 @@ def build_failure_row(
     sampler_id: str,
     sampler_seed: int | None,
     realization_seed: int | None,
+    generator_id: str,
     config: Any,
     exc: Exception,
 ) -> dict[str, Any]:
-    return {
+    row = {
         "geometry_id": geometry_id,
         "case_index": case_index,
         "dataset_name": dataset_name,
@@ -168,7 +217,14 @@ def build_failure_row(
         "realization_mode": "deterministic_from_sample",
         "generator_family": config.generator.family,
         "generator_version": config.generator.version,
-        "generator_id": f"{config.generator.family}_{config.generator.version}",
+        "generator_id": generator_id,
         "error_type": type(exc).__name__,
         "error_message": str(exc),
     }
+
+    _validate_row_matches_fieldnames(
+        row,
+        failure_fieldnames(),
+        context="Failure row",
+    )
+    return row

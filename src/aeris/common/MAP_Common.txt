@@ -1,0 +1,33 @@
+COMMON FOLDER — FOUNDATION LAYER
+
+Purpose:
+Infrastructure backbone of AERIS. Handles config loading, logging, and run folder management.
+
+Key Responsibilities:
+- Load YAML configs safely
+- Create reproducible run folders
+- Setup per-run logging
+
+Key Modules:
+- config.py → load_yaml_config()
+- logging_utils.py → setup_logger()
+- paths.py → create_run_folder()
+
+Workflow Role:
+Pipeline start → config → run folder → logger → everything else
+
+CLI Usage:
+Used indirectly by all commands:
+aeris geometry generate
+aeris dataset generate
+aeris aero run
+
+Key Principles:
+- Reproducibility
+- Deterministic runs
+- Explicit filesystem structure
+
+TODO:
+- Config schema validation
+- Structured logging
+- Dataset-aware paths

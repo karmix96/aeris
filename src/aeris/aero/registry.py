@@ -1,3 +1,10 @@
+"""
+Registry utilities for AERIS aerodynamic solver plugins.
+
+This module maps stable solver IDs to concrete solver adapter classes so that
+pipelines and CLI code depend on registry resolution rather than direct imports.
+"""
+
 from __future__ import annotations
 
 from typing import Type

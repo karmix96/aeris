@@ -1,12 +1,23 @@
+"""
+AVL-based aerodynamic solver adapter using AeroSandbox.
+
+This module wraps AVL execution, handles input preparation, solver execution,
+output parsing, and conversion into structured AeroResult objects.
+
+It also enforces validation and parser consistency checks to ensure reliability
+of aerodynamic outputs for downstream pipelines.
+"""
+
 from __future__ import annotations
 
+import copy
 import json
 import math
 import re
 import shutil
 import subprocess
 import time
-import warnings
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -17,19 +28,15 @@ from aerosandbox.aerodynamics.aero_3D.avl import AVL as AVLBase
 from aerosandbox.geometry import Wing, WingXSec
 
 from aeris.aero.base import AeroSolver
-from aeris.aero.models import (
-    AeroFailure,
-    AeroInput,
-    AeroResult,
-    AeroStatus,
-)
+from aeris.aero.models import AeroFailure, AeroInput, AeroResult, AeroStatus
 from aeris.aero.registry import register_solver
 from aeris.aero.validation import (
     validate_aero_input,
     validate_aero_result,
-    validate_avl_parser_consistency,
 )
+from aeris.aero.solvers.avl_validation import validate_avl_parser_consistency
 
+AERO_RESULT_SCHEMA_VERSION = "aero_result_v1"
 
 class AVLStrips(AVLBase):
     """
@@ -330,7 +337,6 @@ def read_avl_strips(filepath: str | Path, alpha_deg: float | None = None) -> pd.
 
     return df
 
-
 def configure_avl_paneling(airplane: asb.Airplane, panel_cfg: dict[str, Any] | None = None) -> None:
     panel_cfg = panel_cfg or {}
 
@@ -339,11 +345,93 @@ def configure_avl_paneling(airplane: asb.Airplane, panel_cfg: dict[str, Any] | N
     span_res = int(panel_cfg.get("spanwise_resolution", 4))
     chord_res = int(panel_cfg.get("chordwise_resolution", 8))
 
+    if span_res <= 0 or chord_res <= 0:
+        raise ValueError("AVL panel resolutions must be positive integers.")
+
     AVLBase.default_analysis_specific_options[Wing]["wing_level_spanwise_spacing"] = False
     AVLBase.default_analysis_specific_options[WingXSec]["spanwise_spacing"] = span_spacing
     AVLBase.default_analysis_specific_options[WingXSec]["spanwise_resolution"] = span_res
     AVLBase.default_analysis_specific_options[Wing]["chordwise_spacing"] = chord_spacing
     AVLBase.default_analysis_specific_options[Wing]["chordwise_resolution"] = chord_res
+
+
+import copy
+from contextlib import contextmanager
+
+@contextmanager
+def avl_paneling_context(airplane, panel_cfg: dict[str, Any] | None = None):
+    original = AVLBase.default_analysis_specific_options
+    snapshot = copy.deepcopy(original)
+
+    try:
+        configure_avl_paneling(airplane, panel_cfg=panel_cfg)
+        yield
+    finally:
+        original.clear()
+        original.update(snapshot)
+
+def _resolve_avl_command(explicit_command: str | None) -> str:
+    if explicit_command:
+        return explicit_command
+    found = shutil.which("avl")
+    if found:
+        return found
+    raise FileNotFoundError(
+        "AVL executable not found. Set settings.avl_command or make 'avl' available on PATH."
+    )
+
+
+def _validate_solver_airplane(airplane: Any) -> list[str]:
+    errors: list[str] = []
+    if airplane is None:
+        return ["geometry.airplane is None"]
+
+    s_ref = _to_float_or_none(getattr(airplane, "s_ref", None))
+    b_ref = _to_float_or_none(getattr(airplane, "b_ref", None))
+    c_ref = _to_float_or_none(getattr(airplane, "c_ref", None))
+
+    if s_ref is None or s_ref <= 0.0:
+        errors.append(f"Invalid airplane.s_ref={getattr(airplane, 's_ref', None)}")
+    if b_ref is None or b_ref <= 0.0:
+        errors.append(f"Invalid airplane.b_ref={getattr(airplane, 'b_ref', None)}")
+    if c_ref is None or c_ref <= 0.0:
+        errors.append(f"Invalid airplane.c_ref={getattr(airplane, 'c_ref', None)}")
+
+    wings = getattr(airplane, "wings", None)
+    if not wings:
+        errors.append("Airplane has no wings")
+    return errors
+
+
+def _mach_consistency_warning(fc) -> str | None:
+    """
+    In the current AERIS aero pipeline, Mach is treated as metadata/check information.
+
+    The AVL operating point is driven primarily by:
+    - velocity
+    - altitude -> atmosphere
+    - alpha/beta/rates
+
+    If provided Mach disagrees materially with velocity/altitude-derived Mach,
+    emit a warning rather than pretending both are authoritative.
+    """
+    if fc.mach is None:
+        return None
+
+    try:
+        atmosphere = asb.Atmosphere(altitude=fc.altitude_m)
+        expected = float(fc.velocity_mps) / float(atmosphere.speed_of_sound())
+    except Exception:
+        return None
+
+    if abs(float(fc.mach) - expected) > 0.02:
+        return (
+            f"Mach/velocity inconsistency: input mach={fc.mach:.5f}, "
+            f"derived mach={expected:.5f} from velocity/altitude. "
+            "Current AERIS semantics treat Mach as metadata/QC, while AVL run "
+            "is driven by velocity and atmosphere."
+        )
+    return None
 
 
 @register_solver
@@ -352,6 +440,9 @@ class AeroSandboxAVLSolver(AeroSolver):
 
     def run_case(self, aero_input: AeroInput, output_dir: Path) -> AeroResult:
         input_errors = validate_aero_input(aero_input)
+        airplane = aero_input.geometry.airplane
+
+        input_errors.extend(_validate_solver_airplane(airplane))
         if input_errors:
             return AeroResult(
                 status=AeroStatus.INVALID_INPUT,
@@ -367,15 +458,11 @@ class AeroSandboxAVLSolver(AeroSolver):
 
         fc = aero_input.flight_condition
         settings = aero_input.settings
-        airplane = aero_input.geometry.airplane
 
         panel_cfg = settings.solver_options.get("paneling", {})
         save_surface_forces = bool(settings.solver_options.get("save_surface_forces", False))
         save_element_forces = bool(settings.solver_options.get("save_element_forces", False))
-
-        configure_avl_paneling(airplane, panel_cfg=panel_cfg)
-
-        avl_command = settings.avl_command or shutil.which("avl") or "/usr/local/bin/avl"
+        avl_command = _resolve_avl_command(settings.avl_command)
 
         op_point = asb.OperatingPoint(
             atmosphere=asb.Atmosphere(altitude=fc.altitude_m),
@@ -390,24 +477,25 @@ class AeroSandboxAVLSolver(AeroSolver):
         start = time.perf_counter()
 
         try:
-            avl = AVLStrips(
-                airplane=airplane,
-                op_point=op_point,
-                working_directory=str(output_dir),
-                avl_command=avl_command,
-                verbose=settings.verbose,
-                timeout=settings.timeout_sec,
-            )
+            with avl_paneling_context(airplane, panel_cfg=panel_cfg):
+                avl = AVLStrips(
+                    airplane=airplane,
+                    op_point=op_point,
+                    working_directory=str(output_dir),
+                    avl_command=avl_command,
+                    verbose=settings.verbose,
+                    timeout=settings.timeout_sec,
+                )
 
-            raw = avl.run(
-                totals_filename="output.txt",
-                strip_filename="strips.txt",
-                surface_filename="surfaces.txt",
-                element_filename="elements.txt",
-                stability_filename="stability.txt",
-                save_surface_forces=save_surface_forces,
-                save_element_forces=save_element_forces,
-            )
+                raw = avl.run(
+                    totals_filename="output.txt",
+                    strip_filename="strips.txt",
+                    surface_filename="surfaces.txt",
+                    element_filename="elements.txt",
+                    stability_filename="stability.txt",
+                    save_surface_forces=save_surface_forces,
+                    save_element_forces=save_element_forces,
+                )
 
             runtime_sec = time.perf_counter() - start
 
@@ -452,11 +540,7 @@ class AeroSandboxAVLSolver(AeroSolver):
                 derived_metrics=derived_metrics,
                 runtime_sec=runtime_sec,
                 artifact_paths={k: v for k, v in raw.get("_files", {}).items()},
-                raw_outputs={
-                    k: _json_safe(v)
-                    for k, v in raw.items()
-                    if k != "_files"
-                },
+                raw_outputs={k: _json_safe(v) for k, v in raw.items() if k != "_files"},
                 solver_metadata={
                     "avl_command": avl_command,
                     "timeout_sec": settings.timeout_sec,
@@ -479,13 +563,15 @@ class AeroSandboxAVLSolver(AeroSolver):
                 },
             )
 
+            mach_warning = _mach_consistency_warning(fc)
+            if mach_warning:
+                result.warnings.append(mach_warning)
+
             result_errors = validate_aero_result(result)
             parser_qc_errors = validate_avl_parser_consistency(result)
 
             if parser_qc_errors:
-                result.warnings.extend(
-                    [f"PARSER_QC: {msg}" for msg in parser_qc_errors]
-                )
+                result.warnings.extend([f"PARSER_QC: {msg}" for msg in parser_qc_errors])
 
             all_errors = list(result_errors)
             all_errors.extend(parser_qc_errors)
@@ -509,7 +595,6 @@ class AeroSandboxAVLSolver(AeroSolver):
 
             result.artifact_paths["aero_result_json"] = str(output_dir / "aero_result.json")
             _write_aero_result_json(result, output_dir)
-
             return result
 
         except Exception as exc:
@@ -702,6 +787,7 @@ def _json_safe(value: Any) -> Any:
 
 def _write_aero_result_json(result: AeroResult, output_dir: Path) -> Path:
     payload = {
+        "schema_version": AERO_RESULT_SCHEMA_VERSION,
         "status": result.status.value,
         "solver_id": result.solver_id,
         "scalars": {

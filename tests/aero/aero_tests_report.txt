@@ -1,0 +1,150 @@
+AERIS AERO REVIEW — PATCH TEST REPORT (UPDATED)
+
+Status
+- Patch set implemented
+- Initial test run exposed one real defect in AVL paneling state restoration
+- Defect fixed
+- Aero patch test suite now passes
+
+Scope
+- src/aeris/aero/views.py
+- src/aeris/aero/solvers/aerosandbox_avl.py
+- src/aeris/aero/sweep.py
+- src/aeris/aero/sweep_io.py
+- src/aeris/aero/sweep_run.py
+
+Important fixes covered
+
+1. views.py
+- Removed silent NACA0012 fallback on missing/corrupt airfoil files.
+- Added explicit reconstruction artifact version metadata.
+- Added geometry validation for:
+  - monotonic span stations
+  - finite coordinates
+  - positive chord
+  - minimum section count
+- Tightened native airplane extraction behavior.
+
+Why this matters:
+Silent fallback was the nastiest issue in the batch. It could quietly corrupt aerodynamic fidelity and poison later dataset / ML work.
+
+2. aerosandbox_avl.py
+- Added geometry reference-quantity validation before solver execution.
+- Added explicit AVL executable resolution and clean failure if not found.
+- Added Mach/velocity consistency warning instead of pretending both are authoritative.
+- Kept structured failure behavior.
+- Added AVL paneling context protection to avoid global-state leakage.
+
+Important note:
+The first implementation of the AVL paneling context was not fully safe because it restored the top-level defaults object by reassignment, while nested mutable state had already been mutated. That caused the test
+`test_avl_paneling_context_restores_global_defaults`
+to fail.
+
+Final fix:
+- restore AVL defaults in place using:
+  - clear()
+  - update(deepcopy(snapshot))
+
+Why this matters:
+This is important for reproducibility and future parallel execution. Global mutable solver configuration is exactly the kind of bug that behaves politely in small runs and then stabs you later.
+
+3. sweep.py
+- Added case-count helper.
+- Added guard against combinatorial blow-up with max_cases.
+
+Why this matters:
+Prevents accidental explosion of sweep size from Cartesian products.
+
+4. sweep_io.py
+- Sanitized/shortened case labels.
+- Added summary counts:
+  - success
+  - invalid_output
+  - solver_failed
+  - invalid_input
+  - failed_total
+
+Why this matters:
+Makes sweep manifests actually useful for auditing and not just decorative JSON.
+
+5. sweep_run.py
+- Added progress printing.
+- Added optional max_cases guard path through orchestration.
+- Added aggregate runtime tracking in summary.
+
+Why this matters:
+Improves operator visibility and gives the sweep manifest actual operational value.
+
+Tests added / exercised
+- tests/aero/test_views.py
+- tests/aero/test_aerosandbox_avl.py
+- tests/aero/test_sweep.py
+- tests/aero/test_sweep_run.py
+
+Key test coverage
+1. views tests
+- native airplane extraction works
+- missing airfoil file raises hard failure
+- duplicate span station raises hard failure
+
+2. AVL adapter tests
+- invalid airplane reference quantities are caught
+- missing AVL executable is caught
+- Mach/velocity inconsistency warning is emitted
+- derived metric computation handles zero-division safely
+- AVL paneling context restores defaults correctly
+- solver returns INVALID_INPUT for bad geometry
+
+3. sweep tests
+- case counting is correct
+- max_cases guard works
+
+4. sweep run tests
+- manifest summary counts are correct
+- aggregate runtime is tracked
+
+Observed test progression
+Initial result:
+- tests/aero/test_views.py -> passed
+- tests/aero/test_sweep.py -> passed
+- tests/aero/test_sweep_run.py -> passed
+- tests/aero/test_aerosandbox_avl.py -> one failure
+
+Failing test:
+- test_avl_paneling_context_restores_global_defaults
+
+Cause:
+- mutable nested AVL defaults were restored by reassignment instead of in-place restoration
+
+Resolution:
+- changed restore logic to in-place clear/update using deep-copied snapshot
+
+Final result:
+- full aero patch test suite passed
+
+Recommended commands
+pytest tests/aero/test_views.py -v
+pytest tests/aero/test_aerosandbox_avl.py -v
+pytest tests/aero/test_sweep.py -v
+pytest tests/aero/test_sweep_run.py -v
+pytest tests/aero -v
+
+Bottom-line assessment
+This patch batch meaningfully improved the aero layer.
+
+What is stronger now:
+- reconstruction honesty
+- geometry validation
+- solver-state safety
+- sweep guardrails
+- manifest usefulness
+
+What is still for later:
+- full integration tests with real AVL executable
+- solver-version capture
+- stricter geometry-view contract
+- more explicit schema/versioning in persisted aero outputs
+- future parallel sweep execution strategy
+
+Conclusion
+The important fixes are in place, the tests did catch a real bug, that bug was fixed properly, and the current patch set is in much better shape than the original version.

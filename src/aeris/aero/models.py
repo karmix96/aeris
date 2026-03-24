@@ -1,3 +1,13 @@
+"""
+Typed domain models for the AERIS aero layer.
+
+These models define the canonical input/output contract between geometry views,
+solver adapters, sweep orchestration, validation, and result persistence.
+The current v1 geometry carrier is an AeroGeometryView that wraps an
+AeroSandbox airplane object, but the view type is intentionally designed to
+allow future geometry representations without changing solver-facing contracts.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -40,18 +50,29 @@ class AeroSweepResult:
     cases: list[dict[str, Any]] = field(default_factory=list)
     summary: dict[str, Any] = field(default_factory=dict)
 
-@dataclass(slots=True)
+@dataclass
 class AeroGeometryView:
     """
-    Canonical v1 geometry input to the aero layer.
+    Solver-ready geometry view for the aero layer.
 
-    This is intentionally a typed AERIS geometry view that currently wraps an
-    AeroSandbox airplane object. Later, other view kinds can coexist without
-    changing the solver contract.
+    Current v1 contract:
+    - `airplane` must be an AeroSandbox-compatible airplane object
+    - it must provide, at minimum:
+        - wings
+        - s_ref
+        - b_ref
+        - c_ref
+    - this view is the geometry/aero boundary object
+    - solver adapters should depend on this view, not on geometry generator internals
+
+    Notes:
+    - The `airplane` field remains typed as `Any` for now to avoid premature hard
+      coupling, but the intended runtime contract is explicit.
     """
+
     view_id: str
     airplane: Any
-    source_generator: str | None = None
+    source_generator: str
     source_geometry_id: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 

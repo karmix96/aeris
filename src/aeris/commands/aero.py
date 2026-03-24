@@ -3,38 +3,29 @@ CLI commands for aerodynamic analysis and sweep inspection.
 
 Responsibilities:
     - Expose aero run and sweep commands
-    - Resolve geometry source mode for fresh and stored geometry
-    - Delegate solver execution through the aero layer
+    - Validate CLI inputs
+    - Delegate workflow orchestration to pipeline helpers
     - Inspect and replay saved aero results
 
 Notes:
-    - This module is still heavier than ideal
-    - Shared source-preparation logic is centralized here for now
-    - Future cleanup should move workflow/IO/reporting helpers out of commands
+    - Geometry preparation and manifest-writing now live in pipeline helpers
+    - This module should remain a thin control/reporting layer
 """
 
 from __future__ import annotations
 
 import json
-import shutil
-from dataclasses import asdict, is_dataclass
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
 import typer
 
-from aeris.aero import AeroInput, AeroSolverSettings, FlightCondition, create_solver
 from aeris.aero.io import load_aero_result_from_run_dir
-from aeris.aero.models import FlightConditionSweep
-from aeris.aero.sweep_run import run_aero_sweep
-from aeris.aero.views import (
-    geometry_view_from_case,
-    geometry_view_from_dataset_case,
-    geometry_view_from_run_dir,
+from aeris.pipeline.aero_workflows import (
+    execute_aero_run,
+    execute_aero_sweep,
 )
-from aeris.common.config import load_yaml_config
-from aeris.common.paths import create_run_folder
-from aeris.geometry.config_resolver import resolve_generator_and_config
 
 aero_app = typer.Typer(help="Aerodynamic analysis commands.")
 
@@ -222,136 +213,6 @@ def _resolve_source_policy(*, geometry_source: str, config_mode: bool) -> str:
     return gs
 
 
-def _create_aero_run_root(output_name: str, label: str, prefix: str) -> tuple[Path, Path, Path]:
-    suffix = output_name.strip() or label.strip()
-    run_root = create_run_folder(prefix=f"{prefix}_{suffix}").root
-    geometry_dir = run_root / "geometry"
-    aero_dir = run_root / "aero"
-    geometry_dir.mkdir(parents=True, exist_ok=True)
-    aero_dir.mkdir(parents=True, exist_ok=True)
-    return run_root, geometry_dir, aero_dir
-
-
-def _sample_one(generator_id: str, typed_config: Any, seed: int) -> Any:
-    from aeris.geometry.registry import get_geometry_generator
-
-    generator = get_geometry_generator(generator_id)
-    return generator.sample_one(typed_config, seed=seed)
-
-
-def _run_full_case(
-    generator_id: str,
-    sample: Any,
-    typed_config: Any,
-    output_dir: Path,
-    save_plot: bool,
-    build_aerosandbox: bool,
-) -> Any:
-    from aeris.geometry.registry import get_geometry_generator
-
-    generator = get_geometry_generator(generator_id)
-    return generator.run_full_case(
-        sample=sample,
-        config=typed_config,
-        output_dir=output_dir,
-        save_plot=save_plot,
-        build_aerosandbox=build_aerosandbox,
-    )
-
-
-def _summarize_case(generator_id: str, case: Any) -> Any:
-    from aeris.geometry.registry import get_geometry_generator
-
-    generator = get_geometry_generator(generator_id)
-    return generator.summarize_case(case)
-
-
-def _prepare_geometry_source(
-    *,
-    config: Path | None,
-    run_dir: Path | None,
-    dataset: Path | None,
-    geometry_id: str,
-    source_policy: str,
-    seed: int,
-    geometry_dir: Path,
-    copy_config_to: Path | None = None,
-) -> tuple[Any, str, Any]:
-    generator_id = "bwb_segmented_v1"
-    summary: Any = {}
-    geometry_view = None
-
-    if config is not None:
-        raw_config = load_yaml_config(config)
-        generator_id, typed_config = resolve_generator_and_config(raw_config)
-
-        sample = _sample_one(generator_id=generator_id, typed_config=typed_config, seed=seed)
-        case = _run_full_case(
-            generator_id=generator_id,
-            sample=sample,
-            typed_config=typed_config,
-            output_dir=geometry_dir,
-            save_plot=False,
-            build_aerosandbox=True,
-        )
-        summary = _summarize_case(generator_id=generator_id, case=case)
-
-        geometry_view = geometry_view_from_case(
-            case=case,
-            generator_id=generator_id,
-            case_dir=geometry_dir,
-            source_policy=source_policy,
-        )
-
-        if copy_config_to is not None and config.exists():
-            shutil.copy2(config, copy_config_to / config.name)
-
-        return geometry_view, generator_id, summary
-
-    if run_dir is not None:
-        geometry_view = geometry_view_from_run_dir(
-            run_dir=run_dir,
-            generator_id=generator_id,
-        )
-        summary = {
-            "source_mode": "run_dir",
-            "run_dir": str(run_dir.resolve()),
-        }
-        return geometry_view, generator_id, summary
-
-    geometry_view = geometry_view_from_dataset_case(
-        dataset_root=dataset,
-        geometry_id=geometry_id,
-        generator_id=generator_id,
-    )
-    summary = {
-        "source_mode": "dataset",
-        "dataset_root": str(dataset.resolve()),
-        "geometry_id": geometry_id,
-    }
-    return geometry_view, generator_id, summary
-
-
-def _dataclass_or_value(value: Any) -> Any:
-    if is_dataclass(value):
-        return asdict(value)
-    return value
-
-
-def _to_jsonable(value: Any) -> Any:
-    if is_dataclass(value):
-        return _to_jsonable(asdict(value))
-    if isinstance(value, dict):
-        return {str(k): _to_jsonable(v) for k, v in value.items()}
-    if isinstance(value, (list, tuple)):
-        return [_to_jsonable(v) for v in value]
-    if isinstance(value, Path):
-        return str(value)
-    if isinstance(value, (str, int, float, bool)) or value is None:
-        return value
-    return str(value)
-
-
 def _load_aero_sweep_manifest(run_dir: Path) -> dict[str, Any]:
     run_dir = run_dir.resolve()
 
@@ -426,6 +287,11 @@ def run_aero(
     dataset: Path | None = typer.Option(None, "--dataset", help="Existing dataset root."),
     geometry_id: str = typer.Option("", "--geometry-id", help="Geometry ID inside dataset root."),
     geometry_source: str = typer.Option("auto", "--geometry-source", help="auto | native | reconstruct"),
+    generator_id: str = typer.Option(
+        "",
+        "--generator-id",
+        help="Generator ID required for --run-dir and --dataset modes. Ignored for --config.",
+    ),
     alpha: float = typer.Option(..., "--alpha"),
     velocity: float = typer.Option(28.0, "--velocity"),
     altitude: float = typer.Option(0.0, "--altitude"),
@@ -464,78 +330,32 @@ def run_aero(
         config_mode=config is not None,
     )
 
-    label = (
-        config.stem if config is not None
-        else run_dir.name if run_dir is not None
-        else geometry_id
-    )
-
-    run_root, geometry_dir, aero_dir = _create_aero_run_root(
-        output_name=output_name,
-        label=label,
-        prefix="aero",
-    )
-
-    geometry_view, _generator_id, summary = _prepare_geometry_source(
+    run_root, result = execute_aero_run(
         config=config,
         run_dir=run_dir,
         dataset=dataset,
         geometry_id=geometry_id,
-        source_policy=source_policy,
+        geometry_source=source_policy,
+        generator_id=generator_id.strip() or None,
+        alpha=alpha,
+        velocity=velocity,
+        altitude=altitude,
+        beta=beta,
+        mach=mach,
+        p=p,
+        q=q,
+        r=r,
+        solver=solver,
+        avl_command=avl_command,
+        timeout_sec=timeout_sec,
+        spanwise_resolution=spanwise_resolution,
+        chordwise_resolution=chordwise_resolution,
+        spanwise_spacing=spanwise_spacing,
+        chordwise_spacing=chordwise_spacing,
+        save_surface_forces=save_surface_forces,
+        save_element_forces=save_element_forces,
         seed=seed,
-        geometry_dir=geometry_dir,
-        copy_config_to=run_root,
-    )
-
-    aero_input = AeroInput(
-        geometry=geometry_view,
-        flight_condition=FlightCondition(
-            alpha_deg=alpha,
-            beta_deg=beta,
-            mach=mach,
-            velocity_mps=velocity,
-            altitude_m=altitude,
-            p_rad_s=p,
-            q_rad_s=q,
-            r_rad_s=r,
-        ),
-        settings=AeroSolverSettings(
-            avl_command=avl_command or None,
-            timeout_sec=timeout_sec,
-            verbose=False,
-            solver_options={
-                "paneling": {
-                    "spanwise_resolution": spanwise_resolution,
-                    "chordwise_resolution": chordwise_resolution,
-                    "spanwise_spacing": spanwise_spacing,
-                    "chordwise_spacing": chordwise_spacing,
-                },
-                "save_surface_forces": save_surface_forces,
-                "save_element_forces": save_element_forces,
-            },
-        ),
-        provenance={
-            "solver": solver,
-            "seed": seed,
-            "geometry_source": source_policy,
-            "source_label": label,
-        },
-    )
-
-    solver_instance = create_solver(solver)
-    result = solver_instance.run_case(aero_input=aero_input, output_dir=aero_dir)
-
-    manifest = {
-        "run_name": run_root.name,
-        "solver": solver,
-        "geometry_source": source_policy,
-        "flight_condition": _to_jsonable(asdict(aero_input.flight_condition)),
-        "geometry_summary": _to_jsonable(_dataclass_or_value(summary)),
-        "aero_result": _to_jsonable(_dataclass_or_value(result)),
-    }
-    (run_root / "aero_manifest.json").write_text(
-        json.dumps(manifest, indent=2),
-        encoding="utf-8",
+        output_name=output_name,
     )
 
     typer.echo("")
@@ -563,7 +383,7 @@ def inspect_aero(
     result = load_aero_result_from_run_dir(run_dir)
 
     if as_json:
-        typer.echo(json.dumps(_to_jsonable(asdict(result)), indent=2))
+        typer.echo(json.dumps(asdict(result), indent=2))
         return
 
     typer.echo("")
@@ -578,6 +398,11 @@ def sweep_aero(
     dataset: Path | None = typer.Option(None, "--dataset", help="Existing dataset root."),
     geometry_id: str = typer.Option("", "--geometry-id", help="Geometry ID inside dataset root."),
     geometry_source: str = typer.Option("auto", "--geometry-source", help="auto | native | reconstruct"),
+    generator_id: str = typer.Option(
+        "",
+        "--generator-id",
+        help="Generator ID required for --run-dir and --dataset modes. Ignored for --config.",
+    ),
     alpha: float = typer.Option(0.0, "--alpha"),
     velocity: float = typer.Option(28.0, "--velocity"),
     altitude: float = typer.Option(0.0, "--altitude"),
@@ -623,98 +448,56 @@ def sweep_aero(
         config_mode=config is not None,
     )
 
-    label = (
-        config.stem if config is not None
-        else run_dir.name if run_dir is not None
-        else geometry_id
-    )
+    parsed_alpha_values = _parse_float_list(alpha_values, "--alpha-values")
+    parsed_beta_values = _parse_float_list(beta_values, "--beta-values")
+    parsed_velocity_values = _parse_float_list(velocity_values, "--velocity-values")
+    parsed_altitude_values = _parse_float_list(altitude_values, "--altitude-values")
+    parsed_p_values = _parse_float_list(p_values, "--p-values")
+    parsed_q_values = _parse_float_list(q_values, "--q-values")
+    parsed_r_values = _parse_float_list(r_values, "--r-values")
 
-    run_root, geometry_dir, sweep_dir = _create_aero_run_root(
-        output_name=output_name,
-        label=label,
-        prefix="aero_sweep",
-    )
-
-    geometry_view, _generator_id, summary = _prepare_geometry_source(
+    run_root, sweep_result = execute_aero_sweep(
         config=config,
         run_dir=run_dir,
         dataset=dataset,
         geometry_id=geometry_id,
-        source_policy=source_policy,
-        seed=seed,
-        geometry_dir=geometry_dir,
-        copy_config_to=run_root,
-    )
-
-    base_fc = FlightCondition(
-        alpha_deg=alpha,
-        beta_deg=beta,
+        geometry_source=source_policy,
+        generator_id=generator_id.strip() or None,
+        alpha=alpha,
+        velocity=velocity,
+        altitude=altitude,
+        beta=beta,
         mach=mach,
-        velocity_mps=velocity,
-        altitude_m=altitude,
-        p_rad_s=p,
-        q_rad_s=q,
-        r_rad_s=r,
-    )
-
-    sweep = FlightConditionSweep(
-        alpha_deg_values=_parse_float_list(alpha_values, "--alpha-values"),
-        beta_deg_values=_parse_float_list(beta_values, "--beta-values"),
-        velocity_mps_values=_parse_float_list(velocity_values, "--velocity-values"),
-        altitude_m_values=_parse_float_list(altitude_values, "--altitude-values"),
-        p_rad_s_values=_parse_float_list(p_values, "--p-values"),
-        q_rad_s_values=_parse_float_list(q_values, "--q-values"),
-        r_rad_s_values=_parse_float_list(r_values, "--r-values"),
-    )
-
-    settings = AeroSolverSettings(
-        avl_command=avl_command or None,
+        p=p,
+        q=q,
+        r=r,
+        alpha_values=parsed_alpha_values,
+        beta_values=parsed_beta_values,
+        velocity_values=parsed_velocity_values,
+        altitude_values=parsed_altitude_values,
+        p_values=parsed_p_values,
+        q_values=parsed_q_values,
+        r_values=parsed_r_values,
+        solver=solver,
+        avl_command=avl_command,
         timeout_sec=timeout_sec,
-        verbose=False,
-        solver_options={
-            "paneling": {
-                "spanwise_resolution": spanwise_resolution,
-                "chordwise_resolution": chordwise_resolution,
-                "spanwise_spacing": spanwise_spacing,
-                "chordwise_spacing": chordwise_spacing,
-            },
-            "save_surface_forces": save_surface_forces,
-            "save_element_forces": save_element_forces,
-        },
-    )
-
-    sweep_result = run_aero_sweep(
-        geometry=geometry_view,
-        base_flight_condition=base_fc,
-        sweep=sweep,
-        solver_id=solver,
-        settings=settings,
-        output_dir=sweep_dir,
-        provenance={
-            "solver": solver,
-            "seed": seed,
-            "geometry_source": source_policy,
-            "source_label": label,
-        },
-    )
-
-    manifest = {
-        "run_name": run_root.name,
-        "solver": solver,
-        "geometry_source": source_policy,
-        "base_flight_condition": _to_jsonable(asdict(base_fc)),
-        "flight_condition_sweep": _to_jsonable(asdict(sweep)),
-        "geometry_summary": _to_jsonable(_dataclass_or_value(summary)),
-        "aero_sweep_result": _to_jsonable(_dataclass_or_value(sweep_result)),
-    }
-    (run_root / "aero_sweep_manifest.json").write_text(
-        json.dumps(manifest, indent=2),
-        encoding="utf-8",
+        spanwise_resolution=spanwise_resolution,
+        chordwise_resolution=chordwise_resolution,
+        spanwise_spacing=spanwise_spacing,
+        chordwise_spacing=chordwise_spacing,
+        save_surface_forces=save_surface_forces,
+        save_element_forces=save_element_forces,
+        seed=seed,
+        output_name=output_name,
+        max_cases=None,
     )
 
     typer.echo("")
     typer.echo(f"[AERIS] Aero sweep completed in: {run_root}")
-    _print_aero_sweep_result(_to_jsonable(_dataclass_or_value(sweep_result)))
+    _print_aero_sweep_result({
+        "cases": sweep_result.cases,
+        "summary": sweep_result.summary,
+    })
 
 
 @aero_app.command("sweep-inspect")
@@ -770,7 +553,7 @@ def inspect_aero_sweep_case(
     result = load_aero_result_from_run_dir(case_dir)
 
     if as_json:
-        typer.echo(json.dumps(_to_jsonable(asdict(result)), indent=2))
+        typer.echo(json.dumps(asdict(result), indent=2))
         return
 
     typer.echo("")

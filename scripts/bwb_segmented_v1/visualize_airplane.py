@@ -202,6 +202,36 @@ def build_tag(mode: str, config_path: Path | None, dataset_root: Path | None, ge
         return f"{dataset_root.name}_{geometry_id}"
     raise ValueError(f"Unsupported mode: {mode}")
 
+def sample_from_case_dir(case_dir: Path) -> BWBDesignSample:
+    summary_path = case_dir / "geometry_summary.json"
+    if not summary_path.exists():
+        raise FileNotFoundError(f"Missing geometry summary: {summary_path}")
+
+    data = json.loads(summary_path.read_text(encoding="utf-8"))
+
+    sampled_planform = data["sampled_planform"]
+    sampled_sections = data["sampled_sections"]
+
+    return BWBDesignSample(
+        c1_m=float(sampled_planform["c1_m"]),
+        c2_ratio=float(sampled_planform["c2_ratio"]),
+        c3_ratio=float(sampled_planform["c3_ratio"]),
+        c4_ratio=float(sampled_planform["c4_ratio"]),
+        b_total_m=float(sampled_planform["b_total_m"]),
+        b3_ratio=float(sampled_planform["b3_ratio"]),
+        split_ratio=float(sampled_planform["split_ratio"]),
+        sw1_deg=float(abs(sampled_planform["sw1_deg"])),
+        sw2_deg=float(abs(sampled_planform["sw2_deg"])),
+        sw3_deg=float(abs(sampled_planform["sw3_deg"])),
+        twist_b0_deg=float(sampled_sections["twist_b0_deg"]),
+        twist_b1_deg=float(sampled_sections["twist_b1_deg"]),
+        twist_b2_deg=float(sampled_sections["twist_b2_deg"]),
+        twist_b3_deg=float(sampled_sections["twist_b3_deg"]),
+        dihedral_b1_deg=float(sampled_sections["dihedral_b1_deg"]),
+        dihedral_b2_deg=float(sampled_sections["dihedral_b2_deg"]),
+        dihedral_b3_deg=float(sampled_sections["dihedral_b3_deg"]),
+    )
+
 def sample_from_run(run_root: Path) -> BWBDesignSample:
     summary_path = run_root / "geometry" / "geometry_summary.json"
     if not summary_path.exists():
@@ -256,9 +286,15 @@ def main() -> None:
     )
     parser.add_argument(
         "--mode",
-        choices=["baseline", "config", "dataset", "run"],
+        choices=["baseline", "dataset", "run", "case"],
         default="baseline",
-        help="Visualization source: hardcoded baseline, direct config, or dataset metadata.",
+        help="Visualization source: baseline, dataset, run root, or direct geometry case directory.",
+    )
+    parser.add_argument(
+        "--case-dir",
+        type=Path,
+        default=None,
+        help="Direct geometry case directory containing geometry_summary.json and reconstruction artifacts (used only in --mode case).",
     )
     parser.add_argument(
         "--dataset",
@@ -296,7 +332,6 @@ def main() -> None:
     if args.mode == "baseline":
         raw = load_yaml_config(config_path)
         cfg = build_bwb_generator_config(raw)
-        cfg = baseline_config_override(cfg)
         sample = baseline_sample()
         tag = build_tag("baseline", config_path=config_path, dataset_root=None, geometry_id=None)
 
@@ -326,6 +361,18 @@ def main() -> None:
 
         sample = sample_from_run(run_root)
         tag = f"run_{run_root.name}"
+    elif args.mode == "case":
+        if args.case_dir is None:
+            raise ValueError("--case-dir is required when --mode case")
+
+        case_dir = args.case_dir.expanduser().resolve()
+        if not case_dir.exists():
+            raise FileNotFoundError(f"Case directory does not exist: {case_dir}")
+
+        raw = load_yaml_config(config_path)
+        cfg = build_bwb_generator_config(raw)
+        sample = sample_from_case_dir(case_dir)
+        tag = f"case_{case_dir.name}"
     else:
         dataset_root = args.dataset.expanduser().resolve()
         if not args.geometry_id:

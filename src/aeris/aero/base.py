@@ -1,3 +1,12 @@
+"""
+Abstract contract for aerodynamic solver plugins.
+
+A solver adapter evaluates exactly one geometry view at exactly one flight
+condition and returns one structured AeroResult. Multi-condition sweeps,
+batching, retries, and dataset orchestration belong outside the solver in
+pipeline/orchestration code.
+"""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

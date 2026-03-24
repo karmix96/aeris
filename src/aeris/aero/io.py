@@ -1,3 +1,11 @@
+"""
+Persistence and readback helpers for saved aerodynamic results.
+
+This module locates saved aero_result.json files, loads them either as raw JSON
+dictionaries or reconstructed AeroResult objects, and provides a stable readback
+path for CLI inspection and replay workflows.
+"""
+
 from __future__ import annotations
 from pathlib import Path
 

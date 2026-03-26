@@ -28,10 +28,18 @@ from typing import Any
 from aeris.common.config import load_yaml_config
 from aeris.dataset.dataset_run import run_dataset_generation
 from aeris.pipeline.aero_workflows import execute_aero_sweep
+from aeris.quality.pipeline_api import (
+    run_geometry_dataset_qc,
+    run_aero_dataset_qc,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DATASETS_DIR = PROJECT_ROOT / "data" / "datasets"
 
+def _read_json_if_exists(path: Path) -> dict[str, Any] | None:
+    if not path.exists():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
 
 def _utc_now_iso() -> str:
     return datetime.now(UTC).isoformat()
@@ -246,6 +254,12 @@ def run_aero_dataset_generation(
     save_element_forces: bool,
     max_cases: int | None,
     keep_geometry_dataset: bool,
+    run_geometry_qc: bool = False,
+    geometry_qc_profile: str = "basic",
+    fail_on_geometry_qc_error: bool = False,
+    run_aero_qc: bool = False,
+    aero_qc_profile: str = "basic",
+    fail_on_aero_qc_error: bool = False,
 ) -> int:
     raw_config = load_yaml_config(config_path)
     generator_id = _infer_generator_id_from_config(raw_config)
@@ -269,6 +283,9 @@ def run_aero_dataset_generation(
         dataset_name=geometry_dataset_name,
         save_plot=save_plot,
         build_aerosandbox=build_aerosandbox,
+        run_qc=run_geometry_qc,
+        qc_profile=geometry_qc_profile,
+        fail_on_qc_error=fail_on_geometry_qc_error,
     )
     if rc != 0:
         _write_json(
@@ -281,6 +298,14 @@ def run_aero_dataset_generation(
             },
         )
         return 1
+
+    geometry_manifest = _read_json_if_exists(geometry_dataset_root / "dataset_manifest.json")
+    geometry_qc_summary = None
+    if geometry_manifest is not None:
+        geometry_qc_summary = geometry_manifest.get("qc")
+    geometry_qc_report_path = None
+    if geometry_qc_summary is not None:
+        geometry_qc_report_path = geometry_qc_summary.get("report_path")
 
     geometry_metadata_rows = _read_csv_rows(geometry_dataset_root / "metadata.csv")
     geometry_by_id = {
@@ -431,6 +456,7 @@ def run_aero_dataset_generation(
         "p_values": p_values,
         "q_values": q_values,
         "r_values": r_values,
+        "geometry_qc": geometry_qc_summary,
         "artifacts": {
             "aero_dataset_csv": str((final_root / "aero_dataset.csv").resolve()),
             "aero_failures_csv": str((final_root / "aero_failures.csv").resolve()),
@@ -445,5 +471,52 @@ def run_aero_dataset_generation(
     else:
         manifest["geometry_dataset_deleted_after_run"] = False
 
-    _write_json(final_root / "aero_dataset_manifest.json", manifest)
+    if not keep_geometry_dataset:
+        manifest["geometry_dataset_deleted_after_run"] = True
+        if geometry_dataset_root.exists():
+            shutil.rmtree(geometry_dataset_root)
+    else:
+        manifest["geometry_dataset_deleted_after_run"] = False
+
+    manifest_path = final_root / "aero_dataset_manifest.json"
+
+    # Write base manifest first so integrated aero QC can validate against it.
+    _write_json(manifest_path, manifest)
+
+    aero_qc_report = None
+    if run_aero_qc:
+        aero_qc_report = run_aero_dataset_qc(
+            dataset_root=final_root,
+            profile=aero_qc_profile,
+        )
+
+        qc_dir = final_root / "qc"
+        qc_dir.mkdir(parents=True, exist_ok=True)
+        aero_qc_report_path = qc_dir / "aero_qc_report.json"
+        _write_json(aero_qc_report_path, aero_qc_report)
+
+        manifest["aero_qc"] = {
+            "run_qc": True,
+            "profile": aero_qc_profile,
+            "passed": aero_qc_report["passed"],
+            "error_count": len(aero_qc_report["errors"]),
+            "warning_count": len(aero_qc_report["warnings"]),
+            "report_path": str(aero_qc_report_path),
+        }
+    else:
+        manifest["aero_qc"] = {
+            "run_qc": False,
+            "report_path": None,
+        }
+
+    # Rewrite manifest with aero_qc summary included.
+    _write_json(manifest_path, manifest)
+
+    if (
+        aero_qc_report is not None
+        and not aero_qc_report["passed"]
+        and fail_on_aero_qc_error
+    ):
+        return 1
+
     return 0 if success_rows else 1

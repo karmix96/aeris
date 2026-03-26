@@ -20,9 +20,39 @@ import typer
 from aeris.dataset.aero_dataset_run import run_aero_dataset_generation
 from aeris.dataset.dataset_run import run_dataset_generation
 from aeris.dataset.inspect import inspect_dataset
+from aeris.quality.pipeline_api import (
+    run_geometry_dataset_qc,
+    run_aero_dataset_qc,
+    
+)
 
 dataset_app = typer.Typer(help="Dataset generation commands.")
 
+@dataset_app.command("qc")
+def dataset_qc(
+    dataset: Path = typer.Option(..., "--dataset"),
+    profile: str = typer.Option("basic", "--profile"),
+):
+    report = run_geometry_dataset_qc(dataset, profile=profile)
+
+    typer.echo(f"[AERIS] Geometry QC passed: {report['passed']}")
+    typer.echo(f"Errors: {len(report['errors'])}")
+
+    if not report["passed"]:
+        raise typer.Exit(code=1)
+
+@dataset_app.command("aero-qc")
+def dataset_aero_qc(
+    dataset: Path = typer.Option(..., "--dataset"),
+    profile: str = typer.Option("basic", "--profile"),
+):
+    report = run_aero_dataset_qc(dataset, profile=profile)
+
+    typer.echo(f"[AERIS] Aero QC passed: {report['passed']}")
+    typer.echo(f"Errors: {len(report['errors'])}")
+
+    if not report["passed"]:
+        raise typer.Exit(code=1)
 
 @dataset_app.callback()
 def dataset_callback() -> None:
@@ -94,6 +124,21 @@ def dataset_generate(
         "--build-aerosandbox/--no-build-aerosandbox",
         help="Override config AeroSandbox behavior.",
     ),
+        run_qc: bool = typer.Option(
+        False,
+        "--run-qc/--no-run-qc",
+        help="Run QC checks after geometry dataset generation.",
+    ),
+    qc_profile: str = typer.Option(
+        "basic",
+        "--qc-profile",
+        help="QC profile name.",
+    ),
+    fail_on_qc_error: bool = typer.Option(
+        False,
+        "--fail-on-qc-error/--allow-qc-errors",
+        help="Exit nonzero if geometry QC fails.",
+    ),
 ) -> None:
     """Generate a batch geometry dataset using a modular sampling strategy."""
     exit_code = run_dataset_generation(
@@ -104,6 +149,9 @@ def dataset_generate(
         dataset_name=name,
         save_plot=save_plot,
         build_aerosandbox=build_aerosandbox,
+        run_qc=run_qc,
+        qc_profile=qc_profile,
+        fail_on_qc_error=fail_on_qc_error,
     )
     raise typer.Exit(code=exit_code)
 
@@ -247,6 +295,36 @@ def dataset_aero_generate(
         "--keep-geometry-dataset/--delete-geometry-dataset",
         help="Keep or delete the intermediate geometry dataset after aero dataset creation.",
     ),
+        run_geometry_qc: bool = typer.Option(
+        False,
+        "--run-geometry-qc/--no-run-geometry-qc",
+        help="Run QC checks on the intermediate geometry dataset.",
+    ),
+    geometry_qc_profile: str = typer.Option(
+        "basic",
+        "--geometry-qc-profile",
+        help="Geometry QC profile name.",
+    ),
+    fail_on_geometry_qc_error: bool = typer.Option(
+        False,
+        "--fail-on-geometry-qc-error/--allow-geometry-qc-errors",
+        help="Exit nonzero if geometry QC fails.",
+    ),
+    run_aero_qc: bool = typer.Option(
+        False,
+        "--run-aero-qc/--no-run-aero-qc",
+        help="Run QC checks on the generated aero dataset.",
+    ),
+    aero_qc_profile: str = typer.Option(
+        "basic",
+        "--aero-qc-profile",
+        help="Aero QC profile name.",
+    ),
+    fail_on_aero_qc_error: bool = typer.Option(
+        False,
+        "--fail-on-aero-qc-error/--allow-aero-qc-errors",
+        help="Exit nonzero if aero QC fails.",
+    ),
 ) -> None:
     """Generate a geometry dataset and enrich it with aero/control sweeps in one command."""
     parsed_alpha_values = _parse_float_list(alpha_values, "--alpha-values")
@@ -271,33 +349,40 @@ def dataset_aero_generate(
         raise typer.BadParameter("--control-input-values must not be empty.")
 
     exit_code = run_aero_dataset_generation(
-        config_path=config,
-        n_samples=n,
-        sampler=sampler,
-        sampler_seed=sampler_seed,
-        dataset_name=name,
-        save_plot=save_plot,
-        build_aerosandbox=build_aerosandbox,
-        alpha_values=parsed_alpha_values,
-        beta_values=parsed_beta_values,
-        velocity_values=parsed_velocity_values,
-        altitude_values=parsed_altitude_values,
-        p_values=parsed_p_values,
-        q_values=parsed_q_values,
-        r_values=parsed_r_values,
-        control_input_values=parsed_control_input_values,
-        solver=solver,
-        avl_command=avl_command,
-        timeout_sec=timeout_sec,
-        spanwise_resolution=spanwise_resolution,
-        chordwise_resolution=chordwise_resolution,
-        spanwise_spacing=spanwise_spacing,
-        chordwise_spacing=chordwise_spacing,
-        save_surface_forces=save_surface_forces,
-        save_element_forces=save_element_forces,
-        max_cases=max_cases,
-        keep_geometry_dataset=keep_geometry_dataset,
+    config_path=config,
+    n_samples=n,
+    sampler=sampler,
+    sampler_seed=sampler_seed,
+    dataset_name=name,
+    save_plot=save_plot,
+    build_aerosandbox=build_aerosandbox,
+    alpha_values=parsed_alpha_values,
+    beta_values=parsed_beta_values,
+    velocity_values=parsed_velocity_values,
+    altitude_values=parsed_altitude_values,
+    p_values=parsed_p_values,
+    q_values=parsed_q_values,
+    r_values=parsed_r_values,
+    control_input_values=parsed_control_input_values,
+    solver=solver,
+    avl_command=avl_command,
+    timeout_sec=timeout_sec,
+    spanwise_resolution=spanwise_resolution,
+    chordwise_resolution=chordwise_resolution,
+    spanwise_spacing=spanwise_spacing,
+    chordwise_spacing=chordwise_spacing,
+    save_surface_forces=save_surface_forces,
+    save_element_forces=save_element_forces,
+    max_cases=max_cases,
+    keep_geometry_dataset=keep_geometry_dataset,
+    run_geometry_qc=run_geometry_qc,
+    geometry_qc_profile=geometry_qc_profile,
+    fail_on_geometry_qc_error=fail_on_geometry_qc_error,
+    run_aero_qc=run_aero_qc,
+    aero_qc_profile=aero_qc_profile,
+    fail_on_aero_qc_error=fail_on_aero_qc_error,
     )
+        
     raise typer.Exit(code=exit_code)
 
 

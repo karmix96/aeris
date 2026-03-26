@@ -38,12 +38,13 @@ from aeris.aero.solvers.avl_validation import validate_avl_parser_consistency
 
 AERO_RESULT_SCHEMA_VERSION = "aero_result_v1"
 
+
 class AVLStrips(AVLBase):
     """
     AVL wrapper that preserves raw files and parses totals + stability, while also
     exposing output file locations.
     """
-    
+
     def _default_keystroke_file_contents(
         self,
         control_input_deg: float | None = None,
@@ -105,7 +106,7 @@ class AVLStrips(AVLBase):
             run_file_contents += ["d1", "d1", f"{value}"]
 
         return run_file_contents
-    
+
     def run(
         self,
         run_command: str | None = None,
@@ -133,7 +134,8 @@ class AVLStrips(AVLBase):
         body_derivs_filename = "body_derivs.txt"
         vm_filename = "strip_shear_moment.txt"
 
-        self.write_avl(directory / airplane_file)
+        airplane_avl_path = directory / airplane_file
+        self.write_avl(airplane_avl_path)
 
         _rm(directory / totals_filename)
         _rm(directory / strip_filename)
@@ -202,6 +204,7 @@ class AVLStrips(AVLBase):
             ) from exc
 
         log_text = stdout_path.read_text() if stdout_path.exists() else ""
+        avl_text = airplane_avl_path.read_text() if airplane_avl_path.exists() else ""
 
         if "Strip array overflow" in log_text or "SDUPL: Strip array overflow" in log_text:
             raise RuntimeError(
@@ -236,7 +239,7 @@ class AVLStrips(AVLBase):
 
         if body_derivs_path.exists():
             res["_body_file_parsed"] = _parse_stability_file(body_derivs_path)
-            
+
         for key_to_lowerize in ["Alpha", "Beta", "Mach"]:
             if key_to_lowerize in res:
                 res[key_to_lowerize.lower()] = res.pop(key_to_lowerize)
@@ -275,9 +278,17 @@ class AVLStrips(AVLBase):
         res["M_g"] = self.op_point.convert_axes(*res["M_b"], from_axes="body", to_axes="geometry")
         res["M_w"] = self.op_point.convert_axes(*res["M_b"], from_axes="body", to_axes="wind")
 
+        control_diagnostics = {
+            "airplane_has_control_surfaces": _airplane_has_any_control_surface(self.airplane),
+            "airplane_avl_has_control_blocks": _avl_text_has_control_blocks(avl_text),
+            "keystrokes_has_d1_command": _keystrokes_contain_d1(keystroke_lines),
+            "stdout_control_variables": _extract_stdout_control_variable_count(log_text),
+        }
+
+        res["_control_diagnostics"] = control_diagnostics
         res["_files"] = {
             "working_dir": str(directory),
-            "airplane_avl": str(directory / airplane_file),
+            "airplane_avl": str(airplane_avl_path),
             "keystrokes": str(keystrokes_path),
             "stdout": str(stdout_path),
             "totals": str(totals_path),
@@ -292,6 +303,7 @@ class AVLStrips(AVLBase):
         }
 
         return res
+
 
 def read_avl_strips(filepath: str | Path, alpha_deg: float | None = None) -> pd.DataFrame:
     lines = Path(filepath).read_text().splitlines()
@@ -347,6 +359,7 @@ def read_avl_strips(filepath: str | Path, alpha_deg: float | None = None) -> pd.
 
     return df
 
+
 def configure_avl_paneling(airplane: asb.Airplane, panel_cfg: dict[str, Any] | None = None) -> None:
     panel_cfg = panel_cfg or {}
 
@@ -365,9 +378,6 @@ def configure_avl_paneling(airplane: asb.Airplane, panel_cfg: dict[str, Any] | N
     AVLBase.default_analysis_specific_options[Wing]["chordwise_resolution"] = chord_res
 
 
-import copy
-from contextlib import contextmanager
-
 @contextmanager
 def avl_paneling_context(airplane, panel_cfg: dict[str, Any] | None = None):
     original = AVLBase.default_analysis_specific_options
@@ -379,6 +389,7 @@ def avl_paneling_context(airplane, panel_cfg: dict[str, Any] | None = None):
     finally:
         original.clear()
         original.update(snapshot)
+
 
 def _resolve_avl_command(explicit_command: str | None) -> str:
     if explicit_command:
@@ -412,6 +423,7 @@ def _validate_solver_airplane(airplane: Any) -> list[str]:
         errors.append("Airplane has no wings")
     return errors
 
+
 def _airplane_has_any_control_surface(airplane: asb.Airplane) -> bool:
     for wing in getattr(airplane, "wings", []) or []:
         for xsec in getattr(wing, "xsecs", []) or []:
@@ -419,6 +431,25 @@ def _airplane_has_any_control_surface(airplane: asb.Airplane) -> bool:
             if control_surfaces and len(control_surfaces) > 0:
                 return True
     return False
+
+
+def _geometry_view_declares_control_surfaces(geometry_view: Any) -> bool:
+    value = getattr(geometry_view, "has_control_surfaces", None)
+    if value is not None:
+        return bool(value)
+
+    metadata = getattr(geometry_view, "metadata", {}) or {}
+    return bool(metadata.get("has_control_surfaces", False))
+
+
+def _geometry_view_control_surface_names(geometry_view: Any) -> tuple[str, ...]:
+    names = getattr(geometry_view, "control_surface_names", None)
+    if names:
+        return tuple(str(name) for name in names)
+
+    metadata = getattr(geometry_view, "metadata", {}) or {}
+    names = metadata.get("control_surface_names", []) or []
+    return tuple(str(name) for name in names if str(name).strip())
 
 
 def _resolve_control_input_deg(settings) -> float | None:
@@ -437,6 +468,7 @@ def _resolve_control_input_deg(settings) -> float | None:
     if value is None:
         return None
     return float(value)
+
 
 def _mach_consistency_warning(fc) -> str | None:
     """
@@ -469,6 +501,21 @@ def _mach_consistency_warning(fc) -> str | None:
     return None
 
 
+def _extract_stdout_control_variable_count(log_text: str) -> int | None:
+    match = re.search(r"^\s*(\d+)\s+Control variables\b", log_text, flags=re.MULTILINE)
+    if not match:
+        return None
+    return int(match.group(1))
+
+
+def _avl_text_has_control_blocks(avl_text: str) -> bool:
+    return bool(re.search(r"^\s*CONTROL\s*$", avl_text, flags=re.MULTILINE))
+
+
+def _keystrokes_contain_d1(lines: list[str]) -> bool:
+    return any(str(line).strip().lower() == "d1" for line in lines)
+
+
 @register_solver
 class AeroSandboxAVLSolver(AeroSolver):
     solver_id = "aerosandbox_avl"
@@ -499,6 +546,57 @@ class AeroSandboxAVLSolver(AeroSolver):
         save_element_forces = bool(settings.solver_options.get("save_element_forces", False))
         control_input_deg = _resolve_control_input_deg(settings)
         avl_command = _resolve_avl_command(settings.avl_command)
+
+        geometry_declares_controls = _geometry_view_declares_control_surfaces(aero_input.geometry)
+        geometry_control_names = _geometry_view_control_surface_names(aero_input.geometry)
+        airplane_has_controls = _airplane_has_any_control_surface(airplane)
+        requested_control_actuation = control_input_deg is not None
+
+        if requested_control_actuation and not geometry_declares_controls:
+            return AeroResult(
+                status=AeroStatus.INVALID_INPUT,
+                solver_id=self.solver_id,
+                failure=AeroFailure(
+                    status=AeroStatus.INVALID_INPUT,
+                    reason="control_input_requested_but_geometry_has_no_control_surfaces",
+                    message=(
+                        "control_input_deg was provided, but AeroGeometryView declares no "
+                        "control surfaces. Refusing silent no-op actuation."
+                    ),
+                ),
+                solver_metadata={
+                    "control_input_deg": control_input_deg,
+                    "geometry_declares_controls": geometry_declares_controls,
+                    "airplane_has_controls": airplane_has_controls,
+                    "geometry_control_surface_names": list(geometry_control_names),
+                    "geometry_view_id": aero_input.geometry.view_id,
+                    "source_generator": aero_input.geometry.source_generator,
+                    "source_geometry_id": aero_input.geometry.source_geometry_id,
+                },
+            )
+
+        if geometry_declares_controls and not airplane_has_controls:
+            return AeroResult(
+                status=AeroStatus.INVALID_INPUT,
+                solver_id=self.solver_id,
+                failure=AeroFailure(
+                    status=AeroStatus.INVALID_INPUT,
+                    reason="geometry_control_surface_mismatch",
+                    message=(
+                        "AeroGeometryView declares control surfaces, but the airplane object "
+                        "passed to the solver contains none. Refusing inconsistent geometry."
+                    ),
+                ),
+                solver_metadata={
+                    "control_input_deg": control_input_deg,
+                    "geometry_declares_controls": geometry_declares_controls,
+                    "airplane_has_controls": airplane_has_controls,
+                    "geometry_control_surface_names": list(geometry_control_names),
+                    "geometry_view_id": aero_input.geometry.view_id,
+                    "source_generator": aero_input.geometry.source_generator,
+                    "source_geometry_id": aero_input.geometry.source_geometry_id,
+                },
+            )
 
         op_point = asb.OperatingPoint(
             atmosphere=asb.Atmosphere(altitude=fc.altitude_m),
@@ -535,6 +633,51 @@ class AeroSandboxAVLSolver(AeroSolver):
                 )
 
             runtime_sec = time.perf_counter() - start
+
+            control_diagnostics = raw.get("_control_diagnostics", {}) or {}
+            avl_has_control_blocks = bool(control_diagnostics.get("airplane_avl_has_control_blocks", False))
+            keystrokes_has_d1 = bool(control_diagnostics.get("keystrokes_has_d1_command", False))
+            stdout_control_variables = control_diagnostics.get("stdout_control_variables", None)
+
+            if requested_control_actuation:
+                control_failures: list[str] = []
+
+                if not avl_has_control_blocks:
+                    control_failures.append("exported AVL file contains no CONTROL blocks")
+                if not keystrokes_has_d1:
+                    control_failures.append("keystrokes contain no d1 command")
+                if stdout_control_variables is None:
+                    control_failures.append("AVL stdout did not report control-variable count")
+                elif int(stdout_control_variables) <= 0:
+                    control_failures.append("AVL reported 0 control variables")
+
+                if control_failures:
+                    return AeroResult(
+                        status=AeroStatus.INVALID_OUTPUT,
+                        solver_id=self.solver_id,
+                        runtime_sec=runtime_sec,
+                        failure=AeroFailure(
+                            status=AeroStatus.INVALID_OUTPUT,
+                            reason="control_actuation_unavailable",
+                            message="; ".join(control_failures),
+                        ),
+                        artifact_paths={k: v for k, v in raw.get("_files", {}).items()},
+                        solver_metadata={
+                            "avl_command": avl_command,
+                            "timeout_sec": settings.timeout_sec,
+                            "paneling": panel_cfg,
+                            "save_surface_forces": save_surface_forces,
+                            "save_element_forces": save_element_forces,
+                            "control_input_deg": control_input_deg,
+                            "geometry_declares_controls": geometry_declares_controls,
+                            "airplane_has_controls": airplane_has_controls,
+                            "geometry_control_surface_names": list(geometry_control_names),
+                            "control_diagnostics": control_diagnostics,
+                            "geometry_view_id": aero_input.geometry.view_id,
+                            "source_generator": aero_input.geometry.source_generator,
+                            "source_geometry_id": aero_input.geometry.source_geometry_id,
+                        },
+                    )
 
             cl = _to_float_or_none(raw.get("CL"))
             cd = _to_float_or_none(raw.get("CD"))
@@ -585,6 +728,10 @@ class AeroSandboxAVLSolver(AeroSolver):
                     "save_surface_forces": save_surface_forces,
                     "save_element_forces": save_element_forces,
                     "control_input_deg": control_input_deg,
+                    "geometry_declares_controls": geometry_declares_controls,
+                    "airplane_has_controls": airplane_has_controls,
+                    "geometry_control_surface_names": list(geometry_control_names),
+                    "control_diagnostics": control_diagnostics,
                     "flight_condition": {
                         "alpha_deg": fc.alpha_deg,
                         "beta_deg": fc.beta_deg,
@@ -659,6 +806,7 @@ class AeroSandboxAVLSolver(AeroSolver):
             except Exception:
                 pass
             return result
+
 
 def _parse_stability_file(stab_path: Path) -> dict[str, float]:
     text = stab_path.read_text()
@@ -737,6 +885,7 @@ def _normalize_stability_key(key: str) -> str | None:
 
     return None
 
+
 def _to_float_or_none(value: Any) -> float | None:
     try:
         val = float(value)
@@ -745,7 +894,8 @@ def _to_float_or_none(value: Any) -> float | None:
         return val
     except Exception:
         return None
-    
+
+
 def _extract_stability_axis_derivatives(raw: dict[str, Any]) -> dict[str, float | None]:
     parsed = raw.get("_stability_file_parsed", {}) or {}
 
@@ -811,6 +961,7 @@ def _compute_derived_metrics(
         "spiral_metric": spiral_metric,
     }
 
+
 def _json_safe(value: Any) -> Any:
     if isinstance(value, (str, int, float, bool)) or value is None:
         return value
@@ -822,6 +973,7 @@ def _json_safe(value: Any) -> Any:
         return float(value)
     except Exception:
         return str(value)
+
 
 def _write_aero_result_json(result: AeroResult, output_dir: Path) -> Path:
     payload = {

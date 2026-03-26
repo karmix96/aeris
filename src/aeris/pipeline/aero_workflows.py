@@ -289,6 +289,7 @@ def execute_aero_sweep(
     geometry_source: str,
     generator_id: str | None,
     control_input_deg: float | None,
+    control_input_values: list[float],
     alpha: float,
     velocity: float,
     altitude: float,
@@ -360,6 +361,7 @@ def execute_aero_sweep(
         p_rad_s_values=p_values,
         q_rad_s_values=q_values,
         r_rad_s_values=r_values,
+        control_input_deg_values=control_input_values,
     )
 
     settings = AeroSolverSettings(

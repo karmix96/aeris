@@ -3,11 +3,12 @@ from __future__ import annotations
 from pathlib import Path
 
 from aeris.common.config import load_yaml_config
-from aeris.dataset.lhs import generate_lhs_samples
+from aeris.dataset.sampling.samplers.lhs_v1 import generate_lhs_samples
 from aeris.generators.bwb_segmented_v1.params import build_bwb_generator_config
 
+
 def main() -> None:
-    project_root = Path(__file__).resolve().parents[1]
+    project_root = Path(__file__).resolve().parents[2]
     config_path = project_root / "configs" / "geometry" / "wing_bwb.yaml"
 
     raw = load_yaml_config(config_path)
@@ -16,7 +17,7 @@ def main() -> None:
     samples = generate_lhs_samples(
         config=cfg,
         n_samples=5,
-        lhs_seed=123,
+        sampler_seed=123,
     )
 
     print("\n=== LHS SAMPLES ===\n")

@@ -43,6 +43,13 @@ class FlightConditionSweep:
     p_rad_s_values: list[float] = field(default_factory=list)
     q_rad_s_values: list[float] = field(default_factory=list)
     r_rad_s_values: list[float] = field(default_factory=list)
+    control_input_deg_values: list[float] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class AeroSweepCaseInput:
+    flight_condition: FlightCondition
+    control_input_deg: float | None = None
 
 
 @dataclass(slots=True)
@@ -50,20 +57,30 @@ class AeroSweepResult:
     cases: list[dict[str, Any]] = field(default_factory=list)
     summary: dict[str, Any] = field(default_factory=dict)
 
+from dataclasses import dataclass, field
+from typing import Any
+
+
 @dataclass
 class AeroGeometryView:
     """
     Solver-ready geometry view for the aero layer.
 
-    Current v1 contract:
-    - `airplane` must be an AeroSandbox-compatible airplane object
-    - it must provide, at minimum:
+    Current contract:
+    - `airplane` must be an AeroSandbox-compatible airplane object.
+    - It must provide, at minimum:
         - wings
         - s_ref
         - b_ref
         - c_ref
-    - this view is the geometry/aero boundary object
-    - solver adapters should depend on this view, not on geometry generator internals
+    - This view is the geometry/aero boundary object.
+    - Solver adapters should depend on this view, not on geometry generator internals.
+
+    Additional control-surface contract:
+    - `has_control_surfaces` is the explicit geometry-level truth used by the aero layer.
+    - `control_surface_names` carries the unique declared/discovered control names.
+    - `metadata` may include reconstruction/native provenance plus
+      `control_surface_summary` when available.
 
     Notes:
     - The `airplane` field remains typed as `Any` for now to avoid premature hard
@@ -75,6 +92,8 @@ class AeroGeometryView:
     source_generator: str
     source_geometry_id: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
+    has_control_surfaces: bool = False
+    control_surface_names: tuple[str, ...] = ()
 
 
 @dataclass(slots=True)

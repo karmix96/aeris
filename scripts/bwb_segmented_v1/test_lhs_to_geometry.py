@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import numpy as np
-
 from aeris.common.config import load_yaml_config
+from aeris.dataset.sampling.samplers.lhs_v1 import generate_lhs_samples
+from aeris.generators.bwb_segmented_v1.aerosandbox_adapter import build_aerosandbox_geometry
+from aeris.generators.bwb_segmented_v1.export import build_geometry_summary
 from aeris.generators.bwb_segmented_v1.params import build_bwb_generator_config
 from aeris.generators.bwb_segmented_v1.planform import generate_bwb_planform_from_sample
 from aeris.generators.bwb_segmented_v1.sections import build_section_geometry_from_sample
@@ -13,13 +14,10 @@ from aeris.generators.bwb_segmented_v1.validation import (
     validate_planform_result,
     validate_section_geometry,
 )
-from aeris.generators.bwb_segmented_v1.export import build_geometry_summary
-from aeris.generators.bwb_segmented_v1.aerosandbox_adapter import build_aerosandbox_geometry
-from aeris.dataset.lhs import generate_lhs_samples
 
 
 def main() -> None:
-    project_root = Path(__file__).resolve().parents[1]
+    project_root = Path(__file__).resolve().parents[2]
     config_path = project_root / "configs" / "geometry" / "wing_bwb.yaml"
 
     raw = load_yaml_config(config_path)
@@ -29,23 +27,21 @@ def main() -> None:
     lhs_samples = generate_lhs_samples(
         config=cfg,
         n_samples=3,
-        lhs_seed=123,
+        sampler_seed=123,
     )
 
-    # Use the first LHS sample
     sample = lhs_samples[0]
 
-    # For now keep deterministic geometry by turning off hidden perturbations manually
+    # Keep deterministic geometry by turning off hidden perturbations manually.
     cfg_det = build_bwb_generator_config(raw)
     cfg_det = cfg_det.__class__(
         name=cfg_det.name,
         generator=cfg_det.generator,
         controls=cfg_det.controls.__class__(
-            n_iter=cfg_det.controls.n_iter,
             n_points=cfg_det.controls.n_points,
             n_spline_inboard=cfg_det.controls.n_spline_inboard,
             n_spline_outboard=cfg_det.controls.n_spline_outboard,
-            desired_curvature_strength=cfg_det.controls.desired_curvature_strength,
+            curvature_strength=cfg_det.controls.curvature_strength,
             spline_split_ratio=cfg_det.controls.spline_split_ratio,
             segment_length_variation=0.0,
             sweep_variation=0.0,
@@ -53,11 +49,10 @@ def main() -> None:
         planform_bounds=cfg_det.planform_bounds,
         section_bounds=cfg_det.section_bounds,
         outputs=cfg_det.outputs,
+        control_surfaces=cfg_det.control_surfaces,
     )
 
-    rng = np.random.default_rng(999)
-
-    planform = generate_bwb_planform_from_sample(sample, cfg_det, rng)
+    planform = generate_bwb_planform_from_sample(sample, cfg_det)
     validate_planform_result(planform)
 
     section_geometry = build_section_geometry_from_sample(planform, sample, cfg_det)
@@ -82,6 +77,10 @@ def main() -> None:
     print("\n=== RESULTING METRICS ===\n")
     for key, value in summary["metrics"].items():
         print(f"{key}: {value}")
+
+    if "control_surface_summary" in summary:
+        print("\n=== CONTROL SURFACE SUMMARY ===\n")
+        print(summary["control_surface_summary"])
 
     print("\nSuccess: LHS sample was converted into a valid geometry.")
 

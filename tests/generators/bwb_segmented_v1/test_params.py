@@ -51,6 +51,10 @@ def make_raw_config() -> dict:
                 "build_aerosandbox": True,
             },
         },
+        "control_surfaces": {
+            "enabled": False,
+            "surfaces": [],
+        },
     }
 
 
@@ -67,4 +71,137 @@ def test_build_bwb_generator_config_requires_generator_identity():
     del raw["geometry"]["generator"]["family"]
 
     with pytest.raises(KeyError):
+        build_bwb_generator_config(raw)
+
+def test_build_bwb_generator_config_defaults_to_disabled_control_surfaces():
+    config = build_bwb_generator_config(make_raw_config())
+
+    assert config.control_surfaces.enabled is False
+    assert config.control_surfaces.surfaces == ()
+
+
+def test_build_bwb_generator_config_parses_control_surface_block():
+    raw = make_raw_config()
+    raw["geometry"]["control_surfaces"] = {
+        "enabled": True,
+        "surfaces": [
+            {
+                "name": "elevon",
+                "family": "trailing_edge",
+                "hinge_point": 0.75,
+                "symmetric": True,
+                "spanwise": {
+                    "start_frac": 0.60,
+                    "end_frac": 0.95,
+                },
+                "deflection_sign": "standard",
+                "required": False,
+            }
+        ],
+    }
+
+    config = build_bwb_generator_config(raw)
+
+    assert config.control_surfaces.enabled is True
+    assert len(config.control_surfaces.surfaces) == 1
+
+    cs = config.control_surfaces.surfaces[0]
+    assert cs.name == "elevon"
+    assert cs.family == "trailing_edge"
+    assert cs.hinge_point == 0.75
+    assert cs.symmetric is True
+    assert cs.side is None
+    assert cs.spanwise.start_frac == 0.60
+    assert cs.spanwise.end_frac == 0.95
+    assert cs.deflection_sign == "standard"
+    assert cs.required is False
+
+
+def test_build_bwb_generator_config_rejects_invalid_control_surface_span_range():
+    raw = make_raw_config()
+    raw["geometry"]["control_surfaces"] = {
+        "enabled": True,
+        "surfaces": [
+            {
+                "name": "elevon",
+                "family": "trailing_edge",
+                "hinge_point": 0.75,
+                "symmetric": True,
+                "spanwise": {
+                    "start_frac": 0.95,
+                    "end_frac": 0.60,
+                },
+            }
+        ],
+    }
+
+    with pytest.raises(ValueError, match="invalid spanwise range"):
+        build_bwb_generator_config(raw)
+
+
+def test_build_bwb_generator_config_rejects_invalid_hinge_point():
+    raw = make_raw_config()
+    raw["geometry"]["control_surfaces"] = {
+        "enabled": True,
+        "surfaces": [
+            {
+                "name": "elevon",
+                "family": "trailing_edge",
+                "hinge_point": 1.20,
+                "symmetric": True,
+                "spanwise": {
+                    "start_frac": 0.60,
+                    "end_frac": 0.95,
+                },
+            }
+        ],
+    }
+
+    with pytest.raises(ValueError, match="hinge_point"):
+        build_bwb_generator_config(raw)
+
+
+def test_build_bwb_generator_config_rejects_duplicate_control_surface_names():
+    raw = make_raw_config()
+    raw["geometry"]["control_surfaces"] = {
+        "enabled": True,
+        "surfaces": [
+            {
+                "name": "elevon",
+                "family": "trailing_edge",
+                "hinge_point": 0.75,
+                "symmetric": True,
+                "spanwise": {"start_frac": 0.60, "end_frac": 0.80},
+            },
+            {
+                "name": "elevon",
+                "family": "trailing_edge",
+                "hinge_point": 0.75,
+                "symmetric": True,
+                "spanwise": {"start_frac": 0.82, "end_frac": 0.95},
+            },
+        ],
+    }
+
+    with pytest.raises(ValueError, match="Duplicate control surface name"):
+        build_bwb_generator_config(raw)
+
+
+def test_build_bwb_generator_config_rejects_side_for_symmetric_surface():
+    raw = make_raw_config()
+    raw["geometry"]["control_surfaces"] = {
+        "enabled": True,
+        "surfaces": [
+            {
+                "name": "elevon",
+                "family": "trailing_edge",
+                "hinge_point": 0.75,
+                "symmetric": True,
+                "side": "left",
+                "spanwise": {"start_frac": 0.60, "end_frac": 0.95},
+            }
+        ],
+    }
+
+    with pytest.raises(ValueError, match="symmetric=True"):
         build_bwb_generator_config(raw)

@@ -71,6 +71,28 @@ class SectionBoundsConfig:
     dihedral_b2_deg: RangeConfig
     dihedral_b3_deg: RangeConfig
 
+@dataclass(frozen=True)
+class ControlSurfaceSpanwiseConfig:
+    start_frac: float
+    end_frac: float
+
+
+@dataclass(frozen=True)
+class ControlSurfaceConfig:
+    name: str
+    family: str
+    hinge_point: float
+    symmetric: bool
+    spanwise: ControlSurfaceSpanwiseConfig
+    deflection_sign: str = "standard"
+    side: str | None = None
+    required: bool = False
+
+
+@dataclass(frozen=True)
+class ControlSurfacesConfig:
+    enabled: bool
+    surfaces: tuple[ControlSurfaceConfig, ...]
 
 @dataclass(frozen=True)
 class BWBDesignSample:
@@ -111,6 +133,7 @@ class BWBGeneratorConfig:
     planform_bounds: PlanformBoundsConfig
     section_bounds: SectionBoundsConfig
     outputs: PlotOutputsConfig
+    control_surfaces: ControlSurfacesConfig
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -166,12 +189,13 @@ def build_bwb_generator_config(config: dict[str, Any]) -> BWBGeneratorConfig:
     planform_cfg = geometry_cfg.get("planform_bounds", {})
     sections_cfg = geometry_cfg.get("section_bounds", {})
     outputs_cfg = geometry_cfg.get("outputs", {})
+    control_surfaces_cfg = geometry_cfg.get("control_surfaces", {})
 
     return BWBGeneratorConfig(
         name=str(config.get("name", "wing_bwb")),
         generator=GeneratorConfig(
-            family = str(_require(generator_cfg, "family")),
-            version = str(_require(generator_cfg, "version")),
+            family=str(_require(generator_cfg, "family")),
+            version=str(_require(generator_cfg, "version")),
             seed=None if generator_cfg.get("seed") is None else int(generator_cfg["seed"]),
         ),
         controls=ControlsConfig(
@@ -210,4 +234,184 @@ def build_bwb_generator_config(config: dict[str, Any]) -> BWBGeneratorConfig:
             save_plot=bool(outputs_cfg.get("save_plot", True)),
             build_aerosandbox=bool(outputs_cfg.get("build_aerosandbox", True)),
         ),
+        control_surfaces=_build_control_surfaces_config(control_surfaces_cfg),
+    )
+
+def _validate_control_surfaces_config(config: ControlSurfacesConfig) -> None:
+    names: set[str] = set()
+
+    if not config.enabled and len(config.surfaces) > 0:
+        # This is allowed for now, but it is suspicious.
+        # We keep it strict and explicit.
+        raise ValueError(
+            "geometry.control_surfaces.enabled is false, but surfaces are defined. "
+            "Either set enabled: true or remove the surfaces block."
+        )
+
+    for surface in config.surfaces:
+        if surface.name in names:
+            raise ValueError(f"Duplicate control surface name: {surface.name!r}")
+        names.add(surface.name)
+
+        if surface.family not in {"trailing_edge"}:
+            raise ValueError(
+                f"Unsupported control surface family {surface.family!r}. "
+                "v1 supports only 'trailing_edge'."
+            )
+
+        if not (0.0 < surface.hinge_point < 1.0):
+            raise ValueError(
+                f"Control surface {surface.name!r} has invalid hinge_point={surface.hinge_point}. "
+                "Expected 0.0 < hinge_point < 1.0."
+            )
+
+        if not (0.0 <= surface.spanwise.start_frac < surface.spanwise.end_frac <= 1.0):
+            raise ValueError(
+                f"Control surface {surface.name!r} has invalid spanwise range "
+                f"[{surface.spanwise.start_frac}, {surface.spanwise.end_frac}]. "
+                "Expected 0.0 <= start_frac < end_frac <= 1.0."
+            )
+
+        if surface.symmetric:
+            if surface.side is not None:
+                raise ValueError(
+                    f"Control surface {surface.name!r} is symmetric=True, so side must be omitted."
+                )
+        else:
+            if surface.side not in {"left", "right"}:
+                raise ValueError(
+                    f"Control surface {surface.name!r} is symmetric=False, "
+                    "so side must be 'left' or 'right'."
+                )
+
+        if surface.deflection_sign not in {"standard"}:
+            raise ValueError(
+                f"Unsupported deflection_sign {surface.deflection_sign!r} "
+                f"for control surface {surface.name!r}."
+            )
+
+def _as_bool(value: Any, *, field_name: str) -> bool:
+    if isinstance(value, bool):
+        return value
+    raise TypeError(f"{field_name} must be a bool, got {type(value).__name__}.")
+
+
+def _as_float(value: Any, *, field_name: str) -> float:
+    try:
+        return float(value)
+    except Exception as exc:
+        raise TypeError(f"{field_name} must be numeric, got {value!r}.") from exc
+
+
+def _as_str(value: Any, *, field_name: str) -> str:
+    if not isinstance(value, str):
+        raise TypeError(f"{field_name} must be a string, got {type(value).__name__}.")
+    text = value.strip()
+    if not text:
+        raise ValueError(f"{field_name} must not be empty.")
+    return text
+
+
+def _build_control_surfaces_config(control_surfaces_cfg: dict[str, Any]) -> ControlSurfacesConfig:
+    if not control_surfaces_cfg:
+        return ControlSurfacesConfig(
+            enabled=False,
+            surfaces=(),
+        )
+
+    enabled = bool(control_surfaces_cfg.get("enabled", False))
+    raw_surfaces = control_surfaces_cfg.get("surfaces", [])
+
+    if not isinstance(raw_surfaces, list):
+        raise TypeError("geometry.control_surfaces.surfaces must be a list.")
+
+    surfaces: list[ControlSurfaceConfig] = []
+    seen_names: set[str] = set()
+
+    for i, raw in enumerate(raw_surfaces):
+        if not isinstance(raw, dict):
+            raise TypeError(f"geometry.control_surfaces.surfaces[{i}] must be a dict.")
+
+        name = str(_require(raw, "name")).strip()
+        family = str(_require(raw, "family")).strip()
+        hinge_point = float(_require(raw, "hinge_point"))
+        symmetric = bool(raw.get("symmetric", True))
+        deflection_sign = str(raw.get("deflection_sign", "standard")).strip()
+        side = raw.get("side", None)
+        required = bool(raw.get("required", False))
+
+        if side is not None:
+            side = str(side).strip()
+
+        spanwise_cfg = raw.get("spanwise", {})
+        if not isinstance(spanwise_cfg, dict):
+            raise TypeError(f"geometry.control_surfaces.surfaces[{i}].spanwise must be a dict.")
+
+        start_frac = float(_require(spanwise_cfg, "start_frac"))
+        end_frac = float(_require(spanwise_cfg, "end_frac"))
+
+        if not name:
+            raise ValueError(f"geometry.control_surfaces.surfaces[{i}].name must not be empty.")
+
+        if name in seen_names:
+            raise ValueError(f"Duplicate control surface name: {name!r}")
+        seen_names.add(name)
+
+        if family not in {"trailing_edge"}:
+            raise ValueError(
+                f"Unsupported control surface family {family!r}. "
+                "Currently supported: 'trailing_edge'."
+            )
+
+        if not (0.0 < hinge_point < 1.0):
+            raise ValueError(
+                f"Control surface {name!r} has invalid hinge_point={hinge_point}. "
+                "Expected 0.0 < hinge_point < 1.0."
+            )
+
+        if not (0.0 <= start_frac < end_frac <= 1.0):
+            raise ValueError(
+                f"Control surface {name!r} has invalid spanwise range "
+                f"[{start_frac}, {end_frac}]. Expected 0.0 <= start_frac < end_frac <= 1.0."
+            )
+
+        if symmetric and side is not None:
+            raise ValueError(
+                f"Control surface {name!r} is symmetric=True, so side must be omitted."
+            )
+
+        if not symmetric and side not in {"left", "right"}:
+            raise ValueError(
+                f"Control surface {name!r} is symmetric=False, so side must be 'left' or 'right'."
+            )
+
+        if deflection_sign not in {"standard"}:
+            raise ValueError(
+                f"Unsupported deflection_sign {deflection_sign!r} for control surface {name!r}."
+            )
+
+        surfaces.append(
+            ControlSurfaceConfig(
+                name=name,
+                family=family,
+                hinge_point=hinge_point,
+                symmetric=symmetric,
+                spanwise=ControlSurfaceSpanwiseConfig(
+                    start_frac=start_frac,
+                    end_frac=end_frac,
+                ),
+                deflection_sign=deflection_sign,
+                side=side,
+                required=required,
+            )
+        )
+
+    if not enabled and surfaces:
+        raise ValueError(
+            "geometry.control_surfaces.enabled is false, but surfaces are defined."
+        )
+
+    return ControlSurfacesConfig(
+        enabled=enabled,
+        surfaces=tuple(surfaces),
     )

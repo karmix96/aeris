@@ -532,6 +532,11 @@ def sweep_aero(
         "--control-input-deg",
         help="Control surface input in degrees (AVL d1 command) applied to every sweep case.",
     ),
+    control_input_values: str = typer.Option(
+        "",
+        "--control-input-values",
+        help="Comma-separated control-input sweep values in degrees, e.g. -5,0,5",
+    ),
     alpha: float = typer.Option(
         0.0,
         "--alpha",
@@ -693,6 +698,10 @@ def sweep_aero(
     parsed_p_values = _parse_float_list(p_values, "--p-values")
     parsed_q_values = _parse_float_list(q_values, "--q-values")
     parsed_r_values = _parse_float_list(r_values, "--r-values")
+    parsed_control_input_values = _parse_float_list(
+        control_input_values,
+        "--control-input-values",
+    )
 
     run_root, sweep_result = execute_aero_sweep(
         config=config,
@@ -702,6 +711,7 @@ def sweep_aero(
         geometry_source=source_policy,
         generator_id=generator_id.strip() or None,
         control_input_deg=control_input_deg,
+        control_input_values=parsed_control_input_values,
         alpha=alpha,
         velocity=velocity,
         altitude=altitude,

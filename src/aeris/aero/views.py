@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import csv
+import json
 import math
 from pathlib import Path
 from typing import Any
 
-import numpy as np
 import aerosandbox as asb
+import numpy as np
 
 from aeris.aero.models import AeroGeometryView
 
@@ -22,6 +23,197 @@ RECONSTRUCTION_FORMAT_VERSION = "openvsp_sections_xfoil_v1"
 # logic as well. This is intentional for now, but it is a versioned contract,
 # not magic.
 
+
+def _airplane_has_any_control_surface(airplane: Any) -> bool:
+    for wing in getattr(airplane, "wings", []) or []:
+        for xsec in getattr(wing, "xsecs", []) or []:
+            control_surfaces = getattr(xsec, "control_surfaces", None)
+            if control_surfaces and len(control_surfaces) > 0:
+                return True
+    return False
+
+
+def _collect_control_surface_names_from_airplane(airplane: Any) -> list[str]:
+    names: list[str] = []
+    seen: set[str] = set()
+
+    for wing in getattr(airplane, "wings", []) or []:
+        for xsec in getattr(wing, "xsecs", []) or []:
+            for cs in getattr(xsec, "control_surfaces", []) or []:
+                name = str(getattr(cs, "name", "")).strip()
+                if name and name not in seen:
+                    seen.add(name)
+                    names.append(name)
+
+    return names
+
+
+def _load_json_if_exists(path: Path) -> dict[str, Any] | None:
+    if not path.exists():
+        return None
+    with open(path, "r", encoding="utf-8") as handle:
+        data = json.load(handle)
+    if not isinstance(data, dict):
+        raise RuntimeError(f"Expected JSON object in {path}, got {type(data).__name__}.")
+    return data
+
+
+def _find_geometry_summary_paths(case_dir: Path) -> list[Path]:
+    case_dir = Path(case_dir).resolve()
+    candidates = [
+        case_dir / "geometry_summary.json",
+        case_dir / "artifacts" / "geometry_summary.json",
+        case_dir.parent / "geometry_summary.json",
+        case_dir.parent / "artifacts" / "geometry_summary.json",
+    ]
+    unique: list[Path] = []
+    seen: set[Path] = set()
+    for path in candidates:
+        resolved = path.resolve()
+        if resolved not in seen:
+            seen.add(resolved)
+            unique.append(resolved)
+    return unique
+
+
+def _load_geometry_summary_for_case_dir(case_dir: Path) -> dict[str, Any] | None:
+    for candidate in _find_geometry_summary_paths(case_dir):
+        data = _load_json_if_exists(candidate)
+        if data is not None:
+            return data
+    return None
+
+
+def _extract_control_surface_summary_from_summary(
+    summary: dict[str, Any] | None,
+) -> tuple[bool, tuple[str, ...], dict[str, Any] | None]:
+    if not summary:
+        return False, (), None
+
+    cs_summary = summary.get("control_surface_summary", {})
+    if not isinstance(cs_summary, dict):
+        return False, (), None
+
+    configured = cs_summary.get("configured", {})
+    applied = cs_summary.get("applied", {})
+
+    if not isinstance(configured, dict):
+        configured = {}
+    if not isinstance(applied, dict):
+        applied = {}
+
+    names_raw = configured.get("names", [])
+    if not isinstance(names_raw, list):
+        names_raw = []
+
+    names = tuple(str(name).strip() for name in names_raw if str(name).strip())
+    has_control_surfaces = bool(applied.get("has_control_surfaces", False))
+
+    return has_control_surfaces, names, cs_summary
+
+
+def _normalized_semispan_fractions_from_airplane(airplane: asb.Airplane) -> np.ndarray:
+    if not getattr(airplane, "wings", None):
+        raise RuntimeError("Cannot compute span fractions: airplane has no wings.")
+    wing = airplane.wings[0]
+    y_stations = np.array([float(xsec.xyz_le[1]) for xsec in wing.xsecs], dtype=float)
+    if len(y_stations) == 0:
+        raise RuntimeError("Cannot compute span fractions for airplane with no xsecs.")
+
+    y_abs = np.abs(y_stations)
+    y_max = float(np.max(y_abs))
+    if y_max <= 0.0:
+        return np.zeros_like(y_abs)
+    return y_abs / y_max
+
+
+def _xsec_is_in_control_region(
+    frac: float,
+    *,
+    start_frac: float,
+    end_frac: float,
+    is_last_xsec: bool,
+) -> bool:
+    # Match the generator adapter logic:
+    # apply to section starts, but do not tag the final xsec.
+    if is_last_xsec:
+        return False
+    return start_frac <= frac <= end_frac
+
+
+def _control_surface_from_definition(defn: dict[str, Any]) -> asb.ControlSurface:
+    family = str(defn.get("family", "")).strip()
+    if family != "trailing_edge":
+        raise ValueError(
+            f"Unsupported reconstructed control-surface family {family!r}. "
+            "Only 'trailing_edge' is supported in v1."
+        )
+
+    return asb.ControlSurface(
+        name=str(defn["name"]),
+        trailing_edge=True,
+        hinge_point=float(defn["hinge_point"]),
+        deflection=0.0,
+        symmetric=bool(defn.get("symmetric", True)),
+    )
+
+
+def _apply_control_surfaces_from_summary(
+    airplane: asb.Airplane,
+    cs_summary: dict[str, Any] | None,
+) -> tuple[bool, tuple[str, ...]]:
+    """
+    Reattach control surfaces to a reconstructed airplane using geometry summary
+    definitions. This is required because the reconstruction contract
+    (openvsp_sections.csv + xfoil/*.dat) carries geometry shape but not control
+    objects.
+    """
+    if not cs_summary:
+        return False, ()
+
+    configured = cs_summary.get("configured", {}) or {}
+    enabled = bool(configured.get("enabled", False))
+    definitions = configured.get("definitions", []) or []
+
+    if not enabled or not definitions:
+        return False, ()
+
+    if not getattr(airplane, "wings", None):
+        raise RuntimeError("Cannot apply reconstructed control surfaces: airplane has no wings.")
+
+    wing = airplane.wings[0]
+    span_fracs = _normalized_semispan_fractions_from_airplane(airplane)
+    n = len(wing.xsecs)
+
+    applied_any = False
+    names: list[str] = []
+    seen_names: set[str] = set()
+
+    for defn in definitions:
+        name = str(defn.get("name", "")).strip()
+        if name and name not in seen_names:
+            seen_names.add(name)
+            names.append(name)
+
+        start_frac = float(defn["start_frac"])
+        end_frac = float(defn["end_frac"])
+
+        for i, xsec in enumerate(wing.xsecs):
+            frac = float(span_fracs[i])
+            if _xsec_is_in_control_region(
+                frac,
+                start_frac=start_frac,
+                end_frac=end_frac,
+                is_last_xsec=(i == n - 1),
+            ):
+                existing = list(getattr(xsec, "control_surfaces", []) or [])
+                existing.append(_control_surface_from_definition(defn))
+                xsec.control_surfaces = existing
+                applied_any = True
+
+    return applied_any, tuple(names)
+
+
 def geometry_view_from_case(
     *,
     case: Any,
@@ -35,31 +227,83 @@ def geometry_view_from_case(
         airplane = _extract_native_airplane(case)
         if airplane is None:
             raise RuntimeError("Native airplane object not found on geometry case.")
+
         _validate_airplane_for_aero(airplane, context="native_geometry_case")
+
+        metadata: dict[str, Any] = {
+            "source_policy": "native",
+            "case_dir": None if case_dir is None else str(Path(case_dir).resolve()),
+        }
+
+        asb_result = getattr(case, "aerosandbox_result", None)
+        if asb_result is not None:
+            raw_meta = getattr(asb_result, "metadata", None)
+            if isinstance(raw_meta, dict):
+                metadata.update(raw_meta)
+
+        has_control_surfaces = _airplane_has_any_control_surface(airplane)
+        control_surface_names = tuple(_collect_control_surface_names_from_airplane(airplane))
+
+        metadata["has_control_surfaces"] = has_control_surfaces
+        metadata["control_surface_names"] = list(control_surface_names)
+
         return AeroGeometryView(
             view_id="aerosandbox_airplane_native_v1",
             airplane=airplane,
             source_generator=generator_id,
-            metadata={
-                "source_policy": "native",
-                "case_dir": None if case_dir is None else str(case_dir),
-            },
+            source_geometry_id=None if case_dir is None else Path(case_dir).name,
+            metadata=metadata,
+            has_control_surfaces=has_control_surfaces,
+            control_surface_names=control_surface_names,
         )
 
     if source_policy == "reconstruct":
         if case_dir is None:
             raise RuntimeError("Reconstruction requires a case_dir.")
+
+        case_dir = Path(case_dir).resolve()
         airplane = reconstruct_airplane_from_case_dir(case_dir=case_dir)
+        summary = _load_geometry_summary_for_case_dir(case_dir)
+        has_control_surfaces, control_surface_names, cs_summary = (
+            _extract_control_surface_summary_from_summary(summary)
+        )
+
+        if cs_summary is not None:
+            applied_any, reconstructed_names = _apply_control_surfaces_from_summary(
+                airplane,
+                cs_summary,
+            )
+            if applied_any:
+                has_control_surfaces = True
+                if reconstructed_names:
+                    control_surface_names = reconstructed_names
+
         _validate_airplane_for_aero(airplane, context=f"reconstructed:{case_dir}")
+
+        airplane_has_controls = _airplane_has_any_control_surface(airplane)
+        if airplane_has_controls and not has_control_surfaces:
+            has_control_surfaces = True
+        if airplane_has_controls and not control_surface_names:
+            control_surface_names = tuple(_collect_control_surface_names_from_airplane(airplane))
+
+        metadata: dict[str, Any] = {
+            "source_policy": "reconstruct",
+            "case_dir": str(case_dir),
+            "reconstruction_format_version": RECONSTRUCTION_FORMAT_VERSION,
+            "has_control_surfaces": has_control_surfaces,
+            "control_surface_names": list(control_surface_names),
+        }
+        if cs_summary is not None:
+            metadata["control_surface_summary"] = cs_summary
+
         return AeroGeometryView(
             view_id="aerosandbox_airplane_reconstructed_v1",
             airplane=airplane,
             source_generator=generator_id,
-            metadata={
-                "source_policy": "reconstruct",
-                "case_dir": str(case_dir),
-                "reconstruction_format_version": RECONSTRUCTION_FORMAT_VERSION,
-            },
+            source_geometry_id=case_dir.name,
+            metadata=metadata,
+            has_control_surfaces=has_control_surfaces,
+            control_surface_names=control_surface_names,
         )
 
     raise ValueError(f"Unknown source_policy '{source_policy}'.")
@@ -70,19 +314,51 @@ def geometry_view_from_run_dir(
     run_dir: Path,
     generator_id: str = "bwb_segmented_v1",
 ) -> AeroGeometryView:
+    run_dir = Path(run_dir).resolve()
     case_dir = resolve_run_geometry_dir(run_dir)
     airplane = reconstruct_airplane_from_case_dir(case_dir=case_dir)
+    summary = _load_geometry_summary_for_case_dir(case_dir)
+    has_control_surfaces, control_surface_names, cs_summary = (
+        _extract_control_surface_summary_from_summary(summary)
+    )
+
+    if cs_summary is not None:
+        applied_any, reconstructed_names = _apply_control_surfaces_from_summary(
+            airplane,
+            cs_summary,
+        )
+        if applied_any:
+            has_control_surfaces = True
+            if reconstructed_names:
+                control_surface_names = reconstructed_names
+
     _validate_airplane_for_aero(airplane, context=f"run_dir:{run_dir}")
+
+    airplane_has_controls = _airplane_has_any_control_surface(airplane)
+    if airplane_has_controls and not has_control_surfaces:
+        has_control_surfaces = True
+    if airplane_has_controls and not control_surface_names:
+        control_surface_names = tuple(_collect_control_surface_names_from_airplane(airplane))
+
+    metadata: dict[str, Any] = {
+        "source_policy": "reconstruct",
+        "run_dir": str(run_dir),
+        "case_dir": str(case_dir),
+        "reconstruction_format_version": RECONSTRUCTION_FORMAT_VERSION,
+        "has_control_surfaces": has_control_surfaces,
+        "control_surface_names": list(control_surface_names),
+    }
+    if cs_summary is not None:
+        metadata["control_surface_summary"] = cs_summary
+
     return AeroGeometryView(
         view_id="aerosandbox_airplane_reconstructed_v1",
         airplane=airplane,
         source_generator=generator_id,
-        metadata={
-            "source_policy": "reconstruct",
-            "run_dir": str(Path(run_dir).resolve()),
-            "case_dir": str(case_dir),
-            "reconstruction_format_version": RECONSTRUCTION_FORMAT_VERSION,
-        },
+        source_geometry_id=case_dir.name,
+        metadata=metadata,
+        has_control_surfaces=has_control_surfaces,
+        control_surface_names=control_surface_names,
     )
 
 
@@ -92,20 +368,52 @@ def geometry_view_from_dataset_case(
     geometry_id: str,
     generator_id: str = "bwb_segmented_v1",
 ) -> AeroGeometryView:
+    dataset_root = Path(dataset_root).resolve()
     case_dir = resolve_dataset_geometry_dir(dataset_root, geometry_id)
     airplane = reconstruct_airplane_from_case_dir(case_dir=case_dir)
+    summary = _load_geometry_summary_for_case_dir(case_dir)
+    has_control_surfaces, control_surface_names, cs_summary = (
+        _extract_control_surface_summary_from_summary(summary)
+    )
+
+    if cs_summary is not None:
+        applied_any, reconstructed_names = _apply_control_surfaces_from_summary(
+            airplane,
+            cs_summary,
+        )
+        if applied_any:
+            has_control_surfaces = True
+            if reconstructed_names:
+                control_surface_names = reconstructed_names
+
     _validate_airplane_for_aero(airplane, context=f"dataset:{geometry_id}")
+
+    airplane_has_controls = _airplane_has_any_control_surface(airplane)
+    if airplane_has_controls and not has_control_surfaces:
+        has_control_surfaces = True
+    if airplane_has_controls and not control_surface_names:
+        control_surface_names = tuple(_collect_control_surface_names_from_airplane(airplane))
+
+    metadata: dict[str, Any] = {
+        "source_policy": "reconstruct",
+        "dataset_root": str(dataset_root),
+        "geometry_id": geometry_id,
+        "case_dir": str(case_dir),
+        "reconstruction_format_version": RECONSTRUCTION_FORMAT_VERSION,
+        "has_control_surfaces": has_control_surfaces,
+        "control_surface_names": list(control_surface_names),
+    }
+    if cs_summary is not None:
+        metadata["control_surface_summary"] = cs_summary
+
     return AeroGeometryView(
         view_id="aerosandbox_airplane_reconstructed_v1",
         airplane=airplane,
         source_generator=generator_id,
-        metadata={
-            "source_policy": "reconstruct",
-            "dataset_root": str(Path(dataset_root).resolve()),
-            "geometry_id": geometry_id,
-            "case_dir": str(case_dir),
-            "reconstruction_format_version": RECONSTRUCTION_FORMAT_VERSION,
-        },
+        source_geometry_id=geometry_id,
+        metadata=metadata,
+        has_control_surfaces=has_control_surfaces,
+        control_surface_names=control_surface_names,
     )
 
 
@@ -209,8 +517,8 @@ def build_asb_airplane_from_paths(csv_path: Path, airfoil_dir: Path) -> asb.Airp
 
 
 def _load_sections_from_csv(csv_path: Path) -> list[dict[str, float | int]]:
-    with open(csv_path, "r", newline="", encoding="utf-8") as f:
-        header_line = f.readline()
+    with open(csv_path, "r", newline="", encoding="utf-8") as handle:
+        header_line = handle.readline()
         if "," in header_line and "\t" not in header_line:
             delimiter = ","
         elif "\t" in header_line and "," not in header_line:
@@ -218,9 +526,9 @@ def _load_sections_from_csv(csv_path: Path) -> list[dict[str, float | int]]:
         else:
             delimiter = ","
 
-    sections = []
-    with open(csv_path, "r", newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f, delimiter=delimiter)
+    sections: list[dict[str, float | int]] = []
+    with open(csv_path, "r", newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle, delimiter=delimiter)
 
         for row in reader:
             def fget(*names: str, default: float = 0.0) -> float:
@@ -249,7 +557,7 @@ def _load_sections_from_csv(csv_path: Path) -> list[dict[str, float | int]]:
                 }
             )
 
-    sections.sort(key=lambda s: s["y"])
+    sections.sort(key=lambda s: float(s["y"]))
     if len(sections) >= 2:
         sections[0]["dih_seg"] = 0.0
 
@@ -341,6 +649,7 @@ def _extract_native_airplane(case: Any) -> Any | None:
             value = case.get(key)
             if value is not None:
                 return value
+
         nested = case.get("aerosandbox_result")
         if hasattr(nested, "airplane"):
             value = getattr(nested, "airplane", None)

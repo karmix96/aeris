@@ -313,6 +313,11 @@ def run_aero(
         "--generator-id",
         help="Generator ID required for --run-dir and --dataset modes. Ignored for --config.",
     ),
+    control_input_deg: float | None = typer.Option(
+        None,
+        "--control-input-deg",
+        help="Control surface input in degrees (AVL d1 command).",
+    ),
     alpha: float = typer.Option(
         ...,
         "--alpha",
@@ -434,6 +439,7 @@ def run_aero(
         geometry_id=geometry_id,
         geometry_source=source_policy,
         generator_id=generator_id.strip() or None,
+        control_input_deg=control_input_deg,
         alpha=alpha,
         velocity=velocity,
         altitude=altitude,
@@ -520,6 +526,11 @@ def sweep_aero(
         "",
         "--generator-id",
         help="Generator ID required for --run-dir and --dataset modes. Ignored for --config.",
+    ),
+    control_input_deg: float | None = typer.Option(
+        None,
+        "--control-input-deg",
+        help="Control surface input in degrees (AVL d1 command) applied to every sweep case.",
     ),
     alpha: float = typer.Option(
         0.0,
@@ -690,6 +701,7 @@ def sweep_aero(
         geometry_id=geometry_id,
         geometry_source=source_policy,
         generator_id=generator_id.strip() or None,
+        control_input_deg=control_input_deg,
         alpha=alpha,
         velocity=velocity,
         altitude=altitude,

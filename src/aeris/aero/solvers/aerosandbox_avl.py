@@ -44,7 +44,10 @@ class AVLStrips(AVLBase):
     exposing output file locations.
     """
     
-    def _default_keystroke_file_contents(self) -> list[str]:
+    def _default_keystroke_file_contents(
+        self,
+        control_input_deg: float | None = None,
+    ) -> list[str]:
         run_file_contents: list[str] = []
 
         # Disable graphics
@@ -62,7 +65,7 @@ class AVLStrips(AVLBase):
         # Options:
         # - r : use body-axis rotation-rate convention
         # - d : enable derivative output
-        # - v : toggle viscous forces option (kept to match the custom wrapper logic)
+        # - v : toggle viscous forces option
         run_file_contents += [
             "o",
             "r",
@@ -94,14 +97,19 @@ class AVLStrips(AVLBase):
             f"y y {float(r_bar)}",
         ]
 
-        # Keep default control state slot active, aligned with AeroSandbox convention
-        run_file_contents += ["d1 d1 1"]
+        # IMPORTANT:
+        # Explicit AVL control command.
+        # If controls exist, command the actual value through OPER.
+        if _airplane_has_any_control_surface(self.airplane):
+            value = 0.0 if control_input_deg is None else float(control_input_deg)
+            run_file_contents += ["d1", "d1", f"{value}"]
 
         return run_file_contents
     
     def run(
         self,
         run_command: str | None = None,
+        control_input_deg: float | None = None,
         totals_filename: str = "output.txt",
         strip_filename: str = "strips.txt",
         surface_filename: str = "surfaces.txt",
@@ -140,7 +148,9 @@ class AVLStrips(AVLBase):
         if save_element_forces:
             _rm(directory / element_filename)
 
-        keystroke_lines = self._default_keystroke_file_contents()
+        keystroke_lines = self._default_keystroke_file_contents(
+            control_input_deg=control_input_deg
+        )
         if run_command is not None:
             keystroke_lines.append(run_command)
 
@@ -402,6 +412,31 @@ def _validate_solver_airplane(airplane: Any) -> list[str]:
         errors.append("Airplane has no wings")
     return errors
 
+def _airplane_has_any_control_surface(airplane: asb.Airplane) -> bool:
+    for wing in getattr(airplane, "wings", []) or []:
+        for xsec in getattr(wing, "xsecs", []) or []:
+            control_surfaces = getattr(xsec, "control_surfaces", None)
+            if control_surfaces and len(control_surfaces) > 0:
+                return True
+    return False
+
+
+def _resolve_control_input_deg(settings) -> float | None:
+    """
+    Resolve explicit AVL control input command from solver settings.
+
+    Semantics
+    ---------
+    - None  -> do not send any d1 command
+    - float -> send d1 / d1 / <value>
+
+    We do not rely on AeroSandbox's AVL exporter to serialize the actual
+    commanded control deflection magnitude into the CONTROL gain.
+    """
+    value = settings.solver_options.get("control_input_deg", None)
+    if value is None:
+        return None
+    return float(value)
 
 def _mach_consistency_warning(fc) -> str | None:
     """
@@ -462,6 +497,7 @@ class AeroSandboxAVLSolver(AeroSolver):
         panel_cfg = settings.solver_options.get("paneling", {})
         save_surface_forces = bool(settings.solver_options.get("save_surface_forces", False))
         save_element_forces = bool(settings.solver_options.get("save_element_forces", False))
+        control_input_deg = _resolve_control_input_deg(settings)
         avl_command = _resolve_avl_command(settings.avl_command)
 
         op_point = asb.OperatingPoint(
@@ -488,6 +524,7 @@ class AeroSandboxAVLSolver(AeroSolver):
                 )
 
                 raw = avl.run(
+                    control_input_deg=control_input_deg,
                     totals_filename="output.txt",
                     strip_filename="strips.txt",
                     surface_filename="surfaces.txt",
@@ -547,6 +584,7 @@ class AeroSandboxAVLSolver(AeroSolver):
                     "paneling": panel_cfg,
                     "save_surface_forces": save_surface_forces,
                     "save_element_forces": save_element_forces,
+                    "control_input_deg": control_input_deg,
                     "flight_condition": {
                         "alpha_deg": fc.alpha_deg,
                         "beta_deg": fc.beta_deg,

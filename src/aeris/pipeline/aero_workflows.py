@@ -177,6 +177,7 @@ def execute_aero_run(
     geometry_id: str,
     geometry_source: str,
     generator_id: str | None,
+    control_input_deg: float | None,
     alpha: float,
     velocity: float,
     altitude: float,
@@ -246,6 +247,7 @@ def execute_aero_run(
                 },
                 "save_surface_forces": save_surface_forces,
                 "save_element_forces": save_element_forces,
+                "control_input_deg": control_input_deg,
             },
         ),
         provenance={
@@ -265,6 +267,7 @@ def execute_aero_run(
         "solver": solver,
         "geometry_source": geometry_source,
         "resolved_generator_id": resolved_generator_id,
+        "control_input_deg": control_input_deg,
         "flight_condition": to_jsonable(asdict(aero_input.flight_condition)),
         "geometry_summary": to_jsonable(dataclass_or_value(summary)),
         "aero_result": to_jsonable(dataclass_or_value(result)),
@@ -285,6 +288,7 @@ def execute_aero_sweep(
     geometry_id: str,
     geometry_source: str,
     generator_id: str | None,
+    control_input_deg: float | None,
     alpha: float,
     velocity: float,
     altitude: float,
@@ -371,6 +375,7 @@ def execute_aero_sweep(
             },
             "save_surface_forces": save_surface_forces,
             "save_element_forces": save_element_forces,
+            "control_input_deg": control_input_deg,
         },
     )
 
@@ -396,6 +401,7 @@ def execute_aero_sweep(
         "solver": solver,
         "geometry_source": geometry_source,
         "resolved_generator_id": resolved_generator_id,
+        "control_input_deg": control_input_deg,
         "base_flight_condition": to_jsonable(asdict(base_fc)),
         "flight_condition_sweep": to_jsonable(asdict(sweep)),
         "geometry_summary": to_jsonable(dataclass_or_value(summary)),

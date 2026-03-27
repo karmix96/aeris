@@ -25,6 +25,7 @@ from aeris.quality.pipeline_api import (
     run_aero_dataset_qc,
     
 )
+from aeris.quality.presets import list_qc_presets, resolve_qc_preset
 
 dataset_app = typer.Typer(help="Dataset generation commands.")
 
@@ -134,6 +135,11 @@ def dataset_generate(
         "--qc-profile",
         help="QC profile name.",
     ),
+    qc_preset: str = typer.Option(
+        "",
+        "--qc-preset",
+        help=f"Named QC preset for geometry dataset generation. Valid: {', '.join(list_qc_presets())}.",
+    ),
     fail_on_qc_error: bool = typer.Option(
         False,
         "--fail-on-qc-error/--allow-qc-errors",
@@ -141,7 +147,18 @@ def dataset_generate(
     ),
 ) -> None:
     """Generate a batch geometry dataset using a modular sampling strategy."""
-    exit_code = run_dataset_generation(
+    preset = resolve_qc_preset(qc_preset)
+
+    run_qc_effective = run_qc
+    qc_profile_effective = qc_profile
+    fail_on_qc_error_effective = fail_on_qc_error
+
+    if preset is not None:
+        run_qc_effective = preset.run_geometry_qc
+        qc_profile_effective = preset.geometry_qc_profile
+        fail_on_qc_error_effective = preset.fail_on_geometry_qc_error
+        
+        exit_code = run_dataset_generation(
         config_path=config,
         n_samples=n,
         sampler=sampler,
@@ -149,9 +166,9 @@ def dataset_generate(
         dataset_name=name,
         save_plot=save_plot,
         build_aerosandbox=build_aerosandbox,
-        run_qc=run_qc,
-        qc_profile=qc_profile,
-        fail_on_qc_error=fail_on_qc_error,
+        run_qc=run_qc_effective,
+        qc_profile=qc_profile_effective,
+        fail_on_qc_error=fail_on_qc_error_effective,
     )
     raise typer.Exit(code=exit_code)
 
@@ -295,7 +312,7 @@ def dataset_aero_generate(
         "--keep-geometry-dataset/--delete-geometry-dataset",
         help="Keep or delete the intermediate geometry dataset after aero dataset creation.",
     ),
-        run_geometry_qc: bool = typer.Option(
+    run_geometry_qc: bool = typer.Option(
         False,
         "--run-geometry-qc/--no-run-geometry-qc",
         help="Run QC checks on the intermediate geometry dataset.",
@@ -325,6 +342,11 @@ def dataset_aero_generate(
         "--fail-on-aero-qc-error/--allow-aero-qc-errors",
         help="Exit nonzero if aero QC fails.",
     ),
+    qc_preset: str = typer.Option(
+        "",
+        "--qc-preset",
+        help=f"Named QC preset for unified aero dataset generation. Valid: {', '.join(list_qc_presets())}.",
+    ),
 ) -> None:
     """Generate a geometry dataset and enrich it with aero/control sweeps in one command."""
     parsed_alpha_values = _parse_float_list(alpha_values, "--alpha-values")
@@ -347,6 +369,25 @@ def dataset_aero_generate(
         raise typer.BadParameter("--altitude-values must not be empty.")
     if not parsed_control_input_values:
         raise typer.BadParameter("--control-input-values must not be empty.")
+    
+    preset = resolve_qc_preset(qc_preset)
+
+    run_geometry_qc_effective = run_geometry_qc
+    geometry_qc_profile_effective = geometry_qc_profile
+    fail_on_geometry_qc_error_effective = fail_on_geometry_qc_error
+
+    run_aero_qc_effective = run_aero_qc
+    aero_qc_profile_effective = aero_qc_profile
+    fail_on_aero_qc_error_effective = fail_on_aero_qc_error
+
+    if preset is not None:
+        run_geometry_qc_effective = preset.run_geometry_qc
+        geometry_qc_profile_effective = preset.geometry_qc_profile
+        fail_on_geometry_qc_error_effective = preset.fail_on_geometry_qc_error
+
+        run_aero_qc_effective = preset.run_aero_qc
+        aero_qc_profile_effective = preset.aero_qc_profile
+        fail_on_aero_qc_error_effective = preset.fail_on_aero_qc_error
 
     exit_code = run_aero_dataset_generation(
     config_path=config,
@@ -375,12 +416,12 @@ def dataset_aero_generate(
     save_element_forces=save_element_forces,
     max_cases=max_cases,
     keep_geometry_dataset=keep_geometry_dataset,
-    run_geometry_qc=run_geometry_qc,
-    geometry_qc_profile=geometry_qc_profile,
-    fail_on_geometry_qc_error=fail_on_geometry_qc_error,
-    run_aero_qc=run_aero_qc,
-    aero_qc_profile=aero_qc_profile,
-    fail_on_aero_qc_error=fail_on_aero_qc_error,
+    run_geometry_qc=run_geometry_qc_effective,
+    geometry_qc_profile=geometry_qc_profile_effective,
+    fail_on_geometry_qc_error=fail_on_geometry_qc_error_effective,
+    run_aero_qc=run_aero_qc_effective,
+    aero_qc_profile=aero_qc_profile_effective,
+    fail_on_aero_qc_error=fail_on_aero_qc_error_effective,
     )
         
     raise typer.Exit(code=exit_code)

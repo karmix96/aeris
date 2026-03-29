@@ -41,7 +41,34 @@ from aeris.dataset.sampling.registry import get_dataset_sampler
 from aeris.dataset.sampling.resolver import resolve_dataset_sampler
 from aeris.geometry.config_resolver import resolve_generator_and_config
 from aeris.geometry.registry import get_geometry_generator
+from aeris.quality.pipeline_api import run_geometry_dataset_qc
 
+def _write_final_summary(
+    *,
+    dataset_root: Path,
+    manifest: dict[str, Any],
+    exit_code: int,
+    qc_profile: str,
+    fail_on_qc_error: bool,
+) -> None:
+    summary = {
+        "dataset_name": manifest.get("dataset_name"),
+        "config_path": manifest.get("config_path"),
+        "dataset_root": str(dataset_root.resolve()),
+        "requested_n": manifest.get("requested_n"),
+        "attempted_n": manifest.get("attempted_n"),
+        "succeeded_n": manifest.get("succeeded_n"),
+        "failed_n": manifest.get("failed_n"),
+        "generator_id": manifest.get("generator_id"),
+        "qc": manifest.get("qc"),
+        "qc_profile": qc_profile,
+        "fail_on_qc_error": fail_on_qc_error,
+        "final_status": manifest.get("status"),
+        "exit_code": exit_code,
+        "created_at_utc": _utc_now_iso(),
+    }
+
+    write_json(dataset_root / "final_run_summary.json", summary)
 
 def _utc_now_iso() -> str:
     return datetime.now(UTC).isoformat()
@@ -180,6 +207,9 @@ def run_dataset_generation(
     build_aerosandbox: bool | None = None,
     sampler: str | None = None,
     sampler_seed: int | None = None,
+    run_qc: bool = False,
+    qc_profile: str = "basic",
+    fail_on_qc_error: bool = False,
 ) -> int:
     """
     Generate a geometry dataset using the selected dataset sampler and the
@@ -367,6 +397,49 @@ def run_dataset_generation(
             manifest["succeeded_n"],
             manifest["failed_n"],
         )
+        # =========================
+        # GEOMETRY QC BLOCK
+        # =========================
+        qc_report = None
+        if run_qc:
+            qc_report = run_geometry_dataset_qc(
+                dataset_root=dataset_paths.root,
+                profile=qc_profile,
+            )
+
+            qc_dir = dataset_paths.root / "qc"
+            qc_dir.mkdir(parents=True, exist_ok=True)
+            qc_report_path = qc_dir / "geometry_qc_report.json"
+            write_json(qc_report_path, qc_report)
+
+            manifest["qc"] = {
+                "run_qc": True,
+                "profile": qc_profile,
+                "passed": qc_report["passed"],
+                "error_count": len(qc_report["errors"]),
+                "warning_count": len(qc_report["warnings"]),
+                "report_path": str(qc_report_path),
+            }
+
+            write_json(dataset_paths.manifest_path, manifest)
+
+            if not qc_report["passed"] and fail_on_qc_error:
+                logger.error("Geometry QC failed — stopping pipeline")
+                return 1
+        else:
+            manifest["qc"] = {
+                "run_qc": False,
+                "report_path": None,
+            }
+            write_json(dataset_paths.manifest_path, manifest)
+            
+        _write_final_summary(
+            dataset_root=dataset_paths.root,
+            manifest=manifest,
+            exit_code=0,
+            qc_profile=qc_profile,
+            fail_on_qc_error=fail_on_qc_error,
+        )
         return 0
 
     except Exception as exc:
@@ -378,4 +451,12 @@ def run_dataset_generation(
         }
         write_json(dataset_paths.manifest_path, manifest)
         logger.exception("Dataset generation failed at pipeline level")
+        
+        _write_final_summary(
+            dataset_root=dataset_paths.root,
+            manifest=manifest,
+            exit_code=1,
+            qc_profile=qc_profile,
+            fail_on_qc_error=fail_on_qc_error,
+        )
         return 1

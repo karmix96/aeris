@@ -1,0 +1,30 @@
+AERIS QC PRESETS — QUICK REFERENCE
+
+Use case                            Preset
+----------------------------------  ------------------
+Fast debugging                      off
+See QC but do not block             debug
+Normal trusted workflow             production
+Promotion / release / curated set   promotion_strict
+
+
+Behavior matrix
+
+Preset             Geometry QC   Geometry Profile   Stop on Geo QC   Aero QC   Aero Profile   Stop on Aero QC
+-----------------  ------------  -----------------  ---------------  --------  -------------  ---------------
+off                no            basic              no               no        basic          no
+debug              yes           basic              no               yes       basic          no
+production         yes           basic              yes              yes       basic          yes
+promotion_strict   yes           strict             yes              yes       strict         yes
+
+
+Typical commands
+
+Debug:
+aeris dataset aero-generate ... --qc-preset debug
+
+Production:
+aeris dataset aero-generate ... --qc-preset production
+
+Strict promotion:
+aeris dataset aero-generate ... --qc-preset promotion_strict

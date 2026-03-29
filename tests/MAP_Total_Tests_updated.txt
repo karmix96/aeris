@@ -1,0 +1,718 @@
+AERIS MAP — TOTAL TESTS, TEST INTENT, GAPS, AND PRODUCTION PREFLIGHT
+Checkpoint: Geometry + Aero + QC + Retention + Curation + E2E Smoke
+
+==================================================
+0. PURPOSE OF THIS DOCUMENT
+==================================================
+
+This file explains:
+
+1. What each test area is trying to prove
+2. What those tests do NOT prove
+3. How to use the test suite in practice
+4. What to run before:
+   - local development
+   - a light personal E2E run
+   - a medium validation campaign
+   - a large production/cloud campaign
+
+Important distinction:
+
+- Runtime workflow uses the real application code.
+- Pytest tests do NOT run during production workflows.
+- Pytest tests only verify beforehand that the real code behaves as expected.
+
+So:
+
+QC in the workflow:
+- uses the QC implementation functions directly
+
+Pytest:
+- checks those functions and the surrounding plumbing
+
+==================================================
+1. GLOBAL STATUS
+==================================================
+
+Current strengths:
+
+- CLI backbone is tested
+- geometry generation is heavily tested
+- aero execution path has dedicated tests
+- dataset generation, metadata, IO, inspect, QC, retention, summary, and curation are tested
+- at least one real E2E aero dataset test now exists
+- integrated workflow QC has smoke validation
+- final summary artifact and retention policy now have regression protection
+
+Current honest limitation:
+
+This is a strong test-backed engineering codebase.
+It is NOT yet fully operationally proven for long production campaigns.
+
+That requires:
+- medium/large rehearsal runs
+- cloud/HPC environment validation
+- long-run failure observation
+- resumability strategy later
+
+==================================================
+2. HOW TO THINK ABOUT THE TEST SUITE
+==================================================
+
+The test suite has four roles.
+
+A. UNIT / COMPONENT TESTS
+They test one function, helper, validator, model, parser, exporter, or adapter in isolation.
+
+Purpose:
+- catch local regressions fast
+- verify small logic pieces
+- make refactoring safer
+
+B. INTEGRATION TESTS
+They test a few layers working together.
+
+Examples:
+- CLI -> command -> pipeline
+- dataset -> QC
+- aero manifest ordering -> integrated QC
+- geometry export -> replay/read path
+
+Purpose:
+- verify plumbing between modules
+- catch interface drift
+
+C. E2E / WORKFLOW SMOKE TESTS
+They run a real small workflow and inspect the outputs.
+
+Purpose:
+- prove the chain still hangs together
+- catch breakage that unit tests miss
+
+D. MANUAL / OPERATIONAL RUNS
+These are not pytest tests.
+These are real runs executed by the user or by production infrastructure.
+
+Purpose:
+- prove the system survives scale, duration, solver weirdness, and storage pressure
+
+==================================================
+3. DOMAIN-BY-DOMAIN TEST MAP
+==================================================
+
+--------------------------------------------------
+3.1 COMMON DOMAIN
+--------------------------------------------------
+
+Files:
+- tests/common/test_config.py
+- tests/common/test_logging.py
+- tests/common/test_paths.py
+
+What they are about:
+- config loading and malformed YAML behavior
+- logger creation and repeat-safe logging setup
+- run/dataset path creation and structure behavior
+
+What they prove:
+- the base infrastructure is stable
+- configs, logs, and paths are not casually broken
+
+What they do NOT prove:
+- filesystem permission edge cases
+- disk full behavior
+- environment-variable override behavior
+- cloud storage behavior
+
+Operational meaning:
+If these fail, the foundation is broken. Do not trust anything above them.
+
+--------------------------------------------------
+3.2 COMMANDS / CLI DOMAIN
+--------------------------------------------------
+
+Files include:
+- tests/commands/test_version.py
+- tests/commands/test_geometry.py
+- tests/commands/test_dataset.py
+- tests/commands/test_dataset_cli.py
+- tests/commands/test_dataset_qc_cli.py
+- tests/commands/test_dataset_qc_gate_cli.py
+- tests/commands/test_aero.py
+- tests/commands/test_aero_cli.py
+- tests/commands/test_aero_cli_integration.py
+- tests/commands/test_aero_control_integration.py
+- tests/commands/test_dynamics.py
+- tests/commands/test_dynamics_cli.py
+- tests/commands/test_geometry_visualize.py
+
+What they are about:
+- commands exist and do not crash
+- key options and help surfaces are visible
+- CLI arguments are wired to pipeline code
+- QC flags and QC presets are exposed correctly
+- some command-level integration behavior is validated
+
+What they prove:
+- the user-facing control panel is not disconnected from the machine
+- command entrypoints and option wiring are reasonably safe
+
+What they do NOT prove:
+- large production behavior
+- solver robustness at scale
+- full real campaign survivability
+
+Operational meaning:
+These are necessary, but they are not enough by themselves to certify workflow health.
+
+--------------------------------------------------
+3.3 GENERATORS / GEOMETRY DOMAIN
+--------------------------------------------------
+
+Files include:
+- tests/generators/test_registry.py
+- tests/generators/bwb_segmented_v1/test_generator.py
+- tests/generators/bwb_segmented_v1/test_planform.py
+- tests/generators/bwb_segmented_v1/test_sections.py
+- tests/generators/bwb_segmented_v1/test_params.py
+- tests/generators/bwb_segmented_v1/test_validation.py
+- tests/generators/bwb_segmented_v1/test_validators.py
+- tests/generators/bwb_segmented_v1/test_export.py
+- tests/generators/bwb_segmented_v1/test_reconstruction_export.py
+- tests/generators/bwb_segmented_v1/test_aerosandbox_adapter.py
+- tests/generators/bwb_segmented_v1/test_aerosandbox_adapter_smoke.py
+- tests/generators/bwb_segmented_v1/test_geometry_summary_fields.py
+- tests/generators/bwb_segmented_v1/test_export_summary_enriched.py
+- tests/generators/bwb_segmented_v1/test_services.py
+- tests/generators/bwb_segmented_v1/test_asb_metadata.py
+- tests/generators/bwb_segmented_v1/test_bwb_segmented_v1_sampling.py
+
+What they are about:
+- generator registration and lookup
+- geometry parameter handling
+- planform/sections construction
+- validation logic
+- export artifacts
+- reconstruction/replay behavior
+- AeroSandbox conversion behavior
+- geometry summary field integrity
+- seed/reproducibility behavior
+
+What they prove:
+- geometry generation is not a black box
+- config/sample -> geometry path is heavily protected
+- exported geometry artifacts are reasonably trustworthy
+
+What they do NOT prove:
+- golden-reference geometry agreement against an external benchmark
+- large design-space statistical validity
+- manufacturing/certification-level geometry traceability
+
+Operational meaning:
+This is one of the strongest parts of the codebase.
+
+--------------------------------------------------
+3.4 PIPELINE DOMAIN
+--------------------------------------------------
+
+Files:
+- tests/pipeline/test_geometry_run.py
+
+What it is about:
+- geometry pipeline orchestration
+- manifest writing
+- success/failure recording
+
+What it proves:
+- orchestration behavior exists and is not silently broken
+
+What it does NOT prove:
+- multi-generator future scenarios
+- production-scale batch orchestration
+
+Operational meaning:
+Important bridge test; small domain, high leverage.
+
+--------------------------------------------------
+3.5 DATASET DOMAIN
+--------------------------------------------------
+
+Files include:
+- tests/dataset/test_dataset_run.py
+- tests/dataset/test_dataset_sampling.py
+- tests/dataset/test_dataset_io.py
+- tests/dataset/test_metadata.py
+- tests/dataset/test_inspect.py
+- tests/dataset/test_aero_dataset.py
+- tests/dataset/test_aero_dataset_deep.py
+- tests/dataset/test_aero_dataset_run.py
+- tests/dataset/test_aero_qc_integration.py
+- tests/dataset/test_curate_aero.py
+
+What they are about:
+- geometry dataset generation orchestration
+- sampling correctness and reproducibility
+- CSV/JSON IO and schema handling
+- metadata row correctness
+- dataset inspection behavior
+- aero dataset generation path
+- integrated aero QC ordering and behavior
+- final summary artifact
+- retention policy helper behavior
+- curation rules and rejected/kept outputs
+
+What they prove:
+- dataset production is one of the better-validated areas
+- ML-facing tabular outputs are not casually drifting
+- QC integration and post-run curation now have protection
+
+What they do NOT prove:
+- very large campaign behavior
+- parallel dataset generation
+- full cloud object-store semantics
+- resume/restart behavior
+
+Operational meaning:
+This is now a strong part of the workflow, but still not a substitute for rehearsal runs.
+
+--------------------------------------------------
+3.6 AERO DOMAIN
+--------------------------------------------------
+
+Files include:
+- tests/aero/test_aerosandbox_avl.py
+- tests/aero/test_io_read_aero_result.py
+- tests/aero/test_physics_sanity.py
+- tests/aero/test_saved_run_replay.py
+- tests/aero/test_sweep.py
+- tests/aero/test_sweep_run.py
+- tests/aero/test_views.py
+
+What they are about:
+- solver adapter behavior
+- aero result reading
+- sweep execution
+- saved run replay
+- basic physics sanity checks
+- output view/model consistency
+
+What they prove:
+- aero layer is not just “it runs once”
+- replay and parsing paths have coverage
+- some physical sanity checks exist
+
+What they do NOT prove:
+- all solver failure modes
+- large AVL weirdness accumulation
+- exact truth-level aerodynamic fidelity
+
+Operational meaning:
+Useful and important, but still less battle-proven than the geometry/dataset layers.
+
+--------------------------------------------------
+3.7 QUALITY DOMAIN
+--------------------------------------------------
+
+Files:
+- tests/quality/test_geometry_validators.py
+- tests/quality/test_aero_validators.py
+- tests/quality/test_models.py
+- tests/quality/test_registry.py
+- tests/quality/test_runners.py
+
+What they are about:
+- validator logic
+- quality model schemas
+- registry/routing of QC logic
+- runner behavior for QC execution
+
+What they prove:
+- QC implementation itself is tested
+- validation rules are not floating unsupported
+
+What they do NOT prove:
+- that every large real dataset will pass QC
+- that current QC thresholds are perfect
+- that there are no missing validation concepts
+
+Operational meaning:
+These tests verify the QC machinery.
+The workflow uses this machinery directly during real runs.
+
+--------------------------------------------------
+3.8 DYNAMICS DOMAIN
+--------------------------------------------------
+
+Files include:
+- tests/dynamics/test_analysis.py
+- tests/dynamics/test_build_with_mass_config.py
+- tests/dynamics/test_cg_sweep.py
+- tests/dynamics/test_cg_sweep_csv.py
+- tests/dynamics/test_cg_sweep_inspect_command.py
+- tests/dynamics/test_dynamics_config.py
+- tests/dynamics/test_dynamics_io.py
+- tests/dynamics/test_geometry_summary_fallback.py
+- tests/dynamics/test_models.py
+- tests/dynamics/test_trim.py
+- tests/dynamics/test_trim_command.py
+
+What they are about:
+- trim logic
+- CG sweep logic
+- mass-config building
+- dynamics config/models/io
+- command exposure
+- fallback behavior from geometry summary inputs
+
+What they prove:
+- the dynamics foundation exists and has real structure
+
+What they do NOT prove:
+- full flight dynamics trustworthiness
+- integrated production use with large aero databases
+- certification-grade stability assessment
+
+Operational meaning:
+Promising and structured, but still a newer area than geometry/dataset.
+
+--------------------------------------------------
+3.9 E2E DOMAIN
+--------------------------------------------------
+
+Files:
+- tests/e2e/test_full_pipeline_smoke.py
+- tests/e2e/test_aero_dataset_e2e.py
+
+What they are about:
+- small real workflow runs
+- geometry -> aero -> QC -> summary -> retention chain behavior
+
+What they prove:
+- the system still works as a system, not only as separate pieces
+- integrated workflow QC is actually exercised
+- retention/summary/preset propagation are not only unit-tested
+
+What they do NOT prove:
+- one-week survivability
+- large campaign stability
+- cloud scheduling and infrastructure behavior
+
+Operational meaning:
+These are your most important regression tests before real campaigns.
+
+==================================================
+4. WHAT THE RUNTIME WORKFLOW USES
+==================================================
+
+When you run:
+
+aeris dataset aero-generate ...
+
+the runtime workflow uses:
+- real geometry generation code
+- real aero sweep code
+- real QC runner functions
+- real manifest and summary writers
+- real retention logic
+- real curation only if you run it afterwards
+
+It does NOT use:
+- pytest files
+- test helpers except indirectly through confidence they provide
+
+So:
+
+Workflow QC:
+- uses QC implementation code directly
+
+Pytest:
+- proves that implementation is behaving as expected
+
+==================================================
+5. WHAT THE CURRENT E2E TESTS COVER
+==================================================
+
+Current E2E tests cover small real workflows, not fake mock flows.
+
+They currently validate combinations of:
+- geometry generation
+- aero generation
+- integrated geometry QC
+- integrated aero QC
+- manifest creation
+- final summary creation
+- retention behavior
+- QC preset propagation
+- geometry dataset cleanup behavior
+
+That is very valuable.
+
+But they still do NOT replace:
+- medium rehearsal campaigns
+- large operational campaigns
+- cloud/HPC validation
+
+==================================================
+6. WHAT IS MISSING OR SHOULD STILL BE ADDED
+==================================================
+
+Recommended future additions:
+
+1. Medium-scale operational rehearsal script/check
+- not necessarily a pytest
+- something like 20–50 geometries with real campaign settings
+- used before true production launches
+
+2. Resume / restart behavior tests
+- currently missing
+- important for long runs
+
+3. Failure-chain integration tests
+Examples:
+- solver partial failure -> manifest -> QC -> curation -> retention
+- geometry partial corruption -> inspect -> QC -> curate rejection
+
+4. Empty-file / empty-dataset robustness tests
+Especially around:
+- empty aero_failures.csv
+- zero-row curated outputs
+- partial artifact deletion
+
+5. Cloud/HPC environment tests
+Eventually:
+- filesystem semantics
+- job timeouts
+- worker interruption
+- storage cleanup expectations
+
+6. Production naming and collision behavior tests
+- repeated dataset name behavior under production usage
+- archive/cleanup workflow tests
+
+7. Optional golden-reference tests
+- selected fixed geometry / fixed aero outputs
+- used cautiously to catch silent drift
+
+==================================================
+7. STANDARD PREFLIGHT CHECKLIST
+==================================================
+
+--------------------------------------------------
+7.1 CASE A — DAY-TO-DAY LOCAL DEVELOPMENT
+--------------------------------------------------
+
+Use when:
+- editing one module
+- refactoring helpers
+- changing one command
+- changing one validator
+- changing one generator feature
+
+Run:
+1. the nearest unit/component tests first
+2. then the directly related integration tests
+3. do not run the whole universe unless the change is broad
+
+Examples:
+- if changing quality logic:
+  pytest tests/quality tests/dataset/test_aero_qc_integration.py -v
+
+- if changing dataset CLI:
+  pytest tests/commands/test_dataset.py tests/dataset -v
+
+- if changing generator internals:
+  pytest tests/generators/bwb_segmented_v1 tests/pipeline/test_geometry_run.py -v
+
+Goal:
+Fast feedback, focused failures, no wasted time.
+
+--------------------------------------------------
+7.2 CASE B — LIGHT PERSONAL E2E RUN
+--------------------------------------------------
+
+Use when:
+- you want to personally sanity-check the system
+- you changed workflow wiring
+- you want quick confidence before a small run
+
+Run this test gate:
+pytest tests/quality tests/dataset tests/commands tests/e2e -v
+
+Then run one tiny real command:
+- geometry-only: n=1 to 3
+- aero: n=1 to 2, tiny sweep
+
+Then manually inspect:
+- manifest
+- final_run_summary.json
+- QC reports
+- retention result
+- curated outputs if relevant
+
+Goal:
+Prove the whole chain still works in practice.
+
+--------------------------------------------------
+7.3 CASE C — MEDIUM VALIDATION CAMPAIGN
+--------------------------------------------------
+
+Use when:
+- you changed important workflow behavior
+- you changed solver/plumbing/QC/retention/curation
+- you are preparing for production
+
+Run this gate:
+pytest tests/common tests/quality tests/dataset tests/aero tests/commands tests/e2e -v
+
+Then launch a medium rehearsal:
+- 10 to 50 geometries
+- real solver
+- real QC preset
+- intended retention mode
+- realistic sweep settings
+
+After run, inspect:
+- failure rate
+- summary consistency
+- QC pass/fail
+- disk usage
+- kept/deleted aero run roots
+- curated kept vs rejected counts
+
+Goal:
+Catch operational issues that smoke tests will not reveal.
+
+--------------------------------------------------
+7.4 CASE D — LARGE LOCAL OR WORKSTATION PRODUCTION RUN
+--------------------------------------------------
+
+Use when:
+- you want a long unattended run on your machine/server
+
+Before launch:
+1. working tree clean or committed
+2. exact command saved
+3. unique dataset name chosen
+4. preflight tests passed
+5. medium rehearsal already passed for similar setup
+6. disk budget checked
+7. retention mode intentionally chosen
+8. solver executable confirmed
+9. config file frozen for the campaign
+
+Recommended preflight gate:
+pytest tests/quality tests/dataset tests/aero tests/commands tests/e2e -v
+
+Launch recommendations:
+- use --qc-preset production
+- use retain_aero_runs=failures_only unless there is a good reason not to
+- choose whether to keep intermediate geometry dataset intentionally
+- archive final summary and manifest immediately after completion
+
+Post-run:
+- inspect final_run_summary.json first
+- inspect manifest second
+- inspect QC reports third
+- run curate-aero for ML acceptance if needed
+
+Goal:
+Controlled production, not improvisation.
+
+--------------------------------------------------
+7.5 CASE E — CLOUD / PRODUCTION-LEVEL RUN
+--------------------------------------------------
+
+Use when:
+- running in cloud, HPC, remote worker, or scheduled production environment
+
+Suggested process:
+
+Stage 0 — Code gate
+- run regression suite in CI or equivalent:
+  pytest tests/quality tests/dataset tests/aero tests/commands tests/e2e -v
+
+Stage 1 — Environment preflight
+- confirm solver installed and callable
+- confirm filesystem layout and write permissions
+- confirm job time/memory/disk budget
+- confirm dataset naming convention
+- confirm cleanup/archive policy
+
+Stage 2 — Small environment shakeout run
+- run a tiny real campaign in the target environment
+- confirm manifests, summary, QC, retention, and artifact paths look correct
+
+Stage 3 — Medium environment rehearsal
+- run a realistic but smaller-than-production campaign
+- observe failure rate and storage behavior
+
+Stage 4 — Production campaign
+- launch with locked config and documented command
+- monitor logs and summary artifacts
+- preserve final summary, manifest, QC, and curated outputs
+
+Stage 5 — Acceptance
+- inspect final summary
+- inspect QC results
+- run curation
+- archive approved outputs
+- delete transient artifacts according to policy
+
+Important:
+Cloud production should not depend on “I ran some unit tests locally and vibes looked good.”
+
+==================================================
+8. WHAT YOU SHOULD NOT DO
+==================================================
+
+Do NOT:
+- run every single test before every tiny edit
+- assume passing unit tests means large campaigns are safe
+- assume E2E smoke means operational proof
+- ignore disk/retention planning
+- launch a week-long campaign without a medium rehearsal
+- confuse pytest files with runtime QC behavior
+
+==================================================
+9. RECOMMENDED DEFAULT TEST GATES
+==================================================
+
+Fast focused gate:
+pytest tests/quality tests/dataset tests/commands -v
+
+Strong local gate:
+pytest tests/quality tests/dataset tests/aero tests/commands tests/e2e -v
+
+Broad regression gate:
+pytest -v
+
+Use pytest -v when:
+- broad cross-domain changes happened
+- before important branch merges
+- before major release/checkpoint milestones
+
+==================================================
+10. FINAL HONEST SUMMARY
+==================================================
+
+AERIS now has a serious and useful test structure.
+
+It is strong in:
+- geometry
+- dataset generation
+- QC
+- command wiring
+- summary/retention/curation plumbing
+- small real workflow validation
+
+It is not yet fully proven in:
+- large production operations
+- resumability
+- cloud/HPC robustness
+- long-duration failure behavior
+
+So the right engineering statement is:
+
+“AERIS is test-backed and workflow-validated at small scale, with medium/large operational validation still required before claiming production maturity.”
+
+End of document.

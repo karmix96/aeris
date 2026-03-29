@@ -29,12 +29,49 @@ from aeris.common.config import load_yaml_config
 from aeris.dataset.dataset_run import run_dataset_generation
 from aeris.pipeline.aero_workflows import execute_aero_sweep
 from aeris.quality.pipeline_api import (
-    run_geometry_dataset_qc,
     run_aero_dataset_qc,
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DATASETS_DIR = PROJECT_ROOT / "data" / "datasets"
+
+def _write_final_summary(
+    *,
+    final_root: Path,
+    manifest: dict[str, Any],
+    exit_code: int,
+    qc_preset: str | None = None,
+    geometry_qc_profile: str | None = None,
+    aero_qc_profile: str | None = None,
+    fail_on_geometry_qc_error: bool | None = None,
+    fail_on_aero_qc_error: bool | None = None,
+) -> None:
+    summary = {
+        "dataset_name": manifest.get("dataset_name"),
+        "config_path": manifest.get("config_path"),
+        "dataset_root": str(final_root.resolve()),
+        "geometry_dataset_root": manifest.get("geometry_dataset_root"),
+        "requested_geometry_n": manifest.get("requested_geometry_n"),
+        "attempted_geometry_sweeps": manifest.get("attempted_geometry_sweeps"),
+        "completed_geometry_sweeps": manifest.get("completed_geometry_sweeps"),
+        "successful_aero_rows": manifest.get("successful_aero_rows"),
+        "failed_aero_rows": manifest.get("failed_aero_rows"),
+        "generator_id": manifest.get("generator_id"),
+        "solver": manifest.get("solver"),
+        "geometry_qc": manifest.get("geometry_qc"),
+        "aero_qc": manifest.get("aero_qc"),
+        "qc_preset": qc_preset,
+        "geometry_qc_profile": geometry_qc_profile,
+        "aero_qc_profile": aero_qc_profile,
+        "fail_on_geometry_qc_error": fail_on_geometry_qc_error,
+        "fail_on_aero_qc_error": fail_on_aero_qc_error,
+        "final_status": manifest.get("status"),
+        "exit_code": exit_code,
+        "created_at_utc": _utc_now_iso(),
+        "retention": manifest.get("retention"),
+    }
+
+    _write_json(final_root / "final_run_summary.json", summary)
 
 def _read_json_if_exists(path: Path) -> dict[str, Any] | None:
     if not path.exists():
@@ -83,6 +120,53 @@ def _write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
+def _validate_retain_aero_runs(retain_aero_runs: str) -> str:
+    value = retain_aero_runs.strip().lower()
+    valid = {"all", "failures_only", "none"}
+    if value not in valid:
+        raise ValueError(
+            f"Invalid retain_aero_runs={retain_aero_runs!r}. "
+            f"Valid values: {sorted(valid)}"
+        )
+    return value
+
+
+def _prune_aero_run_artifacts(
+    *,
+    copied_sweep_roots_by_geometry: dict[str, Path],
+    geometry_ids_with_failures: set[str],
+    retain_aero_runs: str,
+) -> dict[str, Any]:
+    retain_mode = _validate_retain_aero_runs(retain_aero_runs)
+
+    deleted_roots: list[str] = []
+    kept_roots: list[str] = []
+
+    for geometry_id, run_root in copied_sweep_roots_by_geometry.items():
+        keep = False
+
+        if retain_mode == "all":
+            keep = True
+        elif retain_mode == "failures_only":
+            keep = geometry_id in geometry_ids_with_failures
+        elif retain_mode == "none":
+            keep = False
+
+        if keep:
+            kept_roots.append(str(run_root.resolve()))
+            continue
+
+        if run_root.exists():
+            shutil.rmtree(run_root)
+        deleted_roots.append(str(run_root.resolve()))
+
+    return {
+        "retain_aero_runs": retain_mode,
+        "kept_run_count": len(kept_roots),
+        "deleted_run_count": len(deleted_roots),
+        "kept_run_roots": kept_roots,
+        "deleted_run_roots": deleted_roots,
+    }
 
 def _infer_generator_id_from_config(raw_config: dict[str, Any]) -> str:
     geometry = raw_config.get("geometry", {}) or {}
@@ -254,6 +338,8 @@ def run_aero_dataset_generation(
     save_element_forces: bool,
     max_cases: int | None,
     keep_geometry_dataset: bool,
+    retain_aero_runs: str = "all",
+    qc_preset: str | None = None,
     run_geometry_qc: bool = False,
     geometry_qc_profile: str = "basic",
     fail_on_geometry_qc_error: bool = False,
@@ -262,6 +348,7 @@ def run_aero_dataset_generation(
     fail_on_aero_qc_error: bool = False,
 ) -> int:
     raw_config = load_yaml_config(config_path)
+    retain_aero_runs = _validate_retain_aero_runs(retain_aero_runs)
     generator_id = _infer_generator_id_from_config(raw_config)
 
     final_root = DATASETS_DIR / dataset_name
@@ -276,36 +363,100 @@ def run_aero_dataset_generation(
 
     # 1) Generate geometry dataset first, internally
     rc = run_dataset_generation(
-        config_path=config_path,
-        n_samples=n_samples,
-        sampler=sampler,
-        sampler_seed=sampler_seed,
-        dataset_name=geometry_dataset_name,
-        save_plot=save_plot,
-        build_aerosandbox=build_aerosandbox,
-        run_qc=run_geometry_qc,
-        qc_profile=geometry_qc_profile,
-        fail_on_qc_error=fail_on_geometry_qc_error,
-    )
+    config_path=config_path,
+    n_samples=n_samples,
+    sampler=sampler,
+    sampler_seed=sampler_seed,
+    dataset_name=geometry_dataset_name,
+    save_plot=save_plot,
+    build_aerosandbox=build_aerosandbox,
+    run_qc=run_geometry_qc,
+    qc_profile=geometry_qc_profile,
+    fail_on_qc_error=fail_on_geometry_qc_error,
+)
+
+    # 🔴 NEW: Always load geometry QC summary if exists
+    geometry_manifest = _read_json_if_exists(geometry_dataset_root / "dataset_manifest.json")
+    geometry_qc_summary = None
+    if geometry_manifest is not None:
+        geometry_qc_summary = geometry_manifest.get("qc")
+
+    # 🔴 CASE 1: geometry generation failed
     if rc != 0:
-        _write_json(
-            final_root / "aero_dataset_manifest.json",
-            {
-                "status": "failed",
-                "reason": "geometry_dataset_generation_failed",
-                "geometry_dataset_name": geometry_dataset_name,
-                "created_at_utc": _utc_now_iso(),
-            },
+        manifest = {
+            "status": "failed",
+            "config_path": str(config_path.resolve()),
+            "dataset_name": dataset_name,
+            "geometry_dataset_name": geometry_dataset_name,
+            "geometry_dataset_root": str(geometry_dataset_root.resolve()),
+            "requested_geometry_n": n_samples,
+            "attempted_geometry_sweeps": 0,
+            "completed_geometry_sweeps": 0,
+            "successful_aero_rows": 0,
+            "failed_aero_rows": 0,
+            "generator_id": generator_id,
+            "solver": solver,
+            "geometry_qc": geometry_qc_summary,
+            "aero_qc": None,
+            "retention": {},
+        }
+
+        _write_final_summary(
+            final_root=final_root,
+            manifest=manifest,
+            exit_code=1,
+            qc_preset=qc_preset,
+            geometry_qc_profile=geometry_qc_profile,
+            aero_qc_profile=aero_qc_profile,
+            fail_on_geometry_qc_error=fail_on_geometry_qc_error,
+            fail_on_aero_qc_error=fail_on_aero_qc_error,
         )
+
+        return 1
+
+    # 🔴 CASE 2: geometry QC failed (STRICT STOP)
+    if (
+        run_geometry_qc
+        and fail_on_geometry_qc_error
+        and geometry_qc_summary is not None
+        and not geometry_qc_summary.get("passed", True)
+    ):
+        manifest = {
+            "status": "failed",
+            "config_path": str(config_path.resolve()),
+            "dataset_name": dataset_name,
+            "geometry_dataset_name": geometry_dataset_name,
+            "geometry_dataset_root": str(geometry_dataset_root.resolve()),
+            "requested_geometry_n": n_samples,
+            "attempted_geometry_sweeps": n_samples,
+            "completed_geometry_sweeps": n_samples,
+            "successful_aero_rows": 0,
+            "failed_aero_rows": 0,
+            "generator_id": generator_id,
+            "solver": solver,
+            "geometry_qc": geometry_qc_summary,
+            "aero_qc": None,
+            "retention": {},
+        }
+
+        _write_final_summary(
+            final_root=final_root,
+            manifest=manifest,
+            exit_code=1,
+            qc_preset=qc_preset,
+            geometry_qc_profile=geometry_qc_profile,
+            aero_qc_profile=aero_qc_profile,
+            fail_on_geometry_qc_error=fail_on_geometry_qc_error,
+            fail_on_aero_qc_error=fail_on_aero_qc_error,
+        )
+
         return 1
 
     geometry_manifest = _read_json_if_exists(geometry_dataset_root / "dataset_manifest.json")
     geometry_qc_summary = None
     if geometry_manifest is not None:
         geometry_qc_summary = geometry_manifest.get("qc")
-    geometry_qc_report_path = None
-    if geometry_qc_summary is not None:
-        geometry_qc_report_path = geometry_qc_summary.get("report_path")
+
 
     geometry_metadata_rows = _read_csv_rows(geometry_dataset_root / "metadata.csv")
     geometry_by_id = {
@@ -316,6 +467,8 @@ def run_aero_dataset_generation(
 
     success_rows: list[dict[str, Any]] = []
     failure_rows: list[dict[str, Any]] = []
+    copied_sweep_roots_by_geometry: dict[str, Path] = {}
+    geometry_ids_with_failures: set[str] = set()
 
     requested_geometry_n = len(geometry_by_id)
     attempted_sweeps = 0
@@ -368,6 +521,7 @@ def run_aero_dataset_generation(
             if copied_sweep_root.exists():
                 shutil.rmtree(copied_sweep_root)
             shutil.copytree(sweep_run_root, copied_sweep_root)
+            copied_sweep_roots_by_geometry[geometry_id] = copied_sweep_root
 
             manifest = _load_sweep_manifest(copied_sweep_root)
             cases = manifest.get("cases", []) or []
@@ -378,6 +532,7 @@ def run_aero_dataset_generation(
                     aero_json = _find_aero_result_json(case_dir)
                     aero_payload = json.loads(aero_json.read_text(encoding="utf-8"))
                 except Exception as exc:
+                    geometry_ids_with_failures.add(geometry_id)
                     failure_rows.append(
                         _flatten_failure_row(
                             geometry_row=geometry_row,
@@ -399,6 +554,7 @@ def run_aero_dataset_generation(
                     )
                 else:
                     failure = aero_payload.get("failure", {}) or {}
+                    geometry_ids_with_failures.add(geometry_id)
                     failure_rows.append(
                         _flatten_failure_row(
                             geometry_row=geometry_row,
@@ -412,6 +568,7 @@ def run_aero_dataset_generation(
             completed_sweeps += 1
 
         except Exception as exc:
+            geometry_ids_with_failures.add(geometry_id)
             failure_rows.append(
                 _flatten_failure_row(
                     geometry_row=geometry_row,
@@ -425,6 +582,11 @@ def run_aero_dataset_generation(
     # Write ML-ready outputs
     _write_csv(final_root / "aero_dataset.csv", success_rows)
     _write_csv(final_root / "aero_failures.csv", failure_rows)
+    aero_run_retention = _prune_aero_run_artifacts(
+    copied_sweep_roots_by_geometry=copied_sweep_roots_by_geometry,
+    geometry_ids_with_failures=geometry_ids_with_failures,
+    retain_aero_runs=retain_aero_runs,
+    )
 
     manifest = {
         "status": (
@@ -462,14 +624,13 @@ def run_aero_dataset_generation(
             "aero_failures_csv": str((final_root / "aero_failures.csv").resolve()),
             "aero_runs_root": str(sweep_runs_root.resolve()),
         },
+        "retention": {
+        "keep_geometry_dataset": keep_geometry_dataset,
+        "retain_aero_runs": aero_run_retention["retain_aero_runs"],
+        "kept_aero_run_count": aero_run_retention["kept_run_count"],
+        "deleted_aero_run_count": aero_run_retention["deleted_run_count"],
+    },
     }
-
-    if not keep_geometry_dataset:
-        manifest["geometry_dataset_deleted_after_run"] = True
-        if geometry_dataset_root.exists():
-            shutil.rmtree(geometry_dataset_root)
-    else:
-        manifest["geometry_dataset_deleted_after_run"] = False
 
     if not keep_geometry_dataset:
         manifest["geometry_dataset_deleted_after_run"] = True
@@ -512,11 +673,24 @@ def run_aero_dataset_generation(
     # Rewrite manifest with aero_qc summary included.
     _write_json(manifest_path, manifest)
 
+    exit_code = 0 if success_rows else 1
+
     if (
         aero_qc_report is not None
         and not aero_qc_report["passed"]
         and fail_on_aero_qc_error
     ):
-        return 1
+        exit_code = 1
 
-    return 0 if success_rows else 1
+    _write_final_summary(
+        final_root=final_root,
+        manifest=manifest,
+        exit_code=exit_code,
+        qc_preset=qc_preset,
+        geometry_qc_profile=geometry_qc_profile,
+        aero_qc_profile=aero_qc_profile,
+        fail_on_geometry_qc_error=fail_on_geometry_qc_error,
+        fail_on_aero_qc_error=fail_on_aero_qc_error,
+    )
+
+    return exit_code

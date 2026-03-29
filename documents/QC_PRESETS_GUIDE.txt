@@ -1,0 +1,92 @@
+AERIS QC PRESETS GUIDE
+
+Purpose
+This note explains what each QC preset means in practice.
+
+Why presets exist
+QC behavior should not be reassembled manually every time.
+A preset gives one named operating mode that controls:
+- whether geometry QC runs
+- whether aero QC runs
+- which profile is used (basic or strict)
+- whether QC failure stops the workflow
+
+Preset: off
+Meaning:
+- geometry QC disabled
+- aero QC disabled
+- workflow never stops because of QC
+
+Use when:
+- debugging pipeline mechanics
+- quick smoke work
+- temporary internal experiments
+- not for trusted datasets
+
+Risk:
+- lets bad data pass through silently
+
+
+Preset: debug
+Meaning:
+- geometry QC runs with basic profile
+- aero QC runs with basic profile
+- QC failure does NOT stop the workflow
+
+Use when:
+- you want visibility but do not want blockage
+- development iterations
+- troubleshooting production runs
+
+Risk:
+- warnings/errors are recorded, but bad data can still continue
+
+
+Preset: production
+Meaning:
+- geometry QC runs with basic profile
+- aero QC runs with basic profile
+- QC failure stops the workflow
+
+Use when:
+- normal batch generation
+- daily trusted workflow
+- dataset generation for real work
+- default operator mode for practical use
+
+Interpretation:
+- basic means core sanity and integrity checks
+- not intended to be the final promotion gate
+
+
+Preset: promotion_strict
+Meaning:
+- geometry QC runs with strict profile
+- aero QC runs with strict profile
+- QC failure stops the workflow immediately
+
+Use when:
+- deciding whether a dataset is promotion-quality
+- release / milestone datasets
+- data intended for ML training or long-term retention
+- final curated deliverables
+
+Interpretation:
+- strict should reject suspicious but technically non-crashing data
+- this mode is intentionally more conservative
+
+Important mindset
+production means:
+- operationally acceptable
+
+promotion_strict means:
+- acceptable for promotion / curated retention / higher trust
+
+Do not use promotion_strict for every casual development run unless you enjoy slowing yourself down for sport.
+
+
+Current practical rule
+Use:
+- debug for development
+- production for standard runs
+- promotion_strict for promotion / curated datasets only

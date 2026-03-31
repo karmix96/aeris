@@ -60,64 +60,43 @@ def _build_dataset(tmp_path: Path) -> Path:
     return dataset_root
 
 
-def test_ml_train_cli_linear(tmp_path: Path) -> None:
+def test_ml_compare_cli_runs(tmp_path: Path) -> None:
     dataset_root = _build_dataset(tmp_path)
-    output_dir = tmp_path / "cli_linear"
+    output_dir = tmp_path / "cli_compare"
 
     result = runner.invoke(
         app,
         [
             "ml",
-            "train",
+            "compare",
             "--dataset",
             str(dataset_root),
             "--features",
             "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg",
             "--targets",
             "cl,cd,cm",
-            "--model-type",
-            "linear_regression",
+            "--models",
+            "linear_regression,random_forest,gradient_boosting",
             "--split-method",
             "grouped",
+            "--random-seed",
+            "123",
             "--output-dir",
             str(output_dir),
         ],
     )
 
     assert result.exit_code == 0, result.stdout
-    assert "[AERIS] ML training completed" in result.stdout
-    assert (output_dir / "metrics.json").exists()
-    assert (output_dir / "models" / "model.pkl").exists()
-    assert (output_dir / "coefficients.json").exists()
-
-
-def test_ml_train_cli_gradient_boosting(tmp_path: Path) -> None:
-    dataset_root = _build_dataset(tmp_path)
-    output_dir = tmp_path / "cli_gb"
-
-    result = runner.invoke(
-        app,
-        [
-            "ml",
-            "train",
-            "--dataset",
-            str(dataset_root),
-            "--features",
-            "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg",
-            "--targets",
-            "cl,cd,cm",
-            "--model-type",
-            "gradient_boosting",
-            "--split-method",
-            "grouped",
-            "--output-dir",
-            str(output_dir),
-        ],
-    )
-
-    assert result.exit_code == 0, result.stdout
-    assert "[AERIS] ML training completed" in result.stdout
+    assert "ML model comparison completed" in result.stdout
+    assert "linear_regression" in result.stdout
+    assert "random_forest" in result.stdout
     assert "gradient_boosting" in result.stdout
-    assert (output_dir / "metrics.json").exists()
-    assert (output_dir / "models" / "model.pkl").exists()
-    assert (output_dir / "feature_importances.json").exists()
+    assert "best_by_rmse" in result.stdout
+    assert "best_by_mae" in result.stdout
+    assert "best_by_r2" in result.stdout
+
+    assert (output_dir / "comparison_summary.json").exists()
+    assert (output_dir / "comparison_summary.csv").exists()
+    assert (output_dir / "runs" / "linear_regression" / "coefficients.json").exists()
+    assert (output_dir / "runs" / "random_forest" / "feature_importances.json").exists()
+    assert (output_dir / "runs" / "gradient_boosting" / "feature_importances.json").exists()

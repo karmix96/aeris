@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AERIS Pipeline Reference</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0d0f14;
+    --bg2: #13161e;
+    --bg3: #1a1e2a;
+    --border: #2a2e3d;
+    --border-accent: #3a4060;
+    --text: #c8ccd8;
+    --text-dim: #6b7080;
+    --text-bright: #e8ecf4;
+    --blue: #4a90d9;
+    --blue-dim: #1e3a5f;
+    --teal: #3abfb0;
+    --teal-dim: #0f3832;
+    --amber: #e0a84a;
+    --amber-dim: #3d2a0a;
+    --green: #5aad7a;
+    --green-dim: #0f2e1a;
+    --coral: #d96a50;
+    --coral-dim: #3a1a10;
+    --purple: #8a7ad4;
+    --purple-dim: #1e1a3a;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 11px;
+    line-height: 1.5;
+    padding: 32px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  /* PAGE BREAK SIMULATION */
+  .page {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 32px 36px;
+    margin-bottom: 24px;
+    position: relative;
+  }
+
+  .page-label {
+    position: absolute;
+    top: 12px; right: 16px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  /* HEADER */
+  .masthead {
+    border-bottom: 1px solid var(--border-accent);
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+
+  .masthead h1 {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text-bright);
+    letter-spacing: 0.06em;
+  }
+
+  .masthead .tagline {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    letter-spacing: 0.04em;
+  }
+
+  .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  /* PIPELINE SPINE */
+  .pipeline {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-bottom: 24px;
+  }
+
+  .stage {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-right: none;
+    padding: 10px 10px 10px 11px;
+    position: relative;
+  }
+  .stage:first-child { border-radius: 5px 0 0 5px; }
+  .stage:last-child  { border-radius: 0 5px 5px 0; border-right: 1px solid var(--border); }
+
+  .stage::after {
+    content: '▶';
+    position: absolute;
+    right: -9px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    z-index: 2;
+  }
+  .stage:last-child::after { display: none; }
+
+  .stage-num {
+    font-family: var(--mono);
+    font-size: 8px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    margin-bottom: 3px;
+  }
+
+  .stage-name {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+
+  .stage-sub {
+    font-size: 9px;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+
+  /* COLOR VARIANTS */
+  .s-blue   { border-top: 2px solid var(--blue);   } .s-blue   .stage-name { color: var(--blue); }   .s-blue   ::after { color: var(--blue); }
+  .s-teal   { border-top: 2px solid var(--teal);   } .s-teal   .stage-name { color: var(--teal); }   .s-teal   ::after { color: var(--teal); }
+  .s-amber  { border-top: 2px solid var(--amber);  } .s-amber  .stage-name { color: var(--amber); }  .s-amber  ::after { color: var(--amber); }
+  .s-green  { border-top: 2px solid var(--green);  } .s-green  .stage-name { color: var(--green); }  .s-green  ::after { color: var(--green); }
+  .s-coral  { border-top: 2px solid var(--coral);  } .s-coral  .stage-name { color: var(--coral); }  .s-coral  ::after { color: var(--coral); }
+  .s-purple { border-top: 2px solid var(--purple); } .s-purple .stage-name { color: var(--purple); } .s-purple ::after { color: var(--purple); }
+
+  /* TWO COLUMN LAYOUT */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+
+  /* SECTION BLOCKS */
+  .block {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 12px 14px;
+  }
+
+  .block-title {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-bottom: 7px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  /* CLI CODE */
+  .cmd {
+    font-family: var(--mono);
+    font-size: 10px;
+    line-height: 1.8;
+    padding: 2px 0;
+    display: block;
+    border-radius: 3px;
+  }
+
+  .cmd-prefix {
+    color: var(--text-dim);
+    user-select: none;
+  }
+
+  .cmd-bin  { color: var(--blue); }
+  .cmd-sub  { color: var(--teal); }
+  .cmd-flag { color: var(--amber); }
+  .cmd-val  { color: var(--green); }
+  .cmd-comment { color: var(--text-dim); font-style: italic; }
+  .cmd-shell { color: var(--purple); }
+
+  .cmd-block {
+    background: #090b10;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 10px 14px;
+    margin: 8px 0;
+  }
+
+  /* STEP ROWS */
+  .step {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .step:last-child { border-bottom: none; }
+
+  .step-n {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    padding-top: 1px;
+    min-width: 16px;
+  }
+
+  .step-body { flex: 1; }
+
+  .step-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-bright);
+    margin-bottom: 2px;
+  }
+
+  .step-desc {
+    font-size: 10px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin-bottom: 4px;
+  }
+
+  /* PRESET TABLE */
+  .preset-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 10px;
+  }
+  .preset-row:last-child { border-bottom: none; }
+  .preset-name { font-family: var(--mono); min-width: 120px; font-size: 10px; }
+  .preset-desc { color: var(--text-dim); flex: 1; }
+
+  /* DIVIDER */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 16px 0;
+  }
+
+  /* WARN BOX */
+  .callout {
+    border-radius: 5px;
+    padding: 8px 12px;
+    font-size: 10px;
+    line-height: 1.6;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .callout-icon { font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+
+  /* SECTION HEADING */
+  .sec-heading {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    margin-top: 16px;
+  }
+  .sec-heading:first-child { margin-top: 0; }
+
+  /* KEY-VALUE pairs */
+  .kv { display: flex; gap: 8px; font-size: 10px; padding: 3px 0; }
+  .kv-key { color: var(--text-dim); min-width: 80px; font-family: var(--mono); font-size: 9px; }
+  .kv-val { color: var(--text-bright); }
+
+  /* Print */
+  @media print {
+    body { background: white; color: #111; padding: 0; max-width: 100%; }
+    .page { border: 1px solid #ddd; border-radius: 0; margin: 0; page-break-after: always; background: white; }
+    .bg-dark { background: #f5f5f5 !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ PAGE 1 ═══════════════════════════════════════ -->
+<div class="page">
+  <span class="page-label">Page 1 of 2</span>
+
+  <div class="masthead">
+    <h1>AERIS</h1>
+    <span class="tagline">// aircraft design & analysis pipeline — operator quick reference</span>
+  </div>
+
+  <!-- PIPELINE SPINE -->
+  <div class="pipeline">
+    <div class="stage s-blue">
+      <div class="stage-num">01</div>
+      <div class="stage-name">Geometry</div>
+      <div class="stage-sub">One aircraft from config</div>
+    </div>
+    <div class="stage s-teal">
+      <div class="stage-num">02</div>
+      <div class="stage-name">Dataset</div>
+      <div class="stage-sub">Many aircraft, LHS sampled</div>
+    </div>
+    <div class="stage s-amber">
+      <div class="stage-num">03</div>
+      <div class="stage-name">Aero</div>
+      <div class="stage-sub">AVL sweep per geometry</div>
+    </div>
+    <div class="stage s-green">
+      <div class="stage-num">04</div>
+      <div class="stage-name">QC</div>
+      <div class="stage-sub">Validate & gate data</div>
+    </div>
+    <div class="stage s-coral">
+      <div class="stage-num">05</div>
+      <div class="stage-name">Curate</div>
+      <div class="stage-sub">Reject bad rows</div>
+    </div>
+    <div class="stage s-purple">
+      <div class="stage-num">06</div>
+      <div class="stage-name">Promote → ML</div>
+      <div class="stage-sub">Gate → train surrogates</div>
+    </div>
+  </div>
+
+  <!-- TWO COLUMNS: conceptual + what AERIS is not -->
+  <div class="two-col">
+
+    <div class="block">
+      <div class="block-title"><span class="dot" style="background:var(--blue)"></span>Mental model</div>
+      <div class="step">
+        <div class="step-n">01</div>
+        <div class="step-body">
+          <div class="step-label">Geometry layer</div>
+          <div class="step-desc">Config YAML → deterministic aircraft. One geometry = one airplane realization. Modular generator registry.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-n">02</div>
+        <div class="step-body">
+          <div class="step-label">Dataset layer</div>
+          <div class="step-desc">N geometries via LHS sampling. Each gets its own folder under <span style="font-family:var(--mono);color:var(--teal);font-size:9px">data/datasets/</span>. Reproducible by seed.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-n">03</div>
+        <div class="step-body">
+          <div class="step-label">Aero layer</div>
+          <div class="step-desc">AVL via AeroSandbox. Single operating point or Cartesian sweep (α, β, V, alt, p, q, r). Writes <span style="font-family:var(--mono);color:var(--amber);font-size:9px">aero_result.json</span> per case.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-n">04</div>
+        <div class="step-body">
+          <div class="step-label">QC + Curation + Promotion</div>
+          <div class="step-desc">Three successive gates. Only <em>promoted</em> datasets may enter ML. Raw and curated-only are rejected at the gate.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-n">05</div>
+        <div class="step-body">
+          <div class="step-label">ML layer</div>
+          <div class="step-desc">Tabular surrogate baseline: CL, CD, CM. Features = design params + flight condition. Seeded splits, grouped by geometry_id to prevent leakage.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-title"><span class="dot" style="background:var(--amber)"></span>QC presets — pick one</div>
+
+      <div class="preset-row">
+        <div class="preset-name"><span class="badge" style="background:var(--bg);border:1px solid var(--border);color:var(--text-dim)">off</span></div>
+        <div class="preset-desc">No QC runs. Data passes silently. Debug mechanics only — never for real data.</div>
+      </div>
+      <div class="preset-row">
+        <div class="preset-name"><span class="badge" style="background:var(--bg3);border:1px solid var(--blue-dim);color:var(--blue)">debug</span></div>
+        <div class="preset-desc">Geometry + aero QC with basic profile. Failures logged but pipeline continues.</div>
+      </div>
+      <div class="preset-row">
+        <div class="preset-name"><span class="badge" style="background:var(--green-dim);border:1px solid var(--green);color:var(--green)">production</span></div>
+        <div class="preset-desc">Basic profile. QC failure <strong>stops</strong> workflow. Default for daily batch runs.</div>
+      </div>
+      <div class="preset-row">
+        <div class="preset-name"><span class="badge" style="background:var(--amber-dim);border:1px solid var(--amber);color:var(--amber)">promotion_strict</span></div>
+        <div class="preset-desc">Strict profile. Hard stop on failure. Use only for promotion / ML / curated releases.</div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="block-title" style="margin-top:4px"><span class="dot" style="background:var(--teal)"></span>Key outputs per stage</div>
+      <div class="kv"><span class="kv-key">geometry</span><span class="kv-val">data/runs/&lt;ts&gt;_geo_*/</span></div>
+      <div class="kv"><span class="kv-key">dataset</span><span class="kv-val">data/datasets/&lt;name&gt;/metadata.csv</span></div>
+      <div class="kv"><span class="kv-key">aero csv</span><span class="kv-val">aero_dataset.csv · aero_failures.csv</span></div>
+      <div class="kv"><span class="kv-key">curated</span><span class="kv-val">curated_aero_dataset.csv</span></div>
+      <div class="kv"><span class="kv-key">promotion</span><span class="kv-val">promotion_manifest.json</span></div>
+      <div class="kv"><span class="kv-key">ml model</span><span class="kv-val">model + metrics + config snapshot</span></div>
+    </div>
+
+  </div>
+
+  <!-- KEY PRINCIPLES CALLOUTS -->
+  <div class="three-col">
+    <div class="callout" style="background:var(--blue-dim);border:1px solid var(--blue);border-radius:5px">
+      <span class="callout-icon" style="color:var(--blue)">▸</span>
+      <div><strong style="color:var(--blue);font-size:10px">Deterministic</strong><br>Same config + seed = identical output. Always.</div>
+    </div>
+    <div class="callout" style="background:var(--amber-dim);border:1px solid var(--amber);border-radius:5px">
+      <span class="callout-icon" style="color:var(--amber)">▸</span>
+      <div><strong style="color:var(--amber);font-size:10px">Promotion gate is hard</strong><br>ML inputs must be promoted. Forced promotion requires explicit override flag.</div>
+    </div>
+    <div class="callout" style="background:var(--coral-dim);border:1px solid var(--coral);border-radius:5px">
+      <span class="callout-icon" style="color:var(--coral)">▸</span>
+      <div><strong style="color:var(--coral);font-size:10px">AVL is linear aero</strong><br>Not CFD, not a flight sim. Operating-point evaluator only.</div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════ PAGE 2 ═══════════════════════════════════════ -->
+<div class="page">
+  <span class="page-label">Page 2 of 2</span>
+
+  <div class="masthead">
+    <h1>End-to-End CLI</h1>
+    <span class="tagline">// geometry → dataset → aero sweep → QC → curate → promote → ML train</span>
+  </div>
+
+  <div class="two-col">
+
+    <!-- LEFT: FULL E2E COMMANDS -->
+    <div>
+      <div class="sec-heading">Step 1 — Sanity check</div>
+      <div class="cmd-block">
+        <span class="cmd"><span class="cmd-bin">aeris</span> <span class="cmd-sub">version</span></span>
+        <span class="cmd"><span class="cmd-bin">aeris</span> <span class="cmd-sub">pipeline smoke</span> <span class="cmd-flag">-c</span> <span class="cmd-val">configs/geometry/baseline_bwb.yaml</span></span>
+      </div>
+
+      <div class="sec-heading">Step 2 — Generate a dataset (N geometries)</div>
+      <div class="cmd-block">
+        <span class="cmd"><span class="cmd-bin">aeris</span> <span class="cmd-sub">dataset generate</span> \</span>
+        <span class="cmd">  <span class="cmd-flag">-c</span> <span class="cmd-val">configs/geometry/wing_bwb.yaml</span> \</span>
+        <span class="cmd">  <span class="cmd-flag">--n</span> <span class="cmd-val">200</span> \</span>
+        <span class="cmd">  <span class="cmd-flag">--sampler</span> <span class="cmd-val">lhs_v1</span> <span class="cmd-flag">--sampler-seed</span> <span class="cmd-val">123</span> \</span>
+        <span class="cmd">  <span class="cmd-flag">--no-save-plot</span> \</span>
+        <span class="cmd">  <span class="cmd-flag">--name</span> <span class="cmd-val">run_n200_lhs123</span></span>
+        <span class="cmd" style="margin-top:4px"><span class="cmd-bin">aeris</span> <span class="cmd-sub">dataset inspect</span> <span class="cmd-flag">--dataset</span> <span class="cmd-val">data/datasets/run_n200_lhs123</span></span>
+      </div>
+
+      <div class="sec-heading">Step 3 — Aero sweep across the dataset</div>
+      <div class="cmd-block">
+        <span class="cmd"><span class="cmd-comment"># Run sweep for each geometry in the dataset</span></span>
+        <span class="cmd"><span class="cmd-bin">aeris</span> <span class="cmd-sub">aero sweep</span> \</span>
+        <span class="cmd">  <span class="cmd-flag">--dataset</span> <span class="cmd-val">data/datasets/run_n200_lhs123</span> \</span>
+        <span class="cmd">  <span class="cmd-flag">--geometry-id</span> <span class="cmd-val">geom_00001</span> \</span>
+        <span class="cmd">  <span class="cmd-flag">--velocity</span> <span class="cmd-val">28</span> <span class="cmd-flag">--altitude</span> <span class="cmd-val">0</span> \</span>
+        <span class="cmd">  <span class="cmd-flag">--alpha-values</span> <span class="cmd-val">"0,2,4,6,8,10"</span> \</span>
+        <span class="cmd">  <span class="cmd-flag">--beta-values</span> <span class="cmd-val">"0"</span></span>
+        <span class="cmd" style="margin-top:4px"><span class="cmd-comment"># Inspect result</span></span>
+        <span class="cmd"><span class="cmd-shell">latest_sweep</span>=<span class="cmd-val">"$(ls -td data/runs/*_aero_sweep_* | head -n 1)"</span></span>
+        <span class="cmd"><span class="cmd-bin">aeris</span> <span class="cmd-sub">aero sweep-inspect</span> <span class="cmd-flag">--run-dir</span> <span class="cmd-val">"$latest_sweep"</span></span>
+      </div>
+
+      <div class="sec-heading">Step 4 — Curate the aero dataset</div>
+      <div class="cmd-block">
+        <span class="cmd"><span class="cmd-bin">aeris</span> <span class="cmd-sub">curate-aero</span> \</span>
+        <span class="cmd">  <span class="cmd-flag">--dataset</span> <span class="cmd-val">data/datasets/run_n200_lhs123</span></span>
+        <span class="cmd"><span class="cmd-comment"># → curated_aero_dataset.csv + curation_report.json</span></span>
+      </div>
+
+      <div class="sec-heading">Step 5 — Promote (strict gate)</div>
+      <div class="cmd-block">
+        <span class="cmd"><span class="cmd-bin">aeris</span> <span class="cmd-sub">promote-aero</span> \</span>
+        <span class="cmd">  <span class="cmd-flag">--dataset</span> <span class="cmd-val">data/datasets/run_n200_lhs123</span> \</span>
+        <span class="cmd">  <span class="cmd-flag">--qc-preset</span> <span class="cmd-val">promotion_strict</span></span>
+        <span class="cmd"><span class="cmd-comment"># → promotion_manifest.json (blocks ML if not passed)</span></span>
+      </div>
+
+      <div class="sec-heading">Step 6 — Train ML surrogate</div>
+      <div class="cmd-block">
+        <span class="cmd"><span class="cmd-bin">aeris</span> <span class="cmd-sub">ml train</span> \</span>
+        <span class="cmd">  <span class="cmd-flag">--dataset</span> <span class="cmd-val">data/datasets/run_n200_lhs123</span> \</span>
+        <span class="cmd">  <span class="cmd-flag">--features</span> <span class="cmd-val">span,aspect_ratio,alpha,velocity,altitude</span> \</span>
+        <span class="cmd">  <span class="cmd-flag">--targets</span> <span class="cmd-val">CL,CD,CM</span> \</span>
+        <span class="cmd">  <span class="cmd-flag">--model</span> <span class="cmd-val">random_forest</span> \</span>
+        <span class="cmd">  <span class="cmd-flag">--seed</span> <span class="cmd-val">42</span></span>
+        <span class="cmd"><span class="cmd-comment"># → model + RMSE/MAE/R² + config snapshot</span></span>
+      </div>
+    </div>
+
+    <!-- RIGHT: REFERENCE CARDS -->
+    <div>
+
+      <div class="block" style="margin-bottom:12px">
+        <div class="block-title"><span class="dot" style="background:var(--teal)"></span>Single geometry + single aero run</div>
+        <div class="cmd-block">
+          <span class="cmd"><span class="cmd-bin">aeris</span> <span class="cmd-sub">geometry generate</span> <span class="cmd-flag">-c</span> <span class="cmd-val">configs/geometry/baseline_bwb.yaml</span></span>
+          <span class="cmd"><span class="cmd-bin">aeris</span> <span class="cmd-sub">aero run</span> \</span>
+          <span class="cmd">  <span class="cmd-flag">--config</span> <span class="cmd-val">configs/geometry/baseline_bwb_25.yaml</span> \</span>
+          <span class="cmd">  <span class="cmd-flag">--geometry-source</span> <span class="cmd-val">native</span> \</span>
+          <span class="cmd">  <span class="cmd-flag">--alpha</span> <span class="cmd-val">4</span> <span class="cmd-flag">--beta</span> <span class="cmd-val">0</span> <span class="cmd-flag">--velocity</span> <span class="cmd-val">28</span></span>
+          <span class="cmd" style="margin-top:4px"><span class="cmd-shell">latest_run</span>=<span class="cmd-val">"$(ls -td data/runs/*_aero_* | head -n 1)"</span></span>
+          <span class="cmd"><span class="cmd-bin">aeris</span> <span class="cmd-sub">aero inspect</span> <span class="cmd-flag">--run-dir</span> <span class="cmd-val">"$latest_run"</span></span>
+        </div>
+      </div>
+
+      <div class="block" style="margin-bottom:12px">
+        <div class="block-title"><span class="dot" style="background:var(--purple)"></span>ML training data interface</div>
+        <div class="cmd-block">
+          <span class="cmd"><span class="cmd-bin">aeris</span> <span class="cmd-sub">dataset training-data</span> \</span>
+          <span class="cmd">  <span class="cmd-flag">--dataset</span> <span class="cmd-val">data/datasets/run_n200_lhs123</span></span>
+          <span class="cmd"><span class="cmd-comment"># Loads promoted data, validates schema,</span></span>
+          <span class="cmd"><span class="cmd-comment"># returns X / y / metadata</span></span>
+        </div>
+      </div>
+
+      <div class="block" style="margin-bottom:12px">
+        <div class="block-title"><span class="dot" style="background:var(--amber)"></span>Useful shell helpers</div>
+        <div class="cmd-block">
+          <span class="cmd"><span class="cmd-comment"># Latest dataset</span></span>
+          <span class="cmd"><span class="cmd-shell">latest_ds</span>=<span class="cmd-val">"$(ls -td data/datasets/* | head -n 1)"</span></span>
+          <span class="cmd"><span class="cmd-shell">wc</span> <span class="cmd-flag">-l</span> <span class="cmd-val">"$latest_ds/metadata.csv"</span></span>
+          <span class="cmd"><span class="cmd-shell">wc</span> <span class="cmd-flag">-l</span> <span class="cmd-val">"$latest_ds/failures.csv"</span></span>
+          <span class="cmd" style="margin-top:4px"><span class="cmd-comment"># Dataset audit</span></span>
+          <span class="cmd"><span class="cmd-shell">python</span> <span class="cmd-val">scripts/generic/audit_dataset.py</span></span>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title"><span class="dot" style="background:var(--coral)"></span>Non-goals (phase 8)</div>
+        <div style="font-size:10px;color:var(--text-dim);line-height:1.8;padding-top:2px">
+          <div>✗ &nbsp;Neural operators / GNNs — not yet</div>
+          <div>✗ &nbsp;CFD-level surrogates — not yet</div>
+          <div>✗ &nbsp;Dynamics / trim / CG — paused until after ML baseline</div>
+          <div>✗ &nbsp;Control surface deflections — post-dynamics phase</div>
+          <div>✗ &nbsp;Field tensors / NPZ products — later postprocess phase</div>
+          <div style="margin-top:8px;color:var(--text-bright)">✓ &nbsp;Promoted tabular aero surrogate — this phase</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BOTTOM STRIP -->
+  <div style="border-top:1px solid var(--border);padding-top:12px;display:flex;gap:20px;flex-wrap:wrap">
+    <div style="font-size:9px;color:var(--text-dim);font-family:var(--mono)">
+      <span style="color:var(--text-bright)">--no-save-plot</span> always in batch &nbsp;|&nbsp;
+      <span style="color:var(--text-bright)">lhs_v1 + seed</span> over legacy lhs_seed &nbsp;|&nbsp;
+      <span style="color:var(--text-bright)">geometry</span>=one plane &nbsp;
+      <span style="color:var(--text-bright)">dataset</span>=many planes &nbsp;
+      <span style="color:var(--text-bright)">aero run</span>=one point &nbsp;
+      <span style="color:var(--text-bright)">aero sweep</span>=many points &nbsp;|&nbsp;
+      raw AVL files = source of truth if parser and result disagree
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

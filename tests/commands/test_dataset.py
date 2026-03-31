@@ -63,4 +63,4 @@ def test_dataset_curate_aero_help_runs() -> None:
 def test_dataset_aero_generate_help_runs() -> None:
     result = runner.invoke(app, ["dataset", "aero-generate", "--help"])
     assert result.exit_code == 0
-    assert "Generate a geometry dataset and enrich it with aero/control sweeps" in result.stdout
+    assert "Generate a unified aero dataset from a geometry config." in result.stdout

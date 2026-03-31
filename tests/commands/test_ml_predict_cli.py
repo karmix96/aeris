@@ -11,6 +11,19 @@ from aeris.cli import app
 runner = CliRunner()
 
 
+FEATURE_COLUMNS = [
+    "c1_m",
+    "b_total_m",
+    "sw1_deg",
+    "alpha_deg",
+    "velocity_mps",
+    "altitude_m",
+    "control_input_deg",
+]
+
+TARGET_COLUMNS = ["cl", "cd", "cm"]
+
+
 def _build_dataset(tmp_path: Path) -> Path:
     dataset_root = tmp_path / "ml_dataset"
     dataset_root.mkdir(parents=True, exist_ok=True)
@@ -60,11 +73,11 @@ def _build_dataset(tmp_path: Path) -> Path:
     return dataset_root
 
 
-def test_ml_train_cli_linear(tmp_path: Path) -> None:
+def test_ml_predict_cli_runs(tmp_path: Path) -> None:
     dataset_root = _build_dataset(tmp_path)
-    output_dir = tmp_path / "cli_linear"
+    model_run_dir = tmp_path / "linear_run"
 
-    result = runner.invoke(
+    train_result = runner.invoke(
         app,
         [
             "ml",
@@ -80,44 +93,30 @@ def test_ml_train_cli_linear(tmp_path: Path) -> None:
             "--split-method",
             "grouped",
             "--output-dir",
-            str(output_dir),
+            str(model_run_dir),
         ],
     )
+    assert train_result.exit_code == 0, train_result.stdout
 
-    assert result.exit_code == 0, result.stdout
-    assert "[AERIS] ML training completed" in result.stdout
-    assert (output_dir / "metrics.json").exists()
-    assert (output_dir / "models" / "model.pkl").exists()
-    assert (output_dir / "coefficients.json").exists()
+    input_csv = tmp_path / "predict_input.csv"
+    pd.read_csv(dataset_root / "curated_aero_dataset.csv").to_csv(input_csv, index=False)
 
-
-def test_ml_train_cli_gradient_boosting(tmp_path: Path) -> None:
-    dataset_root = _build_dataset(tmp_path)
-    output_dir = tmp_path / "cli_gb"
-
+    predict_output_dir = tmp_path / "predict_out"
     result = runner.invoke(
         app,
         [
             "ml",
-            "train",
-            "--dataset",
-            str(dataset_root),
-            "--features",
-            "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg",
-            "--targets",
-            "cl,cd,cm",
-            "--model-type",
-            "gradient_boosting",
-            "--split-method",
-            "grouped",
+            "predict",
+            "--model-run-dir",
+            str(model_run_dir),
+            "--input-csv",
+            str(input_csv),
             "--output-dir",
-            str(output_dir),
+            str(predict_output_dir),
         ],
     )
 
     assert result.exit_code == 0, result.stdout
-    assert "[AERIS] ML training completed" in result.stdout
-    assert "gradient_boosting" in result.stdout
-    assert (output_dir / "metrics.json").exists()
-    assert (output_dir / "models" / "model.pkl").exists()
-    assert (output_dir / "feature_importances.json").exists()
+    assert "[AERIS] ML prediction completed" in result.stdout
+    assert (predict_output_dir / "predictions.csv").exists()
+    assert (predict_output_dir / "prediction_summary.json").exists()

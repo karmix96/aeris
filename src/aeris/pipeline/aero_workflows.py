@@ -28,6 +28,7 @@ from aeris.common.config import load_yaml_config
 from aeris.common.paths import create_run_folder
 from aeris.geometry.config_resolver import resolve_generator_and_config
 from aeris.geometry.registry import get_geometry_generator
+from aeris.aero.solvers.aerosandbox_avl import _write_aero_result_json
 
 
 def create_aero_run_root(output_name: str, label: str, prefix: str) -> tuple[Path, Path, Path]:
@@ -375,6 +376,14 @@ def execute_aero_run(
             initial_result=result,
         )
 
+    # Persist the final post-processed result chosen by the pipeline.
+    # The solver writes aero_result.json during each run_case() call, but the
+    # pipeline may later inject fallback metadata and/or replace the initial
+    # result with a successful retry result. Rewrite the final chosen result so
+    # aero_result.json matches what the pipeline is actually returning.
+    result.artifact_paths["aero_result_json"] = str(aero_dir / "aero_result.json")
+    _write_aero_result_json(result, aero_dir)
+    
     manifest = {
         "run_name": run_root.name,
         "solver": solver,

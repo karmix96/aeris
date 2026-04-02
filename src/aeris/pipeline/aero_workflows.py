@@ -168,6 +168,47 @@ def to_jsonable(value: Any) -> Any:
         return value
     return str(value)
 
+def _should_retry_with_finer_paneling(result: Any) -> tuple[bool, str | None]:
+    if not result.is_success():
+        return True, f"status={result.status.value}"
+
+    cd = getattr(result, "cd", None)
+    ld = getattr(result, "l_over_d", None)
+
+    try:
+        if cd is None:
+            return True, "missing_cd"
+        if float(cd) <= 0.0:
+            return True, f"non_positive_cd:{cd}"
+    except Exception:
+        return True, "invalid_cd"
+
+    if ld is None:
+        return True, "missing_l_over_d"
+
+    return False, None
+
+
+def _inject_retry_metadata(
+    final_result: Any,
+    *,
+    used: bool,
+    reason: str | None,
+    initial_paneling: dict[str, Any],
+    fallback_paneling: dict[str, Any] | None,
+    initial_result: Any,
+) -> None:
+    meta = final_result.solver_metadata or {}
+    meta["fallback_retry"] = {
+        "used": used,
+        "reason": reason,
+        "initial_paneling": initial_paneling,
+        "fallback_paneling": fallback_paneling,
+        "initial_status": initial_result.status.value,
+        "initial_cd": initial_result.cd,
+        "initial_l_over_d": initial_result.l_over_d,
+    }
+    final_result.solver_metadata = meta
 
 def execute_aero_run(
     *,
@@ -260,7 +301,79 @@ def execute_aero_run(
     )
 
     solver_instance = create_solver(solver)
-    result = solver_instance.run_case(aero_input=aero_input, output_dir=aero_dir)
+
+    initial_paneling = {
+        "spanwise_resolution": spanwise_resolution,
+        "chordwise_resolution": chordwise_resolution,
+        "spanwise_spacing": spanwise_spacing,
+        "chordwise_spacing": chordwise_spacing,
+    }
+
+    result = solver_instance.run_case(
+        aero_input=aero_input,
+        output_dir=aero_dir,
+    )
+
+    should_retry, retry_reason = _should_retry_with_finer_paneling(result)
+
+    if should_retry:
+        retry_input = AeroInput(
+            geometry=aero_input.geometry,
+            flight_condition=aero_input.flight_condition,
+            settings=AeroSolverSettings(
+                avl_command=avl_command or None,
+                timeout_sec=timeout_sec,
+                verbose=False,
+                solver_options={
+                    "paneling": {
+                        "spanwise_resolution": 8,
+                        "chordwise_resolution": 12,
+                        "spanwise_spacing": spanwise_spacing,
+                        "chordwise_spacing": chordwise_spacing,
+                    },
+                    "save_surface_forces": save_surface_forces,
+                    "save_element_forces": save_element_forces,
+                    "control_input_deg": control_input_deg,
+                },
+            ),
+            provenance=dict(aero_input.provenance),
+        )
+
+        retry_result = solver_instance.run_case(
+            aero_input=retry_input,
+            output_dir=aero_dir,
+        )
+
+        retry_ok, _ = _should_retry_with_finer_paneling(retry_result)
+
+        if not retry_ok:
+            _inject_retry_metadata(
+                retry_result,
+                used=True,
+                reason=retry_reason,
+                initial_paneling=initial_paneling,
+                fallback_paneling=retry_input.settings.solver_options["paneling"],
+                initial_result=result,
+            )
+            result = retry_result
+        else:
+            _inject_retry_metadata(
+                result,
+                used=True,
+                reason=retry_reason,
+                initial_paneling=initial_paneling,
+                fallback_paneling=retry_input.settings.solver_options["paneling"],
+                initial_result=result,
+            )
+    else:
+        _inject_retry_metadata(
+            result,
+            used=False,
+            reason=None,
+            initial_paneling=initial_paneling,
+            fallback_paneling=None,
+            initial_result=result,
+        )
 
     manifest = {
         "run_name": run_root.name,

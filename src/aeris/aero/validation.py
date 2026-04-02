@@ -59,17 +59,17 @@ def validate_aero_input(aero_input: AeroInput) -> list[str]:
 def validate_aero_result(result: AeroResult) -> list[str]:
     errors: list[str] = []
 
-    required_scalars = {
+    # ---- primary force/moment scalars ----
+    primary_scalars = {
         "cl": result.cl,
         "cd": result.cd,
         "cm": result.cm,
-        "l_over_d": result.l_over_d,
         "cy": result.cy,
         "cl_roll": result.cl_roll,
         "cn": result.cn,
     }
 
-    for name, value in required_scalars.items():
+    for name, value in primary_scalars.items():
         if value is None:
             errors.append(f"Required result scalar '{name}' is missing.")
             continue
@@ -80,6 +80,37 @@ def validate_aero_result(result: AeroResult) -> list[str]:
             continue
         if not math.isfinite(fval):
             errors.append(f"Required result scalar '{name}' is not finite: {value!r}")
+
+    # ---- drag-specific pathology logic ----
+    if result.cd is None:
+        errors.append("Aerodynamic result has missing CD.")
+    else:
+        try:
+            cd = float(result.cd)
+            if not math.isfinite(cd):
+                errors.append(f"Aerodynamic result has non-finite CD: {result.cd!r}")
+            elif cd <= 0.0:
+                errors.append(f"Aerodynamic result has non-positive CD: CD={cd}")
+        except Exception:
+            pass
+
+    # ---- l/d should only be required if drag is healthy ----
+    if result.cd is not None:
+        try:
+            cd = float(result.cd)
+            if math.isfinite(cd) and cd > 0.0:
+                if result.l_over_d is None:
+                    errors.append(
+                        "Cannot compute l_over_d despite positive CD."
+                    )
+                else:
+                    ld = float(result.l_over_d)
+                    if not math.isfinite(ld):
+                        errors.append(
+                            f"l_over_d is not finite: {result.l_over_d!r}"
+                        )
+        except Exception:
+            pass
 
     optional_scalar_groups = [
         ("stability_axis_derivatives", result.stability_axis_derivatives),

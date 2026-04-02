@@ -1054,7 +1054,8 @@ dependencies = [
   "numpy>=1.26",
   "scipy>=1.13",
   "matplotlib>=3.8",
-  "aerosandbox>=4.2"
+  "aerosandbox>=4.2",
+  "scikit-learn>=1.5",
 ]
 
 [project.optional-dependencies]
@@ -9154,8 +9155,20 @@ from aeris.commands.dynamics import dynamics_app
 from aeris.commands.geometry import geometry_app
 from aeris.commands.pipeline import pipeline_app
 from aeris.commands.version import version_app
+from aeris.commands.ml import ml_app
 
-app = typer.Typer(help="AERIS command-line interface.")
+app = typer.Typer(
+    help=(
+        "AERIS command-line interface.\n\n"
+        "Mental model:\n"
+        "- geometry = generate one geometry\n"
+        "- dataset = generate or inspect datasets\n"
+        "- aero = run or inspect aerodynamic cases and sweeps\n"
+        "- pipeline = minimal smoke workflows\n"
+        "- dynamics = mass / trim / dynamics workflows\n\n"
+        "Use 'aeris <group> --help' for domain-specific options."
+    )
+)
 
 
 @app.callback()
@@ -9170,6 +9183,7 @@ app.add_typer(dataset_app, name="dataset")
 app.add_typer(pipeline_app, name="pipeline")
 app.add_typer(aero_app, name="aero")
 app.add_typer(dynamics_app, name="dynamics")
+app.add_typer(ml_app, name="ml")
 
 
 def main() -> None:
@@ -10004,15 +10018,19 @@ def inspect_aero_sweep_case(
     _print_aero_result(result)
 ===== FILE: ./src/aeris/commands/dataset.py =====
 """
-CLI commands for dataset generation and inspection.
+CLI commands for dataset generation, inspection, and unified aero-dataset workflows.
 
 Responsibilities:
     - Expose dataset-related user commands
     - Validate basic CLI arguments
-    - Delegate sampling, generation, and inspection to dataset workflows
+    - Delegate geometry-dataset and aero-dataset orchestration to workflow code
+    - Provide operator-facing help that reflects current QC preset behavior
 
 Notes:
-    - This module should not implement sampling or geometry logic directly
+    - This module must remain thin
+    - No sampling, geometry, or aero business logic should live here
+    - The unified aero-dataset workflow writes structured manifests, QC reports,
+      and final_run_summary.json
 """
 
 from __future__ import annotations
@@ -10022,17 +10040,26 @@ from pathlib import Path
 
 import typer
 
-from aeris.dataset.aero_dataset_run import run_aero_dataset_generation
-from aeris.dataset.dataset_run import run_dataset_generation
 from aeris.dataset.inspect import inspect_dataset
-from aeris.quality.pipeline_api import (
-    run_aero_dataset_qc,
-    run_geometry_dataset_qc,
-)
-from aeris.quality.presets import list_qc_presets, resolve_qc_preset
+from aeris.dataset.dataset_run import run_dataset_generation
 from aeris.dataset.curate_aero import curate_aero_dataset
+from aeris.quality.presets import list_qc_presets, resolve_qc_preset
+from aeris.dataset.promote_aero import promote_aero_dataset
+from aeris.dataset.promoted_dataset import require_promoted_aero_dataset
+from aeris.dataset.aero_dataset_run import run_aero_dataset_generation
+from aeris.dataset.training_data import load_training_data
+from aeris.dataset.splitting import split_dataset
+# keep your existing unified aero-dataset imports here
 
-dataset_app = typer.Typer(help="Dataset generation commands.")
+dataset_app = typer.Typer(
+    help=(
+        "Dataset generation and inspection commands.\n\n"
+        "Use:\n"
+        "- 'generate' for geometry-only datasets\n"
+        "- 'inspect' for saved dataset summaries\n"
+        "- 'aero-generate' for the unified geometry -> aero sweep -> CSV -> QC workflow"
+    )
+)
 
 
 def _echo_resolved_qc_configuration(
@@ -10057,6 +10084,92 @@ def _echo_resolved_qc_configuration(
     if fail_on_aero_qc_error is not None:
         typer.echo(f"  fail_on_aero_qc_error: {fail_on_aero_qc_error}")
 
+def _print_curation_report(report: dict) -> None:
+    typer.echo("")
+    typer.echo("[AERIS] Aero dataset curation completed")
+    typer.echo(f"  dataset_root: {report.get('dataset_root')}")
+    typer.echo(f"  kept_rows: {report.get('kept_rows')}")
+    typer.echo(f"  rejected_rows: {report.get('rejected_rows')}")
+    typer.echo(f"  kept_geometries: {report.get('kept_geometries')}")
+    typer.echo(f"  rejected_geometries: {report.get('rejected_geometries')}")
+    typer.echo(f"  geometry_qc_passed: {report.get('geometry_qc_passed')}")
+    typer.echo(f"  aero_qc_passed: {report.get('aero_qc_passed')}")
+    typer.echo(f"  qc_preset_used: {report.get('qc_preset_used')}")
+    typer.echo(f"  promotion_ready: {report.get('promotion_ready')}")
+
+    blockers = report.get("promotion_blockers", []) or []
+    if blockers:
+        typer.echo("  promotion_blockers:")
+        for blocker in blockers:
+            typer.echo(f"    - {blocker}")
+    else:
+        typer.echo("  promotion_blockers: []")
+
+    reason_counts = report.get("rejection_reason_counts", {}) or {}
+    if reason_counts:
+        typer.echo("  rejection_reason_counts:")
+        for reason, count in sorted(reason_counts.items()):
+            typer.echo(f"    - {reason}: {count}")
+
+    typer.echo(f"  curated_csv: {report.get('curated_aero_dataset_csv')}")
+    typer.echo(f"  rejected_csv: {report.get('rejected_aero_rows_csv')}")
+
+def _print_promotion_manifest(manifest: dict) -> None:
+    typer.echo("")
+    typer.echo("[AERIS] Aero dataset promotion completed")
+    typer.echo(f"  dataset_root: {manifest.get('dataset_root')}")
+    typer.echo(f"  promoted_at_utc: {manifest.get('promoted_at_utc')}")
+    typer.echo(
+        f"  promotion_ready_at_time_of_promotion: "
+        f"{manifest.get('promotion_ready_at_time_of_promotion')}"
+    )
+    typer.echo(f"  promotion_forced: {manifest.get('promotion_forced')}")
+
+    qc_context = manifest.get("qc_context", {}) or {}
+    typer.echo(f"  qc_preset_used: {qc_context.get('qc_preset_used')}")
+    typer.echo(f"  geometry_qc_passed: {qc_context.get('geometry_qc_passed')}")
+    typer.echo(f"  aero_qc_passed: {qc_context.get('aero_qc_passed')}")
+
+    blockers = manifest.get("promotion_blockers", []) or []
+    if blockers:
+        typer.echo("  promotion_blockers:")
+        for blocker in blockers:
+            typer.echo(f"    - {blocker}")
+    else:
+        typer.echo("  promotion_blockers: []")
+
+    artifacts = manifest.get("artifacts", {}) or {}
+    typer.echo(f"  curated_csv: {artifacts.get('curated_aero_dataset_csv')}")
+    typer.echo(
+        f"  promotion_manifest: "
+        f"{Path(manifest.get('dataset_root')) / 'promotion_manifest.json'}"
+    )
+
+def _print_promoted_dataset_context(context: dict) -> None:
+    manifest = context.get("promotion_manifest", {}) or {}
+    qc_context = manifest.get("qc_context", {}) or {}
+
+    typer.echo("")
+    typer.echo("[AERIS] Promoted dataset gate check")
+    typer.echo(f"  dataset_root: {context.get('dataset_root')}")
+    typer.echo(f"  curated_csv: {context.get('curated_aero_dataset_csv')}")
+    typer.echo(f"  promotion_manifest_path: {context.get('promotion_manifest_path')}")
+    typer.echo(f"  promotion_forced: {manifest.get('promotion_forced')}")
+    typer.echo(
+        f"  promotion_ready_at_time_of_promotion: "
+        f"{manifest.get('promotion_ready_at_time_of_promotion')}"
+    )
+    typer.echo(f"  qc_preset_used: {qc_context.get('qc_preset_used')}")
+    typer.echo(f"  geometry_qc_passed: {qc_context.get('geometry_qc_passed')}")
+    typer.echo(f"  aero_qc_passed: {qc_context.get('aero_qc_passed')}")
+
+    blockers = manifest.get("promotion_blockers", []) or []
+    if blockers:
+        typer.echo("  promotion_blockers:")
+        for blocker in blockers:
+            typer.echo(f"    - {blocker}")
+    else:
+        typer.echo("  promotion_blockers: []")
 
 @dataset_app.command("qc")
 def dataset_qc(
@@ -10072,6 +10185,49 @@ def dataset_qc(
     if not report["passed"]:
         raise typer.Exit(code=1)
 
+@dataset_app.command("promote-aero")
+def dataset_promote_aero(
+    dataset: Path = typer.Option(
+        ...,
+        "--dataset",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to an existing unified aero dataset root.",
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Force promotion even if curation_report.json says promotion_ready=false.",
+    ),
+    as_json: bool = typer.Option(
+        False,
+        "--json",
+        help="Print the full promotion manifest as JSON.",
+    ),
+) -> None:
+    """Promote a curated aero dataset by writing promotion_manifest.json."""
+    try:
+        manifest = promote_aero_dataset(
+            dataset_root=dataset,
+            force=force,
+        )
+    except Exception as exc:
+        raise typer.BadParameter(str(exc))
+
+    if as_json:
+        typer.echo(json.dumps(manifest, indent=2))
+        return
+
+    _print_promotion_manifest(manifest)
+
+    typer.echo("")
+    if manifest.get("promotion_forced"):
+        typer.echo("[AERIS] Promotion decision: FORCED")
+    else:
+        typer.echo("[AERIS] Promotion decision: APPROVED")
 
 @dataset_app.command("aero-qc")
 def dataset_aero_qc(
@@ -10219,7 +10375,6 @@ def dataset_generate(
         fail_on_qc_error=fail_on_qc_error_effective,
     )
     raise typer.Exit(code=exit_code)
-
 
 @dataset_app.command("aero-generate")
 def dataset_aero_generate(
@@ -10410,7 +10565,20 @@ def dataset_aero_generate(
         ),
     ),
 ) -> None:
-    """Generate a geometry dataset and enrich it with aero/control sweeps in one command."""
+    """Generate a unified aero dataset from a geometry config.
+
+    This workflow:
+    1. generates the intermediate geometry dataset
+    2. runs aero/control sweeps for each geometry
+    3. writes aero_dataset.csv and aero_failures.csv
+    4. applies QC according to the selected preset/profile
+    5. writes final manifests and final_run_summary.json
+
+    Recommended presets:
+    - debug
+    - production
+    - promotion_strict
+    """
     parsed_alpha_values = _parse_float_list(alpha_values, "--alpha-values")
     parsed_beta_values = _parse_float_list(beta_values, "--beta-values")
     parsed_velocity_values = _parse_float_list(velocity_values, "--velocity-values")
@@ -10508,30 +10676,36 @@ def dataset_curate_aero(
         dir_okay=True,
         readable=True,
         resolve_path=True,
-        help="Path to an existing aero dataset root.",
+        help="Path to an existing unified aero dataset root.",
     ),
     reject_incomplete_groups: bool = typer.Option(
         True,
-        "--reject-incomplete-groups/--allow-incomplete-groups",
-        help="Reject whole geometry groups when the sweep is incomplete.",
+        "--reject-incomplete-groups/--keep-incomplete-groups",
+        help="Reject geometries whose sweep grid is incomplete.",
     ),
     reject_groups_with_failures: bool = typer.Option(
         True,
-        "--reject-groups-with-failures/--allow-groups-with-failures",
-        help="Reject whole geometry groups if any aero failures are recorded for that geometry.",
+        "--reject-groups-with-failures/--keep-groups-with-failures",
+        help="Reject geometries that have failed aero cases recorded in aero_failures.csv.",
     ),
     reject_nonfinite_targets: bool = typer.Option(
         True,
-        "--reject-nonfinite-targets/--allow-nonfinite-targets",
-        help="Reject whole geometry groups if CL/CD/CM contain non-finite values.",
+        "--reject-nonfinite-targets/--keep-nonfinite-targets",
+        help="Reject geometries with non-finite CL/CD/Cm values.",
     ),
     reject_control_diagnostic_failures: bool = typer.Option(
         True,
-        "--reject-control-diagnostic-failures/--allow-control-diagnostic-failures",
-        help="Reject whole geometry groups if control-surface diagnostics indicate broken control handling.",
+        "--reject-control-diagnostic-failures/--keep-control-diagnostic-failures",
+        help="Reject geometries that failed control diagnostic columns.",
+    ),
+    as_json: bool = typer.Option(
+        False,
+        "--json",
+        help="Print the full curation report as JSON.",
     ),
 ) -> None:
-    """Curate an existing aero dataset into ML-ready kept/rejected outputs."""
+    
+    """Curate an existing aero dataset into kept/rejected outputs and report promotion readiness."""
     report = curate_aero_dataset(
         dataset_root=dataset,
         reject_incomplete_groups=reject_incomplete_groups,
@@ -10540,13 +10714,19 @@ def dataset_curate_aero(
         reject_control_diagnostic_failures=reject_control_diagnostic_failures,
     )
 
-    typer.echo("[AERIS] Aero dataset curation completed")
-    typer.echo(f"  kept_rows: {report['kept_rows']}")
-    typer.echo(f"  rejected_rows: {report['rejected_rows']}")
-    typer.echo(f"  kept_geometries: {report['kept_geometries']}")
-    typer.echo(f"  rejected_geometries: {report['rejected_geometries']}")
-    typer.echo(f"  curated_csv: {report['curated_aero_dataset_csv']}")
-    typer.echo(f"  rejected_csv: {report['rejected_aero_rows_csv']}")
+    if as_json:
+        typer.echo(json.dumps(report, indent=2))
+        return
+
+    _print_curation_report(report)
+
+    if report.get("promotion_ready") is True:
+        typer.echo("")
+        typer.echo("[AERIS] Promotion decision: READY")
+    else:
+        typer.echo("")
+        typer.echo("[AERIS] Promotion decision: NOT READY")
+
 
 @dataset_app.command("inspect")
 def dataset_inspect(
@@ -10564,6 +10744,167 @@ def dataset_inspect(
     """Inspect a generated dataset and print QC summary as JSON."""
     summary = inspect_dataset(dataset)
     typer.echo(json.dumps(summary, indent=2))
+
+@dataset_app.command("require-promoted-aero")
+def dataset_require_promoted_aero(
+    dataset: Path = typer.Option(
+        ...,
+        "--dataset",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to a promoted aero dataset root.",
+    ),
+    allow_forced: bool = typer.Option(
+        False,
+        "--allow-forced",
+        help="Allow use of a force-promoted dataset.",
+    ),
+    as_json: bool = typer.Option(
+        False,
+        "--json",
+        help="Print the resolved promoted-dataset context as JSON.",
+    ),
+) -> None:
+    """Validate that a dataset is promoted and suitable for trusted downstream use."""
+    try:
+        context = require_promoted_aero_dataset(
+            dataset_root=dataset,
+            allow_forced=allow_forced,
+        )
+    except Exception as exc:
+        raise typer.BadParameter(str(exc))
+
+    if as_json:
+        typer.echo(json.dumps(context, indent=2))
+        return
+
+    _print_promoted_dataset_context(context)
+
+@dataset_app.command("training-data")
+def training_data_cmd(
+    dataset: Path = typer.Option(
+        ...,
+        "--dataset",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to a promoted aero dataset root.",
+    ),
+    features: str = typer.Option(
+        ...,
+        "--features",
+        help="Comma-separated feature columns.",
+    ),
+    targets: str = typer.Option(
+        ...,
+        "--targets",
+        help="Comma-separated target columns.",
+    ),
+    allow_forced: bool = typer.Option(
+        False,
+        "--allow-forced",
+        help="Allow use of a force-promoted dataset.",
+    ),
+) -> None:
+    feature_cols = [f.strip() for f in features.split(",") if f.strip()]
+    target_cols = [t.strip() for t in targets.split(",") if t.strip()]
+
+    try:
+        data = load_training_data(
+            dataset_path=dataset,
+            feature_columns=feature_cols,
+            target_columns=target_cols,
+            allow_forced=allow_forced,
+        )
+    except Exception as exc:
+        raise typer.BadParameter(str(exc))
+
+    typer.echo("[AERIS] Training data loaded")
+    typer.echo(f"  dataset: {dataset}")
+    typer.echo(f"  samples: {data.metadata['n_samples']}")
+    typer.echo(f"  dropped_non_finite_rows: {data.metadata['dropped_non_finite_rows']}")
+    typer.echo(f"  features: {data.feature_columns}")
+    typer.echo(f"  targets: {data.target_columns}")
+
+@dataset_app.command("split-training-data")
+def split_training_data_cmd(
+    dataset: Path = typer.Option(
+        ...,
+        "--dataset",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to a promoted aero dataset root.",
+    ),
+    features: str = typer.Option(
+        ...,
+        "--features",
+        help="Comma-separated feature columns.",
+    ),
+    targets: str = typer.Option(
+        ...,
+        "--targets",
+        help="Comma-separated target columns.",
+    ),
+    method: str = typer.Option(
+        "grouped",
+        "--method",
+        help="Split method: grouped or random.",
+    ),
+    group_column: str = typer.Option(
+        "geometry_id",
+        "--group-column",
+        help="Grouping column for grouped split.",
+    ),
+    train_fraction: float = typer.Option(0.7, "--train-fraction"),
+    val_fraction: float = typer.Option(0.15, "--val-fraction"),
+    test_fraction: float = typer.Option(0.15, "--test-fraction"),
+    random_seed: int = typer.Option(123, "--random-seed"),
+    allow_forced: bool = typer.Option(
+        False,
+        "--allow-forced",
+        help="Allow use of a force-promoted dataset.",
+    ),
+) -> None:
+    feature_cols = [f.strip() for f in features.split(",") if f.strip()]
+    target_cols = [t.strip() for t in targets.split(",") if t.strip()]
+
+    data = load_training_data(
+        dataset_path=dataset,
+        feature_columns=feature_cols,
+        target_columns=target_cols,
+        allow_forced=allow_forced,
+    )
+
+    split = split_dataset(
+        data.df,
+        method=method,
+        group_column=group_column,
+        train_fraction=train_fraction,
+        val_fraction=val_fraction,
+        test_fraction=test_fraction,
+        random_seed=random_seed,
+    )
+
+    typer.echo("[AERIS] Training data split completed")
+    typer.echo(f"  method: {split.method}")
+    typer.echo(f"  random_seed: {split.random_seed}")
+    typer.echo(f"  train_rows: {len(split.train_df)}")
+    typer.echo(f"  val_rows: {len(split.val_df)}")
+    typer.echo(f"  test_rows: {len(split.test_df)}")
+
+    if split.method == "grouped":
+        typer.echo(f"  group_column: {split.metadata['group_column']}")
+        typer.echo(f"  train_groups: {split.metadata['n_groups_train']}")
+        typer.echo(f"  val_groups: {split.metadata['n_groups_val']}")
+        typer.echo(f"  test_groups: {split.metadata['n_groups_test']}")
 ===== FILE: ./src/aeris/commands/dynamics.py =====
 """
 CLI commands for dynamics-foundation utilities.
@@ -11036,6 +11377,246 @@ TODO:
 - config validation command
 - unified JSON output
 
+===== FILE: ./src/aeris/commands/ml.py =====
+from __future__ import annotations
+
+from pathlib import Path
+
+import typer
+
+from aeris.ml.compare import compare_models
+from aeris.ml.train import train_baseline_model
+
+# CLI command group for all ML-facing operator commands.
+ml_app = typer.Typer(
+    help="Machine-learning training and comparison commands for promoted AERIS datasets."
+)
+
+
+def _parse_csv_list(value: str) -> list[str]:
+    """
+    Parse a comma-separated CLI string into a clean list of non-empty values.
+
+    Used for:
+    - feature column lists
+    - target column lists
+    - model type lists
+    """
+    items = [item.strip() for item in value.split(",") if item.strip()]
+    if not items:
+        raise typer.BadParameter("Expected a comma-separated non-empty list.")
+    return items
+
+
+@ml_app.command("train")
+def ml_train(
+    dataset: Path = typer.Option(
+        ...,
+        "--dataset",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to a promoted aero dataset root.",
+    ),
+    features: str = typer.Option(
+        ...,
+        "--features",
+        help="Comma-separated feature columns.",
+    ),
+    targets: str = typer.Option(
+        ...,
+        "--targets",
+        help="Comma-separated target columns.",
+    ),
+    model_type: str = typer.Option(
+        "linear_regression",
+        "--model-type",
+        help="Model type: linear_regression or random_forest.",
+    ),
+    split_method: str = typer.Option(
+        "grouped",
+        "--split-method",
+        help="Split method: grouped or random.",
+    ),
+    group_column: str = typer.Option(
+        "geometry_id",
+        "--group-column",
+        help="Grouping column for grouped split.",
+    ),
+    train_fraction: float = typer.Option(0.7, "--train-fraction"),
+    val_fraction: float = typer.Option(0.15, "--val-fraction"),
+    test_fraction: float = typer.Option(0.15, "--test-fraction"),
+    random_seed: int = typer.Option(123, "--random-seed"),
+    allow_forced: bool = typer.Option(
+        False,
+        "--allow-forced",
+        help="Allow use of a force-promoted dataset.",
+    ),
+    output_dir: Path | None = typer.Option(
+        None,
+        "--output-dir",
+        help="Optional output directory for model artifacts and metrics.",
+    ),
+) -> None:
+    """
+    CLI entrypoint for one ML training run.
+
+    This command:
+    - parses operator-provided CSV-style lists
+    - calls the reusable training pipeline
+    - prints a compact operator summary
+    """
+    feature_cols = _parse_csv_list(features)
+    target_cols = _parse_csv_list(targets)
+
+    try:
+        result = train_baseline_model(
+            dataset_path=dataset,
+            feature_columns=feature_cols,
+            target_columns=target_cols,
+            model_type=model_type,
+            split_method=split_method,
+            group_column=group_column,
+            train_fraction=train_fraction,
+            val_fraction=val_fraction,
+            test_fraction=test_fraction,
+            random_seed=random_seed,
+            allow_forced=allow_forced,
+            output_dir=output_dir,
+        )
+    except Exception as exc:
+        # Convert deep pipeline errors into a CLI-friendly parameter-style failure.
+        raise typer.BadParameter(str(exc))
+
+    artifacts = result["artifacts"]
+    metrics = result["metrics"]
+    split = result["split"]
+
+    typer.echo("[AERIS] ML training completed")
+    typer.echo(f"  model_type: {model_type}")
+    typer.echo(f"  split_method: {split.method}")
+    typer.echo(f"  train_rows: {len(split.train_df)}")
+    typer.echo(f"  val_rows: {len(split.val_df)}")
+    typer.echo(f"  test_rows: {len(split.test_df)}")
+    typer.echo(f"  output_dir: {artifacts.run_dir}")
+    typer.echo(f"  metrics_json: {artifacts.metrics_path}")
+    typer.echo(f"  model_dir: {artifacts.models_dir}")
+    typer.echo(f"  train_rows_csv: {artifacts.train_rows_path}")
+    typer.echo(f"  val_rows_csv: {artifacts.val_rows_path}")
+    typer.echo(f"  test_rows_csv: {artifacts.test_rows_path}")
+
+    if artifacts.coefficients_path is not None:
+        typer.echo(f"  coefficients_json: {artifacts.coefficients_path}")
+    if artifacts.feature_importances_path is not None:
+        typer.echo(f"  feature_importances_json: {artifacts.feature_importances_path}")
+
+    typer.echo(f"  test_r2_mean: {metrics['test']['overall']['r2_mean']:.6f}")
+    typer.echo(f"  test_rmse_mean: {metrics['test']['overall']['rmse_mean']:.6f}")
+
+
+@ml_app.command("compare")
+def ml_compare(
+    dataset: Path = typer.Option(
+        ...,
+        "--dataset",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to a promoted aero dataset root.",
+    ),
+    features: str = typer.Option(
+        ...,
+        "--features",
+        help="Comma-separated feature columns.",
+    ),
+    targets: str = typer.Option(
+        ...,
+        "--targets",
+        help="Comma-separated target columns.",
+    ),
+    models: str = typer.Option(
+        ...,
+        "--models",
+        help="Comma-separated model types, e.g. linear_regression,random_forest.",
+    ),
+    split_method: str = typer.Option(
+        "grouped",
+        "--split-method",
+        help="Split method: grouped or random.",
+    ),
+    group_column: str = typer.Option(
+        "geometry_id",
+        "--group-column",
+        help="Grouping column for grouped split.",
+    ),
+    train_fraction: float = typer.Option(0.7, "--train-fraction"),
+    val_fraction: float = typer.Option(0.15, "--val-fraction"),
+    test_fraction: float = typer.Option(0.15, "--test-fraction"),
+    random_seed: int = typer.Option(123, "--random-seed"),
+    allow_forced: bool = typer.Option(
+        False,
+        "--allow-forced",
+        help="Allow use of a force-promoted dataset.",
+    ),
+    output_dir: Path | None = typer.Option(
+        None,
+        "--output-dir",
+        help="Optional output directory for comparison artifacts.",
+    ),
+) -> None:
+    """
+    CLI entrypoint for multi-model comparison on the same trusted dataset and split.
+
+    This command is the operator-facing bridge from:
+    "train one model"
+    to:
+    "benchmark multiple model families cleanly"
+    """
+    feature_cols = _parse_csv_list(features)
+    target_cols = _parse_csv_list(targets)
+    model_types = _parse_csv_list(models)
+
+    try:
+        result = compare_models(
+            dataset_path=dataset,
+            feature_columns=feature_cols,
+            target_columns=target_cols,
+            model_types=model_types,
+            split_method=split_method,
+            group_column=group_column,
+            train_fraction=train_fraction,
+            val_fraction=val_fraction,
+            test_fraction=test_fraction,
+            random_seed=random_seed,
+            allow_forced=allow_forced,
+            output_dir=output_dir,
+        )
+    except Exception as exc:
+        raise typer.BadParameter(str(exc))
+
+    summary = result["summary"]
+
+    typer.echo("[AERIS] ML model comparison completed")
+    typer.echo(f"  dataset: {summary['dataset_path']}")
+    typer.echo(f"  models: {', '.join(summary['model_types'])}")
+    typer.echo(f"  split_method: {summary['split_config']['split_method']}")
+    typer.echo(f"  random_seed: {summary['split_config']['random_seed']}")
+    typer.echo(f"  output_dir: {result['output_dir']}")
+    typer.echo(f"  comparison_summary_json: {result['comparison_summary_json']}")
+    typer.echo(f"  comparison_summary_csv: {result['comparison_summary_csv']}")
+
+    typer.echo("")
+    typer.echo("Model summary:")
+    for run in summary["model_runs"]:
+        typer.echo(
+            f"  - {run['model_type']}: "
+            f"test_r2_mean={run['metrics']['test']['overall']['r2_mean']:.6f}, "
+            f"test_rmse_mean={run['metrics']['test']['overall']['rmse_mean']:.6f}"
+        )
 ===== FILE: ./src/aeris/commands/pipeline.py =====
 """
 Version command registration for the AERIS CLI.
@@ -12127,6 +12708,45 @@ def _expected_case_count(
     return total
 
 
+def _extract_qc_context(dataset_root: Path) -> dict[str, Any]:
+    manifest = _read_json_if_exists(dataset_root / "aero_dataset_manifest.json")
+    final_summary = _read_json_if_exists(dataset_root / "final_run_summary.json")
+
+    geometry_qc = None
+    aero_qc = None
+    qc_preset = None
+
+    if final_summary is not None:
+        geometry_qc = final_summary.get("geometry_qc")
+        aero_qc = final_summary.get("aero_qc")
+        qc_preset = final_summary.get("qc_preset")
+
+    if manifest is not None:
+        if geometry_qc is None:
+            geometry_qc = manifest.get("geometry_qc")
+        if aero_qc is None:
+            aero_qc = manifest.get("aero_qc")
+
+    geometry_qc_passed = None if geometry_qc is None else geometry_qc.get("passed")
+    aero_qc_passed = None if aero_qc is None else aero_qc.get("passed")
+
+    promotion_blockers: list[str] = []
+
+    if geometry_qc_passed is False:
+        promotion_blockers.append("geometry_qc_failed")
+    if aero_qc_passed is False:
+        promotion_blockers.append("aero_qc_failed")
+
+    return {
+        "qc_preset_used": qc_preset,
+        "geometry_qc": geometry_qc,
+        "aero_qc": aero_qc,
+        "geometry_qc_passed": geometry_qc_passed,
+        "aero_qc_passed": aero_qc_passed,
+        "promotion_blockers_from_qc": promotion_blockers,
+    }
+
+
 def curate_aero_dataset(
     *,
     dataset_root: Path,
@@ -12158,6 +12778,7 @@ def curate_aero_dataset(
         except EmptyDataError:
             failures_df = pd.DataFrame()
 
+    qc_context = _extract_qc_context(dataset_root)
     expected_cases_per_geometry = _expected_case_count(manifest=manifest)
 
     rejected_geometry_reasons: dict[str, set[str]] = {}
@@ -12214,8 +12835,23 @@ def curate_aero_dataset(
     if rejected_rows.empty:
         rejected_rows = df.iloc[0:0].copy()
 
-    curated_rows.to_csv(curated_csv_path, index=False)
-    rejected_rows.to_csv(rejected_csv_path, index=False)
+    # Add operator-facing QC / promotion columns to outputs
+    curated_rows = curated_rows.copy()
+    rejected_rows = rejected_rows.copy()
+
+    curated_rows["geometry_qc_passed"] = qc_context["geometry_qc_passed"]
+    curated_rows["aero_qc_passed"] = qc_context["aero_qc_passed"]
+    curated_rows["qc_preset_used"] = qc_context["qc_preset_used"]
+    curated_rows["promotion_ready"] = False  # assigned after report-level decision
+    curated_rows["rejection_reason"] = ""
+
+    rejected_rows["geometry_qc_passed"] = qc_context["geometry_qc_passed"]
+    rejected_rows["aero_qc_passed"] = qc_context["aero_qc_passed"]
+    rejected_rows["qc_preset_used"] = qc_context["qc_preset_used"]
+    rejected_rows["promotion_ready"] = False
+    rejected_rows["rejection_reason"] = rejected_rows[GROUP_KEY].astype(str).map(
+        lambda gid: ";".join(sorted(rejected_geometry_reasons.get(gid, set())))
+    )
 
     rejection_reason_counts: dict[str, int] = {}
     for reasons in rejected_geometry_reasons.values():
@@ -12224,6 +12860,31 @@ def curate_aero_dataset(
 
     kept_geometry_count = curated_rows[GROUP_KEY].nunique() if not curated_rows.empty else 0
     rejected_geometry_count = len(rejected_geometry_ids)
+
+    promotion_blockers = list(qc_context["promotion_blockers_from_qc"])
+
+    if rejected_geometry_count > 0:
+        promotion_blockers.append("curation_rejected_geometries")
+    if not curated_rows.empty and kept_geometry_count == 0:
+        promotion_blockers.append("no_kept_geometries")
+    if curated_rows.empty:
+        promotion_blockers.append("no_curated_rows")
+
+    # Deduplicate while keeping order
+    deduped_blockers: list[str] = []
+    seen: set[str] = set()
+    for blocker in promotion_blockers:
+        if blocker not in seen:
+            seen.add(blocker)
+            deduped_blockers.append(blocker)
+    promotion_blockers = deduped_blockers
+
+    promotion_ready = len(promotion_blockers) == 0
+
+    curated_rows["promotion_ready"] = promotion_ready
+
+    curated_rows.to_csv(curated_csv_path, index=False)
+    rejected_rows.to_csv(rejected_csv_path, index=False)
 
     report = {
         "dataset_root": str(dataset_root),
@@ -12248,6 +12909,11 @@ def curate_aero_dataset(
             "reject_nonfinite_targets": reject_nonfinite_targets,
             "reject_control_diagnostic_failures": reject_control_diagnostic_failures,
         },
+        "qc_preset_used": qc_context["qc_preset_used"],
+        "geometry_qc_passed": qc_context["geometry_qc_passed"],
+        "aero_qc_passed": qc_context["aero_qc_passed"],
+        "promotion_ready": promotion_ready,
+        "promotion_blockers": promotion_blockers,
     }
 
     report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
@@ -13419,6 +14085,181 @@ class DatasetRunStats:
     attempted_n: int
     succeeded_n: int
     failed_n: int
+===== FILE: ./src/aeris/dataset/promote_aero.py =====
+from __future__ import annotations
+
+import json
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
+
+
+def _utc_now_iso() -> str:
+    return datetime.now(UTC).isoformat()
+
+
+def _read_json(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        raise FileNotFoundError(f"Required JSON file not found: {path}")
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def promote_aero_dataset(
+    *,
+    dataset_root: Path,
+    force: bool = False,
+) -> dict[str, Any]:
+    dataset_root = dataset_root.expanduser().resolve()
+
+    curation_report_path = dataset_root / "curation_report.json"
+    final_summary_path = dataset_root / "final_run_summary.json"
+    promotion_manifest_path = dataset_root / "promotion_manifest.json"
+
+    curation_report = _read_json(curation_report_path)
+    final_summary = _read_json(final_summary_path)
+
+    promotion_ready = bool(curation_report.get("promotion_ready", False))
+    promotion_blockers = list(curation_report.get("promotion_blockers", []) or [])
+
+    if not promotion_ready and not force:
+        raise ValueError(
+            "Dataset is not promotion-ready. "
+            f"Blockers: {promotion_blockers if promotion_blockers else ['unknown']}"
+        )
+
+    manifest = {
+        "dataset_root": str(dataset_root),
+        "promoted_at_utc": _utc_now_iso(),
+        "promotion_ready_at_time_of_promotion": promotion_ready,
+        "promotion_forced": bool(force),
+        "promotion_blockers": promotion_blockers,
+        "source_reports": {
+            "curation_report": str(curation_report_path),
+            "final_run_summary": str(final_summary_path),
+        },
+        "qc_context": {
+            "qc_preset_used": curation_report.get("qc_preset_used"),
+            "geometry_qc_passed": curation_report.get("geometry_qc_passed"),
+            "aero_qc_passed": curation_report.get("aero_qc_passed"),
+        },
+        "curation_context": {
+            "kept_rows": curation_report.get("kept_rows"),
+            "rejected_rows": curation_report.get("rejected_rows"),
+            "kept_geometries": curation_report.get("kept_geometries"),
+            "rejected_geometries": curation_report.get("rejected_geometries"),
+            "rejection_reason_counts": curation_report.get("rejection_reason_counts", {}),
+        },
+        "artifacts": {
+            "curated_aero_dataset_csv": curation_report.get("curated_aero_dataset_csv"),
+            "rejected_aero_rows_csv": curation_report.get("rejected_aero_rows_csv"),
+        },
+        "final_summary_snapshot": {
+            "dataset_name": final_summary.get("dataset_name"),
+            "config_path": final_summary.get("config_path"),
+            "generator_id": final_summary.get("generator_id"),
+            "solver": final_summary.get("solver"),
+            "final_status": final_summary.get("final_status"),
+            "exit_code": final_summary.get("exit_code"),
+        },
+    }
+
+    _write_json(promotion_manifest_path, manifest)
+    return manifest
+===== FILE: ./src/aeris/dataset/promoted_dataset.py =====
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
+
+
+def _read_json(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        raise FileNotFoundError(f"Required JSON file not found: {path}")
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def require_promoted_aero_dataset(
+    *,
+    dataset_root: Path,
+    allow_forced: bool = False,
+) -> dict[str, Any]:
+    """
+    Validate that a dataset is promoted and safe for downstream trusted use.
+
+    Returns a small resolved context bundle containing:
+    - dataset_root
+    - promotion_manifest
+    - curated_aero_dataset_csv path
+    - curation_report path
+    - final_run_summary path
+
+    Rules:
+    - promotion_manifest.json must exist
+    - curated_aero_dataset.csv must exist
+    - if promotion was forced, caller must explicitly allow it
+    """
+    dataset_root = dataset_root.expanduser().resolve()
+
+    promotion_manifest_path = dataset_root / "promotion_manifest.json"
+    curation_report_path = dataset_root / "curation_report.json"
+    final_run_summary_path = dataset_root / "final_run_summary.json"
+
+    promotion_manifest = _read_json(promotion_manifest_path)
+
+    curated_csv_value = (
+        promotion_manifest.get("artifacts", {}) or {}
+    ).get("curated_aero_dataset_csv")
+    if not curated_csv_value:
+        raise ValueError(
+            "promotion_manifest.json is missing artifacts.curated_aero_dataset_csv"
+        )
+
+    curated_csv_path = Path(curated_csv_value).expanduser().resolve()
+    if not curated_csv_path.exists():
+        raise FileNotFoundError(
+            f"Promoted curated dataset CSV not found: {curated_csv_path}"
+        )
+
+    promotion_forced = bool(promotion_manifest.get("promotion_forced", False))
+    if promotion_forced and not allow_forced:
+        raise ValueError(
+            "Dataset was force-promoted. "
+            "Set allow_forced=True only if downstream use explicitly permits that."
+        )
+
+    return {
+        "dataset_root": str(dataset_root),
+        "promotion_manifest_path": str(promotion_manifest_path),
+        "curation_report_path": str(curation_report_path),
+        "final_run_summary_path": str(final_run_summary_path),
+        "curated_aero_dataset_csv": str(curated_csv_path),
+        "promotion_manifest": promotion_manifest,
+    }
+
+
+def load_promoted_aero_dataset(
+    *,
+    dataset_root: Path,
+    allow_forced: bool = False,
+):
+    """
+    Convenience wrapper around require_promoted_aero_dataset() that also loads the curated CSV.
+    """
+    import pandas as pd
+
+    context = require_promoted_aero_dataset(
+        dataset_root=dataset_root,
+        allow_forced=allow_forced,
+    )
+    df = pd.read_csv(context["curated_aero_dataset_csv"])
+    context["dataframe"] = df
+    return context
 ===== FILE: ./src/aeris/dataset/sampling/base.py =====
 """
 Abstract base contract for dataset samplers.
@@ -13830,6 +14671,361 @@ class RandomV1Sampler(DatasetSampler):
             n_samples=n_samples,
             sampler_seed=sampler_seed,
         )
+===== FILE: ./src/aeris/dataset/splitting.py =====
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any, Literal
+
+import numpy as np
+import pandas as pd
+
+
+SplitMethod = Literal["random", "grouped"]
+
+
+@dataclass
+class DatasetSplit:
+    method: SplitMethod
+    random_seed: int
+    train_df: pd.DataFrame
+    val_df: pd.DataFrame
+    test_df: pd.DataFrame
+    train_indices: list[int]
+    val_indices: list[int]
+    test_indices: list[int]
+    metadata: dict[str, Any]
+
+
+def _validate_split_fractions(
+    train_fraction: float,
+    val_fraction: float,
+    test_fraction: float,
+) -> None:
+    fractions = [train_fraction, val_fraction, test_fraction]
+    names = ["train_fraction", "val_fraction", "test_fraction"]
+
+    for name, value in zip(names, fractions):
+        if value <= 0.0 or value >= 1.0:
+            raise ValueError(f"{name} must be > 0 and < 1. Got {value}.")
+
+    total = train_fraction + val_fraction + test_fraction
+    if not np.isclose(total, 1.0, atol=1e-9):
+        raise ValueError(
+            f"Split fractions must sum to 1.0. "
+            f"Got train={train_fraction}, val={val_fraction}, test={test_fraction}, total={total}."
+        )
+
+
+def _slice_by_indices(df: pd.DataFrame, indices: np.ndarray) -> pd.DataFrame:
+    return df.iloc[indices].copy()
+
+
+def split_dataset_random(
+    df: pd.DataFrame,
+    *,
+    train_fraction: float = 0.7,
+    val_fraction: float = 0.15,
+    test_fraction: float = 0.15,
+    random_seed: int = 123,
+) -> DatasetSplit:
+    _validate_split_fractions(train_fraction, val_fraction, test_fraction)
+
+    if df.empty:
+        raise ValueError("Cannot split an empty dataframe.")
+
+    n = len(df)
+    if n < 3:
+        raise ValueError(f"Need at least 3 rows to create train/val/test splits. Got {n}.")
+
+    rng = np.random.default_rng(random_seed)
+    perm = rng.permutation(n)
+
+    n_train = max(1, int(round(n * train_fraction)))
+    n_val = max(1, int(round(n * val_fraction)))
+    n_test = n - n_train - n_val
+
+    if n_test < 1:
+        n_test = 1
+        if n_train >= n_val and n_train > 1:
+            n_train -= 1
+        elif n_val > 1:
+            n_val -= 1
+        else:
+            raise ValueError("Could not allocate at least one row to each split.")
+
+    train_idx = perm[:n_train]
+    val_idx = perm[n_train:n_train + n_val]
+    test_idx = perm[n_train + n_val:]
+
+    train_df = _slice_by_indices(df, train_idx)
+    val_df = _slice_by_indices(df, val_idx)
+    test_df = _slice_by_indices(df, test_idx)
+
+    metadata = {
+        "n_rows_total": n,
+        "n_rows_train": len(train_df),
+        "n_rows_val": len(val_df),
+        "n_rows_test": len(test_df),
+    }
+
+    return DatasetSplit(
+        method="random",
+        random_seed=random_seed,
+        train_df=train_df,
+        val_df=val_df,
+        test_df=test_df,
+        train_indices=train_idx.tolist(),
+        val_indices=val_idx.tolist(),
+        test_indices=test_idx.tolist(),
+        metadata=metadata,
+    )
+
+
+def split_dataset_grouped(
+    df: pd.DataFrame,
+    *,
+    group_column: str = "geometry_id",
+    train_fraction: float = 0.7,
+    val_fraction: float = 0.15,
+    test_fraction: float = 0.15,
+    random_seed: int = 123,
+) -> DatasetSplit:
+    _validate_split_fractions(train_fraction, val_fraction, test_fraction)
+
+    if df.empty:
+        raise ValueError("Cannot split an empty dataframe.")
+
+    if group_column not in df.columns:
+        raise ValueError(
+            f"Grouped split requires column '{group_column}', but it is missing."
+        )
+
+    unique_groups = df[group_column].dropna().unique()
+    n_groups = len(unique_groups)
+
+    if n_groups < 3:
+        raise ValueError(
+            f"Need at least 3 unique groups for grouped train/val/test split. "
+            f"Got {n_groups} unique '{group_column}' values."
+        )
+
+    rng = np.random.default_rng(random_seed)
+    shuffled_groups = rng.permutation(unique_groups)
+
+    n_train_groups = max(1, int(round(n_groups * train_fraction)))
+    n_val_groups = max(1, int(round(n_groups * val_fraction)))
+    n_test_groups = n_groups - n_train_groups - n_val_groups
+
+    if n_test_groups < 1:
+        n_test_groups = 1
+        if n_train_groups >= n_val_groups and n_train_groups > 1:
+            n_train_groups -= 1
+        elif n_val_groups > 1:
+            n_val_groups -= 1
+        else:
+            raise ValueError("Could not allocate at least one group to each split.")
+
+    train_groups = set(shuffled_groups[:n_train_groups])
+    val_groups = set(shuffled_groups[n_train_groups:n_train_groups + n_val_groups])
+    test_groups = set(shuffled_groups[n_train_groups + n_val_groups:])
+
+    train_mask = df[group_column].isin(train_groups)
+    val_mask = df[group_column].isin(val_groups)
+    test_mask = df[group_column].isin(test_groups)
+
+    train_idx = np.flatnonzero(train_mask.to_numpy())
+    val_idx = np.flatnonzero(val_mask.to_numpy())
+    test_idx = np.flatnonzero(test_mask.to_numpy())
+
+    train_df = _slice_by_indices(df, train_idx)
+    val_df = _slice_by_indices(df, val_idx)
+    test_df = _slice_by_indices(df, test_idx)
+
+    overlap = (
+        train_groups.intersection(val_groups)
+        | train_groups.intersection(test_groups)
+        | val_groups.intersection(test_groups)
+    )
+    if overlap:
+        raise RuntimeError(f"Grouped split leakage detected across groups: {sorted(overlap)}")
+
+    metadata = {
+        "group_column": group_column,
+        "n_rows_total": len(df),
+        "n_rows_train": len(train_df),
+        "n_rows_val": len(val_df),
+        "n_rows_test": len(test_df),
+        "n_groups_total": n_groups,
+        "n_groups_train": len(train_groups),
+        "n_groups_val": len(val_groups),
+        "n_groups_test": len(test_groups),
+        "train_groups": sorted(str(x) for x in train_groups),
+        "val_groups": sorted(str(x) for x in val_groups),
+        "test_groups": sorted(str(x) for x in test_groups),
+    }
+
+    return DatasetSplit(
+        method="grouped",
+        random_seed=random_seed,
+        train_df=train_df,
+        val_df=val_df,
+        test_df=test_df,
+        train_indices=train_idx.tolist(),
+        val_indices=val_idx.tolist(),
+        test_indices=test_idx.tolist(),
+        metadata=metadata,
+    )
+
+
+def split_dataset(
+    df: pd.DataFrame,
+    *,
+    method: SplitMethod = "grouped",
+    group_column: str = "geometry_id",
+    train_fraction: float = 0.7,
+    val_fraction: float = 0.15,
+    test_fraction: float = 0.15,
+    random_seed: int = 123,
+) -> DatasetSplit:
+    if method == "random":
+        return split_dataset_random(
+            df,
+            train_fraction=train_fraction,
+            val_fraction=val_fraction,
+            test_fraction=test_fraction,
+            random_seed=random_seed,
+        )
+
+    if method == "grouped":
+        return split_dataset_grouped(
+            df,
+            group_column=group_column,
+            train_fraction=train_fraction,
+            val_fraction=val_fraction,
+            test_fraction=test_fraction,
+            random_seed=random_seed,
+        )
+
+    raise ValueError(f"Unsupported split method: {method}")
+===== FILE: ./src/aeris/dataset/training_data.py =====
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+import numpy as np
+import pandas as pd
+
+from aeris.dataset.promoted_dataset import require_promoted_aero_dataset
+
+
+@dataclass
+class TrainingData:
+    df: pd.DataFrame
+    X: pd.DataFrame
+    y: pd.DataFrame
+    feature_columns: list[str]
+    target_columns: list[str]
+    metadata: dict[str, Any]
+
+
+def load_training_data(
+    dataset_path: Path,
+    feature_columns: list[str],
+    target_columns: list[str],
+    *,
+    allow_forced: bool = False,
+    drop_non_finite: bool = True,
+) -> TrainingData:
+    """
+    Load a promoted aero dataset and prepare ML-ready tabular data.
+
+    Rules enforced:
+    - dataset must pass the promoted-dataset gate
+    - curated_aero_dataset.csv must exist
+    - requested feature/target columns must exist
+    - optional non-finite rows are dropped from X/y
+    """
+    dataset_path = Path(dataset_path).expanduser().resolve()
+
+    promoted_info = require_promoted_aero_dataset(
+        dataset_root=dataset_path,
+        allow_forced=allow_forced,
+    )
+
+    curated_path = dataset_path / "curated_aero_dataset.csv"
+    if not curated_path.exists():
+        raise FileNotFoundError(
+            f"Missing curated dataset CSV: {curated_path}"
+        )
+
+    df = pd.read_csv(curated_path)
+
+    if df.empty:
+        raise ValueError(f"Curated dataset is empty: {curated_path}")
+
+    if not feature_columns:
+        raise ValueError("feature_columns must not be empty.")
+
+    if not target_columns:
+        raise ValueError("target_columns must not be empty.")
+
+    missing_features = [col for col in feature_columns if col not in df.columns]
+    missing_targets = [col for col in target_columns if col not in df.columns]
+
+    if missing_features:
+        raise ValueError(
+            f"Missing feature columns: {missing_features}. "
+            f"Available columns: {list(df.columns)}"
+        )
+
+    if missing_targets:
+        raise ValueError(
+            f"Missing target columns: {missing_targets}. "
+            f"Available columns: {list(df.columns)}"
+        )
+
+    X = df[feature_columns].copy()
+    y = df[target_columns].copy()
+
+    dropped_rows = 0
+    if drop_non_finite:
+        finite_mask = np.isfinite(X.to_numpy(dtype=float)).all(axis=1) & np.isfinite(
+            y.to_numpy(dtype=float)
+        ).all(axis=1)
+
+        dropped_rows = int((~finite_mask).sum())
+
+        if dropped_rows > 0:
+            df = df.loc[finite_mask].copy()
+            X = X.loc[finite_mask].copy()
+            y = y.loc[finite_mask].copy()
+
+    if df.empty:
+        raise ValueError("No valid rows remain after filtering non-finite values.")
+
+    metadata = {
+        "dataset_path": str(dataset_path),
+        "curated_csv_path": str(curated_path),
+        "n_samples": int(len(df)),
+        "n_features": int(len(feature_columns)),
+        "n_targets": int(len(target_columns)),
+        "feature_columns": list(feature_columns),
+        "target_columns": list(target_columns),
+        "dropped_non_finite_rows": dropped_rows,
+        "promotion_context": promoted_info,
+    }
+
+    return TrainingData(
+        df=df,
+        X=X,
+        y=y,
+        feature_columns=list(feature_columns),
+        target_columns=list(target_columns),
+        metadata=metadata,
+    )
 ===== FILE: ./src/aeris/dynamics/analysis.py =====
 from __future__ import annotations
 
@@ -17547,6 +18743,930 @@ Concrete generator implementations are registered separately.
 """
 
 from aeris.generators.bwb_segmented_v1 import generator
+===== FILE: ./src/aeris/ml/compare.py =====
+from __future__ import annotations
+
+import csv
+import hashlib
+import json
+from dataclasses import asdict, is_dataclass
+from pathlib import Path
+from typing import Any, Literal, Sequence
+
+from aeris.ml.train import train_baseline_model
+
+# Supported comparison model types for the current ML baseline phase.
+# Keep this narrow for now, but structured so more models can be added later.
+ModelType = Literal["linear_regression", "random_forest"]
+
+
+# Registry of comparable model families.
+# This is intentionally lightweight for now:
+# - key = operator-facing model identifier
+# - values = human-readable metadata for reports
+MODEL_REGISTRY: dict[str, dict[str, Any]] = {
+    "linear_regression": {
+        "name": "Linear Regression",
+        "family": "tabular_baseline",
+    },
+    "random_forest": {
+        "name": "Random Forest",
+        "family": "tree_ensemble",
+    },
+}
+
+
+def _ensure_output_dir(path: Path) -> Path:
+    """
+    Ensure an output directory exists and return the same path.
+
+    This keeps directory creation in one place and avoids repeating mkdir boilerplate.
+    """
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _normalize_model_types(model_types: Sequence[str]) -> list[ModelType]:
+    """
+    Normalize, validate, and deduplicate requested model types.
+
+    Behavior:
+    - strips whitespace
+    - drops empty entries
+    - rejects unsupported models
+    - preserves original order while removing duplicates
+    """
+    cleaned: list[str] = []
+    seen: set[str] = set()
+
+    for value in model_types:
+        model = str(value).strip()
+        if not model:
+            continue
+
+        if model not in MODEL_REGISTRY:
+            supported = ", ".join(sorted(MODEL_REGISTRY.keys()))
+            raise ValueError(
+                f"Unsupported model type '{model}'. Supported model types: {supported}"
+            )
+
+        if model not in seen:
+            seen.add(model)
+            cleaned.append(model)
+
+    if not cleaned:
+        raise ValueError("At least one valid model type must be provided.")
+
+    return cleaned  # type: ignore[return-value]
+
+
+def _to_jsonable(value: Any) -> Any:
+    """
+    Recursively convert common non-JSON-native values into JSON-safe equivalents.
+
+    Used mainly for:
+    - dataclasses
+    - Path objects
+    - nested dict/list structures
+    """
+    if is_dataclass(value):
+        return {k: _to_jsonable(v) for k, v in asdict(value).items()}
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, dict):
+        return {str(k): _to_jsonable(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_to_jsonable(v) for v in value]
+    return value
+
+
+def _file_sha256(path: Path) -> str:
+    """
+    Compute SHA-256 for a file.
+
+    Here this is used as a strict audit check to confirm that all compared models
+    were trained on exactly the same saved split rows.
+    """
+    digest = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _extract_artifact_path(artifacts: Any, attr_name: str) -> str | None:
+    """
+    Extract an artifact path from either:
+    - a dataclass-like object with attributes, or
+    - a plain dict
+
+    Returning string paths here keeps the final comparison payload JSON-friendly.
+    """
+    if artifacts is None:
+        return None
+
+    if hasattr(artifacts, attr_name):
+        value = getattr(artifacts, attr_name)
+        return None if value is None else str(value)
+
+    if isinstance(artifacts, dict):
+        value = artifacts.get(attr_name)
+        return None if value is None else str(value)
+
+    return None
+
+
+def _build_csv_rows(summary: dict[str, Any]) -> list[dict[str, Any]]:
+    """
+    Flatten the rich comparison summary into row-based CSV output.
+
+    The JSON summary stays hierarchical and audit-friendly.
+    The CSV summary is optimized for quick scanning, spreadsheet use, and paper tables.
+    """
+    rows: list[dict[str, Any]] = []
+
+    for run in summary["model_runs"]:
+        rows.append(
+            {
+                "model_type": run["model_type"],
+                "model_name": run["model_name"],
+                "family": run["family"],
+                "train_rows": run["split"]["train_rows"],
+                "val_rows": run["split"]["val_rows"],
+                "test_rows": run["split"]["test_rows"],
+                "train_hash": run["split"]["train_hash"],
+                "val_hash": run["split"]["val_hash"],
+                "test_hash": run["split"]["test_hash"],
+                "train_rmse_mean": run["metrics"]["train"]["overall"]["rmse_mean"],
+                "train_mae_mean": run["metrics"]["train"]["overall"]["mae_mean"],
+                "train_r2_mean": run["metrics"]["train"]["overall"]["r2_mean"],
+                "val_rmse_mean": run["metrics"]["val"]["overall"]["rmse_mean"],
+                "val_mae_mean": run["metrics"]["val"]["overall"]["mae_mean"],
+                "val_r2_mean": run["metrics"]["val"]["overall"]["r2_mean"],
+                "test_rmse_mean": run["metrics"]["test"]["overall"]["rmse_mean"],
+                "test_mae_mean": run["metrics"]["test"]["overall"]["mae_mean"],
+                "test_r2_mean": run["metrics"]["test"]["overall"]["r2_mean"],
+                "run_dir": run["artifacts"]["run_dir"],
+                "metrics_path": run["artifacts"]["metrics_path"],
+                "model_path": run["artifacts"]["model_path"],
+                "train_rows_path": run["artifacts"]["train_rows_path"],
+                "val_rows_path": run["artifacts"]["val_rows_path"],
+                "test_rows_path": run["artifacts"]["test_rows_path"],
+                "explainability_path": run["artifacts"]["explainability_path"],
+            }
+        )
+
+    return rows
+
+
+def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
+    """
+    Write CSV rows using a union of all encountered field names.
+
+    This is slightly more defensive than hardcoding columns and helps if future
+    comparison rows grow extra fields.
+    """
+    if not rows:
+        fieldnames = ["model_type"]
+        with path.open("w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+        return
+
+    fieldnames: list[str] = []
+    seen: set[str] = set()
+    for row in rows:
+        for key in row.keys():
+            if key not in seen:
+                seen.add(key)
+                fieldnames.append(key)
+
+    with path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({key: row.get(key) for key in fieldnames})
+
+
+def compare_models(
+    *,
+    dataset_path: Path,
+    feature_columns: list[str],
+    target_columns: list[str],
+    model_types: Sequence[str],
+    split_method: str = "grouped",
+    group_column: str = "geometry_id",
+    train_fraction: float = 0.7,
+    val_fraction: float = 0.15,
+    test_fraction: float = 0.15,
+    random_seed: int = 123,
+    allow_forced: bool = False,
+    model_params_by_type: dict[str, dict[str, Any]] | None = None,
+    output_dir: Path | None = None,
+) -> dict[str, Any]:
+    """
+    Run multiple baseline model trainings on the same trusted dataset and
+    verify that all compared models used identical split rows.
+
+    Key design rule:
+    compare_models() does NOT implement a second training pipeline.
+    It reuses train_baseline_model() and then layers comparison/reporting on top.
+
+    Returns:
+        dict containing:
+        - output paths
+        - full comparison summary payload
+    """
+    dataset_path = Path(dataset_path).expanduser().resolve()
+    normalized_models = _normalize_model_types(model_types)
+
+    # Default output location for comparison runs.
+    if output_dir is None:
+        output_dir = (
+            Path("data")
+            / "processed"
+            / "ml_compare"
+            / f"{dataset_path.name}__seed{random_seed}"
+        )
+
+    output_dir = _ensure_output_dir(output_dir)
+    runs_root = _ensure_output_dir(output_dir / "runs")
+
+    model_runs: list[dict[str, Any]] = []
+    reference_split_hashes: dict[str, str] | None = None
+
+    # Train all requested models one by one using the exact same split controls.
+    for model_type in normalized_models:
+        model_output_dir = runs_root / model_type
+
+        result = train_baseline_model(
+            dataset_path=dataset_path,
+            feature_columns=feature_columns,
+            target_columns=target_columns,
+            model_type=model_type,
+            split_method=split_method,
+            group_column=group_column,
+            train_fraction=train_fraction,
+            val_fraction=val_fraction,
+            test_fraction=test_fraction,
+            random_seed=random_seed,
+            allow_forced=allow_forced,
+            model_params=(model_params_by_type or {}).get(model_type, {}),
+            output_dir=model_output_dir,
+        )
+
+        artifacts = result["artifacts"]
+        metrics = result["metrics"]
+        split = result["split"]
+
+        # Hash persisted split CSVs to prove that all models used identical row partitions.
+        train_rows_path = Path(_extract_artifact_path(artifacts, "train_rows_path") or "")
+        val_rows_path = Path(_extract_artifact_path(artifacts, "val_rows_path") or "")
+        test_rows_path = Path(_extract_artifact_path(artifacts, "test_rows_path") or "")
+
+        split_hashes = {
+            "train_hash": _file_sha256(train_rows_path),
+            "val_hash": _file_sha256(val_rows_path),
+            "test_hash": _file_sha256(test_rows_path),
+        }
+
+        # First model becomes the reference split.
+        # Every later model must match it exactly.
+        if reference_split_hashes is None:
+            reference_split_hashes = dict(split_hashes)
+        else:
+            if split_hashes != reference_split_hashes:
+                raise RuntimeError(
+                    f"Split mismatch detected for model '{model_type}'. "
+                    "All compared models must use identical split rows."
+                )
+
+        # Different model families produce different explainability artifacts.
+        explainability_path = (
+            _extract_artifact_path(artifacts, "coefficients_path")
+            or _extract_artifact_path(artifacts, "feature_importances_path")
+        )
+
+        # Split metadata is stored inside DatasetSplit.metadata, not as top-level attrs.
+        split_metadata = dict(getattr(split, "metadata", {}) or {})
+
+        model_runs.append(
+            {
+                "model_type": model_type,
+                "model_name": MODEL_REGISTRY[model_type]["name"],
+                "family": MODEL_REGISTRY[model_type]["family"],
+                "metrics": metrics,
+                "split": {
+                    "method": split.method,
+                    "group_column": split_metadata.get("group_column"),
+                    "train_rows": len(split.train_df),
+                    "val_rows": len(split.val_df),
+                    "test_rows": len(split.test_df),
+                    "metadata": split_metadata,
+                    **split_hashes,
+                },
+                "artifacts": {
+                    "run_dir": _extract_artifact_path(artifacts, "run_dir"),
+                    "models_dir": _extract_artifact_path(artifacts, "models_dir"),
+                    "model_path": _extract_artifact_path(artifacts, "model_path"),
+                    "metrics_path": _extract_artifact_path(artifacts, "metrics_path"),
+                    "train_config_path": _extract_artifact_path(artifacts, "train_config_path"),
+                    "train_rows_path": _extract_artifact_path(artifacts, "train_rows_path"),
+                    "val_rows_path": _extract_artifact_path(artifacts, "val_rows_path"),
+                    "test_rows_path": _extract_artifact_path(artifacts, "test_rows_path"),
+                    "explainability_path": explainability_path,
+                },
+            }
+        )
+
+    # Rich, machine-readable comparison payload.
+    summary = {
+        "dataset_path": str(dataset_path),
+        "feature_columns": list(feature_columns),
+        "target_columns": list(target_columns),
+        "split_config": {
+            "split_method": split_method,
+            "group_column": group_column,
+            "train_fraction": train_fraction,
+            "val_fraction": val_fraction,
+            "test_fraction": test_fraction,
+            "random_seed": random_seed,
+            "allow_forced": allow_forced,
+        },
+        "model_types": list(normalized_models),
+        "shared_split_hashes": reference_split_hashes or {},
+        "model_runs": model_runs,
+    }
+
+    summary_json_path = output_dir / "comparison_summary.json"
+    summary_csv_path = output_dir / "comparison_summary.csv"
+
+    summary_json_path.write_text(
+        json.dumps(_to_jsonable(summary), indent=2),
+        encoding="utf-8",
+    )
+    _write_csv(summary_csv_path, _build_csv_rows(summary))
+
+    return {
+        "output_dir": output_dir,
+        "comparison_summary_json": summary_json_path,
+        "comparison_summary_csv": summary_csv_path,
+        "summary": summary,
+    }
+===== FILE: ./src/aeris/ml/__init__.py =====
+"""AERIS machine-learning utilities and training workflows."""
+===== FILE: ./src/aeris/ml/model_registry.py =====
+"""
+Model registry for AERIS tabular ML baselines.
+
+Responsibilities:
+    - Centralize supported model types
+    - Provide consistent model construction
+    - Expose explainability policy metadata
+    - Keep train/compare logic free of model-specific branching
+
+Notes:
+    - This is intentionally small and explicit.
+    - Add new model families here, not via scattered if/else blocks.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Callable, Literal
+
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.multioutput import MultiOutputRegressor
+
+ExplainabilityArtifactType = Literal["coefficients", "feature_importances", "none"]
+
+
+@dataclass(frozen=True)
+class ModelSpec:
+    """Registry entry describing one supported model family."""
+    model_type: str
+    display_name: str
+    family_name: str
+    explainability_artifact_type: ExplainabilityArtifactType
+    builder: Callable[[int], object]
+    wrapped_per_target: bool
+
+
+def _build_linear_regression(random_seed: int) -> object:
+    # LinearRegression has no random state; keep signature uniform.
+    return LinearRegression()
+
+
+def _build_random_forest(random_seed: int) -> object:
+    # Native RF supports multi-output regression directly.
+    return RandomForestRegressor(
+        n_estimators=300,
+        random_state=random_seed,
+        n_jobs=-1,
+    )
+
+
+def _build_gradient_boosting(random_seed: int) -> object:
+    # GradientBoostingRegressor is single-target in sklearn.
+    # Wrap honestly per target instead of pretending otherwise.
+    return MultiOutputRegressor(
+        GradientBoostingRegressor(
+            random_state=random_seed,
+            n_estimators=200,
+            learning_rate=0.05,
+            max_depth=3,
+        )
+    )
+
+
+MODEL_REGISTRY: dict[str, ModelSpec] = {
+    "linear_regression": ModelSpec(
+        model_type="linear_regression",
+        display_name="Linear Regression",
+        family_name="linear_model",
+        explainability_artifact_type="coefficients",
+        builder=_build_linear_regression,
+        wrapped_per_target=False,
+    ),
+    "random_forest": ModelSpec(
+        model_type="random_forest",
+        display_name="Random Forest",
+        family_name="tree_ensemble",
+        explainability_artifact_type="feature_importances",
+        builder=_build_random_forest,
+        wrapped_per_target=False,
+    ),
+    "gradient_boosting": ModelSpec(
+        model_type="gradient_boosting",
+        display_name="Gradient Boosting",
+        family_name="tree_boosting",
+        explainability_artifact_type="feature_importances",
+        builder=_build_gradient_boosting,
+        wrapped_per_target=True,
+    ),
+}
+
+
+def get_model_spec(model_type: str) -> ModelSpec:
+    """Return the registry spec for a supported model type."""
+    try:
+        return MODEL_REGISTRY[model_type]
+    except KeyError as exc:
+        supported = ", ".join(sorted(MODEL_REGISTRY))
+        raise ValueError(
+            f"Unsupported model_type '{model_type}'. Supported: {supported}"
+        ) from exc
+
+
+def build_model(model_type: str, random_seed: int) -> object:
+    """Construct a model instance from the registry."""
+    return get_model_spec(model_type).builder(random_seed)
+
+
+def list_model_types() -> list[str]:
+    """Return sorted supported model identifiers."""
+    return sorted(MODEL_REGISTRY)
+===== FILE: ./src/aeris/ml/train.py =====
+from __future__ import annotations
+
+import json
+import pickle
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from typing import Any, Literal
+
+import numpy as np
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+from aeris.dataset.splitting import DatasetSplit, split_dataset
+from aeris.dataset.training_data import TrainingData, load_training_data
+
+# Current supported baseline training models.
+ModelType = Literal["linear_regression", "random_forest"]
+
+# Current supported split strategies.
+SplitMethod = Literal["grouped", "random"]
+
+
+@dataclass(frozen=True)
+class TrainConfig:
+    """
+    Serializable record of the exact training configuration used for one run.
+
+    This is written to disk so model runs remain reproducible and auditable later.
+    """
+    dataset_path: str
+    feature_columns: list[str]
+    target_columns: list[str]
+    model_type: str
+    split_method: str
+    group_column: str
+    train_fraction: float
+    val_fraction: float
+    test_fraction: float
+    random_seed: int
+    allow_forced: bool
+    model_params: dict[str, Any]
+
+
+@dataclass(frozen=True)
+class TrainArtifacts:
+    """
+    Paths to all main artifacts written by one training run.
+
+    These are returned to callers so CLI and comparison logic do not need to
+    reconstruct paths by guesswork.
+    """
+    run_dir: Path
+    models_dir: Path
+    model_path: Path
+    metrics_path: Path
+    train_config_path: Path
+    train_rows_path: Path
+    val_rows_path: Path
+    test_rows_path: Path
+    coefficients_path: Path | None = None
+    feature_importances_path: Path | None = None
+
+
+def _ensure_run_dir(output_dir: Path) -> Path:
+    """
+    Ensure the target training run directory exists.
+    """
+    output_dir.mkdir(parents=True, exist_ok=True)
+    return output_dir
+
+
+def _build_model(
+    model_type: ModelType,
+    *,
+    random_seed: int,
+    model_params: dict[str, Any] | None = None,
+) -> Any:
+    """
+    Construct the requested sklearn model instance.
+
+    This is the right seam for future extension:
+    add model types here rather than scattering model construction across the file.
+    """
+    params = dict(model_params or {})
+
+    if model_type == "linear_regression":
+        return LinearRegression(**params)
+
+    if model_type == "random_forest":
+        params.setdefault("n_estimators", 200)
+        params.setdefault("random_state", random_seed)
+        return RandomForestRegressor(**params)
+
+    raise ValueError(f"Unsupported model_type: {model_type}")
+
+
+def _evaluate_predictions(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    target_columns: list[str],
+) -> dict[str, Any]:
+    """
+    Compute regression metrics for each target and also aggregate means.
+
+    Output structure:
+    - per_target[target] = rmse / mae / r2
+    - overall = mean metrics across targets
+    """
+    # Normalize 1D arrays into 2D form so single-target and multi-target cases
+    # can use the same logic.
+    if y_true.ndim == 1:
+        y_true = y_true.reshape(-1, 1)
+    if y_pred.ndim == 1:
+        y_pred = y_pred.reshape(-1, 1)
+
+    per_target: dict[str, dict[str, float]] = {}
+    rmse_values: list[float] = []
+    mae_values: list[float] = []
+    r2_values: list[float] = []
+
+    for idx, target in enumerate(target_columns):
+        y_true_col = y_true[:, idx]
+        y_pred_col = y_pred[:, idx]
+
+        rmse = float(np.sqrt(mean_squared_error(y_true_col, y_pred_col)))
+        mae = float(mean_absolute_error(y_true_col, y_pred_col))
+        r2 = float(r2_score(y_true_col, y_pred_col))
+
+        per_target[target] = {
+            "rmse": rmse,
+            "mae": mae,
+            "r2": r2,
+        }
+
+        rmse_values.append(rmse)
+        mae_values.append(mae)
+        r2_values.append(r2)
+
+    return {
+        "per_target": per_target,
+        "overall": {
+            "rmse_mean": float(np.mean(rmse_values)),
+            "mae_mean": float(np.mean(mae_values)),
+            "r2_mean": float(np.mean(r2_values)),
+        },
+    }
+
+
+def _write_split_rows(split: DatasetSplit, output_dir: Path) -> tuple[Path, Path, Path]:
+    """
+    Persist the full original dataframe rows for each split.
+
+    This is not cosmetic.
+    It provides auditability and lets you inspect exactly what each model saw.
+    """
+    train_rows_path = output_dir / "train_rows.csv"
+    val_rows_path = output_dir / "val_rows.csv"
+    test_rows_path = output_dir / "test_rows.csv"
+
+    split.train_df.to_csv(train_rows_path, index=False)
+    split.val_df.to_csv(val_rows_path, index=False)
+    split.test_df.to_csv(test_rows_path, index=False)
+
+    return train_rows_path, val_rows_path, test_rows_path
+
+
+def _extract_linear_regression_payload(
+    *,
+    model: Any,
+    feature_columns: list[str],
+    target_columns: list[str],
+) -> dict[str, Any]:
+    """
+    Convert a fitted linear regression model into a JSON-friendly explainability payload.
+
+    For each target, store:
+    - intercept
+    - coefficient per feature
+    """
+    coef = np.asarray(model.coef_, dtype=float)
+    intercept = np.asarray(model.intercept_, dtype=float)
+
+    if coef.ndim == 1:
+        coef = coef.reshape(1, -1)
+    if intercept.ndim == 0:
+        intercept = intercept.reshape(1)
+
+    payload: dict[str, Any] = {"model_type": "linear_regression", "targets": {}}
+
+    for idx, target in enumerate(target_columns):
+        payload["targets"][target] = {
+            "intercept": float(intercept[idx]),
+            "coefficients": {
+                feature: float(coef[idx, feat_idx])
+                for feat_idx, feature in enumerate(feature_columns)
+            },
+        }
+
+    return payload
+
+
+def _extract_random_forest_payload(
+    *,
+    model: Any,
+    feature_columns: list[str],
+    target_columns: list[str],
+) -> dict[str, Any]:
+    """
+    Convert a fitted random forest model into a JSON-friendly explainability payload.
+
+    Notes:
+    - For multi-output RF, sklearn may expose one estimator per target.
+    - If not, we fall back to shared feature_importances_.
+    """
+    payload: dict[str, Any] = {"model_type": "random_forest", "targets": {}}
+
+    if hasattr(model, "estimators_") and isinstance(model.estimators_, list):
+        # Multi-output RF in sklearn exposes one forest per target.
+        if len(model.estimators_) == len(target_columns):
+            for idx, target in enumerate(target_columns):
+                est = model.estimators_[idx]
+                importances = np.asarray(est.feature_importances_, dtype=float)
+                payload["targets"][target] = {
+                    "feature_importances": {
+                        feature: float(importances[feat_idx])
+                        for feat_idx, feature in enumerate(feature_columns)
+                    }
+                }
+            return payload
+
+    importances = np.asarray(model.feature_importances_, dtype=float)
+    shared = {
+        feature: float(importances[feat_idx])
+        for feat_idx, feature in enumerate(feature_columns)
+    }
+    for target in target_columns:
+        payload["targets"][target] = {
+            "feature_importances": dict(shared)
+        }
+
+    return payload
+
+
+def _write_explainability_artifacts(
+    *,
+    model: Any,
+    model_type: ModelType,
+    feature_columns: list[str],
+    target_columns: list[str],
+    output_dir: Path,
+) -> tuple[Path | None, Path | None]:
+    """
+    Write the model-specific explainability artifact.
+
+    Current behavior:
+    - linear_regression -> coefficients.json
+    - random_forest -> feature_importances.json
+    """
+    if model_type == "linear_regression":
+        payload = _extract_linear_regression_payload(
+            model=model,
+            feature_columns=feature_columns,
+            target_columns=target_columns,
+        )
+        path = output_dir / "coefficients.json"
+        path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        return path, None
+
+    if model_type == "random_forest":
+        payload = _extract_random_forest_payload(
+            model=model,
+            feature_columns=feature_columns,
+            target_columns=target_columns,
+        )
+        path = output_dir / "feature_importances.json"
+        path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        return None, path
+
+    return None, None
+
+
+def train_baseline_model(
+    *,
+    dataset_path: Path,
+    feature_columns: list[str],
+    target_columns: list[str],
+    model_type: ModelType = "linear_regression",
+    split_method: SplitMethod = "grouped",
+    group_column: str = "geometry_id",
+    train_fraction: float = 0.7,
+    val_fraction: float = 0.15,
+    test_fraction: float = 0.15,
+    random_seed: int = 123,
+    allow_forced: bool = False,
+    model_params: dict[str, Any] | None = None,
+    output_dir: Path | None = None,
+) -> dict[str, Any]:
+    """
+    End-to-end baseline training entrypoint.
+
+    Workflow:
+    1. Load and validate promoted training data
+    2. Split rows into train / val / test
+    3. Build and fit the requested model
+    4. Evaluate metrics
+    5. Save model + metrics + config + split CSVs + explainability artifacts
+
+    Returns:
+        dict containing:
+        - fitted model
+        - loaded training data
+        - split object
+        - metrics payload
+        - artifact paths
+    """
+    dataset_path = Path(dataset_path).expanduser().resolve()
+
+    # Trusted dataset load happens through the promoted-data path.
+    training_data: TrainingData = load_training_data(
+        dataset_path=dataset_path,
+        feature_columns=feature_columns,
+        target_columns=target_columns,
+        allow_forced=allow_forced,
+    )
+
+    # Split after data validation so downstream logic operates on a clean table.
+    split: DatasetSplit = split_dataset(
+        training_data.df,
+        method=split_method,
+        group_column=group_column,
+        train_fraction=train_fraction,
+        val_fraction=val_fraction,
+        test_fraction=test_fraction,
+        random_seed=random_seed,
+    )
+
+    # Extract numpy matrices for sklearn.
+    X_train = split.train_df[feature_columns].to_numpy(dtype=float)
+    y_train = split.train_df[target_columns].to_numpy(dtype=float)
+
+    X_val = split.val_df[feature_columns].to_numpy(dtype=float)
+    y_val = split.val_df[target_columns].to_numpy(dtype=float)
+
+    X_test = split.test_df[feature_columns].to_numpy(dtype=float)
+    y_test = split.test_df[target_columns].to_numpy(dtype=float)
+
+    # Build and fit the requested baseline model.
+    model = _build_model(
+        model_type,
+        random_seed=random_seed,
+        model_params=model_params,
+    )
+    model.fit(X_train, y_train)
+
+    # Evaluate each split separately.
+    y_pred_train = model.predict(X_train)
+    y_pred_val = model.predict(X_val)
+    y_pred_test = model.predict(X_test)
+
+    metrics = {
+        "train": _evaluate_predictions(y_train, y_pred_train, target_columns),
+        "val": _evaluate_predictions(y_val, y_pred_val, target_columns),
+        "test": _evaluate_predictions(y_test, y_pred_test, target_columns),
+    }
+
+    # Default storage location for training runs.
+    if output_dir is None:
+        output_dir = (
+            Path("data")
+            / "processed"
+            / "ml_runs"
+            / f"{model_type}__{dataset_path.name}__seed{random_seed}"
+        )
+    output_dir = _ensure_run_dir(output_dir)
+
+    # Save serialized model.
+    models_dir = output_dir / "models"
+    models_dir.mkdir(parents=True, exist_ok=True)
+
+    model_path = models_dir / "model.pkl"
+    with model_path.open("wb") as f:
+        pickle.dump(model, f)
+
+    # Save metrics summary.
+    metrics_path = output_dir / "metrics.json"
+    metrics_path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+
+    # Save exact training configuration.
+    config = TrainConfig(
+        dataset_path=str(dataset_path),
+        feature_columns=list(feature_columns),
+        target_columns=list(target_columns),
+        model_type=model_type,
+        split_method=split_method,
+        group_column=group_column,
+        train_fraction=train_fraction,
+        val_fraction=val_fraction,
+        test_fraction=test_fraction,
+        random_seed=random_seed,
+        allow_forced=allow_forced,
+        model_params=dict(model_params or {}),
+    )
+
+    train_config_path = output_dir / "train_config.json"
+    train_config_path.write_text(json.dumps(asdict(config), indent=2), encoding="utf-8")
+
+    # Save row-level split artifacts for audit/debug.
+    train_rows_path, val_rows_path, test_rows_path = _write_split_rows(split, output_dir)
+
+    # Save simple explainability artifact depending on model family.
+    coefficients_path, feature_importances_path = _write_explainability_artifacts(
+        model=model,
+        model_type=model_type,
+        feature_columns=feature_columns,
+        target_columns=target_columns,
+        output_dir=output_dir,
+    )
+
+    artifacts = TrainArtifacts(
+        run_dir=output_dir,
+        models_dir=models_dir,
+        model_path=model_path,
+        metrics_path=metrics_path,
+        train_config_path=train_config_path,
+        train_rows_path=train_rows_path,
+        val_rows_path=val_rows_path,
+        test_rows_path=test_rows_path,
+        coefficients_path=coefficients_path,
+        feature_importances_path=feature_importances_path,
+    )
+
+    return {
+        "model": model,
+        "training_data": training_data,
+        "split": split,
+        "metrics": metrics,
+        "artifacts": artifacts,
+    }
 ===== FILE: ./src/aeris/pipeline/aero_workflows.py =====
 """
 Pipeline/orchestration helpers for aerodynamic runs and sweeps.
@@ -22119,6 +24239,198 @@ def test_geometry_visualize_delegates_to_visualization(monkeypatch, tmp_path: Pa
     assert called["draw_3d"] is True
     assert "Geometry visualization output" in result.stdout
     assert "AeroSandbox airplane available: True" in result.stdout
+===== FILE: ./tests/commands/test_ml_cli.py =====
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pandas as pd
+from typer.testing import CliRunner
+
+from aeris.cli import app
+
+runner = CliRunner()
+
+
+def _build_dataset(tmp_path: Path) -> Path:
+    dataset_root = tmp_path / "ml_dataset"
+    dataset_root.mkdir(parents=True, exist_ok=True)
+
+    rows = []
+    for geom_idx, geom_id in enumerate(["g1", "g2", "g3", "g4", "g5", "g6"]):
+        for alpha in [-2.0, 0.0, 4.0]:
+            rows.append(
+                {
+                    "geometry_id": geom_id,
+                    "c1_m": 1.5 + 0.01 * geom_idx,
+                    "b_total_m": 1.6 + 0.01 * geom_idx,
+                    "sw1_deg": 40.0,
+                    "alpha_deg": alpha,
+                    "velocity_mps": 28.0,
+                    "altitude_m": 1500.0,
+                    "control_input_deg": 0.0,
+                    "cl": 0.1 * alpha + 0.01 * geom_idx,
+                    "cd": 0.02 + 0.001 * (alpha ** 2) + 0.0001 * geom_idx,
+                    "cm": -0.05 * alpha + 0.005 * geom_idx,
+                }
+            )
+
+    pd.DataFrame(rows).to_csv(dataset_root / "curated_aero_dataset.csv", index=False)
+
+    promotion_manifest = {
+        "dataset_root": str(dataset_root),
+        "promotion_forced": False,
+        "promotion_ready_at_time_of_promotion": True,
+        "promotion_blockers": [],
+        "qc_context": {
+            "qc_preset_used": "production",
+            "geometry_qc_passed": True,
+            "aero_qc_passed": True,
+        },
+        "artifacts": {
+            "curated_aero_dataset_csv": str(
+                dataset_root / "curated_aero_dataset.csv"
+            ),
+            "rejected_aero_rows_csv": str(
+                dataset_root / "rejected_aero_rows.csv"
+            ),
+        },
+    }
+    (dataset_root / "promotion_manifest.json").write_text(
+        json.dumps(promotion_manifest, indent=2),
+        encoding="utf-8",
+    )
+
+    return dataset_root
+
+
+def test_ml_train_cli_linear(tmp_path: Path) -> None:
+    dataset_root = _build_dataset(tmp_path)
+    output_dir = tmp_path / "cli_linear"
+
+    result = runner.invoke(
+        app,
+        [
+            "ml",
+            "train",
+            "--dataset",
+            str(dataset_root),
+            "--features",
+            "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg",
+            "--targets",
+            "cl,cd,cm",
+            "--model-type",
+            "linear_regression",
+            "--split-method",
+            "grouped",
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    assert result.exit_code == 0, result.stdout
+    assert "[AERIS] ML training completed" in result.stdout
+    assert (output_dir / "metrics.json").exists()
+    assert (output_dir / "models" / "model.pkl").exists()
+===== FILE: ./tests/commands/test_ml_compare_cli.py =====
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pandas as pd
+from typer.testing import CliRunner
+
+from aeris.cli import app
+
+runner = CliRunner()
+
+
+def _build_dataset(tmp_path: Path) -> Path:
+    dataset_root = tmp_path / "ml_dataset"
+    dataset_root.mkdir(parents=True, exist_ok=True)
+
+    rows = []
+    for geom_idx, geom_id in enumerate(["g1", "g2", "g3", "g4", "g5", "g6"]):
+        for alpha in [-2.0, 0.0, 4.0]:
+            rows.append(
+                {
+                    "geometry_id": geom_id,
+                    "c1_m": 1.5 + 0.01 * geom_idx,
+                    "b_total_m": 1.6 + 0.01 * geom_idx,
+                    "sw1_deg": 40.0,
+                    "alpha_deg": alpha,
+                    "velocity_mps": 28.0,
+                    "altitude_m": 1500.0,
+                    "control_input_deg": 0.0,
+                    "cl": 0.1 * alpha + 0.01 * geom_idx,
+                    "cd": 0.02 + 0.001 * (alpha ** 2) + 0.0001 * geom_idx,
+                    "cm": -0.05 * alpha + 0.005 * geom_idx,
+                }
+            )
+
+    pd.DataFrame(rows).to_csv(dataset_root / "curated_aero_dataset.csv", index=False)
+    (dataset_root / "rejected_aero_rows.csv").write_text("", encoding="utf-8")
+
+    promotion_manifest = {
+        "dataset_root": str(dataset_root),
+        "promotion_forced": False,
+        "promotion_ready_at_time_of_promotion": True,
+        "promotion_blockers": [],
+        "qc_context": {
+            "qc_preset_used": "production",
+            "geometry_qc_passed": True,
+            "aero_qc_passed": True,
+        },
+        "artifacts": {
+            "curated_aero_dataset_csv": str(dataset_root / "curated_aero_dataset.csv"),
+            "rejected_aero_rows_csv": str(dataset_root / "rejected_aero_rows.csv"),
+        },
+    }
+    (dataset_root / "promotion_manifest.json").write_text(
+        json.dumps(promotion_manifest, indent=2),
+        encoding="utf-8",
+    )
+
+    return dataset_root
+
+
+def test_ml_compare_cli_runs(tmp_path: Path) -> None:
+    dataset_root = _build_dataset(tmp_path)
+    output_dir = tmp_path / "cli_compare"
+
+    result = runner.invoke(
+        app,
+        [
+            "ml",
+            "compare",
+            "--dataset",
+            str(dataset_root),
+            "--features",
+            "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg",
+            "--targets",
+            "cl,cd,cm",
+            "--models",
+            "linear_regression,random_forest",
+            "--split-method",
+            "grouped",
+            "--random-seed",
+            "123",
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    assert result.exit_code == 0, result.stdout
+    assert "ML model comparison completed" in result.stdout
+    assert "linear_regression" in result.stdout
+    assert "random_forest" in result.stdout
+
+    assert (output_dir / "comparison_summary.json").exists()
+    assert (output_dir / "comparison_summary.csv").exists()
+    assert (output_dir / "runs" / "linear_regression" / "coefficients.json").exists()
+    assert (output_dir / "runs" / "random_forest" / "feature_importances.json").exists()
 ===== FILE: ./tests/commands/test_version.py =====
 """
 Tests: commands.version
@@ -22906,6 +25218,155 @@ def test_curate_aero_rejects_nonfinite_target_group(tmp_path: Path) -> None:
     assert set(curated["geometry_id"].unique()) == {"geom_00001"}
     assert set(rejected["geometry_id"].unique()) == {"geom_00002"}
     assert report["rejection_reason_counts"]["nonfinite_target_values"] == 1
+===== FILE: ./tests/dataset/test_curate_aero_with_qc.py =====
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pandas as pd
+
+from aeris.dataset.curate_aero import curate_aero_dataset
+
+
+def _write_csv(path: Path, rows: list[dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(rows).to_csv(path, index=False)
+
+
+def _healthy_rows() -> list[dict]:
+    rows: list[dict] = []
+    for geometry_id in ["geom_00001", "geom_00002"]:
+        for alpha_deg in [0.0, 2.0]:
+            for control_input_deg in [-5.0, 0.0, 5.0]:
+                rows.append(
+                    {
+                        "geometry_id": geometry_id,
+                        "alpha_deg": alpha_deg,
+                        "beta_deg": 0.0,
+                        "velocity_mps": 28.0,
+                        "altitude_m": 1500.0,
+                        "p_rad_s": 0.0,
+                        "q_rad_s": 0.0,
+                        "r_rad_s": 0.0,
+                        "control_input_deg": control_input_deg,
+                        "cl": 0.4 + 0.01 * control_input_deg + 0.05 * alpha_deg,
+                        "cd": 0.03,
+                        "cm": -0.01 * control_input_deg,
+                        "diag_airplane_has_control_surfaces": True,
+                        "diag_airplane_avl_has_control_blocks": True,
+                        "diag_keystrokes_has_d1_command": True,
+                    }
+                )
+    return rows
+
+
+def _write_manifest(dataset_root: Path) -> None:
+    manifest = {
+        "alpha_values": [0.0, 2.0],
+        "beta_values": [0.0],
+        "velocity_values": [28.0],
+        "altitude_values": [1500.0],
+        "p_values": [0.0],
+        "q_values": [0.0],
+        "r_values": [0.0],
+        "control_input_values": [-5.0, 0.0, 5.0],
+    }
+    (dataset_root / "aero_dataset_manifest.json").write_text(
+        json.dumps(manifest, indent=2),
+        encoding="utf-8",
+    )
+
+
+def test_curate_aero_marks_promotion_ready_when_qc_passed_and_no_rejections(tmp_path: Path) -> None:
+    dataset_root = tmp_path / "dataset_ok"
+    dataset_root.mkdir(parents=True, exist_ok=True)
+
+    _write_manifest(dataset_root)
+    _write_csv(dataset_root / "aero_dataset.csv", _healthy_rows())
+
+    (dataset_root / "aero_failures.csv").write_text("", encoding="utf-8")
+    (dataset_root / "final_run_summary.json").write_text(
+        json.dumps(
+            {
+                "qc_preset": "promotion_strict",
+                "geometry_qc": {"passed": True},
+                "aero_qc": {"passed": True},
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    report = curate_aero_dataset(dataset_root=dataset_root)
+
+    assert report["promotion_ready"] is True
+    assert report["promotion_blockers"] == []
+    assert report["geometry_qc_passed"] is True
+    assert report["aero_qc_passed"] is True
+    assert report["qc_preset_used"] == "promotion_strict"
+
+    curated = pd.read_csv(dataset_root / "curated_aero_dataset.csv")
+    assert "promotion_ready" in curated.columns
+    assert bool(curated["promotion_ready"].all()) is True
+
+
+def test_curate_aero_blocks_promotion_when_qc_failed(tmp_path: Path) -> None:
+    dataset_root = tmp_path / "dataset_qc_failed"
+    dataset_root.mkdir(parents=True, exist_ok=True)
+
+    _write_manifest(dataset_root)
+    _write_csv(dataset_root / "aero_dataset.csv", _healthy_rows())
+    (dataset_root / "aero_failures.csv").write_text("", encoding="utf-8")
+
+    (dataset_root / "final_run_summary.json").write_text(
+        json.dumps(
+            {
+                "qc_preset": "promotion_strict",
+                "geometry_qc": {"passed": False},
+                "aero_qc": {"passed": True},
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    report = curate_aero_dataset(dataset_root=dataset_root)
+
+    assert report["promotion_ready"] is False
+    assert "geometry_qc_failed" in report["promotion_blockers"]
+
+
+def test_curate_aero_blocks_promotion_when_rows_rejected(tmp_path: Path) -> None:
+    dataset_root = tmp_path / "dataset_rejected_rows"
+    dataset_root.mkdir(parents=True, exist_ok=True)
+
+    rows = _healthy_rows()
+    rows = rows[:-1]  # break one geometry group completeness
+
+    _write_manifest(dataset_root)
+    _write_csv(dataset_root / "aero_dataset.csv", rows)
+    (dataset_root / "aero_failures.csv").write_text("", encoding="utf-8")
+
+    (dataset_root / "final_run_summary.json").write_text(
+        json.dumps(
+            {
+                "qc_preset": "promotion_strict",
+                "geometry_qc": {"passed": True},
+                "aero_qc": {"passed": True},
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    report = curate_aero_dataset(dataset_root=dataset_root)
+
+    assert report["promotion_ready"] is False
+    assert "curation_rejected_geometries" in report["promotion_blockers"]
+
+    rejected = pd.read_csv(dataset_root / "rejected_aero_rows.csv")
+    assert "rejection_reason" in rejected.columns
 ===== FILE: ./tests/dataset/test_dataset_io.py =====
 from __future__ import annotations
 
@@ -24039,6 +26500,448 @@ def test_build_failure_row_matches_schema() -> None:
     assert row["generator_id"] == "bwb_segmented_v1"
     assert row["error_type"] == "RuntimeError"
     assert row["error_message"] == "boom"
+===== FILE: ./tests/dataset/test_promote_aero.py =====
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+
+from aeris.dataset.promote_aero import promote_aero_dataset
+
+
+def _write_json(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def test_promote_aero_succeeds_when_promotion_ready(tmp_path: Path) -> None:
+    dataset_root = tmp_path / "dataset_ready"
+    dataset_root.mkdir(parents=True, exist_ok=True)
+
+    _write_json(
+        dataset_root / "curation_report.json",
+        {
+            "promotion_ready": True,
+            "promotion_blockers": [],
+            "qc_preset_used": "production",
+            "geometry_qc_passed": True,
+            "aero_qc_passed": True,
+            "kept_rows": 12,
+            "rejected_rows": 0,
+            "kept_geometries": 2,
+            "rejected_geometries": 0,
+            "rejection_reason_counts": {},
+            "curated_aero_dataset_csv": str(dataset_root / "curated_aero_dataset.csv"),
+            "rejected_aero_rows_csv": str(dataset_root / "rejected_aero_rows.csv"),
+        },
+    )
+
+    _write_json(
+        dataset_root / "final_run_summary.json",
+        {
+            "dataset_name": "dataset_ready",
+            "config_path": "configs/geometry/baseline_bwb_25.yaml",
+            "generator_id": "bwb_segmented_v1",
+            "solver": "aerosandbox_avl",
+            "final_status": "success",
+            "exit_code": 0,
+        },
+    )
+
+    manifest = promote_aero_dataset(dataset_root=dataset_root)
+
+    assert manifest["promotion_ready_at_time_of_promotion"] is True
+    assert manifest["promotion_forced"] is False
+    assert (dataset_root / "promotion_manifest.json").exists()
+
+
+def test_promote_aero_fails_when_not_promotion_ready(tmp_path: Path) -> None:
+    dataset_root = tmp_path / "dataset_blocked"
+    dataset_root.mkdir(parents=True, exist_ok=True)
+
+    _write_json(
+        dataset_root / "curation_report.json",
+        {
+            "promotion_ready": False,
+            "promotion_blockers": ["geometry_qc_failed", "curation_rejected_geometries"],
+            "qc_preset_used": "promotion_strict",
+            "geometry_qc_passed": False,
+            "aero_qc_passed": True,
+            "kept_rows": 10,
+            "rejected_rows": 2,
+            "kept_geometries": 1,
+            "rejected_geometries": 1,
+            "rejection_reason_counts": {"incomplete_sweep_group": 1},
+            "curated_aero_dataset_csv": str(dataset_root / "curated_aero_dataset.csv"),
+            "rejected_aero_rows_csv": str(dataset_root / "rejected_aero_rows.csv"),
+        },
+    )
+
+    _write_json(
+        dataset_root / "final_run_summary.json",
+        {
+            "dataset_name": "dataset_blocked",
+            "config_path": "configs/geometry/baseline_bwb_25.yaml",
+            "generator_id": "bwb_segmented_v1",
+            "solver": "aerosandbox_avl",
+            "final_status": "failed",
+            "exit_code": 1,
+        },
+    )
+
+    with pytest.raises(ValueError) as exc:
+        promote_aero_dataset(dataset_root=dataset_root)
+
+    assert "not promotion-ready" in str(exc.value)
+
+
+def test_promote_aero_can_be_forced(tmp_path: Path) -> None:
+    dataset_root = tmp_path / "dataset_forced"
+    dataset_root.mkdir(parents=True, exist_ok=True)
+
+    _write_json(
+        dataset_root / "curation_report.json",
+        {
+            "promotion_ready": False,
+            "promotion_blockers": ["aero_qc_failed"],
+            "qc_preset_used": "promotion_strict",
+            "geometry_qc_passed": True,
+            "aero_qc_passed": False,
+            "kept_rows": 12,
+            "rejected_rows": 0,
+            "kept_geometries": 2,
+            "rejected_geometries": 0,
+            "rejection_reason_counts": {},
+            "curated_aero_dataset_csv": str(dataset_root / "curated_aero_dataset.csv"),
+            "rejected_aero_rows_csv": str(dataset_root / "rejected_aero_rows.csv"),
+        },
+    )
+
+    _write_json(
+        dataset_root / "final_run_summary.json",
+        {
+            "dataset_name": "dataset_forced",
+            "config_path": "configs/geometry/baseline_bwb_25.yaml",
+            "generator_id": "bwb_segmented_v1",
+            "solver": "aerosandbox_avl",
+            "final_status": "success",
+            "exit_code": 0,
+        },
+    )
+
+    manifest = promote_aero_dataset(dataset_root=dataset_root, force=True)
+
+    assert manifest["promotion_ready_at_time_of_promotion"] is False
+    assert manifest["promotion_forced"] is True
+    assert manifest["promotion_blockers"] == ["aero_qc_failed"]
+===== FILE: ./tests/dataset/test_promoted_dataset.py =====
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pandas as pd
+import pytest
+
+from aeris.dataset.promoted_dataset import (
+    load_promoted_aero_dataset,
+    require_promoted_aero_dataset,
+)
+
+
+def _write_json(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def _write_curated_csv(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(
+        [
+            {
+                "geometry_id": "geom_00001",
+                "cl": 0.5,
+                "cd": 0.03,
+                "cm": -0.02,
+                "promotion_ready": True,
+            }
+        ]
+    ).to_csv(path, index=False)
+
+
+def test_require_promoted_aero_dataset_succeeds_for_normal_promotion(tmp_path: Path) -> None:
+    dataset_root = tmp_path / "dataset_ready"
+    curated_csv = dataset_root / "curated_aero_dataset.csv"
+    _write_curated_csv(curated_csv)
+
+    _write_json(
+        dataset_root / "promotion_manifest.json",
+        {
+            "promotion_ready_at_time_of_promotion": True,
+            "promotion_forced": False,
+            "promotion_blockers": [],
+            "artifacts": {
+                "curated_aero_dataset_csv": str(curated_csv),
+            },
+        },
+    )
+
+    context = require_promoted_aero_dataset(dataset_root=dataset_root)
+
+    assert context["dataset_root"] == str(dataset_root.resolve())
+    assert context["curated_aero_dataset_csv"] == str(curated_csv.resolve())
+    assert context["promotion_manifest"]["promotion_forced"] is False
+
+
+def test_require_promoted_aero_dataset_fails_when_manifest_missing(tmp_path: Path) -> None:
+    dataset_root = tmp_path / "dataset_missing"
+
+    with pytest.raises(FileNotFoundError) as exc:
+        require_promoted_aero_dataset(dataset_root=dataset_root)
+
+    assert "promotion_manifest.json" in str(exc.value)
+
+
+def test_require_promoted_aero_dataset_fails_when_curated_csv_missing(tmp_path: Path) -> None:
+    dataset_root = tmp_path / "dataset_missing_csv"
+
+    _write_json(
+        dataset_root / "promotion_manifest.json",
+        {
+            "promotion_ready_at_time_of_promotion": True,
+            "promotion_forced": False,
+            "promotion_blockers": [],
+            "artifacts": {
+                "curated_aero_dataset_csv": str(dataset_root / "curated_aero_dataset.csv"),
+            },
+        },
+    )
+
+    with pytest.raises(FileNotFoundError) as exc:
+        require_promoted_aero_dataset(dataset_root=dataset_root)
+
+    assert "Promoted curated dataset CSV not found" in str(exc.value)
+
+
+def test_require_promoted_aero_dataset_rejects_forced_promotion_by_default(tmp_path: Path) -> None:
+    dataset_root = tmp_path / "dataset_forced"
+    curated_csv = dataset_root / "curated_aero_dataset.csv"
+    _write_curated_csv(curated_csv)
+
+    _write_json(
+        dataset_root / "promotion_manifest.json",
+        {
+            "promotion_ready_at_time_of_promotion": False,
+            "promotion_forced": True,
+            "promotion_blockers": ["aero_qc_failed"],
+            "artifacts": {
+                "curated_aero_dataset_csv": str(curated_csv),
+            },
+        },
+    )
+
+    with pytest.raises(ValueError) as exc:
+        require_promoted_aero_dataset(dataset_root=dataset_root)
+
+    assert "force-promoted" in str(exc.value)
+
+
+def test_require_promoted_aero_dataset_can_allow_forced_promotion(tmp_path: Path) -> None:
+    dataset_root = tmp_path / "dataset_forced_allowed"
+    curated_csv = dataset_root / "curated_aero_dataset.csv"
+    _write_curated_csv(curated_csv)
+
+    _write_json(
+        dataset_root / "promotion_manifest.json",
+        {
+            "promotion_ready_at_time_of_promotion": False,
+            "promotion_forced": True,
+            "promotion_blockers": ["aero_qc_failed"],
+            "artifacts": {
+                "curated_aero_dataset_csv": str(curated_csv),
+            },
+        },
+    )
+
+    context = require_promoted_aero_dataset(
+        dataset_root=dataset_root,
+        allow_forced=True,
+    )
+
+    assert context["promotion_manifest"]["promotion_forced"] is True
+
+
+def test_load_promoted_aero_dataset_loads_dataframe(tmp_path: Path) -> None:
+    dataset_root = tmp_path / "dataset_load"
+    curated_csv = dataset_root / "curated_aero_dataset.csv"
+    _write_curated_csv(curated_csv)
+
+    _write_json(
+        dataset_root / "promotion_manifest.json",
+        {
+            "promotion_ready_at_time_of_promotion": True,
+            "promotion_forced": False,
+            "promotion_blockers": [],
+            "artifacts": {
+                "curated_aero_dataset_csv": str(curated_csv),
+            },
+        },
+    )
+
+    context = load_promoted_aero_dataset(dataset_root=dataset_root)
+
+    assert "dataframe" in context
+    assert len(context["dataframe"]) == 1
+    assert list(context["dataframe"].columns) == ["geometry_id", "cl", "cd", "cm", "promotion_ready"]
+===== FILE: ./tests/dataset/test_splitting.py =====
+from __future__ import annotations
+
+import pandas as pd
+import pytest
+
+from aeris.dataset.splitting import (
+    split_dataset,
+    split_dataset_grouped,
+    split_dataset_random,
+)
+
+
+def _build_grouped_df() -> pd.DataFrame:
+    rows = []
+    for geom_id in ["g1", "g2", "g3", "g4", "g5", "g6"]:
+        for alpha in [-2.0, 0.0, 4.0]:
+            rows.append(
+                {
+                    "geometry_id": geom_id,
+                    "alpha_deg": alpha,
+                    "cl": 0.1,
+                    "cd": 0.01,
+                    "cm": -0.02,
+                }
+            )
+    return pd.DataFrame(rows)
+
+
+def test_random_split_basic() -> None:
+    df = pd.DataFrame({"x": range(20), "y": range(20)})
+    split = split_dataset_random(df, random_seed=123)
+
+    assert len(split.train_df) > 0
+    assert len(split.val_df) > 0
+    assert len(split.test_df) > 0
+    assert len(split.train_df) + len(split.val_df) + len(split.test_df) == len(df)
+
+
+def test_grouped_split_prevents_geometry_leakage() -> None:
+    df = _build_grouped_df()
+    split = split_dataset_grouped(df, random_seed=123)
+
+    train_groups = set(split.train_df["geometry_id"].unique())
+    val_groups = set(split.val_df["geometry_id"].unique())
+    test_groups = set(split.test_df["geometry_id"].unique())
+
+    assert train_groups.isdisjoint(val_groups)
+    assert train_groups.isdisjoint(test_groups)
+    assert val_groups.isdisjoint(test_groups)
+
+
+def test_grouped_split_requires_group_column() -> None:
+    df = pd.DataFrame({"x": [1, 2, 3], "y": [4, 5, 6]})
+
+    with pytest.raises(ValueError, match="requires column 'geometry_id'"):
+        split_dataset_grouped(df)
+
+
+def test_grouped_split_requires_enough_groups() -> None:
+    df = pd.DataFrame(
+        {
+            "geometry_id": ["g1", "g1", "g2", "g2"],
+            "x": [1, 2, 3, 4],
+        }
+    )
+
+    with pytest.raises(ValueError, match="Need at least 3 unique groups"):
+        split_dataset_grouped(df)
+
+
+def test_split_dataset_dispatch_grouped() -> None:
+    df = _build_grouped_df()
+    split = split_dataset(df, method="grouped", random_seed=123)
+    assert split.method == "grouped"
+
+
+def test_split_dataset_dispatch_random() -> None:
+    df = pd.DataFrame({"x": range(12), "y": range(12)})
+    split = split_dataset(df, method="random", random_seed=123)
+    assert split.method == "random"
+===== FILE: ./tests/dataset/test_training_data.py =====
+from pathlib import Path
+import pandas as pd
+
+from aeris.dataset.training_data import load_training_data
+
+
+def test_training_data_basic(tmp_path):
+    dataset = tmp_path / "dataset"
+    dataset.mkdir()
+
+    # fake curated dataset
+    df = pd.DataFrame({
+        "geometry_id": ["g1", "g2"],
+        "alpha": [0.0, 2.0],
+        "CL": [0.1, 0.2],
+        "CD": [0.01, 0.02],
+    })
+
+    df.to_csv(dataset / "curated_aero_dataset.csv", index=False)
+
+    # fake promotion manifest
+    (dataset / "promotion_manifest.json").write_text("{}")
+
+    # monkeypatch gate
+    from aeris.dataset import training_data as td
+
+    def fake_gate(path, allow_forced=False):
+        return {"status": "promoted"}
+
+    td.require_promoted_aero_dataset = fake_gate
+
+    data = load_training_data(
+        dataset,
+        feature_columns=["alpha"],
+        target_columns=["CL"],
+    )
+
+    assert len(data.X) == 2
+    assert "alpha" in data.X.columns
+    assert "CL" in data.y.columns
+
+
+def test_missing_columns(tmp_path):
+    dataset = tmp_path / "dataset"
+    dataset.mkdir()
+
+    df = pd.DataFrame({"A": [1, 2]})
+    df.to_csv(dataset / "curated_aero_dataset.csv", index=False)
+
+    (dataset / "promotion_manifest.json").write_text("{}")
+
+    from aeris.dataset import training_data as td
+
+    td.require_promoted_aero_dataset = lambda *args, **kwargs: {}
+
+    try:
+        load_training_data(
+            dataset,
+            feature_columns=["missing"],
+            target_columns=["A"],
+        )
+    except ValueError:
+        assert True
+    else:
+        assert False
 ===== FILE: ./tests/dynamics/__init__.py =====
 
 ===== FILE: ./tests/dynamics/test_analysis.py =====
@@ -26321,6 +29224,185 @@ def test_promotion_strict_rejects_non_monotonic_taper_dataset(tmp_path: Path) ->
 
     strict_validator_ids = {check["validator_id"] for check in strict_report["checks"]}
     assert "geometry_chord_ratio_sanity_v1" in strict_validator_ids
+===== FILE: ./tests/integration/test_qc_workflow_summary_integration (Copy).py =====
+from __future__ import annotations
+
+import json
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+CONFIG_PATH = PROJECT_ROOT / "configs" / "geometry" / "baseline_bwb_25.yaml"
+DATASETS_ROOT = PROJECT_ROOT / "data" / "datasets"
+
+
+def _run_command(cmd: list[str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        cmd,
+        cwd=PROJECT_ROOT,
+        text=True,
+        capture_output=True,
+    )
+
+
+@pytest.mark.integration
+@pytest.mark.avl
+def test_production_qc_preset_is_recorded_in_final_run_summary() -> None:
+    dataset_name = "zz_it_qc_summary_production"
+    dataset_root = DATASETS_ROOT / dataset_name
+    geometry_root = DATASETS_ROOT / f"{dataset_name}__geometry"
+
+    for path in [dataset_root, geometry_root]:
+        if path.exists():
+            shutil.rmtree(path)
+
+    cmd = [
+        sys.executable,
+        "-m",
+        "aeris.cli",
+        "dataset",
+        "aero-generate",
+        "--config",
+        str(CONFIG_PATH),
+        "--n",
+        "2",
+        "--name",
+        dataset_name,
+        "--alpha-values",
+        "0,2",
+        "--velocity-values",
+        "28",
+        "--altitude-values",
+        "1500",
+        "--control-input-values",
+        "-5,0,5",
+        "--avl-command",
+        "avl",
+        "--qc-preset",
+        "production",
+        "--retain-aero-runs",
+        "none",
+    ]
+
+    result = _run_command(cmd)
+
+    assert result.returncode == 0, (
+        f"Command failed.\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
+    )
+
+    summary_path = dataset_root / "final_run_summary.json"
+    assert summary_path.exists(), f"Missing final_run_summary.json: {summary_path}"
+
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+
+    assert summary["qc_preset"] == "production"
+    assert summary["geometry_qc"]["run_qc"] is True
+    assert summary["geometry_qc"]["profile"] == "basic"
+    assert summary["geometry_qc"]["passed"] is True
+
+    assert summary["aero_qc"]["run_qc"] is True
+    assert summary["aero_qc"]["profile"] == "basic"
+    assert summary["aero_qc"]["passed"] is True
+
+    assert summary["fail_on_geometry_qc_error"] is True
+    assert summary["fail_on_aero_qc_error"] is True
+    assert summary["final_status"] == "success"
+    assert summary["exit_code"] == 0
+
+    geometry_qc_report = Path(summary["geometry_qc"]["report_path"])
+    aero_qc_report = Path(summary["aero_qc"]["report_path"])
+
+    assert geometry_qc_report.exists(), f"Missing geometry QC report: {geometry_qc_report}"
+    assert aero_qc_report.exists(), f"Missing aero QC report: {aero_qc_report}"
+
+    geometry_report = json.loads(geometry_qc_report.read_text(encoding="utf-8"))
+    aero_report = json.loads(aero_qc_report.read_text(encoding="utf-8"))
+
+    assert geometry_report["passed"] is True
+    assert aero_report["passed"] is True
+
+
+@pytest.mark.integration
+@pytest.mark.avl
+def test_promotion_strict_qc_preset_is_recorded_in_final_run_summary() -> None:
+    dataset_name = "zz_it_qc_summary_strict"
+    dataset_root = DATASETS_ROOT / dataset_name
+    geometry_root = DATASETS_ROOT / f"{dataset_name}__geometry"
+
+    for path in [dataset_root, geometry_root]:
+        if path.exists():
+            shutil.rmtree(path)
+
+    cmd = [
+        sys.executable,
+        "-m",
+        "aeris.cli",
+        "dataset",
+        "aero-generate",
+        "--config",
+        str(CONFIG_PATH),
+        "--n",
+        "2",
+        "--name",
+        dataset_name,
+        "--alpha-values",
+        "0,2",
+        "--velocity-values",
+        "28",
+        "--altitude-values",
+        "1500",
+        "--control-input-values",
+        "-5,0,5",
+        "--avl-command",
+        "avl",
+        "--qc-preset",
+        "promotion_strict",
+        "--retain-aero-runs",
+        "none",
+    ]
+
+    result = _run_command(cmd)
+
+    assert result.returncode == 0, (
+        f"Command failed.\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
+    )
+
+    summary_path = dataset_root / "final_run_summary.json"
+    assert summary_path.exists(), f"Missing final_run_summary.json: {summary_path}"
+
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+
+    assert summary["qc_preset"] == "promotion_strict"
+
+    assert summary["geometry_qc"]["run_qc"] is True
+    assert summary["geometry_qc"]["profile"] == "strict"
+    assert summary["geometry_qc"]["passed"] is True
+
+    assert summary["aero_qc"]["run_qc"] is True
+    assert summary["aero_qc"]["profile"] == "strict"
+    assert summary["aero_qc"]["passed"] is True
+
+    assert summary["fail_on_geometry_qc_error"] is True
+    assert summary["fail_on_aero_qc_error"] is True
+    assert summary["final_status"] == "success"
+    assert summary["exit_code"] == 0
+
+    geometry_qc_report = Path(summary["geometry_qc"]["report_path"])
+    aero_qc_report = Path(summary["aero_qc"]["report_path"])
+
+    assert geometry_qc_report.exists(), f"Missing geometry QC report: {geometry_qc_report}"
+    assert aero_qc_report.exists(), f"Missing aero QC report: {aero_qc_report}"
+
+    geometry_report = json.loads(geometry_qc_report.read_text(encoding="utf-8"))
+    aero_report = json.loads(aero_qc_report.read_text(encoding="utf-8"))
+
+    assert geometry_report["passed"] is True
+    assert aero_report["passed"] is True
 ===== FILE: ./tests/integration/test_qc_workflow_summary_integration.py =====
 from __future__ import annotations
 
@@ -27219,6 +30301,341 @@ So the right engineering statement is:
 “AERIS is test-backed and workflow-validated at small scale, with medium/large operational validation still required before claiming production maturity.”
 
 End of document.
+
+===== FILE: ./tests/ml/test_compare.py =====
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pandas as pd
+
+from aeris.ml.compare import compare_models
+
+
+def _build_dataset(tmp_path: Path) -> Path:
+    dataset_root = tmp_path / "ml_dataset"
+    dataset_root.mkdir(parents=True, exist_ok=True)
+
+    rows = []
+    for geom_idx, geom_id in enumerate(["g1", "g2", "g3", "g4", "g5", "g6"]):
+        for alpha in [-2.0, 0.0, 4.0]:
+            rows.append(
+                {
+                    "geometry_id": geom_id,
+                    "c1_m": 1.5 + 0.01 * geom_idx,
+                    "b_total_m": 1.6 + 0.01 * geom_idx,
+                    "sw1_deg": 40.0,
+                    "alpha_deg": alpha,
+                    "velocity_mps": 28.0,
+                    "altitude_m": 1500.0,
+                    "control_input_deg": 0.0,
+                    "cl": 0.1 * alpha + 0.01 * geom_idx,
+                    "cd": 0.02 + 0.001 * (alpha ** 2) + 0.0001 * geom_idx,
+                    "cm": -0.05 * alpha + 0.005 * geom_idx,
+                }
+            )
+
+    pd.DataFrame(rows).to_csv(dataset_root / "curated_aero_dataset.csv", index=False)
+    (dataset_root / "rejected_aero_rows.csv").write_text("", encoding="utf-8")
+
+    promotion_manifest = {
+        "dataset_root": str(dataset_root),
+        "promotion_forced": False,
+        "promotion_ready_at_time_of_promotion": True,
+        "promotion_blockers": [],
+        "qc_context": {
+            "qc_preset_used": "production",
+            "geometry_qc_passed": True,
+            "aero_qc_passed": True,
+        },
+        "artifacts": {
+            "curated_aero_dataset_csv": str(dataset_root / "curated_aero_dataset.csv"),
+            "rejected_aero_rows_csv": str(dataset_root / "rejected_aero_rows.csv"),
+        },
+    }
+    (dataset_root / "promotion_manifest.json").write_text(
+        json.dumps(promotion_manifest, indent=2),
+        encoding="utf-8",
+    )
+
+    return dataset_root
+
+
+def test_compare_models_writes_comparison_and_shared_split_artifacts(tmp_path: Path) -> None:
+    dataset_root = _build_dataset(tmp_path)
+    output_dir = tmp_path / "compare_run"
+
+    result = compare_models(
+        dataset_path=dataset_root,
+        feature_columns=[
+            "c1_m",
+            "b_total_m",
+            "sw1_deg",
+            "alpha_deg",
+            "velocity_mps",
+            "altitude_m",
+            "control_input_deg",
+        ],
+        target_columns=["cl", "cd", "cm"],
+        model_types=["linear_regression", "random_forest"],
+        split_method="grouped",
+        random_seed=123,
+        output_dir=output_dir,
+    )
+
+    assert output_dir.exists()
+    assert (output_dir / "comparison_summary.json").exists()
+    assert (output_dir / "comparison_summary.csv").exists()
+
+    summary = result["summary"]
+    assert summary["model_types"] == ["linear_regression", "random_forest"]
+    assert len(summary["model_runs"]) == 2
+
+    runs_by_model = {run["model_type"]: run for run in summary["model_runs"]}
+    assert "linear_regression" in runs_by_model
+    assert "random_forest" in runs_by_model
+
+    lr_run = runs_by_model["linear_regression"]
+    rf_run = runs_by_model["random_forest"]
+
+    assert lr_run["split"]["train_hash"] == rf_run["split"]["train_hash"]
+    assert lr_run["split"]["val_hash"] == rf_run["split"]["val_hash"]
+    assert lr_run["split"]["test_hash"] == rf_run["split"]["test_hash"]
+
+    lr_dir = output_dir / "runs" / "linear_regression"
+    rf_dir = output_dir / "runs" / "random_forest"
+
+    for path in [
+        lr_dir / "metrics.json",
+        lr_dir / "train_config.json",
+        lr_dir / "train_rows.csv",
+        lr_dir / "val_rows.csv",
+        lr_dir / "test_rows.csv",
+        lr_dir / "coefficients.json",
+        lr_dir / "models" / "model.pkl",
+        rf_dir / "metrics.json",
+        rf_dir / "train_config.json",
+        rf_dir / "train_rows.csv",
+        rf_dir / "val_rows.csv",
+        rf_dir / "test_rows.csv",
+        rf_dir / "feature_importances.json",
+        rf_dir / "models" / "model.pkl",
+    ]:
+        assert path.exists(), f"Missing expected artifact: {path}"
+
+    lr_train = pd.read_csv(lr_dir / "train_rows.csv")
+    lr_val = pd.read_csv(lr_dir / "val_rows.csv")
+    lr_test = pd.read_csv(lr_dir / "test_rows.csv")
+
+    train_groups = set(lr_train["geometry_id"].unique())
+    val_groups = set(lr_val["geometry_id"].unique())
+    test_groups = set(lr_test["geometry_id"].unique())
+
+    assert train_groups.isdisjoint(val_groups)
+    assert train_groups.isdisjoint(test_groups)
+    assert val_groups.isdisjoint(test_groups)
+
+
+def test_compare_models_json_summary_contains_both_models(tmp_path: Path) -> None:
+    dataset_root = _build_dataset(tmp_path)
+    output_dir = tmp_path / "compare_json"
+
+    compare_models(
+        dataset_path=dataset_root,
+        feature_columns=[
+            "c1_m",
+            "b_total_m",
+            "sw1_deg",
+            "alpha_deg",
+            "velocity_mps",
+            "altitude_m",
+            "control_input_deg",
+        ],
+        target_columns=["cl", "cd", "cm"],
+        model_types=["linear_regression", "random_forest"],
+        split_method="grouped",
+        random_seed=123,
+        output_dir=output_dir,
+    )
+
+    payload = json.loads((output_dir / "comparison_summary.json").read_text(encoding="utf-8"))
+    model_types = [run["model_type"] for run in payload["model_runs"]]
+
+    assert model_types == ["linear_regression", "random_forest"]
+    assert payload["shared_split_hashes"]["train_hash"]
+    assert payload["shared_split_hashes"]["val_hash"]
+    assert payload["shared_split_hashes"]["test_hash"]
+===== FILE: ./tests/ml/test_model_registry.py =====
+from aeris.ml.model_registry import build_model, get_model_spec, list_model_types
+
+
+def test_registry_lists_expected_models():
+    assert list_model_types() == [
+        "gradient_boosting",
+        "linear_regression",
+        "random_forest",
+    ]
+
+
+def test_build_linear_regression():
+    model = build_model("linear_regression", random_seed=123)
+    assert model.__class__.__name__ == "LinearRegression"
+
+
+def test_build_random_forest():
+    model = build_model("random_forest", random_seed=123)
+    assert model.__class__.__name__ == "RandomForestRegressor"
+
+
+def test_build_gradient_boosting():
+    model = build_model("gradient_boosting", random_seed=123)
+    assert model.__class__.__name__ == "MultiOutputRegressor"
+
+
+def test_registry_metadata_for_gradient_boosting():
+    spec = get_model_spec("gradient_boosting")
+    assert spec.family_name == "tree_boosting"
+    assert spec.explainability_artifact_type == "feature_importances"
+    assert spec.wrapped_per_target is True
+===== FILE: ./tests/ml/test_train.py =====
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pandas as pd
+
+from aeris.ml.train import train_baseline_model
+
+
+def _build_dataset(tmp_path: Path) -> Path:
+    dataset_root = tmp_path / "ml_dataset"
+    dataset_root.mkdir(parents=True, exist_ok=True)
+
+    rows = []
+    for geom_idx, geom_id in enumerate(["g1", "g2", "g3", "g4", "g5", "g6"]):
+        for alpha in [-2.0, 0.0, 4.0]:
+            rows.append(
+                {
+                    "geometry_id": geom_id,
+                    "c1_m": 1.5 + 0.01 * geom_idx,
+                    "b_total_m": 1.6 + 0.01 * geom_idx,
+                    "sw1_deg": 40.0,
+                    "alpha_deg": alpha,
+                    "velocity_mps": 28.0,
+                    "altitude_m": 1500.0,
+                    "control_input_deg": 0.0,
+                    "cl": 0.1 * alpha + 0.01 * geom_idx,
+                    "cd": 0.02 + 0.001 * (alpha ** 2) + 0.0001 * geom_idx,
+                    "cm": -0.05 * alpha + 0.005 * geom_idx,
+                }
+            )
+
+    df = pd.DataFrame(rows)
+    df.to_csv(dataset_root / "curated_aero_dataset.csv", index=False)
+
+    # Optional but cleaner: create the file referenced by the manifest
+    (dataset_root / "rejected_aero_rows.csv").write_text("", encoding="utf-8")
+
+    promotion_manifest = {
+        "dataset_root": str(dataset_root),
+        "promotion_forced": False,
+        "promotion_ready_at_time_of_promotion": True,
+        "promotion_blockers": [],
+        "qc_context": {
+            "qc_preset_used": "production",
+            "geometry_qc_passed": True,
+            "aero_qc_passed": True,
+        },
+        "artifacts": {
+            "curated_aero_dataset_csv": str(
+                dataset_root / "curated_aero_dataset.csv"
+            ),
+            "rejected_aero_rows_csv": str(
+                dataset_root / "rejected_aero_rows.csv"
+            ),
+        },
+    }
+
+    (dataset_root / "promotion_manifest.json").write_text(
+        json.dumps(promotion_manifest, indent=2),
+        encoding="utf-8",
+    )
+
+    return dataset_root
+
+
+def test_train_linear_regression_grouped(tmp_path: Path) -> None:
+    dataset_root = _build_dataset(tmp_path)
+    output_dir = tmp_path / "linear_run"
+
+    result = train_baseline_model(
+        dataset_path=dataset_root,
+        feature_columns=[
+            "c1_m",
+            "b_total_m",
+            "sw1_deg",
+            "alpha_deg",
+            "velocity_mps",
+            "altitude_m",
+            "control_input_deg",
+        ],
+        target_columns=["cl", "cd", "cm"],
+        model_type="linear_regression",
+        split_method="grouped",
+        random_seed=123,
+        output_dir=output_dir,
+    )
+
+    assert output_dir.exists()
+    assert (output_dir / "metrics.json").exists()
+    assert (output_dir / "train_config.json").exists()
+    assert (output_dir / "models" / "model.pkl").exists()
+
+    split = result["split"]
+    train_groups = set(split.train_df["geometry_id"].unique())
+    val_groups = set(split.val_df["geometry_id"].unique())
+    test_groups = set(split.test_df["geometry_id"].unique())
+
+    assert train_groups.isdisjoint(val_groups)
+    assert train_groups.isdisjoint(test_groups)
+    assert val_groups.isdisjoint(test_groups)
+
+
+def test_train_random_forest_random_split(tmp_path: Path) -> None:
+    dataset_root = _build_dataset(tmp_path)
+    output_dir = tmp_path / "rf_run"
+
+    result = train_baseline_model(
+        dataset_path=dataset_root,
+        feature_columns=[
+            "c1_m",
+            "b_total_m",
+            "sw1_deg",
+            "alpha_deg",
+            "velocity_mps",
+            "altitude_m",
+            "control_input_deg",
+        ],
+        target_columns=["cl", "cd", "cm"],
+        model_type="random_forest",
+        split_method="random",
+        random_seed=123,
+        output_dir=output_dir,
+    )
+
+    assert output_dir.exists()
+    assert (output_dir / "metrics.json").exists()
+    assert (output_dir / "train_config.json").exists()
+    assert (output_dir / "models" / "model.pkl").exists()
+
+    metrics = result["metrics"]
+    assert "train" in metrics
+    assert "val" in metrics
+    assert "test" in metrics
+    assert "overall" in metrics["test"]
+
 
 ===== FILE: ./tests/pipeline/test_geometry_run.py =====
 """Tests for single-case geometry pipeline orchestration."""

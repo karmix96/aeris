@@ -23,6 +23,11 @@ from .sweep_io import (
 from aeris.aero.solvers.aerosandbox_avl import _write_aero_result_json
 
 def _should_retry_with_finer_paneling(result: Any) -> tuple[bool, str | None]:
+    if getattr(result, "status", None) is not None:
+        status_value = getattr(result.status, "value", str(result.status))
+        if status_value == "invalid_input":
+            return False, None
+
     cd = getattr(result, "cd", None)
     ld = getattr(result, "l_over_d", None)
 

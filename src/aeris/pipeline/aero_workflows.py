@@ -170,8 +170,10 @@ def to_jsonable(value: Any) -> Any:
     return str(value)
 
 def _should_retry_with_finer_paneling(result: Any) -> tuple[bool, str | None]:
-    if not result.is_success():
-        return True, f"status={result.status.value}"
+    if getattr(result, "status", None) is not None:
+        status_value = getattr(result.status, "value", str(result.status))
+        if status_value == "invalid_input":
+            return False, None
 
     cd = getattr(result, "cd", None)
     ld = getattr(result, "l_over_d", None)
@@ -186,6 +188,9 @@ def _should_retry_with_finer_paneling(result: Any) -> tuple[bool, str | None]:
 
     if ld is None:
         return True, "missing_l_over_d"
+
+    if not result.is_success():
+        return True, f"status={result.status.value}"
 
     return False, None
 

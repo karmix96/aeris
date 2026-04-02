@@ -20,7 +20,49 @@ from .sweep_io import (
     make_flight_condition_case_label,
     write_aero_sweep_manifest,
 )
+from aeris.aero.solvers.aerosandbox_avl import _write_aero_result_json
 
+def _should_retry_with_finer_paneling(result: Any) -> tuple[bool, str | None]:
+    cd = getattr(result, "cd", None)
+    ld = getattr(result, "l_over_d", None)
+
+    try:
+        if cd is None:
+            return True, "missing_cd"
+        if float(cd) <= 0.0:
+            return True, f"non_positive_cd:{cd}"
+    except Exception:
+        return True, "invalid_cd"
+
+    if ld is None:
+        return True, "missing_l_over_d"
+
+    if not result.is_success():
+        return True, f"status={result.status.value}"
+
+    return False, None
+
+
+def _inject_retry_metadata(
+    final_result: Any,
+    *,
+    used: bool,
+    reason: str | None,
+    initial_paneling: dict[str, Any],
+    fallback_paneling: dict[str, Any] | None,
+    initial_result: Any,
+) -> None:
+    meta = final_result.solver_metadata or {}
+    meta["fallback_retry"] = {
+        "used": used,
+        "reason": reason,
+        "initial_paneling": initial_paneling,
+        "fallback_paneling": fallback_paneling,
+        "initial_status": initial_result.status.value,
+        "initial_cd": initial_result.cd,
+        "initial_l_over_d": initial_result.l_over_d,
+    }
+    final_result.solver_metadata = meta
 
 def run_aero_sweep(
     *,
@@ -92,7 +134,75 @@ def run_aero_sweep(
             },
         )
 
+        initial_paneling = dict(case_settings.solver_options.get("paneling", {}) or {})
+
         result = solver.run_case(aero_input=aero_input, output_dir=case_dir)
+
+        should_retry, retry_reason = _should_retry_with_finer_paneling(result)
+
+        if should_retry:
+            retry_settings = replace(
+                case_settings,
+                solver_options={
+                    **case_settings.solver_options,
+                    "paneling": {
+                        "spanwise_resolution": 8,
+                        "chordwise_resolution": 12,
+                        "spanwise_spacing": initial_paneling.get("spanwise_spacing", "equal"),
+                        "chordwise_spacing": initial_paneling.get("chordwise_spacing", "cosine"),
+                    },
+                    "control_input_deg": control_input_deg,
+                },
+            )
+
+            retry_input = AeroInput(
+                geometry=geometry,
+                flight_condition=fc,
+                settings=retry_settings,
+                case_id=case_label,
+                provenance={
+                    **provenance,
+                    "solver": solver_id,
+                    "sweep_case_index": idx,
+                    "sweep_case_label": case_label,
+                    "control_input_deg": control_input_deg,
+                },
+            )
+
+            retry_result = solver.run_case(aero_input=retry_input, output_dir=case_dir)
+            retry_bad, _ = _should_retry_with_finer_paneling(retry_result)
+
+            if not retry_bad:
+                _inject_retry_metadata(
+                    retry_result,
+                    used=True,
+                    reason=retry_reason,
+                    initial_paneling=initial_paneling,
+                    fallback_paneling=retry_settings.solver_options["paneling"],
+                    initial_result=result,
+                )
+                result = retry_result
+            else:
+                _inject_retry_metadata(
+                    result,
+                    used=True,
+                    reason=retry_reason,
+                    initial_paneling=initial_paneling,
+                    fallback_paneling=retry_settings.solver_options["paneling"],
+                    initial_result=result,
+                )
+        else:
+            _inject_retry_metadata(
+                result,
+                used=False,
+                reason=None,
+                initial_paneling=initial_paneling,
+                fallback_paneling=None,
+                initial_result=result,
+            )
+
+        result.artifact_paths["aero_result_json"] = str(case_dir / "aero_result.json")
+        _write_aero_result_json(result, case_dir)
 
         record = {
             "case_index": idx,

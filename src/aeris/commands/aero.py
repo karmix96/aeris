@@ -31,6 +31,14 @@ aero_app = typer.Typer(help="Aerodynamic analysis commands.")
 
 _ALLOWED_SPACING = {"equal", "cosine"}
 
+# CLI design note:
+# The current aero command exposes AVL-oriented options because the only
+# operational solver is aerosandbox_avl. This is acceptable for the current
+# implementation, but future CFD/VLM solvers should move toward config-driven
+# solver option blocks or generic --solver-option handling.
+#
+# Do not keep adding solver-specific flags here forever
+
 
 def _print_aero_result(result: Any) -> None:
     typer.echo(f"[AERIS] Solver status: {result.status.value}")

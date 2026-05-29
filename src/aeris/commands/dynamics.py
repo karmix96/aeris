@@ -1,15 +1,19 @@
 """
-CLI commands for dynamics-foundation utilities.
+CLI commands for AERIS dynamics-foundation workflows.
 
 Responsibilities:
-    - Build dynamics foundation artifacts from aero outputs and mass inputs
-    - Run CG sweep studies
-    - Estimate longitudinal trim
+    - Build mass/CG/static-margin foundation artifacts from aero runs
     - Inspect saved dynamics artifacts
+    - Run CG sweep diagnostics
+    - Run first-order trim diagnostics
 
 Notes:
-    - This module is orchestration-focused
-    - Mass-property resolution is centralized to avoid duplicated CLI logic
+    - This module must remain a thin CLI/reporting layer.
+    - Mass-property parsing, static-margin logic, CG sweep logic, and trim
+      calculations belong in aeris.dynamics.*.
+    - Current trim is a first-order, longitudinal, control-fixed diagnostic.
+      It is not a full nonlinear trim solver and does not yet solve control
+      surface deflections.
 """
 
 from __future__ import annotations
@@ -55,8 +59,20 @@ def _resolve_mass_inputs(
     return {
         "mass_kg": mass_kg if mass_kg is not None else (cfg.mass_kg if cfg else None),
         "x_cg_m": x_cg_m if x_cg_m is not None else (cfg.x_cg_m if cfg else None),
-        "y_cg_m": y_cg_m if y_cg_m is not None else (cfg.y_cg_m if cfg else 0.0),
-        "z_cg_m": z_cg_m if z_cg_m is not None else (cfg.z_cg_m if cfg else 0.0),
+        # Lateral/vertical CG default convention:
+        # If not provided by CLI or mass config, default to 0.0 in the current
+        # aircraft geometry frame. This keeps behavior consistent whether or not
+        # a mass config file is supplied.
+        "y_cg_m": (
+            y_cg_m
+            if y_cg_m is not None
+            else (cfg.y_cg_m if cfg and cfg.y_cg_m is not None else 0.0)
+        ),
+        "z_cg_m": (
+            z_cg_m
+            if z_cg_m is not None
+            else (cfg.z_cg_m if cfg and cfg.z_cg_m is not None else 0.0)
+        ),
         "ixx_kg_m2": ixx_kg_m2 if ixx_kg_m2 is not None else (cfg.ixx_kg_m2 if cfg else None),
         "iyy_kg_m2": iyy_kg_m2 if iyy_kg_m2 is not None else (cfg.iyy_kg_m2 if cfg else None),
         "izz_kg_m2": izz_kg_m2 if izz_kg_m2 is not None else (cfg.izz_kg_m2 if cfg else None),

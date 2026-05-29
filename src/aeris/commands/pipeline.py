@@ -1,12 +1,15 @@
 """
-Version command registration for the AERIS CLI.
+Pipeline command registration for the AERIS CLI.
 
 Responsibilities:
-    - Expose the version subcommand
-    - Report installed package version metadata
+    - Expose lightweight pipeline-level workflow commands
+    - Run smoke checks through pipeline helpers
+    - Return pipeline exit codes cleanly to the shell
 
 Notes:
-    - Keep version reporting independent from domain command groups
+    - This module must remain a thin CLI wrapper.
+    - Real workflow logic belongs in aeris.pipeline.*.
+    - Smoke workflows are sanity checks, not full production campaigns.
 """
 
 from __future__ import annotations
@@ -40,6 +43,11 @@ def pipeline_smoke(
         help="Path to the YAML config file.",
     ),
 ) -> None:
-    """Run the minimal smoke pipeline."""
+    """
+    Run the minimal smoke pipeline.
+
+    Use this to check that the basic AERIS execution spine still works.
+    It is not a full geometry/aero/dataset/ML validation campaign.
+    """
     exit_code = run_smoke_pipeline(config)
     raise typer.Exit(code=exit_code)

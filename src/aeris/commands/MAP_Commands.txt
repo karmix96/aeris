@@ -1,37 +1,191 @@
 COMMANDS FOLDER — CLI LAYER
+===========================
 
 Purpose:
-User interface of AERIS. Converts CLI commands into pipeline execution.
+--------
+User interface of AERIS.
 
-Key Responsibilities:
-- Parse CLI input
-- Validate arguments
-- Call pipelines/services
+The commands folder converts terminal commands into calls to the correct
+pipeline/service layer.
 
-Key Modules:
-- geometry.py
-- dataset.py
-- aero.py
-- dynamics.py
-- pipeline.py
-- version.py
+It is the cockpit control panel, not the engine.
+
+Core Rule:
+----------
+Commands must stay thin.
+
+They may:
+- parse CLI input
+- define options and help text
+- perform light CLI-level validation
+- call pipelines/services
+- print concise operator output
+
+They must NOT:
+- implement geometry mathematics
+- implement aero solver logic
+- implement dataset curation logic
+- implement ML training logic
+- write complex manifests directly
+- duplicate pipeline/domain behavior
 
 Workflow:
-CLI → commands → pipeline/services
+---------
+CLI
+  ↓
+commands/*
+  ↓
+pipeline/services
+  ↓
+domain/framework/implementation modules
+  ↓
+artifacts + manifests + logs
+
+
+Current Command Modules:
+------------------------
+
+__init__.py
+    Marks this folder as the command package.
+
+version.py
+    Exposes:
+        aeris version
+
+    Purpose:
+        Show installed AERIS package version.
+
+geometry.py
+    Exposes:
+        aeris geometry generate
+        aeris geometry visualize
+
+    Purpose:
+        Generate or visualize one geometry case.
+        Production logic belongs in geometry pipeline/helpers.
+
+dataset.py
+    Exposes dataset-level workflows such as:
+        aeris dataset generate
+        aeris dataset inspect
+        aeris dataset aero-generate
+        aeris dataset qc
+        aeris dataset aero-qc
+        aeris dataset curate-aero
+        aeris dataset promote-aero
+        aeris dataset training-data
+
+    Purpose:
+        Dataset generation, inspection, QC, curation, promotion,
+        and training-data preparation entry points.
+
+aero.py
+    Exposes:
+        aeris aero run
+        aeris aero inspect
+        aeris aero sweep
+        aeris aero sweep-inspect
+        aeris aero sweep-case-inspect
+
+    Purpose:
+        Single-case aero evaluation, aero sweeps, and saved-result inspection.
+
+dynamics.py
+    Exposes:
+        aeris dynamics build
+        aeris dynamics inspect
+        aeris dynamics cg-sweep
+        aeris dynamics cg-sweep-inspect
+        aeris dynamics trim
+        aeris dynamics trim-inspect
+
+    Purpose:
+        Mass/CG/static-margin/first-order trim foundation workflows.
+        Current trim is diagnostic, not full nonlinear control-surface trim.
+
+ml.py
+    Exposes:
+        aeris ml train
+        aeris ml compare
+        aeris ml predict
+
+    Purpose:
+        Train, compare, and use baseline surrogate models from promoted
+        aero datasets.
+
+pipeline.py
+    Exposes:
+        aeris pipeline smoke
+
+    Purpose:
+        Minimal sanity workflows. Not a full validation campaign.
+
 
 CLI Cheat Sheet:
-aeris version
-aeris geometry generate --config <file>
-aeris dataset generate --config <file>
-aeris dataset inspect --dataset <path>
-aeris aero run
-aeris dynamics
+----------------
 
-Key Principles:
-- Commands must stay thin
-- No business logic here
+General:
+    aeris --help
+    aeris version
 
-TODO:
-- list-generators / solvers commands
-- config validation command
-- unified JSON output
+Geometry:
+    aeris geometry generate -c configs/geometry/baseline_bwb.yaml
+    aeris geometry generate -c configs/geometry/wing_bwb.yaml
+    aeris geometry visualize -c configs/geometry/baseline_bwb.yaml
+
+Dataset:
+    aeris dataset generate -c configs/geometry/wing_bwb.yaml --n 20 --sampler lhs_v1 --sampler-seed 123
+    aeris dataset generate -c configs/geometry/wing_bwb.yaml --n 500 --sampler lhs_v1 --sampler-seed 123 --no-save-plot
+    aeris dataset inspect --dataset <dataset_root>
+
+Aero:
+    aeris aero run --config configs/geometry/baseline_bwb_25.yaml --alpha 4 --velocity 28 --altitude 1500 --avl-command avl
+    aeris aero inspect --run-dir <aero_run_dir>
+    aeris aero sweep --config configs/geometry/baseline_bwb_25.yaml --alpha-values 0,2,4 --velocity 28 --altitude 1500 --avl-command avl
+    aeris aero sweep-inspect --sweep-dir <sweep_dir>
+    aeris aero sweep-case-inspect --sweep-dir <sweep_dir> --case-label <case_label>
+
+Dynamics:
+    aeris dynamics build --run-dir <aero_run_dir> --mass-config configs/mass/baseline_uav.yaml
+    aeris dynamics inspect --run-dir <aero_run_dir>
+    aeris dynamics cg-sweep --run-dir <aero_run_dir> --mass-config configs/mass/baseline_uav.yaml
+    aeris dynamics trim --run-dir <aero_run_dir>
+
+ML:
+    aeris ml train --dataset <promoted_dataset_root> --features <cols> --targets cl,cd,cm --model-type gradient_boosting
+    aeris ml compare --dataset <promoted_dataset_root> --features <cols> --targets cl,cd,cm --models linear_regression,random_forest,gradient_boosting
+    aeris ml predict --model-run-dir <ml_run_dir> --input-csv <input.csv>
+
+Pipeline:
+    aeris pipeline smoke -c configs/smoke/dev.yaml
+
+
+Future Command Additions:
+-------------------------
+
+Useful but not urgent:
+
+1. Registry/listing commands
+    aeris geometry list-generators
+    aeris dataset list-samplers
+    aeris aero list-solvers
+    aeris ml list-models
+
+2. Config validation commands
+    aeris config validate -c <config.yaml>
+
+3. Run inspection commands
+    aeris run inspect --run-dir <run_dir>
+
+4. Structured output mode
+    --json
+
+5. More config-driven solver options
+    Avoid letting aero.py become an 80-option AVL/SU2/OpenFOAM monster.
+
+
+Bottom Line:
+------------
+This folder should remain boring.
+
+If commands become clever, AERIS becomes script spaghetti again.

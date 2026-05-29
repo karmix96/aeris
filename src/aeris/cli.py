@@ -6,19 +6,21 @@ from aeris.commands.aero import aero_app
 from aeris.commands.dataset import dataset_app
 from aeris.commands.dynamics import dynamics_app
 from aeris.commands.geometry import geometry_app
+from aeris.commands.ml import ml_app
 from aeris.commands.pipeline import pipeline_app
 from aeris.commands.version import version_app
-from aeris.commands.ml import ml_app
 
 app = typer.Typer(
     help=(
         "AERIS command-line interface.\n\n"
         "Mental model:\n"
-        "- geometry = generate one geometry\n"
-        "- dataset = generate or inspect datasets\n"
+        "- geometry = generate or visualize one geometry\n"
+        "- dataset = generate, inspect, QC, curate, and promote datasets\n"
         "- aero = run or inspect aerodynamic cases and sweeps\n"
+        "- dynamics = mass / CG / trim / dynamics-foundation workflows\n"
+        "- ml = train, compare, and predict using promoted aero datasets\n"
         "- pipeline = minimal smoke workflows\n"
-        "- dynamics = mass / trim / dynamics workflows\n\n"
+        "- version = show installed package version\n\n"
         "Use 'aeris <group> --help' for domain-specific options."
     )
 )

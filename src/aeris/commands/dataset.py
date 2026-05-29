@@ -1,17 +1,22 @@
 """
-CLI commands for dataset generation, inspection, and unified aero-dataset workflows.
+CLI commands for AERIS dataset workflows.
 
 Responsibilities:
-    - Expose dataset-related user commands
-    - Validate basic CLI arguments
-    - Delegate geometry-dataset and aero-dataset orchestration to workflow code
-    - Provide operator-facing help that reflects current QC preset behavior
+    - Generate geometry datasets
+    - Generate unified aero datasets
+    - Inspect dataset structure and summaries
+    - Run dataset QC
+    - Curate aero datasets
+    - Promote trusted aero datasets
+    - Expose training-data preparation helpers
 
 Notes:
-    - This module must remain thin
-    - No sampling, geometry, or aero business logic should live here
-    - The unified aero-dataset workflow writes structured manifests, QC reports,
-      and final_run_summary.json
+    - This module must remain a thin CLI/reporting layer.
+    - Geometry generation belongs to geometry generators/pipelines.
+    - Aero solving belongs to aero solvers/pipelines.
+    - QC, curation, promotion, and training-data preparation belong in
+      aeris.dataset.* modules.
+    - ML should consume promoted datasets, not raw or merely curated outputs.
 """
 
 from __future__ import annotations
@@ -21,16 +26,21 @@ from pathlib import Path
 
 import typer
 
-from aeris.dataset.inspect import inspect_dataset
-from aeris.dataset.dataset_run import run_dataset_generation
+from aeris.dataset.aero_dataset_run import run_aero_dataset_generation
 from aeris.dataset.curate_aero import curate_aero_dataset
-from aeris.quality.presets import list_qc_presets, resolve_qc_preset
+from aeris.dataset.dataset_run import run_dataset_generation
+from aeris.dataset.inspect import inspect_dataset
 from aeris.dataset.promote_aero import promote_aero_dataset
 from aeris.dataset.promoted_dataset import require_promoted_aero_dataset
-from aeris.dataset.aero_dataset_run import run_aero_dataset_generation
-from aeris.dataset.training_data import load_training_data
 from aeris.dataset.splitting import split_dataset
-# keep your existing unified aero-dataset imports here
+from aeris.dataset.training_data import load_training_data
+from aeris.quality.pipeline_api import (
+    run_aero_dataset_qc,
+    run_geometry_dataset_qc,
+)
+from aeris.quality.presets import list_qc_presets, resolve_qc_preset
+
+
 
 dataset_app = typer.Typer(
     help=(
@@ -42,6 +52,13 @@ dataset_app = typer.Typer(
     )
 )
 
+def _fail_command(command_name: str, exc: Exception) -> None:
+    typer.secho(
+        f"[AERIS] {command_name} failed: {exc}",
+        err=True,
+        fg=typer.colors.RED,
+    )
+    raise typer.Exit(code=1)
 
 def _echo_resolved_qc_configuration(
     *,
@@ -154,7 +171,16 @@ def _print_promoted_dataset_context(context: dict) -> None:
 
 @dataset_app.command("qc")
 def dataset_qc(
-    dataset: Path = typer.Option(..., "--dataset"),
+    dataset: Path = typer.Option(
+    ...,
+    "--dataset",
+    exists=True,
+    file_okay=False,
+    dir_okay=True,
+    readable=True,
+    resolve_path=True,
+    help="Path to an existing geometry dataset root.",
+    ),
     profile: str = typer.Option("basic", "--profile"),
 ) -> None:
     """Run geometry dataset QC on an existing dataset."""
@@ -196,7 +222,7 @@ def dataset_promote_aero(
             force=force,
         )
     except Exception as exc:
-        raise typer.BadParameter(str(exc))
+        _fail_command("Dataset command", exc)
 
     if as_json:
         typer.echo(json.dumps(manifest, indent=2))
@@ -212,7 +238,16 @@ def dataset_promote_aero(
 
 @dataset_app.command("aero-qc")
 def dataset_aero_qc(
-    dataset: Path = typer.Option(..., "--dataset"),
+    dataset: Path = typer.Option(
+    ...,
+    "--dataset",
+    exists=True,
+    file_okay=False,
+    dir_okay=True,
+    readable=True,
+    resolve_path=True,
+    help="Path to an existing aero dataset root.",
+    ),
     profile: str = typer.Option("basic", "--profile"),
 ) -> None:
     """Run aero dataset QC on an existing dataset."""
@@ -741,7 +776,12 @@ def dataset_require_promoted_aero(
     allow_forced: bool = typer.Option(
         False,
         "--allow-forced",
-        help="Allow use of a force-promoted dataset.",
+        help=(
+    "Allow use of a force-promoted dataset. "
+    "Use only when a dataset was explicitly promoted despite known blockers "
+    "or rejected geometries. Normal ML/downstream workflows should prefer "
+    "strictly promoted datasets."
+),
     ),
     as_json: bool = typer.Option(
         False,
@@ -756,7 +796,7 @@ def dataset_require_promoted_aero(
             allow_forced=allow_forced,
         )
     except Exception as exc:
-        raise typer.BadParameter(str(exc))
+        _fail_command("Dataset command", exc)
 
     if as_json:
         typer.echo(json.dumps(context, indent=2))
@@ -789,7 +829,12 @@ def training_data_cmd(
     allow_forced: bool = typer.Option(
         False,
         "--allow-forced",
-        help="Allow use of a force-promoted dataset.",
+        help=(
+    "Allow use of a force-promoted dataset. "
+    "Use only when a dataset was explicitly promoted despite known blockers "
+    "or rejected geometries. Normal ML/downstream workflows should prefer "
+    "strictly promoted datasets."
+),
     ),
 ) -> None:
     feature_cols = [f.strip() for f in features.split(",") if f.strip()]
@@ -803,7 +848,7 @@ def training_data_cmd(
             allow_forced=allow_forced,
         )
     except Exception as exc:
-        raise typer.BadParameter(str(exc))
+        _fail_command("Dataset command", exc)
 
     typer.echo("[AERIS] Training data loaded")
     typer.echo(f"  dataset: {dataset}")
@@ -851,7 +896,12 @@ def split_training_data_cmd(
     allow_forced: bool = typer.Option(
         False,
         "--allow-forced",
-        help="Allow use of a force-promoted dataset.",
+        help=(
+    "Allow use of a force-promoted dataset. "
+    "Use only when a dataset was explicitly promoted despite known blockers "
+    "or rejected geometries. Normal ML/downstream workflows should prefer "
+    "strictly promoted datasets."
+),
     ),
 ) -> None:
     feature_cols = [f.strip() for f in features.split(",") if f.strip()]

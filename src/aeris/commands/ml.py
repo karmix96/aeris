@@ -1,3 +1,19 @@
+"""
+CLI commands for AERIS machine-learning workflows.
+
+Responsibilities:
+    - Train baseline surrogate models from promoted aero datasets
+    - Compare model families using identical train/validation/test splits
+    - Run prediction using saved ML artifacts
+
+Notes:
+    - This module must remain a thin CLI/reporting layer.
+    - Dataset loading, promotion checks, splitting, training, comparison, and
+      prediction belong in aeris.dataset.* and aeris.ml.*.
+    - ML inputs should come from promoted aero datasets, not raw solver output.
+    - Do not put model-training logic directly in this command file.
+"""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -20,6 +36,13 @@ def _parse_csv_list(value: str) -> list[str]:
         raise typer.BadParameter("Expected a comma-separated non-empty list.")
     return items
 
+def _fail_command(command_name: str, exc: Exception) -> None:
+    typer.secho(
+        f"[AERIS] {command_name} failed: {exc}",
+        err=True,
+        fg=typer.colors.RED,
+    )
+    raise typer.Exit(code=1)
 
 @ml_app.command("train")
 def ml_train(
@@ -68,7 +91,7 @@ def ml_train(
             output_dir=output_dir,
         )
     except Exception as exc:
-        raise typer.BadParameter(str(exc))
+        _fail_command("ML train", exc)
 
     artifacts = result["artifacts"]
     metrics = result["metrics"]
@@ -144,7 +167,7 @@ def ml_compare(
             output_dir=output_dir,
         )
     except Exception as exc:
-        raise typer.BadParameter(str(exc))
+        _fail_command("ML compare", exc)
 
     summary = result["summary"]
 
@@ -214,7 +237,7 @@ def ml_predict(
             include_truth_if_available=include_truth_if_available,
         )
     except Exception as exc:
-        raise typer.BadParameter(str(exc))
+        _fail_command("ML predict", exc)
 
     summary = result["summary"]
     artifacts = result["artifacts"]

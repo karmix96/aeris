@@ -53,7 +53,13 @@ def geometry_generate(
         help="Path to the YAML geometry config file.",
     ),
 ) -> None:
-    """Generate geometry artifacts from config."""
+    """
+    Generate one deterministic geometry case from a YAML config.
+
+    This is the production single-case geometry entry point.
+    The command stays thin: actual orchestration belongs in the geometry
+    pipeline, and geometry mathematics belongs in the selected generator.
+    """
     exit_code = run_geometry_generation(config)
     raise typer.Exit(code=exit_code)
 
@@ -105,7 +111,12 @@ def geometry_visualize(
         help="Open AeroSandbox 3D viewer using airplane.draw().",
     ),
 ) -> None:
-    """Generate and visualize one geometry case from config."""
+    """
+    Generate and visualize one geometry case from config.
+
+    This is an operator/debugging path, not the production dataset hot path.
+    For large dataset generation, keep plotting disabled unless explicitly needed.
+    """
     viz_result = visualize_geometry_from_config(
         config_path=config,
         seed=seed,

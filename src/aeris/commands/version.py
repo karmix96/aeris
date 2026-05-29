@@ -1,6 +1,5 @@
 """
-Version command registration for the AERIS CLI.
-
+Command modules for the AERIS CLI
 Responsibilities:
     - Register the version subcommand
     - Report installed package version metadata

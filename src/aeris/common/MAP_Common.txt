@@ -1,33 +1,120 @@
 COMMON FOLDER — FOUNDATION LAYER
+================================
 
-Purpose:
-Infrastructure backbone of AERIS. Handles config loading, logging, and run folder management.
+Purpose
+-------
+Infrastructure backbone of AERIS.
 
-Key Responsibilities:
-- Load YAML configs safely
-- Create reproducible run folders
-- Setup per-run logging
+This layer handles:
+- config loading
+- path resolution
+- data/output directory conventions
+- run folder creation
+- logging setup
 
-Key Modules:
-- config.py → load_yaml_config()
-- logging_utils.py → setup_logger()
-- paths.py → create_run_folder()
+It must stay domain-neutral.
 
-Workflow Role:
-Pipeline start → config → run folder → logger → everything else
+It must NOT contain:
+- BWB geometry logic
+- AVL / CFD solver logic
+- ML training logic
+- QC policy logic
+- dynamics / trim logic
 
-CLI Usage:
-Used indirectly by all commands:
-aeris geometry generate
-aeris dataset generate
-aeris aero run
 
-Key Principles:
-- Reproducibility
-- Deterministic runs
-- Explicit filesystem structure
+Key modules
+-----------
 
-TODO:
-- Config schema validation
-- Structured logging
-- Dataset-aware paths
+config.py
+    load_yaml_config()
+    file_sha256()
+
+    Loads YAML safely with minimal structural validation.
+    Computes config/file hashes for future reproducibility manifests.
+    Does not perform domain-specific schema validation.
+
+logging_utils.py
+    setup_logger()
+    make_process_log_file()
+    log_and_echo()
+
+    Creates rotating file logger plus optional console logger.
+    Closes old handlers correctly.
+    Avoids default logger-name collisions by deriving names from log paths.
+    Supports text logs and JSON-lines logs.
+
+paths.py
+    PROJECT_ROOT
+    CONFIGS_DIR
+    DATA_DIR
+    RUNS_DIR
+    DATASETS_DIR
+    create_run_folder()
+    describe_path_environment()
+
+    Resolves project/config/data directories.
+    Supports editable installs, packaged installs, Windows/Linux machines,
+    cluster scratch, and cloud-style output directories.
+
+
+Environment variables
+---------------------
+
+AERIS_PROJECT_ROOT
+    Optional project/source/workspace root.
+
+AERIS_CONFIGS_DIR or AERIS_CONFIG_ROOT
+    Optional explicit configs directory.
+
+AERIS_DATA_DIR or AERIS_DATA_ROOT
+    Optional explicit generated-data/output directory.
+
+AERIS_USE_CLUSTER_SCRATCH
+    If true and no explicit data dir is set, prefer SLURM_TMPDIR, SCRATCH,
+    or TMPDIR for generated output.
+
+
+Recommended cluster example
+---------------------------
+
+export AERIS_PROJECT_ROOT="$PWD"
+export AERIS_CONFIGS_DIR="$PWD/configs"
+export AERIS_DATA_DIR="$SCRATCH/aeris_data"
+
+
+Production principles
+---------------------
+
+1. Source code location is not output location.
+2. Generated data should be redirectable.
+3. Every run gets its own folder.
+4. Run folders are timestamped and collision-resistant.
+5. Logging should be persistent, rotating, and optionally quiet.
+6. Parallel workers should not write to the same log file.
+7. Common utilities should be boring, stable, and domain-neutral.
+
+
+Future additions
+----------------
+
+common/io.py
+    atomic JSON/text writes
+    safe read helpers
+
+common/runtime.py
+    git commit
+    Python/platform metadata
+    AERIS env snapshot
+    hostname
+    command line
+
+common/manifest.py
+    build/update run manifests
+
+common/cli_helpers.py
+    parse CSV lists
+    parse float lists
+    shared command failure helpers
+
+execution/
+    serial/local process/SLURM/cloud execution backends

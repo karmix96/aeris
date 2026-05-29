@@ -1,1 +1,1 @@
-"""Common utilities shared across the Aeris platform."""
+"""Common infrastructure utilities shared across the AERIS platform."""

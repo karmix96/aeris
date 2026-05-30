@@ -25,6 +25,7 @@ from typing import Any
 import typer
 
 from aeris.aero.io import read_aero_result
+from aeris.commands._helpers import fail_command
 from aeris.dynamics.analysis import build_dynamics_foundation_result
 from aeris.dynamics.cg_sweep import run_cg_sweep, write_cg_sweep, write_cg_sweep_csv
 from aeris.dynamics.config import load_mass_properties_config
@@ -32,10 +33,18 @@ from aeris.dynamics.io import write_dynamics_foundation_result
 from aeris.dynamics.models import InertiaPlaceholders, MassProperties, TrimDefinition
 from aeris.dynamics.trim import estimate_longitudinal_trim, write_trim_result
 
+
 dynamics_app = typer.Typer(help="Mass / CG / dynamics-foundation utilities.")
 
 
+@dynamics_app.callback()
+def dynamics_callback() -> None:
+    """Dynamics command group."""
+    pass
+
+
 def _fmt(value: Any, digits: int = 6) -> str:
+    """Format a number with fixed decimal places; pass through None and non-floats."""
     if value is None:
         return "None"
     if isinstance(value, float):
@@ -54,15 +63,21 @@ def _resolve_mass_inputs(
     iyy_kg_m2: float | None = None,
     izz_kg_m2: float | None = None,
 ) -> dict[str, float | None]:
+    """Merge CLI mass inputs with an optional mass-config file.
+
+    Resolution priority for each field:
+        1. Explicit CLI value (if provided)
+        2. Value from --mass-config (if present)
+        3. Default 0.0 for y_cg_m / z_cg_m; None otherwise.
+
+    The 0.0 default for lateral/vertical CG keeps behavior consistent whether
+    or not a mass config file is supplied.
+    """
     cfg = load_mass_properties_config(mass_config) if mass_config is not None else None
 
     return {
         "mass_kg": mass_kg if mass_kg is not None else (cfg.mass_kg if cfg else None),
         "x_cg_m": x_cg_m if x_cg_m is not None else (cfg.x_cg_m if cfg else None),
-        # Lateral/vertical CG default convention:
-        # If not provided by CLI or mass config, default to 0.0 in the current
-        # aircraft geometry frame. This keeps behavior consistent whether or not
-        # a mass config file is supplied.
         "y_cg_m": (
             y_cg_m
             if y_cg_m is not None
@@ -87,7 +102,7 @@ def _validate_cg_sweep_inputs(*, cg_min_m: float, cg_max_m: float, n: int) -> No
 
 
 @dynamics_app.command("build")
-def build_command(
+def dynamics_build(
     run_dir: Path = typer.Option(..., exists=True, file_okay=False, dir_okay=True, resolve_path=True, help="Run directory"),
     mass_config: Path | None = typer.Option(None, exists=True, file_okay=True, dir_okay=False, resolve_path=True, help="Path to mass-properties YAML/JSON config"),
     mass_kg: float | None = typer.Option(None, help="Aircraft mass [kg]"),
@@ -99,7 +114,11 @@ def build_command(
     izz_kg_m2: float | None = typer.Option(None, "--izz-kg-m2"),
     x_positive_aft: bool = typer.Option(True, "--x-positive-aft/--x-positive-forward"),
 ) -> None:
-    aero_result = read_aero_result(run_dir)
+    """Build mass + CG + static-margin foundation artifacts from an aero run."""
+    try:
+        aero_result = read_aero_result(run_dir)
+    except Exception as exc:
+        fail_command("Dynamics build", exc)
 
     resolved = _resolve_mass_inputs(
         mass_config=mass_config,
@@ -133,15 +152,18 @@ def build_command(
         notes="Schema only. No trim solver implemented.",
     )
 
-    result = build_dynamics_foundation_result(
-        aero_result=aero_result,
-        mass_properties=mass,
-        source_run_dir=str(run_dir),
-        trim_definition=trim,
-        x_positive_aft=x_positive_aft,
-    )
+    try:
+        result = build_dynamics_foundation_result(
+            aero_result=aero_result,
+            mass_properties=mass,
+            source_run_dir=str(run_dir),
+            trim_definition=trim,
+            x_positive_aft=x_positive_aft,
+        )
+        output_path = write_dynamics_foundation_result(result, run_dir / "dynamics")
+    except Exception as exc:
+        fail_command("Dynamics build", exc)
 
-    output_path = write_dynamics_foundation_result(result, run_dir / "dynamics")
     typer.echo(f"[AERIS] Dynamics foundation written to: {output_path}")
 
     sm = result.stability_metrics.static_margin_percent_mac
@@ -155,7 +177,7 @@ def build_command(
 
 
 @dynamics_app.command("cg-sweep")
-def cg_sweep_command(
+def dynamics_cg_sweep(
     run_dir: Path = typer.Option(..., exists=True, file_okay=False, dir_okay=True, resolve_path=True, help="Run directory"),
     mass_config: Path | None = typer.Option(None, exists=True, file_okay=True, dir_okay=False, resolve_path=True, help="Path to mass-properties YAML/JSON config"),
     mass_kg: float | None = typer.Option(None, help="Aircraft mass [kg]"),
@@ -169,6 +191,7 @@ def cg_sweep_command(
     izz_kg_m2: float | None = typer.Option(None, "--izz-kg-m2"),
     x_positive_aft: bool = typer.Option(True, "--x-positive-aft/--x-positive-forward"),
 ) -> None:
+    """Run a CG sweep and write CG-vs-static-margin diagnostic outputs."""
     _validate_cg_sweep_inputs(cg_min_m=cg_min_m, cg_max_m=cg_max_m, n=n)
 
     resolved = _resolve_mass_inputs(
@@ -185,23 +208,26 @@ def cg_sweep_command(
         typer.echo("[AERIS] Need mass_kg, either from --mass-config or explicit CLI option.")
         raise typer.Exit(code=1)
 
-    summary = run_cg_sweep(
-        run_dir=run_dir,
-        mass_kg=resolved["mass_kg"],
-        cg_min_m=cg_min_m,
-        cg_max_m=cg_max_m,
-        n=n,
-        y_cg_m=resolved["y_cg_m"],
-        z_cg_m=resolved["z_cg_m"],
-        ixx_kg_m2=resolved["ixx_kg_m2"],
-        iyy_kg_m2=resolved["iyy_kg_m2"],
-        izz_kg_m2=resolved["izz_kg_m2"],
-        x_positive_aft=x_positive_aft,
-    )
+    try:
+        summary = run_cg_sweep(
+            run_dir=run_dir,
+            mass_kg=resolved["mass_kg"],
+            cg_min_m=cg_min_m,
+            cg_max_m=cg_max_m,
+            n=n,
+            y_cg_m=resolved["y_cg_m"],
+            z_cg_m=resolved["z_cg_m"],
+            ixx_kg_m2=resolved["ixx_kg_m2"],
+            iyy_kg_m2=resolved["iyy_kg_m2"],
+            izz_kg_m2=resolved["izz_kg_m2"],
+            x_positive_aft=x_positive_aft,
+        )
+        output_path = write_cg_sweep(summary, run_dir / "dynamics")
+        csv_path = write_cg_sweep_csv(summary, run_dir / "dynamics")
+    except Exception as exc:
+        fail_command("Dynamics cg-sweep", exc)
 
-    output_path = write_cg_sweep(summary, run_dir / "dynamics")
     typer.echo(f"[AERIS] CG sweep written to: {output_path}")
-    csv_path = write_cg_sweep_csv(summary, run_dir / "dynamics")
     typer.echo(f"[AERIS] CG sweep CSV written to: {csv_path}")
     typer.echo(
         f"[AERIS] Static-margin zero crossing estimate = "
@@ -212,17 +238,20 @@ def cg_sweep_command(
 
 
 @dynamics_app.command("trim")
-def trim_command(
+def dynamics_trim(
     run_dir: Path = typer.Option(..., exists=True, file_okay=False, dir_okay=True, resolve_path=True, help="Run directory"),
 ) -> None:
-    aero_result = read_aero_result(run_dir)
+    """Run a first-order longitudinal trim diagnostic from a saved aero run."""
+    try:
+        aero_result = read_aero_result(run_dir)
+        result = estimate_longitudinal_trim(
+            aero_result=aero_result,
+            run_dir=run_dir,
+        )
+        output_path = write_trim_result(result, run_dir / "dynamics")
+    except Exception as exc:
+        fail_command("Dynamics trim", exc)
 
-    result = estimate_longitudinal_trim(
-        aero_result=aero_result,
-        run_dir=run_dir,
-    )
-
-    output_path = write_trim_result(result, run_dir / "dynamics")
     typer.echo(f"[AERIS] Trim result written to: {output_path}")
 
     if not result.longitudinal.valid:
@@ -237,16 +266,20 @@ def trim_command(
 
 
 @dynamics_app.command("inspect")
-def inspect_command(
+def dynamics_inspect(
     run_dir: Path = typer.Option(..., exists=True, file_okay=False, dir_okay=True, resolve_path=True, help="Run directory"),
 ) -> None:
+    """Inspect dynamics_foundation.json from a previously built dynamics run."""
     dyn_path = run_dir / "dynamics" / "dynamics_foundation.json"
 
     if not dyn_path.exists():
         typer.echo("[AERIS] No dynamics_foundation.json found.")
         raise typer.Exit(code=1)
 
-    data = json.loads(dyn_path.read_text(encoding="utf-8"))
+    try:
+        data = json.loads(dyn_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        fail_command("Dynamics inspect", exc)
 
     sm = data.get("stability_metrics", {})
     readiness = data.get("state_space_preparation", {})
@@ -283,16 +316,20 @@ def inspect_command(
 
 
 @dynamics_app.command("cg-sweep-inspect")
-def cg_sweep_inspect_command(
+def dynamics_cg_sweep_inspect(
     run_dir: Path = typer.Option(..., exists=True, file_okay=False, dir_okay=True, resolve_path=True, help="Run directory"),
 ) -> None:
+    """Inspect cg_sweep.json from a previously run CG sweep."""
     sweep_path = run_dir / "dynamics" / "cg_sweep.json"
 
     if not sweep_path.exists():
         typer.echo("[AERIS] No cg_sweep.json found.")
         raise typer.Exit(code=1)
 
-    data = json.loads(sweep_path.read_text(encoding="utf-8"))
+    try:
+        data = json.loads(sweep_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        fail_command("Dynamics cg-sweep-inspect", exc)
 
     cases = data.get("cases", [])
     stable_min = data.get("stable_cg_min_m")

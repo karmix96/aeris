@@ -2,15 +2,98 @@
 Typed configuration and sampled design-variable models for bwb_segmented_v1.
 
 Defines:
-- immutable generator configuration dataclasses
-- immutable sampled design vectors
-- conversion from raw config dictionaries into typed configuration objects
+    - immutable generator configuration dataclasses
+    - immutable sampled design vectors
+    - conversion from raw config dictionaries into typed configuration objects
+
+Schema compatibility:
+    Two YAML schemas are accepted for selecting the generator:
+
+        (a) Preferred:
+            geometry:
+              generator:
+                id: bwb_segmented_v1
+
+        (b) Legacy (a deprecation warning is logged at the resolver level):
+            geometry:
+              generator:
+                family: bwb_segmented
+                version: v1
+
+    Internally, BWB always stores both `family` and `version` for use in
+    manifests. When only `id` is provided, family and version are derived
+    by splitting on the last '_v' delimiter.
+
+Identity guarantee:
+    At the end of build_bwb_generator_config, family + version are checked
+    against the expected generator id ('bwb_segmented_v1'). A mismatch raises
+    ValueError immediately rather than producing a misleading manifest.
 """
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, fields
 from typing import Any
+
+
+# Must match BwbSegmentedV1Generator.GENERATOR_ID exactly. Kept in sync
+# manually because importing from generator.py would create a circular import.
+# If you change one, change the other.
+_EXPECTED_GENERATOR_ID = "bwb_segmented_v1"
+
+
+# ---------------------------------------------------------------------------
+# Strict cast helpers
+#
+# These give clear error messages for YAML typos and reject silent coercions
+# (e.g. bool getting coerced to int, "yes" getting coerced to True).
+# ---------------------------------------------------------------------------
+
+
+def _as_bool(value: Any, *, field_name: str) -> bool:
+    if isinstance(value, bool):
+        return value
+    raise TypeError(f"{field_name} must be a bool, got {type(value).__name__}.")
+
+
+def _as_int(value: Any, *, field_name: str) -> int:
+    if isinstance(value, bool):
+        # bool is a subclass of int in Python; reject explicitly to catch
+        # YAML mistakes like 'n_points: true'.
+        raise TypeError(f"{field_name} must be int, got bool.")
+    try:
+        return int(value)
+    except (TypeError, ValueError) as exc:
+        raise TypeError(f"{field_name} must be int, got {value!r}.") from exc
+
+
+def _as_float(value: Any, *, field_name: str) -> float:
+    if isinstance(value, bool):
+        raise TypeError(f"{field_name} must be numeric, got bool.")
+    try:
+        return float(value)
+    except (TypeError, ValueError) as exc:
+        raise TypeError(f"{field_name} must be numeric, got {value!r}.") from exc
+
+
+def _as_str(value: Any, *, field_name: str) -> str:
+    if not isinstance(value, str):
+        raise TypeError(f"{field_name} must be a string, got {type(value).__name__}.")
+    text = value.strip()
+    if not text:
+        raise ValueError(f"{field_name} must not be empty.")
+    return text
+
+
+def _as_optional_int(value: Any, *, field_name: str) -> int | None:
+    if value is None:
+        return None
+    return _as_int(value, field_name=field_name)
+
+
+# ---------------------------------------------------------------------------
+# Configuration dataclasses
+# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True)
@@ -71,6 +154,7 @@ class SectionBoundsConfig:
     dihedral_b2_deg: RangeConfig
     dihedral_b3_deg: RangeConfig
 
+
 @dataclass(frozen=True)
 class ControlSurfaceSpanwiseConfig:
     start_frac: float
@@ -94,11 +178,28 @@ class ControlSurfacesConfig:
     enabled: bool
     surfaces: tuple[ControlSurfaceConfig, ...]
 
+
 @dataclass(frozen=True)
 class BWBDesignSample:
-    # -----------------------------
+    """One concrete BWB design sample (17 independent design variables).
+
+    All fields are immutable; pass the dataclass around freely.
+
+    Sign conventions:
+        sw1_deg, sw2_deg, sw3_deg
+            Negative values indicate AFT sweep (current BWB convention).
+            YAML configs declare positive *magnitudes*; the sampler negates
+            them when building this dataclass. Downstream geometry math
+            assumes negative-aft.
+
+        twist_*_deg, dihedral_*_deg
+            Stored as authored in YAML. No sign flipping.
+
+    See sweep_magnitudes_deg if you need the absolute values back (e.g.
+    for human-readable reports or YAML round-trip).
+    """
+
     # Independent planform variables
-    # -----------------------------
     c1_m: float
     c2_ratio: float
     c3_ratio: float
@@ -110,9 +211,7 @@ class BWBDesignSample:
     sw2_deg: float
     sw3_deg: float
 
-    # -----------------------------
     # Independent section variables
-    # -----------------------------
     twist_b0_deg: float
     twist_b1_deg: float
     twist_b2_deg: float
@@ -123,6 +222,11 @@ class BWBDesignSample:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+    @property
+    def sweep_magnitudes_deg(self) -> tuple[float, float, float]:
+        """Return the absolute sweep magnitudes for sw1/sw2/sw3 (positive)."""
+        return (abs(self.sw1_deg), abs(self.sw2_deg), abs(self.sw3_deg))
 
 
 @dataclass(frozen=True)
@@ -139,25 +243,12 @@ class BWBGeneratorConfig:
         return asdict(self)
 
     def design_variable_names(self) -> list[str]:
-        return [
-            "c1_m",
-            "c2_ratio",
-            "c3_ratio",
-            "c4_ratio",
-            "b_total_m",
-            "b3_ratio",
-            "split_ratio",
-            "sw1_deg",
-            "sw2_deg",
-            "sw3_deg",
-            "twist_b0_deg",
-            "twist_b1_deg",
-            "twist_b2_deg",
-            "twist_b3_deg",
-            "dihedral_b1_deg",
-            "dihedral_b2_deg",
-            "dihedral_b3_deg",
-        ]
+        """Return the names of all sampled design variables.
+
+        Derived from BWBDesignSample's dataclass fields so this list cannot
+        drift out of sync with the actual sample structure.
+        """
+        return [f.name for f in fields(BWBDesignSample)]
 
     def fixed_parameters(self) -> dict[str, Any]:
         return {
@@ -168,6 +259,11 @@ class BWBGeneratorConfig:
         }
 
 
+# ---------------------------------------------------------------------------
+# Parsing helpers
+# ---------------------------------------------------------------------------
+
+
 def _require(mapping: dict[str, Any], key: str) -> Any:
     if key not in mapping:
         raise KeyError(f"Missing required config key: {key}")
@@ -176,36 +272,134 @@ def _require(mapping: dict[str, Any], key: str) -> Any:
 
 def _range_cfg(mapping: dict[str, Any], key: str) -> RangeConfig:
     block = _require(mapping, key)
+    if not isinstance(block, dict):
+        raise TypeError(
+            f"Config field {key!r} must be a mapping with 'min' and 'max', "
+            f"got {type(block).__name__}."
+        )
     return RangeConfig(
-        min=float(_require(block, "min")),
-        max=float(_require(block, "max")),
+        min=_as_float(_require(block, "min"), field_name=f"{key}.min"),
+        max=_as_float(_require(block, "max"), field_name=f"{key}.max"),
+    )
+
+
+def _resolve_family_version(generator_cfg: dict[str, Any]) -> tuple[str, str]:
+    """Resolve (family, version) from the YAML generator block.
+
+    Accepts either:
+        - explicit 'id' field: 'bwb_segmented_v1' → ('bwb_segmented', 'v1')
+        - explicit 'family' + 'version' fields (legacy)
+
+    The split for the 'id' form uses the last '_v' delimiter so that
+    'bwb_segmented_v1' produces family='bwb_segmented', version='v1'.
+
+    Raises:
+        ValueError: if neither schema is satisfied, or 'id' cannot be split.
+        TypeError: if a value has the wrong type.
+    """
+    explicit_id = generator_cfg.get("id")
+    if explicit_id is not None:
+        id_str = _as_str(explicit_id, field_name="geometry.generator.id")
+        if "_v" not in id_str:
+            raise ValueError(
+                f"Cannot derive family+version from generator id={id_str!r}. "
+                "Expected format: <family>_v<version> (e.g. 'bwb_segmented_v1')."
+            )
+        family_part, version_suffix = id_str.rsplit("_v", 1)
+        if not family_part or not version_suffix:
+            raise ValueError(
+                f"Generator id={id_str!r} produces empty family or version "
+                "after splitting on '_v'."
+            )
+        return family_part, f"v{version_suffix}"
+
+    family = generator_cfg.get("family")
+    version = generator_cfg.get("version")
+    if family is None or version is None:
+        raise KeyError(
+            "geometry.generator must provide either 'id' (preferred) or "
+            "both 'family' and 'version'."
+        )
+    return (
+        _as_str(family, field_name="geometry.generator.family"),
+        _as_str(version, field_name="geometry.generator.version"),
     )
 
 
 def build_bwb_generator_config(config: dict[str, Any]) -> BWBGeneratorConfig:
+    """Build a typed BWBGeneratorConfig from a raw YAML config dict.
+
+    Accepts both the 'id' schema and the legacy 'family + version' schema.
+    After construction, verifies that the resolved family_version matches
+    BWB's expected GENERATOR_ID.
+
+    Raises:
+        KeyError: missing required config key.
+        TypeError: config value has the wrong type.
+        ValueError: a config value is structurally invalid (e.g. id cannot
+            be split, family+version does not match BWB's GENERATOR_ID).
+    """
     geometry_cfg = config.get("geometry", {})
+    if not isinstance(geometry_cfg, dict):
+        raise TypeError(
+            f"Top-level 'geometry' must be a mapping, "
+            f"got {type(geometry_cfg).__name__}."
+        )
+
     generator_cfg = geometry_cfg.get("generator", {})
+    if not isinstance(generator_cfg, dict):
+        raise TypeError(
+            f"'geometry.generator' must be a mapping, "
+            f"got {type(generator_cfg).__name__}."
+        )
+
     controls_cfg = geometry_cfg.get("controls", {})
     planform_cfg = geometry_cfg.get("planform_bounds", {})
     sections_cfg = geometry_cfg.get("section_bounds", {})
     outputs_cfg = geometry_cfg.get("outputs", {})
     control_surfaces_cfg = geometry_cfg.get("control_surfaces", {})
 
-    return BWBGeneratorConfig(
-        name=str(config.get("name", "wing_bwb")),
+    family, version = _resolve_family_version(generator_cfg)
+
+    bwb_config = BWBGeneratorConfig(
+        name=_as_str(config.get("name", "wing_bwb"), field_name="name"),
         generator=GeneratorConfig(
-            family=str(_require(generator_cfg, "family")),
-            version=str(_require(generator_cfg, "version")),
-            seed=None if generator_cfg.get("seed") is None else int(generator_cfg["seed"]),
+            family=family,
+            version=version,
+            seed=_as_optional_int(
+                generator_cfg.get("seed"),
+                field_name="geometry.generator.seed",
+            ),
         ),
         controls=ControlsConfig(
-            n_points=int(_require(controls_cfg, "n_points")),
-            n_spline_inboard=int(_require(controls_cfg, "n_spline_inboard")),
-            n_spline_outboard=int(_require(controls_cfg, "n_spline_outboard")),
-            curvature_strength=float(_require(controls_cfg, "desired_curvature_strength")),
-            spline_split_ratio=float(controls_cfg.get("spline_split_ratio", 0.55)),
-            segment_length_variation=float(controls_cfg.get("segment_length_variation", 0.25)),
-            sweep_variation=float(controls_cfg.get("sweep_variation", 0.10)),
+            n_points=_as_int(
+                _require(controls_cfg, "n_points"),
+                field_name="controls.n_points",
+            ),
+            n_spline_inboard=_as_int(
+                _require(controls_cfg, "n_spline_inboard"),
+                field_name="controls.n_spline_inboard",
+            ),
+            n_spline_outboard=_as_int(
+                _require(controls_cfg, "n_spline_outboard"),
+                field_name="controls.n_spline_outboard",
+            ),
+            curvature_strength=_as_float(
+                _require(controls_cfg, "desired_curvature_strength"),
+                field_name="controls.desired_curvature_strength",
+            ),
+            spline_split_ratio=_as_float(
+                controls_cfg.get("spline_split_ratio", 0.55),
+                field_name="controls.spline_split_ratio",
+            ),
+            segment_length_variation=_as_float(
+                controls_cfg.get("segment_length_variation", 0.25),
+                field_name="controls.segment_length_variation",
+            ),
+            sweep_variation=_as_float(
+                controls_cfg.get("sweep_variation", 0.10),
+                field_name="controls.sweep_variation",
+            ),
         ),
         planform_bounds=PlanformBoundsConfig(
             c1_m=_range_cfg(planform_cfg, "c1_m"),
@@ -220,8 +414,14 @@ def build_bwb_generator_config(config: dict[str, Any]) -> BWBGeneratorConfig:
             sw3_deg=_range_cfg(planform_cfg, "sw3_deg"),
         ),
         section_bounds=SectionBoundsConfig(
-            airfoil_name=str(sections_cfg.get("airfoil_name", "naca4412")),
-            dihedral_root_deg=float(sections_cfg.get("dihedral_root_deg", 0.0)),
+            airfoil_name=_as_str(
+                sections_cfg.get("airfoil_name", "naca4412"),
+                field_name="section_bounds.airfoil_name",
+            ),
+            dihedral_root_deg=_as_float(
+                sections_cfg.get("dihedral_root_deg", 0.0),
+                field_name="section_bounds.dihedral_root_deg",
+            ),
             twist_b0_deg=_range_cfg(sections_cfg, "twist_b0_deg"),
             twist_b1_deg=_range_cfg(sections_cfg, "twist_b1_deg"),
             twist_b2_deg=_range_cfg(sections_cfg, "twist_b2_deg"),
@@ -231,95 +431,46 @@ def build_bwb_generator_config(config: dict[str, Any]) -> BWBGeneratorConfig:
             dihedral_b3_deg=_range_cfg(sections_cfg, "dihedral_b3_deg"),
         ),
         outputs=PlotOutputsConfig(
-            save_plot=bool(outputs_cfg.get("save_plot", True)),
-            build_aerosandbox=bool(outputs_cfg.get("build_aerosandbox", True)),
+            save_plot=_as_bool(
+                outputs_cfg.get("save_plot", True),
+                field_name="outputs.save_plot",
+            ),
+            build_aerosandbox=_as_bool(
+                outputs_cfg.get("build_aerosandbox", True),
+                field_name="outputs.build_aerosandbox",
+            ),
         ),
         control_surfaces=_build_control_surfaces_config(control_surfaces_cfg),
     )
 
-def _validate_control_surfaces_config(config: ControlSurfacesConfig) -> None:
-    names: set[str] = set()
-
-    if not config.enabled and len(config.surfaces) > 0:
-        # This is allowed for now, but it is suspicious.
-        # We keep it strict and explicit.
+    # Identity consistency: catch family/version mismatches against BWB.
+    resolved_id = f"{bwb_config.generator.family}_{bwb_config.generator.version}"
+    if resolved_id != _EXPECTED_GENERATOR_ID:
         raise ValueError(
-            "geometry.control_surfaces.enabled is false, but surfaces are defined. "
-            "Either set enabled: true or remove the surfaces block."
+            f"BWB generator received family_version={resolved_id!r}, "
+            f"but this code path expects {_EXPECTED_GENERATOR_ID!r}. "
+            "Check 'geometry.generator.id' (or 'family' + 'version') in your YAML."
         )
 
-    for surface in config.surfaces:
-        if surface.name in names:
-            raise ValueError(f"Duplicate control surface name: {surface.name!r}")
-        names.add(surface.name)
-
-        if surface.family not in {"trailing_edge"}:
-            raise ValueError(
-                f"Unsupported control surface family {surface.family!r}. "
-                "v1 supports only 'trailing_edge'."
-            )
-
-        if not (0.0 < surface.hinge_point < 1.0):
-            raise ValueError(
-                f"Control surface {surface.name!r} has invalid hinge_point={surface.hinge_point}. "
-                "Expected 0.0 < hinge_point < 1.0."
-            )
-
-        if not (0.0 <= surface.spanwise.start_frac < surface.spanwise.end_frac <= 1.0):
-            raise ValueError(
-                f"Control surface {surface.name!r} has invalid spanwise range "
-                f"[{surface.spanwise.start_frac}, {surface.spanwise.end_frac}]. "
-                "Expected 0.0 <= start_frac < end_frac <= 1.0."
-            )
-
-        if surface.symmetric:
-            if surface.side is not None:
-                raise ValueError(
-                    f"Control surface {surface.name!r} is symmetric=True, so side must be omitted."
-                )
-        else:
-            if surface.side not in {"left", "right"}:
-                raise ValueError(
-                    f"Control surface {surface.name!r} is symmetric=False, "
-                    "so side must be 'left' or 'right'."
-                )
-
-        if surface.deflection_sign not in {"standard"}:
-            raise ValueError(
-                f"Unsupported deflection_sign {surface.deflection_sign!r} "
-                f"for control surface {surface.name!r}."
-            )
-
-def _as_bool(value: Any, *, field_name: str) -> bool:
-    if isinstance(value, bool):
-        return value
-    raise TypeError(f"{field_name} must be a bool, got {type(value).__name__}.")
+    return bwb_config
 
 
-def _as_float(value: Any, *, field_name: str) -> float:
-    try:
-        return float(value)
-    except Exception as exc:
-        raise TypeError(f"{field_name} must be numeric, got {value!r}.") from exc
-
-
-def _as_str(value: Any, *, field_name: str) -> str:
-    if not isinstance(value, str):
-        raise TypeError(f"{field_name} must be a string, got {type(value).__name__}.")
-    text = value.strip()
-    if not text:
-        raise ValueError(f"{field_name} must not be empty.")
-    return text
-
-
-def _build_control_surfaces_config(control_surfaces_cfg: dict[str, Any]) -> ControlSurfacesConfig:
+def _build_control_surfaces_config(
+    control_surfaces_cfg: dict[str, Any],
+) -> ControlSurfacesConfig:
     if not control_surfaces_cfg:
-        return ControlSurfacesConfig(
-            enabled=False,
-            surfaces=(),
+        return ControlSurfacesConfig(enabled=False, surfaces=())
+
+    if not isinstance(control_surfaces_cfg, dict):
+        raise TypeError(
+            f"geometry.control_surfaces must be a mapping, "
+            f"got {type(control_surfaces_cfg).__name__}."
         )
 
-    enabled = bool(control_surfaces_cfg.get("enabled", False))
+    enabled = _as_bool(
+        control_surfaces_cfg.get("enabled", False),
+        field_name="control_surfaces.enabled",
+    )
     raw_surfaces = control_surfaces_cfg.get("surfaces", [])
 
     if not isinstance(raw_surfaces, list):
@@ -330,28 +481,47 @@ def _build_control_surfaces_config(control_surfaces_cfg: dict[str, Any]) -> Cont
 
     for i, raw in enumerate(raw_surfaces):
         if not isinstance(raw, dict):
-            raise TypeError(f"geometry.control_surfaces.surfaces[{i}] must be a dict.")
+            raise TypeError(
+                f"geometry.control_surfaces.surfaces[{i}] must be a dict."
+            )
 
-        name = str(_require(raw, "name")).strip()
-        family = str(_require(raw, "family")).strip()
-        hinge_point = float(_require(raw, "hinge_point"))
-        symmetric = bool(raw.get("symmetric", True))
-        deflection_sign = str(raw.get("deflection_sign", "standard")).strip()
-        side = raw.get("side", None)
-        required = bool(raw.get("required", False))
+        prefix = f"control_surfaces.surfaces[{i}]"
 
-        if side is not None:
-            side = str(side).strip()
+        name = _as_str(_require(raw, "name"), field_name=f"{prefix}.name")
+        family = _as_str(_require(raw, "family"), field_name=f"{prefix}.family")
+        hinge_point = _as_float(
+            _require(raw, "hinge_point"), field_name=f"{prefix}.hinge_point"
+        )
+        symmetric = _as_bool(
+            raw.get("symmetric", True), field_name=f"{prefix}.symmetric"
+        )
+        deflection_sign = _as_str(
+            raw.get("deflection_sign", "standard"),
+            field_name=f"{prefix}.deflection_sign",
+        )
+        required = _as_bool(
+            raw.get("required", False), field_name=f"{prefix}.required"
+        )
+
+        raw_side = raw.get("side", None)
+        side = (
+            _as_str(raw_side, field_name=f"{prefix}.side")
+            if raw_side is not None
+            else None
+        )
 
         spanwise_cfg = raw.get("spanwise", {})
         if not isinstance(spanwise_cfg, dict):
-            raise TypeError(f"geometry.control_surfaces.surfaces[{i}].spanwise must be a dict.")
+            raise TypeError(f"{prefix}.spanwise must be a dict.")
 
-        start_frac = float(_require(spanwise_cfg, "start_frac"))
-        end_frac = float(_require(spanwise_cfg, "end_frac"))
-
-        if not name:
-            raise ValueError(f"geometry.control_surfaces.surfaces[{i}].name must not be empty.")
+        start_frac = _as_float(
+            _require(spanwise_cfg, "start_frac"),
+            field_name=f"{prefix}.spanwise.start_frac",
+        )
+        end_frac = _as_float(
+            _require(spanwise_cfg, "end_frac"),
+            field_name=f"{prefix}.spanwise.end_frac",
+        )
 
         if name in seen_names:
             raise ValueError(f"Duplicate control surface name: {name!r}")
@@ -372,22 +542,26 @@ def _build_control_surfaces_config(control_surfaces_cfg: dict[str, Any]) -> Cont
         if not (0.0 <= start_frac < end_frac <= 1.0):
             raise ValueError(
                 f"Control surface {name!r} has invalid spanwise range "
-                f"[{start_frac}, {end_frac}]. Expected 0.0 <= start_frac < end_frac <= 1.0."
+                f"[{start_frac}, {end_frac}]. "
+                "Expected 0.0 <= start_frac < end_frac <= 1.0."
             )
 
         if symmetric and side is not None:
             raise ValueError(
-                f"Control surface {name!r} is symmetric=True, so side must be omitted."
+                f"Control surface {name!r} is symmetric=True, "
+                "so side must be omitted."
             )
 
         if not symmetric and side not in {"left", "right"}:
             raise ValueError(
-                f"Control surface {name!r} is symmetric=False, so side must be 'left' or 'right'."
+                f"Control surface {name!r} is symmetric=False, "
+                "so side must be 'left' or 'right'."
             )
 
         if deflection_sign not in {"standard"}:
             raise ValueError(
-                f"Unsupported deflection_sign {deflection_sign!r} for control surface {name!r}."
+                f"Unsupported deflection_sign {deflection_sign!r} "
+                f"for control surface {name!r}."
             )
 
         surfaces.append(
@@ -411,7 +585,4 @@ def _build_control_surfaces_config(control_surfaces_cfg: dict[str, Any]) -> Cont
             "geometry.control_surfaces.enabled is false, but surfaces are defined."
         )
 
-    return ControlSurfacesConfig(
-        enabled=enabled,
-        surfaces=tuple(surfaces),
-    )
+    return ControlSurfacesConfig(enabled=enabled, surfaces=tuple(surfaces))

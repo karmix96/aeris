@@ -118,3 +118,92 @@ common/cli_helpers.py
 
 execution/
     serial/local process/SLURM/cloud execution backends
+
+Cluster / Cloud Usage Notes
+---------------------------
+
+Core rule:
+    Never assume the installed Python package location is writable.
+
+On a cluster or cloud worker, AERIS should treat these as separate locations:
+
+    1. Code location
+        Where the AERIS package is installed.
+        This may be read-only, e.g. site-packages, /opt/aeris, or a container image.
+
+    2. Project/config location
+        Where configs live.
+        Usually the checked-out project folder or a mounted config directory.
+
+    3. Data/output location
+        Where generated runs, datasets, logs, and artifacts are written.
+        Usually scratch storage, a mounted volume, or cloud-backed storage.
+
+Recommended cluster setup:
+
+    cd /path/to/aeris/project
+
+    export AERIS_PROJECT_ROOT="$PWD"
+    export AERIS_CONFIGS_DIR="$PWD/configs"
+    export AERIS_DATA_DIR="$SCRATCH/aeris_data"
+
+    python -m pip install -e .
+    aeris --help
+
+Alternative packaged-install setup:
+
+    python -m pip install aeris.whl
+
+    export AERIS_PROJECT_ROOT="/path/to/workspace"
+    export AERIS_CONFIGS_DIR="/path/to/workspace/configs"
+    export AERIS_DATA_DIR="$SCRATCH/aeris_data"
+
+    aeris --help
+
+Cloud/container setup:
+
+    export AERIS_PROJECT_ROOT="/workspace"
+    export AERIS_CONFIGS_DIR="/workspace/configs"
+    export AERIS_DATA_DIR="/mnt/aeris_data"
+
+    aeris --help
+
+Do not write heavy outputs to:
+
+    - site-packages
+    - read-only container layers
+    - cluster home directories with small quotas
+    - shared network folders unless intentionally configured
+
+Parallel execution rule:
+
+    Each worker/process must write to its own case/run folder or its own log file.
+    Multiple workers must not append directly to the same CSV or write to the same
+    solver working directory.
+
+Correct parallel pattern:
+
+    main process:
+        creates dataset/run root
+        creates task list with deterministic IDs
+        dispatches tasks
+
+    worker process:
+        writes isolated artifacts to its own case folder
+        writes its own log file
+        returns status/result fragment
+
+    main process:
+        collects fragments
+        writes final metadata.csv
+        writes final failures.csv
+        writes final manifest.json
+
+Wrong parallel pattern:
+
+    many workers appending to metadata.csv at the same time
+    many workers writing to one app.log
+    many solver cases sharing one temporary output directory
+
+For SLURM/cloud integration later, build an execution layer instead of putting
+cluster-specific logic inside geometry/aero/dataset modules.

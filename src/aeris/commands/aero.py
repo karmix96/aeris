@@ -22,6 +22,7 @@ from typing import Any
 import typer
 
 from aeris.aero.io import load_aero_result_from_run_dir
+from aeris.commands._helpers import parse_float_list
 from aeris.pipeline.aero_workflows import (
     execute_aero_run,
     execute_aero_sweep,
@@ -147,26 +148,6 @@ def _print_aero_sweep_result(sweep_result: dict[str, Any]) -> None:
     typer.echo("[AERIS] Case statuses:")
     for case in cases:
         typer.echo(f"  - {case.get('case_label')}: {case.get('status')}")
-
-
-def _parse_float_list(value: str, option_name: str) -> list[float]:
-    text = value.strip()
-    if not text:
-        return []
-
-    values: list[float] = []
-    for raw in text.split(","):
-        token = raw.strip()
-        if not token:
-            continue
-        try:
-            values.append(float(token))
-        except ValueError as exc:
-            raise typer.BadParameter(
-                f"Invalid float value '{token}' for {option_name}. "
-                f"Use comma-separated numeric values, e.g. 0,2,4"
-            ) from exc
-    return values
 
 
 def _validate_paneling(
@@ -422,6 +403,13 @@ def run_aero(
         help="Optional run-name suffix for the created output folder.",
     ),
 ) -> None:
+    """Run a single aero evaluation against fresh geometry, an existing run, or a dataset row.
+
+    Velocity defaults to 28 m/s (mid-envelope per AERIS prototype flight scope: 15-30 m/s).
+    Altitude defaults to 0 m. AVL is the only operational solver today; other
+    solvers will arrive via the registry.
+    """
+    
     _validate_source_selection(
         config=config,
         run_dir=run_dir,
@@ -491,6 +479,8 @@ def inspect_aero(
         help="Print saved aero result as machine-readable JSON.",
     ),
 ) -> None:
+    """Inspect a single saved aero run by printing its result, or as JSON with --json."""
+
     result = load_aero_result_from_run_dir(run_dir)
 
     if as_json:
@@ -681,6 +671,11 @@ def sweep_aero(
         help="Optional safety cap on total expanded sweep cases.",
     ),
 ) -> None:
+    """Run a parametric aero sweep across alpha/beta/V/h/p/q/r/control values.
+
+    Provide any subset of *_values options; the workflow generates the Cartesian
+    product of the populated lists. Use --max-cases as a safety cap.
+    """
     _validate_source_selection(
         config=config,
         run_dir=run_dir,
@@ -699,14 +694,14 @@ def sweep_aero(
         config_mode=config is not None,
     )
 
-    parsed_alpha_values = _parse_float_list(alpha_values, "--alpha-values")
-    parsed_beta_values = _parse_float_list(beta_values, "--beta-values")
-    parsed_velocity_values = _parse_float_list(velocity_values, "--velocity-values")
-    parsed_altitude_values = _parse_float_list(altitude_values, "--altitude-values")
-    parsed_p_values = _parse_float_list(p_values, "--p-values")
-    parsed_q_values = _parse_float_list(q_values, "--q-values")
-    parsed_r_values = _parse_float_list(r_values, "--r-values")
-    parsed_control_input_values = _parse_float_list(
+    parsed_alpha_values = parse_float_list(alpha_values, "--alpha-values")
+    parsed_beta_values = parse_float_list(beta_values, "--beta-values")
+    parsed_velocity_values = parse_float_list(velocity_values, "--velocity-values")
+    parsed_altitude_values = parse_float_list(altitude_values, "--altitude-values")
+    parsed_p_values = parse_float_list(p_values, "--p-values")
+    parsed_q_values = parse_float_list(q_values, "--q-values")
+    parsed_r_values = parse_float_list(r_values, "--r-values")
+    parsed_control_input_values = parse_float_list(
         control_input_values,
         "--control-input-values",
     )
@@ -774,6 +769,8 @@ def inspect_aero_sweep(
         help="Print saved aero sweep manifest/result as machine-readable JSON.",
     ),
 ) -> None:
+    """Inspect a saved aero sweep summary by printing it, or as JSON with --json."""
+
     manifest = _load_aero_sweep_manifest(run_dir)
     sweep_result = manifest.get("aero_sweep_result", {}) or {}
 
@@ -813,6 +810,8 @@ def inspect_aero_sweep_case(
         help="Print saved aero case result as machine-readable JSON.",
     ),
 ) -> None:
+    """Inspect a single case from a saved aero sweep by label or index."""
+
     case_dir = _resolve_sweep_case_dir(
         run_dir=run_dir,
         case_label=case_label.strip() or None,

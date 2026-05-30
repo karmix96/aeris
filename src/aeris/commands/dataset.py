@@ -26,6 +26,7 @@ from pathlib import Path
 
 import typer
 
+from aeris.commands._helpers import fail_command, parse_csv_list, parse_float_list
 from aeris.dataset.aero_dataset_run import run_aero_dataset_generation
 from aeris.dataset.curate_aero import curate_aero_dataset
 from aeris.dataset.dataset_run import run_dataset_generation
@@ -41,6 +42,15 @@ from aeris.quality.pipeline_api import (
 from aeris.quality.presets import list_qc_presets, resolve_qc_preset
 
 
+# Shared help text for the --allow-forced flag. Kept in one place so both
+# dataset and ml commands present the same warning.
+_ALLOW_FORCED_HELP = (
+    "Allow use of a force-promoted dataset. "
+    "Use only when a dataset was explicitly promoted despite known blockers "
+    "or rejected geometries. Normal ML/downstream workflows should prefer "
+    "strictly promoted datasets."
+)
+
 
 dataset_app = typer.Typer(
     help=(
@@ -52,13 +62,17 @@ dataset_app = typer.Typer(
     )
 )
 
-def _fail_command(command_name: str, exc: Exception) -> None:
-    typer.secho(
-        f"[AERIS] {command_name} failed: {exc}",
-        err=True,
-        fg=typer.colors.RED,
-    )
-    raise typer.Exit(code=1)
+
+@dataset_app.callback()
+def dataset_callback() -> None:
+    """Dataset command group."""
+    pass
+
+
+# ---------------------------------------------------------------------------
+# Reporting helpers (CLI-layer only — kept here until views modules exist).
+# ---------------------------------------------------------------------------
+
 
 def _echo_resolved_qc_configuration(
     *,
@@ -68,6 +82,7 @@ def _echo_resolved_qc_configuration(
     aero_qc_profile: str | None = None,
     fail_on_aero_qc_error: bool | None = None,
 ) -> None:
+    """Print the resolved QC configuration so the user can see what will run."""
     typer.echo("")
     typer.echo("[AERIS] Resolved QC configuration")
     typer.echo(f"  qc_preset: {qc_preset or 'none'}")
@@ -82,7 +97,9 @@ def _echo_resolved_qc_configuration(
     if fail_on_aero_qc_error is not None:
         typer.echo(f"  fail_on_aero_qc_error: {fail_on_aero_qc_error}")
 
+
 def _print_curation_report(report: dict) -> None:
+    """Pretty-print a curation report to the terminal."""
     typer.echo("")
     typer.echo("[AERIS] Aero dataset curation completed")
     typer.echo(f"  dataset_root: {report.get('dataset_root')}")
@@ -112,7 +129,9 @@ def _print_curation_report(report: dict) -> None:
     typer.echo(f"  curated_csv: {report.get('curated_aero_dataset_csv')}")
     typer.echo(f"  rejected_csv: {report.get('rejected_aero_rows_csv')}")
 
+
 def _print_promotion_manifest(manifest: dict) -> None:
+    """Pretty-print a promotion manifest to the terminal."""
     typer.echo("")
     typer.echo("[AERIS] Aero dataset promotion completed")
     typer.echo(f"  dataset_root: {manifest.get('dataset_root')}")
@@ -143,7 +162,9 @@ def _print_promotion_manifest(manifest: dict) -> None:
         f"{Path(manifest.get('dataset_root')) / 'promotion_manifest.json'}"
     )
 
+
 def _print_promoted_dataset_context(context: dict) -> None:
+    """Pretty-print a promoted-dataset gate-check context."""
     manifest = context.get("promotion_manifest", {}) or {}
     qc_context = manifest.get("qc_context", {}) or {}
 
@@ -169,28 +190,73 @@ def _print_promoted_dataset_context(context: dict) -> None:
     else:
         typer.echo("  promotion_blockers: []")
 
+
+# ---------------------------------------------------------------------------
+# Commands
+# ---------------------------------------------------------------------------
+
+
 @dataset_app.command("qc")
 def dataset_qc(
     dataset: Path = typer.Option(
-    ...,
-    "--dataset",
-    exists=True,
-    file_okay=False,
-    dir_okay=True,
-    readable=True,
-    resolve_path=True,
-    help="Path to an existing geometry dataset root.",
+        ...,
+        "--dataset",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to an existing geometry dataset root.",
     ),
-    profile: str = typer.Option("basic", "--profile"),
+    profile: str = typer.Option(
+        "basic",
+        "--profile",
+        help="Geometry QC profile name (legacy; --qc-preset support pending).",
+    ),
 ) -> None:
     """Run geometry dataset QC on an existing dataset."""
-    report = run_geometry_dataset_qc(dataset, profile=profile)
+    try:
+        report = run_geometry_dataset_qc(dataset, profile=profile)
+    except Exception as exc:
+        fail_command("Dataset qc", exc)
 
     typer.echo(f"[AERIS] Geometry QC passed: {report['passed']}")
     typer.echo(f"Errors: {len(report['errors'])}")
 
     if not report["passed"]:
         raise typer.Exit(code=1)
+
+
+@dataset_app.command("aero-qc")
+def dataset_aero_qc(
+    dataset: Path = typer.Option(
+        ...,
+        "--dataset",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to an existing aero dataset root.",
+    ),
+    profile: str = typer.Option(
+        "basic",
+        "--profile",
+        help="Aero QC profile name (legacy; --qc-preset support pending).",
+    ),
+) -> None:
+    """Run aero dataset QC on an existing dataset."""
+    try:
+        report = run_aero_dataset_qc(dataset, profile=profile)
+    except Exception as exc:
+        fail_command("Dataset aero-qc", exc)
+
+    typer.echo(f"[AERIS] Aero QC passed: {report['passed']}")
+    typer.echo(f"Errors: {len(report['errors'])}")
+
+    if not report["passed"]:
+        raise typer.Exit(code=1)
+
 
 @dataset_app.command("promote-aero")
 def dataset_promote_aero(
@@ -222,7 +288,7 @@ def dataset_promote_aero(
             force=force,
         )
     except Exception as exc:
-        _fail_command("Dataset command", exc)
+        fail_command("Dataset promote-aero", exc)
 
     if as_json:
         typer.echo(json.dumps(manifest, indent=2))
@@ -235,55 +301,6 @@ def dataset_promote_aero(
         typer.echo("[AERIS] Promotion decision: FORCED")
     else:
         typer.echo("[AERIS] Promotion decision: APPROVED")
-
-@dataset_app.command("aero-qc")
-def dataset_aero_qc(
-    dataset: Path = typer.Option(
-    ...,
-    "--dataset",
-    exists=True,
-    file_okay=False,
-    dir_okay=True,
-    readable=True,
-    resolve_path=True,
-    help="Path to an existing aero dataset root.",
-    ),
-    profile: str = typer.Option("basic", "--profile"),
-) -> None:
-    """Run aero dataset QC on an existing dataset."""
-    report = run_aero_dataset_qc(dataset, profile=profile)
-
-    typer.echo(f"[AERIS] Aero QC passed: {report['passed']}")
-    typer.echo(f"Errors: {len(report['errors'])}")
-
-    if not report["passed"]:
-        raise typer.Exit(code=1)
-
-
-@dataset_app.callback()
-def dataset_callback() -> None:
-    """Dataset command group."""
-    pass
-
-
-def _parse_float_list(value: str, option_name: str) -> list[float]:
-    text = value.strip()
-    if not text:
-        return []
-
-    values: list[float] = []
-    for raw in text.split(","):
-        token = raw.strip()
-        if not token:
-            continue
-        try:
-            values.append(float(token))
-        except ValueError as exc:
-            raise typer.BadParameter(
-                f"Invalid float value '{token}' for {option_name}. "
-                f"Use comma-separated numeric values, e.g. -5,0,5"
-            ) from exc
-    return values
 
 
 @dataset_app.command("generate")
@@ -391,6 +408,7 @@ def dataset_generate(
         fail_on_qc_error=fail_on_qc_error_effective,
     )
     raise typer.Exit(code=exit_code)
+
 
 @dataset_app.command("aero-generate")
 def dataset_aero_generate(
@@ -595,14 +613,14 @@ def dataset_aero_generate(
     - production
     - promotion_strict
     """
-    parsed_alpha_values = _parse_float_list(alpha_values, "--alpha-values")
-    parsed_beta_values = _parse_float_list(beta_values, "--beta-values")
-    parsed_velocity_values = _parse_float_list(velocity_values, "--velocity-values")
-    parsed_altitude_values = _parse_float_list(altitude_values, "--altitude-values")
-    parsed_p_values = _parse_float_list(p_values, "--p-values")
-    parsed_q_values = _parse_float_list(q_values, "--q-values")
-    parsed_r_values = _parse_float_list(r_values, "--r-values")
-    parsed_control_input_values = _parse_float_list(
+    parsed_alpha_values = parse_float_list(alpha_values, "--alpha-values")
+    parsed_beta_values = parse_float_list(beta_values, "--beta-values")
+    parsed_velocity_values = parse_float_list(velocity_values, "--velocity-values")
+    parsed_altitude_values = parse_float_list(altitude_values, "--altitude-values")
+    parsed_p_values = parse_float_list(p_values, "--p-values")
+    parsed_q_values = parse_float_list(q_values, "--q-values")
+    parsed_r_values = parse_float_list(r_values, "--r-values")
+    parsed_control_input_values = parse_float_list(
         control_input_values,
         "--control-input-values",
     )
@@ -682,6 +700,7 @@ def dataset_aero_generate(
 
     raise typer.Exit(code=exit_code)
 
+
 @dataset_app.command("curate-aero")
 def dataset_curate_aero(
     dataset: Path = typer.Option(
@@ -720,15 +739,17 @@ def dataset_curate_aero(
         help="Print the full curation report as JSON.",
     ),
 ) -> None:
-    
     """Curate an existing aero dataset into kept/rejected outputs and report promotion readiness."""
-    report = curate_aero_dataset(
-        dataset_root=dataset,
-        reject_incomplete_groups=reject_incomplete_groups,
-        reject_groups_with_failures=reject_groups_with_failures,
-        reject_nonfinite_targets=reject_nonfinite_targets,
-        reject_control_diagnostic_failures=reject_control_diagnostic_failures,
-    )
+    try:
+        report = curate_aero_dataset(
+            dataset_root=dataset,
+            reject_incomplete_groups=reject_incomplete_groups,
+            reject_groups_with_failures=reject_groups_with_failures,
+            reject_nonfinite_targets=reject_nonfinite_targets,
+            reject_control_diagnostic_failures=reject_control_diagnostic_failures,
+        )
+    except Exception as exc:
+        fail_command("Dataset curate-aero", exc)
 
     if as_json:
         typer.echo(json.dumps(report, indent=2))
@@ -758,8 +779,12 @@ def dataset_inspect(
     ),
 ) -> None:
     """Inspect a generated dataset and print QC summary as JSON."""
-    summary = inspect_dataset(dataset)
+    try:
+        summary = inspect_dataset(dataset)
+    except Exception as exc:
+        fail_command("Dataset inspect", exc)
     typer.echo(json.dumps(summary, indent=2))
+
 
 @dataset_app.command("require-promoted-aero")
 def dataset_require_promoted_aero(
@@ -776,12 +801,7 @@ def dataset_require_promoted_aero(
     allow_forced: bool = typer.Option(
         False,
         "--allow-forced",
-        help=(
-    "Allow use of a force-promoted dataset. "
-    "Use only when a dataset was explicitly promoted despite known blockers "
-    "or rejected geometries. Normal ML/downstream workflows should prefer "
-    "strictly promoted datasets."
-),
+        help=_ALLOW_FORCED_HELP,
     ),
     as_json: bool = typer.Option(
         False,
@@ -796,7 +816,7 @@ def dataset_require_promoted_aero(
             allow_forced=allow_forced,
         )
     except Exception as exc:
-        _fail_command("Dataset command", exc)
+        fail_command("Dataset require-promoted-aero", exc)
 
     if as_json:
         typer.echo(json.dumps(context, indent=2))
@@ -804,8 +824,9 @@ def dataset_require_promoted_aero(
 
     _print_promoted_dataset_context(context)
 
+
 @dataset_app.command("training-data")
-def training_data_cmd(
+def dataset_training_data(
     dataset: Path = typer.Option(
         ...,
         "--dataset",
@@ -829,16 +850,12 @@ def training_data_cmd(
     allow_forced: bool = typer.Option(
         False,
         "--allow-forced",
-        help=(
-    "Allow use of a force-promoted dataset. "
-    "Use only when a dataset was explicitly promoted despite known blockers "
-    "or rejected geometries. Normal ML/downstream workflows should prefer "
-    "strictly promoted datasets."
-),
+        help=_ALLOW_FORCED_HELP,
     ),
 ) -> None:
-    feature_cols = [f.strip() for f in features.split(",") if f.strip()]
-    target_cols = [t.strip() for t in targets.split(",") if t.strip()]
+    """Load and report training-data structure from a promoted dataset."""
+    feature_cols = parse_csv_list(features, "--features")
+    target_cols = parse_csv_list(targets, "--targets")
 
     try:
         data = load_training_data(
@@ -848,7 +865,7 @@ def training_data_cmd(
             allow_forced=allow_forced,
         )
     except Exception as exc:
-        _fail_command("Dataset command", exc)
+        fail_command("Dataset training-data", exc)
 
     typer.echo("[AERIS] Training data loaded")
     typer.echo(f"  dataset: {dataset}")
@@ -857,8 +874,9 @@ def training_data_cmd(
     typer.echo(f"  features: {data.feature_columns}")
     typer.echo(f"  targets: {data.target_columns}")
 
+
 @dataset_app.command("split-training-data")
-def split_training_data_cmd(
+def dataset_split_training_data(
     dataset: Path = typer.Option(
         ...,
         "--dataset",
@@ -896,33 +914,32 @@ def split_training_data_cmd(
     allow_forced: bool = typer.Option(
         False,
         "--allow-forced",
-        help=(
-    "Allow use of a force-promoted dataset. "
-    "Use only when a dataset was explicitly promoted despite known blockers "
-    "or rejected geometries. Normal ML/downstream workflows should prefer "
-    "strictly promoted datasets."
-),
+        help=_ALLOW_FORCED_HELP,
     ),
 ) -> None:
-    feature_cols = [f.strip() for f in features.split(",") if f.strip()]
-    target_cols = [t.strip() for t in targets.split(",") if t.strip()]
+    """Load training data and produce a train/val/test split."""
+    feature_cols = parse_csv_list(features, "--features")
+    target_cols = parse_csv_list(targets, "--targets")
 
-    data = load_training_data(
-        dataset_path=dataset,
-        feature_columns=feature_cols,
-        target_columns=target_cols,
-        allow_forced=allow_forced,
-    )
+    try:
+        data = load_training_data(
+            dataset_path=dataset,
+            feature_columns=feature_cols,
+            target_columns=target_cols,
+            allow_forced=allow_forced,
+        )
 
-    split = split_dataset(
-        data.df,
-        method=method,
-        group_column=group_column,
-        train_fraction=train_fraction,
-        val_fraction=val_fraction,
-        test_fraction=test_fraction,
-        random_seed=random_seed,
-    )
+        split = split_dataset(
+            data.df,
+            method=method,
+            group_column=group_column,
+            train_fraction=train_fraction,
+            val_fraction=val_fraction,
+            test_fraction=test_fraction,
+            random_seed=random_seed,
+        )
+    except Exception as exc:
+        fail_command("Dataset split-training-data", exc)
 
     typer.echo("[AERIS] Training data split completed")
     typer.echo(f"  method: {split.method}")

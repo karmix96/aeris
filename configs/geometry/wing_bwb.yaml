@@ -2,8 +2,7 @@ name: wing_bwb
 
 geometry:
   generator:
-    family: bwb_segmented
-    version: v1
+    id: bwb_segmented_v1
     seed: 100
 
   controls:

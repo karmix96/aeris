@@ -1,20 +1,52 @@
+"""
+Per-sample BWB design generator.
+
+Produces a single BWBDesignSample from a BWBGeneratorConfig and a NumPy rng.
+Used by:
+    - single-case geometry generation (one design, one rng)
+    - dataset sampling, where the dataset-level sampler (e.g. LHS) is
+      responsible for any cross-sample coordination
+
+Each design variable is drawn independently with rng.uniform() from its
+configured [min, max] bounds. The dataset-level LHS sampler (Layer 4)
+arranges for the rng draws to follow a Latin Hypercube pattern when needed.
+
+Sign conventions:
+    sw1_deg, sw2_deg, sw3_deg
+        YAML bounds declare positive sweep magnitudes. This function negates
+        them so the stored sample carries the BWB internal convention
+        (negative = aft sweep). See BWBDesignSample docstring.
+"""
+
 from __future__ import annotations
 
 import numpy as np
 
-from aeris.generators.bwb_segmented_v1.params import BWBDesignSample, BWBGeneratorConfig
+from aeris.generators.bwb_segmented_v1.params import (
+    BWBDesignSample,
+    BWBGeneratorConfig,
+)
 
 
 def sample_bwb_design(
     config: BWBGeneratorConfig,
     rng: np.random.Generator,
 ) -> BWBDesignSample:
+    """Draw one explicit BWB design from the configured bounds.
+
+    Args:
+        config: typed BWB generator configuration.
+        rng:    NumPy random Generator. Must be deterministic when given the
+                same seed.
+
+    Returns:
+        BWBDesignSample with negated sw*_deg (BWB internal convention).
+    """
     pb = config.planform_bounds
     sb = config.section_bounds
 
-    # YAML bounds are positive sweep magnitudes.
-    # Internally we preserve the current generator convention:
-    # aft sweep is stored as negative degrees.
+    # YAML bounds are positive magnitudes; convert to BWB's negative-aft
+    # internal convention.
     sw1_mag_deg = rng.uniform(pb.sw1_deg.min, pb.sw1_deg.max)
     sw2_mag_deg = rng.uniform(pb.sw2_deg.min, pb.sw2_deg.max)
     sw3_mag_deg = rng.uniform(pb.sw3_deg.min, pb.sw3_deg.max)

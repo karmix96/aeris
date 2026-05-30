@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 import typer
 
 from aeris.commands.aero import aero_app
@@ -9,6 +11,8 @@ from aeris.commands.geometry import geometry_app
 from aeris.commands.ml import ml_app
 from aeris.commands.pipeline import pipeline_app
 from aeris.commands.version import version_app
+from aeris.common.paths import ensure_output_directories_writable
+
 
 app = typer.Typer(
     help=(
@@ -27,9 +31,58 @@ app = typer.Typer(
 
 
 @app.callback()
-def app_callback() -> None:
-    """AERIS root command group."""
-    pass
+def app_callback(
+    verbose: bool = typer.Option(
+        False,
+        "--verbose",
+        "-v",
+        help="Enable DEBUG-level logging.",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "--quiet",
+        "-q",
+        help="Reduce logging to WARNING-level only.",
+    ),
+    check_writable: bool = typer.Option(
+        True,
+        "--check-writable/--no-check-writable",
+        help="Verify AERIS output directories are writable at startup.",
+    ),
+) -> None:
+    """AERIS — Aerospace + AI conceptual design platform."""
+    if verbose and quiet:
+        typer.secho(
+            "[AERIS] Do not use --verbose and --quiet together.",
+            err=True,
+            fg=typer.colors.RED,
+        )
+        raise typer.Exit(code=2)
+
+    if verbose:
+        level = logging.DEBUG
+    elif quiet:
+        level = logging.WARNING
+    else:
+        level = logging.INFO
+
+    logging.getLogger("aeris").setLevel(level)
+
+    if check_writable:
+        try:
+            ensure_output_directories_writable()
+        except PermissionError as exc:
+            typer.secho(
+                f"[AERIS] Output directory not writable: {exc}",
+                err=True,
+                fg=typer.colors.RED,
+            )
+            typer.secho(
+                "Set AERIS_DATA_ROOT to a writable location or pass "
+                "--no-check-writable to skip this check.",
+                err=True,
+            )
+            raise typer.Exit(code=1)
 
 
 app.add_typer(version_app, name="version")

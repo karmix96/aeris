@@ -20,29 +20,35 @@ from pathlib import Path
 
 import typer
 
+from aeris.commands._helpers import fail_command, parse_csv_list
 from aeris.ml.compare import compare_models
 from aeris.ml.model_registry import list_model_types
 from aeris.ml.predict import predict_with_trained_model
 from aeris.ml.train import train_baseline_model
 
-ml_app = typer.Typer(
-    help="Machine-learning training, comparison, and inference commands for promoted AERIS datasets."
+
+# Shared help text for --allow-forced. Synchronized with dataset commands.
+_ALLOW_FORCED_HELP = (
+    "Allow use of a force-promoted dataset. "
+    "Use only when a dataset was explicitly promoted despite known blockers "
+    "or rejected geometries. Normal ML/downstream workflows should prefer "
+    "strictly promoted datasets."
 )
 
 
-def _parse_csv_list(value: str) -> list[str]:
-    items = [item.strip() for item in value.split(",") if item.strip()]
-    if not items:
-        raise typer.BadParameter("Expected a comma-separated non-empty list.")
-    return items
-
-def _fail_command(command_name: str, exc: Exception) -> None:
-    typer.secho(
-        f"[AERIS] {command_name} failed: {exc}",
-        err=True,
-        fg=typer.colors.RED,
+ml_app = typer.Typer(
+    help=(
+        "Machine-learning training, comparison, and inference commands "
+        "for promoted AERIS datasets."
     )
-    raise typer.Exit(code=1)
+)
+
+
+@ml_app.callback()
+def ml_callback() -> None:
+    """ML command group."""
+    pass
+
 
 @ml_app.command("train")
 def ml_train(
@@ -69,11 +75,12 @@ def ml_train(
     val_fraction: float = typer.Option(0.15, "--val-fraction"),
     test_fraction: float = typer.Option(0.15, "--test-fraction"),
     random_seed: int = typer.Option(123, "--random-seed"),
-    allow_forced: bool = typer.Option(False, "--allow-forced", help="Allow use of a force-promoted dataset."),
+    allow_forced: bool = typer.Option(False, "--allow-forced", help=_ALLOW_FORCED_HELP),
     output_dir: Path | None = typer.Option(None, "--output-dir", help="Optional output directory."),
 ) -> None:
-    feature_cols = _parse_csv_list(features)
-    target_cols = _parse_csv_list(targets)
+    """Train a baseline surrogate model from a promoted aero dataset."""
+    feature_cols = parse_csv_list(features, "--features")
+    target_cols = parse_csv_list(targets, "--targets")
 
     try:
         result = train_baseline_model(
@@ -91,7 +98,7 @@ def ml_train(
             output_dir=output_dir,
         )
     except Exception as exc:
-        _fail_command("ML train", exc)
+        fail_command("ML train", exc)
 
     artifacts = result["artifacts"]
     metrics = result["metrics"]
@@ -144,12 +151,13 @@ def ml_compare(
     val_fraction: float = typer.Option(0.15, "--val-fraction"),
     test_fraction: float = typer.Option(0.15, "--test-fraction"),
     random_seed: int = typer.Option(123, "--random-seed"),
-    allow_forced: bool = typer.Option(False, "--allow-forced", help="Allow use of a force-promoted dataset."),
+    allow_forced: bool = typer.Option(False, "--allow-forced", help=_ALLOW_FORCED_HELP),
     output_dir: Path | None = typer.Option(None, "--output-dir", help="Optional output directory for comparison artifacts."),
 ) -> None:
-    feature_cols = _parse_csv_list(features)
-    target_cols = _parse_csv_list(targets)
-    model_types = _parse_csv_list(models)
+    """Compare several model families on a single fixed train/val/test split."""
+    feature_cols = parse_csv_list(features, "--features")
+    target_cols = parse_csv_list(targets, "--targets")
+    model_types = parse_csv_list(models, "--models")
 
     try:
         result = compare_models(
@@ -167,7 +175,7 @@ def ml_compare(
             output_dir=output_dir,
         )
     except Exception as exc:
-        _fail_command("ML compare", exc)
+        fail_command("ML compare", exc)
 
     summary = result["summary"]
 
@@ -229,6 +237,7 @@ def ml_predict(
         help="If target columns already exist in the input CSV, also compute prediction error metrics.",
     ),
 ) -> None:
+    """Run inference using a saved trained model against an input CSV."""
     try:
         result = predict_with_trained_model(
             model_run_dir=model_run_dir,
@@ -237,7 +246,7 @@ def ml_predict(
             include_truth_if_available=include_truth_if_available,
         )
     except Exception as exc:
-        _fail_command("ML predict", exc)
+        fail_command("ML predict", exc)
 
     summary = result["summary"]
     artifacts = result["artifacts"]
@@ -252,12 +261,6 @@ def ml_predict(
     typer.echo(f"  truth_available: {summary['truth_available']}")
 
     if summary["evaluation"] is not None:
-        typer.echo(
-            f"  rmse_mean: {summary['evaluation']['overall']['rmse_mean']:.6f}"
-        )
-        typer.echo(
-            f"  mae_mean: {summary['evaluation']['overall']['mae_mean']:.6f}"
-        )
-        typer.echo(
-            f"  r2_mean: {summary['evaluation']['overall']['r2_mean']:.6f}"
-        )
+        typer.echo(f"  rmse_mean: {summary['evaluation']['overall']['rmse_mean']:.6f}")
+        typer.echo(f"  mae_mean: {summary['evaluation']['overall']['mae_mean']:.6f}")
+        typer.echo(f"  r2_mean: {summary['evaluation']['overall']['r2_mean']:.6f}")

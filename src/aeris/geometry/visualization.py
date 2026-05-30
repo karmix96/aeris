@@ -2,37 +2,46 @@
 Geometry visualization helpers for AERIS.
 
 Purpose:
-    Provide a reusable, package-native visualization path for one geometry case,
-    so the CLI does not have to call legacy scripts directly.
+    Provide a reusable, package-native visualization path for one geometry
+    case, so the CLI does not call legacy scripts directly.
 
 Responsibilities:
-    - Load a geometry config
-    - Resolve generator and sample one deterministic design
+    - Load a geometry config (via aeris.common.config)
+    - Resolve generator via the registry (no hardcoded generator)
+    - Sample one deterministic design
     - Run one geometry case into a debug output folder
     - Save a plot if requested
     - Optionally display the saved 2D plot
     - Optionally open the AeroSandbox 3D draw window
 
 Notes:
-    - This is intentionally debug-oriented, not a production run pipeline.
-    - We use the same generator path as the real software, not a separate script-only path.
+    - This module is intentionally debug-oriented, not a production pipeline.
+    - It uses the same generator chain as production code (registry-based),
+      so any registered generator works without code changes here.
+    - Output folders go under {data_dir}/debug/visualization_runs/ where
+      data_dir is resolved by aeris.common.paths (editable install, packaged
+      install, cluster scratch, and cloud worker all work transparently).
+    - Matplotlib is imported lazily, so simply importing this module stays
+      fast (relevant for CLI --help latency).
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-import matplotlib.pyplot as plt
-
 from aeris.common.config import load_yaml_config
-from aeris.generators.bwb_segmented_v1.generator import BwbSegmentedV1Generator
+from aeris.common.paths import get_data_dir
+from aeris.geometry.config_resolver import resolve_generator_and_config
+from aeris.geometry.registry import get_geometry_generator
 
 
 @dataclass(frozen=True)
 class GeometryVisualizationResult:
+    """Result of a one-shot geometry visualization."""
+
     output_dir: Path
     plot_path: Path | None
     has_aerosandbox_airplane: bool
@@ -48,27 +57,35 @@ def visualize_geometry_from_config(
     show_plot: bool = False,
     draw_3d: bool = True,
 ) -> GeometryVisualizationResult:
-    """
-    Generate and visualize one geometry from a YAML config.
+    """Generate and visualize one geometry from a YAML config.
 
     Returns:
         GeometryVisualizationResult with output path and visualization status.
+
+    Raises:
+        ValueError: if the config is malformed (propagated from the resolver).
+        KeyError: if the resolved generator ID is not registered.
+        RuntimeError: if 3D draw is requested but no AeroSandbox airplane is
+            available.
     """
     config_path = Path(config_path).expanduser().resolve()
     raw_config = load_yaml_config(config_path)
+
+    generator_id, generator_config = resolve_generator_and_config(raw_config)
+    generator = get_geometry_generator(generator_id)
 
     cfg_name = _resolve_config_name(raw_config=raw_config, config_path=config_path)
     out_dir = _resolve_output_dir(output_dir=output_dir, config_name=cfg_name)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    generator = BwbSegmentedV1Generator()
-    generator_config = generator.build_config(raw_config)
-
     case_seed = seed
     if case_seed is None:
+        # Many generator configs expose a generator-level seed. Treat it as
+        # a best-effort default. Generators without such a field fall through
+        # to None and the sampler picks its own.
         try:
             case_seed = int(generator_config.generator.seed)
-        except Exception:
+        except (AttributeError, TypeError, ValueError):
             case_seed = None
 
     save_plot_final = _resolve_bool_override(
@@ -84,8 +101,13 @@ def visualize_geometry_from_config(
         default=True,
     )
 
+    sample = generator.sample_one(generator_config, seed=case_seed)
+
+    # NOTE: save_plot and build_aerosandbox are BWB-specific kwargs not in
+    # the abstract base contract. Tracker item D15 covers moving these into
+    # the config object during the Layer 2 (BWB) review.
     result = generator.run_full_case(
-        sample=generator.sample_one(generator_config, seed=case_seed),
+        sample=sample,
         config=generator_config,
         output_dir=out_dir,
         save_plot=save_plot_final,
@@ -118,21 +140,31 @@ def visualize_geometry_from_config(
     )
 
 
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
 def _resolve_config_name(*, raw_config: dict[str, Any], config_path: Path) -> str:
     name = raw_config.get("name") or config_path.stem
     return _safe_slug(str(name))
 
 
-def _resolve_output_dir(*, output_dir: str | Path | None, config_name: str) -> Path:
+def _resolve_output_dir(
+    *,
+    output_dir: str | Path | None,
+    config_name: str,
+) -> Path:
     if output_dir is not None:
         return Path(output_dir).expanduser().resolve()
 
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    return _project_root() / "data" / "debug" / "visualization_runs" / f"{ts}_geometry_{config_name}"
-
-
-def _project_root() -> Path:
-    return Path(__file__).resolve().parents[3]
+    ts = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
+    return (
+        get_data_dir()
+        / "debug"
+        / "visualization_runs"
+        / f"{ts}_geometry_{config_name}"
+    )
 
 
 def _safe_slug(text: str) -> str:
@@ -178,6 +210,10 @@ def _find_plot_path(output_dir: Path) -> Path | None:
 
 
 def _show_saved_plot(plot_path: Path) -> None:
+    # Lazy import: matplotlib is heavy (~50 MB, ~0.4–0.8 s startup). Importing
+    # it only when actually displaying keeps CLI help and import time fast.
+    import matplotlib.pyplot as plt
+
     image = plt.imread(plot_path)
     fig = plt.figure()
     ax = fig.add_subplot(111)

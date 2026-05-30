@@ -3,9 +3,9 @@ Registered GeometryGenerator implementation for the bwb_segmented_v1 family.
 
 This module adapts the framework-level GeometryGenerator contract to the
 concrete BWB segmented generator implementation by delegating to:
-- config construction and validation
-- design sampling
-- deterministic case generation
+    - config construction and validation (params + validation)
+    - design sampling (sampling)
+    - deterministic case generation (services, via the case.py shim)
 """
 
 from __future__ import annotations
@@ -18,7 +18,12 @@ import numpy as np
 from aeris.geometry.base import GeometryGenerator
 from aeris.geometry.registry import register_geometry_generator
 
-from aeris.generators.bwb_segmented_v1.case import generate_geometry_case_from_sample
+# case.py is a thin re-export shim from services.py; importing through it
+# keeps scripts/ (which still import from case) functioning.
+from aeris.generators.bwb_segmented_v1.case import (
+    GeometryCaseResult,
+    generate_geometry_case_from_sample,
+)
 from aeris.generators.bwb_segmented_v1.params import (
     BWBDesignSample,
     BWBGeneratorConfig,
@@ -29,12 +34,16 @@ from aeris.generators.bwb_segmented_v1.validation import validate_bwb_generator_
 
 
 @register_geometry_generator
-class BwbSegmentedV1Generator(GeometryGenerator):
-    GENERATOR_ID = "bwb_segmented_v1"
+class BwbSegmentedV1Generator(
+    GeometryGenerator[BWBGeneratorConfig, BWBDesignSample, GeometryCaseResult]
+):
+    """Concrete generator for the BWB segmented v1 design family.
 
-    @property
-    def generator_id(self) -> str:
-        return self.GENERATOR_ID
+    This class is intentionally thin: no geometry math, no validation rules,
+    no file I/O. All real work happens in params/sampling/validation/services.
+    """
+
+    GENERATOR_ID = "bwb_segmented_v1"
 
     @property
     def display_name(self) -> str:
@@ -45,29 +54,41 @@ class BwbSegmentedV1Generator(GeometryGenerator):
         validate_bwb_generator_config(config)
         return config
 
-    def sample_one(self, config: Any, seed: int | None = None) -> BWBDesignSample:
+    def sample_one(
+        self,
+        config: BWBGeneratorConfig,
+        seed: int | None = None,
+    ) -> BWBDesignSample:
+        # Defensive runtime check at the CLI/Any boundary. Static typing
+        # already enforces this at compile time for typed callers.
         if not isinstance(config, BWBGeneratorConfig):
             raise TypeError(
-                f"BwbSegmentedV1Generator expects BWBGeneratorConfig, got {type(config)}"
+                f"BwbSegmentedV1Generator expects BWBGeneratorConfig, "
+                f"got {type(config).__name__}."
             )
         rng = np.random.default_rng(seed)
         return sample_bwb_design(config, rng)
 
     def run_full_case(
         self,
-        sample: Any,
-        config: Any,
+        sample: BWBDesignSample,
+        config: BWBGeneratorConfig,
         output_dir: Path,
         save_plot: bool | None = None,
         build_aerosandbox: bool | None = None,
-    ) -> Any:
+    ) -> GeometryCaseResult:
+        # NOTE: save_plot/build_aerosandbox kwargs are BWB-specific and not
+        # in the abstract base signature. Tracker item D15 covers moving
+        # these into the config object so the base signature becomes complete.
         if not isinstance(config, BWBGeneratorConfig):
             raise TypeError(
-                f"BwbSegmentedV1Generator expects BWBGeneratorConfig, got {type(config)}"
+                f"BwbSegmentedV1Generator expects BWBGeneratorConfig, "
+                f"got {type(config).__name__}."
             )
         if not isinstance(sample, BWBDesignSample):
             raise TypeError(
-                f"BwbSegmentedV1Generator expects BWBDesignSample, got {type(sample)}"
+                f"BwbSegmentedV1Generator expects BWBDesignSample, "
+                f"got {type(sample).__name__}."
             )
 
         return generate_geometry_case_from_sample(
@@ -78,7 +99,22 @@ class BwbSegmentedV1Generator(GeometryGenerator):
             build_aerosandbox=build_aerosandbox,
         )
 
-    def summarize_case(self, case: Any) -> dict[str, Any]:
-        if hasattr(case, "summary"):
-            return case.summary
-        return {}
+    def summarize_case(self, case: GeometryCaseResult) -> dict[str, Any]:
+        """Return the case summary as a dict.
+
+        Downstream consumers (aeris.dataset.*, aeris.ml.*) expect a non-empty
+        dict here. Missing or wrong-typed .summary raises explicitly rather
+        than degrading silently to an empty dict.
+        """
+        if not hasattr(case, "summary"):
+            raise AttributeError(
+                f"{type(case).__name__} has no 'summary' attribute. "
+                "BWB cases must produce a summary dict."
+            )
+        summary = case.summary
+        if not isinstance(summary, dict):
+            raise TypeError(
+                f"BWB case.summary must be a dict, "
+                f"got {type(summary).__name__}."
+            )
+        return summary

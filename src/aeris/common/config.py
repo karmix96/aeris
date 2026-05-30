@@ -32,11 +32,23 @@ from typing import Any
 
 import yaml
 
+__all__ = [
+    "load_yaml_config",
+    "file_sha256",
+]
+
 _LOGGER = logging.getLogger(__name__)
 
 
 def file_sha256(path: str | Path) -> str:
-    """Compute SHA256 hash for a file."""
+    """Compute the SHA256 hex digest of a file.
+
+    Reads the file in 1 MiB chunks to bound memory usage on large inputs.
+
+    Raises:
+        FileNotFoundError: if the path does not exist.
+        OSError: if the file cannot be read.
+    """
     file_path = Path(path).expanduser().resolve()
     hasher = hashlib.sha256()
 
@@ -59,6 +71,8 @@ def load_yaml_config(config_path: str | Path) -> dict[str, Any]:
             are not non-empty strings.
         yaml.YAMLError:
             If the file is not valid YAML.
+        OSError:
+            If the file cannot be opened or read.
     """
     path = Path(config_path).expanduser().resolve()
 
@@ -74,12 +88,15 @@ def load_yaml_config(config_path: str | Path) -> dict[str, Any]:
     try:
         with path.open("r", encoding="utf-8") as handle:
             data = yaml.safe_load(handle)
-    except Exception:
-        _LOGGER.exception("Failed to load YAML config: %s", path)
+    except yaml.YAMLError:
+        _LOGGER.exception("Invalid YAML syntax in config: %s", path)
+        raise
+    except OSError:
+        _LOGGER.exception("Filesystem error loading config: %s", path)
         raise
 
     if data is None:
-        _LOGGER.debug("Loaded empty YAML config: %s", path)
+        _LOGGER.info("Loaded empty YAML config: %s", path)
         return {}
 
     if not isinstance(data, dict):
@@ -89,11 +106,19 @@ def load_yaml_config(config_path: str | Path) -> dict[str, Any]:
         if not isinstance(key, str) or not key.strip():
             raise ValueError(f"Config keys must be non-empty strings: {path}")
 
-    _LOGGER.debug(
-        "Loaded YAML config: %s | top_level_keys=%d | sha256=%s",
+    _LOGGER.info(
+        "Loaded YAML config: %s | top_level_keys=%d",
         path,
         len(data),
-        file_sha256(path),
     )
+
+    # SHA256 is expensive (full file read). Only compute it when DEBUG is active
+    # or when an explicit caller asks via file_sha256() — e.g. the manifest writer.
+    if _LOGGER.isEnabledFor(logging.DEBUG):
+        _LOGGER.debug(
+            "Config sha256: %s | %s",
+            file_sha256(path),
+            path,
+        )
 
     return data

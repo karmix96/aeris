@@ -45,6 +45,7 @@ from aeris.ml.model_registry import list_model_types
 from aeris.ml.inference_guard import check_inference_inputs
 from aeris.ml.multifidelity import build_delta_dataset
 from aeris.ml.multifidelity.delta_model import predict_with_delta_model, train_delta_model
+from aeris.ml.multifidelity.evaluation import evaluate_delta_model_run
 from aeris.ml.predict import predict_with_trained_model
 from aeris.ml.train import train_baseline_model, train_baseline_model_from_config
 
@@ -721,6 +722,37 @@ def ml_predict_delta_model(
         typer.echo(f"  corrected_rmse_mean: {summary['evaluation']['overall']['rmse_mean']:.6f}")
         typer.echo(f"  corrected_mae_mean: {summary['evaluation']['overall']['mae_mean']:.6f}")
         typer.echo(f"  corrected_r2_mean: {summary['evaluation']['overall']['r2_mean']:.6f}")
+
+
+@ml_app.command("evaluate-delta-model")
+def ml_evaluate_delta_model(
+    model_run_dir: Path = typer.Option(..., "--model-run-dir", exists=True, file_okay=False, dir_okay=True, readable=True, resolve_path=True, help="Path to a trained delta model run directory."),
+    partitions: str = typer.Option("train,val,test", "--partitions", help="Comma-separated partitions to evaluate, e.g. train,val,test or test."),
+    output_dir: Path | None = typer.Option(None, "--output-dir", help="Optional output directory for multifidelity evaluation artifacts."),
+) -> None:
+    """Evaluate whether a delta model improves LF predictions against HF truth."""
+    try:
+        result = evaluate_delta_model_run(
+            model_run_dir=model_run_dir,
+            partitions=parse_csv_list(partitions, "--partitions"),
+            output_dir=output_dir,
+        )
+    except Exception as exc:
+        fail_command("ML evaluate-delta-model", exc)
+
+    winner = result.report["winner_report"]
+    typer.echo("[AERIS] ML multifidelity delta-model evaluation completed")
+    typer.echo(f"  model_run_dir: {result.model_run_dir}")
+    typer.echo(f"  output_dir: {result.output_dir}")
+    typer.echo(f"  report_json: {result.report_json}")
+    typer.echo(f"  report_csv: {result.report_csv}")
+    typer.echo(f"  selection_partition: {winner['selection_partition']}")
+    typer.echo(f"  status: {winner['status']}")
+    typer.echo(f"  lf_rmse_mean: {winner['lf_rmse_mean']:.6f}")
+    typer.echo(f"  corrected_rmse_mean: {winner['corrected_rmse_mean']:.6f}")
+    typer.echo(f"  rmse_improvement_pct_mean: {winner['rmse_improvement_pct_mean']}")
+    typer.echo(f"  improved_targets: {winner['improved_targets']}")
+    typer.echo(f"  worsened_targets: {winner['worsened_targets']}")
 
 
 @ml_app.command("compare-seeds")

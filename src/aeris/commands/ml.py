@@ -401,7 +401,8 @@ def ml_tune(
         resolve_path=True,
         help="Path to a promoted aero dataset root. Required unless --config is used.",
     ),
-    features: str | None = typer.Option(None, "--features", help="Comma-separated feature columns. Required unless --config is used."),
+    features: str | None = typer.Option(None, "--features", help="Comma-separated feature columns. Required unless --config or --feature-preset is used."),
+    feature_preset: str | None = typer.Option(None, "--feature-preset", help="Named feature preset, e.g. bwb_control. Cannot be combined with --features."),
     targets: str | None = typer.Option(None, "--targets", help="Comma-separated target columns. Required unless --config is used."),
     model_type: str = typer.Option(
         "random_forest",

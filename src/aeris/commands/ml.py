@@ -42,6 +42,7 @@ from aeris.ml.model_promotion import (
     require_promoted_model as require_promoted_model_gate,
 )
 from aeris.ml.model_registry import list_model_types
+from aeris.ml.inference_guard import check_inference_inputs
 from aeris.ml.predict import predict_with_trained_model
 from aeris.ml.train import train_baseline_model, train_baseline_model_from_config
 
@@ -798,6 +799,43 @@ def ml_require_promoted_model(
     typer.echo(f"  blockers: {manifest.get('promotion_blockers', [])}")
 
 
+@ml_app.command("check-inference-inputs")
+def ml_check_inference_inputs(
+    model_run_dir: Path = typer.Option(..., "--model-run-dir", exists=True, file_okay=False, dir_okay=True, readable=True, resolve_path=True, help="Path to a saved ML training run directory."),
+    input_csv: Path = typer.Option(..., "--input-csv", exists=True, file_okay=True, dir_okay=False, readable=True, resolve_path=True, help="CSV file containing required feature columns."),
+    output_dir: Path | None = typer.Option(None, "--output-dir", help="Optional output directory for inference-guard artifacts."),
+    require_promoted_model: bool = typer.Option(True, "--require-promoted-model/--no-require-promoted-model", help="Require model_promotion_manifest.json to be approved before checking inference inputs."),
+    fail_on_violations: bool = typer.Option(False, "--fail-on-violations/--no-fail-on-violations", help="Exit nonzero if envelope or schema violations are found."),
+    tolerance: float = typer.Option(0.0, "--tolerance", help="Absolute tolerance applied to training-envelope min/max checks."),
+) -> None:
+    """Check whether an input CSV is inside the promoted model training envelope."""
+    try:
+        result = check_inference_inputs(
+            model_run_dir=model_run_dir,
+            input_csv=input_csv,
+            output_dir=output_dir,
+            require_promoted_model_gate=require_promoted_model,
+            fail_on_violations=False,
+            tolerance=tolerance,
+        )
+    except Exception as exc:
+        fail_command("ML check-inference-inputs", exc)
+
+    typer.echo("[AERIS] ML inference-input guard")
+    typer.echo(f"  model_run_dir: {result.model_run_dir}")
+    typer.echo(f"  input_csv: {result.input_csv}")
+    typer.echo(f"  passed: {result.passed}")
+    typer.echo(f"  report_json: {result.report_path}")
+    typer.echo(f"  errors: {len(result.errors)}")
+    typer.echo(f"  warnings: {len(result.warnings)}")
+    for issue in result.errors:
+        typer.echo(f"  ERROR: {issue}")
+    for issue in result.warnings:
+        typer.echo(f"  WARNING: {issue}")
+    if fail_on_violations and not result.passed:
+        raise typer.Exit(code=1)
+
+
 @ml_app.command("predict")
 def ml_predict(
     model_run_dir: Path = typer.Option(
@@ -830,6 +868,16 @@ def ml_predict(
         "--require-promoted-model",
         help="Require model_promotion_manifest.json to be approved before prediction.",
     ),
+    enforce_envelope: bool = typer.Option(
+        False,
+        "--enforce-envelope",
+        help="Require input CSV feature ranges to stay within the promoted model training envelope.",
+    ),
+    envelope_tolerance: float = typer.Option(
+        0.0,
+        "--envelope-tolerance",
+        help="Absolute tolerance applied to training-envelope min/max checks.",
+    ),
     include_truth_if_available: bool = typer.Option(
         True,
         "--include-truth-if-available/--no-include-truth-if-available",
@@ -840,6 +888,15 @@ def ml_predict(
     try:
         if require_promoted_model:
             require_promoted_model_gate(model_run_dir)
+        if enforce_envelope:
+            check_inference_inputs(
+                model_run_dir=model_run_dir,
+                input_csv=input_csv,
+                output_dir=output_dir,
+                require_promoted_model_gate=require_promoted_model,
+                fail_on_violations=True,
+                tolerance=envelope_tolerance,
+            )
 
         result = predict_with_trained_model(
             model_run_dir=model_run_dir,

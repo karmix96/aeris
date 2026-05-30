@@ -121,3 +121,67 @@ def test_ml_train_cli_gradient_boosting(tmp_path: Path) -> None:
     assert (output_dir / "metrics.json").exists()
     assert (output_dir / "models" / "model.pkl").exists()
     assert (output_dir / "feature_importances.json").exists()
+
+
+def test_ml_train_cli_from_config(tmp_path: Path) -> None:
+    import yaml
+
+    dataset_root = _build_dataset(tmp_path)
+    output_dir = tmp_path / "cli_config"
+    config_path = tmp_path / "ml_train.yaml"
+    config_path.write_text(
+        yaml.safe_dump(
+            {
+                "ml": {
+                    "dataset": str(dataset_root),
+                    "features": "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg",
+                    "targets": "cl,cd,cm",
+                    "split": {"method": "grouped", "group_column": "geometry_id", "random_seed": 123},
+                    "model": {"type": "random_forest", "params": {"n_estimators": 7}},
+                    "output_dir": str(output_dir),
+                }
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["ml", "train", "--config", str(config_path)])
+
+    assert result.exit_code == 0, result.stdout
+    assert "[AERIS] ML training completed" in result.stdout
+    assert "random_forest" in result.stdout
+    assert (output_dir / "metrics.json").exists()
+    assert (output_dir / "models" / "model.pkl").exists()
+    assert (output_dir / "ml_run_manifest.json").exists()
+
+    train_config = json.loads((output_dir / "train_config.json").read_text(encoding="utf-8"))
+    assert train_config["source_config_path"] == str(config_path.resolve())
+    assert train_config["model_params"]["n_estimators"] == 7
+
+
+def test_ml_train_cli_model_params_json(tmp_path: Path) -> None:
+    dataset_root = _build_dataset(tmp_path)
+    output_dir = tmp_path / "cli_params"
+    params_json = tmp_path / "rf_params.json"
+    params_json.write_text('{"n_estimators": 5, "max_depth": 2}', encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        [
+            "ml",
+            "train",
+            "--dataset", str(dataset_root),
+            "--features", "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg",
+            "--targets", "cl,cd,cm",
+            "--model-type", "random_forest",
+            "--model-params-json", str(params_json),
+            "--split-method", "grouped",
+            "--output-dir", str(output_dir),
+        ],
+    )
+
+    assert result.exit_code == 0, result.stdout
+    train_config = json.loads((output_dir / "train_config.json").read_text(encoding="utf-8"))
+    assert train_config["model_params"]["n_estimators"] == 5
+    assert train_config["model_params"]["max_depth"] == 2

@@ -1,0 +1,12 @@
+{
+  "search": {
+    "strategy": "random",
+    "max_trials": 6,
+    "random_seed": 123
+  },
+  "params": {
+    "n_estimators": [50, 100, 200],
+    "max_depth": [2, 3, 5, null],
+    "min_samples_leaf": [1, 2, 4]
+  }
+}

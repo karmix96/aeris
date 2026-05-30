@@ -22,12 +22,13 @@ import typer
 
 from aeris.commands._helpers import fail_command, parse_csv_list
 from aeris.ml.compare import compare_models
+from aeris.ml.config import load_model_params_by_type_json, load_model_params_json
+from aeris.ml.tune import load_tuning_param_space_json, tune_model, tune_model_from_config
 from aeris.ml.model_registry import list_model_types
 from aeris.ml.predict import predict_with_trained_model
-from aeris.ml.train import train_baseline_model
+from aeris.ml.train import train_baseline_model, train_baseline_model_from_config
 
 
-# Shared help text for --allow-forced. Synchronized with dataset commands.
 _ALLOW_FORCED_HELP = (
     "Allow use of a force-promoted dataset. "
     "Use only when a dataset was explicitly promoted despite known blockers "
@@ -50,59 +51,11 @@ def ml_callback() -> None:
     pass
 
 
-@ml_app.command("train")
-def ml_train(
-    dataset: Path = typer.Option(
-        ...,
-        "--dataset",
-        exists=True,
-        file_okay=False,
-        dir_okay=True,
-        readable=True,
-        resolve_path=True,
-        help="Path to a promoted aero dataset root.",
-    ),
-    features: str = typer.Option(..., "--features", help="Comma-separated feature columns."),
-    targets: str = typer.Option(..., "--targets", help="Comma-separated target columns."),
-    model_type: str = typer.Option(
-        "linear_regression",
-        "--model-type",
-        help=f"Model type. Supported: {', '.join(list_model_types())}",
-    ),
-    split_method: str = typer.Option("grouped", "--split-method", help="Split method: grouped or random."),
-    group_column: str = typer.Option("geometry_id", "--group-column", help="Grouping column for grouped split."),
-    train_fraction: float = typer.Option(0.7, "--train-fraction"),
-    val_fraction: float = typer.Option(0.15, "--val-fraction"),
-    test_fraction: float = typer.Option(0.15, "--test-fraction"),
-    random_seed: int = typer.Option(123, "--random-seed"),
-    allow_forced: bool = typer.Option(False, "--allow-forced", help=_ALLOW_FORCED_HELP),
-    output_dir: Path | None = typer.Option(None, "--output-dir", help="Optional output directory."),
-) -> None:
-    """Train a baseline surrogate model from a promoted aero dataset."""
-    feature_cols = parse_csv_list(features, "--features")
-    target_cols = parse_csv_list(targets, "--targets")
-
-    try:
-        result = train_baseline_model(
-            dataset_path=dataset,
-            feature_columns=feature_cols,
-            target_columns=target_cols,
-            model_type=model_type,
-            split_method=split_method,
-            group_column=group_column,
-            train_fraction=train_fraction,
-            val_fraction=val_fraction,
-            test_fraction=test_fraction,
-            random_seed=random_seed,
-            allow_forced=allow_forced,
-            output_dir=output_dir,
-        )
-    except Exception as exc:
-        fail_command("ML train", exc)
-
+def _echo_train_result(result: dict, *, model_type_label: str | None = None) -> None:
     artifacts = result["artifacts"]
     metrics = result["metrics"]
     split = result["split"]
+    model_type = model_type_label or metrics["model"]["model_type"]
 
     typer.echo("[AERIS] ML training completed")
     typer.echo(f"  model_type: {model_type}")
@@ -128,6 +81,105 @@ def ml_train(
 
     typer.echo(f"  test_r2_mean: {metrics['test']['overall']['r2_mean']:.6f}")
     typer.echo(f"  test_rmse_mean: {metrics['test']['overall']['rmse_mean']:.6f}")
+
+
+@ml_app.command("train")
+def ml_train(
+    config: Path | None = typer.Option(
+        None,
+        "--config",
+        "-c",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Optional YAML ML experiment config. If provided, dataset/features/targets come from config.",
+    ),
+    dataset: Path | None = typer.Option(
+        None,
+        "--dataset",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to a promoted aero dataset root. Required unless --config is used.",
+    ),
+    features: str | None = typer.Option(None, "--features", help="Comma-separated feature columns. Required unless --config is used."),
+    targets: str | None = typer.Option(None, "--targets", help="Comma-separated target columns. Required unless --config is used."),
+    model_type: str = typer.Option(
+        "linear_regression",
+        "--model-type",
+        help=f"Model type. Supported: {', '.join(list_model_types())}",
+    ),
+    split_method: str = typer.Option("grouped", "--split-method", help="Split method: grouped or random."),
+    group_column: str = typer.Option("geometry_id", "--group-column", help="Grouping column for grouped split."),
+    train_fraction: float = typer.Option(0.7, "--train-fraction"),
+    val_fraction: float = typer.Option(0.15, "--val-fraction"),
+    test_fraction: float = typer.Option(0.15, "--test-fraction"),
+    random_seed: int = typer.Option(123, "--random-seed"),
+    allow_forced: bool = typer.Option(False, "--allow-forced", help=_ALLOW_FORCED_HELP),
+    model_params_json: Path | None = typer.Option(
+        None,
+        "--model-params-json",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Optional JSON object containing model constructor parameters.",
+    ),
+    output_dir: Path | None = typer.Option(None, "--output-dir", help="Optional output directory."),
+) -> None:
+    """Train a baseline surrogate model from a promoted aero dataset."""
+    try:
+        model_params_override = (
+            load_model_params_json(model_params_json)
+            if model_params_json is not None
+            else None
+        )
+
+        if config is not None:
+            result = train_baseline_model_from_config(
+                config_path=config,
+                output_dir=output_dir,
+                model_params_override=model_params_override,
+            )
+            _echo_train_result(result)
+            return
+
+        if dataset is None:
+            raise typer.BadParameter("--dataset is required when --config is not used.")
+        if features is None:
+            raise typer.BadParameter("--features is required when --config is not used.")
+        if targets is None:
+            raise typer.BadParameter("--targets is required when --config is not used.")
+
+        feature_cols = parse_csv_list(features, "--features")
+        target_cols = parse_csv_list(targets, "--targets")
+
+        result = train_baseline_model(
+            dataset_path=dataset,
+            feature_columns=feature_cols,
+            target_columns=target_cols,
+            model_type=model_type,
+            split_method=split_method,
+            group_column=group_column,
+            train_fraction=train_fraction,
+            val_fraction=val_fraction,
+            test_fraction=test_fraction,
+            random_seed=random_seed,
+            allow_forced=allow_forced,
+            model_params=model_params_override,
+            output_dir=output_dir,
+        )
+    except typer.BadParameter:
+        raise
+    except Exception as exc:
+        fail_command("ML train", exc)
+
+    _echo_train_result(result, model_type_label=model_type)
 
 
 @ml_app.command("compare")
@@ -156,6 +208,16 @@ def ml_compare(
     test_fraction: float = typer.Option(0.15, "--test-fraction"),
     random_seed: int = typer.Option(123, "--random-seed"),
     allow_forced: bool = typer.Option(False, "--allow-forced", help=_ALLOW_FORCED_HELP),
+    model_params_json: Path | None = typer.Option(
+        None,
+        "--model-params-json",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Optional JSON mapping of model_type -> constructor parameters.",
+    ),
     output_dir: Path | None = typer.Option(None, "--output-dir", help="Optional output directory for comparison artifacts."),
 ) -> None:
     """Compare several model families on a single fixed train/val/test split."""
@@ -176,6 +238,11 @@ def ml_compare(
             test_fraction=test_fraction,
             random_seed=random_seed,
             allow_forced=allow_forced,
+            model_params_by_type=(
+                load_model_params_by_type_json(model_params_json)
+                if model_params_json is not None
+                else None
+            ),
             output_dir=output_dir,
         )
     except Exception as exc:
@@ -206,6 +273,139 @@ def ml_compare(
             f"test_r2_mean={run['metrics']['test']['overall']['r2_mean']:.6f}, "
             f"test_rmse_mean={run['metrics']['test']['overall']['rmse_mean']:.6f}"
         )
+
+
+@ml_app.command("tune")
+def ml_tune(
+    config: Path | None = typer.Option(
+        None,
+        "--config",
+        "-c",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Optional YAML ML experiment config. If provided, dataset/features/targets/model/split come from config.",
+    ),
+    dataset: Path | None = typer.Option(
+        None,
+        "--dataset",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to a promoted aero dataset root. Required unless --config is used.",
+    ),
+    features: str | None = typer.Option(None, "--features", help="Comma-separated feature columns. Required unless --config is used."),
+    targets: str | None = typer.Option(None, "--targets", help="Comma-separated target columns. Required unless --config is used."),
+    model_type: str = typer.Option(
+        "random_forest",
+        "--model-type",
+        help=f"Model type. Supported: {', '.join(list_model_types())}",
+    ),
+    param_space_json: Path = typer.Option(
+        ...,
+        "--param-space-json",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="JSON parameter space for tuning.",
+    ),
+    strategy: str = typer.Option("grid", "--strategy", help="Tuning strategy: grid or random."),
+    max_trials: int | None = typer.Option(None, "--max-trials", help="Maximum trials. Required for random strategy."),
+    tuning_random_seed: int = typer.Option(123, "--tuning-random-seed", help="Seed for random search trial generation."),
+    split_method: str = typer.Option("grouped", "--split-method", help="Split method: grouped or random."),
+    group_column: str = typer.Option("geometry_id", "--group-column", help="Grouping column for grouped split."),
+    train_fraction: float = typer.Option(0.7, "--train-fraction"),
+    val_fraction: float = typer.Option(0.15, "--val-fraction"),
+    test_fraction: float = typer.Option(0.15, "--test-fraction"),
+    random_seed: int = typer.Option(123, "--random-seed"),
+    allow_forced: bool = typer.Option(False, "--allow-forced", help=_ALLOW_FORCED_HELP),
+    selection_metric: str = typer.Option("val.rmse_mean", "--selection-metric", help="Metric used to pick best trial, e.g. val.rmse_mean or val.r2_mean."),
+    minimize: bool = typer.Option(True, "--minimize/--maximize", help="Whether lower selection metric is better."),
+    fail_policy: str = typer.Option("continue", "--fail-policy", help="Trial failure policy: continue or raise."),
+    output_dir: Path | None = typer.Option(None, "--output-dir", help="Optional output directory for tuning artifacts."),
+) -> None:
+    """Tune one model family over a deterministic parameter search space."""
+    try:
+        loaded_space = load_tuning_param_space_json(param_space_json)
+        param_space = loaded_space["params"]
+        search = loaded_space.get("search", {}) or {}
+        strategy_eff = str(search.get("strategy") or strategy)
+        max_trials_eff = search.get("max_trials", max_trials)
+        tuning_seed_eff = int(search.get("random_seed", tuning_random_seed))
+
+        if config is not None:
+            result = tune_model_from_config(
+                config_path=config,
+                param_space=param_space,
+                strategy=strategy_eff,
+                max_trials=None if max_trials_eff is None else int(max_trials_eff),
+                tuning_random_seed=tuning_seed_eff,
+                selection_metric=selection_metric,
+                minimize=minimize,
+                fail_policy=fail_policy,  # type: ignore[arg-type]
+                source_param_space_path=param_space_json,
+                output_dir=output_dir,
+            )
+        else:
+            if dataset is None:
+                raise typer.BadParameter("--dataset is required when --config is not used.")
+            if features is None:
+                raise typer.BadParameter("--features is required when --config is not used.")
+            if targets is None:
+                raise typer.BadParameter("--targets is required when --config is not used.")
+
+            result = tune_model(
+                dataset_path=dataset,
+                feature_columns=parse_csv_list(features, "--features"),
+                target_columns=parse_csv_list(targets, "--targets"),
+                model_type=model_type,
+                param_space=param_space,
+                strategy=strategy_eff,  # type: ignore[arg-type]
+                max_trials=None if max_trials_eff is None else int(max_trials_eff),
+                tuning_random_seed=tuning_seed_eff,
+                split_method=split_method,
+                group_column=group_column,
+                train_fraction=train_fraction,
+                val_fraction=val_fraction,
+                test_fraction=test_fraction,
+                random_seed=random_seed,
+                allow_forced=allow_forced,
+                selection_metric=selection_metric,
+                minimize=minimize,
+                fail_policy=fail_policy,  # type: ignore[arg-type]
+                source_param_space_path=param_space_json,
+                output_dir=output_dir,
+            )
+    except typer.BadParameter:
+        raise
+    except Exception as exc:
+        fail_command("ML tune", exc)
+
+    summary = result["summary"]
+    best = summary.get("best_trial") or {}
+    best_params = best.get("model_params", {})
+
+    typer.echo("[AERIS] ML tuning completed")
+    typer.echo(f"  dataset: {summary['dataset_path']}")
+    typer.echo(f"  model_type: {summary['model_type']}")
+    typer.echo(f"  strategy: {summary['search']['strategy']}")
+    typer.echo(f"  n_trials: {summary['n_trials']}")
+    typer.echo(f"  n_successful_trials: {summary['n_successful_trials']}")
+    typer.echo(f"  n_failed_trials: {summary['n_failed_trials']}")
+    typer.echo(f"  selection_metric: {summary['search']['selection_metric']}")
+    typer.echo(f"  output_dir: {result['output_dir']}")
+    typer.echo(f"  tuning_summary_json: {result['tuning_summary_json']}")
+    typer.echo(f"  tuning_trials_csv: {result['tuning_trials_csv']}")
+    if best:
+        typer.echo(f"  best_trial: {best['trial_id']}")
+        typer.echo(f"  best_score: {best['selection_score']}")
+        typer.echo(f"  best_params: {best_params}")
 
 
 @ml_app.command("predict")

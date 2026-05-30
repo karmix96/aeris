@@ -43,6 +43,7 @@ from aeris.ml.model_promotion import (
 )
 from aeris.ml.model_registry import list_model_types
 from aeris.ml.inference_guard import check_inference_inputs
+from aeris.ml.multifidelity import build_delta_dataset
 from aeris.ml.predict import predict_with_trained_model
 from aeris.ml.train import train_baseline_model, train_baseline_model_from_config
 
@@ -599,6 +600,41 @@ def ml_tune(
         typer.echo(f"  best_params: {best_params}")
 
 
+
+
+@ml_app.command("build-delta-dataset")
+def ml_build_delta_dataset(
+    lf_csv: Path = typer.Option(..., "--lf-csv", exists=True, file_okay=True, dir_okay=False, readable=True, resolve_path=True, help="Low-fidelity CSV, e.g. AVL/XFOIL scalar results."),
+    hf_csv: Path = typer.Option(..., "--hf-csv", exists=True, file_okay=True, dir_okay=False, readable=True, resolve_path=True, help="High-fidelity CSV, e.g. CFD scalar results."),
+    pair_keys: str = typer.Option(..., "--pair-keys", help="Comma-separated pairing keys, e.g. geometry_id,alpha_deg,velocity_mps,altitude_m,control_input_deg."),
+    targets: str = typer.Option(..., "--targets", help="Comma-separated scalar targets to delta, e.g. cl,cd,cm."),
+    output_dir: Path = typer.Option(..., "--output-dir", help="Output directory for delta_dataset.csv and delta_dataset_report.json."),
+) -> None:
+    """Build a paired multifidelity delta dataset from LF/HF scalar CSV files."""
+    try:
+        result = build_delta_dataset(
+            lf_csv=lf_csv,
+            hf_csv=hf_csv,
+            pair_keys=parse_csv_list(pair_keys, "--pair-keys"),
+            targets=parse_csv_list(targets, "--targets"),
+            output_dir=output_dir,
+        )
+    except Exception as exc:
+        fail_command("ML build-delta-dataset", exc)
+
+    typer.echo("[AERIS] ML multifidelity delta dataset built")
+    typer.echo(f"  lf_csv: {lf_csv}")
+    typer.echo(f"  hf_csv: {hf_csv}")
+    typer.echo(f"  output_dir: {result.output_dir}")
+    typer.echo(f"  delta_dataset_csv: {result.delta_dataset_csv}")
+    typer.echo(f"  report_json: {result.report_json}")
+    typer.echo(f"  pair_keys: {', '.join(result.pair_keys)}")
+    typer.echo(f"  targets: {', '.join(result.targets)}")
+    typer.echo(f"  lf_rows: {result.n_lf_rows}")
+    typer.echo(f"  hf_rows: {result.n_hf_rows}")
+    typer.echo(f"  paired_rows: {result.n_paired_rows}")
+    typer.echo(f"  unmatched_lf_rows: {result.n_unmatched_lf_rows}")
+    typer.echo(f"  unmatched_hf_rows: {result.n_unmatched_hf_rows}")
 
 
 @ml_app.command("compare-seeds")

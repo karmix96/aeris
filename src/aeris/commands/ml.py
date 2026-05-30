@@ -22,8 +22,14 @@ import typer
 
 from aeris.commands._helpers import fail_command, parse_csv_list
 from aeris.ml.compare import compare_models
+from aeris.ml.compare_hardening import compare_models_across_seeds, compare_tuning_runs
 from aeris.ml.config import load_model_params_by_type_json, load_model_params_json
 from aeris.ml.tune import load_tuning_param_space_json, tune_model, tune_model_from_config
+from aeris.ml.optuna_tune import (
+    load_optuna_param_space_json,
+    tune_model_optuna,
+    tune_model_optuna_from_config,
+)
 from aeris.ml.model_registry import list_model_types
 from aeris.ml.predict import predict_with_trained_model
 from aeris.ml.train import train_baseline_model, train_baseline_model_from_config
@@ -277,6 +283,11 @@ def ml_compare(
 
 @ml_app.command("tune")
 def ml_tune(
+    backend: str = typer.Option(
+        "aeris",
+        "--backend",
+        help="Tuning backend: aeris or optuna. Keep aeris for deterministic grid/random; use optuna for advanced studies.",
+    ),
     config: Path | None = typer.Option(
         None,
         "--config",
@@ -315,9 +326,14 @@ def ml_tune(
         resolve_path=True,
         help="JSON parameter space for tuning.",
     ),
-    strategy: str = typer.Option("grid", "--strategy", help="Tuning strategy: grid or random."),
-    max_trials: int | None = typer.Option(None, "--max-trials", help="Maximum trials. Required for random strategy."),
-    tuning_random_seed: int = typer.Option(123, "--tuning-random-seed", help="Seed for random search trial generation."),
+    strategy: str = typer.Option("grid", "--strategy", help="AERIS backend strategy: grid or random."),
+    max_trials: int | None = typer.Option(None, "--max-trials", help="Maximum AERIS backend trials; also used as Optuna n_trials if --n-trials is omitted."),
+    n_trials: int | None = typer.Option(None, "--n-trials", help="Number of Optuna trials. Defaults to search.n_trials, --max-trials, or 20."),
+    tuning_random_seed: int = typer.Option(123, "--tuning-random-seed", help="Seed for random search / Optuna sampler."),
+    optuna_sampler: str = typer.Option("tpe", "--optuna-sampler", help="Optuna sampler: tpe or random."),
+    study_name: str | None = typer.Option(None, "--study-name", help="Optional Optuna study name."),
+    storage: str | None = typer.Option(None, "--storage", help="Optional Optuna storage URL, e.g. sqlite:///data/processed/ml_runs/optuna.db."),
+    load_if_exists: bool = typer.Option(True, "--load-if-exists/--no-load-if-exists", help="For Optuna: resume an existing study with the same name/storage."),
     split_method: str = typer.Option("grouped", "--split-method", help="Split method: grouped or random."),
     group_column: str = typer.Option("geometry_id", "--group-column", help="Grouping column for grouped split."),
     train_fraction: float = typer.Option(0.7, "--train-fraction"),
@@ -330,58 +346,132 @@ def ml_tune(
     fail_policy: str = typer.Option("continue", "--fail-policy", help="Trial failure policy: continue or raise."),
     output_dir: Path | None = typer.Option(None, "--output-dir", help="Optional output directory for tuning artifacts."),
 ) -> None:
-    """Tune one model family over a deterministic parameter search space."""
+    """Tune one model family over a parameter search space."""
     try:
         loaded_space = load_tuning_param_space_json(param_space_json)
         param_space = loaded_space["params"]
         search = loaded_space.get("search", {}) or {}
+
+        backend_eff = str(search.get("backend") or backend).strip().lower()
+
+        # Important: the default AERIS loader normalizes every parameter into a
+        # list for grid/random tuning. Optuna needs raw distribution specs
+        # preserved, e.g. {"type": "float", "low": ..., "high": ...}.
+        if backend_eff == "optuna":
+            optuna_loaded_space = load_optuna_param_space_json(param_space_json)
+            param_space = optuna_loaded_space["params"]
+            search = optuna_loaded_space.get("search", {}) or {}
+            backend_eff = str(search.get("backend") or backend).strip().lower()
+
         strategy_eff = str(search.get("strategy") or strategy)
         max_trials_eff = search.get("max_trials", max_trials)
         tuning_seed_eff = int(search.get("random_seed", tuning_random_seed))
+        selection_metric_eff = str(search.get("selection_metric") or selection_metric)
+        minimize_eff = bool(search.get("minimize", minimize))
 
-        if config is not None:
-            result = tune_model_from_config(
-                config_path=config,
-                param_space=param_space,
-                strategy=strategy_eff,
-                max_trials=None if max_trials_eff is None else int(max_trials_eff),
-                tuning_random_seed=tuning_seed_eff,
-                selection_metric=selection_metric,
-                minimize=minimize,
-                fail_policy=fail_policy,  # type: ignore[arg-type]
-                source_param_space_path=param_space_json,
-                output_dir=output_dir,
-            )
+        if backend_eff == "optuna":
+            n_trials_eff = search.get("n_trials", n_trials if n_trials is not None else max_trials_eff)
+            if n_trials_eff is None:
+                n_trials_eff = 20
+            sampler_eff = str(search.get("sampler") or search.get("optuna_sampler") or optuna_sampler)
+            study_name_eff = search.get("study_name", study_name)
+            storage_eff = search.get("storage", storage)
+
+            if config is not None:
+                result = tune_model_optuna_from_config(
+                    config_path=config,
+                    param_space=param_space,
+                    n_trials=int(n_trials_eff),
+                    sampler_name=sampler_eff,  # type: ignore[arg-type]
+                    tuning_random_seed=tuning_seed_eff,
+                    study_name=None if study_name_eff is None else str(study_name_eff),
+                    storage=None if storage_eff is None else str(storage_eff),
+                    load_if_exists=load_if_exists,
+                    selection_metric=selection_metric_eff,
+                    minimize=minimize_eff,
+                    fail_policy=fail_policy,  # type: ignore[arg-type]
+                    source_param_space_path=param_space_json,
+                    output_dir=output_dir,
+                )
+            else:
+                if dataset is None:
+                    raise typer.BadParameter("--dataset is required when --config is not used.")
+                if features is None:
+                    raise typer.BadParameter("--features is required when --config is not used.")
+                if targets is None:
+                    raise typer.BadParameter("--targets is required when --config is not used.")
+
+                result = tune_model_optuna(
+                    dataset_path=dataset,
+                    feature_columns=parse_csv_list(features, "--features"),
+                    target_columns=parse_csv_list(targets, "--targets"),
+                    model_type=model_type,
+                    param_space=param_space,
+                    n_trials=int(n_trials_eff),
+                    sampler_name=sampler_eff,  # type: ignore[arg-type]
+                    tuning_random_seed=tuning_seed_eff,
+                    study_name=None if study_name_eff is None else str(study_name_eff),
+                    storage=None if storage_eff is None else str(storage_eff),
+                    load_if_exists=load_if_exists,
+                    split_method=split_method,
+                    group_column=group_column,
+                    train_fraction=train_fraction,
+                    val_fraction=val_fraction,
+                    test_fraction=test_fraction,
+                    random_seed=random_seed,
+                    allow_forced=allow_forced,
+                    selection_metric=selection_metric_eff,
+                    minimize=minimize_eff,
+                    fail_policy=fail_policy,  # type: ignore[arg-type]
+                    source_param_space_path=param_space_json,
+                    output_dir=output_dir,
+                )
+        elif backend_eff == "aeris":
+            if config is not None:
+                result = tune_model_from_config(
+                    config_path=config,
+                    param_space=param_space,
+                    strategy=strategy_eff,  # type: ignore[arg-type]
+                    max_trials=None if max_trials_eff is None else int(max_trials_eff),
+                    tuning_random_seed=tuning_seed_eff,
+                    selection_metric=selection_metric_eff,
+                    minimize=minimize_eff,
+                    fail_policy=fail_policy,  # type: ignore[arg-type]
+                    source_param_space_path=param_space_json,
+                    output_dir=output_dir,
+                )
+            else:
+                if dataset is None:
+                    raise typer.BadParameter("--dataset is required when --config is not used.")
+                if features is None:
+                    raise typer.BadParameter("--features is required when --config is not used.")
+                if targets is None:
+                    raise typer.BadParameter("--targets is required when --config is not used.")
+
+                result = tune_model(
+                    dataset_path=dataset,
+                    feature_columns=parse_csv_list(features, "--features"),
+                    target_columns=parse_csv_list(targets, "--targets"),
+                    model_type=model_type,
+                    param_space=param_space,
+                    strategy=strategy_eff,  # type: ignore[arg-type]
+                    max_trials=None if max_trials_eff is None else int(max_trials_eff),
+                    tuning_random_seed=tuning_seed_eff,
+                    split_method=split_method,
+                    group_column=group_column,
+                    train_fraction=train_fraction,
+                    val_fraction=val_fraction,
+                    test_fraction=test_fraction,
+                    random_seed=random_seed,
+                    allow_forced=allow_forced,
+                    selection_metric=selection_metric_eff,
+                    minimize=minimize_eff,
+                    fail_policy=fail_policy,  # type: ignore[arg-type]
+                    source_param_space_path=param_space_json,
+                    output_dir=output_dir,
+                )
         else:
-            if dataset is None:
-                raise typer.BadParameter("--dataset is required when --config is not used.")
-            if features is None:
-                raise typer.BadParameter("--features is required when --config is not used.")
-            if targets is None:
-                raise typer.BadParameter("--targets is required when --config is not used.")
-
-            result = tune_model(
-                dataset_path=dataset,
-                feature_columns=parse_csv_list(features, "--features"),
-                target_columns=parse_csv_list(targets, "--targets"),
-                model_type=model_type,
-                param_space=param_space,
-                strategy=strategy_eff,  # type: ignore[arg-type]
-                max_trials=None if max_trials_eff is None else int(max_trials_eff),
-                tuning_random_seed=tuning_seed_eff,
-                split_method=split_method,
-                group_column=group_column,
-                train_fraction=train_fraction,
-                val_fraction=val_fraction,
-                test_fraction=test_fraction,
-                random_seed=random_seed,
-                allow_forced=allow_forced,
-                selection_metric=selection_metric,
-                minimize=minimize,
-                fail_policy=fail_policy,  # type: ignore[arg-type]
-                source_param_space_path=param_space_json,
-                output_dir=output_dir,
-            )
+            raise typer.BadParameter("--backend must be 'aeris' or 'optuna'.")
     except typer.BadParameter:
         raise
     except Exception as exc:
@@ -392,12 +482,19 @@ def ml_tune(
     best_params = best.get("model_params", {})
 
     typer.echo("[AERIS] ML tuning completed")
+    typer.echo(f"  backend: {summary.get('backend', 'aeris')}")
     typer.echo(f"  dataset: {summary['dataset_path']}")
     typer.echo(f"  model_type: {summary['model_type']}")
     typer.echo(f"  strategy: {summary['search']['strategy']}")
+    if summary.get("study"):
+        typer.echo(f"  study_name: {summary['study'].get('study_name')}")
+        typer.echo(f"  sampler: {summary['study'].get('sampler')}")
+        typer.echo(f"  storage: {summary['study'].get('storage')}")
     typer.echo(f"  n_trials: {summary['n_trials']}")
     typer.echo(f"  n_successful_trials: {summary['n_successful_trials']}")
     typer.echo(f"  n_failed_trials: {summary['n_failed_trials']}")
+    if 'n_pruned_trials' in summary:
+        typer.echo(f"  n_pruned_trials: {summary['n_pruned_trials']}")
     typer.echo(f"  selection_metric: {summary['search']['selection_metric']}")
     typer.echo(f"  output_dir: {result['output_dir']}")
     typer.echo(f"  tuning_summary_json: {result['tuning_summary_json']}")
@@ -406,6 +503,121 @@ def ml_tune(
         typer.echo(f"  best_trial: {best['trial_id']}")
         typer.echo(f"  best_score: {best['selection_score']}")
         typer.echo(f"  best_params: {best_params}")
+
+
+
+
+@ml_app.command("compare-seeds")
+def ml_compare_seeds(
+    dataset: Path = typer.Option(
+        ...,
+        "--dataset",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to a promoted aero dataset root.",
+    ),
+    features: str = typer.Option(..., "--features", help="Comma-separated feature columns."),
+    targets: str = typer.Option(..., "--targets", help="Comma-separated target columns."),
+    models: str = typer.Option(
+        ...,
+        "--models",
+        help=f"Comma-separated model types. Supported: {', '.join(list_model_types())}",
+    ),
+    seeds: str = typer.Option(..., "--seeds", help="Comma-separated random seeds, e.g. 101,202,303."),
+    split_method: str = typer.Option("grouped", "--split-method", help="Split method: grouped or random."),
+    group_column: str = typer.Option("geometry_id", "--group-column", help="Grouping column for grouped split."),
+    train_fraction: float = typer.Option(0.7, "--train-fraction"),
+    val_fraction: float = typer.Option(0.15, "--val-fraction"),
+    test_fraction: float = typer.Option(0.15, "--test-fraction"),
+    allow_forced: bool = typer.Option(False, "--allow-forced", help=_ALLOW_FORCED_HELP),
+    model_params_json: Path | None = typer.Option(
+        None,
+        "--model-params-json",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Optional JSON mapping of model_type -> constructor parameters.",
+    ),
+    output_dir: Path | None = typer.Option(None, "--output-dir", help="Optional output directory for seed-stability artifacts."),
+) -> None:
+    """Compare model families across multiple split seeds."""
+    try:
+        feature_cols = parse_csv_list(features, "--features")
+        target_cols = parse_csv_list(targets, "--targets")
+        model_types = parse_csv_list(models, "--models")
+        seed_values = [int(value) for value in parse_csv_list(seeds, "--seeds")]
+
+        result = compare_models_across_seeds(
+            dataset_path=dataset,
+            feature_columns=feature_cols,
+            target_columns=target_cols,
+            model_types=model_types,
+            seeds=seed_values,
+            split_method=split_method,
+            group_column=group_column,
+            train_fraction=train_fraction,
+            val_fraction=val_fraction,
+            test_fraction=test_fraction,
+            allow_forced=allow_forced,
+            model_params_by_type=(
+                load_model_params_by_type_json(model_params_json)
+                if model_params_json is not None
+                else None
+            ),
+            output_dir=output_dir,
+        )
+    except Exception as exc:
+        fail_command("ML compare-seeds", exc)
+
+    winner = result["summary"]["winner_report"]
+    typer.echo("[AERIS] ML seed-stability comparison completed")
+    typer.echo(f"  dataset: {dataset}")
+    typer.echo(f"  models: {models}")
+    typer.echo(f"  seeds: {seeds}")
+    typer.echo(f"  output_dir: {result['output_dir']}")
+    typer.echo(f"  summary_json: {result['summary_json']}")
+    typer.echo(f"  model_stability_summary_csv: {result['model_stability_summary_csv']}")
+    typer.echo(f"  per_target_ranking_csv: {result['per_target_ranking_csv']}")
+    typer.echo(f"  winner_report_json: {result['winner_report_json']}")
+    typer.echo(f"  winner_by_mean_test_rmse: {winner['winner_by_mean_test_rmse']}")
+    typer.echo(f"  winner_by_rmse_win_count: {winner['winner_by_rmse_win_count']}")
+
+
+@ml_app.command("compare-tuning-runs")
+def ml_compare_tuning_runs(
+    runs: str = typer.Option(..., "--runs", help="Comma-separated tuning run directories containing best_trial.json."),
+    selection_metric: str = typer.Option("val.rmse_mean", "--selection-metric", help="Metric used to rank tuning runs."),
+    minimize: bool = typer.Option(True, "--minimize/--maximize", help="Whether lower selection metric is better."),
+    output_dir: Path | None = typer.Option(None, "--output-dir", help="Optional output directory for tuning-run comparison artifacts."),
+) -> None:
+    """Compare completed tuning campaigns by their best trials."""
+    try:
+        run_dirs = [Path(value) for value in parse_csv_list(runs, "--runs")]
+        result = compare_tuning_runs(
+            tuning_run_dirs=run_dirs,
+            selection_metric=selection_metric,
+            minimize=minimize,
+            output_dir=output_dir,
+        )
+    except Exception as exc:
+        fail_command("ML compare-tuning-runs", exc)
+
+    winner = result["summary"]["winner_report"]
+    typer.echo("[AERIS] ML tuning-run comparison completed")
+    typer.echo(f"  runs: {runs}")
+    typer.echo(f"  selection_metric: {selection_metric}")
+    typer.echo(f"  minimize: {minimize}")
+    typer.echo(f"  output_dir: {result['output_dir']}")
+    typer.echo(f"  summary_json: {result['summary_json']}")
+    typer.echo(f"  summary_csv: {result['summary_csv']}")
+    typer.echo(f"  winner_report_json: {result['winner_report_json']}")
+    typer.echo(f"  winner_model_type: {winner['winner_model_type']}")
+    typer.echo(f"  winner_score: {winner['winner_score']}")
 
 
 @ml_app.command("predict")

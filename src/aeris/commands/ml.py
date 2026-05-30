@@ -44,6 +44,7 @@ from aeris.ml.model_promotion import (
 from aeris.ml.model_registry import list_model_types
 from aeris.ml.inference_guard import check_inference_inputs
 from aeris.ml.multifidelity import build_delta_dataset
+from aeris.ml.multifidelity.delta_model import predict_with_delta_model, train_delta_model
 from aeris.ml.predict import predict_with_trained_model
 from aeris.ml.train import train_baseline_model, train_baseline_model_from_config
 
@@ -635,6 +636,91 @@ def ml_build_delta_dataset(
     typer.echo(f"  paired_rows: {result.n_paired_rows}")
     typer.echo(f"  unmatched_lf_rows: {result.n_unmatched_lf_rows}")
     typer.echo(f"  unmatched_hf_rows: {result.n_unmatched_hf_rows}")
+
+
+@ml_app.command("train-delta-model")
+def ml_train_delta_model(
+    delta_dataset: Path = typer.Option(..., "--delta-dataset", exists=True, readable=True, resolve_path=True, help="Path to delta_dataset.csv or a directory containing it."),
+    features: str = typer.Option(..., "--features", help="Comma-separated feature columns. Usually includes design/condition columns and LF outputs."),
+    base_targets: str = typer.Option(..., "--base-targets", help="Comma-separated base targets, e.g. cl,cd,cm. Delta targets are inferred as delta__<target>."),
+    model_type: str = typer.Option("extra_trees", "--model-type", help=f"Model type. Supported: {', '.join(list_model_types())}"),
+    split_method: str = typer.Option("grouped", "--split-method", help="Split method: grouped or random."),
+    group_column: str = typer.Option("geometry_id", "--group-column", help="Grouping column for grouped split."),
+    train_fraction: float = typer.Option(0.7, "--train-fraction"),
+    val_fraction: float = typer.Option(0.15, "--val-fraction"),
+    test_fraction: float = typer.Option(0.15, "--test-fraction"),
+    random_seed: int = typer.Option(123, "--random-seed"),
+    model_params_json: Path | None = typer.Option(None, "--model-params-json", exists=True, file_okay=True, dir_okay=False, readable=True, resolve_path=True, help="Optional JSON object containing model constructor parameters."),
+    output_dir: Path | None = typer.Option(None, "--output-dir", help="Output directory for the trained delta model run."),
+) -> None:
+    """Train a multifidelity delta model from delta_dataset.csv."""
+    try:
+        result = train_delta_model(
+            delta_dataset=delta_dataset,
+            feature_columns=parse_csv_list(features, "--features"),
+            base_targets=parse_csv_list(base_targets, "--base-targets"),
+            model_type=model_type,
+            split_method=split_method,  # type: ignore[arg-type]
+            group_column=group_column,
+            train_fraction=train_fraction,
+            val_fraction=val_fraction,
+            test_fraction=test_fraction,
+            random_seed=random_seed,
+            model_params=(load_model_params_json(model_params_json) if model_params_json is not None else None),
+            output_dir=output_dir,
+        )
+    except Exception as exc:
+        fail_command("ML train-delta-model", exc)
+
+    artifacts = result["artifacts"]
+    metrics = result["metrics"]
+    split = result["split"]
+    typer.echo("[AERIS] ML multifidelity delta model trained")
+    typer.echo(f"  model_type: {metrics['model']['model_type']}")
+    typer.echo(f"  split_method: {split.method}")
+    typer.echo(f"  train_rows: {len(split.train_df)}")
+    typer.echo(f"  val_rows: {len(split.val_df)}")
+    typer.echo(f"  test_rows: {len(split.test_df)}")
+    typer.echo(f"  output_dir: {artifacts.run_dir}")
+    typer.echo(f"  model_path: {artifacts.model_path}")
+    typer.echo(f"  metrics_json: {artifacts.metrics_path}")
+    typer.echo(f"  delta_model_manifest_json: {artifacts.manifest_path}")
+    typer.echo(f"  test_delta_rmse_mean: {metrics['test']['delta']['overall']['rmse_mean']:.6f}")
+    typer.echo(f"  test_corrected_rmse_mean: {metrics['test']['corrected']['overall']['rmse_mean']:.6f}")
+
+
+@ml_app.command("predict-delta-model")
+def ml_predict_delta_model(
+    model_run_dir: Path = typer.Option(..., "--model-run-dir", exists=True, file_okay=False, dir_okay=True, readable=True, resolve_path=True, help="Path to a trained delta model run directory."),
+    input_csv: Path = typer.Option(..., "--input-csv", exists=True, file_okay=True, dir_okay=False, readable=True, resolve_path=True, help="CSV containing required features and LF target columns."),
+    output_dir: Path | None = typer.Option(None, "--output-dir", help="Output directory for delta predictions."),
+    include_truth_if_available: bool = typer.Option(True, "--include-truth-if-available/--no-include-truth-if-available", help="If HF target columns are present, compute corrected-output metrics."),
+) -> None:
+    """Predict deltas and corrected HF-like scalar outputs using a trained delta model."""
+    try:
+        result = predict_with_delta_model(
+            model_run_dir=model_run_dir,
+            input_csv=input_csv,
+            output_dir=output_dir,
+            include_truth_if_available=include_truth_if_available,
+        )
+    except Exception as exc:
+        fail_command("ML predict-delta-model", exc)
+
+    summary = result["summary"]
+    artifacts = result["artifacts"]
+    typer.echo("[AERIS] ML multifidelity delta prediction completed")
+    typer.echo(f"  model_run_dir: {summary['model_run_dir']}")
+    typer.echo(f"  n_rows: {summary['n_rows']}")
+    typer.echo(f"  input_csv: {summary['input_csv']}")
+    typer.echo(f"  output_dir: {artifacts.output_dir}")
+    typer.echo(f"  predictions_csv: {artifacts.predictions_csv}")
+    typer.echo(f"  prediction_summary_json: {artifacts.prediction_summary_json}")
+    typer.echo(f"  truth_available: {summary['truth_available']}")
+    if summary["evaluation"] is not None:
+        typer.echo(f"  corrected_rmse_mean: {summary['evaluation']['overall']['rmse_mean']:.6f}")
+        typer.echo(f"  corrected_mae_mean: {summary['evaluation']['overall']['mae_mean']:.6f}")
+        typer.echo(f"  corrected_r2_mean: {summary['evaluation']['overall']['r2_mean']:.6f}")
 
 
 @ml_app.command("compare-seeds")

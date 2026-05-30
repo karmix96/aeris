@@ -7,10 +7,12 @@ from pathlib import Path
 from typing import Any, Literal
 
 import numpy as np
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-
 from aeris.dataset.splitting import DatasetSplit, split_dataset
 from aeris.dataset.training_data import TrainingData, load_training_data
+from aeris.ml.diagnostics import write_regression_diagnostics
+from aeris.ml.fingerprints import build_dataset_fingerprints, file_sha256
+from aeris.ml.manifest import build_environment_snapshot, utc_now_iso, write_ml_run_manifest
+from aeris.ml.metrics import evaluate_regression_metrics
 from aeris.ml.model_registry import build_model, get_model_spec
 
 SplitMethod = Literal["grouped", "random"]
@@ -44,6 +46,14 @@ class TrainArtifacts:
     test_rows_path: Path
     coefficients_path: Path | None = None
     feature_importances_path: Path | None = None
+    diagnostics_dir: Path | None = None
+    train_prediction_vs_truth_path: Path | None = None
+    val_prediction_vs_truth_path: Path | None = None
+    test_prediction_vs_truth_path: Path | None = None
+    train_residuals_path: Path | None = None
+    val_residuals_path: Path | None = None
+    test_residuals_path: Path | None = None
+    ml_run_manifest_path: Path | None = None
 
 
 def _ensure_run_dir(output_dir: Path) -> Path:
@@ -56,42 +66,7 @@ def _evaluate_predictions(
     y_pred: np.ndarray,
     target_columns: list[str],
 ) -> dict[str, Any]:
-    if y_true.ndim == 1:
-        y_true = y_true.reshape(-1, 1)
-    if y_pred.ndim == 1:
-        y_pred = y_pred.reshape(-1, 1)
-
-    per_target: dict[str, dict[str, float]] = {}
-    rmse_values: list[float] = []
-    mae_values: list[float] = []
-    r2_values: list[float] = []
-
-    for idx, target in enumerate(target_columns):
-        y_true_col = y_true[:, idx]
-        y_pred_col = y_pred[:, idx]
-
-        rmse = float(np.sqrt(mean_squared_error(y_true_col, y_pred_col)))
-        mae = float(mean_absolute_error(y_true_col, y_pred_col))
-        r2 = float(r2_score(y_true_col, y_pred_col))
-
-        per_target[target] = {
-            "rmse": rmse,
-            "mae": mae,
-            "r2": r2,
-        }
-
-        rmse_values.append(rmse)
-        mae_values.append(mae)
-        r2_values.append(r2)
-
-    return {
-        "per_target": per_target,
-        "overall": {
-            "rmse_mean": float(np.mean(rmse_values)),
-            "mae_mean": float(np.mean(mae_values)),
-            "r2_mean": float(np.mean(r2_values)),
-        },
-    }
+    return evaluate_regression_metrics(y_true, y_pred, target_columns)
 
 
 def _write_split_rows(split: DatasetSplit, output_dir: Path) -> tuple[Path, Path, Path]:
@@ -331,6 +306,37 @@ def train_baseline_model(
     with model_path.open("wb") as f:
         pickle.dump(model, f)
 
+    diagnostics_dir = output_dir / "diagnostics"
+    train_diag = write_regression_diagnostics(
+        partition_name="train",
+        df=split.train_df,
+        target_columns=target_columns,
+        y_true=y_train,
+        y_pred=y_pred_train,
+        output_dir=diagnostics_dir,
+    )
+    val_diag = write_regression_diagnostics(
+        partition_name="val",
+        df=split.val_df,
+        target_columns=target_columns,
+        y_true=y_val,
+        y_pred=y_pred_val,
+        output_dir=diagnostics_dir,
+    )
+    test_diag = write_regression_diagnostics(
+        partition_name="test",
+        df=split.test_df,
+        target_columns=target_columns,
+        y_true=y_test,
+        y_pred=y_pred_test,
+        output_dir=diagnostics_dir,
+    )
+    metrics["diagnostics"] = {
+        "train": train_diag,
+        "val": val_diag,
+        "test": test_diag,
+    }
+
     metrics_path = output_dir / "metrics.json"
     metrics_path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
 
@@ -364,6 +370,61 @@ def train_baseline_model(
         output_dir=output_dir,
     )
 
+    curated_csv_path = training_data.metadata.get("curated_csv_path")
+    dataset_fingerprints = build_dataset_fingerprints(
+        dataset_path=dataset_path,
+        curated_csv_path=curated_csv_path,
+    )
+    split_fingerprints = {
+        "train_rows_csv": {"path": str(train_rows_path), "sha256": file_sha256(train_rows_path)},
+        "val_rows_csv": {"path": str(val_rows_path), "sha256": file_sha256(val_rows_path)},
+        "test_rows_csv": {"path": str(test_rows_path), "sha256": file_sha256(test_rows_path)},
+    }
+
+    ml_run_manifest = {
+        "schema_version": "aeris.ml_run_manifest.v1",
+        "status": "success",
+        "created_at_utc": utc_now_iso(),
+        "run_dir": str(output_dir),
+        "environment": build_environment_snapshot(),
+        "dataset": {
+            "dataset_path": str(dataset_path),
+            "curated_csv_path": str(curated_csv_path),
+            "fingerprints": dataset_fingerprints,
+            "promotion_context": training_data.metadata.get("promotion_context"),
+        },
+        "training_data": {
+            "n_samples": training_data.metadata.get("n_samples"),
+            "n_features": training_data.metadata.get("n_features"),
+            "n_targets": training_data.metadata.get("n_targets"),
+            "feature_columns": list(feature_columns),
+            "target_columns": list(target_columns),
+            "dropped_non_finite_rows": training_data.metadata.get("dropped_non_finite_rows"),
+        },
+        "split": {
+            "method": split.method,
+            "metadata": getattr(split, "metadata", {}),
+            "train_rows": int(len(split.train_df)),
+            "val_rows": int(len(split.val_df)),
+            "test_rows": int(len(split.test_df)),
+            "fingerprints": split_fingerprints,
+        },
+        "model": metrics["model"],
+        "metrics": metrics,
+        "artifacts": {
+            "model_path": str(model_path),
+            "metrics_path": str(metrics_path),
+            "train_config_path": str(train_config_path),
+            "diagnostics_dir": str(diagnostics_dir),
+            "coefficients_path": None if coefficients_path is None else str(coefficients_path),
+            "feature_importances_path": None if feature_importances_path is None else str(feature_importances_path),
+        },
+    }
+    ml_run_manifest_path = write_ml_run_manifest(
+        output_dir / "ml_run_manifest.json",
+        ml_run_manifest,
+    )
+
     artifacts = TrainArtifacts(
         run_dir=output_dir,
         models_dir=models_dir,
@@ -375,6 +436,14 @@ def train_baseline_model(
         test_rows_path=test_rows_path,
         coefficients_path=coefficients_path,
         feature_importances_path=feature_importances_path,
+        diagnostics_dir=diagnostics_dir,
+        train_prediction_vs_truth_path=Path(train_diag["prediction_vs_truth_csv"]),
+        val_prediction_vs_truth_path=Path(val_diag["prediction_vs_truth_csv"]),
+        test_prediction_vs_truth_path=Path(test_diag["prediction_vs_truth_csv"]),
+        train_residuals_path=Path(train_diag["residuals_csv"]),
+        val_residuals_path=Path(val_diag["residuals_csv"]),
+        test_residuals_path=Path(test_diag["residuals_csv"]),
+        ml_run_manifest_path=ml_run_manifest_path,
     )
 
     return {

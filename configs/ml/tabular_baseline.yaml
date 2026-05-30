@@ -1,0 +1,27 @@
+# AERIS ML baseline training template.
+# Replace dataset with a promoted dataset root before use.
+ml:
+  dataset: data/datasets/<promoted_aero_dataset>
+  features:
+    - c1_m
+    - b_total_m
+    - sw1_deg
+    - alpha_deg
+    - velocity_mps
+    - altitude_m
+    - control_input_deg
+  targets:
+    - cl
+    - cd
+    - cm
+  split:
+    method: grouped
+    group_column: geometry_id
+    train_fraction: 0.70
+    val_fraction: 0.15
+    test_fraction: 0.15
+    random_seed: 123
+  model:
+    type: gradient_boosting
+    params: {}
+  output_dir: data/processed/ml_runs/tabular_baseline

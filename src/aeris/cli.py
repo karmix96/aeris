@@ -8,6 +8,7 @@ from aeris.commands.aero import aero_app
 from aeris.commands.dataset import dataset_app
 from aeris.commands.dynamics import dynamics_app
 from aeris.commands.geometry import geometry_app
+from aeris.commands.gui import gui_app
 from aeris.commands.ml import ml_app
 from aeris.commands.pipeline import pipeline_app
 from aeris.commands.version import version_app
@@ -19,6 +20,7 @@ app = typer.Typer(
         "AERIS command-line interface.\n\n"
         "Mental model:\n"
         "- geometry = generate or visualize one geometry\n"
+        "- gui = launch local Streamlit operator cockpit\n"
         "- dataset = generate, inspect, QC, curate, and promote datasets\n"
         "- aero = run or inspect aerodynamic cases and sweeps\n"
         "- dynamics = mass / CG / trim / dynamics-foundation workflows\n"
@@ -87,6 +89,7 @@ def app_callback(
 
 app.add_typer(version_app, name="version")
 app.add_typer(geometry_app, name="geometry")
+app.add_typer(gui_app, name="gui")
 app.add_typer(dataset_app, name="dataset")
 app.add_typer(pipeline_app, name="pipeline")
 app.add_typer(aero_app, name="aero")

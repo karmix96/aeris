@@ -1,0 +1,33 @@
+# AERIS 2D airfoil scalar-surrogate template for XFOIL/CFD campaigns.
+# This assumes the dataset is already curated/promoted and contains these columns.
+ml:
+  dataset: data/datasets/<promoted_airfoil_dataset>
+  features:
+    - cst_u0
+    - cst_u1
+    - cst_u2
+    - cst_u3
+    - cst_u4
+    - cst_l0
+    - cst_l1
+    - cst_l2
+    - cst_l3
+    - cst_l4
+    - alpha_deg
+    - reynolds
+    - mach
+  targets:
+    - cl
+    - cd
+    - cm
+  split:
+    method: grouped
+    group_column: airfoil_id
+    train_fraction: 0.70
+    val_fraction: 0.15
+    test_fraction: 0.15
+    random_seed: 123
+  model:
+    type: gradient_boosting
+    params: {}
+  output_dir: data/processed/ml_runs/airfoil_xfoil_baseline

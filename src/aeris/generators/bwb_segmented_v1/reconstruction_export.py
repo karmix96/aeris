@@ -52,6 +52,10 @@ def export_reconstruction_artifacts(
     seg_dihedral_deg: list[float] = []
     for i in range(len(xsecs)):
         if i == 0:
+            # Root dihedral is always 0° by generator convention
+            # (dihedral_root_deg is a fixed config value, not sampled).
+            # If a future generator introduces non-zero root dihedral,
+            # this must be replaced with: atan2(zs[1]-zs[0], ys[1]-ys[0]).
             seg_dihedral_deg.append(0.0)
         elif i < len(xsecs) - 1:
             dy = ys[i + 1] - ys[i]
@@ -113,8 +117,19 @@ def _write_airfoil_dat(airfoil: asb.Airfoil, path: Path) -> None:
 
     coords = getattr(airfoil, "coordinates", None)
     if coords is None:
+        # 2D.8 — Airfoil coordinates unavailable; falling back to NACA 0012.
+        # This means the original airfoil name was unresolvable by AeroSandbox.
+        # The .dat file will contain NACA 0012 coordinates, NOT the intended
+        # airfoil. This is a data quality issue: check airfoil_name in section_3d.csv.
+        import warnings
+        warnings.warn(
+            f"Airfoil coordinates not found for {path.name!r}; "
+            "falling back to NACA 0012. Check airfoil_name in section_3d.csv.",
+            UserWarning,
+            stacklevel=2,
+        )
         airfoil = asb.Airfoil("naca0012")
-        coords = airfoil.coordinates
+        coords = airfoil.coordinates    
 
     coords = np.asarray(coords, dtype=float)
     if coords.ndim != 2 or coords.shape[1] != 2:

@@ -44,10 +44,15 @@ def load_training_data(
         allow_forced=allow_forced,
     )
 
-    curated_path = dataset_path / "curated_aero_dataset.csv"
+    curated_from_gate = promoted_info.get("curated_aero_dataset_csv")
+    curated_path = (
+        Path(curated_from_gate).expanduser().resolve()
+        if curated_from_gate
+        else dataset_path / "curated_aero_dataset.csv"
+    )
     if not curated_path.exists():
         raise FileNotFoundError(
-            f"Missing curated dataset CSV: {curated_path}"
+            f"Missing curated dataset CSV resolved by promotion gate: {curated_path}"
         )
 
     df = pd.read_csv(curated_path)

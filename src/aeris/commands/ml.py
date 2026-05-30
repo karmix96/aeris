@@ -116,6 +116,10 @@ def ml_train(
     typer.echo(f"  train_rows_csv: {artifacts.train_rows_path}")
     typer.echo(f"  val_rows_csv: {artifacts.val_rows_path}")
     typer.echo(f"  test_rows_csv: {artifacts.test_rows_path}")
+    if getattr(artifacts, "ml_run_manifest_path", None) is not None:
+        typer.echo(f"  ml_run_manifest_json: {artifacts.ml_run_manifest_path}")
+    if getattr(artifacts, "diagnostics_dir", None) is not None:
+        typer.echo(f"  diagnostics_dir: {artifacts.diagnostics_dir}")
 
     if artifacts.coefficients_path is not None:
         typer.echo(f"  coefficients_json: {artifacts.coefficients_path}")

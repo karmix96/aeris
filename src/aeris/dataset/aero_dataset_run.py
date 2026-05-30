@@ -169,18 +169,35 @@ def _prune_aero_run_artifacts(
     }
 
 def _infer_generator_id_from_config(raw_config: dict[str, Any]) -> str:
+    """Infer the generator ID from a raw config dict.
+ 
+    Handles both the preferred 'id:' schema and the legacy 'family + version'
+    schema. Mirrors the logic in geometry/config_resolver.py so both paths
+    resolve identically.
+    """
     geometry = raw_config.get("geometry", {}) or {}
     generator = geometry.get("generator", {}) or {}
+ 
+    # Preferred schema: geometry.generator.id (e.g. 'bwb_segmented_v1')
+    explicit_id = str(generator.get("id", "")).strip()
+    if explicit_id:
+        return explicit_id
+ 
+    # Legacy schema: geometry.generator.family + version
     family = str(generator.get("family", "")).strip()
     version = str(generator.get("version", "")).strip()
-
+ 
     if family == "bwb_segmented" and version == "v1":
         return "bwb_segmented_v1"
-
+ 
     if family and version:
         return f"{family}_{version}"
-
-    raise ValueError("Could not infer generator_id from config.")
+ 
+    raise ValueError(
+        "Could not infer generator_id from config. "
+        "Provide 'geometry.generator.id: bwb_segmented_v1' (preferred) "
+        "or both 'family' and 'version'."
+    )
 
 
 def _find_aero_result_json(case_dir: Path) -> Path:

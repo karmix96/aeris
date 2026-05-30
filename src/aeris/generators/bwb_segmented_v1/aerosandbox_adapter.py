@@ -211,10 +211,17 @@ def build_aerosandbox_geometry(
         xsecs=wing_xsecs,
     )
 
+    # 2D.2 — Explicit reference values are required for AVL normalization.
+    # AeroSandbox computes s_ref/c_ref/b_ref lazily when not provided, which
+    # works for geometry inspection but causes silent incorrect CL/CD/Cm
+    # normalization in AVL runs. Always bake them in from the wing object.
     airplane = asb.Airplane(
         name=config.name,
         xyz_ref=[0.0, 0.0, 0.0],
         wings=[wing],
+        s_ref=float(wing.area()),
+        c_ref=float(wing.mean_aerodynamic_chord()),
+        b_ref=float(wing.span()),
     )
 
     wing_meta = extract_wing_metadata(wing)

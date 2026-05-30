@@ -221,3 +221,8 @@ Do not train production ML from raw or curated-only datasets. Use promoted datas
 ## Development rule
 
 Use the CLI for production workflows. Keep scripts as diagnostics, migration references, or campaign helpers. If a workflow becomes important and repeatable, it should eventually become a proper AERIS command.
+
+## Documentation
+
+- Full user guide: `documents/AERIS_USER_GUIDE.md`
+- CLI quick reference: `documents/AERIS_CLI_QUICK_REFERENCE.md`

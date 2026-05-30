@@ -1413,3 +1413,9 @@ MDAO/optimization loop
 
 Do not start all of them at once. That is how architectures become pasta.
 
+
+---
+
+## CLI quick reference
+
+For a compact command sheet, see `documents/AERIS_CLI_QUICK_REFERENCE.md`.

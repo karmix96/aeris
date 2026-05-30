@@ -36,6 +36,11 @@ from aeris.ml.optuna_tune import (
     tune_model_optuna,
     tune_model_optuna_from_config,
 )
+from aeris.ml.model_promotion import (
+    inspect_model_run,
+    promote_model_run,
+    require_promoted_model as require_promoted_model_gate,
+)
 from aeris.ml.model_registry import list_model_types
 from aeris.ml.predict import predict_with_trained_model
 from aeris.ml.train import train_baseline_model, train_baseline_model_from_config
@@ -708,6 +713,90 @@ def ml_compare_tuning_runs(
     typer.echo(f"  winner_score: {winner['winner_score']}")
 
 
+
+@ml_app.command("promote-model")
+def ml_promote_model(
+    model_run_dir: Path = typer.Option(..., "--model-run-dir", exists=True, file_okay=False, dir_okay=True, readable=True, resolve_path=True, help="Path to a saved ML training run directory."),
+    max_val_rmse_mean: float | None = typer.Option(None, "--max-val-rmse-mean", help="Optional maximum allowed validation RMSE mean."),
+    max_test_rmse_mean: float | None = typer.Option(None, "--max-test-rmse-mean", help="Optional maximum allowed test RMSE mean."),
+    min_test_r2_mean: float | None = typer.Option(None, "--min-test-r2-mean", help="Optional minimum allowed test R2 mean."),
+    require_diagnostics: bool = typer.Option(True, "--require-diagnostics/--no-require-diagnostics", help="Require diagnostics artifacts to exist."),
+    allow_forced_dataset: bool = typer.Option(False, "--allow-forced-dataset", help="Allow promotion of models trained from force-promoted datasets."),
+    notes: str | None = typer.Option(None, "--notes", help="Optional operator note recorded in the promotion manifest."),
+) -> None:
+    """Promote a trained ML model run for downstream use."""
+    try:
+        result = promote_model_run(
+            model_run_dir=model_run_dir,
+            max_val_rmse_mean=max_val_rmse_mean,
+            max_test_rmse_mean=max_test_rmse_mean,
+            min_test_r2_mean=min_test_r2_mean,
+            require_diagnostics=require_diagnostics,
+            allow_forced_dataset=allow_forced_dataset,
+            notes=notes,
+        )
+    except Exception as exc:
+        fail_command("ML promote-model", exc)
+
+    typer.echo("[AERIS] Model promotion completed")
+    typer.echo(f"  model_run_dir: {result.model_run_dir}")
+    typer.echo(f"  status: {result.manifest['status']}")
+    typer.echo(f"  promotion_ready_at_time_of_promotion: {result.passed}")
+    typer.echo(f"  promotion_manifest: {result.manifest_path}")
+    typer.echo(f"  model_card: {result.model_card_path}")
+    typer.echo(f"  training_envelope: {result.training_envelope_path}")
+    typer.echo(f"  blockers: {result.blockers}")
+    typer.echo(f"  warnings: {result.warnings}")
+    if not result.passed:
+        raise typer.Exit(code=1)
+
+
+@ml_app.command("inspect-model")
+def ml_inspect_model(
+    model_run_dir: Path = typer.Option(..., "--model-run-dir", exists=True, file_okay=False, dir_okay=True, readable=True, resolve_path=True, help="Path to a saved ML training run directory."),
+) -> None:
+    """Inspect a saved ML model run and its promotion status."""
+    try:
+        info = inspect_model_run(model_run_dir)
+    except Exception as exc:
+        fail_command("ML inspect-model", exc)
+
+    typer.echo("[AERIS] ML model inspection")
+    typer.echo(f"  model_run_dir: {info['model_run_dir']}")
+    typer.echo(f"  model_type: {info['model_type']}")
+    typer.echo(f"  dataset_path: {info['dataset_path']}")
+    typer.echo(f"  features: {', '.join(info['feature_columns'])}")
+    typer.echo(f"  targets: {', '.join(info['target_columns'])}")
+    typer.echo(f"  val_rmse_mean: {info['metrics']['val_rmse_mean']}")
+    typer.echo(f"  test_rmse_mean: {info['metrics']['test_rmse_mean']}")
+    typer.echo(f"  test_r2_mean: {info['metrics']['test_r2_mean']}")
+    typer.echo(f"  promotion_status: {info['promotion']['status']}")
+    typer.echo(f"  promotion_ready: {info['promotion']['promotion_ready_at_time_of_promotion']}")
+    typer.echo(f"  promotion_manifest: {info['promotion']['manifest_path']}")
+    typer.echo(f"  promotion_blockers: {info['promotion']['blockers']}")
+    typer.echo(f"  has_model_card: {info['has_model_card']}")
+
+
+@ml_app.command("require-promoted-model")
+def ml_require_promoted_model(
+    model_run_dir: Path = typer.Option(..., "--model-run-dir", exists=True, file_okay=False, dir_okay=True, readable=True, resolve_path=True, help="Path to a saved ML training run directory."),
+    verify_hashes: bool = typer.Option(True, "--verify-hashes/--no-verify-hashes", help="Verify current artifact hashes against promotion manifest."),
+) -> None:
+    """Require that a saved ML model run has an approved promotion manifest."""
+    try:
+        manifest = require_promoted_model_gate(model_run_dir, verify_hashes=verify_hashes)
+    except Exception as exc:
+        fail_command("ML require-promoted-model", exc)
+
+    typer.echo("[AERIS] Promoted model gate check")
+    typer.echo(f"  model_run_dir: {model_run_dir}")
+    typer.echo(f"  status: {manifest.get('status')}")
+    typer.echo(f"  promotion_ready_at_time_of_promotion: {manifest.get('promotion_ready_at_time_of_promotion')}")
+    typer.echo(f"  model_type: {manifest.get('model', {}).get('model_type')}")
+    typer.echo(f"  source_dataset: {manifest.get('dataset', {}).get('dataset_path')}")
+    typer.echo(f"  blockers: {manifest.get('promotion_blockers', [])}")
+
+
 @ml_app.command("predict")
 def ml_predict(
     model_run_dir: Path = typer.Option(
@@ -735,6 +824,11 @@ def ml_predict(
         "--output-dir",
         help="Optional output directory for prediction artifacts.",
     ),
+    require_promoted_model: bool = typer.Option(
+        False,
+        "--require-promoted-model",
+        help="Require model_promotion_manifest.json to be approved before prediction.",
+    ),
     include_truth_if_available: bool = typer.Option(
         True,
         "--include-truth-if-available/--no-include-truth-if-available",
@@ -743,6 +837,9 @@ def ml_predict(
 ) -> None:
     """Run inference using a saved trained model against an input CSV."""
     try:
+        if require_promoted_model:
+            require_promoted_model_gate(model_run_dir)
+
         result = predict_with_trained_model(
             model_run_dir=model_run_dir,
             input_csv=input_csv,

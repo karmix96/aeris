@@ -50,7 +50,7 @@ def test_geometry_visualize_delegates_to_visualization(monkeypatch, tmp_path: Pa
             "geometry",
             "visualize",
             "--config",
-            "configs/geometry/baseline_bwb.yaml",
+            "configs/geometry/baseline_bwb_25.yaml",
             "--seed",
             "777",
             "--show-plot",
@@ -61,7 +61,7 @@ def test_geometry_visualize_delegates_to_visualization(monkeypatch, tmp_path: Pa
     )
 
     assert result.exit_code == 0
-    assert called["config_path"].name == "baseline_bwb.yaml"
+    assert called["config_path"].name == "baseline_bwb_25.yaml"
     assert called["seed"] == 777
     assert called["save_plot"] is True
     assert called["build_aerosandbox"] is True

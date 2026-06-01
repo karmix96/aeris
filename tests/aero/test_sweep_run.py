@@ -24,10 +24,14 @@ class DummySolver:
         )
 
         status = self._statuses.pop(0)
+        # Set cd/l_over_d on SUCCESS so _should_retry_with_finer_paneling
+        # does NOT trigger a retry (retries when cd is None or <= 0).
         result = AeroResult(
             status=status,
             solver_id="dummy",
             runtime_sec=0.5,
+            cd=0.02 if status == AeroStatus.SUCCESS else None,
+            l_over_d=5.0 if status == AeroStatus.SUCCESS else None,
         )
         if status != AeroStatus.SUCCESS:
             result.failure = AeroFailure(
@@ -91,7 +95,7 @@ def _base_fc() -> FlightCondition:
 
 def test_run_aero_sweep_propagates_case_specific_control_input(monkeypatch, tmp_path: Path):
     dummy_solver = DummySolver(
-        statuses=[AeroStatus.SUCCESS, AeroStatus.SUCCESS, AeroStatus.SUCCESS]
+        statuses=[AeroStatus.SUCCESS, AeroStatus.SUCCESS, AeroStatus.SOLVER_FAILED, AeroStatus.SUCCESS]
     )
     monkeypatch.setattr(
         "aeris.aero.sweep_run.create_solver",
@@ -126,6 +130,8 @@ def test_run_aero_sweep_propagates_case_specific_control_input(monkeypatch, tmp_
     )
 
     assert len(result.cases) == 3
-    assert dummy_solver.received_control_inputs == [-5.0, 0.0, 5.0]
+    # Case 3 (control_input=5.0) hits SOLVER_FAILED and is retried once.
+    # The retry re-sends the same control input, so 4 total calls.
+    assert dummy_solver.received_control_inputs == [-5.0, 0.0, 5.0, 5.0]
     assert [case["control_input_deg"] for case in result.cases] == [-5.0, 0.0, 5.0]
     assert result.summary["control_input_deg_values"] == [-5.0, 0.0, 5.0]

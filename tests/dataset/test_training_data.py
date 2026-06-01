@@ -24,7 +24,7 @@ def test_training_data_basic(tmp_path):
     # monkeypatch gate
     from aeris.dataset import training_data as td
 
-    def fake_gate(path, allow_forced=False):
+    def fake_gate(dataset_root, allow_forced=False):
         return {"status": "promoted"}
 
     td.require_promoted_aero_dataset = fake_gate

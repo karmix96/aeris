@@ -1,0 +1,45 @@
+{
+  "search": {
+    "backend": "optuna",
+    "sampler": "tpe",
+    "n_trials": 30
+  },
+  "params": {
+    "n_members": {
+      "type": "int",
+      "low": 3,
+      "high": 7,
+      "step": 2
+    },
+    "hidden_layer_sizes": [
+      [32, 32],
+      [64, 64],
+      [128, 128],
+      [64, 64, 32],
+      [128, 64, 32]
+    ],
+    "activation": ["relu", "tanh"],
+    "solver": ["adam", "sgd"],
+    "alpha": {
+      "type": "float",
+      "low": 1e-6,
+      "high": 1e-2,
+      "log": true
+    },
+    "learning_rate": ["constant", "adaptive"],
+    "learning_rate_init": {
+      "type": "float",
+      "low": 1e-5,
+      "high": 1e-2,
+      "log": true
+    },
+    "max_iter": {
+      "type": "int",
+      "low": 300,
+      "high": 1500,
+      "step": 300
+    },
+    "early_stopping": [true],
+    "batch_size": [32, 64, 128]
+  }
+}

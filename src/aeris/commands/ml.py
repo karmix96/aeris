@@ -47,6 +47,8 @@ from aeris.ml.multifidelity import build_delta_dataset
 from aeris.ml.multifidelity.delta_model import predict_with_delta_model, train_delta_model
 from aeris.ml.multifidelity.evaluation import evaluate_delta_model_run
 from aeris.ml.predict import predict_with_trained_model
+from aeris.ml.active_learning import suggest_samples
+from aeris.ml.quality import audit_model, predict_with_confidence
 from aeris.ml.train import train_baseline_model, train_baseline_model_from_config
 
 
@@ -989,6 +991,276 @@ def ml_check_inference_inputs(
     if fail_on_violations and not result.passed:
         raise typer.Exit(code=1)
 
+
+@ml_app.command("audit-model")
+def ml_audit_model(
+    model_run_dir: Path = typer.Option(
+        ...,
+        "--model-run-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to a saved ML training run directory.",
+    ),
+    output_dir: Path | None = typer.Option(
+        None,
+        "--output-dir",
+        help="Optional output directory for model-quality artifacts.",
+    ),
+    max_test_rmse_mean: float | None = typer.Option(
+        None,
+        "--max-test-rmse-mean",
+        help="Optional fail threshold: test RMSE mean must be <= this value.",
+    ),
+    min_test_r2_mean: float | None = typer.Option(
+        None,
+        "--min-test-r2-mean",
+        help="Optional fail threshold: test R² mean must be >= this value.",
+    ),
+    max_test_error_p95_mean: float | None = typer.Option(
+        None,
+        "--max-test-error-p95-mean",
+        help="Optional fail threshold: mean target p95 absolute error must be <= this value.",
+    ),
+    max_test_abs_bias_mean: float | None = typer.Option(
+        None,
+        "--max-test-abs-bias-mean",
+        help="Optional fail threshold: mean absolute target bias must be <= this value.",
+    ),
+    top_k_worst_rows_per_target: int = typer.Option(
+        20,
+        "--top-k-worst-rows-per-target",
+        min=1,
+        help="Number of worst residual rows to retain per target and split.",
+    ),
+    fail_on_quality_gate: bool = typer.Option(
+        False,
+        "--fail-on-quality-gate/--no-fail-on-quality-gate",
+        help="Exit nonzero if any supplied quality threshold fails.",
+    ),
+) -> None:
+    """Audit a saved ML model run and write model-quality artifacts."""
+    try:
+        result = audit_model(
+            model_run_dir=model_run_dir,
+            output_dir=output_dir,
+            max_test_rmse_mean=max_test_rmse_mean,
+            min_test_r2_mean=min_test_r2_mean,
+            max_test_error_p95_mean=max_test_error_p95_mean,
+            max_test_abs_bias_mean=max_test_abs_bias_mean,
+            top_k_worst_rows_per_target=top_k_worst_rows_per_target,
+            fail_on_quality_gate=fail_on_quality_gate,
+        )
+    except Exception as exc:
+        fail_command("ML audit-model", exc)
+
+    typer.echo("[AERIS] ML model-quality audit completed")
+    typer.echo(f"  model_run_dir: {model_run_dir}")
+    typer.echo(f"  passed: {result.passed}")
+    typer.echo(f"  status: {result.status}")
+    typer.echo(f"  output_dir: {result.artifacts.output_dir}")
+    typer.echo(f"  model_quality_report_json: {result.artifacts.report_path}")
+    typer.echo(f"  residual_audit_csv: {result.artifacts.residual_audit_csv_path}")
+    typer.echo(f"  errors: {len(result.report.get('errors', []))}")
+    typer.echo(f"  warnings: {len(result.report.get('warnings', []))}")
+    test_overall = result.report.get("partition_summaries", {}).get("test", {}).get("overall", {})
+    if test_overall:
+        typer.echo(f"  test_rmse_mean: {test_overall.get('rmse_mean')}")
+        typer.echo(f"  test_r2_mean: {test_overall.get('r2_mean')}")
+
+
+@ml_app.command("predict-with-confidence")
+def ml_predict_with_confidence(
+    model_run_dir: Path = typer.Option(
+        ...,
+        "--model-run-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to a saved ML training run directory.",
+    ),
+    input_csv: Path = typer.Option(
+        ...,
+        "--input-csv",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="CSV file containing required feature columns.",
+    ),
+    output_dir: Path | None = typer.Option(
+        None,
+        "--output-dir",
+        help="Optional output directory for confidence artifacts.",
+    ),
+    require_promoted_model: bool = typer.Option(
+        True,
+        "--require-promoted-model/--no-require-promoted-model",
+        help="Require model_promotion_manifest.json to be approved before prediction.",
+    ),
+    include_truth_if_available: bool = typer.Option(
+        True,
+        "--include-truth-if-available/--no-include-truth-if-available",
+        help="If target columns exist in the input CSV, compute prediction error metrics.",
+    ),
+) -> None:
+    """Run inference with heuristic uncertainty and training-envelope confidence diagnostics."""
+    try:
+        result = predict_with_confidence(
+            model_run_dir=model_run_dir,
+            input_csv=input_csv,
+            output_dir=output_dir,
+            require_promoted_model_gate=require_promoted_model,
+            include_truth_if_available=include_truth_if_available,
+        )
+    except Exception as exc:
+        fail_command("ML predict-with-confidence", exc)
+
+    report = result.report
+    typer.echo("[AERIS] ML prediction with confidence completed")
+    typer.echo(f"  model_run_dir: {model_run_dir}")
+    typer.echo(f"  input_csv: {input_csv}")
+    typer.echo(f"  n_rows: {report['n_rows']}")
+    typer.echo(f"  n_outside_envelope: {report['n_outside_envelope']}")
+    typer.echo(f"  uncertainty_method: {report['uncertainty']['method']}")
+    typer.echo(f"  output_dir: {result.artifacts.output_dir}")
+    typer.echo(f"  prediction_confidence_csv: {result.artifacts.prediction_confidence_csv_path}")
+    typer.echo(f"  prediction_confidence_report_json: {result.artifacts.report_path}")
+    typer.echo(f"  truth_available: {report['truth_available']}")
+    if report.get("evaluation") is not None:
+        overall = report["evaluation"].get("overall", {})
+        typer.echo(f"  rmse_mean: {overall.get('rmse_mean')}")
+        typer.echo(f"  r2_mean: {overall.get('r2_mean')}")
+
+
+@ml_app.command("suggest-samples")
+def ml_suggest_samples(
+    model_run_dir: Path = typer.Option(
+        ...,
+        "--model-run-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to a saved ML model run directory.",
+    ),
+    candidate_csv: Path = typer.Option(
+        ...,
+        "--candidate-csv",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="CSV file containing candidate rows with the model feature columns.",
+    ),
+    output_dir: Path | None = typer.Option(
+        None,
+        "--output-dir",
+        help="Optional output directory for active-learning artifacts.",
+    ),
+    reference_csv: Path | None = typer.Option(
+        None,
+        "--reference-csv",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Optional reference CSV for novelty scoring. Defaults to model_run_dir/train_rows.csv.",
+    ),
+    top_n: int = typer.Option(
+        25,
+        "--top-n",
+        min=1,
+        help="Number of top-ranked candidate rows to flag as recommended.",
+    ),
+    candidate_id_column: str | None = typer.Option(
+        None,
+        "--candidate-id-column",
+        help="Optional existing candidate identifier column. If omitted, AERIS creates candidate_id.",
+    ),
+    require_promoted_model: bool = typer.Option(
+        True,
+        "--require-promoted-model/--no-require-promoted-model",
+        help="Require an approved model_promotion_manifest.json before scoring candidates.",
+    ),
+    objective_column: str | None = typer.Option(
+        None,
+        "--objective-column",
+        help="Optional column to reward during ranking, e.g. pred__cl or pred__cd.",
+    ),
+    objective_mode: str = typer.Option(
+        "maximize",
+        "--objective-mode",
+        help="Objective mode: maximize, minimize, or target.",
+    ),
+    objective_target_value: float | None = typer.Option(
+        None,
+        "--objective-target-value",
+        help="Required only when --objective-mode target is used.",
+    ),
+    uncertainty_weight: float = typer.Option(1.0, "--uncertainty-weight", help="Weight for estimator-spread uncertainty score."),
+    novelty_weight: float = typer.Option(0.5, "--novelty-weight", help="Weight for distance-from-training novelty score."),
+    objective_weight: float = typer.Option(0.25, "--objective-weight", help="Weight for optional objective score."),
+    envelope_penalty_weight: float = typer.Option(2.0, "--envelope-penalty-weight", help="Penalty for leaving the training envelope."),
+    exclude_outside_envelope: bool = typer.Option(
+        False,
+        "--exclude-outside-envelope/--allow-outside-envelope",
+        help="If enabled, outside-envelope candidates are never recommended.",
+    ),
+) -> None:
+    """Rank candidate samples for the next simulation batch.
+
+    This command does not run AVL, XFOIL, CFD, or optimization. It only scores
+    a candidate pool using a trained model, training-envelope metadata, and
+    novelty relative to existing training rows.
+    """
+    if objective_mode not in {"maximize", "minimize", "target"}:
+        raise typer.BadParameter("--objective-mode must be one of: maximize, minimize, target")
+
+    try:
+        result = suggest_samples(
+            model_run_dir=model_run_dir,
+            candidate_csv=candidate_csv,
+            output_dir=output_dir,
+            reference_csv=reference_csv,
+            top_n=top_n,
+            candidate_id_column=candidate_id_column,
+            require_promoted_model_gate=require_promoted_model,
+            objective_column=objective_column,
+            objective_mode=objective_mode,  # type: ignore[arg-type]
+            objective_target_value=objective_target_value,
+            uncertainty_weight=uncertainty_weight,
+            novelty_weight=novelty_weight,
+            objective_weight=objective_weight,
+            envelope_penalty_weight=envelope_penalty_weight,
+            exclude_outside_envelope=exclude_outside_envelope,
+        )
+    except typer.BadParameter:
+        raise
+    except Exception as exc:
+        fail_command("ML suggest-samples", exc)
+
+    report = result.report
+    artifacts = result.artifacts
+
+    typer.echo("[AERIS] Active-learning sample suggestion completed")
+    typer.echo(f"  model_run_dir: {report['model_run_dir']}")
+    typer.echo(f"  candidate_csv: {report['candidate_csv']}")
+    typer.echo(f"  n_candidates: {report['n_candidates']}")
+    typer.echo(f"  n_recommended: {report['n_recommended']}")
+    typer.echo(f"  n_outside_envelope: {report['n_outside_envelope']}")
+    typer.echo(f"  uncertainty_method: {report['uncertainty']['method']}")
+    typer.echo(f"  output_dir: {artifacts.output_dir}")
+    typer.echo(f"  ranked_candidates_csv: {artifacts.ranked_candidates_csv_path}")
+    typer.echo(f"  report_json: {artifacts.report_path}")
 
 @ml_app.command("predict")
 def ml_predict(

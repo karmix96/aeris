@@ -20,7 +20,7 @@ from .sweep_io import (
     make_flight_condition_case_label,
     write_aero_sweep_manifest,
 )
-from aeris.aero.solvers.aerosandbox_avl import _write_aero_result_json
+from aeris.aero.io import _write_aero_result_json
 
 def _should_retry_with_finer_paneling(result: Any) -> tuple[bool, str | None]:
     if getattr(result, "status", None) is not None:

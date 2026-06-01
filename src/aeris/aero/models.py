@@ -57,11 +57,7 @@ class AeroSweepResult:
     cases: list[dict[str, Any]] = field(default_factory=list)
     summary: dict[str, Any] = field(default_factory=dict)
 
-from dataclasses import dataclass, field
-from typing import Any
-
-
-@dataclass
+@dataclass(slots=True)
 class AeroGeometryView:
     """
     Solver-ready geometry view for the aero layer.

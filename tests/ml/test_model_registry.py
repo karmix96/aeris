@@ -8,6 +8,8 @@ def test_registry_lists_expected_models():
         "gradient_boosting",
         "hist_gradient_boosting",
         "linear_regression",
+        "neural_mlp",
+        "neural_mlp_ensemble",
         "random_forest",
         "ridge",
     ]
@@ -15,17 +17,22 @@ def test_registry_lists_expected_models():
 
 def test_build_linear_regression():
     model = build_model("linear_regression", random_seed=123)
-    assert model.__class__.__name__ == "LinearRegression"
+    # Linear models are now Pipeline(StandardScaler + estimator) for proper scaling.
+    assert model.__class__.__name__ == "Pipeline"
+    assert model.named_steps["model"].__class__.__name__ == "LinearRegression"
 
 
 def test_build_ridge():
     model = build_model("ridge", random_seed=123)
-    assert model.__class__.__name__ == "Ridge"
+    assert model.__class__.__name__ == "Pipeline"
+    assert model.named_steps["model"].__class__.__name__ == "Ridge"
 
 
 def test_build_elastic_net():
     model = build_model("elastic_net", random_seed=123)
-    assert model.__class__.__name__ == "MultiOutputRegressor"
+    assert model.__class__.__name__ == "Pipeline"
+    # ElasticNet is single-target; inner model is MultiOutputRegressor(ElasticNet)
+    assert model.named_steps["model"].__class__.__name__ == "MultiOutputRegressor"
 
 
 def test_build_random_forest():

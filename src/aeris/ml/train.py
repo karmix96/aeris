@@ -9,6 +9,7 @@ from typing import Any, Literal
 import numpy as np
 from aeris.dataset.splitting import DatasetSplit, split_dataset
 from aeris.dataset.training_data import TrainingData, load_training_data
+from aeris.ml.config import load_ml_experiment_config
 from aeris.ml.diagnostics import write_regression_diagnostics
 from aeris.ml.fingerprints import build_dataset_fingerprints, file_sha256
 from aeris.ml.manifest import build_environment_snapshot, utc_now_iso, write_ml_run_manifest
@@ -32,6 +33,8 @@ class TrainConfig:
     random_seed: int
     allow_forced: bool
     model_params: dict[str, Any]
+    source_config_path: str | None = None
+    source_config_sha256: str | None = None
 
 
 @dataclass(frozen=True)
@@ -81,14 +84,23 @@ def _write_split_rows(split: DatasetSplit, output_dir: Path) -> tuple[Path, Path
     return train_rows_path, val_rows_path, test_rows_path
 
 
+def _unwrap_pipeline(model: Any) -> Any:
+    """If model is a sklearn Pipeline, return the final estimator step."""
+    steps = getattr(model, "named_steps", None)
+    if steps is not None:
+        return steps.get("model", model)
+    return model
+
+
 def _extract_coefficients_payload(
     *,
     model: Any,
     feature_columns: list[str],
     target_columns: list[str],
 ) -> dict[str, Any]:
-    coef = getattr(model, "coef_", None)
-    intercept = getattr(model, "intercept_", None)
+    inner = _unwrap_pipeline(model)
+    coef = getattr(inner, "coef_", None)
+    intercept = getattr(inner, "intercept_", None)
     if coef is None or intercept is None:
         raise ValueError("Model does not expose linear coefficients.")
 
@@ -118,7 +130,8 @@ def _extract_wrapped_coefficients_payload(
     feature_columns: list[str],
     target_columns: list[str],
 ) -> dict[str, Any]:
-    estimators = getattr(model, "estimators_", None)
+    inner = _unwrap_pipeline(model)
+    estimators = getattr(inner, "estimators_", None)
     if estimators is None or len(estimators) != len(target_columns):
         raise ValueError("Wrapped model does not expose per-target estimators correctly.")
 
@@ -165,17 +178,20 @@ def _extract_feature_importances_payload(
             }
         return payload
 
+    # Native multi-output models (RandomForest, ExtraTrees) have one shared
+    # feature_importances_ array — not one per target. Store it once under
+    # "shared" to avoid fabricating fake per-target explanations.
     importances = getattr(model, "feature_importances_", None)
     if importances is None:
         raise ValueError("Model does not expose feature_importances_.")
 
     arr = np.asarray(importances, dtype=float)
-    shared = {
+    payload["shared"] = {
         feature: float(arr[feat_idx])
         for feat_idx, feature in enumerate(feature_columns)
     }
-    for target in target_columns:
-        payload["targets"][target] = {"feature_importances": dict(shared)}
+    # Keep targets dict present but empty — consumers must use payload["shared"]
+    payload["targets"] = {}
     return payload
 
 
@@ -236,6 +252,7 @@ def train_baseline_model(
     allow_forced: bool = False,
     model_params: dict[str, Any] | None = None,
     output_dir: Path | None = None,
+    source_config_path: Path | None = None,
 ) -> dict[str, Any]:
     dataset_path = Path(dataset_path).expanduser().resolve()
 
@@ -299,6 +316,12 @@ def train_baseline_model(
         )
     output_dir = _ensure_run_dir(output_dir)
 
+    source_config_path_resolved: Path | None = None
+    source_config_sha256: str | None = None
+    if source_config_path is not None:
+        source_config_path_resolved = Path(source_config_path).expanduser().resolve()
+        source_config_sha256 = file_sha256(source_config_path_resolved)
+
     models_dir = output_dir / "models"
     models_dir.mkdir(parents=True, exist_ok=True)
 
@@ -353,6 +376,8 @@ def train_baseline_model(
         random_seed=random_seed,
         allow_forced=allow_forced,
         model_params=dict(model_params or {}),
+        source_config_path=None if source_config_path_resolved is None else str(source_config_path_resolved),
+        source_config_sha256=source_config_sha256,
     )
     train_config_path = output_dir / "train_config.json"
     train_config_path.write_text(
@@ -386,6 +411,10 @@ def train_baseline_model(
         "status": "success",
         "created_at_utc": utc_now_iso(),
         "run_dir": str(output_dir),
+        "source_config": {
+            "path": None if source_config_path_resolved is None else str(source_config_path_resolved),
+            "sha256": source_config_sha256,
+        },
         "environment": build_environment_snapshot(),
         "dataset": {
             "dataset_path": str(dataset_path),
@@ -453,3 +482,39 @@ def train_baseline_model(
         "metrics": metrics,
         "artifacts": artifacts,
     }
+
+
+def train_baseline_model_from_config(
+    config_path: str | Path,
+    *,
+    output_dir: Path | None = None,
+    model_params_override: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Train a baseline model from a YAML ML experiment config.
+
+    `output_dir` and `model_params_override` are explicit CLI/programmatic overrides.
+    Config values remain the default source of truth.
+    """
+    config_path = Path(config_path).expanduser().resolve()
+    cfg = load_ml_experiment_config(config_path)
+
+    model_params = dict(cfg.model_params)
+    if model_params_override:
+        model_params.update(model_params_override)
+
+    return train_baseline_model(
+        dataset_path=cfg.dataset_path,
+        feature_columns=cfg.feature_columns,
+        target_columns=cfg.target_columns,
+        model_type=cfg.model_type,
+        split_method=cfg.split_method,
+        group_column=cfg.group_column,
+        train_fraction=cfg.train_fraction,
+        val_fraction=cfg.val_fraction,
+        test_fraction=cfg.test_fraction,
+        random_seed=cfg.random_seed,
+        allow_forced=cfg.allow_forced,
+        model_params=model_params,
+        output_dir=output_dir if output_dir is not None else cfg.output_dir,
+        source_config_path=config_path,
+    )

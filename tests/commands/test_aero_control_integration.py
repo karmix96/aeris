@@ -148,15 +148,16 @@ def test_aero_cli_control_response_end_to_end():
     assert cmp < cm0 < cmm
 
 
-def test_aero_cli_rejects_control_request_when_geometry_has_no_controls():
-    tag = f"ctrlreject_{uuid4().hex[:8]}"
+def test_aero_cli_accepts_control_request_with_baseline_bwb25_controls():
+    """Baseline BWB-25 is the standard control-enabled smoke geometry."""
+    tag = f"ctrlbwb25_{uuid4().hex[:8]}"
 
     result = runner.invoke(
         app,
         [
             "aero",
             "run",
-            "--config", "configs/geometry/wing_bwb.yaml",
+            "--config", "configs/geometry/baseline_bwb_25.yaml",
             "--geometry-source", "native",
             "--alpha", "2",
             "--velocity", "28",
@@ -174,23 +175,7 @@ def test_aero_cli_rejects_control_request_when_geometry_has_no_controls():
     assert result.exit_code == 0, result.output
 
     run_root = _latest_run_matching(tag)
+    payload = _load_aero_result(run_root)
 
-    payload = None
-    try:
-        payload = _load_aero_result(run_root)
-    except FileNotFoundError:
-        manifest = _load_manifest_if_exists(run_root)
-        assert manifest is not None, f"No aero_result.json or manifest found under {run_root}"
-
-        manifest_text = json.dumps(manifest)
-        assert (
-            "control_input_requested_but_geometry_has_no_control_surfaces" in manifest_text
-            or "invalid_input" in manifest_text
-        ), manifest_text
-        return
-
-    assert payload["status"] == "invalid_input"
-    assert payload["failure"] is not None
-    assert payload["failure"]["reason"] == (
-        "control_input_requested_but_geometry_has_no_control_surfaces"
-    )
+    assert payload["status"] == "success"
+    _assert_control_diagnostics_ok(payload, 5.0)

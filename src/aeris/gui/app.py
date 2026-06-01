@@ -11,24 +11,28 @@ from typing import Any, Iterable
 
 import streamlit as st
 
-try:  # Optional, but strongly recommended for the GUI.
+try:
     import pandas as pd
-except Exception:  # pragma: no cover - GUI fallback
+except Exception:  # pragma: no cover - optional GUI dependency
     pd = None
 
-try:  # Optional; config editor still degrades gracefully without it.
+try:
     import yaml
-except Exception:  # pragma: no cover - GUI fallback
+except Exception:  # pragma: no cover - optional GUI dependency
     yaml = None
 
 
-APP_VERSION = "0.2.0"
+APP_VERSION = "0.5.0"
 DEFAULT_FEATURES = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg"
 DEFAULT_TARGETS = "cl,cd,cm"
-SUPPORTED_MODEL_TYPES = ["linear_regression", "random_forest", "gradient_boosting"]
-SUPPORTED_SAMPLERS = ["lhs_v1", "random_v1"]
-SUPPORTED_SPACING = ["equal", "cosine"]
-SUPPORTED_QC_PRESETS = ["off", "debug", "production", "promotion_strict"]
+DEFAULT_PAIR_KEYS = "geometry_id,alpha_deg,velocity_mps,altitude_m,control_input_deg"
+MODEL_TYPES = ["linear_regression", "ridge", "random_forest", "gradient_boosting", "extra_trees", "hist_gradient_boosting"]
+SAMPLERS = ["lhs_v1", "random_v1"]
+QC_PRESETS = ["off", "debug", "production", "promotion_strict"]
+QC_PROFILES = ["basic", "strict"]
+RETENTION_POLICIES = ["all", "failures_only", "none"]
+SPACING = ["equal", "cosine"]
+SOURCE_POLICIES = ["auto", "native", "reconstruct"]
 
 
 @dataclass
@@ -40,7 +44,7 @@ class CommandResult:
 
 
 # -----------------------------------------------------------------------------
-# Generic helpers
+# Paths, files, and execution helpers
 # -----------------------------------------------------------------------------
 
 
@@ -59,29 +63,29 @@ def _repo_exists(project_root: Path) -> bool:
 def _latest_dirs(root: Path, pattern: str = "*") -> list[Path]:
     if not root.exists():
         return []
-    dirs = [p for p in root.glob(pattern) if p.is_dir()]
-    return sorted(dirs, key=lambda p: p.stat().st_mtime, reverse=True)
+    return sorted([p for p in root.glob(pattern) if p.is_dir()], key=lambda p: p.stat().st_mtime, reverse=True)
 
 
 def _latest_files(root: Path, pattern: str = "*") -> list[Path]:
     if not root.exists():
         return []
-    files = [p for p in root.glob(pattern) if p.is_file()]
-    return sorted(files, key=lambda p: p.stat().st_mtime, reverse=True)
+    return sorted([p for p in root.glob(pattern) if p.is_file()], key=lambda p: p.stat().st_mtime, reverse=True)
 
 
-def _resolve_default_path(path: Path, fallback: str) -> str:
-    return str(path if path.exists() else path.parent / fallback)
+def _path_text(path: Path | str | None) -> str:
+    if path is None:
+        return ""
+    return str(path)
 
 
-def _read_text(path: Path, limit: int = 120_000) -> str:
+def _read_text(path: Path, limit: int = 250_000) -> str:
     try:
         return path.read_text(encoding="utf-8", errors="replace")[:limit]
     except Exception as exc:
         return f"<could not read {path}: {exc}>"
 
 
-def _read_json(path: Path) -> dict[str, Any] | list[Any] | None:
+def _read_json(path: Path) -> Any | None:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except Exception:
@@ -97,55 +101,62 @@ def _read_yaml(path: Path) -> Any | None:
         return None
 
 
-def _write_yaml(path: Path, payload: Any) -> None:
+def _write_yaml(path: Path, data: Any) -> None:
     if yaml is None:
         raise RuntimeError("PyYAML is not installed. Run: pip install PyYAML")
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+    path.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
 
 
-def _csv_count(text: str) -> int:
-    if not text.strip():
-        return 1
-    return len([x for x in text.split(",") if x.strip()])
-
-
-def _split_csv(text: str) -> list[str]:
-    return [x.strip() for x in text.split(",") if x.strip()]
-
-
-def _estimate_sweep_cases(*values: str) -> int:
-    n = 1
-    for text in values:
-        n *= _csv_count(text)
-    return n
-
-
-def _quote_command(command: list[str]) -> str:
+def _quote_command(command: Iterable[str]) -> str:
     try:
         return shlex.join([str(x) for x in command])
     except Exception:
         return " ".join([str(x) for x in command])
 
 
-def _append_history(result: CommandResult) -> None:
-    history = st.session_state.setdefault("command_history", [])
-    history.insert(0, result)
-    del history[50:]
+def _parse_extra_args(text: str) -> list[str]:
+    if not text.strip():
+        return []
+    try:
+        return shlex.split(text)
+    except Exception as exc:
+        st.error(f"Could not parse advanced arguments: {exc}")
+        return []
 
 
-def _run_command(
-    *,
-    project_root: Path,
-    aeris_executable: str,
-    args: Iterable[str],
-    timeout_sec: int,
-) -> CommandResult:
+def _append_flag(args: list[str], flag: str, value: Any | None) -> None:
+    if value is None:
+        return
+    text = str(value).strip()
+    if text:
+        args.extend([flag, text])
+
+
+def _append_bool(args: list[str], truthy_flag: str, falsey_flag: str | None, value: bool | None) -> None:
+    if value is None:
+        return
+    if value:
+        args.append(truthy_flag)
+    elif falsey_flag:
+        args.append(falsey_flag)
+
+
+def _csv_count(text: str) -> int:
+    return max(1, len([x for x in text.split(",") if x.strip()]))
+
+
+def _estimate_cases(*fields: str) -> int:
+    n = 1
+    for field in fields:
+        n *= _csv_count(field)
+    return n
+
+
+def _run_command(*, project_root: Path, aeris_executable: str, args: Iterable[str], timeout_sec: int) -> CommandResult:
     command = [aeris_executable, "--no-check-writable", *[str(a) for a in args]]
     env = os.environ.copy()
-    src_path = str(project_root / "src")
-    env["PYTHONPATH"] = src_path + os.pathsep + env.get("PYTHONPATH", "")
-
+    env["PYTHONPATH"] = str(project_root / "src") + os.pathsep + env.get("PYTHONPATH", "")
     try:
         completed = subprocess.run(
             command,
@@ -155,80 +166,92 @@ def _run_command(
             capture_output=True,
             timeout=timeout_sec,
         )
-        return CommandResult(
-            command=command,
-            returncode=completed.returncode,
-            stdout=completed.stdout,
-            stderr=completed.stderr,
-        )
+        return CommandResult(command, completed.returncode, completed.stdout, completed.stderr)
     except FileNotFoundError as exc:
-        return CommandResult(command=command, returncode=127, stdout="", stderr=str(exc))
+        return CommandResult(command, 127, "", str(exc))
     except subprocess.TimeoutExpired as exc:
         return CommandResult(
-            command=command,
-            returncode=124,
-            stdout=exc.stdout or "",
-            stderr=(exc.stderr or "") + f"\nCommand timed out after {timeout_sec} s.",
+            command,
+            124,
+            exc.stdout or "",
+            (exc.stderr or "") + f"\nCommand timed out after {timeout_sec} s.",
         )
 
 
-def _show_result(result: CommandResult, expanded: bool = True) -> None:
-    with st.expander("Command", expanded=True):
-        st.code(_quote_command(result.command), language="bash")
+def _remember_result(result: CommandResult) -> None:
+    st.session_state["last_result"] = result
+    history = st.session_state.setdefault("command_history", [])
+    history.insert(0, result)
+    del history[50:]
 
+
+def _show_result(result: CommandResult, *, advanced: bool = False) -> None:
     if result.returncode == 0:
-        st.success(f"Command finished successfully: exit code {result.returncode}")
+        st.success("Task completed successfully.")
     else:
-        st.error(f"Command failed: exit code {result.returncode}")
+        st.error(f"Task failed. Exit code: {result.returncode}")
 
-    if result.stdout.strip():
-        with st.expander("stdout", expanded=expanded):
-            st.code(result.stdout[-80_000:], language="text")
-    if result.stderr.strip():
-        with st.expander("stderr", expanded=True):
-            st.code(result.stderr[-80_000:], language="text")
+    stdout = result.stdout.strip()
+    stderr = result.stderr.strip()
+
+    if stdout:
+        with st.expander("Result details", expanded=result.returncode != 0):
+            st.code(stdout[-120_000:], language="text")
+    if stderr:
+        with st.expander("Errors / warnings", expanded=True):
+            st.code(stderr[-120_000:], language="text")
+    if advanced:
+        with st.expander("Advanced: executed command", expanded=False):
+            st.code(_quote_command(result.command), language="bash")
 
 
-def _run_button(
-    label: str,
+def _task_panel(
+    *,
+    title: str,
+    purpose: str,
     args: list[str],
     project_root: Path,
     aeris_executable: str,
     timeout_sec: int,
-    *,
-    dry_run: bool = False,
+    dry_run: bool,
+    advanced: bool,
+    button_label: str = "Run task",
+    key: str,
     danger: bool = False,
-    key: str | None = None,
 ) -> None:
-    preview = [aeris_executable, "--no-check-writable", *[str(a) for a in args]]
-    st.code(_quote_command(preview), language="bash")
-
-    if dry_run:
-        st.info("Dry-run mode is enabled. Command preview only; nothing will execute.")
-        return
-
-    button_type = "primary" if not danger else "secondary"
-    if st.button(label, type=button_type, key=key):
-        if not _repo_exists(project_root):
-            st.error("Project root does not look like an AERIS repository: missing src/aeris")
+    with st.container(border=True):
+        st.subheader(title)
+        st.write(purpose)
+        if advanced:
+            with st.expander("Advanced: command that will be executed", expanded=False):
+                st.code(_quote_command([aeris_executable, "--no-check-writable", *args]), language="bash")
+        if dry_run:
+            st.info("Dry-run is enabled. This task will not execute until you turn dry-run off in the sidebar.")
             return
-        with st.spinner("Running AERIS command..."):
-            result = _run_command(
-                project_root=project_root,
-                aeris_executable=aeris_executable,
-                args=args,
-                timeout_sec=timeout_sec,
-            )
-        st.session_state["last_result"] = result
-        _append_history(result)
-        _show_result(result)
+        if st.button(button_label, key=key, type="primary" if not danger else "secondary"):
+            if not _repo_exists(project_root):
+                st.error("This does not look like an AERIS repo. Missing src/aeris under the selected project root.")
+                return
+            with st.spinner("Running AERIS task..."):
+                result = _run_command(project_root=project_root, aeris_executable=aeris_executable, args=args, timeout_sec=timeout_sec)
+            _remember_result(result)
+            _show_result(result, advanced=advanced)
 
 
-def _select_latest_dir(label: str, root: Path, *, pattern: str = "*", key: str) -> str:
-    dirs = _latest_dirs(root, pattern)
-    options = [""] + [str(p) for p in dirs[:50]]
-    default = 1 if len(options) > 1 else 0
-    return st.selectbox(label, options, index=default, key=key)
+def _select_dir(label: str, root: Path, *, key: str, help_text: str = "", allow_manual: bool = True) -> str:
+    dirs = _latest_dirs(root)
+    options = [""] + [str(p) for p in dirs[:200]]
+    selected = st.selectbox(label, options, index=1 if len(options) > 1 else 0, key=f"{key}_select", help=help_text)
+    if allow_manual:
+        return st.text_input("Path override", value=selected, key=f"{key}_manual")
+    return selected
+
+
+def _select_file(label: str, root: Path, pattern: str, *, key: str, default: str = "") -> str:
+    files = _latest_files(root, pattern)
+    options = [default] + [str(p) for p in files[:200]]
+    selected = st.selectbox(label, options, index=0, key=f"{key}_select")
+    return st.text_input("File override", value=selected, key=f"{key}_manual")
 
 
 def _display_dataframe(path: Path) -> None:
@@ -241,594 +264,493 @@ def _display_dataframe(path: Path) -> None:
         st.error(f"Could not read CSV: {exc}")
         st.code(_read_text(path), language="text")
         return
-
     st.caption(f"Rows: {len(df):,} | Columns: {len(df.columns):,}")
     st.dataframe(df, use_container_width=True, height=420)
-
     numeric_cols = list(df.select_dtypes(include="number").columns)
     if numeric_cols:
-        with st.expander("Quick numeric plot", expanded=False):
-            x_col = st.selectbox("X column", ["<index>"] + numeric_cols, key=f"x_{path}")
-            y_cols = st.multiselect("Y columns", numeric_cols, default=numeric_cols[: min(3, len(numeric_cols))], key=f"y_{path}")
+        with st.expander("Quick plot", expanded=False):
+            y_cols = st.multiselect("Numeric columns", numeric_cols, default=numeric_cols[: min(3, len(numeric_cols))], key=f"plot_{path}")
             if y_cols:
-                plot_df = df[y_cols].copy()
-                if x_col != "<index>":
-                    plot_df.index = df[x_col]
-                st.line_chart(plot_df)
+                st.line_chart(df[y_cols])
 
 
 def _display_file(path: Path) -> None:
     if not path.exists():
-        st.warning(f"Missing file: {path}")
+        st.warning(f"File does not exist: {path}")
         return
-
-    st.caption(str(path))
     suffix = path.suffix.lower()
-
+    st.caption(str(path))
     if suffix == ".json":
         payload = _read_json(path)
-        if payload is None:
-            st.code(_read_text(path), language="text")
-        else:
-            st.json(payload)
-        return
-
-    if suffix == ".csv":
+        st.json(payload if payload is not None else {"error": "could not read JSON"})
+    elif suffix == ".csv":
         _display_dataframe(path)
-        return
-
-    if suffix in {".png", ".jpg", ".jpeg", ".webp"}:
+    elif suffix in {".png", ".jpg", ".jpeg", ".webp"}:
         st.image(str(path), use_container_width=True)
-        return
-
-    if suffix in {".txt", ".log", ".yaml", ".yml", ".avl", ".md"}:
+    elif suffix in {".txt", ".log", ".yaml", ".yml", ".md", ".avl"}:
         st.code(_read_text(path), language="yaml" if suffix in {".yaml", ".yml"} else "text")
-        return
-
-    st.info("Preview not supported for this file type.")
-
-
-# -----------------------------------------------------------------------------
-# Sidebar
-# -----------------------------------------------------------------------------
-
-
-def sidebar_settings() -> tuple[Path, str, int, bool]:
-    st.sidebar.title(f"AERIS GUI v{APP_VERSION}")
-    project_root = Path(
-        st.sidebar.text_input("Project root", value=str(_default_project_root()))
-    ).expanduser().resolve()
-
-    default_aeris = shutil.which("aeris") or "aeris"
-    aeris_executable = st.sidebar.text_input("AERIS executable", value=default_aeris)
-    timeout_sec = int(st.sidebar.number_input("Command timeout [s]", min_value=5, max_value=86400, value=900, step=5))
-    dry_run = st.sidebar.toggle("Dry-run mode", value=False, help="Preview commands without executing them.")
-
-    st.sidebar.divider()
-    if _repo_exists(project_root):
-        st.sidebar.success("AERIS repo detected")
     else:
-        st.sidebar.error("src/aeris not found")
-
-    st.sidebar.caption("This GUI calls the existing AERIS CLI. It is a cockpit, not a duplicate backend.")
-    return project_root, aeris_executable, timeout_sec, dry_run
+        st.info("Preview not supported for this file type.")
 
 
 # -----------------------------------------------------------------------------
-# Tabs
+# Sidebar and small UI helpers
 # -----------------------------------------------------------------------------
 
 
-def tab_overview(project_root: Path, aeris_executable: str, timeout_sec: int, dry_run: bool) -> None:
-    st.header("AERIS production cockpit")
+def _sidebar() -> tuple[Path, str, int, bool, bool, str]:
+    st.sidebar.title("AERIS")
+    st.sidebar.caption(f"GUI v{APP_VERSION} — workflow cockpit")
+    project_root = Path(st.sidebar.text_input("Project root", value=str(_default_project_root()))).expanduser().resolve()
+    aeris_executable = st.sidebar.text_input("AERIS executable", value=shutil.which("aeris") or "aeris")
+    timeout_sec = int(st.sidebar.number_input("Task timeout [s]", min_value=5, max_value=86400, value=1800, step=5))
+    dry_run = st.sidebar.toggle("Dry-run", value=False, help="Prepare tasks without executing them.")
+    advanced = st.sidebar.toggle("Show advanced CLI details", value=False, help="The GUI uses the AERIS CLI internally. Keep this off for normal use.")
+
+    if _repo_exists(project_root):
+        st.sidebar.success("AERIS repository detected")
+    else:
+        st.sidebar.error("src/aeris not found under project root")
+
+    page_options = [
+        "Home",
+        "Setup & health",
+        "Geometry",
+        "Dataset factory",
+        "Aero analysis",
+        "Dynamics",
+        "ML studio",
+        "Multifidelity",
+        "Results browser",
+    ]
+    if advanced:
+        page_options.append("Advanced command runner")
+    page = st.sidebar.radio("Workspace", page_options)
+    st.sidebar.caption("Normal users should not need to copy terminal commands. Advanced details are hidden by default.")
+    return project_root, aeris_executable, timeout_sec, dry_run, advanced, page
+
+
+def _section_help(title: str, body: str) -> None:
+    with st.expander(title, expanded=False):
+        st.write(body)
+
+
+# -----------------------------------------------------------------------------
+# Pages
+# -----------------------------------------------------------------------------
+
+
+def page_home(project_root: Path, aeris_executable: str, timeout_sec: int, dry_run: bool, advanced: bool) -> None:
+    st.title("AERIS Workflow Cockpit")
     st.write(
-        "Run, inspect, and replay AERIS workflows from a single local dashboard. "
-        "The backend remains your CLI/pipeline architecture."
+        "A user-friendly front end for AERIS workflows: geometry, datasets, aero, dynamics, ML trust gates, and multifidelity. "
+        "It runs the existing AERIS engine underneath, but it hides terminal commands unless advanced details are enabled."
     )
 
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Run folders", len(_latest_dirs(project_root / "data" / "runs")))
-    with col2:
-        st.metric("Dataset folders", len(_latest_dirs(project_root / "data" / "datasets")))
-    with col3:
-        st.metric("Geometry configs", len(_latest_files(project_root / "configs" / "geometry", "*.yaml")))
-    with col4:
-        st.metric("Mass configs", len(_latest_files(project_root / "configs" / "mass", "*.yaml")))
-
-    st.subheader("Health checks")
     c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Repo", "OK" if _repo_exists(project_root) else "Missing")
+    c2.metric("Datasets", len(_latest_dirs(project_root / "data" / "datasets")))
+    c3.metric("Runs", len(_latest_dirs(project_root / "data" / "runs")))
+    c4.metric("ML runs", len(_latest_dirs(project_root / "data" / "processed" / "ml_runs")))
+
+    st.subheader("Common workflows")
+    w1, w2, w3 = st.columns(3)
+    with w1.container(border=True):
+        st.markdown("**1. Generate trusted aero data**")
+        st.write("Create geometry samples, run aero sweeps, QC, curate, and promote the dataset.")
+    with w2.container(border=True):
+        st.markdown("**2. Train and promote ML models**")
+        st.write("Validate schema, train/tune/compare, promote a model, and guard inference inputs.")
+    with w3.container(border=True):
+        st.markdown("**3. Multifidelity correction**")
+        st.write("Pair LF/HF data, train delta models, predict corrected outputs, and evaluate improvement.")
+
+    st.subheader("Quick health check")
+    _task_panel(
+        title="Check installed AERIS version",
+        purpose="Confirms that the selected executable can start and that the repo environment is wired correctly.",
+        args=["version"],
+        project_root=project_root,
+        aeris_executable=aeris_executable,
+        timeout_sec=timeout_sec,
+        dry_run=dry_run,
+        advanced=advanced,
+        button_label="Check AERIS",
+        key="home_version",
+    )
+
+
+def page_health(project_root: Path, aeris_executable: str, timeout_sec: int, dry_run: bool, advanced: bool) -> None:
+    st.title("Setup & health")
+    st.write("Use this page before long runs. It catches boring environment problems early, which is better than discovering them after 900 cases.")
+
+    c1, c2 = st.columns(2)
     with c1:
-        _run_button("Version", ["version"], project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="health_version")
+        st.subheader("Repository")
+        st.write(f"Project root: `{project_root}`")
+        st.write(f"Source tree exists: `{_repo_exists(project_root)}`")
+        st.write(f"Data folder: `{project_root / 'data'}`")
     with c2:
-        _run_button("Top help", ["--help"], project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="health_help")
-    with c3:
-        _run_button("Aero help", ["aero", "--help"], project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="health_aero_help")
-    with c4:
-        _run_button("ML help", ["ml", "--help"], project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="health_ml_help")
-
-    st.subheader("Latest artifacts")
-    latest_runs = _latest_dirs(project_root / "data" / "runs")[:8]
-    latest_datasets = _latest_dirs(project_root / "data" / "datasets")[:8]
-    col1, col2 = st.columns(2)
-    with col1:
-        st.write("Latest runs")
-        for p in latest_runs:
-            st.caption(str(p.relative_to(project_root) if p.is_relative_to(project_root) else p))
-    with col2:
-        st.write("Latest datasets")
-        for p in latest_datasets:
-            st.caption(str(p.relative_to(project_root) if p.is_relative_to(project_root) else p))
-
-
-def tab_config_lab(project_root: Path) -> None:
-    st.header("Config Lab")
-    st.write("Inspect, edit, and create safe GUI-side config copies. This is where symmetry/control-surface setup belongs.")
-
-    config_root = project_root / "configs"
-    candidates = sorted(config_root.rglob("*.yaml")) if config_root.exists() else []
-    choices = [str(p) for p in candidates]
-    selected = st.selectbox("Config file", choices, index=0 if choices else None)
-
-    if not selected:
-        st.warning("No YAML configs found.")
-        return
-
-    path = Path(selected)
-    raw_text = _read_text(path, limit=500_000)
-    edited = st.text_area("YAML editor", raw_text, height=420)
-
-    col1, col2 = st.columns(2)
-    with col1:
-        save_name = st.text_input("Save edited copy as", value=f"configs/gui/{path.stem}_gui.yaml")
-    with col2:
-        if st.button("Save edited config copy", type="primary"):
-            out = (project_root / save_name).resolve() if not Path(save_name).is_absolute() else Path(save_name)
-            if yaml is not None:
-                try:
-                    yaml.safe_load(edited)
-                except Exception as exc:
-                    st.error(f"YAML is invalid: {exc}")
-                    return
-            out.parent.mkdir(parents=True, exist_ok=True)
-            out.write_text(edited, encoding="utf-8")
-            st.success(f"Saved: {out}")
-
-    payload = _read_yaml(path)
-    if isinstance(payload, dict):
-        st.subheader("Control surfaces / symmetry")
-        cs = (((payload.get("geometry") or {}).get("control_surfaces")) or {})
-        surfaces = cs.get("surfaces", []) if isinstance(cs, dict) else []
-        st.write(f"Enabled: `{cs.get('enabled', False) if isinstance(cs, dict) else False}`")
-        if surfaces and pd is not None:
-            rows = []
-            for s in surfaces:
-                rows.append({
-                    "name": s.get("name"),
-                    "family": s.get("family"),
-                    "symmetric": s.get("symmetric", True),
-                    "side": s.get("side"),
-                    "hinge_point": s.get("hinge_point"),
-                    "span_start": (s.get("spanwise") or {}).get("start_frac"),
-                    "span_end": (s.get("spanwise") or {}).get("end_frac"),
-                    "required": s.get("required", False),
-                })
-            st.dataframe(pd.DataFrame(rows), use_container_width=True)
-        else:
-            st.info("No control-surface definitions found in this config.")
-
-        with st.expander("Create/replace a simple trailing-edge control-surface block", expanded=False):
-            enabled = st.checkbox("Enable control surfaces", value=True)
-            name = st.text_input("Surface name", value="elevon")
-            symmetric = st.checkbox("Symmetric surface", value=True)
-            side = st.selectbox("Side if asymmetric", ["left", "right"], disabled=symmetric)
-            hinge = st.number_input("Hinge point", min_value=0.01, max_value=0.99, value=0.75, step=0.01)
-            s0 = st.number_input("Span start fraction", min_value=0.0, max_value=1.0, value=0.60, step=0.01)
-            s1 = st.number_input("Span end fraction", min_value=0.0, max_value=1.0, value=0.95, step=0.01)
-            required = st.checkbox("Required by validation", value=False)
-            out_name = st.text_input("Save control-surface config as", value=f"configs/gui/{path.stem}_controls.yaml")
-            if st.button("Write control-surface config copy"):
-                if s0 >= s1:
-                    st.error("Span start must be lower than span end.")
-                    return
-                new_payload = dict(payload)
-                geometry = dict(new_payload.get("geometry") or {})
-                surface = {
-                    "name": name,
-                    "family": "trailing_edge",
-                    "hinge_point": float(hinge),
-                    "symmetric": bool(symmetric),
-                    "spanwise": {"start_frac": float(s0), "end_frac": float(s1)},
-                    "required": bool(required),
-                }
-                if not symmetric:
-                    surface["side"] = side
-                geometry["control_surfaces"] = {"enabled": bool(enabled), "surfaces": [surface] if enabled else []}
-                new_payload["geometry"] = geometry
-                out = (project_root / out_name).resolve() if not Path(out_name).is_absolute() else Path(out_name)
-                try:
-                    _write_yaml(out, new_payload)
-                except Exception as exc:
-                    st.error(str(exc))
-                    return
-                st.success(f"Saved: {out}")
-                st.code(str(out), language="text")
-
-
-def tab_geometry(project_root: Path, aeris_executable: str, timeout_sec: int, dry_run: bool) -> None:
-    st.header("Geometry")
-    default_cfg = project_root / "configs" / "geometry" / "baseline_bwb.yaml"
-    config = st.text_input("Geometry config", value=str(default_cfg), key="geom_config")
+        st.subheader("Documentation")
+        for rel in ["README.md", "documents/AERIS_USER_GUIDE.md", "documents/AERIS_CLI_QUICK_REFERENCE.md"]:
+            p = project_root / rel
+            st.write(("✅" if p.exists() else "❌") + f" `{rel}`")
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        _run_button("Generate geometry", ["geometry", "generate", "-c", config], project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="geom_generate")
+        _task_panel(title="AERIS version", purpose="Basic package/CLI check.", args=["version"], project_root=project_root, aeris_executable=aeris_executable, timeout_sec=timeout_sec, dry_run=dry_run, advanced=advanced, key="health_version")
     with col2:
-        seed = st.text_input("Visualization seed override", value="")
-        save_plot = st.checkbox("Save plot", value=True, key="geom_save_plot")
-        build_asb = st.checkbox("Build AeroSandbox", value=True, key="geom_build_asb")
+        _task_panel(title="Top-level help", purpose="Checks that Typer command registration works.", args=["--help"], project_root=project_root, aeris_executable=aeris_executable, timeout_sec=timeout_sec, dry_run=dry_run, advanced=advanced, key="health_help")
     with col3:
-        show_plot = st.checkbox("Show plot interactively", value=False, key="geom_show_plot")
-        draw_3d = st.checkbox("Open AeroSandbox 3D viewer", value=False, key="geom_draw_3d")
-
-    viz_args = ["geometry", "visualize", "-c", config]
-    if seed.strip():
-        viz_args += ["--seed", seed.strip()]
-    viz_args += ["--save-plot" if save_plot else "--no-save-plot"]
-    viz_args += ["--build-aerosandbox" if build_asb else "--no-build-aerosandbox"]
-    viz_args += ["--show-plot" if show_plot else "--no-show-plot"]
-    viz_args += ["--draw-3d" if draw_3d else "--no-draw-3d"]
-    _run_button("Visualize geometry", viz_args, project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="geom_visualize")
-
-    st.info("For production batches, keep plots off. Visualization is inspection, not a hot path.")
+        _task_panel(title="GUI help", purpose="Checks that the GUI launcher command is registered.", args=["gui", "run", "--help"], project_root=project_root, aeris_executable=aeris_executable, timeout_sec=timeout_sec, dry_run=dry_run, advanced=advanced, key="health_gui_help")
 
 
-def tab_dataset(project_root: Path, aeris_executable: str, timeout_sec: int, dry_run: bool) -> None:
-    st.header("Dataset")
-    mode = st.radio("Dataset workflow", ["Geometry dataset", "Unified aero dataset", "QC / curate / promote"], horizontal=True)
+def page_geometry(project_root: Path, aeris_executable: str, timeout_sec: int, dry_run: bool, advanced: bool) -> None:
+    st.title("Geometry")
+    st.write("Generate or inspect BWB geometries. The active production generator is `bwb_segmented_v1`.")
+    action = st.radio("What do you want to do?", ["Generate geometry", "Visualize geometry", "Geometry info"], horizontal=True)
 
-    if mode == "Geometry dataset":
-        default_cfg = project_root / "configs" / "geometry" / "wing_bwb.yaml"
-        config = st.text_input("Geometry config", value=str(default_cfg), key="dataset_geom_cfg")
-        c1, c2, c3, c4 = st.columns(4)
-        with c1:
-            n = int(st.number_input("N geometries", min_value=1, max_value=1_000_000, value=20, step=1, key="dataset_n"))
-            sampler = st.selectbox("Sampler", SUPPORTED_SAMPLERS, index=0, key="dataset_sampler")
-        with c2:
-            sampler_seed = int(st.number_input("Sampler seed", min_value=0, max_value=2_147_483_647, value=123, step=1, key="dataset_seed"))
-            name = st.text_input("Dataset name override", value="", key="dataset_name")
-        with c3:
-            save_plot = st.checkbox("Save plots", value=False, key="dataset_save_plot")
-            build_asb = st.checkbox("Build AeroSandbox", value=False, key="dataset_asb")
-        with c4:
-            st.caption("Rule of thumb")
-            st.write("Use `--no-save-plot` for real batches.")
-
-        args = ["dataset", "generate", "-c", config, "--n", str(n), "--sampler", sampler, "--sampler-seed", str(sampler_seed)]
-        args += ["--save-plot" if save_plot else "--no-save-plot"]
-        args += ["--build-aerosandbox" if build_asb else "--no-build-aerosandbox"]
-        if name.strip():
-            args += ["--name", name.strip()]
-        _run_button("Generate geometry dataset", args, project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="dataset_generate")
-
-    elif mode == "Unified aero dataset":
-        default_cfg = project_root / "configs" / "geometry" / "wing_bwb.yaml"
-        config = st.text_input("Geometry config", value=str(default_cfg), key="aero_dataset_cfg")
-        c1, c2, c3, c4 = st.columns(4)
-        with c1:
-            n = int(st.number_input("N geometries", min_value=1, max_value=100_000, value=5, step=1, key="aero_dataset_n"))
-            sampler = st.selectbox("Sampler", SUPPORTED_SAMPLERS, index=0, key="aero_dataset_sampler")
-            sampler_seed = int(st.number_input("Sampler seed", min_value=0, value=123, step=1, key="aero_dataset_seed"))
-        with c2:
-            name = st.text_input("Aero dataset name", value="gui_aero_dataset_v1", key="aero_dataset_name")
-            qc_preset = st.selectbox("QC preset", SUPPORTED_QC_PRESETS, index=2, key="aero_dataset_qc")
-            retain = st.selectbox("Retain aero runs", ["all", "failures_only", "none"], index=1, key="aero_dataset_retain")
-        with c3:
-            alpha_values = st.text_input("alpha values", value="0,2,4", key="aero_dataset_alpha")
-            beta_values = st.text_input("beta values", value="0", key="aero_dataset_beta")
-            control_values = st.text_input("control input values [deg]", value="-5,0,5", key="aero_dataset_control")
-        with c4:
-            velocity_values = st.text_input("velocity values [m/s]", value="28", key="aero_dataset_velocity")
-            altitude_values = st.text_input("altitude values [m]", value="1500", key="aero_dataset_altitude")
-            max_cases = st.text_input("max cases per geometry", value="", key="aero_dataset_max_cases")
-
-        with st.expander("Advanced sweep dimensions", expanded=False):
-            p_values = st.text_input("p values [rad/s]", value="", key="aero_dataset_p")
-            q_values = st.text_input("q values [rad/s]", value="", key="aero_dataset_q")
-            r_values = st.text_input("r values [rad/s]", value="", key="aero_dataset_r")
-            avl_command = st.text_input("AVL command", value="avl", key="aero_dataset_avl")
-            spanwise = int(st.number_input("Spanwise panels", min_value=1, value=4, step=1, key="aero_dataset_span"))
-            chordwise = int(st.number_input("Chordwise panels", min_value=1, value=8, step=1, key="aero_dataset_chord"))
-            span_spacing = st.selectbox("Spanwise spacing", SUPPORTED_SPACING, index=0, key="aero_dataset_span_spacing")
-            chord_spacing = st.selectbox("Chordwise spacing", SUPPORTED_SPACING, index=1, key="aero_dataset_chord_spacing")
-            timeout = int(st.number_input("Solver timeout [s]", min_value=5, value=180, step=5, key="aero_dataset_timeout"))
-            keep_geometry = st.checkbox("Keep intermediate geometry dataset", value=True, key="aero_dataset_keep_geom")
-            save_plot = st.checkbox("Save geometry plots", value=False, key="aero_dataset_save_plot")
-            build_asb = st.checkbox("Build AeroSandbox", value=True, key="aero_dataset_build_asb")
-
-        per_geom = _estimate_sweep_cases(alpha_values, beta_values, velocity_values, altitude_values, p_values, q_values, r_values, control_values)
-        total_cases = per_geom * n
-        st.metric("Estimated aero cases", f"{total_cases:,}", help="N geometries × Cartesian sweep size")
-        if total_cases > 1000:
-            st.warning("This is a serious run. Check AVL availability, paneling, retention, and timeout before pressing the button.")
-
-        args = [
-            "dataset", "aero-generate", "-c", config, "--n", str(n), "--name", name,
-            "--sampler", sampler, "--sampler-seed", str(sampler_seed),
-            "--alpha-values", alpha_values, "--beta-values", beta_values,
-            "--velocity-values", velocity_values, "--altitude-values", altitude_values,
-            "--control-input-values", control_values,
-            "--solver", "aerosandbox_avl", "--avl-command", avl_command,
-            "--timeout-sec", str(timeout), "--spanwise-resolution", str(spanwise),
-            "--chordwise-resolution", str(chordwise), "--spanwise-spacing", span_spacing,
-            "--chordwise-spacing", chord_spacing, "--retain-aero-runs", retain,
-            "--qc-preset", qc_preset,
-            "--save-plot" if save_plot else "--no-save-plot",
-            "--build-aerosandbox" if build_asb else "--no-build-aerosandbox",
-            "--keep-geometry-dataset" if keep_geometry else "--delete-geometry-dataset",
-        ]
-        if p_values.strip():
-            args += ["--p-values", p_values]
-        if q_values.strip():
-            args += ["--q-values", q_values]
-        if r_values.strip():
-            args += ["--r-values", r_values]
-        if max_cases.strip():
-            args += ["--max-cases", max_cases.strip()]
-        _run_button("Generate unified aero dataset", args, project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="aero_dataset_generate")
-
-    else:
-        dataset = _select_latest_dir("Dataset root", project_root / "data" / "datasets", key="qc_dataset")
-        if not dataset:
-            st.warning("No dataset selected.")
-            return
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            _run_button("Inspect", ["dataset", "inspect", "--dataset", dataset], project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="dataset_inspect")
-        with col2:
-            _run_button("Aero QC", ["dataset", "aero-qc", "--dataset", dataset, "--profile", "basic"], project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="dataset_aero_qc")
-        with col3:
-            _run_button("Curate aero", ["dataset", "curate-aero", "--dataset", dataset], project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="dataset_curate")
-        with col4:
-            force = st.checkbox("Force promotion", value=False)
-            promote_args = ["dataset", "promote-aero", "--dataset", dataset]
-            if force:
-                promote_args += ["--force"]
-            _run_button("Promote aero", promote_args, project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="dataset_promote", danger=force)
-        _run_button("Require promoted gate", ["dataset", "require-promoted-aero", "--dataset", dataset], project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="dataset_require_promoted")
-
-
-def _geometry_source_args(project_root: Path, prefix: str) -> list[str]:
-    source_mode = st.radio("Geometry source", ["config", "run-dir", "dataset case"], horizontal=True, key=f"{prefix}_source_mode")
-    generator_id = st.text_input("Generator ID for stored geometry", value="bwb_segmented_v1", key=f"{prefix}_generator")
-    args: list[str] = []
-    if source_mode == "config":
-        cfg = st.text_input("Geometry config", value=str(project_root / "configs" / "geometry" / "baseline_bwb_25.yaml"), key=f"{prefix}_cfg")
-        args += ["--config", cfg, "--geometry-source", "native"]
-    elif source_mode == "run-dir":
-        run_dir = _select_latest_dir("Geometry/aero run dir", project_root / "data" / "runs", key=f"{prefix}_run")
-        args += ["--run-dir", run_dir, "--geometry-source", "reconstruct", "--generator-id", generator_id]
-    else:
-        dataset = _select_latest_dir("Dataset root", project_root / "data" / "datasets", key=f"{prefix}_dataset")
-        geometry_id = st.text_input("Geometry ID", value="geom_00001", key=f"{prefix}_geometry_id")
-        args += ["--dataset", dataset, "--geometry-id", geometry_id, "--geometry-source", "reconstruct", "--generator-id", generator_id]
-    return args
-
-
-def _solver_options(prefix: str) -> list[str]:
-    with st.expander("Solver / paneling", expanded=False):
-        avl_command = st.text_input("AVL command", value="avl", key=f"{prefix}_avl")
-        timeout = int(st.number_input("Solver timeout [s]", min_value=5, value=180, step=5, key=f"{prefix}_timeout"))
-        spanwise = int(st.number_input("Spanwise panels", min_value=1, value=4, step=1, key=f"{prefix}_span"))
-        chordwise = int(st.number_input("Chordwise panels", min_value=1, value=8, step=1, key=f"{prefix}_chord"))
-        span_spacing = st.selectbox("Spanwise spacing", SUPPORTED_SPACING, index=0, key=f"{prefix}_span_spacing")
-        chord_spacing = st.selectbox("Chordwise spacing", SUPPORTED_SPACING, index=1, key=f"{prefix}_chord_spacing")
-        save_surface = st.checkbox("Save surface forces", value=False, key=f"{prefix}_save_surface")
-        save_element = st.checkbox("Save element forces", value=False, key=f"{prefix}_save_element")
-        output_name = st.text_input("Output name suffix", value="", key=f"{prefix}_output_name")
-
-    args = [
-        "--solver", "aerosandbox_avl", "--avl-command", avl_command,
-        "--timeout-sec", str(timeout), "--spanwise-resolution", str(spanwise),
-        "--chordwise-resolution", str(chordwise), "--spanwise-spacing", span_spacing,
-        "--chordwise-spacing", chord_spacing,
-    ]
-    if save_surface:
-        args += ["--save-surface-forces"]
-    if save_element:
-        args += ["--save-element-forces"]
-    if output_name.strip():
-        args += ["--output-name", output_name.strip()]
-    return args
-
-
-def tab_aero(project_root: Path, aeris_executable: str, timeout_sec: int, dry_run: bool) -> None:
-    st.header("Aero")
-    mode = st.radio("Aero workflow", ["Single run", "Sweep", "Inspect / replay"], horizontal=True)
-
-    if mode == "Single run":
-        args = ["aero", "run"] + _geometry_source_args(project_root, "aero_single")
-        st.subheader("Flight condition")
-        c1, c2, c3, c4 = st.columns(4)
-        with c1:
-            alpha = st.number_input("alpha [deg]", value=4.0, key="single_alpha")
-            beta = st.number_input("beta [deg]", value=0.0, key="single_beta")
-        with c2:
-            velocity = st.number_input("velocity [m/s]", value=28.0, key="single_velocity")
-            altitude = st.number_input("altitude [m]", value=1500.0, key="single_altitude")
-        with c3:
-            p_rate = st.number_input("p [rad/s]", value=0.0, format="%.5f", key="single_p")
-            q_rate = st.number_input("q [rad/s]", value=0.0, format="%.5f", key="single_q")
-        with c4:
-            r_rate = st.number_input("r [rad/s]", value=0.0, format="%.5f", key="single_r")
-            use_control = st.checkbox("Control input", value=False, key="single_use_control")
-            control = st.number_input("control [deg]", value=0.0, disabled=not use_control, key="single_control")
-        args += ["--alpha", str(alpha), "--beta", str(beta), "--velocity", str(velocity), "--altitude", str(altitude), "--p", str(p_rate), "--q", str(q_rate), "--r", str(r_rate)]
-        if use_control:
-            args += ["--control-input-deg", str(control)]
-        args += _solver_options("aero_single")
-        _run_button("Run aero case", args, project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="aero_single_run")
-
-    elif mode == "Sweep":
-        args = ["aero", "sweep"] + _geometry_source_args(project_root, "aero_sweep")
-        st.subheader("Sweep values")
-        c1, c2, c3, c4 = st.columns(4)
-        with c1:
-            alpha_values = st.text_input("alpha values [deg]", value="0,2,4", key="sweep_alpha")
-            beta_values = st.text_input("beta values [deg]", value="0", key="sweep_beta")
-        with c2:
-            control_values = st.text_input("control input values [deg]", value="-5,0,5", key="sweep_control")
-            velocity_values = st.text_input("velocity values [m/s]", value="28", key="sweep_velocity")
-        with c3:
-            altitude_values = st.text_input("altitude values [m]", value="1500", key="sweep_altitude")
-            q_values = st.text_input("q values [rad/s]", value="", key="sweep_q")
-        with c4:
-            p_values = st.text_input("p values [rad/s]", value="", key="sweep_p")
-            r_values = st.text_input("r values [rad/s]", value="", key="sweep_r")
-
-        max_cases = st.text_input("Max cases safety cap", value="", key="sweep_max_cases")
-        ncases = _estimate_sweep_cases(alpha_values, beta_values, velocity_values, altitude_values, p_values, q_values, r_values, control_values)
-        st.metric("Estimated sweep cases", f"{ncases:,}")
-        if ncases > 200:
-            st.warning("Large sweep. Use --max-cases or reduce dimensions unless this is intentional.")
-
-        for flag, value in [
-            ("--alpha-values", alpha_values), ("--beta-values", beta_values),
-            ("--velocity-values", velocity_values), ("--altitude-values", altitude_values),
-            ("--control-input-values", control_values),
-            ("--p-values", p_values), ("--q-values", q_values), ("--r-values", r_values),
-        ]:
-            if value.strip():
-                args += [flag, value]
-        if max_cases.strip():
-            args += ["--max-cases", max_cases.strip()]
-        args += _solver_options("aero_sweep")
-        _run_button("Run aero sweep", args, project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="aero_sweep_run")
-
-    else:
-        latest_aero = _select_latest_dir("Aero run", project_root / "data" / "runs", pattern="*_aero_*", key="aero_inspect_run")
-        col1, col2 = st.columns(2)
-        with col1:
-            if latest_aero:
-                _run_button("Inspect aero run", ["aero", "inspect", "--run-dir", latest_aero], project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="aero_inspect")
-        with col2:
-            latest_sweep = _select_latest_dir("Aero sweep", project_root / "data" / "runs", pattern="*_aero_sweep_*", key="aero_inspect_sweep")
-            if latest_sweep:
-                _run_button("Inspect sweep", ["aero", "sweep-inspect", "--run-dir", latest_sweep], project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="aero_sweep_inspect")
-                case_index = int(st.number_input("Sweep case index", min_value=0, value=0, step=1))
-                _run_button("Inspect sweep case", ["aero", "sweep-case-inspect", "--run-dir", latest_sweep, "--case-index", str(case_index)], project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="aero_sweep_case_inspect")
-
-
-def tab_dynamics(project_root: Path, aeris_executable: str, timeout_sec: int, dry_run: bool) -> None:
-    st.header("Dynamics foundation")
-    run_dir = _select_latest_dir("Aero run dir", project_root / "data" / "runs", pattern="*_aero_*", key="dyn_run")
-    if not run_dir:
-        st.warning("No aero run selected.")
+    if action == "Geometry info":
+        _task_panel(title="Geometry system info", purpose="Shows registered geometry command information.", args=["geometry", "info"], project_root=project_root, aeris_executable=aeris_executable, timeout_sec=timeout_sec, dry_run=dry_run, advanced=advanced, key="geom_info")
         return
 
-    mode = st.radio("Mass input", ["mass config", "manual"], horizontal=True)
-    build_args = ["dynamics", "build", "--run-dir", run_dir]
-    sweep_base_args: list[str] = []
+    if action == "Generate geometry":
+        config = _select_file("Geometry config", project_root / "configs" / "geometry", "*.yaml", key="geom_config", default=str(project_root / "configs" / "geometry" / "baseline_bwb.yaml"))
+        output_name = st.text_input("Optional output name", value="", help="Leave empty for automatic timestamped run folder.")
+        save_plot = st.checkbox("Save planform plot", value=True)
+        build_asb = st.checkbox("Build AeroSandbox geometry", value=True)
+        extra = st.text_input("Advanced extra options", value="", help="Optional additional geometry command options.")
+        args = ["geometry", "generate", "--config", config]
+        _append_flag(args, "--output-name", output_name)
+        _append_bool(args, "--save-plot", "--no-save-plot", save_plot)
+        _append_bool(args, "--build-aerosandbox", "--no-build-aerosandbox", build_asb)
+        args += _parse_extra_args(extra)
+        _task_panel(title="Generate one geometry", purpose="Creates a single deterministic geometry run with artifacts and manifest.", args=args, project_root=project_root, aeris_executable=aeris_executable, timeout_sec=timeout_sec, dry_run=dry_run, advanced=advanced, key="geom_generate")
+        return
 
-    if mode == "mass config":
-        mass_config = st.text_input("Mass config", value=str(project_root / "configs" / "mass" / "baseline_uav.yaml"), key="dyn_mass_config")
-        build_args += ["--mass-config", mass_config]
-        sweep_base_args += ["--mass-config", mass_config]
+    source_mode = st.selectbox("Geometry source", ["latest run", "dataset geometry", "manual path"])
+    if source_mode == "latest run":
+        run_dir = _select_dir("Run directory", project_root / "data" / "runs", key="geom_vis_run")
+        args = ["geometry", "visualize", "--run-dir", run_dir]
+    elif source_mode == "dataset geometry":
+        dataset = _select_dir("Dataset root", project_root / "data" / "datasets", key="geom_vis_dataset")
+        geometry_id = st.text_input("Geometry ID", value="geom_00000")
+        args = ["geometry", "visualize", "--dataset", dataset, "--geometry-id", geometry_id]
     else:
-        c1, c2, c3, c4 = st.columns(4)
-        with c1:
-            mass_kg = st.number_input("mass [kg]", value=8.0, key="dyn_mass")
-        with c2:
-            x_cg_m = st.number_input("x CG [m]", value=0.45, key="dyn_xcg")
-        with c3:
-            y_cg_m = st.number_input("y CG [m]", value=0.0, key="dyn_ycg")
-        with c4:
-            z_cg_m = st.number_input("z CG [m]", value=0.0, key="dyn_zcg")
-        build_args += ["--mass-kg", str(mass_kg), "--x-cg-m", str(x_cg_m), "--y-cg-m", str(y_cg_m), "--z-cg-m", str(z_cg_m)]
-        sweep_base_args += ["--mass-kg", str(mass_kg), "--y-cg-m", str(y_cg_m), "--z-cg-m", str(z_cg_m)]
-
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        _run_button("Build dynamics", build_args, project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="dyn_build")
-    with col2:
-        _run_button("Inspect dynamics", ["dynamics", "inspect", "--run-dir", run_dir], project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="dyn_inspect")
-    with col3:
-        _run_button("Trim diagnostic", ["dynamics", "trim", "--run-dir", run_dir], project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="dyn_trim")
-
-    st.subheader("CG sweep")
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        cg_min = st.number_input("CG min [m]", value=0.30, key="dyn_cg_min")
-    with c2:
-        cg_max = st.number_input("CG max [m]", value=0.70, key="dyn_cg_max")
-    with c3:
-        n = int(st.number_input("N CG points", min_value=2, value=9, step=1, key="dyn_cg_n"))
-
-    sweep_args = ["dynamics", "cg-sweep", "--run-dir", run_dir, "--cg-min-m", str(cg_min), "--cg-max-m", str(cg_max), "--n", str(n)] + sweep_base_args
-    col1, col2 = st.columns(2)
-    with col1:
-        _run_button("Run CG sweep", sweep_args, project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="dyn_cg_sweep")
-    with col2:
-        _run_button("Inspect CG sweep", ["dynamics", "cg-sweep-inspect", "--run-dir", run_dir], project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="dyn_cg_inspect")
+        case_dir = st.text_input("Geometry/case directory", value=str(project_root / "data" / "runs"))
+        args = ["geometry", "visualize", "--case-dir", case_dir]
+    save_path = st.text_input("Optional image output path", value="")
+    draw_3d = st.checkbox("Draw 3D geometry", value=True)
+    show_plot = st.checkbox("Show plot window", value=False)
+    _append_flag(args, "--save-path", save_path)
+    _append_bool(args, "--draw-3d", "--no-draw-3d", draw_3d)
+    _append_bool(args, "--show-plot", "--no-show-plot", show_plot)
+    _task_panel(title="Visualize geometry", purpose="Replays an existing geometry artifact for inspection.", args=args, project_root=project_root, aeris_executable=aeris_executable, timeout_sec=timeout_sec, dry_run=dry_run, advanced=advanced, key="geom_visualize")
 
 
-def tab_ml(project_root: Path, aeris_executable: str, timeout_sec: int, dry_run: bool) -> None:
-    st.header("ML")
-    st.warning("ML commands require promoted aero datasets. The GUI exposes the gate; it does not bypass it.")
-    mode = st.radio("ML workflow", ["Training data / split", "Train", "Compare", "Predict"], horizontal=True)
+def page_dataset(project_root: Path, aeris_executable: str, timeout_sec: int, dry_run: bool, advanced: bool) -> None:
+    st.title("Dataset factory")
+    st.write("Create geometry datasets, unified aero datasets, run QC, curate, and promote. This is the data trust chain.")
+    action = st.radio("Workflow", ["Geometry dataset", "Unified aero dataset", "Inspect / QC", "Curate / promote", "Training data utilities"], horizontal=False)
 
-    if mode in {"Training data / split", "Train", "Compare"}:
-        dataset = _select_latest_dir("Promoted aero dataset root", project_root / "data" / "datasets", key=f"ml_dataset_{mode}")
-        features = st.text_input("Feature columns", value=DEFAULT_FEATURES, key=f"ml_features_{mode}")
-        targets = st.text_input("Target columns", value=DEFAULT_TARGETS, key=f"ml_targets_{mode}")
-        allow_forced = st.checkbox("Allow forced promotion", value=False, key=f"ml_allow_forced_{mode}")
-        forced_args = ["--allow-forced"] if allow_forced else []
-
-    if mode == "Training data / split":
-        col1, col2 = st.columns(2)
-        with col1:
-            _run_button("Check training data", ["dataset", "training-data", "--dataset", dataset, "--features", features, "--targets", targets] + forced_args, project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="ml_training_data")
-        with col2:
-            split_method = st.selectbox("Split method", ["grouped", "random"], index=0, key="ml_split_method")
-            random_seed = int(st.number_input("Random seed", value=123, step=1, key="ml_split_seed"))
-            _run_button("Split training data", ["dataset", "split-training-data", "--dataset", dataset, "--features", features, "--targets", targets, "--method", split_method, "--random-seed", str(random_seed)] + forced_args, project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="ml_split")
-
-    elif mode == "Train":
+    if action == "Geometry dataset":
+        config = _select_file("Geometry config", project_root / "configs" / "geometry", "*.yaml", key="ds_geo_config", default=str(project_root / "configs" / "geometry" / "wing_bwb.yaml"))
         c1, c2, c3 = st.columns(3)
-        with c1:
-            model_type = st.selectbox("Model", SUPPORTED_MODEL_TYPES, index=2)
-            split_method = st.selectbox("Split method", ["grouped", "random"], index=0, key="ml_train_split_method")
-        with c2:
-            random_seed = int(st.number_input("Random seed", value=123, step=1, key="ml_train_seed"))
-            output_dir = st.text_input("Output dir", value=str(project_root / "data" / "processed" / "ml_runs" / "gui_train"), key="ml_train_out")
-        with c3:
-            train_fraction = st.number_input("Train fraction", value=0.70, min_value=0.01, max_value=0.98, step=0.01)
-            val_fraction = st.number_input("Val fraction", value=0.15, min_value=0.01, max_value=0.98, step=0.01)
-            test_fraction = st.number_input("Test fraction", value=0.15, min_value=0.01, max_value=0.98, step=0.01)
-        args = ["ml", "train", "--dataset", dataset, "--features", features, "--targets", targets, "--model-type", model_type, "--split-method", split_method, "--random-seed", str(random_seed), "--train-fraction", str(train_fraction), "--val-fraction", str(val_fraction), "--test-fraction", str(test_fraction), "--output-dir", output_dir] + forced_args
-        _run_button("Train ML model", args, project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="ml_train")
+        n = c1.number_input("Number of geometries", min_value=1, value=20, step=1)
+        sampler = c2.selectbox("Sampler", SAMPLERS)
+        seed = c3.number_input("Sampler seed", min_value=0, value=123, step=1)
+        name = st.text_input("Dataset name", value="gui_geometry_dataset")
+        save_plot = st.checkbox("Save plots", value=False)
+        build_asb = st.checkbox("Build AeroSandbox geometry", value=True)
+        extra = st.text_input("Advanced extra options", value="")
+        args = ["dataset", "generate", "--config", config, "--n", str(int(n)), "--sampler", sampler, "--sampler-seed", str(int(seed)), "--name", name]
+        _append_bool(args, "--save-plot", "--no-save-plot", save_plot)
+        _append_bool(args, "--build-aerosandbox", "--no-build-aerosandbox", build_asb)
+        args += _parse_extra_args(extra)
+        _task_panel(title="Generate geometry dataset", purpose="Builds many deterministic geometry cases and metadata rows.", args=args, project_root=project_root, aeris_executable=aeris_executable, timeout_sec=timeout_sec, dry_run=dry_run, advanced=advanced, key="ds_generate")
+        return
 
-    elif mode == "Compare":
-        models = st.multiselect("Models", SUPPORTED_MODEL_TYPES, default=SUPPORTED_MODEL_TYPES)
-        split_method = st.selectbox("Split method", ["grouped", "random"], index=0, key="ml_compare_split_method")
-        random_seed = int(st.number_input("Random seed", value=123, step=1, key="ml_compare_seed"))
-        output_dir = st.text_input("Output dir", value=str(project_root / "data" / "processed" / "ml_runs" / "gui_compare"), key="ml_compare_out")
-        args = ["ml", "compare", "--dataset", dataset, "--features", features, "--targets", targets, "--models", ",".join(models), "--split-method", split_method, "--random-seed", str(random_seed), "--output-dir", output_dir] + forced_args
-        _run_button("Compare ML models", args, project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="ml_compare")
+    if action == "Unified aero dataset":
+        config = _select_file("Geometry config", project_root / "configs" / "geometry", "*.yaml", key="ds_aero_config", default=str(project_root / "configs" / "geometry" / "wing_bwb.yaml"))
+        st.caption("control input means control-surface deflection in degrees when supported by the aero solver.")
+        c1, c2, c3, c4 = st.columns(4)
+        n = c1.number_input("Geometries", min_value=1, value=10, step=1)
+        sampler = c2.selectbox("Sampler", SAMPLERS, key="aero_ds_sampler")
+        seed = c3.number_input("Sampler seed", min_value=0, value=123, step=1, key="aero_ds_seed")
+        name = c4.text_input("Dataset name", value="gui_aero_dataset")
+        alpha = st.text_input("AoA values [deg]", value="-2,0,2,4,6")
+        beta = st.text_input("Sideslip values beta [deg]", value="0")
+        velocity = st.text_input("Velocity values [m/s]", value="28")
+        altitude = st.text_input("Altitude values [m]", value="1500")
+        control = st.text_input("Control input values [deg]", value="-5,0,5")
+        p, q, r = st.columns(3)
+        p_values = p.text_input("p values [rad/s]", value="0")
+        q_values = q.text_input("q values [rad/s]", value="0")
+        r_values = r.text_input("r values [rad/s]", value="0")
+        estimated = int(n) * _estimate_cases(alpha, beta, velocity, altitude, control, p_values, q_values, r_values)
+        st.info(f"Estimated aero cases: {estimated:,}")
+        c5, c6, c7 = st.columns(3)
+        qc_preset = c5.selectbox("QC preset", QC_PRESETS, index=2)
+        retention = c6.selectbox("Retain aero run folders", RETENTION_POLICIES, index=1)
+        timeout_case = c7.number_input("Per-case timeout [s]", min_value=5, value=180, step=5)
+        panel_span = st.number_input("Spanwise panel resolution", min_value=1, value=4, step=1)
+        panel_chord = st.number_input("Chordwise panel resolution", min_value=1, value=8, step=1)
+        extra = st.text_input("Advanced extra options", value="", key="aero_ds_extra")
+        args = [
+            "dataset", "aero-generate", "--config", config, "--n", str(int(n)), "--sampler", sampler, "--sampler-seed", str(int(seed)), "--name", name,
+            "--alpha-values", alpha, "--beta-values", beta, "--velocity-values", velocity, "--altitude-values", altitude,
+            "--control-input-values", control, "--p-values", p_values, "--q-values", q_values, "--r-values", r_values,
+            "--solver", "aerosandbox_avl", "--timeout-sec", str(int(timeout_case)), "--spanwise-resolution", str(int(panel_span)), "--chordwise-resolution", str(int(panel_chord)),
+            "--retain-aero-runs", retention, "--qc-preset", qc_preset,
+        ]
+        args += _parse_extra_args(extra)
+        _task_panel(title="Generate unified aero dataset", purpose="Generates geometries, runs aero sweeps, records successes/failures, and writes a dataset ready for QC/curation.", args=args, project_root=project_root, aeris_executable=aeris_executable, timeout_sec=timeout_sec, dry_run=dry_run, advanced=advanced, key="ds_aero_generate")
+        return
 
+    if action == "Inspect / QC":
+        dataset = _select_dir("Dataset root", project_root / "data" / "datasets", key="ds_qc_dataset")
+        qc_kind = st.selectbox("Action", ["inspect", "geometry QC", "aero QC"])
+        if qc_kind == "inspect":
+            args = ["dataset", "inspect", "--dataset", dataset]
+        elif qc_kind == "geometry QC":
+            profile = st.selectbox("Geometry QC profile", QC_PROFILES)
+            args = ["dataset", "qc", "--dataset", dataset, "--profile", profile]
+        else:
+            profile = st.selectbox("Aero QC profile", QC_PROFILES)
+            args = ["dataset", "aero-qc", "--dataset", dataset, "--profile", profile]
+        _task_panel(title="Inspect or QC dataset", purpose="Reads dataset artifacts and/or runs quality checks.", args=args, project_root=project_root, aeris_executable=aeris_executable, timeout_sec=timeout_sec, dry_run=dry_run, advanced=advanced, key="ds_inspect_qc")
+        return
+
+    if action == "Curate / promote":
+        dataset = _select_dir("Aero dataset root", project_root / "data" / "datasets", key="ds_promote_dataset")
+        task = st.selectbox("Trust-chain task", ["curate-aero", "promote-aero", "require-promoted-aero"])
+        args = ["dataset", task, "--dataset", dataset]
+        if task == "promote-aero":
+            force = st.checkbox("Force promotion", value=False, help="Use only when you deliberately accept blockers. Not for normal trusted work.")
+            _append_bool(args, "--force", None, force)
+        _task_panel(title="Dataset trust-chain task", purpose="Curate and promote only data that is suitable for downstream ML.", args=args, project_root=project_root, aeris_executable=aeris_executable, timeout_sec=timeout_sec, dry_run=dry_run, advanced=advanced, key="ds_trust_task", danger=task == "promote-aero")
+        return
+
+    dataset = _select_dir("Promoted dataset root", project_root / "data" / "datasets", key="ds_training_dataset")
+    features = st.text_input("Feature columns", value=DEFAULT_FEATURES)
+    targets = st.text_input("Target columns", value=DEFAULT_TARGETS)
+    utility = st.selectbox("Utility", ["training-data", "split-training-data"])
+    args = ["dataset", utility, "--dataset", dataset, "--features", features, "--targets", targets]
+    if utility == "split-training-data":
+        split_method = st.selectbox("Split method", ["grouped", "random"])
+        group_column = st.text_input("Group column", value="geometry_id")
+        seed = st.number_input("Random seed", min_value=0, value=123, step=1)
+        args += ["--method", split_method, "--group-column", group_column, "--random-seed", str(int(seed))]
+    _task_panel(title="Training-data utility", purpose="Builds or splits training-ready data from a promoted dataset.", args=args, project_root=project_root, aeris_executable=aeris_executable, timeout_sec=timeout_sec, dry_run=dry_run, advanced=advanced, key="ds_training_util")
+
+
+def page_aero(project_root: Path, aeris_executable: str, timeout_sec: int, dry_run: bool, advanced: bool) -> None:
+    st.title("Aero analysis")
+    st.write("Run AVL/AeroSandbox scalar aero cases and sweeps from a config, run directory, or dataset geometry.")
+    action = st.radio("Workflow", ["Single run", "Sweep", "Inspect"], horizontal=True)
+
+    if action == "Inspect":
+        run_dir = _select_dir("Aero run or sweep directory", project_root / "data" / "runs", key="aero_inspect_run")
+        inspect_type = st.selectbox("Inspect type", ["single aero run", "sweep", "sweep case"])
+        if inspect_type == "single aero run":
+            args = ["aero", "inspect", "--run-dir", run_dir]
+        elif inspect_type == "sweep":
+            args = ["aero", "sweep-inspect", "--run-dir", run_dir]
+        else:
+            case_id = st.text_input("Case ID or case folder", value="case_0000")
+            args = ["aero", "sweep-case-inspect", "--run-dir", run_dir, "--case-id", case_id]
+        _task_panel(title="Inspect aero result", purpose="Reads saved aero result artifacts without rerunning the solver.", args=args, project_root=project_root, aeris_executable=aeris_executable, timeout_sec=timeout_sec, dry_run=dry_run, advanced=advanced, key="aero_inspect")
+        return
+
+    source = st.selectbox("Geometry source", ["config", "run-dir", "dataset"])
+    args = ["aero", "run" if action == "Single run" else "sweep"]
+    if source == "config":
+        config = _select_file("Geometry config", project_root / "configs" / "geometry", "*.yaml", key=f"aero_{action}_config", default=str(project_root / "configs" / "geometry" / "baseline_bwb.yaml"))
+        args += ["--config", config]
+    elif source == "run-dir":
+        run_dir = _select_dir("Geometry run directory", project_root / "data" / "runs", key=f"aero_{action}_run")
+        args += ["--run-dir", run_dir]
     else:
-        model_run = st.text_input("Model run directory", value=str(project_root / "data" / "processed" / "ml_runs" / "<run>"), key="ml_predict_run")
-        input_csv = st.text_input("Input CSV", value=str(project_root / "data" / "datasets" / "<dataset>" / "curated_aero_dataset.csv"), key="ml_predict_csv")
-        output_dir = st.text_input("Output dir", value=str(project_root / "data" / "processed" / "ml_predictions" / "gui_predict"), key="ml_predict_out")
-        include_truth = st.checkbox("Include truth if available", value=True, key="ml_predict_truth")
-        args = ["ml", "predict", "--model-run-dir", model_run, "--input-csv", input_csv, "--output-dir", output_dir]
-        args += ["--include-truth-if-available" if include_truth else "--no-include-truth-if-available"]
-        _run_button("Run prediction", args, project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="ml_predict")
+        dataset = _select_dir("Geometry dataset root", project_root / "data" / "datasets", key=f"aero_{action}_dataset")
+        geometry_id = st.text_input("Geometry ID", value="geom_00000", key=f"aero_{action}_geom")
+        args += ["--dataset", dataset, "--geometry-id", geometry_id]
+
+    if action == "Single run":
+        c1, c2, c3, c4 = st.columns(4)
+        alpha = c1.number_input("AoA alpha [deg]", value=4.0)
+        beta = c2.number_input("Sideslip beta [deg]", value=0.0)
+        velocity = c3.number_input("Velocity [m/s]", value=28.0)
+        altitude = c4.number_input("Altitude [m]", value=1500.0)
+        control = st.number_input("Control input [deg]", value=0.0)
+        p, q, r = st.columns(3)
+        p_val = p.number_input("p [rad/s]", value=0.0)
+        q_val = q.number_input("q [rad/s]", value=0.0)
+        r_val = r.number_input("r [rad/s]", value=0.0)
+        args += ["--alpha", str(alpha), "--beta", str(beta), "--velocity", str(velocity), "--altitude", str(altitude), "--control-input-deg", str(control), "--p", str(p_val), "--q", str(q_val), "--r", str(r_val)]
+    else:
+        alpha = st.text_input("AoA alpha values [deg]", value="-2,0,2,4,6")
+        beta = st.text_input("Sideslip beta values [deg]", value="0")
+        velocity = st.text_input("Velocity values [m/s]", value="28")
+        altitude = st.text_input("Altitude values [m]", value="1500")
+        control = st.text_input("Control input values [deg]", value="-5,0,5")
+        estimated = _estimate_cases(alpha, beta, velocity, altitude, control)
+        st.info(f"Estimated cases for this single geometry: {estimated:,}")
+        args += ["--alpha-values", alpha, "--beta-values", beta, "--velocity-values", velocity, "--altitude-values", altitude, "--control-input-values", control]
+
+    c5, c6, c7 = st.columns(3)
+    panel_span = c5.number_input("Spanwise panels", min_value=1, value=4, step=1, key=f"aero_{action}_span")
+    panel_chord = c6.number_input("Chordwise panels", min_value=1, value=8, step=1, key=f"aero_{action}_chord")
+    case_timeout = c7.number_input("Solver timeout [s]", min_value=5, value=180, step=5, key=f"aero_{action}_timeout")
+    output_name = st.text_input("Optional output name", value="", key=f"aero_{action}_outname")
+    args += ["--solver", "aerosandbox_avl", "--timeout-sec", str(int(case_timeout)), "--spanwise-resolution", str(int(panel_span)), "--chordwise-resolution", str(int(panel_chord))]
+    _append_flag(args, "--output-name", output_name)
+    _task_panel(title=f"Aero {action.lower()}", purpose="Runs the aero solver and writes structured result artifacts.", args=args, project_root=project_root, aeris_executable=aeris_executable, timeout_sec=timeout_sec, dry_run=dry_run, advanced=advanced, key=f"aero_{action}_run_task")
 
 
-def tab_artifacts(project_root: Path) -> None:
-    st.header("Runs / artifacts")
-    root_choice = st.radio("Root", ["runs", "datasets", "processed", "debug", "custom"], horizontal=True)
+def page_dynamics(project_root: Path, aeris_executable: str, timeout_sec: int, dry_run: bool, advanced: bool) -> None:
+    st.title("Dynamics")
+    st.write("Build mass/CG/dynamics foundation artifacts, inspect them, estimate trim, or sweep CG. This is not a full flight simulator.")
+    action = st.radio("Workflow", ["Build", "Inspect", "Trim", "CG sweep"], horizontal=True)
+    run_dir = _select_dir("Aero run directory", project_root / "data" / "runs", key=f"dyn_{action}_run")
+
+    if action == "Inspect":
+        args = ["dynamics", "inspect", "--run-dir", run_dir]
+    elif action == "Trim":
+        args = ["dynamics", "trim", "--run-dir", run_dir]
+    elif action == "CG sweep":
+        c1, c2, c3 = st.columns(3)
+        cg_min = c1.number_input("CG min x [m]", value=0.30)
+        cg_max = c2.number_input("CG max x [m]", value=0.70)
+        n = c3.number_input("Samples", min_value=2, value=21, step=1)
+        args = ["dynamics", "cg-sweep", "--run-dir", run_dir, "--cg-min-m", str(cg_min), "--cg-max-m", str(cg_max), "--n", str(int(n))]
+    else:
+        mass_config = _select_file("Mass config", project_root / "configs" / "mass", "*.yaml", key="dyn_mass_config", default=str(project_root / "configs" / "mass" / "baseline_uav.yaml"))
+        args = ["dynamics", "build", "--run-dir", run_dir, "--mass-config", mass_config]
+    _task_panel(title=f"Dynamics: {action}", purpose="Creates or inspects dynamics foundation artifacts linked to aero outputs.", args=args, project_root=project_root, aeris_executable=aeris_executable, timeout_sec=timeout_sec, dry_run=dry_run, advanced=advanced, key=f"dyn_{action}_task")
+
+
+def page_ml(project_root: Path, aeris_executable: str, timeout_sec: int, dry_run: bool, advanced: bool) -> None:
+    st.title("ML studio")
+    st.write("Train, tune, compare, promote, and safely use scalar surrogate models. Raw datasets are not trusted inputs.")
+    action = st.radio("Workflow", ["Schema", "Train", "Tune", "Compare", "Model trust", "Predict"], horizontal=False)
+
+    if action == "Schema":
+        dataset = _select_dir("Promoted aero dataset", project_root / "data" / "datasets", key="ml_schema_dataset")
+        preset = st.text_input("Feature preset", value="bwb_control")
+        targets = st.text_input("Targets", value=DEFAULT_TARGETS)
+        group_column = st.text_input("Group column", value="geometry_id")
+        args = ["ml", "validate-schema", "--dataset", dataset, "--feature-preset", preset, "--targets", targets, "--group-column", group_column]
+        _task_panel(title="Validate ML schema", purpose="Checks that a promoted dataset has the columns needed for ML.", args=args, project_root=project_root, aeris_executable=aeris_executable, timeout_sec=timeout_sec, dry_run=dry_run, advanced=advanced, key="ml_schema")
+        return
+
+    if action in {"Train", "Tune", "Compare"}:
+        dataset = _select_dir("Promoted aero dataset", project_root / "data" / "datasets", key=f"ml_{action}_dataset")
+        use_preset = st.checkbox("Use feature preset", value=True, key=f"ml_{action}_use_preset")
+        if use_preset:
+            feature_args = ["--feature-preset", st.text_input("Feature preset", value="bwb_control", key=f"ml_{action}_preset")]
+        else:
+            feature_args = ["--features", st.text_input("Feature columns", value=DEFAULT_FEATURES, key=f"ml_{action}_features")]
+        targets = st.text_input("Targets", value=DEFAULT_TARGETS, key=f"ml_{action}_targets")
+        split_method = st.selectbox("Split method", ["grouped", "random"], key=f"ml_{action}_split")
+        group_column = st.text_input("Group column", value="geometry_id", key=f"ml_{action}_group")
+        seed = st.number_input("Random seed", min_value=0, value=123, step=1, key=f"ml_{action}_seed")
+
+    if action == "Train":
+        model_type = st.selectbox("Model type", MODEL_TYPES, index=4)
+        output_dir = st.text_input("Output directory", value=str(project_root / "data" / "processed" / "ml_runs" / "gui_train"))
+        args = ["ml", "train", "--dataset", dataset, *feature_args, "--targets", targets, "--model-type", model_type, "--split-method", split_method, "--group-column", group_column, "--random-seed", str(int(seed)), "--output-dir", output_dir]
+        _task_panel(title="Train scalar ML model", purpose="Trains a tabular surrogate from a promoted dataset.", args=args, project_root=project_root, aeris_executable=aeris_executable, timeout_sec=timeout_sec, dry_run=dry_run, advanced=advanced, key="ml_train")
+        return
+
+    if action == "Tune":
+        backend = st.selectbox("Tuning backend", ["aeris", "optuna"], index=1)
+        model_type = st.selectbox("Model type", MODEL_TYPES, index=4, key="ml_tune_model")
+        n_trials = st.number_input("Trials", min_value=1, value=25, step=1)
+        param_space = st.text_input("Parameter-space JSON", value=str(project_root / "configs" / "ml" / "tune_extra_trees_optuna_space.json"))
+        output_dir = st.text_input("Output directory", value=str(project_root / "data" / "processed" / "ml_runs" / "gui_tune"))
+        args = ["ml", "tune", "--backend", backend, "--dataset", dataset, *feature_args, "--targets", targets, "--model-type", model_type, "--param-space-json", param_space, "--n-trials", str(int(n_trials)), "--split-method", split_method, "--group-column", group_column, "--random-seed", str(int(seed)), "--output-dir", output_dir]
+        _task_panel(title="Tune scalar ML model", purpose="Runs deterministic or Optuna-based hyperparameter tuning.", args=args, project_root=project_root, aeris_executable=aeris_executable, timeout_sec=timeout_sec, dry_run=dry_run, advanced=advanced, key="ml_tune")
+        return
+
+    if action == "Compare":
+        models = st.multiselect("Models", MODEL_TYPES, default=["linear_regression", "ridge", "random_forest", "gradient_boosting", "extra_trees"])
+        compare_type = st.selectbox("Comparison type", ["single split", "seed stability"])
+        output_dir = st.text_input("Output directory", value=str(project_root / "data" / "processed" / "ml_runs" / "gui_compare"))
+        if compare_type == "single split":
+            args = ["ml", "compare", "--dataset", dataset, *feature_args, "--targets", targets, "--models", ",".join(models), "--split-method", split_method, "--group-column", group_column, "--random-seed", str(int(seed)), "--output-dir", output_dir]
+        else:
+            seeds = st.text_input("Seeds", value="101,202,303,404,505")
+            args = ["ml", "compare-seeds", "--dataset", dataset, *feature_args, "--targets", targets, "--models", ",".join(models), "--seeds", seeds, "--split-method", split_method, "--group-column", group_column, "--output-dir", output_dir]
+        _task_panel(title="Compare scalar ML models", purpose="Compares models and, if requested, checks whether the winner is stable across seeds.", args=args, project_root=project_root, aeris_executable=aeris_executable, timeout_sec=timeout_sec, dry_run=dry_run, advanced=advanced, key="ml_compare")
+        return
+
+    if action == "Model trust":
+        model_run = _select_dir("Model run directory", project_root / "data" / "processed" / "ml_runs", key="ml_trust_model")
+        trust_task = st.selectbox("Trust task", ["inspect-model", "promote-model", "require-promoted-model", "check-inference-inputs"])
+        args = ["ml", trust_task, "--model-run-dir", model_run]
+        if trust_task == "promote-model":
+            max_rmse = st.number_input("Max test RMSE mean", value=0.001, format="%.8f")
+            min_r2 = st.number_input("Min test R² mean", value=0.99, format="%.6f")
+            args += ["--max-test-rmse-mean", str(max_rmse), "--min-test-r2-mean", str(min_r2)]
+        if trust_task == "check-inference-inputs":
+            input_csv = st.text_input("Input CSV", value=str(Path(model_run) / "train_rows.csv" if model_run else ""))
+            enforce = st.checkbox("Fail on violations", value=False)
+            args += ["--input-csv", input_csv]
+            _append_bool(args, "--fail-on-violations", "--no-fail-on-violations", enforce)
+        _task_panel(title="Model trust gate", purpose="Promotes or verifies a trained model before downstream use.", args=args, project_root=project_root, aeris_executable=aeris_executable, timeout_sec=timeout_sec, dry_run=dry_run, advanced=advanced, key="ml_trust")
+        return
+
+    model_run = _select_dir("Model run directory", project_root / "data" / "processed" / "ml_runs", key="ml_predict_model")
+    input_csv = st.text_input("Input CSV", value=str(Path(model_run) / "train_rows.csv" if model_run else ""))
+    output_dir = st.text_input("Output directory", value=str(Path(model_run) / "inference" / "gui_predict" if model_run else project_root / "data" / "processed" / "ml_predictions" / "gui_predict"))
+    require_promoted = st.checkbox("Require promoted model", value=True)
+    enforce_envelope = st.checkbox("Enforce training envelope", value=True)
+    args = ["ml", "predict", "--model-run-dir", model_run, "--input-csv", input_csv, "--output-dir", output_dir]
+    _append_bool(args, "--require-promoted-model", None, require_promoted)
+    _append_bool(args, "--enforce-envelope", None, enforce_envelope)
+    _task_panel(title="Guarded prediction", purpose="Predicts only after the selected trust gates pass.", args=args, project_root=project_root, aeris_executable=aeris_executable, timeout_sec=timeout_sec, dry_run=dry_run, advanced=advanced, key="ml_predict")
+
+
+def page_multifidelity(project_root: Path, aeris_executable: str, timeout_sec: int, dry_run: bool, advanced: bool) -> None:
+    st.title("Multifidelity")
+    st.write("Build LF/HF delta datasets, train correction models, predict corrected outputs, and evaluate whether correction actually helped.")
+    action = st.radio("Workflow", ["Build delta dataset", "Train delta model", "Predict delta model", "Evaluate delta model"], horizontal=False)
+
+    if action == "Build delta dataset":
+        lf_csv = st.text_input("Low-fidelity CSV", value=str(project_root / "data" / "processed" / "multifidelity" / "lf.csv"))
+        hf_csv = st.text_input("High-fidelity CSV", value=str(project_root / "data" / "processed" / "multifidelity" / "hf.csv"))
+        pair_keys = st.text_input("Pair keys", value=DEFAULT_PAIR_KEYS)
+        targets = st.text_input("Base targets", value=DEFAULT_TARGETS)
+        output_dir = st.text_input("Output directory", value=str(project_root / "data" / "processed" / "multifidelity" / "gui_delta_dataset"))
+        args = ["ml", "build-delta-dataset", "--lf-csv", lf_csv, "--hf-csv", hf_csv, "--pair-keys", pair_keys, "--targets", targets, "--output-dir", output_dir]
+        purpose = "Pairs LF/HF scalar rows and writes delta_dataset.csv plus a traceability report."
+    elif action == "Train delta model":
+        delta_dataset = _select_dir("Delta dataset directory", project_root / "data" / "processed" / "multifidelity", key="mf_delta_dataset")
+        features = st.text_input("Features", value="c1_m,alpha_deg,velocity_mps,altitude_m,control_input_deg,lf__cl,lf__cd,lf__cm")
+        targets = st.text_input("Base targets", value=DEFAULT_TARGETS)
+        model_type = st.selectbox("Model type", MODEL_TYPES, index=4)
+        output_dir = st.text_input("Output directory", value=str(project_root / "data" / "processed" / "ml_runs" / "gui_delta_model"))
+        args = ["ml", "train-delta-model", "--delta-dataset", delta_dataset, "--features", features, "--base-targets", targets, "--model-type", model_type, "--split-method", "grouped", "--group-column", "geometry_id", "--output-dir", output_dir]
+        purpose = "Trains a model that predicts HF-LF correction deltas."
+    elif action == "Predict delta model":
+        model_run = _select_dir("Delta model run", project_root / "data" / "processed" / "ml_runs", key="mf_delta_model_pred")
+        input_csv = st.text_input("Input CSV", value=str(Path(model_run) / "test_rows.csv" if model_run else ""))
+        output_dir = st.text_input("Output directory", value=str(Path(model_run) / "delta_inference" / "gui_predict" if model_run else ""))
+        args = ["ml", "predict-delta-model", "--model-run-dir", model_run, "--input-csv", input_csv, "--output-dir", output_dir]
+        purpose = "Predicts deltas and writes corrected outputs: LF + predicted delta."
+    else:
+        model_run = _select_dir("Delta model run", project_root / "data" / "processed" / "ml_runs", key="mf_delta_model_eval")
+        output_dir = st.text_input("Output directory", value=str(Path(model_run) / "multifidelity_evaluation" if model_run else ""))
+        args = ["ml", "evaluate-delta-model", "--model-run-dir", model_run, "--output-dir", output_dir]
+        purpose = "Compares LF baseline error against corrected prediction error. No sugarcoating."
+
+    _task_panel(title=action, purpose=purpose, args=args, project_root=project_root, aeris_executable=aeris_executable, timeout_sec=timeout_sec, dry_run=dry_run, advanced=advanced, key=f"mf_{action}")
+
+
+def page_results(project_root: Path) -> None:
+    st.title("Results browser")
+    st.write("Inspect generated artifacts without digging through folders manually.")
+    root_choice = st.selectbox("Artifact root", ["runs", "datasets", "processed", "debug", "documents", "custom"])
     if root_choice == "runs":
         root = project_root / "data" / "runs"
     elif root_choice == "datasets":
@@ -837,50 +759,70 @@ def tab_artifacts(project_root: Path) -> None:
         root = project_root / "data" / "processed"
     elif root_choice == "debug":
         root = project_root / "data" / "debug"
+    elif root_choice == "documents":
+        root = project_root / "documents"
     else:
-        root = Path(st.text_input("Custom root", value=str(project_root / "data"))).expanduser().resolve()
+        root = Path(st.text_input("Custom root", value=str(project_root / "data"))).expanduser()
 
-    dirs = _latest_dirs(root)
-    if not dirs:
-        st.warning(f"No directories found under {root}")
+    if not root.exists():
+        st.warning(f"Root does not exist: {root}")
         return
 
-    selected = st.selectbox("Select run/dataset", dirs[:200], format_func=lambda p: p.name)
-    st.write(f"Selected: `{selected}`")
-
-    files = sorted([p for p in selected.rglob("*") if p.is_file()])
+    candidates = [root] + _latest_dirs(root)
+    selected_root = st.selectbox("Folder", candidates[:200], format_func=lambda p: p.name if p != root else f"{p.name}/")
+    files = sorted([p for p in selected_root.rglob("*") if p.is_file()])
     st.metric("Files", len(files))
-    preview_candidates = [
-        p for p in files
-        if p.suffix.lower() in {".json", ".csv", ".png", ".jpg", ".jpeg", ".webp", ".txt", ".log", ".yaml", ".yml", ".avl", ".md"}
-    ]
-    if not preview_candidates:
+    previewable = [p for p in files if p.suffix.lower() in {".json", ".csv", ".png", ".jpg", ".jpeg", ".webp", ".txt", ".log", ".yaml", ".yml", ".md", ".avl"}]
+    if not previewable:
         st.info("No previewable files found.")
         return
-
-    selected_file = st.selectbox("Preview file", preview_candidates, format_func=lambda p: str(p.relative_to(selected)))
+    selected_file = st.selectbox("Preview file", previewable, format_func=lambda p: str(p.relative_to(selected_root)))
     _display_file(selected_file)
 
 
-def tab_cli_console(project_root: Path, aeris_executable: str, timeout_sec: int, dry_run: bool) -> None:
-    st.header("CLI console")
-    st.write("Run arbitrary AERIS CLI arguments. No shell is used; arguments are split safely.")
-    raw_args = st.text_input("AERIS args", value="version", help="Example: aero inspect --run-dir data/runs/<run>")
-    try:
-        args = shlex.split(raw_args)
-    except Exception as exc:
-        st.error(f"Could not parse args: {exc}")
-        return
-    _run_button("Run CLI command", args, project_root, aeris_executable, timeout_sec, dry_run=dry_run, key="cli_console_run")
+def page_config_lab(project_root: Path) -> None:
+    st.title("Config Lab")
+    st.write("Inspect and lightly edit YAML configs. This is for convenience, not a replacement for version-controlled config files.")
+    config_path = _select_file("Config file", project_root / "configs", "*.yaml", key="config_lab", default=str(project_root / "configs" / "geometry" / "baseline_bwb.yaml"))
+    path = Path(config_path).expanduser()
+    if not path.exists():
+        st.warning("Selected config file does not exist yet.")
+    text = st.text_area("YAML content", value=_read_text(path) if path.exists() else "", height=520)
+    c1, c2 = st.columns(2)
+    with c1:
+        if st.button("Validate YAML", type="primary"):
+            if yaml is None:
+                st.error("PyYAML is not installed.")
+            else:
+                try:
+                    data = yaml.safe_load(text)
+                    st.success("YAML parsed successfully.")
+                    st.json(data)
+                except Exception as exc:
+                    st.error(f"YAML parse failed: {exc}")
+    with c2:
+        if st.button("Save YAML file"):
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text, encoding="utf-8")
+            st.success(f"Saved: {path}")
 
-    st.subheader("Command history")
+
+def page_advanced_console(project_root: Path, aeris_executable: str, timeout_sec: int, dry_run: bool, advanced: bool) -> None:
+    st.title("Advanced command runner")
+    st.warning("This is for expert/debug use. Normal workflows should use the pages above.")
+    raw = st.text_input("AERIS arguments", value="version", help="Example: ml inspect-model --model-run-dir data/processed/ml_runs/example")
+    args = _parse_extra_args(raw)
+    _task_panel(title="Run advanced AERIS task", purpose="Runs exactly the arguments above through the AERIS CLI wrapper.", args=args, project_root=project_root, aeris_executable=aeris_executable, timeout_sec=timeout_sec, dry_run=dry_run, advanced=True, key="advanced_runner")
+
+    st.subheader("Session history")
     history = st.session_state.get("command_history", [])
     if not history:
-        st.info("No commands run yet in this GUI session.")
+        st.info("No tasks have been run in this session.")
         return
-    for i, result in enumerate(history[:10]):
-        with st.expander(f"#{i + 1} exit={result.returncode}: {_quote_command(result.command[:6])} ...", expanded=False):
-            _show_result(result, expanded=False)
+    for i, result in enumerate(history[:10], start=1):
+        label = f"#{i} exit={result.returncode} — {_quote_command(result.command[:5])}"
+        with st.expander(label, expanded=False):
+            _show_result(result, advanced=True)
 
 
 # -----------------------------------------------------------------------------
@@ -889,43 +831,36 @@ def tab_cli_console(project_root: Path, aeris_executable: str, timeout_sec: int,
 
 
 def main() -> None:
-    st.set_page_config(page_title="AERIS GUI", layout="wide")
-    project_root, aeris_executable, timeout_sec, dry_run = sidebar_settings()
+    st.set_page_config(page_title="AERIS", layout="wide", page_icon="✈️")
+    project_root, aeris_executable, timeout_sec, dry_run, advanced, page = _sidebar()
 
-    tabs = st.tabs([
-        "Overview",
-        "Config Lab",
-        "Geometry",
-        "Dataset",
-        "Aero",
-        "Dynamics",
-        "ML",
-        "Artifacts",
-        "CLI Console",
-    ])
-    with tabs[0]:
-        tab_overview(project_root, aeris_executable, timeout_sec, dry_run)
-    with tabs[1]:
-        tab_config_lab(project_root)
-    with tabs[2]:
-        tab_geometry(project_root, aeris_executable, timeout_sec, dry_run)
-    with tabs[3]:
-        tab_dataset(project_root, aeris_executable, timeout_sec, dry_run)
-    with tabs[4]:
-        tab_aero(project_root, aeris_executable, timeout_sec, dry_run)
-    with tabs[5]:
-        tab_dynamics(project_root, aeris_executable, timeout_sec, dry_run)
-    with tabs[6]:
-        tab_ml(project_root, aeris_executable, timeout_sec, dry_run)
-    with tabs[7]:
-        tab_artifacts(project_root)
-    with tabs[8]:
-        tab_cli_console(project_root, aeris_executable, timeout_sec, dry_run)
+    if page == "Home":
+        page_home(project_root, aeris_executable, timeout_sec, dry_run, advanced)
+    elif page == "Setup & health":
+        page_health(project_root, aeris_executable, timeout_sec, dry_run, advanced)
+    elif page == "Geometry":
+        page_geometry(project_root, aeris_executable, timeout_sec, dry_run, advanced)
+    elif page == "Dataset factory":
+        page_dataset(project_root, aeris_executable, timeout_sec, dry_run, advanced)
+    elif page == "Aero analysis":
+        page_aero(project_root, aeris_executable, timeout_sec, dry_run, advanced)
+    elif page == "Dynamics":
+        page_dynamics(project_root, aeris_executable, timeout_sec, dry_run, advanced)
+    elif page == "ML studio":
+        page_ml(project_root, aeris_executable, timeout_sec, dry_run, advanced)
+    elif page == "Multifidelity":
+        page_multifidelity(project_root, aeris_executable, timeout_sec, dry_run, advanced)
+    elif page == "Results browser":
+        page_results(project_root)
+    elif page == "Advanced command runner":
+        page_advanced_console(project_root, aeris_executable, timeout_sec, dry_run, advanced)
 
     if "last_result" in st.session_state:
-        with st.sidebar.expander("Last command", expanded=False):
-            st.code(_quote_command(st.session_state["last_result"].command), language="bash")
-            st.write(f"Exit code: `{st.session_state['last_result'].returncode}`")
+        result = st.session_state["last_result"]
+        with st.sidebar.expander("Last task", expanded=False):
+            st.write("✅ Success" if result.returncode == 0 else f"❌ Failed: {result.returncode}")
+            if advanced:
+                st.code(_quote_command(result.command), language="bash")
 
 
 if __name__ == "__main__":

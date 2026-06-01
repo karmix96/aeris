@@ -34,7 +34,7 @@ def test_aero_requires_exactly_one_source() -> None:
             "aero",
             "run",
             "--alpha", "4",
-            "--config", "configs/geometry/baseline_bwb.yaml",
+            "--config", "configs/geometry/baseline_bwb_25.yaml",
             "--run-dir", "data/runs/some_run",
         ],
     )
@@ -62,7 +62,7 @@ def test_aero_rejects_bad_float_list() -> None:
         [
             "aero",
             "sweep",
-            "--config", "configs/geometry/baseline_bwb.yaml",
+            "--config", "configs/geometry/baseline_bwb_25.yaml",
             "--alpha-values", "0,foo,4",
         ],
     )

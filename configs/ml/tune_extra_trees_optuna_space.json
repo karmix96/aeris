@@ -1,0 +1,15 @@
+{
+  "search": {
+    "backend": "optuna",
+    "sampler": "tpe",
+    "n_trials": 25,
+    "selection_metric": "val.rmse_mean",
+    "minimize": true
+  },
+  "params": {
+    "n_estimators": {"type": "int", "low": 50, "high": 400, "step": 50},
+    "max_depth": {"type": "categorical", "choices": [null, 4, 6, 8, 12]},
+    "min_samples_leaf": {"type": "int", "low": 1, "high": 5},
+    "max_features": {"type": "categorical", "choices": [1.0, "sqrt", "log2"]}
+  }
+}

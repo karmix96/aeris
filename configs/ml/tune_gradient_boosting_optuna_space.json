@@ -1,0 +1,15 @@
+{
+  "search": {
+    "backend": "optuna",
+    "sampler": "tpe",
+    "n_trials": 30,
+    "selection_metric": "val.rmse_mean",
+    "minimize": true
+  },
+  "params": {
+    "n_estimators": {"type": "int", "low": 50, "high": 400, "step": 50},
+    "learning_rate": {"type": "float", "low": 0.01, "high": 0.2, "log": true},
+    "max_depth": {"type": "int", "low": 2, "high": 5},
+    "subsample": {"type": "float", "low": 0.7, "high": 1.0}
+  }
+}

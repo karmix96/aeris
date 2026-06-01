@@ -1,13 +1,14 @@
 """
-Config helpers for future config-driven ML experiments.
+Config helpers for AERIS ML experiments.
 
-This first version validates the common schema but does not force all CLI paths
-to use YAML yet. It is intentionally conservative so we can adopt it command by
-command without breaking the current interface.
+This module keeps ML experiment definitions reproducible and file-backed. The
+CLI can still accept explicit options for quick smoke runs, but serious work
+should use YAML configs and JSON model-parameter files so runs are repeatable.
 """
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -21,9 +22,18 @@ def _list_from_value(value: Any, *, field_name: str) -> list[str]:
     if isinstance(value, str):
         return [x.strip() for x in value.split(",") if x.strip()]
     if isinstance(value, list):
-        out = [str(x).strip() for x in value if str(x).strip()]
-        return out
-    raise TypeError(f"ML config field '{field_name}' must be a list or comma-separated string.")
+        return [str(x).strip() for x in value if str(x).strip()]
+    raise TypeError(
+        f"ML config field '{field_name}' must be a list or comma-separated string."
+    )
+
+
+def _mapping_from_value(value: Any, *, field_name: str) -> dict[str, Any]:
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        raise TypeError(f"ML config field '{field_name}' must be a mapping/dict.")
+    return dict(value)
 
 
 @dataclass(frozen=True)
@@ -44,6 +54,7 @@ class MLExperimentConfig:
 
 
 def load_ml_experiment_config(config_path: str | Path) -> MLExperimentConfig:
+    """Load a single-model ML training config from YAML."""
     raw = load_yaml_config(config_path)
     ml = raw.get("ml", raw)
     if not isinstance(ml, dict):
@@ -53,8 +64,14 @@ def load_ml_experiment_config(config_path: str | Path) -> MLExperimentConfig:
     if not dataset:
         raise ValueError("ML config requires 'dataset' or 'dataset_path'.")
 
-    features = _list_from_value(ml.get("features") or ml.get("feature_columns"), field_name="features")
-    targets = _list_from_value(ml.get("targets") or ml.get("target_columns"), field_name="targets")
+    features = _list_from_value(
+        ml.get("features") or ml.get("feature_columns"),
+        field_name="features",
+    )
+    targets = _list_from_value(
+        ml.get("targets") or ml.get("target_columns"),
+        field_name="targets",
+    )
     if not features:
         raise ValueError("ML config requires non-empty features.")
     if not targets:
@@ -81,6 +98,62 @@ def load_ml_experiment_config(config_path: str | Path) -> MLExperimentConfig:
         test_fraction=float(split.get("test_fraction", ml.get("test_fraction", 0.15))),
         random_seed=int(split.get("random_seed", ml.get("random_seed", 123))),
         allow_forced=bool(ml.get("allow_forced", False)),
-        model_params=dict(model.get("params", ml.get("model_params", {})) or {}),
+        model_params=_mapping_from_value(
+            model.get("params", ml.get("model_params", {})) or {},
+            field_name="model.params",
+        ),
         output_dir=None if output_dir_raw is None else Path(output_dir_raw),
     )
+
+
+def load_json_mapping(path: str | Path) -> dict[str, Any]:
+    """Load a JSON object from disk."""
+    json_path = Path(path).expanduser().resolve()
+    if not json_path.exists():
+        raise FileNotFoundError(f"JSON file not found: {json_path}")
+    if not json_path.is_file():
+        raise ValueError(f"JSON path is not a file: {json_path}")
+    if json_path.suffix.lower() != ".json":
+        raise ValueError(f"Expected a .json file: {json_path}")
+
+    payload = json.loads(json_path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError(f"JSON file must contain an object/mapping: {json_path}")
+    return payload
+
+
+def load_model_params_json(path: str | Path) -> dict[str, Any]:
+    """Load flat model parameters for one model run."""
+    return load_json_mapping(path)
+
+
+def load_model_params_by_type_json(path: str | Path) -> dict[str, dict[str, Any]]:
+    """Load per-model parameter mappings for compare runs.
+
+    Expected layout:
+
+    ```json
+    {
+      "random_forest": {"n_estimators": 300},
+      "gradient_boosting": {"n_estimators": 200}
+    }
+    ```
+
+    A top-level `models` wrapper is also accepted.
+    """
+    payload = load_json_mapping(path)
+    raw = payload.get("models", payload)
+    if not isinstance(raw, dict):
+        raise ValueError("Compare model-params JSON must contain a mapping.")
+
+    out: dict[str, dict[str, Any]] = {}
+    for model_type, params in raw.items():
+        if params is None:
+            out[str(model_type)] = {}
+        elif isinstance(params, dict):
+            out[str(model_type)] = dict(params)
+        else:
+            raise ValueError(
+                f"Parameters for model '{model_type}' must be a mapping/dict."
+            )
+    return out

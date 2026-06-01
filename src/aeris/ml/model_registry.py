@@ -26,6 +26,10 @@ from sklearn.ensemble import (
 )
 from sklearn.linear_model import ElasticNet, LinearRegression, Ridge
 from sklearn.multioutput import MultiOutputRegressor
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+
+from aeris.ml.neural import build_neural_mlp, build_neural_mlp_ensemble
 
 ExplainabilityArtifactType = Literal["coefficients", "feature_importances", "none"]
 
@@ -49,17 +53,21 @@ def _merge_params(defaults: dict[str, Any], overrides: dict[str, Any] | None) ->
 
 
 def _build_linear_regression(random_seed: int, model_params: dict[str, Any] | None = None) -> object:
+    # Wrapped in Pipeline so features are z-score scaled before fitting.
+    # Coefficients become comparable across features of different magnitudes.
     params = _merge_params({}, model_params)
-    return LinearRegression(**params)
+    return Pipeline([("scaler", StandardScaler()), ("model", LinearRegression(**params))])
 
 
 def _build_ridge(random_seed: int, model_params: dict[str, Any] | None = None) -> object:
+    # Scaling is mandatory for Ridge: regularization penalty must be fair across features.
     params = _merge_params({"alpha": 1.0}, model_params)
-    return Ridge(**params)
+    return Pipeline([("scaler", StandardScaler()), ("model", Ridge(**params))])
 
 
 def _build_elastic_net(random_seed: int, model_params: dict[str, Any] | None = None) -> object:
-    # ElasticNet is single-target in sklearn.
+    # ElasticNet is single-target in sklearn; wrapped in MultiOutputRegressor.
+    # Scaling is mandatory for regularized models.
     params = _merge_params(
         {
             "alpha": 1.0,
@@ -69,7 +77,7 @@ def _build_elastic_net(random_seed: int, model_params: dict[str, Any] | None = N
         },
         model_params,
     )
-    return MultiOutputRegressor(ElasticNet(**params))
+    return Pipeline([("scaler", StandardScaler()), ("model", MultiOutputRegressor(ElasticNet(**params)))])
 
 
 def _build_random_forest(random_seed: int, model_params: dict[str, Any] | None = None) -> object:
@@ -172,6 +180,22 @@ MODEL_REGISTRY: dict[str, ModelSpec] = {
         explainability_artifact_type="feature_importances",
         builder=_build_gradient_boosting,
         wrapped_per_target=True,
+    ),
+    "neural_mlp": ModelSpec(
+        model_type="neural_mlp",
+        display_name="Neural MLP",
+        family_name="neural_tabular",
+        explainability_artifact_type="none",
+        builder=build_neural_mlp,
+        wrapped_per_target=False,
+    ),
+    "neural_mlp_ensemble": ModelSpec(
+        model_type="neural_mlp_ensemble",
+        display_name="Neural MLP Ensemble",
+        family_name="neural_tabular_ensemble",
+        explainability_artifact_type="none",
+        builder=build_neural_mlp_ensemble,
+        wrapped_per_target=False,
     ),
     "hist_gradient_boosting": ModelSpec(
         model_type="hist_gradient_boosting",

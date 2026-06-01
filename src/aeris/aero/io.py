@@ -74,7 +74,12 @@ def find_aero_result_json(run_dir: str | Path) -> Path:
 
 
 def load_aero_result_from_run_dir(run_dir: str | Path) -> AeroResult:
-    return load_aero_result(find_aero_result_json(run_dir))
+    """Load AeroResult from an existing run directory.
+
+    Delegates path resolution to resolve_aero_result_path (single source of truth).
+    find_aero_result_json is retained for callers that need it directly.
+    """
+    return load_aero_result(resolve_aero_result_path(Path(run_dir)))
 
 def resolve_aero_result_path(run_dir: Path) -> Path:
     run_dir = Path(run_dir)
@@ -93,3 +98,68 @@ def resolve_aero_result_path(run_dir: Path) -> Path:
 def read_aero_result(run_dir: Path) -> dict:
     path = resolve_aero_result_path(Path(run_dir))
     return json.loads(path.read_text(encoding="utf-8"))
+
+# ---------------------------------------------------------------------------
+# 3.11 — moved from aerosandbox_avl.py to break solver→pipeline upward dep
+# ---------------------------------------------------------------------------
+
+AERO_RESULT_SCHEMA_VERSION = "aero_result_v1"
+
+
+def _json_safe(value: Any) -> Any:
+    if isinstance(value, (str, int, float, bool)) or value is None:
+        return value
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(v) for v in value]
+    if isinstance(value, dict):
+        return {str(k): _json_safe(v) for k, v in value.items()}
+    try:
+        return float(value)
+    except Exception:
+        return str(value)
+
+
+def _write_aero_result_json(result: AeroResult, output_dir: Path) -> Path:
+    """Serialize AeroResult to aero_result.json.
+
+    Lives in io.py so pipeline and solver can both import it without
+    creating a solver -> pipeline upward dependency.
+    """
+    payload = {
+        "schema_version": AERO_RESULT_SCHEMA_VERSION,
+        "status": result.status.value,
+        "solver_id": result.solver_id,
+        "scalars": {
+            "cl": result.cl,
+            "cd": result.cd,
+            "cm": result.cm,
+            "l_over_d": result.l_over_d,
+            "cy": result.cy,
+            "cl_roll": result.cl_roll,
+            "cn": result.cn,
+            "cd_ind": result.cd_ind,
+            "cd_ff": result.cd_ff,
+            "span_efficiency": result.span_efficiency,
+            "x_np": result.x_np,
+        },
+        "stability_axis_derivatives": result.stability_axis_derivatives,
+        "body_axis_derivatives": result.body_axis_derivatives,
+        "derived_metrics": result.derived_metrics,
+        "runtime_sec": result.runtime_sec,
+        "warnings": result.warnings,
+        "artifact_paths": result.artifact_paths,
+        "solver_metadata": result.solver_metadata,
+        "failure": (
+            {
+                "status": result.failure.status.value,
+                "reason": result.failure.reason,
+                "message": result.failure.message,
+                "exception_type": result.failure.exception_type,
+            }
+            if result.failure is not None
+            else None
+        ),
+    }
+    out_path = output_dir / "aero_result.json"
+    out_path.write_text(json.dumps(_json_safe(payload), indent=2))
+    return out_path

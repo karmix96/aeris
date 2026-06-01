@@ -37,7 +37,7 @@ def _repo_root() -> Path:
 
 
 def _make_raw_config() -> dict:
-    config_path = _repo_root() / "configs" / "geometry" / "wing_bwb.yaml"
+    config_path = _repo_root() / "configs" / "geometry" / "baseline_bwb_25.yaml"
     return load_yaml_config(config_path)
 
 

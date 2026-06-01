@@ -28,7 +28,7 @@ from aeris.common.config import load_yaml_config
 from aeris.common.paths import create_run_folder
 from aeris.geometry.config_resolver import resolve_generator_and_config
 from aeris.geometry.registry import get_geometry_generator
-from aeris.aero.solvers.aerosandbox_avl import _write_aero_result_json
+from aeris.aero.io import _write_aero_result_json
 
 
 def create_aero_run_root(output_name: str, label: str, prefix: str) -> tuple[Path, Path, Path]:
@@ -121,33 +121,33 @@ def prepare_geometry_for_aero(
 
         return geometry_view, resolved_generator_id, summary
 
-    if generator_id is None or not generator_id.strip():
-        raise ValueError(
-            "generator_id must be provided for --run-dir and --dataset source modes."
-        )
+    # Default to bwb_segmented_v1 when not provided — mirrors the default in
+    # geometry_view_from_run_dir and geometry_view_from_dataset_case so that
+    # `aeris aero sweep --dataset ...` works without --generator-id.
+    _resolved_gen_id = (generator_id or "").strip() or "bwb_segmented_v1"
 
     if run_dir is not None:
         geometry_view = geometry_view_from_run_dir(
             run_dir=run_dir,
-            generator_id=generator_id,
+            generator_id=_resolved_gen_id,
         )
         summary = {
             "source_mode": "run_dir",
             "run_dir": str(run_dir.resolve()),
         }
-        return geometry_view, generator_id, summary
+        return geometry_view, _resolved_gen_id, summary
 
     geometry_view = geometry_view_from_dataset_case(
         dataset_root=dataset,
         geometry_id=geometry_id,
-        generator_id=generator_id,
+        generator_id=_resolved_gen_id,
     )
     summary = {
         "source_mode": "dataset",
         "dataset_root": str(dataset.resolve()),
         "geometry_id": geometry_id,
     }
-    return geometry_view, generator_id, summary
+    return geometry_view, _resolved_gen_id, summary
 
 
 def dataclass_or_value(value: Any) -> Any:

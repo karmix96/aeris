@@ -1,0 +1,12 @@
+{
+  "search": {"backend": "optuna", "sampler": "random", "n_trials": 2},
+  "params": {
+    "hidden_layer_sizes": [[16], [16, 16]],
+    "activation": ["relu"],
+    "solver": ["adam"],
+    "alpha": {"type": "float", "low": 1e-5, "high": 1e-3, "log": true},
+    "learning_rate_init": {"type": "float", "low": 1e-4, "high": 1e-2, "log": true},
+    "max_iter": [120],
+    "early_stopping": [false]
+  }
+}

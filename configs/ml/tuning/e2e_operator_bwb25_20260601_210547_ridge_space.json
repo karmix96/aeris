@@ -1,0 +1,4 @@
+{
+  "search": {"backend": "aeris", "strategy": "grid", "max_trials": 2},
+  "params": {"alpha": [0.1, 1.0], "fit_intercept": [true]}
+}

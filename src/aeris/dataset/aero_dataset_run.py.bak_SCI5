@@ -35,23 +35,6 @@ from aeris.quality.pipeline_api import (
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DATASETS_DIR = PROJECT_ROOT / "data" / "datasets"
 
-
-def _compute_reynolds_number(velocity_mps, altitude_m, chord_m):
-    """Chord Reynolds number: Re = rho(h)*V*c/mu(h). ISA + Sutherland."""
-    if velocity_mps is None or altitude_m is None or chord_m is None:
-        return None
-    try:
-        V, h, c = float(velocity_mps), float(altitude_m), float(chord_m)
-    except (TypeError, ValueError):
-        return None
-    if V <= 0.0 or c <= 0.0:
-        return None
-    T = max(288.15 - 0.0065 * h, 216.65)
-    p = 101325.0 * (T / 288.15) ** 5.2561
-    rho = p / (287.058 * T)
-    mu = 1.716e-5 * (T / 288.15) ** 1.5 * (288.15 + 110.4) / (T + 110.4)
-    return max(rho * V * c / mu, 1.0)
-
 def _write_final_summary(
     *,
     final_root: Path,
@@ -311,13 +294,6 @@ def _flatten_success_row(
     row["failure_reason"] = None if failure is None else failure.get("reason")
     row["failure_message"] = None if failure is None else failure.get("message")
 
-    # SCI.5 — Computed: chord Reynolds number (ISA atmosphere, chord=c1_m)
-    row["re_number"] = _compute_reynolds_number(
-        velocity_mps=row.get("velocity_mps"),
-        altitude_m=row.get("altitude_m"),
-        chord_m=row.get("c1_m"),
-    )
-
     return row
 
 
@@ -348,7 +324,6 @@ def _flatten_failure_row(
 
     row["error_type"] = error_type
     row["error_message"] = error_message
-    row["re_number"] = None  # schema stability
     return row
 
 

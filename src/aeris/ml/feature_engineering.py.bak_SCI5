@@ -107,25 +107,6 @@ def _add_sweep_alpha_interaction(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-
-def _add_re_number(df):
-    """Chord Reynolds number Re = rho(h)*V*c1_m/mu(h) via ISA + Sutherland."""
-    required = {"velocity_mps", "altitude_m", "c1_m"}
-    if not required.issubset(df.columns):
-        return df
-    import numpy as _np
-    out = df.copy()
-    V = df["velocity_mps"].to_numpy(dtype=float)
-    h = df["altitude_m"].to_numpy(dtype=float)
-    c = df["c1_m"].to_numpy(dtype=float)
-    T = _np.clip(288.15 - 0.0065 * h, 216.65, None)
-    p = 101325.0 * (T / 288.15) ** 5.2561
-    rho = p / (287.058 * T)
-    mu = 1.716e-5 * (T / 288.15) ** 1.5 * (288.15 + 110.4) / (T + 110.4)
-    re = _np.where((V > 0) & (c > 0), rho * V * c / mu, _np.nan)
-    out["re_number"] = _np.maximum(re, 1.0)
-    return out
-
 # ---------------------------------------------------------------------------
 # Transform registry
 # ---------------------------------------------------------------------------
@@ -180,12 +161,6 @@ FEATURE_TRANSFORMS: dict[str, FeatureTransform] = {
         description="sw1_deg × alpha_deg — sweep modulates effective AoA",
         output_columns=("sw1_x_alpha",),
         fn=_add_sweep_alpha_interaction,
-    ),
-    "re_number": FeatureTransform(
-        key="re_number",
-        description="Chord Reynolds number from ISA atmosphere (velocity_mps, altitude_m, c1_m)",
-        output_columns=("re_number",),
-        fn=_add_re_number,
     ),
 }
 

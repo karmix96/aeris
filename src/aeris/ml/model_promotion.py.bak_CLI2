@@ -9,7 +9,6 @@ import pandas as pd
 
 from aeris.ml.fingerprints import file_sha256
 from aeris.ml.manifest import build_environment_snapshot, utc_now_iso
-from aeris.ml.validation import validate_promoted_dataset_schema
 
 MODEL_PROMOTION_SCHEMA_VERSION = "aeris.model_promotion_manifest.v1"
 MODEL_CARD_SCHEMA_VERSION = "aeris.model_card.v1"
@@ -227,31 +226,6 @@ def promote_model_run(
     feature_columns = list(train_config.get("feature_columns", []))
     target_columns = list(train_config.get("target_columns", []))
     group_column = train_config.get("group_column")
-
-    # CLI.2 — Validate ML schema of source promoted dataset at promotion time.
-    _dataset_path = train_config.get("dataset_path")
-    if _dataset_path:
-        try:
-            _schema_result = validate_promoted_dataset_schema(
-                dataset_path=_dataset_path,
-                feature_columns=feature_columns,
-                target_columns=target_columns,
-                group_column=str(group_column) if group_column else "geometry_id",
-                allow_forced=allow_forced_dataset,
-            )
-            if not _schema_result.passed:
-                _errs = "; ".join(i.message for i in _schema_result.errors)
-                blockers.append(f"promoted dataset schema validation failed: {_errs}")
-        except Exception as _exc:
-            warnings.append(
-                f"promoted dataset schema validation skipped — "
-                f"dataset not accessible: {_exc}"
-            )
-    else:
-        warnings.append(
-            "train_config.json does not record dataset_path; schema validation skipped"
-        )
-
     envelope_path, envelope_warnings = _build_training_envelope(
         model_run_dir=model_run_dir,
         feature_columns=feature_columns,

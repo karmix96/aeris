@@ -283,9 +283,12 @@ def train_baseline_model(
         training_data.df,
         manifest_path=_fe_manifest_path,
     )
-    # Update df in-place on the existing TrainingData instance.
-    # TrainingData is a non-frozen dataclass — direct assignment is safe.
-    training_data.df = _augmented_df
+    training_data = TrainingData(
+        df=_augmented_df,
+        X=_augmented_df[feature_columns],
+        y=_augmented_df[target_columns],
+        metadata=training_data.metadata,
+    )
 
     split: DatasetSplit = split_dataset(
         training_data.df,

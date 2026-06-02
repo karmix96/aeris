@@ -15,7 +15,6 @@ from aeris.ml.fingerprints import build_dataset_fingerprints, file_sha256
 from aeris.ml.manifest import build_environment_snapshot, utc_now_iso, write_ml_run_manifest
 from aeris.ml.metrics import evaluate_regression_metrics
 from aeris.ml.model_registry import build_model, get_model_spec
-from aeris.ml.feature_engineering import apply_feature_engineering
 
 SplitMethod = Literal["grouped", "random"]
 
@@ -51,7 +50,6 @@ class TrainArtifacts:
     coefficients_path: Path | None = None
     feature_importances_path: Path | None = None
     diagnostics_dir: Path | None = None
-    feature_engineering_manifest_path: Path | None = None
     train_prediction_vs_truth_path: Path | None = None
     val_prediction_vs_truth_path: Path | None = None
     test_prediction_vs_truth_path: Path | None = None
@@ -265,28 +263,6 @@ def train_baseline_model(
         allow_forced=allow_forced,
     )
 
-    # SCI.3 — Resolve output_dir early so fe manifest path is valid.
-    if output_dir is None:
-        output_dir = (
-            Path("data")
-            / "processed"
-            / "ml_runs"
-            / f"{model_type}__{dataset_path.name}__seed{random_seed}"
-        )
-    output_dir = _ensure_run_dir(output_dir)
-
-    # SCI.3 — Apply physics-informed feature engineering before split.
-    # Transforms that require columns not present in df are skipped silently.
-    # The manifest records exactly which transforms were applied.
-    _fe_manifest_path = output_dir / "feature_engineering_manifest.json"
-    _augmented_df, _fe_manifest = apply_feature_engineering(
-        training_data.df,
-        manifest_path=_fe_manifest_path,
-    )
-    # Update df in-place on the existing TrainingData instance.
-    # TrainingData is a non-frozen dataclass — direct assignment is safe.
-    training_data.df = _augmented_df
-
     split: DatasetSplit = split_dataset(
         training_data.df,
         method=split_method,
@@ -330,6 +306,15 @@ def train_baseline_model(
         "val": _evaluate_predictions(y_val, y_pred_val, target_columns),
         "test": _evaluate_predictions(y_test, y_pred_test, target_columns),
     }
+
+    if output_dir is None:
+        output_dir = (
+            Path("data")
+            / "processed"
+            / "ml_runs"
+            / f"{model_type}__{dataset_path.name}__seed{random_seed}"
+        )
+    output_dir = _ensure_run_dir(output_dir)
 
     source_config_path_resolved: Path | None = None
     source_config_sha256: str | None = None
@@ -481,7 +466,6 @@ def train_baseline_model(
         coefficients_path=coefficients_path,
         feature_importances_path=feature_importances_path,
         diagnostics_dir=diagnostics_dir,
-        feature_engineering_manifest_path=_fe_manifest_path,
         train_prediction_vs_truth_path=Path(train_diag["prediction_vs_truth_csv"]),
         val_prediction_vs_truth_path=Path(val_diag["prediction_vs_truth_csv"]),
         test_prediction_vs_truth_path=Path(test_diag["prediction_vs_truth_csv"]),

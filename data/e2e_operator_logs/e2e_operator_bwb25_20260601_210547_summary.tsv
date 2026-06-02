@@ -1,0 +1,66 @@
+PASS	repair stale baseline config paths in tests	
+PASS	show remaining stale config refs in real tests	
+PASS	aeris version	
+PASS	aeris geometry help	
+PASS	aeris dataset help	
+PASS	aeris aero help	
+PASS	aeris ml help	
+PASS	py_compile core surfaces	
+PASS	pytest focused suite non-blocking	
+PASS	pipeline smoke baseline25	
+PASS	single geometry generate baseline25	
+PASS	geometry dataset generate n=4	
+PASS	geometry dataset root exists	data/datasets/e2e_operator_bwb25_20260601_210547_geom_n4
+PASS	geometry dataset inspect	
+PASS	geometry dataset QC basic non-blocking	
+PASS	single aero run with +5 deg control	
+PASS	single aero inspect	
+PASS	aero sweep control -5/0/+5	
+PASS	aero sweep inspect	
+PASS	aero sweep case 0 inspect	
+PASS	unified aero dataset generate n=4	
+PASS	aero dataset root exists	data/datasets/e2e_operator_bwb25_20260601_210547_aero_n4
+FAIL	aero dataset inspect	rc=1
+PASS	aero dataset QC basic non-blocking	
+PASS	aero dataset curate	
+PASS	strict dataset promotion	
+PASS	require promoted aero dataset	
+PASS	training-data promoted dataset	
+PASS	split training data grouped	
+PASS	ML feature presets	
+PASS	ML validate schema	
+PASS	ML train elastic_net	
+PASS	ML inspect elastic_net	
+PASS	ML train extra_trees	
+PASS	ML inspect extra_trees	
+PASS	ML train gradient_boosting	
+PASS	ML inspect gradient_boosting	
+PASS	ML train hist_gradient_boosting	
+PASS	ML inspect hist_gradient_boosting	
+PASS	ML train linear_regression	
+PASS	ML inspect linear_regression	
+PASS	ML train neural_mlp	
+PASS	ML inspect neural_mlp	
+PASS	ML train neural_mlp_ensemble	
+PASS	ML inspect neural_mlp_ensemble	
+PASS	ML train random_forest	
+PASS	ML inspect random_forest	
+PASS	ML train ridge	
+PASS	ML inspect ridge	
+PASS	ML compare all registered models	
+PASS	ML tune ridge grid smoke	
+PASS	ML tune neural_mlp optuna smoke	
+PASS	ML compare tuning runs	
+PASS	ML compare seeds smoke	
+FAIL	ML promote chosen model neural_mlp_ensemble	rc=1
+FAIL	ML require promoted model	rc=1
+FAIL	ML check inference inputs	rc=1
+FAIL	ML predict guarded	rc=1
+PASS	ML audit model	
+FAIL	ML predict with confidence	rc=1
+FAIL	ML active-learning suggest samples	rc=1
+PASS	create synthetic LF/HF CSVs for multifidelity smoke	
+PASS	MF build delta dataset	
+PASS	MF train delta model	
+PASS	MF predict delta model	
+PASS	MF evaluate delta model	

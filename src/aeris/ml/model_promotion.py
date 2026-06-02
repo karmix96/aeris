@@ -229,16 +229,41 @@ def promote_model_run(
     group_column = train_config.get("group_column")
 
     # CLI.2 — Validate ML schema of source promoted dataset at promotion time.
+    # If the model was trained from a named feature set, validate the promoted
+    # curated dataset against that feature set instead of requiring engineered
+    # columns to physically exist in curated_aero_dataset.csv. Engineered columns
+    # are produced by explicit/auditable transforms, not stored as raw solver data.
+    feature_set_name = train_config.get("feature_set_name")
+    if not feature_set_name:
+        _training_data = ml_manifest.get("training_data", {})
+        if isinstance(_training_data, dict):
+            feature_set_name = _training_data.get("feature_set_name")
+    if not feature_set_name:
+        _feature_set_payload = train_config.get("feature_set")
+        if isinstance(_feature_set_payload, dict):
+            feature_set_name = _feature_set_payload.get("name")
+
     _dataset_path = train_config.get("dataset_path")
     if _dataset_path:
         try:
-            _schema_result = validate_promoted_dataset_schema(
-                dataset_path=_dataset_path,
-                feature_columns=feature_columns,
-                target_columns=target_columns,
-                group_column=str(group_column) if group_column else "geometry_id",
-                allow_forced=allow_forced_dataset,
-            )
+            if feature_set_name:
+                from aeris.ml.feature_sets import validate_promoted_dataset_feature_set
+
+                _schema_result = validate_promoted_dataset_feature_set(
+                    dataset_path=_dataset_path,
+                    feature_set_name=str(feature_set_name),
+                    target_columns=target_columns,
+                    group_column=str(group_column) if group_column else "geometry_id",
+                    allow_forced=allow_forced_dataset,
+                )
+            else:
+                _schema_result = validate_promoted_dataset_schema(
+                    dataset_path=_dataset_path,
+                    feature_columns=feature_columns,
+                    target_columns=target_columns,
+                    group_column=str(group_column) if group_column else "geometry_id",
+                    allow_forced=allow_forced_dataset,
+                )
             if not _schema_result.passed:
                 _errs = "; ".join(i.message for i in _schema_result.errors)
                 blockers.append(f"promoted dataset schema validation failed: {_errs}")
@@ -273,6 +298,7 @@ def promote_model_run(
         "promotion_blockers": blockers,
         "warnings": warnings,
         "notes": notes,
+        "feature_set_name": feature_set_name,
         "thresholds": {
             "max_val_rmse_mean": max_val_rmse_mean,
             "max_test_rmse_mean": max_test_rmse_mean,
@@ -282,6 +308,8 @@ def promote_model_run(
         },
         "model": {
             "model_type": train_config.get("model_type"),
+            "feature_set_name": feature_set_name,
+            "feature_set": train_config.get("feature_set"),
             "model_params": train_config.get("model_params", {}),
             "feature_columns": feature_columns,
             "target_columns": target_columns,
@@ -318,6 +346,8 @@ def promote_model_run(
         "model_run_dir": str(model_run_dir),
         "status": manifest["status"],
         "model_type": train_config.get("model_type"),
+        "feature_set_name": feature_set_name,
+        "feature_set": train_config.get("feature_set"),
         "features": feature_columns,
         "targets": target_columns,
         "source_dataset": train_config.get("dataset_path"),
@@ -357,6 +387,7 @@ def inspect_model_run(model_run_dir: str | Path) -> dict[str, Any]:
     return {
         "model_run_dir": str(model_run_dir),
         "model_type": train_config.get("model_type"),
+        "feature_set_name": train_config.get("feature_set_name") or promotion_manifest.get("feature_set_name"),
         "feature_columns": train_config.get("feature_columns", []),
         "target_columns": train_config.get("target_columns", []),
         "dataset_path": train_config.get("dataset_path"),

@@ -10,6 +10,8 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
+from aeris.ml.feature_set_inference import prepare_dataframe_for_feature_set_inference
+
 
 @dataclass(frozen=True)
 class PredictArtifacts:
@@ -19,6 +21,8 @@ class PredictArtifacts:
     input_csv_path: Path
     predictions_csv_path: Path
     prediction_summary_path: Path
+    materialized_input_csv_path: Path | None = None
+    feature_engineering_manifest_path: Path | None = None
 
 
 def _ensure_output_dir(path: Path) -> Path:
@@ -111,19 +115,16 @@ def predict_with_trained_model(
     input_csv: Path,
     output_dir: Path | None = None,
     include_truth_if_available: bool = True,
+    feature_set_name: str | None = None,
+    allow_feature_set_mismatch: bool = False,
 ) -> dict[str, Any]:
     """
     Load a saved AERIS ML model run and produce predictions on a new CSV.
 
-    Workflow:
-    1. Load saved train_config.json
-    2. Load fitted model.pkl
-    3. Load input CSV
-    4. Validate required feature columns
-    5. Predict target columns
-    6. Save predictions.csv
-    7. Save prediction_summary.json
-    8. If true target columns are present, also compute metrics
+    If ``feature_set_name`` is provided, the input CSV may contain only the raw
+    source columns required by that feature set. AERIS applies the declared
+    transforms before validating/predicting. By default, the requested feature set
+    must match the model's recorded training feature set.
     """
     model_run_dir = Path(model_run_dir).expanduser().resolve()
     input_csv = Path(input_csv).expanduser().resolve()
@@ -141,7 +142,14 @@ def predict_with_trained_model(
     target_columns = list(train_config["target_columns"])
     model_type = str(train_config["model_type"])
 
-    df = pd.read_csv(input_csv)
+    raw_df = pd.read_csv(input_csv)
+    prepared = prepare_dataframe_for_feature_set_inference(
+        raw_df,
+        train_config=train_config,
+        feature_set_name=feature_set_name,
+        allow_feature_set_mismatch=allow_feature_set_mismatch,
+    )
+    df = prepared.dataframe
     _validate_input_columns(df, feature_columns)
 
     X = df[feature_columns].to_numpy(dtype=float)
@@ -169,21 +177,36 @@ def predict_with_trained_model(
 
     predictions_csv_path = output_dir / "predictions.csv"
     prediction_summary_path = output_dir / "prediction_summary.json"
+    materialized_input_csv_path: Path | None = None
+    feature_engineering_manifest_path: Path | None = None
+
+    if prepared.feature_set_applied:
+        materialized_input_csv_path = output_dir / "materialized_inference_input.csv"
+        feature_engineering_manifest_path = output_dir / "inference_feature_engineering_manifest.json"
+        df.to_csv(materialized_input_csv_path, index=False)
+        feature_engineering_manifest_path.write_text(
+            json.dumps(prepared.transform_manifest or {}, indent=2),
+            encoding="utf-8",
+        )
 
     output_df.to_csv(predictions_csv_path, index=False)
 
+    feature_summary = prepared.to_summary()
     summary = {
         "model_run_dir": str(model_run_dir),
         "model_path": str(model_path),
         "train_config_path": str(model_run_dir / "train_config.json"),
         "input_csv_path": str(input_csv),
         "predictions_csv_path": str(predictions_csv_path),
+        "materialized_input_csv_path": None if materialized_input_csv_path is None else str(materialized_input_csv_path),
+        "feature_engineering_manifest_path": None if feature_engineering_manifest_path is None else str(feature_engineering_manifest_path),
         "model_type": model_type,
         "feature_columns": feature_columns,
         "target_columns": target_columns,
         "n_rows": int(len(df)),
         "truth_available": bool(truth_available),
         "evaluation": evaluation,
+        **feature_summary,
     }
 
     prediction_summary_path.write_text(
@@ -198,6 +221,8 @@ def predict_with_trained_model(
         input_csv_path=input_csv,
         predictions_csv_path=predictions_csv_path,
         prediction_summary_path=prediction_summary_path,
+        materialized_input_csv_path=materialized_input_csv_path,
+        feature_engineering_manifest_path=feature_engineering_manifest_path,
     )
 
     return {

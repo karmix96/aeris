@@ -1539,6 +1539,8 @@ def ml_check_inference_inputs(
     require_promoted_model: bool = typer.Option(True, "--require-promoted-model/--no-require-promoted-model", help="Require model_promotion_manifest.json to be approved before checking inference inputs."),
     fail_on_violations: bool = typer.Option(False, "--fail-on-violations/--no-fail-on-violations", help="Exit nonzero if envelope or schema violations are found."),
     tolerance: float = typer.Option(0.0, "--tolerance", help="Absolute tolerance applied to training-envelope min/max checks."),
+    feature_set: str | None = typer.Option(None, "--feature-set", help="Named feature set to apply to the input CSV before checking inference envelope."),
+    allow_feature_set_mismatch: bool = typer.Option(False, "--allow-feature-set-mismatch", help="Allow requested feature set to differ from the model training feature set."),
 ) -> None:
     """Check whether an input CSV is inside the promoted model training envelope."""
     try:
@@ -1549,6 +1551,8 @@ def ml_check_inference_inputs(
             require_promoted_model_gate=require_promoted_model,
             fail_on_violations=False,
             tolerance=tolerance,
+            feature_set_name=feature_set,
+            allow_feature_set_mismatch=allow_feature_set_mismatch,
         )
     except Exception as exc:
         fail_command("ML check-inference-inputs", exc)
@@ -1556,6 +1560,8 @@ def ml_check_inference_inputs(
     typer.echo("[AERIS] ML inference-input guard")
     typer.echo(f"  model_run_dir: {result.model_run_dir}")
     typer.echo(f"  input_csv: {result.input_csv}")
+    typer.echo(f"  feature_set: {result.report.get('feature_set_name')}")
+    typer.echo(f"  feature_set_applied: {result.report.get('feature_set_applied')}")
     typer.echo(f"  passed: {result.passed}")
     typer.echo(f"  report_json: {result.report_path}")
     typer.echo(f"  errors: {len(result.errors)}")
@@ -1880,6 +1886,16 @@ def ml_predict(
         "--envelope-tolerance",
         help="Absolute tolerance applied to training-envelope min/max checks.",
     ),
+    feature_set: str | None = typer.Option(
+        None,
+        "--feature-set",
+        help="Named feature set to apply to the input CSV before prediction.",
+    ),
+    allow_feature_set_mismatch: bool = typer.Option(
+        False,
+        "--allow-feature-set-mismatch",
+        help="Allow requested feature set to differ from the model training feature set.",
+    ),
     include_truth_if_available: bool = typer.Option(
         True,
         "--include-truth-if-available/--no-include-truth-if-available",
@@ -1898,6 +1914,8 @@ def ml_predict(
                 require_promoted_model_gate=require_promoted_model,
                 fail_on_violations=True,
                 tolerance=envelope_tolerance,
+                feature_set_name=feature_set,
+                allow_feature_set_mismatch=allow_feature_set_mismatch,
             )
 
         result = predict_with_trained_model(
@@ -1905,6 +1923,8 @@ def ml_predict(
             input_csv=input_csv,
             output_dir=output_dir,
             include_truth_if_available=include_truth_if_available,
+            feature_set_name=feature_set,
+            allow_feature_set_mismatch=allow_feature_set_mismatch,
         )
     except Exception as exc:
         fail_command("ML predict", exc)
@@ -1916,6 +1936,8 @@ def ml_predict(
     typer.echo(f"  model_type: {summary['model_type']}")
     typer.echo(f"  n_rows: {summary['n_rows']}")
     typer.echo(f"  input_csv: {artifacts.input_csv_path}")
+    typer.echo(f"  feature_set: {summary.get('feature_set_name')}")
+    typer.echo(f"  feature_set_applied: {summary.get('feature_set_applied')}")
     typer.echo(f"  output_dir: {artifacts.run_dir}")
     typer.echo(f"  predictions_csv: {artifacts.predictions_csv_path}")
     typer.echo(f"  prediction_summary_json: {artifacts.prediction_summary_path}")

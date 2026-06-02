@@ -133,6 +133,149 @@ def ml_feature_presets() -> None:
         typer.echo(f"    description: {preset.description}")
 
 
+
+
+@ml_app.command("feature-sets")
+def ml_feature_sets() -> None:
+    """List named ML feature sets."""
+    from aeris.ml.feature_sets import list_feature_sets
+
+    typer.echo("[AERIS] ML feature sets")
+    for feature_set in list_feature_sets(include_inactive=True):
+        typer.echo(
+            f"  - {feature_set.name} [{feature_set.status}] "
+            f"({feature_set.domain}; generator={feature_set.generator_id or 'generic'})"
+        )
+        typer.echo(f"    raw_features: {', '.join(feature_set.raw_columns)}")
+        if feature_set.engineered_columns:
+            typer.echo(f"    engineered_features: {', '.join(feature_set.engineered_columns)}")
+        else:
+            typer.echo("    engineered_features: none")
+        if feature_set.transforms:
+            typer.echo(f"    transforms: {', '.join(feature_set.transforms)}")
+        typer.echo(f"    description: {feature_set.description}")
+
+
+@ml_app.command("describe-feature-set")
+def ml_describe_feature_set(
+    feature_set: str = typer.Option(
+        ...,
+        "--feature-set",
+        help="Named feature set, e.g. bwb_control_raw or bwb_control_physics_v1.",
+    ),
+    json_output: bool = typer.Option(False, "--json", help="Print JSON description."),
+) -> None:
+    """Describe one ML feature set."""
+    import json
+
+    from aeris.ml.feature_sets import FeatureSetError, describe_feature_set
+
+    try:
+        payload = describe_feature_set(feature_set)
+    except FeatureSetError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    except Exception as exc:
+        fail_command("ML describe-feature-set", exc)
+
+    if json_output:
+        typer.echo(json.dumps(payload, indent=2))
+        return
+
+    typer.echo("[AERIS] ML feature set")
+    typer.echo(f"  name: {payload['name']}")
+    typer.echo(f"  status: {payload['status']}")
+    typer.echo(f"  domain: {payload['domain']}")
+    typer.echo(f"  generator_id: {payload.get('generator_id') or 'generic'}")
+    typer.echo(f"  version: {payload['version']}")
+    typer.echo(f"  raw_features: {', '.join(payload['raw_columns'])}")
+    engineered = payload.get("engineered_columns", [])
+    typer.echo(f"  engineered_features: {', '.join(engineered) if engineered else 'none'}")
+    transforms = payload.get("transforms", [])
+    typer.echo(f"  transforms: {', '.join(transforms) if transforms else 'none'}")
+    typer.echo(f"  final_features: {', '.join(payload['columns'])}")
+    typer.echo(f"  description: {payload['description']}")
+
+
+@ml_app.command("validate-feature-set")
+def ml_validate_feature_set(
+    dataset: Path = typer.Option(
+        ...,
+        "--dataset",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to a promoted aero dataset root.",
+    ),
+    feature_set: str = typer.Option(
+        ...,
+        "--feature-set",
+        help="Named feature set, e.g. bwb_control_raw or bwb_control_physics_v1.",
+    ),
+    targets: str | None = typer.Option(
+        None,
+        "--targets",
+        help="Optional comma-separated target columns to validate with the feature set.",
+    ),
+    group_column: str = typer.Option(
+        "geometry_id",
+        "--group-column",
+        help="Grouping column for grouped split readiness checks.",
+    ),
+    allow_forced: bool = typer.Option(False, "--allow-forced", help=_ALLOW_FORCED_HELP),
+    json_output: bool = typer.Option(False, "--json", help="Print full validation result as JSON."),
+) -> None:
+    """Validate a promoted dataset against a named ML feature set."""
+    import json
+
+    from aeris.ml.feature_sets import FeatureSetError, validate_promoted_dataset_feature_set
+
+    try:
+        target_cols = parse_csv_list(targets, "--targets") if targets else []
+        result = validate_promoted_dataset_feature_set(
+            dataset_path=dataset,
+            feature_set_name=feature_set,
+            target_columns=target_cols,
+            group_column=group_column,
+            allow_forced=allow_forced,
+        )
+    except FeatureSetError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    except Exception as exc:
+        fail_command("ML validate-feature-set", exc)
+
+    if json_output:
+        typer.echo(json.dumps(result.to_dict(), indent=2))
+    else:
+        metadata = result.metadata
+        typer.echo("[AERIS] ML feature-set validation")
+        typer.echo(f"  dataset: {metadata.get('dataset_path')}")
+        typer.echo(f"  curated_csv: {metadata.get('curated_csv_path')}")
+        typer.echo(f"  feature_set: {metadata.get('feature_set_id')}")
+        typer.echo(f"  domain: {metadata.get('domain')}")
+        typer.echo(f"  generator_id: {metadata.get('generator_id') or 'generic'}")
+        typer.echo(f"  passed: {result.passed}")
+        typer.echo(f"  rows: {metadata.get('n_rows')}")
+        typer.echo(f"  raw_features: {', '.join(metadata.get('raw_features', []))}")
+        engineered = metadata.get("engineered_features", [])
+        typer.echo(f"  engineered_features: {', '.join(engineered) if engineered else 'none'}")
+        typer.echo(f"  final_features: {', '.join(metadata.get('feature_columns', []))}")
+        targets_out = metadata.get("target_columns", [])
+        typer.echo(f"  targets: {', '.join(targets_out) if targets_out else 'none'}")
+        typer.echo(f"  group_column: {metadata.get('group_column')}")
+        typer.echo(f"  groups: {metadata.get('n_groups')}")
+        typer.echo(f"  transforms: {', '.join(metadata.get('transforms', [])) if metadata.get('transforms') else 'none'}")
+        typer.echo(f"  errors: {len(result.errors)}")
+        typer.echo(f"  warnings: {len(result.warnings)}")
+        for issue in result.errors:
+            typer.echo(f"  ERROR [{issue.code}]: {issue.message}")
+        for issue in result.warnings:
+            typer.echo(f"  WARNING [{issue.code}]: {issue.message}")
+
+    if not result.passed:
+        raise typer.Exit(code=1)
+
 @ml_app.command("validate-schema")
 def ml_validate_schema(
     dataset: Path = typer.Option(

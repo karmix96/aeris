@@ -37,6 +37,12 @@ class FeaturePreset:
 # Active presets must describe columns that already exist in current promoted
 # aero datasets. Do not add airfoil/CFD/GNN presets here until those dataset
 # schemas are produced by real AERIS pipelines.
+#
+# Important:
+# - bwb_control is the raw/current BWB control preset.
+# - It intentionally does NOT include re_number. Reynolds/Mach/dynamic-pressure
+#   style columns belong in the feature-engineering layer, where they will
+#   be created explicitly and recorded in a feature manifest.
 _FEATURE_PRESETS: dict[str, FeaturePreset] = {
     "bwb_basic": FeaturePreset(
         name="bwb_basic",
@@ -68,7 +74,9 @@ _FEATURE_PRESETS: dict[str, FeaturePreset] = {
         ),
         description=(
             "Current default BWB scalar-aero feature set including control input. "
-            "Use for CL/CD/Cm surrogate smoke and baseline experiments."
+            "Use for CL/CD/Cm surrogate smoke and baseline experiments. "
+            "This is a raw-data preset; engineered Reynolds/Mach/qbar features "
+            "belong in explicit feature-engineering feature sets."
         ),
     ),
 }

@@ -185,3 +185,30 @@ def test_ml_train_cli_model_params_json(tmp_path: Path) -> None:
     train_config = json.loads((output_dir / "train_config.json").read_text(encoding="utf-8"))
     assert train_config["model_params"]["n_estimators"] == 5
     assert train_config["model_params"]["max_depth"] == 2
+
+
+def test_ml_eda_cli_writes_report(tmp_path: Path) -> None:
+    dataset_root = _build_dataset(tmp_path)
+    output_dir = tmp_path / "eda_cli"
+
+    result = runner.invoke(
+        app,
+        [
+            "ml",
+            "eda",
+            "--dataset", str(dataset_root),
+            "--feature-preset", "bwb_control",
+            "--targets", "cl,cd,cm",
+            "--output-dir", str(output_dir),
+            "--no-plots",
+        ],
+    )
+
+    assert result.exit_code == 0, result.stdout
+    assert "[AERIS] ML EDA completed" in result.stdout
+    assert (output_dir / "eda_report.json").exists()
+    assert (output_dir / "eda_summary.md").exists()
+    report = json.loads((output_dir / "eda_report.json").read_text(encoding="utf-8"))
+    assert report["shape"]["n_rows"] > 0
+    assert report["metadata"]["feature_columns"][-1] == "control_input_deg"
+

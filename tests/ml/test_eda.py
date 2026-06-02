@@ -17,6 +17,7 @@ from aeris.ml.eda import (
     _outlier_scan,
     _nonlinearity_scan,
     run_eda,
+    run_promoted_dataset_eda,
 )
 
 
@@ -139,3 +140,44 @@ def test_nonlinearity_scan_detects_nonlinear():
         f"Expected spearman_r ({spearman_r:.4f}) > pearson_r ({pearson_r:.4f}) "
         "for exponential nonlinearity"
     )
+
+
+def _write_promoted_dataset(root: Path, df: pd.DataFrame) -> Path:
+    root.mkdir(parents=True, exist_ok=True)
+    curated = root / "curated_aero_dataset.csv"
+    rejected = root / "rejected_aero_rows.csv"
+    df.to_csv(curated, index=False)
+    rejected.write_text("", encoding="utf-8")
+    manifest = {
+        "dataset_root": str(root),
+        "promotion_forced": False,
+        "promotion_ready_at_time_of_promotion": True,
+        "promotion_blockers": [],
+        "artifacts": {
+            "curated_aero_dataset_csv": str(curated),
+            "rejected_aero_rows_csv": str(rejected),
+        },
+    }
+    (root / "promotion_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    return root
+
+
+def test_run_promoted_dataset_eda_writes_operator_artifacts(tmp_path: Path):
+    dataset = _write_promoted_dataset(tmp_path / "promoted", _make_df())
+    out = tmp_path / "eda_out"
+
+    result = run_promoted_dataset_eda(
+        dataset_root=dataset,
+        feature_columns=FEATURES,
+        target_columns=TARGETS,
+        output_dir=out,
+        write_plots=False,
+    )
+
+    assert result["report_path"].exists()
+    assert result["summary_path"].exists()
+    loaded = json.loads(result["report_path"].read_text(encoding="utf-8"))
+    assert loaded["schema_version"] == EDA_SCHEMA_VERSION
+    assert loaded["metadata"]["dataset_root"] == str(dataset.resolve())
+    assert loaded["shape"]["n_rows"] == len(_make_df())
+

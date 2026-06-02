@@ -174,6 +174,7 @@ def compare_models(
     random_seed: int = 123,
     allow_forced: bool = False,
     model_params_by_type: dict[str, dict[str, Any]] | None = None,
+    feature_set_name: str | None = None,
     output_dir: Path | None = None,
 ) -> dict[str, Any]:
     dataset_path = Path(dataset_path).expanduser().resolve()
@@ -210,6 +211,7 @@ def compare_models(
             allow_forced=allow_forced,
             model_params=(model_params_by_type or {}).get(model_type, {}),
             output_dir=model_output_dir,
+            feature_set_name=feature_set_name,
         )
 
         artifacts = result["artifacts"]
@@ -307,6 +309,7 @@ def compare_models(
         "dataset_path": str(dataset_path),
         "feature_columns": list(feature_columns),
         "target_columns": list(target_columns),
+        "feature_set_name": feature_set_name,
         "split_config": {
             "split_method": split_method,
             "group_column": group_column,

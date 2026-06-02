@@ -134,6 +134,7 @@ def compare_models_across_seeds(
     test_fraction: float = 0.15,
     allow_forced: bool = False,
     model_params_by_type: dict[str, dict[str, Any]] | None = None,
+    feature_set_name: str | None = None,
     output_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Compare model families across multiple split seeds.
@@ -169,6 +170,7 @@ def compare_models_across_seeds(
             allow_forced=allow_forced,
             model_params_by_type=model_params_by_type,
             output_dir=seed_output_dir,
+            feature_set_name=feature_set_name,
         )
         summary = result["summary"]
         seed_summaries.append(
@@ -303,6 +305,7 @@ def compare_models_across_seeds(
         "dataset_path": str(dataset_path),
         "feature_columns": list(feature_columns),
         "target_columns": list(target_columns),
+        "feature_set_name": feature_set_name,
         "model_types": models,
         "seeds": seed_values,
         "split_config": {

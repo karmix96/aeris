@@ -24,6 +24,7 @@ from aeris.commands._helpers import fail_command, parse_csv_list
 from aeris.ml.compare import compare_models
 from aeris.ml.compare_hardening import compare_models_across_seeds, compare_tuning_runs
 from aeris.ml.config import load_model_params_by_type_json, load_model_params_json
+from aeris.ml.feature_sets import FeatureSetError, get_feature_set
 from aeris.ml.feature_presets import (
     FeaturePresetError,
     list_feature_presets,
@@ -65,7 +66,29 @@ def _resolve_feature_columns_cli(
     *,
     features: str | None,
     feature_preset: str | None,
+    feature_set: str | None = None,
 ) -> list[str]:
+    selected = [
+        name
+        for name, value in (
+            ("--features", features),
+            ("--feature-preset", feature_preset),
+            ("--feature-set", feature_set),
+        )
+        if value is not None and str(value).strip()
+    ]
+    if len(selected) > 1:
+        raise typer.BadParameter(
+            "Use only one of --features, --feature-preset, or --feature-set. "
+            f"Received: {', '.join(selected)}"
+        )
+
+    if feature_set is not None and str(feature_set).strip():
+        try:
+            return list(get_feature_set(feature_set).columns)
+        except FeatureSetError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
     explicit = parse_csv_list(features, "--features") if features else None
     try:
         return resolve_feature_columns(
@@ -738,6 +761,11 @@ def ml_train(
     ),
     features: str | None = typer.Option(None, "--features", help="Comma-separated feature columns. Required unless --config or --feature-preset is used."),
     feature_preset: str | None = typer.Option(None, "--feature-preset", help="Named feature preset, e.g. bwb_control. Cannot be combined with --features."),
+    feature_set: str | None = typer.Option(
+        None,
+        "--feature-set",
+        help="Named feature set, e.g. bwb_control_raw or bwb_control_physics_v1. Cannot be combined with --features or --feature-preset.",
+    ),
     targets: str | None = typer.Option(None, "--targets", help="Comma-separated target columns. Required unless --config is used."),
     model_type: str = typer.Option(
         "linear_regression",
@@ -782,12 +810,12 @@ def ml_train(
 
         if dataset is None:
             raise typer.BadParameter("--dataset is required when --config is not used.")
-        if features is None and feature_preset is None:
-            raise typer.BadParameter("--features or --feature-preset is required when --config is not used.")
+        if features is None and feature_preset is None and feature_set is None:
+            raise typer.BadParameter("--features, --feature-preset, or --feature-set is required when --config is not used.")
         if targets is None:
             raise typer.BadParameter("--targets is required when --config is not used.")
 
-        feature_cols = _resolve_feature_columns_cli(features=features, feature_preset=feature_preset)
+        feature_cols = _resolve_feature_columns_cli(features=features, feature_preset=feature_preset, feature_set=feature_set)
         target_cols = parse_csv_list(targets, "--targets")
 
         result = train_baseline_model(
@@ -804,6 +832,7 @@ def ml_train(
             allow_forced=allow_forced,
             model_params=model_params_override,
             output_dir=output_dir,
+            feature_set_name=feature_set,
         )
     except typer.BadParameter:
         raise
@@ -827,6 +856,11 @@ def ml_compare(
     ),
     features: str | None = typer.Option(None, "--features", help="Comma-separated feature columns."),
     feature_preset: str | None = typer.Option(None, "--feature-preset", help="Named feature preset, e.g. bwb_control. Cannot be combined with --features."),
+    feature_set: str | None = typer.Option(
+        None,
+        "--feature-set",
+        help="Named feature set, e.g. bwb_control_raw or bwb_control_physics_v1. Cannot be combined with --features or --feature-preset.",
+    ),
     targets: str = typer.Option(..., "--targets", help="Comma-separated target columns."),
     models: str = typer.Option(
         ...,
@@ -853,7 +887,7 @@ def ml_compare(
     output_dir: Path | None = typer.Option(None, "--output-dir", help="Optional output directory for comparison artifacts."),
 ) -> None:
     """Compare several model families on a single fixed train/val/test split."""
-    feature_cols = _resolve_feature_columns_cli(features=features, feature_preset=feature_preset)
+    feature_cols = _resolve_feature_columns_cli(features=features, feature_preset=feature_preset, feature_set=feature_set)
     target_cols = parse_csv_list(targets, "--targets")
     model_types = parse_csv_list(models, "--models")
 
@@ -876,6 +910,7 @@ def ml_compare(
                 else None
             ),
             output_dir=output_dir,
+            feature_set_name=feature_set,
         )
     except Exception as exc:
         fail_command("ML compare", exc)
@@ -937,6 +972,11 @@ def ml_tune(
     ),
     features: str | None = typer.Option(None, "--features", help="Comma-separated feature columns. Required unless --config or --feature-preset is used."),
     feature_preset: str | None = typer.Option(None, "--feature-preset", help="Named feature preset, e.g. bwb_control. Cannot be combined with --features."),
+    feature_set: str | None = typer.Option(
+        None,
+        "--feature-set",
+        help="Named feature set, e.g. bwb_control_raw or bwb_control_physics_v1. Cannot be combined with --features or --feature-preset.",
+    ),
     targets: str | None = typer.Option(None, "--targets", help="Comma-separated target columns. Required unless --config is used."),
     model_type: str = typer.Option(
         "random_forest",
@@ -1023,14 +1063,14 @@ def ml_tune(
             else:
                 if dataset is None:
                     raise typer.BadParameter("--dataset is required when --config is not used.")
-                if features is None and feature_preset is None:
-                    raise typer.BadParameter("--features or --feature-preset is required when --config is not used.")
+                if features is None and feature_preset is None and feature_set is None:
+                    raise typer.BadParameter("--features, --feature-preset, or --feature-set is required when --config is not used.")
                 if targets is None:
                     raise typer.BadParameter("--targets is required when --config is not used.")
 
                 result = tune_model_optuna(
                     dataset_path=dataset,
-                    feature_columns=_resolve_feature_columns_cli(features=features, feature_preset=feature_preset),
+                    feature_columns=_resolve_feature_columns_cli(features=features, feature_preset=feature_preset, feature_set=feature_set),
                     target_columns=parse_csv_list(targets, "--targets"),
                     model_type=model_type,
                     param_space=param_space,
@@ -1052,6 +1092,7 @@ def ml_tune(
                     fail_policy=fail_policy,  # type: ignore[arg-type]
                     source_param_space_path=param_space_json,
                     output_dir=output_dir,
+                    feature_set_name=feature_set,
                 )
         elif backend_eff == "aeris":
             if config is not None:
@@ -1070,14 +1111,14 @@ def ml_tune(
             else:
                 if dataset is None:
                     raise typer.BadParameter("--dataset is required when --config is not used.")
-                if features is None and feature_preset is None:
-                    raise typer.BadParameter("--features or --feature-preset is required when --config is not used.")
+                if features is None and feature_preset is None and feature_set is None:
+                    raise typer.BadParameter("--features, --feature-preset, or --feature-set is required when --config is not used.")
                 if targets is None:
                     raise typer.BadParameter("--targets is required when --config is not used.")
 
                 result = tune_model(
                     dataset_path=dataset,
-                    feature_columns=_resolve_feature_columns_cli(features=features, feature_preset=feature_preset),
+                    feature_columns=_resolve_feature_columns_cli(features=features, feature_preset=feature_preset, feature_set=feature_set),
                     target_columns=parse_csv_list(targets, "--targets"),
                     model_type=model_type,
                     param_space=param_space,
@@ -1096,6 +1137,7 @@ def ml_tune(
                     fail_policy=fail_policy,  # type: ignore[arg-type]
                     source_param_space_path=param_space_json,
                     output_dir=output_dir,
+                    feature_set_name=feature_set,
                 )
         else:
             raise typer.BadParameter("--backend must be 'aeris' or 'optuna'.")
@@ -1299,6 +1341,11 @@ def ml_compare_seeds(
     ),
     features: str | None = typer.Option(None, "--features", help="Comma-separated feature columns."),
     feature_preset: str | None = typer.Option(None, "--feature-preset", help="Named feature preset, e.g. bwb_control. Cannot be combined with --features."),
+    feature_set: str | None = typer.Option(
+        None,
+        "--feature-set",
+        help="Named feature set, e.g. bwb_control_raw or bwb_control_physics_v1. Cannot be combined with --features or --feature-preset.",
+    ),
     targets: str = typer.Option(..., "--targets", help="Comma-separated target columns."),
     models: str = typer.Option(
         ...,
@@ -1326,7 +1373,7 @@ def ml_compare_seeds(
 ) -> None:
     """Compare model families across multiple split seeds."""
     try:
-        feature_cols = _resolve_feature_columns_cli(features=features, feature_preset=feature_preset)
+        feature_cols = _resolve_feature_columns_cli(features=features, feature_preset=feature_preset, feature_set=feature_set)
         target_cols = parse_csv_list(targets, "--targets")
         model_types = parse_csv_list(models, "--models")
         seed_values = [int(value) for value in parse_csv_list(seeds, "--seeds")]
@@ -1349,6 +1396,7 @@ def ml_compare_seeds(
                 else None
             ),
             output_dir=output_dir,
+            feature_set_name=feature_set,
         )
     except Exception as exc:
         fail_command("ML compare-seeds", exc)

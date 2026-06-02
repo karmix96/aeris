@@ -199,6 +199,7 @@ def tune_model(
     fail_policy: Literal["continue", "raise"] = "continue",
     source_config_path: Path | None = None,
     source_param_space_path: Path | None = None,
+    feature_set_name: str | None = None,
     output_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Run a deterministic hyperparameter tuning campaign for one model family."""
@@ -262,6 +263,7 @@ def tune_model(
                 model_params=merged_params,
                 output_dir=trial_output_dir,
                 source_config_path=source_config_path,
+                feature_set_name=feature_set_name,
             )
             metrics = result["metrics"]
             row.update(
@@ -334,6 +336,7 @@ def tune_model(
         "dataset_path": str(dataset_path),
         "feature_columns": list(feature_columns),
         "target_columns": list(target_columns),
+        "feature_set_name": feature_set_name,
         "model_type": model_type,
         "search": {
             "strategy": strategy,
@@ -423,5 +426,6 @@ def tune_model_from_config(
         fail_policy=fail_policy,
         source_config_path=cfg_path,
         source_param_space_path=source_param_space_path,
+        feature_set_name=None,
         output_dir=output_dir if output_dir is not None else cfg.output_dir,
     )

@@ -16,6 +16,7 @@ from aeris.ml.manifest import build_environment_snapshot, utc_now_iso, write_ml_
 from aeris.ml.metrics import evaluate_regression_metrics
 from aeris.ml.model_registry import build_model, get_model_spec
 from aeris.ml.feature_engineering import apply_feature_engineering
+from aeris.ml.feature_sets import FeatureSet, get_feature_set, validate_feature_set_dataframe
 
 SplitMethod = Literal["grouped", "random"]
 
@@ -36,6 +37,8 @@ class TrainConfig:
     model_params: dict[str, Any]
     source_config_path: str | None = None
     source_config_sha256: str | None = None
+    feature_set_name: str | None = None
+    feature_set: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -255,12 +258,32 @@ def train_baseline_model(
     model_params: dict[str, Any] | None = None,
     output_dir: Path | None = None,
     source_config_path: Path | None = None,
+    feature_set_name: str | None = None,
 ) -> dict[str, Any]:
     dataset_path = Path(dataset_path).expanduser().resolve()
 
+    feature_set: FeatureSet | None = None
+    feature_set_metadata: dict[str, Any] | None = None
+    load_feature_columns = list(feature_columns)
+    final_feature_columns = list(feature_columns)
+    feature_engineering_transforms: list[str] | None = None
+
+    if feature_set_name is not None:
+        feature_set = get_feature_set(feature_set_name)
+        feature_set_metadata = feature_set.to_dict()
+        load_feature_columns = list(feature_set.required_source_columns)
+        final_feature_columns = list(feature_set.columns)
+        feature_engineering_transforms = list(feature_set.transforms)
+
+        if list(feature_columns) and list(feature_columns) != final_feature_columns:
+            raise ValueError(
+                f"feature_columns must match feature set '{feature_set.name}' final columns when feature_set_name is used. "
+                f"Expected {final_feature_columns}; got {list(feature_columns)}"
+            )
+
     training_data: TrainingData = load_training_data(
         dataset_path=dataset_path,
-        feature_columns=feature_columns,
+        feature_columns=load_feature_columns,
         target_columns=target_columns,
         allow_forced=allow_forced,
     )
@@ -275,17 +298,38 @@ def train_baseline_model(
         )
     output_dir = _ensure_run_dir(output_dir)
 
-    # SCI.3 — Apply physics-informed feature engineering before split.
-    # Transforms that require columns not present in df are skipped silently.
-    # The manifest records exactly which transforms were applied.
+    # Apply feature engineering before split.
+    # If a named feature set is used, only its declared transforms are applied.
+    # Otherwise the legacy/default transform behavior is preserved.
     _fe_manifest_path = output_dir / "feature_engineering_manifest.json"
     _augmented_df, _fe_manifest = apply_feature_engineering(
         training_data.df,
+        transforms=feature_engineering_transforms,
         manifest_path=_fe_manifest_path,
     )
-    # Update df in-place on the existing TrainingData instance.
+
+    if feature_set is not None:
+        validation = validate_feature_set_dataframe(
+            _augmented_df,
+            feature_set=feature_set,
+            target_columns=target_columns,
+            group_column=group_column,
+        )
+        if not validation.passed:
+            messages = [f"{issue.code}: {issue.message}" for issue in validation.errors]
+            raise ValueError("Feature-set validation failed before training: " + "; ".join(messages))
+
+    # Update df/X on the existing TrainingData instance.
     # TrainingData is a non-frozen dataclass — direct assignment is safe.
     training_data.df = _augmented_df
+    training_data.feature_columns = list(final_feature_columns)
+    training_data.X = training_data.df[final_feature_columns].copy()
+    training_data.metadata["feature_columns"] = list(final_feature_columns)
+    training_data.metadata["n_features"] = int(len(final_feature_columns))
+    training_data.metadata["feature_set_name"] = None if feature_set is None else feature_set.name
+    training_data.metadata["feature_set"] = feature_set_metadata
+
+    feature_columns = list(final_feature_columns)
 
     split: DatasetSplit = split_dataset(
         training_data.df,
@@ -393,6 +437,8 @@ def train_baseline_model(
         model_params=dict(model_params or {}),
         source_config_path=None if source_config_path_resolved is None else str(source_config_path_resolved),
         source_config_sha256=source_config_sha256,
+        feature_set_name=feature_set.name if feature_set is not None else None,
+        feature_set=feature_set_metadata,
     )
     train_config_path = output_dir / "train_config.json"
     train_config_path.write_text(
@@ -443,6 +489,8 @@ def train_baseline_model(
             "n_targets": training_data.metadata.get("n_targets"),
             "feature_columns": list(feature_columns),
             "target_columns": list(target_columns),
+            "feature_set_name": training_data.metadata.get("feature_set_name"),
+            "feature_set": training_data.metadata.get("feature_set"),
             "dropped_non_finite_rows": training_data.metadata.get("dropped_non_finite_rows"),
         },
         "split": {
@@ -533,4 +581,5 @@ def train_baseline_model_from_config(
         model_params=model_params,
         output_dir=output_dir if output_dir is not None else cfg.output_dir,
         source_config_path=config_path,
+        feature_set_name=None,
     )

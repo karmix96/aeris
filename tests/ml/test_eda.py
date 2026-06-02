@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -12,6 +13,7 @@ from aeris.ml.eda import (
     EDA_SCHEMA_VERSION,
     _detect_constant_columns,
     _detect_duplicates,
+    _correlation_matrix,
     _per_geometry_coverage,
     _alpha_control_coverage,
     _outlier_scan,
@@ -101,6 +103,27 @@ def test_run_eda_feature_stats_keys():
     for col in FEATURES:
         assert col in report["feature_stats"]
         assert "min" in report["feature_stats"][col]
+
+
+def test_run_eda_skips_constant_columns_without_runtime_warnings():
+    df = _make_df()
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)
+        report = run_eda(df, feature_columns=FEATURES, target_columns=TARGETS)
+
+    skipped = {item["column"] for item in report["correlation"].get("skipped_columns", [])}
+    assert "velocity_mps" in skipped
+    assert "altitude_m" in skipped
+    assert report["nonlinearity"]["cl"]["velocity_mps"]["status"] == "skipped"
+
+
+def test_correlation_matrix_skips_constant_columns_explicitly():
+    df = pd.DataFrame({"constant": [1.0, 1.0, 1.0, 1.0], "x": [1.0, 2.0, 3.0, 4.0], "y": [2.0, 4.0, 6.0, 8.0]})
+    result = _correlation_matrix(df, ["constant", "x", "y"])
+    assert result["columns"] == ["x", "y"]
+    assert result["matrix"]["x"]["y"] == 1.0
+    assert result["skipped_columns"][0]["column"] == "constant"
+    assert result["skipped_columns"][0]["reason"] == "constant_or_single_unique_value"
 
 
 def test_run_eda_writes_json(tmp_path: Path):

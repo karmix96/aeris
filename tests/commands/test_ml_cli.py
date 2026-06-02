@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import warnings
 from pathlib import Path
 
 import pandas as pd
@@ -191,18 +192,20 @@ def test_ml_eda_cli_writes_report(tmp_path: Path) -> None:
     dataset_root = _build_dataset(tmp_path)
     output_dir = tmp_path / "eda_cli"
 
-    result = runner.invoke(
-        app,
-        [
-            "ml",
-            "eda",
-            "--dataset", str(dataset_root),
-            "--feature-preset", "bwb_control",
-            "--targets", "cl,cd,cm",
-            "--output-dir", str(output_dir),
-            "--no-plots",
-        ],
-    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)
+        result = runner.invoke(
+            app,
+            [
+                "ml",
+                "eda",
+                "--dataset", str(dataset_root),
+                "--feature-preset", "bwb_control",
+                "--targets", "cl,cd,cm",
+                "--output-dir", str(output_dir),
+                "--no-plots",
+            ],
+        )
 
     assert result.exit_code == 0, result.stdout
     assert "[AERIS] ML EDA completed" in result.stdout
@@ -211,4 +214,7 @@ def test_ml_eda_cli_writes_report(tmp_path: Path) -> None:
     report = json.loads((output_dir / "eda_report.json").read_text(encoding="utf-8"))
     assert report["shape"]["n_rows"] > 0
     assert report["metadata"]["feature_columns"][-1] == "control_input_deg"
+    skipped = {item["column"] for item in report["correlation"].get("skipped_columns", [])}
+    assert "velocity_mps" in skipped
+    assert "altitude_m" in skipped
 

@@ -127,23 +127,106 @@ def _alpha_control_coverage(
     return result
 
 
+def _numeric_column_status(series: pd.Series, *, min_rows: int = 2) -> dict[str, Any]:
+    """Return numeric usability diagnostics for correlation-style EDA checks."""
+    numeric = pd.to_numeric(series, errors="coerce")
+    finite = numeric.dropna()
+    n_finite = int(len(finite))
+    n_unique = int(finite.nunique())
+    if n_finite < min_rows:
+        return {
+            "status": "skipped",
+            "reason": "insufficient_finite_rows",
+            "n_finite": n_finite,
+            "n_unique": n_unique,
+        }
+    if n_unique < 2:
+        return {
+            "status": "skipped",
+            "reason": "constant_or_single_unique_value",
+            "n_finite": n_finite,
+            "n_unique": n_unique,
+        }
+    std = float(finite.std(ddof=1)) if n_finite > 1 else 0.0
+    if not math.isfinite(std) or std == 0.0:
+        return {
+            "status": "skipped",
+            "reason": "zero_or_invalid_std",
+            "n_finite": n_finite,
+            "n_unique": n_unique,
+        }
+    return {
+        "status": "usable",
+        "reason": None,
+        "n_finite": n_finite,
+        "n_unique": n_unique,
+        "std": std,
+    }
+
+
+def _correlatable_numeric_columns(df: pd.DataFrame, columns: list[str], *, min_rows: int = 2) -> tuple[list[str], list[dict[str, Any]]]:
+    """Columns that can participate in Pearson/Spearman correlation without NaNs/warnings."""
+    usable: list[str] = []
+    skipped: list[dict[str, Any]] = []
+    for col in columns:
+        if col not in df.columns:
+            skipped.append({"column": col, "reason": "missing", "status": "skipped"})
+            continue
+        status = _numeric_column_status(df[col], min_rows=min_rows)
+        if status["status"] == "usable":
+            usable.append(col)
+        else:
+            skipped.append({"column": col, **status})
+    return usable, skipped
+
+
+def _safe_corr(x: pd.Series, y: pd.Series, *, method: str, min_rows: int = 3) -> float | None:
+    """Warning-safe correlation for one pair. Returns None when undefined."""
+    x_num = pd.to_numeric(x, errors="coerce")
+    y_num = pd.to_numeric(y, errors="coerce")
+    mask = x_num.notna() & y_num.notna()
+    if int(mask.sum()) < min_rows:
+        return None
+    xf = x_num[mask]
+    yf = y_num[mask]
+    if int(xf.nunique()) < 2 or int(yf.nunique()) < 2:
+        return None
+    value = xf.corr(yf, method=method)
+    if value is None or not math.isfinite(float(value)):
+        return None
+    return float(value)
+
+
 def _correlation_matrix(
     df: pd.DataFrame,
     columns: list[str],
 ) -> dict[str, Any]:
-    """Pearson correlation matrix for specified columns."""
-    available = [c for c in columns if c in df.columns]
-    if len(available) < 2:
-        return {"error": "fewer than 2 columns available for correlation"}
-    numeric_df = df[available].apply(pd.to_numeric, errors="coerce")
-    corr = numeric_df.corr(method="pearson")
+    """Pearson correlation matrix for specified columns, skipping undefined constant columns."""
+    requested = [c for c in columns if c in df.columns]
+    usable, skipped = _correlatable_numeric_columns(df, requested, min_rows=2)
+    if len(usable) < 2:
+        return {
+            "columns": usable,
+            "requested_columns": requested,
+            "skipped_columns": skipped,
+            "matrix": {},
+            "warning": "fewer than 2 non-constant numeric columns available for correlation",
+        }
+
+    matrix: dict[str, dict[str, float | None]] = {}
+    for col in usable:
+        matrix[col] = {}
+        for other in usable:
+            if col == other:
+                matrix[col][other] = 1.0
+            else:
+                value = _safe_corr(df[col], df[other], method="pearson", min_rows=2)
+                matrix[col][other] = None if value is None else round(value, 4)
     return {
-        "columns": available,
-        "matrix": {
-            col: {other: (None if math.isnan(v) else round(float(v), 4))
-                  for other, v in corr[col].items()}
-            for col in available
-        },
+        "columns": usable,
+        "requested_columns": requested,
+        "skipped_columns": skipped,
+        "matrix": matrix,
     }
 
 
@@ -170,9 +253,19 @@ def _nonlinearity_scan(
             if mask.sum() < 10:
                 continue
             xf, yf = x[mask], y[mask]
-            pearson_r = float(np.corrcoef(xf, yf)[0, 1])
-            spearman_r = float(xf.rank().corr(yf.rank()))
+            pearson_r = _safe_corr(xf, yf, method="pearson", min_rows=10)
+            spearman_r = _safe_corr(xf, yf, method="spearman", min_rows=10)
+            if pearson_r is None or spearman_r is None:
+                target_results[feat] = {
+                    "status": "skipped",
+                    "reason": "undefined_correlation_constant_or_insufficient_variance",
+                    "pearson_r": None,
+                    "spearman_r": None,
+                    "nonlinearity_gap": None,
+                }
+                continue
             target_results[feat] = {
+                "status": "computed",
                 "pearson_r": round(pearson_r, 4),
                 "spearman_r": round(spearman_r, 4),
                 "nonlinearity_gap": round(abs(abs(spearman_r) - abs(pearson_r)), 4),
@@ -291,6 +384,7 @@ def write_eda_summary_markdown(report: dict[str, Any], output_path: Path) -> Pat
     coverage = report.get("per_geometry_coverage", {}) or {}
     alpha_control = report.get("alpha_control_coverage", {}) or {}
     outliers = report.get("outliers", {}) or {}
+    correlation = report.get("correlation", {}) or {}
     metadata = report.get("metadata", {}) or {}
 
     lines: list[str] = []
@@ -311,6 +405,11 @@ def write_eda_summary_markdown(report: dict[str, Any], output_path: Path) -> Pat
         lines.append("  - " + ", ".join(f"`{c}`" for c in constants["constant_columns"]))
     lines.append(f"- duplicate rows: `{duplicates.get('n_duplicate_rows', 0)}`")
     lines.append(f"- columns with outliers: `{outliers.get('n_columns_with_outliers', 0)}`")
+    if correlation.get("skipped_columns"):
+        skipped_names = [item.get("column") for item in correlation.get("skipped_columns", []) if item.get("column")]
+        lines.append(f"- correlation-skipped columns: `{len(skipped_names)}`")
+        if skipped_names:
+            lines.append("  - " + ", ".join(f"`{c}`" for c in skipped_names[:20]))
     lines.append("")
     lines.append("## Coverage")
     lines.append(f"- group count: `{coverage.get('n_geometries', 'n/a')}`")
@@ -373,12 +472,22 @@ def write_eda_plots(
     def _record_error(kind: str, exc: Exception) -> None:
         artifacts.append({"kind": kind, "status": "failed", "reason": str(exc)})
 
-    numeric_cols = _available_numeric_columns(df, list(dict.fromkeys(feature_columns + target_columns)))
+    numeric_cols, skipped_corr_cols = _correlatable_numeric_columns(
+        df,
+        list(dict.fromkeys(feature_columns + target_columns)),
+        min_rows=2,
+    )
+    if skipped_corr_cols:
+        artifacts.append({
+            "kind": "correlation_input_diagnostics",
+            "status": "computed",
+            "skipped_columns": skipped_corr_cols,
+        })
 
     # 1) Full correlation heatmap.
     try:
         if len(numeric_cols) >= 2:
-            corr = df[numeric_cols].apply(pd.to_numeric, errors="coerce").corr()
+            corr = df[numeric_cols].apply(pd.to_numeric, errors="coerce").corr().fillna(0.0)
             fig, ax = plt.subplots(figsize=(max(7, 0.6 * len(numeric_cols)), max(5, 0.55 * len(numeric_cols))))
             im = ax.imshow(corr.values, vmin=-1, vmax=1)
             ax.set_xticks(range(len(numeric_cols)))
@@ -392,15 +501,24 @@ def write_eda_plots(
             fig.savefig(path, dpi=160)
             plt.close(fig)
             _record(path, "correlation_heatmap")
+        else:
+            artifacts.append({"kind": "correlation_heatmap", "status": "skipped", "reason": "fewer than 2 non-constant numeric columns"})
     except Exception as exc:
         _record_error("correlation_heatmap", exc)
 
     # 2) Feature-target correlation heatmap.
     try:
-        fcols = _available_numeric_columns(df, feature_columns)
-        tcols = _available_numeric_columns(df, target_columns)
+        fcols, skipped_feature_corr_cols = _correlatable_numeric_columns(df, feature_columns, min_rows=2)
+        tcols, skipped_target_corr_cols = _correlatable_numeric_columns(df, target_columns, min_rows=2)
+        if skipped_feature_corr_cols or skipped_target_corr_cols:
+            artifacts.append({
+                "kind": "feature_target_correlation_input_diagnostics",
+                "status": "computed",
+                "skipped_feature_columns": skipped_feature_corr_cols,
+                "skipped_target_columns": skipped_target_corr_cols,
+            })
         if fcols and tcols:
-            corr = df[fcols + tcols].apply(pd.to_numeric, errors="coerce").corr().loc[fcols, tcols]
+            corr = df[fcols + tcols].apply(pd.to_numeric, errors="coerce").corr().loc[fcols, tcols].fillna(0.0)
             fig, ax = plt.subplots(figsize=(max(5, 0.8 * len(tcols)), max(4, 0.35 * len(fcols))))
             im = ax.imshow(corr.values, vmin=-1, vmax=1, aspect="auto")
             ax.set_xticks(range(len(tcols)))
@@ -414,6 +532,8 @@ def write_eda_plots(
             fig.savefig(path, dpi=160)
             plt.close(fig)
             _record(path, "feature_target_correlation")
+        else:
+            artifacts.append({"kind": "feature_target_correlation", "status": "skipped", "reason": "no non-constant numeric feature/target pair"})
     except Exception as exc:
         _record_error("feature_target_correlation", exc)
 

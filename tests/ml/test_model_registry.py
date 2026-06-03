@@ -2,7 +2,7 @@ from aeris.ml.model_registry import build_model, get_model_spec, list_model_type
 
 
 def test_registry_lists_expected_models():
-    assert list_model_types() == [
+    expected_core = {
         "elastic_net",
         "extra_trees",
         "gradient_boosting",
@@ -12,7 +12,19 @@ def test_registry_lists_expected_models():
         "neural_mlp_ensemble",
         "random_forest",
         "ridge",
-    ]
+    }
+    expected_optional = {
+        "lightgbm",
+        "lightgbm_dart",
+        "xgboost",
+        "catboost",
+        "tabpfn",
+    }
+
+    model_types = set(list_model_types())
+
+    assert expected_core.issubset(model_types)
+    assert expected_optional.issubset(model_types)
 
 
 def test_build_linear_regression():

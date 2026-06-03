@@ -27,6 +27,7 @@ from pathlib import Path
 import typer
 
 from aeris.commands._helpers import fail_command, parse_csv_list, parse_float_list
+from aeris.commands._workflow_recording import record_workflow_stage_success
 from aeris.dataset.aero_dataset_run import run_aero_dataset_generation
 from aeris.dataset.curate_aero import curate_aero_dataset
 from aeris.dataset.dataset_run import run_dataset_generation
@@ -213,6 +214,14 @@ def dataset_qc(
         "--profile",
         help="Geometry QC profile name (legacy; --qc-preset support pending).",
     ),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional workflow root to auto-record the geometry QC stage after success.",
+    ),
 ) -> None:
     """Run geometry dataset QC on an existing dataset."""
     try:
@@ -225,6 +234,24 @@ def dataset_qc(
 
     if not report["passed"]:
         raise typer.Exit(code=1)
+
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="dataset_qc",
+            inputs=[dataset],
+            artifacts=[dataset / "qc" / "geometry_qc_report.json"],
+            notes=f"Geometry dataset QC passed with profile={profile}.",
+            metadata={
+                "command": "aeris dataset qc",
+                "profile": profile,
+                "passed": bool(report.get("passed")),
+                "error_count": len(report.get("errors", [])),
+                "warning_count": len(report.get("warnings", [])),
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
 
 
 @dataset_app.command("aero-qc")
@@ -244,6 +271,14 @@ def dataset_aero_qc(
         "--profile",
         help="Aero QC profile name (legacy; --qc-preset support pending).",
     ),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional workflow root to auto-record the aero QC stage after success.",
+    ),
 ) -> None:
     """Run aero dataset QC on an existing dataset."""
     try:
@@ -256,6 +291,24 @@ def dataset_aero_qc(
 
     if not report["passed"]:
         raise typer.Exit(code=1)
+
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="dataset_qc",
+            inputs=[dataset],
+            artifacts=[dataset / "qc" / "aero_qc_report.json"],
+            notes=f"Aero dataset QC passed with profile={profile}.",
+            metadata={
+                "command": "aeris dataset aero-qc",
+                "profile": profile,
+                "passed": bool(report.get("passed")),
+                "error_count": len(report.get("errors", [])),
+                "warning_count": len(report.get("warnings", [])),
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
 
 
 @dataset_app.command("promote-aero")
@@ -280,6 +333,14 @@ def dataset_promote_aero(
         "--json",
         help="Print the full promotion manifest as JSON.",
     ),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional workflow root to auto-record dataset promotion after success.",
+    ),
 ) -> None:
     """Promote a curated aero dataset by writing promotion_manifest.json."""
     try:
@@ -289,6 +350,24 @@ def dataset_promote_aero(
         )
     except Exception as exc:
         fail_command("Dataset promote-aero", exc)
+
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="promotion",
+            inputs=[dataset, dataset / "curation_report.json"],
+            artifacts=[dataset / "promotion_manifest.json"],
+            notes="Aero dataset promotion completed.",
+            metadata={
+                "command": "aeris dataset promote-aero",
+                "promotion_forced": bool(manifest.get("promotion_forced")),
+                "promotion_ready_at_time_of_promotion": bool(manifest.get("promotion_ready_at_time_of_promotion")),
+                "promotion_blocker_count": len(manifest.get("promotion_blockers", []) or []),
+            },
+            echo=not as_json,
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
 
     if as_json:
         typer.echo(json.dumps(manifest, indent=2))
@@ -376,6 +455,14 @@ def dataset_generate(
         "--fail-on-qc-error/--allow-qc-errors",
         help="Exit nonzero if geometry QC fails.",
     ),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional workflow root to auto-record geometry dataset generation after success.",
+    ),
 ) -> None:
     """Generate a batch geometry dataset using a modular sampling strategy."""
     preset = resolve_qc_preset(qc_preset)
@@ -407,6 +494,28 @@ def dataset_generate(
         qc_profile=qc_profile_effective,
         fail_on_qc_error=fail_on_qc_error_effective,
     )
+
+    if exit_code == 0:
+        try:
+            record_workflow_stage_success(
+                workflow=workflow,
+                stage="geometry_dataset",
+                inputs=[config],
+                artifacts=[f"data/datasets/{name}" if name else None],
+                notes="Geometry dataset generation completed.",
+                metadata={
+                    "command": "aeris dataset generate",
+                    "n": n,
+                    "sampler": sampler,
+                    "sampler_seed": sampler_seed,
+                    "dataset_name": name,
+                    "qc_preset": qc_preset,
+                    "qc_profile": qc_profile_effective,
+                },
+            )
+        except Exception as exc:
+            fail_command("Workflow auto-record", exc)
+
     raise typer.Exit(code=exit_code)
 
 
@@ -598,6 +707,14 @@ def dataset_aero_generate(
             "--qc-preset promotion_strict before ML acceptance or dataset promotion."
         ),
     ),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional workflow root to auto-record aero dataset generation after success.",
+    ),
 ) -> None:
     """Generate a unified aero dataset from a geometry config.
 
@@ -698,6 +815,32 @@ def dataset_aero_generate(
         fail_on_aero_qc_error=fail_on_aero_qc_error_effective,
     )
 
+    if exit_code == 0:
+        try:
+            record_workflow_stage_success(
+                workflow=workflow,
+                stage="aero_dataset",
+                inputs=[config],
+                artifacts=[f"data/datasets/{name}"],
+                notes="Unified aero dataset generation completed.",
+                metadata={
+                    "command": "aeris dataset aero-generate",
+                    "n": n,
+                    "sampler": sampler,
+                    "sampler_seed": sampler_seed,
+                    "dataset_name": name,
+                    "solver": solver,
+                    "qc_preset": qc_preset,
+                    "alpha_values": parsed_alpha_values,
+                    "beta_values": parsed_beta_values,
+                    "velocity_values": parsed_velocity_values,
+                    "altitude_values": parsed_altitude_values,
+                    "control_input_values": parsed_control_input_values,
+                },
+            )
+        except Exception as exc:
+            fail_command("Workflow auto-record", exc)
+
     raise typer.Exit(code=exit_code)
 
 
@@ -738,6 +881,14 @@ def dataset_curate_aero(
         "--json",
         help="Print the full curation report as JSON.",
     ),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional workflow root to auto-record curation after success.",
+    ),
 ) -> None:
     """Curate an existing aero dataset into kept/rejected outputs and report promotion readiness."""
     try:
@@ -750,6 +901,29 @@ def dataset_curate_aero(
         )
     except Exception as exc:
         fail_command("Dataset curate-aero", exc)
+
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="curation",
+            inputs=[dataset],
+            artifacts=[
+                report.get("curated_aero_dataset_csv"),
+                report.get("rejected_aero_rows_csv"),
+                dataset / "curation_report.json",
+            ],
+            notes="Aero dataset curation completed.",
+            metadata={
+                "command": "aeris dataset curate-aero",
+                "promotion_ready": bool(report.get("promotion_ready")),
+                "kept_rows": report.get("kept_rows"),
+                "rejected_rows": report.get("rejected_rows"),
+                "promotion_blocker_count": len(report.get("promotion_blockers", []) or []),
+            },
+            echo=not as_json,
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
 
     if as_json:
         typer.echo(json.dumps(report, indent=2))

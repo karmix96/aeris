@@ -21,6 +21,7 @@ from pathlib import Path
 import typer
 
 from aeris.commands._helpers import fail_command, parse_csv_list
+from aeris.commands._workflow_recording import record_workflow_stage_success
 from aeris.ml.compare import compare_models
 from aeris.ml.compare_hardening import compare_models_across_seeds, compare_tuning_runs
 from aeris.ml.config import load_model_params_by_type_json, load_model_params_json
@@ -420,6 +421,14 @@ def ml_eda(
         min=0.1,
         help="Sigma threshold used for simple outlier scan.",
     ),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional workflow root to auto-record ML EDA after success.",
+    ),
 ) -> None:
     """Run leakage-safe EDA on a promoted dataset or feature-set view."""
     from aeris.ml.eda import run_promoted_dataset_eda
@@ -464,6 +473,24 @@ def ml_eda(
     typer.echo(f"  eda_summary_md: {result['summary_path']}")
     if plots_dir is not None:
         typer.echo(f"  plots_dir: {plots_dir}")
+
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="ml_eda",
+            inputs=[dataset],
+            artifacts=[result.get("output_dir"), result.get("report_path"), result.get("summary_path")],
+            notes="ML EDA completed.",
+            metadata={
+                "command": "aeris ml eda",
+                "feature_preset": feature_preset,
+                "feature_set": feature_set,
+                "targets": target_cols,
+                "rows": report.get("shape", {}).get("n_rows"),
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
 
 
 
@@ -615,6 +642,14 @@ def ml_train(
         help="Optional JSON object containing model constructor parameters.",
     ),
     output_dir: Path | None = typer.Option(None, "--output-dir", help="Optional output directory."),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional workflow root to auto-record ML training after success.",
+    ),
 ) -> None:
     """Train a baseline surrogate model from a promoted aero dataset."""
     try:
@@ -631,6 +666,23 @@ def ml_train(
                 model_params_override=model_params_override,
             )
             _echo_train_result(result)
+            try:
+                artifacts = result["artifacts"]
+                metrics = result["metrics"]
+                record_workflow_stage_success(
+                    workflow=workflow,
+                    stage="ml_training",
+                    inputs=[config],
+                    artifacts=[artifacts.run_dir, artifacts.metrics_path, artifacts.model_path],
+                    notes="ML training completed from config.",
+                    metadata={
+                        "command": "aeris ml train",
+                        "config_mode": True,
+                        "model_type": metrics.get("model", {}).get("model_type"),
+                    },
+                )
+            except Exception as exc:
+                fail_command("Workflow auto-record", exc)
             return
 
         if dataset is None:
@@ -665,6 +717,28 @@ def ml_train(
         fail_command("ML train", exc)
 
     _echo_train_result(result, model_type_label=model_type)
+
+    try:
+        artifacts = result["artifacts"]
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="ml_training",
+            inputs=[dataset],
+            artifacts=[artifacts.run_dir, artifacts.metrics_path, artifacts.model_path],
+            notes="ML training completed.",
+            metadata={
+                "command": "aeris ml train",
+                "model_type": model_type,
+                "feature_preset": feature_preset,
+                "feature_set": feature_set,
+                "targets": target_cols,
+                "split_method": split_method,
+                "group_column": group_column,
+                "random_seed": random_seed,
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
 
 
 @ml_app.command("compare")
@@ -710,6 +784,14 @@ def ml_compare(
         help="Optional JSON mapping of model_type -> constructor parameters.",
     ),
     output_dir: Path | None = typer.Option(None, "--output-dir", help="Optional output directory for comparison artifacts."),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional workflow root to auto-record model comparison after success.",
+    ),
 ) -> None:
     """Compare several model families on a single fixed train/val/test split."""
     feature_cols = _resolve_feature_columns_cli(features=features, feature_preset=feature_preset, feature_set=feature_set)
@@ -765,6 +847,29 @@ def ml_compare(
             f"test_r2_mean={run['metrics']['test']['overall']['r2_mean']:.6f}, "
             f"test_rmse_mean={run['metrics']['test']['overall']['rmse_mean']:.6f}"
         )
+
+
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="model_comparison",
+            inputs=[dataset],
+            artifacts=[result.get("output_dir"), result.get("comparison_summary_json"), result.get("comparison_summary_csv")],
+            notes="ML model comparison completed.",
+            metadata={
+                "command": "aeris ml compare",
+                "models": model_types,
+                "feature_preset": feature_preset,
+                "feature_set": feature_set,
+                "targets": target_cols,
+                "split_method": split_method,
+                "group_column": group_column,
+                "random_seed": random_seed,
+                "best_model_by_test_rmse_mean": summary.get("best_model_by_test_rmse_mean"),
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
 
 
 @ml_app.command("tune")
@@ -1205,6 +1310,14 @@ def ml_compare_seeds(
         help="Optional JSON mapping of model_type -> constructor parameters.",
     ),
     output_dir: Path | None = typer.Option(None, "--output-dir", help="Optional output directory for seed-stability artifacts."),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional workflow root to auto-record model comparison after seed-stability analysis succeeds.",
+    ),
 ) -> None:
     """Compare model families across multiple split seeds."""
     try:
@@ -1248,6 +1361,28 @@ def ml_compare_seeds(
     typer.echo(f"  winner_report_json: {result['winner_report_json']}")
     typer.echo(f"  winner_by_mean_test_rmse: {winner['winner_by_mean_test_rmse']}")
     typer.echo(f"  winner_by_rmse_win_count: {winner['winner_by_rmse_win_count']}")
+
+
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="model_comparison",
+            inputs=[dataset],
+            artifacts=[result.get("output_dir"), result.get("summary_json"), result.get("summary_csv"), result.get("winner_report_json")],
+            notes="ML seed-stability comparison completed.",
+            metadata={
+                "command": "aeris ml compare-seeds",
+                "models": model_types,
+                "seeds": seed_values,
+                "feature_preset": feature_preset,
+                "feature_set": feature_set,
+                "targets": target_cols,
+                "winner_by_mean_test_rmse": winner.get("winner_by_mean_test_rmse"),
+                "winner_by_rmse_win_count": winner.get("winner_by_rmse_win_count"),
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
 
 
 @ml_app.command("compare-tuning-runs")
@@ -1354,6 +1489,14 @@ def ml_promote_model(
     require_diagnostics: bool = typer.Option(True, "--require-diagnostics/--no-require-diagnostics", help="Require diagnostics artifacts to exist."),
     allow_forced_dataset: bool = typer.Option(False, "--allow-forced-dataset", help="Allow promotion of models trained from force-promoted datasets."),
     notes: str | None = typer.Option(None, "--notes", help="Optional operator note recorded in the promotion manifest."),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional workflow root to auto-record model promotion after success.",
+    ),
 ) -> None:
     """Promote a trained ML model run for downstream use."""
     try:
@@ -1381,6 +1524,24 @@ def ml_promote_model(
     typer.echo(f"  warnings: {result.warnings}")
     if not result.passed:
         raise typer.Exit(code=1)
+
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="model_promotion",
+            inputs=[model_run_dir, gate_config],
+            artifacts=[result.manifest_path, result.model_card_path, result.training_envelope_path],
+            notes="ML model promotion completed.",
+            metadata={
+                "command": "aeris ml promote-model",
+                "status": result.manifest.get("status"),
+                "promotion_ready_at_time_of_promotion": bool(result.passed),
+                "blocker_count": len(result.blockers),
+                "warning_count": len(result.warnings),
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
 
 
 @ml_app.command("inspect-model")
@@ -1439,6 +1600,14 @@ def ml_check_inference_inputs(
     tolerance: float = typer.Option(0.0, "--tolerance", help="Absolute tolerance applied to training-envelope min/max checks."),
     feature_set: str | None = typer.Option(None, "--feature-set", help="Named feature set to apply to the input CSV before checking inference envelope."),
     allow_feature_set_mismatch: bool = typer.Option(False, "--allow-feature-set-mismatch", help="Allow requested feature set to differ from the model training feature set."),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional workflow root to auto-record inference-guard checks after success.",
+    ),
 ) -> None:
     """Check whether an input CSV is inside the promoted model training envelope."""
     try:
@@ -1470,6 +1639,26 @@ def ml_check_inference_inputs(
         typer.echo(f"  WARNING: {issue}")
     if fail_on_violations and not result.passed:
         raise typer.Exit(code=1)
+
+    if result.passed:
+        try:
+            record_workflow_stage_success(
+                workflow=workflow,
+                stage="inference_guard",
+                inputs=[model_run_dir, input_csv],
+                artifacts=[result.report_path, result.output_dir],
+                notes="ML inference-input guard completed and passed.",
+                metadata={
+                    "command": "aeris ml check-inference-inputs",
+                    "passed": bool(result.passed),
+                    "error_count": len(result.errors),
+                    "warning_count": len(result.warnings),
+                    "feature_set": feature_set,
+                    "require_promoted_model": require_promoted_model,
+                },
+            )
+        except Exception as exc:
+            fail_command("Workflow auto-record", exc)
 
 
 @ml_app.command("audit-model")

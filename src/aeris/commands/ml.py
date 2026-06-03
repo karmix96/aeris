@@ -1214,7 +1214,8 @@ def ml_build_delta_dataset(
 @ml_app.command("train-delta-model")
 def ml_train_delta_model(
     delta_dataset: Path = typer.Option(..., "--delta-dataset", exists=True, readable=True, resolve_path=True, help="Path to delta_dataset.csv or a directory containing it."),
-    features: str = typer.Option(..., "--features", help="Comma-separated feature columns. Usually includes design/condition columns and LF outputs."),
+    features: str | None = typer.Option(None, "--features", help="Comma-separated explicit feature columns. Mutually exclusive with --feature-set."),
+    feature_set: str | None = typer.Option(None, "--feature-set", help="Named feature set to apply before delta training. LF target columns are appended automatically."),
     base_targets: str = typer.Option(..., "--base-targets", help="Comma-separated base targets, e.g. cl,cd,cm. Delta targets are inferred as delta__<target>."),
     model_type: str = typer.Option("extra_trees", "--model-type", help=f"Model type. Supported: {', '.join(list_model_types())}"),
     split_method: str = typer.Option("grouped", "--split-method", help="Split method: grouped or random."),
@@ -1230,7 +1231,8 @@ def ml_train_delta_model(
     try:
         result = train_delta_model(
             delta_dataset=delta_dataset,
-            feature_columns=parse_csv_list(features, "--features"),
+            feature_columns=(parse_csv_list(features, "--features") if features is not None else None),
+            feature_set_name=feature_set,
             base_targets=parse_csv_list(base_targets, "--base-targets"),
             model_type=model_type,
             split_method=split_method,  # type: ignore[arg-type]
@@ -1250,6 +1252,8 @@ def ml_train_delta_model(
     split = result["split"]
     typer.echo("[AERIS] ML multifidelity delta model trained")
     typer.echo(f"  model_type: {metrics['model']['model_type']}")
+    typer.echo(f"  feature_set: {result['manifest'].get('feature_set_name')}")
+    typer.echo(f"  feature_columns: {', '.join(result['manifest'].get('features', []))}")
     typer.echo(f"  split_method: {split.method}")
     typer.echo(f"  train_rows: {len(split.train_df)}")
     typer.echo(f"  val_rows: {len(split.val_df)}")
@@ -1268,6 +1272,8 @@ def ml_predict_delta_model(
     input_csv: Path = typer.Option(..., "--input-csv", exists=True, file_okay=True, dir_okay=False, readable=True, resolve_path=True, help="CSV containing required features and LF target columns."),
     output_dir: Path | None = typer.Option(None, "--output-dir", help="Output directory for delta predictions."),
     include_truth_if_available: bool = typer.Option(True, "--include-truth-if-available/--no-include-truth-if-available", help="If HF target columns are present, compute corrected-output metrics."),
+    feature_set: str | None = typer.Option(None, "--feature-set", help="Named feature set to apply to raw delta-prediction inputs before correction."),
+    allow_feature_set_mismatch: bool = typer.Option(False, "--allow-feature-set-mismatch", help="Allow requested feature set to differ from the delta model training feature set."),
 ) -> None:
     """Predict deltas and corrected HF-like scalar outputs using a trained delta model."""
     try:
@@ -1276,6 +1282,8 @@ def ml_predict_delta_model(
             input_csv=input_csv,
             output_dir=output_dir,
             include_truth_if_available=include_truth_if_available,
+            feature_set_name=feature_set,
+            allow_feature_set_mismatch=allow_feature_set_mismatch,
         )
     except Exception as exc:
         fail_command("ML predict-delta-model", exc)
@@ -1286,6 +1294,8 @@ def ml_predict_delta_model(
     typer.echo(f"  model_run_dir: {summary['model_run_dir']}")
     typer.echo(f"  n_rows: {summary['n_rows']}")
     typer.echo(f"  input_csv: {summary['input_csv']}")
+    typer.echo(f"  feature_set: {summary.get('feature_set_name')}")
+    typer.echo(f"  feature_set_applied: {summary.get('feature_set_applied')}")
     typer.echo(f"  output_dir: {artifacts.output_dir}")
     typer.echo(f"  predictions_csv: {artifacts.predictions_csv}")
     typer.echo(f"  prediction_summary_json: {artifacts.prediction_summary_json}")

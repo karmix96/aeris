@@ -11,6 +11,8 @@ import pandas as pd
 
 from aeris.dataset.splitting import DatasetSplit, split_dataset
 from aeris.ml.diagnostics import write_regression_diagnostics
+from aeris.ml.feature_engineering import apply_feature_engineering
+from aeris.ml.feature_sets import FeatureSetError, get_feature_set
 from aeris.ml.fingerprints import file_sha256
 from aeris.ml.manifest import build_environment_snapshot, utc_now_iso, write_ml_run_manifest
 from aeris.ml.metrics import evaluate_regression_metrics
@@ -83,6 +85,85 @@ def _validate_numeric_columns(df: pd.DataFrame, columns: list[str], *, label: st
         out[col] = numeric.astype(float)
     return out
 
+
+
+
+def _prepare_delta_feature_frame(
+    df: pd.DataFrame,
+    *,
+    feature_columns: list[str] | None,
+    feature_set_name: str | None,
+    base_targets: list[str],
+    lf_prefix: str,
+) -> tuple[pd.DataFrame, list[str], dict[str, Any] | None, dict[str, Any] | None]:
+    """Resolve explicit or named feature-set inputs for a delta-model DataFrame.
+
+    Delta learning needs both the geometry/condition representation and the LF
+    target columns. With a feature set, AERIS applies declared transforms to raw
+    geometry/condition columns, then appends lf__<target> columns as mandatory
+    correction inputs. This keeps multifidelity learning aligned with the normal
+    scalar ML feature-set trust chain.
+    """
+    explicit = list(feature_columns or [])
+    clean_feature_set = None if feature_set_name is None else str(feature_set_name).strip() or None
+
+    if explicit and clean_feature_set:
+        raise ValueError("Use only one of feature_columns or feature_set_name for delta-model training/prediction.")
+    if not explicit and not clean_feature_set:
+        raise ValueError("feature_columns or feature_set_name must be provided for delta-model training/prediction.")
+
+    lf_columns = [f"{lf_prefix}{target}" for target in base_targets]
+
+    if not clean_feature_set:
+        return df.copy(), explicit, None, None
+
+    try:
+        feature_set = get_feature_set(clean_feature_set)
+    except FeatureSetError as exc:
+        raise ValueError(str(exc)) from exc
+
+    missing_sources = [column for column in feature_set.required_source_columns if column not in df.columns]
+    if missing_sources:
+        raise ValueError(
+            f"missing_feature_set_source_columns: Delta dataset/input is missing raw source columns "
+            f"required by feature set '{feature_set.name}': {missing_sources}"
+        )
+
+    augmented_df, feature_engineering_manifest = apply_feature_engineering(
+        df,
+        transforms=list(feature_set.transforms),
+    )
+    missing_final = [column for column in feature_set.columns if column not in augmented_df.columns]
+    if missing_final:
+        raise ValueError(
+            f"missing_feature_set_columns_after_transforms: Feature set '{feature_set.name}' did not produce "
+            f"required columns: {missing_final}"
+        )
+
+    final_features = list(feature_set.columns) + lf_columns
+    return augmented_df, final_features, feature_set.to_dict(), feature_engineering_manifest
+
+
+def _check_delta_feature_set_mismatch(
+    *,
+    trained_feature_set_name: str | None,
+    requested_feature_set_name: str | None,
+    allow_feature_set_mismatch: bool,
+) -> None:
+    trained = None if trained_feature_set_name is None else str(trained_feature_set_name).strip() or None
+    requested = None if requested_feature_set_name is None else str(requested_feature_set_name).strip() or None
+    if requested is None:
+        return
+    if trained is None and not allow_feature_set_mismatch:
+        raise ValueError(
+            f"Feature-set mismatch: delta model was trained without a feature set, but inference requested "
+            f"'{requested}'. Use --allow-feature-set-mismatch only for deliberate debugging or migration."
+        )
+    if trained is not None and requested != trained and not allow_feature_set_mismatch:
+        raise ValueError(
+            f"Feature-set mismatch: delta model was trained with feature set '{trained}', but inference requested "
+            f"'{requested}'. Use --allow-feature-set-mismatch only for deliberate debugging or migration."
+        )
 
 def _target_columns(base_targets: list[str], *, delta_prefix: str, lf_prefix: str, hf_prefix: str) -> tuple[list[str], list[str], list[str]]:
     delta_cols = [f"{delta_prefix}{t}" for t in base_targets]
@@ -226,8 +307,9 @@ def _write_explainability(
 def train_delta_model(
     *,
     delta_dataset: str | Path,
-    feature_columns: list[str],
+    feature_columns: list[str] | None = None,
     base_targets: list[str],
+    feature_set_name: str | None = None,
     model_type: str = "extra_trees",
     split_method: SplitMethod = "grouped",
     group_column: str = "geometry_id",
@@ -241,10 +323,12 @@ def train_delta_model(
     lf_prefix: str = "lf__",
     hf_prefix: str = "hf__",
 ) -> dict[str, Any]:
-    if not feature_columns:
-        raise ValueError("feature_columns must not be empty")
     if not base_targets:
         raise ValueError("base_targets must not be empty")
+    if feature_columns and feature_set_name:
+        raise ValueError("Use only one of feature_columns or feature_set_name for delta-model training.")
+    if not feature_columns and not feature_set_name:
+        raise ValueError("feature_columns or feature_set_name must be provided for delta-model training.")
 
     delta_csv, df_raw = _load_delta_dataset(delta_dataset)
     delta_columns, lf_columns, hf_columns = _target_columns(
@@ -253,11 +337,19 @@ def train_delta_model(
         lf_prefix=lf_prefix,
         hf_prefix=hf_prefix,
     )
-    required = list(feature_columns) + list(delta_columns) + list(lf_columns) + list(hf_columns)
+    df_featured, resolved_feature_columns, feature_set_metadata, feature_engineering_manifest = _prepare_delta_feature_frame(
+        df_raw,
+        feature_columns=feature_columns,
+        feature_set_name=feature_set_name,
+        base_targets=base_targets,
+        lf_prefix=lf_prefix,
+    )
+    required = list(resolved_feature_columns) + list(delta_columns) + list(lf_columns) + list(hf_columns)
     if split_method == "grouped":
         required.append(group_column)
-    _require_columns(df_raw, required, label="Delta dataset")
-    df = _validate_numeric_columns(df_raw, list(feature_columns) + list(delta_columns) + list(lf_columns) + list(hf_columns), label="Delta dataset")
+    _require_columns(df_featured, required, label="Delta dataset")
+    df = _validate_numeric_columns(df_featured, list(resolved_feature_columns) + list(delta_columns) + list(lf_columns) + list(hf_columns), label="Delta dataset")
+    feature_columns = resolved_feature_columns
 
     split = split_dataset(
         df,
@@ -341,7 +433,13 @@ def train_delta_model(
     train_config = {
         "task": "multifidelity_delta_learning",
         "delta_dataset_csv": str(delta_csv),
+        "feature_set_name": feature_set_name,
+        "feature_set": feature_set_metadata,
+        "feature_engineering_manifest": feature_engineering_manifest,
         "feature_columns": list(feature_columns),
+        "final_features": list(feature_columns),
+        "target_columns": delta_columns,
+        "delta_feature_columns": list(feature_columns),
         "base_targets": list(base_targets),
         "delta_target_columns": delta_columns,
         "lf_target_columns": lf_columns,
@@ -359,6 +457,19 @@ def train_delta_model(
     train_config_path = run_dir / "delta_train_config.json"
     train_config_path.write_text(json.dumps(train_config, indent=2), encoding="utf-8")
 
+    # Standard alias for operator tooling that already knows normal ML run folders.
+    # The canonical delta-specific config remains delta_train_config.json.
+    train_config_alias_path = run_dir / "train_config.json"
+    train_config_alias_path.write_text(json.dumps(train_config, indent=2), encoding="utf-8")
+
+    feature_engineering_manifest_path: Path | None = None
+    if feature_engineering_manifest is not None:
+        feature_engineering_manifest_path = run_dir / "feature_engineering_manifest.json"
+        feature_engineering_manifest_path.write_text(
+            json.dumps(feature_engineering_manifest, indent=2),
+            encoding="utf-8",
+        )
+
     manifest = {
         "schema_version": DELTA_MODEL_MANIFEST_SCHEMA_VERSION,
         "created_at_utc": utc_now_iso(),
@@ -375,7 +486,15 @@ def train_delta_model(
             "model_path": str(model_path),
             "model_sha256": file_sha256(model_path),
         },
+        "feature_set_name": feature_set_name,
+        "feature_set": feature_set_metadata,
+        "feature_engineering": feature_engineering_manifest,
         "features": list(feature_columns),
+        "feature_columns": list(feature_columns),
+        "final_features": list(feature_columns),
+        "target_columns": delta_columns,
+        "lf_target_columns": lf_columns,
+        "hf_target_columns": hf_columns,
         "base_targets": list(base_targets),
         "delta_target_columns": delta_columns,
         "split": {
@@ -386,6 +505,8 @@ def train_delta_model(
         "artifacts": {
             "metrics_json": str(metrics_path),
             "train_config_json": str(train_config_path),
+            "standard_train_config_json": str(train_config_alias_path),
+            "feature_engineering_manifest_json": None if feature_engineering_manifest_path is None else str(feature_engineering_manifest_path),
             "train_rows_csv": str(train_rows_path),
             "val_rows_csv": str(val_rows_path),
             "test_rows_csv": str(test_rows_path),
@@ -445,6 +566,8 @@ def predict_with_delta_model(
     input_csv: str | Path,
     output_dir: str | Path | None = None,
     include_truth_if_available: bool = True,
+    feature_set_name: str | None = None,
+    allow_feature_set_mismatch: bool = False,
 ) -> dict[str, Any]:
     model_run_dir = Path(model_run_dir).expanduser().resolve()
     input_csv = Path(input_csv).expanduser().resolve()
@@ -463,10 +586,31 @@ def predict_with_delta_model(
     delta_columns = list(cfg["delta_target_columns"])
     lf_columns = list(cfg["lf_target_columns"])
     hf_columns = list(cfg.get("hf_target_columns", [f"hf__{t}" for t in base_targets]))
+    trained_feature_set_name = cfg.get("feature_set_name")
+    requested_feature_set_name = None if feature_set_name is None else str(feature_set_name).strip() or None
+    _check_delta_feature_set_mismatch(
+        trained_feature_set_name=trained_feature_set_name,
+        requested_feature_set_name=requested_feature_set_name,
+        allow_feature_set_mismatch=allow_feature_set_mismatch,
+    )
 
     df_raw = pd.read_csv(input_csv)
-    _require_columns(df_raw, list(feature_columns) + list(lf_columns), label="Delta prediction input")
-    df = _validate_numeric_columns(df_raw, list(feature_columns) + list(lf_columns), label="Delta prediction input")
+    feature_set_metadata: dict[str, Any] | None = None
+    feature_engineering_manifest: dict[str, Any] | None = None
+    feature_set_applied = requested_feature_set_name is not None
+    if requested_feature_set_name:
+        df_prepared, _resolved_from_feature_set, feature_set_metadata, feature_engineering_manifest = _prepare_delta_feature_frame(
+            df_raw,
+            feature_columns=None,
+            feature_set_name=requested_feature_set_name,
+            base_targets=base_targets,
+            lf_prefix=cfg.get("prefixes", {}).get("lf_prefix", "lf__"),
+        )
+    else:
+        df_prepared = df_raw.copy()
+
+    _require_columns(df_prepared, list(feature_columns) + list(lf_columns), label="Delta prediction input")
+    df = _validate_numeric_columns(df_prepared, list(feature_columns) + list(lf_columns), label="Delta prediction input")
 
     X = df[feature_columns].to_numpy(dtype=float)
     pred_delta = np.asarray(model.predict(X), dtype=float)
@@ -492,6 +636,16 @@ def predict_with_delta_model(
     out_dir = _ensure_dir(Path(output_dir).expanduser().resolve())
     predictions_csv = out_dir / "delta_predictions.csv"
     summary_json = out_dir / "delta_prediction_summary.json"
+    materialized_input_csv: Path | None = None
+    feature_engineering_manifest_json: Path | None = None
+    if feature_set_applied:
+        materialized_input_csv = out_dir / "materialized_delta_inference_input.csv"
+        df.to_csv(materialized_input_csv, index=False)
+        feature_engineering_manifest_json = out_dir / "delta_inference_feature_engineering_manifest.json"
+        feature_engineering_manifest_json.write_text(
+            json.dumps(feature_engineering_manifest or {}, indent=2),
+            encoding="utf-8",
+        )
     out.to_csv(predictions_csv, index=False)
 
     summary = {
@@ -501,7 +655,14 @@ def predict_with_delta_model(
         "model_path": str(model_path),
         "input_csv": str(input_csv),
         "predictions_csv": str(predictions_csv),
+        "materialized_delta_inference_input_csv": None if materialized_input_csv is None else str(materialized_input_csv),
+        "feature_engineering_manifest_json": None if feature_engineering_manifest_json is None else str(feature_engineering_manifest_json),
         "n_rows": int(len(out)),
+        "trained_feature_set_name": trained_feature_set_name,
+        "feature_set_name": requested_feature_set_name,
+        "feature_set_applied": feature_set_applied,
+        "feature_set": feature_set_metadata,
+        "feature_engineering_manifest": feature_engineering_manifest,
         "feature_columns": feature_columns,
         "base_targets": base_targets,
         "delta_target_columns": delta_columns,

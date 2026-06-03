@@ -10,6 +10,7 @@ import pandas as pd
 from aeris.ml.fingerprints import file_sha256
 from aeris.ml.manifest import build_environment_snapshot, utc_now_iso
 from aeris.ml.validation import validate_promoted_dataset_schema
+from aeris.ml.promotion_gates import evaluate_promotion_gates, load_promotion_gate_config
 
 MODEL_PROMOTION_SCHEMA_VERSION = "aeris.model_promotion_manifest.v1"
 MODEL_CARD_SCHEMA_VERSION = "aeris.model_card.v1"
@@ -168,6 +169,7 @@ def promote_model_run(
     max_val_rmse_mean: float | None = None,
     max_test_rmse_mean: float | None = None,
     min_test_r2_mean: float | None = None,
+    gate_config_path: str | Path | None = None,
     require_diagnostics: bool = True,
     allow_forced_dataset: bool = False,
     notes: str | None = None,
@@ -285,6 +287,19 @@ def promote_model_run(
     )
     warnings.extend(envelope_warnings)
 
+    gate_config_payload: dict[str, Any] | None = None
+    gate_evaluation: dict[str, Any] | None = None
+    gate_config_resolved_path: str | None = None
+    if gate_config_path is not None:
+        gate_config_resolved_path = str(Path(gate_config_path).expanduser().resolve())
+        gate_config_payload = load_promotion_gate_config(gate_config_path)
+        gate_evaluation = evaluate_promotion_gates(
+            model_run_dir=model_run_dir,
+            gate_config=gate_config_payload,
+        )
+        blockers.extend(gate_evaluation.get("blockers", []))
+        warnings.extend(gate_evaluation.get("warnings", []))
+
     artifact_hashes = _artifact_hashes(model_run_dir)
     passed = len(blockers) == 0
 
@@ -305,6 +320,12 @@ def promote_model_run(
             "min_test_r2_mean": min_test_r2_mean,
             "require_diagnostics": require_diagnostics,
             "allow_forced_dataset": allow_forced_dataset,
+            "gate_config_path": gate_config_resolved_path,
+        },
+        "promotion_gate_config": {
+            "path": gate_config_resolved_path,
+            "config": gate_config_payload,
+            "evaluation": gate_evaluation,
         },
         "model": {
             "model_type": train_config.get("model_type"),

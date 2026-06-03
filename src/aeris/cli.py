@@ -12,6 +12,7 @@ from aeris.commands.gui import gui_app
 from aeris.commands.ml import ml_app
 from aeris.commands.pipeline import pipeline_app
 from aeris.commands.version import version_app
+from aeris.commands.workflow import workflow_app
 from aeris.common.paths import ensure_output_directories_writable
 
 
@@ -26,6 +27,7 @@ app = typer.Typer(
         "- dynamics = mass / CG / trim / dynamics-foundation workflows\n"
         "- ml = train, compare, and predict using promoted aero datasets\n"
         "- pipeline = minimal smoke workflows\n"
+        "- workflow = guided workstation stage/status spine\n"
         "- version = show installed package version\n\n"
         "Use 'aeris <group> --help' for domain-specific options."
     )
@@ -92,6 +94,7 @@ app.add_typer(geometry_app, name="geometry")
 app.add_typer(gui_app, name="gui")
 app.add_typer(dataset_app, name="dataset")
 app.add_typer(pipeline_app, name="pipeline")
+app.add_typer(workflow_app, name="workflow")
 app.add_typer(aero_app, name="aero")
 app.add_typer(dynamics_app, name="dynamics")
 app.add_typer(ml_app, name="ml")

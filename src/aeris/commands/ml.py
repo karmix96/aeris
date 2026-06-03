@@ -43,6 +43,7 @@ from aeris.ml.model_promotion import (
     promote_model_run,
     require_promoted_model as require_promoted_model_gate,
 )
+from aeris.ml.promotion_gates import suggest_promotion_gates
 from aeris.ml.model_registry import list_model_types
 from aeris.ml.inference_guard import check_inference_inputs
 from aeris.ml.multifidelity import build_delta_dataset
@@ -1282,12 +1283,74 @@ def ml_compare_tuning_runs(
 
 
 
+@ml_app.command("suggest-promotion-gates")
+def ml_suggest_promotion_gates(
+    model_run_dir: Path = typer.Option(
+        ...,
+        "--model-run-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to a saved ML training run directory.",
+    ),
+    output_dir: Path | None = typer.Option(
+        None,
+        "--output-dir",
+        help="Output directory for promotion_gate_suggestions.json and promotion_gates_template.yaml.",
+    ),
+    profile: str = typer.Option(
+        "normal",
+        "--profile",
+        help="Suggestion profile: strict, normal, or loose.",
+    ),
+) -> None:
+    """Suggest generic, scale-aware per-target model-promotion gates."""
+    try:
+        result = suggest_promotion_gates(
+            model_run_dir=model_run_dir,
+            output_dir=output_dir,
+            profile=profile,
+        )
+    except Exception as exc:
+        fail_command("ML suggest-promotion-gates", exc)
+
+    targets = result.report.get("target_columns", [])
+    typer.echo("[AERIS] ML promotion gate suggestions completed")
+    typer.echo(f"  model_run_dir: {result.model_run_dir}")
+    typer.echo(f"  profile: {result.report.get('profile')}")
+    typer.echo(f"  targets: {', '.join(targets)}")
+    typer.echo(f"  output_dir: {result.output_dir}")
+    typer.echo(f"  suggestions_json: {result.report_path}")
+    typer.echo(f"  gate_template_yaml: {result.template_path}")
+    typer.echo(f"  template_preview_passes_current_model: {result.report.get('template_preview_passes_current_model')}")
+    blockers = result.report.get("template_preview_blockers", [])
+    typer.echo(f"  template_preview_blockers: {len(blockers)}")
+    for blocker in blockers[:10]:
+        typer.echo(f"  BLOCKER: {blocker}")
+    warnings = result.report.get("warnings", [])
+    typer.echo(f"  warnings: {len(warnings)}")
+    for warning in warnings[:10]:
+        typer.echo(f"  WARNING: {warning}")
+
+
 @ml_app.command("promote-model")
 def ml_promote_model(
     model_run_dir: Path = typer.Option(..., "--model-run-dir", exists=True, file_okay=False, dir_okay=True, readable=True, resolve_path=True, help="Path to a saved ML training run directory."),
     max_val_rmse_mean: float | None = typer.Option(None, "--max-val-rmse-mean", help="Optional maximum allowed validation RMSE mean."),
     max_test_rmse_mean: float | None = typer.Option(None, "--max-test-rmse-mean", help="Optional maximum allowed test RMSE mean."),
     min_test_r2_mean: float | None = typer.Option(None, "--min-test-r2-mean", help="Optional minimum allowed test R2 mean."),
+    gate_config: Path | None = typer.Option(
+        None,
+        "--gate-config",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Optional YAML/JSON promotion gate config with generic per-target thresholds.",
+    ),
     require_diagnostics: bool = typer.Option(True, "--require-diagnostics/--no-require-diagnostics", help="Require diagnostics artifacts to exist."),
     allow_forced_dataset: bool = typer.Option(False, "--allow-forced-dataset", help="Allow promotion of models trained from force-promoted datasets."),
     notes: str | None = typer.Option(None, "--notes", help="Optional operator note recorded in the promotion manifest."),
@@ -1299,6 +1362,7 @@ def ml_promote_model(
             max_val_rmse_mean=max_val_rmse_mean,
             max_test_rmse_mean=max_test_rmse_mean,
             min_test_r2_mean=min_test_r2_mean,
+            gate_config_path=gate_config,
             require_diagnostics=require_diagnostics,
             allow_forced_dataset=allow_forced_dataset,
             notes=notes,

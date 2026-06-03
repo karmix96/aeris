@@ -65,3 +65,37 @@ def test_workflow_init_status_next_record_stage_cli(tmp_path: Path) -> None:
     status = json.loads(status_result.output)
     assert status["stages"]["geometry_dataset"]["status"] == "complete"
     assert status["next_required_stage"]["name"] == "aero_dataset"
+
+
+def test_workflow_validate_summary_doctor_cli(tmp_path: Path) -> None:
+    workflow_dir = tmp_path / "wf_validate_cli"
+    init_result = runner.invoke(
+        app,
+        ["--no-check-writable", "workflow", "init", "--name", "cli_validate", "--output-dir", str(workflow_dir)],
+    )
+    assert init_result.exit_code == 0, init_result.output
+
+    summary_result = runner.invoke(
+        app,
+        ["--no-check-writable", "workflow", "summary", "--workflow", str(workflow_dir)],
+    )
+    assert summary_result.exit_code == 0, summary_result.output
+    assert "Workflow summary" in summary_result.output
+    assert "validation_health: incomplete" in summary_result.output
+
+    validate_result = runner.invoke(
+        app,
+        ["--no-check-writable", "workflow", "validate", "--workflow", str(workflow_dir)],
+    )
+    assert validate_result.exit_code == 0, validate_result.output
+    assert "Workflow validation" in validate_result.output
+    assert (workflow_dir / "workflow_validation_report.json").exists()
+
+    doctor_result = runner.invoke(
+        app,
+        ["--no-check-writable", "workflow", "doctor", "--workflow", str(workflow_dir), "--json"],
+    )
+    assert doctor_result.exit_code == 0, doctor_result.output
+    payload = json.loads(doctor_result.output)
+    assert payload["schema_version"] == "aeris.workflow_validation.v1"
+    assert payload["health"] == "incomplete"

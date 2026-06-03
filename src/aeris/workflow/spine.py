@@ -420,6 +420,366 @@ def get_next_required_stage(workflow_dir: Path) -> dict[str, Any] | None:
     return status.get("next_required_stage")
 
 
+
+
+VALIDATION_SCHEMA_VERSION = "aeris.workflow_validation.v1"
+
+
+@dataclass(frozen=True)
+class WorkflowValidationResult:
+    """Return bundle for workflow validation/doctor checks."""
+
+    paths: WorkflowPaths
+    report: dict[str, Any]
+    report_path: Path | None = None
+
+
+def _as_bool(value: Any) -> bool | None:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        lowered = value.strip().lower()
+        if lowered in {"true", "yes", "1", "passed", "approved", "success"}:
+            return True
+        if lowered in {"false", "no", "0", "failed", "rejected", "error"}:
+            return False
+    return None
+
+
+def _resolve_recorded_path(value: str) -> Path | None:
+    """Resolve a recorded artifact/input/output value if it looks path-like."""
+    raw = str(value).strip()
+    if not raw or "://" in raw:
+        return None
+    try:
+        path = Path(raw).expanduser()
+    except Exception:
+        return None
+    if path.is_absolute():
+        return path
+    # Recorded workflow artifacts are normally project-relative paths.
+    return (Path.cwd() / path).resolve()
+
+
+def _path_payload(value: str) -> dict[str, Any]:
+    path = _resolve_recorded_path(value)
+    if path is None:
+        return {"recorded": str(value), "path_like": False, "exists": None, "resolved": None}
+    return {
+        "recorded": str(value),
+        "path_like": True,
+        "exists": path.exists(),
+        "resolved": str(path),
+    }
+
+
+def _try_load_json(path: Path, *, blockers: list[str], warnings: list[str]) -> dict[str, Any] | None:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        blockers.append(f"Missing JSON artifact: {path}")
+        return None
+    except json.JSONDecodeError as exc:
+        blockers.append(f"Invalid JSON artifact {path}: {exc}")
+        return None
+    except OSError as exc:
+        warnings.append(f"Could not read JSON artifact {path}: {exc}")
+        return None
+    if not isinstance(data, dict):
+        blockers.append(f"JSON artifact must contain an object: {path}")
+        return None
+    return data
+
+
+def _first_existing_artifact(stage_state: dict[str, Any], filename: str) -> Path | None:
+    for raw in stage_state.get("artifacts", []) or []:
+        path = _resolve_recorded_path(str(raw))
+        if path is not None and path.name == filename and path.exists():
+            return path
+    return None
+
+
+def _truth_check(data: dict[str, Any], keys: list[str]) -> bool | None:
+    for key in keys:
+        if key in data:
+            return _as_bool(data.get(key))
+    return None
+
+
+def _validate_trust_artifact(
+    *,
+    stage_name: str,
+    stage_state: dict[str, Any],
+    blockers: list[str],
+    warnings: list[str],
+) -> dict[str, Any] | None:
+    """Run stage-specific evidence checks for promoted/guarded artifacts."""
+    if str(stage_state.get("status")) not in {"complete", "skipped"}:
+        return None
+
+    if stage_name == "promotion":
+        artifact_name = "promotion_manifest.json"
+        path = _first_existing_artifact(stage_state, artifact_name)
+        check = {"stage": stage_name, "artifact": artifact_name, "status": "missing"}
+        if path is None:
+            blockers.append("Dataset promotion stage is complete but promotion_manifest.json was not found in artifacts.")
+            return check
+        data = _try_load_json(path, blockers=blockers, warnings=warnings)
+        check.update({"path": str(path), "status": "checked"})
+        if data is None:
+            check["passed"] = False
+            return check
+        ready = _truth_check(data, ["promotion_ready_at_time_of_promotion", "promotion_ready"])
+        forced = _truth_check(data, ["promotion_forced", "forced"])
+        blockers_in_manifest = data.get("promotion_blockers") or data.get("blockers") or []
+        if ready is not True:
+            blockers.append("Dataset promotion manifest does not show promotion_ready_at_time_of_promotion=True.")
+        if forced is True:
+            warnings.append("Dataset promotion manifest indicates forced promotion; treat as smoke/debug evidence, not scientific trust.")
+        if blockers_in_manifest:
+            blockers.append(f"Dataset promotion manifest contains blockers: {blockers_in_manifest}")
+        check.update({"passed": ready is True and not bool(blockers_in_manifest), "ready": ready, "forced": forced})
+        return check
+
+    if stage_name == "model_promotion":
+        artifact_name = "model_promotion_manifest.json"
+        path = _first_existing_artifact(stage_state, artifact_name)
+        check = {"stage": stage_name, "artifact": artifact_name, "status": "missing"}
+        if path is None:
+            blockers.append("Model promotion stage is complete but model_promotion_manifest.json was not found in artifacts.")
+            return check
+        data = _try_load_json(path, blockers=blockers, warnings=warnings)
+        check.update({"path": str(path), "status": "checked"})
+        if data is None:
+            check["passed"] = False
+            return check
+        status = str(data.get("status", "")).lower()
+        ready = _truth_check(data, ["promotion_ready_at_time_of_promotion", "promotion_ready"])
+        blockers_in_manifest = data.get("blockers") or data.get("promotion_blockers") or []
+        approved = status == "approved" or ready is True
+        if status and status != "approved":
+            blockers.append(f"Model promotion manifest status is not approved: {status}")
+        if ready is False:
+            blockers.append("Model promotion manifest says promotion_ready_at_time_of_promotion=False.")
+        if blockers_in_manifest:
+            blockers.append(f"Model promotion manifest contains blockers: {blockers_in_manifest}")
+        check.update({"passed": approved and not bool(blockers_in_manifest), "status_value": status, "ready": ready})
+        return check
+
+    if stage_name == "inference_guard":
+        artifact_name = "inference_guard_report.json"
+        path = _first_existing_artifact(stage_state, artifact_name)
+        check = {"stage": stage_name, "artifact": artifact_name, "status": "missing"}
+        if path is None:
+            blockers.append("Inference guard stage is complete but inference_guard_report.json was not found in artifacts.")
+            return check
+        data = _try_load_json(path, blockers=blockers, warnings=warnings)
+        check.update({"path": str(path), "status": "checked"})
+        if data is None:
+            check["passed"] = False
+            return check
+        passed = _truth_check(data, ["passed", "ok", "success"])
+        errors = data.get("errors") or data.get("error_count") or []
+        if isinstance(errors, int):
+            has_errors = errors > 0
+        elif isinstance(errors, list):
+            has_errors = len(errors) > 0
+        else:
+            has_errors = bool(errors)
+        if passed is not True:
+            blockers.append("Inference guard report does not show passed=True.")
+        if has_errors:
+            blockers.append(f"Inference guard report contains errors: {errors}")
+        check.update({"passed": passed is True and not has_errors, "guard_passed": passed, "has_errors": has_errors})
+        return check
+
+    return None
+
+
+def validate_workflow(workflow_dir: Path, *, write_report: bool = True) -> WorkflowValidationResult:
+    """Validate workflow state against recorded evidence artifacts.
+
+    This is intentionally a validator/doctor, not a runner. It checks whether the
+    workflow record is internally coherent and whether recorded evidence still
+    exists and says what the stage claims it says.
+    """
+    paths = _paths(workflow_dir)
+    manifest = _load_json(paths.manifest_path)
+    status = _load_json(paths.status_path)
+
+    blockers: list[str] = []
+    warnings: list[str] = []
+    missing_artifacts: list[dict[str, Any]] = []
+    artifact_checks: list[dict[str, Any]] = []
+    trust_checks: list[dict[str, Any]] = []
+    stage_order_issues: list[dict[str, Any]] = []
+    stage_summaries: dict[str, dict[str, Any]] = {}
+
+    stages = status.get("stages", {})
+    if not isinstance(stages, dict):
+        blockers.append("workflow_status.json has invalid 'stages' field.")
+        stages = {}
+
+    manifest_stage_names = _stage_names(manifest)
+    status_stage_names = list(stages)
+    missing_status_stages = [name for name in manifest_stage_names if name not in stages]
+    unknown_status_stages = [name for name in status_stage_names if name not in manifest_stage_names]
+    for name in missing_status_stages:
+        blockers.append(f"Stage exists in manifest but not status: {name}")
+    for name in unknown_status_stages:
+        warnings.append(f"Stage exists in status but not manifest: {name}")
+
+    for name in manifest_stage_names:
+        stage_state = stages.get(name, {})
+        stage_status = str(stage_state.get("status", "pending"))
+        required = bool(stage_state.get("required", True))
+        artifacts = stage_state.get("artifacts", []) or []
+        stage_artifact_checks = [_path_payload(str(item)) for item in artifacts]
+        for check in stage_artifact_checks:
+            artifact_checks.append({"stage": name, **check})
+            if check["path_like"] is True and check["exists"] is False:
+                missing_artifacts.append({"stage": name, **check})
+                if stage_status == "complete":
+                    blockers.append(f"Complete stage '{name}' records missing artifact: {check['recorded']}")
+                else:
+                    warnings.append(f"Stage '{name}' records missing artifact: {check['recorded']}")
+
+        trust_check = _validate_trust_artifact(
+            stage_name=name,
+            stage_state=stage_state,
+            blockers=blockers,
+            warnings=warnings,
+        )
+        if trust_check is not None:
+            trust_checks.append(trust_check)
+
+        stage_summaries[name] = {
+            "status": stage_status,
+            "required": required,
+            "artifact_count": len(artifacts),
+            "missing_artifact_count": sum(1 for item in stage_artifact_checks if item["path_like"] and not item["exists"]),
+            "blocker_count": len(stage_state.get("blockers", []) or []),
+            "warning_count": len(stage_state.get("warnings", []) or []),
+            "updated_at_utc": stage_state.get("updated_at_utc"),
+        }
+
+    first_incomplete_required: str | None = None
+    for name in _required_stage_names(manifest):
+        stage_status = str(stages.get(name, {}).get("status", "pending"))
+        if stage_status not in {"complete", "skipped"}:
+            first_incomplete_required = name
+            break
+    if first_incomplete_required is not None:
+        seen_first = False
+        for name in _required_stage_names(manifest):
+            if name == first_incomplete_required:
+                seen_first = True
+                continue
+            if not seen_first:
+                continue
+            later_status = str(stages.get(name, {}).get("status", "pending"))
+            if later_status in {"complete", "skipped"}:
+                issue = {
+                    "first_incomplete_required_stage": first_incomplete_required,
+                    "later_completed_stage": name,
+                    "later_status": later_status,
+                }
+                stage_order_issues.append(issue)
+                warnings.append(
+                    f"Stage order gap: later required stage '{name}' is {later_status} while '{first_incomplete_required}' is incomplete."
+                )
+
+    explicit_blocked_or_failed = [
+        name
+        for name in manifest_stage_names
+        if str(stages.get(name, {}).get("status", "pending")) in {"blocked", "failed"}
+    ]
+    required_complete = [
+        name
+        for name in _required_stage_names(manifest)
+        if str(stages.get(name, {}).get("status", "pending")) in {"complete", "skipped"}
+    ]
+    required_total = len(_required_stage_names(manifest))
+
+    if explicit_blocked_or_failed:
+        health = "blocked"
+    elif blockers:
+        health = "inconsistent"
+    elif len(required_complete) == required_total:
+        health = "healthy"
+    else:
+        health = "incomplete"
+
+    report = {
+        "schema_version": VALIDATION_SCHEMA_VERSION,
+        "created_at_utc": utc_now_iso(),
+        "workflow_root": str(paths.root),
+        "workflow_id": status.get("workflow_id"),
+        "workflow_name": status.get("name"),
+        "workflow_status": status.get("workflow_status"),
+        "health": health,
+        "next_required_stage": status.get("next_required_stage"),
+        "counts": {
+            "total_stages": len(manifest_stage_names),
+            "required_stages": required_total,
+            "completed_required_stages": len(required_complete),
+            "missing_artifacts": len(missing_artifacts),
+            "blockers": len(blockers),
+            "warnings": len(warnings),
+            "trust_checks": len(trust_checks),
+            "stage_order_issues": len(stage_order_issues),
+        },
+        "missing_artifacts": missing_artifacts,
+        "artifact_checks": artifact_checks,
+        "trust_checks": trust_checks,
+        "stage_order_issues": stage_order_issues,
+        "explicit_blocked_or_failed_stages": explicit_blocked_or_failed,
+        "blockers": blockers,
+        "warnings": warnings,
+        "stage_summaries": stage_summaries,
+    }
+
+    report_path = paths.root / "workflow_validation_report.json" if write_report else None
+    if report_path is not None:
+        _write_json(report_path, report)
+        _append_event(
+            paths,
+            {
+                "event_type": "workflow_validated",
+                "workflow_id": status.get("workflow_id"),
+                "health": health,
+                "blocker_count": len(blockers),
+                "warning_count": len(warnings),
+                "missing_artifact_count": len(missing_artifacts),
+                "report_path": str(report_path),
+            },
+        )
+
+    return WorkflowValidationResult(paths=paths, report=report, report_path=report_path)
+
+
+def summarize_workflow(workflow_dir: Path) -> dict[str, Any]:
+    """Return a compact workflow summary with validation health."""
+    payload = inspect_workflow(workflow_dir)
+    validation = validate_workflow(workflow_dir, write_report=False).report
+    status = payload["status"]
+    return {
+        "workflow_root": payload["workflow_root"],
+        "workflow_id": status.get("workflow_id"),
+        "workflow_name": status.get("name"),
+        "workflow_status": status.get("workflow_status"),
+        "validation_health": validation.get("health"),
+        "completed_stages": status.get("completed_stages"),
+        "total_stages": status.get("total_stages"),
+        "required_stages": status.get("required_stages"),
+        "completed_required_stages": validation.get("counts", {}).get("completed_required_stages"),
+        "next_required_stage": status.get("next_required_stage"),
+        "blocker_count": validation.get("counts", {}).get("blockers"),
+        "warning_count": validation.get("counts", {}).get("warnings"),
+        "missing_artifact_count": validation.get("counts", {}).get("missing_artifacts"),
+    }
+
+
 def record_stage(
     *,
     workflow_dir: Path,

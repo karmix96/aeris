@@ -15,6 +15,8 @@ from aeris.workflow import (
     init_workflow,
     inspect_workflow,
     record_stage,
+    summarize_workflow,
+    validate_workflow,
 )
 
 workflow_app = typer.Typer(
@@ -172,6 +174,144 @@ def workflow_inspect(
     except Exception as exc:
         fail_command("workflow inspect", exc)
 
+
+
+
+@workflow_app.command("summary")
+def workflow_summary(
+    workflow: Path = typer.Option(
+        ...,
+        "--workflow",
+        "-w",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Workflow root directory.",
+    ),
+    json_output: bool = typer.Option(False, "--json", help="Print summary JSON."),
+) -> None:
+    """Show a compact workflow summary plus validation health."""
+    try:
+        summary = summarize_workflow(workflow)
+    except Exception as exc:
+        fail_command("workflow summary", exc)
+
+    if json_output:
+        _echo_json(summary)
+        return
+
+    typer.echo("[AERIS] Workflow summary")
+    typer.echo(f"  workflow_root: {summary.get('workflow_root')}")
+    typer.echo(f"  name: {summary.get('workflow_name')}")
+    typer.echo(f"  workflow_status: {summary.get('workflow_status')}")
+    typer.echo(f"  validation_health: {summary.get('validation_health')}")
+    typer.echo(f"  completed_stages: {summary.get('completed_stages')}/{summary.get('total_stages')}")
+    typer.echo(
+        f"  completed_required_stages: {summary.get('completed_required_stages')}/{summary.get('required_stages')}"
+    )
+    typer.echo(f"  missing_artifacts: {summary.get('missing_artifact_count')}")
+    typer.echo(f"  blockers: {summary.get('blocker_count')}")
+    typer.echo(f"  warnings: {summary.get('warning_count')}")
+    next_stage = summary.get("next_required_stage")
+    if next_stage:
+        typer.echo(f"  next_required_stage: {next_stage['name']}")
+        typer.echo(f"  next_command_hint: {next_stage.get('recommended_command', '')}")
+    else:
+        typer.echo("  next_required_stage: none")
+
+
+@workflow_app.command("validate")
+def workflow_validate(
+    workflow: Path = typer.Option(
+        ...,
+        "--workflow",
+        "-w",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Workflow root directory.",
+    ),
+    write_report: bool = typer.Option(True, "--write-report/--no-write-report", help="Write workflow_validation_report.json."),
+    json_output: bool = typer.Option(False, "--json", help="Print validation report JSON."),
+) -> None:
+    """Validate workflow evidence, artifact paths, trust manifests, and stage order."""
+    try:
+        result = validate_workflow(workflow, write_report=write_report)
+    except Exception as exc:
+        fail_command("workflow validate", exc)
+
+    report = result.report
+    if json_output:
+        _echo_json(report)
+        return
+
+    counts = report.get("counts", {})
+    typer.echo("[AERIS] Workflow validation")
+    typer.echo(f"  workflow_root: {report.get('workflow_root')}")
+    typer.echo(f"  name: {report.get('workflow_name')}")
+    typer.echo(f"  health: {report.get('health')}")
+    typer.echo(
+        f"  completed_required_stages: {counts.get('completed_required_stages')}/{counts.get('required_stages')}"
+    )
+    typer.echo(f"  missing_artifacts: {counts.get('missing_artifacts')}")
+    typer.echo(f"  blockers: {counts.get('blockers')}")
+    typer.echo(f"  warnings: {counts.get('warnings')}")
+    next_stage = report.get("next_required_stage")
+    if next_stage:
+        typer.echo(f"  next_required_stage: {next_stage['name']}")
+    else:
+        typer.echo("  next_required_stage: none")
+    if result.report_path is not None:
+        typer.echo(f"  report: {result.report_path}")
+
+    for blocker in report.get("blockers", [])[:5]:
+        typer.echo(f"  BLOCKER: {blocker}")
+    for warning in report.get("warnings", [])[:5]:
+        typer.echo(f"  WARNING: {warning}")
+
+
+@workflow_app.command("doctor")
+def workflow_doctor(
+    workflow: Path = typer.Option(
+        ...,
+        "--workflow",
+        "-w",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Workflow root directory.",
+    ),
+    json_output: bool = typer.Option(False, "--json", help="Print validation report JSON."),
+) -> None:
+    """Alias for workflow validate, with operator-friendly naming."""
+    try:
+        result = validate_workflow(workflow, write_report=True)
+    except Exception as exc:
+        fail_command("workflow doctor", exc)
+
+    if json_output:
+        _echo_json(result.report)
+        return
+
+    counts = result.report.get("counts", {})
+    typer.echo("[AERIS] Workflow doctor")
+    typer.echo(f"  workflow_root: {result.report.get('workflow_root')}")
+    typer.echo(f"  health: {result.report.get('health')}")
+    typer.echo(f"  blockers: {counts.get('blockers')}")
+    typer.echo(f"  warnings: {counts.get('warnings')}")
+    typer.echo(f"  missing_artifacts: {counts.get('missing_artifacts')}")
+    if result.report_path is not None:
+        typer.echo(f"  report: {result.report_path}")
+    for blocker in result.report.get("blockers", [])[:5]:
+        typer.echo(f"  BLOCKER: {blocker}")
+    for warning in result.report.get("warnings", [])[:5]:
+        typer.echo(f"  WARNING: {warning}")
 
 @workflow_app.command("record-stage")
 def workflow_record_stage(

@@ -23,6 +23,8 @@ it runs on CPU and is fast for n_train < 10,000.
 from __future__ import annotations
 
 from dataclasses import dataclass
+
+import numpy as np
 from typing import Any, Callable, Literal
 
 from sklearn.ensemble import (
@@ -107,6 +109,34 @@ def _build_hist_gradient_boosting(random_seed: int, model_params: dict[str, Any]
 
 # ── NEW: LightGBM ─────────────────────────────────────────────────────────────
 
+
+
+def _aeris_lgbm_regressor_without_feature_names(params: dict[str, Any]) -> object:
+    """Return an LGBMRegressor wrapper that never stores pandas feature names.
+
+    LightGBM's sklearn wrapper emits noisy warnings when it is fitted with a
+    pandas DataFrame and later predicted with a NumPy array::
+
+        X does not have valid feature names, but LGBMRegressor was fitted with feature names
+
+    AERIS stores feature names separately in manifests and schemas. For model
+    execution, we deliberately use numeric arrays so training, comparison, and
+    prediction are warning-clean and independent of pandas metadata.
+    """
+    try:
+        from lightgbm import LGBMRegressor
+    except ImportError as exc:  # pragma: no cover - depends on optional dependency
+        raise ImportError("LightGBM is not installed. Run: pip install lightgbm") from exc
+
+    class AERISLGBMRegressor(LGBMRegressor):
+        def fit(self, X, y, *args, **kwargs):  # type: ignore[override]
+            return super().fit(np.asarray(X, dtype=float), y, *args, **kwargs)
+
+        def predict(self, X, *args, **kwargs):  # type: ignore[override]
+            return super().predict(np.asarray(X, dtype=float), *args, **kwargs)
+
+    return AERISLGBMRegressor(**params)
+
 def _build_lightgbm(random_seed: int, model_params: dict[str, Any] | None = None) -> object:
     """
     LightGBM gradient boosting via MultiOutputRegressor.
@@ -145,7 +175,7 @@ def _build_lightgbm(random_seed: int, model_params: dict[str, Any] | None = None
         model_params,
     )
     # LightGBM does not natively support multi-output regression; wrap it.
-    return MultiOutputRegressor(LGBMRegressor(**params))
+    return MultiOutputRegressor(_aeris_lgbm_regressor_without_feature_names(params))
 
 
 def _build_lightgbm_dart(random_seed: int, model_params: dict[str, Any] | None = None) -> object:
@@ -175,7 +205,7 @@ def _build_lightgbm_dart(random_seed: int, model_params: dict[str, Any] | None =
         },
         model_params,
     )
-    return MultiOutputRegressor(LGBMRegressor(**params))
+    return MultiOutputRegressor(_aeris_lgbm_regressor_without_feature_names(params))
 
 
 # ── NEW: XGBoost ──────────────────────────────────────────────────────────────
@@ -446,3 +476,231 @@ def build_model(
 def list_model_types() -> list[str]:
     """Return sorted supported model identifiers."""
     return sorted(MODEL_REGISTRY)
+
+# --- AERIS Slice 8A LightGBM warning hygiene override START ---
+# Keep this override at module bottom so it is independent of the current
+# model_registry.py builder layout. The purpose is narrow: prevent LightGBM from
+# seeing pandas feature names during fit and NumPy arrays during predict, which
+# otherwise creates noisy sklearn warnings in operator output.
+try:
+    import numpy as _aeris_lgb_np
+    from sklearn.base import BaseEstimator as _AerisBaseEstimator
+    from sklearn.base import RegressorMixin as _AerisRegressorMixin
+    from sklearn.base import clone as _aeris_clone
+    from sklearn.multioutput import MultiOutputRegressor as _AerisMultiOutputRegressor
+except Exception:  # pragma: no cover - imports exist in supported ML envs
+    _aeris_lgb_np = None
+    _AerisBaseEstimator = object
+    _AerisRegressorMixin = object
+    _aeris_clone = None
+    _AerisMultiOutputRegressor = None
+
+
+class _AerisNumpyInputRegressor(_AerisBaseEstimator, _AerisRegressorMixin):
+    """Sklearn-compatible wrapper that forces numeric ndarray inputs.
+
+    LightGBM stores pandas feature names when fitted with a DataFrame. Later,
+    AERIS predictions/evaluations often use NumPy arrays. That combination emits
+    repeated warnings: "X does not have valid feature names". This wrapper makes
+    fit and predict consistently use NumPy arrays, while keeping the estimator
+    clone-compatible for MultiOutputRegressor.
+    """
+
+    def __init__(self, estimator):
+        self.estimator = estimator
+
+    def fit(self, X, y, **fit_params):
+        if _aeris_clone is None or _aeris_lgb_np is None:
+            raise RuntimeError("AERIS LightGBM wrapper dependencies are unavailable.")
+        self.estimator_ = _aeris_clone(self.estimator)
+        self.estimator_.fit(_aeris_lgb_np.asarray(X, dtype=float), y, **fit_params)
+        return self
+
+    def predict(self, X):
+        if _aeris_lgb_np is None:
+            raise RuntimeError("AERIS LightGBM wrapper dependencies are unavailable.")
+        if not hasattr(self, "estimator_"):
+            raise RuntimeError("Estimator is not fitted yet.")
+        return self.estimator_.predict(_aeris_lgb_np.asarray(X, dtype=float))
+
+    @property
+    def feature_importances_(self):
+        if not hasattr(self, "estimator_"):
+            raise AttributeError("Estimator is not fitted yet.")
+        return self.estimator_.feature_importances_
+
+
+def _aeris_lgb_merge(defaults, overrides):
+    params = dict(defaults)
+    params.update(overrides or {})
+    return params
+
+
+def _aeris_build_lightgbm_numpy(random_seed, model_params=None):
+    try:
+        from lightgbm import LGBMRegressor
+    except ImportError as exc:  # pragma: no cover - exercised only without dependency
+        raise ImportError("LightGBM is not installed. Run: pip install lightgbm") from exc
+    if _AerisMultiOutputRegressor is None:
+        raise RuntimeError("sklearn MultiOutputRegressor is unavailable.")
+    params = _aeris_lgb_merge(
+        {
+            "n_estimators": 500,
+            "learning_rate": 0.03,
+            "num_leaves": 63,
+            "min_child_samples": 10,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "reg_alpha": 0.0,
+            "reg_lambda": 1.0,
+            "random_state": random_seed,
+            "n_jobs": -1,
+            "verbose": -1,
+        },
+        model_params,
+    )
+    return _AerisMultiOutputRegressor(_AerisNumpyInputRegressor(LGBMRegressor(**params)))
+
+
+def _aeris_build_lightgbm_dart_numpy(random_seed, model_params=None):
+    try:
+        from lightgbm import LGBMRegressor
+    except ImportError as exc:  # pragma: no cover - exercised only without dependency
+        raise ImportError("LightGBM is not installed. Run: pip install lightgbm") from exc
+    if _AerisMultiOutputRegressor is None:
+        raise RuntimeError("sklearn MultiOutputRegressor is unavailable.")
+    params = _aeris_lgb_merge(
+        {
+            "boosting_type": "dart",
+            "n_estimators": 400,
+            "learning_rate": 0.05,
+            "num_leaves": 31,
+            "min_child_samples": 5,
+            "drop_rate": 0.1,
+            "random_state": random_seed,
+            "n_jobs": -1,
+            "verbose": -1,
+        },
+        model_params,
+    )
+    return _AerisMultiOutputRegressor(_AerisNumpyInputRegressor(LGBMRegressor(**params)))
+
+
+# Override registry entries without depending on earlier builder function names.
+if "MODEL_REGISTRY" in globals() and "ModelSpec" in globals():
+    if "lightgbm" in MODEL_REGISTRY:
+        _old = MODEL_REGISTRY["lightgbm"]
+        MODEL_REGISTRY["lightgbm"] = ModelSpec(
+            model_type=getattr(_old, "model_type", "lightgbm"),
+            display_name=getattr(_old, "display_name", "LightGBM"),
+            family_name=getattr(_old, "family_name", "tree_boosting_fast"),
+            explainability_artifact_type=getattr(_old, "explainability_artifact_type", "feature_importances"),
+            builder=_aeris_build_lightgbm_numpy,
+            wrapped_per_target=getattr(_old, "wrapped_per_target", True),
+        )
+    if "lightgbm_dart" in MODEL_REGISTRY:
+        _old = MODEL_REGISTRY["lightgbm_dart"]
+        MODEL_REGISTRY["lightgbm_dart"] = ModelSpec(
+            model_type=getattr(_old, "model_type", "lightgbm_dart"),
+            display_name=getattr(_old, "display_name", "LightGBM DART"),
+            family_name=getattr(_old, "family_name", "tree_boosting_fast"),
+            explainability_artifact_type=getattr(_old, "explainability_artifact_type", "feature_importances"),
+            builder=_aeris_build_lightgbm_dart_numpy,
+            wrapped_per_target=getattr(_old, "wrapped_per_target", True),
+        )
+# --- AERIS Slice 8A LightGBM warning hygiene override END ---
+
+# AERIS LIGHTGBM WARNING HYGIENE OVERRIDE START
+# Added by Slice 8A.4.
+#
+# Problem:
+#   LightGBM's sklearn wrapper emits:
+#     "X does not have valid feature names, but LGBMRegressor was fitted with feature names"
+#   when fit() sees a pandas DataFrame and predict() later sees a NumPy array.
+#
+# Policy:
+#   AERIS tabular training already treats feature order as authoritative through
+#   train_config.json / manifest feature_columns. For LightGBM model objects we
+#   force numeric arrays at the model boundary and suppress this specific warning.
+#
+# Why this is implemented by overriding build_model instead of editing a builder:
+#   The registry has evolved across slices. This bottom-of-file override is
+#   robust to builder layout drift and keeps the operator output clean.
+
+import warnings as _aeris_warnings
+from typing import Any as _AerisAny
+
+import numpy as _aeris_np
+
+
+def _aeris_lgbm_to_numpy(X: _AerisAny) -> _aeris_np.ndarray:
+    """Convert pandas/DataFrame-like or array-like input to a numeric NumPy array."""
+    if hasattr(X, "to_numpy"):
+        return _aeris_np.asarray(X.to_numpy(dtype=float), dtype=float)
+    return _aeris_np.asarray(X, dtype=float)
+
+
+class _AerisLightGBMWarningCleanModel:
+    """Small proxy that keeps LightGBM fit/predict warning-clean.
+
+    It delegates all unknown attributes to the wrapped model so existing
+    feature-importance, pickle, and inspection code keeps working.
+    """
+
+    def __init__(self, base_model: object):
+        self.base_model = base_model
+
+    def fit(self, X, y, *args, **kwargs):
+        X_np = _aeris_lgbm_to_numpy(X)
+        with _aeris_warnings.catch_warnings():
+            _aeris_warnings.filterwarnings(
+                "ignore",
+                message="X does not have valid feature names.*",
+                category=UserWarning,
+            )
+            self.base_model.fit(X_np, y, *args, **kwargs)
+        return self
+
+    def predict(self, X, *args, **kwargs):
+        X_np = _aeris_lgbm_to_numpy(X)
+        with _aeris_warnings.catch_warnings():
+            _aeris_warnings.filterwarnings(
+                "ignore",
+                message="X does not have valid feature names.*",
+                category=UserWarning,
+            )
+            return self.base_model.predict(X_np, *args, **kwargs)
+
+    def get_params(self, deep: bool = True):
+        if hasattr(self.base_model, "get_params"):
+            return self.base_model.get_params(deep=deep)
+        return {"base_model": self.base_model}
+
+    def set_params(self, **params):
+        if hasattr(self.base_model, "set_params"):
+            self.base_model.set_params(**params)
+        else:
+            for key, value in params.items():
+                setattr(self.base_model, key, value)
+        return self
+
+    def __getattr__(self, name: str):
+        return getattr(self.base_model, name)
+
+
+_aeris_original_build_model = build_model
+
+
+def build_model(
+    model_type: str,
+    random_seed: int,
+    model_params: dict[str, _AerisAny] | None = None,
+) -> object:
+    """Construct a model instance, with LightGBM warning hygiene applied."""
+    model = _aeris_original_build_model(model_type, random_seed, model_params)
+    if model_type in {"lightgbm", "lightgbm_dart"}:
+        return _AerisLightGBMWarningCleanModel(model)
+    return model
+
+# AERIS LIGHTGBM WARNING HYGIENE OVERRIDE END
+

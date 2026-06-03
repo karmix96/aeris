@@ -22,6 +22,7 @@ from typing import Any
 import typer
 
 from aeris.aero.io import load_aero_result_from_run_dir
+from aeris.aero.cm_sanity import run_cm_sign_sanity
 from aeris.commands._helpers import parse_float_list
 from aeris.pipeline.aero_workflows import (
     execute_aero_run,
@@ -827,3 +828,90 @@ def inspect_aero_sweep_case(
     typer.echo("")
     typer.echo(f"[AERIS] Inspecting aero sweep case from: {case_dir}")
     _print_aero_result(result)
+
+
+@aero_app.command("cm-sanity")
+def cm_sanity_command(
+    dataset: Path | None = typer.Option(
+        None,
+        "--dataset",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Aero dataset root. Uses curated_aero_dataset.csv if present, else aero_dataset.csv.",
+    ),
+    csv_path: Path | None = typer.Option(
+        None,
+        "--csv",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        resolve_path=True,
+        help="Direct aero CSV path to check.",
+    ),
+    output_dir: Path | None = typer.Option(
+        None,
+        "--output-dir",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Directory for cm_sign_sanity_report.json. Defaults to no file output.",
+    ),
+    group_columns: str = typer.Option(
+        "geometry_id,control_input_deg,velocity_mps,altitude_m,beta_deg,p_rad_s,q_rad_s,r_rad_s",
+        "--group-columns",
+        help="Comma-separated fixed-condition columns used before fitting Cm(alpha). Missing columns are ignored.",
+    ),
+    alpha_column: str = typer.Option("alpha_deg", "--alpha-column"),
+    cm_column: str = typer.Option("cm", "--cm-column"),
+    min_abs_cma_per_rad: float = typer.Option(
+        1.0e-8,
+        "--min-abs-cma-per-rad",
+        help="Treat smaller |Cma| slopes as near-zero failures.",
+    ),
+    fail_on_violation: bool = typer.Option(
+        False,
+        "--fail-on-violation/--no-fail-on-violation",
+        help="Exit non-zero if any evaluable group has unexpected Cma sign.",
+    ),
+    as_json: bool = typer.Option(False, "--json", help="Print full JSON report."),
+) -> None:
+    """Check whether Cm decreases with alpha within fixed-condition groups."""
+
+    if (dataset is None) == (csv_path is None):
+        raise typer.BadParameter("Provide exactly one of --dataset or --csv.")
+
+    try:
+        report = run_cm_sign_sanity(
+            dataset=dataset,
+            csv_path=csv_path,
+            output_dir=output_dir,
+            group_columns=group_columns,
+            alpha_column=alpha_column,
+            cm_column=cm_column,
+            expected_negative=True,
+            min_abs_cma_per_rad=min_abs_cma_per_rad,
+        )
+    except Exception as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    payload = report.to_dict()
+    if as_json:
+        typer.echo(json.dumps(payload, indent=2))
+    else:
+        typer.echo("[AERIS] Cm sign sanity completed")
+        typer.echo(f"  source_csv: {report.source_csv}")
+        typer.echo(f"  expected_cma_sign: {report.expected_cma_sign}")
+        typer.echo(f"  rows: {report.n_rows}")
+        typer.echo(f"  groups_total: {report.n_groups_total}")
+        typer.echo(f"  groups_evaluable: {report.n_groups_evaluable}")
+        typer.echo(f"  groups_passed: {report.n_groups_passed}")
+        typer.echo(f"  groups_failed: {report.n_groups_failed}")
+        typer.echo(f"  groups_skipped: {report.n_groups_skipped}")
+        typer.echo(f"  passed: {report.passed}")
+        if output_dir is not None:
+            typer.echo(f"  report_json: {Path(output_dir) / 'cm_sign_sanity_report.json'}")
+
+    if fail_on_violation and not report.passed:
+        raise typer.Exit(code=1)
+

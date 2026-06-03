@@ -1646,7 +1646,7 @@ def ml_check_inference_inputs(
                 workflow=workflow,
                 stage="inference_guard",
                 inputs=[model_run_dir, input_csv],
-                artifacts=[result.report_path, result.output_dir],
+                artifacts=[result.report_path, result.report_path.parent],
                 notes="ML inference-input guard completed and passed.",
                 metadata={
                     "command": "aeris ml check-inference-inputs",

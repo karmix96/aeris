@@ -368,12 +368,17 @@ def ml_eda(
     features: str | None = typer.Option(
         None,
         "--features",
-        help="Comma-separated explicit feature columns. Use either --features or --feature-preset.",
+        help="Comma-separated explicit feature columns. Use exactly one of --features, --feature-preset, or --feature-set.",
     ),
     feature_preset: str | None = typer.Option(
         None,
         "--feature-preset",
-        help="Named feature preset such as bwb_control.",
+        help="Named feature preset such as bwb_control. Use exactly one of --features, --feature-preset, or --feature-set.",
+    ),
+    feature_set: str | None = typer.Option(
+        None,
+        "--feature-set",
+        help="Named feature set to validate/materialize before EDA, e.g. bwb_control_physics_v1.",
     ),
     targets: str = typer.Option(
         ...,
@@ -415,230 +420,49 @@ def ml_eda(
         help="Sigma threshold used for simple outlier scan.",
     ),
 ) -> None:
-    # Run EDA on a promoted aero dataset and write operator reports.
-    import json
-    from pathlib import Path as _Path
-
-    import pandas as pd
-
-    from aeris.dataset.promoted_dataset import require_promoted_aero_dataset
-    from aeris.ml.eda import run_eda
-    from aeris.ml.feature_presets import resolve_feature_columns
-
-    def _parse_csv_list(value: str | None) -> list[str] | None:
-        if value is None:
-            return None
-        items = [item.strip() for item in str(value).split(",") if item.strip()]
-        return items or None
-
-    def _write_markdown_summary(report: dict, path: _Path) -> None:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        lines: list[str] = []
-        lines.append("# AERIS ML EDA Summary")
-        lines.append("")
-        lines.append("## Shape")
-        shape = report.get("shape", {})
-        lines.append(f"- rows: {shape.get('rows', shape.get('n_rows'))}")
-        lines.append(f"- columns: {shape.get('columns', shape.get('column_names'))}")
-        lines.append("")
-        lines.append("## Constant columns")
-        constants = report.get("constant_columns", {})
-        if isinstance(constants, dict):
-            constant_cols = constants.get("constant_columns", [])
-        elif isinstance(constants, list):
-            constant_cols = constants
-        else:
-            constant_cols = []
-        if constant_cols:
-            for col in constant_cols:
-                lines.append(f"- `{col}`")
-        else:
-            lines.append("- none")
-        lines.append("")
-        lines.append("## Duplicates")
-        duplicates = report.get("duplicates", {})
-        if isinstance(duplicates, dict):
-            lines.append(f"- duplicate_rows: {duplicates.get('duplicate_rows', duplicates.get('n_duplicate_rows', 0))}")
-        else:
-            lines.append(f"- duplicate_rows: {duplicates}")
-        lines.append("")
-        lines.append("## Coverage")
-        for key in ("per_geometry_coverage", "alpha_control_coverage"):
-            value = report.get(key)
-            if value is not None:
-                lines.append(f"### {key}")
-                lines.append("```json")
-                lines.append(json.dumps(value, indent=2))
-                lines.append("```")
-                lines.append("")
-        lines.append("## Notes")
-        lines.append("- This report is an EDA/operator artifact, not a model-quality certificate.")
-        lines.append("- Constant features are warnings, not automatic blockers.")
-        path.write_text(chr(10).join(lines), encoding="utf-8")
-
-    def _write_basic_plots(df: pd.DataFrame, feature_cols: list[str], target_cols: list[str], out_dir: _Path) -> None:
-        out_dir.mkdir(parents=True, exist_ok=True)
-        try:
-            import matplotlib
-            matplotlib.use("Agg")
-            import matplotlib.pyplot as plt
-        except Exception as exc:
-            (out_dir / "plot_error.txt").write_text(str(exc), encoding="utf-8")
-            return
-
-        numeric_cols = [
-            c for c in feature_cols + target_cols
-            if c in df.columns and pd.api.types.is_numeric_dtype(df[c])
-        ]
-
-        if len(numeric_cols) >= 2:
-            corr = df[numeric_cols].corr(numeric_only=True)
-            fig, ax = plt.subplots(figsize=(max(6, 0.55 * len(numeric_cols)), max(5, 0.45 * len(numeric_cols))))
-            im = ax.imshow(corr.fillna(0.0).to_numpy(), aspect="auto")
-            ax.set_xticks(range(len(corr.columns)))
-            ax.set_yticks(range(len(corr.index)))
-            ax.set_xticklabels(corr.columns, rotation=60, ha="right", fontsize=8)
-            ax.set_yticklabels(corr.index, fontsize=8)
-            fig.colorbar(im, ax=ax, shrink=0.8)
-            ax.set_title("Feature/target correlation")
-            fig.tight_layout()
-            fig.savefig(out_dir / "correlation_heatmap.png", dpi=160)
-            plt.close(fig)
-
-        for cols, name in ((feature_cols, "feature_distributions"), (target_cols, "target_distributions")):
-            cols = [c for c in cols if c in df.columns and pd.api.types.is_numeric_dtype(df[c])]
-            if not cols:
-                continue
-            n = len(cols)
-            fig, axes = plt.subplots(n, 1, figsize=(7, max(3, 2.2 * n)))
-            if n == 1:
-                axes = [axes]
-            for ax, col in zip(axes, cols):
-                ax.hist(df[col].dropna().to_numpy(), bins=min(20, max(5, len(df[col].dropna().unique()))))
-                ax.set_title(col)
-                ax.grid(True, alpha=0.25)
-            fig.tight_layout()
-            fig.savefig(out_dir / f"{name}.png", dpi=160)
-            plt.close(fig)
-
-        if {"alpha_deg", "control_input_deg"}.issubset(df.columns):
-            table = pd.crosstab(df["alpha_deg"], df["control_input_deg"])
-            fig, ax = plt.subplots(figsize=(7, 5))
-            im = ax.imshow(table.to_numpy(), aspect="auto")
-            ax.set_xticks(range(len(table.columns)))
-            ax.set_yticks(range(len(table.index)))
-            ax.set_xticklabels([str(x) for x in table.columns])
-            ax.set_yticklabels([str(x) for x in table.index])
-            ax.set_xlabel("control_input_deg")
-            ax.set_ylabel("alpha_deg")
-            ax.set_title("alpha/control coverage count")
-            fig.colorbar(im, ax=ax, shrink=0.8)
-            fig.tight_layout()
-            fig.savefig(out_dir / "alpha_control_coverage.png", dpi=160)
-            plt.close(fig)
-
-        if "alpha_deg" in df.columns:
-            available_targets = [c for c in target_cols if c in df.columns and pd.api.types.is_numeric_dtype(df[c])]
-            if available_targets:
-                fig, axes = plt.subplots(len(available_targets), 1, figsize=(7, max(3, 2.4 * len(available_targets))))
-                if len(available_targets) == 1:
-                    axes = [axes]
-                for ax, col in zip(axes, available_targets):
-                    ax.scatter(df["alpha_deg"], df[col], s=18, alpha=0.8)
-                    ax.set_xlabel("alpha_deg")
-                    ax.set_ylabel(col)
-                    ax.grid(True, alpha=0.25)
-                fig.tight_layout()
-                fig.savefig(out_dir / "targets_vs_alpha.png", dpi=160)
-                plt.close(fig)
-
-    explicit_features = _parse_csv_list(features)
-    target_cols = _parse_csv_list(targets)
-    if not target_cols:
-        typer.secho("[AERIS] ML EDA failed: --targets must not be empty.", err=True, fg=typer.colors.RED)
-        raise typer.Exit(code=2)
+    """Run leakage-safe EDA on a promoted dataset or feature-set view."""
+    from aeris.ml.eda import run_promoted_dataset_eda
 
     try:
-        feature_cols = resolve_feature_columns(
-            explicit_features=explicit_features,
-            preset_name=feature_preset,
+        target_cols = parse_csv_list(targets, "--targets")
+        resolved_feature_cols = _resolve_feature_columns_cli(
+            features=features,
+            feature_preset=feature_preset,
+            feature_set=feature_set,
         )
-        context = require_promoted_aero_dataset(
+        result = run_promoted_dataset_eda(
             dataset_root=dataset,
-            allow_forced=allow_forced,
-        )
-        curated_csv = _Path(context["curated_aero_dataset_csv"])
-        df = pd.read_csv(curated_csv)
-
-        missing_features = [c for c in feature_cols if c not in df.columns]
-        missing_targets = [c for c in target_cols if c not in df.columns]
-        missing_group = [group_column] if group_column and group_column not in df.columns else []
-        missing = missing_features + missing_targets + missing_group
-        if missing:
-            raise ValueError(
-                f"Missing required columns: {missing}. Available columns: {list(df.columns)}"
-            )
-
-        run_dir = output_dir or (dataset / "eda")
-        run_dir = run_dir.expanduser().resolve()
-        run_dir.mkdir(parents=True, exist_ok=True)
-
-        report_path = run_dir / "eda_report.json"
-        report = run_eda(
-            df,
-            feature_columns=feature_cols,
+            feature_columns=None if feature_set else resolved_feature_cols,
+            feature_set_name=feature_set,
             target_columns=target_cols,
-            output_path=report_path,
+            group_column=group_column,
+            allow_forced=allow_forced,
             outlier_sigma=outlier_sigma,
+            output_dir=output_dir,
+            write_plots=bool(plots and not no_plots),
         )
-
-        report["metadata"] = {
-            "dataset_root": str(dataset.expanduser().resolve()),
-            "curated_csv": str(curated_csv),
-            "feature_columns": feature_cols,
-            "target_columns": target_cols,
-            "feature_preset": feature_preset,
-            "group_column": group_column,
-            "allow_forced": bool(allow_forced),
-            "plots_requested": bool(plots and not no_plots),
-        }
-
-        report["operator_context"] = {
-            "dataset_root": str(dataset.expanduser().resolve()),
-            "curated_csv": str(curated_csv),
-            "feature_columns": feature_cols,
-            "target_columns": target_cols,
-            "feature_preset": feature_preset,
-            "group_column": group_column,
-            "allow_forced": bool(allow_forced),
-            "plots_requested": bool(plots and not no_plots),
-        }
-        report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
-
-        summary_path = run_dir / "eda_summary.md"
-        _write_markdown_summary(report, summary_path)
-
-        plots_dir = None
-        if plots and not no_plots:
-            plots_dir = run_dir / "plots"
-            _write_basic_plots(df, feature_cols, target_cols, plots_dir)
-
+    except typer.BadParameter:
+        raise
     except Exception as exc:
-        typer.secho(f"[AERIS] ML EDA failed: {exc}", err=True, fg=typer.colors.RED)
-        raise typer.Exit(code=1)
+        fail_command("ML EDA", exc)
+
+    report = result["report"]
+    metadata = report.get("metadata", {}) or {}
+    plots_dir = result.get("plots_dir")
 
     typer.echo("[AERIS] ML EDA completed")
-    typer.echo(f"  dataset: {dataset.expanduser().resolve()}")
-    typer.echo(f"  curated_csv: {curated_csv}")
-    typer.echo(f"  rows: {len(df)}")
-    typer.echo(f"  features: {', '.join(feature_cols)}")
-    typer.echo(f"  targets: {', '.join(target_cols)}")
-    typer.echo(f"  output_dir: {run_dir}")
-    typer.echo(f"  eda_report_json: {report_path}")
-    typer.echo(f"  eda_summary_md: {summary_path}")
+    typer.echo(f"  dataset: {Path(dataset).expanduser().resolve()}")
+    typer.echo(f"  curated_csv: {result['curated_csv']}")
+    typer.echo(f"  rows: {report.get('shape', {}).get('n_rows')}")
+    typer.echo(f"  features: {', '.join(metadata.get('feature_columns', []))}")
+    typer.echo(f"  targets: {', '.join(metadata.get('target_columns', []))}")
+    typer.echo(f"  feature_set: {metadata.get('feature_set_name')}")
+    typer.echo(f"  feature_set_applied: {metadata.get('feature_set_applied')}")
+    typer.echo(f"  output_dir: {result['output_dir']}")
+    typer.echo(f"  eda_report_json: {result['report_path']}")
+    typer.echo(f"  eda_summary_md: {result['summary_path']}")
     if plots_dir is not None:
         typer.echo(f"  plots_dir: {plots_dir}")
-
 
 
 

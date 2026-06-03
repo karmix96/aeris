@@ -285,6 +285,7 @@ def _build_catboost(random_seed: int, model_params: dict[str, Any] | None = None
             "random_seed": random_seed,
             "thread_count": -1,
             "verbose": False,
+            "allow_writing_files": False,  # avoid ./catboost_info side-effect in project root
             "loss_function": "MultiRMSE",  # native multi-output loss
         },
         model_params,

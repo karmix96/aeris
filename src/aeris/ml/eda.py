@@ -626,7 +626,8 @@ def write_eda_plots(
 def run_promoted_dataset_eda(
     *,
     dataset_root: str | Path,
-    feature_columns: list[str],
+    feature_columns: list[str] | None = None,
+    feature_set_name: str | None = None,
     target_columns: list[str],
     group_column: str = "geometry_id",
     allow_forced: bool = False,
@@ -636,11 +637,19 @@ def run_promoted_dataset_eda(
 ) -> dict[str, Any]:
     """Run EDA on a promoted AERIS aero dataset and write operator artifacts.
 
-    This is the CLI/GUI-friendly wrapper around run_eda(). It resolves the
-    promoted dataset, loads the curated CSV path from promotion_manifest.json,
-    writes JSON/Markdown reports, and optionally writes basic plots.
+    Supports direct feature columns or a named feature set. Feature-set mode
+    validates raw source columns, applies declared transforms in memory, and
+    runs EDA on the materialized feature frame. It does not train, split, or
+    write a reusable engineered training dataset.
     """
     from aeris.dataset.promoted_dataset import load_promoted_aero_dataset
+    from aeris.ml.feature_engineering import apply_feature_engineering
+    from aeris.ml.feature_sets import get_feature_set, validate_feature_set_dataframe
+
+    if feature_columns and feature_set_name:
+        raise ValueError("Use either feature_columns or feature_set_name for EDA, not both.")
+    if not feature_columns and not feature_set_name:
+        raise ValueError("EDA requires either explicit feature_columns or a feature_set_name.")
 
     dataset_root_path = Path(dataset_root).expanduser().resolve()
     context = load_promoted_aero_dataset(
@@ -650,28 +659,81 @@ def run_promoted_dataset_eda(
     df = context["dataframe"]
     curated_csv = Path(context["curated_aero_dataset_csv"]).expanduser().resolve()
 
+    eda_df = df
+    if feature_set_name:
+        feature_set = get_feature_set(feature_set_name)
+        validation = validate_feature_set_dataframe(
+            df,
+            feature_set=feature_set,
+            target_columns=target_columns,
+            group_column=group_column,
+            require_group_column=bool(group_column),
+        )
+        if not validation.passed:
+            errors = [issue.to_dict() for issue in validation.errors]
+            raise ValueError(
+                f"Feature-set EDA validation failed for '{feature_set.name}': {errors}"
+            )
+        eda_df, transform_manifest = apply_feature_engineering(
+            df,
+            transforms=list(feature_set.transforms),
+        )
+        final_feature_columns = list(feature_set.columns)
+        feature_set_provenance: dict[str, Any] = {
+            "feature_set_name": feature_set.name,
+            "feature_set_applied": True,
+            "feature_set": feature_set.to_dict(),
+            "raw_source_columns": list(feature_set.raw_columns),
+            "engineered_columns": list(feature_set.engineered_columns),
+            "final_feature_columns": final_feature_columns,
+            "transforms_requested": list(feature_set.transforms),
+            "transform_manifest": transform_manifest,
+            "validation": validation.to_dict(),
+        }
+    else:
+        final_feature_columns = list(feature_columns or [])
+        feature_set_provenance = {
+            "feature_set_name": None,
+            "feature_set_applied": False,
+            "feature_set": None,
+            "raw_source_columns": final_feature_columns,
+            "engineered_columns": [],
+            "final_feature_columns": final_feature_columns,
+            "transforms_requested": [],
+            "transform_manifest": None,
+            "validation": None,
+        }
+
     out_dir = Path(output_dir).expanduser().resolve() if output_dir is not None else dataset_root_path / "eda"
     plots_dir = out_dir / "plots"
     report_path = out_dir / "eda_report.json"
     summary_path = out_dir / "eda_summary.md"
 
     report = run_eda(
-        df,
-        feature_columns=feature_columns,
+        eda_df,
+        feature_columns=final_feature_columns,
         target_columns=target_columns,
         group_column=group_column,
         outlier_sigma=outlier_sigma,
         output_path=None,
     )
+    report["feature_set"] = feature_set_provenance
     report["metadata"] = {
         "dataset_root": str(dataset_root_path),
         "curated_csv_path": str(curated_csv),
+        "row_count": int(report.get("shape", {}).get("n_rows", len(eda_df))),
+        "column_count": int(report.get("shape", {}).get("n_columns", len(eda_df.columns))),
         "promotion_manifest_path": context.get("promotion_manifest_path"),
         "promotion_forced": bool((context.get("promotion_manifest", {}) or {}).get("promotion_forced", False)),
-        "feature_columns": list(feature_columns),
+        "feature_columns": list(final_feature_columns),
         "target_columns": list(target_columns),
         "group_column": group_column,
         "outlier_sigma": outlier_sigma,
+        "feature_set_name": feature_set_provenance["feature_set_name"],
+        "feature_set_applied": feature_set_provenance["feature_set_applied"],
+        "raw_source_columns": feature_set_provenance["raw_source_columns"],
+        "engineered_columns": feature_set_provenance["engineered_columns"],
+        "final_feature_columns": feature_set_provenance["final_feature_columns"],
     }
 
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -681,8 +743,8 @@ def run_promoted_dataset_eda(
     plot_artifacts: list[dict[str, Any]] = []
     if write_plots:
         plot_artifacts = write_eda_plots(
-            df,
-            feature_columns=feature_columns,
+            eda_df,
+            feature_columns=final_feature_columns,
             target_columns=target_columns,
             output_dir=plots_dir,
             group_column=group_column,

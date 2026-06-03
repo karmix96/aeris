@@ -21,3 +21,9 @@ data/debug/
 
 *.log
 *.png
+
+# ML runtime artifacts
+catboost_info/
+
+# Local patch/operator scripts
+*.sh

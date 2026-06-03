@@ -218,3 +218,69 @@ def test_ml_eda_cli_writes_report(tmp_path: Path) -> None:
     assert "velocity_mps" in skipped
     assert "altitude_m" in skipped
 
+
+def test_ml_eda_cli_accepts_feature_set(tmp_path: Path) -> None:
+    dataset_root = _build_dataset(tmp_path)
+    output_dir = tmp_path / "eda_cli_feature_set"
+
+    result = runner.invoke(
+        app,
+        [
+            "ml",
+            "eda",
+            "--dataset", str(dataset_root),
+            "--feature-set", "bwb_control_physics_v1",
+            "--targets", "cl,cd,cm",
+            "--output-dir", str(output_dir),
+            "--no-plots",
+        ],
+    )
+
+    assert result.exit_code == 0, result.stdout
+    assert "feature_set_applied: True" in result.stdout
+    report = json.loads((output_dir / "eda_report.json").read_text(encoding="utf-8"))
+    assert report["metadata"]["feature_set_name"] == "bwb_control_physics_v1"
+    assert report["metadata"]["feature_set_applied"] is True
+    assert "alpha_deg_sq" in report["metadata"]["engineered_columns"]
+    assert "re_number" in report["metadata"]["final_feature_columns"]
+    assert "alpha_deg_sq" in report["feature_stats"]
+    assert report["metadata"]["row_count"] == report["shape"]["n_rows"]
+    assert report["metadata"]["column_count"] == report["shape"]["n_columns"]
+
+
+def test_ml_eda_cli_rejects_multiple_feature_selectors(tmp_path: Path) -> None:
+    dataset_root = _build_dataset(tmp_path)
+    output_dir = tmp_path / "eda_cli_bad_selectors"
+
+    result = runner.invoke(
+        app,
+        [
+            "ml",
+            "eda",
+            "--dataset", str(dataset_root),
+            "--feature-preset", "bwb_control",
+            "--feature-set", "bwb_control_physics_v1",
+            "--targets", "cl,cd,cm",
+            "--output-dir", str(output_dir),
+            "--no-plots",
+        ],
+    )
+
+    assert result.exit_code != 0
+    combined_output = "\n".join(
+        part
+        for part in [
+            result.stdout or "",
+            getattr(result, "stderr", "") or "",
+            str(result.exception or ""),
+        ]
+        if part
+    )
+    # Typer/Rich may wrap long option strings inside the error box, so avoid
+    # asserting one exact unwrapped line. The command contract is that EDA
+    # rejects multiple feature selectors with a clear selector-conflict error.
+    assert "Use only one of" in combined_output
+    assert "--features" in combined_output
+    assert "--feature-preset" in combined_output
+    assert "--feature" in combined_output
+

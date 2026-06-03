@@ -204,3 +204,40 @@ def test_run_promoted_dataset_eda_writes_operator_artifacts(tmp_path: Path):
     assert loaded["metadata"]["dataset_root"] == str(dataset.resolve())
     assert loaded["shape"]["n_rows"] == len(_make_df())
 
+
+def test_run_promoted_dataset_eda_feature_set_materializes_engineered_columns(tmp_path: Path):
+    dataset = _write_promoted_dataset(tmp_path / "promoted_fs", _make_df())
+    out = tmp_path / "eda_fs_out"
+
+    result = run_promoted_dataset_eda(
+        dataset_root=dataset,
+        feature_set_name="bwb_control_physics_v1",
+        target_columns=TARGETS,
+        output_dir=out,
+        write_plots=False,
+    )
+
+    loaded = json.loads(result["report_path"].read_text(encoding="utf-8"))
+    assert loaded["feature_set"]["feature_set_name"] == "bwb_control_physics_v1"
+    assert loaded["feature_set"]["feature_set_applied"] is True
+    assert "alpha_deg_sq" in loaded["metadata"]["engineered_columns"]
+    assert "re_number" in loaded["metadata"]["final_feature_columns"]
+    assert "alpha_deg_sq" in loaded["feature_stats"]
+    assert loaded["feature_set"]["transform_manifest"]["n_engineered_columns"] > 0
+    assert loaded["metadata"]["row_count"] == loaded["shape"]["n_rows"]
+    assert loaded["metadata"]["column_count"] == loaded["shape"]["n_columns"]
+
+
+def test_run_promoted_dataset_eda_rejects_columns_and_feature_set_together(tmp_path: Path):
+    dataset = _write_promoted_dataset(tmp_path / "promoted_conflict", _make_df())
+
+    with pytest.raises(ValueError, match="either feature_columns or feature_set_name"):
+        run_promoted_dataset_eda(
+            dataset_root=dataset,
+            feature_columns=FEATURES,
+            feature_set_name="bwb_control_raw",
+            target_columns=TARGETS,
+            output_dir=tmp_path / "eda_conflict",
+            write_plots=False,
+        )
+

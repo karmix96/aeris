@@ -370,3 +370,59 @@ def workflow_record_stage(
     else:
         typer.echo("  next_required_stage: none")
     typer.echo(f"  stage_status: {result.paths.stages_dir / stage / 'stage_status.json'}")
+
+
+# -----------------------------------------------------------------------------
+# Slice 9D.3.2 — Workflow coverage audit
+# -----------------------------------------------------------------------------
+from aeris.workflow.coverage import (
+    build_workflow_coverage_report as _build_workflow_coverage_report,
+    write_workflow_coverage_report as _write_workflow_coverage_report,
+)
+
+
+@workflow_app.command("coverage")
+def workflow_coverage(
+    output_json: Path | None = typer.Option(
+        None,
+        "--output-json",
+        "-o",
+        help="Optional path for workflow_coverage_report.json.",
+    ),
+    as_json: bool = typer.Option(
+        False,
+        "--json",
+        help="Print the complete machine-readable report JSON.",
+    ),
+) -> None:
+    """Audit workflow-stage coverage across stage-driving CLI commands."""
+
+    report = _build_workflow_coverage_report()
+
+    written_path = None
+    if output_json is not None:
+        written_path = _write_workflow_coverage_report(report, output_json)
+
+    if as_json:
+        _echo_json(report)
+    else:
+        summary = report["summary"]
+        typer.echo("[AERIS] Workflow coverage audit")
+        typer.echo(f"  entries: {summary['entry_count']}")
+        typer.echo(f"  required entries: {summary['required_entry_count']}")
+        typer.echo(f"  all required covered: {summary['all_required_stage_commands_covered']}")
+        typer.echo(f"  required blockers: {summary['required_blocker_count']}")
+        typer.echo(f"  optional gaps: {summary['optional_gap_count']}")
+        typer.echo("")
+        typer.echo("stage                         command                          status")
+        typer.echo("----------------------------  -------------------------------  -----------------------")
+
+        for entry in report["entries"]:
+            command = f"aeris {entry['command_group']} {entry['command_name']}"
+            required = "*" if entry["required"] else " "
+            typer.echo(
+                f"{required}{entry['stage']:<27}  {command:<31}  {entry['coverage_status']}"
+            )
+
+    if written_path is not None:
+        typer.echo(f"  report_json: {written_path}")

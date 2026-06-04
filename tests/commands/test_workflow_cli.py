@@ -64,7 +64,7 @@ def test_workflow_init_status_next_record_stage_cli(tmp_path: Path) -> None:
     assert status_result.exit_code == 0, status_result.output
     status = json.loads(status_result.output)
     assert status["stages"]["geometry_dataset"]["status"] == "complete"
-    assert status["next_required_stage"]["name"] == "aero_dataset"
+    assert status["next_required_stage"]["name"] == "aero_sweep"
 
 
 def test_workflow_validate_summary_doctor_cli(tmp_path: Path) -> None:
@@ -99,3 +99,31 @@ def test_workflow_validate_summary_doctor_cli(tmp_path: Path) -> None:
     payload = json.loads(doctor_result.output)
     assert payload["schema_version"] == "aeris.workflow_validation.v1"
     assert payload["health"] == "incomplete"
+
+
+def test_workflow_coverage_help_runs() -> None:
+    result = runner.invoke(app, ["workflow", "coverage", "--help"])
+    assert result.exit_code == 0, result.output
+    assert "coverage" in result.output.lower()
+
+
+def test_workflow_coverage_runs() -> None:
+    result = runner.invoke(app, ["--no-check-writable", "workflow", "coverage"])
+    assert result.exit_code == 0, result.output
+    assert "Workflow coverage audit" in result.output
+    assert "aeris aero sweep" in result.output
+
+
+def test_workflow_coverage_json_output(tmp_path: Path) -> None:
+    output_json = tmp_path / "workflow_coverage_report.json"
+    result = runner.invoke(
+        app,
+        ["--no-check-writable", "workflow", "coverage", "--output-json", str(output_json), "--json"],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert output_json.exists()
+    data = json.loads(output_json.read_text(encoding="utf-8"))
+    assert data["report_type"] == "workflow_coverage_audit"
+    assert data["entries"]
+    assert data["summary"]["entry_count"] == len(data["entries"])

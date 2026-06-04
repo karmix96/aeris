@@ -25,6 +25,33 @@ FEATURE_COLUMNS = [
 TARGET_COLUMNS = ["cl", "cd", "cm"]
 
 
+
+
+def _inject_test_dataset_promotion_context(model_run_dir: Path, dataset_root: Path) -> None:
+    """Give synthetic test model runs the dataset provenance required by model promotion."""
+    import json
+    from datetime import datetime, timezone
+
+    manifest_path = model_run_dir / "ml_run_manifest.json"
+    data = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+    dataset_block = data.setdefault("dataset", {})
+    dataset_block["promotion_context"] = {
+        "schema_version": "aeris.test_dataset_promotion_context.v1",
+        "status": "approved",
+        "dataset_root": str(dataset_root),
+        "promotion_manifest_path": str(dataset_root / "promotion_manifest.json"),
+        "curated_aero_dataset_csv": str(dataset_root / "curated_aero_dataset.csv"),
+        "promotion_ready_at_time_of_promotion": True,
+        "promotion_forced": False,
+        "promotion_blockers": [],
+        "created_for_test_at_utc": datetime.now(timezone.utc).isoformat(),
+    }
+    data["dataset"] = dataset_block
+
+    manifest_path.write_text(json.dumps(data, indent=2, sort_keys=True), encoding="utf-8")
+
+
 def _build_dataset(tmp_path: Path) -> Path:
     dataset_root = tmp_path / "neural_ml_dataset"
     dataset_root.mkdir(parents=True, exist_ok=True)
@@ -130,6 +157,7 @@ def test_neural_mlp_ensemble_supports_confidence_spread(tmp_path: Path) -> None:
         model_params={**_small_neural_params(), "n_members": 3},
         output_dir=model_run_dir,
     )
+    _inject_test_dataset_promotion_context(model_run_dir, dataset_root)
     promotion = promote_model_run(
         model_run_dir=model_run_dir,
         max_test_rmse_mean=10.0,

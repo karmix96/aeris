@@ -817,25 +817,56 @@ def dataset_aero_generate(
 
     if exit_code == 0:
         try:
+            dataset_artifact = f"data/datasets/{name}"
+            common_metadata = {
+                "command": "aeris dataset aero-generate",
+                "compound_command": True,
+                "n": n,
+                "sampler": sampler,
+                "sampler_seed": sampler_seed,
+                "dataset_name": name,
+                "solver": solver,
+                "qc_preset": qc_preset,
+                "alpha_values": parsed_alpha_values,
+                "beta_values": parsed_beta_values,
+                "velocity_values": parsed_velocity_values,
+                "altitude_values": parsed_altitude_values,
+                "control_input_values": parsed_control_input_values,
+            }
+
+            record_workflow_stage_success(
+                workflow=workflow,
+                stage="geometry_dataset",
+                inputs=[config],
+                artifacts=[dataset_artifact],
+                notes="Geometry dataset produced as part of dataset aero-generate.",
+                metadata={
+                    **common_metadata,
+                    "compound_stage": "geometry_dataset",
+                },
+            )
+
+            record_workflow_stage_success(
+                workflow=workflow,
+                stage="aero_sweep",
+                inputs=[config],
+                artifacts=[dataset_artifact],
+                notes="Aero sweeps executed as part of dataset aero-generate.",
+                metadata={
+                    **common_metadata,
+                    "compound_stage": "aero_sweep",
+                },
+            )
+
             record_workflow_stage_success(
                 workflow=workflow,
                 stage="aero_dataset",
                 inputs=[config],
-                artifacts=[f"data/datasets/{name}"],
+                artifacts=[dataset_artifact],
                 notes="Unified aero dataset generation completed.",
                 metadata={
-                    "command": "aeris dataset aero-generate",
-                    "n": n,
-                    "sampler": sampler,
-                    "sampler_seed": sampler_seed,
-                    "dataset_name": name,
-                    "solver": solver,
-                    "qc_preset": qc_preset,
-                    "alpha_values": parsed_alpha_values,
-                    "beta_values": parsed_beta_values,
-                    "velocity_values": parsed_velocity_values,
-                    "altitude_values": parsed_altitude_values,
-                    "control_input_values": parsed_control_input_values,
+                    **common_metadata,
+                    "compound_stage": "aero_dataset",
                 },
             )
         except Exception as exc:

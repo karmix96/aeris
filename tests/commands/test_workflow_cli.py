@@ -161,3 +161,31 @@ def test_workflow_init_accepts_template(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.output
     assert "template: canary" in result.output
     assert (out / "workflow_template.json").exists()
+def test_workflow_canary_template_uses_smoke_baseline_hint(tmp_path: Path) -> None:
+    workflow_root = tmp_path / "demo_canary"
+
+    init_result = runner.invoke(
+        app,
+        [
+            "--no-check-writable",
+            "workflow",
+            "init",
+            "--name",
+            "demo_canary",
+            "--template",
+            "canary",
+            "--output-dir",
+            str(workflow_root),
+        ],
+    )
+    assert init_result.exit_code == 0, init_result.output
+    assert "template: canary" in init_result.output
+
+    status_result = runner.invoke(
+        app,
+        ["--no-check-writable", "workflow", "status", "--workflow", str(workflow_root)],
+    )
+    assert status_result.exit_code == 0, status_result.output
+    assert "baseline_bwb_25.yaml" in status_result.output
+    assert "bwb_training_v1.yaml" not in status_result.output
+

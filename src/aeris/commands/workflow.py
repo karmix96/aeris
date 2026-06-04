@@ -97,6 +97,12 @@ def workflow_init(
     except Exception as exc:
         fail_command("workflow init", exc)
 
+    # Slice 9D.5.1: keep operator hints aligned with selected workflow template.
+    if template:
+        from aeris.workflow.templates import apply_template_status_hints
+
+        apply_template_status_hints(result.paths.root, template)
+
     typer.echo("[AERIS] Workflow initialized")
     typer.echo(f"  workflow_root: {result.paths.root}")
     typer.echo(f"  manifest: {result.paths.manifest_path}")

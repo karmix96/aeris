@@ -15189,6 +15189,12 @@ def workflow_init(
     except Exception as exc:
         fail_command("workflow init", exc)
 
+    # Slice 9D.5.1: keep operator hints aligned with selected workflow template.
+    if template:
+        from aeris.workflow.templates import apply_template_status_hints
+
+        apply_template_status_hints(result.paths.root, template)
+
     typer.echo("[AERIS] Workflow initialized")
     typer.echo(f"  workflow_root: {result.paths.root}")
     typer.echo(f"  manifest: {result.paths.manifest_path}")
@@ -42580,6 +42586,61 @@ def init_workflow_from_template(
 
     return WorkflowResult(paths=result.paths, manifest=manifest, status=status)
 
+def apply_template_status_hints(workflow_root: Path, template_name: str | None) -> None:
+    """Apply template-specific operator command hints to workflow artifacts.
+
+    This is intentionally narrow: it adjusts guidance text only. It does not
+    mark stages complete, run commands, or change workflow truth/evidence.
+    """
+
+    if not template_name:
+        return
+
+    normalized = str(template_name).strip().lower()
+    if normalized != "canary":
+        return
+
+    import json
+
+    root = Path(workflow_root).expanduser().resolve()
+    status_path = root / "workflow_status.json"
+    manifest_path = root / "workflow_manifest.json"
+
+    canary_geometry_hint = (
+        "aeris dataset generate "
+        "-c configs/geometry/baseline_bwb_25.yaml "
+        "--n <N> "
+        "--sampler lhs_v1 "
+        "--sampler-seed <seed> "
+        "--no-save-plot "
+        "--build-aerosandbox "
+        "--workflow <workflow_root>"
+    )
+
+    def _patch_stage(stage: object) -> None:
+        if isinstance(stage, dict) and stage.get("name") == "geometry_dataset":
+            stage["recommended_command"] = canary_geometry_hint
+
+    def _patch_payload(path: Path) -> None:
+        if not path.exists():
+            return
+
+        payload = json.loads(path.read_text(encoding="utf-8"))
+
+        _patch_stage(payload.get("next_required_stage"))
+
+        for key in ("stages", "stage_definitions", "required_stages"):
+            value = payload.get(key)
+            if isinstance(value, list):
+                for stage in value:
+                    _patch_stage(stage)
+
+        path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+
+    _patch_payload(status_path)
+    _patch_payload(manifest_path)
+
+
 
 # ==================================================
 # FILE: tests/aero/aero_tests_report.txt
@@ -47882,6 +47943,34 @@ def test_workflow_init_accepts_template(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.output
     assert "template: canary" in result.output
     assert (out / "workflow_template.json").exists()
+def test_workflow_canary_template_uses_smoke_baseline_hint(tmp_path: Path) -> None:
+    workflow_root = tmp_path / "demo_canary"
+
+    init_result = runner.invoke(
+        app,
+        [
+            "--no-check-writable",
+            "workflow",
+            "init",
+            "--name",
+            "demo_canary",
+            "--template",
+            "canary",
+            "--output-dir",
+            str(workflow_root),
+        ],
+    )
+    assert init_result.exit_code == 0, init_result.output
+    assert "template: canary" in init_result.output
+
+    status_result = runner.invoke(
+        app,
+        ["--no-check-writable", "workflow", "status", "--workflow", str(workflow_root)],
+    )
+    assert status_result.exit_code == 0, status_result.output
+    assert "baseline_bwb_25.yaml" in status_result.output
+    assert "bwb_training_v1.yaml" not in status_result.output
+
 
 
 # ==================================================

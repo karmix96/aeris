@@ -227,3 +227,58 @@ def init_workflow_from_template(
     )
 
     return WorkflowResult(paths=result.paths, manifest=manifest, status=status)
+
+def apply_template_status_hints(workflow_root: Path, template_name: str | None) -> None:
+    """Apply template-specific operator command hints to workflow artifacts.
+
+    This is intentionally narrow: it adjusts guidance text only. It does not
+    mark stages complete, run commands, or change workflow truth/evidence.
+    """
+
+    if not template_name:
+        return
+
+    normalized = str(template_name).strip().lower()
+    if normalized != "canary":
+        return
+
+    import json
+
+    root = Path(workflow_root).expanduser().resolve()
+    status_path = root / "workflow_status.json"
+    manifest_path = root / "workflow_manifest.json"
+
+    canary_geometry_hint = (
+        "aeris dataset generate "
+        "-c configs/geometry/baseline_bwb_25.yaml "
+        "--n <N> "
+        "--sampler lhs_v1 "
+        "--sampler-seed <seed> "
+        "--no-save-plot "
+        "--build-aerosandbox "
+        "--workflow <workflow_root>"
+    )
+
+    def _patch_stage(stage: object) -> None:
+        if isinstance(stage, dict) and stage.get("name") == "geometry_dataset":
+            stage["recommended_command"] = canary_geometry_hint
+
+    def _patch_payload(path: Path) -> None:
+        if not path.exists():
+            return
+
+        payload = json.loads(path.read_text(encoding="utf-8"))
+
+        _patch_stage(payload.get("next_required_stage"))
+
+        for key in ("stages", "stage_definitions", "required_stages"):
+            value = payload.get(key)
+            if isinstance(value, list):
+                for stage in value:
+                    _patch_stage(stage)
+
+        path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+
+    _patch_payload(status_path)
+    _patch_payload(manifest_path)
+

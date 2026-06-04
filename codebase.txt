@@ -14887,6 +14887,8 @@ def ml_predict_with_confidence(
     typer.echo(f"  input_csv: {input_csv}")
     typer.echo(f"  n_rows: {report['n_rows']}")
     typer.echo(f"  n_outside_envelope: {report['n_outside_envelope']}")
+    typer.echo(f"  feature_set: {report.get('feature_set_name')}")
+    typer.echo(f"  feature_set_applied: {report.get('feature_set_applied')}")
     typer.echo(f"  uncertainty_method: {report['uncertainty']['method']}")
     typer.echo(f"  output_dir: {result.artifacts.output_dir}")
     typer.echo(f"  prediction_confidence_csv: {result.artifacts.prediction_confidence_csv_path}")
@@ -14951,6 +14953,19 @@ def ml_suggest_samples(
         "--require-promoted-model/--no-require-promoted-model",
         help="Require an approved model_promotion_manifest.json before scoring candidates.",
     ),
+    feature_set: str | None = typer.Option(
+        None,
+        "--feature-set",
+        help=(
+            "Named feature set to apply to raw candidate/reference CSVs before scoring. "
+            "If omitted, AERIS uses the feature set recorded in train_config.json when available."
+        ),
+    ),
+    allow_feature_set_mismatch: bool = typer.Option(
+        False,
+        "--allow-feature-set-mismatch",
+        help="Allow requested feature set to differ from the model training feature set.",
+    ),
     objective_column: str | None = typer.Option(
         None,
         "--objective-column",
@@ -14999,6 +15014,8 @@ def ml_suggest_samples(
             top_n=top_n,
             candidate_id_column=candidate_id_column,
             require_promoted_model_gate=require_promoted_model,
+            feature_set_name=feature_set,
+            allow_feature_set_mismatch=allow_feature_set_mismatch,
             objective_column=objective_column,
             objective_mode=objective_mode,  # type: ignore[arg-type]
             objective_target_value=objective_target_value,
@@ -15022,6 +15039,8 @@ def ml_suggest_samples(
     typer.echo(f"  n_candidates: {report['n_candidates']}")
     typer.echo(f"  n_recommended: {report['n_recommended']}")
     typer.echo(f"  n_outside_envelope: {report['n_outside_envelope']}")
+    typer.echo(f"  feature_set: {report.get('feature_set_name')}")
+    typer.echo(f"  feature_set_applied: {report.get('feature_set_applied')}")
     typer.echo(f"  uncertainty_method: {report['uncertainty']['method']}")
     typer.echo(f"  output_dir: {artifacts.output_dir}")
     typer.echo(f"  ranked_candidates_csv: {artifacts.ranked_candidates_csv_path}")
@@ -15047,6 +15066,8 @@ def ml_suggest_samples(
                 "top_n": top_n,
                 "candidate_id_column": candidate_id_column,
                 "require_promoted_model": require_promoted_model,
+                "feature_set": report.get("feature_set_name"),
+                "feature_set_applied": report.get("feature_set_applied"),
             },
         )
     except Exception as exc:
@@ -26612,159 +26633,443 @@ def pg_dataset(root, exe, tmo, dry):
         _panel("Run smoke pipeline","Quick end-to-end sanity check.",["pipeline","smoke","--config",cfg_sm],root,exe,tmo,dry,"sm_run")
 
 
-def pg_aero(root, exe, tmo, dry):
-    _hero("⊿","Aero Analysis","aerosandbox_avl · single run or parametric sweep","aero")
+def _aero_run_rows(root: Path) -> list[Path]:
+    """All folders in data/runs/ that look like aero runs (single or sweep)."""
+    return [Path(r) for r in _dirs(str(root / "data" / "runs"))
+            if any(k in Path(r).name for k in ("_aero_", "_sweep_"))]
 
-    def _src_args(key):
-        """Returns source args. Exactly one of --config, --run-dir, --dataset must be provided."""
-        src = st.selectbox("Geometry source",
-                           ["Fresh config (--config)","Existing run (--run-dir)","Dataset geometry (--dataset)"],
-                           key=f"{key}_src")
-        args = []
-        if "config" in src:
-            cfg = _pick_file("Config",root/"configs"/"geometry","*.yaml",f"{key}_cfg",
-                             default=str(root/"configs"/"geometry"/"baseline_bwb_25.yaml"))
-            args += ["--config",cfg]
-        elif "run" in src:
-            rd = _pick_dir("Geometry run dir",root/"data"/"runs",f"{key}_rd")
-            gid = st.text_input("--generator-id","bwb_segmented_v1",key=f"{key}_gid",
-                                help="Required for --run-dir mode. Must match the generator used.")
-            args += ["--run-dir",rd,"--generator-id",gid]
+def _geo_run_rows(root: Path) -> list[Path]:
+    """All folders in data/runs/ that look like geometry-only runs."""
+    return [Path(r) for r in _dirs(str(root / "data" / "runs"))
+            if "geometry" in Path(r).name
+            and not any(k in Path(r).name for k in ("_aero_", "_sweep_"))]
+
+def _aero_src_widget(key: str, root: Path, geo_runs: list[Path],
+                     cfg_opts: list[str], cfg_label_fn) -> list[str]:
+    """
+    Geometry source selector for aero run/sweep.
+    Returns the CLI source args list.
+    Always hardcodes --generator-id bwb_segmented_v1 (only registered generator).
+    """
+    src_mode = st.radio(
+        "Geometry source",
+        ["From existing geometry run", "From config file"],
+        horizontal=True,
+        key=f"{key}_src_mode",
+        help="Existing run: reuses a geometry you already generated. "
+             "Config file: generates a fresh geometry sample on the fly.",
+    )
+
+    args = []
+    if src_mode == "From existing geometry run":
+        if not geo_runs:
+            st.warning(
+                "No geometry runs found in data/runs/. "
+                "Go to Geometry → ① Generate first."
+            )
+            # Fall back silently to config so args are always valid
+            cfg = cfg_opts[0] if cfg_opts else ""
+            args += ["--config", cfg]
         else:
-            ds = _pick_dir("Dataset root",root/"data"/"datasets",f"{key}_ds")
-            geom = st.text_input("--geometry-id","geom_00001",key=f"{key}_geomid")
-            gid  = st.text_input("--generator-id","bwb_segmented_v1",key=f"{key}_gid2")
-            args += ["--dataset",ds,"--geometry-id",geom,"--generator-id",gid]
-        return args
-
-    def _solver_args(key):
-        avl  = st.text_input("--avl-command","avl",key=f"{key}_avl",help="'avl' if on PATH, or full path")
-        c1,c2,c3,c4 = st.columns(4)
-        sp   = c1.number_input("--spanwise-resolution",1,value=4,step=1,key=f"{key}_sp")
-        cp   = c2.number_input("--chordwise-resolution",1,value=8,step=1,key=f"{key}_cp")
-        ssp  = c3.selectbox("--spanwise-spacing",SPACING,key=f"{key}_ssp")
-        csp  = c4.selectbox("--chordwise-spacing",SPACING,index=1,key=f"{key}_csp")
-        tmo_ = st.number_input("--timeout-sec",min_value=5,value=180,step=5,key=f"{key}_tmo")
-        with st.expander("Advanced output options"):
-            c5,c6 = st.columns(2)
-            ssf = c5.checkbox("--save-surface-forces",False,key=f"{key}_ssf",help="Write AVL surface force files")
-            sef = c6.checkbox("--save-element-forces",False,key=f"{key}_sef",help="Write AVL element force files")
-        out_n = st.text_input("--output-name (optional folder suffix)","",key=f"{key}_on",
-                              help="Appended to run folder name for easy identification")
-        args = ["--solver","aerosandbox_avl","--avl-command",avl,
-                "--spanwise-resolution",str(int(sp)),"--chordwise-resolution",str(int(cp)),
-                "--spanwise-spacing",ssp,"--chordwise-spacing",csp,
-                "--timeout-sec",str(int(tmo_))]
-        if ssf: args.append("--save-surface-forces")
-        if sef: args.append("--save-element-forces")
-        _flag(args,"--output-name",out_n)
-        return args
-
-    tab_single, tab_sweep, tab_inspect = st.tabs(["  Single run  ","  Sweep  ","  Inspect  "])
-
-    with tab_single:
-        src_a = _src_args("ar")
-        _sec("Flight condition (--alpha is REQUIRED)")
-        c1,c2,c3,c4 = st.columns(4)
-        al = c1.number_input("--alpha [deg]",value=4.0,step=0.5,key="ar_al")
-        be = c2.number_input("--beta [deg]",value=0.0,step=0.5,key="ar_be",help="Sideslip. Default 0.")
-        ve = c3.number_input("--velocity [m/s]",value=28.0,step=1.0,key="ar_ve",help="Default 28 m/s")
-        at = c4.number_input("--altitude [m]",value=1500.0,step=100.0,key="ar_at",help="Default 0 m")
-        ctrl = st.slider("--control-input-deg [deg] (elevon)",-15.0,15.0,0.0,0.5,key="ar_ctrl",
-                         help="Control-surface deflection. Positive = trailing edge down.")
-        with st.expander("Angular rates & misc (optional)"):
-            c5,c6,c7 = st.columns(3)
-            pv = c5.number_input("--p [rad/s]",0.0,key="ar_p",help="Body roll rate. Default 0.")
-            qv = c6.number_input("--q [rad/s]",0.0,key="ar_q",help="Body pitch rate. Default 0.")
-            rv = c7.number_input("--r [rad/s]",0.0,key="ar_r",help="Body yaw rate. Default 0.")
-            mach = st.text_input("--mach (optional Mach metadata)","",key="ar_mach",help="QC metadata only. Velocity+altitude remain authoritative.")
-            seed_ar = st.number_input("--seed",min_value=0,value=0,step=1,key="ar_seed",help="Geometry seed for config mode. Default 0.")
-        _sec("Solver settings")
-        sol_a = _solver_args("ar")
-        args_ar = ["aero","run"] + src_a + ["--alpha",str(al),"--beta",str(be),"--velocity",str(ve),"--altitude",str(at),"--control-input-deg",str(ctrl),"--p",str(pv),"--q",str(qv),"--r",str(rv),"--seed",str(int(seed_ar))] + sol_a
-        _flag(args_ar,"--mach",mach)
-        _panel("Single aero run","One geometry, one flight condition. Full AVL evaluation.",args_ar,root,exe,tmo,dry,"ar_run")
-
-    with tab_sweep:
-        src_s = _src_args("sw")
-        _sec("Sweep definition (comma-separated values)")
-        c1,c2 = st.columns(2)
-        al2 = c1.text_input("--alpha-values [deg]","-2,0,2,4,6",key="sw_al",help="Comma-sep. If empty, uses base --alpha value.")
-        be2 = c2.text_input("--beta-values [deg]","0",key="sw_be",help="Comma-sep. If empty, uses base --beta.")
-        c3,c4 = st.columns(2)
-        ve2 = c3.text_input("--velocity-values [m/s]","28",key="sw_ve",help="Comma-sep. If empty, uses base --velocity.")
-        at2 = c4.text_input("--altitude-values [m]","1500",key="sw_at",help="Comma-sep. If empty, uses base --altitude.")
-        ct2 = st.text_input("--control-input-values [deg]","-5,0,5",key="sw_ctrl",help="Comma-sep elevon sweep. Generates Cartesian product with other sweep values.")
-        with st.expander("Angular rate sweeps (optional)"):
-            c5,c6,c7 = st.columns(3)
-            pv2=c5.text_input("--p-values [rad/s]","0",key="sw_p"); qv2=c6.text_input("--q-values [rad/s]","0",key="sw_q"); rv2=c7.text_input("--r-values [rad/s]","0",key="sw_r")
-        est2 = _est(al2,be2,ve2,at2,ct2,pv2,qv2,rv2)
-        _note(f"Estimated cases (Cartesian product): <b>{est2:,}</b>","info")
-        max_c2 = st.text_input("--max-cases (optional safety cap)","",key="sw_mc",help="Leave blank for no cap.")
-        seed_sw = st.number_input("--seed",min_value=0,value=0,step=1,key="sw_seed",help="Geometry seed for config mode.")
-        _sec("Solver settings")
-        sol_s = _solver_args("sw")
-        args_sw = ["aero","sweep"] + src_s + ["--seed",str(int(seed_sw))]
-        if al2.strip():  args_sw += ["--alpha-values",al2]
-        if be2.strip():  args_sw += ["--beta-values",be2]
-        if ve2.strip():  args_sw += ["--velocity-values",ve2]
-        if at2.strip():  args_sw += ["--altitude-values",at2]
-        if ct2.strip():  args_sw += ["--control-input-values",ct2]
-        if pv2.strip() and pv2.strip()!="0": args_sw += ["--p-values",pv2]
-        if qv2.strip() and qv2.strip()!="0": args_sw += ["--q-values",qv2]
-        if rv2.strip() and rv2.strip()!="0": args_sw += ["--r-values",rv2]
-        args_sw += sol_s
-        _flag(args_sw,"--max-cases",max_c2)
-        _panel("Aero sweep","Runs Cartesian product of flight conditions for one geometry.",args_sw,root,exe,tmo,dry,"sw_run")
-
-    with tab_inspect:
-        rd3 = _pick_dir("Run directory",root/"data"/"runs","ai_rd")
-        it3 = st.selectbox("Inspect type",["Single aero run (aero inspect)","Sweep summary (aero sweep-inspect)","Sweep case (aero sweep-case-inspect)"],key="ai_it")
-        if "Single" in it3:
-            args3 = ["aero","inspect","--run-dir",rd3]
-            desc3 = "Reads and prints a single aero run result."
-        elif "summary" in it3:
-            args3 = ["aero","sweep-inspect","--run-dir",rd3]
-            desc3 = "Reads sweep summary manifest and prints all case results."
-        else:
-            c1,c2 = st.columns(2)
-            cl3  = c1.text_input("--case-label (exact label)","",key="ai_cl",help="Exact sweep case label. Leave blank to use index.")
-            ci3  = c2.number_input("--case-index",min_value=0,value=0,step=1,key="ai_ci",help="Used when --case-label is blank.")
-            args3 = ["aero","sweep-case-inspect","--run-dir",rd3]
-            if cl3.strip(): args3 += ["--case-label",cl3.strip()]
-            else: args3 += ["--case-index",str(int(ci3))]
-            desc3 = "Reads one specific case from a saved sweep."
-        _panel("Inspect aero",desc3,args3,root,exe,tmo,dry,"ai_run")
-
-    # ── Cm sanity ─────────────────────────────────────────────────────────────
-    with st.expander("⚠ Cm sign sanity check — run before any ML training"):
-        _note(
-            "<b>aeris aero cm-sanity</b> — verifies that Cm decreases with alpha (Cma &lt; 0 = stable) "
-            "within fixed-condition groups. Run on your promoted dataset before training any surrogate. "
-            "A positive Cma means the aircraft is statically unstable in pitch — "
-            "every ML model trained on Cm would be learning the wrong physics.",
-            "warn",
+            run_map = {p.name: p for p in geo_runs}
+            chosen = st.selectbox(
+                "Select geometry run",
+                list(run_map.keys()),
+                key=f"{key}_run_sel",
+                help="Folder from data/runs/. The geometry inside will be reused — "
+                     "no re-sampling.",
+            )
+            chosen_path = run_map[chosen]
+            m = _rjson(chosen_path / "manifest.json")
+            status = (m or {}).get("status", "unknown")
+            dot = "#22C55E" if status == "success" else "#EF4444"
+            _h(
+                f'<div style="background:#1B2A3A;border:1px solid #2D3F52;border-radius:7px;'
+                f'padding:.42rem .9rem;margin:.3rem 0;display:flex;align-items:center;gap:10px">'
+                f'<div style="width:7px;height:7px;border-radius:50%;background:{dot};flex-shrink:0"></div>'
+                f'<div style="flex:1;font-size:.78rem;color:#D6DEE8;font-family:JetBrains Mono,monospace;'
+                f'overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{chosen_path.name}</div>'
+                f'<div style="font-size:.7rem;color:{dot};font-weight:600;flex-shrink:0">{status}</div>'
+                f'</div>'
+            )
+            args += ["--run-dir", str(chosen_path),
+                     "--generator-id", "bwb_segmented_v1"]
+    else:
+        cfg = st.selectbox(
+            "Config", cfg_opts if cfg_opts else [""],
+            format_func=cfg_label_fn,
+            key=f"{key}_cfg",
+            help="Generates a fresh geometry sample from this config.",
         )
-        cm_src = st.radio("Source",["--dataset (promoted aero dataset)","--csv (direct CSV path)"],
-                          horizontal=True, key="cms_src")
-        if "--dataset" in cm_src:
-            cms_ds = _pick_dir("Promoted dataset",root/"data"/"datasets","cms_ds")
-            args_cms = ["aero","cm-sanity","--dataset",cms_ds]
+        seed = st.number_input(
+            "Seed", min_value=0, max_value=99999, value=0, step=1,
+            key=f"{key}_seed",
+            help="Geometry seed. 0 = config default. Same seed + same config = same geometry.",
+        )
+        args += ["--config", cfg, "--seed", str(int(seed))]
+
+    return args
+
+
+def _aero_solver_widget(key: str) -> list[str]:
+    """Solver settings — AVL command always visible, rest collapsed."""
+    avl = st.text_input(
+        "AVL command",
+        value="avl",
+        key=f"{key}_avl",
+        help="Type 'avl' if avl is on your PATH. "
+             "Otherwise paste the full path, e.g. /usr/local/bin/avl",
+    )
+    with st.expander("Paneling & advanced solver settings"):
+        c1, c2, c3, c4 = st.columns(4)
+        sp  = c1.number_input("Spanwise panels",  min_value=1, value=4,  step=1, key=f"{key}_sp",
+                              help="--spanwise-resolution. Default 4 for datasets, 8+ for accuracy.")
+        cp  = c2.number_input("Chordwise panels", min_value=1, value=8,  step=1, key=f"{key}_cp",
+                              help="--chordwise-resolution. Default 8.")
+        ssp = c3.selectbox("Spanwise spacing",  SPACING,       key=f"{key}_ssp",
+                           help="--spanwise-spacing. 'equal' or 'cosine'.")
+        csp = c4.selectbox("Chordwise spacing", SPACING, index=1, key=f"{key}_csp",
+                           help="--chordwise-spacing. 'cosine' recommended.")
+        tmo_ = st.number_input("Timeout [s]", min_value=5, value=180, step=5, key=f"{key}_tmo",
+                               help="--timeout-sec. Per-case timeout. 180s is safe for single AVL runs.")
+        c5, c6 = st.columns(2)
+        ssf = c5.checkbox("Save surface forces", False, key=f"{key}_ssf",
+                          help="--save-surface-forces. Writes AVL surface force files.")
+        sef = c6.checkbox("Save element forces", False, key=f"{key}_sef",
+                          help="--save-element-forces. Writes AVL element force files.")
+    args = ["--solver", "aerosandbox_avl",
+            "--avl-command", avl,
+            "--spanwise-resolution", str(int(sp)),
+            "--chordwise-resolution", str(int(cp)),
+            "--spanwise-spacing", ssp,
+            "--chordwise-spacing", csp,
+            "--timeout-sec", str(int(tmo_))]
+    if ssf: args.append("--save-surface-forces")
+    if sef: args.append("--save-element-forces")
+    return args
+
+
+def _aero_run_list(root: Path, tab_key: str, run_filter_fn) -> None:
+    """Show aero runs with per-row delete buttons."""
+    import shutil as _shutil
+    runs = run_filter_fn(root)
+    if not runs:
+        st.caption("No runs yet.")
+        return
+
+    _sec("Recent runs")
+    st.caption("Click 🗑 to delete a run folder.")
+    did_delete = False
+    for i, p in enumerate(runs[:20]):
+        m      = _rjson(p / "manifest.json")
+        status = (m or {}).get("status", "—")
+        dot    = "#22C55E" if status == "success" else                  "#EF4444" if status == "failed"  else "#8EA0B3"
+        col_n, col_b = st.columns([10, 1])
+        with col_n:
+            _h(
+                f'<div style="background:#1B2A3A;border:1px solid #2D3F52;border-radius:7px;'
+                f'padding:.42rem .9rem;display:flex;align-items:center;gap:10px">'
+                f'<div style="width:7px;height:7px;border-radius:50%;background:{dot};flex-shrink:0"></div>'
+                f'<div style="flex:1;font-size:.78rem;color:#D6DEE8;font-family:JetBrains Mono,monospace;'
+                f'overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{p.name}</div>'
+                f'<div style="font-size:.7rem;color:{dot};font-weight:600;flex-shrink:0">{status}</div>'
+                f'</div>'
+            )
+        with col_b:
+            if st.button("🗑", key=f"del_aero_{tab_key}_{i}", help=f"Delete {p.name}"):
+                try:
+                    _shutil.rmtree(p)
+                    st.toast(f"Deleted {p.name}", icon="✓")
+                    did_delete = True
+                except Exception as e:
+                    st.error(str(e))
+    if did_delete:
+        st.rerun()
+
+    if len(runs) > 1:
+        st.markdown("")
+        if st.button(f"🗑  Delete ALL ({len(runs)})", key=f"del_aero_{tab_key}_all", type="secondary"):
+            st.session_state[f"confirm_del_{tab_key}"] = True
+    if st.session_state.get(f"confirm_del_{tab_key}"):
+        st.warning(f"Delete all {len(runs)} run folder(s)? Cannot be undone.")
+        ca, cb, _ = st.columns([1, 1, 4])
+        if ca.button("Yes, delete all", key=f"del_aero_{tab_key}_yes", type="primary"):
+            for p in runs:
+                try:
+                    _shutil.rmtree(p)
+                except Exception as e:
+                    st.error(str(e))
+            st.session_state[f"confirm_del_{tab_key}"] = False
+            st.toast(f"Deleted {len(runs)} folder(s).", icon="✓")
+            st.rerun()
+        if cb.button("Cancel", key=f"del_aero_{tab_key}_no", type="secondary"):
+            st.session_state[f"confirm_del_{tab_key}"] = False
+            st.rerun()
+
+
+def pg_aero(root, exe, tmo, dry):
+    _hero("⊿", "Aero Analysis", "aerosandbox_avl · single run or sweep", "aero")
+
+    # Shared config list
+    cfg_files = _files(str(root / "configs" / "geometry"), "*.yaml")
+    smoke_cfg = str(root / "configs" / "geometry" / "baseline_bwb_25.yaml")
+    prod_cfg  = str(root / "configs" / "geometry" / "bwb_training_v1.yaml")
+    cfg_smoke_first = ([smoke_cfg] if smoke_cfg in cfg_files else []) +                       ([prod_cfg]  if prod_cfg  in cfg_files else []) +                       [f for f in cfg_files if f not in (prod_cfg, smoke_cfg)]
+
+    def _cfg_label(s):
+        if "bwb_training_v1" in s: return f"Production — {Path(s).name}"
+        if "baseline_bwb_25"  in s: return f"Smoke test  — {Path(s).name}"
+        return Path(s).name if s else "— none —"
+
+    geo_runs = _geo_run_rows(root)
+
+    tab_single, tab_sweep, tab_inspect, tab_cm = st.tabs([
+        "  ① Single run  ",
+        "  ② Sweep  ",
+        "  ③ Inspect  ",
+        "  ⚠ Cm sanity  ",
+    ])
+
+    # ── ① SINGLE RUN ─────────────────────────────────────────────────────────
+    with tab_single:
+        st.caption(
+            "Run AVL on **one geometry × one flight condition**. "
+            "Use for spot-checks and solver verification."
+        )
+        src_args = _aero_src_widget("ar", root, geo_runs, cfg_smoke_first, _cfg_label)
+
+        _sec("Flight condition")
+        c1, c2, c3, c4 = st.columns(4)
+        al   = c1.number_input("Alpha [deg]",    value=4.0,    step=0.5, key="ar_al",
+                               help="Angle of attack. Required.")
+        ve   = c2.number_input("Velocity [m/s]", value=28.0,   step=1.0, key="ar_ve")
+        at   = c3.number_input("Altitude [m]",   value=1500.0, step=100.0, key="ar_at")
+        ctrl = c4.number_input("Elevon [deg]",   value=0.0,    step=1.0, key="ar_ctrl",
+                               help="Control surface deflection. Positive = trailing edge down.")
+        with st.expander("Sideslip & body rates (leave at 0 for standard runs)"):
+            c5, c6, c7, c8 = st.columns(4)
+            be = c5.number_input("Beta [deg]", value=0.0, step=0.5, key="ar_be")
+            pv = c6.number_input("p [rad/s]",  value=0.0, step=0.1, key="ar_p")
+            qv = c7.number_input("q [rad/s]",  value=0.0, step=0.1, key="ar_q")
+            rv = c8.number_input("r [rad/s]",  value=0.0, step=0.1, key="ar_r")
+
+        _sec("Solver")
+        sol_args = _aero_solver_widget("ar")
+
+        full_args = (["aero", "run"] + src_args +
+                     ["--alpha", str(al), "--velocity", str(ve),
+                      "--altitude", str(at), "--control-input-deg", str(ctrl),
+                      "--beta", str(be),
+                      "--p", str(pv), "--q", str(qv), "--r", str(rv)] +
+                     sol_args)
+        _panel(
+            "Run single aero case",
+            "One geometry × one flight condition → data/runs/<timestamp>_aero_*/",
+            full_args, root, exe, tmo, dry, "ar_run",
+            label="▶  Run aero case",
+        )
+        _aero_run_list(root, "single", _aero_run_rows)
+
+    # ── ② SWEEP ───────────────────────────────────────────────────────────────
+    with tab_sweep:
+        st.caption(
+            "Run AVL across **multiple flight conditions** for one geometry. "
+            "Generates the Cartesian product of the value lists you provide."
+        )
+        src_args_sw = _aero_src_widget("sw", root, geo_runs, cfg_smoke_first, _cfg_label)
+
+        _sec("Flight condition sweep")
+        st.caption(
+            "Enter comma-separated values for each dimension. "
+            "Leave a field at its single value to hold it constant."
+        )
+        c1, c2 = st.columns(2)
+        al2  = c1.text_input("Alpha values [deg]",    "-2,0,2,4,6",  key="sw_al",
+                             help="e.g. -4,-2,0,2,4,6,8,10")
+        ve2  = c2.text_input("Velocity values [m/s]", "28",          key="sw_ve")
+        c3, c4 = st.columns(2)
+        at2  = c3.text_input("Altitude values [m]",   "1500",        key="sw_at")
+        ct2  = c4.text_input("Elevon values [deg]",   "-5,0,5",      key="sw_ctrl",
+                             help="Control surface sweep.")
+        with st.expander("Sideslip & body rates (usually leave as 0)"):
+            c5, c6, c7, c8 = st.columns(4)
+            be2 = c5.text_input("Beta [deg]", "0",  key="sw_be")
+            pv2 = c6.text_input("p [rad/s]",  "0",  key="sw_p")
+            qv2 = c7.text_input("q [rad/s]",  "0",  key="sw_q")
+            rv2 = c8.text_input("r [rad/s]",  "0",  key="sw_r")
+
+        est = _est(al2, ve2, at2, ct2, be2, pv2, qv2, rv2)
+        if est > 500:
+            st.warning(f"⚠ Estimated cases: **{est:,}** — large sweep, may take a long time.")
         else:
-            cms_csv = st.text_input("--csv path","",key="cms_csv")
-            args_cms = ["aero","cm-sanity","--csv",cms_csv]
-        c1,c2 = st.columns(2)
-        cms_od  = c1.text_input("--output-dir (optional)","",key="cms_od")
-        cms_fov = c2.checkbox("--fail-on-violation",False,key="cms_fov")
-        with st.expander("Advanced"):
-            cms_ac  = st.text_input("--alpha-column","alpha_deg",key="cms_ac")
-            cms_cc  = st.text_input("--cm-column","cm",key="cms_cc")
-            cms_gc  = st.text_input("--group-columns","geometry_id,control_input_deg,velocity_mps,altitude_m",key="cms_gc")
-            cms_mabs= st.number_input("--min-abs-cma-per-rad",value=1e-8,format="%.2e",key="cms_mabs")
-        if cms_od.strip(): args_cms += ["--output-dir",cms_od]
-        if cms_fov:        args_cms += ["--fail-on-violation"]
-        args_cms += ["--alpha-column",cms_ac,"--cm-column",cms_cc,"--group-columns",cms_gc,"--min-abs-cma-per-rad",str(cms_mabs)]
-        _panel("Cm sign sanity","Confirms Cma < 0 (stable). Run before ML training.",args_cms,root,exe,tmo,dry,"cms_run")
+            st.info(f"Estimated cases: **{est:,}** (Cartesian product)")
+
+        max_c = st.text_input(
+            "Safety cap — max cases (optional)",
+            value="", placeholder="e.g. 100 — leave blank for no cap",
+            key="sw_mc",
+            help="--max-cases. If the Cartesian product exceeds this, the sweep errors out. "
+                 "Useful to prevent accidental huge runs.",
+        )
+
+        _sec("Solver")
+        sol_args_sw = _aero_solver_widget("sw")
+
+        sweep_args = ["aero", "sweep"] + src_args_sw
+        for flag, val in [("--alpha-values", al2), ("--velocity-values", ve2),
+                          ("--altitude-values", at2), ("--control-input-values", ct2),
+                          ("--beta-values", be2)]:
+            if val.strip(): sweep_args += [flag, val]
+        for flag, val in [("--p-values", pv2), ("--q-values", qv2), ("--r-values", rv2)]:
+            if val.strip() and val.strip() != "0":
+                sweep_args += [flag, val]
+        sweep_args += sol_args_sw
+        if max_c.strip(): sweep_args += ["--max-cases", max_c.strip()]
+
+        _panel(
+            "Run aero sweep",
+            "Cartesian product of flight conditions → data/runs/<timestamp>_aero_sweep_*/",
+            sweep_args, root, exe, tmo, dry, "sw_run",
+            label="▶  Run sweep",
+        )
+        _aero_run_list(root, "sweep", _aero_run_rows)
+
+    # ── ③ INSPECT ─────────────────────────────────────────────────────────────
+    with tab_inspect:
+        st.caption("Read and display results from a completed aero run or sweep.")
+
+        aero_runs = _aero_run_rows(root)
+
+        if not aero_runs:
+            st.info("No aero runs found yet. Run a Single run or Sweep first.")
+        else:
+            run_map = {p.name: p for p in aero_runs}
+            chosen_run = st.selectbox(
+                "Select run",
+                list(run_map.keys()),
+                key="ai_run_sel",
+                help="All aero run folders from data/runs/.",
+            )
+            chosen_path = run_map[chosen_run]
+
+            # Detect whether it's a sweep by checking manifest
+            m = _rjson(chosen_path / "manifest.json")
+            is_sweep = "sweep" in chosen_run.lower() or                        (m or {}).get("phase", "") == "aero_sweep"
+
+            if is_sweep:
+                inspect_type = st.radio(
+                    "Inspect type",
+                    ["Sweep summary", "Single case from sweep"],
+                    horizontal=True,
+                    key="ai_type",
+                )
+                if inspect_type == "Sweep summary":
+                    args_ins = ["aero", "sweep-inspect", "--run-dir", str(chosen_path)]
+                    desc_ins = "Prints summary of all sweep cases."
+                else:
+                    c1, c2 = st.columns(2)
+                    case_label = c1.text_input(
+                        "Case label (optional)",
+                        value="", placeholder="e.g. case_0000_a+4.000_...",
+                        key="ai_cl",
+                        help="Exact case label from the sweep manifest. "
+                             "Leave blank to use index instead.",
+                    )
+                    case_idx = c2.number_input(
+                        "Case index", min_value=0, value=0, step=1,
+                        key="ai_ci",
+                        help="Zero-based index if case label is blank.",
+                    )
+                    args_ins = ["aero", "sweep-case-inspect", "--run-dir", str(chosen_path)]
+                    if case_label.strip():
+                        args_ins += ["--case-label", case_label.strip()]
+                    else:
+                        args_ins += ["--case-index", str(int(case_idx))]
+                    desc_ins = "Prints one specific case from the sweep."
+            else:
+                args_ins = ["aero", "inspect", "--run-dir", str(chosen_path)]
+                desc_ins  = "Prints the full aero result for this single run."
+
+            _panel("Inspect", desc_ins, args_ins, root, exe, tmo, dry, "ai_run",
+                   label="▶  Inspect")
+
+    # ── ⚠ Cm SANITY ───────────────────────────────────────────────────────────
+    with tab_cm:
+        st.warning(
+            "**Run this before any ML training.** "
+            "Verifies that Cm decreases with alpha (Cma < 0 = statically stable pitch). "
+            "A positive Cma means the aircraft is unstable — "
+            "every ML model trained on Cm would learn the wrong physics."
+        )
+
+        cm_src = st.radio(
+            "Source",
+            ["Promoted aero dataset (recommended)", "Direct CSV path"],
+            horizontal=True, key="cms_src",
+        )
+        if "dataset" in cm_src:
+            ds_opts = [str(p) for p in
+                       [Path(d) for d in _dirs(str(root / "data" / "datasets"))]
+                       if (Path(d) / "promotion_manifest.json" if False else True)]
+            promoted = [d for d in _dirs(str(root / "data" / "datasets"))
+                        if (Path(d) / "promotion_manifest.json").exists()]
+            all_ds   = _dirs(str(root / "data" / "datasets"))
+
+            ds_choices = promoted + [d for d in all_ds if d not in promoted]
+            if ds_choices:
+                cms_ds = st.selectbox(
+                    "Dataset",
+                    ds_choices,
+                    format_func=lambda s: (
+                        f"✓ {Path(s).name}" if (Path(s) / "promotion_manifest.json").exists()
+                        else f"○ {Path(s).name} (not promoted)"
+                    ),
+                    key="cms_ds",
+                    help="✓ = promoted dataset (has promotion_manifest.json). "
+                         "Run on promoted datasets only for reliable Cm sanity.",
+                )
+            else:
+                st.info("No datasets found in data/datasets/. "
+                        "Run a dataset aero-generate first.")
+                cms_ds = ""
+            args_cm = ["aero", "cm-sanity", "--dataset", cms_ds] if cms_ds else []
+        else:
+            cms_csv = st.text_input("CSV path", "", key="cms_csv",
+                                    placeholder="data/datasets/<name>/curated_aero_dataset.csv")
+            args_cm = ["aero", "cm-sanity", "--csv", cms_csv] if cms_csv.strip() else []
+
+        cm_od = st.text_input(
+            "Output dir (optional)",
+            value="",
+            placeholder="data/processed/aero_sanity/<name>  — leave blank for auto",
+            key="cms_od",
+        )
+        if cm_od.strip() and args_cm:
+            args_cm += ["--output-dir", cm_od.strip()]
+
+        with st.expander("Advanced options"):
+            c1, c2 = st.columns(2)
+            cms_ac   = c1.text_input("Alpha column",  "alpha_deg", key="cms_ac")
+            cms_cc   = c2.text_input("Cm column",     "cm",        key="cms_cc")
+            cms_gc   = st.text_input(
+                "Group columns",
+                "geometry_id,control_input_deg,velocity_mps,altitude_m",
+                key="cms_gc",
+            )
+            cms_fov  = st.checkbox("Fail on violation", False, key="cms_fov",
+                                   help="--fail-on-violation. Exit non-zero if any group has Cma ≥ 0.")
+            if args_cm:
+                args_cm += ["--alpha-column", cms_ac, "--cm-column", cms_cc,
+                            "--group-columns", cms_gc]
+                if cms_fov: args_cm.append("--fail-on-violation")
+
+        if args_cm:
+            _panel("Run Cm sanity check",
+                   "Verifies Cma < 0 in all condition groups. Required before ML training.",
+                   args_cm, root, exe, tmo, dry, "cms_run",
+                   label="▶  Run Cm sanity")
+        else:
+            st.info("Select a dataset or CSV path above to enable this check.")
 
 
 def pg_dynamics(root, exe, tmo, dry):
@@ -27727,6 +28032,10 @@ import numpy as np
 import pandas as pd
 
 from aeris.ml.fingerprints import file_sha256
+from aeris.ml.feature_set_inference import (
+    prepare_dataframe_for_feature_set_inference,
+    trained_feature_set_name_from_config,
+)
 from aeris.ml.manifest import utc_now_iso
 from aeris.ml.model_promotion import require_promoted_model
 
@@ -28067,6 +28376,8 @@ def suggest_samples(
     objective_weight: float = 0.25,
     envelope_penalty_weight: float = 2.0,
     exclude_outside_envelope: bool = False,
+    feature_set_name: str | None = None,
+    allow_feature_set_mismatch: bool = False,
 ) -> ActiveLearningResult:
     """Rank candidate samples for the next simulation batch.
 
@@ -28103,15 +28414,34 @@ def suggest_samples(
     candidate_df_raw = pd.read_csv(candidate_csv)
     if candidate_df_raw.empty:
         raise ValueError(f"Candidate CSV is empty: {candidate_csv}")
-    _require_columns(candidate_df_raw, feature_columns, label="Candidate CSV")
     if candidate_id_column is not None and candidate_id_column not in candidate_df_raw.columns:
         raise ValueError(f"candidate_id_column '{candidate_id_column}' is missing from candidate CSV")
 
     reference_path, reference_df_raw = _load_reference_rows(model_run_dir, reference_path_arg)
-    _require_columns(reference_df_raw, feature_columns, label="Reference CSV")
 
-    candidate_df = _numeric_frame(candidate_df_raw, feature_columns, label="Candidate CSV")
-    reference_df = _numeric_frame(reference_df_raw, feature_columns, label="Reference CSV")
+    resolved_feature_set_name = feature_set_name or trained_feature_set_name_from_config(train_config)
+
+    candidate_prepared = prepare_dataframe_for_feature_set_inference(
+        candidate_df_raw,
+        train_config=train_config,
+        feature_set_name=resolved_feature_set_name,
+        allow_feature_set_mismatch=allow_feature_set_mismatch,
+    )
+    reference_prepared = prepare_dataframe_for_feature_set_inference(
+        reference_df_raw,
+        train_config=train_config,
+        feature_set_name=resolved_feature_set_name,
+        allow_feature_set_mismatch=allow_feature_set_mismatch,
+    )
+
+    candidate_df_prepared = candidate_prepared.dataframe
+    reference_df_prepared = reference_prepared.dataframe
+
+    _require_columns(candidate_df_prepared, feature_columns, label="Candidate CSV")
+    _require_columns(reference_df_prepared, feature_columns, label="Reference CSV")
+
+    candidate_df = _numeric_frame(candidate_df_prepared, feature_columns, label="Candidate CSV")
+    reference_df = _numeric_frame(reference_df_prepared, feature_columns, label="Reference CSV")
 
     X_candidate = candidate_df[feature_columns].to_numpy(dtype=float)
     X_reference = reference_df[feature_columns].to_numpy(dtype=float)
@@ -28140,7 +28470,7 @@ def suggest_samples(
     envelope_violation_count, envelope_excess_sum, envelope_excess_max = _envelope_metrics(X_candidate, lows, highs, widths)
     envelope_penalty_score = _minmax_score(envelope_excess_sum)
 
-    ranked_df = candidate_df_raw.copy()
+    ranked_df = candidate_df_prepared.copy()
     if candidate_id_column is None:
         ranked_df.insert(0, "candidate_id", [f"cand_{i:05d}" for i in range(len(ranked_df))])
         resolved_candidate_id_column = "candidate_id"
@@ -28192,6 +28522,28 @@ def suggest_samples(
         output_dir_resolved = Path(output_dir).expanduser().resolve()
     output_dir_resolved = _ensure_dir(output_dir_resolved)
 
+    materialized_candidate_csv_path: Path | None = None
+    materialized_reference_csv_path: Path | None = None
+    feature_engineering_manifest_path: Path | None = None
+
+    if candidate_prepared.feature_set_applied:
+        materialized_candidate_csv_path = output_dir_resolved / "materialized_candidate_pool.csv"
+        materialized_reference_csv_path = output_dir_resolved / "materialized_reference_rows.csv"
+        feature_engineering_manifest_path = output_dir_resolved / "active_learning_feature_engineering_manifest.json"
+
+        candidate_df_prepared.to_csv(materialized_candidate_csv_path, index=False)
+        reference_df_prepared.to_csv(materialized_reference_csv_path, index=False)
+        feature_engineering_manifest_path.write_text(
+            json.dumps(
+                {
+                    "candidate": candidate_prepared.to_summary(),
+                    "reference": reference_prepared.to_summary(),
+                },
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
     ranked_path = output_dir_resolved / "ranked_candidate_samples.csv"
     report_path = output_dir_resolved / "active_learning_report.json"
     ranked_df.to_csv(ranked_path, index=False)
@@ -28214,6 +28566,14 @@ def suggest_samples(
         "feature_columns": feature_columns,
         "target_columns": target_columns,
         "candidate_id_column": resolved_candidate_id_column,
+        "feature_set_name": candidate_prepared.requested_feature_set_name,
+        "trained_feature_set_name": candidate_prepared.trained_feature_set_name,
+        "feature_set_applied": candidate_prepared.feature_set_applied,
+        "allow_feature_set_mismatch": bool(allow_feature_set_mismatch),
+        "feature_engineering": {
+            "candidate": candidate_prepared.to_summary(),
+            "reference": reference_prepared.to_summary(),
+        },
         "n_candidates": int(len(ranked_df)),
         "top_n_requested": int(top_n),
         "n_recommended": n_recommended,
@@ -28231,8 +28591,13 @@ def suggest_samples(
         "artifacts": {
             "ranked_candidates_csv": str(ranked_path),
             "report_json": str(report_path),
+            "materialized_candidate_pool_csv": None if materialized_candidate_csv_path is None else str(materialized_candidate_csv_path),
+            "materialized_reference_rows_csv": None if materialized_reference_csv_path is None else str(materialized_reference_csv_path),
+            "feature_engineering_manifest_json": None if feature_engineering_manifest_path is None else str(feature_engineering_manifest_path),
             "candidate_csv_sha256": file_sha256(candidate_csv),
             "reference_csv_sha256": file_sha256(reference_path),
+            "materialized_candidate_pool_sha256": None if materialized_candidate_csv_path is None else file_sha256(materialized_candidate_csv_path),
+            "materialized_reference_rows_sha256": None if materialized_reference_csv_path is None else file_sha256(materialized_reference_csv_path),
             "model_sha256": file_sha256(model_path),
         },
         "top_recommendations": ranked_df.head(int(top_n))[
@@ -55590,6 +55955,42 @@ So the right engineering statement is:
 “AERIS is test-backed and workflow-validated at small scale, with medium/large operational validation still required before claiming production maturity.”
 
 End of document.
+
+
+# ==================================================
+# FILE: tests/ml/test_active_learning_feature_set_static.py
+# ==================================================
+
+from __future__ import annotations
+
+from pathlib import Path
+
+
+def test_active_learning_supports_feature_set_candidate_materialization() -> None:
+    text = Path("src/aeris/ml/active_learning/suggest.py").read_text(encoding="utf-8")
+
+    assert "prepare_dataframe_for_feature_set_inference" in text
+    assert "trained_feature_set_name_from_config" in text
+    assert "feature_set_name: str | None = None" in text
+    assert "allow_feature_set_mismatch: bool = False" in text
+    assert "materialized_candidate_pool.csv" in text
+    assert "active_learning_feature_engineering_manifest.json" in text
+    assert '"feature_set_applied"' in text
+
+
+def test_suggest_samples_cli_exposes_feature_set_flags() -> None:
+    text = Path("src/aeris/commands/ml.py").read_text(encoding="utf-8")
+
+    suggest_idx = text.find('@ml_app.command("suggest-samples")')
+    predict_idx = text.find('@ml_app.command("predict")')
+    assert suggest_idx != -1
+    assert predict_idx != -1
+
+    suggest_block = text[suggest_idx:predict_idx]
+    assert "--feature-set" in suggest_block
+    assert "--allow-feature-set-mismatch" in suggest_block
+    assert "feature_set_name=feature_set" in suggest_block
+    assert "allow_feature_set_mismatch=allow_feature_set_mismatch" in suggest_block
 
 
 # ==================================================

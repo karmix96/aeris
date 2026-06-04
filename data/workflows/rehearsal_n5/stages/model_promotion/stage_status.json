@@ -1,0 +1,38 @@
+{
+  "next_required_stage_after_record": {
+    "description": "Check prediction inputs against the promoted model and training envelope.",
+    "domain": "ml_trust",
+    "name": "inference_guard",
+    "recommended_command": "aeris ml check-inference-inputs --model-run-dir data/processed/ml_runs/<promoted_run> --input-csv <candidate_inputs.csv>"
+  },
+  "schema_version": "aeris.workflow.v1",
+  "stage": {
+    "artifacts": [
+      "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/processed/ml_runs/rehearsal_n5_compare_physics/runs/random_forest/model_promotion_manifest.json",
+      "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/processed/ml_runs/rehearsal_n5_compare_physics/runs/random_forest/model_card.json",
+      "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/processed/ml_runs/rehearsal_n5_compare_physics/runs/random_forest/training_envelope.json"
+    ],
+    "blockers": [],
+    "domain": "ml_trust",
+    "inputs": [
+      "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/processed/ml_runs/rehearsal_n5_compare_physics/runs/random_forest",
+      "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/processed/ml_runs/rehearsal_n5_compare_physics/runs/random_forest/promotion_gate_suggestions/rehearsal_only_gates.yaml"
+    ],
+    "metadata": {
+      "blocker_count": 0,
+      "command": "aeris ml promote-model",
+      "promotion_ready_at_time_of_promotion": true,
+      "status": "approved",
+      "warning_count": 0
+    },
+    "name": "model_promotion",
+    "notes": "ML model promotion completed.",
+    "outputs": [],
+    "required": true,
+    "status": "complete",
+    "updated_at_utc": "2026-06-04T12:46:09Z",
+    "warnings": []
+  },
+  "workflow_id": "workflow_1ec568790609",
+  "workflow_name": "rehearsal_n5"
+}

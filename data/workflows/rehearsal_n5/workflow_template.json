@@ -1,0 +1,28 @@
+{
+  "description": "Full required BWB aero-surrogate trust chain: dataset, aero, QC, curation, promotion, EDA, ML, model promotion, and inference guard.",
+  "name": "production",
+  "notes": [
+    "Use grouped ML splits by geometry_id.",
+    "Do not train on raw or curated-only datasets; use promoted datasets."
+  ],
+  "optional_stages": [
+    "active_learning",
+    "multifidelity",
+    "final_package"
+  ],
+  "required_stages": [
+    "geometry_dataset",
+    "aero_sweep",
+    "aero_dataset",
+    "dataset_qc",
+    "curation",
+    "promotion",
+    "ml_eda",
+    "ml_training",
+    "model_comparison",
+    "model_promotion",
+    "inference_guard"
+  ],
+  "schema_version": "aeris.workflow_template.v1",
+  "title": "Production training workflow"
+}

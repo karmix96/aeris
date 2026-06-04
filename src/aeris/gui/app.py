@@ -872,130 +872,402 @@ def pg_home(root, exe, tmo, dry):
     ])
 
 
-def pg_geometry(root, exe, tmo, dry):
-    _hero("△","Geometry","bwb_segmented_v1 · 17 design variables","generator")
-    tab_gen, tab_vis, tab_info = st.tabs(["  ① Generate  ","  ② Visualize  ","  ③ System info  "])
+def _geo_var_table(cfg_path: str) -> None:
+    """Read a geometry YAML and render the design variable table from its actual bounds."""
+    # Fixed notes — these never change regardless of YAML
+    NOTES = {
+        "c1_m":           ("Chord",    "Root chord (absolute)"),
+        "c2_ratio":       ("Chord",    "Chord ratio relative to c1 — must be > 0"),
+        "c3_ratio":       ("Chord",    "Chord ratio relative to c1 — must be > 0"),
+        "c4_ratio":       ("Chord",    "Tip chord ratio relative to c1 — must be > 0"),
+        "b_total_m":      ("Span",     "Semi-span — full span = 2 × this value"),
+        "b3_ratio":       ("Span",     "Outboard segment fraction — must be in (0, 1)"),
+        "split_ratio":    ("Span",     "Inner/mid split fraction — must be in (0, 1)"),
+        "sw1_deg":        ("Sweep",    "Inner LE sweep. YAML = positive; Python = negative. Never negate twice."),
+        "sw2_deg":        ("Sweep",    "Mid sweep — same sign convention as sw1_deg"),
+        "sw3_deg":        ("Sweep",    "Outer sweep — same sign convention as sw1_deg"),
+        "twist_b0_deg":   ("Twist",    "Root twist. Positive = leading edge up (washout). No sign flip."),
+        "twist_b1_deg":   ("Twist",    "Inner twist"),
+        "twist_b2_deg":   ("Twist",    "Mid twist"),
+        "twist_b3_deg":   ("Twist",    "Tip twist"),
+        "dihedral_b1_deg":("Dihedral", "Inner dihedral"),
+        "dihedral_b2_deg":("Dihedral", "Mid dihedral"),
+        "dihedral_b3_deg":("Dihedral", "Outer dihedral — root always fixed at 0°"),
+    }
+    UNITS = {
+        "c1_m": "m", "b_total_m": "m",
+        "sw1_deg": "°", "sw2_deg": "°", "sw3_deg": "°",
+        "twist_b0_deg": "°", "twist_b1_deg": "°",
+        "twist_b2_deg": "°", "twist_b3_deg": "°",
+        "dihedral_b1_deg": "°", "dihedral_b2_deg": "°", "dihedral_b3_deg": "°",
+    }
 
-    # ── GENERATE ────────────────────────────────────────────────────────────
-    with tab_gen:
-        _note(
-            "<b>aeris geometry generate</b> — accepts <b>only --config/-c</b>. "
-            "Nothing else. Plot-saving and AeroSandbox are set in the YAML "
-            "<code>geometry.outputs.save_plot</code> / <code>build_aerosandbox</code>. "
-            "The run folder is always <code>data/runs/&lt;timestamp&gt;_geometry_&lt;config_stem&gt;/</code>. "
-            "Custom naming requires a codebase patch (add <code>--name</code> to "
-            "<code>src/aeris/pipeline/geometry_run.py</code> and "
-            "<code>src/aeris/commands/geometry.py</code>).",
-            "info",
-        )
-        _note(
-            "<b>For training campaigns:</b> use <code>bwb_training_v1.yaml</code> (real design-space bounds). "
-            "<code>baseline_bwb_25.yaml</code> is nearly fixed — use only for smoke tests.",
-            "info",
-        )
-        mode = st.radio("Config source",["Use existing YAML file","Build config interactively"],horizontal=True,key="gm_mode")
-        if mode.startswith("Use existing"):
-            _sec("YAML file")
-            config = _pick_file("Config file",root/"configs"/"geometry","*.yaml","g_cfg",
-                                default=str(root/"configs"/"geometry"/"bwb_training_v1.yaml"))
+    cfg_data = None
+    if yaml and cfg_path and Path(cfg_path).exists():
+        try:
+            cfg_data = yaml.safe_load(Path(cfg_path).read_text(encoding="utf-8"))
+        except Exception:
+            cfg_data = None
+
+    pb = (cfg_data or {}).get("geometry", {}).get("planform_bounds", {})
+    sb = (cfg_data or {}).get("geometry", {}).get("section_bounds", {})
+    bounds = {**pb, **sb}
+
+    rows = []
+    for var, (group, note) in NOTES.items():
+        b = bounds.get(var, {})
+        if isinstance(b, dict) and "min" in b and "max" in b:
+            mn, mx = b["min"], b["max"]
+            u = UNITS.get(var, "")
+            spread = abs(float(mx) - float(mn))
+            if spread < 0.01:
+                rng = f"fixed ≈ {mn}{u}"
+            else:
+                rng = f"{mn} – {mx}{u}"
         else:
-            _sec("Interactive builder")
-            yaml_str = _yaml_geometry_builder("gb")
-            with st.expander("Preview YAML"): st.code(yaml_str, language="yaml")
-            sp = st.text_input("Save YAML to path",str(root/"configs"/"geometry"/"gui_built.yaml"),key="gb_sp")
-            if st.button("💾 Save YAML",key="gb_save",type="secondary"):
-                p=Path(sp); p.parent.mkdir(parents=True,exist_ok=True)
-                p.write_text(yaml_str,encoding="utf-8"); st.success(f"Saved: {p}")
-            config = sp
+            rng = "— not in YAML —" if cfg_data else "— load a YAML —"
+        rows.append((group, var, rng, note))
 
-        # Only valid arg: --config
-        args = ["geometry","generate","--config",config]
-        _panel("Generate one geometry",
-               "Creates one deterministic BWB geometry. Output → data/runs/<timestamp>_geometry_<stem>/",
-               args, root, exe, tmo, dry, "g_run")
-
-        # Show recent geometry runs
-        geo_runs = [r for r in _dirs(str(root/"data"/"runs")) if "geometry" in Path(r).name]
-        if geo_runs:
-            _sec("Recent geometry runs")
-            for r in geo_runs[:5]:
-                p = Path(r)
-                m = _rjson(p/"manifest.json")
-                status = (m or {}).get("status","?")
-                col = "#22C55E" if status=="success" else "#EF4444" if status=="failed" else "#F59E0B"
-                _h(f'<div style="background:#202B36;border:1px solid #334252;border-radius:8px;padding:.6rem 1rem;margin-bottom:.35rem;display:flex;align-items:center;gap:10px">'
-                   f'<div style="width:8px;height:8px;border-radius:50%;background:{col}"></div>'
-                   f'<div style="flex:1;font-size:.79rem;color:#D6DEE8;font-family:JetBrains Mono,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{p.name}</div>'
-                   f'<div style="font-size:.7rem;color:#8EA0B3">{status}</div></div>')
-
-    # ── VISUALIZE ────────────────────────────────────────────────────────────
-    with tab_vis:
-        _note(
-            "<b>aeris geometry visualize --config &lt;file&gt;</b> — "
-            "samples ONE geometry from the config using the seed, then visualizes it. "
-            "It does NOT replay an existing run — it re-generates from config.<br>"
-            "<b>2D plot</b> (<code>--save-plot</code>): saves a top-view planform PNG to the output folder. "
-            "View it later in Results Browser — no display needed.<br>"
-            "<b>3D viewer</b> (<code>--draw-3d</code>): opens an AeroSandbox OpenGL window on your "
-            "<b>local desktop</b>. Disable on headless servers / SSH / remote environments. "
-            "Requires <code>build_aerosandbox: true</code> in config outputs.<br>"
-            "<b>--output-dir</b>: leave blank for auto debug folder; "
-            "pick an existing run folder to co-locate visualization artifacts.",
-            "info",
+    # Build table HTML
+    header = (
+        '<table style="width:100%;border-collapse:collapse;font-size:.8rem">'
+        '<thead><tr style="border-bottom:1px solid #334252">'
+        '<th style="text-align:left;padding:.4rem .6rem;color:#8EA0B3;font-weight:600">Group</th>'
+        '<th style="text-align:left;padding:.4rem .6rem;color:#8EA0B3;font-weight:600">Variable</th>'
+        '<th style="text-align:left;padding:.4rem .6rem;color:#8EA0B3;font-weight:600">Range in this config</th>'
+        '<th style="text-align:left;padding:.4rem .6rem;color:#8EA0B3;font-weight:600">Notes</th>'
+        '</tr></thead><tbody>'
+    )
+    body = ""
+    prev_group = None
+    for group, var, rng, note in rows:
+        sep = "border-bottom:1px solid #263545;"
+        # Color fixed ranges differently so user immediately spots near-fixed vars
+        rng_col = "#F59E0B" if "fixed" in rng else "#D6DEE8"
+        body += (
+            f'<tr style="{sep}">'
+            f'<td style="padding:.38rem .6rem;color:#C0CAD6">'
+            f'{"" if group == prev_group else group}</td>'
+            f'<td style="padding:.38rem .6rem;font-family:JetBrains Mono,monospace;'
+            f'color:#93C5FD;white-space:nowrap">{var}</td>'
+            f'<td style="padding:.38rem .6rem;color:{rng_col};white-space:nowrap">{rng}</td>'
+            f'<td style="padding:.38rem .6rem;color:#8EA0B3">{note}</td>'
+            f'</tr>'
         )
-        _sec("Config")
-        vcfg = _pick_file("Geometry config",root/"configs"/"geometry","*.yaml","gv_cfg",
-                          default=str(root/"configs"/"geometry"/"baseline_bwb_25.yaml"))
+        prev_group = group
+    _h(header + body + "</tbody></table>")
 
-        _sec("Generation")
-        c1, c2 = st.columns(2)
-        seed_ov = c1.text_input("--seed (optional, int)",value="",key="gv_seed",
-                                help="Seed for the geometry sampler. Leave blank = use config seed. "
-                                     "Match the seed from a generate run to reproduce that exact shape.")
-        build_asb = c2.selectbox("--build-aerosandbox override",
-                                  ["(from config)","build (--build-aerosandbox)","skip (--no-build-aerosandbox)"],
-                                  key="gv_ba",
-                                  help="Override the YAML build_aerosandbox setting. "
-                                       "Must be True/build to use --draw-3d.")
+    # Extra context from section_bounds
+    airfoil = (cfg_data or {}).get("geometry", {}).get("section_bounds", {}).get("airfoil_name", "—")
+    dih_root = (cfg_data or {}).get("geometry", {}).get("section_bounds", {}).get("dihedral_root_deg", "—")
+    if cfg_data:
+        st.caption(f"Airfoil: **{airfoil}** · Root dihedral: **{dih_root}°** (fixed, not sampled)")
 
-        _sec("Visualization")
-        c3, c4, c5 = st.columns(3)
-        save_pl = c3.selectbox("--save-plot override",
-                                ["(from config)","save (--save-plot)","skip (--no-save-plot)"],
-                                key="gv_sp",
-                                help="Save the 2D planform PNG. Viewable in Results Browser later.")
-        draw3d = c4.checkbox("--draw-3d (open 3D viewer)",value=False,key="gv_3d",
-                             help="Opens interactive AeroSandbox OpenGL window. "
-                                  "DISABLE on headless/remote servers. Needs build-aerosandbox=true.")
-        show_pl = c5.checkbox("--show-plot (pop-up 2D window)",value=False,key="gv_sh",
-                              help="Opens matplotlib window. Usually False on servers.")
 
-        _sec("Output directory (--output-dir)")
-        runs_dirs = _dirs(str(root/"data"/"runs"))
-        od_opts = ["(auto — data/debug/visualization_runs/<timestamp>_geometry_<name>/)"] + runs_dirs
-        od_sel = st.selectbox("Output dir",od_opts,index=0,key="gv_od_sel",
-                              format_func=lambda s: "auto debug folder" if s.startswith("(auto") else Path(s).name,
-                              help="Leave on auto for a fresh debug folder, or pick an existing run to save alongside it.")
-        od = "" if od_sel.startswith("(auto") else od_sel
-        od = st.text_input("Manual --output-dir override",value=od,key="gv_od_m",
-                           help="Absolute path. Leave blank for automatic debug subfolder.")
+def _geo_delete_one(p: Path, key_suffix: str) -> bool:
+    """Render one run-folder row with an inline delete button. Returns True if deleted."""
+    import shutil as _shutil
+    m      = _rjson(p / "manifest.json")
+    status = (m or {}).get("status", "—")
+    dot    = "#22C55E" if status == "success" else "#EF4444" if status == "failed" else "#8EA0B3"
+    loc    = "generate" if "data/runs" in str(p) else "visualize"
 
-        args = ["geometry","visualize","--config",vcfg]
-        _flag(args,"--seed",seed_ov)
-        _flag(args,"--output-dir",od)
-        if "save (--save-plot)" in save_pl:   args.append("--save-plot")
-        elif "skip (--no-save-plot)" in save_pl: args.append("--no-save-plot")
-        if "build (" in build_asb:   args.append("--build-aerosandbox")
-        elif "skip (" in build_asb:  args.append("--no-build-aerosandbox")
-        _bflag(args,"--draw-3d","--no-draw-3d",draw3d)
-        _bflag(args,"--show-plot","--no-show-plot",show_pl)
-        _panel("Visualize geometry",
-               "Generates and visualizes one geometry from config. 2D PNG saved to output dir. 3D = desktop OpenGL.",
-               args, root, exe, tmo, dry, "gv_run")
+    col_name, col_btn = st.columns([10, 1])
+    with col_name:
+        _h(
+            f'<div style="background:#1B2A3A;border:1px solid #2D3F52;border-radius:7px;'
+            f'padding:.42rem .9rem;display:flex;align-items:center;gap:10px">'
+            f'<div style="width:7px;height:7px;border-radius:50%;background:{dot};flex-shrink:0"></div>'
+            f'<div style="flex:1;font-size:.78rem;color:#D6DEE8;font-family:JetBrains Mono,monospace;'
+            f'overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{p.name}</div>'
+            f'<div style="font-size:.68rem;color:#5A7A96;flex-shrink:0;margin-right:6px">{loc}</div>'
+            f'<div style="font-size:.7rem;color:{dot};flex-shrink:0;font-weight:600">{status}</div>'
+            f'</div>'
+        )
+    with col_btn:
+        if st.button("🗑", key=f"del_{key_suffix}", help=f"Delete {p.name}"):
+            try:
+                _shutil.rmtree(p)
+                st.toast(f"Deleted: {p.name}", icon="✓")
+                return True
+            except Exception as e:
+                st.error(f"Could not delete {p.name}: {e}")
+    return False
 
+
+def pg_geometry(root, exe, tmo, dry):
+    import shutil as _shutil
+
+    _hero("△", "Geometry", "bwb_segmented_v1 · 17 design variables", "generator")
+    tab_gen, tab_vis, tab_info = st.tabs(["  ① Generate  ", "  ② Visualize  ", "  ③ Design variables  "])
+
+    # Shared config list — built once, used in all tabs
+    cfg_files = _files(str(root / "configs" / "geometry"), "*.yaml")
+    prod_cfg  = str(root / "configs" / "geometry" / "bwb_training_v1.yaml")
+    smoke_cfg = str(root / "configs" / "geometry" / "baseline_bwb_25.yaml")
+
+    def _cfg_label(s):
+        if "bwb_training_v1" in s: return f"Production — {Path(s).name}"
+        if "baseline_bwb_25"  in s: return f"Smoke test  — {Path(s).name}"
+        return Path(s).name
+
+    cfg_prod_first  = ([prod_cfg]  if prod_cfg  in cfg_files else []) +                       ([smoke_cfg] if smoke_cfg in cfg_files else []) +                       [f for f in cfg_files if f not in (prod_cfg, smoke_cfg)]
+    cfg_smoke_first = ([smoke_cfg] if smoke_cfg in cfg_files else []) +                       ([prod_cfg]  if prod_cfg  in cfg_files else []) +                       [f for f in cfg_files if f not in (prod_cfg, smoke_cfg)]
+
+    if not cfg_files:
+        st.warning(f"No YAML files found under {root / 'configs' / 'geometry'}. "
+                   "Check your project root in the sidebar.")
+        return
+
+    # ── GENERATE ─────────────────────────────────────────────────────────────
+    with tab_gen:
+        sel_cfg = st.selectbox(
+            "Config", cfg_prod_first,
+            format_func=_cfg_label, key="gg_cfg",
+            help="Production = wide design space, use for ML. "
+                 "Smoke = near-fixed, use only to verify the solver works.",
+        )
+        if "bwb_training_v1" in sel_cfg:
+            st.success("✓ Wide design space — correct for ML training campaigns.")
+        elif "baseline_bwb_25" in sel_cfg:
+            st.warning("⚠ Near-fixed design space — smoke / solver-check only. Not suitable for ML.")
+        else:
+            st.info(f"Custom config: {Path(sel_cfg).name}")
+
+        _panel(
+            "Generate geometry",
+            "Output → data/runs/<timestamp>_geometry_<stem>/",
+            ["geometry", "generate", "--config", sel_cfg],
+            root, exe, tmo, dry, "g_run",
+            label="▶  Generate geometry",
+        )
+
+        # ── Runs from data/runs/ ──────────────────────────────────────────
+        geo_runs = [Path(r) for r in _dirs(str(root / "data" / "runs"))
+                    if "geometry" in Path(r).name]
+
+        if geo_runs:
+            _sec("Generated geometry runs  (data/runs/)")
+            st.caption("Click 🗑 on any row to delete that folder immediately.")
+            did_delete = False
+            for i, p in enumerate(geo_runs[:20]):
+                if _geo_delete_one(p, f"gen_{i}"):
+                    did_delete = True
+            if did_delete:
+                st.rerun()
+
+            if len(geo_runs) > 1:
+                st.markdown("")
+                if st.button(
+                    f"🗑  Delete ALL generate runs ({len(geo_runs)})",
+                    key="gg_del_all_gen", type="secondary",
+                ):
+                    st.session_state["gg_confirm_gen"] = True
+
+            if st.session_state.get("gg_confirm_gen"):
+                st.warning(f"Delete all {len(geo_runs)} generate run folder(s)? This cannot be undone.")
+                ca, cb, _ = st.columns([1, 1, 4])
+                if ca.button("Yes, delete all", key="gg_confirm_gen_yes", type="primary"):
+                    deleted = []
+                    for p in geo_runs:
+                        try:
+                            _shutil.rmtree(p)
+                            deleted.append(p.name)
+                        except Exception as e:
+                            st.error(f"{p.name}: {e}")
+                    st.session_state["gg_confirm_gen"] = False
+                    st.toast(f"Deleted {len(deleted)} folder(s).", icon="✓")
+                    st.rerun()
+                if cb.button("Cancel", key="gg_confirm_gen_no", type="secondary"):
+                    st.session_state["gg_confirm_gen"] = False
+                    st.rerun()
+        else:
+            st.caption("No generate runs yet — data/runs/ is empty.")
+
+    # ── VISUALIZE ─────────────────────────────────────────────────────────────
+    with tab_vis:
+        # ── Geometry source ───────────────────────────────────────────────
+        geo_run_paths = [Path(r) for r in _dirs(str(root / "data" / "runs"))
+                         if "geometry" in Path(r).name]
+
+        src_mode = st.radio(
+            "Geometry source",
+            ["From existing run", "From config file"],
+            horizontal=True,
+            key="gv_src_mode",
+            help="From existing run: picks the config that was used when you generated that geometry, "
+                 "so you visualize the same design space. "
+                 "From config file: choose any YAML config directly.",
+        )
+
+        if src_mode == "From existing run":
+            if not geo_run_paths:
+                st.warning(
+                    "No geometry runs found in data/runs/. "
+                    "Go to ① Generate first, create a geometry, then come back here."
+                )
+                vcfg = cfg_smoke_first[0] if cfg_smoke_first else ""
+            else:
+                run_opts = {p.name: p for p in geo_run_paths}
+                chosen_run_name = st.selectbox(
+                    "Select generated run",
+                    list(run_opts.keys()),
+                    key="gv_run_sel",
+                    help="Select a folder from data/runs/. "
+                         "The config that was used to create it will be loaded automatically.",
+                )
+                chosen_run = run_opts[chosen_run_name]
+
+                # Read input_config.yaml saved inside the run folder
+                saved_cfg = chosen_run / "input_config.yaml"
+                if saved_cfg.exists():
+                    vcfg = str(saved_cfg)
+                    # Also read it to show a summary
+                    cfg_preview = None
+                    if yaml:
+                        try:
+                            cfg_preview = yaml.safe_load(saved_cfg.read_text(encoding="utf-8"))
+                        except Exception:
+                            cfg_preview = None
+                    m = _rjson(chosen_run / "manifest.json")
+                    status = (m or {}).get("status", "unknown")
+                    col = "#22C55E" if status == "success" else "#EF4444"
+                    cfg_name = (cfg_preview or {}).get("name", saved_cfg.name)
+                    _h(
+                        f'<div style="background:#1B2A3A;border:1px solid #2D3F52;border-radius:8px;'
+                        f'padding:.55rem 1rem;margin:.4rem 0;display:flex;align-items:center;gap:10px">'
+                        f'<div style="width:8px;height:8px;border-radius:50%;background:{col};flex-shrink:0"></div>'
+                        f'<div style="flex:1;font-size:.8rem;color:#D6DEE8">'
+                        f'<span style="font-family:JetBrains Mono,monospace">{chosen_run.name}</span>'
+                        f' — config: <span style="color:#93C5FD">{cfg_name}</span></div>'
+                        f'<div style="font-size:.7rem;color:{col};font-weight:600">{status}</div>'
+                        f'</div>'
+                    )
+                    st.caption(f"Config loaded from: `{saved_cfg}`")
+                else:
+                    st.warning(
+                        f"No input_config.yaml found inside {chosen_run.name}. "
+                        "This run may be from an older AERIS version. "
+                        "Falling back to config file picker."
+                    )
+                    vcfg = st.selectbox(
+                        "Config (fallback)", cfg_smoke_first,
+                        format_func=_cfg_label, key="gv_cfg_fb",
+                    )
+        else:
+            # From config file
+            vcfg = st.selectbox(
+                "Config", cfg_smoke_first,
+                format_func=_cfg_label, key="gv_cfg",
+                help="Pick which config to sample one geometry from.",
+            )
+
+        # ── Seed and PNG name ─────────────────────────────────────────────
+        c1, c2 = st.columns([1, 2])
+        seed_val = c1.number_input(
+            "Seed", min_value=0, max_value=99999, value=42, step=1,
+            key="gv_seed",
+            help="Same seed + same config = same geometry every time. "
+                 "Change it to explore different shapes from the design space.",
+        )
+        png_name = c2.text_input(
+            "PNG filename (optional)",
+            value="", placeholder="e.g. bwb_sweep35  — leave blank for auto name",
+            key="gv_pngname",
+            help="Name for the saved PNG folder under data/debug/plots/. "
+                 "Leave blank for the AERIS auto-named debug folder.",
+        )
+
+        st.caption(
+            "**▶ Visualize 3D wing** — opens an interactive OpenGL window. "
+            "Requires a local desktop (not SSH / headless).  "
+            "**📷 Save plot as PNG** — saves a 2D top-view image. Works everywhere."
+        )
+
+        col_a, col_b = st.columns(2)
+        with col_a:
+            _panel(
+                "Visualize 3D wing",
+                "Output → data/debug/visualization_runs/<timestamp>/",
+                ["geometry", "visualize", "--config", vcfg,
+                 "--seed", str(int(seed_val)), "--draw-3d"],
+                root, exe, tmo, dry, "gv_3d",
+                label="▶  Visualize 3D wing",
+            )
+        with col_b:
+            args_png = ["geometry", "visualize", "--config", vcfg,
+                        "--seed", str(int(seed_val)), "--no-draw-3d", "--save-plot"]
+            if png_name.strip():
+                out_dir = root / "data" / "debug" / "plots" / png_name.strip()
+                args_png += ["--output-dir", str(out_dir)]
+            _panel(
+                "Save plot as PNG",
+                "Output → data/debug/visualization_runs/<timestamp>/  (or plots/<name>/ if named).",
+                args_png,
+                root, exe, tmo, dry, "gv_png",
+                label="📷  Save plot as PNG",
+            )
+
+        # ── Runs from data/debug/visualization_runs/ + data/debug/plots/ ──
+        viz_base  = root / "data" / "debug" / "visualization_runs"
+        plot_base = root / "data" / "debug" / "plots"
+        viz_runs  = [Path(r) for r in _dirs(str(viz_base))]
+        plot_runs = [Path(r) for r in _dirs(str(plot_base))]
+        all_viz   = viz_runs + plot_runs
+
+        if all_viz:
+            _sec("Visualize outputs")
+            st.caption(
+                "`visualization_runs/` = 3D viewer and default PNG runs. "
+                "`plots/` = named PNG outputs. Click 🗑 to delete."
+            )
+            did_delete = False
+            for i, p in enumerate(all_viz[:20]):
+                if _geo_delete_one(p, f"viz_{i}"):
+                    did_delete = True
+            if did_delete:
+                st.rerun()
+
+            if len(all_viz) > 1:
+                st.markdown("")
+                if st.button(
+                    f"🗑  Delete ALL visualize outputs ({len(all_viz)})",
+                    key="gv_del_all", type="secondary",
+                ):
+                    st.session_state["gv_confirm_all"] = True
+
+            if st.session_state.get("gv_confirm_all"):
+                st.warning(f"Delete all {len(all_viz)} visualize output folder(s)? This cannot be undone.")
+                ca, cb, _ = st.columns([1, 1, 4])
+                if ca.button("Yes, delete all", key="gv_confirm_all_yes", type="primary"):
+                    deleted = []
+                    for p in all_viz:
+                        try:
+                            _shutil.rmtree(p)
+                            deleted.append(p.name)
+                        except Exception as e:
+                            st.error(f"{p.name}: {e}")
+                    st.session_state["gv_confirm_all"] = False
+                    st.toast(f"Deleted {len(deleted)} folder(s).", icon="✓")
+                    st.rerun()
+                if cb.button("Cancel", key="gv_confirm_all_no", type="secondary"):
+                    st.session_state["gv_confirm_all"] = False
+                    st.rerun()
+        else:
+            st.caption("No visualize outputs yet.")
+
+    # ── DESIGN VARIABLES ─────────────────────────────────────────────────────
     with tab_info:
-        _note("<code>aeris geometry info</code> — lists registered generator IDs and current status.", "info")
-        _panel("Geometry system info","Lists registered generators.",["geometry","info"],root,exe,tmo,dry,"gi_run")
+        info_cfg = st.selectbox(
+            "Show bounds for config", cfg_prod_first,
+            format_func=_cfg_label, key="gi_cfg",
+            help="Switch config to see the exact design-variable bounds from that YAML file.",
+        )
+        st.caption(
+            "Ranges are read directly from the selected YAML. "
+            "**Amber** = nearly fixed (min ≈ max) — not useful for ML training."
+        )
+        _geo_var_table(info_cfg)
 
 
 def pg_dataset(root, exe, tmo, dry):
@@ -1231,159 +1503,443 @@ def pg_dataset(root, exe, tmo, dry):
         _panel("Run smoke pipeline","Quick end-to-end sanity check.",["pipeline","smoke","--config",cfg_sm],root,exe,tmo,dry,"sm_run")
 
 
-def pg_aero(root, exe, tmo, dry):
-    _hero("⊿","Aero Analysis","aerosandbox_avl · single run or parametric sweep","aero")
+def _aero_run_rows(root: Path) -> list[Path]:
+    """All folders in data/runs/ that look like aero runs (single or sweep)."""
+    return [Path(r) for r in _dirs(str(root / "data" / "runs"))
+            if any(k in Path(r).name for k in ("_aero_", "_sweep_"))]
 
-    def _src_args(key):
-        """Returns source args. Exactly one of --config, --run-dir, --dataset must be provided."""
-        src = st.selectbox("Geometry source",
-                           ["Fresh config (--config)","Existing run (--run-dir)","Dataset geometry (--dataset)"],
-                           key=f"{key}_src")
-        args = []
-        if "config" in src:
-            cfg = _pick_file("Config",root/"configs"/"geometry","*.yaml",f"{key}_cfg",
-                             default=str(root/"configs"/"geometry"/"baseline_bwb_25.yaml"))
-            args += ["--config",cfg]
-        elif "run" in src:
-            rd = _pick_dir("Geometry run dir",root/"data"/"runs",f"{key}_rd")
-            gid = st.text_input("--generator-id","bwb_segmented_v1",key=f"{key}_gid",
-                                help="Required for --run-dir mode. Must match the generator used.")
-            args += ["--run-dir",rd,"--generator-id",gid]
+def _geo_run_rows(root: Path) -> list[Path]:
+    """All folders in data/runs/ that look like geometry-only runs."""
+    return [Path(r) for r in _dirs(str(root / "data" / "runs"))
+            if "geometry" in Path(r).name
+            and not any(k in Path(r).name for k in ("_aero_", "_sweep_"))]
+
+def _aero_src_widget(key: str, root: Path, geo_runs: list[Path],
+                     cfg_opts: list[str], cfg_label_fn) -> list[str]:
+    """
+    Geometry source selector for aero run/sweep.
+    Returns the CLI source args list.
+    Always hardcodes --generator-id bwb_segmented_v1 (only registered generator).
+    """
+    src_mode = st.radio(
+        "Geometry source",
+        ["From existing geometry run", "From config file"],
+        horizontal=True,
+        key=f"{key}_src_mode",
+        help="Existing run: reuses a geometry you already generated. "
+             "Config file: generates a fresh geometry sample on the fly.",
+    )
+
+    args = []
+    if src_mode == "From existing geometry run":
+        if not geo_runs:
+            st.warning(
+                "No geometry runs found in data/runs/. "
+                "Go to Geometry → ① Generate first."
+            )
+            # Fall back silently to config so args are always valid
+            cfg = cfg_opts[0] if cfg_opts else ""
+            args += ["--config", cfg]
         else:
-            ds = _pick_dir("Dataset root",root/"data"/"datasets",f"{key}_ds")
-            geom = st.text_input("--geometry-id","geom_00001",key=f"{key}_geomid")
-            gid  = st.text_input("--generator-id","bwb_segmented_v1",key=f"{key}_gid2")
-            args += ["--dataset",ds,"--geometry-id",geom,"--generator-id",gid]
-        return args
-
-    def _solver_args(key):
-        avl  = st.text_input("--avl-command","avl",key=f"{key}_avl",help="'avl' if on PATH, or full path")
-        c1,c2,c3,c4 = st.columns(4)
-        sp   = c1.number_input("--spanwise-resolution",1,value=4,step=1,key=f"{key}_sp")
-        cp   = c2.number_input("--chordwise-resolution",1,value=8,step=1,key=f"{key}_cp")
-        ssp  = c3.selectbox("--spanwise-spacing",SPACING,key=f"{key}_ssp")
-        csp  = c4.selectbox("--chordwise-spacing",SPACING,index=1,key=f"{key}_csp")
-        tmo_ = st.number_input("--timeout-sec",min_value=5,value=180,step=5,key=f"{key}_tmo")
-        with st.expander("Advanced output options"):
-            c5,c6 = st.columns(2)
-            ssf = c5.checkbox("--save-surface-forces",False,key=f"{key}_ssf",help="Write AVL surface force files")
-            sef = c6.checkbox("--save-element-forces",False,key=f"{key}_sef",help="Write AVL element force files")
-        out_n = st.text_input("--output-name (optional folder suffix)","",key=f"{key}_on",
-                              help="Appended to run folder name for easy identification")
-        args = ["--solver","aerosandbox_avl","--avl-command",avl,
-                "--spanwise-resolution",str(int(sp)),"--chordwise-resolution",str(int(cp)),
-                "--spanwise-spacing",ssp,"--chordwise-spacing",csp,
-                "--timeout-sec",str(int(tmo_))]
-        if ssf: args.append("--save-surface-forces")
-        if sef: args.append("--save-element-forces")
-        _flag(args,"--output-name",out_n)
-        return args
-
-    tab_single, tab_sweep, tab_inspect = st.tabs(["  Single run  ","  Sweep  ","  Inspect  "])
-
-    with tab_single:
-        src_a = _src_args("ar")
-        _sec("Flight condition (--alpha is REQUIRED)")
-        c1,c2,c3,c4 = st.columns(4)
-        al = c1.number_input("--alpha [deg]",value=4.0,step=0.5,key="ar_al")
-        be = c2.number_input("--beta [deg]",value=0.0,step=0.5,key="ar_be",help="Sideslip. Default 0.")
-        ve = c3.number_input("--velocity [m/s]",value=28.0,step=1.0,key="ar_ve",help="Default 28 m/s")
-        at = c4.number_input("--altitude [m]",value=1500.0,step=100.0,key="ar_at",help="Default 0 m")
-        ctrl = st.slider("--control-input-deg [deg] (elevon)",-15.0,15.0,0.0,0.5,key="ar_ctrl",
-                         help="Control-surface deflection. Positive = trailing edge down.")
-        with st.expander("Angular rates & misc (optional)"):
-            c5,c6,c7 = st.columns(3)
-            pv = c5.number_input("--p [rad/s]",0.0,key="ar_p",help="Body roll rate. Default 0.")
-            qv = c6.number_input("--q [rad/s]",0.0,key="ar_q",help="Body pitch rate. Default 0.")
-            rv = c7.number_input("--r [rad/s]",0.0,key="ar_r",help="Body yaw rate. Default 0.")
-            mach = st.text_input("--mach (optional Mach metadata)","",key="ar_mach",help="QC metadata only. Velocity+altitude remain authoritative.")
-            seed_ar = st.number_input("--seed",min_value=0,value=0,step=1,key="ar_seed",help="Geometry seed for config mode. Default 0.")
-        _sec("Solver settings")
-        sol_a = _solver_args("ar")
-        args_ar = ["aero","run"] + src_a + ["--alpha",str(al),"--beta",str(be),"--velocity",str(ve),"--altitude",str(at),"--control-input-deg",str(ctrl),"--p",str(pv),"--q",str(qv),"--r",str(rv),"--seed",str(int(seed_ar))] + sol_a
-        _flag(args_ar,"--mach",mach)
-        _panel("Single aero run","One geometry, one flight condition. Full AVL evaluation.",args_ar,root,exe,tmo,dry,"ar_run")
-
-    with tab_sweep:
-        src_s = _src_args("sw")
-        _sec("Sweep definition (comma-separated values)")
-        c1,c2 = st.columns(2)
-        al2 = c1.text_input("--alpha-values [deg]","-2,0,2,4,6",key="sw_al",help="Comma-sep. If empty, uses base --alpha value.")
-        be2 = c2.text_input("--beta-values [deg]","0",key="sw_be",help="Comma-sep. If empty, uses base --beta.")
-        c3,c4 = st.columns(2)
-        ve2 = c3.text_input("--velocity-values [m/s]","28",key="sw_ve",help="Comma-sep. If empty, uses base --velocity.")
-        at2 = c4.text_input("--altitude-values [m]","1500",key="sw_at",help="Comma-sep. If empty, uses base --altitude.")
-        ct2 = st.text_input("--control-input-values [deg]","-5,0,5",key="sw_ctrl",help="Comma-sep elevon sweep. Generates Cartesian product with other sweep values.")
-        with st.expander("Angular rate sweeps (optional)"):
-            c5,c6,c7 = st.columns(3)
-            pv2=c5.text_input("--p-values [rad/s]","0",key="sw_p"); qv2=c6.text_input("--q-values [rad/s]","0",key="sw_q"); rv2=c7.text_input("--r-values [rad/s]","0",key="sw_r")
-        est2 = _est(al2,be2,ve2,at2,ct2,pv2,qv2,rv2)
-        _note(f"Estimated cases (Cartesian product): <b>{est2:,}</b>","info")
-        max_c2 = st.text_input("--max-cases (optional safety cap)","",key="sw_mc",help="Leave blank for no cap.")
-        seed_sw = st.number_input("--seed",min_value=0,value=0,step=1,key="sw_seed",help="Geometry seed for config mode.")
-        _sec("Solver settings")
-        sol_s = _solver_args("sw")
-        args_sw = ["aero","sweep"] + src_s + ["--seed",str(int(seed_sw))]
-        if al2.strip():  args_sw += ["--alpha-values",al2]
-        if be2.strip():  args_sw += ["--beta-values",be2]
-        if ve2.strip():  args_sw += ["--velocity-values",ve2]
-        if at2.strip():  args_sw += ["--altitude-values",at2]
-        if ct2.strip():  args_sw += ["--control-input-values",ct2]
-        if pv2.strip() and pv2.strip()!="0": args_sw += ["--p-values",pv2]
-        if qv2.strip() and qv2.strip()!="0": args_sw += ["--q-values",qv2]
-        if rv2.strip() and rv2.strip()!="0": args_sw += ["--r-values",rv2]
-        args_sw += sol_s
-        _flag(args_sw,"--max-cases",max_c2)
-        _panel("Aero sweep","Runs Cartesian product of flight conditions for one geometry.",args_sw,root,exe,tmo,dry,"sw_run")
-
-    with tab_inspect:
-        rd3 = _pick_dir("Run directory",root/"data"/"runs","ai_rd")
-        it3 = st.selectbox("Inspect type",["Single aero run (aero inspect)","Sweep summary (aero sweep-inspect)","Sweep case (aero sweep-case-inspect)"],key="ai_it")
-        if "Single" in it3:
-            args3 = ["aero","inspect","--run-dir",rd3]
-            desc3 = "Reads and prints a single aero run result."
-        elif "summary" in it3:
-            args3 = ["aero","sweep-inspect","--run-dir",rd3]
-            desc3 = "Reads sweep summary manifest and prints all case results."
-        else:
-            c1,c2 = st.columns(2)
-            cl3  = c1.text_input("--case-label (exact label)","",key="ai_cl",help="Exact sweep case label. Leave blank to use index.")
-            ci3  = c2.number_input("--case-index",min_value=0,value=0,step=1,key="ai_ci",help="Used when --case-label is blank.")
-            args3 = ["aero","sweep-case-inspect","--run-dir",rd3]
-            if cl3.strip(): args3 += ["--case-label",cl3.strip()]
-            else: args3 += ["--case-index",str(int(ci3))]
-            desc3 = "Reads one specific case from a saved sweep."
-        _panel("Inspect aero",desc3,args3,root,exe,tmo,dry,"ai_run")
-
-    # ── Cm sanity ─────────────────────────────────────────────────────────────
-    with st.expander("⚠ Cm sign sanity check — run before any ML training"):
-        _note(
-            "<b>aeris aero cm-sanity</b> — verifies that Cm decreases with alpha (Cma &lt; 0 = stable) "
-            "within fixed-condition groups. Run on your promoted dataset before training any surrogate. "
-            "A positive Cma means the aircraft is statically unstable in pitch — "
-            "every ML model trained on Cm would be learning the wrong physics.",
-            "warn",
+            run_map = {p.name: p for p in geo_runs}
+            chosen = st.selectbox(
+                "Select geometry run",
+                list(run_map.keys()),
+                key=f"{key}_run_sel",
+                help="Folder from data/runs/. The geometry inside will be reused — "
+                     "no re-sampling.",
+            )
+            chosen_path = run_map[chosen]
+            m = _rjson(chosen_path / "manifest.json")
+            status = (m or {}).get("status", "unknown")
+            dot = "#22C55E" if status == "success" else "#EF4444"
+            _h(
+                f'<div style="background:#1B2A3A;border:1px solid #2D3F52;border-radius:7px;'
+                f'padding:.42rem .9rem;margin:.3rem 0;display:flex;align-items:center;gap:10px">'
+                f'<div style="width:7px;height:7px;border-radius:50%;background:{dot};flex-shrink:0"></div>'
+                f'<div style="flex:1;font-size:.78rem;color:#D6DEE8;font-family:JetBrains Mono,monospace;'
+                f'overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{chosen_path.name}</div>'
+                f'<div style="font-size:.7rem;color:{dot};font-weight:600;flex-shrink:0">{status}</div>'
+                f'</div>'
+            )
+            args += ["--run-dir", str(chosen_path),
+                     "--generator-id", "bwb_segmented_v1"]
+    else:
+        cfg = st.selectbox(
+            "Config", cfg_opts if cfg_opts else [""],
+            format_func=cfg_label_fn,
+            key=f"{key}_cfg",
+            help="Generates a fresh geometry sample from this config.",
         )
-        cm_src = st.radio("Source",["--dataset (promoted aero dataset)","--csv (direct CSV path)"],
-                          horizontal=True, key="cms_src")
-        if "--dataset" in cm_src:
-            cms_ds = _pick_dir("Promoted dataset",root/"data"/"datasets","cms_ds")
-            args_cms = ["aero","cm-sanity","--dataset",cms_ds]
+        seed = st.number_input(
+            "Seed", min_value=0, max_value=99999, value=0, step=1,
+            key=f"{key}_seed",
+            help="Geometry seed. 0 = config default. Same seed + same config = same geometry.",
+        )
+        args += ["--config", cfg, "--seed", str(int(seed))]
+
+    return args
+
+
+def _aero_solver_widget(key: str) -> list[str]:
+    """Solver settings — AVL command always visible, rest collapsed."""
+    avl = st.text_input(
+        "AVL command",
+        value="avl",
+        key=f"{key}_avl",
+        help="Type 'avl' if avl is on your PATH. "
+             "Otherwise paste the full path, e.g. /usr/local/bin/avl",
+    )
+    with st.expander("Paneling & advanced solver settings"):
+        c1, c2, c3, c4 = st.columns(4)
+        sp  = c1.number_input("Spanwise panels",  min_value=1, value=4,  step=1, key=f"{key}_sp",
+                              help="--spanwise-resolution. Default 4 for datasets, 8+ for accuracy.")
+        cp  = c2.number_input("Chordwise panels", min_value=1, value=8,  step=1, key=f"{key}_cp",
+                              help="--chordwise-resolution. Default 8.")
+        ssp = c3.selectbox("Spanwise spacing",  SPACING,       key=f"{key}_ssp",
+                           help="--spanwise-spacing. 'equal' or 'cosine'.")
+        csp = c4.selectbox("Chordwise spacing", SPACING, index=1, key=f"{key}_csp",
+                           help="--chordwise-spacing. 'cosine' recommended.")
+        tmo_ = st.number_input("Timeout [s]", min_value=5, value=180, step=5, key=f"{key}_tmo",
+                               help="--timeout-sec. Per-case timeout. 180s is safe for single AVL runs.")
+        c5, c6 = st.columns(2)
+        ssf = c5.checkbox("Save surface forces", False, key=f"{key}_ssf",
+                          help="--save-surface-forces. Writes AVL surface force files.")
+        sef = c6.checkbox("Save element forces", False, key=f"{key}_sef",
+                          help="--save-element-forces. Writes AVL element force files.")
+    args = ["--solver", "aerosandbox_avl",
+            "--avl-command", avl,
+            "--spanwise-resolution", str(int(sp)),
+            "--chordwise-resolution", str(int(cp)),
+            "--spanwise-spacing", ssp,
+            "--chordwise-spacing", csp,
+            "--timeout-sec", str(int(tmo_))]
+    if ssf: args.append("--save-surface-forces")
+    if sef: args.append("--save-element-forces")
+    return args
+
+
+def _aero_run_list(root: Path, tab_key: str, run_filter_fn) -> None:
+    """Show aero runs with per-row delete buttons."""
+    import shutil as _shutil
+    runs = run_filter_fn(root)
+    if not runs:
+        st.caption("No runs yet.")
+        return
+
+    _sec("Recent runs")
+    st.caption("Click 🗑 to delete a run folder.")
+    did_delete = False
+    for i, p in enumerate(runs[:20]):
+        m      = _rjson(p / "manifest.json")
+        status = (m or {}).get("status", "—")
+        dot    = "#22C55E" if status == "success" else                  "#EF4444" if status == "failed"  else "#8EA0B3"
+        col_n, col_b = st.columns([10, 1])
+        with col_n:
+            _h(
+                f'<div style="background:#1B2A3A;border:1px solid #2D3F52;border-radius:7px;'
+                f'padding:.42rem .9rem;display:flex;align-items:center;gap:10px">'
+                f'<div style="width:7px;height:7px;border-radius:50%;background:{dot};flex-shrink:0"></div>'
+                f'<div style="flex:1;font-size:.78rem;color:#D6DEE8;font-family:JetBrains Mono,monospace;'
+                f'overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{p.name}</div>'
+                f'<div style="font-size:.7rem;color:{dot};font-weight:600;flex-shrink:0">{status}</div>'
+                f'</div>'
+            )
+        with col_b:
+            if st.button("🗑", key=f"del_aero_{tab_key}_{i}", help=f"Delete {p.name}"):
+                try:
+                    _shutil.rmtree(p)
+                    st.toast(f"Deleted {p.name}", icon="✓")
+                    did_delete = True
+                except Exception as e:
+                    st.error(str(e))
+    if did_delete:
+        st.rerun()
+
+    if len(runs) > 1:
+        st.markdown("")
+        if st.button(f"🗑  Delete ALL ({len(runs)})", key=f"del_aero_{tab_key}_all", type="secondary"):
+            st.session_state[f"confirm_del_{tab_key}"] = True
+    if st.session_state.get(f"confirm_del_{tab_key}"):
+        st.warning(f"Delete all {len(runs)} run folder(s)? Cannot be undone.")
+        ca, cb, _ = st.columns([1, 1, 4])
+        if ca.button("Yes, delete all", key=f"del_aero_{tab_key}_yes", type="primary"):
+            for p in runs:
+                try:
+                    _shutil.rmtree(p)
+                except Exception as e:
+                    st.error(str(e))
+            st.session_state[f"confirm_del_{tab_key}"] = False
+            st.toast(f"Deleted {len(runs)} folder(s).", icon="✓")
+            st.rerun()
+        if cb.button("Cancel", key=f"del_aero_{tab_key}_no", type="secondary"):
+            st.session_state[f"confirm_del_{tab_key}"] = False
+            st.rerun()
+
+
+def pg_aero(root, exe, tmo, dry):
+    _hero("⊿", "Aero Analysis", "aerosandbox_avl · single run or sweep", "aero")
+
+    # Shared config list
+    cfg_files = _files(str(root / "configs" / "geometry"), "*.yaml")
+    smoke_cfg = str(root / "configs" / "geometry" / "baseline_bwb_25.yaml")
+    prod_cfg  = str(root / "configs" / "geometry" / "bwb_training_v1.yaml")
+    cfg_smoke_first = ([smoke_cfg] if smoke_cfg in cfg_files else []) +                       ([prod_cfg]  if prod_cfg  in cfg_files else []) +                       [f for f in cfg_files if f not in (prod_cfg, smoke_cfg)]
+
+    def _cfg_label(s):
+        if "bwb_training_v1" in s: return f"Production — {Path(s).name}"
+        if "baseline_bwb_25"  in s: return f"Smoke test  — {Path(s).name}"
+        return Path(s).name if s else "— none —"
+
+    geo_runs = _geo_run_rows(root)
+
+    tab_single, tab_sweep, tab_inspect, tab_cm = st.tabs([
+        "  ① Single run  ",
+        "  ② Sweep  ",
+        "  ③ Inspect  ",
+        "  ⚠ Cm sanity  ",
+    ])
+
+    # ── ① SINGLE RUN ─────────────────────────────────────────────────────────
+    with tab_single:
+        st.caption(
+            "Run AVL on **one geometry × one flight condition**. "
+            "Use for spot-checks and solver verification."
+        )
+        src_args = _aero_src_widget("ar", root, geo_runs, cfg_smoke_first, _cfg_label)
+
+        _sec("Flight condition")
+        c1, c2, c3, c4 = st.columns(4)
+        al   = c1.number_input("Alpha [deg]",    value=4.0,    step=0.5, key="ar_al",
+                               help="Angle of attack. Required.")
+        ve   = c2.number_input("Velocity [m/s]", value=28.0,   step=1.0, key="ar_ve")
+        at   = c3.number_input("Altitude [m]",   value=1500.0, step=100.0, key="ar_at")
+        ctrl = c4.number_input("Elevon [deg]",   value=0.0,    step=1.0, key="ar_ctrl",
+                               help="Control surface deflection. Positive = trailing edge down.")
+        with st.expander("Sideslip & body rates (leave at 0 for standard runs)"):
+            c5, c6, c7, c8 = st.columns(4)
+            be = c5.number_input("Beta [deg]", value=0.0, step=0.5, key="ar_be")
+            pv = c6.number_input("p [rad/s]",  value=0.0, step=0.1, key="ar_p")
+            qv = c7.number_input("q [rad/s]",  value=0.0, step=0.1, key="ar_q")
+            rv = c8.number_input("r [rad/s]",  value=0.0, step=0.1, key="ar_r")
+
+        _sec("Solver")
+        sol_args = _aero_solver_widget("ar")
+
+        full_args = (["aero", "run"] + src_args +
+                     ["--alpha", str(al), "--velocity", str(ve),
+                      "--altitude", str(at), "--control-input-deg", str(ctrl),
+                      "--beta", str(be),
+                      "--p", str(pv), "--q", str(qv), "--r", str(rv)] +
+                     sol_args)
+        _panel(
+            "Run single aero case",
+            "One geometry × one flight condition → data/runs/<timestamp>_aero_*/",
+            full_args, root, exe, tmo, dry, "ar_run",
+            label="▶  Run aero case",
+        )
+        _aero_run_list(root, "single", _aero_run_rows)
+
+    # ── ② SWEEP ───────────────────────────────────────────────────────────────
+    with tab_sweep:
+        st.caption(
+            "Run AVL across **multiple flight conditions** for one geometry. "
+            "Generates the Cartesian product of the value lists you provide."
+        )
+        src_args_sw = _aero_src_widget("sw", root, geo_runs, cfg_smoke_first, _cfg_label)
+
+        _sec("Flight condition sweep")
+        st.caption(
+            "Enter comma-separated values for each dimension. "
+            "Leave a field at its single value to hold it constant."
+        )
+        c1, c2 = st.columns(2)
+        al2  = c1.text_input("Alpha values [deg]",    "-2,0,2,4,6",  key="sw_al",
+                             help="e.g. -4,-2,0,2,4,6,8,10")
+        ve2  = c2.text_input("Velocity values [m/s]", "28",          key="sw_ve")
+        c3, c4 = st.columns(2)
+        at2  = c3.text_input("Altitude values [m]",   "1500",        key="sw_at")
+        ct2  = c4.text_input("Elevon values [deg]",   "-5,0,5",      key="sw_ctrl",
+                             help="Control surface sweep.")
+        with st.expander("Sideslip & body rates (usually leave as 0)"):
+            c5, c6, c7, c8 = st.columns(4)
+            be2 = c5.text_input("Beta [deg]", "0",  key="sw_be")
+            pv2 = c6.text_input("p [rad/s]",  "0",  key="sw_p")
+            qv2 = c7.text_input("q [rad/s]",  "0",  key="sw_q")
+            rv2 = c8.text_input("r [rad/s]",  "0",  key="sw_r")
+
+        est = _est(al2, ve2, at2, ct2, be2, pv2, qv2, rv2)
+        if est > 500:
+            st.warning(f"⚠ Estimated cases: **{est:,}** — large sweep, may take a long time.")
         else:
-            cms_csv = st.text_input("--csv path","",key="cms_csv")
-            args_cms = ["aero","cm-sanity","--csv",cms_csv]
-        c1,c2 = st.columns(2)
-        cms_od  = c1.text_input("--output-dir (optional)","",key="cms_od")
-        cms_fov = c2.checkbox("--fail-on-violation",False,key="cms_fov")
-        with st.expander("Advanced"):
-            cms_ac  = st.text_input("--alpha-column","alpha_deg",key="cms_ac")
-            cms_cc  = st.text_input("--cm-column","cm",key="cms_cc")
-            cms_gc  = st.text_input("--group-columns","geometry_id,control_input_deg,velocity_mps,altitude_m",key="cms_gc")
-            cms_mabs= st.number_input("--min-abs-cma-per-rad",value=1e-8,format="%.2e",key="cms_mabs")
-        if cms_od.strip(): args_cms += ["--output-dir",cms_od]
-        if cms_fov:        args_cms += ["--fail-on-violation"]
-        args_cms += ["--alpha-column",cms_ac,"--cm-column",cms_cc,"--group-columns",cms_gc,"--min-abs-cma-per-rad",str(cms_mabs)]
-        _panel("Cm sign sanity","Confirms Cma < 0 (stable). Run before ML training.",args_cms,root,exe,tmo,dry,"cms_run")
+            st.info(f"Estimated cases: **{est:,}** (Cartesian product)")
+
+        max_c = st.text_input(
+            "Safety cap — max cases (optional)",
+            value="", placeholder="e.g. 100 — leave blank for no cap",
+            key="sw_mc",
+            help="--max-cases. If the Cartesian product exceeds this, the sweep errors out. "
+                 "Useful to prevent accidental huge runs.",
+        )
+
+        _sec("Solver")
+        sol_args_sw = _aero_solver_widget("sw")
+
+        sweep_args = ["aero", "sweep"] + src_args_sw
+        for flag, val in [("--alpha-values", al2), ("--velocity-values", ve2),
+                          ("--altitude-values", at2), ("--control-input-values", ct2),
+                          ("--beta-values", be2)]:
+            if val.strip(): sweep_args += [flag, val]
+        for flag, val in [("--p-values", pv2), ("--q-values", qv2), ("--r-values", rv2)]:
+            if val.strip() and val.strip() != "0":
+                sweep_args += [flag, val]
+        sweep_args += sol_args_sw
+        if max_c.strip(): sweep_args += ["--max-cases", max_c.strip()]
+
+        _panel(
+            "Run aero sweep",
+            "Cartesian product of flight conditions → data/runs/<timestamp>_aero_sweep_*/",
+            sweep_args, root, exe, tmo, dry, "sw_run",
+            label="▶  Run sweep",
+        )
+        _aero_run_list(root, "sweep", _aero_run_rows)
+
+    # ── ③ INSPECT ─────────────────────────────────────────────────────────────
+    with tab_inspect:
+        st.caption("Read and display results from a completed aero run or sweep.")
+
+        aero_runs = _aero_run_rows(root)
+
+        if not aero_runs:
+            st.info("No aero runs found yet. Run a Single run or Sweep first.")
+        else:
+            run_map = {p.name: p for p in aero_runs}
+            chosen_run = st.selectbox(
+                "Select run",
+                list(run_map.keys()),
+                key="ai_run_sel",
+                help="All aero run folders from data/runs/.",
+            )
+            chosen_path = run_map[chosen_run]
+
+            # Detect whether it's a sweep by checking manifest
+            m = _rjson(chosen_path / "manifest.json")
+            is_sweep = "sweep" in chosen_run.lower() or                        (m or {}).get("phase", "") == "aero_sweep"
+
+            if is_sweep:
+                inspect_type = st.radio(
+                    "Inspect type",
+                    ["Sweep summary", "Single case from sweep"],
+                    horizontal=True,
+                    key="ai_type",
+                )
+                if inspect_type == "Sweep summary":
+                    args_ins = ["aero", "sweep-inspect", "--run-dir", str(chosen_path)]
+                    desc_ins = "Prints summary of all sweep cases."
+                else:
+                    c1, c2 = st.columns(2)
+                    case_label = c1.text_input(
+                        "Case label (optional)",
+                        value="", placeholder="e.g. case_0000_a+4.000_...",
+                        key="ai_cl",
+                        help="Exact case label from the sweep manifest. "
+                             "Leave blank to use index instead.",
+                    )
+                    case_idx = c2.number_input(
+                        "Case index", min_value=0, value=0, step=1,
+                        key="ai_ci",
+                        help="Zero-based index if case label is blank.",
+                    )
+                    args_ins = ["aero", "sweep-case-inspect", "--run-dir", str(chosen_path)]
+                    if case_label.strip():
+                        args_ins += ["--case-label", case_label.strip()]
+                    else:
+                        args_ins += ["--case-index", str(int(case_idx))]
+                    desc_ins = "Prints one specific case from the sweep."
+            else:
+                args_ins = ["aero", "inspect", "--run-dir", str(chosen_path)]
+                desc_ins  = "Prints the full aero result for this single run."
+
+            _panel("Inspect", desc_ins, args_ins, root, exe, tmo, dry, "ai_run",
+                   label="▶  Inspect")
+
+    # ── ⚠ Cm SANITY ───────────────────────────────────────────────────────────
+    with tab_cm:
+        st.warning(
+            "**Run this before any ML training.** "
+            "Verifies that Cm decreases with alpha (Cma < 0 = statically stable pitch). "
+            "A positive Cma means the aircraft is unstable — "
+            "every ML model trained on Cm would learn the wrong physics."
+        )
+
+        cm_src = st.radio(
+            "Source",
+            ["Promoted aero dataset (recommended)", "Direct CSV path"],
+            horizontal=True, key="cms_src",
+        )
+        if "dataset" in cm_src:
+            ds_opts = [str(p) for p in
+                       [Path(d) for d in _dirs(str(root / "data" / "datasets"))]
+                       if (Path(d) / "promotion_manifest.json" if False else True)]
+            promoted = [d for d in _dirs(str(root / "data" / "datasets"))
+                        if (Path(d) / "promotion_manifest.json").exists()]
+            all_ds   = _dirs(str(root / "data" / "datasets"))
+
+            ds_choices = promoted + [d for d in all_ds if d not in promoted]
+            if ds_choices:
+                cms_ds = st.selectbox(
+                    "Dataset",
+                    ds_choices,
+                    format_func=lambda s: (
+                        f"✓ {Path(s).name}" if (Path(s) / "promotion_manifest.json").exists()
+                        else f"○ {Path(s).name} (not promoted)"
+                    ),
+                    key="cms_ds",
+                    help="✓ = promoted dataset (has promotion_manifest.json). "
+                         "Run on promoted datasets only for reliable Cm sanity.",
+                )
+            else:
+                st.info("No datasets found in data/datasets/. "
+                        "Run a dataset aero-generate first.")
+                cms_ds = ""
+            args_cm = ["aero", "cm-sanity", "--dataset", cms_ds] if cms_ds else []
+        else:
+            cms_csv = st.text_input("CSV path", "", key="cms_csv",
+                                    placeholder="data/datasets/<name>/curated_aero_dataset.csv")
+            args_cm = ["aero", "cm-sanity", "--csv", cms_csv] if cms_csv.strip() else []
+
+        cm_od = st.text_input(
+            "Output dir (optional)",
+            value="",
+            placeholder="data/processed/aero_sanity/<name>  — leave blank for auto",
+            key="cms_od",
+        )
+        if cm_od.strip() and args_cm:
+            args_cm += ["--output-dir", cm_od.strip()]
+
+        with st.expander("Advanced options"):
+            c1, c2 = st.columns(2)
+            cms_ac   = c1.text_input("Alpha column",  "alpha_deg", key="cms_ac")
+            cms_cc   = c2.text_input("Cm column",     "cm",        key="cms_cc")
+            cms_gc   = st.text_input(
+                "Group columns",
+                "geometry_id,control_input_deg,velocity_mps,altitude_m",
+                key="cms_gc",
+            )
+            cms_fov  = st.checkbox("Fail on violation", False, key="cms_fov",
+                                   help="--fail-on-violation. Exit non-zero if any group has Cma ≥ 0.")
+            if args_cm:
+                args_cm += ["--alpha-column", cms_ac, "--cm-column", cms_cc,
+                            "--group-columns", cms_gc]
+                if cms_fov: args_cm.append("--fail-on-violation")
+
+        if args_cm:
+            _panel("Run Cm sanity check",
+                   "Verifies Cma < 0 in all condition groups. Required before ML training.",
+                   args_cm, root, exe, tmo, dry, "cms_run",
+                   label="▶  Run Cm sanity")
+        else:
+            st.info("Select a dataset or CSV path above to enable this check.")
 
 
 def pg_dynamics(root, exe, tmo, dry):

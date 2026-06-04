@@ -1,0 +1,37 @@
+{
+  "next_required_stage_after_record": {
+    "description": "Run post-hoc aero QC and confirm row/artifact consistency.",
+    "domain": "dataset_trust",
+    "name": "dataset_qc",
+    "recommended_command": "aeris dataset aero-qc --dataset data/datasets/<aero_dataset> --profile basic"
+  },
+  "schema_version": "aeris.workflow.v1",
+  "stage": {
+    "artifacts": [
+      "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/datasets/rehearsal_n5_aero/curated_aero_dataset.csv",
+      "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/datasets/rehearsal_n5_aero/rejected_aero_rows.csv",
+      "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/datasets/rehearsal_n5_aero/curation_report.json"
+    ],
+    "blockers": [],
+    "domain": "dataset_trust",
+    "inputs": [
+      "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/datasets/rehearsal_n5_aero"
+    ],
+    "metadata": {
+      "command": "aeris dataset curate-aero",
+      "kept_rows": 240,
+      "promotion_blocker_count": 0,
+      "promotion_ready": true,
+      "rejected_rows": 0
+    },
+    "name": "curation",
+    "notes": "Aero dataset curation completed.",
+    "outputs": [],
+    "required": true,
+    "status": "complete",
+    "updated_at_utc": "2026-06-04T12:20:43Z",
+    "warnings": []
+  },
+  "workflow_id": "workflow_1ec568790609",
+  "workflow_name": "rehearsal_n5"
+}

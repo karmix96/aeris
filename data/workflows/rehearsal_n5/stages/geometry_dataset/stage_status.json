@@ -1,0 +1,26 @@
+{
+  "next_required_stage_after_record": {
+    "description": "Run a controlled single-geometry aero sweep to verify solver setup, flight-condition ranges, controls, and raw artifacts.",
+    "domain": "aero",
+    "name": "aero_sweep",
+    "recommended_command": "aeris aero sweep --config configs/geometry/baseline_bwb_25.yaml --alpha-values -2,0,4,8 --beta-values 0 --velocity-values 28 --altitude-values 1500 --control-input-values -5,0,5 --workflow <workflow_root>"
+  },
+  "schema_version": "aeris.workflow.v1",
+  "stage": {
+    "artifacts": [
+      "data/datasets/rehearsal_n5_aero"
+    ],
+    "blockers": [],
+    "domain": "geometry",
+    "inputs": [],
+    "name": "geometry_dataset",
+    "notes": "Geometry dataset produced as part of dataset aero-generate rehearsal.",
+    "outputs": [],
+    "required": true,
+    "status": "complete",
+    "updated_at_utc": "2026-06-04T11:43:50Z",
+    "warnings": []
+  },
+  "workflow_id": "workflow_1ec568790609",
+  "workflow_name": "rehearsal_n5"
+}

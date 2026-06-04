@@ -1,0 +1,142 @@
+{
+  "created_at_utc": "2026-06-04T11:29:19Z",
+  "description": "Full required BWB aero-surrogate trust chain: dataset, aero, QC, curation, promotion, EDA, ML, model promotion, and inference guard.",
+  "name": "rehearsal_n5",
+  "root": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/workflows/rehearsal_n5",
+  "schema_version": "aeris.workflow.v1",
+  "stage_policy": {
+    "solver_execution_inside_workflow_spine": false,
+    "standalone_commands_remain_valid": true,
+    "workflow_records_state_only": true
+  },
+  "stages": [
+    {
+      "description": "Generate and inspect the geometry design-space dataset.",
+      "domain": "geometry",
+      "name": "geometry_dataset",
+      "recommended_command": "aeris dataset generate -c configs/geometry/bwb_training_v1.yaml --n <N> --sampler lhs_v1 --sampler-seed <seed> --no-save-plot --build-aerosandbox",
+      "required": true
+    },
+    {
+      "description": "Run a controlled single-geometry aero sweep to verify solver setup, flight-condition ranges, controls, and raw artifacts.",
+      "domain": "aero",
+      "name": "aero_sweep",
+      "recommended_command": "aeris aero sweep --config configs/geometry/baseline_bwb_25.yaml --alpha-values -2,0,4,8 --beta-values 0 --velocity-values 28 --altitude-values 1500 --control-input-values -5,0,5 --workflow <workflow_root>",
+      "required": true
+    },
+    {
+      "description": "Generate the unified aero-labeled dataset from geometry and flight-condition sweeps.",
+      "domain": "aero",
+      "name": "aero_dataset",
+      "recommended_command": "aeris dataset aero-generate -c configs/geometry/bwb_training_v1.yaml --n <N> --qc-preset production --retain-aero-runs failures_only --workflow <workflow_root>",
+      "required": true
+    },
+    {
+      "description": "Run post-hoc aero QC and confirm row/artifact consistency.",
+      "domain": "dataset_trust",
+      "name": "dataset_qc",
+      "recommended_command": "aeris dataset aero-qc --dataset data/datasets/<aero_dataset> --profile basic",
+      "required": true
+    },
+    {
+      "description": "Create curated_aero_dataset.csv and rejected_aero_rows.csv.",
+      "domain": "dataset_trust",
+      "name": "curation",
+      "recommended_command": "aeris dataset curate-aero --dataset data/datasets/<aero_dataset>",
+      "required": true
+    },
+    {
+      "description": "Promote the curated dataset so ML can use it.",
+      "domain": "dataset_trust",
+      "name": "promotion",
+      "recommended_command": "aeris dataset promote-aero --dataset data/datasets/<aero_dataset>",
+      "required": true
+    },
+    {
+      "description": "Audit promoted data before training using EDA and feature-set checks.",
+      "domain": "ml",
+      "name": "ml_eda",
+      "recommended_command": "aeris ml eda --dataset data/datasets/<promoted_dataset> --feature-set bwb_control_physics_v1 --targets cl,cd,cm --no-plots",
+      "required": true
+    },
+    {
+      "description": "Train baseline model(s) from promoted data with grouped split.",
+      "domain": "ml",
+      "name": "ml_training",
+      "recommended_command": "aeris ml train --dataset data/datasets/<promoted_dataset> --feature-set bwb_control_raw --targets cl,cd,cm --model-type extra_trees --split-method grouped --group-column geometry_id",
+      "required": true
+    },
+    {
+      "description": "Compare candidate model families and/or split seeds.",
+      "domain": "ml",
+      "name": "model_comparison",
+      "recommended_command": "aeris ml compare-seeds --dataset data/datasets/<promoted_dataset> --feature-set bwb_control_raw --targets cl,cd,cm --models extra_trees,gradient_boosting,hist_gradient_boosting --split-method grouped --group-column geometry_id",
+      "required": true
+    },
+    {
+      "description": "Promote the selected model using reviewed target-aware gates.",
+      "domain": "ml_trust",
+      "name": "model_promotion",
+      "recommended_command": "aeris ml suggest-promotion-gates --model-run-dir data/processed/ml_runs/<run> && aeris ml promote-model --model-run-dir data/processed/ml_runs/<run> --gate-config <template.yaml>",
+      "required": true
+    },
+    {
+      "description": "Check prediction inputs against the promoted model and training envelope.",
+      "domain": "ml_trust",
+      "name": "inference_guard",
+      "recommended_command": "aeris ml check-inference-inputs --model-run-dir data/processed/ml_runs/<promoted_run> --input-csv <candidate_inputs.csv>",
+      "required": true
+    },
+    {
+      "description": "Optional LF/HF delta dataset, delta model, corrected prediction, and evaluation.",
+      "domain": "multifidelity",
+      "name": "multifidelity",
+      "recommended_command": "aeris ml build-delta-dataset ... && aeris ml train-delta-model ... && aeris ml evaluate-delta-model ...",
+      "required": false
+    },
+    {
+      "description": "Optional candidate ranking for the next solver batch.",
+      "domain": "active_learning",
+      "name": "active_learning",
+      "recommended_command": "aeris ml suggest-samples --model-run-dir data/processed/ml_runs/<promoted_run> --candidate-csv <candidate_pool.csv>",
+      "required": false
+    },
+    {
+      "description": "Collect promoted model/package evidence for future MDAO or reporting.",
+      "domain": "handoff",
+      "name": "final_package",
+      "recommended_command": "aeris ml require-promoted-model --model-run-dir data/processed/ml_runs/<promoted_run>",
+      "required": false
+    }
+  ],
+  "template": {
+    "description": "Full required BWB aero-surrogate trust chain: dataset, aero, QC, curation, promotion, EDA, ML, model promotion, and inference guard.",
+    "name": "production",
+    "notes": [
+      "Use grouped ML splits by geometry_id.",
+      "Do not train on raw or curated-only datasets; use promoted datasets."
+    ],
+    "optional_stages": [
+      "active_learning",
+      "multifidelity",
+      "final_package"
+    ],
+    "required_stages": [
+      "geometry_dataset",
+      "aero_sweep",
+      "aero_dataset",
+      "dataset_qc",
+      "curation",
+      "promotion",
+      "ml_eda",
+      "ml_training",
+      "model_comparison",
+      "model_promotion",
+      "inference_guard"
+    ],
+    "schema_version": "aeris.workflow_template.v1",
+    "title": "Production training workflow"
+  },
+  "updated_at_utc": "2026-06-04T15:43:43Z",
+  "workflow_id": "workflow_1ec568790609"
+}

@@ -1879,6 +1879,8 @@ def ml_predict_with_confidence(
     typer.echo(f"  input_csv: {input_csv}")
     typer.echo(f"  n_rows: {report['n_rows']}")
     typer.echo(f"  n_outside_envelope: {report['n_outside_envelope']}")
+    typer.echo(f"  feature_set: {report.get('feature_set_name')}")
+    typer.echo(f"  feature_set_applied: {report.get('feature_set_applied')}")
     typer.echo(f"  uncertainty_method: {report['uncertainty']['method']}")
     typer.echo(f"  output_dir: {result.artifacts.output_dir}")
     typer.echo(f"  prediction_confidence_csv: {result.artifacts.prediction_confidence_csv_path}")
@@ -1943,6 +1945,19 @@ def ml_suggest_samples(
         "--require-promoted-model/--no-require-promoted-model",
         help="Require an approved model_promotion_manifest.json before scoring candidates.",
     ),
+    feature_set: str | None = typer.Option(
+        None,
+        "--feature-set",
+        help=(
+            "Named feature set to apply to raw candidate/reference CSVs before scoring. "
+            "If omitted, AERIS uses the feature set recorded in train_config.json when available."
+        ),
+    ),
+    allow_feature_set_mismatch: bool = typer.Option(
+        False,
+        "--allow-feature-set-mismatch",
+        help="Allow requested feature set to differ from the model training feature set.",
+    ),
     objective_column: str | None = typer.Option(
         None,
         "--objective-column",
@@ -1991,6 +2006,8 @@ def ml_suggest_samples(
             top_n=top_n,
             candidate_id_column=candidate_id_column,
             require_promoted_model_gate=require_promoted_model,
+            feature_set_name=feature_set,
+            allow_feature_set_mismatch=allow_feature_set_mismatch,
             objective_column=objective_column,
             objective_mode=objective_mode,  # type: ignore[arg-type]
             objective_target_value=objective_target_value,
@@ -2014,6 +2031,8 @@ def ml_suggest_samples(
     typer.echo(f"  n_candidates: {report['n_candidates']}")
     typer.echo(f"  n_recommended: {report['n_recommended']}")
     typer.echo(f"  n_outside_envelope: {report['n_outside_envelope']}")
+    typer.echo(f"  feature_set: {report.get('feature_set_name')}")
+    typer.echo(f"  feature_set_applied: {report.get('feature_set_applied')}")
     typer.echo(f"  uncertainty_method: {report['uncertainty']['method']}")
     typer.echo(f"  output_dir: {artifacts.output_dir}")
     typer.echo(f"  ranked_candidates_csv: {artifacts.ranked_candidates_csv_path}")
@@ -2039,6 +2058,8 @@ def ml_suggest_samples(
                 "top_n": top_n,
                 "candidate_id_column": candidate_id_column,
                 "require_promoted_model": require_promoted_model,
+                "feature_set": report.get("feature_set_name"),
+                "feature_set_applied": report.get("feature_set_applied"),
             },
         )
     except Exception as exc:

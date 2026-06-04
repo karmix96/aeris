@@ -1,0 +1,26 @@
+{
+  "next_required_stage_after_record": {
+    "description": "Audit promoted data before training using EDA and feature-set checks.",
+    "domain": "ml",
+    "name": "ml_eda",
+    "recommended_command": "aeris ml eda --dataset data/datasets/<promoted_dataset> --feature-set bwb_control_physics_v1 --targets cl,cd,cm --no-plots"
+  },
+  "schema_version": "aeris.workflow.v1",
+  "stage": {
+    "artifacts": [
+      "data/datasets/rehearsal_n5_aero"
+    ],
+    "blockers": [],
+    "domain": "dataset_trust",
+    "inputs": [],
+    "name": "dataset_qc",
+    "notes": "Dataset QC evidence available from aero-generate production QC and curation/promotion reports.",
+    "outputs": [],
+    "required": true,
+    "status": "complete",
+    "updated_at_utc": "2026-06-04T12:22:08Z",
+    "warnings": []
+  },
+  "workflow_id": "workflow_1ec568790609",
+  "workflow_name": "rehearsal_n5"
+}

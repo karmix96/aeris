@@ -10,6 +10,10 @@ import numpy as np
 import pandas as pd
 
 from aeris.ml.fingerprints import file_sha256
+from aeris.ml.feature_set_inference import (
+    prepare_dataframe_for_feature_set_inference,
+    trained_feature_set_name_from_config,
+)
 from aeris.ml.manifest import utc_now_iso
 from aeris.ml.model_promotion import require_promoted_model
 
@@ -350,6 +354,8 @@ def suggest_samples(
     objective_weight: float = 0.25,
     envelope_penalty_weight: float = 2.0,
     exclude_outside_envelope: bool = False,
+    feature_set_name: str | None = None,
+    allow_feature_set_mismatch: bool = False,
 ) -> ActiveLearningResult:
     """Rank candidate samples for the next simulation batch.
 
@@ -386,15 +392,34 @@ def suggest_samples(
     candidate_df_raw = pd.read_csv(candidate_csv)
     if candidate_df_raw.empty:
         raise ValueError(f"Candidate CSV is empty: {candidate_csv}")
-    _require_columns(candidate_df_raw, feature_columns, label="Candidate CSV")
     if candidate_id_column is not None and candidate_id_column not in candidate_df_raw.columns:
         raise ValueError(f"candidate_id_column '{candidate_id_column}' is missing from candidate CSV")
 
     reference_path, reference_df_raw = _load_reference_rows(model_run_dir, reference_path_arg)
-    _require_columns(reference_df_raw, feature_columns, label="Reference CSV")
 
-    candidate_df = _numeric_frame(candidate_df_raw, feature_columns, label="Candidate CSV")
-    reference_df = _numeric_frame(reference_df_raw, feature_columns, label="Reference CSV")
+    resolved_feature_set_name = feature_set_name or trained_feature_set_name_from_config(train_config)
+
+    candidate_prepared = prepare_dataframe_for_feature_set_inference(
+        candidate_df_raw,
+        train_config=train_config,
+        feature_set_name=resolved_feature_set_name,
+        allow_feature_set_mismatch=allow_feature_set_mismatch,
+    )
+    reference_prepared = prepare_dataframe_for_feature_set_inference(
+        reference_df_raw,
+        train_config=train_config,
+        feature_set_name=resolved_feature_set_name,
+        allow_feature_set_mismatch=allow_feature_set_mismatch,
+    )
+
+    candidate_df_prepared = candidate_prepared.dataframe
+    reference_df_prepared = reference_prepared.dataframe
+
+    _require_columns(candidate_df_prepared, feature_columns, label="Candidate CSV")
+    _require_columns(reference_df_prepared, feature_columns, label="Reference CSV")
+
+    candidate_df = _numeric_frame(candidate_df_prepared, feature_columns, label="Candidate CSV")
+    reference_df = _numeric_frame(reference_df_prepared, feature_columns, label="Reference CSV")
 
     X_candidate = candidate_df[feature_columns].to_numpy(dtype=float)
     X_reference = reference_df[feature_columns].to_numpy(dtype=float)
@@ -423,7 +448,7 @@ def suggest_samples(
     envelope_violation_count, envelope_excess_sum, envelope_excess_max = _envelope_metrics(X_candidate, lows, highs, widths)
     envelope_penalty_score = _minmax_score(envelope_excess_sum)
 
-    ranked_df = candidate_df_raw.copy()
+    ranked_df = candidate_df_prepared.copy()
     if candidate_id_column is None:
         ranked_df.insert(0, "candidate_id", [f"cand_{i:05d}" for i in range(len(ranked_df))])
         resolved_candidate_id_column = "candidate_id"
@@ -475,6 +500,28 @@ def suggest_samples(
         output_dir_resolved = Path(output_dir).expanduser().resolve()
     output_dir_resolved = _ensure_dir(output_dir_resolved)
 
+    materialized_candidate_csv_path: Path | None = None
+    materialized_reference_csv_path: Path | None = None
+    feature_engineering_manifest_path: Path | None = None
+
+    if candidate_prepared.feature_set_applied:
+        materialized_candidate_csv_path = output_dir_resolved / "materialized_candidate_pool.csv"
+        materialized_reference_csv_path = output_dir_resolved / "materialized_reference_rows.csv"
+        feature_engineering_manifest_path = output_dir_resolved / "active_learning_feature_engineering_manifest.json"
+
+        candidate_df_prepared.to_csv(materialized_candidate_csv_path, index=False)
+        reference_df_prepared.to_csv(materialized_reference_csv_path, index=False)
+        feature_engineering_manifest_path.write_text(
+            json.dumps(
+                {
+                    "candidate": candidate_prepared.to_summary(),
+                    "reference": reference_prepared.to_summary(),
+                },
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
     ranked_path = output_dir_resolved / "ranked_candidate_samples.csv"
     report_path = output_dir_resolved / "active_learning_report.json"
     ranked_df.to_csv(ranked_path, index=False)
@@ -497,6 +544,14 @@ def suggest_samples(
         "feature_columns": feature_columns,
         "target_columns": target_columns,
         "candidate_id_column": resolved_candidate_id_column,
+        "feature_set_name": candidate_prepared.requested_feature_set_name,
+        "trained_feature_set_name": candidate_prepared.trained_feature_set_name,
+        "feature_set_applied": candidate_prepared.feature_set_applied,
+        "allow_feature_set_mismatch": bool(allow_feature_set_mismatch),
+        "feature_engineering": {
+            "candidate": candidate_prepared.to_summary(),
+            "reference": reference_prepared.to_summary(),
+        },
         "n_candidates": int(len(ranked_df)),
         "top_n_requested": int(top_n),
         "n_recommended": n_recommended,
@@ -514,8 +569,13 @@ def suggest_samples(
         "artifacts": {
             "ranked_candidates_csv": str(ranked_path),
             "report_json": str(report_path),
+            "materialized_candidate_pool_csv": None if materialized_candidate_csv_path is None else str(materialized_candidate_csv_path),
+            "materialized_reference_rows_csv": None if materialized_reference_csv_path is None else str(materialized_reference_csv_path),
+            "feature_engineering_manifest_json": None if feature_engineering_manifest_path is None else str(feature_engineering_manifest_path),
             "candidate_csv_sha256": file_sha256(candidate_csv),
             "reference_csv_sha256": file_sha256(reference_path),
+            "materialized_candidate_pool_sha256": None if materialized_candidate_csv_path is None else file_sha256(materialized_candidate_csv_path),
+            "materialized_reference_rows_sha256": None if materialized_reference_csv_path is None else file_sha256(materialized_reference_csv_path),
             "model_sha256": file_sha256(model_path),
         },
         "top_recommendations": ranked_df.head(int(top_n))[

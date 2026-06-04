@@ -14072,7 +14072,12 @@ def ml_build_delta_dataset(
     hf_csv: Path = typer.Option(..., "--hf-csv", exists=True, file_okay=True, dir_okay=False, readable=True, resolve_path=True, help="High-fidelity CSV, e.g. CFD scalar results."),
     pair_keys: str = typer.Option(..., "--pair-keys", help="Comma-separated pairing keys, e.g. geometry_id,alpha_deg,velocity_mps,altitude_m,control_input_deg."),
     targets: str = typer.Option(..., "--targets", help="Comma-separated scalar targets to delta, e.g. cl,cd,cm."),
-    output_dir: Path = typer.Option(..., "--output-dir", help="Output directory for delta_dataset.csv and delta_dataset_report.json."),
+    output_dir: Path = typer.Option(..., "--output-dir", help="Output directory for delta_dataset.csv and delta_dataset_report.json."),    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        help="Workflow root directory to auto-record this optional branch stage after success.",
+    ),
+
 ) -> None:
     """Build a paired multifidelity delta dataset from LF/HF scalar CSV files."""
     try:
@@ -14101,6 +14106,27 @@ def ml_build_delta_dataset(
     typer.echo(f"  unmatched_hf_rows: {result.n_unmatched_hf_rows}")
 
 
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="multifidelity",
+            inputs=[lf_csv, hf_csv],
+            outputs=[output_dir],
+            artifacts=[
+                getattr(result, "output_dir", None),
+                getattr(result, "delta_dataset_csv", None),
+                getattr(result, "report_json", None),
+            ],
+            notes="Multifidelity delta dataset built.",
+            metadata={
+                "command": "aeris ml build-delta-dataset",
+                "branch_step": "multifidelity_delta_dataset",
+                "pair_keys": parse_csv_list(pair_keys, "--pair-keys"),
+                "targets": parse_csv_list(targets, "--targets"),
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
 @ml_app.command("train-delta-model")
 def ml_train_delta_model(
     delta_dataset: Path = typer.Option(..., "--delta-dataset", exists=True, readable=True, resolve_path=True, help="Path to delta_dataset.csv or a directory containing it."),
@@ -14115,7 +14141,12 @@ def ml_train_delta_model(
     test_fraction: float = typer.Option(0.15, "--test-fraction"),
     random_seed: int = typer.Option(123, "--random-seed"),
     model_params_json: Path | None = typer.Option(None, "--model-params-json", exists=True, file_okay=True, dir_okay=False, readable=True, resolve_path=True, help="Optional JSON object containing model constructor parameters."),
-    output_dir: Path | None = typer.Option(None, "--output-dir", help="Output directory for the trained delta model run."),
+    output_dir: Path | None = typer.Option(None, "--output-dir", help="Output directory for the trained delta model run."),    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        help="Workflow root directory to auto-record this optional branch stage after success.",
+    ),
+
 ) -> None:
     """Train a multifidelity delta model from delta_dataset.csv."""
     try:
@@ -14156,6 +14187,31 @@ def ml_train_delta_model(
     typer.echo(f"  test_corrected_rmse_mean: {metrics['test']['corrected']['overall']['rmse_mean']:.6f}")
 
 
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="multifidelity",
+            inputs=[delta_dataset],
+            outputs=[output_dir],
+            artifacts=[
+                output_dir,
+                getattr(result, "output_dir", None),
+                getattr(result, "run_dir", None),
+                getattr(result, "model_run_dir", None),
+                getattr(result, "manifest_json", None),
+                getattr(result, "manifest_path", None),
+            ],
+            notes="Multifidelity delta model trained.",
+            metadata={
+                "command": "aeris ml train-delta-model",
+                "branch_step": "multifidelity_delta_model",
+                "feature_set": feature_set,
+                "base_targets": parse_csv_list(base_targets, "--base-targets"),
+                "model_type": model_type,
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
 @ml_app.command("predict-delta-model")
 def ml_predict_delta_model(
     model_run_dir: Path = typer.Option(..., "--model-run-dir", exists=True, file_okay=False, dir_okay=True, readable=True, resolve_path=True, help="Path to a trained delta model run directory."),
@@ -14200,7 +14256,12 @@ def ml_predict_delta_model(
 def ml_evaluate_delta_model(
     model_run_dir: Path = typer.Option(..., "--model-run-dir", exists=True, file_okay=False, dir_okay=True, readable=True, resolve_path=True, help="Path to a trained delta model run directory."),
     partitions: str = typer.Option("train,val,test", "--partitions", help="Comma-separated partitions to evaluate, e.g. train,val,test or test."),
-    output_dir: Path | None = typer.Option(None, "--output-dir", help="Optional output directory for multifidelity evaluation artifacts."),
+    output_dir: Path | None = typer.Option(None, "--output-dir", help="Optional output directory for multifidelity evaluation artifacts."),    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        help="Workflow root directory to auto-record this optional branch stage after success.",
+    ),
+
 ) -> None:
     """Evaluate whether a delta model improves LF predictions against HF truth."""
     try:
@@ -14227,6 +14288,28 @@ def ml_evaluate_delta_model(
     typer.echo(f"  worsened_targets: {winner['worsened_targets']}")
 
 
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="multifidelity",
+            inputs=[model_run_dir],
+            outputs=[output_dir],
+            artifacts=[
+                output_dir,
+                getattr(result, "output_dir", None),
+                getattr(result, "report_json", None),
+                getattr(result, "report_path", None),
+                getattr(result, "rows_csv", None),
+            ],
+            notes="Multifidelity delta model evaluation completed.",
+            metadata={
+                "command": "aeris ml evaluate-delta-model",
+                "branch_step": "multifidelity_evaluation",
+                "partitions": parse_csv_list(partitions, "--partitions") if partitions else None,
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
 @ml_app.command("compare-seeds")
 def ml_compare_seeds(
     dataset: Path = typer.Option(
@@ -14843,7 +14926,12 @@ def ml_suggest_samples(
         False,
         "--exclude-outside-envelope/--allow-outside-envelope",
         help="If enabled, outside-envelope candidates are never recommended.",
+    ),    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        help="Workflow root directory to auto-record this optional branch stage after success.",
     ),
+
 ) -> None:
     """Rank candidate samples for the next simulation batch.
 
@@ -14891,6 +14979,30 @@ def ml_suggest_samples(
     typer.echo(f"  ranked_candidates_csv: {artifacts.ranked_candidates_csv_path}")
     typer.echo(f"  report_json: {artifacts.report_path}")
 
+
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="active_learning",
+            inputs=[model_run_dir, candidate_csv, reference_csv],
+            outputs=[output_dir],
+            artifacts=[
+                output_dir,
+                getattr(result, "output_dir", None),
+                getattr(result, "selected_batch_csv", None),
+                getattr(result, "selection_report_json", None),
+                getattr(result, "report_json", None),
+            ],
+            notes="Active-learning sample suggestion completed.",
+            metadata={
+                "command": "aeris ml suggest-samples",
+                "top_n": top_n,
+                "candidate_id_column": candidate_id_column,
+                "require_promoted_model": require_promoted_model,
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
 @ml_app.command("predict")
 def ml_predict(
     model_run_dir: Path = typer.Option(
@@ -25702,129 +25814,224 @@ def pg_home(root, exe, tmo, dry):
 
 
 def pg_geometry(root, exe, tmo, dry):
-    _hero("△","Geometry","bwb_segmented_v1 · 17 design variables","generator")
-    tab_gen, tab_vis, tab_info = st.tabs(["  ① Generate  ","  ② Visualize  ","  ③ System info  "])
+    _hero("△", "Geometry", "bwb_segmented_v1 · 17 design variables", "generator")
+    tab_gen, tab_vis, tab_info = st.tabs(["  ① Generate  ", "  ② Visualize  ", "  ③ Design variables  "])
 
-    # ── GENERATE ────────────────────────────────────────────────────────────
+    # ── GENERATE ─────────────────────────────────────────────────────────────
     with tab_gen:
-        _note(
-            "<b>aeris geometry generate</b> — accepts <b>only --config/-c</b>. "
-            "Nothing else. Plot-saving and AeroSandbox are set in the YAML "
-            "<code>geometry.outputs.save_plot</code> / <code>build_aerosandbox</code>. "
-            "The run folder is always <code>data/runs/&lt;timestamp&gt;_geometry_&lt;config_stem&gt;/</code>. "
-            "Custom naming requires a codebase patch (add <code>--name</code> to "
-            "<code>src/aeris/pipeline/geometry_run.py</code> and "
-            "<code>src/aeris/commands/geometry.py</code>).",
-            "info",
+        # Config picker — reads actual files from disk
+        cfg_files = _files(str(root / "configs" / "geometry"), "*.yaml")
+        prod_cfg  = str(root / "configs" / "geometry" / "bwb_training_v1.yaml")
+        smoke_cfg = str(root / "configs" / "geometry" / "baseline_bwb_25.yaml")
+        cfg_opts  = ([prod_cfg] if prod_cfg in cfg_files else []) + \
+                    ([smoke_cfg] if smoke_cfg in cfg_files else []) + \
+                    [f for f in cfg_files if f not in (prod_cfg, smoke_cfg)]
+
+        if not cfg_opts:
+            st.warning(f"No YAML files found under {root / 'configs' / 'geometry'}. "
+                       "Check your project root in the sidebar.")
+            return
+
+        sel_cfg = st.selectbox(
+            "Config",
+            cfg_opts,
+            format_func=lambda s: (
+                f"Production — {Path(s).name}"  if "bwb_training_v1" in s else
+                f"Smoke test — {Path(s).name}"  if "baseline_bwb_25"  in s else
+                Path(s).name
+            ),
+            key="gg_cfg",
+            help="Production config has a wide design space — use it for ML campaigns. "
+                 "Smoke config is nearly fixed — use it only to verify the solver works.",
         )
-        _note(
-            "<b>For training campaigns:</b> use <code>bwb_training_v1.yaml</code> (real design-space bounds). "
-            "<code>baseline_bwb_25.yaml</code> is nearly fixed — use only for smoke tests.",
-            "info",
-        )
-        mode = st.radio("Config source",["Use existing YAML file","Build config interactively"],horizontal=True,key="gm_mode")
-        if mode.startswith("Use existing"):
-            _sec("YAML file")
-            config = _pick_file("Config file",root/"configs"/"geometry","*.yaml","g_cfg",
-                                default=str(root/"configs"/"geometry"/"bwb_training_v1.yaml"))
+
+        # Inline hint — green for production, amber for smoke
+        if "bwb_training_v1" in sel_cfg:
+            st.success("✓ Wide design space — correct for ML training campaigns.")
+        elif "baseline_bwb_25" in sel_cfg:
+            st.warning("⚠ Near-fixed design space — smoke / solver-check only. Not suitable for ML.")
         else:
-            _sec("Interactive builder")
-            yaml_str = _yaml_geometry_builder("gb")
-            with st.expander("Preview YAML"): st.code(yaml_str, language="yaml")
-            sp = st.text_input("Save YAML to path",str(root/"configs"/"geometry"/"gui_built.yaml"),key="gb_sp")
-            if st.button("💾 Save YAML",key="gb_save",type="secondary"):
-                p=Path(sp); p.parent.mkdir(parents=True,exist_ok=True)
-                p.write_text(yaml_str,encoding="utf-8"); st.success(f"Saved: {p}")
-            config = sp
+            st.info(f"Custom config: {Path(sel_cfg).name}")
 
-        # Only valid arg: --config
-        args = ["geometry","generate","--config",config]
-        _panel("Generate one geometry",
-               "Creates one deterministic BWB geometry. Output → data/runs/<timestamp>_geometry_<stem>/",
-               args, root, exe, tmo, dry, "g_run")
+        _panel(
+            "Generate geometry",
+            "Runs aeris geometry generate. Output → data/runs/<timestamp>_geometry_<stem>/",
+            ["geometry", "generate", "--config", sel_cfg],
+            root, exe, tmo, dry, "g_run",
+            label="▶  Generate geometry",
+        )
 
-        # Show recent geometry runs
-        geo_runs = [r for r in _dirs(str(root/"data"/"runs")) if "geometry" in Path(r).name]
+        # ── Recent geometry runs from disk ────────────────────────────────
+        geo_runs = [r for r in _dirs(str(root / "data" / "runs"))
+                    if "geometry" in Path(r).name]
         if geo_runs:
             _sec("Recent geometry runs")
             for r in geo_runs[:5]:
                 p = Path(r)
-                m = _rjson(p/"manifest.json")
-                status = (m or {}).get("status","?")
-                col = "#22C55E" if status=="success" else "#EF4444" if status=="failed" else "#F59E0B"
-                _h(f'<div style="background:#202B36;border:1px solid #334252;border-radius:8px;padding:.6rem 1rem;margin-bottom:.35rem;display:flex;align-items:center;gap:10px">'
-                   f'<div style="width:8px;height:8px;border-radius:50%;background:{col}"></div>'
-                   f'<div style="flex:1;font-size:.79rem;color:#D6DEE8;font-family:JetBrains Mono,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{p.name}</div>'
-                   f'<div style="font-size:.7rem;color:#8EA0B3">{status}</div></div>')
+                m      = _rjson(p / "manifest.json")
+                status = (m or {}).get("status", "unknown")
+                col    = "#22C55E" if status == "success" else \
+                         "#EF4444" if status == "failed"  else "#F59E0B"
+                _h(
+                    f'<div style="background:#202B36;border:1px solid #334252;border-radius:8px;'
+                    f'padding:.55rem 1rem;margin-bottom:.3rem;display:flex;align-items:center;gap:10px">'
+                    f'<div style="width:8px;height:8px;border-radius:50%;background:{col};flex-shrink:0"></div>'
+                    f'<div style="flex:1;font-size:.79rem;color:#D6DEE8;font-family:JetBrains Mono,monospace;'
+                    f'overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{p.name}</div>'
+                    f'<div style="font-size:.7rem;color:#8EA0B3;flex-shrink:0">{status}</div></div>'
+                )
+        else:
+            st.caption("No geometry runs yet — data/runs/ is empty or doesn't exist.")
 
-    # ── VISUALIZE ────────────────────────────────────────────────────────────
+    # ── VISUALIZE ─────────────────────────────────────────────────────────────
     with tab_vis:
+        # Same config picker as Generate tab, default to smoke for single-case viz
+        cfg_files_v = _files(str(root / "configs" / "geometry"), "*.yaml")
+        smoke_first = ([smoke_cfg] if smoke_cfg in cfg_files_v else []) + \
+                      ([prod_cfg]  if prod_cfg  in cfg_files_v else []) + \
+                      [f for f in cfg_files_v if f not in (prod_cfg, smoke_cfg)]
+
+        vcfg = st.selectbox(
+            "Config",
+            smoke_first if smoke_first else [""],
+            format_func=lambda s: (
+                f"Production — {Path(s).name}" if "bwb_training_v1" in s else
+                f"Smoke test — {Path(s).name}" if "baseline_bwb_25"  in s else
+                Path(s).name if s else "— none found —"
+            ),
+            key="gv_cfg",
+            help="Pick which config to sample one geometry from.",
+        )
+
+        c1, c2 = st.columns([1, 2])
+        seed_val = c1.number_input(
+            "Seed",
+            min_value=0, max_value=99999, value=42, step=1,
+            key="gv_seed",
+            help="Any integer. Same seed + same config always produces the same geometry. "
+                 "Change it to explore different shapes from the design space.",
+        )
+        png_name = c2.text_input(
+            "PNG filename (optional)",
+            value="",
+            placeholder="e.g. bwb_seed42_sweep35  — leave blank for auto name",
+            key="gv_pngname",
+            help="Name for the saved PNG file. Leave blank to use the AERIS default. "
+                 "The .png extension is added automatically.",
+        )
+
+        st.caption(
+            "**▶ Visualize 3D wing** — opens an interactive OpenGL window. "
+            "Requires a local desktop (not SSH / headless server).  \n"
+            "**📷 Save plot as PNG** — saves a 2D top-view image. Works everywhere."
+        )
+
+        col_a, col_b = st.columns(2)
+
+        # ── Button: 3D viewer ─────────────────────────────────────────────
+        with col_a:
+            args_3d = ["geometry", "visualize", "--config", vcfg,
+                       "--seed", str(int(seed_val)), "--draw-3d"]
+            _panel(
+                "Visualize 3D wing",
+                "Opens interactive AeroSandbox OpenGL window — local desktop only.",
+                args_3d, root, exe, tmo, dry, "gv_3d",
+                label="▶  Visualize 3D wing",
+            )
+
+        # ── Button: Save PNG ──────────────────────────────────────────────
+        with col_b:
+            args_png = ["geometry", "visualize", "--config", vcfg,
+                        "--seed", str(int(seed_val)),
+                        "--no-draw-3d", "--save-plot"]
+            if png_name.strip():
+                # Write into a named subfolder so the user can find it easily
+                out_dir = root / "data" / "debug" / "plots" / png_name.strip()
+                args_png += ["--output-dir", str(out_dir)]
+            _panel(
+                "Save plot as PNG",
+                "Saves a 2D planform image. Works on any machine including headless servers.",
+                args_png, root, exe, tmo, dry, "gv_png",
+                label="📷  Save plot as PNG",
+            )
+
+    # ── DESIGN VARIABLES ─────────────────────────────────────────────────────
+    with tab_info:
         _note(
-            "<b>aeris geometry visualize --config &lt;file&gt;</b> — "
-            "samples ONE geometry from the config using the seed, then visualizes it. "
-            "It does NOT replay an existing run — it re-generates from config.<br>"
-            "<b>2D plot</b> (<code>--save-plot</code>): saves a top-view planform PNG to the output folder. "
-            "View it later in Results Browser — no display needed.<br>"
-            "<b>3D viewer</b> (<code>--draw-3d</code>): opens an AeroSandbox OpenGL window on your "
-            "<b>local desktop</b>. Disable on headless servers / SSH / remote environments. "
-            "Requires <code>build_aerosandbox: true</code> in config outputs.<br>"
-            "<b>--output-dir</b>: leave blank for auto debug folder; "
-            "pick an existing run folder to co-locate visualization artifacts.",
+            "<b>aeris geometry info</b> — lists registered generator IDs.",
             "info",
         )
-        _sec("Config")
-        vcfg = _pick_file("Geometry config",root/"configs"/"geometry","*.yaml","gv_cfg",
-                          default=str(root/"configs"/"geometry"/"baseline_bwb_25.yaml"))
+        _panel(
+            "Generator info",
+            "Lists available generators and current system status.",
+            ["geometry", "info"],
+            root, exe, tmo, dry, "gi_run",
+            label="▶  Run geometry info",
+        )
 
-        _sec("Generation")
-        c1, c2 = st.columns(2)
-        seed_ov = c1.text_input("--seed (optional, int)",value="",key="gv_seed",
-                                help="Seed for the geometry sampler. Leave blank = use config seed. "
-                                     "Match the seed from a generate run to reproduce that exact shape.")
-        build_asb = c2.selectbox("--build-aerosandbox override",
-                                  ["(from config)","build (--build-aerosandbox)","skip (--no-build-aerosandbox)"],
-                                  key="gv_ba",
-                                  help="Override the YAML build_aerosandbox setting. "
-                                       "Must be True/build to use --draw-3d.")
-
-        _sec("Visualization")
-        c3, c4, c5 = st.columns(3)
-        save_pl = c3.selectbox("--save-plot override",
-                                ["(from config)","save (--save-plot)","skip (--no-save-plot)"],
-                                key="gv_sp",
-                                help="Save the 2D planform PNG. Viewable in Results Browser later.")
-        draw3d = c4.checkbox("--draw-3d (open 3D viewer)",value=False,key="gv_3d",
-                             help="Opens interactive AeroSandbox OpenGL window. "
-                                  "DISABLE on headless/remote servers. Needs build-aerosandbox=true.")
-        show_pl = c5.checkbox("--show-plot (pop-up 2D window)",value=False,key="gv_sh",
-                              help="Opens matplotlib window. Usually False on servers.")
-
-        _sec("Output directory (--output-dir)")
-        runs_dirs = _dirs(str(root/"data"/"runs"))
-        od_opts = ["(auto — data/debug/visualization_runs/<timestamp>_geometry_<name>/)"] + runs_dirs
-        od_sel = st.selectbox("Output dir",od_opts,index=0,key="gv_od_sel",
-                              format_func=lambda s: "auto debug folder" if s.startswith("(auto") else Path(s).name,
-                              help="Leave on auto for a fresh debug folder, or pick an existing run to save alongside it.")
-        od = "" if od_sel.startswith("(auto") else od_sel
-        od = st.text_input("Manual --output-dir override",value=od,key="gv_od_m",
-                           help="Absolute path. Leave blank for automatic debug subfolder.")
-
-        args = ["geometry","visualize","--config",vcfg]
-        _flag(args,"--seed",seed_ov)
-        _flag(args,"--output-dir",od)
-        if "save (--save-plot)" in save_pl:   args.append("--save-plot")
-        elif "skip (--no-save-plot)" in save_pl: args.append("--no-save-plot")
-        if "build (" in build_asb:   args.append("--build-aerosandbox")
-        elif "skip (" in build_asb:  args.append("--no-build-aerosandbox")
-        _bflag(args,"--draw-3d","--no-draw-3d",draw3d)
-        _bflag(args,"--show-plot","--no-show-plot",show_pl)
-        _panel("Visualize geometry",
-               "Generates and visualizes one geometry from config. 2D PNG saved to output dir. 3D = desktop OpenGL.",
-               args, root, exe, tmo, dry, "gv_run")
-
-    with tab_info:
-        _note("<code>aeris geometry info</code> — lists registered generator IDs and current status.", "info")
-        _panel("Geometry system info","Lists registered generators.",["geometry","info"],root,exe,tmo,dry,"gi_run")
+        _sec("bwb_segmented_v1 — design variable reference")
+        _h("""
+        <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+          <thead>
+            <tr style="border-bottom:1px solid #334252">
+              <th style="text-align:left;padding:.45rem .6rem;color:#8EA0B3;font-weight:600">Group</th>
+              <th style="text-align:left;padding:.45rem .6rem;color:#8EA0B3;font-weight:600">Variable</th>
+              <th style="text-align:left;padding:.45rem .6rem;color:#8EA0B3;font-weight:600">Production range</th>
+              <th style="text-align:left;padding:.45rem .6rem;color:#8EA0B3;font-weight:600">Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid #263545">
+              <td style="padding:.4rem .6rem;color:#C0CAD6">Chord</td>
+              <td style="padding:.4rem .6rem;font-family:JetBrains Mono,monospace;color:#93C5FD">c1_m</td>
+              <td style="padding:.4rem .6rem;color:#D6DEE8">1.20 – 2.00 m</td>
+              <td style="padding:.4rem .6rem;color:#8EA0B3">Root chord (absolute)</td>
+            </tr>
+            <tr style="border-bottom:1px solid #263545">
+              <td style="padding:.4rem .6rem;color:#C0CAD6">Chord</td>
+              <td style="padding:.4rem .6rem;font-family:JetBrains Mono,monospace;color:#93C5FD">c2_ratio, c3_ratio, c4_ratio</td>
+              <td style="padding:.4rem .6rem;color:#D6DEE8">set in YAML</td>
+              <td style="padding:.4rem .6rem;color:#8EA0B3">Ratios relative to c1 — all must be &gt; 0</td>
+            </tr>
+            <tr style="border-bottom:1px solid #263545">
+              <td style="padding:.4rem .6rem;color:#C0CAD6">Span</td>
+              <td style="padding:.4rem .6rem;font-family:JetBrains Mono,monospace;color:#93C5FD">b_total_m</td>
+              <td style="padding:.4rem .6rem;color:#D6DEE8">1.20 – 2.00 m</td>
+              <td style="padding:.4rem .6rem;color:#8EA0B3">Semi-span — full span = 2 × this value</td>
+            </tr>
+            <tr style="border-bottom:1px solid #263545">
+              <td style="padding:.4rem .6rem;color:#C0CAD6">Span</td>
+              <td style="padding:.4rem .6rem;font-family:JetBrains Mono,monospace;color:#93C5FD">b3_ratio, split_ratio</td>
+              <td style="padding:.4rem .6rem;color:#D6DEE8">set in YAML</td>
+              <td style="padding:.4rem .6rem;color:#8EA0B3">Segment fractions — must be in (0, 1)</td>
+            </tr>
+            <tr style="border-bottom:1px solid #263545">
+              <td style="padding:.4rem .6rem;color:#C0CAD6">Sweep</td>
+              <td style="padding:.4rem .6rem;font-family:JetBrains Mono,monospace;color:#93C5FD">sw1_deg</td>
+              <td style="padding:.4rem .6rem;color:#D6DEE8">30 – 55 °</td>
+              <td style="padding:.4rem .6rem;color:#8EA0B3">YAML = positive magnitude. Python = negative. Never negate twice.</td>
+            </tr>
+            <tr style="border-bottom:1px solid #263545">
+              <td style="padding:.4rem .6rem;color:#C0CAD6">Sweep</td>
+              <td style="padding:.4rem .6rem;font-family:JetBrains Mono,monospace;color:#93C5FD">sw2_deg, sw3_deg</td>
+              <td style="padding:.4rem .6rem;color:#D6DEE8">set in YAML</td>
+              <td style="padding:.4rem .6rem;color:#8EA0B3">Same sign convention as sw1_deg</td>
+            </tr>
+            <tr style="border-bottom:1px solid #263545">
+              <td style="padding:.4rem .6rem;color:#C0CAD6">Twist</td>
+              <td style="padding:.4rem .6rem;font-family:JetBrains Mono,monospace;color:#93C5FD">twist_b0_deg … twist_b3_deg</td>
+              <td style="padding:.4rem .6rem;color:#D6DEE8">set in YAML</td>
+              <td style="padding:.4rem .6rem;color:#8EA0B3">Positive = leading edge up (washout). No sign flip.</td>
+            </tr>
+            <tr>
+              <td style="padding:.4rem .6rem;color:#C0CAD6">Dihedral</td>
+              <td style="padding:.4rem .6rem;font-family:JetBrains Mono,monospace;color:#93C5FD">dihedral_b1_deg … dihedral_b3_deg</td>
+              <td style="padding:.4rem .6rem;color:#D6DEE8">set in YAML</td>
+              <td style="padding:.4rem .6rem;color:#8EA0B3">Root always fixed at 0° — not sampled</td>
+            </tr>
+          </tbody>
+        </table>
+        """)
 
 
 def pg_dataset(root, exe, tmo, dry):
@@ -41309,9 +41516,9 @@ WORKFLOW_COVERAGE_SPEC: tuple[WorkflowCoverageSpec, ...] = (
     WorkflowCoverageSpec("model_comparison", False, "ml", "aeris ml compare-seeds ... --workflow <workflow_root>", "ml", "compare-seeds"),
     WorkflowCoverageSpec("model_promotion", True, "ml", "aeris ml promote-model ... --workflow <workflow_root>", "ml", "promote-model"),
     WorkflowCoverageSpec("inference_guard", True, "ml", "aeris ml check-inference-inputs ... --workflow <workflow_root>", "ml", "check-inference-inputs"),
-    WorkflowCoverageSpec("multifidelity_delta_dataset", False, "ml", "aeris ml build-delta-dataset ... --workflow <workflow_root>", "ml", "build-delta-dataset"),
-    WorkflowCoverageSpec("multifidelity_delta_model", False, "ml", "aeris ml train-delta-model ... --workflow <workflow_root>", "ml", "train-delta-model"),
-    WorkflowCoverageSpec("multifidelity_evaluation", False, "ml", "aeris ml evaluate-delta-model ... --workflow <workflow_root>", "ml", "evaluate-delta-model"),
+    WorkflowCoverageSpec("multifidelity", False, "ml", "aeris ml build-delta-dataset ... --workflow <workflow_root>", "ml", "build-delta-dataset"),
+    WorkflowCoverageSpec("multifidelity", False, "ml", "aeris ml train-delta-model ... --workflow <workflow_root>", "ml", "train-delta-model"),
+    WorkflowCoverageSpec("multifidelity", False, "ml", "aeris ml evaluate-delta-model ... --workflow <workflow_root>", "ml", "evaluate-delta-model"),
     WorkflowCoverageSpec("active_learning", False, "ml", "aeris ml suggest-samples ... --workflow <workflow_root>", "ml", "suggest-samples"),
 )
 
@@ -46735,6 +46942,57 @@ def test_ml_evaluate_delta_model_cli(tmp_path: Path) -> None:
     assert "ML multifidelity delta-model evaluation completed" in result.stdout
     assert (out_dir / "multifidelity_evaluation_report.json").exists()
     assert (out_dir / "multifidelity_evaluation_rows.csv").exists()
+
+
+# ==================================================
+# FILE: tests/commands/test_ml_optional_workflow_cli.py
+# ==================================================
+
+from __future__ import annotations
+
+from typer.testing import CliRunner
+
+from aeris.cli import app
+from aeris.workflow.coverage import build_workflow_coverage_report
+
+runner = CliRunner()
+
+
+def test_optional_ml_branch_commands_expose_workflow_help() -> None:
+    commands = [
+        "build-delta-dataset",
+        "train-delta-model",
+        "evaluate-delta-model",
+        "suggest-samples",
+    ]
+
+    for command in commands:
+        result = runner.invoke(app, ["ml", command, "--help"])
+        assert result.exit_code == 0, result.output
+        assert "--workflow" in result.output
+
+
+def test_workflow_coverage_has_no_optional_workflow_gaps() -> None:
+    report = build_workflow_coverage_report()
+
+    assert report["summary"]["optional_gap_count"] == 0
+    assert report["summary"]["status_counts"]["missing_workflow_option"] == 0
+
+    by_command = {
+        (entry["command_group"], entry["command_name"]): entry
+        for entry in report["entries"]
+    }
+
+    for command in [
+        "build-delta-dataset",
+        "train-delta-model",
+        "evaluate-delta-model",
+        "suggest-samples",
+    ]:
+        entry = by_command[("ml", command)]
+        assert entry["command_exists"] is True
+        assert entry["supports_workflow_option"] is True
+        assert entry["coverage_status"] == "covered"
 
 
 # ==================================================

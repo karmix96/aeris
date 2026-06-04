@@ -48,9 +48,9 @@ WORKFLOW_COVERAGE_SPEC: tuple[WorkflowCoverageSpec, ...] = (
     WorkflowCoverageSpec("model_comparison", False, "ml", "aeris ml compare-seeds ... --workflow <workflow_root>", "ml", "compare-seeds"),
     WorkflowCoverageSpec("model_promotion", True, "ml", "aeris ml promote-model ... --workflow <workflow_root>", "ml", "promote-model"),
     WorkflowCoverageSpec("inference_guard", True, "ml", "aeris ml check-inference-inputs ... --workflow <workflow_root>", "ml", "check-inference-inputs"),
-    WorkflowCoverageSpec("multifidelity_delta_dataset", False, "ml", "aeris ml build-delta-dataset ... --workflow <workflow_root>", "ml", "build-delta-dataset"),
-    WorkflowCoverageSpec("multifidelity_delta_model", False, "ml", "aeris ml train-delta-model ... --workflow <workflow_root>", "ml", "train-delta-model"),
-    WorkflowCoverageSpec("multifidelity_evaluation", False, "ml", "aeris ml evaluate-delta-model ... --workflow <workflow_root>", "ml", "evaluate-delta-model"),
+    WorkflowCoverageSpec("multifidelity", False, "ml", "aeris ml build-delta-dataset ... --workflow <workflow_root>", "ml", "build-delta-dataset"),
+    WorkflowCoverageSpec("multifidelity", False, "ml", "aeris ml train-delta-model ... --workflow <workflow_root>", "ml", "train-delta-model"),
+    WorkflowCoverageSpec("multifidelity", False, "ml", "aeris ml evaluate-delta-model ... --workflow <workflow_root>", "ml", "evaluate-delta-model"),
     WorkflowCoverageSpec("active_learning", False, "ml", "aeris ml suggest-samples ... --workflow <workflow_root>", "ml", "suggest-samples"),
 )
 

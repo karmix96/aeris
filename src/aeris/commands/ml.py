@@ -1112,7 +1112,12 @@ def ml_build_delta_dataset(
     hf_csv: Path = typer.Option(..., "--hf-csv", exists=True, file_okay=True, dir_okay=False, readable=True, resolve_path=True, help="High-fidelity CSV, e.g. CFD scalar results."),
     pair_keys: str = typer.Option(..., "--pair-keys", help="Comma-separated pairing keys, e.g. geometry_id,alpha_deg,velocity_mps,altitude_m,control_input_deg."),
     targets: str = typer.Option(..., "--targets", help="Comma-separated scalar targets to delta, e.g. cl,cd,cm."),
-    output_dir: Path = typer.Option(..., "--output-dir", help="Output directory for delta_dataset.csv and delta_dataset_report.json."),
+    output_dir: Path = typer.Option(..., "--output-dir", help="Output directory for delta_dataset.csv and delta_dataset_report.json."),    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        help="Workflow root directory to auto-record this optional branch stage after success.",
+    ),
+
 ) -> None:
     """Build a paired multifidelity delta dataset from LF/HF scalar CSV files."""
     try:
@@ -1141,6 +1146,27 @@ def ml_build_delta_dataset(
     typer.echo(f"  unmatched_hf_rows: {result.n_unmatched_hf_rows}")
 
 
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="multifidelity",
+            inputs=[lf_csv, hf_csv],
+            outputs=[output_dir],
+            artifacts=[
+                getattr(result, "output_dir", None),
+                getattr(result, "delta_dataset_csv", None),
+                getattr(result, "report_json", None),
+            ],
+            notes="Multifidelity delta dataset built.",
+            metadata={
+                "command": "aeris ml build-delta-dataset",
+                "branch_step": "multifidelity_delta_dataset",
+                "pair_keys": parse_csv_list(pair_keys, "--pair-keys"),
+                "targets": parse_csv_list(targets, "--targets"),
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
 @ml_app.command("train-delta-model")
 def ml_train_delta_model(
     delta_dataset: Path = typer.Option(..., "--delta-dataset", exists=True, readable=True, resolve_path=True, help="Path to delta_dataset.csv or a directory containing it."),
@@ -1155,7 +1181,12 @@ def ml_train_delta_model(
     test_fraction: float = typer.Option(0.15, "--test-fraction"),
     random_seed: int = typer.Option(123, "--random-seed"),
     model_params_json: Path | None = typer.Option(None, "--model-params-json", exists=True, file_okay=True, dir_okay=False, readable=True, resolve_path=True, help="Optional JSON object containing model constructor parameters."),
-    output_dir: Path | None = typer.Option(None, "--output-dir", help="Output directory for the trained delta model run."),
+    output_dir: Path | None = typer.Option(None, "--output-dir", help="Output directory for the trained delta model run."),    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        help="Workflow root directory to auto-record this optional branch stage after success.",
+    ),
+
 ) -> None:
     """Train a multifidelity delta model from delta_dataset.csv."""
     try:
@@ -1196,6 +1227,31 @@ def ml_train_delta_model(
     typer.echo(f"  test_corrected_rmse_mean: {metrics['test']['corrected']['overall']['rmse_mean']:.6f}")
 
 
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="multifidelity",
+            inputs=[delta_dataset],
+            outputs=[output_dir],
+            artifacts=[
+                output_dir,
+                getattr(result, "output_dir", None),
+                getattr(result, "run_dir", None),
+                getattr(result, "model_run_dir", None),
+                getattr(result, "manifest_json", None),
+                getattr(result, "manifest_path", None),
+            ],
+            notes="Multifidelity delta model trained.",
+            metadata={
+                "command": "aeris ml train-delta-model",
+                "branch_step": "multifidelity_delta_model",
+                "feature_set": feature_set,
+                "base_targets": parse_csv_list(base_targets, "--base-targets"),
+                "model_type": model_type,
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
 @ml_app.command("predict-delta-model")
 def ml_predict_delta_model(
     model_run_dir: Path = typer.Option(..., "--model-run-dir", exists=True, file_okay=False, dir_okay=True, readable=True, resolve_path=True, help="Path to a trained delta model run directory."),
@@ -1240,7 +1296,12 @@ def ml_predict_delta_model(
 def ml_evaluate_delta_model(
     model_run_dir: Path = typer.Option(..., "--model-run-dir", exists=True, file_okay=False, dir_okay=True, readable=True, resolve_path=True, help="Path to a trained delta model run directory."),
     partitions: str = typer.Option("train,val,test", "--partitions", help="Comma-separated partitions to evaluate, e.g. train,val,test or test."),
-    output_dir: Path | None = typer.Option(None, "--output-dir", help="Optional output directory for multifidelity evaluation artifacts."),
+    output_dir: Path | None = typer.Option(None, "--output-dir", help="Optional output directory for multifidelity evaluation artifacts."),    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        help="Workflow root directory to auto-record this optional branch stage after success.",
+    ),
+
 ) -> None:
     """Evaluate whether a delta model improves LF predictions against HF truth."""
     try:
@@ -1267,6 +1328,28 @@ def ml_evaluate_delta_model(
     typer.echo(f"  worsened_targets: {winner['worsened_targets']}")
 
 
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="multifidelity",
+            inputs=[model_run_dir],
+            outputs=[output_dir],
+            artifacts=[
+                output_dir,
+                getattr(result, "output_dir", None),
+                getattr(result, "report_json", None),
+                getattr(result, "report_path", None),
+                getattr(result, "rows_csv", None),
+            ],
+            notes="Multifidelity delta model evaluation completed.",
+            metadata={
+                "command": "aeris ml evaluate-delta-model",
+                "branch_step": "multifidelity_evaluation",
+                "partitions": parse_csv_list(partitions, "--partitions") if partitions else None,
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
 @ml_app.command("compare-seeds")
 def ml_compare_seeds(
     dataset: Path = typer.Option(
@@ -1883,7 +1966,12 @@ def ml_suggest_samples(
         False,
         "--exclude-outside-envelope/--allow-outside-envelope",
         help="If enabled, outside-envelope candidates are never recommended.",
+    ),    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        help="Workflow root directory to auto-record this optional branch stage after success.",
     ),
+
 ) -> None:
     """Rank candidate samples for the next simulation batch.
 
@@ -1931,6 +2019,30 @@ def ml_suggest_samples(
     typer.echo(f"  ranked_candidates_csv: {artifacts.ranked_candidates_csv_path}")
     typer.echo(f"  report_json: {artifacts.report_path}")
 
+
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="active_learning",
+            inputs=[model_run_dir, candidate_csv, reference_csv],
+            outputs=[output_dir],
+            artifacts=[
+                output_dir,
+                getattr(result, "output_dir", None),
+                getattr(result, "selected_batch_csv", None),
+                getattr(result, "selection_report_json", None),
+                getattr(result, "report_json", None),
+            ],
+            notes="Active-learning sample suggestion completed.",
+            metadata={
+                "command": "aeris ml suggest-samples",
+                "top_n": top_n,
+                "candidate_id_column": candidate_id_column,
+                "require_promoted_model": require_promoted_model,
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
 @ml_app.command("predict")
 def ml_predict(
     model_run_dir: Path = typer.Option(

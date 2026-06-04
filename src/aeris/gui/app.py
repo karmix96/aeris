@@ -13,6 +13,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
 
+from aeris.gui.evidence import (
+    load_workflow_evidence,
+    stage_domain_page,
+    summarize_workflow_evidence,
+)
+
 import streamlit as st
 
 try:
@@ -26,7 +32,7 @@ except Exception:
     yaml = None
 
 # ── Version & constants ───────────────────────────────────────────────────────
-APP_VERSION       = "4.1.0"
+APP_VERSION       = "4.2.0"
 DEFAULT_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg"
 DEFAULT_TARGETS   = "cl,cd,cm"
 DEFAULT_PAIR_KEYS = "geometry_id,alpha_deg,velocity_mps,altitude_m,control_input_deg"
@@ -460,6 +466,82 @@ def _workflow_select(root: Path, key: str) -> str:
     default = sel or str(root / "data" / "workflows" / "bwb_training_v1_workflow")
     return st.text_input("Manual workflow path", value=default, key=f"{key}_manual")
 
+
+
+def _latest_workflow_root(root: Path) -> Path | None:
+    """Return the newest workflow root, if one exists."""
+    workflows = _workflow_dirs(root)
+    return Path(workflows[0]) if workflows else None
+
+
+def _workflow_evidence_card(root: Path, workflow_root: Path | None, *, key: str) -> None:
+    """Render backend-owned workflow evidence without reimplementing workflow rules."""
+    _note("Evidence-driven panel: reads <code>workflow_status.json</code>, <code>stage_status.json</code>, <code>workflow_validation_report.json</code>, event logs, and the backend workflow coverage audit. No simulated state.", "info")
+    if workflow_root is None:
+        _note("No workflow root found under data/workflows. Create one in Workflow Cockpit before expecting guided progress.", "warn")
+        return
+
+    bundle = load_workflow_evidence(workflow_root)
+    summary = summarize_workflow_evidence(bundle)
+    next_stage = summary.get("next_required_stage", {}) or {}
+    next_name = summary.get("next_stage_name", "—")
+    next_domain = next_stage.get("domain") if isinstance(next_stage, dict) else None
+    next_page = stage_domain_page(str(next_name), str(next_domain or ""))
+
+    _stat_row([
+        ("Workflow", workflow_root.name, "selected evidence root"),
+        ("Health", str(summary.get("health", "unknown")), "doctor/validate"),
+        ("Progress", f"{summary.get('completed_stages', 0)}/{summary.get('total_stages', 0)}", "recorded stages"),
+        ("Required coverage", "✓" if summary.get("all_required_covered") else "blocked", "workflow coverage"),
+        ("Optional gaps", str(summary.get("optional_gaps", 0)), "non-blocking"),
+        ("Next", str(next_name), "backend next_required_stage"),
+    ])
+
+    _h(f'<div style="border-left:4px solid {_health_color(str(summary.get("health", "unknown")))};background:#202B36;border-radius:9px;padding:.75rem .9rem;margin:.8rem 0">'
+       f'<div style="font-size:.72rem;color:#AAB6C2;text-transform:uppercase;letter-spacing:.08em">Backend recommended command</div>'
+       f'<div style="font-family:JetBrains Mono,monospace;font-size:.76rem;color:#EAF2FA;word-break:break-all">{summary.get("next_recommended_command", "—")}</div></div>')
+
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        if st.button(f"Open next domain: {next_page}", key=f"{key}_open_next", type="secondary"):
+            st.session_state["active_page"] = next_page
+            st.rerun()
+    with c2:
+        st.caption(f"Events loaded: {summary.get('event_count_tail', 0)}")
+    with c3:
+        st.caption(f"Stage files loaded: {summary.get('stage_status_count', 0)}")
+
+
+def _workflow_coverage_table(key: str) -> None:
+    """Render backend workflow coverage audit in the GUI."""
+    try:
+        report = load_workflow_evidence(Path(".")).coverage_report
+    except Exception as exc:
+        _note(f"Could not load backend workflow coverage audit: {exc}", "warn")
+        return
+    summary = report.get("summary", {}) if isinstance(report, dict) else {}
+    _stat_row([
+        ("Coverage entries", str(summary.get("entry_count", 0)), "stage-command rows"),
+        ("Required blockers", str(summary.get("required_blocker_count", 0)), "must be zero"),
+        ("Optional gaps", str(summary.get("optional_gap_count", 0)), "future branches"),
+    ])
+    rows = report.get("entries", []) if isinstance(report, dict) else []
+    table_rows = [
+        {
+            "stage": row.get("stage"),
+            "command": f"aeris {row.get('command_group')} {row.get('command_name')}",
+            "required": row.get("required"),
+            "exists": row.get("command_exists"),
+            "supports_workflow": row.get("supports_workflow_option"),
+            "status": row.get("coverage_status"),
+        }
+        for row in rows
+    ]
+    if pd is not None and table_rows:
+        st.dataframe(pd.DataFrame(table_rows), use_container_width=True, height=320)
+    else:
+        st.json(table_rows)
+
 # ── YAML geometry builder ─────────────────────────────────────────────────────
 def _yaml_geometry_builder(pfx: str) -> str:
     """Interactive YAML builder — returns a YAML string."""
@@ -747,6 +829,9 @@ def pg_home(root, exe, tmo, dry):
       <div><h1 style="margin:0!important">AERIS Mission Control</h1>
       <p style="margin:0!important;font-size:.78rem!important;color:#AAB6C2!important;font-family:JetBrains Mono,monospace">BWB aerodynamic surrogate pipeline · ground-truth CLI wiring</p></div>
     </div></div>""")
+
+    _sec("Backend-owned workflow evidence")
+    _workflow_evidence_card(root, _latest_workflow_root(root), key="home_workflow_evidence")
 
     steps_data = [
         (1,"Config",   f"{len(cfg_files)} file(s)", bool(cfg_files)),
@@ -1840,6 +1925,9 @@ def pg_workflow(root, exe, tmo, dry):
     _hero("▤", "Workflow Cockpit", "guided stage state + evidence validation", "workflow")
     _note("This panel is a cockpit over <b>aeris workflow</b>. It reads workflow JSON artifacts and runs CLI commands; it does not duplicate solver, dataset, or ML business logic.", "info")
 
+    _sec("Workflow coverage audit")
+    _workflow_coverage_table("workflow_coverage")
+
     workflows = _workflow_dirs(root)
     c_top1, c_top2, c_top3 = st.columns(3)
     with c_top1:
@@ -1863,6 +1951,9 @@ def pg_workflow(root, exe, tmo, dry):
     validation = _rjson(validation_path) or {}
 
     if wf_path.exists() and manifest_path.exists():
+        _sec("Selected workflow evidence")
+        _workflow_evidence_card(root, wf_path, key="selected_workflow_evidence")
+
         health = validation.get("health", "not_validated")
         counts = validation.get("counts", {}) if isinstance(validation, dict) else {}
         next_stage = (validation.get("next_required_stage") or status.get("next_required_stage") or {}) if isinstance(validation, dict) else {}

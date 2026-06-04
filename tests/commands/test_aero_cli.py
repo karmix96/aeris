@@ -26,6 +26,7 @@ def test_aero_run_help_runs() -> None:
     assert "--alpha" in result.stdout
     assert "--velocity" in result.stdout
     assert "--altitude" in result.stdout
+    assert "--workflow" in result.stdout
 
 
 def test_aero_inspect_help_runs() -> None:
@@ -42,6 +43,7 @@ def test_aero_sweep_help_runs() -> None:
     assert "--beta-values" in result.stdout
     assert "--velocity-values" in result.stdout
     assert "--q-values" in result.stdout
+    assert "--workflow" in result.stdout
 
 
 def test_aero_sweep_inspect_help_runs() -> None:

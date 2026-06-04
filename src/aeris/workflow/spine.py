@@ -48,11 +48,18 @@ DEFAULT_STAGE_DEFINITIONS: list[dict[str, Any]] = [
         "recommended_command": "aeris dataset generate -c configs/geometry/bwb_training_v1.yaml --n <N> --sampler lhs_v1 --sampler-seed <seed> --no-save-plot --build-aerosandbox",
     },
     {
+        "name": "aero_sweep",
+        "domain": "aero",
+        "required": True,
+        "description": "Run a controlled single-geometry aero sweep to verify solver setup, flight-condition ranges, controls, and raw artifacts.",
+        "recommended_command": "aeris aero sweep --config configs/geometry/baseline_bwb_25.yaml --alpha-values -2,0,4,8 --beta-values 0 --velocity-values 28 --altitude-values 1500 --control-input-values -5,0,5 --workflow <workflow_root>",
+    },
+    {
         "name": "aero_dataset",
         "domain": "aero",
         "required": True,
         "description": "Generate the unified aero-labeled dataset from geometry and flight-condition sweeps.",
-        "recommended_command": "aeris dataset aero-generate -c configs/geometry/bwb_training_v1.yaml --n <N> --qc-preset production --retain-aero-runs failures_only",
+        "recommended_command": "aeris dataset aero-generate -c configs/geometry/bwb_training_v1.yaml --n <N> --qc-preset production --retain-aero-runs failures_only --workflow <workflow_root>",
     },
     {
         "name": "dataset_qc",

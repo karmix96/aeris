@@ -24,6 +24,7 @@ import typer
 from aeris.aero.io import load_aero_result_from_run_dir
 from aeris.aero.cm_sanity import run_cm_sign_sanity
 from aeris.commands._helpers import parse_float_list
+from aeris.commands._workflow_recording import record_workflow_stage_success
 from aeris.pipeline.aero_workflows import (
     execute_aero_run,
     execute_aero_sweep,
@@ -40,6 +41,43 @@ _ALLOWED_SPACING = {"equal", "cosine"}
 # solver option blocks or generic --solver-option handling.
 #
 # Do not keep adding solver-specific flags here forever
+
+
+def _aero_result_artifacts(run_root: Path, result: Any) -> list[Path | str]:
+    """Return stable artifacts for a single aero run workflow record."""
+    artifacts: list[Path | str] = [run_root]
+    for value in (getattr(result, "artifact_paths", {}) or {}).values():
+        if value:
+            artifacts.append(str(value))
+    for candidate in [run_root / "aero_manifest.json", run_root / "aero" / "aero_result.json"]:
+        if candidate.exists():
+            artifacts.append(candidate)
+    return artifacts
+
+
+def _aero_sweep_artifacts(run_root: Path) -> list[Path | str]:
+    """Return stable artifacts for an aero sweep workflow record."""
+    artifacts: list[Path | str] = [run_root]
+    for candidate in [
+        run_root / "aero_sweep_manifest.json",
+        run_root / "aero_sweep" / "aero_sweep_manifest.json",
+    ]:
+        if candidate.exists():
+            artifacts.append(candidate)
+    return artifacts
+
+
+def _aero_sweep_completed_successfully(sweep_result: Any) -> bool:
+    """Return True when all expanded sweep cases completed with success status."""
+    summary = getattr(sweep_result, "summary", {}) or {}
+    cases = getattr(sweep_result, "cases", []) or []
+    requested = summary.get("requested_n_cases")
+    completed = summary.get("completed_n_cases")
+    if requested is not None and completed is not None and requested != completed:
+        return False
+    if cases and any(str(case.get("status", "")).lower() != "success" for case in cases):
+        return False
+    return True
 
 
 def _print_aero_result(result: Any) -> None:
@@ -403,6 +441,14 @@ def run_aero(
         "--output-name",
         help="Optional run-name suffix for the created output folder.",
     ),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        "-w",
+        file_okay=False,
+        dir_okay=True,
+        help="Optional workflow root to auto-record the aero sweep/setup stage after a successful run.",
+    ),
 ) -> None:
     """Run a single aero evaluation against fresh geometry, an existing run, or a dataset row.
 
@@ -461,6 +507,31 @@ def run_aero(
     typer.echo("")
     typer.echo(f"[AERIS] Aero run completed in: {run_root}")
     _print_aero_result(result)
+
+    result_status = getattr(getattr(result, "status", None), "value", getattr(result, "status", ""))
+    if str(result_status).lower() == "success":
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="aero_sweep",
+            inputs=[config, run_dir, dataset, geometry_id or None],
+            artifacts=_aero_result_artifacts(run_root, result),
+            notes="Single aero run completed successfully.",
+            metadata={
+                "command": "aeris aero run",
+                "solver": solver,
+                "alpha_deg": alpha,
+                "beta_deg": beta,
+                "velocity_mps": velocity,
+                "altitude_m": altitude,
+                "control_input_deg": control_input_deg,
+                "status": str(result_status),
+            },
+        )
+    elif workflow is not None:
+        typer.echo(
+            "[AERIS] Workflow aero_sweep stage was not auto-recorded "
+            f"because aero run status is {result_status!r}."
+        )
 
 
 @aero_app.command("inspect")
@@ -671,6 +742,14 @@ def sweep_aero(
         "--max-cases",
         help="Optional safety cap on total expanded sweep cases.",
     ),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        "-w",
+        file_okay=False,
+        dir_okay=True,
+        help="Optional workflow root to auto-record the aero sweep/setup stage after all sweep cases succeed.",
+    ),
 ) -> None:
     """Run a parametric aero sweep across alpha/beta/V/h/p/q/r/control values.
 
@@ -751,6 +830,31 @@ def sweep_aero(
         "cases": sweep_result.cases,
         "summary": sweep_result.summary,
     })
+
+    if _aero_sweep_completed_successfully(sweep_result):
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="aero_sweep",
+            inputs=[config, run_dir, dataset, geometry_id or None],
+            artifacts=_aero_sweep_artifacts(run_root),
+            notes="Aero sweep completed successfully.",
+            metadata={
+                "command": "aeris aero sweep",
+                "solver": solver,
+                "requested_n_cases": sweep_result.summary.get("requested_n_cases"),
+                "completed_n_cases": sweep_result.summary.get("completed_n_cases"),
+                "alpha_values": parsed_alpha_values or [alpha],
+                "beta_values": parsed_beta_values or [beta],
+                "velocity_values": parsed_velocity_values or [velocity],
+                "altitude_values": parsed_altitude_values or [altitude],
+                "control_input_values": parsed_control_input_values or ([control_input_deg] if control_input_deg is not None else []),
+            },
+        )
+    elif workflow is not None:
+        typer.echo(
+            "[AERIS] Workflow aero_sweep stage was not auto-recorded "
+            "because not all sweep cases succeeded."
+        )
 
 
 @aero_app.command("sweep-inspect")

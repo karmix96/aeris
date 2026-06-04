@@ -26,7 +26,7 @@ except Exception:
     yaml = None
 
 # ── Version & constants ───────────────────────────────────────────────────────
-APP_VERSION       = "4.0.0"
+APP_VERSION       = "4.1.0"
 DEFAULT_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg"
 DEFAULT_TARGETS   = "cl,cd,cm"
 DEFAULT_PAIR_KEYS = "geometry_id,alpha_deg,velocity_mps,altitude_m,control_input_deg"
@@ -76,6 +76,7 @@ PAGES = [
     ("aero",     "⊿",  "Aero Analysis"),
     ("dynamics", "◎",  "Dynamics"),
     ("ml",       "◈",  "ML Studio"),
+    ("workflow", "▤",  "Workflow Cockpit"),
     ("pipeline", "◷",  "Pipeline / Smoke"),
     ("results",  "◫",  "Results Browser"),
     ("config",   "✎",  "Config Lab"),
@@ -383,6 +384,81 @@ def _show_file(p: Path) -> None:
         st.image(str(p), use_container_width=True)
     else:
         st.code(_read(p), language="yaml" if suf in {".yaml", ".yml"} else "text")
+
+
+# ── Workflow cockpit helpers ──────────────────────────────────────────────────
+def _workflow_dirs(root: Path) -> list[str]:
+    """Return workflow roots that look like AERIS workflow folders."""
+    wf_root = root / "data" / "workflows"
+    candidates = _dirs(str(wf_root))
+    return [d for d in candidates if (Path(d) / "workflow_manifest.json").exists()]
+
+
+def _health_color(health: str) -> str:
+    return {
+        "healthy": "#22C55E",
+        "complete": "#22C55E",
+        "incomplete": "#F59E0B",
+        "blocked": "#EF4444",
+        "inconsistent": "#EF4444",
+        "unknown": "#94A3B8",
+    }.get(str(health).lower(), "#94A3B8")
+
+
+def _stage_badge(status: str) -> str:
+    status = str(status or "pending").lower()
+    return {
+        "complete": "✓ complete",
+        "pending": "○ pending",
+        "blocked": "✕ blocked",
+        "failed": "✕ failed",
+        "skipped": "– skipped",
+    }.get(status, status)
+
+
+def _workflow_stage_rows(workflow_root: Path, report: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    """Build a display table from validation report plus per-stage status files."""
+    report = report or {}
+    stage_summaries = report.get("stage_summaries") or {}
+    stage_dir = workflow_root / "stages"
+    names = list(stage_summaries.keys())
+    if stage_dir.exists():
+        for p in sorted(stage_dir.glob("*/stage_status.json")):
+            if p.parent.name not in names:
+                names.append(p.parent.name)
+    rows: list[dict[str, Any]] = []
+    for name in names:
+        summary = stage_summaries.get(name, {}) if isinstance(stage_summaries, dict) else {}
+        data = _rjson(stage_dir / name / "stage_status.json") or {}
+        stage = data.get("stage", {}) if isinstance(data, dict) else {}
+        status = stage.get("status", summary.get("status", "pending"))
+        rows.append({
+            "stage": name,
+            "status": _stage_badge(status),
+            "required": bool(stage.get("required", summary.get("required", False))),
+            "artifacts": int(summary.get("artifact_count", len(stage.get("artifacts", []) or []))),
+            "missing": int(summary.get("missing_artifact_count", 0)),
+            "blockers": int(summary.get("blocker_count", len(stage.get("blockers", []) or []))),
+            "warnings": int(summary.get("warning_count", len(stage.get("warnings", []) or []))),
+            "updated_at_utc": stage.get("updated_at_utc", summary.get("updated_at_utc")),
+        })
+    return rows
+
+
+def _workflow_select(root: Path, key: str) -> str:
+    """Select or manually type a workflow root."""
+    workflows = _workflow_dirs(root)
+    opts = [""] + workflows
+    sel = st.selectbox(
+        "Workflow root",
+        opts,
+        index=1 if len(opts) > 1 else 0,
+        key=f"{key}_sel",
+        format_func=lambda s: Path(s).name if s else "— select or create —",
+        help="Folder under data/workflows containing workflow_manifest.json.",
+    )
+    default = sel or str(root / "data" / "workflows" / "bwb_training_v1_workflow")
+    return st.text_input("Manual workflow path", value=default, key=f"{key}_manual")
 
 # ── YAML geometry builder ─────────────────────────────────────────────────────
 def _yaml_geometry_builder(pfx: str) -> str:
@@ -1758,6 +1834,144 @@ def pg_ml(root, exe, tmo, dry):
             _panel("Evaluate delta","Compare LF baseline vs corrected RMSE. Reports improved/worsened targets.",args_mfe,root,exe,tmo,dry,"mf_ev4r")
 
 
+
+
+def pg_workflow(root, exe, tmo, dry):
+    _hero("▤", "Workflow Cockpit", "guided stage state + evidence validation", "workflow")
+    _note("This panel is a cockpit over <b>aeris workflow</b>. It reads workflow JSON artifacts and runs CLI commands; it does not duplicate solver, dataset, or ML business logic.", "info")
+
+    workflows = _workflow_dirs(root)
+    c_top1, c_top2, c_top3 = st.columns(3)
+    with c_top1:
+        _panel("List stage definitions", "Show the built-in guided workflow stages.", ["workflow", "stages"], root, exe, tmo, dry, "wf_stages", "▶  stages")
+    with c_top2:
+        wf_name_new = st.text_input("New workflow name", "bwb_training_v1_workflow", key="wf_new_name")
+    with c_top3:
+        wf_out_new = st.text_input("New workflow output-dir", str(root / "data" / "workflows" / wf_name_new), key="wf_new_out")
+    _panel("Initialize workflow", "Creates workflow_manifest.json, workflow_status.json, and event log.", ["workflow", "init", "--name", wf_name_new, "--output-dir", wf_out_new], root, exe, tmo, dry, "wf_init")
+
+    _sec("Open workflow")
+    if not workflows:
+        _note("No workflow roots found yet under data/workflows. Initialize one above or type a path manually.", "warn")
+    wf_path = Path(_workflow_select(root, "wf_open")).expanduser()
+
+    status_path = wf_path / "workflow_status.json"
+    manifest_path = wf_path / "workflow_manifest.json"
+    validation_path = wf_path / "workflow_validation_report.json"
+    status = _rjson(status_path) or {}
+    manifest = _rjson(manifest_path) or {}
+    validation = _rjson(validation_path) or {}
+
+    if wf_path.exists() and manifest_path.exists():
+        health = validation.get("health", "not_validated")
+        counts = validation.get("counts", {}) if isinstance(validation, dict) else {}
+        next_stage = (validation.get("next_required_stage") or status.get("next_required_stage") or {}) if isinstance(validation, dict) else {}
+        if isinstance(next_stage, dict):
+            next_name = next_stage.get("name") or "—"
+            next_hint = next_stage.get("recommended_command") or status.get("next_command_hint") or "—"
+        else:
+            next_name = str(next_stage or "—")
+            next_hint = status.get("next_command_hint") or "—"
+
+        _stat_row([
+            ("Health", str(health), "last validation"),
+            ("Completed", f"{status.get('completed_stages', counts.get('completed_required_stages', 0))}/{status.get('total_stages', counts.get('total_stages', 13))}", "stages"),
+            ("Required", f"{counts.get('completed_required_stages', 0)}/{counts.get('required_stages', '?')}", "complete"),
+            ("Blockers", str(counts.get("blockers", 0)), "doctor"),
+            ("Missing", str(counts.get("missing_artifacts", 0)), "artifacts"),
+            ("Next", next_name, "required"),
+        ])
+        _h(f'<div style="border-left:4px solid {_health_color(str(health))};background:#202B36;border-radius:9px;padding:.75rem .9rem;margin:.8rem 0">'
+           f'<div style="font-size:.72rem;color:#AAB6C2;text-transform:uppercase;letter-spacing:.08em">Next command hint</div>'
+           f'<div style="font-family:JetBrains Mono,monospace;font-size:.76rem;color:#EAF2FA;word-break:break-all">{next_hint}</div></div>')
+    elif wf_path.exists():
+        _note(f"Folder exists but is not a workflow root: {wf_path}", "warn")
+    else:
+        _note(f"Workflow root does not exist yet: {wf_path}", "warn")
+
+    _sec("Workflow commands")
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        _panel("Status", "Compact current progress from workflow_status.json.", ["workflow", "status", "--workflow", str(wf_path)], root, exe, tmo, dry, "wf_status", "▶  status")
+    with c2:
+        _panel("Next", "Show the next required stage and command hint.", ["workflow", "next", "--workflow", str(wf_path)], root, exe, tmo, dry, "wf_next", "▶  next")
+    with c3:
+        _panel("Validate", "Write workflow_validation_report.json and check evidence.", ["workflow", "validate", "--workflow", str(wf_path)], root, exe, tmo, dry, "wf_validate", "▶  validate")
+    with c4:
+        _panel("Doctor", "Operator-friendly validation summary.", ["workflow", "doctor", "--workflow", str(wf_path)], root, exe, tmo, dry, "wf_doctor", "▶  doctor")
+
+    _sec("Stage evidence table")
+    if validation:
+        rows = _workflow_stage_rows(wf_path, validation)
+        if rows:
+            if pd is not None:
+                st.dataframe(pd.DataFrame(rows), use_container_width=True, height=360)
+            else:
+                st.json(rows)
+        else:
+            _note("No stages found in validation report yet. Run validate or doctor.", "info")
+    else:
+        _note("No workflow_validation_report.json yet. Run Validate or Doctor to generate evidence checks.", "info")
+
+    tabs = st.tabs(["Record / backfill", "Trust evidence", "Files"])
+    with tabs[0]:
+        _note("Use this only for backfilling existing artifacts. New domain commands should use their own --workflow option so stages auto-record on success.", "warn")
+        stage_name = st.text_input("--stage", "geometry_dataset", key="wf_rec_stage")
+        stage_status = st.selectbox("--status", ["complete", "pending", "blocked", "failed", "skipped"], key="wf_rec_status")
+        artifacts_text = st.text_area("--artifact values, one per line", "", height=90, key="wf_rec_artifacts")
+        notes = st.text_area("--notes", "", height=80, key="wf_rec_notes")
+        args = ["workflow", "record-stage", "--workflow", str(wf_path), "--stage", stage_name, "--status", stage_status]
+        for line in artifacts_text.splitlines():
+            if line.strip():
+                args += ["--artifact", line.strip()]
+        if notes.strip():
+            args += ["--notes", notes.strip()]
+        _panel("Record stage", "Manual stage state update for existing evidence.", args, root, exe, tmo, dry, "wf_record", "▶  record-stage")
+
+    with tabs[1]:
+        if validation:
+            blockers = validation.get("blockers", []) or []
+            warnings = validation.get("warnings", []) or []
+            missing = validation.get("missing_artifacts", []) or []
+            trust = validation.get("trust_checks", []) or []
+            if blockers:
+                st.error("Blockers")
+                st.json(blockers)
+            else:
+                st.success("No validation blockers recorded.")
+            if warnings:
+                st.warning("Warnings")
+                st.json(warnings)
+            if missing:
+                st.warning("Missing artifacts")
+                st.json(missing)
+            if trust:
+                st.caption("Trust checks")
+                st.json(trust)
+            else:
+                _note("No trust checks yet. They appear once dataset/model promotion or inference guard artifacts are recorded.", "info")
+        else:
+            _note("Run workflow validate/doctor first.", "info")
+
+    with tabs[2]:
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            if manifest_path.exists():
+                st.caption("workflow_manifest.json")
+                st.json(manifest)
+        with c2:
+            if status_path.exists():
+                st.caption("workflow_status.json")
+                st.json(status)
+        with c3:
+            if validation_path.exists():
+                st.caption("workflow_validation_report.json")
+                st.json(validation)
+        events_path = wf_path / "workflow_events.jsonl"
+        if events_path.exists():
+            with st.expander("workflow_events.jsonl", expanded=False):
+                st.code(_read(events_path, lim=120_000), language="json")
+
 def pg_pipeline(root, exe, tmo, dry):
     _hero("◷","Pipeline / Smoke","quick end-to-end sanity check","validation")
     _note("<b>aeris pipeline smoke</b> — exercises the full geometry path: config → generator → one sample → artifacts + manifest. Run after install or environment changes.","info")
@@ -1823,6 +2037,7 @@ def main():
         "aero":     pg_aero,
         "dynamics": pg_dynamics,
         "ml":       pg_ml,
+        "workflow": pg_workflow,
         "pipeline": pg_pipeline,
         "results":  lambda r, e, t, d: pg_results(r),
         "config":   lambda r, e, t, d: pg_config(r),

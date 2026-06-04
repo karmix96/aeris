@@ -32,14 +32,14 @@ def test_record_stage_updates_next_required_stage_and_stage_file(tmp_path: Path)
     )
 
     assert updated.status["workflow_status"] == "in_progress"
-    assert updated.status["next_required_stage"]["name"] == "aero_dataset"
+    assert updated.status["next_required_stage"]["name"] == "aero_sweep"
     stage_status = updated.paths.stages_dir / "geometry_dataset" / "stage_status.json"
     assert stage_status.exists()
 
     payload = inspect_workflow(updated.paths.root, stage="geometry_dataset")
     assert payload["stage"]["status"] == "complete"
     assert "data/datasets/demo_geometry" in payload["stage"]["artifacts"]
-    assert get_next_required_stage(updated.paths.root)["name"] == "aero_dataset"
+    assert get_next_required_stage(updated.paths.root)["name"] == "aero_sweep"
 
 
 def test_record_blocked_stage_marks_workflow_blocked(tmp_path: Path) -> None:

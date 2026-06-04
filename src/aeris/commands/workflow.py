@@ -17,6 +17,9 @@ from aeris.workflow import (
     record_stage,
     summarize_workflow,
     validate_workflow,
+    get_workflow_template,
+    init_workflow_from_template,
+    list_workflow_templates,
 )
 
 workflow_app = typer.Typer(
@@ -51,6 +54,18 @@ def workflow_stages() -> None:
     _echo_json({"stages": DEFAULT_STAGE_DEFINITIONS})
 
 
+@workflow_app.command("templates")
+def workflow_templates(
+    name: str | None = typer.Option(None, "--name", help="Optional template name to inspect."),
+) -> None:
+    """Print built-in workflow initialization templates."""
+    try:
+        payload = get_workflow_template(name) if name else {"templates": list_workflow_templates()}
+    except Exception as exc:
+        fail_command("workflow templates", exc)
+    _echo_json(payload)
+
+
 @workflow_app.command("init")
 def workflow_init(
     name: str = typer.Option(..., "--name", "-n", help="Workflow name."),
@@ -60,11 +75,25 @@ def workflow_init(
         help="Optional explicit workflow directory. Defaults to data/workflows/<name>.",
     ),
     description: str | None = typer.Option(None, "--description", help="Optional workflow description."),
+    template: str | None = typer.Option(
+        None,
+        "--template",
+        help="Optional workflow template: canary, production, multifidelity, active_learning.",
+    ),
     force: bool = typer.Option(False, "--force", help="Overwrite/reinitialize an existing workflow folder."),
 ) -> None:
     """Initialize a workflow root with manifest, status, and event log files."""
     try:
-        result = init_workflow(name=name, output_dir=output_dir, description=description, force=force)
+        if template:
+            result = init_workflow_from_template(
+                template_name=template,
+                name=name,
+                output_dir=output_dir,
+                description=description,
+                force=force,
+            )
+        else:
+            result = init_workflow(name=name, output_dir=output_dir, description=description, force=force)
     except Exception as exc:
         fail_command("workflow init", exc)
 
@@ -73,6 +102,9 @@ def workflow_init(
     typer.echo(f"  manifest: {result.paths.manifest_path}")
     typer.echo(f"  status: {result.paths.status_path}")
     typer.echo(f"  events: {result.paths.events_path}")
+    template_used = result.manifest.get("template")
+    if template_used:
+        typer.echo(f"  template: {template_used.get('name')}")
     next_stage = result.status.get("next_required_stage")
     if next_stage:
         typer.echo(f"  next_required_stage: {next_stage['name']}")

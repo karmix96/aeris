@@ -15109,6 +15109,9 @@ from aeris.workflow import (
     record_stage,
     summarize_workflow,
     validate_workflow,
+    get_workflow_template,
+    init_workflow_from_template,
+    list_workflow_templates,
 )
 
 workflow_app = typer.Typer(
@@ -15143,6 +15146,18 @@ def workflow_stages() -> None:
     _echo_json({"stages": DEFAULT_STAGE_DEFINITIONS})
 
 
+@workflow_app.command("templates")
+def workflow_templates(
+    name: str | None = typer.Option(None, "--name", help="Optional template name to inspect."),
+) -> None:
+    """Print built-in workflow initialization templates."""
+    try:
+        payload = get_workflow_template(name) if name else {"templates": list_workflow_templates()}
+    except Exception as exc:
+        fail_command("workflow templates", exc)
+    _echo_json(payload)
+
+
 @workflow_app.command("init")
 def workflow_init(
     name: str = typer.Option(..., "--name", "-n", help="Workflow name."),
@@ -15152,11 +15167,25 @@ def workflow_init(
         help="Optional explicit workflow directory. Defaults to data/workflows/<name>.",
     ),
     description: str | None = typer.Option(None, "--description", help="Optional workflow description."),
+    template: str | None = typer.Option(
+        None,
+        "--template",
+        help="Optional workflow template: canary, production, multifidelity, active_learning.",
+    ),
     force: bool = typer.Option(False, "--force", help="Overwrite/reinitialize an existing workflow folder."),
 ) -> None:
     """Initialize a workflow root with manifest, status, and event log files."""
     try:
-        result = init_workflow(name=name, output_dir=output_dir, description=description, force=force)
+        if template:
+            result = init_workflow_from_template(
+                template_name=template,
+                name=name,
+                output_dir=output_dir,
+                description=description,
+                force=force,
+            )
+        else:
+            result = init_workflow(name=name, output_dir=output_dir, description=description, force=force)
     except Exception as exc:
         fail_command("workflow init", exc)
 
@@ -15165,6 +15194,9 @@ def workflow_init(
     typer.echo(f"  manifest: {result.paths.manifest_path}")
     typer.echo(f"  status: {result.paths.status_path}")
     typer.echo(f"  events: {result.paths.events_path}")
+    template_used = result.manifest.get("template")
+    if template_used:
+        typer.echo(f"  template: {template_used.get('name')}")
     next_stage = result.status.get("next_required_stage")
     if next_stage:
         typer.echo(f"  next_required_stage: {next_stage['name']}")
@@ -41431,7 +41463,18 @@ __all__ = [
     "resolve_workflow_dir",
     "summarize_workflow",
     "validate_workflow",
+    "WORKFLOW_TEMPLATE_SCHEMA_VERSION",
+    "get_workflow_template",
+    "init_workflow_from_template",
+    "list_workflow_templates",
 ]
+
+from aeris.workflow.templates import (
+    WORKFLOW_TEMPLATE_SCHEMA_VERSION,
+    get_workflow_template,
+    init_workflow_from_template,
+    list_workflow_templates,
+)
 
 
 # ==================================================
@@ -42301,6 +42344,241 @@ def record_stage(
     )
 
     return WorkflowResult(paths=paths, manifest=manifest, status=workflow_status)
+
+
+# ==================================================
+# FILE: src/aeris/workflow/templates.py
+# ==================================================
+
+"""Workflow templates for guided AERIS workstation initialization.
+
+Templates are lightweight operator presets. They do not run commands and they do
+not replace the workflow spine. They tell the workflow which built-in stages are
+expected for a named operating mode and record that choice in workflow artifacts.
+"""
+
+from __future__ import annotations
+
+from copy import deepcopy
+from dataclasses import dataclass
+import json
+from pathlib import Path
+from typing import Any
+
+from aeris.workflow.spine import DEFAULT_STAGE_DEFINITIONS, WorkflowResult, init_workflow
+
+
+WORKFLOW_TEMPLATE_SCHEMA_VERSION = "aeris.workflow_template.v1"
+
+
+@dataclass(frozen=True)
+class WorkflowTemplate:
+    """Named workflow initialization preset."""
+
+    name: str
+    title: str
+    description: str
+    required_stages: tuple[str, ...]
+    optional_stages: tuple[str, ...] = ()
+    notes: tuple[str, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": WORKFLOW_TEMPLATE_SCHEMA_VERSION,
+            "name": self.name,
+            "title": self.title,
+            "description": self.description,
+            "required_stages": list(self.required_stages),
+            "optional_stages": list(self.optional_stages),
+            "notes": list(self.notes),
+        }
+
+
+_BASE_REQUIRED = (
+    "geometry_dataset",
+    "aero_sweep",
+    "aero_dataset",
+    "dataset_qc",
+    "curation",
+    "promotion",
+    "ml_eda",
+    "ml_training",
+    "model_comparison",
+    "model_promotion",
+    "inference_guard",
+)
+
+
+_WORKFLOW_TEMPLATES: dict[str, WorkflowTemplate] = {
+    "canary": WorkflowTemplate(
+        name="canary",
+        title="Canary workflow",
+        description=(
+            "Small proof-of-plumbing workflow for validating the guided chain "
+            "before a larger campaign. Use tiny N and baseline_bwb_25 smoke settings."
+        ),
+        required_stages=_BASE_REQUIRED,
+        optional_stages=("final_package",),
+        notes=(
+            "Use configs/geometry/baseline_bwb_25.yaml unless deliberately testing a wider design space.",
+            "Tiny canaries prove plumbing, not surrogate quality.",
+        ),
+    ),
+    "production": WorkflowTemplate(
+        name="production",
+        title="Production training workflow",
+        description=(
+            "Full required BWB aero-surrogate trust chain: dataset, aero, QC, curation, "
+            "promotion, EDA, ML, model promotion, and inference guard."
+        ),
+        required_stages=_BASE_REQUIRED,
+        optional_stages=("active_learning", "multifidelity", "final_package"),
+        notes=(
+            "Use grouped ML splits by geometry_id.",
+            "Do not train on raw or curated-only datasets; use promoted datasets.",
+        ),
+    ),
+    "multifidelity": WorkflowTemplate(
+        name="multifidelity",
+        title="Multifidelity workflow",
+        description=(
+            "Required core trust chain plus the optional LF/HF delta-learning branch. "
+            "This does not run CFD; it records the expected workflow shape."
+        ),
+        required_stages=_BASE_REQUIRED + ("multifidelity",),
+        optional_stages=("active_learning", "final_package"),
+        notes=(
+            "Multifidelity tools consume scalar LF/HF products and do not execute CFD or XFOIL.",
+            "Pairing keys and delta reports must remain auditable.",
+        ),
+    ),
+    "active_learning": WorkflowTemplate(
+        name="active_learning",
+        title="Active-learning workflow",
+        description=(
+            "Required core trust chain plus candidate ranking for the next solver batch. "
+            "Use only after a promoted model and inference guard exist."
+        ),
+        required_stages=_BASE_REQUIRED + ("active_learning",),
+        optional_stages=("multifidelity", "final_package"),
+        notes=(
+            "Active learning recommends new samples; it must not silently run solvers.",
+            "Candidate pools should be traceable CSV/data products.",
+        ),
+    ),
+}
+
+
+def list_workflow_templates() -> list[dict[str, Any]]:
+    """Return all built-in workflow templates as JSON-serializable dictionaries."""
+    return [template.to_dict() for template in _WORKFLOW_TEMPLATES.values()]
+
+
+def get_workflow_template(name: str) -> dict[str, Any]:
+    """Return one workflow template by name."""
+    key = name.strip().lower().replace("_", "-")
+    aliases = {
+        "active-learning": "active_learning",
+        "active_learning": "active_learning",
+        "multi-fidelity": "multifidelity",
+        "multi_fidelity": "multifidelity",
+    }
+    normalized = aliases.get(key, key)
+    if normalized not in _WORKFLOW_TEMPLATES:
+        known = ", ".join(sorted(_WORKFLOW_TEMPLATES))
+        raise ValueError(f"Unknown workflow template '{name}'. Available templates: {known}")
+    return _WORKFLOW_TEMPLATES[normalized].to_dict()
+
+
+def _template_stage_definitions(template: dict[str, Any]) -> list[dict[str, Any]]:
+    required = set(template["required_stages"])
+    optional = set(template["optional_stages"])
+    allowed = required | optional
+
+    out: list[dict[str, Any]] = []
+    for stage in DEFAULT_STAGE_DEFINITIONS:
+        if stage["name"] not in allowed:
+            continue
+        item = deepcopy(stage)
+        item["required"] = item["name"] in required
+        out.append(item)
+
+    missing = sorted(allowed - {stage["name"] for stage in out})
+    if missing:
+        raise ValueError(
+            "Workflow template references unknown stage(s): " + ", ".join(missing)
+        )
+    return out
+
+
+def _initial_stage_state(stage: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "name": stage["name"],
+        "domain": stage.get("domain", ""),
+        "required": bool(stage.get("required", True)),
+        "status": "pending",
+        "artifacts": [],
+        "inputs": [],
+        "outputs": [],
+        "blockers": [],
+        "warnings": [],
+        "notes": "",
+        "updated_at_utc": None,
+    }
+
+
+def _next_required_stage(stages: list[dict[str, Any]]) -> dict[str, Any] | None:
+    for stage in stages:
+        if stage.get("required", True):
+            return stage
+    return None
+
+
+def _write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+
+
+def init_workflow_from_template(
+    *,
+    template_name: str,
+    name: str,
+    output_dir: Path | None = None,
+    description: str | None = None,
+    force: bool = False,
+) -> WorkflowResult:
+    """Initialize a workflow and attach a named template to its artifacts."""
+    template = get_workflow_template(template_name)
+    stage_definitions = _template_stage_definitions(template)
+
+    result = init_workflow(
+        name=name,
+        output_dir=output_dir,
+        description=description or template["description"],
+        force=force,
+    )
+
+    manifest = dict(result.manifest)
+    status = dict(result.status)
+
+    manifest["template"] = template
+    manifest["stages"] = stage_definitions
+
+    status["template"] = template
+    status["stages"] = {stage["name"]: _initial_stage_state(stage) for stage in stage_definitions}
+    status["completed_stages"] = 0
+    status["total_stages"] = len(stage_definitions)
+    status["required_stages"] = len([stage for stage in stage_definitions if stage.get("required", True)])
+    status["next_required_stage"] = _next_required_stage(stage_definitions)
+    status["workflow_status"] = "initialized"
+
+    _write_json(result.paths.manifest_path, manifest)
+    _write_json(result.paths.status_path, status)
+    (result.paths.root / "workflow_template.json").write_text(
+        json.dumps(template, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
+
+    return WorkflowResult(paths=result.paths, manifest=manifest, status=status)
 
 
 # ==================================================
@@ -47570,6 +47848,40 @@ def test_workflow_coverage_json_output(tmp_path: Path) -> None:
     assert data["report_type"] == "workflow_coverage_audit"
     assert data["entries"]
     assert data["summary"]["entry_count"] == len(data["entries"])
+
+
+def test_workflow_templates_command_runs() -> None:
+    result = runner.invoke(app, ["--no-check-writable", "workflow", "templates"])
+    assert result.exit_code == 0, result.output
+    assert "canary" in result.output
+    assert "production" in result.output
+
+
+def test_workflow_templates_named_command_runs() -> None:
+    result = runner.invoke(app, ["--no-check-writable", "workflow", "templates", "--name", "canary"])
+    assert result.exit_code == 0, result.output
+    assert '"name": "canary"' in result.output
+
+
+def test_workflow_init_accepts_template(tmp_path: Path) -> None:
+    out = tmp_path / "wf_canary"
+    result = runner.invoke(
+        app,
+        [
+            "--no-check-writable",
+            "workflow",
+            "init",
+            "--name",
+            "demo_canary",
+            "--template",
+            "canary",
+            "--output-dir",
+            str(out),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "template: canary" in result.output
+    assert (out / "workflow_template.json").exists()
 
 
 # ==================================================
@@ -59712,5 +60024,48 @@ def test_validate_workflow_detects_stage_order_gap(tmp_path: Path) -> None:
     assert validation.report["health"] == "incomplete"
     assert validation.report["stage_order_issues"]
     assert validation.report["stage_order_issues"][0]["first_incomplete_required_stage"] == "geometry_dataset"
+
+
+# ==================================================
+# FILE: tests/workflow/test_workflow_templates.py
+# ==================================================
+
+from __future__ import annotations
+
+import json
+
+from aeris.workflow.templates import (
+    get_workflow_template,
+    init_workflow_from_template,
+    list_workflow_templates,
+)
+
+
+def test_list_workflow_templates_contains_expected_names() -> None:
+    names = {item["name"] for item in list_workflow_templates()}
+    assert {"canary", "production", "multifidelity", "active_learning"} <= names
+
+
+def test_get_workflow_template_aliases() -> None:
+    assert get_workflow_template("active-learning")["name"] == "active_learning"
+    assert get_workflow_template("multi-fidelity")["name"] == "multifidelity"
+
+
+def test_init_workflow_from_canary_template_writes_template_artifacts(tmp_path) -> None:
+    result = init_workflow_from_template(
+        template_name="canary",
+        name="demo_canary",
+        output_dir=tmp_path / "wf",
+    )
+
+    assert result.paths.manifest_path.exists()
+    assert result.paths.status_path.exists()
+    assert (result.paths.root / "workflow_template.json").exists()
+    assert result.manifest["template"]["name"] == "canary"
+    assert result.status["template"]["name"] == "canary"
+    assert result.status["next_required_stage"]["name"] == "geometry_dataset"
+
+    template_payload = json.loads((result.paths.root / "workflow_template.json").read_text())
+    assert template_payload["name"] == "canary"
 
 

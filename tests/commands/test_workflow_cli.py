@@ -127,3 +127,37 @@ def test_workflow_coverage_json_output(tmp_path: Path) -> None:
     assert data["report_type"] == "workflow_coverage_audit"
     assert data["entries"]
     assert data["summary"]["entry_count"] == len(data["entries"])
+
+
+def test_workflow_templates_command_runs() -> None:
+    result = runner.invoke(app, ["--no-check-writable", "workflow", "templates"])
+    assert result.exit_code == 0, result.output
+    assert "canary" in result.output
+    assert "production" in result.output
+
+
+def test_workflow_templates_named_command_runs() -> None:
+    result = runner.invoke(app, ["--no-check-writable", "workflow", "templates", "--name", "canary"])
+    assert result.exit_code == 0, result.output
+    assert '"name": "canary"' in result.output
+
+
+def test_workflow_init_accepts_template(tmp_path: Path) -> None:
+    out = tmp_path / "wf_canary"
+    result = runner.invoke(
+        app,
+        [
+            "--no-check-writable",
+            "workflow",
+            "init",
+            "--name",
+            "demo_canary",
+            "--template",
+            "canary",
+            "--output-dir",
+            str(out),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "template: canary" in result.output
+    assert (out / "workflow_template.json").exists()

@@ -28,4 +28,15 @@ __all__ = [
     "resolve_workflow_dir",
     "summarize_workflow",
     "validate_workflow",
+    "WORKFLOW_TEMPLATE_SCHEMA_VERSION",
+    "get_workflow_template",
+    "init_workflow_from_template",
+    "list_workflow_templates",
 ]
+
+from aeris.workflow.templates import (
+    WORKFLOW_TEMPLATE_SCHEMA_VERSION,
+    get_workflow_template,
+    init_workflow_from_template,
+    list_workflow_templates,
+)

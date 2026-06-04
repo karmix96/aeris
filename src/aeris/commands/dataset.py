@@ -287,7 +287,24 @@ def dataset_aero_qc(
         fail_command("Dataset aero-qc", exc)
 
     typer.echo(f"[AERIS] Aero QC passed: {report['passed']}")
+    typer.echo(f"Profile: {report.get('metrics', {}).get('profile', profile)}")
     typer.echo(f"Errors: {len(report['errors'])}")
+    for error in report.get("errors", []):
+        typer.echo(f"  ERROR: {error}")
+    typer.echo(f"Warnings: {len(report.get('warnings', []))}")
+    for warning in report.get("warnings", []):
+        typer.echo(f"  WARNING: {warning}")
+
+    try:
+        import json
+
+        qc_dir = dataset / "qc"
+        qc_dir.mkdir(parents=True, exist_ok=True)
+        effective_profile = str(report.get("metrics", {}).get("profile", profile))
+        profile_report = qc_dir / f"aero_qc_{effective_profile}_report.json"
+        profile_report.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
+    except Exception as exc:
+        fail_command("Dataset aero-qc report write", exc)
 
     if not report["passed"]:
         raise typer.Exit(code=1)
@@ -297,7 +314,7 @@ def dataset_aero_qc(
             workflow=workflow,
             stage="dataset_qc",
             inputs=[dataset],
-            artifacts=[dataset / "qc" / "aero_qc_report.json"],
+            artifacts=[dataset / "qc" / f"aero_qc_{report.get('metrics', {}).get('profile', profile)}_report.json"],
             notes=f"Aero dataset QC passed with profile={profile}.",
             metadata={
                 "command": "aeris dataset aero-qc",

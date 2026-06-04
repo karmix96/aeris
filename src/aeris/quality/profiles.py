@@ -10,6 +10,14 @@ GEOMETRY_QC_PROFILES: dict[str, list[str]] = {
         "geometry_basic_ranges_v1",
         "geometry_required_files_v1",
     ],
+    "production": [
+        "geometry_manifest_consistency_v1",
+        "geometry_required_columns_v1",
+        "geometry_no_duplicate_ids_v1",
+        "geometry_metadata_no_nan_v1",
+        "geometry_basic_ranges_v1",
+        "geometry_required_files_v1",
+    ],
     "strict": [
         "geometry_manifest_consistency_v1",
         "geometry_required_columns_v1",
@@ -25,6 +33,15 @@ GEOMETRY_QC_PROFILES: dict[str, list[str]] = {
 
 AERO_QC_PROFILES: dict[str, list[str]] = {
     "basic": [
+        "aero_manifest_consistency_v1",
+        "aero_targets_finite_v1",
+        "aero_grid_complete_v1",
+        "aero_zero_control_once_v1",
+        "aero_control_diagnostics_v1",
+        "aero_control_effectiveness_v1",
+        "aero_basic_ranges_v1",
+    ],
+    "production": [
         "aero_manifest_consistency_v1",
         "aero_targets_finite_v1",
         "aero_grid_complete_v1",

@@ -363,7 +363,7 @@ def _check_ld_sanity(df: pd.DataFrame, manifest: dict, report: dict) -> None:
     if bad_too_large > 0:
         _append_error(report, f"Suspiciously large |L/D| detected in {bad_too_large} rows")
     if bad_negative > 0:
-        _append_error(report, f"Non-positive L/D detected in {bad_negative} rows")
+        _append_warning(report, f"Non-positive L/D detected in {bad_negative} rows")
 
 
 def _check_beta_zero_lateral_sanity(df: pd.DataFrame, manifest: dict, report: dict) -> None:

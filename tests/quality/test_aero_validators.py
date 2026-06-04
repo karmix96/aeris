@@ -119,3 +119,63 @@ def test_aero_profile_routing_exposes_strict_only_validator_ids(tmp_path: Path) 
     assert "aero_ld_sanity_v1" in strict_ids
     assert "aero_beta_zero_lateral_sanity_v1" in strict_ids
     assert "aero_target_variation_v1" in strict_ids
+
+def test_aero_strict_warns_not_fails_on_negative_ld(tmp_path: Path) -> None:
+    import json
+    import pandas as pd
+
+    dataset_root = tmp_path / "aero_dataset"
+    dataset_root.mkdir()
+
+    rows = []
+    for alpha in [-2.0, 0.0]:
+        for control in [-5.0, 0.0, 5.0]:
+            cl = 0.10 * alpha + 0.01 * control
+            cd = 0.02 + 0.001 * abs(control)
+            cm = -0.05 - 0.01 * control
+            rows.append(
+                {
+                    "geometry_id": "g1",
+                    "alpha_deg": alpha,
+                    "beta_deg": 0.0,
+                    "velocity_mps": 28.0,
+                    "altitude_m": 1500.0,
+                    "control_input_deg": control,
+                    "cl": cl,
+                    "cd": cd,
+                    "cm": cm,
+                    "cy": 0.0,
+                    "cl_roll": 0.0,
+                    "cn": 0.0,
+                    "l_over_d": cl / cd,
+                    "geometry_declares_controls": True,
+                    "airplane_has_controls": True,
+                    "diag_airplane_has_control_surfaces": True,
+                    "diag_airplane_avl_has_control_blocks": True,
+                    "diag_keystrokes_has_d1_command": True,
+                    "diag_stdout_control_variables": 1,
+                }
+            )
+
+    df = pd.DataFrame(rows)
+    df.to_csv(dataset_root / "aero_dataset.csv", index=False)
+
+    manifest = {
+        "dataset_type": "aero",
+        "status": "success",
+        "successful_aero_rows": len(df),
+        "failed_aero_rows": 0,
+    }
+    (dataset_root / "aero_dataset_manifest.json").write_text(
+        json.dumps(manifest, indent=2),
+        encoding="utf-8",
+    )
+
+    report = run_aero_dataset_qc(dataset_root, profile="strict")
+
+    # This regression only checks L/D semantics:
+    # non-positive L/D should be a warning, not an error.
+    # Other strict validators may still fail on this intentionally tiny toy dataset.
+    assert any("Non-positive L/D" in msg for msg in report["warnings"])
+    assert not any("Non-positive L/D" in msg for msg in report["errors"])
+

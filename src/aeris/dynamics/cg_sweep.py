@@ -1,41 +1,79 @@
+"""
+AERIS Dynamics — CG Sweep
+==========================
+Sweeps CG x-position and computes static margin, neutral point, and trim
+elevon requirement at each point. Produces:
+  - cg_sweep.json  (machine-readable, full detail)
+  - cg_sweep.csv   (tabular, for plotting/export)
+
+Engineering use:
+  - Find the stable CG envelope (SM > 0)
+  - Find the neutral point (SM = 0 crossing)
+  - Find minimum trim elevon as a function of CG
+"""
+
 from __future__ import annotations
 
+import csv
+import math
 from dataclasses import asdict
 from pathlib import Path
 import json
 
 from aeris.aero.io import read_aero_result
-from aeris.dynamics.analysis import build_dynamics_foundation_result
-from aeris.dynamics.models import InertiaPlaceholders, MassProperties, TrimDefinition
+from aeris.dynamics.analysis import (
+    GRAVITY_MPS2,
+    build_dynamics_foundation_result,
+    dynamic_pressure,
+)
+from aeris.dynamics.models import (
+    InertiaPlaceholders,
+    MassProperties,
+    TrimDefinition,
+)
+from aeris.dynamics.trim import (
+    DE_MAX_DEG,
+    DE_MIN_DEG,
+    estimate_longitudinal_trim,
+)
 
+
+# ---------------------------------------------------------------------------
+# Utilities
+# ---------------------------------------------------------------------------
 
 def linspace(start: float, stop: float, n: int) -> list[float]:
+    """Pure-Python linspace without numpy dependency."""
     if n < 2:
         return [float(start)]
     step = (stop - start) / (n - 1)
     return [float(start + i * step) for i in range(n)]
 
+
 def estimate_zero_crossing(cases: list[dict]) -> float | None:
     """
-    Linear interpolation estimate of CG location where static_margin crosses zero.
+    Linear interpolation estimate of CG where static_margin crosses zero.
+    Returns None if no sign change is found in the sweep.
     """
     for a, b in zip(cases[:-1], cases[1:]):
         sm_a = a.get("static_margin")
         sm_b = b.get("static_margin")
         if sm_a is None or sm_b is None:
             continue
-
         if sm_a == 0.0:
             return float(a["x_cg_m"])
         if sm_b == 0.0:
             return float(b["x_cg_m"])
-
         if sm_a * sm_b < 0.0:
             x_a = float(a["x_cg_m"])
             x_b = float(b["x_cg_m"])
             return x_a + (0.0 - sm_a) * (x_b - x_a) / (sm_b - sm_a)
-
     return None
+
+
+# ---------------------------------------------------------------------------
+# Main sweep
+# ---------------------------------------------------------------------------
 
 def run_cg_sweep(
     *,
@@ -50,12 +88,30 @@ def run_cg_sweep(
     iyy_kg_m2: float | None = None,
     izz_kg_m2: float | None = None,
     x_positive_aft: bool = True,
+    sref_m2: float | None = None,
+    span_m: float | None = None,
 ) -> dict:
-    run_dir = Path(run_dir)
+    """
+    Sweep CG x-position from cg_min_m to cg_max_m in n steps.
+
+    For each CG position, computes:
+      - Static margin and neutral point
+      - Key stability derivatives
+      - Trim elevon requirement (Δδe to achieve Cm=0 at current α)
+
+    Returns a summary dict suitable for JSON serialisation.
+    """
+    run_dir    = Path(run_dir)
     aero_result = read_aero_result(run_dir)
 
+    # Load aero_result as dict for trim analysis
+    from aeris.aero.io import find_aero_result_json
+    aero_json_path = find_aero_result_json(run_dir)
+    import json as _json
+    aero_dict = _json.loads(aero_json_path.read_text(encoding="utf-8"))
+
     cg_values = linspace(cg_min_m, cg_max_m, n)
-    cases = []
+    cases: list[dict] = []
 
     for x_cg_m in cg_values:
         mass = MassProperties(
@@ -73,61 +129,89 @@ def run_cg_sweep(
         result = build_dynamics_foundation_result(
             aero_result=aero_result,
             mass_properties=mass,
-            trim_definition=TrimDefinition(
-                enabled=False,
-                notes="Schema only. No trim solver implemented.",
-            ),
             source_run_dir=str(run_dir),
+            trim_definition=TrimDefinition(enabled=False, notes="CG sweep — schema only."),
             x_positive_aft=x_positive_aft,
+            sref_m2=sref_m2,
+            span_m=span_m,
         )
 
-        cases.append(
-            {
-                "x_cg_m": x_cg_m,
-                "static_margin": result.stability_metrics.static_margin,
-                "static_margin_percent_mac": result.stability_metrics.static_margin_percent_mac,
-                "cma": result.stability_metrics.cma,
-                "cma_consistent_with_static_margin": result.stability_metrics.cma_consistent_with_static_margin,
-                "longitudinal_interpretation": result.stability_metrics.longitudinal_interpretation,
-                "x_np_m": result.stability_metrics.x_np_m,
-                "mac_m": result.stability_metrics.mac_m,
-            }
-        )
+        sm   = result.stability_metrics
+        ctrl = result.control_effectiveness
+        deriv = result.stability_derivatives
 
-    positive_cases = [
-        c for c in cases
-        if c["static_margin"] is not None and c["static_margin"] > 0.0
-    ]
+        # Trim elevon estimate at this CG: what δe brings Cm to 0?
+        trim_res = estimate_longitudinal_trim(aero_dict, run_dir)
+        de_trim  = trim_res.longitudinal.de_trim_deg
+        de_ok    = trim_res.longitudinal.de_trim_in_bounds
 
-    zero_crossing_estimate_m = estimate_zero_crossing(cases)
-    
+        cases.append({
+            "x_cg_m":                       round(x_cg_m, 6),
+            "static_margin":                 sm.static_margin,
+            "static_margin_percent_mac":     sm.static_margin_percent_mac,
+            "x_np_m":                        sm.x_np_m,
+            "mac_m":                         sm.mac_m,
+            "cma":                           deriv.longitudinal.cma,
+            "cmde":                          ctrl.cm_per_de_rad,
+            "de_trim_deg":                   round(de_trim, 4) if de_trim is not None else None,
+            "de_trim_in_bounds":             de_ok,
+            "cma_consistent_with_static_margin": sm.cma_consistent_with_static_margin,
+            "longitudinal_interpretation":   sm.longitudinal_interpretation,
+            "pitch_authority_adequate":      ctrl.pitch_authority_adequate,
+        })
+
+    # ── Summary ───────────────────────────────────────────────────────────────
+    positive_cases = [c for c in cases if c["static_margin"] is not None
+                      and c["static_margin"] > 0.0]
+    trimmable_cases = [c for c in cases if c.get("de_trim_in_bounds") is True]
+
+    zero_crossing_m = estimate_zero_crossing(cases)
+
+    min_sm     = min((c["static_margin_percent_mac"] for c in cases
+                      if c["static_margin_percent_mac"] is not None), default=None)
+    max_sm     = max((c["static_margin_percent_mac"] for c in cases
+                      if c["static_margin_percent_mac"] is not None), default=None)
+
     summary = {
+        "schema_version": "0.2.0",
         "run_dir": str(run_dir),
         "mass_kg": mass_kg,
         "cg_min_m": cg_min_m,
         "cg_max_m": cg_max_m,
         "n": n,
         "x_positive_aft": x_positive_aft,
+        # Stability envelope
+        "stable_cg_min_m": min(c["x_cg_m"] for c in positive_cases) if positive_cases else None,
+        "stable_cg_max_m": max(c["x_cg_m"] for c in positive_cases) if positive_cases else None,
+        "static_margin_zero_crossing_estimate_m": zero_crossing_m,
+        "min_static_margin_percent_mac": round(min_sm, 4) if min_sm is not None else None,
+        "max_static_margin_percent_mac": round(max_sm, 4) if max_sm is not None else None,
+        # Trim envelope
+        "trimmable_cg_min_m": min(c["x_cg_m"] for c in trimmable_cases) if trimmable_cases else None,
+        "trimmable_cg_max_m": max(c["x_cg_m"] for c in trimmable_cases) if trimmable_cases else None,
+        "cmde_available": any(c.get("cmde") is not None for c in cases),
+        # Per-CG cases
         "cases": cases,
-        "stable_cg_min_m": None if not positive_cases else min(c["x_cg_m"] for c in positive_cases),
-        "stable_cg_max_m": None if not positive_cases else max(c["x_cg_m"] for c in positive_cases),
-        "static_margin_zero_crossing_estimate_m": zero_crossing_estimate_m,
     }
 
     return summary
 
 
+# ---------------------------------------------------------------------------
+# Output writers
+# ---------------------------------------------------------------------------
+
 def write_cg_sweep(summary: dict, output_dir: str | Path) -> Path:
+    """Write cg_sweep.json to output_dir."""
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     path = output_dir / "cg_sweep.json"
     path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
     return path
 
-import csv
-
 
 def write_cg_sweep_csv(summary: dict, output_dir: str | Path) -> Path:
+    """Write cg_sweep.csv to output_dir."""
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     path = output_dir / "cg_sweep.csv"
@@ -141,15 +225,19 @@ def write_cg_sweep_csv(summary: dict, output_dir: str | Path) -> Path:
         "x_cg_m",
         "static_margin",
         "static_margin_percent_mac",
-        "cma",
-        "cma_consistent_with_static_margin",
-        "longitudinal_interpretation",
         "x_np_m",
         "mac_m",
+        "cma",
+        "cmde",
+        "de_trim_deg",
+        "de_trim_in_bounds",
+        "cma_consistent_with_static_margin",
+        "longitudinal_interpretation",
+        "pitch_authority_adequate",
     ]
 
     with path.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
         writer.writeheader()
         for case in cases:
             writer.writerow({k: case.get(k) for k in fieldnames})

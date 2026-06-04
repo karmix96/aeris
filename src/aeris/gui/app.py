@@ -988,7 +988,7 @@ def _geo_delete_one(p: Path, key_suffix: str) -> bool:
         if st.button("🗑", key=f"del_{key_suffix}", help=f"Delete {p.name}"):
             try:
                 _shutil.rmtree(p)
-                st.toast(f"Deleted: {p.name}", icon="✓")
+                st.toast(f"Deleted: {p.name}", icon="🗑")
                 return True
             except Exception as e:
                 st.error(f"Could not delete {p.name}: {e}")
@@ -1076,7 +1076,7 @@ def pg_geometry(root, exe, tmo, dry):
                         except Exception as e:
                             st.error(f"{p.name}: {e}")
                     st.session_state["gg_confirm_gen"] = False
-                    st.toast(f"Deleted {len(deleted)} folder(s).", icon="✓")
+                    st.toast(f"Deleted {len(deleted)} folder(s).", icon="🗑")
                     st.rerun()
                 if cb.button("Cancel", key="gg_confirm_gen_no", type="secondary"):
                     st.session_state["gg_confirm_gen"] = False
@@ -1088,125 +1088,149 @@ def pg_geometry(root, exe, tmo, dry):
     with tab_vis:
         # ── Geometry source ───────────────────────────────────────────────
         geo_run_paths = [Path(r) for r in _dirs(str(root / "data" / "runs"))
-                         if "geometry" in Path(r).name]
+                         if "geometry" in Path(r).name
+                         and not any(k in Path(r).name for k in ("_aero_", "_sweep_"))]
 
         src_mode = st.radio(
             "Geometry source",
             ["From existing run", "From config file"],
             horizontal=True,
             key="gv_src_mode",
-            help="From existing run: picks the config that was used when you generated that geometry, "
-                 "so you visualize the same design space. "
-                 "From config file: choose any YAML config directly.",
+            help="From existing run: reuses the exact same config AND seed that produced "
+                 "that geometry — so you visualize the identical shape. "
+                 "From config file: choose any config and seed freely.",
         )
+
+        # resolved for the buttons
+        vcfg       = ""
+        auto_seed  = None   # int seed read from manifest — None means not resolved yet
 
         if src_mode == "From existing run":
             if not geo_run_paths:
                 st.warning(
                     "No geometry runs found in data/runs/. "
-                    "Go to ① Generate first, create a geometry, then come back here."
+                    "Go to ① Generate first, then come back here."
                 )
-                vcfg = cfg_smoke_first[0] if cfg_smoke_first else ""
             else:
                 run_opts = {p.name: p for p in geo_run_paths}
                 chosen_run_name = st.selectbox(
                     "Select generated run",
                     list(run_opts.keys()),
                     key="gv_run_sel",
-                    help="Select a folder from data/runs/. "
-                         "The config that was used to create it will be loaded automatically.",
+                    help="Pick the run folder. Config and seed are read automatically "
+                         "from that run — you will visualize the exact geometry that was generated.",
                 )
                 chosen_run = run_opts[chosen_run_name]
 
-                # Read input_config.yaml saved inside the run folder
+                # Read seed from manifest (authoritative)
+                m = _rjson(chosen_run / "manifest.json")
+                auto_seed = (m or {}).get("geometry", {}).get("design_sampling_seed")
+                status    = (m or {}).get("status", "unknown")
+                dot_col   = "#22C55E" if status == "success" else "#EF4444"
+
+                # Config from input_config.yaml
                 saved_cfg = chosen_run / "input_config.yaml"
                 if saved_cfg.exists():
                     vcfg = str(saved_cfg)
-                    # Also read it to show a summary
-                    cfg_preview = None
-                    if yaml:
-                        try:
-                            cfg_preview = yaml.safe_load(saved_cfg.read_text(encoding="utf-8"))
-                        except Exception:
-                            cfg_preview = None
-                    m = _rjson(chosen_run / "manifest.json")
-                    status = (m or {}).get("status", "unknown")
-                    col = "#22C55E" if status == "success" else "#EF4444"
-                    cfg_name = (cfg_preview or {}).get("name", saved_cfg.name)
-                    _h(
-                        f'<div style="background:#1B2A3A;border:1px solid #2D3F52;border-radius:8px;'
-                        f'padding:.55rem 1rem;margin:.4rem 0;display:flex;align-items:center;gap:10px">'
-                        f'<div style="width:8px;height:8px;border-radius:50%;background:{col};flex-shrink:0"></div>'
-                        f'<div style="flex:1;font-size:.8rem;color:#D6DEE8">'
-                        f'<span style="font-family:JetBrains Mono,monospace">{chosen_run.name}</span>'
-                        f' — config: <span style="color:#93C5FD">{cfg_name}</span></div>'
-                        f'<div style="font-size:.7rem;color:{col};font-weight:600">{status}</div>'
-                        f'</div>'
-                    )
-                    st.caption(f"Config loaded from: `{saved_cfg}`")
+                    cfg_display = saved_cfg.name
                 else:
                     st.warning(
-                        f"No input_config.yaml found inside {chosen_run.name}. "
-                        "This run may be from an older AERIS version. "
-                        "Falling back to config file picker."
+                        f"No input_config.yaml in {chosen_run.name}. "
+                        "Falling back to config picker."
                     )
                     vcfg = st.selectbox(
                         "Config (fallback)", cfg_smoke_first,
                         format_func=_cfg_label, key="gv_cfg_fb",
                     )
+                    cfg_display = Path(vcfg).name if vcfg else "—"
+
+                # Info row
+                seed_display = str(auto_seed) if auto_seed is not None else "unknown"
+                _h(
+                    f'<div style="background:#1B2A3A;border:1px solid #2D3F52;border-radius:8px;'
+                    f'padding:.55rem 1rem;margin:.35rem 0;display:flex;align-items:center;gap:12px">'
+                    f'<div style="width:8px;height:8px;border-radius:50%;background:{dot_col};flex-shrink:0"></div>'
+                    f'<div style="flex:1;font-size:.8rem;color:#D6DEE8">'
+                    f'<span style="font-family:JetBrains Mono,monospace;color:#93C5FD">{chosen_run.name}</span>'
+                    f'<span style="color:#5A7A96"> · config: </span>{cfg_display}'
+                    f'<span style="color:#5A7A96"> · seed: </span>'
+                    f'<span style="color:#FCD34D">{seed_display}</span></div>'
+                    f'<div style="font-size:.7rem;color:{dot_col};font-weight:600">{status}</div>'
+                    f'</div>'
+                )
+                if auto_seed is not None:
+                    st.caption(
+                        f"Seed **{auto_seed}** read from manifest — "
+                        "visualize will reproduce the exact same geometry."
+                    )
+                else:
+                    st.caption(
+                        "Seed not found in manifest. "
+                        "The geometry may not be exactly reproduced."
+                    )
         else:
-            # From config file
+            # From config file — user controls seed freely
             vcfg = st.selectbox(
                 "Config", cfg_smoke_first,
                 format_func=_cfg_label, key="gv_cfg",
                 help="Pick which config to sample one geometry from.",
             )
 
-        # ── Seed and PNG name ─────────────────────────────────────────────
-        c1, c2 = st.columns([1, 2])
-        seed_val = c1.number_input(
-            "Seed", min_value=0, max_value=99999, value=42, step=1,
-            key="gv_seed",
-            help="Same seed + same config = same geometry every time. "
-                 "Change it to explore different shapes from the design space.",
-        )
-        png_name = c2.text_input(
-            "PNG filename (optional)",
-            value="", placeholder="e.g. bwb_sweep35  — leave blank for auto name",
-            key="gv_pngname",
-            help="Name for the saved PNG folder under data/debug/plots/. "
-                 "Leave blank for the AERIS auto-named debug folder.",
-        )
-
-        st.caption(
-            "**▶ Visualize 3D wing** — opens an interactive OpenGL window. "
-            "Requires a local desktop (not SSH / headless).  "
-            "**📷 Save plot as PNG** — saves a 2D top-view image. Works everywhere."
-        )
-
-        col_a, col_b = st.columns(2)
-        with col_a:
-            _panel(
-                "Visualize 3D wing",
-                "Output → data/debug/visualization_runs/<timestamp>/",
-                ["geometry", "visualize", "--config", vcfg,
-                 "--seed", str(int(seed_val)), "--draw-3d"],
-                root, exe, tmo, dry, "gv_3d",
-                label="▶  Visualize 3D wing",
+        # ── Seed (only shown in config-file mode) ────────────────────────
+        if src_mode == "From config file":
+            c1, c2 = st.columns([1, 2])
+            seed_val = c1.number_input(
+                "Seed", min_value=0, max_value=99999, value=42, step=1,
+                key="gv_seed",
+                help="Same seed + same config = same geometry every time.",
             )
-        with col_b:
-            args_png = ["geometry", "visualize", "--config", vcfg,
-                        "--seed", str(int(seed_val)), "--no-draw-3d", "--save-plot"]
-            if png_name.strip():
-                out_dir = root / "data" / "debug" / "plots" / png_name.strip()
-                args_png += ["--output-dir", str(out_dir)]
-            _panel(
-                "Save plot as PNG",
-                "Output → data/debug/visualization_runs/<timestamp>/  (or plots/<name>/ if named).",
-                args_png,
-                root, exe, tmo, dry, "gv_png",
-                label="📷  Save plot as PNG",
+            png_name = c2.text_input(
+                "PNG filename (optional)",
+                value="", placeholder="e.g. bwb_sweep35  — leave blank for auto name",
+                key="gv_pngname",
             )
+        else:
+            # Seed comes from manifest — not shown to user
+            seed_val = auto_seed if auto_seed is not None else 0
+            png_name = st.text_input(
+                "PNG filename (optional)",
+                value="", placeholder="e.g. bwb_seed100_run1  — leave blank for auto name",
+                key="gv_pngname",
+            )
+
+        # ── Buttons ───────────────────────────────────────────────────────
+        if not vcfg:
+            st.info("Select a run or config above to enable visualization.")
+        else:
+            st.caption(
+                "**▶ Visualize 3D wing** — opens an interactive OpenGL window. "
+                "Requires a local desktop (not SSH / headless).  "
+                "**📷 Save plot as PNG** — saves a 2D top-view image. Works everywhere."
+            )
+            col_a, col_b = st.columns(2)
+            with col_a:
+                _panel(
+                    "Visualize 3D wing",
+                    "Output → data/debug/visualization_runs/<timestamp>/",
+                    ["geometry", "visualize", "--config", vcfg,
+                     "--seed", str(int(seed_val)), "--draw-3d"],
+                    root, exe, tmo, dry, "gv_3d",
+                    label="▶  Visualize 3D wing",
+                )
+            with col_b:
+                args_png = ["geometry", "visualize", "--config", vcfg,
+                            "--seed", str(int(seed_val)), "--no-draw-3d", "--save-plot"]
+                if png_name.strip():
+                    out_dir = root / "data" / "debug" / "plots" / png_name.strip()
+                    args_png += ["--output-dir", str(out_dir)]
+                _panel(
+                    "Save plot as PNG",
+                    "Output → data/debug/visualization_runs/<timestamp>/  "
+                    "(or plots/<name>/ if named).",
+                    args_png,
+                    root, exe, tmo, dry, "gv_png",
+                    label="📷  Save plot as PNG",
+                )
 
         # ── Runs from data/debug/visualization_runs/ + data/debug/plots/ ──
         viz_base  = root / "data" / "debug" / "visualization_runs"
@@ -1248,7 +1272,7 @@ def pg_geometry(root, exe, tmo, dry):
                         except Exception as e:
                             st.error(f"{p.name}: {e}")
                     st.session_state["gv_confirm_all"] = False
-                    st.toast(f"Deleted {len(deleted)} folder(s).", icon="✓")
+                    st.toast(f"Deleted {len(deleted)} folder(s).", icon="🗑")
                     st.rerun()
                 if cb.button("Cancel", key="gv_confirm_all_no", type="secondary"):
                     st.session_state["gv_confirm_all"] = False
@@ -1272,7 +1296,8 @@ def pg_geometry(root, exe, tmo, dry):
 
 def pg_dataset(root, exe, tmo, dry):
     _hero("▣","Dataset Factory","geometry → sweeps → qc → curate → promote","data pipeline")
-    tabs = st.tabs(["  Unified Aero  ","  Geometry Only  ","  Inspect / QC  ","  Curate / Promote  ","  Training Data  ","  Smoke Check  "])
+    tabs = st.tabs(["  Unified Aero  ",  # Unified aero dataset
+        "  Geometry Only  ","  Inspect / QC  ","  Curate / Promote  ","  Training Data  ","  Smoke Check  "])
 
     # ── UNIFIED AERO DATASET ─────────────────────────────────────────────────
     with tabs[0]:
@@ -1649,7 +1674,7 @@ def _aero_run_list(root: Path, tab_key: str, run_filter_fn) -> None:
             if st.button("🗑", key=f"del_aero_{tab_key}_{i}", help=f"Delete {p.name}"):
                 try:
                     _shutil.rmtree(p)
-                    st.toast(f"Deleted {p.name}", icon="✓")
+                    st.toast(f"Deleted {p.name}", icon="🗑")
                     did_delete = True
                 except Exception as e:
                     st.error(str(e))
@@ -1670,7 +1695,7 @@ def _aero_run_list(root: Path, tab_key: str, run_filter_fn) -> None:
                 except Exception as e:
                     st.error(str(e))
             st.session_state[f"confirm_del_{tab_key}"] = False
-            st.toast(f"Deleted {len(runs)} folder(s).", icon="✓")
+            st.toast(f"Deleted {len(runs)} folder(s).", icon="🗑")
             st.rerun()
         if cb.button("Cancel", key=f"del_aero_{tab_key}_no", type="secondary"):
             st.session_state[f"confirm_del_{tab_key}"] = False
@@ -1693,11 +1718,10 @@ def pg_aero(root, exe, tmo, dry):
 
     geo_runs = _geo_run_rows(root)
 
-    tab_single, tab_sweep, tab_inspect, tab_cm = st.tabs([
+    tab_single, tab_sweep, tab_inspect = st.tabs([
         "  ① Single run  ",
         "  ② Sweep  ",
         "  ③ Inspect  ",
-        "  ⚠ Cm sanity  ",
     ])
 
     # ── ① SINGLE RUN ─────────────────────────────────────────────────────────
@@ -1809,200 +1833,812 @@ def pg_aero(root, exe, tmo, dry):
         st.caption("Read and display results from a completed aero run or sweep.")
 
         aero_runs = _aero_run_rows(root)
-
         if not aero_runs:
             st.info("No aero runs found yet. Run a Single run or Sweep first.")
         else:
             run_map = {p.name: p for p in aero_runs}
             chosen_run = st.selectbox(
-                "Select run",
-                list(run_map.keys()),
-                key="ai_run_sel",
+                "Select run", list(run_map.keys()), key="ai_run_sel",
                 help="All aero run folders from data/runs/.",
             )
             chosen_path = run_map[chosen_run]
+            is_sweep = "sweep" in chosen_run.lower()
 
-            # Detect whether it's a sweep by checking manifest
-            m = _rjson(chosen_path / "manifest.json")
-            is_sweep = "sweep" in chosen_run.lower() or                        (m or {}).get("phase", "") == "aero_sweep"
+            # ── helpers ───────────────────────────────────────────────────
+            def _find_result_json(base):
+                for p in [base / "aero" / "aero_result.json",
+                           base / "aero_result.json"]:
+                    if p.exists(): return p
+                hits = list(base.rglob("aero_result.json"))
+                return hits[0] if hits else None
 
-            if is_sweep:
-                inspect_type = st.radio(
-                    "Inspect type",
-                    ["Sweep summary", "Single case from sweep"],
-                    horizontal=True,
-                    key="ai_type",
-                )
-                if inspect_type == "Sweep summary":
-                    args_ins = ["aero", "sweep-inspect", "--run-dir", str(chosen_path)]
-                    desc_ins = "Prints summary of all sweep cases."
+            def _result_card(res):
+                sc  = res.get("scalars") or {}
+                meta = res.get("solver_metadata") or {}
+                derivs = res.get("stability_axis_derivatives") or {}
+                fc = meta.get("flight_condition") or res.get("flight_condition") or {}
+                _sec("Aerodynamic coefficients")
+                items = [("CL", sc.get("cl")), ("CD", sc.get("cd")),
+                         ("Cm", sc.get("cm")), ("L/D", sc.get("l_over_d")),
+                         ("CDind", sc.get("cd_ind")),
+                         ("Span eff", sc.get("span_efficiency")),
+                         ("Xnp [m]", sc.get("x_np"))]
+                cols = st.columns(len(items))
+                for col, (lbl, v) in zip(cols, items):
+                    col.metric(lbl, f"{float(v):+.4f}" if v is not None else "—")
+                if fc:
+                    _sec("Flight condition")
+                    fc2 = st.columns(5)
+                    for col, (lbl, v) in zip(fc2, [
+                        ("α [°]", fc.get("alpha_deg")),
+                        ("V [m/s]", fc.get("velocity_mps")),
+                        ("Alt [m]", fc.get("altitude_m")),
+                        ("β [°]", fc.get("beta_deg")),
+                        ("Elevon", meta.get("control_input_deg")),
+                    ]):
+                        col.metric(lbl, f"{float(v):+.2f}" if v is not None else "—")
+                cma = derivs.get("Cma")
+                cla = derivs.get("CLa")
+                cnb = derivs.get("Cnb")
+                clb = derivs.get("Clb")
+                if any(v is not None for v in [cma, cla, cnb, clb]):
+                    _sec("Key stability derivatives")
+                    dc = st.columns(4)
+                    for col, (k, v) in zip(dc, [("CLa",cla),("Cma",cma),("Cnb",cnb),("Clb",clb)]):
+                        col.metric(k, f"{float(v):+.4f}" if v is not None else "—")
+                    if cma is not None:
+                        (st.error if float(cma) >= 0 else st.success)(
+                            "⚠ Cma ≥ 0 — pitch-unstable. Do not use for ML training."
+                            if float(cma) >= 0 else "✓ Cma < 0 — pitch-stable.")
+
+            def _strips_chart(base):
+                cands = [base / "aero" / "strips_parsed.csv", base / "strips_parsed.csv"]
+                sp = next((p for p in cands if p.exists()), None)
+                if not sp: return
+                try:
+                    import pandas as _pd
+                    df = _pd.read_csv(sp)
+                    df.columns = [c.strip().lower() for c in df.columns]
+                    yc  = next((c for c in df.columns if "yle" in c or c == "y"), None)
+                    clc = next((c for c in df.columns if c in ("cl","cl_strip","cl_norm")), None)
+                    cdc = next((c for c in df.columns if c in ("cd","cd_strip")), None)
+                    if not (yc and clc): return
+                    _sec("Spanwise load distribution")
+                    st.caption("Section CL across semi-span. Tip peaks → potential tip-stall.")
+                    pf = (df[[yc,clc]].dropna()
+                            .rename(columns={yc:"y (m)",clc:"Section CL"})
+                            .sort_values("y (m)"))
+                    st.line_chart(pf.set_index("y (m)"), use_container_width=True)
+                    if cdc:
+                        with st.expander("Section CD distribution"):
+                            cd2 = (df[[yc,cdc]].dropna()
+                                     .rename(columns={yc:"y (m)",cdc:"Section CD"})
+                                     .sort_values("y (m)"))
+                            st.line_chart(cd2.set_index("y (m)"), use_container_width=True)
+                except Exception as ex:
+                    st.caption(f"Strips: {ex}")
+
+            # ── SINGLE RUN ────────────────────────────────────────────────
+            if not is_sweep:
+                rjp = _find_result_json(chosen_path)
+                if rjp:
+                    try:
+                        import json as _j
+                        _result_card(_j.loads(rjp.read_text()))
+                    except Exception as ex:
+                        st.warning(f"Could not parse aero_result.json: {ex}")
                 else:
-                    c1, c2 = st.columns(2)
-                    case_label = c1.text_input(
-                        "Case label (optional)",
-                        value="", placeholder="e.g. case_0000_a+4.000_...",
-                        key="ai_cl",
-                        help="Exact case label from the sweep manifest. "
-                             "Leave blank to use index instead.",
+                    st.info("No aero_result.json found — use CLI inspect below.")
+                _strips_chart(chosen_path)
+                _sec("Full CLI output")
+                _panel("Full inspect", "Prints complete result in terminal.",
+                       ["aero","inspect","--run-dir",str(chosen_path)],
+                       root, exe, tmo, dry, "ai_run", label="▶  Full inspect")
+
+            # ── SWEEP ─────────────────────────────────────────────────────
+            else:
+                # Load manifest
+                import json as _j
+                import pandas as _pd
+
+                sw_raw = None
+                for cand in [chosen_path / "aero_sweep_manifest.json",
+                              chosen_path / "aero_sweep" / "aero_sweep_manifest.json"]:
+                    if cand.exists():
+                        try: sw_raw = _j.loads(cand.read_text())
+                        except Exception: pass
+                        break
+
+                sw_data = (sw_raw or {}).get("aero_sweep_result", sw_raw or {})
+                cases   = sw_data.get("cases") or []
+
+                if not cases:
+                    st.warning("No cases found in sweep manifest. Using CLI fallback.")
+                    _panel("Sweep inspect","Raw sweep summary.",
+                           ["aero","sweep-inspect","--run-dir",str(chosen_path)],
+                           root,exe,tmo,dry,"ai_sw_cli",label="▶  Sweep inspect")
+                else:
+                    # Build flat DataFrame from all cases
+                    rows = []
+                    for c in cases:
+                        fc  = c.get("flight_condition") or {}
+                        ar  = c.get("aero_result") or {}
+                        sc  = ar.get("scalars") or {}
+                        rows.append({
+                            "#":        c.get("case_index"),
+                            "Status":   c.get("status","—"),
+                            "α [°]":    fc.get("alpha_deg"),
+                            "V [m/s]":  fc.get("velocity_mps"),
+                            "Alt [m]":  fc.get("altitude_m"),
+                            "Elevon [°]": c.get("control_input_deg"),
+                            "CL":       sc.get("cl"),
+                            "CD":       sc.get("cd"),
+                            "Cm":       sc.get("cm"),
+                            "L/D":      sc.get("l_over_d"),
+                            "Xnp":      sc.get("x_np"),
+                        })
+                    df = _pd.DataFrame(rows)
+                    float_cols = ["α [°]","V [m/s]","Alt [m]","Elevon [°]","CL","CD","Cm","L/D","Xnp"]
+                    for fc_col in float_cols:
+                        if fc_col in df.columns:
+                            df[fc_col] = _pd.to_numeric(df[fc_col], errors="coerce")
+
+                    n_ok  = (df["Status"] == "success").sum()
+                    n_bad = len(df) - n_ok
+                    st.caption(
+                        f"**{len(df)} cases** — ✓ {n_ok} success"
+                        + (f"  ✗ {n_bad} failed" if n_bad else "")
                     )
-                    case_idx = c2.number_input(
-                        "Case index", min_value=0, value=0, step=1,
-                        key="ai_ci",
-                        help="Zero-based index if case label is blank.",
+
+                    view = st.radio(
+                        "View", ["Polar curves", "Data table", "Single case detail"],
+                        horizontal=True, key="ai_type",
+                        help="Polar curves: XFLR5-style overlaid polars coloured by elevon. "
+                             "Data table: all cases sortable. "
+                             "Single case detail: full result card.",
                     )
-                    args_ins = ["aero", "sweep-case-inspect", "--run-dir", str(chosen_path)]
-                    if case_label.strip():
-                        args_ins += ["--case-label", case_label.strip()]
+
+                    # ── Polar curves (XFLR5-style, Plotly) ───────────────
+                    if view == "Polar curves":
+                        df_ok = df[df["Status"] == "success"].copy()
+                        if df_ok.empty:
+                            st.warning("No successful cases to plot.")
+                        else:
+                            try:
+                                import plotly.graph_objects as go
+                                from plotly.subplots import make_subplots
+
+                                elevon_vals = sorted(df_ok["Elevon [°]"].dropna().unique())
+                                PALETTE = ["#3B82F6","#F59E0B","#10B981",
+                                           "#EF4444","#8B5CF6","#EC4899","#06B6D4"]
+
+                                LAYOUT = dict(
+                                    paper_bgcolor="rgba(0,0,0,0)",
+                                    plot_bgcolor="#0F1923",
+                                    font=dict(color="#C8D6E5", size=12),
+                                    legend=dict(
+                                        bgcolor="rgba(0,0,0,0)",
+                                        bordercolor="#334252",
+                                        borderwidth=1,
+                                    ),
+                                    margin=dict(l=50, r=20, t=40, b=50),
+                                )
+
+                                def _traces(x_col, y_col, sort_col=None):
+                                    traces = []
+                                    for i, ev in enumerate(elevon_vals):
+                                        sub = (df_ok[df_ok["Elevon [°]"] == ev]
+                                                   .sort_values(sort_col or x_col)
+                                                   [[x_col, y_col]].dropna())
+                                        if sub.empty:
+                                            continue
+                                        lbl = f"δ={ev:+.0f}°"
+                                        traces.append(go.Scatter(
+                                            x=sub[x_col].tolist(),
+                                            y=sub[y_col].tolist(),
+                                            mode="lines+markers",
+                                            name=lbl,
+                                            line=dict(color=PALETTE[i % len(PALETTE)], width=2),
+                                            marker=dict(size=7),
+                                            hovertemplate=(
+                                                f"<b>{lbl}</b><br>"
+                                                f"{x_col}: %{{x:.3f}}<br>"
+                                                f"{y_col}: %{{y:.4f}}<extra></extra>"
+                                            ),
+                                        ))
+                                    return traces
+
+                                def _make_fig(x_col, y_col, x_label, y_label,
+                                              title, sort_col=None, hline=None):
+                                    fig = go.Figure()
+                                    for t in _traces(x_col, y_col, sort_col):
+                                        fig.add_trace(t)
+                                    if hline is not None:
+                                        fig.add_hline(
+                                            y=hline, line_dash="dash",
+                                            line_color="#475569", line_width=1,
+                                        )
+                                    fig.update_layout(
+                                        **LAYOUT,
+                                        title=dict(text=title, font=dict(size=13)),
+                                        xaxis=dict(title=x_label, gridcolor="#1E2F3E",
+                                                   zerolinecolor="#334252"),
+                                        yaxis=dict(title=y_label, gridcolor="#1E2F3E",
+                                                   zerolinecolor="#334252"),
+                                        height=320,
+                                    )
+                                    return fig
+
+                                if len(elevon_vals) > 1:
+                                    st.caption(
+                                        f"One curve per elevon — "
+                                        + ", ".join(f"**δ={e:+.0f}°**" for e in elevon_vals)
+                                        + ". Hover for values. Scroll to zoom."
+                                    )
+                                else:
+                                    st.caption("Single elevon setting. Hover for values.")
+
+                                r1c1, r1c2 = st.columns(2)
+                                r2c1, r2c2 = st.columns(2)
+
+                                with r1c1:
+                                    st.plotly_chart(
+                                        _make_fig("α [°]", "CL", "α [°]", "CL",
+                                                  "CL vs α — lift curve"),
+                                        use_container_width=True,
+                                    )
+                                with r1c2:
+                                    st.plotly_chart(
+                                        _make_fig("α [°]", "Cm", "α [°]", "Cm",
+                                                  "Cm vs α — stability (neg slope = stable)",
+                                                  hline=0.0),
+                                        use_container_width=True,
+                                    )
+                                with r2c1:
+                                    st.plotly_chart(
+                                        _make_fig("CD", "CL", "CD", "CL",
+                                                  "CL vs CD — drag polar",
+                                                  sort_col="CD"),
+                                        use_container_width=True,
+                                    )
+                                with r2c2:
+                                    st.plotly_chart(
+                                        _make_fig("α [°]", "L/D", "α [°]", "L/D",
+                                                  "L/D vs α — efficiency"),
+                                        use_container_width=True,
+                                    )
+
+                            except ImportError:
+                                st.error(
+                                    "Plotly is not installed. "
+                                    "Run `pip install plotly` in your AERIS environment."
+                                )
+
+                    # ── Data table ────────────────────────────────────────
+                    elif view == "Data table":
+                        # Round for display
+                        disp = df.copy()
+                        for fc_col in ["CL","CD","Cm","L/D","Xnp"]:
+                            if fc_col in disp.columns:
+                                disp[fc_col] = disp[fc_col].round(5)
+                        for fc_col in ["α [°]","V [m/s]","Alt [m]","Elevon [°]"]:
+                            if fc_col in disp.columns:
+                                disp[fc_col] = disp[fc_col].round(2)
+
+                        # Elevon filter
+                        elev_opts = ["All"] + [
+                            f"{e:+.1f}°" for e in
+                            sorted(df["Elevon [°]"].dropna().unique())
+                        ]
+                        sel_elev = st.selectbox(
+                            "Filter by elevon", elev_opts, key="ai_tbl_elev"
+                        )
+                        if sel_elev != "All":
+                            ev_val = float(sel_elev.replace("°",""))
+                            disp = disp[disp["Elevon [°]"] == ev_val]
+
+                        st.dataframe(disp, use_container_width=True, hide_index=True)
+                        st.caption(f"Showing {len(disp)} of {len(df)} cases.")
+
+                    # ── Single case detail ────────────────────────────────
                     else:
-                        args_ins += ["--case-index", str(int(case_idx))]
-                    desc_ins = "Prints one specific case from the sweep."
-            else:
-                args_ins = ["aero", "inspect", "--run-dir", str(chosen_path)]
-                desc_ins  = "Prints the full aero result for this single run."
+                        c1, c2 = st.columns(2)
+                        case_label_in = c1.text_input(
+                            "Case label (optional)", value="",
+                            placeholder="e.g. case_0000_ap4d00_...",
+                            key="ai_cl",
+                        )
+                        case_idx_in = int(c2.number_input(
+                            "Case index", min_value=0,
+                            max_value=max(0, len(cases)-1),
+                            value=0, step=1, key="ai_ci",
+                        ))
 
-            _panel("Inspect", desc_ins, args_ins, root, exe, tmo, dry, "ai_run",
-                   label="▶  Inspect")
+                        case = None
+                        if case_label_in.strip():
+                            case = next(
+                                (c for c in cases
+                                 if c.get("case_label") == case_label_in.strip()),
+                                None
+                            )
+                        elif 0 <= case_idx_in < len(cases):
+                            case = cases[case_idx_in]
 
-    # ── ⚠ Cm SANITY ───────────────────────────────────────────────────────────
-    with tab_cm:
-        st.warning(
-            "**Run this before any ML training.** "
-            "Verifies that Cm decreases with alpha (Cma < 0 = statically stable pitch). "
-            "A positive Cma means the aircraft is unstable — "
-            "every ML model trained on Cm would learn the wrong physics."
-        )
+                        if case:
+                            ar = case.get("aero_result") or {}
+                            if ar:
+                                _result_card(ar)
+                                case_dir = case.get("case_dir")
+                                if case_dir:
+                                    _strips_chart(Path(case_dir))
+                            else:
+                                st.warning(
+                                    f"Case {case_idx_in} has no aero_result "
+                                    f"(status: {case.get('status','?')})."
+                                )
+                        else:
+                            st.info("Enter a valid case label or index above.")
 
-        cm_src = st.radio(
-            "Source",
-            ["Promoted aero dataset (recommended)", "Direct CSV path"],
-            horizontal=True, key="cms_src",
-        )
-        if "dataset" in cm_src:
-            ds_opts = [str(p) for p in
-                       [Path(d) for d in _dirs(str(root / "data" / "datasets"))]
-                       if (Path(d) / "promotion_manifest.json" if False else True)]
-            promoted = [d for d in _dirs(str(root / "data" / "datasets"))
-                        if (Path(d) / "promotion_manifest.json").exists()]
-            all_ds   = _dirs(str(root / "data" / "datasets"))
+                        _panel("CLI case inspect","Full result via CLI.",
+                               ["aero","sweep-case-inspect","--run-dir",str(chosen_path)]
+                               + (["--case-label", case_label_in.strip()]
+                                  if case_label_in.strip()
+                                  else ["--case-index", str(case_idx_in)]),
+                               root,exe,tmo,dry,"ai_run",label="▶  CLI inspect")
 
-            ds_choices = promoted + [d for d in all_ds if d not in promoted]
-            if ds_choices:
-                cms_ds = st.selectbox(
-                    "Dataset",
-                    ds_choices,
-                    format_func=lambda s: (
-                        f"✓ {Path(s).name}" if (Path(s) / "promotion_manifest.json").exists()
-                        else f"○ {Path(s).name} (not promoted)"
-                    ),
-                    key="cms_ds",
-                    help="✓ = promoted dataset (has promotion_manifest.json). "
-                         "Run on promoted datasets only for reliable Cm sanity.",
-                )
-            else:
-                st.info("No datasets found in data/datasets/. "
-                        "Run a dataset aero-generate first.")
-                cms_ds = ""
-            args_cm = ["aero", "cm-sanity", "--dataset", cms_ds] if cms_ds else []
-        else:
-            cms_csv = st.text_input("CSV path", "", key="cms_csv",
-                                    placeholder="data/datasets/<name>/curated_aero_dataset.csv")
-            args_cm = ["aero", "cm-sanity", "--csv", cms_csv] if cms_csv.strip() else []
 
-        cm_od = st.text_input(
-            "Output dir (optional)",
-            value="",
-            placeholder="data/processed/aero_sanity/<name>  — leave blank for auto",
-            key="cms_od",
-        )
-        if cm_od.strip() and args_cm:
-            args_cm += ["--output-dir", cm_od.strip()]
+def _dyn_run_rows(root: Path) -> list[Path]:
+    """Aero single-run folders that have a dynamics/ subfolder already built."""
+    return [Path(r) for r in _dirs(str(root / "data" / "runs"))
+            if "_aero_" in Path(r).name and "_sweep_" not in Path(r).name
+            and (Path(r) / "dynamics").exists()]
 
-        with st.expander("Advanced options"):
-            c1, c2 = st.columns(2)
-            cms_ac   = c1.text_input("Alpha column",  "alpha_deg", key="cms_ac")
-            cms_cc   = c2.text_input("Cm column",     "cm",        key="cms_cc")
-            cms_gc   = st.text_input(
-                "Group columns",
-                "geometry_id,control_input_deg,velocity_mps,altitude_m",
-                key="cms_gc",
-            )
-            cms_fov  = st.checkbox("Fail on violation", False, key="cms_fov",
-                                   help="--fail-on-violation. Exit non-zero if any group has Cma ≥ 0.")
-            if args_cm:
-                args_cm += ["--alpha-column", cms_ac, "--cm-column", cms_cc,
-                            "--group-columns", cms_gc]
-                if cms_fov: args_cm.append("--fail-on-violation")
+def _all_aero_rows(root: Path) -> list[Path]:
+    """All aero SINGLE runs — sweep case folders discovered separately."""
+    return [Path(r) for r in _dirs(str(root / "data" / "runs"))
+            if "_aero_" in Path(r).name and "_sweep_" not in Path(r).name]
 
-        if args_cm:
-            _panel("Run Cm sanity check",
-                   "Verifies Cma < 0 in all condition groups. Required before ML training.",
-                   args_cm, root, exe, tmo, dry, "cms_run",
-                   label="▶  Run Cm sanity")
-        else:
-            st.info("Select a dataset or CSV path above to enable this check.")
+def _all_sweep_runs(root: Path) -> list[Path]:
+    """All aero sweep run folders."""
+    return [Path(r) for r in _dirs(str(root / "data" / "runs"))
+            if "_sweep_" in Path(r).name]
 
+def _sweep_case_dirs(sweep_path: Path) -> list[Path]:
+    """Individual case folders inside a sweep run (in aero/ subdir)."""
+    aero_sub = sweep_path / "aero"
+    if aero_sub.exists():
+        return sorted([p for p in aero_sub.iterdir()
+                       if p.is_dir() and p.name.startswith("case_")],
+                      key=lambda p: p.name)
+    # fallback: case folders directly in sweep root
+    return sorted([p for p in sweep_path.iterdir()
+                   if p.is_dir() and p.name.startswith("case_")],
+                  key=lambda p: p.name)
 
 def pg_dynamics(root, exe, tmo, dry):
-    _hero("◎","Dynamics","mass · CG · static margin · trim","dynamics")
-    _note("Builds mass/CG/static-margin artifacts from an existing aero run. Current trim is first-order diagnostic only — not a full nonlinear trim solver.","info")
-    act = st.radio("Workflow",["Build","CG sweep","Trim","Inspect","CG sweep inspect"],horizontal=True,key="dyn_act")
-    rd = _pick_dir("Aero run directory",root/"data"/"runs","dyn_rd",
-                   help_="Must contain an aero result. For Build/Trim/Inspect, must have a completed aero run.")
+    _hero("◎", "Dynamics", "mass · CG · static margin · trim", "dynamics")
 
-    if act == "Build":
-        _note("--mass-config loads from YAML. CLI values override config values.","info")
-        c1,c2 = st.columns(2)
-        mc = c1.text_input("--mass-config (optional YAML path)","",key="dyn_mc",
-                           help="Path to mass-properties YAML. Leave blank to use explicit CLI values only.")
-        xp = c2.selectbox("Axis convention",["--x-positive-aft (default)","--x-positive-forward"],key="dyn_xp",
-                          help="x positive aft = standard aviation convention.")
-        with st.expander("Explicit mass values (override or supplement --mass-config)"):
-            c3,c4 = st.columns(2)
-            mkg  = c3.text_input("--mass-kg","",key="dyn_mkg",help="Aircraft mass [kg]")
-            xcg  = c4.text_input("--x-cg-m","",key="dyn_xcg",help="CG x position [m]")
-            c5,c6,c7 = st.columns(3)
-            ycg  = c5.text_input("--y-cg-m","",key="dyn_ycg",help="CG y [m]. Default 0.")
-            zcg  = c6.text_input("--z-cg-m","",key="dyn_zcg",help="CG z [m]. Default 0.")
-            ixx  = c7.text_input("--ixx-kg-m2","",key="dyn_ixx",help="Roll inertia [kg·m²]")
-            iyy  = c5.text_input("--iyy-kg-m2","",key="dyn_iyy",help="Pitch inertia [kg·m²]")
-            izz  = c6.text_input("--izz-kg-m2","",key="dyn_izz",help="Yaw inertia [kg·m²]")
-        args = ["dynamics","build","--run-dir",rd]
-        if mc.strip(): args += ["--mass-config",mc.strip()]
-        if "forward" in xp: args.append("--x-positive-forward")
-        _flag(args,"--mass-kg",mkg); _flag(args,"--x-cg-m",xcg); _flag(args,"--y-cg-m",ycg); _flag(args,"--z-cg-m",zcg)
-        _flag(args,"--ixx-kg-m2",ixx); _flag(args,"--iyy-kg-m2",iyy); _flag(args,"--izz-kg-m2",izz)
-        desc = "Builds mass/CG/inertia/static-margin artifacts."
+    st.caption(
+        "Dynamics builds on top of a completed **aero run**. "
+        "The workflow is: **Build** (compute static margin from mass + aero) → "
+        "**CG Sweep** (find stable CG range) → **Trim** (first-order trim estimate) → "
+        "**Inspect** (read results). "
+        "Trim is a diagnostic estimate only — not a full nonlinear solver."
+    )
 
-    elif act == "CG sweep":
-        _note("Sweeps CG x-position and computes static margin at each point. Identifies stable CG range.","info")
-        c1,c2 = st.columns(2)
-        mc2  = c1.text_input("--mass-config (optional)","",key="dyn_mc2")
-        mkg2 = c2.text_input("--mass-kg","",key="dyn_mkg2")
-        c3,c4,c5 = st.columns(3)
-        cgmn = c3.number_input("--cg-min-m (REQUIRED)",value=0.20,step=0.05,key="dyn_cgmn")
-        cgmx = c4.number_input("--cg-max-m (REQUIRED)",value=0.70,step=0.05,key="dyn_cgmx")
-        ns   = c5.number_input("--n (sweep points)",min_value=2,value=9,step=1,key="dyn_ns",help="Default 9")
-        xp2  = st.selectbox("Axis convention",["--x-positive-aft","--x-positive-forward"],key="dyn_xp2")
-        args = ["dynamics","cg-sweep","--run-dir",rd,"--cg-min-m",str(cgmn),"--cg-max-m",str(cgmx),"--n",str(int(ns))]
-        if mc2.strip(): args += ["--mass-config",mc2.strip()]
-        if mkg2.strip(): args += ["--mass-kg",mkg2.strip()]
-        if "forward" in xp2: args.append("--x-positive-forward")
-        desc = "Sweeps CG and computes static margin. Writes cg_sweep.json + cg_sweep.csv."
+    tab_build, tab_cgsweep, tab_trim, tab_inspect = st.tabs([
+        "  ① Build  ",
+        "  ② CG Sweep  ",
+        "  ③ Trim  ",
+        "  ④ Inspect  ",
+    ])
 
-    elif act == "Trim":
-        _note("First-order longitudinal trim estimate. Not a full nonlinear solver.","info")
-        args = ["dynamics","trim","--run-dir",rd]
-        desc = "Estimates trim alpha and Cm from saved aero result."
+    # Shared: picker for aero run directory
+    all_aero = _all_aero_rows(root)
 
-    elif act == "Inspect":
-        args = ["dynamics","inspect","--run-dir",rd]
-        desc = "Reads dynamics_foundation.json and prints mass/CG/static-margin results."
+    def _aero_run_picker(key: str, label: str = "Select aero run") -> str:
+        """
+        Picker that handles both single aero runs and individual sweep cases.
+        Dynamics build requires a folder with aero_result.json directly accessible.
+        Single runs: data/runs/<timestamp>_aero_<name>/
+        Sweep cases: data/runs/<timestamp>_sweep_.../aero/case_0000_.../
+        """
+        single_runs  = _all_aero_rows(root)
+        sweep_runs   = _all_sweep_runs(root)
 
-    else:  # CG sweep inspect
-        args = ["dynamics","cg-sweep-inspect","--run-dir",rd]
-        desc = "Reads cg_sweep.json and prints per-CG-point static margin results."
+        if not single_runs and not sweep_runs:
+            st.warning(
+                "No aero runs found. Run a single aero run or sweep first "
+                "(Aero Analysis → ① Single run or ② Sweep)."
+            )
+            return ""
 
-    _panel(f"Dynamics: {act}",desc,args,root,exe,tmo,dry,f"dyn_{act.replace(' ','_')}_task")
+        # Build option list: single runs first, then sweep cases grouped by sweep
+        options = {}  # label → Path
+
+        for p in single_runs:
+            options[f"[single]  {p.name}"] = p
+
+        for sweep in sweep_runs:
+            cases = _sweep_case_dirs(sweep)
+            for case in cases:
+                ar = case / "aero_result.json"
+                if ar.exists():
+                    label_str = f"[sweep case]  {sweep.name} / {case.name}"
+                    options[label_str] = case
+
+        if not options:
+            st.warning(
+                "No usable aero results found. "
+                "Single runs need an aero_result.json at their root. "
+                "Sweep runs need completed case folders."
+            )
+            return ""
+
+        # If only sweep cases available, show a note
+        has_single = any(k.startswith("[single]") for k in options)
+        if not has_single:
+            st.info(
+                "Only sweep runs found. Dynamics build works on individual cases — "
+                "pick one case from a sweep below."
+            )
+
+        chosen_label = st.selectbox(
+            label, list(options.keys()), key=key,
+            help="Single aero runs [single] or individual sweep cases [sweep case]. "
+                 "Dynamics build needs a folder with one aero_result.json.",
+        )
+        p = options[chosen_label]
+
+        # Read status from aero_result.json directly
+        ar_path = p / "aero_result.json"
+        ar_status = "—"
+        if ar_path.exists():
+            try:
+                import json as _jj
+                ar_data = _jj.loads(ar_path.read_text())
+                ar_status = ar_data.get("status", "—")
+            except Exception:
+                ar_status = "?"
+        dot = "#22C55E" if ar_status == "success" else               "#EF4444" if "fail" in ar_status.lower() else "#8EA0B3"
+
+        has_dyn = (p / "dynamics").exists() or (p.parent.parent / "dynamics").exists()
+        dyn_badge = (
+            ' <span style="color:#22C55E;font-size:.68rem">✓ dynamics built</span>'
+            if has_dyn else
+            ' <span style="color:#5A7A96;font-size:.68rem">dynamics not yet built</span>'
+        )
+
+        is_case = "[sweep case]" in chosen_label
+        type_badge = (
+            ' <span style="color:#8B5CF6;font-size:.68rem">sweep case</span>'
+            if is_case else
+            ' <span style="color:#3B82F6;font-size:.68rem">single run</span>'
+        )
+
+        _h(
+            f'<div style="background:#1B2A3A;border:1px solid #2D3F52;border-radius:7px;'
+            f'padding:.42rem .9rem;margin:.3rem 0;display:flex;align-items:center;gap:10px">'
+            f'<div style="width:7px;height:7px;border-radius:50%;background:{dot};flex-shrink:0"></div>'
+            f'<div style="flex:1;font-size:.75rem;color:#D6DEE8;font-family:JetBrains Mono,monospace;'
+            f'overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{p.name}</div>'
+            f'<div style="font-size:.68rem;flex-shrink:0">{type_badge}</div>'
+            f'<div style="font-size:.68rem;flex-shrink:0">{dyn_badge}</div>'
+            f'<div style="font-size:.7rem;color:{dot};font-weight:600;flex-shrink:0;margin-left:6px">{ar_status}</div>'
+            f'</div>'
+        )
+        return str(p)
+
+    def _mass_inputs(key: str) -> list[str]:
+        """Mass config section — reads YAMLs from configs/mass/ and returns CLI args."""
+        args = []
+        mass_dir = root / "configs" / "mass"
+        mass_yaml_files = _files(str(mass_dir), "*.yaml") if mass_dir.exists() else []
+        NONE_LABEL = "none (use explicit values below)"
+
+        if mass_yaml_files:
+            mc_choice = st.selectbox(
+                "Mass config YAML",
+                [NONE_LABEL] + mass_yaml_files,
+                format_func=lambda s: NONE_LABEL if s == NONE_LABEL else Path(s).name,
+                key=f"{key}_mc",
+                help="Select a mass-properties YAML from configs/mass/. "
+                     "Explicit values below override the YAML field by field.",
+            )
+            if mc_choice != NONE_LABEL:
+                args += ["--mass-config", mc_choice]
+                try:
+                    contents = Path(mc_choice).read_text(encoding="utf-8")
+                    with st.expander(f"Preview: {Path(mc_choice).name}"):
+                        st.code(contents, language="yaml")
+                except Exception:
+                    pass
+        else:
+            mc_text = st.text_input(
+                "Mass config YAML (none found in configs/mass/)",
+                value="", placeholder="configs/mass/baseline_uav.yaml",
+                key=f"{key}_mc",
+            )
+            if mc_text.strip():
+                args += ["--mass-config", mc_text.strip()]
+
+        with st.expander("Explicit mass & inertia values (override or supplement YAML)"):
+            st.caption(
+                "mass_kg and x_cg_m are required if no YAML is selected. "
+                "Leave blank to use values from the YAML."
+            )
+            c1, c2, c3 = st.columns(3)
+            mkg = c1.text_input("Mass [kg]",         "", key=f"{key}_mkg")
+            xcg = c2.text_input("CG x [m]",          "", key=f"{key}_xcg",
+                                help="Longitudinal CG from nose reference point.")
+            ycg = c3.text_input("CG y [m]",          "0", key=f"{key}_ycg")
+            c4, c5, c6 = st.columns(3)
+            ixx = c4.text_input("Ixx [kg m2] roll",  "", key=f"{key}_ixx")
+            iyy = c5.text_input("Iyy [kg m2] pitch", "", key=f"{key}_iyy")
+            izz = c6.text_input("Izz [kg m2] yaw",   "", key=f"{key}_izz")
+            xconv = st.radio(
+                "x-axis convention",
+                ["x positive aft (aviation standard)", "x positive forward"],
+                horizontal=True, key=f"{key}_xconv",
+                help="x positive aft matches AVL and AeroSandbox conventions.",
+            )
+            if "forward" in xconv:
+                args.append("--x-positive-forward")
+            for flag, val in [
+                ("--mass-kg", mkg), ("--x-cg-m", xcg), ("--y-cg-m", ycg),
+                ("--ixx-kg-m2", ixx), ("--iyy-kg-m2", iyy), ("--izz-kg-m2", izz),
+            ]:
+                if val.strip() and val.strip() != "0":
+                    args += [flag, val.strip()]
+        return args
+
+    # ── ① BUILD ───────────────────────────────────────────────────────────────
+    with tab_build:
+        st.caption(
+            "Reads the aero result, combines it with your mass/CG inputs, "
+            "and computes the **static margin** and neutral point. "
+            "Output → `<run_dir>/dynamics/dynamics_foundation.json`"
+        )
+        rd_build = _aero_run_picker("dyn_rd_build")
+        if rd_build:
+            mass_args = _mass_inputs("build")
+            _panel(
+                "Build dynamics foundation",
+                "Computes static margin, Xnp, and readiness for trim/eigenanalysis.",
+                ["dynamics", "build", "--run-dir", rd_build] + mass_args,
+                root, exe, tmo, dry, "dyn_build_run",
+                label="▶  Build",
+            )
+
+    # ── ② CG SWEEP ────────────────────────────────────────────────────────────
+    with tab_cgsweep:
+        st.caption(
+            "Sweeps CG x-position across a range and computes the static margin at each point. "
+            "Identifies the **stable CG envelope** — the range where static margin > 0. "
+            "Output → `<run_dir>/dynamics/cg_sweep.json` + `cg_sweep.csv`"
+        )
+        rd_cgsw = _aero_run_picker("dyn_rd_cgsw")
+        if rd_cgsw:
+            c1, c2, c3 = st.columns(3)
+            cgmn = c1.number_input(
+                "CG min [m]", value=0.20, step=0.05, key="dyn_cgmn",
+                help="Forward limit of CG sweep — must be < CG max.",
+            )
+            cgmx = c2.number_input(
+                "CG max [m]", value=0.70, step=0.05, key="dyn_cgmx",
+                help="Aft limit of CG sweep.",
+            )
+            ns = c3.number_input(
+                "Points", min_value=2, value=9, step=1, key="dyn_ns",
+                help="Number of equally-spaced CG positions to evaluate.",
+            )
+            mass_args_sw = _mass_inputs("cgsw")
+            _panel(
+                "Run CG sweep",
+                f"Evaluates static margin at {int(ns)} CG positions from {cgmn:.2f} to {cgmx:.2f} m.",
+                ["dynamics", "cg-sweep", "--run-dir", rd_cgsw,
+                 "--cg-min-m", str(cgmn), "--cg-max-m", str(cgmx),
+                 "--n", str(int(ns))] + mass_args_sw,
+                root, exe, tmo, dry, "dyn_cgsw_run",
+                label="▶  Run CG sweep",
+            )
+
+    # ── ③ TRIM ────────────────────────────────────────────────────────────────
+    with tab_trim:
+        st.caption(
+            "First-order longitudinal trim estimate — finds the alpha at which Cm ≈ 0. "
+            "⚠ This is a **diagnostic only**, not a full nonlinear trim solver. "
+            "Requires dynamics to be built first (① Build)."
+        )
+        rd_trim = _aero_run_picker("dyn_rd_trim")
+        if rd_trim:
+            _panel(
+                "Run trim estimate",
+                "Estimates trim alpha from saved aero + dynamics results.",
+                ["dynamics", "trim", "--run-dir", rd_trim],
+                root, exe, tmo, dry, "dyn_trim_run",
+                label="▶  Run trim",
+            )
+
+    # ── ④ INSPECT ─────────────────────────────────────────────────────────────
+    with tab_inspect:
+        st.caption(
+            "Read and display results from built dynamics runs. "
+            "Shows static margin, neutral point, CG sweep curve, and readiness status."
+        )
+
+        dyn_runs = _dyn_run_rows(root)
+        if not dyn_runs:
+            st.info(
+                "No dynamics results found yet. "
+                "Run ① Build on an aero run first — it creates the `dynamics/` subfolder."
+            )
+        else:
+            run_map = {p.name: p for p in dyn_runs}
+            chosen_run_name = st.selectbox(
+                "Select run", list(run_map.keys()), key="dyn_ins_sel",
+                help="Only runs with a dynamics/ subfolder appear here.",
+            )
+            chosen_path = run_map[chosen_run_name]
+            dyn_dir = chosen_path / "dynamics"
+
+            ins_view = st.radio(
+                "View", ["Foundation results", "CG sweep curve"],
+                horizontal=True, key="dyn_ins_view",
+            )
+
+            # ── Foundation results ────────────────────────────────────────
+            if ins_view == "Foundation results":
+                found_json = dyn_dir / "dynamics_foundation.json"
+                if not found_json.exists():
+                    st.warning(
+                        "No dynamics_foundation.json found. "
+                        "Run ① Build first."
+                    )
+                else:
+                    try:
+                        import json as _j
+                        data = _j.loads(found_json.read_text(encoding="utf-8"))
+                        sm   = data.get("stability_metrics") or {}
+                        mp   = data.get("mass_properties") or {}
+                        rdns = data.get("state_space_preparation") or {}
+
+                        _sec("Static margin & neutral point")
+                        c1, c2, c3, c4 = st.columns(4)
+                        sm_val  = sm.get("static_margin_percent_mac")
+                        xnp_val = sm.get("x_np_m")
+                        cma_val = sm.get("cma")
+                        mac_val = sm.get("mac_m")
+
+                        c1.metric("Static margin", f"{float(sm_val):+.2f} %MAC" if sm_val is not None else "—")
+                        c2.metric("Neutral point Xnp", f"{float(xnp_val):+.4f} m" if xnp_val is not None else "—")
+                        c3.metric("Cma", f"{float(cma_val):+.4f}" if cma_val is not None else "—")
+                        c4.metric("MAC", f"{float(mac_val):.4f} m" if mac_val is not None else "—")
+
+                        # Stability verdict
+                        interp = sm.get("longitudinal_interpretation", "")
+                        if sm_val is not None:
+                            if float(sm_val) > 0:
+                                st.success(f"✓ Statically stable — static margin = {float(sm_val):+.2f} %MAC. {interp}")
+                            else:
+                                st.error(f"✗ Statically unstable — static margin = {float(sm_val):+.2f} %MAC. {interp}")
+                        elif interp:
+                            st.info(interp)
+
+                        _sec("Mass properties")
+                        mc1, mc2 = st.columns(2)
+                        mc1.metric("Mass", f"{float(mp.get('mass_kg')):+.2f} kg" if mp.get("mass_kg") is not None else "—")
+                        mc2.metric("CG x", f"{float(mp.get('x_cg_m')):+.4f} m" if mp.get("x_cg_m") is not None else "—")
+
+                        _sec("Readiness")
+                        r1, r2, r3 = st.columns(3)
+                        def _ready(val):
+                            return "✓ Yes" if val else "✗ No"
+                        r1.metric("Trim solver ready", _ready(rdns.get("ready_for_trim_solver")))
+                        r2.metric("Eigenanalysis ready", _ready(rdns.get("ready_for_eigenanalysis")))
+                        missing = rdns.get("missing_items") or []
+                        if missing:
+                            r3.markdown("**Missing inputs:**")
+                            for item in missing:
+                                r3.caption(f"• {item}")
+
+                    except Exception as ex:
+                        st.warning(f"Could not read dynamics_foundation.json: {ex}")
+
+                _panel("Full CLI inspect",
+                       "Prints the complete dynamics result in the terminal.",
+                       ["dynamics", "inspect", "--run-dir", str(chosen_path)],
+                       root, exe, tmo, dry, "dyn_ins_cli", label="▶  Full inspect")
+
+            # ── CG sweep curve ────────────────────────────────────────────
+            else:
+                cg_json = dyn_dir / "cg_sweep.json"
+                cg_csv  = dyn_dir / "cg_sweep.csv"
+                if not cg_json.exists():
+                    st.info(
+                        "No cg_sweep.json found. "
+                        "Run ② CG Sweep first."
+                    )
+                else:
+                    try:
+                        import json as _j
+                        import pandas as _pd
+                        import plotly.graph_objects as go
+
+                        data   = _j.loads(cg_json.read_text(encoding="utf-8"))
+                        cases  = data.get("cases") or []
+                        zc     = data.get("static_margin_zero_crossing_estimate_m")
+                        sm_min = data.get("stable_cg_min_m")
+                        sm_max = data.get("stable_cg_max_m")
+
+                        if cases:
+                            cg_vals = [c.get("x_cg_m") for c in cases]
+                            sm_vals = [c.get("static_margin") for c in cases]
+
+                            fig = go.Figure()
+
+                            # Static margin curve
+                            fig.add_trace(go.Scatter(
+                                x=cg_vals, y=sm_vals,
+                                mode="lines+markers",
+                                name="Static margin",
+                                line=dict(color="#3B82F6", width=2),
+                                marker=dict(size=7),
+                                hovertemplate="CG: %{x:.3f} m<br>SM: %{y:.4f}<extra></extra>",
+                            ))
+
+                            # Zero line
+                            fig.add_hline(y=0, line_dash="dash",
+                                          line_color="#EF4444", line_width=1.5,
+                                          annotation_text="Neutral (SM=0)",
+                                          annotation_position="top right")
+
+                            # Zero crossing marker
+                            if zc is not None:
+                                fig.add_vline(x=zc, line_dash="dot",
+                                              line_color="#F59E0B", line_width=1.5,
+                                              annotation_text=f"NP ≈ {zc:.3f} m",
+                                              annotation_position="top left")
+
+                            fig.update_layout(
+                                paper_bgcolor="rgba(0,0,0,0)",
+                                plot_bgcolor="#0F1923",
+                                font=dict(color="#C8D6E5", size=12),
+                                margin=dict(l=60, r=20, t=50, b=60),
+                                height=380,
+                                title="Static margin vs CG position",
+                                xaxis=dict(title="CG x position [m]",
+                                           gridcolor="#1E2F3E", zerolinecolor="#334252"),
+                                yaxis=dict(title="Static margin",
+                                           gridcolor="#1E2F3E", zerolinecolor="#334252"),
+                                legend=dict(bgcolor="rgba(0,0,0,0)",
+                                            bordercolor="#334252", borderwidth=1),
+                            )
+                            st.plotly_chart(fig, use_container_width=True)
+
+                            # Summary metrics below chart
+                            sc1, sc2, sc3 = st.columns(3)
+                            sc1.metric("Neutral point (zero crossing)",
+                                       f"{zc:.4f} m" if zc is not None else "—")
+                            sc2.metric("Stable CG min",
+                                       f"{float(sm_min):.4f} m" if sm_min is not None else "—")
+                            sc3.metric("Stable CG max",
+                                       f"{float(sm_max):.4f} m" if sm_max is not None else "—")
+
+                            if sm_min is not None and sm_max is not None:
+                                st.success(
+                                    f"✓ Stable CG range: {float(sm_min):.4f} – {float(sm_max):.4f} m  "
+                                    f"(span = {float(sm_max)-float(sm_min):.4f} m)"
+                                )
+                    except ImportError:
+                        st.error("Plotly not installed. Run `pip install plotly`.")
+                    except Exception as ex:
+                        st.warning(f"Could not read cg_sweep.json: {ex}")
+
+                _panel("Full CLI sweep inspect",
+                       "Prints per-CG-point static margin results.",
+                       ["dynamics", "cg-sweep-inspect", "--run-dir", str(chosen_path)],
+                       root, exe, tmo, dry, "dyn_cgsw_ins_cli", label="▶  Full CG sweep inspect")
 
 
 def _feature_selector(key, include_feature_set=True):
@@ -2030,6 +2666,84 @@ def _feature_selector(key, include_feature_set=True):
 
 def pg_ml(root, exe, tmo, dry):
     _hero("◈","ML Studio","train · tune · compare · promote · predict · active learning","surrogate")
+
+    # ── Cm sanity gate — mandatory before training ────────────────────────────
+    with st.expander("⚠  Step 0 — Cm sanity check  (run before training)", expanded=False):
+        st.warning(
+            "**Run this once on your promoted dataset before any ML training.** "
+            "Verifies that Cm decreases with alpha (Cma < 0 = statically stable pitch). "
+            "A positive Cma means the aircraft is unstable in pitch — ML models trained "
+            "on that data would learn the wrong physics."
+        )
+        cm_src = st.radio(
+            "Source",
+            ["Promoted aero dataset (recommended)", "Direct CSV path"],
+            horizontal=True, key="cms_src",
+        )
+        if "dataset" in cm_src:
+            promoted   = [d for d in _dirs(str(root / "data" / "datasets"))
+                          if (Path(d) / "promotion_manifest.json").exists()]
+            all_ds     = _dirs(str(root / "data" / "datasets"))
+            ds_choices = promoted + [d for d in all_ds if d not in promoted]
+            if ds_choices:
+                cms_ds = st.selectbox(
+                    "Dataset",
+                    ds_choices,
+                    format_func=lambda s: (
+                        f"✓ {Path(s).name}"
+                        if (Path(s) / "promotion_manifest.json").exists()
+                        else f"○ {Path(s).name} (not promoted)"
+                    ),
+                    key="cms_ds",
+                    help="✓ = promoted dataset. Run Cm sanity on promoted data only.",
+                )
+                args_cm = ["aero", "cm-sanity", "--dataset", cms_ds]
+            else:
+                st.info("No datasets found in data/datasets/. Complete the Dataset Factory first.")
+                args_cm = []
+        else:
+            cms_csv = st.text_input(
+                "CSV path", "", key="cms_csv",
+                placeholder="data/datasets/<name>/curated_aero_dataset.csv",
+            )
+            args_cm = ["aero", "cm-sanity", "--csv", cms_csv] if cms_csv.strip() else []
+
+        cm_od = st.text_input(
+            "Output dir (optional)", value="", key="cms_od",
+            placeholder="leave blank for auto",
+        )
+        if cm_od.strip() and args_cm:
+            args_cm += ["--output-dir", cm_od.strip()]
+
+        with st.expander("Advanced column settings"):
+            c1, c2 = st.columns(2)
+            cms_ac  = c1.text_input("Alpha column", "alpha_deg", key="cms_ac")
+            cms_cc  = c2.text_input("Cm column",    "cm",        key="cms_cc")
+            cms_gc  = st.text_input(
+                "Group columns",
+                "geometry_id,control_input_deg,velocity_mps,altitude_m",
+                key="cms_gc",
+            )
+            cms_fov = st.checkbox(
+                "Fail on violation", False, key="cms_fov",
+                help="Exit non-zero if any group has Cma ≥ 0. Useful in CI pipelines.",
+            )
+            if args_cm:
+                args_cm += ["--alpha-column", cms_ac, "--cm-column", cms_cc,
+                            "--group-columns", cms_gc]
+                if cms_fov:
+                    args_cm.append("--fail-on-violation")
+
+        if args_cm:
+            _panel(
+                "Run Cm sanity check",
+                "Verifies Cma < 0 in all condition groups. Gate before ML training.",
+                args_cm, root, exe, tmo, dry, "cms_run",
+                label="▶  Run Cm sanity",
+            )
+        else:
+            st.caption("Select a dataset or CSV path above to enable.")
+
     _note(
         "<b>Feature input rules (strictly enforced by the CLI):</b> use exactly ONE of "
         "<code>--features</code>, <code>--feature-preset</code>, or <code>--feature-set</code>. "

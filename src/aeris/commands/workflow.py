@@ -464,3 +464,123 @@ def workflow_coverage(
 
     if written_path is not None:
         typer.echo(f"  report_json: {written_path}")
+
+
+# -----------------------------------------------------------------------------
+# Slice 9E.0 — Operational rehearsal preflight
+# -----------------------------------------------------------------------------
+from aeris.workflow.preflight import (
+    build_operational_preflight_report as _build_operational_preflight_report,
+    parse_float_list as _parse_preflight_float_list,
+    write_preflight_report as _write_preflight_report,
+)
+
+
+@workflow_app.command("preflight")
+def workflow_preflight(
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        "-w",
+        file_okay=False,
+        dir_okay=True,
+        help="Optional workflow root to inspect before campaign execution.",
+    ),
+    config: Path = typer.Option(
+        Path("configs/geometry/bwb_training_v1.yaml"),
+        "--config",
+        "-c",
+        exists=False,
+        help="Geometry config planned for the campaign.",
+    ),
+    n_geometries: int = typer.Option(
+        50,
+        "--n",
+        help="Planned number of geometries.",
+    ),
+    alpha_values: str = typer.Option(
+        "-2,0,4,8",
+        "--alpha-values",
+        help="Comma-separated planned alpha values.",
+    ),
+    beta_values: str = typer.Option(
+        "0",
+        "--beta-values",
+        help="Comma-separated planned beta values.",
+    ),
+    velocity_values: str = typer.Option(
+        "20,28",
+        "--velocity-values",
+        help="Comma-separated planned velocity values.",
+    ),
+    altitude_values: str = typer.Option(
+        "0,1500",
+        "--altitude-values",
+        help="Comma-separated planned altitude values.",
+    ),
+    control_input_values: str = typer.Option(
+        "-5,0,5",
+        "--control-input-values",
+        help="Comma-separated planned control input values.",
+    ),
+    max_cases_warning: int = typer.Option(
+        1000,
+        "--max-cases-warning",
+        help="Warn when expanded aero case count exceeds this threshold.",
+    ),
+    output_json: Path | None = typer.Option(
+        None,
+        "--output-json",
+        "-o",
+        help="Optional path to write workflow_preflight_report.json.",
+    ),
+    as_json: bool = typer.Option(
+        False,
+        "--json",
+        help="Print the full preflight report as JSON.",
+    ),
+) -> None:
+    """Preflight-check a planned operational rehearsal without running it."""
+
+    report = _build_operational_preflight_report(
+        workflow_root=workflow,
+        config=config,
+        n_geometries=n_geometries,
+        alpha_values=_parse_preflight_float_list(alpha_values, default=[-2.0, 0.0, 4.0, 8.0]),
+        beta_values=_parse_preflight_float_list(beta_values, default=[0.0]),
+        velocity_values=_parse_preflight_float_list(velocity_values, default=[20.0, 28.0]),
+        altitude_values=_parse_preflight_float_list(altitude_values, default=[0.0, 1500.0]),
+        control_input_values=_parse_preflight_float_list(control_input_values, default=[-5.0, 0.0, 5.0]),
+        max_cases_warning=max_cases_warning,
+    )
+
+    written_path = None
+    if output_json is not None:
+        written_path = _write_preflight_report(report, output_json)
+
+    if as_json:
+        _echo_json(report)
+    else:
+        typer.echo("[AERIS] Workflow operational preflight")
+        typer.echo(f"  readiness: {report['readiness']}")
+        typer.echo(f"  config: {report['config']}")
+        typer.echo(f"  n_geometries: {report['campaign_plan']['n_geometries']}")
+        typer.echo(f"  estimated_aero_case_count: {report['estimated_aero_case_count']}")
+        typer.echo(f"  coverage_required_ok: {report['coverage_summary']['all_required_stage_commands_covered']}")
+        typer.echo(f"  coverage_optional_gaps: {report['coverage_summary']['optional_gap_count']}")
+
+        if report["workflow_root"]:
+            typer.echo(f"  workflow_root: {report['workflow_root']}")
+
+        if report["blockers"]:
+            typer.echo("  blockers:")
+            for blocker in report["blockers"]:
+                typer.echo(f"    - {blocker}")
+
+        if report["warnings"]:
+            typer.echo("  warnings:")
+            for warning in report["warnings"]:
+                typer.echo(f"    - {warning}")
+
+    if written_path is not None:
+        typer.echo(f"  report_json: {written_path}")

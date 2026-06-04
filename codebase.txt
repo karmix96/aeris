@@ -15670,6 +15670,126 @@ def workflow_coverage(
         typer.echo(f"  report_json: {written_path}")
 
 
+# -----------------------------------------------------------------------------
+# Slice 9E.0 — Operational rehearsal preflight
+# -----------------------------------------------------------------------------
+from aeris.workflow.preflight import (
+    build_operational_preflight_report as _build_operational_preflight_report,
+    parse_float_list as _parse_preflight_float_list,
+    write_preflight_report as _write_preflight_report,
+)
+
+
+@workflow_app.command("preflight")
+def workflow_preflight(
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        "-w",
+        file_okay=False,
+        dir_okay=True,
+        help="Optional workflow root to inspect before campaign execution.",
+    ),
+    config: Path = typer.Option(
+        Path("configs/geometry/bwb_training_v1.yaml"),
+        "--config",
+        "-c",
+        exists=False,
+        help="Geometry config planned for the campaign.",
+    ),
+    n_geometries: int = typer.Option(
+        50,
+        "--n",
+        help="Planned number of geometries.",
+    ),
+    alpha_values: str = typer.Option(
+        "-2,0,4,8",
+        "--alpha-values",
+        help="Comma-separated planned alpha values.",
+    ),
+    beta_values: str = typer.Option(
+        "0",
+        "--beta-values",
+        help="Comma-separated planned beta values.",
+    ),
+    velocity_values: str = typer.Option(
+        "20,28",
+        "--velocity-values",
+        help="Comma-separated planned velocity values.",
+    ),
+    altitude_values: str = typer.Option(
+        "0,1500",
+        "--altitude-values",
+        help="Comma-separated planned altitude values.",
+    ),
+    control_input_values: str = typer.Option(
+        "-5,0,5",
+        "--control-input-values",
+        help="Comma-separated planned control input values.",
+    ),
+    max_cases_warning: int = typer.Option(
+        1000,
+        "--max-cases-warning",
+        help="Warn when expanded aero case count exceeds this threshold.",
+    ),
+    output_json: Path | None = typer.Option(
+        None,
+        "--output-json",
+        "-o",
+        help="Optional path to write workflow_preflight_report.json.",
+    ),
+    as_json: bool = typer.Option(
+        False,
+        "--json",
+        help="Print the full preflight report as JSON.",
+    ),
+) -> None:
+    """Preflight-check a planned operational rehearsal without running it."""
+
+    report = _build_operational_preflight_report(
+        workflow_root=workflow,
+        config=config,
+        n_geometries=n_geometries,
+        alpha_values=_parse_preflight_float_list(alpha_values, default=[-2.0, 0.0, 4.0, 8.0]),
+        beta_values=_parse_preflight_float_list(beta_values, default=[0.0]),
+        velocity_values=_parse_preflight_float_list(velocity_values, default=[20.0, 28.0]),
+        altitude_values=_parse_preflight_float_list(altitude_values, default=[0.0, 1500.0]),
+        control_input_values=_parse_preflight_float_list(control_input_values, default=[-5.0, 0.0, 5.0]),
+        max_cases_warning=max_cases_warning,
+    )
+
+    written_path = None
+    if output_json is not None:
+        written_path = _write_preflight_report(report, output_json)
+
+    if as_json:
+        _echo_json(report)
+    else:
+        typer.echo("[AERIS] Workflow operational preflight")
+        typer.echo(f"  readiness: {report['readiness']}")
+        typer.echo(f"  config: {report['config']}")
+        typer.echo(f"  n_geometries: {report['campaign_plan']['n_geometries']}")
+        typer.echo(f"  estimated_aero_case_count: {report['estimated_aero_case_count']}")
+        typer.echo(f"  coverage_required_ok: {report['coverage_summary']['all_required_stage_commands_covered']}")
+        typer.echo(f"  coverage_optional_gaps: {report['coverage_summary']['optional_gap_count']}")
+
+        if report["workflow_root"]:
+            typer.echo(f"  workflow_root: {report['workflow_root']}")
+
+        if report["blockers"]:
+            typer.echo("  blockers:")
+            for blocker in report["blockers"]:
+                typer.echo(f"    - {blocker}")
+
+        if report["warnings"]:
+            typer.echo("  warnings:")
+            for warning in report["warnings"]:
+                typer.echo(f"    - {warning}")
+
+    if written_path is not None:
+        typer.echo(f"  report_json: {written_path}")
+
+
 # ==================================================
 # FILE: src/aeris/commands/_workflow_recording.py
 # ==================================================
@@ -25813,6 +25933,98 @@ def pg_home(root, exe, tmo, dry):
     ])
 
 
+def _geo_var_table(cfg_path: str) -> None:
+    """Read a geometry YAML and render the design variable table from its actual bounds."""
+    # Fixed notes — these never change regardless of YAML
+    NOTES = {
+        "c1_m":           ("Chord",    "Root chord (absolute)"),
+        "c2_ratio":       ("Chord",    "Chord ratio relative to c1 — must be > 0"),
+        "c3_ratio":       ("Chord",    "Chord ratio relative to c1 — must be > 0"),
+        "c4_ratio":       ("Chord",    "Tip chord ratio relative to c1 — must be > 0"),
+        "b_total_m":      ("Span",     "Semi-span — full span = 2 × this value"),
+        "b3_ratio":       ("Span",     "Outboard segment fraction — must be in (0, 1)"),
+        "split_ratio":    ("Span",     "Inner/mid split fraction — must be in (0, 1)"),
+        "sw1_deg":        ("Sweep",    "Inner LE sweep. YAML = positive; Python = negative. Never negate twice."),
+        "sw2_deg":        ("Sweep",    "Mid sweep — same sign convention as sw1_deg"),
+        "sw3_deg":        ("Sweep",    "Outer sweep — same sign convention as sw1_deg"),
+        "twist_b0_deg":   ("Twist",    "Root twist. Positive = leading edge up (washout). No sign flip."),
+        "twist_b1_deg":   ("Twist",    "Inner twist"),
+        "twist_b2_deg":   ("Twist",    "Mid twist"),
+        "twist_b3_deg":   ("Twist",    "Tip twist"),
+        "dihedral_b1_deg":("Dihedral", "Inner dihedral"),
+        "dihedral_b2_deg":("Dihedral", "Mid dihedral"),
+        "dihedral_b3_deg":("Dihedral", "Outer dihedral — root always fixed at 0°"),
+    }
+    UNITS = {
+        "c1_m": "m", "b_total_m": "m",
+        "sw1_deg": "°", "sw2_deg": "°", "sw3_deg": "°",
+        "twist_b0_deg": "°", "twist_b1_deg": "°",
+        "twist_b2_deg": "°", "twist_b3_deg": "°",
+        "dihedral_b1_deg": "°", "dihedral_b2_deg": "°", "dihedral_b3_deg": "°",
+    }
+
+    cfg_data = None
+    if yaml and cfg_path and Path(cfg_path).exists():
+        try:
+            cfg_data = yaml.safe_load(Path(cfg_path).read_text(encoding="utf-8"))
+        except Exception:
+            cfg_data = None
+
+    pb = (cfg_data or {}).get("geometry", {}).get("planform_bounds", {})
+    sb = (cfg_data or {}).get("geometry", {}).get("section_bounds", {})
+    bounds = {**pb, **sb}
+
+    rows = []
+    for var, (group, note) in NOTES.items():
+        b = bounds.get(var, {})
+        if isinstance(b, dict) and "min" in b and "max" in b:
+            mn, mx = b["min"], b["max"]
+            u = UNITS.get(var, "")
+            spread = abs(float(mx) - float(mn))
+            if spread < 0.01:
+                rng = f"fixed ≈ {mn}{u}"
+            else:
+                rng = f"{mn} – {mx}{u}"
+        else:
+            rng = "— not in YAML —" if cfg_data else "— load a YAML —"
+        rows.append((group, var, rng, note))
+
+    # Build table HTML
+    header = (
+        '<table style="width:100%;border-collapse:collapse;font-size:.8rem">'
+        '<thead><tr style="border-bottom:1px solid #334252">'
+        '<th style="text-align:left;padding:.4rem .6rem;color:#8EA0B3;font-weight:600">Group</th>'
+        '<th style="text-align:left;padding:.4rem .6rem;color:#8EA0B3;font-weight:600">Variable</th>'
+        '<th style="text-align:left;padding:.4rem .6rem;color:#8EA0B3;font-weight:600">Range in this config</th>'
+        '<th style="text-align:left;padding:.4rem .6rem;color:#8EA0B3;font-weight:600">Notes</th>'
+        '</tr></thead><tbody>'
+    )
+    body = ""
+    prev_group = None
+    for group, var, rng, note in rows:
+        sep = "border-bottom:1px solid #263545;"
+        # Color fixed ranges differently so user immediately spots near-fixed vars
+        rng_col = "#F59E0B" if "fixed" in rng else "#D6DEE8"
+        body += (
+            f'<tr style="{sep}">'
+            f'<td style="padding:.38rem .6rem;color:#C0CAD6">'
+            f'{"" if group == prev_group else group}</td>'
+            f'<td style="padding:.38rem .6rem;font-family:JetBrains Mono,monospace;'
+            f'color:#93C5FD;white-space:nowrap">{var}</td>'
+            f'<td style="padding:.38rem .6rem;color:{rng_col};white-space:nowrap">{rng}</td>'
+            f'<td style="padding:.38rem .6rem;color:#8EA0B3">{note}</td>'
+            f'</tr>'
+        )
+        prev_group = group
+    _h(header + body + "</tbody></table>")
+
+    # Extra context from section_bounds
+    airfoil = (cfg_data or {}).get("geometry", {}).get("section_bounds", {}).get("airfoil_name", "—")
+    dih_root = (cfg_data or {}).get("geometry", {}).get("section_bounds", {}).get("dihedral_root_deg", "—")
+    if cfg_data:
+        st.caption(f"Airfoil: **{airfoil}** · Root dihedral: **{dih_root}°** (fixed, not sampled)")
+
+
 def pg_geometry(root, exe, tmo, dry):
     _hero("△", "Geometry", "bwb_segmented_v1 · 17 design variables", "generator")
     tab_gen, tab_vis, tab_info = st.tabs(["  ① Generate  ", "  ② Visualize  ", "  ③ Design variables  "])
@@ -25861,27 +26073,93 @@ def pg_geometry(root, exe, tmo, dry):
             label="▶  Generate geometry",
         )
 
-        # ── Recent geometry runs from disk ────────────────────────────────
+        # ── Recent geometry runs from disk — with delete controls ─────────
         geo_runs = [r for r in _dirs(str(root / "data" / "runs"))
                     if "geometry" in Path(r).name]
-        if geo_runs:
+        viz_runs = _dirs(str(root / "data" / "debug" / "visualization_runs"))
+        all_run_paths = geo_runs + viz_runs
+
+        if all_run_paths:
             _sec("Recent geometry runs")
-            for r in geo_runs[:5]:
+            st.caption(
+                "Runs in `data/runs/` (generate) and `data/debug/visualization_runs/` (visualize). "
+                "Select folders to delete — this cannot be undone."
+            )
+            run_labels = {Path(r).name: r for r in all_run_paths}
+            to_delete = st.multiselect(
+                "Select runs to delete",
+                options=list(run_labels.keys()),
+                default=[],
+                key="gg_del_sel",
+                help="Select one or more folders. Click Delete selected to remove them permanently.",
+            )
+            col_del, col_all, _ = st.columns([1, 1, 3])
+            if col_del.button(
+                f"🗑  Delete selected ({len(to_delete)})",
+                key="gg_del_btn",
+                disabled=len(to_delete) == 0,
+                type="secondary",
+            ):
+                import shutil as _shutil
+                deleted, failed = [], []
+                for label in to_delete:
+                    p = Path(run_labels[label])
+                    try:
+                        _shutil.rmtree(p)
+                        deleted.append(label)
+                    except Exception as e:
+                        failed.append(f"{label}: {e}")
+                if deleted:
+                    st.success(f"Deleted {len(deleted)} folder(s): " + ", ".join(deleted))
+                if failed:
+                    st.error("Failed: " + "; ".join(failed))
+                st.rerun()
+
+            if col_all.button("🗑  Delete ALL", key="gg_del_all", type="secondary"):
+                st.session_state["gg_confirm_all"] = True
+
+            if st.session_state.get("gg_confirm_all"):
+                st.warning(f"⚠ This will permanently delete **{len(all_run_paths)} folder(s)**. Are you sure?")
+                c1, c2 = st.columns(2)
+                if c1.button("Yes, delete all", key="gg_del_all_yes", type="primary"):
+                    import shutil as _shutil
+                    deleted, failed = [], []
+                    for r in all_run_paths:
+                        try:
+                            _shutil.rmtree(r)
+                            deleted.append(Path(r).name)
+                        except Exception as e:
+                            failed.append(f"{Path(r).name}: {e}")
+                    st.session_state["gg_confirm_all"] = False
+                    if deleted:
+                        st.success(f"Deleted {len(deleted)} folder(s).")
+                    if failed:
+                        st.error("Failed: " + "; ".join(failed))
+                    st.rerun()
+                if c2.button("Cancel", key="gg_del_all_no", type="secondary"):
+                    st.session_state["gg_confirm_all"] = False
+                    st.rerun()
+
+            st.divider()
+            for r in all_run_paths[:20]:
                 p = Path(r)
                 m      = _rjson(p / "manifest.json")
-                status = (m or {}).get("status", "unknown")
+                status = (m or {}).get("status", "—")
                 col    = "#22C55E" if status == "success" else \
-                         "#EF4444" if status == "failed"  else "#F59E0B"
+                         "#EF4444" if status == "failed"  else "#8EA0B3"
+                loc    = "runs" if "data/runs" in r else "debug/viz"
                 _h(
-                    f'<div style="background:#202B36;border:1px solid #334252;border-radius:8px;'
-                    f'padding:.55rem 1rem;margin-bottom:.3rem;display:flex;align-items:center;gap:10px">'
-                    f'<div style="width:8px;height:8px;border-radius:50%;background:{col};flex-shrink:0"></div>'
-                    f'<div style="flex:1;font-size:.79rem;color:#D6DEE8;font-family:JetBrains Mono,monospace;'
+                    f'<div style="background:#1B2A3A;border:1px solid #2D3F52;border-radius:7px;'
+                    f'padding:.42rem .9rem;margin-bottom:.22rem;display:flex;align-items:center;gap:10px">'
+                    f'<div style="width:7px;height:7px;border-radius:50%;background:{col};flex-shrink:0"></div>'
+                    f'<div style="flex:1;font-size:.78rem;color:#D6DEE8;font-family:JetBrains Mono,monospace;'
                     f'overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{p.name}</div>'
-                    f'<div style="font-size:.7rem;color:#8EA0B3;flex-shrink:0">{status}</div></div>'
+                    f'<div style="font-size:.68rem;color:#5A7A96;flex-shrink:0;margin-right:8px">{loc}</div>'
+                    f'<div style="font-size:.7rem;color:{col};flex-shrink:0;font-weight:600">{status}</div>'
+                    f'</div>'
                 )
         else:
-            st.caption("No geometry runs yet — data/runs/ is empty or doesn't exist.")
+            st.caption("No geometry runs yet — data/runs/ and data/debug/visualization_runs/ are empty.")
 
     # ── VISUALIZE ─────────────────────────────────────────────────────────────
     with tab_vis:
@@ -25957,81 +26235,28 @@ def pg_geometry(root, exe, tmo, dry):
 
     # ── DESIGN VARIABLES ─────────────────────────────────────────────────────
     with tab_info:
-        _note(
-            "<b>aeris geometry info</b> — lists registered generator IDs.",
-            "info",
-        )
-        _panel(
-            "Generator info",
-            "Lists available generators and current system status.",
-            ["geometry", "info"],
-            root, exe, tmo, dry, "gi_run",
-            label="▶  Run geometry info",
-        )
+        # Config picker — same list as the other tabs so user sees live bounds for chosen config
+        cfg_files_i = _files(str(root / "configs" / "geometry"), "*.yaml")
+        prod_cfg_i  = str(root / "configs" / "geometry" / "bwb_training_v1.yaml")
+        smoke_cfg_i = str(root / "configs" / "geometry" / "baseline_bwb_25.yaml")
+        info_opts   = ([prod_cfg_i] if prod_cfg_i in cfg_files_i else []) +                       ([smoke_cfg_i] if smoke_cfg_i in cfg_files_i else []) +                       [f for f in cfg_files_i if f not in (prod_cfg_i, smoke_cfg_i)]
 
-        _sec("bwb_segmented_v1 — design variable reference")
-        _h("""
-        <table style="width:100%;border-collapse:collapse;font-size:.8rem">
-          <thead>
-            <tr style="border-bottom:1px solid #334252">
-              <th style="text-align:left;padding:.45rem .6rem;color:#8EA0B3;font-weight:600">Group</th>
-              <th style="text-align:left;padding:.45rem .6rem;color:#8EA0B3;font-weight:600">Variable</th>
-              <th style="text-align:left;padding:.45rem .6rem;color:#8EA0B3;font-weight:600">Production range</th>
-              <th style="text-align:left;padding:.45rem .6rem;color:#8EA0B3;font-weight:600">Notes</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr style="border-bottom:1px solid #263545">
-              <td style="padding:.4rem .6rem;color:#C0CAD6">Chord</td>
-              <td style="padding:.4rem .6rem;font-family:JetBrains Mono,monospace;color:#93C5FD">c1_m</td>
-              <td style="padding:.4rem .6rem;color:#D6DEE8">1.20 – 2.00 m</td>
-              <td style="padding:.4rem .6rem;color:#8EA0B3">Root chord (absolute)</td>
-            </tr>
-            <tr style="border-bottom:1px solid #263545">
-              <td style="padding:.4rem .6rem;color:#C0CAD6">Chord</td>
-              <td style="padding:.4rem .6rem;font-family:JetBrains Mono,monospace;color:#93C5FD">c2_ratio, c3_ratio, c4_ratio</td>
-              <td style="padding:.4rem .6rem;color:#D6DEE8">set in YAML</td>
-              <td style="padding:.4rem .6rem;color:#8EA0B3">Ratios relative to c1 — all must be &gt; 0</td>
-            </tr>
-            <tr style="border-bottom:1px solid #263545">
-              <td style="padding:.4rem .6rem;color:#C0CAD6">Span</td>
-              <td style="padding:.4rem .6rem;font-family:JetBrains Mono,monospace;color:#93C5FD">b_total_m</td>
-              <td style="padding:.4rem .6rem;color:#D6DEE8">1.20 – 2.00 m</td>
-              <td style="padding:.4rem .6rem;color:#8EA0B3">Semi-span — full span = 2 × this value</td>
-            </tr>
-            <tr style="border-bottom:1px solid #263545">
-              <td style="padding:.4rem .6rem;color:#C0CAD6">Span</td>
-              <td style="padding:.4rem .6rem;font-family:JetBrains Mono,monospace;color:#93C5FD">b3_ratio, split_ratio</td>
-              <td style="padding:.4rem .6rem;color:#D6DEE8">set in YAML</td>
-              <td style="padding:.4rem .6rem;color:#8EA0B3">Segment fractions — must be in (0, 1)</td>
-            </tr>
-            <tr style="border-bottom:1px solid #263545">
-              <td style="padding:.4rem .6rem;color:#C0CAD6">Sweep</td>
-              <td style="padding:.4rem .6rem;font-family:JetBrains Mono,monospace;color:#93C5FD">sw1_deg</td>
-              <td style="padding:.4rem .6rem;color:#D6DEE8">30 – 55 °</td>
-              <td style="padding:.4rem .6rem;color:#8EA0B3">YAML = positive magnitude. Python = negative. Never negate twice.</td>
-            </tr>
-            <tr style="border-bottom:1px solid #263545">
-              <td style="padding:.4rem .6rem;color:#C0CAD6">Sweep</td>
-              <td style="padding:.4rem .6rem;font-family:JetBrains Mono,monospace;color:#93C5FD">sw2_deg, sw3_deg</td>
-              <td style="padding:.4rem .6rem;color:#D6DEE8">set in YAML</td>
-              <td style="padding:.4rem .6rem;color:#8EA0B3">Same sign convention as sw1_deg</td>
-            </tr>
-            <tr style="border-bottom:1px solid #263545">
-              <td style="padding:.4rem .6rem;color:#C0CAD6">Twist</td>
-              <td style="padding:.4rem .6rem;font-family:JetBrains Mono,monospace;color:#93C5FD">twist_b0_deg … twist_b3_deg</td>
-              <td style="padding:.4rem .6rem;color:#D6DEE8">set in YAML</td>
-              <td style="padding:.4rem .6rem;color:#8EA0B3">Positive = leading edge up (washout). No sign flip.</td>
-            </tr>
-            <tr>
-              <td style="padding:.4rem .6rem;color:#C0CAD6">Dihedral</td>
-              <td style="padding:.4rem .6rem;font-family:JetBrains Mono,monospace;color:#93C5FD">dihedral_b1_deg … dihedral_b3_deg</td>
-              <td style="padding:.4rem .6rem;color:#D6DEE8">set in YAML</td>
-              <td style="padding:.4rem .6rem;color:#8EA0B3">Root always fixed at 0° — not sampled</td>
-            </tr>
-          </tbody>
-        </table>
-        """)
+        info_cfg = st.selectbox(
+            "Show bounds for config",
+            info_opts if info_opts else [""],
+            format_func=lambda s: (
+                f"Production — {Path(s).name}" if "bwb_training_v1" in s else
+                f"Smoke test — {Path(s).name}" if "baseline_bwb_25"  in s else
+                Path(s).name if s else "— none found —"
+            ),
+            key="gi_cfg",
+            help="Switch config to see the exact design-variable bounds defined in that YAML file.",
+        )
+        st.caption(
+            "Ranges are read directly from the selected YAML. "
+            "**Amber** = nearly fixed (min ≈ max) — not useful for ML training."
+        )
+        _geo_var_table(info_cfg)
 
 
 def pg_dataset(root, exe, tmo, dry):
@@ -41691,6 +41916,189 @@ from aeris.workflow.templates import (
 
 
 # ==================================================
+# FILE: src/aeris/workflow/preflight.py
+# ==================================================
+
+"""Operational workflow preflight checks.
+
+This module does not run solvers, datasets, QC, ML, or promotion.
+It only checks whether a planned campaign looks coherent before spending time.
+"""
+
+from __future__ import annotations
+
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
+import json
+from pathlib import Path
+from typing import Any
+
+from aeris.workflow.coverage import build_workflow_coverage_report
+
+
+@dataclass(frozen=True)
+class CampaignPlan:
+    """Small campaign sizing model for operator preflight."""
+
+    n_geometries: int
+    alpha_values: list[float]
+    beta_values: list[float]
+    velocity_values: list[float]
+    altitude_values: list[float]
+    control_input_values: list[float]
+
+    @property
+    def aero_case_count(self) -> int:
+        return (
+            self.n_geometries
+            * len(self.alpha_values)
+            * len(self.beta_values)
+            * len(self.velocity_values)
+            * len(self.altitude_values)
+            * len(self.control_input_values)
+        )
+
+
+def parse_float_list(value: str, *, default: list[float]) -> list[float]:
+    """Parse comma-separated floats with a fallback default."""
+
+    cleaned = (value or "").strip()
+    if not cleaned:
+        return list(default)
+
+    values: list[float] = []
+    for item in cleaned.split(","):
+        token = item.strip()
+        if not token:
+            continue
+        values.append(float(token))
+
+    if not values:
+        return list(default)
+
+    return values
+
+
+def _read_json(path: Path) -> dict[str, Any] | None:
+    if not path.exists():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def build_operational_preflight_report(
+    *,
+    workflow_root: Path | None,
+    config: Path,
+    n_geometries: int,
+    alpha_values: list[float],
+    beta_values: list[float],
+    velocity_values: list[float],
+    altitude_values: list[float],
+    control_input_values: list[float],
+    max_cases_warning: int = 1000,
+) -> dict[str, Any]:
+    """Build a campaign readiness report without executing the campaign."""
+
+    warnings: list[str] = []
+    blockers: list[str] = []
+
+    config_path = config.expanduser().resolve()
+    if not config_path.exists():
+        blockers.append(f"Config does not exist: {config_path}")
+
+    if n_geometries <= 0:
+        blockers.append("n_geometries must be positive.")
+
+    plan = CampaignPlan(
+        n_geometries=n_geometries,
+        alpha_values=alpha_values,
+        beta_values=beta_values,
+        velocity_values=velocity_values,
+        altitude_values=altitude_values,
+        control_input_values=control_input_values,
+    )
+
+    if plan.aero_case_count <= 0:
+        blockers.append("Expanded aero case count is zero.")
+
+    if plan.aero_case_count > max_cases_warning:
+        warnings.append(
+            f"Expanded aero case count is {plan.aero_case_count}, above warning threshold {max_cases_warning}."
+        )
+
+    coverage = build_workflow_coverage_report()
+    coverage_summary = coverage["summary"]
+    if not coverage_summary.get("all_required_stage_commands_covered", False):
+        blockers.append("Required workflow command coverage has blockers.")
+    if coverage_summary.get("optional_gap_count", 0) > 0:
+        warnings.append("Workflow coverage still has optional gaps.")
+
+    workflow_payload: dict[str, Any] | None = None
+    workflow_status_path: str | None = None
+    workflow_root_resolved: str | None = None
+
+    if workflow_root is not None:
+        root = workflow_root.expanduser().resolve()
+        workflow_root_resolved = str(root)
+        status_path = root / "workflow_status.json"
+        workflow_status_path = str(status_path)
+        workflow_payload = _read_json(status_path)
+
+        if workflow_payload is None:
+            blockers.append(f"Workflow status file does not exist: {status_path}")
+        else:
+            template = workflow_payload.get("template")
+            next_stage = workflow_payload.get("next_required_stage")
+            if not template:
+                warnings.append("Workflow status does not record a template.")
+            if not next_stage:
+                warnings.append("Workflow status does not expose next_required_stage.")
+
+    else:
+        warnings.append("No workflow root supplied; preflight cannot inspect workflow state.")
+
+    if "baseline_bwb_25.yaml" in str(config_path) and n_geometries > 5:
+        warnings.append(
+            "baseline_bwb_25.yaml is a smoke/canary config; it is not a real training design-space config."
+        )
+
+    if "bwb_training_v1.yaml" in str(config_path) and n_geometries < 10:
+        warnings.append(
+            "bwb_training_v1.yaml with very small N is only a canary, not a surrogate-quality campaign."
+        )
+
+    readiness = "blocked" if blockers else ("warning" if warnings else "ready")
+
+    return {
+        "report_type": "workflow_operational_preflight",
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "readiness": readiness,
+        "blockers": blockers,
+        "warnings": warnings,
+        "workflow_root": workflow_root_resolved,
+        "workflow_status_path": workflow_status_path,
+        "workflow_status": workflow_payload,
+        "config": str(config_path),
+        "campaign_plan": asdict(plan),
+        "estimated_aero_case_count": plan.aero_case_count,
+        "coverage_summary": coverage_summary,
+        "operator_note": (
+            "This report is a preflight only. It does not run geometry, AVL, QC, curation, "
+            "promotion, EDA, ML, active learning, or multifidelity commands."
+        ),
+    }
+
+
+def write_preflight_report(report: dict[str, Any], output_path: Path) -> Path:
+    """Write preflight report JSON."""
+
+    output_path = output_path.expanduser().resolve()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
+    return output_path
+
+
+# ==================================================
 # FILE: src/aeris/workflow/spine.py
 # ==================================================
 
@@ -48229,6 +48637,56 @@ def test_workflow_canary_template_uses_smoke_baseline_hint(tmp_path: Path) -> No
     assert "baseline_bwb_25.yaml" in status_result.output
     assert "bwb_training_v1.yaml" not in status_result.output
 
+
+
+# ==================================================
+# FILE: tests/commands/test_workflow_preflight_cli.py
+# ==================================================
+
+from __future__ import annotations
+
+import json
+
+from typer.testing import CliRunner
+
+from aeris.cli import app
+
+runner = CliRunner()
+
+
+def test_workflow_preflight_help_runs() -> None:
+    result = runner.invoke(app, ["workflow", "preflight", "--help"])
+    assert result.exit_code == 0, result.output
+    assert "--config" in result.output
+    assert "--alpha-values" in result.output
+    assert "--output-json" in result.output
+
+
+def test_workflow_preflight_runs_and_writes_json(tmp_path) -> None:
+    output_json = tmp_path / "workflow_preflight_report.json"
+
+    result = runner.invoke(
+        app,
+        [
+            "--no-check-writable",
+            "workflow",
+            "preflight",
+            "--config",
+            "configs/geometry/bwb_training_v1.yaml",
+            "--n",
+            "50",
+            "--output-json",
+            str(output_json),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "estimated_aero_case_count" in result.output
+    assert output_json.exists()
+
+    data = json.loads(output_json.read_text(encoding="utf-8"))
+    assert data["report_type"] == "workflow_operational_preflight"
+    assert data["estimated_aero_case_count"] == 50 * 4 * 1 * 2 * 2 * 3
 
 
 # ==================================================
@@ -60216,6 +60674,58 @@ def test_workflow_coverage_detects_registered_commands() -> None:
     assert by_command[("aero", "sweep")]["command_exists"] is True
     assert by_command[("ml", "train")]["command_exists"] is True
     assert isinstance(by_command[("aero", "sweep")]["supports_workflow_option"], bool)
+
+
+# ==================================================
+# FILE: tests/workflow/test_workflow_preflight.py
+# ==================================================
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from aeris.workflow.preflight import (
+    build_operational_preflight_report,
+    parse_float_list,
+)
+
+
+def test_parse_float_list_defaults_and_values() -> None:
+    assert parse_float_list("", default=[1.0]) == [1.0]
+    assert parse_float_list("1,2.5,-3", default=[0.0]) == [1.0, 2.5, -3.0]
+
+
+def test_preflight_reports_case_count_for_medium_plan() -> None:
+    report = build_operational_preflight_report(
+        workflow_root=None,
+        config=Path("configs/geometry/bwb_training_v1.yaml"),
+        n_geometries=50,
+        alpha_values=[-2.0, 0.0, 4.0, 8.0],
+        beta_values=[0.0],
+        velocity_values=[20.0, 28.0],
+        altitude_values=[0.0, 1500.0],
+        control_input_values=[-5.0, 0.0, 5.0],
+    )
+
+    assert report["estimated_aero_case_count"] == 50 * 4 * 1 * 2 * 2 * 3
+    assert report["report_type"] == "workflow_operational_preflight"
+    assert report["coverage_summary"]["all_required_stage_commands_covered"] is True
+
+
+def test_preflight_blocks_missing_config() -> None:
+    report = build_operational_preflight_report(
+        workflow_root=None,
+        config=Path("configs/geometry/does_not_exist.yaml"),
+        n_geometries=1,
+        alpha_values=[0.0],
+        beta_values=[0.0],
+        velocity_values=[28.0],
+        altitude_values=[1500.0],
+        control_input_values=[0.0],
+    )
+
+    assert report["readiness"] == "blocked"
+    assert any("Config does not exist" in blocker for blocker in report["blockers"])
 
 
 # ==================================================

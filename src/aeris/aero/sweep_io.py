@@ -193,3 +193,112 @@ def write_aero_sweep_manifest(
         )
     )
     return output_path
+
+
+# --- AERIS D1b.1 control alias compatibility wrappers ---
+# This wrapper layer makes the current symmetric elevon control explicit without
+# changing solver behavior:
+#
+#   control_input_deg == delta_e_sym_deg
+#   delta_a_diff_deg == 0.0
+#
+# The original functions are preserved and wrapped so this patch remains robust
+# even if the internal sweep_io implementation has shifted.
+
+from aeris.aero.control_metadata import control_alias_row as _aeris_d1b_control_alias_row
+from aeris.aero.control_metadata import default_control_metadata as _aeris_d1b_default_control_metadata
+
+
+def _aeris_d1b_with_control_aliases(row):
+    if not isinstance(row, dict):
+        return row
+    out = dict(row)
+    out.update(_aeris_d1b_control_alias_row(out.get("control_input_deg")))
+    return out
+
+
+def _aeris_d1b_unique_float_values(rows, key):
+    values = set()
+    for row in rows or []:
+        if not isinstance(row, dict):
+            continue
+        value = row.get(key)
+        if value is None:
+            continue
+        values.add(float(value))
+    return sorted(values)
+
+
+def _aeris_d1b_patch_summary(summary, case_records=None):
+    out = dict(summary or {})
+
+    aliased_cases = [
+        _aeris_d1b_with_control_aliases(row)
+        for row in (case_records or [])
+        if isinstance(row, dict)
+    ]
+
+    control_rows = [
+        _aeris_d1b_with_control_aliases(row)
+        for row in out.get("control_effectiveness_rows", [])
+        if isinstance(row, dict)
+    ]
+
+    # If the summary has no dedicated control-effectiveness rows, use the case
+    # records as the source for alias value lists.
+    source_rows = control_rows if control_rows else aliased_cases
+
+    if control_rows:
+        out["control_effectiveness_rows"] = control_rows
+
+    if "control_input_deg_values" not in out:
+        out["control_input_deg_values"] = _aeris_d1b_unique_float_values(source_rows, "control_input_deg")
+
+    out["delta_e_sym_deg_values"] = _aeris_d1b_unique_float_values(source_rows, "delta_e_sym_deg")
+    out["delta_a_diff_deg_values"] = _aeris_d1b_unique_float_values(source_rows, "delta_a_diff_deg")
+    out.setdefault("control_metadata", _aeris_d1b_default_control_metadata())
+
+    return out
+
+
+_aeris_d1b_original_build_aero_sweep_summary = build_aero_sweep_summary
+
+
+def build_aero_sweep_summary(flight_conditions, case_records):
+    case_records_with_aliases = [
+        _aeris_d1b_with_control_aliases(row)
+        for row in case_records
+    ]
+    summary = _aeris_d1b_original_build_aero_sweep_summary(
+        flight_conditions,
+        case_records_with_aliases,
+    )
+    return _aeris_d1b_patch_summary(summary, case_records_with_aliases)
+
+
+_aeris_d1b_original_write_aero_sweep_manifest = write_aero_sweep_manifest
+
+
+class _AerisD1bSweepResultProxy:
+    def __init__(self, wrapped, cases, summary):
+        self._wrapped = wrapped
+        self.cases = cases
+        self.summary = summary
+
+    def __getattr__(self, name):
+        return getattr(self._wrapped, name)
+
+
+def write_aero_sweep_manifest(output_path, result):
+    cases = [
+        _aeris_d1b_with_control_aliases(row)
+        for row in getattr(result, "cases", [])
+    ]
+    summary = _aeris_d1b_patch_summary(
+        getattr(result, "summary", {}),
+        cases,
+    )
+    patched = _AerisD1bSweepResultProxy(result, cases, summary)
+    return _aeris_d1b_original_write_aero_sweep_manifest(output_path, patched)
+
+

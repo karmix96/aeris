@@ -188,16 +188,35 @@ def interpret_longitudinal(
 # ---------------------------------------------------------------------------
 
 def extract_longitudinal_derivatives(aero_result: Any) -> LongitudinalStabilityDerivatives:
-    """Extract longitudinal stability derivatives from aero_result dict/object."""
+    """Extract longitudinal stability derivatives from aero_result dict/object.
+
+    Supports both real AERIS aero_result dictionaries:
+
+        {"stability_axis_derivatives": {"Cma": ...}}
+
+    and lightweight object-style test/result containers:
+
+        aero_result.Cma
+
+    The object fallback is intentionally narrow and only used when the nested
+    derivative dictionary does not contain the requested value.
+    """
     sad = _get(aero_result, "stability_axis_derivatives") or {}
+
+    def _d(*keys: str) -> float | None:
+        nested = _get(sad, *keys)
+        if nested is not None:
+            return nested
+        return _get(aero_result, *keys)
+
     return LongitudinalStabilityDerivatives(
-        cla=_get(sad, "CLa"),
-        cda=_get(sad, "CDa"),
-        cma=_get(sad, "Cma", "cma"),
-        clq=_get(sad, "CLq"),
-        cmq=_get(sad, "Cmq"),
-        clad=_get(sad, "CLad"),
-        cmad=_get(sad, "Cmad"),
+        cla=_d("CLa", "cla"),
+        cda=_d("CDa", "cda"),
+        cma=_d("Cma", "cma"),
+        clq=_d("CLq", "clq"),
+        cmq=_d("Cmq", "cmq"),
+        clad=_d("CLad", "clad"),
+        cmad=_d("Cmad", "cmad"),
     )
 
 

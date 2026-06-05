@@ -302,3 +302,34 @@ def write_aero_sweep_manifest(output_path, result):
     return _aeris_d1b_original_write_aero_sweep_manifest(output_path, patched)
 
 
+
+# --- AERIS D1b.1 hotfix: post-process written sweep manifest case aliases ---
+# The first D1b.1 wrapper guarantees summary aliases. This post-write wrapper
+# guarantees persisted manifest case rows also carry the explicit aliases.
+
+_aeris_d1b_previous_write_aero_sweep_manifest = write_aero_sweep_manifest
+
+
+def write_aero_sweep_manifest(output_path, result):
+    path = _aeris_d1b_previous_write_aero_sweep_manifest(output_path, result)
+
+    import json
+    from pathlib import Path
+
+    manifest_path = Path(path)
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+    sweep = payload.get("aero_sweep_result", {})
+    cases = sweep.get("cases", [])
+    sweep["cases"] = [
+        _aeris_d1b_with_control_aliases(case)
+        for case in cases
+    ]
+
+    summary = sweep.get("summary", {})
+    sweep["summary"] = _aeris_d1b_patch_summary(summary, sweep["cases"])
+
+    payload["aero_sweep_result"] = sweep
+    manifest_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    return manifest_path

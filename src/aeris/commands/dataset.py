@@ -30,6 +30,7 @@ from aeris.commands._helpers import fail_command, parse_csv_list, parse_float_li
 from aeris.commands._workflow_recording import record_workflow_stage_success
 from aeris.dataset.aero_dataset_run import run_aero_dataset_generation
 from aeris.dataset.curate_aero import curate_aero_dataset
+from aeris.dataset.control_derivatives import compute_control_derivatives
 from aeris.dataset.dataset_run import run_dataset_generation
 from aeris.dataset.inspect import inspect_dataset
 from aeris.dataset.promote_aero import promote_aero_dataset
@@ -130,6 +131,35 @@ def _print_curation_report(report: dict) -> None:
     typer.echo(f"  curated_csv: {report.get('curated_aero_dataset_csv')}")
     typer.echo(f"  rejected_csv: {report.get('rejected_aero_rows_csv')}")
 
+
+
+def _print_control_derivatives_report(report: dict) -> None:
+    """Pretty-print the symmetric-elevon finite-difference derivative report."""
+    typer.echo("")
+    typer.echo("[AERIS] Control derivative extraction completed")
+    typer.echo(f"  dataset_root: {report.get('dataset_root')}")
+    typer.echo(f"  source: {report.get('source')}")
+    typer.echo(f"  control_column: {report.get('control_column')}")
+    typer.echo(f"  used_legacy_control_alias: {report.get('used_legacy_control_alias')}")
+    typer.echo(f"  group_count: {report.get('group_count')}")
+    typer.echo(f"  computed_group_count: {report.get('computed_group_count')}")
+    typer.echo(f"  skipped_group_count: {report.get('skipped_group_count')}")
+    typer.echo(f"  min_abs_Cm_delta_e_per_rad: {report.get('min_abs_Cm_delta_e_per_rad')}")
+
+    pitch_counts = report.get("pitch_authority_counts", {}) or {}
+    if pitch_counts:
+        typer.echo("  pitch_authority_counts:")
+        for key, count in sorted(pitch_counts.items()):
+            typer.echo(f"    - {key}: {count}")
+
+    diff = report.get("differential_elevon", {}) or {}
+    typer.echo(
+        "  differential_elevon: "
+        f"present={diff.get('column_present')}, varies={diff.get('varies')}, "
+        f"status={diff.get('status')}"
+    )
+    typer.echo(f"  output_csv: {report.get('output_csv')}")
+    typer.echo(f"  output_report: {report.get('output_report')}")
 
 def _print_promotion_manifest(manifest: dict) -> None:
     """Pretty-print a promotion manifest to the terminal."""
@@ -986,6 +1016,72 @@ def dataset_curate_aero(
         typer.echo("")
         typer.echo("[AERIS] Promotion decision: NOT READY")
 
+
+
+@dataset_app.command("compute-control-derivatives")
+def dataset_compute_control_derivatives(
+    dataset: Path = typer.Option(
+        ...,
+        "--dataset",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to an existing unified aero dataset root.",
+    ),
+    source: str = typer.Option(
+        "auto",
+        "--source",
+        help="Input CSV policy: auto uses curated_aero_dataset.csv if present, otherwise aero_dataset.csv. Options: auto, curated, raw.",
+    ),
+    control_column: str | None = typer.Option(
+        None,
+        "--control-column",
+        help="Control column to differentiate over. Defaults to delta_e_sym_deg, falling back to legacy control_input_deg.",
+    ),
+    group_columns: str | None = typer.Option(
+        None,
+        "--group-columns",
+        help="Optional comma-separated condition grouping columns. Default uses geometry_id, alpha/beta, V, altitude, and rates when present.",
+    ),
+    targets: str | None = typer.Option(
+        None,
+        "--targets",
+        help="Optional comma-separated target columns. Default: cl,cd,cm,cy,cl_roll,cn when present.",
+    ),
+    min_abs_cm_delta_e: float = typer.Option(
+        0.10,
+        "--min-abs-cm-delta-e",
+        help="Pitch-authority threshold for |Cm_delta_e_per_rad|.",
+    ),
+    as_json: bool = typer.Option(
+        False,
+        "--json",
+        help="Print the full derivative report as JSON.",
+    ),
+) -> None:
+    """Compute finite-difference symmetric-elevon derivatives from control sweeps."""
+    parsed_group_columns = None if group_columns is None else parse_csv_list(group_columns, "--group-columns")
+    parsed_targets = None if targets is None else parse_csv_list(targets, "--targets")
+
+    try:
+        report = compute_control_derivatives(
+            dataset_root=dataset,
+            source=source,
+            control_column=control_column,
+            group_columns=parsed_group_columns,
+            target_columns=parsed_targets,
+            min_abs_cm_delta_e=min_abs_cm_delta_e,
+        )
+    except Exception as exc:
+        fail_command("Dataset compute-control-derivatives", exc)
+
+    if as_json:
+        typer.echo(json.dumps(report, indent=2))
+        return
+
+    _print_control_derivatives_report(report)
 
 @dataset_app.command("inspect")
 def dataset_inspect(

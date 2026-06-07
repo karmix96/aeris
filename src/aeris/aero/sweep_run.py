@@ -7,6 +7,8 @@ directories, collects results, and writes a sweep manifest.
 
 from __future__ import annotations
 
+from aeris.aero.control_metadata import control_alias_row
+
 from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any
@@ -236,6 +238,7 @@ def run_aero_sweep(
                 "exception_type": result.failure.exception_type,
             }
 
+        record.update(control_alias_row(record.get("control_input_deg")))
         case_records.append(record)
 
     summary = build_aero_sweep_summary(

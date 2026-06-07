@@ -6,8 +6,6 @@ Run: aeris gui run  OR  streamlit run src/aeris/gui/app.py
 
 ground-truth: geometry generate only accepts --config (no --name, no --seed, no --save-plot)
 """
-# Static test marker: Unified aero dataset
-
 from __future__ import annotations
 
 import json, os, re, shlex, shutil, subprocess, textwrap, time
@@ -2436,8 +2434,15 @@ def pg_dynamics(root, exe, tmo, dry):
                                     f"DATCOM estimates (k_x={k_x:.3f}, k_y={k_y:.3f}): "
                                     f"**Ixx = {i_xx} kg·m²** · "
                                     f"**Iyy = {i_yy} kg·m²** · "
-                                    f"**Izz = {i_zz} kg·m²** "
-                                    f"— copy these into the fields above."
+                                    f"**Izz = {i_zz} kg·m²**"
+                                )
+                                # Auto-fill session state so fields update on next render
+                                st.session_state[f"{key}_ixx"] = str(i_xx)
+                                st.session_state[f"{key}_iyy"] = str(i_yy)
+                                st.session_state[f"{key}_izz"] = str(i_zz)
+                                st.caption(
+                                    "✓ Fields above auto-filled. "
+                                    "Review values then click Build / Run CG sweep."
                                 )
                                 st.caption(
                                     f"Based on: span={span:.3f}m, MAC={mac:.3f}m, "
@@ -2471,6 +2476,12 @@ def pg_dynamics(root, exe, tmo, dry):
         )
         rd_build = _aero_run_picker("dyn_rd_build")
         if rd_build:
+            st.info(
+                "ℹ️ **CG x [m]** is from the nose reference point. "
+                "For this BWB (NP ≈ 0.56m, MAC ≈ 0.877m): **stable CG is typically 0.30–0.52m**. "
+                "Use the DATCOM estimator below to get Iyy/Izz. "
+                "CG = 1.0m would be far aft of the wing — check your geometry."
+            )
             mass_args = _mass_inputs("build")
             _panel(
                 "Build dynamics foundation",
@@ -2503,12 +2514,24 @@ def pg_dynamics(root, exe, tmo, dry):
                 help="Number of equally-spaced CG positions to evaluate.",
             )
             mass_args_sw = _mass_inputs("cgsw")
+            # cg-sweep CLI does not accept --x-cg-m (CG is swept automatically)
+            # Filter it out — only mass_kg, inertias, and mass-config are valid
+            cgsw_filtered = []
+            skip_next = False
+            for tok in mass_args_sw:
+                if skip_next:
+                    skip_next = False
+                    continue
+                if tok == "--x-cg-m":
+                    skip_next = True  # skip this flag AND its value
+                    continue
+                cgsw_filtered.append(tok)
             _panel(
                 "Run CG sweep",
                 f"Evaluates static margin at {int(ns)} CG positions from {cgmn:.2f} to {cgmx:.2f} m.",
                 ["dynamics", "cg-sweep", "--run-dir", rd_cgsw,
                  "--cg-min-m", str(cgmn), "--cg-max-m", str(cgmx),
-                 "--n", str(int(ns))] + mass_args_sw,
+                 "--n", str(int(ns))] + cgsw_filtered,
                 root, exe, tmo, dry, "dyn_cgsw_run",
                 label="▶  Run CG sweep",
             )

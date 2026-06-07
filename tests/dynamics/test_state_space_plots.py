@@ -65,10 +65,13 @@ def test_render_state_space_plots_all(tmp_path: Path) -> None:
 
     manifest = render_state_space_plots(run_dir=run_dir, plot="all", dpi=90)
 
-    assert manifest["schema_version"] == "state_space_plot_manifest_v0.1"
-    assert manifest["plot_count"] == 2
+    assert manifest["schema_version"] == "state_space_plot_manifest_v0.2"
+    assert manifest["plot_count"] == 4
     assert Path(manifest["artifacts"]["eigenvalues_png"]).exists()
+    assert Path(manifest["artifacts"]["eigenvalues_zoom_png"]).exists()
     assert Path(manifest["artifacts"]["mode_summary_png"]).exists()
+    assert Path(manifest["artifacts"]["mode_summary_zoom_png"]).exists()
+    assert manifest["zoom_policy"]["unstable_eigenvalues_always_kept_in_zoom"] is True
     assert Path(manifest["manifest_path"]).exists()
 
 
@@ -80,8 +83,23 @@ def test_render_state_space_plots_single_eigenvalue_plot(tmp_path: Path) -> None
 
     assert manifest["plot_count"] == 1
     assert Path(manifest["artifacts"]["eigenvalues_png"]).exists()
+    assert manifest["artifacts"]["eigenvalues_zoom_png"] is None
     assert manifest["artifacts"]["mode_summary_png"] is None
+    assert manifest["artifacts"]["mode_summary_zoom_png"] is None
 
+
+
+def test_render_state_space_plots_single_zoom_plots(tmp_path: Path) -> None:
+    run_dir = tmp_path / "run"
+    _write_state_space_result(run_dir)
+
+    eig_manifest = render_state_space_plots(run_dir=run_dir, plot="eigenvalues-zoom", dpi=90)
+    assert eig_manifest["plot_count"] == 1
+    assert Path(eig_manifest["artifacts"]["eigenvalues_zoom_png"]).exists()
+
+    mode_manifest = render_state_space_plots(run_dir=run_dir, plot="mode-summary-zoom", dpi=90)
+    assert mode_manifest["plot_count"] == 1
+    assert Path(mode_manifest["artifacts"]["mode_summary_zoom_png"]).exists()
 
 def test_render_state_space_plots_rejects_unknown_plot(tmp_path: Path) -> None:
     run_dir = tmp_path / "run"

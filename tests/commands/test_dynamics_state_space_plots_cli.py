@@ -57,6 +57,7 @@ def test_dynamics_plot_state_space_help_runs() -> None:
     assert result.exit_code == 0
     assert "--run-dir" in result.stdout
     assert "--plot" in result.stdout
+    assert "eigenvalues-zoom" in result.stdout
 
 
 def test_dynamics_plot_state_space_cli_writes_plots(tmp_path: Path) -> None:
@@ -70,6 +71,24 @@ def test_dynamics_plot_state_space_cli_writes_plots(tmp_path: Path) -> None:
     manifest_path = run_dir / "dynamics" / "plots" / "state_space_plot_manifest.json"
     assert manifest_path.exists()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    assert manifest["plot_count"] == 2
+    assert manifest["plot_count"] == 4
     assert Path(manifest["artifacts"]["eigenvalues_png"]).exists()
+    assert Path(manifest["artifacts"]["eigenvalues_zoom_png"]).exists()
     assert Path(manifest["artifacts"]["mode_summary_png"]).exists()
+    assert Path(manifest["artifacts"]["mode_summary_zoom_png"]).exists()
+
+
+def test_dynamics_plot_state_space_cli_writes_zoom_plot(tmp_path: Path) -> None:
+    run_dir = tmp_path / "run"
+    _write_state_space_result(run_dir)
+
+    result = runner.invoke(
+        app,
+        ["dynamics", "plot-state-space", "--run-dir", str(run_dir), "--plot", "eigenvalues-zoom", "--dpi", "90"],
+    )
+
+    assert result.exit_code == 0, result.stdout
+    manifest = json.loads((run_dir / "dynamics" / "plots" / "state_space_plot_manifest.json").read_text(encoding="utf-8"))
+    assert manifest["plot_count"] == 1
+    assert Path(manifest["artifacts"]["eigenvalues_zoom_png"]).exists()
+    assert manifest["artifacts"]["eigenvalues_png"] is None

@@ -450,7 +450,11 @@ def dynamics_state_space_inspect(
 @dynamics_app.command("plot-state-space")
 def dynamics_plot_state_space(
     run_dir: Path = typer.Option(..., exists=True, file_okay=False, dir_okay=True, resolve_path=True, help="Run directory containing dynamics/state_space_result.json"),
-    plot: str = typer.Option("all", "--plot", help="Plot to generate: all, eigenvalues, or mode-summary."),
+    plot: str = typer.Option(
+        "all",
+        "--plot",
+        help="Plot to generate: all, eigenvalues, eigenvalues-zoom, mode-summary, or mode-summary-zoom.",
+    ),
     output_dir: Path | None = typer.Option(None, file_okay=False, dir_okay=True, resolve_path=True, help="Optional output directory. Defaults to <run_dir>/dynamics/plots."),
     dpi: int = typer.Option(180, "--dpi", min=72, max=600, help="PNG resolution."),
     json_output: bool = typer.Option(False, "--json", help="Print the plot manifest JSON."),

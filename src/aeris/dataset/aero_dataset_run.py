@@ -25,6 +25,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from aeris.aero.control_metadata import control_alias_row, default_control_metadata
 from aeris.common.config import load_yaml_config
 from aeris.dataset.dataset_run import run_dataset_generation
 from aeris.pipeline.aero_workflows import execute_aero_sweep
@@ -136,6 +137,30 @@ def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def _add_control_alias_columns(row: dict[str, Any]) -> dict[str, Any]:
+    """Attach explicit control aliases while preserving the legacy column.
+
+    Current solver behavior has only symmetric elevon wiring:
+    control_input_deg == delta_e_sym_deg, and delta_a_diff_deg is reserved at 0.0.
+    """
+    row.update(control_alias_row(row.get("control_input_deg")))
+    return row
+
+
+def _unique_float_values(rows: list[dict[str, Any]], column: str) -> list[float]:
+    values: set[float] = set()
+    for row in rows:
+        value = row.get(column)
+        if value is None or value == "":
+            continue
+        try:
+            values.add(float(value))
+        except (TypeError, ValueError):
+            continue
+    return sorted(values)
+
 
 def _validate_retain_aero_runs(retain_aero_runs: str) -> str:
     value = retain_aero_runs.strip().lower()
@@ -270,6 +295,7 @@ def _flatten_success_row(
     row["aero_status"] = aero_payload.get("status")
     row["aero_runtime_sec"] = aero_payload.get("runtime_sec")
     row["control_input_deg"] = sweep_case.get("control_input_deg")
+    _add_control_alias_columns(row)
 
     # Flight condition
     fc = sweep_case.get("flight_condition", {}) or {}
@@ -336,6 +362,7 @@ def _flatten_failure_row(
     row["aero_case_label"] = None if sweep_case is None else sweep_case.get("case_label")
     row["aero_case_index"] = None if sweep_case is None else sweep_case.get("case_index")
     row["control_input_deg"] = None if sweep_case is None else sweep_case.get("control_input_deg")
+    _add_control_alias_columns(row)
 
     fc = {} if sweep_case is None else (sweep_case.get("flight_condition", {}) or {})
     row["alpha_deg"] = fc.get("alpha_deg")
@@ -653,6 +680,14 @@ def run_aero_dataset_generation(
         "generator_id": generator_id,
         "solver": solver,
         "control_input_values": control_input_values,
+        "control_metadata": default_control_metadata(),
+        "control_alias_columns": [
+            "control_input_deg",
+            "delta_e_sym_deg",
+            "delta_a_diff_deg",
+        ],
+        "delta_e_sym_values": _unique_float_values(success_rows, "delta_e_sym_deg"),
+        "delta_a_diff_values": _unique_float_values(success_rows, "delta_a_diff_deg"),
         "alpha_values": alpha_values,
         "beta_values": beta_values,
         "velocity_values": velocity_values,

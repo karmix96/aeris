@@ -286,6 +286,8 @@ def _inspect_aero_dataset(dataset_root: Path) -> dict[str, Any]:
         "q_rad_s",
         "r_rad_s",
         "control_input_deg",
+        "delta_e_sym_deg",
+        "delta_a_diff_deg",
     ]
     target_columns = ["cl", "cd", "cm", "cy", "cl_roll", "cn", "l_over_d"]
 

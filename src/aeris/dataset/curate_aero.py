@@ -8,6 +8,8 @@ from typing import Any
 import pandas as pd
 from pandas.errors import EmptyDataError
 
+from aeris.aero.control_metadata import control_alias_row
+
 REQUIRED_TARGET_COLUMNS = [
     "cl",
     "cd",
@@ -30,6 +32,24 @@ def _load_csv(path: Path) -> pd.DataFrame:
         return pd.read_csv(path)
     except EmptyDataError:
         return pd.DataFrame()
+
+
+def _ensure_control_alias_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Backfill explicit control-alias columns for old and new aero datasets."""
+    if df.empty or "control_input_deg" not in df.columns:
+        return df
+
+    out = df.copy()
+    aliases = out["control_input_deg"].map(
+        lambda value: control_alias_row(None if pd.isna(value) else value)
+    )
+
+    if "delta_e_sym_deg" not in out.columns:
+        out["delta_e_sym_deg"] = aliases.map(lambda row: row["delta_e_sym_deg"])
+    if "delta_a_diff_deg" not in out.columns:
+        out["delta_a_diff_deg"] = aliases.map(lambda row: row["delta_a_diff_deg"])
+
+    return out
 
 
 def _is_finite_value(value: Any) -> bool:
@@ -126,7 +146,7 @@ def curate_aero_dataset(
     report_path = dataset_root / "curation_report.json"
 
     manifest = _read_json_if_exists(manifest_path)
-    df = _load_csv(aero_dataset_csv)
+    df = _ensure_control_alias_columns(_load_csv(aero_dataset_csv))
 
     if GROUP_KEY not in df.columns:
         raise ValueError(f"Missing required grouping column: {GROUP_KEY}")

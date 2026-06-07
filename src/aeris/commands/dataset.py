@@ -31,6 +31,7 @@ from aeris.commands._workflow_recording import record_workflow_stage_success
 from aeris.dataset.aero_dataset_run import run_aero_dataset_generation
 from aeris.dataset.curate_aero import curate_aero_dataset
 from aeris.dataset.control_derivatives import compute_control_derivatives
+from aeris.dataset.flyability_labels import compute_flyability_labels
 from aeris.dataset.dataset_run import run_dataset_generation
 from aeris.dataset.inspect import inspect_dataset
 from aeris.dataset.promote_aero import promote_aero_dataset
@@ -157,6 +158,36 @@ def _print_control_derivatives_report(report: dict) -> None:
         "  differential_elevon: "
         f"present={diff.get('column_present')}, varies={diff.get('varies')}, "
         f"status={diff.get('status')}"
+    )
+    typer.echo(f"  output_csv: {report.get('output_csv')}")
+    typer.echo(f"  output_report: {report.get('output_report')}")
+
+
+
+def _print_flyability_labels_report(report: dict) -> None:
+    """Pretty-print the first-order trim/control/flyability label report."""
+    typer.echo("")
+    typer.echo("[AERIS] Flyability label generation completed")
+    typer.echo(f"  dataset_root: {report.get('dataset_root')}")
+    typer.echo(f"  source: {report.get('source')}")
+    typer.echo(f"  control_column: {report.get('control_column')}")
+    typer.echo(f"  used_legacy_control_alias: {report.get('used_legacy_control_alias')}")
+    typer.echo(f"  label_row_count: {report.get('label_row_count')}")
+    typer.echo(f"  computed_label_count: {report.get('computed_label_count')}")
+    typer.echo(f"  skipped_label_count: {report.get('skipped_label_count')}")
+
+    counts = report.get("longitudinal_basic_flyable_counts", {}) or {}
+    if counts:
+        typer.echo("  longitudinal_basic_flyable_counts:")
+        for key, count in sorted(counts.items()):
+            typer.echo(f"    - {key}: {count}")
+
+    thresholds = report.get("thresholds", {}) or {}
+    typer.echo(
+        "  thresholds: "
+        f"|Cm_delta_e|>={thresholds.get('min_abs_Cm_delta_e_per_rad')}, "
+        f"|trim_delta_e|<={thresholds.get('max_abs_trim_delta_e_deg')} deg, "
+        f"alpha=[{thresholds.get('alpha_min_deg')}, {thresholds.get('alpha_max_deg')}] deg"
     )
     typer.echo(f"  output_csv: {report.get('output_csv')}")
     typer.echo(f"  output_report: {report.get('output_report')}")
@@ -1082,6 +1113,100 @@ def dataset_compute_control_derivatives(
         return
 
     _print_control_derivatives_report(report)
+
+@dataset_app.command("compute-flyability-labels")
+def dataset_compute_flyability_labels(
+    dataset: Path = typer.Option(
+        ...,
+        "--dataset",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to an existing unified aero dataset root.",
+    ),
+    source: str = typer.Option(
+        "auto",
+        "--source",
+        help="Input aero CSV policy: auto uses curated_aero_dataset.csv if present, otherwise aero_dataset.csv. Options: auto, curated, raw.",
+    ),
+    control_column: str | None = typer.Option(
+        None,
+        "--control-column",
+        help="Control column used to identify the zero-control trim reference. Defaults to delta_e_sym_deg, falling back to legacy control_input_deg.",
+    ),
+    control_derivatives_csv: Path | None = typer.Option(
+        None,
+        "--control-derivatives-csv",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Optional path to control_derivatives.csv. Defaults to <dataset>/control_derivatives.csv.",
+    ),
+    group_columns: str | None = typer.Option(
+        None,
+        "--group-columns",
+        help="Optional comma-separated condition grouping columns. Default matches control-derivative grouping columns when present.",
+    ),
+    cm_column: str = typer.Option(
+        "cm",
+        "--cm-column",
+        help="Pitching-moment coefficient column used for trim labels.",
+    ),
+    max_abs_trim_delta_e_deg: float = typer.Option(
+        25.0,
+        "--max-abs-trim-delta-e-deg",
+        help="Symmetric elevon deflection limit used for alpha-fixed trim feasibility.",
+    ),
+    min_abs_cm_delta_e: float = typer.Option(
+        0.10,
+        "--min-abs-cm-delta-e",
+        help="Pitch-authority threshold for |Cm_delta_e_per_rad|.",
+    ),
+    alpha_min_deg: float = typer.Option(
+        -5.0,
+        "--alpha-min-deg",
+        help="Optional lower alpha bound for control-fixed alpha-trim feasibility when Cma is available.",
+    ),
+    alpha_max_deg: float = typer.Option(
+        15.0,
+        "--alpha-max-deg",
+        help="Optional upper alpha bound for control-fixed alpha-trim feasibility when Cma is available.",
+    ),
+    as_json: bool = typer.Option(
+        False,
+        "--json",
+        help="Print the full flyability-label report as JSON.",
+    ),
+) -> None:
+    """Generate first-order trim/control/flyability labels from aero rows and D2 derivatives."""
+    parsed_group_columns = None if group_columns is None else parse_csv_list(group_columns, "--group-columns")
+
+    try:
+        report = compute_flyability_labels(
+            dataset_root=dataset,
+            source=source,
+            control_column=control_column,
+            control_derivatives_csv=control_derivatives_csv,
+            group_columns=parsed_group_columns,
+            cm_column=cm_column,
+            max_abs_trim_delta_e_deg=max_abs_trim_delta_e_deg,
+            min_abs_cm_delta_e=min_abs_cm_delta_e,
+            alpha_min_deg=alpha_min_deg,
+            alpha_max_deg=alpha_max_deg,
+        )
+    except Exception as exc:
+        fail_command("Dataset compute-flyability-labels", exc)
+
+    if as_json:
+        typer.echo(json.dumps(report, indent=2))
+        return
+
+    _print_flyability_labels_report(report)
+
 
 @dataset_app.command("inspect")
 def dataset_inspect(

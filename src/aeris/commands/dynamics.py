@@ -37,6 +37,8 @@ from aeris.dynamics.state_space_run import (
     read_state_space_result,
     write_state_space_result,
 )
+
+from aeris.dynamics.state_space_plots import render_state_space_plots
 from aeris.dynamics.trim import estimate_longitudinal_trim, write_trim_result
 
 
@@ -443,6 +445,48 @@ def dynamics_state_space_inspect(
         for item in missing:
             typer.echo(f"  - {item}")
     typer.echo("\n====================================\n")
+
+
+@dynamics_app.command("plot-state-space")
+def dynamics_plot_state_space(
+    run_dir: Path = typer.Option(..., exists=True, file_okay=False, dir_okay=True, resolve_path=True, help="Run directory containing dynamics/state_space_result.json"),
+    plot: str = typer.Option("all", "--plot", help="Plot to generate: all, eigenvalues, or mode-summary."),
+    output_dir: Path | None = typer.Option(None, file_okay=False, dir_okay=True, resolve_path=True, help="Optional output directory. Defaults to <run_dir>/dynamics/plots."),
+    dpi: int = typer.Option(180, "--dpi", min=72, max=600, help="PNG resolution."),
+    json_output: bool = typer.Option(False, "--json", help="Print the plot manifest JSON."),
+) -> None:
+    """Generate static PNG evidence plots from a saved state-space result."""
+    try:
+        manifest = render_state_space_plots(
+            run_dir=run_dir,
+            plot=plot,
+            output_dir=output_dir,
+            dpi=dpi,
+        )
+    except Exception as exc:
+        fail_command("Dynamics plot-state-space", exc)
+
+    if json_output:
+        typer.echo(json.dumps(manifest, indent=2))
+        return
+
+    typer.echo("[AERIS] State-space plots generated")
+    typer.echo(f"  run_dir: {run_dir}")
+    typer.echo(f"  requested_plot: {manifest.get('requested_plot')}")
+    typer.echo(f"  plot_count: {manifest.get('plot_count')}")
+    stability_summary = manifest.get("linear_stability_summary") or {}
+    if stability_summary:
+        typer.echo(
+            "  linear_stability: "
+            f"stable={stability_summary.get('overall_linear_stable')}, "
+            f"unstable_eigenvalues={stability_summary.get('total_unstable_eigenvalue_count')}, "
+            f"max_real={_fmt(stability_summary.get('max_real_eigenvalue'))}"
+        )
+    artifacts = manifest.get("artifacts", {}) or {}
+    for label, path in artifacts.items():
+        if path:
+            typer.echo(f"  {label}: {path}")
+    typer.echo(f"  manifest: {manifest.get('manifest_path')}")
 
 
 @dynamics_app.command("inspect")

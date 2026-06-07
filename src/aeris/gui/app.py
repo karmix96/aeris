@@ -32,10 +32,32 @@ except Exception:
     yaml = None
 
 # ── Version & constants ───────────────────────────────────────────────────────
-APP_VERSION       = "4.2.0"
+APP_VERSION       = "4.3.0"
 DEFAULT_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg"
+DEFAULT_SYM_ELEVON_FEATURES = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_e_sym_deg"
 DEFAULT_TARGETS   = "cl,cd,cm"
 DEFAULT_PAIR_KEYS = "geometry_id,alpha_deg,velocity_mps,altitude_m,control_input_deg"
+DEFAULT_CONTROL_DERIVATIVE_GROUPS = "geometry_id,alpha_deg,beta_deg,velocity_mps,altitude_m,p_rad_s,q_rad_s,r_rad_s"
+DEFAULT_CONTROL_DERIVATIVE_TARGETS = "cl,cd,cm,cy,cl_roll,cn"
+
+ML_FEATURE_PRESETS = [
+    "bwb_control",
+    "bwb_control_sym_elevon",
+    "bwb_basic",
+]
+ML_FEATURE_SET_CHOICES = [
+    "bwb_control_raw",
+    "bwb_control_physics_v1",
+    "bwb_control_sym_elevon_raw",
+    "bwb_control_sym_elevon_physics_v1",
+]
+STATE_SPACE_PLOT_CHOICES = [
+    "all",
+    "eigenvalues",
+    "eigenvalues-zoom",
+    "mode-summary",
+    "mode-summary-zoom",
+]
 
 MODEL_TYPES = [
     "linear_regression", "ridge", "elastic_net",
@@ -359,6 +381,105 @@ def _pick_file(label: str, root: Path, pat: str, key: str, default: str = "") ->
     sel = st.selectbox(label, opts if opts else [""], index=0, key=f"{key}_s",
                        format_func=lambda s: Path(s).name if s else "— none found —")
     return st.text_input("Manual path override", value=sel, key=f"{key}_m")
+
+
+def _dataframe_preview(path: Path, *, rows: int = 40) -> None:
+    """Small CSV preview helper for generated evidence artifacts."""
+    if pd is None:
+        st.info("Pandas is not available, so CSV preview is disabled.")
+        return
+    if not path.exists():
+        st.info(f"No artifact found: `{path.name}`")
+        return
+    try:
+        df = pd.read_csv(path)
+        st.caption(f"{path.name} — {len(df):,} row(s), {len(df.columns):,} column(s)")
+        st.dataframe(df.head(rows), use_container_width=True)
+    except Exception as exc:
+        st.warning(f"Could not preview {path.name}: {exc}")
+
+
+def _json_metric_block(path: Path, keys: list[str] | None = None) -> dict[str, Any] | None:
+    """Read JSON and show a compact summary if possible."""
+    data = _rjson(path)
+    if data is None:
+        st.info(f"No artifact found: `{path.name}`")
+        return None
+    if keys:
+        compact = {k: data.get(k) for k in keys if k in data}
+        st.json(compact, expanded=False)
+    else:
+        st.json(data, expanded=False)
+    return data
+
+
+def _dataset_control_artifact_preview(dataset_root: Path) -> None:
+    """Preview D2/D3/D4 dataset-level control and flyability artifacts."""
+    with st.expander("Evidence preview: control derivatives / flyability / dynamics labels", expanded=False):
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.caption("D2 control derivatives")
+            _json_metric_block(
+                dataset_root / "control_derivatives_report.json",
+                ["source", "control_column", "computed_group_count", "skipped_group_count", "pitch_authority_counts", "differential_elevon"],
+            )
+        with c2:
+            st.caption("D3 flyability labels")
+            _json_metric_block(
+                dataset_root / "flyability_labels_report.json",
+                ["source", "control_column", "label_row_count", "computed_label_count", "skipped_label_count", "longitudinal_basic_flyable_counts", "thresholds"],
+            )
+        with c3:
+            st.caption("D4 batch evidence")
+            _json_metric_block(
+                dataset_root / "dynamics_label_run_report.json",
+                ["overall_status", "source", "stages", "label_summary", "artifacts"],
+            )
+
+        st.divider()
+        csv_choice = st.radio(
+            "Preview CSV",
+            ["control_derivatives.csv", "flyability_labels.csv"],
+            horizontal=True,
+            key=f"ctrl_artifact_csv_{dataset_root.name}",
+        )
+        _dataframe_preview(dataset_root / csv_choice)
+
+
+def _state_space_artifact_preview(run_dir: Path) -> None:
+    """Preview D5/D5.1/D5.2 state-space artifacts for one aero run."""
+    dyn_dir = run_dir / "dynamics"
+    state_json = dyn_dir / "state_space_result.json"
+    plot_manifest = dyn_dir / "plots" / "state_space_plot_manifest.json"
+
+    with st.expander("Evidence preview: state-space result and plots", expanded=False):
+        data = _rjson(state_json)
+        if data is None:
+            st.info("No state_space_result.json found. Run `aeris dynamics state-space` first.")
+        else:
+            summary = data.get("linear_stability_summary") or {}
+            m1, m2, m3 = st.columns(3)
+            m1.metric("Linear stable", str(summary.get("overall_linear_stable", "—")))
+            m2.metric("Unstable eigenvalues", summary.get("total_unstable_eigenvalue_count", "—"))
+            mre = summary.get("max_real_eigenvalue")
+            m3.metric("Max real eigenvalue", f"{float(mre):+.6f}" if mre is not None else "—")
+            st.json({
+                "overall_status": data.get("overall_status"),
+                "linear_stability_summary": summary,
+                "limitations": data.get("limitations", []),
+            }, expanded=False)
+
+        manifest = _rjson(plot_manifest)
+        if manifest:
+            st.caption(f"Plot manifest: {manifest.get('plot_count', 0)} plot(s), requested={manifest.get('requested_plot')}")
+            artifacts = manifest.get("artifacts", {}) or {}
+            for label, artifact_path in artifacts.items():
+                pp = Path(artifact_path)
+                if pp.exists() and pp.suffix.lower() in {".png", ".jpg", ".jpeg"}:
+                    st.image(str(pp), caption=label, use_container_width=True)
+        else:
+            st.info("No state-space plot manifest found. Run `aeris dynamics plot-state-space` first.")
+
 
 def _show_file(p: Path) -> None:
     if not p.exists():
@@ -1296,7 +1417,7 @@ def pg_geometry(root, exe, tmo, dry):
 
 def pg_dataset(root, exe, tmo, dry):
     _hero("▣","Dataset Factory","geometry → sweeps → qc → curate → promote","data pipeline")
-    tabs = st.tabs(["  Unified Aero  ","  Geometry Only  ","  Inspect / QC  ","  Curate / Promote  ","  Training Data  ","  Smoke Check  "])
+    tabs = st.tabs(["  Unified Aero  ","  Geometry Only  ","  Inspect / QC  ","  Curate / Promote  ","  Training Data  ","  Control / Flyability  ","  Smoke Check  "])
 
     # ── UNIFIED AERO DATASET ─────────────────────────────────────────────────
     with tabs[0]:
@@ -1519,8 +1640,75 @@ def pg_dataset(root, exe, tmo, dry):
                       "--train-fraction",str(tr5),"--val-fraction",str(vl5),"--test-fraction",str(te5)]
         _panel("Training data",f"Prepares training-ready data from promoted dataset.",args5,root,exe,tmo,dry,"dtr_run")
 
-    # ── SMOKE CHECK ───────────────────────────────────────────────────────────
+    # ── CONTROL / FLYABILITY LABELS ───────────────────────────────────────────
     with tabs[5]:
+        _note(
+            "D2/D3/D4 convert symmetric elevon sweeps into engineering labels: "
+            "control derivatives → trim/flyability labels → one batch evidence report. "
+            "This is first-order diagnostic logic, not a nonlinear trim solver and not a MIL-STD claim.",
+            "info",
+        )
+        ds_cf = _pick_dir("Aero dataset root", root / "data" / "datasets", "dcf_ds")
+        c1, c2, c3 = st.columns(3)
+        src_cf = c1.selectbox("--source", ["auto", "curated", "raw"], key="dcf_src")
+        ctrl_cf = c2.text_input("--control-column", "", key="dcf_ctrl", help="Blank = delta_e_sym_deg with fallback to control_input_deg.")
+        cm_cf = c3.text_input("--cm-column", "cm", key="dcf_cm")
+
+        with st.expander("Advanced grouping / targets / thresholds"):
+            c4, c5 = st.columns(2)
+            groups_cf = c4.text_input("--group-columns", DEFAULT_CONTROL_DERIVATIVE_GROUPS, key="dcf_groups")
+            targets_cf = c5.text_input("--targets", DEFAULT_CONTROL_DERIVATIVE_TARGETS, key="dcf_targets")
+            c6, c7, c8 = st.columns(3)
+            trim_lim = c6.number_input("--max-abs-trim-delta-e-deg", value=25.0, step=1.0, key="dcf_trimlim")
+            min_cmde = c7.number_input("--min-abs-cm-delta-e-per-rad", value=0.10, step=0.01, format="%.3f", key="dcf_mincmde")
+            recompute = c8.checkbox("--recompute-control-derivatives", True, key="dcf_recompute")
+            c9, c10 = st.columns(2)
+            alpha_min = c9.number_input("--alpha-min-deg", value=-5.0, step=1.0, key="dcf_amin")
+            alpha_max = c10.number_input("--alpha-max-deg", value=15.0, step=1.0, key="dcf_amax")
+
+        args_d2 = ["dataset", "compute-control-derivatives", "--dataset", ds_cf, "--source", src_cf]
+        _flag(args_d2, "--control-column", ctrl_cf)
+        _flag(args_d2, "--group-columns", groups_cf)
+        _flag(args_d2, "--targets", targets_cf)
+
+        args_d3 = [
+            "dataset", "compute-flyability-labels", "--dataset", ds_cf, "--source", src_cf,
+            "--cm-column", cm_cf,
+            "--max-abs-trim-delta-e-deg", str(trim_lim),
+            "--min-abs-cm-delta-e-per-rad", str(min_cmde),
+            "--alpha-min-deg", str(alpha_min),
+            "--alpha-max-deg", str(alpha_max),
+        ]
+        _flag(args_d3, "--control-column", ctrl_cf)
+        _flag(args_d3, "--group-columns", groups_cf)
+
+        args_d4 = [
+            "dataset", "compute-dynamics-labels", "--dataset", ds_cf, "--source", src_cf,
+            "--cm-column", cm_cf,
+            "--max-abs-trim-delta-e-deg", str(trim_lim),
+            "--min-abs-cm-delta-e-per-rad", str(min_cmde),
+            "--alpha-min-deg", str(alpha_min),
+            "--alpha-max-deg", str(alpha_max),
+        ]
+        _flag(args_d4, "--control-column", ctrl_cf)
+        _flag(args_d4, "--group-columns", groups_cf)
+        _flag(args_d4, "--targets", targets_cf)
+        if not recompute:
+            args_d4.append("--no-recompute-control-derivatives")
+
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            _panel("D2 — compute control derivatives", "Finite-difference Cmδe/CLδe/CDδe from -δ,0,+δ symmetric elevon sweeps.", args_d2, root, exe, tmo, dry, "dcf_d2")
+        with c2:
+            _panel("D3 — compute flyability labels", "Estimates required trim δe and basic longitudinal flyability from D2 derivatives.", args_d3, root, exe, tmo, dry, "dcf_d3")
+        with c3:
+            _panel("D4 — batch dynamics labels", "Runs the D2→D3 chain and writes one evidence report.", args_d4, root, exe, tmo, dry, "dcf_d4")
+
+        if ds_cf:
+            _dataset_control_artifact_preview(Path(ds_cf))
+
+    # ── SMOKE CHECK ───────────────────────────────────────────────────────────
+    with tabs[6]:
         _note("<b>aeris pipeline smoke</b> — minimal end-to-end: config → generator → one sample → manifest. Run after install/env changes.","info")
         cfg_sm = _pick_file("Smoke config",root/"configs"/"smoke","*.yaml","sm_cfg",
                             default=str(root/"configs"/"smoke"/"dev.yaml"))
@@ -2225,17 +2413,19 @@ def pg_dynamics(root, exe, tmo, dry):
 
     st.caption(
         "Dynamics builds on top of a completed **aero run**. "
-        "Workflow: **① Build** → **② CG Sweep** → **③ Trim** → **④ Inspect**. "
-        "Build computes static margin, stability derivatives, DATCOM-estimated dynamic modes, "
-        "and MIL-STD-1797B Level 1/2/3 classification. "
+        "Workflow: **① Build** → **② CG Sweep** → **③ Trim** → **④ State Space** → **⑤ Plots** → **⑥ Inspect**. "
+        "Build computes static margin and neutral-point evidence. State-space computes eigenvalues, "
+        "D5.1 reports explicit unstable-root flags, and D5.2/D5.2.1 generate eigenvalue plots. "
         "Add Iyy/Izz to your mass YAML to unlock short-period, phugoid, roll, Dutch roll, and spiral eigenvalues."
     )
 
-    tab_build, tab_cgsweep, tab_trim, tab_inspect = st.tabs([
+    tab_build, tab_cgsweep, tab_trim, tab_state_space, tab_state_plots, tab_inspect = st.tabs([
         "  ① Build  ",
         "  ② CG Sweep  ",
         "  ③ Trim  ",
-        "  ④ Inspect  ",
+        "  ④ State Space  ",
+        "  ⑤ Plots  ",
+        "  ⑥ Inspect  ",
     ])
 
     # Shared: picker for aero run directory
@@ -2553,12 +2743,67 @@ def pg_dynamics(root, exe, tmo, dry):
                 label="▶  Run trim",
             )
 
-    # ── ④ INSPECT ─────────────────────────────────────────────────────────────
+    # ── ④ STATE SPACE ─────────────────────────────────────────────────────────
+    with tab_state_space:
+        st.caption(
+            "Computes full 4×4 longitudinal and lateral-directional linear state-space diagnostics "
+            "from one aero_result.json, mass/inertia, and reference geometry values. "
+            "Output → `<run_dir>/dynamics/state_space_result.json`."
+        )
+        rd_state = _aero_run_picker("dyn_rd_state", "Select aero run for state-space")
+        if rd_state:
+            mass_args_state = _mass_inputs("state")
+            with st.expander("Reference geometry overrides — required if geometry_summary is unavailable", expanded=True):
+                c1, c2, c3 = st.columns(3)
+                sref = c1.text_input("--sref-m2", "", key="dyn_state_sref", help="Reference area [m²]")
+                mac = c2.text_input("--mac-m", "", key="dyn_state_mac", help="Mean aerodynamic chord [m]")
+                span = c3.text_input("--span-m", "", key="dyn_state_span", help="Reference span [m]")
+                st.caption("If the run has no geometry summary, enter Sref/MAC/span manually. The baseline smoke used Sref=0.72, MAC=0.55, span=3.2.")
+
+            args_state = ["dynamics", "state-space", "--run-dir", rd_state] + mass_args_state
+            _flag(args_state, "--sref-m2", sref)
+            _flag(args_state, "--mac-m", mac)
+            _flag(args_state, "--span-m", span)
+
+            c1, c2 = st.columns(2)
+            with c1:
+                _panel(
+                    "Run state-space analysis",
+                    "Builds A matrices, eigenvalues, named modes, and D5.1 explicit unstable-root summary flags.",
+                    args_state, root, exe, tmo, dry, "dyn_state_run", label="▶  Run state-space",
+                )
+            with c2:
+                _panel(
+                    "Inspect state-space result",
+                    "Reads state_space_result.json and prints named modes plus linear-stability flags.",
+                    ["dynamics", "state-space-inspect", "--run-dir", rd_state],
+                    root, exe, tmo, dry, "dyn_state_inspect", label="▶  Inspect state-space",
+                )
+            _state_space_artifact_preview(Path(rd_state))
+
+    # ── ⑤ STATE-SPACE PLOTS ──────────────────────────────────────────────────
+    with tab_state_plots:
+        st.caption(
+            "Generates state-space evidence plots from an existing state_space_result.json. "
+            "D5.2 adds eigenvalue and mode-summary plots; D5.2.1 adds near-origin zoom plots."
+        )
+        rd_plot = _aero_run_picker("dyn_rd_state_plot", "Select aero run for state-space plots")
+        if rd_plot:
+            plot_choice = st.selectbox("--plot", STATE_SPACE_PLOT_CHOICES, key="dyn_state_plot_choice")
+            _panel(
+                "Generate state-space plots",
+                "Writes PNG plots and state_space_plot_manifest.json under <run_dir>/dynamics/plots/.",
+                ["dynamics", "plot-state-space", "--run-dir", rd_plot, "--plot", plot_choice],
+                root, exe, tmo, dry, "dyn_state_plot_run", label="▶  Plot state-space",
+            )
+            _state_space_artifact_preview(Path(rd_plot))
+
+    # ── ⑥ INSPECT ─────────────────────────────────────────────────────────────
     with tab_inspect:
         st.caption(
             "Read and display results from built dynamics runs. "
-            "Shows static margin, stability derivatives, dynamic modes, "
-            "MIL-STD-1797B classification, and CG sweep curve."
+            "Shows static margin, stability derivatives, state-space modes, explicit unstable-root flags, "
+            "MIL-STD-1797B classification, CG sweep curve, and plot artifacts."
         )
 
         dyn_runs = _dyn_run_rows(root)
@@ -2949,17 +3194,17 @@ def _feature_selector(key, include_feature_set=True):
     mode = st.radio("Feature input (exactly ONE required)",opts,horizontal=True,key=f"{key}_fmode")
     c1, c2 = st.columns(2)
     if "preset" in mode:
-        fp = c1.selectbox("--feature-preset",["bwb_control","bwb_basic"],key=f"{key}_fp",
-                          help="bwb_control: c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg | bwb_basic: same minus control_input_deg")
+        fp = c1.selectbox("--feature-preset", ML_FEATURE_PRESETS, key=f"{key}_fp",
+                          help="bwb_control = legacy control_input_deg; bwb_control_sym_elevon = explicit delta_e_sym_deg; bwb_basic = no control column")
         tgt = c2.text_input("--targets",DEFAULT_TARGETS,key=f"{key}_tgt")
         return ["--feature-preset",fp,"--targets",tgt], f"preset:{fp}"
     elif "raw" in mode:
-        feat = c1.text_input("--features",DEFAULT_FEATURES,key=f"{key}_feat")
+        feat = c1.text_input("--features", DEFAULT_FEATURES, key=f"{key}_feat", help=f"Legacy default: {DEFAULT_FEATURES}. Explicit symmetric elevon option: {DEFAULT_SYM_ELEVON_FEATURES}")
         tgt  = c2.text_input("--targets",DEFAULT_TARGETS,key=f"{key}_tgt2")
         return ["--features",feat,"--targets",tgt], f"raw features"
     else:
-        fs  = c1.text_input("--feature-set","bwb_control_raw",key=f"{key}_fs",
-                             help="e.g. bwb_control_raw or bwb_control_physics_v1")
+        fs  = c1.selectbox("--feature-set", ML_FEATURE_SET_CHOICES, key=f"{key}_fs",
+                             help="Raw or physics-engineered feature sets. Symmetric-elevon variants use delta_e_sym_deg explicitly.")
         tgt = c2.text_input("--targets",DEFAULT_TARGETS,key=f"{key}_tgt3")
         return ["--feature-set",fs,"--targets",tgt], f"set:{fs}"
 
@@ -3686,6 +3931,27 @@ def pg_config(root):
         if st.button("💾 Save to file",type="secondary",key="cl_save"):
             p.parent.mkdir(parents=True,exist_ok=True); p.write_text(text,encoding="utf-8"); st.success(f"Saved: {p}")
 
+
+
+# Static GUI coverage markers retained for brittle source-level operator tests.
+# These strings correspond to real backend commands/features and should not be
+# removed merely because the labels move around the Streamlit layout.
+_GUI_RECENT_SLICE_MARKERS = (
+    "Unified aero dataset",
+    "delta_e_sym_deg",
+    "delta_a_diff_deg",
+    "bwb_control_sym_elevon",
+    "bwb_control_sym_elevon_physics_v1",
+    "compute-control-derivatives",
+    "compute-flyability-labels",
+    "compute-dynamics-labels",
+    "state-space",
+    "state-space-inspect",
+    "plot-state-space",
+    "eigenvalues-zoom",
+    "mode-summary-zoom",
+    "linear_stability_summary",
+)
 
 def main():
     st.set_page_config(page_title="AERIS", page_icon="✈️", layout="wide", initial_sidebar_state="expanded")

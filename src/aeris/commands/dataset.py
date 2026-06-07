@@ -32,6 +32,7 @@ from aeris.dataset.aero_dataset_run import run_aero_dataset_generation
 from aeris.dataset.curate_aero import curate_aero_dataset
 from aeris.dataset.control_derivatives import compute_control_derivatives
 from aeris.dataset.flyability_labels import compute_flyability_labels
+from aeris.dataset.dynamics_labels import compute_dynamics_labels
 from aeris.dataset.dataset_run import run_dataset_generation
 from aeris.dataset.inspect import inspect_dataset
 from aeris.dataset.promote_aero import promote_aero_dataset
@@ -191,6 +192,42 @@ def _print_flyability_labels_report(report: dict) -> None:
     )
     typer.echo(f"  output_csv: {report.get('output_csv')}")
     typer.echo(f"  output_report: {report.get('output_report')}")
+
+
+def _print_dynamics_labels_report(report: dict) -> None:
+    """Pretty-print the D4 dynamics/flyability batch report."""
+    typer.echo("")
+    typer.echo("[AERIS] Dynamics label batch completed")
+    typer.echo(f"  dataset_root: {report.get('dataset_root')}")
+    typer.echo(f"  source: {report.get('source')}")
+    typer.echo(f"  overall_status: {report.get('overall_status')}")
+
+    stages = report.get("stages", {}) or {}
+    control = stages.get("control_derivatives", {}) or {}
+    typer.echo("  control_derivatives:")
+    typer.echo(f"    mode: {control.get('mode')}")
+    typer.echo(f"    computed_group_count: {control.get('computed_group_count')}")
+    typer.echo(f"    skipped_group_count: {control.get('skipped_group_count')}")
+    typer.echo(f"    control_column: {control.get('control_column')}")
+
+    flyability = stages.get("flyability_labels", {}) or {}
+    typer.echo("  flyability_labels:")
+    typer.echo(f"    computed_label_count: {flyability.get('computed_label_count')}")
+    typer.echo(f"    skipped_label_count: {flyability.get('skipped_label_count')}")
+
+    summary = report.get("label_summary", {}) or {}
+    typer.echo("  label_summary:")
+    typer.echo(
+        f"    longitudinal_basic_flyable: "
+        f"true={summary.get('longitudinal_basic_flyable_true_count')}, "
+        f"false={summary.get('longitudinal_basic_flyable_false_count')}, "
+        f"unknown={summary.get('longitudinal_basic_flyable_unknown_count')}"
+    )
+    typer.echo(f"    red_flag_count: {summary.get('red_flag_count')}")
+
+    artifacts = report.get("artifacts", {}) or {}
+    typer.echo(f"  output_csv: {artifacts.get('flyability_labels_csv')}")
+    typer.echo(f"  output_report: {artifacts.get('dynamics_label_run_report_json')}")
 
 def _print_promotion_manifest(manifest: dict) -> None:
     """Pretty-print a promotion manifest to the terminal."""
@@ -1206,6 +1243,103 @@ def dataset_compute_flyability_labels(
         return
 
     _print_flyability_labels_report(report)
+
+
+
+@dataset_app.command("compute-dynamics-labels")
+def dataset_compute_dynamics_labels(
+    dataset: Path = typer.Option(
+        ...,
+        "--dataset",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to an existing unified aero dataset root.",
+    ),
+    source: str = typer.Option(
+        "auto",
+        "--source",
+        help="Input aero CSV policy passed to D2/D3. Options: auto, curated, raw.",
+    ),
+    control_column: str | None = typer.Option(
+        None,
+        "--control-column",
+        help="Control column for symmetric-elevon labels. Defaults to delta_e_sym_deg, falling back to control_input_deg.",
+    ),
+    group_columns: str | None = typer.Option(
+        None,
+        "--group-columns",
+        help="Optional comma-separated condition grouping columns shared by D2/D3.",
+    ),
+    targets: str | None = typer.Option(
+        None,
+        "--targets",
+        help="Optional comma-separated target columns for D2 derivative computation.",
+    ),
+    cm_column: str = typer.Option(
+        "cm",
+        "--cm-column",
+        help="Pitching-moment coefficient column used for trim labels.",
+    ),
+    recompute_control_derivatives: bool = typer.Option(
+        True,
+        "--recompute-control-derivatives/--no-recompute-control-derivatives",
+        help="Recompute D2 control derivatives before D3 labels, or reuse existing control_derivatives.csv.",
+    ),
+    max_abs_trim_delta_e_deg: float = typer.Option(
+        25.0,
+        "--max-abs-trim-delta-e-deg",
+        help="Symmetric elevon deflection limit used for first-order trim feasibility.",
+    ),
+    min_abs_cm_delta_e: float = typer.Option(
+        0.10,
+        "--min-abs-cm-delta-e",
+        help="Pitch-authority threshold for |Cm_delta_e_per_rad|.",
+    ),
+    alpha_min_deg: float = typer.Option(
+        -5.0,
+        "--alpha-min-deg",
+        help="Lower alpha bound for optional alpha-trim feasibility when Cma is available.",
+    ),
+    alpha_max_deg: float = typer.Option(
+        15.0,
+        "--alpha-max-deg",
+        help="Upper alpha bound for optional alpha-trim feasibility when Cma is available.",
+    ),
+    as_json: bool = typer.Option(
+        False,
+        "--json",
+        help="Print the full D4 dynamics-label batch report as JSON.",
+    ),
+) -> None:
+    """Run the D2 -> D3 dynamics/flyability label chain and write one batch evidence report."""
+    parsed_group_columns = None if group_columns is None else parse_csv_list(group_columns, "--group-columns")
+    parsed_targets = None if targets is None else parse_csv_list(targets, "--targets")
+
+    try:
+        report = compute_dynamics_labels(
+            dataset_root=dataset,
+            source=source,
+            control_column=control_column,
+            group_columns=parsed_group_columns,
+            target_columns=parsed_targets,
+            cm_column=cm_column,
+            recompute_control_derivatives=recompute_control_derivatives,
+            max_abs_trim_delta_e_deg=max_abs_trim_delta_e_deg,
+            min_abs_cm_delta_e=min_abs_cm_delta_e,
+            alpha_min_deg=alpha_min_deg,
+            alpha_max_deg=alpha_max_deg,
+        )
+    except Exception as exc:
+        fail_command("Dataset compute-dynamics-labels", exc)
+
+    if as_json:
+        typer.echo(json.dumps(report, indent=2))
+        return
+
+    _print_dynamics_labels_report(report)
 
 
 @dataset_app.command("inspect")

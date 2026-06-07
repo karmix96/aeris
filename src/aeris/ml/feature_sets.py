@@ -80,11 +80,34 @@ BWB_CONTROL_RAW_COLUMNS: tuple[str, ...] = (
 )
 
 
+BWB_CONTROL_SYM_ELEVON_RAW_COLUMNS: tuple[str, ...] = (
+    "c1_m",
+    "b_total_m",
+    "sw1_deg",
+    "alpha_deg",
+    "velocity_mps",
+    "altitude_m",
+    "delta_e_sym_deg",
+)
+
+
 BWB_CONTROL_PHYSICS_TRANSFORMS: tuple[str, ...] = (
     "alpha_sq",
     "abs_alpha",
     "control_sq",
     "alpha_x_control",
+    "dynamic_pressure_proxy",
+    "aspect_ratio_proxy",
+    "sweep_alpha_interaction",
+    "re_number",
+)
+
+
+BWB_CONTROL_SYM_ELEVON_PHYSICS_TRANSFORMS: tuple[str, ...] = (
+    "alpha_sq",
+    "abs_alpha",
+    "delta_e_sym_sq",
+    "alpha_x_delta_e_sym",
     "dynamic_pressure_proxy",
     "aspect_ratio_proxy",
     "sweep_alpha_interaction",
@@ -130,11 +153,40 @@ _FEATURE_SETS: dict[str, FeatureSet] = {
         engineered_columns=_transform_output_columns(BWB_CONTROL_PHYSICS_TRANSFORMS),
         transforms=BWB_CONTROL_PHYSICS_TRANSFORMS,
         description=(
-            "Physics-informed BWB control feature set using explicit, auditable "
-            "feature-engineering transforms. It is validation-ready now; full "
-            "train/compare/tune integration belongs in a later slice."
+            "Backward-compatible physics-informed BWB control feature set using "
+            "the legacy control_input_deg column. Keep this for old datasets and "
+            "existing model runs; prefer bwb_control_sym_elevon_physics_v1 for "
+            "new D1b.2+ datasets."
         ),
-        tags=("bwb", "control", "physics", "tabular", "engineered"),
+        tags=("bwb", "control", "legacy-control", "physics", "tabular", "engineered"),
+    ),
+    "bwb_control_sym_elevon_raw": FeatureSet(
+        name="bwb_control_sym_elevon_raw",
+        domain="bwb_scalar_aero",
+        generator_id="bwb_segmented_v1",
+        raw_columns=BWB_CONTROL_SYM_ELEVON_RAW_COLUMNS,
+        engineered_columns=(),
+        transforms=(),
+        description=(
+            "Raw BWB control feature set using explicit symmetric-elevon naming. "
+            "This is the preferred raw feature set for new D1b.2+ datasets. "
+            "It uses delta_e_sym_deg instead of the legacy control_input_deg alias."
+        ),
+        tags=("bwb", "control", "symmetric-elevon", "raw", "tabular"),
+    ),
+    "bwb_control_sym_elevon_physics_v1": FeatureSet(
+        name="bwb_control_sym_elevon_physics_v1",
+        domain="bwb_scalar_aero",
+        generator_id="bwb_segmented_v1",
+        raw_columns=BWB_CONTROL_SYM_ELEVON_RAW_COLUMNS,
+        engineered_columns=_transform_output_columns(BWB_CONTROL_SYM_ELEVON_PHYSICS_TRANSFORMS),
+        transforms=BWB_CONTROL_SYM_ELEVON_PHYSICS_TRANSFORMS,
+        description=(
+            "Physics-informed BWB control feature set using explicit symmetric-"
+            "elevon naming. It derives nonlinear and interaction terms from "
+            "delta_e_sym_deg, not from the legacy control_input_deg alias."
+        ),
+        tags=("bwb", "control", "symmetric-elevon", "physics", "tabular", "engineered"),
     ),
 }
 

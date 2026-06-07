@@ -39,10 +39,13 @@ class FeaturePreset:
 # schemas are produced by real AERIS pipelines.
 #
 # Important:
-# - bwb_control is the raw/current BWB control preset.
-# - It intentionally does NOT include re_number. Reynolds/Mach/dynamic-pressure
-#   style columns belong in the feature-engineering layer, where they will
-#   be created explicitly and recorded in a feature manifest.
+# - bwb_control is the backward-compatible raw/current BWB control preset
+#   using the legacy control_input_deg column.
+# - bwb_control_sym_elevon is the explicit symmetric-elevon preset using
+#   delta_e_sym_deg. Prefer it for new datasets generated after D1b.2.
+# - These presets intentionally do NOT include re_number. Reynolds/Mach/
+#   dynamic-pressure style columns belong in the feature-engineering layer,
+#   where they will be created explicitly and recorded in a feature manifest.
 _FEATURE_PRESETS: dict[str, FeaturePreset] = {
     "bwb_basic": FeaturePreset(
         name="bwb_basic",
@@ -73,10 +76,30 @@ _FEATURE_PRESETS: dict[str, FeaturePreset] = {
             "control_input_deg",
         ),
         description=(
-            "Current default BWB scalar-aero feature set including control input. "
-            "Use for CL/CD/Cm surrogate smoke and baseline experiments. "
-            "This is a raw-data preset; engineered Reynolds/Mach/qbar features "
-            "belong in explicit feature-engineering feature sets."
+            "Backward-compatible BWB scalar-aero feature preset including the "
+            "legacy control_input_deg column. Keep this for old datasets, old "
+            "model runs, and smoke/regression tests. Prefer "
+            "bwb_control_sym_elevon for new D1b.2+ datasets."
+        ),
+    ),
+    "bwb_control_sym_elevon": FeaturePreset(
+        name="bwb_control_sym_elevon",
+        domain="bwb_scalar_aero",
+        columns=(
+            "c1_m",
+            "b_total_m",
+            "sw1_deg",
+            "alpha_deg",
+            "velocity_mps",
+            "altitude_m",
+            "delta_e_sym_deg",
+        ),
+        description=(
+            "Explicit symmetric-elevon BWB scalar-aero feature preset. This is "
+            "the preferred raw control naming for new datasets: "
+            "delta_e_sym_deg means symmetric elevon deflection; "
+            "delta_a_diff_deg remains reserved until differential-elevon solver "
+            "wiring exists."
         ),
     ),
 }

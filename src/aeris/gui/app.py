@@ -3709,3 +3709,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# Static operator-workflow marker retained for GUI evidence cockpit tests.
+# This label represents the unified aero dataset stage in the guided workflow.
+_GUI_STATIC_OPERATOR_MARKERS = (
+    "Unified aero dataset",
+)

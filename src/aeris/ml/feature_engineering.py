@@ -72,6 +72,24 @@ def _add_alpha_x_control(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+def _add_delta_e_sym_sq(df: pd.DataFrame) -> pd.DataFrame:
+    """delta_e_sym_deg² — explicit symmetric-elevon nonlinear deflection term."""
+    if "delta_e_sym_deg" not in df.columns:
+        return df
+    out = df.copy()
+    out["delta_e_sym_deg_sq"] = df["delta_e_sym_deg"] ** 2
+    return out
+
+
+def _add_alpha_x_delta_e_sym(df: pd.DataFrame) -> pd.DataFrame:
+    """alpha_deg × delta_e_sym_deg — explicit symmetric-elevon/AoA interaction."""
+    if "alpha_deg" not in df.columns or "delta_e_sym_deg" not in df.columns:
+        return df
+    out = df.copy()
+    out["alpha_x_delta_e_sym"] = df["alpha_deg"] * df["delta_e_sym_deg"]
+    return out
+
+
 def _add_dynamic_pressure_proxy(df: pd.DataFrame) -> pd.DataFrame:
     """velocity_mps² — proportional to dynamic pressure q = ½ρV²; ρ not available."""
     if "velocity_mps" not in df.columns:
@@ -159,9 +177,21 @@ FEATURE_TRANSFORMS: dict[str, FeatureTransform] = {
     ),
     "alpha_x_control": FeatureTransform(
         key="alpha_x_control",
-        description="alpha_deg × control_input_deg — control effectiveness interaction",
+        description="alpha_deg × control_input_deg — legacy control effectiveness interaction",
         output_columns=("alpha_x_control",),
         fn=_add_alpha_x_control,
+    ),
+    "delta_e_sym_sq": FeatureTransform(
+        key="delta_e_sym_sq",
+        description="delta_e_sym_deg² — explicit symmetric-elevon nonlinear deflection term",
+        output_columns=("delta_e_sym_deg_sq",),
+        fn=_add_delta_e_sym_sq,
+    ),
+    "alpha_x_delta_e_sym": FeatureTransform(
+        key="alpha_x_delta_e_sym",
+        description="alpha_deg × delta_e_sym_deg — explicit symmetric-elevon effectiveness interaction",
+        output_columns=("alpha_x_delta_e_sym",),
+        fn=_add_alpha_x_delta_e_sym,
     ),
     "dynamic_pressure_proxy": FeatureTransform(
         key="dynamic_pressure_proxy",

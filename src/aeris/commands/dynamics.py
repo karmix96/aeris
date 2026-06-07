@@ -31,6 +31,12 @@ from aeris.dynamics.cg_sweep import run_cg_sweep, write_cg_sweep, write_cg_sweep
 from aeris.dynamics.config import load_mass_properties_config
 from aeris.dynamics.io import write_dynamics_foundation_result
 from aeris.dynamics.models import InertiaPlaceholders, MassProperties, TrimDefinition
+from aeris.dynamics.state_space_run import (
+    compute_state_space_result,
+    find_state_space_result,
+    read_state_space_result,
+    write_state_space_result,
+)
 from aeris.dynamics.trim import estimate_longitudinal_trim, write_trim_result
 
 
@@ -263,6 +269,163 @@ def dynamics_trim(
     typer.echo(f"[AERIS] Cma = {_fmt(result.longitudinal.cma_per_rad)}")
     typer.echo(f"[AERIS] Delta alpha trim = {_fmt(result.longitudinal.delta_alpha_deg)} deg")
     typer.echo(f"[AERIS] Estimated trim alpha = {_fmt(result.longitudinal.alpha_trim_deg)} deg")
+
+
+@dynamics_app.command("state-space")
+def dynamics_state_space(
+    run_dir: Path = typer.Option(..., exists=True, file_okay=False, dir_okay=True, resolve_path=True, help="Run directory containing aero_result.json"),
+    mass_config: Path | None = typer.Option(None, exists=True, file_okay=True, dir_okay=False, resolve_path=True, help="Path to mass-properties YAML/JSON config"),
+    mass_kg: float | None = typer.Option(None, help="Aircraft mass [kg]"),
+    x_cg_m: float | None = typer.Option(None, help="CG x [m]; accepted for consistency with other dynamics commands"),
+    y_cg_m: float | None = typer.Option(None, help="CG y [m]"),
+    z_cg_m: float | None = typer.Option(None, help="CG z [m]"),
+    ixx_kg_m2: float | None = typer.Option(None, "--ixx-kg-m2"),
+    iyy_kg_m2: float | None = typer.Option(None, "--iyy-kg-m2"),
+    izz_kg_m2: float | None = typer.Option(None, "--izz-kg-m2"),
+    ixz_kg_m2: float = typer.Option(0.0, "--ixz-kg-m2", help="Optional product of inertia Ixz [kg m^2]"),
+    sref_m2: float | None = typer.Option(None, "--sref-m2", help="Override reference area [m^2] if geometry summary is unavailable"),
+    mac_m: float | None = typer.Option(None, "--mac-m", help="Override mean aerodynamic chord [m] if geometry summary is unavailable"),
+    span_m: float | None = typer.Option(None, "--span-m", help="Override reference span [m] if geometry summary is unavailable"),
+    json_output: bool = typer.Option(False, "--json", help="Print full state-space result JSON"),
+) -> None:
+    """Compute full 4x4 longitudinal/lateral state-space eigenmodes for one aero run."""
+    resolved = _resolve_mass_inputs(
+        mass_config=mass_config,
+        mass_kg=mass_kg,
+        x_cg_m=x_cg_m,
+        y_cg_m=y_cg_m,
+        z_cg_m=z_cg_m,
+        ixx_kg_m2=ixx_kg_m2,
+        iyy_kg_m2=iyy_kg_m2,
+        izz_kg_m2=izz_kg_m2,
+    )
+    missing_mass = [
+        name
+        for name in ("mass_kg", "ixx_kg_m2", "iyy_kg_m2", "izz_kg_m2")
+        if resolved[name] is None
+    ]
+    if missing_mass:
+        typer.echo(
+            "[AERIS] Need mass and principal inertias for state-space analysis: "
+            + ", ".join(missing_mass)
+        )
+        raise typer.Exit(code=1)
+
+    mass = MassProperties(
+        mass_kg=resolved["mass_kg"],
+        x_cg_m=resolved["x_cg_m"] if resolved["x_cg_m"] is not None else 0.0,
+        y_cg_m=resolved["y_cg_m"],
+        z_cg_m=resolved["z_cg_m"],
+        inertia=InertiaPlaceholders(
+            ixx_kg_m2=resolved["ixx_kg_m2"],
+            iyy_kg_m2=resolved["iyy_kg_m2"],
+            izz_kg_m2=resolved["izz_kg_m2"],
+        ),
+    )
+
+    try:
+        result = compute_state_space_result(
+            run_dir=run_dir,
+            mass_properties=mass,
+            sref_m2=sref_m2,
+            mac_m=mac_m,
+            span_m=span_m,
+            ixz_kg_m2=ixz_kg_m2,
+        )
+        output_path = write_state_space_result(result, run_dir / "dynamics")
+    except Exception as exc:
+        fail_command("Dynamics state-space", exc)
+
+    if json_output:
+        typer.echo(json.dumps(result, indent=2))
+        return
+
+    typer.echo("[AERIS] State-space analysis completed")
+    typer.echo(f"  run_dir: {run_dir}")
+    typer.echo(f"  overall_status: {result.get('overall_status')}")
+    typer.echo(f"  output_report: {output_path}")
+
+    longitudinal = result.get("longitudinal", {})
+    lateral = result.get("lateral_directional", {})
+    typer.echo(f"  longitudinal_valid: {longitudinal.get('valid')}")
+    if longitudinal.get("reason"):
+        typer.echo(f"  longitudinal_reason: {longitudinal.get('reason')}")
+    for mode_name in ("short_period", "phugoid"):
+        mode = longitudinal.get(mode_name) or {}
+        if mode:
+            typer.echo(
+                f"  {mode_name}: stable={mode.get('stable')}, "
+                f"zeta={_fmt(mode.get('zeta'))}, omega_n={_fmt(mode.get('omega_n'))}"
+            )
+
+    typer.echo(f"  lateral_valid: {lateral.get('valid')}")
+    if lateral.get("reason"):
+        typer.echo(f"  lateral_reason: {lateral.get('reason')}")
+    for mode_name in ("roll_subsidence", "spiral", "dutch_roll"):
+        mode = lateral.get(mode_name) or {}
+        if mode:
+            typer.echo(
+                f"  {mode_name}: stable={mode.get('stable')}, "
+                f"real={_fmt(mode.get('eigenvalue_real'))}, imag={_fmt(mode.get('eigenvalue_imag'))}"
+            )
+
+    if result.get("overall_status") != "completed":
+        missing = result.get("input_summary", {}).get("missing_inputs", [])
+        if missing:
+            typer.echo("  missing_inputs:")
+            for item in missing:
+                typer.echo(f"    - {item}")
+        raise typer.Exit(code=1)
+
+
+@dynamics_app.command("state-space-inspect")
+def dynamics_state_space_inspect(
+    run_dir: Path = typer.Option(..., exists=True, file_okay=False, dir_okay=True, resolve_path=True, help="Run directory"),
+    json_output: bool = typer.Option(False, "--json", help="Print full state-space result JSON"),
+) -> None:
+    """Inspect state_space_result.json from a previous state-space run."""
+    path = find_state_space_result(run_dir)
+    if path is None:
+        typer.echo("[AERIS] No state_space_result.json found.")
+        raise typer.Exit(code=1)
+    try:
+        data = read_state_space_result(path)
+    except Exception as exc:
+        fail_command("Dynamics state-space-inspect", exc)
+
+    if json_output:
+        typer.echo(json.dumps(data, indent=2))
+        return
+
+    typer.echo("\n=== AERIS State-Space Inspection ===\n")
+    typer.echo(f"Run dir: {run_dir}")
+    typer.echo(f"Status: {data.get('overall_status')}")
+    longitudinal = data.get("longitudinal", {})
+    lateral = data.get("lateral_directional", {})
+    typer.echo(f"Longitudinal valid: {longitudinal.get('valid')}")
+    for mode_name in ("short_period", "phugoid"):
+        mode = longitudinal.get(mode_name) or {}
+        if mode:
+            typer.echo(
+                f"  {mode_name}: stable={mode.get('stable')}, "
+                f"zeta={_fmt(mode.get('zeta'))}, omega_n={_fmt(mode.get('omega_n'))}, "
+                f"real={_fmt(mode.get('eigenvalue_real'))}, imag={_fmt(mode.get('eigenvalue_imag'))}"
+            )
+    typer.echo(f"Lateral valid: {lateral.get('valid')}")
+    for mode_name in ("roll_subsidence", "spiral", "dutch_roll"):
+        mode = lateral.get(mode_name) or {}
+        if mode:
+            typer.echo(
+                f"  {mode_name}: stable={mode.get('stable')}, "
+                f"real={_fmt(mode.get('eigenvalue_real'))}, imag={_fmt(mode.get('eigenvalue_imag'))}, "
+                f"zeta={_fmt(mode.get('zeta'))}"
+            )
+    missing = data.get("input_summary", {}).get("missing_inputs", [])
+    if missing:
+        typer.echo("Missing inputs:")
+        for item in missing:
+            typer.echo(f"  - {item}")
+    typer.echo("\n====================================\n")
 
 
 @dynamics_app.command("inspect")

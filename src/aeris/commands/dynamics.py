@@ -345,6 +345,15 @@ def dynamics_state_space(
     typer.echo(f"  overall_status: {result.get('overall_status')}")
     typer.echo(f"  output_report: {output_path}")
 
+    stability_summary = result.get("linear_stability_summary", {}) or {}
+    if stability_summary:
+        typer.echo(
+            "  linear_stability: "
+            f"stable={stability_summary.get('overall_linear_stable')}, "
+            f"unstable_eigenvalues={stability_summary.get('total_unstable_eigenvalue_count')}, "
+            f"max_real={_fmt(stability_summary.get('max_real_eigenvalue'))}"
+        )
+
     longitudinal = result.get("longitudinal", {})
     lateral = result.get("lateral_directional", {})
     typer.echo(f"  longitudinal_valid: {longitudinal.get('valid')}")
@@ -400,6 +409,14 @@ def dynamics_state_space_inspect(
     typer.echo("\n=== AERIS State-Space Inspection ===\n")
     typer.echo(f"Run dir: {run_dir}")
     typer.echo(f"Status: {data.get('overall_status')}")
+    stability_summary = data.get("linear_stability_summary", {}) or {}
+    if stability_summary:
+        typer.echo(
+            "Linear stability: "
+            f"stable={stability_summary.get('overall_linear_stable')}, "
+            f"unstable_eigenvalues={stability_summary.get('total_unstable_eigenvalue_count')}, "
+            f"max_real={_fmt(stability_summary.get('max_real_eigenvalue'))}"
+        )
     longitudinal = data.get("longitudinal", {})
     lateral = data.get("lateral_directional", {})
     typer.echo(f"Longitudinal valid: {longitudinal.get('valid')}")

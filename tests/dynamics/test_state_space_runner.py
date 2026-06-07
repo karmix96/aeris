@@ -75,7 +75,7 @@ def _mass() -> MassProperties:
 def test_compute_state_space_result_completed(tmp_path: Path) -> None:
     run_dir = _write_fake_run(tmp_path)
     result = compute_state_space_result(run_dir=run_dir, mass_properties=_mass())
-    assert result["schema_version"] == "state_space_result_v0.1"
+    assert result["schema_version"] == "state_space_result_v0.2"
     assert result["overall_status"] == "completed"
     assert result["input_summary"]["missing_inputs"] == []
     assert result["longitudinal"]["valid"] is True
@@ -85,6 +85,14 @@ def test_compute_state_space_result_completed(tmp_path: Path) -> None:
     assert result["longitudinal"]["a_matrix"] is not None
     assert result["lateral_directional"]["a_matrix"] is not None
 
+    summary = result["linear_stability_summary"]
+    assert summary["method"] == "full_eigenvalue_real_part_scan"
+    assert summary["overall_known"] is True
+    assert summary["valid_section_count"] == 2
+    assert summary["sections"]["longitudinal"]["eigenvalue_count"] == 4
+    assert summary["sections"]["lateral_directional"]["eigenvalue_count"] == 4
+    assert isinstance(summary["sections"]["longitudinal"]["has_unstable_eigenvalue"], bool)
+
 
 def test_compute_state_space_result_blocks_when_missing_required_derivative(tmp_path: Path) -> None:
     run_dir = _write_fake_run(tmp_path, omit_cma=True)
@@ -92,6 +100,8 @@ def test_compute_state_space_result_blocks_when_missing_required_derivative(tmp_
     assert result["overall_status"] == "blocked_missing_inputs"
     assert "Cma" in result["input_summary"]["missing_inputs"]
     assert result["longitudinal"]["valid"] is False
+    assert result["linear_stability_summary"]["overall_known"] is False
+    assert result["linear_stability_summary"]["overall_linear_stable"] is None
 
 
 def test_write_state_space_result(tmp_path: Path) -> None:
@@ -101,3 +111,4 @@ def test_write_state_space_result(tmp_path: Path) -> None:
     assert path.exists()
     payload = json.loads(path.read_text(encoding="utf-8"))
     assert payload["overall_status"] == "completed"
+    assert "linear_stability_summary" in payload

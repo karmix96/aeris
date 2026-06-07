@@ -83,6 +83,8 @@ def test_dynamics_state_space_cli_writes_report(tmp_path: Path) -> None:
     assert out.exists()
     payload = json.loads(out.read_text(encoding="utf-8"))
     assert payload["overall_status"] == "completed"
+    assert "linear_stability_summary" in payload
+    assert "linear_stability" in result.stdout
 
 
 def test_dynamics_state_space_inspect_cli_reads_report(tmp_path: Path) -> None:
@@ -92,4 +94,5 @@ def test_dynamics_state_space_inspect_cli_reads_report(tmp_path: Path) -> None:
     result = runner.invoke(app, ["dynamics", "state-space-inspect", "--run-dir", str(run_dir)])
     assert result.exit_code == 0, result.stdout
     assert "State-Space Inspection" in result.stdout
+    assert "Linear stability" in result.stdout
     assert "Longitudinal valid" in result.stdout

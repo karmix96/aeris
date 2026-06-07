@@ -12,7 +12,7 @@ from aeris.dynamics.analysis import load_geometry_summary
 from aeris.dynamics.models import MassProperties
 from aeris.dynamics.state_space import DimDerivatives, compute_full_lateral, compute_full_longitudinal
 
-STATE_SPACE_RESULT_SCHEMA_VERSION = "state_space_result_v0.1"
+STATE_SPACE_RESULT_SCHEMA_VERSION = "state_space_result_v0.2"
 
 
 def _json_safe(value: Any) -> Any:
@@ -167,6 +167,106 @@ def build_dim_derivatives_from_saved_run(
     return dd, diagnostic
 
 
+
+def _eigenvalue_real_parts(section: dict[str, Any]) -> list[float]:
+    values: list[float] = []
+    for item in section.get("all_eigenvalues", []) or []:
+        if not isinstance(item, dict):
+            continue
+        real = _as_float(item.get("real"))
+        if real is not None:
+            values.append(real)
+    return values
+
+
+def _section_stability_summary(section: dict[str, Any]) -> dict[str, Any]:
+    """Summarize full-matrix eigenvalue stability without trusting mode labels.
+
+    Mode classifiers are useful, but they can hide an unassigned positive real
+    eigenvalue. This summary scans every eigenvalue in the 4x4 system.
+    """
+    if not section.get("valid"):
+        return {
+            "valid": False,
+            "eigenvalue_count": 0,
+            "max_real_eigenvalue": None,
+            "unstable_eigenvalue_count": None,
+            "has_unstable_eigenvalue": None,
+            "all_eigenvalues_stable": None,
+            "reason": section.get("reason") or "section_invalid",
+        }
+
+    real_parts = _eigenvalue_real_parts(section)
+    if not real_parts:
+        return {
+            "valid": False,
+            "eigenvalue_count": 0,
+            "max_real_eigenvalue": None,
+            "unstable_eigenvalue_count": None,
+            "has_unstable_eigenvalue": None,
+            "all_eigenvalues_stable": None,
+            "reason": "missing_eigenvalues",
+        }
+
+    unstable_count = sum(1 for real in real_parts if real > 0.0)
+    max_real = max(real_parts)
+    return {
+        "valid": True,
+        "eigenvalue_count": len(real_parts),
+        "max_real_eigenvalue": max_real,
+        "unstable_eigenvalue_count": unstable_count,
+        "has_unstable_eigenvalue": unstable_count > 0,
+        "all_eigenvalues_stable": unstable_count == 0,
+        "reason": None,
+    }
+
+
+def build_linear_stability_summary(
+    *,
+    longitudinal: dict[str, Any],
+    lateral_directional: dict[str, Any],
+) -> dict[str, Any]:
+    """Build explicit full-eigenvalue stability flags for D5/D5.1 reports."""
+    longitudinal_summary = _section_stability_summary(longitudinal)
+    lateral_summary = _section_stability_summary(lateral_directional)
+
+    section_summaries = {
+        "longitudinal": longitudinal_summary,
+        "lateral_directional": lateral_summary,
+    }
+    valid_sections = [summary for summary in section_summaries.values() if summary.get("valid") is True]
+    known_sections = [
+        summary
+        for summary in section_summaries.values()
+        if summary.get("all_eigenvalues_stable") is not None
+    ]
+    total_unstable = sum(
+        int(summary.get("unstable_eigenvalue_count") or 0)
+        for summary in known_sections
+    )
+    max_values = [
+        summary["max_real_eigenvalue"]
+        for summary in known_sections
+        if summary.get("max_real_eigenvalue") is not None
+    ]
+
+    overall_known = len(known_sections) == 2
+    overall_stable = (total_unstable == 0) if overall_known else None
+
+    return {
+        "method": "full_eigenvalue_real_part_scan",
+        "overall_known": overall_known,
+        "overall_linear_stable": overall_stable,
+        "total_unstable_eigenvalue_count": total_unstable if overall_known else None,
+        "max_real_eigenvalue": max(max_values) if max_values else None,
+        "valid_section_count": len(valid_sections),
+        "sections": section_summaries,
+        "notes": [
+            "This summary scans all eigenvalues, not only named mode summaries.",
+            "A positive real eigenvalue means local linear instability for this operating point.",
+        ],
+    }
+
 def _limitations() -> list[str]:
     return [
         "Full 4x4 linear state-space diagnostic around one operating point.",
@@ -188,24 +288,34 @@ def compute_state_space_result(
 ) -> dict[str, Any]:
     dd, diagnostic = build_dim_derivatives_from_saved_run(run_dir=run_dir, mass_properties=mass_properties, sref_m2=sref_m2, mac_m=mac_m, span_m=span_m, ixz_kg_m2=ixz_kg_m2)
     if dd is None:
+        longitudinal = {"valid": False, "reason": "missing_required_inputs"}
+        lateral = {"valid": False, "reason": "missing_required_inputs"}
         return {
             "schema_version": STATE_SPACE_RESULT_SCHEMA_VERSION,
             "overall_status": "blocked_missing_inputs",
             "source_run_dir": str(Path(run_dir)),
             "input_summary": diagnostic,
-            "longitudinal": {"valid": False, "reason": "missing_required_inputs"},
-            "lateral_directional": {"valid": False, "reason": "missing_required_inputs"},
+            "longitudinal": longitudinal,
+            "lateral_directional": lateral,
+            "linear_stability_summary": build_linear_stability_summary(
+                longitudinal=longitudinal,
+                lateral_directional=lateral,
+            ),
             "limitations": _limitations(),
         }
-    longitudinal = compute_full_longitudinal(dd)
-    lateral = compute_full_lateral(dd)
+    longitudinal = _json_safe(compute_full_longitudinal(dd))
+    lateral = _json_safe(compute_full_lateral(dd))
     return _json_safe({
         "schema_version": STATE_SPACE_RESULT_SCHEMA_VERSION,
-        "overall_status": "completed" if longitudinal.valid or lateral.valid else "failed",
+        "overall_status": "completed" if longitudinal.get("valid") or lateral.get("valid") else "failed",
         "source_run_dir": str(Path(run_dir)),
         "input_summary": diagnostic,
         "longitudinal": longitudinal,
         "lateral_directional": lateral,
+        "linear_stability_summary": build_linear_stability_summary(
+            longitudinal=longitudinal,
+            lateral_directional=lateral,
+        ),
         "limitations": _limitations(),
     })
 

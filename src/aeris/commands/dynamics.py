@@ -765,3 +765,49 @@ def dynamics_cg_sweep_inspect(
             f"SM={_fmt(c.get('static_margin_percent_mac'))} %MAC | "
             f"{c.get('longitudinal_interpretation')}"
         )
+
+@dynamics_app.command("build-ml-dataset")
+def dynamics_build_ml_dataset(
+    dataset: Path = typer.Option(..., "--dataset", exists=True, file_okay=False, dir_okay=True, resolve_path=True, help="Promoted aero dataset root with flyability_labels.csv"),
+    source: str = typer.Option("curated", "--source", help="Input aero table source: curated or raw."),
+    output_dir: Path | None = typer.Option(None, "--output-dir", file_okay=False, dir_okay=True, resolve_path=True, help="Output dataset root. Defaults to <dataset_parent>/<dataset_name>__flyability_ml."),
+    allow_forced: bool = typer.Option(False, "--allow-forced", help="Allow source dataset if it was force-promoted."),
+    zero_control_value_deg: float = typer.Option(0.0, "--zero-control-value-deg", help="Symmetric elevon value used as the ML row anchor."),
+    zero_control_tolerance_deg: float = typer.Option(1.0e-9, "--zero-control-tolerance-deg", help="Tolerance for matching the zero-control row."),
+    json_output: bool = typer.Option(False, "--json", help="Print full JSON report."),
+) -> None:
+    """Build an ML-ready derived dataset by joining zero-control aero rows with flyability labels."""
+    try:
+        if source not in {"curated", "raw"}:
+            raise typer.BadParameter("--source must be 'curated' or 'raw'.")
+        from aeris.dataset.flyability_ml_dataset import build_flyability_ml_dataset
+
+        report = build_flyability_ml_dataset(
+            dataset_root=dataset,
+            source=source,  # type: ignore[arg-type]
+            output_dir=output_dir,
+            allow_forced=allow_forced,
+            zero_control_value_deg=zero_control_value_deg,
+            zero_control_tolerance_deg=zero_control_tolerance_deg,
+        )
+    except Exception as exc:
+        fail_command("Dynamics build-ml-dataset", exc)
+
+    if json_output:
+        typer.echo(json.dumps(report, indent=2))
+        return
+
+    typer.echo("[AERIS] Flyability ML dataset completed")
+    typer.echo(f"  source_dataset: {report.get('dataset_root')}")
+    typer.echo(f"  output_dir: {report.get('output_dir')}")
+    typer.echo(f"  status: {report.get('status')}")
+    rows = report.get("row_counts", {}) or {}
+    typer.echo(f"  source_label_rows: {rows.get('source_label_rows')}")
+    typer.echo(f"  joined_ml_rows: {rows.get('joined_ml_rows')}")
+    typer.echo(f"  unmatched_label_rows: {rows.get('unmatched_label_rows')}")
+    targets = (report.get("ml_columns", {}) or {}).get("label_targets_available", [])
+    typer.echo("  label_targets_available: " + (", ".join(targets) if targets else "none"))
+    artifacts = report.get("artifacts", {}) or {}
+    typer.echo("  artifacts:")
+    for key, value in artifacts.items():
+        typer.echo(f"    {key}: {value}")

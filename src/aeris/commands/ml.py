@@ -23,6 +23,7 @@ import typer
 from aeris.commands._helpers import fail_command, parse_csv_list
 from aeris.commands._workflow_recording import record_workflow_stage_success
 from aeris.ml.compare import compare_models
+from aeris.ml.classification import classify_targets, compare_classifiers, list_classifier_types
 from aeris.ml.compare_hardening import compare_models_across_seeds, compare_tuning_runs
 from aeris.ml.config import load_model_params_by_type_json, load_model_params_json
 from aeris.ml.feature_sets import FeatureSetError, get_feature_set
@@ -2167,3 +2168,254 @@ def ml_predict(
         typer.echo(f"  rmse_mean: {summary['evaluation']['overall']['rmse_mean']:.6f}")
         typer.echo(f"  mae_mean: {summary['evaluation']['overall']['mae_mean']:.6f}")
         typer.echo(f"  r2_mean: {summary['evaluation']['overall']['r2_mean']:.6f}")
+
+@ml_app.command("classify")
+def ml_classify(
+    dataset: Path = typer.Option(
+        ...,
+        "--dataset",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to a promoted aero/flyability ML dataset root.",
+    ),
+    features: str | None = typer.Option(None, "--features", help="Comma-separated feature columns."),
+    feature_preset: str | None = typer.Option(None, "--feature-preset", help="Named feature preset, e.g. bwb_control."),
+    feature_set: str | None = typer.Option(
+        None,
+        "--feature-set",
+        help="Named feature set, e.g. bwb_control_physics_v1. Cannot be combined with --features or --feature-preset.",
+    ),
+    targets: str = typer.Option(..., "--targets", help="Comma-separated classification target columns."),
+    classifier_type: str = typer.Option(
+        "logistic_regression",
+        "--classifier-type",
+        help=f"Classifier type. Supported: {', '.join(list_classifier_types())}",
+    ),
+    split_method: str = typer.Option("grouped", "--split-method", help="Split method: grouped or random."),
+    group_column: str = typer.Option("geometry_id", "--group-column", help="Grouping column for grouped split."),
+    train_fraction: float = typer.Option(0.7, "--train-fraction"),
+    val_fraction: float = typer.Option(0.15, "--val-fraction"),
+    test_fraction: float = typer.Option(0.15, "--test-fraction"),
+    random_seed: int = typer.Option(123, "--random-seed"),
+    allow_forced: bool = typer.Option(False, "--allow-forced", help=_ALLOW_FORCED_HELP),
+    model_params_json: Path | None = typer.Option(
+        None,
+        "--model-params-json",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Optional JSON object containing classifier constructor parameters.",
+    ),
+    output_dir: Path | None = typer.Option(None, "--output-dir", help="Optional output directory."),
+    json_output: bool = typer.Option(False, "--json", help="Print full classification summary JSON."),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional workflow root to auto-record classifier training after success.",
+    ),
+) -> None:
+    """Train one classifier per target column on a promoted dataset."""
+    import json
+
+    try:
+        if features is None and feature_preset is None and feature_set is None:
+            raise typer.BadParameter("--features, --feature-preset, or --feature-set is required.")
+        feature_cols = _resolve_feature_columns_cli(features=features, feature_preset=feature_preset, feature_set=feature_set)
+        target_cols = parse_csv_list(targets, "--targets")
+        result = classify_targets(
+            dataset_path=dataset,
+            feature_columns=feature_cols,
+            target_columns=target_cols,
+            classifier_type=classifier_type,
+            split_method=split_method,
+            group_column=group_column,
+            train_fraction=train_fraction,
+            val_fraction=val_fraction,
+            test_fraction=test_fraction,
+            random_seed=random_seed,
+            allow_forced=allow_forced,
+            model_params=(load_model_params_json(model_params_json) if model_params_json is not None else None),
+            output_dir=output_dir,
+            feature_set_name=feature_set,
+        )
+    except typer.BadParameter:
+        raise
+    except Exception as exc:
+        fail_command("ML classify", exc)
+
+    if json_output:
+        typer.echo(json.dumps(result, indent=2))
+    else:
+        test_overall = result["metrics"]["test"]["overall"]
+        typer.echo("[AERIS] ML classification completed")
+        typer.echo(f"  dataset: {result['dataset_path']}")
+        typer.echo(f"  classifier_type: {result['classifier_type']}")
+        typer.echo(f"  targets: {', '.join(result['target_columns'])}")
+        typer.echo(f"  split_method: {result['split_config']['split_method']}")
+        typer.echo(f"  random_seed: {result['split_config']['random_seed']}")
+        typer.echo(f"  output_dir: {result['artifacts']['run_dir']}")
+        typer.echo(f"  classification_summary_json: {result['artifacts']['classification_summary_json']}")
+        typer.echo(f"  per_target_metrics_csv: {result['artifacts']['per_target_metrics_csv']}")
+        typer.echo(f"  test_accuracy_mean: {test_overall['accuracy_mean']:.6f}")
+        typer.echo(f"  test_balanced_accuracy_mean: {test_overall['balanced_accuracy_mean']:.6f}")
+        typer.echo(f"  test_f1_weighted_mean: {test_overall['f1_weighted_mean']:.6f}")
+        if result.get("fallback_targets"):
+            typer.echo(f"  fallback_targets: {result['fallback_targets']}")
+
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="ml_training",
+            inputs=[dataset],
+            artifacts=[result["artifacts"]["run_dir"], result["artifacts"]["classification_summary_json"]],
+            notes="ML classification completed.",
+            metadata={
+                "command": "aeris ml classify",
+                "classifier_type": classifier_type,
+                "feature_set": feature_set,
+                "targets": target_cols,
+                "split_method": split_method,
+                "group_column": group_column,
+                "random_seed": random_seed,
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
+
+
+@ml_app.command("compare-classifiers")
+def ml_compare_classifiers(
+    dataset: Path = typer.Option(
+        ...,
+        "--dataset",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to a promoted aero/flyability ML dataset root.",
+    ),
+    features: str | None = typer.Option(None, "--features", help="Comma-separated feature columns."),
+    feature_preset: str | None = typer.Option(None, "--feature-preset", help="Named feature preset, e.g. bwb_control."),
+    feature_set: str | None = typer.Option(
+        None,
+        "--feature-set",
+        help="Named feature set, e.g. bwb_control_physics_v1. Cannot be combined with --features or --feature-preset.",
+    ),
+    targets: str = typer.Option(..., "--targets", help="Comma-separated classification target columns."),
+    classifiers: str = typer.Option(
+        ...,
+        "--classifiers",
+        help=f"Comma-separated classifier types. Supported: {', '.join(list_classifier_types())}",
+    ),
+    split_method: str = typer.Option("grouped", "--split-method", help="Split method: grouped or random."),
+    group_column: str = typer.Option("geometry_id", "--group-column", help="Grouping column for grouped split."),
+    train_fraction: float = typer.Option(0.7, "--train-fraction"),
+    val_fraction: float = typer.Option(0.15, "--val-fraction"),
+    test_fraction: float = typer.Option(0.15, "--test-fraction"),
+    random_seed: int = typer.Option(123, "--random-seed"),
+    allow_forced: bool = typer.Option(False, "--allow-forced", help=_ALLOW_FORCED_HELP),
+    model_params_json: Path | None = typer.Option(
+        None,
+        "--model-params-json",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Optional JSON mapping of classifier_type -> constructor parameters.",
+    ),
+    output_dir: Path | None = typer.Option(None, "--output-dir", help="Optional output directory."),
+    json_output: bool = typer.Option(False, "--json", help="Print full classifier-comparison JSON."),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional workflow root to auto-record classifier comparison after success.",
+    ),
+) -> None:
+    """Compare classifier families on one fixed train/val/test split."""
+    import json
+
+    try:
+        if features is None and feature_preset is None and feature_set is None:
+            raise typer.BadParameter("--features, --feature-preset, or --feature-set is required.")
+        feature_cols = _resolve_feature_columns_cli(features=features, feature_preset=feature_preset, feature_set=feature_set)
+        target_cols = parse_csv_list(targets, "--targets")
+        classifier_types = parse_csv_list(classifiers, "--classifiers")
+        result = compare_classifiers(
+            dataset_path=dataset,
+            feature_columns=feature_cols,
+            target_columns=target_cols,
+            classifier_types=classifier_types,
+            split_method=split_method,
+            group_column=group_column,
+            train_fraction=train_fraction,
+            val_fraction=val_fraction,
+            test_fraction=test_fraction,
+            random_seed=random_seed,
+            allow_forced=allow_forced,
+            model_params_by_type=(load_model_params_by_type_json(model_params_json) if model_params_json is not None else None),
+            output_dir=output_dir,
+            feature_set_name=feature_set,
+        )
+    except typer.BadParameter:
+        raise
+    except Exception as exc:
+        fail_command("ML compare-classifiers", exc)
+
+    if json_output:
+        typer.echo(json.dumps(result, indent=2))
+    else:
+        typer.echo("[AERIS] ML classifier comparison completed")
+        typer.echo(f"  dataset: {result['dataset_path']}")
+        typer.echo(f"  classifiers: {', '.join(result['classifier_types'])}")
+        typer.echo(f"  split_method: {result['split_config']['split_method']}")
+        typer.echo(f"  random_seed: {result['split_config']['random_seed']}")
+        typer.echo(f"  output_dir: {result['artifacts']['output_dir']}")
+        typer.echo(f"  classifier_comparison_summary_json: {result['artifacts']['classifier_comparison_summary_json']}")
+        typer.echo(f"  classifier_comparison_summary_csv: {result['artifacts']['classifier_comparison_summary_csv']}")
+        typer.echo(f"  best_by_f1_weighted: {result['best_by_f1_weighted']}")
+        typer.echo(f"  best_by_balanced_accuracy: {result['best_by_balanced_accuracy']}")
+        typer.echo("")
+        typer.echo("Classifier summary:")
+        for row in result["rows"]:
+            typer.echo(
+                f"  - {row['classifier_type']}: "
+                f"rank_f1={row['rank_test_f1_weighted_mean']}, "
+                f"rank_bal_acc={row['rank_test_balanced_accuracy_mean']}, "
+                f"test_f1_weighted_mean={row['test_f1_weighted_mean']:.6f}, "
+                f"test_balanced_accuracy_mean={row['test_balanced_accuracy_mean']:.6f}"
+            )
+
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="model_comparison",
+            inputs=[dataset],
+            artifacts=[result["artifacts"]["output_dir"], result["artifacts"]["classifier_comparison_summary_json"]],
+            notes="ML classifier comparison completed.",
+            metadata={
+                "command": "aeris ml compare-classifiers",
+                "classifiers": classifier_types,
+                "feature_set": feature_set,
+                "targets": target_cols,
+                "split_method": split_method,
+                "group_column": group_column,
+                "random_seed": random_seed,
+                "best_by_f1_weighted": result.get("best_by_f1_weighted"),
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
+

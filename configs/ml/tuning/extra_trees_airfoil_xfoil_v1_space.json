@@ -1,0 +1,15 @@
+{
+  "search": {
+    "backend": "aeris",
+    "strategy": "random",
+    "max_trials": 40
+  },
+  "params": {
+    "n_estimators": [300, 500, 800],
+    "max_depth": [null, 8, 12, 20, 30],
+    "min_samples_split": [2, 4, 8],
+    "min_samples_leaf": [1, 2, 4, 8],
+    "max_features": [0.6, 0.8, 1.0],
+    "bootstrap": [false, true]
+  }
+}

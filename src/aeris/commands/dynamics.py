@@ -40,6 +40,7 @@ from aeris.dynamics.state_space_run import (
 
 from aeris.dynamics.state_space_plots import render_state_space_plots
 from aeris.dynamics.trim import estimate_longitudinal_trim, write_trim_result
+from aeris.dynamics.validation import validate_dynamics_run, write_dynamics_validation_report
 
 
 dynamics_app = typer.Typer(help="Mass / CG / dynamics-foundation utilities.")
@@ -491,6 +492,48 @@ def dynamics_plot_state_space(
         if path:
             typer.echo(f"  {label}: {path}")
     typer.echo(f"  manifest: {manifest.get('manifest_path')}")
+
+
+@dynamics_app.command("validate")
+def dynamics_validate(
+    run_dir: Path = typer.Option(..., exists=True, file_okay=False, dir_okay=True, resolve_path=True, help="Run directory containing dynamics artifacts"),
+    json_output: bool = typer.Option(False, "--json", help="Print full validation report JSON"),
+    fail_on_error: bool = typer.Option(False, "--fail-on-error", help="Exit with code 1 if validation errors are found"),
+) -> None:
+    """Validate saved dynamics artifacts for formula/schema/eigenvalue consistency."""
+    try:
+        report = validate_dynamics_run(run_dir)
+        output_path = write_dynamics_validation_report(report, run_dir / "dynamics")
+    except Exception as exc:
+        fail_command("Dynamics validate", exc)
+
+    if json_output:
+        typer.echo(json.dumps(report, indent=2))
+        if fail_on_error and not report.get("passed"):
+            raise typer.Exit(code=1)
+        return
+
+    typer.echo("[AERIS] Dynamics validation completed")
+    typer.echo(f"  run_dir: {run_dir}")
+    typer.echo(f"  passed: {report.get('passed')}")
+    typer.echo(f"  errors: {report.get('error_count')}")
+    typer.echo(f"  warnings: {report.get('warning_count')}")
+    typer.echo(f"  report: {output_path}")
+
+    for error in report.get("errors", [])[:8]:
+        typer.echo(f"  ERROR: {error}")
+    extra_errors = len(report.get("errors", [])) - 8
+    if extra_errors > 0:
+        typer.echo(f"  ... {extra_errors} more error(s) in report")
+
+    for warning in report.get("warnings", [])[:8]:
+        typer.echo(f"  WARNING: {warning}")
+    extra_warnings = len(report.get("warnings", [])) - 8
+    if extra_warnings > 0:
+        typer.echo(f"  ... {extra_warnings} more warning(s) in report")
+
+    if fail_on_error and not report.get("passed"):
+        raise typer.Exit(code=1)
 
 
 @dynamics_app.command("inspect")

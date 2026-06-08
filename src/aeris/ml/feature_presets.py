@@ -102,6 +102,33 @@ _FEATURE_PRESETS: dict[str, FeaturePreset] = {
             "wiring exists."
         ),
     ),
+    "airfoil_xfoil_v1": FeaturePreset(
+        name="airfoil_xfoil_v1",
+        domain="airfoil_2d_scalar_aero",
+        columns=(
+            # Operating condition inputs (always present)
+            "alpha_deg",
+            "log10_reynolds",
+            "mach",
+            "ncrit",
+            # Derived operating features (physics-informed)
+            "alpha_sq",           # quadratic alpha term
+            # Airfoil geometry statistics (computed at ingest, pre-split)
+            "t_c",                # max thickness / chord
+            "camber_max",         # max camber / chord
+            "le_radius",          # approximate leading-edge radius
+            "te_angle_deg",       # trailing-edge included angle
+        ),
+        description=(
+            "Airfoil 2D scalar aero feature set for XFOIL-generated datasets. "
+            "Features: operating condition (alpha, log10Re, Mach, Ncrit) + "
+            "physics-derived (alpha^2) + geometry stats (t/c, camber, LE radius, "
+            "TE angle). CST coefficients can be appended when available. "
+            "Group key: airfoil_id. "
+            "Targets: cl, cd, cm."
+        ),
+    ),
+
 }
 
 

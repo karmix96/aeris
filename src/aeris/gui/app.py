@@ -252,6 +252,7 @@ def _repo_ok(p: Path) -> bool:
     return (p / "src" / "aeris").exists()
 
 @st.cache_data(ttl=30)
+@st.cache_data(ttl=2)
 def _dirs(root_str: str) -> list[str]:
     root = Path(root_str)
     if not root.exists():
@@ -1082,12 +1083,41 @@ def _geo_var_table(cfg_path: str) -> None:
     airfoil = (cfg_data or {}).get("geometry", {}).get("section_bounds", {}).get("airfoil_name", "—")
     dih_root = (cfg_data or {}).get("geometry", {}).get("section_bounds", {}).get("dihedral_root_deg", "—")
     if cfg_data:
-        st.caption(f"Airfoil: **{airfoil}** · Root dihedral: **{dih_root}°** (fixed, not sampled)")
+        gen_cfg = (cfg_data or {}).get("geometry", {}).get("generator", {})
+        gen_seed = gen_cfg.get("seed", "—")
+        gen_id   = gen_cfg.get("id", gen_cfg.get("family", "—"))
+        _h(
+            f'<div style="background:#1B2A3A;border:1px solid #2D3F52;border-radius:8px;'
+            f'padding:.5rem 1rem;margin:.5rem 0 .7rem;display:flex;gap:20px;flex-wrap:wrap">'
+            f'<div><span style="font-size:.68rem;color:#7F8B98;text-transform:uppercase;letter-spacing:.1em">Generator</span>'
+            f'<div style="font-family:JetBrains Mono,monospace;color:#93C5FD;font-size:.82rem">{gen_id}</div></div>'
+            f'<div><span style="font-size:.68rem;color:#7F8B98;text-transform:uppercase;letter-spacing:.1em">Seed (YAML)</span>'
+            f'<div style="font-family:JetBrains Mono,monospace;color:#FCD34D;font-size:.82rem">{gen_seed}</div></div>'
+            f'<div><span style="font-size:.68rem;color:#7F8B98;text-transform:uppercase;letter-spacing:.1em">Airfoil</span>'
+            f'<div style="font-family:JetBrains Mono,monospace;color:#86EFAC;font-size:.82rem">{airfoil}</div></div>'
+            f'<div><span style="font-size:.68rem;color:#7F8B98;text-transform:uppercase;letter-spacing:.1em">Root dihedral</span>'
+            f'<div style="font-family:JetBrains Mono,monospace;color:#D6DEE8;font-size:.82rem">{dih_root}° (fixed)</div></div>'
+            f'</div>'
+        )
+        st.caption(
+            "**Seed** is read from `geometry.generator.seed` in the YAML. "
+            "Same seed + same config = identical geometry every time. "
+            "Change the seed to explore the design space."
+        )
 
 
 def _geo_delete_one(p: Path, key_suffix: str) -> bool:
-    """Render one run-folder row with an inline delete button. Returns True if deleted."""
+    """Render one run-folder row with an inline delete button. Returns True if deleted.
+
+    Key uses folder NAME (stable identity), not list index.
+    This prevents Streamlit's session-state from retaining a True button value
+    across reruns and triggering phantom second deletions.
+    """
     import shutil as _shutil
+    # Stable key: hash of the absolute path, not the positional index.
+    # key_suffix is kept as a namespace prefix to avoid cross-section collisions.
+    stable_key = f"del_{key_suffix}__{p.name}"
+
     m      = _rjson(p / "manifest.json")
     status = (m or {}).get("status", "—")
     dot    = "#22C55E" if status == "success" else "#EF4444" if status == "failed" else "#8EA0B3"
@@ -1106,9 +1136,13 @@ def _geo_delete_one(p: Path, key_suffix: str) -> bool:
             f'</div>'
         )
     with col_btn:
-        if st.button("🗑", key=f"del_{key_suffix}", help=f"Delete {p.name}"):
+        if not p.exists():
+            # Already deleted in this render cycle — skip silently
+            return False
+        if st.button("🗑", key=stable_key, help=f"Delete {p.name}"):
             try:
                 _shutil.rmtree(p)
+                st.cache_data.clear()  # force _dirs() to re-read on next render
                 st.toast(f"Deleted: {p.name}", icon="🗑")
                 return True
             except Exception as e:
@@ -1120,7 +1154,7 @@ def pg_geometry(root, exe, tmo, dry):
     import shutil as _shutil
 
     _hero("△", "Geometry", "bwb_segmented_v1 · 17 design variables", "generator")
-    tab_gen, tab_vis, tab_info = st.tabs(["  ① Generate  ", "  ② Visualize  ", "  ③ Design variables  "])
+    tab_gen, tab_vis, tab_info, tab_inspect = st.tabs(["  ① Generate  ", "  ② Visualize  ", "  ③ Design variables  ", "  ④ Inspect run  "])
 
     # Shared config list — built once, used in all tabs
     cfg_files = _files(str(root / "configs" / "geometry"), "*.yaml")
@@ -1162,6 +1196,13 @@ def pg_geometry(root, exe, tmo, dry):
             root, exe, tmo, dry, "g_run",
             label="▶  Generate geometry",
         )
+        # Show output directory note after run — the seed comes from the YAML config
+        _note(
+            f"Seed is read from the YAML <code>geometry.generator.seed</code> field "
+            f"(currently in config: see ③ Design variables tab). "
+            f"Run output → <code>data/runs/&lt;timestamp&gt;_geometry_{Path(sel_cfg).stem}/</code>",
+            "info",
+        )
 
         # ── Runs from data/runs/ ──────────────────────────────────────────
         geo_runs = [Path(r) for r in _dirs(str(root / "data" / "runs"))
@@ -1172,8 +1213,47 @@ def pg_geometry(root, exe, tmo, dry):
             st.caption("Click 🗑 on any row to delete that folder immediately.")
             did_delete = False
             for i, p in enumerate(geo_runs[:20]):
-                if _geo_delete_one(p, f"gen_{i}"):
-                    did_delete = True
+                # Show key metrics from manifest alongside the delete button
+                m   = _rjson(p / "manifest.json") or {}
+                geo = m.get("geometry") or {}
+                cs  = geo.get("case_summary") or {}
+                cs_met = cs.get("metrics") or {}  # metrics live under case_summary["metrics"]
+                seed_v = geo.get("design_sampling_seed", "—")
+                semi   = cs_met.get("semi_span_m")
+                area   = cs_met.get("approx_area_m2")
+                ar_v   = cs_met.get("approx_aspect_ratio_planform")
+                metrics_str = "  ·  ".join(filter(None, [
+                    f"seed {seed_v}" if seed_v != "—" else None,
+                    f"semi-span {semi:.3f} m" if semi is not None else None,
+                    f"area {area:.4f} m²"     if area  is not None else None,
+                    f"AR {ar_v:.2f}"          if ar_v  is not None else None,
+                ]))
+                col_info, col_del = st.columns([11, 1])
+                with col_info:
+                    status = m.get("status", "—")
+                    dot_c  = "#22C55E" if status == "success" else "#EF4444"
+                    _h(
+                        f'<div style="background:#1B2A3A;border:1px solid #2D3F52;border-radius:7px;'
+                        f'padding:.38rem .9rem;display:flex;flex-direction:column;gap:2px">'
+                        f'<div style="display:flex;align-items:center;gap:8px">'
+                        f'<div style="width:7px;height:7px;border-radius:50%;background:{dot_c};flex-shrink:0"></div>'
+                        f'<div style="font-size:.78rem;color:#D6DEE8;font-family:JetBrains Mono,monospace;'
+                        f'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">{p.name}</div>'
+                        f'<div style="font-size:.7rem;color:{dot_c};font-weight:600;flex-shrink:0">{status}</div>'
+                        f'</div>'
+                        + (f'<div style="font-size:.7rem;color:#5A7A96;font-family:JetBrains Mono,monospace;'
+                           f'padding-left:15px">{metrics_str}</div>' if metrics_str else '')
+                        + f'</div>'
+                    )
+                with col_del:
+                    import shutil as _shutil2
+                    if st.button("🗑", key=f"del_gen_{i}", help=f"Delete {p.name}"):
+                        try:
+                            _shutil2.rmtree(p)
+                            st.toast(f"Deleted: {p.name}", icon="🗑")
+                            did_delete = True
+                        except Exception as e:
+                            st.error(f"Could not delete {p.name}: {e}")
             if did_delete:
                 st.rerun()
 
@@ -1184,23 +1264,32 @@ def pg_geometry(root, exe, tmo, dry):
                     key="gg_del_all_gen", type="secondary",
                 ):
                     st.session_state["gg_confirm_gen"] = True
+                    # Snapshot the list NOW — not on the next rerun
+                    st.session_state["gg_to_delete_gen"] = [str(p) for p in geo_runs]
 
             if st.session_state.get("gg_confirm_gen"):
-                st.warning(f"Delete all {len(geo_runs)} generate run folder(s)? This cannot be undone.")
+                # Use the snapshot taken at confirm time, not the live list
+                to_delete = st.session_state.get("gg_to_delete_gen", geo_runs)
+                st.warning(f"Delete all {len(to_delete)} generate run folder(s)? This cannot be undone.")
                 ca, cb, _ = st.columns([1, 1, 4])
                 if ca.button("Yes, delete all", key="gg_confirm_gen_yes", type="primary"):
                     deleted = []
-                    for p in geo_runs:
+                    for p in to_delete:
+                        if not Path(p).exists():
+                            continue
                         try:
                             _shutil.rmtree(p)
-                            deleted.append(p.name)
+                            deleted.append(Path(p).name)
                         except Exception as e:
-                            st.error(f"{p.name}: {e}")
+                            st.error(f"{Path(p).name}: {e}")
                     st.session_state["gg_confirm_gen"] = False
+                    st.session_state.pop("gg_to_delete_gen", None)
+                    st.cache_data.clear()
                     st.toast(f"Deleted {len(deleted)} folder(s).", icon="🗑")
                     st.rerun()
                 if cb.button("Cancel", key="gg_confirm_gen_no", type="secondary"):
                     st.session_state["gg_confirm_gen"] = False
+                    st.session_state.pop("gg_to_delete_gen", None)
                     st.rerun()
         else:
             st.caption("No generate runs yet — data/runs/ is empty.")
@@ -1353,6 +1442,26 @@ def pg_geometry(root, exe, tmo, dry):
                     label="📷  Save plot as PNG",
                 )
 
+        # ── Auto-display most recent PNG from last save-plot run ──────────
+        viz_base_auto = root / "data" / "debug" / "visualization_runs"
+        plot_base_auto = root / "data" / "debug" / "plots"
+        # Scan both dirs for the newest PNG
+        _all_pngs = sorted(
+            list(viz_base_auto.glob("*/*.png")) + list(plot_base_auto.glob("*/*.png")),
+            key=lambda p: p.stat().st_mtime if p.exists() else 0,
+            reverse=True,
+        ) if (viz_base_auto.exists() or plot_base_auto.exists()) else []
+        if _all_pngs:
+            _sec("Latest saved planform PNG")
+            latest_png = _all_pngs[0]
+            st.caption(f"{latest_png.relative_to(root) if latest_png.is_relative_to(root) else latest_png}")
+            st.image(str(latest_png), use_container_width=True)
+            if len(_all_pngs) > 1:
+                with st.expander(f"Previous PNGs ({len(_all_pngs) - 1})", expanded=False):
+                    for png in _all_pngs[1:6]:
+                        st.caption(str(png.name))
+                        st.image(str(png), use_container_width=True)
+
         # ── Runs from data/debug/visualization_runs/ + data/debug/plots/ ──
         viz_base  = root / "data" / "debug" / "visualization_runs"
         plot_base = root / "data" / "debug" / "plots"
@@ -1380,23 +1489,30 @@ def pg_geometry(root, exe, tmo, dry):
                     key="gv_del_all", type="secondary",
                 ):
                     st.session_state["gv_confirm_all"] = True
+                    st.session_state["gv_to_delete"] = [str(p) for p in all_viz]
 
             if st.session_state.get("gv_confirm_all"):
-                st.warning(f"Delete all {len(all_viz)} visualize output folder(s)? This cannot be undone.")
+                to_delete_viz = st.session_state.get("gv_to_delete", all_viz)
+                st.warning(f"Delete all {len(to_delete_viz)} visualize output folder(s)? This cannot be undone.")
                 ca, cb, _ = st.columns([1, 1, 4])
                 if ca.button("Yes, delete all", key="gv_confirm_all_yes", type="primary"):
                     deleted = []
-                    for p in all_viz:
+                    for p in to_delete_viz:
+                        if not Path(p).exists():
+                            continue
                         try:
                             _shutil.rmtree(p)
-                            deleted.append(p.name)
+                            deleted.append(Path(p).name)
                         except Exception as e:
-                            st.error(f"{p.name}: {e}")
+                            st.error(f"{Path(p).name}: {e}")
                     st.session_state["gv_confirm_all"] = False
+                    st.session_state.pop("gv_to_delete", None)
+                    st.cache_data.clear()
                     st.toast(f"Deleted {len(deleted)} folder(s).", icon="🗑")
                     st.rerun()
                 if cb.button("Cancel", key="gv_confirm_all_no", type="secondary"):
                     st.session_state["gv_confirm_all"] = False
+                    st.session_state.pop("gv_to_delete", None)
                     st.rerun()
         else:
             st.caption("No visualize outputs yet.")
@@ -1413,6 +1529,131 @@ def pg_geometry(root, exe, tmo, dry):
             "**Amber** = nearly fixed (min ≈ max) — not useful for ML training."
         )
         _geo_var_table(info_cfg)
+
+
+    # ── INSPECT ──────────────────────────────────────────────────────────────
+    with tab_inspect:
+        _note(
+            "Inspect any completed geometry run — reads <code>manifest.json</code> "
+            "and shows seed, key aerodynamic metrics, and artifact paths. "
+            "Equivalent to <code>aeris geometry inspect --run-dir &lt;run&gt;</code>.",
+            "info",
+        )
+        insp_runs = [Path(r) for r in _dirs(str(root / "data" / "runs"))
+                     if "geometry" in Path(r).name
+                     and not any(k in Path(r).name for k in ("_aero_", "_sweep_"))]
+        if not insp_runs:
+            st.warning("No geometry runs found in data/runs/. Run ① Generate first.")
+        else:
+            chosen_insp = st.selectbox(
+                "Select run to inspect",
+                [p.name for p in insp_runs],
+                key="gi_insp_run",
+                help="Pick a geometry run folder. Data is read from manifest.json.",
+            )
+            insp_path = next((p for p in insp_runs if p.name == chosen_insp), None)
+            if insp_path:
+                m   = _rjson(insp_path / "manifest.json") or {}
+                geo = m.get("geometry") or {}
+                # case_summary is the full build_geometry_summary() output — a nested dict.
+                # Key metric fields live under cs["metrics"], planform values under cs["sampled_planform"].
+                cs      = geo.get("case_summary") or {}
+                cs_met  = cs.get("metrics") or {}
+                cs_pf   = cs.get("sampled_planform") or {}
+                status  = m.get("status", "unknown")
+
+                # Status + identity
+                c1, c2, c3 = st.columns(3)
+                c1.metric("Status", status)
+                c2.metric("Seed", str(geo.get("design_sampling_seed", "—")))
+                c3.metric("Generator", str(geo.get("generator_id", "—")))
+
+                # Key aerodynamic metrics — from cs["metrics"]
+                semi = cs_met.get("semi_span_m")
+                full = cs_met.get("full_span_m")
+                area = cs_met.get("approx_area_m2")
+                ar_v = cs_met.get("approx_aspect_ratio_planform")
+                ar_asb = cs_met.get("aspect_ratio_aerosandbox")
+
+                # Planform values from cs["sampled_planform"]
+                c1_m = cs_pf.get("c1_m")
+                b_total = cs_pf.get("b_total_m")
+
+                if any(v is not None for v in [semi, full, area, ar_v]):
+                    _sec("Key geometry metrics")
+                    stat_items = []
+                    if semi is not None:
+                        stat_items.append(("Semi-span", f"{semi:.3f} m", "half-span"))
+                    if full is not None:
+                        stat_items.append(("Full span", f"{full:.3f} m", "2 × semi"))
+                    if area is not None:
+                        stat_items.append(("Planform area", f"{area:.4f} m²", "approx"))
+                    if ar_v is not None:
+                        stat_items.append(("AR (planform)", f"{ar_v:.2f}", "planform AR"))
+                    if ar_asb is not None:
+                        stat_items.append(("AR (ASB)", f"{ar_asb:.2f}", "AeroSandbox"))
+                    _stat_row(stat_items)
+
+                    # Planform parameters
+                    if c1_m is not None or b_total is not None:
+                        _sec("Planform parameters")
+                        pf_items = []
+                        if c1_m is not None:
+                            pf_items.append(("Root chord c1", f"{c1_m:.4f} m", "sampled"))
+                        if b_total is not None:
+                            pf_items.append(("Semi-span b_total", f"{b_total:.4f} m", "sampled"))
+                        _stat_row(pf_items)
+                else:
+                    if cs:
+                        st.warning(
+                            'Metrics not found under `case_summary["metrics"]`. '
+                            "This may indicate a schema change. Check Full manifest below."
+                        )
+                    else:
+                        st.warning("No case_summary in manifest. Run may have failed during geometry generation.")
+
+                # Timestamps
+                _sec("Run metadata")
+                st.caption(
+                    f"Created: {m.get('created_at_utc', '—')}  ·  "
+                    f"Completed: {m.get('completed_at_utc', '—')}  ·  "
+                    f"Config: {Path(m.get('config_path', '—')).name}"
+                )
+                st.caption(f"Run root: `{insp_path}`")
+
+                # Artifact paths
+                gspath = insp_path / "artifacts" / "geometry" / "geometry_summary.json"
+                if gspath.exists():
+                    gs = _rjson(gspath) or {}
+                    with st.expander("geometry_summary.json — key sections", expanded=True):
+                        sub_tabs = st.tabs(["metrics", "sampled_planform", "sampled_sections", "raw"])
+                        with sub_tabs[0]:
+                            st.json(gs.get("metrics") or {}, expanded=True)
+                        with sub_tabs[1]:
+                            st.json(gs.get("sampled_planform") or {}, expanded=True)
+                        with sub_tabs[2]:
+                            st.json(gs.get("sampled_sections") or {}, expanded=True)
+                        with sub_tabs[3]:
+                            st.json(gs, expanded=False)
+
+                # Full manifest — show geometry sub-section prominently
+                with st.expander("manifest.json — geometry section", expanded=True):
+                    inner_tabs = st.tabs(["generator info", "design_sample", "full"])
+                    with inner_tabs[0]:
+                        st.json({
+                            "generator_id":         geo.get("generator_id"),
+                            "design_sampling_seed": geo.get("design_sampling_seed"),
+                            "name":                 geo.get("name"),
+                            "geometry_deterministic": geo.get("geometry_deterministic"),
+                        }, expanded=True)
+                    with inner_tabs[1]:
+                        st.json(geo.get("design_sample") or {}, expanded=False)
+                    with inner_tabs[2]:
+                        st.json(m, expanded=False)
+
+                # CLI shortcut
+                _sec("CLI equivalent")
+                _cmd_preview(["geometry", "inspect", "--run-dir", str(insp_path)])
 
 
 def pg_dataset(root, exe, tmo, dry):
@@ -2419,13 +2660,14 @@ def pg_dynamics(root, exe, tmo, dry):
         "Add Iyy/Izz to your mass YAML to unlock short-period, phugoid, roll, Dutch roll, and spiral eigenvalues."
     )
 
-    tab_build, tab_cgsweep, tab_trim, tab_state_space, tab_state_plots, tab_inspect = st.tabs([
+    tab_build, tab_cgsweep, tab_trim, tab_state_space, tab_state_plots, tab_validate, tab_inspect = st.tabs([
         "  ① Build  ",
         "  ② CG Sweep  ",
         "  ③ Trim  ",
         "  ④ State Space  ",
         "  ⑤ Plots  ",
-        "  ⑥ Inspect  ",
+        "  ⑥ Validate  ",
+        "  ⑦ Inspect  ",
     ])
 
     # Shared: picker for aero run directory
@@ -2798,7 +3040,46 @@ def pg_dynamics(root, exe, tmo, dry):
             )
             _state_space_artifact_preview(Path(rd_plot))
 
-    # ── ⑥ INSPECT ─────────────────────────────────────────────────────────────
+    # ── ⑥ VALIDATE ────────────────────────────────────────────────────────────
+    with tab_validate:
+        st.caption(
+            "Validates saved dynamics artifacts without rerunning solvers: static-margin formula, "
+            "trim Taylor formulas, state-space A-matrix shape/finite values, eigenvalue summary consistency, "
+            "and artifact presence. Output → `<run_dir>/dynamics/dynamics_validation_report.json`."
+        )
+        rd_validate = _aero_run_picker("dyn_rd_validate", "Select aero run for dynamics validation")
+        if rd_validate:
+            c1, c2 = st.columns(2)
+            with c1:
+                fail_validate = st.checkbox(
+                    "Fail command on validation errors",
+                    value=False,
+                    key="dyn_validate_fail",
+                    help="Adds --fail-on-error. Useful for CI/regression checks; leave off for exploratory inspection.",
+                )
+            args_validate = ["dynamics", "validate", "--run-dir", rd_validate]
+            if fail_validate:
+                args_validate.append("--fail-on-error")
+            _panel(
+                "Validate dynamics artifacts",
+                "Checks formulas and evidence consistency; does not certify the aircraft and does not run AVL.",
+                args_validate,
+                root, exe, tmo, dry, "dyn_validate_run", label="▶  Validate dynamics",
+            )
+            validation_path = Path(rd_validate) / "dynamics" / "dynamics_validation_report.json"
+            if validation_path.exists():
+                try:
+                    validation_data = json.loads(validation_path.read_text(encoding="utf-8"))
+                    st.metric("Validation passed", str(validation_data.get("passed")))
+                    vc1, vc2 = st.columns(2)
+                    vc1.metric("Errors", validation_data.get("error_count", 0))
+                    vc2.metric("Warnings", validation_data.get("warning_count", 0))
+                    with st.expander("Validation report JSON", expanded=False):
+                        st.json(validation_data)
+                except Exception as ex:
+                    st.warning(f"Could not read validation report: {ex}")
+
+    # ── ⑦ INSPECT ─────────────────────────────────────────────────────────────
     with tab_inspect:
         st.caption(
             "Read and display results from built dynamics runs. "
@@ -3948,6 +4229,7 @@ _GUI_RECENT_SLICE_MARKERS = (
     "state-space",
     "state-space-inspect",
     "plot-state-space",
+    "dynamics validate",
     "eigenvalues-zoom",
     "mode-summary-zoom",
     "linear_stability_summary",

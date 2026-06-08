@@ -104,7 +104,7 @@ def test_run_geometry_generation_happy_path(tmp_path, monkeypatch):
         lambda prefix: fake_run_paths,
     )
 
-    exit_code = run_geometry_generation(config_path=config_path)
+    exit_code, run_root = run_geometry_generation(config_path=config_path)
 
     assert exit_code == 0
     assert fake_run_root.exists()
@@ -167,7 +167,7 @@ geometry:
         lambda prefix: fake_run_paths,
     )
 
-    exit_code = run_geometry_generation(config_path=bad_config_path)
+    exit_code, run_root = run_geometry_generation(config_path=bad_config_path)
 
     assert exit_code == 1
     assert fake_run_root.exists()

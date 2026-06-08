@@ -1,0 +1,21 @@
+# AERIS 2D — Smoke test config (10 airfoils, narrow sweep)
+# Validates XFOIL adapter and dataset pipeline end-to-end.
+# Full config: configs/airfoil/xfoil_sweep_v1.yaml
+
+sweep:
+  alpha_start: -4.0
+  alpha_end:   10.0
+  alpha_step:   2.0     # 8 alpha points — fast
+  reynolds:
+    - 1_000_000         # single Re
+  mach:
+    - 0.0
+  ncrit: 9.0
+
+solver:
+  max_iter: 100
+  repanel: true
+
+output:
+  drop_unconverged: false
+  solver_id: xfoil_python

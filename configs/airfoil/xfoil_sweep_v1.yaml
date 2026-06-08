@@ -1,0 +1,29 @@
+# AERIS 2D — Conservative first XFOIL sweep configuration
+# Widen alpha/Re/Mach ranges and add Ncrit variations after pipeline validation.
+
+sweep:
+  alpha_start: -6.0     # deg  — pre-stall for most airfoils
+  alpha_end:   14.0     # deg  — avoids deep stall region initially
+  alpha_step:   0.5     # deg  — 41 alpha points per condition
+
+  reynolds:             # three representative Reynolds numbers
+    - 500_000           #   low-Re UAV regime
+    - 1_000_000         #   mid-Re reference
+    - 3_000_000         #   higher-Re (transition to turbulent)
+
+  mach:
+    - 0.0               # incompressible (most accurate for XFOIL VPM)
+
+  ncrit: 9.0            # standard free-stream criterion (Tollmien–Schlichting)
+
+solver:
+  max_iter: 100         # XFOIL Newton iterations per alpha point
+  repanel: true         # repanel airfoil before analysis (more robust)
+
+output:
+  drop_unconverged: false   # keep NaN rows — the QC/curation step filters them
+  solver_id: xfoil_python
+
+# Expected dataset size:
+#   1000 airfoils × 3 Re × 1 Mach × 41 alpha = 123,000 rows before filtering
+#   Typical convergence ~85-90% → ~105,000-110,000 clean rows promoted

@@ -26,7 +26,6 @@ Sign convention: x positive aft (standard aviation / AVL / AERIS).
 
 from __future__ import annotations
 
-import cmath
 import math
 from dataclasses import dataclass, field
 from typing import Any
@@ -666,7 +665,6 @@ def compute_root_locus_vs_cg(
         new_cma = -base_dd.CLa * sm  # Cma = -CLα·SM [ER §3.3.6]
 
         # Rebuild DimDerivatives with new Cma
-        import copy, types
         # We directly construct with updated Cma
         try:
             dd_new = DimDerivatives(

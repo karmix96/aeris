@@ -188,6 +188,32 @@ _FEATURE_SETS: dict[str, FeatureSet] = {
         ),
         tags=("bwb", "control", "symmetric-elevon", "physics", "tabular", "engineered"),
     ),
+    "airfoil_xfoil_v1": FeatureSet(
+        name="airfoil_xfoil_v1",
+        domain="airfoil_2d_scalar_aero",
+        generator_id=None,
+        raw_columns=(
+            "alpha_deg",
+            "log10_reynolds",
+            "mach",
+            "ncrit",
+            "alpha_sq",
+            "t_c",
+            "camber_max",
+            "le_radius",
+            "te_angle_deg",
+        ),
+        engineered_columns=(),
+        transforms=(),
+        description=(
+            "Airfoil 2D scalar aero feature set for XFOIL-generated datasets. "
+            "Raw columns: operating condition (alpha, log10Re, Mach, Ncrit) + "
+            "physics-derived (alpha_sq) + geometry stats (t/c, camber, LE radius, "
+            "TE angle). No transforms — all columns are pre-computed at ingest. "
+            "Group key: airfoil_id. Targets: cl, cd, cm."
+        ),
+        tags=("airfoil", "2d", "xfoil", "raw", "tabular"),
+    ),
 }
 
 

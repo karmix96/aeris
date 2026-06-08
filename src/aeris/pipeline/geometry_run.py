@@ -77,7 +77,7 @@ def _mark_manifest_failed(
         "message": str(exc),
     }
 
-def run_geometry_generation(config_path: str | Path) -> int:
+def run_geometry_generation(config_path: str | Path) -> tuple[int, Path | None]:
     """
     Run a single geometry-generation workflow.
 
@@ -165,10 +165,10 @@ def run_geometry_generation(config_path: str | Path) -> int:
         _write_manifest(manifest_path, manifest)
 
         logger.info("Geometry generation completed successfully")
-        return 0
+        return 0, run_paths.root
 
     except Exception as exc:
         logger.exception("Geometry run failed.")
         _mark_manifest_failed(manifest, exc=exc)
         _write_manifest(manifest_path, manifest)
-        return 1
+        return 1, run_paths.root if 'run_paths' in dir() else None

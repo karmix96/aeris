@@ -42,8 +42,6 @@ WORKFLOW_COVERAGE_SPEC: tuple[WorkflowCoverageSpec, ...] = (
     WorkflowCoverageSpec("dataset_qc", True, "dataset", "aeris dataset aero-qc ... --workflow <workflow_root>", "dataset", "aero-qc"),
     WorkflowCoverageSpec("curation", True, "dataset", "aeris dataset curate-aero ... --workflow <workflow_root>", "dataset", "curate-aero"),
     WorkflowCoverageSpec("promotion", True, "dataset", "aeris dataset promote-aero ... --workflow <workflow_root>", "dataset", "promote-aero"),
-    WorkflowCoverageSpec("dynamics_batch_labels", False, "dynamics", "aeris dynamics batch-labels --dataset data/datasets/<promoted_dataset> --source curated --workflow <workflow_root>", "dynamics", "batch-labels"),
-    WorkflowCoverageSpec("flyability_ml_dataset", False, "dynamics", "aeris dynamics build-ml-dataset --dataset data/datasets/<promoted_dataset> --source curated --workflow <workflow_root>", "dynamics", "build-ml-dataset"),
     WorkflowCoverageSpec("ml_eda", True, "ml", "aeris ml eda ... --workflow <workflow_root>", "ml", "eda"),
     WorkflowCoverageSpec("ml_training", True, "ml", "aeris ml train ... --workflow <workflow_root>", "ml", "train"),
     WorkflowCoverageSpec("model_comparison", True, "ml", "aeris ml compare ... --workflow <workflow_root>", "ml", "compare"),
@@ -60,10 +58,9 @@ WORKFLOW_COVERAGE_SPEC: tuple[WorkflowCoverageSpec, ...] = (
 def _command_apps() -> dict[str, Any]:
     from aeris.commands.aero import aero_app
     from aeris.commands.dataset import dataset_app
-    from aeris.commands.dynamics import dynamics_app
     from aeris.commands.ml import ml_app
 
-    return {"aero": aero_app, "dataset": dataset_app, "dynamics": dynamics_app, "ml": ml_app}
+    return {"aero": aero_app, "dataset": dataset_app, "ml": ml_app}
 
 
 def _typer_command_name(command_info: Any) -> str:

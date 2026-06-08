@@ -21563,6 +21563,7 @@ import typer
 
 from aeris.aero.io import read_aero_result
 from aeris.commands._helpers import fail_command, parse_csv_list
+from aeris.commands._workflow_recording import record_workflow_stage_success
 from aeris.dataset.dynamics_labels import compute_dynamics_labels
 from aeris.dynamics.analysis import build_dynamics_foundation_result
 from aeris.dynamics.cg_sweep import run_cg_sweep, write_cg_sweep, write_cg_sweep_csv
@@ -21658,6 +21659,14 @@ def dynamics_batch_labels(
         "--json",
         help="Print the full batch-label report as JSON.",
     ),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional workflow root; auto-records stage dynamics_batch_labels when this command succeeds.",
+    ),
 ) -> None:
     """Generate dataset-level dynamics/flyability labels from a promoted aero dataset.
 
@@ -21685,6 +21694,23 @@ def dynamics_batch_labels(
         )
     except Exception as exc:
         fail_command("Dynamics batch-labels", exc)
+
+
+    record_workflow_stage_success(
+        workflow=workflow,
+        stage="dynamics_batch_labels",
+        inputs=[dataset],
+        outputs=list((report.get("artifacts", {}) or {}).values()),
+        artifacts=list((report.get("artifacts", {}) or {}).values()),
+        notes="Computed control derivatives and first-order flyability labels from an aero dataset.",
+        metadata={
+            "source": report.get("source"),
+            "overall_status": report.get("overall_status"),
+            "label_summary": report.get("label_summary", {}),
+            "thresholds": report.get("thresholds", {}),
+        },
+        echo=not as_json,
+    )
 
     if as_json:
         typer.echo(json.dumps(report, indent=2))
@@ -22312,6 +22338,14 @@ def dynamics_build_ml_dataset(
     zero_control_value_deg: float = typer.Option(0.0, "--zero-control-value-deg", help="Symmetric elevon value used as the ML row anchor."),
     zero_control_tolerance_deg: float = typer.Option(1.0e-9, "--zero-control-tolerance-deg", help="Tolerance for matching the zero-control row."),
     json_output: bool = typer.Option(False, "--json", help="Print full JSON report."),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional workflow root; auto-records stage flyability_ml_dataset when this command succeeds.",
+    ),
 ) -> None:
     """Build an ML-ready derived dataset by joining zero-control aero rows with flyability labels."""
     try:
@@ -22329,6 +22363,23 @@ def dynamics_build_ml_dataset(
         )
     except Exception as exc:
         fail_command("Dynamics build-ml-dataset", exc)
+
+
+    record_workflow_stage_success(
+        workflow=workflow,
+        stage="flyability_ml_dataset",
+        inputs=[dataset, report.get("source_flyability_labels_csv"), report.get("source_control_derivatives_csv")],
+        outputs=[report.get("output_dir"), report.get("output_curated_csv"), report.get("output_alias_csv")],
+        artifacts=list((report.get("artifacts", {}) or {}).values()),
+        notes="Built an ML-ready flyability dataset from zero-control aero rows and flyability labels.",
+        metadata={
+            "source": report.get("source"),
+            "status": report.get("status"),
+            "row_counts": report.get("row_counts", {}),
+            "ml_columns": report.get("ml_columns", {}),
+        },
+        echo=not json_output,
+    )
 
     if json_output:
         typer.echo(json.dumps(report, indent=2))
@@ -45178,20 +45229,22 @@ def pg_dynamics(root, exe, tmo, dry):
 
     st.caption(
         "Dynamics builds on top of a completed **aero run**. "
-        "Workflow: **① Build** → **② CG Sweep** → **③ Trim** → **④ State Space** → **⑤ Plots** → **⑥ Inspect**. "
+        "Workflow: **① Build** → **② CG Sweep** → **③ Trim** → **④ State Space** → **⑤ Plots** → **⑥ Batch Labels** → **⑦ Flyability ML Dataset** → **⑧ Validate** → **⑨ Inspect**. "
         "Build computes static margin and neutral-point evidence. State-space computes eigenvalues, "
         "D5.1 reports explicit unstable-root flags, and D5.2/D5.2.1 generate eigenvalue plots. "
         "Add Iyy/Izz to your mass YAML to unlock short-period, phugoid, roll, Dutch roll, and spiral eigenvalues."
     )
 
-    tab_build, tab_cgsweep, tab_trim, tab_state_space, tab_state_plots, tab_validate, tab_inspect = st.tabs([
+    tab_build, tab_cgsweep, tab_trim, tab_state_space, tab_state_plots, tab_batch_labels, tab_fly_ml, tab_validate, tab_inspect = st.tabs([
         "  ① Build  ",
         "  ② CG Sweep  ",
         "  ③ Trim  ",
         "  ④ State Space  ",
         "  ⑤ Plots  ",
-        "  ⑥ Validate  ",
-        "  ⑦ Inspect  ",
+        "  ⑥ Batch Labels  ",
+        "  ⑦ Flyability ML Dataset  ",
+        "  ⑧ Validate  ",
+        "  ⑨ Inspect  ",
     ])
 
     # Shared: picker for aero run directory
@@ -45289,6 +45342,28 @@ def pg_dynamics(root, exe, tmo, dry):
             f'</div>'
         )
         return str(p)
+
+    def _aero_dataset_picker(key: str, label: str = "Select promoted aero dataset") -> str:
+        """Picker for unified aero dataset roots used by dynamics batch labels."""
+        ds_root = root / "data" / "datasets"
+        candidates = []
+        if ds_root.exists():
+            for d in sorted([p for p in ds_root.iterdir() if p.is_dir()], key=lambda p: p.name):
+                if (d / "curated_aero_dataset.csv").exists() or (d / "aero_dataset.csv").exists():
+                    candidates.append(d)
+        if not candidates:
+            st.info("No aero datasets found. Build, curate, and promote an aero dataset first.")
+            return ""
+        promoted = [d for d in candidates if (d / "promotion_manifest.json").exists()]
+        ordered = promoted + [d for d in candidates if d not in promoted]
+        chosen = st.selectbox(
+            label,
+            ordered,
+            key=key,
+            format_func=lambda p: f"✓ {p.name}" if (p / "promotion_manifest.json").exists() else f"○ {p.name} (not promoted)",
+            help="✓ means promotion_manifest.json exists. Serious ML/dynamics-label workflows should use promoted datasets.",
+        )
+        return str(chosen)
 
     def _mass_inputs(key: str) -> list[str]:
         """Mass config section — reads YAMLs from configs/mass/ and returns CLI args."""
@@ -45564,7 +45639,89 @@ def pg_dynamics(root, exe, tmo, dry):
             )
             _state_space_artifact_preview(Path(rd_plot))
 
-    # ── ⑥ VALIDATE ────────────────────────────────────────────────────────────
+    # ── ⑥ BATCH LABELS ────────────────────────────────────────────────────────
+    with tab_batch_labels:
+        st.caption(
+            "Compute dataset-level control derivatives, first-order trim-deflection estimates, "
+            "flyability labels, red flags, and failure reasons from a promoted control-sweep aero dataset. "
+            "Output → control_derivatives.csv, flyability_labels.csv, dynamics_label_run_report.json."
+        )
+        ds_labels = _aero_dataset_picker("dyn_batch_labels_ds", "Aero dataset for dynamics batch labels")
+        if ds_labels:
+            c1, c2, c3 = st.columns(3)
+            source = c1.selectbox("--source", ["curated", "auto", "raw"], key="dyn_batch_labels_source")
+            max_trim = c2.number_input("Max |trim δe| [deg]", value=25.0, step=1.0, key="dyn_batch_labels_trim_limit")
+            min_auth = c3.number_input("Min |Cmδe| [/rad]", value=0.10, step=0.05, key="dyn_batch_labels_cmde_min")
+            workflow = st.text_input(
+                "Workflow root (optional)",
+                value="",
+                key="dyn_batch_labels_workflow",
+                placeholder="data/workflows/<workflow_name>",
+                help="Adds --workflow so the Workflow Cockpit can record dynamics_batch_labels.",
+            )
+            args_batch = [
+                "dynamics", "batch-labels",
+                "--dataset", ds_labels,
+                "--source", source,
+                "--max-abs-trim-delta-e-deg", str(float(max_trim)),
+                "--min-abs-cm-delta-e", str(float(min_auth)),
+            ]
+            if workflow.strip():
+                args_batch += ["--workflow", workflow.strip()]
+            _panel(
+                "Build dynamics batch labels",
+                "Computes finite-difference symmetric-elevon derivatives and first-order flyability labels. No solver rerun.",
+                args_batch,
+                root, exe, tmo, dry, "dyn_batch_labels_run", label="▶  Build batch labels",
+            )
+            _dataset_control_artifact_preview(Path(ds_labels))
+
+    # ── ⑦ FLYABILITY ML DATASET ───────────────────────────────────────────────
+    with tab_fly_ml:
+        st.caption(
+            "Build an ML-ready derived dataset by joining zero-control aero rows with flyability labels. "
+            "Output → <dataset>__flyability_ml/curated_aero_dataset.csv and flyability_ml_dataset_report.json."
+        )
+        ds_fly = _aero_dataset_picker("dyn_fly_ml_ds", "Source aero dataset with flyability labels")
+        if ds_fly:
+            c1, c2 = st.columns(2)
+            source_fly = c1.selectbox("--source", ["curated", "raw"], key="dyn_fly_ml_source")
+            allow_forced = c2.checkbox("Allow forced source promotion", value=False, key="dyn_fly_ml_allow_forced")
+            out_dir = st.text_input(
+                "Output dataset root (optional)",
+                value="",
+                key="dyn_fly_ml_output",
+                placeholder="leave blank for <source_dataset>__flyability_ml",
+            )
+            workflow_fly = st.text_input(
+                "Workflow root (optional)",
+                value="",
+                key="dyn_fly_ml_workflow",
+                placeholder="data/workflows/<workflow_name>",
+                help="Adds --workflow so the Workflow Cockpit can record flyability_ml_dataset.",
+            )
+            args_fly = ["dynamics", "build-ml-dataset", "--dataset", ds_fly, "--source", source_fly]
+            if out_dir.strip():
+                args_fly += ["--output-dir", out_dir.strip()]
+            if allow_forced:
+                args_fly.append("--allow-forced")
+            if workflow_fly.strip():
+                args_fly += ["--workflow", workflow_fly.strip()]
+            _panel(
+                "Build flyability ML dataset",
+                "Creates a promoted ML-compatible derived dataset for trim/control/flyability targets. No solver rerun.",
+                args_fly,
+                root, exe, tmo, dry, "dyn_fly_ml_run", label="▶  Build ML dataset",
+            )
+            expected = Path(out_dir.strip()) if out_dir.strip() else Path(ds_fly).with_name(Path(ds_fly).name + "__flyability_ml")
+            with st.expander("Evidence preview: flyability ML dataset", expanded=False):
+                _json_metric_block(
+                    expected / "flyability_ml_dataset_report.json",
+                    ["status", "source", "row_counts", "ml_columns", "artifacts"],
+                )
+                _dataframe_preview(expected / "curated_aero_dataset.csv")
+
+    # ── ⑧ VALIDATE ────────────────────────────────────────────────────────────
     with tab_validate:
         st.caption(
             "Validates saved dynamics artifacts without rerunning solvers: static-margin formula, "
@@ -45603,7 +45760,7 @@ def pg_dynamics(root, exe, tmo, dry):
                 except Exception as ex:
                     st.warning(f"Could not read validation report: {ex}")
 
-    # ── ⑦ INSPECT ─────────────────────────────────────────────────────────────
+    # ── ⑨ INSPECT ─────────────────────────────────────────────────────────────
     with tab_inspect:
         st.caption(
             "Read and display results from built dynamics runs. "
@@ -46754,6 +46911,11 @@ _GUI_RECENT_SLICE_MARKERS = (
     "state-space-inspect",
     "plot-state-space",
     "dynamics validate",
+    "dynamics batch-labels",
+    "dynamics build-ml-dataset",
+    "dynamics_batch_labels",
+    "flyability_ml_dataset",
+    "flyability_ml_dataset_report.json",
     "eigenvalues-zoom",
     "mode-summary-zoom",
     "linear_stability_summary",
@@ -61370,6 +61532,8 @@ WORKFLOW_COVERAGE_SPEC: tuple[WorkflowCoverageSpec, ...] = (
     WorkflowCoverageSpec("dataset_qc", True, "dataset", "aeris dataset aero-qc ... --workflow <workflow_root>", "dataset", "aero-qc"),
     WorkflowCoverageSpec("curation", True, "dataset", "aeris dataset curate-aero ... --workflow <workflow_root>", "dataset", "curate-aero"),
     WorkflowCoverageSpec("promotion", True, "dataset", "aeris dataset promote-aero ... --workflow <workflow_root>", "dataset", "promote-aero"),
+    WorkflowCoverageSpec("dynamics_batch_labels", False, "dynamics", "aeris dynamics batch-labels --dataset data/datasets/<promoted_dataset> --source curated --workflow <workflow_root>", "dynamics", "batch-labels"),
+    WorkflowCoverageSpec("flyability_ml_dataset", False, "dynamics", "aeris dynamics build-ml-dataset --dataset data/datasets/<promoted_dataset> --source curated --workflow <workflow_root>", "dynamics", "build-ml-dataset"),
     WorkflowCoverageSpec("ml_eda", True, "ml", "aeris ml eda ... --workflow <workflow_root>", "ml", "eda"),
     WorkflowCoverageSpec("ml_training", True, "ml", "aeris ml train ... --workflow <workflow_root>", "ml", "train"),
     WorkflowCoverageSpec("model_comparison", True, "ml", "aeris ml compare ... --workflow <workflow_root>", "ml", "compare"),
@@ -61386,9 +61550,10 @@ WORKFLOW_COVERAGE_SPEC: tuple[WorkflowCoverageSpec, ...] = (
 def _command_apps() -> dict[str, Any]:
     from aeris.commands.aero import aero_app
     from aeris.commands.dataset import dataset_app
+    from aeris.commands.dynamics import dynamics_app
     from aeris.commands.ml import ml_app
 
-    return {"aero": aero_app, "dataset": dataset_app, "ml": ml_app}
+    return {"aero": aero_app, "dataset": dataset_app, "dynamics": dynamics_app, "ml": ml_app}
 
 
 def _typer_command_name(command_info: Any) -> str:
@@ -61772,6 +61937,20 @@ DEFAULT_STAGE_DEFINITIONS: list[dict[str, Any]] = [
         "required": True,
         "description": "Promote the curated dataset so ML can use it.",
         "recommended_command": "aeris dataset promote-aero --dataset data/datasets/<aero_dataset>",
+    },
+    {
+        "name": "dynamics_batch_labels",
+        "domain": "dynamics",
+        "required": False,
+        "description": "Optional: compute control derivatives, first-order trim-feasibility labels, and flyability red flags from a promoted aero dataset.",
+        "recommended_command": "aeris dynamics batch-labels --dataset data/datasets/<promoted_dataset> --source curated --workflow <workflow_root>",
+    },
+    {
+        "name": "flyability_ml_dataset",
+        "domain": "dynamics_ml",
+        "required": False,
+        "description": "Optional: build a promoted ML-ready dataset that joins zero-control aero rows with flyability labels.",
+        "recommended_command": "aeris dynamics build-ml-dataset --dataset data/datasets/<promoted_dataset> --source curated --workflow <workflow_root>",
     },
     {
         "name": "ml_eda",
@@ -67625,6 +67804,33 @@ def test_dynamics_validate_cli_fail_on_error_exits_nonzero(tmp_path: Path) -> No
     payload = json.loads((run_dir / "dynamics" / "dynamics_validation_report.json").read_text(encoding="utf-8"))
     assert payload["passed"] is False
     assert any("static_margin mismatch" in e for e in payload["errors"])
+
+
+# ==================================================
+# FILE: tests/commands/test_dynamics_workflow_cli.py
+# ==================================================
+
+from __future__ import annotations
+
+from typer.testing import CliRunner
+
+from aeris.cli import app
+
+runner = CliRunner()
+
+
+def test_dynamics_batch_labels_exposes_workflow_option() -> None:
+    result = runner.invoke(app, ["dynamics", "batch-labels", "--help"])
+    assert result.exit_code == 0
+    assert "--workflow" in result.stdout
+    assert "workflow" in result.stdout.lower()
+
+
+def test_dynamics_build_ml_dataset_exposes_workflow_option() -> None:
+    result = runner.invoke(app, ["dynamics", "build-ml-dataset", "--help"])
+    assert result.exit_code == 0
+    assert "--workflow" in result.stdout
+    assert "workflow" in result.stdout.lower()
 
 
 # ==================================================
@@ -77994,6 +78200,28 @@ def test_get_geometry_generator_returns_generator_instance():
     assert generator.generator_id == "bwb_segmented_v1"
 
 # ==================================================
+# FILE: tests/gui/test_gui_dynamics_dataset_static.py
+# ==================================================
+
+from __future__ import annotations
+
+from pathlib import Path
+
+APP = Path("src/aeris/gui/app.py")
+
+
+def test_gui_dynamics_exposes_batch_labels_and_flyability_ml_dataset_tabs() -> None:
+    text = APP.read_text(encoding="utf-8")
+    assert "⑥ Batch Labels" in text
+    assert "⑦ Flyability ML Dataset" in text
+    assert '"dynamics", "batch-labels"' in text
+    assert '"dynamics", "build-ml-dataset"' in text
+    assert "dynamics_batch_labels" in text
+    assert "flyability_ml_dataset" in text
+    assert "flyability_ml_dataset_report.json" in text
+
+
+# ==================================================
 # FILE: tests/gui/test_gui_dynamics_validation_static.py
 # ==================================================
 
@@ -78004,7 +78232,7 @@ APP = Path("src/aeris/gui/app.py")
 
 def test_gui_dynamics_exposes_validation_tab_and_cli_command():
     text = APP.read_text(encoding="utf-8")
-    assert "⑥ Validate" in text
+    assert "Validate" in text
     assert '"dynamics", "validate"' in text
     assert "dynamics_validation_report.json" in text
     assert "static-margin formula" in text or "static margin" in text
@@ -84506,6 +84734,33 @@ def test_ml_subcommands_are_registered() -> None:
 
     for subcommand in ["train", "compare", "predict"]:
         assert subcommand in output
+
+# ==================================================
+# FILE: tests/workflow/test_dynamics_workflow_coverage.py
+# ==================================================
+
+from __future__ import annotations
+
+from aeris.workflow.coverage import WORKFLOW_COVERAGE_SPEC, build_workflow_coverage_report
+from aeris.workflow.spine import DEFAULT_STAGE_DEFINITIONS
+
+
+def test_dynamics_workflow_stages_are_declared_optional() -> None:
+    stages = {stage["name"]: stage for stage in DEFAULT_STAGE_DEFINITIONS}
+    assert stages["dynamics_batch_labels"]["required"] is False
+    assert stages["flyability_ml_dataset"]["required"] is False
+
+
+def test_dynamics_commands_are_in_workflow_coverage_and_covered() -> None:
+    pairs = {(spec.command_group, spec.command_name) for spec in WORKFLOW_COVERAGE_SPEC}
+    assert ("dynamics", "batch-labels") in pairs
+    assert ("dynamics", "build-ml-dataset") in pairs
+
+    report = build_workflow_coverage_report()
+    by_command = {(entry["command_group"], entry["command_name"]): entry for entry in report["entries"]}
+    assert by_command[("dynamics", "batch-labels")]["coverage_status"] == "covered"
+    assert by_command[("dynamics", "build-ml-dataset")]["coverage_status"] == "covered"
+
 
 # ==================================================
 # FILE: tests/workflow/test_workflow_coverage.py

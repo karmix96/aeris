@@ -83,20 +83,6 @@ DEFAULT_STAGE_DEFINITIONS: list[dict[str, Any]] = [
         "recommended_command": "aeris dataset promote-aero --dataset data/datasets/<aero_dataset>",
     },
     {
-        "name": "dynamics_batch_labels",
-        "domain": "dynamics",
-        "required": False,
-        "description": "Optional: compute control derivatives, first-order trim-feasibility labels, and flyability red flags from a promoted aero dataset.",
-        "recommended_command": "aeris dynamics batch-labels --dataset data/datasets/<promoted_dataset> --source curated --workflow <workflow_root>",
-    },
-    {
-        "name": "flyability_ml_dataset",
-        "domain": "dynamics_ml",
-        "required": False,
-        "description": "Optional: build a promoted ML-ready dataset that joins zero-control aero rows with flyability labels.",
-        "recommended_command": "aeris dynamics build-ml-dataset --dataset data/datasets/<promoted_dataset> --source curated --workflow <workflow_root>",
-    },
-    {
         "name": "ml_eda",
         "domain": "ml",
         "required": True,

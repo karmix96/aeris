@@ -2654,22 +2654,20 @@ def pg_dynamics(root, exe, tmo, dry):
 
     st.caption(
         "Dynamics builds on top of a completed **aero run**. "
-        "Workflow: **① Build** → **② CG Sweep** → **③ Trim** → **④ State Space** → **⑤ Plots** → **⑥ Batch Labels** → **⑦ Flyability ML Dataset** → **⑧ Validate** → **⑨ Inspect**. "
+        "Workflow: **① Build** → **② CG Sweep** → **③ Trim** → **④ State Space** → **⑤ Plots** → **⑥ Inspect**. "
         "Build computes static margin and neutral-point evidence. State-space computes eigenvalues, "
         "D5.1 reports explicit unstable-root flags, and D5.2/D5.2.1 generate eigenvalue plots. "
         "Add Iyy/Izz to your mass YAML to unlock short-period, phugoid, roll, Dutch roll, and spiral eigenvalues."
     )
 
-    tab_build, tab_cgsweep, tab_trim, tab_state_space, tab_state_plots, tab_batch_labels, tab_fly_ml, tab_validate, tab_inspect = st.tabs([
+    tab_build, tab_cgsweep, tab_trim, tab_state_space, tab_state_plots, tab_validate, tab_inspect = st.tabs([
         "  ① Build  ",
         "  ② CG Sweep  ",
         "  ③ Trim  ",
         "  ④ State Space  ",
         "  ⑤ Plots  ",
-        "  ⑥ Batch Labels  ",
-        "  ⑦ Flyability ML Dataset  ",
-        "  ⑧ Validate  ",
-        "  ⑨ Inspect  ",
+        "  ⑥ Validate  ",
+        "  ⑦ Inspect  ",
     ])
 
     # Shared: picker for aero run directory
@@ -2767,28 +2765,6 @@ def pg_dynamics(root, exe, tmo, dry):
             f'</div>'
         )
         return str(p)
-
-    def _aero_dataset_picker(key: str, label: str = "Select promoted aero dataset") -> str:
-        """Picker for unified aero dataset roots used by dynamics batch labels."""
-        ds_root = root / "data" / "datasets"
-        candidates = []
-        if ds_root.exists():
-            for d in sorted([p for p in ds_root.iterdir() if p.is_dir()], key=lambda p: p.name):
-                if (d / "curated_aero_dataset.csv").exists() or (d / "aero_dataset.csv").exists():
-                    candidates.append(d)
-        if not candidates:
-            st.info("No aero datasets found. Build, curate, and promote an aero dataset first.")
-            return ""
-        promoted = [d for d in candidates if (d / "promotion_manifest.json").exists()]
-        ordered = promoted + [d for d in candidates if d not in promoted]
-        chosen = st.selectbox(
-            label,
-            ordered,
-            key=key,
-            format_func=lambda p: f"✓ {p.name}" if (p / "promotion_manifest.json").exists() else f"○ {p.name} (not promoted)",
-            help="✓ means promotion_manifest.json exists. Serious ML/dynamics-label workflows should use promoted datasets.",
-        )
-        return str(chosen)
 
     def _mass_inputs(key: str) -> list[str]:
         """Mass config section — reads YAMLs from configs/mass/ and returns CLI args."""
@@ -3064,89 +3040,7 @@ def pg_dynamics(root, exe, tmo, dry):
             )
             _state_space_artifact_preview(Path(rd_plot))
 
-    # ── ⑥ BATCH LABELS ────────────────────────────────────────────────────────
-    with tab_batch_labels:
-        st.caption(
-            "Compute dataset-level control derivatives, first-order trim-deflection estimates, "
-            "flyability labels, red flags, and failure reasons from a promoted control-sweep aero dataset. "
-            "Output → control_derivatives.csv, flyability_labels.csv, dynamics_label_run_report.json."
-        )
-        ds_labels = _aero_dataset_picker("dyn_batch_labels_ds", "Aero dataset for dynamics batch labels")
-        if ds_labels:
-            c1, c2, c3 = st.columns(3)
-            source = c1.selectbox("--source", ["curated", "auto", "raw"], key="dyn_batch_labels_source")
-            max_trim = c2.number_input("Max |trim δe| [deg]", value=25.0, step=1.0, key="dyn_batch_labels_trim_limit")
-            min_auth = c3.number_input("Min |Cmδe| [/rad]", value=0.10, step=0.05, key="dyn_batch_labels_cmde_min")
-            workflow = st.text_input(
-                "Workflow root (optional)",
-                value="",
-                key="dyn_batch_labels_workflow",
-                placeholder="data/workflows/<workflow_name>",
-                help="Adds --workflow so the Workflow Cockpit can record dynamics_batch_labels.",
-            )
-            args_batch = [
-                "dynamics", "batch-labels",
-                "--dataset", ds_labels,
-                "--source", source,
-                "--max-abs-trim-delta-e-deg", str(float(max_trim)),
-                "--min-abs-cm-delta-e", str(float(min_auth)),
-            ]
-            if workflow.strip():
-                args_batch += ["--workflow", workflow.strip()]
-            _panel(
-                "Build dynamics batch labels",
-                "Computes finite-difference symmetric-elevon derivatives and first-order flyability labels. No solver rerun.",
-                args_batch,
-                root, exe, tmo, dry, "dyn_batch_labels_run", label="▶  Build batch labels",
-            )
-            _dataset_control_artifact_preview(Path(ds_labels))
-
-    # ── ⑦ FLYABILITY ML DATASET ───────────────────────────────────────────────
-    with tab_fly_ml:
-        st.caption(
-            "Build an ML-ready derived dataset by joining zero-control aero rows with flyability labels. "
-            "Output → <dataset>__flyability_ml/curated_aero_dataset.csv and flyability_ml_dataset_report.json."
-        )
-        ds_fly = _aero_dataset_picker("dyn_fly_ml_ds", "Source aero dataset with flyability labels")
-        if ds_fly:
-            c1, c2 = st.columns(2)
-            source_fly = c1.selectbox("--source", ["curated", "raw"], key="dyn_fly_ml_source")
-            allow_forced = c2.checkbox("Allow forced source promotion", value=False, key="dyn_fly_ml_allow_forced")
-            out_dir = st.text_input(
-                "Output dataset root (optional)",
-                value="",
-                key="dyn_fly_ml_output",
-                placeholder="leave blank for <source_dataset>__flyability_ml",
-            )
-            workflow_fly = st.text_input(
-                "Workflow root (optional)",
-                value="",
-                key="dyn_fly_ml_workflow",
-                placeholder="data/workflows/<workflow_name>",
-                help="Adds --workflow so the Workflow Cockpit can record flyability_ml_dataset.",
-            )
-            args_fly = ["dynamics", "build-ml-dataset", "--dataset", ds_fly, "--source", source_fly]
-            if out_dir.strip():
-                args_fly += ["--output-dir", out_dir.strip()]
-            if allow_forced:
-                args_fly.append("--allow-forced")
-            if workflow_fly.strip():
-                args_fly += ["--workflow", workflow_fly.strip()]
-            _panel(
-                "Build flyability ML dataset",
-                "Creates a promoted ML-compatible derived dataset for trim/control/flyability targets. No solver rerun.",
-                args_fly,
-                root, exe, tmo, dry, "dyn_fly_ml_run", label="▶  Build ML dataset",
-            )
-            expected = Path(out_dir.strip()) if out_dir.strip() else Path(ds_fly).with_name(Path(ds_fly).name + "__flyability_ml")
-            with st.expander("Evidence preview: flyability ML dataset", expanded=False):
-                _json_metric_block(
-                    expected / "flyability_ml_dataset_report.json",
-                    ["status", "source", "row_counts", "ml_columns", "artifacts"],
-                )
-                _dataframe_preview(expected / "curated_aero_dataset.csv")
-
-    # ── ⑧ VALIDATE ────────────────────────────────────────────────────────────
+    # ── ⑥ VALIDATE ────────────────────────────────────────────────────────────
     with tab_validate:
         st.caption(
             "Validates saved dynamics artifacts without rerunning solvers: static-margin formula, "
@@ -3185,7 +3079,7 @@ def pg_dynamics(root, exe, tmo, dry):
                 except Exception as ex:
                     st.warning(f"Could not read validation report: {ex}")
 
-    # ── ⑨ INSPECT ─────────────────────────────────────────────────────────────
+    # ── ⑦ INSPECT ─────────────────────────────────────────────────────────────
     with tab_inspect:
         st.caption(
             "Read and display results from built dynamics runs. "
@@ -4336,11 +4230,6 @@ _GUI_RECENT_SLICE_MARKERS = (
     "state-space-inspect",
     "plot-state-space",
     "dynamics validate",
-    "dynamics batch-labels",
-    "dynamics build-ml-dataset",
-    "dynamics_batch_labels",
-    "flyability_ml_dataset",
-    "flyability_ml_dataset_report.json",
     "eigenvalues-zoom",
     "mode-summary-zoom",
     "linear_stability_summary",

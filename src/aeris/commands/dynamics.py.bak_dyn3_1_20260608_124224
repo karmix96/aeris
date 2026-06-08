@@ -26,7 +26,6 @@ import typer
 
 from aeris.aero.io import read_aero_result
 from aeris.commands._helpers import fail_command, parse_csv_list
-from aeris.commands._workflow_recording import record_workflow_stage_success
 from aeris.dataset.dynamics_labels import compute_dynamics_labels
 from aeris.dynamics.analysis import build_dynamics_foundation_result
 from aeris.dynamics.cg_sweep import run_cg_sweep, write_cg_sweep, write_cg_sweep_csv
@@ -122,14 +121,6 @@ def dynamics_batch_labels(
         "--json",
         help="Print the full batch-label report as JSON.",
     ),
-    workflow: Path | None = typer.Option(
-        None,
-        "--workflow",
-        file_okay=False,
-        dir_okay=True,
-        resolve_path=True,
-        help="Optional workflow root; auto-records stage dynamics_batch_labels when this command succeeds.",
-    ),
 ) -> None:
     """Generate dataset-level dynamics/flyability labels from a promoted aero dataset.
 
@@ -157,23 +148,6 @@ def dynamics_batch_labels(
         )
     except Exception as exc:
         fail_command("Dynamics batch-labels", exc)
-
-
-    record_workflow_stage_success(
-        workflow=workflow,
-        stage="dynamics_batch_labels",
-        inputs=[dataset],
-        outputs=list((report.get("artifacts", {}) or {}).values()),
-        artifacts=list((report.get("artifacts", {}) or {}).values()),
-        notes="Computed control derivatives and first-order flyability labels from an aero dataset.",
-        metadata={
-            "source": report.get("source"),
-            "overall_status": report.get("overall_status"),
-            "label_summary": report.get("label_summary", {}),
-            "thresholds": report.get("thresholds", {}),
-        },
-        echo=not as_json,
-    )
 
     if as_json:
         typer.echo(json.dumps(report, indent=2))
@@ -801,14 +775,6 @@ def dynamics_build_ml_dataset(
     zero_control_value_deg: float = typer.Option(0.0, "--zero-control-value-deg", help="Symmetric elevon value used as the ML row anchor."),
     zero_control_tolerance_deg: float = typer.Option(1.0e-9, "--zero-control-tolerance-deg", help="Tolerance for matching the zero-control row."),
     json_output: bool = typer.Option(False, "--json", help="Print full JSON report."),
-    workflow: Path | None = typer.Option(
-        None,
-        "--workflow",
-        file_okay=False,
-        dir_okay=True,
-        resolve_path=True,
-        help="Optional workflow root; auto-records stage flyability_ml_dataset when this command succeeds.",
-    ),
 ) -> None:
     """Build an ML-ready derived dataset by joining zero-control aero rows with flyability labels."""
     try:
@@ -826,23 +792,6 @@ def dynamics_build_ml_dataset(
         )
     except Exception as exc:
         fail_command("Dynamics build-ml-dataset", exc)
-
-
-    record_workflow_stage_success(
-        workflow=workflow,
-        stage="flyability_ml_dataset",
-        inputs=[dataset, report.get("source_flyability_labels_csv"), report.get("source_control_derivatives_csv")],
-        outputs=[report.get("output_dir"), report.get("output_curated_csv"), report.get("output_alias_csv")],
-        artifacts=list((report.get("artifacts", {}) or {}).values()),
-        notes="Built an ML-ready flyability dataset from zero-control aero rows and flyability labels.",
-        metadata={
-            "source": report.get("source"),
-            "status": report.get("status"),
-            "row_counts": report.get("row_counts", {}),
-            "ml_columns": report.get("ml_columns", {}),
-        },
-        echo=not json_output,
-    )
 
     if json_output:
         typer.echo(json.dumps(report, indent=2))

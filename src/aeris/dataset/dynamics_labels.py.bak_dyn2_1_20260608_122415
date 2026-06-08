@@ -166,13 +166,7 @@ def compute_dynamics_labels(
 
     completed_label_count = int(flyability_report.get("computed_label_count", 0) or 0)
     skipped_label_count = int(flyability_report.get("skipped_label_count", 0) or 0)
-    red_flag_count = int(
-        flyability_report.get("red_flag_count", label_false_count + label_nan_count + skipped_label_count)
-        or 0
-    )
-    red_flag_reason_counts = flyability_report.get("red_flag_reason_counts", {}) or {}
-    trim_failure_reason_counts = flyability_report.get("trim_failure_reason_counts", {}) or {}
-    label_failure_stage_counts = flyability_report.get("label_failure_stage_counts", {}) or {}
+    red_flag_count = label_false_count + label_nan_count + skipped_label_count
 
     report = {
         "schema_version": "d4_dynamics_label_batch_v1",
@@ -189,9 +183,6 @@ def compute_dynamics_labels(
             "longitudinal_basic_flyable_false_count": label_false_count,
             "longitudinal_basic_flyable_unknown_count": label_nan_count,
             "red_flag_count": red_flag_count,
-            "red_flag_reason_counts": red_flag_reason_counts,
-            "trim_failure_reason_counts": trim_failure_reason_counts,
-            "label_failure_stage_counts": label_failure_stage_counts,
             "longitudinal_basic_flyable_counts": flyable_counts,
         },
         "thresholds": flyability_report.get("thresholds", {}),

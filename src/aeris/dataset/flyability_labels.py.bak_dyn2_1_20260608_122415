@@ -136,172 +136,6 @@ def _safe_bool(value: Any) -> bool | None:
     return bool(value)
 
 
-def _bool_is_true(value: Any) -> bool:
-    parsed = _safe_bool(value)
-    return parsed is True
-
-
-def _is_missing(value: Any) -> bool:
-    try:
-        return bool(pd.isna(value))
-    except Exception:
-        return value is None
-
-
-def _join_reasons(reasons: list[str]) -> str | None:
-    clean = [str(reason).strip() for reason in reasons if str(reason).strip()]
-    return ";".join(clean) if clean else None
-
-
-def _reason_counts(series: pd.Series) -> dict[str, int]:
-    counts: dict[str, int] = {}
-    for value in series.dropna():
-        for reason in str(value).split(";"):
-            reason = reason.strip()
-            if reason:
-                counts[reason] = counts.get(reason, 0) + 1
-    return dict(sorted(counts.items()))
-
-
-def _infer_failure_stage(reasons: list[str]) -> str:
-    if not reasons:
-        return "none"
-    buckets: list[str] = []
-    for reason in reasons:
-        if reason.startswith("label_skipped") or reason in {
-            "control_derivative_not_computed",
-            "matching_aero_group_not_found",
-            "missing_zero_control_cm",
-            "missing_or_zero_Cm_delta_e",
-        }:
-            buckets.append("skipped")
-        elif reason.startswith("pitch_authority") or "authority" in reason:
-            buckets.append("authority")
-        elif reason.startswith("pitch_control_sign"):
-            buckets.append("control_sign")
-        elif reason.startswith("trim_delta_e"):
-            buckets.append("trim")
-        elif reason.startswith("alpha_trim"):
-            buckets.append("alpha_trim")
-        elif reason.startswith("pitch_stability"):
-            buckets.append("static_stability")
-        else:
-            buckets.append("other")
-    unique = sorted(set(buckets))
-    if len(unique) == 1:
-        return unique[0]
-    return "multiple"
-
-
-def _enrich_failure_reason_columns(out_df: pd.DataFrame) -> pd.DataFrame:
-    """Add explicit failure-reason columns to flyability labels.
-
-    This is an evidence/clarity layer over the existing D3 first-order labels.
-    It does not change the underlying physics or promote the result to full
-    nonlinear trim, MIL-STD compliance, or 6-DOF validation.
-    """
-    if out_df.empty:
-        return out_df
-
-    df = out_df.copy()
-    if "trim_delta_e_limit_deg" not in df.columns:
-        df["trim_delta_e_limit_deg"] = df.get("max_abs_trim_delta_e_deg")
-
-    red_flags: list[bool] = []
-    red_flag_reasons: list[str | None] = []
-    trim_failure_reasons: list[str | None] = []
-    pitch_authority_failure_reasons: list[str | None] = []
-    pitch_control_sign_failure_reasons: list[str | None] = []
-    alpha_trim_warning_reasons: list[str | None] = []
-    pitch_stability_warning_reasons: list[str | None] = []
-    failure_stages: list[str] = []
-
-    for _, row in df.iterrows():
-        reasons: list[str] = []
-        trim_reasons: list[str] = []
-        authority_reasons: list[str] = []
-        sign_reasons: list[str] = []
-        alpha_warnings: list[str] = []
-        stability_warnings: list[str] = []
-
-        status = str(row.get("status", "")).strip().lower()
-        if status != "computed":
-            skip = row.get("skip_reason")
-            if _is_missing(skip) or not str(skip).strip():
-                reasons.append("label_skipped")
-            else:
-                reasons.append(str(skip).strip())
-
-        pitch_authority = _safe_bool(row.get("pitch_authority_adequate"))
-        if pitch_authority is not True:
-            if pitch_authority is False:
-                authority_reasons.append("pitch_authority_below_threshold")
-            else:
-                authority_reasons.append("pitch_authority_unknown")
-
-        pitch_sign = _safe_bool(row.get("pitch_control_sign_ok"))
-        if pitch_sign is not True:
-            if pitch_sign is False:
-                sign_reasons.append("pitch_control_sign_not_expected_negative")
-            else:
-                sign_reasons.append("pitch_control_sign_unknown")
-
-        trim_feasible = _safe_bool(row.get("trim_delta_e_feasible"))
-        if trim_feasible is not True:
-            if trim_feasible is False:
-                trim_reasons.append("trim_delta_e_required_exceeds_limit")
-            else:
-                trim_reasons.append("trim_delta_e_feasibility_unknown")
-
-        alpha_trim_feasible = _safe_bool(row.get("alpha_trim_feasible"))
-        if alpha_trim_feasible is False:
-            alpha_warnings.append("alpha_trim_outside_bounds")
-
-        pitch_stability = _safe_bool(row.get("pitch_stability_sign_ok"))
-        if pitch_stability is False:
-            stability_warnings.append("pitch_stability_sign_not_expected_negative")
-
-        reasons.extend(authority_reasons)
-        reasons.extend(sign_reasons)
-        reasons.extend(trim_reasons)
-        # Optional stability/alpha signals are warnings. They become red flags
-        # only when the underlying optional data exists and explicitly fails.
-        reasons.extend(alpha_warnings)
-        reasons.extend(stability_warnings)
-
-        # Keep red_flag aligned with the declared basic label when present.
-        flyable_value = _safe_bool(row.get("label_longitudinal_basic_flyable"))
-        if flyable_value is True and not reasons:
-            red_flag = False
-        elif flyable_value is False:
-            red_flag = True
-            if not reasons:
-                reasons.append("longitudinal_basic_flyable_false")
-        elif flyable_value is None and reasons:
-            red_flag = True
-        else:
-            red_flag = bool(reasons)
-
-        red_flags.append(bool(red_flag))
-        red_flag_reasons.append(_join_reasons(reasons))
-        trim_failure_reasons.append(_join_reasons(trim_reasons))
-        pitch_authority_failure_reasons.append(_join_reasons(authority_reasons))
-        pitch_control_sign_failure_reasons.append(_join_reasons(sign_reasons))
-        alpha_trim_warning_reasons.append(_join_reasons(alpha_warnings))
-        pitch_stability_warning_reasons.append(_join_reasons(stability_warnings))
-        failure_stages.append(_infer_failure_stage(reasons))
-
-    df["red_flag"] = red_flags
-    df["red_flag_reasons"] = red_flag_reasons
-    df["trim_failure_reason"] = trim_failure_reasons
-    df["pitch_authority_failure_reason"] = pitch_authority_failure_reasons
-    df["pitch_control_sign_failure_reason"] = pitch_control_sign_failure_reasons
-    df["alpha_trim_warning_reason"] = alpha_trim_warning_reasons
-    df["pitch_stability_warning_reason"] = pitch_stability_warning_reasons
-    df["label_failure_stage"] = failure_stages
-    return df
-
-
 def _build_label_row(
     *,
     derivative_row: pd.Series,
@@ -334,7 +168,7 @@ def _build_label_row(
     cm0 = None if zero_row is None else _finite_float(zero_row.get(cm_column))
     alpha0 = _finite_float(derivative_row.get("alpha_deg"))
     cma = None
-    for candidate in ("cma_per_rad", "Cma_per_rad", "cma", "Cma", "cm_alpha", "Cm_alpha", "C_m_alpha"):
+    for candidate in ("cma", "Cma", "Cma_per_rad"):
         if zero_row is not None and candidate in zero_row.index:
             cma = _finite_float(zero_row.get(candidate))
             if cma is not None:
@@ -498,7 +332,7 @@ def compute_flyability_labels(
         raise ValueError("Cannot compute flyability labels without geometry_id in aero and derivative data.")
 
     numeric_aero_columns = [resolved_control_column, cm_column, *[c for c in resolved_group_columns if c != "geometry_id"]]
-    for optional in ("cma_per_rad", "Cma_per_rad", "cma", "Cma", "cm_alpha", "Cm_alpha", "C_m_alpha"):
+    for optional in ("cma", "Cma", "Cma_per_rad"):
         if optional in aero_df.columns:
             numeric_aero_columns.append(optional)
     aero_df = _coerce_numeric(aero_df, numeric_aero_columns)
@@ -548,7 +382,6 @@ def compute_flyability_labels(
         rows.append(label_row)
 
     out_df = pd.DataFrame(rows)
-    out_df = _enrich_failure_reason_columns(out_df)
     output_csv = dataset_root / output_csv_name
     output_report = dataset_root / output_report_name
     out_df.to_csv(output_csv, index=False)
@@ -558,23 +391,6 @@ def compute_flyability_labels(
     if "label_longitudinal_basic_flyable" in out_df.columns:
         for value, count in out_df["label_longitudinal_basic_flyable"].value_counts(dropna=False).items():
             flyable_counts[str(value)] = int(count)
-
-    red_flag_count = int(out_df["red_flag"].sum()) if "red_flag" in out_df.columns else 0
-    red_flag_reason_counts = (
-        _reason_counts(out_df["red_flag_reasons"])
-        if "red_flag_reasons" in out_df.columns
-        else {}
-    )
-    trim_failure_reason_counts = (
-        _reason_counts(out_df["trim_failure_reason"])
-        if "trim_failure_reason" in out_df.columns
-        else {}
-    )
-    label_failure_stage_counts = (
-        {str(k): int(v) for k, v in out_df["label_failure_stage"].value_counts(dropna=False).items()}
-        if "label_failure_stage" in out_df.columns
-        else {}
-    )
 
     report = {
         "created_at_utc": datetime.now(UTC).isoformat(),
@@ -600,10 +416,6 @@ def compute_flyability_labels(
         "skipped_label_count": int((out_df["status"] != "computed").sum()) if "status" in out_df else 0,
         "status_counts": {str(k): int(v) for k, v in status_counts.items()},
         "longitudinal_basic_flyable_counts": flyable_counts,
-        "red_flag_count": red_flag_count,
-        "red_flag_reason_counts": red_flag_reason_counts,
-        "trim_failure_reason_counts": trim_failure_reason_counts,
-        "label_failure_stage_counts": label_failure_stage_counts,
         "thresholds": {
             "max_abs_trim_delta_e_deg": float(max_abs_trim_delta_e_deg),
             "min_abs_Cm_delta_e_per_rad": float(min_abs_cm_delta_e),

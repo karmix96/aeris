@@ -51,6 +51,17 @@ def sample_bwb_design(
     sw2_mag_deg = rng.uniform(pb.sw2_deg.min, pb.sw2_deg.max)
     sw3_mag_deg = rng.uniform(pb.sw3_deg.min, pb.sw3_deg.max)
 
+    # Elevon geometry DVs — sample when bounds provided, else use defaults
+    _eb = config.elevon_bounds
+    if _eb is not None:
+        _es = float(rng.uniform(_eb.elevon_start_frac.min, _eb.elevon_start_frac.max))
+        _ee = float(rng.uniform(_eb.elevon_end_frac.min,   _eb.elevon_end_frac.max))
+        _eh = float(rng.uniform(_eb.elevon_hinge_frac.min, _eb.elevon_hinge_frac.max))
+        if _es >= _ee:
+            _es, _ee = min(_es, _ee), max(_es, _ee)
+    else:
+        _es, _ee, _eh = 0.60, 0.95, 0.75
+
     return BWBDesignSample(
         c1_m=rng.uniform(pb.c1_m.min, pb.c1_m.max),
         c2_ratio=rng.uniform(pb.c2_ratio.min, pb.c2_ratio.max),
@@ -69,4 +80,7 @@ def sample_bwb_design(
         dihedral_b1_deg=rng.uniform(sb.dihedral_b1_deg.min, sb.dihedral_b1_deg.max),
         dihedral_b2_deg=rng.uniform(sb.dihedral_b2_deg.min, sb.dihedral_b2_deg.max),
         dihedral_b3_deg=rng.uniform(sb.dihedral_b3_deg.min, sb.dihedral_b3_deg.max),
+        elevon_start_frac=_es,
+        elevon_end_frac=_ee,
+        elevon_hinge_frac=_eh,
     )

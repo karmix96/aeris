@@ -102,6 +102,28 @@ _FEATURE_PRESETS: dict[str, FeaturePreset] = {
             "wiring exists."
         ),
     ),
+    "bwb_control_sym_elevon_v3": FeaturePreset(
+        name="bwb_control_sym_elevon_v3",
+        domain="bwb_scalar_aero",
+        columns=(
+            "c1_m", "b_total_m", "sw1_deg",
+            "elevon_start_frac", "elevon_end_frac", "elevon_hinge_frac",
+            "alpha_deg", "velocity_mps", "altitude_m",
+            "delta_e_sym_deg",
+        ),
+        description="BWB v3 pitch preset with variable elevon geometry DVs.",
+    ),
+    "bwb_diff_elevon_v3": FeaturePreset(
+        name="bwb_diff_elevon_v3",
+        domain="bwb_scalar_aero",
+        columns=(
+            "c1_m", "b_total_m", "sw1_deg",
+            "elevon_start_frac", "elevon_end_frac", "elevon_hinge_frac",
+            "alpha_deg", "velocity_mps", "altitude_m",
+            "delta_a_diff_deg",
+        ),
+        description="BWB v3 roll preset with variable elevon geometry DVs.",
+    ),
     "airfoil_xfoil_v1": FeaturePreset(
         name="airfoil_xfoil_v1",
         domain="airfoil_2d_scalar_aero",

@@ -17,7 +17,7 @@ from aeris.dataset.sampling.base import DatasetSampler
 from aeris.dataset.sampling.registry import register_dataset_sampler
 from aeris.generators.bwb_segmented_v1.params import BWBDesignSample, BWBGeneratorConfig
 
-_BWB_SAMPLE_DIM = 17
+_BWB_SAMPLE_DIM = 20
 
 
 def _lhs_unit(n_samples: int, n_dim: int, rng: np.random.Generator) -> np.ndarray:
@@ -65,6 +65,15 @@ def _bwb_bounds(config: BWBGeneratorConfig) -> list[tuple[float, float]]:
         (sb.dihedral_b2_deg.min, sb.dihedral_b2_deg.max),
         (sb.dihedral_b3_deg.min, sb.dihedral_b3_deg.max),
     ]
+    if config.elevon_bounds is not None:
+        eb = config.elevon_bounds
+        bounds += [
+            (eb.elevon_start_frac.min, eb.elevon_start_frac.max),
+            (eb.elevon_end_frac.min,   eb.elevon_end_frac.max),
+            (eb.elevon_hinge_frac.min, eb.elevon_hinge_frac.max),
+        ]
+    else:
+        bounds += [(0.60, 0.60), (0.95, 0.95), (0.75, 0.75)]
 
     if len(bounds) != _BWB_SAMPLE_DIM:
         raise ValueError(
@@ -114,6 +123,9 @@ def lhs_matrix_to_samples(matrix: np.ndarray) -> list[BWBDesignSample]:
                 dihedral_b1_deg=float(row[14]),
                 dihedral_b2_deg=float(row[15]),
                 dihedral_b3_deg=float(row[16]),
+                elevon_start_frac=float(row[17]),
+                elevon_end_frac=float(row[18]),
+                elevon_hinge_frac=float(row[19]),
             )
         )
 

@@ -71,19 +71,22 @@ def default_control_metadata() -> dict[str, Any]:
     }
 
 
-def control_alias_row(control_input_deg: float | None) -> dict[str, float | None]:
+def control_alias_row(
+    control_input_deg: float | None,
+    diff_input_deg: float | None = None,
+) -> dict[str, float | None]:
     """Return backward-compatible and explicit control-name columns.
 
-    For now:
-        control_input_deg == delta_e_sym_deg
-        delta_a_diff_deg == 0.0
+    control_input_deg → control_input_deg + delta_e_sym_deg (symmetric, pitch)
+    diff_input_deg    → delta_a_diff_deg                    (antisymmetric, roll)
 
-    This is deliberately conservative. It names the current behavior without
-    pretending differential elevon support exists yet.
+    control_input_deg preserves None for backward compatibility.
+    diff_input_deg defaults to 0.0 (reserved column always present).
     """
-    value = None if control_input_deg is None else float(control_input_deg)
+    sym_value  = None if control_input_deg is None else float(control_input_deg)
+    diff_value = 0.0  if diff_input_deg    is None else float(diff_input_deg)
     return {
-        "control_input_deg": value,
-        "delta_e_sym_deg": value,
-        "delta_a_diff_deg": 0.0,
+        "control_input_deg": sym_value,
+        "delta_e_sym_deg":   sym_value,
+        "delta_a_diff_deg":  diff_value,
     }

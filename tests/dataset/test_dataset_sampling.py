@@ -161,7 +161,7 @@ def test_build_lhs_design_matrix_shape_and_reproducibility() -> None:
     m1 = build_lhs_design_matrix(config=config, n_samples=4, rng=rng1)
     m2 = build_lhs_design_matrix(config=config, n_samples=4, rng=rng2)
 
-    assert m1.shape == (4, 17)
+    assert m1.shape == (4, 20)
     assert np.allclose(m1, m2)
 
 

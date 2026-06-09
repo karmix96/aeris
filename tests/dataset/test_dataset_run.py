@@ -103,6 +103,9 @@ def _make_sample(i: int) -> dict[str, float]:
         "dihedral_b1_deg": 3.0,
         "dihedral_b2_deg": 2.0,
         "dihedral_b3_deg": 1.0,
+        "elevon_start_frac": 0.60,
+        "elevon_end_frac": 0.95,
+        "elevon_hinge_frac": 0.75,
     }
 
 

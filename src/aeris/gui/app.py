@@ -100,6 +100,7 @@ QC_PROFILES  = ["basic", "strict"]
 PAGES = [
     ("home",     "⌂",  "Home"),
     ("geometry", "△",  "Geometry"),
+    ("airfoil",  "〜",  "2D Airfoil"),
     ("dataset",  "▣",  "Dataset Factory"),
     ("aero",     "⊿",  "Aero Analysis"),
     ("dynamics", "◎",  "Dynamics"),
@@ -1154,7 +1155,7 @@ def pg_geometry(root, exe, tmo, dry):
     import shutil as _shutil
 
     _hero("△", "Geometry", "bwb_segmented_v1 · 17 design variables", "generator")
-    tab_gen, tab_vis, tab_info, tab_inspect = st.tabs(["  ① Generate  ", "  ② Visualize  ", "  ③ Design variables  ", "  ④ Inspect run  "])
+    tab_gen, tab_vis, tab_info, tab_inspect, tab_cad = st.tabs(["  ① Generate  ", "  ② Visualize  ", "  ③ Design variables  ", "  ④ Inspect run  ", "  ⑤ CAD export  "])
 
     # Shared config list — built once, used in all tabs
     cfg_files = _files(str(root / "configs" / "geometry"), "*.yaml")
@@ -1654,6 +1655,314 @@ def pg_geometry(root, exe, tmo, dry):
                 # CLI shortcut
                 _sec("CLI equivalent")
                 _cmd_preview(["geometry", "inspect", "--run-dir", str(insp_path)])
+
+
+    # ── CAD EXPORT ───────────────────────────────────────────────────────────
+    with tab_cad:
+        _note(
+            "Backend-first CAD export. This panel calls <code>aeris geometry export-cad</code>; "
+            "it does not duplicate OpenVSP or geometry logic in Streamlit. "
+            "VSP script export works without OpenVSP installed. STEP requires OpenVSP batch execution.",
+            "info",
+        )
+        cad_cfg = st.selectbox(
+            "Geometry config",
+            cfg_smoke_first,
+            format_func=_cfg_label,
+            key="cad_cfg",
+            help="Use baseline_bwb_25.yaml for smoke checks unless running a real design-space export.",
+        )
+        cad_format_label = st.selectbox(
+            "Export format selector",
+            ["VSP script (.vspscript)", "STEP (.step/.stp)", "Both"],
+            key="cad_fmt",
+        )
+        cad_format = {
+            "VSP script (.vspscript)": "vspscript",
+            "STEP (.step/.stp)": "step",
+            "Both": "vspscript,step",
+        }[cad_format_label]
+        openvsp_exe = st.text_input(
+            "OpenVSP executable/path",
+            value="vsp",
+            key="cad_openvsp",
+            help="Examples: vsp, OpenVSP, /opt/OpenVSP/vsp. Used only for STEP.",
+        )
+        step_backend = st.selectbox(
+            "STEP backend",
+            ["auto", "cadquery", "openvsp"],
+            index=0,
+            key="cad_step_backend",
+            help="auto tries AeroSandbox/CadQuery first and falls back to OpenVSP batch if needed.",
+        )
+        cad_out = st.text_input(
+            "Output directory",
+            value=str(root / "data" / "runs" / "cad_export_test"),
+            key="cad_out",
+            help="Artifacts go under <output-dir>/cad_exports/.",
+        )
+        cad_args = [
+            "geometry", "export-cad",
+            "--config", cad_cfg,
+            "--formats", cad_format,
+            "--output-dir", cad_out,
+            "--openvsp-command", openvsp_exe,
+            "--step-backend", step_backend,
+        ]
+        _panel(
+            "Export CAD",
+            "Writes cad_exports/geometry.vspscript, geometry_export_manifest.json, stdout.txt, stderr.txt; geometry.step appears only if OpenVSP STEP succeeds.",
+            cad_args,
+            root, exe, tmo, dry, "cad_export_run",
+            label="Export CAD",
+        )
+
+        cad_dir = Path(cad_out).expanduser() / "cad_exports"
+        _sec("Produced files")
+        if cad_dir.exists():
+            files = sorted([p for p in cad_dir.glob("*") if p.is_file()])
+            if not files:
+                st.info("cad_exports/ exists but contains no files yet.")
+            else:
+                rows = []
+                for f in files:
+                    rows.append({
+                        "file": f.name,
+                        "size_bytes": f.stat().st_size,
+                        "path": str(f),
+                    })
+                if pd is not None:
+                    st.dataframe(rows, use_container_width=True)
+                else:
+                    st.json(rows)
+
+                preview_options = [p for p in files if p.suffix.lower() in {".json", ".txt", ".vspscript", ".step", ".stp", ".vsp3"}]
+                if preview_options:
+                    chosen_preview = st.selectbox(
+                        "Preview CAD artifact",
+                        preview_options,
+                        format_func=lambda p: p.name,
+                        key="cad_preview",
+                    )
+                    _show_file(chosen_preview)
+        else:
+            st.caption("No CAD export folder yet. Run Export CAD above.")
+
+        _sec("OpenVSP doctor")
+        _panel(
+            "Check OpenVSP executable",
+            "Checks whether the executable/path is discoverable. Does not launch OpenVSP.",
+            ["geometry", "openvsp-doctor", "--openvsp-command", openvsp_exe],
+            root, exe, tmo, dry, "cad_doctor_run",
+            label="Check OpenVSP",
+        )
+
+
+def pg_airfoil(root, exe, tmo, dry):
+    _hero("〜", "2D Airfoil", "XFOIL surrogate pipeline · library → sweep → QC → promote → ML", "xfoil")
+
+    lib_dir = root / "data" / "airfoil_library"
+    inv_csv = lib_dir / "airfoil_inventory.csv"
+    cfg_files = _files(str(root / "configs" / "airfoil"), "*.yaml")
+    ds_dirs = [Path(d) for d in _dirs(str(root / "data" / "datasets"))
+               if (Path(d) / "airfoil_dataset_manifest.json").exists()]
+
+    tab_lib, tab_sweep, tab_trust, tab_ml = st.tabs([
+        "  ① Library  ", "  ② XFOIL Sweep  ",
+        "  ③ QC / Curate / Promote  ", "  ④ ML  ",
+    ])
+
+    # ── ① LIBRARY ────────────────────────────────────────────────────────────
+    with tab_lib:
+        _sec("Library status")
+        if inv_csv.exists():
+            try:
+                df_inv = pd.read_csv(inv_csv) if pd is not None else None
+                if df_inv is not None:
+                    n_lib = len(df_inv)
+                    fam_counts = df_inv["family"].value_counts().to_dict() if "family" in df_inv.columns else {}
+                    tc_min = df_inv["t_c"].min() if "t_c" in df_inv.columns else None
+                    tc_max = df_inv["t_c"].max() if "t_c" in df_inv.columns else None
+                    stat_items = [("Airfoils", str(n_lib), "ingested")]
+                    if tc_min is not None:
+                        stat_items.append(("t/c range", f"{tc_min:.3f}-{tc_max:.3f}", "thickness"))
+                    if fam_counts:
+                        top3 = ", ".join(f"{k}:{v}" for k, v in list(fam_counts.items())[:3])
+                        stat_items.append(("Top families", top3, "by count"))
+                    _stat_row(stat_items)
+                    with st.expander("Family breakdown", expanded=False):
+                        for fam, cnt in fam_counts.items():
+                            st.caption(f"{fam:<22} {cnt}")
+            except Exception as _e:
+                st.warning(f"Could not read inventory: {_e}")
+        else:
+            st.warning(f"No library at `{lib_dir}`. Run ingest below.")
+
+        _sec("Solver check")
+        _panel("Check XFOIL binary",
+               "Confirms XFOIL is on PATH and shows its version.",
+               ["airfoil", "check-solver"],
+               root, exe, tmo, dry, "af_check", label="▶  Check XFOIL")
+
+        _sec("Ingest .dat library")
+        _note("Point <code>--db-dir</code> to a directory of Selig-format <code>.dat</code> files "
+              "(e.g. the UIUC Airfoil Database). Default output: <code>data/airfoil_library/</code>.", "info")
+        db_dir_str = st.text_input("Source .dat directory (--db-dir)",
+                                    value=str(root / "data" / "airfoil_database"),
+                                    key="af_db_dir")
+        _panel("Ingest airfoil library",
+               f"Reads all .dat files, writes airfoil_inventory.csv + coords/*.npz",
+               ["airfoil", "ingest", "--db-dir", db_dir_str, "--output-dir", str(lib_dir)],
+               root, exe, tmo, dry, "af_ingest", label="▶  Ingest library")
+        _panel("Library stats",
+               "Count, family breakdown, t/c and camber ranges.",
+               ["airfoil", "library-stats", "--library", str(lib_dir)],
+               root, exe, tmo, dry, "af_libstats", label="▶  Library stats")
+
+    # ── ② XFOIL SWEEP ────────────────────────────────────────────────────────
+    with tab_sweep:
+        if not inv_csv.exists():
+            st.warning("Library not built. Go to ① Library and run Ingest first.")
+        else:
+            _note("Use <b>--n-airfoils</b> to subset for fast iteration "
+                  "(10 = smoke, 25 = pilot, 2156 = full campaign at ~2-4 h).", "info")
+
+            smoke_cfg = str(root / "configs" / "airfoil" / "xfoil_smoke_v1.yaml")
+            sweep_cfg = str(root / "configs" / "airfoil" / "xfoil_sweep_v1.yaml")
+            cfg_opts  = ([smoke_cfg] if smoke_cfg in cfg_files else []) +                         ([sweep_cfg] if sweep_cfg in cfg_files else []) +                         [f for f in cfg_files if f not in (smoke_cfg, sweep_cfg)]
+
+            sel_cfg = st.selectbox("XFOIL config", cfg_opts if cfg_opts else [""],
+                                   format_func=lambda s: (
+                                       f"Smoke — {Path(s).name}" if "smoke" in s else
+                                       f"Production — {Path(s).name}" if "sweep_v1" in s else
+                                       Path(s).name),
+                                   key="af_cfg")
+            if "smoke" in (sel_cfg or ""):
+                st.info("Smoke config — 8 alpha, 1 Re. Pipeline validation only.")
+            elif "sweep_v1" in (sel_cfg or ""):
+                st.success("Production config — 41 alpha, 3 Re. Use for ML training.")
+
+            ds_name   = st.text_input("Dataset name (--name)", value="airfoil_xfoil_pilot", key="af_ds_name")
+            n_airfoils = st.slider("Airfoils to sweep (--n-airfoils)", 5, 2156, 25, 5, key="af_n",
+                                   help="5-25 for fast iteration, 2156 for full campaign.")
+            af_seed   = st.number_input("Subset seed (--seed)", value=0, min_value=0, key="af_seed")
+
+            if sel_cfg and ds_name:
+                _panel("Run XFOIL sweep",
+                       f"Sweeps {n_airfoils} airfoils → data/datasets/{ds_name}/",
+                       ["airfoil", "dataset", "generate",
+                        "--library", str(lib_dir),
+                        "--config",  sel_cfg,
+                        "--name",    ds_name,
+                        "--n-airfoils", str(n_airfoils),
+                        "--seed",    str(int(af_seed))],
+                       root, exe, tmo, dry, "af_gen", label="▶  Run XFOIL sweep")
+
+            if ds_dirs:
+                _sec("Existing airfoil datasets")
+                for ds in ds_dirs[:10]:
+                    m = _rjson(ds / "airfoil_dataset_manifest.json") or {}
+                    rate = m.get("convergence_rate")
+                    rate_s = f"{rate:.1%}" if rate is not None else "—"
+                    _h(f'<div style="background:#1B2A3A;border:1px solid #2D3F52;border-radius:7px;'
+                       f'padding:.4rem .9rem;margin:.25rem 0;font-size:.78rem;'
+                       f'font-family:JetBrains Mono,monospace;color:#D6DEE8">'
+                       f'<b>{ds.name}</b> · {m.get("n_airfoils","—")} airfoils · '
+                       f'{m.get("total_rows","—")} rows · {m.get("converged_rows","—")} converged · {rate_s}'
+                       f'</div>')
+
+    # ── ③ QC / CURATE / PROMOTE ──────────────────────────────────────────────
+    with tab_trust:
+        if not ds_dirs:
+            st.warning("No airfoil datasets found. Run ② XFOIL Sweep first.")
+        else:
+            sel_ds  = st.selectbox("Dataset", [d.name for d in ds_dirs], key="af_trust_ds")
+            ds_path = next((d for d in ds_dirs if d.name == sel_ds), None)
+            if ds_path:
+                prom_exists = (ds_path / "promotion_manifest.json").exists()
+                cur_exists  = (ds_path / "curation_report.json").exists()
+                if prom_exists:
+                    st.success("✓ Promoted — ready for ML.")
+                elif cur_exists:
+                    st.info("Curated but not yet promoted.")
+                else:
+                    st.warning("Raw dataset — run QC and Curate before promoting.")
+
+                c_qc, c_cur, c_prom = st.columns(3)
+                with c_qc:
+                    _panel("QC", "Quality checks on raw airfoil_dataset.csv.",
+                           ["airfoil", "dataset", "qc", "--dataset", str(ds_path)],
+                           root, exe, tmo, dry, "af_qc", label="▶  QC")
+                with c_cur:
+                    _panel("Curate", "Reject unconverged, cd≤0, non-finite rows.",
+                           ["airfoil", "dataset", "curate", "--dataset", str(ds_path)],
+                           root, exe, tmo, dry, "af_cur", label="▶  Curate")
+                with c_prom:
+                    _panel("Promote", "Write promotion_manifest.json for ML.",
+                           ["airfoil", "dataset", "promote", "--dataset", str(ds_path)],
+                           root, exe, tmo, dry, "af_prom", label="▶  Promote")
+
+                _sec("Inspect")
+                _panel("Dataset inspect", "Show manifest, curation, promotion status.",
+                       ["airfoil", "dataset", "inspect", "--dataset", str(ds_path)],
+                       root, exe, tmo, dry, "af_insp", label="▶  Inspect")
+
+                for fname, label_str in [
+                    ("airfoil_dataset.csv",    "Raw dataset preview"),
+                    ("curated_dataset.csv",    "Curated dataset preview"),
+                    ("promotion_manifest.json","Promotion manifest"),
+                    ("curation_report.json",   "Curation report"),
+                ]:
+                    fpath = ds_path / fname
+                    if fpath.exists():
+                        with st.expander(label_str, expanded=False):
+                            _show_file(fpath)
+
+    # ── ④ ML SHORTCUT ────────────────────────────────────────────────────────
+    with tab_ml:
+        _note(
+            "All ML training for 2D airfoil data happens in <b>◈ ML Studio</b>. "
+            "Use the settings below when you get there.",
+            "info",
+        )
+        promoted = [d for d in ds_dirs if (d / "promotion_manifest.json").exists()]
+        if not promoted:
+            st.warning("No promoted datasets yet. Complete ③ QC / Curate / Promote first, then go to ◈ ML Studio.")
+        else:
+            sel_prom  = st.selectbox("Promoted dataset", [d.name for d in promoted], key="af_ml_ds")
+            prom_path = next((d for d in promoted if d.name == sel_prom), None)
+            if prom_path:
+                _sec("Settings to use in ◈ ML Studio")
+                _h(
+                    f'<div style="background:#1B2A3A;border:1px solid #2D3F52;border-radius:9px;'
+                    f'padding:1rem 1.2rem;margin:.5rem 0">' +
+                    f'<div style="font-size:.8rem;color:#AAB6C2;margin-bottom:.7rem;'
+                    f'text-transform:uppercase;letter-spacing:.08em">Copy these into ML Studio</div>' +
+                    f'<table style="width:100%;border-collapse:collapse;font-size:.82rem">' +
+                    f'<tr><td style="color:#7F8B98;padding:.2rem .5rem .2rem 0;white-space:nowrap">Dataset</td>' +
+                    f'<td style="font-family:JetBrains Mono,monospace;color:#93C5FD">{prom_path}</td></tr>' +
+                    f'<tr><td style="color:#7F8B98;padding:.2rem .5rem .2rem 0">Feature set</td>' +
+                    f'<td style="font-family:JetBrains Mono,monospace;color:#86EFAC">airfoil_xfoil_v1</td></tr>' +
+                    f'<tr><td style="color:#7F8B98;padding:.2rem .5rem .2rem 0">Targets</td>' +
+                    f'<td style="font-family:JetBrains Mono,monospace;color:#D6DEE8">cl, cd, cm</td></tr>' +
+                    f'<tr><td style="color:#7F8B98;padding:.2rem .5rem .2rem 0">Group column</td>' +
+                    f'<td style="font-family:JetBrains Mono,monospace;color:#FCD34D">airfoil_id</td></tr>' +
+                    f'<tr><td style="color:#7F8B98;padding:.2rem .5rem .2rem 0">Split method</td>' +
+                    f'<td style="font-family:JetBrains Mono,monospace;color:#D6DEE8">grouped</td></tr>' +
+                    f'<tr><td style="color:#7F8B98;padding:.2rem .5rem .2rem 0">Recommended seeds</td>' +
+                    f'<td style="font-family:JetBrains Mono,monospace;color:#D6DEE8">101, 202, 303, 404, 505</td></tr>' +
+                    f'</table>' +
+                    f'<div style="margin-top:.8rem;font-size:.75rem;color:#5A7A96">' +
+                    f'Workflow in ML Studio: ② EDA → ③ Train → ⑤ Compare → ⑥ Promote model' +
+                    f'</div></div>'
+                )
+
+                # Show promoted model if it exists
+                prom_model = root / "data" / "processed" / "ml_runs" / "airfoil_et_final_v1"
+                if prom_model.exists():
+                    _sec("Promoted model")
+                    st.success(f"✓ Promoted model found: `{prom_model.name}`")
+                    _cmd_preview(["ml", "inspect-model", "--model-run-dir", str(prom_model)])
 
 
 def pg_dataset(root, exe, tmo, dry):
@@ -2991,6 +3300,36 @@ def pg_dynamics(root, exe, tmo, dry):
                 root, exe, tmo, dry, "dyn_cgsw_run",
                 label="▶  Run CG sweep",
             )
+            # Show CG sweep summary inline after running
+            cgsw_json = Path(rd_cgsw) / "dynamics" / "cg_sweep.json"
+            if cgsw_json.exists():
+                try:
+                    import json as _jcg
+                    cg_data = _jcg.loads(cgsw_json.read_text(encoding="utf-8"))
+                    sm_min  = cg_data.get("stable_cg_min_m")
+                    sm_max  = cg_data.get("stable_cg_max_m")
+                    zc      = cg_data.get("static_margin_zero_crossing_estimate_m")
+                    _sec("CG sweep result")
+                    s1, s2, s3 = st.columns(3)
+                    s1.metric("Neutral point (Xnp)",
+                              f"{float(zc):.4f} m" if zc is not None else "—")
+                    s2.metric("Stable CG min",
+                              f"{float(sm_min):.4f} m" if sm_min is not None else "—")
+                    s3.metric("Stable CG max",
+                              f"{float(sm_max):.4f} m" if sm_max is not None else "—")
+                    if sm_min is not None and sm_max is not None:
+                        st.success(
+                            f"✓ Stable CG range: {float(sm_min):.4f} – "
+                            f"{float(sm_max):.4f} m "
+                            f"(span = {float(sm_max) - float(sm_min):.4f} m). "
+                            "See ⑥ Inspect → CG sweep curve for the full chart."
+                        )
+                    else:
+                        st.warning("No stable CG range found. Check aero result and mass inputs.")
+                except Exception as _ex:
+                    st.caption(f"Could not read cg_sweep.json: {_ex}")
+            else:
+                st.caption("Run CG sweep above to see results here.")
 
     # ── ③ TRIM ────────────────────────────────────────────────────────────────
     with tab_trim:
@@ -3008,6 +3347,48 @@ def pg_dynamics(root, exe, tmo, dry):
                 root, exe, tmo, dry, "dyn_trim_run",
                 label="▶  Run trim",
             )
+            # Show trim result inline — no need to navigate to ⑥ Inspect
+            trim_json = Path(rd_trim) / "dynamics" / "trim_result.json"
+            if trim_json.exists():
+                try:
+                    import json as _jt
+                    tr  = _jt.loads(trim_json.read_text(encoding="utf-8"))
+                    lng = tr.get("longitudinal") or {}
+                    _sec("Trim result")
+                    if not lng.get("valid"):
+                        st.error(f"Trim invalid: {lng.get('reason', 'unknown')}")
+                    else:
+                        t1, t2, t3, t4 = st.columns(4)
+                        t1.metric("Current α [°]",
+                                  f"{float(lng.get('alpha_current_deg', 0)):+.2f}")
+                        t2.metric("Trim α estimate",
+                                  f"{float(lng.get('alpha_trim_deg', 0)):+.4f}°")
+                        t3.metric("Δα required",
+                                  f"{float(lng.get('delta_alpha_deg', 0)):+.4f}°")
+                        in_bounds = lng.get("alpha_trim_in_bounds")
+                        t4.metric("In range [-5°,15°]",
+                                  "✓ Yes" if in_bounds else "✗ No")
+                        if in_bounds:
+                            st.success(
+                                f"✓ Trim α = {lng.get('alpha_trim_deg', 0):.2f}° "
+                                "is within flyable range."
+                            )
+                        else:
+                            st.warning(
+                                f"⚠ Trim α = {lng.get('alpha_trim_deg', 0):.2f}° "
+                                "is outside [-5°, 15°]. Consider moving CG aft."
+                            )
+                        if lng.get("de_trim_deg") is not None:
+                            e1, e2 = st.columns(2)
+                            e1.metric("Trim δe estimate",
+                                      f"{float(lng.get('de_trim_deg', 0)):+.4f}°")
+                            de_ok = lng.get("de_trim_in_bounds")
+                            e2.metric("In actuator range [-25°,25°]",
+                                      "✓ Yes" if de_ok else "✗ No")
+                except Exception as _ex:
+                    st.caption(f"Could not read trim_result.json: {_ex}")
+            else:
+                st.caption("Run trim above to see results here.")
 
     # ── ④ STATE SPACE ─────────────────────────────────────────────────────────
     with tab_state_space:
@@ -3062,7 +3443,27 @@ def pg_dynamics(root, exe, tmo, dry):
                 ["dynamics", "plot-state-space", "--run-dir", rd_plot, "--plot", plot_choice],
                 root, exe, tmo, dry, "dyn_state_plot_run", label="▶  Plot state-space",
             )
-            _state_space_artifact_preview(Path(rd_plot))
+            # Show PNGs directly — not behind a collapsed expander
+            plot_dir = Path(rd_plot) / "dynamics" / "plots"
+            plot_manifest = plot_dir / "state_space_plot_manifest.json"
+            pm = _rjson(plot_manifest)
+            if pm:
+                artifacts = pm.get("artifacts") or {}
+                pngs = [(label, Path(path)) for label, path in artifacts.items()
+                        if path and Path(path).exists()
+                        and Path(path).suffix.lower() == ".png"]
+                if pngs:
+                    _sec(f"Generated plots ({len(pngs)} PNG{'s' if len(pngs) != 1 else ''})")
+                    for label, png_path in pngs:
+                        st.caption(label)
+                        st.image(str(png_path), use_container_width=True)
+                else:
+                    st.info("No PNG files found. Run ▶ Plot state-space above.")
+            else:
+                st.info("No plot manifest found. Run ▶ Plot state-space above.")
+            # Also keep the full evidence expander for JSON details
+            with st.expander("State-space JSON details", expanded=False):
+                _state_space_artifact_preview(Path(rd_plot))
 
     # ── ⑥ BATCH LABELS ────────────────────────────────────────────────────────
     with tab_batch_labels:
@@ -4353,6 +4754,7 @@ def main():
     dispatch = {
         "home":     pg_home,
         "geometry": pg_geometry,
+        "airfoil":  pg_airfoil,
         "dataset":  pg_dataset,
         "aero":     pg_aero,
         "dynamics": pg_dynamics,

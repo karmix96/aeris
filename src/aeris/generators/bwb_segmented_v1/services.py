@@ -102,6 +102,25 @@ def generate_geometry_case_from_sample(
     section_geometry = build_section_geometry_from_sample(planform, sample, config)
     validate_section_geometry(section_geometry)
 
+    # Override control surface geometry with sampled elevon DVs (v3+)
+    if config.control_surfaces.surfaces and hasattr(sample, 'elevon_start_frac'):
+        from dataclasses import replace as _dc_replace
+        _overridden_surfaces = tuple(
+            _dc_replace(
+                surf,
+                hinge_point=float(sample.elevon_hinge_frac),
+                spanwise=_dc_replace(
+                    surf.spanwise,
+                    start_frac=float(sample.elevon_start_frac),
+                    end_frac=float(sample.elevon_end_frac),
+                ),
+            )
+            for surf in config.control_surfaces.surfaces
+        )
+        config = _dc_replace(config, control_surfaces=_dc_replace(
+            config.control_surfaces, surfaces=_overridden_surfaces
+        ))
+
     aerosandbox_result = None
     if effective_build_aerosandbox:
         aerosandbox_result = build_aerosandbox_geometry(section_geometry, config)
@@ -145,6 +164,7 @@ def generate_geometry_case_from_sample(
         section_geometry=section_geometry,
         aerosandbox_result=aerosandbox_result,
         artifact_paths=artifact_paths.to_dict(),
+        sample=sample,
     )
 
     if reconstruction_artifacts is not None:

@@ -44,12 +44,18 @@ class FlightConditionSweep:
     q_rad_s_values: list[float] = field(default_factory=list)
     r_rad_s_values: list[float] = field(default_factory=list)
     control_input_deg_values: list[float] = field(default_factory=list)
+    diff_input_deg_values: list[float] = field(default_factory=list)
+    # diff_input_deg_values: independent differential-elevon sweep.
+    # Each value is one delta_a_diff_deg run with delta_e_sym_deg = 0.
+    # Not combined with control_input_deg_values (independent, not product).
 
 
 @dataclass(slots=True)
 class AeroSweepCaseInput:
     flight_condition: FlightCondition
     control_input_deg: float | None = None
+    diff_input_deg: float | None = None
+    sweep_type: str = 'sym'  # 'sym' | 'diff'
 
 
 @dataclass(slots=True)

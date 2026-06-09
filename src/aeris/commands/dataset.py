@@ -716,7 +716,17 @@ def dataset_aero_generate(
     control_input_values: str = typer.Option(
         "",
         "--control-input-values",
-        help="Comma-separated control-input values, e.g. -5,0,5",
+        help="Comma-separated symmetric elevon (delta_e_sym_deg) values, e.g. -10,-5,0,5,10",
+    ),
+    diff_input_values: str = typer.Option(
+        "",
+        "--diff-input-values",
+        help=(
+            "Comma-separated differential elevon (delta_a_diff_deg) values, e.g. -10,-5,0,5,10. "
+            "Runs as an INDEPENDENT sweep: each value pairs with sym=0 and sweeps all alpha. "
+            "Requires a second control surface (symmetric=False) in the geometry config. "
+            "Results are tagged sweep_type=diff in the dataset CSV."
+        ),
     ),
     solver: str = typer.Option(
         "aerosandbox_avl",
@@ -856,6 +866,10 @@ def dataset_aero_generate(
         control_input_values,
         "--control-input-values",
     )
+    parsed_diff_input_values = parse_float_list(
+        diff_input_values,
+        "--diff-input-values",
+    )
 
     if not parsed_alpha_values:
         raise typer.BadParameter("--alpha-values must not be empty.")
@@ -909,6 +923,7 @@ def dataset_aero_generate(
         q_values=parsed_q_values,
         r_values=parsed_r_values,
         control_input_values=parsed_control_input_values,
+        diff_input_values=parsed_diff_input_values or None,
         solver=solver,
         avl_command=avl_command,
         timeout_sec=timeout_sec,

@@ -47,6 +47,7 @@ class AVLStrips(AVLBase):
     def _default_keystroke_file_contents(
         self,
         control_input_deg: float | None = None,
+        diff_input_deg: float | None = None,
     ) -> list[str]:
         run_file_contents: list[str] = []
 
@@ -101,8 +102,19 @@ class AVLStrips(AVLBase):
         # Explicit AVL control command.
         # If controls exist, command the actual value through OPER.
         if _airplane_has_any_control_surface(self.airplane):
-            value = 0.0 if control_input_deg is None else float(control_input_deg)
-            run_file_contents += ["d1", "d1", f"{value}"]
+            sym_value  = 0.0 if control_input_deg is None else float(control_input_deg)
+            diff_value = 0.0 if diff_input_deg    is None else float(diff_input_deg)
+
+            # d1 d1 {sym}  — symmetric (pitch) deflection of first control surface
+            run_file_contents += ["d1", "d1", f"{sym_value}"]
+
+            # d2 d2 {diff} — second control surface (antisymmetric elevon for roll).
+            # With ControlSurface(symmetric=False) on Wing(symmetric=True), ASB
+            # writes gain=+1 for the right half and gain=-1 for the mirrored left half,
+            # creating a separate d2 variable. d2 d2 {val} → right down, left up = roll.
+            # Only send when diff is requested AND the plane has a second surface.
+            if diff_input_deg is not None and diff_value != 0.0:
+                run_file_contents += ["d2", "d2", f"{diff_value}"]
 
         return run_file_contents
 
@@ -110,6 +122,7 @@ class AVLStrips(AVLBase):
         self,
         run_command: str | None = None,
         control_input_deg: float | None = None,
+        diff_input_deg: float | None = None,
         totals_filename: str = "output.txt",
         strip_filename: str = "strips.txt",
         surface_filename: str = "surfaces.txt",
@@ -150,7 +163,8 @@ class AVLStrips(AVLBase):
             _rm(directory / element_filename)
 
         keystroke_lines = self._default_keystroke_file_contents(
-            control_input_deg=control_input_deg
+            control_input_deg=control_input_deg,
+            diff_input_deg=diff_input_deg,
         )
         if run_command is not None:
             keystroke_lines.append(run_command)
@@ -622,6 +636,7 @@ class AeroSandboxAVLSolver(AeroSolver):
 
                 raw = avl.run(
                     control_input_deg=control_input_deg,
+                    diff_input_deg=settings.solver_options.get("diff_input_deg"),
                     totals_filename="output.txt",
                     strip_filename="strips.txt",
                     surface_filename="surfaces.txt",

@@ -40,6 +40,8 @@ def build_geometry_summary(
     section_geometry: SectionGeometryResult,
     aerosandbox_result: AeroSandboxGeometryResult | None,
     artifact_paths: dict[str, str],
+    *,
+    sample: BWBDesignSample | None = None,
 ) -> dict[str, Any]:
     generator_info = {
         "family": config.generator.family,
@@ -74,6 +76,9 @@ def build_geometry_summary(
         "sw1_deg": planform.sw1_deg,
         "sw2_deg": planform.sw2_deg,
         "sw3_deg": planform.sw3_deg,
+        "elevon_start_frac": getattr(sample, "elevon_start_frac", 0.60) if sample is not None else 0.60,
+        "elevon_end_frac": getattr(sample, "elevon_end_frac",   0.95) if sample is not None else 0.95,
+        "elevon_hinge_frac": getattr(sample, "elevon_hinge_frac", 0.75) if sample is not None else 0.75,
     }
 
     discretization = {

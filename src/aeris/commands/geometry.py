@@ -18,6 +18,7 @@ from pathlib import Path
 import typer
 
 from aeris.geometry.visualization import visualize_geometry_from_config
+from aeris.geometry.cad_export import export_cad_from_config, openvsp_doctor
 from aeris.pipeline.geometry_run import run_geometry_generation
 
 geometry_app = typer.Typer(help="Geometry-related commands.")
@@ -51,6 +52,8 @@ def geometry_info() -> None:
     typer.echo("")
     typer.echo("  Commands:")
     typer.echo("    aeris geometry generate  --config <yaml>")
+    typer.echo("    aeris geometry export-cad --config <yaml> --formats vspscript,step")
+    typer.echo("    aeris geometry openvsp-doctor [--openvsp-command vsp]")
     typer.echo("    aeris geometry visualize --config <yaml> [--seed N] [--draw-3d|--no-draw-3d]")
     typer.echo("    aeris geometry inspect   --run-dir <run_root>")
 
@@ -270,4 +273,234 @@ def geometry_inspect(
 
     if m.get("error"):
         typer.secho(f"  [ERROR] {m['error']}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+
+
+@geometry_app.command("openvsp-doctor")
+def geometry_openvsp_doctor(
+    openvsp_command: str = typer.Option(
+        "vsp",
+        "--openvsp-command",
+        help="OpenVSP executable name or absolute path.",
+    ),
+    as_json: bool = typer.Option(False, "--json", help="Print machine-readable JSON."),
+) -> None:
+    """Check whether OpenVSP is discoverable for optional STEP export."""
+    import json as _json
+
+    report = openvsp_doctor(openvsp_command)
+    if as_json:
+        typer.echo(_json.dumps(report, indent=2))
+        return
+
+    typer.echo("")
+    typer.echo("[AERIS] OpenVSP doctor")
+    typer.echo(f"  command      : {report['openvsp_command']}")
+    typer.echo(f"  found        : {report['found']}")
+    typer.echo(f"  resolved_path: {report.get('resolved_path') or '—'}")
+    typer.echo(f"  source       : {report.get('source') or '—'}")
+    typer.echo("  note         : VSP script export does not require OpenVSP. STEP can use CadQuery or OpenVSP.")
+    if not report["found"]:
+        typer.secho("  [warn] STEP export will be skipped until OpenVSP is installed or the path is supplied.", fg=typer.colors.YELLOW)
+
+
+@geometry_app.command("export-cad")
+def geometry_export_cad(
+    config: Path = typer.Option(
+        ...,
+        "--config",
+        "-c",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Path to the YAML geometry config file.",
+    ),
+    formats: str = typer.Option(
+        "vspscript",
+        "--formats",
+        help="Comma-separated export formats: vspscript, step. Alias .stp is accepted.",
+    ),
+    output_dir: Path | None = typer.Option(
+        None,
+        "--output-dir",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Run/output root. CAD artifacts are written under <output-dir>/cad_exports/.",
+    ),
+    openvsp_command: str = typer.Option(
+        "vsp",
+        "--openvsp-command",
+        help="OpenVSP executable/path used only when STEP export is requested.",
+    ),
+    timeout_sec: int = typer.Option(
+        180,
+        "--timeout-sec",
+        min=1,
+        help="Timeout for optional OpenVSP batch execution.",
+    ),
+    step_backend: str = typer.Option(
+        "auto",
+        "--step-backend",
+        help="STEP backend: auto, cadquery, or openvsp.",
+    ),
+    as_json: bool = typer.Option(False, "--json", help="Print result as JSON."),
+) -> None:
+    """Export CAD reconstruction artifacts for a config-defined geometry."""
+    import json as _json
+
+    result = export_cad_from_config(
+        config_path=config,
+        formats=formats,
+        output_dir=output_dir,
+        openvsp_command=openvsp_command,
+        timeout_sec=timeout_sec,
+        step_backend=step_backend,
+    )
+
+    if as_json:
+        typer.echo(_json.dumps(result.to_dict(), indent=2))
+    else:
+        typer.echo("")
+        label = "SUCCESS" if result.status == "success" else ("PARTIAL" if result.status == "partial_success" else "FAILED")
+        typer.echo(f"[AERIS] Geometry CAD export — {label}")
+        typer.echo(f"  status      : {result.status}")
+        typer.echo(f"  config      : {config}")
+        typer.echo(f"  run_root    : {result.run_root}")
+        typer.echo(f"  cad_exports : {result.cad_dir}")
+        typer.echo(f"  requested   : {','.join(result.formats_requested)}")
+        typer.echo(f"  produced    : {','.join(result.formats_produced) if result.formats_produced else '—'}")
+        typer.echo(f"  manifest    : {result.manifest_path}")
+        if result.vspscript_path is not None:
+            typer.echo(f"  vspscript   : {result.vspscript_path}")
+        if result.step_path is not None:
+            typer.echo(f"  step        : {result.step_path}")
+        if result.stdout_path is not None:
+            typer.echo(f"  stdout      : {result.stdout_path}")
+        if result.stderr_path is not None:
+            typer.echo(f"  stderr      : {result.stderr_path}")
+        for warning in result.warnings:
+            typer.secho(f"  [warn] {warning}", fg=typer.colors.YELLOW)
+
+    raise typer.Exit(code=0 if result.succeeded else 1)
+
+
+
+@geometry_app.command("export-deflected-cad")
+def geometry_export_deflected_cad(
+    config: Path = typer.Option(
+        ...,
+        "--config",
+        "-c",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Path to the YAML geometry config file.",
+    ),
+    formats: str = typer.Option(
+        "vspscript,step",
+        "--formats",
+        help="Comma-separated CAD formats: vspscript, step, or both.",
+    ),
+    output_dir: Path = typer.Option(
+        ...,
+        "--output-dir",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Output run directory for physical deflected CAD export.",
+    ),
+    delta_e_sym_deg: float = typer.Option(
+        0.0,
+        "--delta-e-sym-deg",
+        help="Symmetric elevon deflection in degrees. Positive = both trailing edges down.",
+    ),
+    delta_a_diff_deg: float = typer.Option(
+        0.0,
+        "--delta-a-diff-deg",
+        help="Differential elevon deflection in degrees. Positive = right TE down, left TE up.",
+    ),
+    hinge_gap_fraction: float = typer.Option(
+        0.01,
+        "--hinge-gap-fraction",
+        min=0.0,
+        max=0.10,
+        help="Chordwise hinge gap fraction between fixed wing and separate elevon. Use 0 for touching hinge, small values like 0.005 for CFD meshing clearance.",
+    ),
+    boundary_epsilon_fraction: float = typer.Option(
+        1.0e-6,
+        "--boundary-epsilon-fraction",
+        min=1.0e-8,
+        max=1.0e-3,
+        help="Spanwise epsilon used to force the abrupt control boundary. Smaller = sharper but more CAD-fragile.",
+    ),
+    deflection_topology: str = typer.Option(
+        "split-elevon",
+        "--deflection-topology",
+        help="Physical CAD topology: split-elevon for separate mechanical elevons, or unified-abrupt for legacy one-body half-wings.",
+    ),
+    seed: int | None = typer.Option(
+        None,
+        "--seed",
+        help="Optional geometry sampling seed override. Defaults to the YAML generator seed.",
+    ),
+) -> None:
+    """Export physically deflected abrupt-boundary BWB CAD.
+
+    Unlike ordinary AVL control metadata, this command changes the actual CAD
+    geometry: each half-wing remains one continuous body, but the control-span
+    aft airfoil geometry is physically deflected with abrupt spanwise boundaries.
+    """
+    try:
+        from aeris.generators.bwb_segmented_v1.deflected_cad import (
+            export_bwb_physical_deflected_cad,
+        )
+
+        manifest = export_bwb_physical_deflected_cad(
+            config_path=config,
+            output_dir=output_dir,
+            formats=formats,
+            delta_e_sym_deg=delta_e_sym_deg,
+            delta_a_diff_deg=delta_a_diff_deg,
+            hinge_gap_fraction=hinge_gap_fraction,
+            boundary_epsilon_fraction=boundary_epsilon_fraction,
+            deflection_topology=deflection_topology,
+            seed=seed,
+        )
+    except Exception as exc:
+        typer.secho(f"[AERIS] Geometry physical deflected CAD export — FAILED: {exc}", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    status = str(manifest.get("status", "unknown"))
+    label = "SUCCESS" if status == "success" else status.upper()
+    typer.echo(f"[AERIS] Geometry physical deflected CAD export — {label}")
+    typer.echo(f"  status      : {status}")
+    typer.echo(f"  config      : {manifest.get('config_path')}")
+    typer.echo(f"  run_root    : {manifest.get('run_root')}")
+    typer.echo(f"  cad_exports : {manifest.get('cad_dir')}")
+    typer.echo(f"  surface_model: {manifest.get('surface_model')}")
+    typer.echo(f"  body_model  : {manifest.get('body_model')}")
+    typer.echo(f"  topology   : {manifest.get('deflection_topology')}")
+    typer.echo(f"  requested   : {','.join(manifest.get('formats_requested', []))}")
+    typer.echo(f"  produced    : {','.join(manifest.get('formats_produced', []))}")
+
+    controls = manifest.get("physical_controls", {}) or {}
+    typer.echo("  physical deflection:")
+    typer.echo(f"    delta_e_sym_deg : {controls.get('delta_e_sym_deg')}")
+    typer.echo(f"    delta_a_diff_deg: {controls.get('delta_a_diff_deg')}")
+    typer.echo(f"    right_deg       : {controls.get('right_deflection_deg')}")
+    typer.echo(f"    left_deg        : {controls.get('left_deflection_deg')}")
+
+    artifacts = manifest.get("artifacts", {}) or {}
+    for key in ["vspscript", "step", "physical_control_deflection", "stdout", "stderr"]:
+        val = artifacts.get(key)
+        if val:
+            typer.echo(f"  {key:12s}: {val}")
+
+    if status == "failed":
         raise typer.Exit(code=1)

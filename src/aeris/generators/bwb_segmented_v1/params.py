@@ -156,6 +156,14 @@ class SectionBoundsConfig:
 
 
 @dataclass(frozen=True)
+class ControlSurfaceBoundsConfig:
+    """Sampling bounds for the shared elevon geometry DVs (v3+)."""
+    elevon_start_frac: RangeConfig
+    elevon_end_frac: RangeConfig
+    elevon_hinge_frac: RangeConfig
+
+
+@dataclass(frozen=True)
 class ControlSurfaceSpanwiseConfig:
     start_frac: float
     end_frac: float
@@ -220,6 +228,11 @@ class BWBDesignSample:
     dihedral_b2_deg: float
     dihedral_b3_deg: float
 
+    # Elevon geometry DVs — defaults match v1/v2 fixed values
+    elevon_start_frac: float = 0.60
+    elevon_end_frac: float   = 0.95
+    elevon_hinge_frac: float = 0.75
+
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
@@ -238,6 +251,7 @@ class BWBGeneratorConfig:
     section_bounds: SectionBoundsConfig
     outputs: PlotOutputsConfig
     control_surfaces: ControlSurfacesConfig
+    elevon_bounds: ControlSurfaceBoundsConfig | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -441,6 +455,7 @@ def build_bwb_generator_config(config: dict[str, Any]) -> BWBGeneratorConfig:
             ),
         ),
         control_surfaces=_build_control_surfaces_config(control_surfaces_cfg),
+        elevon_bounds=_build_elevon_bounds_config(geometry_cfg.get("elevon_bounds")),
     )
 
     # Identity consistency: catch family/version mismatches against BWB.
@@ -453,6 +468,25 @@ def build_bwb_generator_config(config: dict[str, Any]) -> BWBGeneratorConfig:
         )
 
     return bwb_config
+
+
+def _build_elevon_bounds_config(cfg: dict | None) -> "ControlSurfaceBoundsConfig | None":
+    """Parse optional elevon_bounds YAML section. None when absent (v1/v2)."""
+    if not cfg or not isinstance(cfg, dict):
+        return None
+    def _rc(key: str) -> RangeConfig:
+        block = cfg.get(key)
+        if not isinstance(block, dict):
+            raise TypeError(f"elevon_bounds.{key} must have 'min' and 'max'.")
+        return RangeConfig(
+            min=_as_float(_require(block, "min"), field_name=f"elevon_bounds.{key}.min"),
+            max=_as_float(_require(block, "max"), field_name=f"elevon_bounds.{key}.max"),
+        )
+    return ControlSurfaceBoundsConfig(
+        elevon_start_frac=_rc("elevon_start_frac"),
+        elevon_end_frac=_rc("elevon_end_frac"),
+        elevon_hinge_frac=_rc("elevon_hinge_frac"),
+    )
 
 
 def _build_control_surfaces_config(

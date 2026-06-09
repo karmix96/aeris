@@ -131,17 +131,58 @@ def airfoil_dataset_generate(
         resolve_path=True,
         help="Parent directory for datasets. Default: data/datasets/",
     ),
+    n_airfoils: int | None = typer.Option(
+        None,
+        "--n-airfoils",
+        min=1,
+        help=(
+            "Limit to N airfoils sampled from the library. "
+            "Omit to run all. Use 10 for smoke, 25 for pilot, 2156 for full campaign."
+        ),
+    ),
+    seed: int = typer.Option(
+        0,
+        "--seed",
+        help="Random seed for --n-airfoils subsetting. Ignored when --n-airfoils is not set.",
+    ),
 ) -> None:
-    """Run XFOIL alpha sweeps across the airfoil library and write airfoil_dataset.csv."""
+    """Run XFOIL alpha sweeps across the airfoil library and write airfoil_dataset.csv.
+
+    Use --n-airfoils to subset for fast iteration before the full campaign.
+    The subset is drawn with --seed so results are reproducible.
+    """
+    import random as _random
     from aeris.airfoil.dataset_generate import generate_airfoil_dataset
+    from aeris.airfoil.library import AirfoilLibrary
 
     output = dataset_root / name
+
+    airfoil_ids: list[str] | None = None
+    if n_airfoils is not None:
+        try:
+            lib = AirfoilLibrary(library_dir)
+        except Exception as exc:
+            fail_command("Airfoil library load", exc)
+        all_ids = lib.all_ids()
+        if n_airfoils >= len(all_ids):
+            typer.echo(
+                f"[AERIS 2D] --n-airfoils {n_airfoils} >= library size {len(all_ids)};"
+                " running all airfoils."
+            )
+        else:
+            rng = _random.Random(seed)
+            airfoil_ids = rng.sample(all_ids, n_airfoils)
+            typer.echo(
+                f"[AERIS 2D] Subset: {n_airfoils}/{len(all_ids)} airfoils (seed={seed})"
+            )
+
     try:
         manifest = generate_airfoil_dataset(
             library_dir=library_dir,
             config_path=config,
             dataset_root=output,
             name=name,
+            airfoil_ids=airfoil_ids,
         )
     except Exception as exc:
         fail_command("Airfoil dataset generate", exc)
@@ -325,3 +366,88 @@ def airfoil_dataset_inspect(
         for k, v in data.items():
             if not isinstance(v, dict):
                 typer.echo(f"    {k}: {v}")
+
+@airfoil_app.command("check-solver")
+def airfoil_check_solver() -> None:
+    """Check that the XFOIL binary is accessible and show its version.
+
+    Run before any sweep to confirm the solver is installed.
+    Respects the AERIS_XFOIL_BIN environment variable.
+    """
+    import os as _os
+    import shutil as _shutil
+    from aeris.aero_2d.xfoil_adapter import _find_xfoil_binary, _xfoil_version
+
+    binary = _find_xfoil_binary()
+    found_path = _shutil.which(binary)
+
+    typer.echo("")
+    typer.echo("[AERIS 2D] XFOIL solver check")
+    typer.echo(f"  binary name    : {binary}")
+    typer.echo(f"  AERIS_XFOIL_BIN: {_os.environ.get('AERIS_XFOIL_BIN', '(not set)')}")
+
+    if found_path:
+        typer.secho(f"  found at       : {found_path}", fg=typer.colors.GREEN)
+        version = _xfoil_version(binary)
+        typer.echo(f"  version        : {version}")
+        typer.secho("  XFOIL is ready.", fg=typer.colors.GREEN)
+    else:
+        typer.secho("  NOT FOUND on PATH.", fg=typer.colors.RED)
+        typer.echo("  Install:")
+        typer.echo("    Ubuntu/Debian: sudo apt-get install xfoil")
+        typer.echo("    macOS:         brew install xfoil")
+        typer.echo("    Custom path:   export AERIS_XFOIL_BIN=/path/to/xfoil")
+        raise typer.Exit(code=1)
+
+
+@airfoil_app.command("library-stats")
+def airfoil_library_stats(
+    library_dir: Path = typer.Option(
+        Path("data/airfoil_library"),
+        "--library",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Ingested airfoil library directory. Default: data/airfoil_library/",
+    ),
+) -> None:
+    """Show summary statistics for the ingested airfoil library.
+
+    Reads airfoil_inventory.csv and prints count, family breakdown,
+    t/c range, camber range, and LE radius range.
+    Run 'aeris airfoil ingest' first if the library is not yet built.
+    """
+    import pandas as _pd
+
+    inv = library_dir / "airfoil_inventory.csv"
+    if not inv.exists():
+        typer.secho(
+            f"[ERROR] airfoil_inventory.csv not found at {inv}. "
+            "Run 'aeris airfoil ingest --db-dir <dat_dir>' first.",
+            fg=typer.colors.RED,
+        )
+        raise typer.Exit(code=1)
+
+    df = _pd.read_csv(inv)
+    n = len(df)
+
+    typer.echo("")
+    typer.echo(f"[AERIS 2D] Airfoil library: {library_dir}")
+    typer.echo(f"  total airfoils : {n}")
+    if "family" in df.columns:
+        typer.echo("  family breakdown:")
+        for fam, cnt in df["family"].value_counts().items():
+            typer.echo(f"    {fam:<20}: {cnt}")
+    if "t_c" in df.columns:
+        typer.echo(f"  t/c  range     : {df['t_c'].min():.3f} - {df['t_c'].max():.3f}")
+    if "camber_max" in df.columns:
+        typer.echo(f"  camber range   : {df['camber_max'].min():.3f} - {df['camber_max'].max():.3f}")
+    if "le_radius" in df.columns:
+        typer.echo(f"  LE radius range: {df['le_radius'].min():.4f} - {df['le_radius'].max():.4f}")
+    typer.echo(f"  inventory csv  : {inv}")
+    if n > 0:
+        typer.secho(
+            "  Library is ready for 'aeris airfoil dataset generate'.",
+            fg=typer.colors.GREEN,
+        )
+

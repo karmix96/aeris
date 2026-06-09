@@ -34,6 +34,9 @@ class DummySample:
     dihedral_b1_deg: float
     dihedral_b2_deg: float
     dihedral_b3_deg: float
+    elevon_start_frac: float = 0.60
+    elevon_end_frac: float   = 0.95
+    elevon_hinge_frac: float = 0.75
 
 
 class DummySampleWithToDict:
@@ -56,6 +59,9 @@ class DummySampleWithToDict:
             "dihedral_b1_deg": 3.0,
             "dihedral_b2_deg": 2.0,
             "dihedral_b3_deg": 1.0,
+            "elevon_start_frac": 0.60,
+            "elevon_end_frac": 0.95,
+            "elevon_hinge_frac": 0.75,
         }
 
 

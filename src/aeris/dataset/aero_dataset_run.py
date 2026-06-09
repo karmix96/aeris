@@ -142,10 +142,13 @@ def _write_json(path: Path, payload: dict[str, Any]) -> None:
 def _add_control_alias_columns(row: dict[str, Any]) -> dict[str, Any]:
     """Attach explicit control aliases while preserving the legacy column.
 
-    Current solver behavior has only symmetric elevon wiring:
-    control_input_deg == delta_e_sym_deg, and delta_a_diff_deg is reserved at 0.0.
+    Passes both sym (control_input_deg) and diff (diff_input_deg) values
+    so delta_a_diff_deg is correctly populated for differential sweep rows.
     """
-    row.update(control_alias_row(row.get("control_input_deg")))
+    row.update(control_alias_row(
+        row.get("control_input_deg"),
+        diff_input_deg=row.get("diff_input_deg"),
+    ))
     return row
 
 
@@ -295,6 +298,7 @@ def _flatten_success_row(
     row["aero_status"] = aero_payload.get("status")
     row["aero_runtime_sec"] = aero_payload.get("runtime_sec")
     row["control_input_deg"] = sweep_case.get("control_input_deg")
+    row["diff_input_deg"] = sweep_case.get("diff_input_deg")   # populated by sweep_run.py
     _add_control_alias_columns(row)
 
     # Flight condition
@@ -396,6 +400,7 @@ def run_aero_dataset_generation(
     q_values: list[float],
     r_values: list[float],
     control_input_values: list[float],
+    diff_input_values: list[float] | None = None,
     solver: str,
     avl_command: str,
     timeout_sec: int,
@@ -556,6 +561,7 @@ def run_aero_dataset_generation(
                 generator_id=generator_id,
                 control_input_deg=None,
                 control_input_values=control_input_values,
+                diff_input_values=diff_input_values,
                 alpha=alpha_values[0] if alpha_values else 0.0,
                 velocity=velocity_values[0] if velocity_values else 28.0,
                 altitude=altitude_values[0] if altitude_values else 0.0,

@@ -417,6 +417,7 @@ def execute_aero_sweep(
     generator_id: str | None,
     control_input_deg: float | None,
     control_input_values: list[float],
+    diff_input_values: list[float] | None = None,
     alpha: float,
     velocity: float,
     altitude: float,
@@ -489,6 +490,7 @@ def execute_aero_sweep(
         q_rad_s_values=q_values,
         r_rad_s_values=r_values,
         control_input_deg_values=control_input_values,
+        diff_input_deg_values=diff_input_values or [],
     )
 
     settings = AeroSolverSettings(

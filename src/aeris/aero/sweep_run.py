@@ -104,11 +104,17 @@ def run_aero_sweep(
     for idx, sweep_case in enumerate(sweep_cases):
         fc = sweep_case.flight_condition
         control_input_deg = sweep_case.control_input_deg
+        diff_input_deg = getattr(sweep_case, 'diff_input_deg', None)
+        sweep_type = getattr(sweep_case, 'sweep_type', 'sym')
 
         case_label = make_flight_condition_case_label(idx, fc)
         if control_input_deg is not None:
             ctrl_slug = f"{control_input_deg:+.2f}".replace("+", "p").replace("-", "m").replace(".", "d")
             case_label = f"{case_label}_u{ctrl_slug}"
+        diff_input_deg = sweep_case.diff_input_deg
+        if diff_input_deg is not None:
+            diff_slug = f"{diff_input_deg:+.2f}".replace("+", "p").replace("-", "m").replace(".", "d")
+            case_label = f"{case_label}_da{diff_slug}"
 
         case_dir = output_dir / case_label
         case_dir.mkdir(parents=True, exist_ok=True)
@@ -124,6 +130,7 @@ def run_aero_sweep(
             solver_options={
                 **settings.solver_options,
                 "control_input_deg": control_input_deg,
+                "diff_input_deg": diff_input_deg,
             },
         )
 
@@ -138,6 +145,8 @@ def run_aero_sweep(
                 "sweep_case_index": idx,
                 "sweep_case_label": case_label,
                 "control_input_deg": control_input_deg,
+                "diff_input_deg": diff_input_deg,
+                "sweep_type": sweep_case.sweep_type,
             },
         )
 
@@ -159,6 +168,7 @@ def run_aero_sweep(
                         "chordwise_spacing": initial_paneling.get("chordwise_spacing", "cosine"),
                     },
                     "control_input_deg": control_input_deg,
+                    "diff_input_deg": diff_input_deg,
                 },
             )
 
@@ -173,6 +183,8 @@ def run_aero_sweep(
                     "sweep_case_index": idx,
                     "sweep_case_label": case_label,
                     "control_input_deg": control_input_deg,
+                    "diff_input_deg": diff_input_deg,
+                    "sweep_type": sweep_case.sweep_type,
                 },
             )
 
@@ -218,6 +230,8 @@ def run_aero_sweep(
             "runtime_sec": result.runtime_sec,
             "flight_condition": asdict(fc),
             "control_input_deg": control_input_deg,
+            "diff_input_deg": diff_input_deg,
+            "sweep_type": sweep_case.sweep_type,
             "case_dir": str(case_dir),
             "aero_result_json": None,
             "aero_result": None,
@@ -238,7 +252,10 @@ def run_aero_sweep(
                 "exception_type": result.failure.exception_type,
             }
 
-        record.update(control_alias_row(record.get("control_input_deg")))
+        record.update(control_alias_row(
+            record.get("control_input_deg"),
+            diff_input_deg=record.get("diff_input_deg"),
+        ))
         case_records.append(record)
 
     summary = build_aero_sweep_summary(

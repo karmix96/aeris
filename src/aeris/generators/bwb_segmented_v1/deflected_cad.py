@@ -811,6 +811,91 @@ def export_step_physical_deflected_airplane(airplane: Any, filename: Path) -> st
     return "aeris_arbitrary_profile_split_mechanical_exporter"
 
 
+
+# ---------------------------------------------------------------------------
+# Visualization / preview artifacts
+# ---------------------------------------------------------------------------
+
+def save_physical_deflected_planform_preview(
+    airplane: Any,
+    output_path: str | Path,
+    *,
+    title: str | None = None,
+) -> Path:
+    """Save a lightweight 2-D top-view preview of the exact exported airplane.
+
+    This is intentionally generated from the same AeroSandbox airplane that is
+    passed to the VSP/STEP exporters. It is not the neutral ``geometry visualize``
+    path, so it can reveal split elevon bodies and differential deflections.
+    """
+    import matplotlib
+
+    matplotlib.use("Agg", force=True)
+    import matplotlib.pyplot as plt
+
+    output_path = Path(output_path).expanduser().resolve()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    fig, ax = plt.subplots(figsize=(12, 7))
+    n_drawn = 0
+
+    for wing in getattr(airplane, "wings", []):
+        xs_le: list[float] = []
+        xs_te: list[float] = []
+        ys: list[float] = []
+
+        for xsec in getattr(wing, "xsecs", []):
+            coords = np.asarray(getattr(xsec.airfoil, "coordinates"), dtype=float)
+            if coords.ndim != 2 or coords.shape[1] != 2 or len(coords) < 3:
+                continue
+            x0 = float(xsec.xyz_le[0])
+            y0 = float(xsec.xyz_le[1])
+            chord = float(xsec.chord)
+            x_abs = x0 + coords[:, 0] * chord
+            xs_le.append(float(np.nanmin(x_abs)))
+            xs_te.append(float(np.nanmax(x_abs)))
+            ys.append(y0)
+
+        if len(ys) < 2:
+            continue
+
+        order = np.argsort(np.asarray(ys, dtype=float))
+        y_arr = np.asarray(ys, dtype=float)[order]
+        le_arr = np.asarray(xs_le, dtype=float)[order]
+        te_arr = np.asarray(xs_te, dtype=float)[order]
+
+        poly_x = np.concatenate([le_arr, te_arr[::-1]])
+        poly_y = np.concatenate([y_arr, y_arr[::-1]])
+        ax.fill(poly_x, poly_y, alpha=0.22, label=str(getattr(wing, "name", "wing")))
+        ax.plot(le_arr, y_arr, linewidth=1.0)
+        ax.plot(te_arr, y_arr, linewidth=1.0)
+        for xle, xte, yy in zip(le_arr, te_arr, y_arr):
+            ax.plot([xle, xte], [yy, yy], linewidth=0.35, alpha=0.65)
+        n_drawn += 1
+
+    if n_drawn == 0:
+        raise ValueError("No drawable wing sections found for physical deflected preview.")
+
+    ax.set_aspect("equal", adjustable="box")
+    ax.set_xlabel("x [m]")
+    ax.set_ylabel("y [m]")
+    ax.set_title(title or f"{getattr(airplane, 'name', 'AERIS physical deflected geometry')} — top-view preview")
+    ax.grid(True, linewidth=0.3, alpha=0.4)
+    ax.legend(loc="best", fontsize="small")
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=220)
+    plt.close(fig)
+    return output_path
+
+
+def draw_physical_deflected_airplane(airplane: Any) -> None:
+    """Open AeroSandbox's interactive geometry viewer for the exported shape."""
+    drawer = getattr(airplane, "draw", None)
+    if drawer is None:
+        raise RuntimeError("The AeroSandbox airplane object has no draw() method.")
+    drawer()
+
+
 # ---------------------------------------------------------------------------
 # AERIS orchestration
 # ---------------------------------------------------------------------------
@@ -848,6 +933,9 @@ def export_bwb_physical_deflected_cad(
     hinge_gap_fraction: float = 0.0,
     boundary_epsilon_fraction: float = 1.0e-6,
     deflection_topology: str = "split-elevon",
+    save_preview: bool = False,
+    preview_png_name: str | None = None,
+    draw_3d: bool = False,
     seed: int | None = None,
 ) -> dict[str, Any]:
     """Generate BWB geometry and export physically deflected CAD artifacts."""
@@ -899,6 +987,8 @@ def export_bwb_physical_deflected_cad(
         "error": None,
     }
     manifest_path = cad_dir / "physical_deflected_geometry_export_manifest.json"
+    manifest.setdefault("preview", {"save_preview_requested": bool(save_preview), "draw_3d_requested": bool(draw_3d)})
+    manifest["artifacts"].setdefault("physical_deflected_planform_png", None)
 
     try:
         raw = yaml.safe_load(config_path.read_text(encoding="utf-8"))
@@ -961,6 +1051,56 @@ def export_bwb_physical_deflected_cad(
             ],
         }
 
+        if save_preview:
+            preview_dir = cad_dir / "previews"
+            png_name = (preview_png_name or "physical_deflected_planform.png").strip() or "physical_deflected_planform.png"
+            png_name = Path(png_name).name
+            if not png_name.lower().endswith(".png"):
+                png_name += ".png"
+            preview_path = preview_dir / png_name
+            try:
+                save_physical_deflected_planform_preview(
+                    airplane,
+                    preview_path,
+                    title=f"{typed_config.name} physical deflected CAD — {topology}",
+                )
+                manifest["artifacts"]["physical_deflected_planform_png"] = str(preview_path)
+                manifest["preview"] = {
+                    **manifest.get("preview", {}),
+                    "save_preview_requested": True,
+                    "planform_png": str(preview_path),
+                    "status": "success",
+                }
+            except Exception as preview_exc:
+                manifest["warnings"].append(
+                    f"Preview PNG failed: {type(preview_exc).__name__}: {preview_exc}"
+                )
+                manifest["preview"] = {
+                    **manifest.get("preview", {}),
+                    "save_preview_requested": True,
+                    "status": "failed",
+                    "error": f"{type(preview_exc).__name__}: {preview_exc}",
+                }
+
+        if draw_3d:
+            try:
+                draw_physical_deflected_airplane(airplane)
+                manifest["preview"] = {
+                    **manifest.get("preview", {}),
+                    "draw_3d_requested": True,
+                    "draw_3d_status": "success",
+                }
+            except Exception as draw_exc:
+                manifest["warnings"].append(
+                    f"Interactive 3D draw failed: {type(draw_exc).__name__}: {draw_exc}"
+                )
+                manifest["preview"] = {
+                    **manifest.get("preview", {}),
+                    "draw_3d_requested": True,
+                    "draw_3d_status": "failed",
+                    "draw_3d_error": f"{type(draw_exc).__name__}: {draw_exc}",
+                }
+
         produced: list[str] = []
         if "vspscript" in requested:
             vsp_path = cad_dir / "physical_deflected_geometry.vspscript"
@@ -1011,3 +1151,247 @@ def export_bwb_physical_deflected_cad(
         _write_text(stderr_path, stderr_path.read_text(encoding="utf-8") + f"{type(exc).__name__}: {exc}\n")
         manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
         raise
+# ---------------------------------------------------------------------------
+# STEP export robust split-elevon assembly override
+# ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# STEP export robust split-elevon assembly override
+# ---------------------------------------------------------------------------
+
+
+def _aeris_step_safe_name(value: Any, fallback: str = "body") -> str:
+    raw = str(value or fallback)
+    safe = "".join(ch if ch.isalnum() or ch in {"_", "-"} else "_" for ch in raw)
+    safe = safe.strip("_") or fallback
+    return safe[:96]
+
+
+def _aeris_profile_kind_for_step(xsec: Any) -> str:
+    """Classify xsecs by constant-profile topology for robust STEP lofting.
+
+    The split-elevon AeroSandbox airplane is excellent for VSP, but the main
+    fixed wing intentionally switches from full airfoil sections to hinge-cut
+    front sections and then back to full sections. CadQuery/OpenCascade often
+    fails if a single loft mixes those topologies. This classifier lets the STEP
+    backend split each half-wing into constant-topology loft runs.
+    """
+    name = str(getattr(getattr(xsec, "airfoil", None), "name", "")).lower()
+    if "_main_cut_" in name or "main_cut" in name:
+        return "main_cut"
+    if "_main_full_" in name or "main_full" in name:
+        return "main_full"
+    if "elevon" in name:
+        return "elevon"
+
+    coords = np.asarray(getattr(getattr(xsec, "airfoil", None), "coordinates", []), dtype=float)
+    if coords.ndim == 2 and coords.shape[1] == 2 and len(coords) >= 3:
+        xmin = float(np.nanmin(coords[:, 0]))
+        xmax = float(np.nanmax(coords[:, 0]))
+        npts = int(len(coords))
+        # Generic fallback. Profiles with different point counts or x-span are
+        # not lofted together, avoiding most topological BRep failures.
+        return f"profile_n{npts}_x{xmin:.3f}_{xmax:.3f}"
+    return "unknown_profile"
+
+
+def _aeris_split_wing_into_step_runs(wing: Any) -> list[dict[str, Any]]:
+    """Split one AeroSandbox wing into consecutive constant-profile runs."""
+    xsecs = list(getattr(wing, "xsecs", []) or [])
+    if len(xsecs) < 2:
+        return []
+
+    runs: list[dict[str, Any]] = []
+    start = 0
+    current_kind = _aeris_profile_kind_for_step(xsecs[0])
+
+    for i in range(1, len(xsecs)):
+        kind = _aeris_profile_kind_for_step(xsecs[i])
+        if kind != current_kind:
+            if i - start >= 2:
+                runs.append({"kind": current_kind, "start_index": start, "end_index": i - 1, "xsecs": xsecs[start:i]})
+            start = i
+            current_kind = kind
+
+    if len(xsecs) - start >= 2:
+        runs.append({"kind": current_kind, "start_index": start, "end_index": len(xsecs) - 1, "xsecs": xsecs[start:]})
+
+    # If a wing did not need splitting and has enough xsecs, keep it as a run.
+    if not runs and len(xsecs) >= 2:
+        runs.append({"kind": current_kind, "start_index": 0, "end_index": len(xsecs) - 1, "xsecs": xsecs})
+
+    return runs
+
+
+def _aeris_make_step_wing_for_run(source_wing: Any, run: dict[str, Any]) -> Any:
+    import aerosandbox as asb
+
+    return asb.Wing(
+        name=f"{_aeris_step_safe_name(getattr(source_wing, 'name', 'wing'))}_{run['kind']}_{run['start_index']:03d}_{run['end_index']:03d}",
+        symmetric=False,
+        xsecs=list(run["xsecs"]),
+    )
+
+
+def _aeris_loft_step_wing_run(run_wing: Any) -> Any:
+    """Loft a constant-topology wing run into a CadQuery Workplane."""
+    xsec_wires = []
+    for i, xsec in enumerate(run_wing.xsecs):
+        csys = run_wing._compute_frame_of_WingXSec(i)
+        x_dir = np.asarray(csys[0], dtype=float)
+        y_dir = np.asarray(csys[1], dtype=float)
+        coords_2d = np.asarray(xsec.airfoil.coordinates, dtype=float)
+        xsec_wires.append(make_section_wire_arbitrary(xsec, x_dir, y_dir, coords_2d))
+
+    if len(xsec_wires) < 2:
+        raise ValueError(f"STEP run {run_wing.name!r} has fewer than 2 sections.")
+
+    wire_collection = xsec_wires[0]
+    for w in xsec_wires[1:]:
+        wire_collection.ctx.pendingWires.extend(w.ctx.pendingWires)
+
+    # ruled=True is more predictable for spanwise sectional lofts. If it fails,
+    # try a non-ruled loft as a fallback before giving up.
+    try:
+        return wire_collection.loft(ruled=True, clean=False)
+    except Exception:
+        return wire_collection.loft(ruled=False, clean=False)
+
+
+def _aeris_scale_workplane_objects(workplane: Any, factor: float) -> Any:
+    """Scale CadQuery workplane objects without forcing a union/clean."""
+    try:
+        workplane.objects = [obj.scale(float(factor)) for obj in workplane.objects]
+    except Exception:
+        # Keep unscaled if the local CadQuery object model differs. This is a
+        # fallback only; the normal path scales from meters to millimeters.
+        pass
+    return workplane
+
+
+def export_step_physical_deflected_airplane(airplane: Any, filename: Path) -> str:  # type: ignore[override]
+    """Export physical deflected geometry to STEP using a segmented assembly.
+
+    Why this override exists
+    ------------------------
+    The VSP representation can contain a main wing that changes topology along
+    the span: full section -> hinge-cut front section -> full section. OpenCASCADE
+    often throws ``StdFail_NotDone: BRep_API: command not done`` when that is
+    lofted as one body. The fix is not to change the visible VSP geometry; the
+    fix is to export STEP as an assembly of constant-profile loft runs.
+
+    For split-elevon topology this generally becomes, per side:
+      - fixed inboard full wing body,
+      - fixed front/hinge-cut body over the elevon span,
+      - fixed outboard full tip body,
+      - separate deflected elevon body.
+
+    That is physically honest and avoids fake transition plates in the STEP.
+    """
+    import cadquery as cq
+    from cadquery import exporters
+
+    filename = Path(filename)
+    filename.parent.mkdir(parents=True, exist_ok=True)
+
+    body_reports: list[dict[str, Any]] = []
+    bodies: list[tuple[str, Any]] = []
+    errors: list[str] = []
+
+    for wing in getattr(airplane, "wings", []) or []:
+        runs = _aeris_split_wing_into_step_runs(wing)
+        if not runs:
+            body_reports.append({
+                "wing": str(getattr(wing, "name", "wing")),
+                "status": "skipped",
+                "reason": "fewer_than_two_sections",
+            })
+            continue
+
+        for run_idx, run in enumerate(runs):
+            run_wing = _aeris_make_step_wing_for_run(wing, run)
+            body_name = _aeris_step_safe_name(run_wing.name, fallback=f"body_{len(bodies):03d}")
+            try:
+                wp = _aeris_loft_step_wing_run(run_wing)
+                wp = _aeris_scale_workplane_objects(wp, 1000.0)
+                bodies.append((body_name, wp))
+                body_reports.append({
+                    "wing": str(getattr(wing, "name", "wing")),
+                    "body": body_name,
+                    "run_index": run_idx,
+                    "profile_kind": run["kind"],
+                    "start_index": int(run["start_index"]),
+                    "end_index": int(run["end_index"]),
+                    "n_xsecs": len(run["xsecs"]),
+                    "status": "lofted",
+                })
+            except Exception as exc:
+                msg = f"{getattr(wing, 'name', 'wing')} run {run_idx} ({run['kind']}): {type(exc).__name__}: {exc}"
+                errors.append(msg)
+                body_reports.append({
+                    "wing": str(getattr(wing, "name", "wing")),
+                    "run_index": run_idx,
+                    "profile_kind": run["kind"],
+                    "start_index": int(run["start_index"]),
+                    "end_index": int(run["end_index"]),
+                    "n_xsecs": len(run["xsecs"]),
+                    "status": "failed",
+                    "error": f"{type(exc).__name__}: {exc}",
+                })
+
+    report_path = filename.with_suffix(".step_bodies.json")
+    report = {
+        "backend": "aeris_segmented_cadquery_assembly_v1",
+        "airplane": str(getattr(airplane, "name", "AERIS_airplane")),
+        "n_bodies_attempted": len(body_reports),
+        "n_bodies_lofted": len(bodies),
+        "bodies": body_reports,
+        "errors": errors,
+        "units_written": "millimeter",
+        "source_units": "meter",
+        "note": "STEP export segments topology-changing wings into constant-profile loft bodies before assembly export.",
+    }
+    report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+
+    if not bodies:
+        raise RuntimeError("No CadQuery bodies could be lofted for STEP export. See " + str(report_path))
+
+    # First choice: true STEP assembly. This avoids boolean union/clean, which is
+    # exactly where many split-control topologies fail.
+    assembly = cq.Assembly(name=_aeris_step_safe_name(getattr(airplane, "name", "AERIS_deflected")))
+    for body_name, wp in bodies:
+        assembly.add(wp, name=body_name)
+
+    try:
+        exporters.export(assembly, fname=str(filename))
+        return "aeris_segmented_cadquery_assembly_v1"
+    except Exception as assembly_exc:
+        # Fallback: write each body as a separate STEP for debugging and attempt
+        # a non-cleaned Workplane collection as a final combined file.
+        body_dir = filename.parent / "step_bodies"
+        body_dir.mkdir(parents=True, exist_ok=True)
+        body_export_errors: list[str] = []
+        for body_name, wp in bodies:
+            try:
+                exporters.export(wp, fname=str(body_dir / f"{body_name}.step"))
+            except Exception as body_exc:
+                body_export_errors.append(f"{body_name}: {type(body_exc).__name__}: {body_exc}")
+
+        report["assembly_export_error"] = f"{type(assembly_exc).__name__}: {assembly_exc}"
+        report["per_body_step_dir"] = str(body_dir)
+        report["per_body_export_errors"] = body_export_errors
+        report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+
+        # If assembly export is unsupported in this CadQuery build, this may work.
+        try:
+            combined = bodies[0][1]
+            for _body_name, wp in bodies[1:]:
+                combined = combined.add(wp)
+            exporters.export(combined, fname=str(filename))
+            return "aeris_segmented_cadquery_workplane_collection_v1"
+        except Exception as combined_exc:
+            raise RuntimeError(
+                "Segmented STEP export failed. "
+                f"Assembly error: {type(assembly_exc).__name__}: {assembly_exc}. "
+                f"Combined fallback error: {type(combined_exc).__name__}: {combined_exc}. "
+                f"Body debug report: {report_path}"
+            ) from combined_exc

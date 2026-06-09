@@ -32,7 +32,7 @@ except Exception:
     yaml = None
 
 # ── Version & constants ───────────────────────────────────────────────────────
-APP_VERSION       = "4.3.0"
+APP_VERSION       = "4.4.0"
 DEFAULT_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg"
 DEFAULT_SYM_ELEVON_FEATURES = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_e_sym_deg"
 DEFAULT_TARGETS   = "cl,cd,cm"
@@ -1660,102 +1660,342 @@ def pg_geometry(root, exe, tmo, dry):
     # ── CAD EXPORT ───────────────────────────────────────────────────────────
     with tab_cad:
         _note(
-            "Backend-first CAD export. This panel calls <code>aeris geometry export-cad</code>; "
-            "it does not duplicate OpenVSP or geometry logic in Streamlit. "
-            "VSP script export works without OpenVSP installed. STEP requires OpenVSP batch execution.",
+            "Backend-first CAD workstation. This panel calls real CLI commands only: "
+            "<code>aeris geometry export-cad</code> for neutral CAD and "
+            "<code>aeris geometry export-deflected-cad</code> for physical control-deflected CAD. "
+            "The GUI reads produced manifests/previews; it does not duplicate CAD, OpenVSP, CadQuery, or deflection logic.",
             "info",
         )
-        cad_cfg = st.selectbox(
-            "Geometry config",
-            cfg_smoke_first,
-            format_func=_cfg_label,
-            key="cad_cfg",
-            help="Use baseline_bwb_25.yaml for smoke checks unless running a real design-space export.",
-        )
-        cad_format_label = st.selectbox(
-            "Export format selector",
-            ["VSP script (.vspscript)", "STEP (.step/.stp)", "Both"],
-            key="cad_fmt",
-        )
-        cad_format = {
-            "VSP script (.vspscript)": "vspscript",
-            "STEP (.step/.stp)": "step",
-            "Both": "vspscript,step",
-        }[cad_format_label]
-        openvsp_exe = st.text_input(
-            "OpenVSP executable/path",
-            value="vsp",
-            key="cad_openvsp",
-            help="Examples: vsp, OpenVSP, /opt/OpenVSP/vsp. Used only for STEP.",
-        )
-        step_backend = st.selectbox(
-            "STEP backend",
-            ["auto", "cadquery", "openvsp"],
-            index=0,
-            key="cad_step_backend",
-            help="auto tries AeroSandbox/CadQuery first and falls back to OpenVSP batch if needed.",
-        )
-        cad_out = st.text_input(
-            "Output directory",
-            value=str(root / "data" / "runs" / "cad_export_test"),
-            key="cad_out",
-            help="Artifacts go under <output-dir>/cad_exports/.",
-        )
-        cad_args = [
-            "geometry", "export-cad",
-            "--config", cad_cfg,
-            "--formats", cad_format,
-            "--output-dir", cad_out,
-            "--openvsp-command", openvsp_exe,
-            "--step-backend", step_backend,
-        ]
-        _panel(
-            "Export CAD",
-            "Writes cad_exports/geometry.vspscript, geometry_export_manifest.json, stdout.txt, stderr.txt; geometry.step appears only if OpenVSP STEP succeeds.",
-            cad_args,
-            root, exe, tmo, dry, "cad_export_run",
-            label="Export CAD",
-        )
 
-        cad_dir = Path(cad_out).expanduser() / "cad_exports"
-        _sec("Produced files")
-        if cad_dir.exists():
-            files = sorted([p for p in cad_dir.glob("*") if p.is_file()])
-            if not files:
-                st.info("cad_exports/ exists but contains no files yet.")
+        def _cad_file_rows(cad_dir: Path) -> list[dict[str, Any]]:
+            rows: list[dict[str, Any]] = []
+            if not cad_dir.exists():
+                return rows
+            for f in sorted(cad_dir.rglob("*")):
+                if not f.is_file():
+                    continue
+                rel = f.relative_to(cad_dir)
+                rows.append({
+                    "file": str(rel),
+                    "size_bytes": f.stat().st_size,
+                    "path": str(f),
+                })
+            return rows
+
+        def _manifest_status_card(manifest_path: Path, *, physical: bool) -> None:
+            data = _rjson(manifest_path)
+            if not data:
+                st.caption(f"No manifest found yet: `{manifest_path.name}`")
+                return
+            status = str(data.get("status", "unknown"))
+            produced = ",".join(data.get("formats_produced", []) or []) or "—"
+            requested = ",".join(data.get("formats_requested", []) or []) or "—"
+            step_export = data.get("step_export") or {}
+            artifacts = data.get("artifacts") or {}
+            controls = data.get("physical_controls") or {}
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric("Status", status)
+            c2.metric("Produced", produced)
+            c3.metric("Requested", requested)
+            c4.metric("STEP backend", step_export.get("backend", data.get("step_backend", "—")))
+
+            if physical:
+                _sec("Physical deflection evidence")
+                st.json({
+                    "deflection_topology": data.get("deflection_topology"),
+                    "surface_model": data.get("surface_model"),
+                    "body_model": data.get("body_model"),
+                    "right_deflection_deg": controls.get("right_deflection_deg"),
+                    "left_deflection_deg": controls.get("left_deflection_deg"),
+                    "delta_e_sym_deg": controls.get("delta_e_sym_deg"),
+                    "delta_a_diff_deg": controls.get("delta_a_diff_deg"),
+                    "boundary_model": controls.get("boundary_model"),
+                    "step_export": step_export,
+                }, expanded=False)
+                b_report = data.get("boundary_report") or {}
+                if b_report:
+                    st.caption(
+                        "Topology: fixed inboard | separate elevon | fixed outboard. "
+                        f"y_start={b_report.get('y_start_m', '—')} m, "
+                        f"y_end={b_report.get('y_end_m', '—')} m, "
+                        f"epsilon={b_report.get('boundary_epsilon_m', '—')} m."
+                    )
             else:
-                rows = []
-                for f in files:
-                    rows.append({
-                        "file": f.name,
-                        "size_bytes": f.stat().st_size,
-                        "path": str(f),
-                    })
+                st.json({
+                    "status": status,
+                    "formats_produced": data.get("formats_produced"),
+                    "step_export": step_export or data.get("step_backend"),
+                    "artifacts": artifacts,
+                }, expanded=False)
+
+        def _render_cad_outputs(cad_dir: Path, *, physical: bool, key: str) -> None:
+            _sec("Produced files / evidence")
+            if not cad_dir.exists():
+                st.caption("No CAD export folder yet. Run the export above.")
+                return
+
+            manifest_name = "physical_deflected_geometry_export_manifest.json" if physical else "geometry_export_manifest.json"
+            manifest_path = cad_dir / manifest_name
+            _manifest_status_card(manifest_path, physical=physical)
+
+            if physical:
+                preview = cad_dir / "previews" / "physical_deflected_planform.png"
+                if preview.exists():
+                    _sec("Physical-deflected preview")
+                    st.image(str(preview), caption="physical_deflected_planform.png", use_container_width=True)
+
+                body_report = cad_dir / "physical_deflected_geometry.step_bodies.json"
+                if body_report.exists():
+                    _sec("STEP body report")
+                    report = _rjson(body_report) or {}
+                    b1, b2, b3 = st.columns(3)
+                    b1.metric("Bodies attempted", report.get("n_bodies_attempted", "—"))
+                    b2.metric("Bodies lofted", report.get("n_bodies_lofted", "—"))
+                    b3.metric("Body errors", len(report.get("errors", []) or []))
+                    with st.expander("physical_deflected_geometry.step_bodies.json", expanded=False):
+                        st.json(report, expanded=False)
+
+            rows = _cad_file_rows(cad_dir)
+            if rows:
                 if pd is not None:
-                    st.dataframe(rows, use_container_width=True)
+                    st.dataframe(pd.DataFrame(rows), use_container_width=True, height=260)
                 else:
                     st.json(rows)
-
-                preview_options = [p for p in files if p.suffix.lower() in {".json", ".txt", ".vspscript", ".step", ".stp", ".vsp3"}]
-                if preview_options:
-                    chosen_preview = st.selectbox(
-                        "Preview CAD artifact",
-                        preview_options,
-                        format_func=lambda p: p.name,
-                        key="cad_preview",
+                previewable = [Path(r["path"]) for r in rows if Path(r["path"]).suffix.lower() in {".json", ".txt", ".vspscript", ".step", ".stp", ".vsp3", ".png", ".jpg", ".jpeg"}]
+                if previewable:
+                    chosen = st.selectbox(
+                        "Preview artifact",
+                        previewable,
+                        format_func=lambda p: str(p.relative_to(cad_dir)),
+                        key=f"{key}_artifact_preview",
                     )
-                    _show_file(chosen_preview)
-        else:
-            st.caption("No CAD export folder yet. Run Export CAD above.")
+                    _show_file(chosen)
+            else:
+                st.info("cad_exports/ exists but contains no files yet.")
 
-        _sec("OpenVSP doctor")
-        _panel(
-            "Check OpenVSP executable",
-            "Checks whether the executable/path is discoverable. Does not launch OpenVSP.",
-            ["geometry", "openvsp-doctor", "--openvsp-command", openvsp_exe],
-            root, exe, tmo, dry, "cad_doctor_run",
-            label="Check OpenVSP",
-        )
+        neutral_tab, physical_tab, doctor_tab = st.tabs([
+            "  Neutral CAD  ",
+            "  Physical deflected CAD  ",
+            "  OpenVSP doctor  ",
+        ])
+
+        # ── Neutral CAD export ────────────────────────────────────────────────
+        with neutral_tab:
+            _note(
+                "Neutral CAD export is for the baseline/generated BWB shape without physical control deflection. "
+                "Use this for normal geometry handoff or OpenVSP/STEP reconstruction checks.",
+                "info",
+            )
+            cad_cfg = st.selectbox(
+                "Geometry config",
+                cfg_smoke_first,
+                format_func=_cfg_label,
+                key="cad_cfg",
+                help="Use baseline_bwb_25.yaml for smoke checks unless running a real design-space export.",
+            )
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                cad_format_label = st.selectbox(
+                    "Export format selector",
+                    ["VSP script (.vspscript)", "STEP (.step/.stp)", "Both"],
+                    index=2,
+                    key="cad_fmt",
+                )
+            cad_format = {
+                "VSP script (.vspscript)": "vspscript",
+                "STEP (.step/.stp)": "step",
+                "Both": "vspscript,step",
+            }[cad_format_label]
+            with c2:
+                step_backend = st.selectbox(
+                    "STEP backend",
+                    ["auto", "cadquery", "openvsp"],
+                    index=0,
+                    key="cad_step_backend",
+                    help="auto tries AeroSandbox/CadQuery first and falls back to OpenVSP batch when available.",
+                )
+            with c3:
+                openvsp_exe = st.text_input(
+                    "OpenVSP executable/path",
+                    value="vsp",
+                    key="cad_openvsp",
+                    help="Examples: vsp, OpenVSP, /opt/OpenVSP/vsp. Used by OpenVSP doctor and OpenVSP STEP fallback.",
+                )
+            cad_out = st.text_input(
+                "Output directory",
+                value=str(root / "data" / "runs" / "cad_export_test"),
+                key="cad_out",
+                help="Artifacts go under <output-dir>/cad_exports/.",
+            )
+            cad_args = [
+                "geometry", "export-cad",
+                "--config", cad_cfg,
+                "--formats", cad_format,
+                "--output-dir", cad_out,
+                "--openvsp-command", openvsp_exe,
+                "--step-backend", step_backend,
+            ]
+            _panel(
+                "Export neutral CAD",
+                "Writes geometry.vspscript, optional geometry.step, source geometry artifacts, stdout/stderr, and geometry_export_manifest.json.",
+                cad_args,
+                root, exe, tmo, dry, "cad_export_run",
+                label="Export neutral CAD",
+            )
+            _render_cad_outputs(Path(cad_out).expanduser() / "cad_exports", physical=False, key="neutral_cad")
+
+        # ── Physical deflected CAD export ─────────────────────────────────────
+        with physical_tab:
+            _note(
+                "Physical deflected CAD is for CFD/CAD handoff, not AVL metadata. "
+                "AERIS physically deflects the elevons and writes a traceable split-elevon geometry. "
+                "Positive <code>delta_a_diff_deg</code> = right elevon trailing-edge down, left elevon up.",
+                "info",
+            )
+            asym_cfg = str(root / "configs" / "geometry" / "bwb_25_sections_asym_controls.yaml")
+            v2_cfg = str(root / "configs" / "geometry" / "bwb_training_v2.yaml")
+            v3_cfg = str(root / "configs" / "geometry" / "bwb_training_v3.yaml")
+            phys_first = ([asym_cfg] if asym_cfg in cfg_files else []) + ([v2_cfg] if v2_cfg in cfg_files else []) + ([v3_cfg] if v3_cfg in cfg_files else []) + [f for f in cfg_smoke_first if f not in (asym_cfg, v2_cfg, v3_cfg)]
+
+            def _phys_cfg_label(s: str) -> str:
+                name = Path(s).name
+                if name == "bwb_25_sections_asym_controls.yaml":
+                    return f"Physical CAD smoke — {name}"
+                if name == "bwb_training_v2.yaml":
+                    return f"Training v2 — symmetric + differential controls"
+                if name == "bwb_training_v3.yaml":
+                    return f"Training v3 — variable elevon geometry"
+                return _cfg_label(s)
+
+            phys_cfg = st.selectbox(
+                "Physical deflection config",
+                phys_first,
+                format_func=_phys_cfg_label,
+                key="phys_cad_cfg",
+                help="Recommended smoke: bwb_25_sections_asym_controls.yaml. For real campaigns use training v2/v3 after canary checks.",
+            )
+
+            r1c1, r1c2, r1c3, r1c4 = st.columns(4)
+            with r1c1:
+                delta_e = st.number_input(
+                    "delta_e_sym_deg",
+                    value=0.0,
+                    step=1.0,
+                    key="phys_delta_e",
+                    help="Symmetric elevon: positive = both trailing edges down.",
+                )
+            with r1c2:
+                delta_a = st.number_input(
+                    "delta_a_diff_deg",
+                    value=15.0,
+                    step=1.0,
+                    key="phys_delta_a",
+                    help="Differential elevon: positive = right TE down, left TE up.",
+                )
+            with r1c3:
+                topology = st.selectbox(
+                    "Deflection topology",
+                    ["split-elevon", "unified-abrupt"],
+                    index=0,
+                    key="phys_topology",
+                    help="split-elevon is the mechanically honest CFD topology. unified-abrupt is legacy/visual only.",
+                )
+            with r1c4:
+                phys_fmt_label = st.selectbox(
+                    "Formats",
+                    ["Both", "VSP script only", "STEP only"],
+                    index=0,
+                    key="phys_formats",
+                )
+            phys_formats = {"Both": "vspscript,step", "VSP script only": "vspscript", "STEP only": "step"}[phys_fmt_label]
+
+            r2c1, r2c2, r2c3, r2c4 = st.columns(4)
+            with r2c1:
+                hinge_gap = st.number_input(
+                    "hinge_gap_fraction",
+                    min_value=0.0,
+                    max_value=0.10,
+                    value=0.005,
+                    step=0.001,
+                    format="%.6f",
+                    key="phys_hinge_gap",
+                    help="Small chordwise gap between fixed wing and separate elevon. 0.005 is a good CFD-meshing smoke value.",
+                )
+            with r2c2:
+                boundary_eps = st.number_input(
+                    "boundary_epsilon_fraction",
+                    min_value=1.0e-8,
+                    max_value=1.0e-3,
+                    value=1.0e-6,
+                    step=1.0e-6,
+                    format="%.8f",
+                    key="phys_boundary_eps",
+                    help="Near-coincident stations at elevon start/end. Smaller = sharper, but more CAD fragile.",
+                )
+            with r2c3:
+                use_seed = st.checkbox("Override geometry seed", value=False, key="phys_use_seed")
+                phys_seed = st.number_input("Seed", min_value=0, value=100, step=1, key="phys_seed") if use_seed else None
+            with r2c4:
+                save_preview = st.checkbox("Save preview PNG", value=True, key="phys_save_preview")
+                draw_3d = st.checkbox("Open AeroSandbox 3D viewer", value=False, key="phys_draw_3d", help="Requires a local desktop/OpenGL session; do not use over headless SSH.")
+
+            phys_out = st.text_input(
+                "Output directory",
+                value=str(root / "data" / "runs" / "bwb25_physical_deflected_cad_gui"),
+                key="phys_out",
+                help="Artifacts go under <output-dir>/cad_exports/.",
+            )
+
+            right_defl = float(delta_e) + float(delta_a)
+            left_defl = float(delta_e) - float(delta_a)
+            _stat_row([
+                ("Right elevon", f"{right_defl:+.1f}°", "TE-down positive"),
+                ("Left elevon", f"{left_defl:+.1f}°", "TE-down positive"),
+                ("Topology", topology, "CAD body model"),
+                ("STEP strategy", "segmented bodies", "robust CadQuery path"),
+            ])
+
+            phys_args = [
+                "geometry", "export-deflected-cad",
+                "--config", phys_cfg,
+                "--formats", phys_formats,
+                "--output-dir", phys_out,
+                "--delta-e-sym-deg", str(delta_e),
+                "--delta-a-diff-deg", str(delta_a),
+                "--deflection-topology", topology,
+                "--hinge-gap-fraction", str(hinge_gap),
+                "--boundary-epsilon-fraction", str(boundary_eps),
+            ]
+            if phys_seed is not None:
+                phys_args.extend(["--seed", str(int(phys_seed))])
+            if save_preview:
+                phys_args.append("--save-preview")
+            if draw_3d:
+                phys_args.append("--draw-3d")
+
+            _panel(
+                "Export physical deflected CAD",
+                "Writes physical_deflected_geometry.vspscript, physical_deflected_geometry.step, per-body STEP diagnostics, preview PNG, physical_control_deflection.json, and manifest evidence.",
+                phys_args,
+                root, exe, tmo, dry, "phys_cad_export_run",
+                label="Export physical deflected CAD",
+            )
+            _render_cad_outputs(Path(phys_out).expanduser() / "cad_exports", physical=True, key="physical_cad")
+
+        # ── OpenVSP doctor ────────────────────────────────────────────────────
+        with doctor_tab:
+            _note(
+                "VSP script export does not require OpenVSP. OpenVSP is only needed if you explicitly use the OpenVSP STEP backend or want to open the generated script in OpenVSP.",
+                "info",
+            )
+            doctor_exe = st.text_input("OpenVSP executable/path", value="vsp", key="cad_doctor_openvsp")
+            _panel(
+                "Check OpenVSP executable",
+                "Checks whether the executable/path is discoverable. Does not launch OpenVSP.",
+                ["geometry", "openvsp-doctor", "--openvsp-command", doctor_exe],
+                root, exe, tmo, dry, "cad_doctor_run",
+                label="Check OpenVSP",
+            )
 
 
 def pg_airfoil(root, exe, tmo, dry):
@@ -4776,3 +5016,24 @@ if __name__ == "__main__":
 _GUI_STATIC_OPERATOR_MARKERS = (
     "Unified aero dataset",
 )
+
+# -----------------------------------------------------------------------------
+# Static GUI regression markers for the CAD export workstation.
+# These are intentionally plain strings so tests can verify that the GUI still
+# exposes the neutral CAD export controls and standard command artifacts even
+# after adding the physical deflected CAD panel.
+# -----------------------------------------------------------------------------
+_GUI_CAD_EXPORT_STATIC_MARKERS = (
+    "Export CAD",
+    "stdout.txt",
+    "stderr.txt",
+    "geometry_export_manifest.json",
+    "physical_deflected_geometry_export_manifest.json",
+    "physical_deflected_geometry.step_bodies.json",
+)
+
+# Static GUI regression markers for the physical deflected CAD preview panel.
+_GUI_STATIC_DEFLECTED_CAD_PREVIEW_MARKERS = (
+    "Physical deflected CAD preview",
+)
+

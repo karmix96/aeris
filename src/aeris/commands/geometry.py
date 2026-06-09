@@ -444,6 +444,21 @@ def geometry_export_deflected_cad(
         "--deflection-topology",
         help="Physical CAD topology: split-elevon for separate mechanical elevons, or unified-abrupt for legacy one-body half-wings.",
     ),
+    save_preview: bool = typer.Option(
+        False,
+        "--save-preview/--no-save-preview",
+        help="Save a PNG top-view preview generated from the exact physical deflected airplane used for export.",
+    ),
+    preview_png_name: str | None = typer.Option(
+        None,
+        "--preview-png-name",
+        help="Optional PNG filename for the saved physical deflected preview. Defaults to physical_deflected_planform.png.",
+    ),
+    draw_3d: bool = typer.Option(
+        False,
+        "--draw-3d",
+        help="Open AeroSandbox interactive 3D viewer for the exact physical deflected airplane. Requires a local desktop.",
+    ),
     seed: int | None = typer.Option(
         None,
         "--seed",
@@ -470,6 +485,9 @@ def geometry_export_deflected_cad(
             hinge_gap_fraction=hinge_gap_fraction,
             boundary_epsilon_fraction=boundary_epsilon_fraction,
             deflection_topology=deflection_topology,
+            save_preview=save_preview,
+            preview_png_name=preview_png_name,
+            draw_3d=draw_3d,
             seed=seed,
         )
     except Exception as exc:
@@ -497,7 +515,7 @@ def geometry_export_deflected_cad(
     typer.echo(f"    left_deg        : {controls.get('left_deflection_deg')}")
 
     artifacts = manifest.get("artifacts", {}) or {}
-    for key in ["vspscript", "step", "physical_control_deflection", "stdout", "stderr"]:
+    for key in ["vspscript", "step", "physical_deflected_planform_png", "physical_control_deflection", "stdout", "stderr"]:
         val = artifacts.get(key)
         if val:
             typer.echo(f"  {key:12s}: {val}")

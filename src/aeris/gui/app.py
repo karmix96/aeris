@@ -32,9 +32,11 @@ except Exception:
     yaml = None
 
 # ── Version & constants ───────────────────────────────────────────────────────
-APP_VERSION       = "4.4.0"
+APP_VERSION       = "4.5.0"
 DEFAULT_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg"
-DEFAULT_SYM_ELEVON_FEATURES = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_e_sym_deg"
+DEFAULT_SYM_ELEVON_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_e_sym_deg"
+DEFAULT_DIFF_ELEVON_FEATURES = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_a_diff_deg"
+DEFAULT_V3_FEATURES          = "c1_m,b_total_m,sw1_deg,elevon_start_frac,elevon_end_frac,elevon_hinge_frac,alpha_deg,velocity_mps,altitude_m,delta_e_sym_deg"
 DEFAULT_TARGETS   = "cl,cd,cm"
 DEFAULT_PAIR_KEYS = "geometry_id,alpha_deg,velocity_mps,altitude_m,control_input_deg"
 DEFAULT_CONTROL_DERIVATIVE_GROUPS = "geometry_id,alpha_deg,beta_deg,velocity_mps,altitude_m,p_rad_s,q_rad_s,r_rad_s"
@@ -43,6 +45,8 @@ DEFAULT_CONTROL_DERIVATIVE_TARGETS = "cl,cd,cm,cy,cl_roll,cn"
 ML_FEATURE_PRESETS = [
     "bwb_control",
     "bwb_control_sym_elevon",
+    "bwb_control_sym_elevon_v3",
+    "bwb_diff_elevon_v3",
     "bwb_basic",
 ]
 ML_FEATURE_SET_CHOICES = [
@@ -503,9 +507,50 @@ def _show_file(p: Path) -> None:
                 num = list(df.select_dtypes("number").columns)
                 if num:
                     with st.expander("Quick plot"):
-                        cols = st.multiselect("Columns", num, default=num[:3], key=f"plt_{p}")
-                        if cols:
-                            st.line_chart(df[cols])
+                        _is_airfoil = "alpha_deg" in df.columns and "airfoil_id" in df.columns
+                        _is_aero    = "alpha_deg" in df.columns and "geometry_id" in df.columns
+                        if _is_airfoil or _is_aero:
+                            _grp_col = "airfoil_id" if _is_airfoil else "geometry_id"
+                            _targets = [c for c in ["cl","cd","cm","cl_roll"] if c in df.columns]
+                            _target  = st.selectbox("Y axis", _targets, key=f"qp_y_{p}")
+                            _grp_ids = sorted(df[_grp_col].unique().tolist())
+                            _sel_ids = st.multiselect(
+                                f"Filter by {_grp_col} (blank = all)",
+                                _grp_ids,
+                                default=_grp_ids[:min(5, len(_grp_ids))],
+                                key=f"qp_ids_{p}",
+                            )
+                            _df_plot = df[df[_grp_col].isin(_sel_ids)] if _sel_ids else df
+                            if not _df_plot.empty and _target:
+                                try:
+                                    import plotly.express as _px
+                                    _fig = _px.line(
+                                        _df_plot.sort_values("alpha_deg"),
+                                        x="alpha_deg", y=_target,
+                                        color=_grp_col,
+                                        markers=True,
+                                        labels={"alpha_deg": "α [deg]", _target: _target},
+                                        title=f"{_target} vs α",
+                                        template="plotly_dark",
+                                    )
+                                    _fig.update_layout(
+                                        height=380,
+                                        margin=dict(l=40,r=20,t=40,b=40),
+                                        legend=dict(font=dict(size=10)),
+                                        plot_bgcolor="#17212B",
+                                        paper_bgcolor="#17212B",
+                                    )
+                                    st.plotly_chart(_fig, use_container_width=True)
+                                except ImportError:
+                                    _pivot = _df_plot.pivot_table(
+                                        index="alpha_deg", columns=_grp_col,
+                                        values=_target, aggfunc="mean"
+                                    )
+                                    st.line_chart(_pivot)
+                        else:
+                            cols = st.multiselect("Columns", num, default=num[:3], key=f"plt_{p}")
+                            if cols:
+                                st.line_chart(df[cols])
             except Exception as e:
                 st.error(str(e))
                 st.code(_read(p))
@@ -996,33 +1041,41 @@ def pg_home(root, exe, tmo, dry):
 
 
 def _geo_var_table(cfg_path: str) -> None:
-    """Read a geometry YAML and render the design variable table from its actual bounds."""
-    # Fixed notes — these never change regardless of YAML
+    """Read a geometry YAML and render a COMPLETE config reference table.
+
+    Sections shown:
+      1. Generator metadata + spline/controls parameters
+      2. Planform design variables (with bounds)
+      3. Section design variables (with bounds) + fixed section params
+      4. Elevon geometry DVs (v3 only)
+      5. Control surfaces (full metadata for each surface)
+      6. Outputs flags + dataset sampling settings
+    Amber = nearly fixed (spread < 0.01). Green = active sampled DV.
+    """
     NOTES = {
         "c1_m":           ("Chord",    "Root chord (absolute)"),
-        "c2_ratio":       ("Chord",    "Chord ratio relative to c1 — must be > 0"),
-        "c3_ratio":       ("Chord",    "Chord ratio relative to c1 — must be > 0"),
-        "c4_ratio":       ("Chord",    "Tip chord ratio relative to c1 — must be > 0"),
-        "b_total_m":      ("Span",     "Semi-span — full span = 2 × this value"),
-        "b3_ratio":       ("Span",     "Outboard segment fraction — must be in (0, 1)"),
-        "split_ratio":    ("Span",     "Inner/mid split fraction — must be in (0, 1)"),
-        "sw1_deg":        ("Sweep",    "Inner LE sweep. YAML = positive; Python = negative. Never negate twice."),
-        "sw2_deg":        ("Sweep",    "Mid sweep — same sign convention as sw1_deg"),
-        "sw3_deg":        ("Sweep",    "Outer sweep — same sign convention as sw1_deg"),
-        "twist_b0_deg":   ("Twist",    "Root twist. Positive = leading edge up (washout). No sign flip."),
+        "c2_ratio":       ("Chord",    "Chord ratio relative to c1"),
+        "c3_ratio":       ("Chord",    "Chord ratio relative to c1"),
+        "c4_ratio":       ("Chord",    "Tip chord ratio relative to c1"),
+        "b_total_m":      ("Span",     "Semi-span — full span = 2×"),
+        "b3_ratio":       ("Span",     "Outboard segment fraction"),
+        "split_ratio":    ("Span",     "Inner/mid split fraction"),
+        "sw1_deg":        ("Sweep",    "Inner LE sweep. YAML positive; Python negative."),
+        "sw2_deg":        ("Sweep",    "Mid sweep"),
+        "sw3_deg":        ("Sweep",    "Outer sweep"),
+        "twist_b0_deg":   ("Twist",    "Root twist. Positive = LE up."),
         "twist_b1_deg":   ("Twist",    "Inner twist"),
         "twist_b2_deg":   ("Twist",    "Mid twist"),
         "twist_b3_deg":   ("Twist",    "Tip twist"),
         "dihedral_b1_deg":("Dihedral", "Inner dihedral"),
         "dihedral_b2_deg":("Dihedral", "Mid dihedral"),
-        "dihedral_b3_deg":("Dihedral", "Outer dihedral — root always fixed at 0°"),
+        "dihedral_b3_deg":("Dihedral", "Outer dihedral"),
     }
     UNITS = {
-        "c1_m": "m", "b_total_m": "m",
-        "sw1_deg": "°", "sw2_deg": "°", "sw3_deg": "°",
-        "twist_b0_deg": "°", "twist_b1_deg": "°",
-        "twist_b2_deg": "°", "twist_b3_deg": "°",
-        "dihedral_b1_deg": "°", "dihedral_b2_deg": "°", "dihedral_b3_deg": "°",
+        "c1_m":"m","b_total_m":"m",
+        "sw1_deg":"°","sw2_deg":"°","sw3_deg":"°",
+        "twist_b0_deg":"°","twist_b1_deg":"°","twist_b2_deg":"°","twist_b3_deg":"°",
+        "dihedral_b1_deg":"°","dihedral_b2_deg":"°","dihedral_b3_deg":"°",
     }
 
     cfg_data = None
@@ -1032,79 +1085,154 @@ def _geo_var_table(cfg_path: str) -> None:
         except Exception:
             cfg_data = None
 
-    pb = (cfg_data or {}).get("geometry", {}).get("planform_bounds", {})
-    sb = (cfg_data or {}).get("geometry", {}).get("section_bounds", {})
-    bounds = {**pb, **sb}
+    geo      = (cfg_data or {}).get("geometry", {})
+    pb       = geo.get("planform_bounds", {})
+    sb       = geo.get("section_bounds", {})
+    eb       = geo.get("elevon_bounds") or {}
+    cs_cfg   = geo.get("control_surfaces") or {}
+    gen_cfg  = geo.get("generator", {})
+    ctrl_cfg = geo.get("controls", {})
+    out_cfg  = geo.get("outputs", {})
+    ds_cfg   = (cfg_data or {}).get("dataset", {})
 
-    rows = []
-    for var, (group, note) in NOTES.items():
-        b = bounds.get(var, {})
-        if isinstance(b, dict) and "min" in b and "max" in b:
-            mn, mx = b["min"], b["max"]
-            u = UNITS.get(var, "")
-            spread = abs(float(mx) - float(mn))
-            if spread < 0.01:
-                rng = f"fixed ≈ {mn}{u}"
-            else:
-                rng = f"{mn} – {mx}{u}"
-        else:
-            rng = "— not in YAML —" if cfg_data else "— load a YAML —"
-        rows.append((group, var, rng, note))
+    def _rng_cell(b, unit=""):
+        if not isinstance(b, dict) or "min" not in b:
+            return "— not found —", "#5A7A96"
+        mn, mx = float(b["min"]), float(b["max"])
+        spread = abs(mx - mn)
+        if spread < 0.01:
+            return f"fixed ≈ {mn}{unit}", "#F59E0B"
+        return f"{mn} – {mx}{unit}", "#86EFAC"
 
-    # Build table HTML
-    header = (
-        '<table style="width:100%;border-collapse:collapse;font-size:.8rem">'
-        '<thead><tr style="border-bottom:1px solid #334252">'
-        '<th style="text-align:left;padding:.4rem .6rem;color:#8EA0B3;font-weight:600">Group</th>'
-        '<th style="text-align:left;padding:.4rem .6rem;color:#8EA0B3;font-weight:600">Variable</th>'
-        '<th style="text-align:left;padding:.4rem .6rem;color:#8EA0B3;font-weight:600">Range in this config</th>'
-        '<th style="text-align:left;padding:.4rem .6rem;color:#8EA0B3;font-weight:600">Notes</th>'
-        '</tr></thead><tbody>'
-    )
-    body = ""
-    prev_group = None
-    for group, var, rng, note in rows:
-        sep = "border-bottom:1px solid #263545;"
-        # Color fixed ranges differently so user immediately spots near-fixed vars
-        rng_col = "#F59E0B" if "fixed" in rng else "#D6DEE8"
-        body += (
+    def _tbl_header():
+        return (
+            '<table style="width:100%;border-collapse:collapse;font-size:.8rem;margin-bottom:.5rem">'
+            '<thead><tr style="border-bottom:1px solid #334252">'
+            '<th style="text-align:left;padding:.35rem .6rem;color:#8EA0B3;font-weight:600;width:13%">Group</th>'
+            '<th style="text-align:left;padding:.35rem .6rem;color:#8EA0B3;font-weight:600;width:22%">Variable / Parameter</th>'
+            '<th style="text-align:left;padding:.35rem .6rem;color:#8EA0B3;font-weight:600;width:22%">Value / Range</th>'
+            '<th style="text-align:left;padding:.35rem .6rem;color:#8EA0B3;font-weight:600">Notes</th>'
+            '</tr></thead><tbody>'
+        )
+
+    def _row(group, var, val, note, val_col="#D6DEE8", prev_group=None):
+        sep = "border-bottom:1px solid #1E2F3E;"
+        return (
             f'<tr style="{sep}">'
-            f'<td style="padding:.38rem .6rem;color:#C0CAD6">'
+            f'<td style="padding:.33rem .6rem;color:#C0CAD6">'
             f'{"" if group == prev_group else group}</td>'
-            f'<td style="padding:.38rem .6rem;font-family:JetBrains Mono,monospace;'
+            f'<td style="padding:.33rem .6rem;font-family:JetBrains Mono,monospace;'
             f'color:#93C5FD;white-space:nowrap">{var}</td>'
-            f'<td style="padding:.38rem .6rem;color:{rng_col};white-space:nowrap">{rng}</td>'
-            f'<td style="padding:.38rem .6rem;color:#8EA0B3">{note}</td>'
+            f'<td style="padding:.33rem .6rem;color:{val_col};white-space:nowrap">{val}</td>'
+            f'<td style="padding:.33rem .6rem;color:#8EA0B3">{note}</td>'
             f'</tr>'
         )
-        prev_group = group
-    _h(header + body + "</tbody></table>")
 
-    # Extra context from section_bounds
-    airfoil = (cfg_data or {}).get("geometry", {}).get("section_bounds", {}).get("airfoil_name", "—")
-    dih_root = (cfg_data or {}).get("geometry", {}).get("section_bounds", {}).get("dihedral_root_deg", "—")
-    if cfg_data:
-        gen_cfg = (cfg_data or {}).get("geometry", {}).get("generator", {})
-        gen_seed = gen_cfg.get("seed", "—")
-        gen_id   = gen_cfg.get("id", gen_cfg.get("family", "—"))
-        _h(
-            f'<div style="background:#1B2A3A;border:1px solid #2D3F52;border-radius:8px;'
-            f'padding:.5rem 1rem;margin:.5rem 0 .7rem;display:flex;gap:20px;flex-wrap:wrap">'
-            f'<div><span style="font-size:.68rem;color:#7F8B98;text-transform:uppercase;letter-spacing:.1em">Generator</span>'
-            f'<div style="font-family:JetBrains Mono,monospace;color:#93C5FD;font-size:.82rem">{gen_id}</div></div>'
-            f'<div><span style="font-size:.68rem;color:#7F8B98;text-transform:uppercase;letter-spacing:.1em">Seed (YAML)</span>'
-            f'<div style="font-family:JetBrains Mono,monospace;color:#FCD34D;font-size:.82rem">{gen_seed}</div></div>'
-            f'<div><span style="font-size:.68rem;color:#7F8B98;text-transform:uppercase;letter-spacing:.1em">Airfoil</span>'
-            f'<div style="font-family:JetBrains Mono,monospace;color:#86EFAC;font-size:.82rem">{airfoil}</div></div>'
-            f'<div><span style="font-size:.68rem;color:#7F8B98;text-transform:uppercase;letter-spacing:.1em">Root dihedral</span>'
-            f'<div style="font-family:JetBrains Mono,monospace;color:#D6DEE8;font-size:.82rem">{dih_root}° (fixed)</div></div>'
-            f'</div>'
+    # ── 1. Generator & spline params ─────────────────────────────────────────
+    _h('<div style="color:#8EA0B3;font-size:.72rem;text-transform:uppercase;'
+       'letter-spacing:.1em;margin:.8rem 0 .3rem">Generator &amp; Controls</div>')
+    tbl = _tbl_header(); prev = None
+    gen_id   = gen_cfg.get("id", gen_cfg.get("family", "—"))
+    gen_seed = str(gen_cfg.get("seed", "—"))
+    for g, v, val, note in [
+        ("Generator", "id",                   gen_id,    "Generator family+version string"),
+        ("Generator", "seed",                 gen_seed,  "Same seed + same config = identical geometry"),
+        ("Spline", "n_points",                str(ctrl_cfg.get("n_points", "—")),              "Total spline control points"),
+        ("Spline", "n_spline_inboard",        str(ctrl_cfg.get("n_spline_inboard", "—")),      "Inboard sections — 10=fast, 16=fine"),
+        ("Spline", "n_spline_outboard",       str(ctrl_cfg.get("n_spline_outboard", "—")),     "Outboard sections"),
+        ("Spline", "spline_split_ratio",      str(ctrl_cfg.get("spline_split_ratio", "—")),    "Inboard/outboard split fraction"),
+        ("Spline", "segment_length_variation",str(ctrl_cfg.get("segment_length_variation", "—")), "0=uniform spacing, >0=random variation"),
+        ("Spline", "sweep_variation",         str(ctrl_cfg.get("sweep_variation", "—")),       "Local sweep randomisation magnitude"),
+        ("Spline", "curvature_strength",      str(ctrl_cfg.get("curvature_strength", ctrl_cfg.get("desired_curvature_strength", "—"))), "Curvature magnitude"),
+    ]:
+        col = "#FCD34D" if v == "seed" else "#D6DEE8"
+        tbl += _row(g, v, val, note, col, prev); prev = g
+    _h(tbl + "</tbody></table>")
+
+    # ── 2. Planform + Section DVs ─────────────────────────────────────────────
+    _h('<div style="color:#8EA0B3;font-size:.72rem;text-transform:uppercase;'
+       'letter-spacing:.1em;margin:.8rem 0 .3rem">Design Variables — Planform &amp; Sections</div>')
+    _note("Amber = nearly fixed (spread &lt; 0.01) — not useful for ML. Green = active sampled DV.", "info")
+    tbl = _tbl_header(); prev = None
+    bounds = {**pb, **sb}
+    for var, (group, note) in NOTES.items():
+        b = bounds.get(var, {})
+        val, col = _rng_cell(b, UNITS.get(var, ""))
+        tbl += _row(group, var, val, note, col, prev); prev = group
+    airfoil  = sb.get("airfoil_name", "—")
+    dih_root = sb.get("dihedral_root_deg", "—")
+    tbl += _row("Section", "airfoil_name",       airfoil,                   "Airfoil profile for all sections",    "#86EFAC", prev); prev = "Section"
+    tbl += _row("Section", "dihedral_root_deg",  f"{dih_root}° (fixed)", "Root dihedral — always 0°", "#F59E0B", prev)
+    _h(tbl + "</tbody></table>")
+
+    # ── 3. Elevon geometry DVs (v3 only) ──────────────────────────────────────
+    if eb:
+        _h('<div style="color:#8EA0B3;font-size:.72rem;text-transform:uppercase;'
+           'letter-spacing:.1em;margin:.8rem 0 .3rem">Elevon Geometry DVs (v3 — 20 DV config)</div>')
+        _note("3 extra DVs: elevon size and hinge position vary per geometry sample.", "info")
+        tbl = _tbl_header(); prev = None
+        for var, note in [
+            ("elevon_start_frac", "Inboard edge of elevon [fraction of semi-span]"),
+            ("elevon_end_frac",   "Outboard edge of elevon [fraction of semi-span]"),
+            ("elevon_hinge_frac", "Hinge line position [fraction of local chord]"),
+        ]:
+            val, col = _rng_cell(eb.get(var, {}), "")
+            tbl += _row("Elevon DVs", var, val, note, col, prev); prev = "Elevon DVs"
+        _h(tbl + "</tbody></table>")
+
+    # ── 4. Control surfaces ────────────────────────────────────────────────────
+    surfaces   = cs_cfg.get("surfaces", []) if isinstance(cs_cfg, dict) else []
+    cs_enabled = cs_cfg.get("enabled", False) if isinstance(cs_cfg, dict) else False
+    _h('<div style="color:#8EA0B3;font-size:.72rem;text-transform:uppercase;'
+       'letter-spacing:.1em;margin:.8rem 0 .3rem">Control Surfaces</div>')
+    if not cs_enabled or not surfaces:
+        _note("No control surfaces configured in this YAML.", "warn")
+    else:
+        _note(
+            f"<b>{len(surfaces)}</b> surface(s). These are <b>AVL metadata</b> — hinge lines and d-number "
+            "wiring for the solver. Physical deflection happens at aero-generate time or via export-deflected-cad.",
+            "info",
         )
-        st.caption(
-            "**Seed** is read from `geometry.generator.seed` in the YAML. "
-            "Same seed + same config = identical geometry every time. "
-            "Change the seed to explore the design space."
-        )
+        for i, surf in enumerate(surfaces):
+            is_sym   = surf.get("symmetric", True)
+            d_num    = i + 1
+            sym_str  = f"symmetric (d{d_num} — pitch, both sides)" if is_sym else f"antisymmetric (d{d_num} — roll, side={surf.get('side','?')})"
+            span_s   = surf.get("spanwise", {}).get("start_frac", surf.get("start_frac", "—"))
+            span_e   = surf.get("spanwise", {}).get("end_frac",   surf.get("end_frac",   "—"))
+            tbl = _tbl_header(); prev = None
+            for g, v, val, note in [
+                ("Surface", "name",           surf.get("name", "—"),               "AVL control surface name (d-number order)"),
+                ("Surface", "family",         surf.get("family", "—"),             "trailing_edge = standard elevon"),
+                ("Surface", "symmetric",      sym_str,                                  "True=pitch d1, False=roll d2"),
+                ("Surface", "side",           str(surf.get("side") or "both (symmetric)"), "Which wing side this surface acts on"),
+                ("Surface", "spanwise_start", str(span_s),                              "Inboard edge [fraction of semi-span]"),
+                ("Surface", "spanwise_end",   str(span_e),                              "Outboard edge [fraction of semi-span]"),
+                ("Surface", "hinge_point",    str(surf.get("hinge_point", "—")),   "Hinge at this chord fraction"),
+                ("Surface", "deflection_sign",surf.get("deflection_sign", "—"),    "standard = trailing-edge-down positive"),
+                ("Surface", "required",       str(surf.get("required", False)),          "True: solver errors if surface absent"),
+            ]:
+                col = "#93C5FD" if v == "name" else "#D6DEE8"
+                tbl += _row(g, v, val, note, col, prev); prev = g
+            _h(tbl + "</tbody></table>")
+
+    # ── 5. Outputs & dataset sampling ─────────────────────────────────────────
+    _h('<div style="color:#8EA0B3;font-size:.72rem;text-transform:uppercase;'
+       'letter-spacing:.1em;margin:.8rem 0 .3rem">Outputs &amp; Sampling</div>')
+    tbl = _tbl_header(); prev = None
+    for g, v, val, note in [
+        ("Outputs", "save_plot",         str(out_cfg.get("save_plot", "—")),      "Save planform PNG per geometry case"),
+        ("Outputs", "build_aerosandbox", str(out_cfg.get("build_aerosandbox", "—")), "Required for AVL runs and dataset generation"),
+        ("Dataset", "sampling.method",   str((ds_cfg.get("sampling") or {}).get("method", "—")), "LHS = Latin Hypercube Sampling"),
+        ("Dataset", "sampling.seed",     str((ds_cfg.get("sampling") or {}).get("seed",   "—")), "Reproducibility seed for geometry sampling"),
+    ]:
+        col = "#FCD34D" if "seed" in v else "#86EFAC" if val == "True" else "#F59E0B" if val == "False" else "#D6DEE8"
+        tbl += _row(g, v, val, note, col, prev); prev = g
+    _h(tbl + "</tbody></table>")
+
+    st.caption(
+        "Control surfaces shown here are AVL wiring metadata — they do not physically deflect in the 3D viewer. "
+        "Same seed + same config = identical geometry every time."
+    )
 
 
 def _geo_delete_one(p: Path, key_suffix: str) -> bool:
@@ -2086,17 +2214,36 @@ def pg_airfoil(root, exe, tmo, dry):
             n_airfoils = st.slider("Airfoils to sweep (--n-airfoils)", 5, 2156, 25, 5, key="af_n",
                                    help="5-25 for fast iteration, 2156 for full campaign.")
             af_seed   = st.number_input("Subset seed (--seed)", value=0, min_value=0, key="af_seed")
+            af_show_plots = st.checkbox(
+                "Show XFOIL plots (--show-plots)",
+                value=False,
+                key="af_show_plots",
+                help=(
+                    "Checked: Xplot11 Cp windows appear per airfoil — useful for debugging. "
+                    "Unchecked (default): headless via xvfb-run, no windows. "
+                    "Requires: sudo apt install xvfb"
+                ),
+            )
 
             if sel_cfg and ds_name:
-                _panel("Run XFOIL sweep",
-                       f"Sweeps {n_airfoils} airfoils → data/datasets/{ds_name}/",
-                       ["airfoil", "dataset", "generate",
-                        "--library", str(lib_dir),
-                        "--config",  sel_cfg,
-                        "--name",    ds_name,
-                        "--n-airfoils", str(n_airfoils),
-                        "--seed",    str(int(af_seed))],
-                       root, exe, tmo, dry, "af_gen", label="▶  Run XFOIL sweep")
+                _sweep_args = [
+                    "airfoil", "dataset", "generate",
+                    "--library", str(lib_dir),
+                    "--config",  sel_cfg,
+                    "--name",    ds_name,
+                    "--n-airfoils", str(n_airfoils),
+                    "--seed",    str(int(af_seed)),
+                ]
+                if af_show_plots:
+                    _sweep_args.append("--show-plots")
+                _panel(
+                    "Run XFOIL sweep",
+                    f"Sweeps {n_airfoils} airfoils → data/datasets/{ds_name}/ "
+                    + ("[Xplot11 ON]" if af_show_plots else "[headless, no windows]"),
+                    _sweep_args,
+                    root, exe, tmo, dry, "af_gen",
+                    label="▶  Run XFOIL sweep " + ("[Xplot11 ON]" if af_show_plots else "[headless]"),
+                )
 
             if ds_dirs:
                 _sec("Existing airfoil datasets")
@@ -2148,10 +2295,10 @@ def pg_airfoil(root, exe, tmo, dry):
                        root, exe, tmo, dry, "af_insp", label="▶  Inspect")
 
                 for fname, label_str in [
-                    ("airfoil_dataset.csv",    "Raw dataset preview"),
-                    ("curated_dataset.csv",    "Curated dataset preview"),
-                    ("promotion_manifest.json","Promotion manifest"),
-                    ("curation_report.json",   "Curation report"),
+                    ("airfoil_dataset.csv",          "Raw dataset preview"),
+                    ("curated_airfoil_dataset.csv",  "Curated dataset preview"),
+                    ("promotion_manifest.json",      "Promotion manifest"),
+                    ("curation_report.json",         "Curation report"),
                 ]:
                     fpath = ds_path / fname
                     if fpath.exists():
@@ -2217,10 +2364,34 @@ def pg_dataset(root, exe, tmo, dry):
             "--alpha-values, --velocity-values, --altitude-values, --control-input-values are <b>required</b>.",
             "info",
         )
+        def _ds_cfg_label(s):
+            name = Path(s).name
+            if name == "bwb_training_v1.yaml":
+                return "v1 — 17 DVs, fixed elevon, sym sweep only"
+            if name == "bwb_training_v2.yaml":
+                return "v2 — 17 DVs, sym + diff elevon sweep"
+            if name == "bwb_training_v3.yaml":
+                return "v3 — 20 DVs, variable elevon + sym/diff sweep"
+            return Path(s).name
+
         mode = st.radio("Config source",["Use existing YAML file","Build config interactively"],horizontal=True,key="ds_mode2")
         if mode.startswith("Use existing"):
             config = _pick_file("Geometry config",root/"configs"/"geometry","*.yaml","ds_ac",
                                 default=str(root/"configs"/"geometry"/"baseline_bwb_25.yaml"))
+            _cfg_name = Path(config).name if config else ""
+            if _cfg_name == "bwb_training_v2.yaml":
+                _note(
+                    "<b>v2 config selected</b> — supports sym elevon (<code>delta_e_sym_deg</code>) and diff elevon "
+                    "(<code>delta_a_diff_deg</code>) sweeps. Use <code>--diff-input-values</code> below to add roll authority.",
+                    "info",
+                )
+            elif _cfg_name == "bwb_training_v3.yaml":
+                _note(
+                    "<b>v3 config selected</b> — 20 DVs including variable elevon geometry (start/end/hinge fractions). "
+                    "Supports both sym and diff sweeps. Use feature presets <code>bwb_control_sym_elevon_v3</code> or "
+                    "<code>bwb_diff_elevon_v3</code> in ML Studio.",
+                    "info",
+                )
         else:
             ys = _yaml_geometry_builder("dsb")
             with st.expander("Preview YAML"): st.code(ys, language="yaml")
@@ -2246,12 +2417,36 @@ def pg_dataset(root, exe, tmo, dry):
         c3,c4 = st.columns(2)
         vel   = c3.text_input("--velocity-values [m/s]","28",key="ds_ve",help="Freestream velocity. e.g. 20,28")
         alt   = c4.text_input("--altitude-values [m]","1500",key="ds_at",help="ISA altitude. e.g. 0,1500")
-        ctrl  = st.text_input("--control-input-values [deg]","-5,0,5",key="ds_ctrl",help="Elevon deflection. e.g. -10,-5,0,5,10")
+        ctrl  = st.text_input("--control-input-values [deg]","-5,0,5",key="ds_ctrl",help="Symmetric elevon (delta_e_sym_deg). e.g. -10,-5,0,5,10")
+        diff  = st.text_input(
+            "--diff-input-values [deg]", "",
+            key="ds_diff",
+            help=(
+                "Differential elevon sweep (delta_a_diff_deg). "
+                "Independent of --control-input-values. "
+                "Requires bwb_training_v2.yaml or v3.yaml config. "
+                "Leave blank for symmetric-only datasets. "
+                "e.g. -10,-5,0,5,10"
+            ),
+        )
         with st.expander("Angular rates (optional — leave 0 for standard datasets)"):
             c5,c6,c7 = st.columns(3)
             pv = c5.text_input("--p-values [rad/s]","0",key="ds_pv"); qv = c6.text_input("--q-values [rad/s]","0",key="ds_qv"); rv = c7.text_input("--r-values [rad/s]","0",key="ds_rv")
-        est = int(n) * _est(alpha,beta,vel,alt,ctrl,pv,qv,rv)
-        _note(f"Estimated aero cases: <b>{est:,}</b> ({int(n)} geometries × {est//max(int(n),1)} conditions each)","info")
+        _n_sym = _est(alpha,beta,vel,alt,ctrl,pv,qv,rv)
+        if diff.strip():
+            est_sym  = int(n) * _n_sym
+            est_diff = int(n) * _csvn(diff) * _csvn(alpha) * _csvn(vel) * _csvn(alt)
+            est = est_sym + est_diff
+            _note(
+                f"Estimated aero cases: <b>{est:,}</b> total — "
+                f"{est_sym:,} symmetric (N_geom × {_n_sym} conditions) + "
+                f"{est_diff:,} differential (N_geom × {_csvn(diff)} diff-values × {_csvn(alpha)} alpha × vel × alt). "
+                "Sym and diff sweeps are independent (not a product).",
+                "info",
+            )
+        else:
+            est = int(n) * _n_sym
+            _note(f"Estimated aero cases: <b>{est:,}</b> ({int(n)} geometries × {est//max(int(n),1)} conditions each)","info")
 
         _sec("Solver settings")
         c1,c2,c3 = st.columns(3)
@@ -2294,6 +2489,8 @@ def pg_dataset(root, exe, tmo, dry):
             "--alpha-values",alpha,"--velocity-values",vel,
             "--altitude-values",alt,"--control-input-values",ctrl,
         ]
+        if diff.strip():
+            args += ["--diff-input-values", diff]
         if beta.strip() and beta.strip() != "0": args += ["--beta-values",beta]
         if pv.strip() and pv.strip() != "0": args += ["--p-values",pv]
         if qv.strip() and qv.strip() != "0": args += ["--q-values",qv]
@@ -2438,6 +2635,25 @@ def pg_dataset(root, exe, tmo, dry):
             "This is first-order diagnostic logic, not a nonlinear trim solver and not a MIL-STD claim.",
             "info",
         )
+        with st.expander("⟳ Roll authority check (differential elevon datasets — v2/v3 configs)", expanded=False):
+            _note(
+                "For <b>roll authority</b> analysis from a differential elevon dataset, filter rows to "
+                "<code>sweep_type == diff</code> first (or use a diff-only dataset), then run:",
+                "info",
+            )
+            st.code(
+                "aeris dataset compute-control-derivatives \\\n"
+                "  --dataset <dataset> \\\n"
+                "  --control-column delta_a_diff_deg \\\n"
+                "  --targets cl_roll,cy,cn",
+                language="bash",
+            )
+            _note(
+                "<b>Note:</b> <code>sweep_type=diff</code> rows are generated by <code>--diff-input-values</code> during aero-generate. "
+                "These rows hold <code>delta_e_sym_deg=0</code> and vary <code>delta_a_diff_deg</code>. "
+                "D2 on these rows gives roll derivatives (dCl_roll/dδa) rather than pitch derivatives.",
+                "warn",
+            )
         ds_cf = _pick_dir("Aero dataset root", root / "data" / "datasets", "dcf_ds")
         c1, c2, c3 = st.columns(3)
         src_cf = c1.selectbox("--source", ["auto", "curated", "raw"], key="dcf_src")
@@ -2503,6 +2719,59 @@ def pg_dataset(root, exe, tmo, dry):
         cfg_sm = _pick_file("Smoke config",root/"configs"/"smoke","*.yaml","sm_cfg",
                             default=str(root/"configs"/"smoke"/"dev.yaml"))
         _panel("Run smoke pipeline","Quick end-to-end sanity check.",["pipeline","smoke","--config",cfg_sm],root,exe,tmo,dry,"sm_run")
+
+        st.divider()
+        _note("<b>Aero-generate smoke runs</b> — quick functional checks for v2/v3 configs and diff elevon wiring.","info")
+        sm_tabs = st.tabs(["Sym smoke (v2)", "Diff smoke (v2)", "Variable elevon smoke (v3)"])
+
+        _v2_cfg = str(root / "configs" / "geometry" / "bwb_training_v2.yaml")
+        _v3_cfg = str(root / "configs" / "geometry" / "bwb_training_v3.yaml")
+
+        with sm_tabs[0]:
+            _note("1 geometry, 3 alpha, symmetric sweep only. Validates v2 config + AVL wiring.","info")
+            _panel(
+                "Sym smoke (v2)",
+                "Generates 1 geometry with symmetric elevon sweep. Expected: 3 alpha × 3 ctrl = 9 aero cases.",
+                [
+                    "dataset", "aero-generate", "-c", _v2_cfg,
+                    "--n", "1", "--name", "smoke_sym_gui",
+                    "--alpha-values", "-4,0,4", "--velocity-values", "28",
+                    "--altitude-values", "0", "--control-input-values", "-10,0,10",
+                    "--qc-preset", "debug", "--no-save-plot",
+                ],
+                root, exe, tmo, dry, "sm_sym_v2",
+            )
+
+        with sm_tabs[1]:
+            _note("1 geometry, 3 alpha, differential sweep. Validates d2/SgnDup=-1 wiring and Cl_roll response.","info")
+            _panel(
+                "Diff smoke (v2)",
+                "Generates 1 geometry with differential elevon sweep. sym=0 held; diff varies. Cl_roll should vary, Cm near-constant.",
+                [
+                    "dataset", "aero-generate", "-c", _v2_cfg,
+                    "--n", "1", "--name", "smoke_diff_gui",
+                    "--alpha-values", "-4,0,4", "--velocity-values", "28",
+                    "--altitude-values", "0", "--control-input-values", "0",
+                    "--diff-input-values", "-10,0,10",
+                    "--qc-preset", "debug", "--no-save-plot",
+                ],
+                root, exe, tmo, dry, "sm_diff_v2",
+            )
+
+        with sm_tabs[2]:
+            _note("3 geometries with varied elevon geometry (start/end/hinge fractions). Validates v3 20-DV space.","info")
+            _panel(
+                "Variable elevon smoke (v3)",
+                "Generates 3 geometries with sampled elevon_start_frac / end_frac / hinge_frac. Pitch authority should scale with elevon span.",
+                [
+                    "dataset", "aero-generate", "-c", _v3_cfg,
+                    "--n", "3", "--name", "smoke_v3_gui",
+                    "--alpha-values", "-4,0,4", "--velocity-values", "28",
+                    "--altitude-values", "0", "--control-input-values", "-10,0,10",
+                    "--qc-preset", "debug", "--no-save-plot",
+                ],
+                root, exe, tmo, dry, "sm_v3",
+            )
 
 
 def _aero_run_rows(root: Path) -> list[Path]:
@@ -4964,6 +5233,20 @@ def pg_config(root):
 # Static GUI coverage markers retained for brittle source-level operator tests.
 # These strings correspond to real backend commands/features and should not be
 # removed merely because the labels move around the Streamlit layout.
+# v4.5.0 diff elevon / v3 GUI markers
+_GUI_V450_MARKERS = (
+    "bwb_control_sym_elevon_v3",
+    "bwb_diff_elevon_v3",
+    "delta_a_diff_deg",
+    "--diff-input-values",
+    "smoke_sym_gui",
+    "smoke_diff_gui",
+    "smoke_v3_gui",
+    "Roll authority check",
+    "DEFAULT_DIFF_ELEVON_FEATURES",
+    "DEFAULT_V3_FEATURES",
+)
+
 _GUI_RECENT_SLICE_MARKERS = (
     "Unified aero dataset",
     "delta_e_sym_deg",
@@ -5035,5 +5318,14 @@ _GUI_CAD_EXPORT_STATIC_MARKERS = (
 # Static GUI regression markers for the physical deflected CAD preview panel.
 _GUI_STATIC_DEFLECTED_CAD_PREVIEW_MARKERS = (
     "Physical deflected CAD preview",
+)
+
+# Static GUI regression markers for robust visualization fallback behavior.
+_GUI_STATIC_VISUALIZATION_FALLBACK_MARKERS = (
+    "AeroSandbox/PyVista interactive OpenGL viewer",
+    "PyVista/VTK fails",
+    "safe PNG",
+    "--no-draw-3d --save-plot",
+    "draw_3d_error.txt",
 )
 

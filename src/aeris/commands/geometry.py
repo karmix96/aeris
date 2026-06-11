@@ -165,15 +165,32 @@ def geometry_visualize(
     This is an operator/debugging path, not the production dataset hot path.
     For large dataset generation, keep plotting disabled unless explicitly needed.
     """
-    viz_result = visualize_geometry_from_config(
-        config_path=config,
-        seed=seed,
-        save_plot=save_plot,
-        build_aerosandbox=build_aerosandbox,
-        output_dir=output_dir,
-        show_plot=show_plot,
-        draw_3d=draw_3d,
-    )
+    try:
+        viz_result = visualize_geometry_from_config(
+            config_path=config,
+            seed=seed,
+            save_plot=save_plot,
+            build_aerosandbox=build_aerosandbox,
+            output_dir=output_dir,
+            show_plot=show_plot,
+            draw_3d=draw_3d,
+        )
+    except RuntimeError as exc:
+        message = str(exc)
+        if "AERIS_DRAW_3D_FAILED" in message:
+            typer.secho("[AERIS] Interactive 3D viewer failed.", fg=typer.colors.YELLOW)
+            typer.echo(
+                "The geometry generation path is still valid, but AeroSandbox/PyVista/VTK "
+                "could not initialize the OpenGL viewer in this Python environment."
+            )
+            typer.echo(message.replace("AERIS_DRAW_3D_FAILED: ", ""))
+            typer.echo(
+                "Recommended GUI action: use 'Save plot as PNG' or run "
+                "aeris geometry visualize --no-draw-3d --save-plot."
+            )
+            raise typer.Exit(code=2)
+        raise
+
     typer.echo(f"[AERIS] Geometry visualization output: {viz_result.output_dir}")
     if viz_result.plot_path is not None:
         typer.echo(f"[AERIS] Saved plot: {viz_result.plot_path}")

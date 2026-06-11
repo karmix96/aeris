@@ -27,3 +27,5 @@ catboost_info/
 
 # Local patch/operator scripts
 *.sh
+.vsptime
+*.bak_*

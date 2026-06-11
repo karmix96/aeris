@@ -127,6 +127,7 @@ def run_alpha_sweep(
     max_iter: int = 100,
     repanel: bool = True,
     model_size: str = "large",  # unused — kept for API compatibility
+    show_plots: bool = False,   # True = Xplot11 visible; False = headless via xvfb-run
 ) -> list[Aero2DResult]:
     """Run one XFOIL alpha sweep for a single (Re, Mach, Ncrit) condition.
 
@@ -136,6 +137,10 @@ def run_alpha_sweep(
     Unconverged alpha points are NOT present in the polar file — XFOIL simply
     skips them. We reconstruct the full alpha grid and mark missing points as
     converged=False with cl/cd/cm=None.
+
+    show_plots=False (default): runs XFOIL under xvfb-run (virtual display).
+    No Xplot11 windows appear. Requires xvfb-run (sudo apt install xvfb).
+    show_plots=True: uses the real DISPLAY — Xplot11 windows will appear.
     """
     _check_xfoil_available()
     binary = _find_xfoil_binary()
@@ -175,12 +180,23 @@ def run_alpha_sweep(
         stdin_text = "\n".join(cmds) + "\n"
 
         try:
+            import shutil as _shutil
+            if show_plots:
+                cmd = [binary]          # real display — Xplot11 windows appear
+                run_env = None
+            elif _shutil.which("xvfb-run"):
+                cmd = ["xvfb-run", "-a", binary]   # headless virtual display
+                run_env = None
+            else:
+                cmd = [binary]          # xvfb-run absent — best effort
+                run_env = {**os.environ, "DISPLAY": ""}
             proc = subprocess.run(
-                [binary],
+                cmd,
                 input=stdin_text.encode("utf-8"),
                 capture_output=True,
                 timeout=120,
                 cwd=str(tmp),
+                env=run_env,
             )
         except FileNotFoundError as exc:
             raise FileNotFoundError(

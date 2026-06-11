@@ -59,6 +59,7 @@ def generate_airfoil_dataset(
     dataset_root: Path,
     name: str,
     airfoil_ids: list[str] | None = None,
+    show_plots: bool = False,
 ) -> dict[str, Any]:
     """Generate the raw 2D XFOIL dataset.
 
@@ -127,6 +128,7 @@ def generate_airfoil_dataset(
                         ncrit=ncrit,
                         max_iter=max_iter,
                         repanel=repanel,
+                        show_plots=show_plots,
                     )
                     for r in results:
                         row = r.to_row()

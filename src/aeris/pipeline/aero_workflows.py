@@ -24,21 +24,53 @@ from aeris.aero.views import (
     geometry_view_from_dataset_case,
     geometry_view_from_run_dir,
 )
-from aeris.common.config import load_yaml_config
-from aeris.common.paths import create_run_folder
+from aeris.common.config import file_sha256, load_yaml_config
+from aeris.common.logging_utils import setup_logger
+from aeris.common.paths import create_run_folder, write_run_manifest
 from aeris.geometry.config_resolver import resolve_generator_and_config
 from aeris.geometry.registry import get_geometry_generator
 from aeris.aero.io import _write_aero_result_json
 
 
-def create_aero_run_root(output_name: str, label: str, prefix: str) -> tuple[Path, Path, Path]:
+def create_aero_run_root(output_name: str, label: str, prefix: str) -> tuple[Any, Path, Path]:
     suffix = output_name.strip() or label.strip()
-    run_root = create_run_folder(prefix=f"{prefix}_{suffix}").root
+    run_paths = create_run_folder(prefix=f"{prefix}_{suffix}")
+    run_root = run_paths.root
     geometry_dir = run_root / "geometry"
     aero_dir = run_root / "aero"
     geometry_dir.mkdir(parents=True, exist_ok=True)
     aero_dir.mkdir(parents=True, exist_ok=True)
-    return run_root, geometry_dir, aero_dir
+    return run_paths, geometry_dir, aero_dir
+
+
+def _copy_standard_input_config(config: Path | None, run_root: Path) -> Path | None:
+    """Copy the input config to the standard run-root input_config.yaml path."""
+    if config is None:
+        return None
+
+    resolved = Path(config).expanduser().resolve()
+    if not resolved.exists():
+        return None
+
+    copied = run_root / "input_config.yaml"
+    shutil.copy2(resolved, copied)
+    return copied
+
+
+def _config_manifest_fields(config: Path | None, copied_config_path: Path | None) -> dict[str, Any]:
+    """Return generic manifest fields for the source config, if available."""
+    fields: dict[str, Any] = {}
+
+    if config is not None:
+        resolved = Path(config).expanduser().resolve()
+        fields["config_path"] = str(resolved)
+        if resolved.exists():
+            fields["config_sha256"] = file_sha256(resolved)
+
+    if copied_config_path is not None:
+        fields["copied_config_path"] = str(copied_config_path)
+
+    return fields
 
 
 def sample_one(generator_id: str, typed_config: Any, seed: int) -> Any:
@@ -251,11 +283,16 @@ def execute_aero_run(
         else geometry_id
     )
 
-    run_root, geometry_dir, aero_dir = create_aero_run_root(
+    run_paths, geometry_dir, aero_dir = create_aero_run_root(
         output_name=output_name,
         label=label,
         prefix="aero",
     )
+    run_root = run_paths.root
+    logger = setup_logger(run_paths.logs / "app.log")
+    logger.info("Starting aero run")
+    logger.info("Run root: %s", run_root)
+    copied_config_path = _copy_standard_input_config(config, run_root)
 
     geometry_view, resolved_generator_id, summary = prepare_geometry_for_aero(
         config=config,
@@ -266,7 +303,7 @@ def execute_aero_run(
         seed=seed,
         geometry_dir=geometry_dir,
         generator_id=generator_id,
-        copy_config_to=run_root,
+        copy_config_to=None,  # standard copy is input_config.yaml via _copy_standard_input_config()
     )
 
     aero_input = AeroInput(
@@ -399,10 +436,29 @@ def execute_aero_run(
         "geometry_summary": to_jsonable(dataclass_or_value(summary)),
         "aero_result": to_jsonable(dataclass_or_value(result)),
     }
-    (run_root / "aero_manifest.json").write_text(
+    aero_manifest_path = run_root / "aero_manifest.json"
+    aero_manifest_path.write_text(
         json.dumps(manifest, indent=2),
         encoding="utf-8",
     )
+
+    generic_manifest_extra: dict[str, Any] = {
+        "phase": "aero_run",
+        "status": getattr(result.status, "value", str(result.status)),
+        "domain_manifest": str(aero_manifest_path),
+        "aero_result_json": str(aero_dir / "aero_result.json"),
+        "solver": solver,
+        "geometry_source": geometry_source,
+        "resolved_generator_id": resolved_generator_id,
+        "control_input_deg": control_input_deg,
+        "run_artifacts": {
+            "geometry_dir": str(geometry_dir),
+            "aero_dir": str(aero_dir),
+        },
+    }
+    generic_manifest_extra.update(_config_manifest_fields(config, copied_config_path))
+    write_run_manifest(run_paths, extra=generic_manifest_extra)
+    logger.info("Aero run completed with status=%s", generic_manifest_extra["status"])
 
     return run_root, result
 
@@ -452,11 +508,16 @@ def execute_aero_sweep(
         else geometry_id
     )
 
-    run_root, geometry_dir, sweep_dir = create_aero_run_root(
+    run_paths, geometry_dir, sweep_dir = create_aero_run_root(
         output_name=output_name,
         label=label,
         prefix="aero_sweep",
     )
+    run_root = run_paths.root
+    logger = setup_logger(run_paths.logs / "app.log")
+    logger.info("Starting aero sweep")
+    logger.info("Run root: %s", run_root)
+    copied_config_path = _copy_standard_input_config(config, run_root)
 
     geometry_view, resolved_generator_id, summary = prepare_geometry_for_aero(
         config=config,
@@ -467,7 +528,7 @@ def execute_aero_sweep(
         seed=seed,
         geometry_dir=geometry_dir,
         generator_id=generator_id,
-        copy_config_to=run_root,
+        copy_config_to=None,  # standard copy is input_config.yaml via _copy_standard_input_config()
     )
 
     base_fc = FlightCondition(
@@ -538,9 +599,35 @@ def execute_aero_sweep(
         "geometry_summary": to_jsonable(dataclass_or_value(summary)),
         "aero_sweep_result": to_jsonable(dataclass_or_value(sweep_result)),
     }
-    (run_root / "aero_sweep_manifest.json").write_text(
+    aero_sweep_manifest_path = run_root / "aero_sweep_manifest.json"
+    aero_sweep_manifest_path.write_text(
         json.dumps(manifest, indent=2),
         encoding="utf-8",
     )
+
+    sweep_summary = manifest.get("aero_sweep_result", {}).get("summary", {})
+    n_failed_total = int(sweep_summary.get("n_failed_total", 0) or 0)
+    sweep_status = "success" if n_failed_total == 0 else "completed_with_failures"
+
+    generic_manifest_extra: dict[str, Any] = {
+        "phase": "aero_sweep",
+        "status": sweep_status,
+        "domain_manifest": str(aero_sweep_manifest_path),
+        "solver": solver,
+        "geometry_source": geometry_source,
+        "resolved_generator_id": resolved_generator_id,
+        "control_input_deg": control_input_deg,
+        "requested_n_cases": sweep_summary.get("requested_n_cases"),
+        "completed_n_cases": sweep_summary.get("completed_n_cases"),
+        "n_success": sweep_summary.get("n_success"),
+        "n_failed_total": sweep_summary.get("n_failed_total"),
+        "run_artifacts": {
+            "geometry_dir": str(geometry_dir),
+            "aero_dir": str(sweep_dir),
+        },
+    }
+    generic_manifest_extra.update(_config_manifest_fields(config, copied_config_path))
+    write_run_manifest(run_paths, extra=generic_manifest_extra)
+    logger.info("Aero sweep completed with status=%s", sweep_status)
 
     return run_root, sweep_result

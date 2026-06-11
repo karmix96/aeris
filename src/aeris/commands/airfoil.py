@@ -145,6 +145,15 @@ def airfoil_dataset_generate(
         "--seed",
         help="Random seed for --n-airfoils subsetting. Ignored when --n-airfoils is not set.",
     ),
+    show_plots: bool = typer.Option(
+        False,
+        "--show-plots/--no-show-plots",
+        help=(
+            "Show XFOIL Xplot11 graphics windows during sweep. "
+            "Default: headless via xvfb-run (no windows). "
+            "Use --show-plots to see Cp distributions per airfoil."
+        ),
+    ),
 ) -> None:
     """Run XFOIL alpha sweeps across the airfoil library and write airfoil_dataset.csv.
 
@@ -183,6 +192,7 @@ def airfoil_dataset_generate(
             dataset_root=output,
             name=name,
             airfoil_ids=airfoil_ids,
+            show_plots=show_plots,
         )
     except Exception as exc:
         fail_command("Airfoil dataset generate", exc)

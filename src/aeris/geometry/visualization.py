@@ -131,7 +131,33 @@ def visualize_geometry_from_config(
                 "Enable build_aerosandbox in config or via --build-aerosandbox."
             )
         airplane = result.aerosandbox_result.airplane
-        airplane.draw()
+        try:
+            airplane.draw()
+        except Exception as exc:
+            # AeroSandbox.draw() uses PyVista/VTK. On some local Linux/Python
+            # combinations the VTK rendering stack can import-fail even though
+            # geometry generation and PNG plotting are healthy. Do not expose a
+            # huge traceback to GUI operators; save the raw technical detail as
+            # an artifact and raise a tagged compact error for the CLI layer.
+            import traceback
+
+            error_path = out_dir / "draw_3d_error.txt"
+            error_path.write_text(
+                "AERIS interactive 3D draw failed.\n"
+                "The geometry was generated, but AeroSandbox/PyVista/VTK could not open the interactive viewer.\n"
+                "Use the safe headless path instead: aeris geometry visualize --no-draw-3d --save-plot\n\n"
+                f"Original exception type: {type(exc).__name__}\n"
+                f"Original exception message: {exc}\n\n"
+                "Full traceback:\n"
+                + traceback.format_exc(),
+                encoding="utf-8",
+            )
+            raise RuntimeError(
+                "AERIS_DRAW_3D_FAILED: Interactive 3D viewer failed because "
+                "AeroSandbox/PyVista/VTK could not initialize. "
+                f"Technical details were saved to: {error_path}. "
+                "Use safe PNG preview: aeris geometry visualize --no-draw-3d --save-plot"
+            ) from exc
 
     return GeometryVisualizationResult(
         output_dir=out_dir,

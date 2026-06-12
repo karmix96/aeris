@@ -49,6 +49,11 @@ def resolve_dataset_sampler(
         )
 
     if sampler_seed_override is not None:
+        # RES-1: validate seed type explicitly — wrong type causes silent non-reproducibility
+        if not isinstance(sampler_seed_override, int) or sampler_seed_override < 0:
+            raise ValueError(
+                f"sampler_seed_override must be a non-negative integer, got: {sampler_seed_override!r}"
+            )
         sampler_seed = sampler_seed_override
     elif cfg_seed is not None:
         sampler_seed = int(cfg_seed)

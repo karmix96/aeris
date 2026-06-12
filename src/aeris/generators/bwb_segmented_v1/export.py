@@ -12,18 +12,35 @@ from __future__ import annotations
 
 import csv
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from aeris.generators.bwb_segmented_v1.aerosandbox_adapter import AeroSandboxGeometryResult
-from aeris.generators.bwb_segmented_v1.params import BWBGeneratorConfig
+from aeris.generators.bwb_segmented_v1.params import BWBDesignSample, BWBGeneratorConfig  # AERIS_PATCH_G1_APPLIED
 from aeris.generators.bwb_segmented_v1.planform import PlanformResult
 from aeris.generators.bwb_segmented_v1.sections import SectionGeometryResult
 
 
-def _write_json(output_path: Path, payload: dict[str, Any]) -> None:
+def _write_json(output_path: Path, payload: dict[str, Any]) -> None:  # AERIS_PATCH_G6_APPLIED
+    """Atomic JSON write: temp-file + os.replace avoids corrupt output on crash."""
+    import os
+    import tempfile
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    text = json.dumps(payload, indent=2)
+    tmp_fd, tmp_path = tempfile.mkstemp(
+        dir=output_path.parent, prefix=f".{output_path.name}.tmp"
+    )
+    try:
+        with os.fdopen(tmp_fd, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        os.replace(tmp_path, output_path)
+    except Exception:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+        raise
 
 
 def _write_csv(output_path: Path, rows: list[dict[str, Any]], fieldnames: list[str]) -> None:
@@ -155,7 +172,8 @@ def build_geometry_summary(
         },
     }
 
-    return {
+    return {  # AERIS_PATCH_G7_APPLIED
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "name": config.name,
         "generator": generator_info,
         "controls": controls_info,

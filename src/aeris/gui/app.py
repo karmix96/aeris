@@ -1282,7 +1282,7 @@ def _geo_delete_one(p: Path, key_suffix: str) -> bool:
 def pg_geometry(root, exe, tmo, dry):
     import shutil as _shutil
 
-    _hero("△", "Geometry", "bwb_segmented_v1 · 17 design variables", "generator")
+    _hero("△", "Geometry", "bwb_segmented_v1 · 20 design variables", "generator")
     tab_gen, tab_vis, tab_info, tab_inspect, tab_cad = st.tabs(["  ① Generate  ", "  ② Visualize  ", "  ③ Design variables  ", "  ④ Inspect run  ", "  ⑤ CAD export  "])
 
     # Shared config list — built once, used in all tabs
@@ -2979,13 +2979,22 @@ def pg_aero(root, exe, tmo, dry):
         src_args = _aero_src_widget("ar", root, geo_runs, cfg_smoke_first, _cfg_label)
 
         _sec("Flight condition")
-        c1, c2, c3, c4 = st.columns(4)
+        c1, c2, c3 = st.columns(3)
         al   = c1.number_input("Alpha [deg]",    value=4.0,    step=0.5, key="ar_al",
                                help="Angle of attack. Required.")
         ve   = c2.number_input("Velocity [m/s]", value=28.0,   step=1.0, key="ar_ve")
         at   = c3.number_input("Altitude [m]",   value=1500.0, step=100.0, key="ar_at")
-        ctrl = c4.number_input("Elevon [deg]",   value=0.0,    step=1.0, key="ar_ctrl",
-                               help="Control surface deflection. Positive = trailing edge down.")
+        c4, c5 = st.columns(2)
+        ctrl = c4.number_input("Sym elevon δe [deg]", value=0.0, step=1.0, key="ar_ctrl",
+                               help="Symmetric elevon (d2 symmetric). Positive = both trailing edges down.")
+        diff = c5.number_input("Diff elevon δa [deg]", value=0.0, step=1.0, key="ar_diff",
+                               help="Differential elevon (d2 antisymmetric). Positive = right TE down, left TE up.")
+        if abs(al) > 30.0:
+            st.warning(f"⚠ Alpha = {al}° is outside the typical envelope (±30°). AVL may diverge.")
+        if ve <= 0:
+            st.error("✗ Velocity must be > 0 m/s.")
+        elif ve > 150.0:
+            st.warning(f"⚠ Velocity = {ve} m/s is unusually high for a BWB UAV. Check units.")
         with st.expander("Sideslip & body rates (leave at 0 for standard runs)"):
             c5, c6, c7, c8 = st.columns(4)
             be = c5.number_input("Beta [deg]", value=0.0, step=0.5, key="ar_be")
@@ -2999,6 +3008,7 @@ def pg_aero(root, exe, tmo, dry):
         full_args = (["aero", "run"] + src_args +
                      ["--alpha", str(al), "--velocity", str(ve),
                       "--altitude", str(at), "--control-input-deg", str(ctrl),
+                      "--diff-input-deg", str(diff),
                       "--beta", str(be),
                       "--p", str(pv), "--q", str(qv), "--r", str(rv)] +
                      sol_args)
@@ -3028,9 +3038,13 @@ def pg_aero(root, exe, tmo, dry):
                              help="e.g. -4,-2,0,2,4,6,8,10")
         ve2  = c2.text_input("Velocity values [m/s]", "28",          key="sw_ve")
         c3, c4 = st.columns(2)
-        at2  = c3.text_input("Altitude values [m]",   "1500",        key="sw_at")
-        ct2  = c4.text_input("Elevon values [deg]",   "-5,0,5",      key="sw_ctrl",
-                             help="Control surface sweep.")
+        at2  = c3.text_input("Altitude values [m]",          "1500",   key="sw_at")
+        ct2  = c4.text_input("Sym elevon δe values [deg]", "-5,0,5", key="sw_ctrl",
+                             help="Symmetric elevon sweep (d2 symmetric). e.g. -10,-5,0,5,10")
+        c5, c6 = st.columns(2)
+        df2  = c5.text_input("Diff elevon δa values [deg]", "0",   key="sw_diff",
+                             help="Differential elevon sweep (d2 antisymmetric). Leave as 0 for symmetric-only runs.")
+        _ = c6  # spacer
         with st.expander("Sideslip & body rates — expand for lateral-directional derivatives"):
             st.caption(
                 "**For lateral-directional derivative extraction (Clβ, Cnβ, CYβ):** "
@@ -3044,7 +3058,7 @@ def pg_aero(root, exe, tmo, dry):
             qv2 = c7.text_input("q [rad/s]", "0", key="sw_q")
             rv2 = c8.text_input("r [rad/s]", "0", key="sw_r")
 
-        est = _est(al2, ve2, at2, ct2, be2, pv2, qv2, rv2)
+        est = _est(al2, ve2, at2, ct2, be2, pv2, qv2, rv2, df2)
         if est > 500:
             st.warning(f"⚠ Estimated cases: **{est:,}** — large sweep, may take a long time.")
         else:
@@ -3069,6 +3083,8 @@ def pg_aero(root, exe, tmo, dry):
         for flag, val in [("--p-values", pv2), ("--q-values", qv2), ("--r-values", rv2)]:
             if val.strip() and val.strip() != "0":
                 sweep_args += [flag, val]
+        if df2.strip() and df2.strip() != "0":
+            sweep_args += ["--diff-input-values", df2]
         sweep_args += sol_args_sw
         if max_c.strip(): sweep_args += ["--max-cases", max_c.strip()]
 
@@ -3120,13 +3136,14 @@ def pg_aero(root, exe, tmo, dry):
                     col.metric(lbl, f"{float(v):+.4f}" if v is not None else "—")
                 if fc:
                     _sec("Flight condition")
-                    fc2 = st.columns(5)
+                    fc2 = st.columns(6)
                     for col, (lbl, v) in zip(fc2, [
                         ("α [°]", fc.get("alpha_deg")),
                         ("V [m/s]", fc.get("velocity_mps")),
                         ("Alt [m]", fc.get("altitude_m")),
                         ("β [°]", fc.get("beta_deg")),
-                        ("Elevon", meta.get("control_input_deg")),
+                        ("Sym δe [°]", meta.get("control_input_deg")),
+                        ("Diff δa [°]", meta.get("diff_input_deg")),
                     ]):
                         col.metric(lbl, f"{float(v):+.2f}" if v is not None else "—")
                 cma = derivs.get("Cma")
@@ -3217,20 +3234,21 @@ def pg_aero(root, exe, tmo, dry):
                         ar  = c.get("aero_result") or {}
                         sc  = ar.get("scalars") or {}
                         rows.append({
-                            "#":        c.get("case_index"),
-                            "Status":   c.get("status","—"),
-                            "α [°]":    fc.get("alpha_deg"),
-                            "V [m/s]":  fc.get("velocity_mps"),
-                            "Alt [m]":  fc.get("altitude_m"),
-                            "Elevon [°]": c.get("control_input_deg"),
-                            "CL":       sc.get("cl"),
-                            "CD":       sc.get("cd"),
-                            "Cm":       sc.get("cm"),
-                            "L/D":      sc.get("l_over_d"),
-                            "Xnp":      sc.get("x_np"),
+                            "#":       c.get("case_index"),
+                            "Status":  c.get("status","—"),
+                            "α [°]":   fc.get("alpha_deg"),
+                            "V [m/s]": fc.get("velocity_mps"),
+                            "Alt [m]": fc.get("altitude_m"),
+                            "δe [°]":  c.get("control_input_deg"),
+                            "δa [°]":  c.get("diff_input_deg"),
+                            "CL":      sc.get("cl"),
+                            "CD":      sc.get("cd"),
+                            "Cm":      sc.get("cm"),
+                            "L/D":     sc.get("l_over_d"),
+                            "Xnp":     sc.get("x_np"),
                         })
                     df = _pd.DataFrame(rows)
-                    float_cols = ["α [°]","V [m/s]","Alt [m]","Elevon [°]","CL","CD","Cm","L/D","Xnp"]
+                    float_cols = ["α [°]","V [m/s]","Alt [m]","δe [°]","δa [°]","CL","CD","Cm","L/D","Xnp"]
                     for fc_col in float_cols:
                         if fc_col in df.columns:
                             df[fc_col] = _pd.to_numeric(df[fc_col], errors="coerce")
@@ -3380,14 +3398,14 @@ def pg_aero(root, exe, tmo, dry):
                         # Elevon filter
                         elev_opts = ["All"] + [
                             f"{e:+.1f}°" for e in
-                            sorted(df["Elevon [°]"].dropna().unique())
+                            sorted(df["δe [°]"].dropna().unique())
                         ]
                         sel_elev = st.selectbox(
-                            "Filter by elevon", elev_opts, key="ai_tbl_elev"
+                            "Filter by sym elevon (δe)", elev_opts, key="ai_tbl_elev"
                         )
                         if sel_elev != "All":
                             ev_val = float(sel_elev.replace("°",""))
-                            disp = disp[disp["Elevon [°]"] == ev_val]
+                            disp = disp[disp["δe [°]"] == ev_val]
 
                         st.dataframe(disp, use_container_width=True, hide_index=True)
                         st.caption(f"Showing {len(disp)} of {len(df)} cases.")
@@ -3999,7 +4017,7 @@ def pg_dynamics(root, exe, tmo, dry):
                 "--dataset", ds_labels,
                 "--source", source,
                 "--max-abs-trim-delta-e-deg", str(float(max_trim)),
-                "--min-abs-cm-delta-e", str(float(min_auth)),
+                "--min-abs-cm-delta-e-per-rad", str(float(min_auth)),
             ]
             if workflow.strip():
                 args_batch += ["--workflow", workflow.strip()]

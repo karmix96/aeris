@@ -189,3 +189,27 @@ def test_workflow_canary_template_uses_smoke_baseline_hint(tmp_path: Path) -> No
     assert "baseline_bwb_25.yaml" in status_result.output
     assert "bwb_training_v1.yaml" not in status_result.output
 
+
+def test_workflow_validate_help_has_fail_on_blocker():
+    result = runner.invoke(app, ["workflow", "validate", "--help"])
+    assert result.exit_code == 0
+    assert "--fail-on-blocker" in result.stdout
+
+
+def test_workflow_doctor_help_has_fail_on_blocker():
+    result = runner.invoke(app, ["workflow", "doctor", "--help"])
+    assert result.exit_code == 0
+    assert "--fail-on-blocker" in result.stdout
+
+
+def test_pipeline_smoke_help_runs():
+    result = runner.invoke(app, ["pipeline", "smoke", "--help"])
+    assert result.exit_code == 0
+    assert "--config" in result.stdout
+
+
+def test_version_runs():
+    result = runner.invoke(app, ["version"])
+    assert result.exit_code == 0
+    assert "aeris" in result.stdout.lower()
+

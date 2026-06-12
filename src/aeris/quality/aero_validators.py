@@ -107,12 +107,20 @@ def _check_targets_finite(df: pd.DataFrame, manifest: dict, report: dict) -> Non
 
 
 def _check_control_diagnostics(df: pd.DataFrame, manifest: dict, report: dict) -> None:
+    # ISSUE-4: "diag_keystrokes_has_d1_command" is the legacy name written by the solver.
+    # "diag_keystrokes_has_control_command" is the d2-architecture alias (both may be present).
+    # Accept whichever is present; require at least one.
+    _keystroke_col = (
+        "diag_keystrokes_has_d1_command"
+        if "diag_keystrokes_has_d1_command" in df.columns
+        else "diag_keystrokes_has_control_command"
+    )
     diag_cols = [
         "geometry_declares_controls",
         "airplane_has_controls",
         "diag_airplane_has_control_surfaces",
         "diag_airplane_avl_has_control_blocks",
-        "diag_keystrokes_has_d1_command",
+        _keystroke_col,
     ]
 
     diag_summary: dict[str, int] = {}

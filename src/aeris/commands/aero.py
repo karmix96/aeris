@@ -60,7 +60,6 @@ def _aero_sweep_artifacts(run_root: Path) -> list[Path | str]:
     artifacts: list[Path | str] = [run_root]
     for candidate in [
         run_root / "aero_sweep_manifest.json",
-        run_root / "aero_sweep" / "aero_sweep_manifest.json",
     ]:
         if candidate.exists():
             artifacts.append(candidate)
@@ -210,6 +209,39 @@ def _validate_paneling(
         )
 
 
+def _warn_flight_condition(
+    *,
+    alpha: float,
+    velocity: float,
+    altitude: float,
+) -> None:
+    """Emit warnings for physically implausible flight condition values."""
+    if not (-30.0 <= alpha <= 30.0):
+        typer.secho(
+            f"[WARN] alpha={alpha} deg is outside the typical envelope "
+            "(-30 to +30 deg). AVL may diverge or produce meaningless results.",
+            fg=typer.colors.YELLOW,
+        )
+    if velocity <= 0.0:
+        typer.secho(
+            f"[WARN] velocity={velocity} m/s is non-positive. "
+            "AVL requires V > 0.",
+            fg=typer.colors.YELLOW,
+        )
+    if velocity > 150.0:
+        typer.secho(
+            f"[WARN] velocity={velocity} m/s is unusually high for a BWB UAV. "
+            "Check units (expected m/s).",
+            fg=typer.colors.YELLOW,
+        )
+    if altitude < -500.0 or altitude > 20000.0:
+        typer.secho(
+            f"[WARN] altitude={altitude} m is outside the typical range "
+            "(-500 to 20000 m).",
+            fg=typer.colors.YELLOW,
+        )
+
+
 def _validate_source_selection(
     *,
     config: Path | None,
@@ -344,7 +376,12 @@ def run_aero(
     control_input_deg: float | None = typer.Option(
         None,
         "--control-input-deg",
-        help="Control surface input in degrees (AVL d1 command).",
+        help="Symmetric elevon deflection in degrees (AVL d2 symmetric command). Positive = trailing edge down on both sides.",
+    ),
+    diff_input_deg: float | None = typer.Option(
+        None,
+        "--diff-input-deg",
+        help="Differential (antisymmetric) elevon deflection in degrees (AVL d2 antisymmetric command). Positive = right TE down, left TE up.",
     ),
     alpha: float = typer.Option(
         ...,
@@ -447,7 +484,7 @@ def run_aero(
         "-w",
         file_okay=False,
         dir_okay=True,
-        help="Optional workflow root to auto-record the aero sweep/setup stage after a successful run.",
+        help="Optional workflow root to auto-record the aero run stage after a successful run.",
     ),
 ) -> None:
     """Run a single aero evaluation against fresh geometry, an existing run, or a dataset row.
@@ -470,6 +507,8 @@ def run_aero(
         chordwise_spacing=chordwise_spacing,
     )
 
+    _warn_flight_condition(alpha=alpha, velocity=velocity, altitude=altitude)
+
     source_policy = _resolve_source_policy(
         geometry_source=geometry_source,
         config_mode=config is not None,
@@ -483,6 +522,7 @@ def run_aero(
         geometry_source=source_policy,
         generator_id=generator_id.strip() or None,
         control_input_deg=control_input_deg,
+        diff_input_deg=diff_input_deg,
         alpha=alpha,
         velocity=velocity,
         altitude=altitude,
@@ -512,7 +552,7 @@ def run_aero(
     if str(result_status).lower() == "success":
         record_workflow_stage_success(
             workflow=workflow,
-            stage="aero_sweep",
+            stage="aero_run",
             inputs=[config, run_dir, dataset, geometry_id or None],
             artifacts=_aero_result_artifacts(run_root, result),
             notes="Single aero run completed successfully.",
@@ -524,6 +564,7 @@ def run_aero(
                 "velocity_mps": velocity,
                 "altitude_m": altitude,
                 "control_input_deg": control_input_deg,
+                "diff_input_deg": diff_input_deg,
                 "status": str(result_status),
             },
         )
@@ -600,12 +641,17 @@ def sweep_aero(
     control_input_deg: float | None = typer.Option(
         None,
         "--control-input-deg",
-        help="Control surface input in degrees (AVL d1 command) applied to every sweep case.",
+        help="Symmetric elevon deflection in degrees (AVL d2 symmetric command) applied to every sweep case.",
     ),
     control_input_values: str = typer.Option(
         "",
         "--control-input-values",
-        help="Comma-separated control-input sweep values in degrees, e.g. -5,0,5",
+        help="Comma-separated symmetric elevon sweep values in degrees, e.g. -5,0,5",
+    ),
+    diff_input_values: str = typer.Option(
+        "",
+        "--diff-input-values",
+        help="Comma-separated differential (antisymmetric) elevon sweep values in degrees, e.g. -10,-5,0,5,10",
     ),
     alpha: float = typer.Option(
         0.0,
@@ -769,6 +815,8 @@ def sweep_aero(
         chordwise_spacing=chordwise_spacing,
     )
 
+    _warn_flight_condition(alpha=alpha, velocity=velocity, altitude=altitude)
+
     source_policy = _resolve_source_policy(
         geometry_source=geometry_source,
         config_mode=config is not None,
@@ -785,6 +833,10 @@ def sweep_aero(
         control_input_values,
         "--control-input-values",
     )
+    parsed_diff_input_values = parse_float_list(
+        diff_input_values,
+        "--diff-input-values",
+    )
 
     run_root, sweep_result = execute_aero_sweep(
         config=config,
@@ -795,6 +847,7 @@ def sweep_aero(
         generator_id=generator_id.strip() or None,
         control_input_deg=control_input_deg,
         control_input_values=parsed_control_input_values,
+        diff_input_values=parsed_diff_input_values,
         alpha=alpha,
         velocity=velocity,
         altitude=altitude,

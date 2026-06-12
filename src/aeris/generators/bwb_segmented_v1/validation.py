@@ -87,8 +87,12 @@ def validate_planform_controls(config: BWBGeneratorConfig) -> None:
         raise ValueError("geometry.controls.curvature_strength must be >= 0")
     if ctrl.segment_length_variation < 0.0:
         raise ValueError("geometry.controls.segment_length_variation must be >= 0")
-    if ctrl.sweep_variation < 0.0:
-        raise ValueError("geometry.controls.sweep_variation must be >= 0")
+    # AERIS_PATCH_BATCH2_SWEEP_VARIATION_UPPER_BOUND
+    if not (0.0 <= ctrl.sweep_variation < 1.0):
+        raise ValueError(
+            f"geometry.controls.sweep_variation must be in [0, 1), "
+            f"got {ctrl.sweep_variation}"
+        )
 
 
 def validate_bwb_generator_config(config: BWBGeneratorConfig) -> None:
@@ -119,6 +123,22 @@ def validate_bwb_generator_config(config: BWBGeneratorConfig) -> None:
     _ensure_min_less_than_max("geometry.planform_bounds.b_total_m", pb.b_total_m)
     _ensure_min_less_than_max("geometry.planform_bounds.b3_ratio", pb.b3_ratio)
     _ensure_min_less_than_max("geometry.planform_bounds.split_ratio", pb.split_ratio)
+
+    # AERIS_PATCH_BATCH2_POSITIVE_PLANFORM_BOUNDS
+    if pb.c1_m.min <= 0.0:
+        raise ValueError("geometry.planform_bounds.c1_m.min must be > 0")
+    if pb.b_total_m.min <= 0.0:
+        raise ValueError("geometry.planform_bounds.b_total_m.min must be > 0")
+    for _name, _bounds in [
+        ("c2_ratio", pb.c2_ratio),
+        ("c3_ratio", pb.c3_ratio),
+        ("c4_ratio", pb.c4_ratio),
+    ]:
+        if not (0.0 < _bounds.min < _bounds.max <= 1.0):
+            raise ValueError(
+                f"geometry.planform_bounds.{_name} bounds must satisfy "
+                f"0 < min < max <= 1.0, got min={_bounds.min}, max={_bounds.max}"
+            )
 
     # Sweep bounds are positive magnitudes in YAML; sampler negates at draw time.
     # Validate that the magnitude range is sensible (min < max, both positive).
@@ -159,6 +179,34 @@ def validate_bwb_generator_config(config: BWBGeneratorConfig) -> None:
     _ensure_min_less_than_max("geometry.section_bounds.dihedral_b1_deg", sb.dihedral_b1_deg)
     _ensure_min_less_than_max("geometry.section_bounds.dihedral_b2_deg", sb.dihedral_b2_deg)
     _ensure_min_less_than_max("geometry.section_bounds.dihedral_b3_deg", sb.dihedral_b3_deg)
+
+    # --- Elevon bounds (v3+, optional) ---  AERIS_PATCH_G5_APPLIED
+    eb = config.elevon_bounds
+    if eb is not None:
+        for fname, rc in [
+            ("elevon_bounds.elevon_start_frac", eb.elevon_start_frac),
+            ("elevon_bounds.elevon_end_frac",   eb.elevon_end_frac),
+            ("elevon_bounds.elevon_hinge_frac", eb.elevon_hinge_frac),
+        ]:
+            if not (0.0 <= rc.min <= 1.0 and 0.0 <= rc.max <= 1.0):
+                raise ValueError(
+                    f"geometry.{fname} bounds must lie in [0, 1], "
+                    f"got min={rc.min}, max={rc.max}."
+                )
+            _ensure_min_less_than_max(f"geometry.{fname}", rc)
+        if eb.elevon_start_frac.max >= eb.elevon_end_frac.min:
+            raise ValueError(
+                "geometry.elevon_bounds: elevon_start_frac.max must be < "
+                "elevon_end_frac.min to guarantee start < end after sampling. "
+                f"Got start_frac.max={eb.elevon_start_frac.max}, "
+                f"end_frac.min={eb.elevon_end_frac.min}."
+            )
+        if not (0.0 < eb.elevon_hinge_frac.min and eb.elevon_hinge_frac.max < 1.0):
+            raise ValueError(
+                "geometry.elevon_bounds.elevon_hinge_frac bounds must satisfy "
+                "0 < min and max < 1 (hinge point must be strictly inside the chord). "
+                f"Got min={eb.elevon_hinge_frac.min}, max={eb.elevon_hinge_frac.max}."
+            )
 
 
 # ---------------------------------------------------------------------------

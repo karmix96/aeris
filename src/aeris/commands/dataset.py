@@ -328,10 +328,18 @@ def dataset_qc(
         fail_command("Dataset qc", exc)
 
     typer.echo(f"[AERIS] Geometry QC passed: {report['passed']}")
-    typer.echo(f"Errors: {len(report['errors'])}")
+    typer.echo(f"  profile : {profile}")
+    typer.echo(f"  errors  : {len(report.get('errors', []))}")
+    for err in report.get("errors", []):
+        typer.secho(f"  ERROR: {err}", fg=typer.colors.RED)
+    typer.echo(f"  warnings: {len(report.get('warnings', []))}")
+    for warn in report.get("warnings", []):
+        typer.secho(f"  WARN:  {warn}", fg=typer.colors.YELLOW)
 
     if not report["passed"]:
         raise typer.Exit(code=1)
+
+    typer.secho("  QC passed.", fg=typer.colors.GREEN)
 
     try:
         record_workflow_stage_success(
@@ -616,7 +624,7 @@ def dataset_generate(
                 workflow=workflow,
                 stage="geometry_dataset",
                 inputs=[config],
-                artifacts=[f"data/datasets/{name}" if name else None],
+                artifacts=[Path("data/datasets") / name if name else None],
                 notes="Geometry dataset generation completed.",
                 metadata={
                     "command": "aeris dataset generate",
@@ -879,6 +887,13 @@ def dataset_aero_generate(
         raise typer.BadParameter("--altitude-values must not be empty.")
     if not parsed_control_input_values:
         raise typer.BadParameter("--control-input-values must not be empty.")
+    if 0.0 not in parsed_control_input_values and not any(abs(v) < 1e-9 for v in parsed_control_input_values):
+        typer.secho(
+            "[WARN] --control-input-values does not include 0. "
+            "Control derivative computation (D2) requires a zero-control reference point. "
+            "Add 0 to the list, e.g. -5,0,5",
+            fg=typer.colors.YELLOW,
+        )
 
     preset = resolve_qc_preset(qc_preset)
 
@@ -947,7 +962,7 @@ def dataset_aero_generate(
 
     if exit_code == 0:
         try:
-            dataset_artifact = f"data/datasets/{name}"
+            dataset_artifact = Path("data/datasets") / name
             common_metadata = {
                 "command": "aeris dataset aero-generate",
                 "compound_command": True,
@@ -978,13 +993,13 @@ def dataset_aero_generate(
 
             record_workflow_stage_success(
                 workflow=workflow,
-                stage="aero_sweep",
+                stage="aero_dataset_sweep",
                 inputs=[config],
                 artifacts=[dataset_artifact],
                 notes="Aero sweeps executed as part of dataset aero-generate.",
                 metadata={
                     **common_metadata,
-                    "compound_stage": "aero_sweep",
+                    "compound_stage": "aero_dataset_sweep",
                 },
             )
 
@@ -1135,7 +1150,7 @@ def dataset_compute_control_derivatives(
     ),
     min_abs_cm_delta_e: float = typer.Option(
         0.10,
-        "--min-abs-cm-delta-e",
+        "--min-abs-cm-delta-e-per-rad",
         help="Pitch-authority threshold for |Cm_delta_e_per_rad|.",
     ),
     as_json: bool = typer.Option(
@@ -1215,7 +1230,7 @@ def dataset_compute_flyability_labels(
     ),
     min_abs_cm_delta_e: float = typer.Option(
         0.10,
-        "--min-abs-cm-delta-e",
+        "--min-abs-cm-delta-e-per-rad",
         help="Pitch-authority threshold for |Cm_delta_e_per_rad|.",
     ),
     alpha_min_deg: float = typer.Option(
@@ -1310,7 +1325,7 @@ def dataset_compute_dynamics_labels(
     ),
     min_abs_cm_delta_e: float = typer.Option(
         0.10,
-        "--min-abs-cm-delta-e",
+        "--min-abs-cm-delta-e-per-rad",
         help="Pitch-authority threshold for |Cm_delta_e_per_rad|.",
     ),
     alpha_min_deg: float = typer.Option(
@@ -1369,13 +1384,32 @@ def dataset_inspect(
         resolve_path=True,
         help="Path to a generated dataset root folder.",
     ),
+    as_json: bool = typer.Option(
+        False,
+        "--json",
+        help="Print full summary as JSON. Default prints a human-readable summary.",
+    ),
 ) -> None:
-    """Inspect a generated dataset and print QC summary as JSON."""
+    """Inspect a generated dataset and print a summary."""
     try:
         summary = inspect_dataset(dataset)
     except Exception as exc:
         fail_command("Dataset inspect", exc)
-    typer.echo(json.dumps(summary, indent=2))
+
+    if as_json:
+        typer.echo(json.dumps(summary, indent=2))
+        return
+
+    typer.echo("")
+    typer.echo(f"[AERIS] Dataset inspect: {dataset.name}")
+    for key, value in summary.items():
+        if not isinstance(value, dict):
+            typer.echo(f"  {key}: {value}")
+        else:
+            typer.echo(f"  {key}:")
+            for k2, v2 in value.items():
+                if not isinstance(v2, dict):
+                    typer.echo(f"    {k2}: {v2}")
 
 
 @dataset_app.command("require-promoted-aero")

@@ -87,6 +87,7 @@ def failure_fieldnames() -> list[str]:
         "generator_family",
         "generator_version",
         "generator_id",
+        "config_name",
         "error_type",
         "error_message",
     ]
@@ -106,6 +107,13 @@ def _require_nonempty_numeric_array(name: str, values: Any) -> np.ndarray:
     array = np.asarray(values, dtype=float)
     if array.size == 0:
         raise ValueError(f"{name} must be non-empty for dataset metadata generation.")
+    # ISSUE-16: guard against NaN/Inf propagating into twist/dihedral statistics
+    if not np.isfinite(array).all():
+        bad = array[~np.isfinite(array)]
+        raise ValueError(
+            f"{name} contains non-finite values: {bad.tolist()!r}. "
+            "Check generator output for NaN/Inf in geometry arrays."
+        )
     return array
 
 
@@ -122,7 +130,13 @@ def _validate_row_matches_fieldnames(row: dict[str, Any], fieldnames: list[str],
             problems.append(f"extra keys: {extra}")
         if missing:
             problems.append(f"missing keys: {missing}")
-        raise ValueError(f"{context} does not match schema: " + "; ".join(problems))
+        # ISSUE-15: include generator/config context so post-hoc log triage is possible
+        gen_id   = row.get("generator_id", "<unknown>") if isinstance(row, dict) else "<unknown>"
+        cfg_name = row.get("config_name",  "<unknown>") if isinstance(row, dict) else "<unknown>"
+        raise ValueError(
+            f"{context} does not match schema: " + "; ".join(problems) +
+            f" [generator_id={gen_id!r}, config_name={cfg_name!r}]"
+        )
 
 
 def build_metadata_row(
@@ -221,6 +235,8 @@ def build_failure_row(
         "generator_family": config.generator.family,
         "generator_version": config.generator.version,
         "generator_id": generator_id,
+        # META-1: include config context in failure rows for post-hoc triage
+        "config_name": getattr(config, "name", None),
         "error_type": type(exc).__name__,
         "error_message": str(exc),
     }

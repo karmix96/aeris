@@ -40,14 +40,23 @@ def _ensure_control_alias_columns(df: pd.DataFrame) -> pd.DataFrame:
         return df
 
     out = df.copy()
-    aliases = out["control_input_deg"].map(
-        lambda value: control_alias_row(None if pd.isna(value) else value)
-    )
+
+    def _alias_row(row: "pd.Series") -> "pd.Series":
+        sym = None if pd.isna(row["control_input_deg"]) else row["control_input_deg"]
+        diff_col = "diff_input_deg"
+        diff = (
+            None
+            if diff_col not in row.index or pd.isna(row[diff_col])
+            else row[diff_col]
+        )
+        return pd.Series(control_alias_row(sym, diff_input_deg=diff))
+
+    aliases = out.apply(_alias_row, axis=1)
 
     if "delta_e_sym_deg" not in out.columns:
-        out["delta_e_sym_deg"] = aliases.map(lambda row: row["delta_e_sym_deg"])
+        out["delta_e_sym_deg"] = aliases["delta_e_sym_deg"]
     if "delta_a_diff_deg" not in out.columns:
-        out["delta_a_diff_deg"] = aliases.map(lambda row: row["delta_a_diff_deg"])
+        out["delta_a_diff_deg"] = aliases["delta_a_diff_deg"]
 
     return out
 
@@ -64,6 +73,7 @@ def _is_finite_value(value: Any) -> bool:
 def _expected_case_count(
     *,
     manifest: dict[str, Any] | None,
+    treat_empty_rates_as_zero: bool = True,
 ) -> int | None:
     if manifest is None:
         return None
@@ -79,12 +89,35 @@ def _expected_case_count(
         len(manifest.get("control_input_values", []) or []),
     ]
 
-    if any(length == 0 for length in lengths):
-        return None
+    _sweep_keys = [
+        "alpha_values", "beta_values", "velocity_values", "altitude_values",
+        "p_values", "q_values", "r_values", "control_input_values",
+    ]
+    zero_keys = [k for k, l in zip(_sweep_keys, lengths) if l == 0]
+    if zero_keys:
+        if treat_empty_rates_as_zero:
+            # CUR-1: rate parameters like p_values/q_values/r_values default to []
+            # in the CLI (not swept). Treat them as [0.0] — one point at zero rate.
+            # This restores incomplete-group detection for standard single-rate sweeps.
+            for i, key in enumerate(_sweep_keys):
+                if key in zero_keys:
+                    lengths[i] = 1  # equivalent to [0.0]
+        else:
+            import warnings as _warnings
+            _warnings.warn(
+                "_expected_case_count: manifest has zero-length sweep lists for "
+                f"{zero_keys}. Incomplete-group rejection is DISABLED for this dataset. "
+                "Verify aero_dataset_manifest.json is complete.",
+                stacklevel=3,
+            )
+            return None
 
     total = 1
+    diff_values = manifest.get("diff_input_values") or []
     for length in lengths:
         total *= length
+    if diff_values:
+        total *= len(diff_values)
     return total
 
 
@@ -134,6 +167,7 @@ def curate_aero_dataset(
     reject_groups_with_failures: bool = True,
     reject_nonfinite_targets: bool = True,
     reject_control_diagnostic_failures: bool = True,
+    strict_expected_count: bool = False,
 ) -> dict[str, Any]:
     dataset_root = dataset_root.expanduser().resolve()
 
@@ -160,6 +194,12 @@ def curate_aero_dataset(
 
     qc_context = _extract_qc_context(dataset_root)
     expected_cases_per_geometry = _expected_case_count(manifest=manifest)
+    if strict_expected_count and expected_cases_per_geometry is None:
+        raise ValueError(
+            "strict_expected_count=True but expected_cases_per_geometry could not be determined "
+            "from aero_dataset_manifest.json. Ensure all sweep parameter lists are non-empty "
+            "or disable strict mode to allow incomplete-group check bypass."
+        )
 
     rejected_geometry_reasons: dict[str, set[str]] = {}
 
@@ -180,9 +220,13 @@ def curate_aero_dataset(
             reject_geometry(geometry_id, "geometry_has_failed_aero_cases")
 
     if reject_nonfinite_targets:
-        for column in REQUIRED_TARGET_COLUMNS:
-            if column not in df.columns:
-                raise ValueError(f"Missing required target column: {column}")
+        missing_target_cols = [c for c in REQUIRED_TARGET_COLUMNS if c not in df.columns]
+        if missing_target_cols:
+            raise ValueError(
+                f"Dataset at {dataset_root} is missing required target columns: "
+                f"{missing_target_cols}. "
+                f"Available columns: {list(df.columns[:20])}{'...' if len(df.columns) > 20 else ''}"
+            )
 
         nonfinite_mask = pd.Series(False, index=df.index)
         for column in REQUIRED_TARGET_COLUMNS:
@@ -195,7 +239,10 @@ def curate_aero_dataset(
         diagnostic_columns = [
             "diag_airplane_has_control_surfaces",
             "diag_airplane_avl_has_control_blocks",
-            "diag_keystrokes_has_d1_command",
+            # ISSUE-4: d2 architecture — check new column name first,
+            # fall back to legacy d1 column for datasets generated before this patch.
+            "diag_keystrokes_has_control_command",  # new (d2-safe) name
+            "diag_keystrokes_has_d1_command",       # legacy fallback
         ]
         existing_diag_columns = [col for col in diagnostic_columns if col in df.columns]
 

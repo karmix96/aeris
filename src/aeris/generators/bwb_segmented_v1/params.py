@@ -56,11 +56,17 @@ def _as_bool(value: Any, *, field_name: str) -> bool:
     raise TypeError(f"{field_name} must be a bool, got {type(value).__name__}.")
 
 
-def _as_int(value: Any, *, field_name: str) -> int:
+def _as_int(value: Any, *, field_name: str) -> int:  # AERIS_PATCH_SUPP2_APPLIED
     if isinstance(value, bool):
         # bool is a subclass of int in Python; reject explicitly to catch
         # YAML mistakes like 'n_points: true'.
         raise TypeError(f"{field_name} must be int, got bool.")
+    if isinstance(value, float) and not value.is_integer():
+        raise TypeError(
+            f"{field_name} must be an integer, got float {value!r}. "
+            "YAML values like 10.7 are silently truncated by int() — "
+            "use a plain integer (e.g. n_points: 10)."
+        )
     try:
         return int(value)
     except (TypeError, ValueError) as exc:
@@ -256,13 +262,35 @@ class BWBGeneratorConfig:
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
-    def design_variable_names(self) -> list[str]:
-        """Return the names of all sampled design variables.
+    def sample_field_names(self) -> list[str]:
+        """Return all fields stored in :class:`BWBDesignSample`.
 
-        Derived from BWBDesignSample's dataclass fields so this list cannot
-        drift out of sync with the actual sample structure.
+        This includes fixed/default fields such as elevon geometry when
+        ``elevon_bounds`` is absent. Use ``active_design_variable_names()`` for
+        the independent variables sampled by the current config.
         """
         return [f.name for f in fields(BWBDesignSample)]
+
+    def active_design_variable_names(self) -> list[str]:
+        """Return independent design variables sampled by this config.
+
+        v1/v2 configs store elevon_start/end/hinge in the sample for schema
+        stability, but those values are fixed defaults unless ``elevon_bounds``
+        is present. v3 configs with ``elevon_bounds`` expose all 20 active DVs.
+        """
+        elevon_fields = {
+            "elevon_start_frac",
+            "elevon_end_frac",
+            "elevon_hinge_frac",
+        }
+        names = self.sample_field_names()
+        if self.elevon_bounds is None:
+            names = [name for name in names if name not in elevon_fields]
+        return names
+
+    def design_variable_names(self) -> list[str]:
+        """Backward-compatible alias for active design-variable names."""
+        return self.active_design_variable_names()
 
     def fixed_parameters(self) -> dict[str, Any]:
         return {
@@ -472,8 +500,22 @@ def build_bwb_generator_config(config: dict[str, Any]) -> BWBGeneratorConfig:
 
 def _build_elevon_bounds_config(cfg: dict | None) -> "ControlSurfaceBoundsConfig | None":
     """Parse optional elevon_bounds YAML section. None when absent (v1/v2)."""
-    if not cfg or not isinstance(cfg, dict):
+    # AERIS_PATCH_BATCH2_ELEVON_BOUNDS_FAIL_LOUD
+    # Missing block means fixed v1/v2 elevon defaults. A present-but-empty or
+    # wrong-typed block is a YAML/operator error and must not silently disable v3.
+    if cfg is None:
         return None
+    if not isinstance(cfg, dict):
+        raise TypeError(
+            f"geometry.elevon_bounds must be a mapping with elevon_start_frac, "
+            f"elevon_end_frac, and elevon_hinge_frac blocks; got {type(cfg).__name__}."
+        )
+    if not cfg:
+        raise ValueError(
+            "geometry.elevon_bounds is present but empty. Remove the block for "
+            "fixed v1/v2 defaults, or provide elevon_start_frac/elevon_end_frac/"
+            "elevon_hinge_frac bounds for v3 sampling."
+        )
     def _rc(key: str) -> RangeConfig:
         block = cfg.get(key)
         if not isinstance(block, dict):
@@ -492,7 +534,10 @@ def _build_elevon_bounds_config(cfg: dict | None) -> "ControlSurfaceBoundsConfig
 def _build_control_surfaces_config(
     control_surfaces_cfg: dict[str, Any],
 ) -> ControlSurfacesConfig:
-    if not control_surfaces_cfg:
+    # AERIS_PATCH_BATCH2_CONTROL_SURFACES_FAIL_LOUD
+    # Missing/empty mapping disables controls. Present wrong types such as []
+    # must fail loudly instead of silently disabling controls.
+    if control_surfaces_cfg is None:
         return ControlSurfacesConfig(enabled=False, surfaces=())
 
     if not isinstance(control_surfaces_cfg, dict):
@@ -500,6 +545,9 @@ def _build_control_surfaces_config(
             f"geometry.control_surfaces must be a mapping, "
             f"got {type(control_surfaces_cfg).__name__}."
         )
+
+    if not control_surfaces_cfg:
+        return ControlSurfacesConfig(enabled=False, surfaces=())
 
     enabled = _as_bool(
         control_surfaces_cfg.get("enabled", False),

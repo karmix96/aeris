@@ -34,6 +34,15 @@ def _validate_csv_row_keys(row: dict[str, Any], fieldnames: list[str]) -> None:
 
 
 def ensure_dataset_paths(dataset_name: str) -> DatasetPaths:
+    # IO-1: reject names that would create path-traversal or shell-unsafe directories
+    if not dataset_name or dataset_name.strip() != dataset_name:
+        raise ValueError(f"dataset_name must be non-empty and have no leading/trailing whitespace: {dataset_name!r}")
+    _bad_chars = set("/\\ \t\n\r\x00")
+    if any(c in _bad_chars for c in dataset_name) or dataset_name in (".", ".."):
+        raise ValueError(
+            f"dataset_name contains invalid characters or is a reserved name: {dataset_name!r}. "
+            "Use only alphanumeric characters, hyphens, and underscores."
+        )
     ensure_base_directories()
 
     root = DATASETS_DIR / dataset_name
@@ -67,8 +76,23 @@ def ensure_dataset_paths(dataset_name: str) -> DatasetPaths:
 
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
+    # IO-2: atomic write — write to temp file then replace to avoid
+    # corrupt JSON if the process is interrupted mid-write.
+    import tempfile, os
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    text = json.dumps(payload, indent=2)
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=".tmp_", suffix=".json")
+    try:
+        os.write(fd, text.encode("utf-8"))
+        os.close(fd)
+        os.replace(tmp, path)
+    except Exception:
+        os.close(fd)
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 def append_csv_row(path: Path, row: dict[str, Any], fieldnames: list[str]) -> None:
@@ -91,6 +115,21 @@ def ensure_csv_with_header(path: Path, fieldnames: list[str]) -> None:
     """
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
+        # IO-3: warn if existing header does not match expected schema
+        try:
+            import csv as _csv
+            with path.open("r", encoding="utf-8", newline="") as _fh:
+                existing_header = next(_csv.reader(_fh), None)
+            if existing_header is not None and existing_header != fieldnames:
+                import warnings as _w
+                _w.warn(
+                    f"ensure_csv_with_header: existing header in {path} does not match "
+                    f"expected schema. Expected {len(fieldnames)} columns, "
+                    f"found {len(existing_header)}. Will not overwrite.",
+                    stacklevel=2,
+                )
+        except StopIteration:
+            pass
         return
 
     with path.open("w", encoding="utf-8", newline="") as handle:

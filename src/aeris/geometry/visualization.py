@@ -101,6 +101,23 @@ def visualize_geometry_from_config(
         default=True,
     )
 
+    # AERIS_PATCH_BATCH1_VIZ_CLEAR_STALE_PLOT
+    # If an explicit output_dir is reused with --no-save-plot, do not let an
+    # old plots/planform.png make the CLI/GUI report a plot from the current run.
+    if not save_plot_final:
+        for _stale_plot in (
+            out_dir / "plots" / "planform.png",
+            out_dir / "planform.png",
+            out_dir / "artifacts" / "planform.png",
+            out_dir / "geometry" / "planform.png",
+            out_dir / "geometry" / "artifacts" / "planform.png",
+        ):
+            if _stale_plot.exists():
+                _stale_plot.unlink()
+    _draw_error = out_dir / "draw_3d_error.txt"
+    if _draw_error.exists():
+        _draw_error.unlink()
+
     sample = generator.sample_one(generator_config, seed=case_seed)
 
     # NOTE: save_plot and build_aerosandbox are BWB-specific kwargs not in
@@ -224,6 +241,7 @@ def _resolve_bool_override(
 
 def _find_plot_path(output_dir: Path) -> Path | None:
     candidates = [
+        output_dir / "plots" / "planform.png",    # services.py canonical path  # AERIS_PATCH_SUPP3_APPLIED
         output_dir / "planform.png",
         output_dir / "artifacts" / "planform.png",
         output_dir / "geometry" / "planform.png",

@@ -46,8 +46,11 @@ def geometry_info() -> None:
     typer.echo(f"  Registered generators : {n}")
     for gid in generators:
         typer.echo(f"    · {gid}")
-    typer.echo(f"  Design variables      : 17  (10 planform + 7 section)")
-    typer.echo(f"  Production config     : configs/geometry/bwb_training_v1.yaml")
+    typer.echo(f"  Design variables      : 20  (10 planform + 7 section + 3 elevon)")
+    import os as _os
+    _prod = "configs/geometry/bwb_training_v1.yaml"
+    _prod_flag = "" if _os.path.isfile(_prod) else "  [FILE NOT FOUND]"
+    typer.echo(f"  Production config     : {_prod}{_prod_flag}")
     typer.echo(f"  Smoke config          : configs/geometry/baseline_bwb_25.yaml")
     typer.echo("")
     typer.echo("  Commands:")
@@ -56,6 +59,7 @@ def geometry_info() -> None:
     typer.echo("    aeris geometry openvsp-doctor [--openvsp-command vsp]")
     typer.echo("    aeris geometry visualize --config <yaml> [--seed N] [--draw-3d|--no-draw-3d]")
     typer.echo("    aeris geometry inspect   --run-dir <run_root>")
+    typer.echo("    aeris geometry export-deflected-cad --config <yaml> --output-dir <dir>")
 
 
 @geometry_app.command("generate")

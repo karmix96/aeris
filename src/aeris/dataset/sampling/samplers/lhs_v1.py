@@ -73,6 +73,14 @@ def _bwb_bounds(config: BWBGeneratorConfig) -> list[tuple[float, float]]:
             (eb.elevon_hinge_frac.min, eb.elevon_hinge_frac.max),
         ]
     else:
+        # ISSUE-18: elevon_bounds absent — use fixed defaults as degenerate dimensions.
+        # _scale_column(unit, min, max) with min==max collapses any unit value to min,
+        # so these dimensions carry no variance. However _lhs_unit still generates and
+        # shuffles a stratified column for each, consuming RNG state. This is deliberate:
+        # keeping the total dim count at _BWB_SAMPLE_DIM preserves dataset compatibility
+        # between fixed-elevon and variable-elevon configs under the same seed.
+        # DO NOT replace with fewer dimensions or you will break reproducibility of
+        # existing datasets generated without elevon_bounds.
         bounds += [(0.60, 0.60), (0.95, 0.95), (0.75, 0.75)]
 
     if len(bounds) != _BWB_SAMPLE_DIM:
@@ -155,6 +163,33 @@ class LhsV1Sampler(DatasetSampler):
     @property
     def sampler_id(self) -> str:
         return self.SAMPLER_ID
+
+    def get_dimension_info(self, config: "BWBGeneratorConfig") -> dict:
+        """LHS-1: Return sampler dimensionality info for manifest provenance.
+
+        Reports total, active (varying), and degenerate (fixed min==max) dimensions
+        so downstream code knows exactly which DVs were sampled vs fixed.
+        """
+        bounds = _bwb_bounds(config)
+        active = [(i, b) for i, b in enumerate(bounds) if b[0] != b[1]]
+        degenerate = [(i, b) for i, b in enumerate(bounds) if b[0] == b[1]]
+        dv_names = [
+            "c1_m", "c2_ratio", "c3_ratio", "c4_ratio", "b_total_m", "b3_ratio",
+            "split_ratio", "sw1_deg", "sw2_deg", "sw3_deg",
+            "twist_b0_deg", "twist_b1_deg", "twist_b2_deg", "twist_b3_deg",
+            "dihedral_b1_deg", "dihedral_b2_deg", "dihedral_b3_deg",
+            "elevon_start_frac", "elevon_end_frac", "elevon_hinge_frac",
+        ]
+        return {
+            "sampler_id": self.SAMPLER_ID,
+            "total_dimensions": len(bounds),
+            "active_dimensions": len(active),
+            "degenerate_dimensions": len(degenerate),
+            "active_dv_names": [dv_names[i] for i, _ in active if i < len(dv_names)],
+            "degenerate_dv_names": [dv_names[i] for i, _ in degenerate if i < len(dv_names)],
+            "degenerate_fixed_values": {dv_names[i]: b[0] for i, b in degenerate if i < len(dv_names)},
+            "elevon_bounds_present": config.elevon_bounds is not None,
+        }
 
     def sample(
         self,

@@ -66,6 +66,16 @@ def load_training_data(
     if not target_columns:
         raise ValueError("target_columns must not be empty.")
 
+    # ISSUE-22: reject overlap before any data is loaded — feature/target
+    # intersection causes perfect in-sample leakage and invalidates the model.
+    overlap = sorted(set(feature_columns) & set(target_columns))
+    if overlap:
+        raise ValueError(
+            f"Feature and target column lists overlap: {overlap}. "
+            "A column cannot be both a feature and a target — this would "
+            "give the model perfect knowledge of its own target at inference time."
+        )
+
     missing_features = [col for col in feature_columns if col not in df.columns]
     missing_targets = [col for col in target_columns if col not in df.columns]
 
@@ -81,6 +91,16 @@ def load_training_data(
             f"Available columns: {list(df.columns)}"
         )
 
+    # TRN-1: check for non-numeric feature columns before computing finite mask.
+    # Non-numeric dtypes cause a silent conversion error in to_numpy(dtype=float).
+    _non_numeric = [c for c in feature_columns if not pd.api.types.is_numeric_dtype(df[c])]
+    if _non_numeric:
+        _dtypes = {c: str(df[c].dtype) for c in _non_numeric}
+        raise ValueError(
+            f"Non-numeric feature columns detected: {_dtypes}. "
+            "All feature columns must be numeric. Encode categorical features "
+            "before calling load_training_data(), or remove them from feature_columns."
+        )
     X = df[feature_columns].copy()
     y = df[target_columns].copy()
 
@@ -93,6 +113,14 @@ def load_training_data(
         dropped_rows = int((~finite_mask).sum())
 
         if dropped_rows > 0:
+            import warnings as _w
+            _w.warn(
+                f"load_training_data: dropped {dropped_rows} non-finite rows from "
+                f"{curated_path.name} before training. "
+                "Curated datasets should contain no non-finite values — "
+                "check that curate-aero ran with --reject-nonfinite-targets.",
+                stacklevel=2,
+            )
             df = df.loc[finite_mask].copy()
             X = X.loc[finite_mask].copy()
             y = y.loc[finite_mask].copy()

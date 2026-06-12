@@ -127,6 +127,17 @@ def split_dataset_grouped(
             f"Grouped split requires column '{group_column}', but it is missing."
         )
 
+    # ISSUE-19: NaN group values are excluded from all splits.
+    # Warn loudly so the operator knows rows were silently dropped.
+    _nan_group_count = int(df[group_column].isna().sum())
+    if _nan_group_count > 0:
+        import warnings as _w
+        _w.warn(
+            f"split_dataset_grouped: {_nan_group_count} rows have NaN in '{group_column}' "
+            "and will be excluded from ALL splits (train, val, test). "
+            "Verify curation did not leave partial geometry_id entries.",
+            stacklevel=3,
+        )
     unique_groups = df[group_column].dropna().unique()
     n_groups = len(unique_groups)
 
@@ -186,6 +197,8 @@ def split_dataset_grouped(
         "n_groups_train": len(train_groups),
         "n_groups_val": len(val_groups),
         "n_groups_test": len(test_groups),
+        # SPL-1: count rows excluded because group_column was NaN
+        "n_rows_excluded_missing_group": int(df[group_column].isna().sum()),
         "train_groups": sorted(str(x) for x in train_groups),
         "val_groups": sorted(str(x) for x in val_groups),
         "test_groups": sorted(str(x) for x in test_groups),

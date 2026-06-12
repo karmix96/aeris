@@ -17,6 +17,11 @@ def test_promote_aero_succeeds_when_promotion_ready(tmp_path: Path) -> None:
     dataset_root = tmp_path / "dataset_ready"
     dataset_root.mkdir(parents=True, exist_ok=True)
 
+    # FIX: PROM-1 requires the curated CSV to exist before promotion
+    _curated = dataset_root / "curated_aero_dataset.csv"
+    _curated.parent.mkdir(parents=True, exist_ok=True)
+    _curated.write_text("geometry_id,cl,cd,cm\ngeom_00001,0.5,0.02,-0.01\n", encoding="utf-8")
+
     _write_json(
         dataset_root / "curation_report.json",
         {
@@ -58,6 +63,11 @@ def test_promote_aero_fails_when_not_promotion_ready(tmp_path: Path) -> None:
     dataset_root = tmp_path / "dataset_blocked"
     dataset_root.mkdir(parents=True, exist_ok=True)
 
+    # FIX: PROM-1 validates curated CSV exists even when not promotion-ready
+    _curated2 = dataset_root / "curated_aero_dataset.csv"
+    _curated2.parent.mkdir(parents=True, exist_ok=True)
+    _curated2.write_text("geometry_id,cl,cd,cm\ngeom_00001,0.5,0.02,-0.01\n", encoding="utf-8")
+
     _write_json(
         dataset_root / "curation_report.json",
         {
@@ -97,6 +107,11 @@ def test_promote_aero_fails_when_not_promotion_ready(tmp_path: Path) -> None:
 def test_promote_aero_can_be_forced(tmp_path: Path) -> None:
     dataset_root = tmp_path / "dataset_forced"
     dataset_root.mkdir(parents=True, exist_ok=True)
+
+    # FIX: PROM-1 validates curated CSV exists even for forced promotion
+    _curated3 = dataset_root / "curated_aero_dataset.csv"
+    _curated3.parent.mkdir(parents=True, exist_ok=True)
+    _curated3.write_text("geometry_id,cl,cd,cm\ngeom_00001,0.5,0.02,-0.01\n", encoding="utf-8")
 
     _write_json(
         dataset_root / "curation_report.json",

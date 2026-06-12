@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from aeris.generators.bwb_segmented_v1.params import BWBGeneratorConfig
@@ -25,13 +24,24 @@ def save_planform_plot(
 ) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
+    # AERIS_PATCH_BATCH3_PLOT_LAZY_IMPORT
+    # Keep matplotlib import/backend setup local to plotting so importing the
+    # generator package does not initialize pyplot or GUI backends.
+    import matplotlib
+
+    matplotlib.use("Agg", force=True)
+    import matplotlib.pyplot as plt
+
     # Extract section-wise arrays for quick plotting
     y_sections = np.array([section.y_m for section in section_geometry.sections], dtype=float)
     chord_sections = np.array([section.chord_m for section in section_geometry.sections], dtype=float)
     twist_sections = np.array([section.twist_deg for section in section_geometry.sections], dtype=float)
     dihedral_sections = np.array([section.dihedral_deg for section in section_geometry.sections], dtype=float)
 
-    fig = plt.figure(figsize=(16, 10))
+    fig = plt.figure(
+        figsize=(16, 10),
+        constrained_layout=True,  # AERIS_PATCH_BATCH3_PLOT_CONSTRAINED_LAYOUT
+    )
     gs = fig.add_gridspec(2, 2, height_ratios=[2.2, 1.0], hspace=0.28, wspace=0.22)
 
     # ------------------------------------------------------------------
@@ -114,6 +124,32 @@ def save_planform_plot(
     for yb in planform.group_boundary_y:
         ax_planform.axhline(y=yb, linestyle=":", linewidth=0.8, alpha=0.35)
 
+    # AERIS_PATCH_BATCH3_PLOT_CONTROL_SPAN
+    # Show configured/effective control-surface span bands when present. This
+    # makes v3 sampled elevon geometry visible in the operator debug plot.
+    _control_span_bands: list[tuple[float, float, str]] = []
+    _control_surfaces = tuple(
+        getattr(getattr(config, "control_surfaces", None), "surfaces", ()) or ()
+    )
+    _seen_control_labels: set[str] = set()
+    for _surface in _control_surfaces:
+        _spanwise = getattr(_surface, "spanwise", None)
+        if _spanwise is None:
+            continue
+        try:
+            _y0 = float(_spanwise.start_frac) * float(planform.semi_span_m)
+            _y1 = float(_spanwise.end_frac) * float(planform.semi_span_m)
+        except Exception:
+            continue
+        if not (_y1 > _y0 >= 0.0):
+            continue
+        _name = str(getattr(_surface, "name", "control"))
+        _label = f"control span: {_name}" if _name not in _seen_control_labels else None
+        _seen_control_labels.add(_name)
+        _control_span_bands.append((_y0, _y1, _name))
+        ax_planform.axhspan(_y0, _y1, alpha=0.08, label=_label)
+        ax_planform.axhspan(-_y1, -_y0, alpha=0.08)
+
     ax_planform.set_xlabel("x (m)")
     ax_planform.set_ylabel("y (m)")
     ax_planform.set_title("Planform Geometry")
@@ -189,6 +225,10 @@ def save_planform_plot(
     for yb in planform.group_boundary_y:
         ax_chord.axvline(yb, linestyle=":", linewidth=0.8, alpha=0.35)
 
+    # AERIS_PATCH_BATCH3_PLOT_CONTROL_SPAN_LOWER_AXES
+    for _y0, _y1, _name in locals().get("_control_span_bands", []):
+        ax_chord.axvspan(_y0, _y1, alpha=0.08)
+
     ax_chord.set_xlabel("Spanwise station y (m)")
     ax_chord.set_ylabel("Chord (m)")
     ax_chord.set_title("Chord Distribution")
@@ -207,6 +247,10 @@ def save_planform_plot(
     for yb in planform.group_boundary_y:
         ax_angles.axvline(yb, linestyle=":", linewidth=0.8, alpha=0.35)
 
+    # AERIS_PATCH_BATCH3_PLOT_CONTROL_SPAN_ANGLE_AXES
+    for _y0, _y1, _name in locals().get("_control_span_bands", []):
+        ax_angles.axvspan(_y0, _y1, alpha=0.08)
+
     ax_angles.set_xlabel("Spanwise station y (m)")
     ax_angles.set_ylabel("Angle (deg)")
     ax_angles.set_title("Twist and Dihedral Distributions")
@@ -214,6 +258,8 @@ def save_planform_plot(
     ax_angles.legend(loc="best", fontsize=8)
 
     fig.suptitle("AERIS Geometry Debug View", fontsize=16)
-    plt.tight_layout()
+    # AERIS_PATCH_BATCH3_PLOT_NO_TIGHT_LAYOUT
+    # constrained_layout=True above replaces tight_layout(), which emitted
+    # noisy warnings with the metadata panel axes.
     plt.savefig(output_path, dpi=220, bbox_inches="tight")
     plt.close(fig)

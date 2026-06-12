@@ -943,6 +943,14 @@ def ml_tune(
     minimize: bool = typer.Option(True, "--minimize/--maximize", help="Whether lower selection metric is better."),
     fail_policy: str = typer.Option("continue", "--fail-policy", help="Trial failure policy: continue or raise."),
     output_dir: Path | None = typer.Option(None, "--output-dir", help="Optional output directory for tuning artifacts."),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional workflow root to auto-record ML tuning after success.",
+    ),
 ) -> None:
     """Tune one model family over a parameter search space."""
     try:
@@ -1104,7 +1112,25 @@ def ml_tune(
         typer.echo(f"  best_score: {best['selection_score']}")
         typer.echo(f"  best_params: {best_params}")
 
-
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="ml_tuning",
+            inputs=[dataset, config, param_space_json],
+            artifacts=[result.get("output_dir"), result.get("tuning_summary_json"), result.get("tuning_trials_csv")],
+            notes="ML tuning completed.",
+            metadata={
+                "command": "aeris ml tune",
+                "backend": summary.get("backend", "aeris"),
+                "model_type": summary.get("model_type"),
+                "n_trials": summary.get("n_trials"),
+                "n_successful_trials": summary.get("n_successful_trials"),
+                "best_trial": best.get("trial_id") if best else None,
+                "best_score": best.get("selection_score") if best else None,
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
 
 
 @ml_app.command("build-delta-dataset")
@@ -1154,9 +1180,9 @@ def ml_build_delta_dataset(
             inputs=[lf_csv, hf_csv],
             outputs=[output_dir],
             artifacts=[
-                getattr(result, "output_dir", None),
-                getattr(result, "delta_dataset_csv", None),
-                getattr(result, "report_json", None),
+                result.output_dir,
+                result.delta_dataset_csv,
+                result.report_json,
             ],
             notes="Multifidelity delta dataset built.",
             metadata={
@@ -1236,11 +1262,9 @@ def ml_train_delta_model(
             outputs=[output_dir],
             artifacts=[
                 output_dir,
-                getattr(result, "output_dir", None),
-                getattr(result, "run_dir", None),
-                getattr(result, "model_run_dir", None),
-                getattr(result, "manifest_json", None),
-                getattr(result, "manifest_path", None),
+                result.get("artifacts") and getattr(result["artifacts"], "run_dir", None),
+                result.get("artifacts") and getattr(result["artifacts"], "model_path", None),
+                result.get("artifacts") and getattr(result["artifacts"], "manifest_path", None),
             ],
             notes="Multifidelity delta model trained.",
             metadata={
@@ -1337,10 +1361,9 @@ def ml_evaluate_delta_model(
             outputs=[output_dir],
             artifacts=[
                 output_dir,
-                getattr(result, "output_dir", None),
-                getattr(result, "report_json", None),
-                getattr(result, "report_path", None),
-                getattr(result, "rows_csv", None),
+                result.output_dir,
+                result.report_json,
+                result.report_csv,
             ],
             notes="Multifidelity delta model evaluation completed.",
             metadata={
@@ -1631,12 +1654,18 @@ def ml_promote_model(
 @ml_app.command("inspect-model")
 def ml_inspect_model(
     model_run_dir: Path = typer.Option(..., "--model-run-dir", exists=True, file_okay=False, dir_okay=True, readable=True, resolve_path=True, help="Path to a saved ML training run directory."),
+    json_output: bool = typer.Option(False, "--json", help="Print full model run info as JSON."),
 ) -> None:
     """Inspect a saved ML model run and its promotion status."""
+    import json as _json
     try:
         info = inspect_model_run(model_run_dir)
     except Exception as exc:
         fail_command("ML inspect-model", exc)
+
+    if json_output:
+        typer.echo(_json.dumps(info, indent=2, default=str))
+        return
 
     typer.echo("[AERIS] ML model inspection")
     typer.echo(f"  model_run_dir: {info['model_run_dir']}")
@@ -1658,12 +1687,18 @@ def ml_inspect_model(
 def ml_require_promoted_model(
     model_run_dir: Path = typer.Option(..., "--model-run-dir", exists=True, file_okay=False, dir_okay=True, readable=True, resolve_path=True, help="Path to a saved ML training run directory."),
     verify_hashes: bool = typer.Option(True, "--verify-hashes/--no-verify-hashes", help="Verify current artifact hashes against promotion manifest."),
+    json_output: bool = typer.Option(False, "--json", help="Print full promotion manifest as JSON."),
 ) -> None:
     """Require that a saved ML model run has an approved promotion manifest."""
+    import json as _json
     try:
         manifest = require_promoted_model_gate(model_run_dir, verify_hashes=verify_hashes)
     except Exception as exc:
         fail_command("ML require-promoted-model", exc)
+
+    if json_output:
+        typer.echo(_json.dumps(manifest, indent=2, default=str))
+        return
 
     typer.echo("[AERIS] Promoted model gate check")
     typer.echo(f"  model_run_dir: {model_run_dir}")
@@ -2048,10 +2083,9 @@ def ml_suggest_samples(
             outputs=[output_dir],
             artifacts=[
                 output_dir,
-                getattr(result, "output_dir", None),
-                getattr(result, "selected_batch_csv", None),
-                getattr(result, "selection_report_json", None),
-                getattr(result, "report_json", None),
+                result.artifacts.output_dir,
+                result.artifacts.ranked_candidates_csv_path,
+                result.artifacts.report_path,
             ],
             notes="Active-learning sample suggestion completed.",
             metadata={

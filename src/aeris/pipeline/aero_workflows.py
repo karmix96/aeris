@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import json
 import shutil
+
+import numpy as np
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
 from typing import Any
@@ -157,6 +159,13 @@ def prepare_geometry_for_aero(
     # geometry_view_from_run_dir and geometry_view_from_dataset_case so that
     # `aeris aero sweep --dataset ...` works without --generator-id.
     _resolved_gen_id = (generator_id or "").strip() or "bwb_segmented_v1"
+    if not (generator_id or "").strip():
+        import logging as _logging
+        _logging.getLogger("aeris").warning(
+            "prepare_geometry_for_aero: --generator-id not supplied; "
+            "defaulting to bwb_segmented_v1. Pass --generator-id explicitly "
+            "when using a non-default generator family."
+        )
 
     if run_dir is not None:
         geometry_view = geometry_view_from_run_dir(
@@ -199,6 +208,8 @@ def to_jsonable(value: Any) -> Any:
         return str(value)
     if isinstance(value, (str, int, float, bool)) or value is None:
         return value
+    if isinstance(value, np.generic):
+        return value.item()
     return str(value)
 
 def _should_retry_with_finer_paneling(result: Any) -> tuple[bool, str | None]:
@@ -257,25 +268,26 @@ def execute_aero_run(
     geometry_source: str,
     generator_id: str | None,
     control_input_deg: float | None,
-    alpha: float,
-    velocity: float,
-    altitude: float,
-    beta: float,
-    mach: float,
-    p: float,
-    q: float,
-    r: float,
-    solver: str,
-    avl_command: str,
-    timeout_sec: int,
-    spanwise_resolution: int,
-    chordwise_resolution: int,
-    spanwise_spacing: str,
-    chordwise_spacing: str,
-    save_surface_forces: bool,
-    save_element_forces: bool,
-    seed: int,
-    output_name: str,
+    diff_input_deg: float | None = None,
+    alpha: float = 0.0,
+    velocity: float = 28.0,
+    altitude: float = 0.0,
+    beta: float = 0.0,
+    mach: float = 0.0,
+    p: float = 0.0,
+    q: float = 0.0,
+    r: float = 0.0,
+    solver: str = "aerosandbox_avl",
+    avl_command: str = "",
+    timeout_sec: int = 180,
+    spanwise_resolution: int = 4,
+    chordwise_resolution: int = 8,
+    spanwise_spacing: str = "equal",
+    chordwise_spacing: str = "cosine",
+    save_surface_forces: bool = False,
+    save_element_forces: bool = False,
+    seed: int = 0,
+    output_name: str = "",
 ) -> tuple[Path, Any]:
     label = (
         config.stem if config is not None
@@ -332,6 +344,7 @@ def execute_aero_run(
                 "save_surface_forces": save_surface_forces,
                 "save_element_forces": save_element_forces,
                 "control_input_deg": control_input_deg,
+                "diff_input_deg": diff_input_deg,
             },
         ),
         provenance={
@@ -377,6 +390,7 @@ def execute_aero_run(
                     "save_surface_forces": save_surface_forces,
                     "save_element_forces": save_element_forces,
                     "control_input_deg": control_input_deg,
+                    "diff_input_deg": diff_input_deg,
                 },
             ),
             provenance=dict(aero_input.provenance),
@@ -400,10 +414,11 @@ def execute_aero_run(
             )
             result = retry_result
         else:
+            # Retry also produced a bad result — keep original, mark retry as not useful.
             _inject_retry_metadata(
                 result,
-                used=True,
-                reason=retry_reason,
+                used=False,
+                reason=f"retry_also_failed:{retry_reason}",
                 initial_paneling=initial_paneling,
                 fallback_paneling=retry_input.settings.solver_options["paneling"],
                 initial_result=result,
@@ -432,6 +447,7 @@ def execute_aero_run(
         "geometry_source": geometry_source,
         "resolved_generator_id": resolved_generator_id,
         "control_input_deg": control_input_deg,
+        "diff_input_deg": diff_input_deg,
         "flight_condition": to_jsonable(asdict(aero_input.flight_condition)),
         "geometry_summary": to_jsonable(dataclass_or_value(summary)),
         "aero_result": to_jsonable(dataclass_or_value(result)),
@@ -594,6 +610,7 @@ def execute_aero_sweep(
         "geometry_source": geometry_source,
         "resolved_generator_id": resolved_generator_id,
         "control_input_deg": control_input_deg,
+        "diff_input_values": diff_input_values or [],
         "base_flight_condition": to_jsonable(asdict(base_fc)),
         "flight_condition_sweep": to_jsonable(asdict(sweep)),
         "geometry_summary": to_jsonable(dataclass_or_value(summary)),

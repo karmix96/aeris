@@ -19,7 +19,9 @@ from __future__ import annotations
 import json
 import platform
 import shutil
+import re
 import sys
+import traceback
 from dataclasses import asdict, is_dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -37,6 +39,18 @@ from aeris.geometry.registry import get_geometry_generator
 def _utc_now_iso() -> str:
     """Return the current UTC timestamp in ISO-8601 format."""
     return datetime.now(UTC).isoformat()
+
+def _get_aeris_version() -> str:
+    # Return the installed AERIS package version, or 'unknown'.
+    try:
+        from importlib.metadata import PackageNotFoundError, version
+        try:
+            return version("aeris")
+        except PackageNotFoundError:
+            return "unknown"
+    except Exception:
+        return "unknown"
+
 
 
 def _to_jsonable(value: Any) -> Any:
@@ -75,6 +89,7 @@ def _mark_manifest_failed(
     manifest["error"] = {
         "type": type(exc).__name__,
         "message": str(exc),
+        "traceback": traceback.format_exc(),
     }
 
 def run_geometry_generation(config_path: str | Path) -> tuple[int, Path | None]:
@@ -86,7 +101,7 @@ def run_geometry_generation(config_path: str | Path) -> tuple[int, Path | None]:
     - From that point onward, geometry realization is deterministic.
     """
     resolved_config_path = Path(config_path).expanduser().resolve()
-    run_name = resolved_config_path.stem
+    run_name = re.sub(r"[^a-zA-Z0-9_-]", "_", resolved_config_path.stem)
 
     run_paths = create_run_folder(prefix=f"geometry_{run_name}")
     logger = setup_logger(run_paths.logs / "app.log")
@@ -106,6 +121,7 @@ def run_geometry_generation(config_path: str | Path) -> tuple[int, Path | None]:
         "artifacts_dir": str(run_paths.artifacts),
         "platform": platform.system().lower(),
         "python_version": sys.version.split()[0],
+        "aeris_version": _get_aeris_version(),
         "created_at_utc": _utc_now_iso(),
         "completed_at_utc": None,
         "error": None,
@@ -136,6 +152,11 @@ def run_geometry_generation(config_path: str | Path) -> tuple[int, Path | None]:
             generator_id,
         )
         logger.info("Design sampling seed: %s", design_sampling_seed)
+        if design_sampling_seed is None:
+            logger.warning(
+                "design_sampling_seed is None — run is NOT reproducible. "
+                "Set geometry.generator.seed in the config to fix this."
+            )
         logger.info("Geometry realization mode: deterministic from explicit design sample")
 
         design_sample = generator.sample_one(generator_config, seed=design_sampling_seed)
@@ -150,15 +171,15 @@ def run_geometry_generation(config_path: str | Path) -> tuple[int, Path | None]:
         logger.info("Geometry case generated successfully")
 
         manifest["geometry"] = {
-        "name": getattr(generator_config, "name", None),
-        "generator_family": getattr(getattr(generator_config, "generator", None), "family", None),
-        "generator_version": getattr(getattr(generator_config, "generator", None), "version", None),
-        "generator_id": generator_id,
-        "design_sampling_seed": design_sampling_seed,
-        "geometry_deterministic": True,
-        "design_sample": _to_jsonable(design_sample),
-        "case_summary": _to_jsonable(case_summary),
-        }   
+            "name": getattr(generator_config, "name", None),
+            "generator_family": getattr(getattr(generator_config, "generator", None), "family", None),
+            "generator_version": getattr(getattr(generator_config, "generator", None), "version", None),
+            "generator_id": generator_id,
+            "design_sampling_seed": design_sampling_seed,
+            "geometry_deterministic": True,
+            "design_sample": _to_jsonable(design_sample),
+            "case_summary": _to_jsonable(case_summary),
+        }
         manifest["status"] = "success"
         manifest["completed_at_utc"] = _utc_now_iso()
 
@@ -171,4 +192,4 @@ def run_geometry_generation(config_path: str | Path) -> tuple[int, Path | None]:
         logger.exception("Geometry run failed.")
         _mark_manifest_failed(manifest, exc=exc)
         _write_manifest(manifest_path, manifest)
-        return 1, run_paths.root if 'run_paths' in dir() else None
+        return 1, run_paths.root

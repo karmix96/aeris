@@ -57,8 +57,19 @@ def sample_bwb_design(
         _es = float(rng.uniform(_eb.elevon_start_frac.min, _eb.elevon_start_frac.max))
         _ee = float(rng.uniform(_eb.elevon_end_frac.min,   _eb.elevon_end_frac.max))
         _eh = float(rng.uniform(_eb.elevon_hinge_frac.min, _eb.elevon_hinge_frac.max))
+        # AERIS_PATCH_SUPP1_APPLIED: fail-loud instead of silent swap.
+        # ISSUE-G5 (validation patch) already enforces start.max < end.min
+        # at config parse time, so _es >= _ee here means either:
+        #   (a) config was not validated before calling this function, or
+        #   (b) the bounds are degenerate (zero-span elevon).
+        # Both are programming errors; surface them immediately.
         if _es >= _ee:
-            _es, _ee = min(_es, _ee), max(_es, _ee)
+            raise ValueError(
+                f"Sampled elevon_start_frac ({_es:.6f}) >= elevon_end_frac ({_ee:.6f}). "
+                "This indicates misconfigured elevon_bounds (start.max >= end.min) or "
+                "a config that was not validated with validate_bwb_generator_config() "
+                "before sampling."
+            )
     else:
         _es, _ee, _eh = 0.60, 0.95, 0.75
 
@@ -84,3 +95,10 @@ def sample_bwb_design(
         elevon_end_frac=_ee,
         elevon_hinge_frac=_eh,
     )
+
+# ---------------------------------------------------------------------------
+# Backward-compatible alias used by planform.py's deprecated
+# generate_bwb_planform() wrapper (deferred D23).  # AERIS_SUPP1B_ALIAS
+# Do NOT add new callers.  Will be removed when D23 is resolved.
+# ---------------------------------------------------------------------------
+sample_one_bwb_design = sample_bwb_design

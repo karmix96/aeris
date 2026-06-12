@@ -102,7 +102,17 @@ def _row_for_zero_control(group: pd.DataFrame, control_column: str, *, tol: floa
     if subset.empty:
         return None
     if len(subset) > 1:
-        raise ValueError("Duplicate zero-control rows found in a flyability-label group.")
+        # BUG-25 (part b): Belt-and-suspenders. After the diff-row filter in
+        # compute_flyability_labels(), this should not trigger. If it does (e.g.
+        # the caller passed a pre-filtered df with genuine duplicates), warn and
+        # return the first match rather than crashing the entire label computation.
+        import warnings as _w
+        _w.warn(
+            f"_row_for_zero_control: found {len(subset)} rows with control ≈ 0 in group. "
+            "Using the first match. Check that diff-sweep rows have been filtered "
+            "before calling compute_flyability_labels().",
+            stacklevel=3,
+        )
     return subset.iloc[0]
 
 
@@ -510,6 +520,23 @@ def compute_flyability_labels(
     ]
     deriv_df = _coerce_numeric(deriv_df, numeric_derivative_columns)
 
+    # BUG-25 (part a): Filter to symmetric-sweep rows only before groupby.
+    # Mirrors the fix applied to control_derivatives.py.
+    from aeris.dataset.control_derivatives import DIFFERENTIAL_CONTROL_COLUMN as _DIFF_COL
+    if _DIFF_COL in aero_df.columns:
+        _diff_tol_fl = 1e-8
+        _sym_mask_fl = aero_df[_DIFF_COL].fillna(0.0).abs() <= _diff_tol_fl
+        _n_diff_fl = int((~_sym_mask_fl).sum())
+        aero_df = aero_df.loc[_sym_mask_fl].copy()
+        if _n_diff_fl > 0:
+            import warnings as _w
+            _w.warn(
+                f"compute_flyability_labels: removed {_n_diff_fl} differential-sweep rows "
+                f"(diff_input_deg != 0) before computing flyability labels. "
+                "Only symmetric-sweep rows are used for Cm0 extraction and trim computation.",
+                stacklevel=2,
+            )
+
     before_aero = len(aero_df)
     aero_df = aero_df.dropna(subset=[resolved_control_column, cm_column, *resolved_group_columns])
     dropped_aero = before_aero - len(aero_df)
@@ -560,6 +587,28 @@ def compute_flyability_labels(
             flyable_counts[str(value)] = int(count)
 
     red_flag_count = int(out_df["red_flag"].sum()) if "red_flag" in out_df.columns else 0
+
+    # FLY-1: trim summary stats — min/max/mean required trim deflection
+    # and mean trim margin. Quick sanity check without opening the CSV.
+    import numpy as _np
+    trim_summary: dict = {}
+    if "trim_delta_e_required_deg" in out_df.columns:
+        _trim_vals = out_df["trim_delta_e_required_deg"].dropna()
+        trim_summary["trim_delta_e_required_deg_min"] = float(_trim_vals.min()) if not _trim_vals.empty else None
+        trim_summary["trim_delta_e_required_deg_max"] = float(_trim_vals.max()) if not _trim_vals.empty else None
+        trim_summary["trim_delta_e_required_deg_mean"] = float(_trim_vals.mean()) if not _trim_vals.empty else None
+        trim_summary["trim_delta_e_abs_required_deg_mean"] = (
+            float(_trim_vals.abs().mean()) if not _trim_vals.empty else None
+        )
+    if "trim_delta_e_margin_to_limit_deg" in out_df.columns:
+        _margin_vals = out_df["trim_delta_e_margin_to_limit_deg"].dropna()
+        trim_summary["trim_delta_e_margin_deg_min"] = float(_margin_vals.min()) if not _margin_vals.empty else None
+        trim_summary["trim_delta_e_margin_deg_mean"] = float(_margin_vals.mean()) if not _margin_vals.empty else None
+    trim_summary["trim_limit_deg"] = float(max_abs_trim_delta_e_deg)
+    _n_feasible = int(out_df["trim_delta_e_feasible"].sum()) if "trim_delta_e_feasible" in out_df.columns else 0
+    _n_infeasible = int((out_df["trim_delta_e_feasible"] == False).sum()) if "trim_delta_e_feasible" in out_df.columns else 0
+    trim_summary["trim_feasible_count"] = _n_feasible
+    trim_summary["trim_infeasible_count"] = _n_infeasible
     red_flag_reason_counts = (
         _reason_counts(out_df["red_flag_reasons"])
         if "red_flag_reasons" in out_df.columns
@@ -617,6 +666,7 @@ def compute_flyability_labels(
             "not_a_full_nonlinear_trim_solver",
             "not_a_mil_std_compliance_claim",
         ],
+        "trim_summary": trim_summary,
         "control_derivatives_report_context": _read_json_if_exists(dataset_root / "control_derivatives_report.json"),
     }
     _write_json(output_report, report)

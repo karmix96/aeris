@@ -425,6 +425,13 @@ def run_dataset_generation(
 
             if not qc_report["passed"] and fail_on_qc_error:
                 logger.error("Geometry QC failed — stopping pipeline")
+                _write_final_summary(
+                    dataset_root=dataset_paths.root,
+                    manifest=manifest,
+                    exit_code=1,
+                    qc_profile=qc_profile,
+                    fail_on_qc_error=fail_on_qc_error,
+                )
                 return 1
         else:
             manifest["qc"] = {
@@ -445,6 +452,8 @@ def run_dataset_generation(
     except Exception as exc:
         manifest["status"] = "failed"
         manifest["completed_at_utc"] = _utc_now_iso()
+        # ISSUE-9: ensure attempted_n reflects the last known attempt count
+        # (manifest["attempted_n"] may be 0 if failure was pre-loop)
         manifest["error"] = {
             "type": type(exc).__name__,
             "message": str(exc),

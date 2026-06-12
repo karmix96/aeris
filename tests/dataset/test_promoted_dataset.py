@@ -106,7 +106,13 @@ def test_require_promoted_aero_dataset_rejects_forced_promotion_by_default(tmp_p
     with pytest.raises(ValueError) as exc:
         require_promoted_aero_dataset(dataset_root=dataset_root)
 
-    assert "force-promoted" in str(exc.value)
+    # PROM-2 fires when promotion_ready_at_time_of_promotion=False;
+    # the original forced-promotion check fires when promotion_forced=True.
+    # Either message is acceptable — both mean "rejected, use allow_forced=True".
+    error_msg = str(exc.value)
+    assert ("not promotion-ready" in error_msg or "force-promoted" in error_msg), (
+        f"Expected rejection message about non-ready or forced promotion, got: {error_msg!r}"
+    )
 
 
 def test_require_promoted_aero_dataset_can_allow_forced_promotion(tmp_path: Path) -> None:

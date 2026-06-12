@@ -53,12 +53,49 @@ def require_promoted_aero_dataset(
             f"Promoted curated dataset CSV not found: {curated_csv_path}"
         )
 
+    # ISSUE-14: containment guard — curated CSV must live inside dataset_root.
+    # Protects against stale promotion_manifest.json pointing at a different
+    # dataset after the folder was moved or renamed.
+    try:
+        curated_csv_path.relative_to(dataset_root)
+    except ValueError:
+        raise ValueError(
+            f"Security/integrity check failed: curated_aero_dataset_csv "
+            f"({curated_csv_path}) is not inside dataset_root ({dataset_root}). "
+            "The promotion_manifest.json may be stale or the dataset may have "
+            "been moved. Re-promote the dataset from its current location."
+        ) from None
+
+    # PROM-2: enforce promotion_ready_at_time_of_promotion.
+    # If the dataset was not ready when promoted (forced promotion path),
+    # the caller must explicitly allow it.
+    promotion_ready_at_promo = promotion_manifest.get("promotion_ready_at_time_of_promotion")
+    if promotion_ready_at_promo is False and not allow_forced:
+        raise ValueError(
+            "Dataset was not promotion-ready at time of promotion "
+            "(promotion_ready_at_time_of_promotion=False). "
+            "Set allow_forced=True only if downstream use explicitly permits un-ready datasets."
+        )
+
     promotion_forced = bool(promotion_manifest.get("promotion_forced", False))
     if promotion_forced and not allow_forced:
         raise ValueError(
             "Dataset was force-promoted. "
             "Set allow_forced=True only if downstream use explicitly permits that."
         )
+
+    # PROM-3: verify the curated CSV is readable and non-empty before returning.
+    # A promoted dataset with a zero-byte CSV should fail here, not silently in training.
+    try:
+        import pandas as _pd
+        _df_sample = _pd.read_csv(curated_csv_path, nrows=1)
+        if _df_sample.empty:
+            raise ValueError(f"Promoted curated dataset CSV is empty: {curated_csv_path}")
+    except Exception as _e:
+        if not allow_forced:
+            raise ValueError(
+                f"Promoted curated CSV failed validation: {_e}"
+            ) from _e
 
     return {
         "dataset_root": str(dataset_root),

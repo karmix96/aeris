@@ -45,7 +45,15 @@ class CADExportResult:
 
     @property
     def succeeded(self) -> bool:
-        return self.status in {"success", "partial_success"}
+        # AERIS_PATCH_BATCH2_CAD_SUCCESS_STRICT
+        # Partial success means at least one artifact exists, but not all requested
+        # artifacts. Treat it as not fully succeeded so CLI/GUI/workflows do not
+        # confuse VSPScript-only output with successful STEP output.
+        return self.status == "success"
+
+    @property
+    def partially_succeeded(self) -> bool:
+        return self.status == "partial_success"
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -81,6 +89,27 @@ def _jsonable(value: Any) -> Any:
     if isinstance(value, np.ndarray):
         return value.tolist()
     return value
+
+
+def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
+    """AERIS_PATCH_BATCH2_CAD_ATOMIC_MANIFEST: write JSON via temp + replace."""
+    import os
+    import tempfile
+
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    text = json.dumps(payload, indent=2)
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        os.replace(tmp, path)
+    except Exception:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 def parse_cad_formats(formats: str | list[str] | tuple[str, ...]) -> tuple[str, ...]:
@@ -215,6 +244,14 @@ def export_cad_from_config(
     stdout_path.write_text("", encoding="utf-8")
     stderr_path.write_text("", encoding="utf-8")
 
+    # AERIS_PATCH_BATCH1_CAD_REMOVE_STALE_STEP
+    # Explicit output directories reuse fixed artifact names. Delete stale STEP
+    # outputs before a new export attempt so result.succeeded cannot be fooled
+    # by a file produced by an earlier run.
+    for _stale_path in (step_path, vsp3_path):
+        if _stale_path is not None and _stale_path.exists():
+            _stale_path.unlink()
+
     warnings: list[str] = []
     produced: list[str] = []
     status = "running"
@@ -246,7 +283,7 @@ def export_cad_from_config(
         "warnings": [],
         "error": None,
     }
-    manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    _write_json_atomic(manifest_path, manifest)
 
     try:
         raw_config = load_yaml_config(resolved_config_path)
@@ -391,7 +428,7 @@ def export_cad_from_config(
             }
         )
     finally:
-        manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        _write_json_atomic(manifest_path, manifest)
 
     return CADExportResult(
         status=status,
@@ -406,3 +443,5 @@ def export_cad_from_config(
         stderr_path=stderr_path,
         warnings=tuple(warnings),
     )
+
+# AERIS_PATCH_BATCH2_CAD_ATOMIC_MANIFEST_REPLACED

@@ -163,12 +163,21 @@ def _inspect_geometry_dataset(dataset_root: Path) -> dict[str, Any]:
     succeeded_n = manifest.get("succeeded_n")
     failed_n = manifest.get("failed_n")
 
+    def _count_check(expected, actual) -> bool | None:
+        # ISSUE-27: return None when expected is unknown, not False.
+        if expected is None:
+            return None
+        try:
+            return int(expected) == int(actual)
+        except (TypeError, ValueError):
+            return None
+
     count_consistency = {
-        "manifest_succeeded_matches_metadata_rows": succeeded_n == metadata_rows,
-        "manifest_failed_matches_failure_rows": failed_n == failure_rows,
-        "manifest_attempted_matches_success_plus_failure": attempted_n == (metadata_rows + failure_rows),
-        "manifest_requested_matches_attempted": requested_n == attempted_n,
-        "geometry_dir_count_matches_metadata_rows": geometry_dir_count == metadata_rows,
+        "manifest_succeeded_matches_metadata_rows": _count_check(succeeded_n, metadata_rows),
+        "manifest_failed_matches_failure_rows": _count_check(failed_n, failure_rows),
+        "manifest_attempted_matches_success_plus_failure": _count_check(attempted_n, metadata_rows + failure_rows),
+        "manifest_requested_matches_attempted": _count_check(requested_n, attempted_n),
+        "geometry_dir_count_matches_metadata_rows": _count_check(geometry_dir_count, metadata_rows),
     }
 
     summary = {
@@ -190,7 +199,9 @@ def _inspect_geometry_dataset(dataset_root: Path) -> dict[str, Any]:
         "missing_file_count": len(missing_files),
         "missing_files_preview": missing_files[:20],
         "count_consistency": count_consistency,
-        "all_count_checks_pass": all(count_consistency.values()),
+        # INS-1: use _all_known_checks_pass so None (unknown) values are not
+        # treated as False — a missing manifest field should not fail the check.
+        "all_count_checks_pass": _all_known_checks_pass(count_consistency),
         "available_artifacts": {
             "dataset_manifest_json": str(manifest_path) if manifest_path.exists() else None,
             "metadata_csv": str(metadata_path) if metadata_path.exists() else None,
@@ -379,9 +390,18 @@ def _inspect_aero_dataset(dataset_root: Path) -> dict[str, Any]:
         "flight_condition_unique_counts": {
             column: _unique_count(aero_df, column) for column in condition_columns if column in aero_df.columns
         },
+        # INS-3: include re_number (Reynolds number) if present — critical for
+        # viscous solver planning. Report absent if not in this dataset.
+        "re_number": _numeric_metric(aero_df, "re_number") if "re_number" in aero_df.columns else {"min": None, "max": None, "mean": None, "note": "re_number column absent — viscous solver not configured"},
         "target_metrics": {
             column: _numeric_metric(aero_df, column) for column in target_columns if column in aero_df.columns
         },
+        # INS-4: note when target_metrics is empty so CLI output is not silently blank
+        "target_metrics_note": (
+            "no standard target columns (cl/cd/cm/cy/cl_roll/cn/l_over_d) found in dataset"
+            if not any(c in aero_df.columns for c in target_columns)
+            else None
+        ),
         "nan_counts": aero_df.isna().sum().to_dict(),
     }
 
@@ -403,8 +423,18 @@ def inspect_dataset(dataset_root: Path) -> dict[str, Any]:
     has_aero_manifest = (dataset_root / "aero_dataset_manifest.json").exists()
     has_aero_csv = (dataset_root / "aero_dataset.csv").exists()
     has_geometry_manifest = (dataset_root / "dataset_manifest.json").exists()
+    # INS-2: detect flyability_ml / promoted-derived dataset roots.
+    # These have a promotion_manifest.json and curated_aero_dataset.csv but no
+    # aero_dataset_manifest.json. Route them through the aero inspector which
+    # reads available artifacts gracefully.
+    has_promotion_manifest = (dataset_root / "promotion_manifest.json").exists()
+    has_flyability_ml_report = (dataset_root / "flyability_ml_dataset_report.json").exists()
+    has_curated_csv = (dataset_root / "curated_aero_dataset.csv").exists()
 
     if has_aero_manifest or has_aero_csv:
+        return _inspect_aero_dataset(dataset_root)
+
+    if has_flyability_ml_report or (has_promotion_manifest and has_curated_csv):
         return _inspect_aero_dataset(dataset_root)
 
     if has_geometry_manifest:

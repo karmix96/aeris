@@ -256,6 +256,14 @@ def _find_aero_result_json(case_dir: Path) -> Path:
 
     recursive = list(case_dir.rglob("aero_result.json"))
     if recursive:
+        if len(recursive) > 1:
+            import warnings
+            warnings.warn(
+                f"Multiple aero_result.json files found under {case_dir}; "
+                f"using first match: {recursive[0]}. "
+                "Verify no retry/duplicate artifacts exist in this case directory.",
+                stacklevel=2,
+            )
         return recursive[0]
 
     raise FileNotFoundError(f"No aero_result.json found under {case_dir}")
@@ -334,7 +342,11 @@ def _flatten_success_row(
     diag = solver_metadata.get("control_diagnostics", {}) or {}
     row["diag_airplane_has_control_surfaces"] = diag.get("airplane_has_control_surfaces")
     row["diag_airplane_avl_has_control_blocks"] = diag.get("airplane_avl_has_control_blocks")
+    # ISSUE-4: write both column names for full backward compat
+    # Old name is required by aero_validators.py QC and legacy scripts.
+    # New name is the d2-architecture-safe alias used by curate_aero.
     row["diag_keystrokes_has_d1_command"] = diag.get("keystrokes_has_d1_command")
+    row["diag_keystrokes_has_control_command"] = diag.get("keystrokes_has_d1_command")
     row["diag_stdout_control_variables"] = diag.get("stdout_control_variables")
 
     # Failure columns kept for schema stability
@@ -437,17 +449,17 @@ def run_aero_dataset_generation(
 
     # 1) Generate geometry dataset first, internally
     rc = run_dataset_generation(
-    config_path=config_path,
-    n_samples=n_samples,
-    sampler=sampler,
-    sampler_seed=sampler_seed,
-    dataset_name=geometry_dataset_name,
-    save_plot=save_plot,
-    build_aerosandbox=build_aerosandbox,
-    run_qc=run_geometry_qc,
-    qc_profile=geometry_qc_profile,
-    fail_on_qc_error=fail_on_geometry_qc_error,
-)
+        config_path=config_path,
+        n_samples=n_samples,
+        sampler=sampler,
+        sampler_seed=sampler_seed,
+        dataset_name=geometry_dataset_name,
+        save_plot=save_plot,
+        build_aerosandbox=build_aerosandbox,
+        run_qc=run_geometry_qc,
+        qc_profile=geometry_qc_profile,
+        fail_on_qc_error=fail_on_geometry_qc_error,
+    )
 
     # 🔴 NEW: Always load geometry QC summary if exists
     geometry_manifest = _read_json_if_exists(geometry_dataset_root / "dataset_manifest.json")
@@ -502,8 +514,8 @@ def run_aero_dataset_generation(
             "geometry_dataset_name": geometry_dataset_name,
             "geometry_dataset_root": str(geometry_dataset_root.resolve()),
             "requested_geometry_n": n_samples,
-            "attempted_geometry_sweeps": n_samples,
-            "completed_geometry_sweeps": n_samples,
+            "attempted_geometry_sweeps": 0,
+            "completed_geometry_sweeps": 0,
             "successful_aero_rows": 0,
             "failed_aero_rows": 0,
             "generator_id": generator_id,
@@ -526,12 +538,6 @@ def run_aero_dataset_generation(
 
         return 1
 
-    geometry_manifest = _read_json_if_exists(geometry_dataset_root / "dataset_manifest.json")
-    geometry_qc_summary = None
-    if geometry_manifest is not None:
-        geometry_qc_summary = geometry_manifest.get("qc")
-
-
     geometry_metadata_rows = _read_csv_rows(geometry_dataset_root / "metadata.csv")
     geometry_by_id = {
         str(row["geometry_id"]): row
@@ -544,7 +550,7 @@ def run_aero_dataset_generation(
     copied_sweep_roots_by_geometry: dict[str, Path] = {}
     geometry_ids_with_failures: set[str] = set()
 
-    requested_geometry_n = len(geometry_by_id)
+    requested_geometry_n = n_samples
     attempted_sweeps = 0
     completed_sweeps = 0
 
@@ -658,9 +664,9 @@ def run_aero_dataset_generation(
     _write_csv(final_root / "aero_dataset.csv", success_rows)
     _write_csv(final_root / "aero_failures.csv", failure_rows)
     aero_run_retention = _prune_aero_run_artifacts(
-    copied_sweep_roots_by_geometry=copied_sweep_roots_by_geometry,
-    geometry_ids_with_failures=geometry_ids_with_failures,
-    retain_aero_runs=retain_aero_runs,
+        copied_sweep_roots_by_geometry=copied_sweep_roots_by_geometry,
+        geometry_ids_with_failures=geometry_ids_with_failures,
+        retain_aero_runs=retain_aero_runs,
     )
 
     manifest = {
@@ -686,6 +692,7 @@ def run_aero_dataset_generation(
         "generator_id": generator_id,
         "solver": solver,
         "control_input_values": control_input_values,
+        "diff_input_values": diff_input_values,  # differential sweep values; None = symmetric-only
         "control_metadata": default_control_metadata(),
         "control_alias_columns": [
             "control_input_deg",
@@ -708,11 +715,11 @@ def run_aero_dataset_generation(
             "aero_runs_root": str(sweep_runs_root.resolve()),
         },
         "retention": {
-        "keep_geometry_dataset": keep_geometry_dataset,
-        "retain_aero_runs": aero_run_retention["retain_aero_runs"],
-        "kept_aero_run_count": aero_run_retention["kept_run_count"],
-        "deleted_aero_run_count": aero_run_retention["deleted_run_count"],
-    },
+            "keep_geometry_dataset": keep_geometry_dataset,
+            "retain_aero_runs": aero_run_retention["retain_aero_runs"],
+            "kept_aero_run_count": aero_run_retention["kept_run_count"],
+            "deleted_aero_run_count": aero_run_retention["deleted_run_count"],
+        },
     }
 
     if not keep_geometry_dataset:

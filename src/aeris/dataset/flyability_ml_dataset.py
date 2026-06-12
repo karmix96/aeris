@@ -189,6 +189,25 @@ def build_flyability_ml_dataset(
     zero_mask = (aero_df[control_column] - float(zero_control_value_deg)).abs() <= float(
         zero_control_tolerance_deg
     )
+    # BUG-26: Belt-and-suspenders filter for diff-sweep rows.
+    # In a combined sym+diff dataset, all diff rows have delta_e_sym_deg=0,
+    # so zero_mask selects them too. Filter to diff_input_deg ≈ 0 first so
+    # the zero-control reference is always the pure symmetric reference row.
+    _diff_col_fml = "delta_a_diff_deg"
+    _diff_tol_fml = 1e-8
+    if _diff_col_fml in aero_df.columns:
+        _sym_only_fml = aero_df[_diff_col_fml].fillna(0.0).abs() <= _diff_tol_fml
+        _n_removed_fml = int((~_sym_only_fml).sum())
+        aero_df = aero_df.loc[_sym_only_fml].copy()
+        if _n_removed_fml > 0:
+            import warnings as _w
+            _w.warn(
+                f"build_flyability_ml_dataset: removed {_n_removed_fml} differential-sweep "
+                f"rows (delta_a_diff_deg != 0) before selecting zero-control reference rows. "
+                "Only symmetric-sweep rows are used as the aero reference for flyability ML.",
+                stacklevel=2,
+            )
+
     zero_df = aero_df.loc[zero_mask].copy()
     if zero_df.empty:
         raise ValueError(
@@ -265,6 +284,7 @@ def build_flyability_ml_dataset(
         "output_alias_csv": str(alias_out),
         "promotion_manifest": str(promotion_out),
         "row_counts": {
+            "source_aero_rows_original": int(len(aero_df)),
             "source_aero_rows": int(len(aero_df)),
             "source_zero_control_rows": int(len(zero_df)),
             "source_label_rows": int(len(labels_df)),
@@ -363,6 +383,9 @@ def build_flyability_ml_dataset(
         "promotion_ready_at_time_of_promotion": True,
         "promotion_forced": False,
         "qc_preset_used": "derived_from_promoted_aero_dataset" if source == "curated" else "derived_from_raw_aero_dataset",
+        # FML-1: explicit trust status when source="raw"
+        "derived_from_raw_unpromoted_dataset": source == "raw",
+        "trusted_for_production_training": source == "curated",
         "geometry_qc_passed": None,
         "aero_qc_passed": None,
         "promotion_blockers": [],
@@ -378,6 +401,15 @@ def build_flyability_ml_dataset(
             "final_run_summary_json": str(final_summary_out),
         },
         "limitations": report["limitations"],
+        # FML-2: label balance summary for quick single-class check
+        "label_balance": {
+            col: {
+                str(k): int(v)
+                for k, v in ml_df[col].value_counts(dropna=False).items()
+            }
+            for col in LABEL_TARGET_COLUMNS
+            if col in ml_df.columns
+        },
     }
     _write_json(promotion_out, promotion_manifest)
 

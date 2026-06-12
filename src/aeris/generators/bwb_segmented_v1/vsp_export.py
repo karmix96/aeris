@@ -381,6 +381,11 @@ def export_cadquery_step_from_section_geometry(
     log_lines: list[str] = []
     err_lines: list[str] = []
 
+    # AERIS_PATCH_BATCH1_VSP_REMOVE_STALE_CADQUERY_STEP
+    # A failed direct STEP export must not inherit success from an old file.
+    if step_path.exists():
+        step_path.unlink()
+
     try:
         airplane = _build_aerosandbox_airplane_from_sections(
             section_geometry=section_geometry,
@@ -496,6 +501,14 @@ def run_openvsp_batch_script(
         )
 
     command = [cmd_path, "-script", str(vspscript_path)]
+
+    # AERIS_PATCH_BATCH1_VSP_REMOVE_STALE_OPENVSP_STEP
+    # OpenVSP execution success must correspond to this run, not a stale STEP.
+    if step_path is not None:
+        _step = Path(step_path)
+        if _step.exists():
+            _step.unlink()
+
     try:
         completed = subprocess.run(
             command,

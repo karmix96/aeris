@@ -36,6 +36,7 @@ from aeris.generators.bwb_segmented_v1.planform import PlanformResult, generate_
 from aeris.generators.bwb_segmented_v1.plotting import save_planform_plot
 from aeris.generators.bwb_segmented_v1.sections import SectionGeometryResult, build_section_geometry_from_sample
 from aeris.generators.bwb_segmented_v1.validation import validate_planform_result, validate_section_geometry
+from aeris.generators.bwb_segmented_v1.validators import audit_geometry_result  # AERIS_PATCH_BATCH3_GEOMETRY_AUDIT_SUMMARY
 from aeris.generators.bwb_segmented_v1.reconstruction_export import export_reconstruction_artifacts
 
 
@@ -102,8 +103,12 @@ def generate_geometry_case_from_sample(
     section_geometry = build_section_geometry_from_sample(planform, sample, config)
     validate_section_geometry(section_geometry)
 
-    # Override control surface geometry with sampled elevon DVs (v3+)
-    if config.control_surfaces.surfaces and hasattr(sample, 'elevon_start_frac'):
+    # Override control surface geometry with sampled elevon DVs (v3+).
+    # Guard on config.elevon_bounds is not None — this is the correct semantic:
+    # v1/v2 configs have elevon_bounds=None and must NOT be patched with defaults,
+    # even though BWBDesignSample always carries the elevon fields.
+    # AERIS_PATCH_G4_APPLIED
+    if config.control_surfaces.surfaces and config.elevon_bounds is not None:
         from dataclasses import replace as _dc_replace
         _overridden_surfaces = tuple(
             _dc_replace(
@@ -169,6 +174,14 @@ def generate_geometry_case_from_sample(
 
     if reconstruction_artifacts is not None:
         summary["reconstruction_artifacts"] = reconstruction_artifacts
+
+    audit = audit_geometry_result(planform=planform, section_geometry=section_geometry)
+    summary["geometry_audit"] = {
+        "passed": bool(audit.passed),
+        "errors": list(audit.errors),
+        "warnings": list(audit.warnings),
+        "metrics": audit.metrics,
+    }
 
     export_geometry_summary(summary, summary_path)
 

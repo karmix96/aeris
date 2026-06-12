@@ -252,6 +252,27 @@ def compute_control_derivatives(
         numeric_columns.append(DIFFERENTIAL_CONTROL_COLUMN)
     df = _coerce_numeric(df, numeric_columns)
 
+    # BUG-24: Filter to symmetric-sweep rows only (diff_input_deg ≈ 0).
+    # A combined sym+diff aero_dataset.csv has rows where delta_e_sym_deg=0
+    # for BOTH the sym-zero reference AND every diff-sweep point. Without this
+    # filter, groups contain multiple zero-control rows, crashing _row_for_control.
+    # Filtering here is also physically correct: control derivatives for symmetric
+    # elevon should only be computed from symmetric sweep rows.
+    diff_col = DIFFERENTIAL_CONTROL_COLUMN
+    if diff_col in df.columns:
+        _diff_tol = 1e-8
+        _sym_only_mask = df[diff_col].fillna(0.0).abs() <= _diff_tol
+        _n_diff_rows_removed = int((~_sym_only_mask).sum())
+        df = df.loc[_sym_only_mask].copy()
+        if _n_diff_rows_removed > 0:
+            import warnings as _w
+            _w.warn(
+                f"compute_control_derivatives: removed {_n_diff_rows_removed} differential-sweep "
+                f"rows (diff_input_deg != 0) before computing symmetric elevon derivatives. "
+                "Only symmetric-sweep rows are used for dCL/d(delta_e_sym) computation.",
+                stacklevel=2,
+            )
+
     before = len(df)
     df = df.dropna(subset=[resolved_control_column, *resolved_group_columns])
     dropped_missing_keys = before - len(df)

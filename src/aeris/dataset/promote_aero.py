@@ -16,6 +16,12 @@ def _read_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _read_json_if_exists(path: Path) -> dict[str, Any] | None:
+    if not path.exists():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
@@ -33,7 +39,28 @@ def promote_aero_dataset(
     promotion_manifest_path = dataset_root / "promotion_manifest.json"
 
     curation_report = _read_json(curation_report_path)
-    final_summary = _read_json(final_summary_path)
+
+    # PROM-1: validate curated CSV exists and is non-empty before promotion.
+    # Prevents promoting a dataset where curation wrote an empty CSV.
+    _curated_csv_value = (curation_report.get("artifacts") or {}).get("curated_aero_dataset_csv") or curation_report.get("curated_aero_dataset_csv")
+    if _curated_csv_value:
+        _curated_csv_path = Path(_curated_csv_value).expanduser().resolve()
+        if not _curated_csv_path.exists():
+            raise FileNotFoundError(
+                f"Curated dataset CSV referenced in curation_report.json does not exist: {_curated_csv_path}. "
+                "Re-run curate-aero before promoting."
+            )
+        import pandas as _pd
+        try:
+            _df_check = _pd.read_csv(_curated_csv_path, nrows=1)
+            if _df_check.empty:
+                raise ValueError(f"Curated dataset CSV is empty: {_curated_csv_path}")
+        except Exception as _e:
+            if not force:
+                raise ValueError(
+                    f"Cannot promote: curated CSV validation failed ({_e}). Use --force to override."
+                ) from _e
+    final_summary = _read_json_if_exists(final_summary_path) or {}
 
     promotion_ready = bool(curation_report.get("promotion_ready", False))
     promotion_blockers = list(curation_report.get("promotion_blockers", []) or [])
@@ -45,6 +72,7 @@ def promote_aero_dataset(
         )
 
     manifest = {
+        "schema_version": "aero_promotion_manifest_v1",
         "dataset_root": str(dataset_root),
         "promoted_at_utc": _utc_now_iso(),
         "promotion_ready_at_time_of_promotion": promotion_ready,

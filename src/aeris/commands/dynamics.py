@@ -104,7 +104,7 @@ def dynamics_batch_labels(
     ),
     min_abs_cm_delta_e: float = typer.Option(
         0.10,
-        "--min-abs-cm-delta-e",
+        "--min-abs-cm-delta-e-per-rad",
         help="Pitch-authority threshold for |Cm_delta_e_per_rad|.",
     ),
     alpha_min_deg: float = typer.Option(
@@ -159,21 +159,24 @@ def dynamics_batch_labels(
         fail_command("Dynamics batch-labels", exc)
 
 
-    record_workflow_stage_success(
-        workflow=workflow,
-        stage="dynamics_batch_labels",
-        inputs=[dataset],
-        outputs=list((report.get("artifacts", {}) or {}).values()),
-        artifacts=list((report.get("artifacts", {}) or {}).values()),
-        notes="Computed control derivatives and first-order flyability labels from an aero dataset.",
-        metadata={
-            "source": report.get("source"),
-            "overall_status": report.get("overall_status"),
-            "label_summary": report.get("label_summary", {}),
-            "thresholds": report.get("thresholds", {}),
-        },
-        echo=not as_json,
-    )
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="dynamics_batch_labels",
+            inputs=[dataset],
+            outputs=list((report.get("artifacts", {}) or {}).values()),
+            artifacts=list((report.get("artifacts", {}) or {}).values()),
+            notes="Computed control derivatives and first-order flyability labels from an aero dataset.",
+            metadata={
+                "source": report.get("source"),
+                "overall_status": report.get("overall_status"),
+                "label_summary": report.get("label_summary", {}),
+                "thresholds": report.get("thresholds", {}),
+            },
+            echo=not as_json,
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
 
     if as_json:
         typer.echo(json.dumps(report, indent=2))
@@ -284,6 +287,14 @@ def dynamics_build(
     iyy_kg_m2: float | None = typer.Option(None, "--iyy-kg-m2"),
     izz_kg_m2: float | None = typer.Option(None, "--izz-kg-m2"),
     x_positive_aft: bool = typer.Option(True, "--x-positive-aft/--x-positive-forward"),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional workflow root to auto-record the dynamics build stage after success.",
+    ),
 ) -> None:
     """Build mass + CG + static-margin foundation artifacts from an aero run."""
     try:
@@ -303,7 +314,10 @@ def dynamics_build(
     )
 
     if resolved["mass_kg"] is None or resolved["x_cg_m"] is None:
-        typer.echo("[AERIS] Need mass_kg and x_cg_m, either from --mass-config or explicit CLI options.")
+        typer.secho(
+            "[ERROR] Need mass_kg and x_cg_m — supply via --mass-config or --mass-kg / --x-cg-m.",
+            fg=typer.colors.RED,
+        )
         raise typer.Exit(code=1)
 
     mass = MassProperties(
@@ -336,6 +350,23 @@ def dynamics_build(
         fail_command("Dynamics build", exc)
 
     typer.echo(f"[AERIS] Dynamics foundation written to: {output_path}")
+
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="dynamics_build",
+            inputs=[run_dir],
+            artifacts=[output_path],
+            notes="Dynamics foundation built from aero run.",
+            metadata={
+                "command": "aeris dynamics build",
+                "static_margin_percent_mac": getattr(
+                    getattr(result, "stability_metrics", None), "static_margin_percent_mac", None
+                ),
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
 
     sm = result.stability_metrics.static_margin_percent_mac
     if sm is None:
@@ -411,6 +442,7 @@ def dynamics_cg_sweep(
 @dynamics_app.command("trim")
 def dynamics_trim(
     run_dir: Path = typer.Option(..., exists=True, file_okay=False, dir_okay=True, resolve_path=True, help="Run directory"),
+    json_output: bool = typer.Option(False, "--json", help="Print full trim result as JSON."),
 ) -> None:
     """Run a first-order longitudinal trim diagnostic from a saved aero run."""
     try:
@@ -424,6 +456,14 @@ def dynamics_trim(
         fail_command("Dynamics trim", exc)
 
     typer.echo(f"[AERIS] Trim result written to: {output_path}")
+
+    if json_output:
+        import dataclasses as _dc
+        try:
+            typer.echo(json.dumps(_dc.asdict(result), indent=2))
+        except Exception:
+            typer.echo(json.dumps({"output_path": str(output_path)}, indent=2))
+        return
 
     if not result.longitudinal.valid:
         typer.echo(f"[AERIS] Trim estimate invalid: {result.longitudinal.reason}")
@@ -475,6 +515,13 @@ def dynamics_state_space(
             + ", ".join(missing_mass)
         )
         raise typer.Exit(code=1)
+
+    if resolved["x_cg_m"] is None:
+        typer.secho(
+            "[WARN] --x-cg-m not provided; defaulting to 0.0 m (nose reference). "
+            "This gives a meaningless static margin. Provide --x-cg-m or --mass-config.",
+            fg=typer.colors.YELLOW,
+        )
 
     mass = MassProperties(
         mass_kg=resolved["mass_kg"],
@@ -701,6 +748,7 @@ def dynamics_validate(
 @dynamics_app.command("inspect")
 def dynamics_inspect(
     run_dir: Path = typer.Option(..., exists=True, file_okay=False, dir_okay=True, resolve_path=True, help="Run directory"),
+    json_output: bool = typer.Option(False, "--json", help="Print full dynamics_foundation.json as JSON."),
 ) -> None:
     """Inspect dynamics_foundation.json from a previously built dynamics run."""
     dyn_path = run_dir / "dynamics" / "dynamics_foundation.json"
@@ -713,6 +761,10 @@ def dynamics_inspect(
         data = json.loads(dyn_path.read_text(encoding="utf-8"))
     except Exception as exc:
         fail_command("Dynamics inspect", exc)
+
+    if json_output:
+        typer.echo(json.dumps(data, indent=2))
+        return
 
     sm = data.get("stability_metrics", {})
     readiness = data.get("state_space_preparation", {})
@@ -751,6 +803,7 @@ def dynamics_inspect(
 @dynamics_app.command("cg-sweep-inspect")
 def dynamics_cg_sweep_inspect(
     run_dir: Path = typer.Option(..., exists=True, file_okay=False, dir_okay=True, resolve_path=True, help="Run directory"),
+    json_output: bool = typer.Option(False, "--json", help="Print full cg_sweep.json as JSON."),
 ) -> None:
     """Inspect cg_sweep.json from a previously run CG sweep."""
     sweep_path = run_dir / "dynamics" / "cg_sweep.json"
@@ -763,6 +816,10 @@ def dynamics_cg_sweep_inspect(
         data = json.loads(sweep_path.read_text(encoding="utf-8"))
     except Exception as exc:
         fail_command("Dynamics cg-sweep-inspect", exc)
+
+    if json_output:
+        typer.echo(json.dumps(data, indent=2))
+        return
 
     cases = data.get("cases", [])
     stable_min = data.get("stable_cg_min_m")
@@ -828,21 +885,24 @@ def dynamics_build_ml_dataset(
         fail_command("Dynamics build-ml-dataset", exc)
 
 
-    record_workflow_stage_success(
-        workflow=workflow,
-        stage="flyability_ml_dataset",
-        inputs=[dataset, report.get("source_flyability_labels_csv"), report.get("source_control_derivatives_csv")],
-        outputs=[report.get("output_dir"), report.get("output_curated_csv"), report.get("output_alias_csv")],
-        artifacts=list((report.get("artifacts", {}) or {}).values()),
-        notes="Built an ML-ready flyability dataset from zero-control aero rows and flyability labels.",
-        metadata={
-            "source": report.get("source"),
-            "status": report.get("status"),
-            "row_counts": report.get("row_counts", {}),
-            "ml_columns": report.get("ml_columns", {}),
-        },
-        echo=not json_output,
-    )
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="flyability_ml_dataset",
+            inputs=[dataset, report.get("source_flyability_labels_csv"), report.get("source_control_derivatives_csv")],
+            outputs=[report.get("output_dir"), report.get("output_curated_csv"), report.get("output_alias_csv")],
+            artifacts=list((report.get("artifacts", {}) or {}).values()),
+            notes="Built an ML-ready flyability dataset from zero-control aero rows and flyability labels.",
+            metadata={
+                "source": report.get("source"),
+                "status": report.get("status"),
+                "row_counts": report.get("row_counts", {}),
+                "ml_columns": report.get("ml_columns", {}),
+            },
+            echo=not json_output,
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
 
     if json_output:
         typer.echo(json.dumps(report, indent=2))

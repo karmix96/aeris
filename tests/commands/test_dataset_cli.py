@@ -72,7 +72,7 @@ def test_dataset_inspect_cli_reports_aero_dataset(tmp_path):
         root / "aero_failures.csv", index=False
     )
 
-    result = runner.invoke(app, ["dataset", "inspect", "--dataset", str(root)])
+    result = runner.invoke(app, ["dataset", "inspect", "--dataset", str(root), "--json"])
 
     assert result.exit_code == 0
     summary = json.loads(result.stdout)

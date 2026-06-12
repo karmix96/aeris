@@ -39,9 +39,23 @@ def generate_random_samples(
 
     pb = config.planform_bounds
     sb = config.section_bounds
+    # BUG-17: elevon_bounds must be honoured so variable-elevon campaigns
+    # actually sample the elevon design space. When absent, use the fixed
+    # BWBDesignSample defaults (0.60/0.95/0.75) without consuming RNG state,
+    # preserving backward compat for fixed-elevon configs.
+    eb = config.elevon_bounds
 
     samples: list[BWBDesignSample] = []
     for _ in range(n_samples):
+        if eb is not None:
+            elevon_start = _uniform_between(rng, eb.elevon_start_frac.min, eb.elevon_start_frac.max)
+            elevon_end   = _uniform_between(rng, eb.elevon_end_frac.min,   eb.elevon_end_frac.max)
+            elevon_hinge = _uniform_between(rng, eb.elevon_hinge_frac.min, eb.elevon_hinge_frac.max)
+        else:
+            elevon_start = 0.60
+            elevon_end   = 0.95
+            elevon_hinge = 0.75
+
         samples.append(
             BWBDesignSample(
                 c1_m=_uniform_between(rng, pb.c1_m.min, pb.c1_m.max),
@@ -61,6 +75,9 @@ def generate_random_samples(
                 dihedral_b1_deg=_uniform_between(rng, sb.dihedral_b1_deg.min, sb.dihedral_b1_deg.max),
                 dihedral_b2_deg=_uniform_between(rng, sb.dihedral_b2_deg.min, sb.dihedral_b2_deg.max),
                 dihedral_b3_deg=_uniform_between(rng, sb.dihedral_b3_deg.min, sb.dihedral_b3_deg.max),
+                elevon_start_frac=elevon_start,
+                elevon_end_frac=elevon_end,
+                elevon_hinge_frac=elevon_hinge,
             )
         )
 

@@ -284,3 +284,32 @@ def test_ml_eda_cli_rejects_multiple_feature_selectors(tmp_path: Path) -> None:
     assert "--feature-preset" in combined_output
     assert "--feature" in combined_output
 
+
+def test_ml_inspect_model_help_has_json_flag():
+    result = runner.invoke(app, ["ml", "inspect-model", "--help"])
+    assert result.exit_code == 0
+    assert "--json" in result.stdout
+
+
+def test_ml_require_promoted_model_help_has_json_flag():
+    result = runner.invoke(app, ["ml", "require-promoted-model", "--help"])
+    assert result.exit_code == 0
+    assert "--json" in result.stdout
+
+
+def test_ml_tune_help_has_workflow_flag():
+    result = runner.invoke(app, ["ml", "tune", "--help"])
+    assert result.exit_code == 0
+    assert "--workflow" in result.stdout
+
+
+def test_ml_build_delta_dataset_artifacts_not_getattr():
+    import ast, pathlib
+    src = pathlib.Path("src/aeris/commands/ml.py").read_text(encoding="utf-8")
+    fn_start = src.find("def ml_build_delta_dataset(")
+    fn_end   = src.find("\n@ml_app", fn_start + 1)
+    fn_body  = src[fn_start:fn_end]
+    assert "getattr(result" not in fn_body, (
+        "ml_build_delta_dataset must not use getattr on result — use result.attribute directly"
+    )
+

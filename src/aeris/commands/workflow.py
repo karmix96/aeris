@@ -275,6 +275,7 @@ def workflow_validate(
     ),
     write_report: bool = typer.Option(True, "--write-report/--no-write-report", help="Write workflow_validation_report.json."),
     json_output: bool = typer.Option(False, "--json", help="Print validation report JSON."),
+    fail_on_blocker: bool = typer.Option(False, "--fail-on-blocker", help="Exit nonzero if any blockers are found. Useful for CI/CD gates."),
 ) -> None:
     """Validate workflow evidence, artifact paths, trust manifests, and stage order."""
     try:
@@ -285,6 +286,8 @@ def workflow_validate(
     report = result.report
     if json_output:
         _echo_json(report)
+        if fail_on_blocker and report.get("counts", {}).get("blockers", 0) > 0:
+            raise typer.Exit(code=1)
         return
 
     counts = report.get("counts", {})
@@ -311,6 +314,9 @@ def workflow_validate(
     for warning in report.get("warnings", [])[:5]:
         typer.echo(f"  WARNING: {warning}")
 
+    if fail_on_blocker and counts.get("blockers", 0) > 0:
+        raise typer.Exit(code=1)
+
 
 @workflow_app.command("doctor")
 def workflow_doctor(
@@ -326,6 +332,7 @@ def workflow_doctor(
         help="Workflow root directory.",
     ),
     json_output: bool = typer.Option(False, "--json", help="Print validation report JSON."),
+    fail_on_blocker: bool = typer.Option(False, "--fail-on-blocker", help="Exit nonzero if any blockers are found. Useful for CI/CD gates."),
 ) -> None:
     """Alias for workflow validate, with operator-friendly naming."""
     try:
@@ -335,6 +342,8 @@ def workflow_doctor(
 
     if json_output:
         _echo_json(result.report)
+        if fail_on_blocker and result.report.get("counts", {}).get("blockers", 0) > 0:
+            raise typer.Exit(code=1)
         return
 
     counts = result.report.get("counts", {})
@@ -350,6 +359,10 @@ def workflow_doctor(
         typer.echo(f"  BLOCKER: {blocker}")
     for warning in result.report.get("warnings", [])[:5]:
         typer.echo(f"  WARNING: {warning}")
+
+    if fail_on_blocker and counts.get("blockers", 0) > 0:
+        raise typer.Exit(code=1)
+
 
 @workflow_app.command("record-stage")
 def workflow_record_stage(
@@ -375,8 +388,9 @@ def workflow_record_stage(
     metadata_json: str | None = typer.Option(None, "--metadata-json", help="Optional JSON object with extra metadata."),
 ) -> None:
     """Record one workflow stage state without running the underlying domain command."""
+    _STAGE_STATUS_ORDER = ["pending", "running", "complete", "failed", "blocked", "skipped"]
     if status not in _STAGE_STATUS_VALUES:
-        raise typer.BadParameter(f"--status must be one of: {sorted(_STAGE_STATUS_VALUES)}")
+        raise typer.BadParameter(f"--status must be one of: {_STAGE_STATUS_ORDER}")
 
     metadata = _parse_metadata_json(metadata_json)
 

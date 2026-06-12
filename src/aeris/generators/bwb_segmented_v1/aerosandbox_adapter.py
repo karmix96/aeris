@@ -138,6 +138,21 @@ def _build_control_surface_assignment(
             )
         )
 
+    # AERIS_PATCH_SUPP5_APPLIED: required surfaces must attach to ≥1 section.
+    for record in records:
+        spec_match = next(
+            (s for s in control_cfg.surfaces if s.name == record.name), None
+        )
+        if spec_match is not None and getattr(spec_match, "required", False):
+            if len(record.applied_xsec_indices) == 0:
+                raise ValueError(
+                    f"Required control surface {record.name!r} did not attach to any "
+                    f"wing section. Spanwise range [{record.start_frac:.3f}, "
+                    f"{record.end_frac:.3f}] does not overlap the section grid "
+                    f"(n_sections={len(y_stations)}). Increase n_points or widen "
+                    "the spanwise range of the control surface."
+                )
+
     return assignments, records
 
 

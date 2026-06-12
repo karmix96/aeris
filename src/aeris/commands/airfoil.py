@@ -49,6 +49,64 @@ def airfoil_dataset_callback() -> None:
     pass
 
 
+# ── aeris airfoil info ───────────────────────────────────────────────────────
+
+@airfoil_app.command("info")
+def airfoil_info() -> None:
+    """Show AERIS 2D airfoil module status — library, solver, and workflow summary."""
+    import os as _os
+    import shutil as _shutil
+
+    typer.echo("")
+    typer.echo("[AERIS 2D] Airfoil module — ready")
+    typer.echo("")
+    typer.echo("  Workflow:")
+    typer.echo("    1. aeris airfoil ingest       --db-dir <dat_dir>")
+    typer.echo("    2. aeris airfoil dataset generate --library <lib> --config <yaml> --name <name>")
+    typer.echo("    3. aeris airfoil dataset qc   --dataset <ds>")
+    typer.echo("    4. aeris airfoil dataset curate --dataset <ds>")
+    typer.echo("    5. aeris airfoil dataset promote --dataset <ds>")
+    typer.echo("    6. aeris ml train              --feature-set airfoil_xfoil_v1 ...")
+    typer.echo("")
+
+    # Library status
+    lib_inv = Path("data/airfoil_library/airfoil_inventory.csv")
+    if lib_inv.exists():
+        try:
+            import pandas as _pd
+            df = _pd.read_csv(lib_inv)
+            typer.secho(f"  Library       : {len(df)} airfoils ingested ({lib_inv})", fg=typer.colors.GREEN)
+        except Exception:
+            typer.echo(f"  Library       : found at {lib_inv} (could not read count)")
+    else:
+        typer.secho("  Library       : NOT BUILT — run 'aeris airfoil ingest' first", fg=typer.colors.YELLOW)
+
+    # XFOIL solver status
+    xfoil_bin = _os.environ.get("AERIS_XFOIL_BIN", "xfoil")
+    found = _shutil.which(xfoil_bin)
+    if found:
+        typer.secho(f"  XFOIL solver  : {found}", fg=typer.colors.GREEN)
+    else:
+        typer.secho("  XFOIL solver  : NOT FOUND on PATH — run 'aeris airfoil check-solver'", fg=typer.colors.YELLOW)
+
+    # Config status
+    smoke_cfg = Path("configs/airfoil/xfoil_smoke_v1.yaml")
+    sweep_cfg = Path("configs/airfoil/xfoil_sweep_v1.yaml")
+    typer.echo(f"  Smoke config  : {'found' if smoke_cfg.exists() else 'NOT FOUND'} ({smoke_cfg})")
+    typer.echo(f"  Sweep config  : {'found' if sweep_cfg.exists() else 'NOT FOUND'} ({sweep_cfg})")
+    typer.echo("")
+    typer.echo("  Commands:")
+    typer.echo("    aeris airfoil info")
+    typer.echo("    aeris airfoil check-solver")
+    typer.echo("    aeris airfoil library-stats [--library <dir>]")
+    typer.echo("    aeris airfoil ingest        --db-dir <dir>")
+    typer.echo("    aeris airfoil dataset generate --library <lib> --config <yaml> --name <name> [--n-airfoils N]")
+    typer.echo("    aeris airfoil dataset qc    --dataset <ds>")
+    typer.echo("    aeris airfoil dataset curate --dataset <ds>")
+    typer.echo("    aeris airfoil dataset promote --dataset <ds>")
+    typer.echo("    aeris airfoil dataset inspect --dataset <ds> [--json]")
+
+
 # ── aeris airfoil ingest ──────────────────────────────────────────────────────
 
 @airfoil_app.command("ingest")
@@ -73,9 +131,9 @@ def airfoil_ingest(
         help="Library output directory. Default: data/airfoil_library/",
     ),
 ) -> None:
-    """Ingest xlsx airfoil files into the AERIS airfoil library.
+    """Ingest Selig-format .dat airfoil files into the AERIS airfoil library.
 
-    Reads all .xlsx files in --db-dir, extracts x/y coordinates,
+    Reads all .dat files in --db-dir, extracts x/y coordinates,
     computes geometry statistics (t/c, camber, LE radius, TE angle),
     assigns SHA-256 airfoil_id, and writes airfoil_inventory.csv.
     """
@@ -259,11 +317,6 @@ def airfoil_dataset_curate(
         readable=True,
         resolve_path=True,
         help="Path to the airfoil dataset root.",
-    ),
-    force: bool = typer.Option(
-        False,
-        "--force",
-        help="Continue even if QC did not pass (records as forced).",
     ),
 ) -> None:
     """Curate the raw 2D dataset — reject unconverged, negative-cd, and non-finite rows."""

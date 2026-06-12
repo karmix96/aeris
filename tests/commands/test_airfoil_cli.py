@@ -127,7 +127,7 @@ def test_dataset_generate_n_airfoils_subsets(tmp_path, monkeypatch):
     captured: dict = {}
 
     import aeris.airfoil.dataset_generate as dg
-    def fake_gen(*, library_dir, config_path, dataset_root, name, airfoil_ids=None):
+    def fake_gen(*, library_dir, config_path, dataset_root, name, airfoil_ids=None, show_plots=False):
         captured["airfoil_ids"] = airfoil_ids
         return {"total_rows": 3, "converged_rows": 3, "convergence_rate": 1.0,
                 "solver_failure_rows": 0}
@@ -153,7 +153,7 @@ def test_dataset_generate_no_n_airfoils_passes_none(tmp_path, monkeypatch):
     captured: dict = {}
 
     import aeris.airfoil.dataset_generate as dg
-    def fake_gen(*, library_dir, config_path, dataset_root, name, airfoil_ids=None):
+    def fake_gen(*, library_dir, config_path, dataset_root, name, airfoil_ids=None, show_plots=False):
         captured["airfoil_ids"] = airfoil_ids
         return {"total_rows": 5, "converged_rows": 5, "convergence_rate": 1.0,
                 "solver_failure_rows": 0}
@@ -176,7 +176,7 @@ def test_dataset_generate_n_airfoils_seed_deterministic(tmp_path, monkeypatch):
     subsets: list = []
 
     import aeris.airfoil.dataset_generate as dg
-    def fake_gen(*, library_dir, config_path, dataset_root, name, airfoil_ids=None):
+    def fake_gen(*, library_dir, config_path, dataset_root, name, airfoil_ids=None, show_plots=False):
         subsets.append(list(airfoil_ids) if airfoil_ids else None)
         return {"total_rows": 5, "converged_rows": 5, "convergence_rate": 1.0,
                 "solver_failure_rows": 0}
@@ -192,3 +192,31 @@ def test_dataset_generate_n_airfoils_seed_deterministic(tmp_path, monkeypatch):
 
     assert len(subsets) == 2
     assert subsets[0] == subsets[1], "Same seed must produce same subset"
+
+
+def test_airfoil_info_command_exists():
+    result = runner.invoke(app, ["airfoil", "info"])
+    assert result.exit_code == 0, result.output
+    assert "Workflow" in result.output
+    assert "ingest" in result.output
+    assert "dataset generate" in result.output
+
+
+def test_airfoil_curate_has_no_force_flag():
+    """--force was vestigial (pipeline had no force param) and must be removed."""
+    result = runner.invoke(app, ["airfoil", "dataset", "curate", "--help"])
+    assert result.exit_code == 0, result.output
+    assert "--force" not in result.output, (
+        "--force was removed from airfoil curate because the pipeline "
+        "curate_airfoil_dataset() has no force parameter"
+    )
+
+
+def test_airfoil_ingest_docstring_says_dat_not_xlsx():
+    """Ingest docstring must say .dat, not xlsx."""
+    import pathlib
+    src = pathlib.Path("src/aeris/commands/airfoil.py").read_text(encoding="utf-8")
+    assert "xlsx" not in src.lower().split("def airfoil_ingest")[1].split("def ")[0], (
+        "Ingest docstring still references xlsx — should say .dat (Selig format)"
+    )
+

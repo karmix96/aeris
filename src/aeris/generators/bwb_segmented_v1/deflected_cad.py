@@ -224,7 +224,14 @@ def split_airfoil_at_hinge(
 
     x_fixed_cut = max(0.001, min(0.999, float(hinge_point) - 0.5 * float(gap_fraction)))
     x_ctrl_cut = max(0.001, min(0.999, float(hinge_point) + 0.5 * float(gap_fraction)))
-    if x_fixed_cut >= x_ctrl_cut:
+
+    # AERIS_PATCH_BATCH1_REPAIR_ZERO_HINGE_GAP
+    # A zero hinge gap is a valid mechanical split: the fixed-front body and
+    # aft-control body share the same hinge cut location.  The previous >=
+    # check rejected the default hinge_gap_fraction=0.0, which broke physical
+    # deflected CAD once sampled v3 hinge geometry was correctly used.
+    # Only an inverted split is invalid.
+    if x_fixed_cut > x_ctrl_cut:
         raise ValueError(f"Bad hinge split: {x_fixed_cut=} {x_ctrl_cut=}")
 
     le_idx = int(np.argmin(coords[:, 0]))
@@ -640,7 +647,7 @@ def build_unified_abrupt_airplane(
     sections: Iterable[Any],
     airfoil_name: str,
     spec: PhysicalDeflectionSpec,
-    name: str = "AERIS_BWB_Unified_Ab abrupt_Physical_Deflected",
+    name: str = "AERIS_BWB_Unified_Abrupt_Physical_Deflected"  # AERIS_PATCH_G3_APPLIED,
 ) -> Any:
     """Older one-body-per-half-wing topology retained for comparison/debugging."""
     import aerosandbox as asb
@@ -803,15 +810,8 @@ def export_step_arbitrary_profiles(airplane: Any, filename: Path) -> None:
     exporters.export(solid, fname=str(filename))
 
 
-def export_step_physical_deflected_airplane(airplane: Any, filename: Path) -> str:
-    """Export STEP. Prefer AERIS arbitrary-profile exporter for split topology."""
-    filename = Path(filename)
-    filename.parent.mkdir(parents=True, exist_ok=True)
-    export_step_arbitrary_profiles(airplane, filename)
-    return "aeris_arbitrary_profile_split_mechanical_exporter"
-
-
-
+# AERIS_PATCH_G2_APPLIED: first (dead) definition of export_step_physical_deflected_airplane
+# removed here. The authoritative segmented-assembly implementation follows below.
 # ---------------------------------------------------------------------------
 # Visualization / preview artifacts
 # ---------------------------------------------------------------------------
@@ -923,6 +923,27 @@ def _write_text(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
+def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:  # AERIS_PATCH_BATCH2_DCAD_ATOMIC_JSON
+    """Atomically write JSON payload using temp-file + replace."""
+    import os
+    import tempfile
+
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    text = json.dumps(payload, indent=2)
+    fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        os.replace(tmp_name, path)
+    except Exception:
+        try:
+            os.unlink(tmp_name)
+        except OSError:
+            pass
+        raise
+
+
 def export_bwb_physical_deflected_cad(
     *,
     config_path: str | Path,
@@ -956,6 +977,17 @@ def export_bwb_physical_deflected_cad(
 
     requested = _normalise_formats(formats)
     topology = _normalise_topology(deflection_topology)
+
+    # AERIS_PATCH_BATCH2_DCAD_VALIDATE_CONTROL_INPUTS
+    hinge_gap_fraction = float(hinge_gap_fraction)
+    boundary_epsilon_fraction = float(boundary_epsilon_fraction)
+    if hinge_gap_fraction < 0.0:
+        raise ValueError(f"hinge_gap_fraction must be >= 0, got {hinge_gap_fraction}")
+    if boundary_epsilon_fraction <= 0.0:
+        raise ValueError(
+            "boundary_epsilon_fraction must be > 0, "
+            f"got {boundary_epsilon_fraction}"
+        )
     manifest: dict[str, Any] = {
         "status": "running",
         "phase": "geometry_export_physical_deflected_cad",
@@ -989,6 +1021,12 @@ def export_bwb_physical_deflected_cad(
     manifest_path = cad_dir / "physical_deflected_geometry_export_manifest.json"
     manifest.setdefault("preview", {"save_preview_requested": bool(save_preview), "draw_3d_requested": bool(draw_3d)})
     manifest["artifacts"].setdefault("physical_deflected_planform_png", None)
+    manifest["artifacts"].setdefault("step_bodies_report", None)
+
+    # AERIS_PATCH_BATCH2_DCAD_INITIAL_RUNNING_MANIFEST
+    # Write a running manifest before heavy CAD work, so interrupted exports
+    # still leave operator-visible provenance.
+    _write_json_atomic(manifest_path, manifest)
 
     try:
         raw = yaml.safe_load(config_path.read_text(encoding="utf-8"))
@@ -1000,7 +1038,10 @@ def export_bwb_physical_deflected_cad(
             )
 
         generator = get_geometry_generator(generator_id)
-        seed_final = seed if seed is not None else int(getattr(typed_config.generator, "seed", 100))
+        # AERIS_PATCH_SUPP4_APPLIED: int(None) crashes when YAML seed is null.
+        # Use a safe coercion: None → default 100.
+        _cfg_seed = getattr(typed_config.generator, "seed", None)
+        seed_final = seed if seed is not None else (int(_cfg_seed) if _cfg_seed is not None else 100)
         sample = generator.sample_one(typed_config, seed=seed_final)
         case = generator.run_full_case(
             sample=sample,
@@ -1011,6 +1052,32 @@ def export_bwb_physical_deflected_cad(
         )
 
         defaults = _extract_control_defaults(typed_config)
+
+        # AERIS_PATCH_BATCH1_DCAD_V3_GEOMETRY
+        # For v3 variable-elevon configs, the physical CAD control span/hinge
+        # must follow the sampled design, not the static YAML control-surface
+        # defaults. Otherwise the manifest records one design_sample while the
+        # exported CAD uses a different elevon geometry.
+        physical_control_geometry_source = "config_control_surface_defaults"
+        if getattr(typed_config, "elevon_bounds", None) is not None:
+            defaults = {
+                **defaults,
+                "hinge_point": float(sample.elevon_hinge_frac),
+                "start_frac": float(sample.elevon_start_frac),
+                "end_frac": float(sample.elevon_end_frac),
+            }
+            physical_control_geometry_source = "sampled_elevon_geometry"
+
+        if float(hinge_gap_fraction) < 0.0:
+            raise ValueError(
+                f"hinge_gap_fraction must be >= 0, got {hinge_gap_fraction!r}."
+            )
+        if float(boundary_epsilon_fraction) <= 0.0:
+            raise ValueError(
+                "boundary_epsilon_fraction must be > 0, "
+                f"got {boundary_epsilon_fraction!r}."
+            )
+
         spec = PhysicalDeflectionSpec(
             delta_e_sym_deg=float(delta_e_sym_deg),
             delta_a_diff_deg=float(delta_a_diff_deg),
@@ -1037,7 +1104,15 @@ def export_bwb_physical_deflected_cad(
             "design_sample": sample_dict,
             "n_original_sections": len(case.section_geometry.sections),
         }
-        manifest["physical_controls"] = spec.to_dict()
+        # AERIS_PATCH_BATCH1_DCAD_MANIFEST_GEOMETRY_SOURCE
+        _physical_controls_payload = spec.to_dict()
+        _physical_controls_payload["geometry_source"] = physical_control_geometry_source
+        _physical_controls_payload["matches_design_sample"] = {
+            "start_frac": sample_dict.get("elevon_start_frac") == _physical_controls_payload.get("start_frac"),
+            "end_frac": sample_dict.get("elevon_end_frac") == _physical_controls_payload.get("end_frac"),
+            "hinge_point": sample_dict.get("elevon_hinge_frac") == _physical_controls_payload.get("hinge_point"),
+        }
+        manifest["physical_controls"] = _physical_controls_payload
         manifest["surface_model"] = getattr(airplane, "_aeris_physical_deflection_surface_model", manifest["surface_model"])
         manifest["body_model"] = getattr(airplane, "_aeris_physical_deflection_body_model", manifest["body_model"])
         manifest["boundary_report"] = getattr(airplane, "_aeris_physical_deflection_boundary_report", {})
@@ -1117,7 +1192,12 @@ def export_bwb_physical_deflected_cad(
             try:
                 backend = export_step_physical_deflected_airplane(airplane, step_path)
                 manifest["artifacts"]["step"] = str(step_path)
+                # AERIS_PATCH_BATCH2_DCAD_STEP_BODY_REPORT
+                body_report_path = step_path.with_suffix(".step_bodies.json")
                 manifest["step_export"] = {"backend": backend, "status": "success"}
+                if body_report_path.exists():
+                    manifest["step_export"]["body_report_path"] = str(body_report_path)
+                    manifest["artifacts"]["step_bodies_report"] = str(body_report_path)
                 produced.append("step")
                 _write_text(stdout_path, stdout_path.read_text(encoding="utf-8") + f"Exported STEP: {step_path} via {backend}\n")
             except Exception as step_exc:
@@ -1141,7 +1221,7 @@ def export_bwb_physical_deflected_cad(
             manifest["status"] = "failed"
             manifest["error"] = "No requested CAD artifacts were produced."
         manifest["completed_at_utc"] = _utc_now()
-        manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        _write_json_atomic(manifest_path, manifest)
         return manifest
 
     except Exception as exc:
@@ -1149,7 +1229,7 @@ def export_bwb_physical_deflected_cad(
         manifest["error"] = f"{type(exc).__name__}: {exc}"
         manifest["completed_at_utc"] = _utc_now()
         _write_text(stderr_path, stderr_path.read_text(encoding="utf-8") + f"{type(exc).__name__}: {exc}\n")
-        manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        _write_json_atomic(manifest_path, manifest)
         raise
 # ---------------------------------------------------------------------------
 # STEP export robust split-elevon assembly override

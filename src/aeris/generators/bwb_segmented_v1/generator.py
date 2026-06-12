@@ -66,7 +66,11 @@ class BwbSegmentedV1Generator(
                 f"BwbSegmentedV1Generator expects BWBGeneratorConfig, "
                 f"got {type(config).__name__}."
             )
-        rng = np.random.default_rng(seed)
+        # AERIS_PATCH_BATCH1_SAMPLE_ONE_CONFIG_SEED
+        # Direct API callers expect sample_one(config) to follow the config seed,
+        # matching CLI behavior. Passing seed=None to NumPy is nondeterministic.
+        seed_final = config.generator.seed if seed is None else seed
+        rng = np.random.default_rng(seed_final)
         return sample_bwb_design(config, rng)
 
     def run_full_case(

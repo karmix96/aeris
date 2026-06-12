@@ -179,7 +179,20 @@ def compute_dynamics_labels(
         "created_at_utc": datetime.now(UTC).isoformat(),
         "dataset_root": str(dataset_root),
         "source": flyability_report.get("source", source),
-        "overall_status": "completed",
+        # DYN-1: overall_status reflects actual label outcome so operators can
+        # distinguish "completed but all non-flyable" from a pipeline failure.
+        "overall_status": (
+            "completed_all_non_flyable" if (label_true_count == 0 and completed_label_count > 0)
+            else "completed_partial" if (skipped_label_count > 0 and completed_label_count > 0)
+            else "completed_all_skipped" if (completed_label_count == 0 and skipped_label_count > 0)
+            else "completed"
+        ),
+        "design_status": (
+            "non_flyable" if (label_true_count == 0 and completed_label_count > 0)
+            else "partially_flyable" if (0 < label_true_count < completed_label_count)
+            else "flyable" if (label_true_count == completed_label_count and completed_label_count > 0)
+            else "unknown"
+        ),
         "runner": "aeris.dataset.dynamics_labels.compute_dynamics_labels",
         "stages": stages,
         "label_summary": {
@@ -194,6 +207,8 @@ def compute_dynamics_labels(
             "label_failure_stage_counts": label_failure_stage_counts,
             "longitudinal_basic_flyable_counts": flyable_counts,
         },
+        # DYN-2: trim summary for quick operator sanity check without opening CSV
+        "trim_summary": flyability_report.get("trim_summary", {}),
         "thresholds": flyability_report.get("thresholds", {}),
         "artifacts": {
             "control_derivatives_csv": str(control_csv),

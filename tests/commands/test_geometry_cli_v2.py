@@ -27,7 +27,7 @@ def test_geometry_info_lists_generators():
     result = runner.invoke(app, ["geometry", "info"])
     assert result.exit_code == 0, f"geometry info failed:\n{result.output}"
     assert "bwb_segmented_v1" in result.output
-    assert "17" in result.output  # design variable count
+    assert "20" in result.output  # design variable count
     assert "bwb_training_v1" in result.output
 
 

@@ -32,7 +32,7 @@ except Exception:
     yaml = None
 
 # ── Version & constants ───────────────────────────────────────────────────────
-APP_VERSION       = "4.5.0"
+APP_VERSION       = "4.6.0"
 DEFAULT_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg"
 DEFAULT_SYM_ELEVON_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_e_sym_deg"
 DEFAULT_DIFF_ELEVON_FEATURES = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_a_diff_deg"
@@ -48,6 +48,8 @@ ML_FEATURE_PRESETS = [
     "bwb_control_sym_elevon_v3",
     "bwb_diff_elevon_v3",
     "bwb_basic",
+    "airfoil_xfoil_v1",
+    "airfoil_cst_xfoil_v1",
 ]
 ML_FEATURE_SET_CHOICES = [
     "bwb_control_raw",
@@ -2126,14 +2128,88 @@ def pg_geometry(root, exe, tmo, dry):
             )
 
 
+
+# AERIS_PATCH_CST_GUI_V1_HELPERS
+def _airfoil_feature_preset_hint_from_manifest(manifest: dict | None) -> str:
+    """Return the recommended ML feature preset for an airfoil dataset/library.
+
+    CST metadata can be stored in raw dataset manifests, promotion manifests,
+    library reports, or nested summaries. Walk recursively so the GUI remains
+    robust as reports evolve.
+    """
+    def _walk(obj):
+        if isinstance(obj, dict):
+            for key, value in obj.items():
+                key_s = str(key).lower()
+                if key_s == "has_cst_features" and bool(value):
+                    return True
+                if key_s in {"generator_id", "generator_ids"}:
+                    if isinstance(value, list) and any(str(v) == "cst_airfoil_v1" for v in value):
+                        return True
+                    if str(value) == "cst_airfoil_v1":
+                        return True
+                if key_s in {"parameterization", "source_format"} and "cst" in str(value).lower():
+                    return True
+                if key_s in {"cst_feature_columns", "cst_coefficient_columns"} and value:
+                    return True
+                if str(value) in {"cst_airfoil_v1", "cst_kulfan"}:
+                    return True
+                if _walk(value):
+                    return True
+        elif isinstance(obj, list):
+            return any(_walk(item) for item in obj)
+        return False
+
+    return "airfoil_cst_xfoil_v1" if _walk(manifest or {}) else "airfoil_xfoil_v1"
+
+
+def _airfoil_dataset_feature_preset_hint(dataset_root: Path) -> str:
+    """Infer the best airfoil ML preset from dataset artifacts."""
+    for name in ["airfoil_dataset_manifest.json", "promotion_manifest.json", "library_report.json"]:
+        data = _rjson(Path(dataset_root) / name)
+        if data:
+            hint = _airfoil_feature_preset_hint_from_manifest(data)
+            if hint == "airfoil_cst_xfoil_v1":
+                return hint
+    return "airfoil_xfoil_v1"
+
+
+def _airfoil_library_candidates(root: Path) -> list[Path]:
+    """Discover selectable airfoil libraries under data/."""
+    data_root = Path(root) / "data"
+    candidates: list[Path] = []
+    preferred = [data_root / "airfoil_library", data_root / "airfoil_library_cst_smoke"]
+    for d in preferred:
+        if (d / "airfoil_inventory.csv").exists() and d not in candidates:
+            candidates.append(d)
+    if data_root.exists():
+        for d in sorted(data_root.glob("airfoil_library*")):
+            if d.is_dir() and (d / "airfoil_inventory.csv").exists() and d not in candidates:
+                candidates.append(d)
+    if not candidates:
+        candidates.append(data_root / "airfoil_library")
+    return candidates
+
+
 def pg_airfoil(root, exe, tmo, dry):
     _hero("〜", "2D Airfoil", "XFOIL surrogate pipeline · library → sweep → QC → promote → ML", "xfoil")
 
-    lib_dir = root / "data" / "airfoil_library"
-    inv_csv = lib_dir / "airfoil_inventory.csv"
     cfg_files = _files(str(root / "configs" / "airfoil"), "*.yaml")
     ds_dirs = [Path(d) for d in _dirs(str(root / "data" / "datasets"))
                if (Path(d) / "airfoil_dataset_manifest.json").exists()]
+
+    library_choices = _airfoil_library_candidates(root)
+    lib_dir = Path(st.selectbox(
+        "Active airfoil library",
+        [str(d) for d in library_choices],
+        index=0,
+        key="af_active_library",
+        help="Choose a .dat-ingested library or a generated CST/Kulfan library. XFOIL sweep uses this path.",
+    ))
+    inv_csv = lib_dir / "airfoil_inventory.csv"
+    lib_report = _rjson(lib_dir / "library_report.json") or {}
+    lib_manifest = _rjson(lib_dir / "cst_airfoil_library_manifest.json") or {}
+    lib_hint = _airfoil_feature_preset_hint_from_manifest(lib_report or lib_manifest)
 
     tab_lib, tab_sweep, tab_trust, tab_ml = st.tabs([
         "  ① Library  ", "  ② XFOIL Sweep  ",
@@ -2187,6 +2263,42 @@ def pg_airfoil(root, exe, tmo, dry):
                ["airfoil", "library-stats", "--library", str(lib_dir)],
                root, exe, tmo, dry, "af_libstats", label="▶  Library stats")
 
+        _sec("Generate CST/Kulfan library")
+        _note(
+            "Creates a first-class AERIS 2D CST airfoil library: <code>.dat</code>, "
+            "coordinate <code>.npz</code>, CST JSON, <code>airfoil_inventory.csv</code>, "
+            "<code>cst_airfoil_library_manifest.json</code>, and <code>library_report.json</code>.",
+            "info",
+        )
+        cst_cfgs = [f for f in cfg_files if "cst_library" in Path(f).name]
+        if cst_cfgs:
+            cst_default = next((f for f in cst_cfgs if "smoke" in Path(f).name), cst_cfgs[0])
+            cst_cfg = st.selectbox(
+                "CST config",
+                cst_cfgs,
+                index=cst_cfgs.index(cst_default),
+                format_func=lambda s: Path(s).name,
+                key="af_cst_cfg",
+            )
+        else:
+            cst_cfg = st.text_input("CST config", str(root / "configs" / "airfoil" / "cst_library_smoke_v1.yaml"), key="af_cst_cfg_text")
+        cst_out = st.text_input(
+            "CST library output dir",
+            str(root / "data" / "airfoil_library_cst_smoke"),
+            key="af_cst_out",
+        )
+        _panel(
+            "Generate CST airfoil library",
+            "Runs cst_airfoil_v1 and writes a selectable airfoil library for XFOIL and ML.",
+            ["airfoil", "generate-cst-library", "--config", cst_cfg, "--output-dir", cst_out],
+            root, exe, tmo, dry, "af_cst_generate", label="▶  Generate CST library",
+        )
+        if lib_hint == "airfoil_cst_xfoil_v1":
+            st.success("Active library detected as CST/Kulfan. Recommended ML preset: airfoil_cst_xfoil_v1")
+        if (lib_dir / "library_report.json").exists():
+            with st.expander("CST library report", expanded=False):
+                _show_file(lib_dir / "library_report.json")
+
     # ── ② XFOIL SWEEP ────────────────────────────────────────────────────────
     with tab_sweep:
         if not inv_csv.exists():
@@ -2199,7 +2311,23 @@ def pg_airfoil(root, exe, tmo, dry):
             sweep_cfg = str(root / "configs" / "airfoil" / "xfoil_sweep_v1.yaml")
             cfg_opts  = ([smoke_cfg] if smoke_cfg in cfg_files else []) +                         ([sweep_cfg] if sweep_cfg in cfg_files else []) +                         [f for f in cfg_files if f not in (smoke_cfg, sweep_cfg)]
 
-            sel_cfg = st.selectbox("XFOIL config", cfg_opts if cfg_opts else [""],
+            # AERIS_PATCH_CST_GUI_V1_1_XFOIL_CONFIG_FILTER
+            # Only XFOIL sweep configs belong here. CST library configs such as
+            # cst_library_v1.yaml generate airfoil shapes and do not contain
+            # alpha/reynolds sweep keys, so they must not appear in this selectbox.
+            xfoil_cfg_files = [
+                f for f in cfg_files
+                if "xfoil" in Path(f).stem.lower()
+            ]
+            cfg_opts = (
+                ([smoke_cfg] if smoke_cfg in xfoil_cfg_files else [])
+                + ([sweep_cfg] if sweep_cfg in xfoil_cfg_files else [])
+                + [f for f in xfoil_cfg_files if f not in (smoke_cfg, sweep_cfg)]
+            )
+            if st.session_state.get("af_cfg") not in cfg_opts:
+                st.session_state.pop("af_cfg", None)
+
+            sel_cfg = st.selectbox("XFOIL sweep config", cfg_opts if cfg_opts else [""],
                                    format_func=lambda s: (
                                        f"Smoke — {Path(s).name}" if "smoke" in s else
                                        f"Production — {Path(s).name}" if "sweep_v1" in s else
@@ -2211,8 +2339,15 @@ def pg_airfoil(root, exe, tmo, dry):
                 st.success("Production config — 41 alpha, 3 Re. Use for ML training.")
 
             ds_name   = st.text_input("Dataset name (--name)", value="airfoil_xfoil_pilot", key="af_ds_name")
-            n_airfoils = st.slider("Airfoils to sweep (--n-airfoils)", 5, 2156, 25, 5, key="af_n",
-                                   help="5-25 for fast iteration, 2156 for full campaign.")
+            n_lib_available = 25
+            try:
+                if pd is not None and inv_csv.exists():
+                    n_lib_available = max(1, int(len(pd.read_csv(inv_csv))))
+            except Exception:
+                n_lib_available = 25
+            n_slider_default = min(25, n_lib_available)
+            n_airfoils = st.slider("Airfoils to sweep (--n-airfoils)", 1, max(1, n_lib_available), n_slider_default, 1, key="af_n",
+                                   help="Use all available library rows by default for small CST smoke libraries; use subsets for large libraries.")
             af_seed   = st.number_input("Subset seed (--seed)", value=0, min_value=0, key="af_seed")
             af_show_plots = st.checkbox(
                 "Show XFOIL plots (--show-plots)",
@@ -2224,6 +2359,10 @@ def pg_airfoil(root, exe, tmo, dry):
                     "Requires: sudo apt install xvfb"
                 ),
             )
+
+            # AERIS_PATCH_CST_GUI_V1_1_XFOIL_NO_CONFIG_WARNING
+            if not cfg_opts:
+                st.error("No XFOIL sweep configs found. Expected configs/airfoil/xfoil_*.yaml, not CST library configs.")
 
             if sel_cfg and ds_name:
                 _sweep_args = [
@@ -2255,7 +2394,8 @@ def pg_airfoil(root, exe, tmo, dry):
                        f'padding:.4rem .9rem;margin:.25rem 0;font-size:.78rem;'
                        f'font-family:JetBrains Mono,monospace;color:#D6DEE8">'
                        f'<b>{ds.name}</b> · {m.get("n_airfoils","—")} airfoils · '
-                       f'{m.get("total_rows","—")} rows · {m.get("converged_rows","—")} converged · {rate_s}'
+                       f'{m.get("total_rows","—")} rows · {m.get("converged_rows","—")} converged · {rate_s} · '
+                       f'{_airfoil_dataset_feature_preset_hint(ds)}'
                        f'</div>')
 
     # ── ③ QC / CURATE / PROMOTE ──────────────────────────────────────────────
@@ -2319,6 +2459,7 @@ def pg_airfoil(root, exe, tmo, dry):
             sel_prom  = st.selectbox("Promoted dataset", [d.name for d in promoted], key="af_ml_ds")
             prom_path = next((d for d in promoted if d.name == sel_prom), None)
             if prom_path:
+                af_feature_preset_hint = _airfoil_dataset_feature_preset_hint(prom_path)
                 _sec("Settings to use in ◈ ML Studio")
                 _h(
                     f'<div style="background:#1B2A3A;border:1px solid #2D3F52;border-radius:9px;'
@@ -2329,7 +2470,7 @@ def pg_airfoil(root, exe, tmo, dry):
                     f'<tr><td style="color:#7F8B98;padding:.2rem .5rem .2rem 0;white-space:nowrap">Dataset</td>' +
                     f'<td style="font-family:JetBrains Mono,monospace;color:#93C5FD">{prom_path}</td></tr>' +
                     f'<tr><td style="color:#7F8B98;padding:.2rem .5rem .2rem 0">Feature set</td>' +
-                    f'<td style="font-family:JetBrains Mono,monospace;color:#86EFAC">airfoil_xfoil_v1</td></tr>' +
+                    f'<td style="font-family:JetBrains Mono,monospace;color:#86EFAC">{af_feature_preset_hint}</td></tr>' +
                     f'<tr><td style="color:#7F8B98;padding:.2rem .5rem .2rem 0">Targets</td>' +
                     f'<td style="font-family:JetBrains Mono,monospace;color:#D6DEE8">cl, cd, cm</td></tr>' +
                     f'<tr><td style="color:#7F8B98;padding:.2rem .5rem .2rem 0">Group column</td>' +
@@ -4527,6 +4668,62 @@ def _feature_selector(key, include_feature_set=True):
 def pg_ml(root, exe, tmo, dry):
     _hero("◈","ML Studio","train · tune · compare · promote · predict · active learning","surrogate")
 
+    # AERIS_PATCH_CST_GUI_V1_ML_QUICKSTART
+    with st.expander("〜 2D Airfoil / CST quick ML commands", expanded=False):
+        _note(
+            "Use this for promoted 2D XFOIL datasets. CST-generated datasets should use "
+            "<code>airfoil_cst_xfoil_v1</code>; legacy .dat-library datasets should use "
+            "<code>airfoil_xfoil_v1</code>. Group split by <code>airfoil_id</code> prevents leakage.",
+            "info",
+        )
+        airfoil_datasets = [Path(d) for d in _dirs(str(root / "data" / "datasets"))
+                            if (Path(d) / "promotion_manifest.json").exists()
+                            and (Path(d) / "curated_airfoil_dataset.csv").exists()]
+        if airfoil_datasets:
+            airfoil_ds = st.selectbox(
+                "Promoted airfoil dataset",
+                [str(d) for d in airfoil_datasets],
+                format_func=lambda s: f"✓ {Path(s).name} · {_airfoil_dataset_feature_preset_hint(Path(s))}",
+                key="ml_airfoil_quick_ds",
+            )
+            airfoil_preset = _airfoil_dataset_feature_preset_hint(Path(airfoil_ds))
+        else:
+            airfoil_ds = st.text_input(
+                "Promoted airfoil dataset",
+                str(root / "data" / "datasets" / "cst_xfoil_smoke"),
+                key="ml_airfoil_quick_ds_text",
+            )
+            airfoil_preset = "airfoil_cst_xfoil_v1"
+        cqa, cqb, cqc = st.columns(3)
+        airfoil_preset = cqa.selectbox(
+            "Feature preset",
+            ["airfoil_cst_xfoil_v1", "airfoil_xfoil_v1"],
+            index=0 if airfoil_preset == "airfoil_cst_xfoil_v1" else 1,
+            key="ml_airfoil_quick_preset",
+        )
+        airfoil_targets = cqb.text_input("Targets", "cl,cd,cm", key="ml_airfoil_quick_targets")
+        airfoil_model = cqc.selectbox("Model", MODEL_TYPES, index=MODEL_TYPES.index("lightgbm") if "lightgbm" in MODEL_TYPES else 0, key="ml_airfoil_quick_model")
+        airfoil_out = st.text_input(
+            "ML output dir",
+            str(root / "data" / "processed" / "ml_runs" / "gui_airfoil_cst_lgbm"),
+            key="ml_airfoil_quick_out",
+        )
+        qa, qb, qc = st.columns(3)
+        with qa:
+            _panel("Airfoil EDA", "EDA with the correct airfoil feature preset.",
+                   ["ml", "eda", "--dataset", airfoil_ds, "--feature-preset", airfoil_preset, "--targets", airfoil_targets],
+                   root, exe, tmo, dry, "ml_airfoil_quick_eda", label="▶  EDA")
+        with qb:
+            _panel("Train airfoil model", "Grouped split by airfoil_id; suitable for CST/XFOIL smoke and larger campaigns.",
+                   ["ml", "train", "--dataset", airfoil_ds, "--feature-preset", airfoil_preset, "--targets", airfoil_targets,
+                    "--group-column", "airfoil_id", "--model-type", airfoil_model, "--output-dir", airfoil_out],
+                   root, exe, tmo, dry, "ml_airfoil_quick_train", label="▶  Train")
+        with qc:
+            _panel("Compare airfoil seeds", "Multi-seed stability check with group split by airfoil_id.",
+                   ["ml", "compare-seeds", "--dataset", airfoil_ds, "--feature-preset", airfoil_preset, "--targets", airfoil_targets,
+                    "--group-column", "airfoil_id", "--model-types", "lightgbm,xgboost", "--seeds", "101,202,303,404,505"],
+                   root, exe, tmo, dry, "ml_airfoil_quick_compare", label="▶  Compare seeds")
+
     # ── Cm sanity gate — mandatory before training ────────────────────────────
     with st.expander("⚠  Step 0 — Cm sanity check  (run before training)", expanded=False):
         st.warning(
@@ -4608,7 +4805,7 @@ def pg_ml(root, exe, tmo, dry):
         "<b>Feature input rules (strictly enforced by the CLI):</b> use exactly ONE of "
         "<code>--features</code>, <code>--feature-preset</code>, or <code>--feature-set</code>. "
         "Mixing any two is a CLI error. "
-        "Presets: <code>bwb_basic</code>, <code>bwb_control</code>. "
+        "Presets: <code>bwb_basic</code>, <code>bwb_control</code>, <code>airfoil_xfoil_v1</code>, <code>airfoil_cst_xfoil_v1</code>. "
         "Feature sets: <code>bwb_control_raw</code>, <code>bwb_control_physics_v1</code>.",
         "info",
     )

@@ -2,8 +2,9 @@
 2D airfoil dataset promotion.
 
 Mirrors promote_aero.py exactly — same promotion_manifest.json schema.
-The ML layer requires promotion_manifest.json with
-artifacts.curated_aero_dataset_csv pointing to the curated CSV.
+The ML layer still accepts promotion_manifest.json with
+artifacts.curated_aero_dataset_csv for backward compatibility, but airfoil
+datasets also expose artifacts.curated_airfoil_dataset_csv for operator clarity.
 """
 from __future__ import annotations
 
@@ -24,8 +25,24 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
+    """Atomic JSON write: temp-file + os.replace prevents corrupt-on-crash.
+    AERIS_PATCH_C7_APPLIED_FIXED
+    """
+    import os
+    import tempfile
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    payload_text = json.dumps(payload, indent=2)
+    tmp_fd, tmp_str = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.tmp")
+    try:
+        with os.fdopen(tmp_fd, "w", encoding="utf-8") as fh:
+            fh.write(payload_text)
+        os.replace(tmp_str, path)
+    except Exception:
+        try:
+            os.unlink(tmp_str)
+        except OSError:
+            pass
+        raise
 
 
 def promote_airfoil_dataset(
@@ -80,8 +97,10 @@ def promote_airfoil_dataset(
             "rejection_reason_counts": curation_report.get("rejection_reason_counts", {}),
         },
         "artifacts": {
-            # Same key as 3D — required by require_promoted_aero_dataset()
+            # Backward-compatible generic key — required by require_promoted_aero_dataset().
             "curated_aero_dataset_csv": curation_report.get("curated_airfoil_dataset_csv"),
+            # AERIS_PATCH_CST_POLISH_V1: domain-specific airfoil key for operator clarity.
+            "curated_airfoil_dataset_csv": curation_report.get("curated_airfoil_dataset_csv"),
         },
         "dataset_summary": {
             "dataset_name":    dataset_manifest.get("dataset_name"),
@@ -90,6 +109,8 @@ def promote_airfoil_dataset(
             "total_rows":      dataset_manifest.get("total_rows"),
             "converged_rows":  dataset_manifest.get("converged_rows"),
             "convergence_rate": dataset_manifest.get("convergence_rate"),
+            # AERIS_PATCH_CST_POLISH_V1
+            "airfoil_source_schema": dataset_manifest.get("airfoil_source_schema", {}),
         },
     }
 

@@ -56,6 +56,21 @@ class AirfoilLibrary:
     def all_records(self) -> list[AirfoilRecord]:
         return [self._load_record(row) for _, row in self._df.iterrows()]
 
+    # AERIS_PATCH_CST_AIRFOIL_V1_LIBRARY_METADATA
+    def metadata_for_id(self, airfoil_id: str) -> dict[str, Any]:
+        """Return one inventory row as metadata for downstream dataset rows.
+
+        Generated CST libraries add coefficient columns such as cst_u0/cst_l0.
+        The XFOIL dataset builder propagates those columns into
+        airfoil_dataset.csv so EDA/ML feature presets can consume them without
+        any solver-specific special case.
+        """
+        mask = self._df["airfoil_id"] == airfoil_id
+        rows = self._df[mask]
+        if rows.empty:
+            raise KeyError(f"airfoil_id {airfoil_id!r} not found in library inventory")
+        return rows.iloc[0].to_dict()
+
     def __len__(self) -> int:
         return len(self._df)
 

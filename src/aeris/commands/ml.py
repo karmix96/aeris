@@ -467,6 +467,9 @@ def ml_eda(
     typer.echo(f"  rows: {report.get('shape', {}).get('n_rows')}")
     typer.echo(f"  features: {', '.join(metadata.get('feature_columns', []))}")
     typer.echo(f"  targets: {', '.join(metadata.get('target_columns', []))}")
+    # AERIS_PATCH_CST_POLISH_V1: feature preset and feature set are different concepts.
+    typer.echo(f"  feature_preset: {feature_preset}")
+    typer.echo(f"  feature_preset_applied: {bool(feature_preset)}")
     typer.echo(f"  feature_set: {metadata.get('feature_set_name')}")
     typer.echo(f"  feature_set_applied: {metadata.get('feature_set_applied')}")
     typer.echo(f"  output_dir: {result['output_dir']}")
@@ -711,6 +714,7 @@ def ml_train(
             model_params=model_params_override,
             output_dir=output_dir,
             feature_set_name=feature_set,
+            feature_preset_name=feature_preset,
         )
     except typer.BadParameter:
         raise

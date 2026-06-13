@@ -246,7 +246,17 @@ def write_trim_result(result: TrimResult, output_dir: str | Path) -> Path:
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     path = output_dir / "trim_result.json"
-    path.write_text(json.dumps(result.to_dict(), indent=2), encoding="utf-8")
+    import os, tempfile  # AERIS_PATCH_D13B_APPLIED: atomic write
+    serialized = json.dumps(result.to_dict(), indent=2)
+    tmp_fd, tmp_str = tempfile.mkstemp(dir=output_dir, prefix=".trim_result.tmp")
+    try:
+        with os.fdopen(tmp_fd, "w", encoding="utf-8") as fh:
+            fh.write(serialized)
+        os.replace(tmp_str, path)
+    except Exception:
+        try: os.unlink(tmp_str)
+        except OSError: pass
+        raise
     return path
 
 

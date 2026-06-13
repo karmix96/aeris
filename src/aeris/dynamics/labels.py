@@ -229,10 +229,16 @@ def fill_trim_labels(
     labels["dyn_de_trim_deg"]        = _safe(long, "de_trim_deg")
     labels["dyn_trim_feasible_alpha"] = _safe(long, "alpha_trim_in_bounds")
     labels["dyn_trim_feasible_de"]   = _safe(long, "de_trim_in_bounds")
+    # AERIS_PATCH_D12_APPLIED: separate OR-feasibility from strict elevon feasibility.
+    # dyn_trim_feasible: legacy OR label — True if any trim mode is in-bounds.
+    # dyn_de_trim_feasible: strict label — True only when elevon trim is in-bounds.
+    #   This is the operational label for a flight-controlled BWB.
+    # dyn_label_trimmable now uses the strict elevon-trim definition.
     labels["dyn_trim_feasible"] = (
         bool(_safe(long, "alpha_trim_in_bounds") or _safe(long, "de_trim_in_bounds"))
     )
-    labels["dyn_label_trimmable"] = labels["dyn_trim_feasible"]
+    labels["dyn_de_trim_feasible"] = bool(_safe(long, "de_trim_in_bounds"))
+    labels["dyn_label_trimmable"] = labels["dyn_de_trim_feasible"]
     return labels
 
 

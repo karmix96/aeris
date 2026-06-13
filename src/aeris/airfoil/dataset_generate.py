@@ -138,6 +138,20 @@ def generate_airfoil_dataset(
                         row["camber_max"]   = rec.stats.camber_max
                         row["le_radius"]    = rec.stats.le_radius
                         row["te_angle_deg"] = rec.stats.te_angle_deg
+
+                        # AERIS_PATCH_CST_AIRFOIL_V1_DATASET_COLUMNS
+                        # If the library was generated from CST/Kulfan parameters,
+                        # propagate the coefficient columns into the XFOIL dataset.
+                        # This keeps EDA/ML generic: they only see normal columns.
+                        try:
+                            metadata = library.metadata_for_id(rec.airfoil_id)
+                        except KeyError:  # AERIS_PATCH_C4_APPLIED: narrow to KeyError
+                            # KeyError = plain Selig library without CST metadata.
+                            # Any other exception (filesystem, pandas) must raise.
+                            metadata = {}
+                        for key, value in metadata.items():
+                            if key.startswith("cst_") or key in {"generator_id", "parameterization"}:
+                                row[key] = value
                         success_rows.append(row)
 
                 except Exception as exc:
@@ -165,6 +179,15 @@ def generate_airfoil_dataset(
     n_conv = int(success_df["converged"].sum()) if not success_df.empty else 0
     convergence_rate = n_conv / len(success_df) if len(success_df) > 0 else 0.0
 
+    # AERIS_PATCH_CST_AIRFOIL_V1_MANIFEST_SOURCE
+    cst_columns = [c for c in success_df.columns if str(c).startswith("cst_")] if not success_df.empty else []
+    airfoil_source_schema = {
+        "has_cst_features": bool(cst_columns),
+        "cst_feature_columns": cst_columns,
+        "generator_ids": sorted(success_df["generator_id"].dropna().astype(str).unique().tolist())
+        if "generator_id" in success_df.columns and not success_df.empty else [],
+    }
+
     manifest: dict[str, Any] = {
         "schema_version": "airfoil_dataset_v1",
         "dataset_name": name,
@@ -190,6 +213,7 @@ def generate_airfoil_dataset(
         "unconverged_rows": len(success_rows) - n_conv,
         "solver_failure_rows": len(failure_rows),
         "convergence_rate": round(convergence_rate, 4),
+        "airfoil_source_schema": airfoil_source_schema,
         "airfoil_dataset_csv": str(dataset_csv),
         "airfoil_failures_csv": str(failures_csv),
     }

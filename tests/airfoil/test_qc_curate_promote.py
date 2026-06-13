@@ -31,6 +31,14 @@ def _write_test_dataset(root, rows):
         json.dumps(manifest), encoding="utf-8"
     )
     (root / "airfoil_failures.csv").write_text("", encoding="utf-8")
+    # AERIS_FIX_QC_TEST_SETUP: ISSUE-C12 requires QC report to exist.
+    import json as _json
+    (root / "airfoil_qc_report.json").write_text(
+        _json.dumps({"passed": True, "schema_version": "airfoil_qc_v1",
+                     "total_rows": len(rows), "converged_rows": len(rows),
+                     "issues": [], "warnings": []}),
+        encoding="utf-8",
+    )
 
 
 def _good_rows():

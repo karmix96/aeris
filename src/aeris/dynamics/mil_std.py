@@ -420,8 +420,16 @@ def classify_spiral(
         note = f"Spiral: T₂ = {t2_s:.1f} s < 4 s — fast divergence. Escalate."
         value = t2_s
     else:
-        level = HQLevel.LEVEL_2
-        note = "Spiral mode T₂ not computed."
+        # AERIS_PATCH_D11_APPLIED: divergent spiral with unknown T₂ → LEVEL_3.
+        # Cannot claim LEVEL_2 (acceptable) when spiral is divergent but rate unknown.
+        # LEVEL_3 = controllable with pilot compensation; honest for unknown instability.
+        level = HQLevel.LEVEL_3 if not stable else HQLevel.LEVEL_2
+        note = (
+            "Spiral mode divergent (stable=False) but T₂ not computed — classified LEVEL_3 "
+            "(requires pilot/autopilot compensation). Run state-space analysis to compute T₂."
+            if not stable else
+            "Spiral mode data unavailable; classified LEVEL_2 (conservative default for stable/unknown)."
+        )
         value = None
 
     return ModeClassification(

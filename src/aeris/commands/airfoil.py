@@ -13,6 +13,8 @@ This module stays thin — all logic lives in aeris.airfoil.* modules.
 """
 from __future__ import annotations
 
+# AERIS_PATCH_CST_POLISH_V1_1_HELPER_TEXT
+
 import json
 from pathlib import Path
 
@@ -29,7 +31,7 @@ airfoil_app = typer.Typer(
         "  3. aeris airfoil dataset qc    — quality checks\n"
         "  4. aeris airfoil dataset curate — reject bad rows\n"
         "  5. aeris airfoil dataset promote — trust gate for ML\n"
-        "Then use the standard 'aeris ml' commands with --feature-set airfoil_xfoil_v1"
+        "Then use the standard 'aeris ml' commands with --feature-preset airfoil_xfoil_v1"
     )
 )
 
@@ -49,9 +51,53 @@ def airfoil_dataset_callback() -> None:
     pass
 
 
-# ── aeris airfoil info ───────────────────────────────────────────────────────
+# AERIS_PATCH_CST_POLISH_V1
+def _airfoil_feature_preset_hint(manifest: dict) -> str:
+    """Return the recommended ML feature preset for an airfoil dataset manifest.
 
-@airfoil_app.command("info")
+    Keep this deliberately robust because airfoil metadata can appear in:
+    - airfoil_dataset_manifest.json
+    - promotion_manifest.json
+    - nested dataset_summary / source_schema blocks
+    - future report wrappers
+    """
+    def _walk(obj):
+        if isinstance(obj, dict):
+            for key, value in obj.items():
+                key_s = str(key).lower()
+
+                if key_s == "has_cst_features" and bool(value):
+                    return True
+
+                if key_s in {"generator_id", "generator_ids"}:
+                    if isinstance(value, list) and any(str(v) == "cst_airfoil_v1" for v in value):
+                        return True
+                    if str(value) == "cst_airfoil_v1":
+                        return True
+
+                if key_s in {"parameterization", "source_format"} and "cst" in str(value).lower():
+                    return True
+
+                if key_s in {"cst_feature_columns", "cst_coefficient_columns"} and value:
+                    return True
+
+                if str(value) in {"cst_airfoil_v1", "cst_kulfan"}:
+                    return True
+
+                if _walk(value):
+                    return True
+
+        elif isinstance(obj, list):
+            for item in obj:
+                if _walk(item):
+                    return True
+
+        return False
+
+    return "airfoil_cst_xfoil_v1" if _walk(manifest or {}) else "airfoil_xfoil_v1"
+
+
+@airfoil_app.command("info")  # AERIS_FIX_AIRFOIL_INFO_CMD
 def airfoil_info() -> None:
     """Show AERIS 2D airfoil module status — library, solver, and workflow summary."""
     import os as _os
@@ -66,7 +112,7 @@ def airfoil_info() -> None:
     typer.echo("    3. aeris airfoil dataset qc   --dataset <ds>")
     typer.echo("    4. aeris airfoil dataset curate --dataset <ds>")
     typer.echo("    5. aeris airfoil dataset promote --dataset <ds>")
-    typer.echo("    6. aeris ml train              --feature-set airfoil_xfoil_v1 ...")
+    typer.echo("    6. aeris ml train              --feature-preset airfoil_xfoil_v1 ...")
     typer.echo("")
 
     # Library status
@@ -99,6 +145,7 @@ def airfoil_info() -> None:
     typer.echo("    aeris airfoil info")
     typer.echo("    aeris airfoil check-solver")
     typer.echo("    aeris airfoil library-stats [--library <dir>]")
+    typer.echo("    aeris airfoil generate-cst-library --config <yaml> --output-dir <lib>")
     typer.echo("    aeris airfoil ingest        --db-dir <dir>")
     typer.echo("    aeris airfoil dataset generate --library <lib> --config <yaml> --name <name> [--n-airfoils N]")
     typer.echo("    aeris airfoil dataset qc    --dataset <ds>")
@@ -151,6 +198,71 @@ def airfoil_ingest(
     typer.echo(f"  ingested:  {report.get('ingested')}")
     typer.echo(f"  failures:  {report.get('failures')}")
     typer.echo(f"  inventory: {report.get('inventory_csv')}")
+
+
+# ── aeris airfoil generate-cst-library ───────────────────────────────────────
+
+# AERIS_PATCH_CST_AIRFOIL_V1_CLI_COMMAND
+@airfoil_app.command("generate-cst-library")
+def airfoil_generate_cst_library(
+    config: Path = typer.Option(
+        Path("configs/airfoil/cst_library_smoke_v1.yaml"),
+        "--config",
+        "-c",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="CST airfoil generator YAML config.",
+    ),
+    output_dir: Path = typer.Option(
+        Path("data/airfoil_library_cst"),
+        "--output-dir",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Generated AERIS airfoil library output directory.",
+    ),
+    n_airfoils: int | None = typer.Option(
+        None,
+        "--n-airfoils",
+        min=1,
+        help="Override config n_airfoils for smoke/pilot generation.",
+    ),
+    seed: int | None = typer.Option(
+        None,
+        "--seed",
+        help="Override config seed.",
+    ),
+) -> None:
+    """Generate a CST/Kulfan airfoil library for XFOIL/ML workflows.
+
+    Output is compatible with `aeris airfoil dataset generate --library ...`.
+    """
+    from aeris.airfoil.cst_generator import generate_cst_airfoil_library
+
+    try:
+        report = generate_cst_airfoil_library(
+            config_path=config,
+            output_dir=output_dir,
+            n_airfoils=n_airfoils,
+            seed=seed,
+        )
+    except Exception as exc:
+        fail_command("CST airfoil library generation", exc)
+
+    typer.echo("")
+    typer.echo("[AERIS 2D] CST airfoil library generated")
+    typer.echo(f"  generator_id: {report.get('generator_id')}")
+    typer.echo(f"  output_dir:   {output_dir}")
+    typer.echo(f"  generated:    {report.get('n_airfoils_generated')}")
+    typer.echo(f"  seed:         {report.get('seed')}")
+    typer.echo(f"  order:        {report.get('order')}")
+    typer.echo(f"  inventory:    {report.get('inventory_csv')}")
+    typer.echo("")
+    typer.secho("  Next:", fg=typer.colors.GREEN)
+    typer.echo(f"    aeris airfoil dataset generate --library {output_dir} --config configs/airfoil/xfoil_smoke_v1.yaml --name cst_xfoil_smoke")
 
 
 # ── aeris airfoil dataset generate ───────────────────────────────────────────
@@ -362,7 +474,7 @@ def airfoil_dataset_promote(
     """Promote the curated 2D airfoil dataset for ML use.
 
     Writes promotion_manifest.json. After this, use 'aeris ml train' with
-    --feature-set airfoil_xfoil_v1 and --group-column airfoil_id.
+    --feature-preset airfoil_xfoil_v1 and --group-column airfoil_id.
     """
     from aeris.airfoil.promote import promote_airfoil_dataset
 
@@ -378,11 +490,18 @@ def airfoil_dataset_promote(
     curated = (manifest.get("artifacts") or {}).get("curated_aero_dataset_csv")
     typer.echo(f"  curated_csv:    {curated}")
     typer.echo("")
+    try:
+        dataset_manifest_path = Path(dataset) / "airfoil_dataset_manifest.json"
+        dataset_manifest = json.loads(dataset_manifest_path.read_text(encoding="utf-8"))
+        feature_preset_hint = _airfoil_feature_preset_hint(dataset_manifest)
+    except Exception:
+        feature_preset_hint = "airfoil_xfoil_v1"
+
     typer.secho("  Ready for ML. Example:", fg=typer.colors.GREEN)
     typer.echo(f"    aeris ml eda --dataset {dataset} \\")
-    typer.echo( "      --feature-set airfoil_xfoil_v1 --targets cl,cd,cm")
+    typer.echo(f"      --feature-preset {feature_preset_hint} --targets cl,cd,cm")
     typer.echo(f"    aeris ml compare-seeds --dataset {dataset} \\")
-    typer.echo( "      --feature-set airfoil_xfoil_v1 --model-types lightgbm,xgboost \\")
+    typer.echo(f"      --feature-preset {feature_preset_hint} --model-types lightgbm,xgboost \\")
     typer.echo( "      --targets cl,cd,cm --seeds 101,202,303,404,505")
 
 

@@ -75,6 +75,53 @@ def estimate_zero_crossing(cases: list[dict]) -> float | None:
 # Main sweep
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# AERIS_PATCH_D3_APPLIED: CG-corrected trim estimate for cg_sweep
+# ---------------------------------------------------------------------------
+def _cg_corrected_trim(
+    aero_dict: dict,
+    x_cg_m: float,
+    x_cg_ref_m: float,
+    *,
+    run_dir,
+) -> "TrimResult":
+    """
+    Estimate trim elevon at a new CG position by correcting Cm₀.
+
+    Physics: Cm(xcg_new) = Cm(xcg_ref) + CLα·(xcg_ref - xcg_new)/c · α₀
+    Reference: [ER] §3.3, moment transfer theorem.
+
+    xcg_ref_m is the CG position at which the AVL aero_result was computed.
+    """
+    import copy, math
+    aero_corrected = copy.deepcopy(aero_dict)
+    scalars = aero_corrected.get("scalars") or aero_corrected
+    sad = aero_corrected.get("stability_axis_derivatives") or {}
+    meta = aero_corrected.get("solver_metadata") or {}
+    fc = meta.get("flight_condition") or {}
+
+    cla = sad.get("CLa") or sad.get("cla")
+    cm0 = scalars.get("cm") or scalars.get("Cm") or aero_corrected.get("cm")
+    alpha_deg = (fc.get("alpha_deg") if isinstance(fc, dict) else None) or 0.0
+
+    # Extract MAC from geometry summary (best effort)
+    from aeris.dynamics.analysis import load_geometry_summary
+    geo = load_geometry_summary(str(run_dir)) or {}
+    mac_m = (geo.get("reference_values") or {}).get("mean_aerodynamic_chord_m")
+
+    if cla is not None and cm0 is not None and mac_m is not None and mac_m > 0:
+        alpha_rad = math.radians(float(alpha_deg))
+        delta_cm = float(cla) * (x_cg_ref_m - x_cg_m) / float(mac_m) * alpha_rad
+        # Inject corrected Cm into the copy
+        if "scalars" in aero_corrected:
+            aero_corrected["scalars"]["cm"] = float(cm0) + delta_cm
+        else:
+            aero_corrected["cm"] = float(cm0) + delta_cm
+
+    return estimate_longitudinal_trim(aero_corrected, run_dir)
+
+
+
 def run_cg_sweep(
     *,
     run_dir: str | Path,
@@ -141,7 +188,14 @@ def run_cg_sweep(
         deriv = result.stability_derivatives
 
         # Trim elevon estimate at this CG: what δe brings Cm to 0?
-        trim_res = estimate_longitudinal_trim(aero_dict, run_dir)
+        # AERIS_PATCH_D3_APPLIED: correct Cm₀ for CG position before trim.
+        # The AVL result was computed at x_cg_ref_m; we transfer the moment.
+        x_cg_ref_m = float(aero_dict.get("solver_metadata", {}).get(
+            "flight_condition", {}
+        ).get("x_cg_m") or cg_values[0])  # fallback: use first CG as ref
+        trim_res = _cg_corrected_trim(
+            aero_dict, x_cg_m=x_cg_m, x_cg_ref_m=x_cg_ref_m, run_dir=run_dir
+        )
         de_trim  = trim_res.longitudinal.de_trim_deg
         de_ok    = trim_res.longitudinal.de_trim_in_bounds
 

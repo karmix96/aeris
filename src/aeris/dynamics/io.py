@@ -16,6 +16,26 @@ from aeris.dynamics.models import DynamicsFoundationResult
 # Dynamics foundation
 # ---------------------------------------------------------------------------
 
+
+# AERIS_PATCH_D13_APPLIED
+def _write_json_atomic(path: Path, payload: dict | str) -> None:
+    """Atomic JSON write: temp-file + os.replace prevents corrupt-on-crash."""
+    import os
+    import tempfile
+    text = payload if isinstance(payload, str) else __import__("json").dumps(payload, indent=2)
+    tmp_fd, tmp_str = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.tmp")
+    try:
+        with os.fdopen(tmp_fd, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        os.replace(tmp_str, path)
+    except Exception:
+        try:
+            os.unlink(tmp_str)
+        except OSError:
+            pass
+        raise
+
+
 def write_dynamics_foundation_result(
     result: DynamicsFoundationResult,
     output_dir: Path,
@@ -23,7 +43,7 @@ def write_dynamics_foundation_result(
     """Write dynamics_foundation.json to output_dir."""
     output_dir.mkdir(parents=True, exist_ok=True)
     path = output_dir / "dynamics_foundation.json"
-    path.write_text(json.dumps(result.to_dict(), indent=2), encoding="utf-8")
+    _write_json_atomic(path, result.to_dict())
     return path
 
 

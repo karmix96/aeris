@@ -1,0 +1,21 @@
+# AERIS ML template for generated CST/Kulfan airfoil XFOIL datasets.
+# Dataset must be curated/promoted with `aeris airfoil dataset promote` first.
+
+ml:
+  dataset: data/datasets/<promoted_cst_airfoil_dataset>
+  feature_preset: airfoil_cst_xfoil_v1
+  targets:
+    - cl
+    - cd
+    - cm
+  split:
+    method: grouped
+    group_column: airfoil_id
+    train_fraction: 0.70
+    val_fraction:   0.15
+    test_fraction:  0.15
+    random_seed: 123
+  model:
+    type: lightgbm
+    params: {}
+  output_dir: data/processed/ml_runs/airfoil_cst_xfoil_v1

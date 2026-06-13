@@ -39,6 +39,8 @@ class TrainConfig:
     source_config_sha256: str | None = None
     feature_set_name: str | None = None
     feature_set: dict[str, Any] | None = None
+    # AERIS_PATCH_CST_POLISH_V1
+    feature_preset_name: str | None = None
 
 
 @dataclass(frozen=True)
@@ -259,6 +261,7 @@ def train_baseline_model(
     output_dir: Path | None = None,
     source_config_path: Path | None = None,
     feature_set_name: str | None = None,
+    feature_preset_name: str | None = None,
 ) -> dict[str, Any]:
     dataset_path = Path(dataset_path).expanduser().resolve()
 
@@ -439,6 +442,7 @@ def train_baseline_model(
         source_config_sha256=source_config_sha256,
         feature_set_name=feature_set.name if feature_set is not None else None,
         feature_set=feature_set_metadata,
+        feature_preset_name=feature_preset_name,
     )
     train_config_path = output_dir / "train_config.json"
     train_config_path.write_text(
@@ -472,6 +476,13 @@ def train_baseline_model(
         "status": "success",
         "created_at_utc": utc_now_iso(),
         "run_dir": str(output_dir),
+        # AERIS_PATCH_CST_POLISH_V1: top-level quick-inspection aliases.
+        "feature_preset": feature_preset_name,
+        "feature_columns": list(feature_columns),
+        "target_columns": list(target_columns),
+        "group_column": group_column,
+        "model_type": model_type,
+        "split_method": split.method,
         "source_config": {
             "path": None if source_config_path_resolved is None else str(source_config_path_resolved),
             "sha256": source_config_sha256,
@@ -489,6 +500,7 @@ def train_baseline_model(
             "n_targets": training_data.metadata.get("n_targets"),
             "feature_columns": list(feature_columns),
             "target_columns": list(target_columns),
+            "feature_preset_name": feature_preset_name,
             "feature_set_name": training_data.metadata.get("feature_set_name"),
             "feature_set": training_data.metadata.get("feature_set"),
             "dropped_non_finite_rows": training_data.metadata.get("dropped_non_finite_rows"),

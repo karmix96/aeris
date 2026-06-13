@@ -1,0 +1,29 @@
+# AERIS 2D — CST/Kulfan production-style generated airfoil library config.
+# Start with 100-500, validate XFOIL convergence, then scale.
+
+airfoil:
+  generator:
+    id: cst_airfoil_v1
+    seed: 123
+    n_airfoils: 1000
+    order: 8
+    n1: 0.5
+    n2: 1.0
+    dz_te: 0.0
+    n_per_surface: 161
+    max_attempts: 500
+
+    coefficient_bounds:
+      au: [0.05, 0.35]
+      al: [-0.35, 0.05]
+
+    validation_limits:
+      min_thickness: 0.005
+      max_thickness: 0.50
+      min_local_gap: 0.0
+      interior_eps: 0.0001
+      max_le_radius: 0.30
+      min_le_radius: 0.000001
+      max_curvature_reversals: 6
+      n_check: 401
+      min_area: 0.0001

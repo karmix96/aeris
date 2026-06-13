@@ -150,6 +150,22 @@ _FEATURE_PRESETS: dict[str, FeaturePreset] = {
             "Targets: cl, cd, cm."
         ),
     ),
+    # AERIS_PATCH_CST_AIRFOIL_V1_FEATURE_PRESET
+    "airfoil_cst_xfoil_v1": FeaturePreset(
+        name="airfoil_cst_xfoil_v1",
+        domain="airfoil_2d_scalar_aero",
+        columns=(
+            "alpha_deg", "log10_reynolds", "mach", "ncrit", "alpha_sq",
+            "cst_u0", "cst_u1", "cst_u2", "cst_u3", "cst_u4", "cst_u5", "cst_u6", "cst_u7", "cst_u8",
+            "cst_l0", "cst_l1", "cst_l2", "cst_l3", "cst_l4", "cst_l5", "cst_l6", "cst_l7", "cst_l8",
+            "cst_dz_te",
+        ),
+        description=(
+            "CST/Kulfan 8th-order airfoil feature preset for XFOIL scalar datasets. "
+            "Uses generated CST coefficients plus operating-condition features. "
+            "Group key: airfoil_id. Targets: cl, cd, cm."
+        ),
+    ),
 
 }
 

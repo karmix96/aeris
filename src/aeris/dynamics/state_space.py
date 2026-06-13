@@ -395,9 +395,14 @@ def build_lateral_a_matrix(dd: DimDerivatives) -> list[list[float]]:
     V0  = dd.V0
     a0  = dd.alpha0
 
-    Gamma = dd.Ixx * dd.Izz - dd.Ixz**2
-    if abs(Gamma) < 1e-20:
-        Gamma = 1e-20  # avoid division by zero
+    Gamma = dd.Ixx * dd.Izz - dd.Ixz**2  # AERIS_PATCH_D16_APPLIED
+    if abs(Gamma) < 1e-10:
+        raise ValueError(
+            f"Degenerate inertia tensor: |Ixx·Izz - Ixz²| = {abs(Gamma):.3e}. "
+            f"Ixx={dd.Ixx:.4f}, Izz={dd.Izz:.4f}, Ixz={dd.Ixz:.4f}. "
+            "Either Ixz is unrealistically large or Ixx/Izz are too small. "
+            "Cannot assemble lateral A-matrix. Check mass properties."
+        )
 
     Yv = dd.Y_v;  Yp = dd.Y_p;  Yr = dd.Y_r
     Lv = dd.L_v;  Lp = dd.L_p;  Lr = dd.L_r

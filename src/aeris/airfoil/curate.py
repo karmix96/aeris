@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import math
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -95,7 +96,8 @@ def curate_airfoil_dataset(
     # QC pass — check airfoil_qc_report.json if it exists
     qc_report_path = dataset_root / "airfoil_qc_report.json"
     qc_passed = None
-    if qc_report_path.exists():
+    qc_report_found = qc_report_path.exists()
+    if qc_report_found:  # AERIS_PATCH_C12_APPLIED
         try:
             qc = json.loads(qc_report_path.read_text(encoding="utf-8"))
             qc_passed = bool(qc.get("passed", None))
@@ -103,7 +105,11 @@ def curate_airfoil_dataset(
             pass
 
     promotion_blockers: list[str] = []
-    if qc_passed is False:
+    if not qc_report_found:
+        # QC was never run — fail loud so operator cannot silently promote
+        # unverified data. Use `aeris airfoil dataset qc` first.
+        promotion_blockers.append("airfoil_qc_not_run")
+    elif qc_passed is False:
         promotion_blockers.append("airfoil_qc_failed")
     if kept_df.empty:
         promotion_blockers.append("no_rows_after_curation")
@@ -115,8 +121,9 @@ def curate_airfoil_dataset(
     kept_df.to_csv(curated_csv, index=False)
     rejected_df.to_csv(rejected_csv, index=False)
 
-    report: dict[str, Any] = {
+    report: dict[str, Any] = {  # AERIS_PATCH_C5_APPLIED: added generated_at_utc
         "schema_version": "airfoil_curation_v1",
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "dataset_root": str(dataset_root),
         "kept_rows": len(kept_df),
         "rejected_rows": len(rejected_df),

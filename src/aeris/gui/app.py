@@ -3259,17 +3259,22 @@ def pg_airfoil(root, exe, tmo, dry):
                         "promotion when <code>airfoil_qc_report.json</code> is absent.",
                         "warn",
                     )
-                elif _rjson(qc_report_path) and not _rjson(qc_report_path).get("passed"):
+                elif _rjson(qc_report_path):
                     qc_payload = _rjson(qc_report_path) or {}
                     coverage_failures = qc_payload.get("per_group_coverage_failures") or []
-                    extra = ""
-                    if coverage_failures:
-                        extra = " Per-group coverage failed: require at least 3 converged rows per airfoil/Re/Mach group."
-                    _note(
-                        "✗ QC failed on this dataset. Fix issues before curating. "
-                        "See QC report below." + extra,
-                        "err",
-                    )
+                    if not qc_payload.get("passed"):
+                        _note(
+                            "✗ QC failed on this dataset. Fix fatal issues before curating. "
+                            "Coverage shortfalls are reported separately as warnings.",
+                            "err",
+                        )
+                    elif coverage_failures:
+                        _note(
+                            "⚠ QC passed with per-group coverage warnings. Curation may still promote "
+                            "if the under-covered airfoil/Re/Mach groups are fully removed; surviving "
+                            "groups need at least 3 converged rows.",
+                            "warn",
+                        )
                 _sec("QC polar preview")
                 _note(
                     "Quickly inspect saved XFOIL curves before/after QC and curation.",
@@ -3281,14 +3286,14 @@ def pg_airfoil(root, exe, tmo, dry):
                 with c_qc:
                     _panel(
                         "QC",
-                        "Checks XFOIL rows: converged targets, cd>0, duplicate key incl. ncrit, and at least 3 converged rows per airfoil/Re/Mach group.",
+                        "Checks XFOIL rows: converged targets, cd>0, duplicate key incl. ncrit; warns when airfoil/Re/Mach groups have fewer than 3 converged rows.",
                         ["airfoil", "dataset", "qc", "--dataset", str(ds_path)],
                         root, exe, tmo, dry, "af_qc", label="▶  QC",
                     )
                 with c_cur:
                     _panel(
                         "Curate",
-                        "Rejects unconverged, cd<=0, non-finite rows; blocks promotion if QC failed or per-group coverage is insufficient.",
+                        "Rejects unconverged, cd<=0, non-finite rows; blocks promotion if QC failed or insufficient per-group coverage remains after curation: surviving groups need at least 3 converged rows per airfoil/Re/Mach group.",
                         ["airfoil", "dataset", "curate", "--dataset", str(ds_path)],
                         root, exe, tmo, dry, "af_cur", label="▶  Curate",
                     )

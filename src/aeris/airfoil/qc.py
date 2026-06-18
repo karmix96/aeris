@@ -5,7 +5,8 @@ Checks:
   1. Convergence rate per airfoil  (warn if < MIN_CONVERGENCE_RATE)
   2. cd > 0 on all converged rows
   3. All target columns finite on converged rows
-  4. No duplicate (airfoil_id, alpha_deg, reynolds, mach) keys
+  4. No duplicate (airfoil_id, alpha_deg, reynolds, mach, ncrit) keys
+  5. Warn if fewer than MIN_USABLE_ROWS converged rows per (airfoil_id, Re, Mach) group
 """
 from __future__ import annotations
 
@@ -17,6 +18,7 @@ from typing import Any
 import pandas as pd
 
 MIN_CONVERGENCE_RATE = 0.40   # warn below this per-airfoil rate
+MIN_USABLE_ROWS = 3
 
 REQUIRED_TARGETS = ["cl", "cd", "cm"]
 REQUIRED_COLUMNS = [
@@ -44,6 +46,7 @@ def run_airfoil_dataset_qc(
     df = pd.read_csv(csv_path)
     issues: list[str] = []
     warnings_list: list[str] = []
+    per_group_coverage_failures: list[dict[str, Any]] = []
 
     # 1. Required columns
     missing_cols = [c for c in REQUIRED_COLUMNS if c not in df.columns]
@@ -68,13 +71,40 @@ def run_airfoil_dataset_qc(
                     issues.append(f"{n_bad} converged rows have non-finite {col}")
 
         # 4. Duplicates
-        key_cols = [c for c in ["airfoil_id", "alpha_deg", "reynolds", "mach"]
+        key_cols = [c for c in ["airfoil_id", "alpha_deg", "reynolds", "mach", "ncrit"]
                     if c in df.columns]
         n_dup = df.duplicated(subset=key_cols).sum()
         if n_dup > 0:
-            issues.append(f"{n_dup} duplicate (airfoil_id, alpha, Re, Mach) rows")
+            issues.append(f"{n_dup} duplicate (airfoil_id, alpha, Re, Mach, ncrit) rows")
 
-        # 5. Per-airfoil convergence rate
+        # 5. Per-condition coverage
+        group_cols = ["airfoil_id", "reynolds", "mach"]
+        for name, grp in df.groupby(group_cols, dropna=False):
+            converged_count = int((grp["converged"] == True).sum())  # noqa: E712
+            if converged_count < MIN_USABLE_ROWS:
+                airfoil_id, reynolds, mach = name
+                per_group_coverage_failures.append(
+                    {
+                        "airfoil_id": str(airfoil_id),
+                        "reynolds": None if pd.isna(reynolds) else float(reynolds),
+                        "mach": None if pd.isna(mach) else float(mach),
+                        "converged_rows": converged_count,
+                        "min_usable_rows": MIN_USABLE_ROWS,
+                        "total_rows": int(len(grp)),
+                    }
+                )
+        if per_group_coverage_failures:
+            preview = ", ".join(
+                f"{item['airfoil_id']} Re={item['reynolds']} Mach={item['mach']} "
+                f"({item['converged_rows']}/{MIN_USABLE_ROWS})"
+                for item in per_group_coverage_failures[:5]
+            )
+            warnings_list.append(
+                f"{len(per_group_coverage_failures)} (airfoil_id, Re, Mach) groups have "
+                f"fewer than {MIN_USABLE_ROWS} converged rows: {preview}"
+            )
+
+        # 6. Per-airfoil convergence rate
         low_conv: list[str] = []
         for aid, grp in df.groupby("airfoil_id"):
             rate = grp["converged"].sum() / max(len(grp), 1)
@@ -96,6 +126,8 @@ def run_airfoil_dataset_qc(
         "converged_rows": int(df["converged"].sum()) if "converged" in df.columns else 0,
         "issues": issues,
         "warnings": warnings_list,
+        "min_usable_rows_per_group": MIN_USABLE_ROWS,
+        "per_group_coverage_failures": per_group_coverage_failures if not df.empty and not missing_cols else [],
     }
     report_path = dataset_root / "airfoil_qc_report.json"
     report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")

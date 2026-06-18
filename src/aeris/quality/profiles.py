@@ -17,6 +17,10 @@ GEOMETRY_QC_PROFILES: dict[str, list[str]] = {
         "geometry_metadata_no_nan_v1",
         "geometry_basic_ranges_v1",
         "geometry_required_files_v1",
+        "geometry_scalar_consistency_v1",
+        "geometry_chord_ratio_sanity_v1",
+        "geometry_planform_parameter_sanity_v1",
+        "geometry_twist_dihedral_ranges_v1",
     ],
     "strict": [
         "geometry_manifest_consistency_v1",
@@ -50,6 +54,8 @@ AERO_QC_PROFILES: dict[str, list[str]] = {
         "aero_control_diagnostics_v1",
         "aero_control_effectiveness_v1",
         "aero_basic_ranges_v1",
+        "aero_cl_alpha_trend_v1",
+        "aero_cm_control_trend_v1",
     ],
     "strict": [
         "aero_manifest_consistency_v1",

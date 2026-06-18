@@ -3351,8 +3351,8 @@ def pg_airfoil(root, exe, tmo, dry):
 
 
 def pg_dataset(root, exe, tmo, dry):
-    _hero("▣","Dataset Factory","geometry → sweeps → qc → curate → promote","data pipeline")
-    tabs = st.tabs(["  Unified Aero  ","  Geometry Only  ","  Inspect / QC  ","  Curate / Promote  ","  Training Data  ","  Control / Flyability  ","  Smoke Check  "])
+    _hero("▣","Dataset Factory","3D aero · 2D↔3D bridge · qc → curate → promote → ML-ready","data pipeline")
+    tabs = st.tabs(["  Unified Aero  ","  Geometry Only  ","  Inspect / QC  ","  Curate / Promote  ","  Training Data  ","  Control / Flyability  ","  Smoke Check  ","  2D↔3D Bridge  "])
 
     # ── UNIFIED AERO DATASET ─────────────────────────────────────────────────
     with tabs[0]:
@@ -3504,6 +3504,12 @@ def pg_dataset(root, exe, tmo, dry):
         if save_srf: args.append("--save-surface-forces")
         if save_elf: args.append("--save-element-forces")
         _flag(args,"--max-cases",max_c_ds)
+        ds_wf_input = st.text_input(
+            "--workflow (auto-record on success)", "", key="ds_wf",
+            placeholder="e.g. data/workflows/campaign_v1 — leave blank to skip",
+            help="If set, auto-records the dataset aero-generate stage in the workflow spine after the campaign completes.",
+        )
+        if ds_wf_input.strip(): args += ["--workflow", ds_wf_input.strip()]
         if qcp:
             args += ["--qc-preset",qcp]
         else:
@@ -3771,6 +3777,98 @@ def pg_dataset(root, exe, tmo, dry):
                 root, exe, tmo, dry, "sm_v3",
             )
 
+    # ── 2D ↔ 3D BRIDGE ───────────────────────────────────────────────────
+    with tabs[7]:
+        _note(
+            "<b>2D ↔ 3D Bridge</b> — connect a promoted XFOIL airfoil library to a "
+            "3D BWB aero-generate campaign. "
+            "The 2D XFOIL surrogate predicts airfoil-level Cl/Cd/Cm across t/c and Re; "
+            "the 3D AVL sweep predicts wing-level CL/CD/Cm across geometry DVs and flight conditions. "
+            "Together they span the full design space from section to vehicle.",
+            "info",
+        )
+
+        _sec("Step 1 — 2D source library")
+        bridge_lib_opts = _airfoil_library_candidates(root)
+        _default_lib = (bridge_lib_opts[0] if bridge_lib_opts
+                        else str(root / "data" / "airfoil_library"))
+        bridge_lib = st.selectbox(
+            "Active airfoil library",
+            bridge_lib_opts if bridge_lib_opts else [_default_lib],
+            format_func=_airfoil_library_label,
+            key="bridge_lib",
+            help="Select the promoted XFOIL airfoil library that describes the BWB section family.",
+        )
+        bridge_lib_path = Path(str(bridge_lib))
+        _bridge_n = _airfoil_inventory_count(bridge_lib_path)
+        if _bridge_n > 0:
+            st.caption("Library **" + bridge_lib_path.name + "** — " + str(_bridge_n) + " airfoils.")
+        else:
+            st.warning("No airfoils found. Generate + promote a 2D dataset first (2D Airfoils page).")
+
+        _sec("Step 2 — 3D geometry config")
+        bridge_cfg_opts = _files(str(root / "configs" / "geometry"), "*.yaml")
+        bridge_cfg = _pick_file(
+            "3D geometry config", root / "configs" / "geometry", "*.yaml",
+            "bridge_cfg",
+            default=str(root / "configs" / "geometry" / "bwb_training_v1.yaml"),
+        )
+
+        _sec("Step 3 — campaign settings")
+        bc1, bc2, bc3, bc4 = st.columns(4)
+        bridge_n    = bc1.number_input("--n", min_value=1, value=5, step=1, key="bridge_n",
+                                        help="Number of 3D BWB geometries to generate.")
+        bridge_samp = bc2.selectbox("--sampler", SAMPLERS, key="bridge_samp",
+                                    format_func=lambda s: SAMPLER_INFO.get(s, s))
+        bridge_seed = bc3.number_input("--sampler-seed", min_value=0, value=42, step=1, key="bridge_seed")
+        bridge_name = bc4.text_input("--name", value="bridge_aero_v1", key="bridge_name",
+                                     help="Output dataset folder name under data/datasets/.")
+
+        _sec("Step 4 — 3D flight envelope")
+        bb1, bb2 = st.columns(2)
+        bridge_al  = bb1.text_input("--alpha-values [deg]", "-2,0,2,4,6", key="bridge_al")
+        bridge_ve  = bb2.text_input("--velocity-values [m/s]", "28", key="bridge_ve")
+        bb3, bb4 = st.columns(2)
+        bridge_at  = bb3.text_input("--altitude-values [m]", "1500", key="bridge_at")
+        bridge_ct  = bb4.text_input("--control-input-values [deg]", "-5,0,5", key="bridge_ct")
+
+        _sec("Step 5 — QC preset")
+        bridge_qcp = st.selectbox(
+            "--qc-preset", ["(none)"] + QC_PRESETS, key="bridge_qcp",
+            format_func=lambda s: QC_PRESET_INFO.get(s, s) if s in QC_PRESET_INFO else s,
+        )
+
+        bridge_args = [
+            "dataset", "aero-generate",
+            "-c", bridge_cfg,
+            "--n", str(int(bridge_n)),
+            "--sampler", bridge_samp,
+            "--sampler-seed", str(int(bridge_seed)),
+            "--name", bridge_name,
+            "--alpha-values", bridge_al,
+            "--velocity-values", bridge_ve,
+            "--altitude-values", bridge_at,
+            "--control-input-values", bridge_ct,
+            "--solver", "aerosandbox_avl",
+            "--no-save-plot",
+            "--retain-aero-runs", "failures_only",
+        ]
+        if bridge_qcp != "(none)": bridge_args += ["--qc-preset", bridge_qcp]
+
+        _note(
+            "<b>After this campaign:</b> go to ◈ ML Studio, select a feature set that "
+            "includes both 2D airfoil features and 3D geometry/flight-condition features "
+            "(e.g. a custom set combining <code>airfoil_xfoil_v1</code> inputs with "
+            "<code>c1_m, b_total_m, sw1_deg</code>) to train a joint surrogate.",
+            "info",
+        )
+        _panel(
+            "Launch 2D↔3D bridged aero campaign",
+            "3D BWB aero-generate campaign wired to the 2D airfoil library. "
+            "After completion: train a joint surrogate in ML Studio.",
+            bridge_args, root, exe, tmo, dry, "bridge_run",
+        )
+
 
 def _aero_run_rows(root: Path) -> list[Path]:
     """All folders in data/runs/ that look like aero runs (single or sweep)."""
@@ -4003,6 +4101,23 @@ def pg_aero(root, exe, tmo, dry):
         _sec("Solver")
         sol_args = _aero_solver_widget("ar")
 
+        with st.expander("Output naming & workflow (optional)"):
+            c_o1, c_o2 = st.columns(2)
+            ar_out_name = c_o1.text_input(
+                "--output-name", "", key="ar_out_name",
+                placeholder="e.g. baseline_check_v1",
+                help="Optional suffix appended to the output run folder name.",
+            )
+            ar_mach = c_o2.text_input(
+                "--mach (override)", "", key="ar_mach",
+                placeholder="e.g. 0.083 — normally leave blank (auto)",
+                help="Override auto-computed Mach number. AVL is incompressible; leave blank in most cases.",
+            )
+            ar_wf = st.text_input(
+                "--workflow (auto-record stage on success)", "", key="ar_wf",
+                placeholder="e.g. data/workflows/campaign_v1",
+                help="Workflow root. If set, auto-records the aero_run stage after a successful run.",
+            )
         full_args = (["aero", "run"] + src_args +
                      ["--alpha", str(al), "--velocity", str(ve),
                       "--altitude", str(at), "--control-input-deg", str(ctrl),
@@ -4010,6 +4125,9 @@ def pg_aero(root, exe, tmo, dry):
                       "--beta", str(be),
                       "--p", str(pv), "--q", str(qv), "--r", str(rv)] +
                      sol_args)
+        if ar_out_name.strip(): full_args += ["--output-name", ar_out_name.strip()]
+        if ar_mach.strip():     full_args += ["--mach", ar_mach.strip()]
+        if ar_wf.strip():       full_args += ["--workflow", ar_wf.strip()]
         _panel(
             "Run single aero case",
             "One geometry × one flight condition → data/runs/<timestamp>_aero_*/",
@@ -4085,6 +4203,21 @@ def pg_aero(root, exe, tmo, dry):
             sweep_args += ["--diff-input-values", df2]
         sweep_args += sol_args_sw
         if max_c.strip(): sweep_args += ["--max-cases", max_c.strip()]
+
+        with st.expander("Output naming & workflow (optional)"):
+            c_sw1, c_sw2 = st.columns(2)
+            sw_out_name = c_sw1.text_input(
+                "--output-name", "", key="sw_out_name",
+                placeholder="e.g. sweep_v1",
+                help="Optional suffix for the sweep output folder name.",
+            )
+            sw_wf = c_sw2.text_input(
+                "--workflow (auto-record on success)", "", key="sw_wf",
+                placeholder="e.g. data/workflows/campaign_v1",
+                help="Workflow root. Auto-records the aero_sweep stage after all cases succeed.",
+            )
+        if sw_out_name.strip(): sweep_args += ["--output-name", sw_out_name.strip()]
+        if sw_wf.strip():       sweep_args += ["--workflow", sw_wf.strip()]
 
         _panel(
             "Run aero sweep",
@@ -4231,10 +4364,12 @@ def pg_aero(root, exe, tmo, dry):
                         fc  = c.get("flight_condition") or {}
                         ar  = c.get("aero_result") or {}
                         sc  = ar.get("scalars") or {}
+                        derivs = ar.get("stability_axis_derivatives") or {}
                         rows.append({
                             "#":       c.get("case_index"),
                             "Status":  c.get("status","—"),
                             "α [°]":   fc.get("alpha_deg"),
+                            "β [°]":   fc.get("beta_deg"),
                             "V [m/s]": fc.get("velocity_mps"),
                             "Alt [m]": fc.get("altitude_m"),
                             "δe [°]":  c.get("control_input_deg"),
@@ -4244,18 +4379,31 @@ def pg_aero(root, exe, tmo, dry):
                             "Cm":      sc.get("cm"),
                             "L/D":     sc.get("l_over_d"),
                             "Xnp":     sc.get("x_np"),
+                            "CLa":     derivs.get("CLa"),
+                            "Cma":     derivs.get("Cma"),
                         })
                     df = _pd.DataFrame(rows)
-                    float_cols = ["α [°]","V [m/s]","Alt [m]","δe [°]","δa [°]","CL","CD","Cm","L/D","Xnp"]
+                    float_cols = ["α [°]","β [°]","V [m/s]","Alt [m]","δe [°]","δa [°]","CL","CD","Cm","L/D","Xnp","CLa","Cma"]
                     for fc_col in float_cols:
                         if fc_col in df.columns:
                             df[fc_col] = _pd.to_numeric(df[fc_col], errors="coerce")
 
-                    n_ok  = (df["Status"] == "success").sum()
-                    n_bad = len(df) - n_ok
+                    # ── stats bar ─────────────────────────────────────
+                    _n_ok  = (df["Status"] == "success").sum()
+                    _n_bad = len(df) - _n_ok
+                    _al_u  = sorted(df["α [°]"].dropna().unique())
+                    _de_u  = sorted(df["δe [°]"].dropna().unique())
+                    _stat_row([
+                        ("Cases", str(len(df)), "total in sweep"),
+                        ("Success", str(int(_n_ok)), "AVL converged"),
+                        ("Failed", str(int(_n_bad)), "solver timeout / error"),
+                        ("α range", (str(_al_u[0]) + "…" + str(_al_u[-1]) + "°") if _al_u else "—", "sweep bounds"),
+                        ("δe settings", str(len(_de_u)), "elevon values"),
+                    ])
+
                     st.caption(
-                        f"**{len(df)} cases** — ✓ {n_ok} success"
-                        + (f"  ✗ {n_bad} failed" if n_bad else "")
+                        "**" + str(len(df)) + " cases** — ✓ " + str(int(_n_ok)) + " success"
+                        + ("  ✗ " + str(int(_n_bad)) + " failed" if _n_bad else "")
                     )
 
                     view = st.radio(

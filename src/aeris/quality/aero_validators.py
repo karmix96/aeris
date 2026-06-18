@@ -224,17 +224,59 @@ def _check_grid_complete(df: pd.DataFrame, manifest: dict, report: dict) -> None
         _append_error(report, f"Missing required columns for grid completeness check: {missing}")
         return
 
-    expected_per_geom = (
-        df["alpha_deg"].nunique()
-        * df["velocity_mps"].nunique()
-        * df["altitude_m"].nunique()
-        * df["control_input_deg"].nunique()
+    manifest_keys = [
+        "alpha_values",
+        "beta_values",
+        "velocity_values",
+        "altitude_values",
+        "p_values",
+        "q_values",
+        "r_values",
+        "control_input_values",
+        "diff_input_values",
+    ]
+    required_manifest_keys = [
+        "alpha_values",
+        "velocity_values",
+        "altitude_values",
+        "control_input_values",
+    ]
+    has_manifest_sweep = any(key in manifest for key in manifest_keys)
+    has_required_manifest_sweeps = all(
+        len(manifest.get(key, []) or []) > 0 for key in required_manifest_keys
     )
+    manifest_lengths_raw = [len(manifest.get(key, []) or []) for key in manifest_keys]
+    manifest_lengths_effective = [length if length > 0 else 1 for length in manifest_lengths_raw]
+    if has_manifest_sweep and has_required_manifest_sweeps:
+        expected_per_geom = 1
+        for length in manifest_lengths_effective:
+            expected_per_geom *= length
+        expected_source = "manifest"
+    else:
+        expected_per_geom = (
+            df["alpha_deg"].nunique()
+            * df["velocity_mps"].nunique()
+            * df["altitude_m"].nunique()
+            * df["control_input_deg"].nunique()
+        )
+        expected_source = "observed_unique_values"
+        _append_warning(
+            report,
+            "Grid completeness expected count fell back to observed unique values "
+            f"because required manifest sweep lists are missing or empty: {required_manifest_keys}",
+        )
 
     counts = df.groupby("geometry_id").size()
     bad = counts[counts != expected_per_geom]
 
     report["metrics"]["expected_rows_per_geometry"] = int(expected_per_geom)
+    report["metrics"]["expected_rows_source"] = expected_source
+    report["metrics"]["manifest_sweep_lengths"] = {
+        key: int(length) for key, length in zip(manifest_keys, manifest_lengths_raw)
+    }
+    report["metrics"]["manifest_sweep_effective_lengths"] = {
+        key: int(length) for key, length in zip(manifest_keys, manifest_lengths_effective)
+    }
     report["metrics"]["geometry_row_counts"] = {str(k): int(v) for k, v in counts.to_dict().items()}
     report["metrics"]["incomplete_geometry_count"] = int(len(bad))
 
@@ -389,10 +431,10 @@ def _check_ld_sanity(df: pd.DataFrame, manifest: dict, report: dict) -> None:
     cd_for_ld = cd.replace(0.0, np.nan)
     ld = cl_for_ld / cd_for_ld
 
-    # Exclude near-zero-lift rows from the large-L/D check: ratio is
-    # physically infinite there for an inviscid solver.
+    # Exclude near-zero-lift rows from L/D checks: ratio is physically
+    # infinite there for an inviscid solver.
     near_zero_lift = cl.abs() < 0.05
-    bad_non_finite = int((~np.isfinite(ld)).sum())
+    bad_non_finite = int(((~np.isfinite(ld)) & ~near_zero_lift).sum())
     bad_too_large  = int((np.isfinite(ld) & (ld.abs() > 500.0) & ~near_zero_lift).sum())
     bad_negative   = int((np.isfinite(ld) & (ld <= 0.0)).sum())
     near_zero_excluded = int(near_zero_lift.sum())
@@ -405,7 +447,12 @@ def _check_ld_sanity(df: pd.DataFrame, manifest: dict, report: dict) -> None:
     }
 
     if bad_non_finite > 0:
-        _append_error(report, f"Non-finite L/D detected in {bad_non_finite} rows")
+        _append_error(
+            report,
+            f"Non-finite L/D detected in {bad_non_finite} rows "
+            f"(excluding {near_zero_excluded} near-zero-lift rows where L/D is undefined "
+            "for an inviscid solver)",
+        )
     if bad_too_large > 0:
         _append_warning(
             report,

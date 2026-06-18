@@ -48,12 +48,12 @@ def test_build_qc_summary_payload_for_production() -> None:
     assert payload["qc_preset"] == "production"
     assert payload["geometry_qc"] == {
         "enabled": True,
-        "profile": "basic",
+        "profile": "production",
         "fail_on_error": True,
     }
     assert payload["aero_qc"] == {
         "enabled": True,
-        "profile": "basic",
+        "profile": "production",
         "fail_on_error": True,
     }
 

@@ -177,8 +177,8 @@ _GUI_AIRFOIL_UX_STATIC_MARKERS = (
 QC_PRESETS = ["off", "debug", "production", "promotion_strict"]
 QC_PRESET_INFO = {
     "off":              "Off — skip all QC (smoke/debug only, lets bad data pass)",
-    "debug":            "Debug — run QC, don't block on failures (visibility without gate)",
-    "production":       "Production — run QC + block on failures ✓ recommended",
+    "debug":            "Debug — run basic QC, don't block on failures (visibility without gate)",
+    "production":       "Production — physical QC + block on failures ✓ recommended",
     "promotion_strict": "Promotion Strict — strict profile, blocks on any failure",
 }
 RETENTION_POLICIES = ["all", "failures_only", "none"]
@@ -189,7 +189,7 @@ RETENTION_INFO = {
 }
 SPACING  = ["equal", "cosine"]
 SPLIT_METHODS = ["grouped", "random"]
-QC_PROFILES  = ["basic", "strict"]
+QC_PROFILES  = ["basic", "production", "strict"]
 
 PAGES = [
     ("home",     "⌂",  "Overview"),
@@ -3260,9 +3260,14 @@ def pg_airfoil(root, exe, tmo, dry):
                         "warn",
                     )
                 elif _rjson(qc_report_path) and not _rjson(qc_report_path).get("passed"):
+                    qc_payload = _rjson(qc_report_path) or {}
+                    coverage_failures = qc_payload.get("per_group_coverage_failures") or []
+                    extra = ""
+                    if coverage_failures:
+                        extra = " Per-group coverage failed: require at least 3 converged rows per airfoil/Re/Mach group."
                     _note(
                         "✗ QC failed on this dataset. Fix issues before curating. "
-                        "See QC report below.",
+                        "See QC report below." + extra,
                         "err",
                     )
                 _sec("QC polar preview")
@@ -3274,13 +3279,19 @@ def pg_airfoil(root, exe, tmo, dry):
 
                 c_qc, c_cur, c_prom = st.columns(3)
                 with c_qc:
-                    _panel("QC", "Quality checks on raw airfoil_dataset.csv.",
-                           ["airfoil", "dataset", "qc", "--dataset", str(ds_path)],
-                           root, exe, tmo, dry, "af_qc", label="▶  QC")
+                    _panel(
+                        "QC",
+                        "Checks XFOIL rows: converged targets, cd>0, duplicate key incl. ncrit, and at least 3 converged rows per airfoil/Re/Mach group.",
+                        ["airfoil", "dataset", "qc", "--dataset", str(ds_path)],
+                        root, exe, tmo, dry, "af_qc", label="▶  QC",
+                    )
                 with c_cur:
-                    _panel("Curate", "Reject unconverged, cd≤0, non-finite rows.",
-                           ["airfoil", "dataset", "curate", "--dataset", str(ds_path)],
-                           root, exe, tmo, dry, "af_cur", label="▶  Curate")
+                    _panel(
+                        "Curate",
+                        "Rejects unconverged, cd<=0, non-finite rows; blocks promotion if QC failed or per-group coverage is insufficient.",
+                        ["airfoil", "dataset", "curate", "--dataset", str(ds_path)],
+                        root, exe, tmo, dry, "af_cur", label="▶  Curate",
+                    )
                 with c_prom:
                     _panel("Promote", "Write promotion_manifest.json for ML.",
                            ["airfoil", "dataset", "promote", "--dataset", str(ds_path)],
@@ -3293,6 +3304,7 @@ def pg_airfoil(root, exe, tmo, dry):
 
                 for fname, label_str in [
                     ("airfoil_dataset.csv",          "Raw dataset preview"),
+                    ("airfoil_qc_report.json",       "Airfoil QC report"),
                     ("curated_airfoil_dataset.csv",  "Curated dataset preview"),
                     ("promotion_manifest.json",      "Promotion manifest"),
                     ("curation_report.json",         "Curation report"),
@@ -3469,6 +3481,11 @@ def pg_dataset(root, exe, tmo, dry):
         max_c_ds    = c5.text_input("--max-cases (optional cap)","",key="ds_mc",help="Safety cap on total aero cases. Leave blank.")
 
         _sec("QC — use preset OR explicit flags (preset overrides flags)")
+        _note(
+            "<b>Production QC</b> now includes physical geometry checks plus aero CL-alpha and Cm-control sign checks. "
+            "<b>Strict QC</b> additionally keeps statistical outliers, L/D, beta=0 lateral sanity, and target-variation checks.",
+            "info",
+        )
         qcp_label = st.selectbox("--qc-preset (recommended — overrides all explicit QC flags)",
                                   ["(none — use explicit flags below)"] + QC_PRESETS, index=0, key="ds_qcp",
                                   format_func=lambda s: QC_PRESET_INFO.get(s,s) if s in QC_PRESET_INFO else s)
@@ -3561,11 +3578,11 @@ def pg_dataset(root, exe, tmo, dry):
         elif "Geometry QC" in act3:
             qp3 = st.selectbox("--profile",QC_PROFILES,key="diq_gqcp")
             args3 = ["dataset","qc","--dataset",ds3,"--profile",qp3]
-            desc3 = "Runs geometry quality checks on all cases in the dataset."
+            desc3 = "Runs geometry QC. Production/strict include AR consistency, taper, planform, twist, and dihedral physical checks."
         else:
             qp3 = st.selectbox("--profile",QC_PROFILES,key="diq_aqcp")
             args3 = ["dataset","aero-qc","--dataset",ds3,"--profile",qp3]
-            desc3 = "Runs aero quality checks on aero_dataset.csv."
+            desc3 = "Runs aero QC. Production includes CL-alpha and Cm-control sign; strict adds outlier, L/D, beta=0, and target-variation checks."
         _panel("Inspect / QC",desc3,args3,root,exe,tmo,dry,"diq_run")
 
     # ── CURATE / PROMOTE ──────────────────────────────────────────────────────
@@ -3577,13 +3594,14 @@ def pg_dataset(root, exe, tmo, dry):
         if task4 == "curate-aero":
             _note(
                 "Curation rejects: incomplete groups, aero failures, nonfinite targets, failed control diagnostics. "
+                "Grid completeness is checked against manifest sweep lists, including beta/rates/differential controls when present. "
                 "All four defaults are True. "
                 "<b>After curating and promoting, run <code>aeris aero cm-sanity --dataset &lt;ds&gt;</code></b> "
                 "(in the Aero page) to verify Cm sign convention before any ML training.",
                 "info",
             )
             c1,c2 = st.columns(2)
-            ri4 = c1.checkbox("--reject-incomplete-groups",True,key="dc_ri",help="Reject geometries whose sweep grid is incomplete")
+            ri4 = c1.checkbox("--reject-incomplete-groups",True,key="dc_ri",help="Reject geometries whose manifest-defined sweep grid is incomplete")
             rf4 = c2.checkbox("--reject-groups-with-failures",True,key="dc_rf",help="Reject geometries with any failed AVL case")
             rn4 = c1.checkbox("--reject-nonfinite-targets",True,key="dc_rn",help="Reject rows with NaN/Inf in CL/CD/Cm")
             rd4 = c2.checkbox("--reject-control-diagnostic-failures",True,key="dc_rd",help="Reject geometries where AVL control diagnostics failed")
@@ -6034,6 +6052,7 @@ def pg_ml(root, exe, tmo, dry):
             mr4 = _pick_dir("ML run dir",root/"data"/"processed"/"ml_runs","tg_mr")
             _note(
                 "All threshold args are optional — leave blank to skip that gate. "
+                "Dataset promotion context is rechecked here; force-promoted datasets and recorded QC/curation blockers stop model promotion unless explicitly allowed. "
                 "<code>--require-diagnostics</code> defaults True. "
                 "<b>Per-target thresholds are aggregate only</b> — a model can have good mean RMSE but fail on Cm specifically. "
                 "After promotion, run <b>⑧ Audit model</b> to inspect per-target and per-regime residuals.",

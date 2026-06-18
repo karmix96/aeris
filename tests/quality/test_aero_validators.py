@@ -8,13 +8,21 @@ import pandas as pd
 from aeris.quality.pipeline_api import run_aero_dataset_qc
 
 
-def _make_aero_dataset(dataset_root: Path, *, rows: list[dict], successful_aero_rows: int | None = None) -> None:
+def _make_aero_dataset(
+    dataset_root: Path,
+    *,
+    rows: list[dict],
+    successful_aero_rows: int | None = None,
+    manifest_updates: dict | None = None,
+) -> None:
     dataset_root.mkdir(parents=True, exist_ok=True)
 
     manifest = {
         "status": "success",
         "successful_aero_rows": len(rows) if successful_aero_rows is None else successful_aero_rows,
     }
+    if manifest_updates:
+        manifest.update(manifest_updates)
     (dataset_root / "aero_dataset_manifest.json").write_text(
         json.dumps(manifest, indent=2),
         encoding="utf-8",
@@ -202,3 +210,135 @@ def test_aero_strict_warns_not_fails_on_negative_ld(tmp_path: Path) -> None:
     assert any("Non-positive L/D" in msg for msg in report["warnings"])
     assert not any("Non-positive L/D" in msg for msg in report["errors"])
 
+
+
+def _minimal_ld_rows() -> list[dict]:
+    rows = []
+    for alpha, cl, cd in [(0.0, 0.0, 0.0), (4.0, 1.0, 0.0)]:
+        for ctrl, cm in [(-5.0, 0.05), (0.0, 0.0), (5.0, -0.05)]:
+            rows.append(
+                {
+                    "geometry_id": "g1",
+                    "alpha_deg": alpha,
+                    "beta_deg": 0.0,
+                    "velocity_mps": 28.0,
+                    "altitude_m": 1500.0,
+                    "control_input_deg": ctrl,
+                    "cl": cl,
+                    "cd": cd,
+                    "cm": cm,
+                    "cy": 0.0,
+                    "cl_roll": 0.0,
+                    "cn": 0.0,
+                    "geometry_declares_controls": True,
+                    "airplane_has_controls": True,
+                    "diag_airplane_has_control_surfaces": True,
+                    "diag_airplane_avl_has_control_blocks": True,
+                    "diag_keystrokes_has_d1_command": True,
+                    "diag_stdout_control_variables": 1,
+                }
+            )
+    return rows
+
+
+def test_ld_sanity_excludes_nonfinite_ld_at_zero_lift_only(tmp_path: Path) -> None:
+    dataset_root = tmp_path / "aero_dataset"
+    _make_aero_dataset(
+        dataset_root,
+        rows=_minimal_ld_rows(),
+        manifest_updates={
+            "alpha_values": [0.0, 4.0],
+            "velocity_values": [28.0],
+            "altitude_values": [1500.0],
+            "control_input_values": [-5.0, 0.0, 5.0],
+        },
+    )
+
+    report = run_aero_dataset_qc(dataset_root, profile="strict")
+    ld_check = next(c for c in report["checks"] if c["validator_id"] == "aero_ld_sanity_v1")
+
+    assert ld_check["metrics"]["ld_sanity"]["non_finite_ld_count"] == 3
+    assert any("Non-finite L/D detected in 3 rows" in msg for msg in ld_check["errors"])
+    assert not any("Non-finite L/D detected in 6 rows" in msg for msg in ld_check["errors"])
+
+
+def test_grid_complete_uses_manifest_sweep_lists(tmp_path: Path) -> None:
+    dataset_root = tmp_path / "aero_dataset"
+    rows = []
+    for alpha in [-4.0, 0.0, 4.0]:
+        rows.append(
+            {
+                "geometry_id": "g1",
+                "alpha_deg": alpha,
+                "velocity_mps": 28.0,
+                "altitude_m": 1500.0,
+                "control_input_deg": 0.0,
+                "cl": 0.2 + 0.1 * alpha,
+                "cd": 0.03,
+                "cm": -0.05,
+                "geometry_declares_controls": True,
+                "airplane_has_controls": True,
+                "diag_airplane_has_control_surfaces": True,
+                "diag_airplane_avl_has_control_blocks": True,
+                "diag_keystrokes_has_d1_command": True,
+                "diag_stdout_control_variables": 1,
+            }
+        )
+    _make_aero_dataset(
+        dataset_root,
+        rows=rows,
+        manifest_updates={
+            "alpha_values": [-4.0, 0.0, 4.0, 8.0],
+            "beta_values": [],
+            "velocity_values": [28.0],
+            "altitude_values": [1500.0],
+            "p_values": [],
+            "q_values": [],
+            "r_values": [],
+            "control_input_values": [0.0],
+            "diff_input_values": [],
+        },
+    )
+
+    report = run_aero_dataset_qc(dataset_root, profile="basic")
+    grid_check = next(c for c in report["checks"] if c["validator_id"] == "aero_grid_complete_v1")
+
+    assert grid_check["passed"] is False
+    assert grid_check["metrics"]["expected_rows_source"] == "manifest"
+    assert grid_check["metrics"]["expected_rows_per_geometry"] == 4
+    assert grid_check["metrics"]["manifest_sweep_effective_lengths"]["beta_values"] == 1
+    assert grid_check["metrics"]["manifest_sweep_effective_lengths"]["p_values"] == 1
+    assert grid_check["metrics"]["manifest_sweep_effective_lengths"]["diff_input_values"] == 1
+    assert any("Incomplete per-geometry sweep grid" in msg for msg in grid_check["errors"])
+
+
+def test_grid_complete_falls_back_without_manifest_sweep_lists(tmp_path: Path) -> None:
+    dataset_root = tmp_path / "aero_dataset"
+    rows = []
+    for alpha in [-4.0, 0.0, 4.0]:
+        rows.append(
+            {
+                "geometry_id": "g1",
+                "alpha_deg": alpha,
+                "velocity_mps": 28.0,
+                "altitude_m": 1500.0,
+                "control_input_deg": 0.0,
+                "cl": 0.2 + 0.1 * alpha,
+                "cd": 0.03,
+                "cm": -0.05,
+                "geometry_declares_controls": True,
+                "airplane_has_controls": True,
+                "diag_airplane_has_control_surfaces": True,
+                "diag_airplane_avl_has_control_blocks": True,
+                "diag_keystrokes_has_d1_command": True,
+                "diag_stdout_control_variables": 1,
+            }
+        )
+    _make_aero_dataset(dataset_root, rows=rows)
+
+    report = run_aero_dataset_qc(dataset_root, profile="basic")
+    grid_check = next(c for c in report["checks"] if c["validator_id"] == "aero_grid_complete_v1")
+
+    assert grid_check["passed"] is True
+    assert grid_check["metrics"]["expected_rows_source"] == "observed_unique_values"
+    assert any("fell back to observed unique values" in msg for msg in grid_check["warnings"])

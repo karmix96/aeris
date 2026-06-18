@@ -36,10 +36,10 @@ QC_PRESETS: dict[str, QCPreset] = {
     "production": QCPreset(
         name="production",
         run_geometry_qc=True,
-        geometry_qc_profile="basic",
+        geometry_qc_profile="production",
         fail_on_geometry_qc_error=True,
         run_aero_qc=True,
-        aero_qc_profile="basic",
+        aero_qc_profile="production",
         fail_on_aero_qc_error=True,
     ),
     "promotion_strict": QCPreset(

@@ -17,6 +17,8 @@ from typing import Any
 
 import pandas as pd
 
+from aeris.airfoil.qc import MIN_USABLE_ROWS
+
 REQUIRED_TARGETS = ["cl", "cd", "cm"]
 GROUP_KEY = "airfoil_id"
 
@@ -97,10 +99,16 @@ def curate_airfoil_dataset(
     qc_report_path = dataset_root / "airfoil_qc_report.json"
     qc_passed = None
     qc_report_found = qc_report_path.exists()
+    qc_report_has_coverage_field = False
+    qc_per_group_coverage_failures: list[dict[str, Any]] = []
     if qc_report_found:  # AERIS_PATCH_C12_APPLIED
         try:
             qc = json.loads(qc_report_path.read_text(encoding="utf-8"))
             qc_passed = bool(qc.get("passed", None))
+            qc_report_has_coverage_field = "per_group_coverage_failures" in qc
+            qc_per_group_coverage_failures = list(
+                qc.get("per_group_coverage_failures", []) or []
+            )
         except Exception:
             pass
 
@@ -111,6 +119,22 @@ def curate_airfoil_dataset(
         promotion_blockers.append("airfoil_qc_not_run")
     elif qc_passed is False:
         promotion_blockers.append("airfoil_qc_failed")
+    post_curation_coverage_failure_count = 0
+    group_cols = ["airfoil_id", "reynolds", "mach"]
+    if (
+        qc_report_has_coverage_field
+        and not kept_df.empty
+        and all(col in kept_df.columns for col in group_cols)
+    ):
+        for _name, grp in kept_df.groupby(group_cols, dropna=False):
+            if "converged" in grp.columns:
+                converged_count = int((grp["converged"] == True).sum())  # noqa: E712
+            else:
+                converged_count = int(len(grp))
+            if converged_count < MIN_USABLE_ROWS:
+                post_curation_coverage_failure_count += 1
+    if post_curation_coverage_failure_count:
+        promotion_blockers.append("insufficient_per_group_coverage")
     if kept_df.empty:
         promotion_blockers.append("no_rows_after_curation")
 
@@ -131,6 +155,8 @@ def curate_airfoil_dataset(
         "rejected_airfoils": len(rejected_airfoils),
         "rejection_reason_counts": reason_counts,
         "qc_passed": qc_passed,
+        "per_group_coverage_failures": qc_per_group_coverage_failures,
+        "post_curation_coverage_failure_count": post_curation_coverage_failure_count,
         "promotion_ready": promotion_ready,
         "promotion_blockers": promotion_blockers,
         "curated_airfoil_dataset_csv": str(curated_csv),

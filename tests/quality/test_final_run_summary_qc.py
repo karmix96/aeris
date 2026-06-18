@@ -49,11 +49,11 @@ def test_final_run_summary_records_production_profiles(tmp_path: Path) -> None:
     assert loaded["qc"]["qc_preset"] == "production"
 
     assert loaded["qc"]["geometry_qc"]["enabled"] is True
-    assert loaded["qc"]["geometry_qc"]["profile"] == "basic"
+    assert loaded["qc"]["geometry_qc"]["profile"] == "production"
     assert loaded["qc"]["geometry_qc"]["fail_on_error"] is True
 
     assert loaded["qc"]["aero_qc"]["enabled"] is True
-    assert loaded["qc"]["aero_qc"]["profile"] == "basic"
+    assert loaded["qc"]["aero_qc"]["profile"] == "production"
     assert loaded["qc"]["aero_qc"]["fail_on_error"] is True
 
 

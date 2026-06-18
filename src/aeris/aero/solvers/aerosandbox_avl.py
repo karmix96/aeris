@@ -29,6 +29,7 @@ from aerosandbox.geometry import Wing, WingXSec
 
 from aeris.aero.base import AeroSolver
 from aeris.aero.models import AeroFailure, AeroInput, AeroResult, AeroStatus
+from aeris.aero.solvers.avl_polar_injection import inject_polar_cdcl
 from aeris.aero.registry import register_solver
 from aeris.aero.validation import (
     validate_aero_input,
@@ -148,6 +149,16 @@ class AVLStrips(AVLBase):
 
         airplane_avl_path = directory / airplane_file
         self.write_avl(airplane_avl_path)
+
+        # Polar bridge: replace zero CDCL placeholders with library polar data
+        if hasattr(self, "_cdcl_injector") and callable(self._cdcl_injector):
+            try:
+                self._cdcl_injector(airplane_avl_path)
+            except Exception as _exc:
+                import logging as _logging
+                _logging.getLogger(__name__).warning(
+                    "AVL polar injection failed (continuing with zero CDCL): %s", _exc
+                )
 
         _rm(directory / totals_filename)
         _rm(directory / strip_filename)
@@ -634,6 +645,18 @@ class AeroSandboxAVLSolver(AeroSolver):
                     timeout=settings.timeout_sec,
                 )
 
+                # Optional polar bridge: wire up CDCL injector when both
+                # section_map and polar_store are provided via solver_options.
+                _section_map = settings.solver_options.get("section_map")
+                _polar_store = settings.solver_options.get("polar_store")
+                if _section_map is not None and _polar_store is not None:
+                    _V = fc.velocity_mps
+                    _mach = fc.mach
+                    _alt = fc.altitude_m
+                    avl._cdcl_injector = lambda _p: inject_polar_cdcl(
+                        _p, _section_map, _polar_store, _V, _mach, _alt
+                    )
+
                 raw = avl.run(
                     control_input_deg=control_input_deg,
                     diff_input_deg=settings.solver_options.get("diff_input_deg"),
@@ -789,6 +812,28 @@ class AeroSandboxAVLSolver(AeroSolver):
                     strips_df = read_avl_strips(strips_path, alpha_deg=fc.alpha_deg)
                     strips_df.to_csv(output_dir / "strips_parsed.csv", index=False)
                     result.artifact_paths["strips_parsed"] = str(output_dir / "strips_parsed.csv")
+
+                    # Polar bridge: compute profile drag from strip polars when
+                    # both section_map and polar_store are present.
+                    __section_map = settings.solver_options.get("section_map")
+                    __polar_store = settings.solver_options.get("polar_store")
+                    if __section_map is not None and __polar_store is not None:
+                        cd_prof = _compute_strip_profile_drag(
+                            strips_df=strips_df,
+                            section_map=__section_map,
+                            polar_store=__polar_store,
+                            s_ref=float(airplane.s_ref),
+                            velocity_mps=fc.velocity_mps,
+                            mach=fc.mach,
+                            altitude_m=fc.altitude_m,
+                        )
+                        if cd_prof is not None:
+                            result.cd_profile = cd_prof
+                            cd_ind_val = result.cd_ind or 0.0
+                            result.cd_total = cd_ind_val + cd_prof
+                            if result.cl is not None and result.cd_total > 0:
+                                result.l_over_d_viscous = result.cl / result.cd_total
+
                 except Exception as exc:
                     result.warnings.append(f"Strip parsing failed: {exc}")
 
@@ -954,6 +999,87 @@ def _extract_body_axis_derivatives(raw: dict[str, Any]) -> dict[str, float | Non
         key: _to_float_or_none(parsed.get(key))
         for key in derivative_keys
     }
+
+
+def _compute_strip_profile_drag(
+    strips_df: pd.DataFrame,
+    section_map,
+    polar_store,
+    s_ref: float,
+    velocity_mps: float,
+    mach: float,
+    altitude_m: float,
+) -> float | None:
+    """Integrate section profile drag over the semi-span from AVL strip data.
+
+    CD_profile = (1/S_ref) × Σ_i  cd_2d(cl_i, Re_i) × chord_i × Δy_i
+
+    The summation covers all strips on one semi-wing (symmetric).  AVL's
+    ``strips.txt`` contains both semi-wings; this function detects duplication
+    and sums only the port/starboard half.
+
+    Returns None if the strips DataFrame is missing required columns or has
+    too few rows for a meaningful integration.
+    """
+    from aeris.aero.solvers.avl_polar_injection import _kinematic_viscosity
+
+    needed = {"y_le", "chord", "cl_local"}
+    if not needed.issubset(strips_df.columns):
+        return None
+    if len(strips_df) < 2:
+        return None
+
+    nu = _kinematic_viscosity(altitude_m)
+
+    # AVL strips are written for both halves (symmetric).  Keep only y_le >= 0.
+    df = strips_df[strips_df["y_le"] >= 0.0].copy()
+    if df.empty:
+        return None
+
+    # Sort by y_le and compute Δy between adjacent strips
+    df = df.sort_values("y_le").reset_index(drop=True)
+    y_arr = df["y_le"].to_numpy(float)
+    chord_arr = df["chord"].to_numpy(float)
+    cl_arr = df["cl_local"].to_numpy(float)
+
+    dy = _strip_dy(y_arr)
+
+    cd_prof_sum = 0.0
+    for idx in range(len(df)):
+        y_m = float(y_arr[idx])  # y_le is the strip leading-edge y position
+        chord = float(chord_arr[idx])
+        cl = float(cl_arr[idx])
+        re = velocity_mps * chord / nu if nu > 0 else 1e6
+
+        airfoil_id = section_map.get_airfoil_id(y_m)
+        if airfoil_id is None:
+            continue
+
+        cd_2d = polar_store.query_cd(airfoil_id, cl=cl, re=re, mach=mach)
+        if cd_2d is None:
+            continue
+
+        cd_prof_sum += cd_2d * chord * dy[idx]
+
+    if s_ref <= 0:
+        return None
+    return cd_prof_sum / s_ref
+
+
+def _strip_dy(y_arr: "np.ndarray") -> "np.ndarray":
+    """Return spanwise strip widths Δy corresponding to each strip centre."""
+    import numpy as _np
+    n = len(y_arr)
+    dy = _np.empty(n, dtype=float)
+    if n == 1:
+        dy[0] = y_arr[0] * 2 if y_arr[0] > 0 else 0.0
+        return dy
+    # Trapezoidal cell widths
+    dy[0] = (y_arr[1] - y_arr[0]) * 0.5
+    dy[-1] = (y_arr[-1] - y_arr[-2]) * 0.5
+    for i in range(1, n - 1):
+        dy[i] = (y_arr[i + 1] - y_arr[i - 1]) * 0.5
+    return dy
 
 
 def _compute_derived_metrics(

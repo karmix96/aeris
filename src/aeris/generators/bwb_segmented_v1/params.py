@@ -147,6 +147,17 @@ class PlanformBoundsConfig:
 
 
 @dataclass(frozen=True)
+class SegmentAirfoilConfig:
+    """One spanwise segment → one 2D-library airfoil for the polar bridge.
+
+    y_frac_end is normalised by semispan (0 < y_frac_end ≤ 1.0).
+    The last entry should have y_frac_end=1.0; it is clamped automatically.
+    """
+    airfoil_id: str
+    y_frac_end: float
+
+
+@dataclass(frozen=True)
 class SectionBoundsConfig:
     airfoil_name: str
     dihedral_root_deg: float
@@ -159,6 +170,10 @@ class SectionBoundsConfig:
     dihedral_b1_deg: RangeConfig
     dihedral_b2_deg: RangeConfig
     dihedral_b3_deg: RangeConfig
+
+    # AVL polar bridge — optional; None means no CDCL injection
+    airfoil_library_id: str | None = None       # single airfoil from library (approach 1a)
+    segment_airfoils: tuple[SegmentAirfoilConfig, ...] = ()  # multi-segment (approach 1b / 2)
 
 
 @dataclass(frozen=True)
@@ -304,6 +319,41 @@ class BWBGeneratorConfig:
 # ---------------------------------------------------------------------------
 # Parsing helpers
 # ---------------------------------------------------------------------------
+
+
+def _parse_optional_str(value: Any, *, field_name: str) -> str | None:
+    if value is None:
+        return None
+    return _as_str(value, field_name=field_name)
+
+
+def _parse_segment_airfoils(raw: Any) -> tuple[SegmentAirfoilConfig, ...]:
+    """Parse optional section_bounds.segment_airfoils list from YAML."""
+    if raw is None:
+        return ()
+    if not isinstance(raw, list):
+        raise TypeError(
+            f"section_bounds.segment_airfoils must be a list, got {type(raw).__name__}."
+        )
+    result: list[SegmentAirfoilConfig] = []
+    for i, item in enumerate(raw):
+        if not isinstance(item, dict):
+            raise TypeError(
+                f"section_bounds.segment_airfoils[{i}] must be a mapping."
+            )
+        result.append(
+            SegmentAirfoilConfig(
+                airfoil_id=_as_str(
+                    item.get("airfoil_id", item.get("id", "")),
+                    field_name=f"segment_airfoils[{i}].airfoil_id",
+                ),
+                y_frac_end=_as_float(
+                    item.get("y_frac_end", item.get("y_end_frac", 1.0)),
+                    field_name=f"segment_airfoils[{i}].y_frac_end",
+                ),
+            )
+        )
+    return tuple(result)
 
 
 def _require(mapping: dict[str, Any], key: str) -> Any:
@@ -471,6 +521,13 @@ def build_bwb_generator_config(config: dict[str, Any]) -> BWBGeneratorConfig:
             dihedral_b1_deg=_range_cfg(sections_cfg, "dihedral_b1_deg"),
             dihedral_b2_deg=_range_cfg(sections_cfg, "dihedral_b2_deg"),
             dihedral_b3_deg=_range_cfg(sections_cfg, "dihedral_b3_deg"),
+            airfoil_library_id=_parse_optional_str(
+                sections_cfg.get("airfoil_library_id"),
+                field_name="section_bounds.airfoil_library_id",
+            ),
+            segment_airfoils=_parse_segment_airfoils(
+                sections_cfg.get("segment_airfoils"),
+            ),
         ),
         outputs=PlotOutputsConfig(
             save_plot=_as_bool(

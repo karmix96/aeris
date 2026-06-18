@@ -145,6 +145,11 @@ class AeroResult:
     span_efficiency: float | None = None
     x_np: float | None = None
 
+    # 2D→3D polar bridge: profile drag and viscous-corrected totals
+    cd_profile: float | None = None          # section-integrated profile drag (CDCL injection)
+    cd_total: float | None = None            # cd_ind + cd_profile (viscous total)
+    l_over_d_viscous: float | None = None    # cl / cd_total
+
 
     # NEW: explicit derivative-family separation
     stability_axis_derivatives: dict[str, float | None] = field(default_factory=dict)

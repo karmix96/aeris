@@ -36,7 +36,11 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from aeris.generators.bwb_segmented_v1.params import BWBDesignSample, BWBGeneratorConfig
+from aeris.generators.bwb_segmented_v1.params import (
+    BWBDesignSample,
+    BWBGeneratorConfig,
+    SectionBoundsConfig,
+)
 from aeris.generators.bwb_segmented_v1.planform import PlanformResult
 
 
@@ -54,6 +58,7 @@ class SectionRecord:
     twist_deg: float
     dihedral_deg: float
     airfoil_name: str
+    airfoil_id: str | None = None  # library airfoil ID for polar bridge (None = no bridge)
 
 
 @dataclass(frozen=True)
@@ -84,6 +89,32 @@ class SectionGeometryResult:
             arr = getattr(self, field_name)
             if isinstance(arr, np.ndarray):
                 arr.flags.writeable = False
+
+
+# ---------------------------------------------------------------------------
+# Polar bridge helper
+# ---------------------------------------------------------------------------
+
+def _make_airfoil_id_resolver(sb: SectionBoundsConfig, semispan_m: float = 1.0):
+    """Return a callable y_m → airfoil_id for the polar bridge, or None."""
+    if sb.segment_airfoils:
+        segs = sorted(sb.segment_airfoils, key=lambda s: s.y_frac_end)
+        # Convert fractional boundaries to absolute y [m]
+        y_boundaries = [s.y_frac_end * semispan_m for s in segs]
+        ids = [s.airfoil_id for s in segs]
+        return lambda y_m: _segment_lookup_abs(y_m, ids, y_boundaries)
+    if sb.airfoil_library_id:
+        _aid = sb.airfoil_library_id
+        return lambda _y: _aid
+    return None
+
+
+def _segment_lookup_abs(y_m: float, ids: list, y_boundaries: list) -> str:
+    """Return airfoil_id for the segment whose absolute y_end ≥ y_m."""
+    for aid, y_end in zip(ids, y_boundaries):
+        if y_m <= y_end + 1e-6:
+            return aid
+    return ids[-1]
 
 
 # ---------------------------------------------------------------------------
@@ -203,18 +234,23 @@ def build_section_geometry_from_sample(
 
     # --- Build section records ---
     airfoil_name = sb.airfoil_name
+    # Pre-compute airfoil_id lookup for the polar bridge (optional)
+    semispan_m = float(planform.front_y_fine[-1]) if len(planform.front_y_fine) > 0 else 1.0
+    _bridge_id_resolver = _make_airfoil_id_resolver(sb, semispan_m=semispan_m)
     sections: list[SectionRecord] = []
     for i in range(planform.num_sections):
+        y_m_i = float(planform.front_y_fine[i])
         sections.append(
             SectionRecord(
                 index=i,
                 x_le_m=float(planform.front_x_fine[i]),
-                y_m=float(planform.front_y_fine[i]),
+                y_m=y_m_i,
                 z_le_m=float(z_array_m[i]),
                 chord_m=float(planform.rear_x_fine[i] - planform.front_x_fine[i]),
                 twist_deg=float(twist_array_deg[i]),
                 dihedral_deg=float(dihedral_array_deg[i]),
                 airfoil_name=airfoil_name,
+                airfoil_id=_bridge_id_resolver(y_m_i) if _bridge_id_resolver else None,
             )
         )
 

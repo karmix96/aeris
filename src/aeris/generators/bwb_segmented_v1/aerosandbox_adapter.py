@@ -196,6 +196,7 @@ def extract_wing_metadata(wing: asb.Wing) -> dict[str, Any]:
 def build_aerosandbox_geometry(
     section_geometry: SectionGeometryResult,
     config: BWBGeneratorConfig,
+    section_map=None,    # optional SectionAirfoilMap for polar bridge
 ) -> AeroSandboxGeometryResult:
     airfoil_name = config.section_bounds.airfoil_name
 
@@ -207,7 +208,17 @@ def build_aerosandbox_geometry(
 
     wing_xsecs: list[asb.WingXSec] = []
     for i, section in enumerate(section_geometry.sections):
-        airfoil = asb.Airfoil(section.airfoil_name or airfoil_name)
+        # When a section_map with library coordinates is available, pass actual
+        # airfoil geometry to AeroSandbox so it writes correct AFIL/CLAF entries.
+        if section_map is not None:
+            coords = section_map.get_coordinates(section.y_m)
+            if coords is not None:
+                aid = section.airfoil_id or section_map.get_airfoil_id(section.y_m)
+                airfoil = asb.Airfoil(name=aid or section.airfoil_name, coordinates=coords)
+            else:
+                airfoil = asb.Airfoil(section.airfoil_name or airfoil_name)
+        else:
+            airfoil = asb.Airfoil(section.airfoil_name or airfoil_name)
         control_surfaces_here = list(control_assignments.get(i, []))
 
         wing_xsecs.append(

@@ -6,7 +6,7 @@ airfoil:
   generator:
     id: cst_airfoil_v1
     seed: 123
-    n_airfoils: 10
+    n_airfoils: 50
     order: 8
     n1: 0.5
     n2: 1.0

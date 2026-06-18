@@ -74,17 +74,8 @@ geometry:
       max: 0.0001
 
   control_surfaces:
-    enabled: true
-    surfaces:
-      - name: elevon
-        family: trailing_edge
-        hinge_point: 0.75
-        symmetric: true
-        spanwise:
-          start_frac: 0.60
-          end_frac: 0.95
-        deflection_sign: standard
-        required: false
+    enabled: false
+    surfaces: []
 
   outputs:
     save_plot: false

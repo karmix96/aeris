@@ -54,7 +54,7 @@ def geometry_info() -> None:
     typer.echo(f"  Smoke config          : configs/geometry/baseline_bwb_25.yaml")
     typer.echo("")
     typer.echo("  Commands:")
-    typer.echo("    aeris geometry generate  --config <yaml>")
+    typer.echo("    aeris geometry generate  --config <yaml> [--save-plot|--no-save-plot]")
     typer.echo("    aeris geometry export-cad --config <yaml> --formats vspscript,step")
     typer.echo("    aeris geometry openvsp-doctor [--openvsp-command vsp]")
     typer.echo("    aeris geometry visualize --config <yaml> [--seed N] [--draw-3d|--no-draw-3d]")
@@ -75,6 +75,11 @@ def geometry_generate(
         resolve_path=True,
         help="Path to the YAML geometry config file.",
     ),
+    save_plot: bool | None = typer.Option(
+        None,
+        "--save-plot/--no-save-plot",
+        help="Override geometry.outputs.save_plot from the YAML for this run.",
+    ),
 ) -> None:
     """
     Generate one deterministic geometry case from a YAML config.
@@ -85,13 +90,17 @@ def geometry_generate(
     """
     import json as _json
 
-    exit_code, run_root = run_geometry_generation(config)
+    exit_code, run_root = run_geometry_generation(config, save_plot=save_plot)
 
     if run_root is not None:
         typer.echo("")
         typer.echo(f"[AERIS] Geometry generate — {'SUCCESS' if exit_code == 0 else 'FAILED'}")
         typer.echo(f"  config   : {config}")
         typer.echo(f"  run_root : {run_root}")
+        if save_plot is not None:
+            typer.echo(f"  save_plot override: {save_plot}")
+        if save_plot is not None:
+            typer.echo(f"  save_plot override: {save_plot}")
 
         mpath = run_root / "manifest.json"
         if mpath.exists():
@@ -534,6 +543,10 @@ def geometry_export_deflected_cad(
     typer.echo(f"    delta_a_diff_deg: {controls.get('delta_a_diff_deg')}")
     typer.echo(f"    right_deg       : {controls.get('right_deflection_deg')}")
     typer.echo(f"    left_deg        : {controls.get('left_deflection_deg')}")
+    typer.echo("    mix             : right = delta_e_sym_deg + delta_a_diff_deg")
+    typer.echo("                      left  = delta_e_sym_deg - delta_a_diff_deg")
+    if controls.get("deflection_warning"):
+        typer.echo(f"    warning         : {controls.get('deflection_warning')}")
 
     artifacts = manifest.get("artifacts", {}) or {}
     for key in ["vspscript", "step", "physical_deflected_planform_png", "physical_control_deflection", "stdout", "stderr"]:

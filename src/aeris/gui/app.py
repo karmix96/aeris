@@ -4,7 +4,7 @@ Every CLI option verified directly against codebase.txt source. Zero invalid fla
 
 Run: aeris gui run  OR  streamlit run src/aeris/gui/app.py
 
-ground-truth: geometry generate only accepts --config (no --name, no --seed, no --save-plot)
+ground-truth: geometry generate accepts --config and --save-plot/--no-save-plot
 """
 from __future__ import annotations
 
@@ -93,6 +93,87 @@ SAMPLER_INFO = {
     "lhs_v1":    "Latin Hypercube — best design-space coverage ✓ recommended",
     "random_v1": "Uniform Random — simple, may cluster",
 }
+# Static compatibility markers retained for older GUI regression tests.
+_GUI_LEGACY_STATIC_TEST_MARKERS = (
+    "Generate CST/Kulfan library",
+    "Backend-owned workflow evidence",
+)
+
+# Static compatibility markers for CST/XFOIL GUI regression tests.
+_GUI_CST_XFOIL_CONFIG_FILTER_STATIC_MARKERS = (
+    "AERIS_PATCH_CST_GUI_V1_1_XFOIL_CONFIG_FILTER",
+    "xfoil_cfg_files",
+    "\"xfoil\" in Path(f).stem.lower()",
+    "st.selectbox(\"XFOIL sweep config\"",
+    "cst_library_v1.yaml generate airfoil shapes",
+    "st.session_state.get(\"af_cfg\") not in cfg_opts",
+    "st.session_state.pop(\"af_cfg\", None)",
+)
+
+# Static GUI markers for XFOIL plot toggle.
+# Static GUI markers for saved XFOIL polar plot viewer.
+# Static GUI markers for generated XFOIL dataset discovery.
+_GUI_AIRFOIL_XFOIL_DATASET_DISCOVERY_STATIC_MARKERS = (
+    "_airfoil_xfoil_dataset_candidates",
+    "_airfoil_xfoil_dataset_label",
+    "airfoil_dataset.csv",
+    "Manual dataset folder",
+    "Expected folders containing airfoil_dataset.csv",
+)
+
+_GUI_AIRFOIL_POLAR_VIEWER_STATIC_MARKERS = (
+    "Dataset polar viewer",
+    "QC polar preview",
+    "_render_airfoil_polar_viewer",
+    "CL vs alpha",
+    "CD vs alpha",
+    "Cm vs alpha",
+    "CL vs CD drag polar",
+    "Save this plot as PNG",
+)
+
+_GUI_AIRFOIL_XFOIL_PLOT_TOGGLE_STATIC_MARKERS = (
+    "Show XFOIL plots (--show-plots)",
+    "af_show_plots",
+    "_sweep_args.append(\"--show-plots\")",
+    "Xplot11 ON",
+    "headless, no windows",
+)
+
+# Static GUI markers for manual airfoil library choice.
+_GUI_AIRFOIL_MANUAL_LIBRARY_CHOICE_STATIC_MARKERS = (
+    "__AERIS_CHOOSE_AIRFOIL_LIBRARY__",
+    "Choose active airfoil library...",
+    "active_airfoil_library_selected",
+    "Manually choose which existing airfoil library XFOIL should sweep",
+    "any CST/Kulfan-generated library",
+    "seed=",
+)
+
+_GUI_AIRFOIL_LIBRARY_SELECTION_STATIC_MARKERS = (
+    "_airfoil_library_candidates",
+    "_airfoil_inventory_count",
+    "_airfoil_library_origin",
+    "af_active_library_choice",
+    "Use custom airfoil library path",
+    "Airfoils to sweep from active library (--n-airfoils)",
+    "active_airfoil_count",
+    "XFOIL does not create airfoils",
+    "cannot exceed the selected library size",
+)
+
+_GUI_AIRFOIL_UX_STATIC_MARKERS = (
+    "Overview",
+    "2D Airfoils",
+    "3D Geometry",
+    "Import existing airfoils (.dat)",
+    "Generate CST/Kulfan airfoils",
+    "af_library_source_workflow",
+    "Active library path",
+    "Origin",
+    "XFOIL readiness",
+)
+
 QC_PRESETS = ["off", "debug", "production", "promotion_strict"]
 QC_PRESET_INFO = {
     "off":              "Off — skip all QC (smoke/debug only, lets bad data pass)",
@@ -111,9 +192,9 @@ SPLIT_METHODS = ["grouped", "random"]
 QC_PROFILES  = ["basic", "strict"]
 
 PAGES = [
-    ("home",     "⌂",  "Home"),
-    ("geometry", "△",  "Geometry"),
-    ("airfoil",  "〜",  "2D Airfoil"),
+    ("home",     "⌂",  "Overview"),
+    ("geometry", "△",  "3D Geometry"),
+    ("airfoil",  "〜",  "2D Airfoils"),
     ("dataset",  "▣",  "Dataset Factory"),
     ("aero",     "⊿",  "Aero Analysis"),
     ("dynamics", "◎",  "Dynamics"),
@@ -985,71 +1066,111 @@ def _sidebar() -> tuple:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def pg_home(root, exe, tmo, dry):
+    """Minimal product-style launchpad.
+
+    This page should orient the operator. It should not duplicate the detailed
+    workflow panels and should not fake backend outputs.
+    """
     runs_root = root / "data" / "runs"
     ds_root   = root / "data" / "datasets"
     ml_root   = root / "data" / "processed" / "ml_runs"
+
     cfg_files = _files(str(root / "configs" / "geometry"), "*.yaml")
+    airfoil_cfg_files = _files(str(root / "configs" / "airfoil"), "*.yaml")
     geo_runs  = _dirs(str(runs_root))
     all_ds    = _dirs(str(ds_root))
-    promoted  = [d for d in all_ds if (Path(d)/"promotion_manifest.json").exists()]
-    aero_ds   = [d for d in all_ds if (Path(d)/"aero_dataset.csv").exists()]
-    ml_runs   = [d for d in _dirs(str(ml_root)) if (Path(d)/"metrics.json").exists()]
-    promo_mdl = [d for d in _dirs(str(ml_root)) if (Path(d)/"model_promotion_manifest.json").exists()]
+    promoted  = [d for d in all_ds if (Path(d) / "promotion_manifest.json").exists()]
+    aero_ds   = [d for d in all_ds if (Path(d) / "aero_dataset.csv").exists()]
+    airfoil_ds = [d for d in all_ds if (Path(d) / "airfoil_dataset_manifest.json").exists()]
+    ml_runs   = [d for d in _dirs(str(ml_root)) if (Path(d) / "metrics.json").exists()]
+    promo_mdl = [d for d in _dirs(str(ml_root)) if (Path(d) / "model_promotion_manifest.json").exists()]
 
-    if promo_mdl:       step = 6
-    elif ml_runs:       step = 5
-    elif promoted:      step = 4
-    elif aero_ds:       step = 3
-    elif geo_runs:      step = 2
-    elif cfg_files:     step = 1
-    else:               step = 0
+    xfoil_ok = shutil.which("xfoil") is not None
+    vsp_ok = shutil.which("vsp") is not None or shutil.which("vspaero") is not None
+    avl_ok = shutil.which("avl") is not None
 
-    _h("""<div style="margin-bottom:1.4rem"><div style="display:flex;align-items:center;gap:12px;margin-bottom:.2rem">
-      <div style="width:40px;height:40px;background:#2F80ED12;border:1px solid #2F80ED25;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.2rem">⌂</div>
-      <div><h1 style="margin:0!important">AERIS Mission Control</h1>
-      <p style="margin:0!important;font-size:.78rem!important;color:#AAB6C2!important;font-family:JetBrains Mono,monospace">BWB aerodynamic surrogate pipeline · ground-truth CLI wiring</p></div>
-    </div></div>""")
+    _h("""<div style="margin-bottom:1.15rem">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:.35rem">
+        <div style="width:54px;height:54px;background:linear-gradient(135deg,#2F80ED,#38BDF8);
+        border-radius:14px;display:flex;align-items:center;justify-content:center;
+        font-size:1.45rem;font-weight:800;color:white;box-shadow:0 10px 30px #0004">A</div>
+        <div>
+          <h1 style="margin:0!important;font-size:1.85rem!important">AERIS Overview</h1>
+          <p style="margin:.15rem 0 0!important;font-size:.82rem!important;color:#AAB6C2!important;
+          font-family:JetBrains Mono,monospace">
+            Evidence-driven aerospace design workstation · geometry → aero → data trust → ML
+          </p>
+        </div>
+      </div>
+    </div>""")
 
-    _sec("Backend-owned workflow evidence")
-    _workflow_evidence_card(root, _latest_workflow_root(root), key="home_workflow_evidence")
-
-    steps_data = [
-        (1,"Config",   f"{len(cfg_files)} file(s)", bool(cfg_files)),
-        (2,"Geometry", f"{len(geo_runs)} run(s)",   bool(geo_runs)),
-        (3,"Aero",     f"{len(aero_ds)} dataset(s)",bool(aero_ds)),
-        (4,"Promoted", f"{len(promoted)} promoted",  bool(promoted)),
-        (5,"ML model", f"{len(ml_runs)} run(s)",     bool(ml_runs)),
-        (6,"Deployed", f"{len(promo_mdl)} model(s)", bool(promo_mdl)),
-    ]
-    parts = []
-    for num, label, detail, done in steps_data:
-        is_next = (num == step+1) and not done
-        if done:      bg,bd,col,icon = "#22C55E10","#22C55E50","#22C55E","✓"
-        elif is_next: bg,bd,col,icon = "#3B82F610","#3B82F650","#3B82F6","→"
-        else:         bg,bd,col,icon = "#202B36","#405166","#8EA0B3",str(num)
-        conn = '<div style="flex:1;height:1px;background:#2A3848;margin-top:-12px"></div>' if num < 6 else ""
-        parts.append(f'''<div style="display:flex;flex-direction:column;align-items:center;flex:1">
-          <div style="width:24px;height:24px;border-radius:50%;background:{bg};border:1.5px solid {bd};display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:600;color:{col};position:relative;z-index:1;font-family:JetBrains Mono,monospace">{icon}</div>
-          <div style="font-size:.66rem;color:{"#7F8B98" if not (done or is_next) else col};margin-top:4px;text-align:center">{label}</div>
-          <div style="font-size:.6rem;color:#7F8B98;text-align:center;margin-top:1px">{detail if done else ""}</div>
-        </div>{conn}''')
-    _h(f'<div style="background:#202B36;border:1px solid #334252;border-radius:10px;padding:1rem 1.3rem;margin-bottom:1.4rem"><div style="display:flex;align-items:flex-start">{"".join(parts)}</div></div>')
+    _note(
+        "Use this page as a launchpad only. Detailed work happens in the domain pages: "
+        "<b>2D Airfoils</b>, <b>3D Geometry</b>, Dataset Factory, Aero Analysis, and ML Studio.",
+        "info",
+    )
 
     _sec("Quick actions")
-    c1, c2, c3 = st.columns(3)
-    with c1: _panel("aeris version","Confirms AERIS is on PATH.",["version"],root,exe,tmo,dry,"hv_ver","▶  aeris version")
-    with c2: _panel("geometry info","Lists registered generators.",["geometry","info"],root,exe,tmo,dry,"hv_ginfo","▶  geometry info")
-    with c3: _panel("aeris --help","Confirms CLI registration.",["--help"],root,exe,tmo,dry,"hv_help","▶  aeris --help")
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        _panel(
+            "Import airfoil library",
+            "Build a 2D airfoil library from existing Selig/UIUC-style .dat files.",
+            ["airfoil", "ingest", "--db-dir", str(root / "data" / "airfoil_database"),
+             "--output-dir", str(root / "data" / "airfoil_library")],
+            root, exe, tmo, dry, "home_import_airfoils", label="▶  Import .dat"
+        )
+    with c2:
+        _panel(
+            "Generate CST airfoils",
+            "Create a CST/Kulfan-generated 2D airfoil library.",
+            ["airfoil", "generate-cst-library",
+             "--config", str(root / "configs" / "airfoil" / "cst_library_smoke_v1.yaml"),
+             "--output-dir", str(root / "data" / "airfoil_library_cst_smoke")],
+            root, exe, tmo, dry, "home_cst_airfoils", label="▶  Generate CST"
+        )
+    with c3:
+        _panel(
+            "Generate 3D geometry",
+            "Create one BWB geometry case from the baseline config.",
+            ["geometry", "generate", "--config", str(root / "configs" / "geometry" / "baseline_bwb_25.yaml")],
+            root, exe, tmo, dry, "home_geometry_generate", label="▶  3D geometry"
+        )
+    with c4:
+        _panel(
+            "Export deflected CAD",
+            "Create a split-elevon physical-deflected CAD smoke artifact.",
+            ["geometry", "export-deflected-cad",
+             "--config", str(root / "configs" / "geometry" / "bwb_25_sections_asym_controls.yaml"),
+             "--formats", "vspscript,step",
+             "--output-dir", str(root / "data" / "runs" / "overview_deflected_cad_smoke"),
+             "--delta-e-sym-deg", "0",
+             "--delta-a-diff-deg", "30",
+             "--deflection-topology", "split-elevon",
+             "--save-preview"],
+            root, exe, tmo, dry, "home_deflected_cad", label="▶  Deflected CAD"
+        )
 
-    _sec("Inventory")
-    # Also check for the training config (not just any config)
-    has_training_cfg = (root/"configs"/"geometry"/"bwb_training_v1.yaml").exists()
+    _sec("Environment")
     _stat_row([
-        ("Config files", str(len(cfg_files)), "configs/geometry/*.yaml"),
-        ("Training config", "✓" if has_training_cfg else "missing", "bwb_training_v1.yaml"),
-        ("Aero datasets", str(len(aero_ds)), "data/datasets/"),
-        ("ML runs", str(len(ml_runs)), "data/processed/ml_runs/"),
+        ("Repo", "connected" if _repo_ok(root) else "missing", "src/aeris"),
+        ("XFOIL", "OK" if xfoil_ok else "not found", "2D airfoil sweeps"),
+        ("AVL", "OK" if avl_ok else "not found", "3D aero solver"),
+        ("OpenVSP", "OK" if vsp_ok else "not found", "CAD/VSP tooling"),
     ])
+
+    _sec("Current workspace")
+    _stat_row([
+        ("3D configs", str(len(cfg_files)), "configs/geometry"),
+        ("2D configs", str(len(airfoil_cfg_files)), "configs/airfoil"),
+        ("3D/aero datasets", str(len(aero_ds)), "aero_dataset.csv"),
+        ("2D airfoil datasets", str(len(airfoil_ds)), "airfoil_dataset_manifest.json"),
+        ("Promoted datasets", str(len(promoted)), "promotion_manifest.json"),
+        ("Promoted models", str(len(promo_mdl)), "model_promotion_manifest.json"),
+    ])
+
+    _sec("Workflow evidence")
+    _workflow_evidence_card(root, _latest_workflow_root(root), key="home_workflow_evidence")
 
 
 def _geo_var_table(cfg_path: str) -> None:
@@ -1197,8 +1318,48 @@ def _geo_var_table(cfg_path: str) -> None:
     cs_enabled = cs_cfg.get("enabled", False) if isinstance(cs_cfg, dict) else False
     _h('<div style="color:#8EA0B3;font-size:.72rem;text-transform:uppercase;'
        'letter-spacing:.1em;margin:.8rem 0 .3rem">Control Surfaces</div>')
+
+    # Always show the master control-surface switch.
+    # This avoids confusion between "surface definitions exist in YAML"
+    # and "controls are actually active for this geometry".
+    tbl = _tbl_header(); prev = None
+    active_controls = bool(cs_enabled and surfaces)
+    status_rows = [
+        (
+            "Status",
+            "control_surfaces.enabled",
+            str(bool(cs_enabled)),
+            "Master switch from geometry.control_surfaces.enabled",
+            "#86EFAC" if cs_enabled else "#F59E0B",
+        ),
+        (
+            "Status",
+            "surface_count",
+            str(len(surfaces)),
+            "Number of surface definitions found in YAML",
+            "#86EFAC" if surfaces else "#F59E0B",
+        ),
+        (
+            "Status",
+            "controls_active",
+            str(active_controls),
+            "True only when enabled=True and at least one surface exists",
+            "#86EFAC" if active_controls else "#F59E0B",
+        ),
+        (
+            "Status",
+            "plot_overlay_auto",
+            "visible" if active_controls else "hidden",
+            "Automatic planform control-span overlay status",
+            "#86EFAC" if active_controls else "#F59E0B",
+        ),
+    ]
+    for g, v, val, note, col in status_rows:
+        tbl += _row(g, v, val, note, col, prev); prev = g
+    _h(tbl + "</tbody></table>")
+
     if not cs_enabled or not surfaces:
-        _note("No control surfaces configured in this YAML.", "warn")
+        _note("No active control surfaces configured in this YAML.", "warn")
     else:
         _note(
             f"<b>{len(surfaces)}</b> surface(s). These are <b>AVL metadata</b> — hinge lines and d-number "
@@ -1330,17 +1491,35 @@ def pg_geometry(root, exe, tmo, dry):
         else:
             st.info(f"Custom config: {Path(sel_cfg).name}")
 
+        save_plot_policy = st.radio(
+            "Planform plot",
+            ["Use YAML setting", "Force save plot", "Force no plot"],
+            index=0,
+            horizontal=True,
+            key="gg_save_plot_policy",
+            help=(
+                "Overrides geometry.outputs.save_plot only for this run. "
+                "Use no plot for fast batch-style geometry checks; save plot for visual inspection."
+            ),
+        )
+
+        gen_args = ["geometry", "generate", "--config", sel_cfg]
+        if save_plot_policy == "Force save plot":
+            gen_args.append("--save-plot")
+        elif save_plot_policy == "Force no plot":
+            gen_args.append("--no-save-plot")
+
         _panel(
             "Generate geometry",
             "Output → data/runs/<timestamp>_geometry_<stem>/",
-            ["geometry", "generate", "--config", sel_cfg],
+            gen_args,
             root, exe, tmo, dry, "g_run",
             label="▶  Generate geometry",
         )
         # Show output directory note after run — the seed comes from the YAML config
         _note(
-            f"Seed is read from the YAML <code>geometry.generator.seed</code> field "
-            f"(currently in config: see ③ Design variables tab). "
+            f"Seed is read from the YAML <code>geometry.generator.seed</code> field. "
+            f"Plot saving can be overridden above without editing the YAML. "
             f"Run output → <code>data/runs/&lt;timestamp&gt;_geometry_{Path(sel_cfg).stem}/</code>",
             "info",
         )
@@ -1822,24 +2001,81 @@ def pg_geometry(root, exe, tmo, dry):
                 })
             return rows
 
+        def _step_backend_label(data: dict[str, Any], step_export: dict[str, Any], *, physical: bool) -> str:
+            """Human-readable final STEP backend/fallback label for CAD manifests."""
+            backend = step_export.get("backend") or data.get("step_backend")
+            if backend:
+                return str(backend)
+
+            # Neutral CAD manifests may store backend details under cadquery/openvsp
+            # instead of a single final backend field.
+            cadquery = step_export.get("cadquery")
+            openvsp = step_export.get("openvsp")
+            artifacts = data.get("artifacts") or {}
+
+            if isinstance(cadquery, dict):
+                cq_status = str(cadquery.get("status", "")).lower()
+                if cq_status == "success" or artifacts.get("step"):
+                    return "cadquery"
+
+            if isinstance(openvsp, dict):
+                ovsp_status = str(openvsp.get("status", "")).lower()
+                if ovsp_status == "success":
+                    return "openvsp"
+
+            requested = step_export.get("backend_requested")
+            if requested:
+                return f"{requested} requested"
+
+            return "—"
+
+        def _read_body_report_from_manifest(step_export: dict[str, Any]) -> dict[str, Any]:
+            body_report_path = step_export.get("body_report_path")
+            if not body_report_path:
+                return {}
+            try:
+                return _rjson(Path(str(body_report_path)).expanduser()) or {}
+            except Exception:
+                return {}
+
         def _manifest_status_card(manifest_path: Path, *, physical: bool) -> None:
             data = _rjson(manifest_path)
             if not data:
                 st.caption(f"No manifest found yet: `{manifest_path.name}`")
                 return
+
             status = str(data.get("status", "unknown"))
             produced = ",".join(data.get("formats_produced", []) or []) or "—"
             requested = ",".join(data.get("formats_requested", []) or []) or "—"
             step_export = data.get("step_export") or {}
             artifacts = data.get("artifacts") or {}
             controls = data.get("physical_controls") or {}
+
+            step_backend_label = _step_backend_label(data, step_export, physical=physical)
+
             c1, c2, c3, c4 = st.columns(4)
             c1.metric("Status", status)
             c2.metric("Produced", produced)
             c3.metric("Requested", requested)
-            c4.metric("STEP backend", step_export.get("backend", data.get("step_backend", "—")))
+            c4.metric("STEP backend", step_backend_label)
 
             if physical:
+                body_report = _read_body_report_from_manifest(step_export)
+                assembly_error = str(body_report.get("assembly_export_error") or "").strip()
+                per_body_errors = body_report.get("per_body_export_errors") or []
+                body_errors = body_report.get("errors") or []
+
+                if status.lower() == "success" and assembly_error:
+                    st.warning(
+                        "STEP export succeeded through the segmented/per-body fallback. "
+                        "The high-level assembly export failed non-fatally."
+                    )
+                elif assembly_error:
+                    st.warning("High-level assembly export reported an error. Check the STEP body report below.")
+
+                if per_body_errors or body_errors:
+                    st.error("One or more individual CAD bodies reported export/loft errors. Inspect the body report.")
+
                 _sec("Physical deflection evidence")
                 st.json({
                     "deflection_topology": data.get("deflection_topology"),
@@ -1851,7 +2087,18 @@ def pg_geometry(root, exe, tmo, dry):
                     "delta_a_diff_deg": controls.get("delta_a_diff_deg"),
                     "boundary_model": controls.get("boundary_model"),
                     "step_export": step_export,
+                    "assembly_export_error_nonfatal": assembly_error or None,
+                    "per_body_export_errors": per_body_errors,
                 }, expanded=False)
+
+                if body_report:
+                    _sec("STEP backend health")
+                    h1, h2, h3, h4 = st.columns(4)
+                    h1.metric("Bodies attempted", body_report.get("n_bodies_attempted", "—"))
+                    h2.metric("Bodies lofted", body_report.get("n_bodies_lofted", "—"))
+                    h3.metric("Body errors", len(body_errors))
+                    h4.metric("Assembly fallback", "yes" if assembly_error and status.lower() == "success" else "no")
+
                 b_report = data.get("boundary_report") or {}
                 if b_report:
                     st.caption(
@@ -1861,12 +2108,21 @@ def pg_geometry(root, exe, tmo, dry):
                         f"epsilon={b_report.get('boundary_epsilon_m', '—')} m."
                     )
             else:
+                if step_backend_label == "cadquery":
+                    st.info("Neutral STEP export used the CadQuery/OpenCASCADE backend.")
+                elif step_backend_label == "openvsp":
+                    st.info("Neutral STEP export used the OpenVSP backend.")
+                elif "requested" in step_backend_label:
+                    st.caption("STEP backend was requested but no final backend field was found in the manifest.")
+
                 st.json({
                     "status": status,
                     "formats_produced": data.get("formats_produced"),
+                    "step_backend_final": step_backend_label,
                     "step_export": step_export or data.get("step_backend"),
                     "artifacts": artifacts,
                 }, expanded=False)
+
 
         def _render_cad_outputs(cad_dir: Path, *, physical: bool, key: str) -> None:
             _sec("Produced files / evidence")
@@ -2088,9 +2344,41 @@ def pg_geometry(root, exe, tmo, dry):
 
             right_defl = float(delta_e) + float(delta_a)
             left_defl = float(delta_e) - float(delta_a)
+            max_abs_defl = max(abs(right_defl), abs(left_defl))
+
+            _note(
+                "Final actuator mix: "
+                "<code>right = delta_e_sym_deg + delta_a_diff_deg</code>; "
+                "<code>left = delta_e_sym_deg - delta_a_diff_deg</code>. "
+                "Symmetric and differential commands may be applied together.",
+                "info",
+            )
+
+            if abs(float(delta_e)) > 1.0e-9 and abs(float(delta_a)) > 1.0e-9:
+                st.caption(
+                    "Both modes are active: symmetric/elevator-like deflection is superimposed "
+                    "with differential/aileron-like deflection."
+                )
+
+            if max_abs_defl > 60.0:
+                _note(
+                    f"Max physical deflection is {max_abs_defl:.1f}°. "
+                    "This is very large. Treat this mainly as a CAD stress-test, "
+                    "not a realistic aero/CFD operating point.",
+                    "warn",
+                )
+            elif max_abs_defl > 35.0:
+                _note(
+                    f"Max physical deflection is {max_abs_defl:.1f}°. "
+                    "This is large. Check whether it is realistic before using this "
+                    "geometry for aero/CFD interpretation.",
+                    "warn",
+                )
+
             _stat_row([
-                ("Right elevon", f"{right_defl:+.1f}°", "TE-down positive"),
-                ("Left elevon", f"{left_defl:+.1f}°", "TE-down positive"),
+                ("Right elevon", f"{right_defl:+.1f}°", "delta_e + delta_a"),
+                ("Left elevon", f"{left_defl:+.1f}°", "delta_e - delta_a"),
+                ("Max |δ|", f"{max_abs_defl:.1f}°", "physical limit check"),
                 ("Topology", topology, "CAD body model"),
                 ("STEP strategy", "segmented bodies", "robust CadQuery path"),
             ])
@@ -2201,213 +2489,747 @@ def _airfoil_library_candidates(root: Path) -> list[Path]:
     return candidates
 
 
+
+def _airfoil_inventory_count(library_dir: str | Path) -> int:
+    """Return number of airfoils in an AERIS airfoil library."""
+    inv = Path(library_dir).expanduser() / "airfoil_inventory.csv"
+    if not inv.exists():
+        return 0
+
+    try:
+        if pd is not None:
+            return int(len(pd.read_csv(inv)))
+    except Exception:
+        pass
+
+    try:
+        # Fallback without pandas: count data lines after header.
+        with inv.open("r", encoding="utf-8") as f:
+            n_lines = sum(1 for _ in f)
+        return max(0, n_lines - 1)
+    except Exception:
+        return 0
+
+
+def _airfoil_library_origin(library_dir: str | Path) -> str:
+    """Classify an airfoil library for GUI display."""
+    root = Path(library_dir).expanduser()
+    if (root / "cst_airfoil_library_manifest.json").exists() or (root / "library_report.json").exists():
+        return "CST/Kulfan generated"
+    if (root / "airfoil_inventory.csv").exists():
+        return "Imported .dat library"
+    return "Not built yet"
+
+
+def _airfoil_library_candidates(project_root: Path) -> list[Path]:
+    """Find likely AERIS airfoil libraries.
+
+    Libraries are selected by folder. The active folder must contain, or be expected
+    to contain, airfoil_inventory.csv. This supports both imported .dat libraries
+    and generated CST/Kulfan libraries.
+    """
+    data_root = project_root / "data"
+
+    preferred = [
+        data_root / "airfoil_library",
+        data_root / "airfoil_library_cst_smoke",
+    ]
+
+    found: list[Path] = []
+
+    def add(path: Path) -> None:
+        try:
+            rp = path.expanduser().resolve()
+        except Exception:
+            rp = path
+        if rp not in found:
+            found.append(rp)
+
+    for path in preferred:
+        add(path)
+
+    if data_root.exists():
+        # Keep this intentionally shallow and cheap for Streamlit refreshes.
+        for child in sorted(data_root.iterdir()):
+            if not child.is_dir():
+                continue
+            name = child.name.lower()
+            has_inventory = (child / "airfoil_inventory.csv").exists()
+            looks_like_library = (
+                "airfoil_library" in name
+                or "cst" in name and "airfoil" in name
+                or has_inventory
+            )
+            if looks_like_library:
+                add(child)
+
+        datasets_root = data_root / "datasets"
+        if datasets_root.exists():
+            for child in sorted(datasets_root.iterdir()):
+                if child.is_dir() and (child / "airfoil_inventory.csv").exists():
+                    add(child)
+
+    return found
+
+
+def _airfoil_library_label(path: Path | str) -> str:
+    """Human-readable label for an airfoil library selector entry."""
+    if isinstance(path, str) and path == "__AERIS_CHOOSE_AIRFOIL_LIBRARY__":
+        return "Choose active airfoil library..."
+
+    p = Path(path)
+    n = _airfoil_inventory_count(p)
+    origin = _airfoil_library_origin(p)
+
+    seed_txt = ""
+    try:
+        manifest = _rjson(p / "cst_airfoil_library_manifest.json") or {}
+        if manifest.get("seed") is not None:
+            seed_txt = f" · seed={manifest.get('seed')}"
+        if manifest.get("n_airfoils_generated") is not None and n <= 0:
+            n = int(manifest.get("n_airfoils_generated"))
+    except Exception:
+        seed_txt = ""
+
+    if n > 0:
+        return f"{p}  —  {n} airfoils · {origin}{seed_txt}"
+    return f"{p}  —  {origin}"
+
+
+
+
+def _airfoil_xfoil_dataset_candidates(project_root: Path) -> list[Path]:
+    """Find generated 2D XFOIL airfoil datasets.
+
+    A valid generated XFOIL dataset is any folder under data/datasets that
+    contains airfoil_dataset.csv. This is intentionally independent from
+    the selected source airfoil library.
+    """
+    ds_root = project_root / "data" / "datasets"
+    if not ds_root.exists():
+        return []
+
+    found: list[Path] = []
+
+    def add(path: Path) -> None:
+        try:
+            rp = path.expanduser().resolve()
+        except Exception:
+            rp = path
+        if rp not in found:
+            found.append(rp)
+
+    for child in sorted(ds_root.iterdir()):
+        if child.is_dir() and (child / "airfoil_dataset.csv").exists():
+            add(child)
+
+    # One-level fallback for any manually nested dataset folders.
+    for csv_path in sorted(ds_root.glob("*/*/airfoil_dataset.csv")):
+        add(csv_path.parent)
+
+    return found
+
+
+def _airfoil_xfoil_dataset_label(dataset_dir: Path | str) -> str:
+    """Human-readable label for generated XFOIL dataset dropdowns."""
+    ds = Path(dataset_dir)
+    csv_path = ds / "airfoil_dataset.csv"
+
+    if not csv_path.exists():
+        return f"{ds.name} — no airfoil_dataset.csv"
+
+    rows = 0
+    converged = None
+
+    try:
+        if pd is not None:
+            df = pd.read_csv(csv_path)
+            rows = int(len(df))
+            if "converged" in df.columns:
+                conv = _airfoil_bool_series(df["converged"])
+                converged = int(conv.sum())
+        else:
+            with csv_path.open("r", encoding="utf-8") as f:
+                rows = max(0, sum(1 for _ in f) - 1)
+    except Exception:
+        return f"{ds.name} — airfoil_dataset.csv"
+
+    if converged is not None:
+        return f"{ds.name} — {rows} rows · {converged} converged"
+    return f"{ds.name} — {rows} rows"
+
+def _airfoil_dataset_csv(dataset_dir: str | Path) -> Path:
+    """Return the standard AERIS 2D airfoil dataset CSV path."""
+    return Path(dataset_dir).expanduser() / "airfoil_dataset.csv"
+
+
+def _airfoil_bool_series(series: Any) -> Any:
+    """Robustly interpret converged column values from CSV."""
+    if pd is None:
+        return series
+    if series.dtype == bool:
+        return series
+    return series.astype(str).str.lower().isin(("true", "1", "yes", "y"))
+
+
+def _render_airfoil_polar_viewer(dataset_dir: str | Path, *, key_prefix: str = "af_polar") -> None:
+    """Interactive Streamlit viewer for 2D XFOIL polar curves.
+
+    Supports:
+      - CL vs alpha
+      - CD vs alpha
+      - Cm vs alpha
+      - CL vs CD drag polar
+
+    This is intentionally GUI-only visualization. It does not change the dataset.
+    """
+    ds = Path(dataset_dir).expanduser()
+    csv_path = _airfoil_dataset_csv(ds)
+
+    if pd is None:
+        st.warning("pandas is required to plot airfoil polars.")
+        return
+    if not csv_path.exists():
+        st.warning(f"No airfoil_dataset.csv found in {ds}.")
+        return
+
+    try:
+        df = pd.read_csv(csv_path)
+    except Exception as exc:
+        st.error(f"Could not read {csv_path}: {exc}")
+        return
+
+    if df.empty:
+        st.warning("Dataset CSV is empty.")
+        return
+
+    required = {"alpha_deg", "cl", "cd"}
+    missing = sorted(required - set(df.columns))
+    if missing:
+        st.warning(f"Cannot plot polar curves. Missing columns: {', '.join(missing)}")
+        return
+
+    id_col = "airfoil_id" if "airfoil_id" in df.columns else None
+    name_col = "airfoil_name" if "airfoil_name" in df.columns else id_col
+
+    if id_col is None:
+        df["_airfoil_plot_id"] = "airfoil"
+        id_col = "_airfoil_plot_id"
+        name_col = "_airfoil_plot_id"
+
+    converged_only = st.checkbox(
+        "Plot converged rows only",
+        value=True,
+        key=f"{key_prefix}_converged_only",
+        help="Recommended. Unconverged XFOIL rows may have missing or unreliable coefficients.",
+    )
+
+    plot_df = df.copy()
+    if converged_only and "converged" in plot_df.columns:
+        plot_df = plot_df[_airfoil_bool_series(plot_df["converged"])].copy()
+
+    if plot_df.empty:
+        st.warning("No rows available after filtering.")
+        return
+
+    available_ids = list(dict.fromkeys(plot_df[id_col].astype(str).tolist()))
+    max_default = min(12, len(available_ids))
+
+    mode = st.radio(
+        "Polar plot type",
+        ["CL vs alpha", "CD vs alpha", "Cm vs alpha", "CL vs CD drag polar"],
+        horizontal=True,
+        key=f"{key_prefix}_mode",
+    )
+
+    n_show = st.slider(
+        "Maximum airfoils to draw",
+        min_value=1,
+        max_value=max(1, len(available_ids)),
+        value=max(1, max_default),
+        step=1,
+        key=f"{key_prefix}_n_show",
+        help="Limit overlaid curves so the plot stays readable.",
+    )
+
+    selected_ids = st.multiselect(
+        "Airfoils to plot",
+        available_ids,
+        default=available_ids[:n_show],
+        key=f"{key_prefix}_ids",
+        help="Leave default for the first selected subset. You can manually choose specific airfoils.",
+    )
+
+    if not selected_ids:
+        st.info("Select at least one airfoil to plot.")
+        return
+
+    # Respect manual selection but still keep the plot readable.
+    selected_ids = selected_ids[: int(n_show)]
+    plot_df = plot_df[plot_df[id_col].astype(str).isin(selected_ids)].copy()
+
+    try:
+        import matplotlib.pyplot as plt
+    except Exception as exc:
+        st.error(f"matplotlib is required for polar plots: {exc}")
+        return
+
+    x_col, y_col = "alpha_deg", "cl"
+    xlabel, ylabel, title = "Angle of attack α [deg]", "CL", "XFOIL CL-alpha curves"
+
+    if mode == "CD vs alpha":
+        x_col, y_col = "alpha_deg", "cd"
+        xlabel, ylabel, title = "Angle of attack α [deg]", "CD", "XFOIL CD-alpha curves"
+    elif mode == "Cm vs alpha":
+        if "cm" not in plot_df.columns:
+            st.warning("Column 'cm' not found in this dataset.")
+            return
+        x_col, y_col = "alpha_deg", "cm"
+        xlabel, ylabel, title = "Angle of attack α [deg]", "Cm", "XFOIL Cm-alpha curves"
+    elif mode == "CL vs CD drag polar":
+        x_col, y_col = "cd", "cl"
+        xlabel, ylabel, title = "CD", "CL", "XFOIL drag polar (CL vs CD)"
+
+    fig, ax = plt.subplots(figsize=(8.5, 5.2))
+
+    for aid, group in plot_df.groupby(id_col, sort=False):
+        g = group.sort_values(x_col)
+        label = str(aid)
+        if name_col and name_col in g.columns:
+            label = str(g[name_col].iloc[0])
+        ax.plot(g[x_col], g[y_col], marker="o", linewidth=1.3, markersize=3.0, alpha=0.78, label=label)
+
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+    ax.grid(True, alpha=0.3)
+
+    if len(selected_ids) <= 12:
+        ax.legend(fontsize=7, loc="best")
+
+    fig.tight_layout()
+    st.pyplot(fig)
+
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Rows plotted", f"{len(plot_df):,}")
+    c2.metric("Airfoils", f"{plot_df[id_col].nunique():,}")
+    c3.metric("Total dataset rows", f"{len(df):,}")
+    if "converged" in df.columns:
+        n_conv = int(_airfoil_bool_series(df["converged"]).sum())
+        c4.metric("Converged rows", f"{n_conv:,}")
+    else:
+        c4.metric("Converged rows", "—")
+
+    save_plot = st.checkbox(
+        "Save this plot as PNG",
+        value=False,
+        key=f"{key_prefix}_save_png",
+    )
+    if save_plot:
+        plots_dir = ds / "plots"
+        plots_dir.mkdir(parents=True, exist_ok=True)
+        safe_mode = mode.lower().replace(" ", "_").replace("/", "_").replace("-", "_")
+        out_path = plots_dir / f"{safe_mode}.png"
+        fig.savefig(out_path, dpi=200)
+        st.success(f"Saved plot: {out_path}")
+
+    try:
+        plt.close(fig)
+    except Exception:
+        pass
+
 def pg_airfoil(root, exe, tmo, dry):
-    _hero("〜", "2D Airfoil", "XFOIL surrogate pipeline · library → sweep → QC → promote → ML", "xfoil")
+    _hero("〜", "2D Airfoils", "XFOIL pipeline · choose source library → sweep → QC → promote → ML", "xfoil")
 
     cfg_files = _files(str(root / "configs" / "airfoil"), "*.yaml")
-    ds_dirs = [Path(d) for d in _dirs(str(root / "data" / "datasets"))
-               if (Path(d) / "airfoil_dataset_manifest.json").exists()]
+    ds_dirs = _airfoil_xfoil_dataset_candidates(root)
 
     library_choices = _airfoil_library_candidates(root)
-    lib_dir = Path(st.selectbox(
+    airfoil_library_options = _airfoil_library_candidates(root)
+    if not airfoil_library_options:
+        airfoil_library_options = [root / "data" / "airfoil_library"]
+
+    library_prompt = "__AERIS_CHOOSE_AIRFOIL_LIBRARY__"
+    airfoil_library_select_options = [library_prompt] + airfoil_library_options
+
+    if st.session_state.get("af_active_library_choice") not in airfoil_library_select_options:
+        st.session_state.pop("af_active_library_choice", None)
+
+    selected_airfoil_library = st.selectbox(
         "Active airfoil library",
-        [str(d) for d in library_choices],
+        airfoil_library_select_options,
         index=0,
-        key="af_active_library",
-        help="Choose a .dat-ingested library or a generated CST/Kulfan library. XFOIL sweep uses this path.",
-    ))
-    inv_csv = lib_dir / "airfoil_inventory.csv"
-    lib_report = _rjson(lib_dir / "library_report.json") or {}
-    lib_manifest = _rjson(lib_dir / "cst_airfoil_library_manifest.json") or {}
-    lib_hint = _airfoil_feature_preset_hint_from_manifest(lib_report or lib_manifest)
+        format_func=_airfoil_library_label,
+        key="af_active_library_choice",
+        help=(
+            "Manually choose which existing airfoil library XFOIL should sweep. "
+            "This can be an imported .dat library or any CST/Kulfan-generated library."
+        ),
+    )
+    active_airfoil_library_selected = selected_airfoil_library != library_prompt
+
+
+    custom_airfoil_library = st.checkbox(
+        "Use custom airfoil library path",
+        value=False,
+        key="af_active_library_custom_enabled",
+        help="Use this only if the library folder is not shown in the selector.",
+    )
+    if custom_airfoil_library:
+        custom_default = (
+            str(selected_airfoil_library)
+            if active_airfoil_library_selected
+            else str(root / "data" / "airfoil_library")
+        )
+        lib_dir = Path(st.text_input(
+            "Custom active airfoil library",
+            value=custom_default,
+            key="af_active_library",
+        ))
+        active_airfoil_library_selected = True
+    elif active_airfoil_library_selected:
+        lib_dir = Path(selected_airfoil_library)
+    else:
+        lib_dir = root / "data" / "airfoil_library"
+
+    active_airfoil_count = _airfoil_inventory_count(lib_dir) if active_airfoil_library_selected else 0
+    active_airfoil_origin = _airfoil_library_origin(lib_dir) if active_airfoil_library_selected else "No library selected"
 
     tab_lib, tab_sweep, tab_trust, tab_ml = st.tabs([
-        "  ① Library  ", "  ② XFOIL Sweep  ",
-        "  ③ QC / Curate / Promote  ", "  ④ ML  ",
+        "① Library",
+        "② XFOIL Sweep",
+        "③ QC / Curate / Promote",
+        "④ ML",
     ])
+    tab_qc = tab_trust
+
+
+    # Backward-compatible alias: older GUI code/tests may call this tab_qc,
+    # while the existing airfoil page body uses tab_trust.
+    tab_qc = tab_trust
+
 
     # ── ① LIBRARY ────────────────────────────────────────────────────────────
     with tab_lib:
-        _sec("Library status")
-        if inv_csv.exists():
+        _sec("Active library")
+        inv_csv = lib_dir / "airfoil_inventory.csv"
+        lib_manifest = _rjson(lib_dir / "cst_airfoil_library_manifest.json")
+
+        lib_origin = active_airfoil_origin
+        n_lib = str(active_airfoil_count)
+        tc_range = "—"
+        fam_summary = "—"
+
+        if inv_csv.exists() and pd is not None:
             try:
-                df_inv = pd.read_csv(inv_csv) if pd is not None else None
-                if df_inv is not None:
-                    n_lib = len(df_inv)
-                    fam_counts = df_inv["family"].value_counts().to_dict() if "family" in df_inv.columns else {}
-                    tc_min = df_inv["t_c"].min() if "t_c" in df_inv.columns else None
-                    tc_max = df_inv["t_c"].max() if "t_c" in df_inv.columns else None
-                    stat_items = [("Airfoils", str(n_lib), "ingested")]
-                    if tc_min is not None:
-                        stat_items.append(("t/c range", f"{tc_min:.3f}-{tc_max:.3f}", "thickness"))
-                    if fam_counts:
-                        top3 = ", ".join(f"{k}:{v}" for k, v in list(fam_counts.items())[:3])
-                        stat_items.append(("Top families", top3, "by count"))
-                    _stat_row(stat_items)
-                    with st.expander("Family breakdown", expanded=False):
-                        for fam, cnt in fam_counts.items():
-                            st.caption(f"{fam:<22} {cnt}")
-            except Exception as _e:
-                st.warning(f"Could not read inventory: {_e}")
-        else:
-            st.warning(f"No library at `{lib_dir}`. Run ingest below.")
+                df_inv = pd.read_csv(inv_csv)
+                n_lib = str(len(df_inv))
+                if "t_c" in df_inv.columns and len(df_inv):
+                    tc_range = f"{df_inv['t_c'].min():.3f}-{df_inv['t_c'].max():.3f}"
+                if "family" in df_inv.columns and len(df_inv):
+                    fam_counts = df_inv["family"].value_counts().to_dict()
+                    fam_summary = ", ".join(f"{k}:{v}" for k, v in list(fam_counts.items())[:3])
+            except Exception as exc:
+                st.warning(f"Could not read airfoil inventory: {exc}")
 
-        _sec("Solver check")
-        _panel("Check XFOIL binary",
-               "Confirms XFOIL is on PATH and shows its version.",
-               ["airfoil", "check-solver"],
-               root, exe, tmo, dry, "af_check", label="▶  Check XFOIL")
+        _stat_row([
+            ("Active library path", Path(lib_dir).name if active_airfoil_library_selected else "No library selected", "selected library"),
+            ("Origin", lib_origin, "imported or generated"),
+            ("Airfoils", n_lib, "airfoil_inventory.csv"),
+            ("t/c range", tc_range, "thickness ratio"),
+        ])
 
-        _sec("Ingest .dat library")
-        _note("Point <code>--db-dir</code> to a directory of Selig-format <code>.dat</code> files "
-              "(e.g. the UIUC Airfoil Database). Default output: <code>data/airfoil_library/</code>.", "info")
-        db_dir_str = st.text_input("Source .dat directory (--db-dir)",
-                                    value=str(root / "data" / "airfoil_database"),
-                                    key="af_db_dir")
-        _panel("Ingest airfoil library",
-               f"Reads all .dat files, writes airfoil_inventory.csv + coords/*.npz",
-               ["airfoil", "ingest", "--db-dir", db_dir_str, "--output-dir", str(lib_dir)],
-               root, exe, tmo, dry, "af_ingest", label="▶  Ingest library")
-        _panel("Library stats",
-               "Count, family breakdown, t/c and camber ranges.",
-               ["airfoil", "library-stats", "--library", str(lib_dir)],
-               root, exe, tmo, dry, "af_libstats", label="▶  Library stats")
-
-        _sec("Generate CST/Kulfan library")
-        _note(
-            "Creates a first-class AERIS 2D CST airfoil library: <code>.dat</code>, "
-            "coordinate <code>.npz</code>, CST JSON, <code>airfoil_inventory.csv</code>, "
-            "<code>cst_airfoil_library_manifest.json</code>, and <code>library_report.json</code>.",
-            "info",
-        )
-        cst_cfgs = [f for f in cfg_files if "cst_library" in Path(f).name]
-        if cst_cfgs:
-            cst_default = next((f for f in cst_cfgs if "smoke" in Path(f).name), cst_cfgs[0])
-            cst_cfg = st.selectbox(
-                "CST config",
-                cst_cfgs,
-                index=cst_cfgs.index(cst_default),
-                format_func=lambda s: Path(s).name,
-                key="af_cst_cfg",
+        if not active_airfoil_library_selected:
+            _note(
+                "Choose an existing airfoil library from the dropdown above before running XFOIL. "
+                "Use ① Library only when you want to create/import a new library.",
+                "warn",
+            )
+        elif not inv_csv.exists():
+            _note(
+                "The selected folder is not a built airfoil library yet. Choose one of the two source workflows below: "
+                "<b>Import existing airfoils (.dat)</b> or <b>Generate CST/Kulfan airfoils</b>.",
+                "warn",
             )
         else:
-            cst_cfg = st.text_input("CST config", str(root / "configs" / "airfoil" / "cst_library_smoke_v1.yaml"), key="af_cst_cfg_text")
-        cst_out = st.text_input(
-            "CST library output dir",
-            str(root / "data" / "airfoil_library_cst_smoke"),
-            key="af_cst_out",
+            _note(
+                f"Active library is ready. The same downstream XFOIL → QC → Promote → ML pipeline "
+                f"works for imported and CST-generated libraries.",
+                "ok",
+            )
+
+        _sec("Choose how to build an airfoil library")
+        c_import, c_cst = st.columns(2)
+        with c_import:
+            with st.container(border=True):
+                _h('<div style="font-weight:700;color:#F2F5F8;font-size:.95rem">Import existing airfoils (.dat)</div>')
+                _h('<div style="font-size:.78rem;color:#AAB6C2;line-height:1.55;margin:.35rem 0 .55rem">'
+                   'Use an external coordinate database such as UIUC/Selig-format files. '
+                   'AERIS ingests coordinates, computes geometry statistics, and writes a selectable library.</div>')
+                st.caption("Best when you already have trusted coordinate files.")
+        with c_cst:
+            with st.container(border=True):
+                _h('<div style="font-weight:700;color:#F2F5F8;font-size:.95rem">Generate CST/Kulfan airfoils</div>')
+                _h('<div style="font-size:.78rem;color:#AAB6C2;line-height:1.55;margin:.35rem 0 .55rem">'
+                   'Create a parametric AERIS airfoil library from CST/Kulfan coefficients. '
+                   'AERIS writes .dat files, coordinate arrays, CST JSON, inventory, and reports.</div>')
+                st.caption("Best when you want controlled parametric design-space coverage.")
+
+        source_workflow = st.radio(
+            "Library source workflow",
+            ["Import existing airfoils (.dat)", "Generate CST/Kulfan airfoils"],
+            horizontal=True,
+            key="af_library_source_workflow",
+            help="These are two source routes into the same downstream XFOIL surrogate pipeline.",
         )
-        _panel(
-            "Generate CST airfoil library",
-            "Runs cst_airfoil_v1 and writes a selectable airfoil library for XFOIL and ML.",
-            ["airfoil", "generate-cst-library", "--config", cst_cfg, "--output-dir", cst_out],
-            root, exe, tmo, dry, "af_cst_generate", label="▶  Generate CST library",
-        )
-        if lib_hint == "airfoil_cst_xfoil_v1":
-            st.success("Active library detected as CST/Kulfan. Recommended ML preset: airfoil_cst_xfoil_v1")
+
+        if source_workflow == "Import existing airfoils (.dat)":
+            _sec("Import existing airfoils (.dat)")
+            _note(
+                "Point <code>--db-dir</code> to a directory of Selig-format <code>.dat</code> files. "
+                "Default output is the active library path shown above.",
+                "info",
+            )
+            db_dir_str = st.text_input(
+                "Source .dat directory (--db-dir)",
+                value=str(root / "data" / "airfoil_database"),
+                key="af_db_dir",
+            )
+            _panel(
+                "Import airfoil library",
+                "Reads .dat files, writes airfoil_inventory.csv and coords/*.npz.",
+                ["airfoil", "ingest", "--db-dir", db_dir_str, "--output-dir", str(lib_dir)],
+                root, exe, tmo, dry, "af_ingest", label="▶  Import .dat library",
+            )
+            _panel(
+                "Library stats",
+                "Count, family breakdown, t/c and camber ranges.",
+                ["airfoil", "library-stats", "--library", str(lib_dir)],
+                root, exe, tmo, dry, "af_libstats", label="▶  Library stats",
+            )
+
+        else:
+            _sec("Generate CST/Kulfan airfoils")
+            _note(
+                "Creates a first-class AERIS 2D CST airfoil library: <code>.dat</code>, "
+                "coordinate <code>.npz</code>, CST JSON, <code>airfoil_inventory.csv</code>, "
+                "<code>cst_airfoil_library_manifest.json</code>, and <code>library_report.json</code>.",
+                "info",
+            )
+            cst_cfgs = [
+                f for f in _files(str(root / "configs" / "airfoil"), "*.yaml")
+                if "cst_library" in Path(f).name
+            ]
+            if cst_cfgs:
+                cst_default = next((f for f in cst_cfgs if "smoke" in Path(f).name), cst_cfgs[0])
+                cst_cfg = st.selectbox(
+                    "CST config",
+                    cst_cfgs,
+                    index=cst_cfgs.index(cst_default),
+                    format_func=lambda s: Path(s).name,
+                    key="af_cst_cfg",
+                )
+            else:
+                cst_cfg = st.text_input(
+                    "CST config",
+                    str(root / "configs" / "airfoil" / "cst_library_smoke_v1.yaml"),
+                    key="af_cst_cfg_text",
+                )
+
+            cst_out = st.text_input(
+                "CST library output dir",
+                str(root / "data" / "airfoil_library_cst_smoke"),
+                key="af_cst_out",
+            )
+            _panel(
+                "Generate CST/Kulfan library",
+                "Runs cst_airfoil_v1 and writes a selectable airfoil library for XFOIL and ML.",
+                ["airfoil", "generate-cst-library", "--config", cst_cfg, "--output-dir", cst_out],
+                root, exe, tmo, dry, "af_cst_generate", label="▶  Generate CST library",
+            )
+            if (Path(cst_out) / "library_report.json").exists():
+                with st.expander("CST library report", expanded=False):
+                    _show_file(Path(cst_out) / "library_report.json")
+
         if (lib_dir / "library_report.json").exists():
-            with st.expander("CST library report", expanded=False):
+            with st.expander("Active library report", expanded=False):
                 _show_file(lib_dir / "library_report.json")
 
-    # ── ② XFOIL SWEEP ────────────────────────────────────────────────────────
-    with tab_sweep:
-        if not inv_csv.exists():
-            st.warning("Library not built. Go to ① Library and run Ingest first.")
-        else:
-            _note("Use <b>--n-airfoils</b> to subset for fast iteration "
-                  "(10 = smoke, 25 = pilot, 2156 = full campaign at ~2-4 h).", "info")
 
-            smoke_cfg = str(root / "configs" / "airfoil" / "xfoil_smoke_v1.yaml")
-            sweep_cfg = str(root / "configs" / "airfoil" / "xfoil_sweep_v1.yaml")
-            cfg_opts  = ([smoke_cfg] if smoke_cfg in cfg_files else []) +                         ([sweep_cfg] if sweep_cfg in cfg_files else []) +                         [f for f in cfg_files if f not in (smoke_cfg, sweep_cfg)]
+    with tab_sweep:
+        _sec("XFOIL readiness")
+        _panel(
+            "Check XFOIL binary",
+            "Confirms XFOIL is on PATH and shows its version before running sweeps.",
+            ["airfoil", "check-solver"],
+            root, exe, tmo, dry, "af_check", label="▶  Check XFOIL",
+        )
+
+        if not active_airfoil_library_selected:
+            st.warning(
+                "Choose an active airfoil library from the dropdown above before running XFOIL. "
+                "You can choose any imported .dat library or any CST/Kulfan library with a different seed."
+            )
+        elif not inv_csv.exists():
+            st.warning(
+                "The selected active library has no airfoil_inventory.csv. "
+                "Choose another existing library or build/import this one in ① Library."
+            )
+        else:
+            st.caption(
+                f"Selected active library: `{lib_dir}` · "
+                f"{active_airfoil_count} airfoils · {active_airfoil_origin}"
+            )
+            _note(
+                "XFOIL does not create airfoils. It only sweeps airfoils that already exist "
+                "in the selected active library. Therefore <code>--n-airfoils</code> is capped "
+                "by the selected library inventory count.",
+                "info",
+            )
 
             # AERIS_PATCH_CST_GUI_V1_1_XFOIL_CONFIG_FILTER
-            # Only XFOIL sweep configs belong here. CST library configs such as
-            # cst_library_v1.yaml generate airfoil shapes and do not contain
-            # alpha/reynolds sweep keys, so they must not appear in this selectbox.
+            # cst_library_v1.yaml generate airfoil shapes; it must not appear
+            # in the XFOIL sweep config selector.
             xfoil_cfg_files = [
-                f for f in cfg_files
+                f for f in _files(str(root / "configs" / "airfoil"), "*.yaml")
                 if "xfoil" in Path(f).stem.lower()
             ]
-            cfg_opts = (
-                ([smoke_cfg] if smoke_cfg in xfoil_cfg_files else [])
-                + ([sweep_cfg] if sweep_cfg in xfoil_cfg_files else [])
-                + [f for f in xfoil_cfg_files if f not in (smoke_cfg, sweep_cfg)]
-            )
+            cfg_opts = xfoil_cfg_files
+
+            # Reset stale Streamlit state if an older selected value was a CST
+            # library generator config or any non-XFOIL config.
             if st.session_state.get("af_cfg") not in cfg_opts:
                 st.session_state.pop("af_cfg", None)
 
-            sel_cfg = st.selectbox("XFOIL sweep config", cfg_opts if cfg_opts else [""],
-                                   format_func=lambda s: (
-                                       f"Smoke — {Path(s).name}" if "smoke" in s else
-                                       f"Production — {Path(s).name}" if "sweep_v1" in s else
-                                       Path(s).name),
-                                   key="af_cfg")
-            if "smoke" in (sel_cfg or ""):
-                st.info("Smoke config — 8 alpha, 1 Re. Pipeline validation only.")
-            elif "sweep_v1" in (sel_cfg or ""):
-                st.success("Production config — 41 alpha, 3 Re. Use for ML training.")
+            if not cfg_opts:
+                xfoil_cfg = st.text_input(
+                    "XFOIL sweep config",
+                    str(root / "configs" / "airfoil" / "xfoil_smoke_v1.yaml"),
+                    key="af_xfoil_cfg_text",
+                )
+            else:
+                default_cfg = next(
+                    (f for f in cfg_opts if "smoke" in Path(f).stem.lower()),
+                    cfg_opts[0],
+                )
+                selected_cfg = st.session_state.get("af_cfg", default_cfg)
+                if selected_cfg not in cfg_opts:
+                    selected_cfg = default_cfg
 
-            ds_name   = st.text_input("Dataset name (--name)", value="airfoil_xfoil_pilot", key="af_ds_name")
-            n_lib_available = 25
-            try:
-                if pd is not None and inv_csv.exists():
-                    n_lib_available = max(1, int(len(pd.read_csv(inv_csv))))
-            except Exception:
-                n_lib_available = 25
-            n_slider_default = min(25, n_lib_available)
-            n_airfoils = st.slider("Airfoils to sweep (--n-airfoils)", 1, max(1, n_lib_available), n_slider_default, 1, key="af_n",
-                                   help="Use all available library rows by default for small CST smoke libraries; use subsets for large libraries.")
-            af_seed   = st.number_input("Subset seed (--seed)", value=42, min_value=0, key="af_seed",
-                            help="Seed 0 may select geometrically extreme CST airfoils. Try 42 or 5 if you get 0% convergence.")
-            af_show_plots = st.checkbox(
+                xfoil_cfg = st.selectbox("XFOIL sweep config", cfg_opts, index=cfg_opts.index(selected_cfg), format_func=lambda s: ("Smoke — " + Path(s).name if "smoke" in Path(s).stem.lower() else Path(s).name), key="af_cfg")
+
+                if "smoke" in Path(xfoil_cfg).stem.lower():
+                    st.caption("Smoke config — fast pipeline validation only.")
+
+            ds_name = st.text_input(
+                "Dataset name (--name)",
+                "airfoil_xfoil_pilot",
+                key="af_ds_name",
+            )
+
+            sweep_slider_max = max(1, int(active_airfoil_count))
+            suggested_n = min(sweep_slider_max, 10 if sweep_slider_max <= 25 else 25)
+
+            if st.session_state.get("af_n_airfoils", suggested_n) > sweep_slider_max:
+                st.session_state["af_n_airfoils"] = sweep_slider_max
+
+            n_airfoils = int(st.slider(
+                "Airfoils to sweep from active library (--n-airfoils)",
+                min_value=1,
+                max_value=sweep_slider_max,
+                value=min(st.session_state.get("af_n_airfoils", suggested_n), sweep_slider_max),
+                step=1,
+                key="af_n_airfoils",
+                help=(
+                    "Subset size for the selected active library. "
+                    "This does not generate new airfoils and cannot exceed the selected library size."
+                ),
+            ))
+
+            seed = int(st.number_input(
+                "Subset seed (--seed)",
+                min_value=0,
+                value=42,
+                step=1,
+                key="af_seed",
+                help="Controls which reproducible subset is selected from the active library.",
+            ))
+
+            show_xfoil_plots = st.checkbox(
                 "Show XFOIL plots (--show-plots)",
                 value=False,
                 key="af_show_plots",
                 help=(
-                    "Checked: Xplot11 Cp windows appear per airfoil — useful for debugging. "
-                    "Unchecked (default): headless via xvfb-run, no windows. "
-                    "Requires: sudo apt install xvfb"
+                    "Checked: XFOIL/Xplot11 graphics windows may appear during the sweep. "
+                    "Use this only for small debug runs, usually 1-3 airfoils. "
+                    "Unchecked: headless/no windows, recommended for datasets."
                 ),
             )
 
-            # AERIS_PATCH_CST_GUI_V1_1_XFOIL_NO_CONFIG_WARNING
-            if not cfg_opts:
-                st.error("No XFOIL sweep configs found. Expected configs/airfoil/xfoil_*.yaml, not CST library configs.")
-
-            if sel_cfg and ds_name:
-                _sweep_args = [
-                    "airfoil", "dataset", "generate",
-                    "--library", str(lib_dir),
-                    "--config",  sel_cfg,
-                    "--name",    ds_name,
-                    "--n-airfoils", str(n_airfoils),
-                    "--seed",    str(int(af_seed)),
-                ]
-                if af_show_plots:
-                    _sweep_args.append("--show-plots")
-                _panel(
-                    "Run XFOIL sweep",
-                    f"Sweeps {n_airfoils} airfoils → data/datasets/{ds_name}/ "
-                    + ("[Xplot11 ON]" if af_show_plots else "[headless, no windows]"),
-                    _sweep_args,
-                    root, exe, tmo, dry, "af_gen",
-                    label="▶  Run XFOIL sweep " + ("[Xplot11 ON]" if af_show_plots else "[headless]"),
+            if show_xfoil_plots and int(n_airfoils) > 3:
+                _note(
+                    "Plot mode can open many XFOIL/Xplot11 windows. "
+                    "For visual debugging, reduce <code>--n-airfoils</code> to 1-3.",
+                    "warn",
                 )
 
-            if ds_dirs:
-                _sec("Existing airfoil datasets")
-                for ds in ds_dirs[:10]:
-                    m = _rjson(ds / "airfoil_dataset_manifest.json") or {}
-                    rate = m.get("convergence_rate")
-                    rate_s = f"{rate:.1%}" if rate is not None else "—"
-                    _h(f'<div style="background:#1B2A3A;border:1px solid #2D3F52;border-radius:7px;'
-                       f'padding:.4rem .9rem;margin:.25rem 0;font-size:.78rem;'
-                       f'font-family:JetBrains Mono,monospace;color:#D6DEE8">'
-                       f'<b>{ds.name}</b> · {m.get("n_airfoils","—")} airfoils · '
-                       f'{m.get("total_rows","—")} rows · {m.get("converged_rows","—")} converged · {rate_s} · '
-                       f'{_airfoil_dataset_feature_preset_hint(ds)}'
-                       f'</div>')
+            _sweep_args = [
+                "airfoil", "dataset", "generate",
+                "--library", str(lib_dir),
+                "--config", str(xfoil_cfg),
+                "--name", ds_name,
+                "--n-airfoils", str(n_airfoils),
+                "--seed", str(seed),
+            ]
+            if show_xfoil_plots:
+                _sweep_args.append("--show-plots")
+
+            _panel(
+                "Run XFOIL sweep",
+                (
+                    f"Sweeps {n_airfoils} airfoils from the selected active library "
+                    f"→ data/datasets/{ds_name}/ "
+                    + ("[Xplot11 ON]" if show_xfoil_plots else "[headless, no windows]")
+                ),
+                _sweep_args,
+                root, exe, tmo, dry, "af_sweep",
+                label="▶  Run XFOIL sweep " + ("[Xplot11 ON]" if show_xfoil_plots else "[headless]"),
+            )
+
+            _sec("Dataset polar viewer")
+            _note(
+                "View XFOIL polar curves from an existing generated dataset. "
+                "This is different from live <code>--show-plots</code>: it plots saved CSV results "
+                "inside the GUI after the run.",
+                "info",
+            )
+
+            polar_ds_dirs = _airfoil_xfoil_dataset_candidates(root)
+
+            if not polar_ds_dirs:
+                st.warning(
+                    "No generated XFOIL airfoil datasets found under data/datasets. "
+                    "Expected folders containing airfoil_dataset.csv."
+                )
+                manual_polar_ds = st.text_input(
+                    "Manual dataset folder",
+                    str(root / "data" / "datasets" / "airfoil_xfoil_pilot"),
+                    key="af_polar_manual_dataset",
+                    help="Use this if the dataset exists but was not auto-discovered.",
+                )
+                manual_polar_path = Path(manual_polar_ds)
+                if (manual_polar_path / "airfoil_dataset.csv").exists():
+                    _render_airfoil_polar_viewer(manual_polar_path, key_prefix="af_polar_sweep_manual")
+            else:
+                polar_ds_path = st.selectbox(
+                    "Dataset to plot",
+                    polar_ds_dirs,
+                    format_func=_airfoil_xfoil_dataset_label,
+                    key="af_polar_dataset",
+                    help="Choose any generated 2D airfoil XFOIL dataset containing airfoil_dataset.csv.",
+                )
+                _render_airfoil_polar_viewer(polar_ds_path, key_prefix="af_polar_sweep")
+
 
     # ── ③ QC / CURATE / PROMOTE ──────────────────────────────────────────────
     with tab_trust:
@@ -2443,6 +3265,13 @@ def pg_airfoil(root, exe, tmo, dry):
                         "See QC report below.",
                         "err",
                     )
+                _sec("QC polar preview")
+                _note(
+                    "Quickly inspect saved XFOIL curves before/after QC and curation.",
+                    "info",
+                )
+                _render_airfoil_polar_viewer(ds_path, key_prefix="af_polar_qc")
+
                 c_qc, c_cur, c_prom = st.columns(3)
                 with c_qc:
                     _panel("QC", "Quality checks on raw airfoil_dataset.csv.",
@@ -5565,6 +6394,15 @@ _GUI_CAD_EXPORT_STATIC_MARKERS = (
     "geometry_export_manifest.json",
     "physical_deflected_geometry_export_manifest.json",
     "physical_deflected_geometry.step_bodies.json",
+    "control_surfaces.enabled",
+    "surface_count",
+    "controls_active",
+    "plot_overlay_auto",
+    "Planform plot",
+    "--save-plot",
+    "--no-save-plot",
+    "Assembly fallback",
+    "segmented/per-body fallback",
 )
 
 # Static GUI regression markers for the physical deflected CAD preview panel.

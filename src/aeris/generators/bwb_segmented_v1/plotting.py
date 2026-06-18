@@ -128,8 +128,12 @@ def save_planform_plot(
     # Show configured/effective control-surface span bands when present. This
     # makes v3 sampled elevon geometry visible in the operator debug plot.
     _control_span_bands: list[tuple[float, float, str]] = []
-    _control_surfaces = tuple(
-        getattr(getattr(config, "control_surfaces", None), "surfaces", ()) or ()
+    _control_cfg = getattr(config, "control_surfaces", None)
+    _controls_enabled = bool(getattr(_control_cfg, "enabled", False))
+    _control_surfaces = (
+        tuple(getattr(_control_cfg, "surfaces", ()) or ())
+        if _controls_enabled
+        else ()
     )
     _seen_control_labels: set[str] = set()
     for _surface in _control_surfaces:

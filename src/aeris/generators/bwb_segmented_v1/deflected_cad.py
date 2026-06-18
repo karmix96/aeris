@@ -114,6 +114,26 @@ class PhysicalDeflectionSpec:
         d["deflection_topology"] = self.topology
         d["right_deflection_deg"] = self.right_deflection_deg
         d["left_deflection_deg"] = self.left_deflection_deg
+        d["mixing_equation"] = {
+            "right_deflection_deg": "delta_e_sym_deg + delta_a_diff_deg",
+            "left_deflection_deg": "delta_e_sym_deg - delta_a_diff_deg",
+        }
+        d["max_abs_deflection_deg"] = max(
+            abs(self.right_deflection_deg),
+            abs(self.left_deflection_deg),
+        )
+        if d["max_abs_deflection_deg"] > 60.0:
+            d["deflection_warning"] = (
+                "Very large physical deflection. Treat this mainly as a CAD stress-test, "
+                "not a realistic aero/CFD operating point."
+            )
+        elif d["max_abs_deflection_deg"] > 35.0:
+            d["deflection_warning"] = (
+                "Large physical deflection. Check whether this is realistic before using "
+                "the geometry for aero/CFD interpretation."
+            )
+        else:
+            d["deflection_warning"] = None
         if self.topology == "split-elevon":
             d["surface_model"] = "split_mechanical_elevon"
             d["body_model"] = "fixed_wing_plus_separate_elevon_per_side"

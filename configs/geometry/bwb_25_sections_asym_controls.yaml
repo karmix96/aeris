@@ -47,8 +47,8 @@ geometry:
         hinge_point: 0.75
         symmetric: true
         spanwise:
-          start_frac: 0.60
-          end_frac: 0.95
+          start_frac: 0.30
+          end_frac: 0.50
         deflection_sign: standard
         required: false
 

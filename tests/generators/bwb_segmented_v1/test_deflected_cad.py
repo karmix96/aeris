@@ -16,6 +16,25 @@ def test_physical_deflection_right_left_mapping():
     assert spec.right_deflection_deg == pytest.approx(17.0)
     assert spec.left_deflection_deg == pytest.approx(-13.0)
 
+    payload = spec.to_dict()
+    assert payload["mixing_equation"] == {
+        "right_deflection_deg": "delta_e_sym_deg + delta_a_diff_deg",
+        "left_deflection_deg": "delta_e_sym_deg - delta_a_diff_deg",
+    }
+    assert payload["max_abs_deflection_deg"] == pytest.approx(17.0)
+    assert payload["deflection_warning"] is None
+
+
+def test_physical_deflection_large_combined_angle_warns():
+    spec = PhysicalDeflectionSpec(delta_e_sym_deg=50.0, delta_a_diff_deg=15.0)
+    payload = spec.to_dict()
+
+    assert payload["right_deflection_deg"] == pytest.approx(65.0)
+    assert payload["left_deflection_deg"] == pytest.approx(35.0)
+    assert payload["max_abs_deflection_deg"] == pytest.approx(65.0)
+    assert payload["deflection_warning"] is not None
+    assert "CAD stress-test" in payload["deflection_warning"]
+
 
 def test_deflect_control_coordinates_rotates_aft_piece():
     coords = np.array([[0.75, 0.0], [1.0, 0.0], [1.0, -0.02], [0.75, 0.0]])

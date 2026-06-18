@@ -92,7 +92,11 @@ def _mark_manifest_failed(
         "traceback": traceback.format_exc(),
     }
 
-def run_geometry_generation(config_path: str | Path) -> tuple[int, Path | None]:
+def run_geometry_generation(
+    config_path: str | Path,
+    *,
+    save_plot: bool | None = None,
+) -> tuple[int, Path | None]:
     """
     Run a single geometry-generation workflow.
 
@@ -126,6 +130,12 @@ def run_geometry_generation(config_path: str | Path) -> tuple[int, Path | None]:
         "completed_at_utc": None,
         "error": None,
         "geometry": None,
+        "operator_overrides": {
+            "save_plot": save_plot,
+        },
+        "operator_overrides": {
+            "save_plot": save_plot,
+        },
     }
 
     _write_manifest(manifest_path, manifest)
@@ -162,10 +172,15 @@ def run_geometry_generation(config_path: str | Path) -> tuple[int, Path | None]:
         design_sample = generator.sample_one(generator_config, seed=design_sampling_seed)
         logger.info("Design sample generated successfully")
 
+        run_kwargs: dict[str, Any] = {}
+        if save_plot is not None:
+            run_kwargs["save_plot"] = save_plot
+
         case_result = generator.run_full_case(
             sample=design_sample,
             config=generator_config,
             output_dir=geometry_dir,
+            **run_kwargs,
         )
         case_summary = generator.summarize_case(case_result)
         logger.info("Geometry case generated successfully")
@@ -179,6 +194,12 @@ def run_geometry_generation(config_path: str | Path) -> tuple[int, Path | None]:
             "geometry_deterministic": True,
             "design_sample": _to_jsonable(design_sample),
             "case_summary": _to_jsonable(case_summary),
+            "operator_overrides": {
+                "save_plot": save_plot,
+            },
+            "operator_overrides": {
+                "save_plot": save_plot,
+            },
         }
         manifest["status"] = "success"
         manifest["completed_at_utc"] = _utc_now_iso()

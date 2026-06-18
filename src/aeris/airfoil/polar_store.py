@@ -178,6 +178,26 @@ class AirfoilPolarStore:
         t = (math.log(re) - math.log(lo_re)) / (math.log(hi_re) - math.log(lo_re))
         return _interpolate_cdcl(params_lo, params_hi, t)
 
+    def get_cl_bounds(
+        self,
+        airfoil_id: str,
+        re: float,
+        mach: float = 0.0,
+    ) -> tuple[float, float] | None:
+        """Return (cl_min, cl_max) for the nearest Re/Mach bin, or None."""
+        sub = self._filter_airfoil(airfoil_id)
+        if sub is None:
+            return None
+        re_bins = np.sort(sub["reynolds"].unique())
+        mach_bins = np.sort(sub["mach"].unique())
+        re_sel = _nearest(re_bins, re)
+        mach_sel = _nearest(mach_bins, mach)
+        slice_df = sub[(sub["reynolds"] == re_sel) & (sub["mach"] == mach_sel)]
+        if slice_df.empty:
+            return None
+        cl_arr = slice_df["cl"].to_numpy(float)
+        return float(cl_arr.min()), float(cl_arr.max())
+
     def query_cd(
         self,
         airfoil_id: str,

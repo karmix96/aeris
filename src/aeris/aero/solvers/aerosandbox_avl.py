@@ -818,7 +818,7 @@ class AeroSandboxAVLSolver(AeroSolver):
                     __section_map = settings.solver_options.get("section_map")
                     __polar_store = settings.solver_options.get("polar_store")
                     if __section_map is not None and __polar_store is not None:
-                        cd_prof = _compute_strip_profile_drag(
+                        cd_prof, n_extrap = _compute_strip_profile_drag(
                             strips_df=strips_df,
                             section_map=__section_map,
                             polar_store=__polar_store,
@@ -833,6 +833,28 @@ class AeroSandboxAVLSolver(AeroSolver):
                             result.cd_total = cd_ind_val + cd_prof
                             if result.cl is not None and result.cd_total > 0:
                                 result.l_over_d_viscous = result.cl / result.cd_total
+                            # Store extrapolation count for downstream QC
+                            result.solver_metadata["profile_drag_n_extrapolated_strips"] = n_extrap
+                            if n_extrap > 0:
+                                result.warnings.append(
+                                    f"POLAR_BRIDGE: {n_extrap} strip(s) had cl outside 2D polar "
+                                    "range — profile drag clamped at polar boundary (unreliable)."
+                                )
+                            # Cross-check: strip-integration vs AVL CDtot (should agree ±15%)
+                            # AVL CDtot now includes CDCL profile drag from injection.
+                            # Strip integration (cd_total) is the authoritative estimate.
+                            # A large divergence indicates a polar fitting or symmetry issue.
+                            avl_cdtot = result.cd  # CDtot as reported by AVL
+                            if avl_cdtot is not None and avl_cdtot > 0 and result.cd_total > 0:
+                                rel_diff = abs(result.cd_total - avl_cdtot) / result.cd_total
+                                result.solver_metadata["profile_drag_cd_total_vs_avl_cdtot_rel_diff"] = rel_diff
+                                if rel_diff > 0.15:
+                                    result.warnings.append(
+                                        f"POLAR_BRIDGE: cd_total (strip-integration) = "
+                                        f"{result.cd_total:.5f} vs AVL CDtot = {avl_cdtot:.5f} "
+                                        f"({rel_diff:.1%} disagreement). "
+                                        "Check CDCL fit quality and polar coverage."
+                                    )
 
                 except Exception as exc:
                     result.warnings.append(f"Strip parsing failed: {exc}")
@@ -1009,45 +1031,56 @@ def _compute_strip_profile_drag(
     velocity_mps: float,
     mach: float,
     altitude_m: float,
-) -> float | None:
+) -> tuple[float, int] | tuple[None, int]:
     """Integrate section profile drag over the semi-span from AVL strip data.
 
-    CD_profile = (1/S_ref) × Σ_i  cd_2d(cl_i, Re_i) × chord_i × Δy_i
+    Uses AVL's own strip panel areas (chord × Δy per strip) — exact to the
+    same discretisation AVL used for the VLM solution.
 
-    The summation covers all strips on one semi-wing (symmetric).  AVL's
-    ``strips.txt`` contains both semi-wings; this function detects duplication
-    and sums only the port/starboard half.
+    Symmetry: for symmetric wings AVL writes strips for both halves in
+    strips.txt (y < 0 and y ≥ 0).  When both sides are present the summation
+    covers only y ≥ 0 strips and the result is multiplied by 2.  When only
+    one side is present (e.g., a half-wing model) no doubling is applied.
 
-    Returns None if the strips DataFrame is missing required columns or has
-    too few rows for a meaningful integration.
+    Returns:
+        (cd_profile, n_extrapolated_strips)
+        cd_profile = None if required columns are absent or data is empty.
+        n_extrapolated_strips counts strips whose local cl fell outside the
+        2D polar's covered cl range — those cd values are clamped (np.interp
+        boundary) and should be treated as unreliable.
     """
     from aeris.aero.solvers.avl_polar_injection import _kinematic_viscosity
 
-    needed = {"y_le", "chord", "cl_local"}
+    needed = {"y_le", "chord", "area", "cl_local"}
     if not needed.issubset(strips_df.columns):
-        return None
+        return None, 0
     if len(strips_df) < 2:
-        return None
+        return None, 0
 
     nu = _kinematic_viscosity(altitude_m)
 
-    # AVL strips are written for both halves (symmetric).  Keep only y_le >= 0.
-    df = strips_df[strips_df["y_le"] >= 0.0].copy()
-    if df.empty:
-        return None
+    # Detect symmetry: check if strips.txt contains both semi-wings.
+    y_vals = strips_df["y_le"].dropna().to_numpy(float)
+    has_both_sides = bool((y_vals < -1e-6).any() and (y_vals > 1e-6).any())
+    symmetry_factor = 2.0 if has_both_sides else 1.0
 
-    # Sort by y_le and compute Δy between adjacent strips
+    # Work on the positive (or only) half.
+    df = strips_df[strips_df["y_le"] >= -1e-9].copy()
+    if df.empty:
+        return None, 0
+
     df = df.sort_values("y_le").reset_index(drop=True)
     y_arr = df["y_le"].to_numpy(float)
     chord_arr = df["chord"].to_numpy(float)
+    area_arr = df["area"].to_numpy(float)
     cl_arr = df["cl_local"].to_numpy(float)
 
-    dy = _strip_dy(y_arr)
-
     cd_prof_sum = 0.0
+    n_extrapolated = 0
     for idx in range(len(df)):
-        y_m = float(y_arr[idx])  # y_le is the strip leading-edge y position
+        y_m = float(y_arr[idx])
         chord = float(chord_arr[idx])
+        strip_area = float(area_arr[idx])
         cl = float(cl_arr[idx])
         re = velocity_mps * chord / nu if nu > 0 else 1e6
 
@@ -1055,31 +1088,25 @@ def _compute_strip_profile_drag(
         if airfoil_id is None:
             continue
 
+        # Track cl out-of-envelope before querying (np.interp clamps silently)
+        cl_bounds = polar_store.get_cl_bounds(airfoil_id, re=re, mach=mach)
+        if cl_bounds is not None:
+            cl_min, cl_max = cl_bounds
+            if cl < cl_min or cl > cl_max:
+                n_extrapolated += 1
+
         cd_2d = polar_store.query_cd(airfoil_id, cl=cl, re=re, mach=mach)
         if cd_2d is None:
             continue
 
-        cd_prof_sum += cd_2d * chord * dy[idx]
+        # Use AVL's strip area (= chord × Δy) — no reconstruction needed.
+        cd_prof_sum += cd_2d * strip_area
 
     if s_ref <= 0:
-        return None
-    return cd_prof_sum / s_ref
+        return None, n_extrapolated
 
-
-def _strip_dy(y_arr: "np.ndarray") -> "np.ndarray":
-    """Return spanwise strip widths Δy corresponding to each strip centre."""
-    import numpy as _np
-    n = len(y_arr)
-    dy = _np.empty(n, dtype=float)
-    if n == 1:
-        dy[0] = y_arr[0] * 2 if y_arr[0] > 0 else 0.0
-        return dy
-    # Trapezoidal cell widths
-    dy[0] = (y_arr[1] - y_arr[0]) * 0.5
-    dy[-1] = (y_arr[-1] - y_arr[-2]) * 0.5
-    for i in range(1, n - 1):
-        dy[i] = (y_arr[i + 1] - y_arr[i - 1]) * 0.5
-    return dy
+    cd_profile = symmetry_factor * cd_prof_sum / s_ref
+    return cd_profile, n_extrapolated
 
 
 def _compute_derived_metrics(

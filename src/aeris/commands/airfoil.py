@@ -267,6 +267,83 @@ def airfoil_generate_cst_library(
 
 # ── aeris airfoil dataset generate ───────────────────────────────────────────
 
+@airfoil_app.command("fit-cst")
+def airfoil_fit_cst(
+    dat_file: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Path to a Selig-format .dat airfoil coordinate file.",
+    ),
+    output_dir: Path = typer.Option(
+        ...,
+        "--output-dir",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Directory to write the fitted CST JSON and fit_report.json.",
+    ),
+    order: int = typer.Option(8, "--order", help="Bernstein polynomial order (default 8)."),
+    n1: float = typer.Option(0.5, "--n1", help="Class function N1 exponent."),
+    n2: float = typer.Option(1.0, "--n2", help="Class function N2 exponent."),
+    name: str = typer.Option("", "--name", help="Airfoil name (default: .dat filename stem)."),
+) -> None:
+    """Fit CST coefficients to an existing Selig .dat airfoil coordinate file.
+
+    Writes <output_dir>/<stem>_cst.json and fit_report.json.
+    Enables translating any existing airfoil into the CST design space used
+    by AERIS ML surrogates.
+
+    Example
+    -------
+    aeris airfoil fit-cst naca4412.dat --output-dir data/cst_fit/naca4412
+    """
+    import json as _json
+    from aeris.airfoil.cst_generator import CSTAirfoil
+
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    stem = Path(dat_file).stem
+    airfoil_name = name.strip() if name.strip() else stem
+
+    try:
+        foil, rms = CSTAirfoil.fit_dat(
+            dat_file, order=order, n1=n1, n2=n2, name=airfoil_name,
+        )
+    except Exception as exc:
+        typer.echo(f"[ERROR] CST fit failed: {exc}")
+        raise typer.Exit(code=1)
+
+    cst_json_path = output_dir / f"{stem}_cst.json"
+    foil.to_json(cst_json_path)
+
+    validation = foil.validate()
+    report = {
+        "source_dat": str(dat_file),
+        "airfoil_name": airfoil_name,
+        "order": order,
+        "n1": n1,
+        "n2": n2,
+        "rms_error": rms,
+        "cst_json": str(cst_json_path),
+        "au": foil.au.tolist(),
+        "al": foil.al.tolist(),
+        "validation_valid": validation.valid,
+        "validation_failures": validation.failures,
+    }
+    fit_report_path = output_dir / "fit_report.json"
+    fit_report_path.write_text(_json.dumps(report, indent=2), encoding="utf-8")
+
+    typer.echo(f"[AERIS] CST fit: order={order}, RMS={rms:.6f}, valid={validation.valid}")
+    typer.echo(f"  cst_json  : {cst_json_path}")
+    typer.echo(f"  fit_report: {fit_report_path}")
+    if not validation.valid:
+        typer.echo(f"  failures  : {validation.failures}")
+
 @airfoil_dataset_app.command("generate")
 def airfoil_dataset_generate(
     library_dir: Path = typer.Option(

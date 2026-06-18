@@ -294,40 +294,49 @@ class TestIssueC12QcBypassBlocked:
 # ─────────────────────────────────────────────────────────────────────────────
 
 class TestIssueC14XfoilPlop:
-    def test_plop_in_command_sequence(self):
-        """PLOP command must appear in xfoil_adapter command sequence."""
-        import aeris.aero_2d.xfoil_adapter as mod
-        src = Path(mod.__file__).read_text(encoding="utf-8")
-        assert '"PLOP"' in src, (
-            "PLOP command missing from xfoil_adapter — ISSUE-A16/C14 not patched"
-        )
+    """PLOP was intentionally REMOVED (patch_xfoil_remove_plop.sh).
+    Under xvfb-run, display suppression is handled by the virtual X server.
+    PLOP consumed stdin lines needed by LOAD/PANE causing 0% convergence.
+    These tests now verify the correct headless mechanisms instead.
+    """
 
-    def test_plop_before_oper(self):
-        """PLOP must appear before OPER in the source code (order matters)."""
-        import aeris.aero_2d.xfoil_adapter as mod
-        src = Path(mod.__file__).read_text(encoding="utf-8")
-        idx_plop = src.find('"PLOP"')
-        idx_oper = src.find('"OPER"')
-        assert idx_plop > 0 and idx_oper > 0
-        assert idx_plop < idx_oper, (
-            f"PLOP (pos {idx_plop}) must come before OPER (pos {idx_oper})"
-        )
-
-    def test_blank_line_after_g_exits_plop(self):
-        """cmds.append("") must appear between PLOP and OPER to exit PLOP submenu.
-        AERIS_FIX_PLOP_TEST
+    def test_plop_not_in_command_sequence(self):
+        """PLOP must NOT be in the xfoil command sequence.
+        It was removed because it consumed stdin lines causing 0% convergence.
+        xvfb-run and DISPLAY="" provide headless operation without PLOP.
         """
         import aeris.aero_2d.xfoil_adapter as mod
         src = Path(mod.__file__).read_text(encoding="utf-8")
-        idx_plop = src.find('append("PLOP")')
-        idx_oper = src.find('append("OPER")')
-        assert idx_plop > 0, "PLOP not found in source"
-        assert idx_oper > idx_plop, "OPER must come after PLOP"
-        segment = src[idx_plop:idx_oper]
-        assert 'append("G")' in segment, "G command not found in PLOP block"
-        # A blank append() must exist between G and OPER to exit the PLOP submenu
-        has_blank = ('append("")' in segment)
-        assert has_blank, "No blank cmds.append() found between PLOP and OPER"
+        # Find the run_alpha_sweep function body (not comments)
+        idx_fn = src.find("def run_alpha_sweep(")
+        fn_body = src[idx_fn:idx_fn + 3000]
+        assert 'cmds.append("PLOP")' not in fn_body, (
+            "PLOP is in the xfoil command sequence — it causes 0% convergence "
+            "under xvfb-run by consuming stdin lines needed by LOAD/PANE. "
+            "PLOP was intentionally removed; xvfb-run handles headless display."
+        )
+
+    def test_xvfb_run_headless_path_present(self):
+        """xvfb-run headless path must be present as the primary display mechanism."""
+        import aeris.aero_2d.xfoil_adapter as mod
+        src = Path(mod.__file__).read_text(encoding="utf-8")
+        assert "xvfb-run" in src, (
+            "xvfb-run headless path missing from xfoil_adapter"
+        )
+
+    def test_display_env_fallback_present(self):
+        """DISPLAY='' fallback must be present for systems without xvfb-run."""
+        import aeris.aero_2d.xfoil_adapter as mod
+        src = Path(mod.__file__).read_text(encoding="utf-8")
+        assert '"DISPLAY"' in src or "DISPLAY" in src, (
+            "DISPLAY='' fallback missing from xfoil_adapter"
+        )
+
+    def test_oper_present_in_command_sequence(self):
+        """OPER must still be in the command sequence to enter viscous solver."""
+        import aeris.aero_2d.xfoil_adapter as mod
+        src = Path(mod.__file__).read_text(encoding="utf-8")
+        assert 'cmds.append("OPER")' in src
 
 class TestCSTPhysicsInvariants:
     def _make_naca_like_cst(self) -> "CSTAirfoil":

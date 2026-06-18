@@ -86,6 +86,11 @@ class ValidationReport:
     def __bool__(self) -> bool:
         return bool(self.valid)
 
+    def __str__(self) -> str:
+        if self.valid:
+            return "VALID  " + ", ".join(f"{k}={v:.5g}" for k, v in self.metrics.items())
+        return "INVALID [" + "; ".join(self.failures) + "]"
+
 
 class CSTAirfoil:
     """Kulfan/CST airfoil with independent upper/lower Bernstein vectors."""
@@ -296,6 +301,147 @@ class CSTAirfoil:
             dz_te=payload.get("dz_te", 0.0),
             order=payload.get("order"),
             name=payload.get("name", "CST"),
+        )
+
+    # ---------------- batch generation ----------------
+    @classmethod
+    def generate_batch(
+        cls,
+        n: int,
+        *,
+        seed: int | None = None,
+        **kwargs,
+    ) -> "list[CSTAirfoil]":
+        """Generate *n* guaranteed-valid random airfoils, reproducible via *seed*."""
+        rng = np.random.default_rng(seed)
+        return [
+            cls.generate_random(rng=rng, name=f"CST-batch-{i:04d}", **kwargs)
+            for i in range(n)
+        ]
+
+    # ---------------- LSQ fitting ----------------
+    @classmethod
+    def fit(
+        cls,
+        x_upper: "ArrayLike",
+        z_upper: "ArrayLike",
+        x_lower: "ArrayLike",
+        z_lower: "ArrayLike",
+        *,
+        order: int = DEFAULT_ORDER,
+        n1: float = DEFAULT_N1,
+        n2: float = DEFAULT_N2,
+        dz_te: float | None = None,
+        name: str = "CST-fit",
+    ) -> "tuple[CSTAirfoil, float]":
+        """Least-squares fit of upper/lower coordinate arrays to a CST representation.
+
+        Coordinates must be normalised to unit chord (LE at x=0, TE at x=1).
+        Returns (airfoil, rms_error).  rms is the RMS coordinate residual
+        over both surfaces in chord units.
+        """
+        xu = np.asarray(x_upper, dtype=float)
+        zu = np.asarray(z_upper, dtype=float)
+        xl = np.asarray(x_lower, dtype=float)
+        zl = np.asarray(z_lower, dtype=float)
+        if dz_te is None:
+            dz_te = max(0.0, float(zu[int(np.argmax(xu))] - zl[int(np.argmax(xl))]))
+
+        def _solve(xs, zs, te_sign):
+            C = class_function(xs, n1, n2)
+            B = bernstein_matrix(xs, order)
+            rhs = zs - te_sign * 0.5 * dz_te * xs
+            A = C[:, None] * B
+            a, *_ = np.linalg.lstsq(A, rhs, rcond=None)
+            return a
+
+        au = _solve(xu, zu, +1.0)
+        al = _solve(xl, zl, -1.0)
+        foil = cls(au, al, n1=n1, n2=n2, dz_te=dz_te, order=order, name=name)
+        err = np.concatenate([foil.upper(xu) - zu, foil.lower(xl) - zl])
+        return foil, float(np.sqrt(np.mean(err ** 2)))
+
+    @classmethod
+    def fit_dat(
+        cls,
+        path: "str | Path",
+        **kwargs,
+    ) -> "tuple[CSTAirfoil, float]":
+        """Fit CST coefficients directly from a Selig-format ``.dat`` file."""
+        pts = _read_selig(str(path))
+        i_le = int(np.argmin(pts[:, 0]))
+        upper = pts[: i_le + 1][::-1]   # LE→TE
+        lower = pts[i_le:]               # LE→TE
+        return cls.fit(
+            upper[:, 0], upper[:, 1],
+            lower[:, 0], lower[:, 1],
+            **kwargs,
+        )
+
+    # ---------------- I/O methods ----------------
+    def to_dat(
+        self,
+        path: "str | Path",
+        n_per_surface: int = 161,
+        header: str | None = None,
+    ) -> None:
+        """Write Selig-format ``.dat`` file (XFOIL/XFLR5/SU2 compatible)."""
+        xy = self.coordinates(n_per_surface)
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write((header or self.name) + "\n")
+            for px, pz in xy:
+                fh.write(f"  {float(px): .8f}  {float(pz): .8f}\n")
+
+    def to_json(self, path: "str | Path") -> None:
+        """Serialize the airfoil to a JSON file at *path* (atomic write)."""
+        import json as _json
+        import os as _os
+        import tempfile as _tf
+        payload = _json.dumps(self.to_dict(), indent=2)
+        _path = Path(path)
+        _path.parent.mkdir(parents=True, exist_ok=True)
+        fd, tmp = _tf.mkstemp(dir=_path.parent, prefix=".tmp_cst_", suffix=".json")
+        try:
+            with _os.fdopen(fd, "w", encoding="utf-8") as fh:
+                fh.write(payload)
+            _os.replace(tmp, _path)
+        except Exception:
+            try: _os.unlink(tmp)
+            except OSError: pass
+            raise
+
+    @classmethod
+    def from_json(cls, path: "str | Path") -> "CSTAirfoil":
+        """Deserialize a ``CSTAirfoil`` from a JSON file written by :meth:`to_json`."""
+        import json as _json
+        with open(path, encoding="utf-8") as fh:
+            return cls.from_dict(_json.load(fh))
+
+    # ---------------- visualisation ----------------
+    def plot(self, ax=None, show_camber: bool = True, **plot_kw):
+        """Plot the airfoil cross-section (requires matplotlib)."""
+        import matplotlib.pyplot as _plt
+        if ax is None:
+            _, ax = _plt.subplots(figsize=(9, 3))
+        x = cosine_spacing(401)
+        ax.plot(x, self.upper(x), lw=1.6, **plot_kw)
+        ax.plot(x, self.lower(x), lw=1.6, **plot_kw)
+        if show_camber:
+            ax.plot(x, self.camber(x), "--", lw=0.9, alpha=0.7)
+        ax.set_aspect("equal")
+        ax.grid(alpha=0.3)
+        ax.set_xlabel("x/c")
+        ax.set_ylabel("z/c")
+        ax.set_title(self.name)
+        return ax
+
+    # ---------------- repr ----------------
+    def __repr__(self) -> str:
+        t, xt = self.max_thickness()
+        return (
+            f"CSTAirfoil(name={self.name!r}, order={self.order}, "
+            f"N1={self.n1}, N2={self.n2}, dz_te={self.dz_te}, "
+            f"t/c={t:.4f}@{xt:.2f})"
         )
 
 
@@ -563,3 +709,37 @@ def _count_self_intersections(xy: np.ndarray, *, closed: bool = True) -> int:
         adjacent |= np.abs(idx[:, None] - idx[None, :]) == m - 1
     proper &= ~adjacent
     return int(np.count_nonzero(proper) // 2)
+
+
+def _read_selig(path: str) -> "np.ndarray":
+    """Parse a Selig-format .dat coordinate file into shape (N, 2).
+
+    Handles: name header on line 1, files starting with coordinates,
+    comment lines (#/!), and blank separator lines between surfaces.
+
+    Raises ValueError if fewer than 10 valid coordinate pairs are found.
+    """
+    rows: list = []
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        first_coord_seen = False
+        for raw_line in fh:
+            line = raw_line.strip()
+            if not line or line.startswith("#") or line.startswith("!"):
+                continue
+            parts = line.split()
+            if len(parts) < 2:
+                continue
+            try:
+                a, b = float(parts[0]), float(parts[1])
+            except ValueError:
+                # Non-numeric → airfoil name header or section label — skip
+                continue
+            first_coord_seen = True
+            if -0.2 <= a <= 1.2 and -1.0 <= b <= 1.0:
+                rows.append((a, b))
+    if len(rows) < 10:
+        raise ValueError(
+            f"_read_selig: only {len(rows)} valid coordinate pairs in {path!r} "
+            f"(minimum 10 required)"
+        )
+    return np.asarray(rows, dtype=float)

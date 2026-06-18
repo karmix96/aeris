@@ -158,16 +158,13 @@ def run_alpha_sweep(
 
         # Build XFOIL command sequence
         cmds: list[str] = []
+        # AERIS_PATCH_PLOP_REMOVED: PLOP removed — xvfb-run and DISPLAY=""
+        # are sufficient for headless operation. PLOP consumed stdin lines
+        # needed by LOAD/PANE causing 0% XFOIL convergence. See audit notes.
         cmds.append(f"LOAD {dat_path}")
         cmds.append("")                     # accept default name
         if repanel:
             cmds.append("PANE")            # repanel for robustness
-        # AERIS_PATCH_C14_APPLIED: PLOP→G→(blank) disables Xplot11 graphics.
-        # DISPLAY="" env (set below) is a secondary fallback. Both are needed
-        # for reliable headless operation on Linux without explicit xvfb-run.
-        cmds.append("PLOP")
-        cmds.append("G")
-        cmds.append("")   # exit PLOP submenu
         cmds.append("OPER")
         cmds.append(f"VISC {reynolds:.0f}")
         cmds.append(f"MACH {mach:.4f}")

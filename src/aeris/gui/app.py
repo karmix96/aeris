@@ -56,6 +56,7 @@ ML_FEATURE_SET_CHOICES = [
     "bwb_control_physics_v1",
     "bwb_control_sym_elevon_raw",
     "bwb_control_sym_elevon_physics_v1",
+    "airfoil_xfoil_v1",
 ]
 STATE_SPACE_PLOT_CHOICES = [
     "all",
@@ -69,6 +70,7 @@ MODEL_TYPES = [
     "linear_regression", "ridge", "elastic_net",
     "random_forest", "extra_trees", "gradient_boosting",
     "hist_gradient_boosting", "neural_mlp", "neural_mlp_ensemble",
+    "lightgbm", "lightgbm_dart", "xgboost", "catboost", "tabpfn",
 ]
 MODEL_INFO = {
     "linear_regression":     "Linear Regression — fastest baseline, interpretable",
@@ -80,6 +82,11 @@ MODEL_INFO = {
     "hist_gradient_boosting":"Hist Gradient Boosting — fastest tree method ✓ recommended",
     "neural_mlp":            "Neural MLP — tabular neural surrogate",
     "neural_mlp_ensemble":   "Neural MLP Ensemble — neural + confidence spread",
+    "lightgbm":              "LightGBM — fast gradient boosting (leaf-wise)",
+    "lightgbm_dart":         "LightGBM DART — dropout boosting, less overfit",
+    "xgboost":               "XGBoost — regularized gradient boosting",
+    "catboost":              "CatBoost — ordered boosting, robust defaults",
+    "tabpfn":                "TabPFN — transformer prior-fitted net (small data)",
 }
 SAMPLERS = ["lhs_v1", "random_v1"]
 SAMPLER_INFO = {
@@ -258,7 +265,6 @@ def _default_root() -> Path:
 def _repo_ok(p: Path) -> bool:
     return (p / "src" / "aeris").exists()
 
-@st.cache_data(ttl=30)
 @st.cache_data(ttl=2)
 def _dirs(root_str: str) -> list[str]:
     root = Path(root_str)
@@ -433,9 +439,13 @@ def _dataset_control_artifact_preview(dataset_root: Path) -> None:
             )
         with c2:
             st.caption("D3 flyability labels")
+            # AERIS_GUI_D12_DE_TRIM_LABEL: ISSUE-D12 added dyn_de_trim_feasible
+            # (strict elevon-trim label) alongside dyn_trim_feasible (OR label).
             _json_metric_block(
                 dataset_root / "flyability_labels_report.json",
-                ["source", "control_column", "label_row_count", "computed_label_count", "skipped_label_count", "longitudinal_basic_flyable_counts", "thresholds"],
+                ["source", "control_column", "label_row_count", "computed_label_count",
+                 "skipped_label_count", "longitudinal_basic_flyable_counts",
+                 "de_trim_feasible_counts", "thresholds"],
             )
         with c3:
             st.caption("D4 batch evidence")
@@ -2348,7 +2358,8 @@ def pg_airfoil(root, exe, tmo, dry):
             n_slider_default = min(25, n_lib_available)
             n_airfoils = st.slider("Airfoils to sweep (--n-airfoils)", 1, max(1, n_lib_available), n_slider_default, 1, key="af_n",
                                    help="Use all available library rows by default for small CST smoke libraries; use subsets for large libraries.")
-            af_seed   = st.number_input("Subset seed (--seed)", value=0, min_value=0, key="af_seed")
+            af_seed   = st.number_input("Subset seed (--seed)", value=42, min_value=0, key="af_seed",
+                            help="Seed 0 may select geometrically extreme CST airfoils. Try 42 or 5 if you get 0% convergence.")
             af_show_plots = st.checkbox(
                 "Show XFOIL plots (--show-plots)",
                 value=False,
@@ -2415,6 +2426,23 @@ def pg_airfoil(root, exe, tmo, dry):
                 else:
                     st.warning("Raw dataset — run QC and Curate before promoting.")
 
+                # AERIS_GUI_C12_QC_GATE_WARNING: ISSUE-C12 — curate blocks
+                # promotion when airfoil_qc_report.json is absent.
+                # Warn the operator so they know to run QC first.
+                qc_report_path = ds_path / "airfoil_qc_report.json"
+                if not qc_report_path.exists():
+                    _note(
+                        "⚠ QC has not been run on this dataset. "
+                        "Run <b>▶ QC</b> before Curate — curation now blocks "
+                        "promotion when <code>airfoil_qc_report.json</code> is absent.",
+                        "warn",
+                    )
+                elif _rjson(qc_report_path) and not _rjson(qc_report_path).get("passed"):
+                    _note(
+                        "✗ QC failed on this dataset. Fix issues before curating. "
+                        "See QC report below.",
+                        "err",
+                    )
                 c_qc, c_cur, c_prom = st.columns(3)
                 with c_qc:
                     _panel("QC", "Quality checks on raw airfoil_dataset.csv.",
@@ -3419,7 +3447,7 @@ def pg_aero(root, exe, tmo, dry):
                                 import plotly.graph_objects as go
                                 from plotly.subplots import make_subplots
 
-                                elevon_vals = sorted(df_ok["Elevon [°]"].dropna().unique())
+                                elevon_vals = sorted(df_ok["δe [°]"].dropna().unique())
                                 PALETTE = ["#3B82F6","#F59E0B","#10B981",
                                            "#EF4444","#8B5CF6","#EC4899","#06B6D4"]
 
@@ -3438,7 +3466,7 @@ def pg_aero(root, exe, tmo, dry):
                                 def _traces(x_col, y_col, sort_col=None):
                                     traces = []
                                     for i, ev in enumerate(elevon_vals):
-                                        sub = (df_ok[df_ok["Elevon [°]"] == ev]
+                                        sub = (df_ok[df_ok["δe [°]"] == ev]
                                                    .sort_values(sort_col or x_col)
                                                    [[x_col, y_col]].dropna())
                                         if sub.empty:
@@ -3532,7 +3560,7 @@ def pg_aero(root, exe, tmo, dry):
                         for fc_col in ["CL","CD","Cm","L/D","Xnp"]:
                             if fc_col in disp.columns:
                                 disp[fc_col] = disp[fc_col].round(5)
-                        for fc_col in ["α [°]","V [m/s]","Alt [m]","Elevon [°]"]:
+                        for fc_col in ["α [°]","V [m/s]","Alt [m]","δe [°]"]:
                             if fc_col in disp.columns:
                                 disp[fc_col] = disp[fc_col].round(2)
 
@@ -3812,10 +3840,10 @@ def pg_dynamics(root, exe, tmo, dry):
                                 help="Longitudinal CG from nose reference point.")
             ycg = c3.text_input("CG y [m]",          "0", key=f"{key}_ycg")
             c4, c5, c6 = st.columns(3)
-            ixx = c4.text_input("Ixx [kg m2] roll",  "", key=f"{key}_ixx")
-            iyy = c5.text_input("Iyy [kg m2] pitch", "", key=f"{key}_iyy",
+            ixx = c4.text_input("Ixx [kg m2] roll",  key=f"{key}_ixx")
+            iyy = c5.text_input("Iyy [kg m2] pitch", key=f"{key}_iyy",
                                 help="Pitch inertia. Required for short-period and phugoid modes.")
-            izz = c6.text_input("Izz [kg m2] yaw",   "", key=f"{key}_izz",
+            izz = c6.text_input("Izz [kg m2] yaw",   key=f"{key}_izz",
                                 help="Yaw inertia. Required for Dutch roll mode.")
 
             # DATCOM inertia estimator
@@ -3930,6 +3958,15 @@ def pg_dynamics(root, exe, tmo, dry):
             "Sweeps CG x-position across a range and computes the static margin at each point. "
             "Identifies the **stable CG envelope** — the range where static margin > 0. "
             "Output → `<run_dir>/dynamics/cg_sweep.json` + `cg_sweep.csv`"
+        )
+        _note(
+            "✓ <b>CG-corrected trim</b> (BUG-D3 fix): the trim elevon δe shown in the "
+            "plot is now adjusted for each CG position via the moment transfer theorem "
+            "<code>Cm(xcg_new) = Cm(xcg_ref) + CLα·(xcg_ref−xcg_new)/c·α₀</code>. "
+            "This means de_trim_deg varies realistically with CG (e.g. ~10° change per 10 cm shift). "
+            "The trimmable CG range reflects actual actuator authority."
+            "  # AERIS_GUI_D3_CG_TRIM_NOTE",
+            "info",
         )
         rd_cgsw = _aero_run_picker("dyn_rd_cgsw")
         if rd_cgsw:
@@ -4721,7 +4758,7 @@ def pg_ml(root, exe, tmo, dry):
         with qc:
             _panel("Compare airfoil seeds", "Multi-seed stability check with group split by airfoil_id.",
                    ["ml", "compare-seeds", "--dataset", airfoil_ds, "--feature-preset", airfoil_preset, "--targets", airfoil_targets,
-                    "--group-column", "airfoil_id", "--model-types", "lightgbm,xgboost", "--seeds", "101,202,303,404,505"],
+                    "--group-column", "airfoil_id", "--models", "lightgbm,xgboost", "--seeds", "101,202,303,404,505"],
                    root, exe, tmo, dry, "ml_airfoil_quick_compare", label="▶  Compare seeds")
 
     # ── Cm sanity gate — mandatory before training ────────────────────────────

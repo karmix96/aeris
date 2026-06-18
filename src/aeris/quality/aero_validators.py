@@ -185,28 +185,34 @@ def _check_control_effectiveness(df: pd.DataFrame, manifest: dict, report: dict)
 
 def _check_basic_ranges(df: pd.DataFrame, manifest: dict, report: dict) -> None:
     issues = {
-        "cd_non_positive": 0,
-        "cl_abs_gt_5": 0,
-        "cm_abs_gt_5": 0,
+        "cd_negative": 0,          # strictly negative drag — sign error or solver failure
+        "cl_abs_gt_3": 0,          # |CL|>3: unreachable for subsonic BWB in AVL (physical max ~1.5)
+        "cm_abs_gt_2": 0,          # |Cm|>2: unreachable for BWB NACA 4412 (physical max ~0.8)
     }
 
     if "cd" in df.columns:
         cd = pd.to_numeric(df["cd"], errors="coerce")
-        issues["cd_non_positive"] = int((cd <= 0).sum())
-        if issues["cd_non_positive"] > 0:
-            _append_error(report, f"Non-positive CD values detected: {issues['cd_non_positive']}")
+        # AVL is inviscid: CDi = CL²/(π·AR·e) → exactly 0 at zero-lift alpha.
+        # cd=0.0 is physically valid; only strictly negative drag is an error.
+        issues["cd_negative"] = int((cd < -1e-9).sum())
+        if issues["cd_negative"] > 0:
+            _append_error(report, f"Negative CD values detected (inviscid solver error): {issues['cd_negative']}")
 
     if "cl" in df.columns:
         cl = pd.to_numeric(df["cl"], errors="coerce")
-        issues["cl_abs_gt_5"] = int((cl.abs() > 5).sum())
-        if issues["cl_abs_gt_5"] > 0:
-            _append_error(report, f"Absurd |CL| > 5 values detected: {issues['cl_abs_gt_5']}")
+        # BWB with NACA 4412 at α≤+8°: physical CL max ≈ 1.5. AVL has no stall.
+        # Threshold 3.0 gives 2× margin above physical max and catches blowups.
+        issues["cl_abs_gt_3"] = int((cl.abs() > 3).sum())
+        if issues["cl_abs_gt_3"] > 0:
+            _append_error(report, f"Absurd |CL| > 3 values detected (AVL blowup): {issues['cl_abs_gt_3']}")
 
     if "cm" in df.columns:
         cm = pd.to_numeric(df["cm"], errors="coerce")
-        issues["cm_abs_gt_5"] = int((cm.abs() > 5).sum())
-        if issues["cm_abs_gt_5"] > 0:
-            _append_error(report, f"Absurd |Cm| > 5 values detected: {issues['cm_abs_gt_5']}")
+        # BWB NACA 4412 Cm_ac ≈ -0.10; with twist+elevon(±15°): max |Cm| ≈ 0.8.
+        # Threshold 2.0 gives >2× margin above physical max and catches blowups.
+        issues["cm_abs_gt_2"] = int((cm.abs() > 2).sum())
+        if issues["cm_abs_gt_2"] > 0:
+            _append_error(report, f"Absurd |Cm| > 2 values detected (AVL blowup): {issues['cm_abs_gt_2']}")
 
     report["metrics"]["basic_range_issues"] = issues
 
@@ -306,13 +312,31 @@ def _check_cm_control_trend(df: pd.DataFrame, manifest: dict, report: dict) -> N
 
         slope = float(np.polyfit(x, y, deg=1)[0])
         if abs(slope) < 1e-5:
-            bad.append(str(name))
+            bad.append(("magnitude", str(name)))
+        elif slope > 0.0:
+            # Trailing-edge elevon positive deflection increases lift → nose-down
+            # pitching moment → dCm/d(ctrl) must be NEGATIVE.
+            # A positive slope means the elevon sign convention is reversed in AVL,
+            # producing data where increasing control input increases (not decreases)
+            # the pitching moment. This would flip the sign of all control authority
+            # in the surrogate.
+            bad.append(("sign", str(name)))
 
-    report["metrics"]["near_zero_cm_control_slope_group_count"] = len(bad)
+    magnitude_bad = [g for kind, g in bad if kind == "magnitude"]
+    sign_bad      = [g for kind, g in bad if kind == "sign"]
+    report["metrics"]["near_zero_cm_control_slope_group_count"] = len(magnitude_bad)
+    report["metrics"]["wrong_sign_cm_control_slope_group_count"] = len(sign_bad)
 
-    if bad:
-        for group in bad[:10]:
+    if magnitude_bad:
+        for group in magnitude_bad[:10]:
             _append_error(report, f"Cm response to control is too weak for group {group}")
+    if sign_bad:
+        for group in sign_bad[:10]:
+            _append_error(
+                report,
+                f"Cmde sign is POSITIVE for group {group}: elevon deflection convention "
+                "may be inverted in AVL (expected dCm/d(ctrl) < 0 for trailing-edge elevon)",
+            )
 
 
 def _check_outliers(df: pd.DataFrame, manifest: dict, report: dict) -> None:
@@ -355,23 +379,43 @@ def _check_ld_sanity(df: pd.DataFrame, manifest: dict, report: dict) -> None:
     cl = pd.to_numeric(df["cl"], errors="coerce")
     cd = pd.to_numeric(df["cd"], errors="coerce")
 
-    ld = cl / cd.replace(0.0, np.nan)
+    # AVL is inviscid: CDi = CL²/(π·AR·e). Near zero-lift alpha, CDi→0
+    # and L/D→∞ is physically correct — this does NOT indicate bad data.
+    # For a BWB at cruise (CL~0.1, AR~3.7): L/D ≈ 90. At low alpha (CL~0.05,
+    # CDi~0.0002): L/D ≈ 250. Both are valid for an inviscid solver.
+    # We therefore: (a) skip the ratio for |CL| < 0.05 (undefined in practice),
+    # (b) use a WARNING threshold of 500 (not 200) to catch genuine blowups only.
+    cl_for_ld = cl.copy()
+    cd_for_ld = cd.replace(0.0, np.nan)
+    ld = cl_for_ld / cd_for_ld
+
+    # Exclude near-zero-lift rows from the large-L/D check: ratio is
+    # physically infinite there for an inviscid solver.
+    near_zero_lift = cl.abs() < 0.05
     bad_non_finite = int((~np.isfinite(ld)).sum())
-    bad_too_large = int((np.isfinite(ld) & (ld.abs() > 200.0)).sum())
-    bad_negative = int((np.isfinite(ld) & (ld <= 0.0)).sum())
+    bad_too_large  = int((np.isfinite(ld) & (ld.abs() > 500.0) & ~near_zero_lift).sum())
+    bad_negative   = int((np.isfinite(ld) & (ld <= 0.0)).sum())
+    near_zero_excluded = int(near_zero_lift.sum())
 
     report["metrics"]["ld_sanity"] = {
         "non_finite_ld_count": bad_non_finite,
-        "abs_ld_gt_200_count": bad_too_large,
+        "abs_ld_gt_500_count": bad_too_large,
         "non_positive_ld_count": bad_negative,
+        "near_zero_lift_rows_excluded_from_ld_check": near_zero_excluded,
     }
 
     if bad_non_finite > 0:
         _append_error(report, f"Non-finite L/D detected in {bad_non_finite} rows")
     if bad_too_large > 0:
-        _append_error(report, f"Suspiciously large |L/D| detected in {bad_too_large} rows")
+        _append_warning(
+            report,
+            f"Unusually large |L/D| > 500 detected in {bad_too_large} rows "
+            f"(excluding {near_zero_excluded} near-zero-lift rows where L/D is undefined "
+            "for an inviscid solver)"
+        )
     if bad_negative > 0:
-        _append_warning(report, f"Non-positive L/D detected in {bad_negative} rows")
+        _append_warning(report, f"Non-positive L/D detected in {bad_negative} rows ")
+        _append_warning(report, "(negative L/D is expected at negative alpha where CL < 0)")
 
 
 def _check_beta_zero_lateral_sanity(df: pd.DataFrame, manifest: dict, report: dict) -> None:

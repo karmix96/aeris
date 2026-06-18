@@ -28,6 +28,7 @@ GEOMETRY_QC_PROFILES: dict[str, list[str]] = {
         "geometry_scalar_consistency_v1",
         "geometry_chord_ratio_sanity_v1",
         "geometry_planform_parameter_sanity_v1",
+        "geometry_twist_dihedral_ranges_v1",   # new: twist/dihedral physical bounds
     ],
 }
 
@@ -63,7 +64,9 @@ AERO_QC_PROFILES: dict[str, list[str]] = {
         "aero_outlier_scan_v1",
         "aero_ld_sanity_v1",
         "aero_beta_zero_lateral_sanity_v1",
-        "aero_target_variation_v1",
+        "aero_target_variation_v1",         # data integrity: no collapsed outputs
+        # NOTE: Cmde sign check is part of aero_cm_control_trend_v1 (strict only)
+        # It fires when dCm/d(ctrl) > 0, indicating inverted elevon convention.
     ],
 }
 

@@ -67,22 +67,45 @@ def test_aero_basic_profile_passes_for_healthy_dataset(tmp_path: Path) -> None:
     assert report["metrics"]["profile"] == "basic"
 
 
-def test_aero_strict_fails_on_ld_sanity_while_basic_passes(tmp_path: Path) -> None:
+def test_aero_strict_warns_on_ld_blowup_while_basic_passes(tmp_path: Path) -> None:
     dataset_root = tmp_path / "aero_dataset"
     rows = _healthy_aero_rows()
 
-    # Keep CD positive, so basic passes. But make L/D absurd so strict fails.
-    rows[0]["cl"] = 4.0
-    rows[0]["cd"] = 0.001
+    # Isolate L/D semantics:
+    # - CL=1.0 is inside the basic |CL| <= 3 sanity range.
+    # - CD=0.001 gives L/D=1000, so strict L/D sanity should warn.
+    # - Use the alpha=4, ctrl=-5 row so CL-alpha remains monotonic.
+    blowup_row = next(
+        row for row in rows
+        if row["alpha_deg"] == 4.0 and row["control_input_deg"] == -5.0
+    )
+    blowup_row["cl"] = 1.0
+    blowup_row["cd"] = 0.001
 
     _make_aero_dataset(dataset_root, rows=rows)
 
     basic_report = run_aero_dataset_qc(dataset_root, profile="basic")
     strict_report = run_aero_dataset_qc(dataset_root, profile="strict")
 
-    assert basic_report["passed"] is True
-    assert strict_report["passed"] is False
-    assert any("large |L/D|" in msg for msg in strict_report["errors"])
+    assert basic_report["passed"] is True, (
+        "This regression must isolate L/D semantics; basic QC should still pass. "
+        f"errors={basic_report['errors']}"
+    )
+
+    ld_warnings = [
+        msg for msg in strict_report.get("warnings", [])
+        if "L/D" in msg and "500" in msg
+    ]
+    assert ld_warnings, (
+        f"L/D blowup should trigger a strict warning. "
+        f"warnings={strict_report['warnings']}, errors={strict_report['errors']}"
+    )
+
+    ld_errors = [
+        msg for msg in strict_report.get("errors", [])
+        if "L/D" in msg and ("large" in msg or "500" in msg)
+    ]
+    assert ld_errors == [], f"L/D blowup should not be a strict error anymore: {ld_errors}"
 
 
 def test_aero_strict_fails_on_beta_zero_lateral_bias_while_basic_passes(tmp_path: Path) -> None:

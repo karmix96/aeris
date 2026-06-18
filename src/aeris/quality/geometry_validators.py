@@ -257,7 +257,9 @@ def _check_scalar_consistency(df: pd.DataFrame, manifest: dict, report: dict) ->
         if abs(recomputed_ar - ar) > 0.20:
             ar_mismatch += 1
 
-        if ar < 1.0 or ar > 20.0:
+        # BWB design space: AR ≈ 2.4–5.0. Bounds [1.5, 8.0] contain this
+        # with margin and catch unit errors (span in mm) or degenerate planforms.
+        if ar < 1.5 or ar > 8.0:
             absurd_ar += 1
 
         if "semi_span_m" in df.columns:
@@ -280,7 +282,7 @@ def _check_scalar_consistency(df: pd.DataFrame, manifest: dict, report: dict) ->
     if ar_mismatch > 0:
         _append_error(report, f"Aspect-ratio recompute mismatch detected in {ar_mismatch} rows")
     if absurd_ar > 0:
-        _append_error(report, f"Suspicious planform aspect ratio detected in {absurd_ar} rows")
+        _append_error(report, f"Suspicious planform aspect ratio detected in {absurd_ar} rows (expected 1.5 ≤ AR ≤ 8.0 for BWB)")
     if semi_span_mismatch > 0:
         _append_error(report, f"full_span_m != 2 * semi_span_m in {semi_span_mismatch} rows")
     if asb_delta_bad > 0:
@@ -353,6 +355,66 @@ def _check_planform_parameter_sanity(df: pd.DataFrame, manifest: dict, report: d
         if count > 0:
             _append_error(report, f"Geometry strict planform-parameter violation {key}: {count}")
 
+
+
+
+def _check_twist_dihedral_ranges(df: pd.DataFrame, manifest: dict, report: dict) -> None:
+    """Verify that per-panel twist and dihedral values are within physical bounds.
+
+    Sampler bounds (bwb_training_v1/v2/v3):
+      twist:    [-6°, +2°] per panel  → physical limit ±15° (>2× margin)
+      dihedral: [0°, +10°] per panel  → physical limit 25° (>2× margin)
+
+    Values outside these limits indicate a sampler escape, unit error (degrees
+    vs radians), or generator bug.  They would produce physically implausible
+    geometries that would corrupt surrogate training data.
+    """
+    twist_cols    = [c for c in df.columns if c.startswith("twist_") and c.endswith("_deg")]
+    dihedral_cols = [c for c in df.columns if c.startswith("dihedral_") and c.endswith("_deg")]
+
+    twist_max_abs = 15.0     # degrees — >2× the sampler maximum of 6°
+    dihedral_max  = 25.0     # degrees — >2× the sampler maximum of 10°
+
+    twist_bad      = 0
+    dihedral_bad   = 0
+    found_any_col  = False
+
+    for col in twist_cols:
+        found_any_col = True
+        vals = pd.to_numeric(df[col], errors="coerce")
+        bad  = int((vals.abs() > twist_max_abs).sum())
+        twist_bad += bad
+        if bad > 0:
+            _append_error(
+                report,
+                f"Twist out of physical range in {col}: {bad} rows with |twist| > {twist_max_abs}°",
+            )
+
+    for col in dihedral_cols:
+        found_any_col = True
+        vals = pd.to_numeric(df[col], errors="coerce")
+        bad  = int((vals > dihedral_max).sum())
+        dihedral_bad += bad
+        if bad > 0:
+            _append_error(
+                report,
+                f"Dihedral out of physical range in {col}: {bad} rows with dihedral > {dihedral_max}°",
+            )
+
+    if not found_any_col:
+        _append_warning(
+            report,
+            "Skipping twist/dihedral range check: no twist_*_deg or dihedral_*_deg columns found",
+        )
+
+    report["metrics"]["twist_dihedral_sanity"] = {
+        "twist_bad_rows": twist_bad,
+        "dihedral_bad_rows": dihedral_bad,
+        "twist_max_abs_deg": twist_max_abs,
+        "dihedral_max_deg": dihedral_max,
+        "twist_cols_checked": twist_cols,
+        "dihedral_cols_checked": dihedral_cols,
+    }
 
 @GEOMETRY_VALIDATOR_REGISTRY.register
 class GeometryManifestConsistencyValidator(DatasetValidator):
@@ -432,6 +494,15 @@ class GeometryPlanformParameterSanityValidator(DatasetValidator):
 
     def validate(self, dataset_root: Path) -> QCCheckResult:
         report = _with_loaded_dataset(dataset_root, _check_planform_parameter_sanity)
+        return _report_to_check_result(self.VALIDATOR_ID, report)
+
+
+@GEOMETRY_VALIDATOR_REGISTRY.register
+class GeometryTwistDihedralRangesValidator(DatasetValidator):
+    VALIDATOR_ID = "geometry_twist_dihedral_ranges_v1"
+
+    def validate(self, dataset_root: Path) -> QCCheckResult:
+        report = _with_loaded_dataset(dataset_root, _check_twist_dihedral_ranges)
         return _report_to_check_result(self.VALIDATOR_ID, report)
 
 

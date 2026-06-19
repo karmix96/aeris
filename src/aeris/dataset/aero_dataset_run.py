@@ -331,6 +331,11 @@ def _flatten_success_row(
     row["cd_ff"] = scalars.get("cd_ff")
     row["span_efficiency"] = scalars.get("span_efficiency")
     row["x_np"] = scalars.get("x_np")
+    row["cd_profile"] = scalars.get("cd_profile")
+    row["cd_total"] = scalars.get("cd_total")
+    row["l_over_d_viscous"] = scalars.get("l_over_d_viscous")
+    row["profile_drag_n_extrapolated_strips"] = solver_metadata.get("profile_drag_n_extrapolated_strips")
+    row["profile_drag_cd_total_vs_avl_cdtot_rel_diff"] = solver_metadata.get("profile_drag_cd_total_vs_avl_cdtot_rel_diff")
 
     # Compact solver/control diagnostics
     row["geometry_declares_controls"] = solver_metadata.get("geometry_declares_controls")

@@ -627,6 +627,40 @@ class AeroTargetVariationValidator(DatasetValidator):
         return _report_to_check_result(self.VALIDATOR_ID, report)
 
 
+def _check_profile_drag_envelope(df, manifest, report):
+    """Flag rows whose profile drag was extrapolated beyond the 2D polar envelope.
+
+    Warning-level: never fails QC on its own. Skips silently when the polar
+    bridge was not used (column absent), so non-bridge datasets are unaffected.
+    """
+    col = "profile_drag_n_extrapolated_strips"
+    if col not in df.columns:
+        report["metrics"]["profile_drag_envelope"] = "column_absent_skipped"
+        return
+    series = pd.to_numeric(df[col], errors="coerce").fillna(0)
+    n_rows = int((series > 0).sum())
+    total_strips = int(series.clip(lower=0).sum())
+    report["metrics"]["profile_drag_rows_with_extrapolation"] = n_rows
+    report["metrics"]["profile_drag_total_extrapolated_strips"] = total_strips
+    if n_rows > 0:
+        total_rows = int(len(df))
+        msg = (
+            "Profile-drag polar bridge: " + str(n_rows) + " of " + str(total_rows)
+            + " rows had >=1 strip with cl outside the 2D polar envelope; "
+            + "cd_profile/cd_total for those rows are clamped at the polar "
+            + "boundary and are unreliable."
+        )
+        _append_warning(report, msg)
+
+
+@AERO_VALIDATOR_REGISTRY.register
+class AeroProfileDragEnvelopeValidator(DatasetValidator):
+    VALIDATOR_ID = "aero_profile_drag_envelope_v1"
+
+    def validate(self, dataset_root: Path) -> QCCheckResult:
+        report = _with_loaded_dataset(dataset_root, _check_profile_drag_envelope)
+        return _report_to_check_result(self.VALIDATOR_ID, report)
+
 def run_aero_checks(dataset_root: Path, profile: str = "basic") -> dict:
     """
     Backward-compatible legacy wrapper.

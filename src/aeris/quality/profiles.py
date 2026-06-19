@@ -69,6 +69,7 @@ AERO_QC_PROFILES: dict[str, list[str]] = {
         "aero_cm_control_trend_v1",
         "aero_outlier_scan_v1",
         "aero_ld_sanity_v1",
+        "aero_profile_drag_envelope_v1",
         "aero_beta_zero_lateral_sanity_v1",
         "aero_target_variation_v1",         # data integrity: no collapsed outputs
         # NOTE: Cmde sign check is part of aero_cm_control_trend_v1 (strict only)

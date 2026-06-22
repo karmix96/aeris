@@ -658,7 +658,7 @@ def execute_aero_sweep(
             _bridge_section_map, _bridge_polar_store = build_neuralfoil_polar_store_for_segments(
                 _segment_coords,
                 semispan_m=float(_semispan_m),
-                model_size="xsmall",
+                model_size="large",
                 re_grid=viscous_polar_re_grid,
                 mach=_bridge_mach,
             )

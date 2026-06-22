@@ -78,7 +78,7 @@ def workflow_init(
     template: str | None = typer.Option(
         None,
         "--template",
-        help="Optional workflow template: canary, production, multifidelity, active_learning.",
+        help="Optional workflow template: canary, paper_1, production, multifidelity, active_learning.",
     ),
     force: bool = typer.Option(False, "--force", help="Overwrite/reinitialize an existing workflow folder."),
 ) -> None:
@@ -548,6 +548,11 @@ def workflow_preflight(
         "-o",
         help="Optional path to write workflow_preflight_report.json.",
     ),
+    template: str | None = typer.Option(
+        None,
+        "--template",
+        help="Optional workflow template preset for preflight defaults, e.g. paper_1.",
+    ),
     as_json: bool = typer.Option(
         False,
         "--json",
@@ -556,14 +561,28 @@ def workflow_preflight(
 ) -> None:
     """Preflight-check a planned operational rehearsal without running it."""
 
+    normalized_template = str(template).strip().lower().replace("-", "_") if template else None
+    if normalized_template == "paper1":
+        normalized_template = "paper_1"
+
+    if normalized_template == "paper_1":
+        if config == Path("configs/geometry/bwb_training_v1.yaml"):
+            config = Path("configs/geometry/bwb_training_v2.yaml")
+        if alpha_values == "-2,0,4,8":
+            alpha_values = "-2,0,4"
+        if velocity_values == "20,28":
+            velocity_values = "20"
+        if altitude_values == "0,1500":
+            altitude_values = "700"
+
     report = _build_operational_preflight_report(
         workflow_root=workflow,
         config=config,
         n_geometries=n_geometries,
-        alpha_values=_parse_preflight_float_list(alpha_values, default=[-2.0, 0.0, 4.0, 8.0]),
+        alpha_values=_parse_preflight_float_list(alpha_values, default=[-2.0, 0.0, 4.0]),
         beta_values=_parse_preflight_float_list(beta_values, default=[0.0]),
-        velocity_values=_parse_preflight_float_list(velocity_values, default=[20.0, 28.0]),
-        altitude_values=_parse_preflight_float_list(altitude_values, default=[0.0, 1500.0]),
+        velocity_values=_parse_preflight_float_list(velocity_values, default=[20.0]),
+        altitude_values=_parse_preflight_float_list(altitude_values, default=[700.0]),
         control_input_values=_parse_preflight_float_list(control_input_values, default=[-5.0, 0.0, 5.0]),
         max_cases_warning=max_cases_warning,
     )

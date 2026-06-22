@@ -213,3 +213,11 @@ def test_version_runs():
     assert result.exit_code == 0
     assert "aeris" in result.stdout.lower()
 
+
+
+def test_workflow_templates_named_paper_1_command_runs() -> None:
+    result = runner.invoke(app, ["--no-check-writable", "workflow", "templates", "--name", "paper_1"])
+    assert result.exit_code == 0, result.output
+    assert '"name": "paper_1"' in result.output
+    assert "dynamics_batch_labels" in result.output
+    assert "flyability_ml_dataset" in result.output

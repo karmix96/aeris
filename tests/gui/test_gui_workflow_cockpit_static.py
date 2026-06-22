@@ -29,3 +29,8 @@ def test_gui_workflow_cockpit_reads_validation_report_without_backend_duplicatio
     assert "workflow_validation_report.json" in text
     assert "_workflow_stage_rows" in text
     assert "This panel is a cockpit over <b>aeris workflow</b>" in text
+
+
+def test_gui_workflow_cockpit_exposes_paper_1_template():
+    text = APP.read_text(encoding="utf-8")
+    assert '"paper_1"' in text

@@ -46,6 +46,8 @@ def record_workflow_stage_success(
     inputs: list[Path | str | None] | None = None,
     outputs: list[Path | str | None] | None = None,
     artifacts: list[Path | str | None] | None = None,
+    warnings: list[str] | None = None,
+    blockers: list[str] | None = None,
     notes: str | None = None,
     metadata: dict[str, Any] | None = None,
     echo: bool = True,
@@ -66,6 +68,8 @@ def record_workflow_stage_success(
         inputs=_normalize_path_items(inputs),
         outputs=_normalize_path_items(outputs),
         artifacts=_normalize_path_items(artifacts),
+        warnings=warnings,
+        blockers=blockers,
         notes=notes,
         metadata=metadata,
     )

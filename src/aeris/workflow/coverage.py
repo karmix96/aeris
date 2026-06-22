@@ -54,6 +54,17 @@ WORKFLOW_COVERAGE_SPEC: tuple[WorkflowCoverageSpec, ...] = (
     WorkflowCoverageSpec("multifidelity", False, "ml", "aeris ml train-delta-model ... --workflow <workflow_root>", "ml", "train-delta-model"),
     WorkflowCoverageSpec("multifidelity", False, "ml", "aeris ml evaluate-delta-model ... --workflow <workflow_root>", "ml", "evaluate-delta-model"),
     WorkflowCoverageSpec("active_learning", False, "ml", "aeris ml suggest-samples ... --workflow <workflow_root>", "ml", "suggest-samples"),
+    WorkflowCoverageSpec(
+        "final_package",
+        False,
+        "handoff",
+        "aeris workflow record-stage --stage final_package --status complete --artifact <final_package_or_report>",
+        "workflow",
+        "record-stage",
+        auto_record_expected=False,
+        manual_record_only=True,
+        notes="Final handoff/package is usually recorded manually after evidence review.",
+    ),
 )
 
 
@@ -62,8 +73,15 @@ def _command_apps() -> dict[str, Any]:
     from aeris.commands.dataset import dataset_app
     from aeris.commands.dynamics import dynamics_app
     from aeris.commands.ml import ml_app
+    from aeris.commands.workflow import workflow_app
 
-    return {"aero": aero_app, "dataset": dataset_app, "dynamics": dynamics_app, "ml": ml_app}
+    return {
+        "aero": aero_app,
+        "dataset": dataset_app,
+        "dynamics": dynamics_app,
+        "ml": ml_app,
+        "workflow": workflow_app,
+    }
 
 
 def _typer_command_name(command_info: Any) -> str:

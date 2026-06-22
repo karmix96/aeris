@@ -562,6 +562,15 @@ def _validate_trust_artifact(
         check.update({"passed": ready is True and not bool(blockers_in_manifest), "ready": ready, "forced": forced})
         return check
 
+    stage_status = str(stage_state.get("status", "")).lower()
+    if stage_status == "skipped":
+        return {
+            "stage": stage_name,
+            "status": "skipped",
+            "reason": "stage_marked_skipped",
+            "passed": None,
+        }
+
     if stage_name == "model_promotion":
         artifact_name = "model_promotion_manifest.json"
         path = _first_existing_artifact(stage_state, artifact_name)
@@ -673,6 +682,18 @@ def validate_workflow(workflow_dir: Path, *, write_report: bool = True) -> Workf
         )
         if trust_check is not None:
             trust_checks.append(trust_check)
+
+        recorded_blockers = stage_state.get("blockers", []) or []
+        if isinstance(recorded_blockers, list):
+            for blocker in recorded_blockers:
+                if str(blocker).strip():
+                    blockers.append(f"Stage '{name}' recorded blocker: {blocker}")
+
+        recorded_warnings = stage_state.get("warnings", []) or []
+        if isinstance(recorded_warnings, list):
+            for warning in recorded_warnings:
+                if str(warning).strip():
+                    warnings.append(f"Stage '{name}' recorded warning: {warning}")
 
         stage_summaries[name] = {
             "status": stage_status,

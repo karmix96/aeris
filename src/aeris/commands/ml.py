@@ -1119,12 +1119,13 @@ def ml_tune(
     try:
         record_workflow_stage_success(
             workflow=workflow,
-            stage="ml_tuning",
+            stage="model_comparison",
             inputs=[dataset, config, param_space_json],
             artifacts=[result.get("output_dir"), result.get("tuning_summary_json"), result.get("tuning_trials_csv")],
             notes="ML tuning completed.",
             metadata={
                 "command": "aeris ml tune",
+                "branch_step": "ml_tuning",
                 "backend": summary.get("backend", "aeris"),
                 "model_type": summary.get("model_type"),
                 "n_trials": summary.get("n_trials"),
@@ -1479,7 +1480,13 @@ def ml_compare_seeds(
             workflow=workflow,
             stage="model_comparison",
             inputs=[dataset],
-            artifacts=[result.get("output_dir"), result.get("summary_json"), result.get("summary_csv"), result.get("winner_report_json")],
+            artifacts=[
+                result.get("output_dir"),
+                result.get("summary_json"),
+                result.get("model_stability_summary_csv"),
+                result.get("per_target_ranking_csv"),
+                result.get("winner_report_json"),
+            ],
             notes="ML seed-stability comparison completed.",
             metadata={
                 "command": "aeris ml compare-seeds",

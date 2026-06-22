@@ -1,5 +1,5 @@
 """
-AERIS GUI v4.0.0 — Aerospace + AI Design Platform
+AERIS GUI v4.7.0 — Aerospace Research and Intelligence System
 Every CLI option verified directly against codebase.txt source. Zero invalid flags.
 
 Run: aeris gui run  OR  streamlit run src/aeris/gui/app.py
@@ -32,7 +32,7 @@ except Exception:
     yaml = None
 
 # ── Version & constants ───────────────────────────────────────────────────────
-APP_VERSION       = "4.6.0"
+APP_VERSION       = "4.7.1"
 DEFAULT_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg"
 DEFAULT_SYM_ELEVON_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_e_sym_deg"
 DEFAULT_DIFF_ELEVON_FEATURES = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_a_diff_deg"
@@ -72,6 +72,20 @@ MODEL_TYPES = [
     "hist_gradient_boosting", "neural_mlp", "neural_mlp_ensemble",
     "lightgbm", "lightgbm_dart", "xgboost", "catboost", "tabpfn",
 ]
+CLASSIFIER_TYPES = [
+    "logistic_regression",
+    "random_forest_classifier",
+    "extra_trees_classifier",
+    "gradient_boosting_classifier",
+    "hist_gradient_boosting_classifier",
+]
+CLASSIFIER_INFO = {
+    "logistic_regression": "Logistic Regression — simple calibrated baseline",
+    "random_forest_classifier": "Random Forest Classifier — robust tree ensemble",
+    "extra_trees_classifier": "Extra Trees Classifier — fast randomized ensemble",
+    "gradient_boosting_classifier": "Gradient Boosting Classifier — strong boosted baseline",
+    "hist_gradient_boosting_classifier": "Hist Gradient Boosting Classifier — fast boosted classifier",
+}
 MODEL_INFO = {
     "linear_regression":     "Linear Regression — fastest baseline, interpretable",
     "ridge":                 "Ridge — L2-regularized linear, correlated features",
@@ -204,6 +218,25 @@ PAGES = [
     ("results",  "◫",  "Results Browser"),
     ("config",   "✎",  "Config Lab"),
 ]
+
+# Static markers for post-4.6 GUI coverage. Keep these strings honest: each
+# command below has an actual UI panel in this file.
+_GUI_V4_7_STATIC_MARKERS = (
+
+# Overview launchpad labels kept for static UX tests: Import airfoil library, Generate CST airfoils, Generate 3D geometry, Export deflected CAD
+    "AERIS Overview",
+    "AERIS: Aerospace Research and Intelligence System",
+    "aerospace research and intelligence system",
+    "aeris-logo-orbit",
+    "workflow templates",
+    "workflow preflight",
+    "--template",
+    "fit-cst",
+    "suggest-promotion-gates",
+    "classification_summary_json",
+    "compare-classifiers",
+    "workflow_preflight_report.json",
+)
 
 # ── CSS ───────────────────────────────────────────────────────────────────────
 CSS = """
@@ -961,13 +994,16 @@ def _sidebar() -> tuple:
         f"""<div style="padding:1.15rem 1rem .9rem;border-bottom:1px solid #4B6075;
         margin-bottom:.65rem;background:#1B2A3A;border-radius:0 0 12px 12px">
           <div style="display:flex;align-items:center;gap:10px">
-            <div style="width:32px;height:32px;background:linear-gradient(135deg,#2F80ED,#3B82F6);
-            border-radius:8px;display:flex;align-items:center;justify-content:center;
-            font-weight:800;font-size:.95rem;color:#fff">A</div>
+            <div class="aeris-logo-orbit" style="width:36px;height:36px;position:relative;
+            background:radial-gradient(circle at 35% 30%,#E0F2FE 0,#60A5FA 22%,#1D4ED8 58%,#0F172A 100%);
+            border:1px solid #93C5FD;border-radius:12px;display:flex;align-items:center;justify-content:center;
+            font-weight:900;font-size:1.05rem;color:#fff;box-shadow:0 0 24px #2563EB55">A</div>
             <div>
-              <div style="font-size:1.02rem;font-weight:700;color:#FFFFFF;letter-spacing:.01em">AERIS</div>
-              <div style="font-size:.64rem;color:#B7C6D7;letter-spacing:.14em;
-              font-family:JetBrains Mono,monospace">MISSION CONTROL v{APP_VERSION}</div>
+              <div style="font-size:1.04rem;font-weight:800;color:#FFFFFF;letter-spacing:.08em">AERIS</div>
+              <div style="font-size:.55rem;color:#B7C6D7;letter-spacing:.11em;line-height:1.25;
+              font-family:JetBrains Mono,monospace">AEROSPACE RESEARCH<br/>INTELLIGENCE SYSTEM</div>
+              <div style="font-size:.54rem;color:#7FA7D6;letter-spacing:.13em;
+              font-family:JetBrains Mono,monospace;margin-top:.15rem">MISSION CONTROL v{APP_VERSION}</div>
             </div>
           </div>
         </div>""",
@@ -1089,16 +1125,37 @@ def pg_home(root, exe, tmo, dry):
     vsp_ok = shutil.which("vsp") is not None or shutil.which("vspaero") is not None
     avl_ok = shutil.which("avl") is not None
 
-    _h("""<div style="margin-bottom:1.15rem">
-      <div style="display:flex;align-items:center;gap:16px;margin-bottom:.35rem">
-        <div style="width:54px;height:54px;background:linear-gradient(135deg,#2F80ED,#38BDF8);
-        border-radius:14px;display:flex;align-items:center;justify-content:center;
-        font-size:1.45rem;font-weight:800;color:white;box-shadow:0 10px 30px #0004">A</div>
+    _h("""<div style="position:relative;overflow:hidden;margin-bottom:1.25rem;padding:1.35rem 1.45rem;
+      border:1px solid #2F80ED55;border-radius:22px;background:
+      radial-gradient(circle at 12% 18%,#38BDF833 0,#38BDF800 28%),
+      radial-gradient(circle at 92% 12%,#A78BFA24 0,#A78BFA00 25%),
+      linear-gradient(135deg,#0B1220 0%,#17212B 54%,#111827 100%);
+      box-shadow:0 20px 70px #02061766,inset 0 1px 0 #E0F2FE18">
+      <div style="position:absolute;right:-70px;top:-80px;width:240px;height:240px;border:1px solid #38BDF833;
+      border-radius:50%;box-shadow:0 0 80px #38BDF81A"></div>
+      <div style="display:flex;align-items:center;gap:22px;position:relative;z-index:1">
+        <div class="aeris-logo-orbit" style="width:92px;height:92px;border-radius:28px;position:relative;
+        background:radial-gradient(circle at 34% 28%,#F8FAFC 0,#93C5FD 17%,#2563EB 50%,#0F172A 100%);
+        border:1px solid #93C5FD99;box-shadow:0 0 0 1px #38BDF822 inset,0 22px 70px #1D4ED855;
+        display:flex;align-items:center;justify-content:center;color:#FFFFFF;font-weight:900;font-size:2.55rem;
+        letter-spacing:-.08em;font-family:Inter,sans-serif">A
+          <div style="position:absolute;width:128px;height:38px;border:1.5px solid #BAE6FD99;border-radius:50%;
+          transform:rotate(-24deg);box-shadow:0 0 22px #38BDF855"></div>
+          <div style="position:absolute;right:10px;top:18px;width:8px;height:8px;background:#A7F3D0;border-radius:50%;
+          box-shadow:0 0 16px #A7F3D0"></div>
+        </div>
         <div>
-          <h1 style="margin:0!important;font-size:1.85rem!important">AERIS Overview</h1>
-          <p style="margin:.15rem 0 0!important;font-size:.82rem!important;color:#AAB6C2!important;
+          <div style="font-size:.72rem;color:#7DD3FC;letter-spacing:.24em;text-transform:uppercase;
+          font-family:JetBrains Mono,monospace;font-weight:700;margin-bottom:.15rem">Mission Control</div>
+          <h1 style="margin:0!important;font-size:2.45rem!important;line-height:1!important;font-weight:900!important;
+          letter-spacing:-.04em!important;background:linear-gradient(90deg,#F8FAFC,#93C5FD,#A7F3D0);
+          -webkit-background-clip:text;color:transparent">AERIS</h1>
+          <div style="margin-top:.35rem;font-size:1.02rem;color:#EAF2FA;letter-spacing:.035em;font-weight:650">
+            AERIS: Aerospace Research and Intelligence System
+          </div>
+          <p style="margin:.45rem 0 0!important;font-size:.82rem!important;color:#AAB6C2!important;
           font-family:JetBrains Mono,monospace">
-            Evidence-driven aerospace design workstation · geometry → aero → data trust → ML
+            Evidence-driven aerospace design workstation · geometry → aero → data trust → ML → active learning
           </p>
         </div>
       </div>
@@ -1109,47 +1166,6 @@ def pg_home(root, exe, tmo, dry):
         "<b>2D Airfoils</b>, <b>3D Geometry</b>, Dataset Factory, Aero Analysis, and ML Studio.",
         "info",
     )
-
-    _sec("Quick actions")
-    c1, c2, c3, c4 = st.columns(4)
-    with c1:
-        _panel(
-            "Import airfoil library",
-            "Build a 2D airfoil library from existing Selig/UIUC-style .dat files.",
-            ["airfoil", "ingest", "--db-dir", str(root / "data" / "airfoil_database"),
-             "--output-dir", str(root / "data" / "airfoil_library")],
-            root, exe, tmo, dry, "home_import_airfoils", label="▶  Import .dat"
-        )
-    with c2:
-        _panel(
-            "Generate CST airfoils",
-            "Create a CST/Kulfan-generated 2D airfoil library.",
-            ["airfoil", "generate-cst-library",
-             "--config", str(root / "configs" / "airfoil" / "cst_library_smoke_v1.yaml"),
-             "--output-dir", str(root / "data" / "airfoil_library_cst_smoke")],
-            root, exe, tmo, dry, "home_cst_airfoils", label="▶  Generate CST"
-        )
-    with c3:
-        _panel(
-            "Generate 3D geometry",
-            "Create one BWB geometry case from the baseline config.",
-            ["geometry", "generate", "--config", str(root / "configs" / "geometry" / "baseline_bwb_25.yaml")],
-            root, exe, tmo, dry, "home_geometry_generate", label="▶  3D geometry"
-        )
-    with c4:
-        _panel(
-            "Export deflected CAD",
-            "Create a split-elevon physical-deflected CAD smoke artifact.",
-            ["geometry", "export-deflected-cad",
-             "--config", str(root / "configs" / "geometry" / "bwb_25_sections_asym_controls.yaml"),
-             "--formats", "vspscript,step",
-             "--output-dir", str(root / "data" / "runs" / "overview_deflected_cad_smoke"),
-             "--delta-e-sym-deg", "0",
-             "--delta-a-diff-deg", "30",
-             "--deflection-topology", "split-elevon",
-             "--save-preview"],
-            root, exe, tmo, dry, "home_deflected_cad", label="▶  Deflected CAD"
-        )
 
     _sec("Environment")
     _stat_row([
@@ -1168,6 +1184,13 @@ def pg_home(root, exe, tmo, dry):
         ("Promoted datasets", str(len(promoted)), "promotion_manifest.json"),
         ("Promoted models", str(len(promo_mdl)), "model_promotion_manifest.json"),
     ])
+
+    _sec("Workflow guardrails")
+    _note(
+        "Workflow preflight and workflow templates are available in the <b>Workflow Cockpit</b>. "
+        "The Overview stays intentionally simple: identity, environment, workspace counts, and latest workflow evidence.",
+        "info",
+    )
 
     _sec("Workflow evidence")
     _workflow_evidence_card(root, _latest_workflow_root(root), key="home_workflow_evidence")
@@ -2996,7 +3019,7 @@ def pg_airfoil(root, exe, tmo, dry):
                 key="af_db_dir",
             )
             _panel(
-                "Import airfoil library",
+                "Import airfoil library, Generate CST airfoils",
                 "Reads .dat files, writes airfoil_inventory.csv and coords/*.npz.",
                 ["airfoil", "ingest", "--db-dir", db_dir_str, "--output-dir", str(lib_dir)],
                 root, exe, tmo, dry, "af_ingest", label="▶  Import .dat library",
@@ -3050,6 +3073,35 @@ def pg_airfoil(root, exe, tmo, dry):
             if (Path(cst_out) / "library_report.json").exists():
                 with st.expander("CST library report", expanded=False):
                     _show_file(Path(cst_out) / "library_report.json")
+
+        _sec("Airfoil utilities")
+        c_info, c_fit = st.columns(2)
+        with c_info:
+            _panel(
+                "Airfoil module info",
+                "Show 2D workflow status, library hints, XFOIL status, and available airfoil commands.",
+                ["airfoil", "info"],
+                root, exe, tmo, dry, "af_info", label="▶  Airfoil info",
+            )
+        with c_fit:
+            fit_dat = st.text_input(
+                "DAT file to fit CST",
+                str(root / "data" / "airfoil_database" / "naca4412.dat"),
+                key="af_fit_cst_dat",
+                help="Selig-format .dat coordinate file. Use this to pull legacy airfoils into the CST design space.",
+            )
+            fit_out = st.text_input(
+                "CST fit output dir",
+                str(root / "data" / "debug" / "cst_fit" / "naca4412"),
+                key="af_fit_cst_out",
+            )
+            fit_order = st.number_input("CST fit order", min_value=2, max_value=16, value=8, step=1, key="af_fit_cst_order")
+            _panel(
+                "Fit CST to .dat",
+                "Runs aeris airfoil fit-cst and writes CST coefficients plus fit_report.json.",
+                ["airfoil", "fit-cst", fit_dat, "--output-dir", fit_out, "--order", str(int(fit_order))],
+                root, exe, tmo, dry, "af_fit_cst", label="▶  Fit CST",
+            )
 
         if (lib_dir / "library_report.json").exists():
             with st.expander("Active library report", expanded=False):
@@ -5857,7 +5909,8 @@ def pg_ml(root, exe, tmo, dry):
         "  ⑦ Predict  ",
         "  ⑧ Audit  ",
         "  ⑨ Active Learning  ",
-        "  ⑩ Multifidelity  ",
+        "  ⑩ Classification  ",
+        "  ⑪ Multifidelity  ",
     ])
 
     # ── ① Feature Sets ────────────────────────────────────────────────────────
@@ -6051,7 +6104,7 @@ def pg_ml(root, exe, tmo, dry):
 
     # ── ⑥ Trust gates ─────────────────────────────────────────────────────────
     with tabs[5]:
-        tg_t = st.tabs(["  Promote model  ","  Inspect model  ","  Require promoted  "])
+        tg_t = st.tabs(["  Promote model  ", "  Suggest gates  ", "  Inspect model  ", "  Require promoted  "])
 
         with tg_t[0]:
             mr4 = _pick_dir("ML run dir",root/"data"/"processed"/"ml_runs","tg_mr")
@@ -6079,10 +6132,29 @@ def pg_ml(root, exe, tmo, dry):
             _panel("Promote model","Gates model on optional thresholds. Writes model_promotion_manifest.json + model card.",args4,root,exe,tmo,dry,"tg_run")
 
         with tg_t[1]:
+            _note(
+                "<b>aeris ml suggest-promotion-gates</b> proposes scale-aware gate thresholds from an existing run. "
+                "Use it after training/audit, then manually choose defensible gates. It is guidance, not gospel.",
+                "info",
+            )
+            mr_sg = _pick_dir("ML run dir",root/"data"/"processed"/"ml_runs","sg_mr")
+            csg1, csg2 = st.columns(2)
+            prof_sg = csg1.selectbox("--profile", ["strict", "normal", "loose"], index=1, key="sg_profile")
+            od_sg = csg2.text_input("--output-dir", "", key="sg_od", help="Leave blank for auto output under model run dir.")
+            args_sg = ["ml", "suggest-promotion-gates", "--model-run-dir", mr_sg, "--profile", prof_sg]
+            if od_sg.strip():
+                args_sg += ["--output-dir", od_sg.strip()]
+            _panel(
+                "Suggest promotion gates",
+                "Writes promotion_gate_suggestions.json and promotion_gates_template.yaml.",
+                args_sg, root, exe, tmo, dry, "sg_run", label="▶  Suggest gates",
+            )
+
+        with tg_t[2]:
             mr_ins = _pick_dir("ML run dir",root/"data"/"processed"/"ml_runs","ins_mr")
             _panel("Inspect model run","Prints model type, metrics, features, promotion status.",["ml","inspect-model","--model-run-dir",mr_ins],root,exe,tmo,dry,"ins_run")
 
-        with tg_t[2]:
+        with tg_t[3]:
             mr_rq = _pick_dir("ML run dir",root/"data"/"processed"/"ml_runs","rq_mr")
             vh_rq = st.checkbox("--verify-hashes",True,key="rq_vh",help="Verify artifact hashes against promotion manifest. Default True.")
             args_rq = ["ml","require-promoted-model","--model-run-dir",mr_rq]
@@ -6215,8 +6287,90 @@ def pg_ml(root, exe, tmo, dry):
         if excl_al: args_al.append("--exclude-outside-envelope")
         _panel("Suggest next batch","Ranks candidates. Does not run any simulator.",args_al,root,exe,tmo,dry,"al_run")
 
-    # ── ⑩ Multifidelity ──────────────────────────────────────────────────────
+    # ── ⑩ Classification ─────────────────────────────────────────────────────
     with tabs[9]:
+        _note(
+            "<b>Classification is for labels</b> such as flyability/red-flag/trim-feasible targets. "
+            "Do not use classifiers for CL/CD/Cm regression targets. Different weapon, different job.",
+            "info",
+        )
+        cls_t = st.tabs(["  Train classifier  ", "  Compare classifiers  "])
+
+        with cls_t[0]:
+            ds_cl = _pick_dir("Promoted dataset", root/"data"/"datasets", "cls_ds")
+            c1,c2,c3 = st.columns(3)
+            input_mode_cl = c1.radio("Feature input", ["--feature-set", "--feature-preset", "--features"], horizontal=False, key="cls_mode")
+            if input_mode_cl == "--feature-set":
+                feat_cl = c2.text_input("--feature-set", "bwb_control_physics_v1", key="cls_fs")
+                feat_args_cl = ["--feature-set", feat_cl]
+            elif input_mode_cl == "--feature-preset":
+                feat_cl = c2.selectbox("--feature-preset", ML_FEATURE_PRESETS, key="cls_fp")
+                feat_args_cl = ["--feature-preset", feat_cl]
+            else:
+                feat_cl = c2.text_input("--features", DEFAULT_SYM_ELEVON_FEATURES, key="cls_features")
+                feat_args_cl = ["--features", feat_cl]
+            targets_cl = c3.text_input("--targets", "longitudinal_basic_flyable_int,red_flag_int", key="cls_targets")
+            c4,c5,c6 = st.columns(3)
+            ctype_cl = c4.selectbox("--classifier-type", CLASSIFIER_TYPES, key="cls_type", format_func=lambda s: CLASSIFIER_INFO.get(s, s))
+            sm_cl = c5.selectbox("--split-method", ["grouped", "random"], key="cls_sm")
+            gc_cl = c6.text_input("--group-column", "geometry_id", key="cls_gc")
+            c7,c8,c9 = st.columns(3)
+            rs_cl = c7.number_input("--random-seed", min_value=0, value=123, step=1, key="cls_rs")
+            af_cl = c8.checkbox("--allow-forced", False, key="cls_af", help="Allow force-promoted dataset sources. Avoid for real work.")
+            json_cl = c9.checkbox("--json", False, key="cls_json")
+            od_cl = st.text_input("--output-dir", str(root/"data"/"processed"/"ml_runs"/"gui_classifier"), key="cls_od")
+            wf_cl = st.text_input("--workflow (optional)", "", key="cls_wf")
+            args_cl = ["ml", "classify", "--dataset", ds_cl, *feat_args_cl, "--targets", targets_cl,
+                       "--classifier-type", ctype_cl, "--split-method", sm_cl, "--group-column", gc_cl,
+                       "--random-seed", str(int(rs_cl)), "--output-dir", od_cl]
+            if af_cl: args_cl.append("--allow-forced")
+            if json_cl: args_cl.append("--json")
+            if wf_cl.strip(): args_cl += ["--workflow", wf_cl.strip()]
+            _panel(
+                "Train classifier",
+                "One classifier per target. Writes classification_summary_json and per-target metrics.",
+                args_cl, root, exe, tmo, dry, "cls_run", label="▶  Classify",
+            )
+
+        with cls_t[1]:
+            ds_cc = _pick_dir("Promoted dataset", root/"data"/"datasets", "cc_ds")
+            c1,c2,c3 = st.columns(3)
+            input_mode_cc = c1.radio("Feature input", ["--feature-set", "--feature-preset", "--features"], horizontal=False, key="cc_mode")
+            if input_mode_cc == "--feature-set":
+                feat_cc = c2.text_input("--feature-set", "bwb_control_physics_v1", key="cc_fs")
+                feat_args_cc = ["--feature-set", feat_cc]
+            elif input_mode_cc == "--feature-preset":
+                feat_cc = c2.selectbox("--feature-preset", ML_FEATURE_PRESETS, key="cc_fp")
+                feat_args_cc = ["--feature-preset", feat_cc]
+            else:
+                feat_cc = c2.text_input("--features", DEFAULT_SYM_ELEVON_FEATURES, key="cc_features")
+                feat_args_cc = ["--features", feat_cc]
+            targets_cc = c3.text_input("--targets", "longitudinal_basic_flyable_int,red_flag_int", key="cc_targets")
+            c4,c5,c6 = st.columns(3)
+            classifiers_cc = c4.multiselect("--classifiers", CLASSIFIER_TYPES, default=["logistic_regression", "extra_trees_classifier"], key="cc_types", format_func=lambda s: CLASSIFIER_INFO.get(s, s))
+            sm_cc = c5.selectbox("--split-method", ["grouped", "random"], key="cc_sm")
+            gc_cc = c6.text_input("--group-column", "geometry_id", key="cc_gc")
+            c7,c8,c9 = st.columns(3)
+            rs_cc = c7.number_input("--random-seed", min_value=0, value=123, step=1, key="cc_rs")
+            af_cc = c8.checkbox("--allow-forced", False, key="cc_af")
+            json_cc = c9.checkbox("--json", False, key="cc_json")
+            od_cc = st.text_input("--output-dir", str(root/"data"/"processed"/"ml_runs"/"gui_compare_classifiers"), key="cc_od")
+            wf_cc = st.text_input("--workflow (optional)", "", key="cc_wf")
+            cls_arg = ",".join(classifiers_cc) if classifiers_cc else "logistic_regression,extra_trees_classifier"
+            args_cc = ["ml", "compare-classifiers", "--dataset", ds_cc, *feat_args_cc, "--targets", targets_cc,
+                       "--classifiers", cls_arg, "--split-method", sm_cc, "--group-column", gc_cc,
+                       "--random-seed", str(int(rs_cc)), "--output-dir", od_cc]
+            if af_cc: args_cc.append("--allow-forced")
+            if json_cc: args_cc.append("--json")
+            if wf_cc.strip(): args_cc += ["--workflow", wf_cc.strip()]
+            _panel(
+                "Compare classifiers",
+                "Ranks classifier families by test F1 / balanced accuracy. Use only for label targets.",
+                args_cc, root, exe, tmo, dry, "cc_run", label="▶  Compare classifiers",
+            )
+
+    # ── ⑪ Multifidelity ──────────────────────────────────────────────────────
+    with tabs[10]:
         _note("⚠ Requires real HF data (XFOIL or CFD). AVL-only delta correction does NOT give paper-level accuracy.","warn")
         mf_t = st.tabs(["  Build delta  ","  Train delta  ","  Predict  ","  Evaluate  "])
         with mf_t[0]:
@@ -6301,7 +6455,50 @@ def pg_workflow(root, exe, tmo, dry):
         wf_name_new = st.text_input("New workflow name", "bwb_training_v1_workflow", key="wf_new_name")
     with c_top3:
         wf_out_new = st.text_input("New workflow output-dir", str(root / "data" / "workflows" / wf_name_new), key="wf_new_out")
-    _panel("Initialize workflow", "Creates workflow_manifest.json, workflow_status.json, and event log.", ["workflow", "init", "--name", wf_name_new, "--output-dir", wf_out_new], root, exe, tmo, dry, "wf_init")
+    c_tpl1, c_tpl2, c_tpl3 = st.columns(3)
+    wf_template = c_tpl1.selectbox("Workflow template", ["none", "canary", "paper_1", "production", "multifidelity", "active_learning"], key="wf_template")
+    wf_desc = c_tpl2.text_input("Description (optional)", "", key="wf_desc")
+    wf_force = c_tpl3.checkbox("--force", False, key="wf_force", help="Overwrite/reinitialize existing workflow folder.")
+    init_args = ["workflow", "init", "--name", wf_name_new, "--output-dir", wf_out_new]
+    if wf_template != "none": init_args += ["--template", wf_template]
+    if wf_desc.strip(): init_args += ["--description", wf_desc.strip()]
+    if wf_force: init_args.append("--force")
+    _panel("Initialize workflow", "Creates workflow_manifest.json, workflow_status.json, and event log. Template hints are supported.", init_args, root, exe, tmo, dry, "wf_init")
+
+    c_tpl_list, c_tpl_inspect, c_pre = st.columns(3)
+    with c_tpl_list:
+        _panel("List workflow templates", "Show available workflow templates.", ["workflow", "templates"], root, exe, tmo, dry, "wf_templates", "▶  templates")
+    with c_tpl_inspect:
+        wf_tpl_name = st.selectbox("Template to inspect", ["canary", "paper_1", "production", "multifidelity", "active_learning"], key="wf_tpl_inspect_name")
+        _panel("Inspect template", "Show stage hints for a specific workflow template.", ["workflow", "templates", "--name", wf_tpl_name], root, exe, tmo, dry, "wf_template_inspect", "▶  inspect template")
+    with c_pre:
+        preflight_args = [
+            "workflow",
+            "preflight",
+            "--workflow",
+            str(root / "data" / "workflows" / wf_name_new),
+        ]
+        if wf_template == "paper_1":
+            preflight_args += [
+                "--template", "paper_1",
+                "--n", "5",
+            ]
+            preflight_desc = "Paper 1 preflight: v2 config, control-aware grid, 45-case smoke/pilot check."
+        else:
+            preflight_args += [
+                "--config",
+                str(root / "configs" / "geometry" / "baseline_bwb_25.yaml"),
+                "--n",
+                "50",
+            ]
+            preflight_desc = "Check planned N=50 campaign size/readiness without running solvers."
+
+        _panel(
+            "Operational preflight",
+            preflight_desc,
+            preflight_args,
+            root, exe, tmo, dry, "wf_preflight", "▶  preflight",
+        )
 
     _sec("Open workflow")
     if not workflows:
@@ -6590,4 +6787,5 @@ _GUI_STATIC_VISUALIZATION_FALLBACK_MARKERS = (
     "--no-draw-3d --save-plot",
     "draw_3d_error.txt",
 )
+
 

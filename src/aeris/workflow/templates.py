@@ -57,6 +57,23 @@ _BASE_REQUIRED = (
 )
 
 
+_PAPER_1_REQUIRED = (
+    "geometry_dataset",
+    "aero_sweep",
+    "aero_dataset",
+    "dataset_qc",
+    "curation",
+    "promotion",
+    "dynamics_batch_labels",
+    "flyability_ml_dataset",
+    "ml_eda",
+    "ml_training",
+    "model_comparison",
+    "model_promotion",
+    "inference_guard",
+)
+
+
 _WORKFLOW_TEMPLATES: dict[str, WorkflowTemplate] = {
     "canary": WorkflowTemplate(
         name="canary",
@@ -70,6 +87,22 @@ _WORKFLOW_TEMPLATES: dict[str, WorkflowTemplate] = {
         notes=(
             "Use configs/geometry/baseline_bwb_25.yaml unless deliberately testing a wider design space.",
             "Tiny canaries prove plumbing, not surrogate quality.",
+        ),
+    ),
+    "paper_1": WorkflowTemplate(
+        name="paper_1",
+        title="Paper 1 workflow",
+        description=(
+            "Paper 1 static-airworthiness workflow: control-aware BWB aero dataset, "
+            "QC/curation/promotion, first-order trim/flyability labels, ML training, "
+            "model comparison, model promotion, and guarded inference."
+        ),
+        required_stages=_PAPER_1_REQUIRED,
+        optional_stages=("multifidelity", "active_learning", "final_package"),
+        notes=(
+            "Use this for the PhD Paper 1 evidence chain, not as a hidden campaign runner.",
+            "The key scientific outputs are static stability, trim/control authority, flyability labels, and trusted surrogate evidence.",
+            "Start with smoke N, then pilot N, then paper-scale N only after QC and learning curves look sane.",
         ),
     ),
     "production": WorkflowTemplate(
@@ -126,6 +159,8 @@ def get_workflow_template(name: str) -> dict[str, Any]:
     """Return one workflow template by name."""
     key = name.strip().lower().replace("_", "-")
     aliases = {
+        "paper-1": "paper_1",
+        "paper1": "paper_1",
         "active-learning": "active_learning",
         "active_learning": "active_learning",
         "multi-fidelity": "multifidelity",
@@ -238,30 +273,160 @@ def apply_template_status_hints(workflow_root: Path, template_name: str | None) 
     if not template_name:
         return
 
-    normalized = str(template_name).strip().lower()
-    if normalized != "canary":
-        return
+    normalized = str(template_name).strip().lower().replace("-", "_")
+    aliases = {
+        "paper1": "paper_1",
+        "paper_1": "paper_1",
+        "canary": "canary",
+    }
+    normalized = aliases.get(normalized, normalized)
 
-    import json
+    canary_hints = {
+        "geometry_dataset": (
+            "aeris dataset generate "
+            "-c configs/geometry/baseline_bwb_25.yaml "
+            "--n <N> "
+            "--sampler lhs_v1 "
+            "--sampler-seed <seed> "
+            "--no-save-plot "
+            "--build-aerosandbox "
+            "--workflow <workflow_root>"
+        ),
+    }
+
+    paper_1_hints = {
+        "geometry_dataset": (
+            "aeris dataset generate "
+            "-c configs/geometry/bwb_training_v2.yaml "
+            "--n <N> "
+            "--sampler lhs_v1 "
+            "--sampler-seed <seed> "
+            "--no-save-plot "
+            "--build-aerosandbox "
+            "--workflow <workflow_root>"
+        ),
+        "aero_sweep": (
+            "aeris aero sweep "
+            "--config configs/geometry/bwb_training_v2.yaml "
+            "--alpha-values -2,0,4 "
+            "--beta-values 0 "
+            "--velocity-values 20 "
+            "--altitude-values 700 "
+            "--control-input-values -5,0,5 "
+            "--workflow <workflow_root>"
+        ),
+        "aero_dataset": (
+            "aeris dataset aero-generate "
+            "-c configs/geometry/bwb_training_v2.yaml "
+            "--n <N> "
+            "--name <paper_1_dataset_name> "
+            "--alpha-values -2,0,4 "
+            "--velocity-values 20 "
+            "--altitude-values 700 "
+            "--control-input-values -5,0,5 "
+            "--qc-preset production "
+            "--retain-aero-runs failures_only "
+            "--workflow <workflow_root>"
+        ),
+        "dataset_qc": (
+            "aeris dataset aero-qc "
+            "--dataset data/datasets/<paper_1_aero_dataset> "
+            "--profile basic "
+            "--workflow <workflow_root>"
+        ),
+        "curation": (
+            "aeris dataset curate-aero "
+            "--dataset data/datasets/<paper_1_aero_dataset> "
+            "--workflow <workflow_root>"
+        ),
+        "promotion": (
+            "aeris dataset promote-aero "
+            "--dataset data/datasets/<paper_1_aero_dataset> "
+            "--workflow <workflow_root>"
+        ),
+        "dynamics_batch_labels": (
+            "aeris dynamics batch-labels "
+            "--dataset data/datasets/<paper_1_aero_dataset> "
+            "--source curated "
+            "--control-column control_input_deg "
+            "--max-abs-trim-delta-e-deg 25 "
+            "--workflow <workflow_root>"
+        ),
+        "flyability_ml_dataset": (
+            "aeris dynamics build-ml-dataset "
+            "--dataset data/datasets/<paper_1_aero_dataset> "
+            "--source curated "
+            "--workflow <workflow_root>"
+        ),
+        "ml_eda": (
+            "aeris ml eda "
+            "--dataset data/datasets/<paper_1_aero_dataset>__flyability_ml "
+            "--feature-set bwb_control_physics_v1 "
+            "--targets Cm_delta_e_per_rad,trim_delta_e_required_deg,trim_delta_e_margin_to_limit_deg "
+            "--no-plots "
+            "--workflow <workflow_root>"
+        ),
+        "ml_training": (
+            "aeris ml train "
+            "--dataset data/datasets/<paper_1_aero_dataset>__flyability_ml "
+            "--feature-set bwb_control_physics_v1 "
+            "--targets Cm_delta_e_per_rad,trim_delta_e_required_deg,trim_delta_e_margin_to_limit_deg "
+            "--model-type extra_trees "
+            "--split-method grouped "
+            "--group-column geometry_id "
+            "--workflow <workflow_root>"
+        ),
+        "model_comparison": (
+            "aeris ml compare "
+            "--dataset data/datasets/<paper_1_aero_dataset>__flyability_ml "
+            "--feature-set bwb_control_physics_v1 "
+            "--targets Cm_delta_e_per_rad,trim_delta_e_required_deg,trim_delta_e_margin_to_limit_deg "
+            "--models ridge,random_forest,extra_trees,gradient_boosting "
+            "--split-method grouped "
+            "--group-column geometry_id "
+            "--workflow <workflow_root>"
+        ),
+        "model_promotion": (
+            "aeris ml suggest-promotion-gates "
+            "--model-run-dir data/processed/ml_runs/<paper_1_run> && "
+            "aeris ml promote-model "
+            "--model-run-dir data/processed/ml_runs/<paper_1_run> "
+            "--gate-config <paper_1_gate_config.yaml>"
+        ),
+        "inference_guard": (
+            "aeris ml check-inference-inputs "
+            "--model-run-dir data/processed/ml_runs/<promoted_paper_1_run> "
+            "--input-csv <candidate_inputs.csv>"
+        ),
+    }
+
+    template_hints = {
+        "canary": canary_hints,
+        "paper_1": paper_1_hints,
+    }
+
+    hints_by_stage = template_hints.get(normalized)
+    if not hints_by_stage:
+        return
 
     root = Path(workflow_root).expanduser().resolve()
     status_path = root / "workflow_status.json"
     manifest_path = root / "workflow_manifest.json"
 
-    canary_geometry_hint = (
-        "aeris dataset generate "
-        "-c configs/geometry/baseline_bwb_25.yaml "
-        "--n <N> "
-        "--sampler lhs_v1 "
-        "--sampler-seed <seed> "
-        "--no-save-plot "
-        "--build-aerosandbox "
-        "--workflow <workflow_root>"
-    )
-
     def _patch_stage(stage: object) -> None:
-        if isinstance(stage, dict) and stage.get("name") == "geometry_dataset":
-            stage["recommended_command"] = canary_geometry_hint
+        if not isinstance(stage, dict):
+            return
+        name = stage.get("name")
+        if isinstance(name, str) and name in hints_by_stage:
+            stage["recommended_command"] = hints_by_stage[name]
+
+    def _patch_stage_collection(value: object) -> None:
+        if isinstance(value, list):
+            for stage in value:
+                _patch_stage(stage)
+        elif isinstance(value, dict):
+            for stage in value.values():
+                _patch_stage(stage)
 
     def _patch_payload(path: Path) -> None:
         if not path.exists():
@@ -272,10 +437,7 @@ def apply_template_status_hints(workflow_root: Path, template_name: str | None) 
         _patch_stage(payload.get("next_required_stage"))
 
         for key in ("stages", "stage_definitions", "required_stages"):
-            value = payload.get(key)
-            if isinstance(value, list):
-                for stage in value:
-                    _patch_stage(stage)
+            _patch_stage_collection(payload.get(key))
 
         path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
 

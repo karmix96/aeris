@@ -113,25 +113,34 @@ def build_operational_preflight_report(
         warnings.append("Workflow coverage still has optional gaps.")
 
     workflow_payload: dict[str, Any] | None = None
+    workflow_manifest_payload: dict[str, Any] | None = None
     workflow_status_path: str | None = None
+    workflow_manifest_path: str | None = None
     workflow_root_resolved: str | None = None
 
     if workflow_root is not None:
         root = workflow_root.expanduser().resolve()
         workflow_root_resolved = str(root)
         status_path = root / "workflow_status.json"
+        manifest_path = root / "workflow_manifest.json"
         workflow_status_path = str(status_path)
+        workflow_manifest_path = str(manifest_path)
         workflow_payload = _read_json(status_path)
+        workflow_manifest_payload = _read_json(manifest_path)
 
         if workflow_payload is None:
             blockers.append(f"Workflow status file does not exist: {status_path}")
         else:
-            template = workflow_payload.get("template")
             next_stage = workflow_payload.get("next_required_stage")
-            if not template:
-                warnings.append("Workflow status does not record a template.")
             if not next_stage:
                 warnings.append("Workflow status does not expose next_required_stage.")
+
+        if workflow_manifest_payload is None:
+            blockers.append(f"Workflow manifest file does not exist: {manifest_path}")
+        else:
+            template = workflow_manifest_payload.get("template")
+            if not template:
+                warnings.append("Workflow manifest does not record a template.")
 
     else:
         warnings.append("No workflow root supplied; preflight cannot inspect workflow state.")
@@ -156,7 +165,9 @@ def build_operational_preflight_report(
         "warnings": warnings,
         "workflow_root": workflow_root_resolved,
         "workflow_status_path": workflow_status_path,
+        "workflow_manifest_path": workflow_manifest_path,
         "workflow_status": workflow_payload,
+        "workflow_manifest": workflow_manifest_payload,
         "config": str(config_path),
         "campaign_plan": asdict(plan),
         "estimated_aero_case_count": plan.aero_case_count,

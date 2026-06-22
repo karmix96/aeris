@@ -147,3 +147,42 @@ def test_validate_workflow_detects_stage_order_gap(tmp_path: Path) -> None:
     assert validation.report["health"] == "incomplete"
     assert validation.report["stage_order_issues"]
     assert validation.report["stage_order_issues"][0]["first_incomplete_required_stage"] == "geometry_dataset"
+
+
+def test_validate_workflow_skipped_model_promotion_and_inference_guard_do_not_require_artifacts(tmp_path: Path) -> None:
+    """Skipped trust stages should not require trust artifacts.
+
+    Smoke workflows may deliberately skip model promotion and inference guard
+    when model quality is not meaningful. The doctor should record the skip,
+    not demand model_promotion_manifest.json or inference_guard_report.json.
+    """
+    from aeris.workflow import init_workflow, record_stage, validate_workflow
+
+    result = init_workflow(name="demo", output_dir=tmp_path / "wf")
+    artifact_root = tmp_path / "artifacts"
+    artifact_root.mkdir()
+
+    _complete_required_stages_until(
+        result.paths.root,
+        "model_promotion",
+        artifact_root=artifact_root,
+    )
+
+    record_stage(
+        workflow_dir=result.paths.root,
+        stage="model_promotion",
+        status="skipped",
+        notes="Skipped because smoke model was not promotable.",
+    )
+    record_stage(
+        workflow_dir=result.paths.root,
+        stage="inference_guard",
+        status="skipped",
+        notes="Skipped because no model was promoted.",
+    )
+
+    validation = validate_workflow(result.paths.root, write_report=False)
+    blockers = "\n".join(validation.report["blockers"])
+
+    assert "model_promotion_manifest.json" not in blockers
+    assert "inference_guard_report.json" not in blockers

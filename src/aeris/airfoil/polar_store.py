@@ -83,7 +83,13 @@ class _PolarKey:
 
 
 class AirfoilPolarStore:
-    """Load-once, query-many polar store backed by a curated XFOIL dataset."""
+    """Load-once, query-many polar store backed by a curated XFOIL dataset.
+
+    Implements the PolarSource interface (see polar_source_base.py) --
+    structurally, not via inheritance. NeuralFoilPolarSource
+    (neuralfoil_polar_source.py) is the alternative, opt-in backend for
+    DoE-scale campaigns with per-geometry-unique section shapes.
+    """
 
     def __init__(self, dataset_path: Path | str) -> None:
         path = Path(dataset_path).expanduser().resolve()

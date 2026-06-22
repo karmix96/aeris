@@ -563,6 +563,23 @@ class AeroSandboxAVLSolver(AeroSolver):
         output_dir.mkdir(parents=True, exist_ok=True)
 
         fc = aero_input.flight_condition
+        # Effective Mach for the polar bridge: AVL itself does not require
+        # Mach, so fc.mach is None for the vast majority of campaigns. The
+        # polar bridge (CDCL injection + strip profile-drag integration)
+        # needs a real value for polar-bin selection. Derive it from
+        # velocity/altitude via the standard atmosphere when not supplied,
+        # using the same computation this module already performs elsewhere
+        # for Mach/velocity consistency checking.
+        if fc.mach is not None:
+            _effective_mach = fc.mach
+        else:
+            try:
+                _atmosphere_for_mach = asb.Atmosphere(altitude=fc.altitude_m)
+                _effective_mach = float(fc.velocity_mps) / float(
+                    _atmosphere_for_mach.speed_of_sound()
+                )
+            except Exception:
+                _effective_mach = 0.0
         settings = aero_input.settings
 
         panel_cfg = settings.solver_options.get("paneling", {})
@@ -651,8 +668,8 @@ class AeroSandboxAVLSolver(AeroSolver):
                 _polar_store = settings.solver_options.get("polar_store")
                 if _section_map is not None and _polar_store is not None:
                     _V = fc.velocity_mps
-                    _mach = fc.mach
                     _alt = fc.altitude_m
+                    _mach = _effective_mach
                     avl._cdcl_injector = lambda _p: inject_polar_cdcl(
                         _p, _section_map, _polar_store, _V, _mach, _alt
                     )
@@ -824,7 +841,7 @@ class AeroSandboxAVLSolver(AeroSolver):
                             polar_store=__polar_store,
                             s_ref=float(airplane.s_ref),
                             velocity_mps=fc.velocity_mps,
-                            mach=fc.mach,
+                            mach=_effective_mach,
                             altitude_m=fc.altitude_m,
                         )
                         if cd_prof is not None:
@@ -840,11 +857,14 @@ class AeroSandboxAVLSolver(AeroSolver):
                                     f"POLAR_BRIDGE: {n_extrap} strip(s) had cl outside 2D polar "
                                     "range — profile drag clamped at polar boundary (unreliable)."
                                 )
-                            # Cross-check: strip-integration vs AVL CDtot (should agree ±15%)
-                            # AVL CDtot now includes CDCL profile drag from injection.
-                            # Strip integration (cd_total) is the authoritative estimate.
-                            # A large divergence indicates a polar fitting or symmetry issue.
-                            avl_cdtot = result.cd  # CDtot as reported by AVL
+                            # Cross-check: strip-integration vs AVL CDtot.
+                            # AVL CDtot is kept for audit, but the Paper-1 viscous-corrected
+                            # drag target is the strip-integrated total:
+                            #   cd_corrected = cd_induced_AVL + cd_profile_NeuralFoil
+                            avl_cdtot = result.cd  # CDtot as originally reported by AVL
+                            result.solver_metadata["cd_avl_cdtot"] = avl_cdtot
+                            result.solver_metadata["cd_primary_source"] = "polar_bridge_strip_integration"
+
                             if avl_cdtot is not None and avl_cdtot > 0 and result.cd_total > 0:
                                 rel_diff = abs(result.cd_total - avl_cdtot) / result.cd_total
                                 result.solver_metadata["profile_drag_cd_total_vs_avl_cdtot_rel_diff"] = rel_diff
@@ -853,8 +873,15 @@ class AeroSandboxAVLSolver(AeroSolver):
                                         f"POLAR_BRIDGE: cd_total (strip-integration) = "
                                         f"{result.cd_total:.5f} vs AVL CDtot = {avl_cdtot:.5f} "
                                         f"({rel_diff:.1%} disagreement). "
-                                        "Check CDCL fit quality and polar coverage."
+                                        "Using strip-integrated cd_total as primary corrected CD."
                                     )
+
+                            # Promote corrected drag to the primary scalar so downstream
+                            # aero_dataset.csv, curation, ML, and L/D use the viscous-corrected value.
+                            result.cd = result.cd_total
+                            if result.cl is not None and result.cd is not None and result.cd > 0:
+                                result.solver_metadata["l_over_d_avl"] = result.l_over_d
+                                result.l_over_d = result.cl / result.cd
 
                 except Exception as exc:
                     result.warnings.append(f"Strip parsing failed: {exc}")

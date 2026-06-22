@@ -437,6 +437,13 @@ def run_aero_dataset_generation(
     run_aero_qc: bool = False,
     aero_qc_profile: str = "basic",
     fail_on_aero_qc_error: bool = False,
+    # --- AVL polar bridge (BRIDGE.1) -- all optional, default = inviscid AVL ---
+    airfoil_curated_csv: Path | None = None,
+    airfoil_library_id: str | None = None,
+    segment_airfoils: list | None = None,
+    airfoil_library_root: Path | None = None,
+    viscous_polar_source: str = "curated-xfoil",
+    viscous_polar_re_grid: list[float] | None = None,
 ) -> int:
     raw_config = load_yaml_config(config_path)
     retain_aero_runs = _validate_retain_aero_runs(retain_aero_runs)
@@ -487,6 +494,8 @@ def run_aero_dataset_generation(
             "failed_aero_rows": 0,
             "generator_id": generator_id,
             "solver": solver,
+            "viscous_polar_source": viscous_polar_source,
+            "viscous_polar_re_grid": viscous_polar_re_grid or [],
             "geometry_qc": geometry_qc_summary,
             "aero_qc": None,
             "retention": {},
@@ -525,6 +534,8 @@ def run_aero_dataset_generation(
             "failed_aero_rows": 0,
             "generator_id": generator_id,
             "solver": solver,
+            "viscous_polar_source": viscous_polar_source,
+            "viscous_polar_re_grid": viscous_polar_re_grid or [],
             "geometry_qc": geometry_qc_summary,
             "aero_qc": None,
             "retention": {},
@@ -600,6 +611,12 @@ def run_aero_dataset_generation(
                 seed=0,
                 output_name=f"{geometry_id}_aero",
                 max_cases=max_cases,
+                airfoil_curated_csv=airfoil_curated_csv,
+                airfoil_library_id=airfoil_library_id,
+                segment_airfoils=segment_airfoils,
+                airfoil_library_root=airfoil_library_root,
+                viscous_polar_source=viscous_polar_source,
+                viscous_polar_re_grid=viscous_polar_re_grid,
             )
 
             # Copy / preserve sweep run under final dataset root for traceability

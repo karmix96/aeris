@@ -353,6 +353,7 @@ def execute_aero_run(
             "geometry_source": geometry_source,
             "source_label": label,
             "resolved_generator_id": resolved_generator_id,
+            "polar_bridge": to_jsonable(_bridge_status),
         },
     )
 
@@ -479,6 +480,72 @@ def execute_aero_run(
     return run_root, result
 
 
+
+def _extract_neuralfoil_segment_coords_from_airplane(airplane) -> tuple[list[tuple[Any, float]], float]:
+    """Build NeuralFoil segment coordinates from the current AeroSandbox airplane.
+
+    Conservative first implementation:
+    - uses the first wing;
+    - reads each positive-half wing section airfoil coordinates;
+    - creates spanwise segment end fractions from section midpoints;
+    - returns [(coords, y_frac_end), ...], semispan_m.
+
+    This is enough to replace all-zero CDCL placeholders with real NeuralFoil
+    polar fits for the current generated BWB geometry.
+    """
+    wing = airplane.wings[0]
+    xsecs = list(getattr(wing, "xsecs", []) or [])
+    if len(xsecs) < 2:
+        raise ValueError("Need at least two wing sections for NeuralFoil bridge.")
+
+    raw: list[tuple[float, Any]] = []
+    for xsec in xsecs:
+        y = abs(float(xsec.xyz_le[1]))
+        airfoil = getattr(xsec, "airfoil", None)
+        coords = getattr(airfoil, "coordinates", None)
+        if coords is None:
+            continue
+        raw.append((y, coords))
+
+    if len(raw) < 2:
+        raise ValueError("No usable AeroSandbox airfoil coordinates found on wing sections.")
+
+    raw = sorted(raw, key=lambda item: item[0])
+    semispan_m = max(y for y, _ in raw)
+    if semispan_m <= 0.0:
+        raise ValueError("Could not resolve positive semispan for NeuralFoil bridge.")
+
+    # Keep one section per unique y station.
+    unique: list[tuple[float, Any]] = []
+    for y, coords in raw:
+        if not unique or abs(y - unique[-1][0]) > 1e-9:
+            unique.append((y, coords))
+
+    ys = [y for y, _ in unique]
+    segment_coords: list[tuple[Any, float]] = []
+
+    for i, (y, coords) in enumerate(unique):
+        if i == 0:
+            # Root section covers root -> midpoint to next station.
+            if len(unique) == 1:
+                y_end = semispan_m
+            else:
+                y_end = 0.5 * (ys[0] + ys[1])
+        elif i == len(unique) - 1:
+            y_end = semispan_m
+        else:
+            y_end = 0.5 * (ys[i] + ys[i + 1])
+
+        y_frac_end = min(1.0, max(1e-9, float(y_end) / semispan_m))
+        segment_coords.append((coords, y_frac_end))
+
+    # Ensure the last segment exactly reaches the tip.
+    last_coords, _ = segment_coords[-1]
+    segment_coords[-1] = (last_coords, 1.0)
+
+    return segment_coords, float(semispan_m)
+
+
 def execute_aero_sweep(
     *,
     config: Path | None,
@@ -517,6 +584,13 @@ def execute_aero_sweep(
     seed: int,
     output_name: str,
     max_cases: int | None = None,
+    # --- AVL polar bridge (BRIDGE.1) -- all optional, default = inviscid AVL ---
+    airfoil_curated_csv: Path | None = None,
+    airfoil_library_id: str | None = None,
+    segment_airfoils: list | None = None,  # list[SegmentAirfoilConfig]-like
+    airfoil_library_root: Path | None = None,
+    viscous_polar_source: str = "curated-xfoil",
+    viscous_polar_re_grid: list[float] | None = None,
 ) -> tuple[Path, Any]:
     label = (
         config.stem if config is not None
@@ -558,6 +632,140 @@ def execute_aero_sweep(
         r_rad_s=r,
     )
 
+    # --- AVL polar bridge (BRIDGE.1): build section_map/polar_store when configured ---
+    _bridge_section_map = None
+    _bridge_polar_store = None
+    _bridge_status: dict[str, Any] = {
+        "requested_source": viscous_polar_source,
+        "active": False,
+        "backend": None,
+        "reason": "not_requested",
+    }
+
+    _source_key = str(viscous_polar_source or "curated-xfoil").strip().lower()
+
+    if _source_key in {"none", "off", "inviscid"}:
+        _bridge_status["reason"] = "disabled_by_user"
+
+    elif _source_key in {"neuralfoil", "neural-foil"}:
+        try:
+            from aeris.airfoil.neuralfoil_polar_source import build_neuralfoil_polar_store_for_segments
+
+            _segment_coords, _semispan_m = _extract_neuralfoil_segment_coords_from_airplane(
+                geometry_view.airplane
+            )
+            _bridge_mach = 0.0 if mach is None else float(mach)
+            _bridge_section_map, _bridge_polar_store = build_neuralfoil_polar_store_for_segments(
+                _segment_coords,
+                semispan_m=float(_semispan_m),
+                model_size="xsmall",
+                re_grid=viscous_polar_re_grid,
+                mach=_bridge_mach,
+            )
+            _bridge_status.update(
+                {
+                    "active": True,
+                    "backend": "neuralfoil",
+                    "reason": "ok",
+                    "segment_count": len(_segment_coords),
+                    "semispan_m": float(_semispan_m),
+                    "re_grid": viscous_polar_re_grid or [],
+                    "mach": _bridge_mach,
+                }
+            )
+            logger.info(
+                "Polar bridge active: backend=neuralfoil segments=%s semispan=%.6f",
+                len(_segment_coords),
+                float(_semispan_m),
+            )
+        except Exception as _bridge_exc:
+            logger.warning(
+                "NeuralFoil polar bridge setup failed (%s); continuing without it (inviscid AVL).",
+                _bridge_exc,
+            )
+            _bridge_section_map = None
+            _bridge_polar_store = None
+            _bridge_status.update(
+                {
+                    "active": False,
+                    "backend": "neuralfoil",
+                    "reason": f"setup_failed: {_bridge_exc}",
+                }
+            )
+
+    elif airfoil_curated_csv is not None and (airfoil_library_id or segment_airfoils):
+        from aeris.airfoil.polar_store import AirfoilPolarStore
+        from aeris.airfoil.section_map import SectionAirfoilMap
+
+        _semispan_m = None
+        try:
+            _airplane_for_span = geometry_view.airplane
+            _wing_for_span = _airplane_for_span.wings[0]
+            _y_stations = [
+                abs(float(_xsec.xyz_le[1])) for _xsec in _wing_for_span.xsecs
+            ]
+            if _y_stations:
+                _semispan_m = max(_y_stations)
+        except Exception as _span_exc:
+            logger.warning(
+                "Polar bridge: could not derive semispan from geometry_view.airplane "
+                "(%s); falling back to summary lookup.",
+                _span_exc,
+            )
+        if (_semispan_m is None or _semispan_m <= 0.0) and isinstance(summary, dict):
+            _semispan_m = summary.get("semi_span_m")
+        if _semispan_m is None or _semispan_m <= 0.0:
+            logger.warning(
+                "Polar bridge requested but semispan could not be resolved from "
+                "geometry_view or summary; bridge disabled for this case."
+            )
+            _bridge_status.update(
+                {
+                    "active": False,
+                    "backend": "curated-xfoil",
+                    "reason": "semispan_unresolved",
+                }
+            )
+        else:
+            try:
+                _bridge_polar_store = AirfoilPolarStore(airfoil_curated_csv)
+                if segment_airfoils:
+                    _bridge_section_map = SectionAirfoilMap.from_segments(
+                        segments=segment_airfoils,
+                        library_root=airfoil_library_root,
+                        semispan_m=float(_semispan_m),
+                    )
+                elif airfoil_library_id:
+                    _bridge_section_map = SectionAirfoilMap.from_single(
+                        airfoil_id=airfoil_library_id,
+                        library_root=airfoil_library_root,
+                        semispan_m=float(_semispan_m),
+                    )
+                _bridge_status.update(
+                    {
+                        "active": _bridge_section_map is not None and _bridge_polar_store is not None,
+                        "backend": "curated-xfoil",
+                        "reason": "ok",
+                        "semispan_m": float(_semispan_m),
+                    }
+                )
+            except Exception as _bridge_exc:
+                logger.warning(
+                    "Polar bridge setup failed (%s); continuing without it (inviscid AVL).",
+                    _bridge_exc,
+                )
+                _bridge_section_map = None
+                _bridge_polar_store = None
+                _bridge_status.update(
+                    {
+                        "active": False,
+                        "backend": "curated-xfoil",
+                        "reason": f"setup_failed: {_bridge_exc}",
+                    }
+                )
+    else:
+        _bridge_status["reason"] = "no_curated_csv_or_segment_mapping"
+
     sweep = FlightConditionSweep(
         alpha_deg_values=alpha_values,
         beta_deg_values=beta_values,
@@ -584,6 +792,8 @@ def execute_aero_sweep(
             "save_surface_forces": save_surface_forces,
             "save_element_forces": save_element_forces,
             "control_input_deg": control_input_deg,
+            "section_map": _bridge_section_map,
+            "polar_store": _bridge_polar_store,
         },
     )
 
@@ -600,6 +810,7 @@ def execute_aero_sweep(
             "geometry_source": geometry_source,
             "source_label": label,
             "resolved_generator_id": resolved_generator_id,
+            "polar_bridge": to_jsonable(_bridge_status),
         },
         max_cases=max_cases,
     )
@@ -615,6 +826,7 @@ def execute_aero_sweep(
         "flight_condition_sweep": to_jsonable(asdict(sweep)),
         "geometry_summary": to_jsonable(dataclass_or_value(summary)),
         "aero_sweep_result": to_jsonable(dataclass_or_value(sweep_result)),
+        "polar_bridge": to_jsonable(_bridge_status),
     }
     aero_sweep_manifest_path = run_root / "aero_sweep_manifest.json"
     aero_sweep_manifest_path.write_text(
@@ -638,6 +850,7 @@ def execute_aero_sweep(
         "completed_n_cases": sweep_summary.get("completed_n_cases"),
         "n_success": sweep_summary.get("n_success"),
         "n_failed_total": sweep_summary.get("n_failed_total"),
+        "polar_bridge": to_jsonable(_bridge_status),
         "run_artifacts": {
             "geometry_dir": str(geometry_dir),
             "aero_dir": str(sweep_dir),

@@ -928,6 +928,17 @@ def dataset_aero_generate(
         diff_input_values,
         "--diff-input-values",
     )
+    parsed_viscous_polar_re_grid = (
+        None
+        if viscous_polar_re_grid is None or not str(viscous_polar_re_grid).strip()
+        else parse_float_list(viscous_polar_re_grid, "--viscous-polar-re-grid")
+    )
+
+    viscous_polar_source_key = str(viscous_polar_source or "curated-xfoil").strip().lower()
+    if viscous_polar_source_key not in {"curated-xfoil", "neuralfoil", "neural-foil", "none", "off", "inviscid"}:
+        raise typer.BadParameter(
+            "--viscous-polar-source must be one of: curated-xfoil, neuralfoil, none/off/inviscid."
+        )
 
     if not parsed_alpha_values:
         raise typer.BadParameter("--alpha-values must not be empty.")
@@ -1028,6 +1039,8 @@ def dataset_aero_generate(
         airfoil_library_id=airfoil_library_id,
         segment_airfoils=parsed_segment_airfoils,
         airfoil_library_root=airfoil_library_root,
+        viscous_polar_source=viscous_polar_source_key,
+        viscous_polar_re_grid=parsed_viscous_polar_re_grid,
     )
 
     if exit_code == 0:
@@ -1047,6 +1060,8 @@ def dataset_aero_generate(
                 "velocity_values": parsed_velocity_values,
                 "altitude_values": parsed_altitude_values,
                 "control_input_values": parsed_control_input_values,
+                "viscous_polar_source": viscous_polar_source_key,
+                "viscous_polar_re_grid": parsed_viscous_polar_re_grid or [],
             }
 
             record_workflow_stage_success(
@@ -1069,7 +1084,7 @@ def dataset_aero_generate(
                 notes="Aero sweeps executed as part of dataset aero-generate.",
                 metadata={
                     **common_metadata,
-                    "compound_stage": "aero_dataset_sweep",
+                    "compound_stage": "aero_sweep",
                 },
             )
 
@@ -1148,6 +1163,13 @@ def dataset_curate_aero(
     except Exception as exc:
         fail_command("Dataset curate-aero", exc)
 
+    promotion_blockers = [str(item) for item in (report.get("promotion_blockers", []) or []) if str(item).strip()]
+    curation_warnings = []
+    curation_blockers = []
+    if report.get("promotion_ready") is not True:
+        curation_warnings.append("Curation completed, but dataset is not promotion-ready.")
+        curation_blockers.extend(promotion_blockers)
+
     try:
         record_workflow_stage_success(
             workflow=workflow,
@@ -1158,13 +1180,15 @@ def dataset_curate_aero(
                 report.get("rejected_aero_rows_csv"),
                 dataset / "curation_report.json",
             ],
+            warnings=curation_warnings,
+            blockers=curation_blockers,
             notes="Aero dataset curation completed.",
             metadata={
                 "command": "aeris dataset curate-aero",
                 "promotion_ready": bool(report.get("promotion_ready")),
                 "kept_rows": report.get("kept_rows"),
                 "rejected_rows": report.get("rejected_rows"),
-                "promotion_blocker_count": len(report.get("promotion_blockers", []) or []),
+                "promotion_blocker_count": len(promotion_blockers),
             },
             echo=not as_json,
         )

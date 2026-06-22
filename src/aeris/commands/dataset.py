@@ -840,6 +840,56 @@ def dataset_aero_generate(
             "--qc-preset promotion_strict before ML acceptance or dataset promotion."
         ),
     ),
+    viscous_polar_source: str = typer.Option(
+        "curated-xfoil",
+        "--viscous-polar-source",
+        help=(
+            "Backend for the AVL polar bridge: 'curated-xfoil' (default) "
+            "uses --airfoil-curated-csv; 'neuralfoil' evaluates the fixed "
+            "segment airfoils live via NeuralFoil (batched per campaign, "
+            "no curated database needed). Requires the 'neuralfoil' package."
+        ),
+    ),
+    viscous_polar_re_grid: str | None = typer.Option(
+        None,
+        "--viscous-polar-re-grid",
+        help=(
+            "Comma-separated representative Reynolds grid to pre-warm for "
+            "--viscous-polar-source neuralfoil (e.g. '500000,1000000,3000000'). "
+            "Defaults to the campaign sweep.reynolds. Pre-warming means zero "
+            "NeuralFoil calls inside the geometry loop."
+        ),
+    ),
+    airfoil_curated_csv: Path | None = typer.Option(
+        None,
+        "--airfoil-curated-csv",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Curated XFOIL polar CSV enabling the AVL polar bridge "
+             "(AFILE/CLAF/CDCL injection). Omit to keep pure inviscid AVL.",
+    ),
+    airfoil_library_id: str | None = typer.Option(
+        None,
+        "--airfoil-library-id",
+        help="Single airfoil_id (from the curated CSV) applied to the entire "
+             "semi-span. Mutually exclusive with --segment-airfoils.",
+    ),
+    segment_airfoils: list[str] = typer.Option(
+        [],
+        "--segment-airfoils",
+        help="Repeatable spanwise segment, format airfoil_id:y_frac_end "
+             "(e.g. --segment-airfoils inboard_id:0.4 --segment-airfoils tip_id:1.0). "
+             "Last entry should end at 1.0. Overrides --airfoil-library-id when set.",
+    ),
+    airfoil_library_root: Path | None = typer.Option(
+        None,
+        "--airfoil-library-root",
+        help="Root directory of the airfoil .dat library for AFILE coordinate lookup. "
+             "Defaults to the standard data/airfoil_library/ location when omitted.",
+    ),
     workflow: Path | None = typer.Option(
         None,
         "--workflow",
@@ -894,6 +944,22 @@ def dataset_aero_generate(
             "Add 0 to the list, e.g. -5,0,5",
             fg=typer.colors.YELLOW,
         )
+
+    parsed_segment_airfoils = None
+    if segment_airfoils:
+        from aeris.generators.bwb_segmented_v1.params import SegmentAirfoilConfig
+
+        parsed_segment_airfoils = []
+        for _entry in segment_airfoils:
+            if ":" not in _entry:
+                raise typer.BadParameter(
+                    "--segment-airfoils entries must be airfoil_id:y_frac_end, got: "
+                    + repr(_entry)
+                )
+            _aid, _frac_str = _entry.rsplit(":", 1)
+            parsed_segment_airfoils.append(
+                SegmentAirfoilConfig(airfoil_id=_aid, y_frac_end=float(_frac_str))
+            )
 
     preset = resolve_qc_preset(qc_preset)
 
@@ -958,6 +1024,10 @@ def dataset_aero_generate(
         run_aero_qc=run_aero_qc_effective,
         aero_qc_profile=aero_qc_profile_effective,
         fail_on_aero_qc_error=fail_on_aero_qc_error_effective,
+        airfoil_curated_csv=airfoil_curated_csv,
+        airfoil_library_id=airfoil_library_id,
+        segment_airfoils=parsed_segment_airfoils,
+        airfoil_library_root=airfoil_library_root,
     )
 
     if exit_code == 0:
@@ -993,7 +1063,7 @@ def dataset_aero_generate(
 
             record_workflow_stage_success(
                 workflow=workflow,
-                stage="aero_dataset_sweep",
+                stage="aero_sweep",
                 inputs=[config],
                 artifacts=[dataset_artifact],
                 notes="Aero sweeps executed as part of dataset aero-generate.",

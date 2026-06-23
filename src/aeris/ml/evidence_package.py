@@ -18,7 +18,7 @@ from typing import Any, Iterable
 from aeris.ml.fingerprints import file_sha256
 from aeris.ml.manifest import utc_now_iso
 
-EVIDENCE_PACKAGE_SCHEMA_VERSION = "aeris.evidence_package.v1"
+EVIDENCE_PACKAGE_SCHEMA_VERSION = "aeris.evidence_package.v1.1"
 
 
 @dataclass(frozen=True)
@@ -199,8 +199,16 @@ def _add_extra_artifacts(
 
 
 def _read_first_present(rows: list[dict[str, Any]], label: str) -> dict[str, Any]:
+    """Read the first present JSON artifact matching an exact or discovered label.
+
+    V1.1 discovery labels use the form ``<canonical_label>:<file_stem>`` so
+    reports can be found even when commands write them under run-specific
+    subdirectories such as ``quality/confidence__test_rows/``.
+    """
+    prefix = f"{label}:"
     for row in rows:
-        if row.get("label") == label and row.get("status") == "present":
+        row_label = str(row.get("label", ""))
+        if (row_label == label or row_label.startswith(prefix)) and row.get("status") == "present":
             return _safe_load_json(Path(str(row["source_path"])))
     return {}
 
@@ -221,6 +229,17 @@ def _brief_json_status(report: dict[str, Any]) -> dict[str, Any]:
         "n_rows",
         "n_groups",
         "n_regime_rows",
+        "truth_available",
+        "n_outside_envelope",
+        "outside_envelope_count",
+        "inside_envelope_count",
+        "rmse_mean",
+        "mae_mean",
+        "r2_mean",
+        "max_test_rmse_mean",
+        "min_test_r2_mean",
+        "n_errors",
+        "n_warnings",
     ]
     return {k: report.get(k) for k in keys if k in report}
 
@@ -398,6 +417,37 @@ def build_evidence_package(
         add("promotion_gates", "promotion_gates_template", model_root / "promotion_gate_suggestions" / "promotion_gates_template.yaml")
         _add_glob(rows, category="model_diagnostics", label_prefix="diagnostic", root=model_root / "diagnostics", pattern="**/*", output_dir=output_root, copy_artifacts=copy_artifacts)
         _add_glob(rows, category="model_plots", label_prefix="plot", root=model_root / "plots", pattern="*.png", output_dir=output_root, copy_artifacts=copy_artifacts)
+
+        # Evidence Package V1.1 discovery: newer quality/confidence commands write
+        # report folders with run-specific names, e.g. quality/confidence__test_rows/.
+        # Index those automatically so operators do not need to pass --confidence-dir.
+        _add_glob(
+            rows,
+            category="model_quality",
+            label_prefix="model_quality_report",
+            root=model_root / "quality",
+            pattern="**/*model_quality*report*.json",
+            output_dir=output_root,
+            copy_artifacts=copy_artifacts,
+        )
+        _add_glob(
+            rows,
+            category="prediction_confidence",
+            label_prefix="prediction_confidence_report",
+            root=model_root / "quality",
+            pattern="confidence__*/prediction_confidence_report.json",
+            output_dir=output_root,
+            copy_artifacts=copy_artifacts,
+        )
+        _add_glob(
+            rows,
+            category="prediction_confidence",
+            label_prefix="prediction_confidence_csv",
+            root=model_root / "quality",
+            pattern="confidence__*/prediction_confidence.csv",
+            output_dir=output_root,
+            copy_artifacts=copy_artifacts,
+        )
 
     if confidence_root is not None:
         add("prediction_confidence", "prediction_confidence_report", confidence_root / "prediction_confidence_report.json")

@@ -125,3 +125,43 @@ def test_package_evidence_cli_has_workflow_flag() -> None:
     result = CliRunner().invoke(app, ["ml", "package-evidence", "--help"])
     assert result.exit_code == 0
     assert "--workflow" in result.output
+
+
+def test_evidence_package_v11_discovers_confidence_report_under_model_quality(tmp_path: Path) -> None:
+    dataset = tmp_path / "dataset"
+    dataset.mkdir()
+    (dataset / "promotion_manifest.json").write_text(
+        '{"schema_version":"aero_promotion_manifest_v1","promotion_ready_at_time_of_promotion":true}',
+        encoding="utf-8",
+    )
+
+    model = tmp_path / "model_run"
+    model.mkdir()
+    (model / "model_promotion_manifest.json").write_text(
+        '{"schema_version":"aeris.model_promotion_manifest.v1","status":"approved","promotion_ready_at_time_of_promotion":true}',
+        encoding="utf-8",
+    )
+    (model / "model_card.json").write_text('{"model_type":"extra_trees"}', encoding="utf-8")
+    (model / "training_envelope.json").write_text('{"features":{}}', encoding="utf-8")
+
+    confidence_dir = model / "quality" / "confidence__test_rows"
+    confidence_dir.mkdir(parents=True)
+    (confidence_dir / "prediction_confidence_report.json").write_text(
+        '{"schema_version":"aeris.prediction_confidence.v1","status":"completed","n_rows":3,"n_outside_envelope":1,"r2_mean":0.7}',
+        encoding="utf-8",
+    )
+    (confidence_dir / "prediction_confidence.csv").write_text("row_id,pred\n0,1.0\n", encoding="utf-8")
+
+    result = build_evidence_package(
+        dataset=dataset,
+        model_run_dir=model,
+        output_dir=tmp_path / "pkg",
+        allow_missing=True,
+        copy_artifacts=False,
+    )
+
+    assert result.manifest["schema_version"] == "aeris.evidence_package.v1.1"
+    assert result.manifest["key_findings"]["prediction_confidence"]["n_outside_envelope"] == 1
+    assert result.manifest["key_findings"]["prediction_confidence"]["r2_mean"] == 0.7
+    index_text = result.artifacts.artifact_index_csv_path.read_text(encoding="utf-8")
+    assert "prediction_confidence_report" in index_text

@@ -20508,7 +20508,13 @@ def ml_validate_feature_set(
     from aeris.ml.feature_sets import FeatureSetError, validate_promoted_dataset_feature_set
 
     try:
-        target_cols = parse_csv_list(targets, "--targets") if targets else []
+        target_cols = resolve_target_columns_for_dataset(
+            dataset,
+            targets,
+            feature_columns=feature_cols,
+            group_column=group_column,
+            allow_forced=allow_forced,
+        ) if targets else []
         result = validate_promoted_dataset_feature_set(
             dataset_path=dataset,
             feature_set_name=feature_set,
@@ -22741,7 +22747,7 @@ def ml_learning_curves(
         "--feature-set",
         help="Named feature set, e.g. bwb_control_physics_v1. Use exactly one of --features, --feature-preset, or --feature-set.",
     ),
-    targets: str = typer.Option(..., "--targets", help="Comma-separated target columns, e.g. cl,cd,cm."),
+    targets: str = typer.Option("aero_all", "--targets", help="Comma-separated target columns or target set: aero_basic, aero_all, flyability_all, all/numeric_all."),
     model_type: str = typer.Option(
         "extra_trees",
         "--model-type",
@@ -22789,7 +22795,7 @@ def ml_learning_curves(
     ),
 ) -> None:
     """Run grouped learning curves to decide whether more geometries are useful."""
-    from aeris.ml.learning_curves import parse_int_csv, run_learning_curves
+    from aeris.ml.learning_curves import parse_int_csv, resolve_target_columns_for_dataset, run_learning_curves
 
     try:
         if features is None and feature_preset is None and feature_set is None:
@@ -22799,7 +22805,13 @@ def ml_learning_curves(
             feature_preset=feature_preset,
             feature_set=feature_set,
         )
-        target_cols = parse_csv_list(targets, "--targets")
+        target_cols = resolve_target_columns_for_dataset(
+            dataset,
+            targets,
+            feature_columns=feature_cols,
+            group_column=group_column,
+            allow_forced=allow_forced,
+        )
         group_size_values = parse_int_csv(group_sizes, option_name="--group-sizes")
         seed_values = parse_int_csv(seeds, option_name="--seeds")
         model_params = load_model_params_json(model_params_json) if model_params_json is not None else None
@@ -22875,6 +22887,169 @@ def ml_learning_curves(
                 "seeds": seed_values,
                 "largest_test_r2_mean": largest.get("test_r2_mean_mean") if largest else None,
                 "largest_test_rmse_mean": largest.get("test_rmse_mean_mean") if largest else None,
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
+
+@ml_app.command("repeated-grouped-cv")
+def ml_repeated_grouped_cv(
+    dataset: Path = typer.Option(
+        ...,
+        "--dataset",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to a promoted aero/flyability ML dataset root.",
+    ),
+    features: str | None = typer.Option(
+        None,
+        "--features",
+        help="Comma-separated explicit feature columns. Use exactly one of --features, --feature-preset, or --feature-set.",
+    ),
+    feature_preset: str | None = typer.Option(
+        None,
+        "--feature-preset",
+        help="Named feature preset. Use exactly one of --features, --feature-preset, or --feature-set.",
+    ),
+    feature_set: str | None = typer.Option(
+        None,
+        "--feature-set",
+        help="Named feature set, e.g. bwb_control_physics_v1. Use exactly one of --features, --feature-preset, or --feature-set.",
+    ),
+    targets: str = typer.Option(
+        "aero_all",
+        "--targets",
+        help="Comma-separated target columns or target set: aero_basic, aero_all, flyability_all, all/numeric_all.",
+    ),
+    model_type: str = typer.Option(
+        "extra_trees",
+        "--model-type",
+        "--model",
+        help=f"Model type. Supported: {', '.join(list_model_types())}",
+    ),
+    seeds: str = typer.Option("101,202,303,404,505", "--seeds", help="Comma-separated split/training seeds."),
+    group_column: str = typer.Option("geometry_id", "--group-column", help="Grouping column for repeated grouped CV."),
+    train_fraction: float = typer.Option(0.7, "--train-fraction"),
+    val_fraction: float = typer.Option(0.15, "--val-fraction"),
+    test_fraction: float = typer.Option(0.15, "--test-fraction"),
+    allow_forced: bool = typer.Option(False, "--allow-forced", help=_ALLOW_FORCED_HELP),
+    model_params_json: Path | None = typer.Option(
+        None,
+        "--model-params-json",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Optional JSON object containing model constructor parameters.",
+    ),
+    output_dir: Path | None = typer.Option(
+        None,
+        "--output-dir",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional output directory. Defaults to <dataset>/repeated_grouped_cv.",
+    ),
+    plots: bool = typer.Option(True, "--plots/--no-plots", help="Write repeated-CV PNG plots."),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional workflow root to auto-record repeated grouped CV after success.",
+    ),
+) -> None:
+    """Run repeated grouped CV to test model score stability across geometry splits."""
+    from aeris.ml.learning_curves import parse_int_csv, resolve_target_columns_for_dataset
+    from aeris.ml.repeated_grouped_cv import run_repeated_grouped_cv
+
+    try:
+        if features is None and feature_preset is None and feature_set is None:
+            raise typer.BadParameter("--features, --feature-preset, or --feature-set is required.")
+        feature_cols = _resolve_feature_columns_cli(
+            features=features,
+            feature_preset=feature_preset,
+            feature_set=feature_set,
+        )
+        target_cols = resolve_target_columns_for_dataset(
+            dataset,
+            targets,
+            feature_columns=feature_cols,
+            group_column=group_column,
+            allow_forced=allow_forced,
+        )
+        seed_values = parse_int_csv(seeds, option_name="--seeds")
+        model_params = load_model_params_json(model_params_json) if model_params_json is not None else None
+
+        result = run_repeated_grouped_cv(
+            dataset_path=dataset,
+            feature_columns=feature_cols,
+            target_columns=target_cols,
+            model_type=model_type,
+            seeds=seed_values,
+            group_column=group_column,
+            train_fraction=train_fraction,
+            val_fraction=val_fraction,
+            test_fraction=test_fraction,
+            allow_forced=allow_forced,
+            model_params=model_params,
+            output_dir=output_dir,
+            write_plots=plots,
+            feature_set_name=feature_set,
+            feature_preset_name=feature_preset,
+        )
+    except typer.BadParameter:
+        raise
+    except Exception as exc:
+        fail_command("ML repeated-grouped-cv", exc)
+
+    artifacts = result.get("artifacts", {})
+    overall = result.get("overall_summary", {})
+    typer.echo("[AERIS] ML repeated grouped CV completed")
+    typer.echo(f"  dataset: {Path(dataset).expanduser().resolve()}")
+    typer.echo(f"  model_type: {model_type}")
+    typer.echo(f"  group_column: {group_column}")
+    typer.echo(f"  targets: {target_cols}")
+    typer.echo(f"  seeds: {seed_values}")
+    typer.echo(f"  output_dir: {artifacts.get('output_dir')}")
+    typer.echo(f"  repeated_grouped_cv_report_json: {artifacts.get('repeated_grouped_cv_report_json')}")
+    typer.echo(f"  repeated_grouped_cv_summary_md: {artifacts.get('repeated_grouped_cv_summary_md')}")
+    typer.echo(f"  repeated_grouped_cv_csv: {artifacts.get('repeated_grouped_cv_csv')}")
+    typer.echo(f"  repeated_grouped_cv_per_target_summary_csv: {artifacts.get('repeated_grouped_cv_per_target_summary_csv')}")
+    if artifacts.get("plots_dir"):
+        typer.echo(f"  plots_dir: {artifacts.get('plots_dir')}")
+    typer.echo(f"  test_r2_mean: {overall.get('test_r2_mean_mean')}")
+    typer.echo(f"  test_r2_std: {overall.get('test_r2_mean_std')}")
+    typer.echo(f"  test_rmse_mean: {overall.get('test_rmse_mean_mean')}")
+
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="ml_repeated_grouped_cv",
+            inputs=[dataset],
+            artifacts=[
+                artifacts.get("output_dir"),
+                artifacts.get("repeated_grouped_cv_report_json"),
+                artifacts.get("repeated_grouped_cv_summary_md"),
+                artifacts.get("repeated_grouped_cv_csv"),
+                artifacts.get("repeated_grouped_cv_per_target_summary_csv"),
+            ],
+            notes="ML repeated grouped CV completed.",
+            metadata={
+                "command": "aeris ml repeated-grouped-cv",
+                "model_type": model_type,
+                "feature_preset": feature_preset,
+                "feature_set": feature_set,
+                "targets": target_cols,
+                "seeds": seed_values,
+                "test_r2_mean": overall.get("test_r2_mean_mean"),
+                "test_r2_std": overall.get("test_r2_mean_std"),
+                "test_rmse_mean": overall.get("test_rmse_mean_mean"),
             },
         )
     except Exception as exc:
@@ -58580,7 +58755,7 @@ from aeris.ml.metrics import evaluate_regression_metrics
 from aeris.ml.model_registry import build_model, get_model_spec
 
 
-LEARNING_CURVES_SCHEMA_VERSION = "aeris.learning_curves.v1.1"
+LEARNING_CURVES_SCHEMA_VERSION = "aeris.learning_curves.v1.2"
 
 
 def parse_int_csv(value: str | Sequence[int], *, option_name: str = "--group-sizes") -> list[int]:
@@ -58643,6 +58818,191 @@ def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         for row in rows:
             writer.writerow({k: _to_jsonable(row.get(k)) for k in fieldnames})
 
+
+
+_TARGET_SPEC_ALIASES = {
+    "basic": "aero_basic",
+    "default": "aero_basic",
+    "aero": "aero_all",
+    "all_aero": "aero_all",
+    "all": "numeric_all",
+    "all_numeric": "numeric_all",
+}
+
+_AERO_BASIC_TARGETS = ("cl", "cd", "cm")
+
+_AERO_EXACT_TARGETS = {
+    "cl", "cd", "cm", "cy", "cn", "cl_roll", "l_over_d", "l_d", "ld",
+    "l_over_d_viscous", "cd_induced", "cdff", "cd_ff", "cd_profile",
+    "cd_total", "cdtot", "oswald_e", "e", "xnp", "x_np", "spiral_metric",
+}
+
+_AERO_DERIVATIVE_TARGETS = {
+    "cla", "clb", "clp", "clq", "clr",
+    "cda", "cdb", "cdp", "cdq", "cdr",
+    "cma", "cmb", "cmp", "cmq", "cmr",
+    "cya", "cyb", "cyp", "cyq", "cyr",
+    "cna", "cnb", "cnp", "cnq", "cnr",
+    "cxa", "cxb", "cxp", "cxq", "cxr", "cxu", "cxv", "cxw",
+    "czu", "czv", "czw", "cyu", "cyv", "cyw",
+    "clu", "clv", "clw", "cmu", "cmv", "cmw", "cnu", "cnv", "cnw",
+}
+
+_FLYABILITY_TARGET_TOKENS = (
+    "trim", "flyable", "red_flag", "pitch_authority", "control_sign", "delta_e_required",
+    "cm_delta", "delta_e_feasible", "stability", "static_margin",
+)
+
+_EXCLUDE_TARGET_EXACT = {
+    "alpha_deg", "alpha_deg_sq", "abs_alpha_deg", "beta_deg", "velocity_mps", "velocity_sq",
+    "altitude_m", "control_input_deg", "control_input_deg_sq", "alpha_x_control",
+    "delta_e_sym_deg", "delta_a_diff_deg", "diff_input_deg", "p_rad_s", "q_rad_s", "r_rad_s",
+    "re_number", "mach", "reynolds", "ncrit", "sampler_seed", "realization_seed",
+    "num_sections", "n_xsecs_aerosandbox", "geometry_qc_passed", "aero_qc_passed",
+    "promotion_ready", "elevon_start_frac", "elevon_end_frac", "elevon_hinge_frac",
+}
+
+_EXCLUDE_TARGET_PREFIXES = (
+    "c1_", "c2_", "c3_", "c4_", "b1_", "b2_", "b3_", "b_total",
+    "sw1", "sw2", "sw3", "twist_", "dihedral_", "split_", "sampler_",
+    "realization_", "generator_", "geometry_", "aero_", "diag_", "qc_",
+)
+
+_EXCLUDE_TARGET_TOKENS = (
+    "id", "name", "path", "dir", "status", "reason", "message", "config", "manifest",
+    "summary", "hash", "sha", "source", "artifact", "plot", "airfoil", "dataset",
+)
+
+
+def _is_numeric_series(series: pd.Series) -> bool:
+    numeric = pd.to_numeric(series, errors="coerce")
+    return int(numeric.notna().sum()) > 0
+
+
+def _target_finite_fraction(series: pd.Series) -> float:
+    numeric = pd.to_numeric(series, errors="coerce")
+    if len(numeric) == 0:
+        return 0.0
+    return float(numeric.notna().sum()) / float(len(numeric))
+
+
+def _looks_like_aero_target(column: str) -> bool:
+    key = column.lower().strip()
+    if key in _AERO_EXACT_TARGETS or key in _AERO_DERIVATIVE_TARGETS:
+        return True
+    if key.startswith("cd_") and not key.startswith("cdcl"):
+        return True
+    if key.startswith("cl_") and key not in {"cl_roll"}:
+        return True
+    if key.startswith(("cm_", "cy_", "cn_", "cx_", "cz_")):
+        return True
+    if key.endswith(("_per_rad", "_derivative")) and key.startswith(("cl", "cd", "cm", "cy", "cn", "cx", "cz")):
+        return True
+    return False
+
+
+def _looks_like_flyability_target(column: str) -> bool:
+    key = column.lower().strip()
+    return any(token in key for token in _FLYABILITY_TARGET_TOKENS)
+
+
+def _is_excluded_from_auto_targets(column: str, feature_columns: list[str], group_column: str | None) -> bool:
+    key = column.lower().strip()
+    feature_keys = {c.lower().strip() for c in feature_columns}
+    if key in feature_keys:
+        return True
+    if group_column is not None and key == group_column.lower().strip():
+        return True
+    if key in _EXCLUDE_TARGET_EXACT:
+        return True
+    if any(key.startswith(prefix) for prefix in _EXCLUDE_TARGET_PREFIXES):
+        return True
+    if any(token in key for token in _EXCLUDE_TARGET_TOKENS):
+        return True
+    return False
+
+
+def resolve_target_columns_from_dataframe(
+    df: pd.DataFrame,
+    target_spec: str | list[str] | tuple[str, ...],
+    *,
+    feature_columns: list[str] | None = None,
+    group_column: str | None = "geometry_id",
+    min_finite_fraction: float = 1.0,
+) -> list[str]:
+    """Resolve --targets specs such as aero_basic, aero_all, flyability_all, or all/numeric_all.
+
+    Auto target sets intentionally exclude metadata, features, operating conditions,
+    design variables, IDs, paths, and columns with missing/non-numeric values. This
+    keeps broad learning-curve batches from silently training on junk columns.
+    """
+    feature_columns = list(feature_columns or [])
+    if isinstance(target_spec, str):
+        raw = target_spec.strip()
+        parts = [p.strip() for p in raw.split(",") if p.strip()]
+    else:
+        parts = [str(p).strip() for p in target_spec if str(p).strip()]
+    if not parts:
+        raise ValueError("At least one target must be supplied.")
+    if len(parts) > 1:
+        missing = [p for p in parts if p not in df.columns]
+        if missing:
+            raise ValueError(f"Requested target columns are missing: {missing}")
+        return parts
+
+    spec = _TARGET_SPEC_ALIASES.get(parts[0].lower(), parts[0].lower())
+    if spec not in {"aero_basic", "aero_all", "flyability_all", "numeric_all"}:
+        if parts[0] not in df.columns:
+            raise ValueError(f"Requested target column is missing: {parts[0]}")
+        return [parts[0]]
+
+    if spec == "aero_basic":
+        targets = [c for c in _AERO_BASIC_TARGETS if c in df.columns]
+    else:
+        targets = []
+        for col in df.columns:
+            if _is_excluded_from_auto_targets(col, feature_columns, group_column):
+                continue
+            if not _is_numeric_series(df[col]):
+                continue
+            if _target_finite_fraction(df[col]) < float(min_finite_fraction):
+                continue
+            if spec == "aero_all" and not _looks_like_aero_target(col):
+                continue
+            if spec == "flyability_all" and not _looks_like_flyability_target(col):
+                continue
+            targets.append(col)
+    if not targets:
+        raise ValueError(f"Target spec {parts[0]!r} resolved to no usable target columns.")
+    return targets
+
+
+def resolve_target_columns_for_dataset(
+    dataset_path: Path,
+    target_spec: str | list[str] | tuple[str, ...],
+    *,
+    feature_columns: list[str] | None = None,
+    group_column: str | None = "geometry_id",
+    allow_forced: bool = False,
+    min_finite_fraction: float = 1.0,
+) -> list[str]:
+    """Resolve broad target specs against a promoted dataset root."""
+    from aeris.dataset.promoted_dataset import require_promoted_aero_dataset
+
+    dataset_path = Path(dataset_path).expanduser().resolve()
+    promoted_info = require_promoted_aero_dataset(dataset_root=dataset_path, allow_forced=allow_forced)
+    curated = promoted_info.get("curated_aero_dataset_csv") or dataset_path / "curated_aero_dataset.csv"
+    curated_path = Path(curated).expanduser().resolve()
+    if not curated_path.exists():
+        raise FileNotFoundError(f"Missing curated dataset CSV for target resolution: {curated_path}")
+    df = pd.read_csv(curated_path)
+    return resolve_target_columns_from_dataframe(
+        df,
+        target_spec,
+        feature_columns=feature_columns,
+        group_column=group_column,
+        min_finite_fraction=min_finite_fraction,
+    )
 
 def _stats(values: Iterable[float | None]) -> dict[str, float | None]:
     vals = [float(v) for v in values if v is not None and np.isfinite(float(v))]
@@ -64187,6 +64547,363 @@ __all__ = [
     "PredictionConfidenceResult",
     "predict_with_confidence",
 ]
+
+===== FILE: src/aeris/ml/repeated_grouped_cv.py =====
+from __future__ import annotations
+
+import csv
+from pathlib import Path
+from statistics import mean, pstdev
+from typing import Any, Sequence
+
+import numpy as np
+import pandas as pd
+
+from aeris.dataset.splitting import split_dataset
+from aeris.ml.learning_curves import (
+    _evaluate_model,
+    _flatten_metrics_row,
+    _make_output_dir,
+    _stats,
+    _to_jsonable,
+    _write_csv,
+    _write_json,
+    parse_int_csv,
+    resolve_target_columns_for_dataset,
+)
+from aeris.ml.model_registry import build_model, get_model_spec
+from aeris.ml.learning_curves import _materialize_dataset_for_learning_curves
+
+
+REPEATED_GROUPED_CV_SCHEMA_VERSION = "aeris.repeated_grouped_cv.v1"
+
+
+def _classify_cv_target(row: dict[str, Any]) -> str:
+    r2 = row.get("test_r2_mean")
+    std = row.get("test_r2_std")
+    gap = row.get("train_test_r2_gap_mean")
+    if r2 is None:
+        return "unknown"
+    r2 = float(r2)
+    std = 0.0 if std is None else float(std)
+    gap = 0.0 if gap is None else float(gap)
+    if r2 < 0.5:
+        return "weak"
+    if r2 < 0.8:
+        return "moderate"
+    if gap > 0.25:
+        return "overfit_risk"
+    if std > 0.10:
+        return "unstable"
+    return "strong_stable"
+
+
+def _target_recommendation(target: str, row: dict[str, Any]) -> str:
+    state = row.get("cv_state", "unknown")
+    r2 = row.get("test_r2_mean")
+    std = row.get("test_r2_std")
+    gap = row.get("train_test_r2_gap_mean")
+    value = "unknown" if r2 is None else f"{float(r2):.3f}"
+    spread = "unknown" if std is None else f"{float(std):.3f}"
+    gap_s = "unknown" if gap is None else f"{float(gap):.3f}"
+    if state == "weak":
+        return f"Target '{target}' is weak across repeated grouped CV (test R²={value}); do not promote this target before feature/regime diagnosis."
+    if state == "moderate":
+        return f"Target '{target}' is moderate across repeated grouped CV (test R²={value}); useful for pilot insight but not strong evidence yet."
+    if state == "overfit_risk":
+        return f"Target '{target}' has strong mean score but a large train-test gap ({gap_s}); inspect overfit or geometry-distribution mismatch."
+    if state == "unstable":
+        return f"Target '{target}' has good mean score but high split variability (test R² std={spread}); run more geometries or repeated splits."
+    if state == "strong_stable":
+        return f"Target '{target}' is strong and stable across grouped splits (test R²={value}, std={spread})."
+    return f"Target '{target}' could not be classified; inspect repeated-CV rows."
+
+
+def _build_overall_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    computed = [r for r in rows if r.get("status") == "computed"]
+    out: dict[str, Any] = {"n_runs": len(computed)}
+    for split_name in ["train", "val", "test"]:
+        for metric in ["r2_mean", "rmse_mean", "mae_mean", "max_abs_error_mean"]:
+            s = _stats(r.get(f"{split_name}_{metric}") for r in computed)
+            out[f"{split_name}_{metric}_mean"] = s["mean"]
+            out[f"{split_name}_{metric}_std"] = s["std"]
+            out[f"{split_name}_{metric}_min"] = s["min"]
+            out[f"{split_name}_{metric}_max"] = s["max"]
+    if out.get("train_r2_mean_mean") is not None and out.get("test_r2_mean_mean") is not None:
+        out["train_test_r2_gap_mean"] = float(out["train_r2_mean_mean"]) - float(out["test_r2_mean_mean"])
+    else:
+        out["train_test_r2_gap_mean"] = None
+    return out
+
+
+def _build_per_target_summary(rows: list[dict[str, Any]], target_columns: list[str]) -> list[dict[str, Any]]:
+    computed = [r for r in rows if r.get("status") == "computed"]
+    out: list[dict[str, Any]] = []
+    for target in target_columns:
+        row: dict[str, Any] = {"target": target, "n_runs": len(computed)}
+        for split_name in ["train", "val", "test"]:
+            for metric in ["r2", "rmse", "mae", "max_abs_error"]:
+                key = f"{split_name}_{metric}__{target}"
+                s = _stats(r.get(key) for r in computed)
+                row[f"{split_name}_{metric}_mean"] = s["mean"]
+                row[f"{split_name}_{metric}_std"] = s["std"]
+                row[f"{split_name}_{metric}_min"] = s["min"]
+                row[f"{split_name}_{metric}_max"] = s["max"]
+        if row.get("train_r2_mean") is not None and row.get("test_r2_mean") is not None:
+            row["train_test_r2_gap_mean"] = float(row["train_r2_mean"]) - float(row["test_r2_mean"])
+        else:
+            row["train_test_r2_gap_mean"] = None
+        row["cv_state"] = _classify_cv_target(row)
+        row["recommendation"] = _target_recommendation(target, row)
+        out.append(row)
+    return out
+
+
+def _recommendations(overall: dict[str, Any], per_target: list[dict[str, Any]]) -> list[str]:
+    recs: list[str] = []
+    test_r2 = overall.get("test_r2_mean_mean")
+    test_std = overall.get("test_r2_mean_std")
+    gap = overall.get("train_test_r2_gap_mean")
+    if test_r2 is None:
+        recs.append("No repeated-CV score was computed. Check split sizes and selected targets.")
+    elif float(test_r2) >= 0.8:
+        recs.append(f"Overall repeated grouped-CV test R² is strong ({float(test_r2):.3f}); inspect per-target stability before promotion.")
+    elif float(test_r2) >= 0.5:
+        recs.append(f"Overall repeated grouped-CV test R² is moderate ({float(test_r2):.3f}); keep as pilot evidence, not final evidence.")
+    else:
+        recs.append(f"Overall repeated grouped-CV test R² is weak ({float(test_r2):.3f}); do not promote before diagnosis.")
+    if test_std is not None and float(test_std) > 0.10:
+        recs.append(f"Overall score varies strongly across grouped splits (test R² std={float(test_std):.3f}); increase geometry count or inspect family leakage/distribution shift.")
+    if gap is not None and float(gap) > 0.25:
+        recs.append(f"Overall train-test R² gap is large ({float(gap):.3f}); possible overfit or grouped-distribution mismatch.")
+    for row in per_target:
+        recs.append(str(row.get("recommendation")))
+    return recs
+
+
+def _write_summary_markdown(path: Path, report: dict[str, Any]) -> None:
+    cfg = report.get("config", {})
+    overall = report.get("overall_summary", {})
+    lines: list[str] = [
+        "# AERIS Repeated Grouped CV Summary",
+        "",
+        "## Run",
+        f"- dataset: `{cfg.get('dataset_path')}`",
+        f"- model_type: `{cfg.get('model_type')}`",
+        f"- group_column: `{cfg.get('group_column')}`",
+        f"- seeds: `{cfg.get('seeds')}`",
+        f"- targets: `{cfg.get('target_columns')}`",
+        "",
+        "## Overall repeated-CV result",
+        f"- runs: `{overall.get('n_runs')}`",
+        f"- test R² mean/std: `{overall.get('test_r2_mean_mean')}` / `{overall.get('test_r2_mean_std')}`",
+        f"- test RMSE mean/std: `{overall.get('test_rmse_mean_mean')}` / `{overall.get('test_rmse_mean_std')}`",
+        f"- train-test R² gap mean: `{overall.get('train_test_r2_gap_mean')}`",
+        "",
+        "## Per-target stability",
+    ]
+    per_target = report.get("per_target_summary", [])
+    if per_target:
+        lines.append("| target | state | test R² mean | test R² std | test RMSE mean | train-test gap | recommendation |")
+        lines.append("|---|---:|---:|---:|---:|---:|---|")
+        for row in per_target:
+            lines.append(
+                f"| {row.get('target')} | {row.get('cv_state')} | {row.get('test_r2_mean')} | {row.get('test_r2_std')} | {row.get('test_rmse_mean')} | {row.get('train_test_r2_gap_mean')} | {row.get('recommendation')} |"
+            )
+    else:
+        lines.append("- no per-target summary available")
+    lines.append("")
+    lines.append("## Recommendations")
+    for rec in report.get("operator_recommendations", []):
+        lines.append(f"- {rec}")
+    lines.append("")
+    lines.append("## Notes")
+    lines.append("- Repeated grouped CV repeats leakage-safe geometry-level splits across seeds.")
+    lines.append("- Use this after learning curves: learning curves test data need; repeated CV tests score stability.")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _plot_repeated_cv(summary: dict[str, Any], per_target: list[dict[str, Any]], rows: list[dict[str, Any]], output_dir: Path) -> list[dict[str, Any]]:
+    artifacts: list[dict[str, Any]] = []
+    plots_dir = output_dir / "plots"
+    plots_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        import matplotlib.pyplot as plt
+
+        if per_target:
+            labels = [str(r.get("target")) for r in per_target]
+            xs = np.arange(len(labels))
+            means = [np.nan if r.get("test_r2_mean") is None else float(r.get("test_r2_mean")) for r in per_target]
+            stds = [0.0 if r.get("test_r2_std") is None else float(r.get("test_r2_std")) for r in per_target]
+            fig, ax = plt.subplots(figsize=(9, 5))
+            ax.bar(xs, means, yerr=stds, capsize=4)
+            ax.axhline(0.8, linewidth=1, linestyle="--")
+            ax.axhline(0.5, linewidth=1, linestyle=":")
+            ax.set_xticks(xs)
+            ax.set_xticklabels(labels, rotation=30, ha="right")
+            ax.set_ylabel("Repeated grouped-CV test R²")
+            ax.set_title("Per-target repeated grouped-CV stability")
+            ax.grid(True, axis="y", alpha=0.3)
+            fig.tight_layout()
+            path = plots_dir / "per_target_repeated_cv_r2.png"
+            fig.savefig(path, dpi=180)
+            plt.close(fig)
+            artifacts.append({"kind": "per_target_repeated_cv_r2", "status": "written", "path": str(path)})
+
+        computed = [r for r in rows if r.get("status") == "computed"]
+        if computed:
+            seeds = [int(r.get("seed")) for r in computed]
+            scores = [np.nan if r.get("test_r2_mean") is None else float(r.get("test_r2_mean")) for r in computed]
+            fig, ax = plt.subplots(figsize=(8, 5))
+            ax.plot(seeds, scores, marker="o")
+            ax.axhline(float(summary.get("test_r2_mean_mean") or np.nan), linewidth=1, linestyle="--")
+            ax.set_xlabel("Seed")
+            ax.set_ylabel("Overall test R²")
+            ax.set_title("Repeated grouped-CV score variability")
+            ax.grid(True, alpha=0.3)
+            fig.tight_layout()
+            path = plots_dir / "split_score_variability.png"
+            fig.savefig(path, dpi=180)
+            plt.close(fig)
+            artifacts.append({"kind": "split_score_variability", "status": "written", "path": str(path)})
+    except Exception as exc:  # pragma: no cover - plotting should not block reports
+        artifacts.append({"kind": "plot_error", "status": "failed", "reason": str(exc)})
+    return artifacts
+
+
+def run_repeated_grouped_cv(
+    *,
+    dataset_path: Path,
+    feature_columns: list[str],
+    target_columns: list[str],
+    model_type: str = "extra_trees",
+    seeds: Sequence[int] = (101, 202, 303, 404, 505),
+    group_column: str = "geometry_id",
+    train_fraction: float = 0.7,
+    val_fraction: float = 0.15,
+    test_fraction: float = 0.15,
+    allow_forced: bool = False,
+    model_params: dict[str, Any] | None = None,
+    output_dir: Path | None = None,
+    write_plots: bool = True,
+    feature_set_name: str | None = None,
+    feature_preset_name: str | None = None,
+) -> dict[str, Any]:
+    """Run repeated grouped train/val/test splits and summarize score stability."""
+    dataset_path = Path(dataset_path).expanduser().resolve()
+    seeds = parse_int_csv(list(seeds), option_name="seeds")
+    spec = get_model_spec(model_type)
+    if output_dir is None:
+        output_dir = dataset_path / "repeated_grouped_cv"
+    else:
+        output_dir = Path(output_dir).expanduser().resolve()
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    df, final_features, materialization = _materialize_dataset_for_learning_curves(
+        dataset_path=dataset_path,
+        feature_columns=feature_columns,
+        target_columns=target_columns,
+        allow_forced=allow_forced,
+        feature_set_name=feature_set_name,
+        group_column=group_column,
+    )
+
+    rows: list[dict[str, Any]] = []
+    split_metadata: list[dict[str, Any]] = []
+    for seed in seeds:
+        split = split_dataset(
+            df,
+            method="grouped",  # type: ignore[arg-type]
+            group_column=group_column,
+            train_fraction=train_fraction,
+            val_fraction=val_fraction,
+            test_fraction=test_fraction,
+            random_seed=int(seed),
+        )
+        split_metadata.append({"seed": int(seed), "metadata": split.metadata})
+        row: dict[str, Any] = {
+            "seed": int(seed),
+            "status": "computed",
+            "n_train_rows": int(len(split.train_df)),
+            "n_val_rows": int(len(split.val_df)),
+            "n_test_rows": int(len(split.test_df)),
+            "n_train_groups": int(split.train_df[group_column].nunique()) if group_column in split.train_df.columns else None,
+            "n_val_groups": int(split.val_df[group_column].nunique()) if group_column in split.val_df.columns else None,
+            "n_test_groups": int(split.test_df[group_column].nunique()) if group_column in split.test_df.columns else None,
+        }
+        model = build_model(model_type=model_type, random_seed=int(seed), model_params=model_params)
+        metrics = _evaluate_model(
+            model=model,
+            train_df=split.train_df,
+            val_df=split.val_df,
+            test_df=split.test_df,
+            feature_columns=final_features,
+            target_columns=target_columns,
+        )
+        row.update(_flatten_metrics_row(prefix="train", metrics=metrics, target_columns=target_columns))
+        row.update(_flatten_metrics_row(prefix="val", metrics=metrics, target_columns=target_columns))
+        row.update(_flatten_metrics_row(prefix="test", metrics=metrics, target_columns=target_columns))
+        rows.append(row)
+
+    overall_summary = _build_overall_summary(rows)
+    per_target_summary = _build_per_target_summary(rows, target_columns)
+    plot_artifacts = _plot_repeated_cv(overall_summary, per_target_summary, rows, output_dir) if write_plots else []
+
+    rows_csv = output_dir / "repeated_grouped_cv.csv"
+    summary_csv = output_dir / "repeated_grouped_cv_summary.csv"
+    per_target_csv = output_dir / "repeated_grouped_cv_per_target_summary.csv"
+    report_json = output_dir / "repeated_grouped_cv_report.json"
+    summary_md = output_dir / "repeated_grouped_cv_summary.md"
+
+    report: dict[str, Any] = {
+        "schema_version": REPEATED_GROUPED_CV_SCHEMA_VERSION,
+        "status": "completed",
+        "config": {
+            "dataset_path": str(dataset_path),
+            "feature_columns": list(final_features),
+            "target_columns": list(target_columns),
+            "feature_set_name": feature_set_name,
+            "feature_preset_name": feature_preset_name,
+            "model_type": model_type,
+            "model_display_name": spec.display_name,
+            "model_family_name": spec.family_name,
+            "model_params": dict(model_params or {}),
+            "group_column": group_column,
+            "seeds": list(seeds),
+            "train_fraction": train_fraction,
+            "val_fraction": val_fraction,
+            "test_fraction": test_fraction,
+            "allow_forced": allow_forced,
+        },
+        "shape": {
+            "n_rows": int(len(df)),
+            "n_features": int(len(final_features)),
+            "n_targets": int(len(target_columns)),
+            "n_groups": int(df[group_column].nunique()) if group_column in df.columns else None,
+        },
+        "materialization": materialization,
+        "split_metadata": split_metadata,
+        "rows": rows,
+        "overall_summary": overall_summary,
+        "per_target_summary": per_target_summary,
+        "operator_recommendations": _recommendations(overall_summary, per_target_summary),
+        "plot_artifacts": plot_artifacts,
+        "artifacts": {
+            "output_dir": str(output_dir),
+            "repeated_grouped_cv_csv": str(rows_csv),
+            "repeated_grouped_cv_summary_csv": str(summary_csv),
+            "repeated_grouped_cv_per_target_summary_csv": str(per_target_csv),
+            "repeated_grouped_cv_report_json": str(report_json),
+            "repeated_grouped_cv_summary_md": str(summary_md),
+            "plots_dir": str(output_dir / "plots") if write_plots else None,
+        },
+    }
+    _write_csv(rows_csv, rows)
+    _write_csv(summary_csv, [overall_summary])
+    _write_csv(per_target_csv, per_target_summary)
+    _write_summary_markdown(summary_md, report)
+    _write_json(report_json, report)
+    return report
 
 ===== FILE: src/aeris/ml/schema.py =====
 from __future__ import annotations
@@ -95042,7 +95759,7 @@ def test_run_learning_curves_on_dataframe_writes_artifacts(tmp_path) -> None:
         write_plots=True,
     )
 
-    assert result["schema_version"] == "aeris.learning_curves.v1.1"
+    assert result["schema_version"] == "aeris.learning_curves.v1.2"
     assert result["status"] == "completed"
     assert len(result["summary_rows"]) == 2
     assert result["summary_rows"][-1]["group_size"] == 4
@@ -95089,6 +95806,31 @@ def test_learning_curves_per_target_summary_classifies_weak_target(tmp_path) -> 
     by_target = {row["target"]: row for row in result["per_target_summary"]}
     assert by_target["noisy"]["learning_state"] in {"weak", "moderate", "overfit_risk", "unknown"}
     assert by_target["noisy"]["recommendation"]
+
+
+
+def test_resolve_target_columns_from_dataframe_auto_sets() -> None:
+    from aeris.ml.learning_curves import resolve_target_columns_from_dataframe
+
+    df = _synthetic_grouped_df()
+    df["l_over_d"] = df["cl"] / df["cd"]
+    df["velocity_mps"] = 28.0
+    df["config_name"] = "demo"
+
+    targets = resolve_target_columns_from_dataframe(
+        df,
+        "aero_all",
+        feature_columns=["c1_m", "b_total_m", "alpha_deg"],
+        group_column="geometry_id",
+    )
+
+    assert "cl" in targets
+    assert "cd" in targets
+    assert "cm" in targets
+    assert "l_over_d" in targets
+    assert "alpha_deg" not in targets
+    assert "velocity_mps" not in targets
+    assert "geometry_id" not in targets
 
 ===== FILE: tests/ml/test_metrics_and_fingerprints.py =====
 from __future__ import annotations
@@ -96927,6 +97669,46 @@ def test_quality_cli_commands(tmp_path: Path) -> None:
     assert confidence_result.exit_code == 0, confidence_result.output
     assert "ML prediction with confidence completed" in confidence_result.output
     assert (conf_out / "prediction_confidence.csv").exists()
+
+===== FILE: tests/ml/test_repeated_grouped_cv.py =====
+from __future__ import annotations
+
+from aeris.ml.repeated_grouped_cv import run_repeated_grouped_cv
+from tests.ml.test_learning_curves import _synthetic_grouped_df
+
+
+def test_run_repeated_grouped_cv_on_dataframe_like_dataset(tmp_path, monkeypatch) -> None:
+    # Use the lower-level materialization seam by monkeypatching the dataset materializer.
+    import aeris.ml.repeated_grouped_cv as rcv
+
+    df = _synthetic_grouped_df()
+
+    def fake_materialize_dataset(**kwargs):
+        return df, ["c1_m", "b_total_m", "alpha_deg"], {"fake": True}
+
+    monkeypatch.setattr(rcv, "_materialize_dataset_for_learning_curves", fake_materialize_dataset)
+
+    result = run_repeated_grouped_cv(
+        dataset_path=tmp_path,
+        feature_columns=["c1_m", "b_total_m", "alpha_deg"],
+        target_columns=["cl", "cd", "cm"],
+        model_type="linear_regression",
+        seeds=[11, 22, 33],
+        group_column="geometry_id",
+        train_fraction=0.6,
+        val_fraction=0.2,
+        test_fraction=0.2,
+        output_dir=tmp_path / "rcv",
+        write_plots=True,
+    )
+
+    assert result["schema_version"] == "aeris.repeated_grouped_cv.v1"
+    assert result["status"] == "completed"
+    assert result["overall_summary"]["n_runs"] == 3
+    assert len(result["per_target_summary"]) == 3
+    assert (tmp_path / "rcv" / "repeated_grouped_cv_report.json").exists()
+    assert (tmp_path / "rcv" / "repeated_grouped_cv_per_target_summary.csv").exists()
+    assert any(p.get("kind") == "per_target_repeated_cv_r2" for p in result["plot_artifacts"])
 
 ===== FILE: tests/ml/test_schema_and_feature_presets.py =====
 from __future__ import annotations

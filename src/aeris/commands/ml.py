@@ -258,7 +258,13 @@ def ml_validate_feature_set(
     from aeris.ml.feature_sets import FeatureSetError, validate_promoted_dataset_feature_set
 
     try:
-        target_cols = parse_csv_list(targets, "--targets") if targets else []
+        target_cols = resolve_target_columns_for_dataset(
+            dataset,
+            targets,
+            feature_columns=feature_cols,
+            group_column=group_column,
+            allow_forced=allow_forced,
+        ) if targets else []
         result = validate_promoted_dataset_feature_set(
             dataset_path=dataset,
             feature_set_name=feature_set,
@@ -2491,7 +2497,7 @@ def ml_learning_curves(
         "--feature-set",
         help="Named feature set, e.g. bwb_control_physics_v1. Use exactly one of --features, --feature-preset, or --feature-set.",
     ),
-    targets: str = typer.Option(..., "--targets", help="Comma-separated target columns, e.g. cl,cd,cm."),
+    targets: str = typer.Option("aero_all", "--targets", help="Comma-separated target columns or target set: aero_basic, aero_all, flyability_all, all/numeric_all."),
     model_type: str = typer.Option(
         "extra_trees",
         "--model-type",
@@ -2539,7 +2545,7 @@ def ml_learning_curves(
     ),
 ) -> None:
     """Run grouped learning curves to decide whether more geometries are useful."""
-    from aeris.ml.learning_curves import parse_int_csv, run_learning_curves
+    from aeris.ml.learning_curves import parse_int_csv, resolve_target_columns_for_dataset, run_learning_curves
 
     try:
         if features is None and feature_preset is None and feature_set is None:
@@ -2549,7 +2555,13 @@ def ml_learning_curves(
             feature_preset=feature_preset,
             feature_set=feature_set,
         )
-        target_cols = parse_csv_list(targets, "--targets")
+        target_cols = resolve_target_columns_for_dataset(
+            dataset,
+            targets,
+            feature_columns=feature_cols,
+            group_column=group_column,
+            allow_forced=allow_forced,
+        )
         group_size_values = parse_int_csv(group_sizes, option_name="--group-sizes")
         seed_values = parse_int_csv(seeds, option_name="--seeds")
         model_params = load_model_params_json(model_params_json) if model_params_json is not None else None
@@ -2625,6 +2637,169 @@ def ml_learning_curves(
                 "seeds": seed_values,
                 "largest_test_r2_mean": largest.get("test_r2_mean_mean") if largest else None,
                 "largest_test_rmse_mean": largest.get("test_rmse_mean_mean") if largest else None,
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
+
+@ml_app.command("repeated-grouped-cv")
+def ml_repeated_grouped_cv(
+    dataset: Path = typer.Option(
+        ...,
+        "--dataset",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to a promoted aero/flyability ML dataset root.",
+    ),
+    features: str | None = typer.Option(
+        None,
+        "--features",
+        help="Comma-separated explicit feature columns. Use exactly one of --features, --feature-preset, or --feature-set.",
+    ),
+    feature_preset: str | None = typer.Option(
+        None,
+        "--feature-preset",
+        help="Named feature preset. Use exactly one of --features, --feature-preset, or --feature-set.",
+    ),
+    feature_set: str | None = typer.Option(
+        None,
+        "--feature-set",
+        help="Named feature set, e.g. bwb_control_physics_v1. Use exactly one of --features, --feature-preset, or --feature-set.",
+    ),
+    targets: str = typer.Option(
+        "aero_all",
+        "--targets",
+        help="Comma-separated target columns or target set: aero_basic, aero_all, flyability_all, all/numeric_all.",
+    ),
+    model_type: str = typer.Option(
+        "extra_trees",
+        "--model-type",
+        "--model",
+        help=f"Model type. Supported: {', '.join(list_model_types())}",
+    ),
+    seeds: str = typer.Option("101,202,303,404,505", "--seeds", help="Comma-separated split/training seeds."),
+    group_column: str = typer.Option("geometry_id", "--group-column", help="Grouping column for repeated grouped CV."),
+    train_fraction: float = typer.Option(0.7, "--train-fraction"),
+    val_fraction: float = typer.Option(0.15, "--val-fraction"),
+    test_fraction: float = typer.Option(0.15, "--test-fraction"),
+    allow_forced: bool = typer.Option(False, "--allow-forced", help=_ALLOW_FORCED_HELP),
+    model_params_json: Path | None = typer.Option(
+        None,
+        "--model-params-json",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Optional JSON object containing model constructor parameters.",
+    ),
+    output_dir: Path | None = typer.Option(
+        None,
+        "--output-dir",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional output directory. Defaults to <dataset>/repeated_grouped_cv.",
+    ),
+    plots: bool = typer.Option(True, "--plots/--no-plots", help="Write repeated-CV PNG plots."),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional workflow root to auto-record repeated grouped CV after success.",
+    ),
+) -> None:
+    """Run repeated grouped CV to test model score stability across geometry splits."""
+    from aeris.ml.learning_curves import parse_int_csv, resolve_target_columns_for_dataset
+    from aeris.ml.repeated_grouped_cv import run_repeated_grouped_cv
+
+    try:
+        if features is None and feature_preset is None and feature_set is None:
+            raise typer.BadParameter("--features, --feature-preset, or --feature-set is required.")
+        feature_cols = _resolve_feature_columns_cli(
+            features=features,
+            feature_preset=feature_preset,
+            feature_set=feature_set,
+        )
+        target_cols = resolve_target_columns_for_dataset(
+            dataset,
+            targets,
+            feature_columns=feature_cols,
+            group_column=group_column,
+            allow_forced=allow_forced,
+        )
+        seed_values = parse_int_csv(seeds, option_name="--seeds")
+        model_params = load_model_params_json(model_params_json) if model_params_json is not None else None
+
+        result = run_repeated_grouped_cv(
+            dataset_path=dataset,
+            feature_columns=feature_cols,
+            target_columns=target_cols,
+            model_type=model_type,
+            seeds=seed_values,
+            group_column=group_column,
+            train_fraction=train_fraction,
+            val_fraction=val_fraction,
+            test_fraction=test_fraction,
+            allow_forced=allow_forced,
+            model_params=model_params,
+            output_dir=output_dir,
+            write_plots=plots,
+            feature_set_name=feature_set,
+            feature_preset_name=feature_preset,
+        )
+    except typer.BadParameter:
+        raise
+    except Exception as exc:
+        fail_command("ML repeated-grouped-cv", exc)
+
+    artifacts = result.get("artifacts", {})
+    overall = result.get("overall_summary", {})
+    typer.echo("[AERIS] ML repeated grouped CV completed")
+    typer.echo(f"  dataset: {Path(dataset).expanduser().resolve()}")
+    typer.echo(f"  model_type: {model_type}")
+    typer.echo(f"  group_column: {group_column}")
+    typer.echo(f"  targets: {target_cols}")
+    typer.echo(f"  seeds: {seed_values}")
+    typer.echo(f"  output_dir: {artifacts.get('output_dir')}")
+    typer.echo(f"  repeated_grouped_cv_report_json: {artifacts.get('repeated_grouped_cv_report_json')}")
+    typer.echo(f"  repeated_grouped_cv_summary_md: {artifacts.get('repeated_grouped_cv_summary_md')}")
+    typer.echo(f"  repeated_grouped_cv_csv: {artifacts.get('repeated_grouped_cv_csv')}")
+    typer.echo(f"  repeated_grouped_cv_per_target_summary_csv: {artifacts.get('repeated_grouped_cv_per_target_summary_csv')}")
+    if artifacts.get("plots_dir"):
+        typer.echo(f"  plots_dir: {artifacts.get('plots_dir')}")
+    typer.echo(f"  test_r2_mean: {overall.get('test_r2_mean_mean')}")
+    typer.echo(f"  test_r2_std: {overall.get('test_r2_mean_std')}")
+    typer.echo(f"  test_rmse_mean: {overall.get('test_rmse_mean_mean')}")
+
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="ml_repeated_grouped_cv",
+            inputs=[dataset],
+            artifacts=[
+                artifacts.get("output_dir"),
+                artifacts.get("repeated_grouped_cv_report_json"),
+                artifacts.get("repeated_grouped_cv_summary_md"),
+                artifacts.get("repeated_grouped_cv_csv"),
+                artifacts.get("repeated_grouped_cv_per_target_summary_csv"),
+            ],
+            notes="ML repeated grouped CV completed.",
+            metadata={
+                "command": "aeris ml repeated-grouped-cv",
+                "model_type": model_type,
+                "feature_preset": feature_preset,
+                "feature_set": feature_set,
+                "targets": target_cols,
+                "seeds": seed_values,
+                "test_r2_mean": overall.get("test_r2_mean_mean"),
+                "test_r2_std": overall.get("test_r2_mean_std"),
+                "test_rmse_mean": overall.get("test_rmse_mean_mean"),
             },
         )
     except Exception as exc:

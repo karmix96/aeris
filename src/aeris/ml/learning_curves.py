@@ -18,7 +18,7 @@ from aeris.ml.metrics import evaluate_regression_metrics
 from aeris.ml.model_registry import build_model, get_model_spec
 
 
-LEARNING_CURVES_SCHEMA_VERSION = "aeris.learning_curves.v1.1"
+LEARNING_CURVES_SCHEMA_VERSION = "aeris.learning_curves.v1.2"
 
 
 def parse_int_csv(value: str | Sequence[int], *, option_name: str = "--group-sizes") -> list[int]:
@@ -81,6 +81,191 @@ def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         for row in rows:
             writer.writerow({k: _to_jsonable(row.get(k)) for k in fieldnames})
 
+
+
+_TARGET_SPEC_ALIASES = {
+    "basic": "aero_basic",
+    "default": "aero_basic",
+    "aero": "aero_all",
+    "all_aero": "aero_all",
+    "all": "numeric_all",
+    "all_numeric": "numeric_all",
+}
+
+_AERO_BASIC_TARGETS = ("cl", "cd", "cm")
+
+_AERO_EXACT_TARGETS = {
+    "cl", "cd", "cm", "cy", "cn", "cl_roll", "l_over_d", "l_d", "ld",
+    "l_over_d_viscous", "cd_induced", "cdff", "cd_ff", "cd_profile",
+    "cd_total", "cdtot", "oswald_e", "e", "xnp", "x_np", "spiral_metric",
+}
+
+_AERO_DERIVATIVE_TARGETS = {
+    "cla", "clb", "clp", "clq", "clr",
+    "cda", "cdb", "cdp", "cdq", "cdr",
+    "cma", "cmb", "cmp", "cmq", "cmr",
+    "cya", "cyb", "cyp", "cyq", "cyr",
+    "cna", "cnb", "cnp", "cnq", "cnr",
+    "cxa", "cxb", "cxp", "cxq", "cxr", "cxu", "cxv", "cxw",
+    "czu", "czv", "czw", "cyu", "cyv", "cyw",
+    "clu", "clv", "clw", "cmu", "cmv", "cmw", "cnu", "cnv", "cnw",
+}
+
+_FLYABILITY_TARGET_TOKENS = (
+    "trim", "flyable", "red_flag", "pitch_authority", "control_sign", "delta_e_required",
+    "cm_delta", "delta_e_feasible", "stability", "static_margin",
+)
+
+_EXCLUDE_TARGET_EXACT = {
+    "alpha_deg", "alpha_deg_sq", "abs_alpha_deg", "beta_deg", "velocity_mps", "velocity_sq",
+    "altitude_m", "control_input_deg", "control_input_deg_sq", "alpha_x_control",
+    "delta_e_sym_deg", "delta_a_diff_deg", "diff_input_deg", "p_rad_s", "q_rad_s", "r_rad_s",
+    "re_number", "mach", "reynolds", "ncrit", "sampler_seed", "realization_seed",
+    "num_sections", "n_xsecs_aerosandbox", "geometry_qc_passed", "aero_qc_passed",
+    "promotion_ready", "elevon_start_frac", "elevon_end_frac", "elevon_hinge_frac",
+}
+
+_EXCLUDE_TARGET_PREFIXES = (
+    "c1_", "c2_", "c3_", "c4_", "b1_", "b2_", "b3_", "b_total",
+    "sw1", "sw2", "sw3", "twist_", "dihedral_", "split_", "sampler_",
+    "realization_", "generator_", "geometry_", "aero_", "diag_", "qc_",
+)
+
+_EXCLUDE_TARGET_TOKENS = (
+    "id", "name", "path", "dir", "status", "reason", "message", "config", "manifest",
+    "summary", "hash", "sha", "source", "artifact", "plot", "airfoil", "dataset",
+)
+
+
+def _is_numeric_series(series: pd.Series) -> bool:
+    numeric = pd.to_numeric(series, errors="coerce")
+    return int(numeric.notna().sum()) > 0
+
+
+def _target_finite_fraction(series: pd.Series) -> float:
+    numeric = pd.to_numeric(series, errors="coerce")
+    if len(numeric) == 0:
+        return 0.0
+    return float(numeric.notna().sum()) / float(len(numeric))
+
+
+def _looks_like_aero_target(column: str) -> bool:
+    key = column.lower().strip()
+    if key in _AERO_EXACT_TARGETS or key in _AERO_DERIVATIVE_TARGETS:
+        return True
+    if key.startswith("cd_") and not key.startswith("cdcl"):
+        return True
+    if key.startswith("cl_") and key not in {"cl_roll"}:
+        return True
+    if key.startswith(("cm_", "cy_", "cn_", "cx_", "cz_")):
+        return True
+    if key.endswith(("_per_rad", "_derivative")) and key.startswith(("cl", "cd", "cm", "cy", "cn", "cx", "cz")):
+        return True
+    return False
+
+
+def _looks_like_flyability_target(column: str) -> bool:
+    key = column.lower().strip()
+    return any(token in key for token in _FLYABILITY_TARGET_TOKENS)
+
+
+def _is_excluded_from_auto_targets(column: str, feature_columns: list[str], group_column: str | None) -> bool:
+    key = column.lower().strip()
+    feature_keys = {c.lower().strip() for c in feature_columns}
+    if key in feature_keys:
+        return True
+    if group_column is not None and key == group_column.lower().strip():
+        return True
+    if key in _EXCLUDE_TARGET_EXACT:
+        return True
+    if any(key.startswith(prefix) for prefix in _EXCLUDE_TARGET_PREFIXES):
+        return True
+    if any(token in key for token in _EXCLUDE_TARGET_TOKENS):
+        return True
+    return False
+
+
+def resolve_target_columns_from_dataframe(
+    df: pd.DataFrame,
+    target_spec: str | list[str] | tuple[str, ...],
+    *,
+    feature_columns: list[str] | None = None,
+    group_column: str | None = "geometry_id",
+    min_finite_fraction: float = 1.0,
+) -> list[str]:
+    """Resolve --targets specs such as aero_basic, aero_all, flyability_all, or all/numeric_all.
+
+    Auto target sets intentionally exclude metadata, features, operating conditions,
+    design variables, IDs, paths, and columns with missing/non-numeric values. This
+    keeps broad learning-curve batches from silently training on junk columns.
+    """
+    feature_columns = list(feature_columns or [])
+    if isinstance(target_spec, str):
+        raw = target_spec.strip()
+        parts = [p.strip() for p in raw.split(",") if p.strip()]
+    else:
+        parts = [str(p).strip() for p in target_spec if str(p).strip()]
+    if not parts:
+        raise ValueError("At least one target must be supplied.")
+    if len(parts) > 1:
+        missing = [p for p in parts if p not in df.columns]
+        if missing:
+            raise ValueError(f"Requested target columns are missing: {missing}")
+        return parts
+
+    spec = _TARGET_SPEC_ALIASES.get(parts[0].lower(), parts[0].lower())
+    if spec not in {"aero_basic", "aero_all", "flyability_all", "numeric_all"}:
+        if parts[0] not in df.columns:
+            raise ValueError(f"Requested target column is missing: {parts[0]}")
+        return [parts[0]]
+
+    if spec == "aero_basic":
+        targets = [c for c in _AERO_BASIC_TARGETS if c in df.columns]
+    else:
+        targets = []
+        for col in df.columns:
+            if _is_excluded_from_auto_targets(col, feature_columns, group_column):
+                continue
+            if not _is_numeric_series(df[col]):
+                continue
+            if _target_finite_fraction(df[col]) < float(min_finite_fraction):
+                continue
+            if spec == "aero_all" and not _looks_like_aero_target(col):
+                continue
+            if spec == "flyability_all" and not _looks_like_flyability_target(col):
+                continue
+            targets.append(col)
+    if not targets:
+        raise ValueError(f"Target spec {parts[0]!r} resolved to no usable target columns.")
+    return targets
+
+
+def resolve_target_columns_for_dataset(
+    dataset_path: Path,
+    target_spec: str | list[str] | tuple[str, ...],
+    *,
+    feature_columns: list[str] | None = None,
+    group_column: str | None = "geometry_id",
+    allow_forced: bool = False,
+    min_finite_fraction: float = 1.0,
+) -> list[str]:
+    """Resolve broad target specs against a promoted dataset root."""
+    from aeris.dataset.promoted_dataset import require_promoted_aero_dataset
+
+    dataset_path = Path(dataset_path).expanduser().resolve()
+    promoted_info = require_promoted_aero_dataset(dataset_root=dataset_path, allow_forced=allow_forced)
+    curated = promoted_info.get("curated_aero_dataset_csv") or dataset_path / "curated_aero_dataset.csv"
+    curated_path = Path(curated).expanduser().resolve()
+    if not curated_path.exists():
+        raise FileNotFoundError(f"Missing curated dataset CSV for target resolution: {curated_path}")
+    df = pd.read_csv(curated_path)
+    return resolve_target_columns_from_dataframe(
+        df,
+        target_spec,
+        feature_columns=feature_columns,
+        group_column=group_column,
+        min_finite_fraction=min_finite_fraction,
+    )
 
 def _stats(values: Iterable[float | None]) -> dict[str, float | None]:
     vals = [float(v) for v in values if v is not None and np.isfinite(float(v))]

@@ -54,7 +54,7 @@ def test_run_learning_curves_on_dataframe_writes_artifacts(tmp_path) -> None:
         write_plots=True,
     )
 
-    assert result["schema_version"] == "aeris.learning_curves.v1.1"
+    assert result["schema_version"] == "aeris.learning_curves.v1.2"
     assert result["status"] == "completed"
     assert len(result["summary_rows"]) == 2
     assert result["summary_rows"][-1]["group_size"] == 4
@@ -101,3 +101,28 @@ def test_learning_curves_per_target_summary_classifies_weak_target(tmp_path) -> 
     by_target = {row["target"]: row for row in result["per_target_summary"]}
     assert by_target["noisy"]["learning_state"] in {"weak", "moderate", "overfit_risk", "unknown"}
     assert by_target["noisy"]["recommendation"]
+
+
+
+def test_resolve_target_columns_from_dataframe_auto_sets() -> None:
+    from aeris.ml.learning_curves import resolve_target_columns_from_dataframe
+
+    df = _synthetic_grouped_df()
+    df["l_over_d"] = df["cl"] / df["cd"]
+    df["velocity_mps"] = 28.0
+    df["config_name"] = "demo"
+
+    targets = resolve_target_columns_from_dataframe(
+        df,
+        "aero_all",
+        feature_columns=["c1_m", "b_total_m", "alpha_deg"],
+        group_column="geometry_id",
+    )
+
+    assert "cl" in targets
+    assert "cd" in targets
+    assert "cm" in targets
+    assert "l_over_d" in targets
+    assert "alpha_deg" not in targets
+    assert "velocity_mps" not in targets
+    assert "geometry_id" not in targets

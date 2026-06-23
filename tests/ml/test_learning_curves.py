@@ -54,20 +54,50 @@ def test_run_learning_curves_on_dataframe_writes_artifacts(tmp_path) -> None:
         write_plots=True,
     )
 
-    assert result["schema_version"] == "aeris.learning_curves.v1"
+    assert result["schema_version"] == "aeris.learning_curves.v1.1"
     assert result["status"] == "completed"
     assert len(result["summary_rows"]) == 2
     assert result["summary_rows"][-1]["group_size"] == 4
     assert result["summary_rows"][-1]["test_r2_mean_mean"] is not None
+    assert result["per_target_summary"]
+    assert {row["target"] for row in result["per_target_summary"]} == {"cl", "cd", "cm"}
+    assert all(row["learning_state"] for row in result["per_target_summary"])
 
     artifacts = result["artifacts"]
     assert (tmp_path / "learning_curves.csv").exists()
     assert (tmp_path / "learning_curves_summary.csv").exists()
+    assert (tmp_path / "learning_curves_per_target_summary.csv").exists()
     assert (tmp_path / "learning_curves_report.json").exists()
     assert (tmp_path / "learning_curves_summary.md").exists()
     assert (tmp_path / "plots" / "learning_curve_r2.png").exists()
     assert (tmp_path / "plots" / "per_target_learning_curves.png").exists()
+    assert (tmp_path / "plots" / "per_target_final_r2.png").exists()
 
     report = json.loads((tmp_path / "learning_curves_report.json").read_text(encoding="utf-8"))
     assert report["artifacts"]["learning_curves_csv"] == artifacts["learning_curves_csv"]
     assert report["operator_recommendations"]
+
+
+
+def test_learning_curves_per_target_summary_classifies_weak_target(tmp_path) -> None:
+    df = _synthetic_grouped_df()
+    rng = np.random.default_rng(123)
+    df["noisy"] = rng.normal(size=len(df))
+    result = run_learning_curves_on_dataframe(
+        df=df,
+        feature_columns=["c1_m", "b_total_m", "alpha_deg"],
+        target_columns=["cl", "noisy"],
+        model_type="linear_regression",
+        group_sizes=[2, 4],
+        seeds=[11, 22],
+        split_method="grouped",
+        group_column="geometry_id",
+        train_fraction=0.6,
+        val_fraction=0.2,
+        test_fraction=0.2,
+        output_dir=tmp_path,
+        write_plots=True,
+    )
+    by_target = {row["target"]: row for row in result["per_target_summary"]}
+    assert by_target["noisy"]["learning_state"] in {"weak", "moderate", "overfit_risk", "unknown"}
+    assert by_target["noisy"]["recommendation"]

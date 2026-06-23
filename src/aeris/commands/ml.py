@@ -2593,6 +2593,7 @@ def ml_learning_curves(
     typer.echo(f"  learning_curves_summary_md: {artifacts.get('learning_curves_summary_md')}")
     typer.echo(f"  learning_curves_csv: {artifacts.get('learning_curves_csv')}")
     typer.echo(f"  learning_curves_summary_csv: {artifacts.get('learning_curves_summary_csv')}")
+    typer.echo(f"  learning_curves_per_target_summary_csv: {artifacts.get('learning_curves_per_target_summary_csv')}")
     if artifacts.get("plots_dir"):
         typer.echo(f"  plots_dir: {artifacts.get('plots_dir')}")
     if largest:
@@ -2611,6 +2612,7 @@ def ml_learning_curves(
                 artifacts.get("learning_curves_summary_md"),
                 artifacts.get("learning_curves_csv"),
                 artifacts.get("learning_curves_summary_csv"),
+                artifacts.get("learning_curves_per_target_summary_csv"),
             ],
             notes="ML learning curves completed.",
             metadata={

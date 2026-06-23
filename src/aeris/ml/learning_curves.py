@@ -18,7 +18,7 @@ from aeris.ml.metrics import evaluate_regression_metrics
 from aeris.ml.model_registry import build_model, get_model_spec
 
 
-LEARNING_CURVES_SCHEMA_VERSION = "aeris.learning_curves.v1"
+LEARNING_CURVES_SCHEMA_VERSION = "aeris.learning_curves.v1.1"
 
 
 def parse_int_csv(value: str | Sequence[int], *, option_name: str = "--group-sizes") -> list[int]:
@@ -246,6 +246,101 @@ def _build_summary_rows(rows: list[dict[str, Any]], target_columns: list[str]) -
     return summary_rows
 
 
+
+def _classify_target_learning_state(test_r2: float | None, delta_last: float | None, gap: float | None) -> str:
+    """Return a compact operator label for one target's learning curve."""
+    if test_r2 is None:
+        return "unknown"
+    if test_r2 < 0.5:
+        return "weak"
+    if test_r2 < 0.8:
+        return "moderate"
+    if gap is not None and gap > 0.25:
+        return "overfit_risk"
+    if delta_last is not None and abs(delta_last) < 0.02:
+        return "strong_plateau"
+    return "strong_improving"
+
+
+def _target_recommendation(target: str, state: str, test_r2: float | None, delta_last: float | None, gap: float | None) -> str:
+    """Return a plain-language recommendation for one target."""
+    value = "unknown" if test_r2 is None else f"{test_r2:.3f}"
+    if state == "weak":
+        return f"Target '{target}' is weak at the largest size (test R²={value}); do not use it for paper-scale claims or MDAO before feature/regime diagnosis."
+    if state == "moderate":
+        return f"Target '{target}' is moderate at the largest size (test R²={value}); useful for pilot insight, but needs more data/model comparison before promotion."
+    if state == "overfit_risk":
+        return f"Target '{target}' has strong apparent accuracy but a large train-test gap ({gap:.3f}); inspect grouped split/regime mismatch before trusting it."
+    if state == "strong_plateau":
+        delta = "unknown" if delta_last is None else f"{delta_last:.3f}"
+        return f"Target '{target}' is strong and appears near plateau (test R²={value}, last-step ΔR²={delta}); extra geometries may have diminishing returns for this target."
+    if state == "strong_improving":
+        delta = "unknown" if delta_last is None else f"{delta_last:.3f}"
+        return f"Target '{target}' is strong and still improving (test R²={value}, last-step ΔR²={delta}); scaling may still help."
+    return f"Target '{target}' could not be classified; inspect the per-target curve rows."
+
+
+def _build_per_target_summary(summary_rows: list[dict[str, Any]], target_columns: list[str]) -> list[dict[str, Any]]:
+    """Build an operator-facing per-target final/plateau table."""
+    if not summary_rows:
+        return []
+    last = summary_rows[-1]
+    prev = summary_rows[-2] if len(summary_rows) >= 2 else None
+    out: list[dict[str, Any]] = []
+    for target in target_columns:
+        train_r2 = last.get(f"train_r2__{target}_mean")
+        val_r2 = last.get(f"val_r2__{target}_mean")
+        test_r2 = last.get(f"test_r2__{target}_mean")
+        test_rmse = last.get(f"test_rmse__{target}_mean")
+        test_mae = last.get(f"test_mae__{target}_mean")
+        prev_test_r2 = None if prev is None else prev.get(f"test_r2__{target}_mean")
+        delta_last = None
+        if test_r2 is not None and prev_test_r2 is not None:
+            delta_last = float(test_r2) - float(prev_test_r2)
+        gap = None
+        if train_r2 is not None and test_r2 is not None:
+            gap = float(train_r2) - float(test_r2)
+
+        best_group_size = None
+        best_test_r2 = None
+        for row in summary_rows:
+            val = row.get(f"test_r2__{target}_mean")
+            if val is None:
+                continue
+            if best_test_r2 is None or float(val) > float(best_test_r2):
+                best_test_r2 = float(val)
+                best_group_size = int(row.get("group_size"))
+
+        state = _classify_target_learning_state(
+            None if test_r2 is None else float(test_r2),
+            None if delta_last is None else float(delta_last),
+            None if gap is None else float(gap),
+        )
+        out.append(
+            {
+                "target": target,
+                "largest_group_size": int(last.get("group_size")),
+                "train_r2_at_largest": train_r2,
+                "val_r2_at_largest": val_r2,
+                "test_r2_at_largest": test_r2,
+                "test_rmse_at_largest": test_rmse,
+                "test_mae_at_largest": test_mae,
+                "delta_test_r2_last_step": delta_last,
+                "train_test_r2_gap_at_largest": gap,
+                "best_group_size_by_test_r2": best_group_size,
+                "best_test_r2_mean": best_test_r2,
+                "learning_state": state,
+                "recommendation": _target_recommendation(
+                    target,
+                    state,
+                    None if test_r2 is None else float(test_r2),
+                    None if delta_last is None else float(delta_last),
+                    None if gap is None else float(gap),
+                ),
+            }
+        )
+    return out
+
 def _learning_curve_recommendations(summary_rows: list[dict[str, Any]], target_columns: list[str]) -> list[str]:
     if not summary_rows:
         return ["No computed learning-curve points. Check group sizes and split settings."]
@@ -283,13 +378,9 @@ def _learning_curve_recommendations(summary_rows: list[dict[str, Any]], target_c
                 recommendations.append(
                     f"Overall test R² still improved by {delta:.3f} over the last curve step; more geometries may help."
                 )
-    for target in target_columns:
-        key = f"test_r2__{target}_mean"
-        val = last.get(key)
-        if val is not None and val < 0.5:
-            recommendations.append(
-                f"Target '{target}' has weak largest-size test R² ({val:.3f}); diagnose features/regimes before using it in MDAO."
-            )
+    per_target = _build_per_target_summary(summary_rows, target_columns)
+    for row in per_target:
+        recommendations.append(str(row.get("recommendation")))
     return recommendations
 
 
@@ -310,12 +401,41 @@ def _write_summary_markdown(path: Path, report: dict[str, Any]) -> None:
     summary_rows = report.get("summary_rows", [])
     if summary_rows:
         last = summary_rows[-1]
+        gap = None
+        if last.get("train_r2_mean_mean") is not None and last.get("test_r2_mean_mean") is not None:
+            gap = last.get("train_r2_mean_mean") - last.get("test_r2_mean_mean")
         lines.append(f"- group_size: `{last.get('group_size')}`")
         lines.append(f"- test R² mean: `{last.get('test_r2_mean_mean')}`")
         lines.append(f"- test RMSE mean: `{last.get('test_rmse_mean_mean')}`")
-        lines.append(f"- train-test R² gap: `{None if last.get('train_r2_mean_mean') is None or last.get('test_r2_mean_mean') is None else last.get('train_r2_mean_mean') - last.get('test_r2_mean_mean')}`")
+        lines.append(f"- train-test R² gap: `{gap}`")
     else:
         lines.append("- no computed points")
+    per_target = report.get("per_target_summary", [])
+    lines.append("")
+    lines.append("## Per-target readiness")
+    if per_target:
+        lines.append("| target | state | test R² | ΔR² last step | train-test gap | best size | recommendation |")
+        lines.append("|---|---:|---:|---:|---:|---:|---|")
+        for row in per_target:
+            lines.append(
+                "| "
+                + str(row.get("target"))
+                + " | "
+                + str(row.get("learning_state"))
+                + " | "
+                + str(row.get("test_r2_at_largest"))
+                + " | "
+                + str(row.get("delta_test_r2_last_step"))
+                + " | "
+                + str(row.get("train_test_r2_gap_at_largest"))
+                + " | "
+                + str(row.get("best_group_size_by_test_r2"))
+                + " | "
+                + str(row.get("recommendation"))
+                + " |"
+            )
+    else:
+        lines.append("- no per-target summary available")
     lines.append("")
     lines.append("## Recommendations")
     for rec in report.get("operator_recommendations", []):
@@ -324,7 +444,7 @@ def _write_summary_markdown(path: Path, report: dict[str, Any]) -> None:
     lines.append("## Notes")
     lines.append("- For grouped split, group size means number of training groups/geometries, not total rows.")
     lines.append("- Curves are grouped-leakage-safe when `split_method=grouped` and `group_column` is a geometry/family ID.")
-    lines.append("- Use these curves to decide whether to scale the dataset before model promotion or MDAO.")
+    lines.append("- Use per-target readiness before deciding whether CL/CD/Cm are all paper-ready.")
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -418,7 +538,42 @@ def _plot_gap(
     return output_path
 
 
-def _write_plots(output_dir: Path, summary_rows: list[dict[str, Any]], target_columns: list[str]) -> list[dict[str, Any]]:
+
+def _plot_per_target_final_r2(
+    *,
+    per_target_summary: list[dict[str, Any]],
+    output_path: Path,
+) -> Path | None:
+    if not per_target_summary:
+        return None
+    import matplotlib.pyplot as plt
+
+    labels = [str(row.get("target")) for row in per_target_summary]
+    xs = np.arange(len(labels))
+    width = 0.25
+    train = [row.get("train_r2_at_largest") for row in per_target_summary]
+    val = [row.get("val_r2_at_largest") for row in per_target_summary]
+    test = [row.get("test_r2_at_largest") for row in per_target_summary]
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.bar(xs - width, [np.nan if v is None else float(v) for v in train], width, label="train")
+    ax.bar(xs, [np.nan if v is None else float(v) for v in val], width, label="val")
+    ax.bar(xs + width, [np.nan if v is None else float(v) for v in test], width, label="test")
+    ax.axhline(0.8, linewidth=1, linestyle="--")
+    ax.axhline(0.5, linewidth=1, linestyle=":")
+    ax.set_xticks(xs)
+    ax.set_xticklabels(labels)
+    ax.set_ylabel("R² at largest training size")
+    ax.set_title("Per-target final learning readiness")
+    ax.grid(True, axis="y", alpha=0.3)
+    ax.legend()
+    fig.tight_layout()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=180)
+    plt.close(fig)
+    return output_path
+
+
+def _write_plots(output_dir: Path, summary_rows: list[dict[str, Any]], target_columns: list[str], per_target_summary: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
     plots_dir = output_dir / "plots"
     artifacts: list[dict[str, Any]] = []
     for kind, metric, ylabel, filename in [
@@ -437,6 +592,11 @@ def _write_plots(output_dir: Path, summary_rows: list[dict[str, Any]], target_co
     artifacts.append({"kind": "per_target_learning_curves", "status": "written" if path else "skipped", "path": None if path is None else str(path)})
     path = _plot_gap(summary_rows=summary_rows, output_path=plots_dir / "overfit_gap.png")
     artifacts.append({"kind": "overfit_gap", "status": "written" if path else "skipped", "path": None if path is None else str(path)})
+    path = _plot_per_target_final_r2(
+        per_target_summary=list(per_target_summary or []),
+        output_path=plots_dir / "per_target_final_r2.png",
+    )
+    artifacts.append({"kind": "per_target_final_r2", "status": "written" if path else "skipped", "path": None if path is None else str(path)})
     return artifacts
 
 
@@ -536,7 +696,8 @@ def run_learning_curves_on_dataframe(
             rows.append(base_row)
 
     summary_rows = _build_summary_rows(rows, target_columns)
-    plot_artifacts = _write_plots(output_dir, summary_rows, target_columns) if write_plots else []
+    per_target_summary = _build_per_target_summary(summary_rows, target_columns)
+    plot_artifacts = _write_plots(output_dir, summary_rows, target_columns, per_target_summary) if write_plots else []
     report = {
         "schema_version": LEARNING_CURVES_SCHEMA_VERSION,
         "status": "completed",
@@ -568,16 +729,19 @@ def run_learning_curves_on_dataframe(
         "split_metadata": split_metadata,
         "rows": rows,
         "summary_rows": summary_rows,
+        "per_target_summary": per_target_summary,
         "operator_recommendations": _learning_curve_recommendations(summary_rows, target_columns),
         "plot_artifacts": plot_artifacts,
     }
 
     rows_csv = output_dir / "learning_curves.csv"
     summary_csv = output_dir / "learning_curves_summary.csv"
+    target_summary_csv = output_dir / "learning_curves_per_target_summary.csv"
     report_json = output_dir / "learning_curves_report.json"
     summary_md = output_dir / "learning_curves_summary.md"
     _write_csv(rows_csv, rows)
     _write_csv(summary_csv, summary_rows)
+    _write_csv(target_summary_csv, per_target_summary)
     _write_json(report_json, report)
     _write_summary_markdown(summary_md, report)
 
@@ -585,6 +749,7 @@ def run_learning_curves_on_dataframe(
         "output_dir": str(output_dir),
         "learning_curves_csv": str(rows_csv),
         "learning_curves_summary_csv": str(summary_csv),
+        "learning_curves_per_target_summary_csv": str(target_summary_csv),
         "learning_curves_report_json": str(report_json),
         "learning_curves_summary_md": str(summary_md),
         "plots_dir": str(output_dir / "plots") if write_plots else None,

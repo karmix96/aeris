@@ -32,7 +32,7 @@ except Exception:
     yaml = None
 
 # ── Version & constants ───────────────────────────────────────────────────────
-APP_VERSION       = "4.7.3-EDA_V2_1"
+APP_VERSION       = "4.7.5-ML_TRUST_PLOTS"
 DEFAULT_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg"
 DEFAULT_SYM_ELEVON_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_e_sym_deg"
 DEFAULT_DIFF_ELEVON_FEATURES = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_a_diff_deg"
@@ -5911,6 +5911,7 @@ def pg_ml(root, exe, tmo, dry):
         "  ⑨ Active Learning  ",
         "  ⑩ Classification  ",
         "  ⑪ Multifidelity  ",
+        "  ⑫ ML Trust  ",
     ])
 
     # ── ① Feature Sets ────────────────────────────────────────────────────────
@@ -6518,6 +6519,230 @@ def pg_ml(root, exe, tmo, dry):
 
 
 
+
+
+    # ── ⑫ ML Trust ───────────────────────────────────────────────────────────
+    with tabs[11]:
+        _note(
+            "<b>ML Trust diagnostics:</b> run and inspect learning curves, repeated grouped CV, and per-regime residuals. "
+            "Use <code>--targets aero_all</code> for Paper 1 aero-scalar trust evidence. Keep <code>--plots</code> enabled to generate PNGs.",
+            "info",
+        )
+        trust_ds = _pick_dir("Promoted dataset root", root / "data" / "datasets", "mltrust_ds")
+        trust_fs = st.selectbox("--feature-set", ML_FEATURE_SET_CHOICES, index=ML_FEATURE_SET_CHOICES.index("bwb_control_physics_v1") if "bwb_control_physics_v1" in ML_FEATURE_SET_CHOICES else 0, key="mltrust_fs")
+        c1, c2, c3 = st.columns(3)
+        trust_targets = c1.text_input("--targets", "aero_all", key="mltrust_targets", help="Examples: aero_basic, aero_all, flyability_all, all/numeric_all, or explicit cl,cd,cm.")
+        trust_group = c2.text_input("--group-column", "geometry_id", key="mltrust_group")
+        trust_model = c3.selectbox("--model", MODEL_TYPES, index=MODEL_TYPES.index("extra_trees") if "extra_trees" in MODEL_TYPES else 0, key="mltrust_model")
+        c4, c5, c6 = st.columns(3)
+        trust_seeds = c4.text_input("--seeds", "101,202,303,404,505", key="mltrust_seeds")
+        trust_params = c5.text_input("--model-params-json", "", key="mltrust_params", help="Optional path, e.g. /tmp/aeris_extra_trees_fast.json")
+        trust_allow = c6.checkbox("--allow-forced", value=True, key="mltrust_allow", help="Useful for current Paper 1 pilot attrition/forced promotion evidence.")
+        trust_plots = st.checkbox("--plots / generate PNG plots", value=True, key="mltrust_plots")
+
+        def _trust_base_args(command: str) -> list[str]:
+            args = ["ml", command, "--dataset", trust_ds, "--feature-set", trust_fs, "--targets", trust_targets, "--group-column", trust_group, "--model", trust_model, "--seeds", trust_seeds]
+            if trust_allow:
+                args.append("--allow-forced")
+            if trust_params.strip():
+                args += ["--model-params-json", trust_params.strip()]
+            args.append("--plots" if trust_plots else "--no-plots")
+            return args
+
+        def _trust_plot_gallery(label: str, rel_plot_dir: str, filenames: list[str], key: str) -> None:
+            st.markdown(f"### {label}")
+            base = Path(trust_ds).expanduser() if trust_ds.strip() else root / "data" / "datasets"
+            plot_dir_default = base / rel_plot_dir
+            plot_dir_raw = st.text_input(f"{label} plot directory", str(plot_dir_default), key=f"{key}_plot_dir")
+            plot_dir = Path(plot_dir_raw).expanduser()
+            if not plot_dir.exists():
+                st.info(f"No plot directory found yet: {plot_dir}")
+                return
+            existing = [plot_dir / name for name in filenames if (plot_dir / name).exists()]
+            extra = sorted(p for p in plot_dir.glob("*.png") if p.name not in set(filenames))
+            if not existing and not extra:
+                st.info(f"No PNG plots found in: {plot_dir}")
+                return
+            with st.expander(f"Show {label.lower()}", expanded=True):
+                cols = st.columns(2)
+                for i, path in enumerate(existing + extra):
+                    with cols[i % 2]:
+                        st.image(str(path), caption=path.name, use_container_width=True)
+                        st.code(str(path), language="text")
+
+        def _trust_report_viewer(label: str, rel_report: str, rel_summary: str, key: str) -> None:
+            base = Path(trust_ds).expanduser() if trust_ds.strip() else root / "data" / "datasets"
+            default_report = str(base / rel_report)
+            default_summary = str(base / rel_summary)
+            report_path = st.text_input(f"{label} report JSON", default_report, key=f"{key}_report")
+            summary_path = st.text_input(f"{label} summary MD", default_summary, key=f"{key}_summary")
+            c_a, c_b = st.columns(2)
+            with c_a:
+                if st.button(f"Load {label} JSON", key=f"{key}_load_json"):
+                    data = _rjson(Path(report_path).expanduser())
+                    if data is None:
+                        st.warning(f"Could not read JSON: {report_path}")
+                    else:
+                        st.json(data)
+            with c_b:
+                if st.button(f"Load {label} summary", key=f"{key}_load_md"):
+                    st.markdown(_read(Path(summary_path).expanduser(), lim=120_000))
+
+        trust_tabs = st.tabs(["  Learning curves  ", "  Repeated grouped CV  ", "  Per-regime residuals  ", "  Plot gallery  ", "  Report viewer  "])
+        with trust_tabs[0]:
+            c1, c2 = st.columns(2)
+            lc_sizes = c1.text_input("--group-sizes", "5,10,20,30,40", key="mltrust_lc_sizes")
+            lc_out = c2.text_input("--output-dir", "", key="mltrust_lc_out", help="Optional. Default: <dataset>/learning_curves")
+            lc_args = _trust_base_args("learning-curves") + ["--group-sizes", lc_sizes]
+            if lc_out.strip():
+                lc_args += ["--output-dir", lc_out.strip()]
+            _panel(
+                "Run learning curves",
+                "Checks whether more geometry groups improve performance and writes per-target readiness evidence plus learning-curve plots.",
+                lc_args,
+                root,
+                exe,
+                tmo,
+                dry,
+                "mltrust_learning_curves_run",
+                label="▶  Run learning curves",
+            )
+            _trust_report_viewer(
+                "Learning curves",
+                "learning_curves/learning_curves_report.json",
+                "learning_curves/learning_curves_summary.md",
+                "mltrust_lc_view",
+            )
+            _trust_plot_gallery(
+                "Learning curve plots",
+                "learning_curves/plots",
+                [
+                    "learning_curve_r2.png",
+                    "learning_curve_rmse.png",
+                    "learning_curve_mae.png",
+                    "per_target_learning_curves.png",
+                    "per_target_final_r2.png",
+                    "overfit_gap.png",
+                ],
+                "mltrust_lc_gallery",
+            )
+
+        with trust_tabs[1]:
+            cv_out = st.text_input("--output-dir", "", key="mltrust_cv_out", help="Optional. Default: <dataset>/repeated_grouped_cv")
+            cv_args = _trust_base_args("repeated-grouped-cv")
+            if cv_out.strip():
+                cv_args += ["--output-dir", cv_out.strip()]
+            _panel(
+                "Run repeated grouped CV",
+                "Repeats grouped geometry splits to show whether scores are stable or lucky and writes repeated-CV plots.",
+                cv_args,
+                root,
+                exe,
+                tmo,
+                dry,
+                "mltrust_repeated_cv_run",
+                label="▶  Run repeated CV",
+            )
+            _trust_report_viewer(
+                "Repeated grouped CV",
+                "repeated_grouped_cv/repeated_grouped_cv_report.json",
+                "repeated_grouped_cv/repeated_grouped_cv_summary.md",
+                "mltrust_cv_view",
+            )
+            _trust_plot_gallery(
+                "Repeated CV plots",
+                "repeated_grouped_cv/plots",
+                [
+                    "per_target_repeated_cv_r2.png",
+                    "split_score_variability.png",
+                ],
+                "mltrust_cv_gallery",
+            )
+
+        with trust_tabs[2]:
+            c1, c2 = st.columns(2)
+            reg_cols = c1.text_input("--regime-columns", "alpha_deg,control_input_deg", key="mltrust_reg_cols")
+            min_reg = c2.number_input("--min-regime-count", min_value=1, value=3, step=1, key="mltrust_min_reg")
+            pr_out = st.text_input("--output-dir", "", key="mltrust_pr_out", help="Optional. Default: <dataset>/per_regime_residuals")
+            pr_args = _trust_base_args("per-regime-residuals") + ["--regime-columns", reg_cols, "--min-regime-count", str(int(min_reg))]
+            if pr_out.strip():
+                pr_args += ["--output-dir", pr_out.strip()]
+            _panel(
+                "Run per-regime residual diagnostics",
+                "Finds where the model fails by target, alpha, control deflection, and residual regime bucket.",
+                pr_args,
+                root,
+                exe,
+                tmo,
+                dry,
+                "mltrust_per_regime_run",
+                label="▶  Run residual diagnostics",
+            )
+            _trust_report_viewer(
+                "Per-regime residuals",
+                "per_regime_residuals/per_regime_residuals_report.json",
+                "per_regime_residuals/per_regime_residuals_summary.md",
+                "mltrust_pr_view",
+            )
+            _trust_plot_gallery(
+                "Per-regime residual plots",
+                "per_regime_residuals/plots",
+                [
+                    "per_target_residual_rmse.png",
+                    "per_target_residual_bias.png",
+                    "residuals_vs_actual.png",
+                    "regime_rmse_alpha_control.png",
+                ],
+                "mltrust_pr_gallery",
+            )
+
+        with trust_tabs[3]:
+            _note("Direct viewer for all generated ML-trust PNG plots for the selected dataset.", "info")
+            _trust_plot_gallery(
+                "Learning curve plots",
+                "learning_curves/plots",
+                ["learning_curve_r2.png", "learning_curve_rmse.png", "learning_curve_mae.png", "per_target_learning_curves.png", "per_target_final_r2.png", "overfit_gap.png"],
+                "mltrust_gallery_lc_all",
+            )
+            _trust_plot_gallery(
+                "Repeated CV plots",
+                "repeated_grouped_cv/plots",
+                ["per_target_repeated_cv_r2.png", "split_score_variability.png"],
+                "mltrust_gallery_cv_all",
+            )
+            _trust_plot_gallery(
+                "Per-regime residual plots",
+                "per_regime_residuals/plots",
+                ["per_target_residual_rmse.png", "per_target_residual_bias.png", "residuals_vs_actual.png", "regime_rmse_alpha_control.png"],
+                "mltrust_gallery_pr_all",
+            )
+
+        with trust_tabs[4]:
+            _note(
+                "Quick artifact locations for the selected dataset. Use this tab after running the diagnostics above.",
+                "info",
+            )
+            if trust_ds.strip():
+                base = Path(trust_ds).expanduser()
+                st.code(
+                    "\n".join(
+                        [
+                            str(base / "learning_curves" / "learning_curves_report.json"),
+                            str(base / "learning_curves" / "learning_curves_per_target_summary.csv"),
+                            str(base / "learning_curves" / "plots" / "learning_curve_r2.png"),
+                            str(base / "learning_curves" / "plots" / "per_target_learning_curves.png"),
+                            str(base / "repeated_grouped_cv" / "repeated_grouped_cv_report.json"),
+                            str(base / "repeated_grouped_cv" / "repeated_grouped_cv_per_target_summary.csv"),
+                            str(base / "repeated_grouped_cv" / "plots" / "per_target_repeated_cv_r2.png"),
+                            str(base / "per_regime_residuals" / "per_regime_residuals_report.json"),
+                            str(base / "per_regime_residuals" / "regime_residual_summary.csv"),
+                            str(base / "per_regime_residuals" / "plots" / "regime_rmse_alpha_control.png"),
+                        ]
+                    ),
+                    language="text",
+                )
+            else:
+                st.warning("Select a dataset root first.")
 
 def pg_workflow(root, exe, tmo, dry):
     _hero("▤", "Workflow Cockpit", "guided stage state + evidence validation", "workflow")

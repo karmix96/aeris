@@ -2805,3 +2805,183 @@ def ml_repeated_grouped_cv(
     except Exception as exc:
         fail_command("Workflow auto-record", exc)
 
+@ml_app.command("per-regime-residuals")
+def ml_per_regime_residuals(
+    dataset: Path = typer.Option(
+        ...,
+        "--dataset",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to a promoted aero/flyability ML dataset root.",
+    ),
+    features: str | None = typer.Option(
+        None,
+        "--features",
+        help="Comma-separated explicit feature columns. Use exactly one of --features, --feature-preset, or --feature-set.",
+    ),
+    feature_preset: str | None = typer.Option(
+        None,
+        "--feature-preset",
+        help="Named feature preset. Use exactly one of --features, --feature-preset, or --feature-set.",
+    ),
+    feature_set: str | None = typer.Option(
+        None,
+        "--feature-set",
+        help="Named feature set, e.g. bwb_control_physics_v1. Use exactly one of --features, --feature-preset, or --feature-set.",
+    ),
+    targets: str = typer.Option(
+        "aero_all",
+        "--targets",
+        help="Comma-separated target columns or target set: aero_basic, aero_all, flyability_all, all/numeric_all.",
+    ),
+    model_type: str = typer.Option(
+        "extra_trees",
+        "--model-type",
+        "--model",
+        help=f"Model type. Supported: {', '.join(list_model_types())}",
+    ),
+    seeds: str = typer.Option("101,202,303,404,505", "--seeds", help="Comma-separated split/training seeds."),
+    group_column: str = typer.Option("geometry_id", "--group-column", help="Grouping column for grouped residual diagnostics."),
+    regime_columns: str = typer.Option(
+        "alpha_deg,control_input_deg",
+        "--regime-columns",
+        help="Comma-separated regime columns used for residual buckets, e.g. alpha_deg,control_input_deg.",
+    ),
+    min_regime_count: int = typer.Option(3, "--min-regime-count", help="Minimum residual rows needed to report a regime bucket."),
+    train_fraction: float = typer.Option(0.7, "--train-fraction"),
+    val_fraction: float = typer.Option(0.15, "--val-fraction"),
+    test_fraction: float = typer.Option(0.15, "--test-fraction"),
+    allow_forced: bool = typer.Option(False, "--allow-forced", help=_ALLOW_FORCED_HELP),
+    model_params_json: Path | None = typer.Option(
+        None,
+        "--model-params-json",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Optional JSON object containing model constructor parameters.",
+    ),
+    output_dir: Path | None = typer.Option(
+        None,
+        "--output-dir",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional output directory. Defaults to <dataset>/per_regime_residuals.",
+    ),
+    plots: bool = typer.Option(True, "--plots/--no-plots", help="Write residual diagnostic PNG plots."),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional workflow root to auto-record per-regime residuals after success.",
+    ),
+) -> None:
+    """Run per-regime residual diagnostics for grouped ML trust."""
+    from aeris.ml.learning_curves import parse_int_csv, resolve_target_columns_for_dataset
+    from aeris.ml.per_regime_residuals import parse_regime_columns, run_per_regime_residuals
+
+    try:
+        if features is None and feature_preset is None and feature_set is None:
+            raise typer.BadParameter("--features, --feature-preset, or --feature-set is required.")
+        feature_cols = _resolve_feature_columns_cli(
+            features=features,
+            feature_preset=feature_preset,
+            feature_set=feature_set,
+        )
+        target_cols = resolve_target_columns_for_dataset(
+            dataset,
+            targets,
+            feature_columns=feature_cols,
+            group_column=group_column,
+            allow_forced=allow_forced,
+        )
+        seed_values = parse_int_csv(seeds, option_name="--seeds")
+        regime_cols = parse_regime_columns(regime_columns)
+        model_params = load_model_params_json(model_params_json) if model_params_json is not None else None
+
+        result = run_per_regime_residuals(
+            dataset_path=dataset,
+            feature_columns=feature_cols,
+            target_columns=target_cols,
+            model_type=model_type,
+            seeds=seed_values,
+            group_column=group_column,
+            regime_columns=regime_cols,
+            min_regime_count=min_regime_count,
+            train_fraction=train_fraction,
+            val_fraction=val_fraction,
+            test_fraction=test_fraction,
+            allow_forced=allow_forced,
+            model_params=model_params,
+            output_dir=output_dir,
+            write_plots=plots,
+            feature_set_name=feature_set,
+            feature_preset_name=feature_preset,
+        )
+    except typer.BadParameter:
+        raise
+    except Exception as exc:
+        fail_command("ML per-regime-residuals", exc)
+
+    artifacts = result.get("artifacts", {})
+    shape = result.get("shape", {})
+    worst = (result.get("worst_regimes") or [{}])[0] if result.get("worst_regimes") else {}
+    typer.echo("[AERIS] ML per-regime residuals completed")
+    typer.echo(f"  dataset: {Path(dataset).expanduser().resolve()}")
+    typer.echo(f"  model_type: {model_type}")
+    typer.echo(f"  group_column: {group_column}")
+    typer.echo(f"  regime_columns: {result.get('config', {}).get('regime_columns')}")
+    typer.echo(f"  targets: {target_cols}")
+    typer.echo(f"  seeds: {seed_values}")
+    typer.echo(f"  output_dir: {artifacts.get('output_dir')}")
+    typer.echo(f"  per_regime_residuals_report_json: {artifacts.get('per_regime_residuals_report_json')}")
+    typer.echo(f"  per_regime_residuals_summary_md: {artifacts.get('per_regime_residuals_summary_md')}")
+    typer.echo(f"  per_regime_residuals_csv: {artifacts.get('per_regime_residuals_csv')}")
+    typer.echo(f"  regime_residual_summary_csv: {artifacts.get('regime_residual_summary_csv')}")
+    typer.echo(f"  per_target_residual_summary_csv: {artifacts.get('per_target_residual_summary_csv')}")
+    if artifacts.get("plots_dir"):
+        typer.echo(f"  plots_dir: {artifacts.get('plots_dir')}")
+    typer.echo(f"  n_residual_rows: {shape.get('n_residual_rows')}")
+    typer.echo(f"  n_regime_rows: {shape.get('n_regime_rows')}")
+    if worst:
+        typer.echo(f"  worst_target: {worst.get('target')}")
+        typer.echo(f"  worst_rmse: {worst.get('rmse')}")
+
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="ml_per_regime_residuals",
+            inputs=[dataset],
+            artifacts=[
+                artifacts.get("output_dir"),
+                artifacts.get("per_regime_residuals_report_json"),
+                artifacts.get("per_regime_residuals_summary_md"),
+                artifacts.get("per_regime_residuals_csv"),
+                artifacts.get("regime_residual_summary_csv"),
+                artifacts.get("per_target_residual_summary_csv"),
+            ],
+            notes="ML per-regime residual diagnostics completed.",
+            metadata={
+                "command": "aeris ml per-regime-residuals",
+                "model_type": model_type,
+                "feature_preset": feature_preset,
+                "feature_set": feature_set,
+                "targets": target_cols,
+                "regime_columns": result.get("config", {}).get("regime_columns"),
+                "seeds": seed_values,
+                "n_residual_rows": shape.get("n_residual_rows"),
+                "n_regime_rows": shape.get("n_regime_rows"),
+                "worst_target": worst.get("target"),
+                "worst_rmse": worst.get("rmse"),
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
+

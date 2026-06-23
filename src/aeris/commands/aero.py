@@ -478,6 +478,15 @@ def run_aero(
         "--output-name",
         help="Optional run-name suffix for the created output folder.",
     ),
+    viscous_polar_source: str = typer.Option(
+        "none",
+        "--viscous-polar-source",
+        help=(
+            "Viscous drag backend: 'neuralfoil' evaluates profile drag live from "
+            "airfoil coordinates (requires neuralfoil package); 'none' (default) "
+            "keeps pure inviscid AVL."
+        ),
+    ),
     workflow: Path | None = typer.Option(
         None,
         "--workflow",
@@ -542,6 +551,7 @@ def run_aero(
         save_element_forces=save_element_forces,
         seed=seed,
         output_name=output_name,
+        viscous_polar_source=viscous_polar_source,
     )
 
     typer.echo("")

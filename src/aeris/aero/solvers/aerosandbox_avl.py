@@ -1102,8 +1102,13 @@ def _compute_strip_profile_drag(
     area_arr = df["area"].to_numpy(float)
     cl_arr = df["cl_local"].to_numpy(float)
 
-    cd_prof_sum = 0.0
+    # Phase 1: collect per-strip data and track envelope exceedances.
+    strip_airfoil_ids: list[str] = []
+    strip_cls_list: list[float] = []
+    strip_res_list: list[float] = []
+    strip_areas_list: list[float] = []
     n_extrapolated = 0
+
     for idx in range(len(df)):
         y_m = float(y_arr[idx])
         chord = float(chord_arr[idx])
@@ -1122,12 +1127,39 @@ def _compute_strip_profile_drag(
             if cl < cl_min or cl > cl_max:
                 n_extrapolated += 1
 
-        cd_2d = polar_store.query_cd(airfoil_id, cl=cl, re=re, mach=mach)
-        if cd_2d is None:
-            continue
+        strip_airfoil_ids.append(airfoil_id)
+        strip_cls_list.append(cl)
+        strip_res_list.append(re)
+        strip_areas_list.append(strip_area)
 
-        # Use AVL's strip area (= chord × Δy) — no reconstruction needed.
-        cd_prof_sum += cd_2d * strip_area
+    if not strip_airfoil_ids:
+        return None, n_extrapolated
+
+    strip_cls_arr = asbnp.array(strip_cls_list, dtype=float)
+    strip_res_arr = asbnp.array(strip_res_list, dtype=float)
+    strip_areas_arr = asbnp.array(strip_areas_list, dtype=float)
+
+    # Phase 2: CD lookup — batched when available (NeuralFoilPolarSource),
+    # falling back to per-strip scalar calls (AirfoilPolarStore).
+    cd_prof_sum = 0.0
+    if hasattr(polar_store, "query_cd_batch"):
+        # One NeuralFoil call per unique registered shape across all strips.
+        cd_2d_arr = polar_store.query_cd_batch(
+            strip_airfoil_ids, strip_cls_arr, strip_res_arr, mach=mach
+        )
+        valid = asbnp.isfinite(cd_2d_arr)
+        cd_prof_sum = float(asbnp.sum(cd_2d_arr[valid] * strip_areas_arr[valid]))
+    else:
+        for i, aid in enumerate(strip_airfoil_ids):
+            cd_2d = polar_store.query_cd(
+                aid,
+                cl=float(strip_cls_arr[i]),
+                re=float(strip_res_arr[i]),
+                mach=mach,
+            )
+            if cd_2d is None:
+                continue
+            cd_prof_sum += cd_2d * float(strip_areas_arr[i])
 
     if s_ref <= 0:
         return None, n_extrapolated

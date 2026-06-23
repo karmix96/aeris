@@ -288,6 +288,8 @@ def execute_aero_run(
     save_element_forces: bool = False,
     seed: int = 0,
     output_name: str = "",
+    viscous_polar_source: str = "none",
+    viscous_polar_re_grid: list[float] | None = None,
 ) -> tuple[Path, Any]:
     label = (
         config.stem if config is not None
@@ -318,6 +320,54 @@ def execute_aero_run(
         copy_config_to=None,  # standard copy is input_config.yaml via _copy_standard_input_config()
     )
 
+    # Polar bridge wiring for single-run mode (mirrors execute_aero_sweep).
+    _bridge_section_map = None
+    _bridge_polar_store = None
+    _bridge_status: dict[str, Any] = {
+        "requested_source": viscous_polar_source,
+        "active": False,
+        "backend": None,
+        "reason": "not_requested",
+    }
+    _source_key = str(viscous_polar_source or "none").strip().lower()
+    if _source_key in {"neuralfoil", "neural-foil"}:
+        try:
+            from aeris.airfoil.neuralfoil_polar_source import (
+                build_neuralfoil_polar_store_for_segments,
+            )
+            _segment_coords, _semispan_m = _extract_neuralfoil_segment_coords_from_airplane(
+                geometry_view.airplane
+            )
+            _bridge_mach = 0.0 if mach is None else float(mach)
+            _bridge_section_map, _bridge_polar_store = build_neuralfoil_polar_store_for_segments(
+                _segment_coords,
+                semispan_m=float(_semispan_m),
+                model_size="large",
+                re_grid=viscous_polar_re_grid,
+                mach=_bridge_mach,
+            )
+            _bridge_status.update({
+                "active": True,
+                "backend": "neuralfoil",
+                "reason": "ok",
+                "segment_count": len(_segment_coords),
+                "semispan_m": float(_semispan_m),
+            })
+        except Exception as _bridge_exc:
+            import logging as _logging
+            _logging.getLogger("aeris").warning(
+                "NeuralFoil polar bridge setup failed in aero_run (%s); "
+                "continuing with inviscid AVL.", _bridge_exc,
+            )
+            _bridge_section_map = None
+            _bridge_polar_store = None
+            _bridge_status.update({"active": False, "backend": "neuralfoil",
+                                   "reason": "setup_failed: " + str(_bridge_exc)})
+    elif _source_key in {"none", "off", "inviscid"}:
+        _bridge_status["reason"] = "disabled_by_user"
+    else:
+        _bridge_status["reason"] = "not_configured"
+
     aero_input = AeroInput(
         geometry=geometry_view,
         flight_condition=FlightCondition(
@@ -345,6 +395,8 @@ def execute_aero_run(
                 "save_element_forces": save_element_forces,
                 "control_input_deg": control_input_deg,
                 "diff_input_deg": diff_input_deg,
+                "section_map": _bridge_section_map,
+                "polar_store": _bridge_polar_store,
             },
         ),
         provenance={
@@ -392,6 +444,8 @@ def execute_aero_run(
                     "save_element_forces": save_element_forces,
                     "control_input_deg": control_input_deg,
                     "diff_input_deg": diff_input_deg,
+                    "section_map": _bridge_section_map,
+                    "polar_store": _bridge_polar_store,
                 },
             ),
             provenance=dict(aero_input.provenance),

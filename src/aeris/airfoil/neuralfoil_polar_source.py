@@ -53,7 +53,7 @@ from aeris.airfoil.polar_store import (
 
 log = logging.getLogger(__name__)
 
-_DEFAULT_ALPHA_SWEEP_DEG = np.linspace(-8.0, 14.0, 12)
+_DEFAULT_ALPHA_SWEEP_DEG = np.linspace(-8.0, 18.0, 14)
 _DEFAULT_MODEL_SIZE = "large"
 _MIN_POLAR_POINTS = 3
 

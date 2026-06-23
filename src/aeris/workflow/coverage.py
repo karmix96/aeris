@@ -58,12 +58,12 @@ WORKFLOW_COVERAGE_SPEC: tuple[WorkflowCoverageSpec, ...] = (
         "final_package",
         False,
         "handoff",
-        "aeris workflow record-stage --stage final_package --status complete --artifact <final_package_or_report>",
-        "workflow",
-        "record-stage",
-        auto_record_expected=False,
-        manual_record_only=True,
-        notes="Final handoff/package is usually recorded manually after evidence review.",
+        "aeris ml package-evidence --dataset <dataset> --model-run-dir <promoted_run> --workflow <workflow_root>",
+        "ml",
+        "package-evidence",
+        auto_record_expected=True,
+        manual_record_only=False,
+        notes="Final handoff/package can now be built from indexed AERIS evidence artifacts.",
     ),
 )
 

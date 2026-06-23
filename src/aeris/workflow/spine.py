@@ -150,7 +150,7 @@ DEFAULT_STAGE_DEFINITIONS: list[dict[str, Any]] = [
         "domain": "handoff",
         "required": False,
         "description": "Collect promoted model/package evidence for future MDAO or reporting.",
-        "recommended_command": "aeris ml require-promoted-model --model-run-dir data/processed/ml_runs/<promoted_run>",
+        "recommended_command": "aeris ml package-evidence --dataset data/datasets/<dataset> --model-run-dir data/processed/ml_runs/<promoted_run>",
     },
 ]
 

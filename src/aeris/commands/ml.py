@@ -54,6 +54,7 @@ from aeris.ml.multifidelity.evaluation import evaluate_delta_model_run
 from aeris.ml.predict import predict_with_trained_model
 from aeris.ml.active_learning import suggest_samples
 from aeris.ml.quality import audit_model, predict_with_confidence
+from aeris.ml.evidence_package import build_evidence_package
 from aeris.ml.train import train_baseline_model, train_baseline_model_from_config
 
 
@@ -1795,6 +1796,126 @@ def ml_check_inference_inputs(
             )
         except Exception as exc:
             fail_command("Workflow auto-record", exc)
+
+
+
+@ml_app.command("package-evidence")
+def ml_package_evidence(
+    dataset: Path = typer.Option(
+        ...,
+        "--dataset",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to the AERIS dataset root to package evidence for.",
+    ),
+    model_run_dir: Path | None = typer.Option(
+        None,
+        "--model-run-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Optional promoted ML model run directory.",
+    ),
+    confidence_dir: Path | None = typer.Option(
+        None,
+        "--confidence-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Optional output directory from aeris ml predict-with-confidence.",
+    ),
+    output_dir: Path | None = typer.Option(
+        None,
+        "--output-dir",
+        help="Output directory. Defaults to <dataset>/paper1_evidence_package.",
+    ),
+    extra_artifact: list[Path] | None = typer.Option(
+        None,
+        "--extra-artifact",
+        help="Optional extra file or directory to include. Can be passed multiple times.",
+    ),
+    copy_artifacts: bool = typer.Option(
+        True,
+        "--copy-artifacts/--no-copy-artifacts",
+        help="Copy indexed artifacts into the package artifacts/ folder.",
+    ),
+    allow_missing: bool = typer.Option(
+        False,
+        "--allow-missing/--strict-missing",
+        help="Allow missing required artifacts and write a failed_missing_required package instead of failing hard.",
+    ),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Optional workflow root to include and auto-record final_package.",
+    ),
+) -> None:
+    """Create a Paper-1 evidence package from existing AERIS reports/artifacts."""
+    try:
+        result = build_evidence_package(
+            dataset=dataset,
+            model_run_dir=model_run_dir,
+            confidence_dir=confidence_dir,
+            workflow=workflow,
+            output_dir=output_dir,
+            extra_artifacts=extra_artifact,
+            allow_missing=allow_missing,
+            copy_artifacts=copy_artifacts,
+        )
+    except Exception as exc:
+        fail_command("ML evidence package", exc)
+
+    counts = result.manifest.get("counts", {})
+    artifacts = result.manifest.get("artifacts", {})
+    typer.echo("[AERIS] ML evidence package completed")
+    typer.echo(f"  status: {result.status}")
+    typer.echo(f"  dataset: {Path(dataset).expanduser().resolve()}")
+    if model_run_dir is not None:
+        typer.echo(f"  model_run_dir: {Path(model_run_dir).expanduser().resolve()}")
+    typer.echo(f"  output_dir: {artifacts.get('evidence_package_manifest_json', result.artifacts.output_dir)}")
+    typer.echo(f"  evidence_package_manifest_json: {artifacts.get('evidence_package_manifest_json')}")
+    typer.echo(f"  evidence_package_summary_md: {artifacts.get('evidence_package_summary_md')}")
+    typer.echo(f"  evidence_artifact_index_csv: {artifacts.get('evidence_artifact_index_csv')}")
+    typer.echo(f"  present_artifacts: {counts.get('present')}")
+    typer.echo(f"  missing_optional_artifacts: {counts.get('missing_optional')}")
+    typer.echo(f"  missing_required_artifacts: {counts.get('missing_required')}")
+
+    try:
+        record_workflow_stage_success(
+            workflow=workflow,
+            stage="final_package",
+            inputs=[dataset, model_run_dir, confidence_dir],
+            artifacts=[
+                result.artifacts.output_dir,
+                result.artifacts.manifest_path,
+                result.artifacts.summary_md_path,
+                result.artifacts.artifact_index_csv_path,
+            ],
+            notes="Paper 1 / ML evidence package completed.",
+            metadata={
+                "command": "aeris ml package-evidence",
+                "status": result.status,
+                "present_artifacts": counts.get("present"),
+                "missing_optional_artifacts": counts.get("missing_optional"),
+                "missing_required_artifacts": counts.get("missing_required"),
+                "copy_artifacts": copy_artifacts,
+                "allow_missing": allow_missing,
+            },
+        )
+    except Exception as exc:
+        fail_command("Workflow auto-record", exc)
 
 
 @ml_app.command("audit-model")

@@ -32,7 +32,7 @@ except Exception:
     yaml = None
 
 # ── Version & constants ───────────────────────────────────────────────────────
-APP_VERSION       = "4.7.1"
+APP_VERSION       = "4.7.2-EDA_V2"
 DEFAULT_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg"
 DEFAULT_SYM_ELEVON_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_e_sym_deg"
 DEFAULT_DIFF_ELEVON_FEATURES = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_a_diff_deg"
@@ -5973,27 +5973,55 @@ def pg_ml(root, exe, tmo, dry):
 
         with se_t[1]:
             _note(
-                "<b>aeris ml eda</b> — checks constant columns, outliers, coverage gaps. "
+                "<b>aeris ml eda</b> — EDA v2 checks constants, duplicates, missingness, dtypes, categorical/status columns, "
+                "coverage gaps, Pearson/Spearman relationships, robust outliers, and aero sanity signals. "
                 "Generates <code>eda_report.json</code> + <code>eda_summary.md</code> + optional PNGs. "
-                "<code>--plots</code> generates correlation heatmap, distributions, alpha/control coverage.<br>"
-                "<b>Known gap:</b> <code>--feature-set</code> is not yet supported by EDA — use <code>--features</code> or <code>--feature-preset</code> here. "
-                "Run <code>aeris ml feature-engineer</code> first to materialise physics features, then EDA the engineered CSV directly.",
-                "warn",
+                "<code>--feature-set</code> is now supported directly, so physics-engineered views can be inspected before training.",
+                "info",
             )
             ds_e = _pick_dir("Promoted dataset",root/"data"/"datasets","eda_ds")
-            fa_e, _ = _feature_selector("eda", include_feature_set=False)
+            fa_e, _ = _feature_selector("eda", include_feature_set=True)
             c1,c2,c3 = st.columns(3)
             gc_e    = c1.text_input("--group-column","geometry_id",key="eda_gc")
-            sig_e   = c2.number_input("--outlier-sigma",min_value=0.1,value=4.0,step=0.5,key="eda_sig",help="Sigma threshold for outlier scan. Default 4.0")
+            sig_e   = c2.number_input("--outlier-sigma",min_value=0.1,value=4.0,step=0.5,key="eda_sig",help="Sigma threshold for simple outlier scan. EDA v2 also adds robust IQR/MAD outliers.")
             od_e    = c3.text_input("--output-dir (blank = <dataset>/eda)","",key="eda_od")
             c4,c5 = st.columns(2)
-            plots_e = c4.checkbox("--plots (generate PNGs)",False,key="eda_plots",help="Writes correlation_heatmap.png, feature_distributions.png, etc.")
+            plots_e = c4.checkbox("--plots (generate PNGs)",True,key="eda_plots",help="Writes heatmaps, distributions, alpha/control coverage, CL-vs-CD polar, target-vs-feature plots.")
             af_e    = c5.checkbox("--allow-forced",False,key="eda_af")
             args_e = ["ml","eda","--dataset",ds_e,"--group-column",gc_e,"--outlier-sigma",str(sig_e)] + fa_e
             if od_e.strip(): args_e += ["--output-dir",od_e]
             if plots_e: args_e.append("--plots")
+            else: args_e.append("--no-plots")
             if af_e: args_e.append("--allow-forced")
-            _panel("EDA","Generates eda_report.json + eda_summary.md + optional PNGs.",args_e,root,exe,tmo,dry,"eda_run")
+            _panel("EDA v2","Generates EDA v2 JSON/Markdown plus optional diagnostic PNGs.",args_e,root,exe,tmo,dry,"eda_run")
+
+            eda_out_dir = Path(od_e).expanduser() if od_e.strip() else Path(ds_e).expanduser() / "eda"
+            eda_report_path = eda_out_dir / "eda_report.json"
+            if eda_report_path.exists():
+                rep = _rjson(eda_report_path) or {}
+                st.caption(f"Loaded existing EDA report: {eda_report_path}")
+                m1, m2, m3, m4 = st.columns(4)
+                m1.metric("Rows", rep.get("shape", {}).get("n_rows", "—"))
+                m2.metric("Missing cols", rep.get("missingness", {}).get("n_columns_with_missing", "—"))
+                m3.metric("Constant cols", rep.get("constant_columns", {}).get("n_constant", "—"))
+                m4.metric("Robust outlier cols", rep.get("robust_outliers", {}).get("n_columns_with_robust_outliers", "—"))
+
+                recs = rep.get("operator_recommendations", []) or []
+                if recs:
+                    st.markdown("**EDA v2 recommendations**")
+                    for rec in recs[:8]:
+                        st.write(f"- {rec}")
+
+                with st.expander("Aero sanity snapshot", expanded=False):
+                    st.json(rep.get("aero_physics_sanity", {}))
+
+                plots_dir = eda_out_dir / "plots"
+                if plots_dir.exists():
+                    plot_files = sorted(plots_dir.glob("*.png"))
+                    if plot_files:
+                        st.markdown("**Existing EDA plots**")
+                        for plot_path in plot_files[:12]:
+                            st.image(str(plot_path), caption=plot_path.name, use_container_width=True)
 
     # ── ③ Train ───────────────────────────────────────────────────────────────
     with tabs[2]:

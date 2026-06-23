@@ -18,6 +18,7 @@ from aeris.ml.eda import (
     _alpha_control_coverage,
     _outlier_scan,
     _nonlinearity_scan,
+    _robust_outlier_scan,
     run_eda,
     run_promoted_dataset_eda,
 )
@@ -97,6 +98,20 @@ def test_run_eda_alpha_control_coverage():
     assert cov["n_control_values"] == 3
 
 
+def test_run_eda_v2_reports_missingness_dtypes_and_physics_sanity():
+    df = _make_df()
+    df.loc[0, "cl"] = np.nan
+    report = run_eda(df, feature_columns=FEATURES, target_columns=TARGETS)
+
+    assert report["schema_version"] == "aeris.eda_report.v2"
+    assert report["missingness"]["n_columns_with_missing"] >= 1
+    assert report["missingness"]["by_column"]["cl"]["n_missing"] == 1
+    assert report["dtypes"]["columns"]["alpha_deg"]["is_numeric_like"] is True
+    assert "cd_sanity" in report["aero_physics_sanity"]
+    assert report["aero_physics_sanity"]["cd_sanity"]["passed_positive_cd_check"] is True
+    assert report["operator_recommendations"]
+
+
 def test_run_eda_feature_stats_keys():
     df = _make_df()
     report = run_eda(df, feature_columns=FEATURES, target_columns=TARGETS)
@@ -146,6 +161,13 @@ def test_outlier_scan_flags_extreme():
     df = pd.DataFrame({"x": [0.0] * 50 + [1000.0]})
     result = _outlier_scan(df, ["x"], sigma=4.0)
     assert "x" in result["columns_with_outliers"]
+
+
+def test_robust_outlier_scan_flags_extreme():
+    df = pd.DataFrame({"x": [0.0] * 50 + [1000.0]})
+    result = _robust_outlier_scan(df, ["x"])
+    assert "x" in result["columns"]
+    assert result["columns"]["x"]["iqr_outlier_count"] > 0
 
 
 def test_nonlinearity_scan_detects_nonlinear():

@@ -22,7 +22,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-EDA_SCHEMA_VERSION = "aeris.eda_report.v1"
+EDA_SCHEMA_VERSION = "aeris.eda_report.v2"
 
 
 # ---------------------------------------------------------------------------
@@ -300,6 +300,412 @@ def _outlier_scan(
     }
 
 
+def _round_float(value: float | None, digits: int = 6) -> float | None:
+    """Round finite floats for stable JSON reports."""
+    if value is None:
+        return None
+    try:
+        val = float(value)
+    except Exception:
+        return None
+    if not math.isfinite(val):
+        return None
+    return round(val, digits)
+
+
+def _dtype_report(df: pd.DataFrame) -> dict[str, Any]:
+    """Column dtype and numeric-coercion diagnostics."""
+    columns: dict[str, Any] = {}
+    for col in df.columns:
+        series = df[col]
+        numeric = pd.to_numeric(series, errors="coerce")
+        non_missing = int(series.notna().sum())
+        numeric_non_missing = int(numeric.notna().sum())
+        columns[col] = {
+            "dtype": str(series.dtype),
+            "n_unique": int(series.nunique(dropna=True)),
+            "n_missing": int(series.isna().sum()),
+            "numeric_coercible_fraction": (
+                float(numeric_non_missing / non_missing) if non_missing else None
+            ),
+            "is_numeric_like": bool(non_missing > 0 and numeric_non_missing == non_missing),
+        }
+    return {
+        "columns": columns,
+        "n_columns": int(len(columns)),
+        "n_numeric_like": int(sum(1 for item in columns.values() if item["is_numeric_like"])),
+    }
+
+
+def _missingness_report(
+    df: pd.DataFrame,
+    *,
+    important_columns: list[str],
+    group_column: str = "geometry_id",
+    condition_columns: list[str] | None = None,
+) -> dict[str, Any]:
+    """Missing-value diagnostics by column, group, and operating condition."""
+    condition_columns = condition_columns or [
+        "alpha_deg",
+        "control_input_deg",
+        "delta_e_sym_deg",
+        "delta_a_diff_deg",
+        "velocity_mps",
+        "altitude_m",
+    ]
+    n_rows = int(len(df))
+
+    by_column: dict[str, Any] = {}
+    for col in df.columns:
+        n_missing = int(df[col].isna().sum())
+        by_column[col] = {
+            "n_missing": n_missing,
+            "missing_fraction": float(n_missing / n_rows) if n_rows else None,
+        }
+
+    selected = [c for c in important_columns if c in df.columns]
+    by_group: dict[str, Any]
+    if group_column in df.columns and selected:
+        missing_mask = df[selected].isna().any(axis=1)
+        counts = missing_mask.groupby(df[group_column]).sum().sort_values(ascending=False)
+        top = counts[counts > 0].head(20)
+        by_group = {
+            "group_column": group_column,
+            "important_columns": selected,
+            "n_groups": int(df[group_column].nunique(dropna=True)),
+            "n_groups_with_any_missing": int((counts > 0).sum()),
+            "top_groups_by_missing_rows": [
+                {"group": str(idx), "n_missing_rows": int(val)}
+                for idx, val in top.items()
+            ],
+        }
+    else:
+        by_group = {
+            "group_column": group_column,
+            "important_columns": selected,
+            "status": "skipped",
+            "reason": "missing_group_column_or_no_selected_columns",
+        }
+
+    by_condition: dict[str, Any] = {}
+    target_like = [c for c in selected if c in df.columns]
+    for cond in condition_columns:
+        if cond not in df.columns or not target_like:
+            continue
+        cond_summary: dict[str, Any] = {}
+        for value, sub in df.groupby(cond, dropna=False):
+            key = "<NA>" if pd.isna(value) else str(value)
+            cond_summary[key] = {
+                "n_rows": int(len(sub)),
+                "n_rows_with_any_missing": int(sub[target_like].isna().any(axis=1).sum()),
+            }
+        by_condition[cond] = cond_summary
+
+    return {
+        "n_rows": n_rows,
+        "by_column": by_column,
+        "columns_with_missing": [col for col, item in by_column.items() if item["n_missing"] > 0],
+        "n_columns_with_missing": int(sum(1 for item in by_column.values() if item["n_missing"] > 0)),
+        "by_group": by_group,
+        "by_condition": by_condition,
+    }
+
+
+def _categorical_summary(
+    df: pd.DataFrame,
+    *,
+    max_unique_for_category: int = 25,
+    top_n: int = 10,
+) -> dict[str, Any]:
+    """Small categorical/status-column summary for failure/status/provenance fields."""
+    preferred_names = {
+        "solver_id",
+        "solver_status",
+        "status",
+        "failure_reason",
+        "reject_reason",
+        "rejection_reason",
+        "geometry_family",
+        "source_generator",
+        "sweep_type",
+        "control_mode",
+        "fidelity_level",
+    }
+    summaries: dict[str, Any] = {}
+    for col in df.columns:
+        series = df[col]
+        numeric_status = _numeric_column_status(series, min_rows=2)
+        n_unique = int(series.nunique(dropna=True))
+        should_summarize = (
+            col in preferred_names
+            or series.dtype == "object"
+            or n_unique <= max_unique_for_category and numeric_status["status"] != "usable"
+        )
+        if not should_summarize:
+            continue
+        counts = series.fillna("<NA>").astype(str).value_counts(dropna=False).head(top_n)
+        summaries[col] = {
+            "n_unique": n_unique,
+            "top_values": [
+                {"value": str(idx), "count": int(val)}
+                for idx, val in counts.items()
+            ],
+        }
+    return {
+        "columns": summaries,
+        "n_categorical_columns_summarized": int(len(summaries)),
+    }
+
+
+def _robust_outlier_scan(df: pd.DataFrame, columns: list[str]) -> dict[str, Any]:
+    """IQR and MAD outlier counts. Less gullible than mean/std outliers."""
+    results: dict[str, Any] = {}
+    for col in columns:
+        if col not in df.columns:
+            continue
+        x = pd.to_numeric(df[col], errors="coerce").dropna()
+        if len(x) < 8 or int(x.nunique()) < 2:
+            continue
+
+        q1 = float(x.quantile(0.25))
+        q3 = float(x.quantile(0.75))
+        iqr = q3 - q1
+        if math.isfinite(iqr) and iqr > 0.0:
+            lo = q1 - 1.5 * iqr
+            hi = q3 + 1.5 * iqr
+            iqr_count = int(((x < lo) | (x > hi)).sum())
+        else:
+            # Degenerate-but-not-constant columns happen in smoke datasets:
+            # many identical values plus one/few extreme rows. Treat values
+            # different from the median as robust outliers instead of silently
+            # reporting nothing.
+            median_for_iqr = float(x.median())
+            lo = hi = median_for_iqr
+            iqr_count = int((x != median_for_iqr).sum())
+
+        median = float(x.median())
+        mad = float((x - median).abs().median())
+        if math.isfinite(mad) and mad > 0.0:
+            robust_z = 0.6745 * (x - median).abs() / mad
+            mad_count = int((robust_z > 3.5).sum())
+        else:
+            mad_count = int((x != median).sum())
+
+        if iqr_count > 0 or mad_count > 0:
+            results[col] = {
+                "iqr_outlier_count": iqr_count,
+                "mad_outlier_count": mad_count,
+                "iqr_lower_bound": _round_float(lo),
+                "iqr_upper_bound": _round_float(hi),
+                "median": _round_float(median),
+                "mad": _round_float(mad),
+            }
+    return {
+        "columns": results,
+        "n_columns_with_robust_outliers": int(len(results)),
+    }
+
+
+def _slope_summary(
+    df: pd.DataFrame,
+    *,
+    x_col: str,
+    y_col: str,
+    group_cols: list[str],
+    min_unique_x: int = 2,
+) -> dict[str, Any]:
+    """Fit y = slope*x+b by group and summarize slopes."""
+    if x_col not in df.columns or y_col not in df.columns:
+        return {"status": "skipped", "reason": "missing_x_or_y_column"}
+
+    available_groups = [c for c in group_cols if c in df.columns and c != x_col and c != y_col]
+    work = df[available_groups + [x_col, y_col]].copy()
+    work[x_col] = pd.to_numeric(work[x_col], errors="coerce")
+    work[y_col] = pd.to_numeric(work[y_col], errors="coerce")
+    work = work[work[x_col].notna() & work[y_col].notna()]
+    if work.empty:
+        return {"status": "skipped", "reason": "no_finite_rows"}
+
+    iterator = work.groupby(available_groups, dropna=False) if available_groups else [((), work)]
+    rows: list[dict[str, Any]] = []
+    for key, sub in iterator:
+        if not isinstance(key, tuple):
+            key = (key,)
+        if len(sub) < min_unique_x or int(sub[x_col].nunique()) < min_unique_x:
+            continue
+        try:
+            slope, intercept = np.polyfit(sub[x_col].to_numpy(float), sub[y_col].to_numpy(float), 1)
+        except Exception:
+            continue
+        rows.append({
+            "group": {col: (None if pd.isna(val) else val) for col, val in zip(available_groups, key)},
+            "n_rows": int(len(sub)),
+            "x_min": _round_float(float(sub[x_col].min())),
+            "x_max": _round_float(float(sub[x_col].max())),
+            "slope": _round_float(float(slope)),
+            "intercept": _round_float(float(intercept)),
+        })
+
+    slopes = [float(r["slope"]) for r in rows if r.get("slope") is not None]
+    if not slopes:
+        return {"status": "skipped", "reason": "no_evaluable_groups", "group_columns": available_groups}
+
+    return {
+        "status": "computed",
+        "x_column": x_col,
+        "y_column": y_col,
+        "group_columns": available_groups,
+        "n_groups_evaluable": int(len(slopes)),
+        "slope_min": _round_float(min(slopes)),
+        "slope_max": _round_float(max(slopes)),
+        "slope_mean": _round_float(float(np.mean(slopes))),
+        "slope_median": _round_float(float(np.median(slopes))),
+        "n_positive_slopes": int(sum(s > 0 for s in slopes)),
+        "n_negative_slopes": int(sum(s < 0 for s in slopes)),
+        "examples": rows[:20],
+    }
+
+
+def _aero_physics_sanity(
+    df: pd.DataFrame,
+    *,
+    group_column: str = "geometry_id",
+) -> dict[str, Any]:
+    """Lightweight aerodynamic sanity EDA. Not a QC gate; a diagnostic map."""
+    report: dict[str, Any] = {}
+
+    if "cd" in df.columns:
+        cd = pd.to_numeric(df["cd"], errors="coerce")
+        finite = cd.dropna()
+        report["cd_sanity"] = {
+            "n_finite": int(len(finite)),
+            "n_nonpositive": int((finite <= 0.0).sum()),
+            "min_cd": _round_float(float(finite.min())) if len(finite) else None,
+            "max_cd": _round_float(float(finite.max())) if len(finite) else None,
+            "passed_positive_cd_check": bool(len(finite) > 0 and int((finite <= 0.0).sum()) == 0),
+        }
+    else:
+        report["cd_sanity"] = {"status": "skipped", "reason": "missing_cd"}
+
+    if "cl" in df.columns and "cd" in df.columns:
+        cl = pd.to_numeric(df["cl"], errors="coerce")
+        cd = pd.to_numeric(df["cd"], errors="coerce")
+        mask = cl.notna() & cd.notna() & (cd > 0.0)
+        ld = cl[mask] / cd[mask]
+        report["lift_to_drag_sanity"] = {
+            "n_finite": int(len(ld)),
+            "min_l_over_d": _round_float(float(ld.min())) if len(ld) else None,
+            "max_l_over_d": _round_float(float(ld.max())) if len(ld) else None,
+            "mean_l_over_d": _round_float(float(ld.mean())) if len(ld) else None,
+        }
+    else:
+        report["lift_to_drag_sanity"] = {"status": "skipped", "reason": "missing_cl_or_cd"}
+
+    alpha_groups = [group_column, "control_input_deg", "delta_e_sym_deg", "delta_a_diff_deg", "velocity_mps", "altitude_m", "beta_deg"]
+    if "alpha_deg" in df.columns and "cl" in df.columns:
+        report["cl_alpha_slope"] = _slope_summary(df, x_col="alpha_deg", y_col="cl", group_cols=alpha_groups)
+    else:
+        report["cl_alpha_slope"] = {"status": "skipped", "reason": "missing_alpha_or_cl"}
+
+    if "alpha_deg" in df.columns and "cm" in df.columns:
+        cm_alpha = _slope_summary(df, x_col="alpha_deg", y_col="cm", group_cols=alpha_groups)
+        if cm_alpha.get("status") == "computed":
+            n_eval = int(cm_alpha.get("n_groups_evaluable", 0) or 0)
+            n_neg = int(cm_alpha.get("n_negative_slopes", 0) or 0)
+            cm_alpha["expected_sign"] = "negative_for_static_pitch_stability_smoke_check"
+            cm_alpha["n_groups_with_expected_negative_slope"] = n_neg
+            cm_alpha["n_groups_with_nonnegative_slope"] = n_eval - n_neg
+            cm_alpha["passed_expected_sign_check"] = bool(n_eval > 0 and n_neg == n_eval)
+        report["cm_alpha_slope"] = cm_alpha
+    else:
+        report["cm_alpha_slope"] = {"status": "skipped", "reason": "missing_alpha_or_cm"}
+
+    control_col = "delta_e_sym_deg" if "delta_e_sym_deg" in df.columns else "control_input_deg"
+    control_groups = [group_column, "alpha_deg", "velocity_mps", "altitude_m", "beta_deg"]
+    if control_col in df.columns and "cm" in df.columns:
+        report["cm_control_slope"] = _slope_summary(df, x_col=control_col, y_col="cm", group_cols=control_groups)
+    else:
+        report["cm_control_slope"] = {"status": "skipped", "reason": "missing_control_or_cm"}
+
+    return report
+
+
+def _top_feature_target_relationships(
+    df: pd.DataFrame,
+    *,
+    feature_columns: list[str],
+    target_columns: list[str],
+    top_n: int = 8,
+) -> dict[str, Any]:
+    """Rank feature-target relationships by absolute Pearson/Spearman signal."""
+    result: dict[str, Any] = {}
+    for target in target_columns:
+        if target not in df.columns:
+            continue
+        rows: list[dict[str, Any]] = []
+        for feature in feature_columns:
+            if feature not in df.columns:
+                continue
+            pearson = _safe_corr(df[feature], df[target], method="pearson", min_rows=5)
+            spearman = _safe_corr(df[feature], df[target], method="spearman", min_rows=5)
+            signal = max(abs(v) for v in [pearson or 0.0, spearman or 0.0])
+            if signal <= 0.0:
+                continue
+            rows.append({
+                "feature": feature,
+                "pearson_r": _round_float(pearson, 4),
+                "spearman_r": _round_float(spearman, 4),
+                "max_abs_signal": _round_float(signal, 4),
+            })
+        result[target] = sorted(rows, key=lambda item: item["max_abs_signal"] or 0.0, reverse=True)[:top_n]
+    return result
+
+
+def _operator_recommendations(report: dict[str, Any]) -> list[str]:
+    """Plain-English operator hints derived from EDA diagnostics."""
+    hints: list[str] = []
+    constants = report.get("constant_columns", {}).get("constant_columns", []) or []
+    feature_cols = set((report.get("metadata", {}) or {}).get("feature_columns", []) or [])
+    constant_features = [c for c in constants if c in feature_cols]
+    if constant_features:
+        hints.append(
+            "Remove or ignore constant feature columns for this dataset: "
+            + ", ".join(constant_features[:12])
+        )
+
+    missing = report.get("missingness", {}) or {}
+    if missing.get("n_columns_with_missing", 0) > 0:
+        hints.append(
+            f"Inspect missing values before training: {missing.get('n_columns_with_missing')} column(s) contain missing entries."
+        )
+
+    coverage = report.get("per_geometry_coverage", {}) or {}
+    if coverage.get("uniform_coverage") is False:
+        hints.append(
+            "Geometry coverage is not uniform; inspect failed/incomplete geometry groups before trusting grouped-split metrics."
+        )
+
+    cd_sanity = (report.get("aero_physics_sanity", {}) or {}).get("cd_sanity", {}) or {}
+    if cd_sanity.get("n_nonpositive", 0):
+        hints.append("Non-positive CD values exist; this is usually a solver/data-quality red flag, not a model feature.")
+
+    cm_alpha = (report.get("aero_physics_sanity", {}) or {}).get("cm_alpha_slope", {}) or {}
+    if cm_alpha.get("status") == "computed" and cm_alpha.get("n_groups_with_nonnegative_slope", 0):
+        hints.append(
+            "Some Cm-alpha groups have non-negative slope; audit moment reference, sign convention, or unstable geometry regimes."
+        )
+
+    corr_skipped = report.get("correlation", {}).get("skipped_columns", []) or []
+    if corr_skipped:
+        hints.append(
+            f"Correlation skipped {len(corr_skipped)} column(s), usually because they are constant, missing, or non-numeric."
+        )
+
+    if not hints:
+        hints.append("No obvious EDA blockers detected. Still inspect plots before training; autopilot confidence is how bugs get tenure.")
+    return hints
+
+
 # ---------------------------------------------------------------------------
 # Main entry point
 # ---------------------------------------------------------------------------
@@ -342,6 +748,13 @@ def run_eda(
     report: dict[str, Any] = {
         "schema_version": EDA_SCHEMA_VERSION,
         "shape": _summarize_shape(df),
+        "dtypes": _dtype_report(df),
+        "missingness": _missingness_report(
+            df,
+            important_columns=all_cols,
+            group_column=group_column,
+        ),
+        "categorical_summary": _categorical_summary(df),
         "constant_columns": _detect_constant_columns(df),
         "duplicates": _detect_duplicates(df),
         **_per_column_stats(df, feature_columns, "feature_stats"),
@@ -349,9 +762,17 @@ def run_eda(
         "per_geometry_coverage": _per_geometry_coverage(df, group_column),
         "alpha_control_coverage": _alpha_control_coverage(df),
         "correlation": _correlation_matrix(df, all_cols),
+        "top_feature_target_relationships": _top_feature_target_relationships(
+            df,
+            feature_columns=feature_columns,
+            target_columns=target_columns,
+        ),
         "nonlinearity": _nonlinearity_scan(df, feature_columns, target_columns),
         "outliers": _outlier_scan(df, all_cols, sigma=outlier_sigma),
+        "robust_outliers": _robust_outlier_scan(df, all_cols),
+        "aero_physics_sanity": _aero_physics_sanity(df, group_column=group_column),
     }
+    report["operator_recommendations"] = _operator_recommendations(report)
 
     if output_path is not None:
         output_path = Path(output_path)
@@ -405,6 +826,16 @@ def write_eda_summary_markdown(report: dict[str, Any], output_path: Path) -> Pat
         lines.append("  - " + ", ".join(f"`{c}`" for c in constants["constant_columns"]))
     lines.append(f"- duplicate rows: `{duplicates.get('n_duplicate_rows', 0)}`")
     lines.append(f"- columns with outliers: `{outliers.get('n_columns_with_outliers', 0)}`")
+    missingness = report.get("missingness", {}) or {}
+    physics = report.get("aero_physics_sanity", {}) or {}
+    recommendations = report.get("operator_recommendations", []) or []
+    lines.append(f"- columns with missing values: `{missingness.get('n_columns_with_missing', 0)}`")
+    cd_sanity = physics.get("cd_sanity", {}) or {}
+    if "n_nonpositive" in cd_sanity:
+        lines.append(f"- non-positive CD rows: `{cd_sanity.get('n_nonpositive')}`")
+    cm_alpha = physics.get("cm_alpha_slope", {}) or {}
+    if cm_alpha.get("status") == "computed":
+        lines.append(f"- Cm-alpha groups with nonnegative slope: `{cm_alpha.get('n_groups_with_nonnegative_slope', 'n/a')}`")
     if correlation.get("skipped_columns"):
         skipped_names = [item.get("column") for item in correlation.get("skipped_columns", []) if item.get("column")]
         lines.append(f"- correlation-skipped columns: `{len(skipped_names)}`")
@@ -418,6 +849,10 @@ def write_eda_summary_markdown(report: dict[str, Any], output_path: Path) -> Pat
     lines.append(f"- uniform coverage: `{coverage.get('uniform_coverage', 'n/a')}`")
     lines.append(f"- alpha values: `{alpha_control.get('alpha_values')}`")
     lines.append(f"- control values: `{alpha_control.get('control_input_values')}`")
+    lines.append("")
+    lines.append("## Operator recommendations")
+    for hint in recommendations[:12]:
+        lines.append(f"- {hint}")
     lines.append("")
     lines.append("## Notes")
     lines.append("- Constant feature columns are not automatically fatal, but they teach the model nothing in this dataset.")
@@ -619,6 +1054,57 @@ def write_eda_plots(
                 _record(path, "targets_vs_alpha")
     except Exception as exc:
         _record_error("targets_vs_alpha", exc)
+
+
+
+    # 6) Aero polar: CD vs CL.
+    try:
+        if "cl" in df.columns and "cd" in df.columns:
+            cl = pd.to_numeric(df["cl"], errors="coerce")
+            cd = pd.to_numeric(df["cd"], errors="coerce")
+            mask = cl.notna() & cd.notna()
+            if int(mask.sum()) >= 3:
+                fig, ax = plt.subplots(figsize=(6, 4))
+                ax.scatter(cd[mask], cl[mask], s=14, alpha=0.75)
+                ax.set_xlabel("cd")
+                ax.set_ylabel("cl")
+                ax.set_title("Aero polar: CL vs CD")
+                fig.tight_layout()
+                path = output_dir / "aero_polar_cl_vs_cd.png"
+                fig.savefig(path, dpi=160)
+                plt.close(fig)
+                _record(path, "aero_polar_cl_vs_cd")
+    except Exception as exc:
+        _record_error("aero_polar_cl_vs_cd", exc)
+
+    # 7) Target-vs-feature scatter grid for the first useful feature/target pairs.
+    try:
+        fcols = _available_numeric_columns(df, feature_columns)[:6]
+        tcols = _available_numeric_columns(df, target_columns)[:3]
+        pairs = [(f, t) for t in tcols for f in fcols if f != t][:12]
+        if pairs:
+            n = len(pairs)
+            ncols = 3 if n >= 3 else n
+            nrows = int(math.ceil(n / ncols))
+            fig, axes = plt.subplots(nrows, ncols, figsize=(4 * ncols, 3 * nrows))
+            axes_list = list(np.array(axes).reshape(-1)) if n > 1 else [axes]
+            for ax, (feature, target) in zip(axes_list, pairs):
+                x = pd.to_numeric(df[feature], errors="coerce")
+                y = pd.to_numeric(df[target], errors="coerce")
+                mask = x.notna() & y.notna()
+                ax.scatter(x[mask], y[mask], s=10, alpha=0.65)
+                ax.set_xlabel(feature, fontsize=8)
+                ax.set_ylabel(target, fontsize=8)
+                ax.set_title(f"{target} vs {feature}", fontsize=9)
+            for ax in axes_list[len(pairs):]:
+                ax.axis("off")
+            fig.tight_layout()
+            path = output_dir / "targets_vs_features.png"
+            fig.savefig(path, dpi=160)
+            plt.close(fig)
+            _record(path, "targets_vs_features")
+    except Exception as exc:
+        _record_error("targets_vs_features", exc)
 
     return artifacts
 

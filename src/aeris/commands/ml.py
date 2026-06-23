@@ -139,6 +139,10 @@ def _echo_train_result(result: dict, *, model_type_label: str | None = None) -> 
         typer.echo(f"  ml_run_manifest_json: {artifacts.ml_run_manifest_path}")
     if getattr(artifacts, "diagnostics_dir", None) is not None:
         typer.echo(f"  diagnostics_dir: {artifacts.diagnostics_dir}")
+    if getattr(artifacts, "training_monitor_report_path", None) is not None:
+        typer.echo(f"  training_monitor_report_json: {artifacts.training_monitor_report_path}")
+    if getattr(artifacts, "training_history_path", None) is not None:
+        typer.echo(f"  training_history_csv: {artifacts.training_history_path}")
 
     if artifacts.coefficients_path is not None:
         typer.echo(f"  coefficients_json: {artifacts.coefficients_path}")

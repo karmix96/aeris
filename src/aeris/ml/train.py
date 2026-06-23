@@ -14,6 +14,7 @@ from aeris.ml.diagnostics import write_regression_diagnostics
 from aeris.ml.fingerprints import build_dataset_fingerprints, file_sha256
 from aeris.ml.manifest import build_environment_snapshot, utc_now_iso, write_ml_run_manifest
 from aeris.ml.metrics import evaluate_regression_metrics
+from aeris.ml.training_monitor import write_training_monitor
 from aeris.ml.model_registry import build_model, get_model_spec
 from aeris.ml.feature_engineering import apply_feature_engineering
 from aeris.ml.feature_sets import FeatureSet, get_feature_set, validate_feature_set_dataframe
@@ -63,6 +64,10 @@ class TrainArtifacts:
     train_residuals_path: Path | None = None
     val_residuals_path: Path | None = None
     test_residuals_path: Path | None = None
+    training_monitor_dir: Path | None = None
+    training_monitor_report_path: Path | None = None
+    training_history_path: Path | None = None
+    training_monitor_plots_dir: Path | None = None
     ml_run_manifest_path: Path | None = None
 
 
@@ -425,6 +430,14 @@ def train_baseline_model(
     metrics_path = output_dir / "metrics.json"
     metrics_path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
 
+    training_monitor = write_training_monitor(
+        model=model,
+        model_type=model_type,
+        metrics=metrics,
+        output_dir=output_dir / "training_monitor",
+        target_columns=target_columns,
+    )
+
     train_config = TrainConfig(
         dataset_path=str(dataset_path),
         feature_columns=list(feature_columns),
@@ -520,6 +533,9 @@ def train_baseline_model(
             "metrics_path": str(metrics_path),
             "train_config_path": str(train_config_path),
             "diagnostics_dir": str(diagnostics_dir),
+            "training_monitor_report_path": str(training_monitor.report_path),
+            "training_history_path": None if training_monitor.history_path is None else str(training_monitor.history_path),
+            "training_monitor_plots_dir": None if training_monitor.plots_dir is None else str(training_monitor.plots_dir),
             "coefficients_path": None if coefficients_path is None else str(coefficients_path),
             "feature_importances_path": None if feature_importances_path is None else str(feature_importances_path),
         },
@@ -541,6 +557,10 @@ def train_baseline_model(
         coefficients_path=coefficients_path,
         feature_importances_path=feature_importances_path,
         diagnostics_dir=diagnostics_dir,
+        training_monitor_dir=training_monitor.monitor_dir,
+        training_monitor_report_path=training_monitor.report_path,
+        training_history_path=training_monitor.history_path,
+        training_monitor_plots_dir=training_monitor.plots_dir,
         feature_engineering_manifest_path=_fe_manifest_path,
         train_prediction_vs_truth_path=Path(train_diag["prediction_vs_truth_csv"]),
         val_prediction_vs_truth_path=Path(val_diag["prediction_vs_truth_csv"]),

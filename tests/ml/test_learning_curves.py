@@ -54,12 +54,15 @@ def test_run_learning_curves_on_dataframe_writes_artifacts(tmp_path) -> None:
         write_plots=True,
     )
 
-    assert result["schema_version"] == "aeris.learning_curves.v1.2"
+    assert result["schema_version"] == "aeris.learning_curves.v1.3"
     assert result["status"] == "completed"
     assert len(result["summary_rows"]) == 2
     assert result["summary_rows"][-1]["group_size"] == 4
     assert result["summary_rows"][-1]["test_r2_mean_mean"] is not None
     assert result["per_target_summary"]
+    assert "target_diagnostics" in result
+    assert "normalization" in result
+    assert "informative_target_columns" in result
     assert {row["target"] for row in result["per_target_summary"]} == {"cl", "cd", "cm"}
     assert all(row["learning_state"] for row in result["per_target_summary"])
 
@@ -67,11 +70,15 @@ def test_run_learning_curves_on_dataframe_writes_artifacts(tmp_path) -> None:
     assert (tmp_path / "learning_curves.csv").exists()
     assert (tmp_path / "learning_curves_summary.csv").exists()
     assert (tmp_path / "learning_curves_per_target_summary.csv").exists()
+    assert (tmp_path / "learning_curves_target_diagnostics.csv").exists()
     assert (tmp_path / "learning_curves_report.json").exists()
     assert (tmp_path / "learning_curves_summary.md").exists()
     assert (tmp_path / "plots" / "learning_curve_r2.png").exists()
     assert (tmp_path / "plots" / "per_target_learning_curves.png").exists()
     assert (tmp_path / "plots" / "per_target_final_r2.png").exists()
+    assert (tmp_path / "plots" / "learning_curve_informative_r2.png").exists()
+    assert (tmp_path / "plots" / "learning_curve_nrmse_by_std.png").exists()
+    assert (tmp_path / "plots" / "per_target_final_nrmse.png").exists()
 
     report = json.loads((tmp_path / "learning_curves_report.json").read_text(encoding="utf-8"))
     assert report["artifacts"]["learning_curves_csv"] == artifacts["learning_curves_csv"]
@@ -126,3 +133,30 @@ def test_resolve_target_columns_from_dataframe_auto_sets() -> None:
     assert "alpha_deg" not in targets
     assert "velocity_mps" not in targets
     assert "geometry_id" not in targets
+
+
+
+def test_learning_curves_flags_constant_targets(tmp_path) -> None:
+    df = _synthetic_grouped_df()
+    df["constant_target"] = 0.0
+    result = run_learning_curves_on_dataframe(
+        df=df,
+        feature_columns=["c1_m", "b_total_m", "alpha_deg"],
+        target_columns=["cl", "constant_target"],
+        model_type="linear_regression",
+        group_sizes=[2, 4],
+        seeds=[11, 22],
+        split_method="grouped",
+        group_column="geometry_id",
+        train_fraction=0.6,
+        val_fraction=0.2,
+        test_fraction=0.2,
+        output_dir=tmp_path,
+        write_plots=True,
+    )
+    by_target = {row["target"]: row for row in result["per_target_summary"]}
+    assert by_target["constant_target"]["is_near_constant"] is True
+    assert by_target["constant_target"]["learning_state"] == "constant_or_near_constant"
+    assert "constant_target" in result["excluded_from_informative_score_target_columns"]
+    assert "constant_target" not in result["informative_target_columns"]
+    assert result["normalization"]["used_for_training"] is False

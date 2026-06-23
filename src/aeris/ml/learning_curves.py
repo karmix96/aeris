@@ -18,7 +18,7 @@ from aeris.ml.metrics import evaluate_regression_metrics
 from aeris.ml.model_registry import build_model, get_model_spec
 
 
-LEARNING_CURVES_SCHEMA_VERSION = "aeris.learning_curves.v1.2"
+LEARNING_CURVES_SCHEMA_VERSION = "aeris.learning_curves.v1.3"
 
 
 def parse_int_csv(value: str | Sequence[int], *, option_name: str = "--group-sizes") -> list[int]:
@@ -293,7 +293,7 @@ def _target_metric(metrics: dict[str, Any], split_name: str, target: str, metric
 def _flatten_metrics_row(*, prefix: str, metrics: dict[str, Any], target_columns: list[str]) -> dict[str, Any]:
     row: dict[str, Any] = {}
     overall = metrics.get(prefix, {}).get("overall", {})
-    for metric in ["r2_mean", "rmse_mean", "mae_mean", "max_abs_error_mean"]:
+    for metric in ["r2_mean", "rmse_mean", "mae_mean", "nrmse_by_std_mean", "nrmse_by_range_mean", "max_abs_error_mean"]:
         row[f"{prefix}_{metric}"] = overall.get(metric)
     for target in target_columns:
         per = metrics.get(prefix, {}).get("per_target", {}).get(target, {})
@@ -422,7 +422,7 @@ def _build_summary_rows(rows: list[dict[str, Any]], target_columns: list[str]) -
                 row[f"{split_name}_{metric}_std"] = s["std"]
         for target in target_columns:
             for split_name in ["train", "val", "test"]:
-                for metric in ["r2", "rmse", "mae"]:
+                for metric in ["r2", "rmse", "mae", "nrmse_by_std", "nrmse_by_range"]:
                     key = f"{split_name}_{metric}__{target}"
                     s = _stats(r.get(key) for r in subset)
                     row[f"{key}_mean"] = s["mean"]
@@ -430,6 +430,111 @@ def _build_summary_rows(rows: list[dict[str, Any]], target_columns: list[str]) -
         summary_rows.append(row)
     return summary_rows
 
+
+
+def _safe_float(value: Any) -> float | None:
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return None
+    return v if np.isfinite(v) else None
+
+
+def _mean_optional(values: Iterable[Any]) -> float | None:
+    vals = [_safe_float(v) for v in values]
+    vals = [v for v in vals if v is not None]
+    return None if not vals else float(mean(vals))
+
+
+def _target_family(target: str) -> str:
+    """Operator-facing target family for reporting and plotting."""
+    key = target.lower().strip()
+    if key in {"cl", "cd", "cm", "x_np", "xnp"}:
+        return "primary_aero"
+    if key in {"l_over_d", "l_over_d_viscous", "cd_total", "cd_profile", "cd_ind", "cd_ff"}:
+        return "derived_or_drag_breakdown"
+    if key in {"cy", "cl_roll", "cn"}:
+        return "symmetric_lateral_expected_near_zero"
+    if key.endswith("_per_rad") or key.startswith(("cla", "cma", "cyb", "clb", "cnb")):
+        return "derivative_or_stability"
+    return "other_numeric"
+
+
+def _target_diagnostics(df: pd.DataFrame, target_columns: list[str]) -> list[dict[str, Any]]:
+    """Summarize target scale/variance so broad-target scores are not misread.
+
+    Normalization note:
+    Raw RMSE/MAE cannot be compared across targets like CD, Cm, L/D, and Xnp.
+    This table records each target's training-data scale and flags constant or
+    near-constant targets so they can be excluded from broad overall readiness.
+    """
+    out: list[dict[str, Any]] = []
+    for target in target_columns:
+        numeric = pd.to_numeric(df[target], errors="coerce") if target in df.columns else pd.Series(dtype=float)
+        finite = numeric[np.isfinite(numeric.to_numpy(dtype=float, na_value=np.nan))]
+        n = int(len(finite))
+        n_unique = int(finite.nunique(dropna=True)) if n else 0
+        min_v = _safe_float(finite.min()) if n else None
+        max_v = _safe_float(finite.max()) if n else None
+        mean_v = _safe_float(finite.mean()) if n else None
+        std_v = _safe_float(finite.std(ddof=0)) if n else None
+        range_v = None if min_v is None or max_v is None else float(max_v - min_v)
+        is_constant = bool(n_unique <= 1 or std_v is None or std_v <= 1e-12 or range_v is None or range_v <= 1e-12)
+        is_near_constant = bool(is_constant or n_unique <= 2 or (std_v is not None and abs(std_v) <= 1e-9))
+        family = _target_family(target)
+        include_in_overall = not is_near_constant
+        out.append(
+            {
+                "target": target,
+                "family": family,
+                "n_finite": n,
+                "n_unique": n_unique,
+                "min": min_v,
+                "max": max_v,
+                "mean": mean_v,
+                "std": std_v,
+                "range": range_v,
+                "is_constant": is_constant,
+                "is_near_constant": is_near_constant,
+                "include_in_overall_learning_score": include_in_overall,
+                "normalization_note": "Use nRMSE_by_std/range for cross-target comparison; raw RMSE is target-scale dependent.",
+            }
+        )
+    return out
+
+
+def _target_diag_map(target_diagnostics: list[dict[str, Any]] | None) -> dict[str, dict[str, Any]]:
+    return {str(row.get("target")): row for row in list(target_diagnostics or [])}
+
+
+def _informative_targets(target_diagnostics: list[dict[str, Any]] | None, target_columns: list[str]) -> list[str]:
+    if not target_diagnostics:
+        return list(target_columns)
+    out = [str(row["target"]) for row in target_diagnostics if row.get("include_in_overall_learning_score")]
+    return out or list(target_columns)
+
+
+def _annotate_summary_rows_with_informative_metrics(
+    summary_rows: list[dict[str, Any]],
+    target_columns: list[str],
+    target_diagnostics: list[dict[str, Any]] | None,
+) -> list[dict[str, Any]]:
+    """Add broad-score fields that exclude constant/near-constant targets.
+
+    The original overall metrics remain for backward compatibility. New fields
+    named *_informative_mean average only targets with non-trivial variance.
+    """
+    informative = _informative_targets(target_diagnostics, target_columns)
+    excluded = [t for t in target_columns if t not in set(informative)]
+    for row in summary_rows:
+        row["informative_target_columns"] = list(informative)
+        row["excluded_from_informative_score_target_columns"] = list(excluded)
+        for split_name in ["train", "val", "test"]:
+            for metric in ["r2", "rmse", "mae", "nrmse_by_std", "nrmse_by_range"]:
+                row[f"{split_name}_{metric}_informative_mean"] = _mean_optional(
+                    row.get(f"{split_name}_{metric}__{target}_mean") for target in informative
+                )
+    return summary_rows
 
 
 def _classify_target_learning_state(test_r2: float | None, delta_last: float | None, gap: float | None) -> str:
@@ -465,19 +570,27 @@ def _target_recommendation(target: str, state: str, test_r2: float | None, delta
     return f"Target '{target}' could not be classified; inspect the per-target curve rows."
 
 
-def _build_per_target_summary(summary_rows: list[dict[str, Any]], target_columns: list[str]) -> list[dict[str, Any]]:
-    """Build an operator-facing per-target final/plateau table."""
+def _build_per_target_summary(
+    summary_rows: list[dict[str, Any]],
+    target_columns: list[str],
+    target_diagnostics: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    """Build an operator-facing per-target final/plateau table with normalized errors."""
     if not summary_rows:
         return []
+    diag_by_target = _target_diag_map(target_diagnostics)
     last = summary_rows[-1]
     prev = summary_rows[-2] if len(summary_rows) >= 2 else None
     out: list[dict[str, Any]] = []
     for target in target_columns:
+        diag = diag_by_target.get(target, {})
         train_r2 = last.get(f"train_r2__{target}_mean")
         val_r2 = last.get(f"val_r2__{target}_mean")
         test_r2 = last.get(f"test_r2__{target}_mean")
         test_rmse = last.get(f"test_rmse__{target}_mean")
         test_mae = last.get(f"test_mae__{target}_mean")
+        test_nrmse_std = last.get(f"test_nrmse_by_std__{target}_mean")
+        test_nrmse_range = last.get(f"test_nrmse_by_range__{target}_mean")
         prev_test_r2 = None if prev is None else prev.get(f"test_r2__{target}_mean")
         delta_last = None
         if test_r2 is not None and prev_test_r2 is not None:
@@ -496,76 +609,103 @@ def _build_per_target_summary(summary_rows: list[dict[str, Any]], target_columns
                 best_test_r2 = float(val)
                 best_group_size = int(row.get("group_size"))
 
-        state = _classify_target_learning_state(
+        is_near_constant = bool(diag.get("is_near_constant", False))
+        state = "constant_or_near_constant" if is_near_constant else _classify_target_learning_state(
             None if test_r2 is None else float(test_r2),
             None if delta_last is None else float(delta_last),
             None if gap is None else float(gap),
         )
+        if is_near_constant:
+            recommendation = (
+                f"Target '{target}' is constant or near-constant in this dataset; do not treat high R² as evidence of learned physics."
+            )
+        else:
+            recommendation = _target_recommendation(
+                target,
+                state,
+                None if test_r2 is None else float(test_r2),
+                None if delta_last is None else float(delta_last),
+                None if gap is None else float(gap),
+            )
         out.append(
             {
                 "target": target,
+                "target_family": diag.get("family", _target_family(target)),
+                "target_std": diag.get("std"),
+                "target_range": diag.get("range"),
+                "target_n_unique": diag.get("n_unique"),
+                "is_constant": bool(diag.get("is_constant", False)),
+                "is_near_constant": is_near_constant,
+                "include_in_overall_learning_score": bool(diag.get("include_in_overall_learning_score", True)),
                 "largest_group_size": int(last.get("group_size")),
                 "train_r2_at_largest": train_r2,
                 "val_r2_at_largest": val_r2,
                 "test_r2_at_largest": test_r2,
                 "test_rmse_at_largest": test_rmse,
                 "test_mae_at_largest": test_mae,
+                "test_nrmse_by_std_at_largest": test_nrmse_std,
+                "test_nrmse_by_range_at_largest": test_nrmse_range,
                 "delta_test_r2_last_step": delta_last,
                 "train_test_r2_gap_at_largest": gap,
                 "best_group_size_by_test_r2": best_group_size,
                 "best_test_r2_mean": best_test_r2,
                 "learning_state": state,
-                "recommendation": _target_recommendation(
-                    target,
-                    state,
-                    None if test_r2 is None else float(test_r2),
-                    None if delta_last is None else float(delta_last),
-                    None if gap is None else float(gap),
-                ),
+                "recommendation": recommendation,
             }
         )
     return out
+
 
 def _learning_curve_recommendations(summary_rows: list[dict[str, Any]], target_columns: list[str]) -> list[str]:
     if not summary_rows:
         return ["No computed learning-curve points. Check group sizes and split settings."]
     recommendations: list[str] = []
     last = summary_rows[-1]
-    test_r2 = last.get("test_r2_mean_mean")
-    train_r2 = last.get("train_r2_mean_mean")
+    test_r2 = last.get("test_r2_informative_mean", last.get("test_r2_mean_mean"))
+    train_r2 = last.get("train_r2_informative_mean", last.get("train_r2_mean_mean"))
+    excluded = last.get("excluded_from_informative_score_target_columns", []) or []
+    if excluded:
+        recommendations.append(
+            "Excluded constant/near-constant targets from informative overall score: " + ", ".join(map(str, excluded)) + "."
+        )
     if test_r2 is not None:
         if test_r2 < 0.5:
             recommendations.append(
-                f"Overall test R² at largest training size is low ({test_r2:.3f}); increase data, revise features, or try a stronger model before promotion."
+                f"Informative-target test R² at largest training size is low ({test_r2:.3f}); increase data, revise features, or try a stronger model before promotion."
             )
         elif test_r2 < 0.8:
             recommendations.append(
-                f"Overall test R² at largest training size is moderate ({test_r2:.3f}); useful for pilot analysis, but not yet strong evidence."
+                f"Informative-target test R² at largest training size is moderate ({test_r2:.3f}); useful for pilot analysis, but not yet strong evidence."
             )
         else:
             recommendations.append(
-                f"Overall test R² at largest training size is strong ({test_r2:.3f}); inspect per-target curves before promotion."
+                f"Informative-target test R² at largest training size is strong ({test_r2:.3f}); inspect per-target curves before promotion."
             )
     if test_r2 is not None and train_r2 is not None and train_r2 - test_r2 > 0.25:
         recommendations.append(
-            f"Large train-test R² gap at largest size ({train_r2 - test_r2:.3f}); likely overfit or grouped-distribution mismatch."
+            f"Large train-test R² gap on informative targets ({train_r2 - test_r2:.3f}); likely overfit or grouped-distribution mismatch."
         )
     if len(summary_rows) >= 2:
-        prev = summary_rows[-2].get("test_r2_mean_mean")
-        cur = summary_rows[-1].get("test_r2_mean_mean")
+        prev = summary_rows[-2].get("test_r2_informative_mean", summary_rows[-2].get("test_r2_mean_mean"))
+        cur = summary_rows[-1].get("test_r2_informative_mean", summary_rows[-1].get("test_r2_mean_mean"))
         if prev is not None and cur is not None:
             delta = cur - prev
             if abs(delta) < 0.02:
                 recommendations.append(
-                    f"Overall test R² improved by only {delta:.3f} over the last curve step; possible plateau."
+                    f"Informative-target test R² improved by only {delta:.3f} over the last curve step; possible plateau."
                 )
             elif delta > 0.05:
                 recommendations.append(
-                    f"Overall test R² still improved by {delta:.3f} over the last curve step; more geometries may help."
+                    f"Informative-target test R² still improved by {delta:.3f} over the last curve step; more geometries may help."
                 )
     per_target = _build_per_target_summary(summary_rows, target_columns)
     for row in per_target:
+        if row.get("learning_state") == "constant_or_near_constant":
+            continue
         recommendations.append(str(row.get("recommendation")))
+    recommendations.append(
+        "Use normalized RMSE (nRMSE by target std/range) for cross-target comparison; raw RMSE is not comparable across CD, Cm, L/D, and Xnp."
+    )
     return recommendations
 
 
@@ -599,16 +739,22 @@ def _write_summary_markdown(path: Path, report: dict[str, Any]) -> None:
     lines.append("")
     lines.append("## Per-target readiness")
     if per_target:
-        lines.append("| target | state | test R² | ΔR² last step | train-test gap | best size | recommendation |")
-        lines.append("|---|---:|---:|---:|---:|---:|---|")
+        lines.append("| target | family | state | test R² | nRMSE/std | nRMSE/range | ΔR² last step | train-test gap | best size | recommendation |")
+        lines.append("|---|---|---:|---:|---:|---:|---:|---:|---:|---|")
         for row in per_target:
             lines.append(
                 "| "
                 + str(row.get("target"))
                 + " | "
+                + str(row.get("target_family"))
+                + " | "
                 + str(row.get("learning_state"))
                 + " | "
                 + str(row.get("test_r2_at_largest"))
+                + " | "
+                + str(row.get("test_nrmse_by_std_at_largest"))
+                + " | "
+                + str(row.get("test_nrmse_by_range_at_largest"))
                 + " | "
                 + str(row.get("delta_test_r2_last_step"))
                 + " | "
@@ -630,6 +776,8 @@ def _write_summary_markdown(path: Path, report: dict[str, Any]) -> None:
     lines.append("- For grouped split, group size means number of training groups/geometries, not total rows.")
     lines.append("- Curves are grouped-leakage-safe when `split_method=grouped` and `group_column` is a geometry/family ID.")
     lines.append("- Use per-target readiness before deciding whether CL/CD/Cm are all paper-ready.")
+    lines.append("- Raw RMSE/MAE are target-scale dependent. Prefer nRMSE columns for comparing CD, Cm, L/D, and Xnp.")
+    lines.append("- Constant or near-constant targets are tracked but excluded from informative overall score fields.")
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -673,7 +821,8 @@ def _plot_per_target_r2(
     import matplotlib.pyplot as plt
 
     xs = [row["group_size"] for row in summary_rows]
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig_width = max(10.0, min(18.0, 0.9 * len(target_columns) + 6.0))
+    fig, ax = plt.subplots(figsize=(fig_width, 6))
     for target in target_columns:
         ys = [row.get(f"test_r2__{target}_mean") for row in summary_rows]
         if any(y is not None for y in ys):
@@ -682,8 +831,8 @@ def _plot_per_target_r2(
     ax.set_ylabel("Test R²")
     ax.set_title("Per-target test R² learning curves")
     ax.grid(True, alpha=0.3)
-    ax.legend()
-    fig.tight_layout()
+    ax.legend(loc="center left", bbox_to_anchor=(1.02, 0.5), fontsize="small")
+    fig.tight_layout(rect=(0, 0, 0.82, 1))
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output_path, dpi=180)
     plt.close(fig)
@@ -739,16 +888,87 @@ def _plot_per_target_final_r2(
     train = [row.get("train_r2_at_largest") for row in per_target_summary]
     val = [row.get("val_r2_at_largest") for row in per_target_summary]
     test = [row.get("test_r2_at_largest") for row in per_target_summary]
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig_width = max(10.0, min(20.0, 0.75 * len(labels) + 5.0))
+    fig, ax = plt.subplots(figsize=(fig_width, 6))
     ax.bar(xs - width, [np.nan if v is None else float(v) for v in train], width, label="train")
     ax.bar(xs, [np.nan if v is None else float(v) for v in val], width, label="val")
     ax.bar(xs + width, [np.nan if v is None else float(v) for v in test], width, label="test")
     ax.axhline(0.8, linewidth=1, linestyle="--")
     ax.axhline(0.5, linewidth=1, linestyle=":")
+    for i, row in enumerate(per_target_summary):
+        if row.get("is_near_constant"):
+            ax.text(i, 0.03, "const", rotation=90, ha="center", va="bottom", fontsize=8)
     ax.set_xticks(xs)
-    ax.set_xticklabels(labels)
+    ax.set_xticklabels(labels, rotation=35, ha="right")
     ax.set_ylabel("R² at largest training size")
     ax.set_title("Per-target final learning readiness")
+    ax.grid(True, axis="y", alpha=0.3)
+    ax.legend(loc="upper right")
+    fig.tight_layout()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=180)
+    plt.close(fig)
+    return output_path
+
+
+def _plot_informative_metric_curve(
+    *,
+    summary_rows: list[dict[str, Any]],
+    output_path: Path,
+    metric_key: str,
+    ylabel: str,
+    title: str,
+) -> Path | None:
+    if not summary_rows:
+        return None
+    import matplotlib.pyplot as plt
+
+    xs = [row["group_size"] for row in summary_rows]
+    fig, ax = plt.subplots(figsize=(8, 5))
+    wrote = False
+    for split_name in ["train", "val", "test"]:
+        ys = [row.get(f"{split_name}_{metric_key}_informative_mean") for row in summary_rows]
+        if any(y is not None for y in ys):
+            ax.plot(xs, ys, marker="o", label=split_name)
+            wrote = True
+    if not wrote:
+        plt.close(fig)
+        return None
+    ax.set_xlabel("Training groups")
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+    fig.tight_layout()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=180)
+    plt.close(fig)
+    return output_path
+
+
+def _plot_per_target_final_nrmse(
+    *,
+    per_target_summary: list[dict[str, Any]],
+    output_path: Path,
+) -> Path | None:
+    usable = [row for row in per_target_summary if not row.get("is_near_constant")]
+    if not usable:
+        return None
+    import matplotlib.pyplot as plt
+
+    labels = [str(row.get("target")) for row in usable]
+    xs = np.arange(len(labels))
+    by_std = [row.get("test_nrmse_by_std_at_largest") for row in usable]
+    by_range = [row.get("test_nrmse_by_range_at_largest") for row in usable]
+    fig_width = max(10.0, min(20.0, 0.75 * len(labels) + 5.0))
+    fig, ax = plt.subplots(figsize=(fig_width, 6))
+    width = 0.35
+    ax.bar(xs - width / 2, [np.nan if v is None else float(v) for v in by_std], width, label="nRMSE/std")
+    ax.bar(xs + width / 2, [np.nan if v is None else float(v) for v in by_range], width, label="nRMSE/range")
+    ax.set_xticks(xs)
+    ax.set_xticklabels(labels, rotation=35, ha="right")
+    ax.set_ylabel("Normalized RMSE at largest training size")
+    ax.set_title("Per-target normalized error")
     ax.grid(True, axis="y", alpha=0.3)
     ax.legend()
     fig.tight_layout()
@@ -782,6 +1002,27 @@ def _write_plots(output_dir: Path, summary_rows: list[dict[str, Any]], target_co
         output_path=plots_dir / "per_target_final_r2.png",
     )
     artifacts.append({"kind": "per_target_final_r2", "status": "written" if path else "skipped", "path": None if path is None else str(path)})
+    path = _plot_informative_metric_curve(
+        summary_rows=summary_rows,
+        output_path=plots_dir / "learning_curve_informative_r2.png",
+        metric_key="r2",
+        ylabel="Informative-target mean R²",
+        title="Informative-target R² vs training size",
+    )
+    artifacts.append({"kind": "learning_curve_informative_r2", "status": "written" if path else "skipped", "path": None if path is None else str(path)})
+    path = _plot_informative_metric_curve(
+        summary_rows=summary_rows,
+        output_path=plots_dir / "learning_curve_nrmse_by_std.png",
+        metric_key="nrmse_by_std",
+        ylabel="Informative-target mean nRMSE/std",
+        title="Normalized RMSE vs training size",
+    )
+    artifacts.append({"kind": "learning_curve_nrmse_by_std", "status": "written" if path else "skipped", "path": None if path is None else str(path)})
+    path = _plot_per_target_final_nrmse(
+        per_target_summary=list(per_target_summary or []),
+        output_path=plots_dir / "per_target_final_nrmse.png",
+    )
+    artifacts.append({"kind": "per_target_final_nrmse", "status": "written" if path else "skipped", "path": None if path is None else str(path)})
     return artifacts
 
 
@@ -881,7 +1122,9 @@ def run_learning_curves_on_dataframe(
             rows.append(base_row)
 
     summary_rows = _build_summary_rows(rows, target_columns)
-    per_target_summary = _build_per_target_summary(summary_rows, target_columns)
+    target_diagnostics = _target_diagnostics(df, target_columns)
+    summary_rows = _annotate_summary_rows_with_informative_metrics(summary_rows, target_columns, target_diagnostics)
+    per_target_summary = _build_per_target_summary(summary_rows, target_columns, target_diagnostics)
     plot_artifacts = _write_plots(output_dir, summary_rows, target_columns, per_target_summary) if write_plots else []
     report = {
         "schema_version": LEARNING_CURVES_SCHEMA_VERSION,
@@ -909,12 +1152,22 @@ def run_learning_curves_on_dataframe(
             "n_rows": int(len(df)),
             "n_features": int(len(feature_columns)),
             "n_targets": int(len(target_columns)),
+            "n_informative_targets": int(len(_informative_targets(target_diagnostics, target_columns))),
+            "n_constant_or_near_constant_targets": int(sum(1 for row in target_diagnostics if row.get("is_near_constant"))),
             "n_groups": int(df[group_column].nunique()) if group_column in df.columns else None,
         },
         "split_metadata": split_metadata,
         "rows": rows,
         "summary_rows": summary_rows,
+        "target_diagnostics": target_diagnostics,
+        "informative_target_columns": _informative_targets(target_diagnostics, target_columns),
+        "excluded_from_informative_score_target_columns": [t for t in target_columns if t not in set(_informative_targets(target_diagnostics, target_columns))],
         "per_target_summary": per_target_summary,
+        "normalization": {
+            "used_for_training": False,
+            "evaluation_normalized_metrics": ["nrmse_by_std", "nrmse_by_range"],
+            "note": "Targets are not rescaled before fitting in this command. For cross-target comparison, use nRMSE metrics; raw RMSE is target-scale dependent.",
+        },
         "operator_recommendations": _learning_curve_recommendations(summary_rows, target_columns),
         "plot_artifacts": plot_artifacts,
     }
@@ -922,11 +1175,13 @@ def run_learning_curves_on_dataframe(
     rows_csv = output_dir / "learning_curves.csv"
     summary_csv = output_dir / "learning_curves_summary.csv"
     target_summary_csv = output_dir / "learning_curves_per_target_summary.csv"
+    target_diagnostics_csv = output_dir / "learning_curves_target_diagnostics.csv"
     report_json = output_dir / "learning_curves_report.json"
     summary_md = output_dir / "learning_curves_summary.md"
     _write_csv(rows_csv, rows)
     _write_csv(summary_csv, summary_rows)
     _write_csv(target_summary_csv, per_target_summary)
+    _write_csv(target_diagnostics_csv, target_diagnostics)
     _write_json(report_json, report)
     _write_summary_markdown(summary_md, report)
 
@@ -935,6 +1190,7 @@ def run_learning_curves_on_dataframe(
         "learning_curves_csv": str(rows_csv),
         "learning_curves_summary_csv": str(summary_csv),
         "learning_curves_per_target_summary_csv": str(target_summary_csv),
+        "learning_curves_target_diagnostics_csv": str(target_diagnostics_csv),
         "learning_curves_report_json": str(report_json),
         "learning_curves_summary_md": str(summary_md),
         "plots_dir": str(output_dir / "plots") if write_plots else None,

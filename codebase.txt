@@ -43990,7 +43990,7 @@ except Exception:
     yaml = None
 
 # ── Version & constants ───────────────────────────────────────────────────────
-APP_VERSION       = "4.7.2-EDA_V2"
+APP_VERSION       = "4.7.3-EDA_V2_1"
 DEFAULT_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg"
 DEFAULT_SYM_ELEVON_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_e_sym_deg"
 DEFAULT_DIFF_ELEVON_FEATURES = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_a_diff_deg"
@@ -49970,16 +49970,67 @@ def pg_ml(root, exe, tmo, dry):
                     for rec in recs[:8]:
                         st.write(f"- {rec}")
 
-                with st.expander("Aero sanity snapshot", expanded=False):
+                p1, p2, p3, p4 = st.columns(4)
+                p1.metric("Regime outlier cols", rep.get("regime_outliers", {}).get("n_columns_with_regime_outliers", "—"))
+                p2.metric("Polar low-R² groups", rep.get("polar_diagnostics", {}).get("n_low_r2_groups", "—"))
+                p3.metric("Negative polar-k groups", rep.get("polar_diagnostics", {}).get("n_negative_k_groups", "—"))
+                p4.metric("Scale", rep.get("learning_readiness", {}).get("scale_label", "—"))
+
+                eda_view_tabs = st.tabs(["Aero sanity", "Polar/control", "Learning readiness", "Missingness", "Compare reports"])
+                with eda_view_tabs[0]:
                     st.json(rep.get("aero_physics_sanity", {}))
+                with eda_view_tabs[1]:
+                    st.markdown("**Polar diagnostics**")
+                    st.json(rep.get("polar_diagnostics", {}))
+                    st.markdown("**Control-effect sanity**")
+                    st.json(rep.get("control_effect_sanity", {}))
+                with eda_view_tabs[2]:
+                    st.json(rep.get("learning_readiness", {}))
+                with eda_view_tabs[3]:
+                    miss = rep.get("missingness", {}) or {}
+                    top_missing = []
+                    for col, item in (miss.get("by_column", {}) or {}).items():
+                        if int(item.get("n_missing", 0) or 0) > 0:
+                            top_missing.append({
+                                "column": col,
+                                "n_missing": item.get("n_missing"),
+                                "missing_fraction": item.get("missing_fraction"),
+                            })
+                    top_missing = sorted(top_missing, key=lambda r: r.get("n_missing", 0), reverse=True)[:30]
+                    if top_missing:
+                        st.dataframe(top_missing, use_container_width=True)
+                    else:
+                        st.success("No missing-value hotspots in the loaded EDA report.")
+                with eda_view_tabs[4]:
+                    other_report = st.text_input(
+                        "Optional second EDA report path for comparison",
+                        "",
+                        key="eda_compare_report_path",
+                        help="Example: data/datasets/other_dataset/eda/eda_report.json",
+                    )
+                    if other_report.strip():
+                        try:
+                            from aeris.ml.eda import compare_eda_reports
+                            comp = compare_eda_reports([eda_report_path, Path(other_report).expanduser()])
+                            st.dataframe(comp.get("reports", []), use_container_width=True)
+                        except Exception as exc:
+                            st.error(f"Could not compare EDA reports: {exc}")
 
                 plots_dir = eda_out_dir / "plots"
                 if plots_dir.exists():
                     plot_files = sorted(plots_dir.glob("*.png"))
                     if plot_files:
                         st.markdown("**Existing EDA plots**")
-                        for plot_path in plot_files[:12]:
-                            st.image(str(plot_path), caption=plot_path.name, use_container_width=True)
+                        selected_plot = st.selectbox(
+                            "Select plot to inspect",
+                            [p.name for p in plot_files],
+                            key="eda_plot_selector",
+                        )
+                        selected_path = next((p for p in plot_files if p.name == selected_plot), plot_files[0])
+                        st.image(str(selected_path), caption=selected_path.name, use_container_width=True)
+                        with st.expander("Show all EDA plots", expanded=False):
+                            for plot_path in plot_files[:20]:
+                                st.image(str(plot_path), caption=plot_path.name, use_container_width=True)
 
     # ── ③ Train ───────────────────────────────────────────────────────────────
     with tabs[2]:
@@ -55200,6 +55251,464 @@ def _top_feature_target_relationships(
     return result
 
 
+
+
+def _top_missing_columns(missingness: dict[str, Any], *, top_n: int = 20) -> list[dict[str, Any]]:
+    """Return sorted missingness rows for the most affected columns."""
+    rows: list[dict[str, Any]] = []
+    for col, item in (missingness.get("by_column", {}) or {}).items():
+        n_missing = int(item.get("n_missing", 0) or 0)
+        if n_missing <= 0:
+            continue
+        rows.append({
+            "column": col,
+            "n_missing": n_missing,
+            "missing_fraction": _round_float(item.get("missing_fraction"), 6),
+        })
+    return sorted(rows, key=lambda r: (r["n_missing"], r["column"]), reverse=True)[:top_n]
+
+
+def _target_variability_report(df: pd.DataFrame, target_columns: list[str]) -> dict[str, Any]:
+    """Report whether targets have enough finite variation to be learnable."""
+    out: dict[str, Any] = {}
+    for target in target_columns:
+        if target not in df.columns:
+            out[target] = {"status": "missing"}
+            continue
+        y = pd.to_numeric(df[target], errors="coerce").dropna()
+        if len(y) == 0:
+            out[target] = {"status": "no_finite_values", "n_finite": 0}
+            continue
+        std = float(y.std(ddof=1)) if len(y) > 1 else 0.0
+        rng = float(y.max() - y.min()) if len(y) else 0.0
+        out[target] = {
+            "status": "ok" if len(y) >= 10 and y.nunique() >= 4 and std > 0 else "weak_or_degenerate",
+            "n_finite": int(len(y)),
+            "n_unique": int(y.nunique()),
+            "min": _round_float(float(y.min())),
+            "max": _round_float(float(y.max())),
+            "range": _round_float(rng),
+            "std": _round_float(std),
+        }
+    return out
+
+
+def _regime_summary(
+    df: pd.DataFrame,
+    *,
+    target_columns: list[str],
+    regime_columns: list[str] | None = None,
+    max_rows: int = 400,
+) -> dict[str, Any]:
+    """Target summaries by alpha/control/condition regime."""
+    regime_columns = regime_columns or ["alpha_deg", "control_input_deg", "velocity_mps", "altitude_m"]
+    available_regime_cols = [c for c in regime_columns if c in df.columns]
+    available_targets = [c for c in target_columns if c in df.columns]
+    if not available_regime_cols or not available_targets:
+        return {"status": "skipped", "reason": "missing_regime_or_target_columns"}
+
+    work = df[available_regime_cols + available_targets].copy()
+    for col in available_targets:
+        work[col] = pd.to_numeric(work[col], errors="coerce")
+    rows: list[dict[str, Any]] = []
+    for key, sub in work.groupby(available_regime_cols, dropna=False):
+        if not isinstance(key, tuple):
+            key = (key,)
+        item: dict[str, Any] = {
+            "regime": {c: (None if pd.isna(v) else v) for c, v in zip(available_regime_cols, key)},
+            "n_rows": int(len(sub)),
+            "targets": {},
+        }
+        for target in available_targets:
+            y = pd.to_numeric(sub[target], errors="coerce").dropna()
+            item["targets"][target] = {
+                "n_finite": int(len(y)),
+                "mean": _round_float(float(y.mean())) if len(y) else None,
+                "std": _round_float(float(y.std(ddof=1))) if len(y) > 1 else None,
+                "min": _round_float(float(y.min())) if len(y) else None,
+                "max": _round_float(float(y.max())) if len(y) else None,
+            }
+        rows.append(item)
+    rows = sorted(rows, key=lambda r: tuple(str(r["regime"].get(c)) for c in available_regime_cols))
+    return {
+        "status": "computed",
+        "regime_columns": available_regime_cols,
+        "target_columns": available_targets,
+        "n_regimes": int(len(rows)),
+        "rows": rows[:max_rows],
+        "truncated": bool(len(rows) > max_rows),
+    }
+
+
+def _regime_outlier_scan(
+    df: pd.DataFrame,
+    columns: list[str],
+    *,
+    regime_columns: list[str] | None = None,
+    min_group_rows: int = 8,
+    robust_z_threshold: float = 3.5,
+) -> dict[str, Any]:
+    """Outliers within alpha/control regimes instead of one global bucket."""
+    regime_columns = regime_columns or ["alpha_deg", "control_input_deg"]
+    available_regime_cols = [c for c in regime_columns if c in df.columns]
+    scan_cols = [c for c in columns if c in df.columns]
+    if not available_regime_cols or not scan_cols:
+        return {"status": "skipped", "reason": "missing_regime_or_scan_columns"}
+
+    examples: list[dict[str, Any]] = []
+    counts_by_column: dict[str, int] = {c: 0 for c in scan_cols}
+    n_groups_evaluable = 0
+    for key, sub in df.groupby(available_regime_cols, dropna=False):
+        if not isinstance(key, tuple):
+            key = (key,)
+        if len(sub) < min_group_rows:
+            continue
+        n_groups_evaluable += 1
+        regime = {c: (None if pd.isna(v) else v) for c, v in zip(available_regime_cols, key)}
+        for col in scan_cols:
+            x = pd.to_numeric(sub[col], errors="coerce")
+            finite = x.dropna()
+            if len(finite) < min_group_rows or int(finite.nunique()) < 2:
+                continue
+            median = float(finite.median())
+            mad = float((finite - median).abs().median())
+            if mad > 0.0 and math.isfinite(mad):
+                robust_z = 0.6745 * (finite - median).abs() / mad
+                n_out = int((robust_z > robust_z_threshold).sum())
+            else:
+                q1 = float(finite.quantile(0.25))
+                q3 = float(finite.quantile(0.75))
+                iqr = q3 - q1
+                if not math.isfinite(iqr) or iqr <= 0:
+                    n_out = 0
+                else:
+                    lo = q1 - 1.5 * iqr
+                    hi = q3 + 1.5 * iqr
+                    n_out = int(((finite < lo) | (finite > hi)).sum())
+            if n_out > 0:
+                counts_by_column[col] = counts_by_column.get(col, 0) + n_out
+                if len(examples) < 50:
+                    examples.append({
+                        "column": col,
+                        "regime": regime,
+                        "n_group_rows": int(len(sub)),
+                        "n_outlier_rows": n_out,
+                    })
+
+    counts_by_column = {k: v for k, v in counts_by_column.items() if v > 0}
+    return {
+        "status": "computed",
+        "regime_columns": available_regime_cols,
+        "scan_columns": scan_cols,
+        "min_group_rows": min_group_rows,
+        "robust_z_threshold": robust_z_threshold,
+        "n_groups_evaluable": int(n_groups_evaluable),
+        "counts_by_column": counts_by_column,
+        "n_columns_with_regime_outliers": int(len(counts_by_column)),
+        "examples": examples,
+    }
+
+
+def _linear_fit_r2(x: np.ndarray, y: np.ndarray, degree: int) -> tuple[np.ndarray, float] | None:
+    try:
+        coeffs = np.polyfit(x, y, degree)
+        pred = np.polyval(coeffs, x)
+        ss_res = float(np.sum((y - pred) ** 2))
+        ss_tot = float(np.sum((y - np.mean(y)) ** 2))
+        r2 = 1.0 - ss_res / ss_tot if ss_tot > 0 else 1.0
+        return coeffs, r2
+    except Exception:
+        return None
+
+
+def _polar_diagnostics(
+    df: pd.DataFrame,
+    *,
+    group_column: str = "geometry_id",
+    min_rows: int = 4,
+) -> dict[str, Any]:
+    """Fit CD = k*CL² + b*CL + CD0 by group to catch suspicious polar shapes."""
+    if "cl" not in df.columns or "cd" not in df.columns:
+        return {"status": "skipped", "reason": "missing_cl_or_cd"}
+    group_cols = [c for c in [group_column, "control_input_deg", "velocity_mps", "altitude_m", "beta_deg"] if c in df.columns]
+    work = df[group_cols + ["cl", "cd"]].copy()
+    work["cl"] = pd.to_numeric(work["cl"], errors="coerce")
+    work["cd"] = pd.to_numeric(work["cd"], errors="coerce")
+    work = work[work["cl"].notna() & work["cd"].notna()]
+    if work.empty:
+        return {"status": "skipped", "reason": "no_finite_cl_cd_rows"}
+
+    rows: list[dict[str, Any]] = []
+    for key, sub in (work.groupby(group_cols, dropna=False) if group_cols else [((), work)]):
+        if not isinstance(key, tuple):
+            key = (key,)
+        sub = sub.sort_values("cl")
+        if len(sub) < min_rows or int(sub["cl"].nunique()) < 3:
+            continue
+        x = sub["cl"].to_numpy(float)
+        y = sub["cd"].to_numpy(float)
+        fit = _linear_fit_r2(x, y, degree=2)
+        if fit is None:
+            continue
+        coeffs, r2 = fit
+        k, b, cd0 = [float(v) for v in coeffs]
+        rows.append({
+            "group": {c: (None if pd.isna(v) else v) for c, v in zip(group_cols, key)},
+            "n_rows": int(len(sub)),
+            "cl_min": _round_float(float(np.min(x))),
+            "cl_max": _round_float(float(np.max(x))),
+            "cd_min": _round_float(float(np.min(y))),
+            "cd_max": _round_float(float(np.max(y))),
+            "k_cl2": _round_float(k),
+            "linear_cl_term": _round_float(b),
+            "cd0_intercept": _round_float(cd0),
+            "r2": _round_float(r2),
+            "flag_negative_k": bool(k < 0.0),
+            "flag_low_r2": bool(r2 < 0.70),
+            "flag_negative_cd0": bool(cd0 < 0.0),
+        })
+
+    if not rows:
+        return {"status": "skipped", "reason": "no_evaluable_polar_groups", "group_columns": group_cols}
+    return {
+        "status": "computed",
+        "group_columns": group_cols,
+        "n_groups_evaluable": int(len(rows)),
+        "n_negative_k_groups": int(sum(r["flag_negative_k"] for r in rows)),
+        "n_low_r2_groups": int(sum(r["flag_low_r2"] for r in rows)),
+        "n_negative_cd0_groups": int(sum(r["flag_negative_cd0"] for r in rows)),
+        "r2_min": _round_float(min(float(r["r2"]) for r in rows if r.get("r2") is not None)),
+        "r2_median": _round_float(float(np.median([float(r["r2"]) for r in rows if r.get("r2") is not None]))),
+        "k_min": _round_float(min(float(r["k_cl2"]) for r in rows if r.get("k_cl2") is not None)),
+        "k_max": _round_float(max(float(r["k_cl2"]) for r in rows if r.get("k_cl2") is not None)),
+        "examples": rows[:50],
+        "worst_r2_examples": sorted(rows, key=lambda r: r.get("r2") if r.get("r2") is not None else 999.0)[:20],
+    }
+
+
+def _slope_distribution(
+    df: pd.DataFrame,
+    *,
+    x_col: str,
+    y_col: str,
+    group_cols: list[str],
+    min_unique_x: int = 2,
+    weak_abs_slope_threshold: float = 1e-6,
+) -> dict[str, Any]:
+    """Slope distribution helper with weak/nonzero counts."""
+    base = _slope_summary(df, x_col=x_col, y_col=y_col, group_cols=group_cols, min_unique_x=min_unique_x)
+    if base.get("status") != "computed":
+        return base
+    available_groups = base.get("group_columns", []) or []
+    work = df[available_groups + [x_col, y_col]].copy()
+    work[x_col] = pd.to_numeric(work[x_col], errors="coerce")
+    work[y_col] = pd.to_numeric(work[y_col], errors="coerce")
+    work = work[work[x_col].notna() & work[y_col].notna()]
+    slopes: list[float] = []
+    for _key, sub in (work.groupby(available_groups, dropna=False) if available_groups else [((), work)]):
+        if len(sub) < min_unique_x or int(sub[x_col].nunique()) < min_unique_x:
+            continue
+        try:
+            slope, _intercept = np.polyfit(sub[x_col].to_numpy(float), sub[y_col].to_numpy(float), 1)
+            if math.isfinite(float(slope)):
+                slopes.append(float(slope))
+        except Exception:
+            pass
+    base["weak_abs_slope_threshold"] = weak_abs_slope_threshold
+    base["n_weak_or_zero_slopes"] = int(sum(abs(s) <= weak_abs_slope_threshold for s in slopes))
+    base["slope_abs_median"] = _round_float(float(np.median(np.abs(slopes)))) if slopes else None
+    return base
+
+
+def _control_effect_sanity(
+    df: pd.DataFrame,
+    *,
+    group_column: str = "geometry_id",
+) -> dict[str, Any]:
+    """Control-effect slope diagnostics for CL/CD/Cm vs symmetric elevon input."""
+    control_col = "delta_e_sym_deg" if "delta_e_sym_deg" in df.columns else "control_input_deg"
+    if control_col not in df.columns:
+        return {"status": "skipped", "reason": "missing_control_column"}
+    group_cols = [c for c in [group_column, "alpha_deg", "velocity_mps", "altitude_m", "beta_deg"] if c in df.columns]
+    out: dict[str, Any] = {
+        "status": "computed",
+        "control_column": control_col,
+        "group_columns": group_cols,
+    }
+    for target in ["cl", "cd", "cm"]:
+        if target in df.columns:
+            out[f"{target}_control_slope"] = _slope_distribution(
+                df,
+                x_col=control_col,
+                y_col=target,
+                group_cols=group_cols,
+                weak_abs_slope_threshold=1e-5 if target != "cd" else 1e-7,
+            )
+        else:
+            out[f"{target}_control_slope"] = {"status": "skipped", "reason": f"missing_{target}"}
+    return out
+
+
+def _design_space_projection(
+    df: pd.DataFrame,
+    *,
+    feature_columns: list[str],
+    target_columns: list[str] | None = None,
+    group_column: str = "geometry_id",
+    max_examples: int = 100,
+) -> dict[str, Any]:
+    """Two-dimensional PCA-style projection using SVD, no fitting artifact saved."""
+    target_columns = target_columns or []
+    usable, skipped = _correlatable_numeric_columns(df, [c for c in feature_columns if c in df.columns], min_rows=5)
+    if len(usable) < 2:
+        return {"status": "skipped", "reason": "fewer_than_two_usable_numeric_features", "skipped_columns": skipped}
+
+    base_cols = [group_column] if group_column in df.columns else []
+    work = df[base_cols + usable + [c for c in target_columns if c in df.columns]].copy()
+    if group_column in work.columns:
+        numeric_agg = {c: "median" for c in usable + [c for c in target_columns if c in df.columns]}
+        work = work.groupby(group_column, dropna=False).agg(numeric_agg).reset_index()
+    X = work[usable].apply(pd.to_numeric, errors="coerce")
+    X = X.fillna(X.median(numeric_only=True)).fillna(0.0)
+    std = X.std(ddof=1).replace(0.0, np.nan)
+    Xs = ((X - X.mean()) / std).replace([np.inf, -np.inf], np.nan).fillna(0.0)
+    if len(Xs) < 2:
+        return {"status": "skipped", "reason": "fewer_than_two_rows_after_grouping"}
+    try:
+        U, S, Vt = np.linalg.svd(Xs.to_numpy(float), full_matrices=False)
+    except Exception as exc:
+        return {"status": "skipped", "reason": f"svd_failed: {exc}"}
+    if len(S) < 2:
+        return {"status": "skipped", "reason": "svd_returned_less_than_two_components"}
+    scores = U[:, :2] * S[:2]
+    denom = float(np.sum(S ** 2))
+    evr = (S[:2] ** 2) / denom if denom > 0 else np.array([0.0, 0.0])
+    examples: list[dict[str, Any]] = []
+    for i in range(min(len(work), max_examples)):
+        item = {
+            "sample_index": int(i),
+            "pc1": _round_float(float(scores[i, 0])),
+            "pc2": _round_float(float(scores[i, 1])),
+        }
+        if group_column in work.columns:
+            item[group_column] = str(work.iloc[i][group_column])
+        for target in target_columns:
+            if target in work.columns:
+                item[target] = _round_float(pd.to_numeric(pd.Series([work.iloc[i][target]]), errors="coerce").iloc[0])
+        examples.append(item)
+    return {
+        "status": "computed",
+        "method": "standardized_feature_svd_pca",
+        "level": "geometry_group_median" if group_column in df.columns else "row_level",
+        "feature_columns_used": usable,
+        "skipped_columns": skipped,
+        "n_samples_projected": int(len(work)),
+        "explained_variance_ratio_pc1": _round_float(float(evr[0])),
+        "explained_variance_ratio_pc2": _round_float(float(evr[1])),
+        "examples": examples,
+    }
+
+
+def _learning_readiness_diagnosis(
+    report: dict[str, Any],
+    *,
+    feature_columns: list[str],
+    target_columns: list[str],
+) -> dict[str, Any]:
+    """Heuristic EDA-to-ML readiness notes. This is not model validation."""
+    shape = report.get("shape", {}) or {}
+    n_rows = int(shape.get("n_rows", 0) or 0)
+    coverage = report.get("per_geometry_coverage", {}) or {}
+    n_groups = int(coverage.get("n_geometries", 0) or 0)
+    constants = set((report.get("constant_columns", {}) or {}).get("constant_columns", []) or [])
+    constant_features = [c for c in feature_columns if c in constants]
+    missing = report.get("missingness", {}) or {}
+    target_variability = report.get("target_variability", {}) or {}
+    relationships = report.get("top_feature_target_relationships", {}) or {}
+
+    target_rows: dict[str, Any] = {}
+    for target in target_columns:
+        top = relationships.get(target, []) or []
+        best_signal = top[0].get("max_abs_signal") if top else None
+        variability = target_variability.get(target, {}) or {}
+        issues: list[str] = []
+        if variability.get("status") != "ok":
+            issues.append("low_or_degenerate_target_variation")
+        if best_signal is None or float(best_signal) < 0.15:
+            issues.append("weak_simple_feature_target_signal")
+        target_rows[target] = {
+            "target_variability_status": variability.get("status"),
+            "best_simple_abs_correlation_signal": best_signal,
+            "status": "ready_for_baseline_ml" if not issues else "needs_attention_before_trusting_metrics",
+            "issues": issues,
+        }
+
+    global_issues: list[str] = []
+    if n_rows < 500:
+        global_issues.append("small_row_count_for_general_surrogate")
+    if n_groups < 30:
+        global_issues.append("small_geometry_group_count_for_grouped_split")
+    if constant_features:
+        global_issues.append("constant_features_present")
+    if missing.get("n_columns_with_missing", 0):
+        global_issues.append("missing_values_present")
+    if coverage.get("uniform_coverage") is False:
+        global_issues.append("nonuniform_geometry_coverage")
+
+    if n_groups >= 50 and n_rows >= 1000:
+        scale_label = "pilot_scale"
+    elif n_groups >= 10 and n_rows >= 100:
+        scale_label = "canary_or_small_pilot"
+    else:
+        scale_label = "smoke_only"
+    return {
+        "status": "usable_for_pilot_baselines" if not global_issues or scale_label == "pilot_scale" else "use_only_for_smoke_or_debug",
+        "scale_label": scale_label,
+        "n_rows": n_rows,
+        "n_groups": n_groups,
+        "n_features": int(len(feature_columns)),
+        "n_targets": int(len(target_columns)),
+        "constant_features": constant_features,
+        "global_issues": global_issues,
+        "target_readiness": target_rows,
+    }
+
+
+def compare_eda_reports(report_paths: list[str | Path]) -> dict[str, Any]:
+    """Compare multiple EDA JSON reports without recomputing EDA."""
+    rows: list[dict[str, Any]] = []
+    for path in report_paths:
+        p = Path(path).expanduser()
+        data = json.loads(p.read_text(encoding="utf-8"))
+        metadata = data.get("metadata", {}) or {}
+        shape = data.get("shape", {}) or {}
+        physics = data.get("aero_physics_sanity", {}) or {}
+        cd_sanity = physics.get("cd_sanity", {}) or {}
+        polar = data.get("polar_diagnostics", {}) or {}
+        readiness = data.get("learning_readiness", {}) or {}
+        rows.append({
+            "report_path": str(p),
+            "dataset_root": metadata.get("dataset_root"),
+            "schema_version": data.get("schema_version"),
+            "rows": shape.get("n_rows"),
+            "columns": shape.get("n_columns"),
+            "groups": (data.get("per_geometry_coverage", {}) or {}).get("n_geometries"),
+            "promotion_forced": metadata.get("promotion_forced"),
+            "missing_columns": (data.get("missingness", {}) or {}).get("n_columns_with_missing"),
+            "constant_columns": (data.get("constant_columns", {}) or {}).get("n_constant"),
+            "cd_min": cd_sanity.get("min_cd"),
+            "cd_max": cd_sanity.get("max_cd"),
+            "nonpositive_cd_rows": cd_sanity.get("n_nonpositive"),
+            "polar_low_r2_groups": polar.get("n_low_r2_groups"),
+            "learning_scale_label": readiness.get("scale_label"),
+            "learning_status": readiness.get("status"),
+            "recommendation_count": len(data.get("operator_recommendations", []) or []),
+        })
+    return {
+        "schema_version": "aeris.eda_comparison.v1",
+        "n_reports": int(len(rows)),
+        "reports": rows,
+    }
 def _operator_recommendations(report: dict[str, Any]) -> list[str]:
     """Plain-English operator hints derived from EDA diagnostics."""
     hints: list[str] = []
@@ -55233,6 +55742,37 @@ def _operator_recommendations(report: dict[str, Any]) -> list[str]:
         hints.append(
             "Some Cm-alpha groups have non-negative slope; audit moment reference, sign convention, or unstable geometry regimes."
         )
+
+    regime_outliers = report.get("regime_outliers", {}) or {}
+    if regime_outliers.get("n_columns_with_regime_outliers", 0):
+        hints.append(
+            f"Regime-aware outliers exist in {regime_outliers.get('n_columns_with_regime_outliers')} column(s); inspect by alpha/control before deleting rows globally."
+        )
+
+    polar = report.get("polar_diagnostics", {}) or {}
+    if polar.get("status") == "computed":
+        if polar.get("n_low_r2_groups", 0):
+            hints.append(
+                f"Polar diagnostics found {polar.get('n_low_r2_groups')} CL-CD group(s) with weak parabolic fit; inspect AVL/viscous-correction behavior."
+            )
+        if polar.get("n_negative_k_groups", 0):
+            hints.append(
+                f"Polar diagnostics found {polar.get('n_negative_k_groups')} group(s) with negative CL² drag coefficient; this is suspicious for normal attached-flow polar behavior."
+            )
+
+    control = report.get("control_effect_sanity", {}) or {}
+    cm_control = control.get("cm_control_slope", {}) or {}
+    if cm_control.get("status") == "computed" and cm_control.get("n_weak_or_zero_slopes", 0):
+        hints.append(
+            f"Control-effect scan found {cm_control.get('n_weak_or_zero_slopes')} weak Cm-vs-control group(s); inspect trim authority before training flyability models."
+        )
+
+    readiness = report.get("learning_readiness", {}) or {}
+    if readiness.get("global_issues"):
+        hints.append("Learning-readiness warnings: " + ", ".join(readiness.get("global_issues", [])[:8]))
+    for target, item in (readiness.get("target_readiness", {}) or {}).items():
+        if item.get("issues"):
+            hints.append(f"Target `{target}` needs attention: " + ", ".join(item.get("issues", [])[:4]))
 
     corr_skipped = report.get("correlation", {}).get("skipped_columns", []) or []
     if corr_skipped:
@@ -55298,8 +55838,10 @@ def run_eda(
         "duplicates": _detect_duplicates(df),
         **_per_column_stats(df, feature_columns, "feature_stats"),
         **_per_column_stats(df, target_columns, "target_stats"),
+        "target_variability": _target_variability_report(df, target_columns),
         "per_geometry_coverage": _per_geometry_coverage(df, group_column),
         "alpha_control_coverage": _alpha_control_coverage(df),
+        "regime_summary": _regime_summary(df, target_columns=target_columns),
         "correlation": _correlation_matrix(df, all_cols),
         "top_feature_target_relationships": _top_feature_target_relationships(
             df,
@@ -55309,8 +55851,22 @@ def run_eda(
         "nonlinearity": _nonlinearity_scan(df, feature_columns, target_columns),
         "outliers": _outlier_scan(df, all_cols, sigma=outlier_sigma),
         "robust_outliers": _robust_outlier_scan(df, all_cols),
+        "regime_outliers": _regime_outlier_scan(df, all_cols),
         "aero_physics_sanity": _aero_physics_sanity(df, group_column=group_column),
+        "polar_diagnostics": _polar_diagnostics(df, group_column=group_column),
+        "control_effect_sanity": _control_effect_sanity(df, group_column=group_column),
+        "design_space_projection": _design_space_projection(
+            df,
+            feature_columns=feature_columns,
+            target_columns=target_columns,
+            group_column=group_column,
+        ),
     }
+    report["learning_readiness"] = _learning_readiness_diagnosis(
+        report,
+        feature_columns=feature_columns,
+        target_columns=target_columns,
+    )
     report["operator_recommendations"] = _operator_recommendations(report)
 
     if output_path is not None:
@@ -55375,6 +55931,21 @@ def write_eda_summary_markdown(report: dict[str, Any], output_path: Path) -> Pat
     cm_alpha = physics.get("cm_alpha_slope", {}) or {}
     if cm_alpha.get("status") == "computed":
         lines.append(f"- Cm-alpha groups with nonnegative slope: `{cm_alpha.get('n_groups_with_nonnegative_slope', 'n/a')}`")
+    regime_outliers = report.get("regime_outliers", {}) or {}
+    if regime_outliers.get("status") == "computed":
+        lines.append(f"- regime-outlier columns: `{regime_outliers.get('n_columns_with_regime_outliers', 0)}`")
+    polar = report.get("polar_diagnostics", {}) or {}
+    if polar.get("status") == "computed":
+        lines.append(f"- polar groups with low parabolic-fit R²: `{polar.get('n_low_r2_groups', 0)}`")
+        lines.append(f"- polar groups with negative k(CL²): `{polar.get('n_negative_k_groups', 0)}`")
+    control = report.get("control_effect_sanity", {}) or {}
+    cm_control = control.get("cm_control_slope", {}) or {}
+    if cm_control.get("status") == "computed":
+        lines.append(f"- weak Cm-control slope groups: `{cm_control.get('n_weak_or_zero_slopes', 0)}`")
+    readiness = report.get("learning_readiness", {}) or {}
+    if readiness:
+        lines.append(f"- learning-readiness status: `{readiness.get('status', 'unknown')}`")
+        lines.append(f"- learning scale label: `{readiness.get('scale_label', 'unknown')}`")
     if correlation.get("skipped_columns"):
         skipped_names = [item.get("column") for item in correlation.get("skipped_columns", []) if item.get("column")]
         lines.append(f"- correlation-skipped columns: `{len(skipped_names)}`")
@@ -55392,6 +55963,26 @@ def write_eda_summary_markdown(report: dict[str, Any], output_path: Path) -> Pat
     lines.append("## Operator recommendations")
     for hint in recommendations[:12]:
         lines.append(f"- {hint}")
+
+    top_missing = _top_missing_columns(missingness, top_n=12)
+    if top_missing:
+        lines.append("")
+        lines.append("## Missingness hotspots")
+        for item in top_missing:
+            lines.append(
+                f"- `{item['column']}`: `{item['n_missing']}` missing "
+                f"({item['missing_fraction']})"
+            )
+
+    if readiness.get("target_readiness"):
+        lines.append("")
+        lines.append("## Target learning-readiness")
+        for target, item in readiness.get("target_readiness", {}).items():
+            lines.append(
+                f"- `{target}`: `{item.get('status')}`; "
+                f"best simple signal=`{item.get('best_simple_abs_correlation_signal')}`; "
+                f"issues=`{', '.join(item.get('issues', [])) or 'none'}`"
+            )
     lines.append("")
     lines.append("## Notes")
     lines.append("- Constant feature columns are not automatically fatal, but they teach the model nothing in this dataset.")
@@ -55644,6 +56235,213 @@ def write_eda_plots(
             _record(path, "targets_vs_features")
     except Exception as exc:
         _record_error("targets_vs_features", exc)
+
+
+
+    # 8) Boxplots by alpha and control for target distributions.
+    def _boxplot_by_regime(regime_col: str, filename: str, kind: str) -> None:
+        if regime_col not in df.columns:
+            artifacts.append({"kind": kind, "status": "skipped", "reason": f"missing_{regime_col}"})
+            return
+        tcols = _available_numeric_columns(df, target_columns)[:3]
+        if not tcols:
+            artifacts.append({"kind": kind, "status": "skipped", "reason": "no_numeric_targets"})
+            return
+        regime_values = sorted(pd.to_numeric(df[regime_col], errors="coerce").dropna().unique().tolist())
+        if len(regime_values) < 2 or len(regime_values) > 25:
+            artifacts.append({"kind": kind, "status": "skipped", "reason": "too_few_or_too_many_regime_values"})
+            return
+        fig, axes = plt.subplots(len(tcols), 1, figsize=(max(7, 0.45 * len(regime_values)), 3.0 * len(tcols)), squeeze=False)
+        for ax, target in zip(axes.reshape(-1), tcols):
+            series_list = []
+            labels = []
+            for val in regime_values:
+                mask = pd.to_numeric(df[regime_col], errors="coerce") == val
+                y = pd.to_numeric(df.loc[mask, target], errors="coerce").dropna()
+                if len(y):
+                    series_list.append(y.to_numpy(float))
+                    labels.append(str(val))
+            if series_list:
+                ax.boxplot(series_list, labels=labels, showfliers=True)
+                ax.set_title(f"{target} by {regime_col}")
+                ax.set_xlabel(regime_col)
+                ax.set_ylabel(target)
+                ax.tick_params(axis="x", rotation=45)
+        fig.tight_layout()
+        path = output_dir / filename
+        fig.savefig(path, dpi=160)
+        plt.close(fig)
+        _record(path, kind)
+
+    try:
+        _boxplot_by_regime("alpha_deg", "target_boxplots_by_alpha.png", "target_boxplots_by_alpha")
+    except Exception as exc:
+        _record_error("target_boxplots_by_alpha", exc)
+
+    try:
+        _boxplot_by_regime("control_input_deg", "target_boxplots_by_control.png", "target_boxplots_by_control")
+    except Exception as exc:
+        _record_error("target_boxplots_by_control", exc)
+
+    # 9) Small pair plot / scatter matrix for the strongest useful columns.
+    try:
+        relationships = _top_feature_target_relationships(
+            df,
+            feature_columns=feature_columns,
+            target_columns=target_columns,
+            top_n=6,
+        )
+        chosen: list[str] = []
+        for target, rows in relationships.items():
+            if target in df.columns and target not in chosen:
+                chosen.append(target)
+            for row in rows[:2]:
+                col = row.get("feature")
+                if col in df.columns and col not in chosen:
+                    chosen.append(col)
+        chosen = _available_numeric_columns(df, chosen)[:5]
+        if len(chosen) >= 2:
+            data = df[chosen].apply(pd.to_numeric, errors="coerce")
+            n = len(chosen)
+            fig, axes = plt.subplots(n, n, figsize=(2.4 * n, 2.4 * n))
+            for i, ycol in enumerate(chosen):
+                for j, xcol in enumerate(chosen):
+                    ax = axes[i, j]
+                    if i == j:
+                        vals = data[xcol].dropna()
+                        ax.hist(vals, bins=min(24, max(5, int(math.sqrt(max(len(vals), 1))))))
+                    else:
+                        mask = data[xcol].notna() & data[ycol].notna()
+                        ax.scatter(data.loc[mask, xcol], data.loc[mask, ycol], s=8, alpha=0.55)
+                    if i == n - 1:
+                        ax.set_xlabel(xcol, fontsize=7, rotation=0)
+                    else:
+                        ax.set_xticklabels([])
+                    if j == 0:
+                        ax.set_ylabel(ycol, fontsize=7)
+                    else:
+                        ax.set_yticklabels([])
+            fig.suptitle("Top EDA pair plot (strongest feature-target signals)")
+            fig.tight_layout()
+            path = output_dir / "top_pairplot.png"
+            fig.savefig(path, dpi=160)
+            plt.close(fig)
+            _record(path, "top_pairplot")
+        else:
+            artifacts.append({"kind": "top_pairplot", "status": "skipped", "reason": "fewer_than_two_numeric_columns"})
+    except Exception as exc:
+        _record_error("top_pairplot", exc)
+
+    # 10) PCA/SVD design-space projection plot.
+    try:
+        proj = _design_space_projection(
+            df,
+            feature_columns=feature_columns,
+            target_columns=target_columns,
+            group_column=group_column,
+            max_examples=5000,
+        )
+        if proj.get("status") == "computed" and proj.get("examples"):
+            ex = proj["examples"]
+            pc1 = [item["pc1"] for item in ex if item.get("pc1") is not None and item.get("pc2") is not None]
+            pc2 = [item["pc2"] for item in ex if item.get("pc1") is not None and item.get("pc2") is not None]
+            fig, ax = plt.subplots(figsize=(6, 5))
+            ax.scatter(pc1, pc2, s=18, alpha=0.75)
+            ax.set_xlabel(f"PC1 ({proj.get('explained_variance_ratio_pc1')})")
+            ax.set_ylabel(f"PC2 ({proj.get('explained_variance_ratio_pc2')})")
+            ax.set_title("Design-space PCA/SVD projection")
+            fig.tight_layout()
+            path = output_dir / "design_space_pca.png"
+            fig.savefig(path, dpi=160)
+            plt.close(fig)
+            _record(path, "design_space_pca")
+        else:
+            artifacts.append({"kind": "design_space_pca", "status": "skipped", "reason": proj.get("reason", "projection_not_computed")})
+    except Exception as exc:
+        _record_error("design_space_pca", exc)
+
+    # 11) Regime target means as alpha x control heatmaps.
+    try:
+        if "alpha_deg" in df.columns and "control_input_deg" in df.columns:
+            tcols = _available_numeric_columns(df, target_columns)[:3]
+            if tcols:
+                fig, axes = plt.subplots(1, len(tcols), figsize=(5 * len(tcols), 4), squeeze=False)
+                for ax, target in zip(axes.reshape(-1), tcols):
+                    pivot = df.pivot_table(index="alpha_deg", columns="control_input_deg", values=target, aggfunc="mean")
+                    im = ax.imshow(pivot.values, aspect="auto")
+                    ax.set_xticks(range(pivot.shape[1]))
+                    ax.set_yticks(range(pivot.shape[0]))
+                    ax.set_xticklabels([str(v) for v in pivot.columns], rotation=45, ha="right")
+                    ax.set_yticklabels([str(v) for v in pivot.index])
+                    ax.set_title(f"Mean {target} by alpha/control")
+                    ax.set_xlabel("control_input_deg")
+                    ax.set_ylabel("alpha_deg")
+                    fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+                fig.tight_layout()
+                path = output_dir / "regime_target_means.png"
+                fig.savefig(path, dpi=160)
+                plt.close(fig)
+                _record(path, "regime_target_means")
+    except Exception as exc:
+        _record_error("regime_target_means", exc)
+
+    # 12) Polar fit quality diagnostic.
+    try:
+        polar = _polar_diagnostics(df, group_column=group_column)
+        examples = polar.get("examples", []) if polar.get("status") == "computed" else []
+        r2_vals = [float(x["r2"]) for x in examples if x.get("r2") is not None]
+        k_vals = [float(x["k_cl2"]) for x in examples if x.get("k_cl2") is not None]
+        if r2_vals or k_vals:
+            fig, axes = plt.subplots(1, 2, figsize=(9, 4))
+            if r2_vals:
+                axes[0].hist(r2_vals, bins=min(30, max(5, int(math.sqrt(len(r2_vals))))))
+                axes[0].set_title("Polar fit R²")
+            if k_vals:
+                axes[1].hist(k_vals, bins=min(30, max(5, int(math.sqrt(len(k_vals))))))
+                axes[1].set_title("Polar k coefficient")
+            fig.tight_layout()
+            path = output_dir / "polar_fit_quality.png"
+            fig.savefig(path, dpi=160)
+            plt.close(fig)
+            _record(path, "polar_fit_quality")
+        else:
+            artifacts.append({"kind": "polar_fit_quality", "status": "skipped", "reason": polar.get("reason", "no_polar_examples")})
+    except Exception as exc:
+        _record_error("polar_fit_quality", exc)
+
+    # 13) Control-effect slope diagnostic.
+    try:
+        control = _control_effect_sanity(df, group_column=group_column)
+        if control.get("status") == "computed":
+            target_keys = ["cl_control_slope", "cd_control_slope", "cm_control_slope"]
+            labels = []
+            medians = []
+            weak = []
+            for key in target_keys:
+                item = control.get(key, {}) or {}
+                if item.get("status") == "computed":
+                    labels.append(key.replace("_control_slope", ""))
+                    medians.append(float(item.get("slope_median") or 0.0))
+                    weak.append(int(item.get("n_weak_or_zero_slopes") or 0))
+            if labels:
+                fig, ax = plt.subplots(figsize=(7, 4))
+                xpos = np.arange(len(labels))
+                ax.bar(xpos, medians)
+                ax.set_xticks(xpos)
+                ax.set_xticklabels(labels)
+                ax.set_ylabel("median slope per deg control")
+                ax.set_title("Control-effect slope summary")
+                for x, w in zip(xpos, weak):
+                    ax.text(x, medians[x] if abs(medians[x]) > 1e-12 else 0, f"weak={w}", ha="center", va="bottom", fontsize=8)
+                fig.tight_layout()
+                path = output_dir / "control_effect_slopes.png"
+                fig.savefig(path, dpi=160)
+                plt.close(fig)
+                _record(path, "control_effect_slopes")
+        else:
+            artifacts.append({"kind": "control_effect_slopes", "status": "skipped", "reason": control.get("reason", "control_not_computed")})
+    except Exception as exc:
+        _record_error("control_effect_slopes", exc)
 
     return artifacts
 
@@ -91833,6 +92631,7 @@ from aeris.ml.eda import (
     _outlier_scan,
     _nonlinearity_scan,
     _robust_outlier_scan,
+    compare_eda_reports,
     run_eda,
     run_promoted_dataset_eda,
 )
@@ -91924,6 +92723,23 @@ def test_run_eda_v2_reports_missingness_dtypes_and_physics_sanity():
     assert "cd_sanity" in report["aero_physics_sanity"]
     assert report["aero_physics_sanity"]["cd_sanity"]["passed_positive_cd_check"] is True
     assert report["operator_recommendations"]
+
+
+def test_run_eda_v21_reports_aerospace_refinement_blocks():
+    df = _make_df()
+    report = run_eda(df, feature_columns=FEATURES, target_columns=TARGETS)
+
+    assert report["regime_summary"]["status"] == "computed"
+    assert report["regime_outliers"]["status"] == "computed"
+    assert report["polar_diagnostics"]["status"] == "computed"
+    assert report["control_effect_sanity"]["status"] == "computed"
+    assert report["design_space_projection"]["status"] == "computed"
+    assert report["learning_readiness"]["scale_label"] in {
+        "smoke_only",
+        "canary_or_small_pilot",
+        "pilot_scale",
+    }
+    assert "cl" in report["learning_readiness"]["target_readiness"]
 
 
 def test_run_eda_feature_stats_keys():
@@ -92077,6 +92893,42 @@ def test_run_promoted_dataset_eda_rejects_columns_and_feature_set_together(tmp_p
             write_plots=False,
         )
 
+
+
+def test_compare_eda_reports_summarizes_multiple_reports(tmp_path: Path):
+    df = _make_df()
+    p1 = tmp_path / "eda1.json"
+    p2 = tmp_path / "eda2.json"
+    r1 = run_eda(df, feature_columns=FEATURES, target_columns=TARGETS, output_path=p1)
+    r2 = run_eda(df.iloc[:20].copy(), feature_columns=FEATURES, target_columns=TARGETS, output_path=p2)
+    assert r1["schema_version"] == EDA_SCHEMA_VERSION
+    assert r2["schema_version"] == EDA_SCHEMA_VERSION
+
+    comparison = compare_eda_reports([p1, p2])
+    assert comparison["schema_version"] == "aeris.eda_comparison.v1"
+    assert comparison["n_reports"] == 2
+    assert comparison["reports"][0]["rows"] == len(df)
+
+
+def test_write_eda_plots_includes_v21_artifacts(tmp_path: Path):
+    from aeris.ml.eda import write_eda_plots
+
+    df = _make_df()
+    artifacts = write_eda_plots(
+        df,
+        feature_columns=FEATURES,
+        target_columns=TARGETS,
+        output_dir=tmp_path,
+    )
+    written = {a.get("kind") for a in artifacts if a.get("status") == "written"}
+    assert "aero_polar_cl_vs_cd" in written
+    assert "targets_vs_features" in written
+    assert "target_boxplots_by_alpha" in written
+    assert "top_pairplot" in written
+    assert "design_space_pca" in written
+    assert "regime_target_means" in written
+    assert "polar_fit_quality" in written
+    assert "control_effect_slopes" in written
 
 ===== FILE: tests/ml/test_feature_engineering.py =====
 """Tests for aeris.ml.feature_engineering."""

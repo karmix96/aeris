@@ -19,6 +19,7 @@ from aeris.ml.eda import (
     _outlier_scan,
     _nonlinearity_scan,
     _robust_outlier_scan,
+    compare_eda_reports,
     run_eda,
     run_promoted_dataset_eda,
 )
@@ -110,6 +111,23 @@ def test_run_eda_v2_reports_missingness_dtypes_and_physics_sanity():
     assert "cd_sanity" in report["aero_physics_sanity"]
     assert report["aero_physics_sanity"]["cd_sanity"]["passed_positive_cd_check"] is True
     assert report["operator_recommendations"]
+
+
+def test_run_eda_v21_reports_aerospace_refinement_blocks():
+    df = _make_df()
+    report = run_eda(df, feature_columns=FEATURES, target_columns=TARGETS)
+
+    assert report["regime_summary"]["status"] == "computed"
+    assert report["regime_outliers"]["status"] == "computed"
+    assert report["polar_diagnostics"]["status"] == "computed"
+    assert report["control_effect_sanity"]["status"] == "computed"
+    assert report["design_space_projection"]["status"] == "computed"
+    assert report["learning_readiness"]["scale_label"] in {
+        "smoke_only",
+        "canary_or_small_pilot",
+        "pilot_scale",
+    }
+    assert "cl" in report["learning_readiness"]["target_readiness"]
 
 
 def test_run_eda_feature_stats_keys():
@@ -263,3 +281,39 @@ def test_run_promoted_dataset_eda_rejects_columns_and_feature_set_together(tmp_p
             write_plots=False,
         )
 
+
+
+def test_compare_eda_reports_summarizes_multiple_reports(tmp_path: Path):
+    df = _make_df()
+    p1 = tmp_path / "eda1.json"
+    p2 = tmp_path / "eda2.json"
+    r1 = run_eda(df, feature_columns=FEATURES, target_columns=TARGETS, output_path=p1)
+    r2 = run_eda(df.iloc[:20].copy(), feature_columns=FEATURES, target_columns=TARGETS, output_path=p2)
+    assert r1["schema_version"] == EDA_SCHEMA_VERSION
+    assert r2["schema_version"] == EDA_SCHEMA_VERSION
+
+    comparison = compare_eda_reports([p1, p2])
+    assert comparison["schema_version"] == "aeris.eda_comparison.v1"
+    assert comparison["n_reports"] == 2
+    assert comparison["reports"][0]["rows"] == len(df)
+
+
+def test_write_eda_plots_includes_v21_artifacts(tmp_path: Path):
+    from aeris.ml.eda import write_eda_plots
+
+    df = _make_df()
+    artifacts = write_eda_plots(
+        df,
+        feature_columns=FEATURES,
+        target_columns=TARGETS,
+        output_dir=tmp_path,
+    )
+    written = {a.get("kind") for a in artifacts if a.get("status") == "written"}
+    assert "aero_polar_cl_vs_cd" in written
+    assert "targets_vs_features" in written
+    assert "target_boxplots_by_alpha" in written
+    assert "top_pairplot" in written
+    assert "design_space_pca" in written
+    assert "regime_target_means" in written
+    assert "polar_fit_quality" in written
+    assert "control_effect_slopes" in written

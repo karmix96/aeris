@@ -32,7 +32,7 @@ except Exception:
     yaml = None
 
 # ── Version & constants ───────────────────────────────────────────────────────
-APP_VERSION       = "4.7.2-EDA_V2"
+APP_VERSION       = "4.7.3-EDA_V2_1"
 DEFAULT_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg"
 DEFAULT_SYM_ELEVON_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_e_sym_deg"
 DEFAULT_DIFF_ELEVON_FEATURES = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_a_diff_deg"
@@ -6012,16 +6012,67 @@ def pg_ml(root, exe, tmo, dry):
                     for rec in recs[:8]:
                         st.write(f"- {rec}")
 
-                with st.expander("Aero sanity snapshot", expanded=False):
+                p1, p2, p3, p4 = st.columns(4)
+                p1.metric("Regime outlier cols", rep.get("regime_outliers", {}).get("n_columns_with_regime_outliers", "—"))
+                p2.metric("Polar low-R² groups", rep.get("polar_diagnostics", {}).get("n_low_r2_groups", "—"))
+                p3.metric("Negative polar-k groups", rep.get("polar_diagnostics", {}).get("n_negative_k_groups", "—"))
+                p4.metric("Scale", rep.get("learning_readiness", {}).get("scale_label", "—"))
+
+                eda_view_tabs = st.tabs(["Aero sanity", "Polar/control", "Learning readiness", "Missingness", "Compare reports"])
+                with eda_view_tabs[0]:
                     st.json(rep.get("aero_physics_sanity", {}))
+                with eda_view_tabs[1]:
+                    st.markdown("**Polar diagnostics**")
+                    st.json(rep.get("polar_diagnostics", {}))
+                    st.markdown("**Control-effect sanity**")
+                    st.json(rep.get("control_effect_sanity", {}))
+                with eda_view_tabs[2]:
+                    st.json(rep.get("learning_readiness", {}))
+                with eda_view_tabs[3]:
+                    miss = rep.get("missingness", {}) or {}
+                    top_missing = []
+                    for col, item in (miss.get("by_column", {}) or {}).items():
+                        if int(item.get("n_missing", 0) or 0) > 0:
+                            top_missing.append({
+                                "column": col,
+                                "n_missing": item.get("n_missing"),
+                                "missing_fraction": item.get("missing_fraction"),
+                            })
+                    top_missing = sorted(top_missing, key=lambda r: r.get("n_missing", 0), reverse=True)[:30]
+                    if top_missing:
+                        st.dataframe(top_missing, use_container_width=True)
+                    else:
+                        st.success("No missing-value hotspots in the loaded EDA report.")
+                with eda_view_tabs[4]:
+                    other_report = st.text_input(
+                        "Optional second EDA report path for comparison",
+                        "",
+                        key="eda_compare_report_path",
+                        help="Example: data/datasets/other_dataset/eda/eda_report.json",
+                    )
+                    if other_report.strip():
+                        try:
+                            from aeris.ml.eda import compare_eda_reports
+                            comp = compare_eda_reports([eda_report_path, Path(other_report).expanduser()])
+                            st.dataframe(comp.get("reports", []), use_container_width=True)
+                        except Exception as exc:
+                            st.error(f"Could not compare EDA reports: {exc}")
 
                 plots_dir = eda_out_dir / "plots"
                 if plots_dir.exists():
                     plot_files = sorted(plots_dir.glob("*.png"))
                     if plot_files:
                         st.markdown("**Existing EDA plots**")
-                        for plot_path in plot_files[:12]:
-                            st.image(str(plot_path), caption=plot_path.name, use_container_width=True)
+                        selected_plot = st.selectbox(
+                            "Select plot to inspect",
+                            [p.name for p in plot_files],
+                            key="eda_plot_selector",
+                        )
+                        selected_path = next((p for p in plot_files if p.name == selected_plot), plot_files[0])
+                        st.image(str(selected_path), caption=selected_path.name, use_container_width=True)
+                        with st.expander("Show all EDA plots", expanded=False):
+                            for plot_path in plot_files[:20]:
+                                st.image(str(plot_path), caption=plot_path.name, use_container_width=True)
 
     # ── ③ Train ───────────────────────────────────────────────────────────────
     with tabs[2]:

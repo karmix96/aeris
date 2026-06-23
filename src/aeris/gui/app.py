@@ -32,7 +32,7 @@ except Exception:
     yaml = None
 
 # ── Version & constants ───────────────────────────────────────────────────────
-APP_VERSION       = "4.7.5-ML_TRUST_PLOTS"
+APP_VERSION       = "4.7.7-EVIDENCE_PACKAGE_COUNTS_FIX"
 DEFAULT_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg"
 DEFAULT_SYM_ELEVON_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_e_sym_deg"
 DEFAULT_DIFF_ELEVON_FEATURES = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_a_diff_deg"
@@ -6588,7 +6588,7 @@ def pg_ml(root, exe, tmo, dry):
                 if st.button(f"Load {label} summary", key=f"{key}_load_md"):
                     st.markdown(_read(Path(summary_path).expanduser(), lim=120_000))
 
-        trust_tabs = st.tabs(["  Learning curves  ", "  Repeated grouped CV  ", "  Per-regime residuals  ", "  Plot gallery  ", "  Report viewer  "])
+        trust_tabs = st.tabs(["  Learning curves  ", "  Repeated grouped CV  ", "  Per-regime residuals  ", "  Plot gallery  ", "  Report viewer  ", "  Evidence package  "])
         with trust_tabs[0]:
             c1, c2 = st.columns(2)
             lc_sizes = c1.text_input("--group-sizes", "5,10,20,30,40", key="mltrust_lc_sizes")
@@ -6743,6 +6743,139 @@ def pg_ml(root, exe, tmo, dry):
                 )
             else:
                 st.warning("Select a dataset root first.")
+
+
+        with trust_tabs[5]:
+            _note(
+                "<b>Evidence package viewer:</b> build and inspect the final Paper 1 evidence index. "
+                "This reads real backend artifacts: <code>evidence_package_summary.md</code>, "
+                "<code>evidence_artifact_index.csv</code>, and <code>evidence_package_manifest.json</code>.",
+                "info",
+            )
+            evi_c1, evi_c2 = st.columns(2)
+            with evi_c1:
+                evi_model_dir = _pick_dir(
+                    "--model-run-dir (optional)",
+                    root / "data" / "processed" / "ml_runs",
+                    "mltrust_evidence_model_dir",
+                )
+            with evi_c2:
+                evi_workflow = st.text_input("--workflow (optional)", "", key="mltrust_evidence_workflow")
+            evi_c3, evi_c4 = st.columns(2)
+            evi_out = evi_c3.text_input(
+                "--output-dir (optional)",
+                "",
+                key="mltrust_evidence_output_dir",
+                help="Default: <dataset>/paper1_evidence_package",
+            )
+            evi_allow_missing = evi_c4.checkbox(
+                "--allow-missing",
+                value=True,
+                key="mltrust_evidence_allow_missing",
+                help="Use for pilot/debug packages so missing optional evidence is reported instead of blocking the viewer.",
+            )
+
+            evi_args = ["ml", "package-evidence", "--dataset", trust_ds]
+            if evi_model_dir.strip():
+                evi_args += ["--model-run-dir", evi_model_dir]
+            if evi_workflow.strip():
+                evi_args += ["--workflow", evi_workflow.strip()]
+            if evi_out.strip():
+                evi_args += ["--output-dir", evi_out.strip()]
+            if evi_allow_missing:
+                evi_args.append("--allow-missing")
+
+            _panel(
+                "Build evidence package",
+                "Indexes existing EDA, ML-trust, model-promotion, confidence, and workflow evidence into one auditable package. It does not rerun solvers or retrain models.",
+                evi_args,
+                root,
+                exe,
+                tmo,
+                dry,
+                "mltrust_evidence_package_run",
+                label="▶  Build evidence package",
+            )
+
+            base = Path(trust_ds).expanduser() if trust_ds.strip() else root / "data" / "datasets"
+            default_package_dir = base / "paper1_evidence_package"
+            evi_package_dir_raw = st.text_input(
+                "Evidence package directory",
+                str(default_package_dir),
+                key="mltrust_evidence_package_dir",
+            )
+            evi_package_dir = Path(evi_package_dir_raw).expanduser()
+            evi_summary = evi_package_dir / "evidence_package_summary.md"
+            evi_index = evi_package_dir / "evidence_artifact_index.csv"
+            evi_manifest = evi_package_dir / "evidence_package_manifest.json"
+
+            evi_manifest_data = _rjson(evi_manifest)
+            if isinstance(evi_manifest_data, dict):
+                status = evi_manifest_data.get("status", "unknown")
+                counts_raw = evi_manifest_data.get("counts")
+                if not isinstance(counts_raw, dict):
+                    counts_raw = evi_manifest_data.get("artifact_counts")
+                counts = counts_raw if isinstance(counts_raw, dict) else {}
+
+                present_count = counts.get("present", evi_manifest_data.get("present_artifacts", "?"))
+                missing_optional_count = counts.get("missing_optional", evi_manifest_data.get("missing_optional_artifacts", "?"))
+                missing_required_count = counts.get("missing_required", evi_manifest_data.get("missing_required_artifacts", "?"))
+
+                m1, m2, m3, m4 = st.columns(4)
+                m1.metric("Evidence status", str(status))
+                m2.metric("Present", present_count)
+                m3.metric("Missing optional", missing_optional_count)
+                m4.metric("Missing required", missing_required_count)
+
+                try:
+                    missing_required_numeric = int(missing_required_count)
+                except Exception:
+                    missing_required_numeric = 0
+                try:
+                    missing_optional_numeric = int(missing_optional_count)
+                except Exception:
+                    missing_optional_numeric = 0
+
+                if str(status).startswith("failed") or missing_required_numeric:
+                    st.error("Evidence package has missing required artifacts. Inspect the artifact index before trusting this run.")
+                elif "missing_optional" in str(status) or missing_optional_numeric:
+                    st.warning("Evidence package is usable, but some optional evidence is missing.")
+                else:
+                    st.success("Evidence package has no missing required evidence.")
+            else:
+                st.info(f"No evidence package manifest found yet: {evi_manifest}")
+
+            ev_v1, ev_v2, ev_v3 = st.columns(3)
+            with ev_v1:
+                if st.button("Load evidence package summary", key="mltrust_evidence_load_summary"):
+                    if evi_summary.exists():
+                        st.markdown(_read(evi_summary, lim=160_000))
+                    else:
+                        st.warning(f"Missing summary: {evi_summary}")
+            with ev_v2:
+                if st.button("Load artifact index CSV", key="mltrust_evidence_load_index"):
+                    if evi_index.exists():
+                        st.code(_read(evi_index, lim=160_000), language="csv")
+                    else:
+                        st.warning(f"Missing artifact index: {evi_index}")
+            with ev_v3:
+                if st.button("Load evidence manifest JSON", key="mltrust_evidence_load_manifest"):
+                    data = _rjson(evi_manifest)
+                    if data is None:
+                        st.warning(f"Missing or unreadable manifest: {evi_manifest}")
+                    else:
+                        st.json(data)
+
+            st.code(
+                "\n".join(
+                    [
+                        str(evi_summary),
+                        str(evi_index),
+                        str(evi_manifest),
+                    ]
+                ),
+                language="text",
+            )
 
 def pg_workflow(root, exe, tmo, dry):
     _hero("▤", "Workflow Cockpit", "guided stage state + evidence validation", "workflow")

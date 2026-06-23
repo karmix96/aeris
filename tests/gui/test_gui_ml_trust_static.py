@@ -28,3 +28,16 @@ def test_gui_ml_trust_tab_static_markers() -> None:
     assert "learning_curves_report.json" in text
     assert "repeated_grouped_cv_report.json" in text
     assert "per_regime_residuals_report.json" in text
+    assert "Evidence package viewer" in text
+    assert "Build evidence package" in text
+    assert "package-evidence" in text
+    assert "paper1_evidence_package" in text
+    assert "evidence_package_summary.md" in text
+    assert "evidence_artifact_index.csv" in text
+    assert "evidence_package_manifest.json" in text
+    assert "Load evidence package summary" in text
+    assert "Load artifact index CSV" in text
+    assert "Load evidence manifest JSON" in text
+    assert "counts_raw = evi_manifest_data.get(\"counts\")" in text
+    assert "present_count = counts.get(\"present\"" in text
+    assert "missing_required_count = counts.get(\"missing_required\"" in text

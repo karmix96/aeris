@@ -75,11 +75,11 @@ def test_production_qc_preset_is_recorded_in_final_run_summary() -> None:
 
     assert summary["qc_preset"] == "production"
     assert summary["geometry_qc"]["run_qc"] is True
-    assert summary["geometry_qc"]["profile"] == "basic"
+    assert summary["geometry_qc"]["profile"] == "production"
     assert summary["geometry_qc"]["passed"] is True
 
     assert summary["aero_qc"]["run_qc"] is True
-    assert summary["aero_qc"]["profile"] == "basic"
+    assert summary["aero_qc"]["profile"] == "production"
     assert summary["aero_qc"]["passed"] is True
 
     assert summary["fail_on_geometry_qc_error"] is True

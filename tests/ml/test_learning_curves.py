@@ -1,0 +1,73 @@
+from __future__ import annotations
+
+import json
+
+import numpy as np
+import pandas as pd
+
+from aeris.ml.learning_curves import parse_int_csv, run_learning_curves_on_dataframe
+
+
+def _synthetic_grouped_df() -> pd.DataFrame:
+    rows = []
+    for gid in range(9):
+        geom = f"g{gid:02d}"
+        c1 = 1.0 + 0.05 * gid
+        b = 1.6 + 0.03 * gid
+        for alpha in [-2.0, 0.0, 2.0, 4.0, 6.0]:
+            cl = 0.15 + 0.07 * alpha + 0.2 * c1
+            cd = 0.015 + 0.002 * alpha**2 + 0.01 * (b - 1.6)
+            cm = -0.05 - 0.03 * alpha + 0.1 * (c1 - 1.0)
+            rows.append(
+                {
+                    "geometry_id": geom,
+                    "c1_m": c1,
+                    "b_total_m": b,
+                    "alpha_deg": alpha,
+                    "cl": cl,
+                    "cd": cd,
+                    "cm": cm,
+                }
+            )
+    return pd.DataFrame(rows)
+
+
+def test_parse_int_csv_sorts_and_deduplicates() -> None:
+    assert parse_int_csv("20,10,10,5") == [5, 10, 20]
+
+
+def test_run_learning_curves_on_dataframe_writes_artifacts(tmp_path) -> None:
+    df = _synthetic_grouped_df()
+    result = run_learning_curves_on_dataframe(
+        df=df,
+        feature_columns=["c1_m", "b_total_m", "alpha_deg"],
+        target_columns=["cl", "cd", "cm"],
+        model_type="linear_regression",
+        group_sizes=[2, 4],
+        seeds=[11, 22],
+        split_method="grouped",
+        group_column="geometry_id",
+        train_fraction=0.6,
+        val_fraction=0.2,
+        test_fraction=0.2,
+        output_dir=tmp_path,
+        write_plots=True,
+    )
+
+    assert result["schema_version"] == "aeris.learning_curves.v1"
+    assert result["status"] == "completed"
+    assert len(result["summary_rows"]) == 2
+    assert result["summary_rows"][-1]["group_size"] == 4
+    assert result["summary_rows"][-1]["test_r2_mean_mean"] is not None
+
+    artifacts = result["artifacts"]
+    assert (tmp_path / "learning_curves.csv").exists()
+    assert (tmp_path / "learning_curves_summary.csv").exists()
+    assert (tmp_path / "learning_curves_report.json").exists()
+    assert (tmp_path / "learning_curves_summary.md").exists()
+    assert (tmp_path / "plots" / "learning_curve_r2.png").exists()
+    assert (tmp_path / "plots" / "per_target_learning_curves.png").exists()
+
+    report = json.loads((tmp_path / "learning_curves_report.json").read_text(encoding="utf-8"))
+    assert report["artifacts"]["learning_curves_csv"] == artifacts["learning_curves_csv"]
+    assert report["operator_recommendations"]

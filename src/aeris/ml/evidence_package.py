@@ -448,6 +448,25 @@ def build_evidence_package(
             output_dir=output_root,
             copy_artifacts=copy_artifacts,
         )
+        # Evidence Package V1.2 envelope metrics discovery.
+        _add_glob(
+            rows,
+            category="envelope_metrics",
+            label_prefix="envelope_metrics_report",
+            root=model_root / "quality",
+            pattern="envelope_metrics__*/envelope_metrics_report.json",
+            output_dir=output_root,
+            copy_artifacts=copy_artifacts,
+        )
+        _add_glob(
+            rows,
+            category="envelope_metrics",
+            label_prefix="envelope_metrics_by_target",
+            root=model_root / "quality",
+            pattern="envelope_metrics__*/envelope_metrics_by_target.csv",
+            output_dir=output_root,
+            copy_artifacts=copy_artifacts,
+        )
 
     if confidence_root is not None:
         add("prediction_confidence", "prediction_confidence_report", confidence_root / "prediction_confidence_report.json")

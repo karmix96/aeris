@@ -48,6 +48,7 @@ from aeris.ml.model_promotion import (
 from aeris.ml.promotion_gates import suggest_promotion_gates
 from aeris.ml.model_registry import list_model_types
 from aeris.ml.inference_guard import check_inference_inputs
+from aeris.ml.envelope_metrics import compute_envelope_metrics
 from aeris.ml.multifidelity import build_delta_dataset
 from aeris.ml.multifidelity.delta_model import predict_with_delta_model, train_delta_model
 from aeris.ml.multifidelity.evaluation import evaluate_delta_model_run
@@ -1999,6 +2000,97 @@ def ml_audit_model(
     if test_overall:
         typer.echo(f"  test_rmse_mean: {test_overall.get('rmse_mean')}")
         typer.echo(f"  test_r2_mean: {test_overall.get('r2_mean')}")
+
+
+
+@ml_app.command("envelope-metrics")
+def ml_envelope_metrics(
+    model_run_dir: Path = typer.Option(
+        ...,
+        "--model-run-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to a saved ML training run directory.",
+    ),
+    input_csv: Path | None = typer.Option(
+        None,
+        "--input-csv",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="CSV to evaluate. Defaults to model_run_dir/test_rows.csv.",
+    ),
+    output_dir: Path | None = typer.Option(
+        None,
+        "--output-dir",
+        help="Optional output directory for envelope metrics artifacts.",
+    ),
+    require_promoted_model: bool = typer.Option(
+        True,
+        "--require-promoted-model/--no-require-promoted-model",
+        help="Require model_promotion_manifest.json to be approved before evaluation.",
+    ),
+    include_truth_if_available: bool = typer.Option(
+        True,
+        "--include-truth-if-available/--no-include-truth-if-available",
+        help="If target columns exist in the input CSV, compute inside/outside error metrics.",
+    ),
+    tolerance: float = typer.Option(
+        0.0,
+        "--tolerance",
+        help="Absolute tolerance applied to training-envelope min/max checks.",
+    ),
+    feature_set: str | None = typer.Option(
+        None,
+        "--feature-set",
+        help="Named feature set to apply to the input CSV before checking envelope and prediction.",
+    ),
+    allow_feature_set_mismatch: bool = typer.Option(
+        False,
+        "--allow-feature-set-mismatch",
+        help="Allow requested feature set to differ from the model training feature set.",
+    ),
+) -> None:
+    """Split model metrics by inside/outside training-envelope status."""
+    try:
+        result = compute_envelope_metrics(
+            model_run_dir=model_run_dir,
+            input_csv=input_csv,
+            output_dir=output_dir,
+            require_promoted_model_gate=require_promoted_model,
+            include_truth_if_available=include_truth_if_available,
+            tolerance=tolerance,
+            feature_set_name=feature_set,
+            allow_feature_set_mismatch=allow_feature_set_mismatch,
+        )
+    except Exception as exc:
+        fail_command("ML envelope-metrics", exc)
+
+    report = result.report
+    counts = report.get("row_counts", {})
+    typer.echo("[AERIS] ML envelope metrics completed")
+    typer.echo(f"  model_run_dir: {model_run_dir}")
+    typer.echo(f"  input_csv: {report.get('input_csv')}")
+    typer.echo(f"  output_dir: {result.artifacts.output_dir}")
+    typer.echo(f"  total_rows: {counts.get('total')}")
+    typer.echo(f"  inside_envelope_rows: {counts.get('inside')}")
+    typer.echo(f"  outside_envelope_rows: {counts.get('outside')}")
+    typer.echo(f"  truth_available: {report.get('truth_available')}")
+    typer.echo(f"  report_json: {result.artifacts.report_path}")
+    typer.echo(f"  predictions_csv: {result.artifacts.predictions_csv_path}")
+    typer.echo(f"  by_target_csv: {result.artifacts.by_target_csv_path}")
+    typer.echo(f"  by_feature_violation_csv: {result.artifacts.by_feature_violation_csv_path}")
+    part = report.get("partition_metrics", {})
+    for label in ["inside", "outside", "all"]:
+        overall = (part.get(label, {}) or {}).get("overall", {}) or {}
+        if overall:
+            typer.echo(f"  {label}_rmse_mean: {overall.get('rmse_mean')}")
+            typer.echo(f"  {label}_r2_mean: {overall.get('r2_mean')}")
 
 
 @ml_app.command("predict-with-confidence")

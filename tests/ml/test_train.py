@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
+import warnings
 from pathlib import Path
 
 import pandas as pd
+from sklearn.exceptions import DataConversionWarning
 
 from aeris.ml.train import train_baseline_model
 
@@ -241,3 +243,30 @@ def test_train_hist_gradient_boosting_writes_no_explainability_artifact(tmp_path
 
     assert result["metrics"]["model"]["model_type"] == "hist_gradient_boosting"
     assert result["metrics"]["model"]["explainability_artifact_type"] == "none"
+
+
+def test_single_target_training_does_not_emit_data_conversion_warning(tmp_path: Path) -> None:
+    dataset_root = _build_dataset(tmp_path)
+    output_dir = tmp_path / "single_target_extra_trees"
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        result = train_baseline_model(
+            dataset_path=dataset_root,
+            feature_columns=FEATURE_COLUMNS,
+            target_columns=["cl"],
+            model_type="extra_trees",
+            split_method="grouped",
+            random_seed=123,
+            model_params={"n_estimators": 5},
+            output_dir=output_dir,
+        )
+
+    data_conversion_warnings = [
+        warning for warning in caught
+        if issubclass(warning.category, DataConversionWarning)
+    ]
+    assert data_conversion_warnings == []
+    assert result["metrics"]["test"]["overall"]["n_targets"] == 1
+    assert (output_dir / "models" / "model.pkl").exists()
+    assert (output_dir / "metrics.json").exists()

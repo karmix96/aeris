@@ -84,6 +84,27 @@ def _evaluate_predictions(
     return evaluate_regression_metrics(y_true, y_pred, target_columns)
 
 
+def _fit_target_array(y: np.ndarray, target_columns: list[str]) -> np.ndarray:
+    """Return y in the shape expected by sklearn estimators during fitting.
+
+    Single-output sklearn regressors expect a 1D target array. AERIS keeps
+    internal y arrays as 2D for metric/diagnostic consistency, so only squeeze
+    the fit input for the one-target case. Multi-target training stays 2D.
+    """
+    arr = np.asarray(y, dtype=float)
+    if len(target_columns) == 1 and arr.ndim == 2 and arr.shape[1] == 1:
+        return arr.ravel()
+    return arr
+
+
+def _prediction_array_for_metrics(y_pred: Any, target_columns: list[str]) -> np.ndarray:
+    """Return predictions as 2D arrays for AERIS metrics/diagnostics."""
+    arr = np.asarray(y_pred, dtype=float)
+    if len(target_columns) == 1 and arr.ndim == 1:
+        return arr.reshape(-1, 1)
+    return arr
+
+
 def _write_split_rows(split: DatasetSplit, output_dir: Path) -> tuple[Path, Path, Path]:
     train_rows_path = output_dir / "train_rows.csv"
     val_rows_path = output_dir / "val_rows.csv"
@@ -364,11 +385,12 @@ def train_baseline_model(
         random_seed=random_seed,
         model_params=model_params,
     )
-    model.fit(X_train, y_train)
+    fit_y_train = _fit_target_array(y_train, target_columns)
+    model.fit(X_train, fit_y_train)
 
-    y_pred_train = np.asarray(model.predict(X_train), dtype=float)
-    y_pred_val = np.asarray(model.predict(X_val), dtype=float)
-    y_pred_test = np.asarray(model.predict(X_test), dtype=float)
+    y_pred_train = _prediction_array_for_metrics(model.predict(X_train), target_columns)
+    y_pred_val = _prediction_array_for_metrics(model.predict(X_val), target_columns)
+    y_pred_test = _prediction_array_for_metrics(model.predict(X_test), target_columns)
 
     metrics = {
         "model": {

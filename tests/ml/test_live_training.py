@@ -4,25 +4,26 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
 from aeris.ml.live_training import run_live_mlp_arrays
 
 
-def test_run_live_mlp_arrays_writes_epoch_artifacts(tmp_path: Path) -> None:
+def test_run_live_mlp_arrays_writes_full_metric_artifacts(tmp_path: Path) -> None:
     rng = np.random.default_rng(7)
-    X = rng.normal(size=(40, 4))
+    X = rng.normal(size=(54, 4))
     y0 = 2.0 * X[:, 0] - 0.5 * X[:, 1]
     y1 = -1.0 * X[:, 2] + 0.25 * X[:, 3]
     y = np.column_stack([y0, y1])
 
     events: list[dict] = []
     result = run_live_mlp_arrays(
-        X_train=X[:28],
-        y_train=y[:28],
-        X_val=X[28:34],
-        y_val=y[28:34],
-        X_test=X[34:],
-        y_test=y[34:],
+        X_train=X[:36],
+        y_train=y[:36],
+        X_val=X[36:45],
+        y_val=y[36:45],
+        X_test=X[45:],
+        y_test=y[45:],
         target_columns=["target_a", "target_b"],
         output_dir=tmp_path / "live_run",
         max_epochs=4,
@@ -35,14 +36,48 @@ def test_run_live_mlp_arrays_writes_epoch_artifacts(tmp_path: Path) -> None:
     assert len(events) == 4
     assert artifacts.report_json.exists()
     assert artifacts.history_csv.exists()
+    assert artifacts.history_long_csv.exists()
     assert artifacts.loss_curve_png.exists()
+    assert artifacts.rmse_mean_curve_png.exists()
+    assert artifacts.r2_mean_curve_png.exists()
+    assert artifacts.per_target_rmse_curve_png.exists()
+    assert artifacts.normalized_error_curve_png.exists()
+    assert artifacts.generalization_gap_curve_png.exists()
     assert artifacts.model_path.exists()
     assert artifacts.metrics_json.exists()
 
+    hist = pd.read_csv(artifacts.history_csv)
+    required_cols = {
+        "epoch",
+        "train_loss",
+        "train_rmse_mean",
+        "val_rmse_mean",
+        "test_rmse_mean",
+        "train_r2_mean",
+        "val_r2_mean",
+        "train_nrmse_scale_mean",
+        "val_nrmse_scale_mean",
+        "val_minus_train_rmse_mean",
+        "val_rmse__target_a",
+        "val_r2__target_b",
+        "val_nrmse_scale__target_a",
+        "val_loss_mse__target_b",
+        "epoch_time_sec",
+    }
+    assert required_cols.issubset(set(hist.columns))
+    assert hist["val_rmse_mean"].notna().all()
+
+    long_hist = pd.read_csv(artifacts.history_long_csv)
+    assert {"epoch", "partition", "target", "rmse", "nrmse_scale", "bias", "error_p95"}.issubset(long_hist.columns)
+    assert set(long_hist["partition"]) == {"train", "val", "test"}
+
     report = json.loads(artifacts.report_json.read_text(encoding="utf-8"))
-    assert report["schema_version"] == "aeris.live_training_monitor.v2"
-    assert report["monitor_status"] == "live_iterative_training"
+    assert report["schema_version"] == "aeris.live_training_monitor.v2.1"
+    assert report["monitor_status"] == "live_iterative_training_full_metrics"
     assert report["live_streaming_supported"] is True
     assert report["history_available"] is True
     assert report["n_history_rows"] == 4
-    assert report["latest_epoch"]["epoch"] == 4
+    assert "target_normalization" in report
+    assert "diagnostics" in report
+    assert "overfit_warning" in report["diagnostics"]
+    assert "plateau_warning" in report["diagnostics"]

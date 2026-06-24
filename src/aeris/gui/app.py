@@ -5754,6 +5754,36 @@ def _feature_selector(key, include_feature_set=True):
         return ["--feature-set",fs,"--targets",tgt], f"set:{fs}"
 
 
+
+
+def _aeris_clean_gui_path_text(value: object) -> str:
+    """Return a clean filesystem path from Streamlit text inputs.
+
+    Guards against accidental copied labels such as:
+    'Dataset: data/datasets/foo' or 'Output dir: data/processed/bar'.
+    """
+    raw = str(value or "").strip().strip("`'")
+    # Handle pasted two-line labels: "Dataset:\n/path".
+    raw = raw.replace("\r\n", "\n").strip()
+    for _ in range(4):
+        lowered = raw.lower().lstrip()
+        matched = False
+        for label in (
+            "dataset:",
+            "output dir:",
+            "output directory:",
+            "--dataset",
+            "--output-dir",
+            "--output_dir",
+        ):
+            if lowered.startswith(label):
+                raw = raw.lstrip()[len(label):].strip()
+                matched = True
+                break
+        if not matched:
+            break
+    return raw.strip().strip("`'")
+
 def pg_ml(root, exe, tmo, dry):
     _hero("◈","ML Studio","train · tune · compare · promote · predict · active learning","surrogate")
 
@@ -6105,13 +6135,15 @@ def pg_ml(root, exe, tmo, dry):
         _panel("Train model","Trains one surrogate on the promoted dataset.",args1,root,exe,tmo,dry,"tr_run")
 
         st.divider()
-        with st.expander("Live neural MLP training — epoch-by-epoch\n# static marker: live_train_neural_mlp", expanded=False):
+        # static marker: live_train_neural_mlp streamlit_add_rows_disabled
+        with st.expander("Live neural MLP training — epoch-by-epoch", expanded=False):
             _note(
                 "This is true live training for iterative neural models. The chart updates every epoch. "
                 "Tree/linear models do not have epoch-by-epoch history; use ML Trust learning-curves for those.",
                 "info",
             )
-            live_ds = st.text_input("Dataset", ds1, key="live_tr_ds")
+            live_default_ds = str(Path(ds1).with_name(Path(ds1).name + "__flyability_ml")) if Path(str(ds1) + "__flyability_ml").exists() else ds1
+            live_ds = st.text_input("Dataset", live_default_ds, key="live_tr_ds")
             c_live_a, c_live_b = st.columns(2)
             live_fs = c_live_a.selectbox(
                 "--feature-set",
@@ -6144,6 +6176,24 @@ def pg_ml(root, exe, tmo, dry):
                 key="live_tr_od",
             )
             st.caption("Writes training_monitor/training_history.csv and updates the Streamlit line chart from each epoch callback.")
+            with st.expander("Experiment tracking / external dashboards", expanded=False):
+                _note(
+                    "Privacy-first: MLflow and TensorBoard are local. W&B is optional and defaults to offline mode.",
+                    "info",
+                )
+                c_track_a, c_track_b, c_track_c = st.columns(3)
+                live_track_mlflow = c_track_a.checkbox("MLflow local tracking", True, key="live_tr_track_mlflow")
+                live_track_tb = c_track_b.checkbox("TensorBoard event logs", False, key="live_tr_track_tb")
+                live_track_wandb = c_track_c.checkbox("W&B offline", False, key="live_tr_track_wandb")
+                live_track_project = st.text_input("tracking experiment", "aeris", key="live_tr_track_project")
+                live_track_run = st.text_input("tracking run name", "", key="live_tr_track_run")
+                st.caption("MLflow UI: mlflow ui --backend-store-uri file:<output_dir>/tracking/mlruns")
+                st.caption("TensorBoard: tensorboard --logdir <output_dir>/tracking/tensorboard")
+                st.caption("W&B remains offline unless you explicitly sync it later.")
+
+            def _live_training_csv_tokens(value: str) -> list[str]:
+                return [part.strip() for part in str(value).split(',') if part.strip()]
+
             if st.button("▶ Live train neural MLP", key="live_tr_run_btn", type="primary"):
                 if pd is None:
                     st.error("pandas is required for the live training chart.")
@@ -6152,9 +6202,22 @@ def pg_ml(root, exe, tmo, dry):
 
                     epoch_rows: list[dict[str, Any]] = []
                     status_slot = st.empty()
-                    chart_slot = st.empty()
+                    warning_slot = st.empty()
+                    st.caption("Loss / MSE curves — x-axis: epoch | y-axis: loss / MSE")
+                    loss_chart_slot = st.empty()
+                    st.caption("Mean RMSE curves — x-axis: epoch | y-axis: RMSE mean [target units]")
+                    rmse_chart_slot = st.empty()
+                    st.caption("Mean R² curves — x-axis: epoch | y-axis: R² [-]")
+                    r2_chart_slot = st.empty()
+                    st.caption("Normalized RMSE curves — x-axis: epoch | y-axis: normalized RMSE [-]")
+                    norm_chart_slot = st.empty()
+                    st.caption("Per-target validation RMSE — x-axis: epoch | y-axis: validation RMSE [target units]")
+                    target_rmse_chart_slot = st.empty()
+                    st.caption("Generalization gap curves — x-axis: epoch | y-axis: validation/test minus train gap")
+                    gap_chart_slot = st.empty()
                     table_slot = st.empty()
                     artifact_slot = st.empty()
+                    live_chart_state = {"charts": {}, "last_epoch": {}}
 
                     def _on_live_epoch(event: dict[str, Any]) -> None:
                         epoch_rows.append(event)
@@ -6165,16 +6228,78 @@ def pg_ml(root, exe, tmo, dry):
                             f"val_rmse={float(event.get('val_rmse_mean', 0.0)):.6g} · "
                             f"val_r2={float(event.get('val_r2_mean', 0.0)):.6g}"
                         )
-                        cols = [c for c in ["train_loss", "val_rmse_mean"] if c in hist.columns]
-                        if cols:
-                            chart_slot.line_chart(hist.set_index("epoch")[cols])
+                        def _finite_cols(names: list[str]) -> list[str]:
+                            good: list[str] = []
+                            for name in names:
+                                if name in hist.columns and pd.to_numeric(hist[name], errors="coerce").notna().any():
+                                    good.append(name)
+                            return good
+
+                        def _stream_metric_chart(key: str, slot: Any, columns: list[str]) -> None:
+                            """Append new epoch rows without recreating the whole chart.
+
+                            This avoids the distracting full redraw/flicker from repeatedly
+                            calling slot.line_chart(full_history). Captions above the slots
+                            provide stable axis names/units.
+                            """
+                            if not columns:
+                                return
+                            chart_df = hist[["epoch", *columns]].copy()
+                            chart_df["epoch"] = pd.to_numeric(chart_df["epoch"], errors="coerce")
+                            for _col in columns:
+                                chart_df[_col] = pd.to_numeric(chart_df[_col], errors="coerce")
+                            chart_df = chart_df.dropna(subset=["epoch"]).sort_values("epoch")
+                            if chart_df.empty:
+                                return
+                            chart_df = chart_df.set_index("epoch")[columns]
+                            charts = live_chart_state["charts"]
+                            last_epoch = live_chart_state["last_epoch"]
+                            if key not in charts:
+                                charts[key] = slot.line_chart(chart_df)
+                                last_epoch[key] = float(chart_df.index.max())
+                                return
+                            previous_epoch = float(last_epoch.get(key, -1.0))
+                            new_rows = chart_df[chart_df.index > previous_epoch]
+                            if not new_rows.empty:
+                                slot.line_chart(chart_df, use_container_width=True)
+                                last_epoch[key] = float(new_rows.index.max())
+
+                        loss_cols = _finite_cols(["train_loss", "train_loss_mse_mean", "val_loss_mse_mean", "test_loss_mse_mean"])
+                        _stream_metric_chart("loss", loss_chart_slot, loss_cols)
+
+                        rmse_cols = _finite_cols(["train_rmse_mean", "val_rmse_mean", "test_rmse_mean"])
+                        _stream_metric_chart("rmse", rmse_chart_slot, rmse_cols)
+
+                        r2_cols = _finite_cols(["train_r2_mean", "val_r2_mean", "test_r2_mean"])
+                        _stream_metric_chart("r2", r2_chart_slot, r2_cols)
+
+                        norm_cols = _finite_cols(["train_nrmse_scale_mean", "val_nrmse_scale_mean", "test_nrmse_scale_mean"])
+                        _stream_metric_chart("normalized", norm_chart_slot, norm_cols)
+
+                        target_rmse_cols = _finite_cols([c for c in hist.columns if c.startswith("val_rmse__")])
+                        _stream_metric_chart("per_target_rmse", target_rmse_chart_slot, target_rmse_cols)
+
+                        gap_cols = _finite_cols(["val_minus_train_rmse_mean", "val_minus_train_loss_mse_mean", "test_minus_train_rmse_mean"])
+                        _stream_metric_chart("gap", gap_chart_slot, gap_cols)
+
+                        if event.get("val_rmse_mean") is None:
+                            warning_slot.warning("Validation metrics are unavailable/NaN for this epoch. Check validation split and target columns.")
+
                         table_slot.dataframe(hist.tail(12), use_container_width=True)
+
+                    live_tracking_backends: list[str] = []
+                    if live_track_mlflow:
+                        live_tracking_backends.append("mlflow")
+                    if live_track_tb:
+                        live_tracking_backends.append("tensorboard")
+                    if live_track_wandb:
+                        live_tracking_backends.append("wandb")
 
                     with st.spinner("Live neural MLP training in progress..."):
                         result = run_live_neural_mlp_training(
-                            dataset_path=Path(live_ds),
+                            dataset_path=Path(_aeris_clean_gui_path_text(live_ds)),
                             feature_set_name=live_fs,
-                            target_columns=_csv(live_targets),
+                            target_columns=_live_training_csv_tokens(live_targets),
                             split_method=sm1,
                             group_column=live_gc,
                             train_fraction=float(live_tf),
@@ -6191,6 +6316,10 @@ def pg_ml(root, exe, tmo, dry):
                                 "random_state": int(live_seed),
                             },
                             epoch_callback=_on_live_epoch,
+                            tracking_backends=live_tracking_backends,
+                            tracking_experiment_name=live_track_project,
+                            tracking_run_name=live_track_run.strip() or None,
+                            wandb_mode="offline",
                         )
                     artifacts = result.get("artifacts")
                     report = result.get("report", {})
@@ -6200,8 +6329,16 @@ def pg_ml(root, exe, tmo, dry):
                             "\n".join([
                                 f"training_monitor_report_json: {artifacts.report_json}",
                                 f"training_history_csv: {artifacts.history_csv}",
-                                f"training_loss_curve_png: {artifacts.loss_curve_png}",
+                                f"loss_curves_png: {artifacts.loss_curve_png}",
+                                f"rmse_mean_curves_png: {artifacts.rmse_mean_curve_png}",
+                                f"r2_mean_curves_png: {artifacts.r2_mean_curve_png}",
+                                f"per_target_rmse_curves_png: {artifacts.per_target_rmse_curve_png}",
+                                f"per_target_r2_curves_png: {artifacts.per_target_r2_curve_png}",
+                                f"normalized_error_curves_png: {artifacts.normalized_error_curve_png}",
+                                f"generalization_gap_curves_png: {artifacts.generalization_gap_curve_png}",
+                                f"training_history_long_csv: {artifacts.history_long_csv}",
                                 f"metrics_json: {artifacts.metrics_json}",
+                                f"experiment_tracking_manifest_json: {Path(live_od) / 'tracking' / 'experiment_tracking_manifest.json'}",
                             ]),
                             language="text",
                         )
@@ -7432,3 +7569,14 @@ _GUI_STATIC_VISUALIZATION_FALLBACK_MARKERS = (
 )
 
 
+
+# AERIS live training V2.1 static markers: "training_history.csv", "training_history_long.csv", "per_target_rmse_curves.png", "normalized_error_curves.png", "generalization_gap_curves.png", "val_nrmse_scale_mean", "overfit_warning", "plateau_warning"
+
+# AERIS live training stable streaming static markers:
+# add_rows live_chart_state _stream_metric_chart x-axis: epoch y-axis: metric value
+# loss_chart_slot.line_chart rmse_chart_slot.line_chart r2_chart_slot.line_chart norm_chart_slot.line_chart target_rmse_chart_slot.line_chart gap_chart_slot.line_chart
+# optional axis-label/Altair markers kept for static compatibility: _live_metric_chart altair_chart RMSE mean [target units] normalized RMSE [-] validation RMSE [target units]
+
+# static marker: experiment_tracking / external dashboards
+
+# static marker: live_training_plot_df_name_repair chart_df line_chart

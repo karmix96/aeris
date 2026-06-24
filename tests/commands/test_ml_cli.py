@@ -313,3 +313,64 @@ def test_ml_build_delta_dataset_artifacts_not_getattr():
         "ml_build_delta_dataset must not use getattr on result — use result.attribute directly"
     )
 
+def test_ml_train_targets_cli_linear(tmp_path: Path) -> None:
+    dataset_root = _build_dataset(tmp_path)
+    output_dir = tmp_path / "cli_target_specific"
+
+    result = runner.invoke(
+        app,
+        [
+            "ml",
+            "train-targets",
+            "--dataset", str(dataset_root),
+            "--features", "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg",
+            "--targets", "cl,cd",
+            "--model-type", "linear_regression",
+            "--split-method", "grouped",
+            "--random-seed", "123",
+            "--output-dir", str(output_dir),
+        ],
+    )
+
+    assert result.exit_code == 0, result.stdout
+    assert "[AERIS] Target-specific ML training completed" in result.stdout
+    assert "successful_targets: 2" in result.stdout
+    assert "failed_targets: 0" in result.stdout
+    assert (output_dir / "target_specific_training_report.json").exists()
+    assert (output_dir / "target_specific_training_summary.csv").exists()
+    assert (output_dir / "target_model_index.json").exists()
+    assert (output_dir / "targets" / "cl" / "models" / "model.pkl").exists()
+    assert (output_dir / "targets" / "cd" / "models" / "model.pkl").exists()
+
+    report = json.loads((output_dir / "target_specific_training_report.json").read_text(encoding="utf-8"))
+    assert report["status"] == "success"
+    assert report["target_columns"] == ["cl", "cd"]
+    assert report["split_identity"]["consistent_across_successful_targets"] is True
+
+
+def test_ml_train_targets_cli_exits_nonzero_on_failed_target(tmp_path: Path) -> None:
+    dataset_root = _build_dataset(tmp_path)
+    output_dir = tmp_path / "cli_target_specific_failure"
+
+    result = runner.invoke(
+        app,
+        [
+            "ml",
+            "train-targets",
+            "--dataset", str(dataset_root),
+            "--features", "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg",
+            "--targets", "cl,missing_target",
+            "--model-type", "linear_regression",
+            "--split-method", "grouped",
+            "--output-dir", str(output_dir),
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "failed_targets: 1" in result.stdout
+    assert (output_dir / "target_specific_training_report.json").exists()
+
+    report = json.loads((output_dir / "target_specific_training_report.json").read_text(encoding="utf-8"))
+    assert report["status"] == "partial_failure"
+    assert report["failed_targets"] == ["missing_target"]
+

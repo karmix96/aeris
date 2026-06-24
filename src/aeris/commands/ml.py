@@ -57,6 +57,7 @@ from aeris.ml.active_learning import suggest_samples
 from aeris.ml.quality import audit_model, predict_with_confidence
 from aeris.ml.evidence_package import build_evidence_package
 from aeris.ml.train import train_baseline_model, train_baseline_model_from_config
+from aeris.ml.target_specific import train_target_specific_models
 
 
 _ALLOW_FORCED_HELP = (
@@ -152,6 +153,46 @@ def _echo_train_result(result: dict, *, model_type_label: str | None = None) -> 
 
     typer.echo(f"  test_r2_mean: {metrics['test']['overall']['r2_mean']:.6f}")
     typer.echo(f"  test_rmse_mean: {metrics['test']['overall']['rmse_mean']:.6f}")
+
+def _fmt_optional_metric(value: object) -> str:
+    if value is None:
+        return "None"
+    try:
+        return f"{float(value):.6f}"
+    except (TypeError, ValueError):
+        return str(value)
+
+
+def _echo_target_specific_train_result(result: dict) -> None:
+    report = result["report"]
+    typer.echo("[AERIS] Target-specific ML training completed")
+    typer.echo(f"  status: {report['status']}")
+    typer.echo(f"  model_type: {report['model_type']}")
+    typer.echo(f"  target_count: {report['target_count']}")
+    typer.echo(f"  successful_targets: {report['successful_target_count']}")
+    typer.echo(f"  failed_targets: {report['failed_target_count']}")
+    typer.echo(f"  split_consistent: {report['split_identity']['consistent_across_successful_targets']}")
+    typer.echo(f"  output_dir: {result['output_dir']}")
+    typer.echo(f"  report_json: {result['report_path']}")
+    typer.echo(f"  summary_csv: {result['summary_csv_path']}")
+    typer.echo(f"  model_index_json: {result['model_index_path']}")
+    typer.echo("  targets:")
+    for row in report["targets"]:
+        if row.get("status") == "success":
+            typer.echo(
+                "    - "
+                f"{row['target']}: "
+                f"test_r2={_fmt_optional_metric(row.get('test_r2'))}, "
+                f"test_rmse={_fmt_optional_metric(row.get('test_rmse'))}, "
+                f"hint={row.get('quality_hint')}, "
+                f"run_dir={row.get('run_dir')}"
+            )
+        else:
+            typer.echo(
+                "    - "
+                f"{row['target']}: FAILED "
+                f"[{row.get('error_type')}] {row.get('error_message')}"
+            )
 
 
 
@@ -756,6 +797,151 @@ def ml_train(
         )
     except Exception as exc:
         fail_command("Workflow auto-record", exc)
+
+
+@ml_app.command("train-targets")
+def ml_train_targets(
+    dataset: Path = typer.Option(
+        ...,
+        "--dataset",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to a promoted aero dataset root.",
+    ),
+    features: str | None = typer.Option(
+        None,
+        "--features",
+        help="Comma-separated explicit feature columns. Use exactly one of --features, --feature-preset, or --feature-set.",
+    ),
+    feature_preset: str | None = typer.Option(
+        None,
+        "--feature-preset",
+        help="Named feature preset such as bwb_control. Use exactly one of --features, --feature-preset, or --feature-set.",
+    ),
+    feature_set: str | None = typer.Option(
+        None,
+        "--feature-set",
+        help="Named feature set, e.g. bwb_control_physics_v1. Use exactly one of --features, --feature-preset, or --feature-set.",
+    ),
+    targets: str = typer.Option(
+        ...,
+        "--targets",
+        help="Comma-separated target columns. One separate model run is trained per target.",
+    ),
+    model_type: str = typer.Option(
+        "linear_regression",
+        "--model-type",
+        help=f"Model type. Supported: {', '.join(list_model_types())}",
+    ),
+    split_method: str = typer.Option("grouped", "--split-method", help="Split method: grouped or random."),
+    group_column: str = typer.Option("geometry_id", "--group-column", help="Grouping column for grouped split."),
+    train_fraction: float = typer.Option(0.7, "--train-fraction"),
+    val_fraction: float = typer.Option(0.15, "--val-fraction"),
+    test_fraction: float = typer.Option(0.15, "--test-fraction"),
+    random_seed: int = typer.Option(123, "--random-seed"),
+    allow_forced: bool = typer.Option(False, "--allow-forced", help=_ALLOW_FORCED_HELP),
+    model_params_json: Path | None = typer.Option(
+        None,
+        "--model-params-json",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Optional JSON object containing model constructor parameters, reused for every target.",
+    ),
+    output_dir: Path | None = typer.Option(
+        None,
+        "--output-dir",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional root output directory. Per-target runs are written under <output-dir>/targets/<target>/.",
+    ),
+    allow_partial: bool = typer.Option(
+        False,
+        "--allow-partial",
+        help="Exit successfully even if one or more targets fail. Reports are always written either way.",
+    ),
+    workflow: Path | None = typer.Option(
+        None,
+        "--workflow",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Optional workflow root to auto-record target-specific ML training after success.",
+    ),
+) -> None:
+    """Train one independent normal AERIS model run per target column."""
+    try:
+        if features is None and feature_preset is None and feature_set is None:
+            raise typer.BadParameter("--features, --feature-preset, or --feature-set is required.")
+
+        feature_cols = _resolve_feature_columns_cli(
+            features=features,
+            feature_preset=feature_preset,
+            feature_set=feature_set,
+        )
+        target_cols = parse_csv_list(targets, "--targets")
+        model_params = (
+            load_model_params_json(model_params_json)
+            if model_params_json is not None
+            else None
+        )
+
+        result = train_target_specific_models(
+            dataset_path=dataset,
+            feature_columns=feature_cols,
+            target_columns=target_cols,
+            model_type=model_type,
+            split_method=split_method,
+            group_column=group_column,
+            train_fraction=train_fraction,
+            val_fraction=val_fraction,
+            test_fraction=test_fraction,
+            random_seed=random_seed,
+            allow_forced=allow_forced,
+            model_params=model_params,
+            output_dir=output_dir,
+            feature_set_name=feature_set,
+            feature_preset_name=feature_preset,
+        )
+    except typer.BadParameter:
+        raise
+    except Exception as exc:
+        fail_command("ML train-targets", exc)
+
+    _echo_target_specific_train_result(result)
+
+    report = result["report"]
+    if report["status"] == "success":
+        try:
+            record_workflow_stage_success(
+                workflow=workflow,
+                stage="ml_training",
+                inputs=[dataset],
+                artifacts=[result["output_dir"], result["report_path"], result["summary_csv_path"]],
+                notes="Target-specific ML training completed.",
+                metadata={
+                    "command": "aeris ml train-targets",
+                    "target_specific": True,
+                    "model_type": model_type,
+                    "feature_preset": feature_preset,
+                    "feature_set": feature_set,
+                    "targets": target_cols,
+                    "split_method": split_method,
+                    "group_column": group_column,
+                    "random_seed": random_seed,
+                },
+            )
+        except Exception as exc:
+            fail_command("Workflow auto-record", exc)
+
+    if report["failed_target_count"] and not allow_partial:
+        raise typer.Exit(code=1)
 
 
 @ml_app.command("compare")

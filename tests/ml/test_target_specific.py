@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from aeris.ml.target_specific import train_target_specific_models
+from aeris.ml.target_specific import _recommended_next_step, _target_family, train_target_specific_models
 
 
 FEATURE_COLUMNS = [
@@ -103,7 +103,11 @@ def test_train_target_specific_models_writes_one_run_per_target(tmp_path: Path) 
     assert report["status"] == "success"
     assert report["successful_target_count"] == 2
     assert report["failed_target_count"] == 0
+    assert report["target_family_counts"] == {"aero": 2}
+    assert report["weak_targets"] == []
     assert report["split_identity"]["consistent_across_successful_targets"] is True
+    assert all(row["target_family"] == "aero" for row in report["targets"])
+    assert all(row["recommended_next_step"] for row in report["targets"])
 
     summary = pd.read_csv(output_dir / "target_specific_training_summary.csv")
     assert set(summary["target"]) == {"cl", "cd"}
@@ -134,3 +138,17 @@ def test_train_target_specific_models_reports_failed_target(tmp_path: Path) -> N
     assert failed_row["status"] == "failed"
     assert failed_row["error_type"]
     assert failed_row["error_message"]
+
+
+def test_target_family_and_recommendation_helpers() -> None:
+    assert _target_family("cl") == "aero"
+    assert _target_family("cd") == "aero"
+    assert _target_family("cm") == "aero"
+    assert _target_family("Cm_delta_e_per_rad") == "control_derivative"
+    assert _target_family("trim_delta_e_required_deg") == "flyability"
+    assert _target_family("longitudinal_basic_flyable_int") == "flyability"
+
+    recommendation = _recommended_next_step("Cm_delta_e_per_rad", "weak_target_low_r2")
+    assert "do_not_promote_yet" in recommendation
+    assert "control_sweep" in recommendation
+

@@ -171,6 +171,8 @@ def _echo_target_specific_train_result(result: dict) -> None:
     typer.echo(f"  target_count: {report['target_count']}")
     typer.echo(f"  successful_targets: {report['successful_target_count']}")
     typer.echo(f"  failed_targets: {report['failed_target_count']}")
+    typer.echo(f"  target_family_counts: {report.get('target_family_counts', {})}")
+    typer.echo(f"  weak_targets: {report.get('weak_targets', [])}")
     typer.echo(f"  split_consistent: {report['split_identity']['consistent_across_successful_targets']}")
     typer.echo(f"  output_dir: {result['output_dir']}")
     typer.echo(f"  report_json: {result['report_path']}")
@@ -181,10 +183,11 @@ def _echo_target_specific_train_result(result: dict) -> None:
         if row.get("status") == "success":
             typer.echo(
                 "    - "
-                f"{row['target']}: "
+                f"{row['target']} [{row.get('target_family', 'unknown')}]: "
                 f"test_r2={_fmt_optional_metric(row.get('test_r2'))}, "
                 f"test_rmse={_fmt_optional_metric(row.get('test_rmse'))}, "
                 f"hint={row.get('quality_hint')}, "
+                f"next={row.get('recommended_next_step')}, "
                 f"run_dir={row.get('run_dir')}"
             )
         else:

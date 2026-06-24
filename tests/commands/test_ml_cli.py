@@ -336,6 +336,8 @@ def test_ml_train_targets_cli_linear(tmp_path: Path) -> None:
     assert "[AERIS] Target-specific ML training completed" in result.stdout
     assert "successful_targets: 2" in result.stdout
     assert "failed_targets: 0" in result.stdout
+    assert "target_family_counts" in result.stdout
+    assert "weak_targets" in result.stdout
     assert (output_dir / "target_specific_training_report.json").exists()
     assert (output_dir / "target_specific_training_summary.csv").exists()
     assert (output_dir / "target_model_index.json").exists()

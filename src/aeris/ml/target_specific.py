@@ -69,6 +69,128 @@ def _quality_hint(test_r2: float | int | None) -> str:
     return "review_candidate"
 
 
+
+def _target_family(target: str) -> str:
+    """Return a coarse engineering family for a target column."""
+    name = target.strip().lower()
+
+    aero_targets = {
+        "cl",
+        "cd",
+        "cm",
+        "cy",
+        "cl_roll",
+        "cn",
+        "l_over_d",
+        "cd_ind",
+        "cd_ff",
+        "span_efficiency",
+        "x_np",
+        "cd_profile",
+        "cd_total",
+        "l_over_d_viscous",
+    }
+    if name in aero_targets:
+        return "aero"
+
+    # Important: trim/flyability targets can contain "delta_e" in the name,
+    # but they are outcomes/labels, not aerodynamic control derivatives.
+    flyability_tokens = (
+        "flyable",
+        "flyability",
+        "trim_delta_e_",
+        "trim_margin",
+        "red_flag",
+        "pitch_authority",
+        "label_trim",
+        "label_longitudinal",
+    )
+    if any(token in name for token in flyability_tokens):
+        return "flyability"
+
+    control_derivative_tokens = (
+        "cm_delta_e_per_rad",
+        "cl_delta",
+        "cd_delta",
+        "cy_delta",
+        "cn_delta",
+        "delta_a",
+        "control_derivative",
+        "per_rad",
+    )
+    if any(token in name for token in control_derivative_tokens):
+        return "control_derivative"
+
+    return "unknown"
+
+def _target_role(target: str) -> str:
+    """Explain what the target means in short operator language."""
+    name = str(target).strip().lower()
+
+    if name == "cl":
+        return "lift prediction"
+    if name == "cd" or name in {"cd_total", "cd_profile", "cd_ind", "cd_ff"}:
+        return "drag prediction"
+    if name == "cm":
+        return "pitching moment prediction"
+    if name == "cy":
+        return "side-force prediction"
+    if name in {"cn", "cl_roll"}:
+        return "lateral-directional moment prediction"
+    if "cm_delta_e" in name:
+        return "pitch-control authority derivative"
+    if "delta_a" in name or "cl_delta" in name or "cn_delta" in name:
+        return "roll/yaw-control derivative"
+    if "trim_delta" in name or "trim" in name:
+        return "trim requirement / trim margin"
+    if "flyable" in name:
+        return "flyability classification proxy"
+    if "red_flag" in name:
+        return "red-flag classification proxy"
+
+    return "target-specific prediction"
+
+
+def _recommended_next_step(target: str, quality_hint: str | None) -> str:
+    """Return a concise action hint. This is not a promotion decision."""
+    family = _target_family(target)
+    hint = str(quality_hint or "")
+    name = str(target).strip().lower()
+
+    if hint.startswith("weak_target"):
+        if "cm_delta_e" in name:
+            return "do_not_promote_yet__add_control_sweep_evidence_or_try_target_specific_tuning"
+        if family == "control_derivative":
+            return "do_not_promote_yet__add_control_authority_evidence_or_repeated_grouped_cv"
+        if family == "flyability":
+            return "review_labels_and_try_classifier_or_target_specific_tuning"
+        return "do_not_promote_yet__inspect_residuals_learning_curves_and_repeated_cv"
+
+    if family == "aero":
+        return "review_residuals_envelope_metrics_and_repeated_cv_before_promotion"
+    if family == "control_derivative":
+        return "review_control_sweep_coverage_and_derivative_residuals_before_promotion"
+    if family == "flyability":
+        return "review_label_balance_confusion_behavior_and_trim_residuals_before_promotion"
+
+    return "review_target_metrics_before_promotion"
+
+
+def _count_by_key(rows: list[dict[str, Any]], key: str) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for row in rows:
+        value = str(row.get(key) or "unknown")
+        counts[value] = counts.get(value, 0) + 1
+    return dict(sorted(counts.items()))
+
+
+def _weak_targets(rows: list[dict[str, Any]]) -> list[str]:
+    return [
+        str(row["target"])
+        for row in rows
+        if str(row.get("quality_hint") or "").startswith("weak_target")
+    ]
+
 def _split_identity_sha256(df: Any, *, feature_columns: list[str], group_column: str) -> str:
     """Hash row identity without target columns, so target-specific splits can be compared."""
     columns: list[str] = []
@@ -87,6 +209,8 @@ def _split_identity_sha256(df: Any, *, feature_columns: list[str], group_column:
 def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
     fieldnames = [
         "target",
+        "target_family",
+        "target_role",
         "status",
         "model_type",
         "run_dir",
@@ -105,6 +229,7 @@ def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         "test_nrmse_by_std",
         "test_nrmse_by_range",
         "quality_hint",
+        "recommended_next_step",
         "metrics_path",
         "model_path",
         "ml_run_manifest_path",
@@ -176,6 +301,9 @@ def train_target_specific_models(
         run_dir = targets_root / dir_name
         row: dict[str, Any] = {
             "target": target,
+            "target_family": _target_family(target),
+            "target_role": _target_role(target),
+            "recommended_next_step": _recommended_next_step(target, None),
             "status": "failed",
             "model_type": model_type,
             "run_dir": str(run_dir),
@@ -246,6 +374,7 @@ def train_target_specific_models(
                     "test_nrmse_by_std": _metric(metrics, "test", target, "nrmse_by_std"),
                     "test_nrmse_by_range": _metric(metrics, "test", target, "nrmse_by_range"),
                     "quality_hint": _quality_hint(test_r2),
+                    "recommended_next_step": _recommended_next_step(target, _quality_hint(test_r2)),
                     "metrics_path": str(artifacts.metrics_path),
                     "model_path": str(artifacts.model_path),
                     "ml_run_manifest_path": (
@@ -341,6 +470,9 @@ def train_target_specific_models(
         "failed_target_count": len(failed_targets),
         "successful_targets": successful_targets,
         "failed_targets": failed_targets,
+        "target_family_counts": _count_by_key(rows, "target_family"),
+        "quality_hint_counts": _count_by_key(rows, "quality_hint"),
+        "weak_targets": _weak_targets(rows),
         "split_identity": {
             "consistent_across_successful_targets": split_identity_consistent,
             "by_target": successful_split_identities,

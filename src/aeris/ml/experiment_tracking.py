@@ -4,6 +4,12 @@ import json
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
+
+# AERIS_MLFLOW_SQLITE_BACKEND_V2_2
+def _aeris_mlflow_sqlite_uri(tracking_dir: Path) -> str:
+    tracking_dir = Path(tracking_dir).expanduser()
+    tracking_dir.mkdir(parents=True, exist_ok=True)
+    return f"sqlite:///{(tracking_dir / 'mlflow.db').resolve()}"
 from typing import Any, Iterable
 
 
@@ -186,7 +192,7 @@ class ExperimentTracker:
         except Exception as exc:
             self.state.backends_unavailable["mlflow"] = f"import failed: {exc}"
             return
-        tracking_uri = f"file:{(self.tracking_dir / 'mlruns').resolve()}"
+        tracking_uri = _aeris_mlflow_sqlite_uri(self.tracking_dir)
         try:
             mlflow.set_tracking_uri(tracking_uri)
             mlflow.set_experiment(self.experiment_name)

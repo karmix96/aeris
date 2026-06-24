@@ -46,3 +46,23 @@ def test_gui_exposes_true_live_neural_mlp_training_panel() -> None:
 def test_gui_live_training_has_path_sanitizer_marker() -> None:
     text = APP.read_text(encoding="utf-8")
     assert "_aeris_clean_gui_path_text" in text
+
+
+
+def test_gui_live_training_v22_dashboard_markers() -> None:
+    """V2.2 exposes industry-style live-training dashboard markers."""
+    text = APP.read_text(encoding="utf-8")
+    for needle in [
+        "altair_chart",
+        "Learning-rate schedule",
+        "Epoch time",
+        "Mean bias curves",
+        "Mean p95 error curves",
+        "Residual distribution after training",
+        "MLP metrics are poor; do not promote",
+        "sqlite:///<output_dir>/tracking/mlflow.db",
+        "streamlit_add_rows_disabled",
+    ]:
+        assert needle in text
+
+# AERIS_LIVE_TRAINING_V2_2_STATIC_TEST

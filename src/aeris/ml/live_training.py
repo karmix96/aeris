@@ -459,6 +459,138 @@ def _make_artifacts(output_dir: Path) -> LiveTrainingArtifacts:
     )
 
 
+
+
+# ---------------------------------------------------------------------------
+# AERIS_LIVE_TRAINING_V2_2_TARGET_SCALING
+# ---------------------------------------------------------------------------
+def _target_scale_vectors(y_train: np.ndarray, target_columns: list[str], target_scales: dict[str, dict[str, Any]]) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
+    """Return target centering/scaling vectors for neural training.
+
+    The model is trained on scaled targets, but all reported metrics remain in
+    physical units after inverse transformation. This prevents degree-valued
+    targets from dominating MSE while preserving engineering interpretability.
+    """
+    y_train = np.asarray(y_train, dtype=float)
+    offsets = np.nanmean(y_train, axis=0)
+    scales: list[float] = []
+    for i, target in enumerate(target_columns):
+        info = dict(target_scales.get(target, {}))
+        scale = info.get("scale")
+        try:
+            scale_f = float(scale)
+        except Exception:
+            scale_f = float("nan")
+        if not np.isfinite(scale_f) or scale_f <= 0.0:
+            std = float(np.nanstd(y_train[:, i])) if y_train.size else float("nan")
+            scale_f = std if np.isfinite(std) and std > 0.0 else 1.0
+        scales.append(scale_f)
+    scale_arr = np.asarray(scales, dtype=float).reshape(1, -1)
+    offset_arr = np.asarray(offsets, dtype=float).reshape(1, -1)
+    manifest = {
+        "enabled": True,
+        "method": "center_by_train_mean_scale_by_target_iqr_or_std",
+        "offsets": {target: float(offset_arr[0, i]) for i, target in enumerate(target_columns)},
+        "scales": {target: float(scale_arr[0, i]) for i, target in enumerate(target_columns)},
+        "training_loss_units": "scaled_target_mse",
+        "reported_metric_units": "physical_units_after_inverse_transform",
+    }
+    return offset_arr, scale_arr, manifest
+
+
+def _scale_targets(y: np.ndarray, offsets: np.ndarray, scales: np.ndarray) -> np.ndarray:
+    y = np.asarray(y, dtype=float)
+    return (y - offsets) / scales
+
+
+def _inverse_scale_targets(y_scaled: np.ndarray, offsets: np.ndarray, scales: np.ndarray) -> np.ndarray:
+    y_scaled = np.asarray(y_scaled, dtype=float)
+    if y_scaled.ndim == 1:
+        y_scaled = y_scaled.reshape(-1, 1)
+    return y_scaled * scales + offsets
+
+
+def _write_residual_artifacts(
+    *,
+    artifacts: Any,
+    target_columns: list[str],
+    partitions: dict[str, tuple[np.ndarray, np.ndarray]],
+) -> dict[str, Any]:
+    """Write final residual table and histogram artifacts."""
+    residual_csv = Path(artifacts.monitor_dir) / "residuals_long.csv"
+    residual_hist_png = Path(artifacts.plots_dir) / "residual_distribution_histogram.png"
+    rows: list[dict[str, Any]] = []
+    for partition, (y_true, y_pred) in partitions.items():
+        y_true = np.asarray(y_true, dtype=float)
+        y_pred = np.asarray(y_pred, dtype=float)
+        for target_idx, target in enumerate(target_columns):
+            truth = y_true[:, target_idx]
+            pred = y_pred[:, target_idx]
+            residual = pred - truth
+            for row_idx, (t, p, r) in enumerate(zip(truth, pred, residual)):
+                rows.append({
+                    "partition": partition,
+                    "row_index": int(row_idx),
+                    "target": target,
+                    "truth": _safe_float(t),
+                    "prediction": _safe_float(p),
+                    "residual": _safe_float(r),
+                    "abs_error": _safe_float(abs(r)),
+                })
+    df = pd.DataFrame(rows)
+    residual_csv.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(residual_csv, index=False)
+    try:
+        import matplotlib.pyplot as plt
+        residual_hist_png.parent.mkdir(parents=True, exist_ok=True)
+        fig, ax = plt.subplots(figsize=(9, 5))
+        for target in target_columns:
+            s = pd.to_numeric(df.loc[df["target"] == target, "residual"], errors="coerce").dropna()
+            if not s.empty:
+                ax.hist(s, bins=30, alpha=0.45, label=target)
+        ax.axvline(0.0, linestyle="--", linewidth=1.0)
+        ax.set_title("AERIS live neural MLP residual distribution")
+        ax.set_xlabel("Residual = prediction - truth [target units]")
+        ax.set_ylabel("Count")
+        ax.legend(loc="best")
+        ax.grid(True, alpha=0.25)
+        fig.tight_layout()
+        fig.savefig(residual_hist_png, dpi=160)
+        plt.close(fig)
+    except Exception:
+        # The CSV is the required artifact; PNG is best-effort in headless/minimal environments.
+        pass
+    return {
+        "residuals_long_csv": str(residual_csv),
+        "residual_distribution_histogram_png": str(residual_hist_png),
+    }
+
+
+def _live_training_quality_warnings(final_row: dict[str, Any] | None) -> list[str]:
+    """Return operator-facing warnings for non-promotable neural smoke runs."""
+    if not isinstance(final_row, dict):
+        return ["No final epoch metrics available; do not promote this model."]
+    warnings_out: list[str] = []
+    val_r2 = final_row.get("val_r2_mean")
+    test_r2 = final_row.get("test_r2_mean")
+    val_nrmse = final_row.get("val_nrmse_scale_mean")
+    try:
+        if val_r2 is not None and float(val_r2) < 0.50:
+            warnings_out.append(f"Validation R² is poor ({float(val_r2):.3f}); do not promote this MLP.")
+    except Exception:
+        warnings_out.append("Validation R² is unavailable; do not promote this MLP.")
+    try:
+        if test_r2 is not None and float(test_r2) < 0.50:
+            warnings_out.append(f"Test R² is poor ({float(test_r2):.3f}); do not promote this MLP.")
+    except Exception:
+        warnings_out.append("Test R² is unavailable; do not promote this MLP.")
+    try:
+        if val_nrmse is not None and float(val_nrmse) > 0.30:
+            warnings_out.append(f"Validation normalized RMSE is high ({float(val_nrmse):.3f}); model is not engineering-ready.")
+    except Exception:
+        pass
+    return warnings_out
+
 def run_live_mlp_arrays(
     *,
     X_train: np.ndarray,
@@ -512,6 +644,8 @@ def run_live_mlp_arrays(
         raise ValueError("target_columns length does not match y_train target dimension")
 
     target_scales = _target_scale_summary(y_train, target_columns)
+    target_offsets, target_scale_values, target_scaling_manifest = _target_scale_vectors(y_train, target_columns, target_scales)
+    y_train_fit = _scale_targets(y_train, target_offsets, target_scale_values)
     model = _make_live_mlp(random_seed=random_seed, model_params=model_params)
     history_rows: list[dict[str, Any]] = []
     long_rows: list[dict[str, Any]] = []
@@ -527,6 +661,8 @@ def run_live_mlp_arrays(
             "random_seed": int(random_seed),
             "target_columns": list(target_columns),
             "model_params": dict(model_params or {}),
+            "target_scaling_enabled": True,
+            "target_scaling_method": "center_by_train_mean_scale_by_target_iqr_or_std",
         },
         tags={"aeris.live_training": True, "aeris.schema_version": LIVE_TRAINING_SCHEMA_VERSION},
     )
@@ -535,12 +671,12 @@ def run_live_mlp_arrays(
         tic = time.perf_counter()
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=ConvergenceWarning)
-            model.fit(X_train, y_train)
+            model.fit(X_train, y_train_fit)
         epoch_time_sec = float(time.perf_counter() - tic)
 
         inner = model.named_steps.get("model", model)
-        train_pred = _predict_2d(model, X_train)
-        val_pred = _predict_2d(model, X_val)
+        train_pred = _inverse_scale_targets(_predict_2d(model, X_train), target_offsets, target_scale_values)
+        val_pred = _inverse_scale_targets(_predict_2d(model, X_val), target_offsets, target_scale_values)
         train_summary, train_pt = _partition_metrics(
             y_true=y_train, y_pred=train_pred, target_columns=target_columns, target_scales=target_scales
         )
@@ -558,7 +694,7 @@ def run_live_mlp_arrays(
         row.update(_flatten_partition_metrics("val", val_summary, val_pt))
 
         if X_test is not None and y_test is not None:
-            test_pred = _predict_2d(model, X_test)
+            test_pred = _inverse_scale_targets(_predict_2d(model, X_test), target_offsets, target_scale_values)
             test_summary, test_pt = _partition_metrics(
                 y_true=y_test, y_pred=test_pred, target_columns=target_columns, target_scales=target_scales
             )
@@ -600,6 +736,7 @@ def run_live_mlp_arrays(
             "max_epochs": int(max_epochs),
             "target_columns": list(target_columns),
             "target_normalization": target_scales,
+            "target_scaling": target_scaling_manifest,
             "latest_epoch": row,
             "diagnostics": diagnostics,
             "artifacts": {
@@ -630,6 +767,21 @@ def run_live_mlp_arrays(
     history_long_df = _write_long_history(long_rows, artifacts.history_long_csv)
     _write_all_plots(history_df, artifacts)
 
+    final_train_pred = _inverse_scale_targets(_predict_2d(model, X_train), target_offsets, target_scale_values)
+    final_val_pred = _inverse_scale_targets(_predict_2d(model, X_val), target_offsets, target_scale_values)
+    residual_artifacts = _write_residual_artifacts(
+        artifacts=artifacts,
+        target_columns=target_columns,
+        partitions={"train": (y_train, final_train_pred), "val": (y_val, final_val_pred)},
+    )
+    if X_test is not None and y_test is not None:
+        final_test_pred = _inverse_scale_targets(_predict_2d(model, X_test), target_offsets, target_scale_values)
+        residual_artifacts = _write_residual_artifacts(
+            artifacts=artifacts,
+            target_columns=target_columns,
+            partitions={"train": (y_train, final_train_pred), "val": (y_val, final_val_pred), "test": (y_test, final_test_pred)},
+        )
+
     with artifacts.model_path.open("wb") as f:
         pickle.dump(model, f)
 
@@ -642,6 +794,7 @@ def run_live_mlp_arrays(
             "wrapped_per_target": False,
         },
         "target_normalization": target_scales,
+        "target_scaling": target_scaling_manifest,
         "final_epoch": history_rows[-1] if history_rows else {},
     }
     artifacts.metrics_json.write_text(json.dumps(final_metrics, indent=2, default=_json_default, allow_nan=False), encoding="utf-8")
@@ -654,6 +807,7 @@ def run_live_mlp_arrays(
         "model_type": "neural_mlp_live",
         "target_columns": list(target_columns),
         "target_normalization": target_scales,
+        "target_scaling": target_scaling_manifest,
         "live_streaming_supported": True,
         "history_available": True,
         "n_history_rows": len(history_rows),
@@ -662,6 +816,8 @@ def run_live_mlp_arrays(
         "max_epochs": int(max_epochs),
         "latest_epoch": history_rows[-1] if history_rows else None,
         "diagnostics": diagnostics,
+        "quality_warnings": _live_training_quality_warnings(history_rows[-1] if history_rows else None),
+        "promotion_recommendation": "do_not_promote_if_quality_warnings_present",
         "metrics_summary": {
             "train_rmse_mean": history_rows[-1].get("train_rmse_mean") if history_rows else None,
             "val_rmse_mean": history_rows[-1].get("val_rmse_mean") if history_rows else None,
@@ -689,6 +845,7 @@ def run_live_mlp_arrays(
             "generalization_gap_curves_png": str(artifacts.generalization_gap_curve_png),
             "model_path": str(artifacts.model_path),
             "metrics_json": str(artifacts.metrics_json),
+            **residual_artifacts,
         },
         "recommended_next_diagnostic": "Use per-target normalized curves, generalization gaps, repeated grouped CV, and promotion gates before trusting the model.",
     }

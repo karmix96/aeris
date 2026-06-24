@@ -81,3 +81,37 @@ def test_run_live_mlp_arrays_writes_full_metric_artifacts(tmp_path: Path) -> Non
     assert "diagnostics" in report
     assert "overfit_warning" in report["diagnostics"]
     assert "plateau_warning" in report["diagnostics"]
+
+
+
+def test_live_training_v22_target_scaling_and_residual_artifacts(tmp_path):
+    """Live MLP trains on scaled targets and writes residual artifacts."""
+    import numpy as np
+    from aeris.ml.live_training import run_live_mlp_arrays
+
+    rng = np.random.default_rng(123)
+    X = rng.normal(size=(40, 4))
+    y0 = 100.0 * X[:, 0] + 10.0
+    y1 = 0.01 * X[:, 1] - 0.2
+    y = np.column_stack([y0, y1])
+    out = tmp_path / "live_v22"
+    result = run_live_mlp_arrays(
+        X_train=X[:24],
+        y_train=y[:24],
+        X_val=X[24:32],
+        y_val=y[24:32],
+        X_test=X[32:],
+        y_test=y[32:],
+        target_columns=["large_units", "small_units"],
+        output_dir=out,
+        max_epochs=3,
+        random_seed=1,
+        model_params={"hidden_layer_sizes": [8], "learning_rate_init": 0.001, "alpha": 0.0001},
+        tracking_backends=[],
+    )
+    report = result["report"]
+    assert report["target_scaling"]["enabled"] is True
+    assert (out / "training_monitor" / "residuals_long.csv").exists()
+    assert "quality_warnings" in report
+
+# AERIS_LIVE_TRAINING_V2_2_TARGET_SCALING_TEST

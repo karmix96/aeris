@@ -37,3 +37,20 @@ def test_experiment_tracker_missing_optional_backend_does_not_fail(tmp_path: Pat
 
     manifest = tmp_path / "run" / "tracking" / "experiment_tracking_manifest.json"
     assert manifest.exists()
+
+
+
+def test_experiment_tracking_mentions_sqlite_backend() -> None:
+    """MLflow tracking should prefer local SQLite over deprecated file-store backend."""
+    text = Path("src/aeris/ml/experiment_tracking.py").read_text(encoding="utf-8")
+    assert "mlflow.db" in text
+    assert "sqlite:///" in text or "_aeris_mlflow_sqlite_uri" in text
+
+# AERIS_MLFLOW_SQLITE_BACKEND_V2_2_TEST
+
+
+
+def test_mlflow_sqlite_uses_tracker_tracking_dir() -> None:
+    source = Path("src/aeris/ml/experiment_tracking.py").read_text(encoding="utf-8")
+    assert "_aeris_mlflow_sqlite_uri(self.tracking_dir)" in source
+    assert "_aeris_mlflow_sqlite_uri(tracking_dir)" not in source

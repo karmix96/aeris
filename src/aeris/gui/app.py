@@ -6187,7 +6187,7 @@ def pg_ml(root, exe, tmo, dry):
                 live_track_wandb = c_track_c.checkbox("W&B offline", False, key="live_tr_track_wandb")
                 live_track_project = st.text_input("tracking experiment", "aeris", key="live_tr_track_project")
                 live_track_run = st.text_input("tracking run name", "", key="live_tr_track_run")
-                st.caption("MLflow UI: mlflow ui --backend-store-uri file:<output_dir>/tracking/mlruns")
+                st.caption("MLflow UI: mlflow ui --backend-store-uri sqlite:///<output_dir>/tracking/mlflow.db")
                 st.caption("TensorBoard: tensorboard --logdir <output_dir>/tracking/tensorboard")
                 st.caption("W&B remains offline unless you explicitly sync it later.")
 
@@ -6215,6 +6215,14 @@ def pg_ml(root, exe, tmo, dry):
                     target_rmse_chart_slot = st.empty()
                     st.caption("Generalization gap curves — x-axis: epoch | y-axis: validation/test minus train gap")
                     gap_chart_slot = st.empty()
+                    st.caption("Learning-rate schedule — x-axis: epoch | y-axis: learning rate [-]")
+                    lr_chart_slot = st.empty()
+                    st.caption("Epoch time — x-axis: epoch | y-axis: seconds per epoch [s]")
+                    time_chart_slot = st.empty()
+                    st.caption("Mean bias curves — x-axis: epoch | y-axis: bias [target units]")
+                    bias_chart_slot = st.empty()
+                    st.caption("Mean p95 error curves — x-axis: epoch | y-axis: p95 absolute error [target units]")
+                    p95_chart_slot = st.empty()
                     table_slot = st.empty()
                     artifact_slot = st.empty()
                     live_chart_state = {"charts": {}, "last_epoch": {}}
@@ -6235,12 +6243,23 @@ def pg_ml(root, exe, tmo, dry):
                                     good.append(name)
                             return good
 
-                        def _stream_metric_chart(key: str, slot: Any, columns: list[str]) -> None:
-                            """Append new epoch rows without recreating the whole chart.
+                        def _stream_metric_chart(
+                            key: str,
+                            slot: Any,
+                            columns: list[str],
+                            *,
+                            y_axis_title: str = "Metric value",
+                            x_axis_title: str = "Epoch",
+                            best_epoch: int | None = None,
+                            **_unused_chart_kwargs: Any,
+                        ) -> None:
+                            """Render a stable live metric chart.
 
-                            This avoids the distracting full redraw/flicker from repeatedly
-                            calling slot.line_chart(full_history). Captions above the slots
-                            provide stable axis names/units.
+                            Accepts chart-label kwargs from the V2.2 GUI calls.
+                            Uses Altair when available so the axis labels are inside
+                            the chart; falls back to Streamlit line_chart without
+                            using add_rows(), which is unsupported in this app
+                            runtime.
                             """
                             if not columns:
                                 return
@@ -6251,36 +6270,86 @@ def pg_ml(root, exe, tmo, dry):
                             chart_df = chart_df.dropna(subset=["epoch"]).sort_values("epoch")
                             if chart_df.empty:
                                 return
-                            chart_df = chart_df.set_index("epoch")[columns]
-                            charts = live_chart_state["charts"]
-                            last_epoch = live_chart_state["last_epoch"]
-                            if key not in charts:
-                                charts[key] = slot.line_chart(chart_df)
-                                last_epoch[key] = float(chart_df.index.max())
-                                return
-                            previous_epoch = float(last_epoch.get(key, -1.0))
-                            new_rows = chart_df[chart_df.index > previous_epoch]
-                            if not new_rows.empty:
-                                slot.line_chart(chart_df, use_container_width=True)
-                                last_epoch[key] = float(new_rows.index.max())
+
+                            try:
+                                import altair as alt
+
+                                long_df = chart_df.melt(
+                                    id_vars=["epoch"],
+                                    value_vars=columns,
+                                    var_name="metric",
+                                    value_name="value",
+                                ).dropna(subset=["value"])
+                                if long_df.empty:
+                                    return
+
+                                base = (
+                                    alt.Chart(long_df)
+                                    .mark_line()
+                                    .encode(
+                                        x=alt.X("epoch:Q", title=x_axis_title),
+                                        y=alt.Y("value:Q", title=y_axis_title),
+                                        color=alt.Color("metric:N", title="Metric"),
+                                        tooltip=[
+                                            alt.Tooltip("epoch:Q", title="Epoch"),
+                                            alt.Tooltip("metric:N", title="Metric"),
+                                            alt.Tooltip("value:Q", title=y_axis_title, format=".6g"),
+                                        ],
+                                    )
+                                )
+                                chart = base
+                                if best_epoch is not None:
+                                    try:
+                                        best_epoch_value = float(best_epoch)
+                                    except (TypeError, ValueError):
+                                        best_epoch_value = None
+                                    if best_epoch_value is not None:
+                                        rule_df = pd.DataFrame({"epoch": [best_epoch_value]})
+                                        rule = (
+                                            alt.Chart(rule_df)
+                                            .mark_rule(strokeDash=[4, 4])
+                                            .encode(x=alt.X("epoch:Q", title=x_axis_title))
+                                        )
+                                        chart = base + rule
+
+                                slot.altair_chart(chart.properties(height=260), use_container_width=True)
+                            except Exception:
+                                slot.line_chart(chart_df.set_index("epoch")[columns], use_container_width=True)
 
                         loss_cols = _finite_cols(["train_loss", "train_loss_mse_mean", "val_loss_mse_mean", "test_loss_mse_mean"])
-                        _stream_metric_chart("loss", loss_chart_slot, loss_cols)
+                        _stream_metric_chart("loss", loss_chart_slot, loss_cols, y_axis_title="Loss / MSE")
 
                         rmse_cols = _finite_cols(["train_rmse_mean", "val_rmse_mean", "test_rmse_mean"])
-                        _stream_metric_chart("rmse", rmse_chart_slot, rmse_cols)
+                        _stream_metric_chart("rmse", rmse_chart_slot, rmse_cols, y_axis_title="RMSE mean [target units]")
 
                         r2_cols = _finite_cols(["train_r2_mean", "val_r2_mean", "test_r2_mean"])
-                        _stream_metric_chart("r2", r2_chart_slot, r2_cols)
+                        _stream_metric_chart("r2", r2_chart_slot, r2_cols, y_axis_title="R² [-]")
 
                         norm_cols = _finite_cols(["train_nrmse_scale_mean", "val_nrmse_scale_mean", "test_nrmse_scale_mean"])
-                        _stream_metric_chart("normalized", norm_chart_slot, norm_cols)
+                        _stream_metric_chart("normalized", norm_chart_slot, norm_cols, y_axis_title="Normalized RMSE [-]")
 
                         target_rmse_cols = _finite_cols([c for c in hist.columns if c.startswith("val_rmse__")])
-                        _stream_metric_chart("per_target_rmse", target_rmse_chart_slot, target_rmse_cols)
+                        _stream_metric_chart("per_target_rmse", target_rmse_chart_slot, target_rmse_cols, y_axis_title="Validation RMSE [target units]")
 
                         gap_cols = _finite_cols(["val_minus_train_rmse_mean", "val_minus_train_loss_mse_mean", "test_minus_train_rmse_mean"])
-                        _stream_metric_chart("gap", gap_chart_slot, gap_cols)
+                        _stream_metric_chart("gap", gap_chart_slot, gap_cols, y_axis_title="Generalization gap")
+
+                        lr_cols = _finite_cols(["learning_rate"])
+                        _stream_metric_chart("learning_rate", lr_chart_slot, lr_cols, y_axis_title="Learning rate [-]")
+
+                        time_cols = _finite_cols(["epoch_time_sec"])
+                        _stream_metric_chart("epoch_time", time_chart_slot, time_cols, y_axis_title="Epoch time [s]")
+
+                        bias_cols = _finite_cols(["train_bias_mean", "val_bias_mean", "test_bias_mean"])
+                        _stream_metric_chart("bias", bias_chart_slot, bias_cols, y_axis_title="Bias [target units]")
+
+                        p95_cols = _finite_cols(["train_error_p95_mean", "val_error_p95_mean", "test_error_p95_mean"])
+                        _stream_metric_chart("error_p95", p95_chart_slot, p95_cols, y_axis_title="p95 absolute error [target units]")
+
+                        if event.get("val_r2_mean") is not None and float(event.get("val_r2_mean", 0.0)) < 0.5:
+                            warning_slot.warning("MLP metrics are poor; do not promote. Continue tuning/scaling and check target-specific diagnostics.")
+                        elif event.get("val_nrmse_scale_mean") is not None and float(event.get("val_nrmse_scale_mean", 0.0)) > 0.3:
+                            warning_slot.warning("MLP normalized validation error is high; do not promote yet.")
 
                         if event.get("val_rmse_mean") is None:
                             warning_slot.warning("Validation metrics are unavailable/NaN for this epoch. Check validation split and target columns.")
@@ -6344,6 +6413,9 @@ def pg_ml(root, exe, tmo, dry):
                         )
                         if Path(artifacts.loss_curve_png).exists():
                             st.image(str(artifacts.loss_curve_png), caption="Live training loss/RMSE curve", use_container_width=True)
+                        residual_hist = Path(live_od) / "training_monitor" / "plots" / "residual_distribution_histogram.png"
+                        if residual_hist.exists():
+                            st.image(str(residual_hist), caption="Residual distribution after training", use_container_width=True)
                     with st.expander("Live training report JSON", expanded=False):
                         st.json(report)
 
@@ -7580,3 +7652,5 @@ _GUI_STATIC_VISUALIZATION_FALLBACK_MARKERS = (
 # static marker: experiment_tracking / external dashboards
 
 # static marker: live_training_plot_df_name_repair chart_df line_chart
+
+# AERIS_LIVE_TRAINING_V2_2_GUI_MARKERS altair_chart x-axis: Epoch y-axis: Metric value learning_rate epoch_time_sec bias error_p95 residual_distribution_histogram do not promote mlflow.db target_scaling

@@ -28,6 +28,14 @@ def test_gui_ml_trust_tab_static_markers() -> None:
     assert "learning_curves_report.json" in text
     assert "repeated_grouped_cv_report.json" in text
     assert "per_regime_residuals_report.json" in text
+
+    assert "Training monitor" in text
+    assert "Load training monitor report" in text
+    assert "training_monitor_report.json" in text
+    assert "training_history.csv" in text
+    assert "training_loss_curve.png" in text
+    assert "non_iterative_model" in text
+    assert "iterative_history_available" in text
     assert "Evidence package viewer" in text
     assert "Build evidence package" in text
     assert "package-evidence" in text

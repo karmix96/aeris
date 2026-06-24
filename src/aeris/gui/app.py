@@ -32,7 +32,7 @@ except Exception:
     yaml = None
 
 # ── Version & constants ───────────────────────────────────────────────────────
-APP_VERSION       = "4.7.7-EVIDENCE_PACKAGE_COUNTS_FIX"
+APP_VERSION       = "4.7.7-EVIDENCE_PACKAGE_COUNTS_FIX-TRAINING_MONITOR_GUI-LIVE_TRAINING"
 DEFAULT_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg"
 DEFAULT_SYM_ELEVON_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_e_sym_deg"
 DEFAULT_DIFF_ELEVON_FEATURES = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_a_diff_deg"
@@ -6104,6 +6104,113 @@ def pg_ml(root, exe, tmo, dry):
         if af1: args1.append("--allow-forced")
         _panel("Train model","Trains one surrogate on the promoted dataset.",args1,root,exe,tmo,dry,"tr_run")
 
+        st.divider()
+        with st.expander("Live neural MLP training — epoch-by-epoch\n# static marker: live_train_neural_mlp", expanded=False):
+            _note(
+                "This is true live training for iterative neural models. The chart updates every epoch. "
+                "Tree/linear models do not have epoch-by-epoch history; use ML Trust learning-curves for those.",
+                "info",
+            )
+            live_ds = st.text_input("Dataset", ds1, key="live_tr_ds")
+            c_live_a, c_live_b = st.columns(2)
+            live_fs = c_live_a.selectbox(
+                "--feature-set",
+                ML_FEATURE_SET_CHOICES,
+                index=ML_FEATURE_SET_CHOICES.index("bwb_control_physics_v1") if "bwb_control_physics_v1" in ML_FEATURE_SET_CHOICES else 0,
+                key="live_tr_fs",
+                help="Live V2 uses feature sets so engineered columns are produced before split.",
+            )
+            live_targets = c_live_b.text_input(
+                "--targets",
+                "trim_delta_e_required_deg,trim_delta_e_margin_to_limit_deg",
+                key="live_tr_targets",
+            )
+            c_live_c, c_live_d, c_live_e = st.columns(3)
+            live_epochs = c_live_c.number_input("max epochs", min_value=1, max_value=1000, value=50, step=1, key="live_tr_epochs")
+            live_seed = c_live_d.number_input("random seed", min_value=0, value=123, step=1, key="live_tr_seed")
+            live_allow_forced = c_live_e.checkbox("--allow-forced", False, key="live_tr_allow_forced")
+            c_live_f, c_live_g, c_live_h = st.columns(3)
+            live_hidden = c_live_f.text_input("hidden layers", "64,64", key="live_tr_hidden")
+            live_lr = c_live_g.number_input("learning_rate_init", min_value=1e-6, value=1e-3, step=1e-4, format="%.6f", key="live_tr_lr")
+            live_alpha = c_live_h.number_input("alpha", min_value=0.0, value=1e-4, step=1e-4, format="%.6f", key="live_tr_alpha")
+            c_live_i, c_live_j, c_live_k = st.columns(3)
+            live_tf = c_live_i.slider("train fraction", 0.3, 0.85, 0.70, 0.05, key="live_tr_tf")
+            live_vf = c_live_j.slider("val fraction", 0.05, 0.3, 0.15, 0.05, key="live_tr_vf")
+            live_te = c_live_k.slider("test fraction", 0.05, 0.3, 0.15, 0.05, key="live_tr_te")
+            live_gc = st.text_input("--group-column", "geometry_id", key="live_tr_gc")
+            live_od = st.text_input(
+                "--output-dir",
+                str(root / "data" / "processed" / "ml_runs" / "gui_live_neural_mlp"),
+                key="live_tr_od",
+            )
+            st.caption("Writes training_monitor/training_history.csv and updates the Streamlit line chart from each epoch callback.")
+            if st.button("▶ Live train neural MLP", key="live_tr_run_btn", type="primary"):
+                if pd is None:
+                    st.error("pandas is required for the live training chart.")
+                else:
+                    from aeris.ml.live_training import run_live_neural_mlp_training
+
+                    epoch_rows: list[dict[str, Any]] = []
+                    status_slot = st.empty()
+                    chart_slot = st.empty()
+                    table_slot = st.empty()
+                    artifact_slot = st.empty()
+
+                    def _on_live_epoch(event: dict[str, Any]) -> None:
+                        epoch_rows.append(event)
+                        hist = pd.DataFrame(epoch_rows)
+                        status_slot.info(
+                            f"epoch {int(event.get('epoch', 0))}/{int(live_epochs)} · "
+                            f"loss={float(event.get('train_loss', 0.0)):.6g} · "
+                            f"val_rmse={float(event.get('val_rmse_mean', 0.0)):.6g} · "
+                            f"val_r2={float(event.get('val_r2_mean', 0.0)):.6g}"
+                        )
+                        cols = [c for c in ["train_loss", "val_rmse_mean"] if c in hist.columns]
+                        if cols:
+                            chart_slot.line_chart(hist.set_index("epoch")[cols])
+                        table_slot.dataframe(hist.tail(12), use_container_width=True)
+
+                    with st.spinner("Live neural MLP training in progress..."):
+                        result = run_live_neural_mlp_training(
+                            dataset_path=Path(live_ds),
+                            feature_set_name=live_fs,
+                            target_columns=_csv(live_targets),
+                            split_method=sm1,
+                            group_column=live_gc,
+                            train_fraction=float(live_tf),
+                            val_fraction=float(live_vf),
+                            test_fraction=float(live_te),
+                            random_seed=int(live_seed),
+                            allow_forced=bool(live_allow_forced),
+                            output_dir=Path(live_od),
+                            max_epochs=int(live_epochs),
+                            model_params={
+                                "hidden_layer_sizes": live_hidden,
+                                "learning_rate_init": float(live_lr),
+                                "alpha": float(live_alpha),
+                                "random_state": int(live_seed),
+                            },
+                            epoch_callback=_on_live_epoch,
+                        )
+                    artifacts = result.get("artifacts")
+                    report = result.get("report", {})
+                    st.success("Live neural MLP training completed")
+                    if artifacts is not None:
+                        artifact_slot.code(
+                            "\n".join([
+                                f"training_monitor_report_json: {artifacts.report_json}",
+                                f"training_history_csv: {artifacts.history_csv}",
+                                f"training_loss_curve_png: {artifacts.loss_curve_png}",
+                                f"metrics_json: {artifacts.metrics_json}",
+                            ]),
+                            language="text",
+                        )
+                        if Path(artifacts.loss_curve_png).exists():
+                            st.image(str(artifacts.loss_curve_png), caption="Live training loss/RMSE curve", use_container_width=True)
+                    with st.expander("Live training report JSON", expanded=False):
+                        st.json(report)
+
+
     # ── ④ Tune ────────────────────────────────────────────────────────────────
     with tabs[3]:
         _note("<b>--backend optuna</b>: advanced TPE search. <b>--backend aeris</b>: grid/random. Optuna for serious tuning.","info")
@@ -6588,7 +6695,7 @@ def pg_ml(root, exe, tmo, dry):
                 if st.button(f"Load {label} summary", key=f"{key}_load_md"):
                     st.markdown(_read(Path(summary_path).expanduser(), lim=120_000))
 
-        trust_tabs = st.tabs(["  Learning curves  ", "  Repeated grouped CV  ", "  Per-regime residuals  ", "  Plot gallery  ", "  Report viewer  ", "  Evidence package  "])
+        trust_tabs = st.tabs(["  Learning curves  ", "  Repeated grouped CV  ", "  Per-regime residuals  ", "  Plot gallery  ", "  Report viewer  ", "  Evidence package  ", "  Training monitor  "])
         with trust_tabs[0]:
             c1, c2 = st.columns(2)
             lc_sizes = c1.text_input("--group-sizes", "5,10,20,30,40", key="mltrust_lc_sizes")
@@ -6876,6 +6983,105 @@ def pg_ml(root, exe, tmo, dry):
                 ),
                 language="text",
             )
+
+
+        with trust_tabs[-1]:
+            _note(
+                "<b>Training monitor:</b> inspect the artifacts written immediately after <code>aeris ml train</code>. "
+                "Tree/linear models usually report <code>non_iterative_model / iterative_history_available</code>; MLP-style models can expose epoch-like loss history.",
+                "info",
+            )
+            c_tm1, c_tm2 = st.columns(2)
+            tm_model_run = c_tm1.text_input(
+                "Model run directory",
+                str(root / "data" / "processed" / "ml_runs" / "training_monitor_neural_mlp_smoke"),
+                key="mltrust_tm_model_run",
+                help="A model run folder produced by `aeris ml train`.",
+            )
+            tm_dir = Path(tm_model_run).expanduser() / "training_monitor" if tm_model_run.strip() else root / "data" / "processed" / "ml_runs"
+            tm_report_default = str(tm_dir / "training_monitor_report.json")
+            tm_history_default = str(tm_dir / "training_history.csv")
+            tm_plot_default = str(tm_dir / "plots" / "training_loss_curve.png")
+            tm_report_path = c_tm2.text_input(
+                "training_monitor_report.json",
+                tm_report_default,
+                key="mltrust_tm_report_path",
+            )
+            tm_history_path = st.text_input(
+                "training_history.csv",
+                tm_history_default,
+                key="mltrust_tm_history_path",
+            )
+            tm_plot_path = st.text_input(
+                "training_loss_curve.png",
+                tm_plot_default,
+                key="mltrust_tm_plot_path",
+            )
+
+            report_path = Path(tm_report_path).expanduser()
+            history_path = Path(tm_history_path).expanduser()
+            plot_path = Path(tm_plot_path).expanduser()
+
+            if st.button("Load training monitor report", key="mltrust_tm_load_report"):
+                report = _rjson(report_path)
+                if report is None:
+                    st.warning(f"Could not read training monitor report: {report_path}")
+                else:
+                    metrics_summary = report.get("metrics_summary", {}) if isinstance(report, dict) else {}
+                    _stat_row(
+                        [
+                            ("Status", str(report.get("monitor_status", "?")), "monitor"),
+                            ("History", "yes" if report.get("history_available") else "no", "epoch rows"),
+                            ("Rows", str(report.get("n_history_rows", 0)), "history"),
+                            ("Live", "yes" if report.get("live_streaming_supported") else "no", "streaming"),
+                        ]
+                    )
+                    if report.get("monitor_status") == "non_iterative_model":
+                        _note(
+                            "This model does not expose epoch-by-epoch history. Use ML Trust learning curves, repeated grouped CV, and residual diagnostics instead.",
+                            "info",
+                        )
+                    elif report.get("history_available"):
+                        _note("Epoch-like training history is available. Inspect the CSV and loss plot below.", "ok")
+                    st.caption("training_monitor_report.json")
+                    st.json(report)
+                    if metrics_summary:
+                        st.caption("metrics_summary")
+                        st.json(metrics_summary)
+
+            c_hist, c_plot = st.columns(2)
+            with c_hist:
+                if st.button("Load training history CSV", key="mltrust_tm_load_history"):
+                    if pd is None:
+                        st.warning("pandas is not available; cannot display CSV table.")
+                    elif not history_path.exists():
+                        st.info(f"No training history CSV found: {history_path}")
+                    else:
+                        try:
+                            hist_df = pd.read_csv(history_path)
+                            st.dataframe(hist_df.head(200), use_container_width=True)
+                            st.caption(f"Rows shown: {min(len(hist_df), 200)} / {len(hist_df)}")
+                        except Exception as exc:
+                            st.error(f"Could not load training history CSV: {exc}")
+            with c_plot:
+                if st.button("Load training loss plot", key="mltrust_tm_load_plot"):
+                    if plot_path.exists():
+                        st.image(str(plot_path), caption="training_loss_curve.png", use_container_width=True)
+                        st.code(str(plot_path), language="text")
+                    else:
+                        st.info(f"No training loss plot found: {plot_path}")
+
+            with st.expander("Training monitor artifact paths", expanded=False):
+                st.code(
+                    "\n".join(
+                        [
+                            str(report_path),
+                            str(history_path),
+                            str(plot_path),
+                        ]
+                    ),
+                    language="text",
+                )
 
 def pg_workflow(root, exe, tmo, dry):
     _hero("▤", "Workflow Cockpit", "guided stage state + evidence validation", "workflow")

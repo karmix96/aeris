@@ -61,6 +61,11 @@ class OpenVSPExecutionResult:
 
     @property
     def succeeded(self) -> bool:
+        # OpenVSP (3.36.x) can return a non-zero exit code even when the
+        # script executed and wrote the STEP file. Trust the produced
+        # artifact: if the STEP exists, the export succeeded.
+        if self.attempted and self.step_exists:
+            return True
         return bool(self.attempted and self.returncode == 0 and self.step_exists)
 
     def to_dict(self) -> dict[str, Any]:
@@ -292,10 +297,16 @@ def _append_step_export_footer(
 
 // {marker}
 Update();
-WriteVSPFile(\"{_vsp_string(vsp3_path)}\");
+WriteVSPFile(\"{_vsp_string(vsp3_path)}\", SET_ALL);
 ExportFile(\"{_vsp_string(step_path)}\", SET_ALL, EXPORT_STEP);
 """
-    vspscript_path.write_text(text.rstrip() + footer + "\n", encoding="utf-8")
+    stripped = text.rstrip()
+    last_brace = stripped.rfind("}")
+    if last_brace != -1:
+        new_text = stripped[:last_brace] + footer + "\n}\n"
+    else:
+        new_text = stripped + footer + "\n"
+    vspscript_path.write_text(new_text, encoding="utf-8")
 
 
 def export_openvsp_vspscript_from_section_geometry(
@@ -540,4 +551,286 @@ def run_openvsp_batch_script(
             step_path=step_path,
             step_exists=bool(step_path and Path(step_path).exists()),
             skipped_reason=f"Timeout after {timeout_sec}s.",
+        )
+
+
+@dataclass(frozen=True)
+class SolidSTEPExportResult:
+    """Result of watertight-solid STEP export via CadQuery loft."""
+
+    attempted: bool
+    backend: str
+    stdout_path: Path
+    stderr_path: Path
+    step_path: Path
+    step_exists: bool
+    is_solid: bool
+    solid_count: int = 0
+    shell_count: int = 0
+    face_count: int = 0
+    volume_m3: float | None = None
+    bbox_x_m: float | None = None
+    bbox_y_m: float | None = None
+    bbox_z_m: float | None = None
+    skipped_reason: str | None = None
+
+    @property
+    def succeeded(self) -> bool:
+        return bool(self.attempted and self.step_exists and self.is_solid)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "attempted": self.attempted,
+            "backend": self.backend,
+            "stdout_path": str(self.stdout_path),
+            "stderr_path": str(self.stderr_path),
+            "step_path": str(self.step_path),
+            "step_exists": self.step_exists,
+            "is_solid": self.is_solid,
+            "solid_count": self.solid_count,
+            "shell_count": self.shell_count,
+            "face_count": self.face_count,
+            "volume_m3": self.volume_m3,
+            "bbox_x_m": self.bbox_x_m,
+            "bbox_y_m": self.bbox_y_m,
+            "bbox_z_m": self.bbox_z_m,
+            "succeeded": self.succeeded,
+            "skipped_reason": self.skipped_reason,
+        }
+
+
+def _section_closed_wire(airfoil_name, le_x, y, z, chord, twist_deg, fallback_name="naca0012"):
+    """Build a closed CadQuery wire for one section profile.
+
+    Uses the SAME airfoil coordinates AeroSandbox uses (asb.Airfoil(name).coordinates),
+    scaled by chord and twisted about the leading edge, then placed in 3D with the
+    section's LE position (x aft, y span, z up). z already contains cumulative
+    dihedral from the section geometry, so the loft matches the ASB airplane.
+    """
+    import aerosandbox as asb
+    import numpy as np
+    import cadquery as cq
+
+    try:
+        af = asb.Airfoil(airfoil_name)
+        coords = af.coordinates
+        if coords is None:
+            raise ValueError("no coordinates")
+    except Exception:
+        af = asb.Airfoil(fallback_name)
+        coords = af.coordinates
+
+    coords = np.asarray(coords, dtype=float)
+    t = np.radians(float(twist_deg))
+    cos_t = np.cos(t)
+    sin_t = np.sin(t)
+
+    pts = []
+    seen = set()
+    for xc, zc in coords:
+        xs = float(xc) * float(chord)
+        zs = float(zc) * float(chord)
+        # Twist about LE (rotation in the x-z plane, nose-up positive)
+        xr = xs * cos_t + zs * sin_t
+        zr = -xs * sin_t + zs * cos_t
+        px = float(le_x) + xr
+        py = float(y)
+        pz = float(z) + zr
+        key = (round(px, 9), round(py, 9), round(pz, 9))
+        if key in seen:
+            continue
+        seen.add(key)
+        # Scale from metres (AERIS internal) to mm (OCC/CadQuery internal unit).
+        # OCC/CadQuery works in mm; exportStep writes mm to STEP.
+        pts.append(cq.Vector(px * 1000.0, py * 1000.0, pz * 1000.0))
+
+    if len(pts) < 3:
+        raise ValueError("Section produced fewer than 3 unique points; cannot form a wire.")
+
+    return cq.Wire.makePolygon(pts, close=True)
+
+
+def export_solid_step_from_section_geometry(
+    *,
+    section_geometry,
+    config,
+    step_path,
+    stdout_path,
+    stderr_path,
+    symmetric: bool = True,
+) -> "SolidSTEPExportResult":
+    """Export a watertight solid STEP by lofting AERIS section profiles.
+
+    Produces a single closed BREP solid (verified is_solid), mirrored across
+    the XZ plane and fused when symmetric=True. Consistent with the AeroSandbox
+    airplane geometry but suitable for CFD meshing, boolean operations, and
+    solver analysis.
+    """
+    import cadquery as cq
+
+    step_path = Path(step_path)
+    stdout_path = Path(stdout_path)
+    stderr_path = Path(stderr_path)
+    step_path.parent.mkdir(parents=True, exist_ok=True)
+    stdout_path.parent.mkdir(parents=True, exist_ok=True)
+    stderr_path.parent.mkdir(parents=True, exist_ok=True)
+
+    log_lines: list[str] = []
+    err_lines: list[str] = []
+
+    # Remove stale STEP so success cannot be inherited from a previous run.
+    if step_path.exists():
+        step_path.unlink()
+
+    fallback_name = config.section_bounds.airfoil_name or "naca0012"
+
+    try:
+        # Use AeroSandbox's own loft path: _compute_frame_of_WingXSec + splines.
+        # This is geometrically identical to the AeroSandbox airplane.
+        airplane = _build_aerosandbox_airplane_from_sections(
+            section_geometry=section_geometry,
+            config=config,
+            symmetric=symmetric,
+        )
+        log_lines.append(
+            f"Built AeroSandbox airplane ({len(section_geometry.sections)} sections)."
+        )
+
+        if not hasattr(airplane, "export_cadquery_geometry_mike"):
+            # Inject Mike's method at runtime if not already on the class
+            import aerosandbox as _asb
+            import copy as _copy
+            import numpy as _np
+
+            def _gen_cq_mike(self, minimum_airfoil_TE_thickness=0.001, fuselage_tol=1e-4):
+                import cadquery as cq
+                solids = []
+                for wing in self.wings:
+                    xsec_wps = []
+                    for i, xsec in enumerate(wing.xsecs):
+                        csys = wing._compute_frame_of_WingXSec(i)
+                        af = xsec.airfoil
+                        if af.TE_thickness() < minimum_airfoil_TE_thickness:
+                            af = af.set_TE_thickness(minimum_airfoil_TE_thickness)
+                        LE = af.LE_index()
+                        wp = (
+                            cq.Workplane(
+                                inPlane=cq.Plane(
+                                    origin=tuple(xsec.xyz_le),
+                                    xDir=tuple(csys[0]),
+                                    normal=tuple(-csys[1]),
+                                )
+                            )
+                            .spline([tuple(pt * xsec.chord) for pt in af.coordinates[:LE, :]])
+                            .spline(
+                                listOfXYTuple=[tuple(pt * xsec.chord) for pt in af.coordinates[LE:, :]],
+                                includeCurrent=True,
+                            )
+                            .close()
+                        )
+                        xsec_wps.append(wp)
+                    wires = [wp.val() for wp in xsec_wps]
+                    wing_solid = cq.Solid.makeLoft(wires, ruled=True)
+                    solids.append(wing_solid)
+                    if wing.symmetric:
+                        solids.append(wing_solid.mirror("XZ"))
+                final_wp = cq.Workplane("XY").newObject(solids)
+                return final_wp.combine(clean=True)
+
+            def _exp_cq_mike(self, filename, minimum_airfoil_TE_thickness=0.001):
+                from cadquery import exporters
+                solid = self.generate_cadquery_geometry_mike(minimum_airfoil_TE_thickness)
+                solid.objects = [o.scale(1000) for o in solid.objects]
+                exporters.export(solid, fname=str(filename))
+
+            import types
+            airplane.generate_cadquery_geometry_mike = types.MethodType(_gen_cq_mike, airplane)
+            airplane.export_cadquery_geometry_mike = types.MethodType(_exp_cq_mike, airplane)
+            log_lines.append("Injected export_cadquery_geometry_mike at runtime.")
+
+        airplane.export_cadquery_geometry_mike(str(step_path))
+        log_lines.append(f"Solid STEP written: {step_path}")
+
+        step_exists = step_path.exists()
+        is_valid = bool(step_exists)
+        solid_count = 0
+        shell_count = 0
+        face_count = 0
+        volume_m3 = None
+        bbox_x_m = None
+        bbox_y_m = None
+        bbox_z_m = None
+
+        if step_exists:
+            try:
+                imported = cq.importers.importStep(str(step_path))
+                solids = imported.solids().vals()
+                shells = imported.shells().vals()
+                faces = imported.faces().vals()
+                bb = imported.val().BoundingBox()
+
+                solid_count = len(solids)
+                shell_count = len(shells)
+                face_count = len(faces)
+                volume_m3 = float(sum(solid.Volume() for solid in solids) / 1e9)
+
+                bbox_x_m = float(abs(bb.xmax - bb.xmin) / 1000.0)
+                bbox_y_m = float(abs(bb.ymax - bb.ymin) / 1000.0)
+                bbox_z_m = float(abs(bb.zmax - bb.zmin) / 1000.0)
+
+                is_valid = solid_count >= 1 and volume_m3 > 0.0
+                log_lines.append(
+                    "STEP validation: "
+                    f"solids={solid_count} shells={shell_count} faces={face_count} "
+                    f"volume_m3={volume_m3:.9g} "
+                    f"bbox_m=({bbox_x_m:.6g}, {bbox_y_m:.6g}, {bbox_z_m:.6g})"
+                )
+            except Exception as verify_exc:
+                is_valid = False
+                err_lines.append(
+                    f"STEP validation failed: {type(verify_exc).__name__}: {verify_exc}"
+                )
+
+        stdout_path.write_text(
+            "\n".join(log_lines) + ("\n" if log_lines else ""),
+            encoding="utf-8",
+        )
+        stderr_path.write_text(
+            "\n".join(err_lines) + ("\n" if err_lines else ""),
+            encoding="utf-8",
+        )
+
+        return SolidSTEPExportResult(
+            attempted=True,
+            backend="solid",
+            stdout_path=stdout_path,
+            stderr_path=stderr_path,
+            step_path=step_path,
+            step_exists=step_exists,
+            is_solid=is_valid,
+            solid_count=solid_count,
+            shell_count=shell_count,
+            face_count=face_count,
+            volume_m3=volume_m3,
+            bbox_x_m=bbox_x_m,
+            bbox_y_m=bbox_y_m,
+            bbox_z_m=bbox_z_m,
+            skipped_reason=None if is_valid else "Solid STEP validation failed.",
+        )
+
+
+    except Exception as exc:
+        msg = f"Solid STEP loft export failed: {type(exc).__name__}: {exc}"
+        err_lines.append(msg)
+        stdout_path.write_text("\n".join(log_lines) + ("\n" if log_lines else ""), encoding="utf-8")
+        stderr_path.write_text("\n".join(err_lines) + "\n", encoding="utf-8")
+        return SolidSTEPExportResult(
+            attempted=True,
+            backend="solid",
+            stdout_path=stdout_path,
+            stderr_path=stderr_path,
+            step_path=step_path,
+            step_exists=step_path.exists(),
+            is_solid=False,
+            skipped_reason=msg,
         )

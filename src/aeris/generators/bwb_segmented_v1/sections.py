@@ -151,6 +151,19 @@ def _cumulative_z(y_m: np.ndarray, dihedral_deg: np.ndarray) -> np.ndarray:
 # Main section builder
 # ---------------------------------------------------------------------------
 
+def _resolve_station_airfoil(y_m: float, group_boundary_y, station_airfoils) -> str:
+    """Step-function airfoil resolver: each section gets the airfoil
+    from its inboard group boundary (AVL/panel-method convention)."""
+    y_b1 = float(group_boundary_y[1])
+    y_b2 = float(group_boundary_y[2])
+    y_b3 = float(group_boundary_y[3])
+    eps = 1e-9
+    if y_m >= y_b3 - eps: return station_airfoils.b3
+    if y_m >= y_b2 - eps: return station_airfoils.b2
+    if y_m >= y_b1 - eps: return station_airfoils.b1
+    return station_airfoils.b0
+
+
 def build_section_geometry_from_sample(
     planform: PlanformResult,
     sample: BWBDesignSample,

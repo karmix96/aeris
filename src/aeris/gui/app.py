@@ -2192,6 +2192,37 @@ def pg_geometry(root, exe, tmo, dry):
             else:
                 st.info("cad_exports/ exists but contains no files yet.")
 
+        # ── Geometry source selector ───────────────────────────────────────
+        _sec("Geometry source")
+        _cad_source_from_run = st.radio(
+            "Export from",
+            ["Config file (generate / re-sample)", "Existing run (stored DVs — no re-sampling)"],
+            horizontal=True,
+            key="cad_source_sel",
+            help="'Config file' generates from YAML bounds. 'Existing run' uses the "
+                 "exact DVs stored in a previous geometry run — ideal for DoE CFD selection.",
+        ) == "Existing run (stored DVs — no re-sampling)"
+
+        _cad_run_dir: str | None = None
+        if _cad_source_from_run:
+            _all_geo_runs_cad = sorted(
+                [Path(r) for r in _dirs(str(root / "data" / "runs"))
+                 if "geometry" in Path(r).name and "_aero_" not in Path(r).name],
+                key=lambda p: p.name,
+            )
+            if not _all_geo_runs_cad:
+                st.warning("No geometry runs found. Generate some first (① Generate tab).")
+                _cad_source_from_run = False
+            else:
+                _cad_run_name = st.selectbox(
+                    "Select geometry run",
+                    [p.name for p in _all_geo_runs_cad],
+                    key="cad_run_pick",
+                    help="Selects a specific previously-generated geometry by its stored DVs.",
+                )
+                _cad_run_dir = str(next(p for p in _all_geo_runs_cad if p.name == _cad_run_name))
+                st.caption(f"Run: `{_cad_run_name}` · DVs loaded from geometry_summary.json")
+
         neutral_tab, physical_tab, doctor_tab = st.tabs([
             "  Neutral CAD  ",
             "  Physical deflected CAD  ",
@@ -2205,13 +2236,16 @@ def pg_geometry(root, exe, tmo, dry):
                 "Use this for normal geometry handoff or OpenVSP/STEP reconstruction checks.",
                 "info",
             )
-            cad_cfg = st.selectbox(
-                "Geometry config",
-                cfg_smoke_first,
-                format_func=_cfg_label,
-                key="cad_cfg",
-                help="Use baseline_bwb_25.yaml for smoke checks unless running a real design-space export.",
-            )
+            if not _cad_source_from_run:
+                cad_cfg = st.selectbox(
+                    "Geometry config",
+                    cfg_smoke_first,
+                    format_func=_cfg_label,
+                    key="cad_cfg",
+                    help="Use baseline_bwb_25.yaml for smoke checks.",
+                )
+            else:
+                cad_cfg = cfg_smoke_first[0] if cfg_smoke_first else ""
             c1, c2, c3 = st.columns(3)
             with c1:
                 cad_format_label = st.selectbox(
@@ -2246,14 +2280,23 @@ def pg_geometry(root, exe, tmo, dry):
                 key="cad_out",
                 help="Artifacts go under <output-dir>/cad_exports/.",
             )
-            cad_args = [
-                "geometry", "export-cad",
-                "--config", cad_cfg,
-                "--formats", cad_format,
-                "--output-dir", cad_out,
-                "--openvsp-command", openvsp_exe,
-                "--step-backend", step_backend,
-            ]
+            if _cad_source_from_run and _cad_run_dir:
+                cad_args = [
+                    "geometry", "export-cad-from-run", _cad_run_dir,
+                    "--formats", cad_format,
+                    "--output-dir", cad_out,
+                    "--step-backend", step_backend,
+                    "--openvsp-command", openvsp_exe,
+                ]
+            else:
+                cad_args = [
+                    "geometry", "export-cad",
+                    "--config", cad_cfg,
+                    "--formats", cad_format,
+                    "--output-dir", cad_out,
+                    "--openvsp-command", openvsp_exe,
+                    "--step-backend", step_backend,
+                ]
             _panel(
                 "Export neutral CAD",
                 "Writes geometry.vspscript, optional geometry.step, source geometry artifacts, stdout/stderr, and geometry_export_manifest.json.",
@@ -2286,13 +2329,43 @@ def pg_geometry(root, exe, tmo, dry):
                     return f"Training v3 — variable elevon geometry"
                 return _cfg_label(s)
 
-            phys_cfg = st.selectbox(
-                "Physical deflection config",
-                phys_first,
-                format_func=_phys_cfg_label,
-                key="phys_cad_cfg",
-                help="Recommended smoke: bwb_25_sections_asym_controls.yaml. For real campaigns use training v2/v3 after canary checks.",
-            )
+            if not _cad_source_from_run:
+                phys_cfg = st.selectbox(
+                    "Physical deflection config",
+                    phys_first,
+                    format_func=_phys_cfg_label,
+                    key="phys_cad_cfg",
+                    help="Recommended smoke: bwb_25_sections_asym_controls.yaml.",
+                )
+            else:
+                # Derive config + seed from the selected run's manifest
+                _phys_run_manifest: dict = {}
+                if _cad_run_dir:
+                    try:
+                        import json as _pj
+                        _phys_run_manifest = _pj.loads(
+                            (Path(_cad_run_dir) / "manifest.json").read_text()
+                        )
+                    except Exception:
+                        pass
+                phys_cfg = (
+                    _phys_run_manifest.get("config_path")
+                    or (_phys_run_manifest.get("geometry") or {}).get("config_path")
+                    or (phys_first[0] if phys_first else "")
+                )
+                _phys_seed_from_run = (
+                    _phys_run_manifest.get("seed")
+                    or (_phys_run_manifest.get("geometry") or {}).get("seed")
+                )
+                if phys_cfg and Path(phys_cfg).exists():
+                    st.caption(f"Config derived from run manifest: `{Path(phys_cfg).name}`")
+                else:
+                    st.warning("Could not derive config from run manifest — select a config manually.")
+                    phys_cfg = st.selectbox(
+                        "Physical deflection config (fallback)",
+                        phys_first, format_func=_phys_cfg_label, key="phys_cad_cfg_fb"
+                    )
+                    _phys_seed_from_run = None
 
             r1c1, r1c2, r1c3, r1c4 = st.columns(4)
             with r1c1:
@@ -2447,6 +2520,7 @@ def pg_geometry(root, exe, tmo, dry):
                 root, exe, tmo, dry, "cad_doctor_run",
                 label="Check OpenVSP",
             )
+
 
 
 

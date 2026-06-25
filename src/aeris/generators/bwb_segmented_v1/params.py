@@ -158,6 +158,26 @@ class SegmentAirfoilConfig:
 
 
 @dataclass(frozen=True)
+class StationAirfoilsConfig:
+    """Prescribed airfoil at each BWB span station (Paper 1).
+
+    b0 (root): reflex profile, positive Cm0 for pitch stability.
+    b1 (kink): transitional, moderate camber.
+    b2 (mid):  lighter camber, efficient cruise.
+    b3 (tip):  symmetric/low-camber for roll authority.
+
+    Step-function: sections in [b0->b1) get b0, [b1->b2) get b1, etc.
+    """
+    b0: str
+    b1: str
+    b2: str
+    b3: str
+
+    def to_dict(self) -> dict:
+        return {"b0": self.b0, "b1": self.b1, "b2": self.b2, "b3": self.b3}
+
+
+@dataclass(frozen=True)
 class SectionBoundsConfig:
     airfoil_name: str
     dihedral_root_deg: float
@@ -174,6 +194,7 @@ class SectionBoundsConfig:
     # AVL polar bridge — optional; None means no CDCL injection
     airfoil_library_id: str | None = None       # single airfoil from library (approach 1a)
     segment_airfoils: tuple[SegmentAirfoilConfig, ...] = ()  # multi-segment (approach 1b / 2)
+    station_airfoils: StationAirfoilsConfig | None = None    # Paper 1 prescribed geometry airfoils
 
 
 @dataclass(frozen=True)
@@ -528,6 +549,9 @@ def build_bwb_generator_config(config: dict[str, Any]) -> BWBGeneratorConfig:
             segment_airfoils=_parse_segment_airfoils(
                 sections_cfg.get("segment_airfoils"),
             ),
+            station_airfoils=_parse_station_airfoils(
+                sections_cfg.get("station_airfoils"),
+            ),
         ),
         outputs=PlotOutputsConfig(
             save_plot=_as_bool(
@@ -553,6 +577,22 @@ def build_bwb_generator_config(config: dict[str, Any]) -> BWBGeneratorConfig:
         )
 
     return bwb_config
+
+
+def _parse_station_airfoils(cfg: dict | None) -> "StationAirfoilsConfig | None":
+    if cfg is None:
+        return None
+    if not isinstance(cfg, dict):
+        raise TypeError(f"section_bounds.station_airfoils must be a mapping; got {type(cfg).__name__}")
+    for key in ("b0", "b1", "b2", "b3"):
+        if key not in cfg:
+            raise ValueError(f"section_bounds.station_airfoils missing key '{key}'")
+        if not isinstance(cfg[key], str) or not cfg[key].strip():
+            raise ValueError(f"section_bounds.station_airfoils.{key} must be a non-empty string")
+    return StationAirfoilsConfig(
+        b0=str(cfg["b0"]).strip(), b1=str(cfg["b1"]).strip(),
+        b2=str(cfg["b2"]).strip(), b3=str(cfg["b3"]).strip(),
+    )
 
 
 def _build_elevon_bounds_config(cfg: dict | None) -> "ControlSurfaceBoundsConfig | None":

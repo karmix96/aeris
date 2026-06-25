@@ -1,0 +1,51 @@
+# AERIS Paper 1 — Prescribed Station Airfoils (smoke / near-fixed config)
+# b0=naca23012 (root, +Cm0 reflex), b1=naca4412, b2=naca2412, b3=naca0012 (tip, symmetric)
+# Change station_airfoils values to any AeroSandbox-resolvable airfoil name.
+name: paper1_bwb_naca_stations
+geometry:
+  generator: {id: bwb_segmented_v1, seed: 1001}
+  controls:
+    n_points: 12
+    n_spline_inboard: 12
+    n_spline_outboard: 6
+    spline_split_ratio: 0.55
+    desired_curvature_strength: 0.85
+    segment_length_variation: 0.0
+    sweep_variation: 0.0
+  planform_bounds:
+    c1_m:        {min: 1.600, max: 1.601}
+    c2_ratio:    {min: 0.550, max: 0.551}
+    c3_ratio:    {min: 0.380, max: 0.381}
+    c4_ratio:    {min: 0.120, max: 0.121}
+    b_total_m:   {min: 1.600, max: 1.601}
+    b3_ratio:    {min: 0.500, max: 0.501}
+    split_ratio: {min: 0.450, max: 0.451}
+    sw1_deg:     {min: 40.0, max: 40.001}
+    sw2_deg:     {min: 25.0, max: 25.001}
+    sw3_deg:     {min: 10.0, max: 10.001}
+  section_bounds:
+    airfoil_name: naca23012
+    dihedral_root_deg: 0.0
+    twist_b0_deg:    {min:  0.0, max:  0.001}
+    twist_b1_deg:    {min: -2.0, max: -1.999}
+    twist_b2_deg:    {min: -3.0, max: -2.999}
+    twist_b3_deg:    {min: -4.0, max: -3.999}
+    dihedral_b1_deg: {min: 1.0, max: 1.001}
+    dihedral_b2_deg: {min: 2.5, max: 2.501}
+    dihedral_b3_deg: {min: 4.0, max: 4.001}
+    station_airfoils:
+      b0: naca23012   # root  — reflex, Cm0>0 for pitch stability
+      b1: naca4412    # kink  — moderate camber
+      b2: naca2412    # mid   — lighter camber, efficient cruise
+      b3: naca0012    # tip   — symmetric, roll authority
+  outputs: {save_plot: true, build_aerosandbox: true}
+  control_surfaces:
+    enabled: true
+    surfaces:
+      - name: elevon
+        family: trailing_edge
+        hinge_point: 0.75
+        symmetric: true
+        required: false
+        deflection_sign: standard
+        spanwise: {start_frac: 0.60, end_frac: 0.95}

@@ -24,7 +24,7 @@ from aeris.geometry.config_resolver import resolve_generator_and_config
 from aeris.geometry.registry import get_geometry_generator
 
 SUPPORTED_FORMATS = {"vspscript", "step"}
-SUPPORTED_STEP_BACKENDS = {"auto", "cadquery", "openvsp"}
+SUPPORTED_STEP_BACKENDS = {"auto", "solid", "cadquery", "openvsp"}
 
 
 @dataclass(frozen=True)
@@ -160,6 +160,9 @@ def parse_step_backend(step_backend: str) -> str:
     value = str(step_backend or "auto").strip().lower()
     aliases = {
         "auto": "auto",
+        "solid": "solid",
+        "loft": "solid",
+        "watertight": "solid",
         "cadquery": "cadquery",
         "cq": "cadquery",
         "asb": "cadquery",
@@ -169,7 +172,7 @@ def parse_step_backend(step_backend: str) -> str:
     }
     if value not in aliases:
         raise ValueError(
-            f"Unsupported STEP backend {step_backend!r}. "
+            f"Unsupported STEP backend {step_backend!r}. Valid values: solid (watertight loft — CFD/boolean ready), cadquery (surface shells), openvsp (OpenVSP batch), auto (solid→cadquery→openvsp). "
             f"Supported: {', '.join(sorted(SUPPORTED_STEP_BACKENDS))}."
         )
     return aliases[value]
@@ -257,6 +260,7 @@ def export_cad_from_config(
     status = "running"
     error: dict[str, Any] | None = None
     execution_payload: dict[str, Any] | None = None
+    solid_payload: dict[str, Any] | None = None
     cadquery_payload: dict[str, Any] | None = None
     source_artifacts: dict[str, str] = {}
 
@@ -275,6 +279,7 @@ def export_cad_from_config(
         "openvsp": None,
         "step_export": {
             "backend_requested": resolved_step_backend,
+            "solid": None,
             "cadquery": None,
             "openvsp": None,
         },
@@ -299,6 +304,8 @@ def export_cad_from_config(
 
         from aeris.generators.bwb_segmented_v1.vsp_export import (
             build_bwb_cad_source,
+            export_solid_step_from_section_geometry,
+            export_solid_step_from_section_geometry,
             export_cadquery_step_from_section_geometry,
             export_openvsp_vspscript_from_section_geometry,
             run_openvsp_batch_script,
@@ -328,7 +335,37 @@ def export_cad_from_config(
             #   cadquery  -> direct AeroSandbox/CadQuery STEP only
             #   openvsp   -> OpenVSP batch script only
             #   auto      -> try CadQuery first, then OpenVSP if CadQuery fails
-            if resolved_step_backend in {"auto", "cadquery"}:
+            # solid backend: watertight loft (best for CFD/booleans)
+            # auto tries solid first, then cadquery, then openvsp
+            solid_payload: dict | None = None
+            if resolved_step_backend in {"auto", "solid"}:
+                solid_stdout = cad_dir / "solid_stdout.txt"
+                solid_stderr = cad_dir / "solid_stderr.txt"
+                solid_result = export_solid_step_from_section_geometry(
+                    section_geometry=source.section_geometry,
+                    config=generator_config,
+                    step_path=step_path or (cad_dir / "geometry.step"),
+                    stdout_path=solid_stdout,
+                    stderr_path=solid_stderr,
+                    symmetric=True,
+                )
+                solid_payload = solid_result.to_dict()
+                if solid_result.succeeded:
+                    produced.append("step")
+                    stdout_path.write_text(
+                        solid_stdout.read_text(encoding="utf-8", errors="replace"),
+                        encoding="utf-8",
+                    )
+                    stderr_path.write_text(
+                        solid_stderr.read_text(encoding="utf-8", errors="replace"),
+                        encoding="utf-8",
+                    )
+                else:
+                    warnings.append(
+                        solid_result.skipped_reason
+                        or "Solid STEP loft failed."
+                    )
+            if resolved_step_backend in {"auto", "cadquery"} and "step" not in produced:
                 cadquery_stdout = cad_dir / "cadquery_stdout.txt"
                 cadquery_stderr = cad_dir / "cadquery_stderr.txt"
                 cadquery_result = export_cadquery_step_from_section_geometry(
@@ -389,6 +426,12 @@ def export_cad_from_config(
                 },
                 "step_export": {
                     "backend_requested": resolved_step_backend,
+                    "backend_final": "solid" if solid_payload and solid_payload.get("succeeded") else (
+                        "cadquery" if cadquery_payload and cadquery_payload.get("succeeded") else (
+                            "openvsp" if execution_payload and execution_payload.get("succeeded") else None
+                        )
+                    ),
+                    "solid": solid_payload,
                     "cadquery": cadquery_payload,
                     "openvsp": execution_payload,
                 },
@@ -445,3 +488,332 @@ def export_cad_from_config(
     )
 
 # AERIS_PATCH_BATCH2_CAD_ATOMIC_MANIFEST_REPLACED
+
+def load_sample_from_geometry_run(run_dir):
+    """Load a BWBDesignSample + BWBGeneratorConfig from an existing geometry run.
+
+    Essential for DoE workflows: pick N from 10,000 geometry runs and export
+    only those specific cases to CAD, without re-sampling from bounds.
+
+    Parameters
+    ----------
+    run_dir : str or Path
+        Geometry run root folder (contains manifest.json and artifacts/).
+
+    Returns
+    -------
+    (BWBDesignSample, BWBGeneratorConfig, Path)
+
+    Raises
+    ------
+    FileNotFoundError  If manifest.json or geometry_summary.json are absent.
+    KeyError           If stored JSON is missing expected DV fields.
+    ValueError         If the run did not succeed.
+    """
+    import json as _json
+    from pathlib import Path as _Path
+    from aeris.generators.bwb_segmented_v1.params import BWBDesignSample, build_bwb_generator_config
+    from aeris.common.config import load_yaml_config as _load_yaml
+
+    run_dir = _Path(run_dir).expanduser().resolve()
+
+    manifest_path = run_dir / "manifest.json"
+    if not manifest_path.exists():
+        raise FileNotFoundError(f"No manifest.json at {manifest_path}")
+    manifest = _json.loads(manifest_path.read_text(encoding="utf-8"))
+
+    run_status = manifest.get("status", "unknown")
+    if run_status != "success":
+        raise ValueError(
+            f"Run {run_dir.name} has status={run_status!r}. "
+            "Only successful runs can be exported to CAD."
+        )
+
+    cfg_path_str = manifest.get("config_path") or (
+        manifest.get("geometry") or {}
+    ).get("config_path")
+    if not cfg_path_str:
+        raise KeyError("manifest.json does not contain config_path")
+    cfg_path = _Path(cfg_path_str).expanduser().resolve()
+    if not cfg_path.exists():
+        raise FileNotFoundError(
+            f"Original config not found: {cfg_path}. "
+            "The YAML config file must still exist to reconstruct generator settings."
+        )
+
+    summary_candidates = [
+        run_dir / "artifacts" / "geometry" / "geometry_summary.json",
+        run_dir / "geometry_summary.json",
+    ]
+    summary_path = next((p for p in summary_candidates if p.exists()), None)
+    if summary_path is None:
+        raise FileNotFoundError(f"No geometry_summary.json found under {run_dir}")
+    summary = _json.loads(summary_path.read_text(encoding="utf-8"))
+
+    sp = summary.get("sampled_planform") or {}
+    ss = summary.get("sampled_sections") or {}
+    required = (
+        "c1_m", "c2_ratio", "c3_ratio", "c4_ratio",
+        "b_total_m", "b3_ratio", "split_ratio",
+        "sw1_deg", "sw2_deg", "sw3_deg",
+    )
+    missing = [k for k in required if k not in sp]
+    if missing:
+        raise KeyError(f"geometry_summary.json missing planform DV fields: {missing}")
+
+    sample = BWBDesignSample(
+        c1_m=float(sp["c1_m"]),
+        c2_ratio=float(sp["c2_ratio"]),
+        c3_ratio=float(sp["c3_ratio"]),
+        c4_ratio=float(sp["c4_ratio"]),
+        b_total_m=float(sp["b_total_m"]),
+        b3_ratio=float(sp["b3_ratio"]),
+        split_ratio=float(sp["split_ratio"]),
+        sw1_deg=float(sp["sw1_deg"]),
+        sw2_deg=float(sp["sw2_deg"]),
+        sw3_deg=float(sp["sw3_deg"]),
+        twist_b0_deg=float(ss.get("twist_b0_deg", 0.0)),
+        twist_b1_deg=float(ss.get("twist_b1_deg", 0.0)),
+        twist_b2_deg=float(ss.get("twist_b2_deg", 0.0)),
+        twist_b3_deg=float(ss.get("twist_b3_deg", 0.0)),
+        dihedral_b1_deg=float(ss.get("dihedral_b1_deg", 0.0)),
+        dihedral_b2_deg=float(ss.get("dihedral_b2_deg", 0.0)),
+        dihedral_b3_deg=float(ss.get("dihedral_b3_deg", 0.0)),
+        elevon_start_frac=float(sp.get("elevon_start_frac", 0.60)),
+        elevon_end_frac=float(sp.get("elevon_end_frac", 0.95)),
+        elevon_hinge_frac=float(sp.get("elevon_hinge_frac", 0.75)),
+    )
+
+    raw = _load_yaml(str(cfg_path))
+    config = build_bwb_generator_config(raw)
+    return sample, config, run_dir
+
+
+def export_cad_from_sample(
+    *,
+    sample,
+    config,
+    output_dir,
+    formats="vspscript,step",
+    openvsp_command="vsp",
+    timeout_sec=180,
+    step_backend="auto",
+):
+    """Export CAD from a SPECIFIC pre-built BWBDesignSample (DoE run export path).
+
+    Identical logic to export_cad_from_config but uses a provided sample
+    instead of re-sampling from the YAML config bounds. Use after a DoE campaign
+    to export CAD for specific selected geometries (e.g. 50 out of 10,000).
+
+    Parameters
+    ----------
+    sample : BWBDesignSample
+        The design vector. Use load_sample_from_geometry_run() to build this.
+    config : BWBGeneratorConfig
+        Generator config loaded from the original YAML.
+    output_dir : Path-like
+        Directory for CAD artifacts.
+    formats, step_backend, openvsp_command, timeout_sec
+        Same semantics as export_cad_from_config.
+    """
+    import platform as _platform
+    import sys as _sys
+    from pathlib import Path as _Path
+
+    output_dir = _Path(output_dir).expanduser().resolve()
+    requested = parse_cad_formats(formats)
+    resolved_step_backend = parse_step_backend(step_backend)
+    cad_dir = output_dir / "cad_exports"
+    cad_dir.mkdir(parents=True, exist_ok=True)
+    manifest_path = cad_dir / "geometry_export_manifest.json"
+
+    vspscript_path = cad_dir / "geometry.vspscript"
+    step_path = cad_dir / "geometry.step" if "step" in requested else None
+    vsp3_path = cad_dir / "geometry.vsp3" if "step" in requested else None
+    stdout_path = cad_dir / "stdout.txt"
+    stderr_path = cad_dir / "stderr.txt"
+    stdout_path.write_text("", encoding="utf-8")
+    stderr_path.write_text("", encoding="utf-8")
+
+    for _stale in (step_path, vsp3_path):
+        if _stale is not None and _stale.exists():
+            _stale.unlink()
+
+    warnings_list = []
+    produced = []
+    status = "running"
+    error = None
+    execution_payload = None
+    cadquery_payload = None
+    source_artifacts = {}
+
+    manifest = {
+        "status": status,
+        "phase": "geometry_export_cad_from_run",
+        "created_at_utc": _utc_now_iso(),
+        "completed_at_utc": None,
+        "run_root": str(output_dir),
+        "cad_dir": str(cad_dir),
+        "formats_requested": list(requested),
+        "formats_produced": [],
+        "platform": _platform.system().lower(),
+        "python_version": _sys.version.split()[0],
+        "generator": None,
+        "step_export": {
+            "backend_requested": resolved_step_backend,
+            "solid": None,
+            "cadquery": None,
+            "openvsp": None,
+        },
+        "artifacts": {},
+        "warnings": [],
+        "error": None,
+    }
+    _write_json_atomic(manifest_path, manifest)
+
+    try:
+        from aeris.generators.bwb_segmented_v1.vsp_export import (
+            build_bwb_cad_source,
+            export_cadquery_step_from_section_geometry,
+            export_openvsp_vspscript_from_section_geometry,
+        )
+
+        source = build_bwb_cad_source(
+            config=config,
+            sample=sample,
+            output_dir=cad_dir,
+        )
+        source_artifacts = source.artifact_paths
+
+        export_openvsp_vspscript_from_section_geometry(
+            section_geometry=source.section_geometry,
+            config=config,
+            sample=sample,
+            output_path=vspscript_path,
+            include_step_footer=("step" in requested),
+            step_path=step_path,
+            vsp3_path=vsp3_path,
+        )
+        if vspscript_path.exists():
+            produced.append("vspscript")
+
+        if "step" in requested:
+            solid_payload2: dict | None = None
+            if resolved_step_backend in {"auto", "solid"}:
+                sol_out = cad_dir / "solid_stdout.txt"
+                sol_err = cad_dir / "solid_stderr.txt"
+                sol_result = export_solid_step_from_section_geometry(
+                    section_geometry=source.section_geometry,
+                    config=config,
+                    step_path=step_path or (cad_dir / "geometry.step"),
+                    stdout_path=sol_out,
+                    stderr_path=sol_err,
+                    symmetric=True,
+                )
+                solid_payload2 = sol_result.to_dict()
+                if sol_result.succeeded:
+                    produced.append("step")
+                else:
+                    warnings_list.append(
+                        sol_result.skipped_reason or "Solid STEP loft failed."
+                    )
+            if resolved_step_backend in {"auto", "cadquery"} and "step" not in produced:
+                cq_out = cad_dir / "cadquery_stdout.txt"
+                cq_err = cad_dir / "cadquery_stderr.txt"
+                cq_result = export_cadquery_step_from_section_geometry(
+                    section_geometry=source.section_geometry,
+                    config=config,
+                    step_path=step_path or (cad_dir / "geometry.step"),
+                    stdout_path=cq_out,
+                    stderr_path=cq_err,
+                    symmetric=True,
+                )
+                cadquery_payload = cq_result.to_dict()
+                if cq_result.succeeded:
+                    produced.append("step")
+                else:
+                    warnings_list.append(
+                        cq_result.skipped_reason or "CadQuery STEP export failed"
+                    )
+
+            if "step" not in produced and resolved_step_backend in {"auto", "openvsp"}:
+                execution = run_openvsp_batch_script(
+                    vspscript_path=vspscript_path,
+                    openvsp_executable=openvsp_command,
+                    stdout_path=stdout_path,
+                    stderr_path=stderr_path,
+                    step_path=step_path,
+                    timeout_sec=timeout_sec,
+                )
+                execution_payload = execution.to_dict()
+                if execution.succeeded:
+                    produced.append("step")
+                else:
+                    warnings_list.append(
+                        execution.skipped_reason or "OpenVSP STEP export failed"
+                    )
+
+        status = "success" if set(produced) >= set(requested) else "partial_success"
+        if not produced:
+            status = "failed"
+
+        manifest.update({
+            "status": status,
+            "completed_at_utc": _utc_now_iso(),
+            "formats_produced": list(produced),
+            "generator": {
+                "id": "bwb_segmented_v1",
+                "design_sample": _jsonable(sample),
+            },
+            "step_export": {
+                "backend_requested": resolved_step_backend,
+                "cadquery": cadquery_payload,
+                "openvsp": execution_payload,
+            },
+            "artifacts": {
+                "vspscript": str(vspscript_path) if vspscript_path.exists() else None,
+                "step": str(step_path) if step_path and step_path.exists() else None,
+                "stdout": str(stdout_path),
+                "stderr": str(stderr_path),
+                **source_artifacts,
+            },
+            "warnings": warnings_list,
+            "error": None,
+        })
+
+    except Exception as exc:
+        status = "failed"
+        error = {"type": type(exc).__name__, "message": str(exc)}
+        stderr_path.write_text(str(exc), encoding="utf-8")
+        manifest.update({
+            "status": status,
+            "completed_at_utc": _utc_now_iso(),
+            "formats_produced": list(produced),
+            "artifacts": {
+                "vspscript": str(vspscript_path) if vspscript_path.exists() else None,
+                "step": str(step_path) if step_path and step_path.exists() else None,
+                "stdout": str(stdout_path),
+                "stderr": str(stderr_path),
+                **source_artifacts,
+            },
+            "warnings": warnings_list,
+            "error": error,
+        })
+
+    finally:
+        _write_json_atomic(manifest_path, manifest)
+
+    return CADExportResult(
+        status=status,
+        run_root=output_dir,
+        cad_dir=cad_dir,
+        manifest_path=manifest_path,
+        formats_requested=requested,
+        formats_produced=tuple(produced),
+        vspscript_path=vspscript_path if vspscript_path.exists() else None,
+        step_path=step_path if step_path is not None and step_path.exists() else None,
+        stdout_path=stdout_path,
+        stderr_path=stderr_path,
+        warnings=tuple(warnings_list),
+    )
+

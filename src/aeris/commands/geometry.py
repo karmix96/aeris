@@ -556,3 +556,40 @@ def geometry_export_deflected_cad(
 
     if status == "failed":
         raise typer.Exit(code=1)
+
+@geometry_app.command("export-cad-from-run")
+def export_cad_from_run(
+    run_dir: str = typer.Argument(..., help="Geometry run directory."),
+    formats: str = typer.Option("vspscript,step", help="vspscript, step, or both."),
+    output_dir: Path | None = typer.Option(None, help="Output dir (default: <run_dir>/cad_exports_explicit/)."),
+    step_backend: str = typer.Option("auto", help="auto | cadquery | openvsp."),
+    openvsp_command: str = typer.Option("vsp"),
+    timeout_sec: int = typer.Option(180, min=1),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
+    """Export CAD for a specific geometry from an existing DoE run directory.
+
+    Unlike export-cad, uses exact DVs stored in geometry_summary.json (no re-sampling).
+    Ideal for selecting N from 10,000 DoE runs for CFD meshing.
+    """
+    from aeris.geometry.cad_export import export_cad_from_sample, load_sample_from_geometry_run
+    try:
+        sample, config, run_path = load_sample_from_geometry_run(run_dir)
+    except (FileNotFoundError, KeyError, ValueError) as exc:
+        typer.echo(f"[ERROR] {exc}", err=True); raise typer.Exit(1)
+    resolved_out = output_dir or (run_path / "cad_exports_explicit")
+    if not json_output:
+        typer.echo(f"  Run: {run_path.name}\n  Formats: {formats}\n  Output: {resolved_out}")
+    result = export_cad_from_sample(
+        sample=sample, config=config, output_dir=resolved_out,
+        formats=formats, step_backend=step_backend,
+        openvsp_command=openvsp_command, timeout_sec=timeout_sec,
+    )
+    if json_output:
+        import json as _j
+        typer.echo(_j.dumps({"status": result.status,
+            "formats_produced": list(result.formats_produced),
+            "cad_dir": str(result.cad_dir)}, indent=2))
+    else:
+        typer.echo(f"  Status: {result.status}  Produced: {', '.join(result.formats_produced) or '—'}")
+    if result.status not in ("success", "partial_success"): raise typer.Exit(1)

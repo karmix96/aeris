@@ -375,7 +375,7 @@ def geometry_export_cad(
     step_backend: str = typer.Option(
         "auto",
         "--step-backend",
-        help="STEP backend: auto, cadquery, or openvsp.",
+        help="STEP backend: auto, solid, cadquery, or openvsp.",
     ),
     as_json: bool = typer.Option(False, "--json", help="Print result as JSON."),
 ) -> None:
@@ -562,7 +562,7 @@ def export_cad_from_run(
     run_dir: str = typer.Argument(..., help="Geometry run directory."),
     formats: str = typer.Option("vspscript,step", help="vspscript, step, or both."),
     output_dir: Path | None = typer.Option(None, help="Output dir (default: <run_dir>/cad_exports_explicit/)."),
-    step_backend: str = typer.Option("auto", help="auto | cadquery | openvsp."),
+    step_backend: str = typer.Option("auto", help="auto | solid | cadquery | openvsp."),
     openvsp_command: str = typer.Option("vsp"),
     timeout_sec: int = typer.Option(180, min=1),
     json_output: bool = typer.Option(False, "--json"),

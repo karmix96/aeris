@@ -22,6 +22,7 @@ from aeris.common.config import load_yaml_config
 from aeris.common.paths import create_run_folder
 from aeris.geometry.config_resolver import resolve_generator_and_config
 from aeris.geometry.registry import get_geometry_generator
+from aeris.generators.bwb_segmented_v1.vsp_export import export_solid_step_from_section_geometry
 
 SUPPORTED_FORMATS = {"vspscript", "step"}
 SUPPORTED_STEP_BACKENDS = {"auto", "solid", "cadquery", "openvsp"}
@@ -304,7 +305,6 @@ def export_cad_from_config(
 
         from aeris.generators.bwb_segmented_v1.vsp_export import (
             build_bwb_cad_source,
-            export_solid_step_from_section_geometry,
             export_solid_step_from_section_geometry,
             export_cadquery_step_from_section_geometry,
             export_openvsp_vspscript_from_section_geometry,
@@ -676,6 +676,7 @@ def export_cad_from_sample(
             build_bwb_cad_source,
             export_cadquery_step_from_section_geometry,
             export_openvsp_vspscript_from_section_geometry,
+            run_openvsp_batch_script,
         )
 
         source = build_bwb_cad_source(
@@ -697,8 +698,8 @@ def export_cad_from_sample(
         if vspscript_path.exists():
             produced.append("vspscript")
 
+        solid_payload2: dict | None = None
         if "step" in requested:
-            solid_payload2: dict | None = None
             if resolved_step_backend in {"auto", "solid"}:
                 sol_out = cad_dir / "solid_stdout.txt"
                 sol_err = cad_dir / "solid_stderr.txt"
@@ -767,6 +768,22 @@ def export_cad_from_sample(
             },
             "step_export": {
                 "backend_requested": resolved_step_backend,
+                "backend_final": (
+                    "solid"
+                    if "step" in produced
+                    and isinstance(solid_payload2, dict)
+                    and bool(solid_payload2.get("succeeded") or solid_payload2.get("is_solid"))
+                    else "cadquery"
+                    if "step" in produced
+                    and isinstance(cadquery_payload, dict)
+                    and bool(cadquery_payload.get("succeeded"))
+                    else "openvsp"
+                    if "step" in produced
+                    and isinstance(execution_payload, dict)
+                    and bool(execution_payload.get("succeeded"))
+                    else None
+                ),
+                "solid": solid_payload2,
                 "cadquery": cadquery_payload,
                 "openvsp": execution_payload,
             },

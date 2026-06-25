@@ -650,6 +650,163 @@ def _section_closed_wire(airfoil_name, le_x, y, z, chord, twist_deg, fallback_na
     return cq.Wire.makePolygon(pts, close=True)
 
 
+def _ensure_airplane_has_cadquery_geometry_mike(airplane, log_lines: list[str]) -> str:
+    """Ensure the Airplane has Mike's volumetric CadQuery exporter.
+
+    Prefer the installed/original method when present. Only inject the fallback
+    when the local AeroSandbox installation does not provide it. This keeps the
+    production path honest: solid STEP means Mike-style volumetric CadQuery,
+    not the older surface-shell exporter.
+    """
+    for method_name in (
+        "export_cadquery_geometry_mike",
+        "export_cadquery_mike",
+        "export_cadquer_mike",  # tolerate the old typo if it exists locally
+    ):
+        exporter = getattr(airplane, method_name, None)
+        if callable(exporter):
+            if method_name != "export_cadquery_geometry_mike":
+                airplane.export_cadquery_geometry_mike = exporter
+            log_lines.append(f"Using installed Airplane.{method_name}().")
+            return f"installed_{method_name}"
+
+    import types
+
+    def _gen_cq_mike(self, minimum_airfoil_TE_thickness=0.001, fuselage_tol=1e-4):
+        import cadquery as cq
+
+        solids = []
+        for wing in self.wings:
+            xsec_wps = []
+            for i, xsec in enumerate(wing.xsecs):
+                csys = wing._compute_frame_of_WingXSec(i)
+                af = xsec.airfoil
+                if af.TE_thickness() < minimum_airfoil_TE_thickness:
+                    af = af.set_TE_thickness(minimum_airfoil_TE_thickness)
+                LE = af.LE_index()
+                wp = (
+                    cq.Workplane(
+                        inPlane=cq.Plane(
+                            origin=tuple(float(v) for v in xsec.xyz_le),
+                            xDir=tuple(float(v) for v in csys[0]),
+                            normal=tuple(float(v) for v in -csys[1]),
+                        )
+                    )
+                    .spline([tuple(pt * xsec.chord) for pt in af.coordinates[:LE, :]])
+                    .spline(
+                        listOfXYTuple=[tuple(pt * xsec.chord) for pt in af.coordinates[LE:, :]],
+                        includeCurrent=True,
+                    )
+                    .close()
+                )
+                xsec_wps.append(wp)
+            wires = [wp.val() for wp in xsec_wps]
+            wing_solid = cq.Solid.makeLoft(wires, ruled=True)
+            solids.append(wing_solid)
+            if wing.symmetric:
+                solids.append(wing_solid.mirror("XZ"))
+        final_wp = cq.Workplane("XY").newObject(solids)
+        return final_wp.combine(clean=True)
+
+    def _exp_cq_mike(self, filename, minimum_airfoil_TE_thickness=0.001):
+        from cadquery import exporters
+
+        solid = self.generate_cadquery_geometry_mike(minimum_airfoil_TE_thickness)
+        solid.objects = [o.scale(1000) for o in solid.objects]
+        exporters.export(solid, fname=str(filename))
+
+    airplane.generate_cadquery_geometry_mike = types.MethodType(_gen_cq_mike, airplane)
+    airplane.export_cadquery_geometry_mike = types.MethodType(_exp_cq_mike, airplane)
+    log_lines.append("Injected fallback export_cadquery_geometry_mike at runtime.")
+    return "injected_export_cadquery_geometry_mike"
+
+
+def _copy_xsec_for_full_span_mirror(xsec):
+    """Mirror one AeroSandbox WingXSec across the XZ plane for full-span lofting."""
+    import aerosandbox as asb
+
+    xyz = [float(v) for v in xsec.xyz_le]
+    return asb.WingXSec(
+        xyz_le=[xyz[0], -xyz[1], xyz[2]],
+        chord=float(xsec.chord),
+        twist=float(xsec.twist),
+        airfoil=xsec.airfoil,
+        control_surfaces=[],
+    )
+
+
+def _copy_xsec_without_controls(xsec):
+    """Copy one AeroSandbox WingXSec while stripping controls for neutral CAD."""
+    import aerosandbox as asb
+
+    return asb.WingXSec(
+        xyz_le=[float(v) for v in xsec.xyz_le],
+        chord=float(xsec.chord),
+        twist=float(xsec.twist),
+        airfoil=xsec.airfoil,
+        control_surfaces=[],
+    )
+
+
+def _build_mike_solid_export_airplane(
+    *,
+    section_geometry: SectionGeometryResult,
+    config: BWBGeneratorConfig,
+    symmetric: bool = True,
+):
+    """Build the exact AeroSandbox airplane used by the solid Mike exporter.
+
+    For symmetric BWB geometry, do not loft a half-wing and then boolean-fuse its
+    mirror. That can leave two touching solids or a thin root artifact for some
+    DoE geometries. Instead build a non-symmetric full-span AeroSandbox wing and
+    let Mike's exporter loft one continuous solid from left tip to right tip.
+    """
+    import aerosandbox as asb
+
+    from aeris.generators.bwb_segmented_v1.aerosandbox_adapter import (
+        build_aerosandbox_geometry,
+    )
+
+    asb_result = build_aerosandbox_geometry(section_geometry, config)
+    airplane = asb_result.airplane
+
+    if not symmetric:
+        return airplane, "canonical_asb_airplane"
+
+    if not airplane.wings:
+        raise ValueError("AeroSandbox airplane has no wings for solid STEP export.")
+
+    wing = airplane.wings[0]
+    positive_xsecs = list(wing.xsecs)
+    if len(positive_xsecs) < 2:
+        raise ValueError("Need at least 2 BWB sections for solid STEP export.")
+
+    # y order: negative tip -> negative near-root -> root -> positive tip.
+    # Exclude the mirrored root to avoid duplicate coincident root wires.
+    mirrored_left = [
+        _copy_xsec_for_full_span_mirror(xsec)
+        for xsec in reversed(positive_xsecs[1:])
+    ]
+    right = [_copy_xsec_without_controls(xsec) for xsec in positive_xsecs]
+    full_xsecs = mirrored_left + right
+
+    full_wing = asb.Wing(
+        name=f"{wing.name}_full_span_solid",
+        symmetric=False,
+        xsecs=full_xsecs,
+    )
+
+    full_airplane = asb.Airplane(
+        name=airplane.name,
+        xyz_ref=[0.0, 0.0, 0.0],
+        wings=[full_wing],
+        s_ref=float(full_wing.area()),
+        c_ref=float(full_wing.mean_aerodynamic_chord()),
+        b_ref=float(full_wing.span()),
+    )
+    return full_airplane, "canonical_asb_full_span_no_mirror_boolean"
+
+
 def export_solid_step_from_section_geometry(
     *,
     section_geometry,
@@ -682,74 +839,25 @@ def export_solid_step_from_section_geometry(
     if step_path.exists():
         step_path.unlink()
 
-    fallback_name = config.section_bounds.airfoil_name or "naca0012"
-
     try:
-        # Use AeroSandbox's own loft path: _compute_frame_of_WingXSec + splines.
-        # This is geometrically identical to the AeroSandbox airplane.
-        airplane = _build_aerosandbox_airplane_from_sections(
+        # Build the same canonical AeroSandbox airplane AERIS uses elsewhere,
+        # then export it through Mike's volumetric CadQuery path. For symmetric
+        # wings, use a full-span non-symmetric loft to avoid root boolean artifacts.
+        airplane, airplane_source = _build_mike_solid_export_airplane(
             section_geometry=section_geometry,
             config=config,
             symmetric=symmetric,
         )
         log_lines.append(
-            f"Built AeroSandbox airplane ({len(section_geometry.sections)} sections)."
+            f"Built {airplane_source} for Mike solid export "
+            f"({len(airplane.wings[0].xsecs)} export sections)."
         )
 
-        if not hasattr(airplane, "export_cadquery_geometry_mike"):
-            # Inject Mike's method at runtime if not already on the class
-            import aerosandbox as _asb
-            import copy as _copy
-            import numpy as _np
-
-            def _gen_cq_mike(self, minimum_airfoil_TE_thickness=0.001, fuselage_tol=1e-4):
-                import cadquery as cq
-                solids = []
-                for wing in self.wings:
-                    xsec_wps = []
-                    for i, xsec in enumerate(wing.xsecs):
-                        csys = wing._compute_frame_of_WingXSec(i)
-                        af = xsec.airfoil
-                        if af.TE_thickness() < minimum_airfoil_TE_thickness:
-                            af = af.set_TE_thickness(minimum_airfoil_TE_thickness)
-                        LE = af.LE_index()
-                        wp = (
-                            cq.Workplane(
-                                inPlane=cq.Plane(
-                                    origin=tuple(xsec.xyz_le),
-                                    xDir=tuple(csys[0]),
-                                    normal=tuple(-csys[1]),
-                                )
-                            )
-                            .spline([tuple(pt * xsec.chord) for pt in af.coordinates[:LE, :]])
-                            .spline(
-                                listOfXYTuple=[tuple(pt * xsec.chord) for pt in af.coordinates[LE:, :]],
-                                includeCurrent=True,
-                            )
-                            .close()
-                        )
-                        xsec_wps.append(wp)
-                    wires = [wp.val() for wp in xsec_wps]
-                    wing_solid = cq.Solid.makeLoft(wires, ruled=True)
-                    solids.append(wing_solid)
-                    if wing.symmetric:
-                        solids.append(wing_solid.mirror("XZ"))
-                final_wp = cq.Workplane("XY").newObject(solids)
-                return final_wp.combine(clean=True)
-
-            def _exp_cq_mike(self, filename, minimum_airfoil_TE_thickness=0.001):
-                from cadquery import exporters
-                solid = self.generate_cadquery_geometry_mike(minimum_airfoil_TE_thickness)
-                solid.objects = [o.scale(1000) for o in solid.objects]
-                exporters.export(solid, fname=str(filename))
-
-            import types
-            airplane.generate_cadquery_geometry_mike = types.MethodType(_gen_cq_mike, airplane)
-            airplane.export_cadquery_geometry_mike = types.MethodType(_exp_cq_mike, airplane)
-            log_lines.append("Injected export_cadquery_geometry_mike at runtime.")
-
+        mike_source = _ensure_airplane_has_cadquery_geometry_mike(airplane, log_lines)
         airplane.export_cadquery_geometry_mike(str(step_path))
-        log_lines.append(f"Solid STEP written: {step_path}")
+        log_lines.append(
+            f"Solid STEP written via {mike_source}: {step_path}"
+        )
 
         step_exists = step_path.exists()
         is_valid = bool(step_exists)
@@ -778,13 +886,23 @@ def export_solid_step_from_section_geometry(
                 bbox_y_m = float(abs(bb.ymax - bb.ymin) / 1000.0)
                 bbox_z_m = float(abs(bb.zmax - bb.zmin) / 1000.0)
 
-                is_valid = solid_count >= 1 and volume_m3 > 0.0
+                expected_solid_count = 1 if symmetric else None
+                is_valid = (
+                    solid_count == expected_solid_count and volume_m3 > 0.0
+                    if expected_solid_count is not None
+                    else solid_count >= 1 and volume_m3 > 0.0
+                )
                 log_lines.append(
                     "STEP validation: "
                     f"solids={solid_count} shells={shell_count} faces={face_count} "
                     f"volume_m3={volume_m3:.9g} "
                     f"bbox_m=({bbox_x_m:.6g}, {bbox_y_m:.6g}, {bbox_z_m:.6g})"
                 )
+                if expected_solid_count is not None and solid_count != expected_solid_count:
+                    err_lines.append(
+                        f"Expected exactly {expected_solid_count} fused solid for symmetric "
+                        f"BWB export, got {solid_count}."
+                    )
             except Exception as verify_exc:
                 is_valid = False
                 err_lines.append(

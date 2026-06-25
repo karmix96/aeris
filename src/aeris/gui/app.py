@@ -2026,15 +2026,25 @@ def pg_geometry(root, exe, tmo, dry):
 
         def _step_backend_label(data: dict[str, Any], step_export: dict[str, Any], *, physical: bool) -> str:
             """Human-readable final STEP backend/fallback label for CAD manifests."""
-            backend = step_export.get("backend") or data.get("step_backend")
+            backend = (
+                step_export.get("backend_final")
+                or step_export.get("backend")
+                or data.get("step_backend")
+            )
             if backend:
                 return str(backend)
 
-            # Neutral CAD manifests may store backend details under cadquery/openvsp
+            # Neutral CAD manifests may store backend details under solid/cadquery/openvsp
             # instead of a single final backend field.
+            solid = step_export.get("solid")
             cadquery = step_export.get("cadquery")
             openvsp = step_export.get("openvsp")
             artifacts = data.get("artifacts") or {}
+
+            if isinstance(solid, dict):
+                solid_ok = bool(solid.get("succeeded") or solid.get("is_solid"))
+                if solid_ok or artifacts.get("step"):
+                    return "solid"
 
             if isinstance(cadquery, dict):
                 cq_status = str(cadquery.get("status", "")).lower()
@@ -2051,6 +2061,37 @@ def pg_geometry(root, exe, tmo, dry):
                 return f"{requested} requested"
 
             return "—"
+
+        def _render_solid_step_metadata(step_export: dict[str, Any]) -> None:
+            """Show neutral solid STEP proof from geometry_export_manifest.json."""
+            solid = step_export.get("solid")
+            if not isinstance(solid, dict):
+                return
+
+            st.caption("Solid STEP validation metadata")
+            cols = st.columns(4)
+            cols[0].metric("solid_count", solid.get("solid_count", "—"))
+            cols[1].metric("face_count", solid.get("face_count", "—"))
+            cols[2].metric("volume_m3", solid.get("volume_m3", "—"))
+            cols[3].metric("bbox_y_m", solid.get("bbox_y_m", "—"))
+
+            with st.expander("Solid STEP metadata — full", expanded=False):
+                st.json(
+                    {
+                        "backend": solid.get("backend"),
+                        "succeeded": solid.get("succeeded"),
+                        "is_solid": solid.get("is_solid"),
+                        "solid_count": solid.get("solid_count"),
+                        "shell_count": solid.get("shell_count"),
+                        "face_count": solid.get("face_count"),
+                        "volume_m3": solid.get("volume_m3"),
+                        "bbox_x_m": solid.get("bbox_x_m"),
+                        "bbox_y_m": solid.get("bbox_y_m"),
+                        "bbox_z_m": solid.get("bbox_z_m"),
+                        "step_path": solid.get("step_path"),
+                    },
+                    expanded=False,
+                )
 
         def _read_body_report_from_manifest(step_export: dict[str, Any]) -> dict[str, Any]:
             body_report_path = step_export.get("body_report_path")
@@ -2081,6 +2122,7 @@ def pg_geometry(root, exe, tmo, dry):
             c2.metric("Produced", produced)
             c3.metric("Requested", requested)
             c4.metric("STEP backend", step_backend_label)
+            _render_solid_step_metadata(step_export)
 
             if physical:
                 body_report = _read_body_report_from_manifest(step_export)
@@ -2262,7 +2304,7 @@ def pg_geometry(root, exe, tmo, dry):
             with c2:
                 step_backend = st.selectbox(
                     "STEP backend",
-                    ["auto", "cadquery", "openvsp"],
+                    ["auto", "cadquery", "openvsp", "solid"],
                     index=0,
                     key="cad_step_backend",
                     help="auto tries AeroSandbox/CadQuery first and falls back to OpenVSP batch when available.",

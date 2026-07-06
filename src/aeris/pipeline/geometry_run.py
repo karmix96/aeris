@@ -133,9 +133,6 @@ def run_geometry_generation(
         "operator_overrides": {
             "save_plot": save_plot,
         },
-        "operator_overrides": {
-            "save_plot": save_plot,
-        },
     }
 
     _write_manifest(manifest_path, manifest)
@@ -194,9 +191,6 @@ def run_geometry_generation(
             "geometry_deterministic": True,
             "design_sample": _to_jsonable(design_sample),
             "case_summary": _to_jsonable(case_summary),
-            "operator_overrides": {
-                "save_plot": save_plot,
-            },
             "operator_overrides": {
                 "save_plot": save_plot,
             },

@@ -49,4 +49,4 @@ geometry:
         deflection_sign: standard
         spanwise: {start_frac: 0.60, end_frac: 0.95}
 dataset:
-  sampling: {method: lhs_v2, seed: 42}
+  sampling: {method: lhs_v1, seed: 42}

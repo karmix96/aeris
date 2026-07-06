@@ -99,8 +99,6 @@ def geometry_generate(
         typer.echo(f"  run_root : {run_root}")
         if save_plot is not None:
             typer.echo(f"  save_plot override: {save_plot}")
-        if save_plot is not None:
-            typer.echo(f"  save_plot override: {save_plot}")
 
         mpath = run_root / "manifest.json"
         if mpath.exists():

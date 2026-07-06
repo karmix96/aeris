@@ -79,7 +79,7 @@ def _control_surface_to_asb(spec: ControlSurfaceConfig) -> asb.ControlSurface:
         name=spec.name,
         trailing_edge=True,
         hinge_point=spec.hinge_point,
-        deflection=0.0,
+        deflection=1.0,  # gain=1 → d1 keystroke sets actual deflection angle
         symmetric=spec.symmetric,
     )
 

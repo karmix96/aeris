@@ -2304,10 +2304,13 @@ def pg_geometry(root, exe, tmo, dry):
             with c2:
                 step_backend = st.selectbox(
                     "STEP backend",
-                    ["auto", "cadquery", "openvsp", "solid"],
+                    ["solid", "auto", "cadquery", "openvsp"],
                     index=0,
+                    help=(
+                        "solid = AERIS CadQuery filled volumetric STEP backend; "
+                        "auto/cadquery/openvsp are legacy/fallback STEP paths."
+                    ),
                     key="cad_step_backend",
-                    help="auto tries AeroSandbox/CadQuery first and falls back to OpenVSP batch when available.",
                 )
             with c3:
                 openvsp_exe = st.text_input(

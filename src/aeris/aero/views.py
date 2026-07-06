@@ -153,7 +153,7 @@ def _control_surface_from_definition(defn: dict[str, Any]) -> asb.ControlSurface
         name=str(defn["name"]),
         trailing_edge=True,
         hinge_point=float(defn["hinge_point"]),
-        deflection=0.0,
+        deflection=1.0,  # gain=1 → d1 keystroke sets actual deflection angle
         symmetric=bool(defn.get("symmetric", True)),
     )
 

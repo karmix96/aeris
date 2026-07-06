@@ -1000,7 +1000,7 @@ geometry:
         deflection_sign: standard
         spanwise: {start_frac: 0.60, end_frac: 0.95}
 dataset:
-  sampling: {method: lhs_v2, seed: 42}
+  sampling: {method: lhs_v1, seed: 42}
 
 ===== FILE: ./configs/geometry/paper1_bwb_naca_stations.yaml =====
 # AERIS Paper 1 — Prescribed Station Airfoils (smoke / near-fixed config)
@@ -19594,8 +19594,6 @@ def geometry_generate(
         typer.echo(f"[AERIS] Geometry generate — {'SUCCESS' if exit_code == 0 else 'FAILED'}")
         typer.echo(f"  config   : {config}")
         typer.echo(f"  run_root : {run_root}")
-        if save_plot is not None:
-            typer.echo(f"  save_plot override: {save_plot}")
         if save_plot is not None:
             typer.echo(f"  save_plot override: {save_plot}")
 
@@ -73896,9 +73894,6 @@ def run_geometry_generation(
         "operator_overrides": {
             "save_plot": save_plot,
         },
-        "operator_overrides": {
-            "save_plot": save_plot,
-        },
     }
 
     _write_manifest(manifest_path, manifest)
@@ -73957,9 +73952,6 @@ def run_geometry_generation(
             "geometry_deterministic": True,
             "design_sample": _to_jsonable(design_sample),
             "case_summary": _to_jsonable(case_summary),
-            "operator_overrides": {
-                "save_plot": save_plot,
-            },
             "operator_overrides": {
                 "save_plot": save_plot,
             },

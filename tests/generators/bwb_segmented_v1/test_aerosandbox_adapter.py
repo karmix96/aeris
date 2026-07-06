@@ -128,6 +128,8 @@ def test_build_aerosandbox_geometry_control_surface_deflection_stays_zero(raw_co
         for xsec in wing.xsecs:
             for cs in getattr(xsec, "control_surfaces", []):
                 seen.append(cs)
-                assert cs.deflection == 0.0
+                # deflection=1.0 is the AVL gain; actual deflection angle
+                # is commanded via 'd1 d1 <value>' keystrokes at solve time.
+                assert cs.deflection == 1.0
 
     assert len(seen) > 0

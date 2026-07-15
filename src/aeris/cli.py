@@ -9,6 +9,7 @@ from aeris.commands.dataset import dataset_app
 from aeris.commands.dynamics import dynamics_app
 from aeris.commands.geometry import geometry_app
 from aeris.commands.gui import gui_app
+from aeris.commands.mesh import mesh_app
 from aeris.commands.ml import ml_app
 from aeris.commands.pipeline import pipeline_app
 from aeris.commands.version import version_app
@@ -26,6 +27,7 @@ app = typer.Typer(
         "- dataset = generate, inspect, QC, curate, and promote datasets\n"
         "- aero = run or inspect aerodynamic cases and sweeps\n"
         "- dynamics = mass / CG / trim / dynamics-foundation workflows\n"
+        "- mesh = structured CFD mesh generation (surface + pyHyp volume)\n"
         "- ml = train, compare, and predict using promoted aero datasets\n"
         "- pipeline = minimal smoke workflows\n"
         "- workflow = guided workstation stage/status spine\n"
@@ -98,6 +100,7 @@ app.add_typer(pipeline_app, name="pipeline")
 app.add_typer(workflow_app, name="workflow")
 app.add_typer(aero_app, name="aero")
 app.add_typer(dynamics_app, name="dynamics")
+app.add_typer(mesh_app, name="mesh")
 app.add_typer(ml_app, name="ml")
 app.add_typer(airfoil_app, name="airfoil")
 

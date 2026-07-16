@@ -17,14 +17,17 @@ from pathlib import Path
 
 
 # `coarsen` decimates the INPUT surface before marching (coarsen=4 keeps every
-# 8th surface point).  The flat wing-tip O-grid cap has cells ~1e3-1e4x smaller
-# than the OML cells; empirically only coarsen=4 decimates that jump enough for
-# the hyperbolic marcher to produce a valid (positive-volume) volume mesh —
-# in-plane (chord/span) resolution is therefore topology-limited until the tip
-# cap is redesigned (camber-split / M6-style).  Wall-NORMAL resolution is NOT
-# limited: N up to 257 with s0 down to ~1e-5 m is validated valid.  Each level
-# sets N and a default first-cell height as a fraction of characteristic
-# length (overridable via s0).
+# 8th surface point).  With the mid4 topology the flat wing-tip O-grid cap has
+# cells ~1e3-1e4x smaller than the OML cells; empirically only coarsen=4
+# decimates that jump enough for the hyperbolic marcher to produce a valid
+# (positive-volume) volume mesh, so mid4 in-plane resolution is topology-
+# limited.  The cap4 (camber-split, M6-style) topology removes that limit: it
+# marches valid volumes at coarsen=1 (full in-plane resolution, validated at
+# L1) but is incompatible with coarsening — decimation breaks its thin collar
+# blocks.  Wall-NORMAL resolution is not limited in either topology: N up to
+# 257 with s0 down to ~1e-5 m is validated valid.  Each level sets N and a
+# default first-cell height as a fraction of characteristic length
+# (overridable via s0); the coarsen values below apply to mid4/split8 runs.
 GRID_LEVELS: dict[str, dict[str, object]] = {
     "L1": {"coarsen": 4, "N": 257, "s0_frac": 4.4e-6},   # fine wall-resolved RANS (y+ ~ 0.2)
     "L2": {"coarsen": 4, "N": 193, "s0_frac": 8.8e-6},   # standard wall-resolved RANS

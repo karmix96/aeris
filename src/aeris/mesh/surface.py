@@ -331,16 +331,79 @@ def _airfoil_four_sides(
             raise MeshBuildError("Internal error: airfoil side corners are disconnected.")
     return sides
 
+def _airfoil_cap4_sides(
+    airfoil: object,
+    *,
+    wrap_points: int,
+    chord_points: int,
+    dense_points_per_surface: int,
+    wrap_x: float,
+    minimum_te_thickness: float,
+) -> list[Array]:
+    """Return 4 sides with per-side point counts for the cap4 topology.
+
+    Corners sit near the LE and TE (x/c = wrap_x and 1-wrap_x): a narrow nose
+    wrap and TE wrap carry ``wrap_points`` each, while the long upper/lower
+    sides carry ``chord_points``.  This keeps surface cell size near-uniform
+    around the airfoil — uniform-count topologies over-resolve the tiny LE/TE
+    arcs, which is what makes the tip cap fold in pyHyp.
+    """
+    shoulder_x = 1.0 - wrap_x
+    try:
+        working = airfoil.normalize().repanel(n_points_per_side=dense_points_per_surface)
+    except AttributeError as exc:
+        raise MeshBuildError(
+            "Each WingXSec must contain an AeroSandbox Airfoil with normalize()/repanel()."
+        ) from exc
+    coords = _as_numeric_xyz(working.coordinates, label="airfoil coordinates")
+    if coords.ndim != 2 or coords.shape[1] != 2 or len(coords) < 9:
+        raise MeshBuildError("Airfoil coordinates must have shape (N, 2), N >= 9.")
+    le_index = int(np.argmin(coords[:, 0]))
+    if le_index == 0 or le_index == len(coords) - 1:
+        raise MeshBuildError(
+            "Unexpected airfoil ordering: leading edge must lie between upper and lower TE points."
+        )
+    upper_te_to_le = coords[: le_index + 1].copy()
+    lower_le_to_te = coords[le_index:].copy()
+    te_thickness = float(np.linalg.norm(upper_te_to_le[0] - lower_le_to_te[-1]))
+    if te_thickness < minimum_te_thickness:
+        raise MeshBuildError(
+            f"Trailing edge thickness is {te_thickness:.3e} chord, below the required "
+            f"{minimum_te_thickness:.3e}. Use a small blunt CFD trailing edge."
+        )
+    upper_te_to_le, upper_shoulder_idx = _insert_point_at_x(upper_te_to_le, shoulder_x)
+    upper_te_to_le, upper_nose_idx = _insert_point_at_x(upper_te_to_le, wrap_x)
+    lower_le_to_te, lower_nose_idx = _insert_point_at_x(lower_le_to_te, wrap_x)
+    lower_le_to_te, lower_shoulder_idx = _insert_point_at_x(lower_le_to_te, shoulder_x)
+    te_mid = 0.5 * (upper_te_to_le[0] + lower_le_to_te[-1])
+    raw_sides = [
+        np.vstack([upper_te_to_le[upper_nose_idx:], lower_le_to_te[1 : lower_nose_idx + 1]]),
+        lower_le_to_te[lower_nose_idx : lower_shoulder_idx + 1],
+        np.vstack([lower_le_to_te[lower_shoulder_idx:], [te_mid], upper_te_to_le[: upper_shoulder_idx + 1]]),
+        upper_te_to_le[upper_shoulder_idx : upper_nose_idx + 1],
+    ]
+    counts = [wrap_points, chord_points, wrap_points, chord_points]
+    sides = [
+        _resample_polyline(side, n, cosine=False)
+        for side, n in zip(raw_sides, counts)
+    ]
+    for k in range(len(sides)):
+        nxt = (k + 1) % len(sides)
+        if not np.allclose(sides[k][-1], sides[nxt][0], atol=1e-12):
+            raise MeshBuildError("Internal error: airfoil side corners are disconnected.")
+    return sides
+
+
 def _map_sides_to_wing(
     wing: object,
     sides_by_xsec: Sequence[Sequence[Array]],
 ) -> list[Array]:
     n_xsecs = len(sides_by_xsec)
     n_sides = len(sides_by_xsec[0])
-    n_points = len(sides_by_xsec[0][0])
 
     blocks: list[Array] = []
     for side_idx in range(n_sides):
+        n_points = len(sides_by_xsec[0][side_idx])
         block = np.empty((n_points, n_xsecs, 3), dtype=float)
         for i in range(n_points):
             x_values = [sides_by_xsec[j][side_idx][i, 0] for j in range(n_xsecs)]
@@ -395,6 +458,128 @@ def _coons_patch(
             )
             patch[i, j] = blended_edges - bilinear
     return patch
+
+
+def _tfi_patch(bottom: Array, top: Array, left: Array, right: Array) -> Array:
+    """General transfinite interpolation patch with rectangular index space.
+
+    bottom/top run along the i-direction (nb points, same direction);
+    left/right run along the j-direction (nm points, same direction).
+    Consistency required: left[0]==bottom[0], left[-1]==top[0],
+    right[0]==bottom[-1], right[-1]==top[-1].
+    Returns an (nb, nm, 3) patch.
+    """
+    nb, nm = len(bottom), len(left)
+    if len(top) != nb or len(right) != nm:
+        raise MeshBuildError("TFI sides have inconsistent point counts.")
+    for pair, name in (
+        ((left[0], bottom[0]), "left/bottom"),
+        ((left[-1], top[0]), "left/top"),
+        ((right[0], bottom[-1]), "right/bottom"),
+        ((right[-1], top[-1]), "right/top"),
+    ):
+        if not np.allclose(pair[0], pair[1], atol=1e-9):
+            raise MeshBuildError(f"TFI corner mismatch at {name}.")
+
+    u = np.linspace(0.0, 1.0, nb)[:, None, None]
+    v = np.linspace(0.0, 1.0, nm)[None, :, None]
+    b = bottom[:, None, :]
+    t = top[:, None, :]
+    lf = left[None, :, :]
+    r = right[None, :, :]
+    p00, p10, p01, p11 = bottom[0], bottom[-1], top[0], top[-1]
+    patch = (
+        (1 - v) * b + v * t + (1 - u) * lf + u * r
+        - ((1 - u) * (1 - v) * p00 + u * (1 - v) * p10
+           + (1 - u) * v * p01 + u * v * p11)
+    )
+    return patch
+
+
+def _build_tip_cap4(
+    oml_blocks: Sequence[Array],
+    *,
+    collar_points: int,
+    width_frac: float,
+) -> tuple[list[Array], list[Array], list[list[int]]]:
+    """Camber-aligned tip cap for the cap4 topology.
+
+    The OML tip edges are [nose wrap, lower, TE wrap, upper] with per-side
+    point counts (wrap sides narrow, chord sides long).  The cap is:
+
+    * an inner rectangle aligned with the tip-section camber line — a
+      chordwise strip (n_chord x n_wrap) whose cell anisotropy matches the
+      slender airfoil, and
+    * four thin collar blocks of near-uniform width joining the rectangle to
+      the tip edge (no long-side-to-short-side fans).
+    """
+    if len(oml_blocks) != 4:
+        raise MeshBuildError("cap4 tip closure requires exactly 4 OML blocks.")
+    if collar_points < 3:
+        raise MeshBuildError("tip_radial_points (collar) must be at least 3.")
+    if not (0.15 <= width_frac <= 0.85):
+        raise MeshBuildError("cap_width_frac must lie between 0.15 and 0.85.")
+
+    e_nose = oml_blocks[0][:, -1, :]   # upper corner -> LE -> lower corner
+    e_low = oml_blocks[1][:, -1, :]    # nose -> shoulder (LE -> TE)
+    e_te = oml_blocks[2][:, -1, :]     # lower shoulder -> te_mid -> upper shoulder
+    e_up = oml_blocks[3][:, -1, :]     # shoulder -> nose (TE -> LE)
+    n_wrap = len(e_nose)
+    n_chord = len(e_low)
+    if len(e_te) != n_wrap or len(e_up) != n_chord:
+        raise MeshBuildError("cap4 tip edges have inconsistent point counts.")
+
+    lower = e_low                       # nose -> te
+    upper = e_up[::-1]                  # nose -> te
+
+    # Inset the rectangle chordwise so the collar end edges slant from the
+    # OML corners to the rectangle corners.  Without the inset, the end edges
+    # are collinear with the rectangle's short sides (both at the wrap_x
+    # station), which degenerates the corner cells to zero Jacobian.
+    inset = 0.05
+    idx = np.linspace(inset, 1.0 - inset, n_chord) * (n_chord - 1)
+    lo_i = np.floor(idx).astype(int)
+    hi_i = np.minimum(lo_i + 1, n_chord - 1)
+    frac = (idx - lo_i)[:, None]
+
+    def _at(arr: Array) -> Array:
+        return (1.0 - frac) * arr[lo_i] + frac * arr[hi_i]
+
+    lower_s = _at(lower)
+    upper_s = _at(upper)
+    camber = 0.5 * (upper_s + lower_s)
+    rect_top = camber + width_frac * (upper_s - camber)
+    rect_bot = camber + width_frac * (lower_s - camber)
+
+    def straight(a: Array, b: Array, n: int) -> Array:
+        t = np.linspace(0.0, 1.0, n)[:, None]
+        return (1.0 - t) * a + t * b
+
+    rect_left = straight(rect_top[0], rect_bot[0], n_wrap)     # upper -> lower
+    rect_right = straight(rect_bot[-1], rect_top[-1], n_wrap)  # lower -> upper
+
+    # Shared collar end edges (outer corner -> rectangle corner), collar_points each.
+    end_up_nose = straight(e_nose[0], rect_top[0], collar_points)
+    end_lo_nose = straight(e_nose[-1], rect_bot[0], collar_points)
+    end_lo_te = straight(e_low[-1], rect_bot[-1], collar_points)
+    end_up_te = straight(e_up[0], rect_top[-1], collar_points)
+
+    # Collar blocks, indexed (along-edge, radial): [:, 0] = outer OML edge.
+    collar_nose = _tfi_patch(end_up_nose, end_lo_nose, e_nose, rect_left)
+    collar_nose = collar_nose.transpose(1, 0, 2)  # (n_wrap, collar_points, 3)
+    collar_low = _tfi_patch(end_lo_nose, end_lo_te, e_low, rect_bot)
+    collar_low = collar_low.transpose(1, 0, 2)
+    collar_te = _tfi_patch(end_lo_te, end_up_te, e_te, rect_right)
+    collar_te = collar_te.transpose(1, 0, 2)
+    collar_up = _tfi_patch(end_up_te, end_up_nose, e_up, rect_top[::-1])
+    collar_up = collar_up.transpose(1, 0, 2)
+
+    center = _tfi_patch(rect_bot, rect_top, rect_left[::-1], rect_right)
+
+    ring_blocks = [collar_nose, collar_low, collar_te, collar_up]
+    center_patches = [center]
+    tip_groups = [[0], [1], [2], [3]]
+    return ring_blocks, center_patches, tip_groups
 
 
 def _refine_spanwise(blocks: Sequence[Array], panels_per_section: int) -> list[Array]:
@@ -913,6 +1098,9 @@ def build_surface_mesh(
     tip_inner_scale: float = 0.60,
     tip_dome_scale: float = 0.0,
     tip_conformal_ring: bool = False,
+    cap_wrap_points: int = 17,
+    cap_wrap_x: float = 0.03,
+    cap_width_frac: float = 0.5,
 ) -> tuple[list[SurfaceBlock], dict[str, object]]:
     """Build a 9-block structured surface mesh from an AeroSandbox Wing.
 
@@ -933,22 +1121,40 @@ def build_surface_mesh(
         raise MeshBuildError("minimum_scaled_jacobian must lie between 0 and 1.")
     if not (0.0 < maximum_adjacent_normal_angle_deg <= 180.0):
         raise MeshBuildError("maximum_adjacent_normal_angle_deg must lie between 0 and 180.")
-    if oml_topology not in {"mid4", "split8"}:
-        raise MeshBuildError("oml_topology must be 'mid4' or 'split8'.")
+    if oml_topology not in {"mid4", "split8", "cap4"}:
+        raise MeshBuildError("oml_topology must be 'mid4', 'split8', or 'cap4'.")
     if not (0.0 <= tip_dome_scale <= 2.0):
         raise MeshBuildError("tip_dome_scale must lie between 0 (flat cap) and 2.")
+    if oml_topology == "cap4":
+        if cap_wrap_points < 5:
+            raise MeshBuildError("cap_wrap_points must be at least 5.")
+        if not (0.01 <= cap_wrap_x <= 0.15):
+            raise MeshBuildError("cap_wrap_x must lie between 0.01 and 0.15.")
 
-    side_builder = _airfoil_four_sides if oml_topology == "mid4" else _airfoil_eight_sides
-    sides_by_xsec = [
-        side_builder(
-            xsec.airfoil,
-            points_per_side=points_per_block_side,
-            dense_points_per_surface=dense_airfoil_points_per_surface,
-            split_x_fore=split_x_fore,
-            minimum_te_thickness=minimum_te_thickness,
-        )
-        for xsec in xsecs
-    ]
+    if oml_topology == "cap4":
+        sides_by_xsec = [
+            _airfoil_cap4_sides(
+                xsec.airfoil,
+                wrap_points=cap_wrap_points,
+                chord_points=points_per_block_side,
+                dense_points_per_surface=dense_airfoil_points_per_surface,
+                wrap_x=cap_wrap_x,
+                minimum_te_thickness=minimum_te_thickness,
+            )
+            for xsec in xsecs
+        ]
+    else:
+        side_builder = _airfoil_four_sides if oml_topology == "mid4" else _airfoil_eight_sides
+        sides_by_xsec = [
+            side_builder(
+                xsec.airfoil,
+                points_per_side=points_per_block_side,
+                dense_points_per_surface=dense_airfoil_points_per_surface,
+                split_x_fore=split_x_fore,
+                minimum_te_thickness=minimum_te_thickness,
+            )
+            for xsec in xsecs
+        ]
 
     raw_oml = _map_sides_to_wing(wing, sides_by_xsec)
     raw_oml = _refine_spanwise(raw_oml, spanwise_panels_per_section)
@@ -978,12 +1184,19 @@ def build_surface_mesh(
     root_points = np.concatenate([block[:, root_j, :] for block in raw_oml], axis=0)
     root_y_range = float(np.ptp(root_points[:, 1]))
 
-    raw_ring, raw_center, tip_groups = _build_tip_blocks(
-        raw_oml,
-        radial_points=tip_radial_points,
-        inner_scale=tip_inner_scale,
-        conformal_ring=tip_conformal_ring,
-    )
+    if oml_topology == "cap4":
+        raw_ring, raw_center, tip_groups = _build_tip_cap4(
+            raw_oml,
+            collar_points=tip_radial_points,
+            width_frac=cap_width_frac,
+        )
+    else:
+        raw_ring, raw_center, tip_groups = _build_tip_blocks(
+            raw_oml,
+            radial_points=tip_radial_points,
+            inner_scale=tip_inner_scale,
+            conformal_ring=tip_conformal_ring,
+        )
 
     oml_arrays = _orient_oml_blocks_outward(raw_oml)
     section_centers = np.array(
@@ -1114,12 +1327,15 @@ def build_surface_mesh(
 
     report: dict[str, object] = {
         "schema": SURFACE_SCHEMA_VERSION,
-        "topology": (
-            "mid-chord O-type: 4 OML + 4 tip-ring + 1 tip-center"
-            if oml_topology == "mid4"
-            else "split LE/TE O-type: 8 OML + 8 tip-ring + 4 tip-center"
-        ),
+        "topology": {
+            "mid4": "mid-chord O-type: 4 OML + 4 tip-ring + 1 tip-center",
+            "split8": "split LE/TE O-type: 8 OML + 8 tip-ring + 4 tip-center",
+            "cap4": "camber-cap: 4 OML (narrow LE/TE wraps) + 4 collar + 1 camber-strip center",
+        }[oml_topology],
         "oml_topology": oml_topology,
+        "cap_wrap_points": cap_wrap_points,
+        "cap_wrap_x": cap_wrap_x,
+        "cap_width_frac": cap_width_frac,
         "block_count": len(blocks),
         "xsec_count": len(xsecs),
         "spanwise_panels_per_section": spanwise_panels_per_section,

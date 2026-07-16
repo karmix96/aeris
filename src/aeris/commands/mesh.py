@@ -126,12 +126,15 @@ def mesh_pyhyp(
             "Increase for high-AR wings or tip-dominated flows."
         ),
     ),
-    tip_radial_points: int = typer.Option(
-        9, "--tip-radial-points",
+    tip_radial_points: Optional[int] = typer.Option(
+        None, "--tip-radial-points",
         help=(
-            "Radial grid points in each tip-ring block (from OML inward to center cap).  "
-            "9 is the default — few radial points keep tip-cap cells comparable in size "
-            "to the OML cells, avoiding the surface-metric jump that folds the volume march."
+            "Radial grid points in each tip-ring/collar block (from OML inward).  "
+            "None = auto per topology: 9 for mid4/split8, 3 for cap4.  Few radial "
+            "points keep tip-cap cells comparable in size to the OML cells, avoiding "
+            "the surface-metric jump that folds the volume march.  For cap4, 3 is the "
+            "only validated value — 5+ shrinks the collar cells 100-200x below OML "
+            "size and the full-resolution march inverts."
         ),
     ),
     tip_inner_scale: float = typer.Option(
@@ -187,7 +190,33 @@ def mesh_pyhyp(
     ),
     oml_topology: str = typer.Option(
         "mid4", "--oml-topology",
-        help="OML topology: 'mid4' for the stable 4-block surface, 'split8' for doubled LE/TE blocks.",
+        help=(
+            "OML topology: 'mid4' for the stable 4-block surface (coarse levels, "
+            "requires coarsen=4), 'split8' for doubled LE/TE blocks, 'cap4' for the "
+            "camber-aligned tip cap (fine in-plane RANS; forces coarsen=1 and a "
+            "3-point collar — validated at L1 full resolution)."
+        ),
+    ),
+    cap_width_frac: float = typer.Option(
+        0.5, "--cap-width-frac",
+        help=(
+            "cap4 only: width of the camber-strip center rectangle as a fraction of "
+            "the local tip half-thickness (0.15-0.85).  0.5 is the validated default."
+        ),
+    ),
+    cap_wrap_points: int = typer.Option(
+        17, "--cap-wrap-points",
+        help=(
+            "cap4 only: points across each narrow LE/TE wrap side of the tip section "
+            "(min 5).  17 is the validated default."
+        ),
+    ),
+    cap_wrap_x: float = typer.Option(
+        0.03, "--cap-wrap-x",
+        help=(
+            "cap4 only: chordwise x/c station of the wrap corners (0.01-0.15).  "
+            "Corners sit at x/c = cap_wrap_x and 1-cap_wrap_x."
+        ),
     ),
     max_adjacent_normal_angle: float = typer.Option(
         180.0, "--max-adjacent-normal-angle",
@@ -207,10 +236,12 @@ def mesh_pyhyp(
         help=(
             "pyHyp grid level preset — sets normal-direction layers (N), surface "
             "coarsening, and default wall spacing unless overridden.  "
-            f"Choices: {list(GRID_LEVELS)}.  All levels use coarsen=4 (in-plane "
-            "resolution is tip-topology-limited).  L1=fine wall-resolved RANS "
-            "(N 257, y+~0.2), L2=standard RANS (N 193), L3=default baseline "
-            "(N 129), L4=quick topology check (N 37).  All validated valid."
+            f"Choices: {list(GRID_LEVELS)}.  Level presets use coarsen=4 with the "
+            "mid4 topology (in-plane resolution is tip-topology-limited); the cap4 "
+            "topology instead forces coarsen=1 (full in-plane resolution).  "
+            "L1=fine wall-resolved RANS (N 257, y+~0.2), L2=standard RANS (N 193), "
+            "L3=default baseline (N 129), L4=quick topology check (N 37).  "
+            "All validated valid."
         ),
     ),
 
@@ -328,7 +359,8 @@ def mesh_pyhyp(
 
     Pipeline:
     1. Generate AeroSandbox geometry from the config.
-    2. Build a 9-block structured surface mesh (4 OML + 4 tip-ring + 1 tip-center).
+    2. Build a 9-block structured surface mesh (mid4/split8: 4 OML + 4 tip-ring
+       + 1 tip-center; cap4: 4 OML + 4 collar + 1 camber-strip center).
     3. Export surface to CGNS, PLOT3D, VTK, and NPZ.
     4. (Optional) Run pyHyp to extrude a 3-D volume mesh.
 
@@ -346,6 +378,36 @@ def mesh_pyhyp(
             fg=typer.colors.RED, err=True,
         )
         raise typer.Exit(code=2)
+
+    if oml_topology not in {"mid4", "split8", "cap4"}:
+        typer.secho(
+            f"[AERIS mesh] Unknown OML topology {oml_topology!r}. "
+            "Valid: mid4, split8, cap4.",
+            fg=typer.colors.RED, err=True,
+        )
+        raise typer.Exit(code=2)
+
+    if tip_radial_points is None:
+        tip_radial_points = 3 if oml_topology == "cap4" else 9
+
+    if oml_topology == "cap4" and run_pyhyp_flag:
+        # The cap4 collar blocks are too thin to survive decimation: coarsen=4
+        # breaks the collar rim and the march inverts.  cap4 is the
+        # full-resolution topology — force coarsen=1 unless explicitly given.
+        if n_coarsen is None:
+            n_coarsen = 1
+            typer.echo(
+                "[AERIS mesh] cap4 topology: overriding level coarsening -> 1 "
+                "(cap4 marches at full in-plane resolution)."
+            )
+        elif n_coarsen != 1:
+            typer.secho(
+                f"[AERIS mesh] cap4 topology is incompatible with --n-coarsen {n_coarsen}: "
+                "decimation breaks the thin collar blocks and the march inverts. "
+                "Use --n-coarsen 1, or switch to --oml-topology mid4 for coarsened runs.",
+                fg=typer.colors.RED, err=True,
+            )
+            raise typer.Exit(code=2)
 
     output_path = Path(output_dir).expanduser().resolve()
     if output_path.exists() and not overwrite:
@@ -372,6 +434,10 @@ def mesh_pyhyp(
     typer.echo(f"  tip-inner-scale    : {tip_inner_scale}")
     typer.echo(f"  split-x-fore       : {split_x_fore}  (aft={1.0-split_x_fore:.2f})")
     typer.echo(f"  oml-topology       : {oml_topology}")
+    if oml_topology == "cap4":
+        typer.echo(f"  cap-width-frac     : {cap_width_frac}")
+        typer.echo(f"  cap-wrap-points    : {cap_wrap_points}")
+        typer.echo(f"  cap-wrap-x         : {cap_wrap_x}")
     typer.echo(f"  min-te-thickness   : {min_te_thickness}")
     typer.echo(f"  min-scaled-jacobian: {min_scaled_jacobian}")
     typer.echo(f"  max-normal-angle   : {max_adjacent_normal_angle} deg")
@@ -448,6 +514,9 @@ def mesh_pyhyp(
             minimum_scaled_jacobian=min_scaled_jacobian,
             maximum_adjacent_normal_angle_deg=max_adjacent_normal_angle,
             oml_topology=oml_topology,
+            cap_width_frac=cap_width_frac,
+            cap_wrap_points=cap_wrap_points,
+            cap_wrap_x=cap_wrap_x,
         )
     except MeshBuildError as exc:
         typer.secho(f"\n[AERIS mesh] Surface build failed: {exc}", fg=typer.colors.RED, err=True)

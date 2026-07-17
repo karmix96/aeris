@@ -7738,25 +7738,28 @@ def _paraview_button(path: Path, key: str) -> None:
            f'font-family:JetBrains Mono,monospace;word-break:break-all">{path}</div>')
 
 
+def _adflow_resrho_from_line(line: str) -> float | None:
+    """Extract Res_rho from one ADflow monitor row, else None.
+
+    Monitor rows carry CFL, step, lin-res, resrho, resturb, cl, cd after the
+    two integer columns — resrho is the 4th float when present.
+    """
+    parts = line.split()
+    if len(parts) < 8 or not parts[0].isdigit() or not parts[1].isdigit():
+        return None
+    floats = []
+    for tok in parts[2:]:
+        try:
+            floats.append(float(tok))
+        except ValueError:
+            continue
+    return floats[3] if len(floats) >= 4 else None
+
+
 def _parse_adflow_residuals(log_text: str) -> list[float]:
     """Best-effort: extract the Res_rho column from ADflow monitor rows."""
-    vals: list[float] = []
-    for line in log_text.splitlines():
-        parts = line.split()
-        if len(parts) < 8 or not parts[0].isdigit() or not parts[1].isdigit():
-            continue
-        floats = []
-        for tok in parts[2:]:
-            try:
-                floats.append(float(tok))
-            except ValueError:
-                continue
-        # monitor rows carry CFL, step, lin-res, resrho, resturb, cl, cd →
-        # resrho is the first strongly negative-exponent residual column;
-        # take the 4th float when present (CFL, step, linres, resrho, ...).
-        if len(floats) >= 4:
-            vals.append(floats[3])
-    return vals
+    vals = (_adflow_resrho_from_line(line) for line in log_text.splitlines())
+    return [v for v in vals if v is not None]
 
 
 def pg_mesh(root, exe, tmo, dry):
@@ -7953,8 +7956,12 @@ def pg_mesh(root, exe, tmo, dry):
                 else:
                     adf_out.mkdir(parents=True, exist_ok=True)
                     log_path = adf_out / "adflow_run.log"
+                    _sec("Live residual (density)")
+                    chart_box = st.empty()
                     tail_box = st.empty()
                     lines: list[str] = []
+                    res_vals: list[float] = []
+                    last_charted = 0
                     with st.status("ADflow RANS solve running …", expanded=True) as status:
                         proc = subprocess.Popen(
                             cmd, cwd=root, text=True, bufsize=1,
@@ -7962,11 +7969,20 @@ def pg_mesh(root, exe, tmo, dry):
                         assert proc.stdout is not None
                         for line in proc.stdout:
                             lines.append(line.rstrip("\n"))
+                            v = _adflow_resrho_from_line(line)
+                            if v is not None:
+                                res_vals.append(v)
                             if len(lines) % 5 == 0:
                                 tail_box.code("\n".join(lines[-25:]), language="text")
+                                if len(res_vals) > last_charted:
+                                    chart_box.line_chart(
+                                        {"log10 Res_rho": res_vals}, height=200)
+                                    last_charted = len(res_vals)
                         rc = proc.wait()
                         log_path.write_text("\n".join(lines), encoding="utf-8")
                         tail_box.code("\n".join(lines[-25:]), language="text")
+                        if res_vals:
+                            chart_box.line_chart({"log10 Res_rho": res_vals}, height=200)
                         if rc == 0:
                             status.update(label="ADflow finished", state="complete")
                             st.success(f"Solve complete — see tab ④.  Log: {log_path}")

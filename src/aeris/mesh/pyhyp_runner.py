@@ -33,6 +33,12 @@ GRID_LEVELS: dict[str, dict[str, object]] = {
     "L2": {"coarsen": 4, "N": 193, "s0_frac": 8.8e-6},   # standard wall-resolved RANS
     "L3": {"coarsen": 4, "N": 129, "s0_frac": 2.2e-5},   # DEFAULT — validated baseline
     "L4": {"coarsen": 4, "N": 37,  "s0_frac": 2.2e-5},   # coarse / quick topology check
+    # cap4 family levels (see aeris.mesh.presets): full in-plane resolution,
+    # all three index directions refine together at r ~ 1.4, and s0 follows
+    # the family law s0_frac = 4.4e-6 * (97 / points_per_side).
+    "smoke":      {"coarsen": 1, "N": 129, "s0_frac": 8.8e-6},
+    "fine":       {"coarsen": 1, "N": 193, "s0_frac": 6.0e-6},
+    "production": {"coarsen": 1, "N": 257, "s0_frac": 4.4e-6},
 }
 
 DEFAULT_LEVEL = "L3"

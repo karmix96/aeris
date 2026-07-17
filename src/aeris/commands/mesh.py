@@ -26,6 +26,7 @@ from aeris.mesh.surface import (
     select_wing,
 )
 from aeris.mesh.pyhyp_runner import GRID_LEVELS, DEFAULT_LEVEL, subprocess_run_pyhyp
+from aeris.mesh.presets import MARCH_POLICY, MESH_PRESETS
 
 mesh_app = typer.Typer(
     help=(
@@ -106,6 +107,17 @@ def mesh_pyhyp(
     save_geometry_plot: bool = typer.Option(
         False, "--save-plot/--no-save-plot",
         help="Save the 2-D geometry summary plot from the generator.",
+    ),
+    preset: Optional[str] = typer.Option(
+        None, "--preset",
+        help=(
+            "Named cap4 family preset: 'smoke' (49 pts/side, N 129 — cheap "
+            "laptop-scale runs), 'fine' (71 pts/side, N 193), or 'production' "
+            "(97 pts/side, N 257 — the validated DSE recipe).  Sets topology, "
+            "points-per-side, spanwise-panels, cap parameters (via the "
+            "documented scaling laws in aeris.mesh.presets), and the volume "
+            "level; overrides those individual flags."
+        ),
     ),
 
     # ── Surface mesh ──────────────────────────────────────────────────────────
@@ -371,6 +383,36 @@ def mesh_pyhyp(
     if not config_path.is_file():
         typer.secho(f"[AERIS mesh] Config not found: {config_path}", fg=typer.colors.RED, err=True)
         raise typer.Exit(code=2)
+
+    if preset is not None:
+        if preset not in MESH_PRESETS:
+            typer.secho(
+                f"[AERIS mesh] Unknown preset {preset!r}. Valid: {list(MESH_PRESETS)}",
+                fg=typer.colors.RED, err=True,
+            )
+            raise typer.Exit(code=2)
+        p = MESH_PRESETS[preset]
+        oml_topology = "cap4"
+        points_per_side = p.points_per_side
+        spanwise_panels = p.spanwise_panels
+        cap_width_frac = p.cap_width_frac
+        cap_wrap_points = p.cap_wrap_points
+        cap_wrap_x = p.cap_wrap_x
+        level = p.name
+        c_max = float(MARCH_POLICY["c_max"])
+        eps_e_far = float(MARCH_POLICY["eps_e_far"])
+        eps_i_far = float(MARCH_POLICY["eps_i_far"])
+        vol_smooth_iter = int(MARCH_POLICY["vol_smooth_iter"])
+        n_constant_start = int(MARCH_POLICY["n_constant_start"])
+        typer.echo(
+            f"[AERIS mesh] Preset {p.name!r}: {p.description}\n"
+            f"  cap4, points-per-side={p.points_per_side}, "
+            f"spanwise-panels={p.spanwise_panels}, "
+            f"cap-width-frac={p.cap_width_frac:.4f}, "
+            f"cap-wrap-points={p.cap_wrap_points}, "
+            f"cap-wrap-x={p.cap_wrap_x}, level={p.name}, "
+            f"march policy={MARCH_POLICY}"
+        )
 
     if level not in GRID_LEVELS:
         typer.secho(

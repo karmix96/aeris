@@ -122,3 +122,32 @@ blunt-TE tip-corner skewness.
   with default cap_wrap_points=17; inverts at layer 15 with wrap=9). The
   coarse family levels need genuine collar/cap redesign work, not parameter
   scaling. Failure artifacts: `data/meshes/bwb_cap4_F3_smoke/`.
+
+**Status updates (2026-07-17) — WP2 resolved at the coarse level:**
+* Root cause was NOT the collar/cap size contrast: cell-volume scans of the
+  invalid volumes localised every inversion to one column — the blunt-TE
+  base at the ROOT symmetry plane (`oml_2`, base-centre i, j=0).  With
+  `cap_wrap_x=0.03` the wrap points spread over the whole wrap arc and the
+  base is crossed by a single cell absorbing both ~90° corner turns.
+* Fix (family-wide policy, `aeris.mesh.presets`):
+  - `cap_wrap_x` 0.03 → 0.015: doubles base resolution; adjacent-normal
+    angle at the TE wrap drops 115° → 78°.
+  - Tip cap is held at its validated parameters on every level (width_frac
+    0.5, wrap 17, collar 3).  The cap tiles a fixed-size feature and cannot
+    coarsen with the OML: wrap=9 → 143° corner fold; width_frac=0.15 →
+    1.5e-7 centre cells and NaN at layer 5 (both measured).  Cap is < 2% of
+    the surface; family ratio unaffected.
+  - s0 family law: s0_frac = 4.4e-6 × (97/points_per_side) — wall spacing
+    refines at the same ratio as the in-plane spacing.  The old coarse-level
+    s0 (2.2e-5) let the first layers stride past the TE base cells.
+  - One damped march policy at all levels: cMax 0.5, epsE 6, epsI 12,
+    volSmoothIter 1200, nConstantStart 3.
+* Family presets implemented (`--preset smoke|fine|production` = 49/71/97
+  pts/side, panels 4/6/8, N 129/193/257, r ≈ 1.4 in all three directions).
+* smoke level VALIDATED: marches all 128 layers, min quality +0.128, ZERO
+  low-quality layers (the old production recipe had 60), near-wall growth
+  ratio ≤ 1.12, ~1M cells, 62 s, 24.5 MB.  Run: `data/meshes/bwb_smoke/`.
+* fine/production are updated by the same policy but NOT yet re-marched;
+  all changes are in the stabilising direction (the 78° corner should
+  remove the production skew warnings).  Pre-2026-07-17 mesh artifacts were
+  deleted; every mesh regenerates deterministically from config + preset.

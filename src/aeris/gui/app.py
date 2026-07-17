@@ -211,6 +211,7 @@ PAGES = [
     ("airfoil",  "〜",  "2D Airfoils"),
     ("dataset",  "▣",  "Dataset Factory"),
     ("aero",     "⊿",  "Aero Analysis"),
+    ("mesh",     "⬡",  "CFD Mesh & Solve"),
     ("dynamics", "◎",  "Dynamics"),
     ("ml",       "◈",  "ML Studio"),
     ("workflow", "▤",  "Workflow Cockpit"),
@@ -7691,6 +7692,338 @@ _GUI_RECENT_SLICE_MARKERS = (
     "linear_stability_summary",
 )
 
+# ── CFD Mesh & Solve page ─────────────────────────────────────────────────────
+
+_MACH_AERO_PREFIX = os.environ.get("MACH_AERO_CONDA_PREFIX", "/home/mike/miniconda3/envs/mach-aero")
+
+
+def _mesh_run_dirs(root: Path) -> list[Path]:
+    base = root / "data" / "meshes"
+    if not base.exists():
+        return []
+    return sorted([p for p in base.iterdir() if p.is_dir()],
+                  key=lambda p: p.stat().st_mtime, reverse=True)
+
+
+def _mesh_volume_cgns(run_dir: Path) -> Path | None:
+    for p in sorted((run_dir / "surface").glob("wing_vol_*.cgns")):
+        if ".invalid" not in p.name:
+            return p
+    return None
+
+
+def _open_in_paraview(path: Path) -> str | None:
+    exe = shutil.which("paraview")
+    if exe is None:
+        return "ParaView not found on PATH — open the file manually."
+    try:
+        subprocess.Popen([exe, str(path)], start_new_session=True,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception as e:  # pragma: no cover - depends on desktop env
+        return f"Could not launch ParaView: {e}"
+    return None
+
+
+def _paraview_button(path: Path, key: str) -> None:
+    c1, c2 = st.columns([1, 3])
+    with c1:
+        if st.button("⬈ Open in ParaView", key=key):
+            err = _open_in_paraview(path)
+            if err:
+                st.warning(err)
+            else:
+                st.success("ParaView launched")
+    with c2:
+        _h(f'<div style="padding:8px 0;font-size:.72rem;color:#7F8B98;'
+           f'font-family:JetBrains Mono,monospace;word-break:break-all">{path}</div>')
+
+
+def _parse_adflow_residuals(log_text: str) -> list[float]:
+    """Best-effort: extract the Res_rho column from ADflow monitor rows."""
+    vals: list[float] = []
+    for line in log_text.splitlines():
+        parts = line.split()
+        if len(parts) < 8 or not parts[0].isdigit() or not parts[1].isdigit():
+            continue
+        floats = []
+        for tok in parts[2:]:
+            try:
+                floats.append(float(tok))
+            except ValueError:
+                continue
+        # monitor rows carry CFL, step, lin-res, resrho, resturb, cl, cd →
+        # resrho is the first strongly negative-exponent residual column;
+        # take the 4th float when present (CFL, step, linres, resrho, ...).
+        if len(floats) >= 4:
+            vals.append(floats[3])
+    return vals
+
+
+def pg_mesh(root, exe, tmo, dry):
+    _hero("⬡", "CFD Mesh & Solve",
+          "structured cap4 family · pyHyp march · ADflow RANS · post-processing",
+          badge="WP1-WP3", bcolor="#22C55E")
+
+    try:
+        from aeris.mesh.presets import MARCH_POLICY, MESH_PRESETS
+    except Exception as e:
+        st.error(f"aeris.mesh.presets not importable: {e}")
+        return
+
+    tab_gen, tab_eval, tab_solve, tab_post = st.tabs(
+        ["① Generate mesh", "② Evaluate mesh", "③ ADflow solve", "④ Results / post-process"]
+    )
+
+    # ── ① Generate ───────────────────────────────────────────────────────────
+    with tab_gen:
+        _sec("Family preset")
+        pnames = list(MESH_PRESETS)
+        pick = st.radio(
+            "Preset", pnames, index=0, horizontal=True, key="mesh_preset",
+            format_func=lambda n: f"{n} — {MESH_PRESETS[n].points_per_side} pts/side",
+        )
+        p = MESH_PRESETS[pick]
+        _stat_row([
+            ("points / side", p.points_per_side, "chordwise blocks"),
+            ("spanwise panels", p.spanwise_panels, "per section interval"),
+            ("cap policy", f"{p.cap_width_frac:g}/{p.cap_wrap_points}/{p.cap_wrap_x:g}",
+             "width_frac / wrap pts / wrap x — fixed"),
+            ("march policy", f"cMax {MARCH_POLICY['c_max']}", "family-wide damping"),
+        ])
+        _note(p.description + "  The tip cap never coarsens with the family "
+              "(fixed-size feature); every parameter above is a function of the "
+              "preset name — no per-case tuning.", "info")
+
+        _sec("Input / output")
+        cfgs = _files(str(root / "configs" / "geometry"), "*.yaml")
+        if not cfgs:
+            st.error("No YAML configs found under configs/geometry.")
+            return
+        cfg_labels = {c: Path(c).name for c in cfgs}
+        default_idx = next((i for i, c in enumerate(cfgs)
+                            if Path(c).name == "baseline_bwb_25.yaml"), 0)
+        cfg = st.selectbox("Geometry config", cfgs, index=default_idx,
+                           format_func=lambda c: cfg_labels[c], key="mesh_cfg")
+        c1, c2, c3 = st.columns([2, 1, 1])
+        with c1:
+            out_dir = st.text_input("Output directory",
+                                    value=f"data/meshes/bwb_{pick}", key="mesh_out")
+        with c2:
+            seed = st.text_input("Seed override", value="", key="mesh_seed",
+                                 help="Blank = seed from the config file.")
+        with c3:
+            overwrite = st.checkbox("Overwrite", value=True, key="mesh_ow")
+
+        args = ["mesh", "pyhyp", "-c", cfg, "-o", out_dir, "--preset", pick]
+        if overwrite:
+            args.append("--overwrite")
+        if seed.strip():
+            args += ["--seed", seed.strip()]
+        _cmd_preview(args)
+        eta = {"smoke": "~1-2 min", "fine": "~2-4 min", "production": "~5-8 min"}.get(pick, "")
+        if st.button(f"▶  Generate {pick} mesh  ({eta})", type="primary", key="mesh_go"):
+            if dry:
+                st.info("Dry-run mode — command not executed.")
+            else:
+                with st.spinner(f"Marching {pick} volume … {eta}"):
+                    r = _run(root, exe, args, max(int(tmo), 1800))
+                _save_result(r)
+                _show_result(r)
+
+    # ── ② Evaluate ───────────────────────────────────────────────────────────
+    with tab_eval:
+        runs = _mesh_run_dirs(root)
+        if not runs:
+            st.info("No mesh runs under data/meshes yet — generate one in tab ①.")
+        else:
+            sel = st.selectbox("Mesh run", runs, format_func=lambda p: p.name,
+                               key="mesh_eval_sel")
+            sr = _rjson(sel / "surface" / "surface_report.json")
+            vr = _rjson(sel / "surface" / "volume_report.json")
+            man = _rjson(sel / "smoke_manifest.json")
+            cgns = _mesh_volume_cgns(sel)
+
+            if man:
+                status = str(man.get("status", "?"))
+                vol = man.get("volume") or {}
+                n_layers = vol.get("N")
+                surf_cells = sum(b.get("cells", 0) for b in (sr or {}).get("blocks", []))
+                est_cells = surf_cells * (int(n_layers) - 1) if n_layers else None
+                mm = (vr or {}).get("march_metrics", {})
+                _stat_row([
+                    ("status", status, "smoke_manifest"),
+                    ("volume cells", f"{est_cells:,}" if est_cells else "—",
+                     f"{surf_cells:,} surf × {n_layers} layers" if n_layers else ""),
+                    ("min quality", f"{mm.get('min_quality', '—')}",
+                     f"{mm.get('low_quality_layers', '—')} low-quality layers"),
+                    ("min volume", f"{mm.get('min_volume', '—')}",
+                     "all-positive = valid march"),
+                ])
+                if mm.get("passed") is True:
+                    _note("March PASSED — every layer has positive cell volumes.", "ok")
+                elif mm.get("passed") is False:
+                    _note(f"March FAILED at layer {mm.get('first_invalid_layer')} — "
+                          "volume quarantined as *.invalid.cgns.", "err")
+
+            if sr and pd is not None:
+                _sec("Surface blocks")
+                rows = [{
+                    "block": b["name"], "ni": b["ni"], "nj": b["nj"],
+                    "cells": b["cells"],
+                    "median area": f"{b['median_area']:.3e}",
+                    "min area": f"{b['min_area']:.3e}",
+                    "min Jacobian": round(b["min_scaled_corner_jacobian"], 4),
+                    "max normal angle°": round(b["max_adjacent_normal_angle_deg"], 1),
+                } for b in sr.get("blocks", [])]
+                st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+
+            mm_rows = ((vr or {}).get("march_metrics") or {}).get("rows") or []
+            if mm_rows:
+                _sec("March quality per layer")
+                st.line_chart({"min quality": [r0.get("min_quality") for r0 in mm_rows]},
+                              height=190)
+
+            if cgns is not None:
+                _sec("Inspect")
+                _paraview_button(cgns, key="pv_mesh")
+            elif vr and vr.get("status") == "invalid":
+                bad = Path(str(vr.get("output_cgns", "")))
+                if bad.exists():
+                    _sec("Inspect failure artifact")
+                    _paraview_button(bad, key="pv_mesh_bad")
+
+    # ── ③ ADflow solve ───────────────────────────────────────────────────────
+    with tab_solve:
+        valid_runs = [p0 for p0 in _mesh_run_dirs(root) if _mesh_volume_cgns(p0)]
+        if not valid_runs:
+            st.info("No valid volume meshes found — generate one in tab ① first.")
+        else:
+            sel = st.selectbox("Mesh", valid_runs, format_func=lambda p0: p0.name,
+                               key="adf_mesh")
+            grid = _mesh_volume_cgns(sel)
+            _sec("Flow condition")
+            c1, c2, c3, c4 = st.columns(4)
+            with c1:
+                alpha = st.number_input("Alpha [deg]", value=2.0, step=0.5, key="adf_a")
+            with c2:
+                mach = st.number_input("Mach", value=0.2, step=0.05, key="adf_m")
+            with c3:
+                reyn = st.number_input("Reynolds", value=1.0e6, step=1.0e5,
+                                       format="%.3g", key="adf_re")
+            with c4:
+                temp = st.number_input("T [K]", value=288.15, step=1.0, key="adf_t")
+            c1, c2, c3, c4 = st.columns(4)
+            with c1:
+                aref = st.number_input("areaRef (half) [m²]", value=1.094,
+                                       format="%.4f", key="adf_ar")
+            with c2:
+                cref = st.number_input("chordRef [m]", value=0.8774,
+                                       format="%.4f", key="adf_cr")
+            with c3:
+                ranks = st.number_input("MPI ranks", value=4, min_value=1, max_value=8,
+                                        step=1, key="adf_np")
+            with c4:
+                l2 = st.selectbox("L2 convergence", ["1e-8", "1e-10", "1e-6"], key="adf_l2")
+            if int(ranks) > 4:
+                _note("15 GB RAM caps ~1M-cell runs at 4 ranks — 8 ranks was "
+                      "OOM-killed on this machine. Proceed only on bigger hardware.", "warn")
+            _note("areaRef/chordRef defaults are for the baseline BWB half-model — "
+                  "change them if you meshed a different geometry.", "info")
+
+            adf_out = sel / "adflow"
+            mpirun = f"{_MACH_AERO_PREFIX}/bin/mpirun"
+            mpy = f"{_MACH_AERO_PREFIX}/bin/python"
+            cmd = [mpirun, "-np", str(int(ranks)), mpy, "scripts/adflow_smoke.py",
+                   "--grid", str(grid), "--output-dir", str(adf_out),
+                   "--area-ref", f"{aref}", "--chord-ref", f"{cref}",
+                   "--alpha", f"{alpha}", "--mach", f"{mach}",
+                   "--reynolds", f"{reyn:g}", "--temperature", f"{temp}",
+                   "--l2-convergence", l2]
+            _h(f'<div style="background:#111A23;border:1px solid #334252;border-radius:7px;'
+               f'padding:8px 12px;margin:.5rem 0;font-size:.72rem;color:#7ab3f0;'
+               f'font-family:JetBrains Mono,monospace;word-break:break-all">'
+               f'$ {" ".join(cmd)}</div>')
+
+            if st.button("▶  Run ADflow  (~15-25 min)", type="primary", key="adf_go"):
+                if dry:
+                    st.info("Dry-run mode — command not executed.")
+                elif not Path(mpirun).exists():
+                    st.error(f"mach-aero env not found at {_MACH_AERO_PREFIX} "
+                             "(set MACH_AERO_CONDA_PREFIX).")
+                else:
+                    adf_out.mkdir(parents=True, exist_ok=True)
+                    log_path = adf_out / "adflow_run.log"
+                    tail_box = st.empty()
+                    lines: list[str] = []
+                    with st.status("ADflow RANS solve running …", expanded=True) as status:
+                        proc = subprocess.Popen(
+                            cmd, cwd=root, text=True, bufsize=1,
+                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        assert proc.stdout is not None
+                        for line in proc.stdout:
+                            lines.append(line.rstrip("\n"))
+                            if len(lines) % 5 == 0:
+                                tail_box.code("\n".join(lines[-25:]), language="text")
+                        rc = proc.wait()
+                        log_path.write_text("\n".join(lines), encoding="utf-8")
+                        tail_box.code("\n".join(lines[-25:]), language="text")
+                        if rc == 0:
+                            status.update(label="ADflow finished", state="complete")
+                            st.success(f"Solve complete — see tab ④.  Log: {log_path}")
+                        else:
+                            status.update(label=f"ADflow failed (exit {rc})", state="error")
+                            st.error(f"ADflow exited {rc}.  Full log: {log_path}")
+
+    # ── ④ Results / post-process ─────────────────────────────────────────────
+    with tab_post:
+        solved = [p0 for p0 in _mesh_run_dirs(root)
+                  if (p0 / "adflow" / "adflow_smoke.json").exists()]
+        if not solved:
+            st.info("No ADflow results yet — run a solve in tab ③.")
+        else:
+            sel = st.selectbox("Solved case", solved, format_func=lambda p0: p0.name,
+                               key="post_sel")
+            adf = sel / "adflow"
+            rep = _rjson(adf / "adflow_smoke.json") or {}
+            fns = rep.get("functions", {})
+            cl = next((v for k, v in fns.items() if k.endswith("cl")), None)
+            cd = next((v for k, v in fns.items() if k.endswith("cd")), None)
+            cm = next((v for k, v in fns.items() if k.endswith("cmy")), None)
+            _sec("Force coefficients")
+            _stat_row([
+                ("CL", f"{cl:.4f}" if cl is not None else "—",
+                 f"α={rep.get('alpha_deg','?')}°  M={rep.get('mach','?')}"),
+                ("CD", f"{cd:.5f}" if cd is not None else "—",
+                 f"{cd*1e4:.1f} counts" if cd is not None else ""),
+                ("CM", f"{cm:.4f}" if cm is not None else "—", "pitching moment"),
+                ("L/D", f"{cl/cd:.1f}" if cl and cd else "—",
+                 "FAILED" if rep.get("solve_failed") else "solve OK"),
+            ])
+            if rep.get("solve_failed"):
+                _note("ADflow flagged this solution as FAILED — do not trust "
+                      "the coefficients above.", "err")
+
+            log_text = _read(adf / "adflow_run.log", 5_000_000) \
+                if (adf / "adflow_run.log").exists() else ""
+            res = _parse_adflow_residuals(log_text)
+            if res:
+                _sec("Convergence (density residual)")
+                st.line_chart({"log10 Res_rho": res}, height=210)
+
+            _sec("Post-process in ParaView")
+            outs = sorted(adf.glob("*.cgns"))
+            if outs:
+                for i, f in enumerate(outs):
+                    _paraview_button(f, key=f"pv_post_{i}")
+                _note("The *_surf.cgns file carries cp, cf and y+ — color by "
+                      "yPlus and check max ≤ ~1 over the wing for the wall-"
+                      "resolved claim (C5).", "info")
+            else:
+                st.info("No CGNS outputs in the adflow directory.")
+            with st.expander("Raw ADflow report JSON"):
+                st.json(rep)
+
+
 def main():
     st.set_page_config(page_title="AERIS", page_icon="✈️", layout="wide", initial_sidebar_state="expanded")
     st.markdown(CSS, unsafe_allow_html=True)
@@ -7701,6 +8034,7 @@ def main():
         "airfoil":  pg_airfoil,
         "dataset":  pg_dataset,
         "aero":     pg_aero,
+        "mesh":     pg_mesh,
         "dynamics": pg_dynamics,
         "ml":       pg_ml,
         "workflow": pg_workflow,

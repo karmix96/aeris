@@ -7741,11 +7741,14 @@ def _paraview_button(path: Path, key: str) -> None:
 def _adflow_resrho_from_line(line: str) -> float | None:
     """Extract Res_rho from one ADflow monitor row, else None.
 
-    Monitor rows carry CFL, step, lin-res, resrho, resturb, cl, cd after the
-    two integer columns — resrho is the 4th float when present.
+    Verified row layout (2026-07-17 smoke solve):
+      Grid  Iter  IterTot  IterType  CFL  Step  LinRes  Res_rho  Res_turb  CL  CD  totalRes
+    After dropping the non-numeric IterType token the floats are
+    [IterTot, CFL, Step, LinRes, Res_rho, Res_turb, CL, CD, totalRes],
+    so Res_rho is floats[4].
     """
     parts = line.split()
-    if len(parts) < 8 or not parts[0].isdigit() or not parts[1].isdigit():
+    if len(parts) < 10 or not parts[0].isdigit() or not parts[1].isdigit():
         return None
     floats = []
     for tok in parts[2:]:
@@ -7753,7 +7756,7 @@ def _adflow_resrho_from_line(line: str) -> float | None:
             floats.append(float(tok))
         except ValueError:
             continue
-    return floats[3] if len(floats) >= 4 else None
+    return floats[4] if len(floats) >= 9 else None
 
 
 def _parse_adflow_residuals(log_text: str) -> list[float]:

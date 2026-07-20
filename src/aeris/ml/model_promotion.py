@@ -287,6 +287,18 @@ def promote_model_run(
     )
     warnings.extend(envelope_warnings)
 
+    # ML-C2 / CONF.1: calibrated-uncertainty evidence. Soft gate for now
+    # (warning only); planned upgrade to a blocker once conformal calibration
+    # is standard across promoted models.
+    _conformal_calibration_path = model_run_dir / "conformal_calibration.json"
+    if not _conformal_calibration_path.exists():
+        warnings.append(
+            "conformal_calibration.json is missing - calibrated uncertainty "
+            "evidence is absent for this model. Run "
+            "`aeris ml calibrate-conformal --model-run-dir ...` before relying "
+            "on interval or coverage claims."
+        )
+
     gate_config_payload: dict[str, Any] | None = None
     gate_evaluation: dict[str, Any] | None = None
     gate_config_resolved_path: str | None = None

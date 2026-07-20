@@ -117,6 +117,15 @@ def _feature_ranges_from_reference(reference_df: pd.DataFrame, feature_columns: 
     return ranges
 
 
+# ML-H3 (mirror of aeris.ml.quality.confidence): estimator-spread is a valid
+# uncertainty heuristic only for bagging-style ensembles with >= 2 members.
+_AERIS_BAGGING_ENSEMBLE_TYPES = {
+    "RandomForestRegressor",
+    "ExtraTreesRegressor",
+    "NeuralMLPEnsembleRegressor",
+}
+
+
 def _resolve_feature_ranges(
     *,
     envelope: dict[str, Any] | None,
@@ -223,6 +232,12 @@ def _uncertainty_from_native_ensemble(inner_model: Any, X: np.ndarray, target_co
     estimators = getattr(inner_model, "estimators_", None)
     if not estimators:
         return None
+    # ML-H3: only genuine bagging ensembles qualify; a MultiOutputRegressor
+    # also exposes estimators_ but those are per-target sub-models.
+    if type(inner_model).__name__ not in _AERIS_BAGGING_ENSEMBLE_TYPES:
+        return None
+    if len(estimators) < 2:
+        return None
 
     try:
         preds = []
@@ -257,7 +272,13 @@ def _uncertainty_from_wrapped_ensemble(inner_model: Any, X: np.ndarray, target_c
     supported_targets: list[str] = []
     for target, estimator in zip(target_columns, estimators):
         sub_estimators = getattr(estimator, "estimators_", None)
-        if sub_estimators is None:
+        # ML-H3: per-target spread only for bagging sub-models with >= 2 members;
+        # boosting stage trees are residual increments, not ensemble members.
+        if (
+            type(estimator).__name__ not in _AERIS_BAGGING_ENSEMBLE_TYPES
+            or sub_estimators is None
+            or len(sub_estimators) < 2
+        ):
             cols.append(np.full(X.shape[0], np.nan, dtype=float))
             continue
         try:

@@ -1,0 +1,47 @@
+# GCI ladder — fine member (r ~ 1.4 family with the main validation case as
+# the medium member).
+#
+# MESHING FINDING (2026-07-20): at 513 points/surface the TE cosine spacing
+# (~9e-6 c) meets s0 = 3.6e-6 c at the sharp corner and pyHyp's default
+# corner detection (cornerAngle 60) produced one machine-zero-negative
+# sliver cell at march layer 3 (min_volume -3e-12; the rest of the march was
+# pristine, quality -> 0.87). No curated march-control combination fixed it;
+# the native option cornerAngle=110 (the value pyHyp's own naca0012 RANS
+# example schedules) did — passed via raw pyhyp_options, recorded in the
+# provenance manifest as a curated-bypass. March damping below follows the
+# same escalation used for the wing family.
+schema: aeris.cfd.case.v1
+case:
+  name: naca0012_tmr_a10_fine
+  geometry:
+    airfoil: naca0012
+  surface_mesh:
+    topology: airfoil_ogrid_v1
+    overrides:
+      n_per_surface: 513
+  volume_mesh:
+    level: smoke
+    march_dist_factor: 100.0
+    overrides:
+      n_grid: 257
+      s0: 3.6e-6
+      c_max: 0.3
+      vol_smooth_iter: 2400
+      n_constant_start: 5
+      eps_e_far: 8.0
+      eps_i_far: 16.0
+    pyhyp_options:
+      cornerAngle: 110.0
+  solve:
+    solver: adflow
+    preset: rans_ank_nk_v1
+    overrides:
+      l2_convergence: 2.0e-6
+    flow:
+      alpha: 10.0
+      mach: 0.15
+      reynolds: 6.0e+6
+      temperature: 300.0
+    area_ref: 1.0
+    chord_ref: 1.0
+    mpi_np: 4

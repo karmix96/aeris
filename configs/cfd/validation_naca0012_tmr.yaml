@@ -1,0 +1,50 @@
+# NACA 0012 validation case vs the NASA Turbulence Modeling Resource (TMR)
+# https://turbmodels.larc.nasa.gov/naca0012_val.html
+#
+# Geometry: TMR-modified NACA 0012 (closed sharp TE, -0.1036 coefficient) —
+#   generated analytically by aeris.cfd.meshing.airfoil_geometry.
+# Conditions: M = 0.15, Re = 6e6 (per chord), T = 300 K, SA turbulence.
+# TMR CFL3D reference (finest grid): alpha=10 deg -> CL = 1.0909, CD = 0.01231.
+#
+# ADflow has no true 2-D mode: pyHyp's 2-D extrusion emits a one-cell-wide
+# 3-D CGNS with symmetry z-planes (standard MACH practice).  SU2 (M6) will
+# consume the same grid natively in 2-D — the cross-solver verification pair.
+#
+# Fidelity ladder for GCI: run this case at n_per_surface 129 / 257 / 513
+# with n_grid 129 / 193 / 257 (override per run); s0 = 5e-6 c targets y+ ~ 1
+# at Re 6e6 (s0/c ≈ 5 / (Re * sqrt(Cf/2)), Cf ≈ 0.0026 flat-plate estimate).
+schema: aeris.cfd.case.v1
+case:
+  name: naca0012_tmr_a10
+  geometry:
+    airfoil: naca0012
+  surface_mesh:
+    topology: airfoil_ogrid_v1
+    overrides:
+      n_per_surface: 257
+  volume_mesh:
+    level: smoke            # coarsen=1; N/s0 overridden explicitly below
+    march_dist_factor: 100.0  # ~100 chords; TMR reference grids reach ~500c
+    overrides:
+      n_grid: 193
+      s0: 5.0e-6
+  solve:
+    solver: adflow
+    preset: rans_ank_nk_v1
+    overrides:
+      # Force-vs-residual ladder, measured on this grid (r ~ 1.4 family,
+      # N=193, 100c farfield): CL = 1.0656 @ 5.2 orders, 1.0826 @ 5.3,
+      # 1.0960 @ ~6.0 (residual limit-cycles at ~1.7e-6 relative near the
+      # sharp TE; ADflow stops itself there against the 1e-8 default and
+      # flags 'fail' despite settled forces). 2e-6 relative is reached just
+      # before the stall with CL settled to <0.2%% — the achievable,
+      # documented target for this case.
+      l2_convergence: 2.0e-6
+    flow:
+      alpha: 10.0
+      mach: 0.15
+      reynolds: 6.0e+6
+      temperature: 300.0
+    area_ref: 1.0           # chord (1) x unit depth (1): one-cell-wide grid
+    chord_ref: 1.0
+    mpi_np: 8

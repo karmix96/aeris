@@ -1,0 +1,32 @@
+# Wing-level grid-convergence family, medium member (DSE_READINESS.md WP3).
+# See configs/cfd/wing_gci_smoke.yaml for the full rationale; only the mesh
+# family preset differs (fine: 71 pts/side, 6 spanwise panels, N193 --
+# DSE_READINESS.md estimates ~4.7M cells by simple per-direction scaling from
+# the validated smoke mesh, ~1M cells at 62s march time). NOT yet marched or
+# solved -- confirm it marches (mesh-only) before attempting a solve; ANK-only
+# RAM behavior at this size is unverified on this 16 GB machine.
+schema: aeris.cfd.case.v1
+case:
+  name: wing_gci_fine
+  geometry:
+    aeris_config: configs/geometry/bwb_explore_wide.yaml  # resolved relative to CWD; run from repo root
+    wing_index: 0
+    seed: 100
+  surface_mesh:
+    preset: fine
+  volume_mesh:
+    preset: fine
+  solve:
+    solver: adflow
+    preset: rans_ank_nk_v1
+    overrides:
+      l2_convergence: 1.0e-6
+      use_nk_solver: false
+    flow:
+      alpha: 2.0
+      mach: 0.2
+      reynolds: 1.0e+6
+      temperature: 288.15
+    area_ref: 1.094
+    chord_ref: 0.8774
+    mpi_np: 4

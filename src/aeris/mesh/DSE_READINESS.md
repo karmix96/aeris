@@ -129,6 +129,24 @@ blunt-TE tip-corner skewness.
   base at the ROOT symmetry plane (`oml_2`, base-centre i, j=0).  With
   `cap_wrap_x=0.03` the wrap points spread over the whole wrap arc and the
   base is crossed by a single cell absorbing both ~90° corner turns.
+**Status update (2026-07-20):** WP2 partially re-verified — surface generation
+(cap4 topology, all QC gates) confirmed clean at all three family levels
+(smoke 49/4, fine 71/6, production 97/8 pts-per-side/spanwise-panels). The
+pyHyp *volume* march at fine/production (never actually re-marched since the
+2026-07-17 policy change) and WP3 (3-grid solve/GCI) and WP4 (100-geometry
+DOE campaign) are staged but **not yet run** — a CFD-suite session built the
+case YAMLs (`configs/cfd/wing_gci_{smoke,fine,production}.yaml`) and a new
+`aeris cfd campaign mesh-robustness` command for exactly this, and reused the
+2D NACA0012 O-grid infrastructure to add three targeted (not exhaustive) 2D
+sensitivity studies — farfield distance, wall spacing, Euler-vs-RANS — plus a
+post-hoc force-vs-convergence-tolerance table reconstructed from existing
+logs at zero extra compute, and a mesh/solver determinism check (bit-
+identical CGNS mesh data and bit-identical solver forces across independent
+reruns). All of this is queued for Mike to run on his own schedule rather
+than launched automatically — see `configs/cfd/RUNBOOK.md` for the exact
+commands, runtime estimates, and RAM caveats (production, at pyHyp's own
+~6.7M-cell estimate, is flagged as likely exceeding this 16 GB machine).
+
 * Fix (family-wide policy, `aeris.mesh.presets`):
   - `cap_wrap_x` 0.03 → 0.015: doubles base resolution; adjacent-normal
     angle at the TE wrap drops 115° → 78°.

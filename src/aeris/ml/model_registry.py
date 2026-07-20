@@ -311,7 +311,7 @@ def _build_tabpfn(random_seed: int, model_params: dict[str, Any] | None = None) 
 
     TabPFN wraps in MultiOutputRegressor because it is single-target.
 
-    Override: {"device": "cpu", "N_ensemble_configurations": 16}
+    Override: {"device": "cpu", "n_estimators": 16}
     """
     try:
         from tabpfn import TabPFNRegressor
@@ -321,16 +321,19 @@ def _build_tabpfn(random_seed: int, model_params: dict[str, Any] | None = None) 
             "Requires Python>=3.9 and torch>=2.0."
         ) from exc
 
+    # ML-C3: TabPFNRegressor exists only in TabPFN >= 2.0, whose constructor
+    # takes n_estimators / random_state / device. The pre-2.0 package shipped a
+    # classifier only, so a successful import above already implies the v2 API.
+    # The old N_ensemble_configurations kwarg raised TypeError at build time and
+    # the seed was silently discarded.
     params = _merge_params(
         {
             "device": "cpu",
-            "N_ensemble_configurations": 16,  # more = better but slower
+            "n_estimators": 16,  # ensemble members: more = better but slower
+            "random_state": random_seed,
         },
         model_params,
     )
-    # TabPFN ignores random_seed in its constructor; seed is set via torch.manual_seed
-    # before fit() in real usage. We store it for logging only.
-    _ = random_seed
     return MultiOutputRegressor(TabPFNRegressor(**params))
 
 
@@ -522,7 +525,19 @@ class _AerisNumpyInputRegressor(_AerisBaseEstimator, _AerisRegressorMixin):
             raise RuntimeError("AERIS LightGBM wrapper dependencies are unavailable.")
         if not hasattr(self, "estimator_"):
             raise RuntimeError("Estimator is not fitted yet.")
-        return self.estimator_.predict(_aeris_lgb_np.asarray(X, dtype=float))
+        # ML-C1: LightGBM >= 4.x sets feature_names_in_ even when fitted on a
+        # plain ndarray, so sklearn's _check_feature_names warns on every
+        # ndarray predict. Scoped filter here replaces the removed (unpicklable)
+        # module-level proxy — this is the only job that proxy actually had.
+        import warnings as _aeris_warnings
+
+        with _aeris_warnings.catch_warnings():
+            _aeris_warnings.filterwarnings(
+                "ignore",
+                message="X does not have valid feature names",
+                category=UserWarning,
+            )
+            return self.estimator_.predict(_aeris_lgb_np.asarray(X, dtype=float))
 
     @property
     def feature_importances_(self):
@@ -612,96 +627,36 @@ if "MODEL_REGISTRY" in globals() and "ModelSpec" in globals():
 # --- AERIS Slice 8A LightGBM warning hygiene override END ---
 
 # AERIS LIGHTGBM WARNING HYGIENE OVERRIDE START
-# Added by Slice 8A.4.
+# Slice 9 / audit ML-C1 (July 2026): the previous block wrapped every built
+# lightgbm/lightgbm_dart model in _AerisLightGBMWarningCleanModel, whose
+# unrestricted __getattr__ made pickle.load recurse infinitely and whose
+# missing __getstate__ pickled the INNER estimator state under the proxy
+# class. Every saved LightGBM model.pkl was unloadable by design.
 #
-# Problem:
-#   LightGBM's sklearn wrapper emits:
-#     "X does not have valid feature names, but LGBMRegressor was fitted with feature names"
-#   when fit() sees a pandas DataFrame and predict() later sees a NumPy array.
-#
-# Policy:
-#   AERIS tabular training already treats feature order as authoritative through
-#   train_config.json / manifest feature_columns. For LightGBM model objects we
-#   force numeric arrays at the model boundary and suppress this specific warning.
-#
-# Why this is implemented by overriding build_model instead of editing a builder:
-#   The registry has evolved across slices. This bottom-of-file override is
-#   robust to builder layout drift and keeps the operator output clean.
-
-import warnings as _aeris_warnings
-from typing import Any as _AerisAny
-
-import numpy as _aeris_np
+# Resolution: the override is removed. build_model() is the plain registry
+# function again; the Slice-8A builders already return
+# MultiOutputRegressor(_AerisNumpyInputRegressor(LGBMRegressor)), which forces
+# NumPy at the estimator boundary (so the "valid feature names" warning can
+# never fire: no pandas names are ever stored at fit time) and pickles
+# cleanly. The class name below is kept ONLY so that legacy pickles fail with
+# a precise, actionable error instead of a RecursionError.
 
 
-def _aeris_lgbm_to_numpy(X: _AerisAny) -> _aeris_np.ndarray:
-    """Convert pandas/DataFrame-like or array-like input to a numeric NumPy array."""
-    if hasattr(X, "to_numpy"):
-        return _aeris_np.asarray(X.to_numpy(dtype=float), dtype=float)
-    return _aeris_np.asarray(X, dtype=float)
+class _AerisLightGBMWarningCleanModel:  # pragma: no cover - legacy tombstone
+    """Removed proxy wrapper (audit ML-C1). Legacy pickles are unloadable."""
 
+    def __setstate__(self, state):
+        raise RuntimeError(
+            "AERIS ML-C1: this model.pkl was saved with the removed LightGBM "
+            "proxy wrapper and its pickled state is corrupted-by-design. "
+            "Retrain the run with the patched model registry (aeris ml train)."
+        )
 
-class _AerisLightGBMWarningCleanModel:
-    """Small proxy that keeps LightGBM fit/predict warning-clean.
-
-    It delegates all unknown attributes to the wrapped model so existing
-    feature-importance, pickle, and inspection code keeps working.
-    """
-
-    def __init__(self, base_model: object):
-        self.base_model = base_model
-
-    def fit(self, X, y, *args, **kwargs):
-        X_np = _aeris_lgbm_to_numpy(X)
-        with _aeris_warnings.catch_warnings():
-            _aeris_warnings.filterwarnings(
-                "ignore",
-                message="X does not have valid feature names.*",
-                category=UserWarning,
-            )
-            self.base_model.fit(X_np, y, *args, **kwargs)
-        return self
-
-    def predict(self, X, *args, **kwargs):
-        X_np = _aeris_lgbm_to_numpy(X)
-        with _aeris_warnings.catch_warnings():
-            _aeris_warnings.filterwarnings(
-                "ignore",
-                message="X does not have valid feature names.*",
-                category=UserWarning,
-            )
-            return self.base_model.predict(X_np, *args, **kwargs)
-
-    def get_params(self, deep: bool = True):
-        if hasattr(self.base_model, "get_params"):
-            return self.base_model.get_params(deep=deep)
-        return {"base_model": self.base_model}
-
-    def set_params(self, **params):
-        if hasattr(self.base_model, "set_params"):
-            self.base_model.set_params(**params)
-        else:
-            for key, value in params.items():
-                setattr(self.base_model, key, value)
-        return self
-
-    def __getattr__(self, name: str):
-        return getattr(self.base_model, name)
-
-
-_aeris_original_build_model = build_model
-
-
-def build_model(
-    model_type: str,
-    random_seed: int,
-    model_params: dict[str, _AerisAny] | None = None,
-) -> object:
-    """Construct a model instance, with LightGBM warning hygiene applied."""
-    model = _aeris_original_build_model(model_type, random_seed, model_params)
-    if model_type in {"lightgbm", "lightgbm_dart"}:
-        return _AerisLightGBMWarningCleanModel(model)
-    return model
+    def __init__(self, *args, **kwargs):
+        raise RuntimeError(
+            "AERIS ML-C1: _AerisLightGBMWarningCleanModel is retired. "
+            "build_model() now returns picklable LightGBM models directly."
+        )
 
 # AERIS LIGHTGBM WARNING HYGIENE OVERRIDE END
 

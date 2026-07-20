@@ -51,6 +51,8 @@ class MLExperimentConfig:
     allow_forced: bool = False
     model_params: dict[str, Any] = field(default_factory=dict)
     output_dir: Path | None = None
+    feature_preset: str | None = None
+    feature_set: str | None = None
 
 
 def load_ml_experiment_config(config_path: str | Path) -> MLExperimentConfig:
@@ -72,8 +74,23 @@ def load_ml_experiment_config(config_path: str | Path) -> MLExperimentConfig:
         ml.get("targets") or ml.get("target_columns"),
         field_name="targets",
     )
-    if not features:
-        raise ValueError("ML config requires non-empty features.")
+    # ML-BUG-02/03: config may drive features via exactly one of
+    # features / feature_preset / feature_set (mirrors the CLI contract).
+    feature_preset_cfg = ml.get("feature_preset")
+    feature_set_cfg = ml.get("feature_set")
+    feature_preset_cfg = str(feature_preset_cfg).strip() if feature_preset_cfg else None
+    feature_set_cfg = str(feature_set_cfg).strip() if feature_set_cfg else None
+    _n_feature_sources = sum(
+        1 for _v in (bool(features), bool(feature_preset_cfg), bool(feature_set_cfg)) if _v
+    )
+    if _n_feature_sources == 0:
+        raise ValueError(
+            "ML config requires exactly one of: features, feature_preset, feature_set."
+        )
+    if _n_feature_sources > 1:
+        raise ValueError(
+            "ML config must set exactly one of features, feature_preset, feature_set (not several)."
+        )
     if not targets:
         raise ValueError("ML config requires non-empty targets.")
 
@@ -103,6 +120,8 @@ def load_ml_experiment_config(config_path: str | Path) -> MLExperimentConfig:
             field_name="model.params",
         ),
         output_dir=None if output_dir_raw is None else Path(output_dir_raw),
+        feature_preset=feature_preset_cfg,
+        feature_set=feature_set_cfg,
     )
 
 

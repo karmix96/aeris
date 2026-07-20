@@ -14,6 +14,7 @@ from aeris.commands.ml import ml_app
 from aeris.commands.pipeline import pipeline_app
 from aeris.commands.version import version_app
 from aeris.commands.airfoil import airfoil_app
+from aeris.commands.cfd import cfd_app
 from aeris.commands.workflow import workflow_app
 from aeris.common.paths import ensure_output_directories_writable
 
@@ -103,6 +104,7 @@ app.add_typer(dynamics_app, name="dynamics")
 app.add_typer(mesh_app, name="mesh")
 app.add_typer(ml_app, name="ml")
 app.add_typer(airfoil_app, name="airfoil")
+app.add_typer(cfd_app, name="cfd")
 
 
 def main() -> None:

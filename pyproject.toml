@@ -7,7 +7,7 @@ name = "aeris"
 version = "0.1.0"
 description = "Cross-platform Python platform for aircraft design, geometry generation, simulation workflows, datasets, AI models, and optimization."
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 authors = [
   { name = "Michail Karalis" }
 ]
@@ -19,6 +19,7 @@ dependencies = [
   "matplotlib>=3.8",
   "aerosandbox>=4.2",
   "scikit-learn>=1.5",
+  "h5py>=3.10",
   "platformdirs>=4.0",
   "pyyaml>=6.0",
 ]
@@ -39,6 +40,9 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+aeris = ["cfd/presets/data/*.yaml"]
 
 [tool.black]
 line-length = 100

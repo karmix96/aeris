@@ -1,0 +1,45 @@
+# Second NASA TMR validation anchor: alpha = 0 deg.
+#
+# Same grid/solver recipe as the alpha=10 anchor (validation_naca0012_tmr.yaml)
+# — only the angle of attack changes.  A symmetric NACA 0012 at alpha=0 gives
+# an independent, near-zero-lift check (CL should vanish by symmetry; any
+# residual CL bounds mesh/solver asymmetry) plus a second CD data point in a
+# skin-friction-dominated drag regime, very different from alpha=10's
+# pressure-drag contribution.
+#
+# NOTE: the exact NASA TMR CFL3D alpha=0 CL/CD figures are NOT reproduced
+# here from memory — this environment has no live network access to
+# re-verify them against https://turbmodels.larc.nasa.gov, and an
+# unverified number would undermine the PhD citation rather than support
+# it. Compare this run's CL/CD against the TMR table by hand before citing
+# a percent-error figure (the alpha=10 anchor's 1.0909/0.01231 values were
+# carried over from the earlier session and should also be spot-checked
+# against the live TMR page when network access is available).
+schema: aeris.cfd.case.v1
+case:
+  name: naca0012_tmr_a0
+  geometry:
+    airfoil: naca0012
+  surface_mesh:
+    topology: airfoil_ogrid_v1
+    overrides:
+      n_per_surface: 257
+  volume_mesh:
+    level: smoke
+    march_dist_factor: 100.0
+    overrides:
+      n_grid: 193
+      s0: 5.0e-6
+  solve:
+    solver: adflow
+    preset: rans_ank_nk_v1
+    overrides:
+      l2_convergence: 2.0e-6
+    flow:
+      alpha: 0.0
+      mach: 0.15
+      reynolds: 6.0e+6
+      temperature: 300.0
+    area_ref: 1.0
+    chord_ref: 1.0
+    mpi_np: 8

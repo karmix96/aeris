@@ -16,6 +16,19 @@ from aeris.ml.model_promotion import require_promoted_model
 
 PREDICTION_CONFIDENCE_SCHEMA_VERSION = "aeris.prediction_confidence_report.v1"
 
+# ML-H3: estimator-spread is a valid epistemic-uncertainty heuristic ONLY for
+# bagging-style ensembles whose members each predict the full target vector.
+# MultiOutputRegressor exposes per-target sub-models through estimators_
+# (NOT ensemble members: a single-target wrapper yields spread == 0), and
+# boosting stage trees are residual increments (their spread reflects the
+# learning trajectory, not predictive uncertainty). Anything outside this
+# whitelist reports supported=False and honest NaN uncertainty.
+_AERIS_BAGGING_ENSEMBLE_TYPES = {
+    "RandomForestRegressor",
+    "ExtraTreesRegressor",
+    "NeuralMLPEnsembleRegressor",
+}
+
 
 @dataclass(frozen=True)
 class PredictionConfidenceArtifacts:
@@ -121,11 +134,17 @@ def _resolve_feature_ranges(model_run_dir: Path, feature_columns: list[str]) -> 
     return _feature_ranges_from_rows(model_run_dir / "train_rows.csv", feature_columns), "train_rows.csv"
 
 
-def _range_arrays(feature_ranges: dict[str, dict[str, float | None]], feature_columns: list[str]) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[str]]:
+def _range_arrays(feature_ranges: dict[str, dict[str, float | None]], feature_columns: list[str]) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[str], np.ndarray]:
+    # ML-H2: features WITHOUT a recorded training range must be excluded from
+    # envelope arithmetic entirely (valid_mask False), never scored against a
+    # fabricated [0, 1] placeholder range. The placeholder lo/hi/width values
+    # below only keep array shapes aligned; the mask guarantees they can never
+    # contribute to a violation. Mirrors aeris.ml.envelope_metrics.
     lows: list[float] = []
     highs: list[float] = []
     widths: list[float] = []
     missing: list[str] = []
+    valid: list[bool] = []
     for col in feature_columns:
         item = feature_ranges.get(col, {}) or {}
         lo_raw = item.get("min")
@@ -134,25 +153,37 @@ def _range_arrays(feature_ranges: dict[str, dict[str, float | None]], feature_co
             lo = 0.0
             hi = 1.0
             missing.append(col)
+            valid.append(False)
         else:
             lo = float(lo_raw)
             hi = float(hi_raw)
+            valid.append(True)
         width = abs(hi - lo)
         if not np.isfinite(width) or width <= 0.0:
             width = 1.0
         lows.append(lo)
         highs.append(hi)
         widths.append(width)
-    return np.asarray(lows, dtype=float), np.asarray(highs, dtype=float), np.asarray(widths, dtype=float), missing
+    return (
+        np.asarray(lows, dtype=float),
+        np.asarray(highs, dtype=float),
+        np.asarray(widths, dtype=float),
+        missing,
+        np.asarray(valid, dtype=bool),
+    )
 
 
-def _envelope_metrics(candidate_values: np.ndarray, lows: np.ndarray, highs: np.ndarray, widths: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def _envelope_metrics(candidate_values: np.ndarray, lows: np.ndarray, highs: np.ndarray, widths: np.ndarray, valid_mask: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     lower_excess = np.maximum(lows.reshape(1, -1) - candidate_values, 0.0) / widths.reshape(1, -1)
     upper_excess = np.maximum(candidate_values - highs.reshape(1, -1), 0.0) / widths.reshape(1, -1)
     excess = lower_excess + upper_excess
+    # ML-H2: zero out columns with no recorded training range so they can
+    # never be counted as envelope violations.
+    if excess.size:
+        excess[:, ~np.asarray(valid_mask, dtype=bool)] = 0.0
     violation_count = np.sum(excess > 0.0, axis=1).astype(int)
     excess_sum = np.sum(excess, axis=1)
-    excess_max = np.max(excess, axis=1)
+    excess_max = np.max(excess, axis=1) if excess.size else np.zeros(candidate_values.shape[0])
     return violation_count, excess_sum, excess_max
 
 
@@ -170,6 +201,12 @@ def _predict(model: Any, X: np.ndarray, target_columns: list[str]) -> np.ndarray
 def _uncertainty_from_native_ensemble(inner_model: Any, X: np.ndarray, target_columns: list[str]) -> tuple[np.ndarray, dict[str, Any]] | None:
     estimators = getattr(inner_model, "estimators_", None)
     if not estimators:
+        return None
+    # ML-H3: only genuine bagging ensembles qualify; a MultiOutputRegressor
+    # also exposes estimators_ but those are per-target sub-models.
+    if type(inner_model).__name__ not in _AERIS_BAGGING_ENSEMBLE_TYPES:
+        return None
+    if len(estimators) < 2:
         return None
     try:
         preds = []
@@ -199,7 +236,15 @@ def _uncertainty_from_wrapped_ensemble(inner_model: Any, X: np.ndarray, target_c
     supported_targets: list[str] = []
     for target, estimator in zip(target_columns, estimators):
         sub_estimators = getattr(estimator, "estimators_", None)
-        if sub_estimators is None:
+        # ML-H3: per-target spread is meaningful only when the per-target
+        # model is itself a bagging ensemble with >= 2 members. Boosting
+        # stage trees (e.g. GradientBoostingRegressor.estimators_) are
+        # residual increments and must not be treated as members.
+        if (
+            type(estimator).__name__ not in _AERIS_BAGGING_ENSEMBLE_TYPES
+            or sub_estimators is None
+            or len(sub_estimators) < 2
+        ):
             cols.append(np.full(X.shape[0], np.nan, dtype=float))
             continue
         try:
@@ -283,6 +328,9 @@ def predict_with_confidence(
     output_dir: str | Path | None = None,
     require_promoted_model_gate: bool = True,
     include_truth_if_available: bool = True,
+    uq_method: str = "heuristic",
+    feature_set_name: str | None = None,
+    allow_feature_set_mismatch: bool = False,
 ) -> PredictionConfidenceResult:
     """Predict with a saved AERIS model and attach engineering-quality confidence diagnostics.
 
@@ -316,32 +364,111 @@ def predict_with_confidence(
     input_df_raw = pd.read_csv(input_csv)
     if input_df_raw.empty:
         raise ValueError(f"Input CSV is empty: {input_csv}")
-    _require_columns(input_df_raw, feature_columns, label="Input CSV")
-    input_df = _numeric_frame(input_df_raw, feature_columns, label="Input CSV")
+    # ML-BUG-04 / ML-REF-03: shared feature-set materialization path.
+    from aeris.ml.feature_set_inference import (
+        prepare_dataframe_for_feature_set_inference,
+    )
+    _prepared = prepare_dataframe_for_feature_set_inference(
+        input_df_raw,
+        train_config=train_config,
+        feature_set_name=feature_set_name,
+        allow_feature_set_mismatch=allow_feature_set_mismatch,
+    )
+    _feature_set_summary = _prepared.to_summary()
+    input_df_prepared = _prepared.dataframe
+    _require_columns(input_df_prepared, feature_columns, label="Input CSV")
+    input_df = _numeric_frame(input_df_prepared, feature_columns, label="Input CSV")
     X = input_df[feature_columns].to_numpy(dtype=float)
 
+    if uq_method not in {"heuristic", "conformal"}:
+        raise ValueError(
+            "Unsupported uq_method '" + str(uq_method) + "'. Use 'heuristic' or 'conformal'."
+        )
+
     predictions = _predict(model, X, target_columns)
-    uncertainty, uncertainty_report = _estimate_uncertainty(model, X, target_columns)
+    conformal_lower: np.ndarray | None = None
+    conformal_upper: np.ndarray | None = None
+
+    if uq_method == "conformal":
+        # ML-C2 / CONF.1: calibrated split-conformal intervals.
+        from aeris.ml.conformal import load_conformal_calibration
+
+        calibration_path = model_run_dir / "conformal_calibration.json"
+        calibration = load_conformal_calibration(calibration_path)
+        if list(calibration.target_columns) != list(target_columns):
+            raise ValueError(
+                "Conformal calibration target mismatch. Model targets: "
+                + str(list(target_columns))
+                + ", calibration targets: "
+                + str(list(calibration.target_columns))
+                + ". Re-run: aeris ml calibrate-conformal --model-run-dir ..."
+            )
+        current_model_sha = file_sha256(model_path)
+        if (
+            calibration.model_sha256 is not None
+            and calibration.model_sha256 != current_model_sha
+        ):
+            raise ValueError(
+                "Conformal calibration was fitted on a DIFFERENT model artifact "
+                "(model.pkl sha256 mismatch). The coverage guarantee does not "
+                "transfer. Re-run: aeris ml calibrate-conformal --model-run-dir ..."
+            )
+        q_arr = np.array(
+            [float(calibration.q_hat[t]) for t in target_columns], dtype=float
+        )
+        uncertainty = np.tile(q_arr.reshape(1, -1), (X.shape[0], 1))
+        conformal_lower = predictions - q_arr.reshape(1, -1)
+        conformal_upper = predictions + q_arr.reshape(1, -1)
+        uncertainty_report = {
+            "method": "split_conformal_v1",
+            "supported": True,
+            "alpha": float(calibration.alpha),
+            "coverage_theoretical": float(calibration.coverage_theoretical),
+            "n_calibration": int(calibration.n_calibration),
+            "q_hat": {k: float(v) for k, v in calibration.q_hat.items()},
+            "calibration_path": str(calibration_path),
+            "calibration_model_sha256": calibration.model_sha256,
+            "note": (
+                "Symmetric split-conformal intervals: per-target marginal "
+                "coverage >= 1 - alpha under exchangeability of calibration "
+                "and test rows. Interval half-width per target = q_hat."
+            ),
+        }
+    else:
+        uncertainty, uncertainty_report = _estimate_uncertainty(model, X, target_columns)
+
     uncertainty_mean = _safe_mean_uncertainty(uncertainty)
 
     feature_ranges, envelope_source = _resolve_feature_ranges(model_run_dir, feature_columns)
-    lows, highs, widths, missing_envelope_features = _range_arrays(feature_ranges, feature_columns)
-    envelope_violation_count, envelope_excess_sum, envelope_excess_max = _envelope_metrics(X, lows, highs, widths)
+    lows, highs, widths, missing_envelope_features, envelope_valid_mask = _range_arrays(feature_ranges, feature_columns)
+    envelope_violation_count, envelope_excess_sum, envelope_excess_max = _envelope_metrics(X, lows, highs, widths, envelope_valid_mask)
 
     output_df = input_df_raw.copy()
     for idx, target in enumerate(target_columns):
         output_df[f"pred__{target}"] = predictions[:, idx]
         output_df[f"uncertainty__{target}"] = uncertainty[:, idx]
+    if conformal_lower is not None and conformal_upper is not None:
+        for idx, target in enumerate(target_columns):
+            output_df[f"lower__{target}"] = conformal_lower[:, idx]
+            output_df[f"upper__{target}"] = conformal_upper[:, idx]
     output_df["uncertainty_mean"] = uncertainty_mean
     output_df["envelope_violation_count"] = envelope_violation_count
     output_df["envelope_excess_sum"] = envelope_excess_sum
     output_df["envelope_excess_max"] = envelope_excess_max
     output_df["envelope_status"] = np.where(envelope_violation_count > 0, "outside", "inside")
-    output_df["confidence_status"] = _confidence_status(
-        uncertainty_mean=uncertainty_mean,
-        envelope_violation_count=envelope_violation_count,
-        uncertainty_supported=bool(uncertainty_report.get("supported")),
-    )
+    if uq_method == "conformal":
+        # Calibrated intervals carry their own guarantee; the only remaining
+        # per-row qualifier is the training envelope. Batch-relative
+        # percentile labels would be meaningless on constant q_hat widths.
+        output_df["confidence_status"] = np.where(
+            envelope_violation_count > 0, "outside_envelope", "calibrated"
+        )
+    else:
+        output_df["confidence_status"] = _confidence_status(
+            uncertainty_mean=uncertainty_mean,
+            envelope_violation_count=envelope_violation_count,
+            uncertainty_supported=bool(uncertainty_report.get("supported")),
+        )
 
     evaluation: dict[str, Any] | None = None
     truth_available = all(col in input_df_raw.columns for col in target_columns)
@@ -380,6 +507,11 @@ def predict_with_confidence(
         "target_columns": target_columns,
         "n_rows": int(len(output_df)),
         "truth_available": bool(truth_available),
+        "uq_method": uq_method,
+        "feature_set_name": _feature_set_summary.get("feature_set_name"),
+        "trained_feature_set_name": _feature_set_summary.get("trained_feature_set_name"),
+        "feature_set_applied": _feature_set_summary.get("feature_set_applied"),
+        "feature_engineering_manifest": _feature_set_summary.get("feature_engineering_manifest"),
         "evaluation": _to_jsonable_metrics(evaluation),
         "uncertainty": uncertainty_report,
         "envelope_source": envelope_source,

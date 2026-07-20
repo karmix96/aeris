@@ -275,9 +275,12 @@ def _write_explainability(
             if importances is None:
                 return None, None
             arr = np.asarray(importances, dtype=float)
-            shared = {feature: float(arr[i]) for i, feature in enumerate(feature_columns)}
-            for target in target_columns:
-                payload["targets"][target] = {"feature_importances": dict(shared)}
+            # ML-H4: native multi-output models expose ONE shared importance
+            # vector. Mirror the aeris.ml.train contract: store it under
+            # "shared" and keep the per-target dict empty. Duplicating the
+            # identical vector under every delta target fabricated fake
+            # per-target explanations.
+            payload["shared"] = {feature: float(arr[i]) for i, feature in enumerate(feature_columns)}
         path = output_dir / "feature_importances.json"
         path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return None, path

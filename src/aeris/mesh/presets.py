@@ -45,22 +45,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-P_REF: int = 97            # points_per_side of the production level
+# Preset VALUES live as data in aeris.cfd.presets (YAML, schema
+# aeris.cfd.preset.v1) — one inspectable source of truth for CLI, GUI, and
+# the case runner.  This module keeps its public exports (MESH_PRESETS,
+# MARCH_POLICY, CAP_*) for backward compatibility; the scaling LAWS stay
+# here as code.  tests/cfd/test_presets_registry.py pins the loaded values
+# to the validated numbers.
+from aeris.cfd.presets.registry import list_presets
+
+P_REF: int = 97  # points_per_side of the production level
 S0_FRAC_REF: float = 4.4e-6  # production wall-spacing fraction (y+ ~ 0.2)
-
-# Fixed cap policy (validated; held constant across the family).
-CAP_WIDTH_FRAC: float = 0.5
-CAP_WRAP_POINTS: int = 17
-CAP_WRAP_X: float = 0.015
-
-# Family-wide pyHyp march policy.
-MARCH_POLICY: dict[str, float | int] = {
-    "c_max": 0.5,
-    "eps_e_far": 6.0,
-    "eps_i_far": 12.0,
-    "vol_smooth_iter": 1200,
-    "n_constant_start": 3,
-}
 
 
 def family_s0_frac(points_per_side: int) -> float:
@@ -74,28 +68,45 @@ class MeshPreset:
     points_per_side: int
     spanwise_panels: int
     description: str
-    cap_width_frac: float = CAP_WIDTH_FRAC
-    cap_wrap_points: int = CAP_WRAP_POINTS
-    cap_wrap_x: float = CAP_WRAP_X
+    cap_width_frac: float
+    cap_wrap_points: int
+    cap_wrap_x: float
 
 
-MESH_PRESETS: dict[str, MeshPreset] = {
-    "smoke": MeshPreset(
-        name="smoke",
-        points_per_side=49,
-        spanwise_panels=4,
-        description="Coarse family level - cheap solver smoke tests on a laptop.",
-    ),
-    "fine": MeshPreset(
-        name="fine",
-        points_per_side=71,
-        spanwise_panels=6,
-        description="Medium family level - grid-convergence middle rung.",
-    ),
-    "production": MeshPreset(
-        name="production",
-        points_per_side=97,
-        spanwise_panels=8,
-        description="Fine family level - full-resolution DSE recipe.",
-    ),
-}
+def _load_family() -> tuple[dict[str, MeshPreset], dict[str, float | int]]:
+    family = sorted(
+        list_presets(kind="mesh_family"),
+        key=lambda p: int(p.surface["points_per_side"]),  # coarse -> fine
+    )
+    if not family:
+        raise RuntimeError("No mesh_family presets found in aeris.cfd.presets data")
+
+    policies = [{k: v for k, v in p.volume.items() if k != "level"} for p in family]
+    if any(policy != policies[0] for policy in policies[1:]):
+        raise RuntimeError(
+            "mesh_family presets must share one family-wide march policy "
+            "(C1/C2: one documented policy, no per-case tuning)"
+        )
+
+    presets = {
+        p.name: MeshPreset(
+            name=p.name,
+            points_per_side=int(p.surface["points_per_side"]),
+            spanwise_panels=int(p.surface["spanwise_panels"]),
+            description=p.description,
+            cap_width_frac=float(p.surface["cap_width_frac"]),
+            cap_wrap_points=int(p.surface["cap_wrap_points"]),
+            cap_wrap_x=float(p.surface["cap_wrap_x"]),
+        )
+        for p in family
+    }
+    return presets, dict(policies[0])
+
+
+MESH_PRESETS, MARCH_POLICY = _load_family()
+
+# Fixed cap policy (validated; held constant across the family).
+_reference = MESH_PRESETS[max(MESH_PRESETS, key=lambda n: MESH_PRESETS[n].points_per_side)]
+CAP_WIDTH_FRAC: float = _reference.cap_width_frac
+CAP_WRAP_POINTS: int = _reference.cap_wrap_points
+CAP_WRAP_X: float = _reference.cap_wrap_x

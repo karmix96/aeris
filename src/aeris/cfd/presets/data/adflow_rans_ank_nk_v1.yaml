@@ -1,0 +1,21 @@
+schema: aeris.cfd.preset.v1
+name: rans_ank_nk_v1
+kind: solver_strategy
+tool: adflow
+description: >-
+  Single-grid RANS with ANK from the start and NK end game - the validated
+  strategy for AERIS cap4 structured meshes.
+citation: >-
+  WP1 smoke driver rationale (DSE_READINESS.md): cap4 tip collar blocks are
+  2 cells wide, so multigrid coarsening is impossible (MGCycle sg); ANK from
+  the first iteration (switch tol 1.0) is robust on the skewed blunt-TE tip
+  cells; NK below 1e-6 delivers the final orders. Validated on the
+  2026-07-17 smoke solve.
+solver:
+  mg_cycle: sg
+  use_ank_solver: true
+  ank_switch_tol: 1.0
+  use_nk_solver: true
+  nk_switch_tol: 1.0e-6
+  n_cycles: 20000
+  l2_convergence: 1.0e-8

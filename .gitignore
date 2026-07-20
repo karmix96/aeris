@@ -18,6 +18,9 @@ data/raw/
 data/interim/
 data/processed/
 data/debug/
+data/cfd_cases/
+data/meshes/
+data/workflows/
 
 *.log
 *.png

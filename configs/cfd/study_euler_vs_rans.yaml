@@ -1,0 +1,43 @@
+# Euler-vs-RANS comparison on the same grid (rubric item 8.2: multifidelity
+# study). Same medium O-grid, same flow condition; only the governing
+# equations change (ADflow's curated `equation_type`, native `equationType`,
+# valid values confirmed against the installed ADflow 2.13.1
+# (aeris_mach-aero_env) source: "RANS" | "Euler" | "laminar NS").
+#
+# Expected outcome (attached, non-separated flow at alpha=10 deg): CL and CM
+# should be close between Euler and RANS (lift is pressure-dominated and only
+# weakly affected by the boundary layer at this incidence); CD should differ
+# substantially, since Euler has no viscous/skin-friction drag at all -- the
+# entire ~140 count RANS CD is boundary-layer + a small amount of induced/
+# numerical drag under Euler. This is the standard justification in the
+# rubric for "why RANS is used selectively" (item 8.4): Euler is far cheaper
+# per iteration and adequate for CL/CM screening, RANS is required whenever
+# CD or separation matters.
+#
+# NOT YET RUN (2026-07-20): prepared and --dry-run validated only, per
+# Mike's instruction to stage heavy runs for desktop execution rather than
+# launch them in-session. See configs/cfd/RUNBOOK.md.
+schema: aeris.cfd.study.v1
+study:
+  name: naca0012_euler_vs_rans
+  description: >
+    Same medium O-grid (n_per_surface=257, n_grid=193, s0=5e-6c,
+    march_dist_factor=100), alpha=10 deg -- governing equations vary
+    (RANS/SA baseline vs inviscid Euler).
+  base_case: validation_naca0012_tmr.yaml
+  baseline: rans
+  quantities: [cl, cd, cmy]
+  variants:
+    - name: rans
+      description: "RANS/SA baseline (matches the validation anchor)."
+      patch: {}
+    - name: euler
+      description: >
+        Inviscid Euler on the identical grid. NOTE: verify before running
+        that ADflow does not require turbulence-model options to be unset
+        under equationType=Euler on this ADflow version -- not yet checked
+        against a real solve.
+      patch:
+        solve:
+          overrides:
+            equation_type: Euler

@@ -1,0 +1,38 @@
+# Farfield-distance sensitivity study (mesh-independence: domain size).
+#
+# Motivation: the three-grid GCI ladder on this case (see
+# configs/cfd/validation_naca0012_tmr*.yaml, data/cfd_cases/README.md)
+# Richardson-extrapolates CL_inf = 1.0700 at march_dist_factor = 100 (100
+# chords), a -1.9% offset from the NASA TMR CFL3D reference (1.0909) whose
+# own grids reach ~500 chords.  A farfield-distance study isolates domain-
+# size error from spatial-discretization error: same surface/volume grid
+# density and s0, only the outer-boundary distance varies (100c / 250c /
+# 500c).  If CL converges toward 1.09 as the domain grows, the GCI offset
+# is farfield-truncation error, not a discretization defect — the
+# hypothesis this study is designed to test (Roache 1997 boundary-
+# location error; Rumsey & Spalart, TMR site notes on domain size for
+# 2-D airfoil RANS verification).
+schema: aeris.cfd.study.v1
+study:
+  name: naca0012_farfield_study
+  description: >
+    Farfield distance sensitivity at fixed grid density (n_per_surface=257,
+    n_grid=193, s0=5e-6c) — isolates domain-size error from the GCI ladder's
+    discretization-error estimate.
+  base_case: validation_naca0012_tmr.yaml
+  baseline: farfield_100c
+  quantities: [cl, cd, cmy]
+  variants:
+    - name: farfield_100c
+      description: "100 chords (matches the GCI-ladder / TMR-comparison anchor)."
+      patch: {}
+    - name: farfield_250c
+      description: "250 chords."
+      patch:
+        volume_mesh:
+          march_dist_factor: 250.0
+    - name: farfield_500c
+      description: "500 chords (matches NASA TMR CFL3D reference grid extent)."
+      patch:
+        volume_mesh:
+          march_dist_factor: 500.0

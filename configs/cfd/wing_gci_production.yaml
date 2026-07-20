@@ -1,0 +1,34 @@
+# Wing-level grid-convergence family, fine member (DSE_READINESS.md WP3).
+# See configs/cfd/wing_gci_smoke.yaml for the full rationale; only the mesh
+# family preset differs (production: 97 pts/side, 8 spanwise panels, N257 --
+# DSE_READINESS.md's own estimate is ~6.7M cells and explicitly flags this as
+# "likely needs bigger hardware" than this 16 GB machine. MESH ONLY is
+# realistic here first (confirm the family marches all the way to its finest
+# member); a full RANS SOLVE at this size should be expected to need either
+# more RAM, more ranks than 4, or both -- do not assume it will run to
+# convergence on this machine without checking free RAM during the run.
+schema: aeris.cfd.case.v1
+case:
+  name: wing_gci_production
+  geometry:
+    aeris_config: configs/geometry/bwb_explore_wide.yaml  # resolved relative to CWD; run from repo root
+    wing_index: 0
+    seed: 100
+  surface_mesh:
+    preset: production
+  volume_mesh:
+    preset: production
+  solve:
+    solver: adflow
+    preset: rans_ank_nk_v1
+    overrides:
+      l2_convergence: 1.0e-6
+      use_nk_solver: false
+    flow:
+      alpha: 2.0
+      mach: 0.2
+      reynolds: 1.0e+6
+      temperature: 288.15
+    area_ref: 1.094
+    chord_ref: 0.8774
+    mpi_np: 4

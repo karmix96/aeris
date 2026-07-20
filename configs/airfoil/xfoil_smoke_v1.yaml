@@ -1,5 +1,7 @@
-# AERIS 2D — Smoke test config (10 airfoils, narrow sweep)
-# Validates XFOIL adapter and dataset pipeline end-to-end.
+# AERIS 2D — Smoke sweep config
+# Airfoil count is selected by CLI/GUI via --n-airfoils, NOT by this file.
+# This file only defines alpha/Re/Mach/XFOIL solver settings for a fast
+# end-to-end pipeline check.
 # Full config: configs/airfoil/xfoil_sweep_v1.yaml
 
 sweep:

@@ -211,6 +211,82 @@ def ml_feature_presets() -> None:
 
 
 
+@ml_app.command("doctor")
+def ml_doctor(
+    json_output: bool = typer.Option(False, "--json", help="Print backend availability as JSON."),
+) -> None:
+    """Report which optional ML backends are installed (LightGBM/XGBoost/CatBoost/TabPFN).
+
+    Core sklearn/neural backends are always available. Optional tree-boosting and
+    transformer backends are import-guarded: this command tells you which are
+    installed BEFORE you launch a training run, instead of failing mid-campaign.
+    """
+    import importlib.util as _ilu
+    import json as _json
+
+    from aeris.ml.model_registry import get_model_spec, list_model_types
+
+    optional_imports = {
+        "lightgbm": "lightgbm",
+        "lightgbm_dart": "lightgbm",
+        "xgboost": "xgboost",
+        "catboost": "catboost",
+        "tabpfn": "tabpfn",
+    }
+    install_hints = {
+        "lightgbm": "pip install lightgbm",
+        "xgboost": "pip install xgboost",
+        "catboost": "pip install catboost",
+        "tabpfn": "pip install tabpfn (requires torch>=2.0)",
+    }
+
+    all_types = list_model_types()
+    rows = []
+    for model_type in all_types:
+        required_module = optional_imports.get(model_type)
+        if required_module is None:
+            rows.append({
+                "model_type": model_type,
+                "tier": "core",
+                "required_module": None,
+                "available": True,
+                "install_hint": None,
+            })
+            continue
+        available = _ilu.find_spec(required_module) is not None
+        rows.append({
+            "model_type": model_type,
+            "tier": "optional",
+            "required_module": required_module,
+            "available": bool(available),
+            "install_hint": None if available else install_hints.get(required_module),
+        })
+
+    n_available = sum(1 for r in rows if r["available"])
+    n_missing = sum(1 for r in rows if not r["available"])
+    payload = {
+        "schema_version": "aeris.ml_doctor.v1",
+        "n_model_types": len(rows),
+        "n_available": n_available,
+        "n_missing": n_missing,
+        "backends": rows,
+    }
+
+    if json_output:
+        typer.echo(_json.dumps(payload, indent=2))
+        return
+
+    typer.echo("[AERIS] ML backend doctor")
+    typer.echo(f"  model types: {len(rows)}  available: {n_available}  missing: {n_missing}")
+    for r in rows:
+        mark = "OK " if r["available"] else "MISS"
+        tier = r["tier"]
+        if r["available"]:
+            typer.echo(f"  [{mark}] {r['model_type']} ({tier})")
+        else:
+            typer.echo(f"  [{mark}] {r['model_type']} ({tier}) -> {r['install_hint']}")
+
+
 @ml_app.command("feature-sets")
 def ml_feature_sets() -> None:
     """List named ML feature sets."""
@@ -305,9 +381,20 @@ def ml_validate_feature_set(
     """Validate a promoted dataset against a named ML feature set."""
     import json
 
-    from aeris.ml.feature_sets import FeatureSetError, validate_promoted_dataset_feature_set
+    from aeris.ml.feature_sets import (
+        FeatureSetError,
+        get_feature_set,
+        validate_promoted_dataset_feature_set,
+    )
+    from aeris.ml.learning_curves import resolve_target_columns_for_dataset
 
     try:
+        # ML-H1 (OPEN.2/OPEN.3): feature_cols was referenced but never defined
+        # in this command, so any invocation with --targets raised NameError
+        # (masked into exit code 1 by fail_command). Resolve the named feature
+        # set first; unknown names raise FeatureSetError -> BadParameter below.
+        _fs = get_feature_set(feature_set)
+        feature_cols = list(_fs.required_source_columns)
         target_cols = resolve_target_columns_for_dataset(
             dataset,
             targets,
@@ -1863,6 +1950,80 @@ def ml_promote_model(
         fail_command("Workflow auto-record", exc)
 
 
+@ml_app.command("calibrate-conformal")
+def ml_calibrate_conformal(
+    model_run_dir: Path = typer.Option(
+        ...,
+        "--model-run-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to a saved ML training run directory (must contain val_rows.csv).",
+    ),
+    alpha: float = typer.Option(
+        0.10,
+        "--alpha",
+        min=0.001,
+        max=0.5,
+        help="Miscoverage rate. 0.10 = 90% marginal coverage guarantee per target.",
+    ),
+) -> None:
+    """Fit split-conformal calibration on the run's held-out val split (ML-C2 / CONF.1).
+
+    Writes conformal_calibration.json into the run directory. The val split is the
+    correct calibration set: it was never used to fit the model. Afterwards run:
+    aeris ml predict-with-confidence --uq-method conformal ...
+    """
+    import json as _json
+    import pickle as _pickle
+
+    from aeris.ml.conformal import fit_conformal_from_run_dir
+
+    try:
+        train_config_path = model_run_dir / "train_config.json"
+        if not train_config_path.exists():
+            raise FileNotFoundError(
+                "Missing train_config.json in model run dir: " + str(model_run_dir)
+            )
+        _cfg = _json.loads(train_config_path.read_text(encoding="utf-8"))
+        feature_columns = list(_cfg.get("feature_columns", []))
+        target_columns = list(_cfg.get("target_columns", []))
+        if not feature_columns or not target_columns:
+            raise ValueError(
+                "train_config.json must define feature_columns and target_columns."
+            )
+        model_path = model_run_dir / "models" / "model.pkl"
+        if not model_path.exists():
+            model_path = model_run_dir / "model.pkl"
+        if not model_path.exists():
+            raise FileNotFoundError(
+                "Could not find model.pkl under model run dir: " + str(model_run_dir)
+            )
+        with model_path.open("rb") as _f:
+            _model = _pickle.load(_f)
+        calibration = fit_conformal_from_run_dir(
+            model_run_dir,
+            _model,
+            feature_columns,
+            target_columns,
+            alpha=alpha,
+        )
+    except Exception as exc:
+        fail_command("ML calibrate-conformal", exc)
+
+    typer.echo("[AERIS] Split-conformal calibration written")
+    typer.echo(f"  model_run_dir: {model_run_dir}")
+    typer.echo(f"  alpha: {calibration.alpha}")
+    typer.echo(f"  coverage_theoretical: {calibration.coverage_theoretical}")
+    typer.echo(f"  n_calibration_rows: {calibration.n_calibration}")
+    for _t in calibration.target_columns:
+        typer.echo(f"  q_hat[{_t}]: {calibration.q_hat[_t]:.6g}")
+    typer.echo(f"  calibration_json: {model_run_dir / 'conformal_calibration.json'}")
+    typer.echo("  next: aeris ml predict-with-confidence --uq-method conformal ...")
+
+
 @ml_app.command("inspect-model")
 def ml_inspect_model(
     model_run_dir: Path = typer.Option(..., "--model-run-dir", exists=True, file_okay=False, dir_okay=True, readable=True, resolve_path=True, help="Path to a saved ML training run directory."),
@@ -2319,8 +2480,27 @@ def ml_predict_with_confidence(
         "--include-truth-if-available/--no-include-truth-if-available",
         help="If target columns exist in the input CSV, compute prediction error metrics.",
     ),
+    uq_method: str = typer.Option(
+        "heuristic",
+        "--uq-method",
+        help=(
+            "Uncertainty method: 'heuristic' (estimator spread; valid for bagging "
+            "ensembles only) or 'conformal' (calibrated intervals; requires "
+            "conformal_calibration.json from `aeris ml calibrate-conformal`)."
+        ),
+    ),
+    feature_set: str | None = typer.Option(
+        None,
+        "--feature-set",
+        help="Named feature set to apply to the input CSV before confidence prediction.",
+    ),
+    allow_feature_set_mismatch: bool = typer.Option(
+        False,
+        "--allow-feature-set-mismatch",
+        help="Allow requested feature set to differ from the model training feature set.",
+    ),
 ) -> None:
-    """Run inference with heuristic uncertainty and training-envelope confidence diagnostics."""
+    """Run inference with uncertainty (heuristic spread or calibrated conformal) and training-envelope confidence diagnostics."""
     try:
         result = predict_with_confidence(
             model_run_dir=model_run_dir,
@@ -2328,6 +2508,9 @@ def ml_predict_with_confidence(
             output_dir=output_dir,
             require_promoted_model_gate=require_promoted_model,
             include_truth_if_available=include_truth_if_available,
+            uq_method=uq_method,
+            feature_set_name=feature_set,
+            allow_feature_set_mismatch=allow_feature_set_mismatch,
         )
     except Exception as exc:
         fail_command("ML predict-with-confidence", exc)
@@ -2341,6 +2524,11 @@ def ml_predict_with_confidence(
     typer.echo(f"  feature_set: {report.get('feature_set_name')}")
     typer.echo(f"  feature_set_applied: {report.get('feature_set_applied')}")
     typer.echo(f"  uncertainty_method: {report['uncertainty']['method']}")
+    if report.get("uq_method") == "conformal":
+        _unc = report.get("uncertainty", {})
+        typer.echo(f"  conformal_alpha: {_unc.get('alpha')}")
+        typer.echo(f"  coverage_theoretical: {_unc.get('coverage_theoretical')}")
+        typer.echo(f"  n_calibration_rows: {_unc.get('n_calibration')}")
     typer.echo(f"  output_dir: {result.artifacts.output_dir}")
     typer.echo(f"  prediction_confidence_csv: {result.artifacts.prediction_confidence_csv_path}")
     typer.echo(f"  prediction_confidence_report_json: {result.artifacts.report_path}")
@@ -2349,6 +2537,152 @@ def ml_predict_with_confidence(
         overall = report["evaluation"].get("overall", {})
         typer.echo(f"  rmse_mean: {overall.get('rmse_mean')}")
         typer.echo(f"  r2_mean: {overall.get('r2_mean')}")
+
+
+@ml_app.command("al-generate-pool")
+def ml_al_generate_pool(
+    model_run_dir: Path = typer.Option(..., "--model-run-dir", exists=True, file_okay=False,
+                                       dir_okay=True, readable=True, resolve_path=True,
+                                       help="Trained run whose design space defines the pool bounds."),
+    n_samples: int = typer.Option(2000, "--n-samples", min=1, help="Pool size. Default 2000."),
+    seed: int = typer.Option(123, "--seed", help="LHS seed. Default 123."),
+    expand_frac: float = typer.Option(0.0, "--expand-frac", min=0.0,
+                                      help="Expand each bound by this fraction of its width (novelty hunting)."),
+    fix: list[str] = typer.Option([], "--fix", help="Pin a column: --fix col=value (repeatable)."),
+    output_dir: Path | None = typer.Option(None, "--output-dir",
+                                           help="Default: <run>/active_learning/candidate_pool/"),
+) -> None:
+    """Generate an LHS candidate pool over the model's raw design space (W3)."""
+    from aeris.ml.active_learning.pool import generate_candidate_pool
+
+    try:
+        fixed: dict[str, float] = {}
+        for item in fix:
+            if "=" not in item:
+                raise ValueError(f"--fix expects col=value, got '{item}'")
+            k, v = item.split("=", 1)
+            fixed[k.strip()] = float(v)
+        result = generate_candidate_pool(
+            model_run_dir=model_run_dir, n_samples=n_samples, seed=seed,
+            expand_frac=expand_frac, fixed=fixed, output_dir=output_dir,
+        )
+    except Exception as exc:
+        fail_command("ML al-generate-pool", exc)
+
+    typer.echo("[AERIS] Active-learning candidate pool written")
+    typer.echo(f"  model_run_dir: {model_run_dir}")
+    typer.echo(f"  n_samples: {result.n_samples}")
+    typer.echo(f"  columns: {', '.join(result.columns)}")
+    typer.echo(f"  pool_csv: {result.pool_csv_path}")
+    typer.echo(f"  manifest: {result.manifest_path}")
+    typer.echo("  next: aeris ml suggest-samples --candidate-csv <pool_csv> ...")
+
+
+@ml_app.command("al-status")
+def ml_al_status(
+    campaign_dir: Path = typer.Option(..., "--campaign-dir", file_okay=False, dir_okay=True,
+                                      resolve_path=True,
+                                      help="Campaign ledger directory (created if missing)."),
+    record_run: Path | None = typer.Option(None, "--record-run", exists=True, file_okay=False,
+                                           dir_okay=True, readable=True, resolve_path=True,
+                                           help="Optionally record this completed model run as the next round."),
+    batch_csv: Path | None = typer.Option(None, "--batch-csv", exists=True, file_okay=True,
+                                          dir_okay=False, readable=True, resolve_path=True,
+                                          help="The selected batch CSV that produced --record-run (provenance)."),
+    notes: str | None = typer.Option(None, "--notes", help="Free-text round notes."),
+    metric: str = typer.Option("val.overall.r2_mean", "--metric",
+                               help="Dotted path into metrics.json. Default val.overall.r2_mean."),
+    min_rounds: int = typer.Option(3, "--min-rounds", min=1, help="Never STOP before this many rounds."),
+    patience: int = typer.Option(2, "--patience", min=1, help="Plateau window (rounds). Default 2."),
+    min_delta: float = typer.Option(0.005, "--min-delta",
+                                    help="Minimum best-value improvement over the window to CONTINUE."),
+    plot: bool = typer.Option(True, "--plot/--no-plot", help="Write campaign_curve.png. Default on."),
+) -> None:
+    """Record a round (optional) and evaluate the learning-curve stopping criterion (W3)."""
+    from aeris.ml.active_learning.campaign import evaluate_stopping, record_round
+
+    try:
+        if record_run is not None:
+            rec = record_round(campaign_dir, model_run_dir=record_run,
+                               batch_csv=batch_csv, notes=notes)
+            typer.echo(f"[AERIS] Recorded round {rec['round']} -> {campaign_dir}")
+        decision = evaluate_stopping(
+            campaign_dir, metric=metric, min_rounds=min_rounds,
+            patience=patience, min_delta=min_delta, make_plot=plot,
+        )
+    except Exception as exc:
+        fail_command("ML al-status", exc)
+
+    typer.echo("[AERIS] Active-learning campaign status")
+    typer.echo(f"  campaign_dir: {campaign_dir}")
+    typer.echo(f"  metric: {decision.metric} ({decision.mode})")
+    typer.echo(f"  rounds: {decision.n_rounds}")
+    typer.echo(f"  best: round {decision.best_round} -> {decision.best_value}")
+    if decision.recent_improvement is not None:
+        typer.echo(f"  recent_improvement: {decision.recent_improvement:+.6g}")
+    typer.echo(f"  VERDICT: {decision.verdict}")
+    for reason in decision.reasons:
+        typer.echo(f"    - {reason}")
+    if decision.report_path is not None:
+        typer.echo(f"  report: {decision.report_path}")
+
+
+@ml_app.command("optimize")
+def ml_optimize(
+    model_run_dir: Path = typer.Option(..., "--model-run-dir", exists=True, file_okay=False,
+                                       dir_okay=True, readable=True, resolve_path=True,
+                                       help="Trained (ideally promoted) run to search over."),
+    target: str = typer.Option(..., "--target", help="Objective target column, e.g. cl."),
+    mode: str = typer.Option("maximize", "--mode", help="maximize | minimize | target."),
+    target_value: float | None = typer.Option(None, "--target-value",
+                                              help="Required when --mode target."),
+    n_samples: int = typer.Option(4000, "--n-samples", min=1, help="LHS screening size. Default 4000."),
+    n_refine: int = typer.Option(8, "--n-refine", min=0, help="Top seeds refined locally. Default 8."),
+    refine_iters: int = typer.Option(60, "--refine-iters", min=0, help="Nelder-Mead iters per seed."),
+    seed: int = typer.Option(123, "--seed", help="Deterministic seed. Default 123."),
+    risk_k: float = typer.Option(0.0, "--risk-k", min=0.0,
+                                 help="Conformal risk aversion: score = pred -/+ k*q_hat. Requires calibrate-conformal."),
+    fix: list[str] = typer.Option([], "--fix", help="Pin a column: --fix col=value (repeatable)."),
+    constraint: list[str] = typer.Option([], "--constraint",
+                                         help="Predicted-target constraint, e.g. --constraint cm>=-0.05 (repeatable)."),
+    expand_frac: float = typer.Option(0.0, "--expand-frac", min=0.0,
+                                      help="Expand box bounds by this fraction of width. Use with caution."),
+    require_promoted_model: bool = typer.Option(True, "--require-promoted-model/--no-require-promoted-model",
+                                                help="Gate on approved promotion manifest. Default True."),
+    output_dir: Path | None = typer.Option(None, "--output-dir",
+                                           help="Default: <run>/optimization/opt_<target>_<mode>/"),
+    top_k: int = typer.Option(20, "--top-k", min=1, help="Candidates kept in the report. Default 20."),
+) -> None:
+    """Search the surrogate's design space for optimal candidates (W3)."""
+    from aeris.ml.optimize import optimize_design
+
+    try:
+        fixed: dict[str, float] = {}
+        for item in fix:
+            if "=" not in item:
+                raise ValueError(f"--fix expects col=value, got '{item}'")
+            k, v = item.split("=", 1)
+            fixed[k.strip()] = float(v)
+        result = optimize_design(
+            model_run_dir=model_run_dir, objective_target=target, mode=mode,
+            target_value=target_value, n_samples=n_samples, n_refine=n_refine,
+            refine_iters=refine_iters, seed=seed, risk_k=risk_k, fixed=fixed,
+            constraints=list(constraint), expand_frac=expand_frac,
+            require_promoted_model_gate=require_promoted_model,
+            output_dir=output_dir, top_k=top_k,
+        )
+    except Exception as exc:
+        fail_command("ML optimize", exc)
+
+    typer.echo("[AERIS] Design optimization complete")
+    typer.echo(f"  model_run_dir: {model_run_dir}")
+    typer.echo(f"  objective: {target} ({mode})")
+    best = result.best or {}
+    typer.echo(f"  best objective_score: {best.get('objective_score')}")
+    typer.echo(f"  best pred__{target}: {best.get('pred__' + target)}")
+    typer.echo(f"  top_candidates_csv: {result.candidates_csv_path}")
+    typer.echo(f"  report: {result.report_path}")
+    typer.echo("  note: surrogate optimum inside the training envelope — verify with the solver pipeline.")
 
 
 @ml_app.command("suggest-samples")

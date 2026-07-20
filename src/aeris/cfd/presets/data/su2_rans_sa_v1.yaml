@@ -1,0 +1,23 @@
+schema: aeris.cfd.preset.v1
+name: su2_rans_sa_v1
+kind: solver_strategy
+tool: su2
+description: >-
+  SU2 compressible RANS with the SA turbulence model - the cross-solver
+  verification counterpart to the ADflow rans_ank_nk_v1 strategy.
+citation: >-
+  SA chosen to match both the ADflow default and the NASA TMR reference
+  solutions (turbmodels.larc.nasa.gov), so ADflow-vs-SU2 differences on the
+  identical CGNS grid measure code/discretization effects, not turbulence
+  modeling (ASME V&V 20 code-verification setup). CFL 10 with adaptive
+  ramping is SU2's standard robust RANS practice.
+solver:
+  turb_model: SA
+  conv_num_method_flow: ROE
+  muscl_flow: "YES"
+  slope_limiter_flow: NONE
+  iter: 20000
+  cfl: 10.0
+  cfl_adapt: "YES"
+  conv_field: RMS_DENSITY
+  conv_residual_minval: -10

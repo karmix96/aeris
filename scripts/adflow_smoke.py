@@ -30,10 +30,8 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--grid", type=Path, required=True)
     p.add_argument("--output-dir", type=Path, required=True)
-    p.add_argument("--area-ref", type=float, required=True,
-                   help="Half-model reference area [m^2].")
-    p.add_argument("--chord-ref", type=float, required=True,
-                   help="Mean aerodynamic chord [m].")
+    p.add_argument("--area-ref", type=float, required=True, help="Half-model reference area [m^2].")
+    p.add_argument("--chord-ref", type=float, required=True, help="Mean aerodynamic chord [m].")
     p.add_argument("--alpha", type=float, default=2.0)
     p.add_argument("--mach", type=float, default=0.2)
     p.add_argument("--reynolds", type=float, default=1.0e6)
@@ -45,6 +43,14 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    if MPI.COMM_WORLD.rank == 0:
+        print(
+            "[adflow_smoke] DEPRECATED: this script is superseded by "
+            "'aeris cfd solve --grid ... --output-dir ... --area-ref ... "
+            "--chord-ref ...' (full option authority + provenance manifests). "
+            "It keeps working, but new options land in the adapter only.",
+            flush=True,
+        )
     out_dir = args.output_dir.expanduser().resolve()
     if MPI.COMM_WORLD.rank == 0:
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -101,9 +107,7 @@ def main() -> int:
             "solve_failed": bool(funcs.get("fail", False)),
             "functions": {k: float(v) for k, v in funcs.items() if k != "fail"},
         }
-        (out_dir / "adflow_smoke.json").write_text(
-            json.dumps(report, indent=2), encoding="utf-8"
-        )
+        (out_dir / "adflow_smoke.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
         print("\n[adflow_smoke] " + json.dumps(report["functions"], indent=2))
         print(f"[adflow_smoke] solve_failed = {report['solve_failed']}")
         print(f"[adflow_smoke] report -> {out_dir / 'adflow_smoke.json'}")

@@ -18,15 +18,22 @@ from pathlib import Path
 from typing import Optional
 
 import typer
+import yaml
 
+from aeris.mesh.presets import (
+    CAP_WIDTH_FRAC,
+    CAP_WRAP_POINTS,
+    CAP_WRAP_X,
+    MARCH_POLICY,
+    MESH_PRESETS,
+)
+from aeris.mesh.pyhyp_runner import DEFAULT_LEVEL, GRID_LEVELS, subprocess_run_pyhyp
 from aeris.mesh.surface import (
     MeshBuildError,
     airplane_summary,
     export_surface_mesh,
     select_wing,
 )
-from aeris.mesh.pyhyp_runner import GRID_LEVELS, DEFAULT_LEVEL, subprocess_run_pyhyp
-from aeris.mesh.presets import MARCH_POLICY, MESH_PRESETS
 
 mesh_app = typer.Typer(
     help=(
@@ -73,9 +80,7 @@ def _build_wing(
 
     airplane = getattr(getattr(case, "aerosandbox_result", None), "airplane", None)
     if airplane is None:
-        raise MeshBuildError(
-            "The generator did not return an AeroSandbox Airplane object."
-        )
+        raise MeshBuildError("The generator did not return an AeroSandbox Airplane object.")
 
     wing = select_wing(airplane, wing_index)
     return wing, airplane, generator_id
@@ -85,61 +90,75 @@ def _build_wing(
 def mesh_pyhyp(
     # ── Input / output ────────────────────────────────────────────────────────
     config: Path = typer.Option(
-        ..., "--config", "-c",
+        ...,
+        "--config",
+        "-c",
         help="Path to the YAML geometry config file.",
     ),
     output_dir: Path = typer.Option(
-        ..., "--output-dir", "-o",
+        ...,
+        "--output-dir",
+        "-o",
         help="Directory where all mesh artifacts are written (persistent, not /tmp).",
     ),
     overwrite: bool = typer.Option(
-        False, "--overwrite/--no-overwrite",
+        False,
+        "--overwrite/--no-overwrite",
         help="Overwrite an existing output directory.",
     ),
     wing_index: int = typer.Option(
-        0, "--wing-index",
+        0,
+        "--wing-index",
         help="Which wing in the Airplane to mesh (0 = main wing).",
     ),
     seed: Optional[int] = typer.Option(
-        None, "--seed",
+        None,
+        "--seed",
         help="Override the geometry sampling seed from the config.",
     ),
     save_geometry_plot: bool = typer.Option(
-        False, "--save-plot/--no-save-plot",
+        False,
+        "--save-plot/--no-save-plot",
         help="Save the 2-D geometry summary plot from the generator.",
     ),
     preset: Optional[str] = typer.Option(
-        None, "--preset",
+        None,
+        "--preset",
         help=(
             "Named cap4 family preset: 'smoke' (49 pts/side, N 129 — cheap "
             "laptop-scale runs), 'fine' (71 pts/side, N 193), or 'production' "
             "(97 pts/side, N 257 — the validated DSE recipe).  Sets topology, "
             "points-per-side, spanwise-panels, cap parameters (via the "
-            "documented scaling laws in aeris.mesh.presets), and the volume "
-            "level; overrides those individual flags."
+            "documented scaling laws in aeris.cfd.presets data), and the "
+            "volume level.  Explicitly passed flags WIN over the preset "
+            "(CLI > preset > default authority order)."
         ),
     ),
-
     # ── Surface mesh ──────────────────────────────────────────────────────────
-    points_per_side: int = typer.Option(
-        97, "--points-per-side",
+    points_per_side: Optional[int] = typer.Option(
+        None,
+        "--points-per-side",
         help=(
             "Points along each block edge in the chordwise and tip-radial "
             "directions.  Doubling this quadruples surface cells.  "
-            "Min 9; 97 is the default — it resolves the blunt-TE wing-tip "
-            "corner finely enough for pyHyp to march without folding."
+            "Min 9; default 97 (or the preset value) — it resolves the "
+            "blunt-TE wing-tip corner finely enough for pyHyp to march "
+            "without folding."
         ),
     ),
-    spanwise_panels: int = typer.Option(
-        8, "--spanwise-panels",
+    spanwise_panels: Optional[int] = typer.Option(
+        None,
+        "--spanwise-panels",
         help=(
             "Spanwise panels per cross-section interval.  "
             "Total spanwise columns = (n_xsecs - 1) × panels.  "
+            "Default 8 (or the preset value).  "
             "Increase for high-AR wings or tip-dominated flows."
         ),
     ),
     tip_radial_points: Optional[int] = typer.Option(
-        None, "--tip-radial-points",
+        None,
+        "--tip-radial-points",
         help=(
             "Radial grid points in each tip-ring/collar block (from OML inward).  "
             "None = auto per topology: 9 for mid4/split8, 3 for cap4.  Few radial "
@@ -150,7 +169,8 @@ def mesh_pyhyp(
         ),
     ),
     tip_inner_scale: float = typer.Option(
-        0.60, "--tip-inner-scale",
+        0.60,
+        "--tip-inner-scale",
         help=(
             "Scale factor (0.15–0.75) controlling how far the tip-ring inner boundary "
             "shrinks toward the tip centroid.  Smaller = tighter cap, larger = looser.  "
@@ -158,7 +178,8 @@ def mesh_pyhyp(
         ),
     ),
     tip_dome_scale: float = typer.Option(
-        0.0, "--tip-dome-scale",
+        0.0,
+        "--tip-dome-scale",
         help=(
             "EXPERIMENTAL: dome the tip cap spanwise by this fraction of local "
             "half-thickness (0 = flat cap, the validated default).  A quarter-"
@@ -168,7 +189,8 @@ def mesh_pyhyp(
         ),
     ),
     tip_conformal_ring: bool = typer.Option(
-        False, "--tip-conformal-ring/--tip-straight-ring",
+        False,
+        "--tip-conformal-ring/--tip-straight-ring",
         help=(
             "EXPERIMENTAL: build the tip-ring inner boundary as a scaled copy of "
             "the curved tip edge instead of straight chords.  Fixes the LE/TE ring "
@@ -176,7 +198,8 @@ def mesh_pyhyp(
         ),
     ),
     split_x_fore: float = typer.Option(
-        0.20, "--split-x-fore",
+        0.20,
+        "--split-x-fore",
         help=(
             "Fore x/c split for the mid-chord O-type topology.  Block corners land at "
             "x/c = split_x_fore and (1-split_x_fore) on both surfaces; the LE and TE live "
@@ -184,14 +207,16 @@ def mesh_pyhyp(
         ),
     ),
     min_te_thickness: float = typer.Option(
-        2.0e-3, "--min-te-thickness",
+        2.0e-3,
+        "--min-te-thickness",
         help=(
             "Minimum blunt trailing-edge gap (in chord units) required before meshing.  "
             "Raises an error if the airfoil TE is too sharp for a structured mesh."
         ),
     ),
     min_scaled_jacobian: float = typer.Option(
-        1.0e-2, "--min-scaled-jacobian",
+        1.0e-2,
+        "--min-scaled-jacobian",
         help=(
             "Minimum accepted surface scaled corner Jacobian before pyHyp.  "
             "Default 0.01: the blunt-TE tip cap is intrinsically skewed, and "
@@ -200,66 +225,77 @@ def mesh_pyhyp(
             "pyHyp's marched cell volumes, not the surface Jacobian."
         ),
     ),
-    oml_topology: str = typer.Option(
-        "mid4", "--oml-topology",
+    oml_topology: Optional[str] = typer.Option(
+        None,
+        "--oml-topology",
         help=(
             "OML topology: 'mid4' for the stable 4-block surface (coarse levels, "
             "requires coarsen=4), 'split8' for doubled LE/TE blocks, 'cap4' for the "
             "camber-aligned tip cap (fine in-plane RANS; forces coarsen=1 and a "
-            "3-point collar — validated at L1 full resolution)."
+            "3-point collar — validated at L1 full resolution).  "
+            "Default mid4 (cap4 when a preset is used)."
         ),
     ),
-    cap_width_frac: float = typer.Option(
-        0.5, "--cap-width-frac",
+    cap_width_frac: Optional[float] = typer.Option(
+        None,
+        "--cap-width-frac",
         help=(
             "cap4 only: width of the camber-strip center rectangle as a fraction of "
             "the local tip half-thickness (0.15-0.85).  0.5 is the validated default."
         ),
     ),
-    cap_wrap_points: int = typer.Option(
-        17, "--cap-wrap-points",
+    cap_wrap_points: Optional[int] = typer.Option(
+        None,
+        "--cap-wrap-points",
         help=(
             "cap4 only: points across each narrow LE/TE wrap side of the tip section "
             "(min 5).  17 is the validated default."
         ),
     ),
-    cap_wrap_x: float = typer.Option(
-        0.03, "--cap-wrap-x",
+    cap_wrap_x: Optional[float] = typer.Option(
+        None,
+        "--cap-wrap-x",
         help=(
             "cap4 only: chordwise x/c station of the wrap corners (0.01-0.15).  "
-            "Corners sit at x/c = cap_wrap_x and 1-cap_wrap_x."
+            "Corners sit at x/c = cap_wrap_x and 1-cap_wrap_x.  Default 0.015 "
+            "(the validated value; the old 0.03 default folded the coarse march "
+            "at the root TE base — measured 2026-07-17)."
         ),
     ),
     max_adjacent_normal_angle: float = typer.Option(
-        180.0, "--max-adjacent-normal-angle",
+        180.0,
+        "--max-adjacent-normal-angle",
         help=(
             "Maximum accepted angle in degrees between adjacent surface-cell normals.  "
-            "Default 180 reports this metric without rejecting the current 4-block topology; lower it for topology studies."
+            "Default 180 reports this metric without rejecting the current "
+            "4-block topology; lower it for topology studies."
         ),
     ),
-
     # ── Volume mesh (pyHyp level preset) ─────────────────────────────────────
     run_pyhyp_flag: bool = typer.Option(
-        True, "--run-pyhyp/--surface-only",
+        True,
+        "--run-pyhyp/--surface-only",
         help="Run pyHyp to extrude the volume mesh.  Use --surface-only to skip.",
     ),
-    level: str = typer.Option(
-        DEFAULT_LEVEL, "--level",
+    level: Optional[str] = typer.Option(
+        None,
+        "--level",
         help=(
             "pyHyp grid level preset — sets normal-direction layers (N), surface "
             "coarsening, and default wall spacing unless overridden.  "
-            f"Choices: {list(GRID_LEVELS)}.  Level presets use coarsen=4 with the "
-            "mid4 topology (in-plane resolution is tip-topology-limited); the cap4 "
-            "topology instead forces coarsen=1 (full in-plane resolution).  "
-            "L1=fine wall-resolved RANS (N 257, y+~0.2), L2=standard RANS (N 193), "
-            "L3=default baseline (N 129), L4=quick topology check (N 37).  "
-            "All validated valid."
+            f"Choices: {list(GRID_LEVELS)}.  Default {DEFAULT_LEVEL} (or the "
+            "family level when --preset is used).  Level presets use coarsen=4 "
+            "with the mid4 topology (in-plane resolution is tip-topology-"
+            "limited); the cap4 topology instead forces coarsen=1 (full "
+            "in-plane resolution).  L1=fine wall-resolved RANS (N 257, y+~0.2), "
+            "L2=standard RANS (N 193), L3=default baseline (N 129), L4=quick "
+            "topology check (N 37).  All validated valid."
         ),
     ),
-
     # ── Volume mesh (wall spacing & farfield) ─────────────────────────────────
     s0: Optional[float] = typer.Option(
-        None, "--s0",
+        None,
+        "--s0",
         help=(
             "First cell height from the wall (metres).  "
             "None = automatic per level (~y⁺≈1 at Re≈1e6 on 1 m chord).  "
@@ -267,103 +303,125 @@ def mesh_pyhyp(
         ),
     ),
     march_dist_factor: float = typer.Option(
-        25.0, "--march-dist-factor",
+        25.0,
+        "--march-dist-factor",
         help=(
             "Farfield distance = factor × characteristic_length.  "
             "25 is the default (robust for this BWB).  "
             "Increase to 30–50 for external aerodynamics once the mesh is stable."
         ),
     ),
-
     # ── Volume mesh (normal-direction overrides) ──────────────────────────────
     n_grid: Optional[int] = typer.Option(
-        None, "--n-grid",
+        None,
+        "--n-grid",
         help=(
             "Override the number of normal-direction cell layers (ignores --level preset).  "
             "Typical values: 37 (coarse) → 257 (fine RANS)."
         ),
     ),
     n_coarsen: Optional[int] = typer.Option(
-        None, "--n-coarsen",
+        None,
+        "--n-coarsen",
         help=(
             "Override the coarsening factor (ignores --level preset).  "
             "1 = no coarsening (full resolution), 4 = aggressive coarsening."
         ),
     ),
-
     # ── Volume mesh (stability & smoothing) ───────────────────────────────────
-    c_max: float = typer.Option(
-        0.7, "--c-max",
+    c_max: Optional[float] = typer.Option(
+        None,
+        "--c-max",
         help=(
             "Maximum allowable cell size ratio before the marcher reduces the step.  "
-            "0.7 (gentle) is the robust Aeris default; the MDO Lab BWB reference is 2.5.  "
-            "Lower → smoother but slower; needed here to survive the tip corner."
+            "Default 0.7 (gentle, robust Aeris; MDO Lab BWB reference is 2.5); "
+            "presets use the damped 0.5.  Lower → smoother but slower."
         ),
     ),
-    theta: float = typer.Option(
-        3.0, "--theta",
+    theta: Optional[float] = typer.Option(
+        None,
+        "--theta",
         help=(
             "Angle-based smoothing weight.  Higher → better orthogonality near curved "
-            "surfaces but higher cost.  2.0–5.0 typical."
+            "surfaces but higher cost.  Default 3.0; 2.0–5.0 typical."
         ),
     ),
-    vol_coef: float = typer.Option(
-        0.5, "--vol-coef",
+    vol_coef: Optional[float] = typer.Option(
+        None,
+        "--vol-coef",
         help=(
             "Volume smoothing coefficient.  Higher → more aggressive cell size "
-            "regularisation.  0.5 is the robust Aeris default (0.1–0.5 typical)."
+            "regularisation.  Default 0.5 (0.1–0.5 typical)."
         ),
     ),
-    eps_e_far: float = typer.Option(
-        4.0, "--eps-e-far",
+    eps_e_far: Optional[float] = typer.Option(
+        None,
+        "--eps-e-far",
         help=(
-            "Explicit smoothing amplitude.  4.0 is the robust Aeris default "
-            "(MDO Lab BWB reference = 1.0); the extra smoothing keeps the tip march stable."
+            "Explicit smoothing amplitude.  Default 4.0 (presets use 6.0; MDO Lab "
+            "BWB reference = 1.0); the extra smoothing keeps the tip march stable."
         ),
     ),
-    eps_i_far: float = typer.Option(
-        8.0, "--eps-i-far",
+    eps_i_far: Optional[float] = typer.Option(
+        None,
+        "--eps-i-far",
         help=(
-            "Implicit smoothing amplitude.  8.0 is the robust Aeris default "
-            "(should stay ~2× eps-e-far)."
+            "Implicit smoothing amplitude.  Default 8.0 (presets use 12.0; "
+            "should stay ~2× eps-e-far)."
         ),
     ),
-    vol_smooth_iter: int = typer.Option(
-        800, "--vol-smooth-iter",
+    vol_smooth_iter: Optional[int] = typer.Option(
+        None,
+        "--vol-smooth-iter",
         help=(
-            "Volume smoothing iterations per marching step.  800 is the robust "
-            "Aeris default (MDO Lab BWB reference = 150); heavier smoothing "
+            "Volume smoothing iterations per marching step.  Default 800 (presets "
+            "use 1200; MDO Lab BWB reference = 150); heavier smoothing "
             "regularises the sharp tip-cap curvature."
         ),
     ),
-    vol_blend: float = typer.Option(
-        0.004, "--vol-blend",
+    vol_blend: Optional[float] = typer.Option(
+        None,
+        "--vol-blend",
         help=(
-            "Global volume-smoothing blend factor.  0.004 is the robust Aeris "
-            "default (MDO Lab BWB reference = 0.0002)."
+            "Global volume-smoothing blend factor.  Default 0.004 "
+            "(MDO Lab BWB reference = 0.0002)."
         ),
     ),
-    n_constant_start: int = typer.Option(
-        5, "--n-constant-start",
+    n_constant_start: Optional[int] = typer.Option(
+        None,
+        "--n-constant-start",
         help=(
             "Number of initial marching layers grown rigidly (no smoothing) to "
-            "carry the mesh cleanly off sharp surface features.  5 is the default."
+            "carry the mesh cleanly off sharp surface features.  Default 5 "
+            "(presets use 3)."
         ),
     ),
-
     # ── Volume mesh (linear solver) ───────────────────────────────────────────
-    ksp_rel_tol: float = typer.Option(
-        1.0e-8, "--ksp-rel-tol",
+    ksp_rel_tol: Optional[float] = typer.Option(
+        None,
+        "--ksp-rel-tol",
         help=(
             "Relative convergence tolerance for the PETSc KSP linear solver used per "
-            "marching step.  Tighten to 1e-10 if you see marching instabilities."
+            "marching step.  Default 1e-8; tighten to 1e-10 for marching instabilities."
         ),
     ),
-    ksp_max_its: int = typer.Option(
-        1500, "--ksp-max-its",
+    ksp_max_its: Optional[int] = typer.Option(
+        None,
+        "--ksp-max-its",
         help=(
-            "Maximum KSP iterations per marching step.  Raise if solver reports "
-            "divergence on highly curved surfaces."
+            "Maximum KSP iterations per marching step.  Default 1500; raise if "
+            "solver reports divergence on highly curved surfaces."
+        ),
+    ),
+    pyhyp_option: list[str] = typer.Option(
+        [],
+        "--pyhyp-option",
+        help=(
+            "Raw native pyHyp option as KEY=VALUE, repeatable — full authority "
+            "pass-through for ANY pyHyp option not covered by a flag "
+            "(e.g. --pyhyp-option splay=0.25 --pyhyp-option cornerAngle=60.0).  "
+            "Values are parsed as YAML scalars.  Raw keys win over flags and "
+            "presets; the override is recorded in the provenance manifest."
         ),
     ),
 ) -> None:
@@ -388,44 +446,90 @@ def mesh_pyhyp(
         if preset not in MESH_PRESETS:
             typer.secho(
                 f"[AERIS mesh] Unknown preset {preset!r}. Valid: {list(MESH_PRESETS)}",
-                fg=typer.colors.RED, err=True,
+                fg=typer.colors.RED,
+                err=True,
             )
             raise typer.Exit(code=2)
+        # Authority order: explicit CLI flag > preset > aeris default.  The
+        # preset only fills values the user did not pass.
         p = MESH_PRESETS[preset]
-        oml_topology = "cap4"
-        points_per_side = p.points_per_side
-        spanwise_panels = p.spanwise_panels
-        cap_width_frac = p.cap_width_frac
-        cap_wrap_points = p.cap_wrap_points
-        cap_wrap_x = p.cap_wrap_x
-        level = p.name
-        c_max = float(MARCH_POLICY["c_max"])
-        eps_e_far = float(MARCH_POLICY["eps_e_far"])
-        eps_i_far = float(MARCH_POLICY["eps_i_far"])
-        vol_smooth_iter = int(MARCH_POLICY["vol_smooth_iter"])
-        n_constant_start = int(MARCH_POLICY["n_constant_start"])
+        oml_topology = oml_topology if oml_topology is not None else "cap4"
+        points_per_side = points_per_side if points_per_side is not None else p.points_per_side
+        spanwise_panels = spanwise_panels if spanwise_panels is not None else p.spanwise_panels
+        cap_width_frac = cap_width_frac if cap_width_frac is not None else p.cap_width_frac
+        cap_wrap_points = cap_wrap_points if cap_wrap_points is not None else p.cap_wrap_points
+        cap_wrap_x = cap_wrap_x if cap_wrap_x is not None else p.cap_wrap_x
+        level = level if level is not None else p.name
+        c_max = c_max if c_max is not None else float(MARCH_POLICY["c_max"])
+        eps_e_far = eps_e_far if eps_e_far is not None else float(MARCH_POLICY["eps_e_far"])
+        eps_i_far = eps_i_far if eps_i_far is not None else float(MARCH_POLICY["eps_i_far"])
+        vol_smooth_iter = (
+            vol_smooth_iter if vol_smooth_iter is not None else int(MARCH_POLICY["vol_smooth_iter"])
+        )
+        n_constant_start = (
+            n_constant_start
+            if n_constant_start is not None
+            else int(MARCH_POLICY["n_constant_start"])
+        )
         typer.echo(
             f"[AERIS mesh] Preset {p.name!r}: {p.description}\n"
-            f"  cap4, points-per-side={p.points_per_side}, "
-            f"spanwise-panels={p.spanwise_panels}, "
-            f"cap-width-frac={p.cap_width_frac:.4f}, "
-            f"cap-wrap-points={p.cap_wrap_points}, "
-            f"cap-wrap-x={p.cap_wrap_x}, level={p.name}, "
-            f"march policy={MARCH_POLICY}"
+            f"  cap4, points-per-side={points_per_side}, "
+            f"spanwise-panels={spanwise_panels}, "
+            f"cap-width-frac={cap_width_frac:.4f}, "
+            f"cap-wrap-points={cap_wrap_points}, "
+            f"cap-wrap-x={cap_wrap_x}, level={level}, "
+            f"march policy={MARCH_POLICY}  (explicit flags win over the preset)"
         )
+
+    # Legacy defaults for anything still unset (no preset, no explicit flag).
+    if oml_topology is None:
+        oml_topology = "mid4"
+    if points_per_side is None:
+        points_per_side = 97
+    if spanwise_panels is None:
+        spanwise_panels = 8
+    if cap_width_frac is None:
+        cap_width_frac = CAP_WIDTH_FRAC
+    if cap_wrap_points is None:
+        cap_wrap_points = CAP_WRAP_POINTS
+    if cap_wrap_x is None:
+        cap_wrap_x = CAP_WRAP_X
+    if level is None:
+        level = DEFAULT_LEVEL
+
+    raw_pyhyp_options: dict[str, object] = {}
+    for item in pyhyp_option:
+        key, sep, value = item.partition("=")
+        if not sep or not key:
+            typer.secho(
+                f"[AERIS mesh] --pyhyp-option must be KEY=VALUE, got {item!r}",
+                fg=typer.colors.RED,
+                err=True,
+            )
+            raise typer.Exit(code=2)
+        try:
+            raw_pyhyp_options[key] = yaml.safe_load(value)
+        except yaml.YAMLError as exc:
+            typer.secho(
+                f"[AERIS mesh] --pyhyp-option {key}: unparseable value {value!r} ({exc})",
+                fg=typer.colors.RED,
+                err=True,
+            )
+            raise typer.Exit(code=2) from exc
 
     if level not in GRID_LEVELS:
         typer.secho(
             f"[AERIS mesh] Unknown grid level {level!r}. Valid: {list(GRID_LEVELS)}",
-            fg=typer.colors.RED, err=True,
+            fg=typer.colors.RED,
+            err=True,
         )
         raise typer.Exit(code=2)
 
     if oml_topology not in {"mid4", "split8", "cap4"}:
         typer.secho(
-            f"[AERIS mesh] Unknown OML topology {oml_topology!r}. "
-            "Valid: mid4, split8, cap4.",
-            fg=typer.colors.RED, err=True,
+            f"[AERIS mesh] Unknown OML topology {oml_topology!r}. " "Valid: mid4, split8, cap4.",
+            fg=typer.colors.RED,
+            err=True,
         )
         raise typer.Exit(code=2)
 
@@ -447,7 +551,8 @@ def mesh_pyhyp(
                 f"[AERIS mesh] cap4 topology is incompatible with --n-coarsen {n_coarsen}: "
                 "decimation breaks the thin collar blocks and the march inverts. "
                 "Use --n-coarsen 1, or switch to --oml-topology mid4 for coarsened runs.",
-                fg=typer.colors.RED, err=True,
+                fg=typer.colors.RED,
+                err=True,
             )
             raise typer.Exit(code=2)
 
@@ -456,7 +561,8 @@ def mesh_pyhyp(
         typer.secho(
             f"[AERIS mesh] Output directory already exists: {output_path}\n"
             "  Use --overwrite to replace it.",
-            fg=typer.colors.RED, err=True,
+            fg=typer.colors.RED,
+            err=True,
         )
         raise typer.Exit(code=2)
 
@@ -484,19 +590,25 @@ def mesh_pyhyp(
     typer.echo(f"  min-scaled-jacobian: {min_scaled_jacobian}")
     typer.echo(f"  max-normal-angle   : {max_adjacent_normal_angle} deg")
     if run_pyhyp_flag:
+
+        def _show(value: object) -> object:
+            return "aeris-default" if value is None else value
+
         typer.echo("")
         typer.echo(f"[AERIS mesh] Volume mesh settings  (level={level})")
         typer.echo(f"  s0                 : {'auto' if s0 is None else s0}")
         typer.echo(f"  march-dist-factor  : {march_dist_factor}  (= {march_dist_factor}×chord)")
         typer.echo(f"  n-grid             : {'from level' if n_grid is None else n_grid}")
         typer.echo(f"  n-coarsen          : {'from level' if n_coarsen is None else n_coarsen}")
-        typer.echo(f"  c-max              : {c_max}")
-        typer.echo(f"  theta              : {theta}")
-        typer.echo(f"  vol-coef           : {vol_coef}")
-        typer.echo(f"  eps-e-far          : {eps_e_far}")
-        typer.echo(f"  eps-i-far          : {eps_i_far}")
-        typer.echo(f"  ksp-rel-tol        : {ksp_rel_tol}")
-        typer.echo(f"  ksp-max-its        : {ksp_max_its}")
+        typer.echo(f"  c-max              : {_show(c_max)}")
+        typer.echo(f"  theta              : {_show(theta)}")
+        typer.echo(f"  vol-coef           : {_show(vol_coef)}")
+        typer.echo(f"  eps-e-far          : {_show(eps_e_far)}")
+        typer.echo(f"  eps-i-far          : {_show(eps_i_far)}")
+        typer.echo(f"  ksp-rel-tol        : {_show(ksp_rel_tol)}")
+        typer.echo(f"  ksp-max-its        : {_show(ksp_max_its)}")
+        if raw_pyhyp_options:
+            typer.echo(f"  raw pyhyp options  : {raw_pyhyp_options}")
 
     shutil.copy2(config_path, output_path / "input_config.yaml")
 
@@ -518,7 +630,8 @@ def mesh_pyhyp(
     except Exception as exc:
         typer.secho(
             f"\n[AERIS mesh] Unexpected geometry error: {type(exc).__name__}: {exc}",
-            fg=typer.colors.RED, err=True,
+            fg=typer.colors.RED,
+            err=True,
         )
         raise typer.Exit(code=1) from exc
 
@@ -567,30 +680,31 @@ def mesh_pyhyp(
     except Exception as exc:
         typer.secho(
             f"\n[AERIS mesh] Unexpected surface error: {type(exc).__name__}: {exc}",
-            fg=typer.colors.RED, err=True,
+            fg=typer.colors.RED,
+            err=True,
         )
-        _write_smoke_manifest(output_path, status="surface_error",
-                              error=f"{type(exc).__name__}: {exc}")
+        _write_smoke_manifest(
+            output_path, status="surface_error", error=f"{type(exc).__name__}: {exc}"
+        )
         raise typer.Exit(code=1) from exc
 
     block_count = int(surface_report.get("block_count", 0))
-    char_len    = float(surface_report.get("characteristic_length", 0.0))
-    min_jac     = float(surface_report.get("global", {}).get("min_scaled_corner_jacobian", 0.0))
+    char_len = float(surface_report.get("characteristic_length", 0.0))
+    min_jac = float(surface_report.get("global", {}).get("min_scaled_corner_jacobian", 0.0))
     total_nodes = sum(b["nodes"] for b in surface_report.get("blocks", []))
     total_cells = sum(b["cells"] for b in surface_report.get("blocks", []))
 
     typer.echo(f"  Blocks     : {block_count}")
     typer.echo(f"  Nodes      : {total_nodes:,}  |  Cells: {total_cells:,}")
     typer.echo(f"  Char. len  : {char_len:.4f} m")
-    typer.echo(f"  Min Jacobi : {min_jac:.4f}" + (
-        "  low - increase --points-per-side or adjust --split-x-fore"
-        if min_jac < 0.05 else ""
-    ))
+    typer.echo(
+        f"  Min Jacobi : {min_jac:.4f}"
+        + ("  low - increase --points-per-side or adjust --split-x-fore" if min_jac < 0.05 else "")
+    )
     typer.echo(f"  Surface    : {surface_dir / 'surface.cgns'}")
 
     if not run_pyhyp_flag:
-        _write_smoke_manifest(output_path, status="surface_only",
-                              surface_report=surface_report)
+        _write_smoke_manifest(output_path, status="surface_only", surface_report=surface_report)
         typer.echo("")
         typer.echo("[AERIS mesh] --surface-only: skipping pyHyp volume extrusion.")
         typer.echo(f"[AERIS mesh] Done. Artifacts: {output_path}")
@@ -618,31 +732,38 @@ def mesh_pyhyp(
             n_constant_start=n_constant_start,
             ksp_rel_tol=ksp_rel_tol,
             ksp_max_its=ksp_max_its,
+            pyhyp_options=raw_pyhyp_options or None,
         )
     except ImportError as exc:
         typer.secho(
             f"\n[AERIS mesh] pyhyp not available: {exc}\n"
             "  Activate the mach-aero conda environment and re-run.",
-            fg=typer.colors.YELLOW, err=True,
+            fg=typer.colors.YELLOW,
+            err=True,
         )
-        _write_smoke_manifest(output_path, status="pyhyp_not_available",
-                              error=str(exc), surface_report=surface_report)
+        _write_smoke_manifest(
+            output_path, status="pyhyp_not_available", error=str(exc), surface_report=surface_report
+        )
         raise typer.Exit(code=1) from exc
     except Exception as exc:
         typer.secho(
             f"\n[AERIS mesh] pyHyp failed: {type(exc).__name__}: {exc}",
-            fg=typer.colors.RED, err=True,
+            fg=typer.colors.RED,
+            err=True,
         )
-        _write_smoke_manifest(output_path, status="pyhyp_failed",
-                              error=f"{type(exc).__name__}: {exc}",
-                              surface_report=surface_report)
+        _write_smoke_manifest(
+            output_path,
+            status="pyhyp_failed",
+            error=f"{type(exc).__name__}: {exc}",
+            surface_report=surface_report,
+        )
         raise typer.Exit(code=1) from exc
 
-    elapsed  = float(pyhyp_report.get("elapsed_seconds", 0.0))
-    size_mb  = int(pyhyp_report.get("output_size_bytes", 0)) / (1024 * 1024)
+    elapsed = float(pyhyp_report.get("elapsed_seconds", 0.0))
+    size_mb = int(pyhyp_report.get("output_size_bytes", 0)) / (1024 * 1024)
     n_actual = pyhyp_report.get("N")
-    s0_used  = pyhyp_report.get("s0")
-    march    = pyhyp_report.get("march_distance")
+    s0_used = pyhyp_report.get("s0")
+    march = pyhyp_report.get("march_distance")
     typer.echo(f"  Layers (N) : {n_actual}")
     typer.echo(f"  s0 (wall)  : {'auto' if s0_used is None else f'{s0_used:.3e} m'}")
     if isinstance(march, (int, float)):
@@ -659,9 +780,9 @@ def mesh_pyhyp(
             fg=typer.colors.YELLOW,
         )
 
-    _write_smoke_manifest(output_path, status="success",
-                          surface_report=surface_report,
-                          pyhyp_report=pyhyp_report)
+    _write_smoke_manifest(
+        output_path, status="success", surface_report=surface_report, pyhyp_report=pyhyp_report
+    )
     typer.echo("")
     typer.secho("[AERIS mesh] SUCCESS", fg=typer.colors.GREEN)
     typer.echo(f"  All artifacts in: {output_path}")

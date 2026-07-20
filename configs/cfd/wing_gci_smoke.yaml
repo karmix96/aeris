@@ -1,0 +1,45 @@
+# Wing-level grid-convergence family, coarse member (DSE_READINESS.md WP3).
+#
+# Same baseline geometry as data/cfd_cases/bwb_smoke_a2_adflow (config
+# bwb_explore_wide.yaml, generator seed=100, wing_index=0 -- "the tested BWB
+# design" DSE_READINESS.md refers to throughout), same flight condition
+# (alpha=2 deg, M=0.2, Re=1e6 on the MAC) -- so this case, run as-is, should
+# reproduce that existing solve (CL=0.3980, CD=0.02640) as a determinism/
+# regression check before treating it as the coarse GCI-family member.
+#
+# useNKSolver=false (ANK-only): the NK phase OOMs on this machine (16 GB RAM)
+# above roughly 1M cells even at 4 ranks -- documented in the user guide
+# ch.19 and DSE_READINESS.md C6. mpi_np=4 is the safe rank count on this
+# machine (the GUI warns above 4).
+#
+# NOT YET RUN (2026-07-20): staged for desktop execution, not run in-session
+# per Mike's instruction. l2_convergence=1e-6 is a PROVISIONAL target, not a
+# measured one (unlike the 2D ladder, which had a real force-vs-residual
+# ladder measured first) -- expect to need the same kind of empirical
+# adjustment DSE_READINESS documents for the 2D case if ADflow stalls above
+# that on this mesh. See configs/cfd/RUNBOOK.md.
+schema: aeris.cfd.case.v1
+case:
+  name: wing_gci_smoke
+  geometry:
+    aeris_config: configs/geometry/bwb_explore_wide.yaml  # resolved relative to CWD; run from repo root
+    wing_index: 0
+    seed: 100
+  surface_mesh:
+    preset: smoke
+  volume_mesh:
+    preset: smoke
+  solve:
+    solver: adflow
+    preset: rans_ank_nk_v1
+    overrides:
+      l2_convergence: 1.0e-6
+      use_nk_solver: false
+    flow:
+      alpha: 2.0
+      mach: 0.2
+      reynolds: 1.0e+6
+      temperature: 288.15
+    area_ref: 1.094
+    chord_ref: 0.8774
+    mpi_np: 4

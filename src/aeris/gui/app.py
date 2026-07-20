@@ -6,6 +6,7 @@ Run: aeris gui run  OR  streamlit run src/aeris/gui/app.py
 
 ground-truth: geometry generate accepts --config and --save-plot/--no-save-plot
 """
+
 from __future__ import annotations
 
 import json, os, re, shlex, shutil, subprocess, textwrap, time
@@ -32,14 +33,20 @@ except Exception:
     yaml = None
 
 # ── Version & constants ───────────────────────────────────────────────────────
-APP_VERSION       = "4.7.7-EVIDENCE_PACKAGE_COUNTS_FIX-TRAINING_MONITOR_GUI-LIVE_TRAINING"
-DEFAULT_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg"
-DEFAULT_SYM_ELEVON_FEATURES  = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_e_sym_deg"
-DEFAULT_DIFF_ELEVON_FEATURES = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_a_diff_deg"
-DEFAULT_V3_FEATURES          = "c1_m,b_total_m,sw1_deg,elevon_start_frac,elevon_end_frac,elevon_hinge_frac,alpha_deg,velocity_mps,altitude_m,delta_e_sym_deg"
-DEFAULT_TARGETS   = "cl,cd,cm"
+APP_VERSION = "4.7.7-EVIDENCE_PACKAGE_COUNTS_FIX-TRAINING_MONITOR_GUI-LIVE_TRAINING"
+DEFAULT_FEATURES = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg"
+DEFAULT_SYM_ELEVON_FEATURES = (
+    "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_e_sym_deg"
+)
+DEFAULT_DIFF_ELEVON_FEATURES = (
+    "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_a_diff_deg"
+)
+DEFAULT_V3_FEATURES = "c1_m,b_total_m,sw1_deg,elevon_start_frac,elevon_end_frac,elevon_hinge_frac,alpha_deg,velocity_mps,altitude_m,delta_e_sym_deg"
+DEFAULT_TARGETS = "cl,cd,cm"
 DEFAULT_PAIR_KEYS = "geometry_id,alpha_deg,velocity_mps,altitude_m,control_input_deg"
-DEFAULT_CONTROL_DERIVATIVE_GROUPS = "geometry_id,alpha_deg,beta_deg,velocity_mps,altitude_m,p_rad_s,q_rad_s,r_rad_s"
+DEFAULT_CONTROL_DERIVATIVE_GROUPS = (
+    "geometry_id,alpha_deg,beta_deg,velocity_mps,altitude_m,p_rad_s,q_rad_s,r_rad_s"
+)
 DEFAULT_CONTROL_DERIVATIVE_TARGETS = "cl,cd,cm,cy,cl_roll,cn"
 
 ML_FEATURE_PRESETS = [
@@ -67,10 +74,20 @@ STATE_SPACE_PLOT_CHOICES = [
 ]
 
 MODEL_TYPES = [
-    "linear_regression", "ridge", "elastic_net",
-    "random_forest", "extra_trees", "gradient_boosting",
-    "hist_gradient_boosting", "neural_mlp", "neural_mlp_ensemble",
-    "lightgbm", "lightgbm_dart", "xgboost", "catboost", "tabpfn",
+    "linear_regression",
+    "ridge",
+    "elastic_net",
+    "random_forest",
+    "extra_trees",
+    "gradient_boosting",
+    "hist_gradient_boosting",
+    "neural_mlp",
+    "neural_mlp_ensemble",
+    "lightgbm",
+    "lightgbm_dart",
+    "xgboost",
+    "catboost",
+    "tabpfn",
 ]
 CLASSIFIER_TYPES = [
     "logistic_regression",
@@ -87,24 +104,24 @@ CLASSIFIER_INFO = {
     "hist_gradient_boosting_classifier": "Hist Gradient Boosting Classifier — fast boosted classifier",
 }
 MODEL_INFO = {
-    "linear_regression":     "Linear Regression — fastest baseline, interpretable",
-    "ridge":                 "Ridge — L2-regularized linear, correlated features",
-    "elastic_net":           "Elastic Net — L1+L2, automatic feature selection",
-    "random_forest":         "Random Forest — robust ensemble, low tuning burden",
-    "extra_trees":           "Extra Trees — faster RF, similar accuracy",
-    "gradient_boosting":     "Gradient Boosting — high accuracy, needs tuning",
-    "hist_gradient_boosting":"Hist Gradient Boosting — fastest tree method ✓ recommended",
-    "neural_mlp":            "Neural MLP — tabular neural surrogate",
-    "neural_mlp_ensemble":   "Neural MLP Ensemble — neural + confidence spread",
-    "lightgbm":              "LightGBM — fast gradient boosting (leaf-wise)",
-    "lightgbm_dart":         "LightGBM DART — dropout boosting, less overfit",
-    "xgboost":               "XGBoost — regularized gradient boosting",
-    "catboost":              "CatBoost — ordered boosting, robust defaults",
-    "tabpfn":                "TabPFN — transformer prior-fitted net (small data)",
+    "linear_regression": "Linear Regression — fastest baseline, interpretable",
+    "ridge": "Ridge — L2-regularized linear, correlated features",
+    "elastic_net": "Elastic Net — L1+L2, automatic feature selection",
+    "random_forest": "Random Forest — robust ensemble, low tuning burden",
+    "extra_trees": "Extra Trees — faster RF, similar accuracy",
+    "gradient_boosting": "Gradient Boosting — high accuracy, needs tuning",
+    "hist_gradient_boosting": "Hist Gradient Boosting — fastest tree method ✓ recommended",
+    "neural_mlp": "Neural MLP — tabular neural surrogate",
+    "neural_mlp_ensemble": "Neural MLP Ensemble — neural + confidence spread",
+    "lightgbm": "LightGBM — fast gradient boosting (leaf-wise)",
+    "lightgbm_dart": "LightGBM DART — dropout boosting, less overfit",
+    "xgboost": "XGBoost — regularized gradient boosting",
+    "catboost": "CatBoost — ordered boosting, robust defaults",
+    "tabpfn": "TabPFN — transformer prior-fitted net (small data)",
 }
 SAMPLERS = ["lhs_v1", "random_v1"]
 SAMPLER_INFO = {
-    "lhs_v1":    "Latin Hypercube — best design-space coverage ✓ recommended",
+    "lhs_v1": "Latin Hypercube — best design-space coverage ✓ recommended",
     "random_v1": "Uniform Random — simple, may cluster",
 }
 # Static compatibility markers retained for older GUI regression tests.
@@ -117,11 +134,11 @@ _GUI_LEGACY_STATIC_TEST_MARKERS = (
 _GUI_CST_XFOIL_CONFIG_FILTER_STATIC_MARKERS = (
     "AERIS_PATCH_CST_GUI_V1_1_XFOIL_CONFIG_FILTER",
     "xfoil_cfg_files",
-    "\"xfoil\" in Path(f).stem.lower()",
-    "st.selectbox(\"XFOIL sweep config\"",
+    '"xfoil" in Path(f).stem.lower()',
+    'st.selectbox("XFOIL sweep config"',
     "cst_library_v1.yaml generate airfoil shapes",
-    "st.session_state.get(\"af_cfg\") not in cfg_opts",
-    "st.session_state.pop(\"af_cfg\", None)",
+    'st.session_state.get("af_cfg") not in cfg_opts',
+    'st.session_state.pop("af_cfg", None)',
 )
 
 # Static GUI markers for XFOIL plot toggle.
@@ -149,7 +166,7 @@ _GUI_AIRFOIL_POLAR_VIEWER_STATIC_MARKERS = (
 _GUI_AIRFOIL_XFOIL_PLOT_TOGGLE_STATIC_MARKERS = (
     "Show XFOIL plots (--show-plots)",
     "af_show_plots",
-    "_sweep_args.append(\"--show-plots\")",
+    '_sweep_args.append("--show-plots")',
     "Xplot11 ON",
     "headless, no windows",
 )
@@ -190,41 +207,40 @@ _GUI_AIRFOIL_UX_STATIC_MARKERS = (
 
 QC_PRESETS = ["off", "debug", "production", "promotion_strict"]
 QC_PRESET_INFO = {
-    "off":              "Off — skip all QC (smoke/debug only, lets bad data pass)",
-    "debug":            "Debug — run basic QC, don't block on failures (visibility without gate)",
-    "production":       "Production — physical QC + block on failures ✓ recommended",
+    "off": "Off — skip all QC (smoke/debug only, lets bad data pass)",
+    "debug": "Debug — run basic QC, don't block on failures (visibility without gate)",
+    "production": "Production — physical QC + block on failures ✓ recommended",
     "promotion_strict": "Promotion Strict — strict profile, blocks on any failure",
 }
 RETENTION_POLICIES = ["all", "failures_only", "none"]
 RETENTION_INFO = {
-    "all":           "Keep all run folders (large disk use)",
+    "all": "Keep all run folders (large disk use)",
     "failures_only": "Keep only failed cases for debugging ✓ recommended",
-    "none":          "Delete all run folders after dataset creation",
+    "none": "Delete all run folders after dataset creation",
 }
-SPACING  = ["equal", "cosine"]
+SPACING = ["equal", "cosine"]
 SPLIT_METHODS = ["grouped", "random"]
-QC_PROFILES  = ["basic", "production", "strict"]
+QC_PROFILES = ["basic", "production", "strict"]
 
 PAGES = [
-    ("home",     "⌂",  "Overview"),
-    ("geometry", "△",  "3D Geometry"),
-    ("airfoil",  "〜",  "2D Airfoils"),
-    ("dataset",  "▣",  "Dataset Factory"),
-    ("aero",     "⊿",  "Aero Analysis"),
-    ("mesh",     "⬡",  "CFD Mesh & Solve"),
-    ("dynamics", "◎",  "Dynamics"),
-    ("ml",       "◈",  "ML Studio"),
-    ("workflow", "▤",  "Workflow Cockpit"),
-    ("pipeline", "◷",  "Pipeline / Smoke"),
-    ("results",  "◫",  "Results Browser"),
-    ("config",   "✎",  "Config Lab"),
+    ("home", "⌂", "Overview"),
+    ("geometry", "△", "3D Geometry"),
+    ("airfoil", "〜", "2D Airfoils"),
+    ("dataset", "▣", "Dataset Factory"),
+    ("aero", "⊿", "Aero Analysis"),
+    ("mesh", "⬡", "CFD Mesh & Solve"),
+    ("dynamics", "◎", "Dynamics"),
+    ("ml", "◈", "ML Studio"),
+    ("workflow", "▤", "Workflow Cockpit"),
+    ("pipeline", "◷", "Pipeline / Smoke"),
+    ("results", "◫", "Results Browser"),
+    ("config", "✎", "Config Lab"),
 ]
 
 # Static markers for post-4.6 GUI coverage. Keep these strings honest: each
 # command below has an actual UI panel in this file.
 _GUI_V4_7_STATIC_MARKERS = (
-
-# Overview launchpad labels kept for static UX tests: Import airfoil library, Generate CST airfoils, Generate 3D geometry, Export deflected CAD
+    # Overview launchpad labels kept for static UX tests: Import airfoil library, Generate CST airfoils, Generate 3D geometry, Export deflected CAD
     "AERIS Overview",
     "AERIS: Aerospace Research and Intelligence System",
     "aerospace research and intelligence system",
@@ -319,48 +335,70 @@ button[title*="sidebar" i],button[aria-label*="sidebar" i]{
 </style>
 """
 
+
 # ── HTML/UI helpers ───────────────────────────────────────────────────────────
 def _h(html: str) -> None:
     st.markdown(html, unsafe_allow_html=True)
 
+
 def _hero(icon: str, title: str, sub: str, badge: str = "", bcolor: str = "#3B82F6") -> None:
-    b = (f'<span style="margin-left:10px;padding:2px 10px;background:{bcolor}18;color:{bcolor};'
-         f'border:1px solid {bcolor}35;border-radius:20px;font-size:.7rem;font-weight:600;'
-         f'letter-spacing:.07em;font-family:JetBrains Mono,monospace;vertical-align:middle">{badge}</span>'
-         if badge else "")
-    _h(f'<div style="margin-bottom:1.6rem"><div style="display:flex;align-items:center;gap:12px;margin-bottom:.25rem">'
-       f'<div style="width:38px;height:38px;background:{bcolor}12;border:1px solid {bcolor}25;border-radius:9px;'
-       f'display:flex;align-items:center;justify-content:center;font-size:1.15rem">{icon}</div>'
-       f'<div><h1 style="margin:0!important">{title}{b}</h1>'
-       f'<p style="margin:0!important;font-size:.78rem!important;color:#AAB6C2!important;'
-       f'font-family:JetBrains Mono,monospace">{sub}</p></div></div></div>')
+    b = (
+        f'<span style="margin-left:10px;padding:2px 10px;background:{bcolor}18;color:{bcolor};'
+        f"border:1px solid {bcolor}35;border-radius:20px;font-size:.7rem;font-weight:600;"
+        f'letter-spacing:.07em;font-family:JetBrains Mono,monospace;vertical-align:middle">{badge}</span>'
+        if badge
+        else ""
+    )
+    _h(
+        f'<div style="margin-bottom:1.6rem"><div style="display:flex;align-items:center;gap:12px;margin-bottom:.25rem">'
+        f'<div style="width:38px;height:38px;background:{bcolor}12;border:1px solid {bcolor}25;border-radius:9px;'
+        f'display:flex;align-items:center;justify-content:center;font-size:1.15rem">{icon}</div>'
+        f'<div><h1 style="margin:0!important">{title}{b}</h1>'
+        f'<p style="margin:0!important;font-size:.78rem!important;color:#AAB6C2!important;'
+        f'font-family:JetBrains Mono,monospace">{sub}</p></div></div></div>'
+    )
+
 
 def _sec(label: str) -> None:
-    _h(f'<div style="display:flex;align-items:center;gap:8px;margin:1.4rem 0 .7rem">'
-       f'<span style="font-size:.68rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;'
-       f'color:#7F8B98;white-space:nowrap">{label}</span>'
-       f'<div style="flex:1;height:1px;background:#2A3848"></div></div>')
+    _h(
+        f'<div style="display:flex;align-items:center;gap:8px;margin:1.4rem 0 .7rem">'
+        f'<span style="font-size:.68rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;'
+        f'color:#7F8B98;white-space:nowrap">{label}</span>'
+        f'<div style="flex:1;height:1px;background:#2A3848"></div></div>'
+    )
+
 
 def _note(text: str, kind: str = "info") -> None:
-    c = {"info":"#3B82F6","warn":"#F59E0B","ok":"#22C55E","err":"#EF4444"}.get(kind,"#3B82F6")
-    _h(f'<div style="background:{c}0d;border-left:3px solid {c}60;border-radius:0 6px 6px 0;'
-       f'padding:9px 13px;margin:.6rem 0;font-size:.81rem;color:{c};line-height:1.65">{text}</div>')
+    c = {"info": "#3B82F6", "warn": "#F59E0B", "ok": "#22C55E", "err": "#EF4444"}.get(
+        kind, "#3B82F6"
+    )
+    _h(
+        f'<div style="background:{c}0d;border-left:3px solid {c}60;border-radius:0 6px 6px 0;'
+        f'padding:9px 13px;margin:.6rem 0;font-size:.81rem;color:{c};line-height:1.65">{text}</div>'
+    )
+
 
 def _stat_row(stats: list[tuple]) -> None:
     cols = st.columns(len(stats))
     for col, (label, val, sub) in zip(cols, stats):
         with col:
-            _h(f'<div style="background:#202B36;border:1px solid #334252;border-radius:9px;padding:.9rem 1rem">'
-               f'<div style="font-size:.68rem;color:#7F8B98;text-transform:uppercase;letter-spacing:.12em;font-weight:600;margin-bottom:5px">{label}</div>'
-               f'<div style="font-size:1.45rem;font-weight:500;color:#F2F5F8;font-family:JetBrains Mono,monospace;line-height:1">{val}</div>'
-               f'<div style="font-size:.7rem;color:#8EA0B3;margin-top:3px">{sub}</div></div>')
+            _h(
+                f'<div style="background:#202B36;border:1px solid #334252;border-radius:9px;padding:.9rem 1rem">'
+                f'<div style="font-size:.68rem;color:#7F8B98;text-transform:uppercase;letter-spacing:.12em;font-weight:600;margin-bottom:5px">{label}</div>'
+                f'<div style="font-size:1.45rem;font-weight:500;color:#F2F5F8;font-family:JetBrains Mono,monospace;line-height:1">{val}</div>'
+                f'<div style="font-size:.7rem;color:#8EA0B3;margin-top:3px">{sub}</div></div>'
+            )
+
 
 def _cmd_preview(args: list[str]) -> None:
     """Show the exact CLI command that will run."""
     cmd_str = " ".join(shlex.quote(str(a)) for a in args)
-    _h(f'<div style="background:#111A23;border:1px solid #334252;border-radius:7px;padding:8px 12px;'
-       f'margin:.5rem 0;font-size:.75rem;color:#7ab3f0;font-family:JetBrains Mono,monospace;'
-       f'word-break:break-all"><span style="color:#7F8B98">$</span> aeris {cmd_str}</div>')
+    _h(
+        f'<div style="background:#111A23;border:1px solid #334252;border-radius:7px;padding:8px 12px;'
+        f"margin:.5rem 0;font-size:.75rem;color:#7ab3f0;font-family:JetBrains Mono,monospace;"
+        f'word-break:break-all"><span style="color:#7F8B98">$</span> aeris {cmd_str}</div>'
+    )
+
 
 # ── Data & execution helpers ──────────────────────────────────────────────────
 @dataclass
@@ -370,6 +408,7 @@ class CommandResult:
     stdout: str
     stderr: str
 
+
 def _default_root() -> Path:
     cwd = Path.cwd().resolve()
     for c in [cwd, *cwd.parents]:
@@ -377,28 +416,38 @@ def _default_root() -> Path:
             return c
     return cwd
 
+
 def _repo_ok(p: Path) -> bool:
     return (p / "src" / "aeris").exists()
+
 
 @st.cache_data(ttl=2)
 def _dirs(root_str: str) -> list[str]:
     root = Path(root_str)
     if not root.exists():
         return []
-    return [str(p) for p in sorted(
-        [p for p in root.glob("*") if p.is_dir()],
-        key=lambda x: x.stat().st_mtime, reverse=True
-    )[:300]]
+    return [
+        str(p)
+        for p in sorted(
+            [p for p in root.glob("*") if p.is_dir()], key=lambda x: x.stat().st_mtime, reverse=True
+        )[:300]
+    ]
+
 
 @st.cache_data(ttl=30)
 def _files(root_str: str, pattern: str = "*.yaml") -> list[str]:
     root = Path(root_str)
     if not root.exists():
         return []
-    return [str(p) for p in sorted(
-        [p for p in root.glob(pattern) if p.is_file()],
-        key=lambda x: x.stat().st_mtime, reverse=True
-    )[:300]]
+    return [
+        str(p)
+        for p in sorted(
+            [p for p in root.glob(pattern) if p.is_file()],
+            key=lambda x: x.stat().st_mtime,
+            reverse=True,
+        )[:300]
+    ]
+
 
 def _read(p: Path, lim: int = 250_000) -> str:
     try:
@@ -406,11 +455,13 @@ def _read(p: Path, lim: int = 250_000) -> str:
     except Exception as e:
         return f"<error: {e}>"
 
+
 def _rjson(p: Path) -> Any | None:
     try:
         return json.loads(p.read_text(encoding="utf-8"))
     except Exception:
         return None
+
 
 def _xargs(text: str) -> list[str]:
     if not text.strip():
@@ -421,12 +472,14 @@ def _xargs(text: str) -> list[str]:
         st.error(f"Parse error in extra args: {e}")
         return []
 
+
 def _flag(args: list, flag: str, val: Any) -> None:
     if val is None:
         return
     s = str(val).strip()
     if s:
         args.extend([flag, s])
+
 
 def _bflag(args: list, t: str, f: str | None, val: bool | None) -> None:
     if val is None:
@@ -436,14 +489,17 @@ def _bflag(args: list, t: str, f: str | None, val: bool | None) -> None:
     elif f:
         args.append(f)
 
+
 def _csvn(text: str) -> int:
     return max(1, len([x for x in text.split(",") if x.strip()]))
+
 
 def _est(*fields: str) -> int:
     n = 1
     for f in fields:
         n *= _csvn(f)
     return n
+
 
 def _run(root: Path, exe: str, args: Iterable[str], timeout: int) -> CommandResult:
     cmd = [exe, "--no-check-writable", *[str(a) for a in args]]
@@ -455,13 +511,17 @@ def _run(root: Path, exe: str, args: Iterable[str], timeout: int) -> CommandResu
     except FileNotFoundError as e:
         return CommandResult(cmd, 127, "", str(e))
     except subprocess.TimeoutExpired as e:
-        return CommandResult(cmd, 124, e.stdout or "", (e.stderr or "") + f"\nTimeout after {timeout}s.")
+        return CommandResult(
+            cmd, 124, e.stdout or "", (e.stderr or "") + f"\nTimeout after {timeout}s."
+        )
+
 
 def _save_result(r: CommandResult) -> None:
     st.session_state["last"] = r
     h = st.session_state.setdefault("history", [])
     h.insert(0, r)
     del h[50:]
+
 
 def _show_result(r: CommandResult) -> None:
     if r.returncode == 0:
@@ -475,11 +535,23 @@ def _show_result(r: CommandResult) -> None:
         with st.expander("Errors / warnings", expanded=True):
             st.code(r.stderr.strip()[-80_000:], language="text")
 
-def _panel(title: str, desc: str, args: list, root: Path, exe: str,
-           tmo: int, dry: bool, key: str,
-           label: str = "▶  Run", danger: bool = False) -> None:
+
+def _panel(
+    title: str,
+    desc: str,
+    args: list,
+    root: Path,
+    exe: str,
+    tmo: int,
+    dry: bool,
+    key: str,
+    label: str = "▶  Run",
+    danger: bool = False,
+) -> None:
     with st.container(border=True):
-        _h(f'<div style="font-weight:600;color:#F2F5F8;font-size:.9rem;margin-bottom:3px">{title}</div>')
+        _h(
+            f'<div style="font-weight:600;color:#F2F5F8;font-size:.9rem;margin-bottom:3px">{title}</div>'
+        )
         _h(f'<div style="font-size:.78rem;color:#AAB6C2;margin-bottom:.5rem">{desc}</div>')
         _cmd_preview(args)
         if dry:
@@ -494,21 +566,98 @@ def _panel(title: str, desc: str, args: list, root: Path, exe: str,
             _save_result(r)
             _show_result(r)
 
+
 # ── File/dir pickers ──────────────────────────────────────────────────────────
 def _pick_dir(label: str, root: Path, key: str, help_: str = "") -> str:
     dirs = _dirs(str(root))
     opts = [""] + dirs
     idx = 1 if len(opts) > 1 else 0
-    sel = st.selectbox(label, opts,
-                       index=idx, key=f"{key}_s", help=help_,
-                       format_func=lambda s: Path(s).name if s else "— select —")
+    sel = st.selectbox(
+        label,
+        opts,
+        index=idx,
+        key=f"{key}_s",
+        help=help_,
+        format_func=lambda s: Path(s).name if s else "— select —",
+    )
     return st.text_input("Manual path override", value=sel, key=f"{key}_m")
+
+
+# (AERIS_PATCH_DATASET_GUI_V1) Dataset-kind classifier + kind-aware picker.
+# Classification is based on the actual artifact filenames each pipeline
+# writes (verified against ingest.py / dataset_run.py / aero_dataset_run.py /
+# curate.py / curate_aero.py / promote.py / promote_aero.py), not filename
+# guessing. Promotion is checked first since a promoted dataset still has
+# the raw/curated files sitting next to promotion_manifest.json.
+_DATASET_KIND_LABELS = {
+    "geometry_3d": "3D geometry",
+    "aero_3d": "3D aero",
+    "promoted_aero_3d": "3D aero (promoted)",
+    "airfoil_2d": "2D airfoil",
+    "promoted_airfoil_2d": "2D airfoil (promoted)",
+    "unknown": "unknown",
+}
+
+
+def _detect_dataset_kind(path) -> str:
+    """Classify a data/datasets/<name> folder by the artifacts it contains."""
+    p = Path(path)
+    if not path or not p.exists() or not p.is_dir():
+        return "unknown"
+    has_promotion = (p / "promotion_manifest.json").exists()
+    if has_promotion and (p / "curated_airfoil_dataset.csv").exists():
+        return "promoted_airfoil_2d"
+    if has_promotion and (p / "curated_aero_dataset.csv").exists():
+        return "promoted_aero_3d"
+    if (p / "airfoil_dataset.csv").exists():
+        return "airfoil_2d"
+    if (p / "aero_dataset.csv").exists():
+        return "aero_3d"
+    if (p / "metadata.csv").exists() and (p / "dataset_manifest.json").exists():
+        return "geometry_3d"
+    return "unknown"
+
+
+def _pick_dataset_dir(label: str, root: Path, key: str, help_: str = "", kinds=None):
+    """Like _pick_dir, but tags each option with its detected dataset kind and,
+    if `kinds` is given, only offers folders whose kind is in that set.
+    Returns (selected_path, detected_kind).
+    """
+    ds_root = root / "data" / "datasets"
+    all_dirs = _dirs(str(ds_root))
+    tagged = [(d, _detect_dataset_kind(d)) for d in all_dirs]
+    if kinds is not None:
+        tagged = [(d, k) for d, k in tagged if k in kinds]
+    kind_map = dict(tagged)
+    opts = [""] + [d for d, _ in tagged]
+    idx = 1 if len(opts) > 1 else 0
+    sel = st.selectbox(
+        label,
+        opts,
+        index=idx,
+        key=f"{key}_s",
+        help=help_,
+        format_func=lambda s: (
+            f"{Path(s).name}  ·  {_DATASET_KIND_LABELS.get(kind_map.get(s, 'unknown'), 'unknown')}"
+            if s
+            else "— select —"
+        ),
+    )
+    manual = st.text_input("Manual path override", value=sel, key=f"{key}_m")
+    detected = _detect_dataset_kind(manual) if manual else "unknown"
+    return manual, detected
+
 
 def _pick_file(label: str, root: Path, pat: str, key: str, default: str = "") -> str:
     files = _files(str(root), pat)
     opts = ([default] if default else []) + [f for f in files if f != default]
-    sel = st.selectbox(label, opts if opts else [""], index=0, key=f"{key}_s",
-                       format_func=lambda s: Path(s).name if s else "— none found —")
+    sel = st.selectbox(
+        label,
+        opts if opts else [""],
+        index=0,
+        key=f"{key}_s",
+        format_func=lambda s: Path(s).name if s else "— none found —",
+    )
     return st.text_input("Manual path override", value=sel, key=f"{key}_m")
 
 
@@ -544,13 +693,22 @@ def _json_metric_block(path: Path, keys: list[str] | None = None) -> dict[str, A
 
 def _dataset_control_artifact_preview(dataset_root: Path) -> None:
     """Preview D2/D3/D4 dataset-level control and flyability artifacts."""
-    with st.expander("Evidence preview: control derivatives / flyability / dynamics labels", expanded=False):
+    with st.expander(
+        "Evidence preview: control derivatives / flyability / dynamics labels", expanded=False
+    ):
         c1, c2, c3 = st.columns(3)
         with c1:
             st.caption("D2 control derivatives")
             _json_metric_block(
                 dataset_root / "control_derivatives_report.json",
-                ["source", "control_column", "computed_group_count", "skipped_group_count", "pitch_authority_counts", "differential_elevon"],
+                [
+                    "source",
+                    "control_column",
+                    "computed_group_count",
+                    "skipped_group_count",
+                    "pitch_authority_counts",
+                    "differential_elevon",
+                ],
             )
         with c2:
             st.caption("D3 flyability labels")
@@ -558,9 +716,16 @@ def _dataset_control_artifact_preview(dataset_root: Path) -> None:
             # (strict elevon-trim label) alongside dyn_trim_feasible (OR label).
             _json_metric_block(
                 dataset_root / "flyability_labels_report.json",
-                ["source", "control_column", "label_row_count", "computed_label_count",
-                 "skipped_label_count", "longitudinal_basic_flyable_counts",
-                 "de_trim_feasible_counts", "thresholds"],
+                [
+                    "source",
+                    "control_column",
+                    "label_row_count",
+                    "computed_label_count",
+                    "skipped_label_count",
+                    "longitudinal_basic_flyable_counts",
+                    "de_trim_feasible_counts",
+                    "thresholds",
+                ],
             )
         with c3:
             st.caption("D4 batch evidence")
@@ -596,22 +761,29 @@ def _state_space_artifact_preview(run_dir: Path) -> None:
             m2.metric("Unstable eigenvalues", summary.get("total_unstable_eigenvalue_count", "—"))
             mre = summary.get("max_real_eigenvalue")
             m3.metric("Max real eigenvalue", f"{float(mre):+.6f}" if mre is not None else "—")
-            st.json({
-                "overall_status": data.get("overall_status"),
-                "linear_stability_summary": summary,
-                "limitations": data.get("limitations", []),
-            }, expanded=False)
+            st.json(
+                {
+                    "overall_status": data.get("overall_status"),
+                    "linear_stability_summary": summary,
+                    "limitations": data.get("limitations", []),
+                },
+                expanded=False,
+            )
 
         manifest = _rjson(plot_manifest)
         if manifest:
-            st.caption(f"Plot manifest: {manifest.get('plot_count', 0)} plot(s), requested={manifest.get('requested_plot')}")
+            st.caption(
+                f"Plot manifest: {manifest.get('plot_count', 0)} plot(s), requested={manifest.get('requested_plot')}"
+            )
             artifacts = manifest.get("artifacts", {}) or {}
             for label, artifact_path in artifacts.items():
                 pp = Path(artifact_path)
                 if pp.exists() and pp.suffix.lower() in {".png", ".jpg", ".jpeg"}:
                     st.image(str(pp), caption=label, use_container_width=True)
         else:
-            st.info("No state-space plot manifest found. Run `aeris dynamics plot-state-space` first.")
+            st.info(
+                "No state-space plot manifest found. Run `aeris dynamics plot-state-space` first."
+            )
 
 
 def _show_file(p: Path) -> None:
@@ -635,25 +807,27 @@ def _show_file(p: Path) -> None:
                 if num:
                     with st.expander("Quick plot"):
                         _is_airfoil = "alpha_deg" in df.columns and "airfoil_id" in df.columns
-                        _is_aero    = "alpha_deg" in df.columns and "geometry_id" in df.columns
+                        _is_aero = "alpha_deg" in df.columns and "geometry_id" in df.columns
                         if _is_airfoil or _is_aero:
                             _grp_col = "airfoil_id" if _is_airfoil else "geometry_id"
-                            _targets = [c for c in ["cl","cd","cm","cl_roll"] if c in df.columns]
-                            _target  = st.selectbox("Y axis", _targets, key=f"qp_y_{p}")
+                            _targets = [c for c in ["cl", "cd", "cm", "cl_roll"] if c in df.columns]
+                            _target = st.selectbox("Y axis", _targets, key=f"qp_y_{p}")
                             _grp_ids = sorted(df[_grp_col].unique().tolist())
                             _sel_ids = st.multiselect(
                                 f"Filter by {_grp_col} (blank = all)",
                                 _grp_ids,
-                                default=_grp_ids[:min(5, len(_grp_ids))],
+                                default=_grp_ids[: min(5, len(_grp_ids))],
                                 key=f"qp_ids_{p}",
                             )
                             _df_plot = df[df[_grp_col].isin(_sel_ids)] if _sel_ids else df
                             if not _df_plot.empty and _target:
                                 try:
                                     import plotly.express as _px
+
                                     _fig = _px.line(
                                         _df_plot.sort_values("alpha_deg"),
-                                        x="alpha_deg", y=_target,
+                                        x="alpha_deg",
+                                        y=_target,
                                         color=_grp_col,
                                         markers=True,
                                         labels={"alpha_deg": "α [deg]", _target: _target},
@@ -662,7 +836,7 @@ def _show_file(p: Path) -> None:
                                     )
                                     _fig.update_layout(
                                         height=380,
-                                        margin=dict(l=40,r=20,t=40,b=40),
+                                        margin=dict(l=40, r=20, t=40, b=40),
                                         legend=dict(font=dict(size=10)),
                                         plot_bgcolor="#17212B",
                                         paper_bgcolor="#17212B",
@@ -670,8 +844,10 @@ def _show_file(p: Path) -> None:
                                     st.plotly_chart(_fig, use_container_width=True)
                                 except ImportError:
                                     _pivot = _df_plot.pivot_table(
-                                        index="alpha_deg", columns=_grp_col,
-                                        values=_target, aggfunc="mean"
+                                        index="alpha_deg",
+                                        columns=_grp_col,
+                                        values=_target,
+                                        aggfunc="mean",
                                     )
                                     st.line_chart(_pivot)
                         else:
@@ -717,7 +893,9 @@ def _stage_badge(status: str) -> str:
     }.get(status, status)
 
 
-def _workflow_stage_rows(workflow_root: Path, report: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+def _workflow_stage_rows(
+    workflow_root: Path, report: dict[str, Any] | None = None
+) -> list[dict[str, Any]]:
     """Build a display table from validation report plus per-stage status files."""
     report = report or {}
     stage_summaries = report.get("stage_summaries") or {}
@@ -733,16 +911,20 @@ def _workflow_stage_rows(workflow_root: Path, report: dict[str, Any] | None = No
         data = _rjson(stage_dir / name / "stage_status.json") or {}
         stage = data.get("stage", {}) if isinstance(data, dict) else {}
         status = stage.get("status", summary.get("status", "pending"))
-        rows.append({
-            "stage": name,
-            "status": _stage_badge(status),
-            "required": bool(stage.get("required", summary.get("required", False))),
-            "artifacts": int(summary.get("artifact_count", len(stage.get("artifacts", []) or []))),
-            "missing": int(summary.get("missing_artifact_count", 0)),
-            "blockers": int(summary.get("blocker_count", len(stage.get("blockers", []) or []))),
-            "warnings": int(summary.get("warning_count", len(stage.get("warnings", []) or []))),
-            "updated_at_utc": stage.get("updated_at_utc", summary.get("updated_at_utc")),
-        })
+        rows.append(
+            {
+                "stage": name,
+                "status": _stage_badge(status),
+                "required": bool(stage.get("required", summary.get("required", False))),
+                "artifacts": int(
+                    summary.get("artifact_count", len(stage.get("artifacts", []) or []))
+                ),
+                "missing": int(summary.get("missing_artifact_count", 0)),
+                "blockers": int(summary.get("blocker_count", len(stage.get("blockers", []) or []))),
+                "warnings": int(summary.get("warning_count", len(stage.get("warnings", []) or []))),
+                "updated_at_utc": stage.get("updated_at_utc", summary.get("updated_at_utc")),
+            }
+        )
     return rows
 
 
@@ -762,7 +944,6 @@ def _workflow_select(root: Path, key: str) -> str:
     return st.text_input("Manual workflow path", value=default, key=f"{key}_manual")
 
 
-
 def _latest_workflow_root(root: Path) -> Path | None:
     """Return the newest workflow root, if one exists."""
     workflows = _workflow_dirs(root)
@@ -771,9 +952,15 @@ def _latest_workflow_root(root: Path) -> Path | None:
 
 def _workflow_evidence_card(root: Path, workflow_root: Path | None, *, key: str) -> None:
     """Render backend-owned workflow evidence without reimplementing workflow rules."""
-    _note("Evidence-driven panel: reads <code>workflow_status.json</code>, <code>stage_status.json</code>, <code>workflow_validation_report.json</code>, event logs, and the backend workflow coverage audit. No simulated state.", "info")
+    _note(
+        "Evidence-driven panel: reads <code>workflow_status.json</code>, <code>stage_status.json</code>, <code>workflow_validation_report.json</code>, event logs, and the backend workflow coverage audit. No simulated state.",
+        "info",
+    )
     if workflow_root is None:
-        _note("No workflow root found under data/workflows. Create one in Workflow Cockpit before expecting guided progress.", "warn")
+        _note(
+            "No workflow root found under data/workflows. Create one in Workflow Cockpit before expecting guided progress.",
+            "warn",
+        )
         return
 
     bundle = load_workflow_evidence(workflow_root)
@@ -783,18 +970,30 @@ def _workflow_evidence_card(root: Path, workflow_root: Path | None, *, key: str)
     next_domain = next_stage.get("domain") if isinstance(next_stage, dict) else None
     next_page = stage_domain_page(str(next_name), str(next_domain or ""))
 
-    _stat_row([
-        ("Workflow", workflow_root.name, "selected evidence root"),
-        ("Health", str(summary.get("health", "unknown")), "doctor/validate"),
-        ("Progress", f"{summary.get('completed_stages', 0)}/{summary.get('total_stages', 0)}", "recorded stages"),
-        ("Required coverage", "✓" if summary.get("all_required_covered") else "blocked", "workflow coverage"),
-        ("Optional gaps", str(summary.get("optional_gaps", 0)), "non-blocking"),
-        ("Next", str(next_name), "backend next_required_stage"),
-    ])
+    _stat_row(
+        [
+            ("Workflow", workflow_root.name, "selected evidence root"),
+            ("Health", str(summary.get("health", "unknown")), "doctor/validate"),
+            (
+                "Progress",
+                f"{summary.get('completed_stages', 0)}/{summary.get('total_stages', 0)}",
+                "recorded stages",
+            ),
+            (
+                "Required coverage",
+                "✓" if summary.get("all_required_covered") else "blocked",
+                "workflow coverage",
+            ),
+            ("Optional gaps", str(summary.get("optional_gaps", 0)), "non-blocking"),
+            ("Next", str(next_name), "backend next_required_stage"),
+        ]
+    )
 
-    _h(f'<div style="border-left:4px solid {_health_color(str(summary.get("health", "unknown")))};background:#202B36;border-radius:9px;padding:.75rem .9rem;margin:.8rem 0">'
-       f'<div style="font-size:.72rem;color:#AAB6C2;text-transform:uppercase;letter-spacing:.08em">Backend recommended command</div>'
-       f'<div style="font-family:JetBrains Mono,monospace;font-size:.76rem;color:#EAF2FA;word-break:break-all">{summary.get("next_recommended_command", "—")}</div></div>')
+    _h(
+        f'<div style="border-left:4px solid {_health_color(str(summary.get("health", "unknown")))};background:#202B36;border-radius:9px;padding:.75rem .9rem;margin:.8rem 0">'
+        f'<div style="font-size:.72rem;color:#AAB6C2;text-transform:uppercase;letter-spacing:.08em">Backend recommended command</div>'
+        f'<div style="font-family:JetBrains Mono,monospace;font-size:.76rem;color:#EAF2FA;word-break:break-all">{summary.get("next_recommended_command", "—")}</div></div>'
+    )
 
     c1, c2, c3 = st.columns(3)
     with c1:
@@ -815,11 +1014,13 @@ def _workflow_coverage_table(key: str) -> None:
         _note(f"Could not load backend workflow coverage audit: {exc}", "warn")
         return
     summary = report.get("summary", {}) if isinstance(report, dict) else {}
-    _stat_row([
-        ("Coverage entries", str(summary.get("entry_count", 0)), "stage-command rows"),
-        ("Required blockers", str(summary.get("required_blocker_count", 0)), "must be zero"),
-        ("Optional gaps", str(summary.get("optional_gap_count", 0)), "future branches"),
-    ])
+    _stat_row(
+        [
+            ("Coverage entries", str(summary.get("entry_count", 0)), "stage-command rows"),
+            ("Required blockers", str(summary.get("required_blocker_count", 0)), "must be zero"),
+            ("Optional gaps", str(summary.get("optional_gap_count", 0)), "future branches"),
+        ]
+    )
     rows = report.get("entries", []) if isinstance(report, dict) else []
     table_rows = [
         {
@@ -837,56 +1038,112 @@ def _workflow_coverage_table(key: str) -> None:
     else:
         st.json(table_rows)
 
+
 # ── YAML geometry builder ─────────────────────────────────────────────────────
 def _yaml_geometry_builder(pfx: str) -> str:
     """Interactive YAML builder — returns a YAML string."""
     _sec("Generator")
     c1, c2 = st.columns(2)
     gen_id = c1.selectbox("Generator ID", ["bwb_segmented_v1"], key=f"{pfx}_gid")
-    seed = c2.number_input("Seed", min_value=0, value=100, step=1, key=f"{pfx}_seed",
-                            help="Same seed = same geometry. Change to explore design space.")
+    seed = c2.number_input(
+        "Seed",
+        min_value=0,
+        value=100,
+        step=1,
+        key=f"{pfx}_seed",
+        help="Same seed = same geometry. Change to explore design space.",
+    )
     name = st.text_input("Config name", value="aeris_design_space", key=f"{pfx}_name")
 
     _sec("Mesh control")
     c1, c2, c3 = st.columns(3)
-    n_pts = c1.number_input("n_points", min_value=3, value=10, step=1, key=f"{pfx}_npts",
-                             help="Control polygon points along LE")
-    n_in  = c2.number_input("n_spline_inboard", min_value=4, value=20, step=1, key=f"{pfx}_nin",
-                             help="20 for datasets · 150 for visualization quality")
+    n_pts = c1.number_input(
+        "n_points",
+        min_value=3,
+        value=10,
+        step=1,
+        key=f"{pfx}_npts",
+        help="Control polygon points along LE",
+    )
+    n_in = c2.number_input(
+        "n_spline_inboard",
+        min_value=4,
+        value=20,
+        step=1,
+        key=f"{pfx}_nin",
+        help="20 for datasets · 150 for visualization quality",
+    )
     n_out = c3.number_input("n_spline_outboard", min_value=2, value=10, step=1, key=f"{pfx}_nout")
     c4, c5 = st.columns(2)
-    curv = c4.slider("Curvature strength", 0.0, 2.0, 1.0, 0.05, key=f"{pfx}_curv",
-                     help="1.0 = default BWB curvature · 0 = linear · >1 exaggerates")
-    spl_r = c5.slider("Spline split ratio", 0.3, 0.8, 0.55, 0.05, key=f"{pfx}_spr",
-                      help="Fraction of LE covered by cubic spline vs. linear")
+    curv = c4.slider(
+        "Curvature strength",
+        0.0,
+        2.0,
+        1.0,
+        0.05,
+        key=f"{pfx}_curv",
+        help="1.0 = default BWB curvature · 0 = linear · >1 exaggerates",
+    )
+    spl_r = c5.slider(
+        "Spline split ratio",
+        0.3,
+        0.8,
+        0.55,
+        0.05,
+        key=f"{pfx}_spr",
+        help="Fraction of LE covered by cubic spline vs. linear",
+    )
 
     _sec("Planform bounds — chord")
-    _note("YAML sweep values are <b>positive magnitudes</b>. Sampler negates them internally.", "info")
+    _note(
+        "YAML sweep values are <b>positive magnitudes</b>. Sampler negates them internally.", "info"
+    )
     c1, c2, c3, c4 = st.columns(4)
-    c1mn = c1.number_input("c1_m min", 0.1, 2.0, 0.35, 0.05, key=f"{pfx}_c1mn", help="Root chord [m]")
+    c1mn = c1.number_input(
+        "c1_m min", 0.1, 2.0, 0.35, 0.05, key=f"{pfx}_c1mn", help="Root chord [m]"
+    )
     c1mx = c1.number_input("c1_m max", 0.1, 2.0, 0.65, 0.05, key=f"{pfx}_c1mx")
     c2mn = c2.number_input("c2_ratio min", 0.1, 1.0, 0.45, 0.05, key=f"{pfx}_c2mn")
     c2mx = c2.number_input("c2_ratio max", 0.1, 1.0, 0.75, 0.05, key=f"{pfx}_c2mx")
     c3mn = c3.number_input("c3_ratio min", 0.05, 1.0, 0.25, 0.05, key=f"{pfx}_c3mn")
     c3mx = c3.number_input("c3_ratio max", 0.05, 1.0, 0.55, 0.05, key=f"{pfx}_c3mx")
-    c4mn = c4.number_input("c4_ratio min", 0.02, 0.5, 0.08, 0.01, key=f"{pfx}_c4mn", help="Tip chord ratio")
+    c4mn = c4.number_input(
+        "c4_ratio min", 0.02, 0.5, 0.08, 0.01, key=f"{pfx}_c4mn", help="Tip chord ratio"
+    )
     c4mx = c4.number_input("c4_ratio max", 0.02, 0.5, 0.20, 0.01, key=f"{pfx}_c4mx")
 
     _sec("Planform bounds — span")
     c1, c2, c3 = st.columns(3)
-    bmn = c1.number_input("b_total_m min [semi-span m]", 0.3, 3.0, 0.70, 0.05, key=f"{pfx}_bmn",
-                           help="Semi-span [m]. Full span = 2×")
+    bmn = c1.number_input(
+        "b_total_m min [semi-span m]",
+        0.3,
+        3.0,
+        0.70,
+        0.05,
+        key=f"{pfx}_bmn",
+        help="Semi-span [m]. Full span = 2×",
+    )
     bmx = c1.number_input("b_total_m max", 0.3, 3.0, 1.10, 0.05, key=f"{pfx}_bmx")
-    b3mn = c2.number_input("b3_ratio min", 0.1, 0.9, 0.40, 0.05, key=f"{pfx}_b3mn",
-                            help="Outboard segment fraction")
+    b3mn = c2.number_input(
+        "b3_ratio min", 0.1, 0.9, 0.40, 0.05, key=f"{pfx}_b3mn", help="Outboard segment fraction"
+    )
     b3mx = c2.number_input("b3_ratio max", 0.1, 0.9, 0.60, 0.05, key=f"{pfx}_b3mx")
-    spmn = c3.number_input("split_ratio min", 0.1, 0.9, 0.35, 0.05, key=f"{pfx}_spmn",
-                            help="Inboard/mid LE split fraction")
+    spmn = c3.number_input(
+        "split_ratio min",
+        0.1,
+        0.9,
+        0.35,
+        0.05,
+        key=f"{pfx}_spmn",
+        help="Inboard/mid LE split fraction",
+    )
     spmx = c3.number_input("split_ratio max", 0.1, 0.9, 0.55, 0.05, key=f"{pfx}_spmx")
 
     _sec("Planform bounds — LE sweep [positive magnitudes → negated by sampler]")
     c1, c2, c3 = st.columns(3)
-    sw1mn = c1.number_input("sw1_deg min", 0.0, 80.0, 30.0, 1.0, key=f"{pfx}_sw1mn", help="Inner LE sweep [°]")
+    sw1mn = c1.number_input(
+        "sw1_deg min", 0.0, 80.0, 30.0, 1.0, key=f"{pfx}_sw1mn", help="Inner LE sweep [°]"
+    )
     sw1mx = c1.number_input("sw1_deg max", 0.0, 80.0, 50.0, 1.0, key=f"{pfx}_sw1mx")
     sw2mn = c2.number_input("sw2_deg min", 0.0, 60.0, 15.0, 1.0, key=f"{pfx}_sw2mn")
     sw2mx = c2.number_input("sw2_deg max", 0.0, 60.0, 30.0, 1.0, key=f"{pfx}_sw2mx")
@@ -916,15 +1173,16 @@ def _yaml_geometry_builder(pfx: str) -> str:
 
     _sec("Airfoil & control surfaces")
     c1, c2 = st.columns(2)
-    airfoil  = c1.text_input("Airfoil name", value="naca4412", key=f"{pfx}_af",
-                              help="NACA 4-digit or profile name")
-    ctrl_en  = c2.checkbox("Enable control surfaces", value=True, key=f"{pfx}_csen")
+    airfoil = c1.text_input(
+        "Airfoil name", value="naca4412", key=f"{pfx}_af", help="NACA 4-digit or profile name"
+    )
+    ctrl_en = c2.checkbox("Enable control surfaces", value=True, key=f"{pfx}_csen")
     ctrl_block = ""
     if ctrl_en:
         c3, c4, c5 = st.columns(3)
-        hinge     = c3.slider("Hinge point (chord fraction)", 0.5, 0.95, 0.75, 0.01, key=f"{pfx}_hp")
-        sp_start  = c4.slider("Span start fraction", 0.3, 0.9, 0.60, 0.01, key=f"{pfx}_css")
-        sp_end    = c5.slider("Span end fraction", 0.5, 1.0, 0.95, 0.01, key=f"{pfx}_cse")
+        hinge = c3.slider("Hinge point (chord fraction)", 0.5, 0.95, 0.75, 0.01, key=f"{pfx}_hp")
+        sp_start = c4.slider("Span start fraction", 0.3, 0.9, 0.60, 0.01, key=f"{pfx}_css")
+        sp_end = c5.slider("Span end fraction", 0.5, 1.0, 0.95, 0.01, key=f"{pfx}_cse")
         ctrl_block = f"""  control_surfaces:
     enabled: true
     surfaces:
@@ -940,11 +1198,19 @@ def _yaml_geometry_builder(pfx: str) -> str:
 
     _sec("Output options (stored in YAML — used by dataset generate, visualize)")
     c1, c2 = st.columns(2)
-    save_plot_yaml  = c1.checkbox("Save planform plot (YAML default)", value=False, key=f"{pfx}_sp",
-                                   help="Sets geometry.outputs.save_plot in the YAML. "
-                                        "For geometry generate, this is the only way to control plotting.")
-    build_asb_yaml  = c2.checkbox("Build AeroSandbox object (YAML default)", value=True, key=f"{pfx}_ba",
-                                   help="Sets geometry.outputs.build_aerosandbox. Required for aero runs.")
+    save_plot_yaml = c1.checkbox(
+        "Save planform plot (YAML default)",
+        value=False,
+        key=f"{pfx}_sp",
+        help="Sets geometry.outputs.save_plot in the YAML. "
+        "For geometry generate, this is the only way to control plotting.",
+    )
+    build_asb_yaml = c2.checkbox(
+        "Build AeroSandbox object (YAML default)",
+        value=True,
+        key=f"{pfx}_ba",
+        help="Sets geometry.outputs.build_aerosandbox. Required for aero runs.",
+    )
 
     return textwrap.dedent(f"""\
 name: {name}
@@ -989,6 +1255,7 @@ dataset:
     seed: {seed}
 """)
 
+
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 def _sidebar() -> tuple:
     st.sidebar.markdown(
@@ -1017,36 +1284,41 @@ def _sidebar() -> tuple:
             value=str(_default_root()),
             key="sb_root",
             help="Absolute path to the AERIS repo root — the folder containing src/aeris/. "
-                 "Auto-detected by walking up from the current working directory.",
+            "Auto-detected by walking up from the current working directory.",
         )
         exe = st.text_input(
             "AERIS executable",
             value=shutil.which("aeris") or "aeris",
             key="sb_exe",
             help="The 'aeris' command on your PATH, or an absolute path to the aeris script. "
-                 "Auto-detected with shutil.which.",
+            "Auto-detected with shutil.which.",
         )
-        tmo = int(st.number_input(
-            "Timeout [s]",
-            min_value=30, max_value=86400, value=1800, step=30,
-            key="sb_tmo",
-            help="Max seconds to wait for any single aeris command. "
-                 "Default 1800 = 30 min. Increase for large dataset generation.",
-        ))
+        tmo = int(
+            st.number_input(
+                "Timeout [s]",
+                min_value=30,
+                max_value=86400,
+                value=1800,
+                step=30,
+                key="sb_tmo",
+                help="Max seconds to wait for any single aeris command. "
+                "Default 1800 = 30 min. Increase for large dataset generation.",
+            )
+        )
         dry = st.toggle(
             "Dry-run (preview only)",
             False,
             key="sb_dry",
             help="When ON: shows the exact command that would run, but does NOT execute it. "
-                 "Use to verify arguments before committing to a long run.",
+            "Use to verify arguments before committing to a long run.",
         )
 
     root = Path(st.session_state.get("sb_root", str(_default_root()))).expanduser().resolve()
-    exe  = st.session_state.get("sb_exe", shutil.which("aeris") or "aeris")
-    tmo  = int(st.session_state.get("sb_tmo", 1800))
-    dry  = bool(st.session_state.get("sb_dry", False))
+    exe = st.session_state.get("sb_exe", shutil.which("aeris") or "aeris")
+    tmo = int(st.session_state.get("sb_tmo", 1800))
+    dry = bool(st.session_state.get("sb_dry", False))
 
-    ok  = _repo_ok(root)
+    ok = _repo_ok(root)
     dot = "#22C55E" if ok else "#EF4444"
     msg = "repo connected" if ok else "repo not found"
     st.sidebar.markdown(
@@ -1070,7 +1342,7 @@ def _sidebar() -> tuple:
 
     for pid, icon, name in PAGES:
         selected = st.session_state["active_page"] == pid
-        prefix   = "●" if selected else "○"
+        prefix = "●" if selected else "○"
         if st.sidebar.button(
             f"{prefix}  {icon}  {name}",
             key=f"nav_{pid}",
@@ -1080,7 +1352,7 @@ def _sidebar() -> tuple:
             st.session_state["active_page"] = pid
 
     if "last" in st.session_state:
-        r   = st.session_state["last"]
+        r = st.session_state["last"]
         col = "#22C55E" if r.returncode == 0 else "#EF4444"
         icon = "✓" if r.returncode == 0 else "✗"
         st.sidebar.markdown(
@@ -1094,6 +1366,7 @@ def _sidebar() -> tuple:
 
     return root, exe, tmo, dry, st.session_state.get("active_page", "home")
 
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # PAGES
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1102,6 +1375,7 @@ def _sidebar() -> tuple:
 # PAGES — 100% codebase-verified CLI options, zero invalid flags
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def pg_home(root, exe, tmo, dry):
     """Minimal product-style launchpad.
 
@@ -1109,24 +1383,27 @@ def pg_home(root, exe, tmo, dry):
     workflow panels and should not fake backend outputs.
     """
     runs_root = root / "data" / "runs"
-    ds_root   = root / "data" / "datasets"
-    ml_root   = root / "data" / "processed" / "ml_runs"
+    ds_root = root / "data" / "datasets"
+    ml_root = root / "data" / "processed" / "ml_runs"
 
     cfg_files = _files(str(root / "configs" / "geometry"), "*.yaml")
     airfoil_cfg_files = _files(str(root / "configs" / "airfoil"), "*.yaml")
-    geo_runs  = _dirs(str(runs_root))
-    all_ds    = _dirs(str(ds_root))
-    promoted  = [d for d in all_ds if (Path(d) / "promotion_manifest.json").exists()]
-    aero_ds   = [d for d in all_ds if (Path(d) / "aero_dataset.csv").exists()]
+    geo_runs = _dirs(str(runs_root))
+    all_ds = _dirs(str(ds_root))
+    promoted = [d for d in all_ds if (Path(d) / "promotion_manifest.json").exists()]
+    aero_ds = [d for d in all_ds if (Path(d) / "aero_dataset.csv").exists()]
     airfoil_ds = [d for d in all_ds if (Path(d) / "airfoil_dataset_manifest.json").exists()]
-    ml_runs   = [d for d in _dirs(str(ml_root)) if (Path(d) / "metrics.json").exists()]
-    promo_mdl = [d for d in _dirs(str(ml_root)) if (Path(d) / "model_promotion_manifest.json").exists()]
+    ml_runs = [d for d in _dirs(str(ml_root)) if (Path(d) / "metrics.json").exists()]
+    promo_mdl = [
+        d for d in _dirs(str(ml_root)) if (Path(d) / "model_promotion_manifest.json").exists()
+    ]
 
     xfoil_ok = shutil.which("xfoil") is not None
     vsp_ok = shutil.which("vsp") is not None or shutil.which("vspaero") is not None
     avl_ok = shutil.which("avl") is not None
 
-    _h("""<div style="position:relative;overflow:hidden;margin-bottom:1.25rem;padding:1.35rem 1.45rem;
+    _h(
+        """<div style="position:relative;overflow:hidden;margin-bottom:1.25rem;padding:1.35rem 1.45rem;
       border:1px solid #2F80ED55;border-radius:22px;background:
       radial-gradient(circle at 12% 18%,#38BDF833 0,#38BDF800 28%),
       radial-gradient(circle at 92% 12%,#A78BFA24 0,#A78BFA00 25%),
@@ -1160,7 +1437,8 @@ def pg_home(root, exe, tmo, dry):
           </p>
         </div>
       </div>
-    </div>""")
+    </div>"""
+    )
 
     _note(
         "Use this page as a launchpad only. Detailed work happens in the domain pages: "
@@ -1169,22 +1447,26 @@ def pg_home(root, exe, tmo, dry):
     )
 
     _sec("Environment")
-    _stat_row([
-        ("Repo", "connected" if _repo_ok(root) else "missing", "src/aeris"),
-        ("XFOIL", "OK" if xfoil_ok else "not found", "2D airfoil sweeps"),
-        ("AVL", "OK" if avl_ok else "not found", "3D aero solver"),
-        ("OpenVSP", "OK" if vsp_ok else "not found", "CAD/VSP tooling"),
-    ])
+    _stat_row(
+        [
+            ("Repo", "connected" if _repo_ok(root) else "missing", "src/aeris"),
+            ("XFOIL", "OK" if xfoil_ok else "not found", "2D airfoil sweeps"),
+            ("AVL", "OK" if avl_ok else "not found", "3D aero solver"),
+            ("OpenVSP", "OK" if vsp_ok else "not found", "CAD/VSP tooling"),
+        ]
+    )
 
     _sec("Current workspace")
-    _stat_row([
-        ("3D configs", str(len(cfg_files)), "configs/geometry"),
-        ("2D configs", str(len(airfoil_cfg_files)), "configs/airfoil"),
-        ("3D/aero datasets", str(len(aero_ds)), "aero_dataset.csv"),
-        ("2D airfoil datasets", str(len(airfoil_ds)), "airfoil_dataset_manifest.json"),
-        ("Promoted datasets", str(len(promoted)), "promotion_manifest.json"),
-        ("Promoted models", str(len(promo_mdl)), "model_promotion_manifest.json"),
-    ])
+    _stat_row(
+        [
+            ("3D configs", str(len(cfg_files)), "configs/geometry"),
+            ("2D configs", str(len(airfoil_cfg_files)), "configs/airfoil"),
+            ("3D/aero datasets", str(len(aero_ds)), "aero_dataset.csv"),
+            ("2D airfoil datasets", str(len(airfoil_ds)), "airfoil_dataset_manifest.json"),
+            ("Promoted datasets", str(len(promoted)), "promotion_manifest.json"),
+            ("Promoted models", str(len(promo_mdl)), "model_promotion_manifest.json"),
+        ]
+    )
 
     _sec("Workflow guardrails")
     _note(
@@ -1210,29 +1492,37 @@ def _geo_var_table(cfg_path: str) -> None:
     Amber = nearly fixed (spread < 0.01). Green = active sampled DV.
     """
     NOTES = {
-        "c1_m":           ("Chord",    "Root chord (absolute)"),
-        "c2_ratio":       ("Chord",    "Chord ratio relative to c1"),
-        "c3_ratio":       ("Chord",    "Chord ratio relative to c1"),
-        "c4_ratio":       ("Chord",    "Tip chord ratio relative to c1"),
-        "b_total_m":      ("Span",     "Semi-span — full span = 2×"),
-        "b3_ratio":       ("Span",     "Outboard segment fraction"),
-        "split_ratio":    ("Span",     "Inner/mid split fraction"),
-        "sw1_deg":        ("Sweep",    "Inner LE sweep. YAML positive; Python negative."),
-        "sw2_deg":        ("Sweep",    "Mid sweep"),
-        "sw3_deg":        ("Sweep",    "Outer sweep"),
-        "twist_b0_deg":   ("Twist",    "Root twist. Positive = LE up."),
-        "twist_b1_deg":   ("Twist",    "Inner twist"),
-        "twist_b2_deg":   ("Twist",    "Mid twist"),
-        "twist_b3_deg":   ("Twist",    "Tip twist"),
-        "dihedral_b1_deg":("Dihedral", "Inner dihedral"),
-        "dihedral_b2_deg":("Dihedral", "Mid dihedral"),
-        "dihedral_b3_deg":("Dihedral", "Outer dihedral"),
+        "c1_m": ("Chord", "Root chord (absolute)"),
+        "c2_ratio": ("Chord", "Chord ratio relative to c1"),
+        "c3_ratio": ("Chord", "Chord ratio relative to c1"),
+        "c4_ratio": ("Chord", "Tip chord ratio relative to c1"),
+        "b_total_m": ("Span", "Semi-span — full span = 2×"),
+        "b3_ratio": ("Span", "Outboard segment fraction"),
+        "split_ratio": ("Span", "Inner/mid split fraction"),
+        "sw1_deg": ("Sweep", "Inner LE sweep. YAML positive; Python negative."),
+        "sw2_deg": ("Sweep", "Mid sweep"),
+        "sw3_deg": ("Sweep", "Outer sweep"),
+        "twist_b0_deg": ("Twist", "Root twist. Positive = LE up."),
+        "twist_b1_deg": ("Twist", "Inner twist"),
+        "twist_b2_deg": ("Twist", "Mid twist"),
+        "twist_b3_deg": ("Twist", "Tip twist"),
+        "dihedral_b1_deg": ("Dihedral", "Inner dihedral"),
+        "dihedral_b2_deg": ("Dihedral", "Mid dihedral"),
+        "dihedral_b3_deg": ("Dihedral", "Outer dihedral"),
     }
     UNITS = {
-        "c1_m":"m","b_total_m":"m",
-        "sw1_deg":"°","sw2_deg":"°","sw3_deg":"°",
-        "twist_b0_deg":"°","twist_b1_deg":"°","twist_b2_deg":"°","twist_b3_deg":"°",
-        "dihedral_b1_deg":"°","dihedral_b2_deg":"°","dihedral_b3_deg":"°",
+        "c1_m": "m",
+        "b_total_m": "m",
+        "sw1_deg": "°",
+        "sw2_deg": "°",
+        "sw3_deg": "°",
+        "twist_b0_deg": "°",
+        "twist_b1_deg": "°",
+        "twist_b2_deg": "°",
+        "twist_b3_deg": "°",
+        "dihedral_b1_deg": "°",
+        "dihedral_b2_deg": "°",
+        "dihedral_b3_deg": "°",
     }
 
     cfg_data = None
@@ -1242,15 +1532,15 @@ def _geo_var_table(cfg_path: str) -> None:
         except Exception:
             cfg_data = None
 
-    geo      = (cfg_data or {}).get("geometry", {})
-    pb       = geo.get("planform_bounds", {})
-    sb       = geo.get("section_bounds", {})
-    eb       = geo.get("elevon_bounds") or {}
-    cs_cfg   = geo.get("control_surfaces") or {}
-    gen_cfg  = geo.get("generator", {})
+    geo = (cfg_data or {}).get("geometry", {})
+    pb = geo.get("planform_bounds", {})
+    sb = geo.get("section_bounds", {})
+    eb = geo.get("elevon_bounds") or {}
+    cs_cfg = geo.get("control_surfaces") or {}
+    gen_cfg = geo.get("generator", {})
     ctrl_cfg = geo.get("controls", {})
-    out_cfg  = geo.get("outputs", {})
-    ds_cfg   = (cfg_data or {}).get("dataset", {})
+    out_cfg = geo.get("outputs", {})
+    ds_cfg = (cfg_data or {}).get("dataset", {})
 
     def _rng_cell(b, unit=""):
         if not isinstance(b, dict) or "min" not in b:
@@ -1269,7 +1559,7 @@ def _geo_var_table(cfg_path: str) -> None:
             '<th style="text-align:left;padding:.35rem .6rem;color:#8EA0B3;font-weight:600;width:22%">Variable / Parameter</th>'
             '<th style="text-align:left;padding:.35rem .6rem;color:#8EA0B3;font-weight:600;width:22%">Value / Range</th>'
             '<th style="text-align:left;padding:.35rem .6rem;color:#8EA0B3;font-weight:600">Notes</th>'
-            '</tr></thead><tbody>'
+            "</tr></thead><tbody>"
         )
 
     def _row(group, var, val, note, val_col="#D6DEE8", prev_group=None):
@@ -1282,71 +1572,131 @@ def _geo_var_table(cfg_path: str) -> None:
             f'color:#93C5FD;white-space:nowrap">{var}</td>'
             f'<td style="padding:.33rem .6rem;color:{val_col};white-space:nowrap">{val}</td>'
             f'<td style="padding:.33rem .6rem;color:#8EA0B3">{note}</td>'
-            f'</tr>'
+            f"</tr>"
         )
 
     # ── 1. Generator & spline params ─────────────────────────────────────────
-    _h('<div style="color:#8EA0B3;font-size:.72rem;text-transform:uppercase;'
-       'letter-spacing:.1em;margin:.8rem 0 .3rem">Generator &amp; Controls</div>')
-    tbl = _tbl_header(); prev = None
-    gen_id   = gen_cfg.get("id", gen_cfg.get("family", "—"))
+    _h(
+        '<div style="color:#8EA0B3;font-size:.72rem;text-transform:uppercase;'
+        'letter-spacing:.1em;margin:.8rem 0 .3rem">Generator &amp; Controls</div>'
+    )
+    tbl = _tbl_header()
+    prev = None
+    gen_id = gen_cfg.get("id", gen_cfg.get("family", "—"))
     gen_seed = str(gen_cfg.get("seed", "—"))
     for g, v, val, note in [
-        ("Generator", "id",                   gen_id,    "Generator family+version string"),
-        ("Generator", "seed",                 gen_seed,  "Same seed + same config = identical geometry"),
-        ("Spline", "n_points",                str(ctrl_cfg.get("n_points", "—")),              "Total spline control points"),
-        ("Spline", "n_spline_inboard",        str(ctrl_cfg.get("n_spline_inboard", "—")),      "Inboard sections — 10=fast, 16=fine"),
-        ("Spline", "n_spline_outboard",       str(ctrl_cfg.get("n_spline_outboard", "—")),     "Outboard sections"),
-        ("Spline", "spline_split_ratio",      str(ctrl_cfg.get("spline_split_ratio", "—")),    "Inboard/outboard split fraction"),
-        ("Spline", "segment_length_variation",str(ctrl_cfg.get("segment_length_variation", "—")), "0=uniform spacing, >0=random variation"),
-        ("Spline", "sweep_variation",         str(ctrl_cfg.get("sweep_variation", "—")),       "Local sweep randomisation magnitude"),
-        ("Spline", "curvature_strength",      str(ctrl_cfg.get("curvature_strength", ctrl_cfg.get("desired_curvature_strength", "—"))), "Curvature magnitude"),
+        ("Generator", "id", gen_id, "Generator family+version string"),
+        ("Generator", "seed", gen_seed, "Same seed + same config = identical geometry"),
+        ("Spline", "n_points", str(ctrl_cfg.get("n_points", "—")), "Total spline control points"),
+        (
+            "Spline",
+            "n_spline_inboard",
+            str(ctrl_cfg.get("n_spline_inboard", "—")),
+            "Inboard sections — 10=fast, 16=fine",
+        ),
+        (
+            "Spline",
+            "n_spline_outboard",
+            str(ctrl_cfg.get("n_spline_outboard", "—")),
+            "Outboard sections",
+        ),
+        (
+            "Spline",
+            "spline_split_ratio",
+            str(ctrl_cfg.get("spline_split_ratio", "—")),
+            "Inboard/outboard split fraction",
+        ),
+        (
+            "Spline",
+            "segment_length_variation",
+            str(ctrl_cfg.get("segment_length_variation", "—")),
+            "0=uniform spacing, >0=random variation",
+        ),
+        (
+            "Spline",
+            "sweep_variation",
+            str(ctrl_cfg.get("sweep_variation", "—")),
+            "Local sweep randomisation magnitude",
+        ),
+        (
+            "Spline",
+            "curvature_strength",
+            str(
+                ctrl_cfg.get("curvature_strength", ctrl_cfg.get("desired_curvature_strength", "—"))
+            ),
+            "Curvature magnitude",
+        ),
     ]:
         col = "#FCD34D" if v == "seed" else "#D6DEE8"
-        tbl += _row(g, v, val, note, col, prev); prev = g
+        tbl += _row(g, v, val, note, col, prev)
+        prev = g
     _h(tbl + "</tbody></table>")
 
     # ── 2. Planform + Section DVs ─────────────────────────────────────────────
-    _h('<div style="color:#8EA0B3;font-size:.72rem;text-transform:uppercase;'
-       'letter-spacing:.1em;margin:.8rem 0 .3rem">Design Variables — Planform &amp; Sections</div>')
-    _note("Amber = nearly fixed (spread &lt; 0.01) — not useful for ML. Green = active sampled DV.", "info")
-    tbl = _tbl_header(); prev = None
+    _h(
+        '<div style="color:#8EA0B3;font-size:.72rem;text-transform:uppercase;'
+        'letter-spacing:.1em;margin:.8rem 0 .3rem">Design Variables — Planform &amp; Sections</div>'
+    )
+    _note(
+        "Amber = nearly fixed (spread &lt; 0.01) — not useful for ML. Green = active sampled DV.",
+        "info",
+    )
+    tbl = _tbl_header()
+    prev = None
     bounds = {**pb, **sb}
     for var, (group, note) in NOTES.items():
         b = bounds.get(var, {})
         val, col = _rng_cell(b, UNITS.get(var, ""))
-        tbl += _row(group, var, val, note, col, prev); prev = group
-    airfoil  = sb.get("airfoil_name", "—")
+        tbl += _row(group, var, val, note, col, prev)
+        prev = group
+    airfoil = sb.get("airfoil_name", "—")
     dih_root = sb.get("dihedral_root_deg", "—")
-    tbl += _row("Section", "airfoil_name",       airfoil,                   "Airfoil profile for all sections",    "#86EFAC", prev); prev = "Section"
-    tbl += _row("Section", "dihedral_root_deg",  f"{dih_root}° (fixed)", "Root dihedral — always 0°", "#F59E0B", prev)
+    tbl += _row(
+        "Section", "airfoil_name", airfoil, "Airfoil profile for all sections", "#86EFAC", prev
+    )
+    prev = "Section"
+    tbl += _row(
+        "Section",
+        "dihedral_root_deg",
+        f"{dih_root}° (fixed)",
+        "Root dihedral — always 0°",
+        "#F59E0B",
+        prev,
+    )
     _h(tbl + "</tbody></table>")
 
     # ── 3. Elevon geometry DVs (v3 only) ──────────────────────────────────────
     if eb:
-        _h('<div style="color:#8EA0B3;font-size:.72rem;text-transform:uppercase;'
-           'letter-spacing:.1em;margin:.8rem 0 .3rem">Elevon Geometry DVs (v3 — 20 DV config)</div>')
+        _h(
+            '<div style="color:#8EA0B3;font-size:.72rem;text-transform:uppercase;'
+            'letter-spacing:.1em;margin:.8rem 0 .3rem">Elevon Geometry DVs (v3 — 20 DV config)</div>'
+        )
         _note("3 extra DVs: elevon size and hinge position vary per geometry sample.", "info")
-        tbl = _tbl_header(); prev = None
+        tbl = _tbl_header()
+        prev = None
         for var, note in [
             ("elevon_start_frac", "Inboard edge of elevon [fraction of semi-span]"),
-            ("elevon_end_frac",   "Outboard edge of elevon [fraction of semi-span]"),
+            ("elevon_end_frac", "Outboard edge of elevon [fraction of semi-span]"),
             ("elevon_hinge_frac", "Hinge line position [fraction of local chord]"),
         ]:
             val, col = _rng_cell(eb.get(var, {}), "")
-            tbl += _row("Elevon DVs", var, val, note, col, prev); prev = "Elevon DVs"
+            tbl += _row("Elevon DVs", var, val, note, col, prev)
+            prev = "Elevon DVs"
         _h(tbl + "</tbody></table>")
 
     # ── 4. Control surfaces ────────────────────────────────────────────────────
-    surfaces   = cs_cfg.get("surfaces", []) if isinstance(cs_cfg, dict) else []
+    surfaces = cs_cfg.get("surfaces", []) if isinstance(cs_cfg, dict) else []
     cs_enabled = cs_cfg.get("enabled", False) if isinstance(cs_cfg, dict) else False
-    _h('<div style="color:#8EA0B3;font-size:.72rem;text-transform:uppercase;'
-       'letter-spacing:.1em;margin:.8rem 0 .3rem">Control Surfaces</div>')
+    _h(
+        '<div style="color:#8EA0B3;font-size:.72rem;text-transform:uppercase;'
+        'letter-spacing:.1em;margin:.8rem 0 .3rem">Control Surfaces</div>'
+    )
 
     # Always show the master control-surface switch.
     # This avoids confusion between "surface definitions exist in YAML"
     # and "controls are actually active for this geometry".
-    tbl = _tbl_header(); prev = None
+    tbl = _tbl_header()
+    prev = None
     active_controls = bool(cs_enabled and surfaces)
     status_rows = [
         (
@@ -1379,7 +1729,8 @@ def _geo_var_table(cfg_path: str) -> None:
         ),
     ]
     for g, v, val, note, col in status_rows:
-        tbl += _row(g, v, val, note, col, prev); prev = g
+        tbl += _row(g, v, val, note, col, prev)
+        prev = g
     _h(tbl + "</tbody></table>")
 
     if not cs_enabled or not surfaces:
@@ -1391,39 +1742,98 @@ def _geo_var_table(cfg_path: str) -> None:
             "info",
         )
         for i, surf in enumerate(surfaces):
-            is_sym   = surf.get("symmetric", True)
-            d_num    = i + 1
-            sym_str  = f"symmetric (d{d_num} — pitch, both sides)" if is_sym else f"antisymmetric (d{d_num} — roll, side={surf.get('side','?')})"
-            span_s   = surf.get("spanwise", {}).get("start_frac", surf.get("start_frac", "—"))
-            span_e   = surf.get("spanwise", {}).get("end_frac",   surf.get("end_frac",   "—"))
-            tbl = _tbl_header(); prev = None
+            is_sym = surf.get("symmetric", True)
+            d_num = i + 1
+            sym_str = (
+                f"symmetric (d{d_num} — pitch, both sides)"
+                if is_sym
+                else f"antisymmetric (d{d_num} — roll, side={surf.get('side','?')})"
+            )
+            span_s = surf.get("spanwise", {}).get("start_frac", surf.get("start_frac", "—"))
+            span_e = surf.get("spanwise", {}).get("end_frac", surf.get("end_frac", "—"))
+            tbl = _tbl_header()
+            prev = None
             for g, v, val, note in [
-                ("Surface", "name",           surf.get("name", "—"),               "AVL control surface name (d-number order)"),
-                ("Surface", "family",         surf.get("family", "—"),             "trailing_edge = standard elevon"),
-                ("Surface", "symmetric",      sym_str,                                  "True=pitch d1, False=roll d2"),
-                ("Surface", "side",           str(surf.get("side") or "both (symmetric)"), "Which wing side this surface acts on"),
-                ("Surface", "spanwise_start", str(span_s),                              "Inboard edge [fraction of semi-span]"),
-                ("Surface", "spanwise_end",   str(span_e),                              "Outboard edge [fraction of semi-span]"),
-                ("Surface", "hinge_point",    str(surf.get("hinge_point", "—")),   "Hinge at this chord fraction"),
-                ("Surface", "deflection_sign",surf.get("deflection_sign", "—"),    "standard = trailing-edge-down positive"),
-                ("Surface", "required",       str(surf.get("required", False)),          "True: solver errors if surface absent"),
+                (
+                    "Surface",
+                    "name",
+                    surf.get("name", "—"),
+                    "AVL control surface name (d-number order)",
+                ),
+                ("Surface", "family", surf.get("family", "—"), "trailing_edge = standard elevon"),
+                ("Surface", "symmetric", sym_str, "True=pitch d1, False=roll d2"),
+                (
+                    "Surface",
+                    "side",
+                    str(surf.get("side") or "both (symmetric)"),
+                    "Which wing side this surface acts on",
+                ),
+                ("Surface", "spanwise_start", str(span_s), "Inboard edge [fraction of semi-span]"),
+                ("Surface", "spanwise_end", str(span_e), "Outboard edge [fraction of semi-span]"),
+                (
+                    "Surface",
+                    "hinge_point",
+                    str(surf.get("hinge_point", "—")),
+                    "Hinge at this chord fraction",
+                ),
+                (
+                    "Surface",
+                    "deflection_sign",
+                    surf.get("deflection_sign", "—"),
+                    "standard = trailing-edge-down positive",
+                ),
+                (
+                    "Surface",
+                    "required",
+                    str(surf.get("required", False)),
+                    "True: solver errors if surface absent",
+                ),
             ]:
                 col = "#93C5FD" if v == "name" else "#D6DEE8"
-                tbl += _row(g, v, val, note, col, prev); prev = g
+                tbl += _row(g, v, val, note, col, prev)
+                prev = g
             _h(tbl + "</tbody></table>")
 
     # ── 5. Outputs & dataset sampling ─────────────────────────────────────────
-    _h('<div style="color:#8EA0B3;font-size:.72rem;text-transform:uppercase;'
-       'letter-spacing:.1em;margin:.8rem 0 .3rem">Outputs &amp; Sampling</div>')
-    tbl = _tbl_header(); prev = None
+    _h(
+        '<div style="color:#8EA0B3;font-size:.72rem;text-transform:uppercase;'
+        'letter-spacing:.1em;margin:.8rem 0 .3rem">Outputs &amp; Sampling</div>'
+    )
+    tbl = _tbl_header()
+    prev = None
     for g, v, val, note in [
-        ("Outputs", "save_plot",         str(out_cfg.get("save_plot", "—")),      "Save planform PNG per geometry case"),
-        ("Outputs", "build_aerosandbox", str(out_cfg.get("build_aerosandbox", "—")), "Required for AVL runs and dataset generation"),
-        ("Dataset", "sampling.method",   str((ds_cfg.get("sampling") or {}).get("method", "—")), "LHS = Latin Hypercube Sampling"),
-        ("Dataset", "sampling.seed",     str((ds_cfg.get("sampling") or {}).get("seed",   "—")), "Reproducibility seed for geometry sampling"),
+        (
+            "Outputs",
+            "save_plot",
+            str(out_cfg.get("save_plot", "—")),
+            "Save planform PNG per geometry case",
+        ),
+        (
+            "Outputs",
+            "build_aerosandbox",
+            str(out_cfg.get("build_aerosandbox", "—")),
+            "Required for AVL runs and dataset generation",
+        ),
+        (
+            "Dataset",
+            "sampling.method",
+            str((ds_cfg.get("sampling") or {}).get("method", "—")),
+            "LHS = Latin Hypercube Sampling",
+        ),
+        (
+            "Dataset",
+            "sampling.seed",
+            str((ds_cfg.get("sampling") or {}).get("seed", "—")),
+            "Reproducibility seed for geometry sampling",
+        ),
     ]:
-        col = "#FCD34D" if "seed" in v else "#86EFAC" if val == "True" else "#F59E0B" if val == "False" else "#D6DEE8"
-        tbl += _row(g, v, val, note, col, prev); prev = g
+        col = (
+            "#FCD34D"
+            if "seed" in v
+            else "#86EFAC" if val == "True" else "#F59E0B" if val == "False" else "#D6DEE8"
+        )
+        tbl += _row(g, v, val, note, col, prev)
+        prev = g
     _h(tbl + "</tbody></table>")
 
     st.caption(
@@ -1440,14 +1850,15 @@ def _geo_delete_one(p: Path, key_suffix: str) -> bool:
     across reruns and triggering phantom second deletions.
     """
     import shutil as _shutil
+
     # Stable key: hash of the absolute path, not the positional index.
     # key_suffix is kept as a namespace prefix to avoid cross-section collisions.
     stable_key = f"del_{key_suffix}__{p.name}"
 
-    m      = _rjson(p / "manifest.json")
+    m = _rjson(p / "manifest.json")
     status = (m or {}).get("status", "—")
-    dot    = "#22C55E" if status == "success" else "#EF4444" if status == "failed" else "#8EA0B3"
-    loc    = "generate" if "data/runs" in str(p) else "visualize"
+    dot = "#22C55E" if status == "success" else "#EF4444" if status == "failed" else "#8EA0B3"
+    loc = "generate" if "data/runs" in str(p) else "visualize"
 
     col_name, col_btn = st.columns([10, 1])
     with col_name:
@@ -1459,7 +1870,7 @@ def _geo_delete_one(p: Path, key_suffix: str) -> bool:
             f'overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{p.name}</div>'
             f'<div style="font-size:.68rem;color:#5A7A96;flex-shrink:0;margin-right:6px">{loc}</div>'
             f'<div style="font-size:.7rem;color:{dot};flex-shrink:0;font-weight:600">{status}</div>'
-            f'</div>'
+            f"</div>"
         )
     with col_btn:
         if not p.exists():
@@ -1480,38 +1891,62 @@ def pg_geometry(root, exe, tmo, dry):
     import shutil as _shutil
 
     _hero("△", "Geometry", "bwb_segmented_v1 · 20 design variables", "generator")
-    tab_gen, tab_vis, tab_info, tab_inspect, tab_cad = st.tabs(["  ① Generate  ", "  ② Visualize  ", "  ③ Design variables  ", "  ④ Inspect run  ", "  ⑤ CAD export  "])
+    tab_gen, tab_vis, tab_info, tab_inspect, tab_cad = st.tabs(
+        [
+            "  ① Generate  ",
+            "  ② Visualize  ",
+            "  ③ Design variables  ",
+            "  ④ Inspect run  ",
+            "  ⑤ CAD export  ",
+        ]
+    )
 
     # Shared config list — built once, used in all tabs
     cfg_files = _files(str(root / "configs" / "geometry"), "*.yaml")
-    prod_cfg  = str(root / "configs" / "geometry" / "bwb_training_v1.yaml")
+    prod_cfg = str(root / "configs" / "geometry" / "bwb_training_v1.yaml")
     smoke_cfg = str(root / "configs" / "geometry" / "baseline_bwb_25.yaml")
 
     def _cfg_label(s):
-        if "bwb_training_v1" in s: return f"Production — {Path(s).name}"
-        if "baseline_bwb_25"  in s: return f"Smoke test  — {Path(s).name}"
+        if "bwb_training_v1" in s:
+            return f"Production — {Path(s).name}"
+        if "baseline_bwb_25" in s:
+            return f"Smoke test  — {Path(s).name}"
         return Path(s).name
 
-    cfg_prod_first  = ([prod_cfg]  if prod_cfg  in cfg_files else []) +                       ([smoke_cfg] if smoke_cfg in cfg_files else []) +                       [f for f in cfg_files if f not in (prod_cfg, smoke_cfg)]
-    cfg_smoke_first = ([smoke_cfg] if smoke_cfg in cfg_files else []) +                       ([prod_cfg]  if prod_cfg  in cfg_files else []) +                       [f for f in cfg_files if f not in (prod_cfg, smoke_cfg)]
+    cfg_prod_first = (
+        ([prod_cfg] if prod_cfg in cfg_files else [])
+        + ([smoke_cfg] if smoke_cfg in cfg_files else [])
+        + [f for f in cfg_files if f not in (prod_cfg, smoke_cfg)]
+    )
+    cfg_smoke_first = (
+        ([smoke_cfg] if smoke_cfg in cfg_files else [])
+        + ([prod_cfg] if prod_cfg in cfg_files else [])
+        + [f for f in cfg_files if f not in (prod_cfg, smoke_cfg)]
+    )
 
     if not cfg_files:
-        st.warning(f"No YAML files found under {root / 'configs' / 'geometry'}. "
-                   "Check your project root in the sidebar.")
+        st.warning(
+            f"No YAML files found under {root / 'configs' / 'geometry'}. "
+            "Check your project root in the sidebar."
+        )
         return
 
     # ── GENERATE ─────────────────────────────────────────────────────────────
     with tab_gen:
         sel_cfg = st.selectbox(
-            "Config", cfg_prod_first,
-            format_func=_cfg_label, key="gg_cfg",
+            "Config",
+            cfg_prod_first,
+            format_func=_cfg_label,
+            key="gg_cfg",
             help="Production = wide design space, use for ML. "
-                 "Smoke = near-fixed, use only to verify the solver works.",
+            "Smoke = near-fixed, use only to verify the solver works.",
         )
         if "bwb_training_v1" in sel_cfg:
             st.success("✓ Wide design space — correct for ML training campaigns.")
         elif "baseline_bwb_25" in sel_cfg:
-            st.warning("⚠ Near-fixed design space — smoke / solver-check only. Not suitable for ML.")
+            st.warning(
+                "⚠ Near-fixed design space — smoke / solver-check only. Not suitable for ML."
+            )
         else:
             st.info(f"Custom config: {Path(sel_cfg).name}")
 
@@ -1537,7 +1972,11 @@ def pg_geometry(root, exe, tmo, dry):
             "Generate geometry",
             "Output → data/runs/<timestamp>_geometry_<stem>/",
             gen_args,
-            root, exe, tmo, dry, "g_run",
+            root,
+            exe,
+            tmo,
+            dry,
+            "g_run",
             label="▶  Generate geometry",
         )
         # Show output directory note after run — the seed comes from the YAML config
@@ -1549,8 +1988,9 @@ def pg_geometry(root, exe, tmo, dry):
         )
 
         # ── Runs from data/runs/ ──────────────────────────────────────────
-        geo_runs = [Path(r) for r in _dirs(str(root / "data" / "runs"))
-                    if "geometry" in Path(r).name]
+        geo_runs = [
+            Path(r) for r in _dirs(str(root / "data" / "runs")) if "geometry" in Path(r).name
+        ]
 
         if geo_runs:
             _sec("Generated geometry runs  (data/runs/)")
@@ -1558,24 +1998,29 @@ def pg_geometry(root, exe, tmo, dry):
             did_delete = False
             for i, p in enumerate(geo_runs[:20]):
                 # Show key metrics from manifest alongside the delete button
-                m   = _rjson(p / "manifest.json") or {}
+                m = _rjson(p / "manifest.json") or {}
                 geo = m.get("geometry") or {}
-                cs  = geo.get("case_summary") or {}
+                cs = geo.get("case_summary") or {}
                 cs_met = cs.get("metrics") or {}  # metrics live under case_summary["metrics"]
                 seed_v = geo.get("design_sampling_seed", "—")
-                semi   = cs_met.get("semi_span_m")
-                area   = cs_met.get("approx_area_m2")
-                ar_v   = cs_met.get("approx_aspect_ratio_planform")
-                metrics_str = "  ·  ".join(filter(None, [
-                    f"seed {seed_v}" if seed_v != "—" else None,
-                    f"semi-span {semi:.3f} m" if semi is not None else None,
-                    f"area {area:.4f} m²"     if area  is not None else None,
-                    f"AR {ar_v:.2f}"          if ar_v  is not None else None,
-                ]))
+                semi = cs_met.get("semi_span_m")
+                area = cs_met.get("approx_area_m2")
+                ar_v = cs_met.get("approx_aspect_ratio_planform")
+                metrics_str = "  ·  ".join(
+                    filter(
+                        None,
+                        [
+                            f"seed {seed_v}" if seed_v != "—" else None,
+                            f"semi-span {semi:.3f} m" if semi is not None else None,
+                            f"area {area:.4f} m²" if area is not None else None,
+                            f"AR {ar_v:.2f}" if ar_v is not None else None,
+                        ],
+                    )
+                )
                 col_info, col_del = st.columns([11, 1])
                 with col_info:
                     status = m.get("status", "—")
-                    dot_c  = "#22C55E" if status == "success" else "#EF4444"
+                    dot_c = "#22C55E" if status == "success" else "#EF4444"
                     _h(
                         f'<div style="background:#1B2A3A;border:1px solid #2D3F52;border-radius:7px;'
                         f'padding:.38rem .9rem;display:flex;flex-direction:column;gap:2px">'
@@ -1584,13 +2029,18 @@ def pg_geometry(root, exe, tmo, dry):
                         f'<div style="font-size:.78rem;color:#D6DEE8;font-family:JetBrains Mono,monospace;'
                         f'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">{p.name}</div>'
                         f'<div style="font-size:.7rem;color:{dot_c};font-weight:600;flex-shrink:0">{status}</div>'
-                        f'</div>'
-                        + (f'<div style="font-size:.7rem;color:#5A7A96;font-family:JetBrains Mono,monospace;'
-                           f'padding-left:15px">{metrics_str}</div>' if metrics_str else '')
-                        + f'</div>'
+                        f"</div>"
+                        + (
+                            f'<div style="font-size:.7rem;color:#5A7A96;font-family:JetBrains Mono,monospace;'
+                            f'padding-left:15px">{metrics_str}</div>'
+                            if metrics_str
+                            else ""
+                        )
+                        + f"</div>"
                     )
                 with col_del:
                     import shutil as _shutil2
+
                     if st.button("🗑", key=f"del_gen_{i}", help=f"Delete {p.name}"):
                         try:
                             _shutil2.rmtree(p)
@@ -1605,7 +2055,8 @@ def pg_geometry(root, exe, tmo, dry):
                 st.markdown("")
                 if st.button(
                     f"🗑  Delete ALL generate runs ({len(geo_runs)})",
-                    key="gg_del_all_gen", type="secondary",
+                    key="gg_del_all_gen",
+                    type="secondary",
                 ):
                     st.session_state["gg_confirm_gen"] = True
                     # Snapshot the list NOW — not on the next rerun
@@ -1614,7 +2065,9 @@ def pg_geometry(root, exe, tmo, dry):
             if st.session_state.get("gg_confirm_gen"):
                 # Use the snapshot taken at confirm time, not the live list
                 to_delete = st.session_state.get("gg_to_delete_gen", geo_runs)
-                st.warning(f"Delete all {len(to_delete)} generate run folder(s)? This cannot be undone.")
+                st.warning(
+                    f"Delete all {len(to_delete)} generate run folder(s)? This cannot be undone."
+                )
                 ca, cb, _ = st.columns([1, 1, 4])
                 if ca.button("Yes, delete all", key="gg_confirm_gen_yes", type="primary"):
                     deleted = []
@@ -1641,9 +2094,12 @@ def pg_geometry(root, exe, tmo, dry):
     # ── VISUALIZE ─────────────────────────────────────────────────────────────
     with tab_vis:
         # ── Geometry source ───────────────────────────────────────────────
-        geo_run_paths = [Path(r) for r in _dirs(str(root / "data" / "runs"))
-                         if "geometry" in Path(r).name
-                         and not any(k in Path(r).name for k in ("_aero_", "_sweep_"))]
+        geo_run_paths = [
+            Path(r)
+            for r in _dirs(str(root / "data" / "runs"))
+            if "geometry" in Path(r).name
+            and not any(k in Path(r).name for k in ("_aero_", "_sweep_"))
+        ]
 
         src_mode = st.radio(
             "Geometry source",
@@ -1651,13 +2107,13 @@ def pg_geometry(root, exe, tmo, dry):
             horizontal=True,
             key="gv_src_mode",
             help="From existing run: reuses the exact same config AND seed that produced "
-                 "that geometry — so you visualize the identical shape. "
-                 "From config file: choose any config and seed freely.",
+            "that geometry — so you visualize the identical shape. "
+            "From config file: choose any config and seed freely.",
         )
 
         # resolved for the buttons
-        vcfg       = ""
-        auto_seed  = None   # int seed read from manifest — None means not resolved yet
+        vcfg = ""
+        auto_seed = None  # int seed read from manifest — None means not resolved yet
 
         if src_mode == "From existing run":
             if not geo_run_paths:
@@ -1672,15 +2128,15 @@ def pg_geometry(root, exe, tmo, dry):
                     list(run_opts.keys()),
                     key="gv_run_sel",
                     help="Pick the run folder. Config and seed are read automatically "
-                         "from that run — you will visualize the exact geometry that was generated.",
+                    "from that run — you will visualize the exact geometry that was generated.",
                 )
                 chosen_run = run_opts[chosen_run_name]
 
                 # Read seed from manifest (authoritative)
                 m = _rjson(chosen_run / "manifest.json")
                 auto_seed = (m or {}).get("geometry", {}).get("design_sampling_seed")
-                status    = (m or {}).get("status", "unknown")
-                dot_col   = "#22C55E" if status == "success" else "#EF4444"
+                status = (m or {}).get("status", "unknown")
+                dot_col = "#22C55E" if status == "success" else "#EF4444"
 
                 # Config from input_config.yaml
                 saved_cfg = chosen_run / "input_config.yaml"
@@ -1693,8 +2149,10 @@ def pg_geometry(root, exe, tmo, dry):
                         "Falling back to config picker."
                     )
                     vcfg = st.selectbox(
-                        "Config (fallback)", cfg_smoke_first,
-                        format_func=_cfg_label, key="gv_cfg_fb",
+                        "Config (fallback)",
+                        cfg_smoke_first,
+                        format_func=_cfg_label,
+                        key="gv_cfg_fb",
                     )
                     cfg_display = Path(vcfg).name if vcfg else "—"
 
@@ -1710,7 +2168,7 @@ def pg_geometry(root, exe, tmo, dry):
                     f'<span style="color:#5A7A96"> · seed: </span>'
                     f'<span style="color:#FCD34D">{seed_display}</span></div>'
                     f'<div style="font-size:.7rem;color:{dot_col};font-weight:600">{status}</div>'
-                    f'</div>'
+                    f"</div>"
                 )
                 if auto_seed is not None:
                     st.caption(
@@ -1719,14 +2177,15 @@ def pg_geometry(root, exe, tmo, dry):
                     )
                 else:
                     st.caption(
-                        "Seed not found in manifest. "
-                        "The geometry may not be exactly reproduced."
+                        "Seed not found in manifest. " "The geometry may not be exactly reproduced."
                     )
         else:
             # From config file — user controls seed freely
             vcfg = st.selectbox(
-                "Config", cfg_smoke_first,
-                format_func=_cfg_label, key="gv_cfg",
+                "Config",
+                cfg_smoke_first,
+                format_func=_cfg_label,
+                key="gv_cfg",
                 help="Pick which config to sample one geometry from.",
             )
 
@@ -1734,13 +2193,18 @@ def pg_geometry(root, exe, tmo, dry):
         if src_mode == "From config file":
             c1, c2 = st.columns([1, 2])
             seed_val = c1.number_input(
-                "Seed", min_value=0, max_value=99999, value=42, step=1,
+                "Seed",
+                min_value=0,
+                max_value=99999,
+                value=42,
+                step=1,
                 key="gv_seed",
                 help="Same seed + same config = same geometry every time.",
             )
             png_name = c2.text_input(
                 "PNG filename (optional)",
-                value="", placeholder="e.g. bwb_sweep35  — leave blank for auto name",
+                value="",
+                placeholder="e.g. bwb_sweep35  — leave blank for auto name",
                 key="gv_pngname",
             )
         else:
@@ -1748,7 +2212,8 @@ def pg_geometry(root, exe, tmo, dry):
             seed_val = auto_seed if auto_seed is not None else 0
             png_name = st.text_input(
                 "PNG filename (optional)",
-                value="", placeholder="e.g. bwb_seed100_run1  — leave blank for auto name",
+                value="",
+                placeholder="e.g. bwb_seed100_run1  — leave blank for auto name",
                 key="gv_pngname",
             )
 
@@ -1766,14 +2231,33 @@ def pg_geometry(root, exe, tmo, dry):
                 _panel(
                     "Visualize 3D wing",
                     "Output → data/debug/visualization_runs/<timestamp>/",
-                    ["geometry", "visualize", "--config", vcfg,
-                     "--seed", str(int(seed_val)), "--draw-3d"],
-                    root, exe, tmo, dry, "gv_3d",
+                    [
+                        "geometry",
+                        "visualize",
+                        "--config",
+                        vcfg,
+                        "--seed",
+                        str(int(seed_val)),
+                        "--draw-3d",
+                    ],
+                    root,
+                    exe,
+                    tmo,
+                    dry,
+                    "gv_3d",
                     label="▶  Visualize 3D wing",
                 )
             with col_b:
-                args_png = ["geometry", "visualize", "--config", vcfg,
-                            "--seed", str(int(seed_val)), "--no-draw-3d", "--save-plot"]
+                args_png = [
+                    "geometry",
+                    "visualize",
+                    "--config",
+                    vcfg,
+                    "--seed",
+                    str(int(seed_val)),
+                    "--no-draw-3d",
+                    "--save-plot",
+                ]
                 if png_name.strip():
                     out_dir = root / "data" / "debug" / "plots" / png_name.strip()
                     args_png += ["--output-dir", str(out_dir)]
@@ -1782,7 +2266,11 @@ def pg_geometry(root, exe, tmo, dry):
                     "Output → data/debug/visualization_runs/<timestamp>/  "
                     "(or plots/<name>/ if named).",
                     args_png,
-                    root, exe, tmo, dry, "gv_png",
+                    root,
+                    exe,
+                    tmo,
+                    dry,
+                    "gv_png",
                     label="📷  Save plot as PNG",
                 )
 
@@ -1790,15 +2278,21 @@ def pg_geometry(root, exe, tmo, dry):
         viz_base_auto = root / "data" / "debug" / "visualization_runs"
         plot_base_auto = root / "data" / "debug" / "plots"
         # Scan both dirs for the newest PNG
-        _all_pngs = sorted(
-            list(viz_base_auto.glob("*/*.png")) + list(plot_base_auto.glob("*/*.png")),
-            key=lambda p: p.stat().st_mtime if p.exists() else 0,
-            reverse=True,
-        ) if (viz_base_auto.exists() or plot_base_auto.exists()) else []
+        _all_pngs = (
+            sorted(
+                list(viz_base_auto.glob("*/*.png")) + list(plot_base_auto.glob("*/*.png")),
+                key=lambda p: p.stat().st_mtime if p.exists() else 0,
+                reverse=True,
+            )
+            if (viz_base_auto.exists() or plot_base_auto.exists())
+            else []
+        )
         if _all_pngs:
             _sec("Latest saved planform PNG")
             latest_png = _all_pngs[0]
-            st.caption(f"{latest_png.relative_to(root) if latest_png.is_relative_to(root) else latest_png}")
+            st.caption(
+                f"{latest_png.relative_to(root) if latest_png.is_relative_to(root) else latest_png}"
+            )
             st.image(str(latest_png), use_container_width=True)
             if len(_all_pngs) > 1:
                 with st.expander(f"Previous PNGs ({len(_all_pngs) - 1})", expanded=False):
@@ -1807,11 +2301,11 @@ def pg_geometry(root, exe, tmo, dry):
                         st.image(str(png), use_container_width=True)
 
         # ── Runs from data/debug/visualization_runs/ + data/debug/plots/ ──
-        viz_base  = root / "data" / "debug" / "visualization_runs"
+        viz_base = root / "data" / "debug" / "visualization_runs"
         plot_base = root / "data" / "debug" / "plots"
-        viz_runs  = [Path(r) for r in _dirs(str(viz_base))]
+        viz_runs = [Path(r) for r in _dirs(str(viz_base))]
         plot_runs = [Path(r) for r in _dirs(str(plot_base))]
-        all_viz   = viz_runs + plot_runs
+        all_viz = viz_runs + plot_runs
 
         if all_viz:
             _sec("Visualize outputs")
@@ -1830,14 +2324,17 @@ def pg_geometry(root, exe, tmo, dry):
                 st.markdown("")
                 if st.button(
                     f"🗑  Delete ALL visualize outputs ({len(all_viz)})",
-                    key="gv_del_all", type="secondary",
+                    key="gv_del_all",
+                    type="secondary",
                 ):
                     st.session_state["gv_confirm_all"] = True
                     st.session_state["gv_to_delete"] = [str(p) for p in all_viz]
 
             if st.session_state.get("gv_confirm_all"):
                 to_delete_viz = st.session_state.get("gv_to_delete", all_viz)
-                st.warning(f"Delete all {len(to_delete_viz)} visualize output folder(s)? This cannot be undone.")
+                st.warning(
+                    f"Delete all {len(to_delete_viz)} visualize output folder(s)? This cannot be undone."
+                )
                 ca, cb, _ = st.columns([1, 1, 4])
                 if ca.button("Yes, delete all", key="gv_confirm_all_yes", type="primary"):
                     deleted = []
@@ -1864,8 +2361,10 @@ def pg_geometry(root, exe, tmo, dry):
     # ── DESIGN VARIABLES ─────────────────────────────────────────────────────
     with tab_info:
         info_cfg = st.selectbox(
-            "Show bounds for config", cfg_prod_first,
-            format_func=_cfg_label, key="gi_cfg",
+            "Show bounds for config",
+            cfg_prod_first,
+            format_func=_cfg_label,
+            key="gi_cfg",
             help="Switch config to see the exact design-variable bounds from that YAML file.",
         )
         st.caption(
@@ -1873,7 +2372,6 @@ def pg_geometry(root, exe, tmo, dry):
             "**Amber** = nearly fixed (min ≈ max) — not useful for ML training."
         )
         _geo_var_table(info_cfg)
-
 
     # ── INSPECT ──────────────────────────────────────────────────────────────
     with tab_inspect:
@@ -1883,9 +2381,12 @@ def pg_geometry(root, exe, tmo, dry):
             "Equivalent to <code>aeris geometry inspect --run-dir &lt;run&gt;</code>.",
             "info",
         )
-        insp_runs = [Path(r) for r in _dirs(str(root / "data" / "runs"))
-                     if "geometry" in Path(r).name
-                     and not any(k in Path(r).name for k in ("_aero_", "_sweep_"))]
+        insp_runs = [
+            Path(r)
+            for r in _dirs(str(root / "data" / "runs"))
+            if "geometry" in Path(r).name
+            and not any(k in Path(r).name for k in ("_aero_", "_sweep_"))
+        ]
         if not insp_runs:
             st.warning("No geometry runs found in data/runs/. Run ① Generate first.")
         else:
@@ -1897,14 +2398,14 @@ def pg_geometry(root, exe, tmo, dry):
             )
             insp_path = next((p for p in insp_runs if p.name == chosen_insp), None)
             if insp_path:
-                m   = _rjson(insp_path / "manifest.json") or {}
+                m = _rjson(insp_path / "manifest.json") or {}
                 geo = m.get("geometry") or {}
                 # case_summary is the full build_geometry_summary() output — a nested dict.
                 # Key metric fields live under cs["metrics"], planform values under cs["sampled_planform"].
-                cs      = geo.get("case_summary") or {}
-                cs_met  = cs.get("metrics") or {}
-                cs_pf   = cs.get("sampled_planform") or {}
-                status  = m.get("status", "unknown")
+                cs = geo.get("case_summary") or {}
+                cs_met = cs.get("metrics") or {}
+                cs_pf = cs.get("sampled_planform") or {}
+                status = m.get("status", "unknown")
 
                 # Status + identity
                 c1, c2, c3 = st.columns(3)
@@ -1954,7 +2455,9 @@ def pg_geometry(root, exe, tmo, dry):
                             "This may indicate a schema change. Check Full manifest below."
                         )
                     else:
-                        st.warning("No case_summary in manifest. Run may have failed during geometry generation.")
+                        st.warning(
+                            "No case_summary in manifest. Run may have failed during geometry generation."
+                        )
 
                 # Timestamps
                 _sec("Run metadata")
@@ -1970,7 +2473,9 @@ def pg_geometry(root, exe, tmo, dry):
                 if gspath.exists():
                     gs = _rjson(gspath) or {}
                     with st.expander("geometry_summary.json — key sections", expanded=True):
-                        sub_tabs = st.tabs(["metrics", "sampled_planform", "sampled_sections", "raw"])
+                        sub_tabs = st.tabs(
+                            ["metrics", "sampled_planform", "sampled_sections", "raw"]
+                        )
                         with sub_tabs[0]:
                             st.json(gs.get("metrics") or {}, expanded=True)
                         with sub_tabs[1]:
@@ -1984,12 +2489,15 @@ def pg_geometry(root, exe, tmo, dry):
                 with st.expander("manifest.json — geometry section", expanded=True):
                     inner_tabs = st.tabs(["generator info", "design_sample", "full"])
                     with inner_tabs[0]:
-                        st.json({
-                            "generator_id":         geo.get("generator_id"),
-                            "design_sampling_seed": geo.get("design_sampling_seed"),
-                            "name":                 geo.get("name"),
-                            "geometry_deterministic": geo.get("geometry_deterministic"),
-                        }, expanded=True)
+                        st.json(
+                            {
+                                "generator_id": geo.get("generator_id"),
+                                "design_sampling_seed": geo.get("design_sampling_seed"),
+                                "name": geo.get("name"),
+                                "geometry_deterministic": geo.get("geometry_deterministic"),
+                            },
+                            expanded=True,
+                        )
                     with inner_tabs[1]:
                         st.json(geo.get("design_sample") or {}, expanded=False)
                     with inner_tabs[2]:
@@ -1998,7 +2506,6 @@ def pg_geometry(root, exe, tmo, dry):
                 # CLI shortcut
                 _sec("CLI equivalent")
                 _cmd_preview(["geometry", "inspect", "--run-dir", str(insp_path)])
-
 
     # ── CAD EXPORT ───────────────────────────────────────────────────────────
     with tab_cad:
@@ -2018,14 +2525,18 @@ def pg_geometry(root, exe, tmo, dry):
                 if not f.is_file():
                     continue
                 rel = f.relative_to(cad_dir)
-                rows.append({
-                    "file": str(rel),
-                    "size_bytes": f.stat().st_size,
-                    "path": str(f),
-                })
+                rows.append(
+                    {
+                        "file": str(rel),
+                        "size_bytes": f.stat().st_size,
+                        "path": str(f),
+                    }
+                )
             return rows
 
-        def _step_backend_label(data: dict[str, Any], step_export: dict[str, Any], *, physical: bool) -> str:
+        def _step_backend_label(
+            data: dict[str, Any], step_export: dict[str, Any], *, physical: bool
+        ) -> str:
             """Human-readable final STEP backend/fallback label for CAD manifests."""
             backend = (
                 step_export.get("backend_final")
@@ -2137,25 +2648,32 @@ def pg_geometry(root, exe, tmo, dry):
                         "The high-level assembly export failed non-fatally."
                     )
                 elif assembly_error:
-                    st.warning("High-level assembly export reported an error. Check the STEP body report below.")
+                    st.warning(
+                        "High-level assembly export reported an error. Check the STEP body report below."
+                    )
 
                 if per_body_errors or body_errors:
-                    st.error("One or more individual CAD bodies reported export/loft errors. Inspect the body report.")
+                    st.error(
+                        "One or more individual CAD bodies reported export/loft errors. Inspect the body report."
+                    )
 
                 _sec("Physical deflection evidence")
-                st.json({
-                    "deflection_topology": data.get("deflection_topology"),
-                    "surface_model": data.get("surface_model"),
-                    "body_model": data.get("body_model"),
-                    "right_deflection_deg": controls.get("right_deflection_deg"),
-                    "left_deflection_deg": controls.get("left_deflection_deg"),
-                    "delta_e_sym_deg": controls.get("delta_e_sym_deg"),
-                    "delta_a_diff_deg": controls.get("delta_a_diff_deg"),
-                    "boundary_model": controls.get("boundary_model"),
-                    "step_export": step_export,
-                    "assembly_export_error_nonfatal": assembly_error or None,
-                    "per_body_export_errors": per_body_errors,
-                }, expanded=False)
+                st.json(
+                    {
+                        "deflection_topology": data.get("deflection_topology"),
+                        "surface_model": data.get("surface_model"),
+                        "body_model": data.get("body_model"),
+                        "right_deflection_deg": controls.get("right_deflection_deg"),
+                        "left_deflection_deg": controls.get("left_deflection_deg"),
+                        "delta_e_sym_deg": controls.get("delta_e_sym_deg"),
+                        "delta_a_diff_deg": controls.get("delta_a_diff_deg"),
+                        "boundary_model": controls.get("boundary_model"),
+                        "step_export": step_export,
+                        "assembly_export_error_nonfatal": assembly_error or None,
+                        "per_body_export_errors": per_body_errors,
+                    },
+                    expanded=False,
+                )
 
                 if body_report:
                     _sec("STEP backend health")
@@ -2163,7 +2681,10 @@ def pg_geometry(root, exe, tmo, dry):
                     h1.metric("Bodies attempted", body_report.get("n_bodies_attempted", "—"))
                     h2.metric("Bodies lofted", body_report.get("n_bodies_lofted", "—"))
                     h3.metric("Body errors", len(body_errors))
-                    h4.metric("Assembly fallback", "yes" if assembly_error and status.lower() == "success" else "no")
+                    h4.metric(
+                        "Assembly fallback",
+                        "yes" if assembly_error and status.lower() == "success" else "no",
+                    )
 
                 b_report = data.get("boundary_report") or {}
                 if b_report:
@@ -2179,16 +2700,20 @@ def pg_geometry(root, exe, tmo, dry):
                 elif step_backend_label == "openvsp":
                     st.info("Neutral STEP export used the OpenVSP backend.")
                 elif "requested" in step_backend_label:
-                    st.caption("STEP backend was requested but no final backend field was found in the manifest.")
+                    st.caption(
+                        "STEP backend was requested but no final backend field was found in the manifest."
+                    )
 
-                st.json({
-                    "status": status,
-                    "formats_produced": data.get("formats_produced"),
-                    "step_backend_final": step_backend_label,
-                    "step_export": step_export or data.get("step_backend"),
-                    "artifacts": artifacts,
-                }, expanded=False)
-
+                st.json(
+                    {
+                        "status": status,
+                        "formats_produced": data.get("formats_produced"),
+                        "step_backend_final": step_backend_label,
+                        "step_export": step_export or data.get("step_backend"),
+                        "artifacts": artifacts,
+                    },
+                    expanded=False,
+                )
 
         def _render_cad_outputs(cad_dir: Path, *, physical: bool, key: str) -> None:
             _sec("Produced files / evidence")
@@ -2196,7 +2721,11 @@ def pg_geometry(root, exe, tmo, dry):
                 st.caption("No CAD export folder yet. Run the export above.")
                 return
 
-            manifest_name = "physical_deflected_geometry_export_manifest.json" if physical else "geometry_export_manifest.json"
+            manifest_name = (
+                "physical_deflected_geometry_export_manifest.json"
+                if physical
+                else "geometry_export_manifest.json"
+            )
             manifest_path = cad_dir / manifest_name
             _manifest_status_card(manifest_path, physical=physical)
 
@@ -2204,7 +2733,11 @@ def pg_geometry(root, exe, tmo, dry):
                 preview = cad_dir / "previews" / "physical_deflected_planform.png"
                 if preview.exists():
                     _sec("Physical-deflected preview")
-                    st.image(str(preview), caption="physical_deflected_planform.png", use_container_width=True)
+                    st.image(
+                        str(preview),
+                        caption="physical_deflected_planform.png",
+                        use_container_width=True,
+                    )
 
                 body_report = cad_dir / "physical_deflected_geometry.step_bodies.json"
                 if body_report.exists():
@@ -2214,7 +2747,9 @@ def pg_geometry(root, exe, tmo, dry):
                     b1.metric("Bodies attempted", report.get("n_bodies_attempted", "—"))
                     b2.metric("Bodies lofted", report.get("n_bodies_lofted", "—"))
                     b3.metric("Body errors", len(report.get("errors", []) or []))
-                    with st.expander("physical_deflected_geometry.step_bodies.json", expanded=False):
+                    with st.expander(
+                        "physical_deflected_geometry.step_bodies.json", expanded=False
+                    ):
                         st.json(report, expanded=False)
 
             rows = _cad_file_rows(cad_dir)
@@ -2223,7 +2758,22 @@ def pg_geometry(root, exe, tmo, dry):
                     st.dataframe(pd.DataFrame(rows), use_container_width=True, height=260)
                 else:
                     st.json(rows)
-                previewable = [Path(r["path"]) for r in rows if Path(r["path"]).suffix.lower() in {".json", ".txt", ".vspscript", ".step", ".stp", ".vsp3", ".png", ".jpg", ".jpeg"}]
+                previewable = [
+                    Path(r["path"])
+                    for r in rows
+                    if Path(r["path"]).suffix.lower()
+                    in {
+                        ".json",
+                        ".txt",
+                        ".vspscript",
+                        ".step",
+                        ".stp",
+                        ".vsp3",
+                        ".png",
+                        ".jpg",
+                        ".jpeg",
+                    }
+                ]
                 if previewable:
                     chosen = st.selectbox(
                         "Preview artifact",
@@ -2237,20 +2787,29 @@ def pg_geometry(root, exe, tmo, dry):
 
         # ── Geometry source selector ───────────────────────────────────────
         _sec("Geometry source")
-        _cad_source_from_run = st.radio(
-            "Export from",
-            ["Config file (generate / re-sample)", "Existing run (stored DVs — no re-sampling)"],
-            horizontal=True,
-            key="cad_source_sel",
-            help="'Config file' generates from YAML bounds. 'Existing run' uses the "
-                 "exact DVs stored in a previous geometry run — ideal for DoE CFD selection.",
-        ) == "Existing run (stored DVs — no re-sampling)"
+        _cad_source_from_run = (
+            st.radio(
+                "Export from",
+                [
+                    "Config file (generate / re-sample)",
+                    "Existing run (stored DVs — no re-sampling)",
+                ],
+                horizontal=True,
+                key="cad_source_sel",
+                help="'Config file' generates from YAML bounds. 'Existing run' uses the "
+                "exact DVs stored in a previous geometry run — ideal for DoE CFD selection.",
+            )
+            == "Existing run (stored DVs — no re-sampling)"
+        )
 
         _cad_run_dir: str | None = None
         if _cad_source_from_run:
             _all_geo_runs_cad = sorted(
-                [Path(r) for r in _dirs(str(root / "data" / "runs"))
-                 if "geometry" in Path(r).name and "_aero_" not in Path(r).name],
+                [
+                    Path(r)
+                    for r in _dirs(str(root / "data" / "runs"))
+                    if "geometry" in Path(r).name and "_aero_" not in Path(r).name
+                ],
                 key=lambda p: p.name,
             )
             if not _all_geo_runs_cad:
@@ -2266,11 +2825,13 @@ def pg_geometry(root, exe, tmo, dry):
                 _cad_run_dir = str(next(p for p in _all_geo_runs_cad if p.name == _cad_run_name))
                 st.caption(f"Run: `{_cad_run_name}` · DVs loaded from geometry_summary.json")
 
-        neutral_tab, physical_tab, doctor_tab = st.tabs([
-            "  Neutral CAD  ",
-            "  Physical deflected CAD  ",
-            "  OpenVSP doctor  ",
-        ])
+        neutral_tab, physical_tab, doctor_tab = st.tabs(
+            [
+                "  Neutral CAD  ",
+                "  Physical deflected CAD  ",
+                "  OpenVSP doctor  ",
+            ]
+        )
 
         # ── Neutral CAD export ────────────────────────────────────────────────
         with neutral_tab:
@@ -2328,29 +2889,47 @@ def pg_geometry(root, exe, tmo, dry):
             )
             if _cad_source_from_run and _cad_run_dir:
                 cad_args = [
-                    "geometry", "export-cad-from-run", _cad_run_dir,
-                    "--formats", cad_format,
-                    "--output-dir", cad_out,
-                    "--step-backend", step_backend,
-                    "--openvsp-command", openvsp_exe,
+                    "geometry",
+                    "export-cad-from-run",
+                    _cad_run_dir,
+                    "--formats",
+                    cad_format,
+                    "--output-dir",
+                    cad_out,
+                    "--step-backend",
+                    step_backend,
+                    "--openvsp-command",
+                    openvsp_exe,
                 ]
             else:
                 cad_args = [
-                    "geometry", "export-cad",
-                    "--config", cad_cfg,
-                    "--formats", cad_format,
-                    "--output-dir", cad_out,
-                    "--openvsp-command", openvsp_exe,
-                    "--step-backend", step_backend,
+                    "geometry",
+                    "export-cad",
+                    "--config",
+                    cad_cfg,
+                    "--formats",
+                    cad_format,
+                    "--output-dir",
+                    cad_out,
+                    "--openvsp-command",
+                    openvsp_exe,
+                    "--step-backend",
+                    step_backend,
                 ]
             _panel(
                 "Export neutral CAD",
                 "Writes geometry.vspscript, optional geometry.step, source geometry artifacts, stdout/stderr, and geometry_export_manifest.json.",
                 cad_args,
-                root, exe, tmo, dry, "cad_export_run",
+                root,
+                exe,
+                tmo,
+                dry,
+                "cad_export_run",
                 label="Export neutral CAD",
             )
-            _render_cad_outputs(Path(cad_out).expanduser() / "cad_exports", physical=False, key="neutral_cad")
+            _render_cad_outputs(
+                Path(cad_out).expanduser() / "cad_exports", physical=False, key="neutral_cad"
+            )
 
         # ── Physical deflected CAD export ─────────────────────────────────────
         with physical_tab:
@@ -2363,7 +2942,12 @@ def pg_geometry(root, exe, tmo, dry):
             asym_cfg = str(root / "configs" / "geometry" / "bwb_25_sections_asym_controls.yaml")
             v2_cfg = str(root / "configs" / "geometry" / "bwb_training_v2.yaml")
             v3_cfg = str(root / "configs" / "geometry" / "bwb_training_v3.yaml")
-            phys_first = ([asym_cfg] if asym_cfg in cfg_files else []) + ([v2_cfg] if v2_cfg in cfg_files else []) + ([v3_cfg] if v3_cfg in cfg_files else []) + [f for f in cfg_smoke_first if f not in (asym_cfg, v2_cfg, v3_cfg)]
+            phys_first = (
+                ([asym_cfg] if asym_cfg in cfg_files else [])
+                + ([v2_cfg] if v2_cfg in cfg_files else [])
+                + ([v3_cfg] if v3_cfg in cfg_files else [])
+                + [f for f in cfg_smoke_first if f not in (asym_cfg, v2_cfg, v3_cfg)]
+            )
 
             def _phys_cfg_label(s: str) -> str:
                 name = Path(s).name
@@ -2389,6 +2973,7 @@ def pg_geometry(root, exe, tmo, dry):
                 if _cad_run_dir:
                     try:
                         import json as _pj
+
                         _phys_run_manifest = _pj.loads(
                             (Path(_cad_run_dir) / "manifest.json").read_text()
                         )
@@ -2399,17 +2984,20 @@ def pg_geometry(root, exe, tmo, dry):
                     or (_phys_run_manifest.get("geometry") or {}).get("config_path")
                     or (phys_first[0] if phys_first else "")
                 )
-                _phys_seed_from_run = (
-                    _phys_run_manifest.get("seed")
-                    or (_phys_run_manifest.get("geometry") or {}).get("seed")
-                )
+                _phys_seed_from_run = _phys_run_manifest.get("seed") or (
+                    _phys_run_manifest.get("geometry") or {}
+                ).get("seed")
                 if phys_cfg and Path(phys_cfg).exists():
                     st.caption(f"Config derived from run manifest: `{Path(phys_cfg).name}`")
                 else:
-                    st.warning("Could not derive config from run manifest — select a config manually.")
+                    st.warning(
+                        "Could not derive config from run manifest — select a config manually."
+                    )
                     phys_cfg = st.selectbox(
                         "Physical deflection config (fallback)",
-                        phys_first, format_func=_phys_cfg_label, key="phys_cad_cfg_fb"
+                        phys_first,
+                        format_func=_phys_cfg_label,
+                        key="phys_cad_cfg_fb",
                     )
                     _phys_seed_from_run = None
 
@@ -2445,7 +3033,11 @@ def pg_geometry(root, exe, tmo, dry):
                     index=0,
                     key="phys_formats",
                 )
-            phys_formats = {"Both": "vspscript,step", "VSP script only": "vspscript", "STEP only": "step"}[phys_fmt_label]
+            phys_formats = {
+                "Both": "vspscript,step",
+                "VSP script only": "vspscript",
+                "STEP only": "step",
+            }[phys_fmt_label]
 
             r2c1, r2c2, r2c3, r2c4 = st.columns(4)
             with r2c1:
@@ -2472,10 +3064,19 @@ def pg_geometry(root, exe, tmo, dry):
                 )
             with r2c3:
                 use_seed = st.checkbox("Override geometry seed", value=False, key="phys_use_seed")
-                phys_seed = st.number_input("Seed", min_value=0, value=100, step=1, key="phys_seed") if use_seed else None
+                phys_seed = (
+                    st.number_input("Seed", min_value=0, value=100, step=1, key="phys_seed")
+                    if use_seed
+                    else None
+                )
             with r2c4:
                 save_preview = st.checkbox("Save preview PNG", value=True, key="phys_save_preview")
-                draw_3d = st.checkbox("Open AeroSandbox 3D viewer", value=False, key="phys_draw_3d", help="Requires a local desktop/OpenGL session; do not use over headless SSH.")
+                draw_3d = st.checkbox(
+                    "Open AeroSandbox 3D viewer",
+                    value=False,
+                    key="phys_draw_3d",
+                    help="Requires a local desktop/OpenGL session; do not use over headless SSH.",
+                )
 
             phys_out = st.text_input(
                 "Output directory",
@@ -2517,24 +3118,35 @@ def pg_geometry(root, exe, tmo, dry):
                     "warn",
                 )
 
-            _stat_row([
-                ("Right elevon", f"{right_defl:+.1f}°", "delta_e + delta_a"),
-                ("Left elevon", f"{left_defl:+.1f}°", "delta_e - delta_a"),
-                ("Max |δ|", f"{max_abs_defl:.1f}°", "physical limit check"),
-                ("Topology", topology, "CAD body model"),
-                ("STEP strategy", "segmented bodies", "robust CadQuery path"),
-            ])
+            _stat_row(
+                [
+                    ("Right elevon", f"{right_defl:+.1f}°", "delta_e + delta_a"),
+                    ("Left elevon", f"{left_defl:+.1f}°", "delta_e - delta_a"),
+                    ("Max |δ|", f"{max_abs_defl:.1f}°", "physical limit check"),
+                    ("Topology", topology, "CAD body model"),
+                    ("STEP strategy", "segmented bodies", "robust CadQuery path"),
+                ]
+            )
 
             phys_args = [
-                "geometry", "export-deflected-cad",
-                "--config", phys_cfg,
-                "--formats", phys_formats,
-                "--output-dir", phys_out,
-                "--delta-e-sym-deg", str(delta_e),
-                "--delta-a-diff-deg", str(delta_a),
-                "--deflection-topology", topology,
-                "--hinge-gap-fraction", str(hinge_gap),
-                "--boundary-epsilon-fraction", str(boundary_eps),
+                "geometry",
+                "export-deflected-cad",
+                "--config",
+                phys_cfg,
+                "--formats",
+                phys_formats,
+                "--output-dir",
+                phys_out,
+                "--delta-e-sym-deg",
+                str(delta_e),
+                "--delta-a-diff-deg",
+                str(delta_a),
+                "--deflection-topology",
+                topology,
+                "--hinge-gap-fraction",
+                str(hinge_gap),
+                "--boundary-epsilon-fraction",
+                str(boundary_eps),
             ]
             if phys_seed is not None:
                 phys_args.extend(["--seed", str(int(phys_seed))])
@@ -2547,10 +3159,16 @@ def pg_geometry(root, exe, tmo, dry):
                 "Export physical deflected CAD",
                 "Writes physical_deflected_geometry.vspscript, physical_deflected_geometry.step, per-body STEP diagnostics, preview PNG, physical_control_deflection.json, and manifest evidence.",
                 phys_args,
-                root, exe, tmo, dry, "phys_cad_export_run",
+                root,
+                exe,
+                tmo,
+                dry,
+                "phys_cad_export_run",
                 label="Export physical deflected CAD",
             )
-            _render_cad_outputs(Path(phys_out).expanduser() / "cad_exports", physical=True, key="physical_cad")
+            _render_cad_outputs(
+                Path(phys_out).expanduser() / "cad_exports", physical=True, key="physical_cad"
+            )
 
         # ── OpenVSP doctor ────────────────────────────────────────────────────
         with doctor_tab:
@@ -2558,16 +3176,20 @@ def pg_geometry(root, exe, tmo, dry):
                 "VSP script export does not require OpenVSP. OpenVSP is only needed if you explicitly use the OpenVSP STEP backend or want to open the generated script in OpenVSP.",
                 "info",
             )
-            doctor_exe = st.text_input("OpenVSP executable/path", value="vsp", key="cad_doctor_openvsp")
+            doctor_exe = st.text_input(
+                "OpenVSP executable/path", value="vsp", key="cad_doctor_openvsp"
+            )
             _panel(
                 "Check OpenVSP executable",
                 "Checks whether the executable/path is discoverable. Does not launch OpenVSP.",
                 ["geometry", "openvsp-doctor", "--openvsp-command", doctor_exe],
-                root, exe, tmo, dry, "cad_doctor_run",
+                root,
+                exe,
+                tmo,
+                dry,
+                "cad_doctor_run",
                 label="Check OpenVSP",
             )
-
-
 
 
 # AERIS_PATCH_CST_GUI_V1_HELPERS
@@ -2578,6 +3200,7 @@ def _airfoil_feature_preset_hint_from_manifest(manifest: dict | None) -> str:
     library reports, or nested summaries. Walk recursively so the GUI remains
     robust as reports evolve.
     """
+
     def _walk(obj):
         if isinstance(obj, dict):
             for key, value in obj.items():
@@ -2615,22 +3238,12 @@ def _airfoil_dataset_feature_preset_hint(dataset_root: Path) -> str:
     return "airfoil_xfoil_v1"
 
 
-def _airfoil_library_candidates(root: Path) -> list[Path]:
-    """Discover selectable airfoil libraries under data/."""
-    data_root = Path(root) / "data"
-    candidates: list[Path] = []
-    preferred = [data_root / "airfoil_library", data_root / "airfoil_library_cst_smoke"]
-    for d in preferred:
-        if (d / "airfoil_inventory.csv").exists() and d not in candidates:
-            candidates.append(d)
-    if data_root.exists():
-        for d in sorted(data_root.glob("airfoil_library*")):
-            if d.is_dir() and (d / "airfoil_inventory.csv").exists() and d not in candidates:
-                candidates.append(d)
-    if not candidates:
-        candidates.append(data_root / "airfoil_library")
-    return candidates
-
+# NOTE (AERIS_PATCH_AIRFOIL_GUI_V1): the pre-July-2026 duplicate definition of
+# _airfoil_library_candidates(root) that lived here unconditionally added
+# "preferred" paths without checking airfoil_inventory.csv existence, and was
+# shadowed at runtime by the second definition below anyway (Python re-binds
+# the name; the later def wins). Removed as dead code; the surviving
+# definition below now carries the missing existence check.
 
 
 def _airfoil_inventory_count(library_dir: str | Path) -> int:
@@ -2657,7 +3270,9 @@ def _airfoil_inventory_count(library_dir: str | Path) -> int:
 def _airfoil_library_origin(library_dir: str | Path) -> str:
     """Classify an airfoil library for GUI display."""
     root = Path(library_dir).expanduser()
-    if (root / "cst_airfoil_library_manifest.json").exists() or (root / "library_report.json").exists():
+    if (root / "cst_airfoil_library_manifest.json").exists() or (
+        root / "library_report.json"
+    ).exists():
         return "CST/Kulfan generated"
     if (root / "airfoil_inventory.csv").exists():
         return "Imported .dat library"
@@ -2688,8 +3303,10 @@ def _airfoil_library_candidates(project_root: Path) -> list[Path]:
         if rp not in found:
             found.append(rp)
 
+    # (AERIS_PATCH_AIRFOIL_GUI_V1) only add preferred paths that are actually built libraries.
     for path in preferred:
-        add(path)
+        if (path / "airfoil_inventory.csv").exists():
+            add(path)
 
     if data_root.exists():
         # Keep this intentionally shallow and cheap for Streamlit refreshes.
@@ -2699,9 +3316,7 @@ def _airfoil_library_candidates(project_root: Path) -> list[Path]:
             name = child.name.lower()
             has_inventory = (child / "airfoil_inventory.csv").exists()
             looks_like_library = (
-                "airfoil_library" in name
-                or "cst" in name and "airfoil" in name
-                or has_inventory
+                "airfoil_library" in name or "cst" in name and "airfoil" in name or has_inventory
             )
             if looks_like_library:
                 add(child)
@@ -2737,8 +3352,6 @@ def _airfoil_library_label(path: Path | str) -> str:
     if n > 0:
         return f"{p}  —  {n} airfoils · {origin}{seed_txt}"
     return f"{p}  —  {origin}"
-
-
 
 
 def _airfoil_xfoil_dataset_candidates(project_root: Path) -> list[Path]:
@@ -2800,6 +3413,7 @@ def _airfoil_xfoil_dataset_label(dataset_dir: Path | str) -> str:
     if converged is not None:
         return f"{ds.name} — {rows} rows · {converged} converged"
     return f"{ds.name} — {rows} rows"
+
 
 def _airfoil_dataset_csv(dataset_dir: str | Path) -> Path:
     """Return the standard AERIS 2D airfoil dataset CSV path."""
@@ -2940,7 +3554,9 @@ def _render_airfoil_polar_viewer(dataset_dir: str | Path, *, key_prefix: str = "
         label = str(aid)
         if name_col and name_col in g.columns:
             label = str(g[name_col].iloc[0])
-        ax.plot(g[x_col], g[y_col], marker="o", linewidth=1.3, markersize=3.0, alpha=0.78, label=label)
+        ax.plot(
+            g[x_col], g[y_col], marker="o", linewidth=1.3, markersize=3.0, alpha=0.78, label=label
+        )
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
@@ -2981,13 +3597,18 @@ def _render_airfoil_polar_viewer(dataset_dir: str | Path, *, key_prefix: str = "
     except Exception:
         pass
 
+
 def pg_airfoil(root, exe, tmo, dry):
-    _hero("〜", "2D Airfoils", "XFOIL pipeline · choose source library → sweep → QC → promote → ML", "xfoil")
+    _hero(
+        "〜",
+        "2D Airfoils",
+        "XFOIL pipeline · choose source library → sweep → QC → promote → ML",
+        "xfoil",
+    )
 
     cfg_files = _files(str(root / "configs" / "airfoil"), "*.yaml")
     ds_dirs = _airfoil_xfoil_dataset_candidates(root)
 
-    library_choices = _airfoil_library_candidates(root)
     airfoil_library_options = _airfoil_library_candidates(root)
     if not airfoil_library_options:
         airfoil_library_options = [root / "data" / "airfoil_library"]
@@ -3011,7 +3632,6 @@ def pg_airfoil(root, exe, tmo, dry):
     )
     active_airfoil_library_selected = selected_airfoil_library != library_prompt
 
-
     custom_airfoil_library = st.checkbox(
         "Use custom airfoil library path",
         value=False,
@@ -3024,33 +3644,41 @@ def pg_airfoil(root, exe, tmo, dry):
             if active_airfoil_library_selected
             else str(root / "data" / "airfoil_library")
         )
-        lib_dir = Path(st.text_input(
-            "Custom active airfoil library",
-            value=custom_default,
-            key="af_active_library",
-        ))
+        lib_dir = Path(
+            st.text_input(
+                "Custom active airfoil library",
+                value=custom_default,
+                key="af_active_library",
+            )
+        )
         active_airfoil_library_selected = True
     elif active_airfoil_library_selected:
         lib_dir = Path(selected_airfoil_library)
     else:
         lib_dir = root / "data" / "airfoil_library"
 
-    active_airfoil_count = _airfoil_inventory_count(lib_dir) if active_airfoil_library_selected else 0
-    active_airfoil_origin = _airfoil_library_origin(lib_dir) if active_airfoil_library_selected else "No library selected"
+    active_airfoil_count = (
+        _airfoil_inventory_count(lib_dir) if active_airfoil_library_selected else 0
+    )
+    active_airfoil_origin = (
+        _airfoil_library_origin(lib_dir)
+        if active_airfoil_library_selected
+        else "No library selected"
+    )
 
-    tab_lib, tab_sweep, tab_trust, tab_ml = st.tabs([
-        "① Library",
-        "② XFOIL Sweep",
-        "③ QC / Curate / Promote",
-        "④ ML",
-    ])
+    tab_lib, tab_sweep, tab_trust, tab_ml = st.tabs(
+        [
+            "① Library",
+            "② XFOIL Sweep",
+            "③ QC / Curate / Promote",
+            "④ ML",
+        ]
+    )
     tab_qc = tab_trust
-
 
     # Backward-compatible alias: older GUI code/tests may call this tab_qc,
     # while the existing airfoil page body uses tab_trust.
     tab_qc = tab_trust
-
 
     # ── ① LIBRARY ────────────────────────────────────────────────────────────
     with tab_lib:
@@ -3075,12 +3703,39 @@ def pg_airfoil(root, exe, tmo, dry):
             except Exception as exc:
                 st.warning(f"Could not read airfoil inventory: {exc}")
 
-        _stat_row([
-            ("Active library path", Path(lib_dir).name if active_airfoil_library_selected else "No library selected", "selected library"),
-            ("Origin", lib_origin, "imported or generated"),
-            ("Airfoils", n_lib, "airfoil_inventory.csv"),
-            ("t/c range", tc_range, "thickness ratio"),
-        ])
+        _stat_row(
+            [
+                (
+                    "Active library path",
+                    (
+                        Path(lib_dir).name
+                        if active_airfoil_library_selected
+                        else "No library selected"
+                    ),
+                    "selected library",
+                ),
+                ("Origin", lib_origin, "imported or generated"),
+                ("Airfoils", n_lib, "airfoil_inventory.csv"),
+                ("t/c range", tc_range, "thickness ratio"),
+            ]
+        )
+
+        # (AERIS_PATCH_AIRFOIL_GUI_V1) raw source database is informational only, never an active
+        # library choice -- shown separately per design decision.
+        _raw_db_dir = root / "data" / "airfoil_database"
+        _raw_db_count = len(list(_raw_db_dir.glob("*.dat"))) if _raw_db_dir.exists() else 0
+        st.caption(
+            f"Raw .dat source database: `{_raw_db_dir}` -- {_raw_db_count} coordinate file(s). "
+            f"This is **not** a selectable library until imported via 'Import existing airfoils (.dat)' below."
+        )
+
+        if not airfoil_library_options:
+            _note(
+                "No built airfoil library exists yet -- no folder under <code>data/</code> contains "
+                "<code>airfoil_inventory.csv</code>. Import the raw .dat database or generate a CST/Kulfan "
+                "library below before running XFOIL.",
+                "warn",
+            )
 
         if not active_airfoil_library_selected:
             _note(
@@ -3105,17 +3760,25 @@ def pg_airfoil(root, exe, tmo, dry):
         c_import, c_cst = st.columns(2)
         with c_import:
             with st.container(border=True):
-                _h('<div style="font-weight:700;color:#F2F5F8;font-size:.95rem">Import existing airfoils (.dat)</div>')
-                _h('<div style="font-size:.78rem;color:#AAB6C2;line-height:1.55;margin:.35rem 0 .55rem">'
-                   'Use an external coordinate database such as UIUC/Selig-format files. '
-                   'AERIS ingests coordinates, computes geometry statistics, and writes a selectable library.</div>')
+                _h(
+                    '<div style="font-weight:700;color:#F2F5F8;font-size:.95rem">Import existing airfoils (.dat)</div>'
+                )
+                _h(
+                    '<div style="font-size:.78rem;color:#AAB6C2;line-height:1.55;margin:.35rem 0 .55rem">'
+                    "Use an external coordinate database such as UIUC/Selig-format files. "
+                    "AERIS ingests coordinates, computes geometry statistics, and writes a selectable library.</div>"
+                )
                 st.caption("Best when you already have trusted coordinate files.")
         with c_cst:
             with st.container(border=True):
-                _h('<div style="font-weight:700;color:#F2F5F8;font-size:.95rem">Generate CST/Kulfan airfoils</div>')
-                _h('<div style="font-size:.78rem;color:#AAB6C2;line-height:1.55;margin:.35rem 0 .55rem">'
-                   'Create a parametric AERIS airfoil library from CST/Kulfan coefficients. '
-                   'AERIS writes .dat files, coordinate arrays, CST JSON, inventory, and reports.</div>')
+                _h(
+                    '<div style="font-weight:700;color:#F2F5F8;font-size:.95rem">Generate CST/Kulfan airfoils</div>'
+                )
+                _h(
+                    '<div style="font-size:.78rem;color:#AAB6C2;line-height:1.55;margin:.35rem 0 .55rem">'
+                    "Create a parametric AERIS airfoil library from CST/Kulfan coefficients. "
+                    "AERIS writes .dat files, coordinate arrays, CST JSON, inventory, and reports.</div>"
+                )
                 st.caption("Best when you want controlled parametric design-space coverage.")
 
         source_workflow = st.radio(
@@ -3142,13 +3805,23 @@ def pg_airfoil(root, exe, tmo, dry):
                 "Import airfoil library, Generate CST airfoils",
                 "Reads .dat files, writes airfoil_inventory.csv and coords/*.npz.",
                 ["airfoil", "ingest", "--db-dir", db_dir_str, "--output-dir", str(lib_dir)],
-                root, exe, tmo, dry, "af_ingest", label="▶  Import .dat library",
+                root,
+                exe,
+                tmo,
+                dry,
+                "af_ingest",
+                label="▶  Import .dat library",
             )
             _panel(
                 "Library stats",
                 "Count, family breakdown, t/c and camber ranges.",
                 ["airfoil", "library-stats", "--library", str(lib_dir)],
-                root, exe, tmo, dry, "af_libstats", label="▶  Library stats",
+                root,
+                exe,
+                tmo,
+                dry,
+                "af_libstats",
+                label="▶  Library stats",
             )
 
         else:
@@ -3160,7 +3833,8 @@ def pg_airfoil(root, exe, tmo, dry):
                 "info",
             )
             cst_cfgs = [
-                f for f in _files(str(root / "configs" / "airfoil"), "*.yaml")
+                f
+                for f in _files(str(root / "configs" / "airfoil"), "*.yaml")
                 if "cst_library" in Path(f).name
             ]
             if cst_cfgs:
@@ -3188,22 +3862,41 @@ def pg_airfoil(root, exe, tmo, dry):
                 "Generate CST/Kulfan library",
                 "Runs cst_airfoil_v1 and writes a selectable airfoil library for XFOIL and ML.",
                 ["airfoil", "generate-cst-library", "--config", cst_cfg, "--output-dir", cst_out],
-                root, exe, tmo, dry, "af_cst_generate", label="▶  Generate CST library",
+                root,
+                exe,
+                tmo,
+                dry,
+                "af_cst_generate",
+                label="▶  Generate CST library",
             )
             if (Path(cst_out) / "library_report.json").exists():
                 with st.expander("CST library report", expanded=False):
                     _show_file(Path(cst_out) / "library_report.json")
 
         _sec("Airfoil utilities")
-        c_info, c_fit = st.columns(2)
-        with c_info:
-            _panel(
-                "Airfoil module info",
-                "Show 2D workflow status, library hints, XFOIL status, and available airfoil commands.",
-                ["airfoil", "info"],
-                root, exe, tmo, dry, "af_info", label="▶  Airfoil info",
+        _panel(
+            "Airfoil module info",
+            "Show 2D workflow status, library hints, XFOIL status, and available airfoil commands.",
+            ["airfoil", "info"],
+            root,
+            exe,
+            tmo,
+            dry,
+            "af_info",
+            label="▶  Airfoil info",
+        )
+
+        # (AERIS_PATCH_AIRFOIL_GUI_V1) Fit CST is an advanced single-file utility, not part of the
+        # normal .dat-import -> XFOIL -> QC -> ML workflow. Collapsed so it does
+        # not compete visually with the main library-building actions.
+        with st.expander("Advanced airfoil utilities — Fit CST to .dat", expanded=False):
+            _note(
+                "Converts <b>one</b> existing .dat coordinate file into CST/Kulfan coefficients. "
+                "Optional debugging/conversion utility -- not required for the normal library "
+                "→ XFOIL sweep → QC → ML workflow. Single-file only; batch fitting is not yet "
+                "implemented (would need a separate <code>fit-cst-library</code> command).",
+                "info",
             )
-        with c_fit:
             fit_dat = st.text_input(
                 "DAT file to fit CST",
                 str(root / "data" / "airfoil_database" / "naca4412.dat"),
@@ -3215,18 +3908,41 @@ def pg_airfoil(root, exe, tmo, dry):
                 str(root / "data" / "debug" / "cst_fit" / "naca4412"),
                 key="af_fit_cst_out",
             )
-            fit_order = st.number_input("CST fit order", min_value=2, max_value=16, value=8, step=1, key="af_fit_cst_order")
+            fit_order = st.number_input(
+                "CST fit order", min_value=2, max_value=16, value=8, step=1, key="af_fit_cst_order"
+            )
+            _note(
+                "AERIS CST order N writes N+1 coefficients per side (order 8 → cst_u0..cst_u8, "
+                "9 values per side). NeuralFoil's trained model uses a <b>fixed</b> 8-per-side Kulfan "
+                "representation plus leading-edge modification and trailing-edge thickness (18 "
+                "parameters total) and does <b>not</b> accept an arbitrary AERIS CST order directly "
+                "-- a dedicated adapter would be needed before feeding AERIS CST coefficients into "
+                "NeuralFoil.",
+                "warn",
+            )
             _panel(
                 "Fit CST to .dat",
-                "Runs aeris airfoil fit-cst and writes CST coefficients plus fit_report.json.",
-                ["airfoil", "fit-cst", fit_dat, "--output-dir", fit_out, "--order", str(int(fit_order))],
-                root, exe, tmo, dry, "af_fit_cst", label="▶  Fit CST",
+                "Runs aeris airfoil fit-cst and writes CST coefficients plus fit_report.json. Single .dat file only.",
+                [
+                    "airfoil",
+                    "fit-cst",
+                    fit_dat,
+                    "--output-dir",
+                    fit_out,
+                    "--order",
+                    str(int(fit_order)),
+                ],
+                root,
+                exe,
+                tmo,
+                dry,
+                "af_fit_cst",
+                label="▶  Fit CST",
             )
 
         if (lib_dir / "library_report.json").exists():
             with st.expander("Active library report", expanded=False):
                 _show_file(lib_dir / "library_report.json")
-
 
     with tab_sweep:
         _sec("XFOIL readiness")
@@ -3234,7 +3950,12 @@ def pg_airfoil(root, exe, tmo, dry):
             "Check XFOIL binary",
             "Confirms XFOIL is on PATH and shows its version before running sweeps.",
             ["airfoil", "check-solver"],
-            root, exe, tmo, dry, "af_check", label="▶  Check XFOIL",
+            root,
+            exe,
+            tmo,
+            dry,
+            "af_check",
+            label="▶  Check XFOIL",
         )
 
         if not active_airfoil_library_selected:
@@ -3263,7 +3984,8 @@ def pg_airfoil(root, exe, tmo, dry):
             # cst_library_v1.yaml generate airfoil shapes; it must not appear
             # in the XFOIL sweep config selector.
             xfoil_cfg_files = [
-                f for f in _files(str(root / "configs" / "airfoil"), "*.yaml")
+                f
+                for f in _files(str(root / "configs" / "airfoil"), "*.yaml")
                 if "xfoil" in Path(f).stem.lower()
             ]
             cfg_opts = xfoil_cfg_files
@@ -3288,7 +4010,17 @@ def pg_airfoil(root, exe, tmo, dry):
                 if selected_cfg not in cfg_opts:
                     selected_cfg = default_cfg
 
-                xfoil_cfg = st.selectbox("XFOIL sweep config", cfg_opts, index=cfg_opts.index(selected_cfg), format_func=lambda s: ("Smoke — " + Path(s).name if "smoke" in Path(s).stem.lower() else Path(s).name), key="af_cfg")
+                xfoil_cfg = st.selectbox(
+                    "XFOIL sweep config",
+                    cfg_opts,
+                    index=cfg_opts.index(selected_cfg),
+                    format_func=lambda s: (
+                        "Smoke — " + Path(s).name
+                        if "smoke" in Path(s).stem.lower()
+                        else Path(s).name
+                    ),
+                    key="af_cfg",
+                )
 
                 if "smoke" in Path(xfoil_cfg).stem.lower():
                     st.caption("Smoke config — fast pipeline validation only.")
@@ -3305,27 +4037,31 @@ def pg_airfoil(root, exe, tmo, dry):
             if st.session_state.get("af_n_airfoils", suggested_n) > sweep_slider_max:
                 st.session_state["af_n_airfoils"] = sweep_slider_max
 
-            n_airfoils = int(st.slider(
-                "Airfoils to sweep from active library (--n-airfoils)",
-                min_value=1,
-                max_value=sweep_slider_max,
-                value=min(st.session_state.get("af_n_airfoils", suggested_n), sweep_slider_max),
-                step=1,
-                key="af_n_airfoils",
-                help=(
-                    "Subset size for the selected active library. "
-                    "This does not generate new airfoils and cannot exceed the selected library size."
-                ),
-            ))
+            n_airfoils = int(
+                st.slider(
+                    "Airfoils to sweep from active library (--n-airfoils)",
+                    min_value=1,
+                    max_value=sweep_slider_max,
+                    value=min(st.session_state.get("af_n_airfoils", suggested_n), sweep_slider_max),
+                    step=1,
+                    key="af_n_airfoils",
+                    help=(
+                        "Subset size for the selected active library. "
+                        "This does not generate new airfoils and cannot exceed the selected library size."
+                    ),
+                )
+            )
 
-            seed = int(st.number_input(
-                "Subset seed (--seed)",
-                min_value=0,
-                value=42,
-                step=1,
-                key="af_seed",
-                help="Controls which reproducible subset is selected from the active library.",
-            ))
+            seed = int(
+                st.number_input(
+                    "Subset seed (--seed)",
+                    min_value=0,
+                    value=42,
+                    step=1,
+                    key="af_seed",
+                    help="Controls which reproducible subset is selected from the active library.",
+                )
+            )
 
             show_xfoil_plots = st.checkbox(
                 "Show XFOIL plots (--show-plots)",
@@ -3346,12 +4082,19 @@ def pg_airfoil(root, exe, tmo, dry):
                 )
 
             _sweep_args = [
-                "airfoil", "dataset", "generate",
-                "--library", str(lib_dir),
-                "--config", str(xfoil_cfg),
-                "--name", ds_name,
-                "--n-airfoils", str(n_airfoils),
-                "--seed", str(seed),
+                "airfoil",
+                "dataset",
+                "generate",
+                "--library",
+                str(lib_dir),
+                "--config",
+                str(xfoil_cfg),
+                "--name",
+                ds_name,
+                "--n-airfoils",
+                str(n_airfoils),
+                "--seed",
+                str(seed),
             ]
             if show_xfoil_plots:
                 _sweep_args.append("--show-plots")
@@ -3364,8 +4107,13 @@ def pg_airfoil(root, exe, tmo, dry):
                     + ("[Xplot11 ON]" if show_xfoil_plots else "[headless, no windows]")
                 ),
                 _sweep_args,
-                root, exe, tmo, dry, "af_sweep",
-                label="▶  Run XFOIL sweep " + ("[Xplot11 ON]" if show_xfoil_plots else "[headless]"),
+                root,
+                exe,
+                tmo,
+                dry,
+                "af_sweep",
+                label="▶  Run XFOIL sweep "
+                + ("[Xplot11 ON]" if show_xfoil_plots else "[headless]"),
             )
 
             _sec("Dataset polar viewer")
@@ -3391,7 +4139,9 @@ def pg_airfoil(root, exe, tmo, dry):
                 )
                 manual_polar_path = Path(manual_polar_ds)
                 if (manual_polar_path / "airfoil_dataset.csv").exists():
-                    _render_airfoil_polar_viewer(manual_polar_path, key_prefix="af_polar_sweep_manual")
+                    _render_airfoil_polar_viewer(
+                        manual_polar_path, key_prefix="af_polar_sweep_manual"
+                    )
             else:
                 polar_ds_path = st.selectbox(
                     "Dataset to plot",
@@ -3402,17 +4152,16 @@ def pg_airfoil(root, exe, tmo, dry):
                 )
                 _render_airfoil_polar_viewer(polar_ds_path, key_prefix="af_polar_sweep")
 
-
     # ── ③ QC / CURATE / PROMOTE ──────────────────────────────────────────────
     with tab_trust:
         if not ds_dirs:
             st.warning("No airfoil datasets found. Run ② XFOIL Sweep first.")
         else:
-            sel_ds  = st.selectbox("Dataset", [d.name for d in ds_dirs], key="af_trust_ds")
+            sel_ds = st.selectbox("Dataset", [d.name for d in ds_dirs], key="af_trust_ds")
             ds_path = next((d for d in ds_dirs if d.name == sel_ds), None)
             if ds_path:
                 prom_exists = (ds_path / "promotion_manifest.json").exists()
-                cur_exists  = (ds_path / "curation_report.json").exists()
+                cur_exists = (ds_path / "curation_report.json").exists()
                 if prom_exists:
                     st.success("✓ Promoted — ready for ML.")
                 elif cur_exists:
@@ -3460,31 +4209,57 @@ def pg_airfoil(root, exe, tmo, dry):
                         "QC",
                         "Checks XFOIL rows: converged targets, cd>0, duplicate key incl. ncrit; warns when airfoil/Re/Mach groups have fewer than 3 converged rows.",
                         ["airfoil", "dataset", "qc", "--dataset", str(ds_path)],
-                        root, exe, tmo, dry, "af_qc", label="▶  QC",
+                        root,
+                        exe,
+                        tmo,
+                        dry,
+                        "af_qc",
+                        label="▶  QC",
                     )
                 with c_cur:
                     _panel(
                         "Curate",
                         "Rejects unconverged, cd<=0, non-finite rows; blocks promotion if QC failed or insufficient per-group coverage remains after curation: surviving groups need at least 3 converged rows per airfoil/Re/Mach group.",
                         ["airfoil", "dataset", "curate", "--dataset", str(ds_path)],
-                        root, exe, tmo, dry, "af_cur", label="▶  Curate",
+                        root,
+                        exe,
+                        tmo,
+                        dry,
+                        "af_cur",
+                        label="▶  Curate",
                     )
                 with c_prom:
-                    _panel("Promote", "Write promotion_manifest.json for ML.",
-                           ["airfoil", "dataset", "promote", "--dataset", str(ds_path)],
-                           root, exe, tmo, dry, "af_prom", label="▶  Promote")
+                    _panel(
+                        "Promote",
+                        "Write promotion_manifest.json for ML.",
+                        ["airfoil", "dataset", "promote", "--dataset", str(ds_path)],
+                        root,
+                        exe,
+                        tmo,
+                        dry,
+                        "af_prom",
+                        label="▶  Promote",
+                    )
 
                 _sec("Inspect")
-                _panel("Dataset inspect", "Show manifest, curation, promotion status.",
-                       ["airfoil", "dataset", "inspect", "--dataset", str(ds_path)],
-                       root, exe, tmo, dry, "af_insp", label="▶  Inspect")
+                _panel(
+                    "Dataset inspect",
+                    "Show manifest, curation, promotion status.",
+                    ["airfoil", "dataset", "inspect", "--dataset", str(ds_path)],
+                    root,
+                    exe,
+                    tmo,
+                    dry,
+                    "af_insp",
+                    label="▶  Inspect",
+                )
 
                 for fname, label_str in [
-                    ("airfoil_dataset.csv",          "Raw dataset preview"),
-                    ("airfoil_qc_report.json",       "Airfoil QC report"),
-                    ("curated_airfoil_dataset.csv",  "Curated dataset preview"),
-                    ("promotion_manifest.json",      "Promotion manifest"),
-                    ("curation_report.json",         "Curation report"),
+                    ("airfoil_dataset.csv", "Raw dataset preview"),
+                    ("airfoil_qc_report.json", "Airfoil QC report"),
+                    ("curated_airfoil_dataset.csv", "Curated dataset preview"),
+                    ("promotion_manifest.json", "Promotion manifest"),
+                    ("curation_report.json", "Curation report"),
                 ]:
                     fpath = ds_path / fname
                     if fpath.exists():
@@ -3500,35 +4275,37 @@ def pg_airfoil(root, exe, tmo, dry):
         )
         promoted = [d for d in ds_dirs if (d / "promotion_manifest.json").exists()]
         if not promoted:
-            st.warning("No promoted datasets yet. Complete ③ QC / Curate / Promote first, then go to ◈ ML Studio.")
+            st.warning(
+                "No promoted datasets yet. Complete ③ QC / Curate / Promote first, then go to ◈ ML Studio."
+            )
         else:
-            sel_prom  = st.selectbox("Promoted dataset", [d.name for d in promoted], key="af_ml_ds")
+            sel_prom = st.selectbox("Promoted dataset", [d.name for d in promoted], key="af_ml_ds")
             prom_path = next((d for d in promoted if d.name == sel_prom), None)
             if prom_path:
                 af_feature_preset_hint = _airfoil_dataset_feature_preset_hint(prom_path)
                 _sec("Settings to use in ◈ ML Studio")
                 _h(
                     f'<div style="background:#1B2A3A;border:1px solid #2D3F52;border-radius:9px;'
-                    f'padding:1rem 1.2rem;margin:.5rem 0">' +
-                    f'<div style="font-size:.8rem;color:#AAB6C2;margin-bottom:.7rem;'
-                    f'text-transform:uppercase;letter-spacing:.08em">Copy these into ML Studio</div>' +
-                    f'<table style="width:100%;border-collapse:collapse;font-size:.82rem">' +
-                    f'<tr><td style="color:#7F8B98;padding:.2rem .5rem .2rem 0;white-space:nowrap">Dataset</td>' +
-                    f'<td style="font-family:JetBrains Mono,monospace;color:#93C5FD">{prom_path}</td></tr>' +
-                    f'<tr><td style="color:#7F8B98;padding:.2rem .5rem .2rem 0">Feature set</td>' +
-                    f'<td style="font-family:JetBrains Mono,monospace;color:#86EFAC">{af_feature_preset_hint}</td></tr>' +
-                    f'<tr><td style="color:#7F8B98;padding:.2rem .5rem .2rem 0">Targets</td>' +
-                    f'<td style="font-family:JetBrains Mono,monospace;color:#D6DEE8">cl, cd, cm</td></tr>' +
-                    f'<tr><td style="color:#7F8B98;padding:.2rem .5rem .2rem 0">Group column</td>' +
-                    f'<td style="font-family:JetBrains Mono,monospace;color:#FCD34D">airfoil_id</td></tr>' +
-                    f'<tr><td style="color:#7F8B98;padding:.2rem .5rem .2rem 0">Split method</td>' +
-                    f'<td style="font-family:JetBrains Mono,monospace;color:#D6DEE8">grouped</td></tr>' +
-                    f'<tr><td style="color:#7F8B98;padding:.2rem .5rem .2rem 0">Recommended seeds</td>' +
-                    f'<td style="font-family:JetBrains Mono,monospace;color:#D6DEE8">101, 202, 303, 404, 505</td></tr>' +
-                    f'</table>' +
-                    f'<div style="margin-top:.8rem;font-size:.75rem;color:#5A7A96">' +
-                    f'Workflow in ML Studio: ② EDA → ③ Train → ⑤ Compare → ⑥ Promote model' +
-                    f'</div></div>'
+                    f'padding:1rem 1.2rem;margin:.5rem 0">'
+                    + f'<div style="font-size:.8rem;color:#AAB6C2;margin-bottom:.7rem;'
+                    f'text-transform:uppercase;letter-spacing:.08em">Copy these into ML Studio</div>'
+                    + f'<table style="width:100%;border-collapse:collapse;font-size:.82rem">'
+                    + f'<tr><td style="color:#7F8B98;padding:.2rem .5rem .2rem 0;white-space:nowrap">Dataset</td>'
+                    + f'<td style="font-family:JetBrains Mono,monospace;color:#93C5FD">{prom_path}</td></tr>'
+                    + f'<tr><td style="color:#7F8B98;padding:.2rem .5rem .2rem 0">Feature set</td>'
+                    + f'<td style="font-family:JetBrains Mono,monospace;color:#86EFAC">{af_feature_preset_hint}</td></tr>'
+                    + f'<tr><td style="color:#7F8B98;padding:.2rem .5rem .2rem 0">Targets</td>'
+                    + f'<td style="font-family:JetBrains Mono,monospace;color:#D6DEE8">cl, cd, cm</td></tr>'
+                    + f'<tr><td style="color:#7F8B98;padding:.2rem .5rem .2rem 0">Group column</td>'
+                    + f'<td style="font-family:JetBrains Mono,monospace;color:#FCD34D">airfoil_id</td></tr>'
+                    + f'<tr><td style="color:#7F8B98;padding:.2rem .5rem .2rem 0">Split method</td>'
+                    + f'<td style="font-family:JetBrains Mono,monospace;color:#D6DEE8">grouped</td></tr>'
+                    + f'<tr><td style="color:#7F8B98;padding:.2rem .5rem .2rem 0">Recommended seeds</td>'
+                    + f'<td style="font-family:JetBrains Mono,monospace;color:#D6DEE8">101, 202, 303, 404, 505</td></tr>'
+                    + f"</table>"
+                    + f'<div style="margin-top:.8rem;font-size:.75rem;color:#5A7A96">'
+                    + f"Workflow in ML Studio: ② EDA → ③ Train → ⑤ Compare → ⑥ Promote model"
+                    + f"</div></div>"
                 )
 
                 # Show promoted model if it exists
@@ -3540,17 +4317,36 @@ def pg_airfoil(root, exe, tmo, dry):
 
 
 def pg_dataset(root, exe, tmo, dry):
-    _hero("▣","Dataset Factory","3D aero · 2D↔3D bridge · qc → curate → promote → ML-ready","data pipeline")
-    tabs = st.tabs(["  Unified Aero  ","  Geometry Only  ","  Inspect / QC  ","  Curate / Promote  ","  Training Data  ","  Control / Flyability  ","  Smoke Check  ","  2D↔3D Bridge  "])
+    _hero(
+        "▣",
+        "Dataset Factory",
+        "3D aero · 2D↔3D bridge · qc → curate → promote → ML-ready",
+        "data pipeline",
+    )
+    # (AERIS_PATCH_DATASET_GUI_V1) reordered to match the workflow spine: geometry_dataset -> aero_sweep
+    # -> aero_dataset -> ... -> control/flyability labels -> training data.
+    tabs = st.tabs(
+        [
+            "  Geometry Only  ",
+            "  Unified Aero  ",
+            "  Inspect / QC  ",
+            "  Curate / Promote  ",
+            "  Control / Flyability  ",
+            "  Training Data  ",
+            "  2D→3D Polar Bridge  ",
+            "  ⧧ Developer Checks  ",
+        ]
+    )
 
     # ── UNIFIED AERO DATASET ─────────────────────────────────────────────────
-    with tabs[0]:
+    with tabs[1]:
         _note(
             "<b>aeris dataset aero-generate</b> — the main production command. "
             "Geometry + full aero sweeps + QC in one pipeline. "
             "--alpha-values, --velocity-values, --altitude-values, --control-input-values are <b>required</b>.",
             "info",
         )
+
         def _ds_cfg_label(s):
             name = Path(s).name
             if name == "bwb_training_v1.yaml":
@@ -3561,10 +4357,20 @@ def pg_dataset(root, exe, tmo, dry):
                 return "v3 — 20 DVs, variable elevon + sym/diff sweep"
             return Path(s).name
 
-        mode = st.radio("Config source",["Use existing YAML file","Build config interactively"],horizontal=True,key="ds_mode2")
+        mode = st.radio(
+            "Config source",
+            ["Use existing YAML file", "Build config interactively"],
+            horizontal=True,
+            key="ds_mode2",
+        )
         if mode.startswith("Use existing"):
-            config = _pick_file("Geometry config",root/"configs"/"geometry","*.yaml","ds_ac",
-                                default=str(root/"configs"/"geometry"/"baseline_bwb_25.yaml"))
+            config = _pick_file(
+                "Geometry config",
+                root / "configs" / "geometry",
+                "*.yaml",
+                "ds_ac",
+                default=str(root / "configs" / "geometry" / "baseline_bwb_25.yaml"),
+            )
             _cfg_name = Path(config).name if config else ""
             if _cfg_name == "bwb_training_v2.yaml":
                 _note(
@@ -3581,32 +4387,77 @@ def pg_dataset(root, exe, tmo, dry):
                 )
         else:
             ys = _yaml_geometry_builder("dsb")
-            with st.expander("Preview YAML"): st.code(ys, language="yaml")
-            sp2 = st.text_input("Save YAML to",str(root/"configs"/"geometry"/"gui_ds_config.yaml"),key="dsb_sp2")
-            if st.button("Save YAML",key="dsb_sv2",type="secondary"):
-                p=Path(sp2); p.parent.mkdir(parents=True,exist_ok=True)
-                p.write_text(ys,encoding="utf-8"); st.success(f"Saved: {p}")
+            with st.expander("Preview YAML"):
+                st.code(ys, language="yaml")
+            sp2 = st.text_input(
+                "Save YAML to",
+                str(root / "configs" / "geometry" / "gui_ds_config.yaml"),
+                key="dsb_sp2",
+            )
+            if st.button("Save YAML", key="dsb_sv2", type="secondary"):
+                p = Path(sp2)
+                p.parent.mkdir(parents=True, exist_ok=True)
+                p.write_text(ys, encoding="utf-8")
+                st.success(f"Saved: {p}")
             config = sp2
 
         _sec("Sampling & naming")
-        c1,c2,c3,c4 = st.columns(4)
-        n    = c1.number_input("--n (geometries)",min_value=1,value=10,step=1,key="ds_n",help="Number of geometries to generate")
-        samp = c2.selectbox("--sampler",SAMPLERS,key="ds_samp",format_func=lambda s: SAMPLER_INFO.get(s,s))
-        seed = c3.number_input("--sampler-seed",min_value=0,value=123,step=1,key="ds_seed",help="Same seed = reproducible dataset")
-        name = c4.text_input("--name (REQUIRED)",value="gui_aero_dataset_v1",key="ds_name",
-                             help="Folder name under data/datasets/. Required. No spaces or slashes.")
+        c1, c2, c3, c4 = st.columns(4)
+        n = c1.number_input(
+            "--n (geometries)",
+            min_value=1,
+            value=10,
+            step=1,
+            key="ds_n",
+            help="Number of geometries to generate",
+        )
+        samp = c2.selectbox(
+            "--sampler", SAMPLERS, key="ds_samp", format_func=lambda s: SAMPLER_INFO.get(s, s)
+        )
+        seed = c3.number_input(
+            "--sampler-seed",
+            min_value=0,
+            value=123,
+            step=1,
+            key="ds_seed",
+            help="Same seed = reproducible dataset",
+        )
+        name = c4.text_input(
+            "--name (REQUIRED)",
+            value="gui_aero_dataset_v1",
+            key="ds_name",
+            help="Folder name under data/datasets/. Required. No spaces or slashes.",
+        )
 
         _sec("Flight condition sweep (all required)")
-        _note("All values are comma-separated floats. --alpha-values, --velocity-values, --altitude-values, --control-input-values are required by the CLI.", "warn")
-        c1,c2 = st.columns(2)
-        alpha = c1.text_input("--alpha-values [deg]","-2,0,2,4,6",key="ds_al",help="Angle of attack sweep. e.g. -4,-2,0,2,4,6,8,10")
-        beta  = c2.text_input("--beta-values [deg]","0",key="ds_be",help="Sideslip. Usually 0.")
-        c3,c4 = st.columns(2)
-        vel   = c3.text_input("--velocity-values [m/s]","28",key="ds_ve",help="Freestream velocity. e.g. 20,28")
-        alt   = c4.text_input("--altitude-values [m]","1500",key="ds_at",help="ISA altitude. e.g. 0,1500")
-        ctrl  = st.text_input("--control-input-values [deg]","-5,0,5",key="ds_ctrl",help="Symmetric elevon (delta_e_sym_deg). e.g. -10,-5,0,5,10")
-        diff  = st.text_input(
-            "--diff-input-values [deg]", "",
+        _note(
+            "All values are comma-separated floats. --alpha-values, --velocity-values, --altitude-values, --control-input-values are required by the CLI.",
+            "warn",
+        )
+        c1, c2 = st.columns(2)
+        alpha = c1.text_input(
+            "--alpha-values [deg]",
+            "-2,0,2,4,6",
+            key="ds_al",
+            help="Angle of attack sweep. e.g. -4,-2,0,2,4,6,8,10",
+        )
+        beta = c2.text_input("--beta-values [deg]", "0", key="ds_be", help="Sideslip. Usually 0.")
+        c3, c4 = st.columns(2)
+        vel = c3.text_input(
+            "--velocity-values [m/s]", "28", key="ds_ve", help="Freestream velocity. e.g. 20,28"
+        )
+        alt = c4.text_input(
+            "--altitude-values [m]", "1500", key="ds_at", help="ISA altitude. e.g. 0,1500"
+        )
+        ctrl = st.text_input(
+            "--control-input-values [deg]",
+            "-5,0,5",
+            key="ds_ctrl",
+            help="Symmetric elevon (delta_e_sym_deg). e.g. -10,-5,0,5,10",
+        )
+        diff = st.text_input(
+            "--diff-input-values [deg]",
+            "",
             key="ds_diff",
             help=(
                 "Differential elevon sweep (delta_a_diff_deg). "
@@ -3617,11 +4468,13 @@ def pg_dataset(root, exe, tmo, dry):
             ),
         )
         with st.expander("Angular rates (optional — leave 0 for standard datasets)"):
-            c5,c6,c7 = st.columns(3)
-            pv = c5.text_input("--p-values [rad/s]","0",key="ds_pv"); qv = c6.text_input("--q-values [rad/s]","0",key="ds_qv"); rv = c7.text_input("--r-values [rad/s]","0",key="ds_rv")
-        _n_sym = _est(alpha,beta,vel,alt,ctrl,pv,qv,rv)
+            c5, c6, c7 = st.columns(3)
+            pv = c5.text_input("--p-values [rad/s]", "0", key="ds_pv")
+            qv = c6.text_input("--q-values [rad/s]", "0", key="ds_qv")
+            rv = c7.text_input("--r-values [rad/s]", "0", key="ds_rv")
+        _n_sym = _est(alpha, beta, vel, alt, ctrl, pv, qv, rv)
         if diff.strip():
-            est_sym  = int(n) * _n_sym
+            est_sym = int(n) * _n_sym
             est_diff = int(n) * _csvn(diff) * _csvn(alpha) * _csvn(vel) * _csvn(alt)
             est = est_sym + est_diff
             _note(
@@ -3633,29 +4486,81 @@ def pg_dataset(root, exe, tmo, dry):
             )
         else:
             est = int(n) * _n_sym
-            _note(f"Estimated aero cases: <b>{est:,}</b> ({int(n)} geometries × {est//max(int(n),1)} conditions each)","info")
+            _note(
+                f"Estimated aero cases: <b>{est:,}</b> ({int(n)} geometries × {est//max(int(n),1)} conditions each)",
+                "info",
+            )
 
         _sec("Solver settings")
-        c1,c2,c3 = st.columns(3)
-        avl_cmd     = c1.text_input("--avl-command","avl",key="ds_avl",help="'avl' if on PATH, or full path to binary")
-        timeout_ds  = c2.number_input("--timeout-sec",min_value=5,value=180,step=5,key="ds_tmo",help="Per-case solver timeout")
-        sp_span     = c3.number_input("--spanwise-resolution",min_value=1,value=4,step=1,key="ds_sp")
-        c4,c5,c6 = st.columns(3)
-        sp_chord    = c4.number_input("--chordwise-resolution",min_value=1,value=8,step=1,key="ds_cp")
-        sp_spacing  = c5.selectbox("--spanwise-spacing",SPACING,key="ds_spsp")
-        ch_spacing  = c6.selectbox("--chordwise-spacing",SPACING,index=1,key="ds_chsp")
-        c7,c8 = st.columns(2)
-        save_srf    = c7.checkbox("--save-surface-forces",False,key="ds_ssf",help="Write AVL surface force files. More disk use.")
-        save_elf    = c8.checkbox("--save-element-forces",False,key="ds_sef",help="Write AVL element force files. Even more disk.")
+        c1, c2, c3 = st.columns(3)
+        avl_cmd = c1.text_input(
+            "--avl-command", "avl", key="ds_avl", help="'avl' if on PATH, or full path to binary"
+        )
+        timeout_ds = c2.number_input(
+            "--timeout-sec",
+            min_value=5,
+            value=180,
+            step=5,
+            key="ds_tmo",
+            help="Per-case solver timeout",
+        )
+        sp_span = c3.number_input(
+            "--spanwise-resolution", min_value=1, value=4, step=1, key="ds_sp"
+        )
+        c4, c5, c6 = st.columns(3)
+        sp_chord = c4.number_input(
+            "--chordwise-resolution", min_value=1, value=8, step=1, key="ds_cp"
+        )
+        sp_spacing = c5.selectbox("--spanwise-spacing", SPACING, key="ds_spsp")
+        ch_spacing = c6.selectbox("--chordwise-spacing", SPACING, index=1, key="ds_chsp")
+        c7, c8 = st.columns(2)
+        save_srf = c7.checkbox(
+            "--save-surface-forces",
+            False,
+            key="ds_ssf",
+            help="Write AVL surface force files. More disk use.",
+        )
+        save_elf = c8.checkbox(
+            "--save-element-forces",
+            False,
+            key="ds_sef",
+            help="Write AVL element force files. Even more disk.",
+        )
 
         _sec("Output & retention")
-        c1,c2,c3 = st.columns(3)
-        retain      = c1.selectbox("--retain-aero-runs",RETENTION_POLICIES,index=1,key="ds_ret",format_func=lambda s: RETENTION_INFO.get(s,s))
-        save_pl_ds  = c2.checkbox("--no-save-plot (disable geometry plots)",False,key="ds_spl",help="Check to disable plot saving. Faster for large runs.")
-        build_asb_ds= c3.checkbox("--build-aerosandbox (required for aero)",True,key="ds_ba",help="Must be True for aero runs to work.")
-        c4,c5 = st.columns(2)
-        keep_geo    = c4.checkbox("--keep-geometry-dataset",True,key="ds_kgd",help="Keep intermediate geometry dataset. Default True.")
-        max_c_ds    = c5.text_input("--max-cases (optional cap)","",key="ds_mc",help="Safety cap on total aero cases. Leave blank.")
+        c1, c2, c3 = st.columns(3)
+        retain = c1.selectbox(
+            "--retain-aero-runs",
+            RETENTION_POLICIES,
+            index=1,
+            key="ds_ret",
+            format_func=lambda s: RETENTION_INFO.get(s, s),
+        )
+        save_pl_ds = c2.checkbox(
+            "--no-save-plot (disable geometry plots)",
+            False,
+            key="ds_spl",
+            help="Check to disable plot saving. Faster for large runs.",
+        )
+        build_asb_ds = c3.checkbox(
+            "--build-aerosandbox (required for aero)",
+            True,
+            key="ds_ba",
+            help="Must be True for aero runs to work.",
+        )
+        c4, c5 = st.columns(2)
+        keep_geo = c4.checkbox(
+            "--keep-geometry-dataset",
+            True,
+            key="ds_kgd",
+            help="Keep intermediate geometry dataset. Default True.",
+        )
+        max_c_ds = c5.text_input(
+            "--max-cases (optional cap)",
+            "",
+            key="ds_mc",
+            help="Safety cap on total aero cases. Leave blank.",
+        )
 
         _sec("QC — use preset OR explicit flags (preset overrides flags)")
         _note(
@@ -3663,178 +4568,482 @@ def pg_dataset(root, exe, tmo, dry):
             "<b>Strict QC</b> additionally keeps statistical outliers, L/D, beta=0 lateral sanity, and target-variation checks.",
             "info",
         )
-        qcp_label = st.selectbox("--qc-preset (recommended — overrides all explicit QC flags)",
-                                  ["(none — use explicit flags below)"] + QC_PRESETS, index=0, key="ds_qcp",
-                                  format_func=lambda s: QC_PRESET_INFO.get(s,s) if s in QC_PRESET_INFO else s)
+        qcp_label = st.selectbox(
+            "--qc-preset (recommended — overrides all explicit QC flags)",
+            ["(none — use explicit flags below)"] + QC_PRESETS,
+            index=0,
+            key="ds_qcp",
+            format_func=lambda s: QC_PRESET_INFO.get(s, s) if s in QC_PRESET_INFO else s,
+        )
         qcp = "" if qcp_label.startswith("(none") else qcp_label
         if not qcp:
             with st.expander("Explicit QC flags (only used when no --qc-preset)"):
-                c1,c2,c3 = st.columns(3)
-                rg_qc  = c1.checkbox("--run-geometry-qc",False,key="ds_rgqc"); gp_qc = c1.selectbox("--geometry-qc-profile",QC_PROFILES,key="ds_gqcp"); fg_qc = c1.checkbox("--fail-on-geometry-qc-error",False,key="ds_fgqc")
-                ra_qc  = c2.checkbox("--run-aero-qc",False,key="ds_raqc");     ap_qc = c2.selectbox("--aero-qc-profile",QC_PROFILES,key="ds_aqcp");     fa_qc = c2.checkbox("--fail-on-aero-qc-error",False,key="ds_faqc")
+                c1, c2, c3 = st.columns(3)
+                rg_qc = c1.checkbox("--run-geometry-qc", False, key="ds_rgqc")
+                gp_qc = c1.selectbox("--geometry-qc-profile", QC_PROFILES, key="ds_gqcp")
+                fg_qc = c1.checkbox("--fail-on-geometry-qc-error", False, key="ds_fgqc")
+                ra_qc = c2.checkbox("--run-aero-qc", False, key="ds_raqc")
+                ap_qc = c2.selectbox("--aero-qc-profile", QC_PROFILES, key="ds_aqcp")
+                fa_qc = c2.checkbox("--fail-on-aero-qc-error", False, key="ds_faqc")
 
         args = [
-            "dataset","aero-generate",
-            "--config",config,"--n",str(int(n)),
-            "--sampler",samp,"--sampler-seed",str(int(seed)),
-            "--name",name,
-            "--alpha-values",alpha,"--velocity-values",vel,
-            "--altitude-values",alt,"--control-input-values",ctrl,
+            "dataset",
+            "aero-generate",
+            "--config",
+            config,
+            "--n",
+            str(int(n)),
+            "--sampler",
+            samp,
+            "--sampler-seed",
+            str(int(seed)),
+            "--name",
+            name,
+            "--alpha-values",
+            alpha,
+            "--velocity-values",
+            vel,
+            "--altitude-values",
+            alt,
+            "--control-input-values",
+            ctrl,
         ]
         if diff.strip():
             args += ["--diff-input-values", diff]
-        if beta.strip() and beta.strip() != "0": args += ["--beta-values",beta]
-        if pv.strip() and pv.strip() != "0": args += ["--p-values",pv]
-        if qv.strip() and qv.strip() != "0": args += ["--q-values",qv]
-        if rv.strip() and rv.strip() != "0": args += ["--r-values",rv]
-        args += ["--solver","aerosandbox_avl","--avl-command",avl_cmd,
-                 "--timeout-sec",str(int(timeout_ds)),
-                 "--spanwise-resolution",str(int(sp_span)),"--chordwise-resolution",str(int(sp_chord)),
-                 "--spanwise-spacing",sp_spacing,"--chordwise-spacing",ch_spacing,
-                 "--retain-aero-runs",retain]
-        if save_pl_ds: args.append("--no-save-plot")
-        if not build_asb_ds: args.append("--no-build-aerosandbox")
-        if not keep_geo: args.append("--delete-geometry-dataset")
-        if save_srf: args.append("--save-surface-forces")
-        if save_elf: args.append("--save-element-forces")
-        _flag(args,"--max-cases",max_c_ds)
+        if beta.strip() and beta.strip() != "0":
+            args += ["--beta-values", beta]
+        if pv.strip() and pv.strip() != "0":
+            args += ["--p-values", pv]
+        if qv.strip() and qv.strip() != "0":
+            args += ["--q-values", qv]
+        if rv.strip() and rv.strip() != "0":
+            args += ["--r-values", rv]
+        args += [
+            "--solver",
+            "aerosandbox_avl",
+            "--avl-command",
+            avl_cmd,
+            "--timeout-sec",
+            str(int(timeout_ds)),
+            "--spanwise-resolution",
+            str(int(sp_span)),
+            "--chordwise-resolution",
+            str(int(sp_chord)),
+            "--spanwise-spacing",
+            sp_spacing,
+            "--chordwise-spacing",
+            ch_spacing,
+            "--retain-aero-runs",
+            retain,
+        ]
+        if save_pl_ds:
+            args.append("--no-save-plot")
+        if not build_asb_ds:
+            args.append("--no-build-aerosandbox")
+        if not keep_geo:
+            args.append("--delete-geometry-dataset")
+        if save_srf:
+            args.append("--save-surface-forces")
+        if save_elf:
+            args.append("--save-element-forces")
+        _flag(args, "--max-cases", max_c_ds)
+
+        # ── Viscous polar backend (AERIS_PATCH_DATASET_GUI_V2) ────────────────────────────────────
+        _sec("Viscous polar backend")
+        _note(
+            "AVL is inviscid by default. A viscous backend adds real airfoil drag (profile CD) "
+            "section-by-section via a polar lookup, giving more realistic CD and L/D. "
+            "<b>NeuralFoil</b> (recommended): computes polars directly from each section's airfoil "
+            "shape -- no external dataset needed. <b>Curated XFOIL</b>: use a promoted 2D XFOIL "
+            "dataset from the <b>2D→3D Polar Bridge</b> tab instead. "
+            "<b>None</b>: pure inviscid AVL (fastest; acceptable for CL/Cm surrogates).",
+            "info",
+        )
+        vps_choice = st.radio(
+            "Polar source",
+            [
+                "None (inviscid AVL)",
+                "NeuralFoil (auto-from-geometry)",
+                "Curated XFOIL (use Bridge tab)",
+            ],
+            index=0,
+            key="ds_vps",
+            horizontal=True,
+            help="NeuralFoil reads airfoil shapes directly from AeroSandbox; no external data needed. "
+            "Curated XFOIL requires a promoted 2D dataset -- configure it in the 2D→3D Polar Bridge tab.",
+        )
+        if "NeuralFoil" in vps_choice:
+            args += ["--viscous-polar-source", "neuralfoil"]
+            _vps_re_grid = st.text_input(
+                "--viscous-polar-re-grid (Reynolds pre-warm, comma-separated)",
+                "500000,1000000,3000000",
+                key="ds_vps_re",
+                help="Pre-warms NeuralFoil at these Reynolds numbers before the campaign loop. "
+                "Matches your --velocity-values × chord range. Leave at defaults for most cases.",
+            )
+            if _vps_re_grid.strip():
+                args += ["--viscous-polar-re-grid", _vps_re_grid.strip()]
+            _note(
+                "NeuralFoil reads the actual AeroSandbox airfoil shapes from each generated BWB section "
+                "(root/kink/mid/tip), converts them to Kulfan/CST via AeroSandbox, and queries NeuralFoil "
+                "at the campaign Re/Mach/alpha grid. Profile drag is integrated strip-by-strip after AVL runs "
+                "(<code>cd_total = cd_induced_AVL + cd_profile_NeuralFoil</code>). "
+                "CDCL data is also injected into the .avl file before AVL runs. "
+                "Requires <code>pip install neuralfoil</code>.",
+                "info",
+            )
+        elif "Curated XFOIL" in vps_choice:
+            _note(
+                "For the Curated XFOIL path, go to the <b>2D→3D Polar Bridge</b> tab. "
+                "That tab collects your promoted 2D airfoil dataset, coordinate library, and "
+                "spanwise airfoil mapping, then constructs the full bridged <code>aero-generate</code> command. "
+                "The campaign you launch here will use <b>no viscous correction</b>.",
+                "warn",
+            )
+        # (None: no flag added — pure inviscid AVL)
+        # ──────────────────────────────────────────────────────────────────────
         ds_wf_input = st.text_input(
-            "--workflow (auto-record on success)", "", key="ds_wf",
+            "--workflow (auto-record on success)",
+            "",
+            key="ds_wf",
             placeholder="e.g. data/workflows/campaign_v1 — leave blank to skip",
             help="If set, auto-records the dataset aero-generate stage in the workflow spine after the campaign completes.",
         )
-        if ds_wf_input.strip(): args += ["--workflow", ds_wf_input.strip()]
+        if ds_wf_input.strip():
+            args += ["--workflow", ds_wf_input.strip()]
         if qcp:
-            args += ["--qc-preset",qcp]
+            args += ["--qc-preset", qcp]
         else:
-            _bflag(args,"--run-geometry-qc","--no-run-geometry-qc",rg_qc)
-            if rg_qc: args += ["--geometry-qc-profile",gp_qc]; _bflag(args,"--fail-on-geometry-qc-error","--allow-geometry-qc-errors",fg_qc)
-            _bflag(args,"--run-aero-qc","--no-run-aero-qc",ra_qc)
-            if ra_qc: args += ["--aero-qc-profile",ap_qc]; _bflag(args,"--fail-on-aero-qc-error","--allow-aero-qc-errors",fa_qc)
-        _panel("Generate unified aero dataset",
-               "Generates N geometries + full aero sweeps + QC. Writes aero_dataset.csv ready for curation/ML.",
-               args, root, exe, tmo, dry, "ds_aero_gen")
+            _bflag(args, "--run-geometry-qc", "--no-run-geometry-qc", rg_qc)
+            if rg_qc:
+                args += ["--geometry-qc-profile", gp_qc]
+                _bflag(args, "--fail-on-geometry-qc-error", "--allow-geometry-qc-errors", fg_qc)
+            _bflag(args, "--run-aero-qc", "--no-run-aero-qc", ra_qc)
+            if ra_qc:
+                args += ["--aero-qc-profile", ap_qc]
+                _bflag(args, "--fail-on-aero-qc-error", "--allow-aero-qc-errors", fa_qc)
+        _panel(
+            "Generate unified aero dataset",
+            "Generates N geometries + full aero sweeps + QC. Writes aero_dataset.csv ready for curation/ML.",
+            args,
+            root,
+            exe,
+            tmo,
+            dry,
+            "ds_aero_gen",
+        )
 
     # ── GEOMETRY ONLY ─────────────────────────────────────────────────────────
-    with tabs[1]:
-        _note("<b>aeris dataset generate</b> — geometry only, no aero. Fast iteration on design space before committing to sweeps.","info")
-        config2 = _pick_file("Geometry config",root/"configs"/"geometry","*.yaml","gs_cfg",
-                             default=str(root/"configs"/"geometry"/"wing_bwb.yaml"))
-        c1,c2,c3,c4 = st.columns(4)
-        n2   = c1.number_input("--n",min_value=1,value=20,step=1,key="gs_n")
-        s2   = c2.selectbox("--sampler",SAMPLERS,key="gs_samp",format_func=lambda s:SAMPLER_INFO.get(s,s))
-        sd2  = c3.number_input("--sampler-seed",min_value=0,value=123,step=1,key="gs_seed")
-        nm2  = c4.text_input("--name (optional)","",key="gs_name",help="Dataset folder name. Leave blank for auto-generated name.")
-        c5,c6 = st.columns(2)
-        sp2  = c5.checkbox("--no-save-plot (disable plots)",False,key="gs_sp")
-        ba2  = c6.checkbox("--build-aerosandbox",True,key="gs_ba")
+    with tabs[0]:
+        _note(
+            "<b>aeris dataset generate</b> — geometry only, no aero. Fast iteration on design space before committing to sweeps.",
+            "info",
+        )
+        config2 = _pick_file(
+            "Geometry config",
+            root / "configs" / "geometry",
+            "*.yaml",
+            "gs_cfg",
+            default=str(root / "configs" / "geometry" / "wing_bwb.yaml"),
+        )
+        c1, c2, c3, c4 = st.columns(4)
+        n2 = c1.number_input("--n", min_value=1, value=20, step=1, key="gs_n")
+        s2 = c2.selectbox(
+            "--sampler", SAMPLERS, key="gs_samp", format_func=lambda s: SAMPLER_INFO.get(s, s)
+        )
+        sd2 = c3.number_input("--sampler-seed", min_value=0, value=123, step=1, key="gs_seed")
+        nm2 = c4.text_input(
+            "--name (optional)",
+            "",
+            key="gs_name",
+            help="Dataset folder name. Leave blank for auto-generated name.",
+        )
+        c5, c6 = st.columns(2)
+        sp2 = c5.checkbox("--no-save-plot (disable plots)", False, key="gs_sp")
+        ba2 = c6.checkbox("--build-aerosandbox", True, key="gs_ba")
         with st.expander("QC options"):
-            qcp2  = st.selectbox("--qc-preset",["(none)"] + QC_PRESETS,key="gs_qcp2",format_func=lambda s:QC_PRESET_INFO.get(s,s) if s in QC_PRESET_INFO else s)
+            qcp2 = st.selectbox(
+                "--qc-preset",
+                ["(none)"] + QC_PRESETS,
+                key="gs_qcp2",
+                format_func=lambda s: QC_PRESET_INFO.get(s, s) if s in QC_PRESET_INFO else s,
+            )
             if qcp2 == "(none)":
-                rqc2 = st.checkbox("--run-qc/--no-run-qc",False,key="gs_rqc")
-                qpr2 = st.selectbox("--qc-profile",QC_PROFILES,key="gs_qpr2")
-                fqc2 = st.checkbox("--fail-on-qc-error/--allow-qc-errors",False,key="gs_fqc2")
-        args2 = ["dataset","generate","--config",config2,"--n",str(int(n2)),"--sampler",s2,"--sampler-seed",str(int(sd2))]
-        _flag(args2,"--name",nm2)
-        if sp2:  args2.append("--no-save-plot")
-        if not ba2: args2.append("--no-build-aerosandbox")
+                rqc2 = st.checkbox("--run-qc/--no-run-qc", False, key="gs_rqc")
+                qpr2 = st.selectbox("--qc-profile", QC_PROFILES, key="gs_qpr2")
+                fqc2 = st.checkbox("--fail-on-qc-error/--allow-qc-errors", False, key="gs_fqc2")
+        args2 = [
+            "dataset",
+            "generate",
+            "--config",
+            config2,
+            "--n",
+            str(int(n2)),
+            "--sampler",
+            s2,
+            "--sampler-seed",
+            str(int(sd2)),
+        ]
+        _flag(args2, "--name", nm2)
+        if sp2:
+            args2.append("--no-save-plot")
+        if not ba2:
+            args2.append("--no-build-aerosandbox")
         if qcp2 != "(none)":
-            args2 += ["--qc-preset",qcp2]
+            args2 += ["--qc-preset", qcp2]
         else:
-            _bflag(args2,"--run-qc","--no-run-qc",rqc2)
-            if rqc2: args2 += ["--qc-profile",qpr2]; _bflag(args2,"--fail-on-qc-error","--allow-qc-errors",fqc2)
-        _panel("Generate geometry dataset","Builds many deterministic geometry cases. No aero.",args2,root,exe,tmo,dry,"gs_run")
+            _bflag(args2, "--run-qc", "--no-run-qc", rqc2)
+            if rqc2:
+                args2 += ["--qc-profile", qpr2]
+                _bflag(args2, "--fail-on-qc-error", "--allow-qc-errors", fqc2)
+        _panel(
+            "Generate geometry dataset",
+            "Builds many deterministic geometry cases. No aero.",
+            args2,
+            root,
+            exe,
+            tmo,
+            dry,
+            "gs_run",
+        )
 
     # ── INSPECT / QC ──────────────────────────────────────────────────────────
     with tabs[2]:
-        ds3 = _pick_dir("Dataset root",root/"data"/"datasets","diq_ds")
-        act3 = st.selectbox("Action",["Inspect (aeris dataset inspect)","Geometry QC (aeris dataset qc)","Aero QC (aeris dataset aero-qc)"],key="diq_act")
-        if "inspect" in act3.lower():
-            args3 = ["dataset","inspect","--dataset",ds3]
-            desc3 = "Reads dataset structure and prints QC summary JSON."
-        elif "Geometry QC" in act3:
-            qp3 = st.selectbox("--profile",QC_PROFILES,key="diq_gqcp")
-            args3 = ["dataset","qc","--dataset",ds3,"--profile",qp3]
-            desc3 = "Runs geometry QC. Production/strict include AR consistency, taper, planform, twist, and dihedral physical checks."
+        # (AERIS_PATCH_DATASET_GUI_V1) auto-detect dataset kind and route to the matching command
+        # family instead of always issuing 3D `aeris dataset ...` commands.
+        ds3, kind3 = _pick_dataset_dir(
+            "Dataset root",
+            root / "data" / "datasets",
+            "diq_ds",
+            help_="Any dataset under data/datasets/. Type is auto-detected from its artifacts.",
+        )
+        if ds3:
+            st.caption(f"Detected type: **{_DATASET_KIND_LABELS.get(kind3, 'unknown')}**")
+        if kind3 in ("airfoil_2d", "promoted_airfoil_2d"):
+            act3 = st.selectbox(
+                "Action",
+                ["Inspect (aeris airfoil dataset inspect)", "QC (aeris airfoil dataset qc)"],
+                key="diq_act_2d",
+            )
+            if "Inspect" in act3:
+                args3 = ["airfoil", "dataset", "inspect", "--dataset", ds3]
+                desc3 = "Reads the 2D airfoil dataset structure and prints the manifest/curation summary."
+            else:
+                args3 = ["airfoil", "dataset", "qc", "--dataset", ds3]
+                desc3 = "Runs 2D airfoil QC on the raw airfoil_dataset.csv (unconverged / negative-cd / non-finite row checks)."
+            _panel("Inspect / QC (2D airfoil)", desc3, args3, root, exe, tmo, dry, "diq_run_2d")
         else:
-            qp3 = st.selectbox("--profile",QC_PROFILES,key="diq_aqcp")
-            args3 = ["dataset","aero-qc","--dataset",ds3,"--profile",qp3]
-            desc3 = "Runs aero QC. Production includes CL-alpha and Cm-control sign; strict adds outlier, L/D, beta=0, and target-variation checks."
-        _panel("Inspect / QC",desc3,args3,root,exe,tmo,dry,"diq_run")
+            act3 = st.selectbox(
+                "Action",
+                [
+                    "Inspect (aeris dataset inspect)",
+                    "Geometry QC (aeris dataset qc)",
+                    "Aero QC (aeris dataset aero-qc)",
+                ],
+                key="diq_act",
+            )
+            if "inspect" in act3.lower():
+                args3 = ["dataset", "inspect", "--dataset", ds3]
+                desc3 = "Reads dataset structure and prints QC summary JSON."
+            elif "Geometry QC" in act3:
+                qp3 = st.selectbox("--profile", QC_PROFILES, key="diq_gqcp")
+                args3 = ["dataset", "qc", "--dataset", ds3, "--profile", qp3]
+                desc3 = "Runs geometry QC. Production/strict include AR consistency, taper, planform, twist, and dihedral physical checks."
+            else:
+                qp3 = st.selectbox("--profile", QC_PROFILES, key="diq_aqcp")
+                args3 = ["dataset", "aero-qc", "--dataset", ds3, "--profile", qp3]
+                desc3 = "Runs aero QC. Production includes CL-alpha and Cm-control sign; strict adds outlier, L/D, beta=0, and target-variation checks."
+            _panel("Inspect / QC", desc3, args3, root, exe, tmo, dry, "diq_run")
 
     # ── CURATE / PROMOTE ──────────────────────────────────────────────────────
     with tabs[3]:
-        _note("Curation filters bad rows. Promotion writes <code>promotion_manifest.json</code> — required gate before ML training.","info")
-        ds4 = _pick_dir("Aero dataset root",root/"data"/"datasets","dcp_ds")
-        task4 = st.selectbox("Task",["curate-aero","promote-aero","require-promoted-aero"],key="dcp_task")
+        # (AERIS_PATCH_DATASET_GUI_V1) auto-detect dataset kind and route to the matching command family.
+        _note(
+            "Curation filters bad rows. Promotion writes <code>promotion_manifest.json</code> -- required gate before ML training.",
+            "info",
+        )
+        ds4, kind4 = _pick_dataset_dir(
+            "Dataset root",
+            root / "data" / "datasets",
+            "dcp_ds",
+            help_="Any dataset under data/datasets/. Type is auto-detected from its artifacts.",
+        )
+        if ds4:
+            st.caption(f"Detected type: **{_DATASET_KIND_LABELS.get(kind4, 'unknown')}**")
 
-        if task4 == "curate-aero":
-            _note(
-                "Curation rejects: incomplete groups, aero failures, nonfinite targets, failed control diagnostics. "
-                "Grid completeness is checked against manifest sweep lists, including beta/rates/differential controls when present. "
-                "All four defaults are True. "
-                "<b>After curating and promoting, run <code>aeris aero cm-sanity --dataset &lt;ds&gt;</code></b> "
-                "(in the Aero page) to verify Cm sign convention before any ML training.",
-                "info",
+        if kind4 in ("airfoil_2d", "promoted_airfoil_2d"):
+            task4 = st.selectbox("Task", ["curate", "promote"], key="dcp_task_2d")
+            if task4 == "curate":
+                args4 = ["airfoil", "dataset", "curate", "--dataset", ds4]
+                desc4 = "Rejects unconverged, negative-cd, and non-finite rows. Writes curated_airfoil_dataset.csv + curation_report.json."
+            else:
+                force4 = st.checkbox(
+                    "--force (bypass promotion blockers)",
+                    False,
+                    key="dc_force_2d",
+                    help="Force promotion despite promotion_blockers. Document why before using.",
+                )
+                if force4:
+                    _note(
+                        "⚠ Force-promoted datasets are flagged in all downstream workflows. Document the reason.",
+                        "warn",
+                    )
+                args4 = ["airfoil", "dataset", "promote", "--dataset", ds4]
+                if force4:
+                    args4.append("--force")
+                desc4 = "Writes promotion_manifest.json -- the required gate for 2D airfoil ML training."
+            _panel(
+                f"2D airfoil: {task4}",
+                desc4,
+                args4,
+                root,
+                exe,
+                tmo,
+                dry,
+                "dcp_run_2d",
+                danger=(task4 == "promote"),
             )
-            c1,c2 = st.columns(2)
-            ri4 = c1.checkbox("--reject-incomplete-groups",True,key="dc_ri",help="Reject geometries whose manifest-defined sweep grid is incomplete")
-            rf4 = c2.checkbox("--reject-groups-with-failures",True,key="dc_rf",help="Reject geometries with any failed AVL case")
-            rn4 = c1.checkbox("--reject-nonfinite-targets",True,key="dc_rn",help="Reject rows with NaN/Inf in CL/CD/Cm")
-            rd4 = c2.checkbox("--reject-control-diagnostic-failures",True,key="dc_rd",help="Reject geometries where AVL control diagnostics failed")
-            args4 = ["dataset","curate-aero","--dataset",ds4]
-            if not ri4: args4.append("--keep-incomplete-groups")
-            if not rf4: args4.append("--keep-groups-with-failures")
-            if not rn4: args4.append("--keep-nonfinite-targets")
-            if not rd4: args4.append("--keep-control-diagnostic-failures")
-            desc4 = "Filters bad rows. Writes curated_aero_dataset.csv + curation_report.json."
+        else:
+            task4 = st.selectbox(
+                "Task", ["curate-aero", "promote-aero", "require-promoted-aero"], key="dcp_task"
+            )
 
-        elif task4 == "promote-aero":
-            force4 = st.checkbox("--force (bypass promotion blockers)",False,key="dc_force",
-                                 help="Force promotion despite curation_report.json promotion_ready=false. Document why before using.")
-            if force4: _note("⚠ Force-promoted datasets are flagged in all downstream workflows. Document the reason.","warn")
-            args4 = ["dataset","promote-aero","--dataset",ds4]
-            if force4: args4.append("--force")
-            desc4 = "Writes promotion_manifest.json — the required gate for ML training."
+            if task4 == "curate-aero":
+                _note(
+                    "Curation rejects: incomplete groups, aero failures, nonfinite targets, failed control diagnostics. "
+                    "Grid completeness is checked against manifest sweep lists, including beta/rates/differential controls when present. "
+                    "All four defaults are True. "
+                    "<b>After curating and promoting, run <code>aeris aero cm-sanity --dataset &lt;ds&gt;</code></b> "
+                    "(in the Aero page) to verify Cm sign convention before any ML training.",
+                    "info",
+                )
+                c1, c2 = st.columns(2)
+                ri4 = c1.checkbox(
+                    "--reject-incomplete-groups",
+                    True,
+                    key="dc_ri",
+                    help="Reject geometries whose manifest-defined sweep grid is incomplete",
+                )
+                rf4 = c2.checkbox(
+                    "--reject-groups-with-failures",
+                    True,
+                    key="dc_rf",
+                    help="Reject geometries with any failed AVL case",
+                )
+                rn4 = c1.checkbox(
+                    "--reject-nonfinite-targets",
+                    True,
+                    key="dc_rn",
+                    help="Reject rows with NaN/Inf in CL/CD/Cm",
+                )
+                rd4 = c2.checkbox(
+                    "--reject-control-diagnostic-failures",
+                    True,
+                    key="dc_rd",
+                    help="Reject geometries where AVL control diagnostics failed",
+                )
+                args4 = ["dataset", "curate-aero", "--dataset", ds4]
+                if not ri4:
+                    args4.append("--keep-incomplete-groups")
+                if not rf4:
+                    args4.append("--keep-groups-with-failures")
+                if not rn4:
+                    args4.append("--keep-nonfinite-targets")
+                if not rd4:
+                    args4.append("--keep-control-diagnostic-failures")
+                desc4 = "Filters bad rows. Writes curated_aero_dataset.csv + curation_report.json."
 
-        else:  # require-promoted-aero
-            af4 = st.checkbox("--allow-forced (allow force-promoted datasets)",False,key="dc_af")
-            args4 = ["dataset","require-promoted-aero","--dataset",ds4]
-            if af4: args4.append("--allow-forced")
-            desc4 = "Validates dataset has promotion_manifest.json and is trustworthy."
+            elif task4 == "promote-aero":
+                force4 = st.checkbox(
+                    "--force (bypass promotion blockers)",
+                    False,
+                    key="dc_force",
+                    help="Force promotion despite curation_report.json promotion_ready=false. Document why before using.",
+                )
+                if force4:
+                    _note(
+                        "⚠ Force-promoted datasets are flagged in all downstream workflows. Document the reason.",
+                        "warn",
+                    )
+                args4 = ["dataset", "promote-aero", "--dataset", ds4]
+                if force4:
+                    args4.append("--force")
+                desc4 = "Writes promotion_manifest.json -- the required gate for ML training."
 
-        _panel(f"Dataset: {task4}",desc4,args4,root,exe,tmo,dry,"dcp_run",danger=(task4=="promote-aero"))
+            else:  # require-promoted-aero
+                af4 = st.checkbox(
+                    "--allow-forced (allow force-promoted datasets)", False, key="dc_af"
+                )
+                args4 = ["dataset", "require-promoted-aero", "--dataset", ds4]
+                if af4:
+                    args4.append("--allow-forced")
+                desc4 = "Validates dataset has promotion_manifest.json and is trustworthy."
+
+            _panel(
+                f"Dataset: {task4}",
+                desc4,
+                args4,
+                root,
+                exe,
+                tmo,
+                dry,
+                "dcp_run",
+                danger=(task4 == "promote-aero"),
+            )
 
     # ── TRAINING DATA ─────────────────────────────────────────────────────────
-    with tabs[4]:
-        ds5 = _pick_dir("Promoted dataset root",root/"data"/"datasets","dtr_ds")
-        c1,c2 = st.columns(2)
-        feat5 = c1.text_input("--features",DEFAULT_FEATURES,key="dtr_feat")
-        tgt5  = c2.text_input("--targets",DEFAULT_TARGETS,key="dtr_tgt")
-        util5 = st.selectbox("Utility",["training-data","split-training-data"],key="dtr_util")
-        args5 = ["dataset",util5,"--dataset",ds5,"--features",feat5,"--targets",tgt5]
+    with tabs[5]:
+        ds5 = _pick_dir("Promoted dataset root", root / "data" / "datasets", "dtr_ds")
+        c1, c2 = st.columns(2)
+        feat5 = c1.text_input("--features", DEFAULT_FEATURES, key="dtr_feat")
+        tgt5 = c2.text_input("--targets", DEFAULT_TARGETS, key="dtr_tgt")
+        util5 = st.selectbox("Utility", ["training-data", "split-training-data"], key="dtr_util")
+        args5 = ["dataset", util5, "--dataset", ds5, "--features", feat5, "--targets", tgt5]
         if util5 == "split-training-data":
-            c3,c4,c5 = st.columns(3)
-            sm5  = c3.selectbox("--method",["grouped","random"],key="dtr_sm")
-            gc5  = c4.text_input("--group-column","geometry_id",key="dtr_gc")
-            rs5  = c5.number_input("--random-seed",min_value=0,value=123,step=1,key="dtr_rs")
-            c6,c7,c8 = st.columns(3)
-            tr5  = c6.slider("--train-fraction",0.3,0.85,0.70,0.05,key="dtr_tr")
-            vl5  = c7.slider("--val-fraction",0.05,0.3,0.15,0.05,key="dtr_vl")
-            te5  = c8.slider("--test-fraction",0.05,0.3,0.15,0.05,key="dtr_te")
-            args5 += ["--method",sm5,"--group-column",gc5,"--random-seed",str(int(rs5)),
-                      "--train-fraction",str(tr5),"--val-fraction",str(vl5),"--test-fraction",str(te5)]
-        _panel("Training data",f"Prepares training-ready data from promoted dataset.",args5,root,exe,tmo,dry,"dtr_run")
+            c3, c4, c5 = st.columns(3)
+            sm5 = c3.selectbox("--method", ["grouped", "random"], key="dtr_sm")
+            gc5 = c4.text_input("--group-column", "geometry_id", key="dtr_gc")
+            rs5 = c5.number_input("--random-seed", min_value=0, value=123, step=1, key="dtr_rs")
+            c6, c7, c8 = st.columns(3)
+            tr5 = c6.slider("--train-fraction", 0.3, 0.85, 0.70, 0.05, key="dtr_tr")
+            vl5 = c7.slider("--val-fraction", 0.05, 0.3, 0.15, 0.05, key="dtr_vl")
+            te5 = c8.slider("--test-fraction", 0.05, 0.3, 0.15, 0.05, key="dtr_te")
+            args5 += [
+                "--method",
+                sm5,
+                "--group-column",
+                gc5,
+                "--random-seed",
+                str(int(rs5)),
+                "--train-fraction",
+                str(tr5),
+                "--val-fraction",
+                str(vl5),
+                "--test-fraction",
+                str(te5),
+            ]
+        _panel(
+            "Training data",
+            f"Prepares training-ready data from promoted dataset.",
+            args5,
+            root,
+            exe,
+            tmo,
+            dry,
+            "dtr_run",
+        )
 
     # ── CONTROL / FLYABILITY LABELS ───────────────────────────────────────────
-    with tabs[5]:
+    with tabs[4]:
         _note(
             "D2/D3/D4 convert symmetric elevon sweeps into engineering labels: "
             "control derivatives → trim/flyability labels → one batch evidence report. "
             "This is first-order diagnostic logic, not a nonlinear trim solver and not a MIL-STD claim.",
             "info",
         )
-        with st.expander("⟳ Roll authority check (differential elevon datasets — v2/v3 configs)", expanded=False):
+        with st.expander(
+            "⟳ Roll authority check (differential elevon datasets — v2/v3 configs)", expanded=False
+        ):
             _note(
                 "For <b>roll authority</b> analysis from a differential elevon dataset, filter rows to "
                 "<code>sweep_type == diff</code> first (or use a diff-only dataset), then run:",
@@ -3853,19 +5062,55 @@ def pg_dataset(root, exe, tmo, dry):
                 "D2 on these rows gives roll derivatives (dCl_roll/dδa) rather than pitch derivatives.",
                 "warn",
             )
-        ds_cf = _pick_dir("Aero dataset root", root / "data" / "datasets", "dcf_ds")
+        # (AERIS_PATCH_DATASET_GUI_V1) hide non-aero datasets here instead of letting D2/D3/D4 run
+        # on data with no geometry_id/cm/control columns.
+        ds_cf, kind_cf = _pick_dataset_dir(
+            "Aero dataset root",
+            root / "data" / "datasets",
+            "dcf_ds",
+            help_="3D aero datasets only (needs geometry_id, cm, and an elevon/control column). "
+            "2D airfoil datasets are hidden here -- use the 2D Airfoils page instead.",
+            kinds={"aero_3d", "promoted_aero_3d"},
+        )
+        if ds_cf:
+            st.caption(f"Detected type: **{_DATASET_KIND_LABELS.get(kind_cf, 'unknown')}**")
+        elif not _dirs(str(root / "data" / "datasets")):
+            st.info("No datasets found yet.")
+        else:
+            st.warning(
+                "No 3D aero datasets found under data/datasets/ -- this tab only accepts "
+                "aero_3d or promoted_aero_3d datasets. 2D airfoil datasets are intentionally "
+                "hidden here; use the 2D Airfoils page for those."
+            )
         c1, c2, c3 = st.columns(3)
         src_cf = c1.selectbox("--source", ["auto", "curated", "raw"], key="dcf_src")
-        ctrl_cf = c2.text_input("--control-column", "", key="dcf_ctrl", help="Blank = delta_e_sym_deg with fallback to control_input_deg.")
+        ctrl_cf = c2.text_input(
+            "--control-column",
+            "",
+            key="dcf_ctrl",
+            help="Blank = delta_e_sym_deg with fallback to control_input_deg.",
+        )
         cm_cf = c3.text_input("--cm-column", "cm", key="dcf_cm")
 
         with st.expander("Advanced grouping / targets / thresholds"):
             c4, c5 = st.columns(2)
-            groups_cf = c4.text_input("--group-columns", DEFAULT_CONTROL_DERIVATIVE_GROUPS, key="dcf_groups")
-            targets_cf = c5.text_input("--targets", DEFAULT_CONTROL_DERIVATIVE_TARGETS, key="dcf_targets")
+            groups_cf = c4.text_input(
+                "--group-columns", DEFAULT_CONTROL_DERIVATIVE_GROUPS, key="dcf_groups"
+            )
+            targets_cf = c5.text_input(
+                "--targets", DEFAULT_CONTROL_DERIVATIVE_TARGETS, key="dcf_targets"
+            )
             c6, c7, c8 = st.columns(3)
-            trim_lim = c6.number_input("--max-abs-trim-delta-e-deg", value=25.0, step=1.0, key="dcf_trimlim")
-            min_cmde = c7.number_input("--min-abs-cm-delta-e-per-rad", value=0.10, step=0.01, format="%.3f", key="dcf_mincmde")
+            trim_lim = c6.number_input(
+                "--max-abs-trim-delta-e-deg", value=25.0, step=1.0, key="dcf_trimlim"
+            )
+            min_cmde = c7.number_input(
+                "--min-abs-cm-delta-e-per-rad",
+                value=0.10,
+                step=0.01,
+                format="%.3f",
+                key="dcf_mincmde",
+            )
             recompute = c8.checkbox("--recompute-control-derivatives", True, key="dcf_recompute")
             c9, c10 = st.columns(2)
             alpha_min = c9.number_input("--alpha-min-deg", value=-5.0, step=1.0, key="dcf_amin")
@@ -3877,23 +5122,43 @@ def pg_dataset(root, exe, tmo, dry):
         _flag(args_d2, "--targets", targets_cf)
 
         args_d3 = [
-            "dataset", "compute-flyability-labels", "--dataset", ds_cf, "--source", src_cf,
-            "--cm-column", cm_cf,
-            "--max-abs-trim-delta-e-deg", str(trim_lim),
-            "--min-abs-cm-delta-e-per-rad", str(min_cmde),
-            "--alpha-min-deg", str(alpha_min),
-            "--alpha-max-deg", str(alpha_max),
+            "dataset",
+            "compute-flyability-labels",
+            "--dataset",
+            ds_cf,
+            "--source",
+            src_cf,
+            "--cm-column",
+            cm_cf,
+            "--max-abs-trim-delta-e-deg",
+            str(trim_lim),
+            "--min-abs-cm-delta-e-per-rad",
+            str(min_cmde),
+            "--alpha-min-deg",
+            str(alpha_min),
+            "--alpha-max-deg",
+            str(alpha_max),
         ]
         _flag(args_d3, "--control-column", ctrl_cf)
         _flag(args_d3, "--group-columns", groups_cf)
 
         args_d4 = [
-            "dataset", "compute-dynamics-labels", "--dataset", ds_cf, "--source", src_cf,
-            "--cm-column", cm_cf,
-            "--max-abs-trim-delta-e-deg", str(trim_lim),
-            "--min-abs-cm-delta-e-per-rad", str(min_cmde),
-            "--alpha-min-deg", str(alpha_min),
-            "--alpha-max-deg", str(alpha_max),
+            "dataset",
+            "compute-dynamics-labels",
+            "--dataset",
+            ds_cf,
+            "--source",
+            src_cf,
+            "--cm-column",
+            cm_cf,
+            "--max-abs-trim-delta-e-deg",
+            str(trim_lim),
+            "--min-abs-cm-delta-e-per-rad",
+            str(min_cmde),
+            "--alpha-min-deg",
+            str(alpha_min),
+            "--alpha-max-deg",
+            str(alpha_max),
         ]
         _flag(args_d4, "--control-column", ctrl_cf)
         _flag(args_d4, "--group-columns", groups_cf)
@@ -3903,181 +5168,410 @@ def pg_dataset(root, exe, tmo, dry):
 
         c1, c2, c3 = st.columns(3)
         with c1:
-            _panel("D2 — compute control derivatives", "Finite-difference Cmδe/CLδe/CDδe from -δ,0,+δ symmetric elevon sweeps.", args_d2, root, exe, tmo, dry, "dcf_d2")
+            _panel(
+                "D2 — compute control derivatives",
+                "Finite-difference Cmδe/CLδe/CDδe from -δ,0,+δ symmetric elevon sweeps.",
+                args_d2,
+                root,
+                exe,
+                tmo,
+                dry,
+                "dcf_d2",
+            )
         with c2:
-            _panel("D3 — compute flyability labels", "Estimates required trim δe and basic longitudinal flyability from D2 derivatives.", args_d3, root, exe, tmo, dry, "dcf_d3")
+            _panel(
+                "D3 — compute flyability labels",
+                "Estimates required trim δe and basic longitudinal flyability from D2 derivatives.",
+                args_d3,
+                root,
+                exe,
+                tmo,
+                dry,
+                "dcf_d3",
+            )
         with c3:
-            _panel("D4 — batch dynamics labels", "Runs the D2→D3 chain and writes one evidence report.", args_d4, root, exe, tmo, dry, "dcf_d4")
+            _panel(
+                "D4 — batch control/flyability labels",
+                "Runs the D2→D3 chain and writes one evidence report.",
+                args_d4,
+                root,
+                exe,
+                tmo,
+                dry,
+                "dcf_d4",
+            )
 
         if ds_cf:
             _dataset_control_artifact_preview(Path(ds_cf))
 
     # ── SMOKE CHECK ───────────────────────────────────────────────────────────
-    with tabs[6]:
-        _note("<b>aeris pipeline smoke</b> — minimal end-to-end: config → generator → one sample → manifest. Run after install/env changes.","info")
-        cfg_sm = _pick_file("Smoke config",root/"configs"/"smoke","*.yaml","sm_cfg",
-                            default=str(root/"configs"/"smoke"/"dev.yaml"))
-        _panel("Run smoke pipeline","Quick end-to-end sanity check.",["pipeline","smoke","--config",cfg_sm],root,exe,tmo,dry,"sm_run")
+    with tabs[7]:
+        _note(
+            "<b>aeris pipeline smoke</b> — minimal end-to-end: config → generator → one sample → manifest. Run after install/env changes.",
+            "info",
+        )
+        cfg_sm = _pick_file(
+            "Smoke config",
+            root / "configs" / "smoke",
+            "*.yaml",
+            "sm_cfg",
+            default=str(root / "configs" / "smoke" / "dev.yaml"),
+        )
+        _panel(
+            "Run smoke pipeline",
+            "Quick end-to-end sanity check.",
+            ["pipeline", "smoke", "--config", cfg_sm],
+            root,
+            exe,
+            tmo,
+            dry,
+            "sm_run",
+        )
 
         st.divider()
-        _note("<b>Aero-generate smoke runs</b> — quick functional checks for v2/v3 configs and diff elevon wiring.","info")
+        _note(
+            "<b>Aero-generate smoke runs</b> — quick functional checks for v2/v3 configs and diff elevon wiring.",
+            "info",
+        )
         sm_tabs = st.tabs(["Sym smoke (v2)", "Diff smoke (v2)", "Variable elevon smoke (v3)"])
 
         _v2_cfg = str(root / "configs" / "geometry" / "bwb_training_v2.yaml")
         _v3_cfg = str(root / "configs" / "geometry" / "bwb_training_v3.yaml")
 
         with sm_tabs[0]:
-            _note("1 geometry, 3 alpha, symmetric sweep only. Validates v2 config + AVL wiring.","info")
+            _note(
+                "1 geometry, 3 alpha, symmetric sweep only. Validates v2 config + AVL wiring.",
+                "info",
+            )
             _panel(
                 "Sym smoke (v2)",
                 "Generates 1 geometry with symmetric elevon sweep. Expected: 3 alpha × 3 ctrl = 9 aero cases.",
                 [
-                    "dataset", "aero-generate", "-c", _v2_cfg,
-                    "--n", "1", "--name", "smoke_sym_gui",
-                    "--alpha-values", "-4,0,4", "--velocity-values", "28",
-                    "--altitude-values", "0", "--control-input-values", "-10,0,10",
-                    "--qc-preset", "debug", "--no-save-plot",
+                    "dataset",
+                    "aero-generate",
+                    "-c",
+                    _v2_cfg,
+                    "--n",
+                    "1",
+                    "--name",
+                    "smoke_sym_gui",
+                    "--alpha-values",
+                    "-4,0,4",
+                    "--velocity-values",
+                    "28",
+                    "--altitude-values",
+                    "0",
+                    "--control-input-values",
+                    "-10,0,10",
+                    "--qc-preset",
+                    "debug",
+                    "--no-save-plot",
                 ],
-                root, exe, tmo, dry, "sm_sym_v2",
+                root,
+                exe,
+                tmo,
+                dry,
+                "sm_sym_v2",
             )
 
         with sm_tabs[1]:
-            _note("1 geometry, 3 alpha, differential sweep. Validates d2/SgnDup=-1 wiring and Cl_roll response.","info")
+            _note(
+                "1 geometry, 3 alpha, differential sweep. Validates d2/SgnDup=-1 wiring and Cl_roll response.",
+                "info",
+            )
             _panel(
                 "Diff smoke (v2)",
                 "Generates 1 geometry with differential elevon sweep. sym=0 held; diff varies. Cl_roll should vary, Cm near-constant.",
                 [
-                    "dataset", "aero-generate", "-c", _v2_cfg,
-                    "--n", "1", "--name", "smoke_diff_gui",
-                    "--alpha-values", "-4,0,4", "--velocity-values", "28",
-                    "--altitude-values", "0", "--control-input-values", "0",
-                    "--diff-input-values", "-10,0,10",
-                    "--qc-preset", "debug", "--no-save-plot",
+                    "dataset",
+                    "aero-generate",
+                    "-c",
+                    _v2_cfg,
+                    "--n",
+                    "1",
+                    "--name",
+                    "smoke_diff_gui",
+                    "--alpha-values",
+                    "-4,0,4",
+                    "--velocity-values",
+                    "28",
+                    "--altitude-values",
+                    "0",
+                    "--control-input-values",
+                    "0",
+                    "--diff-input-values",
+                    "-10,0,10",
+                    "--qc-preset",
+                    "debug",
+                    "--no-save-plot",
                 ],
-                root, exe, tmo, dry, "sm_diff_v2",
+                root,
+                exe,
+                tmo,
+                dry,
+                "sm_diff_v2",
             )
 
         with sm_tabs[2]:
-            _note("3 geometries with varied elevon geometry (start/end/hinge fractions). Validates v3 20-DV space.","info")
+            _note(
+                "3 geometries with varied elevon geometry (start/end/hinge fractions). Validates v3 20-DV space.",
+                "info",
+            )
             _panel(
                 "Variable elevon smoke (v3)",
                 "Generates 3 geometries with sampled elevon_start_frac / end_frac / hinge_frac. Pitch authority should scale with elevon span.",
                 [
-                    "dataset", "aero-generate", "-c", _v3_cfg,
-                    "--n", "3", "--name", "smoke_v3_gui",
-                    "--alpha-values", "-4,0,4", "--velocity-values", "28",
-                    "--altitude-values", "0", "--control-input-values", "-10,0,10",
-                    "--qc-preset", "debug", "--no-save-plot",
+                    "dataset",
+                    "aero-generate",
+                    "-c",
+                    _v3_cfg,
+                    "--n",
+                    "3",
+                    "--name",
+                    "smoke_v3_gui",
+                    "--alpha-values",
+                    "-4,0,4",
+                    "--velocity-values",
+                    "28",
+                    "--altitude-values",
+                    "0",
+                    "--control-input-values",
+                    "-10,0,10",
+                    "--qc-preset",
+                    "debug",
+                    "--no-save-plot",
                 ],
-                root, exe, tmo, dry, "sm_v3",
+                root,
+                exe,
+                tmo,
+                dry,
+                "sm_v3",
             )
 
     # ── 2D ↔ 3D BRIDGE ───────────────────────────────────────────────────
-    with tabs[7]:
+    with tabs[6]:
         _note(
-            "<b>2D ↔ 3D Bridge</b> — connect a promoted XFOIL airfoil library to a "
-            "3D BWB aero-generate campaign. "
-            "The 2D XFOIL surrogate predicts airfoil-level Cl/Cd/Cm across t/c and Re; "
-            "the 3D AVL sweep predicts wing-level CL/CD/Cm across geometry DVs and flight conditions. "
-            "Together they span the full design space from section to vehicle.",
+            "<b>2D → 3D Polar Bridge (Curated XFOIL path)</b> -- feeds a promoted XFOIL airfoil "
+            "dataset (viscous polars: cl/cd/cm vs alpha/Re) into a 3D BWB aero-generate campaign. "
+            "This is the <b>curated-xfoil</b> mode: it uses real XFOIL sweep data you already promoted "
+            "in the 2D Airfoils page. "
+            "For <b>NeuralFoil</b> (auto-from-geometry, no external dataset needed), use the viscous polar "
+            "backend selector in the <b>Unified Aero</b> tab instead -- it reads airfoil shapes directly "
+            "from each generated BWB section at campaign time.",
             "info",
         )
 
-        _sec("Step 1 — 2D source library")
+        _sec("Step 1 -- 2D source (promoted XFOIL airfoil dataset)")
+        _note(
+            "The bridge needs a <b>promoted</b> XFOIL airfoil dataset -- polar data, not just "
+            "coordinates. A coordinate library alone (data/airfoil_library) has geometry but no "
+            "aerodynamics. Promote a 2D dataset in the 2D Airfoils page first if none appear below.",
+            "info",
+        )
+        bridge_ds, bridge_ds_kind = _pick_dataset_dir(
+            "Promoted 2D airfoil dataset",
+            root / "data" / "datasets",
+            "bridge_ds",
+            help_="Must be promoted (has promotion_manifest.json + curated_airfoil_dataset.csv).",
+            kinds={"promoted_airfoil_2d"},
+        )
+        if not bridge_ds:
+            st.warning(
+                "No promoted 2D airfoil datasets found. Promote one in the 2D Airfoils page first."
+            )
+        bridge_curated_csv = (
+            str(Path(bridge_ds) / "curated_airfoil_dataset.csv") if bridge_ds else ""
+        )
+
         bridge_lib_opts = _airfoil_library_candidates(root)
-        _default_lib = (bridge_lib_opts[0] if bridge_lib_opts
-                        else str(root / "data" / "airfoil_library"))
+        _default_lib = (
+            bridge_lib_opts[0] if bridge_lib_opts else str(root / "data" / "airfoil_library")
+        )
         bridge_lib = st.selectbox(
-            "Active airfoil library",
+            "Airfoil coordinate library (for t/c lookup)",
             bridge_lib_opts if bridge_lib_opts else [_default_lib],
             format_func=_airfoil_library_label,
             key="bridge_lib",
-            help="Select the promoted XFOIL airfoil library that describes the BWB section family.",
+            help="The coordinate library the promoted dataset above was swept from. Used alongside "
+            "the polar data for thickness/geometry lookups -- not a substitute for it.",
         )
         bridge_lib_path = Path(str(bridge_lib))
         _bridge_n = _airfoil_inventory_count(bridge_lib_path)
         if _bridge_n > 0:
-            st.caption("Library **" + bridge_lib_path.name + "** — " + str(_bridge_n) + " airfoils.")
+            st.caption(
+                "Library **" + bridge_lib_path.name + "** -- " + str(_bridge_n) + " airfoils."
+            )
         else:
-            st.warning("No airfoils found. Generate + promote a 2D dataset first (2D Airfoils page).")
+            st.warning("No airfoils found in the selected coordinate library.")
 
-        _sec("Step 2 — 3D geometry config")
+        _sec("Step 1b -- airfoil mapping")
+        bridge_mode = st.radio(
+            "How airfoils map onto the BWB span",
+            [
+                "Single airfoil for the whole wing",
+                "Spanwise segments (different airfoil per station)",
+            ],
+            key="bridge_mode",
+            help="Single: one --airfoil-library-id applied everywhere. Segments: repeated "
+            "--segment-airfoils entries, e.g. root -> kink -> tip.",
+        )
+        if bridge_mode.startswith("Single"):
+            bridge_airfoil_id = st.text_input(
+                "--airfoil-library-id",
+                value="naca4412",
+                key="bridge_airfoil_id",
+                help="Airfoil ID from the coordinate library above, applied to every section.",
+            )
+            bridge_segments: list[str] = []
+        else:
+            st.caption(
+                "One row per station: airfoil_id:y_frac_end. Last entry should end at 1.0 (tip)."
+            )
+            _seg_default = "naca4412:0.40\nnaca0012:0.70\nnaca0008:1.00"
+            bridge_seg_text = st.text_area(
+                "--segment-airfoils (one per line)",
+                value=_seg_default,
+                key="bridge_seg_text",
+                height=100,
+            )
+            bridge_segments = [ln.strip() for ln in bridge_seg_text.splitlines() if ln.strip()]
+            bridge_airfoil_id = None
+
+        _sec("Step 2 -- 3D geometry config")
         bridge_cfg_opts = _files(str(root / "configs" / "geometry"), "*.yaml")
         bridge_cfg = _pick_file(
-            "3D geometry config", root / "configs" / "geometry", "*.yaml",
+            "3D geometry config",
+            root / "configs" / "geometry",
+            "*.yaml",
             "bridge_cfg",
             default=str(root / "configs" / "geometry" / "bwb_training_v1.yaml"),
         )
 
-        _sec("Step 3 — campaign settings")
+        _sec("Step 3 -- campaign settings")
         bc1, bc2, bc3, bc4 = st.columns(4)
-        bridge_n    = bc1.number_input("--n", min_value=1, value=5, step=1, key="bridge_n",
-                                        help="Number of 3D BWB geometries to generate.")
-        bridge_samp = bc2.selectbox("--sampler", SAMPLERS, key="bridge_samp",
-                                    format_func=lambda s: SAMPLER_INFO.get(s, s))
-        bridge_seed = bc3.number_input("--sampler-seed", min_value=0, value=42, step=1, key="bridge_seed")
-        bridge_name = bc4.text_input("--name", value="bridge_aero_v1", key="bridge_name",
-                                     help="Output dataset folder name under data/datasets/.")
+        bridge_n = bc1.number_input(
+            "--n",
+            min_value=1,
+            value=5,
+            step=1,
+            key="bridge_n",
+            help="Number of 3D BWB geometries to generate.",
+        )
+        bridge_samp = bc2.selectbox(
+            "--sampler", SAMPLERS, key="bridge_samp", format_func=lambda s: SAMPLER_INFO.get(s, s)
+        )
+        bridge_seed = bc3.number_input(
+            "--sampler-seed", min_value=0, value=42, step=1, key="bridge_seed"
+        )
+        bridge_name = bc4.text_input(
+            "--name",
+            value="bridge_aero_v1",
+            key="bridge_name",
+            help="Output dataset folder name under data/datasets/.",
+        )
 
-        _sec("Step 4 — 3D flight envelope")
+        _sec("Step 4 -- 3D flight envelope")
         bb1, bb2 = st.columns(2)
-        bridge_al  = bb1.text_input("--alpha-values [deg]", "-2,0,2,4,6", key="bridge_al")
-        bridge_ve  = bb2.text_input("--velocity-values [m/s]", "28", key="bridge_ve")
+        bridge_al = bb1.text_input("--alpha-values [deg]", "-2,0,2,4,6", key="bridge_al")
+        bridge_ve = bb2.text_input("--velocity-values [m/s]", "28", key="bridge_ve")
         bb3, bb4 = st.columns(2)
-        bridge_at  = bb3.text_input("--altitude-values [m]", "1500", key="bridge_at")
-        bridge_ct  = bb4.text_input("--control-input-values [deg]", "-5,0,5", key="bridge_ct")
+        bridge_at = bb3.text_input("--altitude-values [m]", "1500", key="bridge_at")
+        bridge_ct = bb4.text_input("--control-input-values [deg]", "-5,0,5", key="bridge_ct")
 
-        _sec("Step 5 — QC preset")
+        _sec("Step 5 -- QC preset")
         bridge_qcp = st.selectbox(
-            "--qc-preset", ["(none)"] + QC_PRESETS, key="bridge_qcp",
+            "--qc-preset",
+            ["(none)"] + QC_PRESETS,
+            key="bridge_qcp",
             format_func=lambda s: QC_PRESET_INFO.get(s, s) if s in QC_PRESET_INFO else s,
         )
 
+        # (AERIS_PATCH_DATASET_GUI_V1) bridge_curated_csv / bridge_lib_path were previously collected
+        # from the user and then never added to bridge_args -- the bridge did
+        # nothing. Now actually wired into the backend's bridge flags.
         bridge_args = [
-            "dataset", "aero-generate",
-            "-c", bridge_cfg,
-            "--n", str(int(bridge_n)),
-            "--sampler", bridge_samp,
-            "--sampler-seed", str(int(bridge_seed)),
-            "--name", bridge_name,
-            "--alpha-values", bridge_al,
-            "--velocity-values", bridge_ve,
-            "--altitude-values", bridge_at,
-            "--control-input-values", bridge_ct,
-            "--solver", "aerosandbox_avl",
+            "dataset",
+            "aero-generate",
+            "-c",
+            bridge_cfg,
+            "--n",
+            str(int(bridge_n)),
+            "--sampler",
+            bridge_samp,
+            "--sampler-seed",
+            str(int(bridge_seed)),
+            "--name",
+            bridge_name,
+            "--alpha-values",
+            bridge_al,
+            "--velocity-values",
+            bridge_ve,
+            "--altitude-values",
+            bridge_at,
+            "--control-input-values",
+            bridge_ct,
+            "--solver",
+            "aerosandbox_avl",
+            "--viscous-polar-source",
+            "curated-xfoil",
+            "--airfoil-curated-csv",
+            bridge_curated_csv,
+            "--airfoil-library-root",
+            str(bridge_lib_path),
             "--no-save-plot",
-            "--retain-aero-runs", "failures_only",
+            "--retain-aero-runs",
+            "failures_only",
         ]
-        if bridge_qcp != "(none)": bridge_args += ["--qc-preset", bridge_qcp]
+        if bridge_mode.startswith("Single"):
+            bridge_args += ["--airfoil-library-id", bridge_airfoil_id]
+        else:
+            for _seg in bridge_segments:
+                bridge_args += ["--segment-airfoils", _seg]
+        if bridge_qcp != "(none)":
+            bridge_args += ["--qc-preset", bridge_qcp]
 
         _note(
-            "<b>After this campaign:</b> go to ◈ ML Studio, select a feature set that "
-            "includes both 2D airfoil features and 3D geometry/flight-condition features "
-            "(e.g. a custom set combining <code>airfoil_xfoil_v1</code> inputs with "
-            "<code>c1_m, b_total_m, sw1_deg</code>) to train a joint surrogate.",
+            "<b>This campaign uses 2D polar data to inform the 3D AVL aero dataset</b> -- it does "
+            "not automatically build a joint 2D+3D ML table. For a joint surrogate afterwards, go "
+            "to ◈ ML Studio and select a feature set combining <code>airfoil_xfoil_v1</code> "
+            "inputs with 3D geometry/flight-condition features "
+            "(e.g. <code>c1_m, b_total_m, sw1_deg</code>) as a separate step.",
             "info",
         )
         _panel(
-            "Launch 2D↔3D bridged aero campaign",
-            "3D BWB aero-generate campaign wired to the 2D airfoil library. "
-            "After completion: train a joint surrogate in ML Studio.",
-            bridge_args, root, exe, tmo, dry, "bridge_run",
+            "Launch 2D→3D bridged aero campaign",
+            "3D BWB aero-generate campaign wired to the promoted 2D airfoil dataset above via "
+            "--viscous-polar-source / --airfoil-curated-csv / --airfoil-library-root.",
+            bridge_args,
+            root,
+            exe,
+            tmo,
+            dry,
+            "bridge_run",
         )
 
 
 def _aero_run_rows(root: Path) -> list[Path]:
     """All folders in data/runs/ that look like aero runs (single or sweep)."""
-    return [Path(r) for r in _dirs(str(root / "data" / "runs"))
-            if any(k in Path(r).name for k in ("_aero_", "_sweep_"))]
+    return [
+        Path(r)
+        for r in _dirs(str(root / "data" / "runs"))
+        if any(k in Path(r).name for k in ("_aero_", "_sweep_"))
+    ]
+
 
 def _geo_run_rows(root: Path) -> list[Path]:
     """All folders in data/runs/ that look like geometry-only runs."""
-    return [Path(r) for r in _dirs(str(root / "data" / "runs"))
-            if "geometry" in Path(r).name
-            and not any(k in Path(r).name for k in ("_aero_", "_sweep_"))]
+    return [
+        Path(r)
+        for r in _dirs(str(root / "data" / "runs"))
+        if "geometry" in Path(r).name and not any(k in Path(r).name for k in ("_aero_", "_sweep_"))
+    ]
 
-def _aero_src_widget(key: str, root: Path, geo_runs: list[Path],
-                     cfg_opts: list[str], cfg_label_fn) -> list[str]:
+
+def _aero_src_widget(
+    key: str, root: Path, geo_runs: list[Path], cfg_opts: list[str], cfg_label_fn
+) -> list[str]:
     """
     Geometry source selector for aero run/sweep.
     Returns the CLI source args list.
@@ -4089,15 +5583,14 @@ def _aero_src_widget(key: str, root: Path, geo_runs: list[Path],
         horizontal=True,
         key=f"{key}_src_mode",
         help="Existing run: reuses a geometry you already generated. "
-             "Config file: generates a fresh geometry sample on the fly.",
+        "Config file: generates a fresh geometry sample on the fly.",
     )
 
     args = []
     if src_mode == "From existing geometry run":
         if not geo_runs:
             st.warning(
-                "No geometry runs found in data/runs/. "
-                "Go to Geometry → ① Generate first."
+                "No geometry runs found in data/runs/. " "Go to Geometry → ① Generate first."
             )
             # Fall back silently to config so args are always valid
             cfg = cfg_opts[0] if cfg_opts else ""
@@ -4109,7 +5602,7 @@ def _aero_src_widget(key: str, root: Path, geo_runs: list[Path],
                 list(run_map.keys()),
                 key=f"{key}_run_sel",
                 help="Folder from data/runs/. The geometry inside will be reused — "
-                     "no re-sampling.",
+                "no re-sampling.",
             )
             chosen_path = run_map[chosen]
             m = _rjson(chosen_path / "manifest.json")
@@ -4122,19 +5615,23 @@ def _aero_src_widget(key: str, root: Path, geo_runs: list[Path],
                 f'<div style="flex:1;font-size:.78rem;color:#D6DEE8;font-family:JetBrains Mono,monospace;'
                 f'overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{chosen_path.name}</div>'
                 f'<div style="font-size:.7rem;color:{dot};font-weight:600;flex-shrink:0">{status}</div>'
-                f'</div>'
+                f"</div>"
             )
-            args += ["--run-dir", str(chosen_path),
-                     "--generator-id", "bwb_segmented_v1"]
+            args += ["--run-dir", str(chosen_path), "--generator-id", "bwb_segmented_v1"]
     else:
         cfg = st.selectbox(
-            "Config", cfg_opts if cfg_opts else [""],
+            "Config",
+            cfg_opts if cfg_opts else [""],
             format_func=cfg_label_fn,
             key=f"{key}_cfg",
             help="Generates a fresh geometry sample from this config.",
         )
         seed = st.number_input(
-            "Seed", min_value=0, max_value=99999, value=0, step=1,
+            "Seed",
+            min_value=0,
+            max_value=99999,
+            value=0,
+            step=1,
             key=f"{key}_seed",
             help="Geometry seed. 0 = config default. Same seed + same config = same geometry.",
         )
@@ -4150,40 +5647,87 @@ def _aero_solver_widget(key: str) -> list[str]:
         value="avl",
         key=f"{key}_avl",
         help="Type 'avl' if avl is on your PATH. "
-             "Otherwise paste the full path, e.g. /usr/local/bin/avl",
+        "Otherwise paste the full path, e.g. /usr/local/bin/avl",
     )
     with st.expander("Paneling & advanced solver settings"):
         c1, c2, c3, c4 = st.columns(4)
-        sp  = c1.number_input("Spanwise panels",  min_value=1, value=4,  step=1, key=f"{key}_sp",
-                              help="--spanwise-resolution. Default 4 for datasets, 8+ for accuracy.")
-        cp  = c2.number_input("Chordwise panels", min_value=1, value=8,  step=1, key=f"{key}_cp",
-                              help="--chordwise-resolution. Default 8.")
-        ssp = c3.selectbox("Spanwise spacing",  SPACING,       key=f"{key}_ssp",
-                           help="--spanwise-spacing. 'equal' or 'cosine'.")
-        csp = c4.selectbox("Chordwise spacing", SPACING, index=1, key=f"{key}_csp",
-                           help="--chordwise-spacing. 'cosine' recommended.")
-        tmo_ = st.number_input("Timeout [s]", min_value=5, value=180, step=5, key=f"{key}_tmo",
-                               help="--timeout-sec. Per-case timeout. 180s is safe for single AVL runs.")
+        sp = c1.number_input(
+            "Spanwise panels",
+            min_value=1,
+            value=4,
+            step=1,
+            key=f"{key}_sp",
+            help="--spanwise-resolution. Default 4 for datasets, 8+ for accuracy.",
+        )
+        cp = c2.number_input(
+            "Chordwise panels",
+            min_value=1,
+            value=8,
+            step=1,
+            key=f"{key}_cp",
+            help="--chordwise-resolution. Default 8.",
+        )
+        ssp = c3.selectbox(
+            "Spanwise spacing",
+            SPACING,
+            key=f"{key}_ssp",
+            help="--spanwise-spacing. 'equal' or 'cosine'.",
+        )
+        csp = c4.selectbox(
+            "Chordwise spacing",
+            SPACING,
+            index=1,
+            key=f"{key}_csp",
+            help="--chordwise-spacing. 'cosine' recommended.",
+        )
+        tmo_ = st.number_input(
+            "Timeout [s]",
+            min_value=5,
+            value=180,
+            step=5,
+            key=f"{key}_tmo",
+            help="--timeout-sec. Per-case timeout. 180s is safe for single AVL runs.",
+        )
         c5, c6 = st.columns(2)
-        ssf = c5.checkbox("Save surface forces", False, key=f"{key}_ssf",
-                          help="--save-surface-forces. Writes AVL surface force files.")
-        sef = c6.checkbox("Save element forces", False, key=f"{key}_sef",
-                          help="--save-element-forces. Writes AVL element force files.")
-    args = ["--solver", "aerosandbox_avl",
-            "--avl-command", avl,
-            "--spanwise-resolution", str(int(sp)),
-            "--chordwise-resolution", str(int(cp)),
-            "--spanwise-spacing", ssp,
-            "--chordwise-spacing", csp,
-            "--timeout-sec", str(int(tmo_))]
-    if ssf: args.append("--save-surface-forces")
-    if sef: args.append("--save-element-forces")
+        ssf = c5.checkbox(
+            "Save surface forces",
+            False,
+            key=f"{key}_ssf",
+            help="--save-surface-forces. Writes AVL surface force files.",
+        )
+        sef = c6.checkbox(
+            "Save element forces",
+            False,
+            key=f"{key}_sef",
+            help="--save-element-forces. Writes AVL element force files.",
+        )
+    args = [
+        "--solver",
+        "aerosandbox_avl",
+        "--avl-command",
+        avl,
+        "--spanwise-resolution",
+        str(int(sp)),
+        "--chordwise-resolution",
+        str(int(cp)),
+        "--spanwise-spacing",
+        ssp,
+        "--chordwise-spacing",
+        csp,
+        "--timeout-sec",
+        str(int(tmo_)),
+    ]
+    if ssf:
+        args.append("--save-surface-forces")
+    if sef:
+        args.append("--save-element-forces")
     return args
 
 
 def _aero_run_list(root: Path, tab_key: str, run_filter_fn) -> None:
     """Show aero runs with per-row delete buttons."""
     import shutil as _shutil
+
     runs = run_filter_fn(root)
     if not runs:
         st.caption("No runs yet.")
@@ -4193,9 +5737,9 @@ def _aero_run_list(root: Path, tab_key: str, run_filter_fn) -> None:
     st.caption("Click 🗑 to delete a run folder.")
     did_delete = False
     for i, p in enumerate(runs[:20]):
-        m      = _rjson(p / "manifest.json")
+        m = _rjson(p / "manifest.json")
         status = (m or {}).get("status", "—")
-        dot    = "#22C55E" if status == "success" else                  "#EF4444" if status == "failed"  else "#8EA0B3"
+        dot = "#22C55E" if status == "success" else "#EF4444" if status == "failed" else "#8EA0B3"
         col_n, col_b = st.columns([10, 1])
         with col_n:
             _h(
@@ -4205,7 +5749,7 @@ def _aero_run_list(root: Path, tab_key: str, run_filter_fn) -> None:
                 f'<div style="flex:1;font-size:.78rem;color:#D6DEE8;font-family:JetBrains Mono,monospace;'
                 f'overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{p.name}</div>'
                 f'<div style="font-size:.7rem;color:{dot};font-weight:600;flex-shrink:0">{status}</div>'
-                f'</div>'
+                f"</div>"
             )
         with col_b:
             if st.button("🗑", key=f"del_aero_{tab_key}_{i}", help=f"Delete {p.name}"):
@@ -4220,7 +5764,9 @@ def _aero_run_list(root: Path, tab_key: str, run_filter_fn) -> None:
 
     if len(runs) > 1:
         st.markdown("")
-        if st.button(f"🗑  Delete ALL ({len(runs)})", key=f"del_aero_{tab_key}_all", type="secondary"):
+        if st.button(
+            f"🗑  Delete ALL ({len(runs)})", key=f"del_aero_{tab_key}_all", type="secondary"
+        ):
             st.session_state[f"confirm_del_{tab_key}"] = True
     if st.session_state.get(f"confirm_del_{tab_key}"):
         st.warning(f"Delete all {len(runs)} run folder(s)? Cannot be undone.")
@@ -4245,21 +5791,29 @@ def pg_aero(root, exe, tmo, dry):
     # Shared config list
     cfg_files = _files(str(root / "configs" / "geometry"), "*.yaml")
     smoke_cfg = str(root / "configs" / "geometry" / "baseline_bwb_25.yaml")
-    prod_cfg  = str(root / "configs" / "geometry" / "bwb_training_v1.yaml")
-    cfg_smoke_first = ([smoke_cfg] if smoke_cfg in cfg_files else []) +                       ([prod_cfg]  if prod_cfg  in cfg_files else []) +                       [f for f in cfg_files if f not in (prod_cfg, smoke_cfg)]
+    prod_cfg = str(root / "configs" / "geometry" / "bwb_training_v1.yaml")
+    cfg_smoke_first = (
+        ([smoke_cfg] if smoke_cfg in cfg_files else [])
+        + ([prod_cfg] if prod_cfg in cfg_files else [])
+        + [f for f in cfg_files if f not in (prod_cfg, smoke_cfg)]
+    )
 
     def _cfg_label(s):
-        if "bwb_training_v1" in s: return f"Production — {Path(s).name}"
-        if "baseline_bwb_25"  in s: return f"Smoke test  — {Path(s).name}"
+        if "bwb_training_v1" in s:
+            return f"Production — {Path(s).name}"
+        if "baseline_bwb_25" in s:
+            return f"Smoke test  — {Path(s).name}"
         return Path(s).name if s else "— none —"
 
     geo_runs = _geo_run_rows(root)
 
-    tab_single, tab_sweep, tab_inspect = st.tabs([
-        "  ① Single run  ",
-        "  ② Sweep  ",
-        "  ③ Inspect  ",
-    ])
+    tab_single, tab_sweep, tab_inspect = st.tabs(
+        [
+            "  ① Single run  ",
+            "  ② Sweep  ",
+            "  ③ Inspect  ",
+        ]
+    )
 
     # ── ① SINGLE RUN ─────────────────────────────────────────────────────────
     with tab_single:
@@ -4271,15 +5825,26 @@ def pg_aero(root, exe, tmo, dry):
 
         _sec("Flight condition")
         c1, c2, c3 = st.columns(3)
-        al   = c1.number_input("Alpha [deg]",    value=4.0,    step=0.5, key="ar_al",
-                               help="Angle of attack. Required.")
-        ve   = c2.number_input("Velocity [m/s]", value=28.0,   step=1.0, key="ar_ve")
-        at   = c3.number_input("Altitude [m]",   value=1500.0, step=100.0, key="ar_at")
+        al = c1.number_input(
+            "Alpha [deg]", value=4.0, step=0.5, key="ar_al", help="Angle of attack. Required."
+        )
+        ve = c2.number_input("Velocity [m/s]", value=28.0, step=1.0, key="ar_ve")
+        at = c3.number_input("Altitude [m]", value=1500.0, step=100.0, key="ar_at")
         c4, c5 = st.columns(2)
-        ctrl = c4.number_input("Sym elevon δe [deg]", value=0.0, step=1.0, key="ar_ctrl",
-                               help="Symmetric elevon (d2 symmetric). Positive = both trailing edges down.")
-        diff = c5.number_input("Diff elevon δa [deg]", value=0.0, step=1.0, key="ar_diff",
-                               help="Differential elevon (d2 antisymmetric). Positive = right TE down, left TE up.")
+        ctrl = c4.number_input(
+            "Sym elevon δe [deg]",
+            value=0.0,
+            step=1.0,
+            key="ar_ctrl",
+            help="Symmetric elevon (d2 symmetric). Positive = both trailing edges down.",
+        )
+        diff = c5.number_input(
+            "Diff elevon δa [deg]",
+            value=0.0,
+            step=1.0,
+            key="ar_diff",
+            help="Differential elevon (d2 antisymmetric). Positive = right TE down, left TE up.",
+        )
         if abs(al) > 30.0:
             st.warning(f"⚠ Alpha = {al}° is outside the typical envelope (±30°). AVL may diverge.")
         if ve <= 0:
@@ -4289,9 +5854,9 @@ def pg_aero(root, exe, tmo, dry):
         with st.expander("Sideslip & body rates (leave at 0 for standard runs)"):
             c5, c6, c7, c8 = st.columns(4)
             be = c5.number_input("Beta [deg]", value=0.0, step=0.5, key="ar_be")
-            pv = c6.number_input("p [rad/s]",  value=0.0, step=0.1, key="ar_p")
-            qv = c7.number_input("q [rad/s]",  value=0.0, step=0.1, key="ar_q")
-            rv = c8.number_input("r [rad/s]",  value=0.0, step=0.1, key="ar_r")
+            pv = c6.number_input("p [rad/s]", value=0.0, step=0.1, key="ar_p")
+            qv = c7.number_input("q [rad/s]", value=0.0, step=0.1, key="ar_q")
+            rv = c8.number_input("r [rad/s]", value=0.0, step=0.1, key="ar_r")
 
         _sec("Solver")
         sol_args = _aero_solver_widget("ar")
@@ -4299,34 +5864,66 @@ def pg_aero(root, exe, tmo, dry):
         with st.expander("Output naming & workflow (optional)"):
             c_o1, c_o2 = st.columns(2)
             ar_out_name = c_o1.text_input(
-                "--output-name", "", key="ar_out_name",
+                "--output-name",
+                "",
+                key="ar_out_name",
                 placeholder="e.g. baseline_check_v1",
                 help="Optional suffix appended to the output run folder name.",
             )
             ar_mach = c_o2.text_input(
-                "--mach (override)", "", key="ar_mach",
+                "--mach (override)",
+                "",
+                key="ar_mach",
                 placeholder="e.g. 0.083 — normally leave blank (auto)",
                 help="Override auto-computed Mach number. AVL is incompressible; leave blank in most cases.",
             )
             ar_wf = st.text_input(
-                "--workflow (auto-record stage on success)", "", key="ar_wf",
+                "--workflow (auto-record stage on success)",
+                "",
+                key="ar_wf",
                 placeholder="e.g. data/workflows/campaign_v1",
                 help="Workflow root. If set, auto-records the aero_run stage after a successful run.",
             )
-        full_args = (["aero", "run"] + src_args +
-                     ["--alpha", str(al), "--velocity", str(ve),
-                      "--altitude", str(at), "--control-input-deg", str(ctrl),
-                      "--diff-input-deg", str(diff),
-                      "--beta", str(be),
-                      "--p", str(pv), "--q", str(qv), "--r", str(rv)] +
-                     sol_args)
-        if ar_out_name.strip(): full_args += ["--output-name", ar_out_name.strip()]
-        if ar_mach.strip():     full_args += ["--mach", ar_mach.strip()]
-        if ar_wf.strip():       full_args += ["--workflow", ar_wf.strip()]
+        full_args = (
+            ["aero", "run"]
+            + src_args
+            + [
+                "--alpha",
+                str(al),
+                "--velocity",
+                str(ve),
+                "--altitude",
+                str(at),
+                "--control-input-deg",
+                str(ctrl),
+                "--diff-input-deg",
+                str(diff),
+                "--beta",
+                str(be),
+                "--p",
+                str(pv),
+                "--q",
+                str(qv),
+                "--r",
+                str(rv),
+            ]
+            + sol_args
+        )
+        if ar_out_name.strip():
+            full_args += ["--output-name", ar_out_name.strip()]
+        if ar_mach.strip():
+            full_args += ["--mach", ar_mach.strip()]
+        if ar_wf.strip():
+            full_args += ["--workflow", ar_wf.strip()]
         _panel(
             "Run single aero case",
             "One geometry × one flight condition → data/runs/<timestamp>_aero_*/",
-            full_args, root, exe, tmo, dry, "ar_run",
+            full_args,
+            root,
+            exe,
+            tmo,
+            dry,
+            "ar_run",
             label="▶  Run aero case",
         )
         _aero_run_list(root, "single", _aero_run_rows)
@@ -4345,16 +5942,25 @@ def pg_aero(root, exe, tmo, dry):
             "Leave a field at its single value to hold it constant."
         )
         c1, c2 = st.columns(2)
-        al2  = c1.text_input("Alpha values [deg]",    "-2,0,2,4,6",  key="sw_al",
-                             help="e.g. -4,-2,0,2,4,6,8,10")
-        ve2  = c2.text_input("Velocity values [m/s]", "28",          key="sw_ve")
+        al2 = c1.text_input(
+            "Alpha values [deg]", "-2,0,2,4,6", key="sw_al", help="e.g. -4,-2,0,2,4,6,8,10"
+        )
+        ve2 = c2.text_input("Velocity values [m/s]", "28", key="sw_ve")
         c3, c4 = st.columns(2)
-        at2  = c3.text_input("Altitude values [m]",          "1500",   key="sw_at")
-        ct2  = c4.text_input("Sym elevon δe values [deg]", "-5,0,5", key="sw_ctrl",
-                             help="Symmetric elevon sweep (d2 symmetric). e.g. -10,-5,0,5,10")
+        at2 = c3.text_input("Altitude values [m]", "1500", key="sw_at")
+        ct2 = c4.text_input(
+            "Sym elevon δe values [deg]",
+            "-5,0,5",
+            key="sw_ctrl",
+            help="Symmetric elevon sweep (d2 symmetric). e.g. -10,-5,0,5,10",
+        )
         c5, c6 = st.columns(2)
-        df2  = c5.text_input("Diff elevon δa values [deg]", "0",   key="sw_diff",
-                             help="Differential elevon sweep (d2 antisymmetric). Leave as 0 for symmetric-only runs.")
+        df2 = c5.text_input(
+            "Diff elevon δa values [deg]",
+            "0",
+            key="sw_diff",
+            help="Differential elevon sweep (d2 antisymmetric). Leave as 0 for symmetric-only runs.",
+        )
         _ = c6  # spacer
         with st.expander("Sideslip & body rates — expand for lateral-directional derivatives"):
             st.caption(
@@ -4363,8 +5969,12 @@ def pg_aero(root, exe, tmo, dry):
                 "This is required for Paper 1 dataset labels and Dutch roll / spiral screening."
             )
             c5, c6, c7, c8 = st.columns(4)
-            be2 = c5.text_input("Beta values [deg]", "0", key="sw_be",
-                                help="For derivative extraction: -10,-8,-6,-4,-2,0,2,4,6,8,10")
+            be2 = c5.text_input(
+                "Beta values [deg]",
+                "0",
+                key="sw_be",
+                help="For derivative extraction: -10,-8,-6,-4,-2,0,2,4,6,8,10",
+            )
             pv2 = c6.text_input("p [rad/s]", "0", key="sw_p")
             qv2 = c7.text_input("q [rad/s]", "0", key="sw_q")
             rv2 = c8.text_input("r [rad/s]", "0", key="sw_r")
@@ -4377,47 +5987,65 @@ def pg_aero(root, exe, tmo, dry):
 
         max_c = st.text_input(
             "Safety cap — max cases (optional)",
-            value="", placeholder="e.g. 100 — leave blank for no cap",
+            value="",
+            placeholder="e.g. 100 — leave blank for no cap",
             key="sw_mc",
             help="--max-cases. If the Cartesian product exceeds this, the sweep errors out. "
-                 "Useful to prevent accidental huge runs.",
+            "Useful to prevent accidental huge runs.",
         )
 
         _sec("Solver")
         sol_args_sw = _aero_solver_widget("sw")
 
         sweep_args = ["aero", "sweep"] + src_args_sw
-        for flag, val in [("--alpha-values", al2), ("--velocity-values", ve2),
-                          ("--altitude-values", at2), ("--control-input-values", ct2),
-                          ("--beta-values", be2)]:
-            if val.strip(): sweep_args += [flag, val]
+        for flag, val in [
+            ("--alpha-values", al2),
+            ("--velocity-values", ve2),
+            ("--altitude-values", at2),
+            ("--control-input-values", ct2),
+            ("--beta-values", be2),
+        ]:
+            if val.strip():
+                sweep_args += [flag, val]
         for flag, val in [("--p-values", pv2), ("--q-values", qv2), ("--r-values", rv2)]:
             if val.strip() and val.strip() != "0":
                 sweep_args += [flag, val]
         if df2.strip() and df2.strip() != "0":
             sweep_args += ["--diff-input-values", df2]
         sweep_args += sol_args_sw
-        if max_c.strip(): sweep_args += ["--max-cases", max_c.strip()]
+        if max_c.strip():
+            sweep_args += ["--max-cases", max_c.strip()]
 
         with st.expander("Output naming & workflow (optional)"):
             c_sw1, c_sw2 = st.columns(2)
             sw_out_name = c_sw1.text_input(
-                "--output-name", "", key="sw_out_name",
+                "--output-name",
+                "",
+                key="sw_out_name",
                 placeholder="e.g. sweep_v1",
                 help="Optional suffix for the sweep output folder name.",
             )
             sw_wf = c_sw2.text_input(
-                "--workflow (auto-record on success)", "", key="sw_wf",
+                "--workflow (auto-record on success)",
+                "",
+                key="sw_wf",
                 placeholder="e.g. data/workflows/campaign_v1",
                 help="Workflow root. Auto-records the aero_sweep stage after all cases succeed.",
             )
-        if sw_out_name.strip(): sweep_args += ["--output-name", sw_out_name.strip()]
-        if sw_wf.strip():       sweep_args += ["--workflow", sw_wf.strip()]
+        if sw_out_name.strip():
+            sweep_args += ["--output-name", sw_out_name.strip()]
+        if sw_wf.strip():
+            sweep_args += ["--workflow", sw_wf.strip()]
 
         _panel(
             "Run aero sweep",
             "Cartesian product of flight conditions → data/runs/<timestamp>_aero_sweep_*/",
-            sweep_args, root, exe, tmo, dry, "sw_run",
+            sweep_args,
+            root,
+            exe,
+            tmo,
+            dry,
+            "sw_run",
             label="▶  Run sweep",
         )
         _aero_run_list(root, "sweep", _aero_run_rows)
@@ -4432,7 +6060,9 @@ def pg_aero(root, exe, tmo, dry):
         else:
             run_map = {p.name: p for p in aero_runs}
             chosen_run = st.selectbox(
-                "Select run", list(run_map.keys()), key="ai_run_sel",
+                "Select run",
+                list(run_map.keys()),
+                key="ai_run_sel",
                 help="All aero run folders from data/runs/.",
             )
             chosen_path = run_map[chosen_run]
@@ -4440,37 +6070,44 @@ def pg_aero(root, exe, tmo, dry):
 
             # ── helpers ───────────────────────────────────────────────────
             def _find_result_json(base):
-                for p in [base / "aero" / "aero_result.json",
-                           base / "aero_result.json"]:
-                    if p.exists(): return p
+                for p in [base / "aero" / "aero_result.json", base / "aero_result.json"]:
+                    if p.exists():
+                        return p
                 hits = list(base.rglob("aero_result.json"))
                 return hits[0] if hits else None
 
             def _result_card(res):
-                sc  = res.get("scalars") or {}
+                sc = res.get("scalars") or {}
                 meta = res.get("solver_metadata") or {}
                 derivs = res.get("stability_axis_derivatives") or {}
                 fc = meta.get("flight_condition") or res.get("flight_condition") or {}
                 _sec("Aerodynamic coefficients")
-                items = [("CL", sc.get("cl")), ("CD", sc.get("cd")),
-                         ("Cm", sc.get("cm")), ("L/D", sc.get("l_over_d")),
-                         ("CDind", sc.get("cd_ind")),
-                         ("Span eff", sc.get("span_efficiency")),
-                         ("Xnp [m]", sc.get("x_np"))]
+                items = [
+                    ("CL", sc.get("cl")),
+                    ("CD", sc.get("cd")),
+                    ("Cm", sc.get("cm")),
+                    ("L/D", sc.get("l_over_d")),
+                    ("CDind", sc.get("cd_ind")),
+                    ("Span eff", sc.get("span_efficiency")),
+                    ("Xnp [m]", sc.get("x_np")),
+                ]
                 cols = st.columns(len(items))
                 for col, (lbl, v) in zip(cols, items):
                     col.metric(lbl, f"{float(v):+.4f}" if v is not None else "—")
                 if fc:
                     _sec("Flight condition")
                     fc2 = st.columns(6)
-                    for col, (lbl, v) in zip(fc2, [
-                        ("α [°]", fc.get("alpha_deg")),
-                        ("V [m/s]", fc.get("velocity_mps")),
-                        ("Alt [m]", fc.get("altitude_m")),
-                        ("β [°]", fc.get("beta_deg")),
-                        ("Sym δe [°]", meta.get("control_input_deg")),
-                        ("Diff δa [°]", meta.get("diff_input_deg")),
-                    ]):
+                    for col, (lbl, v) in zip(
+                        fc2,
+                        [
+                            ("α [°]", fc.get("alpha_deg")),
+                            ("V [m/s]", fc.get("velocity_mps")),
+                            ("Alt [m]", fc.get("altitude_m")),
+                            ("β [°]", fc.get("beta_deg")),
+                            ("Sym δe [°]", meta.get("control_input_deg")),
+                            ("Diff δa [°]", meta.get("diff_input_deg")),
+                        ],
+                    ):
                         col.metric(lbl, f"{float(v):+.2f}" if v is not None else "—")
                 cma = derivs.get("Cma")
                 cla = derivs.get("CLa")
@@ -4479,36 +6116,49 @@ def pg_aero(root, exe, tmo, dry):
                 if any(v is not None for v in [cma, cla, cnb, clb]):
                     _sec("Key stability derivatives")
                     dc = st.columns(4)
-                    for col, (k, v) in zip(dc, [("CLa",cla),("Cma",cma),("Cnb",cnb),("Clb",clb)]):
+                    for col, (k, v) in zip(
+                        dc, [("CLa", cla), ("Cma", cma), ("Cnb", cnb), ("Clb", clb)]
+                    ):
                         col.metric(k, f"{float(v):+.4f}" if v is not None else "—")
                     if cma is not None:
                         (st.error if float(cma) >= 0 else st.success)(
                             "⚠ Cma ≥ 0 — pitch-unstable. Do not use for ML training."
-                            if float(cma) >= 0 else "✓ Cma < 0 — pitch-stable.")
+                            if float(cma) >= 0
+                            else "✓ Cma < 0 — pitch-stable."
+                        )
 
             def _strips_chart(base):
                 cands = [base / "aero" / "strips_parsed.csv", base / "strips_parsed.csv"]
                 sp = next((p for p in cands if p.exists()), None)
-                if not sp: return
+                if not sp:
+                    return
                 try:
                     import pandas as _pd
+
                     df = _pd.read_csv(sp)
                     df.columns = [c.strip().lower() for c in df.columns]
-                    yc  = next((c for c in df.columns if "yle" in c or c == "y"), None)
-                    clc = next((c for c in df.columns if c in ("cl","cl_strip","cl_norm")), None)
-                    cdc = next((c for c in df.columns if c in ("cd","cd_strip")), None)
-                    if not (yc and clc): return
+                    yc = next((c for c in df.columns if "yle" in c or c == "y"), None)
+                    clc = next((c for c in df.columns if c in ("cl", "cl_strip", "cl_norm")), None)
+                    cdc = next((c for c in df.columns if c in ("cd", "cd_strip")), None)
+                    if not (yc and clc):
+                        return
                     _sec("Spanwise load distribution")
                     st.caption("Section CL across semi-span. Tip peaks → potential tip-stall.")
-                    pf = (df[[yc,clc]].dropna()
-                            .rename(columns={yc:"y (m)",clc:"Section CL"})
-                            .sort_values("y (m)"))
+                    pf = (
+                        df[[yc, clc]]
+                        .dropna()
+                        .rename(columns={yc: "y (m)", clc: "Section CL"})
+                        .sort_values("y (m)")
+                    )
                     st.line_chart(pf.set_index("y (m)"), use_container_width=True)
                     if cdc:
                         with st.expander("Section CD distribution"):
-                            cd2 = (df[[yc,cdc]].dropna()
-                                     .rename(columns={yc:"y (m)",cdc:"Section CD"})
-                                     .sort_values("y (m)"))
+                            cd2 = (
+                                df[[yc, cdc]]
+                                .dropna()
+                                .rename(columns={yc: "y (m)", cdc: "Section CD"})
+                                .sort_values("y (m)")
+                            )
                             st.line_chart(cd2.set_index("y (m)"), use_container_width=True)
                 except Exception as ex:
                     st.caption(f"Strips: {ex}")
@@ -4519,6 +6169,7 @@ def pg_aero(root, exe, tmo, dry):
                 if rjp:
                     try:
                         import json as _j
+
                         _result_card(_j.loads(rjp.read_text()))
                     except Exception as ex:
                         st.warning(f"Could not parse aero_result.json: {ex}")
@@ -4526,9 +6177,17 @@ def pg_aero(root, exe, tmo, dry):
                     st.info("No aero_result.json found — use CLI inspect below.")
                 _strips_chart(chosen_path)
                 _sec("Full CLI output")
-                _panel("Full inspect", "Prints complete result in terminal.",
-                       ["aero","inspect","--run-dir",str(chosen_path)],
-                       root, exe, tmo, dry, "ai_run", label="▶  Full inspect")
+                _panel(
+                    "Full inspect",
+                    "Prints complete result in terminal.",
+                    ["aero", "inspect", "--run-dir", str(chosen_path)],
+                    root,
+                    exe,
+                    tmo,
+                    dry,
+                    "ai_run",
+                    label="▶  Full inspect",
+                )
 
             # ── SWEEP ─────────────────────────────────────────────────────
             else:
@@ -4537,76 +6196,116 @@ def pg_aero(root, exe, tmo, dry):
                 import pandas as _pd
 
                 sw_raw = None
-                for cand in [chosen_path / "aero_sweep_manifest.json",
-                              chosen_path / "aero_sweep" / "aero_sweep_manifest.json"]:
+                for cand in [
+                    chosen_path / "aero_sweep_manifest.json",
+                    chosen_path / "aero_sweep" / "aero_sweep_manifest.json",
+                ]:
                     if cand.exists():
-                        try: sw_raw = _j.loads(cand.read_text())
-                        except Exception: pass
+                        try:
+                            sw_raw = _j.loads(cand.read_text())
+                        except Exception:
+                            pass
                         break
 
                 sw_data = (sw_raw or {}).get("aero_sweep_result", sw_raw or {})
-                cases   = sw_data.get("cases") or []
+                cases = sw_data.get("cases") or []
 
                 if not cases:
                     st.warning("No cases found in sweep manifest. Using CLI fallback.")
-                    _panel("Sweep inspect","Raw sweep summary.",
-                           ["aero","sweep-inspect","--run-dir",str(chosen_path)],
-                           root,exe,tmo,dry,"ai_sw_cli",label="▶  Sweep inspect")
+                    _panel(
+                        "Sweep inspect",
+                        "Raw sweep summary.",
+                        ["aero", "sweep-inspect", "--run-dir", str(chosen_path)],
+                        root,
+                        exe,
+                        tmo,
+                        dry,
+                        "ai_sw_cli",
+                        label="▶  Sweep inspect",
+                    )
                 else:
                     # Build flat DataFrame from all cases
                     rows = []
                     for c in cases:
-                        fc  = c.get("flight_condition") or {}
-                        ar  = c.get("aero_result") or {}
-                        sc  = ar.get("scalars") or {}
+                        fc = c.get("flight_condition") or {}
+                        ar = c.get("aero_result") or {}
+                        sc = ar.get("scalars") or {}
                         derivs = ar.get("stability_axis_derivatives") or {}
-                        rows.append({
-                            "#":       c.get("case_index"),
-                            "Status":  c.get("status","—"),
-                            "α [°]":   fc.get("alpha_deg"),
-                            "β [°]":   fc.get("beta_deg"),
-                            "V [m/s]": fc.get("velocity_mps"),
-                            "Alt [m]": fc.get("altitude_m"),
-                            "δe [°]":  c.get("control_input_deg"),
-                            "δa [°]":  c.get("diff_input_deg"),
-                            "CL":      sc.get("cl"),
-                            "CD":      sc.get("cd"),
-                            "Cm":      sc.get("cm"),
-                            "L/D":     sc.get("l_over_d"),
-                            "Xnp":     sc.get("x_np"),
-                            "CLa":     derivs.get("CLa"),
-                            "Cma":     derivs.get("Cma"),
-                        })
+                        rows.append(
+                            {
+                                "#": c.get("case_index"),
+                                "Status": c.get("status", "—"),
+                                "α [°]": fc.get("alpha_deg"),
+                                "β [°]": fc.get("beta_deg"),
+                                "V [m/s]": fc.get("velocity_mps"),
+                                "Alt [m]": fc.get("altitude_m"),
+                                "δe [°]": c.get("control_input_deg"),
+                                "δa [°]": c.get("diff_input_deg"),
+                                "CL": sc.get("cl"),
+                                "CD": sc.get("cd"),
+                                "Cm": sc.get("cm"),
+                                "L/D": sc.get("l_over_d"),
+                                "Xnp": sc.get("x_np"),
+                                "CLa": derivs.get("CLa"),
+                                "Cma": derivs.get("Cma"),
+                            }
+                        )
                     df = _pd.DataFrame(rows)
-                    float_cols = ["α [°]","β [°]","V [m/s]","Alt [m]","δe [°]","δa [°]","CL","CD","Cm","L/D","Xnp","CLa","Cma"]
+                    float_cols = [
+                        "α [°]",
+                        "β [°]",
+                        "V [m/s]",
+                        "Alt [m]",
+                        "δe [°]",
+                        "δa [°]",
+                        "CL",
+                        "CD",
+                        "Cm",
+                        "L/D",
+                        "Xnp",
+                        "CLa",
+                        "Cma",
+                    ]
                     for fc_col in float_cols:
                         if fc_col in df.columns:
                             df[fc_col] = _pd.to_numeric(df[fc_col], errors="coerce")
 
                     # ── stats bar ─────────────────────────────────────
-                    _n_ok  = (df["Status"] == "success").sum()
+                    _n_ok = (df["Status"] == "success").sum()
                     _n_bad = len(df) - _n_ok
-                    _al_u  = sorted(df["α [°]"].dropna().unique())
-                    _de_u  = sorted(df["δe [°]"].dropna().unique())
-                    _stat_row([
-                        ("Cases", str(len(df)), "total in sweep"),
-                        ("Success", str(int(_n_ok)), "AVL converged"),
-                        ("Failed", str(int(_n_bad)), "solver timeout / error"),
-                        ("α range", (str(_al_u[0]) + "…" + str(_al_u[-1]) + "°") if _al_u else "—", "sweep bounds"),
-                        ("δe settings", str(len(_de_u)), "elevon values"),
-                    ])
+                    _al_u = sorted(df["α [°]"].dropna().unique())
+                    _de_u = sorted(df["δe [°]"].dropna().unique())
+                    _stat_row(
+                        [
+                            ("Cases", str(len(df)), "total in sweep"),
+                            ("Success", str(int(_n_ok)), "AVL converged"),
+                            ("Failed", str(int(_n_bad)), "solver timeout / error"),
+                            (
+                                "α range",
+                                (str(_al_u[0]) + "…" + str(_al_u[-1]) + "°") if _al_u else "—",
+                                "sweep bounds",
+                            ),
+                            ("δe settings", str(len(_de_u)), "elevon values"),
+                        ]
+                    )
 
                     st.caption(
-                        "**" + str(len(df)) + " cases** — ✓ " + str(int(_n_ok)) + " success"
+                        "**"
+                        + str(len(df))
+                        + " cases** — ✓ "
+                        + str(int(_n_ok))
+                        + " success"
                         + ("  ✗ " + str(int(_n_bad)) + " failed" if _n_bad else "")
                     )
 
                     view = st.radio(
-                        "View", ["Polar curves", "Data table", "Single case detail"],
-                        horizontal=True, key="ai_type",
+                        "View",
+                        ["Polar curves", "Data table", "Single case detail"],
+                        horizontal=True,
+                        key="ai_type",
                         help="Polar curves: XFLR5-style overlaid polars coloured by elevon. "
-                             "Data table: all cases sortable. "
-                             "Single case detail: full result card.",
+                        "Data table: all cases sortable. "
+                        "Single case detail: full result card.",
                     )
 
                     # ── Polar curves (XFLR5-style, Plotly) ───────────────
@@ -4620,8 +6319,15 @@ def pg_aero(root, exe, tmo, dry):
                                 from plotly.subplots import make_subplots
 
                                 elevon_vals = sorted(df_ok["δe [°]"].dropna().unique())
-                                PALETTE = ["#3B82F6","#F59E0B","#10B981",
-                                           "#EF4444","#8B5CF6","#EC4899","#06B6D4"]
+                                PALETTE = [
+                                    "#3B82F6",
+                                    "#F59E0B",
+                                    "#10B981",
+                                    "#EF4444",
+                                    "#8B5CF6",
+                                    "#EC4899",
+                                    "#06B6D4",
+                                ]
 
                                 LAYOUT = dict(
                                     paper_bgcolor="rgba(0,0,0,0)",
@@ -4638,44 +6344,57 @@ def pg_aero(root, exe, tmo, dry):
                                 def _traces(x_col, y_col, sort_col=None):
                                     traces = []
                                     for i, ev in enumerate(elevon_vals):
-                                        sub = (df_ok[df_ok["δe [°]"] == ev]
-                                                   .sort_values(sort_col or x_col)
-                                                   [[x_col, y_col]].dropna())
+                                        sub = (
+                                            df_ok[df_ok["δe [°]"] == ev]
+                                            .sort_values(sort_col or x_col)[[x_col, y_col]]
+                                            .dropna()
+                                        )
                                         if sub.empty:
                                             continue
                                         lbl = f"δ={ev:+.0f}°"
-                                        traces.append(go.Scatter(
-                                            x=sub[x_col].tolist(),
-                                            y=sub[y_col].tolist(),
-                                            mode="lines+markers",
-                                            name=lbl,
-                                            line=dict(color=PALETTE[i % len(PALETTE)], width=2),
-                                            marker=dict(size=7),
-                                            hovertemplate=(
-                                                f"<b>{lbl}</b><br>"
-                                                f"{x_col}: %{{x:.3f}}<br>"
-                                                f"{y_col}: %{{y:.4f}}<extra></extra>"
-                                            ),
-                                        ))
+                                        traces.append(
+                                            go.Scatter(
+                                                x=sub[x_col].tolist(),
+                                                y=sub[y_col].tolist(),
+                                                mode="lines+markers",
+                                                name=lbl,
+                                                line=dict(color=PALETTE[i % len(PALETTE)], width=2),
+                                                marker=dict(size=7),
+                                                hovertemplate=(
+                                                    f"<b>{lbl}</b><br>"
+                                                    f"{x_col}: %{{x:.3f}}<br>"
+                                                    f"{y_col}: %{{y:.4f}}<extra></extra>"
+                                                ),
+                                            )
+                                        )
                                     return traces
 
-                                def _make_fig(x_col, y_col, x_label, y_label,
-                                              title, sort_col=None, hline=None):
+                                def _make_fig(
+                                    x_col, y_col, x_label, y_label, title, sort_col=None, hline=None
+                                ):
                                     fig = go.Figure()
                                     for t in _traces(x_col, y_col, sort_col):
                                         fig.add_trace(t)
                                     if hline is not None:
                                         fig.add_hline(
-                                            y=hline, line_dash="dash",
-                                            line_color="#475569", line_width=1,
+                                            y=hline,
+                                            line_dash="dash",
+                                            line_color="#475569",
+                                            line_width=1,
                                         )
                                     fig.update_layout(
                                         **LAYOUT,
                                         title=dict(text=title, font=dict(size=13)),
-                                        xaxis=dict(title=x_label, gridcolor="#1E2F3E",
-                                                   zerolinecolor="#334252"),
-                                        yaxis=dict(title=y_label, gridcolor="#1E2F3E",
-                                                   zerolinecolor="#334252"),
+                                        xaxis=dict(
+                                            title=x_label,
+                                            gridcolor="#1E2F3E",
+                                            zerolinecolor="#334252",
+                                        ),
+                                        yaxis=dict(
+                                            title=y_label,
+                                            gridcolor="#1E2F3E",
+                                            zerolinecolor="#334252",
+                                        ),
                                         height=320,
                                     )
                                     return fig
@@ -4694,28 +6413,40 @@ def pg_aero(root, exe, tmo, dry):
 
                                 with r1c1:
                                     st.plotly_chart(
-                                        _make_fig("α [°]", "CL", "α [°]", "CL",
-                                                  "CL vs α — lift curve"),
+                                        _make_fig(
+                                            "α [°]", "CL", "α [°]", "CL", "CL vs α — lift curve"
+                                        ),
                                         use_container_width=True,
                                     )
                                 with r1c2:
                                     st.plotly_chart(
-                                        _make_fig("α [°]", "Cm", "α [°]", "Cm",
-                                                  "Cm vs α — stability (neg slope = stable)",
-                                                  hline=0.0),
+                                        _make_fig(
+                                            "α [°]",
+                                            "Cm",
+                                            "α [°]",
+                                            "Cm",
+                                            "Cm vs α — stability (neg slope = stable)",
+                                            hline=0.0,
+                                        ),
                                         use_container_width=True,
                                     )
                                 with r2c1:
                                     st.plotly_chart(
-                                        _make_fig("CD", "CL", "CD", "CL",
-                                                  "CL vs CD — drag polar",
-                                                  sort_col="CD"),
+                                        _make_fig(
+                                            "CD",
+                                            "CL",
+                                            "CD",
+                                            "CL",
+                                            "CL vs CD — drag polar",
+                                            sort_col="CD",
+                                        ),
                                         use_container_width=True,
                                     )
                                 with r2c2:
                                     st.plotly_chart(
-                                        _make_fig("α [°]", "L/D", "α [°]", "L/D",
-                                                  "L/D vs α — efficiency"),
+                                        _make_fig(
+                                            "α [°]", "L/D", "α [°]", "L/D", "L/D vs α — efficiency"
+                                        ),
                                         use_container_width=True,
                                     )
 
@@ -4729,23 +6460,22 @@ def pg_aero(root, exe, tmo, dry):
                     elif view == "Data table":
                         # Round for display
                         disp = df.copy()
-                        for fc_col in ["CL","CD","Cm","L/D","Xnp"]:
+                        for fc_col in ["CL", "CD", "Cm", "L/D", "Xnp"]:
                             if fc_col in disp.columns:
                                 disp[fc_col] = disp[fc_col].round(5)
-                        for fc_col in ["α [°]","V [m/s]","Alt [m]","δe [°]"]:
+                        for fc_col in ["α [°]", "V [m/s]", "Alt [m]", "δe [°]"]:
                             if fc_col in disp.columns:
                                 disp[fc_col] = disp[fc_col].round(2)
 
                         # Elevon filter
                         elev_opts = ["All"] + [
-                            f"{e:+.1f}°" for e in
-                            sorted(df["δe [°]"].dropna().unique())
+                            f"{e:+.1f}°" for e in sorted(df["δe [°]"].dropna().unique())
                         ]
                         sel_elev = st.selectbox(
                             "Filter by sym elevon (δe)", elev_opts, key="ai_tbl_elev"
                         )
                         if sel_elev != "All":
-                            ev_val = float(sel_elev.replace("°",""))
+                            ev_val = float(sel_elev.replace("°", ""))
                             disp = disp[disp["δe [°]"] == ev_val]
 
                         st.dataframe(disp, use_container_width=True, hide_index=True)
@@ -4755,22 +6485,27 @@ def pg_aero(root, exe, tmo, dry):
                     else:
                         c1, c2 = st.columns(2)
                         case_label_in = c1.text_input(
-                            "Case label (optional)", value="",
+                            "Case label (optional)",
+                            value="",
                             placeholder="e.g. case_0000_ap4d00_...",
                             key="ai_cl",
                         )
-                        case_idx_in = int(c2.number_input(
-                            "Case index", min_value=0,
-                            max_value=max(0, len(cases)-1),
-                            value=0, step=1, key="ai_ci",
-                        ))
+                        case_idx_in = int(
+                            c2.number_input(
+                                "Case index",
+                                min_value=0,
+                                max_value=max(0, len(cases) - 1),
+                                value=0,
+                                step=1,
+                                key="ai_ci",
+                            )
+                        )
 
                         case = None
                         if case_label_in.strip():
                             case = next(
-                                (c for c in cases
-                                 if c.get("case_label") == case_label_in.strip()),
-                                None
+                                (c for c in cases if c.get("case_label") == case_label_in.strip()),
+                                None,
                             )
                         elif 0 <= case_idx_in < len(cases):
                             case = cases[case_idx_in]
@@ -4790,41 +6525,63 @@ def pg_aero(root, exe, tmo, dry):
                         else:
                             st.info("Enter a valid case label or index above.")
 
-                        _panel("CLI case inspect","Full result via CLI.",
-                               ["aero","sweep-case-inspect","--run-dir",str(chosen_path)]
-                               + (["--case-label", case_label_in.strip()]
-                                  if case_label_in.strip()
-                                  else ["--case-index", str(case_idx_in)]),
-                               root,exe,tmo,dry,"ai_run",label="▶  CLI inspect")
+                        _panel(
+                            "CLI case inspect",
+                            "Full result via CLI.",
+                            ["aero", "sweep-case-inspect", "--run-dir", str(chosen_path)]
+                            + (
+                                ["--case-label", case_label_in.strip()]
+                                if case_label_in.strip()
+                                else ["--case-index", str(case_idx_in)]
+                            ),
+                            root,
+                            exe,
+                            tmo,
+                            dry,
+                            "ai_run",
+                            label="▶  CLI inspect",
+                        )
 
 
 def _dyn_run_rows(root: Path) -> list[Path]:
     """Aero single-run folders that have a dynamics/ subfolder already built."""
-    return [Path(r) for r in _dirs(str(root / "data" / "runs"))
-            if "_aero_" in Path(r).name and "_sweep_" not in Path(r).name
-            and (Path(r) / "dynamics").exists()]
+    return [
+        Path(r)
+        for r in _dirs(str(root / "data" / "runs"))
+        if "_aero_" in Path(r).name
+        and "_sweep_" not in Path(r).name
+        and (Path(r) / "dynamics").exists()
+    ]
+
 
 def _all_aero_rows(root: Path) -> list[Path]:
     """All aero SINGLE runs — sweep case folders discovered separately."""
-    return [Path(r) for r in _dirs(str(root / "data" / "runs"))
-            if "_aero_" in Path(r).name and "_sweep_" not in Path(r).name]
+    return [
+        Path(r)
+        for r in _dirs(str(root / "data" / "runs"))
+        if "_aero_" in Path(r).name and "_sweep_" not in Path(r).name
+    ]
+
 
 def _all_sweep_runs(root: Path) -> list[Path]:
     """All aero sweep run folders."""
-    return [Path(r) for r in _dirs(str(root / "data" / "runs"))
-            if "_sweep_" in Path(r).name]
+    return [Path(r) for r in _dirs(str(root / "data" / "runs")) if "_sweep_" in Path(r).name]
+
 
 def _sweep_case_dirs(sweep_path: Path) -> list[Path]:
     """Individual case folders inside a sweep run (in aero/ subdir)."""
     aero_sub = sweep_path / "aero"
     if aero_sub.exists():
-        return sorted([p for p in aero_sub.iterdir()
-                       if p.is_dir() and p.name.startswith("case_")],
-                      key=lambda p: p.name)
+        return sorted(
+            [p for p in aero_sub.iterdir() if p.is_dir() and p.name.startswith("case_")],
+            key=lambda p: p.name,
+        )
     # fallback: case folders directly in sweep root
-    return sorted([p for p in sweep_path.iterdir()
-                   if p.is_dir() and p.name.startswith("case_")],
-                  key=lambda p: p.name)
+    return sorted(
+        [p for p in sweep_path.iterdir() if p.is_dir() and p.name.startswith("case_")],
+        key=lambda p: p.name,
+    )
+
 
 def pg_dynamics(root, exe, tmo, dry):
     _hero("◎", "Dynamics", "mass · CG · static margin · eigenvalues · MIL-STD-1797B", "dynamics")
@@ -4837,17 +6594,29 @@ def pg_dynamics(root, exe, tmo, dry):
         "Add Iyy/Izz to your mass YAML to unlock short-period, phugoid, roll, Dutch roll, and spiral eigenvalues."
     )
 
-    tab_build, tab_cgsweep, tab_trim, tab_state_space, tab_state_plots, tab_batch_labels, tab_fly_ml, tab_validate, tab_inspect = st.tabs([
-        "  ① Build  ",
-        "  ② CG Sweep  ",
-        "  ③ Trim  ",
-        "  ④ State Space  ",
-        "  ⑤ Plots  ",
-        "  ⑥ Batch Labels  ",
-        "  ⑦ Flyability ML Dataset  ",
-        "  ⑧ Validate  ",
-        "  ⑨ Inspect  ",
-    ])
+    (
+        tab_build,
+        tab_cgsweep,
+        tab_trim,
+        tab_state_space,
+        tab_state_plots,
+        tab_batch_labels,
+        tab_fly_ml,
+        tab_validate,
+        tab_inspect,
+    ) = st.tabs(
+        [
+            "  ① Build  ",
+            "  ② CG Sweep  ",
+            "  ③ Trim  ",
+            "  ④ State Space  ",
+            "  ⑤ Plots  ",
+            "  ⑥ Batch Labels  ",
+            "  ⑦ Flyability ML Dataset  ",
+            "  ⑧ Validate  ",
+            "  ⑨ Inspect  ",
+        ]
+    )
 
     # Shared: picker for aero run directory
     all_aero = _all_aero_rows(root)
@@ -4859,8 +6628,8 @@ def pg_dynamics(root, exe, tmo, dry):
         Single runs: data/runs/<timestamp>_aero_<name>/
         Sweep cases: data/runs/<timestamp>_sweep_.../aero/case_0000_.../
         """
-        single_runs  = _all_aero_rows(root)
-        sweep_runs   = _all_sweep_runs(root)
+        single_runs = _all_aero_rows(root)
+        sweep_runs = _all_sweep_runs(root)
 
         if not single_runs and not sweep_runs:
             st.warning(
@@ -4900,9 +6669,11 @@ def pg_dynamics(root, exe, tmo, dry):
             )
 
         chosen_label = st.selectbox(
-            label, list(options.keys()), key=key,
+            label,
+            list(options.keys()),
+            key=key,
             help="Single aero runs [single] or individual sweep cases [sweep case]. "
-                 "Dynamics build needs a folder with one aero_result.json.",
+            "Dynamics build needs a folder with one aero_result.json.",
         )
         p = options[chosen_label]
 
@@ -4912,24 +6683,29 @@ def pg_dynamics(root, exe, tmo, dry):
         if ar_path.exists():
             try:
                 import json as _jj
+
                 ar_data = _jj.loads(ar_path.read_text())
                 ar_status = ar_data.get("status", "—")
             except Exception:
                 ar_status = "?"
-        dot = "#22C55E" if ar_status == "success" else               "#EF4444" if "fail" in ar_status.lower() else "#8EA0B3"
+        dot = (
+            "#22C55E"
+            if ar_status == "success"
+            else "#EF4444" if "fail" in ar_status.lower() else "#8EA0B3"
+        )
 
         has_dyn = (p / "dynamics").exists() or (p.parent.parent / "dynamics").exists()
         dyn_badge = (
             ' <span style="color:#22C55E;font-size:.68rem">✓ dynamics built</span>'
-            if has_dyn else
-            ' <span style="color:#5A7A96;font-size:.68rem">dynamics not yet built</span>'
+            if has_dyn
+            else ' <span style="color:#5A7A96;font-size:.68rem">dynamics not yet built</span>'
         )
 
         is_case = "[sweep case]" in chosen_label
         type_badge = (
             ' <span style="color:#8B5CF6;font-size:.68rem">sweep case</span>'
-            if is_case else
-            ' <span style="color:#3B82F6;font-size:.68rem">single run</span>'
+            if is_case
+            else ' <span style="color:#3B82F6;font-size:.68rem">single run</span>'
         )
 
         _h(
@@ -4941,7 +6717,7 @@ def pg_dynamics(root, exe, tmo, dry):
             f'<div style="font-size:.68rem;flex-shrink:0">{type_badge}</div>'
             f'<div style="font-size:.68rem;flex-shrink:0">{dyn_badge}</div>'
             f'<div style="font-size:.7rem;color:{dot};font-weight:600;flex-shrink:0;margin-left:6px">{ar_status}</div>'
-            f'</div>'
+            f"</div>"
         )
         return str(p)
 
@@ -4962,7 +6738,11 @@ def pg_dynamics(root, exe, tmo, dry):
             label,
             ordered,
             key=key,
-            format_func=lambda p: f"✓ {p.name}" if (p / "promotion_manifest.json").exists() else f"○ {p.name} (not promoted)",
+            format_func=lambda p: (
+                f"✓ {p.name}"
+                if (p / "promotion_manifest.json").exists()
+                else f"○ {p.name} (not promoted)"
+            ),
             help="✓ means promotion_manifest.json exists. Serious ML/dynamics-label workflows should use promoted datasets.",
         )
         return str(chosen)
@@ -4981,7 +6761,7 @@ def pg_dynamics(root, exe, tmo, dry):
                 format_func=lambda s: NONE_LABEL if s == NONE_LABEL else Path(s).name,
                 key=f"{key}_mc",
                 help="Select a mass-properties YAML from configs/mass/. "
-                     "Explicit values below override the YAML field by field.",
+                "Explicit values below override the YAML field by field.",
             )
             if mc_choice != NONE_LABEL:
                 args += ["--mass-config", mc_choice]
@@ -4994,7 +6774,8 @@ def pg_dynamics(root, exe, tmo, dry):
         else:
             mc_text = st.text_input(
                 "Mass config YAML (none found in configs/mass/)",
-                value="", placeholder="configs/mass/baseline_uav.yaml",
+                value="",
+                placeholder="configs/mass/baseline_uav.yaml",
                 key=f"{key}_mc",
             )
             if mc_text.strip():
@@ -5007,20 +6788,28 @@ def pg_dynamics(root, exe, tmo, dry):
                 "**Iyy and Izz unlock eigenvalue analysis** (short-period, phugoid, Dutch roll)."
             )
             c1, c2, c3 = st.columns(3)
-            mkg = c1.text_input("Mass [kg]",         "", key=f"{key}_mkg")
-            xcg = c2.text_input("CG x [m]",          "", key=f"{key}_xcg",
-                                help="Longitudinal CG from nose reference point.")
-            ycg = c3.text_input("CG y [m]",          "0", key=f"{key}_ycg")
+            mkg = c1.text_input("Mass [kg]", "", key=f"{key}_mkg")
+            xcg = c2.text_input(
+                "CG x [m]", "", key=f"{key}_xcg", help="Longitudinal CG from nose reference point."
+            )
+            ycg = c3.text_input("CG y [m]", "0", key=f"{key}_ycg")
             c4, c5, c6 = st.columns(3)
-            ixx = c4.text_input("Ixx [kg m2] roll",  key=f"{key}_ixx")
-            iyy = c5.text_input("Iyy [kg m2] pitch", key=f"{key}_iyy",
-                                help="Pitch inertia. Required for short-period and phugoid modes.")
-            izz = c6.text_input("Izz [kg m2] yaw",   key=f"{key}_izz",
-                                help="Yaw inertia. Required for Dutch roll mode.")
+            ixx = c4.text_input("Ixx [kg m2] roll", key=f"{key}_ixx")
+            iyy = c5.text_input(
+                "Iyy [kg m2] pitch",
+                key=f"{key}_iyy",
+                help="Pitch inertia. Required for short-period and phugoid modes.",
+            )
+            izz = c6.text_input(
+                "Izz [kg m2] yaw",
+                key=f"{key}_izz",
+                help="Yaw inertia. Required for Dutch roll mode.",
+            )
 
             # DATCOM inertia estimator
             geo_runs_for_inertia = [
-                Path(r) for r in _dirs(str(root / "data" / "runs"))
+                Path(r)
+                for r in _dirs(str(root / "data" / "runs"))
                 if "geometry" in Path(r).name
                 and not any(k in Path(r).name for k in ("_aero_", "_sweep_"))
             ]
@@ -5040,28 +6829,30 @@ def pg_dynamics(root, exe, tmo, dry):
                     )
                     if st.button("📐 Estimate inertia", key=f"{key}_datcom_btn", type="secondary"):
                         geo_path = geo_opts[chosen_geo]
-                        gs_path  = geo_path / "artifacts" / "geometry" / "geometry_summary.json"
+                        gs_path = geo_path / "artifacts" / "geometry" / "geometry_summary.json"
                         if not gs_path.exists():
                             st.warning(f"geometry_summary.json not found in {chosen_geo}.")
                         else:
                             try:
                                 import json as _jj
+
                                 gs = _jj.loads(gs_path.read_text(encoding="utf-8"))
                                 m_val = float(mkg.strip())
-                                rv  = gs.get("reference_values") or {}
-                                ma  = gs.get("mean_angles_deg") or {}
+                                rv = gs.get("reference_values") or {}
+                                ma = gs.get("mean_angles_deg") or {}
                                 import math as _math
-                                span  = float(rv.get("span_m", 2.0))
-                                mac   = float(rv.get("mean_aerodynamic_chord_m", 0.877))
-                                area  = float(rv.get("area_m2", 0.5))
-                                ar    = float(rv.get("aspect_ratio", 5.0))
+
+                                span = float(rv.get("span_m", 2.0))
+                                mac = float(rv.get("mean_aerodynamic_chord_m", 0.877))
+                                area = float(rv.get("area_m2", 0.5))
+                                ar = float(rv.get("aspect_ratio", 5.0))
                                 sweep = float(ma.get("sweep_le_deg", 35.0))
                                 dihed = abs(float(ma.get("dihedral_c4_deg", 3.0)))
-                                k_x = max(0.28, min(0.40, 0.32 + dihed/90*0.05))
+                                k_x = max(0.28, min(0.40, 0.32 + dihed / 90 * 0.05))
                                 k_y_base = 0.35 + (sweep - 30.0) * (0.42 - 0.35) / 20.0
                                 k_y = max(0.25, min(0.55, k_y_base))
-                                i_xx = round(m_val * (k_x * span/2)**2, 4)
-                                i_yy = round(m_val * (k_y * mac)**2, 4)
+                                i_xx = round(m_val * (k_x * span / 2) ** 2, 4)
+                                i_yy = round(m_val * (k_y * mac) ** 2, 4)
                                 i_zz = round(i_xx + i_yy, 4)
                                 st.success(
                                     f"DATCOM estimates (k_x={k_x:.3f}, k_y={k_y:.3f}): "
@@ -5087,14 +6878,19 @@ def pg_dynamics(root, exe, tmo, dry):
             xconv = st.radio(
                 "x-axis convention",
                 ["x positive aft (aviation standard)", "x positive forward"],
-                horizontal=True, key=f"{key}_xconv",
+                horizontal=True,
+                key=f"{key}_xconv",
                 help="x positive aft matches AVL and AeroSandbox conventions.",
             )
             if "forward" in xconv:
                 args.append("--x-positive-forward")
             for flag, val in [
-                ("--mass-kg", mkg), ("--x-cg-m", xcg), ("--y-cg-m", ycg),
-                ("--ixx-kg-m2", ixx), ("--iyy-kg-m2", iyy), ("--izz-kg-m2", izz),
+                ("--mass-kg", mkg),
+                ("--x-cg-m", xcg),
+                ("--y-cg-m", ycg),
+                ("--ixx-kg-m2", ixx),
+                ("--iyy-kg-m2", iyy),
+                ("--izz-kg-m2", izz),
             ]:
                 if val.strip() and val.strip() != "0":
                     args += [flag, val.strip()]
@@ -5120,7 +6916,11 @@ def pg_dynamics(root, exe, tmo, dry):
                 "Build dynamics foundation",
                 "Computes static margin, Xnp, and readiness for trim/eigenanalysis.",
                 ["dynamics", "build", "--run-dir", rd_build] + mass_args,
-                root, exe, tmo, dry, "dyn_build_run",
+                root,
+                exe,
+                tmo,
+                dry,
+                "dyn_build_run",
                 label="▶  Build",
             )
 
@@ -5144,15 +6944,25 @@ def pg_dynamics(root, exe, tmo, dry):
         if rd_cgsw:
             c1, c2, c3 = st.columns(3)
             cgmn = c1.number_input(
-                "CG min [m]", value=0.20, step=0.05, key="dyn_cgmn",
+                "CG min [m]",
+                value=0.20,
+                step=0.05,
+                key="dyn_cgmn",
                 help="Forward limit of CG sweep — must be < CG max.",
             )
             cgmx = c2.number_input(
-                "CG max [m]", value=0.70, step=0.05, key="dyn_cgmx",
+                "CG max [m]",
+                value=0.70,
+                step=0.05,
+                key="dyn_cgmx",
                 help="Aft limit of CG sweep.",
             )
             ns = c3.number_input(
-                "Points", min_value=2, value=9, step=1, key="dyn_ns",
+                "Points",
+                min_value=2,
+                value=9,
+                step=1,
+                key="dyn_ns",
                 help="Number of equally-spaced CG positions to evaluate.",
             )
             mass_args_sw = _mass_inputs("cgsw")
@@ -5171,10 +6981,24 @@ def pg_dynamics(root, exe, tmo, dry):
             _panel(
                 "Run CG sweep",
                 f"Evaluates static margin at {int(ns)} CG positions from {cgmn:.2f} to {cgmx:.2f} m.",
-                ["dynamics", "cg-sweep", "--run-dir", rd_cgsw,
-                 "--cg-min-m", str(cgmn), "--cg-max-m", str(cgmx),
-                 "--n", str(int(ns))] + cgsw_filtered,
-                root, exe, tmo, dry, "dyn_cgsw_run",
+                [
+                    "dynamics",
+                    "cg-sweep",
+                    "--run-dir",
+                    rd_cgsw,
+                    "--cg-min-m",
+                    str(cgmn),
+                    "--cg-max-m",
+                    str(cgmx),
+                    "--n",
+                    str(int(ns)),
+                ]
+                + cgsw_filtered,
+                root,
+                exe,
+                tmo,
+                dry,
+                "dyn_cgsw_run",
                 label="▶  Run CG sweep",
             )
             # Show CG sweep summary inline after running
@@ -5182,18 +7006,22 @@ def pg_dynamics(root, exe, tmo, dry):
             if cgsw_json.exists():
                 try:
                     import json as _jcg
+
                     cg_data = _jcg.loads(cgsw_json.read_text(encoding="utf-8"))
-                    sm_min  = cg_data.get("stable_cg_min_m")
-                    sm_max  = cg_data.get("stable_cg_max_m")
-                    zc      = cg_data.get("static_margin_zero_crossing_estimate_m")
+                    sm_min = cg_data.get("stable_cg_min_m")
+                    sm_max = cg_data.get("stable_cg_max_m")
+                    zc = cg_data.get("static_margin_zero_crossing_estimate_m")
                     _sec("CG sweep result")
                     s1, s2, s3 = st.columns(3)
-                    s1.metric("Neutral point (Xnp)",
-                              f"{float(zc):.4f} m" if zc is not None else "—")
-                    s2.metric("Stable CG min",
-                              f"{float(sm_min):.4f} m" if sm_min is not None else "—")
-                    s3.metric("Stable CG max",
-                              f"{float(sm_max):.4f} m" if sm_max is not None else "—")
+                    s1.metric(
+                        "Neutral point (Xnp)", f"{float(zc):.4f} m" if zc is not None else "—"
+                    )
+                    s2.metric(
+                        "Stable CG min", f"{float(sm_min):.4f} m" if sm_min is not None else "—"
+                    )
+                    s3.metric(
+                        "Stable CG max", f"{float(sm_max):.4f} m" if sm_max is not None else "—"
+                    )
                     if sm_min is not None and sm_max is not None:
                         st.success(
                             f"✓ Stable CG range: {float(sm_min):.4f} – "
@@ -5221,7 +7049,11 @@ def pg_dynamics(root, exe, tmo, dry):
                 "Run trim estimate",
                 "Estimates trim alpha from saved aero + dynamics results.",
                 ["dynamics", "trim", "--run-dir", rd_trim],
-                root, exe, tmo, dry, "dyn_trim_run",
+                root,
+                exe,
+                tmo,
+                dry,
+                "dyn_trim_run",
                 label="▶  Run trim",
             )
             # Show trim result inline — no need to navigate to ⑥ Inspect
@@ -5229,22 +7061,19 @@ def pg_dynamics(root, exe, tmo, dry):
             if trim_json.exists():
                 try:
                     import json as _jt
-                    tr  = _jt.loads(trim_json.read_text(encoding="utf-8"))
+
+                    tr = _jt.loads(trim_json.read_text(encoding="utf-8"))
                     lng = tr.get("longitudinal") or {}
                     _sec("Trim result")
                     if not lng.get("valid"):
                         st.error(f"Trim invalid: {lng.get('reason', 'unknown')}")
                     else:
                         t1, t2, t3, t4 = st.columns(4)
-                        t1.metric("Current α [°]",
-                                  f"{float(lng.get('alpha_current_deg', 0)):+.2f}")
-                        t2.metric("Trim α estimate",
-                                  f"{float(lng.get('alpha_trim_deg', 0)):+.4f}°")
-                        t3.metric("Δα required",
-                                  f"{float(lng.get('delta_alpha_deg', 0)):+.4f}°")
+                        t1.metric("Current α [°]", f"{float(lng.get('alpha_current_deg', 0)):+.2f}")
+                        t2.metric("Trim α estimate", f"{float(lng.get('alpha_trim_deg', 0)):+.4f}°")
+                        t3.metric("Δα required", f"{float(lng.get('delta_alpha_deg', 0)):+.4f}°")
                         in_bounds = lng.get("alpha_trim_in_bounds")
-                        t4.metric("In range [-5°,15°]",
-                                  "✓ Yes" if in_bounds else "✗ No")
+                        t4.metric("In range [-5°,15°]", "✓ Yes" if in_bounds else "✗ No")
                         if in_bounds:
                             st.success(
                                 f"✓ Trim α = {lng.get('alpha_trim_deg', 0):.2f}° "
@@ -5257,11 +7086,11 @@ def pg_dynamics(root, exe, tmo, dry):
                             )
                         if lng.get("de_trim_deg") is not None:
                             e1, e2 = st.columns(2)
-                            e1.metric("Trim δe estimate",
-                                      f"{float(lng.get('de_trim_deg', 0)):+.4f}°")
+                            e1.metric(
+                                "Trim δe estimate", f"{float(lng.get('de_trim_deg', 0)):+.4f}°"
+                            )
                             de_ok = lng.get("de_trim_in_bounds")
-                            e2.metric("In actuator range [-25°,25°]",
-                                      "✓ Yes" if de_ok else "✗ No")
+                            e2.metric("In actuator range [-25°,25°]", "✓ Yes" if de_ok else "✗ No")
                 except Exception as _ex:
                     st.caption(f"Could not read trim_result.json: {_ex}")
             else:
@@ -5277,12 +7106,23 @@ def pg_dynamics(root, exe, tmo, dry):
         rd_state = _aero_run_picker("dyn_rd_state", "Select aero run for state-space")
         if rd_state:
             mass_args_state = _mass_inputs("state")
-            with st.expander("Reference geometry overrides — required if geometry_summary is unavailable", expanded=True):
+            with st.expander(
+                "Reference geometry overrides — required if geometry_summary is unavailable",
+                expanded=True,
+            ):
                 c1, c2, c3 = st.columns(3)
-                sref = c1.text_input("--sref-m2", "", key="dyn_state_sref", help="Reference area [m²]")
-                mac = c2.text_input("--mac-m", "", key="dyn_state_mac", help="Mean aerodynamic chord [m]")
-                span = c3.text_input("--span-m", "", key="dyn_state_span", help="Reference span [m]")
-                st.caption("If the run has no geometry summary, enter Sref/MAC/span manually. The baseline smoke used Sref=0.72, MAC=0.55, span=3.2.")
+                sref = c1.text_input(
+                    "--sref-m2", "", key="dyn_state_sref", help="Reference area [m²]"
+                )
+                mac = c2.text_input(
+                    "--mac-m", "", key="dyn_state_mac", help="Mean aerodynamic chord [m]"
+                )
+                span = c3.text_input(
+                    "--span-m", "", key="dyn_state_span", help="Reference span [m]"
+                )
+                st.caption(
+                    "If the run has no geometry summary, enter Sref/MAC/span manually. The baseline smoke used Sref=0.72, MAC=0.55, span=3.2."
+                )
 
             args_state = ["dynamics", "state-space", "--run-dir", rd_state] + mass_args_state
             _flag(args_state, "--sref-m2", sref)
@@ -5294,14 +7134,25 @@ def pg_dynamics(root, exe, tmo, dry):
                 _panel(
                     "Run state-space analysis",
                     "Builds A matrices, eigenvalues, named modes, and D5.1 explicit unstable-root summary flags.",
-                    args_state, root, exe, tmo, dry, "dyn_state_run", label="▶  Run state-space",
+                    args_state,
+                    root,
+                    exe,
+                    tmo,
+                    dry,
+                    "dyn_state_run",
+                    label="▶  Run state-space",
                 )
             with c2:
                 _panel(
                     "Inspect state-space result",
                     "Reads state_space_result.json and prints named modes plus linear-stability flags.",
                     ["dynamics", "state-space-inspect", "--run-dir", rd_state],
-                    root, exe, tmo, dry, "dyn_state_inspect", label="▶  Inspect state-space",
+                    root,
+                    exe,
+                    tmo,
+                    dry,
+                    "dyn_state_inspect",
+                    label="▶  Inspect state-space",
                 )
             _state_space_artifact_preview(Path(rd_state))
 
@@ -5313,12 +7164,19 @@ def pg_dynamics(root, exe, tmo, dry):
         )
         rd_plot = _aero_run_picker("dyn_rd_state_plot", "Select aero run for state-space plots")
         if rd_plot:
-            plot_choice = st.selectbox("--plot", STATE_SPACE_PLOT_CHOICES, key="dyn_state_plot_choice")
+            plot_choice = st.selectbox(
+                "--plot", STATE_SPACE_PLOT_CHOICES, key="dyn_state_plot_choice"
+            )
             _panel(
                 "Generate state-space plots",
                 "Writes PNG plots and state_space_plot_manifest.json under <run_dir>/dynamics/plots/.",
                 ["dynamics", "plot-state-space", "--run-dir", rd_plot, "--plot", plot_choice],
-                root, exe, tmo, dry, "dyn_state_plot_run", label="▶  Plot state-space",
+                root,
+                exe,
+                tmo,
+                dry,
+                "dyn_state_plot_run",
+                label="▶  Plot state-space",
             )
             # Show PNGs directly — not behind a collapsed expander
             plot_dir = Path(rd_plot) / "dynamics" / "plots"
@@ -5326,9 +7184,11 @@ def pg_dynamics(root, exe, tmo, dry):
             pm = _rjson(plot_manifest)
             if pm:
                 artifacts = pm.get("artifacts") or {}
-                pngs = [(label, Path(path)) for label, path in artifacts.items()
-                        if path and Path(path).exists()
-                        and Path(path).suffix.lower() == ".png"]
+                pngs = [
+                    (label, Path(path))
+                    for label, path in artifacts.items()
+                    if path and Path(path).exists() and Path(path).suffix.lower() == ".png"
+                ]
                 if pngs:
                     _sec(f"Generated plots ({len(pngs)} PNG{'s' if len(pngs) != 1 else ''})")
                     for label, png_path in pngs:
@@ -5349,12 +7209,20 @@ def pg_dynamics(root, exe, tmo, dry):
             "flyability labels, red flags, and failure reasons from a promoted control-sweep aero dataset. "
             "Output → control_derivatives.csv, flyability_labels.csv, dynamics_label_run_report.json."
         )
-        ds_labels = _aero_dataset_picker("dyn_batch_labels_ds", "Aero dataset for dynamics batch labels")
+        ds_labels = _aero_dataset_picker(
+            "dyn_batch_labels_ds", "Aero dataset for dynamics batch labels"
+        )
         if ds_labels:
             c1, c2, c3 = st.columns(3)
-            source = c1.selectbox("--source", ["curated", "auto", "raw"], key="dyn_batch_labels_source")
-            max_trim = c2.number_input("Max |trim δe| [deg]", value=25.0, step=1.0, key="dyn_batch_labels_trim_limit")
-            min_auth = c3.number_input("Min |Cmδe| [/rad]", value=0.10, step=0.05, key="dyn_batch_labels_cmde_min")
+            source = c1.selectbox(
+                "--source", ["curated", "auto", "raw"], key="dyn_batch_labels_source"
+            )
+            max_trim = c2.number_input(
+                "Max |trim δe| [deg]", value=25.0, step=1.0, key="dyn_batch_labels_trim_limit"
+            )
+            min_auth = c3.number_input(
+                "Min |Cmδe| [/rad]", value=0.10, step=0.05, key="dyn_batch_labels_cmde_min"
+            )
             workflow = st.text_input(
                 "Workflow root (optional)",
                 value="",
@@ -5363,11 +7231,16 @@ def pg_dynamics(root, exe, tmo, dry):
                 help="Adds --workflow so the Workflow Cockpit can record dynamics_batch_labels.",
             )
             args_batch = [
-                "dynamics", "batch-labels",
-                "--dataset", ds_labels,
-                "--source", source,
-                "--max-abs-trim-delta-e-deg", str(float(max_trim)),
-                "--min-abs-cm-delta-e-per-rad", str(float(min_auth)),
+                "dynamics",
+                "batch-labels",
+                "--dataset",
+                ds_labels,
+                "--source",
+                source,
+                "--max-abs-trim-delta-e-deg",
+                str(float(max_trim)),
+                "--min-abs-cm-delta-e-per-rad",
+                str(float(min_auth)),
             ]
             if workflow.strip():
                 args_batch += ["--workflow", workflow.strip()]
@@ -5375,7 +7248,12 @@ def pg_dynamics(root, exe, tmo, dry):
                 "Build dynamics batch labels",
                 "Computes finite-difference symmetric-elevon derivatives and first-order flyability labels. No solver rerun.",
                 args_batch,
-                root, exe, tmo, dry, "dyn_batch_labels_run", label="▶  Build batch labels",
+                root,
+                exe,
+                tmo,
+                dry,
+                "dyn_batch_labels_run",
+                label="▶  Build batch labels",
             )
             _dataset_control_artifact_preview(Path(ds_labels))
 
@@ -5389,7 +7267,9 @@ def pg_dynamics(root, exe, tmo, dry):
         if ds_fly:
             c1, c2 = st.columns(2)
             source_fly = c1.selectbox("--source", ["curated", "raw"], key="dyn_fly_ml_source")
-            allow_forced = c2.checkbox("Allow forced source promotion", value=False, key="dyn_fly_ml_allow_forced")
+            allow_forced = c2.checkbox(
+                "Allow forced source promotion", value=False, key="dyn_fly_ml_allow_forced"
+            )
             out_dir = st.text_input(
                 "Output dataset root (optional)",
                 value="",
@@ -5414,9 +7294,18 @@ def pg_dynamics(root, exe, tmo, dry):
                 "Build flyability ML dataset",
                 "Creates a promoted ML-compatible derived dataset for trim/control/flyability targets. No solver rerun.",
                 args_fly,
-                root, exe, tmo, dry, "dyn_fly_ml_run", label="▶  Build ML dataset",
+                root,
+                exe,
+                tmo,
+                dry,
+                "dyn_fly_ml_run",
+                label="▶  Build ML dataset",
             )
-            expected = Path(out_dir.strip()) if out_dir.strip() else Path(ds_fly).with_name(Path(ds_fly).name + "__flyability_ml")
+            expected = (
+                Path(out_dir.strip())
+                if out_dir.strip()
+                else Path(ds_fly).with_name(Path(ds_fly).name + "__flyability_ml")
+            )
             with st.expander("Evidence preview: flyability ML dataset", expanded=False):
                 _json_metric_block(
                     expected / "flyability_ml_dataset_report.json",
@@ -5448,7 +7337,12 @@ def pg_dynamics(root, exe, tmo, dry):
                 "Validate dynamics artifacts",
                 "Checks formulas and evidence consistency; does not certify the aircraft and does not run AVL.",
                 args_validate,
-                root, exe, tmo, dry, "dyn_validate_run", label="▶  Validate dynamics",
+                root,
+                exe,
+                tmo,
+                dry,
+                "dyn_validate_run",
+                label="▶  Validate dynamics",
             )
             validation_path = Path(rd_validate) / "dynamics" / "dynamics_validation_report.json"
             if validation_path.exists():
@@ -5480,7 +7374,9 @@ def pg_dynamics(root, exe, tmo, dry):
         else:
             run_map = {p.name: p for p in dyn_runs}
             chosen_run_name = st.selectbox(
-                "Select run", list(run_map.keys()), key="dyn_ins_sel",
+                "Select run",
+                list(run_map.keys()),
+                key="dyn_ins_sel",
                 help="Only runs with a dynamics/ subfolder appear here.",
             )
             chosen_path = run_map[chosen_run_name]
@@ -5489,7 +7385,8 @@ def pg_dynamics(root, exe, tmo, dry):
             ins_view = st.radio(
                 "View",
                 ["Foundation & modes", "CG sweep curve", "Trim result"],
-                horizontal=True, key="dyn_ins_view",
+                horizontal=True,
+                key="dyn_ins_view",
             )
 
             # ── Foundation & dynamic modes ────────────────────────────────
@@ -5500,28 +7397,35 @@ def pg_dynamics(root, exe, tmo, dry):
                 else:
                     try:
                         import json as _j
+
                         data = _j.loads(found_json.read_text(encoding="utf-8"))
-                        sm   = data.get("stability_metrics") or {}
-                        mp   = data.get("mass_properties") or {}
+                        sm = data.get("stability_metrics") or {}
+                        mp = data.get("mass_properties") or {}
                         rdns = data.get("state_space_preparation") or {}
                         deriv_s = data.get("stability_derivatives") or {}
-                        long_d  = deriv_s.get("longitudinal") or {}
-                        lat_d   = deriv_s.get("lateral_directional") or {}
-                        ctrl    = data.get("control_effectiveness") or {}
-                        dyn_m   = data.get("dynamic_modes") or {}
-                        sp_m    = dyn_m.get("short_period") or {}
-                        ph_m    = dyn_m.get("phugoid") or {}
-                        dr_m    = dyn_m.get("dutch_roll") or {}
+                        long_d = deriv_s.get("longitudinal") or {}
+                        lat_d = deriv_s.get("lateral_directional") or {}
+                        ctrl = data.get("control_effectiveness") or {}
+                        dyn_m = data.get("dynamic_modes") or {}
+                        sp_m = dyn_m.get("short_period") or {}
+                        ph_m = dyn_m.get("phugoid") or {}
+                        dr_m = dyn_m.get("dutch_roll") or {}
 
                         # ── Static margin ─────────────────────────────────
                         _sec("Static margin & neutral point")
                         c1, c2, c3, c4 = st.columns(4)
-                        sm_val  = sm.get("static_margin_percent_mac")
+                        sm_val = sm.get("static_margin_percent_mac")
                         xnp_val = sm.get("x_np_m")
                         cma_val = sm.get("cma")
                         mac_val = sm.get("mac_m")
-                        c1.metric("Static margin", f"{float(sm_val):+.2f} %MAC" if sm_val is not None else "—")
-                        c2.metric("Neutral point Xnp", f"{float(xnp_val):+.4f} m" if xnp_val is not None else "—")
+                        c1.metric(
+                            "Static margin",
+                            f"{float(sm_val):+.2f} %MAC" if sm_val is not None else "—",
+                        )
+                        c2.metric(
+                            "Neutral point Xnp",
+                            f"{float(xnp_val):+.4f} m" if xnp_val is not None else "—",
+                        )
                         c3.metric("Cma", f"{float(cma_val):+.4f}" if cma_val is not None else "—")
                         c4.metric("MAC", f"{float(mac_val):.4f} m" if mac_val is not None else "—")
 
@@ -5537,10 +7441,11 @@ def pg_dynamics(root, exe, tmo, dry):
                         spiral_stable = deriv_s.get("spiral_stable")
                         if spiral is not None:
                             sc1, sc2 = st.columns(2)
-                            sc1.metric("Spiral metric (Clβ·Cnr / Clr·Cnβ)",
-                                       f"{float(spiral):+.4f}")
-                            sc2.metric("Spiral tendency",
-                                       "✓ Stable (< 1)" if spiral_stable else "⚠ Unstable (> 1)")
+                            sc1.metric("Spiral metric (Clβ·Cnr / Clr·Cnβ)", f"{float(spiral):+.4f}")
+                            sc2.metric(
+                                "Spiral tendency",
+                                "✓ Stable (< 1)" if spiral_stable else "⚠ Unstable (> 1)",
+                            )
 
                         # ── Control effectiveness ─────────────────────────
                         _sec("Control effectiveness")
@@ -5548,12 +7453,25 @@ def pg_dynamics(root, exe, tmo, dry):
                         cl_de = ctrl.get("cl_per_de_rad")
                         pitch_ok = ctrl.get("pitch_authority_adequate")
                         ce1, ce2, ce3 = st.columns(3)
-                        ce1.metric("Cmδe [/rad]",
-                                   f"{float(cm_de):+.4f}" if cm_de is not None else "— (not in AVL output)")
-                        ce2.metric("CLδe [/rad]",
-                                   f"{float(cl_de):+.4f}" if cl_de is not None else "—")
-                        ce3.metric("Pitch authority",
-                                   "✓ Adequate" if pitch_ok else ("✗ Inadequate" if pitch_ok is False else "— unknown"))
+                        ce1.metric(
+                            "Cmδe [/rad]",
+                            (
+                                f"{float(cm_de):+.4f}"
+                                if cm_de is not None
+                                else "— (not in AVL output)"
+                            ),
+                        )
+                        ce2.metric(
+                            "CLδe [/rad]", f"{float(cl_de):+.4f}" if cl_de is not None else "—"
+                        )
+                        ce3.metric(
+                            "Pitch authority",
+                            (
+                                "✓ Adequate"
+                                if pitch_ok
+                                else ("✗ Inadequate" if pitch_ok is False else "— unknown")
+                            ),
+                        )
                         if cm_de is None:
                             st.caption(
                                 "Cmδe not found. Run the aero sweep with elevon deflection values "
@@ -5587,9 +7505,20 @@ def pg_dynamics(root, exe, tmo, dry):
                                 ("Cnp", lat_d.get("cnp"), "adverse yaw"),
                             ]
                             sign_check = {
-                                "cla": None, "cma": -1, "cmq": -1, "clq": None, "cmad": None,
-                                "clb": -1, "cnb": +1, "cyb": None, "clp": -1, "cnr": -1, "clr": None, "cnp": None,
+                                "cla": None,
+                                "cma": -1,
+                                "cmq": -1,
+                                "clq": None,
+                                "cmad": None,
+                                "clb": -1,
+                                "cnb": +1,
+                                "cyb": None,
+                                "clp": -1,
+                                "cnr": -1,
+                                "clr": None,
+                                "cnp": None,
                             }
+
                             def _row_html(name, val, note, key_lc):
                                 if val is None:
                                     return f'<tr><td>{name}</td><td style="color:#5A7A96">—</td><td style="color:#5A7A96">{note}</td></tr>'
@@ -5604,84 +7533,212 @@ def pg_dynamics(root, exe, tmo, dry):
                                 return f'<tr><td style="font-family:JetBrains Mono,monospace">{name}</td><td style="color:{col};font-family:JetBrains Mono,monospace">{v:+.5f}</td><td style="color:#8EA0B3;font-size:.75rem">{note}</td></tr>'
 
                             st.markdown("**Longitudinal**")
-                            _h('<table style="width:100%;border-collapse:collapse;font-size:.8rem">' +
-                               "".join(_row_html(n, v, note, n.lower().replace("α","a").replace("δ","d").replace("dot","ad"))
-                                       for n, v, note in rows_long) + "</table>")
+                            _h(
+                                '<table style="width:100%;border-collapse:collapse;font-size:.8rem">'
+                                + "".join(
+                                    _row_html(
+                                        n,
+                                        v,
+                                        note,
+                                        n.lower()
+                                        .replace("α", "a")
+                                        .replace("δ", "d")
+                                        .replace("dot", "ad"),
+                                    )
+                                    for n, v, note in rows_long
+                                )
+                                + "</table>"
+                            )
                             st.markdown("**Lateral-directional**")
-                            _h('<table style="width:100%;border-collapse:collapse;font-size:.8rem">' +
-                               "".join(_row_html(n, v, note, n.lower().replace("β","b").replace("α","a"))
-                                       for n, v, note in rows_lat) + "</table>")
-                            st.caption("Green = correct sign for stability · Red = wrong sign · Grey = sign not prescribed")
+                            _h(
+                                '<table style="width:100%;border-collapse:collapse;font-size:.8rem">'
+                                + "".join(
+                                    _row_html(
+                                        n, v, note, n.lower().replace("β", "b").replace("α", "a")
+                                    )
+                                    for n, v, note in rows_lat
+                                )
+                                + "</table>"
+                            )
+                            st.caption(
+                                "Green = correct sign for stability · Red = wrong sign · Grey = sign not prescribed"
+                            )
 
                         # ── Dynamic modes ─────────────────────────────────
                         _sec("Dynamic modes")
                         if sp_m.get("valid"):
                             st.markdown("**Short-period**")
                             dm1, dm2, dm3, dm4 = st.columns(4)
-                            dm1.metric("ζ_sp",   f"{float(sp_m.get('zeta', 0)):+.4f}" if sp_m.get("zeta") else "—")
-                            dm2.metric("ωn [rad/s]", f"{float(sp_m.get('omega_n_rad_s', 0)):.4f}" if sp_m.get("omega_n_rad_s") else "—")
-                            dm3.metric("Period [s]", f"{float(sp_m.get('period_s', 0)):.3f}" if sp_m.get("period_s") else "—")
-                            dm4.metric("t½ [s]", f"{float(sp_m.get('time_to_half_s', 0)):.3f}" if sp_m.get("time_to_half_s") else "—")
+                            dm1.metric(
+                                "ζ_sp",
+                                f"{float(sp_m.get('zeta', 0)):+.4f}" if sp_m.get("zeta") else "—",
+                            )
+                            dm2.metric(
+                                "ωn [rad/s]",
+                                (
+                                    f"{float(sp_m.get('omega_n_rad_s', 0)):.4f}"
+                                    if sp_m.get("omega_n_rad_s")
+                                    else "—"
+                                ),
+                            )
+                            dm3.metric(
+                                "Period [s]",
+                                (
+                                    f"{float(sp_m.get('period_s', 0)):.3f}"
+                                    if sp_m.get("period_s")
+                                    else "—"
+                                ),
+                            )
+                            dm4.metric(
+                                "t½ [s]",
+                                (
+                                    f"{float(sp_m.get('time_to_half_s', 0)):.3f}"
+                                    if sp_m.get("time_to_half_s")
+                                    else "—"
+                                ),
+                            )
                             zeta_sp = sp_m.get("zeta")
                             if zeta_sp is not None:
                                 z = float(zeta_sp)
                                 if 0.35 <= z <= 1.30:
-                                    st.success(f"✓ ζ_sp = {z:.4f} — MIL-STD-1797B **Level 1** (0.35 ≤ ζ ≤ 1.30)")
+                                    st.success(
+                                        f"✓ ζ_sp = {z:.4f} — MIL-STD-1797B **Level 1** (0.35 ≤ ζ ≤ 1.30)"
+                                    )
                                 elif 0.25 <= z:
-                                    st.warning(f"⚠ ζ_sp = {z:.4f} — **Level 2** (0.25 ≤ ζ < 0.35 or ζ > 1.30)")
+                                    st.warning(
+                                        f"⚠ ζ_sp = {z:.4f} — **Level 2** (0.25 ≤ ζ < 0.35 or ζ > 1.30)"
+                                    )
                                 elif 0.15 <= z:
-                                    st.error(f"✗ ζ_sp = {z:.4f} — **Level 3** (barely controllable)")
+                                    st.error(
+                                        f"✗ ζ_sp = {z:.4f} — **Level 3** (barely controllable)"
+                                    )
                                 else:
                                     st.error(f"✗ ζ_sp = {z:.4f} — **Unacceptable** (below Level 3)")
                         else:
                             reason = sp_m.get("reason", "")
                             st.caption(f"Short-period not computed. {reason}")
                             if "Iyy" in (reason or ""):
-                                st.info("💡 Add Iyy (pitch inertia) to your mass config to enable short-period analysis. Use the DATCOM estimator above.")
+                                st.info(
+                                    "💡 Add Iyy (pitch inertia) to your mass config to enable short-period analysis. Use the DATCOM estimator above."
+                                )
 
                         if ph_m.get("valid"):
                             st.markdown("**Phugoid**")
                             pm1, pm2, pm3 = st.columns(3)
-                            pm1.metric("ζ_ph", f"{float(ph_m.get('zeta', 0)):+.4f}" if ph_m.get("zeta") else "—")
-                            pm2.metric("Period [s]", f"{float(ph_m.get('period_s', 0)):.1f}" if ph_m.get("period_s") else "—")
+                            pm1.metric(
+                                "ζ_ph",
+                                f"{float(ph_m.get('zeta', 0)):+.4f}" if ph_m.get("zeta") else "—",
+                            )
+                            pm2.metric(
+                                "Period [s]",
+                                (
+                                    f"{float(ph_m.get('period_s', 0)):.1f}"
+                                    if ph_m.get("period_s")
+                                    else "—"
+                                ),
+                            )
                             pm3.metric("Stable", "✓ Yes" if ph_m.get("stable") else "✗ No")
                             zeta_ph = ph_m.get("zeta")
                             if zeta_ph is not None:
-                                (st.success if float(zeta_ph) >= 0.04 else
-                                 st.warning if float(zeta_ph) >= 0 else st.error)(
+                                (
+                                    st.success
+                                    if float(zeta_ph) >= 0.04
+                                    else st.warning if float(zeta_ph) >= 0 else st.error
+                                )(
                                     f"Phugoid ζ = {float(zeta_ph):.4f} — "
-                                    + ("Level 1 (≥0.04)" if float(zeta_ph) >= 0.04
-                                       else "Level 2 (stable but ζ<0.04)"
-                                       if float(zeta_ph) >= 0 else "Level 3 (divergent phugoid)")
+                                    + (
+                                        "Level 1 (≥0.04)"
+                                        if float(zeta_ph) >= 0.04
+                                        else (
+                                            "Level 2 (stable but ζ<0.04)"
+                                            if float(zeta_ph) >= 0
+                                            else "Level 3 (divergent phugoid)"
+                                        )
+                                    )
                                 )
 
                         if dr_m.get("valid"):
                             st.markdown("**Dutch roll**")
                             dr1, dr2, dr3 = st.columns(3)
-                            dr1.metric("ζ_DR", f"{float(dr_m.get('zeta', 0)):+.4f}" if dr_m.get("zeta") else "—")
-                            dr2.metric("ωn_DR [rad/s]", f"{float(dr_m.get('omega_n_rad_s', 0)):.4f}" if dr_m.get("omega_n_rad_s") else "—")
-                            dr3.metric("Period [s]", f"{float(dr_m.get('period_s', 0)):.2f}" if dr_m.get("period_s") else "—")
+                            dr1.metric(
+                                "ζ_DR",
+                                f"{float(dr_m.get('zeta', 0)):+.4f}" if dr_m.get("zeta") else "—",
+                            )
+                            dr2.metric(
+                                "ωn_DR [rad/s]",
+                                (
+                                    f"{float(dr_m.get('omega_n_rad_s', 0)):.4f}"
+                                    if dr_m.get("omega_n_rad_s")
+                                    else "—"
+                                ),
+                            )
+                            dr3.metric(
+                                "Period [s]",
+                                (
+                                    f"{float(dr_m.get('period_s', 0)):.2f}"
+                                    if dr_m.get("period_s")
+                                    else "—"
+                                ),
+                            )
 
                         # ── Mass & readiness ──────────────────────────────
                         _sec("Mass properties & readiness")
                         mc1, mc2, mc3, mc4 = st.columns(4)
                         inertia = mp.get("inertia") or {}
-                        mc1.metric("Mass", f"{float(mp.get('mass_kg')):+.2f} kg" if mp.get("mass_kg") is not None else "—")
-                        mc2.metric("CG x", f"{float(mp.get('x_cg_m')):+.4f} m" if mp.get("x_cg_m") is not None else "—")
-                        mc3.metric("Iyy", f"{float(inertia.get('iyy_kg_m2')):.4f} kg·m²" if inertia.get("iyy_kg_m2") else "— (not set)")
-                        mc4.metric("Izz", f"{float(inertia.get('izz_kg_m2')):.4f} kg·m²" if inertia.get("izz_kg_m2") else "— (not set)")
+                        mc1.metric(
+                            "Mass",
+                            (
+                                f"{float(mp.get('mass_kg')):+.2f} kg"
+                                if mp.get("mass_kg") is not None
+                                else "—"
+                            ),
+                        )
+                        mc2.metric(
+                            "CG x",
+                            (
+                                f"{float(mp.get('x_cg_m')):+.4f} m"
+                                if mp.get("x_cg_m") is not None
+                                else "—"
+                            ),
+                        )
+                        mc3.metric(
+                            "Iyy",
+                            (
+                                f"{float(inertia.get('iyy_kg_m2')):.4f} kg·m²"
+                                if inertia.get("iyy_kg_m2")
+                                else "— (not set)"
+                            ),
+                        )
+                        mc4.metric(
+                            "Izz",
+                            (
+                                f"{float(inertia.get('izz_kg_m2')):.4f} kg·m²"
+                                if inertia.get("izz_kg_m2")
+                                else "— (not set)"
+                            ),
+                        )
 
                         missing = rdns.get("missing_items") or []
                         if missing:
-                            st.caption("Missing for full eigenanalysis: " + " · ".join(f"**{m}**" for m in missing))
+                            st.caption(
+                                "Missing for full eigenanalysis: "
+                                + " · ".join(f"**{m}**" for m in missing)
+                            )
 
                     except Exception as ex:
                         st.warning(f"Could not read dynamics_foundation.json: {ex}")
 
-                _panel("Full CLI inspect",
-                       "Prints the complete dynamics result in the terminal.",
-                       ["dynamics", "inspect", "--run-dir", str(chosen_path)],
-                       root, exe, tmo, dry, "dyn_ins_cli", label="▶  Full inspect")
+                _panel(
+                    "Full CLI inspect",
+                    "Prints the complete dynamics result in the terminal.",
+                    ["dynamics", "inspect", "--run-dir", str(chosen_path)],
+                    root,
+                    exe,
+                    tmo,
+                    dry,
+                    "dyn_ins_cli",
+                    label="▶  Full inspect",
+                )
 
             # ── CG sweep curve ────────────────────────────────────────────
             elif ins_view == "CG sweep curve":
@@ -5692,9 +7749,10 @@ def pg_dynamics(root, exe, tmo, dry):
                     try:
                         import json as _j
                         import plotly.graph_objects as go
-                        data   = _j.loads(cg_json.read_text(encoding="utf-8"))
-                        cases  = data.get("cases") or []
-                        zc     = data.get("static_margin_zero_crossing_estimate_m")
+
+                        data = _j.loads(cg_json.read_text(encoding="utf-8"))
+                        cases = data.get("cases") or []
+                        zc = data.get("static_margin_zero_crossing_estimate_m")
                         sm_min = data.get("stable_cg_min_m")
                         sm_max = data.get("stable_cg_max_m")
                         trim_min = data.get("trimmable_cg_min_m")
@@ -5706,53 +7764,100 @@ def pg_dynamics(root, exe, tmo, dry):
                             de_vals = [c.get("de_trim_deg") for c in cases]
 
                             from plotly.subplots import make_subplots
-                            has_de  = any(v is not None for v in de_vals)
+
+                            has_de = any(v is not None for v in de_vals)
                             fig = make_subplots(specs=[[{"secondary_y": has_de}]])
 
-                            fig.add_trace(go.Scatter(
-                                x=cg_vals, y=sm_vals, mode="lines+markers",
-                                name="Static margin [%MAC]",
-                                line=dict(color="#3B82F6", width=2), marker=dict(size=7),
-                                hovertemplate="CG: %{x:.3f} m<br>SM: %{y:.2f}% MAC<extra></extra>",
-                            ), secondary_y=False)
+                            fig.add_trace(
+                                go.Scatter(
+                                    x=cg_vals,
+                                    y=sm_vals,
+                                    mode="lines+markers",
+                                    name="Static margin [%MAC]",
+                                    line=dict(color="#3B82F6", width=2),
+                                    marker=dict(size=7),
+                                    hovertemplate="CG: %{x:.3f} m<br>SM: %{y:.2f}% MAC<extra></extra>",
+                                ),
+                                secondary_y=False,
+                            )
 
-                            fig.add_hline(y=0, line_dash="dash", line_color="#EF4444", line_width=1.5,
-                                          annotation_text="SM=0 (neutral point)",
-                                          annotation_position="top right")
-                            fig.add_hrect(y0=5, y1=12, fillcolor="#22C55E", opacity=0.08,
-                                          annotation_text="ISR target 5–12%",
-                                          annotation_position="top right")
+                            fig.add_hline(
+                                y=0,
+                                line_dash="dash",
+                                line_color="#EF4444",
+                                line_width=1.5,
+                                annotation_text="SM=0 (neutral point)",
+                                annotation_position="top right",
+                            )
+                            fig.add_hrect(
+                                y0=5,
+                                y1=12,
+                                fillcolor="#22C55E",
+                                opacity=0.08,
+                                annotation_text="ISR target 5–12%",
+                                annotation_position="top right",
+                            )
 
                             if has_de:
-                                fig.add_trace(go.Scatter(
-                                    x=cg_vals, y=de_vals, mode="lines+markers",
-                                    name="Trim δe [deg]",
-                                    line=dict(color="#F59E0B", width=2, dash="dot"),
-                                    marker=dict(size=5, symbol="square"),
-                                    hovertemplate="CG: %{x:.3f} m<br>Trim δe: %{y:.2f}°<extra></extra>",
-                                ), secondary_y=True)
-                                fig.add_hline(y=20, line_color="#EF4444", line_dash="dot", line_width=1,
-                                              annotation_text="δe=20° limit", secondary_y=True)
-                                fig.add_hline(y=-20, line_color="#EF4444", line_dash="dot", line_width=1,
-                                              secondary_y=True)
+                                fig.add_trace(
+                                    go.Scatter(
+                                        x=cg_vals,
+                                        y=de_vals,
+                                        mode="lines+markers",
+                                        name="Trim δe [deg]",
+                                        line=dict(color="#F59E0B", width=2, dash="dot"),
+                                        marker=dict(size=5, symbol="square"),
+                                        hovertemplate="CG: %{x:.3f} m<br>Trim δe: %{y:.2f}°<extra></extra>",
+                                    ),
+                                    secondary_y=True,
+                                )
+                                fig.add_hline(
+                                    y=20,
+                                    line_color="#EF4444",
+                                    line_dash="dot",
+                                    line_width=1,
+                                    annotation_text="δe=20° limit",
+                                    secondary_y=True,
+                                )
+                                fig.add_hline(
+                                    y=-20,
+                                    line_color="#EF4444",
+                                    line_dash="dot",
+                                    line_width=1,
+                                    secondary_y=True,
+                                )
 
                             if zc is not None:
-                                fig.add_vline(x=zc, line_dash="dot", line_color="#F59E0B", line_width=1.5,
-                                              annotation_text=f"NP ≈ {zc:.3f} m",
-                                              annotation_position="top left")
+                                fig.add_vline(
+                                    x=zc,
+                                    line_dash="dot",
+                                    line_color="#F59E0B",
+                                    line_width=1.5,
+                                    annotation_text=f"NP ≈ {zc:.3f} m",
+                                    annotation_position="top left",
+                                )
                             if sm_min is not None and sm_max is not None:
-                                fig.add_vrect(x0=sm_min, x1=sm_max, fillcolor="#22C55E", opacity=0.06,
-                                              annotation_text=f"Stable: {sm_min:.3f}–{sm_max:.3f} m")
+                                fig.add_vrect(
+                                    x0=sm_min,
+                                    x1=sm_max,
+                                    fillcolor="#22C55E",
+                                    opacity=0.06,
+                                    annotation_text=f"Stable: {sm_min:.3f}–{sm_max:.3f} m",
+                                )
 
                             fig.update_layout(
-                                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="#0F1923",
+                                paper_bgcolor="rgba(0,0,0,0)",
+                                plot_bgcolor="#0F1923",
                                 font=dict(color="#C8D6E5", size=12),
-                                margin=dict(l=60, r=20, t=50, b=60), height=400,
+                                margin=dict(l=60, r=20, t=50, b=60),
+                                height=400,
                                 title="CG sweep — static margin and trim elevon",
                                 xaxis=dict(title="CG x position [m]", gridcolor="#1E2F3E"),
                                 yaxis=dict(title="Static margin [%MAC]", gridcolor="#1E2F3E"),
                                 yaxis2=dict(title="Trim δe [deg]", gridcolor="#1E2F3E"),
-                                legend=dict(bgcolor="rgba(0,0,0,0)", bordercolor="#334252", borderwidth=1),
+                                legend=dict(
+                                    bgcolor="rgba(0,0,0,0)", bordercolor="#334252", borderwidth=1
+                                ),
                             )
                             st.plotly_chart(fig, use_container_width=True)
 
@@ -5760,9 +7865,14 @@ def pg_dynamics(root, exe, tmo, dry):
                             sc1.metric("Neutral point", f"{zc:.4f} m" if zc else "—")
                             sc2.metric("Stable CG min", f"{float(sm_min):.4f} m" if sm_min else "—")
                             sc3.metric("Stable CG max", f"{float(sm_max):.4f} m" if sm_max else "—")
-                            sc4.metric("Trimmable range",
-                                       f"{float(trim_min):.3f}–{float(trim_max):.3f} m"
-                                       if (trim_min and trim_max) else "— (no Cmδe data)")
+                            sc4.metric(
+                                "Trimmable range",
+                                (
+                                    f"{float(trim_min):.3f}–{float(trim_max):.3f} m"
+                                    if (trim_min and trim_max)
+                                    else "— (no Cmδe data)"
+                                ),
+                            )
 
                             if sm_min is not None and sm_max is not None:
                                 st.success(
@@ -5780,10 +7890,17 @@ def pg_dynamics(root, exe, tmo, dry):
                     except Exception as ex:
                         st.warning(f"Could not read cg_sweep.json: {ex}")
 
-                _panel("Full CLI sweep inspect",
-                       "Prints per-CG-point static margin results.",
-                       ["dynamics", "cg-sweep-inspect", "--run-dir", str(chosen_path)],
-                       root, exe, tmo, dry, "dyn_cgsw_ins_cli", label="▶  Full CG sweep inspect")
+                _panel(
+                    "Full CLI sweep inspect",
+                    "Prints per-CG-point static margin results.",
+                    ["dynamics", "cg-sweep-inspect", "--run-dir", str(chosen_path)],
+                    root,
+                    exe,
+                    tmo,
+                    dry,
+                    "dyn_cgsw_ins_cli",
+                    label="▶  Full CG sweep inspect",
+                )
 
             # ── Trim result ───────────────────────────────────────────────
             else:
@@ -5793,23 +7910,36 @@ def pg_dynamics(root, exe, tmo, dry):
                 else:
                     try:
                         import json as _j
-                        tr   = _j.loads(trim_json.read_text(encoding="utf-8"))
-                        lng  = tr.get("longitudinal") or {}
+
+                        tr = _j.loads(trim_json.read_text(encoding="utf-8"))
+                        lng = tr.get("longitudinal") or {}
                         meta = tr.get("metadata") or {}
 
                         if not lng.get("valid"):
-                            st.error(f"Trim estimate invalid: {lng.get('reason', 'unknown reason')}")
+                            st.error(
+                                f"Trim estimate invalid: {lng.get('reason', 'unknown reason')}"
+                            )
                         else:
                             _sec("Control-fixed trim (α-trim at fixed δe)")
                             t1, t2, t3, t4 = st.columns(4)
-                            t1.metric("Current α [°]", f"{float(lng.get('alpha_current_deg', 0)):+.2f}")
-                            t2.metric("Δα required", f"{float(lng.get('delta_alpha_deg', 0)):+.4f}°")
-                            t3.metric("Trim α estimate", f"{float(lng.get('alpha_trim_deg', 0)):+.4f}°")
+                            t1.metric(
+                                "Current α [°]", f"{float(lng.get('alpha_current_deg', 0)):+.2f}"
+                            )
+                            t2.metric(
+                                "Δα required", f"{float(lng.get('delta_alpha_deg', 0)):+.4f}°"
+                            )
+                            t3.metric(
+                                "Trim α estimate", f"{float(lng.get('alpha_trim_deg', 0)):+.4f}°"
+                            )
                             in_bounds = lng.get("alpha_trim_in_bounds")
-                            t4.metric("In flyable range [-5°,15°]", "✓ Yes" if in_bounds else "✗ No")
+                            t4.metric(
+                                "In flyable range [-5°,15°]", "✓ Yes" if in_bounds else "✗ No"
+                            )
 
                             if in_bounds:
-                                st.success(f"✓ Trim alpha {lng.get('alpha_trim_deg', 0):.2f}° is within flyable range.")
+                                st.success(
+                                    f"✓ Trim alpha {lng.get('alpha_trim_deg', 0):.2f}° is within flyable range."
+                                )
                             else:
                                 st.warning(
                                     f"⚠ Trim alpha {lng.get('alpha_trim_deg', 0):.2f}° is outside [-5°, 15°]. "
@@ -5819,13 +7949,24 @@ def pg_dynamics(root, exe, tmo, dry):
                             if lng.get("de_trim_deg") is not None:
                                 _sec("Elevon-fixed trim (δe-trim at fixed α)")
                                 e1, e2, e3, e4 = st.columns(4)
-                                e1.metric("Current δe [°]", f"{float(lng.get('control_input_deg', 0)):+.2f}")
-                                e2.metric("Δδe required", f"{float(lng.get('delta_de_deg', 0)):+.4f}°")
-                                e3.metric("Trim δe estimate", f"{float(lng.get('de_trim_deg', 0)):+.4f}°")
+                                e1.metric(
+                                    "Current δe [°]",
+                                    f"{float(lng.get('control_input_deg', 0)):+.2f}",
+                                )
+                                e2.metric(
+                                    "Δδe required", f"{float(lng.get('delta_de_deg', 0)):+.4f}°"
+                                )
+                                e3.metric(
+                                    "Trim δe estimate", f"{float(lng.get('de_trim_deg', 0)):+.4f}°"
+                                )
                                 de_bounds = lng.get("de_trim_in_bounds")
-                                e4.metric("In actuator range [-25°,25°]", "✓ Yes" if de_bounds else "✗ No")
+                                e4.metric(
+                                    "In actuator range [-25°,25°]", "✓ Yes" if de_bounds else "✗ No"
+                                )
                                 if de_bounds:
-                                    st.success(f"✓ Trim δe {lng.get('de_trim_deg', 0):.2f}° within actuator limits.")
+                                    st.success(
+                                        f"✓ Trim δe {lng.get('de_trim_deg', 0):.2f}° within actuator limits."
+                                    )
                                 else:
                                     st.warning(
                                         f"⚠ Trim δe {lng.get('de_trim_deg', 0):.2f}° exceeds actuator limits [-25°, 25°]. "
@@ -5834,8 +7975,22 @@ def pg_dynamics(root, exe, tmo, dry):
 
                             _sec("Key derivatives used")
                             d1, d2 = st.columns(2)
-                            d1.metric("Cma [/rad]", f"{float(lng.get('cma_per_rad', 0)):+.4f}" if lng.get("cma_per_rad") else "—")
-                            d2.metric("Cmδe [/rad]", f"{float(lng.get('cmde_per_rad', 0)):+.4f}" if lng.get("cmde_per_rad") else "— (not available)")
+                            d1.metric(
+                                "Cma [/rad]",
+                                (
+                                    f"{float(lng.get('cma_per_rad', 0)):+.4f}"
+                                    if lng.get("cma_per_rad")
+                                    else "—"
+                                ),
+                            )
+                            d2.metric(
+                                "Cmδe [/rad]",
+                                (
+                                    f"{float(lng.get('cmde_per_rad', 0)):+.4f}"
+                                    if lng.get("cmde_per_rad")
+                                    else "— (not available)"
+                                ),
+                            )
 
                             if meta.get("alpha_trim_warning"):
                                 st.warning(meta["alpha_trim_warning"])
@@ -5845,10 +8000,17 @@ def pg_dynamics(root, exe, tmo, dry):
                     except Exception as ex:
                         st.warning(f"Could not read trim_result.json: {ex}")
 
-                _panel("Full CLI trim inspect",
-                       "Runs the trim estimate via CLI.",
-                       ["dynamics", "trim", "--run-dir", str(chosen_path)],
-                       root, exe, tmo, dry, "dyn_trim_ins_cli", label="▶  Run trim")
+                _panel(
+                    "Full CLI trim inspect",
+                    "Runs the trim estimate via CLI.",
+                    ["dynamics", "trim", "--run-dir", str(chosen_path)],
+                    root,
+                    exe,
+                    tmo,
+                    dry,
+                    "dyn_trim_ins_cli",
+                    label="▶  Run trim",
+                )
 
 
 def _feature_selector(key, include_feature_set=True):
@@ -5856,24 +8018,37 @@ def _feature_selector(key, include_feature_set=True):
     opts = ["--feature-preset (named preset)", "--features (raw comma-sep columns)"]
     if include_feature_set:
         opts.append("--feature-set (physics-engineered)")
-    mode = st.radio("Feature input (exactly ONE required)",opts,horizontal=True,key=f"{key}_fmode")
+    mode = st.radio(
+        "Feature input (exactly ONE required)", opts, horizontal=True, key=f"{key}_fmode"
+    )
     c1, c2 = st.columns(2)
     if "preset" in mode:
-        fp = c1.selectbox("--feature-preset", ML_FEATURE_PRESETS, key=f"{key}_fp",
-                          help="bwb_control = legacy control_input_deg; bwb_control_sym_elevon = explicit delta_e_sym_deg; bwb_basic = no control column")
-        tgt = c2.text_input("--targets",DEFAULT_TARGETS,key=f"{key}_tgt")
-        return ["--feature-preset",fp,"--targets",tgt], f"preset:{fp}"
+        fp = c1.selectbox(
+            "--feature-preset",
+            ML_FEATURE_PRESETS,
+            key=f"{key}_fp",
+            help="bwb_control = legacy control_input_deg; bwb_control_sym_elevon = explicit delta_e_sym_deg; bwb_basic = no control column",
+        )
+        tgt = c2.text_input("--targets", DEFAULT_TARGETS, key=f"{key}_tgt")
+        return ["--feature-preset", fp, "--targets", tgt], f"preset:{fp}"
     elif "raw" in mode:
-        feat = c1.text_input("--features", DEFAULT_FEATURES, key=f"{key}_feat", help=f"Legacy default: {DEFAULT_FEATURES}. Explicit symmetric elevon option: {DEFAULT_SYM_ELEVON_FEATURES}")
-        tgt  = c2.text_input("--targets",DEFAULT_TARGETS,key=f"{key}_tgt2")
-        return ["--features",feat,"--targets",tgt], f"raw features"
+        feat = c1.text_input(
+            "--features",
+            DEFAULT_FEATURES,
+            key=f"{key}_feat",
+            help=f"Legacy default: {DEFAULT_FEATURES}. Explicit symmetric elevon option: {DEFAULT_SYM_ELEVON_FEATURES}",
+        )
+        tgt = c2.text_input("--targets", DEFAULT_TARGETS, key=f"{key}_tgt2")
+        return ["--features", feat, "--targets", tgt], f"raw features"
     else:
-        fs  = c1.selectbox("--feature-set", ML_FEATURE_SET_CHOICES, key=f"{key}_fs",
-                             help="Raw or physics-engineered feature sets. Symmetric-elevon variants use delta_e_sym_deg explicitly.")
-        tgt = c2.text_input("--targets",DEFAULT_TARGETS,key=f"{key}_tgt3")
-        return ["--feature-set",fs,"--targets",tgt], f"set:{fs}"
-
-
+        fs = c1.selectbox(
+            "--feature-set",
+            ML_FEATURE_SET_CHOICES,
+            key=f"{key}_fs",
+            help="Raw or physics-engineered feature sets. Symmetric-elevon variants use delta_e_sym_deg explicitly.",
+        )
+        tgt = c2.text_input("--targets", DEFAULT_TARGETS, key=f"{key}_tgt3")
+        return ["--feature-set", fs, "--targets", tgt], f"set:{fs}"
 
 
 def _aeris_clean_gui_path_text(value: object) -> str:
@@ -5897,15 +8072,21 @@ def _aeris_clean_gui_path_text(value: object) -> str:
             "--output_dir",
         ):
             if lowered.startswith(label):
-                raw = raw.lstrip()[len(label):].strip()
+                raw = raw.lstrip()[len(label) :].strip()
                 matched = True
                 break
         if not matched:
             break
     return raw.strip().strip("`'")
 
+
 def pg_ml(root, exe, tmo, dry):
-    _hero("◈","ML Studio","train · tune · compare · promote · predict · active learning","surrogate")
+    _hero(
+        "◈",
+        "ML Studio",
+        "train · tune · compare · promote · predict · active learning",
+        "surrogate",
+    )
 
     # AERIS_PATCH_CST_GUI_V1_ML_QUICKSTART
     with st.expander("〜 2D Airfoil / CST quick ML commands", expanded=False):
@@ -5915,9 +8096,12 @@ def pg_ml(root, exe, tmo, dry):
             "<code>airfoil_xfoil_v1</code>. Group split by <code>airfoil_id</code> prevents leakage.",
             "info",
         )
-        airfoil_datasets = [Path(d) for d in _dirs(str(root / "data" / "datasets"))
-                            if (Path(d) / "promotion_manifest.json").exists()
-                            and (Path(d) / "curated_airfoil_dataset.csv").exists()]
+        airfoil_datasets = [
+            Path(d)
+            for d in _dirs(str(root / "data" / "datasets"))
+            if (Path(d) / "promotion_manifest.json").exists()
+            and (Path(d) / "curated_airfoil_dataset.csv").exists()
+        ]
         if airfoil_datasets:
             airfoil_ds = st.selectbox(
                 "Promoted airfoil dataset",
@@ -5941,7 +8125,12 @@ def pg_ml(root, exe, tmo, dry):
             key="ml_airfoil_quick_preset",
         )
         airfoil_targets = cqb.text_input("Targets", "cl,cd,cm", key="ml_airfoil_quick_targets")
-        airfoil_model = cqc.selectbox("Model", MODEL_TYPES, index=MODEL_TYPES.index("lightgbm") if "lightgbm" in MODEL_TYPES else 0, key="ml_airfoil_quick_model")
+        airfoil_model = cqc.selectbox(
+            "Model",
+            MODEL_TYPES,
+            index=MODEL_TYPES.index("lightgbm") if "lightgbm" in MODEL_TYPES else 0,
+            key="ml_airfoil_quick_model",
+        )
         airfoil_out = st.text_input(
             "ML output dir",
             str(root / "data" / "processed" / "ml_runs" / "gui_airfoil_cst_lgbm"),
@@ -5949,19 +8138,80 @@ def pg_ml(root, exe, tmo, dry):
         )
         qa, qb, qc = st.columns(3)
         with qa:
-            _panel("Airfoil EDA", "EDA with the correct airfoil feature preset.",
-                   ["ml", "eda", "--dataset", airfoil_ds, "--feature-preset", airfoil_preset, "--targets", airfoil_targets],
-                   root, exe, tmo, dry, "ml_airfoil_quick_eda", label="▶  EDA")
+            _panel(
+                "Airfoil EDA",
+                "EDA with the correct airfoil feature preset.",
+                [
+                    "ml",
+                    "eda",
+                    "--dataset",
+                    airfoil_ds,
+                    "--feature-preset",
+                    airfoil_preset,
+                    "--targets",
+                    airfoil_targets,
+                ],
+                root,
+                exe,
+                tmo,
+                dry,
+                "ml_airfoil_quick_eda",
+                label="▶  EDA",
+            )
         with qb:
-            _panel("Train airfoil model", "Grouped split by airfoil_id; suitable for CST/XFOIL smoke and larger campaigns.",
-                   ["ml", "train", "--dataset", airfoil_ds, "--feature-preset", airfoil_preset, "--targets", airfoil_targets,
-                    "--group-column", "airfoil_id", "--model-type", airfoil_model, "--output-dir", airfoil_out],
-                   root, exe, tmo, dry, "ml_airfoil_quick_train", label="▶  Train")
+            _panel(
+                "Train airfoil model",
+                "Grouped split by airfoil_id; suitable for CST/XFOIL smoke and larger campaigns.",
+                [
+                    "ml",
+                    "train",
+                    "--dataset",
+                    airfoil_ds,
+                    "--feature-preset",
+                    airfoil_preset,
+                    "--targets",
+                    airfoil_targets,
+                    "--group-column",
+                    "airfoil_id",
+                    "--model-type",
+                    airfoil_model,
+                    "--output-dir",
+                    airfoil_out,
+                ],
+                root,
+                exe,
+                tmo,
+                dry,
+                "ml_airfoil_quick_train",
+                label="▶  Train",
+            )
         with qc:
-            _panel("Compare airfoil seeds", "Multi-seed stability check with group split by airfoil_id.",
-                   ["ml", "compare-seeds", "--dataset", airfoil_ds, "--feature-preset", airfoil_preset, "--targets", airfoil_targets,
-                    "--group-column", "airfoil_id", "--models", "lightgbm,xgboost", "--seeds", "101,202,303,404,505"],
-                   root, exe, tmo, dry, "ml_airfoil_quick_compare", label="▶  Compare seeds")
+            _panel(
+                "Compare airfoil seeds",
+                "Multi-seed stability check with group split by airfoil_id.",
+                [
+                    "ml",
+                    "compare-seeds",
+                    "--dataset",
+                    airfoil_ds,
+                    "--feature-preset",
+                    airfoil_preset,
+                    "--targets",
+                    airfoil_targets,
+                    "--group-column",
+                    "airfoil_id",
+                    "--models",
+                    "lightgbm,xgboost",
+                    "--seeds",
+                    "101,202,303,404,505",
+                ],
+                root,
+                exe,
+                tmo,
+                dry,
+                "ml_airfoil_quick_compare",
+                label="▶  Compare seeds",
+            )
 
     # ── Cm sanity gate — mandatory before training ────────────────────────────
     with st.expander("⚠  Step 0 — Cm sanity check  (run before training)", expanded=False):
@@ -5974,12 +8224,16 @@ def pg_ml(root, exe, tmo, dry):
         cm_src = st.radio(
             "Source",
             ["Promoted aero dataset (recommended)", "Direct CSV path"],
-            horizontal=True, key="cms_src",
+            horizontal=True,
+            key="cms_src",
         )
         if "dataset" in cm_src:
-            promoted   = [d for d in _dirs(str(root / "data" / "datasets"))
-                          if (Path(d) / "promotion_manifest.json").exists()]
-            all_ds     = _dirs(str(root / "data" / "datasets"))
+            promoted = [
+                d
+                for d in _dirs(str(root / "data" / "datasets"))
+                if (Path(d) / "promotion_manifest.json").exists()
+            ]
+            all_ds = _dirs(str(root / "data" / "datasets"))
             ds_choices = promoted + [d for d in all_ds if d not in promoted]
             if ds_choices:
                 cms_ds = st.selectbox(
@@ -5999,13 +8253,17 @@ def pg_ml(root, exe, tmo, dry):
                 args_cm = []
         else:
             cms_csv = st.text_input(
-                "CSV path", "", key="cms_csv",
+                "CSV path",
+                "",
+                key="cms_csv",
                 placeholder="data/datasets/<name>/curated_aero_dataset.csv",
             )
             args_cm = ["aero", "cm-sanity", "--csv", cms_csv] if cms_csv.strip() else []
 
         cm_od = st.text_input(
-            "Output dir (optional)", value="", key="cms_od",
+            "Output dir (optional)",
+            value="",
+            key="cms_od",
             placeholder="leave blank for auto",
         )
         if cm_od.strip() and args_cm:
@@ -6013,20 +8271,28 @@ def pg_ml(root, exe, tmo, dry):
 
         with st.expander("Advanced column settings"):
             c1, c2 = st.columns(2)
-            cms_ac  = c1.text_input("Alpha column", "alpha_deg", key="cms_ac")
-            cms_cc  = c2.text_input("Cm column",    "cm",        key="cms_cc")
-            cms_gc  = st.text_input(
+            cms_ac = c1.text_input("Alpha column", "alpha_deg", key="cms_ac")
+            cms_cc = c2.text_input("Cm column", "cm", key="cms_cc")
+            cms_gc = st.text_input(
                 "Group columns",
                 "geometry_id,control_input_deg,velocity_mps,altitude_m",
                 key="cms_gc",
             )
             cms_fov = st.checkbox(
-                "Fail on violation", False, key="cms_fov",
+                "Fail on violation",
+                False,
+                key="cms_fov",
                 help="Exit non-zero if any group has Cma ≥ 0. Useful in CI pipelines.",
             )
             if args_cm:
-                args_cm += ["--alpha-column", cms_ac, "--cm-column", cms_cc,
-                            "--group-columns", cms_gc]
+                args_cm += [
+                    "--alpha-column",
+                    cms_ac,
+                    "--cm-column",
+                    cms_cc,
+                    "--group-columns",
+                    cms_gc,
+                ]
                 if cms_fov:
                     args_cm.append("--fail-on-violation")
 
@@ -6034,7 +8300,12 @@ def pg_ml(root, exe, tmo, dry):
             _panel(
                 "Run Cm sanity check",
                 "Verifies Cma < 0 in all condition groups. Gate before ML training.",
-                args_cm, root, exe, tmo, dry, "cms_run",
+                args_cm,
+                root,
+                exe,
+                tmo,
+                dry,
+                "cms_run",
                 label="▶  Run Cm sanity",
             )
         else:
@@ -6049,78 +8320,183 @@ def pg_ml(root, exe, tmo, dry):
         "info",
     )
 
-    tabs = st.tabs([
-        "  ① Feature Sets  ",
-        "  ② Schema/EDA  ",
-        "  ③ Train  ",
-        "  ④ Tune  ",
-        "  ⑤ Compare  ",
-        "  ⑥ Trust gates  ",
-        "  ⑦ Predict  ",
-        "  ⑧ Audit  ",
-        "  ⑨ Active Learning  ",
-        "  ⑩ Classification  ",
-        "  ⑪ Multifidelity  ",
-        "  ⑫ ML Trust  ",
-    ])
+    tabs = st.tabs(
+        [
+            "  ① Feature Sets  ",
+            "  ② Schema/EDA  ",
+            "  ③ Train  ",
+            "  ④ Tune  ",
+            "  ⑤ Compare  ",
+            "  ⑥ Trust gates  ",
+            "  ⑦ Predict  ",
+            "  ⑧ Audit  ",
+            "  ⑨ Active Learning  ",
+            "  ⑩ Classification  ",
+            "  ⑪ Multifidelity  ",
+            "  ⑫ ML Trust  ",
+            "  ⑬ E2E Campaign  ",
+            "  ⑭ Optimizer  ",
+        ]
+    )
 
     # ── ① Feature Sets ────────────────────────────────────────────────────────
     with tabs[0]:
-        fst = st.tabs(["  List  ","  Validate feature-set  ","  Materialize  "])
+        fst = st.tabs(["  List  ", "  Validate feature-set  ", "  Materialize  "])
         with fst[0]:
-            c1,c2 = st.columns(2)
-            with c1: _panel("List feature presets","Lists bwb_basic and bwb_control column bundles.",["ml","feature-presets"],root,exe,tmo,dry,"ft_presets")
-            with c2: _panel("List feature sets","Lists bwb_control_raw, bwb_control_physics_v1 with transforms.",["ml","feature-sets"],root,exe,tmo,dry,"ft_sets")
+            c1, c2 = st.columns(2)
+            with c1:
+                _panel(
+                    "List feature presets",
+                    "Lists bwb_basic and bwb_control column bundles.",
+                    ["ml", "feature-presets"],
+                    root,
+                    exe,
+                    tmo,
+                    dry,
+                    "ft_presets",
+                )
+            with c2:
+                _panel(
+                    "List feature sets",
+                    "Lists bwb_control_raw, bwb_control_physics_v1 with transforms.",
+                    ["ml", "feature-sets"],
+                    root,
+                    exe,
+                    tmo,
+                    dry,
+                    "ft_sets",
+                )
             st.divider()
-            c3,c4 = st.columns(2)
-            fs_d = c3.text_input("--feature-set to describe","bwb_control_physics_v1",key="ft_desc_fs")
-            with c4: _panel("Describe feature set","Shows raw+engineered features, transforms, status.",["ml","describe-feature-set","--feature-set",fs_d],root,exe,tmo,dry,"ft_desc")
+            c3, c4 = st.columns(2)
+            fs_d = c3.text_input(
+                "--feature-set to describe", "bwb_control_physics_v1", key="ft_desc_fs"
+            )
+            with c4:
+                _panel(
+                    "Describe feature set",
+                    "Shows raw+engineered features, transforms, status.",
+                    ["ml", "describe-feature-set", "--feature-set", fs_d],
+                    root,
+                    exe,
+                    tmo,
+                    dry,
+                    "ft_desc",
+                )
 
         with fst[1]:
-            _note("<b>aeris ml validate-feature-set</b> — checks the promoted dataset has all columns required by the feature set.","info")
-            ds_fv = _pick_dir("Promoted dataset",root/"data"/"datasets","fv_ds")
-            c1,c2 = st.columns(2)
-            fs_fv = c1.text_input("--feature-set","bwb_control_raw",key="fv_fs")
-            tgt_fv = c2.text_input("--targets (optional)",DEFAULT_TARGETS,key="fv_tgt")
-            gc_fv = st.text_input("--group-column","geometry_id",key="fv_gc")
-            af_fv = st.checkbox("--allow-forced",False,key="fv_af")
-            args_fv = ["ml","validate-feature-set","--dataset",ds_fv,"--feature-set",fs_fv,"--group-column",gc_fv]
-            if tgt_fv.strip(): args_fv += ["--targets",tgt_fv]
-            if af_fv: args_fv.append("--allow-forced")
-            _panel("Validate feature set","Checks dataset columns match feature set requirements.",args_fv,root,exe,tmo,dry,"fv_run")
+            _note(
+                "<b>aeris ml validate-feature-set</b> — checks the promoted dataset has all columns required by the feature set.",
+                "info",
+            )
+            ds_fv = _pick_dir("Promoted dataset", root / "data" / "datasets", "fv_ds")
+            c1, c2 = st.columns(2)
+            fs_fv = c1.text_input("--feature-set", "bwb_control_raw", key="fv_fs")
+            tgt_fv = c2.text_input("--targets (optional)", DEFAULT_TARGETS, key="fv_tgt")
+            gc_fv = st.text_input("--group-column", "geometry_id", key="fv_gc")
+            af_fv = st.checkbox("--allow-forced", False, key="fv_af")
+            args_fv = [
+                "ml",
+                "validate-feature-set",
+                "--dataset",
+                ds_fv,
+                "--feature-set",
+                fs_fv,
+                "--group-column",
+                gc_fv,
+            ]
+            if tgt_fv.strip():
+                args_fv += ["--targets", tgt_fv]
+            if af_fv:
+                args_fv.append("--allow-forced")
+            _panel(
+                "Validate feature set",
+                "Checks dataset columns match feature set requirements.",
+                args_fv,
+                root,
+                exe,
+                tmo,
+                dry,
+                "fv_run",
+            )
 
         with fst[2]:
-            _note("<b>aeris ml feature-engineer</b> — materializes a feature set into an explicit engineered CSV with transform manifest. Required before training on physics-engineered features.","info")
-            ds_fe = _pick_dir("Promoted dataset",root/"data"/"datasets","fe_ds")
-            c1,c2 = st.columns(2)
-            fs_fe = c1.text_input("--feature-set","bwb_control_physics_v1",key="fe_fs")
-            tgt_fe = c2.text_input("--targets (optional)","",key="fe_tgt")
-            gc_fe = st.text_input("--group-column","geometry_id",key="fe_gc")
-            od_fe = st.text_input("--output-dir (blank = <dataset>/features/<feature_set>)","",key="fe_od")
-            c3,c4,c5 = st.columns(3)
-            af_fe = c3.checkbox("--allow-forced",False,key="fe_af")
-            iac_fe = c4.checkbox("--include-all-columns (default True)",True,key="fe_iac",help="False = only group/features/targets (--only-feature-columns)")
-            ow_fe = c5.checkbox("--overwrite",False,key="fe_ow")
-            args_fe = ["ml","feature-engineer","--dataset",ds_fe,"--feature-set",fs_fe,"--group-column",gc_fe]
-            if tgt_fe.strip(): args_fe += ["--targets",tgt_fe]
-            if od_fe.strip(): args_fe += ["--output-dir",od_fe]
-            if af_fe: args_fe.append("--allow-forced")
-            if not iac_fe: args_fe.append("--only-feature-columns")
-            if ow_fe: args_fe.append("--overwrite")
-            _panel("Materialize feature set","Writes engineered_dataset.csv + feature_engineering_manifest.json.",args_fe,root,exe,tmo,dry,"fe_run")
+            _note(
+                "<b>aeris ml feature-engineer</b> — materializes a feature set into an explicit engineered CSV with transform manifest. Required before training on physics-engineered features.",
+                "info",
+            )
+            ds_fe = _pick_dir("Promoted dataset", root / "data" / "datasets", "fe_ds")
+            c1, c2 = st.columns(2)
+            fs_fe = c1.text_input("--feature-set", "bwb_control_physics_v1", key="fe_fs")
+            tgt_fe = c2.text_input("--targets (optional)", "", key="fe_tgt")
+            gc_fe = st.text_input("--group-column", "geometry_id", key="fe_gc")
+            od_fe = st.text_input(
+                "--output-dir (blank = <dataset>/features/<feature_set>)", "", key="fe_od"
+            )
+            c3, c4, c5 = st.columns(3)
+            af_fe = c3.checkbox("--allow-forced", False, key="fe_af")
+            iac_fe = c4.checkbox(
+                "--include-all-columns (default True)",
+                True,
+                key="fe_iac",
+                help="False = only group/features/targets (--only-feature-columns)",
+            )
+            ow_fe = c5.checkbox("--overwrite", False, key="fe_ow")
+            args_fe = [
+                "ml",
+                "feature-engineer",
+                "--dataset",
+                ds_fe,
+                "--feature-set",
+                fs_fe,
+                "--group-column",
+                gc_fe,
+            ]
+            if tgt_fe.strip():
+                args_fe += ["--targets", tgt_fe]
+            if od_fe.strip():
+                args_fe += ["--output-dir", od_fe]
+            if af_fe:
+                args_fe.append("--allow-forced")
+            if not iac_fe:
+                args_fe.append("--only-feature-columns")
+            if ow_fe:
+                args_fe.append("--overwrite")
+            _panel(
+                "Materialize feature set",
+                "Writes engineered_dataset.csv + feature_engineering_manifest.json.",
+                args_fe,
+                root,
+                exe,
+                tmo,
+                dry,
+                "fe_run",
+            )
 
     # ── ② Schema / EDA ────────────────────────────────────────────────────────
     with tabs[1]:
-        se_t = st.tabs(["  Schema validate  ","  EDA  "])
+        se_t = st.tabs(["  Schema validate  ", "  EDA  "])
         with se_t[0]:
-            _note("<b>aeris ml validate-schema</b> — checks a promoted dataset has feature/target columns. Use --feature-preset or --features (not both).","info")
-            ds0 = _pick_dir("Promoted dataset",root/"data"/"datasets","sch_ds")
+            _note(
+                "<b>aeris ml validate-schema</b> — checks a promoted dataset has feature/target columns. Use --feature-preset or --features (not both).",
+                "info",
+            )
+            ds0 = _pick_dir("Promoted dataset", root / "data" / "datasets", "sch_ds")
             fa0, _ = _feature_selector("sch", include_feature_set=False)
-            gc0 = st.text_input("--group-column","geometry_id",key="sch_gc")
-            af0 = st.checkbox("--allow-forced",False,key="sch_af")
-            args0 = ["ml","validate-schema","--dataset",ds0,"--group-column",gc0] + fa0
-            if af0: args0.append("--allow-forced")
-            _panel("Schema validate","Validates dataset columns for training readiness.",args0,root,exe,tmo,dry,"sch_run")
+            gc0 = st.text_input("--group-column", "geometry_id", key="sch_gc")
+            af0 = st.checkbox("--allow-forced", False, key="sch_af")
+            args0 = ["ml", "validate-schema", "--dataset", ds0, "--group-column", gc0] + fa0
+            if af0:
+                args0.append("--allow-forced")
+            _panel(
+                "Schema validate",
+                "Validates dataset columns for training readiness.",
+                args0,
+                root,
+                exe,
+                tmo,
+                dry,
+                "sch_run",
+            )
 
         with se_t[1]:
             _note(
@@ -6130,32 +8506,73 @@ def pg_ml(root, exe, tmo, dry):
                 "<code>--feature-set</code> is now supported directly, so physics-engineered views can be inspected before training.",
                 "info",
             )
-            ds_e = _pick_dir("Promoted dataset",root/"data"/"datasets","eda_ds")
+            ds_e = _pick_dir("Promoted dataset", root / "data" / "datasets", "eda_ds")
             fa_e, _ = _feature_selector("eda", include_feature_set=True)
-            c1,c2,c3 = st.columns(3)
-            gc_e    = c1.text_input("--group-column","geometry_id",key="eda_gc")
-            sig_e   = c2.number_input("--outlier-sigma",min_value=0.1,value=4.0,step=0.5,key="eda_sig",help="Sigma threshold for simple outlier scan. EDA v2 also adds robust IQR/MAD outliers.")
-            od_e    = c3.text_input("--output-dir (blank = <dataset>/eda)","",key="eda_od")
-            c4,c5 = st.columns(2)
-            plots_e = c4.checkbox("--plots (generate PNGs)",True,key="eda_plots",help="Writes heatmaps, distributions, alpha/control coverage, CL-vs-CD polar, target-vs-feature plots.")
-            af_e    = c5.checkbox("--allow-forced",False,key="eda_af")
-            args_e = ["ml","eda","--dataset",ds_e,"--group-column",gc_e,"--outlier-sigma",str(sig_e)] + fa_e
-            if od_e.strip(): args_e += ["--output-dir",od_e]
-            if plots_e: args_e.append("--plots")
-            else: args_e.append("--no-plots")
-            if af_e: args_e.append("--allow-forced")
-            _panel("EDA v2","Generates EDA v2 JSON/Markdown plus optional diagnostic PNGs.",args_e,root,exe,tmo,dry,"eda_run")
+            c1, c2, c3 = st.columns(3)
+            gc_e = c1.text_input("--group-column", "geometry_id", key="eda_gc")
+            sig_e = c2.number_input(
+                "--outlier-sigma",
+                min_value=0.1,
+                value=4.0,
+                step=0.5,
+                key="eda_sig",
+                help="Sigma threshold for simple outlier scan. EDA v2 also adds robust IQR/MAD outliers.",
+            )
+            od_e = c3.text_input("--output-dir (blank = <dataset>/eda)", "", key="eda_od")
+            c4, c5 = st.columns(2)
+            plots_e = c4.checkbox(
+                "--plots (generate PNGs)",
+                True,
+                key="eda_plots",
+                help="Writes heatmaps, distributions, alpha/control coverage, CL-vs-CD polar, target-vs-feature plots.",
+            )
+            af_e = c5.checkbox("--allow-forced", False, key="eda_af")
+            args_e = [
+                "ml",
+                "eda",
+                "--dataset",
+                ds_e,
+                "--group-column",
+                gc_e,
+                "--outlier-sigma",
+                str(sig_e),
+            ] + fa_e
+            if od_e.strip():
+                args_e += ["--output-dir", od_e]
+            if plots_e:
+                args_e.append("--plots")
+            else:
+                args_e.append("--no-plots")
+            if af_e:
+                args_e.append("--allow-forced")
+            _panel(
+                "EDA v2",
+                "Generates EDA v2 JSON/Markdown plus optional diagnostic PNGs.",
+                args_e,
+                root,
+                exe,
+                tmo,
+                dry,
+                "eda_run",
+            )
 
-            eda_out_dir = Path(od_e).expanduser() if od_e.strip() else Path(ds_e).expanduser() / "eda"
+            eda_out_dir = (
+                Path(od_e).expanduser() if od_e.strip() else Path(ds_e).expanduser() / "eda"
+            )
             eda_report_path = eda_out_dir / "eda_report.json"
             if eda_report_path.exists():
                 rep = _rjson(eda_report_path) or {}
                 st.caption(f"Loaded existing EDA report: {eda_report_path}")
                 m1, m2, m3, m4 = st.columns(4)
                 m1.metric("Rows", rep.get("shape", {}).get("n_rows", "—"))
-                m2.metric("Missing cols", rep.get("missingness", {}).get("n_columns_with_missing", "—"))
+                m2.metric(
+                    "Missing cols", rep.get("missingness", {}).get("n_columns_with_missing", "—")
+                )
                 m3.metric("Constant cols", rep.get("constant_columns", {}).get("n_constant", "—"))
-                m4.metric("Robust outlier cols", rep.get("robust_outliers", {}).get("n_columns_with_robust_outliers", "—"))
+                m4.metric(
+                    "Robust outlier cols",
+                    rep.get("robust_outliers", {}).get("n_columns_with_robust_outliers", "—"),
+                )
 
                 recs = rep.get("operator_recommendations", []) or []
                 if recs:
@@ -6164,12 +8581,29 @@ def pg_ml(root, exe, tmo, dry):
                         st.write(f"- {rec}")
 
                 p1, p2, p3, p4 = st.columns(4)
-                p1.metric("Regime outlier cols", rep.get("regime_outliers", {}).get("n_columns_with_regime_outliers", "—"))
-                p2.metric("Polar low-R² groups", rep.get("polar_diagnostics", {}).get("n_low_r2_groups", "—"))
-                p3.metric("Negative polar-k groups", rep.get("polar_diagnostics", {}).get("n_negative_k_groups", "—"))
+                p1.metric(
+                    "Regime outlier cols",
+                    rep.get("regime_outliers", {}).get("n_columns_with_regime_outliers", "—"),
+                )
+                p2.metric(
+                    "Polar low-R² groups",
+                    rep.get("polar_diagnostics", {}).get("n_low_r2_groups", "—"),
+                )
+                p3.metric(
+                    "Negative polar-k groups",
+                    rep.get("polar_diagnostics", {}).get("n_negative_k_groups", "—"),
+                )
                 p4.metric("Scale", rep.get("learning_readiness", {}).get("scale_label", "—"))
 
-                eda_view_tabs = st.tabs(["Aero sanity", "Polar/control", "Learning readiness", "Missingness", "Compare reports"])
+                eda_view_tabs = st.tabs(
+                    [
+                        "Aero sanity",
+                        "Polar/control",
+                        "Learning readiness",
+                        "Missingness",
+                        "Compare reports",
+                    ]
+                )
                 with eda_view_tabs[0]:
                     st.json(rep.get("aero_physics_sanity", {}))
                 with eda_view_tabs[1]:
@@ -6184,12 +8618,16 @@ def pg_ml(root, exe, tmo, dry):
                     top_missing = []
                     for col, item in (miss.get("by_column", {}) or {}).items():
                         if int(item.get("n_missing", 0) or 0) > 0:
-                            top_missing.append({
-                                "column": col,
-                                "n_missing": item.get("n_missing"),
-                                "missing_fraction": item.get("missing_fraction"),
-                            })
-                    top_missing = sorted(top_missing, key=lambda r: r.get("n_missing", 0), reverse=True)[:30]
+                            top_missing.append(
+                                {
+                                    "column": col,
+                                    "n_missing": item.get("n_missing"),
+                                    "missing_fraction": item.get("missing_fraction"),
+                                }
+                            )
+                    top_missing = sorted(
+                        top_missing, key=lambda r: r.get("n_missing", 0), reverse=True
+                    )[:30]
                     if top_missing:
                         st.dataframe(top_missing, use_container_width=True)
                     else:
@@ -6204,7 +8642,10 @@ def pg_ml(root, exe, tmo, dry):
                     if other_report.strip():
                         try:
                             from aeris.ml.eda import compare_eda_reports
-                            comp = compare_eda_reports([eda_report_path, Path(other_report).expanduser()])
+
+                            comp = compare_eda_reports(
+                                [eda_report_path, Path(other_report).expanduser()]
+                            )
                             st.dataframe(comp.get("reports", []), use_container_width=True)
                         except Exception as exc:
                             st.error(f"Could not compare EDA reports: {exc}")
@@ -6219,11 +8660,17 @@ def pg_ml(root, exe, tmo, dry):
                             [p.name for p in plot_files],
                             key="eda_plot_selector",
                         )
-                        selected_path = next((p for p in plot_files if p.name == selected_plot), plot_files[0])
-                        st.image(str(selected_path), caption=selected_path.name, use_container_width=True)
+                        selected_path = next(
+                            (p for p in plot_files if p.name == selected_plot), plot_files[0]
+                        )
+                        st.image(
+                            str(selected_path), caption=selected_path.name, use_container_width=True
+                        )
                         with st.expander("Show all EDA plots", expanded=False):
                             for plot_path in plot_files[:20]:
-                                st.image(str(plot_path), caption=plot_path.name, use_container_width=True)
+                                st.image(
+                                    str(plot_path), caption=plot_path.name, use_container_width=True
+                                )
 
     # ── ③ Train ───────────────────────────────────────────────────────────────
     with tabs[2]:
@@ -6234,25 +8681,61 @@ def pg_ml(root, exe, tmo, dry):
             "Engineered columns (<code>re_number</code>, <code>alpha_deg_sq</code>, etc.) are added before the split, not after.",
             "warn",
         )
-        ds1 = _pick_dir("Promoted dataset",root/"data"/"datasets","tr_ds")
+        ds1 = _pick_dir("Promoted dataset", root / "data" / "datasets", "tr_ds")
         fa1, _ = _feature_selector("tr")
-        mt1 = st.selectbox("--model-type",MODEL_TYPES,index=6,key="tr_mt",format_func=lambda s:MODEL_INFO.get(s,s))
-        c1,c2,c3 = st.columns(3)
-        sm1  = c1.selectbox("--split-method",["grouped","random"],key="tr_sm")
-        gc1  = c2.text_input("--group-column","geometry_id",key="tr_gc")
-        rs1  = c3.number_input("--random-seed",min_value=0,value=123,step=1,key="tr_rs")
-        c4,c5,c6 = st.columns(3)
-        tf1  = c4.slider("--train-fraction",0.3,0.85,0.70,0.05,key="tr_tf")
-        vf1  = c5.slider("--val-fraction",0.05,0.3,0.15,0.05,key="tr_vf")
-        te1  = c6.slider("--test-fraction",0.05,0.3,0.15,0.05,key="tr_te")
-        od1  = st.text_input("--output-dir",str(root/"data"/"processed"/"ml_runs"/"gui_train"),key="tr_od")
-        af1  = st.checkbox("--allow-forced",False,key="tr_af")
-        args1 = ["ml","train","--dataset",ds1,"--model-type",mt1,
-                 "--split-method",sm1,"--group-column",gc1,"--random-seed",str(int(rs1)),
-                 "--train-fraction",str(tf1),"--val-fraction",str(vf1),"--test-fraction",str(te1),
-                 "--output-dir",od1] + fa1
-        if af1: args1.append("--allow-forced")
-        _panel("Train model","Trains one surrogate on the promoted dataset.",args1,root,exe,tmo,dry,"tr_run")
+        mt1 = st.selectbox(
+            "--model-type",
+            MODEL_TYPES,
+            index=6,
+            key="tr_mt",
+            format_func=lambda s: MODEL_INFO.get(s, s),
+        )
+        c1, c2, c3 = st.columns(3)
+        sm1 = c1.selectbox("--split-method", ["grouped", "random"], key="tr_sm")
+        gc1 = c2.text_input("--group-column", "geometry_id", key="tr_gc")
+        rs1 = c3.number_input("--random-seed", min_value=0, value=123, step=1, key="tr_rs")
+        c4, c5, c6 = st.columns(3)
+        tf1 = c4.slider("--train-fraction", 0.3, 0.85, 0.70, 0.05, key="tr_tf")
+        vf1 = c5.slider("--val-fraction", 0.05, 0.3, 0.15, 0.05, key="tr_vf")
+        te1 = c6.slider("--test-fraction", 0.05, 0.3, 0.15, 0.05, key="tr_te")
+        od1 = st.text_input(
+            "--output-dir", str(root / "data" / "processed" / "ml_runs" / "gui_train"), key="tr_od"
+        )
+        af1 = st.checkbox("--allow-forced", False, key="tr_af")
+        args1 = [
+            "ml",
+            "train",
+            "--dataset",
+            ds1,
+            "--model-type",
+            mt1,
+            "--split-method",
+            sm1,
+            "--group-column",
+            gc1,
+            "--random-seed",
+            str(int(rs1)),
+            "--train-fraction",
+            str(tf1),
+            "--val-fraction",
+            str(vf1),
+            "--test-fraction",
+            str(te1),
+            "--output-dir",
+            od1,
+        ] + fa1
+        if af1:
+            args1.append("--allow-forced")
+        _panel(
+            "Train model",
+            "Trains one surrogate on the promoted dataset.",
+            args1,
+            root,
+            exe,
+            tmo,
+            dry,
+            "tr_run",
+        )
 
         st.divider()
         # static marker: live_train_neural_mlp streamlit_add_rows_disabled
@@ -6262,13 +8745,21 @@ def pg_ml(root, exe, tmo, dry):
                 "Tree/linear models do not have epoch-by-epoch history; use ML Trust learning-curves for those.",
                 "info",
             )
-            live_default_ds = str(Path(ds1).with_name(Path(ds1).name + "__flyability_ml")) if Path(str(ds1) + "__flyability_ml").exists() else ds1
+            live_default_ds = (
+                str(Path(ds1).with_name(Path(ds1).name + "__flyability_ml"))
+                if Path(str(ds1) + "__flyability_ml").exists()
+                else ds1
+            )
             live_ds = st.text_input("Dataset", live_default_ds, key="live_tr_ds")
             c_live_a, c_live_b = st.columns(2)
             live_fs = c_live_a.selectbox(
                 "--feature-set",
                 ML_FEATURE_SET_CHOICES,
-                index=ML_FEATURE_SET_CHOICES.index("bwb_control_physics_v1") if "bwb_control_physics_v1" in ML_FEATURE_SET_CHOICES else 0,
+                index=(
+                    ML_FEATURE_SET_CHOICES.index("bwb_control_physics_v1")
+                    if "bwb_control_physics_v1" in ML_FEATURE_SET_CHOICES
+                    else 0
+                ),
                 key="live_tr_fs",
                 help="Live V2 uses feature sets so engineered columns are produced before split.",
             )
@@ -6278,13 +8769,28 @@ def pg_ml(root, exe, tmo, dry):
                 key="live_tr_targets",
             )
             c_live_c, c_live_d, c_live_e = st.columns(3)
-            live_epochs = c_live_c.number_input("max epochs", min_value=1, max_value=1000, value=50, step=1, key="live_tr_epochs")
-            live_seed = c_live_d.number_input("random seed", min_value=0, value=123, step=1, key="live_tr_seed")
-            live_allow_forced = c_live_e.checkbox("--allow-forced", False, key="live_tr_allow_forced")
+            live_epochs = c_live_c.number_input(
+                "max epochs", min_value=1, max_value=1000, value=50, step=1, key="live_tr_epochs"
+            )
+            live_seed = c_live_d.number_input(
+                "random seed", min_value=0, value=123, step=1, key="live_tr_seed"
+            )
+            live_allow_forced = c_live_e.checkbox(
+                "--allow-forced", False, key="live_tr_allow_forced"
+            )
             c_live_f, c_live_g, c_live_h = st.columns(3)
             live_hidden = c_live_f.text_input("hidden layers", "64,64", key="live_tr_hidden")
-            live_lr = c_live_g.number_input("learning_rate_init", min_value=1e-6, value=1e-3, step=1e-4, format="%.6f", key="live_tr_lr")
-            live_alpha = c_live_h.number_input("alpha", min_value=0.0, value=1e-4, step=1e-4, format="%.6f", key="live_tr_alpha")
+            live_lr = c_live_g.number_input(
+                "learning_rate_init",
+                min_value=1e-6,
+                value=1e-3,
+                step=1e-4,
+                format="%.6f",
+                key="live_tr_lr",
+            )
+            live_alpha = c_live_h.number_input(
+                "alpha", min_value=0.0, value=1e-4, step=1e-4, format="%.6f", key="live_tr_alpha"
+            )
             c_live_i, c_live_j, c_live_k = st.columns(3)
             live_tf = c_live_i.slider("train fraction", 0.3, 0.85, 0.70, 0.05, key="live_tr_tf")
             live_vf = c_live_j.slider("val fraction", 0.05, 0.3, 0.15, 0.05, key="live_tr_vf")
@@ -6295,24 +8801,36 @@ def pg_ml(root, exe, tmo, dry):
                 str(root / "data" / "processed" / "ml_runs" / "gui_live_neural_mlp"),
                 key="live_tr_od",
             )
-            st.caption("Writes training_monitor/training_history.csv and updates the Streamlit line chart from each epoch callback.")
+            st.caption(
+                "Writes training_monitor/training_history.csv and updates the Streamlit line chart from each epoch callback."
+            )
             with st.expander("Experiment tracking / external dashboards", expanded=False):
                 _note(
                     "Privacy-first: MLflow and TensorBoard are local. W&B is optional and defaults to offline mode.",
                     "info",
                 )
                 c_track_a, c_track_b, c_track_c = st.columns(3)
-                live_track_mlflow = c_track_a.checkbox("MLflow local tracking", True, key="live_tr_track_mlflow")
-                live_track_tb = c_track_b.checkbox("TensorBoard event logs", False, key="live_tr_track_tb")
-                live_track_wandb = c_track_c.checkbox("W&B offline", False, key="live_tr_track_wandb")
-                live_track_project = st.text_input("tracking experiment", "aeris", key="live_tr_track_project")
+                live_track_mlflow = c_track_a.checkbox(
+                    "MLflow local tracking", True, key="live_tr_track_mlflow"
+                )
+                live_track_tb = c_track_b.checkbox(
+                    "TensorBoard event logs", False, key="live_tr_track_tb"
+                )
+                live_track_wandb = c_track_c.checkbox(
+                    "W&B offline", False, key="live_tr_track_wandb"
+                )
+                live_track_project = st.text_input(
+                    "tracking experiment", "aeris", key="live_tr_track_project"
+                )
                 live_track_run = st.text_input("tracking run name", "", key="live_tr_track_run")
-                st.caption("MLflow UI: mlflow ui --backend-store-uri sqlite:///<output_dir>/tracking/mlflow.db")
+                st.caption(
+                    "MLflow UI: mlflow ui --backend-store-uri sqlite:///<output_dir>/tracking/mlflow.db"
+                )
                 st.caption("TensorBoard: tensorboard --logdir <output_dir>/tracking/tensorboard")
                 st.caption("W&B remains offline unless you explicitly sync it later.")
 
             def _live_training_csv_tokens(value: str) -> list[str]:
-                return [part.strip() for part in str(value).split(',') if part.strip()]
+                return [part.strip() for part in str(value).split(",") if part.strip()]
 
             if st.button("▶ Live train neural MLP", key="live_tr_run_btn", type="primary"):
                 if pd is None:
@@ -6325,15 +8843,23 @@ def pg_ml(root, exe, tmo, dry):
                     warning_slot = st.empty()
                     st.caption("Loss / MSE curves — x-axis: epoch | y-axis: loss / MSE")
                     loss_chart_slot = st.empty()
-                    st.caption("Mean RMSE curves — x-axis: epoch | y-axis: RMSE mean [target units]")
+                    st.caption(
+                        "Mean RMSE curves — x-axis: epoch | y-axis: RMSE mean [target units]"
+                    )
                     rmse_chart_slot = st.empty()
                     st.caption("Mean R² curves — x-axis: epoch | y-axis: R² [-]")
                     r2_chart_slot = st.empty()
-                    st.caption("Normalized RMSE curves — x-axis: epoch | y-axis: normalized RMSE [-]")
+                    st.caption(
+                        "Normalized RMSE curves — x-axis: epoch | y-axis: normalized RMSE [-]"
+                    )
                     norm_chart_slot = st.empty()
-                    st.caption("Per-target validation RMSE — x-axis: epoch | y-axis: validation RMSE [target units]")
+                    st.caption(
+                        "Per-target validation RMSE — x-axis: epoch | y-axis: validation RMSE [target units]"
+                    )
                     target_rmse_chart_slot = st.empty()
-                    st.caption("Generalization gap curves — x-axis: epoch | y-axis: validation/test minus train gap")
+                    st.caption(
+                        "Generalization gap curves — x-axis: epoch | y-axis: validation/test minus train gap"
+                    )
                     gap_chart_slot = st.empty()
                     st.caption("Learning-rate schedule — x-axis: epoch | y-axis: learning rate [-]")
                     lr_chart_slot = st.empty()
@@ -6341,7 +8867,9 @@ def pg_ml(root, exe, tmo, dry):
                     time_chart_slot = st.empty()
                     st.caption("Mean bias curves — x-axis: epoch | y-axis: bias [target units]")
                     bias_chart_slot = st.empty()
-                    st.caption("Mean p95 error curves — x-axis: epoch | y-axis: p95 absolute error [target units]")
+                    st.caption(
+                        "Mean p95 error curves — x-axis: epoch | y-axis: p95 absolute error [target units]"
+                    )
                     p95_chart_slot = st.empty()
                     table_slot = st.empty()
                     artifact_slot = st.empty()
@@ -6356,10 +8884,14 @@ def pg_ml(root, exe, tmo, dry):
                             f"val_rmse={float(event.get('val_rmse_mean', 0.0)):.6g} · "
                             f"val_r2={float(event.get('val_r2_mean', 0.0)):.6g}"
                         )
+
                         def _finite_cols(names: list[str]) -> list[str]:
                             good: list[str] = []
                             for name in names:
-                                if name in hist.columns and pd.to_numeric(hist[name], errors="coerce").notna().any():
+                                if (
+                                    name in hist.columns
+                                    and pd.to_numeric(hist[name], errors="coerce").notna().any()
+                                ):
                                     good.append(name)
                             return good
 
@@ -6413,7 +8945,9 @@ def pg_ml(root, exe, tmo, dry):
                                         tooltip=[
                                             alt.Tooltip("epoch:Q", title="Epoch"),
                                             alt.Tooltip("metric:N", title="Metric"),
-                                            alt.Tooltip("value:Q", title=y_axis_title, format=".6g"),
+                                            alt.Tooltip(
+                                                "value:Q", title=y_axis_title, format=".6g"
+                                            ),
                                         ],
                                     )
                                 )
@@ -6432,47 +8966,123 @@ def pg_ml(root, exe, tmo, dry):
                                         )
                                         chart = base + rule
 
-                                slot.altair_chart(chart.properties(height=260), use_container_width=True)
+                                slot.altair_chart(
+                                    chart.properties(height=260), use_container_width=True
+                                )
                             except Exception:
-                                slot.line_chart(chart_df.set_index("epoch")[columns], use_container_width=True)
+                                slot.line_chart(
+                                    chart_df.set_index("epoch")[columns], use_container_width=True
+                                )
 
-                        loss_cols = _finite_cols(["train_loss", "train_loss_mse_mean", "val_loss_mse_mean", "test_loss_mse_mean"])
-                        _stream_metric_chart("loss", loss_chart_slot, loss_cols, y_axis_title="Loss / MSE")
+                        loss_cols = _finite_cols(
+                            [
+                                "train_loss",
+                                "train_loss_mse_mean",
+                                "val_loss_mse_mean",
+                                "test_loss_mse_mean",
+                            ]
+                        )
+                        _stream_metric_chart(
+                            "loss", loss_chart_slot, loss_cols, y_axis_title="Loss / MSE"
+                        )
 
-                        rmse_cols = _finite_cols(["train_rmse_mean", "val_rmse_mean", "test_rmse_mean"])
-                        _stream_metric_chart("rmse", rmse_chart_slot, rmse_cols, y_axis_title="RMSE mean [target units]")
+                        rmse_cols = _finite_cols(
+                            ["train_rmse_mean", "val_rmse_mean", "test_rmse_mean"]
+                        )
+                        _stream_metric_chart(
+                            "rmse",
+                            rmse_chart_slot,
+                            rmse_cols,
+                            y_axis_title="RMSE mean [target units]",
+                        )
 
                         r2_cols = _finite_cols(["train_r2_mean", "val_r2_mean", "test_r2_mean"])
                         _stream_metric_chart("r2", r2_chart_slot, r2_cols, y_axis_title="R² [-]")
 
-                        norm_cols = _finite_cols(["train_nrmse_scale_mean", "val_nrmse_scale_mean", "test_nrmse_scale_mean"])
-                        _stream_metric_chart("normalized", norm_chart_slot, norm_cols, y_axis_title="Normalized RMSE [-]")
+                        norm_cols = _finite_cols(
+                            [
+                                "train_nrmse_scale_mean",
+                                "val_nrmse_scale_mean",
+                                "test_nrmse_scale_mean",
+                            ]
+                        )
+                        _stream_metric_chart(
+                            "normalized",
+                            norm_chart_slot,
+                            norm_cols,
+                            y_axis_title="Normalized RMSE [-]",
+                        )
 
-                        target_rmse_cols = _finite_cols([c for c in hist.columns if c.startswith("val_rmse__")])
-                        _stream_metric_chart("per_target_rmse", target_rmse_chart_slot, target_rmse_cols, y_axis_title="Validation RMSE [target units]")
+                        target_rmse_cols = _finite_cols(
+                            [c for c in hist.columns if c.startswith("val_rmse__")]
+                        )
+                        _stream_metric_chart(
+                            "per_target_rmse",
+                            target_rmse_chart_slot,
+                            target_rmse_cols,
+                            y_axis_title="Validation RMSE [target units]",
+                        )
 
-                        gap_cols = _finite_cols(["val_minus_train_rmse_mean", "val_minus_train_loss_mse_mean", "test_minus_train_rmse_mean"])
-                        _stream_metric_chart("gap", gap_chart_slot, gap_cols, y_axis_title="Generalization gap")
+                        gap_cols = _finite_cols(
+                            [
+                                "val_minus_train_rmse_mean",
+                                "val_minus_train_loss_mse_mean",
+                                "test_minus_train_rmse_mean",
+                            ]
+                        )
+                        _stream_metric_chart(
+                            "gap", gap_chart_slot, gap_cols, y_axis_title="Generalization gap"
+                        )
 
                         lr_cols = _finite_cols(["learning_rate"])
-                        _stream_metric_chart("learning_rate", lr_chart_slot, lr_cols, y_axis_title="Learning rate [-]")
+                        _stream_metric_chart(
+                            "learning_rate",
+                            lr_chart_slot,
+                            lr_cols,
+                            y_axis_title="Learning rate [-]",
+                        )
 
                         time_cols = _finite_cols(["epoch_time_sec"])
-                        _stream_metric_chart("epoch_time", time_chart_slot, time_cols, y_axis_title="Epoch time [s]")
+                        _stream_metric_chart(
+                            "epoch_time", time_chart_slot, time_cols, y_axis_title="Epoch time [s]"
+                        )
 
-                        bias_cols = _finite_cols(["train_bias_mean", "val_bias_mean", "test_bias_mean"])
-                        _stream_metric_chart("bias", bias_chart_slot, bias_cols, y_axis_title="Bias [target units]")
+                        bias_cols = _finite_cols(
+                            ["train_bias_mean", "val_bias_mean", "test_bias_mean"]
+                        )
+                        _stream_metric_chart(
+                            "bias", bias_chart_slot, bias_cols, y_axis_title="Bias [target units]"
+                        )
 
-                        p95_cols = _finite_cols(["train_error_p95_mean", "val_error_p95_mean", "test_error_p95_mean"])
-                        _stream_metric_chart("error_p95", p95_chart_slot, p95_cols, y_axis_title="p95 absolute error [target units]")
+                        p95_cols = _finite_cols(
+                            ["train_error_p95_mean", "val_error_p95_mean", "test_error_p95_mean"]
+                        )
+                        _stream_metric_chart(
+                            "error_p95",
+                            p95_chart_slot,
+                            p95_cols,
+                            y_axis_title="p95 absolute error [target units]",
+                        )
 
-                        if event.get("val_r2_mean") is not None and float(event.get("val_r2_mean", 0.0)) < 0.5:
-                            warning_slot.warning("MLP metrics are poor; do not promote. Continue tuning/scaling and check target-specific diagnostics.")
-                        elif event.get("val_nrmse_scale_mean") is not None and float(event.get("val_nrmse_scale_mean", 0.0)) > 0.3:
-                            warning_slot.warning("MLP normalized validation error is high; do not promote yet.")
+                        if (
+                            event.get("val_r2_mean") is not None
+                            and float(event.get("val_r2_mean", 0.0)) < 0.5
+                        ):
+                            warning_slot.warning(
+                                "MLP metrics are poor; do not promote. Continue tuning/scaling and check target-specific diagnostics."
+                            )
+                        elif (
+                            event.get("val_nrmse_scale_mean") is not None
+                            and float(event.get("val_nrmse_scale_mean", 0.0)) > 0.3
+                        ):
+                            warning_slot.warning(
+                                "MLP normalized validation error is high; do not promote yet."
+                            )
 
                         if event.get("val_rmse_mean") is None:
-                            warning_slot.warning("Validation metrics are unavailable/NaN for this epoch. Check validation split and target columns.")
+                            warning_slot.warning(
+                                "Validation metrics are unavailable/NaN for this epoch. Check validation split and target columns."
+                            )
 
                         table_slot.dataframe(hist.tail(12), use_container_width=True)
 
@@ -6515,72 +9125,167 @@ def pg_ml(root, exe, tmo, dry):
                     st.success("Live neural MLP training completed")
                     if artifacts is not None:
                         artifact_slot.code(
-                            "\n".join([
-                                f"training_monitor_report_json: {artifacts.report_json}",
-                                f"training_history_csv: {artifacts.history_csv}",
-                                f"loss_curves_png: {artifacts.loss_curve_png}",
-                                f"rmse_mean_curves_png: {artifacts.rmse_mean_curve_png}",
-                                f"r2_mean_curves_png: {artifacts.r2_mean_curve_png}",
-                                f"per_target_rmse_curves_png: {artifacts.per_target_rmse_curve_png}",
-                                f"per_target_r2_curves_png: {artifacts.per_target_r2_curve_png}",
-                                f"normalized_error_curves_png: {artifacts.normalized_error_curve_png}",
-                                f"generalization_gap_curves_png: {artifacts.generalization_gap_curve_png}",
-                                f"training_history_long_csv: {artifacts.history_long_csv}",
-                                f"metrics_json: {artifacts.metrics_json}",
-                                f"experiment_tracking_manifest_json: {Path(live_od) / 'tracking' / 'experiment_tracking_manifest.json'}",
-                            ]),
+                            "\n".join(
+                                [
+                                    f"training_monitor_report_json: {artifacts.report_json}",
+                                    f"training_history_csv: {artifacts.history_csv}",
+                                    f"loss_curves_png: {artifacts.loss_curve_png}",
+                                    f"rmse_mean_curves_png: {artifacts.rmse_mean_curve_png}",
+                                    f"r2_mean_curves_png: {artifacts.r2_mean_curve_png}",
+                                    f"per_target_rmse_curves_png: {artifacts.per_target_rmse_curve_png}",
+                                    f"per_target_r2_curves_png: {artifacts.per_target_r2_curve_png}",
+                                    f"normalized_error_curves_png: {artifacts.normalized_error_curve_png}",
+                                    f"generalization_gap_curves_png: {artifacts.generalization_gap_curve_png}",
+                                    f"training_history_long_csv: {artifacts.history_long_csv}",
+                                    f"metrics_json: {artifacts.metrics_json}",
+                                    f"experiment_tracking_manifest_json: {Path(live_od) / 'tracking' / 'experiment_tracking_manifest.json'}",
+                                ]
+                            ),
                             language="text",
                         )
                         if Path(artifacts.loss_curve_png).exists():
-                            st.image(str(artifacts.loss_curve_png), caption="Live training loss/RMSE curve", use_container_width=True)
-                        residual_hist = Path(live_od) / "training_monitor" / "plots" / "residual_distribution_histogram.png"
+                            st.image(
+                                str(artifacts.loss_curve_png),
+                                caption="Live training loss/RMSE curve",
+                                use_container_width=True,
+                            )
+                        residual_hist = (
+                            Path(live_od)
+                            / "training_monitor"
+                            / "plots"
+                            / "residual_distribution_histogram.png"
+                        )
                         if residual_hist.exists():
-                            st.image(str(residual_hist), caption="Residual distribution after training", use_container_width=True)
+                            st.image(
+                                str(residual_hist),
+                                caption="Residual distribution after training",
+                                use_container_width=True,
+                            )
                     with st.expander("Live training report JSON", expanded=False):
                         st.json(report)
 
-
     # ── ④ Tune ────────────────────────────────────────────────────────────────
     with tabs[3]:
-        _note("<b>--backend optuna</b>: advanced TPE search. <b>--backend aeris</b>: grid/random. Optuna for serious tuning.","info")
-        ds2 = _pick_dir("Promoted dataset",root/"data"/"datasets","tu_ds")
-        c1,c2 = st.columns(2)
-        bk2 = c1.selectbox("--backend",["optuna","aeris"],key="tu_bk",help="optuna=Bayesian TPE · aeris=grid/random")
-        mt2 = c2.selectbox("--model-type",MODEL_TYPES,index=4,key="tu_mt",format_func=lambda s:MODEL_INFO.get(s,s))
+        _note(
+            "<b>--backend optuna</b>: advanced TPE search. <b>--backend aeris</b>: grid/random. Optuna for serious tuning.",
+            "info",
+        )
+        ds2 = _pick_dir("Promoted dataset", root / "data" / "datasets", "tu_ds")
+        c1, c2 = st.columns(2)
+        bk2 = c1.selectbox(
+            "--backend",
+            ["optuna", "aeris"],
+            key="tu_bk",
+            help="optuna=Bayesian TPE · aeris=grid/random",
+        )
+        mt2 = c2.selectbox(
+            "--model-type",
+            MODEL_TYPES,
+            index=4,
+            key="tu_mt",
+            format_func=lambda s: MODEL_INFO.get(s, s),
+        )
         fa2, _ = _feature_selector("tu", include_feature_set=False)
-        c3,c4,c5 = st.columns(3)
-        rs2    = c3.number_input("--random-seed",min_value=0,value=123,step=1,key="tu_rs")
-        nt2    = c4.number_input("--n-trials (Optuna)",min_value=5,value=50,step=5,key="tu_nt",help="Optuna trials. Ignored for aeris backend.")
-        sm2    = c5.selectbox("--split-method",["grouped","random"],key="tu_sm")
-        gc2    = st.text_input("--group-column","geometry_id",key="tu_gc")
-        od2    = st.text_input("--output-dir",str(root/"data"/"processed"/"ml_runs"/"gui_tune"),key="tu_od")
-        args2 = ["ml","tune","--backend",bk2,"--dataset",ds2,"--model-type",mt2,
-                 "--split-method",sm2,"--group-column",gc2,"--random-seed",str(int(rs2)),
-                 "--output-dir",od2] + fa2
-        if bk2 == "optuna": args2 += ["--n-trials",str(int(nt2))]
-        _panel("Tune model","Hyperparameter search. Best params saved to output dir.",args2,root,exe,tmo,dry,"tu_run")
+        c3, c4, c5 = st.columns(3)
+        rs2 = c3.number_input("--random-seed", min_value=0, value=123, step=1, key="tu_rs")
+        nt2 = c4.number_input(
+            "--n-trials (Optuna)",
+            min_value=5,
+            value=50,
+            step=5,
+            key="tu_nt",
+            help="Optuna trials. Ignored for aeris backend.",
+        )
+        sm2 = c5.selectbox("--split-method", ["grouped", "random"], key="tu_sm")
+        gc2 = st.text_input("--group-column", "geometry_id", key="tu_gc")
+        od2 = st.text_input(
+            "--output-dir", str(root / "data" / "processed" / "ml_runs" / "gui_tune"), key="tu_od"
+        )
+        args2 = [
+            "ml",
+            "tune",
+            "--backend",
+            bk2,
+            "--dataset",
+            ds2,
+            "--model-type",
+            mt2,
+            "--split-method",
+            sm2,
+            "--group-column",
+            gc2,
+            "--random-seed",
+            str(int(rs2)),
+            "--output-dir",
+            od2,
+        ] + fa2
+        if bk2 == "optuna":
+            args2 += ["--n-trials", str(int(nt2))]
+        _panel(
+            "Tune model",
+            "Hyperparameter search. Best params saved to output dir.",
+            args2,
+            root,
+            exe,
+            tmo,
+            dry,
+            "tu_run",
+        )
 
     # ── ⑤ Compare ─────────────────────────────────────────────────────────────
     with tabs[4]:
-        cmp_t = st.tabs(["  Compare models  ","  Seed stability  ","  Compare tuning runs  "])
+        cmp_t = st.tabs(["  Compare models  ", "  Seed stability  ", "  Compare tuning runs  "])
 
         with cmp_t[0]:
-            _note("Never declare a winner from a single split. Follow with Seed stability.","warn")
-            ds3 = _pick_dir("Promoted dataset",root/"data"/"datasets","cm_ds")
+            _note("Never declare a winner from a single split. Follow with Seed stability.", "warn")
+            ds3 = _pick_dir("Promoted dataset", root / "data" / "datasets", "cm_ds")
             fa3, _ = _feature_selector("cm")
-            models3 = st.multiselect("--models",MODEL_TYPES,default=["extra_trees","hist_gradient_boosting","gradient_boosting"],key="cm_models",format_func=lambda s:MODEL_INFO.get(s,s))
-            c1,c2,c3 = st.columns(3)
-            sm3 = c1.selectbox("--split-method",["grouped","random"],key="cm_sm")
-            gc3 = c2.text_input("--group-column","geometry_id",key="cm_gc")
-            rs3 = c3.number_input("--random-seed",min_value=0,value=123,step=1,key="cm_rs")
-            od3 = st.text_input("--output-dir",str(root/"data"/"processed"/"ml_runs"/"gui_compare"),key="cm_od")
-            af3 = st.checkbox("--allow-forced",False,key="cm_af")
+            models3 = st.multiselect(
+                "--models",
+                MODEL_TYPES,
+                default=["extra_trees", "hist_gradient_boosting", "gradient_boosting"],
+                key="cm_models",
+                format_func=lambda s: MODEL_INFO.get(s, s),
+            )
+            c1, c2, c3 = st.columns(3)
+            sm3 = c1.selectbox("--split-method", ["grouped", "random"], key="cm_sm")
+            gc3 = c2.text_input("--group-column", "geometry_id", key="cm_gc")
+            rs3 = c3.number_input("--random-seed", min_value=0, value=123, step=1, key="cm_rs")
+            od3 = st.text_input(
+                "--output-dir",
+                str(root / "data" / "processed" / "ml_runs" / "gui_compare"),
+                key="cm_od",
+            )
+            af3 = st.checkbox("--allow-forced", False, key="cm_af")
             models_str3 = ",".join(models3) if models3 else "extra_trees,hist_gradient_boosting"
-            args3 = ["ml","compare","--dataset",ds3,"--models",models_str3,
-                     "--split-method",sm3,"--group-column",gc3,"--random-seed",str(int(rs3)),
-                     "--output-dir",od3] + fa3
-            if af3: args3.append("--allow-forced")
-            _panel("Compare models","Benchmarks multiple model types on one split.",args3,root,exe,tmo,dry,"cm_run")
+            args3 = [
+                "ml",
+                "compare",
+                "--dataset",
+                ds3,
+                "--models",
+                models_str3,
+                "--split-method",
+                sm3,
+                "--group-column",
+                gc3,
+                "--random-seed",
+                str(int(rs3)),
+                "--output-dir",
+                od3,
+            ] + fa3
+            if af3:
+                args3.append("--allow-forced")
+            _panel(
+                "Compare models",
+                "Benchmarks multiple model types on one split.",
+                args3,
+                root,
+                exe,
+                tmo,
+                dry,
+                "cm_run",
+            )
 
         with cmp_t[1]:
             _note(
@@ -6590,40 +9295,122 @@ def pg_ml(root, exe, tmo, dry):
                 "On datasets with &lt;30 geometries the test set is too small — use this to catch instability, not to claim accuracy.",
                 "info",
             )
-            ds_cs = _pick_dir("Promoted dataset",root/"data"/"datasets","cs_ds")
+            ds_cs = _pick_dir("Promoted dataset", root / "data" / "datasets", "cs_ds")
             fa_cs, _ = _feature_selector("cs")
-            models_cs = st.multiselect("--models",MODEL_TYPES,default=["extra_trees","hist_gradient_boosting"],key="cs_models",format_func=lambda s:MODEL_INFO.get(s,s))
-            c1,c2 = st.columns(2)
-            seeds_cs = c1.text_input("--seeds (comma-sep ints)","101,202,303,404,505",key="cs_seeds",help="At least 5 seeds recommended")
-            gc_cs    = c2.text_input("--group-column","geometry_id",key="cs_gc")
-            sm_cs    = st.selectbox("--split-method",["grouped","random"],key="cs_sm")
-            od_cs    = st.text_input("--output-dir",str(root/"data"/"processed"/"ml_runs"/"gui_seeds"),key="cs_od")
-            models_str_cs = ",".join(models_cs) if models_cs else "extra_trees,hist_gradient_boosting"
-            args_cs = ["ml","compare-seeds","--dataset",ds_cs,"--models",models_str_cs,"--seeds",seeds_cs,
-                       "--split-method",sm_cs,"--group-column",gc_cs,"--output-dir",od_cs] + fa_cs
-            _panel("Seed stability","Runs same models with N seeds. Confirms winner is consistent.",args_cs,root,exe,tmo,dry,"cs_run")
+            models_cs = st.multiselect(
+                "--models",
+                MODEL_TYPES,
+                default=["extra_trees", "hist_gradient_boosting"],
+                key="cs_models",
+                format_func=lambda s: MODEL_INFO.get(s, s),
+            )
+            c1, c2 = st.columns(2)
+            seeds_cs = c1.text_input(
+                "--seeds (comma-sep ints)",
+                "101,202,303,404,505",
+                key="cs_seeds",
+                help="At least 5 seeds recommended",
+            )
+            gc_cs = c2.text_input("--group-column", "geometry_id", key="cs_gc")
+            sm_cs = st.selectbox("--split-method", ["grouped", "random"], key="cs_sm")
+            od_cs = st.text_input(
+                "--output-dir",
+                str(root / "data" / "processed" / "ml_runs" / "gui_seeds"),
+                key="cs_od",
+            )
+            models_str_cs = (
+                ",".join(models_cs) if models_cs else "extra_trees,hist_gradient_boosting"
+            )
+            args_cs = [
+                "ml",
+                "compare-seeds",
+                "--dataset",
+                ds_cs,
+                "--models",
+                models_str_cs,
+                "--seeds",
+                seeds_cs,
+                "--split-method",
+                sm_cs,
+                "--group-column",
+                gc_cs,
+                "--output-dir",
+                od_cs,
+            ] + fa_cs
+            _panel(
+                "Seed stability",
+                "Runs same models with N seeds. Confirms winner is consistent.",
+                args_cs,
+                root,
+                exe,
+                tmo,
+                dry,
+                "cs_run",
+            )
 
         with cmp_t[2]:
-            _note("<b>aeris ml compare-tuning-runs</b> — compares completed tuning campaigns by their best trial. Pass all tuning run dirs as a comma-separated string to <code>--runs</code>.","info")
-            runs_ctr = st.text_input("--runs (comma-sep tuning run dirs)","",key="ctr_runs",
-                                     help="e.g. data/processed/ml_runs/tune_run1,data/processed/ml_runs/tune_run2")
-            c1,c2 = st.columns(2)
-            metric_ctr = c1.text_input("--selection-metric","val.rmse_mean",key="ctr_metric",help="Metric to rank tuning runs. Default: val.rmse_mean")
-            minimize_ctr = c2.checkbox("--minimize (lower is better)",True,key="ctr_min",help="Uncheck for --maximize (higher is better)")
-            od_ctr = st.text_input("--output-dir",str(root/"data"/"processed"/"ml_runs"/"gui_compare_tuning"),key="ctr_od")
+            _note(
+                "<b>aeris ml compare-tuning-runs</b> — compares completed tuning campaigns by their best trial. Pass all tuning run dirs as a comma-separated string to <code>--runs</code>.",
+                "info",
+            )
+            runs_ctr = st.text_input(
+                "--runs (comma-sep tuning run dirs)",
+                "",
+                key="ctr_runs",
+                help="e.g. data/processed/ml_runs/tune_run1,data/processed/ml_runs/tune_run2",
+            )
+            c1, c2 = st.columns(2)
+            metric_ctr = c1.text_input(
+                "--selection-metric",
+                "val.rmse_mean",
+                key="ctr_metric",
+                help="Metric to rank tuning runs. Default: val.rmse_mean",
+            )
+            minimize_ctr = c2.checkbox(
+                "--minimize (lower is better)",
+                True,
+                key="ctr_min",
+                help="Uncheck for --maximize (higher is better)",
+            )
+            od_ctr = st.text_input(
+                "--output-dir",
+                str(root / "data" / "processed" / "ml_runs" / "gui_compare_tuning"),
+                key="ctr_od",
+            )
             if runs_ctr.strip():
-                args_ctr = ["ml","compare-tuning-runs","--runs",runs_ctr,"--selection-metric",metric_ctr,"--output-dir",od_ctr]
-                if not minimize_ctr: args_ctr.append("--maximize")
-                _panel("Compare tuning runs","Selects best hyperparameters across tuning campaigns.",args_ctr,root,exe,tmo,dry,"ctr_run")
+                args_ctr = [
+                    "ml",
+                    "compare-tuning-runs",
+                    "--runs",
+                    runs_ctr,
+                    "--selection-metric",
+                    metric_ctr,
+                    "--output-dir",
+                    od_ctr,
+                ]
+                if not minimize_ctr:
+                    args_ctr.append("--maximize")
+                _panel(
+                    "Compare tuning runs",
+                    "Selects best hyperparameters across tuning campaigns.",
+                    args_ctr,
+                    root,
+                    exe,
+                    tmo,
+                    dry,
+                    "ctr_run",
+                )
             else:
-                _note("Enter at least one comma-separated tuning run path in --runs above.","warn")
+                _note("Enter at least one comma-separated tuning run path in --runs above.", "warn")
 
     # ── ⑥ Trust gates ─────────────────────────────────────────────────────────
     with tabs[5]:
-        tg_t = st.tabs(["  Promote model  ", "  Suggest gates  ", "  Inspect model  ", "  Require promoted  "])
+        tg_t = st.tabs(
+            ["  Promote model  ", "  Suggest gates  ", "  Inspect model  ", "  Require promoted  "]
+        )
 
         with tg_t[0]:
-            mr4 = _pick_dir("ML run dir",root/"data"/"processed"/"ml_runs","tg_mr")
+            mr4 = _pick_dir("ML run dir", root / "data" / "processed" / "ml_runs", "tg_mr")
             _note(
                 "All threshold args are optional — leave blank to skip that gate. "
                 "Dataset promotion context is rechecked here; force-promoted datasets and recorded QC/curation blockers stop model promotion unless explicitly allowed. "
@@ -6632,20 +9419,54 @@ def pg_ml(root, exe, tmo, dry):
                 "After promotion, run <b>⑧ Audit model</b> to inspect per-target and per-regime residuals.",
                 "info",
             )
-            c1,c2,c3 = st.columns(3)
-            max_vr  = c1.text_input("--max-val-rmse-mean","",key="tg_mvr",help="Optional: val RMSE mean ≤ this")
-            max_tr  = c2.text_input("--max-test-rmse-mean","",key="tg_mtr",help="Optional: test RMSE mean ≤ this")
-            min_r2  = c3.text_input("--min-test-r2-mean","",key="tg_mr2",help="Optional: test R² mean ≥ this")
-            c4,c5,c6 = st.columns(3)
-            req_d   = c4.checkbox("--require-diagnostics",True,key="tg_rd",help="Require diagnostics artifacts. Default True.")
-            afd     = c5.checkbox("--allow-forced-dataset",False,key="tg_afd",help="Allow models trained from force-promoted datasets.")
-            notes4  = c6.text_input("--notes (optional)","",key="tg_notes",help="Operator note recorded in promotion manifest.")
-            args4 = ["ml","promote-model","--model-run-dir",mr4]
-            _flag(args4,"--max-val-rmse-mean",max_vr); _flag(args4,"--max-test-rmse-mean",max_tr); _flag(args4,"--min-test-r2-mean",min_r2)
-            if not req_d: args4.append("--no-require-diagnostics")
-            if afd: args4.append("--allow-forced-dataset")
-            _flag(args4,"--notes",notes4)
-            _panel("Promote model","Gates model on optional thresholds. Writes model_promotion_manifest.json + model card.",args4,root,exe,tmo,dry,"tg_run")
+            c1, c2, c3 = st.columns(3)
+            max_vr = c1.text_input(
+                "--max-val-rmse-mean", "", key="tg_mvr", help="Optional: val RMSE mean ≤ this"
+            )
+            max_tr = c2.text_input(
+                "--max-test-rmse-mean", "", key="tg_mtr", help="Optional: test RMSE mean ≤ this"
+            )
+            min_r2 = c3.text_input(
+                "--min-test-r2-mean", "", key="tg_mr2", help="Optional: test R² mean ≥ this"
+            )
+            c4, c5, c6 = st.columns(3)
+            req_d = c4.checkbox(
+                "--require-diagnostics",
+                True,
+                key="tg_rd",
+                help="Require diagnostics artifacts. Default True.",
+            )
+            afd = c5.checkbox(
+                "--allow-forced-dataset",
+                False,
+                key="tg_afd",
+                help="Allow models trained from force-promoted datasets.",
+            )
+            notes4 = c6.text_input(
+                "--notes (optional)",
+                "",
+                key="tg_notes",
+                help="Operator note recorded in promotion manifest.",
+            )
+            args4 = ["ml", "promote-model", "--model-run-dir", mr4]
+            _flag(args4, "--max-val-rmse-mean", max_vr)
+            _flag(args4, "--max-test-rmse-mean", max_tr)
+            _flag(args4, "--min-test-r2-mean", min_r2)
+            if not req_d:
+                args4.append("--no-require-diagnostics")
+            if afd:
+                args4.append("--allow-forced-dataset")
+            _flag(args4, "--notes", notes4)
+            _panel(
+                "Promote model",
+                "Gates model on optional thresholds. Writes model_promotion_manifest.json + model card.",
+                args4,
+                root,
+                exe,
+                tmo,
+                dry,
+                "tg_run",
+            )
 
         with tg_t[1]:
             _note(
@@ -6653,33 +9474,79 @@ def pg_ml(root, exe, tmo, dry):
                 "Use it after training/audit, then manually choose defensible gates. It is guidance, not gospel.",
                 "info",
             )
-            mr_sg = _pick_dir("ML run dir",root/"data"/"processed"/"ml_runs","sg_mr")
+            mr_sg = _pick_dir("ML run dir", root / "data" / "processed" / "ml_runs", "sg_mr")
             csg1, csg2 = st.columns(2)
-            prof_sg = csg1.selectbox("--profile", ["strict", "normal", "loose"], index=1, key="sg_profile")
-            od_sg = csg2.text_input("--output-dir", "", key="sg_od", help="Leave blank for auto output under model run dir.")
-            args_sg = ["ml", "suggest-promotion-gates", "--model-run-dir", mr_sg, "--profile", prof_sg]
+            prof_sg = csg1.selectbox(
+                "--profile", ["strict", "normal", "loose"], index=1, key="sg_profile"
+            )
+            od_sg = csg2.text_input(
+                "--output-dir",
+                "",
+                key="sg_od",
+                help="Leave blank for auto output under model run dir.",
+            )
+            args_sg = [
+                "ml",
+                "suggest-promotion-gates",
+                "--model-run-dir",
+                mr_sg,
+                "--profile",
+                prof_sg,
+            ]
             if od_sg.strip():
                 args_sg += ["--output-dir", od_sg.strip()]
             _panel(
                 "Suggest promotion gates",
                 "Writes promotion_gate_suggestions.json and promotion_gates_template.yaml.",
-                args_sg, root, exe, tmo, dry, "sg_run", label="▶  Suggest gates",
+                args_sg,
+                root,
+                exe,
+                tmo,
+                dry,
+                "sg_run",
+                label="▶  Suggest gates",
             )
 
         with tg_t[2]:
-            mr_ins = _pick_dir("ML run dir",root/"data"/"processed"/"ml_runs","ins_mr")
-            _panel("Inspect model run","Prints model type, metrics, features, promotion status.",["ml","inspect-model","--model-run-dir",mr_ins],root,exe,tmo,dry,"ins_run")
+            mr_ins = _pick_dir("ML run dir", root / "data" / "processed" / "ml_runs", "ins_mr")
+            _panel(
+                "Inspect model run",
+                "Prints model type, metrics, features, promotion status.",
+                ["ml", "inspect-model", "--model-run-dir", mr_ins],
+                root,
+                exe,
+                tmo,
+                dry,
+                "ins_run",
+            )
 
         with tg_t[3]:
-            mr_rq = _pick_dir("ML run dir",root/"data"/"processed"/"ml_runs","rq_mr")
-            vh_rq = st.checkbox("--verify-hashes",True,key="rq_vh",help="Verify artifact hashes against promotion manifest. Default True.")
-            args_rq = ["ml","require-promoted-model","--model-run-dir",mr_rq]
-            if not vh_rq: args_rq.append("--no-verify-hashes")
-            _panel("Require promoted model","Verifies model has approved promotion manifest.",args_rq,root,exe,tmo,dry,"rq_run")
+            mr_rq = _pick_dir("ML run dir", root / "data" / "processed" / "ml_runs", "rq_mr")
+            vh_rq = st.checkbox(
+                "--verify-hashes",
+                True,
+                key="rq_vh",
+                help="Verify artifact hashes against promotion manifest. Default True.",
+            )
+            args_rq = ["ml", "require-promoted-model", "--model-run-dir", mr_rq]
+            if not vh_rq:
+                args_rq.append("--no-verify-hashes")
+            _panel(
+                "Require promoted model",
+                "Verifies model has approved promotion manifest.",
+                args_rq,
+                root,
+                exe,
+                tmo,
+                dry,
+                "rq_run",
+            )
 
     # ── ⑦ Predict ─────────────────────────────────────────────────────────────
     with tabs[6]:
-        pr_t = st.tabs(["  Standard predict  ","  Predict with confidence  ","  Check inference inputs  "])
+        pr_t = st.tabs(
+            ["  Standard predict  ", "  Predict with confidence  ", "  Check inference inputs  "]
+        )
 
         with pr_t[0]:
             _note(
@@ -6691,117 +9558,484 @@ def pg_ml(root, exe, tmo, dry):
                 "Mismatch is rejected unless <code>--allow-feature-set-mismatch</code> is set.",
                 "warn",
             )
-            mr5 = _pick_dir("Model run dir",root/"data"/"processed"/"ml_runs","pr_mr5")
-            ic5 = st.text_input("--input-csv",str(Path(mr5)/"test_rows.csv" if mr5 else ""),key="pr_ic5")
-            od5 = st.text_input("--output-dir","",key="pr_od5",help="Leave blank for auto dir under model run dir.")
-            c1,c2,c3 = st.columns(3)
-            rp5 = c1.checkbox("--require-promoted-model",False,key="pr_rp5",help="Check for production use. Default False.")
-            ee5 = c2.checkbox("--enforce-envelope",False,key="pr_ee5",help="Block out-of-envelope inputs. Default False.")
-            it5 = c3.checkbox("--include-truth-if-available",True,key="pr_it5",help="Compute error metrics if targets in input CSV. Default True. Uses --no-include-truth-if-available to disable.")
-            tol5 = st.number_input("--envelope-tolerance",0.0,key="pr_tol5",format="%.4f",help="Absolute tolerance on envelope checks. Default 0.0.")
-            fs5  = st.text_input("--feature-set (optional)","",key="pr_fs5",help="Apply named feature-set transforms to input before prediction.")
-            args5 = ["ml","predict","--model-run-dir",mr5,"--input-csv",ic5,"--envelope-tolerance",str(tol5)]
-            if od5.strip(): args5 += ["--output-dir",od5]
-            if rp5:  args5.append("--require-promoted-model")
-            if ee5:  args5.append("--enforce-envelope")
-            if not it5: args5.append("--no-include-truth-if-available")
-            _flag(args5,"--feature-set",fs5)
-            _panel("Predict","Runs inference. Guards envelope. Computes error if truth available.",args5,root,exe,tmo,dry,"pr_run5")
+            mr5 = _pick_dir("Model run dir", root / "data" / "processed" / "ml_runs", "pr_mr5")
+            ic5 = st.text_input(
+                "--input-csv", str(Path(mr5) / "test_rows.csv" if mr5 else ""), key="pr_ic5"
+            )
+            od5 = st.text_input(
+                "--output-dir",
+                "",
+                key="pr_od5",
+                help="Leave blank for auto dir under model run dir.",
+            )
+            c1, c2, c3 = st.columns(3)
+            rp5 = c1.checkbox(
+                "--require-promoted-model",
+                False,
+                key="pr_rp5",
+                help="Check for production use. Default False.",
+            )
+            ee5 = c2.checkbox(
+                "--enforce-envelope",
+                False,
+                key="pr_ee5",
+                help="Block out-of-envelope inputs. Default False.",
+            )
+            it5 = c3.checkbox(
+                "--include-truth-if-available",
+                True,
+                key="pr_it5",
+                help="Compute error metrics if targets in input CSV. Default True. Uses --no-include-truth-if-available to disable.",
+            )
+            tol5 = st.number_input(
+                "--envelope-tolerance",
+                0.0,
+                key="pr_tol5",
+                format="%.4f",
+                help="Absolute tolerance on envelope checks. Default 0.0.",
+            )
+            fs5 = st.text_input(
+                "--feature-set (optional)",
+                "",
+                key="pr_fs5",
+                help="Apply named feature-set transforms to input before prediction.",
+            )
+            args5 = [
+                "ml",
+                "predict",
+                "--model-run-dir",
+                mr5,
+                "--input-csv",
+                ic5,
+                "--envelope-tolerance",
+                str(tol5),
+            ]
+            if od5.strip():
+                args5 += ["--output-dir", od5]
+            if rp5:
+                args5.append("--require-promoted-model")
+            if ee5:
+                args5.append("--enforce-envelope")
+            if not it5:
+                args5.append("--no-include-truth-if-available")
+            _flag(args5, "--feature-set", fs5)
+            _panel(
+                "Predict",
+                "Runs inference. Guards envelope. Computes error if truth available.",
+                args5,
+                root,
+                exe,
+                tmo,
+                dry,
+                "pr_run5",
+            )
 
         with pr_t[1]:
-            _note("<b>aeris ml predict-with-confidence</b> — adds heuristic uncertainty + envelope diagnostics to predictions.","info")
-            mr_pc = _pick_dir("Model run dir",root/"data"/"processed"/"ml_runs","pc_mr")
-            ic_pc = st.text_input("--input-csv",str(Path(mr_pc)/"test_rows.csv" if mr_pc else ""),key="pc_ic")
-            od_pc = st.text_input("--output-dir","",key="pc_od")
-            c1,c2 = st.columns(2)
-            rp_pc = c1.checkbox("--require-promoted-model",True,key="pc_rp",help="Default True.")
-            it_pc = c2.checkbox("--include-truth-if-available",True,key="pc_it",help="Default True.")
-            args_pc = ["ml","predict-with-confidence","--model-run-dir",mr_pc,"--input-csv",ic_pc]
-            if od_pc.strip(): args_pc += ["--output-dir",od_pc]
-            if not rp_pc: args_pc.append("--no-require-promoted-model")
-            if not it_pc: args_pc.append("--no-include-truth-if-available")
-            _panel("Predict with confidence","Predictions + uncertainty + envelope diagnostics.",args_pc,root,exe,tmo,dry,"pc_run")
+            _note(
+                "<b>aeris ml predict-with-confidence</b> — adds heuristic uncertainty + envelope diagnostics to predictions.",
+                "info",
+            )
+            mr_pc = _pick_dir("Model run dir", root / "data" / "processed" / "ml_runs", "pc_mr")
+            ic_pc = st.text_input(
+                "--input-csv", str(Path(mr_pc) / "test_rows.csv" if mr_pc else ""), key="pc_ic"
+            )
+            od_pc = st.text_input("--output-dir", "", key="pc_od")
+            c1, c2, c3 = st.columns(3)
+            rp_pc = c1.checkbox("--require-promoted-model", True, key="pc_rp", help="Default True.")
+            it_pc = c2.checkbox(
+                "--include-truth-if-available", True, key="pc_it", help="Default True."
+            )
+            uq_pc = c3.selectbox(
+                "--uq-method",
+                ["heuristic", "conformal"],
+                key="pc_uq",
+                help="conformal = calibrated intervals; requires calibrate-conformal below.",
+            )
+            args_pc = [
+                "ml",
+                "predict-with-confidence",
+                "--model-run-dir",
+                mr_pc,
+                "--input-csv",
+                ic_pc,
+                "--uq-method",
+                uq_pc,
+            ]
+            if od_pc.strip():
+                args_pc += ["--output-dir", od_pc]
+            if not rp_pc:
+                args_pc.append("--no-require-promoted-model")
+            if not it_pc:
+                args_pc.append("--no-include-truth-if-available")
+            _panel(
+                "Predict with confidence",
+                "Predictions + uncertainty + envelope diagnostics.",
+                args_pc,
+                root,
+                exe,
+                tmo,
+                dry,
+                "pc_run",
+            )
+
+            _sec("Split-conformal calibration (Wave-2)")
+            _note(
+                "<b>aeris ml calibrate-conformal</b> — fits calibrated intervals on the run's held-out val split. Run once per promoted model, then use --uq-method conformal above.",
+                "info",
+            )
+            alpha_cc = st.number_input(
+                "--alpha (miscoverage)",
+                0.001,
+                0.5,
+                0.10,
+                0.01,
+                key="cc_alpha",
+                help="0.10 = 90% marginal coverage per target.",
+            )
+            args_cc = [
+                "ml",
+                "calibrate-conformal",
+                "--model-run-dir",
+                mr_pc,
+                "--alpha",
+                str(alpha_cc),
+            ]
+            _panel(
+                "Calibrate conformal",
+                "Writes conformal_calibration.json into the run dir.",
+                args_cc,
+                root,
+                exe,
+                tmo,
+                dry,
+                "ccal_run",
+            )
 
         with pr_t[2]:
-            _note("<b>aeris ml check-inference-inputs</b> — pre-flight check before prediction: verifies inputs are inside the training envelope.","info")
-            mr_ci = _pick_dir("Model run dir",root/"data"/"processed"/"ml_runs","ci_mr")
-            ic_ci = st.text_input("--input-csv",str(Path(mr_ci)/"test_rows.csv" if mr_ci else ""),key="ci_ic")
-            od_ci = st.text_input("--output-dir","",key="ci_od")
-            c1,c2,c3 = st.columns(3)
-            rp_ci  = c1.checkbox("--require-promoted-model",True,key="ci_rp")
-            fov_ci = c2.checkbox("--fail-on-violations",False,key="ci_fov",help="Exit nonzero if violations found. Default False.")
-            tol_ci = c3.number_input("--tolerance",0.0,key="ci_tol",format="%.4f")
-            fs_ci  = st.text_input("--feature-set (optional)","",key="ci_fs")
-            afm_ci = st.checkbox("--allow-feature-set-mismatch",False,key="ci_afm",help="Allow feature set to differ from training set. Default False.")
-            args_ci = ["ml","check-inference-inputs","--model-run-dir",mr_ci,"--input-csv",ic_ci,"--tolerance",str(tol_ci)]
-            if od_ci.strip(): args_ci += ["--output-dir",od_ci]
-            if not rp_ci:  args_ci.append("--no-require-promoted-model")
-            if fov_ci:     args_ci.append("--fail-on-violations")
-            _flag(args_ci,"--feature-set",fs_ci)
-            if afm_ci: args_ci.append("--allow-feature-set-mismatch")
-            _panel("Check inference inputs","Verifies inputs are inside training envelope before prediction.",args_ci,root,exe,tmo,dry,"ci_run")
+            _note(
+                "<b>aeris ml check-inference-inputs</b> — pre-flight check before prediction: verifies inputs are inside the training envelope.",
+                "info",
+            )
+            mr_ci = _pick_dir("Model run dir", root / "data" / "processed" / "ml_runs", "ci_mr")
+            ic_ci = st.text_input(
+                "--input-csv", str(Path(mr_ci) / "test_rows.csv" if mr_ci else ""), key="ci_ic"
+            )
+            od_ci = st.text_input("--output-dir", "", key="ci_od")
+            c1, c2, c3 = st.columns(3)
+            rp_ci = c1.checkbox("--require-promoted-model", True, key="ci_rp")
+            fov_ci = c2.checkbox(
+                "--fail-on-violations",
+                False,
+                key="ci_fov",
+                help="Exit nonzero if violations found. Default False.",
+            )
+            tol_ci = c3.number_input("--tolerance", 0.0, key="ci_tol", format="%.4f")
+            fs_ci = st.text_input("--feature-set (optional)", "", key="ci_fs")
+            afm_ci = st.checkbox(
+                "--allow-feature-set-mismatch",
+                False,
+                key="ci_afm",
+                help="Allow feature set to differ from training set. Default False.",
+            )
+            args_ci = [
+                "ml",
+                "check-inference-inputs",
+                "--model-run-dir",
+                mr_ci,
+                "--input-csv",
+                ic_ci,
+                "--tolerance",
+                str(tol_ci),
+            ]
+            if od_ci.strip():
+                args_ci += ["--output-dir", od_ci]
+            if not rp_ci:
+                args_ci.append("--no-require-promoted-model")
+            if fov_ci:
+                args_ci.append("--fail-on-violations")
+            _flag(args_ci, "--feature-set", fs_ci)
+            if afm_ci:
+                args_ci.append("--allow-feature-set-mismatch")
+            _panel(
+                "Check inference inputs",
+                "Verifies inputs are inside training envelope before prediction.",
+                args_ci,
+                root,
+                exe,
+                tmo,
+                dry,
+                "ci_run",
+            )
 
     # ── ⑧ Audit ───────────────────────────────────────────────────────────────
     with tabs[7]:
-        _note("<b>aeris ml audit-model</b> — deep quality analysis: residual audit, p95 error, bias, worst rows, optional quality gates.","info")
-        mr6 = _pick_dir("ML run dir",root/"data"/"processed"/"ml_runs","au_mr")
-        od6 = st.text_input("--output-dir","",key="au_od",help="Leave blank for auto dir under model run dir.")
+        _note(
+            "<b>aeris ml audit-model</b> — deep quality analysis: residual audit, p95 error, bias, worst rows, optional quality gates.",
+            "info",
+        )
+        mr6 = _pick_dir("ML run dir", root / "data" / "processed" / "ml_runs", "au_mr")
+        od6 = st.text_input(
+            "--output-dir", "", key="au_od", help="Leave blank for auto dir under model run dir."
+        )
         _sec("Optional quality thresholds (leave blank to skip gate)")
-        c1,c2,c3,c4 = st.columns(4)
-        mr6_rmse = c1.text_input("--max-test-rmse-mean","",key="au_rmse",help="Fail if test RMSE mean > this.")
-        mr6_r2   = c2.text_input("--min-test-r2-mean","",key="au_r2",help="Fail if test R² mean < this.")
-        mr6_p95  = c3.text_input("--max-test-error-p95-mean","",key="au_p95",help="Fail if p95 absolute error mean > this.")
-        mr6_bias = c4.text_input("--max-test-abs-bias-mean","",key="au_bias",help="Fail if absolute bias mean > this.")
-        c5,c6 = st.columns(2)
-        topk6  = c5.number_input("--top-k-worst-rows-per-target",min_value=1,value=20,step=5,key="au_topk",help="Worst residual rows per target and split. Default 20.")
-        fail6  = c6.checkbox("--fail-on-quality-gate",False,key="au_fail",help="Exit nonzero if any threshold fails. Default False.")
-        args6 = ["ml","audit-model","--model-run-dir",mr6,"--top-k-worst-rows-per-target",str(int(topk6))]
-        if od6.strip(): args6 += ["--output-dir",od6]
-        _flag(args6,"--max-test-rmse-mean",mr6_rmse); _flag(args6,"--min-test-r2-mean",mr6_r2)
-        _flag(args6,"--max-test-error-p95-mean",mr6_p95); _flag(args6,"--max-test-abs-bias-mean",mr6_bias)
-        if fail6: args6.append("--fail-on-quality-gate")
-        _panel("Audit model","Writes residual_audit.csv + model_quality_report.json.",args6,root,exe,tmo,dry,"au_run")
+        c1, c2, c3, c4 = st.columns(4)
+        mr6_rmse = c1.text_input(
+            "--max-test-rmse-mean", "", key="au_rmse", help="Fail if test RMSE mean > this."
+        )
+        mr6_r2 = c2.text_input(
+            "--min-test-r2-mean", "", key="au_r2", help="Fail if test R² mean < this."
+        )
+        mr6_p95 = c3.text_input(
+            "--max-test-error-p95-mean",
+            "",
+            key="au_p95",
+            help="Fail if p95 absolute error mean > this.",
+        )
+        mr6_bias = c4.text_input(
+            "--max-test-abs-bias-mean", "", key="au_bias", help="Fail if absolute bias mean > this."
+        )
+        c5, c6 = st.columns(2)
+        topk6 = c5.number_input(
+            "--top-k-worst-rows-per-target",
+            min_value=1,
+            value=20,
+            step=5,
+            key="au_topk",
+            help="Worst residual rows per target and split. Default 20.",
+        )
+        fail6 = c6.checkbox(
+            "--fail-on-quality-gate",
+            False,
+            key="au_fail",
+            help="Exit nonzero if any threshold fails. Default False.",
+        )
+        args6 = [
+            "ml",
+            "audit-model",
+            "--model-run-dir",
+            mr6,
+            "--top-k-worst-rows-per-target",
+            str(int(topk6)),
+        ]
+        if od6.strip():
+            args6 += ["--output-dir", od6]
+        _flag(args6, "--max-test-rmse-mean", mr6_rmse)
+        _flag(args6, "--min-test-r2-mean", mr6_r2)
+        _flag(args6, "--max-test-error-p95-mean", mr6_p95)
+        _flag(args6, "--max-test-abs-bias-mean", mr6_bias)
+        if fail6:
+            args6.append("--fail-on-quality-gate")
+        _panel(
+            "Audit model",
+            "Writes residual_audit.csv + model_quality_report.json.",
+            args6,
+            root,
+            exe,
+            tmo,
+            dry,
+            "au_run",
+        )
 
     # ── ⑨ Active Learning ─────────────────────────────────────────────────────
     with tabs[8]:
-        _note("<b>aeris ml suggest-samples</b> — ranks a candidate pool for the next simulation batch using uncertainty + novelty + optional objective. Does NOT run AVL or any simulator.","info")
-        mr_al = _pick_dir("Model run dir (promoted recommended)",root/"data"/"processed"/"ml_runs","al_mr")
-        c1,c2 = st.columns(2)
-        ic_al  = c1.text_input("--candidate-csv",str(Path(mr_al)/"test_rows.csv" if mr_al else ""),key="al_ic",help="CSV with all model feature columns. Candidates to rank.")
-        ref_al = c2.text_input("--reference-csv (optional, default = train_rows.csv)","",key="al_ref",help="Reference rows for novelty scoring. Blank = model's training rows.")
-        od_al  = st.text_input("--output-dir","",key="al_od")
-        c3,c4  = st.columns(2)
-        topn_al = c3.number_input("--top-n",min_value=1,value=25,step=5,key="al_topn",help="Number of recommended candidates. Default 25.")
-        cid_al  = c4.text_input("--candidate-id-column (optional)","",key="al_cid",help="Existing ID column. Blank = AERIS creates candidate_id.")
-        rp_al   = st.checkbox("--require-promoted-model",True,key="al_rp",help="Require approved promotion manifest. Default True.")
+        _note(
+            "<b>aeris ml suggest-samples</b> — ranks a candidate pool for the next simulation batch using uncertainty + novelty + optional objective. Does NOT run AVL or any simulator.",
+            "info",
+        )
+        mr_al = _pick_dir(
+            "Model run dir (promoted recommended)", root / "data" / "processed" / "ml_runs", "al_mr"
+        )
+        c1, c2 = st.columns(2)
+        ic_al = c1.text_input(
+            "--candidate-csv",
+            str(Path(mr_al) / "test_rows.csv" if mr_al else ""),
+            key="al_ic",
+            help="CSV with all model feature columns. Candidates to rank.",
+        )
+        ref_al = c2.text_input(
+            "--reference-csv (optional, default = train_rows.csv)",
+            "",
+            key="al_ref",
+            help="Reference rows for novelty scoring. Blank = model's training rows.",
+        )
+        od_al = st.text_input("--output-dir", "", key="al_od")
+        c3, c4 = st.columns(2)
+        topn_al = c3.number_input(
+            "--top-n",
+            min_value=1,
+            value=25,
+            step=5,
+            key="al_topn",
+            help="Number of recommended candidates. Default 25.",
+        )
+        cid_al = c4.text_input(
+            "--candidate-id-column (optional)",
+            "",
+            key="al_cid",
+            help="Existing ID column. Blank = AERIS creates candidate_id.",
+        )
+        rp_al = st.checkbox(
+            "--require-promoted-model",
+            True,
+            key="al_rp",
+            help="Require approved promotion manifest. Default True.",
+        )
 
         _sec("Ranking weights")
-        c5,c6,c7,c8 = st.columns(4)
-        uw_al  = c5.number_input("--uncertainty-weight",0.0,5.0,1.0,0.1,key="al_uw",help="Weight for estimator-spread uncertainty. Default 1.0.")
-        nw_al  = c6.number_input("--novelty-weight",0.0,5.0,0.5,0.1,key="al_nw",help="Weight for distance-from-training novelty. Default 0.5.")
-        ow_al  = c7.number_input("--objective-weight",0.0,5.0,0.25,0.05,key="al_ow",help="Weight for objective score. Default 0.25. Only used if objective-column set.")
-        epw_al = c8.number_input("--envelope-penalty-weight",0.0,10.0,2.0,0.5,key="al_epw",help="Penalty for outside-envelope candidates. Default 2.0.")
+        c5, c6, c7, c8 = st.columns(4)
+        uw_al = c5.number_input(
+            "--uncertainty-weight",
+            0.0,
+            5.0,
+            1.0,
+            0.1,
+            key="al_uw",
+            help="Weight for estimator-spread uncertainty. Default 1.0.",
+        )
+        nw_al = c6.number_input(
+            "--novelty-weight",
+            0.0,
+            5.0,
+            0.5,
+            0.1,
+            key="al_nw",
+            help="Weight for distance-from-training novelty. Default 0.5.",
+        )
+        ow_al = c7.number_input(
+            "--objective-weight",
+            0.0,
+            5.0,
+            0.25,
+            0.05,
+            key="al_ow",
+            help="Weight for objective score. Default 0.25. Only used if objective-column set.",
+        )
+        epw_al = c8.number_input(
+            "--envelope-penalty-weight",
+            0.0,
+            10.0,
+            2.0,
+            0.5,
+            key="al_epw",
+            help="Penalty for outside-envelope candidates. Default 2.0.",
+        )
 
         _sec("Optional objective (guided active learning)")
-        c9,c10,c11 = st.columns(3)
-        obj_col  = c9.text_input("--objective-column (optional)","",key="al_obj",help="Column for objective, e.g. pred__cl. Leave blank for no objective.")
-        obj_mode = c10.selectbox("--objective-mode",["maximize","minimize","target"],key="al_omode",help="Default maximize. Use 'target' with --objective-target-value.")
-        obj_tgt  = c11.text_input("--objective-target-value (only for target mode)","",key="al_otgt")
-        excl_al  = st.checkbox("--exclude-outside-envelope",False,key="al_excl",help="Never recommend candidates outside envelope. Default False (--allow-outside-envelope).")
+        c9, c10, c11 = st.columns(3)
+        obj_col = c9.text_input(
+            "--objective-column (optional)",
+            "",
+            key="al_obj",
+            help="Column for objective, e.g. pred__cl. Leave blank for no objective.",
+        )
+        obj_mode = c10.selectbox(
+            "--objective-mode",
+            ["maximize", "minimize", "target"],
+            key="al_omode",
+            help="Default maximize. Use 'target' with --objective-target-value.",
+        )
+        obj_tgt = c11.text_input(
+            "--objective-target-value (only for target mode)", "", key="al_otgt"
+        )
+        excl_al = st.checkbox(
+            "--exclude-outside-envelope",
+            False,
+            key="al_excl",
+            help="Never recommend candidates outside envelope. Default False (--allow-outside-envelope).",
+        )
 
-        args_al = ["ml","suggest-samples","--model-run-dir",mr_al,"--candidate-csv",ic_al,
-                   "--top-n",str(int(topn_al)),
-                   "--uncertainty-weight",str(uw_al),"--novelty-weight",str(nw_al),
-                   "--objective-weight",str(ow_al),"--envelope-penalty-weight",str(epw_al),
-                   "--objective-mode",obj_mode]
-        if od_al.strip():  args_al += ["--output-dir",od_al]
-        if ref_al.strip(): args_al += ["--reference-csv",ref_al]
-        _flag(args_al,"--candidate-id-column",cid_al)
-        if not rp_al: args_al.append("--no-require-promoted-model")
-        _flag(args_al,"--objective-column",obj_col)
-        if obj_mode == "target" and obj_tgt.strip(): args_al += ["--objective-target-value",obj_tgt.strip()]
-        if excl_al: args_al.append("--exclude-outside-envelope")
-        _panel("Suggest next batch","Ranks candidates. Does not run any simulator.",args_al,root,exe,tmo,dry,"al_run")
+        args_al = [
+            "ml",
+            "suggest-samples",
+            "--model-run-dir",
+            mr_al,
+            "--candidate-csv",
+            ic_al,
+            "--top-n",
+            str(int(topn_al)),
+            "--uncertainty-weight",
+            str(uw_al),
+            "--novelty-weight",
+            str(nw_al),
+            "--objective-weight",
+            str(ow_al),
+            "--envelope-penalty-weight",
+            str(epw_al),
+            "--objective-mode",
+            obj_mode,
+        ]
+        if od_al.strip():
+            args_al += ["--output-dir", od_al]
+        if ref_al.strip():
+            args_al += ["--reference-csv", ref_al]
+        _flag(args_al, "--candidate-id-column", cid_al)
+        if not rp_al:
+            args_al.append("--no-require-promoted-model")
+        _flag(args_al, "--objective-column", obj_col)
+        if obj_mode == "target" and obj_tgt.strip():
+            args_al += ["--objective-target-value", obj_tgt.strip()]
+        if excl_al:
+            args_al.append("--exclude-outside-envelope")
+        _panel(
+            "Suggest next batch",
+            "Ranks candidates. Does not run any simulator.",
+            args_al,
+            root,
+            exe,
+            tmo,
+            dry,
+            "al_run",
+        )
+
+        _sec("Candidate pool generator (Wave-3)")
+        _note(
+            "<b>aeris ml al-generate-pool</b> — LHS pool of RAW design/condition rows inside the model's envelope. Feed the pool CSV into suggest-samples above.",
+            "info",
+        )
+        c1p, c2p, c3p = st.columns(3)
+        np_pool = c1p.number_input("--n-samples", min_value=1, value=2000, step=250, key="pool_n")
+        seed_pool = c2p.number_input("--seed", min_value=0, value=123, step=1, key="pool_seed")
+        exp_pool = c3p.number_input(
+            "--expand-frac",
+            0.0,
+            1.0,
+            0.0,
+            0.05,
+            key="pool_exp",
+            help="Expand bounds by this fraction of width (novelty hunting).",
+        )
+        fix_pool = st.text_area(
+            "--fix lines (col=value, one per line, optional)", "", height=68, key="pool_fix"
+        )
+        od_pool = st.text_input("--output-dir (optional)", "", key="pool_od")
+        args_pool = [
+            "ml",
+            "al-generate-pool",
+            "--model-run-dir",
+            mr_al,
+            "--n-samples",
+            str(int(np_pool)),
+            "--seed",
+            str(int(seed_pool)),
+            "--expand-frac",
+            str(exp_pool),
+        ]
+        for _ln in fix_pool.splitlines():
+            _ln = _ln.strip()
+            if _ln:
+                args_pool += ["--fix", _ln]
+        if od_pool.strip():
+            args_pool += ["--output-dir", od_pool]
+        _panel(
+            "Generate candidate pool",
+            "Writes candidate_pool.csv + provenance manifest.",
+            args_pool,
+            root,
+            exe,
+            tmo,
+            dry,
+            "pool_run",
+        )
 
     # ── ⑩ Classification ─────────────────────────────────────────────────────
     with tabs[9]:
@@ -6813,9 +10047,14 @@ def pg_ml(root, exe, tmo, dry):
         cls_t = st.tabs(["  Train classifier  ", "  Compare classifiers  "])
 
         with cls_t[0]:
-            ds_cl = _pick_dir("Promoted dataset", root/"data"/"datasets", "cls_ds")
-            c1,c2,c3 = st.columns(3)
-            input_mode_cl = c1.radio("Feature input", ["--feature-set", "--feature-preset", "--features"], horizontal=False, key="cls_mode")
+            ds_cl = _pick_dir("Promoted dataset", root / "data" / "datasets", "cls_ds")
+            c1, c2, c3 = st.columns(3)
+            input_mode_cl = c1.radio(
+                "Feature input",
+                ["--feature-set", "--feature-preset", "--features"],
+                horizontal=False,
+                key="cls_mode",
+            )
             if input_mode_cl == "--feature-set":
                 feat_cl = c2.text_input("--feature-set", "bwb_control_physics_v1", key="cls_fs")
                 feat_args_cl = ["--feature-set", feat_cl]
@@ -6823,35 +10062,83 @@ def pg_ml(root, exe, tmo, dry):
                 feat_cl = c2.selectbox("--feature-preset", ML_FEATURE_PRESETS, key="cls_fp")
                 feat_args_cl = ["--feature-preset", feat_cl]
             else:
-                feat_cl = c2.text_input("--features", DEFAULT_SYM_ELEVON_FEATURES, key="cls_features")
+                feat_cl = c2.text_input(
+                    "--features", DEFAULT_SYM_ELEVON_FEATURES, key="cls_features"
+                )
                 feat_args_cl = ["--features", feat_cl]
-            targets_cl = c3.text_input("--targets", "longitudinal_basic_flyable_int,red_flag_int", key="cls_targets")
-            c4,c5,c6 = st.columns(3)
-            ctype_cl = c4.selectbox("--classifier-type", CLASSIFIER_TYPES, key="cls_type", format_func=lambda s: CLASSIFIER_INFO.get(s, s))
+            targets_cl = c3.text_input(
+                "--targets", "longitudinal_basic_flyable_int,red_flag_int", key="cls_targets"
+            )
+            c4, c5, c6 = st.columns(3)
+            ctype_cl = c4.selectbox(
+                "--classifier-type",
+                CLASSIFIER_TYPES,
+                key="cls_type",
+                format_func=lambda s: CLASSIFIER_INFO.get(s, s),
+            )
             sm_cl = c5.selectbox("--split-method", ["grouped", "random"], key="cls_sm")
             gc_cl = c6.text_input("--group-column", "geometry_id", key="cls_gc")
-            c7,c8,c9 = st.columns(3)
+            c7, c8, c9 = st.columns(3)
             rs_cl = c7.number_input("--random-seed", min_value=0, value=123, step=1, key="cls_rs")
-            af_cl = c8.checkbox("--allow-forced", False, key="cls_af", help="Allow force-promoted dataset sources. Avoid for real work.")
+            af_cl = c8.checkbox(
+                "--allow-forced",
+                False,
+                key="cls_af",
+                help="Allow force-promoted dataset sources. Avoid for real work.",
+            )
             json_cl = c9.checkbox("--json", False, key="cls_json")
-            od_cl = st.text_input("--output-dir", str(root/"data"/"processed"/"ml_runs"/"gui_classifier"), key="cls_od")
+            od_cl = st.text_input(
+                "--output-dir",
+                str(root / "data" / "processed" / "ml_runs" / "gui_classifier"),
+                key="cls_od",
+            )
             wf_cl = st.text_input("--workflow (optional)", "", key="cls_wf")
-            args_cl = ["ml", "classify", "--dataset", ds_cl, *feat_args_cl, "--targets", targets_cl,
-                       "--classifier-type", ctype_cl, "--split-method", sm_cl, "--group-column", gc_cl,
-                       "--random-seed", str(int(rs_cl)), "--output-dir", od_cl]
-            if af_cl: args_cl.append("--allow-forced")
-            if json_cl: args_cl.append("--json")
-            if wf_cl.strip(): args_cl += ["--workflow", wf_cl.strip()]
+            args_cl = [
+                "ml",
+                "classify",
+                "--dataset",
+                ds_cl,
+                *feat_args_cl,
+                "--targets",
+                targets_cl,
+                "--classifier-type",
+                ctype_cl,
+                "--split-method",
+                sm_cl,
+                "--group-column",
+                gc_cl,
+                "--random-seed",
+                str(int(rs_cl)),
+                "--output-dir",
+                od_cl,
+            ]
+            if af_cl:
+                args_cl.append("--allow-forced")
+            if json_cl:
+                args_cl.append("--json")
+            if wf_cl.strip():
+                args_cl += ["--workflow", wf_cl.strip()]
             _panel(
                 "Train classifier",
                 "One classifier per target. Writes classification_summary_json and per-target metrics.",
-                args_cl, root, exe, tmo, dry, "cls_run", label="▶  Classify",
+                args_cl,
+                root,
+                exe,
+                tmo,
+                dry,
+                "cls_run",
+                label="▶  Classify",
             )
 
         with cls_t[1]:
-            ds_cc = _pick_dir("Promoted dataset", root/"data"/"datasets", "cc_ds")
-            c1,c2,c3 = st.columns(3)
-            input_mode_cc = c1.radio("Feature input", ["--feature-set", "--feature-preset", "--features"], horizontal=False, key="cc_mode")
+            ds_cc = _pick_dir("Promoted dataset", root / "data" / "datasets", "cc_ds")
+            c1, c2, c3 = st.columns(3)
+            input_mode_cc = c1.radio(
+                "Feature input",
+                ["--feature-set", "--feature-preset", "--features"],
+                horizontal=False,
+                key="cc_mode",
+            )
             if input_mode_cc == "--feature-set":
                 feat_cc = c2.text_input("--feature-set", "bwb_control_physics_v1", key="cc_fs")
                 feat_args_cc = ["--feature-set", feat_cc]
@@ -6859,103 +10146,296 @@ def pg_ml(root, exe, tmo, dry):
                 feat_cc = c2.selectbox("--feature-preset", ML_FEATURE_PRESETS, key="cc_fp")
                 feat_args_cc = ["--feature-preset", feat_cc]
             else:
-                feat_cc = c2.text_input("--features", DEFAULT_SYM_ELEVON_FEATURES, key="cc_features")
+                feat_cc = c2.text_input(
+                    "--features", DEFAULT_SYM_ELEVON_FEATURES, key="cc_features"
+                )
                 feat_args_cc = ["--features", feat_cc]
-            targets_cc = c3.text_input("--targets", "longitudinal_basic_flyable_int,red_flag_int", key="cc_targets")
-            c4,c5,c6 = st.columns(3)
-            classifiers_cc = c4.multiselect("--classifiers", CLASSIFIER_TYPES, default=["logistic_regression", "extra_trees_classifier"], key="cc_types", format_func=lambda s: CLASSIFIER_INFO.get(s, s))
+            targets_cc = c3.text_input(
+                "--targets", "longitudinal_basic_flyable_int,red_flag_int", key="cc_targets"
+            )
+            c4, c5, c6 = st.columns(3)
+            classifiers_cc = c4.multiselect(
+                "--classifiers",
+                CLASSIFIER_TYPES,
+                default=["logistic_regression", "extra_trees_classifier"],
+                key="cc_types",
+                format_func=lambda s: CLASSIFIER_INFO.get(s, s),
+            )
             sm_cc = c5.selectbox("--split-method", ["grouped", "random"], key="cc_sm")
             gc_cc = c6.text_input("--group-column", "geometry_id", key="cc_gc")
-            c7,c8,c9 = st.columns(3)
+            c7, c8, c9 = st.columns(3)
             rs_cc = c7.number_input("--random-seed", min_value=0, value=123, step=1, key="cc_rs")
             af_cc = c8.checkbox("--allow-forced", False, key="cc_af")
             json_cc = c9.checkbox("--json", False, key="cc_json")
-            od_cc = st.text_input("--output-dir", str(root/"data"/"processed"/"ml_runs"/"gui_compare_classifiers"), key="cc_od")
+            od_cc = st.text_input(
+                "--output-dir",
+                str(root / "data" / "processed" / "ml_runs" / "gui_compare_classifiers"),
+                key="cc_od",
+            )
             wf_cc = st.text_input("--workflow (optional)", "", key="cc_wf")
-            cls_arg = ",".join(classifiers_cc) if classifiers_cc else "logistic_regression,extra_trees_classifier"
-            args_cc = ["ml", "compare-classifiers", "--dataset", ds_cc, *feat_args_cc, "--targets", targets_cc,
-                       "--classifiers", cls_arg, "--split-method", sm_cc, "--group-column", gc_cc,
-                       "--random-seed", str(int(rs_cc)), "--output-dir", od_cc]
-            if af_cc: args_cc.append("--allow-forced")
-            if json_cc: args_cc.append("--json")
-            if wf_cc.strip(): args_cc += ["--workflow", wf_cc.strip()]
+            cls_arg = (
+                ",".join(classifiers_cc)
+                if classifiers_cc
+                else "logistic_regression,extra_trees_classifier"
+            )
+            args_cc = [
+                "ml",
+                "compare-classifiers",
+                "--dataset",
+                ds_cc,
+                *feat_args_cc,
+                "--targets",
+                targets_cc,
+                "--classifiers",
+                cls_arg,
+                "--split-method",
+                sm_cc,
+                "--group-column",
+                gc_cc,
+                "--random-seed",
+                str(int(rs_cc)),
+                "--output-dir",
+                od_cc,
+            ]
+            if af_cc:
+                args_cc.append("--allow-forced")
+            if json_cc:
+                args_cc.append("--json")
+            if wf_cc.strip():
+                args_cc += ["--workflow", wf_cc.strip()]
             _panel(
                 "Compare classifiers",
                 "Ranks classifier families by test F1 / balanced accuracy. Use only for label targets.",
-                args_cc, root, exe, tmo, dry, "cc_run", label="▶  Compare classifiers",
+                args_cc,
+                root,
+                exe,
+                tmo,
+                dry,
+                "cc_run",
+                label="▶  Compare classifiers",
             )
 
     # ── ⑪ Multifidelity ──────────────────────────────────────────────────────
     with tabs[10]:
-        _note("⚠ Requires real HF data (XFOIL or CFD). AVL-only delta correction does NOT give paper-level accuracy.","warn")
-        mf_t = st.tabs(["  Build delta  ","  Train delta  ","  Predict  ","  Evaluate  "])
+        _note(
+            "⚠ Requires real HF data (XFOIL or CFD). AVL-only delta correction does NOT give paper-level accuracy.",
+            "warn",
+        )
+        mf_t = st.tabs(["  Build delta  ", "  Train delta  ", "  Predict  ", "  Evaluate  "])
         with mf_t[0]:
-            c1,c2 = st.columns(2)
-            lf = c1.text_input("--lf-csv (AVL results)",str(root/"data"/"processed"/"multifidelity"/"lf.csv"),key="mf_lf")
-            hf = c2.text_input("--hf-csv (CFD/XFOIL results)",str(root/"data"/"processed"/"multifidelity"/"hf.csv"),key="mf_hf")
-            pk = st.text_input("--pair-keys",DEFAULT_PAIR_KEYS,key="mf_pk",help="Comma-sep columns to match LF/HF rows.")
-            tg = st.text_input("--targets",DEFAULT_TARGETS,key="mf_tg")
-            od = st.text_input("--output-dir (REQUIRED)",str(root/"data"/"processed"/"multifidelity"/"gui_delta"),key="mf_od")
-            _panel("Build delta dataset","Pairs LF/HF rows. Writes delta_dataset.csv + delta_dataset_report.json.",
-                   ["ml","build-delta-dataset","--lf-csv",lf,"--hf-csv",hf,"--pair-keys",pk,"--targets",tg,"--output-dir",od],
-                   root,exe,tmo,dry,"mf_bld")
+            c1, c2 = st.columns(2)
+            lf = c1.text_input(
+                "--lf-csv (AVL results)",
+                str(root / "data" / "processed" / "multifidelity" / "lf.csv"),
+                key="mf_lf",
+            )
+            hf = c2.text_input(
+                "--hf-csv (CFD/XFOIL results)",
+                str(root / "data" / "processed" / "multifidelity" / "hf.csv"),
+                key="mf_hf",
+            )
+            pk = st.text_input(
+                "--pair-keys",
+                DEFAULT_PAIR_KEYS,
+                key="mf_pk",
+                help="Comma-sep columns to match LF/HF rows.",
+            )
+            tg = st.text_input("--targets", DEFAULT_TARGETS, key="mf_tg")
+            od = st.text_input(
+                "--output-dir (REQUIRED)",
+                str(root / "data" / "processed" / "multifidelity" / "gui_delta"),
+                key="mf_od",
+            )
+            _panel(
+                "Build delta dataset",
+                "Pairs LF/HF rows. Writes delta_dataset.csv + delta_dataset_report.json.",
+                [
+                    "ml",
+                    "build-delta-dataset",
+                    "--lf-csv",
+                    lf,
+                    "--hf-csv",
+                    hf,
+                    "--pair-keys",
+                    pk,
+                    "--targets",
+                    tg,
+                    "--output-dir",
+                    od,
+                ],
+                root,
+                exe,
+                tmo,
+                dry,
+                "mf_bld",
+            )
         with mf_t[1]:
-            dd2 = _pick_dir("Delta dataset dir (or parent dir)",root/"data"/"processed"/"multifidelity","mf_dd2")
+            dd2 = _pick_dir(
+                "Delta dataset dir (or parent dir)",
+                root / "data" / "processed" / "multifidelity",
+                "mf_dd2",
+            )
             _note(
                 "<b>Feature input:</b> use <code>--feature-set</code> (recommended — e.g. <code>bwb_control_physics_v1</code>) "
                 "or explicit <code>--features</code>. LF target columns (<code>lf__cl</code>, etc.) are appended automatically when using a feature set. "
                 "Provenance is written to <code>delta_model_manifest.json</code>.",
                 "info",
             )
-            mf_fs_mode = st.radio("Feature input",["--feature-set (recommended)","--features (explicit)"],horizontal=True,key="mf_fs_mode")
-            c1,c2 = st.columns(2)
+            mf_fs_mode = st.radio(
+                "Feature input",
+                ["--feature-set (recommended)", "--features (explicit)"],
+                horizontal=True,
+                key="mf_fs_mode",
+            )
+            c1, c2 = st.columns(2)
             if "--feature-set" in mf_fs_mode:
-                mf_fs2 = c1.text_input("--feature-set","bwb_control_physics_v1",key="mf_fs2",help="LF columns (lf__cl etc.) appended automatically.")
-                tg2    = c2.text_input("--base-targets",DEFAULT_TARGETS,key="mf_tg2",help="cl,cd,cm. Delta targets = delta__cl etc.")
-                ft2    = None
+                mf_fs2 = c1.text_input(
+                    "--feature-set",
+                    "bwb_control_physics_v1",
+                    key="mf_fs2",
+                    help="LF columns (lf__cl etc.) appended automatically.",
+                )
+                tg2 = c2.text_input(
+                    "--base-targets",
+                    DEFAULT_TARGETS,
+                    key="mf_tg2",
+                    help="cl,cd,cm. Delta targets = delta__cl etc.",
+                )
+                ft2 = None
             else:
-                ft2 = c1.text_input("--features (include lf__ columns)","c1_m,alpha_deg,velocity_mps,altitude_m,control_input_deg,lf__cl,lf__cd,lf__cm",key="mf_ft2",help="Include LF output columns as features — main correction signal")
-                tg2 = c2.text_input("--base-targets",DEFAULT_TARGETS,key="mf_tg2b",help="e.g. cl,cd,cm.")
+                ft2 = c1.text_input(
+                    "--features (include lf__ columns)",
+                    "c1_m,alpha_deg,velocity_mps,altitude_m,control_input_deg,lf__cl,lf__cd,lf__cm",
+                    key="mf_ft2",
+                    help="Include LF output columns as features — main correction signal",
+                )
+                tg2 = c2.text_input(
+                    "--base-targets", DEFAULT_TARGETS, key="mf_tg2b", help="e.g. cl,cd,cm."
+                )
                 mf_fs2 = None
-            mt2 = st.selectbox("--model-type",MODEL_TYPES,index=4,key="mf_mt2",format_func=lambda s:MODEL_INFO.get(s,s))
-            c3,c4,c5 = st.columns(3)
-            sm2 = c3.selectbox("--split-method",["grouped","random"],key="mf_sm2")
-            gc2 = c4.text_input("--group-column","geometry_id",key="mf_gc2")
-            rs2 = c5.number_input("--random-seed",min_value=0,value=123,step=1,key="mf_rs2")
-            od2 = st.text_input("--output-dir",str(root/"data"/"processed"/"ml_runs"/"gui_delta_model"),key="mf_od2")
-            args_mft = ["ml","train-delta-model","--delta-dataset",dd2,"--base-targets",tg2,
-                         "--model-type",mt2,"--split-method",sm2,"--group-column",gc2,
-                         "--random-seed",str(int(rs2)),"--output-dir",od2]
-            if mf_fs2: args_mft += ["--feature-set",mf_fs2]
-            elif ft2:  args_mft += ["--features",ft2]
-            _panel("Train delta model","Learns HF−LF correction. Feature provenance written to delta_model_manifest.json.",
-                   args_mft, root,exe,tmo,dry,"mf_tr2")
+            mt2 = st.selectbox(
+                "--model-type",
+                MODEL_TYPES,
+                index=4,
+                key="mf_mt2",
+                format_func=lambda s: MODEL_INFO.get(s, s),
+            )
+            c3, c4, c5 = st.columns(3)
+            sm2 = c3.selectbox("--split-method", ["grouped", "random"], key="mf_sm2")
+            gc2 = c4.text_input("--group-column", "geometry_id", key="mf_gc2")
+            rs2 = c5.number_input("--random-seed", min_value=0, value=123, step=1, key="mf_rs2")
+            od2 = st.text_input(
+                "--output-dir",
+                str(root / "data" / "processed" / "ml_runs" / "gui_delta_model"),
+                key="mf_od2",
+            )
+            args_mft = [
+                "ml",
+                "train-delta-model",
+                "--delta-dataset",
+                dd2,
+                "--base-targets",
+                tg2,
+                "--model-type",
+                mt2,
+                "--split-method",
+                sm2,
+                "--group-column",
+                gc2,
+                "--random-seed",
+                str(int(rs2)),
+                "--output-dir",
+                od2,
+            ]
+            if mf_fs2:
+                args_mft += ["--feature-set", mf_fs2]
+            elif ft2:
+                args_mft += ["--features", ft2]
+            _panel(
+                "Train delta model",
+                "Learns HF−LF correction. Feature provenance written to delta_model_manifest.json.",
+                args_mft,
+                root,
+                exe,
+                tmo,
+                dry,
+                "mf_tr2",
+            )
         with mf_t[2]:
-            mr3  = _pick_dir("Delta model run dir",root/"data"/"processed"/"ml_runs","mf_pr3")
-            ic3  = st.text_input("--input-csv",str(Path(mr3)/"test_rows.csv" if mr3 else ""),key="mf_ic3",help="Needs feature columns AND lf__ columns.")
-            od3  = st.text_input("--output-dir","",key="mf_od3")
-            it3  = st.checkbox("--include-truth-if-available",True,key="mf_it3",help="Compute metrics if HF columns present. Default True.")
+            mr3 = _pick_dir(
+                "Delta model run dir", root / "data" / "processed" / "ml_runs", "mf_pr3"
+            )
+            ic3 = st.text_input(
+                "--input-csv",
+                str(Path(mr3) / "test_rows.csv" if mr3 else ""),
+                key="mf_ic3",
+                help="Needs feature columns AND lf__ columns.",
+            )
+            od3 = st.text_input("--output-dir", "", key="mf_od3")
+            it3 = st.checkbox(
+                "--include-truth-if-available",
+                True,
+                key="mf_it3",
+                help="Compute metrics if HF columns present. Default True.",
+            )
             c_mfp1, c_mfp2 = st.columns(2)
-            mfp_fs = c_mfp1.text_input("--feature-set (optional)","",key="mfp_fs",
-                                         help="Same feature set used during delta training. Leave blank if model was trained with --features.")
-            mfp_afm = c_mfp2.checkbox("--allow-feature-set-mismatch",False,key="mfp_afm")
-            args_mfp = ["ml","predict-delta-model","--model-run-dir",mr3,"--input-csv",ic3]
-            if od3.strip(): args_mfp += ["--output-dir",od3]
-            if not it3: args_mfp.append("--no-include-truth-if-available")
-            if mfp_fs.strip(): args_mfp += ["--feature-set",mfp_fs.strip()]
-            if mfp_afm: args_mfp.append("--allow-feature-set-mismatch")
-            _panel("Predict with delta","Output = LF_prediction + predicted_delta. Feature transforms applied automatically if --feature-set provided.",args_mfp,root,exe,tmo,dry,"mf_pr3r")
+            mfp_fs = c_mfp1.text_input(
+                "--feature-set (optional)",
+                "",
+                key="mfp_fs",
+                help="Same feature set used during delta training. Leave blank if model was trained with --features.",
+            )
+            mfp_afm = c_mfp2.checkbox("--allow-feature-set-mismatch", False, key="mfp_afm")
+            args_mfp = ["ml", "predict-delta-model", "--model-run-dir", mr3, "--input-csv", ic3]
+            if od3.strip():
+                args_mfp += ["--output-dir", od3]
+            if not it3:
+                args_mfp.append("--no-include-truth-if-available")
+            if mfp_fs.strip():
+                args_mfp += ["--feature-set", mfp_fs.strip()]
+            if mfp_afm:
+                args_mfp.append("--allow-feature-set-mismatch")
+            _panel(
+                "Predict with delta",
+                "Output = LF_prediction + predicted_delta. Feature transforms applied automatically if --feature-set provided.",
+                args_mfp,
+                root,
+                exe,
+                tmo,
+                dry,
+                "mf_pr3r",
+            )
         with mf_t[3]:
-            mr4  = _pick_dir("Delta model run dir",root/"data"/"processed"/"ml_runs","mf_ev4")
-            parts4 = st.text_input("--partitions","train,val,test",key="mf_parts",help="Comma-sep partitions to evaluate. Default train,val,test.")
-            od4  = st.text_input("--output-dir","",key="mf_od4")
-            args_mfe = ["ml","evaluate-delta-model","--model-run-dir",mr4,"--partitions",parts4]
-            if od4.strip(): args_mfe += ["--output-dir",od4]
-            _panel("Evaluate delta","Compare LF baseline vs corrected RMSE. Reports improved/worsened targets.",args_mfe,root,exe,tmo,dry,"mf_ev4r")
-
-
-
-
+            mr4 = _pick_dir(
+                "Delta model run dir", root / "data" / "processed" / "ml_runs", "mf_ev4"
+            )
+            parts4 = st.text_input(
+                "--partitions",
+                "train,val,test",
+                key="mf_parts",
+                help="Comma-sep partitions to evaluate. Default train,val,test.",
+            )
+            od4 = st.text_input("--output-dir", "", key="mf_od4")
+            args_mfe = [
+                "ml",
+                "evaluate-delta-model",
+                "--model-run-dir",
+                mr4,
+                "--partitions",
+                parts4,
+            ]
+            if od4.strip():
+                args_mfe += ["--output-dir", od4]
+            _panel(
+                "Evaluate delta",
+                "Compare LF baseline vs corrected RMSE. Reports improved/worsened targets.",
+                args_mfe,
+                root,
+                exe,
+                tmo,
+                dry,
+                "mf_ev4r",
+            )
 
     # ── ⑫ ML Trust ───────────────────────────────────────────────────────────
     with tabs[11]:
@@ -6965,19 +10445,63 @@ def pg_ml(root, exe, tmo, dry):
             "info",
         )
         trust_ds = _pick_dir("Promoted dataset root", root / "data" / "datasets", "mltrust_ds")
-        trust_fs = st.selectbox("--feature-set", ML_FEATURE_SET_CHOICES, index=ML_FEATURE_SET_CHOICES.index("bwb_control_physics_v1") if "bwb_control_physics_v1" in ML_FEATURE_SET_CHOICES else 0, key="mltrust_fs")
+        trust_fs = st.selectbox(
+            "--feature-set",
+            ML_FEATURE_SET_CHOICES,
+            index=(
+                ML_FEATURE_SET_CHOICES.index("bwb_control_physics_v1")
+                if "bwb_control_physics_v1" in ML_FEATURE_SET_CHOICES
+                else 0
+            ),
+            key="mltrust_fs",
+        )
         c1, c2, c3 = st.columns(3)
-        trust_targets = c1.text_input("--targets", "aero_all", key="mltrust_targets", help="Examples: aero_basic, aero_all, flyability_all, all/numeric_all, or explicit cl,cd,cm.")
+        trust_targets = c1.text_input(
+            "--targets",
+            "aero_all",
+            key="mltrust_targets",
+            help="Examples: aero_basic, aero_all, flyability_all, all/numeric_all, or explicit cl,cd,cm.",
+        )
         trust_group = c2.text_input("--group-column", "geometry_id", key="mltrust_group")
-        trust_model = c3.selectbox("--model", MODEL_TYPES, index=MODEL_TYPES.index("extra_trees") if "extra_trees" in MODEL_TYPES else 0, key="mltrust_model")
+        trust_model = c3.selectbox(
+            "--model",
+            MODEL_TYPES,
+            index=MODEL_TYPES.index("extra_trees") if "extra_trees" in MODEL_TYPES else 0,
+            key="mltrust_model",
+        )
         c4, c5, c6 = st.columns(3)
         trust_seeds = c4.text_input("--seeds", "101,202,303,404,505", key="mltrust_seeds")
-        trust_params = c5.text_input("--model-params-json", "", key="mltrust_params", help="Optional path, e.g. /tmp/aeris_extra_trees_fast.json")
-        trust_allow = c6.checkbox("--allow-forced", value=True, key="mltrust_allow", help="Useful for current Paper 1 pilot attrition/forced promotion evidence.")
+        trust_params = c5.text_input(
+            "--model-params-json",
+            "",
+            key="mltrust_params",
+            help="Optional path, e.g. /tmp/aeris_extra_trees_fast.json",
+        )
+        trust_allow = c6.checkbox(
+            "--allow-forced",
+            value=True,
+            key="mltrust_allow",
+            help="Useful for current Paper 1 pilot attrition/forced promotion evidence.",
+        )
         trust_plots = st.checkbox("--plots / generate PNG plots", value=True, key="mltrust_plots")
 
         def _trust_base_args(command: str) -> list[str]:
-            args = ["ml", command, "--dataset", trust_ds, "--feature-set", trust_fs, "--targets", trust_targets, "--group-column", trust_group, "--model", trust_model, "--seeds", trust_seeds]
+            args = [
+                "ml",
+                command,
+                "--dataset",
+                trust_ds,
+                "--feature-set",
+                trust_fs,
+                "--targets",
+                trust_targets,
+                "--group-column",
+                trust_group,
+                "--model",
+                trust_model,
+                "--seeds",
+                trust_seeds,
+            ]
             if trust_allow:
                 args.append("--allow-forced")
             if trust_params.strip():
@@ -6985,11 +10509,15 @@ def pg_ml(root, exe, tmo, dry):
             args.append("--plots" if trust_plots else "--no-plots")
             return args
 
-        def _trust_plot_gallery(label: str, rel_plot_dir: str, filenames: list[str], key: str) -> None:
+        def _trust_plot_gallery(
+            label: str, rel_plot_dir: str, filenames: list[str], key: str
+        ) -> None:
             st.markdown(f"### {label}")
             base = Path(trust_ds).expanduser() if trust_ds.strip() else root / "data" / "datasets"
             plot_dir_default = base / rel_plot_dir
-            plot_dir_raw = st.text_input(f"{label} plot directory", str(plot_dir_default), key=f"{key}_plot_dir")
+            plot_dir_raw = st.text_input(
+                f"{label} plot directory", str(plot_dir_default), key=f"{key}_plot_dir"
+            )
             plot_dir = Path(plot_dir_raw).expanduser()
             if not plot_dir.exists():
                 st.info(f"No plot directory found yet: {plot_dir}")
@@ -7011,7 +10539,9 @@ def pg_ml(root, exe, tmo, dry):
             default_report = str(base / rel_report)
             default_summary = str(base / rel_summary)
             report_path = st.text_input(f"{label} report JSON", default_report, key=f"{key}_report")
-            summary_path = st.text_input(f"{label} summary MD", default_summary, key=f"{key}_summary")
+            summary_path = st.text_input(
+                f"{label} summary MD", default_summary, key=f"{key}_summary"
+            )
             c_a, c_b = st.columns(2)
             with c_a:
                 if st.button(f"Load {label} JSON", key=f"{key}_load_json"):
@@ -7024,11 +10554,26 @@ def pg_ml(root, exe, tmo, dry):
                 if st.button(f"Load {label} summary", key=f"{key}_load_md"):
                     st.markdown(_read(Path(summary_path).expanduser(), lim=120_000))
 
-        trust_tabs = st.tabs(["  Learning curves  ", "  Repeated grouped CV  ", "  Per-regime residuals  ", "  Plot gallery  ", "  Report viewer  ", "  Evidence package  ", "  Training monitor  "])
+        trust_tabs = st.tabs(
+            [
+                "  Learning curves  ",
+                "  Repeated grouped CV  ",
+                "  Per-regime residuals  ",
+                "  Plot gallery  ",
+                "  Report viewer  ",
+                "  Evidence package  ",
+                "  Training monitor  ",
+            ]
+        )
         with trust_tabs[0]:
             c1, c2 = st.columns(2)
             lc_sizes = c1.text_input("--group-sizes", "5,10,20,30,40", key="mltrust_lc_sizes")
-            lc_out = c2.text_input("--output-dir", "", key="mltrust_lc_out", help="Optional. Default: <dataset>/learning_curves")
+            lc_out = c2.text_input(
+                "--output-dir",
+                "",
+                key="mltrust_lc_out",
+                help="Optional. Default: <dataset>/learning_curves",
+            )
             lc_args = _trust_base_args("learning-curves") + ["--group-sizes", lc_sizes]
             if lc_out.strip():
                 lc_args += ["--output-dir", lc_out.strip()]
@@ -7064,7 +10609,12 @@ def pg_ml(root, exe, tmo, dry):
             )
 
         with trust_tabs[1]:
-            cv_out = st.text_input("--output-dir", "", key="mltrust_cv_out", help="Optional. Default: <dataset>/repeated_grouped_cv")
+            cv_out = st.text_input(
+                "--output-dir",
+                "",
+                key="mltrust_cv_out",
+                help="Optional. Default: <dataset>/repeated_grouped_cv",
+            )
             cv_args = _trust_base_args("repeated-grouped-cv")
             if cv_out.strip():
                 cv_args += ["--output-dir", cv_out.strip()]
@@ -7097,10 +10647,24 @@ def pg_ml(root, exe, tmo, dry):
 
         with trust_tabs[2]:
             c1, c2 = st.columns(2)
-            reg_cols = c1.text_input("--regime-columns", "alpha_deg,control_input_deg", key="mltrust_reg_cols")
-            min_reg = c2.number_input("--min-regime-count", min_value=1, value=3, step=1, key="mltrust_min_reg")
-            pr_out = st.text_input("--output-dir", "", key="mltrust_pr_out", help="Optional. Default: <dataset>/per_regime_residuals")
-            pr_args = _trust_base_args("per-regime-residuals") + ["--regime-columns", reg_cols, "--min-regime-count", str(int(min_reg))]
+            reg_cols = c1.text_input(
+                "--regime-columns", "alpha_deg,control_input_deg", key="mltrust_reg_cols"
+            )
+            min_reg = c2.number_input(
+                "--min-regime-count", min_value=1, value=3, step=1, key="mltrust_min_reg"
+            )
+            pr_out = st.text_input(
+                "--output-dir",
+                "",
+                key="mltrust_pr_out",
+                help="Optional. Default: <dataset>/per_regime_residuals",
+            )
+            pr_args = _trust_base_args("per-regime-residuals") + [
+                "--regime-columns",
+                reg_cols,
+                "--min-regime-count",
+                str(int(min_reg)),
+            ]
             if pr_out.strip():
                 pr_args += ["--output-dir", pr_out.strip()]
             _panel(
@@ -7133,11 +10697,21 @@ def pg_ml(root, exe, tmo, dry):
             )
 
         with trust_tabs[3]:
-            _note("Direct viewer for all generated ML-trust PNG plots for the selected dataset.", "info")
+            _note(
+                "Direct viewer for all generated ML-trust PNG plots for the selected dataset.",
+                "info",
+            )
             _trust_plot_gallery(
                 "Learning curve plots",
                 "learning_curves/plots",
-                ["learning_curve_r2.png", "learning_curve_rmse.png", "learning_curve_mae.png", "per_target_learning_curves.png", "per_target_final_r2.png", "overfit_gap.png"],
+                [
+                    "learning_curve_r2.png",
+                    "learning_curve_rmse.png",
+                    "learning_curve_mae.png",
+                    "per_target_learning_curves.png",
+                    "per_target_final_r2.png",
+                    "overfit_gap.png",
+                ],
                 "mltrust_gallery_lc_all",
             )
             _trust_plot_gallery(
@@ -7149,7 +10723,12 @@ def pg_ml(root, exe, tmo, dry):
             _trust_plot_gallery(
                 "Per-regime residual plots",
                 "per_regime_residuals/plots",
-                ["per_target_residual_rmse.png", "per_target_residual_bias.png", "residuals_vs_actual.png", "regime_rmse_alpha_control.png"],
+                [
+                    "per_target_residual_rmse.png",
+                    "per_target_residual_bias.png",
+                    "residuals_vs_actual.png",
+                    "regime_rmse_alpha_control.png",
+                ],
                 "mltrust_gallery_pr_all",
             )
 
@@ -7164,22 +10743,42 @@ def pg_ml(root, exe, tmo, dry):
                     "\n".join(
                         [
                             str(base / "learning_curves" / "learning_curves_report.json"),
-                            str(base / "learning_curves" / "learning_curves_per_target_summary.csv"),
+                            str(
+                                base / "learning_curves" / "learning_curves_per_target_summary.csv"
+                            ),
                             str(base / "learning_curves" / "plots" / "learning_curve_r2.png"),
-                            str(base / "learning_curves" / "plots" / "per_target_learning_curves.png"),
+                            str(
+                                base
+                                / "learning_curves"
+                                / "plots"
+                                / "per_target_learning_curves.png"
+                            ),
                             str(base / "repeated_grouped_cv" / "repeated_grouped_cv_report.json"),
-                            str(base / "repeated_grouped_cv" / "repeated_grouped_cv_per_target_summary.csv"),
-                            str(base / "repeated_grouped_cv" / "plots" / "per_target_repeated_cv_r2.png"),
+                            str(
+                                base
+                                / "repeated_grouped_cv"
+                                / "repeated_grouped_cv_per_target_summary.csv"
+                            ),
+                            str(
+                                base
+                                / "repeated_grouped_cv"
+                                / "plots"
+                                / "per_target_repeated_cv_r2.png"
+                            ),
                             str(base / "per_regime_residuals" / "per_regime_residuals_report.json"),
                             str(base / "per_regime_residuals" / "regime_residual_summary.csv"),
-                            str(base / "per_regime_residuals" / "plots" / "regime_rmse_alpha_control.png"),
+                            str(
+                                base
+                                / "per_regime_residuals"
+                                / "plots"
+                                / "regime_rmse_alpha_control.png"
+                            ),
                         ]
                     ),
                     language="text",
                 )
             else:
                 st.warning("Select a dataset root first.")
-
 
         with trust_tabs[5]:
             _note(
@@ -7196,7 +10795,9 @@ def pg_ml(root, exe, tmo, dry):
                     "mltrust_evidence_model_dir",
                 )
             with evi_c2:
-                evi_workflow = st.text_input("--workflow (optional)", "", key="mltrust_evidence_workflow")
+                evi_workflow = st.text_input(
+                    "--workflow (optional)", "", key="mltrust_evidence_workflow"
+                )
             evi_c3, evi_c4 = st.columns(2)
             evi_out = evi_c3.text_input(
                 "--output-dir (optional)",
@@ -7253,9 +10854,15 @@ def pg_ml(root, exe, tmo, dry):
                     counts_raw = evi_manifest_data.get("artifact_counts")
                 counts = counts_raw if isinstance(counts_raw, dict) else {}
 
-                present_count = counts.get("present", evi_manifest_data.get("present_artifacts", "?"))
-                missing_optional_count = counts.get("missing_optional", evi_manifest_data.get("missing_optional_artifacts", "?"))
-                missing_required_count = counts.get("missing_required", evi_manifest_data.get("missing_required_artifacts", "?"))
+                present_count = counts.get(
+                    "present", evi_manifest_data.get("present_artifacts", "?")
+                )
+                missing_optional_count = counts.get(
+                    "missing_optional", evi_manifest_data.get("missing_optional_artifacts", "?")
+                )
+                missing_required_count = counts.get(
+                    "missing_required", evi_manifest_data.get("missing_required_artifacts", "?")
+                )
 
                 m1, m2, m3, m4 = st.columns(4)
                 m1.metric("Evidence status", str(status))
@@ -7273,7 +10880,9 @@ def pg_ml(root, exe, tmo, dry):
                     missing_optional_numeric = 0
 
                 if str(status).startswith("failed") or missing_required_numeric:
-                    st.error("Evidence package has missing required artifacts. Inspect the artifact index before trusting this run.")
+                    st.error(
+                        "Evidence package has missing required artifacts. Inspect the artifact index before trusting this run."
+                    )
                 elif "missing_optional" in str(status) or missing_optional_numeric:
                     st.warning("Evidence package is usable, but some optional evidence is missing.")
                 else:
@@ -7313,7 +10922,6 @@ def pg_ml(root, exe, tmo, dry):
                 language="text",
             )
 
-
         with trust_tabs[-1]:
             _note(
                 "<b>Training monitor:</b> inspect the artifacts written immediately after <code>aeris ml train</code>. "
@@ -7327,7 +10935,11 @@ def pg_ml(root, exe, tmo, dry):
                 key="mltrust_tm_model_run",
                 help="A model run folder produced by `aeris ml train`.",
             )
-            tm_dir = Path(tm_model_run).expanduser() / "training_monitor" if tm_model_run.strip() else root / "data" / "processed" / "ml_runs"
+            tm_dir = (
+                Path(tm_model_run).expanduser() / "training_monitor"
+                if tm_model_run.strip()
+                else root / "data" / "processed" / "ml_runs"
+            )
             tm_report_default = str(tm_dir / "training_monitor_report.json")
             tm_history_default = str(tm_dir / "training_history.csv")
             tm_plot_default = str(tm_dir / "plots" / "training_loss_curve.png")
@@ -7356,13 +10968,23 @@ def pg_ml(root, exe, tmo, dry):
                 if report is None:
                     st.warning(f"Could not read training monitor report: {report_path}")
                 else:
-                    metrics_summary = report.get("metrics_summary", {}) if isinstance(report, dict) else {}
+                    metrics_summary = (
+                        report.get("metrics_summary", {}) if isinstance(report, dict) else {}
+                    )
                     _stat_row(
                         [
                             ("Status", str(report.get("monitor_status", "?")), "monitor"),
-                            ("History", "yes" if report.get("history_available") else "no", "epoch rows"),
+                            (
+                                "History",
+                                "yes" if report.get("history_available") else "no",
+                                "epoch rows",
+                            ),
                             ("Rows", str(report.get("n_history_rows", 0)), "history"),
-                            ("Live", "yes" if report.get("live_streaming_supported") else "no", "streaming"),
+                            (
+                                "Live",
+                                "yes" if report.get("live_streaming_supported") else "no",
+                                "streaming",
+                            ),
                         ]
                     )
                     if report.get("monitor_status") == "non_iterative_model":
@@ -7371,7 +10993,10 @@ def pg_ml(root, exe, tmo, dry):
                             "info",
                         )
                     elif report.get("history_available"):
-                        _note("Epoch-like training history is available. Inspect the CSV and loss plot below.", "ok")
+                        _note(
+                            "Epoch-like training history is available. Inspect the CSV and loss plot below.",
+                            "ok",
+                        )
                     st.caption("training_monitor_report.json")
                     st.json(report)
                     if metrics_summary:
@@ -7395,7 +11020,11 @@ def pg_ml(root, exe, tmo, dry):
             with c_plot:
                 if st.button("Load training loss plot", key="mltrust_tm_load_plot"):
                     if plot_path.exists():
-                        st.image(str(plot_path), caption="training_loss_curve.png", use_container_width=True)
+                        st.image(
+                            str(plot_path),
+                            caption="training_loss_curve.png",
+                            use_container_width=True,
+                        )
                         st.code(str(plot_path), language="text")
                     else:
                         st.info(f"No training loss plot found: {plot_path}")
@@ -7412,9 +11041,174 @@ def pg_ml(root, exe, tmo, dry):
                     language="text",
                 )
 
+    # ── ⑬ E2E Campaign ────────────────────────────────────────────────────────
+    with tabs[12]:
+        _note(
+            "<b>Batch active-learning loop</b> — pool → suggest → run aero on the selected batch (dataset module) → curate/promote → retrain → record here. <b>aeris ml al-status</b> gives the CONTINUE/STOP verdict from the learning curve.",
+            "info",
+        )
+        camp_dir = st.text_input(
+            "--campaign-dir",
+            str(root / "data" / "processed" / "al_campaigns" / "campaign_1"),
+            key="camp_dir",
+        )
+        rec_run = _pick_dir(
+            "--record-run (completed retrain run, optional — leave blank to only check status)",
+            root / "data" / "processed" / "ml_runs",
+            "camp_rec",
+        )
+        batch_pc = st.text_input("--batch-csv (provenance, optional)", "", key="camp_batch")
+        notes_c = st.text_input("--notes (optional)", "", key="camp_notes")
+        c1c, c2c, c3c, c4c = st.columns(4)
+        met_c = c1c.text_input(
+            "--metric",
+            "val.overall.r2_mean",
+            key="camp_metric",
+            help="Dotted path into metrics.json.",
+        )
+        minr_c = c2c.number_input("--min-rounds", min_value=1, value=3, step=1, key="camp_minr")
+        pat_c = c3c.number_input("--patience", min_value=1, value=2, step=1, key="camp_pat")
+        mind_c = c4c.number_input(
+            "--min-delta", 0.0, 1.0, 0.005, 0.001, key="camp_mind", format="%.4f"
+        )
+        plot_c = st.checkbox("--plot", True, key="camp_plot", help="Write campaign_curve.png.")
+        args_camp = [
+            "ml",
+            "al-status",
+            "--campaign-dir",
+            camp_dir,
+            "--metric",
+            met_c,
+            "--min-rounds",
+            str(int(minr_c)),
+            "--patience",
+            str(int(pat_c)),
+            "--min-delta",
+            str(mind_c),
+        ]
+        if rec_run.strip():
+            args_camp += ["--record-run", rec_run]
+        if batch_pc.strip():
+            args_camp += ["--batch-csv", batch_pc]
+        _flag(args_camp, "--notes", notes_c)
+        if not plot_c:
+            args_camp.append("--no-plot")
+        _panel(
+            "Record round / evaluate stopping",
+            "Appends the round (if given) and prints CONTINUE/STOP with reasons.",
+            args_camp,
+            root,
+            exe,
+            tmo,
+            dry,
+            "camp_run",
+        )
+        rep_p = Path(camp_dir) / "campaign_report.json" if camp_dir.strip() else None
+        if rep_p and rep_p.exists():
+            _sec("Latest campaign report")
+            _json_metric_block(
+                rep_p, ["verdict", "metric", "best_round", "best_value", "recent_improvement"]
+            )
+            png_p = Path(camp_dir) / "campaign_curve.png"
+            if png_p.exists():
+                st.image(str(png_p))
+
+    # ── ⑭ Optimizer ───────────────────────────────────────────────────────────
+    with tabs[13]:
+        _note(
+            "<b>aeris ml optimize</b> — searches the promoted surrogate's design space (LHS + local refine, box = training envelope) for optimal candidates. Output = candidates for solver verification, not certified optima.",
+            "info",
+        )
+        mr_opt = _pick_dir(
+            "Model run dir (promoted)", root / "data" / "processed" / "ml_runs", "opt_mr"
+        )
+        c1o, c2o, c3o = st.columns(3)
+        tgt_opt = c1o.text_input("--target", "cl", key="opt_tgt")
+        mode_opt = c2o.selectbox("--mode", ["maximize", "minimize", "target"], key="opt_mode")
+        tv_opt = c3o.text_input("--target-value (mode=target)", "", key="opt_tv")
+        c4o, c5o, c6o, c7o = st.columns(4)
+        ns_opt = c4o.number_input("--n-samples", min_value=1, value=4000, step=500, key="opt_ns")
+        nr_opt = c5o.number_input("--n-refine", min_value=0, value=8, step=1, key="opt_nr")
+        ri_opt = c6o.number_input("--refine-iters", min_value=0, value=60, step=10, key="opt_ri")
+        sd_opt = c7o.number_input("--seed", min_value=0, value=123, step=1, key="opt_seed")
+        c8o, c9o = st.columns(2)
+        rk_opt = c8o.number_input(
+            "--risk-k (conformal)",
+            0.0,
+            10.0,
+            0.0,
+            0.5,
+            key="opt_rk",
+            help=">0 requires calibrate-conformal on this run.",
+        )
+        ex_opt = c9o.number_input("--expand-frac", 0.0, 1.0, 0.0, 0.05, key="opt_exp")
+        fix_opt = st.text_area(
+            "--fix lines (col=value, one per line)",
+            "alpha_deg=2.0\nvelocity_mps=30.0",
+            height=68,
+            key="opt_fix",
+            help="Pin flight conditions so the search is over geometry/control only.",
+        )
+        con_opt = st.text_area("--constraint lines (e.g. cm>=-0.05)", "", height=68, key="opt_con")
+        rp_opt = st.checkbox("--require-promoted-model", True, key="opt_rp")
+        od_opt = st.text_input("--output-dir (optional)", "", key="opt_od")
+        topk_o = st.number_input("--top-k", min_value=1, value=20, step=5, key="opt_topk")
+        args_opt = [
+            "ml",
+            "optimize",
+            "--model-run-dir",
+            mr_opt,
+            "--target",
+            tgt_opt,
+            "--mode",
+            mode_opt,
+            "--n-samples",
+            str(int(ns_opt)),
+            "--n-refine",
+            str(int(nr_opt)),
+            "--refine-iters",
+            str(int(ri_opt)),
+            "--seed",
+            str(int(sd_opt)),
+            "--risk-k",
+            str(rk_opt),
+            "--expand-frac",
+            str(ex_opt),
+            "--top-k",
+            str(int(topk_o)),
+        ]
+        if mode_opt == "target" and tv_opt.strip():
+            args_opt += ["--target-value", tv_opt.strip()]
+        for _ln in fix_opt.splitlines():
+            _ln = _ln.strip()
+            if _ln:
+                args_opt += ["--fix", _ln]
+        for _ln in con_opt.splitlines():
+            _ln = _ln.strip()
+            if _ln:
+                args_opt += ["--constraint", _ln]
+        if not rp_opt:
+            args_opt.append("--no-require-promoted-model")
+        if od_opt.strip():
+            args_opt += ["--output-dir", od_opt]
+        _panel(
+            "Optimize design",
+            "Writes top_candidates.csv + optimization_report.json.",
+            args_opt,
+            root,
+            exe,
+            tmo,
+            dry,
+            "opt_run",
+        )
+
+
 def pg_workflow(root, exe, tmo, dry):
     _hero("▤", "Workflow Cockpit", "guided stage state + evidence validation", "workflow")
-    _note("This panel is a cockpit over <b>aeris workflow</b>. It reads workflow JSON artifacts and runs CLI commands; it does not duplicate solver, dataset, or ML business logic.", "info")
+    _note(
+        "This panel is a cockpit over <b>aeris workflow</b>. It reads workflow JSON artifacts and runs CLI commands; it does not duplicate solver, dataset, or ML business logic.",
+        "info",
+    )
 
     _sec("Workflow coverage audit")
     _workflow_coverage_table("workflow_coverage")
@@ -7422,27 +11216,85 @@ def pg_workflow(root, exe, tmo, dry):
     workflows = _workflow_dirs(root)
     c_top1, c_top2, c_top3 = st.columns(3)
     with c_top1:
-        _panel("List stage definitions", "Show the built-in guided workflow stages.", ["workflow", "stages"], root, exe, tmo, dry, "wf_stages", "▶  stages")
+        _panel(
+            "List stage definitions",
+            "Show the built-in guided workflow stages.",
+            ["workflow", "stages"],
+            root,
+            exe,
+            tmo,
+            dry,
+            "wf_stages",
+            "▶  stages",
+        )
     with c_top2:
-        wf_name_new = st.text_input("New workflow name", "bwb_training_v1_workflow", key="wf_new_name")
+        wf_name_new = st.text_input(
+            "New workflow name", "bwb_training_v1_workflow", key="wf_new_name"
+        )
     with c_top3:
-        wf_out_new = st.text_input("New workflow output-dir", str(root / "data" / "workflows" / wf_name_new), key="wf_new_out")
+        wf_out_new = st.text_input(
+            "New workflow output-dir",
+            str(root / "data" / "workflows" / wf_name_new),
+            key="wf_new_out",
+        )
     c_tpl1, c_tpl2, c_tpl3 = st.columns(3)
-    wf_template = c_tpl1.selectbox("Workflow template", ["none", "canary", "paper_1", "production", "multifidelity", "active_learning"], key="wf_template")
+    wf_template = c_tpl1.selectbox(
+        "Workflow template",
+        ["none", "canary", "paper_1", "production", "multifidelity", "active_learning"],
+        key="wf_template",
+    )
     wf_desc = c_tpl2.text_input("Description (optional)", "", key="wf_desc")
-    wf_force = c_tpl3.checkbox("--force", False, key="wf_force", help="Overwrite/reinitialize existing workflow folder.")
+    wf_force = c_tpl3.checkbox(
+        "--force", False, key="wf_force", help="Overwrite/reinitialize existing workflow folder."
+    )
     init_args = ["workflow", "init", "--name", wf_name_new, "--output-dir", wf_out_new]
-    if wf_template != "none": init_args += ["--template", wf_template]
-    if wf_desc.strip(): init_args += ["--description", wf_desc.strip()]
-    if wf_force: init_args.append("--force")
-    _panel("Initialize workflow", "Creates workflow_manifest.json, workflow_status.json, and event log. Template hints are supported.", init_args, root, exe, tmo, dry, "wf_init")
+    if wf_template != "none":
+        init_args += ["--template", wf_template]
+    if wf_desc.strip():
+        init_args += ["--description", wf_desc.strip()]
+    if wf_force:
+        init_args.append("--force")
+    _panel(
+        "Initialize workflow",
+        "Creates workflow_manifest.json, workflow_status.json, and event log. Template hints are supported.",
+        init_args,
+        root,
+        exe,
+        tmo,
+        dry,
+        "wf_init",
+    )
 
     c_tpl_list, c_tpl_inspect, c_pre = st.columns(3)
     with c_tpl_list:
-        _panel("List workflow templates", "Show available workflow templates.", ["workflow", "templates"], root, exe, tmo, dry, "wf_templates", "▶  templates")
+        _panel(
+            "List workflow templates",
+            "Show available workflow templates.",
+            ["workflow", "templates"],
+            root,
+            exe,
+            tmo,
+            dry,
+            "wf_templates",
+            "▶  templates",
+        )
     with c_tpl_inspect:
-        wf_tpl_name = st.selectbox("Template to inspect", ["canary", "paper_1", "production", "multifidelity", "active_learning"], key="wf_tpl_inspect_name")
-        _panel("Inspect template", "Show stage hints for a specific workflow template.", ["workflow", "templates", "--name", wf_tpl_name], root, exe, tmo, dry, "wf_template_inspect", "▶  inspect template")
+        wf_tpl_name = st.selectbox(
+            "Template to inspect",
+            ["canary", "paper_1", "production", "multifidelity", "active_learning"],
+            key="wf_tpl_inspect_name",
+        )
+        _panel(
+            "Inspect template",
+            "Show stage hints for a specific workflow template.",
+            ["workflow", "templates", "--name", wf_tpl_name],
+            root,
+            exe,
+            tmo,
+            dry,
+            "wf_template_inspect",
+            "▶  inspect template",
+        )
     with c_pre:
         preflight_args = [
             "workflow",
@@ -7452,10 +11304,14 @@ def pg_workflow(root, exe, tmo, dry):
         ]
         if wf_template == "paper_1":
             preflight_args += [
-                "--template", "paper_1",
-                "--n", "5",
+                "--template",
+                "paper_1",
+                "--n",
+                "5",
             ]
-            preflight_desc = "Paper 1 preflight: v2 config, control-aware grid, 45-case smoke/pilot check."
+            preflight_desc = (
+                "Paper 1 preflight: v2 config, control-aware grid, 45-case smoke/pilot check."
+            )
         else:
             preflight_args += [
                 "--config",
@@ -7469,12 +11325,20 @@ def pg_workflow(root, exe, tmo, dry):
             "Operational preflight",
             preflight_desc,
             preflight_args,
-            root, exe, tmo, dry, "wf_preflight", "▶  preflight",
+            root,
+            exe,
+            tmo,
+            dry,
+            "wf_preflight",
+            "▶  preflight",
         )
 
     _sec("Open workflow")
     if not workflows:
-        _note("No workflow roots found yet under data/workflows. Initialize one above or type a path manually.", "warn")
+        _note(
+            "No workflow roots found yet under data/workflows. Initialize one above or type a path manually.",
+            "warn",
+        )
     wf_path = Path(_workflow_select(root, "wf_open")).expanduser()
 
     status_path = wf_path / "workflow_status.json"
@@ -7490,25 +11354,43 @@ def pg_workflow(root, exe, tmo, dry):
 
         health = validation.get("health", "not_validated")
         counts = validation.get("counts", {}) if isinstance(validation, dict) else {}
-        next_stage = (validation.get("next_required_stage") or status.get("next_required_stage") or {}) if isinstance(validation, dict) else {}
+        next_stage = (
+            (validation.get("next_required_stage") or status.get("next_required_stage") or {})
+            if isinstance(validation, dict)
+            else {}
+        )
         if isinstance(next_stage, dict):
             next_name = next_stage.get("name") or "—"
-            next_hint = next_stage.get("recommended_command") or status.get("next_command_hint") or "—"
+            next_hint = (
+                next_stage.get("recommended_command") or status.get("next_command_hint") or "—"
+            )
         else:
             next_name = str(next_stage or "—")
             next_hint = status.get("next_command_hint") or "—"
 
-        _stat_row([
-            ("Health", str(health), "last validation"),
-            ("Completed", f"{status.get('completed_stages', counts.get('completed_required_stages', 0))}/{status.get('total_stages', counts.get('total_stages', 13))}", "stages"),
-            ("Required", f"{counts.get('completed_required_stages', 0)}/{counts.get('required_stages', '?')}", "complete"),
-            ("Blockers", str(counts.get("blockers", 0)), "doctor"),
-            ("Missing", str(counts.get("missing_artifacts", 0)), "artifacts"),
-            ("Next", next_name, "required"),
-        ])
-        _h(f'<div style="border-left:4px solid {_health_color(str(health))};background:#202B36;border-radius:9px;padding:.75rem .9rem;margin:.8rem 0">'
-           f'<div style="font-size:.72rem;color:#AAB6C2;text-transform:uppercase;letter-spacing:.08em">Next command hint</div>'
-           f'<div style="font-family:JetBrains Mono,monospace;font-size:.76rem;color:#EAF2FA;word-break:break-all">{next_hint}</div></div>')
+        _stat_row(
+            [
+                ("Health", str(health), "last validation"),
+                (
+                    "Completed",
+                    f"{status.get('completed_stages', counts.get('completed_required_stages', 0))}/{status.get('total_stages', counts.get('total_stages', 13))}",
+                    "stages",
+                ),
+                (
+                    "Required",
+                    f"{counts.get('completed_required_stages', 0)}/{counts.get('required_stages', '?')}",
+                    "complete",
+                ),
+                ("Blockers", str(counts.get("blockers", 0)), "doctor"),
+                ("Missing", str(counts.get("missing_artifacts", 0)), "artifacts"),
+                ("Next", next_name, "required"),
+            ]
+        )
+        _h(
+            f'<div style="border-left:4px solid {_health_color(str(health))};background:#202B36;border-radius:9px;padding:.75rem .9rem;margin:.8rem 0">'
+            f'<div style="font-size:.72rem;color:#AAB6C2;text-transform:uppercase;letter-spacing:.08em">Next command hint</div>'
+            f'<div style="font-family:JetBrains Mono,monospace;font-size:.76rem;color:#EAF2FA;word-break:break-all">{next_hint}</div></div>'
+        )
     elif wf_path.exists():
         _note(f"Folder exists but is not a workflow root: {wf_path}", "warn")
     else:
@@ -7517,13 +11399,53 @@ def pg_workflow(root, exe, tmo, dry):
     _sec("Workflow commands")
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        _panel("Status", "Compact current progress from workflow_status.json.", ["workflow", "status", "--workflow", str(wf_path)], root, exe, tmo, dry, "wf_status", "▶  status")
+        _panel(
+            "Status",
+            "Compact current progress from workflow_status.json.",
+            ["workflow", "status", "--workflow", str(wf_path)],
+            root,
+            exe,
+            tmo,
+            dry,
+            "wf_status",
+            "▶  status",
+        )
     with c2:
-        _panel("Next", "Show the next required stage and command hint.", ["workflow", "next", "--workflow", str(wf_path)], root, exe, tmo, dry, "wf_next", "▶  next")
+        _panel(
+            "Next",
+            "Show the next required stage and command hint.",
+            ["workflow", "next", "--workflow", str(wf_path)],
+            root,
+            exe,
+            tmo,
+            dry,
+            "wf_next",
+            "▶  next",
+        )
     with c3:
-        _panel("Validate", "Write workflow_validation_report.json and check evidence.", ["workflow", "validate", "--workflow", str(wf_path)], root, exe, tmo, dry, "wf_validate", "▶  validate")
+        _panel(
+            "Validate",
+            "Write workflow_validation_report.json and check evidence.",
+            ["workflow", "validate", "--workflow", str(wf_path)],
+            root,
+            exe,
+            tmo,
+            dry,
+            "wf_validate",
+            "▶  validate",
+        )
     with c4:
-        _panel("Doctor", "Operator-friendly validation summary.", ["workflow", "doctor", "--workflow", str(wf_path)], root, exe, tmo, dry, "wf_doctor", "▶  doctor")
+        _panel(
+            "Doctor",
+            "Operator-friendly validation summary.",
+            ["workflow", "doctor", "--workflow", str(wf_path)],
+            root,
+            exe,
+            tmo,
+            dry,
+            "wf_doctor",
+            "▶  doctor",
+        )
 
     _sec("Stage evidence table")
     if validation:
@@ -7536,22 +11458,51 @@ def pg_workflow(root, exe, tmo, dry):
         else:
             _note("No stages found in validation report yet. Run validate or doctor.", "info")
     else:
-        _note("No workflow_validation_report.json yet. Run Validate or Doctor to generate evidence checks.", "info")
+        _note(
+            "No workflow_validation_report.json yet. Run Validate or Doctor to generate evidence checks.",
+            "info",
+        )
 
     tabs = st.tabs(["Record / backfill", "Trust evidence", "Files"])
     with tabs[0]:
-        _note("Use this only for backfilling existing artifacts. New domain commands should use their own --workflow option so stages auto-record on success.", "warn")
+        _note(
+            "Use this only for backfilling existing artifacts. New domain commands should use their own --workflow option so stages auto-record on success.",
+            "warn",
+        )
         stage_name = st.text_input("--stage", "geometry_dataset", key="wf_rec_stage")
-        stage_status = st.selectbox("--status", ["complete", "pending", "blocked", "failed", "skipped"], key="wf_rec_status")
-        artifacts_text = st.text_area("--artifact values, one per line", "", height=90, key="wf_rec_artifacts")
+        stage_status = st.selectbox(
+            "--status", ["complete", "pending", "blocked", "failed", "skipped"], key="wf_rec_status"
+        )
+        artifacts_text = st.text_area(
+            "--artifact values, one per line", "", height=90, key="wf_rec_artifacts"
+        )
         notes = st.text_area("--notes", "", height=80, key="wf_rec_notes")
-        args = ["workflow", "record-stage", "--workflow", str(wf_path), "--stage", stage_name, "--status", stage_status]
+        args = [
+            "workflow",
+            "record-stage",
+            "--workflow",
+            str(wf_path),
+            "--stage",
+            stage_name,
+            "--status",
+            stage_status,
+        ]
         for line in artifacts_text.splitlines():
             if line.strip():
                 args += ["--artifact", line.strip()]
         if notes.strip():
             args += ["--notes", notes.strip()]
-        _panel("Record stage", "Manual stage state update for existing evidence.", args, root, exe, tmo, dry, "wf_record", "▶  record-stage")
+        _panel(
+            "Record stage",
+            "Manual stage state update for existing evidence.",
+            args,
+            root,
+            exe,
+            tmo,
+            dry,
+            "wf_record",
+            "▶  record-stage",
+        )
 
     with tabs[1]:
         if validation:
@@ -7574,7 +11525,10 @@ def pg_workflow(root, exe, tmo, dry):
                 st.caption("Trust checks")
                 st.json(trust)
             else:
-                _note("No trust checks yet. They appear once dataset/model promotion or inference guard artifacts are recorded.", "info")
+                _note(
+                    "No trust checks yet. They appear once dataset/model promotion or inference guard artifacts are recorded.",
+                    "info",
+                )
         else:
             _note("Run workflow validate/doctor first.", "info")
 
@@ -7597,59 +11551,178 @@ def pg_workflow(root, exe, tmo, dry):
             with st.expander("workflow_events.jsonl", expanded=False):
                 st.code(_read(events_path, lim=120_000), language="json")
 
+
 def pg_pipeline(root, exe, tmo, dry):
-    _hero("◷","Pipeline / Smoke","quick end-to-end sanity check","validation")
-    _note("<b>aeris pipeline smoke</b> — exercises the full geometry path: config → generator → one sample → artifacts + manifest. Run after install or environment changes.","info")
-    cfg_s = _pick_file("--config (smoke config)",root/"configs"/"smoke","*.yaml","pl_cfg",
-                       default=str(root/"configs"/"smoke"/"dev.yaml"))
-    _panel("Run smoke pipeline","Quick end-to-end validation.",["pipeline","smoke","--config",cfg_s],root,exe,tmo,dry,"pl_run")
+    _hero("◷", "Pipeline / Smoke", "quick end-to-end sanity check", "validation")
+    _note(
+        "<b>aeris pipeline smoke</b> — exercises the full geometry path: config → generator → one sample → artifacts + manifest. Run after install or environment changes.",
+        "info",
+    )
+    cfg_s = _pick_file(
+        "--config (smoke config)",
+        root / "configs" / "smoke",
+        "*.yaml",
+        "pl_cfg",
+        default=str(root / "configs" / "smoke" / "dev.yaml"),
+    )
+    _panel(
+        "Run smoke pipeline",
+        "Quick end-to-end validation.",
+        ["pipeline", "smoke", "--config", cfg_s],
+        root,
+        exe,
+        tmo,
+        dry,
+        "pl_run",
+    )
 
     _sec("Health checks")
-    c1,c2,c3 = st.columns(3)
-    with c1: _panel("aeris version","Confirms AERIS is on PATH.",["version"],root,exe,tmo,dry,"hc_ver","▶  version")
-    with c2: _panel("aeris --help","Confirms CLI registration.",["--help"],root,exe,tmo,dry,"hc_help","▶  --help")
-    with c3: _panel("geometry info","Lists registered generators.",["geometry","info"],root,exe,tmo,dry,"hc_gi","▶  geometry info")
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        _panel(
+            "aeris version",
+            "Confirms AERIS is on PATH.",
+            ["version"],
+            root,
+            exe,
+            tmo,
+            dry,
+            "hc_ver",
+            "▶  version",
+        )
+    with c2:
+        _panel(
+            "aeris --help",
+            "Confirms CLI registration.",
+            ["--help"],
+            root,
+            exe,
+            tmo,
+            dry,
+            "hc_help",
+            "▶  --help",
+        )
+    with c3:
+        _panel(
+            "geometry info",
+            "Lists registered generators.",
+            ["geometry", "info"],
+            root,
+            exe,
+            tmo,
+            dry,
+            "hc_gi",
+            "▶  geometry info",
+        )
 
 
 def pg_results(root):
-    _hero("◫","Results Browser","inspect any artifact without digging through folders","browser")
-    rc = st.selectbox("Artifact root",["runs","datasets","processed","debug","configs","custom"],key="rb_rc")
-    rm = {"runs":root/"data"/"runs","datasets":root/"data"/"datasets","processed":root/"data"/"processed","debug":root/"data"/"debug","configs":root/"configs"}
-    r = (Path(st.text_input("Custom root",str(root/"data"),key="rb_cr")).expanduser() if rc=="custom" else rm[rc])
-    if not r.exists(): _note(f"Root does not exist: {r}","warn"); return
+    _hero("◫", "Results Browser", "inspect any artifact without digging through folders", "browser")
+    rc = st.selectbox(
+        "Artifact root",
+        ["runs", "datasets", "processed", "debug", "configs", "custom"],
+        key="rb_rc",
+    )
+    rm = {
+        "runs": root / "data" / "runs",
+        "datasets": root / "data" / "datasets",
+        "processed": root / "data" / "processed",
+        "debug": root / "data" / "debug",
+        "configs": root / "configs",
+    }
+    r = (
+        Path(st.text_input("Custom root", str(root / "data"), key="rb_cr")).expanduser()
+        if rc == "custom"
+        else rm[rc]
+    )
+    if not r.exists():
+        _note(f"Root does not exist: {r}", "warn")
+        return
     cands = [str(r)] + _dirs(str(r))
-    sel_root = Path(st.selectbox("Folder",cands[:200],format_func=lambda s:(Path(s).name+"/") if Path(s)!=r else str(r),key="rb_sr"))
+    sel_root = Path(
+        st.selectbox(
+            "Folder",
+            cands[:200],
+            format_func=lambda s: (Path(s).name + "/") if Path(s) != r else str(r),
+            key="rb_sr",
+        )
+    )
     files = sorted([p for p in sel_root.rglob("*") if p.is_file()])
-    _stat_row([("Files",str(len(files)),"in selected folder"),("Folder",sel_root.name,"selected")])
-    prev = [p for p in files if p.suffix.lower() in {".json",".csv",".png",".jpg",".jpeg",".webp",".txt",".log",".yaml",".yml",".md",".avl"}]
-    if not prev: _note("No previewable files in this folder.","info"); return
-    sel = st.selectbox("Preview file",prev,format_func=lambda p:str(p.relative_to(sel_root)),key="rb_sel")
+    _stat_row(
+        [("Files", str(len(files)), "in selected folder"), ("Folder", sel_root.name, "selected")]
+    )
+    prev = [
+        p
+        for p in files
+        if p.suffix.lower()
+        in {
+            ".json",
+            ".csv",
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".webp",
+            ".txt",
+            ".log",
+            ".yaml",
+            ".yml",
+            ".md",
+            ".avl",
+        }
+    ]
+    if not prev:
+        _note("No previewable files in this folder.", "info")
+        return
+    sel = st.selectbox(
+        "Preview file", prev, format_func=lambda p: str(p.relative_to(sel_root)), key="rb_sel"
+    )
     _show_file(sel)
 
 
 def pg_config(root):
-    _hero("✎","Config Lab","YAML editor — always version-control your configs","editor")
+    _hero("✎", "Config Lab", "YAML editor — always version-control your configs", "editor")
     st.caption("Convenience editor. Use version control for production configs.")
-    mode = st.radio("Mode",["Edit existing YAML","Paste / write new YAML"],horizontal=True,key="cl_mode")
+    mode = st.radio(
+        "Mode", ["Edit existing YAML", "Paste / write new YAML"], horizontal=True, key="cl_mode"
+    )
     if mode.startswith("Edit"):
-        p_str = _pick_file("Config file",root/"configs","*.yaml","cl_f",default=str(root/"configs"/"geometry"/"baseline_bwb_25.yaml"))
+        p_str = _pick_file(
+            "Config file",
+            root / "configs",
+            "*.yaml",
+            "cl_f",
+            default=str(root / "configs" / "geometry" / "baseline_bwb_25.yaml"),
+        )
         p = Path(p_str).expanduser()
-        text = st.text_area("YAML content",value=_read(p) if p.exists() else "# new config\n",height=500,key="cl_text")
+        text = st.text_area(
+            "YAML content",
+            value=_read(p) if p.exists() else "# new config\n",
+            height=500,
+            key="cl_text",
+        )
     else:
-        p_str = st.text_input("Save path",str(root/"configs"/"geometry"/"new_config.yaml"),key="cl_sp")
+        p_str = st.text_input(
+            "Save path", str(root / "configs" / "geometry" / "new_config.yaml"), key="cl_sp"
+        )
         p = Path(p_str).expanduser()
-        text = st.text_area("YAML content",value="name: my_config\n",height=500,key="cl_text2")
-    c1,c2 = st.columns(2)
+        text = st.text_area("YAML content", value="name: my_config\n", height=500, key="cl_text2")
+    c1, c2 = st.columns(2)
     with c1:
-        if st.button("✓ Validate YAML",type="primary",key="cl_val"):
-            if yaml is None: st.error("PyYAML not installed.")
+        if st.button("✓ Validate YAML", type="primary", key="cl_val"):
+            if yaml is None:
+                st.error("PyYAML not installed.")
             else:
-                try: d=yaml.safe_load(text); st.success("Valid YAML"); st.json(d)
-                except Exception as e: st.error(f"Parse error: {e}")
+                try:
+                    d = yaml.safe_load(text)
+                    st.success("Valid YAML")
+                    st.json(d)
+                except Exception as e:
+                    st.error(f"Parse error: {e}")
     with c2:
-        if st.button("💾 Save to file",type="secondary",key="cl_save"):
-            p.parent.mkdir(parents=True,exist_ok=True); p.write_text(text,encoding="utf-8"); st.success(f"Saved: {p}")
-
+        if st.button("💾 Save to file", type="secondary", key="cl_save"):
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(text, encoding="utf-8")
+            st.success(f"Saved: {p}")
 
 
 # Static GUI coverage markers retained for brittle source-level operator tests.
@@ -7701,8 +11774,9 @@ def _mesh_run_dirs(root: Path) -> list[Path]:
     base = root / "data" / "meshes"
     if not base.exists():
         return []
-    return sorted([p for p in base.iterdir() if p.is_dir()],
-                  key=lambda p: p.stat().st_mtime, reverse=True)
+    return sorted(
+        [p for p in base.iterdir() if p.is_dir()], key=lambda p: p.stat().st_mtime, reverse=True
+    )
 
 
 def _mesh_volume_cgns(run_dir: Path) -> Path | None:
@@ -7717,8 +11791,12 @@ def _open_in_paraview(path: Path) -> str | None:
     if exe is None:
         return "ParaView not found on PATH — open the file manually."
     try:
-        subprocess.Popen([exe, str(path)], start_new_session=True,
-                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.Popen(
+            [exe, str(path)],
+            start_new_session=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
     except Exception as e:  # pragma: no cover - depends on desktop env
         return f"Could not launch ParaView: {e}"
     return None
@@ -7734,8 +11812,10 @@ def _paraview_button(path: Path, key: str) -> None:
             else:
                 st.success("ParaView launched")
     with c2:
-        _h(f'<div style="padding:8px 0;font-size:.72rem;color:#7F8B98;'
-           f'font-family:JetBrains Mono,monospace;word-break:break-all">{path}</div>')
+        _h(
+            f'<div style="padding:8px 0;font-size:.72rem;color:#7F8B98;'
+            f'font-family:JetBrains Mono,monospace;word-break:break-all">{path}</div>'
+        )
 
 
 def _adflow_resrho_from_line(line: str) -> float | None:
@@ -7766,9 +11846,13 @@ def _parse_adflow_residuals(log_text: str) -> list[float]:
 
 
 def pg_mesh(root, exe, tmo, dry):
-    _hero("⬡", "CFD Mesh & Solve",
-          "structured cap4 family · pyHyp march · ADflow RANS · post-processing",
-          badge="WP1-WP3", bcolor="#22C55E")
+    _hero(
+        "⬡",
+        "CFD Mesh & Solve",
+        "structured cap4 family · pyHyp march · ADflow RANS · post-processing",
+        badge="WP1-WP3",
+        bcolor="#22C55E",
+    )
 
     try:
         from aeris.mesh.presets import MARCH_POLICY, MESH_PRESETS
@@ -7785,20 +11869,32 @@ def pg_mesh(root, exe, tmo, dry):
         _sec("Family preset")
         pnames = list(MESH_PRESETS)
         pick = st.radio(
-            "Preset", pnames, index=0, horizontal=True, key="mesh_preset",
+            "Preset",
+            pnames,
+            index=0,
+            horizontal=True,
+            key="mesh_preset",
             format_func=lambda n: f"{n} — {MESH_PRESETS[n].points_per_side} pts/side",
         )
         p = MESH_PRESETS[pick]
-        _stat_row([
-            ("points / side", p.points_per_side, "chordwise blocks"),
-            ("spanwise panels", p.spanwise_panels, "per section interval"),
-            ("cap policy", f"{p.cap_width_frac:g}/{p.cap_wrap_points}/{p.cap_wrap_x:g}",
-             "width_frac / wrap pts / wrap x — fixed"),
-            ("march policy", f"cMax {MARCH_POLICY['c_max']}", "family-wide damping"),
-        ])
-        _note(p.description + "  The tip cap never coarsens with the family "
-              "(fixed-size feature); every parameter above is a function of the "
-              "preset name — no per-case tuning.", "info")
+        _stat_row(
+            [
+                ("points / side", p.points_per_side, "chordwise blocks"),
+                ("spanwise panels", p.spanwise_panels, "per section interval"),
+                (
+                    "cap policy",
+                    f"{p.cap_width_frac:g}/{p.cap_wrap_points}/{p.cap_wrap_x:g}",
+                    "width_frac / wrap pts / wrap x — fixed",
+                ),
+                ("march policy", f"cMax {MARCH_POLICY['c_max']}", "family-wide damping"),
+            ]
+        )
+        _note(
+            p.description + "  The tip cap never coarsens with the family "
+            "(fixed-size feature); every parameter above is a function of the "
+            "preset name — no per-case tuning.",
+            "info",
+        )
 
         _sec("Input / output")
         cfgs = _files(str(root / "configs" / "geometry"), "*.yaml")
@@ -7806,17 +11902,28 @@ def pg_mesh(root, exe, tmo, dry):
             st.error("No YAML configs found under configs/geometry.")
             return
         cfg_labels = {c: Path(c).name for c in cfgs}
-        default_idx = next((i for i, c in enumerate(cfgs)
-                            if Path(c).name == "baseline_bwb_25.yaml"), 0)
-        cfg = st.selectbox("Geometry config", cfgs, index=default_idx,
-                           format_func=lambda c: cfg_labels[c], key="mesh_cfg")
+        default_idx = next(
+            (i for i, c in enumerate(cfgs) if Path(c).name == "baseline_bwb_25.yaml"), 0
+        )
+        cfg = st.selectbox(
+            "Geometry config",
+            cfgs,
+            index=default_idx,
+            format_func=lambda c: cfg_labels[c],
+            key="mesh_cfg",
+        )
         c1, c2, c3 = st.columns([2, 1, 1])
         with c1:
-            out_dir = st.text_input("Output directory",
-                                    value=f"data/meshes/bwb_{pick}", key="mesh_out")
+            out_dir = st.text_input(
+                "Output directory", value=f"data/meshes/bwb_{pick}", key="mesh_out"
+            )
         with c2:
-            seed = st.text_input("Seed override", value="", key="mesh_seed",
-                                 help="Blank = seed from the config file.")
+            seed = st.text_input(
+                "Seed override",
+                value="",
+                key="mesh_seed",
+                help="Blank = seed from the config file.",
+            )
         with c3:
             overwrite = st.checkbox("Overwrite", value=True, key="mesh_ow")
 
@@ -7842,8 +11949,7 @@ def pg_mesh(root, exe, tmo, dry):
         if not runs:
             st.info("No mesh runs under data/meshes yet — generate one in tab ①.")
         else:
-            sel = st.selectbox("Mesh run", runs, format_func=lambda p: p.name,
-                               key="mesh_eval_sel")
+            sel = st.selectbox("Mesh run", runs, format_func=lambda p: p.name, key="mesh_eval_sel")
             sr = _rjson(sel / "surface" / "surface_report.json")
             vr = _rjson(sel / "surface" / "volume_report.json")
             man = _rjson(sel / "smoke_manifest.json")
@@ -7856,38 +11962,58 @@ def pg_mesh(root, exe, tmo, dry):
                 surf_cells = sum(b.get("cells", 0) for b in (sr or {}).get("blocks", []))
                 est_cells = surf_cells * (int(n_layers) - 1) if n_layers else None
                 mm = (vr or {}).get("march_metrics", {})
-                _stat_row([
-                    ("status", status, "smoke_manifest"),
-                    ("volume cells", f"{est_cells:,}" if est_cells else "—",
-                     f"{surf_cells:,} surf × {n_layers} layers" if n_layers else ""),
-                    ("min quality", f"{mm.get('min_quality', '—')}",
-                     f"{mm.get('low_quality_layers', '—')} low-quality layers"),
-                    ("min volume", f"{mm.get('min_volume', '—')}",
-                     "all-positive = valid march"),
-                ])
+                _stat_row(
+                    [
+                        ("status", status, "smoke_manifest"),
+                        (
+                            "volume cells",
+                            f"{est_cells:,}" if est_cells else "—",
+                            f"{surf_cells:,} surf × {n_layers} layers" if n_layers else "",
+                        ),
+                        (
+                            "min quality",
+                            f"{mm.get('min_quality', '—')}",
+                            f"{mm.get('low_quality_layers', '—')} low-quality layers",
+                        ),
+                        (
+                            "min volume",
+                            f"{mm.get('min_volume', '—')}",
+                            "all-positive = valid march",
+                        ),
+                    ]
+                )
                 if mm.get("passed") is True:
                     _note("March PASSED — every layer has positive cell volumes.", "ok")
                 elif mm.get("passed") is False:
-                    _note(f"March FAILED at layer {mm.get('first_invalid_layer')} — "
-                          "volume quarantined as *.invalid.cgns.", "err")
+                    _note(
+                        f"March FAILED at layer {mm.get('first_invalid_layer')} — "
+                        "volume quarantined as *.invalid.cgns.",
+                        "err",
+                    )
 
             if sr and pd is not None:
                 _sec("Surface blocks")
-                rows = [{
-                    "block": b["name"], "ni": b["ni"], "nj": b["nj"],
-                    "cells": b["cells"],
-                    "median area": f"{b['median_area']:.3e}",
-                    "min area": f"{b['min_area']:.3e}",
-                    "min Jacobian": round(b["min_scaled_corner_jacobian"], 4),
-                    "max normal angle°": round(b["max_adjacent_normal_angle_deg"], 1),
-                } for b in sr.get("blocks", [])]
+                rows = [
+                    {
+                        "block": b["name"],
+                        "ni": b["ni"],
+                        "nj": b["nj"],
+                        "cells": b["cells"],
+                        "median area": f"{b['median_area']:.3e}",
+                        "min area": f"{b['min_area']:.3e}",
+                        "min Jacobian": round(b["min_scaled_corner_jacobian"], 4),
+                        "max normal angle°": round(b["max_adjacent_normal_angle_deg"], 1),
+                    }
+                    for b in sr.get("blocks", [])
+                ]
                 st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
 
             mm_rows = ((vr or {}).get("march_metrics") or {}).get("rows") or []
             if mm_rows:
                 _sec("March quality per layer")
-                st.line_chart({"min quality": [r0.get("min_quality") for r0 in mm_rows]},
-                              height=190)
+                st.line_chart(
+                    {"min quality": [r0.get("min_quality") for r0 in mm_rows]}, height=190
+                )
 
             if cgns is not None:
                 _sec("Inspect")
@@ -7904,8 +12030,7 @@ def pg_mesh(root, exe, tmo, dry):
         if not valid_runs:
             st.info("No valid volume meshes found — generate one in tab ① first.")
         else:
-            sel = st.selectbox("Mesh", valid_runs, format_func=lambda p0: p0.name,
-                               key="adf_mesh")
+            sel = st.selectbox("Mesh", valid_runs, format_func=lambda p0: p0.name, key="adf_mesh")
             grid = _mesh_volume_cgns(sel)
             _sec("Flow condition")
             c1, c2, c3, c4 = st.columns(4)
@@ -7914,116 +12039,178 @@ def pg_mesh(root, exe, tmo, dry):
             with c2:
                 mach = st.number_input("Mach", value=0.2, step=0.05, key="adf_m")
             with c3:
-                reyn = st.number_input("Reynolds", value=1.0e6, step=1.0e5,
-                                       format="%.3g", key="adf_re")
+                reyn = st.number_input(
+                    "Reynolds", value=1.0e6, step=1.0e5, format="%.3g", key="adf_re"
+                )
             with c4:
                 temp = st.number_input("T [K]", value=288.15, step=1.0, key="adf_t")
             c1, c2, c3, c4 = st.columns(4)
             with c1:
-                aref = st.number_input("areaRef (half) [m²]", value=1.094,
-                                       format="%.4f", key="adf_ar")
+                aref = st.number_input(
+                    "areaRef (half) [m²]", value=1.094, format="%.4f", key="adf_ar"
+                )
             with c2:
-                cref = st.number_input("chordRef [m]", value=0.8774,
-                                       format="%.4f", key="adf_cr")
+                cref = st.number_input("chordRef [m]", value=0.8774, format="%.4f", key="adf_cr")
             with c3:
-                ranks = st.number_input("MPI ranks", value=4, min_value=1, max_value=8,
-                                        step=1, key="adf_np")
+                ranks = st.number_input(
+                    "MPI ranks", value=4, min_value=1, max_value=8, step=1, key="adf_np"
+                )
             with c4:
                 l2 = st.selectbox("L2 convergence", ["1e-8", "1e-10", "1e-6"], key="adf_l2")
             if int(ranks) > 4:
-                _note("15 GB RAM caps ~1M-cell runs at 4 ranks — 8 ranks was "
-                      "OOM-killed on this machine. Proceed only on bigger hardware.", "warn")
-            _note("areaRef/chordRef defaults are for the baseline BWB half-model — "
-                  "change them if you meshed a different geometry.", "info")
+                _note(
+                    "15 GB RAM caps ~1M-cell runs at 4 ranks — 8 ranks was "
+                    "OOM-killed on this machine. Proceed only on bigger hardware.",
+                    "warn",
+                )
+            _note(
+                "areaRef/chordRef defaults are for the baseline BWB half-model — "
+                "change them if you meshed a different geometry.",
+                "info",
+            )
 
             adf_out = sel / "adflow"
             mpirun = f"{_MACH_AERO_PREFIX}/bin/mpirun"
             mpy = f"{_MACH_AERO_PREFIX}/bin/python"
-            cmd = [mpirun, "-np", str(int(ranks)), mpy, "scripts/adflow_smoke.py",
-                   "--grid", str(grid), "--output-dir", str(adf_out),
-                   "--area-ref", f"{aref}", "--chord-ref", f"{cref}",
-                   "--alpha", f"{alpha}", "--mach", f"{mach}",
-                   "--reynolds", f"{reyn:g}", "--temperature", f"{temp}",
-                   "--l2-convergence", l2]
-            _h(f'<div style="background:#111A23;border:1px solid #334252;border-radius:7px;'
-               f'padding:8px 12px;margin:.5rem 0;font-size:.72rem;color:#7ab3f0;'
-               f'font-family:JetBrains Mono,monospace;word-break:break-all">'
-               f'$ {" ".join(cmd)}</div>')
+            _h(
+                f'<div style="background:#111A23;border:1px solid #334252;border-radius:7px;'
+                f"padding:8px 12px;margin:.5rem 0;font-size:.72rem;color:#7ab3f0;"
+                f'font-family:JetBrains Mono,monospace;word-break:break-all">'
+                f"$ {mpirun} -np {int(ranks)} {mpy} {adf_out}/run_adflow.py"
+                f'&nbsp;&nbsp;<span style="color:#5a6b7c">(adapter-prepared: options + '
+                f"provenance manifests land in {adf_out.name}/)</span></div>"
+            )
 
             if st.button("▶  Run ADflow  (~15-25 min)", type="primary", key="adf_go"):
                 if dry:
                     st.info("Dry-run mode — command not executed.")
                 elif not Path(mpirun).exists():
-                    st.error(f"mach-aero env not found at {_MACH_AERO_PREFIX} "
-                             "(set MACH_AERO_CONDA_PREFIX).")
+                    st.error(
+                        f"mach-aero env not found at {_MACH_AERO_PREFIX} "
+                        "(set MACH_AERO_CONDA_PREFIX)."
+                    )
                 else:
-                    adf_out.mkdir(parents=True, exist_ok=True)
-                    log_path = adf_out / "adflow_run.log"
+                    from aeris.cfd.case.spec import FlowConditions, SolveSpec
+                    from aeris.cfd.solvers.base import get_solver_adapter
+
+                    adapter = get_solver_adapter("adflow")
+                    solve_spec = SolveSpec(
+                        solver="adflow",
+                        flow=FlowConditions(
+                            alpha=float(alpha),
+                            mach=float(mach),
+                            reynolds=float(reyn),
+                            temperature=float(temp),
+                        ),
+                        area_ref=float(aref),
+                        chord_ref=float(cref),
+                        mpi_np=int(ranks),
+                        raw_options={"L2Convergence": float(l2)},
+                    )
+                    prepared = adapter.prepare(solve_spec, grid, adf_out)
                     _sec("Live residual (density)")
                     chart_box = st.empty()
                     tail_box = st.empty()
                     lines: list[str] = []
                     res_vals: list[float] = []
-                    last_charted = 0
+                    state = {"charted": 0}
+
+                    def _stream(line: str) -> None:
+                        lines.append(line)
+                        v = _adflow_resrho_from_line(line)
+                        if v is not None:
+                            res_vals.append(v)
+                        if len(lines) % 5 == 0:
+                            tail_box.code("\n".join(lines[-25:]), language="text")
+                            if len(res_vals) > state["charted"]:
+                                chart_box.line_chart({"log10 Res_rho": res_vals}, height=200)
+                                state["charted"] = len(res_vals)
+
                     with st.status("ADflow RANS solve running …", expanded=True) as status:
-                        proc = subprocess.Popen(
-                            cmd, cwd=root, text=True, bufsize=1,
-                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                        assert proc.stdout is not None
-                        for line in proc.stdout:
-                            lines.append(line.rstrip("\n"))
-                            v = _adflow_resrho_from_line(line)
-                            if v is not None:
-                                res_vals.append(v)
-                            if len(lines) % 5 == 0:
-                                tail_box.code("\n".join(lines[-25:]), language="text")
-                                if len(res_vals) > last_charted:
-                                    chart_box.line_chart(
-                                        {"log10 Res_rho": res_vals}, height=200)
-                                    last_charted = len(res_vals)
-                        rc = proc.wait()
-                        log_path.write_text("\n".join(lines), encoding="utf-8")
+                        rc = adapter.run(prepared, stream=_stream)
+                        report = adapter.parse(prepared.workdir)
                         tail_box.code("\n".join(lines[-25:]), language="text")
                         if res_vals:
                             chart_box.line_chart({"log10 Res_rho": res_vals}, height=200)
-                        if rc == 0:
+                        log_path = prepared.workdir / prepared.log_name
+                        if rc == 0 and report.status == "converged":
                             status.update(label="ADflow finished", state="complete")
-                            st.success(f"Solve complete — see tab ④.  Log: {log_path}")
+                            st.success(
+                                f"Solve {report.status} — see tab ④.  "
+                                f"Report: {prepared.workdir / 'solve_report.json'}"
+                            )
                         else:
-                            status.update(label=f"ADflow failed (exit {rc})", state="error")
-                            st.error(f"ADflow exited {rc}.  Full log: {log_path}")
+                            status.update(
+                                label=f"ADflow {report.status} (exit {rc})", state="error"
+                            )
+                            st.error(
+                                f"ADflow exited {rc} ({report.status}).  " f"Full log: {log_path}"
+                            )
 
     # ── ④ Results / post-process ─────────────────────────────────────────────
     with tab_post:
-        solved = [p0 for p0 in _mesh_run_dirs(root)
-                  if (p0 / "adflow" / "adflow_smoke.json").exists()]
+        solved = [
+            p0
+            for p0 in _mesh_run_dirs(root)
+            if (p0 / "adflow" / "solve_report.json").exists()
+            or (p0 / "adflow" / "adflow_smoke.json").exists()
+        ]
         if not solved:
             st.info("No ADflow results yet — run a solve in tab ③.")
         else:
-            sel = st.selectbox("Solved case", solved, format_func=lambda p0: p0.name,
-                               key="post_sel")
+            sel = st.selectbox(
+                "Solved case", solved, format_func=lambda p0: p0.name, key="post_sel"
+            )
             adf = sel / "adflow"
-            rep = _rjson(adf / "adflow_smoke.json") or {}
-            fns = rep.get("functions", {})
+            # prefer the normalized solve_report.v1; fall back to the legacy
+            # adflow_smoke.json for pre-adapter runs
+            srep = _rjson(adf / "solve_report.json")
+            if srep:
+                fns = srep.get("forces", {})
+                flow = srep.get("flow", {})
+                alpha_show, mach_show = flow.get("alpha", "?"), flow.get("mach", "?")
+                failed = srep.get("status") != "converged"
+            else:
+                rep = _rjson(adf / "adflow_smoke.json") or {}
+                fns = rep.get("functions", {})
+                alpha_show, mach_show = rep.get("alpha_deg", "?"), rep.get("mach", "?")
+                failed = bool(rep.get("solve_failed"))
             cl = next((v for k, v in fns.items() if k.endswith("cl")), None)
             cd = next((v for k, v in fns.items() if k.endswith("cd")), None)
             cm = next((v for k, v in fns.items() if k.endswith("cmy")), None)
             _sec("Force coefficients")
-            _stat_row([
-                ("CL", f"{cl:.4f}" if cl is not None else "—",
-                 f"α={rep.get('alpha_deg','?')}°  M={rep.get('mach','?')}"),
-                ("CD", f"{cd:.5f}" if cd is not None else "—",
-                 f"{cd*1e4:.1f} counts" if cd is not None else ""),
-                ("CM", f"{cm:.4f}" if cm is not None else "—", "pitching moment"),
-                ("L/D", f"{cl/cd:.1f}" if cl and cd else "—",
-                 "FAILED" if rep.get("solve_failed") else "solve OK"),
-            ])
-            if rep.get("solve_failed"):
-                _note("ADflow flagged this solution as FAILED — do not trust "
-                      "the coefficients above.", "err")
+            _stat_row(
+                [
+                    (
+                        "CL",
+                        f"{cl:.4f}" if cl is not None else "—",
+                        f"α={alpha_show}°  M={mach_show}",
+                    ),
+                    (
+                        "CD",
+                        f"{cd:.5f}" if cd is not None else "—",
+                        f"{cd*1e4:.1f} counts" if cd is not None else "",
+                    ),
+                    ("CM", f"{cm:.4f}" if cm is not None else "—", "pitching moment"),
+                    (
+                        "L/D",
+                        f"{cl/cd:.1f}" if cl and cd else "—",
+                        "FAILED" if failed else "solve OK",
+                    ),
+                ]
+            )
+            if failed:
+                _note(
+                    "The solver did not report a converged solution — do not "
+                    "trust the coefficients above.",
+                    "err",
+                )
 
-            log_text = _read(adf / "adflow_run.log", 5_000_000) \
-                if (adf / "adflow_run.log").exists() else ""
+            log_text = (
+                _read(adf / "adflow_run.log", 5_000_000)
+                if (adf / "adflow_run.log").exists()
+                else ""
+            )
             res = _parse_adflow_residuals(log_text)
             if res:
                 _sec("Convergence (density residual)")
@@ -8034,9 +12221,12 @@ def pg_mesh(root, exe, tmo, dry):
             if outs:
                 for i, f in enumerate(outs):
                     _paraview_button(f, key=f"pv_post_{i}")
-                _note("The *_surf.cgns file carries cp, cf and y+ — color by "
-                      "yPlus and check max ≤ ~1 over the wing for the wall-"
-                      "resolved claim (C5).", "info")
+                _note(
+                    "The *_surf.cgns file carries cp, cf and y+ — color by "
+                    "yPlus and check max ≤ ~1 over the wing for the wall-"
+                    "resolved claim (C5).",
+                    "info",
+                )
             else:
                 st.info("No CGNS outputs in the adflow directory.")
             with st.expander("Raw ADflow report JSON"):
@@ -8044,35 +12234,36 @@ def pg_mesh(root, exe, tmo, dry):
 
 
 def main():
-    st.set_page_config(page_title="AERIS", page_icon="✈️", layout="wide", initial_sidebar_state="expanded")
+    st.set_page_config(
+        page_title="AERIS", page_icon="✈️", layout="wide", initial_sidebar_state="expanded"
+    )
     st.markdown(CSS, unsafe_allow_html=True)
     root, exe, tmo, dry, page = _sidebar()
     dispatch = {
-        "home":     pg_home,
+        "home": pg_home,
         "geometry": pg_geometry,
-        "airfoil":  pg_airfoil,
-        "dataset":  pg_dataset,
-        "aero":     pg_aero,
-        "mesh":     pg_mesh,
+        "airfoil": pg_airfoil,
+        "dataset": pg_dataset,
+        "aero": pg_aero,
+        "mesh": pg_mesh,
         "dynamics": pg_dynamics,
-        "ml":       pg_ml,
+        "ml": pg_ml,
         "workflow": pg_workflow,
         "pipeline": pg_pipeline,
-        "results":  lambda r, e, t, d: pg_results(r),
-        "config":   lambda r, e, t, d: pg_config(r),
+        "results": lambda r, e, t, d: pg_results(r),
+        "config": lambda r, e, t, d: pg_config(r),
     }
     fn = dispatch.get(page)
     if fn:
         fn(root, exe, tmo, dry)
+
 
 if __name__ == "__main__":
     main()
 
 # Static operator-workflow marker retained for GUI evidence cockpit tests.
 # This label represents the unified aero dataset stage in the guided workflow.
-_GUI_STATIC_OPERATOR_MARKERS = (
-    "Unified aero dataset",
-)
+_GUI_STATIC_OPERATOR_MARKERS = ("Unified aero dataset",)
 
 # -----------------------------------------------------------------------------
 # Static GUI regression markers for the CAD export workstation.
@@ -8099,9 +12290,7 @@ _GUI_CAD_EXPORT_STATIC_MARKERS = (
 )
 
 # Static GUI regression markers for the physical deflected CAD preview panel.
-_GUI_STATIC_DEFLECTED_CAD_PREVIEW_MARKERS = (
-    "Physical deflected CAD preview",
-)
+_GUI_STATIC_DEFLECTED_CAD_PREVIEW_MARKERS = ("Physical deflected CAD preview",)
 
 # Static GUI regression markers for robust visualization fallback behavior.
 _GUI_STATIC_VISUALIZATION_FALLBACK_MARKERS = (
@@ -8111,7 +12300,6 @@ _GUI_STATIC_VISUALIZATION_FALLBACK_MARKERS = (
     "--no-draw-3d --save-plot",
     "draw_3d_error.txt",
 )
-
 
 
 # AERIS live training V2.1 static markers: "training_history.csv", "training_history_long.csv", "per_target_rmse_curves.png", "normalized_error_curves.png", "generalization_gap_curves.png", "val_nrmse_scale_mean", "overfit_warning", "plateau_warning"

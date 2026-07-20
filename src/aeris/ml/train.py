@@ -635,5 +635,6 @@ def train_baseline_model_from_config(
         model_params=model_params,
         output_dir=output_dir if output_dir is not None else cfg.output_dir,
         source_config_path=config_path,
-        feature_set_name=None,
+        feature_set_name=cfg.feature_set,
+        feature_preset_name=cfg.feature_preset,
     )

@@ -1416,6 +1416,141 @@ Do not start all of them at once. That is how architectures become pasta.
 
 ---
 
+# 19. CFD suite (`aeris cfd`)
+
+One-stop pre-process → mesh → solve → post-process pipeline (package
+`aeris.cfd`, standalone-capable). Every run resolves its options through
+provenance-tracked layers and records everything needed to reproduce it.
+
+## 19.1 The option model (full authority)
+
+Resolution order, recorded per key in `*_effective_options.json`:
+
+    tool default < aeris default < level/preset < topology hints
+                 < config overrides < CLI flags < raw pass-through
+
+- **Curated options** (typed, documented, cited) cover the validated knobs.
+- **Raw pass-through** reaches ANY native tool option verbatim:
+  - case YAML: `pyhyp_options:`, `adflow_options:`, `su2_options:`
+  - CLI: `aeris mesh pyhyp --pyhyp-option KEY=VALUE`,
+    `aeris cfd solve --solver-option KEY=VALUE` (repeatable)
+  - Raw keys win over everything but are flagged in the provenance
+    manifest (`overridden_curated_keys`) — full authority, traceable.
+- **Presets are data** (`src/aeris/cfd/presets/data/*.yaml`), curated keys
+  only, each with a citation. `aeris cfd presets list|show NAME`.
+
+## 19.2 Case specs
+
+One YAML (`schema: aeris.cfd.case.v1`) describes a whole run:
+
+```yaml
+schema: aeris.cfd.case.v1
+case:
+  name: my_case
+  geometry:            # exactly ONE of:
+    airfoil: naca0012            # 2-D (or a Selig .dat path)
+    # cad: my_aircraft.step                                # 3-D CAD solid
+    # aeris_config: configs/geometry/baseline_bwb_25.yaml  # AERIS wing
+    # surface_dir: data/meshes/bwb_smoke/surface           # pre-built
+  surface_mesh:
+    topology: airfoil_ogrid_v1   # see `aeris cfd topologies`
+    preset: smoke                # or overrides: {...}
+  volume_mesh:                   # omit for final-mesh topologies (gmsh)
+    preset: smoke                # level/march policy; overrides + pyhyp_options
+  solve:
+    solver: adflow               # or su2
+    preset: rans_ank_nk_v1
+    flow: {alpha: 2.0, mach: 0.2, reynolds: 1.0e+6}
+    area_ref: 1.094              # HALF-model area for symmetry meshes
+    chord_ref: 0.8774
+    mpi_np: 4
+  post: {reports: [forces]}
+```
+
+Run per-stage or end-to-end:
+
+```bash
+aeris cfd run case.yaml --stage surface --stage volume --stage solve --stage post
+aeris cfd run case.yaml --dry-run     # prepare everything, execute nothing
+```
+
+Artifacts per stage land in the workdir with a chained
+`case_manifest.json` (sha256 links). Solves also write
+`solve_report.json` (normalized across solvers) and `verification.json`
+(iterative convergence + mesh QC + hash chain).
+
+## 19.3 Topologies
+
+`aeris cfd topologies` lists the registry. Currently:
+
+| id                    | type | notes |
+|-----------------------|------|-------|
+| `wing_mid4_v1`        | 3-D structured | coarse screening (pyHyp coarsen=4) |
+| `wing_split8_v1`      | 3-D structured | doubled LE/TE blocks |
+| `wing_cap4_v1`        | 3-D structured | DSE grid-convergence family |
+| `airfoil_ogrid_v1`    | 2-D structured | pyHyp O-grid, NASA TMR validation |
+| `airfoil_gmsh_tri_v1` | 2-D unstructured | Gmsh tri + quad BL, SU2 only |
+| `cad_gmsh_tet_v1`     | 3-D unstructured | STEP/BREP/IGES solid → farfield-cut tets, SU2 only (tet tier: Euler/wall-function) |
+
+Topologies carry their solver requirements as hints in the surface report
+(`pyhyp_hints`, `adflow_hints`) — e.g. the airfoil strip sets
+`lift_index: 2` automatically; explicit overrides always win.
+
+## 19.4 Solvers
+
+- **ADflow** (mach-aero conda env, `MACH_AERO_CONDA_PREFIX`): structured
+  RANS, `mpirun` MPI, live residual streaming. Strategy preset
+  `rans_ank_nk_v1` (single grid + ANK→NK).
+  NOTE (this machine, 16 GB): the NK phase OOMs on ~1M-cell meshes —
+  use ≤4 ranks and/or `--solver-option useNKSolver=false`.
+- **SU2** (own conda env `su2`, `AERIS_SU2_CONDA_PREFIX` /
+  `AERIS_SU2_BIN`): consumes the SAME grids — structured CGNS is
+  auto-converted to native `.su2` with the node set preserved
+  (cross-solver verification stays a same-grid claim). Markers are read
+  from the mesh itself. Strategy preset `su2_rans_sa_v1`.
+- Standalone single-point solve (replaces `scripts/adflow_smoke.py`):
+
+```bash
+aeris cfd solve --grid mesh.cgns -o out --area-ref 1.094 --chord-ref 0.8774 \
+    --alpha 2 --mach 0.2 --reynolds 1e6 --np 4 [--solver su2]
+```
+
+## 19.5 Post-processing and verification
+
+```bash
+aeris cfd summary run1/solve run2/solve      # cross-solver/fidelity table
+aeris cfd gci fine/solve med/solve coarse/solve --quantity cl --ratio 1.4
+```
+
+`gci` implements the Celik et al. (2008) / ASME V&V 20 three-grid
+procedure (observed order, Richardson extrapolation, GCI). The cap4
+family and the 2-D O-grid ladder were designed at r ≈ 1.4 for exactly
+this.
+
+## 19.6 CFD → ML trust chain
+
+- `aeris.cfd.post.dataset.collect_cfd_dataset(case_dirs, out)` — one row
+  per solve with per-row verification gating (converged, valid march,
+  ≥4 orders dropped, finite targets) → `cfd_dataset.csv` +
+  `cfd_rejected.csv` + gate report.
+- `aeris.ml.conformal.fit_conformal_grouped(...)` — per-fidelity
+  (Mondrian) conformal intervals so coverage holds within each fidelity.
+- `aeris.ml.active_learning.emit_cfd.emit_cfd_cases(ranked_csv,
+  template_case, out_dir)` — recommended candidates become runnable case
+  YAMLs with the AI's choice recorded as provenance in the case itself.
+- `aeris.cfd.post.dataset.trust_chain_artifacts(case_dir)` — the artifact
+  chain for `build_evidence_package(extra_artifacts=...)`.
+
+## 19.7 Validation anchor
+
+`configs/cfd/validation_naca0012_tmr.yaml`: NACA 0012 (TMR closed-TE
+geometry) at α=10°, M=0.15, Re=6e6 vs the NASA Turbulence Modeling
+Resource CFL3D reference (CL 1.0909, CD 0.01231). The config documents
+the measured force-vs-residual ladder and the achievable convergence
+target for this grid family.
+
+---
+
 ## CLI quick reference
 
 For a compact command sheet, see `documents/AERIS_CLI_QUICK_REFERENCE.md`.

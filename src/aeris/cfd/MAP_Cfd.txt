@@ -1,0 +1,84 @@
+MAP — aeris.cfd (CFD suite core: pre-process, mesh, solve, post-process)
+
+Standalone-capable: imports only stdlib/numpy/yaml/aeris.common (enforced by
+tests/cfd/test_import_boundary.py). Geometry enters via file interfaces.
+
+options/
+  schema.py    CuratedOption + ToolOptionSchema — typed, documented, cited
+               curated knobs per tool; everything else via raw pass-through.
+  layers.py    OptionLayer + resolve_options: layered merge (defaults < level/
+               preset < derived < config < cli < raw) with per-key provenance;
+               raw keys win but are warned + recorded (full user authority).
+  manifest.py  effective_options manifest writer (aeris.cfd.effective_options.v1)
+               with per-key {value, source} and input sha256 fingerprints.
+
+meshing/
+  pyhyp_options.py  Single source of truth for pyHyp options: GRID_LEVELS,
+                    PYHYP_SCHEMA (curated, with citations), build_pyhyp_options.
+  pyhyp_extrude.py  Execution: pyhyp_options.json + static runner (bakes in
+                    nothing) + provenance manifest; subprocess run, march QC
+                    (parse_pyhyp_march_metrics), volume_report, quarantine.
+
+presets/
+  registry.py  Data-only preset loader (aeris.cfd.preset.v1); presets may only
+               set curated keys; each carries a citation.
+  data/        mesh_family_{smoke,fine,production}.yaml — the cap4 family.
+               Values consumed by aeris.mesh.presets (back-compat exports).
+
+case/
+  spec.py    CaseSpec dataclasses (aeris.cfd.case.v1): geometry -> surface_mesh
+             -> volume_mesh -> solve -> post in one YAML.
+  loader.py  YAML -> CaseSpec, field-named errors.
+  runner.py  Per-stage execution, isolated workdir copies, case_manifest.json
+             (aeris.cfd.case_manifest.v1) chaining artifacts by sha256;
+             --dry-run prepares everything without external tools.
+
+meshing/ (2-D additions)
+  airfoil_geometry.py  NACA 4-digit generator (TMR closed-TE form), Selig
+                       .dat loader, cosine resampling.
+  airfoil_ogrid.py     airfoil_ogrid_v1 topology: loop + PLOT3D strip +
+                       pyhyp_hints (z-symm BCs) -> pyHyp O-grid march.
+  quality.py           Industry QC metrics: scaled Jacobian, equiangle
+                       skewness, aspect ratio, growth ratio (Verdict/ANSYS
+                       definitions), pure numpy.
+  gmsh_backend.py      airfoil_gmsh_tri_v1: unstructured tri + quad BL,
+                       true-2D .su2 output (SU2-only; final mesh — no
+                       volume stage).
+  gmsh_cad.py          cad_gmsh_tet_v1: CAD solid (STEP/BREP/IGES) ->
+                       spherical farfield boolean cut -> curvature-adaptive
+                       tets, 3-D .su2 (SU2-only; tet tier — prism BL next).
+                       Case geometry source: `cad: file.step`.
+  registry.py          Topology registry (decorator + TOPOLOGY_ID) with
+                       plugin loading; AERIS wing topologies live in
+                       aeris.mesh.topologies (plugin side of the boundary).
+
+solvers/
+  base.py     SolverAdapter ABC (prepare/run/parse), PreparedRun,
+              SolveReport (aeris.cfd.solve_report.v1), solver registry.
+  adflow/     options_schema (curated + rans_ank_nk_v1 strategy preset),
+              adapter (static runner + JSON pair, mpirun), parse
+              (monitor rows: Res_rho = floats[4]).
+  su2/        options_schema, cfg_writer (provenance-annotated .cfg),
+              parse (history.csv), adapter — same grids as ADflow
+              (ASME V&V 20 cross-solver verification pair).
+              mesh_convert.py: structured CGNS -> native .su2 (SU2's CGNS
+              reader is unstructured-only); node set preserved, O-seam
+              nodes merged, markers from CGNS FamilyName.  The adapter
+              scans MARKER_TAG lines of .su2 meshes to derive marker
+              options (the mesh is the authority).
+
+post/
+  reports.py  GCI/Richardson (Celik et al. 2008), solve_summary,
+              gci_study; CLI: aeris cfd gci / summary.
+
+case/runner.py also writes solve verification.json
+  (aeris.cfd.verification.v1): iterative-convergence evidence + mesh QC +
+  sha256 chain — the quality tag CFD rows carry into the ML trust chain.
+
+env.py  external env resolution: mach-aero (pyHyp/ADflow) and SU2
+        (AERIS_SU2_BIN / AERIS_SU2_CONDA_PREFIX).
+
+CLI: aeris cfd run|presets (src/aeris/commands/cfd.py).
+Consumed by aeris.mesh.pyhyp_runner (both in-process and subprocess paths).
+Tests: tests/cfd/ (pure python — no pyHyp/ADflow imports; real runs are
+@integration).

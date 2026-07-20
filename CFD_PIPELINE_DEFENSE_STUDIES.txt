@@ -1,0 +1,410 @@
+CFD PIPELINE DEFENSE STUDIES
+============================
+
+Goal:
+Prove that the automated wing meshing, CFD solver, dataset generation, and later
+ML/BlendNet+++ workflow are robust, reproducible, and scientifically defensible.
+
+
+1. GEOMETRY STUDIES
+-------------------
+
+1.1 Geometry validity study
+- Check self-intersections.
+- Check positive thickness.
+- Check airfoil crossover.
+- Check realistic twist, sweep, taper, span, chord, and aspect ratio.
+- Check smooth section transitions.
+- Check valid control-surface placement.
+- Check blunt trailing edge availability for CFD meshing.
+
+1.2 Design-space feasibility study
+- Sample the full design space.
+- Report accepted geometries.
+- Report rejected geometries.
+- Report rejection reason distribution.
+- Report geometry acceptance percentage.
+
+1.3 Geometry sensitivity study
+- Vary one design variable at a time.
+- Confirm smooth geometric response.
+- Study sweep, taper, aspect ratio, twist, airfoil thickness, camber, and controls.
+
+1.4 Airfoil interpolation study
+- Check thickness distribution.
+- Check camber distribution.
+- Check leading-edge radius.
+- Check trailing-edge thickness.
+- Check spanwise smoothness.
+
+1.5 Control-surface geometry study
+- Check undeflected and deflected shapes.
+- Check hinge validity.
+- Check no self-intersection.
+- Check valid deflection limits.
+- Check symmetric and differential behavior.
+
+
+2. SURFACE MESH STUDIES
+-----------------------
+
+2.1 Surface topology study
+- Compare LE-corner O-grid, TE-corner split, and mid-chord O-grid.
+- Show why LE-corner topology creates poor Jacobians.
+- Justify mid-chord O-type topology for production.
+
+2.2 Surface split-location study
+- Test split_x_fore values such as 0.10, 0.15, 0.20, 0.25, 0.30, 0.35.
+- Track min scaled Jacobian.
+- Track median scaled Jacobian.
+- Track min area.
+- Track skewness and failure rate.
+
+2.3 Surface resolution study
+- Test points_per_side values such as 25, 33, 49, 65, 97.
+- Track mesh quality and solver impact.
+
+2.4 Spanwise resolution study
+- Test spanwise panels per section such as 2, 4, 8, 12, 16.
+- Track tip, root, and high-sweep behavior.
+
+2.5 Tip-cap mesh study
+- Vary tip_radial_points.
+- Vary tip_inner_scale.
+- Compare tip-cap topology options.
+- Track tip-cell quality.
+
+2.6 Surface mesh robustness campaign
+- Run surface meshing on hundreds or thousands of generated wings.
+- Report pass rate.
+- Report failure types.
+- Report worst-case Jacobian.
+- Report runtime distribution.
+
+2.7 Surface mesh determinism study
+- Same input must produce same node coordinates.
+- Same input must produce same block count.
+- Same input must produce same hashes and QC metrics.
+
+2.8 Surface normal orientation study
+- Prove wall normals point outward.
+- Check flipped blocks.
+- Check folded quads.
+
+2.9 Surface connectivity study
+- Check OML-to-OML connections.
+- Check OML-to-tip-ring connections.
+- Check tip-ring-to-tip-center connections.
+- Check root symmetry edge.
+
+
+3. VOLUME MESH STUDIES
+----------------------
+
+3.1 pyHyp robustness study
+- Run volume meshing on many accepted surfaces.
+- Report success rate.
+- Report negative volume count.
+- Report min volume quality.
+- Report aspect ratio and orthogonality.
+- Report runtime and failure reasons.
+
+3.2 First-cell height study
+- Vary s0.
+- Connect s0 to target y+.
+- Study y+ approximately 1, y+ approximately 5, and wall-function options if used.
+
+3.3 Normal-layer count study
+- Test N values such as 49, 97, 129, 193, 257.
+- Track RANS convergence and mesh quality.
+
+3.4 March-distance study
+- Test farfield distances such as 20c, 30c, 50c, 80c.
+- Track force sensitivity and convergence.
+
+3.5 Growth-rate study
+- Check boundary-layer growth ratio.
+- Check wall-normal smoothness.
+- Check adjacent-cell-size ratio.
+
+3.6 pyHyp smoothing parameter study
+- Vary cMax, theta, epsE, epsI, volCoef, and volSmoothIter.
+- Track robustness and quality.
+
+3.7 Symmetry boundary study
+- Verify half-wing root treatment.
+- Check root plane planarity.
+- Check symmetry boundary tagging.
+
+3.8 Farfield boundary study
+- Check farfield shape and distance effects on forces.
+
+
+4. SOLVER VERIFICATION AND VALIDATION STUDIES
+---------------------------------------------
+
+4.1 Known-case verification study
+- Run simple known cases.
+- Examples: flat plate, simple NACA wing, inviscid lifting wing.
+
+4.2 Benchmark validation study
+- Compare against published data.
+- Candidates: ONERA M6 wing, NACA 0012, simple swept wing, NASA CRM later.
+
+4.3 Euler solver setup study
+- Check CL-alpha slope.
+- Check CM trend.
+- Check residual drop.
+- Check pressure distribution.
+
+4.4 RANS solver setup study
+- Test turbulence model choices.
+- Compare Spalart-Allmaras and SST if available.
+- Check wall treatment and freestream turbulence settings.
+
+4.5 Boundary-condition study
+- Test farfield boundary distance.
+- Test symmetry plane setup.
+- Test wall condition.
+- Test freestream and reference values.
+
+4.6 Residual convergence study
+- Track density residual.
+- Track momentum residual.
+- Track energy residual.
+- Track turbulence residual.
+
+4.7 Force-convergence study
+- Check CL stability.
+- Check CD stability.
+- Check CM stability.
+- Reject oscillatory or drifting force histories.
+
+4.8 Solver restart study
+- Restart converged or partially converged cases.
+- Confirm same final answer within tolerance.
+
+4.9 Solver determinism study
+- Run identical case twice.
+- Confirm same outputs within tolerance.
+
+
+5. GRID CONVERGENCE STUDIES
+---------------------------
+
+5.1 Euler grid convergence study
+- Run coarse, medium, and fine Euler meshes.
+- Compare CL, CM, Cp, and shock location if transonic.
+
+5.2 RANS grid convergence study
+- Run coarse, medium, and fine RANS meshes.
+- Compare CL, CD, CM, Cp, y+, and separation pattern.
+
+5.3 Grid Convergence Index study
+- Compute observed order where possible.
+- Compute extrapolated value.
+- Estimate numerical uncertainty.
+
+5.4 Surface-volume resolution coupling study
+- Confirm surface resolution and volume-layer resolution are balanced.
+
+
+6. PHYSICS ENVELOPE STUDIES
+---------------------------
+
+6.1 Angle-of-attack envelope study
+- Sweep alpha.
+- Identify linear range.
+- Identify nonlinear range.
+- Identify stall or separation-prone range.
+- Identify solver failure range.
+
+6.2 Sideslip envelope study
+- Sweep beta.
+- Track convergence and aerodynamic consistency.
+
+6.3 Mach number study
+- Sweep Mach if compressibility matters.
+- Example values: 0.1, 0.2, 0.3, 0.5, 0.7.
+
+6.4 Reynolds number study
+- Sweep Reynolds number for RANS.
+- Track y+, CD, and separation sensitivity.
+
+6.5 Control-deflection envelope study
+- Sweep elevon/flap deflections.
+- Check moment response.
+- Check geometry validity.
+- Check solver stability.
+
+6.6 Separated-flow failure study
+- Identify cases where steady RANS is unreliable.
+- Define rejected or special-treatment regimes.
+
+
+7. DATASET ROBUSTNESS STUDIES
+-----------------------------
+
+7.1 Sampling strategy study
+- Compare random sampling, Latin hypercube, Sobol, and active learning.
+
+7.2 Coverage study
+- Show design-space coverage.
+- Show operating-condition coverage.
+
+7.3 Failure-rate study
+- Categorize failures:
+  geometry_failed
+  surface_mesh_failed
+  volume_mesh_failed
+  solver_diverged
+  force_not_converged
+  physics_outlier
+
+7.4 Outlier detection study
+- Detect negative drag.
+- Detect impossible CL.
+- Detect discontinuous CL-alpha behavior.
+- Detect excessive moment jumps.
+- Detect bad residuals and high y+.
+
+7.5 Data reproducibility study
+- Store geometry config.
+- Store random seed.
+- Store mesh settings.
+- Store solver settings.
+- Store software versions.
+- Store mesh hash.
+- Store result hash.
+
+7.6 Storage format study
+- Use CSV or Parquet for scalar datasets.
+- Use CGNS, HDF5, Zarr, VTK, or VTU for field datasets.
+
+7.7 Metadata completeness study
+- Prove every CFD row is traceable and reproducible.
+
+
+8. MULTIFIDELITY STUDIES
+------------------------
+
+8.1 AVL-vs-Euler study
+- Compare low-fidelity and Euler trends.
+
+8.2 Euler-vs-RANS study
+- Compare inviscid and viscous CFD.
+- Expect CL and CM trends to be similar in attached flow.
+- Expect CD to differ significantly.
+
+8.3 Low-fidelity correction study
+- Train correction from AVL or Euler to RANS.
+- Compare direct model vs correction model.
+
+8.4 Cost-vs-accuracy study
+- Report runtime per case.
+- Report accuracy improvement.
+- Justify why RANS is used selectively.
+
+
+9. ML AND BLENDNET+++ STUDIES
+-----------------------------
+
+9.1 Train/test leakage study
+- Split by geometry, not by individual flow condition.
+- Avoid having the same geometry in both train and test.
+
+9.2 Baseline model study
+- Compare BlendNet+++ against simple baselines.
+- Baselines: linear regression, random forest, extra trees, gradient boosting, MLP.
+
+9.3 Ablation study
+- Remove one input group at a time.
+- Test geometry-only features.
+- Test flow-condition-only features.
+- Test low-fidelity-only features.
+- Test combined features.
+- Prove which part of BlendNet+++ contributes value.
+
+9.4 Multifidelity ablation study
+- Compare:
+  RANS-only model
+  AVL-to-RANS correction
+  Euler-to-RANS correction
+  AVL+Euler+geometry fused model
+  BlendNet+++ full model
+
+9.5 Learning-curve study
+- Train with increasing dataset sizes.
+- Show error vs number of CFD cases.
+- Estimate how much more CFD data is useful.
+
+9.6 Generalization study
+- Test interpolation inside the training envelope.
+- Test extrapolation near the envelope boundary.
+- Test unseen geometry families if available.
+
+9.7 Uncertainty calibration study
+- Estimate prediction uncertainty.
+- Check calibration: predicted uncertainty should match actual error.
+- Reject predictions with high uncertainty.
+
+9.8 Physics-consistency study
+- Check monotonic CL-alpha behavior in linear range.
+- Check nonnegative drag.
+- Check plausible moment trends.
+- Check control derivatives have correct sign.
+
+9.9 Residual/error structure study
+- Plot errors vs alpha, beta, Mach, Reynolds number, geometry variables, and controls.
+- Identify regimes where the model fails.
+
+9.10 Robustness-to-noise study
+- Add small perturbations to inputs.
+- Confirm predictions do not jump unphysically.
+
+9.11 Out-of-distribution detection study
+- Detect geometry or operating points outside the training envelope.
+- Add inference guards.
+
+9.12 Model reproducibility study
+- Same data and seed should reproduce the same metrics within tolerance.
+- Store model hash, data hash, feature schema, and training config.
+
+9.13 Model comparison and promotion study
+- Define promotion criteria.
+- Compare BlendNet+++ to all baselines.
+- Promote only if it beats baselines on grouped test data and physics checks.
+
+9.14 Pressure-field extension study
+- If predicting Cp or pressure fields later, verify mesh indexing consistency.
+- Store surface nodes, connectivity, and Cp.
+- Compare scalar-only model vs scalar-plus-field model.
+
+
+10. MINIMUM DEFENSE-READY PACKAGE
+---------------------------------
+
+Non-negotiable studies before claiming production CFD dataset readiness:
+
+- Geometry robustness study.
+- Surface mesh topology study.
+- Surface mesh robustness campaign.
+- Volume mesh robustness campaign.
+- Euler grid convergence study.
+- RANS grid convergence study.
+- Benchmark validation study.
+- Solver convergence criteria study.
+- Operating-envelope study.
+- Dataset failure-rate study.
+- Reproducibility and metadata study.
+- Euler-vs-RANS comparison.
+- BlendNet+++ baseline comparison.
+- BlendNet+++ ablation study.
+- BlendNet+++ leakage-safe train/test study.
+- BlendNet+++ uncertainty and out-of-distribution study.
+
+
+Defense message:
+The geometry is valid, the mesh is valid, the solver is verified/validated, the
+grid is adequate, the data is reproducible, the failure modes are known, and the
+ML model is tested against baselines, leakage, uncertainty, and physics checks.

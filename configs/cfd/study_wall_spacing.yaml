@@ -1,0 +1,38 @@
+# Wall-spacing (near-wall resolution / y+) sensitivity study.
+#
+# Motivation: RANS with wall-integration turbulence models (SA here) is only
+# meaningful once the wall-adjacent cell resolves the viscous sublayer
+# (y+ <~ 1; Coles/Wilcox correlation used throughout the mach-aero docs and
+# the TMR case guidance).  This study brackets the validated s0 = 5.0e-6 c
+# choice (y+ ~ 1 at Re = 6e6, flat-plate Cf estimate — see the comment in
+# validation_naca0012_tmr.yaml) with a coarser (y+ ~ 2) and a finer
+# (y+ ~ 0.4) first-cell height at otherwise fixed grid density and domain
+# size, to show force coefficients are insensitive once y+ <~ 1 — the
+# standard wall-resolution independence argument (Spalart & Allmaras 1992;
+# CFL3D/ADflow SA usage notes).
+schema: aeris.cfd.study.v1
+study:
+  name: naca0012_wall_spacing_study
+  description: >
+    First-cell height (s0) sensitivity at fixed n_per_surface=257,
+    n_grid=193, march_dist_factor=100 — brackets y+ ~ 1 to show force
+    independence once the viscous sublayer is resolved.
+  base_case: validation_naca0012_tmr.yaml
+  baseline: s0_5.0e-6_yplus1
+  quantities: [cl, cd, cmy]
+  variants:
+    - name: s0_1.0e-5_yplus2
+      description: "s0 = 1.0e-5 c (y+ ~ 2, under-resolved)."
+      patch:
+        volume_mesh:
+          overrides:
+            s0: 1.0e-5
+    - name: s0_5.0e-6_yplus1
+      description: "s0 = 5.0e-6 c (y+ ~ 1, the validated baseline)."
+      patch: {}
+    - name: s0_2.0e-6_yplus04
+      description: "s0 = 2.0e-6 c (y+ ~ 0.4, over-resolved)."
+      patch:
+        volume_mesh:
+          overrides:
+            s0: 2.0e-6

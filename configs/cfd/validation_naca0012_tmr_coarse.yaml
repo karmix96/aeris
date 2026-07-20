@@ -1,0 +1,31 @@
+# GCI ladder — coarse member (r ~ 1.4 family with the main validation case
+# as the medium member). Measured result: CL 1.1093, CD 0.01357 (converged)
+# -> monotone approach to the TMR reference from above across the ladder.
+schema: aeris.cfd.case.v1
+case:
+  name: naca0012_tmr_a10_coarse
+  geometry:
+    airfoil: naca0012
+  surface_mesh:
+    topology: airfoil_ogrid_v1
+    overrides:
+      n_per_surface: 129
+  volume_mesh:
+    level: smoke
+    march_dist_factor: 100.0
+    overrides:
+      n_grid: 129
+      s0: 7.0e-6
+  solve:
+    solver: adflow
+    preset: rans_ank_nk_v1
+    overrides:
+      l2_convergence: 2.0e-6
+    flow:
+      alpha: 10.0
+      mach: 0.15
+      reynolds: 6.0e+6
+      temperature: 300.0
+    area_ref: 1.0
+    chord_ref: 1.0
+    mpi_np: 4

@@ -53,13 +53,14 @@ import numpy as np
 from aeris.ml.fingerprints import file_sha256
 from aeris.ml.manifest import utc_now_iso
 
-
 CONFORMAL_SCHEMA_VERSION = "aeris.conformal_calibration.v1"
+GROUPED_CONFORMAL_SCHEMA_VERSION = "aeris.conformal_calibration_grouped.v1"
 
 
 # ---------------------------------------------------------------------------
 # Data container
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class ConformalCalibration:
@@ -95,6 +96,7 @@ class ConformalCalibration:
 # Fitting
 # ---------------------------------------------------------------------------
 
+
 def _as_2d(arr: Any) -> np.ndarray:
     a = np.asarray(arr, dtype=float)
     return a.reshape(-1, 1) if a.ndim == 1 else a
@@ -109,6 +111,36 @@ def _predict_2d(model: Any, X: np.ndarray, n_targets: int) -> np.ndarray:
             f"Model predicted {pred.shape[1]} columns but {n_targets} targets expected."
         )
     return pred
+
+
+def _per_target_quantiles(
+    scores: np.ndarray, target_columns: list[str], alpha: float
+) -> tuple[dict[str, float], dict[str, float], dict[str, float]]:
+    """Per-target q_hat + diagnostics from a nonconformity score matrix.
+
+    Implements the ML-H5 finite-sample rule: the ceil((m+1)(1-alpha))-th
+    ORDER STATISTIC via method="higher", with m = finite scores per target.
+    Shared by marginal and grouped (Mondrian) calibration so both carry the
+    identical guarantee arithmetic.
+    """
+    q_hat: dict[str, float] = {}
+    p50: dict[str, float] = {}
+    p95: dict[str, float] = {}
+    for idx, target in enumerate(target_columns):
+        s = scores[:, idx]
+        finite = s[np.isfinite(s)]
+        if len(finite) == 0:
+            # Fallback: use +inf so all intervals are maximally wide.
+            q_hat[target] = float("inf")
+            p50[target] = float("nan")
+            p95[target] = float("nan")
+        else:
+            m = int(len(finite))
+            q_level = min((1.0 + 1.0 / m) * (1.0 - alpha), 1.0)
+            q_hat[target] = float(np.quantile(finite, q_level, method="higher"))
+            p50[target] = float(np.percentile(finite, 50))
+            p95[target] = float(np.percentile(finite, 95))
+    return q_hat, p50, p95
 
 
 def fit_conformal(
@@ -167,26 +199,15 @@ def fit_conformal(
     # Nonconformity scores: absolute residual per sample per target
     scores = np.abs(y_cal - y_pred_cal)  # shape (n, n_targets)
 
-    # Conformal quantile with finite-sample inflation.
-    # This is the (1 + 1/n)(1 − α)-th quantile of the empirical distribution.
-    q_level = min((1.0 + 1.0 / n) * (1.0 - alpha), 1.0)
+    # ML-H5: the finite-sample guarantee requires the ceil((m+1)(1-alpha))-th
+    # ORDER STATISTIC of the nonconformity scores. numpy's default linear
+    # interpolation can return a value below that order statistic
+    # (anti-conservative, worst at small m), so method="higher" is mandatory.
+    # The level is computed per target from m = number of FINITE scores for
+    # that target, not from the raw row count n, so silently dropped
+    # non-finite rows cannot understate the inflation.
 
-    q_hat: dict[str, float] = {}
-    p50: dict[str, float] = {}
-    p95: dict[str, float] = {}
-
-    for idx, target in enumerate(target_columns):
-        s = scores[:, idx]
-        finite = s[np.isfinite(s)]
-        if len(finite) == 0:
-            # Fallback: use +inf so all intervals are maximally wide.
-            q_hat[target] = float("inf")
-            p50[target] = float("nan")
-            p95[target] = float("nan")
-        else:
-            q_hat[target] = float(np.quantile(finite, q_level))
-            p50[target] = float(np.percentile(finite, 50))
-            p95[target] = float(np.percentile(finite, 95))
+    q_hat, p50, p95 = _per_target_quantiles(scores, target_columns, alpha)
 
     return ConformalCalibration(
         alpha=float(alpha),
@@ -203,9 +224,7 @@ def fit_conformal(
             else None
         ),
         model_sha256=(
-            file_sha256(model_path)
-            if model_path is not None and model_path.exists()
-            else None
+            file_sha256(model_path) if model_path is not None and model_path.exists() else None
         ),
     )
 
@@ -213,6 +232,7 @@ def fit_conformal(
 # ---------------------------------------------------------------------------
 # Inference
 # ---------------------------------------------------------------------------
+
 
 def predict_with_conformal_intervals(
     model: Any,
@@ -254,6 +274,7 @@ def predict_with_conformal_intervals(
 # Persistence
 # ---------------------------------------------------------------------------
 
+
 def save_conformal_calibration(
     calibration: ConformalCalibration,
     path: Path,
@@ -281,8 +302,7 @@ def load_conformal_calibration(path: Path) -> ConformalCalibration:
     schema = raw.get("schema_version", "")
     if not schema.startswith("aeris.conformal_calibration"):
         raise ValueError(
-            f"Unexpected schema version '{schema}'. "
-            "Expected aeris.conformal_calibration.v1."
+            f"Unexpected schema version '{schema}'. " "Expected aeris.conformal_calibration.v1."
         )
     return ConformalCalibration(
         alpha=float(raw["alpha"]),
@@ -299,8 +319,191 @@ def load_conformal_calibration(path: Path) -> ConformalCalibration:
 
 
 # ---------------------------------------------------------------------------
+# Grouped (Mondrian) conformal — per-group coverage, e.g. per CFD fidelity
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class GroupedConformalCalibration:
+    """Group-conditional (Mondrian) conformal quantiles.
+
+    Marginal split conformal guarantees coverage *on average over all rows*;
+    a mixed-fidelity dataset can then hide undercoverage on one fidelity
+    behind overcoverage on another.  Calibrating q_hat per group (Vovk's
+    Mondrian conformal) restores the guarantee *within each group*:
+
+        P(y ∈ [ŷ − q̂_g, ŷ + q̂_g] | group = g) ≥ 1 − α
+
+    Intended AERIS use: group = CFD fidelity level (smoke / fine /
+    production, from the verification-gated cfd_dataset), so surrogate
+    intervals honestly widen on coarse-grid training data.
+
+    Groups with fewer than ``min_group_size`` calibration rows fall back to
+    the marginal calibration — a small-sample Mondrian quantile would be
+    dominated by the (1+1/m) inflation and the per-group guarantee would be
+    vacuous; falling back is the statistically honest choice.
+    """
+
+    alpha: float
+    target_columns: list[str]
+    group_column: str
+    q_hat_by_group: dict[str, dict[str, float]]
+    n_calibration_by_group: dict[str, int]
+    fallback: ConformalCalibration
+    min_group_size: int
+    coverage_theoretical: float
+    created_at_utc: str = ""
+
+
+def fit_conformal_grouped(
+    model: Any,
+    X_cal: np.ndarray,
+    y_cal: np.ndarray,
+    target_columns: list[str],
+    groups: Any,
+    *,
+    alpha: float = 0.10,
+    group_column: str = "fidelity",
+    min_group_size: int = 20,
+    calibration_csv_path: Path | None = None,
+    model_path: Path | None = None,
+) -> GroupedConformalCalibration:
+    """Fit Mondrian conformal calibration: one q_hat set per group.
+
+    ``groups`` is a per-row label array aligned with X_cal/y_cal (e.g. the
+    ``fidelity`` column of a mixed-fidelity training set).  The marginal
+    calibration over all rows is always fitted too and serves as the
+    fallback for unseen or undersized groups.
+    """
+    groups = np.asarray(groups)
+    X_cal = np.asarray(X_cal, dtype=float)
+    y_cal = _as_2d(y_cal)
+    if len(groups) != len(y_cal):
+        raise ValueError(f"groups has {len(groups)} rows but y_cal has {len(y_cal)}.")
+
+    fallback = fit_conformal(
+        model,
+        X_cal,
+        y_cal,
+        target_columns,
+        alpha=alpha,
+        calibration_csv_path=calibration_csv_path,
+        model_path=model_path,
+    )
+
+    y_pred_cal = _predict_2d(model, X_cal, len(target_columns))
+    scores = np.abs(y_cal - y_pred_cal)
+
+    q_hat_by_group: dict[str, dict[str, float]] = {}
+    n_by_group: dict[str, int] = {}
+    for group in np.unique(groups):
+        mask = groups == group
+        n_by_group[str(group)] = int(mask.sum())
+        if int(mask.sum()) < min_group_size:
+            continue  # served by the fallback at inference
+        group_q, _, _ = _per_target_quantiles(scores[mask], target_columns, alpha)
+        q_hat_by_group[str(group)] = group_q
+
+    return GroupedConformalCalibration(
+        alpha=float(alpha),
+        target_columns=list(target_columns),
+        group_column=group_column,
+        q_hat_by_group=q_hat_by_group,
+        n_calibration_by_group=n_by_group,
+        fallback=fallback,
+        min_group_size=int(min_group_size),
+        coverage_theoretical=float(1.0 - alpha),
+        created_at_utc=utc_now_iso(),
+    )
+
+
+def predict_with_conformal_intervals_grouped(
+    model: Any,
+    X: np.ndarray,
+    calibration: GroupedConformalCalibration,
+    target_columns: list[str],
+    groups: Any,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Predict with per-group conformal intervals (fallback for unseen groups).
+
+    Returns (predictions, lower, upper), each (n_rows, n_targets); the
+    interval half-width of each row comes from its group's q_hat, or the
+    marginal fallback when the group was unseen/undersized at calibration.
+    """
+    if target_columns != calibration.target_columns:
+        raise ValueError(
+            f"target_columns mismatch. Model: {target_columns}, "
+            f"Calibration: {calibration.target_columns}"
+        )
+    groups = np.asarray(groups)
+    X = np.asarray(X, dtype=float)
+    if len(groups) != len(X):
+        raise ValueError(f"groups has {len(groups)} rows but X has {len(X)}.")
+
+    predictions = _predict_2d(model, X, len(target_columns))
+    fallback_q = np.array([calibration.fallback.q_hat[t] for t in target_columns], dtype=float)
+    q_rows = np.tile(fallback_q, (len(X), 1))
+    for group, group_q in calibration.q_hat_by_group.items():
+        mask = groups.astype(str) == group
+        if mask.any():
+            q_rows[mask] = np.array([group_q[t] for t in target_columns], dtype=float)
+
+    return predictions, predictions - q_rows, predictions + q_rows
+
+
+def save_grouped_conformal_calibration(
+    calibration: GroupedConformalCalibration, path: Path
+) -> Path:
+    """Write grouped calibration to JSON. Returns the path written."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "schema_version": GROUPED_CONFORMAL_SCHEMA_VERSION,
+        **asdict(calibration),
+    }
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    return path
+
+
+def load_grouped_conformal_calibration(path: Path) -> GroupedConformalCalibration:
+    """Load a saved grouped conformal calibration from JSON."""
+    raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    schema = raw.get("schema_version", "")
+    if schema != GROUPED_CONFORMAL_SCHEMA_VERSION:
+        raise ValueError(
+            f"Unexpected schema version '{schema}'. "
+            f"Expected {GROUPED_CONFORMAL_SCHEMA_VERSION}."
+        )
+    fallback_raw = raw["fallback"]
+    fallback = ConformalCalibration(
+        alpha=float(fallback_raw["alpha"]),
+        target_columns=list(fallback_raw["target_columns"]),
+        q_hat=dict(fallback_raw["q_hat"]),
+        n_calibration=int(fallback_raw["n_calibration"]),
+        coverage_theoretical=float(fallback_raw["coverage_theoretical"]),
+        nonconformity_scores_p50=dict(fallback_raw["nonconformity_scores_p50"]),
+        nonconformity_scores_p95=dict(fallback_raw["nonconformity_scores_p95"]),
+        created_at_utc=str(fallback_raw.get("created_at_utc", "")),
+        calibration_rows_sha256=fallback_raw.get("calibration_rows_sha256"),
+        model_sha256=fallback_raw.get("model_sha256"),
+    )
+    return GroupedConformalCalibration(
+        alpha=float(raw["alpha"]),
+        target_columns=list(raw["target_columns"]),
+        group_column=str(raw["group_column"]),
+        q_hat_by_group={k: dict(v) for k, v in raw["q_hat_by_group"].items()},
+        n_calibration_by_group={k: int(v) for k, v in raw["n_calibration_by_group"].items()},
+        fallback=fallback,
+        min_group_size=int(raw["min_group_size"]),
+        coverage_theoretical=float(raw["coverage_theoretical"]),
+        created_at_utc=str(raw.get("created_at_utc", "")),
+    )
+
+
+# ---------------------------------------------------------------------------
 # Convenience: fit from a model run directory (uses val_rows.csv)
 # ---------------------------------------------------------------------------
+
 
 def fit_conformal_from_run_dir(
     model_run_dir: Path,
@@ -332,14 +535,13 @@ def fit_conformal_from_run_dir(
     model_run_dir = Path(model_run_dir).expanduser().resolve()
     val_csv = model_run_dir / "val_rows.csv"
     model_path = model_run_dir / "models" / "model.pkl"
-    if not val_csv.exists():
-        val_csv = model_run_dir / "val_rows.csv"
+    # ML-H5 cleanup: removed duplicated exists-check (dead reassignment).
     if not val_csv.exists():
         raise FileNotFoundError(f"val_rows.csv not found in {model_run_dir}")
 
     df = pd.read_csv(val_csv)
     missing_feat = [c for c in feature_columns if c not in df.columns]
-    missing_tgt  = [c for c in target_columns  if c not in df.columns]
+    missing_tgt = [c for c in target_columns if c not in df.columns]
     if missing_feat:
         raise ValueError(f"val_rows.csv is missing feature columns: {missing_feat}")
     if missing_tgt:

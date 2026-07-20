@@ -411,6 +411,7 @@ def build_evidence_package(
         add("model", "model_promotion_manifest", model_root / "model_promotion_manifest.json", required=True)
         add("model", "model_card", model_root / "model_card.json")
         add("model", "training_envelope", model_root / "training_envelope.json")
+        add("model", "conformal_calibration", model_root / "conformal_calibration.json")
         add("model_quality", "model_quality_report", model_root / "quality" / "model_audit" / "model_quality_report.json")
         add("model_quality", "residual_audit", model_root / "quality" / "model_audit" / "residual_audit.csv")
         add("promotion_gates", "promotion_gate_suggestions", model_root / "promotion_gate_suggestions" / "promotion_gate_suggestions.json")

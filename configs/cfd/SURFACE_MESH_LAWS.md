@@ -442,3 +442,42 @@ uniform-to-cosine distribution whose strength is a single float in [0, 1]
 *sheet* for VLM/OpenAeroStruct by projecting onto a triangulated surface and
 taking upper/lower midpoints — no closed OML, no tip cap, no blunt TE, so it
 cannot be extruded by pyHyp. Different purpose.
+
+## Law 12 — tip skewness is set by the OUTER loop, and smoothing cannot reach it
+
+Tip skewness sat at 0.90-0.98 across every strategy in this study, both tip
+topologies, every tip parameter. Localised at last:
+
+* `tip_center_0` is **excellent** (skew 0.085). The centre patch was never
+  the problem.
+* The damage is entirely in the ring/collar blocks, worst in `tip_ring_2`
+  (the trailing-edge collar) at cell (i=9, **j=0**) — corner angles 7.7,
+  171.9, 8.8, 171.6 deg with all four edges a similar 3.2-4.1 mm.
+
+Similar edge lengths with 8 deg corners means these are **rhombi, not
+stretched rectangles**: the radial direction is nearly *tangent* to the
+ring. That is a node-correspondence failure between the outer and inner
+loops — point i of the inner loop sits along the loop from point i of the
+outer loop rather than inward from it — which is why neither resolution nor
+`cap_width_frac` nor `tip_inner_scale` ever moved it.
+
+`tip_smooth_iters` (Laplacian relaxation of cap interiors, block boundaries
+held fixed) was added and helps, monotonically inward:
+
+    j (0 = outer loop)   0      1      2      3      4      5      6      7
+    unsmoothed         0.914  0.907  0.897  0.883  0.862  0.827  0.760  0.602
+    400 iterations     0.900  0.877  0.856  0.829  0.796  0.747  0.669  0.497
+
+but the worst cell **stays at j=0** and improves only 0.914 -> 0.900. The
+outer loop is pinned to the OML tip edge and cannot move without breaking
+block connectivity, so interior smoothing structurally cannot repair the
+first cell row. Smoothing is worth keeping (tip Jacobian 0.134 -> 0.149,
+tip AR 10.3 -> 9.0) but it is not the fix.
+
+**The fix, not yet implemented:** build the inner loop as an inward *offset*
+of the outer loop along its local inward normal, sampled at the same
+parameter values, instead of a camber-aligned rectangle. Then the radial
+direction is perpendicular to the loop by construction and the first ring
+row cannot be rhombic. This is the "generate a smooth inner loop rather
+than simply scaling every coordinate uniformly" step from the project
+lead's architecture proposal, and it is now the top open surface item.

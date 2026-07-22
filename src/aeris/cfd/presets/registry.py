@@ -45,6 +45,7 @@ ALLOWED_SURFACE_KEYS = frozenset(
         "cap_wrap_x",
         "split_x_fore",
         "tip_topology",
+        "tip_smooth_iters",
         "te_thickness",
         "te_base_points",
         "chordwise_distribution",

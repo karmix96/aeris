@@ -891,6 +891,32 @@ def _refine_spanwise(
     return refined
 
 
+
+def _smooth_patch_interior(patch: Array, iterations: int, relaxation: float = 0.5) -> Array:
+    """Laplacian-smooth a structured patch's interior, boundary held fixed.
+
+    The tip collar's worst cells are rhombi -- similar edge lengths but ~8
+    deg corners -- because the inner loop's node correspondence is not
+    radial: point i of the inner loop is displaced along the loop rather
+    than inward from point i of the outer loop.  No amount of resolution or
+    uniform scaling fixes that, because it is a parameterisation mismatch,
+    not a spacing one.  Relaxing interior nodes toward the average of their
+    structured neighbours pulls the grid lines back toward orthogonality.
+
+    Only interior (i, j) nodes move, so every block boundary -- and
+    therefore all block-to-block connectivity -- is preserved exactly.
+    """
+    if iterations <= 0 or min(patch.shape[:2]) < 3:
+        return patch
+    out = patch.copy()
+    for _ in range(int(iterations)):
+        neighbour_mean = 0.25 * (
+            out[:-2, 1:-1, :] + out[2:, 1:-1, :] + out[1:-1, :-2, :] + out[1:-1, 2:, :]
+        )
+        out[1:-1, 1:-1, :] += relaxation * (neighbour_mean - out[1:-1, 1:-1, :])
+    return out
+
+
 def _apply_tip_dome(
     cap_blocks: Sequence[Array],
     boundary: Array,
@@ -1464,6 +1490,7 @@ def build_surface_mesh(
     spanwise_distribution: str = "uniform",
     spanwise_beta: float = 2.0,
     spanwise_allocation: str = "uniform",
+    tip_smooth_iters: int = 0,
     tip_topology: str = "auto",
 ) -> tuple[list[SurfaceBlock], dict[str, object]]:
     """Build a 9-block structured surface mesh from an AeroSandbox Wing.
@@ -1590,6 +1617,7 @@ def build_surface_mesh(
     # square-patch-on-a-postage-stamp problem of the ring+Coons closure
     # (that cap put points_per_side^2 nodes on ~0.1% of the wing area).
     resolved_tip = oml_topology if tip_topology == "auto" else tip_topology
+    # (smoothing is applied to the returned cap blocks below)
     if resolved_tip == "cap4":
         raw_ring, raw_center, tip_groups = _build_tip_cap4(
             raw_oml,
@@ -1603,6 +1631,10 @@ def build_surface_mesh(
             inner_scale=tip_inner_scale,
             conformal_ring=tip_conformal_ring,
         )
+
+    if tip_smooth_iters > 0:
+        raw_ring = [_smooth_patch_interior(b, tip_smooth_iters) for b in raw_ring]
+        raw_center = [_smooth_patch_interior(b, tip_smooth_iters) for b in raw_center]
 
     oml_arrays = _orient_oml_blocks_outward(raw_oml)
     section_centers = np.array(
@@ -1768,6 +1800,7 @@ def build_surface_mesh(
         "split_x_fore": split_x_fore,
         "split_x_aft": 1.0 - split_x_fore,
         "tip_topology": resolved_tip,
+        "tip_smooth_iters": tip_smooth_iters,
         "chordwise_distribution": chordwise_distribution,
         "chordwise_beta": chordwise_beta,
         "spanwise_distribution": spanwise_distribution,

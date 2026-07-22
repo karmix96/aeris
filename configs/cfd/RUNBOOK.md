@@ -208,6 +208,113 @@ starting.
 existing findings) comes out of Pass A as the robust choice is the one to
 carry into section 3's wing-level GCI study.
 
+## 5. Surface-mesh option sweeps -> "surface mesh laws" (rubric 2.1-2.5)
+
+New CLI command this session: `aeris cfd campaign surface-option-sweep`.
+Design: 20 geometries drawn via **true Latin Hypercube sampling**
+(`aeris.dataset.sampling.samplers.lhs_v1`, space-filling over all 20 BWB
+design variables -- NOT independent random seeds, which is what section 4's
+`mesh-robustness` command uses) are built **once** and reused for every
+level of one surface-mesh option, one option at a time (one-factor-at-a-
+time, not a full factorial across all ~9 options -- combinatorially
+infeasible and not how this kind of DOE is normally run). Validated this
+session: LHS sampling confirmed to space-fill the bounds (20 points,
+split_ratio spread 0.352-0.543 against config bounds [0.35,0.55]); a cheap
+real 2-geometry x 2-level surface-only check ran correctly (no wiring bugs).
+**Not run at the real n=20 scale for any option.**
+
+```bash
+# Topology comparison (cap4 known to work; mid4/split8 never validated at
+# full LHS-design-space scale). Mesh-only (surface+volume), ~20 geoms x 3
+# topologies x ~3 min/mesh (cap4/mid4) -- split8 is a documented dead end
+# in DSE_READINESS.md, expect it to fail most/all of these.
+aeris cfd campaign surface-option-sweep --config configs/geometry/bwb_explore_wide.yaml \
+  --n 20 --lhs-seed 42 --option topology --levels cap4,mid4,split8 \
+  --workdir data/cfd_cases/sweep_topology
+
+# Surface split-location study (rubric 2.2)
+aeris cfd campaign surface-option-sweep --config configs/geometry/bwb_explore_wide.yaml \
+  --n 20 --lhs-seed 42 --option split_x_fore --levels 0.10,0.15,0.20,0.25,0.30,0.35 \
+  --workdir data/cfd_cases/sweep_split_x_fore
+
+# Surface (chordwise) resolution study (rubric 2.3)
+aeris cfd campaign surface-option-sweep --config configs/geometry/bwb_explore_wide.yaml \
+  --n 20 --lhs-seed 42 --option points_per_side --levels 25,33,49,65,97 \
+  --workdir data/cfd_cases/sweep_points_per_side
+
+# Spanwise resolution study (rubric 2.4)
+aeris cfd campaign surface-option-sweep --config configs/geometry/bwb_explore_wide.yaml \
+  --n 20 --lhs-seed 42 --option spanwise_panels --levels 2,4,8,12,16 \
+  --workdir data/cfd_cases/sweep_spanwise_panels
+
+# Tip-cap studies (rubric 2.5) -- cap_wrap_x=0.03 and cap_wrap_points=9 are
+# KNOWN failures from a single-baseline test (DSE_READINESS.md 2026-07-17);
+# this generalizes that finding across 20 LHS geometries instead of one.
+aeris cfd campaign surface-option-sweep --config configs/geometry/bwb_explore_wide.yaml \
+  --n 20 --lhs-seed 42 --option tip_radial_points --levels 3,9,17 \
+  --workdir data/cfd_cases/sweep_tip_radial_points
+aeris cfd campaign surface-option-sweep --config configs/geometry/bwb_explore_wide.yaml \
+  --n 20 --lhs-seed 42 --option cap_width_frac --levels 0.15,0.3,0.5 \
+  --workdir data/cfd_cases/sweep_cap_width_frac
+aeris cfd campaign surface-option-sweep --config configs/geometry/bwb_explore_wide.yaml \
+  --n 20 --lhs-seed 42 --option cap_wrap_points --levels 9,17,25 \
+  --workdir data/cfd_cases/sweep_cap_wrap_points
+aeris cfd campaign surface-option-sweep --config configs/geometry/bwb_explore_wide.yaml \
+  --n 20 --lhs-seed 42 --option cap_wrap_x --levels 0.015,0.03 \
+  --workdir data/cfd_cases/sweep_cap_wrap_x
+```
+Rough cost: ~20 geometries x (levels per option) x ~2-3 min/mesh (smoke
+size) -- e.g. split_x_fore (6 levels) ~ 20x6x2.5min ~ 5 hours. Run ONE
+option sweep at a time; this is the biggest remaining compute item in this
+document. Each writes `surface_option_sweep_report.json` with per-(level,
+geometry) status + real measured QC (`measured_min_scaled_jacobian`,
+`measured_max_adjacent_normal_angle_deg` -- not the misleading top-level
+gate-threshold fields, see the bugfix note in DSE_READINESS.md/memory).
+
+Once results are in, fold them into `configs/cfd/SURFACE_MESH_LAWS.md` --
+the "laws" Mike asked for: safe range per option, backed by
+success-rate-vs-level data across a fixed 20-geometry LHS sample, not
+single-baseline spot checks.
+
+> **These sweeps are currently ON HOLD.** The baseline cap4 recipe has a
+> ~30% background volume-march failure rate whose mechanism is identified
+> but not yet fixed, so sweep results would attribute it to whichever
+> option is being varied. See `NEXT_STEPS.md` task L1 and the failure-mode
+> section of `SURFACE_MESH_LAWS.md`.
+
+## 6. Controlled re-march experiments (volume-side single-variable studies)
+
+`aeris cfd campaign remarch` re-marches *existing* surface meshes under
+named pyHyp option variants. Because the surface mesh is copied unchanged
+into every variant, any difference in the audited inverted-cell count is
+attributable to the varied option alone -- and skipping geometry+surface
+generation makes a single-variable study affordable on a laptop (~2 min per
+march at smoke size).
+
+```bash
+N10=data/cfd_cases/mesh_robustness_n10_cap4
+aeris cfd campaign remarch \
+  --sample $N10/sample_00001 --sample $N10/sample_00003 --sample $N10/sample_00004 \
+  --variant "baseline:" \
+  --variant "eps_lo:epsE=3.0,epsI=6.0" \
+  --variant "theta:theta=5.0" \
+  --variant "nstart:nConstantStart=10" \
+  --variant "cmax:cMax=0.25" \
+  --workdir data/cfd_cases/remarch_te_inversion
+```
+
+A bare `name:` re-marches with unmodified options -- always include one as
+the control. Writes `remarch_report.json` with per-(variant, sample)
+status, `inverted_cells`, and the audited cluster location.
+
+Every march (here and everywhere else) now also runs
+`aeris.cfd.meshing.volume_audit` on the written CGNS: pyHyp exiting 0 does
+not mean the mesh is sound, so cell volumes are recomputed from the file
+that was actually written and any inversion is classified (`clean` /
+`inverted_localized` / `inverted_widespread`) with its block, index range,
+layer range and wall bounding box. This lands in `volume_report.json`
+under `volume_audit` and on every campaign row.
+
 ## Explicitly out of scope (per this session's scope review)
 
 - Exhaustive parameter sweeps (5-point farfield/N-count ladders, every

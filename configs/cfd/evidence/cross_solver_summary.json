@@ -1,0 +1,49 @@
+{
+  "schema": "aeris.cfd.solve_summary.v1",
+  "rows": [
+    {
+      "label": "adflow_same_grid",
+      "solver": "adflow",
+      "status": "converged",
+      "flow": {
+        "alpha": 10.0,
+        "mach": 0.15,
+        "reynolds": 6000000.0,
+        "temperature": 300.0
+      },
+      "forces": {
+        "cd": 0.013164679005086222,
+        "cl": 1.0917740093456412,
+        "cmy": -0.08830994459843143
+      },
+      "final_resrho": 0.0007027813852957267,
+      "iterations": 283,
+      "report": "data/cfd_cases/naca0012_tmr_a10/solve/solve_report.json"
+    },
+    {
+      "label": "su2_same_grid",
+      "solver": "su2",
+      "status": "converged",
+      "flow": {
+        "alpha": 10.0,
+        "mach": 0.15,
+        "reynolds": 6000000.0,
+        "temperature": 300.0
+      },
+      "forces": {
+        "cd": 0.01790186112,
+        "cfx": -0.1724307907,
+        "cfy": 9.033629898e-22,
+        "cfz": 1.080996318,
+        "cl": 1.094515847,
+        "cmx": 0.5404981596,
+        "cmy": -0.2675849847,
+        "cmz": 0.08621539526,
+        "csf": 9.033629898e-22
+      },
+      "final_resrho": -7.003873605,
+      "iterations": 2049,
+      "report": "data/cfd_cases/naca0012_tmr_a10_su2/solve_report.json"
+    }
+  ]
+}

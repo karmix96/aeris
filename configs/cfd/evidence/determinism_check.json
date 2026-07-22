@@ -1,0 +1,29 @@
+{
+  "mesh_determinism": {
+    "case": "validation_naca0012_tmr.yaml (medium)",
+    "note": "wing_vol_smoke.cgns raw file bytes differ between identical reruns (sha256 mismatch), but every HDF5 dataset in the CGNS file (coordinates, connectivity, BC arrays -- 29/29 datasets) is bit-identical (np.array_equal). The difference is non-semantic HDF5/CGNS container metadata (e.g. a creation timestamp/library string), not the mesh. The march itself is deterministic; sha256-only determinism checks on CGNS files will show false positives for nondeterminism and should compare dataset contents, not raw bytes.",
+    "surface_fmt_identical": true,
+    "surface_fmt_sha256_run_a": "6625b41253dd527207e796c10f08ade30676b055625c7e9baefd30131962b6d4",
+    "surface_fmt_sha256_run_b": "6625b41253dd527207e796c10f08ade30676b055625c7e9baefd30131962b6d4",
+    "volume_cgns_all_29_hdf5_datasets_numerically_identical": true,
+    "volume_cgns_raw_bytes_identical": false
+  },
+  "schema": "aeris.cfd.determinism_check.v1",
+  "solver_determinism": {
+    "case": "validation_naca0012_tmr_coarse.yaml",
+    "forces_bit_identical": true,
+    "forces_original": {
+      "cd": 0.013569040253441633,
+      "cl": 1.1093133495250602,
+      "cmy": -0.0896336727820506
+    },
+    "forces_rerun": {
+      "cd": 0.013569040253441633,
+      "cl": 1.1093133495250602,
+      "cmy": -0.0896336727820506
+    },
+    "iterations_original": 235,
+    "iterations_rerun": 235,
+    "reruns_separated_by": "independent aeris cfd run invocations, same machine/env, different wall-clock time"
+  }
+}

@@ -1,0 +1,569 @@
+{
+  "by_variant": {
+    "baseline": {
+      "n_clean": 0,
+      "n_samples": 3,
+      "total_inverted_cells": 167
+    },
+    "cmax": {
+      "n_clean": 0,
+      "n_samples": 3,
+      "total_inverted_cells": 161
+    },
+    "eps_lo": {
+      "n_clean": 2,
+      "n_samples": 3,
+      "total_inverted_cells": 2
+    },
+    "nstart": {
+      "n_clean": 0,
+      "n_samples": 3,
+      "total_inverted_cells": 164
+    },
+    "theta": {
+      "n_clean": 0,
+      "n_samples": 3,
+      "total_inverted_cells": 184
+    }
+  },
+  "preset": "smoke",
+  "rows": [
+    {
+      "error": "RuntimeError: pyHyp subprocess produced invalid marched volume metrics: min_volume=-3.78e-08, min_quality=-1.0, first_invalid_layer=26.\ninverted_localized: 53 of 1703936 cells (0.00311%) inverted, min volume -3.776e-08\n  domain.00003: 53 cells, layers 25-51, j[0, 0] i[7, 8], spanwise_edge=True, wall_adjacent=False, wall x[1.9566,1.9587] y[-0.0001,-0.0001]\nInvalid CGNS moved to /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/baseline/sample_00001/surface/wing_vol_smoke.invalid.cgns. Inspect /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/baseline/sample_00001/surface/pyhyp_stdout.log.",
+      "inverted_cells": 53,
+      "inverted_fraction": 3.1104454627403844e-05,
+      "inverted_i_range": [
+        7,
+        8
+      ],
+      "inverted_layer_range": [
+        25,
+        51
+      ],
+      "inverted_on_spanwise_edge": true,
+      "inverted_primary_block": "domain.00003",
+      "inverted_wall_adjacent": false,
+      "inverted_wall_bbox": {
+        "x": [
+          1.9566370856846849,
+          1.9587384820635243
+        ],
+        "y": [
+          -5.1639001768002206e-05,
+          -5.1639001768002206e-05
+        ],
+        "z": [
+          -0.0338217511100068,
+          -0.03154142637283603
+        ]
+      },
+      "overrides": {},
+      "sample": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/mesh_robustness_n10_cap4/sample_00001",
+      "seconds": 104.21038752699997,
+      "status": "volume_mesh_invalid_march",
+      "variant": "baseline",
+      "volume_audit_classification": "inverted_localized",
+      "volume_audit_summary": "inverted_localized (53 cells)"
+    },
+    {
+      "error": "RuntimeError: pyHyp subprocess produced invalid marched volume metrics: min_volume=-3.68e-08, min_quality=-1.0, first_invalid_layer=16.\ninverted_localized: 100 of 1703936 cells (0.00587%) inverted, min volume -3.675e-08\n  domain.00003: 100 cells, layers 15-57, j[0, 0] i[6, 9], spanwise_edge=True, wall_adjacent=False, wall x[1.6606,1.6658] y[-0.0002,-0.0002]\nInvalid CGNS moved to /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/baseline/sample_00003/surface/wing_vol_smoke.invalid.cgns. Inspect /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/baseline/sample_00003/surface/pyhyp_stdout.log.",
+      "inverted_cells": 100,
+      "inverted_fraction": 5.868765024038462e-05,
+      "inverted_i_range": [
+        6,
+        9
+      ],
+      "inverted_layer_range": [
+        15,
+        57
+      ],
+      "inverted_on_spanwise_edge": true,
+      "inverted_primary_block": "domain.00003",
+      "inverted_wall_adjacent": false,
+      "inverted_wall_bbox": {
+        "x": [
+          1.6606075017535082,
+          1.6657702719216705
+        ],
+        "y": [
+          -0.00022289588346615822,
+          -0.00022289588346615822
+        ],
+        "z": [
+          0.010556302454229845,
+          0.01614730483487381
+        ]
+      },
+      "overrides": {},
+      "sample": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/mesh_robustness_n10_cap4/sample_00003",
+      "seconds": 111.33699595100006,
+      "status": "volume_mesh_invalid_march",
+      "variant": "baseline",
+      "volume_audit_classification": "inverted_localized",
+      "volume_audit_summary": "inverted_localized (100 cells)"
+    },
+    {
+      "error": "RuntimeError: pyHyp subprocess produced invalid marched volume metrics: min_volume=-2.02e-10, min_quality=-1.0, first_invalid_layer=2.\ninverted_localized: 14 of 1703936 cells (0.00082%) inverted, min volume -2.021e-10\n  domain.00003: 14 cells, layers 1-6, j[94, 95] i[7, 8], spanwise_edge=True, wall_adjacent=True, wall x[1.2325,1.2377] y[1.3065,1.3232]\nInvalid CGNS moved to /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/baseline/sample_00004/surface/wing_vol_smoke.invalid.cgns. Inspect /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/baseline/sample_00004/surface/pyhyp_stdout.log.",
+      "inverted_cells": 14,
+      "inverted_fraction": 8.216271033653846e-06,
+      "inverted_i_range": [
+        7,
+        8
+      ],
+      "inverted_layer_range": [
+        1,
+        6
+      ],
+      "inverted_on_spanwise_edge": true,
+      "inverted_primary_block": "domain.00003",
+      "inverted_wall_adjacent": true,
+      "inverted_wall_bbox": {
+        "x": [
+          1.2324551252876184,
+          1.2376756783836096
+        ],
+        "y": [
+          1.3065139168551592,
+          1.323180417182237
+        ],
+        "z": [
+          0.10897848328340823,
+          0.1117807416603756
+        ]
+      },
+      "overrides": {},
+      "sample": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/mesh_robustness_n10_cap4/sample_00004",
+      "seconds": 175.08861873899968,
+      "status": "volume_mesh_invalid_march",
+      "variant": "baseline",
+      "volume_audit_classification": "inverted_localized",
+      "volume_audit_summary": "inverted_localized (14 cells)"
+    },
+    {
+      "inverted_cells": 0,
+      "inverted_fraction": 0.0,
+      "overrides": {
+        "epsE": 3.0,
+        "epsI": 6.0
+      },
+      "sample": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/mesh_robustness_n10_cap4/sample_00001",
+      "seconds": 169.94336258199974,
+      "status": "ok",
+      "variant": "eps_lo",
+      "volume_audit_classification": "clean",
+      "volume_audit_summary": "clean"
+    },
+    {
+      "inverted_cells": 0,
+      "inverted_fraction": 0.0,
+      "overrides": {
+        "epsE": 3.0,
+        "epsI": 6.0
+      },
+      "sample": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/mesh_robustness_n10_cap4/sample_00003",
+      "seconds": 170.78483582599983,
+      "status": "ok",
+      "variant": "eps_lo",
+      "volume_audit_classification": "clean",
+      "volume_audit_summary": "clean"
+    },
+    {
+      "error": "RuntimeError: pyHyp subprocess produced invalid marched volume metrics: min_volume=-5.4e-11, min_quality=-1.0, first_invalid_layer=2.\ninverted_localized: 2 of 1703936 cells (0.00012%) inverted, min volume -5.399e-11\n  domain.00003: 2 cells, layers 1-2, j[95, 95] i[8, 8], spanwise_edge=True, wall_adjacent=True, wall x[1.2377,1.2377] y[1.3232,1.3232]\nInvalid CGNS moved to /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/eps_lo/sample_00004/surface/wing_vol_smoke.invalid.cgns. Inspect /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/eps_lo/sample_00004/surface/pyhyp_stdout.log.",
+      "inverted_cells": 2,
+      "inverted_fraction": 1.1737530048076924e-06,
+      "inverted_i_range": [
+        8,
+        8
+      ],
+      "inverted_layer_range": [
+        1,
+        2
+      ],
+      "inverted_on_spanwise_edge": true,
+      "inverted_primary_block": "domain.00003",
+      "inverted_wall_adjacent": true,
+      "inverted_wall_bbox": {
+        "x": [
+          1.2376756783836096,
+          1.2376756783836096
+        ],
+        "y": [
+          1.323180417182237,
+          1.323180417182237
+        ],
+        "z": [
+          0.11152211161952487,
+          0.11152211161952487
+        ]
+      },
+      "overrides": {
+        "epsE": 3.0,
+        "epsI": 6.0
+      },
+      "sample": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/mesh_robustness_n10_cap4/sample_00004",
+      "seconds": 199.60343413200007,
+      "status": "volume_mesh_invalid_march",
+      "variant": "eps_lo",
+      "volume_audit_classification": "inverted_localized",
+      "volume_audit_summary": "inverted_localized (2 cells)"
+    },
+    {
+      "error": "RuntimeError: pyHyp subprocess produced invalid marched volume metrics: min_volume=-4.2e-08, min_quality=-1.0, first_invalid_layer=26.\ninverted_localized: 68 of 1703936 cells (0.00399%) inverted, min volume -4.196e-08\n  domain.00003: 68 cells, layers 25-52, j[0, 0] i[6, 9], spanwise_edge=True, wall_adjacent=False, wall x[1.9528,1.9587] y[-0.0001,-0.0001]\nInvalid CGNS moved to /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/theta/sample_00001/surface/wing_vol_smoke.invalid.cgns. Inspect /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/theta/sample_00001/surface/pyhyp_stdout.log.",
+      "inverted_cells": 68,
+      "inverted_fraction": 3.990760216346154e-05,
+      "inverted_i_range": [
+        6,
+        9
+      ],
+      "inverted_layer_range": [
+        25,
+        52
+      ],
+      "inverted_on_spanwise_edge": true,
+      "inverted_primary_block": "domain.00003",
+      "inverted_wall_adjacent": false,
+      "inverted_wall_bbox": {
+        "x": [
+          1.9527515138156173,
+          1.9587384820635243
+        ],
+        "y": [
+          -5.1639001768002206e-05,
+          -5.1639001768002206e-05
+        ],
+        "z": [
+          -0.03710214360556413,
+          -0.030404107524039787
+        ]
+      },
+      "overrides": {
+        "theta": 5.0
+      },
+      "sample": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/mesh_robustness_n10_cap4/sample_00001",
+      "seconds": 209.97898891299974,
+      "status": "volume_mesh_invalid_march",
+      "variant": "theta",
+      "volume_audit_classification": "inverted_localized",
+      "volume_audit_summary": "inverted_localized (68 cells)"
+    },
+    {
+      "error": "RuntimeError: pyHyp subprocess produced invalid marched volume metrics: min_volume=-3.76e-08, min_quality=-1.0, first_invalid_layer=16.\ninverted_localized: 107 of 1703936 cells (0.00628%) inverted, min volume -3.758e-08\n  domain.00003: 107 cells, layers 15-58, j[0, 0] i[6, 9], spanwise_edge=True, wall_adjacent=False, wall x[1.6606,1.6658] y[-0.0002,-0.0002]\nInvalid CGNS moved to /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/theta/sample_00003/surface/wing_vol_smoke.invalid.cgns. Inspect /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/theta/sample_00003/surface/pyhyp_stdout.log.",
+      "inverted_cells": 107,
+      "inverted_fraction": 6.279578575721153e-05,
+      "inverted_i_range": [
+        6,
+        9
+      ],
+      "inverted_layer_range": [
+        15,
+        58
+      ],
+      "inverted_on_spanwise_edge": true,
+      "inverted_primary_block": "domain.00003",
+      "inverted_wall_adjacent": false,
+      "inverted_wall_bbox": {
+        "x": [
+          1.6606075017535082,
+          1.6657702719216705
+        ],
+        "y": [
+          -0.00022289588346615822,
+          -0.00022289588346615822
+        ],
+        "z": [
+          0.010556302454229845,
+          0.01614730483487381
+        ]
+      },
+      "overrides": {
+        "theta": 5.0
+      },
+      "sample": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/mesh_robustness_n10_cap4/sample_00003",
+      "seconds": 201.38370138400023,
+      "status": "volume_mesh_invalid_march",
+      "variant": "theta",
+      "volume_audit_classification": "inverted_localized",
+      "volume_audit_summary": "inverted_localized (107 cells)"
+    },
+    {
+      "error": "RuntimeError: pyHyp subprocess produced invalid marched volume metrics: min_volume=-1.26e-10, min_quality=-1.0, first_invalid_layer=2.\ninverted_localized: 9 of 1703936 cells (0.00053%) inverted, min volume -1.259e-10\n  domain.00003: 9 cells, layers 1-4, j[94, 95] i[7, 8], spanwise_edge=True, wall_adjacent=True, wall x[1.2327,1.2377] y[1.3066,1.3232]\nInvalid CGNS moved to /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/theta/sample_00004/surface/wing_vol_smoke.invalid.cgns. Inspect /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/theta/sample_00004/surface/pyhyp_stdout.log.",
+      "inverted_cells": 9,
+      "inverted_fraction": 5.281888521634615e-06,
+      "inverted_i_range": [
+        7,
+        8
+      ],
+      "inverted_layer_range": [
+        1,
+        4
+      ],
+      "inverted_on_spanwise_edge": true,
+      "inverted_primary_block": "domain.00003",
+      "inverted_wall_adjacent": true,
+      "inverted_wall_bbox": {
+        "x": [
+          1.2327088965453075,
+          1.2376756783836096
+        ],
+        "y": [
+          1.306556791136285,
+          1.323180417182237
+        ],
+        "z": [
+          0.10897848328340823,
+          0.1117807416603756
+        ]
+      },
+      "overrides": {
+        "theta": 5.0
+      },
+      "sample": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/mesh_robustness_n10_cap4/sample_00004",
+      "seconds": 222.16980127199986,
+      "status": "volume_mesh_invalid_march",
+      "variant": "theta",
+      "volume_audit_classification": "inverted_localized",
+      "volume_audit_summary": "inverted_localized (9 cells)"
+    },
+    {
+      "error": "RuntimeError: pyHyp subprocess produced invalid marched volume metrics: min_volume=-3.99e-08, min_quality=-1.0, first_invalid_layer=32.\ninverted_localized: 51 of 1703936 cells (0.00299%) inverted, min volume -3.995e-08\n  domain.00003: 51 cells, layers 31-56, j[0, 0] i[7, 8], spanwise_edge=True, wall_adjacent=False, wall x[1.9566,1.9587] y[-0.0001,-0.0001]\nInvalid CGNS moved to /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/nstart/sample_00001/surface/wing_vol_smoke.invalid.cgns. Inspect /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/nstart/sample_00001/surface/pyhyp_stdout.log.",
+      "inverted_cells": 51,
+      "inverted_fraction": 2.9930701622596153e-05,
+      "inverted_i_range": [
+        7,
+        8
+      ],
+      "inverted_layer_range": [
+        31,
+        56
+      ],
+      "inverted_on_spanwise_edge": true,
+      "inverted_primary_block": "domain.00003",
+      "inverted_wall_adjacent": false,
+      "inverted_wall_bbox": {
+        "x": [
+          1.9566370856846849,
+          1.9587384820635243
+        ],
+        "y": [
+          -5.1639001768002206e-05,
+          -5.1639001768002206e-05
+        ],
+        "z": [
+          -0.0338217511100068,
+          -0.03154142637283603
+        ]
+      },
+      "overrides": {
+        "nConstantStart": 10
+      },
+      "sample": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/mesh_robustness_n10_cap4/sample_00001",
+      "seconds": 185.50138393499947,
+      "status": "volume_mesh_invalid_march",
+      "variant": "nstart",
+      "volume_audit_classification": "inverted_localized",
+      "volume_audit_summary": "inverted_localized (51 cells)"
+    },
+    {
+      "error": "RuntimeError: pyHyp subprocess produced invalid marched volume metrics: min_volume=-3.84e-08, min_quality=-1.0, first_invalid_layer=20.\ninverted_localized: 98 of 1703936 cells (0.00575%) inverted, min volume -3.836e-08\n  domain.00003: 98 cells, layers 19-61, j[0, 0] i[6, 9], spanwise_edge=True, wall_adjacent=False, wall x[1.6606,1.6658] y[-0.0002,-0.0002]\nInvalid CGNS moved to /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/nstart/sample_00003/surface/wing_vol_smoke.invalid.cgns. Inspect /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/nstart/sample_00003/surface/pyhyp_stdout.log.",
+      "inverted_cells": 98,
+      "inverted_fraction": 5.751389723557692e-05,
+      "inverted_i_range": [
+        6,
+        9
+      ],
+      "inverted_layer_range": [
+        19,
+        61
+      ],
+      "inverted_on_spanwise_edge": true,
+      "inverted_primary_block": "domain.00003",
+      "inverted_wall_adjacent": false,
+      "inverted_wall_bbox": {
+        "x": [
+          1.6606075017535082,
+          1.6657702719216705
+        ],
+        "y": [
+          -0.00022289588346615822,
+          -0.00022289588346615822
+        ],
+        "z": [
+          0.010556302454229845,
+          0.01614730483487381
+        ]
+      },
+      "overrides": {
+        "nConstantStart": 10
+      },
+      "sample": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/mesh_robustness_n10_cap4/sample_00003",
+      "seconds": 185.81234927100013,
+      "status": "volume_mesh_invalid_march",
+      "variant": "nstart",
+      "volume_audit_classification": "inverted_localized",
+      "volume_audit_summary": "inverted_localized (98 cells)"
+    },
+    {
+      "error": "RuntimeError: pyHyp subprocess produced invalid marched volume metrics: min_volume=-2.02e-10, min_quality=-1.0, first_invalid_layer=2.\ninverted_localized: 15 of 1703936 cells (0.00088%) inverted, min volume -2.015e-10\n  domain.00003: 15 cells, layers 1-7, j[94, 95] i[7, 8], spanwise_edge=True, wall_adjacent=True, wall x[1.2325,1.2377] y[1.3065,1.3232]\nInvalid CGNS moved to /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/nstart/sample_00004/surface/wing_vol_smoke.invalid.cgns. Inspect /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/nstart/sample_00004/surface/pyhyp_stdout.log.",
+      "inverted_cells": 15,
+      "inverted_fraction": 8.803147536057692e-06,
+      "inverted_i_range": [
+        7,
+        8
+      ],
+      "inverted_layer_range": [
+        1,
+        7
+      ],
+      "inverted_on_spanwise_edge": true,
+      "inverted_primary_block": "domain.00003",
+      "inverted_wall_adjacent": true,
+      "inverted_wall_bbox": {
+        "x": [
+          1.2324551252876184,
+          1.2376756783836096
+        ],
+        "y": [
+          1.3065139168551592,
+          1.323180417182237
+        ],
+        "z": [
+          0.10897848328340823,
+          0.1117807416603756
+        ]
+      },
+      "overrides": {
+        "nConstantStart": 10
+      },
+      "sample": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/mesh_robustness_n10_cap4/sample_00004",
+      "seconds": 203.3203339319998,
+      "status": "volume_mesh_invalid_march",
+      "variant": "nstart",
+      "volume_audit_classification": "inverted_localized",
+      "volume_audit_summary": "inverted_localized (15 cells)"
+    },
+    {
+      "error": "RuntimeError: pyHyp subprocess produced invalid marched volume metrics: min_volume=-2.76e-08, min_quality=-1.0, first_invalid_layer=26.\ninverted_localized: 52 of 1703936 cells (0.00305%) inverted, min volume -2.764e-08\n  domain.00003: 52 cells, layers 25-51, j[0, 0] i[7, 8], spanwise_edge=True, wall_adjacent=False, wall x[1.9566,1.9587] y[-0.0001,-0.0001]\nInvalid CGNS moved to /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/cmax/sample_00001/surface/wing_vol_smoke.invalid.cgns. Inspect /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/cmax/sample_00001/surface/pyhyp_stdout.log.",
+      "inverted_cells": 52,
+      "inverted_fraction": 3.0517578125e-05,
+      "inverted_i_range": [
+        7,
+        8
+      ],
+      "inverted_layer_range": [
+        25,
+        51
+      ],
+      "inverted_on_spanwise_edge": true,
+      "inverted_primary_block": "domain.00003",
+      "inverted_wall_adjacent": false,
+      "inverted_wall_bbox": {
+        "x": [
+          1.9566370856846849,
+          1.9587384820635243
+        ],
+        "y": [
+          -5.1639001768002206e-05,
+          -5.1639001768002206e-05
+        ],
+        "z": [
+          -0.0338217511100068,
+          -0.03154142637283603
+        ]
+      },
+      "overrides": {
+        "cMax": 0.25
+      },
+      "sample": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/mesh_robustness_n10_cap4/sample_00001",
+      "seconds": 344.52162738599964,
+      "status": "volume_mesh_invalid_march",
+      "variant": "cmax",
+      "volume_audit_classification": "inverted_localized",
+      "volume_audit_summary": "inverted_localized (52 cells)"
+    },
+    {
+      "error": "RuntimeError: pyHyp subprocess produced invalid marched volume metrics: min_volume=-3.18e-08, min_quality=-1.0, first_invalid_layer=16.\ninverted_localized: 95 of 1703936 cells (0.00558%) inverted, min volume -3.183e-08\n  domain.00003: 95 cells, layers 15-56, j[0, 0] i[6, 8], spanwise_edge=True, wall_adjacent=False, wall x[1.6606,1.6658] y[-0.0002,-0.0002]\nInvalid CGNS moved to /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/cmax/sample_00003/surface/wing_vol_smoke.invalid.cgns. Inspect /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/cmax/sample_00003/surface/pyhyp_stdout.log.",
+      "inverted_cells": 95,
+      "inverted_fraction": 5.575326772836538e-05,
+      "inverted_i_range": [
+        6,
+        8
+      ],
+      "inverted_layer_range": [
+        15,
+        56
+      ],
+      "inverted_on_spanwise_edge": true,
+      "inverted_primary_block": "domain.00003",
+      "inverted_wall_adjacent": false,
+      "inverted_wall_bbox": {
+        "x": [
+          1.6606075017535082,
+          1.6657702719216705
+        ],
+        "y": [
+          -0.00022289588346615822,
+          -0.00022289588346615822
+        ],
+        "z": [
+          0.013370890525664234,
+          0.01614730483487381
+        ]
+      },
+      "overrides": {
+        "cMax": 0.25
+      },
+      "sample": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/mesh_robustness_n10_cap4/sample_00003",
+      "seconds": 347.6889854990004,
+      "status": "volume_mesh_invalid_march",
+      "variant": "cmax",
+      "volume_audit_classification": "inverted_localized",
+      "volume_audit_summary": "inverted_localized (95 cells)"
+    },
+    {
+      "error": "RuntimeError: pyHyp subprocess produced invalid marched volume metrics: min_volume=-2.02e-10, min_quality=-1.0, first_invalid_layer=2.\ninverted_localized: 14 of 1703936 cells (0.00082%) inverted, min volume -2.021e-10\n  domain.00003: 14 cells, layers 1-6, j[94, 95] i[7, 8], spanwise_edge=True, wall_adjacent=True, wall x[1.2325,1.2377] y[1.3065,1.3232]\nInvalid CGNS moved to /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/cmax/sample_00004/surface/wing_vol_smoke.invalid.cgns. Inspect /home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/remarch_te_inversion/cmax/sample_00004/surface/pyhyp_stdout.log.",
+      "inverted_cells": 14,
+      "inverted_fraction": 8.216271033653846e-06,
+      "inverted_i_range": [
+        7,
+        8
+      ],
+      "inverted_layer_range": [
+        1,
+        6
+      ],
+      "inverted_on_spanwise_edge": true,
+      "inverted_primary_block": "domain.00003",
+      "inverted_wall_adjacent": true,
+      "inverted_wall_bbox": {
+        "x": [
+          1.2324551252876184,
+          1.2376756783836096
+        ],
+        "y": [
+          1.3065139168551592,
+          1.323180417182237
+        ],
+        "z": [
+          0.10897848328340823,
+          0.1117807416603756
+        ]
+      },
+      "overrides": {
+        "cMax": 0.25
+      },
+      "sample": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/mesh_robustness_n10_cap4/sample_00004",
+      "seconds": 381.5808536180002,
+      "status": "volume_mesh_invalid_march",
+      "variant": "cmax",
+      "volume_audit_classification": "inverted_localized",
+      "volume_audit_summary": "inverted_localized (14 cells)"
+    }
+  ],
+  "samples": [
+    "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/mesh_robustness_n10_cap4/sample_00001",
+    "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/mesh_robustness_n10_cap4/sample_00003",
+    "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/mesh_robustness_n10_cap4/sample_00004"
+  ],
+  "schema": "aeris.cfd.remarch_experiment.v1",
+  "volume_level": "smoke"
+}

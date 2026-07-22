@@ -13,6 +13,14 @@ marched cell *volume* is a hard failure (inverted cell, mesh unusable,
 CGNS quarantined); a negative scaled *quality* with positive volume is a
 warning (skewed but usable — expected at blunt-TE tip corners, matching
 MDO Lab practice for BWB tip meshes).
+
+That policy reads the march *log*, which reports only per-layer extrema
+and which pyHyp writes even for runs it goes on to finish with an exit
+code of 0.  Every successful extrusion is therefore also audited
+geometrically (``aeris.cfd.meshing.volume_audit``) against the CGNS that
+was actually written, which is what supplies the extent and location of a
+defect — the facts needed to classify a failure rather than merely detect
+one.
 """
 
 from __future__ import annotations
@@ -24,6 +32,11 @@ import time
 from pathlib import Path
 
 from aeris.cfd.env import mach_aero_python
+from aeris.cfd.meshing.volume_audit import (
+    VOLUME_AUDIT_SCHEMA_VERSION,
+    audit_volume_cgns,
+    summarize_audit,
+)
 from aeris.cfd.options.layers import EffectiveOptions
 from aeris.cfd.options.manifest import write_effective_options_manifest
 
@@ -175,6 +188,7 @@ def write_volume_report(
     status: str,
     output_cgns: Path,
     march_metrics: dict[str, object],
+    volume_audit: dict[str, object] | None = None,
     error: str | None = None,
 ) -> Path:
     report = {
@@ -183,6 +197,8 @@ def write_volume_report(
         "output_cgns": str(output_cgns),
         "march_metrics": march_metrics,
     }
+    if volume_audit is not None:
+        report["volume_audit"] = volume_audit
     if error is not None:
         report["error"] = error
     path = surface_dir / "volume_report.json"
@@ -201,6 +217,24 @@ def quarantine_invalid_cgns(output_cgns: Path) -> Path | None:
         pass
     output_cgns.rename(invalid_path)
     return invalid_path
+
+
+def audit_written_mesh(output_cgns: Path) -> dict[str, object]:
+    """Audit the written CGNS, reporting rather than raising on failure.
+
+    A campaign must classify every outcome rather than crash, so an audit
+    that cannot run (unreadable file, unexpected CGNS layout) comes back
+    classified ``audit_failed`` and the caller falls back to the march-log
+    verdict, instead of taking the run down with it.
+    """
+    try:
+        return audit_volume_cgns(output_cgns)
+    except Exception as exc:  # noqa: BLE001 - audit is diagnostic, never fatal
+        return {
+            "schema": VOLUME_AUDIT_SCHEMA_VERSION,
+            "classification": "audit_failed",
+            "error": f"{type(exc).__name__}: {exc}",
+        }
 
 
 def run_pyhyp_subprocess(
@@ -251,13 +285,30 @@ def run_pyhyp_subprocess(
             error=error,
         )
         raise RuntimeError(error)
-    if march_metrics.get("passed") is False:
+    # pyHyp exiting 0 does not mean the mesh is sound: it reports a negative
+    # minimum volume for a layer and then keeps marching, so the written file
+    # can contain inverted cells.  Audit the geometry that was actually
+    # written rather than trusting the log alone, and use it to say *where*
+    # and *how bad* — the march table only gives per-layer extrema.
+    volume_audit = audit_written_mesh(output_cgns)
+
+    # "audit_failed" means the check itself could not run — that is not
+    # evidence against the mesh, so fall back to the march-log verdict.
+    audit_classification = (volume_audit or {}).get("classification")
+    audit_rejects = audit_classification not in (None, "clean", "audit_failed")
+    if march_metrics.get("passed") is False or audit_rejects:
         invalid_path = quarantine_invalid_cgns(output_cgns)
+        detail = (
+            summarize_audit(volume_audit)
+            if audit_classification not in (None, "audit_failed")
+            else "(volume audit unavailable)"
+        )
         error = (
             "pyHyp subprocess produced invalid marched volume metrics: "
             f"min_volume={march_metrics.get('min_volume')}, "
             f"min_quality={march_metrics.get('min_quality')}, "
-            f"first_invalid_layer={march_metrics.get('first_invalid_layer')}. "
+            f"first_invalid_layer={march_metrics.get('first_invalid_layer')}.\n"
+            f"{detail}\n"
             f"Invalid CGNS moved to {invalid_path}. Inspect {stdout_path}."
         )
         write_volume_report(
@@ -265,6 +316,7 @@ def run_pyhyp_subprocess(
             status="invalid",
             output_cgns=invalid_path or output_cgns,
             march_metrics=march_metrics,
+            volume_audit=volume_audit,
             error=error,
         )
         raise RuntimeError(error)
@@ -273,6 +325,7 @@ def run_pyhyp_subprocess(
         status="valid",
         output_cgns=output_cgns,
         march_metrics=march_metrics,
+        volume_audit=volume_audit,
     )
 
     return {
@@ -283,6 +336,7 @@ def run_pyhyp_subprocess(
         "effective_options": str(surface_dir / MANIFEST_NAME),
         "quality_warning": march_metrics.get("quality_warning"),
         "low_quality_layers": march_metrics.get("low_quality_layers"),
+        "volume_audit": volume_audit,
         "output_cgns": str(output_cgns),
         "output_size_bytes": int(output_cgns.stat().st_size),
         "elapsed_seconds": elapsed,

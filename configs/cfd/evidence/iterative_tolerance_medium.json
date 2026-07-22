@@ -1,0 +1,56 @@
+{
+  "schema": "aeris.cfd.iterative_tolerance_sensitivity.v1",
+  "log": "data/cfd_cases/naca0012_tmr_a10/solve/adflow_run.log",
+  "initial_resrho": 250.17723548820896,
+  "rows": [
+    {
+      "orders_dropped_target": 3.0,
+      "reached": true,
+      "iteration": 11,
+      "cl": 0.640013807952259,
+      "cd": 0.05818670949860971,
+      "resrho": 0.23099128059087257
+    },
+    {
+      "orders_dropped_target": 4.0,
+      "reached": true,
+      "iteration": 32,
+      "cl": 1.0310903215574496,
+      "cd": 0.01899400316522571,
+      "resrho": 0.024955889124469416
+    },
+    {
+      "orders_dropped_target": 5.0,
+      "reached": true,
+      "iteration": 78,
+      "cl": 1.0499135929239214,
+      "cd": 0.015162845462328024,
+      "resrho": 0.0023609078387932603
+    },
+    {
+      "orders_dropped_target": 5.5,
+      "reached": true,
+      "iteration": 263,
+      "cl": 1.0901536726755667,
+      "cd": 0.013217938261599907,
+      "resrho": 0.000790022528079443
+    },
+    {
+      "orders_dropped_target": 6.0,
+      "reached": false,
+      "iteration": null,
+      "cl": null,
+      "cd": null,
+      "resrho": null
+    },
+    {
+      "orders_dropped_target": null,
+      "reached": true,
+      "iteration": 283,
+      "cl": 1.0917740093456412,
+      "cd": 0.013164679005086222,
+      "resrho": 0.0007027813852957267,
+      "note": "final iteration reached by the run (not a tolerance target)"
+    }
+  ]
+}

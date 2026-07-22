@@ -1,0 +1,30 @@
+{
+  "cl": {
+    "schema": "aeris.cfd.gci_study.v1",
+    "quantity": "cl",
+    "refinement_ratio": 1.4,
+    "values_fine_to_coarse": [
+      1.082050943762358,
+      1.0917740093456412,
+      1.1093133495250602
+    ],
+    "observed_order": 1.7533256714943413,
+    "extrapolated": 1.0699559228960795,
+    "gci_fine_percent": 1.3972332975635307,
+    "convergence": "monotone"
+  },
+  "cd": {
+    "schema": "aeris.cfd.gci_study.v1",
+    "quantity": "cd",
+    "refinement_ratio": 1.4,
+    "values_fine_to_coarse": [
+      0.013012411656530998,
+      0.013164679005086222,
+      0.013569040253441633
+    ],
+    "observed_order": 2.9026787452369134,
+    "extrapolated": 0.012920440587598291,
+    "gci_fine_percent": 0.8834936920258221,
+    "convergence": "monotone"
+  }
+}

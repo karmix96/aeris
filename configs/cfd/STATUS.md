@@ -6,6 +6,11 @@ that was committed on whichever machine ran it. `git pull` to refresh.
 
 | Job | Kind | Status | Progress | Machine | Commit | Updated (UTC) |
 |---|---|---|---|---|---|---|
+| remarch-run | campaign:remarch | running | 0/2 | mike | 81320c6 | 2026-07-22T20:22:53+00:00 |
+| surface-strategy-surface_strategy_r12_lock | campaign:surface-strategy | done | 8/8 | mike | 81320c6 | 2026-07-22T20:20:43+00:00 |
+| surface-strategy-surface_strategy_r11 | campaign:surface-strategy | done | 4/4 | mike | 1ea1a4a | 2026-07-22T20:05:16+00:00 |
+| surface-strategy-surface_strategy_r10_tebase | campaign:surface-strategy | done | 5/5 | mike | 1ea1a4a | 2026-07-22T20:04:14+00:00 |
+| surface-strategy-surface_strategy_r9_te | campaign:surface-strategy | done | 5/5 | mike | 46f703f | 2026-07-22T19:53:08+00:00 |
 | surface-strategy-surface_strategy_r8_final | campaign:surface-strategy | done | 7/7 | mike | 843b684 | 2026-07-22T19:39:31+00:00 |
 | surface-strategy-surface_strategy_r7_midseam | campaign:surface-strategy | done | 7/7 | mike | 843b684 | 2026-07-22T19:38:48+00:00 |
 | surface-strategy-surface_strategy_r6_wideWrap | campaign:surface-strategy | done | 7/7 | mike | 843b684 | 2026-07-22T19:37:44+00:00 |
@@ -19,6 +24,9 @@ that was committed on whichever machine ran it. `git pull` to refresh.
 ## Detail
 
 - **surface-strategy-surface_strategy_r1**: best=F2_wrap060
+- **surface-strategy-surface_strategy_r10_tebase**: best=A_base0
+- **surface-strategy-surface_strategy_r11**: best=A_base0
+- **surface-strategy-surface_strategy_r12_lock**: best=N_nobase
 - **surface-strategy-surface_strategy_r2_mid4**: best=M2_span24
 - **surface-strategy-surface_strategy_r3_mid4**: best=R1_span24_sp030
 - **surface-strategy-surface_strategy_r4_tip**: best=U1_pts33_sp24
@@ -26,4 +34,5 @@ that was committed on whichever machine ran it. `git pull` to refresh.
 - **surface-strategy-surface_strategy_r6_wideWrap**: best=W0_mid4_ref
 - **surface-strategy-surface_strategy_r7_midseam**: best=X0_mid4_ref
 - **surface-strategy-surface_strategy_r8_final**: best=Y0_mid4_ref
+- **surface-strategy-surface_strategy_r9_te**: best=Z0_te_asis
 - **surface-strategy-surface_strategy_smoke**: best=current

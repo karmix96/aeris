@@ -1,4 +1,14 @@
 {
+  "remarch-run": {
+    "commit": "81320c6",
+    "detail": "",
+    "kind": "campaign:remarch",
+    "machine": "mike",
+    "progress": "0/2",
+    "status": "running",
+    "updated_utc": "2026-07-22T20:22:53+00:00",
+    "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/march_selected/run"
+  },
   "surface-strategy-surface_strategy_r1": {
     "commit": "8bd4ec6",
     "detail": "best=F2_wrap060",
@@ -8,6 +18,36 @@
     "status": "done",
     "updated_utc": "2026-07-22T18:51:54+00:00",
     "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/surface_strategy_r1"
+  },
+  "surface-strategy-surface_strategy_r10_tebase": {
+    "commit": "1ea1a4a",
+    "detail": "best=A_base0",
+    "kind": "campaign:surface-strategy",
+    "machine": "mike",
+    "progress": "5/5",
+    "status": "done",
+    "updated_utc": "2026-07-22T20:04:14+00:00",
+    "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/surface_strategy_r10_tebase"
+  },
+  "surface-strategy-surface_strategy_r11": {
+    "commit": "1ea1a4a",
+    "detail": "best=A_base0",
+    "kind": "campaign:surface-strategy",
+    "machine": "mike",
+    "progress": "4/4",
+    "status": "done",
+    "updated_utc": "2026-07-22T20:05:16+00:00",
+    "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/surface_strategy_r11"
+  },
+  "surface-strategy-surface_strategy_r12_lock": {
+    "commit": "81320c6",
+    "detail": "best=N_nobase",
+    "kind": "campaign:surface-strategy",
+    "machine": "mike",
+    "progress": "8/8",
+    "status": "done",
+    "updated_utc": "2026-07-22T20:20:43+00:00",
+    "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/surface_strategy_r12_lock"
   },
   "surface-strategy-surface_strategy_r2_mid4": {
     "commit": "81503a8",
@@ -78,6 +118,16 @@
     "status": "done",
     "updated_utc": "2026-07-22T19:39:31+00:00",
     "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/surface_strategy_r8_final"
+  },
+  "surface-strategy-surface_strategy_r9_te": {
+    "commit": "46f703f",
+    "detail": "best=Z0_te_asis",
+    "kind": "campaign:surface-strategy",
+    "machine": "mike",
+    "progress": "5/5",
+    "status": "done",
+    "updated_utc": "2026-07-22T19:53:08+00:00",
+    "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/surface_strategy_r9_te"
   },
   "surface-strategy-surface_strategy_smoke": {
     "commit": "8bd4ec6",

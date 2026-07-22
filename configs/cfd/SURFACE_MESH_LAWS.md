@@ -330,3 +330,71 @@ A cheaper variant, `points_per_side=33` (31232 cells, OML jac 0.248, AR
 **Unverified:** none of this has been marched. The next step is a pyHyp
 canary (3 layers) then a full extrusion, with `epsE=3.0` per the earlier
 law.
+
+## Law 9 — trailing-edge thickness: 0.5% chord, and why (2026-07-22)
+
+AeroSandbox hands the mesher a **0.2519% chord** trailing edge. That is not
+an artifact: it is the canonical NACA 4-digit TE, which does not close to
+zero. (The NASA TMR validation case used the *closed*-TE variant.)
+
+`te_thickness` opens it. Selected value **0.005 (0.5% chord)**, on three
+independent grounds:
+
+1. **Practice.** Real transport wings carry ~0.2-0.5%c for structural and
+   manufacturing reasons; blunt TEs of this order are standard on
+   drag-prediction-workshop geometries. 0.5% is more physically honest than
+   a sharp idealisation, not less.
+2. **This aircraft's Reynolds number.** At Re 1e6 (root) to 1.2e5 (tip) the
+   turbulent boundary layer at the TE is 2.3-3.6% of chord, so a 0.5% base
+   sits at h/delta = 0.14-0.21 — buried well inside the boundary layer,
+   which is the regime where base drag is cheap. A transport wing at
+   Re 4e7 has delta ~0.6%c and the same 0.5% base would be comparable to
+   the boundary layer and genuinely costly. **The low Reynolds number of a
+   small BWB UAV is what makes this affordable.** Estimated penalty ~4
+   drag counts over the 0.252% baseline, ~1.5% of the measured C_D.
+3. **Manufacturing.** 0.5%c is 8.0 mm at the root and **1.0 mm at the
+   tip** — about the thinnest edge that can actually be built, and the
+   centrebody needs that depth for elevon hinges anyway.
+
+2% chord was tested and rejected: it gave the best TE-angle metric (81.5
+deg) and that is exactly why it is the wrong objective — it optimises the
+mesh, not the aircraft.
+
+## Law 10 — a resolved TE base needs an absolute floor, not a fixed count
+
+`te_base_points` pins the two ~90 deg corners of the blunt base (see the
+commit "pin the blunt-TE base corners"), and it works: the TE normal
+rotation drops to 87.9 deg and stays there regardless of how many base
+points are used, because the turn is captured exactly rather than smeared.
+
+But it currently **degrades the OML**, and more wrap points do not help --
+`cap_wrap_points` 17/21/25 give identical results (jac 0.068, AR 29.2).
+Per-block localisation shows the damage is confined to `oml_2`, and the
+cause is the tip: 0.5%c is 8.0 mm at the root but 0.96 mm at the tip, so a
+fixed 5 points across the base makes 0.24 mm slivers outboard.
+
+**A constant point count across a base whose physical size varies 8x is
+wrong.** The fix is an absolute minimum thickness alongside the percentage
+(real aircraft do exactly this -- you cannot build a 0.5 mm edge), which
+would disproportionately thicken the tip where the meshing pain and the
+earlier volume-march inversion both concentrate. Until then
+`te_base_points` defaults to 0 and is not part of the selected recipe.
+
+## Selected recipe, locked 2026-07-22
+
+    oml_topology       cap4
+    points_per_side    49
+    spanwise_panels    24
+    cap_wrap_x         0.15
+    cap_wrap_points    17
+    tip_radial_points  9
+    te_thickness       0.005
+    (volume)  epsE 3.0, epsI 6.0
+
+              OML                            tip
+      jac    skew   AR   growth  angle |  jac    skew   AR    cells
+      0.259  0.631  6.9  1.508   146.0 | 0.134  0.914  10.3  41728
+
+Not yet added to the mesh_family presets: those share one family-wide march
+policy by design (C1/C2, no per-case tuning), and epsE 6.0 -> 3.0 must move
+for the whole family at once, after the march below validates it.

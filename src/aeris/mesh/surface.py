@@ -153,6 +153,9 @@ DISTRIBUTIONS = (
     "cluster_start",
     "cluster_end",
     "tanh",
+    # dense at the side's midpoint -- mid4/split8 put the LE and TE in block
+    # interiors, so end-clustering cannot reach them
+    "cluster_center",
     # topology-aware: each side builder decides per side (cap4 only)
     "junction",
 )
@@ -191,6 +194,11 @@ def _distribution(n: int, mode: str = "uniform", *, beta: float = 2.0) -> Array:
         return 1.0 - np.cos(0.5 * np.pi * t)
     if mode == "cluster_end":
         return np.sin(0.5 * np.pi * t)
+    if mode == "cluster_center":
+        # t + (a/2pi) sin(2 pi t): spacing ~ 1 + a cos(2 pi t), so cells are
+        # widest at the ends and tightest at t=0.5.  a < 1 keeps it monotone.
+        a = min(0.95, max(0.0, 0.45 * beta))
+        return t + (a / (2.0 * np.pi)) * np.sin(2.0 * np.pi * t)
     if beta <= 0.0:
         return t
     stretched = np.tanh(beta * (t - 0.5)) / np.tanh(0.5 * beta)

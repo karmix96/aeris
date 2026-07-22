@@ -164,3 +164,109 @@ floor, and to check the lower bound does not degrade quality elsewhere —
 `epsE` exists to keep the front smooth, so it cannot go to zero for free.
 Once a value clears all three, it becomes the curated cap4 default and the
 option sweeps can run against a sound baseline.
+
+---
+
+# Surface-mesh strategy study — mid4 (2026-07-22)
+
+Fixed baseline wing (`configs/geometry/baseline_bwb_25.yaml`, seed 100,
+pinned bounds) so every difference is the recipe, not the shape. Surface
+only, ~1 s per candidate. 54 strategies over three rounds; scripts in
+`scripts/surface_strategy_round{1,2,3}*.sh`.
+
+`mid4` was selected over `cap4` on visual inspection (Mike, round 1).
+
+## Law 1 — score the OML and the tip cap separately
+
+Whole-mesh extrema are meaningless here. The tip collar's near-degenerate
+skewness (0.91-0.98) swamps every aggregate, so a strategy that genuinely
+improves the wing surface scores identically to one that does nothing. Per
+block on the round-1 `mid4` pick: `oml_1`/`oml_3` already *passed* the
+industry targets (jac 0.22, skew 0.48, AR 8.3, angle 1-8 deg) while
+`oml_2` — the trailing-edge block — carried jac 0.076, AR 25, growth 1.98,
+angle 121 deg. Three of four OML blocks were fine all along.
+
+## Law 2 — the wing surface and the tip cap are independent
+
+Across round 2, every tip parameter (`tip_radial_points`,
+`tip_inner_scale`, `tip_dome_scale`, `tip_conformal_ring`) left the OML
+numbers **identical to four decimals** (jac 0.0757, AR 25.0). They can be
+tuned separately without interaction.
+
+## Law 3 — spanwise resolution is the dominant OML lever, and it is monotone
+
+`spanwise_panels` at fixed 49 chordwise points, mid4:
+
+    panels    8      16      24      32
+    jac    0.076   0.151   0.224   0.296
+    AR      25.0    12.6     8.5     6.4
+
+The shipped recipe used 8. It is simply spanwise-starved. This single
+change takes the OML from failing to passing the Jacobian target.
+
+## Law 4 — `tip_radial_points` is the dominant tip lever, also monotone
+
+    points     5       9      13      17
+    tip jac 0.016   0.033   0.048   0.060
+    tip AR    75.2    47.3    34.3    26.8
+
+`tip_inner_scale=0.70` improves tip AR further (47 -> 38 at 9 points).
+
+## Law 5 — two tip options are dead ends
+
+* `tip_conformal_ring=true`: **degenerate**, tip skew 1.000, jac 0.0003,
+  fails QC outright. Do not use.
+* `tip_dome_scale`: moves tip skew by 0.006 (0.948 -> 0.942). It is not
+  the tip fix it was hoped to be, and it is incompatible with coarsen=4.
+
+## Law 6 — the trailing edge is a genuine trade-off, not a tuning bug
+
+Two levers act on the TE block, in opposite directions:
+
+* `split_x_fore` 0.30-0.35 gives the best cell shape (jac 0.34, AR 5.6)
+  but pushes the TE normal rotation to 136-141 deg.
+* `chordwise_distribution=cluster_center` (added for this study, because
+  mid4 puts the LE and TE in block *interiors* where end-clustering cannot
+  reach) softens the turn to 88-103 deg but costs Jacobian and aspect
+  ratio, which more spanwise panels then have to repay.
+
+## Best recipes found
+
+    R2_span24_sp035  spanwise_panels=24, tip_radial_points=17,
+                     tip_inner_scale=0.70, split_x_fore=0.35
+                     OML jac 0.341  AR 5.6  | tip jac 0.081  AR 18.6
+                     best cell shape; TE turn 141 deg
+
+    S1_span32_sp030_ctr  as above + spanwise 32, split 0.30,
+                     cluster_center beta=1.0
+                     OML jac 0.214  AR 9.0  | tip jac 0.051  AR 20.5
+                     TE turn 88 deg -- the gentlest trailing edge found
+
+Versus the round-1 pick (`spanwise_panels=8, tip_radial_points=9`):
+OML Jacobian 0.076 -> 0.341 (4.5x), OML AR 25.0 -> 5.6 (4.5x better),
+tip Jacobian 0.033 -> 0.081, tip AR 47.3 -> 18.6.
+
+## Three metrics that never pass, and why
+
+* **OML skewness pinned at 0.634-0.639** across all 54 strategies —
+  resolution, clustering, split location, topology, none of it moves it.
+  Structural: on a swept, tapered planform the chordwise and spanwise grid
+  families are not orthogonal, and refinement cannot change an angle. Note
+  0.638 is "fair" on the standard scale and is acceptable for RANS — the
+  <0.5 target used in the harness is too strict for a swept wing.
+* **Growth ratio** bottoms out at 1.508 (target 1.2).
+* **TE normal rotation** bottoms out at ~67-88 deg (target 40). A blunt
+  trailing edge has to turn a large corner; this is geometry, not mesh
+  quality. The target is the wrong yardstick for this block.
+
+## OPEN — the constraint that decides whether any of this is usable
+
+`mid4` is documented as **requiring pyHyp `coarsen=4`** (see
+`aeris.mesh.topologies` and `DSE_READINESS.md`): the volume mesher
+decimates the surface 4x in-plane. If that still holds, a 65k-cell refined
+surface is thrown away at the volume stage and every gain above is
+cosmetic. The stated *reason* mid4 needed coarsen=4 was the tip cap — the
+exact thing laws 4 and 5 just improved. **Next test: march
+`R2_span24_sp035` and `S1_span32_sp030_ctr` at coarsen=1.** If they march
+clean, mid4 becomes strictly better than cap4 for this geometry. If they
+do not, the choice reverts to cap4 and this study must be repeated there.

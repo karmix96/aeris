@@ -6,10 +6,14 @@ that was committed on whichever machine ran it. `git pull` to refresh.
 
 | Job | Kind | Status | Progress | Machine | Commit | Updated (UTC) |
 |---|---|---|---|---|---|---|
+| surface-strategy-surface_strategy_r3_mid4 | campaign:surface-strategy | done | 13/13 | mike | 81503a8 | 2026-07-22T19:14:44+00:00 |
+| surface-strategy-surface_strategy_r2_mid4 | campaign:surface-strategy | done | 22/22 | mike | 81503a8 | 2026-07-22T19:12:23+00:00 |
 | surface-strategy-surface_strategy_r1 | campaign:surface-strategy | done | 19/19 | mike | 8bd4ec6 | 2026-07-22T18:51:54+00:00 |
 | surface-strategy-surface_strategy_smoke | campaign:surface-strategy | done | 2/2 | mike | 8bd4ec6 | 2026-07-22T18:41:54+00:00 |
 
 ## Detail
 
 - **surface-strategy-surface_strategy_r1**: best=F2_wrap060
+- **surface-strategy-surface_strategy_r2_mid4**: best=M2_span24
+- **surface-strategy-surface_strategy_r3_mid4**: best=R1_span24_sp030
 - **surface-strategy-surface_strategy_smoke**: best=current

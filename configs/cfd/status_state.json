@@ -29,6 +29,16 @@
     "updated_utc": "2026-07-22T19:14:44+00:00",
     "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/surface_strategy_r3_mid4"
   },
+  "surface-strategy-surface_strategy_r4_tip": {
+    "commit": "d880e96",
+    "detail": "best=U1_pts33_sp24",
+    "kind": "campaign:surface-strategy",
+    "machine": "mike",
+    "progress": "5/5",
+    "status": "done",
+    "updated_utc": "2026-07-22T19:24:27+00:00",
+    "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/surface_strategy_r4_tip"
+  },
   "surface-strategy-surface_strategy_smoke": {
     "commit": "8bd4ec6",
     "detail": "best=current",

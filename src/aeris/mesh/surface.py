@@ -274,6 +274,78 @@ def _open_trailing_edge(coords: Array, target_thickness: float) -> Array:
     return opened
 
 
+
+def _resample_piecewise(
+    segments: Sequence[Array],
+    counts: Sequence[int],
+    *,
+    distribution: str | Sequence[str] = "uniform",
+    beta: float = 2.0,
+) -> Array:
+    """Resample consecutive polyline segments independently and join them.
+
+    Resampling a composite side in one pass distributes nodes by arc length
+    over the whole side, which silently discards the *corners* between
+    segments.  On a blunt trailing edge those corners are the two ~90 deg
+    turns onto the base — losing them smears the base over whatever nodes
+    arc length happens to land there and leaves the midpoint protruding aft
+    of its neighbours.  Resampling per segment pins every corner to a node.
+
+    Shared endpoints are emitted once.
+    """
+    if len(segments) != len(counts):
+        raise MeshBuildError("_resample_piecewise needs one count per segment.")
+    modes = (
+        [distribution] * len(segments) if isinstance(distribution, str) else list(distribution)
+    )
+    pieces: list[Array] = []
+    for index, (segment, count) in enumerate(zip(segments, counts)):
+        if count < 2:
+            raise MeshBuildError("each piecewise segment needs at least 2 points.")
+        sampled = _resample_polyline(segment, count, distribution=modes[index], beta=beta)
+        pieces.append(sampled if index == 0 else sampled[1:])
+    return np.vstack(pieces)
+
+
+def _split_counts(segments: Sequence[Array], total: int, fixed: dict[int, int]) -> list[int]:
+    """Allocate ``total`` unique nodes across segments, honouring fixed counts.
+
+    Joined segments share their endpoints, so N segments holding ``counts``
+    nodes each yield ``sum(counts) - (N - 1)`` unique nodes.  Segments
+    without a fixed count share what remains in proportion to arc length, so
+    the free part of the side keeps a uniform node density.
+    """
+    n_seg = len(segments)
+    lengths = [float(_polyline_arclength(np.asarray(seg, dtype=float))[-1]) for seg in segments]
+    free = [i for i in range(n_seg) if i not in fixed]
+    if not free:
+        raise MeshBuildError("_split_counts needs at least one free segment.")
+
+    budget = total + n_seg - 1 - sum(fixed.values())
+    if budget < 2 * len(free):
+        raise MeshBuildError(
+            f"too few points ({total}) to give every segment 2 nodes with "
+            f"{sum(fixed.values())} pinned."
+        )
+
+    counts = [0] * n_seg
+    for index, value in fixed.items():
+        counts[index] = value
+
+    free_length = sum(lengths[i] for i in free) or 1.0
+    assigned = 0
+    for position, index in enumerate(free):
+        if position == len(free) - 1:
+            counts[index] = budget - assigned
+        else:
+            share = max(2, int(round(budget * lengths[index] / free_length)))
+            counts[index] = share
+            assigned += share
+    if min(counts[i] for i in free) < 2:
+        raise MeshBuildError("segment allocation produced fewer than 2 nodes.")
+    return counts
+
+
 def _insert_point_at_x(surface: Array, x_target: float) -> tuple[Array, int]:
     x = surface[:, 0]
     candidates: list[tuple[int, float]] = []
@@ -306,6 +378,7 @@ def _airfoil_eight_sides(
     split_x_fore: float,
     minimum_te_thickness: float,
     te_thickness: float = 0.0,
+    te_base_points: int = 0,
     chordwise_distribution: str = "uniform",
     chordwise_beta: float = 2.0,
 ) -> list[Array]:
@@ -409,6 +482,7 @@ def _airfoil_four_sides(
     split_x_fore: float,
     minimum_te_thickness: float,
     te_thickness: float = 0.0,
+    te_base_points: int = 0,
     chordwise_distribution: str = "uniform",
     chordwise_beta: float = 2.0,
 ) -> list[Array]:
@@ -470,6 +544,7 @@ def _airfoil_cap4_sides(
     wrap_x: float,
     minimum_te_thickness: float,
     te_thickness: float = 0.0,
+    te_base_points: int = 0,
     chordwise_distribution: str = "uniform",
     chordwise_beta: float = 2.0,
 ) -> list[Array]:
@@ -529,10 +604,36 @@ def _airfoil_cap4_sides(
         per_side = ["uniform", "cosine", "uniform", "cosine"]
     else:
         per_side = [chordwise_distribution] * 4
-    sides = [
-        _resample_polyline(side, n, distribution=mode, beta=chordwise_beta)
-        for side, n, mode in zip(raw_sides, counts, per_side)
-    ]
+    sides = []
+    for index, (side, n, mode) in enumerate(zip(raw_sides, counts, per_side)):
+        if index == 2 and te_base_points >= 2:
+            # The TE wrap side is (lower arc | blunt base | upper arc).  Pin
+            # both base corners by resampling the three pieces separately,
+            # otherwise arc-length resampling smears the two ~90 deg turns
+            # and the base midpoint protrudes aft of its neighbours.
+            base = np.vstack([lower_le_to_te[-1], te_mid, upper_te_to_le[0]])
+            pieces = [
+                lower_le_to_te[lower_shoulder_idx:],
+                base,
+                upper_te_to_le[: upper_shoulder_idx + 1],
+            ]
+            allocation = _split_counts(pieces, n, {1: te_base_points})
+            # Taper each surface arc into the base corner.  Pinning the
+            # corner makes the turn exact but leaves short base cells beside
+            # long surface cells; clustering the arcs against the corner is
+            # what keeps the size transition smooth.
+            sides.append(
+                _resample_piecewise(
+                    pieces,
+                    allocation,
+                    distribution=["cluster_end", "uniform", "cluster_start"],
+                    beta=chordwise_beta,
+                )
+            )
+        else:
+            sides.append(
+                _resample_polyline(side, n, distribution=mode, beta=chordwise_beta)
+            )
     for k in range(len(sides)):
         nxt = (k + 1) % len(sides)
         if not np.allclose(sides[k][-1], sides[nxt][0], atol=1e-12):
@@ -1314,6 +1415,7 @@ def build_surface_mesh(
     split_x_fore: float = 0.20,
     minimum_te_thickness: float = 2.0e-3,
     te_thickness: float = 0.0,
+    te_base_points: int = 0,
     minimum_scaled_jacobian: float = 1.0e-2,
     maximum_adjacent_normal_angle_deg: float = 180.0,
     oml_topology: str = "mid4",
@@ -1391,6 +1493,7 @@ def build_surface_mesh(
                 wrap_x=cap_wrap_x,
                 minimum_te_thickness=minimum_te_thickness,
                 te_thickness=te_thickness,
+                te_base_points=te_base_points,
                 chordwise_distribution=chordwise_distribution,
                 chordwise_beta=chordwise_beta,
             )
@@ -1406,6 +1509,7 @@ def build_surface_mesh(
                 split_x_fore=split_x_fore,
                 minimum_te_thickness=minimum_te_thickness,
                 te_thickness=te_thickness,
+                te_base_points=te_base_points,
                 chordwise_distribution=chordwise_distribution,
                 chordwise_beta=chordwise_beta,
             )
@@ -1636,6 +1740,7 @@ def build_surface_mesh(
         "spanwise_beta": spanwise_beta,
         "minimum_te_thickness": minimum_te_thickness,
         "te_thickness_requested": te_thickness,
+        "te_base_points": te_base_points,
         "minimum_scaled_jacobian": jacobian_floor,
         "maximum_adjacent_normal_angle_deg": maximum_adjacent_normal_angle_deg,
         "characteristic_length": characteristic_length,

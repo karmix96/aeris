@@ -43,3 +43,23 @@ def test_unclosed_tip_is_caught():
     # the y=2 tip edge is open and must be reported, not silently accepted
     assert any(abs(e["mean_y"] - 2.0) < 1e-9 for e in off_root)
     assert audit["closed_except_root"] is False
+
+
+def test_root_plane_need_not_be_at_zero():
+    """The builder snaps the root to its own mean plane, which may not be y=0.
+
+    Comparing against 0.0 rejected every geometry whose root landed at
+    y = -2.9e-4 -- a legitimate half-model, exactly planar, just offset.
+    """
+    offset = -2.9e-4
+    block = _panel(offset, 1.0 + offset, 0.0, 1.0, "oml_0")
+
+    # Against y=0 the offset root edge is (wrongly) treated as an open
+    # boundary away from the symmetry plane.
+    default = _free_edge_audit([block], tol=1e-9)
+    assert not any(e["on_root_plane"] for e in default["edges"])
+
+    # Against the detected plane it is recognised.
+    shifted = _free_edge_audit([block], tol=1e-9, root_plane_y=offset)
+    root = [e for e in shifted["edges"] if e["on_root_plane"]]
+    assert len(root) == 1 and root[0]["side"] == "j0"

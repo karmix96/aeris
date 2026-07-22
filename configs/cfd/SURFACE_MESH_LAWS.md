@@ -515,3 +515,68 @@ another blocking arrangement.
 
 `tip_topology="single"` is kept in the code as a documented negative
 result, not as a usable option.
+
+---
+
+# Surface robustness across the design space (2026-07-23)
+
+`scripts/surface_robustness.py`, selected recipe, 50 geometries sampled from
+`configs/geometry/bwb_explore_wide.yaml`, surface only.
+
+## Result: 50/50 succeed (100%)
+
+No geometry failures, no surface-build failures, no QC rejections.
+
+## Law 14 — the tip cap is design-space INVARIANT
+
+Every tip metric is **identical to four decimals across all 50 geometries**:
+
+    tip min_jacobian   0.149   (min = p10 = median = p90 = max)
+    tip max_skewness   0.898
+    tip max_aspect_ratio 11.205
+    tip max_growth_ratio 2.069
+
+This is not a bug. Every sampled geometry uses the same airfoil, so the tip
+section is a uniformly scaled and rigidly rotated copy of one normalized
+shape — and skewness and *scaled* Jacobian are angle-based, hence invariant
+under scaling and rotation. Taper, twist and dihedral cannot move them.
+
+Two consequences, and they point in opposite directions:
+
+* The tip defect will **never** be "fine on most geometries". It is
+  identically mediocre everywhere, so it is a permanent quality ceiling.
+* It is also **not a robustness risk**. It never degrades, never causes a
+  failure, and contributes no variance to the DoE. Fixing it is a one-time
+  structural improvement, not a prerequisite for running the campaign.
+
+Combined with laws 12 and 13 (no blocking arrangement fixes it), the tip is
+now a *known, bounded, constant* defect rather than an open risk — which is
+a reasonable state in which to proceed, and an honest basis for deciding
+whether overset is worth it later.
+
+## Law 15 — the tuning baseline was the best geometry in the space
+
+Everything in this study was tuned on `baseline_bwb_25` (seed 100). Its OML
+Jacobian of 0.426 sits at the **100th percentile** of the 50-sample spread:
+
+    OML metric          min     p10   median    p90     max
+    min_jacobian      0.114   0.157   0.231   0.312   0.388
+    max_skewness      0.520   0.577   0.648   0.744   0.851
+    max_aspect_ratio  4.264   5.730   8.056  12.422  17.425
+    max_growth_ratio  1.239   1.300   1.398   1.545   1.896
+    max_normal_angle 142.107 145.854 146.051 146.268 146.405
+
+The design-space median OML Jacobian is **0.231, not 0.426** — the tuning
+geometry was better than every one of the 50 samples. Aspect ratio is
+similar: 4.3 on the baseline against a median of 8.1 and a worst case of
+17.4 (seeds 3, 44, 37).
+
+**Quote the median, not the baseline, when reporting this recipe.** The
+recipe still clears the Jacobian target (>0.2) at the median and holds
+100% success at the worst case, but a single hand-picked geometry
+systematically flatters it — which is exactly the trap this document warns
+about in its opening paragraph.
+
+Note also that `max_normal_angle_deg` is essentially constant at ~146 deg
+across the space: like the tip, the trailing-edge turn is set by the shared
+airfoil, not by the planform.

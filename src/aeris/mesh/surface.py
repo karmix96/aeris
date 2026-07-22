@@ -1270,7 +1270,9 @@ def _edge_contains_segment(edge: Array, segment: Array, tol: float) -> bool:
     return any(_edge_match(candidate, segment, tol) for candidate in candidates)
 
 
-def _free_edge_audit(blocks: Sequence[SurfaceBlock], tol: float) -> dict[str, object]:
+def _free_edge_audit(
+    blocks: Sequence[SurfaceBlock], tol: float, root_plane_y: float = 0.0
+) -> dict[str, object]:
     """Find block edges shared by no other block, and where they sit.
 
     pyHyp is normally run with ``unattachedEdgesAreSymmetry=True``, which
@@ -1282,6 +1284,12 @@ def _free_edge_audit(blocks: Sequence[SurfaceBlock], tol: float) -> dict[str, ob
 
     Returns the free-edge count and how many of them lie off the root
     plane; a closed half-model surface has zero of the latter.
+
+    ``root_plane_y`` is the *detected* symmetry plane, not necessarily y=0:
+    the builder snaps the root to its own mean plane when that mean is
+    outside the zero-snap tolerance, so a legitimate half-model can sit at
+    y = -2.9e-4.  Comparing against 0.0 instead would fail every such
+    geometry.
     """
     edges: list[tuple[str, str, Array]] = []
     for block in blocks:
@@ -1307,8 +1315,11 @@ def _free_edge_audit(blocks: Sequence[SurfaceBlock], tol: float) -> dict[str, ob
                 "side": side,
                 "mean_y": mean_y,
                 "y_range": y_span,
-                # A root-plane edge is flat in y and sits at y ~ 0.
-                "on_root_plane": bool(y_span <= tol and abs(mean_y) <= tol),
+                # A root-plane edge is flat in y and sits on the detected
+                # symmetry plane.
+                "on_root_plane": bool(
+                    y_span <= tol and abs(mean_y - root_plane_y) <= tol
+                ),
             }
         )
     off_root = [item for item in free if not item["on_root_plane"]]
@@ -1759,7 +1770,7 @@ def build_surface_mesh(
     characteristic_length = float(np.linalg.norm(extent))
     connection_tol = max(1e-10, characteristic_length * 1e-10)
     connectivity = _connectivity_qc(oml, ring, center, connection_tol, tip_groups=tip_groups)
-    free_edges = _free_edge_audit(blocks, connection_tol)
+    free_edges = _free_edge_audit(blocks, connection_tol, root_plane_y=root_plane_y)
 
     root_plane_ok = root_y_range <= connection_tol
     min_area = min(float(item["min_area"]) for item in qc_blocks)

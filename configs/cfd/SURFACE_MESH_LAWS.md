@@ -481,3 +481,37 @@ direction is perpendicular to the loop by construction and the first ring
 row cannot be rhombic. This is the "generate a smooth inner loop rather
 than simply scaling every coordinate uniformly" step from the project
 lead's architecture proposal, and it is now the top open surface item.
+
+## Law 13 — the collar is the mitigation, not the villain (option A, rejected)
+
+Hypothesis: the tip's radial (collar) family is what produces the rhombic
+cells, and the chordwise-aligned rectangular patch is excellent (skew
+0.085), so closing the tip with ONE transfinite patch on the four OML tip
+arcs -- no radial family at all -- should be better.
+
+Implemented as `tip_topology="single"` and measured. **It is much worse:**
+
+    closure          tip jac    tip skew   tip AR   cells
+    collar (cap4)     0.1494      0.898     11.2    28672
+    single patch      0.0015      0.999      7.2    27648   <- fails QC
+
+Aspect ratio improves (7.2, the best measured) but skewness goes fully
+degenerate at 0.999 and the Jacobian collapses by 100x. The four patch
+corners land on the arc junctions and absorb the entire loop-to-rectangle
+mismatch, producing collapsed corner cells.
+
+**Interpretation.** The distortion is not merely conserved when the collar
+is removed -- it is *concentrated*. The collar earns its place by spreading
+the mismatch around a ring rather than dumping it on four corners. The
+real difficulty is topological: capping a closed, high-aspect,
+sharply-curved loop (192 mm chord x ~15 mm thickness at the tip, with a
+rounded nose and a near-zero-thickness TE) with any single structured
+patch has no good solution.
+
+This rules out the "simplify the tip topology" direction with evidence.
+Remaining options are geometric (round/fair the tip so no cap is needed) or
+overset (a separate tip grid, removing the topology constraint), not
+another blocking arrangement.
+
+`tip_topology="single"` is kept in the code as a documented negative
+result, not as a usable option.

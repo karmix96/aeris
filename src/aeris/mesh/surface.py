@@ -985,6 +985,57 @@ def _apply_tip_dome(
     return domed
 
 
+
+def _build_tip_single(
+    oml_blocks: Sequence[Array],
+) -> tuple[list[Array], list[Array], list[list[int]]]:
+    """Close the tip with ONE transfinite patch on the four OML tip edges.
+
+    The collar approach introduces a *radial* grid family that has to map a
+    closed loop onto a rectangle; where the loop is sharply curved (nose) or
+    nearly zero-thickness (blunt TE) that mapping rotates the radial
+    direction until it is almost tangent, producing rhombic cells with ~8
+    deg corners.  Refinement cannot change an angle and smoothing cannot
+    move the outer loop, so the defect is structural.
+
+    The chordwise-aligned rectangular patch, by contrast, is the best-shaped
+    block in the mesh (skewness 0.085).  This closure keeps only that
+    family: the four OML tip edges become the four sides of a single patch,
+    so the cap carries no radial family at all.  Distortion concentrates at
+    the four corners where the arcs meet instead of around a whole ring.
+
+    Requires opposite OML tip edges to have matching point counts, which the
+    cap4 layout ([nose wrap, lower, TE wrap, upper]) already satisfies.
+    """
+    if len(oml_blocks) != 4:
+        raise MeshBuildError("single-patch tip closure requires exactly 4 OML blocks.")
+
+    e_nose = oml_blocks[0][:, -1, :]
+    e_low = oml_blocks[1][:, -1, :]
+    e_te = oml_blocks[2][:, -1, :]
+    e_up = oml_blocks[3][:, -1, :]
+    if len(e_te) != len(e_nose) or len(e_up) != len(e_low):
+        raise MeshBuildError("single-patch tip closure needs matching opposite edge counts.")
+
+    # Walk the loop nose -> lower -> TE -> upper and use the two chord arcs
+    # as the i-direction sides, the two wrap arcs as the j-direction sides.
+    bottom = e_low                 # nose corner -> TE corner (lower surface)
+    top = e_up[::-1]               # nose corner -> TE corner (upper surface)
+    left = e_nose[::-1]            # lower nose corner -> upper nose corner
+    right = e_te                   # lower TE corner -> upper TE corner
+
+    if not np.allclose(left[0], bottom[0], atol=1e-9):
+        left = left[::-1]
+    if not np.allclose(right[0], bottom[-1], atol=1e-9):
+        right = right[::-1]
+    if not np.allclose(top[0], left[-1], atol=1e-9):
+        top = top[::-1]
+
+    patch = _tfi_patch(bottom, top, left, right)
+    # No ring blocks: every OML tip edge attaches straight to the patch.
+    return [], [patch], [[0], [1], [2], [3]]
+
+
 def _build_tip_blocks(
     oml_blocks: Sequence[Array],
     *,
@@ -1290,6 +1341,35 @@ def _connectivity_qc(
     if tip_groups is None:
         tip_groups = [[i] for i in range(len(ring))]
 
+    if not ring:
+        # Collar-free closure: every OML tip edge attaches straight to the
+        # single cap patch, so check against the patch boundary instead.
+        cap_edges = []
+        for block in center:
+            cap_edges.extend(
+                [
+                    block.xyz[:, 0, :],
+                    block.xyz[-1, :, :],
+                    block.xyz[:, -1, :],
+                    block.xyz[0, :, :],
+                ]
+            )
+        for oml_idx in range(n_oml):
+            oml_tip_edges = [oml[oml_idx].xyz[:, -1, :], oml[oml_idx].xyz[::-1, -1, :]]
+            matched = any(
+                _edge_match(cap_edge, oml_edge, tol)
+                or _edge_contains_segment(cap_edge, oml_edge, tol)
+                for cap_edge in cap_edges
+                for oml_edge in oml_tip_edges
+            )
+            checks.append(
+                {"connection": f"oml_{oml_idx}_to_tip_cap", "matched": matched}
+            )
+        return {
+            "checks": checks,
+            "all_matched": all(bool(item["matched"]) for item in checks),
+        }
+
     for ring_idx, group in enumerate(tip_groups):
         ring_outer_edges = [ring[ring_idx].xyz[:, 0, :], ring[ring_idx].xyz[::-1, 0, :]]
         for oml_idx in group:
@@ -1524,8 +1604,8 @@ def build_surface_mesh(
             raise MeshBuildError(f"{label} must be one of {DISTRIBUTIONS}, got {mode!r}")
     if te_thickness and not (0.0 < te_thickness <= 0.05):
         raise MeshBuildError("te_thickness must lie between 0 and 0.05 chord (0 = leave as-is).")
-    if tip_topology not in ("auto", "cap4", "ring"):
-        raise MeshBuildError("tip_topology must be 'auto', 'cap4', or 'ring'.")
+    if tip_topology not in ("auto", "cap4", "ring", "single"):
+        raise MeshBuildError("tip_topology must be 'auto', 'cap4', 'ring', or 'single'.")
     if spanwise_distribution == "junction":
         raise MeshBuildError(
             "spanwise_distribution cannot be 'junction' -- that mode is a "
@@ -1618,7 +1698,9 @@ def build_surface_mesh(
     # (that cap put points_per_side^2 nodes on ~0.1% of the wing area).
     resolved_tip = oml_topology if tip_topology == "auto" else tip_topology
     # (smoothing is applied to the returned cap blocks below)
-    if resolved_tip == "cap4":
+    if resolved_tip == "single":
+        raw_ring, raw_center, tip_groups = _build_tip_single(raw_oml)
+    elif resolved_tip == "cap4":
         raw_ring, raw_center, tip_groups = _build_tip_cap4(
             raw_oml,
             collar_points=tip_radial_points,

@@ -31,6 +31,7 @@ _PARAM_MAP = {
     "tip_conformal_ring": "tip_conformal_ring",
     "split_x_fore": "split_x_fore",
     "min_te_thickness": "minimum_te_thickness",
+    "te_thickness": "te_thickness",
     "min_scaled_jacobian": "minimum_scaled_jacobian",
     "max_adjacent_normal_angle": "maximum_adjacent_normal_angle_deg",
     "cap_width_frac": "cap_width_frac",

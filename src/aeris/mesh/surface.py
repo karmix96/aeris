@@ -233,6 +233,47 @@ def _resample_polyline(
     )
 
 
+
+def _open_trailing_edge(coords: Array, target_thickness: float) -> Array:
+    """Thicken a normalized airfoil's trailing edge to ``target_thickness`` chord.
+
+    Structured meshing needs a blunt trailing edge: the TE block has to wrap
+    the base, and the thinner that base, the sharper the turn it must make.
+    AeroSandbox's NACA sections come out at ~0.25% chord, which is 2-4x
+    thinner than the 0.5-1.0% normally used for a CFD blunt TE, and at the
+    tip of a tapered wing that is a few tenths of a millimetre.
+
+    Points are displaced perpendicular to the chord line by a half-gap that
+    grows linearly from zero at the leading edge to the full half-gap at the
+    trailing edge, so the leading edge and the forward shape are untouched
+    and only the aft camber/thickness distribution shifts.  This is the
+    classic airfoil TE-opening operation.
+
+    Returns the coordinates unchanged if they are already thick enough.
+    """
+    coords = np.asarray(coords, dtype=float)
+    le_index = int(np.argmin(coords[:, 0]))
+    current = float(np.linalg.norm(coords[0] - coords[-1]))
+    if target_thickness <= current:
+        return coords
+
+    half_gap = 0.5 * (target_thickness - current)
+    x = coords[:, 0]
+    x_le = float(x[le_index])
+    # Normalize against the actual trailing-edge station, not 1.0: after
+    # normalize() the TE can sit a fraction short of x=1 and the blend would
+    # then stop just below the requested gap.
+    span = max(float(x.max()) - x_le, 1e-12)
+    blend = np.clip((x - x_le) / span, 0.0, 1.0)
+
+    opened = coords.copy()
+    # coords run upper TE -> LE -> lower TE, so the split at le_index gives
+    # the sign of the displacement.
+    sign = np.where(np.arange(len(coords)) <= le_index, 1.0, -1.0)
+    opened[:, 1] = coords[:, 1] + sign * half_gap * blend
+    return opened
+
+
 def _insert_point_at_x(surface: Array, x_target: float) -> tuple[Array, int]:
     x = surface[:, 0]
     candidates: list[tuple[int, float]] = []
@@ -264,6 +305,7 @@ def _airfoil_eight_sides(
     dense_points_per_surface: int,
     split_x_fore: float,
     minimum_te_thickness: float,
+    te_thickness: float = 0.0,
     chordwise_distribution: str = "uniform",
     chordwise_beta: float = 2.0,
 ) -> list[Array]:
@@ -289,6 +331,8 @@ def _airfoil_eight_sides(
     if coords.ndim != 2 or coords.shape[1] != 2 or len(coords) < 9:
         raise MeshBuildError("Airfoil coordinates must have shape (N, 2), N >= 9.")
 
+    if te_thickness > 0.0:
+        coords = _open_trailing_edge(coords, te_thickness)
     le_index = int(np.argmin(coords[:, 0]))
     if le_index == 0 or le_index == len(coords) - 1:
         raise MeshBuildError(
@@ -298,10 +342,10 @@ def _airfoil_eight_sides(
     upper_te_to_le = coords[: le_index + 1].copy()  # x: 1 -> 0
     lower_le_to_te = coords[le_index:].copy()       # x: 0 -> 1
 
-    te_thickness = float(np.linalg.norm(upper_te_to_le[0] - lower_le_to_te[-1]))
-    if te_thickness < minimum_te_thickness:
+    te_thickness_actual = float(np.linalg.norm(upper_te_to_le[0] - lower_le_to_te[-1]))
+    if te_thickness_actual < minimum_te_thickness:
         raise MeshBuildError(
-            f"Trailing edge thickness is {te_thickness:.3e} chord, below the required "
+            f"Trailing edge thickness is {te_thickness_actual:.3e} chord, below the required "
             f"{minimum_te_thickness:.3e}. Use a small blunt CFD trailing edge."
         )
 
@@ -364,6 +408,7 @@ def _airfoil_four_sides(
     dense_points_per_surface: int,
     split_x_fore: float,
     minimum_te_thickness: float,
+    te_thickness: float = 0.0,
     chordwise_distribution: str = "uniform",
     chordwise_beta: float = 2.0,
 ) -> list[Array]:
@@ -377,6 +422,8 @@ def _airfoil_four_sides(
     coords = _as_numeric_xyz(working.coordinates, label="airfoil coordinates")
     if coords.ndim != 2 or coords.shape[1] != 2 or len(coords) < 9:
         raise MeshBuildError("Airfoil coordinates must have shape (N, 2), N >= 9.")
+    if te_thickness > 0.0:
+        coords = _open_trailing_edge(coords, te_thickness)
     le_index = int(np.argmin(coords[:, 0]))
     if le_index == 0 or le_index == len(coords) - 1:
         raise MeshBuildError(
@@ -384,10 +431,10 @@ def _airfoil_four_sides(
         )
     upper_te_to_le = coords[: le_index + 1].copy()
     lower_le_to_te = coords[le_index:].copy()
-    te_thickness = float(np.linalg.norm(upper_te_to_le[0] - lower_le_to_te[-1]))
-    if te_thickness < minimum_te_thickness:
+    te_thickness_actual = float(np.linalg.norm(upper_te_to_le[0] - lower_le_to_te[-1]))
+    if te_thickness_actual < minimum_te_thickness:
         raise MeshBuildError(
-            f"Trailing edge thickness is {te_thickness:.3e} chord, below the required "
+            f"Trailing edge thickness is {te_thickness_actual:.3e} chord, below the required "
             f"{minimum_te_thickness:.3e}. Use a small blunt CFD trailing edge."
         )
     upper_te_to_le, upper_aft_idx = _insert_point_at_x(upper_te_to_le, split_x_aft)
@@ -422,6 +469,7 @@ def _airfoil_cap4_sides(
     dense_points_per_surface: int,
     wrap_x: float,
     minimum_te_thickness: float,
+    te_thickness: float = 0.0,
     chordwise_distribution: str = "uniform",
     chordwise_beta: float = 2.0,
 ) -> list[Array]:
@@ -443,6 +491,8 @@ def _airfoil_cap4_sides(
     coords = _as_numeric_xyz(working.coordinates, label="airfoil coordinates")
     if coords.ndim != 2 or coords.shape[1] != 2 or len(coords) < 9:
         raise MeshBuildError("Airfoil coordinates must have shape (N, 2), N >= 9.")
+    if te_thickness > 0.0:
+        coords = _open_trailing_edge(coords, te_thickness)
     le_index = int(np.argmin(coords[:, 0]))
     if le_index == 0 or le_index == len(coords) - 1:
         raise MeshBuildError(
@@ -450,10 +500,10 @@ def _airfoil_cap4_sides(
         )
     upper_te_to_le = coords[: le_index + 1].copy()
     lower_le_to_te = coords[le_index:].copy()
-    te_thickness = float(np.linalg.norm(upper_te_to_le[0] - lower_le_to_te[-1]))
-    if te_thickness < minimum_te_thickness:
+    te_thickness_actual = float(np.linalg.norm(upper_te_to_le[0] - lower_le_to_te[-1]))
+    if te_thickness_actual < minimum_te_thickness:
         raise MeshBuildError(
-            f"Trailing edge thickness is {te_thickness:.3e} chord, below the required "
+            f"Trailing edge thickness is {te_thickness_actual:.3e} chord, below the required "
             f"{minimum_te_thickness:.3e}. Use a small blunt CFD trailing edge."
         )
     upper_te_to_le, upper_shoulder_idx = _insert_point_at_x(upper_te_to_le, shoulder_x)
@@ -1010,6 +1060,56 @@ def _edge_contains_segment(edge: Array, segment: Array, tol: float) -> bool:
     return any(_edge_match(candidate, segment, tol) for candidate in candidates)
 
 
+def _free_edge_audit(blocks: Sequence[SurfaceBlock], tol: float) -> dict[str, object]:
+    """Find block edges shared by no other block, and where they sit.
+
+    pyHyp is normally run with ``unattachedEdgesAreSymmetry=True``, which
+    silently reinterprets *any* open boundary as a symmetry plane.  On a
+    half-model the root plane is legitimately open — but so is a tip that
+    failed to close, and that one would be extruded as though a mirror
+    plane sat across the wingtip.  Auditing free edges here, against the
+    surface we can still inspect, is the only place that lie is catchable.
+
+    Returns the free-edge count and how many of them lie off the root
+    plane; a closed half-model surface has zero of the latter.
+    """
+    edges: list[tuple[str, str, Array]] = []
+    for block in blocks:
+        xyz = block.xyz
+        edges.append((block.name, "i0", xyz[0, :, :]))
+        edges.append((block.name, "i1", xyz[-1, :, :]))
+        edges.append((block.name, "j0", xyz[:, 0, :]))
+        edges.append((block.name, "j1", xyz[:, -1, :]))
+
+    free: list[dict[str, object]] = []
+    for index, (name, side, edge) in enumerate(edges):
+        shared = any(
+            other_index != index and _edge_match(edge, other_edge, tol)
+            for other_index, (_n, _s, other_edge) in enumerate(edges)
+        )
+        if shared:
+            continue
+        y_span = float(np.ptp(edge[:, 1]))
+        mean_y = float(np.mean(edge[:, 1]))
+        free.append(
+            {
+                "block": name,
+                "side": side,
+                "mean_y": mean_y,
+                "y_range": y_span,
+                # A root-plane edge is flat in y and sits at y ~ 0.
+                "on_root_plane": bool(y_span <= tol and abs(mean_y) <= tol),
+            }
+        )
+    off_root = [item for item in free if not item["on_root_plane"]]
+    return {
+        "free_edge_count": len(free),
+        "off_root_free_edges": len(off_root),
+        "closed_except_root": not off_root,
+        "edges": free,
+    }
+
+
 def _connectivity_qc(
     oml: Sequence[SurfaceBlock],
     ring: Sequence[SurfaceBlock],
@@ -1213,6 +1313,7 @@ def build_surface_mesh(
     dense_airfoil_points_per_surface: int = 301,
     split_x_fore: float = 0.20,
     minimum_te_thickness: float = 2.0e-3,
+    te_thickness: float = 0.0,
     minimum_scaled_jacobian: float = 1.0e-2,
     maximum_adjacent_normal_angle_deg: float = 180.0,
     oml_topology: str = "mid4",
@@ -1259,6 +1360,8 @@ def build_surface_mesh(
     ):
         if mode not in DISTRIBUTIONS:
             raise MeshBuildError(f"{label} must be one of {DISTRIBUTIONS}, got {mode!r}")
+    if te_thickness and not (0.0 < te_thickness <= 0.05):
+        raise MeshBuildError("te_thickness must lie between 0 and 0.05 chord (0 = leave as-is).")
     if tip_topology not in ("auto", "cap4", "ring"):
         raise MeshBuildError("tip_topology must be 'auto', 'cap4', or 'ring'.")
     if spanwise_distribution == "junction":
@@ -1287,6 +1390,7 @@ def build_surface_mesh(
                 dense_points_per_surface=dense_airfoil_points_per_surface,
                 wrap_x=cap_wrap_x,
                 minimum_te_thickness=minimum_te_thickness,
+                te_thickness=te_thickness,
                 chordwise_distribution=chordwise_distribution,
                 chordwise_beta=chordwise_beta,
             )
@@ -1301,6 +1405,7 @@ def build_surface_mesh(
                 dense_points_per_surface=dense_airfoil_points_per_surface,
                 split_x_fore=split_x_fore,
                 minimum_te_thickness=minimum_te_thickness,
+                te_thickness=te_thickness,
                 chordwise_distribution=chordwise_distribution,
                 chordwise_beta=chordwise_beta,
             )
@@ -1402,6 +1507,7 @@ def build_surface_mesh(
     characteristic_length = float(np.linalg.norm(extent))
     connection_tol = max(1e-10, characteristic_length * 1e-10)
     connectivity = _connectivity_qc(oml, ring, center, connection_tol, tip_groups=tip_groups)
+    free_edges = _free_edge_audit(blocks, connection_tol)
 
     root_plane_ok = root_y_range <= connection_tol
     min_area = min(float(item["min_area"]) for item in qc_blocks)
@@ -1426,6 +1532,19 @@ def build_surface_mesh(
                 "check": "block_connectivity",
                 "message": "One or more structured block edges do not match.",
                 "unmatched_connections": unmatched,
+            }
+        )
+    if not free_edges["closed_except_root"]:
+        failure_reasons.append(
+            {
+                "check": "open_boundary_off_root_plane",
+                "message": (
+                    "Surface has free edges away from the root plane. pyHyp's "
+                    "unattachedEdgesAreSymmetry would silently extrude these as "
+                    "symmetry planes -- e.g. an unclosed wingtip."
+                ),
+                "off_root_free_edges": free_edges["off_root_free_edges"],
+                "edges": [e for e in free_edges["edges"] if not e["on_root_plane"]],
             }
         )
     if not root_plane_ok:
@@ -1516,11 +1635,13 @@ def build_surface_mesh(
         "spanwise_distribution": spanwise_distribution,
         "spanwise_beta": spanwise_beta,
         "minimum_te_thickness": minimum_te_thickness,
+        "te_thickness_requested": te_thickness,
         "minimum_scaled_jacobian": jacobian_floor,
         "maximum_adjacent_normal_angle_deg": maximum_adjacent_normal_angle_deg,
         "characteristic_length": characteristic_length,
         "blocks": qc_blocks,
         "connectivity": connectivity,
+        "free_edges": free_edges,
         "symmetry_root": {
             "detected_spanwise_index": root_j,
             "mean_y_before_snap": root_mean_y_before,

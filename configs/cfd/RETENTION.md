@@ -65,3 +65,12 @@ directory. It was nearly destroyed by a routine cleanup. Results writeups
 belong in `configs/cfd/` (tracked): see `RESULTS_ARCHIVE.md` and
 `SURFACE_MESH_LAWS.md`. When a run establishes something, write the number
 into a tracked file; do not leave it in the run directory.
+
+## Exception: open strategy comparisons
+
+A `surface-strategy` workdir exists to be *looked at* — the `surface.vtk`
+per candidate is the whole point, since "which mesh is better" is partly a
+judgement made at the leading edge in ParaView, not only from the metrics
+table. Do not prune a strategy comparison until its winner has been chosen
+and recorded. `aeris cfd prune` will happily delete those VTKs; that is
+correct for a finished campaign and wrong for an open decision.

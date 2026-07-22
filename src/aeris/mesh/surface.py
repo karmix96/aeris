@@ -34,6 +34,10 @@ from typing import Sequence
 
 import numpy as np
 
+# aeris.mesh may depend on aeris.cfd (the plugin direction); the reverse is
+# what the import-boundary test forbids.
+from aeris.cfd.meshing.quality import block_quality_metrics
+
 Array = np.ndarray
 
 SURFACE_SCHEMA_VERSION = "aeris.asb_structured_surface.v2"
@@ -143,7 +147,64 @@ def _polyline_arclength(points: Array) -> Array:
     return np.concatenate(([0.0], np.cumsum(segment)))
 
 
-def _resample_polyline(points: Array, n: int, *, cosine: bool = True) -> Array:
+DISTRIBUTIONS = (
+    "uniform",
+    "cosine",
+    "cluster_start",
+    "cluster_end",
+    "tanh",
+    # topology-aware: each side builder decides per side (cap4 only)
+    "junction",
+)
+
+
+def _distribution(n: int, mode: str = "uniform", *, beta: float = 2.0) -> Array:
+    """Parametric node positions in [0, 1] for one structured direction.
+
+    Controls where points bunch up.  ``uniform`` spaces by arc length, which
+    is what this module did everywhere before 2026-07-22 and which
+    under-resolves the leading and trailing edges — the two places a RANS
+    surface mesh most needs points.
+
+    * ``cosine`` — clusters at *both* ends (standard airfoil distribution).
+    * ``cluster_start`` / ``cluster_end`` — clusters at one end, for sides
+      whose far end is already refined by a neighbouring block.
+    * ``tanh`` — symmetric clustering whose strength is set by ``beta``;
+      higher is tighter.  Approaches ``uniform`` as beta -> 0.
+    """
+    if n < 2:
+        raise MeshBuildError("A structured direction needs at least 2 points.")
+    if mode == "junction":
+        raise MeshBuildError(
+            "'junction' is resolved per side by the topology, not a raw distribution"
+        )
+    if mode not in DISTRIBUTIONS:
+        raise MeshBuildError(f"distribution must be one of {DISTRIBUTIONS}, got {mode!r}")
+
+    t = np.linspace(0.0, 1.0, n)
+    if mode == "uniform":
+        return t
+    if mode == "cosine":
+        return 0.5 * (1.0 - np.cos(np.pi * t))
+    if mode == "cluster_start":
+        # dense at t=0: quarter-cosine, zero slope at the far end
+        return 1.0 - np.cos(0.5 * np.pi * t)
+    if mode == "cluster_end":
+        return np.sin(0.5 * np.pi * t)
+    if beta <= 0.0:
+        return t
+    stretched = np.tanh(beta * (t - 0.5)) / np.tanh(0.5 * beta)
+    return 0.5 * (1.0 + stretched)
+
+
+def _resample_polyline(
+    points: Array,
+    n: int,
+    *,
+    cosine: bool = True,
+    distribution: str | None = None,
+    beta: float = 2.0,
+) -> Array:
     points = _as_numeric_xyz(points, label="airfoil polyline")
     if points.ndim != 2 or points.shape[1] != 2:
         raise MeshBuildError("Airfoil polyline must have shape (N, 2).")
@@ -157,10 +218,8 @@ def _resample_polyline(points: Array, n: int, *, cosine: bool = True) -> Array:
     if len(points) < 2 or s[-1] <= 0:
         raise MeshBuildError("An airfoil boundary segment collapsed to zero length.")
 
-    t = np.linspace(0.0, 1.0, n)
-    if cosine:
-        t = 0.5 * (1.0 - np.cos(np.pi * t))
-    sample_s = t * s[-1]
+    mode = distribution if distribution is not None else ("cosine" if cosine else "uniform")
+    sample_s = _distribution(n, mode, beta=beta) * s[-1]
     return np.column_stack(
         [np.interp(sample_s, s, points[:, axis]) for axis in range(2)]
     )
@@ -197,6 +256,8 @@ def _airfoil_eight_sides(
     dense_points_per_surface: int,
     split_x_fore: float,
     minimum_te_thickness: float,
+    chordwise_distribution: str = "uniform",
+    chordwise_beta: float = 2.0,
 ) -> list[Array]:
     """Return 8 sides for a split LE/TE O-type topology.
 
@@ -274,7 +335,13 @@ def _airfoil_eight_sides(
         upper_te_to_le[upper_aft_idx : upper_fore_idx + 1],
     ]
 
-    sides = [_resample_polyline(side, points_per_side, cosine=False) for side in raw_sides]
+    # mid4/split8 have no narrow wrap blocks -- every side runs between two
+    # block splits, so the topology-aware "junction" mode is plain cosine.
+    mode = "cosine" if chordwise_distribution == "junction" else chordwise_distribution
+    sides = [
+        _resample_polyline(side, points_per_side, distribution=mode, beta=chordwise_beta)
+        for side in raw_sides
+    ]
     for k in range(len(sides)):
         nxt = (k + 1) % len(sides)
         if not np.allclose(sides[k][-1], sides[nxt][0], atol=1e-12):
@@ -289,6 +356,8 @@ def _airfoil_four_sides(
     dense_points_per_surface: int,
     split_x_fore: float,
     minimum_te_thickness: float,
+    chordwise_distribution: str = "uniform",
+    chordwise_beta: float = 2.0,
 ) -> list[Array]:
     split_x_aft = 1.0 - split_x_fore
     try:
@@ -324,7 +393,13 @@ def _airfoil_four_sides(
         np.vstack([lower_le_to_te[lower_aft_idx:], [te_mid], upper_te_to_le[: upper_aft_idx + 1]]),
         upper_te_to_le[upper_aft_idx : upper_fore_idx + 1],
     ]
-    sides = [_resample_polyline(side, points_per_side, cosine=False) for side in raw_sides]
+    # mid4/split8 have no narrow wrap blocks -- every side runs between two
+    # block splits, so the topology-aware "junction" mode is plain cosine.
+    mode = "cosine" if chordwise_distribution == "junction" else chordwise_distribution
+    sides = [
+        _resample_polyline(side, points_per_side, distribution=mode, beta=chordwise_beta)
+        for side in raw_sides
+    ]
     for k in range(len(sides)):
         nxt = (k + 1) % len(sides)
         if not np.allclose(sides[k][-1], sides[nxt][0], atol=1e-12):
@@ -339,6 +414,8 @@ def _airfoil_cap4_sides(
     dense_points_per_surface: int,
     wrap_x: float,
     minimum_te_thickness: float,
+    chordwise_distribution: str = "uniform",
+    chordwise_beta: float = 2.0,
 ) -> list[Array]:
     """Return 4 sides with per-side point counts for the cap4 topology.
 
@@ -383,9 +460,20 @@ def _airfoil_cap4_sides(
         upper_te_to_le[upper_shoulder_idx : upper_nose_idx + 1],
     ]
     counts = [wrap_points, chord_points, wrap_points, chord_points]
+    # cap4's four sides are LE-wrap, lower chord, TE-wrap, upper chord.  A
+    # single distribution applied to all four is wrong: the wrap sides are
+    # narrow bands whose *middle* is the leading (or trailing) edge, so
+    # clustering their ends coarsens exactly the point that needs
+    # resolution.  "junction" therefore clusters only the two long chord
+    # sides, whose ends are the wrap-block junctions, and leaves the wraps
+    # uniform.
+    if chordwise_distribution == "junction":
+        per_side = ["uniform", "cosine", "uniform", "cosine"]
+    else:
+        per_side = [chordwise_distribution] * 4
     sides = [
-        _resample_polyline(side, n, cosine=False)
-        for side, n in zip(raw_sides, counts)
+        _resample_polyline(side, n, distribution=mode, beta=chordwise_beta)
+        for side, n, mode in zip(raw_sides, counts, per_side)
     ]
     for k in range(len(sides)):
         nxt = (k + 1) % len(sides)
@@ -582,15 +670,30 @@ def _build_tip_cap4(
     return ring_blocks, center_patches, tip_groups
 
 
-def _refine_spanwise(blocks: Sequence[Array], panels_per_section: int) -> list[Array]:
+def _refine_spanwise(
+    blocks: Sequence[Array],
+    panels_per_section: int,
+    *,
+    distribution: str = "uniform",
+    beta: float = 2.0,
+) -> list[Array]:
+    """Subdivide each geometry section into panels along the span.
+
+    ``distribution`` shapes the spacing *within* each section, so a
+    clustering mode bunches points against every section boundary — which on
+    a segmented BWB is exactly where the kinks, and the resulting surface
+    slope discontinuities, live.
+    """
     if panels_per_section < 1:
         raise MeshBuildError("spanwise_panels_per_section must be at least 1.")
+    # One extra sample then drop the endpoint: each section contributes
+    # panels_per_section columns and the next section supplies the shared one.
+    t_all = _distribution(panels_per_section + 1, distribution, beta=beta)[:-1]
     refined: list[Array] = []
     for block in blocks:
         columns = []
         for j in range(block.shape[1] - 1):
-            for k in range(panels_per_section):
-                t = k / panels_per_section
+            for t in t_all:
                 columns.append((1.0 - t) * block[:, j, :] + t * block[:, j + 1, :])
         columns.append(block[:, -1, :])
         refined.append(np.stack(columns, axis=1))
@@ -855,6 +958,14 @@ def _block_qc(block: SurfaceBlock) -> dict[str, float | int | str]:
     else:
         max_adjacent_normal_angle_deg = 0.0
 
+    # Skewness / aspect ratio / growth ratio come from the shared industry
+    # metric set (aeris.cfd.meshing.quality) rather than a second local
+    # implementation.  Until 2026-07-22 those were computed only for the 2D
+    # airfoil O-grid, so the 3D wing surface was accepted on Jacobian and
+    # normal-rotation alone — the two metrics least able to spot the coarse,
+    # unclustered LE/TE cells this topology actually produces.
+    industry = block_quality_metrics(xyz)
+
     return {
         "name": block.name,
         "ni": int(xyz.shape[0]),
@@ -868,6 +979,10 @@ def _block_qc(block: SurfaceBlock) -> dict[str, float | int | str]:
         "min_triangle_normal_alignment": float(np.min(normal_alignment)),
         "median_triangle_normal_alignment": float(np.median(normal_alignment)),
         "max_adjacent_normal_angle_deg": max_adjacent_normal_angle_deg,
+        "max_equiangle_skewness": industry["max_equiangle_skewness"],
+        "mean_equiangle_skewness": industry["mean_equiangle_skewness"],
+        "max_aspect_ratio": industry["max_aspect_ratio"],
+        "max_growth_ratio": industry["max_growth_ratio"],
     }
 
 
@@ -1101,6 +1216,10 @@ def build_surface_mesh(
     cap_wrap_points: int = 17,
     cap_wrap_x: float = 0.03,
     cap_width_frac: float = 0.5,
+    chordwise_distribution: str = "uniform",
+    chordwise_beta: float = 2.0,
+    spanwise_distribution: str = "uniform",
+    spanwise_beta: float = 2.0,
 ) -> tuple[list[SurfaceBlock], dict[str, object]]:
     """Build a 9-block structured surface mesh from an AeroSandbox Wing.
 
@@ -1125,6 +1244,17 @@ def build_surface_mesh(
         raise MeshBuildError("oml_topology must be 'mid4', 'split8', or 'cap4'.")
     if not (0.0 <= tip_dome_scale <= 2.0):
         raise MeshBuildError("tip_dome_scale must lie between 0 (flat cap) and 2.")
+    for label, mode in (
+        ("chordwise_distribution", chordwise_distribution),
+        ("spanwise_distribution", spanwise_distribution),
+    ):
+        if mode not in DISTRIBUTIONS:
+            raise MeshBuildError(f"{label} must be one of {DISTRIBUTIONS}, got {mode!r}")
+    if spanwise_distribution == "junction":
+        raise MeshBuildError(
+            "spanwise_distribution cannot be 'junction' -- that mode is a "
+            "per-side chordwise rule; use 'cosine' to cluster at section kinks."
+        )
     if oml_topology == "cap4":
         if cap_wrap_points < 5:
             raise MeshBuildError("cap_wrap_points must be at least 5.")
@@ -1140,6 +1270,8 @@ def build_surface_mesh(
                 dense_points_per_surface=dense_airfoil_points_per_surface,
                 wrap_x=cap_wrap_x,
                 minimum_te_thickness=minimum_te_thickness,
+                chordwise_distribution=chordwise_distribution,
+                chordwise_beta=chordwise_beta,
             )
             for xsec in xsecs
         ]
@@ -1152,12 +1284,19 @@ def build_surface_mesh(
                 dense_points_per_surface=dense_airfoil_points_per_surface,
                 split_x_fore=split_x_fore,
                 minimum_te_thickness=minimum_te_thickness,
+                chordwise_distribution=chordwise_distribution,
+                chordwise_beta=chordwise_beta,
             )
             for xsec in xsecs
         ]
 
     raw_oml = _map_sides_to_wing(wing, sides_by_xsec)
-    raw_oml = _refine_spanwise(raw_oml, spanwise_panels_per_section)
+    raw_oml = _refine_spanwise(
+        raw_oml,
+        spanwise_panels_per_section,
+        distribution=spanwise_distribution,
+        beta=spanwise_beta,
+    )
 
     # Snap root edge to an exact y-plane — pyHyp requires a genuinely planar
     # symmetry boundary, and AeroSandbox can leave floating-point noise on it.
@@ -1347,6 +1486,10 @@ def build_surface_mesh(
         "tip_conformal_ring": tip_conformal_ring,
         "split_x_fore": split_x_fore,
         "split_x_aft": 1.0 - split_x_fore,
+        "chordwise_distribution": chordwise_distribution,
+        "chordwise_beta": chordwise_beta,
+        "spanwise_distribution": spanwise_distribution,
+        "spanwise_beta": spanwise_beta,
         "minimum_te_thickness": minimum_te_thickness,
         "minimum_scaled_jacobian": jacobian_floor,
         "maximum_adjacent_normal_angle_deg": maximum_adjacent_normal_angle_deg,
@@ -1371,6 +1514,18 @@ def build_surface_mesh(
             "min_triangle_normal_alignment": min_alignment,
             "alignment_floor": alignment_floor,
             "max_adjacent_normal_angle_deg": max_adjacent_normal_angle,
+            # Reported, not gated: these are the metrics a strategy
+            # comparison is scored on, and gating them would reject the
+            # existing validated recipes before there is anything better.
+            "max_equiangle_skewness": max(
+                float(item["max_equiangle_skewness"]) for item in qc_blocks
+            ),
+            "mean_equiangle_skewness": float(
+                np.mean([float(item["mean_equiangle_skewness"]) for item in qc_blocks])
+            ),
+            "max_aspect_ratio": max(float(item["max_aspect_ratio"]) for item in qc_blocks),
+            "max_growth_ratio": max(float(item["max_growth_ratio"]) for item in qc_blocks),
+            "total_cells": int(sum(int(item["cells"]) for item in qc_blocks)),
         },
         "accepted_pre_pyhyp": accepted,
         "failure_reasons": failure_reasons,

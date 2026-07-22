@@ -1162,6 +1162,223 @@ def _prunable_files(root: Path) -> list[Path]:
     return victims
 
 
+# Reported by every surface strategy, with the target each is judged
+# against.  Targets follow common structured-meshing practice (Fluent/ANSYS
+# skewness guidance, Verdict/CUBIT scaled Jacobian); they are comparison
+# yardsticks, not gates.
+SURFACE_METRIC_TARGETS = {
+    "min_scaled_corner_jacobian": (">", 0.20),
+    "max_equiangle_skewness": ("<", 0.50),
+    "max_aspect_ratio": ("<", 100.0),
+    "max_growth_ratio": ("<", 1.20),
+    "max_adjacent_normal_angle_deg": ("<", 40.0),
+}
+
+
+def _group_block_metrics(blocks: list[dict]) -> dict[str, dict[str, float]]:
+    """Aggregate per-block metrics separately for the OML and the tip cap.
+
+    Scoring a wing surface as one number hides the thing that matters: the
+    tip collar is a deliberately thin, fragile structure (3 radial points,
+    forced by the volume march) whose skewness swamps the whole-mesh
+    extrema, so a strategy that genuinely improves the wing surface looks
+    identical to one that does not.  Judge the two independently.
+    """
+    groups = {
+        "oml": [b for b in blocks if str(b.get("name", "")).startswith("oml")],
+        "tip": [b for b in blocks if str(b.get("name", "")).startswith("tip")],
+    }
+    out: dict[str, dict[str, float]] = {}
+    for label, members in groups.items():
+        if not members:
+            continue
+        out[label] = {
+            "min_scaled_corner_jacobian": min(
+                float(b["min_scaled_corner_jacobian"]) for b in members
+            ),
+            "max_equiangle_skewness": max(float(b["max_equiangle_skewness"]) for b in members),
+            "max_aspect_ratio": max(float(b["max_aspect_ratio"]) for b in members),
+            "max_growth_ratio": max(float(b["max_growth_ratio"]) for b in members),
+            "max_adjacent_normal_angle_deg": max(
+                float(b["max_adjacent_normal_angle_deg"]) for b in members
+            ),
+            "worst_skew_block": max(members, key=lambda b: float(b["max_equiangle_skewness"]))[
+                "name"
+            ],
+            "worst_jacobian_block": min(
+                members, key=lambda b: float(b["min_scaled_corner_jacobian"])
+            )["name"],
+        }
+    return out
+
+
+def _score_surface_metrics(global_metrics: dict) -> tuple[int, list[str]]:
+    """Count how many industry targets a surface mesh meets, and name the misses."""
+    met = 0
+    missed: list[str] = []
+    for key, (sense, target) in SURFACE_METRIC_TARGETS.items():
+        value = global_metrics.get(key)
+        if value is None:
+            continue
+        ok = value > target if sense == ">" else value < target
+        if ok:
+            met += 1
+        else:
+            missed.append(key)
+    return met, missed
+
+
+@campaign_app.command("surface-strategy")
+def campaign_surface_strategy(
+    config: Path = typer.Option(..., "--config", "-c", help="Geometry YAML (one fixed wing)."),
+    strategy: list[str] = typer.Option(
+        ...,
+        "--strategy",
+        help=(
+            "Named surface recipe, 'name:key=value,key=value'. 'topology' "
+            "selects the generator (cap4/mid4/split8); every other key is a "
+            "surface param (points_per_side, spanwise_panels, split_x_fore, "
+            "chordwise_distribution, ...)."
+        ),
+    ),
+    workdir: Path = typer.Option(..., help="Output directory."),
+    seed: Optional[int] = typer.Option(None, help="Override the config's geometry seed."),
+) -> None:
+    """Compare surface-mesh strategies on ONE fixed wing, surface only.
+
+    Holding the geometry fixed isolates the meshing recipe: every metric
+    difference is the strategy, not the shape.  Surface generation is
+    seconds, so a wide comparison is cheap -- volume marching is the
+    expensive part and is deliberately not run here.
+
+    Each strategy writes its own `surface.vtk` for ParaView alongside the
+    metrics, because "which mesh is better" is partly a judgement you make
+    by looking at the leading edge, not only by reading a table.
+    """
+    from aeris.cfd.meshing.registry import get_topology
+    from aeris.commands.mesh import _build_wing
+    from aeris.mesh.surface import MeshBuildError
+    from aeris.cfd.status import record_status
+
+    import time as _time
+
+    _TOPOLOGY_IDS = {"cap4": "wing_cap4_v1", "mid4": "wing_mid4_v1", "split8": "wing_split8_v1"}
+
+    strategies = [_parse_variant(item) for item in strategy]
+    workdir = workdir.resolve()
+    workdir.mkdir(parents=True, exist_ok=True)
+    job_id = f"surface-strategy-{workdir.name}"
+    record_status(
+        job_id, kind="campaign:surface-strategy", status="running",
+        progress=f"0/{len(strategies)}", workdir=workdir,
+    )
+
+    wing, _airplane, _generator_id = _build_wing(
+        config,
+        wing_index=0,
+        geometry_output_dir=workdir / "geometry",
+        seed_override=seed,
+        save_plot=False,
+    )
+
+    rows: list[dict] = []
+    for index, (name, params) in enumerate(strategies, start=1):
+        topology_key = str(params.pop("topology", "cap4"))
+        if topology_key not in _TOPOLOGY_IDS:
+            raise typer.BadParameter(f"topology must be one of {sorted(_TOPOLOGY_IDS)}")
+        generator = get_topology(_TOPOLOGY_IDS[topology_key])
+        out_dir = workdir / name
+
+        row: dict[str, object] = {"strategy": name, "topology": topology_key, "params": params}
+        t0 = _time.perf_counter()
+        try:
+            generator.generate(wing, out_dir, params)
+            row["accepted"] = True
+        except (MeshBuildError, ValueError) as exc:
+            # A rejected mesh is a comparison result, not a crash: its report
+            # is still written, so it can be scored alongside the others.
+            row["accepted"] = False
+            row["error"] = f"{type(exc).__name__}: {exc}"
+        row["seconds"] = _time.perf_counter() - t0
+
+        report_path = out_dir / "surface_report.json"
+        if report_path.is_file():
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+            metrics = report.get("global", {})
+            row["metrics"] = metrics
+            row["groups"] = _group_block_metrics(report.get("blocks") or [])
+            row["block_count"] = report.get("block_count")
+            row["targets_met"], row["targets_missed"] = _score_surface_metrics(metrics)
+            # Rank on the wing surface, not the tip collar: the collar is
+            # constrained by the volume march and cannot be tuned freely.
+            oml = row["groups"].get("oml", {})
+            row["oml_targets_met"], _ = _score_surface_metrics(oml)
+            row["vtk"] = str(out_dir / "surface.vtk")
+        rows.append(row)
+        record_status(
+            job_id, kind="campaign:surface-strategy", status="running",
+            progress=f"{index}/{len(strategies)}", workdir=workdir,
+        )
+
+    ranked = sorted(
+        rows,
+        key=lambda r: (
+            not r.get("accepted"),
+            -int(r.get("oml_targets_met") or 0),
+            float(((r.get("groups") or {}).get("oml") or {}).get("max_aspect_ratio") or 9e9),
+        ),
+    )
+    payload = {
+        "schema": "aeris.cfd.surface_strategy.v1",
+        "config": str(config),
+        "seed": seed,
+        "targets": {k: f"{s} {v}" for k, (s, v) in SURFACE_METRIC_TARGETS.items()},
+        "ranking": [r["strategy"] for r in ranked],
+        "rows": rows,
+    }
+    report_path = workdir / "surface_strategy_report.json"
+    report_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    header = (
+        f"{'strategy':<22}{'ok':>4}{'oml':>5}"
+        f"{'jac':>8}{'skew':>7}{'AR':>7}{'grow':>7}{'angle':>7}"
+        f"{'|':>3}{'jac':>8}{'skew':>7}{'AR':>7}{'cells':>9}"
+    )
+    typer.echo("")
+    typer.echo(header)
+    typer.echo("-" * len(header))
+    for row in ranked:
+        m = row.get("metrics") or {}
+        o = (row.get("groups") or {}).get("oml", {})
+        t = (row.get("groups") or {}).get("tip", {})
+        nan = float("nan")
+        typer.echo(
+            f"{row['strategy']:<22}"
+            f"{('yes' if row.get('accepted') else 'NO'):>4}"
+            f"{str(row.get('oml_targets_met', '-')) + '/5':>5}"
+            f"{o.get('min_scaled_corner_jacobian', nan):>8.4f}"
+            f"{o.get('max_equiangle_skewness', nan):>7.3f}"
+            f"{o.get('max_aspect_ratio', nan):>7.1f}"
+            f"{o.get('max_growth_ratio', nan):>7.3f}"
+            f"{o.get('max_adjacent_normal_angle_deg', nan):>7.1f}"
+            f"{'|':>3}"
+            f"{t.get('min_scaled_corner_jacobian', nan):>8.4f}"
+            f"{t.get('max_equiangle_skewness', nan):>7.3f}"
+            f"{t.get('max_aspect_ratio', nan):>7.1f}"
+            f"{m.get('total_cells', 0):>9}"
+        )
+    typer.echo("")
+    typer.echo("  left block = OML (wing surface), right of | = tip cap; ranked on OML")
+    typer.echo("targets: " + ", ".join(f"{k} {s}{v}" for k, (s, v) in SURFACE_METRIC_TARGETS.items()))
+    typer.echo(f"ParaView: {workdir}/<strategy>/surface.vtk")
+    record_status(
+        job_id, kind="campaign:surface-strategy", status="done",
+        progress=f"{len(strategies)}/{len(strategies)}",
+        detail=f"best={ranked[0]['strategy'] if ranked else 'n/a'}", workdir=workdir,
+    )
+    typer.secho(f"[surface-strategy] report: {report_path}", fg=typer.colors.GREEN)
+
+
 @cfd_app.command("prune")
 def cfd_prune(
     target: list[Path] = typer.Argument(..., help="Case or campaign directories to prune."),

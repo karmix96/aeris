@@ -1,1 +1,22 @@
-{}
+{
+  "surface-strategy-surface_strategy_r1": {
+    "commit": "8bd4ec6",
+    "detail": "best=F2_wrap060",
+    "kind": "campaign:surface-strategy",
+    "machine": "mike",
+    "progress": "19/19",
+    "status": "done",
+    "updated_utc": "2026-07-22T18:51:54+00:00",
+    "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/surface_strategy_r1"
+  },
+  "surface-strategy-surface_strategy_smoke": {
+    "commit": "8bd4ec6",
+    "detail": "best=current",
+    "kind": "campaign:surface-strategy",
+    "machine": "mike",
+    "progress": "2/2",
+    "status": "done",
+    "updated_utc": "2026-07-22T18:41:54+00:00",
+    "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/surface_strategy_smoke"
+  }
+}

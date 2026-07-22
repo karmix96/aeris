@@ -1228,6 +1228,7 @@ def build_surface_mesh(
     chordwise_beta: float = 2.0,
     spanwise_distribution: str = "uniform",
     spanwise_beta: float = 2.0,
+    tip_topology: str = "auto",
 ) -> tuple[list[SurfaceBlock], dict[str, object]]:
     """Build a 9-block structured surface mesh from an AeroSandbox Wing.
 
@@ -1258,6 +1259,8 @@ def build_surface_mesh(
     ):
         if mode not in DISTRIBUTIONS:
             raise MeshBuildError(f"{label} must be one of {DISTRIBUTIONS}, got {mode!r}")
+    if tip_topology not in ("auto", "cap4", "ring"):
+        raise MeshBuildError("tip_topology must be 'auto', 'cap4', or 'ring'.")
     if spanwise_distribution == "junction":
         raise MeshBuildError(
             "spanwise_distribution cannot be 'junction' -- that mode is a "
@@ -1266,8 +1269,14 @@ def build_surface_mesh(
     if oml_topology == "cap4":
         if cap_wrap_points < 5:
             raise MeshBuildError("cap_wrap_points must be at least 5.")
-        if not (0.01 <= cap_wrap_x <= 0.15):
-            raise MeshBuildError("cap_wrap_x must lie between 0.01 and 0.15.")
+        # Upper bound raised from 0.15 to 0.45 on 2026-07-22.  The original
+        # limit assumed cap_wrap_x meant a razor-thin band hugging the LE/TE
+        # crown; used instead as a mid-chord seam it improves both the tip
+        # cap and the OML monotonically (see SURFACE_MESH_LAWS.md).  0.45
+        # matches split_x_fore's range -- past that the wrap and chord blocks
+        # swap roles and the topology stops meaning what its name says.
+        if not (0.01 <= cap_wrap_x <= 0.45):
+            raise MeshBuildError("cap_wrap_x must lie between 0.01 and 0.45.")
 
     if oml_topology == "cap4":
         sides_by_xsec = [
@@ -1331,7 +1340,14 @@ def build_surface_mesh(
     root_points = np.concatenate([block[:, root_j, :] for block in raw_oml], axis=0)
     root_y_range = float(np.ptp(root_points[:, 1]))
 
-    if oml_topology == "cap4":
+    # The tip closure is independent of the OML blocking: both builders
+    # consume only the four OML tip edges, and mid4/cap4 order those edges
+    # identically ([LE wrap, lower, TE wrap, upper]).  Decoupling them lets
+    # a mid4 wing use the camber-aligned cap4 cap, which avoids the
+    # square-patch-on-a-postage-stamp problem of the ring+Coons closure
+    # (that cap put points_per_side^2 nodes on ~0.1% of the wing area).
+    resolved_tip = oml_topology if tip_topology == "auto" else tip_topology
+    if resolved_tip == "cap4":
         raw_ring, raw_center, tip_groups = _build_tip_cap4(
             raw_oml,
             collar_points=tip_radial_points,
@@ -1494,6 +1510,7 @@ def build_surface_mesh(
         "tip_conformal_ring": tip_conformal_ring,
         "split_x_fore": split_x_fore,
         "split_x_aft": 1.0 - split_x_fore,
+        "tip_topology": resolved_tip,
         "chordwise_distribution": chordwise_distribution,
         "chordwise_beta": chordwise_beta,
         "spanwise_distribution": spanwise_distribution,

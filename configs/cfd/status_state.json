@@ -39,6 +39,46 @@
     "updated_utc": "2026-07-22T19:24:27+00:00",
     "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/surface_strategy_r4_tip"
   },
+  "surface-strategy-surface_strategy_r5_hybrid": {
+    "commit": "843b684",
+    "detail": "best=V0_ring_best",
+    "kind": "campaign:surface-strategy",
+    "machine": "mike",
+    "progress": "6/6",
+    "status": "done",
+    "updated_utc": "2026-07-22T19:35:59+00:00",
+    "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/surface_strategy_r5_hybrid"
+  },
+  "surface-strategy-surface_strategy_r6_wideWrap": {
+    "commit": "843b684",
+    "detail": "best=W0_mid4_ref",
+    "kind": "campaign:surface-strategy",
+    "machine": "mike",
+    "progress": "7/7",
+    "status": "done",
+    "updated_utc": "2026-07-22T19:37:44+00:00",
+    "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/surface_strategy_r6_wideWrap"
+  },
+  "surface-strategy-surface_strategy_r7_midseam": {
+    "commit": "843b684",
+    "detail": "best=X0_mid4_ref",
+    "kind": "campaign:surface-strategy",
+    "machine": "mike",
+    "progress": "7/7",
+    "status": "done",
+    "updated_utc": "2026-07-22T19:38:48+00:00",
+    "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/surface_strategy_r7_midseam"
+  },
+  "surface-strategy-surface_strategy_r8_final": {
+    "commit": "843b684",
+    "detail": "best=Y0_mid4_ref",
+    "kind": "campaign:surface-strategy",
+    "machine": "mike",
+    "progress": "7/7",
+    "status": "done",
+    "updated_utc": "2026-07-22T19:39:31+00:00",
+    "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/surface_strategy_r8_final"
+  },
   "surface-strategy-surface_strategy_smoke": {
     "commit": "8bd4ec6",
     "detail": "best=current",

@@ -270,3 +270,63 @@ exact thing laws 4 and 5 just improved. **Next test: march
 `R2_span24_sp035` and `S1_span32_sp030_ctr` at coarsen=1.** If they march
 clean, mid4 becomes strictly better than cap4 for this geometry. If they
 do not, the choice reverts to cap4 and this study must be repeated there.
+
+## Law 7 — the tip cap is downstream of the OML's per-side point counts
+
+The `mid4` wing + `cap4` tip hybrid (added 2026-07-22 as `tip_topology`)
+built and ran, but was a **wash**: tip jac 0.064 vs the tuned ring's 0.075,
+AR 23.3 vs 19.8. The block shapes explain why — `_build_tip_cap4` produced
+a **33x33** centre patch, identical in form to the ring's Coons patch.
+
+cap4's cap is only good when the OML hands it *unequal* side counts (49
+chord x 17 wrap), giving an anisotropic rectangle that matches a slender
+airfoil. `mid4` gives every side the same count, so the cap degenerates to
+the same square-patch-on-a-postage-stamp. **Tip quality cannot be fixed at
+the tip; it is set by the OML blocking.**
+
+## Law 8 — `cap_wrap_x` is a mid-chord seam control, not a crown band
+
+Widening cap4's wrap improves the tip and the OML together, monotonically,
+until it doesn't:
+
+    cap_wrap_x   0.015   0.060   0.100   0.150   0.250   0.350   0.450
+    OML jac      0.084   0.199   0.218   0.196   0.124   0.090   0.071
+    OML AR        23.0     9.9     9.0     9.2    15.4    21.8    28.0
+    tip jac      0.017   0.036   0.034   0.115   0.100   0.090   0.082
+    tip AR        38.4    24.1    21.0     9.2     7.8     9.0    10.6
+
+**0.15 is the optimum.** Past it the OML degrades with no further tip gain.
+The old 0.01-0.15 validation ceiling assumed this parameter meant a
+razor-thin band hugging the crown; it is really the seam location, and the
+bound was raised to 0.45 (matching `split_x_fore`) to permit this study.
+
+This is the "mid-chord O-type" idea, realised inside cap4's anisotropic
+structure rather than as a new topology.
+
+## SELECTED BASELINE RECIPE (2026-07-22)
+
+    topology            cap4
+    points_per_side     49
+    spanwise_panels     24
+    cap_wrap_x          0.15
+    cap_wrap_points     17
+    tip_radial_points   9
+
+                      OML                          tip
+              jac    skew    AR   growth  angle |  jac    skew    AR    cells
+    selected  0.259  0.631   6.9  1.508   153.7 | 0.129  0.917  10.9   41728
+    mid4 best 0.288  0.634   6.7  1.606   142.6 | 0.075  0.943  19.8   42496
+    original  0.076  0.636  25.0  1.981   121.0 | 0.033  0.948  47.3   23808
+
+Versus the recipe this study started from: **OML Jacobian 3.4x better, OML
+aspect ratio 3.6x better, tip Jacobian 3.9x better, tip aspect ratio 4.3x
+better**, at 1.75x the cell count. Versus the best `mid4` variant it trades
+~10% of OML Jacobian for a 1.8x better tip -- the tip being the thing the
+project lead rejected on visual inspection.
+
+A cheaper variant, `points_per_side=33` (31232 cells, OML jac 0.248, AR
+7.9, tip jac 0.120, AR 12.3), is the natural smoke-level member.
+
+**Unverified:** none of this has been marched. The next step is a pyHyp
+canary (3 layers) then a full extrusion, with `epsE=3.0` per the earlier
+law.

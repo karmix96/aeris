@@ -36,6 +36,7 @@ _PARAM_MAP = {
     "cap_width_frac": "cap_width_frac",
     "cap_wrap_points": "cap_wrap_points",
     "cap_wrap_x": "cap_wrap_x",
+    "tip_topology": "tip_topology",
     "chordwise_distribution": "chordwise_distribution",
     "chordwise_beta": "chordwise_beta",
     "spanwise_distribution": "spanwise_distribution",

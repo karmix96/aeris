@@ -6,6 +6,10 @@ that was committed on whichever machine ran it. `git pull` to refresh.
 
 | Job | Kind | Status | Progress | Machine | Commit | Updated (UTC) |
 |---|---|---|---|---|---|---|
+| surface-strategy-surface_strategy_r8_final | campaign:surface-strategy | done | 7/7 | mike | 843b684 | 2026-07-22T19:39:31+00:00 |
+| surface-strategy-surface_strategy_r7_midseam | campaign:surface-strategy | done | 7/7 | mike | 843b684 | 2026-07-22T19:38:48+00:00 |
+| surface-strategy-surface_strategy_r6_wideWrap | campaign:surface-strategy | done | 7/7 | mike | 843b684 | 2026-07-22T19:37:44+00:00 |
+| surface-strategy-surface_strategy_r5_hybrid | campaign:surface-strategy | done | 6/6 | mike | 843b684 | 2026-07-22T19:35:59+00:00 |
 | surface-strategy-surface_strategy_r4_tip | campaign:surface-strategy | done | 5/5 | mike | d880e96 | 2026-07-22T19:24:27+00:00 |
 | surface-strategy-surface_strategy_r3_mid4 | campaign:surface-strategy | done | 13/13 | mike | 81503a8 | 2026-07-22T19:14:44+00:00 |
 | surface-strategy-surface_strategy_r2_mid4 | campaign:surface-strategy | done | 22/22 | mike | 81503a8 | 2026-07-22T19:12:23+00:00 |
@@ -18,4 +22,8 @@ that was committed on whichever machine ran it. `git pull` to refresh.
 - **surface-strategy-surface_strategy_r2_mid4**: best=M2_span24
 - **surface-strategy-surface_strategy_r3_mid4**: best=R1_span24_sp030
 - **surface-strategy-surface_strategy_r4_tip**: best=U1_pts33_sp24
+- **surface-strategy-surface_strategy_r5_hybrid**: best=V0_ring_best
+- **surface-strategy-surface_strategy_r6_wideWrap**: best=W0_mid4_ref
+- **surface-strategy-surface_strategy_r7_midseam**: best=X0_mid4_ref
+- **surface-strategy-surface_strategy_r8_final**: best=Y0_mid4_ref
 - **surface-strategy-surface_strategy_smoke**: best=current

@@ -6,6 +6,9 @@ that was committed on whichever machine ran it. `git pull` to refresh.
 
 | Job | Kind | Status | Progress | Machine | Commit | Updated (UTC) |
 |---|---|---|---|---|---|---|
+| surface-strategy-mesh_family_v2t | campaign:surface-strategy | done | 5/5 | mike | 783a9b9 | 2026-07-22T21:35:10+00:00 |
+| surface-strategy-mesh_family_v2s | campaign:surface-strategy | done | 5/5 | mike | 783a9b9 | 2026-07-22T21:34:17+00:00 |
+| surface-strategy-mesh_family_v2 | campaign:surface-strategy | done | 5/5 | mike | 783a9b9 | 2026-07-22T21:33:21+00:00 |
 | surface-strategy-surface_strategy_r15_single | campaign:surface-strategy | done | 3/3 | mike | 291a219 | 2026-07-22T21:08:13+00:00 |
 | surface-strategy-surface_strategy_r14_tipsmooth | campaign:surface-strategy | done | 4/4 | mike | 89b0eba | 2026-07-22T20:58:20+00:00 |
 | surface-strategy-surface_strategy_r13_prop | campaign:surface-strategy | done | 4/4 | mike | 9b02f1c | 2026-07-22T20:44:08+00:00 |
@@ -27,6 +30,9 @@ that was committed on whichever machine ran it. `git pull` to refresh.
 ## Detail
 
 - **remarch-run**: cancelled 2026-07-22: surface not validated across the design space yet
+- **surface-strategy-mesh_family_v2**: best=L2_smoke
+- **surface-strategy-mesh_family_v2s**: best=L1_coarse
+- **surface-strategy-mesh_family_v2t**: best=L1_coarse
 - **surface-strategy-surface_strategy_r1**: best=F2_wrap060
 - **surface-strategy-surface_strategy_r10_tebase**: best=A_base0
 - **surface-strategy-surface_strategy_r11**: best=A_base0

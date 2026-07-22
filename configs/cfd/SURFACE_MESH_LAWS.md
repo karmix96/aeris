@@ -580,3 +580,36 @@ about in its opening paragraph.
 Note also that `max_normal_angle_deg` is essentially constant at ~146 deg
 across the space: like the tip, the trailing-edge turn is set by the shared
 airfoil, not by the planform.
+
+## Law 16 — a mesh family must scale its cap resolution too
+
+Building the selected recipe into a 5-level family exposed two parameters
+that were being held fixed and should not have been.
+
+`cap_wrap_points` fixed at 17 while `points_per_side` scaled 25 -> 97:
+
+    level            L1     L2     L3     L4     L5
+    OML aspect ratio 5.5    3.5    4.0    6.1    8.1   <- not self-similar
+
+The wrap block kept 17 points over 15% chord while the chord blocks
+refined, so the seam cell-size mismatch grew with refinement. Scaling it as
+`cap_wrap_points = points_per_side * cap_wrap_x / (0.5 - cap_wrap_x)` flattens
+it to 3.2-3.8.
+
+`tip_radial_points` fixed at 9 did the same to the cap — tip aspect ratio
+9.9 -> 32.1 — because the collar's circumferential resolution follows the
+OML while its radial resolution did not. Scaling it 5/7/9/13/17 flattens
+tip aspect ratio to 11.7-17.0 and tip Jacobian to 0.111-0.139.
+
+**This overturns the older "the tip cap does NOT coarsen with the family"
+policy** (`aeris.mesh.presets`). That policy is correct for the cap's
+*geometry* — `cap_wrap_x` and `te_thickness` tile a fixed-size physical
+feature and must stay constant or the levels stop being the same aircraft —
+and incorrect for its *resolution*.
+
+Result: cell counts 7,516 / 15,352 / 30,608 / 61,592 / 122,712, a factor of
+~2.0 per level, i.e. linear r ~ 1.42 — on the 1.4 GCI target — with OML
+Jacobian 0.466-0.496, aspect ratio 3.2-3.8, growth 1.369-1.407 and tip
+skewness 0.900-0.908 all effectively flat across a 16x cell-count range.
+
+Full family spec: `configs/cfd/MESH_FAMILY_V2.md`.

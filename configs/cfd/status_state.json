@@ -9,6 +9,36 @@
     "updated_utc": "2026-07-22T20:38:21+00:00",
     "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/march_selected/run"
   },
+  "surface-strategy-mesh_family_v2": {
+    "commit": "783a9b9",
+    "detail": "best=L2_smoke",
+    "kind": "campaign:surface-strategy",
+    "machine": "mike",
+    "progress": "5/5",
+    "status": "done",
+    "updated_utc": "2026-07-22T21:33:21+00:00",
+    "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/mesh_family_v2"
+  },
+  "surface-strategy-mesh_family_v2s": {
+    "commit": "783a9b9",
+    "detail": "best=L1_coarse",
+    "kind": "campaign:surface-strategy",
+    "machine": "mike",
+    "progress": "5/5",
+    "status": "done",
+    "updated_utc": "2026-07-22T21:34:17+00:00",
+    "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/mesh_family_v2s"
+  },
+  "surface-strategy-mesh_family_v2t": {
+    "commit": "783a9b9",
+    "detail": "best=L1_coarse",
+    "kind": "campaign:surface-strategy",
+    "machine": "mike",
+    "progress": "5/5",
+    "status": "done",
+    "updated_utc": "2026-07-22T21:35:10+00:00",
+    "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/mesh_family_v2t"
+  },
   "surface-strategy-surface_strategy_r1": {
     "commit": "8bd4ec6",
     "detail": "best=F2_wrap060",

@@ -156,6 +156,9 @@ DISTRIBUTIONS = (
     # dense at the side's midpoint -- mid4/split8 put the LE and TE in block
     # interiors, so end-clustering cannot reach them
     "cluster_center",
+    # continuous uniform <-> cosine blend (pyGeo createMidsurfaceMesh's
+    # chordCosSpacing): beta in [0, 1] sets the clustering strength
+    "cosine_blend",
     # topology-aware: each side builder decides per side (cap4 only)
     "junction",
 )
@@ -194,6 +197,9 @@ def _distribution(n: int, mode: str = "uniform", *, beta: float = 2.0) -> Array:
         return 1.0 - np.cos(0.5 * np.pi * t)
     if mode == "cluster_end":
         return np.sin(0.5 * np.pi * t)
+    if mode == "cosine_blend":
+        weight = float(np.clip(beta, 0.0, 1.0))
+        return weight * 0.5 * (1.0 - np.cos(np.pi * t)) + (1.0 - weight) * t
     if mode == "cluster_center":
         # t + (a/2pi) sin(2 pi t): spacing ~ 1 + a cos(2 pi t), so cells are
         # widest at the ends and tightest at t=0.5.  a < 1 keeps it monotone.
@@ -835,6 +841,7 @@ def _refine_spanwise(
     *,
     distribution: str = "uniform",
     beta: float = 2.0,
+    allocation: str = "uniform",
 ) -> list[Array]:
     """Subdivide each geometry section into panels along the span.
 
@@ -845,14 +852,39 @@ def _refine_spanwise(
     """
     if panels_per_section < 1:
         raise MeshBuildError("spanwise_panels_per_section must be at least 1.")
-    # One extra sample then drop the endpoint: each section contributes
-    # panels_per_section columns and the next section supplies the shared one.
-    t_all = _distribution(panels_per_section + 1, distribution, beta=beta)[:-1]
+    if allocation not in ("uniform", "proportional"):
+        raise MeshBuildError("spanwise_allocation must be 'uniform' or 'proportional'.")
+
+    n_intervals = blocks[0].shape[1] - 1
+    if allocation == "proportional":
+        # Geometry sections are not equally spaced along the span, so giving
+        # every one the same panel count makes the cell size jump wherever
+        # the section spacing changes -- on the baseline BWB that is a 1.50x
+        # step at one kink, which was the whole of the mesh's growth ratio.
+        # Allocate the same total budget in proportion to each interval's
+        # spanwise extent instead (the per-segment nSpan idea from pyGeo's
+        # createMidsurfaceMesh).
+        centroids = np.stack(
+            [
+                np.mean(np.concatenate([b[:, j, :] for b in blocks], axis=0), axis=0)
+                for j in range(n_intervals + 1)
+            ]
+        )
+        lengths = np.linalg.norm(np.diff(centroids, axis=0), axis=1)
+        total = float(lengths.sum()) or 1.0
+        budget = panels_per_section * n_intervals
+        counts = [max(1, int(round(budget * length / total))) for length in lengths]
+    else:
+        counts = [panels_per_section] * n_intervals
+
+    # One extra sample then drop the endpoint: each interval contributes its
+    # own columns and the next interval supplies the shared one.
+    samples = {n: _distribution(n + 1, distribution, beta=beta)[:-1] for n in set(counts)}
     refined: list[Array] = []
     for block in blocks:
         columns = []
-        for j in range(block.shape[1] - 1):
-            for t in t_all:
+        for j in range(n_intervals):
+            for t in samples[counts[j]]:
                 columns.append((1.0 - t) * block[:, j, :] + t * block[:, j + 1, :])
         columns.append(block[:, -1, :])
         refined.append(np.stack(columns, axis=1))
@@ -1431,6 +1463,7 @@ def build_surface_mesh(
     chordwise_beta: float = 2.0,
     spanwise_distribution: str = "uniform",
     spanwise_beta: float = 2.0,
+    spanwise_allocation: str = "uniform",
     tip_topology: str = "auto",
 ) -> tuple[list[SurfaceBlock], dict[str, object]]:
     """Build a 9-block structured surface mesh from an AeroSandbox Wing.
@@ -1522,6 +1555,7 @@ def build_surface_mesh(
         spanwise_panels_per_section,
         distribution=spanwise_distribution,
         beta=spanwise_beta,
+        allocation=spanwise_allocation,
     )
 
     # Snap root edge to an exact y-plane — pyHyp requires a genuinely planar
@@ -1737,6 +1771,7 @@ def build_surface_mesh(
         "chordwise_distribution": chordwise_distribution,
         "chordwise_beta": chordwise_beta,
         "spanwise_distribution": spanwise_distribution,
+        "spanwise_allocation": spanwise_allocation,
         "spanwise_beta": spanwise_beta,
         "minimum_te_thickness": minimum_te_thickness,
         "te_thickness_requested": te_thickness,

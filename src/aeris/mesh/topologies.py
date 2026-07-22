@@ -43,6 +43,7 @@ _PARAM_MAP = {
     "chordwise_beta": "chordwise_beta",
     "spanwise_distribution": "spanwise_distribution",
     "spanwise_beta": "spanwise_beta",
+    "spanwise_allocation": "spanwise_allocation",
 }
 
 

@@ -6,7 +6,8 @@ that was committed on whichever machine ran it. `git pull` to refresh.
 
 | Job | Kind | Status | Progress | Machine | Commit | Updated (UTC) |
 |---|---|---|---|---|---|---|
-| remarch-run | campaign:remarch | running | 0/2 | mike | 81320c6 | 2026-07-22T20:22:53+00:00 |
+| surface-strategy-surface_strategy_r13_prop | campaign:surface-strategy | done | 4/4 | mike | 9b02f1c | 2026-07-22T20:44:08+00:00 |
+| remarch-run | campaign:remarch | killed | 1/2 | mike | 9b02f1c | 2026-07-22T20:38:21+00:00 |
 | surface-strategy-surface_strategy_r12_lock | campaign:surface-strategy | done | 8/8 | mike | 81320c6 | 2026-07-22T20:20:43+00:00 |
 | surface-strategy-surface_strategy_r11 | campaign:surface-strategy | done | 4/4 | mike | 1ea1a4a | 2026-07-22T20:05:16+00:00 |
 | surface-strategy-surface_strategy_r10_tebase | campaign:surface-strategy | done | 5/5 | mike | 1ea1a4a | 2026-07-22T20:04:14+00:00 |
@@ -23,10 +24,12 @@ that was committed on whichever machine ran it. `git pull` to refresh.
 
 ## Detail
 
+- **remarch-run**: cancelled 2026-07-22: surface not validated across the design space yet
 - **surface-strategy-surface_strategy_r1**: best=F2_wrap060
 - **surface-strategy-surface_strategy_r10_tebase**: best=A_base0
 - **surface-strategy-surface_strategy_r11**: best=A_base0
 - **surface-strategy-surface_strategy_r12_lock**: best=N_nobase
+- **surface-strategy-surface_strategy_r13_prop**: best=P2_prop16
 - **surface-strategy-surface_strategy_r2_mid4**: best=M2_span24
 - **surface-strategy-surface_strategy_r3_mid4**: best=R1_span24_sp030
 - **surface-strategy-surface_strategy_r4_tip**: best=U1_pts33_sp24

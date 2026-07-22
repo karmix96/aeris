@@ -398,3 +398,47 @@ earlier volume-march inversion both concentrate. Until then
 Not yet added to the mesh_family presets: those share one family-wide march
 policy by design (C1/C2, no per-case tuning), and epsE 6.0 -> 3.0 must move
 for the whole family at once, after the march below validates it.
+
+## Law 11 — spanwise panels must be allocated by segment LENGTH, not per section
+
+The growth ratio sat frozen at **1.508** across ~90 strategies — every
+resolution, distribution, split location, wrap width and topology. It was
+never a chordwise or trailing-edge effect.
+
+`spanwise_panels_per_section` gave every geometry section the same panel
+count regardless of its physical extent. On the baseline BWB the 13 section
+intervals are not equally spaced: sections 0-8 span 106.7 mm, sections 9-12
+span 160.0 mm. Equal panels therefore produced 4.44 mm cells inboard and
+6.67 mm cells outboard —
+
+    6.67 / 4.44 = 1.50   <- exactly the frozen growth ratio
+
+`spanwise_allocation="proportional"` spends the same total budget in
+proportion to each interval's spanwise extent (the per-segment `nSpan` list
+in pyGeo's `createMidsurfaceMesh`). Measured on `oml_1`:
+
+    spanwise cell size ratio   uniform 1.500  ->  proportional 1.016
+
+and the worst growth block moves from `oml_0` (spanwise) to `oml_2` (the TE
+wrap), i.e. the remaining 1.407 is a *different*, chordwise problem that was
+previously masked.
+
+It also frees resolution. With proportional allocation the same recipe at
+**16** panels beats the old 24:
+
+               OML jac   OML AR   growth   cells
+    uniform 24   0.259      6.9    1.508   41728
+    prop 24      0.294      6.1    1.407   41856
+    prop 16      0.426      4.0    1.407   28672
+
+`prop 16` is the best OML measured in this entire study — Jacobian 2.1x the
+target with 31% fewer cells than the previously selected recipe.
+
+Also adopted from the same pyGeo routine: `cosine_blend`, a continuous
+uniform-to-cosine distribution whose strength is a single float in [0, 1]
+(`chordCosSpacing` there), rather than discrete named modes.
+
+**Not adopted:** `createMidsurfaceMesh` itself. It builds a mean-camber
+*sheet* for VLM/OpenAeroStruct by projecting onto a triangulated surface and
+taking upper/lower midpoints — no closed OML, no tip cap, no blunt TE, so it
+cannot be extruded by pyHyp. Different purpose.

@@ -1,12 +1,12 @@
 {
   "remarch-run": {
-    "commit": "81320c6",
-    "detail": "",
+    "commit": "9b02f1c",
+    "detail": "cancelled 2026-07-22: surface not validated across the design space yet",
     "kind": "campaign:remarch",
     "machine": "mike",
-    "progress": "0/2",
-    "status": "running",
-    "updated_utc": "2026-07-22T20:22:53+00:00",
+    "progress": "1/2",
+    "status": "killed",
+    "updated_utc": "2026-07-22T20:38:21+00:00",
     "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/march_selected/run"
   },
   "surface-strategy-surface_strategy_r1": {
@@ -48,6 +48,16 @@
     "status": "done",
     "updated_utc": "2026-07-22T20:20:43+00:00",
     "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/surface_strategy_r12_lock"
+  },
+  "surface-strategy-surface_strategy_r13_prop": {
+    "commit": "9b02f1c",
+    "detail": "best=P2_prop16",
+    "kind": "campaign:surface-strategy",
+    "machine": "mike",
+    "progress": "4/4",
+    "status": "done",
+    "updated_utc": "2026-07-22T20:44:08+00:00",
+    "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/data/cfd_cases/surface_strategy_r13_prop"
   },
   "surface-strategy-surface_strategy_r2_mid4": {
     "commit": "81503a8",

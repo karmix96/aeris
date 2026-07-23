@@ -31,6 +31,23 @@ dev = [
   "black>=24.0",
   "mypy>=1.10"
 ]
+# Pure-PyPI deps for the pyGeo geometry backend: physical-CAD control surfaces
+# (CadQuery/OCC), Gmsh import audit, and Plotly geometry visualization.
+# NOTE: pyGeo/pySpline are NOT here — they require a Fortran/C++ toolchain at
+# build time. Install them via the `geometry-mdolab` group or from .deps/mdolab.
+# See docs/INSTALL_PYGEO.md.
+geometry = [
+  "cadquery>=2.7",
+  "gmsh>=4.15",
+  "plotly>=6.7",
+]
+# MDO Lab geometry kernel. Requires a working Fortran + C++ compiler and CMake
+# (pySpline builds native extensions). Pinned to the versions AERIS is validated
+# against. See docs/INSTALL_PYGEO.md for the source-build path under .deps/mdolab.
+geometry-mdolab = [
+  "pyspline==1.5.4",
+  "pygeo==1.17.0",
+]
 
 [project.scripts]
 aeris = "aeris.cli:main"

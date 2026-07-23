@@ -4,6 +4,7 @@ __pycache__/
 
 .venv/
 venv/
+.deps/
 
 .vscode/
 .idea/
@@ -32,3 +33,13 @@ catboost_info/
 *.sh
 .vsptime
 *.bak_*
+
+# Generated study artifacts (1+ GB: meshes, STEP/STL, surface samples, HTML previews).
+# Rescue any REPORT.md / findings into configs/ BEFORE wiping — see MEMORY policy.
+artifacts/
+
+# Reference papers / strategy docs kept locally, not versioned
+*.pdf
+
+# Stray solver history (bare SU2/ADflow header, no data)
+history.csv

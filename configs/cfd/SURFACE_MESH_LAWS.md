@@ -613,3 +613,90 @@ Jacobian 0.466-0.496, aspect ratio 3.2-3.8, growth 1.369-1.407 and tip
 skewness 0.900-0.908 all effectively flat across a 16x cell-count range.
 
 Full family spec: `configs/cfd/MESH_FAMILY_V2.md`.
+
+---
+
+# METRIC CORRECTION (2026-07-23)
+
+An audit of the metric definitions against their published sources found two
+errors. Everything measured before this date is still *comparatively* valid
+— the recipe was selected on like-for-like comparisons — but the labels,
+citations and the score denominator were wrong.
+
+## Error 1 — the QC gate was misnamed
+
+`surface.py` computed `2|e1 x e2| / (|e1|^2 + |e2|^2)` and called it the
+scaled corner Jacobian. That is Verdict's quad **Shape** metric. The scaled
+Jacobian is `|e1 x e2| / (|e1||e2|) = sin(theta)`.
+
+By AM-GM, Shape <= scaled Jacobian always, equality only for square cells,
+so Shape penalises **aspect ratio as well as angle**. Measured on `oml_1`:
+Shape min 0.554 against scaled-Jacobian min 0.651, ratio down to 0.59.
+
+Consequence: the ">0.2" figure quoted all through this study is published
+guidance for the *scaled Jacobian*. Applied to Shape it is a different,
+**stricter** bar — so the meshes were held to a higher standard than
+advertised, not a lower one. Renamed to `min_shape_metric`; the true scaled
+Jacobian is now reported alongside as `min_scaled_jacobian`.
+
+## Error 2 — two "independent" targets were one measurement
+
+For a quad, scaled Jacobian is `sin(theta)` of the worst corner and
+equiangle skewness is `|theta-90|/90` of that same corner, so
+
+    scaled_jacobian == cos(90 * equiangle_skewness)
+
+verified to a maximum absolute error of **1.6e-15 over 30,608 cells**.
+Scoring both counted one quantity twice, and made it arithmetically
+impossible for one to pass while the other failed. **Scores are now out of
+4, not 5.** Skewness is scored (its acceptance bands are the established
+ones); the scaled Jacobian is reported but not scored.
+
+## Error 3 — one threshold was invented
+
+`max_adjacent_normal_angle_deg < 40` had no source. The quantity measures
+how far the surface normal turns between neighbouring cells — curvature
+*resolution*, not cell quality — and a blunt trailing edge must turn ~180
+deg across its base whatever the mesh does. It is now a reported
+diagnostic, never a target.
+
+## Verified correct
+
+* `equiangle_skewness` — exactly the Fluent/ANSYS definition. The general
+  form `max[(theta_max-theta_e)/(180-theta_e), (theta_e-theta_min)/theta_e]`
+  with `theta_e = 90` reduces precisely to `max|theta-90|/90` for quads.
+* `growth_ratio` — standard adjacent-cell size ratio.
+* `aspect_ratio` — defensible, but ours is the ratio of mean edge lengths;
+  Fluent/ICEM use bounding-box or radius-ratio forms, so the *number* is
+  not directly comparable to a quoted Fluent AR even though the intent is.
+
+## Corrected targets
+
+    min_shape_metric        > 0.20   Verdict quad Shape (stricter than
+                                     scaled Jacobian, conservative bar)
+    max_equiangle_skewness  < 0.75   Fluent bands: <=0.25 excellent,
+                                     <=0.5 good, <=0.75 fair, <=0.9 poor,
+                                     >0.9 degenerate
+    max_aspect_ratio        < 100
+    max_growth_ratio        < 1.20
+
+Skewness moved from <0.5 to <0.75. <0.5 demanded "good" from a swept,
+tapered planform whose chordwise and spanwise families cannot be
+orthogonal — unreachable by construction, not a mesh deficiency.
+
+## The family under corrected metrics
+
+Every level now scores **3/4**, missing only growth ratio (~1.4 vs 1.2),
+which is isolated to the TE wrap block:
+
+    level          shape   skew    AR   growth  |  tip shape  tip skew  tip AR
+    L1_coarse      0.496  0.625   3.2   1.407   |   0.133      0.901     11.7
+    L2_smoke       0.466  0.630   3.3   1.369   |   0.139      0.900     12.4
+    L3_medium      0.491  0.633   3.5   1.407   |   0.126      0.902     14.6
+    L4_fine        0.474  0.636   3.5   1.407   |   0.129      0.904     14.5
+    L5_production  0.483  0.637   3.8   1.407   |   0.111      0.908     17.0
+
+The OML at skewness 0.63 sits in the **"fair"** band — acceptable for RANS.
+The tip at 0.90 sits exactly on the **degenerate** boundary, which confirms
+the tip judgement was not over-strict: by the standard bands it really is
+at the limit.

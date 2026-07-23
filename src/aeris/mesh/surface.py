@@ -1155,7 +1155,21 @@ def _orient_tip_blocks_outward(
     return oriented
 
 
-def _corner_scaled_jacobian(block: Array) -> Array:
+def _corner_shape_metric(block: Array) -> Array:
+    """Per-quad Verdict *Shape* metric: min over corners of 2|e1 x e2|/(|e1|^2+|e2|^2).
+
+    Named `scaled Jacobian` in this module until 2026-07-23, which was
+    wrong.  The scaled Jacobian is |e1 x e2|/(|e1||e2|) = sin(theta) and
+    depends on the corner angle alone; this quantity uses the sum of squared
+    edge lengths in the denominator, so by AM-GM it is always <= the scaled
+    Jacobian, with equality only for square cells.  It therefore penalises
+    aspect ratio as well as angle -- a stricter, combined shape measure.
+
+    Keeping it as the QC gate is deliberate (it is the stricter bar and
+    every existing threshold was calibrated against it); only the name and
+    the citation were wrong.  `min_scaled_jacobian` is reported alongside
+    for comparison with published thresholds.
+    """
     p00 = block[:-1, :-1]
     p10 = block[1:, :-1]
     p11 = block[1:, 1:]
@@ -1184,7 +1198,7 @@ def _block_qc(block: SurfaceBlock) -> dict[str, float | int | str]:
         raise MeshBuildError(f"Block {block.name} has fewer than 2 points per direction.")
 
     _, normal, area = _cell_geometry(xyz)
-    quality = _corner_scaled_jacobian(xyz)
+    quality = _corner_shape_metric(xyz)
 
     p00 = xyz[:-1, :-1]
     p10 = xyz[1:, :-1]
@@ -1242,8 +1256,12 @@ def _block_qc(block: SurfaceBlock) -> dict[str, float | int | str]:
         "cells": int((xyz.shape[0] - 1) * (xyz.shape[1] - 1)),
         "min_area": float(np.min(area)),
         "median_area": float(np.median(area)),
-        "min_scaled_corner_jacobian": float(np.min(quality)),
-        "median_scaled_corner_jacobian": float(np.median(quality)),
+        "min_shape_metric": float(np.min(quality)),
+        "median_shape_metric": float(np.median(quality)),
+        # True Verdict scaled Jacobian = sin(worst corner angle).  Note it
+        # is an exact restatement of equiangle skewness for a quad
+        # (jac == cos(90 * skew)), so the two are one measurement, not two.
+        "min_scaled_jacobian": industry["min_scaled_jacobian"],
         "min_triangle_normal_alignment": float(np.min(normal_alignment)),
         "median_triangle_normal_alignment": float(np.median(normal_alignment)),
         "max_adjacent_normal_angle_deg": max_adjacent_normal_angle_deg,
@@ -1565,7 +1583,7 @@ def build_surface_mesh(
     minimum_te_thickness: float = 2.0e-3,
     te_thickness: float = 0.0,
     te_base_points: int = 0,
-    minimum_scaled_jacobian: float = 1.0e-2,
+    minimum_shape_metric: float = 1.0e-2,
     maximum_adjacent_normal_angle_deg: float = 180.0,
     oml_topology: str = "mid4",
     spanwise_panels_per_section: int = 8,
@@ -1599,8 +1617,8 @@ def build_surface_mesh(
         raise MeshBuildError("Use at least 9 points per block side.")
     if not (0.05 <= split_x_fore <= 0.45):
         raise MeshBuildError("split_x_fore must lie between 0.05 and 0.45.")
-    if not (0.0 < minimum_scaled_jacobian < 1.0):
-        raise MeshBuildError("minimum_scaled_jacobian must lie between 0 and 1.")
+    if not (0.0 < minimum_shape_metric < 1.0):
+        raise MeshBuildError("minimum_shape_metric must lie between 0 and 1.")
     if not (0.0 < maximum_adjacent_normal_angle_deg <= 180.0):
         raise MeshBuildError("maximum_adjacent_normal_angle_deg must lie between 0 and 180.")
     if oml_topology not in {"mid4", "split8", "cap4"}:
@@ -1774,13 +1792,14 @@ def build_surface_mesh(
 
     root_plane_ok = root_y_range <= connection_tol
     min_area = min(float(item["min_area"]) for item in qc_blocks)
-    min_jacobian = min(float(item["min_scaled_corner_jacobian"]) for item in qc_blocks)
+    min_shape = min(float(item["min_shape_metric"]) for item in qc_blocks)
+    min_scaled_jac = min(float(item["min_scaled_jacobian"]) for item in qc_blocks)
     min_alignment = min(float(item["min_triangle_normal_alignment"]) for item in qc_blocks)
     max_adjacent_normal_angle = max(
         float(item["max_adjacent_normal_angle_deg"]) for item in qc_blocks
     )
     area_floor = max(1e-20, characteristic_length**2 * 1e-14)
-    jacobian_floor = float(minimum_scaled_jacobian)
+    shape_floor = float(minimum_shape_metric)
     alignment_floor = -0.25
 
     failure_reasons: list[dict[str, object]] = []
@@ -1830,15 +1849,15 @@ def build_surface_mesh(
                 "required_greater_than": area_floor,
             }
         )
-    if not min_jacobian > jacobian_floor:
-        worst = min(qc_blocks, key=lambda item: float(item["min_scaled_corner_jacobian"]))
+    if not min_shape > shape_floor:
+        worst = min(qc_blocks, key=lambda item: float(item["min_shape_metric"]))
         failure_reasons.append(
             {
-                "check": "minimum_scaled_corner_jacobian",
-                "message": "At least one surface quad is excessively skewed or degenerate.",
+                "check": "minimum_shape_metric",
+                "message": "At least one surface quad is excessively skewed or stretched.",
                 "block": worst["name"],
-                "value": min_jacobian,
-                "required_greater_than": jacobian_floor,
+                "value": min_shape,
+                "required_greater_than": shape_floor,
             }
         )
     if not min_alignment > alignment_floor:
@@ -1902,7 +1921,7 @@ def build_surface_mesh(
         "minimum_te_thickness": minimum_te_thickness,
         "te_thickness_requested": te_thickness,
         "te_base_points": te_base_points,
-        "minimum_scaled_jacobian": jacobian_floor,
+        "minimum_shape_metric": shape_floor,
         "maximum_adjacent_normal_angle_deg": maximum_adjacent_normal_angle_deg,
         "characteristic_length": characteristic_length,
         "blocks": qc_blocks,
@@ -1921,8 +1940,9 @@ def build_surface_mesh(
         "global": {
             "min_area": min_area,
             "area_floor": area_floor,
-            "min_scaled_corner_jacobian": min_jacobian,
-            "jacobian_floor": jacobian_floor,
+            "min_shape_metric": min_shape,
+            "shape_floor": shape_floor,
+            "min_scaled_jacobian": min_scaled_jac,
             "min_triangle_normal_alignment": min_alignment,
             "alignment_floor": alignment_floor,
             "max_adjacent_normal_angle_deg": max_adjacent_normal_angle,

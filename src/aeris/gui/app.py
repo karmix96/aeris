@@ -12001,7 +12001,7 @@ def pg_mesh(root, exe, tmo, dry):
                         "cells": b["cells"],
                         "median area": f"{b['median_area']:.3e}",
                         "min area": f"{b['min_area']:.3e}",
-                        "min Jacobian": round(b["min_scaled_corner_jacobian"], 4),
+                        "min Jacobian": round(b["min_shape_metric"], 4),
                         "max normal angle°": round(b["max_adjacent_normal_angle_deg"], 1),
                     }
                     for b in sr.get("blocks", [])

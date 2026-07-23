@@ -214,9 +214,9 @@ def mesh_pyhyp(
             "Raises an error if the airfoil TE is too sharp for a structured mesh."
         ),
     ),
-    min_scaled_jacobian: float = typer.Option(
+    min_shape_metric: float = typer.Option(
         1.0e-2,
-        "--min-scaled-jacobian",
+        "--min-shape-metric",
         help=(
             "Minimum accepted surface scaled corner Jacobian before pyHyp.  "
             "Default 0.01: the blunt-TE tip cap is intrinsically skewed, and "
@@ -587,7 +587,7 @@ def mesh_pyhyp(
         typer.echo(f"  cap-wrap-points    : {cap_wrap_points}")
         typer.echo(f"  cap-wrap-x         : {cap_wrap_x}")
     typer.echo(f"  min-te-thickness   : {min_te_thickness}")
-    typer.echo(f"  min-scaled-jacobian: {min_scaled_jacobian}")
+    typer.echo(f"  min-scaled-jacobian: {min_shape_metric}")
     typer.echo(f"  max-normal-angle   : {max_adjacent_normal_angle} deg")
     if run_pyhyp_flag:
 
@@ -666,7 +666,7 @@ def mesh_pyhyp(
             tip_conformal_ring=tip_conformal_ring,
             split_x_fore=split_x_fore,
             minimum_te_thickness=min_te_thickness,
-            minimum_scaled_jacobian=min_scaled_jacobian,
+            minimum_shape_metric=min_shape_metric,
             maximum_adjacent_normal_angle_deg=max_adjacent_normal_angle,
             oml_topology=oml_topology,
             cap_width_frac=cap_width_frac,
@@ -690,7 +690,7 @@ def mesh_pyhyp(
 
     block_count = int(surface_report.get("block_count", 0))
     char_len = float(surface_report.get("characteristic_length", 0.0))
-    min_jac = float(surface_report.get("global", {}).get("min_scaled_corner_jacobian", 0.0))
+    min_jac = float(surface_report.get("global", {}).get("min_shape_metric", 0.0))
     total_nodes = sum(b["nodes"] for b in surface_report.get("blocks", []))
     total_cells = sum(b["cells"] for b in surface_report.get("blocks", []))
 

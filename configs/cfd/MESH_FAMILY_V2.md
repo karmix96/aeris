@@ -48,7 +48,7 @@ costs L3+L4+L5 or L1+L2+L3 depending on budget.
 
 ## Measured quality (baseline_bwb_25, seed 100)
 
-| level | OML jac | OML skew | OML AR | growth | TE angle | tip jac | tip skew | tip AR |
+| level | OML shape | OML skew | OML AR | growth | TE angle | tip jac | tip skew | tip AR |
 |---|---|---|---|---|---|---|---|---|
 | L1_coarse | 0.496 | 0.625 | 3.2 | 1.407 | 154.0 | 0.133 | 0.901 | 11.7 |
 | L2_smoke | 0.466 | 0.630 | 3.3 | 1.369 | 148.8 | 0.139 | 0.900 | 12.4 |
@@ -57,15 +57,14 @@ costs L3+L4+L5 or L1+L2+L3 depending on budget.
 | L5_production | 0.483 | 0.637 | 3.8 | 1.407 | 104.0 | 0.111 | 0.908 | 17.0 |
 
 **The family is geometrically self-similar**, which is the property GCI
-actually requires: OML Jacobian 0.466-0.496, aspect ratio 3.2-3.8, growth
+actually requires: OML Shape 0.466-0.496, aspect ratio 3.2-3.8, growth
 1.369-1.407 and tip skewness 0.900-0.908 are all effectively flat across a
 16x range of cell count. Only the trailing-edge turn improves with
 refinement (154 -> 104 deg), which is correct behaviour — the same geometry
 resolved better.
 
 Remember when quoting these: seed 100 is the **best** geometry in the design
-space (law 15). The 50-sample median OML Jacobian for L3 is **0.231**, not
-0.49.
+space (law 15). The 50-sample median OML Shape for L3 is **0.231**, not 0.49.
 
 ## Why these parameters scale, and these do not
 
@@ -133,3 +132,10 @@ deliberate:
    and should be validated by a march first.
 
 Both are one coherent change, best done together with a canary extrusion.
+
+## Metric names corrected 2026-07-23
+
+What this document calls the OML/tip quality number is Verdict's quad
+**Shape** metric (`min_shape_metric`), not the scaled Jacobian — see the
+METRIC CORRECTION section of `SURFACE_MESH_LAWS.md`. Every level scores
+**3/4** on the corrected target set, missing only growth ratio.

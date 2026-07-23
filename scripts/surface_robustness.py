@@ -39,7 +39,8 @@ def _group_metrics(blocks: list[dict], prefix: str) -> dict[str, float]:
     if not members:
         return {}
     return {
-        "min_jacobian": min(float(b["min_scaled_corner_jacobian"]) for b in members),
+        "min_shape": min(float(b["min_shape_metric"]) for b in members),
+        "min_scaled_jacobian": min(float(b["min_scaled_jacobian"]) for b in members),
         "max_skewness": max(float(b["max_equiangle_skewness"]) for b in members),
         "max_aspect_ratio": max(float(b["max_aspect_ratio"]) for b in members),
         "max_growth_ratio": max(float(b["max_growth_ratio"]) for b in members),
@@ -107,7 +108,7 @@ def main() -> None:
         tip = row.get("tip") or {}
         print(
             f"  seed {seed:5d}  {row['status']:<15}"
-            f" oml_jac={(row.get('oml') or {}).get('min_jacobian', float('nan')):.3f}"
+            f" oml_shape={(row.get('oml') or {}).get('min_shape', float('nan')):.3f}"
             f" tip_skew={tip.get('max_skewness', float('nan')):.3f}"
             f" tip_jac={tip.get('min_jacobian', float('nan')):.4f}"
         )
@@ -144,7 +145,7 @@ def main() -> None:
         "failures": failures,
         "spread": {
             group: {key: spread(group, key) for key in
-                    ("min_jacobian", "max_skewness", "max_aspect_ratio",
+                    ("min_shape", "max_skewness", "max_aspect_ratio",
                      "max_growth_ratio", "max_normal_angle_deg")}
             for group in ("oml", "tip")
         },

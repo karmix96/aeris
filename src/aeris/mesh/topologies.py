@@ -33,7 +33,7 @@ _PARAM_MAP = {
     "min_te_thickness": "minimum_te_thickness",
     "te_thickness": "te_thickness",
     "te_base_points": "te_base_points",
-    "min_scaled_jacobian": "minimum_scaled_jacobian",
+    "min_shape_metric": "minimum_shape_metric",
     "max_adjacent_normal_angle": "maximum_adjacent_normal_angle_deg",
     "cap_width_frac": "cap_width_frac",
     "cap_wrap_points": "cap_wrap_points",

@@ -40,6 +40,7 @@ ALLOWED_SURFACE_KEYS = frozenset(
         "spanwise_panels",
         "tip_radial_points",
         "tip_inner_scale",
+        "min_shape_metric",
         "cap_width_frac",
         "cap_wrap_points",
         "cap_wrap_x",

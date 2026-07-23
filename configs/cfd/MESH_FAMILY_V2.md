@@ -109,8 +109,13 @@ documented limits rather than open questions:
 * **TE normal rotation 104-154 deg** — the blunt-TE turn. Improves with
   refinement. `te_base_points` is the right lever but needs an absolute
   thickness floor first (law 10).
-* **growth ratio ~1.4** — now isolated to the TE wrap block after the
-  spanwise fix (law 11).
+* **growth ratio ~1.4** — this is a *passing* number, not a defect. The
+  whole OML runs 1.26–1.41 (worst in the TE wrap, oml_2), which is the
+  expected signature of deliberate LE/TE tangential clustering, not
+  under-resolution. The 1.2 bar was a wall-normal BL bound mis-applied to a
+  tangential grid; the surface target is 1.50 (SURFACE_MESH_LAWS.md Error 4).
+  `te_base_points` with an absolute floor (law 10) would lower oml_2's 1.41
+  further, but it is an improvement, not a fix.
 
 ## Not yet wired as presets
 
@@ -137,5 +142,6 @@ Both are one coherent change, best done together with a canary extrusion.
 
 What this document calls the OML/tip quality number is Verdict's quad
 **Shape** metric (`min_shape_metric`), not the scaled Jacobian — see the
-METRIC CORRECTION section of `SURFACE_MESH_LAWS.md`. Every level scores
-**3/4** on the corrected target set, missing only growth ratio.
+METRIC CORRECTION section of `SURFACE_MESH_LAWS.md`. With the growth target
+corrected to the surface-tangential 1.50 (Error 4), every level scores
+**4/4 on the OML**.

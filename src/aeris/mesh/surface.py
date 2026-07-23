@@ -30,7 +30,7 @@ import math
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Sequence
+from typing import Protocol, Sequence
 
 import numpy as np
 
@@ -99,6 +99,12 @@ def select_wing(geometry: object, wing_index: int) -> object:
     if hasattr(geometry, "xsecs") and hasattr(geometry, "mesh_line"):
         if wing_index not in (0, -1):
             raise MeshBuildError("A Wing was returned, so wing_index must be 0.")
+        return geometry
+
+    if getattr(geometry, "sections", None) is not None:
+        # A pyGeo surface carrier is itself a single meshable "wing".
+        if wing_index not in (0, -1):
+            raise MeshBuildError("A pyGeo surface carrier was passed, so wing_index must be 0.")
         return geometry
 
     wings = getattr(geometry, "wings", None)
@@ -238,6 +244,24 @@ def _resample_polyline(
         [np.interp(sample_s, s, points[:, axis]) for axis in range(2)]
     )
 
+
+
+def _te_fraction_with_floor(base_frac: float, chord: float, abs_floor: float) -> float:
+    """Per-section blunt-TE fraction, floored to an absolute thickness.
+
+    A blunt TE given as a chord *fraction* shrinks in absolute size toward the
+    tip (0.5%c is 8 mm at a 1.6 m root but ~1 mm at a 0.2 m tip).  ``abs_floor``
+    (metres) raises the fraction so the physical base never drops below the
+    floor -- real aircraft do exactly this, you cannot build a 0.5 mm edge, and
+    the extra outboard thickness dents the tip-collar skewness (law 10).  The
+    result is clamped to 5%c, the same envelope the raw fraction is validated
+    against: a floor exceeding 5%c of some chord means the floor is too big for
+    that section, not that a grossly thick TE should be built there.
+    """
+    frac = base_frac
+    if abs_floor > 0.0 and chord > 0.0:
+        frac = max(frac, abs_floor / chord)
+    return min(frac, 0.05)
 
 
 def _open_trailing_edge(coords: Array, target_thickness: float) -> Array:
@@ -553,6 +577,7 @@ def _airfoil_cap4_sides(
     te_base_points: int = 0,
     chordwise_distribution: str = "uniform",
     chordwise_beta: float = 2.0,
+    coords: Array | None = None,
 ) -> list[Array]:
     """Return 4 sides with per-side point counts for the cap4 topology.
 
@@ -561,15 +586,23 @@ def _airfoil_cap4_sides(
     sides carry ``chord_points``.  This keeps surface cell size near-uniform
     around the airfoil — uniform-count topologies over-resolve the tiny LE/TE
     arcs, which is what makes the tip cap fold in pyHyp.
+
+    ``coords`` lets a caller supply a normalised (N, 2) airfoil loop
+    (upper-TE -> LE -> lower-TE) directly, bypassing the AeroSandbox
+    normalize()/repanel() path.  The pyGeo source uses this to split a
+    surface-sampled section without AeroSandbox; ``airfoil`` is ignored then.
     """
     shoulder_x = 1.0 - wrap_x
-    try:
-        working = airfoil.normalize().repanel(n_points_per_side=dense_points_per_surface)
-    except AttributeError as exc:
-        raise MeshBuildError(
-            "Each WingXSec must contain an AeroSandbox Airfoil with normalize()/repanel()."
-        ) from exc
-    coords = _as_numeric_xyz(working.coordinates, label="airfoil coordinates")
+    if coords is None:
+        try:
+            working = airfoil.normalize().repanel(n_points_per_side=dense_points_per_surface)
+        except AttributeError as exc:
+            raise MeshBuildError(
+                "Each WingXSec must contain an AeroSandbox Airfoil with normalize()/repanel()."
+            ) from exc
+        coords = _as_numeric_xyz(working.coordinates, label="airfoil coordinates")
+    else:
+        coords = _as_numeric_xyz(coords, label="airfoil coordinates")
     if coords.ndim != 2 or coords.shape[1] != 2 or len(coords) < 9:
         raise MeshBuildError("Airfoil coordinates must have shape (N, 2), N >= 9.")
     if te_thickness > 0.0:
@@ -675,6 +708,195 @@ def _map_sides_to_wing(
             block[i, :, :] = line
         blocks.append(block)
     return blocks
+
+
+@dataclass(frozen=True)
+class OmlTopologyParams:
+    """The topology/resolution knobs an OML geometry source needs to emit blocks.
+
+    Deliberately geometry-source-agnostic: an AeroSandbox wing and a pyGeo loft
+    build the SAME structured topology from different point sources.
+    """
+
+    oml_topology: str
+    points_per_block_side: int
+    cap_wrap_points: int
+    cap_wrap_x: float
+    split_x_fore: float
+    dense_airfoil_points_per_surface: int
+    minimum_te_thickness: float
+    te_thickness: float
+    te_thickness_abs_floor: float
+    te_base_points: int
+    chordwise_distribution: str
+    chordwise_beta: float
+
+
+class _OmlGeometrySource(Protocol):
+    """Emits the raw (pre-spanwise-refinement) OML blocks in 3D.
+
+    The mesher's spanwise refinement, root-plane snap, tip closure and QC are
+    all geometry-source-agnostic; only the OML surface points come from here.
+    An implementation MUST return one block per side, in the exact side order
+    the tip closure and QC expect (cap4: LE-wrap, lower chord, TE-wrap, upper
+    chord), each of shape ``(n_side_points, n_stations, 3)``.
+    """
+
+    def raw_oml_blocks(self, params: OmlTopologyParams) -> list[Array]:
+        ...
+
+
+class AeroSandboxOmlSource:
+    """OML blocks from an AeroSandbox Wing -- the original, validated path.
+
+    Each section's airfoil is split into 2D sides and lofted to 3D through
+    ``Wing.mesh_line``.  This is the ONLY source that uses AeroSandbox; the
+    pyGeo source samples its own realised surface instead.  The logic here is
+    a verbatim move of the former in-line block in ``build_surface_mesh`` and
+    must stay behaviourally identical.
+    """
+
+    def __init__(self, wing: object) -> None:
+        self._wing = wing
+        self._xsecs = list(getattr(wing, "xsecs", []) or [])
+
+    def raw_oml_blocks(self, p: OmlTopologyParams) -> list[Array]:
+        def te_frac_for(xsec: object) -> float:
+            chord = float(getattr(xsec, "chord", 0.0) or 0.0)
+            return _te_fraction_with_floor(p.te_thickness, chord, p.te_thickness_abs_floor)
+
+        if p.oml_topology == "cap4":
+            sides_by_xsec = [
+                _airfoil_cap4_sides(
+                    xsec.airfoil,
+                    wrap_points=p.cap_wrap_points,
+                    chord_points=p.points_per_block_side,
+                    dense_points_per_surface=p.dense_airfoil_points_per_surface,
+                    wrap_x=p.cap_wrap_x,
+                    minimum_te_thickness=p.minimum_te_thickness,
+                    te_thickness=te_frac_for(xsec),
+                    te_base_points=p.te_base_points,
+                    chordwise_distribution=p.chordwise_distribution,
+                    chordwise_beta=p.chordwise_beta,
+                )
+                for xsec in self._xsecs
+            ]
+        else:
+            side_builder = (
+                _airfoil_four_sides if p.oml_topology == "mid4" else _airfoil_eight_sides
+            )
+            sides_by_xsec = [
+                side_builder(
+                    xsec.airfoil,
+                    points_per_side=p.points_per_block_side,
+                    dense_points_per_surface=p.dense_airfoil_points_per_surface,
+                    split_x_fore=p.split_x_fore,
+                    minimum_te_thickness=p.minimum_te_thickness,
+                    te_thickness=te_frac_for(xsec),
+                    te_base_points=p.te_base_points,
+                    chordwise_distribution=p.chordwise_distribution,
+                    chordwise_beta=p.chordwise_beta,
+                )
+                for xsec in self._xsecs
+            ]
+        return _map_sides_to_wing(self._wing, sides_by_xsec)
+
+
+@dataclass(frozen=True)
+class PyGeoSurfaceGeometry:
+    """Carrier for a realised pyGeo loft's surface-sampled section slices.
+
+    Lets ``build_surface_mesh`` mesh the pyGeo surface with no ``asb.Wing``.
+    ``sections`` are ordered root -> tip and must expose (duck-typed, so this
+    module never imports pyGeo): ``direct_coordinates`` (N, 2 normalised loop,
+    upper-TE -> LE -> lower-TE), ``chord_m``, ``le_xyz_m``, ``chord_axis``,
+    ``thickness_axis``.  ``xsecs`` mirrors ``sections`` for the mesher's
+    section-count validation and report bookkeeping.
+    """
+
+    sections: tuple
+    name: str = "pygeo_wing"
+    symmetric: bool = True
+
+    @property
+    def xsecs(self) -> tuple:
+        return self.sections
+
+
+class PyGeoSectionOmlSource:
+    """OML blocks from realised-surface section slices -- AeroSandbox-free.
+
+    Each section already carries its airfoil sampled on the pyGeo surface plus
+    the local frame (LE, chord/thickness axes, chord).  The cap4 split runs on
+    the section's 2D coordinates and the result maps straight back to 3D through
+    that frame -- no ``Wing.mesh_line``, no ``asb.Airfoil``.  The manufacturable
+    TE floor is enforced here identically to the AeroSandbox source, so both
+    paths mesh the same aircraft.
+    """
+
+    def __init__(self, sections: Sequence[object]) -> None:
+        self._sections = list(sections)
+        if len(self._sections) < 2:
+            raise MeshBuildError("A pyGeo surface geometry needs at least two sections.")
+
+    def raw_oml_blocks(self, p: OmlTopologyParams) -> list[Array]:
+        if p.oml_topology != "cap4":
+            raise MeshBuildError(
+                "The pyGeo OML source currently supports only oml_topology='cap4'."
+            )
+        sides_by_station: list[list[Array]] = []
+        for sec in self._sections:
+            coords2d = np.asarray(getattr(sec, "direct_coordinates"), dtype=float)
+            chord_m = float(getattr(sec, "chord_m"))
+            te_frac = _te_fraction_with_floor(p.te_thickness, chord_m, p.te_thickness_abs_floor)
+            sides2d = _airfoil_cap4_sides(
+                None,
+                wrap_points=p.cap_wrap_points,
+                chord_points=p.points_per_block_side,
+                dense_points_per_surface=p.dense_airfoil_points_per_surface,
+                wrap_x=p.cap_wrap_x,
+                minimum_te_thickness=p.minimum_te_thickness,
+                te_thickness=te_frac,
+                te_base_points=p.te_base_points,
+                chordwise_distribution=p.chordwise_distribution,
+                chordwise_beta=p.chordwise_beta,
+                coords=coords2d,
+            )
+            le = np.asarray(getattr(sec, "le_xyz_m"), dtype=float).reshape(3)
+            chord_axis = np.asarray(getattr(sec, "chord_axis"), dtype=float).reshape(3)
+            thick_axis = np.asarray(getattr(sec, "thickness_axis"), dtype=float).reshape(3)
+            # Inverse of extract_section's projection: exact for the planarised
+            # slice (span_axis component is the tiny discarded plane-warp).
+            sides3d = [
+                le[None, :] + chord_m * (s[:, 0:1] * chord_axis[None, :]
+                                         + s[:, 1:2] * thick_axis[None, :])
+                for s in sides2d
+            ]
+            sides_by_station.append(sides3d)
+
+        n_sides = len(sides_by_station[0])
+        return [
+            np.stack([station[side_idx] for station in sides_by_station], axis=1)
+            for side_idx in range(n_sides)
+        ]
+
+
+def _oml_source_for(geometry: object) -> _OmlGeometrySource:
+    """Pick the OML geometry source for ``geometry``.
+
+    AeroSandbox Wing (xsecs + mesh_line) -> AeroSandbox source; a pyGeo surface
+    carrier (``sections``) -> the AeroSandbox-free pyGeo source.  Anything else
+    is a clear error rather than a downstream ``mesh_line`` failure.
+    """
+    if hasattr(geometry, "xsecs") and hasattr(geometry, "mesh_line"):
+        return AeroSandboxOmlSource(geometry)
+    sections = getattr(geometry, "sections", None)
+    if sections is not None:
+        return PyGeoSectionOmlSource(sections)
+    raise MeshBuildError(
+        "Unsupported geometry for surface meshing: expected an AeroSandbox Wing "
+        "(xsecs + mesh_line) or a pyGeo surface carrier (sections)."
+    )
 
 
 def _coons_patch(
@@ -1582,6 +1804,7 @@ def build_surface_mesh(
     split_x_fore: float = 0.20,
     minimum_te_thickness: float = 2.0e-3,
     te_thickness: float = 0.0,
+    te_thickness_abs_floor: float = 0.0,
     te_base_points: int = 0,
     minimum_shape_metric: float = 1.0e-2,
     maximum_adjacent_normal_angle_deg: float = 180.0,
@@ -1633,6 +1856,8 @@ def build_surface_mesh(
             raise MeshBuildError(f"{label} must be one of {DISTRIBUTIONS}, got {mode!r}")
     if te_thickness and not (0.0 < te_thickness <= 0.05):
         raise MeshBuildError("te_thickness must lie between 0 and 0.05 chord (0 = leave as-is).")
+    if te_thickness_abs_floor < 0.0:
+        raise MeshBuildError("te_thickness_abs_floor must be >= 0 (metres, 0 = disabled).")
     if tip_topology not in ("auto", "cap4", "ring", "single"):
         raise MeshBuildError("tip_topology must be 'auto', 'cap4', 'ring', or 'single'.")
     if spanwise_distribution == "junction":
@@ -1652,40 +1877,25 @@ def build_surface_mesh(
         if not (0.01 <= cap_wrap_x <= 0.45):
             raise MeshBuildError("cap_wrap_x must lie between 0.01 and 0.45.")
 
-    if oml_topology == "cap4":
-        sides_by_xsec = [
-            _airfoil_cap4_sides(
-                xsec.airfoil,
-                wrap_points=cap_wrap_points,
-                chord_points=points_per_block_side,
-                dense_points_per_surface=dense_airfoil_points_per_surface,
-                wrap_x=cap_wrap_x,
-                minimum_te_thickness=minimum_te_thickness,
-                te_thickness=te_thickness,
-                te_base_points=te_base_points,
-                chordwise_distribution=chordwise_distribution,
-                chordwise_beta=chordwise_beta,
-            )
-            for xsec in xsecs
-        ]
-    else:
-        side_builder = _airfoil_four_sides if oml_topology == "mid4" else _airfoil_eight_sides
-        sides_by_xsec = [
-            side_builder(
-                xsec.airfoil,
-                points_per_side=points_per_block_side,
-                dense_points_per_surface=dense_airfoil_points_per_surface,
-                split_x_fore=split_x_fore,
-                minimum_te_thickness=minimum_te_thickness,
-                te_thickness=te_thickness,
-                te_base_points=te_base_points,
-                chordwise_distribution=chordwise_distribution,
-                chordwise_beta=chordwise_beta,
-            )
-            for xsec in xsecs
-        ]
-
-    raw_oml = _map_sides_to_wing(wing, sides_by_xsec)
+    # OML surface points come from a geometry source behind a seam; the rest of
+    # the mesher (spanwise refine, root snap, tip closure, QC) is source-
+    # agnostic.  AeroSandboxOmlSource reproduces the former in-line path exactly.
+    raw_oml = _oml_source_for(wing).raw_oml_blocks(
+        OmlTopologyParams(
+            oml_topology=oml_topology,
+            points_per_block_side=points_per_block_side,
+            cap_wrap_points=cap_wrap_points,
+            cap_wrap_x=cap_wrap_x,
+            split_x_fore=split_x_fore,
+            dense_airfoil_points_per_surface=dense_airfoil_points_per_surface,
+            minimum_te_thickness=minimum_te_thickness,
+            te_thickness=te_thickness,
+            te_thickness_abs_floor=te_thickness_abs_floor,
+            te_base_points=te_base_points,
+            chordwise_distribution=chordwise_distribution,
+            chordwise_beta=chordwise_beta,
+        )
+    )
     raw_oml = _refine_spanwise(
         raw_oml,
         spanwise_panels_per_section,

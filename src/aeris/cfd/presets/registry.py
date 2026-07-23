@@ -48,6 +48,7 @@ ALLOWED_SURFACE_KEYS = frozenset(
         "tip_topology",
         "tip_smooth_iters",
         "te_thickness",
+        "te_thickness_abs_floor",
         "te_base_points",
         "chordwise_distribution",
         "chordwise_beta",

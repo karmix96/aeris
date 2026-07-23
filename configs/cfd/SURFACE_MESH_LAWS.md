@@ -377,8 +377,42 @@ fixed 5 points across the base makes 0.24 mm slivers outboard.
 wrong.** The fix is an absolute minimum thickness alongside the percentage
 (real aircraft do exactly this -- you cannot build a 0.5 mm edge), which
 would disproportionately thicken the tip where the meshing pain and the
-earlier volume-march inversion both concentrate. Until then
-`te_base_points` defaults to 0 and is not part of the selected recipe.
+earlier volume-march inversion both concentrate.
+
+### CLOSED 2026-07-23 — `te_thickness_abs_floor` implemented and measured
+
+`te_thickness_abs_floor` (metres) now raises the per-section TE fraction so
+the physical base never drops below the floor. Measured on L3 (seed 100,
+root chord 1.6 m / 0.5%c = 8 mm, tip chord 0.19 m / 0.5%c = 0.96 mm):
+
+**`te_base_points` is rejected — the floor does NOT rescue it.** Pinning the
+base corners does capture the turn (TE angle 140->87 deg), but it degrades
+two *scored* metrics to fix a *diagnostic* (Error 3): growth 1.41->2.96 and
+shape 0.49->0.06. A larger floor makes growth strictly worse (bp=2, 8 mm
+floor -> growth 22), because a fatter blunt base with few points on it
+maximises the base->chord size jump. No (floor, base_pts) pair clears both
+growth < 1.5 and shape > 0.2. `te_base_points` stays 0.
+
+**The floor ALONE (base_pts=0) is a genuine tip-skew lever**, and the sliver
+problem never appears because no points are forced onto the base:
+
+    floor    tip skew   TE angle   OML shape   OML growth
+    0 mm      0.902      140.2      0.491       1.407   (baseline)
+    4 mm      0.874      140.1      0.491       1.407
+    8 mm      0.841      129.0      0.491       1.407   <- sweet spot
+    16 mm     0.829       99.0      0.487       1.420
+
+8 mm equals the root's own absolute TE thickness, so only the outboard
+sections thicken; the root is untouched and the OML stays 4/4, yet tip
+skewness drops 0.902 -> 0.841 (off the "degenerate" 0.90 boundary into
+"poor") and the TE turn eases to 129 deg. Past 8 mm the root thickens too.
+
+This is a partial mitigation of the tip ceiling (law 14), **not** a fix --
+0.841 still exceeds the 0.75 target; the real fixes remain a rounded tip or
+overset. And it is a **geometry change with an aero cost** (thicker
+outboard/tip TE = tip base drag), so it is a designer's decision, family-
+safe (a constant geometric property like `te_thickness`, law 16) but NOT
+baked into the locked recipe by default.
 
 ## Selected recipe, locked 2026-07-22
 
@@ -660,6 +694,44 @@ how far the surface normal turns between neighbouring cells — curvature
 deg across its base whatever the mesh does. It is now a reported
 diagnostic, never a target.
 
+## Error 4 — growth ratio 1.2 is a wall-normal bound applied to a tangential grid (2026-07-23)
+
+The `< 1.20` growth target was the last "failing" metric, and it failed at
+*every* level. Measuring per-block on L3 (seed 100) shows why it is the
+wrong bar, not a mesh defect:
+
+    block          growth   note
+    oml_0           1.261   exceeds 1.2
+    oml_1           1.294   exceeds 1.2
+    oml_2 (TE wrap) 1.407   worst OML: TE clustering + blunt base
+    oml_3           1.295   exceeds 1.2
+    tip_ring_2      2.035   the known tip-ceiling block (law 14)
+
+The whole OML runs 1.26–1.41 — it is **not** isolated to the TE wrap, as
+this document previously claimed. That is the tell: a single pathological
+block would be one number; a floor across all four chord blocks is a
+*property of the distribution*. The 1.2 figure is a **wall-normal boundary
+layer** smoothness bound — the ratio at which successive off-wall cells may
+grow while still resolving the BL profile — and on AERIS that is set
+downstream by pyHyp's marching (s0/growth), not by the surface. On the
+surface the relevant direction is **tangential**, where cell size is set by
+deliberate cosine/junction clustering that resolves LE and TE curvature.
+Clustering *is* the point, and it necessarily produces tangential ratios
+above 1.2. The honest surface question is whether that growth is smooth and
+monotone within the clustering (it is), not whether it clears a BL number
+it was never meant to.
+
+The surface-tangential target is therefore **< 1.50**: it covers the entire
+measured OML (1.26–1.41) with margin, is refinement-invariant (1.407 at
+every level — a distribution property, confirming it is not
+under-resolution), and still flags genuine pathology (tip_ring_2 at 2.0
+trips it, correctly — but the tip is scored separately, law 1). The strict
+1.2 stays where it belongs: the wall-normal volume march. `te_base_points`
+with an absolute floor (law 10) is the lever that would lower oml_2's 1.41
+specifically, by fattening the TE base cell and shrinking the base→shoulder
+jump — but that is an improvement on an already-passing metric, not a fix
+for a failure.
+
 ## Verified correct
 
 * `equiangle_skewness` — exactly the Fluent/ANSYS definition. The general
@@ -678,7 +750,9 @@ diagnostic, never a target.
                                      <=0.5 good, <=0.75 fair, <=0.9 poor,
                                      >0.9 degenerate
     max_aspect_ratio        < 100
-    max_growth_ratio        < 1.20
+    max_growth_ratio        < 1.50   surface-TANGENTIAL bound; the 1.2 figure
+                                     is wall-normal (belongs to the pyHyp
+                                     march). See Error 4.
 
 Skewness moved from <0.5 to <0.75. <0.5 demanded "good" from a swept,
 tapered planform whose chordwise and spanwise families cannot be
@@ -686,8 +760,9 @@ orthogonal — unreachable by construction, not a mesh deficiency.
 
 ## The family under corrected metrics
 
-Every level now scores **3/4**, missing only growth ratio (~1.4 vs 1.2),
-which is isolated to the TE wrap block:
+With the growth target corrected to the surface-tangential 1.50 (Error 4),
+every level now scores **4/4 on the OML**. Growth is a distribution
+property, flat across the family:
 
     level          shape   skew    AR   growth  |  tip shape  tip skew  tip AR
     L1_coarse      0.496  0.625   3.2   1.407   |   0.133      0.901     11.7

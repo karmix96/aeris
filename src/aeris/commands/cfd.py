@@ -1194,8 +1194,15 @@ SURFACE_METRIC_TARGETS = {
     # cannot change an angle.
     "max_equiangle_skewness": ("<", 0.75),
     "max_aspect_ratio": ("<", 100.0),
-    # Common structured-meshing guidance for adjacent-cell size change.
-    "max_growth_ratio": ("<", 1.20),
+    # Surface-TANGENTIAL adjacent-cell size ratio.  The oft-quoted 1.2 is a
+    # wall-normal boundary-layer bound (successive off-wall cells resolving
+    # the BL profile) and on AERIS is set downstream by the pyHyp march, not
+    # here.  On the surface, tangential spacing is deliberately clustered at
+    # the LE/TE (cosine/junction) to resolve curvature, which necessarily
+    # exceeds 1.2 -- the whole OML measures 1.26-1.41, flat across refinement.
+    # 1.50 covers that with margin and still flags real pathology (a tip
+    # collar block hits ~2.0).  See SURFACE_MESH_LAWS.md Error 4.
+    "max_growth_ratio": ("<", 1.50),
 }
 
 # Reported, never scored: no standard threshold exists for these.

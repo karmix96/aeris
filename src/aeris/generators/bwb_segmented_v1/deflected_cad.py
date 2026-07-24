@@ -1051,10 +1051,10 @@ def export_bwb_physical_deflected_cad(
     try:
         raw = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         generator_id, typed_config = resolve_generator_and_config(raw)
-        if generator_id != "bwb_segmented_v1":
+        if generator_id not in ("bwb_segmented", "bwb_segmented_v1"):
             raise ValueError(
                 "Physical deflected CAD export currently supports only "
-                f"bwb_segmented_v1, got {generator_id!r}."
+                f"the bwb_segmented generator, got {generator_id!r}."
             )
 
         generator = get_geometry_generator(generator_id)

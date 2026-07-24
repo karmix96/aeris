@@ -298,9 +298,10 @@ def export_cad_from_config(
         seed = getattr(getattr(generator_config, "generator", None), "seed", None)
         sample = generator.sample_one(generator_config, seed=seed)
 
-        if generator_id != "bwb_segmented_v1":
+        if generator_id not in ("bwb_segmented", "bwb_segmented_v1"):
             raise NotImplementedError(
-                f"CAD export currently supports only bwb_segmented_v1, got {generator_id!r}."
+                f"CAD export currently supports only the bwb_segmented generator, "
+                f"got {generator_id!r}."
             )
 
         from aeris.generators.bwb_segmented_v1.vsp_export import (

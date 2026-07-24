@@ -2740,6 +2740,38 @@ def pg_geometry(root, exe, tmo, dry):
         plot_runs = [Path(r) for r in _dirs(str(plot_base))]
         all_viz = viz_runs + plot_runs
 
+        # ── Interactive 3-D view — embed the pyGeo HTML in-page ───────────────
+        interactive_htmls = (
+            sorted(
+                viz_base.rglob("*interactive_3d.html"),
+                key=lambda p: p.stat().st_mtime,
+                reverse=True,
+            )
+            if viz_base.exists()
+            else []
+        )
+        if interactive_htmls:
+            _sec("Interactive 3-D view")
+            st.caption("Rotate / zoom the geometry directly below (pyGeo interactive loft).")
+            options = [str(p) for p in interactive_htmls]
+            sel_html = st.selectbox(
+                "Run",
+                options,
+                format_func=lambda s: Path(s).parent.parent.name or Path(s).name,
+                key="gv_interactive_sel",
+            )
+            try:
+                import streamlit.components.v1 as _components
+
+                _components.html(
+                    Path(sel_html).read_text(encoding="utf-8"),
+                    height=680,
+                    scrolling=False,
+                )
+            except Exception as exc:
+                st.error(f"Could not embed the interactive view: {exc}")
+                st.caption(f"Open manually: {sel_html}")
+
         if all_viz:
             _sec("Visualize outputs")
             st.caption(

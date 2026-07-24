@@ -57,6 +57,13 @@ _DEFAULT_ALPHA_SWEEP_DEG = np.linspace(-8.0, 18.0, 14)
 _DEFAULT_MODEL_SIZE = "large"
 _MIN_POLAR_POINTS = 3
 
+# Reynolds binning resolution for batched CD lookups, in decades (log10 Re).
+# Strips within one bin share a single alpha-sweep evaluation; 0.1 dex keeps
+# each strip within a factor of ~1.26 in Re of its bin representative.  This
+# replaces the previous single-median-Re-per-shape collapse, which produced up
+# to ~37.5% CD error across a 2e5..2e6 strip-Reynolds range.
+_RE_BIN_DEX = 0.1
+
 
 def shape_id_from_coordinates(coordinates: np.ndarray) -> str:
     """Stable hash-based airfoil_id for a coordinate array.
@@ -335,11 +342,12 @@ class NeuralFoilPolarSource:
         This is the per-case batching entry point: aerosandbox_avl.py's
         strip-integration call site should collect all strips for ONE AVL
         case into arrays and call this once, rather than calling query_cd()
-        per strip. Internally this still does one alpha-sweep-style
-        NeuralFoil call per unique registered shape present in the batch
-        (not per strip), since get_aero_from_kulfan_parameters accepts
-        array-valued alpha/Re for a SINGLE shape at a time in this
-        AeroSandbox version; shapes are grouped to minimize call count.
+        per strip. Internally this does one alpha-sweep-style NeuralFoil call
+        per (registered shape, Reynolds bin) present in the batch -- strips of
+        one shape are grouped into log-Re bins of width ``_RE_BIN_DEX`` and
+        each bin is evaluated at its own representative Re. This replaces the
+        earlier single-median-Re-per-shape collapse, which assigned one Re's
+        polar to strips spanning a wide Reynolds range (up to ~37.5% CD error).
 
         Returns an array of cd values, NaN where lookup failed (unregistered
         shape, or evaluation error for that row) -- callers should treat NaN
@@ -359,19 +367,27 @@ class NeuralFoilPolarSource:
             shape = self._shapes.get(aid)
             if shape is None:
                 continue
-            idx = [i for i, a in enumerate(airfoil_ids) if a == aid]
-            local_cl_target = cls[idx]
-            local_re = res[idx]
+            idx = np.array([i for i, a in enumerate(airfoil_ids) if a == aid])
 
-            cl_curve, cd_curve = self._evaluate_alpha_sweep(
-                shape, re=float(np.median(local_re)), mach=mach
-            )
-            if cl_curve is None or len(cl_curve) < 2:
-                continue
-            order = np.argsort(cl_curve)
-            interpolated = np.interp(local_cl_target, cl_curve[order], cd_curve[order])
-            for local_i, global_i in enumerate(idx):
-                cd_out[global_i] = interpolated[local_i]
+            # Group this shape's strips into Reynolds bins and evaluate one
+            # polar per bin at that bin's representative (median) Re, rather
+            # than collapsing every strip to a single median Re.
+            safe_re = np.maximum(res[idx], 1.0)
+            bin_keys = np.round(np.log10(safe_re) / _RE_BIN_DEX)
+            for bkey in np.unique(bin_keys):
+                bin_mask = bin_keys == bkey
+                bin_idx = idx[bin_mask]
+                rep_re = float(np.median(safe_re[bin_mask]))
+
+                cl_curve, cd_curve = self._evaluate_alpha_sweep(
+                    shape, re=rep_re, mach=mach
+                )
+                if cl_curve is None or len(cl_curve) < 2:
+                    continue
+                order = np.argsort(cl_curve)
+                cd_out[bin_idx] = np.interp(
+                    cls[bin_idx], cl_curve[order], cd_curve[order]
+                )
 
         return cd_out
 
@@ -397,6 +413,15 @@ class NeuralFoilPolarSource:
             "leading_edge_weight": shape.kulfan_leading_edge_weight,
             "TE_thickness": shape.kulfan_TE_thickness,
         }
+        # NOTE (Mach): the raw NeuralFoil core (get_aero_from_kulfan_parameters)
+        # is incompressible -- it has no Mach input and CD is Mach-independent.
+        # ``mach`` is accepted for interface compatibility but is intentionally
+        # NOT forwarded here, because doing so would be a silent no-op that
+        # implies a compressibility model this source does not apply. If a
+        # compressibility correction is wanted, route through AeroSandbox's
+        # extended interface and document it as a wrapper correction, not
+        # network output.
+        _ = mach  # documented no-op for the raw incompressible core
         try:
             aero = nf.get_aero_from_kulfan_parameters(
                 kulfan_parameters=kulfan_parameters,

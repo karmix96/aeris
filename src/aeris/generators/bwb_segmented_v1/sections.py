@@ -246,13 +246,27 @@ def build_section_geometry_from_sample(
     z_array_m = _cumulative_z(planform.front_y_fine, dihedral_array_deg)
 
     # --- Build section records ---
-    airfoil_name = sb.airfoil_name
+    # Per-station airfoil assignment.  When ``section_bounds.station_airfoils``
+    # is configured, each station gets the prescribed airfoil for its span group
+    # (step-function, AVL/panel convention) via ``_resolve_station_airfoil``.
+    # Otherwise every station uses the single root airfoil.  Previously the root
+    # airfoil was hardcoded onto every station and ``station_airfoils`` was
+    # silently ignored, corrupting all multi-airfoil aero (measured CL error
+    # ~-35% against the intended geometry).
+    station_airfoils = sb.station_airfoils
+    default_airfoil_name = sb.airfoil_name
     # Pre-compute airfoil_id lookup for the polar bridge (optional)
     semispan_m = float(planform.front_y_fine[-1]) if len(planform.front_y_fine) > 0 else 1.0
     _bridge_id_resolver = _make_airfoil_id_resolver(sb, semispan_m=semispan_m)
     sections: list[SectionRecord] = []
     for i in range(planform.num_sections):
         y_m_i = float(planform.front_y_fine[i])
+        if station_airfoils is not None:
+            airfoil_name = _resolve_station_airfoil(
+                y_m_i, planform.group_boundary_y, station_airfoils
+            )
+        else:
+            airfoil_name = default_airfoil_name
         sections.append(
             SectionRecord(
                 index=i,

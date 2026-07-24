@@ -67,12 +67,16 @@ class AVLStrips(AVLBase):
         # Options:
         # - r : use body-axis rotation-rate convention
         # - d : enable derivative output
-        # - v : toggle viscous forces option
+        #
+        # NOTE: AVL starts with viscous/profile forces (CDCL) *on*.  Sending the
+        # "v" toggle here previously turned them OFF, so the injected per-section
+        # CDCL polars produced CDvis=0 and the AVL-vs-strip viscous cross-check
+        # was inert.  The toggle is intentionally omitted so viscous forces stay
+        # enabled and the injected profile drag is counted by AVL itself.
         run_file_contents += [
             "o",
             "r",
             "d",
-            "v",
             "",
         ]
 
@@ -560,6 +564,12 @@ class AeroSandboxAVLSolver(AeroSolver):
                 ),
             )
 
+        # Resolve to an absolute path before use.  AeroSandbox changes into the
+        # working directory to run AVL; a relative AFILE path would then be
+        # resolved a second time against the new cwd and fail to find the
+        # section coordinate files.  Absolute case dirs also propagate to
+        # working_directory and every artifact path below.
+        output_dir = Path(output_dir).resolve()
         output_dir.mkdir(parents=True, exist_ok=True)
 
         fc = aero_input.flight_condition

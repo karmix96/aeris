@@ -105,6 +105,31 @@ def test_query_cd_batch_matches_single_point_queries():
     assert np.all(batch_result > 0)
 
 
+def test_query_cd_batch_resolves_reynolds_not_median_collapse():
+    """Strips of one shape at widely different Re must get Re-resolved CD.
+
+    Regression for the median-Re collapse: at fixed CL, CD falls with rising
+    Re, so a low-Re and a high-Re strip of the same airfoil must not receive
+    the same CD (which the old single-median-Re evaluation produced).
+    """
+    source = NeuralFoilPolarSource(model_size="small")
+    aid = source.register_shape(_naca0012_coordinates())
+
+    cl = 0.3
+    # Same shape, same CL, two strips an order of magnitude apart in Re.
+    cls = np.array([cl, cl])
+    res = np.array([2.0e5, 2.0e6])
+    batch = source.query_cd_batch([aid, aid], cls, res, mach=0.0)
+
+    assert np.all(np.isfinite(batch))
+    # Distinct CD, and drag decreasing with Reynolds number.
+    assert not np.isclose(batch[0], batch[1], rtol=1e-3)
+    assert batch[0] > batch[1]
+    # Each binned batch value should match the corresponding single-point query.
+    assert np.isclose(batch[0], source.query_cd(aid, cl=cl, re=2.0e5), rtol=1e-6)
+    assert np.isclose(batch[1], source.query_cd(aid, cl=cl, re=2.0e6), rtol=1e-6)
+
+
 def test_query_cd_batch_unregistered_shape_yields_nan_not_crash():
     source = NeuralFoilPolarSource(model_size="small")
     coords = _naca0012_coordinates()

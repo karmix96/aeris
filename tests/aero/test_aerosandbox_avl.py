@@ -263,6 +263,39 @@ def test_default_keystrokes_controls_use_explicit_value():
     assert lines[-3:] == ["d1", "d1", "5.0"]
 
 
+def test_default_keystrokes_do_not_toggle_viscous_off():
+    """AVL defaults viscous/profile (CDCL) forces on; the runner must not send
+    the 'v' toggle in the OPER options block, which would disable them and zero
+    out injected section profile drag (regression for the CDvis=0 bug)."""
+    avl = object.__new__(AVLStrips)
+    avl.airplane = DummyControlAirplane(has_control=False)
+
+    class DummyAtmosphere:
+        def density(self):
+            return 1.225
+
+    class DummyOpPoint:
+        velocity = 30.0
+        alpha = 2.0
+        beta = 0.0
+        p = 0.0
+        q = 0.0
+        r = 0.0
+        atmosphere = DummyAtmosphere()
+
+        def mach(self):
+            return 0.1
+
+    avl.op_point = DummyOpPoint()
+
+    lines = avl._default_keystroke_file_contents(control_input_deg=None)
+    # Locate the options sub-menu: "o" ... up to the terminating blank line.
+    assert "o" in lines
+    o_idx = lines.index("o")
+    options_block = lines[o_idx + 1 : o_idx + 1 + lines[o_idx + 1 :].index("")]
+    assert "v" not in options_block, f"viscous toggle must not be sent; got {options_block}"
+
+
 def test_solver_rejects_requested_control_when_geometry_declares_none(tmp_path: Path):
     solver = AeroSandboxAVLSolver()
     geometry = AeroGeometryView(

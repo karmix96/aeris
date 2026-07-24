@@ -29,6 +29,7 @@ from aeris.generators.bwb_segmented_v1.pygeo_adapter import (  # noqa: E402
 from aeris.generators.bwb_segmented_v1.pygeo_avl_adapter import (  # noqa: E402
     build_pygeo_aero_input,
     run_pygeo_avl_case,
+    run_pygeo_native_avl_case,
 )
 from aeris.generators.bwb_segmented_v1.pygeo_backend import (  # noqa: E402
     _resolve_airfoil_database,
@@ -108,3 +109,42 @@ def test_pygeo_avl_end_to_end_viscous(tmp_path: Path) -> None:
     assert res.cd_profile is not None and res.cd_profile > 0.0
     assert res.cd_total == pytest.approx(res.cd_ind + res.cd_profile, rel=1e-6)
     assert res.l_over_d_viscous is not None and res.l_over_d_viscous > 0.0
+
+
+@pytest.mark.skipif(shutil.which("avl") is None, reason="avl binary not available")
+def test_native_avl_end_to_end_matches_asb(tmp_path: Path) -> None:
+    """Native (no asb.Airplane) path reproduces the asb-serialized numbers."""
+    ex = _extract(n_sections=11)
+    fc = FlightCondition(alpha_deg=4.0, velocity_mps=28.0, altitude_m=0.0)
+    native = run_pygeo_native_avl_case(
+        flight_condition=fc, output_dir=tmp_path / "native", extracted_sections=ex,
+        viscous=True, name="native_e2e",
+    )
+    asb = run_pygeo_avl_case(
+        flight_condition=fc, output_dir=tmp_path / "asb", extracted_sections=ex,
+        viscous=True, name="asb_e2e",
+    )
+    assert native.status == "SUCCESS"
+    assert native.cd_total == pytest.approx(native.cd_ind + native.cd_profile, rel=1e-6)
+    # Native vs asb-serialized agree to sub-percent (airfoil-resolution diff only).
+    assert native.cl == pytest.approx(asb.cl, rel=2e-2)
+    assert native.cd_total == pytest.approx(asb.cd_total, rel=3e-2)
+
+
+@pytest.mark.skipif(shutil.which("avl") is None, reason="avl binary not available")
+def test_native_avl_builds_no_asb_airplane(tmp_path: Path, monkeypatch) -> None:
+    """The native path must never construct an asb.Airplane."""
+    import aerosandbox as asb
+
+    def _boom(*a, **k):
+        raise AssertionError("native path constructed an asb.Airplane")
+
+    monkeypatch.setattr(asb, "Airplane", _boom)
+    ex = _extract(n_sections=9)
+    fc = FlightCondition(alpha_deg=2.0, velocity_mps=28.0, altitude_m=0.0)
+    res = run_pygeo_native_avl_case(
+        flight_condition=fc, output_dir=tmp_path, extracted_sections=ex,
+        viscous=True, name="native_noasb",
+    )
+    assert res.status == "SUCCESS"
+    assert res.cl is not None and res.cl > 0.0

@@ -69,16 +69,25 @@ def build_realized_section_polar_bridge(
     re_grid: "list[float] | None" = None,
     mach: float = 0.0,
     cst_points: int = _DEFAULT_CST_POINTS,
+    polar_source_cls: type | None = None,
 ) -> tuple[Any, Any]:
-    """Build (SectionAirfoilMap, NeuralFoilPolarSource) from realized CST sections.
+    """Build (SectionAirfoilMap, polar source) from realized CST sections.
 
     Each realized section's own CST coordinates are registered and mapped to its
     spanwise neighbourhood — section-resolved viscous correction from the master
     surface. Returns objects that drop straight into
     ``solver_options["section_map" | "polar_store"]``.
+
+    ``polar_source_cls`` selects the polar backend (default: the ASB-Airplane-free
+    ``NeuralFoilCoordinateSource``). Pass ``NeuralFoilPolarSource`` for the legacy
+    asb-Kulfan path.
     """
-    from aeris.airfoil.neuralfoil_polar_source import NeuralFoilPolarSource
     from aeris.airfoil.section_map import SectionAirfoilMap
+
+    if polar_source_cls is None:
+        from aeris.airfoil.neuralfoil_coordinate_source import NeuralFoilCoordinateSource
+
+        polar_source_cls = NeuralFoilCoordinateSource
 
     if semispan_m <= 0:
         raise ValueError("semispan_m must be positive")
@@ -86,7 +95,7 @@ def build_realized_section_polar_bridge(
     if len(ordered) < 2:
         raise ValueError("at least two realized sections are required")
 
-    source = NeuralFoilPolarSource(model_size=model_size, n_crit=n_crit)
+    source = polar_source_cls(model_size=model_size, n_crit=n_crit)
     fracs = [min(max(float(s.y_m) / float(semispan_m), 0.0), 1.0) for s in ordered]
     y_frac_ends = _nearest_section_y_frac_ends(fracs)
 
@@ -281,3 +290,58 @@ def run_pygeo_avl_case(
         **kwargs,
     )
     return AeroSandboxAVLSolver().run_case(aero_input, Path(output_dir))
+
+
+def run_pygeo_native_avl_case(
+    *,
+    flight_condition: FlightCondition,
+    output_dir: Path,
+    pygeo_result: Any | None = None,
+    extracted_sections: Sequence[ExtractedSection] | None = None,
+    semispan_m: float | None = None,
+    control: dict[str, Any] | None = None,
+    control_input_deg: float = 0.0,
+    viscous: bool = True,
+    model_size: str = _DEFAULT_MODEL_SIZE,
+    n_crit: float = 9.0,
+    re_grid: "list[float] | None" = None,
+    avl_command: str = "avl",
+    timeout_sec: int = 180,
+    name: str = "pygeo_bwb",
+):
+    """Fully asb.Airplane-free entry: pyGeo sections -> native AVL + viscous.
+
+    Authors the .avl natively (no asb.Airplane) and drives the viscous correction
+    from a NeuralFoilCoordinateSource (no asb.Airfoil in AERIS code). Returns a
+    ``NativeAvlResult``. aerosandbox may still be imported transitively via
+    NeuralFoil; nothing here constructs an AeroSandbox airplane.
+    """
+    from aeris.aero.solvers.native_avl import run_native_avl_case
+
+    if extracted_sections is None:
+        if pygeo_result is None:
+            raise ValueError("pass either pygeo_result or extracted_sections")
+        extracted_sections = pygeo_result.extracted
+    if semispan_m is None:
+        semispan_m = max(float(s.y_m) for s in extracted_sections)
+
+    section_map = polar_store = None
+    if viscous:
+        mach = flight_condition.mach or 0.0
+        section_map, polar_store = build_realized_section_polar_bridge(
+            extracted_sections, semispan_m=semispan_m, model_size=model_size,
+            n_crit=n_crit, re_grid=re_grid, mach=mach,
+        )  # default source is the ASB-Airplane-free NeuralFoilCoordinateSource
+
+    return run_native_avl_case(
+        extracted_sections,
+        flight_condition=flight_condition,
+        output_dir=Path(output_dir),
+        section_map=section_map,
+        polar_store=polar_store,
+        control=control,
+        control_input_deg=control_input_deg,
+        avl_command=avl_command,
+        timeout_sec=timeout_sec,
+        name=name,
+    )

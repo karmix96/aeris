@@ -41,20 +41,23 @@ interactive Plotly side-by-side (pyGeo | ASB | overlay). Sweep: 50 designs, seed
 
 ## Results
 
-- **Robustness:** 50/50 designs build on BOTH backends, 0 failures.
-- **Agreement** (|pyGeo − ASB|/ASB across the DoE, mean / max):
+Sweep of 50 designs (seeds 5000–5049), geometry only, re-run 2026-07-24 and
+reproducible (deterministic seeds → identical numbers on re-run).
 
-  | metric | mean | max |
-  |---|---|---|
-  | span | 0.16% | 0.43% |
-  | planform area | 0.12% | 0.28% |
-  | aspect ratio | 0.21% | 0.58% |
-  | MAC | 0.03% | 0.12% |
-  | root chord | 0.03% | 0.04% |
-  | tip chord | 0.29% | 0.32% |
-  | taper ratio | 0.26% | 0.29% |
-  | volume | 0.19% | 0.32% |
-  | wetted area | 0.72% | 1.29% |
+- **Robustness:** 50/50 designs build on BOTH backends, 0 failures.
+- **Agreement** (|pyGeo − ASB|/ASB across the DoE):
+
+  | metric | mean | p95 | max |
+  |---|---|---|---|
+  | span | 0.161% | 0.332% | 0.429% |
+  | planform area | 0.118% | 0.206% | 0.278% |
+  | aspect ratio | 0.206% | 0.459% | 0.581% |
+  | MAC | 0.029% | 0.079% | 0.122% |
+  | root chord | 0.032% | 0.036% | 0.037% |
+  | tip chord | 0.290% | 0.317% | 0.321% |
+  | taper ratio | 0.258% | 0.287% | 0.289% |
+  | volume | 0.185% | 0.275% | 0.315% |
+  | wetted area | 0.720% | 1.126% | 1.286% |
 
 - **Difference signature:** largest at the tip (tip chord / taper ~0.3%) and in
   wetted area (~0.7%, max 1.3%) — exactly where a smooth loft departs most from a

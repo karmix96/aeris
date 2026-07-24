@@ -1,7 +1,7 @@
 # pyGeo vs AeroSandbox geometry comparison
 
 - config: `configs/geometry/bwb.yaml`
-- generated: 2026-07-24T20:09:28.301378+00:00
+- generated: 2026-07-24T20:21:50.603472+00:00
 - samples: 50/50 built, 0 failed (seeds 5000..5049)
 
 Both backends realize the SAME sampled design, so these are tool-realization differences (smooth pyGeo B-spline loft vs AeroSandbox piecewise), not different designs.

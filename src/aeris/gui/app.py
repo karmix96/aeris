@@ -6402,13 +6402,65 @@ def pg_aero(root, exe, tmo, dry):
 
     geo_runs = _geo_run_rows(root)
 
-    tab_single, tab_sweep, tab_inspect = st.tabs(
+    tab_single, tab_sweep, tab_inspect, tab_pygeo = st.tabs(
         [
             "  ① Single run  ",
             "  ② Sweep  ",
             "  ③ Inspect  ",
+            "  ④ pyGeo native (no ASB airplane)  ",
         ]
     )
+
+    # ── ④ pyGeo NATIVE (no asb.Airplane) ─────────────────────────────────────
+    with tab_pygeo:
+        st.caption(
+            "Drive **AVL + NeuralFoil viscous** directly from a **pyGeo** loft — the "
+            ".avl is authored natively from the realized sections and the viscous "
+            "correction comes from section coordinates. **No `asb.Airplane` is built.** "
+            "(AeroSandbox is still imported transitively by NeuralFoil — that is fine.)"
+        )
+        pygeo_cfgs = [c for c in cfg_smoke_first if "pygeo" in c.lower()] or cfg_smoke_first
+        pg_cfg = st.selectbox(
+            "pyGeo geometry config", pygeo_cfgs, format_func=_cfg_label, key="pgn_cfg",
+            help="Must have geometry.pygeo.enabled: true.",
+        )
+        _sec("Flight condition")
+        pc1, pc2, pc3 = st.columns(3)
+        pg_al = pc1.number_input("Alpha [deg]", value=4.0, step=0.5, key="pgn_al")
+        pg_ve = pc2.number_input("Velocity [m/s]", value=28.0, step=1.0, key="pgn_ve")
+        pg_at = pc3.number_input("Altitude [m]", value=0.0, step=100.0, key="pgn_at")
+        pc4, pc5, pc6 = st.columns(3)
+        pg_sec = pc4.number_input(
+            "Extraction sections", value=25, min_value=5, max_value=61, step=2, key="pgn_sec",
+            help="Spanwise realized sections (25 is converged; see step-5 evidence).",
+        )
+        pg_ctrl = pc5.number_input(
+            "Sym elevon δe [deg]", value=0.0, step=1.0, key="pgn_ctrl",
+            help="Symmetric elevon deflection (native AVL d1).",
+        )
+        pg_visc = pc6.checkbox("Viscous correction", value=True, key="pgn_visc")
+        pgn_args = [
+            "aero", "pygeo-native",
+            "--config", str(pg_cfg),
+            "--alpha", str(pg_al),
+            "--velocity", str(pg_ve),
+            "--altitude", str(pg_at),
+            "--sections", str(int(pg_sec)),
+            "--control-input-deg", str(pg_ctrl),
+            "--viscous" if pg_visc else "--no-viscous",
+        ]
+        _panel(
+            "Run pyGeo → native AVL + viscous",
+            "pyGeo loft → native .avl (no asb.Airplane) → AVL + NeuralFoil viscous → "
+            "data/runs/<timestamp>_aero_pygeo_native/pygeo_native_aero.json",
+            pgn_args,
+            root,
+            exe,
+            tmo,
+            dry,
+            "pgn_run",
+            label="▶  Run pyGeo native aero",
+        )
 
     # ── ① SINGLE RUN ─────────────────────────────────────────────────────────
     with tab_single:

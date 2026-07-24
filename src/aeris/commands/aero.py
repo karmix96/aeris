@@ -1082,3 +1082,77 @@ def cm_sanity_command(
     if fail_on_violation and not report.passed:
         raise typer.Exit(code=1)
 
+
+@aero_app.command("pygeo-native")
+def pygeo_native_aero(
+    config: Path = typer.Option(..., "--config", "-c", help="pyGeo geometry config YAML."),
+    alpha: float = typer.Option(..., "--alpha", help="Angle of attack (deg)."),
+    velocity: float = typer.Option(28.0, "--velocity", help="Freestream velocity (m/s)."),
+    altitude: float = typer.Option(0.0, "--altitude", help="Altitude (m)."),
+    sections: int = typer.Option(25, "--sections", help="Spanwise extraction sections."),
+    control_input_deg: float = typer.Option(
+        0.0, "--control-input-deg", help="Symmetric elevon deflection (deg)."
+    ),
+    viscous: bool = typer.Option(
+        True, "--viscous/--no-viscous", help="Apply the NeuralFoil viscous correction."
+    ),
+    output_dir: Path | None = typer.Option(
+        None, "--output-dir", help="Output dir (default: a new run folder)."
+    ),
+) -> None:
+    """pyGeo geometry -> native AVL + NeuralFoil viscous, WITHOUT building an asb.Airplane.
+
+    Authors the .avl directly from the pyGeo realized sections and drives the
+    viscous correction from section coordinates (NeuralFoilCoordinateSource).
+    AeroSandbox is never used to build an airplane on this path.
+    """
+    from aeris.aero.models import FlightCondition
+    from aeris.common.paths import create_run_folder
+    from aeris.generators.bwb_segmented_v1.pygeo_avl_adapter import (
+        build_pygeo_sections_from_config,
+        run_pygeo_native_avl_case,
+        summarize_pygeo_avl_qc,
+    )
+
+    if output_dir is None:
+        out = create_run_folder(prefix="aero_pygeo_native").root
+    else:
+        out = Path(output_dir)
+        out.mkdir(parents=True, exist_ok=True)
+
+    typer.echo("[AERIS aero] pyGeo -> native AVL + viscous (no asb.Airplane)")
+    typer.echo(f"  config   : {config}")
+    ex, semispan, meta = build_pygeo_sections_from_config(config, n_sections=sections)
+    typer.echo(
+        f"  sections : {len(ex)}  semispan: {semispan:.3f} m  "
+        f"control: {bool(meta['control'])}"
+    )
+
+    fc = FlightCondition(alpha_deg=alpha, velocity_mps=velocity, altitude_m=altitude)
+    res = run_pygeo_native_avl_case(
+        flight_condition=fc, output_dir=out, extracted_sections=ex, semispan_m=semispan,
+        control=meta["control"], control_input_deg=control_input_deg, viscous=viscous,
+        name="pygeo_native",
+    )
+    qc = summarize_pygeo_avl_qc(res) if viscous else {}
+
+    payload = {
+        "config": str(config), "alpha_deg": alpha, "velocity_mps": velocity,
+        "altitude_m": altitude, "viscous": viscous, "status": res.status,
+        "CL": res.cl, "CD": res.cd, "cd_ind": res.cd_ind, "cd_profile": res.cd_profile,
+        "cd_total": res.cd_total, "cm": res.cm, "l_over_d": res.l_over_d,
+        "l_over_d_viscous": res.l_over_d_viscous, "n_cdcl_injected": res.n_cdcl_injected,
+        "qc": qc, "meta": meta, "warnings": res.warnings,
+    }
+    result_path = out / "pygeo_native_aero.json"
+    result_path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
+
+    typer.echo(f"  status   : {res.status}")
+    typer.echo(f"  CL={res.cl}  cd_ind={res.cd_ind}  cd_profile={res.cd_profile}")
+    typer.echo(f"  cd_total={res.cd_total}  L/D_visc={res.l_over_d_viscous}")
+    if qc:
+        typer.echo(f"  QC pass={qc.get('pass')}  drag_agree={qc.get('drag_agreement_rel_diff')}")
+    typer.echo(f"  result   : {result_path}")
+    if res.status != "SUCCESS":
+        raise typer.Exit(code=1)
+

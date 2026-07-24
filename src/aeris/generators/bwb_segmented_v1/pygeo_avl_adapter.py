@@ -60,6 +60,70 @@ def _nearest_section_y_frac_ends(fracs: list[float]) -> list[float]:
     return ends
 
 
+def build_pygeo_sections_from_config(
+    config_path: "Path | str",
+    *,
+    n_sections: int = 25,
+    seed: int | None = None,
+    span_margin: float = 0.02,
+) -> "tuple[list[ExtractedSection], float, dict[str, Any]]":
+    """Build the pyGeo loft from a geometry config and extract its sections.
+
+    Encapsulates the load→sample→planform→sections→loft→extract pipeline (no
+    asb.Airplane). Returns (extracted_sections, semispan_m, meta).
+    """
+    from pathlib import Path as _Path
+
+    from aeris.common.config import load_yaml_config
+    from aeris.generators.bwb_segmented_v1.pygeo_adapter import (
+        build_pygeo,
+        extract_sections,
+        stations_from_records,
+    )
+    from aeris.generators.bwb_segmented_v1.pygeo_backend import _resolve_airfoil_database
+    from aeris.generators.bwb_segmented_v1.services import (
+        build_section_geometry_from_sample,
+        generate_bwb_planform_from_sample,
+    )
+    from aeris.geometry.config_resolver import resolve_generator_and_config
+    from aeris.geometry.registry import get_geometry_generator
+
+    raw = load_yaml_config(_Path(config_path))
+    gid, gcfg = resolve_generator_and_config(raw)
+    if not gcfg.pygeo.enabled:
+        raise ValueError(
+            f"{config_path}: geometry.pygeo.enabled is false; this entry needs the pyGeo backend."
+        )
+    gen = get_geometry_generator(gid)
+    sample = gen.sample_one(gcfg, seed=gcfg.generator.seed if seed is None else seed)
+    planform = generate_bwb_planform_from_sample(sample, gcfg)
+    section_geometry = build_section_geometry_from_sample(planform, sample, gcfg)
+    stations = tuple(stations_from_records(section_geometry.sections, _resolve_airfoil_database(gcfg)))
+    frame_mode = "asb_frame" if gcfg.pygeo.frame_mode == "aeris_frame" else gcfg.pygeo.frame_mode
+    build = build_pygeo(
+        stations, k_span=gcfg.pygeo.k_span, frame_mode=frame_mode,
+        n_ctl=gcfg.pygeo.n_ctl, tip=gcfg.pygeo.tip, tip_scale=gcfg.pygeo.tip_scale,
+    )
+    lo, hi = float(span_margin), float(1.0 - span_margin)
+    ex = list(extract_sections(
+        build, np.linspace(lo, hi, int(n_sections)),
+        cst_order=gcfg.pygeo.extraction.cst_order,
+        chordwise_points=gcfg.pygeo.extraction.chordwise_points,
+    ))
+    semispan = max(float(s.y_m) for s in ex)
+    control = None
+    surfaces = getattr(gcfg.control_surfaces, "surfaces", None)
+    if surfaces:
+        cs = surfaces[0]
+        control = {
+            "name": cs.name, "hinge_point": cs.hinge_point, "symmetric": cs.symmetric,
+            "start_frac": cs.spanwise.start_frac, "end_frac": cs.spanwise.end_frac,
+        }
+    meta = {"generator_id": gid, "geometry_id": getattr(build, "geometry_id", None),
+            "n_sections": len(ex), "semispan_m": semispan, "control": control}
+    return ex, semispan, meta
+
+
 def build_realized_section_polar_bridge(
     extracted: Sequence[ExtractedSection],
     *,

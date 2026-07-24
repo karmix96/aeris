@@ -2160,12 +2160,12 @@ def pg_geometry(root, exe, tmo, dry):
     _hero(
         "△",
         "Geometry",
-        "bwb_segmented_v1 · AeroSandbox and pyGeo realization backends",
+        "bwb_segmented · AeroSandbox and pyGeo realization backends",
         "generator",
     )
     _stat_row(
         [
-            ("Generator", "bwb_segmented_v1", "single BWB definition"),
+            ("Generator", "bwb_segmented", "single BWB definition"),
             (
                 "pyGeo",
                 "available" if _find_spec("pygeo") is not None else "not installed",
@@ -2185,7 +2185,7 @@ def pg_geometry(root, exe, tmo, dry):
     )
     tab_gen, tab_vis, tab_info, tab_inspect, tab_cad = st.tabs(
         [
-            "  ① Generate  ",
+            "  ① Create geometry  ",
             "  ② Visualize  ",
             "  ③ Design variables  ",
             "  ④ Inspect run  ",
@@ -2260,99 +2260,88 @@ def pg_geometry(root, exe, tmo, dry):
         else:
             st.info(f"Custom config: {Path(sel_cfg).name}")
 
-        try:
-            backend_state = read_geometry_backend_state(sel_cfg)
-        except Exception as exc:
-            backend_state = None
-            st.error(f"Could not read geometry backend settings: {exc}")
-
-        if backend_state is not None:
-            backend_policy = st.radio(
-                "Geometry realization",
-                backend_policy_options(backend_state),
-                horizontal=True,
-                key="gg_backend_policy",
-                help=(
-                    "This maps directly to the YAML plus the real "
-                    "--build-aerosandbox/--no-build-aerosandbox CLI override. "
-                    "pyGeo itself is enabled only in the selected YAML."
-                ),
-            )
-            aerosandbox_override = aerosandbox_override_for_policy(backend_policy)
-            effective_backends = backend_state.effective_backends(aerosandbox_override)
-            _stat_row(
-                [
-                    ("Configured", " + ".join(backend_state.configured_backends) or "none", "YAML"),
-                    ("This run", " + ".join(effective_backends) or "none", "effective"),
-                    (
-                        "pyGeo CAD",
-                        "enabled" if backend_state.physical_cad_enabled else "disabled",
-                        "split elevon",
-                    ),
-                    (
-                        "Station airfoils",
-                        str(len(backend_state.station_airfoils)),
-                        "b0-b3 fixed profiles",
-                    ),
-                ]
-            )
-            if backend_policy == DUAL_BACKEND:
-                _note(
-                    "Aeris will independently realize the shared sections with pyGeo and "
-                    "AeroSandbox, then write the numerical CSV and visual overlay. No "
-                    "geometry-object translation is used.",
-                    "info",
-                )
-            elif backend_policy == PYGEO_ONLY:
-                _note(
-                    "pyGeo is the only realization for this run. Native loft, section/CST, "
-                    "CAD, metrics, and visual artifacts remain under the standard Aeris run.",
-                    "info",
-                )
-        else:
-            backend_policy = "Use YAML backend settings"
-            aerosandbox_override = None
-
-        save_plot_policy = st.radio(
-            "Planform plot",
-            ["Use YAML setting", "Force save plot", "Force no plot"],
-            index=0,
-            horizontal=True,
-            key="gg_save_plot_policy",
-            help=(
-                "Overrides geometry.outputs.save_plot only for this run. "
-                "Use no plot for fast batch-style geometry checks; save plot for visual inspection."
-            ),
-        )
-
-        gen_args = ["geometry", "generate", "--config", sel_cfg]
-        if aerosandbox_override is True:
-            gen_args.append("--build-aerosandbox")
-        elif aerosandbox_override is False:
-            gen_args.append("--no-build-aerosandbox")
-        if save_plot_policy == "Force save plot":
-            gen_args.append("--save-plot")
-        elif save_plot_policy == "Force no plot":
-            gen_args.append("--no-save-plot")
-
-        _panel(
-            "Generate geometry",
-            "Output → data/runs/<timestamp>_geometry_<stem>/",
-            gen_args,
-            root,
-            exe,
-            tmo,
-            dry,
-            "g_run",
-            label="▶  Generate geometry",
-        )
-        # Show output directory note after run — the seed comes from the YAML config
         _note(
-            f"Seed is read from the YAML <code>geometry.generator.seed</code> field. "
-            f"Plot saving can be overridden above without editing the YAML. "
-            f"Run output → <code>data/runs/&lt;timestamp&gt;_geometry_{Path(sel_cfg).stem}/</code>",
+            "Choose a backend below. Nothing (CAD/STEP/STL/VTK/plots) is written "
+            "unless you tick it. Metrics (span, area, AR, taper, MAC, volume, wetted) "
+            "save to <code>geometry_metrics.json</code>.",
             "info",
         )
+        _sec("Create geometry")
+        sub_asb, sub_pygeo = st.tabs(["  AeroSandbox  ", "  pyGeo  "])
+
+        def _seed_row(pfx: str) -> str:
+            return st.text_input(
+                "Seed  (blank = config seed)", "", key=f"{pfx}_seed",
+                help="Override geometry.generator.seed for this run.",
+            )
+
+        # ── Tab: AeroSandbox ─────────────────────────────────────────────────
+        with sub_asb:
+            st.caption("Create geometry with the **AeroSandbox** backend.")
+            a_seed = _seed_row("gasb")
+            ca1, ca2 = st.columns(2)
+            a_plot = ca1.checkbox("Save planform plot", value=False, key="gasb_plot")
+            a_metrics = ca2.checkbox("Save metrics", value=True, key="gasb_metrics")
+            a_args = ["geometry", "generate", "--config", sel_cfg, "--backend", "aerosandbox"]
+            if a_seed.strip():
+                a_args += ["--seed", a_seed.strip()]
+            a_args.append("--save-plot" if a_plot else "--no-save-plot")
+            a_args.append("--save-metrics" if a_metrics else "--no-save-metrics")
+            _panel(
+                "Generate (AeroSandbox)",
+                "Output → data/runs/<timestamp>_geometry_bwb/",
+                a_args, root, exe, tmo, dry, "g_asb_run",
+                label="▶  Generate (AeroSandbox)",
+            )
+
+        # ── Tab: pyGeo ───────────────────────────────────────────────────────
+        with sub_pygeo:
+            st.caption(
+                "Create geometry with the **pyGeo** backend (master B-spline loft). "
+                "Exports are OFF by default — tick only what you need."
+            )
+            p_seed = _seed_row("gpyg")
+            cp1, cp2 = st.columns(2)
+            p_plot = cp1.checkbox("Save planform plot", value=False, key="gpyg_plot")
+            p_metrics = cp2.checkbox("Save metrics", value=True, key="gpyg_metrics")
+            st.markdown("**pyGeo exports** (off by default):")
+            e1, e2, e3, e4 = st.columns(4)
+            exports: list[str] = []
+            if e1.checkbox("IGES", key="gpyg_iges"):
+                exports.append("iges")
+            if e1.checkbox("Tecplot", key="gpyg_tec"):
+                exports.append("tecplot")
+            if e2.checkbox("Section DAT", key="gpyg_dat"):
+                exports.append("sections")
+            if e2.checkbox("Surface NPZ", key="gpyg_npz"):
+                exports.append("npz")
+            if e3.checkbox("STEP", key="gpyg_step"):
+                exports.append("step")
+            if e3.checkbox("STL", key="gpyg_stl"):
+                exports.append("stl")
+            if e4.checkbox("OBJ", key="gpyg_obj"):
+                exports.append("obj")
+            if e4.checkbox("VTK", key="gpyg_vtk"):
+                exports.append("vtk")
+            p_cad = st.checkbox(
+                "Build split-elevon physical CAD", value=False, key="gpyg_cad",
+                help="Heavy (CadQuery/OCC). CAD exports (STEP/STL/OBJ/VTK) auto-enable this.",
+            )
+            p_args = ["geometry", "generate", "--config", sel_cfg, "--backend", "pygeo"]
+            if p_seed.strip():
+                p_args += ["--seed", p_seed.strip()]
+            if exports:
+                p_args += ["--exports", ",".join(exports)]
+            if p_cad:
+                p_args.append("--physical-cad")
+            p_args.append("--save-plot" if p_plot else "--no-save-plot")
+            p_args.append("--save-metrics" if p_metrics else "--no-save-metrics")
+            _panel(
+                "Generate (pyGeo)",
+                "Output → data/runs/<timestamp>_geometry_bwb/",
+                p_args, root, exe, tmo, dry, "g_pyg_run",
+                label="▶  Generate (pyGeo)",
+            )
 
         # ── Runs from data/runs/ ──────────────────────────────────────────
         geo_runs = [

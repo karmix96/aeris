@@ -1,111 +1,110 @@
-schema: aeris.pygeo_surface_mesh_study.v1
-name: pygeo_bwb_surface_mesh_geometry_laws
+schema: aeris.pygeo_surface_mesh_study.v2
+name: pygeo_bwb_surface_mesh_geometry_laws_aiaa
 
 geometry:
-  definition_config: configs/geometry/pygeo_surface_study_simple.yaml
+  # Canonical BWB geometry; the run manifest hashes this exact file.
+  definition_config: configs/geometry/bwb.yaml
   airfoil_database: data/airfoil_database
+
+  # These fields are deliberately outside the clean-OML inferential space.
+  # dihedral_b1 is pinned by enforce_flat_root_panel. Elevon geometry belongs
+  # to a separate split-CAD/topology study and does not change the neutral OML.
+  fixed_sample_values:
+    dihedral_b1_deg: 0.0
+    elevon_start_frac: 0.60
+    elevon_end_frac: 0.95
+    elevon_hinge_frac: 0.75
+
   extraction:
-    # Fixed for every case. This avoids the near-duplicate stations present in
-    # the production feature-extraction lattice and removes section-count bias.
     source_sections: 14
     chordwise_points: 301
     cst_order: 8
     minimum_spacing_fraction: 0.0001
 
-# Public study values. Aft sweep is positive here and converted to Aeris's
-# internal negative-aft convention with sample_scale=-1.
+# Independent attribution factors. Public sweep is positive aft sweep; Aeris
+# stores aft sweep as negative, hence sample_scale=-1. Aspect ratio, panel
+# taper, dimensional thickness, thickness ratio, curvature, twist rate, and
+# dihedral rate are realised descriptors recorded for every geometry.
 variables:
-  c1_m:
-    {sample_field: c1_m, units: m, baseline: 1.60, low: 1.20, high: 2.00}
-  c2_ratio:
-    {sample_field: c2_ratio, units: "1", baseline: 0.75, low: 0.65, high: 0.85}
-  c3_ratio:
-    {sample_field: c3_ratio, units: "1", baseline: 0.50, low: 0.40, high: 0.60}
-  c4_ratio:
-    {sample_field: c4_ratio, units: "1", baseline: 0.25, low: 0.15, high: 0.35}
-  b_total_m:
-    {sample_field: b_total_m, units: m, baseline: 1.60, low: 1.20, high: 2.00}
-  b3_ratio:
-    {sample_field: b3_ratio, units: "1", baseline: 0.3333333333333333, low: 0.25, high: 0.45}
-  split_ratio:
-    {sample_field: split_ratio, units: "1", baseline: 0.50, low: 0.35, high: 0.65}
+  root_chord_m:
+    {sample_field: c1_m, units: m, baseline: 0.90, low: 0.70, high: 1.10, description: "Root chord c1"}
+  chord_ratio_b1_root:
+    {sample_field: c2_ratio, units: "1", baseline: 0.675, low: 0.55, high: 0.80, description: "c2/c1"}
+  chord_ratio_b2_root:
+    {sample_field: c3_ratio, units: "1", baseline: 0.425, low: 0.30, high: 0.55, description: "c3/c1"}
+  tip_taper_ratio:
+    {sample_field: c4_ratio, units: "1", baseline: 0.14, low: 0.08, high: 0.20, description: "c4/c1"}
+  semi_span_m:
+    {sample_field: b_total_m, units: m, baseline: 1.00, low: 0.75, high: 1.25, description: "Implemented semi-span; full span is 2b"}
+  outer_panel_span_fraction:
+    {sample_field: b3_ratio, units: "1", baseline: 0.475, low: 0.40, high: 0.55, description: "b3/b"}
+  inner_remaining_span_split:
+    {sample_field: split_ratio, units: "1", baseline: 0.50, low: 0.40, high: 0.60, description: "b1/(b1+b2)"}
 
-  sw1_deg:
-    {sample_field: sw1_deg, units: deg, baseline: 0.0, low: 0.0, high: 55.0, sample_scale: -1.0}
-  sw2_deg:
-    {sample_field: sw2_deg, units: deg, baseline: 0.0, low: 0.0, high: 35.0, sample_scale: -1.0}
-  sw3_deg:
-    {sample_field: sw3_deg, units: deg, baseline: 0.0, low: 0.0, high: 25.0, sample_scale: -1.0}
+  inner_le_sweep_deg:
+    {sample_field: sw1_deg, units: deg, baseline: 30.0, low: 20.0, high: 40.0, sample_scale: -1.0}
+  mid_le_sweep_deg:
+    {sample_field: sw2_deg, units: deg, baseline: 25.0, low: 15.0, high: 35.0, sample_scale: -1.0}
+  outer_le_sweep_deg:
+    {sample_field: sw3_deg, units: deg, baseline: 15.0, low: 5.0, high: 25.0, sample_scale: -1.0}
 
-  twist_b0_deg:
-    {sample_field: twist_b0_deg, units: deg, baseline: 0.0, low: -6.0, high: 6.0}
+  twist_root_deg:
+    {sample_field: twist_b0_deg, units: deg, baseline: 0.0, low: -1.0, high: 1.0}
   twist_b1_deg:
-    {sample_field: twist_b1_deg, units: deg, baseline: 0.0, low: -8.0, high: 6.0}
+    {sample_field: twist_b1_deg, units: deg, baseline: -1.5, low: -3.0, high: 0.0}
   twist_b2_deg:
-    {sample_field: twist_b2_deg, units: deg, baseline: 0.0, low: -10.0, high: 5.0}
-  twist_b3_deg:
-    {sample_field: twist_b3_deg, units: deg, baseline: 0.0, low: -12.0, high: 4.0}
+    {sample_field: twist_b2_deg, units: deg, baseline: -3.0, low: -5.0, high: -1.0}
+  twist_tip_deg:
+    {sample_field: twist_b3_deg, units: deg, baseline: -5.0, low: -8.0, high: -2.0}
 
-  dihedral_b1_deg:
-    {sample_field: dihedral_b1_deg, units: deg, baseline: 0.0, low: -8.0, high: 8.0}
   dihedral_b2_deg:
-    {sample_field: dihedral_b2_deg, units: deg, baseline: 0.0, low: -10.0, high: 12.0}
-  dihedral_b3_deg:
-    {sample_field: dihedral_b3_deg, units: deg, baseline: 0.0, low: -12.0, high: 15.0}
+    {sample_field: dihedral_b2_deg, units: deg, baseline: 3.0, low: 0.0, high: 6.0}
+  dihedral_tip_deg:
+    {sample_field: dihedral_b3_deg, units: deg, baseline: 5.0, low: 0.0, high: 10.0}
 
-ofat:
-  # Piecewise normalized about baseline. Zero is a separately stored baseline.
-  fractions: [-1.0, -0.5, 0.5, 1.0]
+design:
+  # Eight signed levels plus the separate baseline give a nine-point response
+  # curve for every factor and stable local slope/curvature estimates.
+  ofat:
+    fractions: [-1.0, -0.75, -0.50, -0.25, 0.25, 0.50, 0.75, 1.0]
 
-interactions:
+  # All C(16,2)=120 pairs at four low/high corners: 480 cases. No pair is
+  # selected or discarded using the response, avoiding screening bias.
   pairwise:
     enabled: true
-    # Variables are ranked from their common-L3 OFAT response first.
-    top_k: 6
     fractions: [-1.0, 1.0]
-    max_cases: 60
-  lhs:
-    enabled: true
-    samples: 64
+    max_cases: 480
+
+  # All 16 factors change simultaneously. A scrambled low-discrepancy design
+  # trains the global response surface; an independent IID uniform design is held
+  # out and never used for fitting or hyperparameter selection.
+  global:
+    method: sobol
+    samples: 1024
     seed: 20260724
+  validation:
+    method: iid_uniform
+    samples: 512
+    seed: 20260725
 
 mesh:
-  # Every geometry gets L3 even when a coarser level passes. Geometry laws use
-  # only this common reference, preventing adaptive-resolution confounding.
   reference_level: L3
 
-  # Five-level, near-constant r≈sqrt(2) family from MESH_FAMILY_V2.md.
+  # Research runs evaluate every level for every geometry. Adaptive stopping
+  # would create informative missingness and biased level-transition laws.
+  complete_ladder: true
+
   levels:
     L1:
-      order: 1
-      points_per_block_side: 25
-      spanwise_panels_per_section: 8
-      cap_wrap_points: 11
-      tip_radial_points: 5
+      {order: 1, points_per_block_side: 25, spanwise_panels_per_section: 8, cap_wrap_points: 11, tip_radial_points: 5}
     L2:
-      order: 2
-      points_per_block_side: 33
-      spanwise_panels_per_section: 12
-      cap_wrap_points: 15
-      tip_radial_points: 7
+      {order: 2, points_per_block_side: 33, spanwise_panels_per_section: 12, cap_wrap_points: 15, tip_radial_points: 7}
     L3:
-      order: 3
-      points_per_block_side: 49
-      spanwise_panels_per_section: 16
-      cap_wrap_points: 21
-      tip_radial_points: 9
+      {order: 3, points_per_block_side: 49, spanwise_panels_per_section: 16, cap_wrap_points: 21, tip_radial_points: 9}
     L4:
-      order: 4
-      points_per_block_side: 65
-      spanwise_panels_per_section: 24
-      cap_wrap_points: 29
-      tip_radial_points: 13
+      {order: 4, points_per_block_side: 65, spanwise_panels_per_section: 24, cap_wrap_points: 29, tip_radial_points: 13}
     L5:
-      order: 5
-      points_per_block_side: 97
-      spanwise_panels_per_section: 32
-      cap_wrap_points: 43
-      tip_radial_points: 17
+      {order: 5, points_per_block_side: 97, spanwise_panels_per_section: 32, cap_wrap_points: 43, tip_radial_points: 17}
 
   common:
     oml_topology: cap4
@@ -116,12 +115,8 @@ mesh:
     te_thickness: 0.005
     te_thickness_abs_floor: 0.0
     te_base_points: 0
-
-    # Construction floors catch collapse/folding only. The editable scientific
-    # limits below decide whether an otherwise valid mesh is accepted.
     minimum_shape_metric: 0.000001
     maximum_adjacent_normal_angle_deg: 180.0
-
     cap_wrap_x: 0.15
     cap_width_frac: 0.50
     tip_inner_scale: 0.60
@@ -135,8 +130,6 @@ mesh:
     spanwise_allocation: proportional
 
 acceptance:
-  # The full campaign refuses to start while an enabled limit is null.
-  # Set enabled=false for metrics you explicitly choose not to gate.
   require_limits_for_run: true
   metrics:
     oml.min_shape_metric:
@@ -153,7 +146,6 @@ acceptance:
       {operator: "<=", limit: null, enabled: true, description: "Worst adjacent tangential cell-size ratio"}
     oml.max_adjacent_normal_angle_deg:
       {operator: "<=", limit: null, enabled: true, description: "Worst rotation between adjacent cell normals"}
-
     tip.min_shape_metric:
       {operator: ">=", limit: null, enabled: true, description: "Tip/collar quad Shape; larger is better"}
     tip.min_scaled_jacobian:
@@ -168,6 +160,27 @@ acceptance:
       {operator: "<=", limit: null, enabled: true, description: "Worst tip adjacent cell-size ratio"}
     tip.max_adjacent_normal_angle_deg:
       {operator: "<=", limit: null, enabled: true, description: "Worst tip adjacent-normal rotation"}
+
+analysis:
+  local_polynomial_max_degree: 3
+  global_model:
+    basis: orthonormal_legendre_quadratic
+    regularization: ridge
+    cv_folds: 10
+    ridge_lambdas: [0.0, 1.0e-10, 1.0e-8, 1.0e-6, 1.0e-4, 1.0e-2, 1.0, 100.0]
+    bootstrap_replicates: 200
+    conformal_coverage: 0.99
+  validation:
+    max_normalized_rmse: 0.05
+    minimum_r2: 0.90
+    maximum_false_accepts: 0
+    maximum_false_accept_probability_upper_95: 0.02
+  applicability:
+    require_exact_airfoil_signature: true
+    reject_extrapolation: true
+  # If validation gates fail, this study revision remains non-deployable.
+  # Enrichment must be registered as a new training campaign with a fresh
+  # independent validation set, not mixed into the existing holdout.
 
 projection_diagnostic:
   enabled: true

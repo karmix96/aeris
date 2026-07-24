@@ -1,8 +1,9 @@
-"""Typed study schema and deterministic experiment planning.
+"""Version-2 schema and deterministic design for the pyGeo mesh-law study.
 
-The study deliberately stores *public* sweep values as positive aft-sweep
-magnitudes.  ``VariableSpec.sample_scale=-1`` converts those values to the
-negative-aft convention used by :class:`BWBDesignSample`.
+The design separates independent generator controls, fixed fields required by
+the canonical geometry contract, and realised descriptors recorded at runtime.
+It combines dense one-factor curves, every two-factor corner, scrambled-Sobol
+global training, and an independent IID uniform validation design by default.
 """
 
 from __future__ import annotations
@@ -12,13 +13,14 @@ import json
 import math
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any, Mapping
 
+import numpy as np
 import yaml
 from scipy.stats import qmc
 
-SCHEMA_VERSION = "aeris.pygeo_surface_mesh_study.v1"
-EXPECTED_SAMPLE_FIELDS = (
+SCHEMA_VERSION = "aeris.pygeo_surface_mesh_study.v2"
+SAMPLE_FIELDS = (
     "c1_m",
     "c2_ratio",
     "c3_ratio",
@@ -36,9 +38,12 @@ EXPECTED_SAMPLE_FIELDS = (
     "dihedral_b1_deg",
     "dihedral_b2_deg",
     "dihedral_b3_deg",
+    "elevon_start_frac",
+    "elevon_end_frac",
+    "elevon_hinge_frac",
 )
 VALID_OPERATORS = {"<=", ">="}
-VALID_STAGES = {"baseline", "ofat", "pairwise", "lhs"}
+VALID_STAGES = {"baseline", "ofat", "pairwise", "global_train", "validation"}
 
 
 def _mapping(value: object, label: str) -> dict[str, Any]:
@@ -89,18 +94,15 @@ def _boolean(value: object, label: str) -> bool:
     return value
 
 
-def _canonical_hash(value: object) -> str:
+def _hash(value: object) -> str:
     payload = json.dumps(value, sort_keys=True, separators=(",", ":"), default=str)
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    return hashlib.sha256(payload.encode()).hexdigest()
 
 
-def _resolve_path(value: object, *, config_path: Path, label: str) -> Path:
+def _resolve_path(value: object, config_path: Path, label: str) -> Path:
     raw = Path(_string(value, label)).expanduser()
     if raw.is_absolute():
         return raw.resolve()
-
-    # Repository configs conventionally use paths relative to the repository
-    # root, while a portable external study can use paths relative to itself.
     repo = next(
         (
             parent
@@ -113,15 +115,15 @@ def _resolve_path(value: object, *, config_path: Path, label: str) -> Path:
     if repo is not None:
         candidates.insert(0, repo / raw)
     candidates.append(Path.cwd() / raw)
-    for candidate in candidates:
-        if candidate.exists():
-            return candidate.resolve()
-    return candidates[0].resolve()
+    return next(
+        (candidate.resolve() for candidate in candidates if candidate.exists()),
+        candidates[0].resolve(),
+    )
 
 
 @dataclass(frozen=True)
 class VariableSpec:
-    """One public study variable and its Aeris sample-field mapping."""
+    """One independent public factor and its Aeris sample-field mapping."""
 
     name: str
     sample_field: str
@@ -130,42 +132,38 @@ class VariableSpec:
     low: float
     high: float
     sample_scale: float = 1.0
+    description: str = ""
 
     def __post_init__(self) -> None:
-        values = (self.baseline, self.low, self.high, self.sample_scale)
-        if not all(math.isfinite(value) for value in values):
-            raise ValueError(f"{self.name}: all numeric values must be finite")
-        if self.low > self.baseline or self.baseline > self.high:
+        if not all(
+            math.isfinite(value)
+            for value in (self.baseline, self.low, self.high, self.sample_scale)
+        ):
+            raise ValueError(f"{self.name}: values must be finite")
+        if not self.low < self.baseline < self.high:
             raise ValueError(
-                f"{self.name}: expected low <= baseline <= high, got "
-                f"{self.low} <= {self.baseline} <= {self.high}"
+                f"{self.name}: inferential baseline must be strictly interior; "
+                f"got {self.low} < {self.baseline} < {self.high}"
             )
-        if self.low == self.high:
-            raise ValueError(f"{self.name}: low and high must differ")
         if self.sample_scale == 0.0:
             raise ValueError(f"{self.name}: sample_scale must be non-zero")
 
     def value_at_fraction(self, fraction: float) -> float:
-        """Map a normalized perturbation in [-1, 1] piecewise about baseline."""
-
         fraction = float(fraction)
         if not -1.0 <= fraction <= 1.0:
-            raise ValueError(f"{self.name}: perturbation fraction must be in [-1, 1]")
+            raise ValueError(f"{self.name}: fraction must be in [-1, 1]")
         endpoint = self.low if fraction < 0.0 else self.high
         return self.baseline + abs(fraction) * (endpoint - self.baseline)
 
-    def to_sample_value(self, public_value: float) -> float:
-        return self.sample_scale * float(public_value)
-
-    def normalized_fraction(self, public_value: float) -> float:
-        value = float(public_value)
-        if math.isclose(value, self.baseline, rel_tol=0.0, abs_tol=1.0e-14):
+    def normalized_fraction(self, value: float) -> float:
+        value = float(value)
+        if math.isclose(value, self.baseline, abs_tol=1.0e-14, rel_tol=0.0):
             return 0.0
         endpoint = self.low if value < self.baseline else self.high
-        denominator = endpoint - self.baseline
-        if denominator == 0.0:
-            raise ValueError(f"{self.name}: value is on a zero-width side of the range")
-        return math.copysign(abs((value - self.baseline) / denominator), value - self.baseline)
+        return (value - self.baseline) / abs(endpoint - self.baseline)
+
+    def to_sample_value(self, value: float) -> float:
+        return self.sample_scale * float(value)
 
 
 @dataclass(frozen=True)
@@ -178,14 +176,10 @@ class MeshLevel:
     tip_radial_points: int
 
     def __post_init__(self) -> None:
-        if self.order < 1:
-            raise ValueError(f"{self.name}: order must be positive")
-        if self.points_per_block_side < 9:
-            raise ValueError(f"{self.name}: points_per_block_side must be at least 9")
-        if self.spanwise_panels_per_section < 1:
-            raise ValueError(f"{self.name}: spanwise_panels_per_section must be at least 1")
-        if self.cap_wrap_points < 5:
-            raise ValueError(f"{self.name}: cap_wrap_points must be at least 5")
+        if self.order < 1 or self.points_per_block_side < 9:
+            raise ValueError(f"{self.name}: invalid order/chordwise resolution")
+        if self.spanwise_panels_per_section < 1 or self.cap_wrap_points < 5:
+            raise ValueError(f"{self.name}: invalid span/wrap resolution")
         if self.tip_radial_points < 2:
             raise ValueError(f"{self.name}: tip_radial_points must be at least 2")
 
@@ -200,7 +194,7 @@ class MetricLimit:
 
     def __post_init__(self) -> None:
         if self.operator not in VALID_OPERATORS:
-            raise ValueError(f"{self.path}: operator must be one of {sorted(VALID_OPERATORS)}")
+            raise ValueError(f"{self.path}: invalid operator {self.operator!r}")
         if self.limit is not None and not math.isfinite(self.limit):
             raise ValueError(f"{self.path}: limit must be finite or null")
 
@@ -222,11 +216,11 @@ class StudyCase:
 
     def __post_init__(self) -> None:
         if self.stage not in VALID_STAGES:
-            raise ValueError(f"Invalid study stage {self.stage!r}")
+            raise ValueError(f"Invalid stage {self.stage!r}")
 
     @property
     def identity_hash(self) -> str:
-        return _canonical_hash(
+        return _hash(
             {
                 "case_id": self.case_id,
                 "stage": self.stage,
@@ -253,26 +247,31 @@ class StudySpec:
     name: str
     geometry_config: Path
     airfoil_database: Path
+    fixed_sample_values: dict[str, float]
     variables: tuple[VariableSpec, ...]
     ofat_fractions: tuple[float, ...]
     pairwise_enabled: bool
-    pairwise_top_k: int
     pairwise_fractions: tuple[float, ...]
     pairwise_max_cases: int
-    lhs_enabled: bool
-    lhs_samples: int
-    lhs_seed: int
+    global_method: str
+    global_train_samples: int
+    global_train_seed: int
+    validation_method: str
+    validation_samples: int
+    validation_seed: int
     source_sections: int
     extraction_cst_order: int
     extraction_chordwise_points: int
     minimum_source_spacing_fraction: float
     levels: tuple[MeshLevel, ...]
     reference_level: str
+    complete_ladder: bool
     mesh_common: dict[str, Any]
     metric_limits: tuple[MetricLimit, ...]
     require_limits_for_run: bool
     projection_enabled: bool
     projection_sample_nodes: int
+    analysis_config: dict[str, Any]
 
     @property
     def variable_map(self) -> dict[str, VariableSpec]:
@@ -288,7 +287,7 @@ class StudySpec:
 
     @property
     def fingerprint(self) -> str:
-        return _canonical_hash(self.raw)
+        return _hash(self.raw)
 
     @property
     def reference_level_spec(self) -> MeshLevel:
@@ -300,66 +299,52 @@ class StudySpec:
         ]
 
     def sample_values(self, public_values: Mapping[str, float]) -> dict[str, float]:
-        missing = set(self.variable_map) - set(public_values)
-        extra = set(public_values) - set(self.variable_map)
-        if missing or extra:
-            raise ValueError(
-                f"Study vector mismatch: missing={sorted(missing)}, extra={sorted(extra)}"
-            )
-        return {
-            variable.sample_field: variable.to_sample_value(public_values[variable.name])
-            for variable in self.variables
-        }
+        if set(public_values) != set(self.variable_map):
+            raise ValueError("Public study vector does not match configured variables")
+        values = dict(self.fixed_sample_values)
+        values.update(
+            {
+                variable.sample_field: variable.to_sample_value(public_values[variable.name])
+                for variable in self.variables
+            }
+        )
+        if set(values) != set(SAMPLE_FIELDS):
+            raise ValueError("Complete BWB sample vector has missing or extra fields")
+        return values
 
     def baseline_case(self, *, sequence_index: int = 0) -> StudyCase:
-        return StudyCase(
-            case_id="baseline",
-            stage="baseline",
-            public_values=self.baseline_values,
-            perturbations={},
-            sequence_index=sequence_index,
-        )
+        return StudyCase("baseline", "baseline", self.baseline_values, {}, sequence_index)
 
     def ofat_cases(self, *, sequence_start: int = 0) -> list[StudyCase]:
         cases: list[StudyCase] = []
-        seen_vectors: set[str] = set()
         for variable in self.variables:
             for fraction in self.ofat_fractions:
-                value = variable.value_at_fraction(fraction)
-                if math.isclose(value, variable.baseline, rel_tol=0.0, abs_tol=1.0e-13):
-                    continue
                 values = self.baseline_values
-                values[variable.name] = value
-                vector_hash = _canonical_hash(values)
-                if vector_hash in seen_vectors:
-                    continue
-                seen_vectors.add(vector_hash)
+                values[variable.name] = variable.value_at_fraction(fraction)
                 cases.append(
                     StudyCase(
-                        case_id=f"ofat__{variable.name}__{_fraction_token(fraction)}",
-                        stage="ofat",
-                        public_values=values,
-                        perturbations={variable.name: float(fraction)},
-                        sequence_index=sequence_start + len(cases),
+                        f"ofat__{variable.name}__{_fraction_token(fraction)}",
+                        "ofat",
+                        values,
+                        {variable.name: fraction},
+                        sequence_start + len(cases),
                     )
                 )
         return cases
 
-    def pairwise_cases(
-        self,
-        ranked_variables: Sequence[str],
-        *,
-        sequence_start: int = 0,
-    ) -> list[StudyCase]:
+    def pairwise_cases(self, *, sequence_start: int = 0) -> list[StudyCase]:
         if not self.pairwise_enabled:
             return []
-        unknown = set(ranked_variables) - set(self.variable_map)
-        if unknown:
-            raise ValueError(f"Unknown ranked variables: {sorted(unknown)}")
-        selected = list(dict.fromkeys(ranked_variables))[: self.pairwise_top_k]
+        names = [variable.name for variable in self.variables]
+        required = math.comb(len(names), 2) * len(self.pairwise_fractions) ** 2
+        if self.pairwise_max_cases < required:
+            raise ValueError(
+                f"pairwise.max_cases={self.pairwise_max_cases} truncates "
+                f"the complete {required}-case pair design"
+            )
         cases: list[StudyCase] = []
-        for first_index, first in enumerate(selected):
-            for second in selected[first_index + 1 :]:
+        for first_index, first in enumerate(names):
+            for second in names[first_index + 1 :]:
                 for first_fraction in self.pairwise_fractions:
                     for second_fraction in self.pairwise_fractions:
                         values = self.baseline_values
@@ -367,83 +352,102 @@ class StudySpec:
                         values[second] = self.variable_map[second].value_at_fraction(
                             second_fraction
                         )
-                        if math.isclose(
-                            values[first],
-                            self.variable_map[first].baseline,
-                            rel_tol=0.0,
-                            abs_tol=1.0e-13,
-                        ) or math.isclose(
-                            values[second],
-                            self.variable_map[second].baseline,
-                            rel_tol=0.0,
-                            abs_tol=1.0e-13,
-                        ):
-                            continue
                         cases.append(
                             StudyCase(
-                                case_id=(
-                                    f"pair__{first}_{_fraction_token(first_fraction)}"
-                                    f"__{second}_{_fraction_token(second_fraction)}"
-                                ),
-                                stage="pairwise",
-                                public_values=values,
-                                perturbations={
-                                    first: float(first_fraction),
-                                    second: float(second_fraction),
-                                },
-                                sequence_index=sequence_start + len(cases),
+                                f"pair__{first}_{_fraction_token(first_fraction)}__"
+                                f"{second}_{_fraction_token(second_fraction)}",
+                                "pairwise",
+                                values,
+                                {first: first_fraction, second: second_fraction},
+                                sequence_start + len(cases),
                             )
                         )
-                        if len(cases) >= self.pairwise_max_cases:
-                            return cases
         return cases
 
-    def lhs_cases(self, *, sequence_start: int = 0) -> list[StudyCase]:
-        if not self.lhs_enabled:
-            return []
-        engine = qmc.LatinHypercube(d=len(self.variables), seed=self.lhs_seed)
-        unit = engine.random(n=self.lhs_samples)
+    def _unit_design(self, samples: int, seed: int, method: str) -> np.ndarray:
+        if method == "sobol":
+            power = int(round(math.log2(samples)))
+            if 2**power != samples:
+                raise ValueError("Sobol sample counts must be powers of two")
+            return qmc.Sobol(d=len(self.variables), scramble=True, seed=seed).random_base2(power)
+        if method == "lhs":
+            return qmc.LatinHypercube(d=len(self.variables), seed=seed).random(samples)
+        return np.random.default_rng(seed).random((samples, len(self.variables)))
+
+    def _space_filling_cases(
+        self,
+        stage: str,
+        samples: int,
+        seed: int,
+        method: str,
+        sequence_start: int,
+    ) -> list[StudyCase]:
         cases: list[StudyCase] = []
-        for row_index, row in enumerate(unit):
+        for row_index, row in enumerate(self._unit_design(samples, seed, method)):
             values = {
-                variable.name: (variable.low + float(row[column]) * (variable.high - variable.low))
+                variable.name: variable.low + float(row[column]) * (variable.high - variable.low)
                 for column, variable in enumerate(self.variables)
             }
             perturbations = {
                 variable.name: variable.normalized_fraction(values[variable.name])
-                for column, variable in enumerate(self.variables)
+                for variable in self.variables
             }
             cases.append(
                 StudyCase(
-                    case_id=f"lhs__{row_index:04d}",
-                    stage="lhs",
-                    public_values=values,
-                    perturbations=perturbations,
-                    sequence_index=sequence_start + row_index,
+                    f"{stage}__{row_index:04d}",
+                    stage,
+                    values,
+                    perturbations,
+                    sequence_start + row_index,
                 )
             )
         return cases
 
-    def initial_plan(self) -> dict[str, Any]:
-        baseline = self.baseline_case(sequence_index=0)
+    def global_train_cases(self, *, sequence_start: int = 0) -> list[StudyCase]:
+        return self._space_filling_cases(
+            "global_train",
+            self.global_train_samples,
+            self.global_train_seed,
+            self.global_method,
+            sequence_start,
+        )
+
+    def validation_cases(self, *, sequence_start: int = 0) -> list[StudyCase]:
+        return self._space_filling_cases(
+            "validation",
+            self.validation_samples,
+            self.validation_seed,
+            self.validation_method,
+            sequence_start,
+        )
+
+    def all_cases(self) -> list[StudyCase]:
+        baseline = self.baseline_case()
         ofat = self.ofat_cases(sequence_start=1)
-        lhs = self.lhs_cases(sequence_start=1 + len(ofat))
+        pairwise = self.pairwise_cases(sequence_start=1 + len(ofat))
+        train = self.global_train_cases(sequence_start=1 + len(ofat) + len(pairwise))
+        validation = self.validation_cases(
+            sequence_start=1 + len(ofat) + len(pairwise) + len(train)
+        )
+        return [baseline, *ofat, *pairwise, *train, *validation]
+
+    def initial_plan(self) -> dict[str, Any]:
+        cases = self.all_cases()
+        counts = {stage: 0 for stage in sorted(VALID_STAGES)}
+        for case in cases:
+            counts[case.stage] += 1
+        counts["total_geometries"] = len(cases)
+        counts["planned_mesh_builds"] = (
+            len(cases) * len(self.levels) if self.complete_ladder else None
+        )
         return {
             "schema": SCHEMA_VERSION,
             "study": self.name,
             "study_fingerprint": self.fingerprint,
-            "pairwise_deferred_until_ofat_ranking": self.pairwise_enabled,
-            "counts": {
-                "baseline": 1,
-                "ofat": len(ofat),
-                "lhs": len(lhs),
-                "pairwise": None if self.pairwise_enabled else 0,
-            },
-            "cases": [
-                baseline.to_dict(),
-                *(case.to_dict() for case in ofat),
-                *(case.to_dict() for case in lhs),
-            ],
+            "global_design_method": self.global_method,
+            "counts": counts,
+            "validation_design_method": self.validation_method,
+            "cases": [case.to_dict() for case in cases],
         }
 
 
@@ -462,27 +466,30 @@ def _parse_variable(name: str, value: object) -> VariableSpec:
         low=_number(block.get("low"), f"variables.{name}.low"),
         high=_number(block.get("high"), f"variables.{name}.high"),
         sample_scale=_number(block.get("sample_scale", 1.0), f"variables.{name}.sample_scale"),
+        description=str(block.get("description", "")).strip(),
     )
 
 
-def _parse_level(name: str, value: object, default_order: int) -> MeshLevel:
+def _parse_level(name: str, value: object, order: int) -> MeshLevel:
     block = _mapping(value, f"mesh.levels.{name}")
     return MeshLevel(
-        name=name,
-        order=_integer(block.get("order", default_order), f"mesh.levels.{name}.order"),
-        points_per_block_side=_integer(
+        name,
+        _integer(block.get("order", order), f"mesh.levels.{name}.order"),
+        _integer(
             block.get("points_per_block_side"),
             f"mesh.levels.{name}.points_per_block_side",
         ),
-        spanwise_panels_per_section=_integer(
+        _integer(
             block.get("spanwise_panels_per_section"),
             f"mesh.levels.{name}.spanwise_panels_per_section",
         ),
-        cap_wrap_points=_integer(
-            block.get("cap_wrap_points"), f"mesh.levels.{name}.cap_wrap_points"
+        _integer(
+            block.get("cap_wrap_points"),
+            f"mesh.levels.{name}.cap_wrap_points",
         ),
-        tip_radial_points=_integer(
-            block.get("tip_radial_points"), f"mesh.levels.{name}.tip_radial_points"
+        _integer(
+            block.get("tip_radial_points"),
+            f"mesh.levels.{name}.tip_radial_points",
         ),
     )
 
@@ -491,63 +498,81 @@ def _parse_metric(path: str, value: object) -> MetricLimit:
     block = _mapping(value, f"acceptance.metrics.{path}")
     raw_limit = block.get("limit")
     return MetricLimit(
-        path=path,
-        operator=_string(block.get("operator"), f"acceptance.metrics.{path}.operator"),
-        limit=None if raw_limit is None else _number(raw_limit, f"acceptance.metrics.{path}.limit"),
-        enabled=_boolean(block.get("enabled", True), f"acceptance.metrics.{path}.enabled"),
-        description=str(block.get("description", "")).strip(),
+        path,
+        _string(
+            block.get("operator"),
+            f"acceptance.metrics.{path}.operator",
+        ),
+        None if raw_limit is None else _number(raw_limit, path),
+        _boolean(
+            block.get("enabled", True),
+            f"acceptance.metrics.{path}.enabled",
+        ),
+        str(block.get("description", "")).strip(),
     )
 
 
 def load_study_spec(path: str | Path) -> StudySpec:
-    """Load and validate a surface-mesh study YAML file."""
-
     config_path = Path(path).expanduser().resolve()
-    raw_loaded = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-    raw = _mapping(raw_loaded, "study config")
+    raw = _mapping(
+        yaml.safe_load(config_path.read_text(encoding="utf-8")),
+        "study config",
+    )
     schema = _string(raw.get("schema"), "schema")
     if schema != SCHEMA_VERSION:
         raise ValueError(f"Unsupported schema {schema!r}; expected {SCHEMA_VERSION!r}")
 
     geometry = _mapping(raw.get("geometry"), "geometry")
     extraction = _mapping(geometry.get("extraction"), "geometry.extraction")
+    fixed_raw = _mapping(
+        geometry.get("fixed_sample_values"),
+        "geometry.fixed_sample_values",
+    )
+    fixed = {
+        str(key): _number(value, f"geometry.fixed_sample_values.{key}")
+        for key, value in fixed_raw.items()
+    }
     variables_raw = _mapping(raw.get("variables"), "variables")
     variables = tuple(_parse_variable(name, value) for name, value in variables_raw.items())
-    sample_fields = [variable.sample_field for variable in variables]
-    if len(set(sample_fields)) != len(sample_fields):
-        raise ValueError("variables contain duplicate sample_field mappings")
-    if set(sample_fields) != set(EXPECTED_SAMPLE_FIELDS):
-        raise ValueError(
-            "variables must map exactly the 17 active BWB fields; "
-            f"missing={sorted(set(EXPECTED_SAMPLE_FIELDS) - set(sample_fields))}, "
-            f"extra={sorted(set(sample_fields) - set(EXPECTED_SAMPLE_FIELDS))}"
-        )
+    mapped = [variable.sample_field for variable in variables]
+    if len(mapped) != len(set(mapped)) or set(mapped) & set(fixed):
+        raise ValueError("Sample fields must be unique and either varied or fixed")
+    covered = set(mapped) | set(fixed)
+    if covered != set(SAMPLE_FIELDS):
+        missing = set(SAMPLE_FIELDS) - covered
+        extra = covered - set(SAMPLE_FIELDS)
+        raise ValueError(f"Incomplete BWB sample: missing={sorted(missing)}, extra={sorted(extra)}")
 
-    ofat = _mapping(raw.get("ofat"), "ofat")
-    ofat_fractions = tuple(
-        _number(value, f"ofat.fractions[{index}]")
-        for index, value in enumerate(_sequence(ofat.get("fractions"), "ofat.fractions"))
+    design = _mapping(raw.get("design"), "design")
+    ofat = _mapping(design.get("ofat"), "design.ofat")
+    fractions = tuple(
+        _number(value, "design.ofat.fractions")
+        for value in _sequence(ofat.get("fractions"), "design.ofat.fractions")
     )
-    if not ofat_fractions or any(not -1.0 <= value <= 1.0 for value in ofat_fractions):
-        raise ValueError("ofat.fractions must be a non-empty list within [-1, 1]")
-    if any(value == 0.0 for value in ofat_fractions):
-        raise ValueError("ofat.fractions must omit zero; baseline is a separate case")
-
-    interactions = _mapping(raw.get("interactions"), "interactions")
-    pairwise = _mapping(interactions.get("pairwise"), "interactions.pairwise")
-    pairwise_fractions = tuple(
-        _number(value, f"interactions.pairwise.fractions[{index}]")
-        for index, value in enumerate(
-            _sequence(pairwise.get("fractions"), "interactions.pairwise.fractions")
-        )
+    if not fractions or any(value == 0.0 or not -1.0 <= value <= 1.0 for value in fractions):
+        raise ValueError("OFAT fractions must be non-zero and in [-1, 1]")
+    pair = _mapping(design.get("pairwise"), "design.pairwise")
+    pair_fractions = tuple(
+        _number(value, "design.pairwise.fractions")
+        for value in _sequence(pair.get("fractions"), "design.pairwise.fractions")
     )
-    if any(not -1.0 <= value <= 1.0 for value in pairwise_fractions):
-        raise ValueError("interactions.pairwise.fractions must lie within [-1, 1]")
-    if not pairwise_fractions:
-        raise ValueError("interactions.pairwise.fractions must not be empty")
-    lhs = _mapping(interactions.get("lhs"), "interactions.lhs")
+    if not pair_fractions or any(
+        value == 0.0 or not -1.0 <= value <= 1.0 for value in pair_fractions
+    ):
+        raise ValueError("Pair fractions must be non-zero and in [-1, 1]")
+    global_block = _mapping(design.get("global"), "design.global")
+    validation = _mapping(design.get("validation"), "design.validation")
+    method = _string(global_block.get("method", "sobol"), "design.global.method").lower()
+    if method not in {"sobol", "lhs"}:
+        raise ValueError("Global method must be sobol or lhs")
 
     mesh = _mapping(raw.get("mesh"), "mesh")
+    validation_method = _string(
+        validation.get("method", "iid_uniform"),
+        "design.validation.method",
+    ).lower()
+    if validation_method not in {"iid_uniform", "sobol", "lhs"}:
+        raise ValueError("Validation method must be iid_uniform, sobol, or lhs")
     levels_raw = _mapping(mesh.get("levels"), "mesh.levels")
     levels = tuple(
         sorted(
@@ -555,56 +580,55 @@ def load_study_spec(path: str | Path) -> StudySpec:
                 _parse_level(name, value, index)
                 for index, (name, value) in enumerate(levels_raw.items(), start=1)
             ),
-            key=lambda item: item.order,
+            key=lambda level: level.order,
         )
     )
-    if len(levels) < 3:
-        raise ValueError("mesh.levels must define at least three refinement levels")
-    if len({level.name for level in levels}) != len(levels):
-        raise ValueError("mesh.level names must be unique")
-    if len({level.order for level in levels}) != len(levels):
-        raise ValueError("mesh.level order values must be unique")
-    reference_level = _string(mesh.get("reference_level"), "mesh.reference_level")
-    if reference_level not in {level.name for level in levels}:
-        raise ValueError(f"mesh.reference_level {reference_level!r} is not defined")
-
+    reference = _string(mesh.get("reference_level"), "mesh.reference_level")
+    if len(levels) < 3 or reference not in {level.name for level in levels}:
+        raise ValueError("At least three levels and a valid reference level are required")
     acceptance = _mapping(raw.get("acceptance"), "acceptance")
-    metrics_raw = _mapping(acceptance.get("metrics"), "acceptance.metrics")
-    metric_limits = tuple(_parse_metric(path, value) for path, value in metrics_raw.items())
-    if not metric_limits:
-        raise ValueError("acceptance.metrics must not be empty")
+    metrics = tuple(
+        _parse_metric(path, value)
+        for path, value in _mapping(acceptance.get("metrics"), "acceptance.metrics").items()
+    )
+    projection = _mapping(
+        raw.get("projection_diagnostic", {}),
+        "projection_diagnostic",
+    )
 
-    projection = _mapping(raw.get("projection_diagnostic", {}), "projection_diagnostic")
     spec = StudySpec(
         path=config_path,
         raw=raw,
         name=_string(raw.get("name"), "name"),
         geometry_config=_resolve_path(
             geometry.get("definition_config"),
-            config_path=config_path,
-            label="geometry.definition_config",
+            config_path,
+            "geometry.definition_config",
         ),
         airfoil_database=_resolve_path(
             geometry.get("airfoil_database", "data/airfoil_database"),
-            config_path=config_path,
-            label="geometry.airfoil_database",
+            config_path,
+            "geometry.airfoil_database",
         ),
+        fixed_sample_values=fixed,
         variables=variables,
-        ofat_fractions=ofat_fractions,
-        pairwise_enabled=_boolean(pairwise.get("enabled", True), "interactions.pairwise.enabled"),
-        pairwise_top_k=_integer(pairwise.get("top_k", 6), "interactions.pairwise.top_k"),
-        pairwise_fractions=pairwise_fractions,
-        pairwise_max_cases=_integer(
-            pairwise.get("max_cases", 60), "interactions.pairwise.max_cases"
-        ),
-        lhs_enabled=_boolean(lhs.get("enabled", True), "interactions.lhs.enabled"),
-        lhs_samples=_integer(lhs.get("samples", 64), "interactions.lhs.samples"),
-        lhs_seed=_integer(lhs.get("seed", 20260724), "interactions.lhs.seed"),
+        ofat_fractions=fractions,
+        pairwise_enabled=_boolean(pair.get("enabled", True), "design.pairwise.enabled"),
+        pairwise_fractions=pair_fractions,
+        pairwise_max_cases=_integer(pair.get("max_cases"), "design.pairwise.max_cases"),
+        global_method=method,
+        global_train_samples=_integer(global_block.get("samples"), "design.global.samples"),
+        global_train_seed=_integer(global_block.get("seed"), "design.global.seed"),
+        validation_samples=_integer(validation.get("samples"), "design.validation.samples"),
+        validation_seed=_integer(validation.get("seed"), "design.validation.seed"),
+        validation_method=validation_method,
         source_sections=_integer(
-            extraction.get("source_sections", 14), "geometry.extraction.source_sections"
+            extraction.get("source_sections", 14),
+            "geometry.extraction.source_sections",
         ),
         extraction_cst_order=_integer(
-            extraction.get("cst_order", 8), "geometry.extraction.cst_order"
+            extraction.get("cst_order", 8),
+            "geometry.extraction.cst_order",
         ),
         extraction_chordwise_points=_integer(
             extraction.get("chordwise_points", 301),
@@ -615,34 +639,33 @@ def load_study_spec(path: str | Path) -> StudySpec:
             "geometry.extraction.minimum_spacing_fraction",
         ),
         levels=levels,
-        reference_level=reference_level,
+        reference_level=reference,
+        complete_ladder=_boolean(mesh.get("complete_ladder", True), "mesh.complete_ladder"),
         mesh_common=_mapping(mesh.get("common"), "mesh.common"),
-        metric_limits=metric_limits,
+        metric_limits=metrics,
         require_limits_for_run=_boolean(
             acceptance.get("require_limits_for_run", True),
             "acceptance.require_limits_for_run",
         ),
         projection_enabled=_boolean(
-            projection.get("enabled", True), "projection_diagnostic.enabled"
+            projection.get("enabled", True),
+            "projection_diagnostic.enabled",
         ),
         projection_sample_nodes=_integer(
-            projection.get("sample_nodes", 500), "projection_diagnostic.sample_nodes"
+            projection.get("sample_nodes", 500),
+            "projection_diagnostic.sample_nodes",
         ),
+        analysis_config=_mapping(raw.get("analysis"), "analysis"),
     )
-    if spec.source_sections < 4:
-        raise ValueError("geometry.extraction.source_sections must be at least 4")
-    if spec.extraction_cst_order < 2:
-        raise ValueError("geometry.extraction.cst_order must be at least 2")
+    if spec.global_train_seed == spec.validation_seed:
+        raise ValueError("Training and validation seeds must differ")
+    if spec.source_sections < 4 or spec.extraction_cst_order < 2:
+        raise ValueError("Invalid pyGeo extraction resolution")
     if spec.extraction_chordwise_points < max(21, spec.extraction_cst_order + 3):
         raise ValueError("geometry.extraction.chordwise_points is too small")
     if not 0.0 < spec.minimum_source_spacing_fraction < 1.0:
-        raise ValueError("geometry.extraction.minimum_spacing_fraction must lie in (0, 1)")
-    if spec.pairwise_top_k < 2:
-        raise ValueError("interactions.pairwise.top_k must be at least 2")
-    if spec.pairwise_max_cases < 1:
-        raise ValueError("interactions.pairwise.max_cases must be positive")
-    if spec.lhs_samples < 1:
-        raise ValueError("interactions.lhs.samples must be positive")
+        raise ValueError("minimum source spacing fraction must lie in (0, 1)")
     if spec.projection_sample_nodes < 10:
-        raise ValueError("projection_diagnostic.sample_nodes must be at least 10")
+        raise ValueError("projection sample must contain at least 10 nodes")
+    spec.initial_plan()
     return spec

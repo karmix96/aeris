@@ -120,11 +120,14 @@ def load_generator_config(spec: StudySpec) -> BWBGeneratorConfig:
             "this study isolates the neutral pyGeo outer mold line."
         )
     active = set(config.active_design_variable_names())
-    mapped = {variable.sample_field for variable in spec.variables}
-    if active != mapped:
+    varied = {variable.sample_field for variable in spec.variables}
+    fixed = set(spec.fixed_sample_values)
+    covered = varied | fixed
+    if not varied <= active or not active <= covered:
         raise ValueError(
-            "Study variables do not match the geometry definition's active variables: "
-            f"missing={sorted(active - mapped)}, extra={sorted(mapped - active)}"
+            "Study varied/fixed fields do not cover the geometry definition: "
+            f"active_not_covered={sorted(active - covered)}, "
+            f"varied_not_active={sorted(varied - active)}"
         )
     return config
 
@@ -138,21 +141,18 @@ def study_provenance(spec: StudySpec) -> dict[str, Any]:
         ),
         Path.cwd(),
     )
-    source_candidates = (
-        spec.path,
-        spec.geometry_config,
-        repo_root / "src/aeris/mesh/surface.py",
-        repo_root / "src/aeris/cfd/meshing/quality.py",
-        repo_root / "src/aeris/generators/bwb_segmented_v1/params.py",
-        repo_root / "src/aeris/generators/bwb_segmented_v1/planform.py",
-        repo_root / "src/aeris/generators/bwb_segmented_v1/sections.py",
-        repo_root / "src/aeris/generators/bwb_segmented_v1/validation.py",
-        repo_root / "src/aeris/generators/bwb_segmented_v1/pygeo_config.py",
-        repo_root / "src/aeris/generators/bwb_segmented_v1/pygeo_adapter.py",
-        Path(__file__).resolve(),
-        Path(__file__).with_name("spec.py").resolve(),
-        Path(__file__).with_name("analysis.py").resolve(),
+    source_candidates = [spec.path, spec.geometry_config]
+    source_roots = (
+        repo_root / "src/aeris/mesh",
+        repo_root / "src/aeris/cfd/meshing",
+        repo_root / "src/aeris/generators/bwb_segmented_v1",
+        Path(__file__).resolve().parent,
     )
+    for root in source_roots:
+        if root.is_file():
+            source_candidates.append(root)
+        elif root.is_dir():
+            source_candidates.extend(sorted(root.rglob("*.py")))
     generator_config = load_generator_config(spec)
     airfoil_names = {generator_config.section_bounds.airfoil_name}
     station_airfoils = generator_config.section_bounds.station_airfoils
@@ -163,7 +163,7 @@ def study_provenance(spec: StudySpec) -> dict[str, Any]:
     )
     sources = {
         str(path.resolve()): file_sha256(path.resolve())
-        for path in (*source_candidates, *airfoil_candidates)
+        for path in dict.fromkeys((*source_candidates, *airfoil_candidates))
         if path.is_file()
     }
     package_versions = {}
@@ -253,6 +253,140 @@ def _geometry_quality(
     }
 
 
+def _polyline_turning_angle_deg(x: np.ndarray, y: np.ndarray) -> float:
+    points = np.column_stack([np.asarray(x, dtype=float), np.asarray(y, dtype=float)])
+    segments = np.diff(points, axis=0)
+    lengths = np.linalg.norm(segments, axis=1)
+    valid = lengths > 1.0e-14
+    segments = segments[valid]
+    lengths = lengths[valid]
+    if len(segments) < 2:
+        return 0.0
+    unit = segments / lengths[:, None]
+    cosine = np.sum(unit[:-1] * unit[1:], axis=1)
+    return float(np.max(np.degrees(np.arccos(np.clip(cosine, -1.0, 1.0)))))
+
+
+def _max_abs_rate(values: np.ndarray, coordinate: np.ndarray) -> float:
+    values = np.asarray(values, dtype=float)
+    coordinate = np.asarray(coordinate, dtype=float)
+    if len(values) < 2 or np.ptp(coordinate) <= 1.0e-14:
+        return 0.0
+    return float(np.max(np.abs(np.gradient(values, coordinate, edge_order=1))))
+
+
+def _max_abs_second_rate(values: np.ndarray, coordinate: np.ndarray) -> float:
+    values = np.asarray(values, dtype=float)
+    coordinate = np.asarray(coordinate, dtype=float)
+    if len(values) < 3 or np.ptp(coordinate) <= 1.0e-14:
+        return 0.0
+    first = np.gradient(values, coordinate, edge_order=1)
+    return float(np.max(np.abs(np.gradient(first, coordinate, edge_order=1))))
+
+
+def geometry_descriptors(
+    planform: object,
+    section_geometry: object,
+    extracted: Sequence[object],
+) -> dict[str, Any]:
+    """Return portable, realised descriptors for attribution and law guards.
+
+    Independent controls remain the statistically valid attribution variables.
+    These descriptors expose the geometry seen by the mesher and are suitable
+    for applicability checks by a future autonomous meshing agent.
+    """
+
+    semispan = max(float(planform.semi_span_m), 1.0e-15)
+    root_chord = max(float(planform.c1), 1.0e-15)
+    boundary_eta = np.asarray(planform.group_boundary_y, dtype=float) / semispan
+    panel_eta = np.diff(boundary_eta)
+    twist = np.asarray(section_geometry.twist_boundaries_deg, dtype=float)
+    dihedral = np.asarray(section_geometry.dihedral_boundaries_deg, dtype=float)
+    twist_rates = np.diff(twist) / panel_eta
+    dihedral_rates = np.diff(dihedral) / panel_eta
+
+    span_fraction = np.asarray([float(section.span_fraction) for section in extracted], dtype=float)
+    thickness_ratio = np.asarray(
+        [float(section.thickness_ratio) for section in extracted], dtype=float
+    )
+    camber_ratio = np.asarray(
+        [float(section.max_camber_ratio) for section in extracted], dtype=float
+    )
+    chord_m = np.asarray([float(section.chord_m) for section in extracted], dtype=float)
+    thickness_m = thickness_ratio * chord_m
+
+    fine_eta = np.asarray(planform.front_y_fine, dtype=float) / semispan
+    le_x_cref = np.asarray(planform.front_x_fine, dtype=float) / root_chord
+    te_x_cref = np.asarray(planform.rear_x_fine, dtype=float) / root_chord
+    fine_chord_cref = te_x_cref - le_x_cref
+
+    return {
+        "scale": {
+            "root_chord_m": float(planform.c1),
+            "mean_aerodynamic_scale_m": float(
+                planform.approx_area_m2 / max(planform.full_span_m, 1.0e-15)
+            ),
+            "semi_span_m": float(planform.semi_span_m),
+            "full_span_m": float(planform.full_span_m),
+            "area_m2": float(planform.approx_area_m2),
+            "aspect_ratio": float(planform.approx_aspect_ratio),
+            "semi_span_to_root_chord": float(planform.semi_span_m / root_chord),
+        },
+        "planform": {
+            "tip_taper_ratio": float(planform.c4 / root_chord),
+            "panel_taper_ratios": [
+                float(planform.c2 / root_chord),
+                float(planform.c3 / max(planform.c2, 1.0e-15)),
+                float(planform.c4 / max(planform.c3, 1.0e-15)),
+            ],
+            "panel_span_fractions": panel_eta.tolist(),
+            "break_span_fractions": boundary_eta.tolist(),
+            "le_sweep_magnitudes_deg": [
+                abs(float(planform.sw1_deg)),
+                abs(float(planform.sw2_deg)),
+                abs(float(planform.sw3_deg)),
+            ],
+            "sweep_jumps_deg": [
+                abs(float(planform.sw2_deg - planform.sw1_deg)),
+                abs(float(planform.sw3_deg - planform.sw2_deg)),
+            ],
+            "max_chord_rate_per_semispan": _max_abs_rate(fine_chord_cref, fine_eta),
+            "max_chord_curvature_per_semispan2": _max_abs_second_rate(fine_chord_cref, fine_eta),
+            "max_le_curvature_per_semispan2": _max_abs_second_rate(le_x_cref, fine_eta),
+            "max_te_curvature_per_semispan2": _max_abs_second_rate(te_x_cref, fine_eta),
+            "max_le_polyline_turn_deg": _polyline_turning_angle_deg(
+                planform.front_x_fine, planform.front_y_fine
+            ),
+            "max_te_polyline_turn_deg": _polyline_turning_angle_deg(
+                planform.rear_x_fine, planform.rear_y_fine
+            ),
+        },
+        "section_kinematics": {
+            "twist_stations_deg": twist.tolist(),
+            "twist_panel_rates_deg_per_semispan": twist_rates.tolist(),
+            "max_abs_twist_rate_deg_per_semispan": float(np.max(np.abs(twist_rates))),
+            "dihedral_stations_deg": dihedral.tolist(),
+            "dihedral_panel_rates_deg_per_semispan": dihedral_rates.tolist(),
+            "max_abs_dihedral_rate_deg_per_semispan": float(np.max(np.abs(dihedral_rates))),
+        },
+        "airfoil_shape": {
+            "policy": "fixed_station_profiles",
+            "thickness_ratio_min": float(np.min(thickness_ratio)),
+            "thickness_ratio_max": float(np.max(thickness_ratio)),
+            "thickness_ratio_range": float(np.ptp(thickness_ratio)),
+            "max_abs_thickness_ratio_rate_per_semispan": _max_abs_rate(
+                thickness_ratio, span_fraction
+            ),
+            "dimensional_thickness_m_min": float(np.min(thickness_m)),
+            "dimensional_thickness_m_max": float(np.max(thickness_m)),
+            "camber_ratio_min": float(np.min(camber_ratio)),
+            "camber_ratio_max": float(np.max(camber_ratio)),
+            "max_abs_camber_ratio_rate_per_semispan": _max_abs_rate(camber_ratio, span_fraction),
+            "independent_thickness_effect_identifiable": False,
+        },
+    }
+
+
 def build_geometry(
     spec: StudySpec,
     generator_config: BWBGeneratorConfig,
@@ -305,6 +439,7 @@ def build_geometry(
     geometry = {
         "sample": sample.to_dict(),
         "public_values": dict(case.public_values),
+        "descriptors": geometry_descriptors(planform, section_geometry, extracted),
         "airfoils": {
             "configured_stations": (
                 generator_config.section_bounds.station_airfoils.to_dict()
@@ -748,6 +883,8 @@ def run_case(
         if smoke_level not in spec.level_map:
             raise ValueError(f"Unknown smoke level {smoke_level!r}")
         execution_levels = [spec.level_map[smoke_level]]
+    elif spec.complete_ladder:
+        execution_levels = list(levels)
     else:
         reference = spec.reference_level_spec
         execution_levels = [reference]
@@ -760,7 +897,7 @@ def run_case(
         # Standard adaptive protocol always measures the common reference first.
         # It then searches from the coarsest level upward and stops at the first
         # passing level. Fine levels are needed only when L1..reference fail.
-        if smoke_level is None and index > 0:
+        if smoke_level is None and not spec.complete_ladder and index > 0:
             coarser = [
                 attempt
                 for attempt in attempts
@@ -989,72 +1126,42 @@ def run_stage(
     allow_unset_limits: bool = False,
     rerun_failed: bool = False,
 ) -> dict[str, Any]:
-    """Run one stage or the complete staged campaign."""
+    """Run one stage or the complete pre-registered campaign."""
 
-    if stage not in {"baseline", "ofat", "pairwise", "lhs", "all"}:
-        raise ValueError("stage must be baseline, ofat, pairwise, lhs, or all")
+    valid = {
+        "baseline",
+        "ofat",
+        "pairwise",
+        "global_train",
+        "validation",
+        "all",
+    }
+    if stage not in valid:
+        raise ValueError(f"stage must be one of {sorted(valid)}")
     validate_ready(spec, allow_unset_limits=allow_unset_limits)
     generator_config = load_generator_config(spec)
     manifest = initialize_workdir(spec, workdir)
 
-    baseline = spec.baseline_case(sequence_index=0)
+    baseline = [spec.baseline_case(sequence_index=0)]
     ofat = spec.ofat_cases(sequence_start=1)
-    lhs = spec.lhs_cases(sequence_start=1 + len(ofat))
-    if stage in {"baseline", "all"}:
+    pairwise = spec.pairwise_cases(sequence_start=1 + len(ofat))
+    global_train = spec.global_train_cases(sequence_start=1 + len(ofat) + len(pairwise))
+    validation = spec.validation_cases(
+        sequence_start=1 + len(ofat) + len(pairwise) + len(global_train)
+    )
+    groups = {
+        "baseline": baseline,
+        "ofat": ofat,
+        "pairwise": pairwise,
+        "global_train": global_train,
+        "validation": validation,
+    }
+    selected_stages = list(groups) if stage == "all" else [stage]
+    for stage_name in selected_stages:
         _run_cases(
             spec,
             generator_config,
-            [baseline],
-            workdir,
-            manifest,
-            allow_unset_limits=allow_unset_limits,
-            rerun_failed=rerun_failed,
-        )
-    if stage in {"ofat", "all"}:
-        _run_cases(
-            spec,
-            generator_config,
-            ofat,
-            workdir,
-            manifest,
-            allow_unset_limits=allow_unset_limits,
-            rerun_failed=rerun_failed,
-        )
-    if stage in {"pairwise", "all"}:
-        from .analysis import rank_variable_names
-
-        existing = collect_results(workdir)
-        ranked = rank_variable_names(spec, existing)
-        if len(ranked) < 2:
-            raise RuntimeError(
-                "Pairwise stage requires completed baseline and OFAT reference results"
-            )
-        pairwise = spec.pairwise_cases(
-            ranked,
-            sequence_start=1 + len(ofat) + len(lhs),
-        )
-        write_json(
-            Path(workdir) / "pairwise_plan.json",
-            {
-                "ranked_variables": ranked,
-                "selected_top_k": ranked[: spec.pairwise_top_k],
-                "cases": [case.to_dict() for case in pairwise],
-            },
-        )
-        _run_cases(
-            spec,
-            generator_config,
-            pairwise,
-            workdir,
-            manifest,
-            allow_unset_limits=allow_unset_limits,
-            rerun_failed=rerun_failed,
-        )
-    if stage in {"lhs", "all"}:
-        _run_cases(
-            spec,
-            generator_config,
-            lhs,
+            groups[stage_name],
             workdir,
             manifest,
             allow_unset_limits=allow_unset_limits,

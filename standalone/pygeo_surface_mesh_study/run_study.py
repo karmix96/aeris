@@ -58,7 +58,7 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--workdir", required=True)
     run.add_argument(
         "--stage",
-        choices=("baseline", "ofat", "pairwise", "lhs", "all"),
+        choices=("baseline", "ofat", "pairwise", "global_train", "validation", "all"),
         default="all",
     )
     run.add_argument(

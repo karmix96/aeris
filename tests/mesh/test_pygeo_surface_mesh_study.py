@@ -1,13 +1,19 @@
 from __future__ import annotations
 
 import copy
+from dataclasses import replace
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 from standalone.pygeo_surface_mesh_study.analysis import (
     build_analysis,
     rank_variable_names,
+)
+from standalone.pygeo_surface_mesh_study.modeling import (
+    fit_response_model,
+    orthonormal_quadratic_basis,
 )
 from standalone.pygeo_surface_mesh_study.runner import (
     build_geometry,
@@ -100,7 +106,8 @@ def _result(
 def test_real_study_config_and_plan_are_deterministic() -> None:
     first = _spec()
     second = _spec()
-    airfoils = load_generator_config(first).section_bounds.station_airfoils
+    generator_config = load_generator_config(first)
+    airfoils = generator_config.section_bounds.station_airfoils
     assert airfoils is not None
     assert airfoils.to_dict() == {
         "b0": "mh91",
@@ -109,20 +116,40 @@ def test_real_study_config_and_plan_are_deterministic() -> None:
         "b3": "nlf1015",
     }
 
-    assert len(first.variables) == 17
+    assert len(first.variables) == 16
+    assert first.variable_map["root_chord_m"].baseline == pytest.approx(0.90)
+    assert first.variable_map["root_chord_m"].low == pytest.approx(0.70)
+    assert first.variable_map["root_chord_m"].high == pytest.approx(1.10)
+    assert first.variable_map["semi_span_m"].baseline == pytest.approx(1.00)
+    assert first.variable_map["semi_span_m"].low == pytest.approx(0.75)
+    assert first.variable_map["semi_span_m"].high == pytest.approx(1.25)
+    assert first.validation_method == "iid_uniform"
+    assert first.fixed_sample_values == {
+        "dihedral_b1_deg": 0.0,
+        "elevon_start_frac": 0.60,
+        "elevon_end_frac": 0.95,
+        "elevon_hinge_frac": 0.75,
+    }
     assert first.initial_plan() == second.initial_plan()
     assert first.initial_plan()["counts"] == {
         "baseline": 1,
-        "ofat": 62,
-        "lhs": 64,
-        "pairwise": None,
+        "global_train": 1024,
+        "ofat": 128,
+        "pairwise": 480,
+        "validation": 512,
+        "total_geometries": 2145,
+        "planned_mesh_builds": 10725,
     }
     assert first.reference_level == "L3"
+    assert first.complete_ladder
     assert [level.name for level in first.levels] == ["L1", "L2", "L3", "L4", "L5"]
     assert len(first.unset_enabled_limits()) == 14
-    lhs_sweep = [case.public_values["sw1_deg"] for case in first.lhs_cases()]
-    assert len(set(lhs_sweep)) == 64
-    assert all(0.0 < value < 55.0 for value in lhs_sweep)
+
+    pairs = first.pairwise_cases()
+    assert len(pairs) == len({case.identity_hash for case in pairs}) == 480
+    global_sweep = [case.public_values["inner_le_sweep_deg"] for case in first.global_train_cases()]
+    assert len(set(global_sweep)) == 1024
+    assert all(20.0 < value < 40.0 for value in global_sweep)
 
 
 def test_piecewise_delta_mapping_and_sweep_sign() -> None:
@@ -140,7 +167,7 @@ def test_piecewise_delta_mapping_and_sweep_sign() -> None:
     assert variable.to_sample_value(30.0) == pytest.approx(-30.0)
     spec = _spec()
     public = spec.baseline_values
-    public["sw1_deg"] = 20.0
+    public["inner_le_sweep_deg"] = 20.0
     assert spec.sample_values(public)["sw1_deg"] == pytest.approx(-20.0)
 
 
@@ -176,10 +203,10 @@ def test_synthetic_ofat_ranking_and_candidate_fit() -> None:
     }
     results = [_result(spec, "baseline", "baseline", base_metrics)]
     for variable_name, fraction, delta in (
-        ("c1_m", -1.0, 0.20),
-        ("c1_m", 1.0, 0.40),
-        ("c2_ratio", -1.0, 0.02),
-        ("c2_ratio", 1.0, 0.03),
+        ("root_chord_m", -1.0, 0.20),
+        ("root_chord_m", 1.0, 0.40),
+        ("chord_ratio_b1_root", -1.0, 0.02),
+        ("chord_ratio_b1_root", 1.0, 0.03),
     ):
         variable = spec.variable_map[variable_name]
         metrics = dict(base_metrics)
@@ -197,13 +224,71 @@ def test_synthetic_ofat_ranking_and_candidate_fit() -> None:
             )
         )
     ranked = rank_variable_names(spec, results)
-    assert ranked[:2] == ["c1_m", "c2_ratio"]
+    assert ranked[:2] == ["root_chord_m", "chord_ratio_b1_root"]
     analysis = build_analysis(spec, results)
-    fit = analysis["ofat_candidate_laws"]["c1_m"]["metric_laws"]["oml.max_aspect_ratio"][
+    fit = analysis["ofat_candidate_laws"]["root_chord_m"]["metric_laws"]["oml.max_aspect_ratio"][
         "fit_in_normalized_fraction"
     ]
     assert fit["degree"] == 2
     assert fit["r2"] == pytest.approx(1.0)
+
+
+def test_global_legendre_basis_is_centered_and_nearly_orthonormal() -> None:
+    spec = _spec()
+    normalized = np.random.default_rng(20260724).uniform(
+        -1.0, 1.0, size=(4096, len(spec.variables))
+    )
+    basis = orthonormal_quadratic_basis(normalized, [variable.name for variable in spec.variables])
+    assert basis.matrix.shape == (4096, 153)
+    gram = basis.matrix.T @ basis.matrix / len(normalized)
+    assert np.max(np.abs(np.diag(gram) - 1.0)) < 0.08
+    off_diagonal = gram - np.diag(np.diag(gram))
+    assert np.max(np.abs(off_diagonal)) < 0.10
+
+
+def test_global_response_model_recovers_known_law_on_holdout() -> None:
+    original = _spec()
+    analysis_config = copy.deepcopy(original.analysis_config)
+    analysis_config["global_model"].update(
+        {
+            "cv_folds": 3,
+            "ridge_lambdas": [0.0],
+            "bootstrap_replicates": 8,
+        }
+    )
+    spec = replace(original, analysis_config=analysis_config)
+    metric = MetricLimit("oml.max_aspect_ratio", "<=", 10.0, True)
+
+    def result(case) -> dict:
+        x = case.perturbations
+        response = (
+            4.0
+            + 0.6 * x["root_chord_m"]
+            + 0.3 * x["chord_ratio_b1_root"] * x["chord_ratio_b2_root"]
+        )
+        return {
+            "case": case.to_dict(),
+            "attempts": [
+                {
+                    "level": "L3",
+                    "acceptance": {"flat_metrics": {"oml.max_aspect_ratio": response}},
+                }
+            ],
+        }
+
+    results = [
+        *(result(case) for case in spec.global_train_cases()),
+        *(result(case) for case in spec.validation_cases()),
+    ]
+    model = fit_response_model(spec, results, "L3", metric)
+    assert model is not None
+    assert model["validation"]["normalized_rmse"] < 1.0e-10
+    assert model["validation"]["classification"]["false_accepts"] == 0
+    assert model["deployable"]
+    intervals = model["sensitivity_confidence_intervals"]
+    assert intervals is not None and intervals["replicates"] == 8
+    total = model["sobol_indices_from_validated_surrogate"]["total_effect"]
+    assert total["root_chord_m"] > total["chord_ratio_b1_root"] > 0.0
 
 
 @pytest.mark.integration
@@ -219,3 +304,8 @@ def test_baseline_pygeo_uniform_source_lattice() -> None:
     assert len(carrier.sections) == 14
     assert geometry["realised"]["quality_passed"]
     assert geometry["realised"]["minimum_source_spacing_fraction"] > 0.07
+    descriptors = geometry["descriptors"]
+    assert descriptors["scale"]["aspect_ratio"] > 0.0
+    assert len(descriptors["planform"]["panel_taper_ratios"]) == 3
+    assert descriptors["airfoil_shape"]["thickness_ratio_max"] > 0.0
+    assert not descriptors["airfoil_shape"]["independent_thickness_effect_identifiable"]

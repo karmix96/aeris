@@ -14,7 +14,7 @@ from scipy.stats import spearmanr
 
 from .spec import StudySpec, VariableSpec
 
-ANALYSIS_SCHEMA = "aeris.pygeo_surface_mesh_analysis.v1"
+ANALYSIS_SCHEMA = "aeris.pygeo_surface_mesh_analysis.v2"
 
 
 def _case(result: Mapping[str, Any]) -> Mapping[str, Any]:
@@ -113,11 +113,11 @@ def rank_variable_names(
     return [name for _score, _index, name in scored]
 
 
-def _polynomial_fit(x: Sequence[float], y: Sequence[float]) -> dict[str, Any]:
+def _polynomial_fit(x: Sequence[float], y: Sequence[float], *, max_degree: int) -> dict[str, Any]:
     x_array = np.asarray(x, dtype=float)
     y_array = np.asarray(y, dtype=float)
     unique_x = np.unique(np.round(x_array, decimals=12))
-    degree = min(2, len(unique_x) - 1)
+    degree = min(int(max_degree), len(unique_x) - 1)
     if degree < 1:
         return {
             "degree": 0,
@@ -137,18 +137,27 @@ def _polynomial_fit(x: Sequence[float], y: Sequence[float]) -> dict[str, Any]:
         "degree": degree,
         "coefficients_ascending": [float(value) for value in coefficients],
         "r2": None if r2 is None else float(r2),
+        "baseline_slope_per_normalized_delta": (None if degree < 1 else float(coefficients[1])),
+        "baseline_curvature_per_normalized_delta2": (
+            None if degree < 2 else float(2.0 * coefficients[2])
+        ),
     }
 
 
-def _trend(deltas: Sequence[float]) -> str:
-    tolerance = max(1.0e-14, max((abs(value) for value in deltas), default=0.0) * 1.0e-8)
-    signs = {int(np.sign(value)) for value in deltas if abs(value) > tolerance}
-    if not signs:
+def _trend(x_values: Sequence[float], y_values: Sequence[float]) -> str:
+    paired = sorted(zip(x_values, y_values, strict=False), key=lambda item: item[0])
+    if len(paired) < 2:
         return "flat_over_tested_points"
-    if signs == {1}:
-        return "increases_from_baseline"
-    if signs == {-1}:
-        return "decreases_from_baseline"
+    y = [float(item[1]) for item in paired]
+    deltas = np.diff(y)
+    tolerance = max(1.0e-14, max((abs(value) for value in y), default=0.0) * 1.0e-8)
+    active = [value for value in deltas if abs(value) > tolerance]
+    if not active:
+        return "flat_over_tested_points"
+    if all(value > 0.0 for value in active):
+        return "monotone_increasing_over_tested_points"
+    if all(value < 0.0 for value in active):
+        return "monotone_decreasing_over_tested_points"
     return "nonmonotone_or_direction_changes"
 
 
@@ -202,7 +211,9 @@ def ofat_laws(
             y = [float(baseline_metrics[metric_path]), *(item[1] for item in paired)]
             baseline = y[0]
             deltas = [value - baseline for value in y[1:]]
-            fit = _polynomial_fit(x, y)
+            fit = _polynomial_fit(
+                x, y, max_degree=int(spec.analysis_config["local_polynomial_max_degree"])
+            )
             metric_laws[metric_path] = {
                 "baseline": baseline,
                 "minimum": min(y),
@@ -213,8 +224,14 @@ def ofat_laws(
                     if abs(baseline) <= 1.0e-15
                     else max(abs(value) for value in deltas) / abs(baseline)
                 ),
-                "trend": _trend(deltas),
+                "trend": _trend(x, y),
                 "fit_in_normalized_fraction": fit,
+                "baseline_slope_per_public_unit": {
+                    "low_side": float(fit["baseline_slope_per_normalized_delta"])
+                    / (variable.baseline - variable.low),
+                    "high_side": float(fit["baseline_slope_per_normalized_delta"])
+                    / (variable.high - variable.baseline),
+                },
             }
         passed_values: list[float] = []
         if baseline_result.get("limits_satisfied", False):
@@ -322,21 +339,21 @@ def pairwise_interactions(
     return {"summaries": summaries, "cases": cases}
 
 
-def lhs_correlations(
+def global_rank_correlations(
     spec: StudySpec,
     results: Sequence[Mapping[str, Any]],
 ) -> dict[str, Any]:
-    lhs_results = [
+    global_results = [
         result
         for result in _eligible_reference_results(results)
-        if _case(result).get("stage") == "lhs"
+        if _case(result).get("stage") == "global_train"
     ]
     output: dict[str, Any] = {}
     for variable in spec.variables:
         per_metric: dict[str, Any] = {}
         x = []
         rows = []
-        for result in lhs_results:
+        for result in global_results:
             public = _case(result).get("public_values", {})
             if isinstance(public, Mapping) and variable.name in public:
                 x.append(float(public[variable.name]))
@@ -353,13 +370,16 @@ def lhs_correlations(
                 continue
             x_values, y_values = zip(*paired, strict=False)
             if np.ptp(y_values) <= 0.0:
-                rho, pvalue = 0.0, 1.0
+                rho = 0.0
             else:
-                rho, pvalue = spearmanr(x_values, y_values)
+                rho, _pvalue = spearmanr(x_values, y_values)
             per_metric[metric.path] = {
                 "spearman_rho": float(rho),
-                "p_value": float(pvalue),
                 "samples": len(paired),
+                "inference": (
+                    "descriptive association in the designed global-training set; "
+                    "no iid p-value reported"
+                ),
             }
         output[variable.name] = per_metric
     return output
@@ -467,8 +487,9 @@ def refinement_summary(
         "nonmonotone_pass_cases": nonmonotone_cases,
         "observed_transition_deltas": transition_output,
         "caution": (
-            "Fine-level pass rates are conditional because the adaptive ladder stops "
-            "after the first passing level. L3 is the unbiased common-reference level."
+            "Research ladders are complete, so level pass rates are unconditional "
+            "over observed cases. If complete_ladder is disabled in a derivative "
+            "run, fine-level pass rates become conditional on earlier failures."
         ),
     }
 
@@ -509,7 +530,7 @@ def build_analysis(
         "ranking": ranking_rows,
         "ofat_candidate_laws": laws,
         "pairwise_interactions": pairwise_interactions(spec, results),
-        "lhs_rank_correlations": lhs_correlations(spec, results),
+        "global_rank_correlations": global_rank_correlations(spec, results),
         "refinement": refinement_summary(spec, results),
         "interpretation_guardrails": [
             (
@@ -524,7 +545,10 @@ def build_analysis(
                 "OFAT laws hold all other variables at baseline; pairwise "
                 "residuals quantify departures from additivity."
             ),
-            "Latin-hypercube rank correlations are association measures, not causal derivatives.",
+            (
+                "Global-training Spearman correlations are descriptive association "
+                "measures, not causal derivatives."
+            ),
             "A failed L5 case remains unresolved; limits are never relaxed automatically.",
         ],
     }
@@ -585,9 +609,10 @@ def render_candidate_laws_markdown(spec: StudySpec, analysis: Mapping[str, Any])
                     continue
                 coefficients = list(fit.get("coefficients_ascending", []))
                 terms = []
-                labels = ("1", "f", "f²")
+                labels = ("1", "f", "f^2", "f^3")
                 for index, coefficient in enumerate(coefficients):
-                    terms.append(f"{float(coefficient):+.6g}·{labels[index]}")
+                    label = labels[index] if index < len(labels) else f"f^{index}"
+                    terms.append(f"{float(coefficient):+.6g}*{label}")
                 r2 = fit.get("r2")
                 r2_text = "n/a" if r2 is None else f"{float(r2):.4f}"
                 lines.append(
@@ -619,7 +644,7 @@ def render_candidate_laws_markdown(spec: StudySpec, analysis: Mapping[str, Any])
             ),
             "",
             (
-                "See `mesh_analysis.json` for pairwise residuals, LHS "
+                "See `mesh_analysis.json` for pairwise residuals, global "
                 "correlations, fit coefficients, and transition statistics."
             ),
             "",
@@ -629,11 +654,19 @@ def render_candidate_laws_markdown(spec: StudySpec, analysis: Mapping[str, Any])
 
 
 def analyze_workdir(spec: StudySpec, workdir: Path) -> dict[str, Any]:
+    from .modeling import build_agent_law
     from .runner import collect_results, write_json
 
     results = collect_results(workdir)
     analysis = build_analysis(spec, results)
     output_dir = Path(workdir)
+    agent_law = build_agent_law(spec, results)
+    write_json(output_dir / "agent_mesh_law.json", agent_law)
+    analysis["agent_law"] = {
+        "path": str((output_dir / "agent_mesh_law.json").resolve()),
+        "deployment_ready": agent_law["deployment_ready"],
+        "deployment_blockers": agent_law["deployment_blockers"],
+    }
     write_json(output_dir / "mesh_analysis.json", analysis)
     (output_dir / "candidate_mesh_laws.md").write_text(
         render_candidate_laws_markdown(spec, analysis),

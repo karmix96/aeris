@@ -1,0 +1,133 @@
+# Aeris wide-bound pyGeo SMOKE DoE (roadmap step 2).
+#
+# Purpose: exercise the pyGeo master-loft path across a WIDE design space (not the
+# pinned paper1_bwb_pygeo.yaml point) to confirm robustness — every sampled design
+# must build a valid, QC-accepted loft whose reference metrics reproduce the
+# planform and whose smoothing envelope stays bounded.
+#
+# Bounds are borrowed from configs/geometry/bwb_explore_wide.yaml (a validated wide
+# range), with two pyGeo-required constraints preserved from paper1_bwb_pygeo.yaml:
+#   1. flat-root-panel invariant: dihedral_root = 0 AND dihedral_b1 = {0, 0}
+#   2. exactly one symmetric trailing-edge control surface (physical CAD contract)
+#
+# Light path (neutral loft + gate) sweep:
+#   PYTHONPATH=src .venv/bin/python -m standalone.pygeo_validation.validate_config_frame \
+#     --config configs/geometry/paper1_bwb_pygeo_smoke_doe.yaml --doe 24 \
+#     --report-dir configs/geometry/pygeo_validation_evidence
+name: paper1_bwb_pygeo_smoke_doe
+geometry:
+  generator:
+    id: bwb_segmented_v1
+    seed: 2002
+
+  controls:
+    n_points: 12
+    n_spline_inboard: 12
+    n_spline_outboard: 6
+    spline_split_ratio: 0.55
+    desired_curvature_strength: 0.85
+    segment_length_variation: 0.0
+    sweep_variation: 0.0
+
+  planform_bounds:
+    c1_m:        {min: 1.20, max: 2.00}
+    c2_ratio:    {min: 0.45, max: 0.65}
+    c3_ratio:    {min: 0.30, max: 0.45}
+    c4_ratio:    {min: 0.08, max: 0.20}
+    b_total_m:   {min: 1.20, max: 2.00}
+    b3_ratio:    {min: 0.45, max: 0.55}
+    split_ratio: {min: 0.35, max: 0.55}
+    sw1_deg:     {min: 30.0, max: 55.0}
+    sw2_deg:     {min: 10.0, max: 45.0}
+    sw3_deg:     {min:  0.0, max: 30.0}
+
+  section_bounds:
+    airfoil_name: naca23012
+    dihedral_root_deg: 0.0
+    twist_b0_deg:    {min: -2.0, max:  2.0}
+    twist_b1_deg:    {min: -4.0, max:  2.0}
+    twist_b2_deg:    {min: -5.0, max:  2.0}
+    twist_b3_deg:    {min: -6.0, max:  2.0}
+
+    # pyGeo invariant: the complete b0-b1 root panel is exactly flat.
+    dihedral_b1_deg: {min:  0.0, max:  0.0}
+    dihedral_b2_deg: {min:  0.0, max:  8.0}
+    dihedral_b3_deg: {min:  0.0, max: 10.0}
+
+    station_airfoils:
+      b0: naca23012
+      b1: naca4412
+      b2: naca2412
+      b3: naca0012
+
+  outputs:
+    save_plot: false
+    build_aerosandbox: false
+
+  control_surfaces:
+    enabled: true
+    surfaces:
+      - name: elevon
+        family: trailing_edge
+        hinge_point: 0.75
+        symmetric: true
+        required: true
+        deflection_sign: standard
+        spanwise: {start_frac: 0.60, end_frac: 0.95}
+
+  pygeo:
+    enabled: true
+    airfoil_database: data/airfoil_database
+    k_span: 3
+    frame_mode: aeris_frame
+    n_ctl: null
+    tip: none
+    tip_scale: 0.25
+    enforce_flat_root_panel: true
+
+    extraction:
+      spanwise_sections: 25
+      chordwise_points: 241
+      cst_order: 8
+
+    surface_sampling:
+      chordwise_points: 141
+      spanwise_points: 121
+
+    quality:
+      warn_plane_warp_chord: 3.0e-3
+      max_plane_warp_chord: 1.0e-2
+      max_cst_rms_chord: 1.0e-3
+      fail_on_rejection: true
+
+    commands:
+      delta_e_sym_deg: 0.0
+      delta_a_diff_deg: 0.0
+
+    physical_cad:
+      enabled: true
+      topology: split_elevon
+      design_deflection_limit_deg: 20.0
+      hinge_gap_fraction: 0.005
+      boundary_clearance_fraction: 0.005
+      chordwise_points: 81
+      minimum_te_thickness_fraction: 5.0e-4
+      tessellation_tolerance_m: 7.5e-4
+      tessellation_angular_tolerance_rad: 0.12
+      max_master_to_cad_deviation_cref: 0.005
+      fail_on_invalid: true
+
+    outputs:
+      write_iges: true
+      write_tecplot: true
+      write_surface_npz: true
+      write_section_dat: true
+      write_step: true
+      verify_step_import: true
+      write_brep: false
+      write_stl: true
+      write_obj: true
+      write_vtk: true
+      write_cad_npz: true
+      save_visualization: false
+      visualization_dpi: 180

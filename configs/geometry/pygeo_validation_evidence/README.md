@@ -61,3 +61,15 @@ span fractions 0 → 0.06), not a spike — the master surface is well-formed at
 root.
 
 See `memory/project_master_geometry_decision.md`.
+
+## Step 2 — wide-bound smoke DoE
+
+`paper1_bwb_pygeo_smoke_doe_doe.md` records a 24-design sweep over WIDE bounds
+(`configs/geometry/paper1_bwb_pygeo_smoke_doe.yaml`, seeds 3000..3023): **24/24
+built + gate-pass** in ~22 s. Reference-metric reproduction holds across the space
+(area rel err max 4.0e-4); the smooth-loft envelope stays bounded (chord p95 1.68% /
+max 1.88%, twist p95 0.49° / max 0.55°, LE max ~12 mm) — consistent with the single
+production point, confirming the master-loft path is robust.
+
+The heavy production CAD/STEP/Gmsh sweep is a desktop runbook; see
+`standalone/pygeo_validation/RUNBOOK.md` step 3.

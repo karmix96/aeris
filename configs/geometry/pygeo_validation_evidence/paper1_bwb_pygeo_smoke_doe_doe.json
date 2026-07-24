@@ -1,0 +1,33 @@
+{
+  "config": "configs/geometry/paper1_bwb_pygeo_smoke_doe.yaml",
+  "generated_utc": "2026-07-24T09:45:29.291381+00:00",
+  "mode": "doe",
+  "n_requested": 24,
+  "base_seed": 3000,
+  "n_built": 24,
+  "n_gate_pass": 24,
+  "n_failed": 0,
+  "failures": [],
+  "envelope_p50": {
+    "max_chord_rel_err": 0.011273669710059471,
+    "max_twist_err_deg": 0.4086235527661932,
+    "max_x_le_err_m": 0.005525489177012045,
+    "max_z_le_err_m": 0.008104515246410551
+  },
+  "envelope_p95": {
+    "max_chord_rel_err": 0.01679372066064676,
+    "max_twist_err_deg": 0.4911305318058267,
+    "max_x_le_err_m": 0.009444730954844964,
+    "max_z_le_err_m": 0.0097808258913365
+  },
+  "envelope_max": {
+    "max_chord_rel_err": 0.0187641877290384,
+    "max_twist_err_deg": 0.5485641129117176,
+    "max_x_le_err_m": 0.012026770679218382,
+    "max_z_le_err_m": 0.010443509071313488
+  },
+  "ref_area_rel_p95": 0.00028701889259480384,
+  "ref_area_rel_max": 0.00039891200157089746,
+  "ref_span_rel_max": 0.00018402630495967842,
+  "pass": true
+}

@@ -117,11 +117,12 @@ def _panel_angle_deg(d_perp: float, d_span: float) -> float:
     return math.degrees(math.atan2(d_perp, d_span))
 
 
-def _load_case(config_path: Path):
+def _load_case(config_path: Path, seed: int | None = None):
     raw = load_yaml_config(config_path)
     generator_id, gcfg = resolve_generator_and_config(raw)
     generator = get_geometry_generator(generator_id)
-    sample = generator.sample_one(gcfg, seed=gcfg.generator.seed)
+    effective_seed = gcfg.generator.seed if seed is None else seed
+    sample = generator.sample_one(gcfg, seed=effective_seed)
     planform = generate_bwb_planform_from_sample(sample, gcfg)
     section_geometry = build_section_geometry_from_sample(planform, sample, gcfg)
     return gcfg, sample, planform, section_geometry
@@ -172,8 +173,8 @@ def _station_fractions(stations: tuple[StationDefinition, ...]) -> np.ndarray:
     return (ys - ys[0]) / span
 
 
-def validate(config_path: Path, tol: dict[str, float]) -> dict[str, Any]:
-    gcfg, sample, planform, section_geometry = _load_case(config_path)
+def validate(config_path: Path, tol: dict[str, float], seed: int | None = None) -> dict[str, Any]:
+    gcfg, sample, planform, section_geometry = _load_case(config_path, seed=seed)
 
     stations = tuple(stations_from_records(section_geometry.sections, _airfoil_db(gcfg)))
     frame_mode = "asb_frame" if gcfg.pygeo.frame_mode == "aeris_frame" else gcfg.pygeo.frame_mode
@@ -349,6 +350,7 @@ def validate(config_path: Path, tol: dict[str, float]) -> dict[str, Any]:
     passed = all(c.passed for c in gate_checks)
     return {
         "config": str(config_path),
+        "seed": gcfg.generator.seed if seed is None else seed,
         "generated_utc": datetime.now(UTC).isoformat(),
         "k_span": gcfg.pygeo.k_span,
         "frame_mode": frame_mode,
@@ -498,17 +500,126 @@ def _fmt_report_md(result: dict[str, Any], invariance: dict[str, Any] | None) ->
     return "\n".join(lines)
 
 
+def run_doe(config_path: Path, tol: dict[str, float], n: int, base_seed: int) -> dict[str, Any]:
+    """Sweep N sampled designs through the neutral-loft gate; aggregate robustness."""
+    cases: list[dict[str, Any]] = []
+    failures: list[dict[str, Any]] = []
+    for i in range(n):
+        seed = base_seed + i
+        try:
+            r = validate(config_path, tol, seed=seed)
+            cases.append(r)
+            if not r["pass"]:
+                failures.append({"seed": seed, "reason": "gate_fail",
+                                 "n_gate_failed": r["n_gate_failed"]})
+        except Exception as exc:  # a build/QC/extraction failure is a robustness result
+            failures.append({"seed": seed, "reason": f"{type(exc).__name__}: {exc}"})
+
+    def pct(values: list[float], q: float) -> float:
+        return float(np.percentile(values, q)) if values else float("nan")
+
+    env_keys = ["max_chord_rel_err", "max_twist_err_deg", "max_x_le_err_m", "max_z_le_err_m"]
+    envelopes = {k: [c["loft_smoothing_envelope"][k] for c in cases] for k in env_keys}
+    # Reference-metric worst relative deltas across the passing set.
+    ref_area_rel = []
+    ref_span_rel = []
+    for c in cases:
+        for chk in c["checks"]:
+            if chk["name"] == "ref.area" and chk["reference"]:
+                ref_area_rel.append(abs(chk["delta"]) / abs(chk["reference"]))
+            if chk["name"] == "ref.span" and chk["reference"]:
+                ref_span_rel.append(abs(chk["delta"]) / abs(chk["reference"]))
+
+    return {
+        "config": str(config_path),
+        "generated_utc": datetime.now(UTC).isoformat(),
+        "mode": "doe",
+        "n_requested": n,
+        "base_seed": base_seed,
+        "n_built": len(cases),
+        "n_gate_pass": sum(1 for c in cases if c["pass"]),
+        "n_failed": len(failures),
+        "failures": failures,
+        "envelope_p50": {k: pct(v, 50) for k, v in envelopes.items()},
+        "envelope_p95": {k: pct(v, 95) for k, v in envelopes.items()},
+        "envelope_max": {k: (max(v) if v else float("nan")) for k, v in envelopes.items()},
+        "ref_area_rel_p95": pct(ref_area_rel, 95),
+        "ref_area_rel_max": max(ref_area_rel) if ref_area_rel else float("nan"),
+        "ref_span_rel_max": max(ref_span_rel) if ref_span_rel else float("nan"),
+        "pass": len(failures) == 0,
+    }
+
+
+def _fmt_doe_md(d: dict[str, Any]) -> str:
+    status = "PASS" if d["pass"] else "FAIL"
+    L = [
+        f"# pyGeo wide-bound smoke DoE — {status}",
+        "",
+        f"- config: `{d['config']}`",
+        f"- generated: {d['generated_utc']}",
+        f"- samples: {d['n_built']}/{d['n_requested']} built, "
+        f"{d['n_gate_pass']}/{d['n_built']} gate-pass, {d['n_failed']} failed "
+        f"(seeds {d['base_seed']}..{d['base_seed'] + d['n_requested'] - 1})",
+        "",
+        "## Reference-metric reproduction across the DoE",
+        "",
+        f"- area relative error: p95 {d['ref_area_rel_p95']:.2e}, max {d['ref_area_rel_max']:.2e}",
+        f"- span relative error: max {d['ref_span_rel_max']:.2e}",
+        "",
+        "## Smooth-loft characterization envelope (NOT gated)",
+        "",
+        "| metric | p50 | p95 | max |",
+        "|---|---|---|---|",
+    ]
+    labels = {
+        "max_chord_rel_err": "chord rel err",
+        "max_twist_err_deg": "twist err (deg)",
+        "max_x_le_err_m": "x_LE err (m)",
+        "max_z_le_err_m": "z_LE err (m)",
+    }
+    for k, lab in labels.items():
+        L.append(
+            f"| {lab} | {d['envelope_p50'][k]:.4g} | {d['envelope_p95'][k]:.4g} "
+            f"| {d['envelope_max'][k]:.4g} |"
+        )
+    L.append("")
+    if d["failures"]:
+        L.append("## Failures")
+        L.append("")
+        for f in d["failures"]:
+            L.append(f"- seed {f['seed']}: {f['reason']}")
+        L.append("")
+    return "\n".join(L)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--config", required=True, type=Path)
     ap.add_argument("--report-dir", type=Path, default=None,
-                    help="If set, write <stem>_validation.{json,md} here.")
+                    help="If set, write report(s) here.")
     ap.add_argument("--check-controls-invariance", action="store_true")
+    ap.add_argument("--doe", type=int, default=0,
+                    help="Sweep N sampled designs through the neutral-loft gate.")
+    ap.add_argument("--doe-base-seed", type=int, default=3000)
     for k, v in DEFAULTS.items():
         ap.add_argument(f"--tol-{k.replace('_', '-')}", type=float, default=v, dest=f"tol_{k}")
     args = ap.parse_args()
 
     tol = {k: getattr(args, f"tol_{k}") for k in DEFAULTS}
+
+    if args.doe and args.doe > 0:
+        d = run_doe(args.config, tol, args.doe, args.doe_base_seed)
+        md = _fmt_doe_md(d)
+        print(md)
+        if args.report_dir is not None:
+            args.report_dir.mkdir(parents=True, exist_ok=True)
+            stem = args.config.stem
+            (args.report_dir / f"{stem}_doe.json").write_text(
+                json.dumps(d, indent=2), encoding="utf-8")
+            (args.report_dir / f"{stem}_doe.md").write_text(md, encoding="utf-8")
+            print(f"\n[written] {args.report_dir}/{stem}_doe.{{json,md}}")
+        return 0 if d["pass"] else 1
+
     result = validate(args.config, tol)
     invariance = (
         check_controls_invariance(args.config, tol) if args.check_controls_invariance else None

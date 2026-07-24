@@ -1091,7 +1091,10 @@ def pygeo_native_aero(
     altitude: float = typer.Option(0.0, "--altitude", help="Altitude (m)."),
     sections: int = typer.Option(25, "--sections", help="Spanwise extraction sections."),
     control_input_deg: float = typer.Option(
-        0.0, "--control-input-deg", help="Symmetric elevon deflection (deg)."
+        0.0, "--control-input-deg", help="Symmetric elevon deflection δe (pitch, deg)."
+    ),
+    diff_input_deg: float = typer.Option(
+        0.0, "--diff-input-deg", help="Differential elevon deflection δa (roll, deg)."
     ),
     viscous: bool = typer.Option(
         True, "--viscous/--no-viscous", help="Apply the NeuralFoil viscous correction."
@@ -1131,8 +1134,8 @@ def pygeo_native_aero(
     fc = FlightCondition(alpha_deg=alpha, velocity_mps=velocity, altitude_m=altitude)
     res = run_pygeo_native_avl_case(
         flight_condition=fc, output_dir=out, extracted_sections=ex, semispan_m=semispan,
-        control=meta["control"], control_input_deg=control_input_deg, viscous=viscous,
-        name="pygeo_native",
+        control=meta["control"], control_input_deg=control_input_deg,
+        diff_input_deg=diff_input_deg, viscous=viscous, name="pygeo_native",
     )
     qc = summarize_pygeo_avl_qc(res) if viscous else {}
 
@@ -1140,7 +1143,8 @@ def pygeo_native_aero(
         "config": str(config), "alpha_deg": alpha, "velocity_mps": velocity,
         "altitude_m": altitude, "viscous": viscous, "status": res.status,
         "CL": res.cl, "CD": res.cd, "cd_ind": res.cd_ind, "cd_profile": res.cd_profile,
-        "cd_total": res.cd_total, "cm": res.cm, "l_over_d": res.l_over_d,
+        "cd_total": res.cd_total, "cm": res.cm, "cl_roll": res.cl_roll,
+        "cn": res.cn, "cy": res.cy, "l_over_d": res.l_over_d,
         "l_over_d_viscous": res.l_over_d_viscous, "n_cdcl_injected": res.n_cdcl_injected,
         "qc": qc, "meta": meta, "warnings": res.warnings,
     }

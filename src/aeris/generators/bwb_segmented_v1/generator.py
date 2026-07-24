@@ -43,7 +43,7 @@ class BwbSegmentedV1Generator(
     no file I/O. All real work happens in params/sampling/validation/services.
     """
 
-    GENERATOR_ID = "bwb_segmented_v1"
+    GENERATOR_ID = "bwb_segmented"
 
     @property
     def display_name(self) -> str:

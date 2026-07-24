@@ -420,10 +420,9 @@ def _resolve_family_version(generator_cfg: dict[str, Any]) -> tuple[str, str]:
     if explicit_id is not None:
         id_str = _as_str(explicit_id, field_name="geometry.generator.id")
         if "_v" not in id_str:
-            raise ValueError(
-                f"Cannot derive family+version from generator id={id_str!r}. "
-                "Expected format: <family>_v<version> (e.g. 'bwb_segmented_v1')."
-            )
+            # Suffix-less id (e.g. 'bwb_segmented'): the whole id is the family,
+            # version defaults to v1 for internal manifest bookkeeping.
+            return id_str, "v1"
         family_part, version_suffix = id_str.rsplit("_v", 1)
         if not family_part or not version_suffix:
             raise ValueError(

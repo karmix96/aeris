@@ -38,10 +38,12 @@ _TOTALS_KEYS = {
     "CDtot": "cd",
     "CDind": "cd_ind",
     "CDvis": "cd_vis",
-    "Cmtot": "cm",
+    "Cmtot": "cm",       # pitch moment (elevon δe authority)
+    "Cltot": "cl_roll",  # roll moment  (differential elevon δa authority)
+    "Cntot": "cn",       # yaw moment
+    "CYtot": "cy",       # side force
     "CLff": "cl_ff",
     "CDff": "cd_ff",
-    "CYtot": "cy",
 }
 
 
@@ -53,7 +55,10 @@ class NativeAvlResult:
     cd_ind: float | None = None
     cd_vis: float | None = None        # AVL's own injected-CDCL viscous drag
     cd_ff: float | None = None
-    cm: float | None = None
+    cm: float | None = None            # pitch moment
+    cl_roll: float | None = None       # roll moment (differential elevon authority)
+    cn: float | None = None            # yaw moment
+    cy: float | None = None            # side force
     cd_profile: float | None = None    # NeuralFoil strip-integrated profile drag
     cd_total: float | None = None      # cd_ind + cd_profile
     l_over_d: float | None = None
@@ -159,7 +164,6 @@ def write_native_avl(
     ctrl_hinge = float(control.get("hinge_point", 0.75)) if control else 0.75
     ctrl_start = float(control.get("start_frac", 0.0)) if control else 0.0
     ctrl_end = float(control.get("end_frac", 1.0)) if control else 1.0
-    ctrl_sgndup = 1 if (control and control.get("symmetric", True)) else -1
 
     n = len(ordered)
     for i, sec in enumerate(ordered):
@@ -187,12 +191,19 @@ def write_native_avl(
             "",
         ]
         # Control surface on interval sections within the elevon span band.
+        # Two AVL controls on the same hinge so the elevon does BOTH:
+        #   <name>_sym  (SgnDup +1) = symmetric pitch  -> AVL d1
+        #   <name>_diff (SgnDup -1) = differential roll -> AVL d2
+        # Net: right = de_sym + da_diff, left = de_sym - da_diff.
         frac = float(getattr(sec, "span_fraction", le[1]))
         if control and i != n - 1 and ctrl_start <= frac <= ctrl_end:
             lines += [
                 "CONTROL",
                 "#name, gain, Xhinge, XYZhvec, SgnDup",
-                f"{ctrl_name} 1 {ctrl_hinge} 0 0 0 {ctrl_sgndup}",
+                f"{ctrl_name}_sym 1 {ctrl_hinge} 0 0 0  1",
+                "",
+                "CONTROL",
+                f"{ctrl_name}_diff 1 {ctrl_hinge} 0 0 0 -1",
                 "",
             ]
         lines += [
@@ -234,6 +245,7 @@ def run_native_avl_case(
     polar_store: Any | None = None,
     control: dict[str, Any] | None = None,
     control_input_deg: float = 0.0,
+    diff_input_deg: float = 0.0,
     avl_command: str = "avl",
     timeout_sec: int = 180,
     nchordwise: int = 8,
@@ -287,7 +299,8 @@ def run_native_avl_case(
     # scale forces, not the coefficients we parse, so they are not set here.
     keys: list[str] = ["oper", f"a a {alpha}", f"b b {beta}"]
     if control:
-        keys += ["d1", "d1", f"{control_input_deg}"]
+        keys += ["d1", "d1", f"{control_input_deg}"]   # symmetric (pitch)
+        keys += ["d2", "d2", f"{diff_input_deg}"]       # differential (roll)
     keys += ["x", "ft", totals_file, "fs", strip_file, "", "quit"]
 
     stdout_path = output_dir / "avl_stdout.txt"
@@ -320,6 +333,9 @@ def run_native_avl_case(
     result.cd_vis = totals.get("cd_vis")
     result.cd_ff = totals.get("cd_ff")
     result.cm = totals.get("cm")
+    result.cl_roll = totals.get("cl_roll")
+    result.cn = totals.get("cn")
+    result.cy = totals.get("cy")
     if result.cl is not None and result.cd and result.cd > 0:
         result.l_over_d = result.cl / result.cd
 

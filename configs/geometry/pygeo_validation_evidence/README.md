@@ -41,17 +41,23 @@ under-rotates inboard; chord runs slightly full inboard), so it cancels in the
 integral — hence the near-exact reference metrics. Max LE 8.4 mm sits inside the
 previously recorded 19.1 mm Hausdorff for this loft family.
 
-## Open modelling question (for Mike)
+## Modelling decision — RESOLVED (Mike, 2026-07-24)
 
-Whether this pointwise smoothing is "acceptable reproduction" or a defect depends
-on which geometry is the master:
+**The smooth MACH-Aero pyGeo B-spline loft is the master geometry** ("keep the
+spline of mach aero and use this approach in aeris"). The piecewise Aeris station
+stack is control input only; the loft is NOT re-parameterized to interpolate it.
 
-- **(A) smooth loft is master** — the B-spline OML is authoritative; the piecewise
-  station stack is only the control input. Then the gate above is the validation,
-  and the smoothing is a characterized property that lives in the design space.
-- **(B) piecewise station stack is master** — the loft *should* interpolate the
-  authored stations; 1.2% / 0.4° / 8 mm is then a kSpan/nCtl tuning target
-  (roadmap step 3).
+Therefore:
+- The **GATE above IS the step-1 validation** and it PASSES.
+- The pointwise deviation (chord 1.18%, twist 0.40°, LE 8.4 mm) is a **characterized
+  property of the master surface**, living in the design-variable space — not a
+  defect. It is reported honestly, not tuned away.
+- Aero (AVL/NeuralFoil) and mesh already extract from the realized surface, so the
+  whole pipeline is consistent with this master.
 
-This is the "smooth loft ≠ piecewise" boundary from the roadmap's honest-physics
-section. See [[project_pygeo_integration]].
+Endpoint check: the realized root twist (0.299° where authored root = 0°) was
+confirmed a **smooth B-spline end offset** (0.299 → 0.216 → 0.047 → −0.215 across
+span fractions 0 → 0.06), not a spike — the master surface is well-formed at its
+root.
+
+See `memory/project_master_geometry_decision.md`.

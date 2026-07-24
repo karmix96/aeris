@@ -37,16 +37,33 @@ standalone study rather than the coarse 4-airfoil step.
 Regression tests: `tests/generators/bwb_segmented_v1/test_pygeo_avl_adapter.py`
 (assembly always; end-to-end AVL run when the `avl` binary is present — passes).
 
-## Still open in step 4 (refinements on the working chain)
+## Step 4 QC gate (added)
 
-- **NeuralFoil confidence gate** — surface `min_confidence` per section and gate /
-  warn below threshold (study flagged it ungated).
-- **Drag-agreement tolerance** — cross-check AVL-internal CDvis vs the independent
-  strip integration and flag divergence (study saw ~4.1% agreement).
+`summarize_pygeo_avl_qc(result, drag_agreement_tol=0.10, max_extrapolated_strips=0)`
+gates the viscous cross-check the solver already records. On the smoke case:
+
+| QC metric | value |
+|---|---|
+| drag agreement (strip cd_total vs AVL CDtot) | **2.25%** (< 10% tol) → OK |
+| cd_avl_cdtot | 0.01193 |
+| cd_total (strip) | 0.01220 |
+| extrapolated strips (reliability) | 0 → OK |
+| pass | True |
+
+The 2.25% agreement independently cross-validates the viscous correction (study
+saw ~4.1%). Thresholds are QC choices (not physics) — flagged for Mike's review.
+
+## Still open in step 4
+
+- **NeuralFoil confidence gate (true)** — the QC gate currently uses the
+  extrapolated-strip count as the reliability proxy; `NeuralFoilPolarSource` does
+  not surface NeuralFoil's `analysis_confidence`. Surfacing it is a future
+  enhancement (touches the shared polar source).
 - **CDCL negative-side endpoint fitter** — the fitter can pick a poor negative
-  endpoint; needs the fixed variant.
+  endpoint; needs the fixed variant. (Physics/algorithm — for Mike.)
 - **Explicit Mach** — currently metadata (mach=0 → derived from velocity/atmosphere
-  for polar-bin selection); make the intended Mach handling explicit.
+  for polar-bin selection); explicit compressibility handling is a modelling
+  decision for Mike (raw NeuralFoil ignores Mach; ASB extended wrapper adds it).
 - **Native AVL writer** — remove the AeroSandbox serializer coupling entirely.
 
 See `standalone/pygeo_avl_study/` for the proven feasibility study and

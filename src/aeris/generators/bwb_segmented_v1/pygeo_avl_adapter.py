@@ -211,6 +211,50 @@ def build_pygeo_aero_input(
     )
 
 
+def summarize_pygeo_avl_qc(
+    result: Any,
+    *,
+    drag_agreement_tol: float = 0.10,
+    max_extrapolated_strips: int = 0,
+) -> dict[str, Any]:
+    """QC gate over the viscous cross-check the production solver already records.
+
+    Reads (additively, no solver change) the metadata the AVL solver stores for
+    the polar bridge and applies documented tolerances:
+
+    - **drag agreement**: |cd_total(strip) − CDtot(AVL)| / cd_total, from
+      ``solver_metadata["profile_drag_cd_total_vs_avl_cdtot_rel_diff"]``. The
+      standalone study observed ~4.1%; the solver warns at 15%. Default gate 10%.
+    - **strip reliability**: ``profile_drag_n_extrapolated_strips`` — strips whose
+      CL fell outside the 2D polar range (clamped, unreliable). This is the
+      production reliability proxy; the raw NeuralFoil analysis_confidence is NOT
+      surfaced by NeuralFoilPolarSource (future enhancement). Default gate 0.
+
+    NOTE (for Mike): the two thresholds are QC choices, not physics — review and
+    adjust `drag_agreement_tol` / `max_extrapolated_strips` to taste.
+
+    Returns a dict with the metrics and boolean `pass`.
+    """
+    meta = getattr(result, "solver_metadata", {}) or {}
+    rel_diff = meta.get("profile_drag_cd_total_vs_avl_cdtot_rel_diff")
+    n_extrap = meta.get("profile_drag_n_extrapolated_strips")
+
+    drag_ok = rel_diff is None or float(rel_diff) <= drag_agreement_tol
+    reliability_ok = n_extrap is None or int(n_extrap) <= max_extrapolated_strips
+
+    return {
+        "drag_agreement_rel_diff": rel_diff,
+        "drag_agreement_tol": drag_agreement_tol,
+        "drag_agreement_ok": bool(drag_ok),
+        "cd_avl_cdtot": meta.get("cd_avl_cdtot"),
+        "cd_total_strip": getattr(result, "cd_total", None),
+        "n_extrapolated_strips": n_extrap,
+        "max_extrapolated_strips": max_extrapolated_strips,
+        "reliability_ok": bool(reliability_ok),
+        "pass": bool(drag_ok and reliability_ok),
+    }
+
+
 def run_pygeo_avl_case(
     *,
     flight_condition: FlightCondition,

@@ -10,8 +10,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-import aerosandbox as asb
 import numpy as np
+
+# NOTE: aerosandbox is imported lazily inside the functions that construct ASB
+# objects (see _control_surface_to_asb / build_aerosandbox_geometry). All module-,
+# class-, and function-level ``asb.*`` annotations are strings under
+# ``from __future__ import annotations`` and are never evaluated, so importing this
+# module (e.g. for AeroSandboxGeometryResult) does NOT require aerosandbox. This
+# keeps the pyGeo-only geometry path fully decoupled from AeroSandbox.
 
 from aeris.generators.bwb_segmented_v1.params import (
     BWBGeneratorConfig,
@@ -69,6 +75,8 @@ def _normalized_semispan_fractions(y_stations: np.ndarray) -> np.ndarray:
 
 
 def _control_surface_to_asb(spec: ControlSurfaceConfig) -> asb.ControlSurface:
+    import aerosandbox as asb
+
     if spec.family != "trailing_edge":
         raise ValueError(
             f"Unsupported control surface family {spec.family!r}. "
@@ -198,6 +206,8 @@ def build_aerosandbox_geometry(
     config: BWBGeneratorConfig,
     section_map=None,    # optional SectionAirfoilMap for polar bridge
 ) -> AeroSandboxGeometryResult:
+    import aerosandbox as asb
+
     airfoil_name = config.section_bounds.airfoil_name
 
     y_stations = np.asarray([section.y_m for section in section_geometry.sections], dtype=float)

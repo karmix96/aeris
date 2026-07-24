@@ -164,3 +164,18 @@ CAD additionally requires CadQuery; STEP verification requires Gmsh. Run
 `aeris geometry info` to see which optional components are available in the
 active environment.
 
+### AeroSandbox decoupling
+
+The pyGeo-only geometry path is fully decoupled from AeroSandbox: the neutral
+loft, exact frame reconstruction, section extraction, and their whole import
+chain (generator `services` → `aerosandbox_adapter`, `reconstruction_export`,
+`export`) build and run with `aerosandbox` unavailable. Every `aerosandbox`
+import in the shared generator modules is lazy (in-function); all `asb.*`
+annotations are strings under `from __future__ import annotations` and are never
+evaluated. AeroSandbox is imported only when the AeroSandbox realization or the
+dual-backend comparison is actually requested. A subprocess regression guard
+(`tests/generators/bwb_segmented_v1/test_pygeo_aerosandbox_decoupled.py`) blocks
+`aerosandbox` and rebuilds the loft frame, so a reintroduced module-level import
+fails CI. AeroSandbox is still retained as the AVL serializer (see roadmap
+step 4); that runtime coupling is intentional and separate.
+

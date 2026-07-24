@@ -15,7 +15,11 @@ import math
 from pathlib import Path
 
 import numpy as np
-import aerosandbox as asb
+
+# aerosandbox is imported lazily in _write_airfoil_dat; all ``asb.*`` annotations
+# here are strings under ``from __future__ import annotations`` and are never
+# evaluated, so importing this module does not require aerosandbox (keeps the
+# pyGeo-only path decoupled).
 
 
 def export_reconstruction_artifacts(
@@ -150,6 +154,8 @@ def _write_airfoil_dat(airfoil: asb.Airfoil, path: Path) -> dict[str, object]:
         # The .dat file will contain NACA 0012 coordinates, NOT the intended
         # airfoil. This is a data quality issue: check airfoil_name in section_3d.csv.
         import warnings
+
+        import aerosandbox as asb
         warnings.warn(
             f"Airfoil coordinates not found for {path.name!r}; "
             "falling back to NACA 0012. Check airfoil_name in section_3d.csv.",

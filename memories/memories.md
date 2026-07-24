@@ -90,6 +90,15 @@ Decisions live in `decision/` (ADR-style); study write-ups in `studies/`.
   (cst_points=80 → 159-pt loop); AeroSandbox uses ~99.
 - **`section_bounds.airfoil_name`** is the fallback airfoil (overridden per station
   by `station_airfoils`); kept = root airfoil to avoid confusion.
+- **Generator-id rename gotcha:** renaming GENERATOR_ID to `bwb_segmented` broke
+  code that hardcoded `generator_id != "bwb_segmented_v1"` (neutral + deflected CAD
+  export). Fixed to accept `("bwb_segmented","bwb_segmented_v1")`. If more id-gated
+  code surfaces, apply the same. Package import path stays `bwb_segmented_v1`.
+- **Geometry runs are LEAN by default:** write-only inspection CSVs (control_points/
+  planform_sections/section_3d + pyGeo authored/extracted/cst) are gated behind
+  `geometry.outputs.save_detail_csv` / `--save-detail` (off). Empty `sections/` dir
+  only created when section DATs are written. GUI Visualize tab embeds the pyGeo
+  interactive 3-D HTML in-page (streamlit.components.v1.html).
 
 ## Key references
 

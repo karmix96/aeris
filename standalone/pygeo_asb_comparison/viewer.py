@@ -132,13 +132,18 @@ def main() -> int:
     if args.save_html is not None:
         args.save_html.mkdir(parents=True, exist_ok=True)
 
+    index_rows = []
     for idx, seed in enumerate(seeds):
         both = build_both(args.config, seed=seed, n_sections=args.n_sections)
         fig = make_figure(both)
         if args.save_html is not None:
             out = args.save_html / f"pygeo_vs_asb_seed{seed}.html"
             fig.write_html(out, include_plotlyjs="cdn", full_html=True)
-            print(f"[{idx + 1}/{len(seeds)}] wrote {out}")
+            pm = pygeo_metrics(both.extracted)
+            am = asb_metrics(both.asb_result)
+            rd = relative_diff(pm, am)
+            index_rows.append((seed, out.name, pm, rd))
+            print(f"[{idx + 1}/{len(seeds)}] wrote {out.name}")
         else:
             print(f"[{idx + 1}/{len(seeds)}] seed {seed}: opening interactive window…")
             fig.show()
@@ -148,7 +153,41 @@ def main() -> int:
                 except (KeyboardInterrupt, EOFError):
                     print("\nstopped.")
                     break
+
+    if args.save_html is not None and index_rows:
+        _write_index(args.save_html / "index.html", index_rows)
+        print(f"\n[index] open {args.save_html / 'index.html'} to browse all "
+              f"{len(index_rows)} candidates")
     return 0
+
+
+def _write_index(path: Path, rows: list) -> None:
+    """A small index page linking every candidate view + its key metrics."""
+    cells = []
+    for seed, fname, pm, rd in rows:
+        cells.append(
+            f"<tr><td><a href='{fname}'>seed {seed}</a></td>"
+            f"<td>{pm['span_m']:.3f} ({rd['span_m']*100:+.2f}%)</td>"
+            f"<td>{pm['planform_area_m2']:.3f} ({rd['planform_area_m2']*100:+.2f}%)</td>"
+            f"<td>{pm['aspect_ratio']:.2f} ({rd['aspect_ratio']*100:+.2f}%)</td>"
+            f"<td>{pm['taper_ratio']:.3f} ({rd['taper_ratio']*100:+.2f}%)</td>"
+            f"<td>{pm['volume_m3']:.4f} ({rd['volume_m3']*100:+.2f}%)</td></tr>"
+        )
+    html = (
+        "<!doctype html><meta charset='utf-8'><title>pyGeo vs ASB — candidates</title>"
+        "<style>body{font-family:system-ui,sans-serif;margin:2rem;background:#17212b;"
+        "color:#e6ecf2}h1{font-size:1.3rem}table{border-collapse:collapse;font-size:.85rem}"
+        "td,th{border:1px solid #334252;padding:.4rem .7rem;text-align:right}"
+        "td:first-child,th:first-child{text-align:left}a{color:#4a9eff}"
+        "th{background:#202b36;position:sticky;top:0}</style>"
+        f"<h1>pyGeo vs AeroSandbox — {len(rows)} candidates</h1>"
+        "<p>Metric = pyGeo value (pyGeo−ASB relative Δ). Click a seed for the "
+        "interactive side-by-side 3D view.</p>"
+        "<table><tr><th>candidate</th><th>span m</th><th>area m²</th><th>AR</th>"
+        "<th>taper</th><th>volume m³</th></tr>"
+        + "".join(cells) + "</table>"
+    )
+    path.write_text(html, encoding="utf-8")
 
 
 if __name__ == "__main__":

@@ -107,18 +107,65 @@ def geometry_generate(
             "running a direct AeroSandbox-versus-pyGeo comparison."
         ),
     ),
+    backend: str | None = typer.Option(
+        None,
+        "--backend",
+        help="Backend override: aerosandbox | pygeo | both. Sets which tool(s) build.",
+    ),
+    exports: str = typer.Option(
+        "",
+        "--exports",
+        help=(
+            "Comma-separated pyGeo exports to WRITE (default: none). Choices: "
+            "iges,tecplot,sections,npz,step,stl,obj,vtk. CAD-family (step/stl/obj/vtk) "
+            "auto-enables physical CAD. Nothing is written unless listed here."
+        ),
+    ),
+    physical_cad: bool | None = typer.Option(
+        None,
+        "--physical-cad/--no-physical-cad",
+        help="Build the split-elevon physical CAD (default: off).",
+    ),
+    save_metrics: bool = typer.Option(
+        False,
+        "--save-metrics/--no-save-metrics",
+        help="Save per-geometry metrics (span, area, AR, taper, MAC, volume, wetted) "
+        "to geometry_metrics.json.",
+    ),
+    seed: int | None = typer.Option(
+        None, "--seed", help="Override geometry.generator.seed for this run."
+    ),
 ) -> None:
     """
     Generate one deterministic geometry case from a YAML config.
 
-    This is the production single-case geometry entry point.
-    The command stays thin: actual orchestration belongs in the geometry
-    pipeline, and geometry mathematics belongs in the selected generator.
+    This is the production single-case geometry entry point. Outputs are OPT-IN:
+    nothing (CAD/STEP/STL/VTK/plots) is written unless requested via --exports /
+    --physical-cad / --save-plot.
     """
     import json as _json
 
-    generation_kwargs = {"save_plot": save_plot}
-    if build_aerosandbox is not None:
+    if backend is not None and backend.strip().lower() not in {
+        "aerosandbox", "asb", "pygeo", "both"
+    }:
+        typer.secho(
+            f"[AERIS] Invalid --backend {backend!r}. Use aerosandbox|pygeo|both.",
+            fg=typer.colors.RED, err=True,
+        )
+        raise typer.Exit(code=2)
+
+    export_set = {e.strip().lower() for e in exports.split(",") if e.strip()}
+
+    generation_kwargs = {
+        "save_plot": save_plot,
+        "backend": backend,
+        "pygeo_exports": export_set or None,
+        "physical_cad": physical_cad,
+        "save_metrics": save_metrics,
+        "seed": seed,
+    }
+    # --backend is the primary switch; only pass the legacy flag when no backend.
+    if build_aerosandbox is not None and backend is None:
         generation_kwargs["build_aerosandbox"] = build_aerosandbox
     exit_code, run_root = run_geometry_generation(config, **generation_kwargs)
 

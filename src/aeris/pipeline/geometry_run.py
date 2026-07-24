@@ -95,11 +95,112 @@ def _mark_manifest_failed(
     }
 
 
+_PYGEO_EXPORT_KEYS = {
+    "iges": ["write_iges"],
+    "tecplot": ["write_tecplot"],
+    "sections": ["write_section_dat"],
+    "npz": ["write_surface_npz", "write_cad_npz"],
+    "step": ["write_step"],
+    "stl": ["write_stl"],
+    "obj": ["write_obj"],
+    "vtk": ["write_vtk"],
+}
+_PYGEO_CAD_EXPORTS = {"step", "stl", "obj", "vtk"}
+
+
+def _apply_operator_overrides(
+    raw_config: dict[str, Any],
+    *,
+    backend: str | None,
+    pygeo_exports: "set[str] | None",
+    physical_cad: bool | None,
+    plot: bool | None,
+    seed: int | None,
+) -> dict[str, Any]:
+    """Patch the raw YAML config with run-time operator overrides (opt-in).
+
+    Keeps the "nothing saved unless requested" policy: exports/CAD/plots are only
+    turned ON here when explicitly requested.
+    """
+    geom = raw_config.setdefault("geometry", {})
+    outputs = geom.setdefault("outputs", {})
+    pygeo = geom.setdefault("pygeo", {})
+    pygeo_outputs = pygeo.setdefault("outputs", {})
+
+    if backend is not None:
+        b = backend.strip().lower()
+        outputs["build_aerosandbox"] = b in ("aerosandbox", "asb", "both")
+        pygeo["enabled"] = b in ("pygeo", "both")
+    if seed is not None:
+        geom.setdefault("generator", {})["seed"] = int(seed)
+    if plot is not None:
+        outputs["save_plot"] = bool(plot)
+        pygeo_outputs["save_visualization"] = bool(plot)
+    if physical_cad is not None:
+        pygeo.setdefault("physical_cad", {})["enabled"] = bool(physical_cad)
+    if pygeo_exports:
+        exps = {e.strip().lower() for e in pygeo_exports if e.strip()}
+        for name in exps:
+            for key in _PYGEO_EXPORT_KEYS.get(name, []):
+                pygeo_outputs[key] = True
+        # CAD-family exports need the physical CAD stage enabled.
+        if (exps & _PYGEO_CAD_EXPORTS) and physical_cad is None:
+            pygeo.setdefault("physical_cad", {})["enabled"] = True
+    return raw_config
+
+
+def _write_geometry_metrics(
+    case_summary: dict[str, Any], path: Path, sample: Any | None = None
+) -> Path | None:
+    """Write a concise per-geometry metrics file (the important info) for whichever
+    backend(s) actually built. Returns the path, or None if empty."""
+    backends = case_summary.get("realization_backends") or {}
+    asb_on = bool((backends.get("aerosandbox") or {}).get("enabled"))
+    pygeo_on = bool((backends.get("pygeo") or {}).get("enabled"))
+
+    # Taper / root / tip from the design vector (authored; realized differs <0.3%).
+    taper_extra: dict[str, float] = {}
+    if sample is not None:
+        try:
+            root = float(sample.c1_m)
+            tipr = float(sample.c4_ratio)
+            taper_extra = {
+                "root_chord_m": root,
+                "tip_chord_m": root * tipr,
+                "taper_ratio": tipr,
+            }
+        except Exception:
+            taper_extra = {}
+
+    metrics: dict[str, Any] = {}
+    if pygeo_on:
+        pg = case_summary.get("pygeo_reference_values") or (
+            case_summary.get("pygeo") or {}
+        ).get("reference_values")
+        if isinstance(pg, dict) and pg:
+            metrics["pygeo"] = {**pg, **taper_extra}
+    if asb_on:
+        rv = case_summary.get("reference_values")
+        if isinstance(rv, dict) and rv:
+            # ASB reports taper_ratio itself; keep it if present, else fill.
+            merged = {**taper_extra, **rv}
+            metrics["aerosandbox"] = merged
+    if not metrics:
+        return None
+    path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+    return path
+
+
 def run_geometry_generation(
     config_path: str | Path,
     *,
     save_plot: bool | None = None,
     build_aerosandbox: bool | None = None,
+    backend: str | None = None,
+    pygeo_exports: "set[str] | None" = None,
+    physical_cad: bool | None = None,
+    save_metrics: bool = False,
+    seed: int | None = None,
 ) -> tuple[int, Path | None]:
     """
     Run a single geometry-generation workflow.
@@ -148,6 +249,10 @@ def run_geometry_generation(
         logger.info("Run root: %s", run_paths.root)
 
         raw_config = load_yaml_config(resolved_config_path)
+        _apply_operator_overrides(
+            raw_config, backend=backend, pygeo_exports=pygeo_exports,
+            physical_cad=physical_cad, plot=save_plot, seed=seed,
+        )
         shutil.copy2(resolved_config_path, copied_config_path)
 
         geometry_dir.mkdir(parents=True, exist_ok=True)
@@ -189,6 +294,15 @@ def run_geometry_generation(
         case_summary = generator.summarize_case(case_result)
         logger.info("Geometry case generated successfully")
 
+        metrics_path = None
+        if save_metrics:
+            metrics_path = _write_geometry_metrics(
+                case_summary, run_paths.root / "geometry_metrics.json",
+                sample=design_sample,
+            )
+            if metrics_path is not None:
+                logger.info("Geometry metrics saved: %s", metrics_path)
+
         manifest["geometry"] = {
             "name": getattr(generator_config, "name", None),
             "generator_family": getattr(
@@ -205,7 +319,13 @@ def run_geometry_generation(
             "operator_overrides": {
                 "save_plot": save_plot,
                 "build_aerosandbox": build_aerosandbox,
+                "backend": backend,
+                "pygeo_exports": sorted(pygeo_exports) if pygeo_exports else None,
+                "physical_cad": physical_cad,
+                "save_metrics": save_metrics,
+                "seed": seed,
             },
+            "metrics_path": str(metrics_path) if metrics_path else None,
         }
         manifest["status"] = "success"
         manifest["completed_at_utc"] = _utc_now_iso()

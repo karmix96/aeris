@@ -1,0 +1,379 @@
+{
+  "config": "configs/geometry/paper1_bwb_pygeo.yaml",
+  "generated_utc": "2026-07-24T08:33:58.714608+00:00",
+  "k_span": 3,
+  "frame_mode": "asb_frame",
+  "n_stations": 17,
+  "set_values": {
+    "chords_m": [
+      1.6005,
+      0.88107525,
+      0.6089902500000001,
+      0.19286025
+    ],
+    "sweeps_deg": [
+      40.0005,
+      25.000500000000002,
+      10.000499999999999
+    ],
+    "twists_deg": [
+      0.0005,
+      -1.9995,
+      -2.9995000000000003,
+      -3.9995000000000003
+    ],
+    "dihedrals_deg": [
+      0.0,
+      0.0,
+      2.5004999999999997,
+      4.000500000000001
+    ],
+    "b_total_m": 1.6005
+  },
+  "per_station": [
+    {
+      "station": "b0(root)",
+      "airfoil": "naca23012",
+      "y_m": 0.0,
+      "set_chord_m": 1.6005,
+      "intended_chord_m": 1.6008578900645412,
+      "realized_chord_m": 1.6017741199463813,
+      "set_twist_deg": 0.0005,
+      "intended_twist_deg": 0.00013192838801799178,
+      "realized_twist_deg": 0.2992554054002163
+    },
+    {
+      "station": "b1",
+      "airfoil": "naca23012",
+      "y_m": 0.33934104589232045,
+      "set_chord_m": 0.88107525,
+      "intended_chord_m": 0.9524464537338855,
+      "realized_chord_m": 0.9606103258186085,
+      "set_twist_deg": -1.9995,
+      "intended_twist_deg": -1.8839958413881666,
+      "realized_twist_deg": -1.536708834396142
+    },
+    {
+      "station": "b2",
+      "airfoil": "naca4412",
+      "y_m": 0.763517353257721,
+      "set_chord_m": 0.6089902500000001,
+      "intended_chord_m": 0.6449310636314036,
+      "realized_chord_m": 0.6448533504620373,
+      "set_twist_deg": -2.9995000000000003,
+      "intended_twist_deg": -2.9166960986030332,
+      "realized_twist_deg": -2.5584503235515523
+    },
+    {
+      "station": "b3(tip)",
+      "airfoil": "naca0012",
+      "y_m": 1.6000985621335215,
+      "set_chord_m": 0.19286025,
+      "intended_chord_m": 0.1931116489641288,
+      "realized_chord_m": 0.19291853046055096,
+      "set_twist_deg": -3.9995000000000003,
+      "intended_twist_deg": -3.9997465320852594,
+      "realized_twist_deg": -4.314826923710926
+    }
+  ],
+  "per_panel": [
+    {
+      "panel": "b0(root)->b1",
+      "set_sweep_deg": 40.0005,
+      "intended_sweep_LE_deg": 39.020672206188095,
+      "realized_sweep_LE_deg": 38.856269640332826,
+      "intended_dihedral_deg": 0.0,
+      "realized_dihedral_deg": -0.5316950539892067
+    },
+    {
+      "panel": "b1->b2",
+      "set_sweep_deg": 25.000500000000002,
+      "intended_sweep_LE_deg": 26.32090600465901,
+      "realized_sweep_LE_deg": 26.439582908470125,
+      "intended_dihedral_deg": 1.1000032742826367,
+      "realized_dihedral_deg": 0.9398487377028321
+    },
+    {
+      "panel": "b2->b3(tip)",
+      "set_sweep_deg": 10.000499999999999,
+      "intended_sweep_LE_deg": 11.05675599049422,
+      "realized_sweep_LE_deg": 11.163315243414653,
+      "intended_dihedral_deg": 3.2094827119323197,
+      "realized_dihedral_deg": 2.8630502209161492
+    }
+  ],
+  "reference_metrics": {
+    "area": {
+      "realized": 2.237233024111026,
+      "planform": 2.2371761166272583
+    },
+    "span": {
+      "realized": 3.20033210150341,
+      "planform": 3.200197124267043
+    },
+    "aspect_ratio": {
+      "realized": 4.578032529259211,
+      "planform": 4.5777628135985395
+    },
+    "MAC_realized_m": 0.8977608938943138
+  },
+  "checks": [
+    {
+      "name": "frame_reconstruction_error",
+      "measured": 6.591949208711867e-16,
+      "reference": 0.0,
+      "delta": 6.591949208711867e-16,
+      "abs_delta": 6.591949208711867e-16,
+      "tol": 1e-06,
+      "unit": "-",
+      "gate": true,
+      "pass": true
+    },
+    {
+      "name": "loft.max_chord_rel_err",
+      "measured": 0.011796728578902071,
+      "reference": 0.0,
+      "delta": 0.011796728578902071,
+      "abs_delta": 0.011796728578902071,
+      "tol": 0.005,
+      "unit": "-",
+      "gate": false,
+      "pass": false
+    },
+    {
+      "name": "loft.max_twist_err",
+      "measured": 0.3977706920180002,
+      "reference": 0.0,
+      "delta": 0.3977706920180002,
+      "abs_delta": 0.3977706920180002,
+      "tol": 0.05,
+      "unit": "deg",
+      "gate": false,
+      "pass": false
+    },
+    {
+      "name": "loft.max_x_le_err",
+      "measured": 0.006708624711693763,
+      "reference": 0.0,
+      "delta": 0.006708624711693763,
+      "abs_delta": 0.006708624711693763,
+      "tol": 0.002,
+      "unit": "m",
+      "gate": false,
+      "pass": false
+    },
+    {
+      "name": "loft.max_z_le_err",
+      "measured": 0.008366654159645708,
+      "reference": 0.0,
+      "delta": 0.008366654159645708,
+      "abs_delta": 0.008366654159645708,
+      "tol": 0.002,
+      "unit": "m",
+      "gate": false,
+      "pass": false
+    },
+    {
+      "name": "b0(root).chord_SET",
+      "measured": 1.6017741199463813,
+      "reference": 1.6005,
+      "delta": 0.0012741199463812691,
+      "abs_delta": 0.0012741199463812691,
+      "tol": 0.008002500000000001,
+      "unit": "m",
+      "gate": false,
+      "pass": true
+    },
+    {
+      "name": "b0(root).twist_SET",
+      "measured": 0.2992554054002163,
+      "reference": 0.0005,
+      "delta": 0.2987554054002163,
+      "abs_delta": 0.2987554054002163,
+      "tol": 0.05,
+      "unit": "deg",
+      "gate": false,
+      "pass": false
+    },
+    {
+      "name": "b1.chord_SET",
+      "measured": 0.9606103258186085,
+      "reference": 0.88107525,
+      "delta": 0.07953507581860852,
+      "abs_delta": 0.07953507581860852,
+      "tol": 0.00440537625,
+      "unit": "m",
+      "gate": false,
+      "pass": false
+    },
+    {
+      "name": "b1.twist_SET",
+      "measured": -1.536708834396142,
+      "reference": -1.9995,
+      "delta": 0.46279116560385813,
+      "abs_delta": 0.46279116560385813,
+      "tol": 0.05,
+      "unit": "deg",
+      "gate": false,
+      "pass": false
+    },
+    {
+      "name": "b2.chord_SET",
+      "measured": 0.6448533504620373,
+      "reference": 0.6089902500000001,
+      "delta": 0.03586310046203722,
+      "abs_delta": 0.03586310046203722,
+      "tol": 0.0030449512500000005,
+      "unit": "m",
+      "gate": false,
+      "pass": false
+    },
+    {
+      "name": "b2.twist_SET",
+      "measured": -2.5584503235515523,
+      "reference": -2.9995000000000003,
+      "delta": 0.44104967644844795,
+      "abs_delta": 0.44104967644844795,
+      "tol": 0.05,
+      "unit": "deg",
+      "gate": false,
+      "pass": false
+    },
+    {
+      "name": "b3(tip).chord_SET",
+      "measured": 0.19291853046055096,
+      "reference": 0.19286025,
+      "delta": 5.828046055095237e-05,
+      "abs_delta": 5.828046055095237e-05,
+      "tol": 0.0009643012500000001,
+      "unit": "m",
+      "gate": false,
+      "pass": true
+    },
+    {
+      "name": "b3(tip).twist_SET",
+      "measured": -4.314826923710926,
+      "reference": -3.9995000000000003,
+      "delta": -0.3153269237109253,
+      "abs_delta": 0.3153269237109253,
+      "tol": 0.05,
+      "unit": "deg",
+      "gate": false,
+      "pass": false
+    },
+    {
+      "name": "panel0.sweep_vs_intended",
+      "measured": 38.856269640332826,
+      "reference": 39.020672206188095,
+      "delta": -0.16440256585526924,
+      "abs_delta": 0.16440256585526924,
+      "tol": 0.15,
+      "unit": "deg",
+      "gate": false,
+      "pass": false
+    },
+    {
+      "name": "panel0.dihedral_vs_intended",
+      "measured": -0.5316950539892067,
+      "reference": 0.0,
+      "delta": -0.5316950539892067,
+      "abs_delta": 0.5316950539892067,
+      "tol": 0.15,
+      "unit": "deg",
+      "gate": false,
+      "pass": false
+    },
+    {
+      "name": "panel1.sweep_vs_intended",
+      "measured": 26.439582908470125,
+      "reference": 26.32090600465901,
+      "delta": 0.11867690381111373,
+      "abs_delta": 0.11867690381111373,
+      "tol": 0.15,
+      "unit": "deg",
+      "gate": false,
+      "pass": true
+    },
+    {
+      "name": "panel1.dihedral_vs_intended",
+      "measured": 0.9398487377028321,
+      "reference": 1.1000032742826367,
+      "delta": -0.1601545365798046,
+      "abs_delta": 0.1601545365798046,
+      "tol": 0.15,
+      "unit": "deg",
+      "gate": false,
+      "pass": false
+    },
+    {
+      "name": "panel2.sweep_vs_intended",
+      "measured": 11.163315243414653,
+      "reference": 11.05675599049422,
+      "delta": 0.106559252920432,
+      "abs_delta": 0.106559252920432,
+      "tol": 0.15,
+      "unit": "deg",
+      "gate": false,
+      "pass": true
+    },
+    {
+      "name": "panel2.dihedral_vs_intended",
+      "measured": 2.8630502209161492,
+      "reference": 3.2094827119323197,
+      "delta": -0.34643249101617046,
+      "abs_delta": 0.34643249101617046,
+      "tol": 0.15,
+      "unit": "deg",
+      "gate": false,
+      "pass": false
+    },
+    {
+      "name": "ref.area",
+      "measured": 2.237233024111026,
+      "reference": 2.2371761166272583,
+      "delta": 5.690748376752097e-05,
+      "abs_delta": 5.690748376752097e-05,
+      "tol": 0.011185880583136291,
+      "unit": "m2",
+      "gate": true,
+      "pass": true
+    },
+    {
+      "name": "ref.span",
+      "measured": 3.20033210150341,
+      "reference": 3.200197124267043,
+      "delta": 0.00013497723636701764,
+      "abs_delta": 0.00013497723636701764,
+      "tol": 0.003200197124267043,
+      "unit": "m",
+      "gate": true,
+      "pass": true
+    },
+    {
+      "name": "ref.aspect_ratio",
+      "measured": 4.578032529259211,
+      "reference": 4.5777628135985395,
+      "delta": 0.0002697156606714657,
+      "abs_delta": 0.0002697156606714657,
+      "tol": 0.0228888140679927,
+      "unit": "-",
+      "gate": true,
+      "pass": true
+    }
+  ],
+  "n_checks": 22,
+  "n_gate": 4,
+  "n_gate_failed": 0,
+  "loft_smoothing_envelope": {
+    "max_chord_rel_err": 0.011796728578902071,
+    "max_twist_err_deg": 0.3977706920180002,
+    "max_x_le_err_m": 0.006708624711693763,
+    "max_z_le_err_m": 0.008366654159645708
+  },
+  "pass": true,
+  "controls_invariance": {
+    "max_station_deviation": 0.0,
+    "tol": 0.002,
+    "pass": true
+  }
+}

@@ -95,6 +95,15 @@ airfoil stations sit at the planform kinks (A) or at user-chosen fractions (B).
 - Author `configs/geometry/bwb.yaml`; verify it builds with pyGeo AND AeroSandbox
   and runs native-AVL viscous.
 - Repoint the ~30 src references (CLI help/defaults, GUI config list) and ~40 test
-  references to `bwb.yaml` (or parametrize tests). Delete the other 13 configs only
-  after references are migrated and the suite is green.
+  references to `bwb.yaml` (or parametrize tests).
 - Record the airfoil-baseline rationale here; future airfoil swaps update this doc.
+
+## Migration status (2026-07-24)
+
+DONE, but more aggressively than the plan above. Mike's call: "just delete all
+configs and keep the unified; we'll debug the tests as we rebuild." So ALL 14 other
+geometry configs were deleted — `configs/geometry/` now holds only `bwb.yaml`.
+Consequence (accepted): ~25 tests reference the deleted configs and are RED by
+design until repointed/rewritten to `bwb.yaml` during the rebuild. GUI/CLI degrade
+gracefully (dynamic config lists show bwb.yaml). This red suite is the intended
+state of the from-scratch rebuild, NOT a regression.

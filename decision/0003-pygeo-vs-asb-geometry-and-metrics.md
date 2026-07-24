@@ -17,22 +17,23 @@ report), `viewer.py` (interactive side-by-side 3D).
 
 Both backends realize the SAME sampled Aeris sections, so any metric difference is
 a TOOL-realization difference (smooth pyGeo B-spline loft vs AeroSandbox piecewise),
-not a different design. Sweep of 50 designs over the full DoE:
+not a different design. Sweep of 50 designs over the DoE (rescaled small BWB ISR
+UAV per DECISION-0002: full span 1.5–2.5 m, AR 2.6–6.2):
 
-- **50/50 built on both backends, 0 failures** — the wide DoE is robust.
+- **50/50 built on both backends, 0 failures** — the DoE is robust.
 - |pyGeo − ASB| / ASB across the DoE (mean / max):
 
   | metric | mean | max |
   |---|---|---|
-  | span | 0.17% | 0.44% |
-  | planform area | 0.14% | 0.32% |
-  | aspect ratio | 0.21% | 0.57% |
+  | span | 0.16% | 0.43% |
+  | planform area | 0.12% | 0.28% |
+  | aspect ratio | 0.21% | 0.58% |
   | MAC | 0.03% | 0.12% |
   | root chord | 0.03% | 0.04% |
-  | tip chord | 0.30% | 0.32% |
-  | taper ratio | 0.27% | 0.29% |
-  | volume | 0.22% | 0.33% |
-  | wetted area | 0.40% | 0.76% |
+  | tip chord | 0.29% | 0.32% |
+  | taper ratio | 0.26% | 0.29% |
+  | volume | 0.19% | 0.32% |
+  | wetted area | 0.72% | 1.29% |
 
 Reading: the two tools agree to **well under 1%** on every integrated metric. The
 largest gaps are **tip chord / taper (~0.3%)** and **wetted area (~0.4–0.8%)** —

@@ -69,6 +69,14 @@ Decisions live in `decision/` (ADR-style); study write-ups in `studies/`.
   exists.
 - Generator id renamed `bwb_segmented_v1` → **`bwb_segmented`** (config-facing;
   package path unchanged).
+- **Geometry creation is opt-in + backend-selectable.** `aeris geometry generate`
+  flags: `--backend aerosandbox|pygeo|both`, `--exports iges,tecplot,sections,npz,
+  step,stl,obj,vtk` (default NONE; CAD-family auto-enables physical CAD),
+  `--physical-cad`, `--save-metrics` (→ `geometry_metrics.json` with span/area/AR/
+  MAC/volume/wetted + taper/root/tip, attributed to the backend(s) that built),
+  `--seed`. Nothing (CAD/VTK/STEP/plots) written unless requested. GUI geometry page
+  "① Create geometry" has two backend tabs (AeroSandbox | pyGeo), pyGeo tab exposes
+  the export checkboxes + physical-CAD + save-metrics.
 
 ## Technical gotchas (hard-won)
 

@@ -679,53 +679,55 @@ def _export_base_artifacts(result: PyGeoGeometryResult, config: BWBGeneratorConf
     output = result.output_dir
     output.mkdir(parents=True, exist_ok=True)
     sections_dir = output / "sections"
-    sections_dir.mkdir(exist_ok=True)
 
-    authored_path = output / "authored_stations.csv"
-    authored_rows = [
-        {
-            "index": station.index,
-            "x_le_m": station.x_le_m,
-            "y_m": station.y_m,
-            "z_le_m": station.z_le_m,
-            "chord_m": station.chord_m,
-            "twist_deg": station.twist_deg,
-            "dihedral_deg": station.dihedral_deg,
-            "airfoil_name": station.airfoil_name,
-            "airfoil_path": str(station.airfoil_path),
-        }
-        for station in result.stations
-    ]
-    _write_csv(authored_path, authored_rows, list(authored_rows[0]))
-    result.artifacts["authored_stations_csv"] = str(authored_path)
+    # Write-only inspection artifacts (authored/extracted/cst) — opt-in only, so
+    # DoE runs are not bloated with per-candidate CSVs nothing consumes.
+    if config.outputs.save_detail_csv:
+        authored_path = output / "authored_stations.csv"
+        authored_rows = [
+            {
+                "index": station.index,
+                "x_le_m": station.x_le_m,
+                "y_m": station.y_m,
+                "z_le_m": station.z_le_m,
+                "chord_m": station.chord_m,
+                "twist_deg": station.twist_deg,
+                "dihedral_deg": station.dihedral_deg,
+                "airfoil_name": station.airfoil_name,
+                "airfoil_path": str(station.airfoil_path),
+            }
+            for station in result.stations
+        ]
+        _write_csv(authored_path, authored_rows, list(authored_rows[0]))
+        result.artifacts["authored_stations_csv"] = str(authored_path)
 
-    extracted_path = output / "extracted_sections.csv"
-    extracted_rows = [section.as_metrics_row() for section in result.extracted]
-    _write_csv(extracted_path, extracted_rows, list(extracted_rows[0]))
-    result.artifacts["extracted_sections_csv"] = str(extracted_path)
+        extracted_path = output / "extracted_sections.csv"
+        extracted_rows = [section.as_metrics_row() for section in result.extracted]
+        _write_csv(extracted_path, extracted_rows, list(extracted_rows[0]))
+        result.artifacts["extracted_sections_csv"] = str(extracted_path)
 
-    cst_path = output / "cst_coefficients.json"
-    _write_json(
-        cst_path,
-        {
-            "schema": "aeris.pygeo.cst_sections.v1",
-            "geometry_id": result.geometry_id,
-            "sections": [
-                {
-                    "section_index": section.index,
-                    "span_fraction": section.span_fraction,
-                    "chord_m": section.chord_m,
-                    "cst": section.cst.to_dict(),
-                    "cst_rms_chord": section.cst_rms_chord,
-                    "cst_max_chord": section.cst_max_chord,
-                    "valid": section.cst_valid,
-                    "failures": list(section.cst_failures),
-                }
-                for section in result.extracted
-            ],
-        },
-    )
-    result.artifacts["cst_coefficients_json"] = str(cst_path)
+        cst_path = output / "cst_coefficients.json"
+        _write_json(
+            cst_path,
+            {
+                "schema": "aeris.pygeo.cst_sections.v1",
+                "geometry_id": result.geometry_id,
+                "sections": [
+                    {
+                        "section_index": section.index,
+                        "span_fraction": section.span_fraction,
+                        "chord_m": section.chord_m,
+                        "cst": section.cst.to_dict(),
+                        "cst_rms_chord": section.cst_rms_chord,
+                        "cst_max_chord": section.cst_max_chord,
+                        "valid": section.cst_valid,
+                        "failures": list(section.cst_failures),
+                    }
+                    for section in result.extracted
+                ],
+            },
+        )
+        result.artifacts["cst_coefficients_json"] = str(cst_path)
 
     control_path = output / "control_surface.json"
     _write_json(
@@ -752,6 +754,7 @@ def _export_base_artifacts(result: PyGeoGeometryResult, config: BWBGeneratorConf
         result.exports["surface_npz"] = "written"
 
     if outputs.write_section_dat:
+        sections_dir.mkdir(exist_ok=True)
         for section in result.extracted:
             _write_section_dat(
                 sections_dir / f"section_{section.index:03d}_yb_{section.span_fraction:.6f}.dat",

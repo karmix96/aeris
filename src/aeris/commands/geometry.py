@@ -132,6 +132,12 @@ def geometry_generate(
         help="Save per-geometry metrics (span, area, AR, taper, MAC, volume, wetted) "
         "to geometry_metrics.json.",
     ),
+    save_detail: bool = typer.Option(
+        False,
+        "--save-detail/--no-save-detail",
+        help="Write the (write-only) inspection CSVs — control_points/planform_sections/"
+        "section_3d + pyGeo authored/extracted/cst. Off by default (lean DoE runs).",
+    ),
     seed: int | None = typer.Option(
         None, "--seed", help="Override geometry.generator.seed for this run."
     ),
@@ -162,6 +168,7 @@ def geometry_generate(
         "pygeo_exports": export_set or None,
         "physical_cad": physical_cad,
         "save_metrics": save_metrics,
+        "save_detail": save_detail,
         "seed": seed,
     }
     # --backend is the primary switch; only pass the legacy flag when no backend.

@@ -110,6 +110,10 @@ def _as_optional_int(value: Any, *, field_name: str) -> int | None:
 class PlotOutputsConfig:
     save_plot: bool = True
     build_aerosandbox: bool = True
+    # Write-only inspection CSVs (control_points/planform_sections/section_3d +
+    # pyGeo authored/extracted/cst). Nothing consumes them; off by default so DoE
+    # runs stay lean. Opt in via --save-detail.
+    save_detail_csv: bool = False
 
 
 @dataclass(frozen=True)
@@ -559,6 +563,10 @@ def build_bwb_generator_config(config: dict[str, Any]) -> BWBGeneratorConfig:
             save_plot=_as_bool(
                 outputs_cfg.get("save_plot", True),
                 field_name="outputs.save_plot",
+            ),
+            save_detail_csv=_as_bool(
+                outputs_cfg.get("save_detail_csv", False),
+                field_name="outputs.save_detail_csv",
             ),
             build_aerosandbox=_as_bool(
                 outputs_cfg.get("build_aerosandbox", True),

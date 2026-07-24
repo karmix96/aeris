@@ -2282,11 +2282,17 @@ def pg_geometry(root, exe, tmo, dry):
             ca1, ca2 = st.columns(2)
             a_plot = ca1.checkbox("Save planform plot", value=False, key="gasb_plot")
             a_metrics = ca2.checkbox("Save metrics", value=True, key="gasb_metrics")
+            a_detail = st.checkbox(
+                "Save inspection CSVs (detail)", value=False, key="gasb_detail",
+                help="Write-only control_points/planform_sections/section_3d CSVs. "
+                "Off keeps runs lean.",
+            )
             a_args = ["geometry", "generate", "--config", sel_cfg, "--backend", "aerosandbox"]
             if a_seed.strip():
                 a_args += ["--seed", a_seed.strip()]
             a_args.append("--save-plot" if a_plot else "--no-save-plot")
             a_args.append("--save-metrics" if a_metrics else "--no-save-metrics")
+            a_args.append("--save-detail" if a_detail else "--no-save-detail")
             _panel(
                 "Generate (AeroSandbox)",
                 "Output → data/runs/<timestamp>_geometry_bwb/",
@@ -2327,6 +2333,11 @@ def pg_geometry(root, exe, tmo, dry):
                 "Build split-elevon physical CAD", value=False, key="gpyg_cad",
                 help="Heavy (CadQuery/OCC). CAD exports (STEP/STL/OBJ/VTK) auto-enable this.",
             )
+            st.checkbox(
+                "Save inspection CSVs (detail)", value=False, key="gpyg_detail",
+                help="Write-only authored/extracted/cst + planform CSVs. Off keeps "
+                "DoE runs lean.",
+            )
             p_args = ["geometry", "generate", "--config", sel_cfg, "--backend", "pygeo"]
             if p_seed.strip():
                 p_args += ["--seed", p_seed.strip()]
@@ -2336,6 +2347,9 @@ def pg_geometry(root, exe, tmo, dry):
                 p_args.append("--physical-cad")
             p_args.append("--save-plot" if p_plot else "--no-save-plot")
             p_args.append("--save-metrics" if p_metrics else "--no-save-metrics")
+            p_args.append(
+                "--save-detail" if st.session_state.get("gpyg_detail") else "--no-save-detail"
+            )
             _panel(
                 "Generate (pyGeo)",
                 "Output → data/runs/<timestamp>_geometry_bwb/",

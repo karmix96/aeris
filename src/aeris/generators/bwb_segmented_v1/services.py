@@ -226,9 +226,11 @@ def generate_geometry_case_from_sample(
         plots_dir.mkdir(parents=True, exist_ok=True)
         plot_path = plots_dir / "planform.png"
 
-    export_control_points_csv(planform, control_points_path)
-    export_planform_sections_csv(planform, planform_sections_path)
-    export_section_3d_csv(section_geometry, section_3d_path)
+    # Write-only inspection CSVs — opt-in (geometry.outputs.save_detail_csv).
+    if config.outputs.save_detail_csv:
+        export_control_points_csv(planform, control_points_path)
+        export_planform_sections_csv(planform, planform_sections_path)
+        export_section_3d_csv(section_geometry, section_3d_path)
 
     if effective_save_plot and plot_path is not None:
         save_planform_plot(planform, section_geometry, config, plot_path)

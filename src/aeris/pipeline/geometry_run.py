@@ -116,6 +116,7 @@ def _apply_operator_overrides(
     physical_cad: bool | None,
     plot: bool | None,
     seed: int | None,
+    save_detail: bool | None = None,
 ) -> dict[str, Any]:
     """Patch the raw YAML config with run-time operator overrides (opt-in).
 
@@ -136,6 +137,8 @@ def _apply_operator_overrides(
     if plot is not None:
         outputs["save_plot"] = bool(plot)
         pygeo_outputs["save_visualization"] = bool(plot)
+    if save_detail is not None:
+        outputs["save_detail_csv"] = bool(save_detail)
     if physical_cad is not None:
         pygeo.setdefault("physical_cad", {})["enabled"] = bool(physical_cad)
     if pygeo_exports:
@@ -200,6 +203,7 @@ def run_geometry_generation(
     pygeo_exports: "set[str] | None" = None,
     physical_cad: bool | None = None,
     save_metrics: bool = False,
+    save_detail: bool | None = None,
     seed: int | None = None,
 ) -> tuple[int, Path | None]:
     """
@@ -252,6 +256,7 @@ def run_geometry_generation(
         _apply_operator_overrides(
             raw_config, backend=backend, pygeo_exports=pygeo_exports,
             physical_cad=physical_cad, plot=save_plot, seed=seed,
+            save_detail=save_detail,
         )
         shutil.copy2(resolved_config_path, copied_config_path)
 

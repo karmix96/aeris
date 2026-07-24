@@ -1,0 +1,137 @@
+# AERIS — the single canonical BWB geometry config.
+#
+# ONE config, used by BOTH backends (see DECISION-0001):
+#   - AeroSandbox : set  outputs.build_aerosandbox: true
+#   - pyGeo       : set  pygeo.enabled: true
+#   - both (cross-check): set both true
+#
+# Fixed airfoils at the four span stations b0/b1/b2/b3 (Panagiotou & Yakinthos
+# BWB UAV baseline). To use different airfoils, just change the four names below
+# to any file in data/airfoil_database (2181 available). b0/b1/b2/b3 sit at the
+# planform group boundaries (root, two kinks, tip).
+#
+# Control surface: one symmetric elevon. Deflect it by setting a nonzero
+# pygeo.commands.delta_e_sym_deg (pyGeo split-CAD) and/or passing
+# --control-input-deg at aero time; 0 = neutral (undeflected). Set
+# control_surfaces.enabled: false for a clean wing with no control surface.
+name: bwb
+
+geometry:
+  generator:
+    id: bwb_segmented_v1
+    seed: 1001
+
+  controls:
+    n_points: 12
+    n_spline_inboard: 12
+    n_spline_outboard: 6
+    spline_split_ratio: 0.55
+    desired_curvature_strength: 0.85
+    segment_length_variation: 0.0
+    sweep_variation: 0.0
+
+  planform_bounds:
+    c1_m: {min: 1.600, max: 1.601}
+    c2_ratio: {min: 0.550, max: 0.551}
+    c3_ratio: {min: 0.380, max: 0.381}
+    c4_ratio: {min: 0.120, max: 0.121}
+    b_total_m: {min: 1.600, max: 1.601}
+    b3_ratio: {min: 0.500, max: 0.501}
+    split_ratio: {min: 0.450, max: 0.451}
+    sw1_deg: {min: 40.0, max: 40.001}
+    sw2_deg: {min: 25.0, max: 25.001}
+    sw3_deg: {min: 10.0, max: 10.001}
+
+  section_bounds:
+    airfoil_name: mh91
+    dihedral_root_deg: 0.0
+    twist_b0_deg: {min: 0.0, max: 0.001}
+    twist_b1_deg: {min: -2.0, max: -1.999}
+    twist_b2_deg: {min: -3.0, max: -2.999}
+    twist_b3_deg: {min: -4.0, max: -3.999}
+
+    # pyGeo invariant: the complete b0-b1 root panel is exactly flat.
+    dihedral_b1_deg: {min: 0.0, max: 0.0}
+    dihedral_b2_deg: {min: 2.5, max: 2.501}
+    dihedral_b3_deg: {min: 4.0, max: 4.001}
+
+    # Four fixed station airfoils (Panagiotou & Yakinthos BWB UAV).
+    # Swap these names for any data/airfoil_database entry to change airfoils.
+    station_airfoils:
+      b0: mh91
+      b1: mh91
+      b2: e374
+      b3: nlf1015
+
+  outputs:
+    save_plot: true
+    build_aerosandbox: false   # set true for the AeroSandbox backend (or both)
+
+  control_surfaces:
+    enabled: true              # set false for a clean wing with no control surface
+    surfaces:
+      - name: elevon
+        family: trailing_edge
+        hinge_point: 0.75
+        symmetric: true
+        required: true
+        deflection_sign: standard
+        spanwise: {start_frac: 0.60, end_frac: 0.95}
+
+  pygeo:
+    enabled: true              # set false for AeroSandbox-only
+    airfoil_database: data/airfoil_database
+    k_span: 3
+    frame_mode: aeris_frame
+    n_ctl: null
+    tip: none
+    tip_scale: 0.25
+    enforce_flat_root_panel: true
+
+    extraction:
+      spanwise_sections: 25
+      chordwise_points: 241
+      cst_order: 8
+
+    surface_sampling:
+      chordwise_points: 141
+      spanwise_points: 121
+
+    quality:
+      warn_plane_warp_chord: 3.0e-3
+      max_plane_warp_chord: 1.0e-2
+      max_cst_rms_chord: 1.0e-3
+      fail_on_rejection: true
+
+    # Elevon deflection for the pyGeo split-CAD. 0 = neutral (undeflected).
+    commands:
+      delta_e_sym_deg: 0.0
+      delta_a_diff_deg: 0.0
+
+    physical_cad:
+      enabled: true
+      topology: split_elevon
+      design_deflection_limit_deg: 20.0
+      hinge_gap_fraction: 0.005
+      boundary_clearance_fraction: 0.005
+      chordwise_points: 81
+      minimum_te_thickness_fraction: 5.0e-4
+      tessellation_tolerance_m: 7.5e-4
+      tessellation_angular_tolerance_rad: 0.12
+      max_master_to_cad_deviation_cref: 0.005
+      fail_on_invalid: true
+
+    outputs:
+      write_iges: true
+      write_tecplot: true
+      write_surface_npz: true
+      write_section_dat: true
+      write_step: true
+      verify_step_import: true
+      write_brep: false
+      write_stl: true
+      write_obj: true
+      write_vtk: true
+      write_cad_npz: true
+      save_visualization: true
+      visualization_dpi: 180

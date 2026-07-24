@@ -14,10 +14,13 @@ import csv
 import json
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 from aeris.generators.bwb_segmented_v1.aerosandbox_adapter import AeroSandboxGeometryResult
-from aeris.generators.bwb_segmented_v1.params import BWBDesignSample, BWBGeneratorConfig  # AERIS_PATCH_G1_APPLIED
+from aeris.generators.bwb_segmented_v1.params import (
+    BWBDesignSample,
+    BWBGeneratorConfig,
+)  # AERIS_PATCH_G1_APPLIED
 from aeris.generators.bwb_segmented_v1.planform import PlanformResult
 from aeris.generators.bwb_segmented_v1.sections import SectionGeometryResult
 
@@ -26,11 +29,10 @@ def _write_json(output_path: Path, payload: dict[str, Any]) -> None:  # AERIS_PA
     """Atomic JSON write: temp-file + os.replace avoids corrupt output on crash."""
     import os
     import tempfile
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
     text = json.dumps(payload, indent=2)
-    tmp_fd, tmp_path = tempfile.mkstemp(
-        dir=output_path.parent, prefix=f".{output_path.name}.tmp"
-    )
+    tmp_fd, tmp_path = tempfile.mkstemp(dir=output_path.parent, prefix=f".{output_path.name}.tmp")
     try:
         with os.fdopen(tmp_fd, "w", encoding="utf-8") as fh:
             fh.write(text)
@@ -93,9 +95,13 @@ def build_geometry_summary(
         "sw1_deg": planform.sw1_deg,
         "sw2_deg": planform.sw2_deg,
         "sw3_deg": planform.sw3_deg,
-        "elevon_start_frac": getattr(sample, "elevon_start_frac", 0.60) if sample is not None else 0.60,
-        "elevon_end_frac": getattr(sample, "elevon_end_frac",   0.95) if sample is not None else 0.95,
-        "elevon_hinge_frac": getattr(sample, "elevon_hinge_frac", 0.75) if sample is not None else 0.75,
+        "elevon_start_frac": getattr(sample, "elevon_start_frac", 0.60)
+        if sample is not None
+        else 0.60,
+        "elevon_end_frac": getattr(sample, "elevon_end_frac", 0.95) if sample is not None else 0.95,
+        "elevon_hinge_frac": getattr(sample, "elevon_hinge_frac", 0.75)
+        if sample is not None
+        else 0.75,
     }
 
     discretization = {
@@ -132,13 +138,17 @@ def build_geometry_summary(
         "full_span_m": planform.full_span_m,
         "approx_area_m2": planform.approx_area_m2,
         "approx_aspect_ratio_planform": planform.approx_aspect_ratio,
-        "aspect_ratio_aerosandbox": None if aerosandbox_result is None else aerosandbox_result.aspect_ratio,
+        "aspect_ratio_aerosandbox": None
+        if aerosandbox_result is None
+        else aerosandbox_result.aspect_ratio,
         "n_xsecs_aerosandbox": None if aerosandbox_result is None else aerosandbox_result.n_xsecs,
     }
 
     reference_values = None if aerosandbox_result is None else aerosandbox_result.reference_values
     mean_angles_deg = None if aerosandbox_result is None else aerosandbox_result.mean_angles_deg
-    aerodynamic_center = None if aerosandbox_result is None else aerosandbox_result.aerodynamic_center
+    aerodynamic_center = (
+        None if aerosandbox_result is None else aerosandbox_result.aerodynamic_center
+    )
     sectional_metrics = None if aerosandbox_result is None else aerosandbox_result.sectional_metrics
     geometry_info = None if aerosandbox_result is None else aerosandbox_result.geometry_info
     asb_metadata = {} if aerosandbox_result is None else dict(aerosandbox_result.metadata)
@@ -172,6 +182,24 @@ def build_geometry_summary(
         },
     }
 
+    if aerosandbox_result is not None:
+        primary_backend = "aerosandbox"
+        area_definition = "wing planform area from AeroSandbox wing.area()"
+        span_definition = "wing span from AeroSandbox wing.span()"
+        chord_definition = "mean aerodynamic chord from AeroSandbox wing.mean_aerodynamic_chord()"
+    elif config.pygeo.enabled:
+        primary_backend = "pygeo"
+        area_definition = "symmetric xy-projected area integrated from realised pyGeo sections"
+        span_definition = "full mirrored y-span measured from realised pyGeo sections"
+        chord_definition = (
+            "area-weighted mean aerodynamic chord integrated from realised pyGeo sections"
+        )
+    else:
+        primary_backend = "aeris_planform"
+        area_definition = "Aeris trapezoidal planform approximation"
+        span_definition = "Aeris authored full span"
+        chord_definition = "not available without a realization backend"
+
     return {  # AERIS_PATCH_G7_APPLIED
         "generated_at_utc": datetime.now(UTC).isoformat(),
         "name": config.name,
@@ -190,14 +218,44 @@ def build_geometry_summary(
         "geometry_info": geometry_info,
         "control_surface_summary": control_surface_summary,
         "reference_conventions": {
-            "geometry_axes_origin": "aircraft geometry origin used to define section xyz_le coordinates",
+            "geometry_axes_origin": (
+                "aircraft geometry origin used to define section xyz_le coordinates"
+            ),
             "moment_reference_point_xyz_m": [0.0, 0.0, 0.0],
             "x_axis_positive_direction": "aft",
-            "reference_area_definition": "wing planform area from AeroSandbox wing.area()",
-            "reference_span_definition": "wing span from AeroSandbox wing.span()",
-            "reference_chord_definition": "mean aerodynamic chord from AeroSandbox wing.mean_aerodynamic_chord()",
+            "primary_realization_backend": primary_backend,
+            "reference_area_definition": area_definition,
+            "reference_span_definition": span_definition,
+            "reference_chord_definition": chord_definition,
         },
     }
+
+
+def export_backend_comparison_csv(
+    comparison: Mapping[str, Any],
+    output_path: Path,
+) -> None:
+    """Write the direct AeroSandbox-versus-pyGeo reference comparison."""
+
+    rows = [
+        {
+            "metric": metric,
+            **dict(values),
+        }
+        for metric, values in comparison.get("metrics", {}).items()
+    ]
+    _write_csv(
+        output_path,
+        rows,
+        fieldnames=[
+            "metric",
+            "aerosandbox",
+            "pygeo",
+            "delta_pygeo_minus_aerosandbox",
+            "relative_delta",
+            "relative_delta_percent",
+        ],
+    )
 
 
 def export_control_points_csv(planform: PlanformResult, output_path: Path) -> None:

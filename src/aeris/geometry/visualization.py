@@ -35,6 +35,10 @@ from typing import Any
 from aeris.common.config import load_yaml_config
 from aeris.common.paths import get_data_dir
 from aeris.geometry.config_resolver import resolve_generator_and_config
+from aeris.geometry.pygeo_visualization import (
+    find_pygeo_plot_path,
+    write_pygeo_interactive_html,
+)
 from aeris.geometry.registry import get_geometry_generator
 
 
@@ -45,6 +49,10 @@ class GeometryVisualizationResult:
     output_dir: Path
     plot_path: Path | None
     has_aerosandbox_airplane: bool
+    has_pygeo_geometry: bool = False
+    pygeo_plot_path: Path | None = None
+    interactive_3d_path: Path | None = None
+    visualization_backend: str | None = None
 
 
 def visualize_geometry_from_config(
@@ -132,14 +140,42 @@ def visualize_geometry_from_config(
     )
 
     plot_path = _find_plot_path(out_dir)
+    pygeo_result = getattr(result, "pygeo_result", None)
+    has_pygeo = pygeo_result is not None
+    pygeo_plot_path = find_pygeo_plot_path(
+        output_dir=out_dir, pygeo_result=pygeo_result
+    )
 
     if show_plot and plot_path is not None and plot_path.exists():
         _show_saved_plot(plot_path)
+
+    if (
+        show_plot
+        and pygeo_plot_path is not None
+        and pygeo_plot_path.exists()
+        and pygeo_plot_path != plot_path
+    ):
+        _show_saved_plot(pygeo_plot_path)
 
     has_airplane = (
         getattr(result, "aerosandbox_result", None) is not None
         and getattr(result.aerosandbox_result, "airplane", None) is not None
     )
+
+    if draw_3d and has_pygeo and not has_airplane:
+        interactive_path = write_pygeo_interactive_html(
+            pygeo_result,
+            out_dir / "pygeo" / "pygeo_interactive_3d.html",
+        )
+        return GeometryVisualizationResult(
+            output_dir=out_dir,
+            plot_path=plot_path,
+            has_aerosandbox_airplane=False,
+            has_pygeo_geometry=True,
+            pygeo_plot_path=pygeo_plot_path,
+            interactive_3d_path=interactive_path,
+            visualization_backend="pygeo",
+        )
 
     if draw_3d:
         if not has_airplane:
@@ -161,8 +197,10 @@ def visualize_geometry_from_config(
             error_path = out_dir / "draw_3d_error.txt"
             error_path.write_text(
                 "AERIS interactive 3D draw failed.\n"
-                "The geometry was generated, but AeroSandbox/PyVista/VTK could not open the interactive viewer.\n"
-                "Use the safe headless path instead: aeris geometry visualize --no-draw-3d --save-plot\n\n"
+                "The geometry was generated, but AeroSandbox/PyVista/VTK could not "
+                "open the interactive viewer.\n"
+                "Use the safe headless path instead: aeris geometry visualize "
+                "--no-draw-3d --save-plot\n\n"
                 f"Original exception type: {type(exc).__name__}\n"
                 f"Original exception message: {exc}\n\n"
                 "Full traceback:\n"
@@ -180,6 +218,11 @@ def visualize_geometry_from_config(
         output_dir=out_dir,
         plot_path=plot_path,
         has_aerosandbox_airplane=has_airplane,
+        has_pygeo_geometry=has_pygeo,
+        pygeo_plot_path=pygeo_plot_path,
+        visualization_backend=(
+            "aerosandbox" if has_airplane else "pygeo" if has_pygeo else None
+        ),
     )
 
 
@@ -241,7 +284,7 @@ def _resolve_bool_override(
 
 def _find_plot_path(output_dir: Path) -> Path | None:
     candidates = [
-        output_dir / "plots" / "planform.png",    # services.py canonical path  # AERIS_PATCH_SUPP3_APPLIED
+        output_dir / "plots" / "planform.png",  # canonical service path
         output_dir / "planform.png",
         output_dir / "artifacts" / "planform.png",
         output_dir / "geometry" / "planform.png",

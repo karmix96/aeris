@@ -49,6 +49,7 @@ if TYPE_CHECKING:
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _ensure_min_less_than_max(name: str, bounds: RangeConfig) -> None:
     if bounds.min >= bounds.max:
         raise ValueError(f"{name}.min must be < {name}.max")
@@ -57,6 +58,7 @@ def _ensure_min_less_than_max(name: str, bounds: RangeConfig) -> None:
 # ---------------------------------------------------------------------------
 # Config validators
 # ---------------------------------------------------------------------------
+
 
 def validate_planform_controls(config: BWBGeneratorConfig) -> None:
     """
@@ -80,8 +82,7 @@ def validate_planform_controls(config: BWBGeneratorConfig) -> None:
         raise ValueError("geometry.controls.n_spline_outboard must be >= 2")
     if not (0.0 < ctrl.spline_split_ratio < 1.0):
         raise ValueError(
-            f"geometry.controls.spline_split_ratio must be in (0, 1), "
-            f"got {ctrl.spline_split_ratio}"
+            f"geometry.controls.spline_split_ratio must be in (0, 1), got {ctrl.spline_split_ratio}"
         )
     if ctrl.curvature_strength < 0.0:
         raise ValueError("geometry.controls.curvature_strength must be >= 0")
@@ -90,8 +91,7 @@ def validate_planform_controls(config: BWBGeneratorConfig) -> None:
     # AERIS_PATCH_BATCH2_SWEEP_VARIATION_UPPER_BOUND
     if not (0.0 <= ctrl.sweep_variation < 1.0):
         raise ValueError(
-            f"geometry.controls.sweep_variation must be in [0, 1), "
-            f"got {ctrl.sweep_variation}"
+            f"geometry.controls.sweep_variation must be in [0, 1), got {ctrl.sweep_variation}"
         )
 
 
@@ -176,22 +176,50 @@ def validate_bwb_generator_config(config: BWBGeneratorConfig) -> None:
     _ensure_min_less_than_max("geometry.section_bounds.twist_b1_deg", sb.twist_b1_deg)
     _ensure_min_less_than_max("geometry.section_bounds.twist_b2_deg", sb.twist_b2_deg)
     _ensure_min_less_than_max("geometry.section_bounds.twist_b3_deg", sb.twist_b3_deg)
-    _ensure_min_less_than_max("geometry.section_bounds.dihedral_b1_deg", sb.dihedral_b1_deg)
+    if config.pygeo.enabled and config.pygeo.enforce_flat_root_panel:
+        if abs(sb.dihedral_root_deg) > 1.0e-12:
+            raise ValueError(
+                "pyGeo requires geometry.section_bounds.dihedral_root_deg = 0.0 "
+                "so mirrored finite-thickness halves do not penetrate at the root"
+            )
+        if abs(sb.dihedral_b1_deg.min) > 1.0e-12 or abs(sb.dihedral_b1_deg.max) > 1.0e-12:
+            raise ValueError(
+                "pyGeo enforce_flat_root_panel requires "
+                "geometry.section_bounds.dihedral_b1_deg min=max=0.0"
+            )
+    else:
+        _ensure_min_less_than_max("geometry.section_bounds.dihedral_b1_deg", sb.dihedral_b1_deg)
     _ensure_min_less_than_max("geometry.section_bounds.dihedral_b2_deg", sb.dihedral_b2_deg)
     _ensure_min_less_than_max("geometry.section_bounds.dihedral_b3_deg", sb.dihedral_b3_deg)
+
+    if config.pygeo.enabled and config.pygeo.physical_cad.enabled:
+        if not config.control_surfaces.enabled or not config.control_surfaces.surfaces:
+            raise ValueError(
+                "geometry.pygeo.physical_cad.enabled requires an enabled "
+                "geometry.control_surfaces definition"
+            )
+        if len(config.control_surfaces.surfaces) != 1:
+            raise ValueError(
+                "The frozen pyGeo split-control CAD implementation currently "
+                "supports exactly one spanwise control-surface definition"
+            )
+        if not config.control_surfaces.surfaces[0].symmetric:
+            raise ValueError(
+                "The frozen pyGeo split-control CAD implementation requires "
+                "a symmetric control-surface definition"
+            )
 
     # --- Elevon bounds (v3+, optional) ---  AERIS_PATCH_G5_APPLIED
     eb = config.elevon_bounds
     if eb is not None:
         for fname, rc in [
             ("elevon_bounds.elevon_start_frac", eb.elevon_start_frac),
-            ("elevon_bounds.elevon_end_frac",   eb.elevon_end_frac),
+            ("elevon_bounds.elevon_end_frac", eb.elevon_end_frac),
             ("elevon_bounds.elevon_hinge_frac", eb.elevon_hinge_frac),
         ]:
             if not (0.0 <= rc.min <= 1.0 and 0.0 <= rc.max <= 1.0):
                 raise ValueError(
-                    f"geometry.{fname} bounds must lie in [0, 1], "
-                    f"got min={rc.min}, max={rc.max}."
+                    f"geometry.{fname} bounds must lie in [0, 1], got min={rc.min}, max={rc.max}."
                 )
             _ensure_min_less_than_max(f"geometry.{fname}", rc)
         if eb.elevon_start_frac.max >= eb.elevon_end_frac.min:
@@ -212,6 +240,7 @@ def validate_bwb_generator_config(config: BWBGeneratorConfig) -> None:
 # ---------------------------------------------------------------------------
 # Geometry output validators
 # ---------------------------------------------------------------------------
+
 
 def validate_planform_result(planform: PlanformResult) -> None:
     """
@@ -250,8 +279,7 @@ def validate_planform_result(planform: PlanformResult) -> None:
     local_chords = planform.rear_x_fine - planform.front_x_fine
     if not np.all(local_chords > 0.0):
         raise ValueError(
-            "fine-section local chords must all be > 0 "
-            f"(min={float(np.min(local_chords)):.6e})"
+            f"fine-section local chords must all be > 0 (min={float(np.min(local_chords)):.6e})"
         )
 
     # --- Fine array length consistency ---
@@ -328,6 +356,4 @@ def validate_section_geometry(section_geometry: SectionGeometryResult) -> None:
     # All section chords must be positive
     chords = np.array([s.chord_m for s in section_geometry.sections], dtype=float)
     if not np.all(chords > 0.0):
-        raise ValueError(
-            f"section chord_m must all be > 0 (min={float(np.min(chords)):.6e})"
-        )
+        raise ValueError(f"section chord_m must all be > 0 (min={float(np.min(chords)):.6e})")

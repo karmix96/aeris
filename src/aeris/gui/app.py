@@ -4,23 +4,38 @@ Every CLI option verified directly against codebase.txt source. Zero invalid fla
 
 Run: aeris gui run  OR  streamlit run src/aeris/gui/app.py
 
-ground-truth: geometry generate accepts --config and --save-plot/--no-save-plot
+ground-truth: geometry generation delegates to Aeris CLI; pyGeo is a realization backend
 """
 
 from __future__ import annotations
 
-import json, os, re, shlex, shutil, subprocess, textwrap, time
+import json
+import os
+import re
+import shlex
+import shutil
+import subprocess
+import textwrap
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
+
+import streamlit as st
 
 from aeris.gui.evidence import (
     load_workflow_evidence,
     stage_domain_page,
     summarize_workflow_evidence,
 )
-
-import streamlit as st
+from aeris.gui.geometry_support import (
+    DUAL_BACKEND,
+    PYGEO_ONLY,
+    aerosandbox_override_for_policy,
+    backend_policy_options,
+    load_geometry_run_evidence,
+    read_geometry_backend_state,
+)
 
 try:
     import pandas as pd
@@ -33,7 +48,7 @@ except Exception:
     yaml = None
 
 # ── Version & constants ───────────────────────────────────────────────────────
-APP_VERSION = "4.7.7-EVIDENCE_PACKAGE_COUNTS_FIX-TRAINING_MONITOR_GUI-LIVE_TRAINING"
+APP_VERSION = "4.8.0-PYGEO-BACKEND"
 DEFAULT_FEATURES = "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,control_input_deg"
 DEFAULT_SYM_ELEVON_FEATURES = (
     "c1_m,b_total_m,sw1_deg,alpha_deg,velocity_mps,altitude_m,delta_e_sym_deg"
@@ -1040,7 +1055,7 @@ def _workflow_coverage_table(key: str) -> None:
 
 
 # ── YAML geometry builder ─────────────────────────────────────────────────────
-def _yaml_geometry_builder(pfx: str) -> str:
+def _yaml_geometry_builder(pfx: str, root: Path | None = None) -> str:
     """Interactive YAML builder — returns a YAML string."""
     _sec("Generator")
     c1, c2 = st.columns(2)
@@ -1054,6 +1069,71 @@ def _yaml_geometry_builder(pfx: str) -> str:
         help="Same seed = same geometry. Change to explore design space.",
     )
     name = st.text_input("Config name", value="aeris_design_space", key=f"{pfx}_name")
+
+    _sec("Geometry realization")
+    backend_mode = st.selectbox(
+        "Realization backend",
+        ["AeroSandbox only", "pyGeo only", "Both + comparison"],
+        index=2,
+        key=f"{pfx}_backend_mode",
+        help=(
+            "The YAML remains the source of truth. Both mode realizes the same Aeris "
+            "sections independently and records a numerical/visual comparison."
+        ),
+    )
+    pygeo_enabled = backend_mode in {"pyGeo only", "Both + comparison"}
+    build_asb_selected = backend_mode in {"AeroSandbox only", "Both + comparison"}
+    if pygeo_enabled:
+        p1, p2, p3 = st.columns(3)
+        pygeo_k_span = int(
+            p1.number_input(
+                "pyGeo k_span", min_value=2, max_value=4, value=3, key=f"{pfx}_pyg_k"
+            )
+        )
+        pygeo_sections = int(
+            p2.number_input(
+                "Extracted sections", min_value=4, value=25, key=f"{pfx}_pyg_sections"
+            )
+        )
+        pygeo_cst_order = int(
+            p3.number_input(
+                "CST order", min_value=3, max_value=16, value=8, key=f"{pfx}_pyg_cst"
+            )
+        )
+        p4, p5, p6 = st.columns(3)
+        pygeo_physical_cad = p4.checkbox(
+            "Build split-elevon CAD",
+            value=False,
+            key=f"{pfx}_pyg_cad",
+            help=(
+                "Leave off for large geometry/AVL campaigns. Enable when "
+                "regenerating selected CFD cases with physical control gaps."
+            ),
+        )
+        pygeo_delta_e = float(
+            p5.number_input(
+                "delta_e_sym_deg", value=0.0, step=1.0, key=f"{pfx}_pyg_de"
+            )
+        )
+        pygeo_delta_a = float(
+            p6.number_input(
+                "delta_a_diff_deg", value=0.0, step=1.0, key=f"{pfx}_pyg_da"
+            )
+        )
+        _note(
+            "pyGeo mode enforces dihedral_root_deg = 0 and dihedral_b1_deg min=max=0. "
+            "The current frozen control implementation uses only the existing "
+            "symmetric/differential command pair.",
+            "info",
+        )
+    else:
+        pygeo_k_span = 3
+        pygeo_sections = 25
+        pygeo_cst_order = 8
+        pygeo_physical_cad = False
+        pygeo_delta_e = 0.0
+        pygeo_delta_a = 0.0
+
 
     _sec("Mesh control")
     c1, c2, c3 = st.columns(3)
@@ -1164,19 +1244,56 @@ def _yaml_geometry_builder(pfx: str) -> str:
 
     _sec("Section bounds — dihedral [°]")
     c1, c2, c3 = st.columns(3)
-    dh1mn = c1.number_input("dihedral_b1 min", 0.0, 15.0, 0.0, 0.5, key=f"{pfx}_dh1mn")
-    dh1mx = c1.number_input("max", 0.0, 15.0, 3.0, 0.5, key=f"{pfx}_dh1mx")
+    dh1mn = c1.number_input(
+        "dihedral_b1 min",
+        0.0,
+        15.0,
+        0.0,
+        0.5,
+        key=f"{pfx}_dh1mn",
+        disabled=pygeo_enabled,
+    )
+    dh1mx = c1.number_input(
+        "max",
+        0.0,
+        15.0,
+        0.0 if pygeo_enabled else 3.0,
+        0.5,
+        key=f"{pfx}_dh1mx",
+        disabled=pygeo_enabled,
+    )
     dh2mn = c2.number_input("dihedral_b2 min", 0.0, 15.0, 0.0, 0.5, key=f"{pfx}_dh2mn")
     dh2mx = c2.number_input("max", 0.0, 15.0, 5.0, 0.5, key=f"{pfx}_dh2mx")
     dh3mn = c3.number_input("dihedral_b3 min", 0.0, 15.0, 0.0, 0.5, key=f"{pfx}_dh3mn")
     dh3mx = c3.number_input("max", 0.0, 15.0, 7.0, 0.5, key=f"{pfx}_dh3mx")
 
     _sec("Airfoil & control surfaces")
-    c1, c2 = st.columns(2)
-    airfoil = c1.text_input(
-        "Airfoil name", value="naca4412", key=f"{pfx}_af", help="NACA 4-digit or profile name"
-    )
-    ctrl_en = c2.checkbox("Enable control surfaces", value=True, key=f"{pfx}_csen")
+    airfoil_database = (root or _default_root()) / "data" / "airfoil_database"
+    airfoil_choices = sorted(
+        {path.stem for path in airfoil_database.rglob("*.dat")}
+    ) if airfoil_database.is_dir() else []
+
+    def _station_airfoil_widget(column, station: str, default: str) -> str:
+        if airfoil_choices:
+            index = airfoil_choices.index(default) if default in airfoil_choices else 0
+            return column.selectbox(
+                f"{station} airfoil",
+                airfoil_choices,
+                index=index,
+                key=f"{pfx}_af_{station}",
+            )
+        return column.text_input(
+            f"{station} airfoil", value=default, key=f"{pfx}_af_{station}"
+        )
+
+
+    a1, a2, a3, a4 = st.columns(4)
+    airfoil_b0 = _station_airfoil_widget(a1, "b0", "naca23012")
+    airfoil_b1 = _station_airfoil_widget(a2, "b1", "naca4412")
+    airfoil_b2 = _station_airfoil_widget(a3, "b2", "naca2412")
+    airfoil_b3 = _station_airfoil_widget(a4, "b3", "naca0012")
+    airfoil = airfoil_b0
+    ctrl_en = st.checkbox("Enable control surfaces", value=True, key=f"{pfx}_csen")
     ctrl_block = ""
     if ctrl_en:
         c3, c4, c5 = st.columns(3)
@@ -1207,8 +1324,9 @@ def _yaml_geometry_builder(pfx: str) -> str:
     )
     build_asb_yaml = c2.checkbox(
         "Build AeroSandbox object (YAML default)",
-        value=True,
+        value=build_asb_selected,
         key=f"{pfx}_ba",
+        disabled=True,
         help="Sets geometry.outputs.build_aerosandbox. Required for aero runs.",
     )
 
@@ -1237,6 +1355,11 @@ geometry:
     sw3_deg:     {{min: {sw3mn}, max: {sw3mx}}}
   section_bounds:
     airfoil_name: {airfoil}
+    station_airfoils:
+      b0: {airfoil_b0}
+      b1: {airfoil_b1}
+      b2: {airfoil_b2}
+      b3: {airfoil_b3}
     dihedral_root_deg: 0.0
     twist_b0_deg:    {{min: {tw0mn}, max: {tw0mx}}}
     twist_b1_deg:    {{min: {tw1mn}, max: {tw1mx}}}
@@ -1249,6 +1372,56 @@ geometry:
   outputs:
     save_plot: {str(save_plot_yaml).lower()}
     build_aerosandbox: {str(build_asb_yaml).lower()}
+  pygeo:
+    enabled: {str(pygeo_enabled).lower()}
+    airfoil_database: data/airfoil_database
+    k_span: {pygeo_k_span}
+    frame_mode: aeris_frame
+    n_ctl: null
+    tip: none
+    tip_scale: 0.25
+    enforce_flat_root_panel: {str(pygeo_enabled).lower()}
+    extraction:
+      spanwise_sections: {pygeo_sections}
+      chordwise_points: 241
+      cst_order: {pygeo_cst_order}
+    surface_sampling:
+      chordwise_points: 141
+      spanwise_points: 121
+    quality:
+      warn_plane_warp_chord: 3.0e-3
+      max_plane_warp_chord: 1.0e-2
+      max_cst_rms_chord: 1.0e-3
+      fail_on_rejection: true
+    commands:
+      delta_e_sym_deg: {pygeo_delta_e}
+      delta_a_diff_deg: {pygeo_delta_a}
+    physical_cad:
+      enabled: {str(pygeo_physical_cad and ctrl_en).lower()}
+      topology: split_elevon
+      design_deflection_limit_deg: 20.0
+      hinge_gap_fraction: 0.005
+      boundary_clearance_fraction: 0.005
+      chordwise_points: 81
+      minimum_te_thickness_fraction: 5.0e-4
+      tessellation_tolerance_m: 7.5e-4
+      tessellation_angular_tolerance_rad: 0.12
+      max_master_to_cad_deviation_cref: 0.005
+      fail_on_invalid: true
+    outputs:
+      write_iges: true
+      write_tecplot: true
+      write_surface_npz: true
+      write_section_dat: true
+      write_step: true
+      verify_step_import: true
+      write_brep: false
+      write_stl: true
+      write_obj: true
+      write_vtk: true
+      write_cad_npz: true
+      save_visualization: true
+      visualization_dpi: 180
 dataset:
   sampling:
     method: lhs_v1
@@ -1540,6 +1713,10 @@ def _geo_var_table(cfg_path: str) -> None:
     gen_cfg = geo.get("generator", {})
     ctrl_cfg = geo.get("controls", {})
     out_cfg = geo.get("outputs", {})
+    pygeo_cfg = geo.get("pygeo") or {}
+    pygeo_outputs_cfg = pygeo_cfg.get("outputs") or {}
+    pygeo_physical_cfg = pygeo_cfg.get("physical_cad") or {}
+    station_airfoils_cfg = sb.get("station_airfoils") or {}
     ds_cfg = (cfg_data or {}).get("dataset", {})
 
     def _rng_cell(b, unit=""):
@@ -1654,6 +1831,16 @@ def _geo_var_table(cfg_path: str) -> None:
     tbl += _row(
         "Section", "airfoil_name", airfoil, "Airfoil profile for all sections", "#86EFAC", prev
     )
+    for station in ("b0", "b1", "b2", "b3"):
+        if station in station_airfoils_cfg:
+            tbl += _row(
+                "Station airfoil",
+                station,
+                str(station_airfoils_cfg[station]),
+                "Fixed profile resolved from the configured airfoil database",
+                "#86EFAC",
+                "Station airfoil",
+            )
     prev = "Section"
     tbl += _row(
         "Section",
@@ -1794,6 +1981,84 @@ def _geo_var_table(cfg_path: str) -> None:
                 prev = g
             _h(tbl + "</tbody></table>")
 
+    # ── 5. Geometry realization backends ────────────────────────────────────
+    _h(
+        '<div style="color:#8EA0B3;font-size:.72rem;text-transform:uppercase;'
+        'letter-spacing:.1em;margin:.8rem 0 .3rem">Realization Backends</div>'
+    )
+    pygeo_enabled = bool(pygeo_cfg.get("enabled", False))
+    aerosandbox_enabled = bool(out_cfg.get("build_aerosandbox", True))
+    tbl = _tbl_header()
+    prev = None
+    backend_rows = [
+        (
+            "Backend",
+            "AeroSandbox",
+            str(aerosandbox_enabled),
+            "Discrete realization and current aero adapter",
+            "#86EFAC" if aerosandbox_enabled else "#F59E0B",
+        ),
+        (
+            "Backend",
+            "pyGeo",
+            str(pygeo_enabled),
+            "Native B-spline loft, extraction, metrics, and CAD utilities",
+            "#86EFAC" if pygeo_enabled else "#F59E0B",
+        ),
+    ]
+    if pygeo_enabled:
+        backend_rows.extend(
+            [
+                (
+                    "pyGeo",
+                    "k_span",
+                    str(pygeo_cfg.get("k_span", "—")),
+                    "Spanwise B-spline order",
+                    "#D6DEE8",
+                ),
+                (
+                    "pyGeo",
+                    "airfoil_database",
+                    str(pygeo_cfg.get("airfoil_database", "—")),
+                    "Database used for fixed b0-b3 profiles",
+                    "#93C5FD",
+                ),
+                (
+                    "pyGeo",
+                    "flat_root_panel",
+                    str(bool(pygeo_cfg.get("enforce_flat_root_panel", False))),
+                    "Requires dihedral_root and b0-b1 panel to remain at zero",
+                    "#86EFAC",
+                ),
+                (
+                    "pyGeo CAD",
+                    "physical_cad.enabled",
+                    str(bool(pygeo_physical_cfg.get("enabled", False))),
+                    "Named fixed-wing/elevon STEP bodies",
+                    "#86EFAC" if pygeo_physical_cfg.get("enabled") else "#F59E0B",
+                ),
+                (
+                    "pyGeo",
+                    "save_visualization",
+                    str(bool(pygeo_outputs_cfg.get("save_visualization", True))),
+                    "Native 3-D loft and section/CST PNGs",
+                    "#86EFAC",
+                ),
+            ]
+        )
+    for group, variable, value, note, color in backend_rows:
+        tbl += _row(group, variable, value, note, color, prev)
+        prev = group
+    _h(tbl + "</tbody></table>")
+    if pygeo_enabled and aerosandbox_enabled:
+        _note(
+            "Both realizations are built independently from the shared Aeris sections. "
+            "The run writes a numerical comparison and overlay without translating "
+            "between geometry objects.",
+            "info",
+        )
+
+
     # ── 5. Outputs & dataset sampling ─────────────────────────────────────────
     _h(
         '<div style="color:#8EA0B3;font-size:.72rem;text-transform:uppercase;'
@@ -1837,7 +2102,8 @@ def _geo_var_table(cfg_path: str) -> None:
     _h(tbl + "</tbody></table>")
 
     st.caption(
-        "Control surfaces shown here are AVL wiring metadata — they do not physically deflect in the 3D viewer. "
+        "Control geometry is shared by Aeris backends. AeroSandbox uses it for solver wiring; "
+        "pyGeo can additionally export the named split-solid physical CAD. "
         "Same seed + same config = identical geometry every time."
     )
 
@@ -1888,9 +2154,35 @@ def _geo_delete_one(p: Path, key_suffix: str) -> bool:
 
 
 def pg_geometry(root, exe, tmo, dry):
+    from importlib.util import find_spec as _find_spec
     import shutil as _shutil
 
-    _hero("△", "Geometry", "bwb_segmented_v1 · 20 design variables", "generator")
+    _hero(
+        "△",
+        "Geometry",
+        "bwb_segmented_v1 · AeroSandbox and pyGeo realization backends",
+        "generator",
+    )
+    _stat_row(
+        [
+            ("Generator", "bwb_segmented_v1", "single BWB definition"),
+            (
+                "pyGeo",
+                "available" if _find_spec("pygeo") is not None else "not installed",
+                "native loft",
+            ),
+            (
+                "CadQuery",
+                "available" if _find_spec("cadquery") is not None else "not installed",
+                "physical CAD",
+            ),
+            (
+                "Gmsh",
+                "available" if _find_spec("gmsh") is not None else "not installed",
+                "STEP audit",
+            ),
+        ]
+    )
     tab_gen, tab_vis, tab_info, tab_inspect, tab_cad = st.tabs(
         [
             "  ① Generate  ",
@@ -1905,23 +2197,36 @@ def pg_geometry(root, exe, tmo, dry):
     cfg_files = _files(str(root / "configs" / "geometry"), "*.yaml")
     prod_cfg = str(root / "configs" / "geometry" / "bwb_training_v1.yaml")
     smoke_cfg = str(root / "configs" / "geometry" / "baseline_bwb_25.yaml")
+    pygeo_cfg = str(root / "configs" / "geometry" / "paper1_bwb_pygeo.yaml")
 
     def _cfg_label(s):
         if "bwb_training_v1" in s:
             return f"Production — {Path(s).name}"
+        if "paper1_bwb_pygeo" in s:
+            return f"pyGeo production — {Path(s).name}"
         if "baseline_bwb_25" in s:
             return f"Smoke test  — {Path(s).name}"
         return Path(s).name
 
     cfg_prod_first = (
         ([prod_cfg] if prod_cfg in cfg_files else [])
+        + ([pygeo_cfg] if pygeo_cfg in cfg_files else [])
         + ([smoke_cfg] if smoke_cfg in cfg_files else [])
-        + [f for f in cfg_files if f not in (prod_cfg, smoke_cfg)]
+        + [
+            f
+            for f in cfg_files
+            if f not in (prod_cfg, pygeo_cfg, smoke_cfg)
+        ]
     )
     cfg_smoke_first = (
         ([smoke_cfg] if smoke_cfg in cfg_files else [])
+        + ([pygeo_cfg] if pygeo_cfg in cfg_files else [])
         + ([prod_cfg] if prod_cfg in cfg_files else [])
-        + [f for f in cfg_files if f not in (prod_cfg, smoke_cfg)]
+        + [
+            f
+            for f in cfg_files
+            if f not in (prod_cfg, pygeo_cfg, smoke_cfg)
+        ]
     )
 
     if not cfg_files:
@@ -1943,12 +2248,70 @@ def pg_geometry(root, exe, tmo, dry):
         )
         if "bwb_training_v1" in sel_cfg:
             st.success("✓ Wide design space — correct for ML training campaigns.")
+        elif "paper1_bwb_pygeo" in sel_cfg:
+            st.success(
+                "✓ Aeris pyGeo production config — four fixed airfoils, native loft, "
+                "section/CST extraction, metrics, visualization, and split-control CAD."
+            )
         elif "baseline_bwb_25" in sel_cfg:
             st.warning(
                 "⚠ Near-fixed design space — smoke / solver-check only. Not suitable for ML."
             )
         else:
             st.info(f"Custom config: {Path(sel_cfg).name}")
+
+        try:
+            backend_state = read_geometry_backend_state(sel_cfg)
+        except Exception as exc:
+            backend_state = None
+            st.error(f"Could not read geometry backend settings: {exc}")
+
+        if backend_state is not None:
+            backend_policy = st.radio(
+                "Geometry realization",
+                backend_policy_options(backend_state),
+                horizontal=True,
+                key="gg_backend_policy",
+                help=(
+                    "This maps directly to the YAML plus the real "
+                    "--build-aerosandbox/--no-build-aerosandbox CLI override. "
+                    "pyGeo itself is enabled only in the selected YAML."
+                ),
+            )
+            aerosandbox_override = aerosandbox_override_for_policy(backend_policy)
+            effective_backends = backend_state.effective_backends(aerosandbox_override)
+            _stat_row(
+                [
+                    ("Configured", " + ".join(backend_state.configured_backends) or "none", "YAML"),
+                    ("This run", " + ".join(effective_backends) or "none", "effective"),
+                    (
+                        "pyGeo CAD",
+                        "enabled" if backend_state.physical_cad_enabled else "disabled",
+                        "split elevon",
+                    ),
+                    (
+                        "Station airfoils",
+                        str(len(backend_state.station_airfoils)),
+                        "b0-b3 fixed profiles",
+                    ),
+                ]
+            )
+            if backend_policy == DUAL_BACKEND:
+                _note(
+                    "Aeris will independently realize the shared sections with pyGeo and "
+                    "AeroSandbox, then write the numerical CSV and visual overlay. No "
+                    "geometry-object translation is used.",
+                    "info",
+                )
+            elif backend_policy == PYGEO_ONLY:
+                _note(
+                    "pyGeo is the only realization for this run. Native loft, section/CST, "
+                    "CAD, metrics, and visual artifacts remain under the standard Aeris run.",
+                    "info",
+                )
+        else:
+            backend_policy = "Use YAML backend settings"
+            aerosandbox_override = None
 
         save_plot_policy = st.radio(
             "Planform plot",
@@ -1963,6 +2326,10 @@ def pg_geometry(root, exe, tmo, dry):
         )
 
         gen_args = ["geometry", "generate", "--config", sel_cfg]
+        if aerosandbox_override is True:
+            gen_args.append("--build-aerosandbox")
+        elif aerosandbox_override is False:
+            gen_args.append("--no-build-aerosandbox")
         if save_plot_policy == "Force save plot":
             gen_args.append("--save-plot")
         elif save_plot_policy == "Force no plot":
@@ -2006,6 +2373,13 @@ def pg_geometry(root, exe, tmo, dry):
                 semi = cs_met.get("semi_span_m")
                 area = cs_met.get("approx_area_m2")
                 ar_v = cs_met.get("approx_aspect_ratio_planform")
+                ar_pygeo = cs_met.get("aspect_ratio_pygeo")
+                backend_summary = cs.get("realization_backends") or {}
+                enabled_backend_names = [
+                    name
+                    for name, data in backend_summary.items()
+                    if isinstance(data, dict) and data.get("enabled")
+                ]
                 metrics_str = "  ·  ".join(
                     filter(
                         None,
@@ -2014,6 +2388,12 @@ def pg_geometry(root, exe, tmo, dry):
                             f"semi-span {semi:.3f} m" if semi is not None else None,
                             f"area {area:.4f} m²" if area is not None else None,
                             f"AR {ar_v:.2f}" if ar_v is not None else None,
+                            f"pyGeo AR {ar_pygeo:.2f}" if ar_pygeo is not None else None,
+                            (
+                                "backends " + "+".join(enabled_backend_names)
+                                if enabled_backend_names
+                                else None
+                            ),
                         ],
                     )
                 )
@@ -2114,6 +2494,7 @@ def pg_geometry(root, exe, tmo, dry):
         # resolved for the buttons
         vcfg = ""
         auto_seed = None  # int seed read from manifest — None means not resolved yet
+        source_run_path = None
 
         if src_mode == "From existing run":
             if not geo_run_paths:
@@ -2131,6 +2512,7 @@ def pg_geometry(root, exe, tmo, dry):
                     "from that run — you will visualize the exact geometry that was generated.",
                 )
                 chosen_run = run_opts[chosen_run_name]
+                source_run_path = chosen_run
 
                 # Read seed from manifest (authoritative)
                 m = _rjson(chosen_run / "manifest.json")
@@ -2189,6 +2571,53 @@ def pg_geometry(root, exe, tmo, dry):
                 help="Pick which config to sample one geometry from.",
             )
 
+        if source_run_path is not None:
+            run_evidence = load_geometry_run_evidence(source_run_path)
+            if run_evidence.pygeo:
+                _sec("Native pyGeo realization from this Aeris run")
+                pygeo_metrics = run_evidence.pygeo.get("metrics") or {}
+                _stat_row(
+                    [
+                        (
+                            "pyGeo QC",
+                            str(run_evidence.pygeo.get("quality_status", "—")),
+                            "realised loft",
+                        ),
+                        (
+                            "AR",
+                            f"{float(pygeo_metrics.get('aspect_ratio_xy', 0.0)):.4f}",
+                            "pyGeo",
+                        ),
+                        (
+                            "Sections",
+                            str(pygeo_metrics.get("n_extracted_sections", "—")),
+                            "realised/CST",
+                        ),
+                        (
+                            "Physical CAD",
+                            "PASS" if pygeo_metrics.get("physical_cad_accepted") else "not built",
+                            "split control",
+                        ),
+                    ]
+                )
+                if run_evidence.preview_images:
+                    preview_columns = st.columns(
+                        min(2, len(run_evidence.preview_images))
+                    )
+                    for index, image_path in enumerate(run_evidence.preview_images):
+                        with preview_columns[index % len(preview_columns)]:
+                            st.caption(image_path.name)
+                            st.image(str(image_path), use_container_width=True)
+                if run_evidence.pygeo_interactive_html is not None:
+                    st.download_button(
+                        "Download/open native interactive pyGeo view",
+                        data=run_evidence.pygeo_interactive_html.read_bytes(),
+                        file_name=run_evidence.pygeo_interactive_html.name,
+                        mime="text/html",
+                        key="gv_pygeo_html",
+                    )
+
+
         # ── Seed (only shown in config-file mode) ────────────────────────
         if src_mode == "From config file":
             c1, c2 = st.columns([1, 2])
@@ -2222,14 +2651,15 @@ def pg_geometry(root, exe, tmo, dry):
             st.info("Select a run or config above to enable visualization.")
         else:
             st.caption(
-                "**▶ Visualize 3D wing** — opens an interactive OpenGL window. "
+                "**▶ Visualize native 3-D geometry** — uses the AeroSandbox viewer when "
+                "that backend is present; pyGeo-only writes a native interactive HTML view. "
                 "Requires a local desktop (not SSH / headless).  "
                 "**📷 Save plot as PNG** — saves a 2D top-view image. Works everywhere."
             )
             col_a, col_b = st.columns(2)
             with col_a:
                 _panel(
-                    "Visualize 3D wing",
+                    "Visualize native 3-D geometry",
                     "Output → data/debug/visualization_runs/<timestamp>/",
                     [
                         "geometry",
@@ -2245,7 +2675,7 @@ def pg_geometry(root, exe, tmo, dry):
                     tmo,
                     dry,
                     "gv_3d",
-                    label="▶  Visualize 3D wing",
+                    label="▶  Visualize native 3-D geometry",
                 )
             with col_b:
                 args_png = [
@@ -2280,7 +2710,7 @@ def pg_geometry(root, exe, tmo, dry):
         # Scan both dirs for the newest PNG
         _all_pngs = (
             sorted(
-                list(viz_base_auto.glob("*/*.png")) + list(plot_base_auto.glob("*/*.png")),
+                list(viz_base_auto.rglob("*.png")) + list(plot_base_auto.rglob("*.png")),
                 key=lambda p: p.stat().st_mtime if p.exists() else 0,
                 reverse=True,
             )
@@ -2418,6 +2848,13 @@ def pg_geometry(root, exe, tmo, dry):
                 full = cs_met.get("full_span_m")
                 area = cs_met.get("approx_area_m2")
                 ar_v = cs_met.get("approx_aspect_ratio_planform")
+                ar_pygeo = cs_met.get("aspect_ratio_pygeo")
+                backend_summary = cs.get("realization_backends") or {}
+                enabled_backend_names = [
+                    name
+                    for name, data in backend_summary.items()
+                    if isinstance(data, dict) and data.get("enabled")
+                ]
                 ar_asb = cs_met.get("aspect_ratio_aerosandbox")
 
                 # Planform values from cs["sampled_planform"]
@@ -2437,6 +2874,12 @@ def pg_geometry(root, exe, tmo, dry):
                         stat_items.append(("AR (planform)", f"{ar_v:.2f}", "planform AR"))
                     if ar_asb is not None:
                         stat_items.append(("AR (ASB)", f"{ar_asb:.2f}", "AeroSandbox"))
+                    if ar_pygeo is not None:
+                        stat_items.append(("AR (pyGeo)", f"{ar_pygeo:.2f}", "realised loft"))
+                    if enabled_backend_names:
+                        stat_items.append(
+                            ("Backends", " + ".join(enabled_backend_names), "this run")
+                        )
                     _stat_row(stat_items)
 
                     # Planform parameters
@@ -2467,6 +2910,87 @@ def pg_geometry(root, exe, tmo, dry):
                     f"Config: {Path(m.get('config_path', '—')).name}"
                 )
                 st.caption(f"Run root: `{insp_path}`")
+
+                run_evidence = load_geometry_run_evidence(insp_path)
+                if run_evidence.pygeo:
+                    _sec("pyGeo realization evidence")
+                    pygeo_metrics = run_evidence.pygeo.get("metrics") or {}
+                    _stat_row(
+                        [
+                            (
+                                "QC",
+                                str(run_evidence.pygeo.get("quality_status", "—")),
+                                "loft/CST gate",
+                            ),
+                            (
+                                "Volume",
+                                f"{float(pygeo_metrics.get('volume_m3', 0.0)):.5f} m³",
+                                "realised OML",
+                            ),
+                            (
+                                "Wetted area",
+                                f"{float(pygeo_metrics.get('wetted_area_m2', 0.0)):.5f} m²",
+                                "realised OML",
+                            ),
+                            (
+                                "CAD",
+                                "PASS" if pygeo_metrics.get("physical_cad_accepted") else "not built",
+                                "Gmsh audited",
+                            ),
+                        ]
+                    )
+                    st.caption(
+                        "Plane warp: "
+                        f"{100.0 * float(pygeo_metrics.get('max_plane_warp_chord', 0.0)):.4f}% c · "
+                        "CST RMS: "
+                        f"{100.0 * float(pygeo_metrics.get('max_cst_rms_chord', 0.0)):.4f}% c"
+                    )
+
+                comparison_metrics = run_evidence.comparison.get("metrics") or {}
+                if comparison_metrics:
+                    _sec("pyGeo versus AeroSandbox — independent realizations")
+                    comparison_rows = []
+                    for metric_name, values in comparison_metrics.items():
+                        comparison_rows.append(
+                            {
+                                "metric": metric_name,
+                                "AeroSandbox": values.get("aerosandbox"),
+                                "pyGeo": values.get("pygeo"),
+                                "pyGeo - ASB [%]": values.get("relative_delta_percent"),
+                            }
+                        )
+                    if pd is not None:
+                        st.dataframe(
+                            pd.DataFrame(comparison_rows),
+                            use_container_width=True,
+                            hide_index=True,
+                        )
+                    st.caption("Geometry-object translation used: false")
+
+                if run_evidence.preview_images:
+                    with st.expander("Geometry previews", expanded=True):
+                        preview_columns = st.columns(
+                            min(2, len(run_evidence.preview_images))
+                        )
+                        for index, image_path in enumerate(run_evidence.preview_images):
+                            with preview_columns[index % len(preview_columns)]:
+                                st.caption(image_path.name)
+                                st.image(str(image_path), use_container_width=True)
+
+                if run_evidence.pygeo_cad_dir is not None:
+                    cad_files = sorted(
+                        path
+                        for path in run_evidence.pygeo_cad_dir.rglob("*")
+                        if path.is_file()
+                    )
+                    with st.expander(
+                        f"pyGeo CAD artifacts ({len(cad_files)})", expanded=False
+                    ):
+                        for cad_file in cad_files:
+                            st.caption(
+                                str(cad_file.relative_to(run_evidence.pygeo_cad_dir))
+                            )
+
 
                 # Artifact paths
                 gspath = insp_path / "artifacts" / "geometry" / "geometry_summary.json"
@@ -2516,6 +3040,78 @@ def pg_geometry(root, exe, tmo, dry):
             "The GUI reads produced manifests/previews; it does not duplicate CAD, OpenVSP, CadQuery, or deflection logic.",
             "info",
         )
+
+        pygeo_cad_runs = []
+        for candidate in [
+            Path(value) for value in _dirs(str(root / "data" / "runs"))
+        ]:
+            evidence = load_geometry_run_evidence(candidate)
+            if evidence.pygeo_cad_dir is not None:
+                pygeo_cad_runs.append((candidate, evidence))
+
+        if pygeo_cad_runs:
+            _sec("pyGeo CAD from standard Aeris geometry runs")
+            selected_pygeo_cad_run = st.selectbox(
+                "pyGeo geometry run",
+                [item[0].name for item in pygeo_cad_runs],
+                key="pygeo_cad_run",
+            )
+            selected_evidence = next(
+                evidence
+                for candidate, evidence in pygeo_cad_runs
+                if candidate.name == selected_pygeo_cad_run
+            )
+            cad_files = sorted(
+                path
+                for path in selected_evidence.pygeo_cad_dir.rglob("*")
+                if path.is_file()
+            )
+            st.caption(
+                "These files were generated inside the canonical geometry run by the "
+                "pyGeo backend; no separate CAD geometry reconstruction is run by the GUI."
+            )
+            if pd is not None:
+                st.dataframe(
+                    pd.DataFrame(
+                        [
+                            {
+                                "artifact": str(
+                                    path.relative_to(selected_evidence.pygeo_cad_dir)
+                                ),
+                                "size_MiB": round(path.stat().st_size / 2**20, 3),
+                            }
+                            for path in cad_files
+                        ]
+                    ),
+                    use_container_width=True,
+                    hide_index=True,
+                )
+            downloadable = [
+                path
+                for path in cad_files
+                if path.suffix.lower() in {".step", ".brep", ".json"}
+            ]
+            if downloadable:
+                chosen_download = st.selectbox(
+                    "Download pyGeo CAD artifact",
+                    downloadable,
+                    format_func=lambda path: str(
+                        path.relative_to(selected_evidence.pygeo_cad_dir)
+                    ),
+                    key="pygeo_cad_download",
+                )
+                st.download_button(
+                    "Download selected pyGeo CAD artifact",
+                    data=chosen_download.read_bytes(),
+                    file_name=chosen_download.name,
+                    mime="application/octet-stream",
+                    key="pygeo_cad_download_button",
+                )
+        else:
+            st.caption(
+                "No completed pyGeo CAD run found. Generate paper1_bwb_pygeo.yaml first."
+            )
+
 
         def _cad_file_rows(cad_dir: Path) -> list[dict[str, Any]]:
             rows: list[dict[str, Any]] = []
@@ -4081,18 +4677,14 @@ def pg_airfoil(root, exe, tmo, dry):
                     "warn",
                 )
 
-            _sweep_args = [
-                "airfoil",
-                "dataset",
-                "generate",
+            _sweep_args = ["airfoil", "dataset", "generate",
                 "--library",
                 str(lib_dir),
                 "--config",
                 str(xfoil_cfg),
                 "--name",
                 ds_name,
-                "--n-airfoils",
-                str(n_airfoils),
+                "--n-airfoils", str(n_airfoils),
                 "--seed",
                 str(seed),
             ]
@@ -4386,7 +4978,7 @@ def pg_dataset(root, exe, tmo, dry):
                     "info",
                 )
         else:
-            ys = _yaml_geometry_builder("dsb")
+            ys = _yaml_geometry_builder("dsb", root)
             with st.expander("Preview YAML"):
                 st.code(ys, language="yaml")
             sp2 = st.text_input(
@@ -5791,6 +6383,7 @@ def pg_aero(root, exe, tmo, dry):
     # Shared config list
     cfg_files = _files(str(root / "configs" / "geometry"), "*.yaml")
     smoke_cfg = str(root / "configs" / "geometry" / "baseline_bwb_25.yaml")
+    pygeo_cfg = str(root / "configs" / "geometry" / "paper1_bwb_pygeo.yaml")
     prod_cfg = str(root / "configs" / "geometry" / "bwb_training_v1.yaml")
     cfg_smoke_first = (
         ([smoke_cfg] if smoke_cfg in cfg_files else [])
@@ -5801,6 +6394,8 @@ def pg_aero(root, exe, tmo, dry):
     def _cfg_label(s):
         if "bwb_training_v1" in s:
             return f"Production — {Path(s).name}"
+        if "paper1_bwb_pygeo" in s:
+            return f"pyGeo production — {Path(s).name}"
         if "baseline_bwb_25" in s:
             return f"Smoke test  — {Path(s).name}"
         return Path(s).name if s else "— none —"
@@ -6193,6 +6788,7 @@ def pg_aero(root, exe, tmo, dry):
             else:
                 # Load manifest
                 import json as _j
+
                 import pandas as _pd
 
                 sw_raw = None
@@ -7748,6 +8344,7 @@ def pg_dynamics(root, exe, tmo, dry):
                 else:
                     try:
                         import json as _j
+
                         import plotly.graph_objects as go
 
                         data = _j.loads(cg_json.read_text(encoding="utf-8"))

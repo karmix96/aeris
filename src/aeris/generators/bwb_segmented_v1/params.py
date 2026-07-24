@@ -32,9 +32,13 @@ Identity guarantee:
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, fields
+from dataclasses import asdict, dataclass, field, fields
 from typing import Any
 
+from aeris.generators.bwb_segmented_v1.pygeo_config import (
+    PyGeoBackendConfig,
+    build_pygeo_backend_config,
+)
 
 # Must match BwbSegmentedV1Generator.GENERATOR_ID exactly. Kept in sync
 # manually because importing from generator.py would create a circular import.
@@ -153,6 +157,7 @@ class SegmentAirfoilConfig:
     y_frac_end is normalised by semispan (0 < y_frac_end ≤ 1.0).
     The last entry should have y_frac_end=1.0; it is clamped automatically.
     """
+
     airfoil_id: str
     y_frac_end: float
 
@@ -168,6 +173,7 @@ class StationAirfoilsConfig:
 
     Step-function: sections in [b0->b1) get b0, [b1->b2) get b1, etc.
     """
+
     b0: str
     b1: str
     b2: str
@@ -192,14 +198,15 @@ class SectionBoundsConfig:
     dihedral_b3_deg: RangeConfig
 
     # AVL polar bridge — optional; None means no CDCL injection
-    airfoil_library_id: str | None = None       # single airfoil from library (approach 1a)
+    airfoil_library_id: str | None = None  # single airfoil from library (approach 1a)
     segment_airfoils: tuple[SegmentAirfoilConfig, ...] = ()  # multi-segment (approach 1b / 2)
-    station_airfoils: StationAirfoilsConfig | None = None    # Paper 1 prescribed geometry airfoils
+    station_airfoils: StationAirfoilsConfig | None = None  # Paper 1 prescribed geometry airfoils
 
 
 @dataclass(frozen=True)
 class ControlSurfaceBoundsConfig:
     """Sampling bounds for the shared elevon geometry DVs (v3+)."""
+
     elevon_start_frac: RangeConfig
     elevon_end_frac: RangeConfig
     elevon_hinge_frac: RangeConfig
@@ -272,7 +279,7 @@ class BWBDesignSample:
 
     # Elevon geometry DVs — defaults match v1/v2 fixed values
     elevon_start_frac: float = 0.60
-    elevon_end_frac: float   = 0.95
+    elevon_end_frac: float = 0.95
     elevon_hinge_frac: float = 0.75
 
     def to_dict(self) -> dict[str, Any]:
@@ -294,6 +301,7 @@ class BWBGeneratorConfig:
     outputs: PlotOutputsConfig
     control_surfaces: ControlSurfacesConfig
     elevon_bounds: ControlSurfaceBoundsConfig | None = None
+    pygeo: PyGeoBackendConfig = field(default_factory=PyGeoBackendConfig)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -359,9 +367,7 @@ def _parse_segment_airfoils(raw: Any) -> tuple[SegmentAirfoilConfig, ...]:
     result: list[SegmentAirfoilConfig] = []
     for i, item in enumerate(raw):
         if not isinstance(item, dict):
-            raise TypeError(
-                f"section_bounds.segment_airfoils[{i}] must be a mapping."
-            )
+            raise TypeError(f"section_bounds.segment_airfoils[{i}] must be a mapping.")
         result.append(
             SegmentAirfoilConfig(
                 airfoil_id=_as_str(
@@ -421,8 +427,7 @@ def _resolve_family_version(generator_cfg: dict[str, Any]) -> tuple[str, str]:
         family_part, version_suffix = id_str.rsplit("_v", 1)
         if not family_part or not version_suffix:
             raise ValueError(
-                f"Generator id={id_str!r} produces empty family or version "
-                "after splitting on '_v'."
+                f"Generator id={id_str!r} produces empty family or version after splitting on '_v'."
             )
         return family_part, f"v{version_suffix}"
 
@@ -455,15 +460,13 @@ def build_bwb_generator_config(config: dict[str, Any]) -> BWBGeneratorConfig:
     geometry_cfg = config.get("geometry", {})
     if not isinstance(geometry_cfg, dict):
         raise TypeError(
-            f"Top-level 'geometry' must be a mapping, "
-            f"got {type(geometry_cfg).__name__}."
+            f"Top-level 'geometry' must be a mapping, got {type(geometry_cfg).__name__}."
         )
 
     generator_cfg = geometry_cfg.get("generator", {})
     if not isinstance(generator_cfg, dict):
         raise TypeError(
-            f"'geometry.generator' must be a mapping, "
-            f"got {type(generator_cfg).__name__}."
+            f"'geometry.generator' must be a mapping, got {type(generator_cfg).__name__}."
         )
 
     controls_cfg = geometry_cfg.get("controls", {})
@@ -565,6 +568,7 @@ def build_bwb_generator_config(config: dict[str, Any]) -> BWBGeneratorConfig:
         ),
         control_surfaces=_build_control_surfaces_config(control_surfaces_cfg),
         elevon_bounds=_build_elevon_bounds_config(geometry_cfg.get("elevon_bounds")),
+        pygeo=build_pygeo_backend_config(geometry_cfg.get("pygeo")),
     )
 
     # Identity consistency: catch family/version mismatches against BWB.
@@ -583,15 +587,19 @@ def _parse_station_airfoils(cfg: dict | None) -> "StationAirfoilsConfig | None":
     if cfg is None:
         return None
     if not isinstance(cfg, dict):
-        raise TypeError(f"section_bounds.station_airfoils must be a mapping; got {type(cfg).__name__}")
+        raise TypeError(
+            f"section_bounds.station_airfoils must be a mapping; got {type(cfg).__name__}"
+        )
     for key in ("b0", "b1", "b2", "b3"):
         if key not in cfg:
             raise ValueError(f"section_bounds.station_airfoils missing key '{key}'")
         if not isinstance(cfg[key], str) or not cfg[key].strip():
             raise ValueError(f"section_bounds.station_airfoils.{key} must be a non-empty string")
     return StationAirfoilsConfig(
-        b0=str(cfg["b0"]).strip(), b1=str(cfg["b1"]).strip(),
-        b2=str(cfg["b2"]).strip(), b3=str(cfg["b3"]).strip(),
+        b0=str(cfg["b0"]).strip(),
+        b1=str(cfg["b1"]).strip(),
+        b2=str(cfg["b2"]).strip(),
+        b3=str(cfg["b3"]).strip(),
     )
 
 
@@ -613,6 +621,7 @@ def _build_elevon_bounds_config(cfg: dict | None) -> "ControlSurfaceBoundsConfig
             "fixed v1/v2 defaults, or provide elevon_start_frac/elevon_end_frac/"
             "elevon_hinge_frac bounds for v3 sampling."
         )
+
     def _rc(key: str) -> RangeConfig:
         block = cfg.get(key)
         if not isinstance(block, dict):
@@ -621,6 +630,7 @@ def _build_elevon_bounds_config(cfg: dict | None) -> "ControlSurfaceBoundsConfig
             min=_as_float(_require(block, "min"), field_name=f"elevon_bounds.{key}.min"),
             max=_as_float(_require(block, "max"), field_name=f"elevon_bounds.{key}.max"),
         )
+
     return ControlSurfaceBoundsConfig(
         elevon_start_frac=_rc("elevon_start_frac"),
         elevon_end_frac=_rc("elevon_end_frac"),
@@ -660,34 +670,22 @@ def _build_control_surfaces_config(
 
     for i, raw in enumerate(raw_surfaces):
         if not isinstance(raw, dict):
-            raise TypeError(
-                f"geometry.control_surfaces.surfaces[{i}] must be a dict."
-            )
+            raise TypeError(f"geometry.control_surfaces.surfaces[{i}] must be a dict.")
 
         prefix = f"control_surfaces.surfaces[{i}]"
 
         name = _as_str(_require(raw, "name"), field_name=f"{prefix}.name")
         family = _as_str(_require(raw, "family"), field_name=f"{prefix}.family")
-        hinge_point = _as_float(
-            _require(raw, "hinge_point"), field_name=f"{prefix}.hinge_point"
-        )
-        symmetric = _as_bool(
-            raw.get("symmetric", True), field_name=f"{prefix}.symmetric"
-        )
+        hinge_point = _as_float(_require(raw, "hinge_point"), field_name=f"{prefix}.hinge_point")
+        symmetric = _as_bool(raw.get("symmetric", True), field_name=f"{prefix}.symmetric")
         deflection_sign = _as_str(
             raw.get("deflection_sign", "standard"),
             field_name=f"{prefix}.deflection_sign",
         )
-        required = _as_bool(
-            raw.get("required", False), field_name=f"{prefix}.required"
-        )
+        required = _as_bool(raw.get("required", False), field_name=f"{prefix}.required")
 
         raw_side = raw.get("side", None)
-        side = (
-            _as_str(raw_side, field_name=f"{prefix}.side")
-            if raw_side is not None
-            else None
-        )
+        side = _as_str(raw_side, field_name=f"{prefix}.side") if raw_side is not None else None
 
         spanwise_cfg = raw.get("spanwise", {})
         if not isinstance(spanwise_cfg, dict):
@@ -727,20 +725,17 @@ def _build_control_surfaces_config(
 
         if symmetric and side is not None:
             raise ValueError(
-                f"Control surface {name!r} is symmetric=True, "
-                "so side must be omitted."
+                f"Control surface {name!r} is symmetric=True, so side must be omitted."
             )
 
         if not symmetric and side not in {"left", "right"}:
             raise ValueError(
-                f"Control surface {name!r} is symmetric=False, "
-                "so side must be 'left' or 'right'."
+                f"Control surface {name!r} is symmetric=False, so side must be 'left' or 'right'."
             )
 
         if deflection_sign not in {"standard"}:
             raise ValueError(
-                f"Unsupported deflection_sign {deflection_sign!r} "
-                f"for control surface {name!r}."
+                f"Unsupported deflection_sign {deflection_sign!r} for control surface {name!r}."
             )
 
         surfaces.append(
@@ -760,8 +755,6 @@ def _build_control_surfaces_config(
         )
 
     if not enabled and surfaces:
-        raise ValueError(
-            "geometry.control_surfaces.enabled is false, but surfaces are defined."
-        )
+        raise ValueError("geometry.control_surfaces.enabled is false, but surfaces are defined.")
 
     return ControlSurfacesConfig(enabled=enabled, surfaces=tuple(surfaces))

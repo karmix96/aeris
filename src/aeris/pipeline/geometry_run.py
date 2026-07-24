@@ -18,8 +18,8 @@ from __future__ import annotations
 
 import json
 import platform
-import shutil
 import re
+import shutil
 import sys
 import traceback
 from dataclasses import asdict, is_dataclass
@@ -40,17 +40,18 @@ def _utc_now_iso() -> str:
     """Return the current UTC timestamp in ISO-8601 format."""
     return datetime.now(UTC).isoformat()
 
+
 def _get_aeris_version() -> str:
     # Return the installed AERIS package version, or 'unknown'.
     try:
         from importlib.metadata import PackageNotFoundError, version
+
         try:
             return version("aeris")
         except PackageNotFoundError:
             return "unknown"
     except Exception:
         return "unknown"
-
 
 
 def _to_jsonable(value: Any) -> Any:
@@ -78,6 +79,7 @@ def _write_manifest(manifest_path: Path, manifest: dict[str, Any]) -> None:
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
+
 def _mark_manifest_failed(
     manifest: dict[str, Any],
     *,
@@ -92,10 +94,12 @@ def _mark_manifest_failed(
         "traceback": traceback.format_exc(),
     }
 
+
 def run_geometry_generation(
     config_path: str | Path,
     *,
     save_plot: bool | None = None,
+    build_aerosandbox: bool | None = None,
 ) -> tuple[int, Path | None]:
     """
     Run a single geometry-generation workflow.
@@ -132,6 +136,7 @@ def run_geometry_generation(
         "geometry": None,
         "operator_overrides": {
             "save_plot": save_plot,
+            "build_aerosandbox": build_aerosandbox,
         },
     }
 
@@ -172,6 +177,8 @@ def run_geometry_generation(
         run_kwargs: dict[str, Any] = {}
         if save_plot is not None:
             run_kwargs["save_plot"] = save_plot
+        if build_aerosandbox is not None:
+            run_kwargs["build_aerosandbox"] = build_aerosandbox
 
         case_result = generator.run_full_case(
             sample=design_sample,
@@ -184,8 +191,12 @@ def run_geometry_generation(
 
         manifest["geometry"] = {
             "name": getattr(generator_config, "name", None),
-            "generator_family": getattr(getattr(generator_config, "generator", None), "family", None),
-            "generator_version": getattr(getattr(generator_config, "generator", None), "version", None),
+            "generator_family": getattr(
+                getattr(generator_config, "generator", None), "family", None
+            ),
+            "generator_version": getattr(
+                getattr(generator_config, "generator", None), "version", None
+            ),
             "generator_id": generator_id,
             "design_sampling_seed": design_sampling_seed,
             "geometry_deterministic": True,
@@ -193,6 +204,7 @@ def run_geometry_generation(
             "case_summary": _to_jsonable(case_summary),
             "operator_overrides": {
                 "save_plot": save_plot,
+                "build_aerosandbox": build_aerosandbox,
             },
         }
         manifest["status"] = "success"

@@ -17,8 +17,8 @@ from pathlib import Path
 
 import typer
 
-from aeris.geometry.visualization import visualize_geometry_from_config
 from aeris.geometry.cad_export import export_cad_from_config, openvsp_doctor
+from aeris.geometry.visualization import visualize_geometry_from_config
 from aeris.pipeline.geometry_run import run_geometry_generation
 
 geometry_app = typer.Typer(help="Geometry-related commands.")
@@ -34,6 +34,7 @@ def geometry_callback() -> None:
 def geometry_info() -> None:
     """Show the current status of geometry tooling and registered generators."""
     from aeris.geometry.registry import list_geometry_generators
+
     try:
         generators = list_geometry_generators()
         n = len(generators)
@@ -46,15 +47,33 @@ def geometry_info() -> None:
     typer.echo(f"  Registered generators : {n}")
     for gid in generators:
         typer.echo(f"    · {gid}")
-    typer.echo(f"  Design variables      : 20  (10 planform + 7 section + 3 elevon)")
+
+    from importlib.util import find_spec
+
+    pygeo_available = find_spec("pygeo") is not None
+    cadquery_available = find_spec("cadquery") is not None
+    gmsh_available = find_spec("gmsh") is not None
+    typer.echo("  Realization backends:")
+    typer.echo("    · AeroSandbox (built in)")
+    typer.echo(f"    · pyGeo ({'available' if pygeo_available else 'not installed'})")
+    typer.echo(
+        "      physical CAD: "
+        f"CadQuery={'yes' if cadquery_available else 'no'}, "
+        f"Gmsh={'yes' if gmsh_available else 'no'}"
+    )
+    typer.echo("  Design variables      : 20  (10 planform + 7 section + 3 elevon)")
     import os as _os
+
     _prod = "configs/geometry/bwb_training_v1.yaml"
     _prod_flag = "" if _os.path.isfile(_prod) else "  [FILE NOT FOUND]"
     typer.echo(f"  Production config     : {_prod}{_prod_flag}")
-    typer.echo(f"  Smoke config          : configs/geometry/baseline_bwb_25.yaml")
+    typer.echo("  Smoke config          : configs/geometry/baseline_bwb_25.yaml")
     typer.echo("")
     typer.echo("  Commands:")
-    typer.echo("    aeris geometry generate  --config <yaml> [--save-plot|--no-save-plot]")
+    typer.echo(
+        "    aeris geometry generate  --config <yaml> "
+        "[--build-aerosandbox|--no-build-aerosandbox]"
+    )
     typer.echo("    aeris geometry export-cad --config <yaml> --formats vspscript,step")
     typer.echo("    aeris geometry openvsp-doctor [--openvsp-command vsp]")
     typer.echo("    aeris geometry visualize --config <yaml> [--seed N] [--draw-3d|--no-draw-3d]")
@@ -80,6 +99,14 @@ def geometry_generate(
         "--save-plot/--no-save-plot",
         help="Override geometry.outputs.save_plot from the YAML for this run.",
     ),
+    build_aerosandbox: bool | None = typer.Option(
+        None,
+        "--build-aerosandbox/--no-build-aerosandbox",
+        help=(
+            "Override geometry.outputs.build_aerosandbox. This is useful for "
+            "running a direct AeroSandbox-versus-pyGeo comparison."
+        ),
+    ),
 ) -> None:
     """
     Generate one deterministic geometry case from a YAML config.
@@ -90,7 +117,10 @@ def geometry_generate(
     """
     import json as _json
 
-    exit_code, run_root = run_geometry_generation(config, save_plot=save_plot)
+    generation_kwargs = {"save_plot": save_plot}
+    if build_aerosandbox is not None:
+        generation_kwargs["build_aerosandbox"] = build_aerosandbox
+    exit_code, run_root = run_geometry_generation(config, **generation_kwargs)
 
     if run_root is not None:
         typer.echo("")
@@ -99,17 +129,19 @@ def geometry_generate(
         typer.echo(f"  run_root : {run_root}")
         if save_plot is not None:
             typer.echo(f"  save_plot override: {save_plot}")
+        if build_aerosandbox is not None:
+            typer.echo(f"  AeroSandbox override: {build_aerosandbox}")
 
         mpath = run_root / "manifest.json"
         if mpath.exists():
             try:
-                m      = _json.loads(mpath.read_text(encoding="utf-8"))
-                geo    = m.get("geometry") or {}
-                seed   = geo.get("design_sampling_seed", "—")
-                cs     = geo.get("case_summary") or {}
+                m = _json.loads(mpath.read_text(encoding="utf-8"))
+                geo = m.get("geometry") or {}
+                seed = geo.get("design_sampling_seed", "—")
+                cs = geo.get("case_summary") or {}
                 # Metrics live under case_summary["metrics"], not at the top level.
                 cs_met = cs.get("metrics") or {}
-                cs_pf  = cs.get("sampled_planform") or {}
+                cs_pf = cs.get("sampled_planform") or {}
 
                 typer.echo(f"  seed     : {seed}")
                 typer.echo(f"  semi_span: {cs_met.get('semi_span_m', '—')} m")
@@ -117,6 +149,11 @@ def geometry_generate(
                 typer.echo(f"  area     : {cs_met.get('approx_area_m2', '—')} m²")
                 typer.echo(f"  AR       : {cs_met.get('approx_aspect_ratio_planform', '—')}")
                 typer.echo(f"  c1_m     : {cs_pf.get('c1_m', '—')} m")
+                backends = cs.get("realization_backends") or {}
+                pygeo_summary = cs.get("pygeo") or {}
+                if (backends.get("pygeo") or {}).get("enabled"):
+                    typer.echo(f"  pyGeo AR : {cs_met.get('aspect_ratio_pygeo', '—')}")
+                    typer.echo(f"  pyGeo QC : {pygeo_summary.get('quality_status', '—')}")
             except Exception as _e:
                 typer.echo(f"  [warn] Could not read manifest metrics: {_e}")
 
@@ -167,7 +204,10 @@ def geometry_visualize(
     draw_3d: bool = typer.Option(
         True,
         "--draw-3d/--no-draw-3d",
-        help="Open AeroSandbox 3D viewer using airplane.draw().",
+        help=(
+            "Open the AeroSandbox viewer when available, or write a native "
+            "interactive pyGeo HTML view for a pyGeo-only configuration."
+        ),
     ),
 ) -> None:
     """
@@ -206,6 +246,17 @@ def geometry_visualize(
     if viz_result.plot_path is not None:
         typer.echo(f"[AERIS] Saved plot: {viz_result.plot_path}")
     typer.echo(f"[AERIS] AeroSandbox airplane available: {viz_result.has_aerosandbox_airplane}")
+    has_pygeo = bool(getattr(viz_result, "has_pygeo_geometry", False))
+    typer.echo(f"[AERIS] pyGeo geometry available: {has_pygeo}")
+    pygeo_plot = getattr(viz_result, "pygeo_plot_path", None)
+    if pygeo_plot is not None:
+        typer.echo(f"[AERIS] Native pyGeo plot: {pygeo_plot}")
+    interactive_path = getattr(viz_result, "interactive_3d_path", None)
+    if interactive_path is not None:
+        typer.echo(f"[AERIS] Interactive 3-D view: {interactive_path}")
+    backend = getattr(viz_result, "visualization_backend", None)
+    if backend is not None:
+        typer.echo(f"[AERIS] Visualization backend: {backend}")
 
 
 @geometry_app.command("inspect")
@@ -233,19 +284,19 @@ def geometry_inspect(
     """
     import json as _json
 
-    mpath  = run_dir / "manifest.json"
+    mpath = run_dir / "manifest.json"
     gspath = run_dir / "artifacts" / "geometry" / "geometry_summary.json"
 
     if not mpath.exists():
         typer.secho(f"[ERROR] No manifest.json found in {run_dir}", fg=typer.colors.RED)
         raise typer.Exit(code=1)
 
-    m      = _json.loads(mpath.read_text(encoding="utf-8"))
-    geo    = m.get("geometry") or {}
-    cs     = geo.get("case_summary") or {}
+    m = _json.loads(mpath.read_text(encoding="utf-8"))
+    geo = m.get("geometry") or {}
+    cs = geo.get("case_summary") or {}
     # Metrics live under case_summary["metrics"], planform values under case_summary["sampled_planform"].
     cs_met = cs.get("metrics") or {}
-    cs_pf  = cs.get("sampled_planform") or {}
+    cs_pf = cs.get("sampled_planform") or {}
 
     if as_json:
         summary: dict = {"manifest": m}
@@ -269,19 +320,31 @@ def geometry_inspect(
     if cs_met:
         typer.echo("")
         typer.echo("  Key metrics (case_summary → metrics):")
-        semi   = cs_met.get("semi_span_m")
-        full   = cs_met.get("full_span_m")
-        area   = cs_met.get("approx_area_m2")
-        ar     = cs_met.get("approx_aspect_ratio_planform")
+        semi = cs_met.get("semi_span_m")
+        full = cs_met.get("full_span_m")
+        area = cs_met.get("approx_area_m2")
+        ar = cs_met.get("approx_aspect_ratio_planform")
         ar_asb = cs_met.get("aspect_ratio_aerosandbox")
-        c1     = cs_pf.get("c1_m")
+        ar_pygeo = cs_met.get("aspect_ratio_pygeo")
+        c1 = cs_pf.get("c1_m")
 
-        if semi  is not None: typer.echo(f"    semi_span_m        : {semi:.4f} m")
-        if full  is not None: typer.echo(f"    full_span_m        : {full:.4f} m")
-        if area  is not None: typer.echo(f"    area_m2            : {area:.4f} m²")
-        if ar    is not None: typer.echo(f"    aspect_ratio       : {ar:.3f}  (planform)")
-        if ar_asb is not None: typer.echo(f"    aspect_ratio_asb   : {ar_asb:.3f}  (AeroSandbox)")
-        if c1    is not None: typer.echo(f"    c1_m               : {c1:.4f} m")
+        if semi is not None:
+            typer.echo(f"    semi_span_m        : {semi:.4f} m")
+        if full is not None:
+            typer.echo(f"    full_span_m        : {full:.4f} m")
+        if area is not None:
+            typer.echo(f"    area_m2            : {area:.4f} m²")
+        if ar is not None:
+            typer.echo(f"    aspect_ratio       : {ar:.3f}  (planform)")
+        if ar_asb is not None:
+            typer.echo(f"    aspect_ratio_asb   : {ar_asb:.3f}  (AeroSandbox)")
+        if ar_pygeo is not None:
+            typer.echo(f"    aspect_ratio_pygeo : {ar_pygeo:.3f}  (realised loft)")
+        pygeo_summary = cs.get("pygeo") or {}
+        if pygeo_summary.get("enabled"):
+            typer.echo(f"    pygeo_qc            : {pygeo_summary.get('quality_status', '—')}")
+        if c1 is not None:
+            typer.echo(f"    c1_m               : {c1:.4f} m")
     elif cs:
         typer.secho(
             "  [WARN] case_summary present but no 'metrics' key found. "
@@ -289,11 +352,16 @@ def geometry_inspect(
             fg=typer.colors.YELLOW,
         )
     else:
-        typer.secho("  [WARN] No case_summary in manifest. Run may have failed.", fg=typer.colors.YELLOW)
+        typer.secho(
+            "  [WARN] No case_summary in manifest. Run may have failed.", fg=typer.colors.YELLOW
+        )
 
     typer.echo("")
     typer.echo("  Artifact paths:")
     typer.echo(f"    manifest      : {mpath}")
+    pygeo_dir = (cs.get("artifacts") or {}).get("pygeo_dir")
+    if pygeo_dir:
+        typer.echo(f"    pygeo         : {pygeo_dir}")
     if gspath.exists():
         typer.echo(f"    geo_summary   : {gspath}")
     else:
@@ -302,7 +370,6 @@ def geometry_inspect(
     if m.get("error"):
         typer.secho(f"  [ERROR] {m['error']}", fg=typer.colors.RED)
         raise typer.Exit(code=1)
-
 
 
 @geometry_app.command("openvsp-doctor")
@@ -328,9 +395,14 @@ def geometry_openvsp_doctor(
     typer.echo(f"  found        : {report['found']}")
     typer.echo(f"  resolved_path: {report.get('resolved_path') or '—'}")
     typer.echo(f"  source       : {report.get('source') or '—'}")
-    typer.echo("  note         : VSP script export does not require OpenVSP. STEP can use CadQuery or OpenVSP.")
+    typer.echo(
+        "  note         : VSP script export does not require OpenVSP. STEP can use CadQuery or OpenVSP."
+    )
     if not report["found"]:
-        typer.secho("  [warn] STEP export will be skipped until OpenVSP is installed or the path is supplied.", fg=typer.colors.YELLOW)
+        typer.secho(
+            "  [warn] STEP export will be skipped until OpenVSP is installed or the path is supplied.",
+            fg=typer.colors.YELLOW,
+        )
 
 
 @geometry_app.command("export-cad")
@@ -393,14 +465,20 @@ def geometry_export_cad(
         typer.echo(_json.dumps(result.to_dict(), indent=2))
     else:
         typer.echo("")
-        label = "SUCCESS" if result.status == "success" else ("PARTIAL" if result.status == "partial_success" else "FAILED")
+        label = (
+            "SUCCESS"
+            if result.status == "success"
+            else ("PARTIAL" if result.status == "partial_success" else "FAILED")
+        )
         typer.echo(f"[AERIS] Geometry CAD export — {label}")
         typer.echo(f"  status      : {result.status}")
         typer.echo(f"  config      : {config}")
         typer.echo(f"  run_root    : {result.run_root}")
         typer.echo(f"  cad_exports : {result.cad_dir}")
         typer.echo(f"  requested   : {','.join(result.formats_requested)}")
-        typer.echo(f"  produced    : {','.join(result.formats_produced) if result.formats_produced else '—'}")
+        typer.echo(
+            f"  produced    : {','.join(result.formats_produced) if result.formats_produced else '—'}"
+        )
         typer.echo(f"  manifest    : {result.manifest_path}")
         if result.vspscript_path is not None:
             typer.echo(f"  vspscript   : {result.vspscript_path}")
@@ -414,7 +492,6 @@ def geometry_export_cad(
             typer.secho(f"  [warn] {warning}", fg=typer.colors.YELLOW)
 
     raise typer.Exit(code=0 if result.succeeded else 1)
-
 
 
 @geometry_app.command("export-deflected-cad")
@@ -519,7 +596,9 @@ def geometry_export_deflected_cad(
             seed=seed,
         )
     except Exception as exc:
-        typer.secho(f"[AERIS] Geometry physical deflected CAD export — FAILED: {exc}", fg=typer.colors.RED)
+        typer.secho(
+            f"[AERIS] Geometry physical deflected CAD export — FAILED: {exc}", fg=typer.colors.RED
+        )
         raise typer.Exit(code=1)
 
     status = str(manifest.get("status", "unknown"))
@@ -547,7 +626,14 @@ def geometry_export_deflected_cad(
         typer.echo(f"    warning         : {controls.get('deflection_warning')}")
 
     artifacts = manifest.get("artifacts", {}) or {}
-    for key in ["vspscript", "step", "physical_deflected_planform_png", "physical_control_deflection", "stdout", "stderr"]:
+    for key in [
+        "vspscript",
+        "step",
+        "physical_deflected_planform_png",
+        "physical_control_deflection",
+        "stdout",
+        "stderr",
+    ]:
         val = artifacts.get(key)
         if val:
             typer.echo(f"  {key:12s}: {val}")
@@ -555,11 +641,14 @@ def geometry_export_deflected_cad(
     if status == "failed":
         raise typer.Exit(code=1)
 
+
 @geometry_app.command("export-cad-from-run")
 def export_cad_from_run(
     run_dir: str = typer.Argument(..., help="Geometry run directory."),
     formats: str = typer.Option("vspscript,step", help="vspscript, step, or both."),
-    output_dir: Path | None = typer.Option(None, help="Output dir (default: <run_dir>/cad_exports_explicit/)."),
+    output_dir: Path | None = typer.Option(
+        None, help="Output dir (default: <run_dir>/cad_exports_explicit/)."
+    ),
     step_backend: str = typer.Option("auto", help="auto | solid | cadquery | openvsp."),
     openvsp_command: str = typer.Option("vsp"),
     timeout_sec: int = typer.Option(180, min=1),
@@ -571,23 +660,40 @@ def export_cad_from_run(
     Ideal for selecting N from 10,000 DoE runs for CFD meshing.
     """
     from aeris.geometry.cad_export import export_cad_from_sample, load_sample_from_geometry_run
+
     try:
         sample, config, run_path = load_sample_from_geometry_run(run_dir)
     except (FileNotFoundError, KeyError, ValueError) as exc:
-        typer.echo(f"[ERROR] {exc}", err=True); raise typer.Exit(1)
+        typer.echo(f"[ERROR] {exc}", err=True)
+        raise typer.Exit(1)
     resolved_out = output_dir or (run_path / "cad_exports_explicit")
     if not json_output:
         typer.echo(f"  Run: {run_path.name}\n  Formats: {formats}\n  Output: {resolved_out}")
     result = export_cad_from_sample(
-        sample=sample, config=config, output_dir=resolved_out,
-        formats=formats, step_backend=step_backend,
-        openvsp_command=openvsp_command, timeout_sec=timeout_sec,
+        sample=sample,
+        config=config,
+        output_dir=resolved_out,
+        formats=formats,
+        step_backend=step_backend,
+        openvsp_command=openvsp_command,
+        timeout_sec=timeout_sec,
     )
     if json_output:
         import json as _j
-        typer.echo(_j.dumps({"status": result.status,
-            "formats_produced": list(result.formats_produced),
-            "cad_dir": str(result.cad_dir)}, indent=2))
+
+        typer.echo(
+            _j.dumps(
+                {
+                    "status": result.status,
+                    "formats_produced": list(result.formats_produced),
+                    "cad_dir": str(result.cad_dir),
+                },
+                indent=2,
+            )
+        )
     else:
-        typer.echo(f"  Status: {result.status}  Produced: {', '.join(result.formats_produced) or '—'}")
-    if result.status not in ("success", "partial_success"): raise typer.Exit(1)
+        typer.echo(
+            f"  Status: {result.status}  Produced: {', '.join(result.formats_produced) or '—'}"
+        )
+    if result.status not in ("success", "partial_success"):
+        raise typer.Exit(1)

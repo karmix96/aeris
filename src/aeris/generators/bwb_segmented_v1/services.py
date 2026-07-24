@@ -8,6 +8,7 @@ explicit design sample:
 - section realization
 - validation
 - optional AeroSandbox conversion
+- optional pyGeo loft, extraction, and CAD realization
 - optional artifact export and plotting
 
 It keeps orchestration separate from the generator contract, math modules,
@@ -26,18 +27,73 @@ from aeris.generators.bwb_segmented_v1.aerosandbox_adapter import (
 )
 from aeris.generators.bwb_segmented_v1.export import (
     build_geometry_summary,
+    export_backend_comparison_csv,
     export_control_points_csv,
     export_geometry_summary,
     export_planform_sections_csv,
     export_section_3d_csv,
 )
 from aeris.generators.bwb_segmented_v1.params import BWBDesignSample, BWBGeneratorConfig
-from aeris.generators.bwb_segmented_v1.planform import PlanformResult, generate_bwb_planform_from_sample
+from aeris.generators.bwb_segmented_v1.planform import (
+    PlanformResult,
+    generate_bwb_planform_from_sample,
+)
 from aeris.generators.bwb_segmented_v1.plotting import save_planform_plot
-from aeris.generators.bwb_segmented_v1.sections import SectionGeometryResult, build_section_geometry_from_sample
-from aeris.generators.bwb_segmented_v1.validation import validate_planform_result, validate_section_geometry
-from aeris.generators.bwb_segmented_v1.validators import audit_geometry_result  # AERIS_PATCH_BATCH3_GEOMETRY_AUDIT_SUMMARY
+from aeris.generators.bwb_segmented_v1.pygeo_backend import (
+    PyGeoGeometryResult,
+    build_pygeo_geometry,
+    save_backend_comparison_plot,
+)
 from aeris.generators.bwb_segmented_v1.reconstruction_export import export_reconstruction_artifacts
+from aeris.generators.bwb_segmented_v1.sections import (
+    SectionGeometryResult,
+    build_section_geometry_from_sample,
+)
+from aeris.generators.bwb_segmented_v1.validation import (
+    validate_planform_result,
+    validate_section_geometry,
+)
+from aeris.generators.bwb_segmented_v1.validators import (
+    audit_geometry_result,  # AERIS_PATCH_BATCH3_GEOMETRY_AUDIT_SUMMARY
+)
+
+_BACKEND_REFERENCE_FIELDS = (
+    "span_m",
+    "area_m2",
+    "aspect_ratio",
+    "mean_aerodynamic_chord_m",
+    "volume_m3",
+)
+
+
+def compare_backend_reference_values(
+    aerosandbox_values: dict[str, Any],
+    pygeo_values: dict[str, Any],
+) -> dict[str, Any]:
+    """Build a numerical comparison without translating either geometry object."""
+
+    metrics: dict[str, Any] = {}
+    for name in _BACKEND_REFERENCE_FIELDS:
+        asb_value = aerosandbox_values.get(name)
+        pygeo_value = pygeo_values.get(name)
+        if asb_value is None or pygeo_value is None:
+            continue
+        reference = float(asb_value)
+        candidate = float(pygeo_value)
+        delta = candidate - reference
+        metrics[name] = {
+            "aerosandbox": reference,
+            "pygeo": candidate,
+            "delta_pygeo_minus_aerosandbox": delta,
+            "relative_delta": None if reference == 0.0 else delta / reference,
+            "relative_delta_percent": (None if reference == 0.0 else 100.0 * delta / reference),
+        }
+    return {
+        "reference_backend": "aerosandbox",
+        "candidate_backend": "pygeo",
+        "geometry_translation_used": False,
+        "metrics": metrics,
+    }
 
 
 @dataclass(frozen=True)
@@ -47,6 +103,7 @@ class GeometryArtifactPaths:
     planform_sections_path: Path
     section_3d_path: Path
     plot_path: Path | None
+    pygeo_dir: Path | None
 
     def to_dict(self) -> dict[str, str | None]:
         return {
@@ -55,6 +112,7 @@ class GeometryArtifactPaths:
             "planform_sections_path": str(self.planform_sections_path),
             "section_3d_path": str(self.section_3d_path),
             "plot_path": None if self.plot_path is None else str(self.plot_path),
+            "pygeo_dir": None if self.pygeo_dir is None else str(self.pygeo_dir),
         }
 
 
@@ -64,6 +122,7 @@ class GeometryCaseResult:
     planform: PlanformResult
     section_geometry: SectionGeometryResult
     aerosandbox_result: AeroSandboxGeometryResult | None
+    pygeo_result: PyGeoGeometryResult | None
     artifact_paths: GeometryArtifactPaths
     summary: dict[str, Any]
 
@@ -78,6 +137,13 @@ class GeometryCaseResult:
         if self.aerosandbox_result is None:
             return None
         return self.aerosandbox_result.wing
+
+    @property
+    def pygeo_geometry(self):
+        if self.pygeo_result is None:
+            return None
+        return self.pygeo_result.pygeo.geometry
+
 
 def generate_geometry_case_from_sample(
     *,
@@ -110,6 +176,7 @@ def generate_geometry_case_from_sample(
     # AERIS_PATCH_G4_APPLIED
     if config.control_surfaces.surfaces and config.elevon_bounds is not None:
         from dataclasses import replace as _dc_replace
+
         _overridden_surfaces = tuple(
             _dc_replace(
                 surf,
@@ -122,14 +189,25 @@ def generate_geometry_case_from_sample(
             )
             for surf in config.control_surfaces.surfaces
         )
-        config = _dc_replace(config, control_surfaces=_dc_replace(
-            config.control_surfaces, surfaces=_overridden_surfaces
-        ))
+        config = _dc_replace(
+            config,
+            control_surfaces=_dc_replace(config.control_surfaces, surfaces=_overridden_surfaces),
+        )
+
+    pygeo_result = None
+    if config.pygeo.enabled:
+        pygeo_result = build_pygeo_geometry(
+            section_geometry=section_geometry,
+            planform=planform,
+            sample=sample,
+            config=config,
+            output_dir=output_dir / "pygeo",
+        )
 
     aerosandbox_result = None
     if effective_build_aerosandbox:
         aerosandbox_result = build_aerosandbox_geometry(section_geometry, config)
-    
+
     reconstruction_artifacts = None
     if aerosandbox_result is not None:
         reconstruction_artifacts = export_reconstruction_artifacts(
@@ -161,6 +239,7 @@ def generate_geometry_case_from_sample(
         planform_sections_path=planform_sections_path,
         section_3d_path=section_3d_path,
         plot_path=plot_path,
+        pygeo_dir=None if pygeo_result is None else pygeo_result.output_dir,
     )
 
     summary = build_geometry_summary(
@@ -171,6 +250,62 @@ def generate_geometry_case_from_sample(
         artifact_paths=artifact_paths.to_dict(),
         sample=sample,
     )
+
+    summary["realization_backends"] = {
+        "aerosandbox": {
+            "enabled": aerosandbox_result is not None,
+            "role": "discrete wing realization and aerodynamic adapter",
+        },
+        "pygeo": {
+            "enabled": pygeo_result is not None,
+            "role": "master B-spline loft, section extraction, and CAD utilities",
+        },
+    }
+    if pygeo_result is not None:
+        pygeo_summary = pygeo_result.summary_dict()
+        summary["pygeo"] = pygeo_summary
+        summary["pygeo_reference_values"] = pygeo_result.reference_values
+        if aerosandbox_result is not None:
+            comparison = compare_backend_reference_values(
+                aerosandbox_result.reference_values,
+                pygeo_result.reference_values,
+            )
+            summary["backend_comparison"] = comparison
+            comparison_csv = output_dir / "backend_comparison.csv"
+            export_backend_comparison_csv(comparison, comparison_csv)
+            summary["artifacts"]["backend_comparison_csv"] = str(comparison_csv)
+
+            if config.pygeo.outputs.save_visualization:
+                comparison_plot = output_dir / "plots" / "pygeo_vs_aerosandbox.png"
+                save_backend_comparison_plot(
+                    pygeo_result,
+                    aerosandbox_result.wing,
+                    comparison_plot,
+                    comparison=comparison,
+                    dpi=config.pygeo.outputs.visualization_dpi,
+                )
+                summary["artifacts"]["backend_comparison_plot"] = str(comparison_plot)
+        summary["metrics"].update(
+            {
+                "aspect_ratio_pygeo": pygeo_result.metrics["aspect_ratio_xy"],
+                "n_sections_pygeo_extracted": pygeo_result.metrics["n_extracted_sections"],
+                "volume_pygeo_m3": pygeo_result.metrics["volume_m3"],
+                "wetted_area_pygeo_m2": pygeo_result.metrics["wetted_area_m2"],
+            }
+        )
+        summary["artifacts"]["pygeo"] = pygeo_result.artifacts
+        summary["control_surface_summary"]["pygeo"] = pygeo_result.control.to_dict()
+        if aerosandbox_result is None:
+            summary["reference_values"] = pygeo_result.reference_values
+            summary["geometry_info"] = {
+                "backend": "pygeo",
+                "geometry_id": pygeo_result.geometry_id,
+                "n_authored_sections": len(pygeo_result.stations),
+                "n_extracted_sections": len(pygeo_result.extracted),
+                "symmetric": True,
+            }
+    else:
+        summary["pygeo"] = {"enabled": False}
 
     if reconstruction_artifacts is not None:
         summary["reconstruction_artifacts"] = reconstruction_artifacts
@@ -190,6 +325,7 @@ def generate_geometry_case_from_sample(
         planform=planform,
         section_geometry=section_geometry,
         aerosandbox_result=aerosandbox_result,
+        pygeo_result=pygeo_result,
         artifact_paths=artifact_paths,
         summary=summary,
     )

@@ -1,0 +1,168 @@
+schema: mach_aero.multifidelity.v1
+
+# Paths are resolved from repo_root. The standalone package does not edit the
+# inherited Aeris geometry configuration.
+repo_root: ../../..
+
+campaign:
+  name: mach_aero_bwb_smoke
+  base_geometry_config: configs/geometry/paper1_bwb_doe_naca_stations.yaml
+  airfoil_database: data/airfoil_database
+  output_root: artifacts/mach_aero_multifidelity/smoke
+  sampling:
+    method: lhs
+    seed: 73
+    n_designs: 2
+
+design_space:
+  # A small smoke DoE. Expand this list for the production campaign.
+  vary:
+    - c1_m
+    - c2_ratio
+    - b_total_m
+    - sw1_deg
+    - twist_b1_deg
+    - twist_b3_deg
+  # Fixed important knobs are explicit and copied to every dataset row.
+  fixed:
+    c3_ratio: 0.35
+    c4_ratio: 0.12
+    b3_ratio: 0.45
+    split_ratio: 0.50
+    sw2_deg: 25.0
+    sw3_deg: 12.0
+    twist_b0_deg: 0.0
+    twist_b2_deg: -2.5
+    dihedral_b1_deg: 1.0
+    dihedral_b2_deg: 3.0
+    dihedral_b3_deg: 5.0
+    elevon_start_frac: 0.60
+    elevon_end_frac: 0.95
+    elevon_hinge_frac: 0.75
+  unspecified: midpoint
+  fixed_station_airfoils:
+    b0: naca23012
+    b1: naca4412
+    b2: naca2412
+    b3: naca0012
+
+geometry:
+  pygeo:
+    k_span: 3
+    frame_mode: asb_frame
+    tip: none
+  extraction:
+    avl_sections: 17
+    cfd_sections: 13
+    chordwise_points: 181
+    cst_order: 8
+  quality:
+    max_plane_warp_chord: 1.0e-3
+    max_cst_rms_chord: 5.0e-4
+
+controls:
+  sign_convention: positive_trailing_edge_down
+  cfd_geometry:
+    mode: continuous_hinge_morph
+    blend_width_frac: 0.025
+    differential_policy: reject
+  states:
+    - {id: neutral, symmetric_deg: 0.0, differential_deg: 0.0}
+    - {id: elevon_down_8, symmetric_deg: 8.0, differential_deg: 0.0}
+    - {id: elevon_up_8, symmetric_deg: -8.0, differential_deg: 0.0}
+    # Valid for native AVL. The current half-wing CFD mesh rejects it loudly.
+    - {id: roll_right_5, symmetric_deg: 0.0, differential_deg: 5.0}
+
+flows:
+  - id: cruise_am2
+    alpha_deg: -2.0
+    beta_deg: 0.0
+    mach: 0.20
+    reynolds_ref: 1.0e+6
+    temperature_k: 288.15
+  - id: cruise_a2
+    alpha_deg: 2.0
+    beta_deg: 0.0
+    mach: 0.20
+    reynolds_ref: 1.0e+6
+    temperature_k: 288.15
+  - id: cruise_a6
+    alpha_deg: 6.0
+    beta_deg: 0.0
+    mach: 0.20
+    reynolds_ref: 1.0e+6
+    temperature_k: 288.15
+
+low_fidelity:
+  avl:
+    executable: avl
+    chordwise_panels: 8
+    spanwise_panels_per_interval: 3
+    chord_spacing: 1.0
+    span_spacing: 0.0
+    timeout_sec: 30
+  neuralfoil:
+    model_size: large
+    n_crit: 9.0
+    alpha_grid_deg: [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
+    confidence_floor: 0.15
+    cst_weights_per_side: 8
+  viscous_correction:
+    final_cd: cd_induced_plus_strip_neuralfoil
+    write_section_cdcl: true
+    control_profile_geometry: physically_deflected_2d_sections
+
+high_fidelity:
+  selection:
+    method: maximin
+    n_designs: 1
+  control_states: [neutral, elevon_down_8, elevon_up_8]
+  flow_states: [cruise_a2]
+  surface_mesh:
+    preset: smoke
+    overrides:
+      te_thickness: 0.005
+      minimum_te_thickness: 0.002
+  volume_mesh:
+    preset: smoke
+  solve:
+    solver: adflow
+    preset: rans_ank_nk_v1
+    mpi_np: 4
+    overrides:
+      l2_convergence: 1.0e-6
+      use_nk_solver: false
+
+dataset:
+  pair_keys: [geometry_id, control_id, flow_id]
+  targets: [cl, cd, cm]
+  group_column: geometry_id
+  model:
+    type: extra_trees
+    features:
+      - c1_m
+      - c2_ratio
+      - c3_ratio
+      - c4_ratio
+      - b_total_m
+      - b3_ratio
+      - split_ratio
+      - sw1_deg
+      - sw2_deg
+      - sw3_deg
+      - twist_b0_deg
+      - twist_b1_deg
+      - twist_b2_deg
+      - twist_b3_deg
+      - dihedral_b1_deg
+      - dihedral_b2_deg
+      - dihedral_b3_deg
+      - elevon_start_frac
+      - elevon_end_frac
+      - elevon_hinge_frac
+      - control_symmetric_deg
+      - control_differential_deg
+      - alpha_deg
+      - mach
+      - reynolds_ref
+

@@ -1,0 +1,121 @@
+schema: pygeo_bwb_generator.v1
+name: paper1_pygeo_bwb_doe
+
+# The planform and section mathematics are imported from this generator
+# definition. The file is read-only; this standalone workflow never edits it.
+aeris_definition_config: configs/geometry/paper1_bwb_doe_naca_stations.yaml
+airfoil_database: data/airfoil_database
+
+fixed_airfoils:
+  b0: naca23012
+  b1: naca4412
+  b2: naca2412
+  b3: naca0012
+
+# Physical DoE variables. Chords and spans are sampled directly, then
+# converted to the ratio variables expected by BWBDesignSample.
+doe:
+  method: lhs
+  seed: 20260723
+  n_samples: 16
+  variables:
+    c1_m: {min: 1.50, max: 2.00}
+    c2_m: {min: 0.95, max: 1.25}
+    c3_m: {min: 0.50, max: 0.75}
+    c4_m: {min: 0.15, max: 0.28}
+
+    b1_m: {min: 0.25, max: 0.45}
+    b2_m: {min: 0.35, max: 0.60}
+    b3_m: {min: 0.70, max: 1.00}
+
+    # Positive values are conventional aft-sweep magnitudes. Aeris stores
+    # these internally with a negative sign.
+    sw1_deg: {min: 30.0, max: 55.0}
+    sw2_deg: {min: 15.0, max: 35.0}
+    sw3_deg: {min: 5.0, max: 20.0}
+
+    twist_b0_deg: {min: -2.0, max: 2.0}
+    twist_b1_deg: {min: -4.0, max: 1.0}
+    twist_b2_deg: {min: -5.0, max: 0.0}
+    twist_b3_deg: {min: -6.0, max: 0.0}
+
+    # Hard invariant: keep the complete inboard/root panel flat so mirrored
+    # finite-thickness halves meet at y=0 without penetrating one another.
+    dihedral_b1_deg: {value: 0.0}
+    dihedral_b2_deg: {min: 1.0, max: 5.0}
+    dihedral_b3_deg: {min: 2.0, max: 8.0}
+
+geometry:
+  pygeo:
+    k_span: 3
+    # Reconstruct the same local chord/span/thickness frame used by Aeris.
+    # This alias does not construct an AeroSandbox geometry object.
+    frame_mode: aeris_frame
+    tip: none
+    tip_scale: 0.25
+  extraction:
+    spanwise_sections: 25
+    chordwise_points: 241
+    cst_order: 8
+  surface_sampling:
+    chordwise_points: 141
+    spanwise_points: 121
+  # Same metadata philosophy as geometry.control_surfaces in Aeris. Commands
+  # are recorded and shown in the GUI; native pyGeo CAD remains neutral.
+  control_surfaces:
+    enabled: true
+    surfaces:
+      - name: elevon
+        family: trailing_edge
+        hinge_point: 0.75
+        symmetric: true
+        spanwise: {start_frac: 0.60, end_frac: 0.95}
+        deflection_sign: standard
+    commands:
+      delta_e_sym_deg: 0.0
+      delta_a_diff_deg: 0.0
+    physical_cad:
+      enabled: true
+      topology: split_elevon
+      # Current model: collision-safe simple clearance cove for screening.
+      # Its void is fluid domain; design-limit relief makes the effective
+      # chordwise opening wider than hinge_gap_fraction.
+      # The fixed cove is sized once; commands do not change geometry_id.
+      design_deflection_limit_deg: 20.0
+      hinge_gap_fraction: 0.005
+      boundary_clearance_fraction: 0.005
+      chordwise_points: 81
+      minimum_te_thickness_fraction: 5.0e-4
+      tessellation_tolerance_m: 7.5e-4
+      tessellation_angular_tolerance_rad: 0.12
+      # Conservative sampled native-pyGeo OML -> tessellated OCC surface gate.
+      max_master_to_cad_deviation_cref: 0.005
+      fail_on_invalid: true
+
+
+  quality:
+    # Constant-span slices of a smooth 3-D loft need not be perfectly
+    # planar. Warn at 0.3% chord; reject only beyond 1% chord.
+    warn_plane_warp_chord: 3.0e-3
+    max_plane_warp_chord: 1.0e-2
+    max_cst_rms_chord: 1.0e-3
+
+outputs:
+  root: artifacts/pygeo_bwb_generator
+  fail_fast: false
+  write_iges: true
+  write_tecplot: true
+  write_surface_npz: true
+  write_section_dat: true
+  write_step: true
+  verify_step_import: true
+  write_brep: false
+  write_stl: true
+  write_obj: true
+  write_vtk: true
+  write_cad_npz: true
+  visualization:
+    enabled: true
+    dpi: 180
+    formats: [png]
+

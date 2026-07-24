@@ -1,0 +1,122 @@
+schema: mach_aero.multifidelity.v1
+repo_root: ../../..
+
+campaign:
+  name: paper1_pygeo_mach_aero
+  base_geometry_config: configs/geometry/paper1_bwb_doe_naca_stations.yaml
+  airfoil_database: data/airfoil_database
+  output_root: artifacts/mach_aero_multifidelity/paper1
+  sampling: {method: lhs, seed: 20260723, n_designs: 256}
+
+design_space:
+  # Planform, twist, and dihedral DoE; airfoils remain prescribed.
+  vary:
+    - c1_m
+    - c2_ratio
+    - c3_ratio
+    - c4_ratio
+    - b_total_m
+    - b3_ratio
+    - split_ratio
+    - sw1_deg
+    - sw2_deg
+    - sw3_deg
+    - twist_b0_deg
+    - twist_b1_deg
+    - twist_b2_deg
+    - twist_b3_deg
+    - dihedral_b1_deg
+    - dihedral_b2_deg
+    - dihedral_b3_deg
+  fixed:
+    elevon_start_frac: 0.60
+    elevon_end_frac: 0.95
+    elevon_hinge_frac: 0.75
+  unspecified: midpoint
+  fixed_station_airfoils:
+    b0: naca23012
+    b1: naca4412
+    b2: naca2412
+    b3: naca0012
+
+geometry:
+  pygeo: {k_span: 3, frame_mode: asb_frame, tip: none}
+  extraction:
+    avl_sections: 25
+    cfd_sections: 25
+    chordwise_points: 241
+    cst_order: 8
+  quality:
+    max_plane_warp_chord: 1.0e-3
+    max_cst_rms_chord: 5.0e-4
+
+controls:
+  sign_convention: positive_trailing_edge_down
+  cfd_geometry:
+    mode: continuous_hinge_morph
+    blend_width_frac: 0.02
+    differential_policy: reject
+  states:
+    - {id: neutral, symmetric_deg: 0.0, differential_deg: 0.0}
+    - {id: elevon_down_5, symmetric_deg: 5.0, differential_deg: 0.0}
+    - {id: elevon_down_10, symmetric_deg: 10.0, differential_deg: 0.0}
+    - {id: elevon_up_5, symmetric_deg: -5.0, differential_deg: 0.0}
+    - {id: elevon_up_10, symmetric_deg: -10.0, differential_deg: 0.0}
+    - {id: roll_right_5, symmetric_deg: 0.0, differential_deg: 5.0}
+    - {id: roll_left_5, symmetric_deg: 0.0, differential_deg: -5.0}
+
+flows:
+  - {id: m015_am4, alpha_deg: -4, beta_deg: 0, mach: 0.15, reynolds_ref: 8.0e+5, temperature_k: 288.15}
+  - {id: m015_a0, alpha_deg: 0, beta_deg: 0, mach: 0.15, reynolds_ref: 8.0e+5, temperature_k: 288.15}
+  - {id: m015_a4, alpha_deg: 4, beta_deg: 0, mach: 0.15, reynolds_ref: 8.0e+5, temperature_k: 288.15}
+  - {id: m015_a8, alpha_deg: 8, beta_deg: 0, mach: 0.15, reynolds_ref: 8.0e+5, temperature_k: 288.15}
+  - {id: m025_a0, alpha_deg: 0, beta_deg: 0, mach: 0.25, reynolds_ref: 1.5e+6, temperature_k: 288.15}
+  - {id: m025_a4, alpha_deg: 4, beta_deg: 0, mach: 0.25, reynolds_ref: 1.5e+6, temperature_k: 288.15}
+  - {id: m025_a8, alpha_deg: 8, beta_deg: 0, mach: 0.25, reynolds_ref: 1.5e+6, temperature_k: 288.15}
+
+low_fidelity:
+  avl:
+    executable: avl
+    chordwise_panels: 10
+    spanwise_panels_per_interval: 3
+    chord_spacing: 1.0
+    span_spacing: 0.0
+    timeout_sec: 45
+  neuralfoil:
+    model_size: xlarge
+    n_crit: 9.0
+    alpha_grid_deg: [-12, -10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+    confidence_floor: 0.10
+    cst_weights_per_side: 8
+  viscous_correction:
+    final_cd: cd_induced_plus_strip_neuralfoil
+    write_section_cdcl: true
+    control_profile_geometry: physically_deflected_2d_sections
+
+high_fidelity:
+  selection: {method: maximin, n_designs: 32}
+  control_states: [neutral, elevon_down_5, elevon_down_10, elevon_up_5, elevon_up_10]
+  flow_states: [m015_a0, m015_a4, m015_a8, m025_a0, m025_a4, m025_a8]
+  surface_mesh:
+    preset: production
+    overrides: {te_thickness: 0.005, minimum_te_thickness: 0.002}
+  volume_mesh: {preset: production}
+  solve:
+    solver: adflow
+    preset: rans_ank_nk_v1
+    mpi_np: 4
+    overrides: {l2_convergence: 1.0e-6, use_nk_solver: false}
+
+dataset:
+  pair_keys: [geometry_id, control_id, flow_id]
+  targets: [cl, cd, cm]
+  group_column: geometry_id
+  model:
+    type: extra_trees
+    features:
+      [c1_m, c2_ratio, c3_ratio, c4_ratio, b_total_m, b3_ratio,
+       split_ratio, sw1_deg, sw2_deg, sw3_deg, twist_b0_deg,
+       twist_b1_deg, twist_b2_deg, twist_b3_deg, dihedral_b1_deg,
+       dihedral_b2_deg, dihedral_b3_deg, elevon_start_frac,
+       elevon_end_frac, elevon_hinge_frac, control_symmetric_deg,
+       control_differential_deg, alpha_deg, mach, reynolds_ref]

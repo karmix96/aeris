@@ -29,13 +29,15 @@ geometry:
     segment_length_variation: 0.0
     sweep_variation: 0.0
 
-  # ── DoE design space — small BWB ISR UAV (PROPOSED; adjust the scale freely) ──
+  # ── DoE design space — small BWB ISR UAV (AR ~4–7; full span 1.5–2.5 m) ──────
+  # NOTE: b_total_m is the SEMI-span (half-span) in metres. The full (tip-to-tip)
+  # span = 2 * b_total_m. This is how the planform uses it internally.
   planform_bounds:
-    c1_m:        {min: 0.55, max: 0.90}   # root chord [m]
-    c2_ratio:    {min: 0.55, max: 0.80}   # chord at b1 / c1
-    c3_ratio:    {min: 0.35, max: 0.60}   # chord at b2 / c1
-    c4_ratio:    {min: 0.10, max: 0.25}   # tip chord  / c1
-    b_total_m:   {min: 1.80, max: 2.80}   # full span [m]
+    c1_m:        {min: 0.70, max: 1.10}   # root chord [m]
+    c2_ratio:    {min: 0.55, max: 0.80}   # chord at b1 / c1 (wide BWB centrebody)
+    c3_ratio:    {min: 0.30, max: 0.55}   # chord at b2 / c1
+    c4_ratio:    {min: 0.08, max: 0.20}   # tip chord  / c1
+    b_total_m:   {min: 0.75, max: 1.25}   # SEMI-span [m]  (full span = 2x = 1.5–2.5 m)
     b3_ratio:    {min: 0.40, max: 0.55}   # outer-panel span fraction
     split_ratio: {min: 0.40, max: 0.60}   # inner/outer LE-spline split
     sw1_deg:     {min: 20.0, max: 40.0}   # inner LE sweep

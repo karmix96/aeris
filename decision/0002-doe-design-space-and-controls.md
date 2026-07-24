@@ -27,21 +27,30 @@ Yes. `dihedral_root_deg: 0.0` (fixed) + `dihedral_b1_deg: {0, 0}` (pinned) +
 root airfoil sits at zero dihedral by construction. `dihedral_b1` stays pinned to 0
 across the DoE (only b2/b3 dihedral vary).
 
-## 4. DoE ranges — small BWB ISR UAV (PROPOSED)
+## 4. DoE ranges — small BWB ISR UAV (RESCALED 2026-07-24)
 
 Bounds are ranges (this file IS the DoE design space; one sample = the baseline).
-Confirm/adjust the SCALE (root chord, span) — these are my proposed values:
+
+**Correction (Mike caught it):** `b_total_m` is the **SEMI-span**, not the full
+span (`full_span = 2·b_total_m`; verified: seed 5000 → b_total_m 2.58 = semi_span
+2.58, full 5.16). The first ranges treated it as full span, producing full span
+3.6–5.6 m and **AR ~11–12** — a high-AR sailplane, not a small BWB. Rescaled so the
+full span is 1.5–2.5 m and **AR ~2.6–6.2 (mean 4.3)**, BWB-appropriate.
 
 | var | range | | var | range |
 |---|---|---|---|---|
-| c1_m (root chord) | 0.55–0.90 m | | twist_b0 | −1..+1° |
+| c1_m (root chord) | 0.70–1.10 m | | twist_b0 | −1..+1° |
 | c2_ratio | 0.55–0.80 | | twist_b1 | −3..0° |
-| c3_ratio | 0.35–0.60 | | twist_b2 | −5..−1° |
-| c4_ratio | 0.10–0.25 | | twist_b3 | −8..−2° (washout) |
-| b_total_m (span) | 1.80–2.80 m | | dihedral_b1 | 0 (pinned, flat root) |
+| c3_ratio | 0.30–0.55 | | twist_b2 | −5..−1° |
+| c4_ratio | 0.08–0.20 | | twist_b3 | −8..−2° (washout) |
+| **b_total_m (SEMI-span)** | **0.75–1.25 m** → full 1.5–2.5 m | | dihedral_b1 | 0 (pinned, flat root) |
 | b3_ratio | 0.40–0.55 | | dihedral_b2 | 0–6° |
 | split_ratio | 0.40–0.60 | | dihedral_b3 | 0–10° |
 | sw1/sw2/sw3 | 20–40 / 15–35 / 5–25° | | | |
+
+Verified on 50 samples: full span 1.50–2.42 m, AR 2.6–6.2 (mean 4.3), root chord
+0.70–1.08 m, planform area 0.62–1.27 m². Both backends build 50/50; pyGeo vs ASB
+metrics agree <1.3% (DECISION-0003).
 
 ## 5. Control surfaces — symmetric AND asymmetric
 

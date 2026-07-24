@@ -54,3 +54,23 @@ size per case). **Rescue `cad_doe_summary.json` into `configs/` before wiping
 `data/runs/`** (memory policy: findings live in configs/, data/ gets wiped).
 
 To widen: pass more seeds. Each adds one full CAD generate (~tens of MB).
+
+## 4. Section-count convergence (step 5) — LIGHT single design / DESKTOP for sweep
+
+Runs the production viscous pyGeo→AVL chain at several extraction counts × alphas
+and reports convergence vs the finest count.
+
+```bash
+PYTHONPATH=src .venv/bin/python -m standalone.pygeo_validation.section_count_study \
+  --config configs/geometry/paper1_bwb_pygeo.yaml \
+  --counts 9,13,17,25,33 --alphas 0,4,8 \
+  --report-dir configs/geometry/pygeo_validation_evidence
+```
+
+Result on the production design: 25 sections holds every metric <0.4% vs 33;
+17 ~1% CL / 0.57% cd_total; ≤13 too coarse. See
+`pygeo_validation_evidence/paper1_bwb_pygeo_section_count.md`.
+
+For the full design-space version, wrap this over multiple seeds/configs on the
+desktop (each design = counts × alphas AVL cases). Rescue the JSON reports into
+`configs/` before wiping `data/runs/`.

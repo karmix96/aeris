@@ -73,3 +73,24 @@ production point, confirming the master-loft path is robust.
 
 The heavy production CAD/STEP/Gmsh sweep is a desktop runbook; see
 `standalone/pygeo_validation/RUNBOOK.md` step 3.
+
+## Step 5 — section-count convergence (aero)
+
+`paper1_bwb_pygeo_section_count.md` runs the full production viscous pyGeo→AVL
+chain at 5 extraction counts (9/13/17/25/33) × 3 alphas (0/4/8), measuring
+convergence vs the 33-section reference. Headline (max rel err over alphas):
+
+| count | CL | cd_ind | cd_profile | cd_total |
+|---|---|---|---|---|
+| 17 | 1.42%* | 1.08% | 0.26% | 0.57% |
+| 25 | 0.34% | 0.31% | 0.10% | 0.18% |
+
+\* The CL % at 17 is dominated by the α=0 near-zero-lift point (CL≈0.012, so tiny
+absolute deltas inflate the ratio). At lifting alphas (4°, 8°) the 17-section CL
+error is ~1.1% and cd_total ~0.57%. **25 sections holds every metric under 0.4%**,
+justifying the production config's 25 extraction sections; ≤13 sections are too
+coarse (α=4 CL error 12.75% at 13). This extends the standalone study's 17-vs-33
+point across the alpha range.
+
+The full design-space version (many designs × counts × alpha sweeps) is a desktop
+runbook (RUNBOOK.md step 4).

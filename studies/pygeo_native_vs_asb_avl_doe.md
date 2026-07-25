@@ -297,6 +297,24 @@ can be optimised.
 Resolved during this study (were open, now closed): the Cmu/CZu discrepancy, the
 cause of the force residual, and the airfoil-resolution hypothesis.
 
+**Closed after this study by follow-up work (DECISION-0008):**
+
+- **Sideslip.** Re-run DoE-wide at β = 4°, δa = 0 over 12 seeds: every lateral
+  derivative agrees to ≤1.9 %, most ≤1 % (CYb 0.20 %, Clb 0.58 %, Cnb 0.63 %,
+  Clp 1.01 % max). This retires the Cnb worry above — at β = 0 it was
+  ill-conditioned. It is also a third independent confirmation of the elevon
+  explanation: with δe = 0, CL agrees to 0.056 % median / 0.13 % max.
+- **"The native elevon is geometrically correct"** — was asserted, now proved. A
+  section-count refinement (n = 13…49) shows the ASB/native CL_δe ratio does NOT
+  trend to 1: it sits at 1.0417 ± 0.0119 (seed 7000) and 1.0440 ± 0.0125
+  (seed 7005), while native's own CL_δe converges to 0.7 %. The two paths reach
+  **different limits**, so the difference is geometry, not discretisation.
+- **Independent (non-code-to-code) verification** now exists:
+  `studies/native_avl_physics_validation.md` — elliptic wing e = 0.9975 vs a
+  theoretical 1.0, CL(α=0) = 0 exactly, CLα bracketed by Helmbold and
+  lifting-line, and all three geometric sign conventions confirmed including that
+  twist acts per section.
+
 Genuinely still open:
 
 - **Reference-length definitions differ 0.13 %** (native ∫c²dy/S vs ASB
@@ -310,15 +328,9 @@ Genuinely still open:
   β sweep is missing and should be added.
 - **One operating point** (α = 6°). Behaviour near CL_max, where the polar bridge
   starts clamping strips outside the 2-D polar range, is not characterised.
-- **No independent third source.** Two AVL wrappers agreeing bounds
-  implementation error but cannot detect a shared error — and the two paths *do*
-  share the CDCL injection and strip-drag integration. An independent check on
-  the geometry actually encoded in the `.avl` (analytic planform, and a
-  known-answer case such as an untwisted rectangular wing against lifting-line)
-  is not yet in place.
-- **Twist-convention sign is not independently verified.** Both writers read
-  `section.twist_deg` from the same source, so a sign or convention error would
-  be *invisible* to this comparison. This needs a physics check (e.g. increasing
-  washout must reduce tip loading in the strip data), not a code-to-code one.
+- **AVL strip ceiling.** (n_sections − 1) × spanwise_panels ≤ 250, i.e. 500
+  strips over both halves. n = 65 at 4 panels/interval (512 strips) fails
+  outright. A hard limit on what uniform refinement can buy.
 - **No validation against experiment or CFD.** This study bounds implementation
-  error, not physical accuracy.
+  error, not physical accuracy. Verification is now three-legged
+  (DECISION-0008); validation still requires the high-fidelity path.

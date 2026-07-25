@@ -1,0 +1,49 @@
+GAP 1 - sideslip comparison (alpha=6.0 deg, beta=4.0 deg, da=0, 12 DoE seeds)
+Lateral derivatives now carry real signal, so these relative errors are
+MEANINGFUL - unlike the beta=0 case where they are ~0 by symmetry.
+
+field        n   med |val|  median rel     max rel
+CY          12    1.14e-03    0.00e+00    9.17e-03
+Cl_roll     12    5.85e-03    1.68e-03    5.96e-03
+Cn          12    1.30e-04    0.00e+00    2.70e-02
+CL          12    2.90e-01    5.64e-04    1.33e-03
+CYb         12    1.62e-02    1.27e-03    2.04e-03
+Clb         12    8.30e-02    2.34e-03    5.79e-03
+Cnb         12    6.70e-03    2.63e-03    6.27e-03
+Clp         12    3.18e-01    4.20e-03    1.01e-02
+Clr         12    9.63e-02    3.87e-03    9.68e-03
+Cnr         12    8.23e-03    4.10e-03    9.91e-03
+CYp         12    1.43e-02    4.79e-03    1.87e-02
+Cnp         12    1.34e-02    2.04e-03    6.14e-03
+CYr         12    1.47e-02    2.89e-03    5.92e-03
+
+
+GAP 2 - elevon asymptote (de=6.0 deg, inviscid).
+Same limit => discretisation only. Different limits => a real geometry difference.
+NOTE: n=65 sections x 4 spanwise panels x 2 halves = 512 strips, which exceeds
+AVL's NSMAX=500 hard limit; that level fails and is excluded.
+
+=== seed 7000 ===
+ n_sec   CLde native    CLde asb  ratio a/n        dCL
+    13      0.009575    0.010020     1.0465   0.002630
+    17      0.009739    0.010215     1.0489   0.002830
+    25      0.009398    0.009913     1.0548   0.003050
+    33      0.009495    0.009689     1.0204   0.001140
+    49      0.009506    0.009867     1.0380   0.002130
+  ratio asb/native across n=[13, 17, 25, 33, 49]: [1.0465, 1.0489, 1.0548, 1.0204, 1.038]
+  mean ratio 1.0417  sd 0.0119  -> DIFFERENT limits: a REAL geometry difference
+  native CLde 0.009575 (n=13) -> 0.009506 (n=49)
+  asb    CLde 0.010020 (n=13) -> 0.009867 (n=49)
+
+=== seed 7005 ===
+ n_sec   CLde native    CLde asb  ratio a/n        dCL
+    13      0.010479    0.010998     1.0495   0.003330
+    17      0.010700    0.011252     1.0516   0.003530
+    25      0.010345    0.010940     1.0575   0.003850
+    33      0.010459    0.010686     1.0217   0.001600
+    49      0.010475    0.010890     1.0396   0.002760
+  ratio asb/native across n=[13, 17, 25, 33, 49]: [1.0495, 1.0516, 1.0575, 1.0217, 1.0396]
+  mean ratio 1.0440  sd 0.0125  -> DIFFERENT limits: a REAL geometry difference
+  native CLde 0.010479 (n=13) -> 0.010475 (n=49)
+  asb    CLde 0.010998 (n=13) -> 0.010890 (n=49)
+

@@ -292,6 +292,106 @@ def dia_criterion():
         "before any calculation is run.", "".join(b), height=214, dia_id="dia6")
 
 
+
+
+# ------------------------------------------------------------- primer ------
+def dia_anatomy():
+    """One labelled picture that defines every word used later."""
+    b=[]
+    # planform, top view
+    pts=[(120,72),(470,104),(470,146),(120,196)]
+    b.append('<polygon points="'+" ".join(f"{x},{y}" for x,y in pts)+
+             f'" fill="{MUTED}" fill-opacity="0.10" stroke="{MUTED}" stroke-width="1.5"/>')
+    b.append(f'<line x1="120" y1="60" x2="120" y2="208" stroke="{MUTED}" '
+             f'stroke-width="1" stroke-dasharray="4 4"/>')
+    b.append(f'<text class="tick" x="120" y="224" text-anchor="middle">centreline</text>')
+    b.append(f'<text class="tick" x="470" y="224" text-anchor="middle">tip</text>')
+    # sections
+    for i in range(9):
+        tt=i/8; x=120+350*tt; y0=72+32*tt; y1=196-50*tt
+        b.append(f'<line x1="{x:.0f}" y1="{y0:.0f}" x2="{x:.0f}" y2="{y1:.0f}" '
+                 f'stroke="{BLUE}" stroke-width="1.8"/>')
+    b.append(f'<text class="dlab" x="180" y="52" fill="{BLUE}">SECTIONS</text>')
+    b.append(f'<text class="tick" x="180" y="248">slices of the real wing shape</text>')
+    # elevon band
+    s,e=0.55,0.92
+    for tt,lab in ((s,"band start"),(e,"band end")):
+        x=120+350*tt; y0=72+32*tt; y1=196-50*tt
+        b.append(f'<line x1="{x:.0f}" y1="{y0-10:.0f}" x2="{x:.0f}" y2="{y1+10:.0f}" '
+                 f'stroke="{CRIT}" stroke-width="1.6" stroke-dasharray="3 3"/>')
+    bx=[(120+350*s,196-50*s),(120+350*e,196-50*e),
+        (120+350*e,196-50*e-14),(120+350*s,196-50*s-18)]
+    b.append('<polygon points="'+" ".join(f"{x:.0f},{y:.0f}" for x,y in bx)+
+             f'" fill="{CRIT}" fill-opacity="0.28" stroke="{CRIT}" stroke-width="1.4"/>')
+    b.append(f'<text class="dlab" x="{120+350*0.73:.0f}" y="{196-50*0.73+34:.0f}" '
+             f'text-anchor="middle" fill="{CRIT}">ELEVON</text>')
+    b.append(f'<text class="tick" x="{120+350*0.73:.0f}" y="{196-50*0.73+50:.0f}" '
+             f'text-anchor="middle">the moving flap</text>')
+    # side view inset
+    b.append(f'<text class="dlab" x="620" y="52">SIDE VIEW of one section</text>')
+    b.append(f'<path d="M540,120 Q590,88 640,106 Q680,120 730,128 Q640,142 540,120 Z" '
+             f'fill="{MUTED}" fill-opacity="0.13" stroke="{MUTED}" stroke-width="1.3"/>')
+    hx=540+0.75*190
+    b.append(f'<line x1="{hx:.0f}" y1="86" x2="{hx:.0f}" y2="152" stroke="{INK}" '
+             f'stroke-width="2"/>')
+    b.append(f'<circle cx="{hx:.0f}" cy="120" r="4.5" fill="{INK}"/>')
+    b.append(f'<text class="tick" x="{hx:.0f}" y="80" text-anchor="middle">HINGE</text>')
+    b.append(f'<text class="tick" x="{hx+42:.0f}" y="168" text-anchor="middle" '
+             f'fill="{CRIT}">this part moves</text>')
+    b.append(f'<text class="tick" x="560" y="168">nose</text>')
+    b.append(f'<text class="tick" x="726" y="168" text-anchor="end">tail</text>')
+    return diagram(
+        "Diagram 0 — The words used in this report",
+        "<strong>Section</strong>: a slice across the wing. We cut ~25 of them and "
+        "hand those to the aerodynamics program, which joins them with straight "
+        "lines. <strong>Elevon</strong>: on a flying wing there is no tail, so one "
+        "hinged flap does the job of both elevator and aileron — move both sides "
+        "together and the aircraft pitches, move them oppositely and it rolls. "
+        "<strong>Band</strong>: how far along the span the elevon runs. "
+        "<strong>Hinge</strong>: how far back along the chord it is pivoted. "
+        "<strong>Panels</strong>: not shown — they are the small calculation cells "
+        "the program builds <em>between</em> the sections. Sections describe the "
+        "shape; panels do the arithmetic.", "".join(b), height=270, dia_id="dia0")
+
+
+def glossary_block():
+    rows = [
+        ("Section", "A slice across the wing. We cut about 25 and give them to AVL, "
+         "which joins neighbouring slices with straight lines. More slices = a truer shape."),
+        ("Panel", "A small calculation cell AVL builds <em>between</em> sections. "
+         "Sections describe the shape; panels do the arithmetic. Two separate things — "
+         "confusing them is what made the old study unreadable."),
+        ("AVL", "The fast aerodynamics program. It is approximate by design: it treats "
+         "the wing as a sheet of small vortices. That is why it runs in seconds and why "
+         "everything in this report is about checking what we feed it."),
+        ("Elevon", "A flying wing has no tail, so one hinged flap does two jobs. Both "
+         "sides down together → the aircraft pitches. One down, one up → it rolls."),
+        ("Band", "How far along the span the elevon runs, e.g. from 55 % to 92 % of the "
+         "way to the tip. A <em>short</em> band is the awkward case in this report."),
+        ("Hinge", "How far back along the chord the flap pivots, e.g. 75 %. Everything "
+         "behind it moves."),
+        ("Gain ramp", "AVL cannot switch a flap on instantly. Between the last section "
+         "without the flap and the first one with it, the flap <em>fades in</em>. That "
+         "fade is the ramp — a smeared, half-real piece of elevon at each end."),
+        ("CL", "Lift coefficient — lift, made independent of speed and size."),
+        ("CL_δe", "<strong>Control power.</strong> How much lift you get per degree of "
+         "elevon. This is the number that turned out to be hardest to compute, and it "
+         "matters because the design study tunes the elevon."),
+        ("Xnp", "Neutral point — where the aircraft's aerodynamic balance sits. Governs "
+         "whether it is stable in pitch."),
+        ("Discretisation error", "The error from chopping a smooth wing into a finite "
+         "number of sections and panels. Not a physics error — a bookkeeping one. It is "
+         "what this whole report measures."),
+        ("Converged", "Adding more sections or panels stops changing the answer. Then "
+         "you know the number you have is the model's answer, not an artefact of a "
+         "coarse grid."),
+    ]
+    tr = "".join(f'<tr><td><strong>{esc(k)}</strong></td><td class="qa">{v}</td></tr>'
+                 for k, v in rows)
+    return (f'<div class="q"><div class="scroll"><table class="gloss">'
+            f'<tbody>{tr}</tbody></table></div></div>')
+
+
 # --------------------------------------------------------------- figures ----
 def fig_extremes():
     d = json.loads((EV_ROB / "extremes.json").read_text())
@@ -391,6 +491,131 @@ def fig_adaptive():
     return "\n".join(L)
 
 
+
+
+def all_data_appendix():
+    """Every study's key numbers, gathered in one place."""
+    import json as _j
+
+    def tbl(head, rows, cls=""):
+        th="".join(f"<th>{esc(c)}</th>" for c in head)
+        tb="".join("<tr>"+"".join(f"<td>{c}</td>" for c in r)+"</tr>" for r in rows)
+        return (f'<div class="scroll"><table class="{cls}"><thead><tr>{th}</tr></thead>'
+                f'<tbody>{tb}</tbody></table></div>')
+
+    out=['<div class="q">']
+
+    # 1 span margin
+    d=_j.loads((EV_VER/"span_margin_probe.json").read_text())
+    out.append("<h3>1 · Span margin (the centreline gap)</h3>")
+    out.append(tbl(["margin","gap (m)","CL","CLα /rad","e","L/D","Bref (m)"],
+        [[f'{r["span_margin"]:g}',f'{r["centreline_gap_m"]:.4f}',f'{r["CL"]:.5f}',
+          f'{r["CLa_per_rad"]:.4f}',f'{r["span_efficiency"]:.4f}',
+          f'{r["L_over_D_viscous"]:.3f}',f'{r["Bref"]:.4f}'] for r in d]))
+
+    # 2 CDCL / CLAF
+    d=_j.loads((EV_VER/"viscous_claf_verification.json").read_text())
+    c,cl=d["cdcl"],d["claf"]
+    out.append("<h3>2 · Airfoil corrections (viscous drag + thickness)</h3>")
+    out.append(tbl(["check","value"],[
+      ["sections with real drag data",f'{c["present"]["n_with_real_cdcl"]}/{c["present"]["n_sections"]}'],
+      ["distinct drag curves",f'{c["section_resolved"]["n_distinct_cd_min"]}'],
+      ["root drag / tip drag",f'{c["section_resolved"]["cd_min_root"]:.5f} / {c["section_resolved"]["cd_min_tip"]:.5f}'],
+      ["matches an independent recompute to",f'{max(x["max_abs_diff"] for x in c["correct"] if x["max_abs_diff"]):.1e}'],
+      ["AVL drag with correction off / on",f'{c["active"]["CDvis_viscous_off"]} / {c["active"]["CDvis_viscous_on"]}'],
+      ["thickness: distinct values",f'{cl["section_resolved"]["n_distinct_values"]}'],
+      ["thickness t/c root → min → tip",
+       f'{cl["section_resolved"]["t_over_c_root"]:.4f} → {cl["section_resolved"]["t_over_c_min"]:.4f} → {cl["section_resolved"]["t_over_c_tip"]:.4f}'],
+      ["switch-off test: CLα",f'{cl["active"]["CLa_claf_forced_to_1"]:.5f} → {cl["active"]["CLa_with_claf"]:.5f}'],
+      ["measured / theory ratio",
+       f'{cl["active"]["CLa_ratio"]:.5f} / {cl["active"]["lifting_line_cross_check"]["predicted_ratio"]:.5f}'],
+    ]))
+
+    # 3 DoE
+    s=_j.loads((EV_DOE/"doe_summary.json").read_text())
+    f=s["viscous_on"]["fields"]
+    keys=[("CL","CL"),("cd_total","CD"),("CDind","CDind"),("cd_profile","cd_profile"),
+          ("Cm","Cm"),("L_over_D","L/D"),("e","e"),("Xnp","Xnp"),("CLa","CLα"),
+          ("Cma","Cmα"),("Cmq","Cmq"),("Clp","Clp"),("Cnb","Cnb")]
+    out.append("<h3>3 · Our solver vs the previous one — 30 wings</h3>")
+    out.append(tbl(["quantity","median","p95","max"],
+        [[lab,f'{f[k]["median_rel"]*100:.3f} %',f'{f[k]["p95_rel"]*100:.3f} %',
+          f'{f[k]["max_rel"]*100:.3f} %'] for k,lab in keys if k in f and "median_rel" in f[k]]))
+    cb=s["analysis"]["control_bias"]
+    out.append(f'<p class="qa">Elevon size bias in the old path: '
+               f'<strong>{cb["signed_median"]*100:+.2f} % ± {cb["signed_sd"]*100:.2f} %</strong>, '
+               f'same sign in all {cb["n"]} wings.</p>')
+
+    # 4 physics
+    d=_j.loads((EV_VER/"physics_validation.json").read_text())
+    out.append("<h3>4 · Textbook checks</h3>")
+    out.append(tbl(["check","measured","expected","verdict"],
+        [[esc(c["check"]),
+          f'{c["value"]:.5f}' if isinstance(c["value"],float) else esc(c["value"]),
+          f'{c["expected"]:.4f}' if isinstance(c["expected"],float) else esc(str(c["expected"])[:22]),
+          '<span class="okk">PASS</span>' if c["pass"] else '<span class="bad">FAIL</span>']
+         for c in d["checks"]]))
+
+    # 5 convergence
+    from make_figures import parse_convergence, parse_panel_sections
+    _,g=parse_convergence(EV_DIS/"4a_geometry_sections_chord8.txt")
+    lv=sorted(g["CL"]); ks=["CL","CDind","Cm","CLa","Cnb","CL_de"]
+    out.append("<h3>5 · How many sections? (panel count held fixed)</h3>")
+    out.append(tbl(["sections"]+ks,
+        [[str(l)]+[f'{g[k].get(l,float("nan"))*100:.2f} %' for k in ks] for l in lv]))
+    parts=parse_panel_sections(EV_DIS/"4b_avl_panels.txt")
+    for key,lab in (("spanwise","spanwise panels per gap"),("chordwise","chordwise panels")):
+        _,d2=parts[key]; lv2=sorted(d2["CL"])
+        out.append(f"<h3>5 · How many panels? — {esc(lab)}</h3>")
+        out.append(tbl([lab]+ks,
+            [[str(l)]+[f'{d2[k].get(l,float("nan"))*100:.2f} %' for k in ks] for l in lv2]))
+
+    # 6 hinge sweep
+    d=_j.loads((EV_ROB/"hinge_scout.json").read_text())
+    hs=sorted({r["hinge"] for r in d}); ns=sorted({r["nchordwise"] for r in d})
+    out.append("<h3>6 · Hinge position vs chordwise panels (elevon power error)</h3>")
+    out.append(tbl(["chordwise"]+[f"hinge {h}" for h in hs],
+        [[str(n)]+[f'{[r for r in d if r["hinge"]==h and r["nchordwise"]==n][0]["err"]*100:.2f} %'
+                   for h in hs] for n in ns]))
+
+    # 7 extremes
+    d=_j.loads((EV_ROB/"extremes.json").read_text())
+    out.append("<h3>7 · Nine deliberately awkward wings</h3>")
+    rows=[]
+    for k,e in d.items():
+        gm=e.get("geometry",{}) or {}; er=e.get("err_prod",{})
+        if not er: continue
+        rows.append([esc(k),f'{gm.get("AR",0):.2f}',
+                     f'{er.get("CL",0)*100:.2f} %',f'{er.get("CDind",0)*100:.2f} %',
+                     f'{er.get("CL_de",0)*100:.2f} %',f'<strong>{max(er.values())*100:.2f} %</strong>'])
+    out.append(tbl(["wing","AR","CL","CDind","elevon power","worst"],rows))
+
+    # 8 alpha
+    lines=[ln.split() for ln in (EV_ROB/"alpha_sweep.txt").read_text().splitlines()
+           if ln.strip() and ln.split()[0].replace(".","").replace("-","").isdigit()]
+    out.append("<h3>8 · Across angle of attack</h3>")
+    out.append(tbl(["alpha (deg)","CL","strips out of data","worst error"],
+        [[r[0],r[1],r[2],r[-1]] for r in lines]))
+
+    # 9 adaptive
+    d=_j.loads((EV_ADA/"adaptive.json").read_text())
+    out.append("<h3>9 · Smart section placement (same 25-section budget)</h3>")
+    rows=[]
+    for k,e in d.items():
+        if "err_uniform" not in e: continue
+        u=e["err_uniform"].get("CL_de"); a=e["err_adaptive"].get("CL_de")
+        rows.append([esc(k),f'{e["ramp_uniform"]:.1%}',f'{e["ramp_adaptive"]:.1%}',
+                     f'{u*100:.2f} %',f'{a*100:.2f} %',
+                     f'<strong>{u/a:.2f}×</strong>' if a else "—"])
+    out.append(tbl(["wing","ramp evenly","ramp smart","evenly","smart","gain"],rows))
+    hh=(EV_ADA/"placement_head_to_head.txt").read_text().splitlines()
+    out.append('<h3>9 · Head-to-head, matched conditions</h3><pre class="mono">'
+               + esc("\n".join(l for l in hh if l.strip())) + "</pre>")
+
+    out.append("</div>")
+    return "\n".join(out)
+
+
 # ------------------------------------------------------------------ page ----
 EXTRA_CSS = """
 .dia svg { background:transparent; }
@@ -410,6 +635,14 @@ EXTRA_CSS = """
 ul.tight { margin:8px 0 0; padding-left:20px; }
 ul.tight li { margin:5px 0; }
 .chk td:first-child { width:34px; }
+.gloss td:first-child { width:150px; white-space:nowrap; }
+.gloss td { vertical-align:top; text-align:left; }
+.q h3 { font-size:14px; margin:20px 0 8px; letter-spacing:0; }
+.q h3:first-child { margin-top:0; }
+pre.mono { font-size:11.5px; overflow-x:auto; background:#f9f9f7; padding:11px 13px;
+  border-radius:7px; line-height:1.45; }
+@media (prefers-color-scheme: dark) {
+ :root:where(:not([data-theme="light"])) pre.mono { background:#0d0d0d; color:#c3c2b7; } }
 @media (prefers-color-scheme: dark) {
  :root:where(:not([data-theme="light"])) .dlab,
  :root:where(:not([data-theme="light"])) .big { fill:#fff; }
@@ -439,9 +672,21 @@ def main() -> None:
 estimate lift, drag and handling for thousands of candidate wings. It is fast
 because it makes simplifications. This report is the record of us checking, one
 by one, whether those simplifications are being fed the right wing — and whether
-the answers can be trusted. We found four real bugs, discarded one of our own
+the answers can be trusted. We found five real bugs, discarded three of our own
 explanations, and ended with a single rule that predicts the model's accuracy
 before you run it.</p>
+
+<p class="lead"><strong>How to read this.</strong> Part 0 defines every term.
+Part A is the answer — the settings you use. Parts 1–7 are one study each, in
+plain words, and every one ends with a green box saying what to do. Parts C–F
+are the bugs, the mistakes we corrected, the limits, and a completeness
+checklist. <strong>Part H has every number from every study in one place.</strong></p>
+
+<h2><span class="num">0</span>What the words mean</h2>
+<p class="lead">Nothing below makes sense without these. Read this part once and
+the rest follows.</p>
+{dia_anatomy()}
+{glossary_block()}
 
 <h2><span class="num">A</span>The settings — start here</h2>
 {settings("Use these. They are already the defaults in the code — you do not need to pass anything.", [
@@ -672,6 +917,11 @@ a contradiction — <strong>that study's wing had no elevon</strong>, so elevon
 power never appeared in it. On everything it did measure, 8 is fine and we agree.
 The whole increase is bought for control authority.</p>
 </div>
+
+<h2><span class="num">H</span>Every number, in one place</h2>
+<p class="lead">All nine studies' data, gathered. Everything here regenerates
+from the tracked evidence under <code>configs/aero/*_evidence/</code>.</p>
+{all_data_appendix()}
 
 <p class="note" style="margin-top:34px">Full technical detail, with every number
 and every caveat, is in <code>studies/discretisation_master_study.md</code> and

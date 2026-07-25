@@ -6,8 +6,9 @@ This is a deterministic computer experiment for the following bounded claim:
 
 > For the canonical clean BWB outer mold line, fixed station airfoils, fixed
 > cap4 topology, and registered geometry domain, predict the surface-quality
-> metrics at each member of the L1-L5 mesh family and select the coarsest family
-> member that satisfies every user-authored limit.
+> metrics at each member of the L1-L5 mesh family, select the coarsest family
+> member that satisfies every user-authored limit, and estimate which
+> individual numerical mesh controls are most useful for measured retry actions.
 
 The study does **not** claim CFD solution independence, universal airfoil
 generality, or validity outside the registered factor ranges. Surface-cell
@@ -112,6 +113,13 @@ with this one without a block/categorical term would be statistically invalid.
 
 ## Experimental design and exact count
 
+The registered campaign has two layers because they answer different causal
+questions. The geometry-law layer asks how geometry moves mesh quality across
+the bundled L1-L5 mesh family. The mesh-control layer asks which individual
+mesh knob should move when a measured candidate fails.
+
+Geometry-law layer:
+
 | Block | Geometry cases | Purpose |
 |---|---:|---|
 | Center baseline | 1 | Reference and reproducibility anchor |
@@ -119,8 +127,19 @@ with this one without a block/categorical term would be statistically invalid.
 | All two-factor corners | C(16,2) x 4 = 480 | Direct pair non-additivity, without response-based pair selection |
 | Scrambled-Sobol training | 1,024 | All 16 variables change simultaneously; fit global laws |
 | Independent IID uniform validation | 512 | Untouched holdout for prediction and false-accept audits |
-| **Total** | **2,145 geometries** | |
+| **Geometry-law total** | **2,145 geometries** | |
 | Five levels per geometry | **10,725 meshes** | Complete L1-L5 response data |
+
+Mesh-control layer:
+
+| Block | Cases | Purpose |
+|---|---:|---|
+| Joint 20-factor scrambled-Sobol training | 2,048 | Fit geometry-conditioned knob effects |
+| Independent 20-factor IID uniform validation | 1,024 | Audit knob-action predictions and false accepts |
+| **Mesh-control total** | **3,072 meshes** | One explicit mesh per sampled case |
+
+The complete registered execution plan is therefore **5,217 cases** and
+**13,797 surface-mesh builds**.
 
 An exhaustive two-level factorial would require \(2^{16}=65,536\) geometries
 before mesh refinement and is unnecessary for a second-order bounded law. The
@@ -244,6 +263,52 @@ The simulator is deterministic, so these intervals quantify finite-design and
 surrogate error, not physical aleatory uncertainty. Process-level determinism
 and output hashes must be checked separately.
 
+## Registered surface-quality limits
+
+The acceptance limits are hard pre-volume surface-mesh gates, not claims of CFD
+solution independence. They combine four considerations:
+
+1. algebraic quad-quality guidance from the Verdict/CUBIT/Knupp metric family;
+2. CFD meshing practice for skewness, aspect ratio, and smooth size transition;
+3. OpenFOAM-style hard validity floors for determinant/twist-like quantities;
+4. empirical pre-flight screening of the fixed cap4 BWB tip topology.
+
+The OML receives tighter shape/angle limits because it is the aerodynamic
+surface that seeds the volume mesh. The tip/collar receives separate relaxed
+limits because it is a small closure singularity at a blunt, thin BWB trailing
+edge. Applying near-square finite-element quad limits to that collar would
+reject the verified topology rather than identify a CFD-relevant failure.
+
+| Metric | Limit | Role |
+|---|---:|---|
+| `oml.min_shape_metric` | >= 0.08 | Rejects highly collapsed OML cells while allowing structured aerodynamic stretching. |
+| `oml.min_scaled_jacobian` | >= 0.50 | CUBIT/Verdict acceptable lower bound for linear quads. |
+| `oml.min_triangle_normal_alignment` | >= 0.95 | Requires the two triangles inside each quad to be nearly co-planar and consistently oriented. |
+| `oml.max_equiangle_skewness` | <= 0.50 | Keeps OML skewness in the good mapped-quad band. |
+| `oml.max_aspect_ratio` | <= 25 | Allows aerodynamic surface stretching but rejects extreme tangential anisotropy. |
+| `oml.max_growth_ratio` | <= 2.50 | Hard upper gate on adjacent surface-size jumps; 1.1-1.5 remains the design target. |
+| `oml.max_adjacent_normal_angle_deg` | <= 170 | Fold/edge-wrap sentinel; not interpreted as a curvature-resolution target at LE/TE wraps. |
+| `tip.min_shape_metric` | >= 0.03 | Non-degenerate cap/collar floor for the small closure blocks. |
+| `tip.min_scaled_jacobian` | >= 0.03 | Positive, non-collapsed tip-collar Jacobian floor. |
+| `tip.min_triangle_normal_alignment` | >= 0.95 | Same quad-orientation/planarity gate as OML. |
+| `tip.max_equiangle_skewness` | <= 0.98 | Absolute cap/collar skewness gate; tighter values are reported but not used as a hard topology rejection. |
+| `tip.max_aspect_ratio` | <= 10 | Keeps the closure blocks below the usual non-boundary-layer CFD aspect-ratio target. |
+| `tip.max_growth_ratio` | <= 2.50 | Same hard size-jump gate as OML. |
+| `tip.max_adjacent_normal_angle_deg` | <= 10 | Tip cap should remain locally smooth; large jumps indicate a bad closure. |
+
+These limits deliberately separate hard acceptance from design aspiration. For
+example, surface growth rates near 1.2 and skewness below 0.8 are better design
+targets, but setting them as absolute gates would make the current structured
+tip closure non-deployable before the DOE can identify which geometry/mesh
+variables cause the excursions. The study therefore records the continuous
+metrics and trains laws on them; acceptance only rejects meshes that cross the
+pre-registered hard limits.
+
+The limit set is valid only for this fixed airfoil signature and cap4 topology.
+Changing the airfoils, enabling split physical CAD, changing the tip topology,
+or using the surface mesh as final CFD evidence requires a new pre-registration
+and a separate CFD solution-verification study.
+
 ## Why every geometry runs L1-L5
 
 The research campaign evaluates the complete family for every geometry.
@@ -257,9 +322,57 @@ non-monotone cases and fits each level separately. It does not force a
 monotonic model.
 
 The four resolution controls are coupled into one registered family. The
-resulting agent law selects a family level; it does not claim which individual
-resolution knob is causal. A separate orthogonal mesh-control DOE is required
-before publishing knob-specific retry actions.
+resulting agent law selects a family level; it does not prove which individual
+resolution knob is causal. The added mesh-control DOE therefore varies
+individual controls directly while preserving the same OML, airfoil, topology,
+and distribution family.
+
+## Geometry-conditioned mesh-control DOE
+
+The second law layer is explicitly designed for autonomous retry actions. It
+keeps the mesher topology and distribution model fixed and varies only four
+numerical controls:
+
+- chordwise/block-side points;
+- spanwise panels per realised source-section interval;
+- cap wrap points;
+- tip/collar radial points.
+
+Pre-flight structural screening bounds the cap-wrap and tip-radial ranges to
+the verified nonfolding cap4-tip domain. Higher values fold the thin BWB
+trailing-edge tip collar and are excluded from this law; they require a
+separate topology-redesign campaign.
+
+Each mesh-control case samples all 16 geometry variables and these four mesh
+variables jointly. The training design is a 20-dimensional scrambled Sobol
+sequence with 2,048 cases. The validation design is an independent
+20-dimensional IID uniform sample with 1,024 cases. Each case runs one explicit
+mesh named mesh_control, not the full L1-L5 ladder.
+
+For each metric, the fitted law uses the same orthonormal quadratic Legendre
+form as the geometry layer, now with \(p=20\) factors:
+
+\[
+1 + 2p + \binom{p}{2} = 231
+\]
+
+coefficients. The 2,048 training samples provide 8.9 observations per
+coefficient before regularization. Ridge strength is still selected only by
+training-set cross-validation, and deployment still requires the independent
+validation/conformal false-accept gates.
+
+The emitted mesh-control law reports, per metric:
+
+- total and first-order effect of each mesh knob;
+- the local center derivative and the beneficial local direction implied by
+  the metric limit;
+- the strongest geometry-mesh interactions, e.g. whether sweep or dihedral
+  changes make a specific knob more important.
+
+The beneficial direction is a local derivative at the registered center, not a
+global monotonicity guarantee. The agent must combine it with the current
+geometry, the interaction table, the predicted uncertainty bound, and measured
+QC results.
 
 ## Autonomous-agent contract
 
@@ -269,12 +382,18 @@ must:
 1. read the current 16 factors and realised descriptors;
 2. verify every factor lies inside its registered range;
 3. verify exact airfoil and topology signatures;
-4. evaluate conservative predictions for L1-L5;
+4. evaluate conservative predictions for L1-L5 and, when deployable, the
+   geometry-conditioned mesh-control law;
 5. choose the coarsest level predicted to pass every metric;
 6. generate the mesh and calculate the actual metrics;
 7. accept only measured pass results;
-8. if measured metrics fail, move to the next predicted passing level;
-9. stop and escalate if L5 fails, the response is non-monotone in a harmful
+8. if measured metrics fail, identify the failed metric family and use the
+   mesh-control action ranking plus geometry-mesh interactions to choose the
+   smallest allowed knob move in the beneficial direction;
+9. regenerate and remeasure; if the knob law is absent, non-deployable, or
+   the retry remains outside the audited margin, move to the next predicted
+   passing L-level;
+10. stop and escalate if L5 fails, the response is non-monotone in a harmful
    way, or the geometry is outside the law domain.
 
 The law is decision support, never a replacement for mesh QC.

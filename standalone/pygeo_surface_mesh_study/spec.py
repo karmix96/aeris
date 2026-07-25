@@ -43,7 +43,22 @@ SAMPLE_FIELDS = (
     "elevon_hinge_frac",
 )
 VALID_OPERATORS = {"<=", ">="}
-VALID_STAGES = {"baseline", "ofat", "pairwise", "global_train", "validation"}
+VALID_STAGES = {
+    "baseline",
+    "ofat",
+    "pairwise",
+    "global_train",
+    "validation",
+    "mesh_control_train",
+    "mesh_control_validation",
+}
+
+MESH_CONTROL_PARAMETERS = {
+    "points_per_block_side",
+    "spanwise_panels_per_section",
+    "cap_wrap_points",
+    "tip_radial_points",
+}
 
 
 def _mapping(value: object, label: str) -> dict[str, Any]:
@@ -176,12 +191,72 @@ class MeshLevel:
     tip_radial_points: int
 
     def __post_init__(self) -> None:
-        if self.order < 1 or self.points_per_block_side < 9:
+        if self.order < 0 or self.points_per_block_side < 9:
             raise ValueError(f"{self.name}: invalid order/chordwise resolution")
         if self.spanwise_panels_per_section < 1 or self.cap_wrap_points < 5:
             raise ValueError(f"{self.name}: invalid span/wrap resolution")
         if self.tip_radial_points < 2:
             raise ValueError(f"{self.name}: tip_radial_points must be at least 2")
+
+
+@dataclass(frozen=True)
+class MeshControlSpec:
+    """One independently varied numerical mesh-control knob."""
+
+    name: str
+    parameter: str
+    units: str
+    baseline: float
+    low: float
+    high: float
+    integer: bool = False
+    odd: bool = False
+    description: str = ""
+
+    def __post_init__(self) -> None:
+        if not all(math.isfinite(value) for value in (self.baseline, self.low, self.high)):
+            raise ValueError(f"{self.name}: values must be finite")
+        if not self.low < self.baseline < self.high:
+            raise ValueError(
+                f"{self.name}: baseline must be strictly interior; "
+                f"got {self.low} < {self.baseline} < {self.high}"
+            )
+        if self.odd and not self.integer:
+            raise ValueError(f"{self.name}: odd mesh controls must be integer controls")
+        if not self.parameter.strip():
+            raise ValueError(f"{self.name}: parameter must be non-empty")
+
+    def canonical_value(self, value: float) -> float:
+        value = min(self.high, max(self.low, float(value)))
+        if not self.integer:
+            return value
+        rounded = int(round(value))
+        low = int(math.ceil(self.low))
+        high = int(math.floor(self.high))
+        rounded = min(high, max(low, rounded))
+        if self.odd and rounded % 2 == 0:
+            lower = rounded - 1
+            upper = rounded + 1
+            candidates = [candidate for candidate in (lower, upper) if low <= candidate <= high]
+            if not candidates:
+                raise ValueError(f"{self.name}: no odd integer value lies inside the bounds")
+            rounded = min(candidates, key=lambda candidate: abs(candidate - value))
+        return float(rounded)
+
+    def value_at_unit(self, unit: float) -> float:
+        unit = min(1.0, max(0.0, float(unit)))
+        return self.canonical_value(self.low + unit * (self.high - self.low))
+
+    def normalized_fraction(self, value: float) -> float:
+        value = self.canonical_value(value)
+        if math.isclose(value, self.baseline, abs_tol=1.0e-14, rel_tol=0.0):
+            return 0.0
+        endpoint = self.low if value < self.baseline else self.high
+        return (value - self.baseline) / abs(endpoint - self.baseline)
+
+    def to_parameter_value(self, value: float) -> int | float:
+        value = self.canonical_value(value)
+        return int(value) if self.integer else value
 
 
 @dataclass(frozen=True)
@@ -213,6 +288,8 @@ class StudyCase:
     public_values: dict[str, float]
     perturbations: dict[str, float]
     sequence_index: int
+    mesh_values: dict[str, float] | None = None
+    mesh_perturbations: dict[str, float] | None = None
 
     def __post_init__(self) -> None:
         if self.stage not in VALID_STAGES:
@@ -226,11 +303,13 @@ class StudyCase:
                 "stage": self.stage,
                 "public_values": self.public_values,
                 "perturbations": self.perturbations,
+                "mesh_values": self.mesh_values or {},
+                "mesh_perturbations": self.mesh_perturbations or {},
             }
         )
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        payload = {
             "case_id": self.case_id,
             "stage": self.stage,
             "sequence_index": self.sequence_index,
@@ -238,6 +317,10 @@ class StudyCase:
             "perturbations": dict(self.perturbations),
             "identity_hash": self.identity_hash,
         }
+        if self.mesh_values is not None:
+            payload["mesh_values"] = dict(self.mesh_values)
+            payload["mesh_perturbations"] = dict(self.mesh_perturbations or {})
+        return payload
 
 
 @dataclass(frozen=True)
@@ -262,6 +345,14 @@ class StudySpec:
     source_sections: int
     extraction_cst_order: int
     extraction_chordwise_points: int
+    mesh_control_enabled: bool
+    mesh_control_variables: tuple[MeshControlSpec, ...]
+    mesh_control_train_method: str
+    mesh_control_train_samples: int
+    mesh_control_train_seed: int
+    mesh_control_validation_method: str
+    mesh_control_validation_samples: int
+    mesh_control_validation_seed: int
     minimum_source_spacing_fraction: float
     levels: tuple[MeshLevel, ...]
     reference_level: str
@@ -272,6 +363,10 @@ class StudySpec:
     projection_enabled: bool
     projection_sample_nodes: int
     analysis_config: dict[str, Any]
+
+    @property
+    def mesh_control_variable_map(self) -> dict[str, MeshControlSpec]:
+        return {variable.name: variable for variable in self.mesh_control_variables}
 
     @property
     def variable_map(self) -> dict[str, VariableSpec]:
@@ -364,15 +459,28 @@ class StudySpec:
                         )
         return cases
 
-    def _unit_design(self, samples: int, seed: int, method: str) -> np.ndarray:
+    def _unit_design(self, samples: int, seed: int, method: str, dimensions: int) -> np.ndarray:
         if method == "sobol":
             power = int(round(math.log2(samples)))
             if 2**power != samples:
                 raise ValueError("Sobol sample counts must be powers of two")
-            return qmc.Sobol(d=len(self.variables), scramble=True, seed=seed).random_base2(power)
+            return qmc.Sobol(d=dimensions, scramble=True, seed=seed).random_base2(power)
         if method == "lhs":
-            return qmc.LatinHypercube(d=len(self.variables), seed=seed).random(samples)
-        return np.random.default_rng(seed).random((samples, len(self.variables)))
+            return qmc.LatinHypercube(d=dimensions, seed=seed).random(samples)
+        return np.random.default_rng(seed).random((samples, dimensions))
+
+    def _geometry_values_from_unit_row(
+        self, row: np.ndarray
+    ) -> tuple[dict[str, float], dict[str, float]]:
+        values = {
+            variable.name: variable.low + float(row[column]) * (variable.high - variable.low)
+            for column, variable in enumerate(self.variables)
+        }
+        perturbations = {
+            variable.name: variable.normalized_fraction(values[variable.name])
+            for variable in self.variables
+        }
+        return values, perturbations
 
     def _space_filling_cases(
         self,
@@ -383,15 +491,10 @@ class StudySpec:
         sequence_start: int,
     ) -> list[StudyCase]:
         cases: list[StudyCase] = []
-        for row_index, row in enumerate(self._unit_design(samples, seed, method)):
-            values = {
-                variable.name: variable.low + float(row[column]) * (variable.high - variable.low)
-                for column, variable in enumerate(self.variables)
-            }
-            perturbations = {
-                variable.name: variable.normalized_fraction(values[variable.name])
-                for variable in self.variables
-            }
+        for row_index, row in enumerate(
+            self._unit_design(samples, seed, method, len(self.variables))
+        ):
+            values, perturbations = self._geometry_values_from_unit_row(row)
             cases.append(
                 StudyCase(
                     f"{stage}__{row_index:04d}",
@@ -421,7 +524,7 @@ class StudySpec:
             sequence_start,
         )
 
-    def all_cases(self) -> list[StudyCase]:
+    def geometry_law_cases(self) -> list[StudyCase]:
         baseline = self.baseline_case()
         ofat = self.ofat_cases(sequence_start=1)
         pairwise = self.pairwise_cases(sequence_start=1 + len(ofat))
@@ -431,15 +534,82 @@ class StudySpec:
         )
         return [baseline, *ofat, *pairwise, *train, *validation]
 
+    def _mesh_control_cases(
+        self,
+        stage: str,
+        samples: int,
+        seed: int,
+        method: str,
+        sequence_start: int,
+    ) -> list[StudyCase]:
+        if not self.mesh_control_enabled:
+            return []
+        dimensions = len(self.variables) + len(self.mesh_control_variables)
+        cases: list[StudyCase] = []
+        for row_index, row in enumerate(self._unit_design(samples, seed, method, dimensions)):
+            geometry_row = row[: len(self.variables)]
+            mesh_row = row[len(self.variables) :]
+            values, perturbations = self._geometry_values_from_unit_row(geometry_row)
+            mesh_values = {
+                variable.name: variable.value_at_unit(float(mesh_row[column]))
+                for column, variable in enumerate(self.mesh_control_variables)
+            }
+            mesh_perturbations = {
+                variable.name: variable.normalized_fraction(mesh_values[variable.name])
+                for variable in self.mesh_control_variables
+            }
+            cases.append(
+                StudyCase(
+                    f"{stage}__{row_index:04d}",
+                    stage,
+                    values,
+                    perturbations,
+                    sequence_start + row_index,
+                    mesh_values=mesh_values,
+                    mesh_perturbations=mesh_perturbations,
+                )
+            )
+        return cases
+
+    def mesh_control_train_cases(self, *, sequence_start: int = 0) -> list[StudyCase]:
+        return self._mesh_control_cases(
+            "mesh_control_train",
+            self.mesh_control_train_samples,
+            self.mesh_control_train_seed,
+            self.mesh_control_train_method,
+            sequence_start,
+        )
+
+    def mesh_control_validation_cases(self, *, sequence_start: int = 0) -> list[StudyCase]:
+        return self._mesh_control_cases(
+            "mesh_control_validation",
+            self.mesh_control_validation_samples,
+            self.mesh_control_validation_seed,
+            self.mesh_control_validation_method,
+            sequence_start,
+        )
+
+    def mesh_control_cases(self, *, sequence_start: int = 0) -> list[StudyCase]:
+        train = self.mesh_control_train_cases(sequence_start=sequence_start)
+        validation = self.mesh_control_validation_cases(sequence_start=sequence_start + len(train))
+        return [*train, *validation]
+
+    def all_cases(self) -> list[StudyCase]:
+        geometry_cases = self.geometry_law_cases()
+        mesh_cases = self.mesh_control_cases(sequence_start=len(geometry_cases))
+        return [*geometry_cases, *mesh_cases]
+
     def initial_plan(self) -> dict[str, Any]:
-        cases = self.all_cases()
+        geometry_cases = self.geometry_law_cases()
+        mesh_cases = self.mesh_control_cases(sequence_start=len(geometry_cases))
+        cases = [*geometry_cases, *mesh_cases]
         counts = {stage: 0 for stage in sorted(VALID_STAGES)}
         for case in cases:
             counts[case.stage] += 1
-        counts["total_geometries"] = len(cases)
-        counts["planned_mesh_builds"] = (
-            len(cases) * len(self.levels) if self.complete_ladder else None
-        )
+        counts["geometry_law_geometries"] = len(geometry_cases)
+        counts["mesh_control_cases"] = len(mesh_cases)
+        counts["total_cases"] = len(cases)
+        counts["planned_mesh_builds"] = len(geometry_cases) * len(self.levels) + len(mesh_cases)
         return {
             "schema": SCHEMA_VERSION,
             "study": self.name,
@@ -447,6 +617,21 @@ class StudySpec:
             "global_design_method": self.global_method,
             "counts": counts,
             "validation_design_method": self.validation_method,
+            "mesh_control_enabled": self.mesh_control_enabled,
+            "mesh_control_train_design_method": self.mesh_control_train_method,
+            "mesh_control_validation_design_method": self.mesh_control_validation_method,
+            "mesh_control_variables": [
+                {
+                    "name": variable.name,
+                    "parameter": variable.parameter,
+                    "baseline": variable.baseline,
+                    "low": variable.low,
+                    "high": variable.high,
+                    "integer": variable.integer,
+                    "odd": variable.odd,
+                }
+                for variable in self.mesh_control_variables
+            ],
             "cases": [case.to_dict() for case in cases],
         }
 
@@ -491,6 +676,24 @@ def _parse_level(name: str, value: object, order: int) -> MeshLevel:
             block.get("tip_radial_points"),
             f"mesh.levels.{name}.tip_radial_points",
         ),
+    )
+
+
+def _parse_mesh_control(name: str, value: object) -> MeshControlSpec:
+    block = _mapping(value, f"mesh_control.variables.{name}")
+    return MeshControlSpec(
+        name=name,
+        parameter=_string(
+            block.get("parameter", name),
+            f"mesh_control.variables.{name}.parameter",
+        ),
+        units=_string(block.get("units", "1"), f"mesh_control.variables.{name}.units"),
+        baseline=_number(block.get("baseline"), f"mesh_control.variables.{name}.baseline"),
+        low=_number(block.get("low"), f"mesh_control.variables.{name}.low"),
+        high=_number(block.get("high"), f"mesh_control.variables.{name}.high"),
+        integer=_boolean(block.get("integer", False), f"mesh_control.variables.{name}.integer"),
+        odd=_boolean(block.get("odd", False), f"mesh_control.variables.{name}.odd"),
+        description=str(block.get("description", "")).strip(),
     )
 
 
@@ -573,6 +776,37 @@ def load_study_spec(path: str | Path) -> StudySpec:
     ).lower()
     if validation_method not in {"iid_uniform", "sobol", "lhs"}:
         raise ValueError("Validation method must be iid_uniform, sobol, or lhs")
+
+    mesh_control = _mapping(raw.get("mesh_control", {}), "mesh_control")
+    mesh_control_enabled = _boolean(
+        mesh_control.get("enabled", False),
+        "mesh_control.enabled",
+    )
+    mesh_control_train = _mapping(mesh_control.get("train", {}), "mesh_control.train")
+    mesh_control_validation = _mapping(
+        mesh_control.get("validation", {}),
+        "mesh_control.validation",
+    )
+    mesh_control_variables = tuple(
+        _parse_mesh_control(name, value)
+        for name, value in _mapping(
+            mesh_control.get("variables", {}),
+            "mesh_control.variables",
+        ).items()
+    )
+    mesh_control_train_method = _string(
+        mesh_control_train.get("method", "sobol"),
+        "mesh_control.train.method",
+    ).lower()
+    mesh_control_validation_method = _string(
+        mesh_control_validation.get("method", "iid_uniform"),
+        "mesh_control.validation.method",
+    ).lower()
+    if mesh_control_train_method not in {"sobol", "lhs", "iid_uniform"}:
+        raise ValueError("Mesh-control train method must be sobol, lhs, or iid_uniform")
+    if mesh_control_validation_method not in {"sobol", "lhs", "iid_uniform"}:
+        raise ValueError("Mesh-control validation method must be sobol, lhs, or iid_uniform")
+
     levels_raw = _mapping(mesh.get("levels"), "mesh.levels")
     levels = tuple(
         sorted(
@@ -622,6 +856,26 @@ def load_study_spec(path: str | Path) -> StudySpec:
         validation_samples=_integer(validation.get("samples"), "design.validation.samples"),
         validation_seed=_integer(validation.get("seed"), "design.validation.seed"),
         validation_method=validation_method,
+        mesh_control_enabled=mesh_control_enabled,
+        mesh_control_variables=mesh_control_variables,
+        mesh_control_train_method=mesh_control_train_method,
+        mesh_control_train_samples=_integer(
+            mesh_control_train.get("samples", 0),
+            "mesh_control.train.samples",
+        ),
+        mesh_control_train_seed=_integer(
+            mesh_control_train.get("seed", 20260726),
+            "mesh_control.train.seed",
+        ),
+        mesh_control_validation_method=mesh_control_validation_method,
+        mesh_control_validation_samples=_integer(
+            mesh_control_validation.get("samples", 0),
+            "mesh_control.validation.samples",
+        ),
+        mesh_control_validation_seed=_integer(
+            mesh_control_validation.get("seed", 20260727),
+            "mesh_control.validation.seed",
+        ),
         source_sections=_integer(
             extraction.get("source_sections", 14),
             "geometry.extraction.source_sections",
@@ -659,6 +913,30 @@ def load_study_spec(path: str | Path) -> StudySpec:
     )
     if spec.global_train_seed == spec.validation_seed:
         raise ValueError("Training and validation seeds must differ")
+    if spec.mesh_control_enabled:
+        if not spec.mesh_control_variables:
+            raise ValueError("mesh_control.enabled requires at least one mesh-control variable")
+        parameters = [variable.parameter for variable in spec.mesh_control_variables]
+        if len(parameters) != len(set(parameters)):
+            raise ValueError("mesh_control variables must map to unique mesher parameters")
+        unsupported = sorted(set(parameters) - MESH_CONTROL_PARAMETERS)
+        if unsupported:
+            raise ValueError(
+                "Unsupported mesh-control parameter(s) for this registered DOE: "
+                f"{unsupported}. Supported: {sorted(MESH_CONTROL_PARAMETERS)}"
+            )
+        if spec.mesh_control_train_samples < 1 or spec.mesh_control_validation_samples < 1:
+            raise ValueError("mesh-control train and validation samples must be positive")
+        seeds = {
+            spec.global_train_seed,
+            spec.validation_seed,
+            spec.mesh_control_train_seed,
+            spec.mesh_control_validation_seed,
+        }
+        if len(seeds) != 4:
+            raise ValueError("Geometry and mesh-control train/validation seeds must differ")
+    elif spec.mesh_control_variables:
+        raise ValueError("mesh_control.variables must be empty when mesh_control.enabled is false")
     if spec.source_sections < 4 or spec.extraction_cst_order < 2:
         raise ValueError("Invalid pyGeo extraction resolution")
     if spec.extraction_chordwise_points < max(21, spec.extraction_cst_order + 3):

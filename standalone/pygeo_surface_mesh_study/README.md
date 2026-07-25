@@ -29,6 +29,10 @@ rejects extrapolation to other profiles.
 
 ## Exact campaign size
 
+The campaign has two registered layers.
+
+Geometry-law layer, with complete L1-L5 ladders:
+
 | Stage | Geometries |
 |---|---:|
 | Baseline | 1 |
@@ -36,11 +40,30 @@ rejects extrapolation to other profiles.
 | Four corners for all 120 factor pairs | 480 |
 | Scrambled-Sobol global training | 1,024 |
 | Independent IID uniform validation | 512 |
-| **Total** | **2,145** |
+| **Geometry-law total** | **2,145** |
 
-Every geometry is evaluated at all five registered levels. The campaign
-therefore contains **10,725 surface-mesh builds**. Complete ladders prevent
-adaptive-stop censoring from biasing refinement laws.
+Every geometry-law case is evaluated at all five registered levels, giving
+**10,725 surface-mesh builds**. Complete ladders prevent adaptive-stop
+censoring from biasing refinement laws.
+
+Mesh-control layer, with one explicit mesh per case:
+
+| Stage | Cases |
+|---|---:|
+| Joint geometry x mesh-control Sobol training | 2,048 |
+| Independent joint geometry x mesh-control validation | 1,024 |
+| **Mesh-control total** | **3,072** |
+
+These cases vary the same 16 geometry factors plus four individual numerical
+mesh controls: chordwise/block-side points, spanwise panels per section,
+cap-wrap points, and tip radial points.
+
+The cap-wrap and tip-radial ranges are intentionally bounded to the verified
+nonfolding cap4-tip domain. Higher values fold the thin BWB trailing-edge tip
+collar and belong to a separate topology-redesign campaign, not this law fit.
+
+The full registered execution plan is **5,217 cases** and **13,797 mesh
+builds**.
 
 If validation fails, the emitted law remains non-deployable. Any enrichment is
 registered as a new training campaign with a fresh independent validation set.
@@ -51,8 +74,11 @@ registered as a new training campaign with a fresh independent validation set.
 - physical-unit baseline slopes and curvature;
 - all direct pairwise non-additivity residuals;
 - per-level, per-metric quadratic Legendre response surfaces;
+- geometry-conditioned mesh-control response surfaces over 16 geometry factors
+  and four individual mesh knobs;
 - ridge hyperparameters selected by training-only cross-validation;
 - surrogate-based first, total, and pair Sobol contributions;
+- mesh-control action rankings and top geometry-mesh interactions;
 - independent holdout errors and conservative false-accept audits;
 - level-transition and non-monotonicity summaries;
 - exact applicability ranges, fixed fields, airfoils, and topology;
@@ -72,15 +98,15 @@ Important outputs are:
     cases/<case_id>/geometry.json
     cases/<case_id>/attempts/L1...L5/
 
-## Insert metric limits
+## Review metric limits
 
-Edit the acceptance.metrics entries in:
+The acceptance.metrics entries in the registered config are populated with
+hard pre-volume surface-quality gates. Review them before publication runs:
 
     configs/cfd/pygeo_surface_mesh_study.yaml
 
-Every enabled metric must have a numeric limit. Set enabled: false only when a
-metric is deliberately excluded from acceptance. The campaign never relaxes a
-limit automatically.
+The rationale for each limit is in METHODOLOGY.md. Set enabled: false only
+when a metric is deliberately excluded from acceptance.
 
 ## Validate and inspect the plan
 
@@ -114,6 +140,8 @@ Run stages in this order so partial results and resource use remain explicit:
     pairwise
     global_train
     validation
+    mesh_control_train
+    mesh_control_validation
 
 For example:
 
@@ -135,5 +163,6 @@ fingerprint match.
       --workdir artifacts/pygeo_surface_mesh_study/paper_run_001
 
 The future meshing agent must use agent_mesh_law.json only when
-deployment_ready is true. It must still generate the proposed mesh and accept
-it only from measured QC metrics.
+deployment_ready is true. The law contains both the bundled L1-L5 selection
+model and the individual mesh-control retry model. The agent must still
+generate the proposed mesh and accept it only from measured QC metrics.

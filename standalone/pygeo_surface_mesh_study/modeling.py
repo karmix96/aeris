@@ -196,6 +196,52 @@ def _normalized_rows(
     return np.asarray(x_rows, dtype=float), np.asarray(y_rows, dtype=float), case_ids
 
 
+def _mesh_control_rows(
+    spec: StudySpec,
+    results: Sequence[Mapping[str, Any]],
+    stage: str,
+    metric_path: str,
+) -> tuple[np.ndarray, np.ndarray, list[str]]:
+    x_rows = []
+    y_rows = []
+    case_ids = []
+    for result in results:
+        case = _case(result)
+        if case.get("stage") != stage:
+            continue
+        public = case.get("public_values", {})
+        mesh_values = case.get("mesh_values", {})
+        if not isinstance(public, Mapping) or not isinstance(mesh_values, Mapping):
+            continue
+        metrics = result.get("reference_metrics", {})
+        response = _response_value(
+            spec, metrics if isinstance(metrics, Mapping) else {}, metric_path
+        )
+        if response is None:
+            continue
+        try:
+            geometry_row = [
+                variable.normalized_fraction(float(public[variable.name]))
+                for variable in spec.variables
+            ]
+            mesh_row = [
+                variable.normalized_fraction(float(mesh_values[variable.name]))
+                for variable in spec.mesh_control_variables
+            ]
+        except (KeyError, TypeError, ValueError):
+            continue
+        x_rows.append([*geometry_row, *mesh_row])
+        y_rows.append(response)
+        case_ids.append(str(case.get("case_id", "")))
+    if not x_rows:
+        return (
+            np.empty((0, len(spec.variables) + len(spec.mesh_control_variables))),
+            np.empty(0),
+            [],
+        )
+    return np.asarray(x_rows, dtype=float), np.asarray(y_rows, dtype=float), case_ids
+
+
 def _quality_statistics(
     actual: np.ndarray, predicted: np.ndarray, scale_source: np.ndarray
 ) -> dict[str, float | None]:
@@ -509,6 +555,184 @@ def fit_response_model(
     }
 
 
+def fit_mesh_control_model(
+    spec: StudySpec,
+    results: Sequence[Mapping[str, Any]],
+    metric: MetricLimit,
+) -> dict[str, Any] | None:
+    """Fit a geometry-conditioned mesh-knob response law."""
+
+    if not spec.mesh_control_enabled:
+        return None
+    x_train, y_train, train_ids = _mesh_control_rows(
+        spec, results, "mesh_control_train", metric.path
+    )
+    x_validation, y_validation, validation_ids = _mesh_control_rows(
+        spec, results, "mesh_control_validation", metric.path
+    )
+    geometry_names = [variable.name for variable in spec.variables]
+    mesh_names = [variable.name for variable in spec.mesh_control_variables]
+    factor_names = [*geometry_names, *mesh_names]
+    required_columns = 1 + 2 * len(factor_names) + math.comb(len(factor_names), 2)
+    if len(y_train) < required_columns + 1 or len(y_validation) < 20:
+        return None
+    training_complete = bool(
+        len(y_train) == spec.mesh_control_train_samples
+        and len(set(train_ids)) == spec.mesh_control_train_samples
+    )
+    validation_complete = bool(
+        len(y_validation) == spec.mesh_control_validation_samples
+        and len(set(validation_ids)) == spec.mesh_control_validation_samples
+    )
+
+    settings = _analysis_settings(spec)
+    train_basis = orthonormal_quadratic_basis(x_train, factor_names)
+    validation_basis = orthonormal_quadratic_basis(x_validation, factor_names)
+    penalty, cv_scores = _ridge_cross_validation(
+        train_basis.matrix,
+        y_train,
+        settings["lambdas"],
+        settings["folds"],
+        spec.mesh_control_train_seed,
+    )
+    coefficient = _ridge_coefficients(train_basis.matrix, y_train, penalty)
+    predicted_validation = validation_basis.matrix @ coefficient
+
+    split = max(10, len(y_validation) // 2)
+    calibration_residual = np.abs(y_validation[:split] - predicted_validation[:split])
+    target_coverage = min(1.0, max(0.0, settings["coverage"]))
+    calibration_rank = min(split, max(1, math.ceil((split + 1) * target_coverage)))
+    ordered_calibration_residual = np.sort(calibration_residual)
+    absolute_error_bound = float(ordered_calibration_residual[calibration_rank - 1])
+    audit_actual = y_validation[split:]
+    audit_predicted = predicted_validation[split:]
+    statistics = _quality_statistics(audit_actual, audit_predicted, y_train)
+    coverage = float(np.mean(np.abs(audit_actual - audit_predicted) <= absolute_error_bound))
+    classification = _classification_audit(
+        metric,
+        audit_actual,
+        audit_predicted,
+        absolute_error_bound,
+    )
+    r2 = statistics["r2"]
+    classification_safe = bool(
+        classification is None
+        or (
+            classification["false_accepts"] <= settings["max_false_accepts"]
+            and (
+                classification["predicted_passes"] == 0
+                or classification["false_accept_probability_upper_95"]
+                <= settings["max_false_accept_upper_95"]
+            )
+        )
+    )
+    deployable = bool(
+        training_complete
+        and validation_complete
+        and statistics["normalized_rmse"] <= settings["max_nrmse"]
+        and r2 is not None
+        and r2 >= settings["min_r2"]
+        and coverage >= settings["coverage"] - 0.02
+        and classification_safe
+    )
+
+    sobol = _sobol_from_coefficients(coefficient, train_basis, factor_names)
+    mesh_start = len(geometry_names)
+    action_rows = []
+    for offset, variable in enumerate(spec.mesh_control_variables):
+        factor_index = mesh_start + offset
+        linear_effect = float(
+            math.sqrt(3.0) * coefficient[train_basis.linear_columns[factor_index]]
+        )
+        tolerance = max(1.0e-12, abs(linear_effect) * 1.0e-8)
+        if abs(linear_effect) <= tolerance:
+            beneficial_direction = "flat_at_center"
+        elif metric.operator == "<=":
+            beneficial_direction = "increase" if linear_effect < 0.0 else "decrease"
+        else:
+            beneficial_direction = "increase" if linear_effect > 0.0 else "decrease"
+        action_rows.append(
+            {
+                "mesh_control": variable.name,
+                "parameter": variable.parameter,
+                "units": variable.units,
+                "total_effect": sobol["total_effect"][variable.name],
+                "first_order_effect": sobol["first_order"][variable.name],
+                "center_linear_effect_on_response_per_normalized_knob": linear_effect,
+                "center_beneficial_direction_for_metric": beneficial_direction,
+            }
+        )
+    action_rows.sort(key=lambda row: row["total_effect"], reverse=True)
+
+    variance = float(sobol["surrogate_variance"])
+    geometry_mesh_interactions = []
+    if variance > 1.0e-30:
+        for (first, second), column in train_basis.pair_columns.items():
+            first_is_geometry = first < mesh_start
+            second_is_geometry = second < mesh_start
+            if first_is_geometry == second_is_geometry:
+                continue
+            geometry_index = first if first_is_geometry else second
+            mesh_index = second if first_is_geometry else first
+            contribution = float(coefficient[column] ** 2 / variance)
+            geometry_mesh_interactions.append(
+                {
+                    "geometry_variable": factor_names[geometry_index],
+                    "mesh_control": factor_names[mesh_index],
+                    "second_order_effect": contribution,
+                }
+            )
+    geometry_mesh_interactions.sort(
+        key=lambda row: row["second_order_effect"],
+        reverse=True,
+    )
+
+    return {
+        "response": metric.path,
+        "operator": metric.operator,
+        "limit": metric.limit,
+        "basis": {
+            "family": "orthonormal Legendre, total degree 2",
+            "factor_distribution": "independent uniform geometry and mesh controls",
+            "feature_names": list(train_basis.names),
+            "coefficients": [float(value) for value in coefficient],
+            "factor_groups": {"geometry": geometry_names, "mesh_control": mesh_names},
+        },
+        "regularization": {
+            "method": "ridge",
+            "selected_lambda": penalty,
+            "cross_validation_rmse": cv_scores,
+            "folds": settings["folds"],
+        },
+        "sample_counts": {
+            "training": len(y_train),
+            "training_expected": spec.mesh_control_train_samples,
+            "validation_total": len(y_validation),
+            "validation_expected": spec.mesh_control_validation_samples,
+            "training_complete": training_complete,
+            "validation_complete": validation_complete,
+            "calibration": split,
+            "audit": len(audit_actual),
+        },
+        "validation": {
+            **statistics,
+            "absolute_error_bound": absolute_error_bound,
+            "calibration_method": "split conformal absolute residual",
+            "calibration_rank": calibration_rank,
+            "reference_measure": "independent uniform geometry and mesh-control factors",
+            "target_coverage": settings["coverage"],
+            "audit_coverage": coverage,
+            "classification": classification,
+            "audit_case_ids": validation_ids[split:],
+        },
+        "sobol_indices_from_validated_surrogate": sobol,
+        "mesh_control_action_ranking": action_rows,
+        "top_geometry_mesh_interactions": geometry_mesh_interactions[:40],
+        "deployable": deployable,
+        "training_case_ids_hash": hashlib.sha256("\n".join(train_ids).encode("utf-8")).hexdigest(),
+    }
+
+
 def _composite_metric() -> MetricLimit:
     return MetricLimit(
         path=_COMPOSITE_MARGIN_PATH,
@@ -596,10 +820,13 @@ def _campaign_completeness(
             if isinstance(attempts, list)
             else set()
         )
-        if attempted_levels != expected_levels:
+        expected_case_levels = (
+            {"mesh_control"} if expected[case_id].mesh_values else expected_levels
+        )
+        if attempted_levels != expected_case_levels:
             incomplete_level_ladders[case_id] = {
-                "missing": sorted(expected_levels - attempted_levels),
-                "extra": sorted(attempted_levels - expected_levels),
+                "missing": sorted(expected_case_levels - attempted_levels),
+                "extra": sorted(attempted_levels - expected_case_levels),
             }
         if isinstance(attempts, list):
             attempt_errors.extend(
@@ -653,6 +880,13 @@ def build_agent_law(
                 level_models[metric.path] = model
         models[level.name] = level_models
 
+    mesh_control_models = {}
+    if spec.mesh_control_enabled:
+        for metric in metrics:
+            model = fit_mesh_control_model(spec, results, metric)
+            if model is not None:
+                mesh_control_models[metric.path] = model
+
     baseline = next(
         (
             result
@@ -680,12 +914,22 @@ def build_agent_law(
         and oml_topology
         and tip_topology
     )
+    required_mesh_control_model_count = len(metrics) if spec.mesh_control_enabled else 0
+    mesh_control_fitted = list(mesh_control_models.values())
+    mesh_control_models_ready = bool(
+        not spec.mesh_control_enabled
+        or (
+            len(mesh_control_fitted) == required_mesh_control_model_count
+            and all(model.get("deployable", False) for model in mesh_control_fitted)
+        )
+    )
     required_model_count = len(spec.levels) * len(metrics)
     fitted = [model for level in models.values() for model in level.values()]
     deployment_ready = bool(
         not spec.unset_enabled_limits()
         and completeness["complete"]
         and applicability_contract_complete
+        and mesh_control_models_ready
         and len(fitted) == required_model_count
         and all(model.get("deployable", False) for model in fitted)
     )
@@ -700,6 +944,11 @@ def build_agent_law(
             reverse=True,
         )
 
+    mesh_control_action_rankings = {
+        path: model.get("mesh_control_action_ranking", [])
+        for path, model in mesh_control_models.items()
+    }
+
     return {
         "schema": MODEL_SCHEMA,
         "study": spec.name,
@@ -709,6 +958,9 @@ def build_agent_law(
             "unset_limits": spec.unset_enabled_limits(),
             "missing_or_failed_models": required_model_count
             - sum(bool(model.get("deployable", False)) for model in fitted),
+            "missing_or_failed_mesh_control_models": required_mesh_control_model_count
+            - sum(bool(model.get("deployable", False)) for model in mesh_control_fitted),
+            "mesh_control_models_required": spec.mesh_control_enabled,
             "campaign_incomplete": not completeness["complete"],
             "applicability_contract_incomplete": not applicability_contract_complete,
         },
@@ -742,6 +994,19 @@ def build_agent_law(
                 "independent thickness-ratio effect."
             ),
         },
+        "mesh_control_contract": {
+            variable.name: {
+                "parameter": variable.parameter,
+                "units": variable.units,
+                "baseline": variable.baseline,
+                "low": variable.low,
+                "high": variable.high,
+                "integer": variable.integer,
+                "odd": variable.odd,
+                "description": variable.description,
+            }
+            for variable in spec.mesh_control_variables
+        },
         "mesh_levels": {
             level.name: {
                 "order": level.order,
@@ -758,5 +1023,7 @@ def build_agent_law(
             "predicted passing level. Never substitute prediction for QC."
         ),
         "models": models,
+        "mesh_control_models": mesh_control_models,
+        "mesh_control_action_rankings": mesh_control_action_rankings,
         "reference_level_total_effect_rankings": influence,
     }

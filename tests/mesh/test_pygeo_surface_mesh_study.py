@@ -7,6 +7,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+import standalone.pygeo_surface_mesh_study.runner as runner_module
+from aeris.mesh.surface import build_surface_mesh
 from standalone.pygeo_surface_mesh_study.analysis import (
     build_analysis,
     rank_variable_names,
@@ -134,20 +136,59 @@ def test_real_study_config_and_plan_are_deterministic() -> None:
     assert first.initial_plan()["counts"] == {
         "baseline": 1,
         "global_train": 1024,
+        "mesh_control_train": 2048,
+        "mesh_control_validation": 1024,
         "ofat": 128,
         "pairwise": 480,
         "validation": 512,
-        "total_geometries": 2145,
-        "planned_mesh_builds": 10725,
+        "geometry_law_geometries": 2145,
+        "mesh_control_cases": 3072,
+        "total_cases": 5217,
+        "planned_mesh_builds": 13797,
     }
     assert first.reference_level == "L3"
     assert first.complete_ladder
     assert [level.name for level in first.levels] == ["L1", "L2", "L3", "L4", "L5"]
-    assert len(first.unset_enabled_limits()) == 14
+    assert [(level.cap_wrap_points, level.tip_radial_points) for level in first.levels] == [
+        (5, 5),
+        (7, 5),
+        (9, 7),
+        (11, 9),
+        (13, 9),
+    ]
+    assert first.unset_enabled_limits() == []
+
+    limits = {metric.path: metric.limit for metric in first.metric_limits}
+    assert limits["oml.min_scaled_jacobian"] == pytest.approx(0.50)
+    assert limits["oml.max_equiangle_skewness"] == pytest.approx(0.50)
+    assert limits["tip.min_scaled_jacobian"] == pytest.approx(0.03)
+    assert limits["tip.max_equiangle_skewness"] == pytest.approx(0.98)
 
     pairs = first.pairwise_cases()
     assert len(pairs) == len({case.identity_hash for case in pairs}) == 480
     global_sweep = [case.public_values["inner_le_sweep_deg"] for case in first.global_train_cases()]
+    assert first.mesh_control_enabled
+    assert [variable.name for variable in first.mesh_control_variables] == [
+        "chordwise_block_points",
+        "spanwise_panels_per_section",
+        "cap_wrap_points",
+        "tip_radial_points",
+    ]
+    assert [variable.parameter for variable in first.mesh_control_variables] == [
+        "points_per_block_side",
+        "spanwise_panels_per_section",
+        "cap_wrap_points",
+        "tip_radial_points",
+    ]
+    mesh_case = first.mesh_control_train_cases()[0]
+    assert mesh_case.stage == "mesh_control_train"
+    assert set(mesh_case.mesh_values or {}) == {
+        variable.name for variable in first.mesh_control_variables
+    }
+    assert int((mesh_case.mesh_values or {})["chordwise_block_points"]) % 2 == 1
+    assert int((mesh_case.mesh_values or {})["cap_wrap_points"]) % 2 == 1
+    assert int((mesh_case.mesh_values or {})["tip_radial_points"]) % 2 == 1
+
     assert len(set(global_sweep)) == 1024
     assert all(20.0 < value < 40.0 for value in global_sweep)
 
@@ -291,6 +332,62 @@ def test_global_response_model_recovers_known_law_on_holdout() -> None:
     assert total["root_chord_m"] > total["chord_ratio_b1_root"] > 0.0
 
 
+def test_run_stage_passes_baseline_case_to_runner(monkeypatch, tmp_path: Path) -> None:
+    spec = _spec()
+    calls = []
+
+    monkeypatch.setattr(
+        runner_module,
+        "validate_ready",
+        lambda spec_arg, *, allow_unset_limits: None,
+    )
+    monkeypatch.setattr(
+        runner_module,
+        "load_generator_config",
+        lambda spec_arg: {"generator": "stub"},
+    )
+    monkeypatch.setattr(
+        runner_module,
+        "initialize_workdir",
+        lambda spec_arg, workdir_arg: {"run_fingerprint": "unit-test"},
+    )
+
+    def fake_run_case(
+        spec_arg,
+        generator_config,
+        case,
+        workdir,
+        manifest,
+        *,
+        allow_unset_limits=False,
+        rerun_failed=False,
+        smoke_level=None,
+    ) -> dict:
+        calls.append((spec_arg, generator_config, case, workdir, manifest))
+        assert allow_unset_limits
+        assert rerun_failed
+        assert smoke_level is None
+        return {"status": "complete", "selected_level": "L1", "seconds": 0.0}
+
+    monkeypatch.setattr(runner_module, "run_case", fake_run_case)
+    monkeypatch.setattr(
+        runner_module,
+        "assemble_report",
+        lambda spec_arg, workdir_arg, manifest: {"result_count": len(calls)},
+    )
+
+    report = runner_module.run_stage(
+        spec,
+        tmp_path,
+        stage="baseline",
+        allow_unset_limits=True,
+        rerun_failed=True,
+    )
+    assert report["result_count"] == 1
+    assert calls[0][0] is spec
+    assert calls[0][2].case_id == "baseline"
+
+
 @pytest.mark.integration
 def test_baseline_pygeo_uniform_source_lattice() -> None:
     pytest.importorskip("pygeo")
@@ -309,3 +406,15 @@ def test_baseline_pygeo_uniform_source_lattice() -> None:
     assert len(descriptors["planform"]["panel_taper_ratios"]) == 3
     assert descriptors["airfoil_shape"]["thickness_ratio_max"] > 0.0
     assert not descriptors["airfoil_shape"]["independent_thickness_effect_identifiable"]
+
+    params = dict(spec.mesh_common)
+    level = spec.level_map["L5"]
+    params.update(
+        points_per_block_side=level.points_per_block_side,
+        spanwise_panels_per_section=level.spanwise_panels_per_section,
+        cap_wrap_points=level.cap_wrap_points,
+        tip_radial_points=level.tip_radial_points,
+    )
+    _blocks, report = build_surface_mesh(carrier, **params)
+    assert report["accepted_pre_pyhyp"]
+    assert report["global"]["min_triangle_normal_alignment"] > 0.0

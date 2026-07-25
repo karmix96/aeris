@@ -632,6 +632,31 @@ def _mesh_parameters(spec: StudySpec, level: MeshLevel) -> dict[str, Any]:
     return parameters
 
 
+def _mesh_level_from_case(spec: StudySpec, case: StudyCase) -> MeshLevel | None:
+    if case.mesh_values is None:
+        return None
+    controls = {
+        variable.parameter: variable.to_parameter_value(case.mesh_values[variable.name])
+        for variable in spec.mesh_control_variables
+    }
+    required = {
+        "points_per_block_side",
+        "spanwise_panels_per_section",
+        "cap_wrap_points",
+        "tip_radial_points",
+    }
+    if set(controls) != required:
+        raise ValueError(f"Mesh-control case does not define {sorted(required)}")
+    return MeshLevel(
+        "mesh_control",
+        0,
+        int(controls["points_per_block_side"]),
+        int(controls["spanwise_panels_per_section"]),
+        int(controls["cap_wrap_points"]),
+        int(controls["tip_radial_points"]),
+    )
+
+
 def run_mesh_attempt(
     spec: StudySpec,
     carrier: PyGeoSurfaceGeometry,
@@ -826,6 +851,10 @@ def run_case(
     }
     write_json(case_dir / "case.json", case_payload)
     started = time.perf_counter()
+    custom_mesh_level = _mesh_level_from_case(spec, case)
+    reference_level_name = smoke_level or (
+        custom_mesh_level.name if custom_mesh_level else spec.reference_level
+    )
     result: dict[str, Any] = {
         "schema": RESULT_SCHEMA,
         "study": spec.name,
@@ -836,7 +865,7 @@ def run_case(
         "status": "running",
         "geometry": None,
         "attempts": [],
-        "reference_level": smoke_level or spec.reference_level,
+        "reference_level": reference_level_name,
         "selected_level": None,
         "limits_satisfied": False,
         "projection_diagnostic": None,
@@ -879,7 +908,9 @@ def run_case(
         return result
 
     levels = list(spec.levels)
-    if smoke_level is not None:
+    if custom_mesh_level is not None:
+        execution_levels = [custom_mesh_level]
+    elif smoke_level is not None:
         if smoke_level not in spec.level_map:
             raise ValueError(f"Unknown smoke level {smoke_level!r}")
         execution_levels = [spec.level_map[smoke_level]]
@@ -933,7 +964,9 @@ def run_case(
     )
     selected = passing[0] if passing else None
     reference_attempt = _attempt_by_level(attempts, spec.reference_level)
-    if smoke_level is not None:
+    if custom_mesh_level is not None:
+        reference_attempt = _attempt_by_level(attempts, custom_mesh_level.name)
+    elif smoke_level is not None:
         reference_attempt = _attempt_by_level(attempts, smoke_level)
 
     projection: dict[str, Any] | None = None
@@ -974,7 +1007,9 @@ def run_case(
             "selected_metrics": (
                 None if selected is None else selected["acceptance"].get("flat_metrics", {})
             ),
-            "resolution_monotonicity": _resolution_monotonicity(attempts, levels),
+            "resolution_monotonicity": None
+            if custom_mesh_level
+            else _resolution_monotonicity(attempts, levels),
             "projection_diagnostic": projection,
             "finished_at": utc_now(),
             "seconds": time.perf_counter() - started,
@@ -1031,6 +1066,7 @@ def assemble_report(
     write_json(Path(workdir) / "study_report.json", report)
 
     variable_names = [variable.name for variable in spec.variables]
+    mesh_control_names = [variable.name for variable in spec.mesh_control_variables]
     metric_paths = [metric.path for metric in spec.metric_limits]
     fields = [
         "case_id",
@@ -1042,6 +1078,7 @@ def assemble_report(
         "selected_level",
         "seconds",
         *variable_names,
+        *(f"mesh.{name}" for name in mesh_control_names),
         *(f"reference.{path}" for path in metric_paths),
         *(f"selected.{path}" for path in metric_paths),
     ]
@@ -1052,6 +1089,7 @@ def assemble_report(
         for result in results:
             case = result.get("case", {})
             public = case.get("public_values", {}) if isinstance(case, Mapping) else {}
+            mesh_values = case.get("mesh_values", {}) if isinstance(case, Mapping) else {}
             reference_metrics = result.get("reference_metrics") or {}
             selected_metrics = result.get("selected_metrics") or {}
             row: dict[str, Any] = {
@@ -1065,6 +1103,7 @@ def assemble_report(
                 "seconds": result.get("seconds"),
             }
             row.update({name: public.get(name) for name in variable_names})
+            row.update({f"mesh.{name}": mesh_values.get(name) for name in mesh_control_names})
             row.update({f"reference.{path}": reference_metrics.get(path) for path in metric_paths})
             row.update({f"selected.{path}": selected_metrics.get(path) for path in metric_paths})
             writer.writerow({key: _csv_value(value) for key, value in row.items()})
@@ -1134,6 +1173,8 @@ def run_stage(
         "pairwise",
         "global_train",
         "validation",
+        "mesh_control_train",
+        "mesh_control_validation",
         "all",
     }
     if stage not in valid:
@@ -1149,12 +1190,19 @@ def run_stage(
     validation = spec.validation_cases(
         sequence_start=1 + len(ofat) + len(pairwise) + len(global_train)
     )
+    geometry_count = 1 + len(ofat) + len(pairwise) + len(global_train) + len(validation)
+    mesh_control_train = spec.mesh_control_train_cases(sequence_start=geometry_count)
+    mesh_control_validation = spec.mesh_control_validation_cases(
+        sequence_start=geometry_count + len(mesh_control_train)
+    )
     groups = {
         "baseline": baseline,
         "ofat": ofat,
         "pairwise": pairwise,
         "global_train": global_train,
         "validation": validation,
+        "mesh_control_train": mesh_control_train,
+        "mesh_control_validation": mesh_control_validation,
     }
     selected_stages = list(groups) if stage == "all" else [stage]
     for stage_name in selected_stages:

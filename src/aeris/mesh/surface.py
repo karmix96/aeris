@@ -64,8 +64,7 @@ def _as_numeric_xyz(values: object, *, label: str) -> Array:
         array = np.asarray(values, dtype=float)
     except (TypeError, ValueError) as exc:
         raise MeshBuildError(
-            f"{label} is not purely numeric. Resolve all symbolic/CasADi values "
-            "before CFD meshing."
+            f"{label} is not purely numeric. Resolve all symbolic/CasADi values before CFD meshing."
         ) from exc
     if not np.all(np.isfinite(array)):
         raise MeshBuildError(f"{label} contains NaN or infinite coordinates.")
@@ -109,9 +108,7 @@ def select_wing(geometry: object, wing_index: int) -> object:
 
     wings = getattr(geometry, "wings", None)
     if wings is None:
-        raise MeshBuildError(
-            "Geometry must be an AeroSandbox Wing or Airplane-like object."
-        )
+        raise MeshBuildError("Geometry must be an AeroSandbox Wing or Airplane-like object.")
     if not wings:
         raise MeshBuildError("The returned Airplane contains no wings.")
     try:
@@ -240,10 +237,7 @@ def _resample_polyline(
 
     mode = distribution if distribution is not None else ("cosine" if cosine else "uniform")
     sample_s = _distribution(n, mode, beta=beta) * s[-1]
-    return np.column_stack(
-        [np.interp(sample_s, s, points[:, axis]) for axis in range(2)]
-    )
-
+    return np.column_stack([np.interp(sample_s, s, points[:, axis]) for axis in range(2)])
 
 
 def _te_fraction_with_floor(base_frac: float, chord: float, abs_floor: float) -> float:
@@ -304,7 +298,6 @@ def _open_trailing_edge(coords: Array, target_thickness: float) -> Array:
     return opened
 
 
-
 def _resample_piecewise(
     segments: Sequence[Array],
     counts: Sequence[int],
@@ -325,11 +318,9 @@ def _resample_piecewise(
     """
     if len(segments) != len(counts):
         raise MeshBuildError("_resample_piecewise needs one count per segment.")
-    modes = (
-        [distribution] * len(segments) if isinstance(distribution, str) else list(distribution)
-    )
+    modes = [distribution] * len(segments) if isinstance(distribution, str) else list(distribution)
     pieces: list[Array] = []
-    for index, (segment, count) in enumerate(zip(segments, counts)):
+    for index, (segment, count) in enumerate(zip(segments, counts, strict=False)):
         if count < 2:
             raise MeshBuildError("each piecewise segment needs at least 2 points.")
         sampled = _resample_polyline(segment, count, distribution=modes[index], beta=beta)
@@ -443,7 +434,7 @@ def _airfoil_eight_sides(
         )
 
     upper_te_to_le = coords[: le_index + 1].copy()  # x: 1 -> 0
-    lower_le_to_te = coords[le_index:].copy()       # x: 0 -> 1
+    lower_le_to_te = coords[le_index:].copy()  # x: 0 -> 1
 
     te_thickness_actual = float(np.linalg.norm(upper_te_to_le[0] - lower_le_to_te[-1]))
     if te_thickness_actual < minimum_te_thickness:
@@ -474,18 +465,22 @@ def _airfoil_eight_sides(
 
     raw_sides = [
         upper_te_to_le[upper_fore_idx : upper_nose_idx + 1],
-        np.vstack([
-            upper_te_to_le[upper_nose_idx:],
-            lower_le_to_te[1 : lower_nose_idx + 1],
-        ]),
+        np.vstack(
+            [
+                upper_te_to_le[upper_nose_idx:],
+                lower_le_to_te[1 : lower_nose_idx + 1],
+            ]
+        ),
         lower_le_to_te[lower_nose_idx : lower_fore_idx + 1],
         lower_le_to_te[lower_fore_idx : lower_aft_idx + 1],
         lower_le_to_te[lower_aft_idx : lower_te_shoulder_idx + 1],
-        np.vstack([
-            lower_le_to_te[lower_te_shoulder_idx:],
-            [te_mid],
-            upper_te_to_le[: upper_te_shoulder_idx + 1],
-        ]),
+        np.vstack(
+            [
+                lower_le_to_te[lower_te_shoulder_idx:],
+                [te_mid],
+                upper_te_to_le[: upper_te_shoulder_idx + 1],
+            ]
+        ),
         upper_te_to_le[upper_te_shoulder_idx : upper_aft_idx + 1],
         upper_te_to_le[upper_aft_idx : upper_fore_idx + 1],
     ]
@@ -565,6 +560,7 @@ def _airfoil_four_sides(
             raise MeshBuildError("Internal error: airfoil side corners are disconnected.")
     return sides
 
+
 def _airfoil_cap4_sides(
     airfoil: object,
     *,
@@ -628,7 +624,13 @@ def _airfoil_cap4_sides(
     raw_sides = [
         np.vstack([upper_te_to_le[upper_nose_idx:], lower_le_to_te[1 : lower_nose_idx + 1]]),
         lower_le_to_te[lower_nose_idx : lower_shoulder_idx + 1],
-        np.vstack([lower_le_to_te[lower_shoulder_idx:], [te_mid], upper_te_to_le[: upper_shoulder_idx + 1]]),
+        np.vstack(
+            [
+                lower_le_to_te[lower_shoulder_idx:],
+                [te_mid],
+                upper_te_to_le[: upper_shoulder_idx + 1],
+            ]
+        ),
         upper_te_to_le[upper_shoulder_idx : upper_nose_idx + 1],
     ]
     counts = [wrap_points, chord_points, wrap_points, chord_points]
@@ -644,7 +646,7 @@ def _airfoil_cap4_sides(
     else:
         per_side = [chordwise_distribution] * 4
     sides = []
-    for index, (side, n, mode) in enumerate(zip(raw_sides, counts, per_side)):
+    for index, (side, n, mode) in enumerate(zip(raw_sides, counts, per_side, strict=False)):
         if index == 2 and te_base_points >= 2:
             # The TE wrap side is (lower arc | blunt base | upper arc).  Pin
             # both base corners by resampling the three pieces separately,
@@ -670,9 +672,7 @@ def _airfoil_cap4_sides(
                 )
             )
         else:
-            sides.append(
-                _resample_polyline(side, n, distribution=mode, beta=chordwise_beta)
-            )
+            sides.append(_resample_polyline(side, n, distribution=mode, beta=chordwise_beta))
     for k in range(len(sides)):
         nxt = (k + 1) % len(sides)
         if not np.allclose(sides[k][-1], sides[nxt][0], atol=1e-12):
@@ -742,8 +742,7 @@ class _OmlGeometrySource(Protocol):
     chord), each of shape ``(n_side_points, n_stations, 3)``.
     """
 
-    def raw_oml_blocks(self, params: OmlTopologyParams) -> list[Array]:
-        ...
+    def raw_oml_blocks(self, params: OmlTopologyParams) -> list[Array]: ...
 
 
 class AeroSandboxOmlSource:
@@ -782,9 +781,7 @@ class AeroSandboxOmlSource:
                 for xsec in self._xsecs
             ]
         else:
-            side_builder = (
-                _airfoil_four_sides if p.oml_topology == "mid4" else _airfoil_eight_sides
-            )
+            side_builder = _airfoil_four_sides if p.oml_topology == "mid4" else _airfoil_eight_sides
             sides_by_xsec = [
                 side_builder(
                     xsec.airfoil,
@@ -846,8 +843,8 @@ class PyGeoSectionOmlSource:
             )
         sides_by_station: list[list[Array]] = []
         for sec in self._sections:
-            coords2d = np.asarray(getattr(sec, "direct_coordinates"), dtype=float)
-            chord_m = float(getattr(sec, "chord_m"))
+            coords2d = np.asarray(sec.direct_coordinates, dtype=float)
+            chord_m = float(sec.chord_m)
             te_frac = _te_fraction_with_floor(p.te_thickness, chord_m, p.te_thickness_abs_floor)
             sides2d = _airfoil_cap4_sides(
                 None,
@@ -862,14 +859,14 @@ class PyGeoSectionOmlSource:
                 chordwise_beta=p.chordwise_beta,
                 coords=coords2d,
             )
-            le = np.asarray(getattr(sec, "le_xyz_m"), dtype=float).reshape(3)
-            chord_axis = np.asarray(getattr(sec, "chord_axis"), dtype=float).reshape(3)
-            thick_axis = np.asarray(getattr(sec, "thickness_axis"), dtype=float).reshape(3)
+            le = np.asarray(sec.le_xyz_m, dtype=float).reshape(3)
+            chord_axis = np.asarray(sec.chord_axis, dtype=float).reshape(3)
+            thick_axis = np.asarray(sec.thickness_axis, dtype=float).reshape(3)
             # Inverse of extract_section's projection: exact for the planarised
             # slice (span_axis component is the tiny discarded plane-warp).
             sides3d = [
-                le[None, :] + chord_m * (s[:, 0:1] * chord_axis[None, :]
-                                         + s[:, 1:2] * thick_axis[None, :])
+                le[None, :]
+                + chord_m * (s[:, 0:1] * chord_axis[None, :] + s[:, 1:2] * thick_axis[None, :])
                 for s in sides2d
             ]
             sides_by_station.append(sides3d)
@@ -919,12 +916,7 @@ def _coons_patch(
 
     for i, ui in enumerate(u):
         for j, vj in enumerate(v):
-            blended_edges = (
-                (1 - vj) * bottom[i]
-                + vj * top[i]
-                + (1 - ui) * left[j]
-                + ui * right[j]
-            )
+            blended_edges = (1 - vj) * bottom[i] + vj * top[i] + (1 - ui) * left[j] + ui * right[j]
             bilinear = (
                 (1 - ui) * (1 - vj) * p00
                 + ui * (1 - vj) * p10
@@ -964,9 +956,11 @@ def _tfi_patch(bottom: Array, top: Array, left: Array, right: Array) -> Array:
     r = right[None, :, :]
     p00, p10, p01, p11 = bottom[0], bottom[-1], top[0], top[-1]
     patch = (
-        (1 - v) * b + v * t + (1 - u) * lf + u * r
-        - ((1 - u) * (1 - v) * p00 + u * (1 - v) * p10
-           + (1 - u) * v * p01 + u * v * p11)
+        (1 - v) * b
+        + v * t
+        + (1 - u) * lf
+        + u * r
+        - ((1 - u) * (1 - v) * p00 + u * (1 - v) * p10 + (1 - u) * v * p01 + u * v * p11)
     )
     return patch
 
@@ -995,17 +989,17 @@ def _build_tip_cap4(
     if not (0.15 <= width_frac <= 0.85):
         raise MeshBuildError("cap_width_frac must lie between 0.15 and 0.85.")
 
-    e_nose = oml_blocks[0][:, -1, :]   # upper corner -> LE -> lower corner
-    e_low = oml_blocks[1][:, -1, :]    # nose -> shoulder (LE -> TE)
-    e_te = oml_blocks[2][:, -1, :]     # lower shoulder -> te_mid -> upper shoulder
-    e_up = oml_blocks[3][:, -1, :]     # shoulder -> nose (TE -> LE)
+    e_nose = oml_blocks[0][:, -1, :]  # upper corner -> LE -> lower corner
+    e_low = oml_blocks[1][:, -1, :]  # nose -> shoulder (LE -> TE)
+    e_te = oml_blocks[2][:, -1, :]  # lower shoulder -> te_mid -> upper shoulder
+    e_up = oml_blocks[3][:, -1, :]  # shoulder -> nose (TE -> LE)
     n_wrap = len(e_nose)
     n_chord = len(e_low)
     if len(e_te) != n_wrap or len(e_up) != n_chord:
         raise MeshBuildError("cap4 tip edges have inconsistent point counts.")
 
-    lower = e_low                       # nose -> te
-    upper = e_up[::-1]                  # nose -> te
+    lower = e_low  # nose -> te
+    upper = e_up[::-1]  # nose -> te
 
     # Inset the rectangle chordwise so the collar end edges slant from the
     # OML corners to the rectangle corners.  Without the inset, the end edges
@@ -1030,8 +1024,27 @@ def _build_tip_cap4(
         t = np.linspace(0.0, 1.0, n)[:, None]
         return (1.0 - t) * a + t * b
 
-    rect_left = straight(rect_top[0], rect_bot[0], n_wrap)     # upper -> lower
-    rect_right = straight(rect_bot[-1], rect_top[-1], n_wrap)  # lower -> upper
+    def edge_fraction(edge: Array) -> Array:
+        lengths = np.linalg.norm(np.diff(edge, axis=0), axis=1)
+        total = float(np.sum(lengths))
+        if total <= 1.0e-14:
+            return np.linspace(0.0, 1.0, len(edge))
+        cumulative = np.concatenate(([0.0], np.cumsum(lengths)))
+        return cumulative / total
+
+    def straight_like_edge(a: Array, b: Array, edge: Array) -> Array:
+        t = edge_fraction(edge)[:, None]
+        return (1.0 - t) * a + t * b
+
+    # Match the inner strip parameterization to the corresponding curved OML
+    # wrap edge.  A uniform inner edge is harmless for synthetic thick tips but
+    # folds the first TE-collar row on thin pyGeo BWB tips when the radial
+    # resolution is increased: the outer wrap points are strongly non-uniform,
+    # so the radial grid lines cross near the blunt TE.  Using the same
+    # cumulative arc-length coordinate preserves block correspondence without
+    # changing the topology or point counts.
+    rect_left = straight_like_edge(rect_top[0], rect_bot[0], e_nose)  # upper -> lower
+    rect_right = straight_like_edge(rect_bot[-1], rect_top[-1], e_te)  # lower -> upper
 
     # Shared collar end edges (outer corner -> rectangle corner), collar_points each.
     end_up_nose = straight(e_nose[0], rect_top[0], collar_points)
@@ -1111,7 +1124,6 @@ def _refine_spanwise(
         columns.append(block[:, -1, :])
         refined.append(np.stack(columns, axis=1))
     return refined
-
 
 
 def _smooth_patch_interior(patch: Array, iterations: int, relaxation: float = 0.5) -> Array:
@@ -1207,7 +1219,6 @@ def _apply_tip_dome(
     return domed
 
 
-
 def _build_tip_single(
     oml_blocks: Sequence[Array],
 ) -> tuple[list[Array], list[Array], list[list[int]]]:
@@ -1241,10 +1252,10 @@ def _build_tip_single(
 
     # Walk the loop nose -> lower -> TE -> upper and use the two chord arcs
     # as the i-direction sides, the two wrap arcs as the j-direction sides.
-    bottom = e_low                 # nose corner -> TE corner (lower surface)
-    top = e_up[::-1]               # nose corner -> TE corner (upper surface)
-    left = e_nose[::-1]            # lower nose corner -> upper nose corner
-    right = e_te                   # lower TE corner -> upper TE corner
+    bottom = e_low  # nose corner -> TE corner (lower surface)
+    top = e_up[::-1]  # nose corner -> TE corner (upper surface)
+    left = e_nose[::-1]  # lower nose corner -> upper nose corner
+    right = e_te  # lower TE corner -> upper TE corner
 
     if not np.allclose(left[0], bottom[0], atol=1e-9):
         left = left[::-1]
@@ -1296,7 +1307,7 @@ def _build_tip_blocks(
 
     radial_t = np.linspace(0.0, 1.0, radial_points)
     ring_blocks = []
-    for outer, inner in zip(outer_sides, inner_sides):
+    for outer, inner in zip(outer_sides, inner_sides, strict=False):
         ring = np.empty((len(outer), radial_points, 3), dtype=float)
         for j, tj in enumerate(radial_t):
             ring[:, j, :] = (1 - tj) * outer + tj * inner
@@ -1310,10 +1321,7 @@ def _build_tip_blocks(
         return ring_blocks, center_patches, tip_groups
 
     center_scale = 0.35
-    center_corners = [
-        center + center_scale * (inner_corners[idx] - center)
-        for idx in (0, 2, 4, 6)
-    ]
+    center_corners = [center + center_scale * (inner_corners[idx] - center) for idx in (0, 2, 4, 6)]
 
     center_patches = []
     tip_groups = [[idx] for idx in range(8)]
@@ -1334,6 +1342,7 @@ def _build_tip_blocks(
         center_patches.append(_coons_patch(bottom, right, top_q2_to_q3, left_q3_to_q0))
 
     return ring_blocks, center_patches, tip_groups
+
 
 def _cell_geometry(block: Array) -> tuple[Array, Array, Array]:
     p00 = block[:-1, :-1]
@@ -1365,9 +1374,7 @@ def _orient_oml_blocks_outward(blocks: Sequence[Array]) -> list[Array]:
     return oriented
 
 
-def _orient_tip_blocks_outward(
-    blocks: Sequence[Array], outward_vector: Array
-) -> list[Array]:
+def _orient_tip_blocks_outward(blocks: Sequence[Array], outward_vector: Array) -> list[Array]:
     outward_vector = outward_vector / np.linalg.norm(outward_vector)
     oriented = []
     for block in blocks:
@@ -1406,9 +1413,7 @@ def _corner_shape_metric(block: Array) -> Array:
     for e1, e2 in corners:
         cross = np.linalg.norm(np.cross(e1, e2), axis=2)
         denom = np.sum(e1 * e1, axis=2) + np.sum(e2 * e2, axis=2)
-        qualities.append(
-            np.divide(2 * cross, denom, out=np.zeros_like(cross), where=denom > 0)
-        )
+        qualities.append(np.divide(2 * cross, denom, out=np.zeros_like(cross), where=denom > 0))
     return np.min(np.stack(qualities, axis=0), axis=0)
 
 
@@ -1445,17 +1450,11 @@ def _block_qc(block: SurfaceBlock) -> dict[str, float | int | str]:
     )
     adjacent_normal_dot: list[Array] = []
     if unit_normal.shape[0] > 1:
-        adjacent_normal_dot.append(
-            np.sum(unit_normal[1:, :, :] * unit_normal[:-1, :, :], axis=2)
-        )
+        adjacent_normal_dot.append(np.sum(unit_normal[1:, :, :] * unit_normal[:-1, :, :], axis=2))
     if unit_normal.shape[1] > 1:
-        adjacent_normal_dot.append(
-            np.sum(unit_normal[:, 1:, :] * unit_normal[:, :-1, :], axis=2)
-        )
+        adjacent_normal_dot.append(np.sum(unit_normal[:, 1:, :] * unit_normal[:, :-1, :], axis=2))
     if adjacent_normal_dot:
-        min_adjacent_normal_dot = float(
-            np.min([np.min(values) for values in adjacent_normal_dot])
-        )
+        min_adjacent_normal_dot = float(np.min([np.min(values) for values in adjacent_normal_dot]))
         max_adjacent_normal_angle_deg = float(
             np.degrees(np.arccos(np.clip(min_adjacent_normal_dot, -1.0, 1.0)))
         )
@@ -1497,10 +1496,7 @@ def _block_qc(block: SurfaceBlock) -> dict[str, float | int | str]:
 def _edge_match(a: Array, b: Array, tol: float) -> bool:
     if a.shape != b.shape:
         return False
-    return bool(
-        np.allclose(a, b, atol=tol, rtol=0)
-        or np.allclose(a, b[::-1], atol=tol, rtol=0)
-    )
+    return bool(np.allclose(a, b, atol=tol, rtol=0) or np.allclose(a, b[::-1], atol=tol, rtol=0))
 
 
 def _edge_contains_segment(edge: Array, segment: Array, tol: float) -> bool:
@@ -1557,9 +1553,7 @@ def _free_edge_audit(
                 "y_range": y_span,
                 # A root-plane edge is flat in y and sits on the detected
                 # symmetry plane.
-                "on_root_plane": bool(
-                    y_span <= tol and abs(mean_y - root_plane_y) <= tol
-                ),
+                "on_root_plane": bool(y_span <= tol and abs(mean_y - root_plane_y) <= tol),
             }
         )
     off_root = [item for item in free if not item["on_root_plane"]]
@@ -1613,9 +1607,7 @@ def _connectivity_qc(
                 for cap_edge in cap_edges
                 for oml_edge in oml_tip_edges
             )
-            checks.append(
-                {"connection": f"oml_{oml_idx}_to_tip_cap", "matched": matched}
-            )
+            checks.append({"connection": f"oml_{oml_idx}_to_tip_cap", "matched": matched})
         return {
             "checks": checks,
             "all_matched": all(bool(item["matched"]) for item in checks),
@@ -1662,6 +1654,7 @@ def _connectivity_qc(
         "all_matched": all(bool(item["matched"]) for item in checks),
     }
 
+
 # ---------------------------------------------------------------------------
 # File writers
 # ---------------------------------------------------------------------------
@@ -1675,30 +1668,22 @@ def _write_plot3d_formatted(path: Path, blocks: Sequence[SurfaceBlock]) -> None:
             ni, nj, _ = block.xyz.shape
             dims.extend([ni, nj, 1])
         for start in range(0, len(dims), 6):
-            stream.write(
-                "".join(f"{value:12d}" for value in dims[start : start + 6]) + "\n"
-            )
+            stream.write("".join(f"{value:12d}" for value in dims[start : start + 6]) + "\n")
         for block in blocks:
             for component in range(3):
                 values = block.xyz[:, :, component].reshape(-1, order="F")
                 for start in range(0, len(values), 3):
                     stream.write(
-                        "".join(
-                            f"{value:24.16E}" for value in values[start : start + 3]
-                        )
-                        + "\n"
+                        "".join(f"{value:24.16E}" for value in values[start : start + 3]) + "\n"
                     )
 
 
-def _write_cgns_structured_surface(
-    path: Path, blocks: Sequence[SurfaceBlock]
-) -> dict[str, object]:
+def _write_cgns_structured_surface(path: Path, blocks: Sequence[SurfaceBlock]) -> dict[str, object]:
     try:
         from cgnsutilities.cgnsutilities import Block, Grid, readGrid
     except (ImportError, ModuleNotFoundError) as exc:
         raise MeshBuildError(
-            "CGNS export requires MDO Lab cgnsUtilities. "
-            "Activate the mach-aero conda environment."
+            "CGNS export requires MDO Lab cgnsUtilities. Activate the mach-aero conda environment."
         ) from exc
 
     grid = Grid()
@@ -1709,9 +1694,7 @@ def _write_cgns_structured_surface(
     for index, surface_block in enumerate(blocks, start=1):
         ni, nj, _ = surface_block.xyz.shape
         dims = np.asarray([ni, nj, 1], dtype=np.int32, order="F")
-        coords = np.asfortranarray(
-            surface_block.xyz[:, :, np.newaxis, :], dtype=np.float64
-        )
+        coords = np.asfortranarray(surface_block.xyz[:, :, np.newaxis, :], dtype=np.float64)
         zone_name = f"{surface_block.name}.{index:05d}"
         grid.addBlock(Block(zone_name, dims, coords))
         expected.append({"name": zone_name, "dims": [int(ni), int(nj), 1]})
@@ -1722,9 +1705,7 @@ def _write_cgns_structured_surface(
 
     check_grid = readGrid(str(path))
     if int(check_grid.cellDim) != 2:
-        raise MeshBuildError(
-            f"CGNS read-back reports cellDim={check_grid.cellDim}; expected 2."
-        )
+        raise MeshBuildError(f"CGNS read-back reports cellDim={check_grid.cellDim}; expected 2.")
     if len(check_grid.blocks) != len(blocks):
         raise MeshBuildError(
             f"CGNS read-back block count {len(check_grid.blocks)} != {len(blocks)}."
@@ -1913,9 +1894,7 @@ def build_surface_mesh(
     section_centers_refined = np.asarray(section_centers_refined)
     root_j = int(np.argmin(np.abs(section_centers_refined[:, 1])))
 
-    root_points_before = np.concatenate(
-        [block[:, root_j, :] for block in raw_oml], axis=0
-    )
+    root_points_before = np.concatenate([block[:, root_j, :] for block in raw_oml], axis=0)
     root_mean_y_before = float(np.mean(root_points_before[:, 1]))
     root_y_range_before = float(np.ptp(root_points_before[:, 1]))
 
@@ -1969,17 +1948,11 @@ def build_surface_mesh(
     )
     tip_outward = section_centers[-1] - section_centers[-2]
     if np.linalg.norm(tip_outward) < 1e-12:
-        raise MeshBuildError(
-            "Cannot infer outward wingtip direction from the last two xsecs."
-        )
+        raise MeshBuildError("Cannot infer outward wingtip direction from the last two xsecs.")
 
     if tip_dome_scale > 0.0:
-        tip_boundary = np.concatenate(
-            [block[:-1, -1, :] for block in raw_oml], axis=0
-        )
-        domed = _apply_tip_dome(
-            [*raw_ring, *raw_center], tip_boundary, tip_outward, tip_dome_scale
-        )
+        tip_boundary = np.concatenate([block[:-1, -1, :] for block in raw_oml], axis=0)
+        domed = _apply_tip_dome([*raw_ring, *raw_center], tip_boundary, tip_outward, tip_dome_scale)
         raw_ring = domed[: len(raw_ring)]
         raw_center = domed[len(raw_ring) :]
     tip_arrays = _orient_tip_blocks_outward([*raw_ring, *raw_center], tip_outward)
@@ -2015,9 +1988,7 @@ def build_surface_mesh(
     failure_reasons: list[dict[str, object]] = []
     if not connectivity["all_matched"]:
         unmatched = [
-            item["connection"]
-            for item in connectivity["checks"]
-            if not bool(item["matched"])
+            item["connection"] for item in connectivity["checks"] if not bool(item["matched"])
         ]
         failure_reasons.append(
             {
@@ -2071,9 +2042,7 @@ def build_surface_mesh(
             }
         )
     if not min_alignment > alignment_floor:
-        worst = min(
-            qc_blocks, key=lambda item: float(item["min_triangle_normal_alignment"])
-        )
+        worst = min(qc_blocks, key=lambda item: float(item["min_triangle_normal_alignment"]))
         failure_reasons.append(
             {
                 "check": "quad_triangle_normal_alignment",
@@ -2084,13 +2053,13 @@ def build_surface_mesh(
             }
         )
     if not max_adjacent_normal_angle <= maximum_adjacent_normal_angle_deg:
-        worst = max(
-            qc_blocks, key=lambda item: float(item["max_adjacent_normal_angle_deg"])
-        )
+        worst = max(qc_blocks, key=lambda item: float(item["max_adjacent_normal_angle_deg"]))
         failure_reasons.append(
             {
                 "check": "adjacent_surface_normal_rotation",
-                "message": "At least one block has excessive wall-normal rotation between adjacent cells.",
+                "message": (
+                    "At least one block has excessive wall-normal rotation between adjacent cells."
+                ),
                 "block": worst["name"],
                 "value": max_adjacent_normal_angle,
                 "required_less_equal": maximum_adjacent_normal_angle_deg,
@@ -2236,9 +2205,7 @@ def export_surface_mesh(
 
     if not bool(report["accepted_pre_pyhyp"]):
         report["cgns"] = {"written": False, "status": "rejected_by_surface_qc"}
-        report_path.write_text(
-            json.dumps(report, indent=2, sort_keys=True), encoding="utf-8"
-        )
+        report_path.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
         summaries = []
         for reason in report.get("failure_reasons", []):
             detail = str(reason.get("check", "unknown"))
@@ -2254,9 +2221,7 @@ def export_surface_mesh(
         )
 
     report["cgns"] = {"written": False, "status": "pending_export"}
-    report_path.write_text(
-        json.dumps(report, indent=2, sort_keys=True), encoding="utf-8"
-    )
+    report_path.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
 
     try:
         cgns_metadata = _write_cgns_structured_surface(cgns_path, blocks)
@@ -2268,9 +2233,7 @@ def export_surface_mesh(
             "error_type": type(exc).__name__,
             "error": str(exc),
         }
-        report_path.write_text(
-            json.dumps(report, indent=2, sort_keys=True), encoding="utf-8"
-        )
+        report_path.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
         if require_cgns_export:
             raise
         return report
@@ -2281,7 +2244,5 @@ def export_surface_mesh(
     }
     report["cgns"] = cgns_metadata
     report["artifacts"] = artifacts
-    report_path.write_text(
-        json.dumps(report, indent=2, sort_keys=True), encoding="utf-8"
-    )
+    report_path.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
     return report

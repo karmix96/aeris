@@ -14,11 +14,14 @@ surface mesh needs a finite TE to march. The TE thickness must be chosen so it i
 manufacturable, meshable, and aerodynamically negligible — and defensible to an
 AIAA committee. Three bounds:
 
-- **Aerodynamic ceiling (this study):** ΔCd is ~linear in TE thickness (Hoerner
-  base drag). For our airfoils at our Re, TE **≤ 0.5%c** costs ≤~7 drag counts at
-  the section level, slightly *raises* CL_max (van Dam flatback), and shifts Cm
-  little. Above ~1%c the penalty becomes material. At the low-Re tip a blunt TE is
-  actually *beneficial* (mitigates laminar separation on nlf1015).
+- **Aerodynamic ceiling — WING level is the driver (this study):** the aircraft ΔCD
+  from applying the chosen floor over the whole wing (area-weighted, each section at
+  its own Re/airfoil/floor) is **≈ −0.5 drag counts (< 0.5% of total CD) —
+  negligible**, and slightly favorable (the largest %c TE is at the low-area tip,
+  where blunting *helps* at low Re). Section-level: ΔCd is ~linear in TE thickness
+  (Hoerner base drag), ≤~7 counts at ≤0.5%c, slightly *raising* CL_max (van Dam
+  flatback); >1%c becomes material — but section drag is not the driver, the wing
+  integral is.
 - **Manufacturing floor:** ≈ **0.5 mm** absolute TE for a small composite/foam/FDM
   UAV.
 - **Meshability floor:** pyHyp structured march needs a finite TE; assumed

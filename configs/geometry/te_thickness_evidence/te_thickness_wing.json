@@ -1,0 +1,24 @@
+{
+  "config": "configs/geometry/bwb.yaml",
+  "seed": 1001,
+  "cl_op": 0.4,
+  "te_frac_floor_pct": 0.25,
+  "te_abs_mm": 0.5,
+  "s_ref_m2": 0.6443883334743863,
+  "n_sections": 17,
+  "chord_root_tip_m": [
+    0.9520403997492267,
+    0.09675529544913788
+  ],
+  "te_pct_root_tip": [
+    0.25,
+    0.5167675812254007
+  ],
+  "section_d_cd_counts_min_max": [
+    -53.27359205547014,
+    0.47350167056973114
+  ],
+  "wing_dCD": -5.3870079091382495e-05,
+  "wing_dCD_counts": -0.538700790913825,
+  "generated_utc": "2026-07-25T09:19:46.402377+00:00"
+}

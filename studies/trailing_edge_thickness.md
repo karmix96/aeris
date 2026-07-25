@@ -68,15 +68,33 @@ Representative (full tables in the evidence file):
   (0.0283 → 0.0230 at 0.5%c) by mitigating laminar trailing-edge separation — so at
   the tip, where a manufacturing TE is largest in %c, blunting *helps*.
 
+## Wing-level increment (the actual driver)
+
+Section drag is informative but **not** the driver — the aircraft ΔCD is. Integrating
+the per-section blunt-TE increment over the actual wing, area-weighted
+(`standalone/te_thickness_study/wing.py`, seed 1001, each section blunted to its own
+floor `max(0.25%c, 0.5 mm)` at its own Re/airfoil):
+
+    ΔCD_wing = (2/S_ref) ∫ ΔCd(y)·c(y) dy = **−0.5 drag counts**
+
+(worst single *section* only +0.5 counts). It is slightly **negative** because the
+tip carries the largest %c TE but the least area, and the outboard low-Re sections
+get the separation *benefit* — so the tiny inboard base-drag penalty is offset.
+Against a total wing CD ≈ 100–120 counts this is **< 0.5% of total drag** — negligible.
+This is the number that defends the decision, not the section counts.
+
 ## Conclusions
 
-1. **≤0.5%c is the aerodynamically negligible range** for our airfoils and Re:
+1. **Wing-level ΔCD ≈ −0.5 drag counts (< 0.5% of total) — negligible.** The blunt-TE
+   floor has no meaningful aircraft-drag cost; the largest %c TE sits at the low-area
+   tip and is aerodynamically benign (beneficial at low Re).
+2. **≤0.5%c is the aerodynamically negligible range** for our airfoils and Re:
    ≤~7 drag counts at the section level, CL_max slightly improved, Cm small. Above
    ~1%c the drag penalty becomes material.
-2. A **0.5 mm absolute** manufacturing TE maps to **0.05%c at root, ~0.5%c at tip** —
+3. A **0.5 mm absolute** manufacturing TE maps to **0.05%c at root, ~0.5%c at tip** —
    entirely inside the negligible range, and at the tip it is aerodynamically
    *beneficial* at low Re.
-3. Recommended TE floor (DECISION-0004): **max(0.25%c, 0.5 mm) per section** — the
+4. Recommended TE floor (DECISION-0004): **max(0.25%c, 0.5 mm) per section** — the
    fractional term (meshability) governs inboard (~0.25%c ≈ 2.4 mm at root), the
    absolute term (manufacturing) governs at the tip (0.5 mm ≈ 0.5%c). Every section
    stays ≤~0.5%c ⇒ negligible aero, manufacturable, and meshable.

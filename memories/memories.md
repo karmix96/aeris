@@ -53,7 +53,9 @@ Decisions live in `decision/` (ADR-style); study write-ups in `studies/`.
   manufacturing at tip). Study (`studies/trailing_edge_thickness.md`, NeuralFoil
   sweep on our airfoils at Re tip 1.85e5 / MAC 7.7e5 / root 1.8e6): ΔCd ~linear in TE
   thickness (Hoerner); ≤0.5%c costs ≤~7 section drag counts, RAISES CL_max (van Dam),
-  small Cm; >1%c material; blunting nlf1015 at low-Re tip REDUCES drag. Applies to
+  small Cm; >1%c material; blunting nlf1015 at low-Re tip REDUCES drag. **WING-LEVEL
+  (the driver): ΔCD ≈ −0.5 drag counts (<0.5% of total), slightly favorable** —
+  area-weighted integral (wing.py), largest %c TE at low-area tip. Applies to
   the MESH TE floor. OPEN: validate 0.25%c pyHyp marchability floor; 3-D ADflow base
   drag check. pyGeo master surface stays sharp; blunt TE is a downstream mesh/mfg
   transform.

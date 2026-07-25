@@ -378,13 +378,15 @@ def fig_adaptive():
             L.append(f'<text class="val" x="{266+w+9:.0f}" y="{yy+12}">{v:.2f}%</text>')
             L.append(f'<text class="tick" x="{266+w+58:.0f}" y="{yy+12}">{nm}</text>')
     L.append("</svg>")
-    L.append('<p class="note">On the wing it was designed for — the short elevon — '
-             'smart placement is <strong>2.8× more accurate for free</strong>. On an '
-             'ordinary wing it makes no difference, and on one case it is slightly '
-             'worse. So we switch it on only when the ramp-share rule says the even '
-             'spacing is not good enough. <strong>Our first attempt at this was '
-             '10× WORSE than even spacing</strong> — it crowded sections onto the '
-             'interesting bits and left an 18 %-of-span hole everywhere else.</p>')
+    L.append('<p class="note">Smart placement wins big on the <strong>hard</strong> '
+             'wings — 4.2× on the one with the sharpest shape change, 2.3× and 1.7× on '
+             'the two odd elevons — and loses a little on easy wings that were already '
+             'near the noise floor. For a design study, where one setting must serve '
+             'every wing, what matters is the <strong>worst</strong> case: it drops '
+             'from 1.23 % to 0.84 %. <strong>Our first attempt was 10× WORSE than even '
+             'spacing</strong> — the metric had a flaw that made it blind to how much '
+             'each shape property actually varied. Finding and fixing that flaw '
+             'reversed the answer.</p>')
     L.append("</figure>")
     return "\n".join(L)
 
@@ -557,17 +559,18 @@ This is the part that did not work as hoped.</p>
 {dia_metric()}
 {fig_adaptive()}
 {settings("From Study 7", [
-  ("default", "evenly spaced sections", "with sections pinned to the elevon ends"),
-  ("smart placement", "only if ramp share > 15 %", "2.8× better on a short elevon, no help otherwise"),
-  ("the 'concentration' score", "do not use", "it predicts difficulty BACKWARDS"),
+  ("design studies (DoE)", "smart placement ON", "worst case across all wings: 1.23 % -> 0.84 %"),
+  ("one-off ordinary wing", "evenly spaced is fine", "simpler, and marginally better on easy geometry"),
+  ("the 'concentration' score", "do not use", "predicts difficulty BACKWARDS, even after the fix"),
 ], why="<strong>What the metric is, in one sentence:</strong> AVL joins sections "
        "with straight lines, so we measure how sharply the wing bends along its "
        "span — sweep, taper, twist, dihedral, thickness, camber, and whether the "
        "elevon is on — and put sections where the bending is. <strong>What went "
-       "wrong:</strong> done purely, it crowds sections onto the interesting parts "
-       "and leaves big holes elsewhere; it was up to 10× worse than even spacing. "
-       "Damping it down fixed that and left a real 2.8× gain on exactly the wing "
-       "that needed it.")}
+       "wrong the first time:</strong> the metric treated a violent kink and a "
+       "barely-visible wiggle as equally important — it recorded WHERE each property "
+       "changed but threw away HOW MUCH. So it could not tell a sharply-kinked wing "
+       "from a smooth one. Once fixed, the answer reversed: big wins on the hard "
+       "wings, small losses on the easy ones, and a third off the worst case.")}
 
 <h2><span class="num">C</span>The four bugs we found</h2>
 <div class="q">
@@ -605,6 +608,11 @@ They were not a problem at all — just a small number divided by an even smalle
 one.</li>
 <li><strong>We claimed all 19 design variables were exercised.</strong> It was 16;
 bug 3 above meant the three elevon ones were not.</li>
+<li><strong>We reported smart section placement as a failure.</strong> It was our
+metric that was broken, not the idea. It treated a violent kink and an invisible
+wiggle as equally important. Fixed, the verdict reversed — from "10× worse" to
+"a third off the worst case". <em>This one was caught by a reader asking why the
+result did not make sense.</em></li>
 </ul>
 </div>
 
@@ -621,6 +629,8 @@ model a flap exactly. We did not try it; it would probably let us drop back belo
 24 chordwise panels.</li>
 <li><strong>Choosing the number of sections automatically</strong> — the metric
 places a fixed budget, it does not yet decide the budget.</li>
+<li><strong>Re-tuning the damping</strong> after we fixed the metric. The damping
+value was set against the broken version and may no longer be the best one.</li>
 <li><strong>Spanwise vs chordwise at equal cost.</strong> We tried, but the test
 was flawed and we threw the result out rather than quote it.</li>
 <li><strong>One aircraft, one speed, one airfoil set</strong> (mh91 / e374 /

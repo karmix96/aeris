@@ -36,10 +36,17 @@ A wing is not one function, so ``ρ`` is a weighted blend over several
     camber(y) camber / airfoil transition
     gain(y)   CONTROL-SURFACE GAIN    (see below — usually the dominant channel)
 
-Each channel is normalised by its own spanwise range before differentiating, so
-the blend is dimensionless and no channel dominates through its units alone. Each
-channel's ρ_k is then normalised to unit integral, so the weights mean what they
-say.
+Each channel is scaled by a FIXED physical reference before differentiating —
+lengths by the root chord, twist by 10°, thickness/camber by 0.1 — so the blend
+is dimensionless *and* a channel that barely varies contributes proportionally
+little.
+
+**This is a correction.** The first implementation normalised each channel to its
+own range and then to unit integral. That made channels comparable but destroyed
+the magnitude information: a sweep break of 1.05 and a wiggle of 0.0002 both
+integrated to exactly 1.0, so the metric could not tell a sharply-kinked wing
+from a smooth one — the judgement it exists to make. Fixed reference scales keep
+"how much this varies" alongside "where it varies".
 
 The control channel
 -------------------
@@ -107,6 +114,16 @@ DEFAULT_CHANNEL_WEIGHTS: dict[str, float] = {
     "control_gain": 3.0,
 }
 
+# Fixed physical scales each channel is divided by before differentiating.
+# Lengths are in units of the ROOT CHORD; twist in units of 10 degrees;
+# thickness and camber in units of 0.1 (10% of chord). These make a unit of one
+# channel roughly as aerodynamically significant as a unit of another, WITHOUT
+# erasing how much each actually varies on a given wing.
+CHANNEL_REFERENCE_SCALES: dict[str, str | float] = {
+    "x_le": "root_chord", "z_le": "root_chord", "chord": "root_chord",
+    "twist": 10.0, "thickness": 0.1, "camber": 0.1, "control_gain": 1.0,
+}
+
 # Half-width, in span fractions, over which the control-gain boxcar is smoothed
 # before differentiating. A true step would put a delta at each band edge and
 # consume the whole budget; this sets how tightly sections cluster there.
@@ -139,9 +156,17 @@ class InformationProfile:
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def channel_shares(self) -> dict[str, float]:
-        """Fraction of the blended density each channel contributes."""
-        total = sum(c.weight for c in self.channels.values()) or 1.0
-        return {name: c.weight / total for name, c in self.channels.items()}
+        """Fraction of the blended density each channel ACTUALLY contributes.
+
+        Integrates weight x density per channel, so a near-flat channel reports a
+        small share. (The first implementation returned the weights themselves,
+        because per-channel normalisation had already erased the magnitudes.)
+        """
+        x = np.asarray(self.span_fraction, dtype=float)
+        parts = {name: c.weight * float(np.trapezoid(c.density, x))
+                 for name, c in self.channels.items()}
+        total = sum(parts.values()) or 1.0
+        return {name: v / total for name, v in parts.items()}
 
     def concentration(self) -> float:
         """How non-uniform the density is: 1.0 = uniform, higher = peaked.
@@ -232,37 +257,37 @@ def probe_spanwise_geometry(
     }
 
 
-def _channel_density(values: np.ndarray, y: np.ndarray, smooth: int) -> tuple[np.ndarray, np.ndarray, float]:
-    """(normalised values, unit-integral density, total variation) for one channel.
+def _channel_density(values: np.ndarray, y: np.ndarray, smooth: int,
+                     scale: float) -> tuple[np.ndarray, np.ndarray, float]:
+    """(scaled values, density, total variation) for one channel.
 
     density = |g''|^(1/2), the de Boor monitor for piecewise-LINEAR
     interpolation, which is what AVL does between sections.
+
+    ``scale`` is a FIXED physical reference (see CHANNEL_REFERENCE_SCALES), not
+    the channel's own range. The density is deliberately NOT normalised to unit
+    integral: its magnitude must survive so that a channel with a sharp break
+    outweighs one that is nearly flat.
     """
     v = np.asarray(values, dtype=float)
     span = float(np.max(v) - np.min(v))
-    if span <= _EPS:
-        # A channel that does not vary carries no information. Return zeros
-        # rather than a spurious uniform density.
+    if span <= _EPS or scale <= _EPS:
         return np.zeros_like(v), np.zeros_like(v), 0.0
-    vn = (v - float(np.min(v))) / span
+    vn = (v - float(np.min(v))) / float(scale)
 
-    # Second derivative on a possibly non-uniform y grid.
     d1 = np.gradient(vn, y, edge_order=2)
     d2 = np.gradient(d1, y, edge_order=2)
     monitor = np.sqrt(np.abs(d2))
 
     if smooth and smooth > 1:
-        # The loft's curvature is spread over a finite width by the B-spline;
-        # a short moving average suppresses probe-grid noise in the second
+        # The loft's curvature is spread over a finite width by the B-spline; a
+        # short moving average suppresses probe-grid noise in the second
         # derivative without moving the features.
         k = int(smooth) | 1
         kernel = np.ones(k) / k
         monitor = np.convolve(np.pad(monitor, k // 2, mode="edge"), kernel, mode="valid")
 
-    area = float(np.trapezoid(monitor, y))
-    if area <= _EPS:
-        return vn, np.zeros_like(monitor), span
-    return vn, monitor / area, span
+    return vn, monitor, span
 
 
 def _control_gain_channel(
@@ -333,22 +358,21 @@ def spanwise_information_profile(
             smoothing=control_edge_smoothing,
         )
 
+    root_chord = float(np.asarray(p["chord"], dtype=float)[0]) or 1.0
     channels: dict[str, InformationChannel] = {}
     blended = np.zeros_like(y)
-    weight_sum = 0.0
     for name, values in channel_sources.items():
         w = float(weights.get(name, 0.0))
-        vn, density, tv = _channel_density(values, y, smooth)
+        ref = CHANNEL_REFERENCE_SCALES.get(name, 1.0)
+        scale = root_chord if ref == "root_chord" else float(ref)
+        vn, density, tv = _channel_density(values, y, smooth, scale)
         channels[name] = InformationChannel(
             name=name, values=np.asarray(values, dtype=float), normalised=vn,
             density=density, weight=w, total_variation=tv,
         )
-        if w > 0.0 and np.any(density > 0.0):
+        if w > 0.0:
+            # NOT re-normalised per channel: magnitude must survive the blend.
             blended = blended + w * density
-            weight_sum += w
-
-    if weight_sum > 0.0:
-        blended = blended / weight_sum
     area = float(np.trapezoid(blended, y))
     span_len = float(y[-1] - y[0])
     if area <= _EPS or span_len <= _EPS:

@@ -27,7 +27,7 @@ default** in `native_avl.py`, `pygeo_avl_adapter.py` and `aeris aero pygeo-nativ
 | `spanwise_panels_per_section` | **4** | | 96/side; ≤0.54 % worst-seed |
 | `nchordwise` | **24** | *(was 8)* | CL_δe 7.7 % → ~1.1 % |
 | `cspace` | **1.0** (cosine) | | uniform halves the elevon error but costs 14× on Xnp |
-| adaptive placement | **only if** ramp fraction > 15 % | | 2.78× on a narrow band; neutral-to-worse otherwise |
+| adaptive placement | **on for DoE work** | | worst case 1.23 % → 0.84 % across the design set |
 
 Cost: **192 strips, 4608 vortices** — inside both AVL array limits.
 
@@ -87,7 +87,7 @@ Read in this order; each depends on the one before.
 | 5 | [`section_and_panel_convergence.md`](section_and_panel_convergence.md) | Geometry-section and AVL-panel convergence, **separated** | [0009](../decision/0009-lowfi-discretisation.md) |
 | 6 | [`hinge_panel_alignment.md`](hinge_panel_alignment.md) | Chordwise spacing vs the hinge; why uniform spacing is rejected. **Its "coincidence" explanation is superseded — see 0010** | 0009 |
 | 7 | [`discretisation_master_study.md`](discretisation_master_study.md) | **THE SYNTHESIS** — sections, panels, robustness across the design space, adaptive placement. Read this one first | [0010](../decision/0010-control-resolution-criterion.md) |
-| 8 | [`adaptive_section_placement.md`](adaptive_section_placement.md) | Information-metric placement: predictive claim split, prescriptive claim refuted then conditionally recovered | [0011](../decision/0011-adaptive-section-placement.md) |
+| 8 | [`adaptive_section_placement.md`](adaptive_section_placement.md) | Information-metric placement. **Contains a corrected error** — the metric's first version erased channel magnitudes; fixed, and the verdict reversed | [0011](../decision/0011-adaptive-section-placement.md) |
 
 ### The three results most likely to be challenged
 

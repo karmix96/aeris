@@ -132,14 +132,25 @@ Decisions live in `decision/` (ADR-style); study write-ups in `studies/`.
   Honest number: nchordwise=24 gives CL_δe **≤1.8%** across the hinge range (not the
   1.1% quoted at hinge 0.75 alone). 32 chordwise would give 0.76% but is 6144
   vortices — over AVL's limit. So 1.8% is the ceiling at this grid.
-- **Adaptive section placement (DECISION-0011): principal result NEGATIVE.** Pure
-  de Boor equidistribution was WORSE than uniform on all 6 designs (up to 10×),
-  while succeeding at its objective — it starved featureless regions, max gap 4.4×
-  uniform. Gradation control (uniform-mixing floor 0.15→**0.50**, a MEASURED
-  default) recovers it: 2.78× on a narrow band, neutral on benign, 0.73× on
-  max_gradient. So it is **GATED, not universal**: adapt only if
-  ramp_fraction(uniform) > 0.15. The metric's `concentration()` score predicts
-  difficulty in the WRONG DIRECTION (r=-0.813) — do not use it.
+- **Adaptive section placement (DECISION-0011) — I got this WRONG first, then
+  fixed it.** Reported as a negative result (10× worse than uniform); the cause was
+  a **design flaw in my own metric**, not the idea. Each channel was normalised to
+  UNIT INTEGRAL before blending, so a sweep break of range 1.05 and a wiggle of
+  range 0.0002 both contributed exactly 1.000 — the metric recorded WHERE each
+  property varied and destroyed HOW MUCH it mattered, i.e. the one judgement it
+  exists to make. **Fix: fixed physical reference scales** (lengths/root chord,
+  twist/10°, thickness+camber/0.1), NO per-channel re-normalisation; verified
+  against de Boor (density ∝ √amplitude). Verdict reversed:
+  max_gradient 4.21×, elevon_wide 2.25×, elevon_narrow 1.72×, easy cases 0.27–0.49×,
+  and **worst case over the set 1.23% → 0.84%** — so ADOPTED for DoE work
+  (uniform still fine for a one-off ordinary wing).
+  Two things survive the correction: `concentration()` still predicts difficulty
+  BACKWARDS (−0.813 → −0.820) so it is genuinely useless, and |g''|^(1/2) cannot
+  resolve features sharper than its smoothing window, so true kinks (control-band
+  edges) still need HARD node constraints, not density.
+  **`floor=0.50` was tuned against the BROKEN metric — re-tune it.**
+  Lesson: Mike's scepticism ("something doesn't make sense") found this. When a
+  result contradicts a strong prior, suspect the instrument before the finding.
 - **BUG CLASS TO WATCH: two pipelines, one override.** The 3 elevon DVs were
   sampled but never reached AVL — `services.generate_geometry_case` applied the
   sampled-elevon override, `build_pygeo_sections_from_config` (which reimplements

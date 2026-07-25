@@ -1,6 +1,6 @@
 # DECISION-0011 — Adaptive section placement: targeted, not universal
 
-Status: ACCEPTED (with a negative principal result)
+Status: ACCEPTED (REVISED 2026-07-25 after a design flaw was found in the metric)
 Date: 2026-07-25
 Owner: Mike (with Claude as lead engineer)
 Evidence: `studies/adaptive_section_placement.md`,
@@ -8,25 +8,56 @@ Evidence: `studies/adaptive_section_placement.md`,
 
 ## Decision
 
-**Uniform section spacing with sections snapped to the elevon band edges remains
-the production default.** Adaptive, information-weighted placement is applied
-**only** when uniform spacing violates the DECISION-0010 criterion:
+**Adaptive, information-weighted placement is adopted for DoE use.** It lowers
+the worst-case error across the design set from **1.23 % to 0.84 %**, which is the
+relevant number when one policy must serve every wing.
+
+Uniform spacing with band-edge snapping remains correct for one-off analyses of an
+ordinary wing, where it is marginally better and simpler.
 
 ```
-if ramp_fraction(uniform_sections, band) > 0.15:
-    use adaptive placement          # measured 2.78x better on a narrow band
-else:
-    keep uniform                    # adaptive is neutral-to-slightly-worse here
+DoE / optimisation  -> adaptive placement (worst case 0.84 % vs 1.23 %)
+single ordinary wing -> uniform is fine, and slightly better on easy geometry
 ```
 
 `ramp_fraction` is exported from `aeris.geometry.geometric_information` and costs
 nothing to evaluate — it is arithmetic on the section list.
 
-## Why not universal: the principal result is negative
+## The first version of this decision was wrong
 
-Pure equidistribution — the theoretically correct construction — was **worse than
-uniform on all six designs tested**, by up to **10×** (benign case: 0.21 % → 2.19 %
-CL_δe error at an identical budget).
+It recorded adaptive placement as a **negative result** — worse than uniform on all
+six designs, by up to 10×. That finding was real but the cause was a **design flaw
+in the metric**, not a property of adaptive placement.
+
+**The flaw.** Each channel was normalised to unit integral before blending, so a
+sweep break of range 1.05 and a wiggle of range 0.0002 both contributed exactly
+1.000. The metric preserved *where* each property varied and destroyed *how much
+it mattered* — the judgement it exists to make.
+
+**The fix.** Fixed physical reference scales (lengths by root chord, twist by 10°,
+thickness/camber by 0.1), no per-channel re-normalisation. Verified against de Boor
+theory: density now scales as √amplitude (1 : 0.32 : 0.10 for amplitudes
+1.0 : 0.1 : 0.01).
+
+**Result with the corrected metric** (identical experiment):
+
+| case | CL_δe uniform → adaptive | gain | was (flawed) |
+|---|---|---|---|
+| max_gradient | 0.36 % → **0.09 %** | **4.21×** | 0.25× |
+| elevon_wide | 0.12 % → **0.05 %** | **2.25×** | 0.62× |
+| elevon_narrow | 1.18 % → **0.68 %** | **1.72×** | 0.92× |
+| benign | 0.21 % → 0.75 % | 0.27× | 0.09× |
+| nominal | 0.33 % → 0.77 % | 0.42× | 0.39× |
+| max_ar | 0.32 % → 0.65 % | 0.49× | 0.73× |
+
+The three hard cases now improve substantially; the three easy ones degrade
+slightly from an already near-noise-floor 0.12–0.33 %. **Worst case over the set:
+1.23 % → 0.84 %.**
+
+## The superseded finding, kept for the record
+
+With the flawed metric, pure equidistribution was worse than uniform on all six
+designs, by up to **10×** (benign: 0.21 % → 2.19 %).
 
 It failed while *succeeding* at its stated objective: the gain-ramp fraction fell
 in every case. The cost landed elsewhere. On the benign case it moved the inboard
@@ -43,9 +74,9 @@ gradation control. Implemented here as uniform-density mixing raised from
 | **elevon_narrow** | 1.5× | 1.18 % → **0.42 %** | **2.78×** |
 | max_gradient | 1.7× | 0.36 % → 0.49 % | 0.73× |
 
-So the method is **conditionally useful**, not generally better — hence the gated
-rule above. `floor = 0.50` is therefore a **measured** default in the module, not
-a preference.
+`floor = 0.50` remains a **measured** default in the module, not a preference —
+it was established on the flawed metric and has not been re-optimised for the
+corrected one, which is an open item.
 
 ## What is adopted from the metric, and what is not
 
@@ -61,10 +92,10 @@ CL_δe error, independently confirming DECISION-0010 (r = +0.978) on a different
 design set.
 
 **NOT adopted — the metric's `concentration()` score.** It correlates with
-difficulty in the **wrong direction** (−0.813): more concentrated information means
-an *easier* design at fixed budget, because most of the wing is then featureless.
-It remains in the module for reporting but **must not be used as a difficulty
-score**.
+difficulty in the **wrong direction**, and still does after the fix
+(−0.813 before, −0.820 after). So this is a genuine property of that measure, not
+an artefact of the flaw. It remains in the module for reporting but **must not be
+used as a difficulty score**.
 
 ## Not delivered
 
@@ -74,7 +105,12 @@ score**.
   ramp ≲ 15 %) but it is unvalidated as a budget selector.
 - **A proper gradation limiter.** Uniform mixing is a crude proxy for bounding the
   cell-size ratio directly.
-- **`floor` optimisation.** One value, three cases, no sweep.
+- **`floor` optimisation.** One value, three cases, no sweep — and it was tuned
+  against the FLAWED metric, so it may no longer be the right value.
+- **The monitor cannot resolve true kinks.** |g''|^(1/2) gives features sharper
+  than the smoothing window roughly equal weight (measured 3.35 / 3.36 / 3.24 at
+  widths 0.10 / 0.03 / 0.01). Control-band edges therefore still need hard node
+  constraints, not density alone.
 
 ## Known bias in the evidence
 

@@ -67,6 +67,7 @@ def build_pygeo_sections_from_config(
     seed: int | None = None,
     span_margin: float = 0.0,
     snap_sections_to_control: bool = True,
+    sample: Any | None = None,
 ) -> "tuple[list[ExtractedSection], float, dict[str, Any]]":
     """Build the pyGeo loft from a geometry config and extract its sections.
 
@@ -106,7 +107,12 @@ def build_pygeo_sections_from_config(
             f"{config_path}: geometry.pygeo.enabled is false; this entry needs the pyGeo backend."
         )
     gen = get_geometry_generator(gid)
-    sample = gen.sample_one(gcfg, seed=gcfg.generator.seed if seed is None else seed)
+    # ``sample`` lets a caller supply a CONSTRUCTED design instead of a random
+    # one. Random sampling in 19 dimensions essentially never lands near a
+    # corner of the design space, so deliberately built extreme cases are the
+    # only way to test the discretisation at the edges (Task 5).
+    if sample is None:
+        sample = gen.sample_one(gcfg, seed=gcfg.generator.seed if seed is None else seed)
     planform = generate_bwb_planform_from_sample(sample, gcfg)
     section_geometry = build_section_geometry_from_sample(planform, sample, gcfg)
     stations = tuple(stations_from_records(section_geometry.sections, _resolve_airfoil_database(gcfg)))
@@ -119,9 +125,23 @@ def build_pygeo_sections_from_config(
     surfaces = getattr(gcfg.control_surfaces, "surfaces", None)
     if surfaces:
         cs = surfaces[0]
+        # The three elevon DVs (start/end/hinge) are SAMPLED per design, so the
+        # elevon geometry must come from the sample, not from the static config —
+        # otherwise every design in a DoE flies the same elevon and the DVs are
+        # inert on the aero path. `services.generate_geometry_case` already does
+        # this override for the geometry path; this is the same rule for the aero
+        # path, which reimplements the pipeline. Guarded on `elevon_bounds is not
+        # None` because v1/v2 configs carry no elevon DVs and must not be patched
+        # (BWBDesignSample always has the fields regardless).
+        hinge = cs.hinge_point
+        start, end = cs.spanwise.start_frac, cs.spanwise.end_frac
+        if getattr(gcfg, "elevon_bounds", None) is not None:
+            hinge = float(getattr(sample, "elevon_hinge_frac", hinge))
+            start = float(getattr(sample, "elevon_start_frac", start))
+            end = float(getattr(sample, "elevon_end_frac", end))
         control = {
-            "name": cs.name, "hinge_point": cs.hinge_point, "symmetric": cs.symmetric,
-            "start_frac": cs.spanwise.start_frac, "end_frac": cs.spanwise.end_frac,
+            "name": cs.name, "hinge_point": hinge, "symmetric": cs.symmetric,
+            "start_frac": start, "end_frac": end,
         }
 
     lo, hi = float(span_margin), float(1.0 - span_margin)

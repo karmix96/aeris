@@ -83,9 +83,13 @@ real; should be unified.
   bounds implementation error, not physical accuracy.
 - That 25 sections / 8×4 panels is a converged discretisation (DECISION-0008).
 - That 30 samples suffice for these statistics to be design-space representative
-  (Task 5). Coverage itself is confirmed: all 19 free DVs varied over essentially
-  their whole ranges (sweeps −39.2…−6.3°, all four twists, dihedrals b2/b3, all
-  three elevon DVs); only `dihedral_b1` is pinned, by design.
+  (Task 5). Coverage: **16 of 19** free DVs varied over essentially their whole
+  ranges (sweeps −39.2…−6.3°, all four twists, dihedrals b2/b3); `dihedral_b1` is
+  pinned by design. **The three elevon DVs were sampled but did NOT reach AVL** —
+  the aero entry point read the elevon from the static config, so every run flew
+  the same elevon (0.60–0.95, hinge 0.75). Fixed 2026-07-25; the +5.89 % elevon
+  bias above is therefore a single-elevon measurement, and its variation with
+  elevon geometry is unmeasured.
 - Agreement at other angles of attack, near CL_max, or in **sideslip** — the
   β ≠ 0 / δa = 0 comparison is legitimate and was wrongly excluded; it is
   outstanding.

@@ -124,10 +124,15 @@ placement matters: it raises geometric fidelity **without** spending strips.
 - **Surface split at the hinge line** — the standard AVL technique for an exactly
   resolved flap, and the principled fix for §4 rather than paying for resolution.
   Not attempted.
-- **Hinge position varies across the DoE** (`elevon_hinge_frac` 0.652–0.814),
-  so the hinge-to-edge distance and hence the elevon error vary design-space-wide.
-  This study fixes it at the nominal 0.75; the error at other hinge positions is
-  unmapped and could be worse.
+- **Hinge-position sensitivity is completely unmapped — and worse than first
+  stated.** The original wording here claimed the hinge "varies across the DoE
+  (0.652–0.814)". It did not: a defect found on 2026-07-25 meant the aero entry
+  point read the elevon from the static config rather than the sample, so **every
+  run in every study above used hinge = 0.75 exactly**. Since the elevon error is
+  a hinge/panel-edge coincidence, and `nchordwise = 24` was tuned against that one
+  hinge position, the recommendation is **only validated at hinge 0.75**. At 0.652
+  or 0.814 the hinge-to-edge distance differs and the error could exceed 24
+  panels' capability. Closing this is the first job of Task 5.
 - **One operating point** (α = 6°, δe = 4°, β = 0°). Convergence near CL_max,
   where the polar bridge clamps strips, is uncharacterised.
 - **No Richardson extrapolation.** Errors are convergence increments against the

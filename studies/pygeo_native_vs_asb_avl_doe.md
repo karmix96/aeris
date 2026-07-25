@@ -28,8 +28,19 @@ well-conditioned), β = 0°, symmetric elevon δe = 4°, V = 28 m/s, sea level,
 25 extraction sections, 8 chordwise × 4 spanwise panels per interval (192 strips,
 1536 vortices in both solvers).
 
-**Design-space coverage achieved — all 19 free design variables varied**, not just
-scale. Measured ranges over the 30 samples:
+**Design-space coverage achieved — 16 of the 19 free design variables varied.**
+
+> **CORRECTION (found 2026-07-25, after this study ran).** The three *elevon* DVs
+> below were sampled per design but **did not reach AVL**: the aero entry point
+> `build_pygeo_sections_from_config` read the elevon geometry from the static
+> config instead of the sample, so **every run in this study flew the same elevon**
+> (start 0.60, end 0.95, hinge 0.75). The 16 planform and section DVs did vary and
+> did reach the geometry, so every conclusion about solver equivalence stands —
+> both solvers always saw identical geometry. What does **not** hold is any claim
+> that the elevon geometry was exercised. Fixed in `pygeo_avl_adapter.py`;
+> re-exercising it is Task 5's job.
+
+Measured sample ranges over the 30 designs:
 
 | DV | range sampled | | DV | range sampled |
 |---|---|---|---|---|
@@ -44,10 +55,11 @@ scale. Measured ranges over the 30 samples:
 | **sw2** | **−34.1 … −15.4°** | | elevon_end_frac | 0.851 – 0.977 |
 | **sw3** | **−23.6 … −6.3°** | | elevon_hinge_frac | 0.652 – 0.814 |
 
-Derived: AR **3.11 – 6.62**, full span **1.52 – 2.49 m**. Every sweep, twist,
-dihedral and elevon variable spans essentially its whole DECISION-0002 range, so
-this is a genuine design-space sweep and not a scale sweep. `dihedral_b1` is
-pinned at 0 by design (flat root panel, DECISION-0002 §3).
+Derived: AR **3.11 – 6.62**, full span **1.52 – 2.49 m**. Every sweep, twist and
+dihedral variable spans essentially its whole DECISION-0002 range, so this is a
+genuine planform sweep and not a scale sweep. `dihedral_b1` is pinned at 0 by
+design (flat root panel, DECISION-0002 §3). The three elevon rows are the
+*sampled* ranges — see the correction above; they were not seen by AVL.
 
 ### Scope restriction, and why it is not a dodge
 
@@ -244,7 +256,8 @@ Symmetric control authority, signed (ASB − native)/native across all 30 sample
 | same sign in all 30 samples | **yes** |
 
 A ±0.39 % spread on a +5.89 % offset, with no sign changes in 30 independent
-geometries, is a systematic bias — precisely the elevon over-extension identified
+geometries, is a systematic bias — **measured at one fixed elevon geometry**
+(0.60–0.95, hinge 0.75); how the bias varies with elevon geometry is unmeasured — precisely the elevon over-extension identified
 in DECISION-0005: AeroSandbox tags one section *outboard* of `elevon_end_frac`,
 so its elevon always reaches further toward the tip, where the moment arm is
 largest. The native path's elevon matches the geometry's band exactly.

@@ -114,9 +114,11 @@ Read in this order; each depends on the one before.
   come from the high-fidelity ADflow path.
 - **Surface split at the hinge line** — the principled fix for the elevon
   resolution rather than paying for chordwise panels. Not attempted.
-- **Hinge position varies across the DoE** (`elevon_hinge_frac` 0.652–0.814), so
-  the hinge-to-edge distance and hence the elevon error vary design-space-wide;
-  mapped only at the nominal 0.75.
+- **The panelling is validated at hinge = 0.75 ONLY.** A defect found 2026-07-25
+  meant the three elevon DVs never reached AVL — every run in every study used
+  elevon 0.60–0.95 at hinge 0.75. Since the chordwise recommendation is driven by
+  a hinge/panel-edge coincidence, `nchordwise = 24` is unvalidated at other hinge
+  positions (the DV range is 0.652–0.814). Fixed; Task 5 closes it.
 - **One operating point** (α = 6°). Near-CL_max behaviour, where the polar bridge
   clamps strips outside the 2-D polar range, is uncharacterised.
 - **Cref definition mismatch** of 0.13 % between the paths (∫c²dy/S vs

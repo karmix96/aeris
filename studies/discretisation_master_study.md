@@ -1,10 +1,12 @@
 # Master study — Discretisation of the low-fidelity aerodynamic model
 
 Sections, AVL panels, and the robustness of both across the design space.
-Synthesises Tasks 3–5; Task 6 (adaptive placement) follows from §6.
+Synthesises Tasks 3–6.
 
 Date: 2026-07-25
-Decisions: `decision/0009-lowfi-discretisation.md`, `decision/0010-control-resolution-criterion.md`
+Decisions: `decision/0009-lowfi-discretisation.md`,
+`decision/0010-control-resolution-criterion.md`,
+`decision/0011-adaptive-section-placement.md`
 Evidence: `configs/aero/lowfi_discretisation_evidence/`,
 `configs/aero/discretisation_robustness_evidence/`,
 `configs/aero/native_avl_doe_evidence/`
@@ -17,7 +19,7 @@ Evidence: `configs/aero/lowfi_discretisation_evidence/`,
 |---|---|---|
 | `n_sections` | **25** | ≤0.56 % worst-seed on forces + stability derivatives |
 | `span_margin` | **0.0** | full span; any inset opens a centreline gap |
-| section placement | snapped to elevon band edges | **conditional — see §6** |
+| section placement | snapped to elevon band edges; adaptive **only** if ramp fraction > 15 % | see §6, §7 |
 | `spanwise_panels_per_section` | **4** | ≤0.54 % worst-seed |
 | `nchordwise` | **24** | CL_δe ≤1.8 % across the full hinge range 0.652–0.814 |
 | `cspace` | **1.0** (cosine) | uniform halves the elevon error but costs 14× on Xnp |
@@ -224,7 +226,7 @@ inviscid, no control surfaces) recommended **25 sections, ~4 spanwise per segmen
 
 ---
 
-## 8. What is confounded, weak, or open
+## 9. What is confounded, weak, or open
 
 Stated plainly, because a committee will find these anyway.
 
@@ -252,10 +254,16 @@ Stated plainly, because a committee will find these anyway.
 - Only cosine and uniform chordwise spacing tested; AVL also offers sine and −1.
 - **A surface split at the hinge line** — the principled way to resolve a flap
   exactly — was not attempted, and would likely supersede the N_flap trade-off.
+- **Adaptive-placement evidence is biased toward uniform**: both candidates are
+  measured against a *uniform* 49-section reference, so uniform-25 shares its
+  distribution family. The 10× failure is far too large to be explained by it, but
+  the 2.78× gain is conservative.
+- **Budget selection is not delivered** — the metric places a fixed budget, it does
+  not yet choose one.
 
 ---
 
-## 9. Conclusions
+## 10. Conclusions
 
 1. **Use 25 sections / 4 spanwise / 24 chordwise / cosine**, full span, sections
    snapped to the elevon band edges. 4608 vortices.
@@ -268,8 +276,8 @@ Stated plainly, because a committee will find these anyway.
 4. The grid is robust across geometry extremes — AR 2.25–7.85, maximum sweep,
    twist and dihedral gradients, both hinge bounds — at ≤0.5 %.
 5. **It is not robust for a narrow elevon band** (4.34 %), and the fix is section
-   *placement* at the band edges, not section count. That is Task 6's mandate, now
-   with a measured target rather than an aesthetic one.
+   *placement* at the band edges, not section count — worth 2.78× when gated on
+   the ramp criterion (§7).
 6. The recommendation agrees exactly with an independent earlier study on sections
    and spanwise panels; the chordwise difference is fully explained by that study
    having no control surfaces to resolve.

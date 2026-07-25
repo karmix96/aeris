@@ -27,6 +27,7 @@ default** in `native_avl.py`, `pygeo_avl_adapter.py` and `aeris aero pygeo-nativ
 | `spanwise_panels_per_section` | **4** | | 96/side; ≤0.54 % worst-seed |
 | `nchordwise` | **24** | *(was 8)* | CL_δe 7.7 % → ~1.1 % |
 | `cspace` | **1.0** (cosine) | | uniform halves the elevon error but costs 14× on Xnp |
+| adaptive placement | **only if** ramp fraction > 15 % | | 2.78× on a narrow band; neutral-to-worse otherwise |
 
 Cost: **192 strips, 4608 vortices** — inside both AVL array limits.
 
@@ -84,7 +85,9 @@ Read in this order; each depends on the one before.
 | 3 | [`pygeo_native_vs_asb_avl_doe.md`](pygeo_native_vs_asb_avl_doe.md) | Native ≡ AeroSandbox design-space-wide (30 samples); the entire residual is the elevon | [0007](../decision/0007-native-avl-is-the-production-lowfi-solver.md) |
 | 4 | [`native_avl_physics_validation.md`](native_avl_physics_validation.md) | Independent closed-form validation, 11/11 — the leg code-to-code comparison cannot provide | [0008](../decision/0008-native-avl-verification-standard.md) |
 | 5 | [`section_and_panel_convergence.md`](section_and_panel_convergence.md) | Geometry-section and AVL-panel convergence, **separated** | [0009](../decision/0009-lowfi-discretisation.md) |
-| 6 | [`hinge_panel_alignment.md`](hinge_panel_alignment.md) | Why the elevon error is a hinge/panel-edge coincidence, and why uniform spacing is rejected | 0009 |
+| 6 | [`hinge_panel_alignment.md`](hinge_panel_alignment.md) | Chordwise spacing vs the hinge; why uniform spacing is rejected. **Its "coincidence" explanation is superseded — see 0010** | 0009 |
+| 7 | [`discretisation_master_study.md`](discretisation_master_study.md) | **THE SYNTHESIS** — sections, panels, robustness across the design space, adaptive placement. Read this one first | [0010](../decision/0010-control-resolution-criterion.md) |
+| 8 | [`adaptive_section_placement.md`](adaptive_section_placement.md) | Information-metric placement: predictive claim split, prescriptive claim refuted then conditionally recovered | [0011](../decision/0011-adaptive-section-placement.md) |
 
 ### The three results most likely to be challenged
 
@@ -123,8 +126,10 @@ Read in this order; each depends on the one before.
   clamps strips outside the 2-D polar range, is uncharacterised.
 - **Cref definition mismatch** of 0.13 % between the paths (∫c²dy/S vs
   `mean_aerodynamic_chord()`); moves Cmu and Cmα by 0.129 %.
-- **Whether 30 samples / 5 seeds suffice** for these statistics to be
-  design-space representative — the next study.
+- **Budget selection** — the information metric places a fixed section budget but
+  does not yet choose one.
+- **Whether chordwise is a better buy than spanwise at fixed cost** — the equal-cost
+  grid trade was confounded and no dominating reference fits in AVL's arrays.
 
 ---
 

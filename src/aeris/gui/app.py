@@ -2311,7 +2311,9 @@ def pg_geometry(root, exe, tmo, dry):
             p_plot = cp1.checkbox("Save planform plot", value=False, key="gpyg_plot")
             p_metrics = cp2.checkbox("Save metrics", value=True, key="gpyg_metrics")
             st.markdown("**pyGeo exports** (off by default):")
-            e1, e2, e3, e4 = st.columns(4)
+            # Neutral base exports only. CAD (STEP/STL/OBJ/VTK + split-elevon) lives
+            # in the "⑤ CAD export" tab — geometry creation stays lean.
+            e1, e2 = st.columns(2)
             exports: list[str] = []
             if e1.checkbox("IGES", key="gpyg_iges"):
                 exports.append("iges")
@@ -2321,18 +2323,8 @@ def pg_geometry(root, exe, tmo, dry):
                 exports.append("sections")
             if e2.checkbox("Surface NPZ", key="gpyg_npz"):
                 exports.append("npz")
-            if e3.checkbox("STEP", key="gpyg_step"):
-                exports.append("step")
-            if e3.checkbox("STL", key="gpyg_stl"):
-                exports.append("stl")
-            if e4.checkbox("OBJ", key="gpyg_obj"):
-                exports.append("obj")
-            if e4.checkbox("VTK", key="gpyg_vtk"):
-                exports.append("vtk")
-            p_cad = st.checkbox(
-                "Build split-elevon physical CAD", value=False, key="gpyg_cad",
-                help="Heavy (CadQuery/OCC). CAD exports (STEP/STL/OBJ/VTK) auto-enable this.",
-            )
+            st.caption("STEP / STL / OBJ / VTK and split-elevon CAD → use the "
+                       "**⑤ CAD export** tab.")
             st.checkbox(
                 "Save inspection CSVs (detail)", value=False, key="gpyg_detail",
                 help="Write-only authored/extracted/cst + planform CSVs. Off keeps "
@@ -2343,8 +2335,6 @@ def pg_geometry(root, exe, tmo, dry):
                 p_args += ["--seed", p_seed.strip()]
             if exports:
                 p_args += ["--exports", ",".join(exports)]
-            if p_cad:
-                p_args.append("--physical-cad")
             p_args.append("--save-plot" if p_plot else "--no-save-plot")
             p_args.append("--save-metrics" if p_metrics else "--no-save-metrics")
             p_args.append(

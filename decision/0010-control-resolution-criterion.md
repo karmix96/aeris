@@ -54,29 +54,39 @@ penalty persists under refinement.
 
 ## Validity envelope of the production grid
 
-25 / 4 / 24 holds to **≤0.5 %** on constructed extremes spanning AR **2.25–7.85**,
-maximum sweep, twist and dihedral gradients, and **both hinge bounds** — the
-geometry extremes are all non-issues.
+25 / 4 / 24 holds to **≤1.3 %** on all nine constructed extremes spanning
+AR **2.25–7.85**, maximum sweep, twist and dihedral gradients, and **both hinge
+bounds** — the geometry extremes are all non-issues.
 
-It **fails for a narrow elevon band**: 0.70–0.85 gives CL_δe **4.34 %**, because
-the ramp fraction reaches 38.9 % against 11.8 % for a normal band.
+**Narrow elevon bands are the binding case, but no longer a failure.** A
+0.70–0.85 band drives the uniform ramp fraction to 38.9 % against 11.8 % for a
+normal band, and the error tracks it. Originally measured at **4.34 %**; that was
+inflated by band-edge snapping *moving* a section onto each edge (which widens the
+ramp to 23 % even on a normal band). With snapping corrected to *insert*
+(DECISION-0005), the same case measures **1.18 % uniform / 0.74 % adaptive**. The
+mechanism stands; the severity was partly self-inflicted.
 
 Across the full hinge range, CL_δe is **≤1.8 %** (worst at hinge 0.814), not the
 1.1 % previously quoted at hinge 0.75 alone. Reaching ≤1 % everywhere needs 32
 chordwise = 6144 vortices, **over AVL's array limit**. So 1.8 % is the accuracy
 ceiling at this grid, and improving it requires placement, not count.
 
-## Consequence: uniform section spacing is the wrong distribution
+## Consequence: where uniform spacing is misallocated, placement beats count
 
-At an **identical 25-section budget**, moving sections toward the band edges
-reduces the ramp fraction 38.9 % → 26.7 % → 13.3 % and moves CL_δe monotonically
-(0.004191 → 0.004119 → 0.004061), recovering ~3.2 % of the 4.34 % error **without
-spending a section**.
+Head-to-head at matched conditions against a common 49-section reference:
 
-Uniform spacing is therefore not *insufficient*, it is *misallocated*. Adaptive
-placement (Task 6) now has a measured target — the ramp-fraction criterion — in
-place of an aesthetic one, and the control-band edges are a required feature of
-any information metric used to drive it.
+| design | placement | ramp | CL_δe error |
+|---|---|---|---|
+| narrow band | uniform (27 sec) | 38.9 % | 1.18 % |
+| narrow band | **adaptive (25 sec)** | 25.0 % | **0.68 %** — 1.7× better |
+| normal band | **uniform (27 sec)** | 11.8 % | **0.33 %** — 2.4× better |
+| normal band | adaptive (25 sec) | 5.0 % | 0.78 % |
+
+Uniform spacing is *misallocated* only where the ramp criterion is breached, and
+correct where it is not. That is why DECISION-0011 gates adaptive placement on
+this criterion rather than applying it everywhere: the gate picks the winner in
+both directions. The control-band edges are a required feature of any information
+metric used to drive it.
 
 ## Explicitly not established
 

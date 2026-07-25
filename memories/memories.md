@@ -179,6 +179,16 @@ Decisions live in `decision/` (ADR-style); study write-ups in `studies/`.
   **Two of my own decisions were in tension and nothing caught it until the gate
   misfired.**
 
+- **RE-RUN after the snapping fix (2026-07-25).** Only Task 5 extremes could
+  change a decision, and it did: **elevon_narrow 4.34% → 0.74%**. The "narrow
+  elevon fails" headline was largely an artefact of moving-snap. All nine extremes
+  now ≤1.3%. Head-to-head at matched conditions validates the auto gate BOTH ways:
+  narrow → adaptive 0.68% vs uniform 1.18% (1.7×); normal → uniform 0.33% vs
+  adaptive 0.78% (2.4×). DECISION-0011 now rests on that instead of on a failure.
+  Unaffected and NOT re-run: Tasks 1(vs-ASB)/2/3 (both sides saw identical
+  sections, so comparisons cancel), Task 4 physics validation (synthetic wings,
+  never touches that code path), Task 6 (its uniform baseline already inserted).
+
 ## Project state (2026-07-24)
 
 - **pyGeo backend committed** and decoupled from AeroSandbox (geometry import graph

@@ -146,19 +146,29 @@ Production grid vs a 33/4/20 reference:
 
 | case | AR | span | band | CL | CDind | CL_δe | **worst** |
 |---|---|---|---|---|---|---|---|
-| benign (simple) | 4.16 | 2.00 | 0.55–0.92 | 0.12 % | 0.19 % | 0.14 % | **0.19 %** |
-| hinge_min (0.650) | 4.62 | 1.98 | 0.55–0.92 | 0.02 % | 0.27 % | 0.49 % | **0.49 %** |
-| hinge_max (0.820) | 4.62 | 1.98 | 0.55–0.92 | 0.10 % | 0.43 % | 0.06 % | **0.43 %** |
-| max_gradient | 5.24 | 1.98 | 0.55–0.92 | 0.10 % | 0.34 % | 0.27 % | **0.34 %** |
-| max_ar | **7.85** | 2.50 | 0.55–0.92 | 0.01 % | 0.21 % | 0.34 % | **0.42 %** |
-| min_ar | **2.25** | 1.50 | 0.55–0.92 | 0.16 % | 0.34 % | 0.08 % | **0.34 %** |
-| max_dihedral | 4.62 | 1.98 | 0.55–0.92 | 0.07 % | 0.37 % | 0.16 % | **0.37 %** |
-| elevon_wide | 4.62 | 1.98 | 0.50–0.98 | 0.04 % | 0.57 % | 1.13 % | **1.45 %** |
-| **elevon_narrow** | 4.62 | 1.98 | **0.70–0.85** | 0.36 % | 0.82 % | **4.34 %** | **4.34 %** |
+| benign (simple) | 4.16 | 2.00 | 0.55–0.92 | 0.25 % | 0.45 % | 1.10 % | **1.10 %** |
+| hinge_min (0.650) | 4.63 | 1.98 | 0.55–0.92 | 0.24 % | 0.55 % | 0.75 % | **0.75 %** |
+| hinge_max (0.820) | 4.63 | 1.98 | 0.55–0.92 | 0.29 % | 0.68 % | 1.30 % | **1.30 %** |
+| max_gradient | 5.24 | 1.98 | 0.55–0.92 | 0.29 % | 0.70 % | 1.10 % | **1.10 %** |
+| max_ar | **7.85** | 2.50 | 0.55–0.92 | 0.21 % | 0.68 % | 1.07 % | **1.07 %** |
+| min_ar | **2.25** | 1.50 | 0.55–0.92 | 0.31 % | 0.62 % | 0.91 % | **0.91 %** |
+| max_dihedral | 4.63 | 1.98 | 0.55–0.92 | 0.27 % | 0.63 % | 1.09 % | **1.09 %** |
+| elevon_wide | 4.62 | 1.98 | 0.50–0.98 | 0.21 % | 0.53 % | 0.78 % | **0.78 %** |
+| elevon_narrow | 4.63 | 1.98 | **0.70–0.85** | 0.25 % | 0.59 % | 0.74 % | **0.74 %** |
 
-**Seven of nine hold at ≤0.5 %**, including AR 2.25 and AR 7.85 — well outside the
-DoE's nominal 2.6–6.2. Aspect ratio, sweep, twist and dihedral extremes are all
-non-issues. **Both failures are elevon-band cases.**
+**All nine hold at ≤1.3 %**, including AR 2.25 and AR 7.85 — well outside the
+DoE's nominal 2.6–6.2. Aspect ratio, sweep, twist, dihedral and hinge extremes are
+all non-issues.
+
+> **RE-RUN 2026-07-25 after the snapping correction.** The first pass of this
+> table showed **elevon_narrow failing at 4.34 %**, and that failure carried a lot
+> of weight in DECISION-0010 and DECISION-0011. It was largely an artefact of
+> band-edge snapping *moving* the nearest section onto the edge, which widened the
+> gain ramp to 23 % of band width. With snapping corrected to *insert*, the same
+> case measures **0.74 %**. The ramp-fraction mechanism is unchanged and still
+> confirmed — the narrow band's uniform ramp is 38.9 % against 11.8 % for a normal
+> one, and the errors track it — but the production grid no longer *fails*
+> anywhere in this set.
 
 ---
 

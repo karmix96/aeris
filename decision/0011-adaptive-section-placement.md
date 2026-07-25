@@ -20,6 +20,21 @@ DoE / optimisation  -> adaptive placement (worst case 0.84 % vs 1.23 %)
 single ordinary wing -> uniform is fine, and slightly better on easy geometry
 ```
 
+**Validated head-to-head 2026-07-25**, at matched conditions against a common
+49-section reference, after the snapping correction:
+
+| design | placement | ramp | CL_δe error | |
+|---|---|---|---|---|
+| narrow band | uniform (27 sec) | 38.9 % | 1.18 % | |
+| narrow band | **adaptive (25 sec)** | 25.0 % | **0.68 %** | **1.7× better** |
+| normal band | **uniform (27 sec)** | 11.8 % | **0.33 %** | **2.4× better** |
+| normal band | adaptive (25 sec) | 5.0 % | 0.78 % | |
+
+**The `auto` gate picks the winner in both directions** — adaptive where uniform
+is weak, uniform where it is strong. That is the cleanest justification this
+decision has, and it replaces the earlier argument which rested on a narrow-band
+failure that was partly an artefact of the old snapping.
+
 **Wired 2026-07-25.** `geometry.aero_discretisation.section_placement` selects
 `auto` (default) | `always` | `never`. `auto` engages adaptive placement only when
 uniform spacing breaches `ramp_fraction_limit` (0.15), which in practice means

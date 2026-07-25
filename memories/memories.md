@@ -110,6 +110,45 @@ Decisions live in `decision/` (ADR-style); study write-ups in `studies/`.
   vortices.** 49/4/16 and 65/4/* both FAIL. Studies:
   `studies/section_and_panel_convergence.md`, `studies/hinge_panel_alignment.md`.
 
+- **CONTROL RESOLUTION is the binding low-fi error (DECISION-0010, 2026-07-25).**
+  Not wing resolution. AVL smears a control at its EDGES — chordwise at the hinge,
+  spanwise at the band ends — and the error is set by how much of the control the
+  smearing occupies. One criterion replaces two tuned numbers:
+  **N_flap ≥ 6** (chordwise panels aft of the hinge; error ~ N_flap^-1.47, R²0.966)
+  and **ramp fraction ≲ 15%** (gain-ramp width outside the band edges / band width;
+  r = +0.978, re-confirmed +0.964 on an independent set). PREDICTIVE — estimable
+  from geometry before running AVL. `ramp_fraction()` is in
+  `aeris.geometry.geometric_information`.
+  **I published a WRONG mechanism first** (hinge/panel-edge "coincidence") and a
+  hinge sweep killed it: within-chordwise-level corr(edge distance, error) =
+  +0.611/+0.077/-0.040/-0.163, inconsistent. At nchordwise=24 the hinge with EXACT
+  edge alignment is not the most accurate. Lesson: pooled correlations across a
+  refinement level are confounded by the level.
+- **Robustness (Task 5):** 25/4/24 holds ≤0.5% on 9 CONSTRUCTED extremes —
+  AR 2.25–7.85, max sweep/twist/dihedral, both hinge bounds. Geometry extremes are
+  a NON-ISSUE. Both failures are elevon-BAND: narrow band (0.70–0.85) = 4.34%.
+  Random sampling CANNOT reach a 19-D corner (0.2^19 ≈ 5e-14) — extremes must be
+  BUILT. `build_pygeo_sections_from_config(sample=...)` accepts a constructed design.
+  Honest number: nchordwise=24 gives CL_δe **≤1.8%** across the hinge range (not the
+  1.1% quoted at hinge 0.75 alone). 32 chordwise would give 0.76% but is 6144
+  vortices — over AVL's limit. So 1.8% is the ceiling at this grid.
+- **Adaptive section placement (DECISION-0011): principal result NEGATIVE.** Pure
+  de Boor equidistribution was WORSE than uniform on all 6 designs (up to 10×),
+  while succeeding at its objective — it starved featureless regions, max gap 4.4×
+  uniform. Gradation control (uniform-mixing floor 0.15→**0.50**, a MEASURED
+  default) recovers it: 2.78× on a narrow band, neutral on benign, 0.73× on
+  max_gradient. So it is **GATED, not universal**: adapt only if
+  ramp_fraction(uniform) > 0.15. The metric's `concentration()` score predicts
+  difficulty in the WRONG DIRECTION (r=-0.813) — do not use it.
+- **BUG CLASS TO WATCH: two pipelines, one override.** The 3 elevon DVs were
+  sampled but never reached AVL — `services.generate_geometry_case` applied the
+  sampled-elevon override, `build_pygeo_sections_from_config` (which reimplements
+  the pipeline for the AERO path) did not. Every aero run before 2026-07-25 flew
+  elevon 0.60–0.95 at hinge 0.75. Invisible to every check: geometry built fine,
+  both solvers saw the same elevon so they still agreed. Guarded by
+  `tests/aero/test_elevon_dvs_reach_avl.py`. **Whenever a second pipeline
+  reimplements a first, diff the override steps.**
+
 ## Project state (2026-07-24)
 
 - **pyGeo backend committed** and decoupled from AeroSandbox (geometry import graph

@@ -72,6 +72,21 @@ Decisions live in `decision/` (ADR-style); study write-ups in `studies/`.
   Verified vs ASB: NO field missing, clean symmetric case agrees ≤0.6% (CLα 8e-7,
   Xnp 1e-5). Study: `studies/native_avl_output_and_fidelity.md`.
 
+- **Low-fi viscous+thickness model (DECISION-0006, 2026-07-25) — VERIFIED, not
+  assumed.** `CD = cd_ind_AVL + cd_profile_NeuralFoil`; AVL's two per-section
+  hooks are both used and both proven PRESENT/CORRECT/ACTIVE by ablation:
+  **CDCL** (25/25 sections, per-section CST NeuralFoil at the section's own Re;
+  independent refit agrees 4.3e-7; CDvis 0→0.00663 on toggle; tip 3.8× draggier
+  than root from Re alone) and **CLAF** = 1+0.77·t/c (16 distinct values from 4
+  authored airfoils; t/c 15.00%→10.93%→15.07% recovers mh91→e374→nlf1015;
+  ablation CLα 3.484→3.685, ratio 1.0576 vs lifting-line 1.0641 — 0.6% apart,
+  proving it acts as a SECTION property diluted by 3-D downwash).
+  **Verification standard adopted: presence in the .avl is NOT evidence** — an
+  ablation must move AVL's answer by the *predicted magnitude*. (The OPER `v`
+  toggle once silently disabled viscous forces with CDCL still in the file.)
+  Strip integration is PRIMARY, AVL CDtot is the audit — they differ 4.28%,
+  which is the 3-point CDCL fit's own error. Study: `studies/avl_section_corrections.md`.
+
 ## Project state (2026-07-24)
 
 - **pyGeo backend committed** and decoupled from AeroSandbox (geometry import graph

@@ -1,0 +1,21 @@
+Task 2 — AVL section corrections: CDCL (viscous) and CLAF (thickness)
+baseline seed, alpha=6.0 deg, 25 sections, V=28.0 m/s
+
+(a) CDCL — viscous profile drag from per-section CST NeuralFoil polars
+  PRESENT   : 25/25 sections carry a real CDCL triplet (runner reported n_cdcl_injected=25)
+              viscous OFF leaves 25/25 zero placeholders
+  RESOLVED  : 25 distinct min-drag cd values across 25 sections
+              cd_min root=0.00547 mid=0.00637 tip=0.02065
+  CORRECT   : max |injected - independent NeuralFoil refit| = 4.28e-07
+  ACTIVE    : CDvis 0.0 (off) -> 0.00663 (on);  strip cd_profile 0.006926
+              AVL CDvis vs independent strip integration: 4.28% apart
+
+(b) CLAF — thickness lift-slope correction
+  PRESENT   : 25/25 sections
+  CORRECT   : max |written - (1 + 0.77*t/c) recomputed independently| = 1.46e-06
+  RESOLVED  : 16 distinct values; t/c 0.1500 (root) -> 0.1093 (min) -> 0.1507 (tip)
+  ACTIVE    : CLa 3.48426 (CLAF=1) -> 3.68502 (CLAF as written)
+              measured ratio 1.05762; mean CLAF written 1.10096
+              lifting-line prediction (AR=4.133, e=0.9250): 1.06406
+              -> CLAF acts as a SECTION property diluted by 3-D downwash,
+                 exactly as it should (ratio < mean CLAF, and > 1).

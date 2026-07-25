@@ -12,6 +12,7 @@ All runs: `configs/geometry/bwb.yaml` at its default seed, 28 m/s, sea level,
 | `span_margin_probe.txt` / `.json` | Span-margin sensitivity sweep (0.02 → 0.0). Shows the old 2 % inset understated CL by 54.9 % and CLα by 26.2 % via the YDUPLICATE centreline gap. Regenerate: `python standalone/lowfi_avl_study/probe_span_margin.py` |
 | `verification_report.txt` / `.json` | Field-by-field native vs AeroSandbox comparison over three cases (clean symmetric / pitch control / lateral). Fields missing in native: NONE. Case A agrees to ≤0.6 %. Regenerate: `python standalone/lowfi_avl_study/verify_native_vs_asb.py` |
 | `native_avl_result_example.json` | A complete `NativeAvlResult` dump — the reference for what the hardened runner now captures (e, Xnp, 25 stability + 18 body derivatives, per-control authority, hinge moments, surface forces, discretisation counts). |
+| `viscous_claf_verification.txt` / `.json` | Task 2: proof that CDCL (viscous) and CLAF (thickness) are PRESENT / CORRECT / ACTIVE and section-resolved, each on three independent axes incl. ablation. Regenerate: `python standalone/lowfi_avl_study/verify_viscous_and_claf.py` |
 | `example_avl_stability_dump.txt` | The raw AVL `st` dump the parsers are tested against, including the `d01`/`d02` control-derivative columns. |
 
 ## Headline numbers
@@ -21,3 +22,6 @@ All runs: `configs/geometry/bwb.yaml` at its default seed, 28 m/s, sea level,
 - Native vs ASB, clean symmetric: CLα 8e-7, Xnp 1e-5, CD 5e-4, CL 5.2e-3.
 - ASB reference path has **zero** differential (roll) elevon authority — its AVL
   exporter emits a single `all_deflections` control variable.
+- CDCL + CLAF both verified active: 25/25 sections injected, independent refit
+  agrees to 4.3e-7, CDvis 0 -> 0.00663 on toggle; CLAF ablation moves CLa
+  3.484 -> 3.685, ratio 1.0576 vs lifting-line 1.0641 (0.6% apart).

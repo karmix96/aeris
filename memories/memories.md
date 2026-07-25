@@ -59,6 +59,19 @@ Decisions live in `decision/` (ADR-style); study write-ups in `studies/`.
   drag check. pyGeo master surface stays sharp; blunt TE is a downstream mesh/mfg
   transform.
 
+- **Native AVL fidelity + capture (DECISION-0005, 2026-07-25):** three things.
+  (1) The native runner now captures the COMPLETE AVL output family (e, Xnp, 25
+  stability + 18 body derivatives, per-control authority derivs, hinge moments,
+  surface forces, strips, shear/bending) into `native_avl_result.json`; parsers
+  live in the shared asb-free `aero/solvers/avl_output.py` used by BOTH solvers.
+  (2) **`span_margin` default 0.02 → 0.0 (FULL span).** The 2% inset left a
+  32.6 mm centreline GAP under YDUPLICATE → spurious inboard tip vortices:
+  CL was −54.9%, CLα −26.2% (2.741 vs 3.715 /rad), L/D halved. **All low-fi aero
+  numbers from before 2026-07-25 are invalid.** (3) Elevon now spans exactly its
+  geometric band (edge sections snapped + both boundaries tagged): CL_δe +16.7%.
+  Verified vs ASB: NO field missing, clean symmetric case agrees ≤0.6% (CLα 8e-7,
+  Xnp 1e-5). Study: `studies/native_avl_output_and_fidelity.md`.
+
 ## Project state (2026-07-24)
 
 - **pyGeo backend committed** and decoupled from AeroSandbox (geometry import graph
@@ -97,7 +110,22 @@ Decisions live in `decision/` (ADR-style); study write-ups in `studies/`.
 - **NeuralFoil hard-depends on aerosandbox** (imports it at load) — zero-aerosandbox
   viscous is impossible while using NeuralFoil; the target is only "no asb.Airplane".
 - **AVL `.avl` airfoil files must be ≤ IBX (~360 pts)** — native writer downsamples
-  (cst_points=80 → 159-pt loop); AeroSandbox uses ~99.
+  (cst_points=80 → 159-pt loop); AeroSandbox uses ~99. This 80-vs-181-point camber
+  difference is the whole residual ~0.5% CL gap between the native and ASB paths.
+- **The ASB reference path CANNOT do roll.** AeroSandbox's AVL exporter collapses
+  every control surface into ONE variable `all_deflections` (SgnDup +1); AVL
+  reports "1 Control variables", so the `d2` keystroke hits nothing and δa is
+  silently ignored (measured Cl_roll = the sideslip term alone). Its elevon also
+  over-extends to the tip. Only the NATIVE path models differential elevon —
+  which is what the 3 elevon DVs exist to optimise. Don't trust ASB-path lateral
+  numbers.
+- **AVL interpolates control gain linearly between sections** — a control band
+  edge exists only where a SECTION declares the control. Tag both boundary
+  sections, and snap sections onto the band edges, or the elevon extent quantises
+  to the section grid (staircase response vs the elevon DVs).
+- **No CG exists yet** → AVL Xref=(0,0,0) is the geometry origin, not the CG, so
+  `static_margin` is deliberately NOT reported (only `x_np_over_c_ref`). Pass
+  `moment_reference_m=` + `moment_reference_is_cg=True` once a mass model exists.
 - **`section_bounds.airfoil_name`** is the fallback airfoil (overridden per station
   by `station_airfoils`); kept = root airfoil to avoid confusion.
 - **Generator-id rename gotcha:** renaming GENERATOR_ID to `bwb_segmented` broke

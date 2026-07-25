@@ -1,0 +1,11 @@
+Span-margin sensitivity of the native pyGeo->AVL model
+baseline seed, alpha=3.0 deg, 25 sections, viscous on
+(margin 0.0 = full span = the correct model; % = deviation from it)
+
+  margin     gap_m        CL      CLa       e     L/D     Bref   CL err  CLa err
+    0.02    0.0326   0.02230   2.7409  0.3162   3.387   1.5666   -54.9%   -26.2%
+    0.01    0.0163   0.02657   2.8633  0.3336   4.006   1.5992   -46.3%   -22.9%
+   0.005    0.0082   0.03021   2.9820  0.3576   4.522   1.6156   -38.9%   -19.7%
+   0.001    0.0016   0.03842   3.2877  0.4373   5.695   1.6286   -22.3%   -11.5%
+  0.0001    0.0002   0.04729   3.6319  0.5368   6.942   1.6315    -4.4%    -2.2%
+       0    0.0000   0.04945   3.7153  0.5615   7.247   1.6319     0.0%     0.0%

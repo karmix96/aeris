@@ -1090,6 +1090,16 @@ def pygeo_native_aero(
     velocity: float = typer.Option(28.0, "--velocity", help="Freestream velocity (m/s)."),
     altitude: float = typer.Option(0.0, "--altitude", help="Altitude (m)."),
     sections: int = typer.Option(25, "--sections", help="Spanwise extraction sections."),
+    span_margin: float = typer.Option(
+        0.0, "--span-margin",
+        help="Inset of the extraction from both span ends (0 = full span; "
+             "non-zero opens a centreline gap under YDUPLICATE).",
+    ),
+    nchordwise: int = typer.Option(8, "--nchordwise", help="AVL chordwise panels."),
+    spanwise_panels: int = typer.Option(
+        4, "--spanwise-panels", help="AVL spanwise panels per section interval."
+    ),
+    beta: float = typer.Option(0.0, "--beta", help="Sideslip angle (deg)."),
     control_input_deg: float = typer.Option(
         0.0, "--control-input-deg", help="Symmetric elevon deflection δe (pitch, deg)."
     ),
@@ -1125,27 +1135,47 @@ def pygeo_native_aero(
 
     typer.echo("[AERIS aero] pyGeo -> native AVL + viscous (no asb.Airplane)")
     typer.echo(f"  config   : {config}")
-    ex, semispan, meta = build_pygeo_sections_from_config(config, n_sections=sections)
+    ex, semispan, meta = build_pygeo_sections_from_config(
+        config, n_sections=sections, span_margin=span_margin
+    )
     typer.echo(
         f"  sections : {len(ex)}  semispan: {semispan:.3f} m  "
         f"control: {bool(meta['control'])}"
     )
 
-    fc = FlightCondition(alpha_deg=alpha, velocity_mps=velocity, altitude_m=altitude)
+    fc = FlightCondition(
+        alpha_deg=alpha, beta_deg=beta, velocity_mps=velocity, altitude_m=altitude
+    )
     res = run_pygeo_native_avl_case(
         flight_condition=fc, output_dir=out, extracted_sections=ex, semispan_m=semispan,
         control=meta["control"], control_input_deg=control_input_deg,
         diff_input_deg=diff_input_deg, viscous=viscous, name="pygeo_native",
+        nchordwise=nchordwise, spanwise_panels_per_section=spanwise_panels,
     )
     qc = summarize_pygeo_avl_qc(res) if viscous else {}
 
     payload = {
-        "config": str(config), "alpha_deg": alpha, "velocity_mps": velocity,
-        "altitude_m": altitude, "viscous": viscous, "status": res.status,
+        "config": str(config), "alpha_deg": alpha, "beta_deg": beta,
+        "velocity_mps": velocity, "altitude_m": altitude,
+        "span_margin": span_margin, "n_sections_requested": sections,
+        "nchordwise": nchordwise, "spanwise_panels_per_section": spanwise_panels,
+        "viscous": viscous, "status": res.status,
         "CL": res.cl, "CD": res.cd, "cd_ind": res.cd_ind, "cd_profile": res.cd_profile,
-        "cd_total": res.cd_total, "cm": res.cm, "cl_roll": res.cl_roll,
-        "cn": res.cn, "cy": res.cy, "l_over_d": res.l_over_d,
+        "cd_total": res.cd_total, "cd_vis_avl": res.cd_vis, "cd_ff": res.cd_ff,
+        "cm": res.cm, "cl_roll": res.cl_roll, "cn": res.cn, "cy": res.cy,
+        "span_efficiency": res.span_efficiency, "x_np": res.x_np,
+        "x_np_over_c_ref": res.x_np_over_c_ref, "static_margin": res.static_margin,
+        "s_ref": res.s_ref, "c_ref": res.c_ref, "b_ref": res.b_ref,
+        "n_strips": res.n_strips, "n_vortices": res.n_vortices,
+        "stability_axis_derivatives": res.stability_axis_derivatives,
+        "body_axis_derivatives": res.body_axis_derivatives,
+        "control_derivatives": res.control_derivatives,
+        "derived_metrics": res.derived_metrics,
+        "hinge_moments": res.hinge_moments,
+        "surface_forces": res.surface_forces,
+        "l_over_d": res.l_over_d,
         "l_over_d_viscous": res.l_over_d_viscous, "n_cdcl_injected": res.n_cdcl_injected,
+        "artifact_paths": res.artifact_paths,
         "qc": qc, "meta": meta, "warnings": res.warnings,
     }
     result_path = out / "pygeo_native_aero.json"
@@ -1154,8 +1184,24 @@ def pygeo_native_aero(
     typer.echo(f"  status   : {res.status}")
     typer.echo(f"  CL={res.cl}  cd_ind={res.cd_ind}  cd_profile={res.cd_profile}")
     typer.echo(f"  cd_total={res.cd_total}  L/D_visc={res.l_over_d_viscous}")
+    typer.echo(
+        f"  e={res.span_efficiency}  Xnp={res.x_np}  Xnp/Cref={res.x_np_over_c_ref}"
+    )
+    stab = res.stability_axis_derivatives or {}
+    typer.echo(
+        f"  CLa={stab.get('CLa')}  Cma={stab.get('Cma')}  "
+        f"Clb={stab.get('Clb')}  Cnb={stab.get('Cnb')}  Clp={stab.get('Clp')}"
+    )
+    if res.control_derivatives:
+        for cname, cderivs in res.control_derivatives.items():
+            typer.echo(
+                f"  {cname}: CL_d={cderivs.get('CL')} Cm_d={cderivs.get('Cm')} "
+                f"Cl_d={cderivs.get('Cl')}  Chinge={res.hinge_moments.get(cname)}"
+            )
     if qc:
         typer.echo(f"  QC pass={qc.get('pass')}  drag_agree={qc.get('drag_agreement_rel_diff')}")
+    for w in res.warnings:
+        typer.echo(f"  WARN     : {w}")
     typer.echo(f"  result   : {result_path}")
     if res.status != "SUCCESS":
         raise typer.Exit(code=1)

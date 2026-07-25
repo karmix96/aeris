@@ -65,12 +65,23 @@ def build_pygeo_sections_from_config(
     *,
     n_sections: int = 25,
     seed: int | None = None,
-    span_margin: float = 0.02,
+    span_margin: float = 0.0,
+    snap_sections_to_control: bool = True,
 ) -> "tuple[list[ExtractedSection], float, dict[str, Any]]":
     """Build the pyGeo loft from a geometry config and extract its sections.
 
     Encapsulates the load→sample→planform→sections→loft→extract pipeline (no
     asb.Airplane). Returns (extracted_sections, semispan_m, meta).
+
+    ``span_margin`` insets the extraction from both span ends
+    (``linspace(margin, 1-margin, n)``). It defaults to **0.0 — the FULL span**.
+    A non-zero margin is a modelling error on the AVL path: the innermost
+    section lands at y>0, so YDUPLICATE mirrors it into a centreline GAP of
+    2·y_min and AVL sheds a spurious inboard tip-vortex pair, while the tip is
+    simultaneously truncated. Measured on the baseline seed, margin 0.02 shifts
+    CL by more than a factor of two at α=3° (see DECISION-0005). It also matches
+    the existing rule that integrated metrics must be extracted over the full
+    span.
     """
     from pathlib import Path as _Path
 
@@ -104,13 +115,6 @@ def build_pygeo_sections_from_config(
         stations, k_span=gcfg.pygeo.k_span, frame_mode=frame_mode,
         n_ctl=gcfg.pygeo.n_ctl, tip=gcfg.pygeo.tip, tip_scale=gcfg.pygeo.tip_scale,
     )
-    lo, hi = float(span_margin), float(1.0 - span_margin)
-    ex = list(extract_sections(
-        build, np.linspace(lo, hi, int(n_sections)),
-        cst_order=gcfg.pygeo.extraction.cst_order,
-        chordwise_points=gcfg.pygeo.extraction.chordwise_points,
-    ))
-    semispan = max(float(s.y_m) for s in ex)
     control = None
     surfaces = getattr(gcfg.control_surfaces, "surfaces", None)
     if surfaces:
@@ -119,8 +123,38 @@ def build_pygeo_sections_from_config(
             "name": cs.name, "hinge_point": cs.hinge_point, "symmetric": cs.symmetric,
             "start_frac": cs.spanwise.start_frac, "end_frac": cs.spanwise.end_frac,
         }
+
+    lo, hi = float(span_margin), float(1.0 - span_margin)
+    fractions = np.linspace(lo, hi, int(n_sections))
+
+    # Snap two sections onto the elevon band edges so the control extent is the
+    # geometry's extent, not whatever the uniform grid happens to bracket. AVL
+    # ramps the control gain linearly between sections, so without an exact
+    # boundary section the elevon's effective area is quantised to the section
+    # spacing — which would give the DoE's three elevon DVs a staircase control
+    # response instead of a smooth one.
+    snapped: list[float] = []
+    if control is not None and snap_sections_to_control:
+        for edge in (float(control["start_frac"]), float(control["end_frac"])):
+            if lo < edge < hi:
+                nearest = int(np.argmin(np.abs(fractions - edge)))
+                # Never consume a span-end section; move the nearest interior one.
+                if nearest in (0, len(fractions) - 1):
+                    continue
+                fractions[nearest] = edge
+                snapped.append(edge)
+        fractions = np.unique(fractions)
+
+    ex = list(extract_sections(
+        build, fractions,
+        cst_order=gcfg.pygeo.extraction.cst_order,
+        chordwise_points=gcfg.pygeo.extraction.chordwise_points,
+    ))
+    semispan = max(float(s.y_m) for s in ex)
     meta = {"generator_id": gid, "geometry_id": getattr(build, "geometry_id", None),
-            "n_sections": len(ex), "semispan_m": semispan, "control": control}
+            "n_sections": len(ex), "semispan_m": semispan, "control": control,
+            "span_margin": float(span_margin),
+            "control_edges_snapped": snapped}
     return ex, semispan, meta
 
 
@@ -215,6 +249,8 @@ def build_pygeo_aero_input(
     n_crit: float = 9.0,
     re_grid: "list[float] | None" = None,
     paneling: dict[str, Any] | None = None,
+    control_input_deg: float | None = None,
+    diff_input_deg: float | None = None,
     avl_command: str | None = None,
     timeout_sec: int = 180,
     case_id: str | None = None,
@@ -248,6 +284,10 @@ def build_pygeo_aero_input(
     solver_options: dict[str, Any] = {}
     if paneling:
         solver_options["paneling"] = paneling
+    if control_input_deg is not None:
+        solver_options["control_input_deg"] = float(control_input_deg)
+    if diff_input_deg is not None:
+        solver_options["diff_input_deg"] = float(diff_input_deg)
     if viscous:
         mach = flight_condition.mach or 0.0
         if viscous_model == "realized_sections":
@@ -373,6 +413,12 @@ def run_pygeo_native_avl_case(
     avl_command: str = "avl",
     timeout_sec: int = 180,
     name: str = "pygeo_bwb",
+    nchordwise: int = 8,
+    spanwise_panels_per_section: int = 4,
+    moment_reference_m: tuple[float, float, float] = (0.0, 0.0, 0.0),
+    moment_reference_is_cg: bool = False,
+    save_element_forces: bool = False,
+    write_result_json: bool = True,
 ):
     """Fully asb.Airplane-free entry: pyGeo sections -> native AVL + viscous.
 
@@ -410,4 +456,10 @@ def run_pygeo_native_avl_case(
         avl_command=avl_command,
         timeout_sec=timeout_sec,
         name=name,
+        nchordwise=nchordwise,
+        spanwise_panels_per_section=spanwise_panels_per_section,
+        moment_reference_m=moment_reference_m,
+        moment_reference_is_cg=moment_reference_is_cg,
+        save_element_forces=save_element_forces,
+        write_result_json=write_result_json,
     )

@@ -30,6 +30,17 @@ from aerosandbox.geometry import Wing, WingXSec
 from aeris.aero.base import AeroSolver
 from aeris.aero.models import AeroFailure, AeroInput, AeroResult, AeroStatus
 from aeris.aero.solvers.avl_polar_injection import inject_polar_cdcl
+from aeris.aero.solvers.avl_output import (
+    BODY_DERIVATIVE_KEYS,
+    STABILITY_DERIVATIVE_KEYS,
+    compute_derived_metrics as _compute_derived_metrics,
+    extract_body_axis_derivatives as _extract_body_axis_derivatives_from_parsed,
+    extract_stability_axis_derivatives as _extract_stability_axis_derivatives_from_parsed,
+    normalize_stability_key as _normalize_stability_key,
+    parse_stability_file as _parse_stability_file,
+    read_avl_strips,
+    to_float_or_none as _to_float_or_none,
+)
 from aeris.aero.registry import register_solver
 from aeris.aero.validation import (
     validate_aero_input,
@@ -331,61 +342,6 @@ class AVLStrips(AVLBase):
         }
 
         return res
-
-
-def read_avl_strips(filepath: str | Path, alpha_deg: float | None = None) -> pd.DataFrame:
-    lines = Path(filepath).read_text().splitlines()
-    rows: list[dict[str, Any]] = []
-    surface_id = None
-    header_cols = None
-
-    for line in lines:
-        m = re.search(r"Surface\s*#\s*(\d+)", line, re.IGNORECASE)
-        if m:
-            surface_id = int(m.group(1))
-            header_cols = None
-            continue
-
-        if ("Strip" in line or re.search(r"\bj\b", line)) and "Chord" in line:
-            header_cols = re.findall(r"[A-Za-z0-9'_/.-]+", line)
-            continue
-
-        if header_cols and re.match(r"\s*\d+\s", line):
-            tokens = re.findall(r"[A-Za-z0-9'_/.-]+", line)
-            if len(tokens) >= len(header_cols):
-                row = dict(zip(header_cols, tokens[:len(header_cols)]))
-                row["surface"] = surface_id
-                rows.append(row)
-
-    if not rows:
-        raise ValueError(f"No strip data found in {filepath}")
-
-    df = pd.DataFrame(rows)
-    for c in df.columns:
-        df[c] = pd.to_numeric(df[c], errors="coerce")
-
-    rename_map = {
-        "Strip": "strip",
-        "j": "strip",
-        "Xle": "x_le",
-        "Yle": "y_le",
-        "Zle": "z_le",
-        "Chord": "chord",
-        "Area": "area",
-        "ai": "alpha_induced",
-        "cl": "cl_local",
-        "cd": "cd_local",
-        "cm_c/4": "cm_c4",
-    }
-    df = df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns})
-
-    if "strip" in df.columns:
-        df["strip"] = pd.to_numeric(df["strip"], errors="coerce").astype("Int64")
-
-    if alpha_deg is not None:
-        df["alpha_deg"] = float(alpha_deg)
-
-    return df
 
 
 def configure_avl_paneling(airplane: asb.Airplane, panel_cfg: dict[str, Any] | None = None) -> None:
@@ -926,138 +882,14 @@ class AeroSandboxAVLSolver(AeroSolver):
             return result
 
 
-def _parse_stability_file(stab_path: Path) -> dict[str, float]:
-    text = stab_path.read_text()
-    out: dict[str, float] = {}
-
-    # Standard single-token key = value pairs
-    pattern = re.compile(r"([A-Za-z][A-Za-z0-9'/_\.-]*)\s*=\s*([-+0-9.Ee]+)")
-
-    for line in text.splitlines():
-        stripped = line.strip()
-        if not stripped:
-            continue
-
-        # Handle composite metric explicitly so it doesn't overwrite Cnb
-        if "Clb Cnr / Clr Cnb" in stripped and "=" in stripped:
-            lhs, rhs = stripped.split("=", 1)
-            metric_key = lhs.strip()
-            try:
-                metric_val = float(rhs.strip().split()[0])
-                out[metric_key] = metric_val
-            except Exception:
-                pass
-            continue
-
-        for match in pattern.finditer(line):
-            raw_key = match.group(1).strip()
-            raw_val = match.group(2).strip()
-
-            try:
-                val = float(raw_val)
-            except Exception:
-                continue
-
-            # Keep first occurrence; don't overwrite already parsed derivatives
-            if raw_key not in out:
-                out[raw_key] = val
-
-            normalized = _normalize_stability_key(raw_key)
-            if normalized is not None and normalized not in out:
-                out[normalized] = val
-
-    return out
-
-
-def _normalize_stability_key(key: str) -> str | None:
-    k = key.strip()
-
-    alias_map = {
-        "CL_a": "CLa",
-        "Cm_a": "Cma",
-        "CY_b": "CYb",
-        "Cl_b": "Clb",
-        "Cn_b": "Cnb",
-        "Cl_p": "Clp",
-        "Cm_q": "Cmq",
-        "Cn_r": "Cnr",
-        "Cl_r": "Clr",
-        "Cn_p": "Cnp",
-        "CLu": "CLu",
-        "Cmu": "Cmu",
-        "CYp": "CYp",
-        "CYr": "CYr",
-    }
-    if k in alias_map:
-        return alias_map[k]
-
-    compressed = re.sub(r"[^A-Za-z0-9]", "", k)
-
-    canonical_targets = {
-        "CLa", "Cma", "CYb", "Clb", "Cnb",
-        "Clp", "Cmq", "Cnr", "Clr", "Cnp",
-        "CLu", "Cmu", "CYp", "CYr",
-    }
-    if compressed in canonical_targets:
-        return compressed
-
-    return None
-
-
-def _to_float_or_none(value: Any) -> float | None:
-    try:
-        val = float(value)
-        if not math.isfinite(val):
-            return None
-        return val
-    except Exception:
-        return None
-
-
 def _extract_stability_axis_derivatives(raw: dict[str, Any]) -> dict[str, float | None]:
-    parsed = raw.get("_stability_file_parsed", {}) or {}
-
-    derivative_keys = [
-        # Stability-axis static derivatives
-        "CLa", "CLb",
-        "CYa", "CYb",
-        "Cla", "Clb",
-        "Cma", "Cmb",
-        "Cna", "Cnb",
-
-        # Stability-axis rate derivatives
-        "CLp", "CLq", "CLr",
-        "CYp", "CYq", "CYr",
-        "Clp", "Clq", "Clr",
-        "Cmp", "Cmq", "Cmr",
-        "Cnp", "Cnq", "Cnr",
-
-        # Common scalar printed in stability file
-        "Xnp",
-    ]
-
-    return {
-        key: _to_float_or_none(parsed.get(key))
-        for key in derivative_keys
-    }
+    """Stability-axis derivatives from the raw AVL dict (shared parser)."""
+    return _extract_stability_axis_derivatives_from_parsed(raw.get("_stability_file_parsed", {}) or {})
 
 
 def _extract_body_axis_derivatives(raw: dict[str, Any]) -> dict[str, float | None]:
-    parsed = raw.get("_body_file_parsed", {}) or {}
-
-    derivative_keys = [
-        "CXu", "CXv", "CXw",
-        "CYu", "CYv", "CYw",
-        "CZu", "CZv", "CZw",
-        "Clu", "Clv", "Clw",
-        "Cmu", "Cmv", "Cmw",
-        "Cnu", "Cnv", "Cnw",
-    ]
-
-    return {
-        key: _to_float_or_none(parsed.get(key))
-        for key in derivative_keys
-    }
+    """Body/geometry-axis derivatives from the raw AVL dict (shared parser)."""
+    return _extract_body_axis_derivatives_from_parsed(raw.get("_body_file_parsed", {}) or {})
 
 
 def _compute_strip_profile_drag(
@@ -1176,23 +1008,3 @@ def _compute_strip_profile_drag(
 
     cd_profile = symmetry_factor * cd_prof_sum / s_ref
     return cd_profile, n_extrapolated
-
-
-def _compute_derived_metrics(
-    stability_axis_derivatives: dict[str, float | None],
-) -> dict[str, float | None]:
-    clb = stability_axis_derivatives.get("Clb")
-    cnr = stability_axis_derivatives.get("Cnr")
-    clr = stability_axis_derivatives.get("Clr")
-    cnb = stability_axis_derivatives.get("Cnb")
-
-    spiral_metric: float | None = None
-    try:
-        if None not in (clb, cnr, clr, cnb) and clr != 0.0 and cnb != 0.0:
-            spiral_metric = float((clb * cnr) / (clr * cnb))
-    except Exception:
-        spiral_metric = None
-
-    return {
-        "spiral_metric": spiral_metric,
-    }

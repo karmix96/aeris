@@ -1,0 +1,1298 @@
+[
+  {
+    "case": "A_clean_symmetric",
+    "alpha_deg": 3.0,
+    "beta_deg": 0.0,
+    "elevon_sym_deg": 0.0,
+    "elevon_diff_deg": 0.0,
+    "n_sections": 25,
+    "native_status": "SUCCESS",
+    "asb_status": "AeroStatus.SUCCESS",
+    "scalars": [
+      {
+        "field": "CL",
+        "native": 0.04945,
+        "asb": 0.04971,
+        "rel_diff": 0.005230335948501234
+      },
+      {
+        "field": "CD",
+        "native": 0.006823107759338465,
+        "asb": 0.006826599381233991,
+        "rel_diff": 0.0005114730923165446
+      },
+      {
+        "field": "CDind",
+        "native": 0.0003139,
+        "asb": 0.0003169,
+        "rel_diff": 0.009466708740927796
+      },
+      {
+        "field": "CDff",
+        "native": 0.0003356,
+        "asb": 0.0003385,
+        "rel_diff": 0.008567208271787185
+      },
+      {
+        "field": "Cm",
+        "native": -0.00308,
+        "asb": -0.00329,
+        "rel_diff": 0.06382978723404259
+      },
+      {
+        "field": "Cl_roll",
+        "native": 0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Cn",
+        "native": 0.0,
+        "asb": 0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "CY",
+        "native": 0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "e",
+        "native": 0.5615,
+        "asb": 0.5626,
+        "rel_diff": 0.001955207963028777
+      },
+      {
+        "field": "Xnp",
+        "native": 0.232674,
+        "asb": 0.232672,
+        "rel_diff": 8.59571761349356e-06
+      },
+      {
+        "field": "cd_profile",
+        "native": 0.006509207759338465,
+        "asb": 0.00650969938123399,
+        "rel_diff": 7.552144373099582e-05
+      },
+      {
+        "field": "cd_total",
+        "native": 0.006823107759338465,
+        "asb": 0.006826599381233991,
+        "rel_diff": 0.0005114730923165446
+      },
+      {
+        "field": "L/D_viscous",
+        "native": 7.247430605550693,
+        "asb": 7.281810052696297,
+        "rel_diff": 0.004721277662670494
+      }
+    ],
+    "stability_derivatives": [
+      {
+        "field": "CLa",
+        "native": 3.71533,
+        "asb": 3.715332,
+        "rel_diff": 5.383099007785996e-07
+      },
+      {
+        "field": "CLb",
+        "native": 0.0,
+        "asb": 0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "CLp",
+        "native": 0.0,
+        "asb": 0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "CLq",
+        "native": 6.70442,
+        "asb": 6.712997,
+        "rel_diff": 0.0012776707631479405
+      },
+      {
+        "field": "CLr",
+        "native": 0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "CYa",
+        "native": -0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "CYb",
+        "native": -0.009271,
+        "asb": -0.009258,
+        "rel_diff": 0.0014022219825260624
+      },
+      {
+        "field": "CYp",
+        "native": -0.019502,
+        "asb": -0.019455,
+        "rel_diff": 0.002410009229822502
+      },
+      {
+        "field": "CYq",
+        "native": -0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "CYr",
+        "native": 0.003347,
+        "asb": 0.003338,
+        "rel_diff": 0.0026889752016732377
+      },
+      {
+        "field": "Cla",
+        "native": -0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Clb",
+        "native": -0.026693,
+        "asb": -0.026685,
+        "rel_diff": 0.00029970404225830973
+      },
+      {
+        "field": "Clp",
+        "native": -0.2933,
+        "asb": -0.293314,
+        "rel_diff": 4.7730418595818813e-05
+      },
+      {
+        "field": "Clq",
+        "native": -0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Clr",
+        "native": 0.020844,
+        "asb": 0.020866,
+        "rel_diff": 0.0010543467842421986
+      },
+      {
+        "field": "Cma",
+        "native": -1.587653,
+        "asb": -1.589665,
+        "rel_diff": 0.0012656754725052918
+      },
+      {
+        "field": "Cmb",
+        "native": 0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Cmp",
+        "native": -0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Cmq",
+        "native": -3.509158,
+        "asb": -3.518118,
+        "rel_diff": 0.0025468162239014255
+      },
+      {
+        "field": "Cmr",
+        "native": -0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Cna",
+        "native": 0.0,
+        "asb": 0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Cnb",
+        "native": 0.002521,
+        "asb": 0.002517,
+        "rel_diff": 0.001586671955573052
+      },
+      {
+        "field": "Cnp",
+        "native": 0.003396,
+        "asb": 0.003376,
+        "rel_diff": 0.005889281507656081
+      },
+      {
+        "field": "Cnq",
+        "native": 0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Cnr",
+        "native": -0.002661,
+        "asb": -0.002658,
+        "rel_diff": 0.001127395715896266
+      },
+      {
+        "field": "Xnp",
+        "native": 0.232674,
+        "asb": 0.232672,
+        "rel_diff": 8.59571761349356e-06
+      }
+    ],
+    "body_derivatives": [
+      {
+        "field": "CXu",
+        "native": -0.019528,
+        "asb": -0.019511,
+        "rel_diff": 0.0008705448586644641
+      },
+      {
+        "field": "CXv",
+        "native": 0.0,
+        "asb": 0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "CXw",
+        "native": 0.214866,
+        "asb": 0.214944,
+        "rel_diff": 0.00036288521661453563
+      },
+      {
+        "field": "CYu",
+        "native": 0.0,
+        "asb": 0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "CYv",
+        "native": -0.009271,
+        "asb": -0.009258,
+        "rel_diff": 0.0014022219825260624
+      },
+      {
+        "field": "CYw",
+        "native": -0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "CZu",
+        "native": 0.095489,
+        "asb": 0.094966,
+        "rel_diff": 0.0054770706573533025
+      },
+      {
+        "field": "CZv",
+        "native": -0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "CZw",
+        "native": -3.716004,
+        "asb": -3.716032,
+        "rel_diff": 7.534918967306251e-06
+      },
+      {
+        "field": "Clu",
+        "native": 0.0,
+        "asb": 0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Clv",
+        "native": -0.026788,
+        "asb": -0.02678,
+        "rel_diff": 0.0002986411826189933
+      },
+      {
+        "field": "Clw",
+        "native": -0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Cmu",
+        "native": 0.077097,
+        "asb": 0.076789,
+        "rel_diff": 0.003994967378756667
+      },
+      {
+        "field": "Cmv",
+        "native": 0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Cmw",
+        "native": -1.585791,
+        "asb": -1.587822,
+        "rel_diff": 0.0012791106307886626
+      },
+      {
+        "field": "Cnu",
+        "native": 0.0,
+        "asb": 0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Cnv",
+        "native": 0.00112,
+        "asb": 0.001117,
+        "rel_diff": 0.002678571428571397
+      },
+      {
+        "field": "Cnw",
+        "native": 0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      }
+    ],
+    "native_only_capture": {
+      "control_derivatives": {
+        "elevon_sym": {
+          "CL": 0.00945,
+          "CY": -0.0,
+          "Cl": -0.0,
+          "Cm": -0.005138,
+          "Cn": -0.0,
+          "CDff": 2.2e-05,
+          "e": 0.177767,
+          "avl_slot": "d01"
+        },
+        "elevon_diff": {
+          "CL": 0.0,
+          "CY": -0.000286,
+          "Cl": -0.002452,
+          "Cm": -0.0,
+          "Cn": -0.000101,
+          "CDff": -0.0,
+          "e": 0.0,
+          "avl_slot": "d02"
+        }
+      },
+      "hinge_moments": {
+        "elevon_sym": -4.755e-05,
+        "elevon_diff": 8.233e-19
+      },
+      "surface_forces_n_rows": 2,
+      "derived_metrics": {
+        "spiral_metric": 1.3517250147694315
+      },
+      "n_strips": 192,
+      "n_vortices": 1536,
+      "artifact_paths": [
+        "airplane_avl",
+        "body_derivs",
+        "body_forces",
+        "hinge_moments",
+        "keystrokes",
+        "native_avl_result_json",
+        "stability",
+        "stdout",
+        "strip_shear_moment",
+        "strip_shear_moment_parsed",
+        "strips",
+        "strips_parsed",
+        "surface_forces",
+        "totals"
+      ],
+      "asb_artifact_paths": [
+        "aero_result_json",
+        "airplane_avl",
+        "body_derivs",
+        "body_forces",
+        "elements",
+        "hinge_moments",
+        "keystrokes",
+        "stability",
+        "stdout",
+        "strip_shear_moment",
+        "strips",
+        "strips_parsed",
+        "surfaces",
+        "totals",
+        "working_dir"
+      ]
+    },
+    "missing_in_native": [],
+    "native_warnings": [
+      "static_margin not computed: the AVL moment reference (Xref=0) is not declared to be the CG. Xnp/Cref aft of the reference = 0.4273."
+    ],
+    "asb_warnings": [
+      "Mach/velocity inconsistency: input mach=0.00000, derived mach=0.08228 from velocity/altitude. Current AERIS semantics treat Mach as metadata/QC, while AVL run is driven by velocity and atmosphere."
+    ]
+  },
+  {
+    "case": "B_pitch_control",
+    "alpha_deg": 3.0,
+    "beta_deg": 0.0,
+    "elevon_sym_deg": 4.0,
+    "elevon_diff_deg": 0.0,
+    "n_sections": 25,
+    "native_status": "SUCCESS",
+    "asb_status": "AeroStatus.SUCCESS",
+    "scalars": [
+      {
+        "field": "CL",
+        "native": 0.08721,
+        "asb": 0.0898,
+        "rel_diff": 0.02884187082405355
+      },
+      {
+        "field": "CD",
+        "native": 0.007273119350870504,
+        "asb": 0.007380006229392148,
+        "rel_diff": 0.014483304647623263
+      },
+      {
+        "field": "CDind",
+        "native": 0.0007063,
+        "asb": 0.0008145,
+        "rel_diff": 0.1328422344996931
+      },
+      {
+        "field": "CDff",
+        "native": 0.0007378,
+        "asb": 0.0008459,
+        "rel_diff": 0.12779288331954128
+      },
+      {
+        "field": "Cm",
+        "native": -0.02363,
+        "asb": -0.02509,
+        "rel_diff": 0.05819051414906335
+      },
+      {
+        "field": "Cl_roll",
+        "native": 0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Cn",
+        "native": 0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "CY",
+        "native": -0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "e",
+        "native": 0.7944,
+        "asb": 0.7348,
+        "rel_diff": 0.07502517623363543
+      },
+      {
+        "field": "Xnp",
+        "native": 0.232626,
+        "asb": 0.232622,
+        "rel_diff": 1.71949825041225e-05
+      },
+      {
+        "field": "cd_profile",
+        "native": 0.006566819350870504,
+        "asb": 0.006565506229392148,
+        "rel_diff": 0.000199963088398668
+      },
+      {
+        "field": "cd_total",
+        "native": 0.007273119350870504,
+        "asb": 0.007380006229392148,
+        "rel_diff": 0.014483304647623263
+      },
+      {
+        "field": "L/D_viscous",
+        "native": 11.990728570893316,
+        "asb": 12.168011409306947,
+        "rel_diff": 0.014569581869230781
+      }
+    ],
+    "stability_derivatives": [
+      {
+        "field": "CLa",
+        "native": 3.714562,
+        "asb": 3.71414,
+        "rel_diff": 0.00011360693400727258
+      },
+      {
+        "field": "CLb",
+        "native": -0.0,
+        "asb": 0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "CLp",
+        "native": 0.0,
+        "asb": 0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "CLq",
+        "native": 6.708062,
+        "asb": 6.716398,
+        "rel_diff": 0.00124114145707266
+      },
+      {
+        "field": "CLr",
+        "native": 0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "CYa",
+        "native": -0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "CYb",
+        "native": -0.008872,
+        "asb": -0.00883,
+        "rel_diff": 0.004733994589720511
+      },
+      {
+        "field": "CYp",
+        "native": -0.015979,
+        "asb": -0.015873,
+        "rel_diff": 0.00663370674009628
+      },
+      {
+        "field": "CYq",
+        "native": -0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "CYr",
+        "native": 0.004302,
+        "asb": 0.00438,
+        "rel_diff": 0.017808219178082178
+      },
+      {
+        "field": "Cla",
+        "native": -0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Clb",
+        "native": -0.024281,
+        "asb": -0.023963,
+        "rel_diff": 0.013096659939870633
+      },
+      {
+        "field": "Clp",
+        "native": -0.293188,
+        "asb": -0.293078,
+        "rel_diff": 0.00037518588755337524
+      },
+      {
+        "field": "Clq",
+        "native": -0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Clr",
+        "native": 0.034646,
+        "asb": 0.036056,
+        "rel_diff": 0.03910583536720642
+      },
+      {
+        "field": "Cma",
+        "native": -1.587002,
+        "asb": -1.588813,
+        "rel_diff": 0.0011398446513214626
+      },
+      {
+        "field": "Cmb",
+        "native": 0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Cmp",
+        "native": -0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Cmq",
+        "native": -3.510789,
+        "asb": -3.519594,
+        "rel_diff": 0.0025017090039362987
+      },
+      {
+        "field": "Cmr",
+        "native": -0.0,
+        "asb": 0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Cna",
+        "native": 0.0,
+        "asb": 0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Cnb",
+        "native": 0.002355,
+        "asb": 0.002312,
+        "rel_diff": 0.018259023354564786
+      },
+      {
+        "field": "Cnp",
+        "native": 0.000539,
+        "asb": 0.000354,
+        "rel_diff": 0.3432282003710575
+      },
+      {
+        "field": "Cnq",
+        "native": 0.0,
+        "asb": 0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Cnr",
+        "native": -0.003078,
+        "asb": -0.003172,
+        "rel_diff": 0.029634300126103373
+      },
+      {
+        "field": "Xnp",
+        "native": 0.232626,
+        "asb": 0.232622,
+        "rel_diff": 1.71949825041225e-05
+      }
+    ],
+    "body_derivatives": [
+      {
+        "field": "CXu",
+        "native": -0.0174,
+        "asb": -0.01739,
+        "rel_diff": 0.0005747126436781375
+      },
+      {
+        "field": "CXv",
+        "native": -0.0,
+        "asb": 0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "CXw",
+        "native": 0.233225,
+        "asb": 0.234406,
+        "rel_diff": 0.005038266938559658
+      },
+      {
+        "field": "CYu",
+        "native": 0.0,
+        "asb": 0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "CYv",
+        "native": -0.008872,
+        "asb": -0.00883,
+        "rel_diff": 0.004733994589720511
+      },
+      {
+        "field": "CYw",
+        "native": -0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "CZu",
+        "native": 0.020053,
+        "asb": 0.014848,
+        "rel_diff": 0.25956216027527057
+      },
+      {
+        "field": "CZv",
+        "native": 0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "CZw",
+        "native": -3.718624,
+        "asb": -3.718511,
+        "rel_diff": 3.038758422477018e-05
+      },
+      {
+        "field": "Clu",
+        "native": 0.0,
+        "asb": 0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Clv",
+        "native": -0.024371,
+        "asb": -0.024052,
+        "rel_diff": 0.013089327479381225
+      },
+      {
+        "field": "Clw",
+        "native": -0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Cmu",
+        "native": 0.036014,
+        "asb": 0.033196,
+        "rel_diff": 0.07824734825345683
+      },
+      {
+        "field": "Cmv",
+        "native": 0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Cmw",
+        "native": -1.587293,
+        "asb": -1.589253,
+        "rel_diff": 0.00123328381321285
+      },
+      {
+        "field": "Cnu",
+        "native": 0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      },
+      {
+        "field": "Cnv",
+        "native": 0.001081,
+        "asb": 0.001054,
+        "rel_diff": 0.024976873265494817
+      },
+      {
+        "field": "Cnw",
+        "native": -0.0,
+        "asb": -0.0,
+        "rel_diff": 0.0
+      }
+    ],
+    "native_only_capture": {
+      "control_derivatives": {
+        "elevon_sym": {
+          "CL": 0.009448,
+          "CY": -0.0,
+          "Cl": -0.0,
+          "Cm": -0.005139,
+          "Cn": -0.0,
+          "CDff": 0.000179,
+          "e": -0.020984,
+          "avl_slot": "d01"
+        },
+        "elevon_diff": {
+          "CL": 0.0,
+          "CY": -0.000261,
+          "Cl": -0.002453,
+          "Cm": -0.0,
+          "Cn": -7.3e-05,
+          "CDff": -0.0,
+          "e": 0.0,
+          "avl_slot": "d02"
+        }
+      },
+      "hinge_moments": {
+        "elevon_sym": -0.0001999,
+        "elevon_diff": 8.462e-19
+      },
+      "surface_forces_n_rows": 2,
+      "derived_metrics": {
+        "spiral_metric": 0.9159909269771678
+      },
+      "n_strips": 192,
+      "n_vortices": 1536,
+      "artifact_paths": [
+        "airplane_avl",
+        "body_derivs",
+        "body_forces",
+        "hinge_moments",
+        "keystrokes",
+        "native_avl_result_json",
+        "stability",
+        "stdout",
+        "strip_shear_moment",
+        "strip_shear_moment_parsed",
+        "strips",
+        "strips_parsed",
+        "surface_forces",
+        "totals"
+      ],
+      "asb_artifact_paths": [
+        "aero_result_json",
+        "airplane_avl",
+        "body_derivs",
+        "body_forces",
+        "elements",
+        "hinge_moments",
+        "keystrokes",
+        "stability",
+        "stdout",
+        "strip_shear_moment",
+        "strips",
+        "strips_parsed",
+        "surfaces",
+        "totals",
+        "working_dir"
+      ]
+    },
+    "missing_in_native": [],
+    "native_warnings": [
+      "static_margin not computed: the AVL moment reference (Xref=0) is not declared to be the CG. Xnp/Cref aft of the reference = 0.4272."
+    ],
+    "asb_warnings": [
+      "Mach/velocity inconsistency: input mach=0.00000, derived mach=0.08228 from velocity/altitude. Current AERIS semantics treat Mach as metadata/QC, while AVL run is driven by velocity and atmosphere."
+    ]
+  },
+  {
+    "case": "C_lateral",
+    "alpha_deg": 3.0,
+    "beta_deg": 2.0,
+    "elevon_sym_deg": 0.0,
+    "elevon_diff_deg": 2.0,
+    "n_sections": 25,
+    "native_status": "SUCCESS",
+    "asb_status": "AeroStatus.SUCCESS",
+    "scalars": [
+      {
+        "field": "CL",
+        "native": 0.04894,
+        "asb": 0.04959,
+        "rel_diff": 0.01310748134704587
+      },
+      {
+        "field": "CD",
+        "native": 0.006907096723980416,
+        "asb": 0.0068238230842908466,
+        "rel_diff": 0.012056243457610177
+      },
+      {
+        "field": "CDind",
+        "native": 0.0003811,
+        "asb": 0.0003139,
+        "rel_diff": 0.17633167147730255
+      },
+      {
+        "field": "CDff",
+        "native": 0.0004291,
+        "asb": 0.0003392,
+        "rel_diff": 0.2095082731298066
+      },
+      {
+        "field": "Cm",
+        "native": -0.00271,
+        "asb": -0.00321,
+        "rel_diff": 0.1557632398753894
+      },
+      {
+        "field": "Cl_roll",
+        "native": -0.00583,
+        "asb": -0.00093,
+        "rel_diff": 0.8404802744425386
+      },
+      {
+        "field": "Cn",
+        "native": -8e-05,
+        "asb": 4e-05,
+        "rel_diff": 1.5
+      },
+      {
+        "field": "CY",
+        "native": -0.0009,
+        "asb": -0.00032,
+        "rel_diff": 0.6444444444444445
+      },
+      {
+        "field": "e",
+        "native": 0.4361,
+        "asb": 0.5608,
+        "rel_diff": 0.22236091298145505
+      },
+      {
+        "field": "Xnp",
+        "native": 0.232678,
+        "asb": 0.232673,
+        "rel_diff": 2.1488924608278394e-05
+      },
+      {
+        "field": "cd_profile",
+        "native": 0.0065259967239804165,
+        "asb": 0.006509923084290847,
+        "rel_diff": 0.0024630168186425077
+      },
+      {
+        "field": "cd_total",
+        "native": 0.006907096723980416,
+        "asb": 0.0068238230842908466,
+        "rel_diff": 0.012056243457610177
+      },
+      {
+        "field": "L/D_viscous",
+        "native": 7.085466145289029,
+        "asb": 7.267187233233136,
+        "rel_diff": 0.025005697818419888
+      }
+    ],
+    "stability_derivatives": [
+      {
+        "field": "CLa",
+        "native": 3.710739,
+        "asb": 3.710809,
+        "rel_diff": 1.8863811098877494e-05
+      },
+      {
+        "field": "CLb",
+        "native": -0.017942,
+        "asb": -0.006927,
+        "rel_diff": 0.6139226396165423
+      },
+      {
+        "field": "CLp",
+        "native": -0.021624,
+        "asb": -0.021648,
+        "rel_diff": 0.0011086474501108515
+      },
+      {
+        "field": "CLq",
+        "native": 6.700326,
+        "asb": 6.708911,
+        "rel_diff": 0.0012796413605725377
+      },
+      {
+        "field": "CLr",
+        "native": -0.016192,
+        "asb": 0.001642,
+        "rel_diff": 1.1014081027667986
+      },
+      {
+        "field": "CYa",
+        "native": -0.003993,
+        "asb": -0.000372,
+        "rel_diff": 0.9068369646882044
+      },
+      {
+        "field": "CYb",
+        "native": -0.009248,
+        "asb": -0.009255,
+        "rel_diff": 0.0007563479200432266
+      },
+      {
+        "field": "CYp",
+        "native": -0.019533,
+        "asb": -0.019444,
+        "rel_diff": 0.004556391747299381
+      },
+      {
+        "field": "CYq",
+        "native": -0.008985,
+        "asb": -0.00133,
+        "rel_diff": 0.8519755147468002
+      },
+      {
+        "field": "CYr",
+        "native": 0.003315,
+        "asb": 0.00334,
+        "rel_diff": 0.007485029940119845
+      },
+      {
+        "field": "Cla",
+        "native": -0.013376,
+        "asb": -0.013685,
+        "rel_diff": 0.022579466569236283
+      },
+      {
+        "field": "Clb",
+        "native": -0.026288,
+        "asb": -0.02662,
+        "rel_diff": 0.012471825694966281
+      },
+      {
+        "field": "Clp",
+        "native": -0.293124,
+        "asb": -0.293136,
+        "rel_diff": 4.0936630096651385e-05
+      },
+      {
+        "field": "Clq",
+        "native": -0.022112,
+        "asb": -0.021876,
+        "rel_diff": 0.01067293777134588
+      },
+      {
+        "field": "Clr",
+        "native": 0.020798,
+        "asb": 0.020854,
+        "rel_diff": 0.0026853361465426534
+      },
+      {
+        "field": "Cma",
+        "native": -1.585718,
+        "asb": -1.587731,
+        "rel_diff": 0.0012678470093485878
+      },
+      {
+        "field": "Cmb",
+        "native": 0.012808,
+        "asb": 0.004298,
+        "rel_diff": 0.6644284821986258
+      },
+      {
+        "field": "Cmp",
+        "native": 0.022352,
+        "asb": 0.022405,
+        "rel_diff": 0.002365543405489889
+      },
+      {
+        "field": "Cmq",
+        "native": -3.506998,
+        "asb": -3.515976,
+        "rel_diff": 0.0025534872820520884
+      },
+      {
+        "field": "Cmr",
+        "native": 0.005756,
+        "asb": -0.002639,
+        "rel_diff": 1.4584781097984711
+      },
+      {
+        "field": "Cna",
+        "native": 0.006501,
+        "asb": 0.001547,
+        "rel_diff": 0.7620366097523458
+      },
+      {
+        "field": "Cnb",
+        "native": 0.002489,
+        "asb": 0.002514,
+        "rel_diff": 0.00994431185361984
+      },
+      {
+        "field": "Cnp",
+        "native": 0.00325,
+        "asb": 0.003374,
+        "rel_diff": 0.03675163011262596
+      },
+      {
+        "field": "Cnq",
+        "native": 0.003536,
+        "asb": 0.001567,
+        "rel_diff": 0.556843891402715
+      },
+      {
+        "field": "Cnr",
+        "native": -0.0027,
+        "asb": -0.002657,
+        "rel_diff": 0.01592592592592595
+      },
+      {
+        "field": "Xnp",
+        "native": 0.232678,
+        "asb": 0.232673,
+        "rel_diff": 2.1488924608278394e-05
+      }
+    ],
+    "body_derivatives": [
+      {
+        "field": "CXu",
+        "native": -0.019749,
+        "asb": -0.0195,
+        "rel_diff": 0.012608233328269746
+      },
+      {
+        "field": "CXv",
+        "native": -0.000289,
+        "asb": -3.3e-05,
+        "rel_diff": 0.8858131487889274
+      },
+      {
+        "field": "CXw",
+        "native": 0.215288,
+        "asb": 0.21482,
+        "rel_diff": 0.0021738322619003205
+      },
+      {
+        "field": "CYu",
+        "native": -0.001033,
+        "asb": -7.6e-05,
+        "rel_diff": 0.9264278799612778
+      },
+      {
+        "field": "CYv",
+        "native": -0.009297,
+        "asb": -0.009264,
+        "rel_diff": 0.0035495321071313374
+      },
+      {
+        "field": "CYw",
+        "native": -0.004055,
+        "asb": -0.000376,
+        "rel_diff": 0.9072749691738594
+      },
+      {
+        "field": "CZu",
+        "native": 0.095811,
+        "asb": 0.094908,
+        "rel_diff": 0.009424805085010982
+      },
+      {
+        "field": "CZv",
+        "native": 0.014532,
+        "asb": 0.003476,
+        "rel_diff": 0.760803743462703
+      },
+      {
+        "field": "CZw",
+        "native": -3.713702,
+        "asb": -3.713772,
+        "rel_diff": 1.8848760774763366e-05
+      },
+      {
+        "field": "Clu",
+        "native": -0.01001,
+        "asb": -0.000211,
+        "rel_diff": 0.9789210789210789
+      },
+      {
+        "field": "Clv",
+        "native": -0.026773,
+        "asb": -0.026764,
+        "rel_diff": 0.0003361595637396654
+      },
+      {
+        "field": "Clw",
+        "native": -0.014174,
+        "asb": -0.013825,
+        "rel_diff": 0.024622548327924394
+      },
+      {
+        "field": "Cmu",
+        "native": 0.077347,
+        "asb": 0.076742,
+        "rel_diff": 0.007821893544675223
+      },
+      {
+        "field": "Cmv",
+        "native": 0.012617,
+        "asb": 0.004076,
+        "rel_diff": 0.6769438059760641
+      },
+      {
+        "field": "Cmw",
+        "native": -1.584808,
+        "asb": -1.586857,
+        "rel_diff": 0.0012912316610759302
+      },
+      {
+        "field": "Cnu",
+        "native": -0.000223,
+        "asb": 9e-06,
+        "rel_diff": 1.040358744394619
+      },
+      {
+        "field": "Cnv",
+        "native": 0.001102,
+        "asb": 0.001118,
+        "rel_diff": 0.014311270125223766
+      },
+      {
+        "field": "Cnw",
+        "native": -5.3e-05,
+        "asb": -0.000106,
+        "rel_diff": 0.5
+      }
+    ],
+    "native_only_capture": {
+      "control_derivatives": {
+        "elevon_sym": {
+          "CL": 0.00944,
+          "CY": 1.6e-05,
+          "Cl": 2.1e-05,
+          "Cm": -0.005133,
+          "Cn": 1.6e-05,
+          "CDff": 2.1e-05,
+          "e": 0.146089,
+          "avl_slot": "d01"
+        },
+        "elevon_diff": {
+          "CL": -0.000194,
+          "CY": -0.000286,
+          "Cl": -0.002449,
+          "Cm": 0.000149,
+          "Cn": -0.000102,
+          "CDff": 8.8e-05,
+          "e": -0.090879,
+          "avl_slot": "d02"
+        }
+      },
+      "hinge_moments": {
+        "elevon_sym": -4.607e-05,
+        "elevon_diff": -7.636e-05
+      },
+      "surface_forces_n_rows": 2,
+      "derived_metrics": {
+        "spiral_metric": 1.3711180236409757
+      },
+      "n_strips": 192,
+      "n_vortices": 1536,
+      "artifact_paths": [
+        "airplane_avl",
+        "body_derivs",
+        "body_forces",
+        "hinge_moments",
+        "keystrokes",
+        "native_avl_result_json",
+        "stability",
+        "stdout",
+        "strip_shear_moment",
+        "strip_shear_moment_parsed",
+        "strips",
+        "strips_parsed",
+        "surface_forces",
+        "totals"
+      ],
+      "asb_artifact_paths": [
+        "aero_result_json",
+        "airplane_avl",
+        "body_derivs",
+        "body_forces",
+        "elements",
+        "hinge_moments",
+        "keystrokes",
+        "stability",
+        "stdout",
+        "strip_shear_moment",
+        "strips",
+        "strips_parsed",
+        "surfaces",
+        "totals",
+        "working_dir"
+      ]
+    },
+    "missing_in_native": [],
+    "native_warnings": [
+      "static_margin not computed: the AVL moment reference (Xref=0) is not declared to be the CG. Xnp/Cref aft of the reference = 0.4273."
+    ],
+    "asb_warnings": [
+      "Mach/velocity inconsistency: input mach=0.00000, derived mach=0.08228 from velocity/altitude. Current AERIS semantics treat Mach as metadata/QC, while AVL run is driven by velocity and atmosphere."
+    ]
+  }
+]

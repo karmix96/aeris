@@ -1089,19 +1089,33 @@ def pygeo_native_aero(
     alpha: float = typer.Option(..., "--alpha", help="Angle of attack (deg)."),
     velocity: float = typer.Option(28.0, "--velocity", help="Freestream velocity (m/s)."),
     altitude: float = typer.Option(0.0, "--altitude", help="Altitude (m)."),
-    sections: int = typer.Option(25, "--sections", help="Spanwise extraction sections."),
-    span_margin: float = typer.Option(
-        0.0, "--span-margin",
+    sections: int | None = typer.Option(
+        None, "--sections",
+        help="Spanwise extraction sections (default: geometry.aero_discretisation).",
+    ),
+    span_margin: float | None = typer.Option(
+        None, "--span-margin",
         help="Inset of the extraction from both span ends (0 = full span; "
              "non-zero opens a centreline gap under YDUPLICATE).",
     ),
-    nchordwise: int = typer.Option(
-        24, "--nchordwise",
+    nchordwise: int | None = typer.Option(
+        None, "--nchordwise",
         help="AVL chordwise panels (DECISION-0009: 24; 16 is the economy setting; "
-             "8 costs ~7.7% on elevon authority).",
+             "8 costs ~7.7% on elevon authority). Default: config.",
     ),
-    spanwise_panels: int = typer.Option(
-        4, "--spanwise-panels", help="AVL spanwise panels per section interval."
+    spanwise_panels: int | None = typer.Option(
+        None, "--spanwise-panels",
+        help="AVL spanwise panels per section interval. Default: config.",
+    ),
+    cspace: float | None = typer.Option(
+        None, "--cspace",
+        help="AVL chordwise spacing: 1.0 = cosine (recommended), 0.0 = uniform. "
+             "Uniform helps the elevon but degrades Xnp/Cmq ~14x. Default: config.",
+    ),
+    section_placement: str | None = typer.Option(
+        None, "--section-placement",
+        help="auto | always | never. 'auto' uses adaptive placement only when "
+             "uniform spacing breaches the gain-ramp criterion. Default: config.",
     ),
     beta: float = typer.Option(0.0, "--beta", help="Sideslip angle (deg)."),
     control_input_deg: float = typer.Option(
@@ -1139,8 +1153,31 @@ def pygeo_native_aero(
 
     typer.echo("[AERIS aero] pyGeo -> native AVL + viscous (no asb.Airplane)")
     typer.echo(f"  config   : {config}")
+    # Resolve the discretisation: CLI flag > config block > code default.
+    from aeris.common.config import load_yaml_config as _lyc
+    from aeris.geometry.config_resolver import resolve_generator_and_config as _rgc
+
+    _disc = getattr(_rgc(_lyc(Path(config)))[1], "aero_discretisation", None)
+
+    def _pick(flag, name, fallback):
+        if flag is not None:
+            return flag
+        return getattr(_disc, name, fallback) if _disc else fallback
+
+    sections = _pick(sections, "n_sections", 25)
+    span_margin = _pick(span_margin, "span_margin", 0.0)
+    nchordwise = _pick(nchordwise, "nchordwise", 24)
+    spanwise_panels = _pick(spanwise_panels, "spanwise_panels_per_section", 4)
+    cspace = _pick(cspace, "cspace", 1.0)
+    placement = _pick(section_placement, "section_placement", "auto")
+
     ex, semispan, meta = build_pygeo_sections_from_config(
         config, n_sections=sections, span_margin=span_margin
+    )
+    typer.echo(
+        f"  grid     : {sections} sections / {spanwise_panels} spanwise / "
+        f"{nchordwise} chordwise / cspace {cspace}  "
+        f"[placement={meta.get('section_placement', 'uniform')}]"
     )
     typer.echo(
         f"  sections : {len(ex)}  semispan: {semispan:.3f} m  "
@@ -1155,6 +1192,7 @@ def pygeo_native_aero(
         control=meta["control"], control_input_deg=control_input_deg,
         diff_input_deg=diff_input_deg, viscous=viscous, name="pygeo_native",
         nchordwise=nchordwise, spanwise_panels_per_section=spanwise_panels,
+        cspace=cspace,
     )
     qc = summarize_pygeo_avl_qc(res) if viscous else {}
 
@@ -1163,6 +1201,9 @@ def pygeo_native_aero(
         "velocity_mps": velocity, "altitude_m": altitude,
         "span_margin": span_margin, "n_sections_requested": sections,
         "nchordwise": nchordwise, "spanwise_panels_per_section": spanwise_panels,
+        "cspace": cspace, "section_placement_mode": placement,
+        "section_placement_used": meta.get("section_placement"),
+        "ramp_fraction": meta.get("ramp_fraction"),
         "viscous": viscous, "status": res.status,
         "CL": res.cl, "CD": res.cd, "cd_ind": res.cd_ind, "cd_profile": res.cd_profile,
         "cd_total": res.cd_total, "cd_vis_avl": res.cd_vis, "cd_ff": res.cd_ff,

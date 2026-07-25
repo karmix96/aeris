@@ -99,8 +99,17 @@ this cannot regress silently.
 **Decision.** Two changes make the AVL control extent equal the geometry's
 `[elevon_start_frac, elevon_end_frac]`:
 
-- the extraction grid **snaps two sections onto the band edges**
+- the extraction grid **inserts two sections at the band edges**
   (`snap_sections_to_control=True`);
+
+  > **CORRECTED 2026-07-25.** This originally *moved* the nearest section onto
+  > each edge. That gives an exact extent but leaves the next section a full
+  > spacing outside the band, which **widens** the gain ramp AVL builds there —
+  > measured 11.8 % → 23.0 % of band width, breaching the DECISION-0010
+  > criterion. It also meant the ramp figures quoted in the studies (computed by
+  > *inserting*) described a section set the production code never built. Now
+  > inserts: the edge is exact **and** its neighbour stays close, at a cost of
+  > two extra sections.
 - the writer tags **every** section inside the band including both boundary
   sections (previously the outboard-most section of the band was skipped).
 

@@ -328,6 +328,7 @@ def run_native_avl_case(
     timeout_sec: int = 180,
     nchordwise: int = 24,          # DECISION-0009
     spanwise_panels_per_section: int = 4,
+    cspace: float = 1.0,
     representation: str = "cst",
     cst_points: int = 80,
     name: str = "pygeo_bwb",
@@ -368,6 +369,7 @@ def run_native_avl_case(
     ref = write_native_avl(
         ordered, avl_path, name=name, mach=mach, symmetric=True,
         nchordwise=nchordwise, spanwise_panels_per_section=spanwise_panels_per_section,
+        cspace=cspace,
         representation=representation, cst_points=cst_points, control=control,
         moment_reference_m=moment_reference_m,
     )
@@ -631,6 +633,7 @@ def run_native_avl_case(
             "paneling": {
                 "nchordwise": int(nchordwise),
                 "spanwise_panels_per_section": int(spanwise_panels_per_section),
+                "cspace": float(cspace),
             },
             "representation": representation,
             "cst_points": int(cst_points),

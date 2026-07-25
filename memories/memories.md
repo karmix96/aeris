@@ -160,6 +160,25 @@ Decisions live in `decision/` (ADR-style); study write-ups in `studies/`.
   `tests/aero/test_elevon_dvs_reach_avl.py`. **Whenever a second pipeline
   reimplements a first, diff the override steps.**
 
+- **WIRING (2026-07-25).** The panelling decisions are now reachable, not just
+  documented: `geometry.aero_discretisation` block in `bwb.yaml` (n_sections,
+  span_margin, spanwise_panels_per_section, nchordwise, cspace,
+  snap_sections_to_control, section_placement, ramp_fraction_limit), validated
+  against AVL's array limits AT CONFIG LOAD. Resolution order **CLI flag → config
+  → code default**. CLI gained `--cspace` and `--section-placement`; the GUI
+  pyGeo-native tab exposes all four and warns before exceeding the limits.
+  Adaptive placement is now actually CALLED from
+  `build_pygeo_sections_from_config` (it was orphaned research code — DECISION-0011
+  was unimplementable). Guard: `tests/aero/test_discretisation_wiring.py`.
+- **Band-edge snapping now INSERTS, not moves (corrects DECISION-0005).** Moving
+  the nearest section onto the edge leaves its neighbour a full spacing out, which
+  WIDENS the gain ramp: 11.8% → 23.0% of band width — the opposite of what
+  DECISION-0010 wants, and it made the whole `auto` gate fire on every wing. It
+  also meant the ramp numbers in the studies (computed by inserting) described a
+  section set production never built. Inserting costs 2 sections and gets both.
+  **Two of my own decisions were in tension and nothing caught it until the gate
+  misfired.**
+
 ## Project state (2026-07-24)
 
 - **pyGeo backend committed** and decoupled from AeroSandbox (geometry import graph

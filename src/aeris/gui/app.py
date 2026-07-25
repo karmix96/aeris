@@ -6464,6 +6464,51 @@ def pg_aero(root, exe, tmo, dry):
             help="Symmetric elevon deflection (native AVL d1).",
         )
         pg_visc = pc6.checkbox("Viscous correction", value=True, key="pgn_visc")
+
+        _sec("AVL discretisation")
+        st.caption(
+            "Defaults are DECISION-0009/0010/0011 and are read from the config's "
+            "`geometry.aero_discretisation` block. Override here only to reproduce "
+            "an older run or to explore. **Hard AVL limits:** "
+            "`(sections-1) x spanwise <= 250` strips and `strips x chordwise <= ~6000` "
+            "vortices — exceed either and the run fails outright."
+        )
+        pd1, pd2, pd3, pd4 = st.columns(4)
+        pg_nch = pd1.number_input(
+            "Chordwise panels", value=24, min_value=4, max_value=40, step=2,
+            key="pgn_nch",
+            help="24 is production. At 8 the elevon derivative carries ~7.7% error "
+                 "because too few panels land on the flap. 16 is the economy "
+                 "setting when control power is not the object of study.",
+        )
+        pg_spw = pd2.number_input(
+            "Spanwise panels / gap", value=4, min_value=1, max_value=10, step=1,
+            key="pgn_spw",
+            help="4 per section interval gives <=0.54% worst-seed error.",
+        )
+        pg_csp = pd3.selectbox(
+            "Chordwise spacing", ["cosine (1.0)", "uniform (0.0)"], index=0,
+            key="pgn_csp",
+            help="Cosine bunches panels at the leading edge, which is what resolves "
+                 "the pitching moment. Uniform halves the elevon error but degrades "
+                 "the neutral point and pitch damping by 14-15x — not recommended.",
+        )
+        pg_plc = pd4.selectbox(
+            "Section placement", ["auto", "always", "never"], index=0, key="pgn_plc",
+            help="'auto' uses adaptive placement only when evenly-spaced sections "
+                 "breach the 15% gain-ramp criterion (short elevons). Adaptive "
+                 "lowers the worst case across a design set from 1.23% to 0.84%.",
+        )
+        _strips = (int(pg_sec) - 1) * int(pg_spw)
+        _vort = 2 * _strips * int(pg_nch)
+        if _strips > 250 or _vort > 6000:
+            st.error(
+                f"Exceeds AVL's arrays: {2*_strips} strips (max 500), "
+                f"{_vort} vortices (max ~6000). The run will fail — reduce a setting."
+            )
+        else:
+            st.caption(f"→ {2*_strips} strips, {_vort} vortices — within AVL's limits.")
+
         pgn_args = [
             "aero", "pygeo-native",
             "--config", str(pg_cfg),
@@ -6471,6 +6516,10 @@ def pg_aero(root, exe, tmo, dry):
             "--velocity", str(pg_ve),
             "--altitude", str(pg_at),
             "--sections", str(int(pg_sec)),
+            "--nchordwise", str(int(pg_nch)),
+            "--spanwise-panels", str(int(pg_spw)),
+            "--cspace", "1.0" if pg_csp.startswith("cosine") else "0.0",
+            "--section-placement", str(pg_plc),
             "--control-input-deg", str(pg_ctrl),
             "--viscous" if pg_visc else "--no-viscous",
         ]

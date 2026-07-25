@@ -15,9 +15,13 @@ evidence, so it survives a `data/` wipe).
 
 ## THE PANELLING TO USE FROM NOW ON
 
-Settled by `decision/0009-lowfi-discretisation.md`. **Already applied as the
-default** in `native_avl.py`, `pygeo_avl_adapter.py` and `aeris aero pygeo-native`
-— you do not need to pass anything.
+Settled by `decision/0009` / `0010` / `0011`. **Versioned in the config** at
+`geometry.aero_discretisation` in `configs/geometry/bwb.yaml`, so a saved design
+states the grid it was evaluated on. Overridable per run on the CLI
+(`--nchordwise`, `--spanwise-panels`, `--span-margin`, `--cspace`,
+`--section-placement`) and in the GUI's pyGeo-native tab, which also warns before
+you exceed AVL's array limits. Resolution order: **CLI flag → config block → code
+default.**
 
 | parameter | value | | why |
 |---|---|---|---|

@@ -63,10 +63,10 @@ def _nearest_section_y_frac_ends(fracs: list[float]) -> list[float]:
 def build_pygeo_sections_from_config(
     config_path: "Path | str",
     *,
-    n_sections: int = 25,
+    n_sections: int | None = None,
     seed: int | None = None,
-    span_margin: float = 0.0,
-    snap_sections_to_control: bool = True,
+    span_margin: float | None = None,
+    snap_sections_to_control: bool | None = None,
     sample: Any | None = None,
 ) -> "tuple[list[ExtractedSection], float, dict[str, Any]]":
     """Build the pyGeo loft from a geometry config and extract its sections.
@@ -106,6 +106,14 @@ def build_pygeo_sections_from_config(
         raise ValueError(
             f"{config_path}: geometry.pygeo.enabled is false; this entry needs the pyGeo backend."
         )
+    _d = getattr(gcfg, "aero_discretisation", None)
+    if n_sections is None:
+        n_sections = int(getattr(_d, "n_sections", 25))
+    if span_margin is None:
+        span_margin = float(getattr(_d, "span_margin", 0.0))
+    if snap_sections_to_control is None:
+        snap_sections_to_control = bool(getattr(_d, "snap_sections_to_control", True))
+
     gen = get_geometry_generator(gid)
     # ``sample`` lets a caller supply a CONSTRUCTED design instead of a random
     # one. Random sampling in 19 dimensions essentially never lands near a
@@ -144,8 +152,10 @@ def build_pygeo_sections_from_config(
             "start_frac": start, "end_frac": end,
         }
 
+    disc = getattr(gcfg, "aero_discretisation", None)
     lo, hi = float(span_margin), float(1.0 - span_margin)
     fractions = np.linspace(lo, hi, int(n_sections))
+    placement_used = "uniform"
 
     # Snap two sections onto the elevon band edges so the control extent is the
     # geometry's extent, not whatever the uniform grid happens to bracket. AVL
@@ -153,17 +163,51 @@ def build_pygeo_sections_from_config(
     # boundary section the elevon's effective area is quantised to the section
     # spacing — which would give the DoE's three elevon DVs a staircase control
     # response instead of a smooth one.
+    #
+    # The edges are INSERTED, not swapped onto the nearest neighbour. Moving the
+    # neighbour gives an exact extent but leaves the next section a full spacing
+    # outside the band, which WIDENS the gain ramp AVL builds there — measured
+    # 11.8% -> 23.0% of band width, breaching the DECISION-0010 criterion.
+    # Inserting keeps both: the edge is exact AND its neighbour stays close.
+    # Cost is two extra sections, which is cheap against a 25-section budget.
     snapped: list[float] = []
     if control is not None and snap_sections_to_control:
         for edge in (float(control["start_frac"]), float(control["end_frac"])):
             if lo < edge < hi:
-                nearest = int(np.argmin(np.abs(fractions - edge)))
-                # Never consume a span-end section; move the nearest interior one.
-                if nearest in (0, len(fractions) - 1):
-                    continue
-                fractions[nearest] = edge
                 snapped.append(edge)
-        fractions = np.unique(fractions)
+        if snapped:
+            fractions = np.unique(np.concatenate([fractions, snapped]))
+
+    # ---- adaptive placement (DECISION-0011) --------------------------------
+    # Uniform spacing is fine for most wings, but it is misallocated when the
+    # control band is short: AVL ramps the control gain over the interval just
+    # outside each band edge, and on a narrow band those ramps swamp it. The
+    # information metric redistributes the SAME budget toward where the geometry
+    # (and the control) actually changes. "auto" applies it only when uniform
+    # spacing breaches the ramp criterion, which is the DoE-safe setting.
+    band = ((float(control["start_frac"]), float(control["end_frac"]))
+            if control is not None else None)
+    mode = getattr(disc, "section_placement", "never") if disc else "never"
+    if band is not None and mode in {"auto", "always"}:
+        from aeris.geometry.geometric_information import (
+            adaptive_span_fractions, ramp_fraction, spanwise_information_profile,
+        )
+
+        limit = float(getattr(disc, "ramp_fraction_limit", 0.15))
+        uniform_ramp = ramp_fraction(fractions, band)
+        if mode == "always" or uniform_ramp > limit:
+            try:
+                profile = spanwise_information_profile(
+                    build, n_probe=301, chordwise_probe=21, control_band=band
+                )
+                adaptive = adaptive_span_fractions(
+                    profile, int(n_sections), must_include=band
+                )
+                if len(adaptive) >= 2:
+                    fractions = adaptive
+                    placement_used = "adaptive"
+            except Exception:  # pragma: no cover - never fail a run over placement
+                placement_used = "uniform (adaptive failed)"
 
     ex = list(extract_sections(
         build, fractions,
@@ -174,7 +218,12 @@ def build_pygeo_sections_from_config(
     meta = {"generator_id": gid, "geometry_id": getattr(build, "geometry_id", None),
             "n_sections": len(ex), "semispan_m": semispan, "control": control,
             "span_margin": float(span_margin),
-            "control_edges_snapped": snapped}
+            "control_edges_snapped": snapped,
+            "section_placement": placement_used}
+    if band is not None:
+        from aeris.geometry.geometric_information import ramp_fraction as _rf
+
+        meta["ramp_fraction"] = _rf(fractions, band)
     return ex, semispan, meta
 
 
@@ -435,6 +484,7 @@ def run_pygeo_native_avl_case(
     name: str = "pygeo_bwb",
     nchordwise: int = 24,          # DECISION-0009
     spanwise_panels_per_section: int = 4,
+    cspace: float = 1.0,
     moment_reference_m: tuple[float, float, float] = (0.0, 0.0, 0.0),
     moment_reference_is_cg: bool = False,
     save_element_forces: bool = False,
@@ -478,6 +528,7 @@ def run_pygeo_native_avl_case(
         name=name,
         nchordwise=nchordwise,
         spanwise_panels_per_section=spanwise_panels_per_section,
+        cspace=cspace,
         moment_reference_m=moment_reference_m,
         moment_reference_is_cg=moment_reference_is_cg,
         save_element_forces=save_element_forces,

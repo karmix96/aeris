@@ -20,6 +20,15 @@ DoE / optimisation  -> adaptive placement (worst case 0.84 % vs 1.23 %)
 single ordinary wing -> uniform is fine, and slightly better on easy geometry
 ```
 
+**Wired 2026-07-25.** `geometry.aero_discretisation.section_placement` selects
+`auto` (default) | `always` | `never`. `auto` engages adaptive placement only when
+uniform spacing breaches `ramp_fraction_limit` (0.15), which in practice means
+short elevon bands. Exposed on the CLI (`--section-placement`) and in the GUI, and
+the placement actually used plus the resulting ramp fraction are recorded in the
+run's `meta` and result JSON. Guarded by `tests/aero/test_discretisation_wiring.py`.
+Before this the module was validated but never called from production — the
+decision was unimplementable.
+
 `ramp_fraction` is exported from `aeris.geometry.geometric_information` and costs
 nothing to evaluate — it is arithmetic on the section list.
 

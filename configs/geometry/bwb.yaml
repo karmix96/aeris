@@ -97,6 +97,29 @@ geometry:
         deflection_sign: standard
         spanwise: {start_frac: 0.60, end_frac: 0.95}
 
+  # ---------------------------------------------------------------------------
+  # Low-fidelity AVL discretisation (DECISION-0009 / 0010 / 0011).
+  # Versioned here so a saved design states the grid it was evaluated on — a
+  # later comparison cannot then silently mix discretisations.
+  #
+  # Hard AVL limits, checked at config load:
+  #   (n_sections - 1) * spanwise_panels_per_section <= 250   (NSMAX = 500 strips)
+  #   strips * nchordwise                            <~ 6000  (vortex array)
+  # These settings: 192 strips, 4608 vortices.
+  aero_discretisation:
+    n_sections: 25                   # <=0.56% worst-seed on forces + stability
+    span_margin: 0.0                 # FULL span; an inset opens a centreline gap
+    spanwise_panels_per_section: 4   # 96/side; <=0.54% worst-seed
+    nchordwise: 24                   # was 8: elevon authority 7.7% -> ~1.1% error
+    cspace: 1.0                      # cosine. uniform helps the elevon but
+                                     # degrades Xnp/Cmq by 14-15x
+    snap_sections_to_control: true   # sections land exactly on the elevon ends
+    # Adaptive section placement. auto = apply only when uniform spacing breaches
+    # the gain-ramp criterion below (the DoE-safe setting; worst case across the
+    # design set 1.23% -> 0.84%). always | never force it.
+    section_placement: auto
+    ramp_fraction_limit: 0.15        # gain-ramp width / elevon band width
+
   pygeo:
     enabled: true                # false = AeroSandbox-only
     airfoil_database: data/airfoil_database

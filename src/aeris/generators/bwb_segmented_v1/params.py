@@ -296,6 +296,38 @@ class BWBDesignSample:
 
 
 @dataclass(frozen=True)
+class AeroDiscretisationConfig:
+    """The low-fidelity AVL discretisation, versioned with the design.
+
+    Defaults are DECISION-0009/0010/0011. Recording them in the config (rather
+    than only as Python defaults) means a saved design states the grid it was
+    evaluated on, so a later comparison cannot silently mix discretisations.
+    """
+
+    n_sections: int = 25
+    span_margin: float = 0.0
+    spanwise_panels_per_section: int = 4
+    nchordwise: int = 24
+    cspace: float = 1.0
+    snap_sections_to_control: bool = True
+    # Adaptive section placement (DECISION-0011). "auto" applies it only when
+    # uniform spacing breaches the 15% gain-ramp criterion; "always"/"never"
+    # force it. "auto" is the DoE-safe default.
+    section_placement: str = "auto"
+    ramp_fraction_limit: float = 0.15
+
+    def avl_limits_ok(self) -> tuple[bool, str]:
+        """AVL's own array limits. Exceeding either makes the run fail outright."""
+        strips = (self.n_sections - 1) * self.spanwise_panels_per_section
+        vortices = 2 * strips * self.nchordwise
+        if strips > 250:
+            return False, f"{2*strips} strips exceeds AVL NSMAX=500"
+        if vortices > 6000:
+            return False, f"{vortices} vortices exceeds AVL's array limit (~6000)"
+        return True, f"{2*strips} strips, {vortices} vortices"
+
+
+@dataclass(frozen=True)
 class BWBGeneratorConfig:
     name: str
     generator: GeneratorConfig
@@ -306,6 +338,9 @@ class BWBGeneratorConfig:
     control_surfaces: ControlSurfacesConfig
     elevon_bounds: ControlSurfaceBoundsConfig | None = None
     pygeo: PyGeoBackendConfig = field(default_factory=PyGeoBackendConfig)
+    aero_discretisation: AeroDiscretisationConfig = field(
+        default_factory=AeroDiscretisationConfig
+    )
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -575,6 +610,9 @@ def build_bwb_generator_config(config: dict[str, Any]) -> BWBGeneratorConfig:
         ),
         control_surfaces=_build_control_surfaces_config(control_surfaces_cfg),
         elevon_bounds=_build_elevon_bounds_config(geometry_cfg.get("elevon_bounds")),
+        aero_discretisation=_build_aero_discretisation_config(
+            geometry_cfg.get("aero_discretisation")
+        ),
         pygeo=build_pygeo_backend_config(geometry_cfg.get("pygeo")),
     )
 
@@ -608,6 +646,45 @@ def _parse_station_airfoils(cfg: dict | None) -> "StationAirfoilsConfig | None":
         b2=str(cfg["b2"]).strip(),
         b3=str(cfg["b3"]).strip(),
     )
+
+
+def _build_aero_discretisation_config(cfg: dict | None) -> "AeroDiscretisationConfig":
+    """Parse the optional geometry.aero_discretisation block.
+
+    Absent = the DECISION-0009/0011 defaults, so existing configs keep working.
+    """
+    if cfg is None:
+        return AeroDiscretisationConfig()
+    if not isinstance(cfg, dict):
+        raise TypeError("geometry.aero_discretisation must be a mapping.")
+    allowed = {f.name for f in fields(AeroDiscretisationConfig)}
+    unknown = set(cfg) - allowed
+    if unknown:
+        raise ValueError(
+            f"geometry.aero_discretisation: unknown key(s) {sorted(unknown)}. "
+            f"Allowed: {sorted(allowed)}."
+        )
+    placement = str(cfg.get("section_placement", "auto")).lower()
+    if placement not in {"auto", "always", "never"}:
+        raise ValueError(
+            "geometry.aero_discretisation.section_placement must be one of "
+            f"'auto', 'always', 'never'. Got {placement!r}."
+        )
+    out = AeroDiscretisationConfig(
+        n_sections=int(cfg.get("n_sections", 25)),
+        span_margin=float(cfg.get("span_margin", 0.0)),
+        spanwise_panels_per_section=int(cfg.get("spanwise_panels_per_section", 4)),
+        nchordwise=int(cfg.get("nchordwise", 24)),
+        cspace=float(cfg.get("cspace", 1.0)),
+        snap_sections_to_control=bool(cfg.get("snap_sections_to_control", True)),
+        section_placement=placement,
+        ramp_fraction_limit=float(cfg.get("ramp_fraction_limit", 0.15)),
+    )
+    ok, msg = out.avl_limits_ok()
+    if not ok:
+        raise ValueError(f"geometry.aero_discretisation: {msg}. Reduce sections, "
+                         f"spanwise panels or nchordwise.")
+    return out
 
 
 def _build_elevon_bounds_config(cfg: dict | None) -> "ControlSurfaceBoundsConfig | None":

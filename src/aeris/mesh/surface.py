@@ -223,8 +223,8 @@ def _resample_polyline(
     beta: float = 2.0,
 ) -> Array:
     points = _as_numeric_xyz(points, label="airfoil polyline")
-    if points.ndim != 2 or points.shape[1] != 2:
-        raise MeshBuildError("Airfoil polyline must have shape (N, 2).")
+    if points.ndim != 2 or points.shape[1] < 2:
+        raise MeshBuildError("Polyline must have shape (N, D) with D >= 2.")
     if n < 2:
         raise MeshBuildError("Each structured side needs at least 2 points.")
 
@@ -237,7 +237,9 @@ def _resample_polyline(
 
     mode = distribution if distribution is not None else ("cosine" if cosine else "uniform")
     sample_s = _distribution(n, mode, beta=beta) * s[-1]
-    return np.column_stack([np.interp(sample_s, s, points[:, axis]) for axis in range(2)])
+    return np.column_stack(
+        [np.interp(sample_s, s, points[:, axis]) for axis in range(points.shape[1])]
+    )
 
 
 def _te_fraction_with_floor(base_frac: float, chord: float, abs_floor: float) -> float:
@@ -965,109 +967,85 @@ def _tfi_patch(bottom: Array, top: Array, left: Array, right: Array) -> Array:
     return patch
 
 
+def _build_tip_airfoil_face_cap4(
+    oml_blocks: Sequence[Array],
+    *,
+    collar_points: int,
+    width_frac: float,
+) -> tuple[list[Array], list[Array], list[list[int]]]:
+    """Quad-only full airfoil-face tip closure for the cap4 OML topology.
+
+    The cap is one collar-free structured airfoil-face block.  Its lower and
+    upper chord-side boundaries are the lower/upper OML tip edges, and its
+    first/last columns are the physical LE/TE wrap edges.  For odd
+    ``cap_wrap_points`` the middle structured row is the tip camber line.
+
+    A plain transfinite interpolation over this boundary folds at the LE/TE
+    shoulders when the wrap edge is strongly curved.  This routine therefore
+    uses a standard algebraic-grid blend: start from lower-to-upper columns and
+    propagate the LE/TE boundary curvature a short distance into the interior.
+    Boundary nodes stay exact and the cap remains a single structured quad
+    block for pyHyp.
+
+    ``collar_points`` is reused as the LE/TE curvature-blend control so the
+    mesh ladder still has an active tip-resolution parameter. ``width_frac``
+    is accepted for API compatibility and intentionally unused.
+    """
+    _ = width_frac
+    if len(oml_blocks) != 4:
+        raise MeshBuildError("airfoil-face tip closure requires exactly 4 OML blocks.")
+
+    e_nose = oml_blocks[0][:, -1, :]  # upper shoulder -> LE -> lower shoulder
+    e_low = oml_blocks[1][:, -1, :]  # lower nose shoulder -> lower TE shoulder
+    e_te = oml_blocks[2][:, -1, :]  # lower TE shoulder -> TE mid -> upper TE shoulder
+    e_up = oml_blocks[3][:, -1, :]  # upper TE shoulder -> upper nose shoulder
+    n_wrap = len(e_nose)
+    n_chord = len(e_low)
+    if len(e_te) != n_wrap or len(e_up) != n_chord:
+        raise MeshBuildError("airfoil-face tip edges have inconsistent point counts.")
+    if n_wrap < 3:
+        raise MeshBuildError("airfoil-face tip closure requires cap_wrap_points >= 3.")
+
+    lower = e_low  # lower nose shoulder -> lower TE shoulder
+    upper = e_up[::-1]  # upper nose shoulder -> upper TE shoulder
+    nose_col = e_nose[::-1]  # lower nose shoulder -> upper nose shoulder
+    te_col = e_te  # lower TE shoulder -> upper TE shoulder
+
+    v = np.linspace(0.0, 1.0, n_wrap)[None, :, None]
+    ruled = (1.0 - v) * lower[:, None, :] + v * upper[:, None, :]
+
+    # Carry the curved end-column shape into nearby interior columns.  A power
+    # law keeps the effect local while avoiding the concave first/last cells
+    # created by an abrupt transition from wrap column to straight thickness
+    # column.  The boundaries are restored exactly after blending.
+    s = np.linspace(0.0, 1.0, n_chord)[:, None, None]
+    blend_power = max(4.0, 40.0 / float(collar_points))
+    patch = (
+        ruled
+        + (1.0 - s) ** blend_power * (nose_col - ruled[0])[None, :, :]
+        + s**blend_power * (te_col - ruled[-1])[None, :, :]
+    )
+    patch[0, :, :] = nose_col
+    patch[-1, :, :] = te_col
+    patch[:, 0, :] = lower
+    patch[:, -1, :] = upper
+
+    # No ring blocks: the cap boundary is the actual airfoil face boundary.
+    return [], [patch], [[0], [1], [2], [3]]
+
+
 def _build_tip_cap4(
     oml_blocks: Sequence[Array],
     *,
     collar_points: int,
     width_frac: float,
 ) -> tuple[list[Array], list[Array], list[list[int]]]:
-    """Camber-aligned tip cap for the cap4 topology.
-
-    The OML tip edges are [nose wrap, lower, TE wrap, upper] with per-side
-    point counts (wrap sides narrow, chord sides long).  The cap is:
-
-    * an inner rectangle aligned with the tip-section camber line — a
-      chordwise strip (n_chord x n_wrap) whose cell anisotropy matches the
-      slender airfoil, and
-    * four thin collar blocks of near-uniform width joining the rectangle to
-      the tip edge (no long-side-to-short-side fans).
-    """
-    if len(oml_blocks) != 4:
-        raise MeshBuildError("cap4 tip closure requires exactly 4 OML blocks.")
-    if collar_points < 3:
-        raise MeshBuildError("tip_radial_points (collar) must be at least 3.")
-    if not (0.15 <= width_frac <= 0.85):
-        raise MeshBuildError("cap_width_frac must lie between 0.15 and 0.85.")
-
-    e_nose = oml_blocks[0][:, -1, :]  # upper corner -> LE -> lower corner
-    e_low = oml_blocks[1][:, -1, :]  # nose -> shoulder (LE -> TE)
-    e_te = oml_blocks[2][:, -1, :]  # lower shoulder -> te_mid -> upper shoulder
-    e_up = oml_blocks[3][:, -1, :]  # shoulder -> nose (TE -> LE)
-    n_wrap = len(e_nose)
-    n_chord = len(e_low)
-    if len(e_te) != n_wrap or len(e_up) != n_chord:
-        raise MeshBuildError("cap4 tip edges have inconsistent point counts.")
-
-    lower = e_low  # nose -> te
-    upper = e_up[::-1]  # nose -> te
-
-    # Inset the rectangle chordwise so the collar end edges slant from the
-    # OML corners to the rectangle corners.  Without the inset, the end edges
-    # are collinear with the rectangle's short sides (both at the wrap_x
-    # station), which degenerates the corner cells to zero Jacobian.
-    inset = 0.05
-    idx = np.linspace(inset, 1.0 - inset, n_chord) * (n_chord - 1)
-    lo_i = np.floor(idx).astype(int)
-    hi_i = np.minimum(lo_i + 1, n_chord - 1)
-    frac = (idx - lo_i)[:, None]
-
-    def _at(arr: Array) -> Array:
-        return (1.0 - frac) * arr[lo_i] + frac * arr[hi_i]
-
-    lower_s = _at(lower)
-    upper_s = _at(upper)
-    camber = 0.5 * (upper_s + lower_s)
-    rect_top = camber + width_frac * (upper_s - camber)
-    rect_bot = camber + width_frac * (lower_s - camber)
-
-    def straight(a: Array, b: Array, n: int) -> Array:
-        t = np.linspace(0.0, 1.0, n)[:, None]
-        return (1.0 - t) * a + t * b
-
-    def edge_fraction(edge: Array) -> Array:
-        lengths = np.linalg.norm(np.diff(edge, axis=0), axis=1)
-        total = float(np.sum(lengths))
-        if total <= 1.0e-14:
-            return np.linspace(0.0, 1.0, len(edge))
-        cumulative = np.concatenate(([0.0], np.cumsum(lengths)))
-        return cumulative / total
-
-    def straight_like_edge(a: Array, b: Array, edge: Array) -> Array:
-        t = edge_fraction(edge)[:, None]
-        return (1.0 - t) * a + t * b
-
-    # Match the inner strip parameterization to the corresponding curved OML
-    # wrap edge.  A uniform inner edge is harmless for synthetic thick tips but
-    # folds the first TE-collar row on thin pyGeo BWB tips when the radial
-    # resolution is increased: the outer wrap points are strongly non-uniform,
-    # so the radial grid lines cross near the blunt TE.  Using the same
-    # cumulative arc-length coordinate preserves block correspondence without
-    # changing the topology or point counts.
-    rect_left = straight_like_edge(rect_top[0], rect_bot[0], e_nose)  # upper -> lower
-    rect_right = straight_like_edge(rect_bot[-1], rect_top[-1], e_te)  # lower -> upper
-
-    # Shared collar end edges (outer corner -> rectangle corner), collar_points each.
-    end_up_nose = straight(e_nose[0], rect_top[0], collar_points)
-    end_lo_nose = straight(e_nose[-1], rect_bot[0], collar_points)
-    end_lo_te = straight(e_low[-1], rect_bot[-1], collar_points)
-    end_up_te = straight(e_up[0], rect_top[-1], collar_points)
-
-    # Collar blocks, indexed (along-edge, radial): [:, 0] = outer OML edge.
-    collar_nose = _tfi_patch(end_up_nose, end_lo_nose, e_nose, rect_left)
-    collar_nose = collar_nose.transpose(1, 0, 2)  # (n_wrap, collar_points, 3)
-    collar_low = _tfi_patch(end_lo_nose, end_lo_te, e_low, rect_bot)
-    collar_low = collar_low.transpose(1, 0, 2)
-    collar_te = _tfi_patch(end_lo_te, end_up_te, e_te, rect_right)
-    collar_te = collar_te.transpose(1, 0, 2)
-    collar_up = _tfi_patch(end_up_te, end_up_nose, e_up, rect_top[::-1])
-    collar_up = collar_up.transpose(1, 0, 2)
-
-    center = _tfi_patch(rect_bot, rect_top, rect_left[::-1], rect_right)
-
-    ring_blocks = [collar_nose, collar_low, collar_te, collar_up]
-    center_patches = [center]
-    tip_groups = [[0], [1], [2], [3]]
-    return ring_blocks, center_patches, tip_groups
+    """Backward-compatible alias for the airfoil-face cap4 tip closure."""
+    return _build_tip_airfoil_face_cap4(
+        oml_blocks,
+        collar_points=collar_points,
+        width_frac=width_frac,
+    )
 
 
 def _refine_spanwise(
@@ -1502,8 +1480,32 @@ def _edge_match(a: Array, b: Array, tol: float) -> bool:
 def _edge_contains_segment(edge: Array, segment: Array, tol: float) -> bool:
     if len(edge) < len(segment):
         return False
-    candidates = [edge[: len(segment)], edge[-len(segment) :]]
+    candidates = [
+        edge[start : start + len(segment)]
+        for start in range(len(edge) - len(segment) + 1)
+    ]
     return any(_edge_match(candidate, segment, tol) for candidate in candidates)
+
+
+def _edge_covered_by_edges(edge: Array, candidates: Sequence[Array], tol: float) -> bool:
+    """Return True if every segment of edge is matched by candidate edges.
+
+    Structured multiblock caps can legally split one physical boundary edge
+    across two zones, e.g. a full LE wrap matched by lower- and upper-cap
+    edges that meet at the camber point.  The check remains segment-exact:
+    every consecutive node pair on ``edge`` must appear on at least one
+    candidate edge, in either direction.
+    """
+    if any(
+        _edge_match(edge, other, tol) or _edge_contains_segment(other, edge, tol)
+        for other in candidates
+    ):
+        return True
+    for idx in range(len(edge) - 1):
+        segment = edge[idx : idx + 2]
+        if not any(_edge_contains_segment(other, segment, tol) for other in candidates):
+            return False
+    return True
 
 
 def _free_edge_audit(
@@ -1537,10 +1539,12 @@ def _free_edge_audit(
 
     free: list[dict[str, object]] = []
     for index, (name, side, edge) in enumerate(edges):
-        shared = any(
-            other_index != index and _edge_match(edge, other_edge, tol)
+        other_edges = [
+            other_edge
             for other_index, (_n, _s, other_edge) in enumerate(edges)
-        )
+            if other_index != index
+        ]
+        shared = _edge_covered_by_edges(edge, other_edges, tol)
         if shared:
             continue
         y_span = float(np.ptp(edge[:, 1]))
@@ -1602,10 +1606,7 @@ def _connectivity_qc(
         for oml_idx in range(n_oml):
             oml_tip_edges = [oml[oml_idx].xyz[:, -1, :], oml[oml_idx].xyz[::-1, -1, :]]
             matched = any(
-                _edge_match(cap_edge, oml_edge, tol)
-                or _edge_contains_segment(cap_edge, oml_edge, tol)
-                for cap_edge in cap_edges
-                for oml_edge in oml_tip_edges
+                _edge_covered_by_edges(oml_edge, cap_edges, tol) for oml_edge in oml_tip_edges
             )
             checks.append({"connection": f"oml_{oml_idx}_to_tip_cap", "matched": matched})
         return {
@@ -1839,8 +1840,11 @@ def build_surface_mesh(
         raise MeshBuildError("te_thickness must lie between 0 and 0.05 chord (0 = leave as-is).")
     if te_thickness_abs_floor < 0.0:
         raise MeshBuildError("te_thickness_abs_floor must be >= 0 (metres, 0 = disabled).")
-    if tip_topology not in ("auto", "cap4", "ring", "single"):
-        raise MeshBuildError("tip_topology must be 'auto', 'cap4', 'ring', or 'single'.")
+    if tip_topology not in ("auto", "airfoil_face", "camber_ribbon", "cap4", "ring", "single"):
+        raise MeshBuildError(
+            "tip_topology must be 'auto', 'airfoil_face', 'camber_ribbon', "
+            "'cap4', 'ring', or 'single'."
+        )
     if spanwise_distribution == "junction":
         raise MeshBuildError(
             "spanwise_distribution cannot be 'junction' -- that mode is a "
@@ -1908,18 +1912,22 @@ def build_surface_mesh(
     root_points = np.concatenate([block[:, root_j, :] for block in raw_oml], axis=0)
     root_y_range = float(np.ptp(root_points[:, 1]))
 
-    # The tip closure is independent of the OML blocking: both builders
-    # consume only the four OML tip edges, and mid4/cap4 order those edges
-    # identically ([LE wrap, lower, TE wrap, upper]).  Decoupling them lets
-    # a mid4 wing use the camber-aligned cap4 cap, which avoids the
-    # square-patch-on-a-postage-stamp problem of the ring+Coons closure
-    # (that cap put points_per_side^2 nodes on ~0.1% of the wing area).
-    resolved_tip = oml_topology if tip_topology == "auto" else tip_topology
+    # The tip closure is independent of the OML blocking.  ``cap4`` remains a
+    # compatibility spellings for the quad-only airfoil-face closure.  ``auto``
+    # maps cap4 OMLs to airfoil_face and older mid4/split8 OMLs to the ring
+    # closure they historically used.
+    requested_tip = oml_topology if tip_topology == "auto" else tip_topology
+    if requested_tip in {"cap4", "camber_ribbon"}:
+        resolved_tip = "airfoil_face"
+    elif requested_tip in {"mid4", "split8"}:
+        resolved_tip = "ring"
+    else:
+        resolved_tip = requested_tip
     # (smoothing is applied to the returned cap blocks below)
     if resolved_tip == "single":
         raw_ring, raw_center, tip_groups = _build_tip_single(raw_oml)
-    elif resolved_tip == "cap4":
-        raw_ring, raw_center, tip_groups = _build_tip_cap4(
+    elif resolved_tip == "airfoil_face":
+        raw_ring, raw_center, tip_groups = _build_tip_airfoil_face_cap4(
             raw_oml,
             collar_points=tip_radial_points,
             width_frac=cap_width_frac,
@@ -2073,8 +2081,16 @@ def build_surface_mesh(
         "topology": {
             "mid4": "mid-chord O-type: 4 OML + 4 tip-ring + 1 tip-center",
             "split8": "split LE/TE O-type: 8 OML + 8 tip-ring + 4 tip-center",
-            "cap4": "camber-cap: 4 OML (narrow LE/TE wraps) + 4 collar + 1 camber-strip center",
+            "cap4": "cap4 OML: 4 airfoil-side blocks with independent tip closure",
         }[oml_topology],
+        "tip_topology_description": {
+            "airfoil_face": (
+                "quad-only full airfoil-face cap: 1 collar-free structured block with "
+                "a camber-line grid row and LE/TE curvature blending"
+            ),
+            "ring": "quad-only ring + center tip cap",
+            "single": "single quad-only transfinite tip patch",
+        }[resolved_tip],
         "oml_topology": oml_topology,
         "cap_wrap_points": cap_wrap_points,
         "cap_wrap_x": cap_wrap_x,
@@ -2094,6 +2110,27 @@ def build_surface_mesh(
         "tip_smooth_iters": tip_smooth_iters,
         "chordwise_distribution": chordwise_distribution,
         "chordwise_beta": chordwise_beta,
+        "tip_topology_requested": requested_tip,
+        "tip_cap": {
+            "quad_only": True,
+            "topology": (
+                "single_block_full_airfoil_face_camber_row"
+                if resolved_tip == "airfoil_face"
+                else resolved_tip
+            ),
+            "collar_ring": bool(raw_ring),
+            "center_block_count": len(raw_center),
+            "camber_line_is_block_interface": False,
+            "camber_line_grid_row": bool(
+                resolved_tip == "airfoil_face" and cap_wrap_points % 2 == 1
+            ),
+            "camber_line_row_index": (
+                cap_wrap_points // 2 if resolved_tip == "airfoil_face" else None
+            ),
+            "uses_tip_radial_points": bool(resolved_tip != "airfoil_face"),
+            "uses_cap_width_frac": bool(resolved_tip != "airfoil_face"),
+            "exact_singular_camber_cap_would_require_mixed_elements": False,
+        },
         "spanwise_distribution": spanwise_distribution,
         "spanwise_allocation": spanwise_allocation,
         "spanwise_beta": spanwise_beta,

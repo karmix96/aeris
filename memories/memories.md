@@ -94,6 +94,16 @@ Decisions live in `decision/` (ADR-style); study write-ups in `studies/`.
   code that hardcoded `generator_id != "bwb_segmented_v1"` (neutral + deflected CAD
   export). Fixed to accept `("bwb_segmented","bwb_segmented_v1")`. If more id-gated
   code surfaces, apply the same. Package import path stays `bwb_segmented_v1`.
+- **Split-elevon physical CAD is DEFERRED (broken at small scale).** Both the
+  neutral `--physical-cad` and the deflected `export-deflected-cad` produce INVALID
+  OCC solids for the rescaled small BWB — `validity_ok = all bodies shape.isValid()`
+  is False systematically (all seeds), and the deflected loft fails 2-3/8 bodies
+  (`StdFail_NotDone`). NOT the airfoils (clean), NOT flaky, NOT the split-epsilon.
+  Root cause: thin split-elevon bodies at small scale degenerate for OCC; the
+  standalone "worked" at the OLD larger scale. Real fix = denser elevon sections +
+  shape healing (each CAD build is >2 min — slow to iterate). Secondary path;
+  control authority is covered by native AVL. GUI: CAD removed from the Create-
+  geometry tab, lives only in "⑤ CAD export".
 - **Geometry runs are LEAN by default:** write-only inspection CSVs (control_points/
   planform_sections/section_3d + pyGeo authored/extracted/cst) are gated behind
   `geometry.outputs.save_detail_csv` / `--save-detail` (off). Empty `sections/` dir

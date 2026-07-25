@@ -1,0 +1,9 @@
+uniform-25             n= 27 ramp/band= 38.9% CL_de=0.004191
+clustered eps=0.02     n= 25 ramp/band= 26.7% CL_de=0.004119
+clustered eps=0.01     n= 25 ramp/band= 13.3% CL_de=0.004061
+REFERENCE 65-uniform   n= 67 ramp/band= 14.6% CL_de=None
+Traceback (most recent call last):
+  File "/tmp/narrow_fix.py", line 93, in <module>
+    L.append(f"{name:<22}{v['n']:>9}{v['ramp_frac']:>10.1%}{v['CL_de']:>11.6f}{err:>11.2f}%")
+                                                           ^^^^^^^^^^^^^^^^^^^
+TypeError: unsupported format string passed to NoneType.__format__

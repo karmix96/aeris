@@ -1,0 +1,17 @@
+Grid trade at EQUAL vortex cost (~4608): where to spend the budget
+reference = 25/2/48 (finest chordwise affordable; coarse spanwise by necessity)
+spanwise contribution is NOT captured here -- taken from Task 4b:
+   4/interval 0.54% worst-seed, 3/interval 0.75%, 2/interval 1.29%
+
+=== hinge 0.75 ===
+candidate    strips   vort       CL    CDind       Cm      Cmq    CL_de
+A_25_4_24       192   4608    0.49%    1.37%    0.68%    0.27%    1.39%
+B_25_3_32       144   4608    0.30%    0.81%    0.43%    0.18%    0.79%
+C_25_2_40        96   3840    0.04%    0.21%    0.05%    0.00%    0.30%
+
+=== hinge 0.814 ===
+candidate    strips   vort       CL    CDind       Cm      Cmq    CL_de
+A_25_4_24       192   4608    0.52%    1.47%    0.75%    0.27%    1.84%
+B_25_3_32       144   4608    0.29%    0.80%    0.43%    0.18%    0.80%
+C_25_2_40        96   3840    0.04%    0.22%    0.05%    0.00%    0.33%
+

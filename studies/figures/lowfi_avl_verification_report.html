@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Low-fidelity AVL verification campaign</title><style>
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin:0; background:#f9f9f7; color:#0b0b0b;
+  font:15px/1.62 system-ui,-apple-system,"Segoe UI",sans-serif; }
+.wrap { max-width:920px; margin:0 auto; padding:44px 22px 90px; }
+h1 { font-size:30px; line-height:1.22; letter-spacing:-.02em; margin:0 0 6px; }
+.sub { color:#52514e; margin:0 0 26px; font-size:15px; }
+h2 { font-size:20px; margin:46px 0 8px; letter-spacing:-.01em; }
+h2 .num { color:#898781; font-variant-numeric:tabular-nums; margin-right:8px; }
+h3 { font-size:16px; margin:0 0 3px; letter-spacing:-.01em; }
+.lede { color:#52514e; margin:0 0 18px; }
+.fig { background:#fcfcfb; border:1px solid rgba(11,11,11,.10); border-radius:12px;
+  margin:0 0 22px; padding:18px 18px 12px; }
+figcaption p { color:#52514e; font-size:13.5px; margin:0 0 10px; }
+svg { width:100%; height:auto; display:block; overflow:visible; }
+.grid { stroke:#e1e0d9; stroke-width:1; }
+.axis { stroke:#c3c2b7; stroke-width:1; }
+.tick { fill:#898781; font-size:11px; font-variant-numeric:tabular-nums; }
+.axlabel { fill:#52514e; font-size:12px; }
+.rowlab { fill:#52514e; font-size:12.5px; }
+.val { fill:#52514e; font-size:11.5px; font-variant-numeric:tabular-nums; }
+.ptlab { fill:#898781; font-size:10.5px; font-variant-numeric:tabular-nums; }
+.ln { fill:none; stroke-width:2; stroke-linejoin:round; stroke-linecap:round; }
+.mk { stroke:#fcfcfb; stroke-width:2; }
+.mk:hover, .mk:focus { r:6.5; outline:none; }
+.dlabel { font-size:12px; font-weight:600; }
+.track { fill:#e1e0d9; }
+.bar { fill:#2a78d6; }
+.bar.good { fill:#0ca30c; } .bar.warn { fill:#fab219; } .bar.crit { fill:#d03b3b; }
+.whisk { stroke:#0b0b0b; stroke-width:2; }
+.zero { stroke:#898781; stroke-width:1; stroke-dasharray:3 3; }
+.s0 { stroke:#2a78d6; } .s1 { stroke:#eb6834; } .s2 { stroke:#1baf7a; } .s3 { stroke:#eda100; }
+circle.s0 { fill:#2a78d6; } circle.s1 { fill:#eb6834; }
+circle.s2 { fill:#1baf7a; } circle.s3 { fill:#eda100; }
+text.s0 { fill:#2a78d6; stroke:none; } text.s1 { fill:#eb6834; stroke:none; }
+text.s2 { fill:#1baf7a; stroke:none; } text.s3 { fill:#eda100; stroke:none; }
+.note { font-size:13px; color:#52514e; margin:12px 0 2px;
+  border-top:1px solid #e1e0d9; padding-top:11px; }
+code { font-size:12.5px; background:#f0efec; padding:1px 5px; border-radius:4px; }
+.tbl { margin-top:10px; }
+.tbl summary { cursor:pointer; font-size:12.5px; color:#52514e; }
+.scroll { overflow-x:auto; margin-top:8px; }
+table { border-collapse:collapse; font-size:12px; width:100%;
+  font-variant-numeric:tabular-nums; }
+th,td { text-align:right; padding:4px 9px; border-bottom:1px solid #e1e0d9;
+  white-space:nowrap; }
+th:first-child,td:first-child { text-align:left; }
+th { color:#52514e; font-weight:600; }
+.kpis { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); }
+.kpi { display:flex; flex-direction:column; gap:2px; background:#f9f9f7;
+  border:1px solid rgba(11,11,11,.08); border-radius:9px; padding:13px 14px; }
+.kpi-l { font-size:12px; color:#52514e; }
+.kpi-v { font-size:26px; font-weight:650; letter-spacing:-.02em; color:#0ca30c; }
+.kpi-r { font-size:11.5px; color:#898781; font-variant-numeric:tabular-nums; }
+.kpi-w { font-size:12px; color:#52514e; margin-top:5px; }
+.card { background:#fcfcfb; border:1px solid rgba(11,11,11,.10);
+  border-left:3px solid #2a78d6; border-radius:10px; padding:18px 20px; margin:0 0 22px; }
+.card table { width:auto; }
+.card td:first-child { font-weight:600; }
+.pill { display:inline-block; font-size:11px; padding:2px 9px; border-radius:20px;
+  background:#f0efec; color:#52514e; margin-right:6px; }
+.tip { position:fixed; pointer-events:none; opacity:0; transition:opacity .1s;
+  background:#0b0b0b; color:#fff; font-size:12px; padding:6px 9px; border-radius:6px;
+  z-index:9; max-width:280px; font-variant-numeric:tabular-nums; }
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) body { background:#0d0d0d; color:#fff; }
+  :root:where(:not([data-theme="light"])) .sub,
+  :root:where(:not([data-theme="light"])) .lede,
+  :root:where(:not([data-theme="light"])) figcaption p,
+  :root:where(:not([data-theme="light"])) .note,
+  :root:where(:not([data-theme="light"])) .axlabel,
+  :root:where(:not([data-theme="light"])) .rowlab,
+  :root:where(:not([data-theme="light"])) .val,
+  :root:where(:not([data-theme="light"])) th,
+  :root:where(:not([data-theme="light"])) .kpi-l,
+  :root:where(:not([data-theme="light"])) .kpi-w,
+  :root:where(:not([data-theme="light"])) .tbl summary { color:#c3c2b7; }
+  :root:where(:not([data-theme="light"])) .fig,
+  :root:where(:not([data-theme="light"])) .card { background:#1a1a19;
+    border-color:rgba(255,255,255,.10); }
+  :root:where(:not([data-theme="light"])) .kpi { background:#0d0d0d;
+    border-color:rgba(255,255,255,.09); }
+  :root:where(:not([data-theme="light"])) .grid { stroke:#2c2c2a; }
+  :root:where(:not([data-theme="light"])) .axis { stroke:#383835; }
+  :root:where(:not([data-theme="light"])) .track { fill:#2c2c2a; }
+  :root:where(:not([data-theme="light"])) .whisk { stroke:#fff; }
+  :root:where(:not([data-theme="light"])) th,
+  :root:where(:not([data-theme="light"])) td { border-color:#2c2c2a; }
+  :root:where(:not([data-theme="light"])) code { background:#2c2c2a; }
+  :root:where(:not([data-theme="light"])) .pill { background:#2c2c2a; color:#c3c2b7; }
+  :root:where(:not([data-theme="light"])) .mk { stroke:#1a1a19; }
+  :root:where(:not([data-theme="light"])) .s0 { stroke:#3987e5; }
+  :root:where(:not([data-theme="light"])) .s1 { stroke:#d95926; }
+  :root:where(:not([data-theme="light"])) .s2 { stroke:#199e70; }
+  :root:where(:not([data-theme="light"])) .s3 { stroke:#c98500; }
+  :root:where(:not([data-theme="light"])) circle.s0 { fill:#3987e5; }
+  :root:where(:not([data-theme="light"])) circle.s1 { fill:#d95926; }
+  :root:where(:not([data-theme="light"])) circle.s2 { fill:#199e70; }
+  :root:where(:not([data-theme="light"])) circle.s3 { fill:#c98500; }
+  :root:where(:not([data-theme="light"])) text.s0 { fill:#3987e5; }
+  :root:where(:not([data-theme="light"])) text.s1 { fill:#d95926; }
+  :root:where(:not([data-theme="light"])) text.s2 { fill:#199e70; }
+  :root:where(:not([data-theme="light"])) text.s3 { fill:#c98500; }
+  :root:where(:not([data-theme="light"])) .bar { fill:#3987e5; }
+  :root:where(:not([data-theme="light"])) .card { border-left-color:#3987e5; }
+}
+</style></head><body><div class="wrap">
+<h1>Low-fidelity AVL: verification campaign</h1>
+<p class="sub">pyGeo → native AVL + NeuralFoil, for the BWB ISR UAV design space.
+Tasks 1–4 · DECISION-0005 … 0009 · 2026-07-25</p>
+
+
+<div class="card">
+<h3 style="margin-bottom:10px">The panelling to use from now on</h3>
+<table>
+<tr><td>Geometry sections</td><td><code>n_sections = 25</code></td>
+    <td>≤0.56 % worst-seed on all forces + stability derivatives</td></tr>
+<tr><td>Section placement</td><td><code>span_margin = 0.0</code>, snap to elevon edges</td>
+    <td>full span; a margin opens a centreline gap (Fig 1)</td></tr>
+<tr><td>Spanwise panels</td><td><code>spanwise_panels_per_section = 4</code></td>
+    <td>96/side; ≤0.54 % worst-seed (Fig 6a)</td></tr>
+<tr><td>Chordwise panels</td><td><code>nchordwise = 24</code> &nbsp;<span class="pill">was 8</span></td>
+    <td>CL_δe 7.7 % → ~1.1 % (Fig 6b, 7)</td></tr>
+<tr><td>Chordwise spacing</td><td><code>cspace = 1.0</code> (cosine)</td>
+    <td>uniform halves the elevon error but costs 14× on Xnp (Fig 7)</td></tr>
+</table>
+<p class="note" style="margin-bottom:0">Cost: 192 strips, 4608 vortices — inside
+both AVL array limits. <strong>Economy setting</strong> for work where the elevon
+derivative is not the object of study: <code>nchordwise = 16</code> (CL_δe ~2.6 %,
+everything else ≤0.4 %, 3072 vortices).
+<strong>Hard ceilings:</strong> (n_sections − 1) × spanwise_panels ≤ 250 strips,
+and strips × nchordwise ≤ ~6000 vortices — 49/4/16 and 65/4/anything both fail.
+Already applied as the default in <code>native_avl.py</code>,
+<code>pygeo_avl_adapter.py</code> and <code>aeris aero pygeo-native</code>.</p>
+</div>
+
+
+<h2><span class="num">1</span>Geometry fidelity — two defects that moved everything</h2>
+<p class="lede">Confirming the chain "runs clean" is what exposed these. Both are
+fixed; both changed the answers by tens of percent, so every low-fidelity number
+produced before 2026-07-25 is invalid.</p>
+<figure class="fig" id="f1">
+<figcaption><h3>Fig 1 — The extraction span margin was corrupting every number</h3><p>Error against the correct full-span model (margin = 0, not plotted — it is the zero). Baseline seed, α = 3°, 25 sections, viscous on.</p></figcaption>
+<svg viewBox="0 0 760 320" role="img" aria-label="Fig 1 — The extraction span margin was corrupting every number">
+<line class="grid" x1="74" y1="268.0" x2="644" y2="268.0"/>
+<text class="tick" x="64" y="272.0" text-anchor="end">1e+00</text>
+<line class="grid" x1="74" y1="210.3" x2="644" y2="210.3"/>
+<text class="tick" x="64" y="214.3" text-anchor="end">3e+00</text>
+<line class="grid" x1="74" y1="147.0" x2="644" y2="147.0"/>
+<text class="tick" x="64" y="151.0" text-anchor="end">1e+01</text>
+<line class="grid" x1="74" y1="89.3" x2="644" y2="89.3"/>
+<text class="tick" x="64" y="93.3" text-anchor="end">3e+01</text>
+<line class="grid" x1="74" y1="26.0" x2="644" y2="26.0"/>
+<text class="tick" x="64" y="30.0" text-anchor="end">1e+02</text>
+<line class="axis" x1="74" y1="268" x2="644" y2="268"/>
+<text class="tick" x="74.0" y="288" text-anchor="middle">0.02</text>
+<text class="tick" x="216.5" y="288" text-anchor="middle">0.01</text>
+<text class="tick" x="359.0" y="288" text-anchor="middle">0.005</text>
+<text class="tick" x="501.5" y="288" text-anchor="middle">0.001</text>
+<text class="tick" x="644.0" y="288" text-anchor="middle">0.0001</text>
+<text class="axlabel" x="359" y="312" text-anchor="middle">span_margin  (inset from each span end)</text>
+<path class="ln s0" d="M74.0,57.5 L216.5,66.5 L359.0,75.6 L501.5,104.8 L644.0,190.5"/>
+<circle class="mk s0" cx="74.0" cy="57.5" r="4.5" tabindex="0" data-t="CL: 54.9%"/>
+<circle class="mk s0" cx="216.5" cy="66.5" r="4.5" tabindex="0" data-t="CL: 46.3%"/>
+<circle class="mk s0" cx="359.0" cy="75.6" r="4.5" tabindex="0" data-t="CL: 38.9%"/>
+<circle class="mk s0" cx="501.5" cy="104.8" r="4.5" tabindex="0" data-t="CL: 22.3%"/>
+<circle class="mk s0" cx="644.0" cy="190.5" r="4.5" tabindex="0" data-t="CL: 4.4%"/>
+<text class="dlabel s0" x="654.0" y="194.5">CL</text>
+<path class="ln s1" d="M74.0,96.3 L216.5,103.4 L359.0,111.3 L501.5,139.6 L644.0,225.5"/>
+<circle class="mk s1" cx="74.0" cy="96.3" r="4.5" tabindex="0" data-t="CLα: 26.2%"/>
+<circle class="mk s1" cx="216.5" cy="103.4" r="4.5" tabindex="0" data-t="CLα: 22.9%"/>
+<circle class="mk s1" cx="359.0" cy="111.3" r="4.5" tabindex="0" data-t="CLα: 19.7%"/>
+<circle class="mk s1" cx="501.5" cy="139.6" r="4.5" tabindex="0" data-t="CLα: 11.5%"/>
+<circle class="mk s1" cx="644.0" cy="225.5" r="4.5" tabindex="0" data-t="CLα: 2.2%"/>
+<text class="dlabel s1" x="654.0" y="229.5">CLα</text>
+<path class="ln s2" d="M74.0,69.5 L216.5,73.4 L359.0,79.2 L501.5,105.3 L644.0,190.2"/>
+<circle class="mk s2" cx="74.0" cy="69.5" r="4.5" tabindex="0" data-t="e: 43.7%"/>
+<circle class="mk s2" cx="216.5" cy="73.4" r="4.5" tabindex="0" data-t="e: 40.6%"/>
+<circle class="mk s2" cx="359.0" cy="79.2" r="4.5" tabindex="0" data-t="e: 36.3%"/>
+<circle class="mk s2" cx="501.5" cy="105.3" r="4.5" tabindex="0" data-t="e: 22.1%"/>
+<circle class="mk s2" cx="644.0" cy="190.2" r="4.5" tabindex="0" data-t="e: 4.4%"/>
+<text class="dlabel s2" x="654.0" y="194.2">e</text>
+<path class="ln s3" d="M74.0,59.1 L216.5,68.3 L359.0,77.4 L501.5,107.0 L644.0,192.4"/>
+<circle class="mk s3" cx="74.0" cy="59.1" r="4.5" tabindex="0" data-t="L/D: 53.3%"/>
+<circle class="mk s3" cx="216.5" cy="68.3" r="4.5" tabindex="0" data-t="L/D: 44.7%"/>
+<circle class="mk s3" cx="359.0" cy="77.4" r="4.5" tabindex="0" data-t="L/D: 37.6%"/>
+<circle class="mk s3" cx="501.5" cy="107.0" r="4.5" tabindex="0" data-t="L/D: 21.4%"/>
+<circle class="mk s3" cx="644.0" cy="192.4" r="4.5" tabindex="0" data-t="L/D: 4.2%"/>
+<text class="dlabel s3" x="654.0" y="196.4">L/D</text>
+</svg>
+<p class="note">A non-zero margin puts the innermost section at y &gt; 0, so <code>YDUPLICATE</code> mirrors it into a <strong>centreline gap</strong> and AVL sheds a spurious inboard tip-vortex pair. The old default of 0.02 understated CL by <strong>54.9 %</strong> and the lift-curve slope by <strong>26.2 %</strong>. Error is monotonic in the gap and reaches zero only at margin exactly 0 — even the 1e-4 margin used for geometric metrics still costs 2.2 % of CLα.</p>
+<details class="tbl"><summary>Table view</summary><div class="scroll"><table><thead><tr><th>span_margin</th><th>centreline gap (m)</th><th>CL</th><th>CLα /rad</th><th>e</th><th>L/D</th></tr></thead><tbody><tr><td>0.02</td><td>0.0326</td><td>0.02230</td><td>2.7409</td><td>0.3162</td><td>3.387</td></tr><tr><td>0.01</td><td>0.0163</td><td>0.02657</td><td>2.8633</td><td>0.3336</td><td>4.006</td></tr><tr><td>0.005</td><td>0.0082</td><td>0.03021</td><td>2.9820</td><td>0.3576</td><td>4.522</td></tr><tr><td>0.001</td><td>0.0016</td><td>0.03842</td><td>3.2877</td><td>0.4373</td><td>5.695</td></tr><tr><td>0.0001</td><td>0.0002</td><td>0.04729</td><td>3.6319</td><td>0.5368</td><td>6.942</td></tr><tr><td>0</td><td>0.0000</td><td>0.04945</td><td>3.7153</td><td>0.5615</td><td>7.247</td></tr></tbody></table></div></details>
+</figure>
+
+<h2><span class="num">2</span>The viscous and thickness corrections</h2>
+<p class="lede">AVL is inviscid. Its two per-section hooks are the entire
+difference between "AVL on a wireframe" and "AVL that knows what airfoil it is
+flying". Both have regressed silently before, so presence in the <code>.avl</code>
+is not evidence — each is established as PRESENT, CORRECT against an independent
+recomputation, and ACTIVE by ablation.</p>
+<figure class="fig" id="f2a">
+<figcaption><h3>Fig 2a — CDCL: a separate NeuralFoil polar per section</h3><p>Injected minimum-drag cd (x10^-3) for all 25 sections, at each section's own local Reynolds number. alpha = 6 deg.</p></figcaption>
+<svg viewBox="0 0 760 320" role="img" aria-label="Fig 2a — CDCL: a separate NeuralFoil polar per section">
+<line class="grid" x1="74" y1="268.0" x2="644" y2="268.0"/>
+<text class="tick" x="64" y="272.0" text-anchor="end">0</text>
+<line class="grid" x1="74" y1="207.5" x2="644" y2="207.5"/>
+<text class="tick" x="64" y="211.5" text-anchor="end">5.16</text>
+<line class="grid" x1="74" y1="147.0" x2="644" y2="147.0"/>
+<text class="tick" x="64" y="151.0" text-anchor="end">10.3</text>
+<line class="grid" x1="74" y1="86.5" x2="644" y2="86.5"/>
+<text class="tick" x="64" y="90.5" text-anchor="end">15.5</text>
+<line class="grid" x1="74" y1="26.0" x2="644" y2="26.0"/>
+<text class="tick" x="64" y="30.0" text-anchor="end">20.7</text>
+<line class="axis" x1="74" y1="268" x2="644" y2="268"/>
+<text class="tick" x="74.0" y="288" text-anchor="middle">0.00</text>
+<text class="tick" x="97.8" y="288" text-anchor="middle"></text>
+<text class="tick" x="121.5" y="288" text-anchor="middle"></text>
+<text class="tick" x="145.2" y="288" text-anchor="middle"></text>
+<text class="tick" x="169.0" y="288" text-anchor="middle"></text>
+<text class="tick" x="192.8" y="288" text-anchor="middle"></text>
+<text class="tick" x="216.5" y="288" text-anchor="middle">0.25</text>
+<text class="tick" x="240.2" y="288" text-anchor="middle"></text>
+<text class="tick" x="264.0" y="288" text-anchor="middle"></text>
+<text class="tick" x="287.8" y="288" text-anchor="middle"></text>
+<text class="tick" x="311.5" y="288" text-anchor="middle"></text>
+<text class="tick" x="335.2" y="288" text-anchor="middle"></text>
+<text class="tick" x="359.0" y="288" text-anchor="middle">0.50</text>
+<text class="tick" x="382.8" y="288" text-anchor="middle"></text>
+<text class="tick" x="406.5" y="288" text-anchor="middle"></text>
+<text class="tick" x="430.2" y="288" text-anchor="middle"></text>
+<text class="tick" x="454.0" y="288" text-anchor="middle"></text>
+<text class="tick" x="477.8" y="288" text-anchor="middle"></text>
+<text class="tick" x="501.5" y="288" text-anchor="middle">0.75</text>
+<text class="tick" x="525.2" y="288" text-anchor="middle"></text>
+<text class="tick" x="549.0" y="288" text-anchor="middle"></text>
+<text class="tick" x="572.8" y="288" text-anchor="middle"></text>
+<text class="tick" x="596.5" y="288" text-anchor="middle"></text>
+<text class="tick" x="620.2" y="288" text-anchor="middle"></text>
+<text class="tick" x="644.0" y="288" text-anchor="middle">1.00</text>
+<text class="axlabel" x="359" y="312" text-anchor="middle">spanwise station  y / semispan</text>
+<path class="ln s0" d="M74.0,203.9 L97.8,203.5 L121.5,202.8 L145.2,202.0 L169.0,200.9 L192.8,199.6 L216.5,197.9 L240.2,196.1 L264.0,194.1 L287.8,191.6 L311.5,188.4 L335.2,189.5 L359.0,193.3 L382.8,191.2 L406.5,189.3 L430.2,188.5 L454.0,187.1 L477.8,185.3 L501.5,183.1 L525.2,180.4 L549.0,176.9 L572.8,172.0 L596.5,160.6 L620.2,139.9 L644.0,26.0"/>
+<circle class="mk s0" cx="74.0" cy="203.9" r="4.5" tabindex="0" data-t="cd_min: 5.47e-3"/>
+<circle class="mk s0" cx="97.8" cy="203.5" r="4.5" tabindex="0" data-t="cd_min: 5.50e-3"/>
+<circle class="mk s0" cx="121.5" cy="202.8" r="4.5" tabindex="0" data-t="cd_min: 5.56e-3"/>
+<circle class="mk s0" cx="145.2" cy="202.0" r="4.5" tabindex="0" data-t="cd_min: 5.64e-3"/>
+<circle class="mk s0" cx="169.0" cy="200.9" r="4.5" tabindex="0" data-t="cd_min: 5.72e-3"/>
+<circle class="mk s0" cx="192.8" cy="199.6" r="4.5" tabindex="0" data-t="cd_min: 5.84e-3"/>
+<circle class="mk s0" cx="216.5" cy="197.9" r="4.5" tabindex="0" data-t="cd_min: 5.98e-3"/>
+<circle class="mk s0" cx="240.2" cy="196.1" r="4.5" tabindex="0" data-t="cd_min: 6.14e-3"/>
+<circle class="mk s0" cx="264.0" cy="194.1" r="4.5" tabindex="0" data-t="cd_min: 6.30e-3"/>
+<circle class="mk s0" cx="287.8" cy="191.6" r="4.5" tabindex="0" data-t="cd_min: 6.52e-3"/>
+<circle class="mk s0" cx="311.5" cy="188.4" r="4.5" tabindex="0" data-t="cd_min: 6.79e-3"/>
+<circle class="mk s0" cx="335.2" cy="189.5" r="4.5" tabindex="0" data-t="cd_min: 6.70e-3"/>
+<circle class="mk s0" cx="359.0" cy="193.3" r="4.5" tabindex="0" data-t="cd_min: 6.37e-3"/>
+<circle class="mk s0" cx="382.8" cy="191.2" r="4.5" tabindex="0" data-t="cd_min: 6.56e-3"/>
+<circle class="mk s0" cx="406.5" cy="189.3" r="4.5" tabindex="0" data-t="cd_min: 6.72e-3"/>
+<circle class="mk s0" cx="430.2" cy="188.5" r="4.5" tabindex="0" data-t="cd_min: 6.78e-3"/>
+<circle class="mk s0" cx="454.0" cy="187.1" r="4.5" tabindex="0" data-t="cd_min: 6.90e-3"/>
+<circle class="mk s0" cx="477.8" cy="185.3" r="4.5" tabindex="0" data-t="cd_min: 7.05e-3"/>
+<circle class="mk s0" cx="501.5" cy="183.1" r="4.5" tabindex="0" data-t="cd_min: 7.24e-3"/>
+<circle class="mk s0" cx="525.2" cy="180.4" r="4.5" tabindex="0" data-t="cd_min: 7.48e-3"/>
+<circle class="mk s0" cx="549.0" cy="176.9" r="4.5" tabindex="0" data-t="cd_min: 7.77e-3"/>
+<circle class="mk s0" cx="572.8" cy="172.0" r="4.5" tabindex="0" data-t="cd_min: 8.19e-3"/>
+<circle class="mk s0" cx="596.5" cy="160.6" r="4.5" tabindex="0" data-t="cd_min: 9.17e-3"/>
+<circle class="mk s0" cx="620.2" cy="139.9" r="4.5" tabindex="0" data-t="cd_min: 10.93e-3"/>
+<circle class="mk s0" cx="644.0" cy="26.0" r="4.5" tabindex="0" data-t="cd_min: 20.65e-3"/>
+<text class="dlabel s0" x="654.0" y="30.0">cd_min</text>
+</svg>
+<p class="note">25 sections, <strong>25 distinct polars</strong>. The tip is <strong>3.8x draggier than the root</strong> from the Reynolds effect alone (cd_min 0.02065 vs 0.00547) - exactly the variation a wing-level or 4-airfoil-step CDCL would smear away. Verified active by ablation: AVL's CDvis goes 0 -> 0.00663 when the correction is switched on, and the injected values match an independent NeuralFoil refit to 4.3e-7.</p>
+</figure>
+<figure class="fig" id="f2b">
+<figcaption><h3>Fig 2b — CLAF: thickness read off the realized loft</h3><p>t/c per section (%), which sets CLAF = 1 + 0.77 (t/c). Same 25 sections.</p></figcaption>
+<svg viewBox="0 0 760 320" role="img" aria-label="Fig 2b — CLAF: thickness read off the realized loft">
+<line class="grid" x1="74" y1="268.0" x2="644" y2="268.0"/>
+<text class="tick" x="64" y="272.0" text-anchor="end">0</text>
+<line class="grid" x1="74" y1="207.5" x2="644" y2="207.5"/>
+<text class="tick" x="64" y="211.5" text-anchor="end">3.77</text>
+<line class="grid" x1="74" y1="147.0" x2="644" y2="147.0"/>
+<text class="tick" x="64" y="151.0" text-anchor="end">7.53</text>
+<line class="grid" x1="74" y1="86.5" x2="644" y2="86.5"/>
+<text class="tick" x="64" y="90.5" text-anchor="end">11.3</text>
+<line class="grid" x1="74" y1="26.0" x2="644" y2="26.0"/>
+<text class="tick" x="64" y="30.0" text-anchor="end">15.1</text>
+<line class="axis" x1="74" y1="268" x2="644" y2="268"/>
+<text class="tick" x="74.0" y="288" text-anchor="middle">0.00</text>
+<text class="tick" x="97.8" y="288" text-anchor="middle"></text>
+<text class="tick" x="121.5" y="288" text-anchor="middle"></text>
+<text class="tick" x="145.2" y="288" text-anchor="middle"></text>
+<text class="tick" x="169.0" y="288" text-anchor="middle"></text>
+<text class="tick" x="192.8" y="288" text-anchor="middle"></text>
+<text class="tick" x="216.5" y="288" text-anchor="middle">0.25</text>
+<text class="tick" x="240.2" y="288" text-anchor="middle"></text>
+<text class="tick" x="264.0" y="288" text-anchor="middle"></text>
+<text class="tick" x="287.8" y="288" text-anchor="middle"></text>
+<text class="tick" x="311.5" y="288" text-anchor="middle"></text>
+<text class="tick" x="335.2" y="288" text-anchor="middle"></text>
+<text class="tick" x="359.0" y="288" text-anchor="middle">0.50</text>
+<text class="tick" x="382.8" y="288" text-anchor="middle"></text>
+<text class="tick" x="406.5" y="288" text-anchor="middle"></text>
+<text class="tick" x="430.2" y="288" text-anchor="middle"></text>
+<text class="tick" x="454.0" y="288" text-anchor="middle"></text>
+<text class="tick" x="477.8" y="288" text-anchor="middle"></text>
+<text class="tick" x="501.5" y="288" text-anchor="middle">0.75</text>
+<text class="tick" x="525.2" y="288" text-anchor="middle"></text>
+<text class="tick" x="549.0" y="288" text-anchor="middle"></text>
+<text class="tick" x="572.8" y="288" text-anchor="middle"></text>
+<text class="tick" x="596.5" y="288" text-anchor="middle"></text>
+<text class="tick" x="620.2" y="288" text-anchor="middle"></text>
+<text class="tick" x="644.0" y="288" text-anchor="middle">1.00</text>
+<text class="axlabel" x="359" y="312" text-anchor="middle">spanwise station  y / semispan</text>
+<path class="ln s0" d="M74.0,27.1 L97.8,27.1 L121.5,27.1 L145.2,27.1 L169.0,27.1 L192.8,27.1 L216.5,27.1 L240.2,27.1 L264.0,27.1 L287.8,27.1 L311.5,27.1 L335.2,45.9 L359.0,88.3 L382.8,92.4 L406.5,92.4 L430.2,92.4 L454.0,92.4 L477.8,92.4 L501.5,92.4 L525.2,92.4 L549.0,92.4 L572.8,91.0 L596.5,80.8 L620.2,65.4 L644.0,26.0"/>
+<circle class="mk s0" cx="74.0" cy="27.1" r="4.5" tabindex="0" data-t="t/c: 15.00%"/>
+<circle class="mk s0" cx="97.8" cy="27.1" r="4.5" tabindex="0" data-t="t/c: 15.00%"/>
+<circle class="mk s0" cx="121.5" cy="27.1" r="4.5" tabindex="0" data-t="t/c: 15.00%"/>
+<circle class="mk s0" cx="145.2" cy="27.1" r="4.5" tabindex="0" data-t="t/c: 15.00%"/>
+<circle class="mk s0" cx="169.0" cy="27.1" r="4.5" tabindex="0" data-t="t/c: 15.00%"/>
+<circle class="mk s0" cx="192.8" cy="27.1" r="4.5" tabindex="0" data-t="t/c: 15.00%"/>
+<circle class="mk s0" cx="216.5" cy="27.1" r="4.5" tabindex="0" data-t="t/c: 15.00%"/>
+<circle class="mk s0" cx="240.2" cy="27.1" r="4.5" tabindex="0" data-t="t/c: 14.99%"/>
+<circle class="mk s0" cx="264.0" cy="27.1" r="4.5" tabindex="0" data-t="t/c: 15.00%"/>
+<circle class="mk s0" cx="287.8" cy="27.1" r="4.5" tabindex="0" data-t="t/c: 15.00%"/>
+<circle class="mk s0" cx="311.5" cy="27.1" r="4.5" tabindex="0" data-t="t/c: 15.00%"/>
+<circle class="mk s0" cx="335.2" cy="45.9" r="4.5" tabindex="0" data-t="t/c: 13.83%"/>
+<circle class="mk s0" cx="359.0" cy="88.3" r="4.5" tabindex="0" data-t="t/c: 11.19%"/>
+<circle class="mk s0" cx="382.8" cy="92.4" r="4.5" tabindex="0" data-t="t/c: 10.93%"/>
+<circle class="mk s0" cx="406.5" cy="92.4" r="4.5" tabindex="0" data-t="t/c: 10.93%"/>
+<circle class="mk s0" cx="430.2" cy="92.4" r="4.5" tabindex="0" data-t="t/c: 10.93%"/>
+<circle class="mk s0" cx="454.0" cy="92.4" r="4.5" tabindex="0" data-t="t/c: 10.93%"/>
+<circle class="mk s0" cx="477.8" cy="92.4" r="4.5" tabindex="0" data-t="t/c: 10.93%"/>
+<circle class="mk s0" cx="501.5" cy="92.4" r="4.5" tabindex="0" data-t="t/c: 10.93%"/>
+<circle class="mk s0" cx="525.2" cy="92.4" r="4.5" tabindex="0" data-t="t/c: 10.93%"/>
+<circle class="mk s0" cx="549.0" cy="92.4" r="4.5" tabindex="0" data-t="t/c: 10.93%"/>
+<circle class="mk s0" cx="572.8" cy="91.0" r="4.5" tabindex="0" data-t="t/c: 11.02%"/>
+<circle class="mk s0" cx="596.5" cy="80.8" r="4.5" tabindex="0" data-t="t/c: 11.65%"/>
+<circle class="mk s0" cx="620.2" cy="65.4" r="4.5" tabindex="0" data-t="t/c: 12.61%"/>
+<circle class="mk s0" cx="644.0" cy="26.0" r="4.5" tabindex="0" data-t="t/c: 15.07%"/>
+<text class="dlabel s0" x="654.0" y="30.0">t/c</text>
+</svg>
+<p class="note">16 distinct CLAF values from only <strong>4 authored station airfoils</strong>. The trace runs 15.00 % -> 10.93 % -> 15.07 %, i.e. mh91 -> e374 -> nlf1015 recovered from the surface <em>including the blends</em>, with the thin-airfoil minimum correctly interior. Ablation: forcing CLAF to 1 moves CLa 3.685 -> 3.484; the ratio 1.0576 sits between 1.0 (ignored) and the mean CLAF 1.1010 (no 3-D dilution), and lifting-line predicts 1.0641 - <strong>0.6 % away</strong>, confirming AVL treats it as a section property diluted by downwash.</p>
+<details class="tbl"><summary>Table view</summary><div class="scroll"><table><thead><tr><th>section</th><th>y/semispan</th><th>injected cd_min</th><th>t/c (drives CLAF)</th></tr></thead><tbody><tr><td>0</td><td>0.000</td><td>0.00547</td><td>0.1500</td></tr><tr><td>1</td><td>0.042</td><td>0.00550</td><td>0.1500</td></tr><tr><td>2</td><td>0.083</td><td>0.00556</td><td>0.1500</td></tr><tr><td>3</td><td>0.125</td><td>0.00564</td><td>0.1500</td></tr><tr><td>4</td><td>0.167</td><td>0.00572</td><td>0.1500</td></tr><tr><td>5</td><td>0.208</td><td>0.00584</td><td>0.1500</td></tr><tr><td>6</td><td>0.250</td><td>0.00598</td><td>0.1500</td></tr><tr><td>7</td><td>0.292</td><td>0.00614</td><td>0.1499</td></tr><tr><td>8</td><td>0.333</td><td>0.00630</td><td>0.1500</td></tr><tr><td>9</td><td>0.375</td><td>0.00652</td><td>0.1500</td></tr><tr><td>10</td><td>0.417</td><td>0.00679</td><td>0.1500</td></tr><tr><td>11</td><td>0.458</td><td>0.00670</td><td>0.1383</td></tr><tr><td>12</td><td>0.500</td><td>0.00637</td><td>0.1119</td></tr><tr><td>13</td><td>0.542</td><td>0.00656</td><td>0.1093</td></tr><tr><td>14</td><td>0.583</td><td>0.00672</td><td>0.1093</td></tr><tr><td>15</td><td>0.625</td><td>0.00678</td><td>0.1093</td></tr><tr><td>16</td><td>0.667</td><td>0.00690</td><td>0.1093</td></tr><tr><td>17</td><td>0.708</td><td>0.00705</td><td>0.1093</td></tr><tr><td>18</td><td>0.750</td><td>0.00724</td><td>0.1093</td></tr><tr><td>19</td><td>0.792</td><td>0.00748</td><td>0.1093</td></tr><tr><td>20</td><td>0.833</td><td>0.00777</td><td>0.1093</td></tr><tr><td>21</td><td>0.875</td><td>0.00819</td><td>0.1102</td></tr><tr><td>22</td><td>0.917</td><td>0.00917</td><td>0.1165</td></tr><tr><td>23</td><td>0.958</td><td>0.01093</td><td>0.1261</td></tr><tr><td>24</td><td>1.000</td><td>0.02065</td><td>0.1507</td></tr></tbody></table></div></details>
+</figure>
+
+<h2><span class="num">3</span>Native vs AeroSandbox, across the design space</h2>
+<figure class="fig" id="f4">
+<figcaption><h3>Fig 4 — Agreement holds across the whole design space</h3><p>Native vs AeroSandbox over 30 DoE samples (AR 3.11–6.62, span 1.52–2.49 m, all 19 free DVs varied). Bar = median, tick = worst.</p></figcaption>
+<svg viewBox="0 0 760 418" role="img" aria-label="Fig 4 — Agreement holds across the whole design space">
+<text class="rowlab" x="156" y="42" text-anchor="end">CL</text>
+<rect class="track" x="168" y="26" width="442" height="22" rx="4"/>
+<rect class="bar" x="168" y="26" width="126.5" height="22" rx="4" tabindex="0" data-t="CL: 0.687% (max 1.04%)"/>
+<line class="whisk" x1="358.9" y1="29" x2="358.9" y2="45"/>
+<text class="val" x="620" y="42">0.687%  /  1.04%</text>
+<text class="rowlab" x="156" y="74" text-anchor="end">CD (viscous)</text>
+<rect class="track" x="168" y="58" width="442" height="22" rx="4"/>
+<rect class="bar" x="168" y="58" width="252.2" height="22" rx="4" tabindex="0" data-t="CD (viscous): 1.37% (max 1.92%)"/>
+<line class="whisk" x1="522.2" y1="61" x2="522.2" y2="77"/>
+<text class="val" x="620" y="74">1.37%  /  1.92%</text>
+<text class="rowlab" x="156" y="106" text-anchor="end">CDind</text>
+<rect class="track" x="168" y="90" width="442" height="22" rx="4"/>
+<rect class="bar" x="168" y="90" width="442.0" height="22" rx="4" tabindex="0" data-t="CDind: 2.4% (max 3.68%)"/>
+<line class="whisk" x1="845.3" y1="93" x2="845.3" y2="109"/>
+<text class="val" x="620" y="106">2.4%  /  3.68%</text>
+<text class="rowlab" x="156" y="138" text-anchor="end">cd_profile</text>
+<rect class="track" x="168" y="122" width="442" height="22" rx="4"/>
+<rect class="bar" x="168" y="122" width="10.3" height="22" rx="4" tabindex="0" data-t="cd_profile: 0.0561% (max 0.111%)"/>
+<line class="whisk" x1="188.4" y1="125" x2="188.4" y2="141"/>
+<text class="val" x="620" y="138">0.0561%  /  0.111%</text>
+<text class="rowlab" x="156" y="170" text-anchor="end">Cm</text>
+<rect class="track" x="168" y="154" width="442" height="22" rx="4"/>
+<rect class="bar" x="168" y="154" width="226.3" height="22" rx="4" tabindex="0" data-t="Cm: 1.23% (max 1.58%)"/>
+<line class="whisk" x1="459.4" y1="157" x2="459.4" y2="173"/>
+<text class="val" x="620" y="170">1.23%  /  1.58%</text>
+<text class="rowlab" x="156" y="202" text-anchor="end">L/D</text>
+<rect class="track" x="168" y="186" width="442" height="22" rx="4"/>
+<rect class="bar" x="168" y="186" width="110.0" height="22" rx="4" tabindex="0" data-t="L/D: 0.598% (max 1.25%)"/>
+<line class="whisk" x1="398.1" y1="189" x2="398.1" y2="205"/>
+<text class="val" x="620" y="202">0.598%  /  1.25%</text>
+<text class="rowlab" x="156" y="234" text-anchor="end">CLα</text>
+<rect class="track" x="168" y="218" width="442" height="22" rx="4"/>
+<rect class="bar" x="168" y="218" width="18.4" height="22" rx="4" tabindex="0" data-t="CLα: 0.1% (max 0.203%)"/>
+<line class="whisk" x1="205.3" y1="221" x2="205.3" y2="237"/>
+<text class="val" x="620" y="234">0.1%  /  0.203%</text>
+<text class="rowlab" x="156" y="266" text-anchor="end">Cmα</text>
+<rect class="track" x="168" y="250" width="442" height="22" rx="4"/>
+<rect class="bar" x="168" y="250" width="5.5" height="22" rx="4" tabindex="0" data-t="Cmα: 0.0297% (max 0.07%)"/>
+<line class="whisk" x1="180.9" y1="253" x2="180.9" y2="269"/>
+<text class="val" x="620" y="266">0.0297%  /  0.07%</text>
+<text class="rowlab" x="156" y="298" text-anchor="end">Cmq</text>
+<rect class="track" x="168" y="282" width="442" height="22" rx="4"/>
+<rect class="bar" x="168" y="282" width="28.9" height="22" rx="4" tabindex="0" data-t="Cmq: 0.157% (max 0.301%)"/>
+<line class="whisk" x1="223.4" y1="285" x2="223.4" y2="301"/>
+<text class="val" x="620" y="298">0.157%  /  0.301%</text>
+<text class="rowlab" x="156" y="330" text-anchor="end">Clp</text>
+<rect class="track" x="168" y="314" width="442" height="22" rx="4"/>
+<rect class="bar" x="168" y="314" width="87.5" height="22" rx="4" tabindex="0" data-t="Clp: 0.475% (max 1.05%)"/>
+<line class="whisk" x1="361.7" y1="317" x2="361.7" y2="333"/>
+<text class="val" x="620" y="330">0.475%  /  1.05%</text>
+<text class="rowlab" x="156" y="362" text-anchor="end">Xnp</text>
+<rect class="track" x="168" y="346" width="442" height="22" rx="4"/>
+<rect class="bar" x="168" y="346" width="3.0" height="22" rx="4" tabindex="0" data-t="Xnp: 0.0036% (max 0.00732%)"/>
+<line class="whisk" x1="169.3" y1="349" x2="169.3" y2="365"/>
+<text class="val" x="620" y="362">0.0036%  /  0.00732%</text>
+</svg>
+<p class="note">Every quantity the multifidelity workflow consumes agrees to ≲1 % median. The lift-curve slope agrees <strong>7× better than the lift itself</strong> (CLα 0.10 % vs CL 0.69 %) — the signature of a constant lift offset rather than a different solution, which Fig 3 identifies. No dependence on position in the design space: corr(AR, CL error) = −0.287, not significant at n = 30. These figures are an <em>upper bound</em> inflated by δe = 4°.</p>
+</figure>
+<figure class="fig" id="f3">
+<figcaption><h3>Fig 3 — The whole native-vs-AeroSandbox gap is the elevon</h3><p>ΔCL (ASB − native) ×10⁻³ against elevon deflection, α = 6°, identical pyGeo sections into both solvers.</p></figcaption>
+<svg viewBox="0 0 760 320" role="img" aria-label="Fig 3 — The whole native-vs-AeroSandbox gap is the elevon">
+<line class="grid" x1="74" y1="268.0" x2="644" y2="268.0"/>
+<text class="tick" x="64" y="272.0" text-anchor="end">-0.03</text>
+<line class="grid" x1="74" y1="207.5" x2="644" y2="207.5"/>
+<text class="tick" x="64" y="211.5" text-anchor="end">1.24</text>
+<line class="grid" x1="74" y1="147.0" x2="644" y2="147.0"/>
+<text class="tick" x="64" y="151.0" text-anchor="end">2.51</text>
+<line class="grid" x1="74" y1="86.5" x2="644" y2="86.5"/>
+<text class="tick" x="64" y="90.5" text-anchor="end">3.77</text>
+<line class="grid" x1="74" y1="26.0" x2="644" y2="26.0"/>
+<text class="tick" x="64" y="30.0" text-anchor="end">5.04</text>
+<line class="axis" x1="74" y1="268" x2="644" y2="268"/>
+<line class="zero" x1="74" y1="266.6" x2="644" y2="266.6"/>
+<text class="tick" x="74.0" y="288" text-anchor="middle">0</text>
+<text class="tick" x="264.0" y="288" text-anchor="middle">2</text>
+<text class="tick" x="454.0" y="288" text-anchor="middle">4</text>
+<text class="tick" x="644.0" y="288" text-anchor="middle">8</text>
+<text class="axlabel" x="359" y="312" text-anchor="middle">symmetric elevon deflection δe  (deg)</text>
+<path class="ln s0" d="M74.0,268.0 L264.0,218.8 L454.0,170.1 L644.0,72.3"/>
+<circle class="mk s0" cx="74.0" cy="268.0" r="4.5" tabindex="0" data-t="seed 7000: -0.030e-3"/>
+<circle class="mk s0" cx="264.0" cy="218.8" r="4.5" tabindex="0" data-t="seed 7000: 1.000e-3"/>
+<circle class="mk s0" cx="454.0" cy="170.1" r="4.5" tabindex="0" data-t="seed 7000: 2.020e-3"/>
+<circle class="mk s0" cx="644.0" cy="72.3" r="4.5" tabindex="0" data-t="seed 7000: 4.070e-3"/>
+<text class="dlabel s0" x="654.0" y="76.3">seed 7000</text>
+<path class="ln s1" d="M74.0,252.2 L264.0,195.9 L454.0,139.6 L644.0,26.0"/>
+<circle class="mk s1" cx="74.0" cy="252.2" r="4.5" tabindex="0" data-t="seed 7005: 0.300e-3"/>
+<circle class="mk s1" cx="264.0" cy="195.9" r="4.5" tabindex="0" data-t="seed 7005: 1.480e-3"/>
+<circle class="mk s1" cx="454.0" cy="139.6" r="4.5" tabindex="0" data-t="seed 7005: 2.660e-3"/>
+<circle class="mk s1" cx="644.0" cy="26.0" r="4.5" tabindex="0" data-t="seed 7005: 5.040e-3"/>
+<text class="dlabel s1" x="654.0" y="30.0">seed 7005</text>
+</svg>
+<p class="note"><strong>At δe = 0 the two solvers agree on CL to 3e-5 … 3e-4</strong> — three orders of magnitude better than the 0.7 % headline. The gap is linear in δe with ~zero intercept, so 94–101 % of it is the elevon. Its slope (5.12e-4 /deg) matches the independently measured +5.89 % CL_δe bias prediction (5.6e-4 /deg) to 9 %. Two earlier explanations — airfoil coordinate resolution and Mach handling — were tested and refuted.</p>
+<details class="tbl"><summary>Table view</summary><div class="scroll"><table><thead><tr><th>seed</th><th>δe (deg)</th><th>CL native</th><th>CL ASB</th><th>ΔCL</th></tr></thead><tbody><tr><td>7005</td><td>0</td><td>0.24540</td><td>0.24570</td><td>+0.00030</td></tr><tr><td>7005</td><td>2</td><td>0.26611</td><td>0.26759</td><td>+0.00148</td></tr><tr><td>7005</td><td>4</td><td>0.28681</td><td>0.28947</td><td>+0.00266</td></tr><tr><td>7005</td><td>8</td><td>0.32816</td><td>0.33320</td><td>+0.00504</td></tr><tr><td>7000</td><td>0</td><td>0.33102</td><td>0.33099</td><td>-0.00003</td></tr><tr><td>7000</td><td>2</td><td>0.34987</td><td>0.35087</td><td>+0.00100</td></tr><tr><td>7000</td><td>4</td><td>0.36871</td><td>0.37073</td><td>+0.00202</td></tr><tr><td>7000</td><td>8</td><td>0.40634</td><td>0.41041</td><td>+0.00407</td></tr></tbody></table></div></details>
+</figure>
+
+<h2><span class="num">4</span>Independent physics validation</h2>
+<p class="lede">Code-to-code agreement is not verification. This leg uses
+closed-form answers.</p>
+<figure class="fig" id="f9">
+<figcaption><h3>Fig 9 — Independent physics validation: 11/11</h3><p>Closed-form checks on analytic wings built from a duck-typed stub, with no pyGeo present.</p></figcaption>
+<div class="kpis">
+<div class="kpi"><span class="kpi-l">Elliptic wing span efficiency</span><span class="kpi-v">0.99750</span><span class="kpi-r">theory 1.0</span><span class="kpi-w">The keystone. Elliptic loading is the minimum-induced-drag distribution, so e = 1 requires the chord law, spanwise stations, Sref/Bref AND AVL's Trefftz integration all to be right at once.</span></div>
+<div class="kpi"><span class="kpi-l">Symmetric untwisted CL(α = 0)</span><span class="kpi-v">0.00000</span><span class="kpi-r">theory 0</span><span class="kpi-w">NACA 0012, no twist, no camber.</span></div>
+<div class="kpi"><span class="kpi-l">Rectangular CLα</span><span class="kpi-v">4.4367</span><span class="kpi-r">Helmbold 4.5287</span><span class="kpi-w">2.0 % below Helmbold and 5.8 % below the e = 1 lifting-line value — bracketed on the physically correct side, since rectangular loading is less efficient than elliptic.</span></div>
+</div>
+<p class="note"><strong>Why this exists:</strong> the native and AeroSandbox paths share <code>inject_polar_cdcl</code> and <code>_compute_strip_profile_drag</code>, and both read <code>twist_deg</code>, <code>x_le_m</code>, <code>z_le_m</code> from the <em>same</em> section objects. A shared bug, or a sign error in a geometry field, is <strong>structurally invisible</strong> to their agreement — they would agree to 1e-7 while both being wrong. All three sign conventions are confirmed here by their known physical consequences, including that twist acts <em>per section</em> (washout moves the tip strip cl by −0.1306 vs −0.1119 at the root, so the loading shifts inboard rather than scaling down). <strong>11/11 checks pass.</strong> Weakest link, recorded as such: the unswept neutral point comes out at 0.215 c against the thin-airfoil 0.25 c.</p>
+<details class="tbl"><summary>Table view</summary><div class="scroll"><table><thead><tr><th>check</th><th>measured</th><th>reference</th><th>verdict</th></tr></thead><tbody><tr><td>A: AR encoded correctly</td><td>5.99382</td><td>6.0000</td><td>PASS</td></tr><tr><td>A: elliptic span efficiency e = 1</td><td>0.99750</td><td>1.0000</td><td>PASS</td></tr><tr><td>B: symmetric untwisted CL(alpha=0) = 0</td><td>0.00000</td><td>0.0000</td><td>PASS</td></tr><tr><td>B: CLa vs Helmbold</td><td>4.43667</td><td>4.5287</td><td>PASS</td></tr><tr><td>B: unswept neutral point at quarter chord</td><td>0.21510</td><td>0.2500</td><td>PASS</td></tr><tr><td>C: washout REDUCES CL (twist sign)</td><td>0.21780</td><td>&lt; 0.38958</td><td>PASS</td></tr><tr><td>C: wash-in INCREASES CL (twist sign)</td><td>0.56094</td><td>&gt; 0.38958</td><td>PASS</td></tr><tr><td>C: washout unloads the TIP specifically</td><td>-0.13057</td><td>&lt; 0 and more negative than root</td><td>PASS</td></tr><tr><td>D: dihedral makes Clb MORE NEGATIVE (dihedral effect)</td><td>-0.18676</td><td>&lt; -0.050717</td><td>PASS</td></tr><tr><td>E: aft sweep moves the neutral point AFT</td><td>0.33727</td><td>&gt; 0.0717</td><td>PASS</td></tr><tr><td>E: aft sweep reduces CLa</td><td>4.06909</td><td>&lt; 4.436668</td><td>PASS</td></tr></tbody></table></div></details>
+</figure>
+
+<h2><span class="num">5</span>Discretisation — the two questions, separated</h2>
+<p class="lede">The prior study conflated them: because
+<code>total spanwise panels = (n_sections − 1) × panels_per_interval</code>,
+adding a <em>section</em> silently refined the <em>lattice</em>. Separating them
+showed the dominant error was never the section count.</p>
+<figure class="fig" id="f5">
+<figcaption><h3>Fig 5 — (a) Geometry sections, with the AVL panel count held FIXED</h3><p>Worst-seed error vs n = 49, 5 DoE seeds. Total spanwise panels pinned at 96/side, so ONLY geometric fidelity varies.</p></figcaption>
+<svg viewBox="0 0 760 320" role="img" aria-label="Fig 5 — (a) Geometry sections, with the AVL panel count held FIXED">
+<line class="grid" x1="74" y1="268.0" x2="644" y2="268.0"/>
+<text class="tick" x="64" y="272.0" text-anchor="end">1e-5</text>
+<line class="grid" x1="74" y1="219.6" x2="644" y2="219.6"/>
+<text class="tick" x="64" y="223.6" text-anchor="end">1e-4</text>
+<line class="grid" x1="74" y1="171.2" x2="644" y2="171.2"/>
+<text class="tick" x="64" y="175.2" text-anchor="end">1e-3</text>
+<line class="grid" x1="74" y1="122.8" x2="644" y2="122.8"/>
+<text class="tick" x="64" y="126.8" text-anchor="end">1e-2</text>
+<line class="grid" x1="74" y1="74.4" x2="644" y2="74.4"/>
+<text class="tick" x="64" y="78.4" text-anchor="end">1e-1</text>
+<line class="grid" x1="74" y1="26.0" x2="644" y2="26.0"/>
+<text class="tick" x="64" y="30.0" text-anchor="end">1e+00</text>
+<line class="axis" x1="74" y1="268" x2="644" y2="268"/>
+<text class="tick" x="74.0" y="288" text-anchor="middle">5</text>
+<text class="tick" x="169.0" y="288" text-anchor="middle">7</text>
+<text class="tick" x="264.0" y="288" text-anchor="middle">9</text>
+<text class="tick" x="359.0" y="288" text-anchor="middle">13</text>
+<text class="tick" x="454.0" y="288" text-anchor="middle">17</text>
+<text class="tick" x="549.0" y="288" text-anchor="middle">25</text>
+<text class="tick" x="644.0" y="288" text-anchor="middle">33</text>
+<text class="axlabel" x="359" y="312" text-anchor="middle">n_sections  (geometry extraction slices)</text>
+<path class="ln s0" d="M74.0,81.4 L169.0,115.4 L264.0,115.0 L359.0,132.7 L454.0,137.2 L549.0,163.5 L644.0,206.0"/>
+<circle class="mk s0" cx="74.0" cy="81.4" r="4.5" tabindex="0" data-t="CL: 7.18e-02"/>
+<circle class="mk s0" cx="169.0" cy="115.4" r="4.5" tabindex="0" data-t="CL: 1.42e-02"/>
+<circle class="mk s0" cx="264.0" cy="115.0" r="4.5" tabindex="0" data-t="CL: 1.45e-02"/>
+<circle class="mk s0" cx="359.0" cy="132.7" r="4.5" tabindex="0" data-t="CL: 6.24e-03"/>
+<circle class="mk s0" cx="454.0" cy="137.2" r="4.5" tabindex="0" data-t="CL: 5.03e-03"/>
+<circle class="mk s0" cx="549.0" cy="163.5" r="4.5" tabindex="0" data-t="CL: 1.44e-03"/>
+<circle class="mk s0" cx="644.0" cy="206.0" r="4.5" tabindex="0" data-t="CL: 1.91e-04"/>
+<text class="dlabel s0" x="654.0" y="210.0">CL</text>
+<path class="ln s1" d="M74.0,65.2 L169.0,93.8 L264.0,95.4 L359.0,108.9 L454.0,129.7 L549.0,158.2 L644.0,158.7"/>
+<circle class="mk s1" cx="74.0" cy="65.2" r="4.5" tabindex="0" data-t="CDind: 1.55e-01"/>
+<circle class="mk s1" cx="169.0" cy="93.8" r="4.5" tabindex="0" data-t="CDind: 3.98e-02"/>
+<circle class="mk s1" cx="264.0" cy="95.4" r="4.5" tabindex="0" data-t="CDind: 3.68e-02"/>
+<circle class="mk s1" cx="359.0" cy="108.9" r="4.5" tabindex="0" data-t="CDind: 1.94e-02"/>
+<circle class="mk s1" cx="454.0" cy="129.7" r="4.5" tabindex="0" data-t="CDind: 7.19e-03"/>
+<circle class="mk s1" cx="549.0" cy="158.2" r="4.5" tabindex="0" data-t="CDind: 1.86e-03"/>
+<circle class="mk s1" cx="644.0" cy="158.7" r="4.5" tabindex="0" data-t="CDind: 1.81e-03"/>
+<text class="dlabel s1" x="654.0" y="162.7">CDind</text>
+<path class="ln s2" d="M74.0,39.6 L169.0,55.9 L264.0,66.2 L359.0,146.0 L454.0,113.7 L549.0,114.8 L644.0,144.2"/>
+<circle class="mk s2" cx="74.0" cy="39.6" r="4.5" tabindex="0" data-t="CL_δe: 5.24e-01"/>
+<circle class="mk s2" cx="169.0" cy="55.9" r="4.5" tabindex="0" data-t="CL_δe: 2.41e-01"/>
+<circle class="mk s2" cx="264.0" cy="66.2" r="4.5" tabindex="0" data-t="CL_δe: 1.48e-01"/>
+<circle class="mk s2" cx="359.0" cy="146.0" r="4.5" tabindex="0" data-t="CL_δe: 3.31e-03"/>
+<circle class="mk s2" cx="454.0" cy="113.7" r="4.5" tabindex="0" data-t="CL_δe: 1.54e-02"/>
+<circle class="mk s2" cx="549.0" cy="114.8" r="4.5" tabindex="0" data-t="CL_δe: 1.46e-02"/>
+<circle class="mk s2" cx="644.0" cy="144.2" r="4.5" tabindex="0" data-t="CL_δe: 3.62e-03"/>
+<text class="dlabel s2" x="654.0" y="148.2">CL_δe</text>
+<path class="ln s3" d="M74.0,139.9 L169.0,143.3 L264.0,151.4 L359.0,160.9 L454.0,186.7 L549.0,199.4 L644.0,241.4"/>
+<circle class="mk s3" cx="74.0" cy="139.9" r="4.5" tabindex="0" data-t="CLα: 4.43e-03"/>
+<circle class="mk s3" cx="169.0" cy="143.3" r="4.5" tabindex="0" data-t="CLα: 3.77e-03"/>
+<circle class="mk s3" cx="264.0" cy="151.4" r="4.5" tabindex="0" data-t="CLα: 2.56e-03"/>
+<circle class="mk s3" cx="359.0" cy="160.9" r="4.5" tabindex="0" data-t="CLα: 1.63e-03"/>
+<circle class="mk s3" cx="454.0" cy="186.7" r="4.5" tabindex="0" data-t="CLα: 4.79e-04"/>
+<circle class="mk s3" cx="549.0" cy="199.4" r="4.5" tabindex="0" data-t="CLα: 2.61e-04"/>
+<circle class="mk s3" cx="644.0" cy="241.4" r="4.5" tabindex="0" data-t="CLα: 3.54e-05"/>
+<text class="dlabel s3" x="654.0" y="245.4">CLα</text>
+</svg>
+<p class="note">Forces and stability derivatives converge to ≤0.56 % by <strong>n = 25</strong>. But <strong>CL_δe is non-monotonic</strong> — n = 13 beats n = 17 and n = 25, reproducibly. Sections snap onto the elevon band edges, yet AVL still ramps the control gain over the interval <em>just outside</em> each edge, whose width depends on where the neighbour lands. The result is a ±1.5 % oscillatory floor that uniform refinement cannot remove.</p>
+<details class="tbl"><summary>Table view</summary><div class="scroll"><table><thead><tr><th>n_sections</th><th>CL</th><th>CDind</th><th>CL_δe</th><th>CLα</th></tr></thead><tbody><tr><td>5</td><td>7.18e-02</td><td>1.55e-01</td><td>5.24e-01</td><td>4.43e-03</td></tr><tr><td>7</td><td>1.42e-02</td><td>3.98e-02</td><td>2.41e-01</td><td>3.77e-03</td></tr><tr><td>9</td><td>1.45e-02</td><td>3.68e-02</td><td>1.48e-01</td><td>2.56e-03</td></tr><tr><td>13</td><td>6.24e-03</td><td>1.94e-02</td><td>3.31e-03</td><td>1.63e-03</td></tr><tr><td>17</td><td>5.03e-03</td><td>7.19e-03</td><td>1.54e-02</td><td>4.79e-04</td></tr><tr><td>25</td><td>1.44e-03</td><td>1.86e-03</td><td>1.46e-02</td><td>2.61e-04</td></tr><tr><td>33</td><td>1.91e-04</td><td>1.81e-03</td><td>3.62e-03</td><td>3.54e-05</td></tr></tbody></table></div></details>
+</figure>
+<figure class="fig" id="f6-spanwise">
+<figcaption><h3>Fig 6a — (b-i) AVL spanwise panels, geometry FIXED at 25 sections</h3><p>Worst-seed error vs the finest level, 5 DoE seeds. Only the vortex lattice varies.</p></figcaption>
+<svg viewBox="0 0 760 320" role="img" aria-label="Fig 6a — (b-i) AVL spanwise panels, geometry FIXED at 25 sections">
+<line class="grid" x1="74" y1="268.0" x2="644" y2="268.0"/>
+<text class="tick" x="64" y="272.0" text-anchor="end">1e-4</text>
+<line class="grid" x1="74" y1="187.3" x2="644" y2="187.3"/>
+<text class="tick" x="64" y="191.3" text-anchor="end">1e-3</text>
+<line class="grid" x1="74" y1="106.7" x2="644" y2="106.7"/>
+<text class="tick" x="64" y="110.7" text-anchor="end">1e-2</text>
+<line class="grid" x1="74" y1="26.0" x2="644" y2="26.0"/>
+<text class="tick" x="64" y="30.0" text-anchor="end">1e-1</text>
+<line class="axis" x1="74" y1="268" x2="644" y2="268"/>
+<text class="tick" x="74.0" y="288" text-anchor="middle">1</text>
+<text class="tick" x="188.0" y="288" text-anchor="middle">2</text>
+<text class="tick" x="302.0" y="288" text-anchor="middle">3</text>
+<text class="tick" x="416.0" y="288" text-anchor="middle">4</text>
+<text class="tick" x="530.0" y="288" text-anchor="middle">6</text>
+<text class="tick" x="644.0" y="288" text-anchor="middle">8</text>
+<text class="axlabel" x="359" y="312" text-anchor="middle">spanwise panels per section interval</text>
+<path class="ln s0" d="M74.0,108.0 L188.0,113.6 L302.0,123.4 L416.0,134.3 L530.0,156.1 L644.0,187.3"/>
+<circle class="mk s0" cx="74.0" cy="108.0" r="4.5" tabindex="0" data-t="CL_δe: 9.64e-03"/>
+<circle class="mk s0" cx="188.0" cy="113.6" r="4.5" tabindex="0" data-t="CL_δe: 8.20e-03"/>
+<circle class="mk s0" cx="302.0" cy="123.4" r="4.5" tabindex="0" data-t="CL_δe: 6.20e-03"/>
+<circle class="mk s0" cx="416.0" cy="134.3" r="4.5" tabindex="0" data-t="CL_δe: 4.54e-03"/>
+<circle class="mk s0" cx="530.0" cy="156.1" r="4.5" tabindex="0" data-t="CL_δe: 2.44e-03"/>
+<circle class="mk s0" cx="644.0" cy="187.3" r="4.5" tabindex="0" data-t="CL_δe: 1.00e-03"/>
+<text class="dlabel s0" x="654.0" y="191.3">CL_δe</text>
+<path class="ln s1" d="M74.0,100.9 L188.0,125.9 L302.0,145.3 L416.0,161.7 L530.0,192.4 L644.0,229.0"/>
+<circle class="mk s1" cx="74.0" cy="100.9" r="4.5" tabindex="0" data-t="CDind: 1.18e-02"/>
+<circle class="mk s1" cx="188.0" cy="125.9" r="4.5" tabindex="0" data-t="CDind: 5.77e-03"/>
+<circle class="mk s1" cx="302.0" cy="145.3" r="4.5" tabindex="0" data-t="CDind: 3.32e-03"/>
+<circle class="mk s1" cx="416.0" cy="161.7" r="4.5" tabindex="0" data-t="CDind: 2.08e-03"/>
+<circle class="mk s1" cx="530.0" cy="192.4" r="4.5" tabindex="0" data-t="CDind: 8.65e-04"/>
+<circle class="mk s1" cx="644.0" cy="229.0" r="4.5" tabindex="0" data-t="CDind: 3.04e-04"/>
+<text class="dlabel s1" x="654.0" y="233.0">CDind</text>
+<path class="ln s2" d="M74.0,70.0 L188.0,97.7 L302.0,116.6 L416.0,132.2 L530.0,161.0 L644.0,195.7"/>
+<circle class="mk s2" cx="74.0" cy="70.0" r="4.5" tabindex="0" data-t="Clp: 2.85e-02"/>
+<circle class="mk s2" cx="188.0" cy="97.7" r="4.5" tabindex="0" data-t="Clp: 1.29e-02"/>
+<circle class="mk s2" cx="302.0" cy="116.6" r="4.5" tabindex="0" data-t="Clp: 7.53e-03"/>
+<circle class="mk s2" cx="416.0" cy="132.2" r="4.5" tabindex="0" data-t="Clp: 4.82e-03"/>
+<circle class="mk s2" cx="530.0" cy="161.0" r="4.5" tabindex="0" data-t="Clp: 2.12e-03"/>
+<circle class="mk s2" cx="644.0" cy="195.7" r="4.5" tabindex="0" data-t="Clp: 7.88e-04"/>
+<text class="dlabel s2" x="654.0" y="199.7">Clp</text>
+<path class="ln s3" d="M74.0,95.6 L188.0,124.0 L302.0,143.5 L416.0,159.1 L530.0,188.0 L644.0,223.7"/>
+<circle class="mk s3" cx="74.0" cy="95.6" r="4.5" tabindex="0" data-t="CL: 1.37e-02"/>
+<circle class="mk s3" cx="188.0" cy="124.0" r="4.5" tabindex="0" data-t="CL: 6.10e-03"/>
+<circle class="mk s3" cx="302.0" cy="143.5" r="4.5" tabindex="0" data-t="CL: 3.49e-03"/>
+<circle class="mk s3" cx="416.0" cy="159.1" r="4.5" tabindex="0" data-t="CL: 2.24e-03"/>
+<circle class="mk s3" cx="530.0" cy="188.0" r="4.5" tabindex="0" data-t="CL: 9.82e-04"/>
+<circle class="mk s3" cx="644.0" cy="223.7" r="4.5" tabindex="0" data-t="CL: 3.54e-04"/>
+<text class="dlabel s3" x="654.0" y="227.7">CL</text>
+</svg>
+<p class="note">Monotone and well behaved. Roll damping Clp is the limiting quantity at coarse resolution, as expected — it depends on the outboard loading gradient. <strong>4 per interval is adequate</strong> (≤0.54 %).</p>
+<details class="tbl"><summary>Table view</summary><div class="scroll"><table><thead><tr><th>level</th><th>CL_δe</th><th>CDind</th><th>Clp</th><th>CL</th></tr></thead><tbody><tr><td>1</td><td>9.64e-03</td><td>1.18e-02</td><td>2.85e-02</td><td>1.37e-02</td></tr><tr><td>2</td><td>8.20e-03</td><td>5.77e-03</td><td>1.29e-02</td><td>6.10e-03</td></tr><tr><td>3</td><td>6.20e-03</td><td>3.32e-03</td><td>7.53e-03</td><td>3.49e-03</td></tr><tr><td>4</td><td>4.54e-03</td><td>2.08e-03</td><td>4.82e-03</td><td>2.24e-03</td></tr><tr><td>6</td><td>2.44e-03</td><td>8.65e-04</td><td>2.12e-03</td><td>9.82e-04</td></tr><tr><td>8</td><td>1.00e-03</td><td>3.04e-04</td><td>7.88e-04</td><td>3.54e-04</td></tr></tbody></table></div></details>
+</figure>
+<figure class="fig" id="f6-chordwise">
+<figcaption><h3>Fig 6b — (b-ii) AVL chordwise panels, geometry FIXED at 25 sections</h3><p>Worst-seed error vs the finest level, 5 DoE seeds. Only the vortex lattice varies.</p></figcaption>
+<svg viewBox="0 0 760 320" role="img" aria-label="Fig 6b — (b-ii) AVL chordwise panels, geometry FIXED at 25 sections">
+<line class="grid" x1="74" y1="268.0" x2="644" y2="268.0"/>
+<text class="tick" x="64" y="272.0" text-anchor="end">1e-5</text>
+<line class="grid" x1="74" y1="219.6" x2="644" y2="219.6"/>
+<text class="tick" x="64" y="223.6" text-anchor="end">1e-4</text>
+<line class="grid" x1="74" y1="171.2" x2="644" y2="171.2"/>
+<text class="tick" x="64" y="175.2" text-anchor="end">1e-3</text>
+<line class="grid" x1="74" y1="122.8" x2="644" y2="122.8"/>
+<text class="tick" x="64" y="126.8" text-anchor="end">1e-2</text>
+<line class="grid" x1="74" y1="74.4" x2="644" y2="74.4"/>
+<text class="tick" x="64" y="78.4" text-anchor="end">1e-1</text>
+<line class="grid" x1="74" y1="26.0" x2="644" y2="26.0"/>
+<text class="tick" x="64" y="30.0" text-anchor="end">1e+00</text>
+<line class="axis" x1="74" y1="268" x2="644" y2="268"/>
+<text class="tick" x="74.0" y="288" text-anchor="middle">4</text>
+<text class="tick" x="216.5" y="288" text-anchor="middle">6</text>
+<text class="tick" x="359.0" y="288" text-anchor="middle">8</text>
+<text class="tick" x="501.5" y="288" text-anchor="middle">12</text>
+<text class="tick" x="644.0" y="288" text-anchor="middle">16</text>
+<text class="axlabel" x="359" y="312" text-anchor="middle">chordwise panels</text>
+<path class="ln s0" d="M74.0,65.6 L216.5,79.6 L359.0,85.1 L501.5,107.5 L644.0,126.9"/>
+<circle class="mk s0" cx="74.0" cy="65.6" r="4.5" tabindex="0" data-t="CL_δe: 1.52e-01"/>
+<circle class="mk s0" cx="216.5" cy="79.6" r="4.5" tabindex="0" data-t="CL_δe: 7.81e-02"/>
+<circle class="mk s0" cx="359.0" cy="85.1" r="4.5" tabindex="0" data-t="CL_δe: 6.01e-02"/>
+<circle class="mk s0" cx="501.5" cy="107.5" r="4.5" tabindex="0" data-t="CL_δe: 2.07e-02"/>
+<circle class="mk s0" cx="644.0" cy="126.9" r="4.5" tabindex="0" data-t="CL_δe: 8.24e-03"/>
+<text class="dlabel s0" x="654.0" y="130.9">CL_δe</text>
+<path class="ln s1" d="M74.0,90.0 L216.5,90.7 L359.0,97.8 L501.5,119.0 L644.0,142.6"/>
+<circle class="mk s1" cx="74.0" cy="90.0" r="4.5" tabindex="0" data-t="CDind: 4.77e-02"/>
+<circle class="mk s1" cx="216.5" cy="90.7" r="4.5" tabindex="0" data-t="CDind: 4.60e-02"/>
+<circle class="mk s1" cx="359.0" cy="97.8" r="4.5" tabindex="0" data-t="CDind: 3.28e-02"/>
+<circle class="mk s1" cx="501.5" cy="119.0" r="4.5" tabindex="0" data-t="CDind: 1.20e-02"/>
+<circle class="mk s1" cx="644.0" cy="142.6" r="4.5" tabindex="0" data-t="CDind: 3.89e-03"/>
+<text class="dlabel s1" x="654.0" y="146.6">CDind</text>
+<path class="ln s2" d="M74.0,164.7 L216.5,179.6 L359.0,188.5 L501.5,211.2 L644.0,233.5"/>
+<circle class="mk s2" cx="74.0" cy="164.7" r="4.5" tabindex="0" data-t="Clp: 1.36e-03"/>
+<circle class="mk s2" cx="216.5" cy="179.6" r="4.5" tabindex="0" data-t="Clp: 6.69e-04"/>
+<circle class="mk s2" cx="359.0" cy="188.5" r="4.5" tabindex="0" data-t="Clp: 4.40e-04"/>
+<circle class="mk s2" cx="501.5" cy="211.2" r="4.5" tabindex="0" data-t="Clp: 1.49e-04"/>
+<circle class="mk s2" cx="644.0" cy="233.5" r="4.5" tabindex="0" data-t="Clp: 5.17e-05"/>
+<text class="dlabel s2" x="654.0" y="237.5">Clp</text>
+<path class="ln s3" d="M74.0,100.1 L216.5,113.2 L359.0,121.2 L501.5,147.1 L644.0,177.6"/>
+<circle class="mk s3" cx="74.0" cy="100.1" r="4.5" tabindex="0" data-t="CL: 2.95e-02"/>
+<circle class="mk s3" cx="216.5" cy="113.2" r="4.5" tabindex="0" data-t="CL: 1.58e-02"/>
+<circle class="mk s3" cx="359.0" cy="121.2" r="4.5" tabindex="0" data-t="CL: 1.08e-02"/>
+<circle class="mk s3" cx="501.5" cy="147.1" r="4.5" tabindex="0" data-t="CL: 3.14e-03"/>
+<circle class="mk s3" cx="644.0" cy="177.6" r="4.5" tabindex="0" data-t="CL: 7.38e-04"/>
+<text class="dlabel s3" x="654.0" y="181.6">CL</text>
+</svg>
+<p class="note"><strong>This is the largest discretisation error in the whole chain, and it sat in the production default.</strong> At nchordwise = 8 the elevon derivative carries 6–8 % error because the hinge at x/c = 0.75 falls 0.059 c from the nearest cosine panel edge. CL_δe is the limiting quantity at <em>every</em> level — the diagnostic that this is a specific geometric coincidence, not generic under-resolution.</p>
+<details class="tbl"><summary>Table view</summary><div class="scroll"><table><thead><tr><th>level</th><th>CL_δe</th><th>CDind</th><th>Clp</th><th>CL</th></tr></thead><tbody><tr><td>4</td><td>1.52e-01</td><td>4.77e-02</td><td>1.36e-03</td><td>2.95e-02</td></tr><tr><td>6</td><td>7.81e-02</td><td>4.60e-02</td><td>6.69e-04</td><td>1.58e-02</td></tr><tr><td>8</td><td>6.01e-02</td><td>3.28e-02</td><td>4.40e-04</td><td>1.08e-02</td></tr><tr><td>12</td><td>2.07e-02</td><td>1.20e-02</td><td>1.49e-04</td><td>3.14e-03</td></tr><tr><td>16</td><td>8.24e-03</td><td>3.89e-03</td><td>5.17e-05</td><td>7.38e-04</td></tr></tbody></table></div></details>
+</figure>
+<figure class="fig" id="f7">
+<figcaption><h3>Fig 7 — Uniform spacing wins the elevon and loses the neutral point</h3><p>Worst-seed error vs cosine-40, 3 seeds. Down-and-left is better. Labels give the chordwise panel count.</p></figcaption>
+<svg viewBox="0 0 760 320" role="img" aria-label="Fig 7 — Uniform spacing wins the elevon and loses the neutral point">
+<line class="grid" x1="74" y1="268.0" x2="644" y2="268.0"/>
+<text class="tick" x="64" y="272.0" text-anchor="end">1e-6</text>
+<line class="grid" x1="74" y1="207.5" x2="644" y2="207.5"/>
+<text class="tick" x="64" y="211.5" text-anchor="end">1e-5</text>
+<line class="grid" x1="74" y1="147.0" x2="644" y2="147.0"/>
+<text class="tick" x="64" y="151.0" text-anchor="end">1e-4</text>
+<line class="grid" x1="74" y1="86.5" x2="644" y2="86.5"/>
+<text class="tick" x="64" y="90.5" text-anchor="end">1e-3</text>
+<line class="grid" x1="74" y1="26.0" x2="644" y2="26.0"/>
+<text class="tick" x="64" y="30.0" text-anchor="end">1e-2</text>
+<text class="tick" x="74.0" y="288" text-anchor="middle">1e-3</text>
+<text class="tick" x="359.0" y="288" text-anchor="middle">1e-2</text>
+<text class="tick" x="644.0" y="288" text-anchor="middle">1e-1</text>
+<line class="axis" x1="74" y1="268" x2="644" y2="268"/>
+<text class="axlabel" x="359" y="312" text-anchor="middle">CL_δe error  (elevon authority)</text>
+<text class="axlabel" transform="translate(16,147) rotate(-90)" text-anchor="middle">Xnp error  (neutral point)</text>
+<circle class="mk s0" cx="611.7" cy="113.3" r="6" tabindex="0" data-t="cosine-8 — CL_δe error  (elevon authority) 7.71e-02, Xnp error  (neutral point) 3.60e-04"/>
+<text class="ptlab" x="621.7" y="117.3">cosine-8</text>
+<circle class="mk s0" cx="525.3" cy="152.1" r="6" tabindex="0" data-t="cosine-12 — CL_δe error  (elevon authority) 3.83e-02, Xnp error  (neutral point) 8.24e-05"/>
+<text class="ptlab" x="535.3" y="156.1">cosine-12</text>
+<circle class="mk s0" cx="477.7" cy="178.2" r="6" tabindex="0" data-t="cosine-16 — CL_δe error  (elevon authority) 2.61e-02, Xnp error  (neutral point) 3.05e-05"/>
+<text class="ptlab" x="487.7" y="182.2">cosine-16</text>
+<circle class="mk s0" cx="431.6" cy="202.8" r="6" tabindex="0" data-t="cosine-20 — CL_δe error  (elevon authority) 1.80e-02, Xnp error  (neutral point) 1.19e-05"/>
+<text class="ptlab" x="441.6" y="206.8">cosine-20</text>
+<circle class="mk s0" cx="366.0" cy="221.1" r="6" tabindex="0" data-t="cosine-24 — CL_δe error  (elevon authority) 1.06e-02, Xnp error  (neutral point) 5.97e-06"/>
+<text class="ptlab" x="376.0" y="225.1">cosine-24</text>
+<text class="dlabel s0" x="656" y="40">cosine spacing</text>
+<circle class="mk s1" cx="525.0" cy="43.7" r="6" tabindex="0" data-t="uniform-8 — CL_δe error  (elevon authority) 3.82e-02, Xnp error  (neutral point) 5.10e-03"/>
+<text class="ptlab" x="535.0" y="47.7">uniform-8</text>
+<circle class="mk s1" cx="447.5" cy="54.2" r="6" tabindex="0" data-t="uniform-12 — CL_δe error  (elevon authority) 2.04e-02, Xnp error  (neutral point) 3.42e-03"/>
+<text class="ptlab" x="457.5" y="58.2">uniform-12</text>
+<circle class="mk s1" cx="374.1" cy="61.3" r="6" tabindex="0" data-t="uniform-16 — CL_δe error  (elevon authority) 1.13e-02, Xnp error  (neutral point) 2.61e-03"/>
+<text class="ptlab" x="384.1" y="65.3">uniform-16</text>
+<circle class="mk s1" cx="278.4" cy="83.5" r="6" tabindex="0" data-t="uniform-40 — CL_δe error  (elevon authority) 5.21e-03, Xnp error  (neutral point) 1.12e-03"/>
+<text class="ptlab" x="288.4" y="87.5">uniform-40</text>
+<text class="dlabel s1" x="656" y="58">uniform spacing</text>
+</svg>
+<p class="note">Uniform-8 puts a panel edge <em>exactly</em> on the hinge and halves the elevon error at identical cost (3.82 % vs 7.71 %) — confirming the alignment mechanism. It is <strong>rejected anyway</strong>: it degrades Xnp and Cmq by <strong>14–15×</strong>, and the penalty persists under refinement (uniform-40 still 1.1e-3 vs cosine-20's 1.2e-5). Leading-edge clustering is what resolves the pitching moment. Trading 14× neutral-point accuracy for 2× elevon accuracy is the wrong trade for a stability-and-control study.</p>
+<details class="tbl"><summary>Table view</summary><div class="scroll"><table><thead><tr><th>config</th><th>hinge→edge dist (c)</th><th>CL_δe err</th><th>CL err</th><th>Xnp err</th><th>Cmq err</th></tr></thead><tbody><tr><td>cosine-8 (production)</td><td>0.0587</td><td>7.71e-02</td><td>1.37e-02</td><td>3.60e-04</td><td>3.23e-04</td></tr><tr><td>uniform-8</td><td>0.0000</td><td>3.82e-02</td><td>2.29e-02</td><td>5.10e-03</td><td>4.74e-03</td></tr><tr><td>cosine-12</td><td>0.0000</td><td>3.83e-02</td><td>6.21e-03</td><td>8.24e-05</td><td>1.45e-04</td></tr><tr><td>uniform-12</td><td>0.0000</td><td>2.04e-02</td><td>9.93e-03</td><td>3.42e-03</td><td>3.66e-03</td></tr><tr><td>cosine-16</td><td>0.0278</td><td>2.61e-02</td><td>3.89e-03</td><td>3.05e-05</td><td>9.26e-05</td></tr><tr><td>uniform-16</td><td>0.0000</td><td>1.13e-02</td><td>3.99e-03</td><td>2.61e-03</td><td>2.94e-03</td></tr><tr><td>cosine-20</td><td>0.0230</td><td>1.80e-02</td><td>3.20e-03</td><td>1.19e-05</td><td>5.41e-05</td></tr><tr><td>cosine-24</td><td>0.0000</td><td>1.06e-02</td><td>1.85e-03</td><td>5.97e-06</td><td>2.88e-05</td></tr><tr><td>uniform-40 (cross-check)</td><td>0.0000</td><td>5.21e-03</td><td>6.95e-05</td><td>1.12e-03</td><td>1.36e-03</td></tr></tbody></table></div></details>
+</figure><details class="tbl"><summary>Table view</summary><div class="scroll"><table><thead><tr><th>config</th><th>hinge→edge dist (c)</th><th>CL_δe err</th><th>CL err</th><th>Xnp err</th><th>Cmq err</th></tr></thead><tbody><tr><td>cosine-8 (production)</td><td>0.0587</td><td>7.71e-02</td><td>1.37e-02</td><td>3.60e-04</td><td>3.23e-04</td></tr><tr><td>uniform-8</td><td>0.0000</td><td>3.82e-02</td><td>2.29e-02</td><td>5.10e-03</td><td>4.74e-03</td></tr><tr><td>cosine-12</td><td>0.0000</td><td>3.83e-02</td><td>6.21e-03</td><td>8.24e-05</td><td>1.45e-04</td></tr><tr><td>uniform-12</td><td>0.0000</td><td>2.04e-02</td><td>9.93e-03</td><td>3.42e-03</td><td>3.66e-03</td></tr><tr><td>cosine-16</td><td>0.0278</td><td>2.61e-02</td><td>3.89e-03</td><td>3.05e-05</td><td>9.26e-05</td></tr><tr><td>uniform-16</td><td>0.0000</td><td>1.13e-02</td><td>3.99e-03</td><td>2.61e-03</td><td>2.94e-03</td></tr><tr><td>cosine-20</td><td>0.0230</td><td>1.80e-02</td><td>3.20e-03</td><td>1.19e-05</td><td>5.41e-05</td></tr><tr><td>cosine-24</td><td>0.0000</td><td>1.06e-02</td><td>1.85e-03</td><td>5.97e-06</td><td>2.88e-05</td></tr><tr><td>uniform-40 (cross-check)</td><td>0.0000</td><td>5.21e-03</td><td>6.95e-05</td><td>1.12e-03</td><td>1.36e-03</td></tr></tbody></table></div></details>
+
+<h2><span class="num">6</span>What the change buys</h2>
+<figure class="fig" id="f8-production">
+<figcaption><h3>Fig 8a — OLD: 25 sec / 4 span / 8 chord</h3><p>Total discretisation error vs the best reference that fits AVL's array limits (33 sec / 4 span / 20 chord), 3 seeds. Shared 0–8 % scale.</p></figcaption>
+<svg viewBox="0 0 760 258" role="img" aria-label="Fig 8a — OLD: 25 sec / 4 span / 8 chord">
+<text class="rowlab" x="156" y="42" text-anchor="end">CL_δe</text>
+<rect class="track" x="168" y="26" width="442" height="22" rx="4"/>
+<rect class="bar crit" x="168" y="26" width="390.1" height="22" rx="4" tabindex="0" data-t="CL_δe: 7.06%"/>
+<text class="val" x="620" y="42">7.06%</text>
+<text class="rowlab" x="156" y="74" text-anchor="end">CDind</text>
+<rect class="track" x="168" y="58" width="442" height="22" rx="4"/>
+<rect class="bar crit" x="168" y="58" width="176.8" height="22" rx="4" tabindex="0" data-t="CDind: 3.2%"/>
+<text class="val" x="620" y="74">3.2%</text>
+<text class="rowlab" x="156" y="106" text-anchor="end">Cm</text>
+<rect class="track" x="168" y="90" width="442" height="22" rx="4"/>
+<rect class="bar warn" x="168" y="90" width="93.9" height="22" rx="4" tabindex="0" data-t="Cm: 1.7%"/>
+<text class="val" x="620" y="106">1.7%</text>
+<text class="rowlab" x="156" y="138" text-anchor="end">CD</text>
+<rect class="track" x="168" y="122" width="442" height="22" rx="4"/>
+<rect class="bar warn" x="168" y="122" width="94.5" height="22" rx="4" tabindex="0" data-t="CD: 1.71%"/>
+<text class="val" x="620" y="138">1.71%</text>
+<text class="rowlab" x="156" y="170" text-anchor="end">CL</text>
+<rect class="track" x="168" y="154" width="442" height="22" rx="4"/>
+<rect class="bar warn" x="168" y="154" width="59.1" height="22" rx="4" tabindex="0" data-t="CL: 1.07%"/>
+<text class="val" x="620" y="170">1.07%</text>
+<text class="rowlab" x="156" y="202" text-anchor="end">Cnb</text>
+<rect class="track" x="168" y="186" width="442" height="22" rx="4"/>
+<rect class="bar warn" x="168" y="186" width="58.0" height="22" rx="4" tabindex="0" data-t="Cnb: 1.05%"/>
+<text class="val" x="620" y="202">1.05%</text>
+</svg>
+</figure>
+<figure class="fig" id="f8-recommended_24">
+<figcaption><h3>Fig 8b — NEW: 25 sec / 4 span / 24 chord</h3><p>Total discretisation error vs the best reference that fits AVL's array limits (33 sec / 4 span / 20 chord), 3 seeds. Shared 0–8 % scale.</p></figcaption>
+<svg viewBox="0 0 760 258" role="img" aria-label="Fig 8b — NEW: 25 sec / 4 span / 24 chord">
+<text class="rowlab" x="156" y="42" text-anchor="end">CL_δe</text>
+<rect class="track" x="168" y="26" width="442" height="22" rx="4"/>
+<rect class="bar good" x="168" y="26" width="21.1" height="22" rx="4" tabindex="0" data-t="CL_δe: 0.382%"/>
+<text class="val" x="620" y="42">0.382%</text>
+<text class="rowlab" x="156" y="74" text-anchor="end">CDind</text>
+<rect class="track" x="168" y="58" width="442" height="22" rx="4"/>
+<rect class="bar good" x="168" y="58" width="28.2" height="22" rx="4" tabindex="0" data-t="CDind: 0.51%"/>
+<text class="val" x="620" y="74">0.51%</text>
+<text class="rowlab" x="156" y="106" text-anchor="end">Cm</text>
+<rect class="track" x="168" y="90" width="442" height="22" rx="4"/>
+<rect class="bar good" x="168" y="90" width="6.0" height="22" rx="4" tabindex="0" data-t="Cm: 0.108%"/>
+<text class="val" x="620" y="106">0.108%</text>
+<text class="rowlab" x="156" y="138" text-anchor="end">CD</text>
+<rect class="track" x="168" y="122" width="442" height="22" rx="4"/>
+<rect class="bar good" x="168" y="122" width="22.2" height="22" rx="4" tabindex="0" data-t="CD: 0.402%"/>
+<text class="val" x="620" y="138">0.402%</text>
+<text class="rowlab" x="156" y="170" text-anchor="end">CL</text>
+<rect class="track" x="168" y="154" width="442" height="22" rx="4"/>
+<rect class="bar good" x="168" y="154" width="8.1" height="22" rx="4" tabindex="0" data-t="CL: 0.147%"/>
+<text class="val" x="620" y="170">0.147%</text>
+<text class="rowlab" x="156" y="202" text-anchor="end">Cnb</text>
+<rect class="track" x="168" y="186" width="442" height="22" rx="4"/>
+<rect class="bar good" x="168" y="186" width="16.9" height="22" rx="4" tabindex="0" data-t="Cnb: 0.305%"/>
+<text class="val" x="620" y="202">0.305%</text>
+</svg>
+</figure>
+
+<h2><span class="num">7</span>What is still open</h2>
+<div class="fig">
+<ul>
+<li><strong>No validation against experiment or CFD.</strong> Everything here is
+verification — is the code solving the intended equations correctly. Physical
+accuracy must come from the high-fidelity ADflow path.</li>
+<li><strong>Surface split at the hinge line</strong> — the principled fix for the
+elevon resolution, rather than paying for chordwise panels. Not attempted.</li>
+<li><strong>The hinge position varies across the DoE</strong>
+(<code>elevon_hinge_frac</code> 0.652–0.814), so the hinge-to-edge distance and
+hence the elevon error vary design-space-wide. Mapped only at the nominal 0.75.</li>
+<li><strong>One operating point</strong> (α = 6°). Behaviour near CL<sub>max</sub>,
+where the polar bridge clamps strips outside the 2-D polar range, is
+uncharacterised.</li>
+<li><strong>Cref definition mismatch</strong> of 0.13 % between the two paths
+(∫c²dy/S vs <code>mean_aerodynamic_chord()</code>); moves Cmu and Cmα by 0.129 %.</li>
+<li><strong>Whether 30 samples / 5 seeds suffice</strong> for these statistics to be
+design-space representative — the next study.</li>
+</ul>
+<p class="note">Colour: the <code>dataviz</code> reference palette used unchanged,
+so its documented validation applies (worst adjacent CVD ΔE 9.1 light / 8.4 dark;
+slots 1–3 clear the all-pairs gate used by Fig 7). No JS runtime was available to
+re-run the validator, and no palette values were substituted. Every chart ships
+direct labels and a table view.</p>
+</div>
+</div><script>
+const tip=document.createElement('div');tip.className='tip';document.body.append(tip);
+function show(e){const t=e.target.getAttribute('data-t');if(!t)return;
+ tip.textContent=t;tip.style.opacity=1;
+ const r=e.target.getBoundingClientRect();
+ tip.style.left=Math.min(window.innerWidth-300,r.left+r.width/2-60)+'px';
+ tip.style.top=Math.max(6,r.top-38)+'px';}
+function hide(){tip.style.opacity=0;}
+for(const el of document.querySelectorAll('[data-t]')){
+ el.addEventListener('mouseenter',show);el.addEventListener('focus',show);
+ el.addEventListener('mouseleave',hide);el.addEventListener('blur',hide);}
+</script></body></html>

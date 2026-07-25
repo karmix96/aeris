@@ -413,7 +413,7 @@ def run_pygeo_native_avl_case(
     avl_command: str = "avl",
     timeout_sec: int = 180,
     name: str = "pygeo_bwb",
-    nchordwise: int = 8,
+    nchordwise: int = 24,          # DECISION-0009
     spanwise_panels_per_section: int = 4,
     moment_reference_m: tuple[float, float, float] = (0.0, 0.0, 0.0),
     moment_reference_is_cg: bool = False,

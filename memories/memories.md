@@ -87,6 +87,29 @@ Decisions live in `decision/` (ADR-style); study write-ups in `studies/`.
   Strip integration is PRIMARY, AVL CDtot is the audit — they differ 4.28%,
   which is the 3-point CDCL fit's own error. Study: `studies/avl_section_corrections.md`.
 
+- **Low-fi DISCRETISATION (DECISION-0009, 2026-07-25).** The two convergence
+  questions were CONFLATED before (adding a section also refined the lattice,
+  since total spanwise panels = (n−1)×panels_per_interval). Separated: geometry
+  mode varies n_sections with the panel count PINNED at 96/side; panel mode pins
+  n_sections and sweeps each direction alone.
+  **PRODUCTION = 25 sections / 4 spanwise / `nchordwise` 24 / cosine.**
+  **`nchordwise` 8 → 24** — at 8 the elevon CL_δe carried **7.7 %** error, the
+  biggest in the whole chain, because the hinge at x/c=0.75 sits 0.059c from the
+  nearest cosine panel edge. Joint check 25/4/8 → 25/4/24: CL 1.07→0.15 %,
+  CDind 3.20→0.51 %, CL_δe 7.06→0.38 %.
+  Three gotchas worth remembering:
+  (a) **geometric metrics converge ~3× earlier than aerodynamics** (Sref 0.05 % by
+  n=9 vs aero 1.9 % at n=13) — NEVER use area/MAC convergence as a proxy;
+  (b) **CL_δe is NON-MONOTONIC in n_sections** (n=13 beats 17 and 25,
+  reproducibly): a ±1.5 % oscillatory floor from section alignment vs the elevon
+  band edges, which uniform refinement cannot fix → motivates adaptive placement;
+  (c) **uniform chordwise spacing halves the elevon error but wrecks Xnp/Cmq
+  (14–15× worse, and it does NOT improve with refinement)** — rejected; LE
+  clustering is what resolves the pitching moment.
+  **Hard AVL limits: (n−1)×spanwise ≤ 250 strips; strips×nchordwise ≤ ~6000
+  vortices.** 49/4/16 and 65/4/* both FAIL. Studies:
+  `studies/section_and_panel_convergence.md`, `studies/hinge_panel_alignment.md`.
+
 ## Project state (2026-07-24)
 
 - **pyGeo backend committed** and decoupled from AeroSandbox (geometry import graph

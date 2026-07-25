@@ -165,7 +165,11 @@ def write_native_avl(
     name: str = "pygeo_bwb",
     mach: float = 0.0,
     symmetric: bool = True,
-    nchordwise: int = 8,
+    # DECISION-0009: 24 chordwise, cosine. At 8 the elevon hinge at x/c=0.75 fell
+    # 0.059c from the nearest panel edge and CL_delta carried ~7.7% error -- the
+    # largest discretisation error in the low-fi chain. Cosine is kept (uniform
+    # halves the elevon error but degrades Xnp/Cmq by 14-15x).
+    nchordwise: int = 24,
     cspace: float = 1.0,
     spanwise_panels_per_section: int = 4,
     representation: str = "cst",
@@ -322,7 +326,7 @@ def run_native_avl_case(
     diff_input_deg: float = 0.0,
     avl_command: str = "avl",
     timeout_sec: int = 180,
-    nchordwise: int = 8,
+    nchordwise: int = 24,          # DECISION-0009
     spanwise_panels_per_section: int = 4,
     representation: str = "cst",
     cst_points: int = 80,

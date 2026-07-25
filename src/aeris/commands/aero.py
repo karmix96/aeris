@@ -1095,7 +1095,11 @@ def pygeo_native_aero(
         help="Inset of the extraction from both span ends (0 = full span; "
              "non-zero opens a centreline gap under YDUPLICATE).",
     ),
-    nchordwise: int = typer.Option(8, "--nchordwise", help="AVL chordwise panels."),
+    nchordwise: int = typer.Option(
+        24, "--nchordwise",
+        help="AVL chordwise panels (DECISION-0009: 24; 16 is the economy setting; "
+             "8 costs ~7.7% on elevon authority).",
+    ),
     spanwise_panels: int = typer.Option(
         4, "--spanwise-panels", help="AVL spanwise panels per section interval."
     ),

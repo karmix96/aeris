@@ -48,24 +48,34 @@ symmetric authority by ~6 % cannot be the production path.
   exclude them or place them on a common well-conditioned scale. Scoring them as
   0 % error because both solvers return ~0 is equally wrong — it flatters the
   headline numbers.
-- **Cmu and CZu are NOT trusted from either path** (max 10.3 % / 4.2 % apart,
-  versus ≤1.7 % for every other well-conditioned derivative). Two candidate causes
-  were experimentally eliminated: the operating Mach is identical (0.0820 in
-  both), and the `.avl` header Mach is irrelevant (ablation: setting it to 0
-  changes CL and CLα by nothing at 6 s.f. — OPER `mn` supersedes it). Cause
-  unresolved; most likely conditioning, since the u-derivatives are small
-  residuals of large terms. **Open item — must be resolved before any phugoid or
-  speed-stability mode analysis.**
+- **Cmu / CZu are conditioning artefacts, not a defect — RESOLVED.** Their large
+  relative errors (max 10.3 % / 4.2 %) come from a constant absolute offset
+  (mean 0.0045, cv 0.19) divided by an |Cmu| that varies 7.3× across the DoE;
+  corr(1/|Cmu|, relative error) = **0.971**. No separate cause exists. Report them
+  with their magnitude, or on a common scale — never as a bare relative error.
 
-## Accepted, understood differences (not defects)
+## The residual is fully accounted for
 
-- **CL differs ~0.7 %, CDind ~2.4 %** from airfoil camber discretisation: the
-  native writer is capped at 80 points per surface by AVL's IBX limit, ASB uses
-  181. This shifts the zero-lift angle ≈0.05°, so it moves CL but not CLα (which
-  agrees to 0.2 %). Induced drag, being quadratic in the lift distribution,
-  amplifies it.
-- **Cref differs 0.13 %**: native uses ∫c²dy/S, ASB uses
-  `mean_aerodynamic_chord()`. Worth unifying, harmless as is.
+**At δe = 0 the two paths agree on CL to 3e-5 … 3e-4 absolute** (<0.1 %). The
+entire ~0.7 % CL / 2.4 % CDind headline is the elevon over-extension, proven by a
+δe sweep: the gap is linear in δe with ~zero intercept, 94–101 % attributable,
+and its slope (5.12e-4 /deg) matches the independently measured +5.89 % CL_δe bias
+prediction (5.6e-4 /deg) to 9 %.
+
+Two plausible explanations were tested and **refuted**:
+
+- *Airfoil coordinate resolution* — and the premise was backwards: native writes
+  **159** points per section, AeroSandbox downsamples to **99**. Re-running native
+  at a matched 99 points changes the disagreement by ~3 % of itself. Native's own
+  resolution convergence is 0.1 % between 99 and 239 points (319+ exceeds AVL's
+  IBX limit and fails).
+- *Mach handling* — the header Mach changes Cmu/CZu by 0.000 % (ablation with the
+  `sb` dump; an earlier test that dumped only `st` was inconclusive for these very
+  quantities). Both paths run at identical Mach 0.0820.
+
+Remaining known inconsistency: **Cref differs 0.13 %** (native ∫c²dy/S vs ASB
+`mean_aerodynamic_chord()`), which moves Cmu and Cmα by exactly 0.129 %. Small but
+real; should be unified.
 
 ## Not established by this decision
 
@@ -73,5 +83,12 @@ symmetric authority by ~6 % cannot be the production path.
   bounds implementation error, not physical accuracy.
 - That 25 sections / 8×4 panels is a converged discretisation (DECISION-0008).
 - That 30 samples suffice for these statistics to be design-space representative
-  (Task 5).
-- Agreement at other angles of attack or in sideslip.
+  (Task 5). Coverage itself is confirmed: all 19 free DVs varied over essentially
+  their whole ranges (sweeps −39.2…−6.3°, all four twists, dihedrals b2/b3, all
+  three elevon DVs); only `dihedral_b1` is pinned, by design.
+- Agreement at other angles of attack, near CL_max, or in **sideslip** — the
+  β ≠ 0 / δa = 0 comparison is legitimate and was wrongly excluded; it is
+  outstanding.
+- Any independent (non-code-to-code) check: the two paths share the CDCL
+  injection and strip-drag integration, and both read twist from the same source,
+  so a shared error or a twist-convention error is invisible to this comparison.

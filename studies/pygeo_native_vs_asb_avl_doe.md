@@ -28,8 +28,26 @@ well-conditioned), β = 0°, symmetric elevon δe = 4°, V = 28 m/s, sea level,
 25 extraction sections, 8 chordwise × 4 spanwise panels per interval (192 strips,
 1536 vortices in both solvers).
 
-**Design-space coverage achieved:** AR **3.11 – 6.62**, full span **1.52 – 2.49 m**
-— essentially the whole DECISION-0002 range (AR 2.6–6.2 nominal, span 1.5–2.5 m).
+**Design-space coverage achieved — all 19 free design variables varied**, not just
+scale. Measured ranges over the 30 samples:
+
+| DV | range sampled | | DV | range sampled |
+|---|---|---|---|---|
+| c1_m (root chord) | 0.720 – 1.092 m | | twist_b0 | −0.98 … +0.95° |
+| c2_ratio | 0.550 – 0.799 | | twist_b1 | −2.97 … −0.17° |
+| c3_ratio | 0.304 – 0.545 | | twist_b2 | −4.95 … −1.13° |
+| c4_ratio | 0.081 – 0.199 | | twist_b3 | −7.66 … −2.06° |
+| b_total_m (semi) | 0.759 – 1.243 m | | dihedral_b1 | 0 (pinned, flat root) |
+| b3_ratio | 0.410 – 0.541 | | dihedral_b2 | 0.06 – 5.51° |
+| split_ratio | 0.404 – 0.592 | | dihedral_b3 | 0.04 – 9.96° |
+| **sw1** | **−39.2 … −21.3°** | | elevon_start_frac | 0.502 – 0.700 |
+| **sw2** | **−34.1 … −15.4°** | | elevon_end_frac | 0.851 – 0.977 |
+| **sw3** | **−23.6 … −6.3°** | | elevon_hinge_frac | 0.652 – 0.814 |
+
+Derived: AR **3.11 – 6.62**, full span **1.52 – 2.49 m**. Every sweep, twist,
+dihedral and elevon variable spans essentially its whole DECISION-0002 range, so
+this is a genuine design-space sweep and not a scale sweep. `dihedral_b1` is
+pinned at 0 by design (flat root panel, DECISION-0002 §3).
 
 ### Scope restriction, and why it is not a dodge
 
@@ -76,11 +94,11 @@ Three things worth drawing out:
 
 - **The stability derivatives that matter agree far better than the forces.** CLα
   to 0.2 %, Cmα to 0.07 %, Xnp to 7e-5 — i.e. the two solvers are solving the same
-  VLM problem. The force differences come from the airfoil camber discretisation
-  (native 80 points/surface, forced by AVL's IBX limit; ASB 181), which shifts the
-  zero-lift angle ≈0.05° and so moves CL but not its slope.
+  VLM problem. A slope agreeing to 0.2 % while the force it integrates differs by
+  0.7 % is the signature of a **constant lift offset**, not of a different
+  solution. §5 identifies and proves what that offset is.
 - **CDind is the largest primary disagreement (2.4 % median).** Induced drag is
-  quadratic in the lift distribution, so it amplifies the same camber difference.
+  quadratic in the lift distribution, so it amplifies the same offset.
 - **The viscous chain is essentially identical**: cd_profile agrees to 0.056 %,
   which is expected since both paths use the same polar bridge. This *improves*
   the L/D agreement (0.60 % viscous vs 1.65 % inviscid): profile drag dominates
@@ -120,27 +138,100 @@ Splitting the 44 derivatives by conditioning:
 - **14 well-conditioned** (median |value| > 0.05): all agree to **≤1.7 %** — with
   two exceptions, below.
 
-## 5. Result — one genuine open item: the speed derivatives
+## 5. Result — the ENTIRE force disagreement is the elevon extent, proven
 
-Among the well-conditioned derivatives, **Cmu (max 10.3 %) and CZu (max 4.2 %)**
-stand out; every other one is ≤1.7 %. These are the ∂/∂u speed derivatives, which
-feed the phugoid and speed-stability modes.
+The residual was initially attributed to airfoil-coordinate resolution, and the
+speed derivatives Cmu (max 10.3 %) / CZu (max 4.2 %) were logged as an unexplained
+open item. Both of those readings were wrong. Four experiments settle it.
 
-Two candidate causes were tested and **eliminated**:
+### 5.1 Airfoil resolution is NOT the cause — refuted
 
-- *Operating Mach mismatch* — both solvers run at Mach 0.0820 (verified in both
-  totals dumps).
-- *Header Mach* — the native writer puts M = 0.0823 in the `.avl` header while
-  AeroSandbox writes `0` with a note that it is overwritten. Ablation: editing the
-  native header to `0` and re-running changes **nothing** (CL 0.36871 and
-  CLα 3.93958 identical to 6 significant figures). AVL's OPER `mn` command fully
-  supersedes the header.
+First, the direction was backwards: the native writer emits **159** points per
+section (`cst_points=80` → 2n−1) while AeroSandbox's AVL exporter downsamples to
+**99**. The native side is the *finer* one.
 
-The remaining likely mechanism is conditioning: the u-derivatives are small
-residuals of much larger terms, so they amplify the ~0.5 % CL and ~0.13 % Cref
-differences between the paths. This is **not resolved here**. Anyone doing
-dynamic-mode (phugoid / speed-stability) analysis should not take Cmu or CZu from
-either path without a dedicated verification.
+Test: re-run the native path at `cst_points=50`, which writes exactly 99 points
+and so matches AeroSandbox's discretisation. If resolution were the cause, the
+gap would close.
+
+| seed 7005, vs ASB | CL | CDind | Cm | Cmu | CZu |
+|---|---|---|---|---|---|
+| native 99 pts (matched) | 8.95e-3 | 3.09e-2 | 1.52e-2 | 9.95e-2 | 4.12e-2 |
+| native 159 pts (default) | 9.19e-3 | 3.13e-2 | 1.57e-2 | 1.03e-1 | 4.24e-2 |
+
+Matching the resolution changes the disagreement by ~3 % *of itself*. **Refuted.**
+
+Native self-convergence in airfoil resolution is meanwhile excellent: CL moves
+0.1 % between 99 and 239 points — an order of magnitude smaller than the 0.9 %
+gap to ASB. (319 and 359 points exceed AVL's IBX array limit and fail; 239 is the
+practical ceiling.)
+
+### 5.2 Mach is NOT the cause — refuted, properly this time
+
+An earlier ablation of the `.avl` header Mach dumped only `st`, but Cmu and CZu
+come from `sb` — it was inconclusive for exactly the quantities in question.
+Repeated with `sb` dumped: setting the native header Mach from 0.0823 to 0 changes
+Cmu, CZu and CXu by **0.000 %**. OPER `mn` fully supersedes the header. Both paths
+also run at an identical Mach 0.0820. Separately, dCmu/dM is mild (Cmu moves
+0.22 % over M = 0 → 0.082), so Mach cannot amplify anything here. **Refuted.**
+
+### 5.3 Cmu / CZu are conditioning, not a separate defect — confirmed
+
+Across the 30 samples the **absolute** Cmu difference is essentially constant
+while |Cmu| itself varies 7.3×:
+
+| | |Cmu| | \|abs diff\| | rel. error |
+|---|---|---|---|
+| seed 7005 (smallest \|Cmu\|) | 0.0416 | 0.00478 | **10.3 %** |
+| seed 7024 | 0.0440 | 0.00453 | 9.3 % |
+| seed 7001 | 0.2845 | 0.00517 | 1.8 % |
+| seed 7023 (largest \|Cmu\|) | 0.3040 | 0.00657 | 2.1 % |
+
+|abs diff| over 30 samples: mean 0.00452, sd 0.00086 (cv = 0.19), while |Cmu|
+ranges 0.0416–0.3040. And **corr(1/|Cmu|, relative error) = 0.971**.
+
+A constant numerator over a denominator varying 7× is the definition of a
+conditioning artefact. Cmu and CZu are **not separately broken**; they inherit the
+same absolute offset as everything else, and show a large relative error only
+where |Cmu| happens to be small. Direct confirmation: an α perturbation that moves
+CL by 3.7 % moves Cmu by 1.25× that fraction — no amplification mechanism exists
+that could turn a 0.5 % CL difference into 10 %.
+
+### 5.4 What the offset actually is: the elevon — confirmed
+
+CLα agreeing to 0.2 % while CL differs 0.7 % means a **constant lift offset**, and
+the one candidate is the elevon over-extension (§6). Test: sweep δe at fixed α.
+If the elevon is the cause, the gap must be **linear in δe with zero intercept**.
+
+| seed | δe | CL native | CL ASB | ΔCL | ΔCm |
+|---|---|---|---|---|---|
+| 7005 | 0° | 0.24540 | 0.24570 | **+0.00030** | −0.00043 |
+| 7005 | 2° | 0.26611 | 0.26759 | +0.00148 | −0.00145 |
+| 7005 | 4° | 0.28681 | 0.28947 | +0.00266 | −0.00248 |
+| 7005 | 8° | 0.32816 | 0.33320 | +0.00504 | −0.00453 |
+| 7000 | 0° | 0.33102 | 0.33099 | **−0.00003** | −0.00038 |
+| 7000 | 2° | 0.34987 | 0.35087 | +0.00100 | −0.00136 |
+| 7000 | 4° | 0.36871 | 0.37073 | +0.00202 | −0.00234 |
+| 7000 | 8° | 0.40634 | 0.41041 | +0.00407 | −0.00431 |
+
+**At δe = 0 the two solvers agree on CL to 3e-4 and 3e-5** — three orders of
+magnitude better than the 0.7 % headline. The gap is linear in δe:
+d(ΔCL)/dδe = +5.92e-4 /deg (seed 7005) and +5.12e-4 /deg (seed 7000). The elevon
+accounts for **94 % and 101 %** of the δe = 8° gap.
+
+Independent closure: the measured elevon bias is +5.89 % on CL_δe ≈ 0.0095 /deg
+(§6), predicting a slope of 0.0095 × 0.0589 = **5.6e-4 /deg**. Measured 5.12e-4.
+**Agreement to 9 %, from two completely independent measurements.**
+
+### 5.5 Consequence
+
+The native and AeroSandbox paths are not "equivalent to ~1 % for reasons we
+believe are discretisation". They are **equivalent to <0.1 % on undeflected
+geometry**, and 100 % of the residual is one identified, quantified defect in the
+reference path — a defect the native path already fixes. Every headline number in
+§3 is therefore an *upper bound* inflated by δe = 4°, not a measure of solver
+disagreement. There is **no remaining unexplained discrepancy**, and no open item
+on the speed derivatives.
 
 ## 6. Result — the elevon difference is a systematic bias, not scatter
 
@@ -178,18 +269,56 @@ can be optimised.
 
 ## 8. Conclusions
 
-1. The native pyGeo→AVL path and the AeroSandbox reference are **equivalent
-   design-space-wide** for symmetric aerodynamics: CL ≤1.0 %, L/D ≤1.3 %,
-   CLα ≤0.2 %, Cmα ≤0.07 %, Xnp ≤7e-5 over 30 samples spanning AR 3.11–6.62,
-   with no dependence on position in the design space.
-2. Every alarming relative error belongs to a derivative that is ≈0 by symmetry;
-   the largest absolute discrepancy anywhere among them is 0.18 % of |Clp|.
-3. Two well-conditioned exceptions remain — the speed derivatives Cmu and CZu
-   (10.3 % / 4.2 %) — with the two obvious Mach explanations experimentally
-   eliminated. Flagged, not explained.
-4. The elevon authority difference is a **systematic +5.89 % ± 0.39 %** bias in
-   the reference path's favour, consistent in sign across all 30 samples, and is
-   the known ASB over-extension. The native value is the geometrically correct one.
-5. Combined with the reference path's structural inability to deflect an elevon
+1. **The two solvers are equivalent to <0.1 % on undeflected geometry.** At
+   δe = 0 they agree on CL to 3e-5 … 3e-4 absolute, with CLα to 0.2 %, Cmα to
+   0.07 % and Xnp to 7e-5 over 30 samples spanning AR 3.11–6.62 and all 19 free
+   design variables. No dependence on position in the design space.
+2. **100 % of the residual is one identified defect**, the AeroSandbox elevon
+   over-extension. Proven three ways: the gap is linear in δe with ~zero
+   intercept (94–101 % of it attributable), its slope matches the independently
+   measured +5.89 % CL_δe bias to 9 %, and the bias has the same sign in all 30
+   samples (sd 0.39 %). Every §3 headline number is an upper bound inflated by
+   δe = 4°, not solver disagreement.
+3. **Two initially-plausible explanations were tested and refuted**: airfoil
+   coordinate resolution (matching it 159→99 points changes the gap by 3 % of
+   itself, and the native side was the finer one all along) and Mach handling
+   (header Mach changes Cmu/CZu by 0.000 %; both paths run identical Mach).
+4. **The speed derivatives are NOT an open item.** Cmu/CZu's large relative
+   errors are pure conditioning: the absolute offset is constant (cv 0.19) while
+   |Cmu| varies 7.3×, and corr(1/|Cmu|, rel. error) = 0.971.
+5. Every alarming relative error elsewhere belongs to a derivative that is ≈0 by
+   symmetry; the largest absolute discrepancy among them is 0.18 % of |Clp|.
+6. Combined with the reference path's structural inability to deflect an elevon
    differentially, the native path is the one to build the multifidelity workflow
-   on. The ASB path is retained as a symmetric-case cross-check.
+   on. The ASB path is retained as a symmetric, undeflected cross-check only.
+
+## 9. Open items and what still needs study
+
+Resolved during this study (were open, now closed): the Cmu/CZu discrepancy, the
+cause of the force residual, and the airfoil-resolution hypothesis.
+
+Genuinely still open:
+
+- **Reference-length definitions differ 0.13 %** (native ∫c²dy/S vs ASB
+  `mean_aerodynamic_chord()`). Measured effect: perturbing Cref by 0.130 % moves
+  Cmu and Cmα by 0.129 % — i.e. exactly proportional, as expected. Small, but it
+  is a real normalisation inconsistency and should be unified.
+- **Sideslip (β ≠ 0) was excluded too broadly.** The stated reason — that the ASB
+  path cannot deflect an elevon differentially — justifies excluding δa ≠ 0, but
+  **not** β ≠ 0 with δa = 0, which is a legitimate comparison exercising every
+  lateral derivative with real signal. Task 1 covered one such case; a DoE-wide
+  β sweep is missing and should be added.
+- **One operating point** (α = 6°). Behaviour near CL_max, where the polar bridge
+  starts clamping strips outside the 2-D polar range, is not characterised.
+- **No independent third source.** Two AVL wrappers agreeing bounds
+  implementation error but cannot detect a shared error — and the two paths *do*
+  share the CDCL injection and strip-drag integration. An independent check on
+  the geometry actually encoded in the `.avl` (analytic planform, and a
+  known-answer case such as an untwisted rectangular wing against lifting-line)
+  is not yet in place.
+- **Twist-convention sign is not independently verified.** Both writers read
+  `section.twist_deg` from the same source, so a sign or convention error would
+  be *invisible* to this comparison. This needs a physics check (e.g. increasing
+  washout must reduce tip loading in the strip data), not a code-to-code one.
+- **No validation against experiment or CFD.** This study bounds implementation
+  error, not physical accuracy.

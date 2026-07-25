@@ -1,0 +1,31 @@
+Speed-derivative (Cmu / CZu) diagnosis
+
+H1 — .avl HEADER Mach (native writes the run Mach, ASB writes 0):
+header              run Mach        CL         Cmu         CZu         CXu
+header_0              0.0820   0.36871   -0.176967   -0.322874   -0.018783
+header_run_mach       0.0820   0.36871   -0.176967   -0.322874   -0.018783
+  -> header Mach changes Cmu by 0.000 %, CZu by 0.000 %, CL by 0.000 %
+  VERDICT: REJECTED: the header Mach is not the cause
+
+H2 — Mach sensitivity of the u-derivatives at fixed geometry:
+  run Mach        CL         Cmu         CZu         CXu       CLa
+    0.0000   0.36797   -0.176578   -0.322177   -0.018769   3.93217
+    0.0200   0.36801   -0.176601   -0.322218   -0.018770   3.93260
+    0.0500   0.36824   -0.176721   -0.322434   -0.018774   3.93490
+    0.0820   0.36871   -0.176967   -0.322874   -0.018783   3.93958
+    0.1200   0.36954   -0.177410   -0.323665   -0.018799   3.94799
+    0.2000   0.37241   -0.178927   -0.326372   -0.018853   3.97671
+
+H3 — Cref perturbed by 0.130 % (the measured native-vs-ASB gap):
+  Cmu moves 0.129 %, CZu 0.000 %, Cma 0.129 %
+
+H4 — conditioning: fractional response per fractional CL change
+     (>1 = amplifies the CL difference; >>1 = ill-conditioned)
+  Cmu    amplification =     1.25x
+  CZu    amplification =     1.15x
+  CXu    amplification =     0.29x
+  Cma    amplification =     0.03x
+  CLa    amplification =     0.02x
+  CZw    amplification =     0.00x
+  Cmw    amplification =     0.00x
+  (probe: alpha +/-0.1 deg moved CL by 3.729 %)

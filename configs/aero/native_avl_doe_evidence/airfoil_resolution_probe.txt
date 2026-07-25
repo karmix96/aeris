@@ -1,0 +1,60 @@
+Airfoil coordinate-resolution probe
+native cst_points -> points written = 2n-1;  AeroSandbox writes 99
+
+=== seed 7000 ===
+variant          pts         CL      CDind   cd_total         Cm        CLa        Cma        Cmu        CZu        CXu
+native cst50      99   0.368730   0.009831   0.016962  -0.212390   3.939485  -2.344721  -0.177049  -0.322942  -0.018779
+native cst80     159   0.368710   0.009830   0.016961  -0.212350   3.939579  -2.344721  -0.176967  -0.322874  -0.018783
+native cst120    239   0.369010   0.009844   0.016976  -0.212630   3.939518  -2.344671  -0.177528  -0.323490  -0.018764
+native cst160    319        nan        nan        nan        nan        nan        nan        nan        nan        nan
+native cst180    359        nan        nan        nan        nan        nan        nan        nan        nan        nan
+ASB              100   0.370730   0.010110   0.017238  -0.214690   3.934666  -2.345414  -0.181555  -0.327432  -0.018997
+
+rel diff vs ASB               CL      CDind   cd_total         Cm        CLa        Cma        Cmu        CZu        CXu
+cst50                  5.39e-03   2.76e-02   1.60e-02   1.07e-02   1.22e-03   2.95e-04   2.48e-02   1.37e-02   1.15e-02
+cst80                  5.45e-03   2.77e-02   1.61e-02   1.09e-02   1.25e-03   2.95e-04   2.53e-02   1.39e-02   1.13e-02
+cst180                        -          -          -          -          -          -          -          -          -
+
+=== seed 7005 ===
+variant          pts         CL      CDind   cd_total         Cm        CLa        Cma        Cmu        CZu        CXu
+native cst50      99   0.286880   0.004960   0.012070  -0.155660   4.275099  -2.558706  -0.041786  -0.125189  -0.025441
+native cst80     159   0.286810   0.004957   0.012067  -0.155580   4.275207  -2.558712  -0.041626  -0.125029  -0.025450
+native cst120    239   0.287210   0.004971   0.012082  -0.155940   4.275134  -2.558648  -0.042357  -0.125840  -0.025416
+native cst160    319        nan        nan        nan        nan        nan        nan        nan        nan        nan
+native cst180    359        nan        nan        nan        nan        nan        nan        nan        nan        nan
+ASB              100   0.289470   0.005118   0.012233  -0.158060   4.273098  -2.560235  -0.046405  -0.130564  -0.025423
+
+rel diff vs ASB               CL      CDind   cd_total         Cm        CLa        Cma        Cmu        CZu        CXu
+cst50                  8.95e-03   3.09e-02   1.33e-02   1.52e-02   4.68e-04   5.97e-04   9.95e-02   4.12e-02   7.08e-04
+cst80                  9.19e-03   3.13e-02   1.36e-02   1.57e-02   4.93e-04   5.95e-04   1.03e-01   4.24e-02   1.06e-03
+cst180                        -          -          -          -          -          -          -          -          -
+
+=== seed 7024 ===
+variant          pts         CL      CDind   cd_total         Cm        CLa        Cma        Cmu        CZu        CXu
+native cst50      99   0.287270   0.004751   0.011722  -0.166170   4.348735  -2.735879  -0.044161  -0.118340  -0.026007
+native cst80     159   0.287210   0.004750   0.011720  -0.166100   4.348842  -2.735883  -0.044024  -0.118205  -0.026014
+native cst120    239   0.287620   0.004764   0.011735  -0.166490   4.348772  -2.735821  -0.044796  -0.119034  -0.025978
+native cst160    319        nan        nan        nan        nan        nan        nan        nan        nan        nan
+native cst180    359        nan        nan        nan        nan        nan        nan        nan        nan        nan
+ASB              100   0.289560   0.004869   0.011839  -0.168440   4.345712  -2.737074  -0.048552  -0.123215  -0.025911
+
+rel diff vs ASB               CL      CDind   cd_total         Cm        CLa        Cma        Cmu        CZu        CXu
+cst50                  7.91e-03   2.42e-02   9.94e-03   1.35e-02   6.95e-04   4.37e-04   9.04e-02   3.96e-02   3.69e-03
+cst80                  8.12e-03   2.45e-02   1.01e-02   1.39e-02   7.20e-04   4.35e-04   9.33e-02   4.07e-02   3.96e-03
+cst180                        -          -          -          -          -          -          -          -          -
+
+Native SELF-convergence in airfoil resolution (rel change vs the finest, cst=180):
+
+  seed   cst         CL      CDind   cd_total         Cm        CLa        Cma        Cmu        CZu        CXu
+  7000    50          -          -          -          -          -          -          -          -          -
+  7000    80          -          -          -          -          -          -          -          -          -
+  7000   120          -          -          -          -          -          -          -          -          -
+  7000   160          -          -          -          -          -          -          -          -          -
+  7005    50          -          -          -          -          -          -          -          -          -
+  7005    80          -          -          -          -          -          -          -          -          -
+  7005   120          -          -          -          -          -          -          -          -          -
+  7005   160          -          -          -          -          -          -          -          -          -
+  7024    50          -          -          -          -          -          -          -          -          -
+  7024    80          -          -          -          -          -          -          -          -          -
+  7024   120          -          -          -          -          -          -          -          -          -
+  7024   160          -          -          -          -          -          -          -          -          -

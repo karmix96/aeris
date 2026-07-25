@@ -273,4 +273,10 @@ Decisions live in `decision/` (ADR-style); study write-ups in `studies/`.
   `pygeo_avl_adapter.py`; polar `src/aeris/airfoil/neuralfoil_coordinate_source.py`.
 - Comparison tooling: `standalone/pygeo_asb_comparison/`.
 - Evidence: `configs/geometry/{pygeo_avl_evidence,pygeo_validation_evidence,pygeo_asb_comparison_evidence}/`.
-- Parallel work: Codex owns `standalone/pygeo_surface_mesh_study/` — leave it alone.
+- **Codex's work is NOT off-limits (Mike, 2026-07-26).** The earlier "Codex owns
+  `standalone/pygeo_surface_mesh_study/` — leave it alone" rule is SUPERSEDED:
+  Mike said "you can edit codex work, actually do it. i don't like its work". So
+  `src/aeris/mesh/surface.py`, `standalone/pygeo_surface_mesh_study/` and the
+  mesh study configs are all editable. Still: never delete evidence, never
+  force-push. (NB: commit 66976b4 accidentally swept in Codex's uncommitted
+  surface.py via `git add -A src/` — content intact, attribution wrong.)

@@ -29,29 +29,43 @@ AIAA committee. Three bounds:
 
 ## Decision
 
-Adopt a **hybrid per-section TE floor**:
+**As-built aircraft TE: a FIXED (constant along span) absolute thickness = 0.5 mm.**
+(1.0 mm is equally acceptable if the build process wants a sturdier edge.)
 
-    t_TE(section) = max( 0.25%c · chord,  0.5 mm )
+Wing-level ΔCD (seed 1001, area-weighted): constant 0.5 mm → **−0.89 counts**;
+constant 1.0 mm → −0.75; hybrid max(0.25%c,0.5mm) → −0.54. All negligible; the
+**constant** options are the best (thinnest inboard, least base drag) **and** the
+most manufacturable.
 
-- Inboard (large chord) the **fractional** term governs → ~0.25%c (root ≈ 2.4 mm),
-  set by meshability, aerodynamically invisible.
-- At the **tip** (small chord) the **absolute** term governs → 0.5 mm ≈ 0.5%c, set
-  by manufacturing, at the negligible-aero boundary and beneficial at low Re.
-- Every section stays **≤ ~0.5%c** → inside the aerodynamically negligible range,
-  while never thinner than 0.5 mm (buildable) or ~0.25%c (meshable).
+Why constant (not variable / not fractional):
 
-This matches the mechanism AERIS already implements (mesh/CAD open the TE as
-`max(fractional·chord, absolute floor)`).
+- **Manufacturability (decisive):** a single constant TE thickness is the easiest to
+  produce — one uniform mould land / foam-cut offset / print wall / finishing gauge.
+  A spanwise-**varying** TE (a fractional or hybrid law: 2.4 mm at root tapering to
+  0.5 mm) needs a spanwise-varying tool/process and is materially harder to build to
+  tolerance. Mike's driver: pick the easiest-to-manufacture option that is
+  aerodynamically free — that is the constant TE.
+- **Aerodynamics:** wing ΔCD ≈ −0.9 counts (< 1% of total) — negligible and
+  slightly favorable. Root 0.05%c (invisible), tip 0.52%c (negligible, beneficial at
+  low Re). Constant is aerodynamically *better* than the hybrid because it is thinner
+  inboard where the area (and thus base-drag weight) is largest.
+- **0.5 vs 1.0 mm:** both give wing ΔCD ≈ 0. Use **0.5 mm** as the aerodynamic/clean
+  default; step to **1.0 mm** only if a 0.5 mm edge is too fragile for the chosen
+  material/process.
 
 ## Where it applies
 
-- **Mesh** (the path that matters now): set the structured surface-mesh TE to this
-  floor — fractional 0.25%c + absolute 0.5 mm — when meshing `bwb.yaml` geometry.
-- Physical CAD `minimum_te_thickness_fraction` currently defaults 0.05%c; it is on
-  the deferred split-elevon path, so leave it until that path is revived, then align
-  to this decision.
-- The pyGeo master surface keeps its sharp TE; the blunt TE is a documented
-  manufacturing/mesh transformation applied downstream, quantified here.
+- **Aircraft geometry / manufacturing:** constant 0.5 mm TE, the number that goes to
+  the shop and to the as-built CAD.
+- **Mesh:** model the AS-BUILT 0.5 mm TE. If a real pyHyp march cannot advance the
+  thin inboard TE (0.5 mm ≈ 0.05%c at root), apply a **mesh-only** local inboard floor
+  (~0.25%c) — a NUMERICAL artifact of the solver, not a change to the aircraft, and
+  quantified here as ~0 drag. This keeps a simple, single-number as-built TE while
+  the mesh handles its own marchability. Pending pyHyp validation (see Open items).
+- Physical CAD `minimum_te_thickness_fraction` (deferred split-elevon path): align to
+  a constant 0.5 mm when that path is revived.
+- The pyGeo master surface keeps its sharp TE; the constant 0.5 mm blunt TE is a
+  documented downstream manufacturing/mesh transform, quantified here.
 
 ## Open items
 

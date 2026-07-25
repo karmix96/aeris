@@ -48,9 +48,8 @@ Decisions live in `decision/` (ADR-style); study write-ups in `studies/`.
 - **Fixed airfoils at b0/b1/b2/b3:** mh91 / mh91 / e374 / nlf1015 (Panagiotou &
   Yakinthos BWB UAV baseline). NOT AH 94-145. Swap the four `station_airfoils` names
   for any `data/airfoil_database` entry.
-- **TE thickness (DECISION-0004):** airfoils are sharp; blunt TE floor =
-  **max(0.25%c, 0.5 mm) per section** (fractional/meshability inboard, absolute/
-  manufacturing at tip). Study (`studies/trailing_edge_thickness.md`, NeuralFoil
+- **TE thickness (DECISION-0004):** airfoils are sharp; blunt TE =
+  **FIXED constant 0.5 mm absolute along span** (1.0 mm if sturdier edge needed). Study (`studies/trailing_edge_thickness.md`, NeuralFoil
   sweep on our airfoils at Re tip 1.85e5 / MAC 7.7e5 / root 1.8e6): ΔCd ~linear in TE
   thickness (Hoerner); ≤0.5%c costs ≤~7 section drag counts, RAISES CL_max (van Dam),
   small Cm; >1%c material; blunting nlf1015 at low-Re tip REDUCES drag. **WING-LEVEL

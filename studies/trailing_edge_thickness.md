@@ -94,10 +94,13 @@ This is the number that defends the decision, not the section counts.
 3. A **0.5 mm absolute** manufacturing TE maps to **0.05%c at root, ~0.5%c at tip** —
    entirely inside the negligible range, and at the tip it is aerodynamically
    *beneficial* at low Re.
-4. Recommended TE floor (DECISION-0004): **max(0.25%c, 0.5 mm) per section** — the
-   fractional term (meshability) governs inboard (~0.25%c ≈ 2.4 mm at root), the
-   absolute term (manufacturing) governs at the tip (0.5 mm ≈ 0.5%c). Every section
-   stays ≤~0.5%c ⇒ negligible aero, manufacturable, and meshable.
+4. **Recommendation (DECISION-0004): a FIXED constant 0.5 mm absolute TE along the
+   whole span** (1.0 mm if a sturdier edge is needed). Constant wins on both counts:
+   most manufacturable (one uniform TE, no spanwise-varying tooling) AND
+   aerodynamically best (wing ΔCD −0.9 counts, thinner inboard than the hybrid). Root
+   0.05%c / tip 0.52%c — all negligible. The mesh models the as-built 0.5 mm; a
+   mesh-only inboard floor (~0.25%c) is applied only if pyHyp cannot march the thin
+   root (a numerical artifact, ~0 drag).
 
 ## Open items
 

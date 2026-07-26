@@ -171,12 +171,6 @@ def build_pygeo_sections_from_config(
     # Inserting keeps both: the edge is exact AND its neighbour stays close.
     # Cost is two extra sections, which is cheap against a 25-section budget.
     snapped: list[float] = []
-    if control is not None and snap_sections_to_control:
-        for edge in (float(control["start_frac"]), float(control["end_frac"])):
-            if lo < edge < hi:
-                snapped.append(edge)
-        if snapped:
-            fractions = np.unique(np.concatenate([fractions, snapped]))
 
     # ---- adaptive placement (DECISION-0011) --------------------------------
     # Uniform spacing is fine for most wings, but it is misallocated when the
@@ -187,6 +181,30 @@ def build_pygeo_sections_from_config(
     # spacing breaches the ramp criterion, which is the DoE-safe setting.
     band = ((float(control["start_frac"]), float(control["end_frac"]))
             if control is not None else None)
+
+    # HARD FEATURE PINS (DECISION-0012). The de Boor monitor |g''|^(1/2) is built
+    # for SMOOTH functions; at a true kink it cannot resolve the feature no matter
+    # how much density it piles nearby — a kink needs a node placed exactly ON it.
+    # The BWB planform has two such kinks by construction (the b1/b2 and b2/b3
+    # break stations, where sweep and taper change slope discontinuously in the
+    # authored geometry), plus the two control-band edges. Pinning them exactly is
+    # cheaper and more effective than any amount of nearby refinement.
+    feature_pins: list[float] = [0.0, 1.0]
+    try:
+        b3r = float(getattr(sample, "b3_ratio"))
+        splt = float(getattr(sample, "split_ratio"))
+        feature_pins += [(1.0 - b3r) * splt, 1.0 - b3r]
+    except (AttributeError, TypeError, ValueError):
+        pass
+    if band is not None:
+        feature_pins += list(band)
+    feature_pins = sorted({round(v, 9) for v in feature_pins if lo <= v <= hi})
+    # Applied on BOTH paths. Uniform spacing needs the pins just as much as
+    # adaptive does -- a kink that falls between two sections is mis-represented
+    # whatever rule chose those sections.
+    if snap_sections_to_control and feature_pins:
+        fractions = np.unique(np.concatenate([fractions, feature_pins]))
+        snapped = [v for v in feature_pins if v not in (lo, hi)]
     mode = getattr(disc, "section_placement", "never") if disc else "never"
     if band is not None and mode in {"auto", "always"}:
         from aeris.geometry.geometric_information import (
@@ -201,7 +219,7 @@ def build_pygeo_sections_from_config(
                     build, n_probe=301, chordwise_probe=21, control_band=band
                 )
                 adaptive = adaptive_span_fractions(
-                    profile, int(n_sections), must_include=band
+                    profile, int(n_sections), must_include=feature_pins
                 )
                 if len(adaptive) >= 2:
                     fractions = adaptive
@@ -219,7 +237,8 @@ def build_pygeo_sections_from_config(
             "n_sections": len(ex), "semispan_m": semispan, "control": control,
             "span_margin": float(span_margin),
             "control_edges_snapped": snapped,
-            "section_placement": placement_used}
+            "section_placement": placement_used,
+            "feature_pins": feature_pins}
     if band is not None:
         from aeris.geometry.geometric_information import ramp_fraction as _rf
 

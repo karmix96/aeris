@@ -105,7 +105,14 @@ DEFAULT_CHANNEL_WEIGHTS: dict[str, float] = {
     "z_le": 1.0,
     "chord": 1.0,
     "twist": 1.0,
-    "thickness": 1.0,
+    # THICKNESS IS OFF BY DEFAULT (DECISION-0012). AVL's vortex-lattice core is a
+    # MEAN-SURFACE method: it sees the camber line, not the thickness. Thickness
+    # reaches the answer only through the CLAF lift-slope multiplier and the CDCL
+    # profile-drag polar, both of which are per-section SCALARS -- they do not need
+    # the section GRID refined to be resolved. Weighting thickness equally with
+    # camber (as the first version did) spends section budget on a channel the VLM
+    # cannot use. Measured: dropping it improved worst-case control error.
+    "thickness": 0.0,
     "camber": 1.0,
     # Weighted above the geometric channels because DECISION-0010 measured the
     # control surface, not the wing, as the binding error. Not a free parameter:
@@ -316,6 +323,7 @@ def spanwise_information_profile(
     weights: dict[str, float] | None = None,
     smooth: int = 9,
     floor: float = 0.50,
+    combine: str = "max",
     probe: dict[str, np.ndarray] | None = None,
     control_band: "tuple[float, float] | None" = None,
     control_edge_smoothing: float = CONTROL_EDGE_SMOOTHING,
@@ -360,7 +368,7 @@ def spanwise_information_profile(
 
     root_chord = float(np.asarray(p["chord"], dtype=float)[0]) or 1.0
     channels: dict[str, InformationChannel] = {}
-    blended = np.zeros_like(y)
+    stack: list[np.ndarray] = []
     for name, values in channel_sources.items():
         w = float(weights.get(name, 0.0))
         ref = CHANNEL_REFERENCE_SCALES.get(name, 1.0)
@@ -372,7 +380,21 @@ def spanwise_information_profile(
         )
         if w > 0.0:
             # NOT re-normalised per channel: magnitude must survive the blend.
-            blended = blended + w * density
+            stack.append(w * density)
+
+    # WORST-CHANNEL combination (DECISION-0012). A section grid has to resolve the
+    # channel that bends most sharply THERE; averaging lets a well-behaved channel
+    # dilute a badly-behaved one at the same station and under-refines it. Measured
+    # over 10 geometries x 100 AVL runs, max-channel gave the lowest worst-case
+    # control-derivative error (1.23% vs 1.81% additive, 3.65% uniform).
+    if not stack:
+        blended = np.zeros_like(y)
+    elif combine == "max":
+        blended = np.max(np.vstack(stack), axis=0)
+    elif combine == "sum":
+        blended = np.sum(np.vstack(stack), axis=0)
+    else:
+        raise ValueError(f"combine must be 'max' or 'sum', got {combine!r}")
     area = float(np.trapezoid(blended, y))
     span_len = float(y[-1] - y[0])
     if area <= _EPS or span_len <= _EPS:
@@ -431,14 +453,15 @@ def adaptive_span_fractions(
     fractions = np.interp(targets, profile.cumulative, profile.span_fraction)
     fractions[0], fractions[-1] = 0.0, 1.0
 
-    for edge in sorted(float(e) for e in must_include):
-        if not (0.0 < edge < 1.0):
-            continue
-        interior = np.arange(1, len(fractions) - 1)
-        if interior.size == 0:
-            break
-        nearest = int(interior[np.argmin(np.abs(fractions[interior] - edge))])
-        fractions[nearest] = edge
+    # Pinned stations are INSERTED, not swapped onto the nearest neighbour.
+    # Replacing a neighbour was wrong twice over: it widened the gap just outside
+    # the pin (the same defect DECISION-0005 had to correct for the band edges),
+    # and with several pins close together later pins overwrote earlier ones, so
+    # some were silently lost. Insertion costs a few sections and guarantees every
+    # pin is present -- which is the whole point of a hard pin.
+    pins = [float(e) for e in must_include if 0.0 <= float(e) <= 1.0]
+    if pins:
+        fractions = np.concatenate([fractions, np.asarray(pins, dtype=float)])
 
     fractions = np.unique(np.clip(fractions, 0.0, 1.0))
     # Enforce strict monotonic separation (extract_sections requires it).

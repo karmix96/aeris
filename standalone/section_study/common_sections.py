@@ -179,7 +179,7 @@ def fractions_for(ctx: dict, n_sections: int, policy: str) -> np.ndarray:
 # Provenance + cache (§9): hash includes the full fraction vector + policy.   #
 # --------------------------------------------------------------------------- #
 def _provenance(sample_key, *, fractions, policy, n_req, alpha_deg,
-                control_input_deg, diff_input_deg) -> dict:
+                control_input_deg, diff_input_deg, nchord=NCHORD, spanw=SPANW) -> dict:
     return {
         "study": "section_positioning_v1",
         "sample_id": sample_key,
@@ -187,7 +187,7 @@ def _provenance(sample_key, *, fractions, policy, n_req, alpha_deg,
         "n_requested": int(n_req),
         "section_fractions": [round(float(f), 6) for f in fractions],
         "n_realized": int(len(fractions)),
-        "nchordwise": NCHORD, "spanwise": SPANW, "cspace": CSPACE,
+        "nchordwise": int(nchord), "spanwise": int(spanw), "cspace": CSPACE,
         "alpha_deg": float(alpha_deg), "beta_deg": float(pc.BETA_DEG),
         "control_input_deg": float(control_input_deg),
         "diff_input_deg": float(diff_input_deg),
@@ -216,15 +216,15 @@ def hash_for(ctx, sample_key, *, n_sections, policy, alpha_deg,
 # --------------------------------------------------------------------------- #
 def run_section_case(sample, *, sample_key, n_sections, policy, alpha_deg,
                      control_input_deg=4.0, diff_input_deg=4.0,
-                     tag="", bypass_cache=False) -> dict:
+                     tag="", bypass_cache=False, nchord=NCHORD, spanw=SPANW) -> dict:
     ctx = build_context(sample, sample_key)
     fr = fractions_for(ctx, n_sections, policy)
     n_real = len(fr)
-    strips, vortices = pc.assert_mesh_legal(n_real, NCHORD, SPANW)
+    strips, vortices = pc.assert_mesh_legal(n_real, int(nchord), int(spanw))
 
     prov = _provenance(sample_key, fractions=fr, policy=policy, n_req=n_sections,
                        alpha_deg=alpha_deg, control_input_deg=control_input_deg,
-                       diff_input_deg=diff_input_deg)
+                       diff_input_deg=diff_input_deg, nchord=nchord, spanw=spanw)
     h = _hash(prov)
     cache_dir = CACHE_ROOT / h
     result_json = cache_dir / "native_avl_result.json"
@@ -249,8 +249,8 @@ def run_section_case(sample, *, sample_key, n_sections, policy, alpha_deg,
             extracted_sections=ex, semispan_m=semi, control=ctx["control"],
             control_input_deg=float(control_input_deg),
             diff_input_deg=float(diff_input_deg),
-            viscous=pc.VISCOUS, nchordwise=NCHORD,
-            spanwise_panels_per_section=SPANW, cspace=CSPACE,
+            viscous=pc.VISCOUS, nchordwise=int(nchord),
+            spanwise_panels_per_section=int(spanw), cspace=CSPACE,
             timeout_sec=pc.AVL_TIMEOUT_SEC, avl_command=pc.AVL_BIN)
         return r, time.perf_counter() - t0
 
@@ -265,7 +265,7 @@ def run_section_case(sample, *, sample_key, n_sections, policy, alpha_deg,
     base = {"ok": status == "SUCCESS", "status": status, "cache_hit": False,
             "sample_id": sample_key, "policy": policy, "tag": tag,
             "n_requested": int(n_sections), "n_realized": int(n_real),
-            "nchordwise": NCHORD, "spanwise": SPANW, "cspace": CSPACE,
+            "nchordwise": int(nchord), "spanwise": int(spanw), "cspace": CSPACE,
             "alpha_deg": float(alpha_deg),
             "control_input_deg": float(control_input_deg),
             "diff_input_deg": float(diff_input_deg),
@@ -303,7 +303,8 @@ def run_cases_serial(cases, *, verbose=True):
             policy=c["policy"], alpha_deg=c["alpha_deg"],
             control_input_deg=c.get("control_input_deg", 4.0),
             diff_input_deg=c.get("diff_input_deg", 4.0),
-            tag=c.get("tag", ""))
+            tag=c.get("tag", ""),
+            nchord=c.get("nchord", NCHORD), spanw=c.get("spanw", SPANW))
         out.append(r)
         if verbose:
             print(f"[{i+1}/{len(cases)}] {c['sample_key']} {c['policy']} "
@@ -311,6 +312,20 @@ def run_cases_serial(cases, *, verbose=True):
                   f"ok={r['ok']} hit={r.get('cache_hit')} "
                   f"cl={r.get('cl')}", flush=True)
     return out
+
+
+def _collect_one(sample_key, policy, n_sections, alpha_deg, nchord, spanw,
+                 control_input_deg=4.0, diff_input_deg=4.0):
+    """Read one cached result by recomputing its provenance hash."""
+    s = sample_by_key(sample_key)
+    ctx = build_context(s, sample_key)
+    prov = _provenance(sample_key,
+                       fractions=fractions_for(ctx, n_sections, policy),
+                       policy=policy, n_req=n_sections, alpha_deg=alpha_deg,
+                       control_input_deg=control_input_deg,
+                       diff_input_deg=diff_input_deg, nchord=nchord, spanw=spanw)
+    rj = CACHE_ROOT / _hash(prov) / "native_avl_result.json"
+    return json.loads(rj.read_text()) if rj.exists() else None
 
 
 def collect(cases) -> dict:
@@ -325,7 +340,8 @@ def collect(cases) -> dict:
             fractions=fractions_for(ctx, c["n_sections"], c["policy"]),
             policy=c["policy"], n_req=c["n_sections"], alpha_deg=c["alpha_deg"],
             control_input_deg=c.get("control_input_deg", 4.0),
-            diff_input_deg=c.get("diff_input_deg", 4.0))
+            diff_input_deg=c.get("diff_input_deg", 4.0),
+            nchord=c.get("nchord", NCHORD), spanw=c.get("spanw", SPANW))
         h = _hash(prov)
         rj = CACHE_ROOT / h / "native_avl_result.json"
         row = json.loads(rj.read_text()) if rj.exists() else {"ok": False, "missing": True}

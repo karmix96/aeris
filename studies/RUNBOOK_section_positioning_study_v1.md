@@ -120,6 +120,34 @@ reality — the vortex-lattice + strip-viscous model has its own error (the pane
 study put elevon power ~1.5% short of the truth). Every number here is
 self-consistency to converged-section AVL. State this in the abstract.
 
+> **CORRECTION found during execution (2026-07-30, kept for the record).**
+> The G1a "placement-neutrality" criterion as originally written was WRONG and is
+> superseded. Requiring uniform / adaptive / clustered to agree at N_ref conflates
+> two different things: whether the reference is converged, and whether a
+> deliberately non-uniform *candidate* has converged. Adaptive and clustered keep a
+> non-uniform distribution at every N, so they need not match a dense uniform mesh
+> even when that mesh is converged. Measured: at N_ref they differ from dense
+> uniform by ~2–3% on `cd_ind` and this does **not** shrink with N.
+>
+> The correct legitimacy test is **G1b alone: Richardson convergence of DENSE
+> UNIFORM in N.** Verified (2026-07-30): dense uniform is converged to
+> **< 0.4%** between N=151 and N=201 on every key quantity (`cd_ind` 0.01–0.13%),
+> so **uniform-201 is a legitimate reference**. The prior study's real error was a
+> *sparse* (49-section) uniform reference, not uniformity itself.
+>
+> Two further execution facts that reshape the study:
+> 1. **Separability of the section axis from the panel mesh is confirmed** — the
+>    uniform→adaptive placement effect is 2.74% at c16s2u vs 3.04% at c8s1u
+>    (≈ equal). So the reference is built on the cheap mesh **c8s1u**, where N≈201
+>    is affordable (c16s2u caps at N≈92 under the 6000-vortex limit), and the
+>    placement/count POLICY transfers to c16s2u. Stage 2 formalises this.
+> 2. **Induced drag `cd_ind` is irreducibly ~2–3% section-placement-sensitive** even
+>    at high N: different placements give different spanwise strip distributions and
+>    AVL's Trefftz induced-drag integral depends on that distribution. `cd_ind` and
+>    the near-print-floor `hinge_sym` are therefore reported as *placement-sensitive*
+>    and are NOT held to the < 1% accuracy gate (§5 G3); forces, moments, stability
+>    and control-surface derivatives do converge and carry the gate.
+
 ---
 
 ## 3. The quantities, angles, control states — FROZEN

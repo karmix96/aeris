@@ -23,6 +23,7 @@ data/cfd_cases/
 data/meshes/
 data/workflows/
 data/panelling_study/
+data/section_study/
 
 *.log
 *.png

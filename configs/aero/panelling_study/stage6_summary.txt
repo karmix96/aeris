@@ -1,0 +1,53 @@
+STAGE 6 — RANKING AND DECISION TEST
+================================================================
+1. RUN: 540 cells. success rate = 100.0%
+   (30 normal + 6 extreme geoms; extreme reported separately below)
+
+2. PER-SETTING RESULTS ON THE 30 NORMAL DESIGNS
+    setting    rho disp top10 top3 regret% trimflip stabflip maxDdt  eps%
+      c8s2u  0.990    4     9    3   0.000        0        0   3.41  4.10
+     c12s2u  0.994    3    10    3   0.000        0        0   1.61  2.03
+     c16s2u  0.996    3    10    3   0.000        0        0   0.82  1.11
+     c24s4c  0.998    2    10    3   0.000        0        0   0.69  0.79
+     c48s2c   (comparator — reference)
+
+3. GATES (all seven must pass on the 30 normal designs)
+    setting  g1 g2 g3 g4 g5 g6 g7  ALL
+      c8s2u  Y . Y . Y . Y   fail
+     c12s2u  Y Y Y . Y . Y   fail
+     c16s2u  Y Y Y . Y . Y   fail
+     c24s4c  Y Y Y Y Y . Y   fail
+
+4. SELECTION RULE (cheapest passing all 7 by end-to-end time)
+   NOTHING PASSES all seven gates. Do not lower a gate. The design tier
+   needs a more expensive discretisation than hoped (§7).
+
+4b. GATE-6 DIAGNOSTIC (why the trim gate fails — NOT a gate change)
+    Strict gate 6 uses ALL designs. But a few designs need trim deflections
+    beyond the +/-25 deg envelope (untrimmable regardless),
+    where the deflection magnitude is large and mesh-sensitive. Restricting
+    to TRIMMABLE designs isolates the decision-relevant number:
+     setting strict maxDdt trimmable maxDdt n untrimmable
+       c8s2u      3.406 deg         1.881 deg             7
+      c12s2u      1.615 deg         0.950 deg             7
+      c16s2u      0.817 deg         0.501 deg             7
+      c24s4c      0.692 deg         0.442 deg             7
+    -> production (c24s4c) passes gate 6 on trimmable designs (its strict
+       failure is one untrimmable outlier); c16s2u sits on the 0.5 deg line.
+
+5. RANK-GAP CONTEXT (gate 2 informativeness)
+      c8s2u gap rank3/4=1.5600128299185338  gap rank10/11=1.452466116740048
+     c12s2u gap rank3/4=1.5600128299185338  gap rank10/11=1.452466116740048
+     c16s2u gap rank3/4=1.5600128299185338  gap rank10/11=1.452466116740048
+     c24s4c gap rank3/4=1.5600128299185338  gap rank10/11=1.452466116740048
+
+6. WHAT THIS MEANS
+   A cheap mesh is acceptable only if it keeps the design RANKING and the
+   trim/stability CLASSIFICATION, not merely the coefficients. The gates
+   test that directly. The recommended setting is the cheapest that does.
+
+7. CAVEATS
+   - Trimmable label uses a +/-25 deg elevon envelope (documented threshold).
+   - Extreme geometries are NOT pooled into these statistics.
+   - Comparator (chord48/span2) is itself ~1.5% short on elevon power
+     (Stage 2); it is the best available reference, not ground truth.

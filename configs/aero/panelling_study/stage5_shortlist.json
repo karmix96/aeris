@@ -1,0 +1,85 @@
+{
+  "cost_model": "seconds ~ power-law in vortex count, anchored to Stages 2&3",
+  "eps_model": "eps(nc,ns,cs) = stage4_worstkey(nc,cs @ span2) + (eps_span(ns)-eps_span(2))",
+  "span_correction_pct": {
+    "1": 0.9352871157952138,
+    "2": 0.0,
+    "4": -0.5243205969445747,
+    "8": -0.7807984315005145
+  },
+  "stage4_eps_pct": {
+    "c8_cs0.0": 4.1014393444804735,
+    "c12_cs0.0": 2.0286190290344797,
+    "c16_cs0.0": 1.1144958277619768,
+    "c24_cs0.0": 0.8582009563712903,
+    "c8_cs0.5": 4.333887319072627,
+    "c12_cs0.5": 3.0912383812075177,
+    "c16_cs0.5": 2.3228993128461974,
+    "c24_cs0.5": 1.018503115830743,
+    "c8_cs1.0": 6.593567082845846,
+    "c12_cs1.0": 4.096193080599005,
+    "c16_cs1.0": 2.5185144172498863,
+    "c24_cs1.0": 1.31002937464864
+  },
+  "stage2_eps_pct": {
+    "6": 9.397577714749268,
+    "12": 4.165175722848842,
+    "24": 1.370566536940545,
+    "48": 0.0
+  },
+  "shortlist": [
+    {
+      "nchordwise": 8,
+      "spanwise": 2,
+      "cspace": 0.0,
+      "role": "below_knee (expected to fail gate 4)",
+      "cost_s": 2.9,
+      "eps_pct": 4.101,
+      "vortices": 896,
+      "label": "c8s2u"
+    },
+    {
+      "nchordwise": 12,
+      "spanwise": 2,
+      "cspace": 0.0,
+      "role": "spanning_knee (cheap)",
+      "cost_s": 6.8,
+      "eps_pct": 2.029,
+      "vortices": 1344,
+      "label": "c12s2u"
+    },
+    {
+      "nchordwise": 16,
+      "spanwise": 2,
+      "cspace": 0.0,
+      "role": "spanning_knee (mid)",
+      "cost_s": 11.5,
+      "eps_pct": 1.114,
+      "vortices": 1792,
+      "label": "c16s2u"
+    },
+    {
+      "nchordwise": 24,
+      "spanwise": 4,
+      "cspace": 1.0,
+      "role": "spanning_knee + PRODUCTION default (chord24/span4/cosine)",
+      "cost_s": 84.1,
+      "eps_pct": 0.786,
+      "vortices": 5376,
+      "label": "c24s4c"
+    },
+    {
+      "nchordwise": 48,
+      "spanwise": 2,
+      "cspace": 1.0,
+      "role": "above_knee COMPARATOR (Stages 2-4 reference; eps=0 in-study)",
+      "cost_s": 84.0,
+      "eps_pct": 0.0,
+      "vortices": 5376,
+      "label": "c48s2c"
+    }
+  ],
+  "box_extrapolation_note": "Configs 4 (chord24) and 5 (chord48) lie outside the Stage 1 separability box (chord 8-16). Approved: Stage 1's interaction index for the mesh-responsive quantities was <0.06 and Stage 2 confirmed monotone chordwise convergence to chord 48, so extending separability to chord 24/48 is low risk. Recorded per \u00a7Stage5 / \u00a713 limitation 1.",
+  "spacing_finding": "Stages 3-4 show spanwise 2 and UNIFORM spacing dominate at every cost level, so 4 of 5 configs use (span2, uniform). This is the acceptable 'single spanwise/spacing dominates' outcome the runbook allows, stated with evidence (Stage 3 knee, Stage 4 grouped bars).",
+  "stage7_measured": true
+}

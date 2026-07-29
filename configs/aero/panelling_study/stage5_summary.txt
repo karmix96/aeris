@@ -1,0 +1,33 @@
+STAGE 5 — SHORTLIST (0 runs)
+============================================================
+
+THE FIVE SETTINGS TAKEN FORWARD
+    #    label  chord  span  spacing  cost_s   eps%  role
+    1    c8s2u      8     2  uniform     2.6   4.10  below_knee (expected to fail gate 4)
+    2   c12s2u     12     2  uniform     6.8   2.03  spanning_knee (cheap)
+    3   c16s2u     16     2  uniform    10.3   1.11  spanning_knee (mid)
+    4   c24s4c     24     4   cosine    83.0   0.79  spanning_knee + PRODUCTION default (chord24/span4/cosine)
+    5   c48s2c     48     2   cosine    83.0   0.00  above_knee COMPARATOR (Stages 2-4 reference; eps=0 in-study)
+
+SELECTION RATIONALE
+   1 below the knee, deliberately too cheap (should fail gate 4).
+   2-4 span the knee; 4 is the production default (chord24/span4/cosine).
+   5 is the comparator (chord48/span2/cosine) — the Stages 2-4 reference.
+   Not all share one (span,cspace) pair (4 is span4/cosine).
+
+KEY FINDINGS DRIVING THIS
+   - Chordwise dominates the error budget; spanwise 2 is near-optimal
+     (Stage 3 knee 0.63%). Uniform spacing beats cosine at every chord
+     (Stage 4). Hence the candidates cluster at (span2, uniform).
+   - The production default (chord24/span4/cosine) costs ~83s but its
+     spanwise-4 over-resolves a direction that barely matters, while its
+     cosine spacing is the WORST performer. chord16/span2/uniform costs
+     ~10s at ~1.1% — a candidate that may beat production on both axes.
+
+BOX EXTRAPOLATION (approved, documented)
+   Configs 4-5 exceed the Stage 1 box (chord 8-16). Approved: interaction
+   index <0.06 on mesh-responsive quantities and monotone chordwise
+   convergence to chord 48 make the extrapolation low risk.
+
+*** STAGE 6 IS THE DECISIVE, EXPENSIVE TEST (540 runs). This shortlist is
+    fixed and will not be revised after seeing Stage 6 results. ***

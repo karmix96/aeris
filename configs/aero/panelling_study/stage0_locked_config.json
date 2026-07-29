@@ -1,0 +1,719 @@
+{
+  "study": "avl_panelling_v2",
+  "stage": 0,
+  "toolchain": {
+    "geom_config_sha256": "543da140a6d0eacdb86d907fc34529e875e43a4d9c573c356cb8894bc40452b3",
+    "src_git_sha": "6bb2627b75bbf1c3cc1a35eaf5559aaeee0e0d51",
+    "avl_version": "/usr/local/bin/avl:sha256=758a9c634d7bfc26"
+  },
+  "fixed_conditions": {
+    "geometry_config": "/home/mike_kara/aeris/configs/geometry/bwb.yaml",
+    "n_sections_config": 25,
+    "span_margin": 0.0,
+    "snap_sections_to_control": true,
+    "velocity_mps": 28.0,
+    "altitude_m": 0.0,
+    "beta_deg": 0.0,
+    "viscous": true,
+    "avl_timeout_sec": 900
+  },
+  "decisions": {
+    "D1_control_state": {
+      "base": {
+        "elevon_symmetric_deg": 4.0,
+        "elevon_differential_deg": 4.0
+      },
+      "production_state": "symmetric elevon sweep {-5,0,+5} deg, differential=0 (workflow.py control_input_values default; no differential sweep)",
+      "resolution": "KEEP (sym+4,diff+4). A differentially deflected state has a higher spanwise wavenumber, so validating panelling there is CONSERVATIVE for spanwise resolution relative to production's symmetric-only state. Stage 6b (diff=0) is the direct transfer test to production's differential."
+    },
+    "D2_plus8": {
+      "production_sweeps_plus8": false,
+      "evidence": "workflow.py:571 collapses alpha '-2,0,4,8' -> '-2,0,4'; default sweep [-2,0,4].",
+      "resolution": "Remove +8 from Stages 2 and 3. Convergence angles = [-2,0,2,4]. No +8 added to Stage 6."
+    },
+    "D3_velocity": {
+      "study_velocity_mps": 28.0,
+      "production_default_mps": 20.0,
+      "resolution": "Keep 28.0 per runbook \u00a73. AVL influence matrix is velocity-independent; velocity enters only via Re (viscous) and q_inf."
+    },
+    "D4_mesh_legality": {
+      "runbook_assumed_base_strips": 48,
+      "realized_base_strips": "2*(N-1), N in [28,29] -> [54,56]",
+      "cause": "snap_sections_to_control inserts sections at control-band edges and planform kinks; realized N=28..29, not 25.",
+      "illegal_study_combos": [
+        {
+          "stage": "stage1",
+          "nchordwise": 20,
+          "spanwise": 6,
+          "vortices": 6720
+        }
+      ],
+      "resolution": "Stage 1 top chordwise capped 20->16 so (16,6)=5376<=6000 is legal; Stage 1 grid = chord{8,12,16} x span{2,4,6}. Separability box becomes chord 8-16 (was never legal to 20 at span 6). All other stage combos are legal."
+    },
+    "D5_sampling": {
+      "production_sampler": "lhs_v1 (Latin hypercube, space-filling)",
+      "resolution": "30 normal geometries = one LHS design (sampler_seed=2000) over the config bounds, matching production distributionally (\u00a75 step 1). Convergence subset = first 8; Stage 1 subset = first 4."
+    }
+  },
+  "control_state": {
+    "elevon_symmetric_deg": 4.0,
+    "elevon_differential_deg": 4.0
+  },
+  "angles": {
+    "convergence_stages_2_3": [
+      -2,
+      0,
+      2,
+      4
+    ],
+    "lattice_ranking_deflection_1_6_6b": [
+      -2,
+      0,
+      4
+    ],
+    "spacing_stage_4": [
+      4
+    ]
+  },
+  "aggregation": {
+    "across_geom_angle": "worst_case (max), median reported alongside",
+    "across_quantities": "worst_case (max) over the gate's named quantities"
+  },
+  "noise_floor": 0.0001,
+  "quantity_fields": [
+    "cd_ind",
+    "cd_total",
+    "span_efficiency",
+    "l_over_d",
+    "cl",
+    "cm",
+    "x_np",
+    "CLa",
+    "Cma",
+    "Clp",
+    "Cmq",
+    "Cnb",
+    "elevon_sym.CL",
+    "elevon_sym.Cm",
+    "elevon_diff.Cl",
+    "elevon_diff.Cn",
+    "elevon_diff.CY",
+    "hinge_moments.elevon_sym",
+    "hinge_moments.elevon_diff"
+  ],
+  "derived_quantities": {
+    "delta_trim": "-cm / elevon_sym.Cm  (per-angle, per-design; units: degrees)",
+    "static_margin": "(x_np - x_ref) / mac",
+    "roll_power": "elevon_diff.Cl"
+  },
+  "control_derivative_units": {
+    "convention": "per_degree",
+    "avl_control_lines": [
+      "CONTROL",
+      "CONTROL",
+      "CONTROL",
+      "CONTROL",
+      "CONTROL",
+      "CONTROL",
+      "CONTROL",
+      "CONTROL",
+      "CONTROL",
+      "CONTROL",
+      "CONTROL",
+      "CONTROL",
+      "CONTROL",
+      "CONTROL",
+      "CONTROL",
+      "CONTROL",
+      "CONTROL",
+      "CONTROL",
+      "CONTROL",
+      "CONTROL"
+    ],
+    "note": "AERIS control input is a deflection in degrees; AVL control derivatives are therefore per degree. delta_trim inherits degrees. Verified against delta_trim magnitude at the base state."
+  },
+  "delta_trim_sanity_first_geom_deg": -11.81764619237001,
+  "reference": {
+    "x_ref": 0.0,
+    "mac_by_geom": {
+      "lhs30s2000:00": 0.5539,
+      "lhs30s2000:01": 0.62927,
+      "lhs30s2000:02": 0.65443,
+      "lhs30s2000:03": 0.68536,
+      "lhs30s2000:04": 0.58102,
+      "lhs30s2000:05": 0.57661,
+      "lhs30s2000:06": 0.65452,
+      "lhs30s2000:07": 0.64408,
+      "lhs30s2000:08": 0.71355,
+      "lhs30s2000:09": 0.59077,
+      "lhs30s2000:10": 0.43602,
+      "lhs30s2000:11": 0.48767,
+      "lhs30s2000:12": 0.60218,
+      "lhs30s2000:13": 0.57986,
+      "lhs30s2000:14": 0.52855,
+      "lhs30s2000:15": 0.6183,
+      "lhs30s2000:16": 0.57421,
+      "lhs30s2000:17": 0.47686,
+      "lhs30s2000:18": 0.42298,
+      "lhs30s2000:19": 0.60024,
+      "lhs30s2000:20": 0.61083,
+      "lhs30s2000:21": 0.66939,
+      "lhs30s2000:22": 0.54688,
+      "lhs30s2000:23": 0.42936,
+      "lhs30s2000:24": 0.64506,
+      "lhs30s2000:25": 0.45796,
+      "lhs30s2000:26": 0.49375,
+      "lhs30s2000:27": 0.44715,
+      "lhs30s2000:28": 0.4533,
+      "lhs30s2000:29": 0.48403,
+      "extreme:narrow_elevon": 0.55423,
+      "extreme:wide_elevon": 0.55391,
+      "extreme:high_ar": 0.46449,
+      "extreme:strong_taper": 0.49851,
+      "extreme:min_chord": 0.55705,
+      "extreme:max_sweep": 0.5539
+    },
+    "s_ref_by_geom": {
+      "lhs30s2000:00": 0.77939,
+      "lhs30s2000:01": 0.74569,
+      "lhs30s2000:02": 1.2584,
+      "lhs30s2000:03": 1.069,
+      "lhs30s2000:04": 0.73046,
+      "lhs30s2000:05": 0.85687,
+      "lhs30s2000:06": 1.1337,
+      "lhs30s2000:07": 0.99526,
+      "lhs30s2000:08": 1.3703,
+      "lhs30s2000:09": 0.86271,
+      "lhs30s2000:10": 0.52879,
+      "lhs30s2000:11": 1.0411,
+      "lhs30s2000:12": 1.066,
+      "lhs30s2000:13": 0.72307,
+      "lhs30s2000:14": 0.91286,
+      "lhs30s2000:15": 0.9679,
+      "lhs30s2000:16": 0.81117,
+      "lhs30s2000:17": 0.70565,
+      "lhs30s2000:18": 0.80903,
+      "lhs30s2000:19": 1.0205,
+      "lhs30s2000:20": 0.92951,
+      "lhs30s2000:21": 1.0299,
+      "lhs30s2000:22": 1.1101,
+      "lhs30s2000:23": 0.70859,
+      "lhs30s2000:24": 1.0648,
+      "lhs30s2000:25": 0.8095,
+      "lhs30s2000:26": 0.63267,
+      "lhs30s2000:27": 0.76528,
+      "lhs30s2000:28": 0.86502,
+      "lhs30s2000:29": 0.63705,
+      "extreme:narrow_elevon": 0.77934,
+      "extreme:wide_elevon": 0.77939,
+      "extreme:high_ar": 0.95187,
+      "extreme:strong_taper": 0.61198,
+      "extreme:min_chord": 0.76513,
+      "extreme:max_sweep": 0.7794
+    },
+    "b_ref_by_geom": {
+      "lhs30s2000:00": 1.7165,
+      "lhs30s2000:01": 1.5594,
+      "lhs30s2000:02": 2.2771,
+      "lhs30s2000:03": 1.8196,
+      "lhs30s2000:04": 1.5227,
+      "lhs30s2000:05": 1.7428,
+      "lhs30s2000:06": 2.2661,
+      "lhs30s2000:07": 2.027,
+      "lhs30s2000:08": 2.3388,
+      "lhs30s2000:09": 1.8585,
+      "lhs30s2000:10": 1.6897,
+      "lhs30s2000:11": 2.4972,
+      "lhs30s2000:12": 2.191,
+      "lhs30s2000:13": 1.6585,
+      "lhs30s2000:14": 2.3053,
+      "lhs30s2000:15": 2.1399,
+      "lhs30s2000:16": 1.7779,
+      "lhs30s2000:17": 1.937,
+      "lhs30s2000:18": 2.4397,
+      "lhs30s2000:19": 1.9774,
+      "lhs30s2000:20": 1.9066,
+      "lhs30s2000:21": 1.8852,
+      "lhs30s2000:22": 2.4177,
+      "lhs30s2000:23": 2.1117,
+      "lhs30s2000:24": 2.0589,
+      "lhs30s2000:25": 2.2032,
+      "lhs30s2000:26": 1.5823,
+      "lhs30s2000:27": 2.094,
+      "lhs30s2000:28": 2.3812,
+      "lhs30s2000:29": 1.6313,
+      "extreme:narrow_elevon": 1.7165,
+      "extreme:wide_elevon": 1.7165,
+      "extreme:high_ar": 2.4999,
+      "extreme:strong_taper": 1.7166,
+      "extreme:min_chord": 1.7166,
+      "extreme:max_sweep": 1.7165
+    }
+  },
+  "normalisation_scale": {
+    "cd_ind": 0.0035508500000000004,
+    "cd_total": 0.010332428639290549,
+    "span_efficiency": 0.81265,
+    "l_over_d": 19.32899395551944,
+    "cl": 0.195025,
+    "cm": 0.10417,
+    "x_np": 0.3063175,
+    "CLa": 3.8319799999999997,
+    "Cma": 2.0516595,
+    "Clp": 0.30581749999999996,
+    "Cmq": 4.918607,
+    "Cnb": 0.003372,
+    "elevon_sym.CL": 0.010145999999999999,
+    "elevon_sym.Cm": 0.00701,
+    "elevon_diff.Cl": 0.002594,
+    "elevon_diff.Cn": 5.4999999999999995e-05,
+    "elevon_diff.CY": 0.000557,
+    "hinge_moments.elevon_sym": 0.0002872,
+    "hinge_moments.elevon_diff": 0.00020435
+  },
+  "realized_n_sections": {
+    "by_geom": {
+      "lhs30s2000:00": 29,
+      "lhs30s2000:01": 29,
+      "lhs30s2000:02": 29,
+      "lhs30s2000:03": 28,
+      "lhs30s2000:04": 29,
+      "lhs30s2000:05": 29,
+      "lhs30s2000:06": 29,
+      "lhs30s2000:07": 29,
+      "lhs30s2000:08": 29,
+      "lhs30s2000:09": 29,
+      "lhs30s2000:10": 28,
+      "lhs30s2000:11": 29,
+      "lhs30s2000:12": 29,
+      "lhs30s2000:13": 29,
+      "lhs30s2000:14": 29,
+      "lhs30s2000:15": 29,
+      "lhs30s2000:16": 29,
+      "lhs30s2000:17": 29,
+      "lhs30s2000:18": 29,
+      "lhs30s2000:19": 29,
+      "lhs30s2000:20": 29,
+      "lhs30s2000:21": 29,
+      "lhs30s2000:22": 29,
+      "lhs30s2000:23": 29,
+      "lhs30s2000:24": 29,
+      "lhs30s2000:25": 29,
+      "lhs30s2000:26": 28,
+      "lhs30s2000:27": 29,
+      "lhs30s2000:28": 29,
+      "lhs30s2000:29": 29,
+      "extreme:narrow_elevon": 29,
+      "extreme:wide_elevon": 28,
+      "extreme:high_ar": 29,
+      "extreme:strong_taper": 29,
+      "extreme:min_chord": 29,
+      "extreme:max_sweep": 29
+    },
+    "min": 28,
+    "max": 29
+  },
+  "legality_table_Nmax": {
+    "stage1:c8s2": {
+      "nchordwise": 8,
+      "spanwise": 2,
+      "strips_Nmax": 112,
+      "vortices_Nmax": 896,
+      "legal": true
+    },
+    "stage1:c8s4": {
+      "nchordwise": 8,
+      "spanwise": 4,
+      "strips_Nmax": 224,
+      "vortices_Nmax": 1792,
+      "legal": true
+    },
+    "stage1:c8s6": {
+      "nchordwise": 8,
+      "spanwise": 6,
+      "strips_Nmax": 336,
+      "vortices_Nmax": 2688,
+      "legal": true
+    },
+    "stage1:c12s2": {
+      "nchordwise": 12,
+      "spanwise": 2,
+      "strips_Nmax": 112,
+      "vortices_Nmax": 1344,
+      "legal": true
+    },
+    "stage1:c12s4": {
+      "nchordwise": 12,
+      "spanwise": 4,
+      "strips_Nmax": 224,
+      "vortices_Nmax": 2688,
+      "legal": true
+    },
+    "stage1:c12s6": {
+      "nchordwise": 12,
+      "spanwise": 6,
+      "strips_Nmax": 336,
+      "vortices_Nmax": 4032,
+      "legal": true
+    },
+    "stage1:c20s2": {
+      "nchordwise": 20,
+      "spanwise": 2,
+      "strips_Nmax": 112,
+      "vortices_Nmax": 2240,
+      "legal": true
+    },
+    "stage1:c20s4": {
+      "nchordwise": 20,
+      "spanwise": 4,
+      "strips_Nmax": 224,
+      "vortices_Nmax": 4480,
+      "legal": true
+    },
+    "stage1:c20s6": {
+      "nchordwise": 20,
+      "spanwise": 6,
+      "strips_Nmax": 336,
+      "vortices_Nmax": 6720,
+      "legal": false
+    },
+    "stage2:c6s2": {
+      "nchordwise": 6,
+      "spanwise": 2,
+      "strips_Nmax": 112,
+      "vortices_Nmax": 672,
+      "legal": true
+    },
+    "stage2:c12s2": {
+      "nchordwise": 12,
+      "spanwise": 2,
+      "strips_Nmax": 112,
+      "vortices_Nmax": 1344,
+      "legal": true
+    },
+    "stage2:c24s2": {
+      "nchordwise": 24,
+      "spanwise": 2,
+      "strips_Nmax": 112,
+      "vortices_Nmax": 2688,
+      "legal": true
+    },
+    "stage2:c48s2": {
+      "nchordwise": 48,
+      "spanwise": 2,
+      "strips_Nmax": 112,
+      "vortices_Nmax": 5376,
+      "legal": true
+    },
+    "stage3:c12s1": {
+      "nchordwise": 12,
+      "spanwise": 1,
+      "strips_Nmax": 56,
+      "vortices_Nmax": 672,
+      "legal": true
+    },
+    "stage3:c12s2": {
+      "nchordwise": 12,
+      "spanwise": 2,
+      "strips_Nmax": 112,
+      "vortices_Nmax": 1344,
+      "legal": true
+    },
+    "stage3:c12s4": {
+      "nchordwise": 12,
+      "spanwise": 4,
+      "strips_Nmax": 224,
+      "vortices_Nmax": 2688,
+      "legal": true
+    },
+    "stage3:c12s8": {
+      "nchordwise": 12,
+      "spanwise": 8,
+      "strips_Nmax": 448,
+      "vortices_Nmax": 5376,
+      "legal": true
+    },
+    "stage4:c8s2": {
+      "nchordwise": 8,
+      "spanwise": 2,
+      "strips_Nmax": 112,
+      "vortices_Nmax": 896,
+      "legal": true
+    },
+    "stage4:c12s2": {
+      "nchordwise": 12,
+      "spanwise": 2,
+      "strips_Nmax": 112,
+      "vortices_Nmax": 1344,
+      "legal": true
+    },
+    "stage4:c16s2": {
+      "nchordwise": 16,
+      "spanwise": 2,
+      "strips_Nmax": 112,
+      "vortices_Nmax": 1792,
+      "legal": true
+    },
+    "stage4:c24s2": {
+      "nchordwise": 24,
+      "spanwise": 2,
+      "strips_Nmax": 112,
+      "vortices_Nmax": 2688,
+      "legal": true
+    },
+    "stage4:c48s2": {
+      "nchordwise": 48,
+      "spanwise": 2,
+      "strips_Nmax": 112,
+      "vortices_Nmax": 5376,
+      "legal": true
+    }
+  },
+  "coverage_table": {
+    "b3_ratio": {
+      "bound_min": 0.4,
+      "bound_max": 0.55,
+      "sample_min": 0.4042598246987622,
+      "sample_median": 0.47489758156442624,
+      "sample_max": 0.5479936248520826,
+      "range_fraction": 0.9582253343554691
+    },
+    "b_total_m": {
+      "bound_min": 0.75,
+      "bound_max": 1.25,
+      "sample_min": 0.7613428880191604,
+      "sample_median": 1.0011909305089985,
+      "sample_max": 1.2486818169868084,
+      "range_fraction": 0.9746778579352959
+    },
+    "c1_m": {
+      "bound_min": 0.7,
+      "bound_max": 1.1,
+      "sample_min": 0.7076684842514351,
+      "sample_median": 0.8957966720548876,
+      "sample_max": 1.094280331178604,
+      "range_fraction": 0.9665296173179219
+    },
+    "c2_ratio": {
+      "bound_min": 0.55,
+      "bound_max": 0.8,
+      "sample_min": 0.5563125443120525,
+      "sample_median": 0.6735323883030818,
+      "sample_max": 0.7955116709853105,
+      "range_fraction": 0.9567965066930322
+    },
+    "c3_ratio": {
+      "bound_min": 0.3,
+      "bound_max": 0.55,
+      "sample_min": 0.3047615917561014,
+      "sample_median": 0.42672907246867114,
+      "sample_max": 0.545598373990975,
+      "range_fraction": 0.9633471289394941
+    },
+    "c4_ratio": {
+      "bound_min": 0.08,
+      "bound_max": 0.2,
+      "sample_min": 0.08222426096942183,
+      "sample_median": 0.1399976160497226,
+      "sample_max": 0.19947004573880073,
+      "range_fraction": 0.9770482064114907
+    },
+    "dihedral_b2_deg": {
+      "bound_min": 0.0,
+      "bound_max": 6.0,
+      "sample_min": 0.15366166077928034,
+      "sample_median": 2.97850828614202,
+      "sample_max": 5.919773828577731,
+      "range_fraction": 0.9610186946330751
+    },
+    "dihedral_b3_deg": {
+      "bound_min": 0.0,
+      "bound_max": 10.0,
+      "sample_min": 0.027433327603077262,
+      "sample_median": 4.927402888090295,
+      "sample_max": 9.82111664716971,
+      "range_fraction": 0.9793683319566633
+    },
+    "elevon_end_frac": {
+      "bound_min": 0.85,
+      "bound_max": 0.98,
+      "sample_min": 0.8535208396586782,
+      "sample_median": 0.9134629453334664,
+      "sample_max": 0.9757539064519295,
+      "range_fraction": 0.9402543599480869
+    },
+    "elevon_hinge_frac": {
+      "bound_min": 0.65,
+      "bound_max": 0.82,
+      "sample_min": 0.6520310694086237,
+      "sample_median": 0.7352204453269455,
+      "sample_max": 0.816960247727938,
+      "range_fraction": 0.9701716371724375
+    },
+    "elevon_start_frac": {
+      "bound_min": 0.5,
+      "bound_max": 0.7,
+      "sample_min": 0.5028673259257438,
+      "sample_median": 0.6028296082801763,
+      "sample_max": 0.6996975506365333,
+      "range_fraction": 0.9841511235539476
+    },
+    "split_ratio": {
+      "bound_min": 0.4,
+      "bound_max": 0.6,
+      "sample_min": 0.40236460837635146,
+      "sample_median": 0.500263958902798,
+      "sample_max": 0.5986148945322878,
+      "range_fraction": 0.9812514307796818
+    },
+    "sw1_deg": {
+      "bound_min": 20.0,
+      "bound_max": 40.0,
+      "sample_min": -39.805682144093865,
+      "sample_median": -30.005598607598525,
+      "sample_max": -20.459556619171376,
+      "range_fraction": 0.9673062762461244
+    },
+    "sw2_deg": {
+      "bound_min": 15.0,
+      "bound_max": 35.0,
+      "sample_min": -34.856422439457695,
+      "sample_median": -24.822567528491675,
+      "sample_max": -15.188476429954608,
+      "range_fraction": 0.9833973004751544
+    },
+    "sw3_deg": {
+      "bound_min": 5.0,
+      "bound_max": 25.0,
+      "sample_min": -24.699569877300114,
+      "sample_median": -14.965638137703117,
+      "sample_max": -5.191019519534841,
+      "range_fraction": 0.9754275178882637
+    },
+    "twist_b0_deg": {
+      "bound_min": -1.0,
+      "bound_max": 1.0,
+      "sample_min": -0.950343850746438,
+      "sample_median": -0.01293308032752466,
+      "sample_max": 0.996208687843988,
+      "range_fraction": 0.973276269295213
+    },
+    "twist_b1_deg": {
+      "bound_min": -3.0,
+      "bound_max": 0.0,
+      "sample_min": -2.98555126608476,
+      "sample_median": -1.5114186274977666,
+      "sample_max": -0.02524573725104995,
+      "range_fraction": 0.9867685096112367
+    },
+    "twist_b2_deg": {
+      "bound_min": -5.0,
+      "bound_max": -1.0,
+      "sample_min": -4.950684763969746,
+      "sample_median": -3.025885054166741,
+      "sample_max": -1.0165009805192766,
+      "range_fraction": 0.9835459458626173
+    },
+    "twist_b3_deg": {
+      "bound_min": -8.0,
+      "bound_max": -2.0,
+      "sample_min": -7.80051132299591,
+      "sample_median": -4.991908045581148,
+      "sample_max": -2.0771347564245444,
+      "range_fraction": 0.9538960944285609
+    }
+  },
+  "coverage_under_half_range": [],
+  "geometries": {
+    "normal_keys": [
+      "lhs30s2000:00",
+      "lhs30s2000:01",
+      "lhs30s2000:02",
+      "lhs30s2000:03",
+      "lhs30s2000:04",
+      "lhs30s2000:05",
+      "lhs30s2000:06",
+      "lhs30s2000:07",
+      "lhs30s2000:08",
+      "lhs30s2000:09",
+      "lhs30s2000:10",
+      "lhs30s2000:11",
+      "lhs30s2000:12",
+      "lhs30s2000:13",
+      "lhs30s2000:14",
+      "lhs30s2000:15",
+      "lhs30s2000:16",
+      "lhs30s2000:17",
+      "lhs30s2000:18",
+      "lhs30s2000:19",
+      "lhs30s2000:20",
+      "lhs30s2000:21",
+      "lhs30s2000:22",
+      "lhs30s2000:23",
+      "lhs30s2000:24",
+      "lhs30s2000:25",
+      "lhs30s2000:26",
+      "lhs30s2000:27",
+      "lhs30s2000:28",
+      "lhs30s2000:29"
+    ],
+    "extreme_keys": [
+      "extreme:narrow_elevon",
+      "extreme:wide_elevon",
+      "extreme:high_ar",
+      "extreme:strong_taper",
+      "extreme:min_chord",
+      "extreme:max_sweep"
+    ],
+    "extreme_overrides": {
+      "narrow_elevon": {
+        "elevon_start_frac": 0.7,
+        "elevon_end_frac": 0.85,
+        "elevon_hinge_frac": 0.78
+      },
+      "wide_elevon": {
+        "elevon_start_frac": 0.5,
+        "elevon_end_frac": 0.98,
+        "elevon_hinge_frac": 0.7
+      },
+      "high_ar": {
+        "b_total_m": 1.25,
+        "c1_m": 0.7
+      },
+      "strong_taper": {
+        "c2_ratio": 0.55,
+        "c3_ratio": 0.3,
+        "c4_ratio": 0.08
+      },
+      "min_chord": {
+        "c4_ratio": 0.08
+      },
+      "max_sweep": {
+        "sw1_deg": 40.0,
+        "sw2_deg": 35.0,
+        "sw3_deg": 25.0
+      }
+    }
+  },
+  "gates_section7": {
+    "gate1": "Spearman l_over_d >= 0.98 AND max rank displacement <= 4",
+    "gate2": "top-10 set retention = 10/10 (report top-3, do not gate)",
+    "gate3": "objective regret <= 0.5%",
+    "gate4": "numerical uncertainty < 1% on cl,cm,cd_ind,cd_total,x_np (worst case)",
+    "gate5": "control derivs sign preserved (all 5); |bias|<=5% and scatter<=5% of bias on elevon_sym.Cm and elevon_diff.Cl",
+    "gate6": "decision preservation: 0 trim-label changes, 0 stability-label changes, |delta delta_trim| <= 0.5 deg every design/angle",
+    "gate7": "100% runs status==SUCCESS",
+    "selection_rule": "among settings passing all 7 gates, cheapest by end-to-end time"
+  },
+  "standing_justifications": {
+    "altitude": "AVL influence matrix is altitude-independent; altitude enters only via Re (viscous) and q_inf, neither of which alters vortex-lattice discretisation error. Panelling adequacy at sea level transfers to the dataset's altitudes. No runs spent on it.",
+    "spanwise_1": "With snap_sections_to_control, spanwise 1 resolves the elevon band with only the strips the section placement provides; hinge moments are expected unusable there. That is the intended 'below the knee' point in Stage 3, predicted here, not discovered later.",
+    "determinism": "AVL solves a direct linear system; identical inputs give bit-identical output. Every spread reported anywhere is design-to-design variation, never run-to-run noise."
+  },
+  "run_accounting_stage0": {
+    "new_solves": 36,
+    "cache_hits": 0,
+    "failures": 0,
+    "note": "8 of the 36 (+4 finest) are shared with Stage 2."
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "names": {
+    "extreme:narrow_elevon": "narrow_elevon",
+    "extreme:wide_elevon": "wide_elevon",
+    "extreme:high_ar": "high_ar",
+    "extreme:strong_taper": "strong_taper",
+    "extreme:min_chord": "min_chord",
+    "extreme:max_sweep": "max_sweep"
+  },
+  "report": {
+    "c8s2u": {
+      "per_geom": {
+        "extreme:narrow_elevon": 6.805,
+        "extreme:wide_elevon": 3.834,
+        "extreme:high_ar": 4.587,
+        "extreme:strong_taper": 4.84,
+        "extreme:min_chord": 5.518,
+        "extreme:max_sweep": 15.233
+      },
+      "worst_key_pct": 15.233,
+      "ctrl_sign_preserved": true
+    },
+    "c12s2u": {
+      "per_geom": {
+        "extreme:narrow_elevon": 3.251,
+        "extreme:wide_elevon": 1.809,
+        "extreme:high_ar": 2.076,
+        "extreme:strong_taper": 2.251,
+        "extreme:min_chord": 2.561,
+        "extreme:max_sweep": 8.429
+      },
+      "worst_key_pct": 8.429,
+      "ctrl_sign_preserved": true
+    },
+    "c16s2u": {
+      "per_geom": {
+        "extreme:narrow_elevon": 1.657,
+        "extreme:wide_elevon": 1.17,
+        "extreme:high_ar": 1.041,
+        "extreme:strong_taper": 1.312,
+        "extreme:min_chord": 1.146,
+        "extreme:max_sweep": 5.206
+      },
+      "worst_key_pct": 5.206,
+      "ctrl_sign_preserved": true
+    },
+    "c24s4c": {
+      "per_geom": {
+        "extreme:narrow_elevon": 1.454,
+        "extreme:wide_elevon": 1.788,
+        "extreme:high_ar": 1.723,
+        "extreme:strong_taper": 1.726,
+        "extreme:min_chord": 1.725,
+        "extreme:max_sweep": 0.938
+      },
+      "worst_key_pct": 1.788,
+      "ctrl_sign_preserved": true
+    }
+  }
+}

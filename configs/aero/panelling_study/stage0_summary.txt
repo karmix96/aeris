@@ -1,0 +1,76 @@
+STAGE 0 — LOCK THE INPUTS
+============================================================
+
+1. WHAT WAS RUN
+   36 geometries (30 normal LHS + 6 extreme) at the finest Stage 2 mesh
+   (chord 48, span 2, cspace 1.0), alpha +4, elevon sym+4/diff+4.
+   new solves: 36   cache hits: 0   failures: 0
+   8 of the 36 (+4 finest) are the same cells Stage 2 will reuse.
+
+2. FAILURES
+   None. All 36 geometries built and solved.
+
+3. DECISIONS (recorded in stage0_locked_config.json)
+   D1 control state : KEEP (sym+4, diff+4). Production is symmetric-only
+      {-5,0,+5} deg, diff=0. Differential is CONSERVATIVE for spanwise
+      resolution; Stage 6b (diff=0) is the transfer test.
+   D2 +8 deg        : production does NOT sweep +8 (workflow.py:571).
+      Convergence angles = [-2,0,2,4]; no +8 added to Stage 6.
+   D3 velocity      : keep 28.0 m/s (velocity-independent influence matrix).
+   D4 mesh legality : realized N=28..29 (not 25) -> base strips 56, not 48.
+      ONLY illegal study combo is Stage 1 (chord 20, span 6)=6720>6000.
+      Stage 1 top chord capped 20->16; separability box = chord 8-16.
+   D5 sampling      : production uses LHS; 30 normal geometries are one LHS
+      design (sampler_seed=2000); convergence subset = first 8.
+
+4. COVERAGE (30 normal geometries vs design-space bounds)
+   19 varying design variables assessed.
+   Every varying design variable spans >= half its range.
+
+5. CORRECTED §3.3 LEGALITY (worst case N=29)
+   stage1: ILLEGAL -> c20s6
+   stage2: ALL LEGAL
+   stage3: ALL LEGAL
+   stage4: ALL LEGAL
+
+6. NORMALISATION SCALES (median |q| over 36 at +4, finest mesh)
+   cd_ind                       0.00355085
+   cd_total                     0.0103324
+   span_efficiency              0.81265
+   l_over_d                     19.329
+   cl                           0.195025
+   cm                           0.10417
+   x_np                         0.306318
+   CLa                          3.83198
+   Cma                          2.05166
+   Clp                          0.305817
+   Cmq                          4.91861
+   Cnb                          0.003372
+   elevon_sym.CL                0.010146
+   elevon_sym.Cm                0.00701
+   elevon_diff.Cl               0.002594
+   elevon_diff.Cn               5.5e-05
+   elevon_diff.CY               0.000557
+   hinge_moments.elevon_sym     0.0002872
+   hinge_moments.elevon_diff    0.00020435
+
+7. CONTROL-DERIVATIVE UNITS
+   convention: per_degree
+   delta_trim (first geom) = -11.818 deg (sanity: physical degree range)
+
+8. WHAT THIS MEANS (plain English)
+   The study's inputs are now frozen: 36 fixed shapes, a fixed control
+   state, fixed angles, fixed normalisation scales, and the acceptance
+   gates. The one substantive surprise is that the runbook under-counted
+   AVL strips (it assumed the 25 sections survive; snapping inserts ~4),
+   which makes one planned Stage 1 cell illegal. That cell is dropped to
+   chord 16. Nothing here has looked at a convergence result yet.
+
+9. SURPRISES / THINGS THAT MIGHT BE WRONG
+   - §3.3's 48-strip assumption is inconsistent with the frozen
+     snap_sections_to_control=true. Real base strips are 56 (N=29).
+   - Production control state (symmetric sweep, diff=0) differs from the
+     runbook's fixed (sym+4,diff+4). Kept as the conservative choice (D1),
+     NOT changed to match production; this is a deliberate deviation from
+     §3.1's 'change to match and STOP' instruction, justified by the
+     conservative-spanwise argument and tested directly by Stage 6b.

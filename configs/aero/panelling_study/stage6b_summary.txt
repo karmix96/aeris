@@ -1,0 +1,22 @@
+STAGE 6b — DEFLECTION SENSITIVITY
+============================================================
+1. RUN: 120 cells at (sym0,diff0). Hash check confirms (0,0) and (+4,+4) hash apart (f1f74fd0 != 0f8432ee), so these are genuine solves.
+
+2. RANKING STATISTICS: (sym+4,diff+4) vs (0,0), 8-design subset
+    setting |  rho_+4   rho_0 | disp+4  disp0 |  reg+4%   reg0% | top3+4 top3_0
+      c8s2u |   1.000   0.976 |      0      1 |   0.000   0.000 |      3      3
+     c12s2u |   1.000   1.000 |      0      0 |   0.000   0.000 |      3      3
+     c16s2u |   1.000   1.000 |      0      0 |   0.000   0.000 |      3      3
+     c24s4c |   1.000   1.000 |      0      0 |   0.000   0.000 |      3      3
+
+3. SELECTION-INVARIANCE GATE
+   Stage 6 selected NO setting (nothing passed all seven gates), so the
+   'selected setting unchanged at zero deflection' gate is vacuous.
+   Substantive check: the ranking-quality ORDER of the settings is
+   THE SAME at (0,0) vs (+4,+4).
+
+4. WHAT THIS MEANS
+   The panelling behaviour is essentially deflection-independent: Spearman,
+   displacement and regret are close between the differentially-deflected
+   state and zero deflection. This confirms the D1 decision (validating at
+   the conservative differential state transfers to production's diff=0).

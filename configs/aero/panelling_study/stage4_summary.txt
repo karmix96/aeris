@@ -1,0 +1,32 @@
+STAGE 4 — PANEL SPACING
+============================================================
+1. RUN: 48 main + 4 comparator + 4 reference-neutrality. new=32 hits=16 fails=0
+   (all cspace=1.0 cells were cached from Stages 1-2.)
+
+2. FAILURES: 0
+
+3. REFERENCE-NEUTRALITY (chord48 uniform vs cosine, worst key-quantity)
+   lhs30s2000:00: 0.224%
+   lhs30s2000:01: 0.183%
+   lhs30s2000:02: 0.134%
+   lhs30s2000:03: 0.231%
+   max = 0.231%  -> NEUTRAL (comparator is spacing-independent)
+
+4. ERROR vs COMPARATOR, median over 4 geoms  [% worst key-quantity]
+    chord      uniform  half-cosine  full cosine
+        8        4.101        4.334        6.594
+       12        2.029        3.091        4.096
+       16        1.114        2.323        2.519
+       24        0.858        1.019        1.310
+
+5. BEST SPACING PER CHORD
+   chord  8: uniform (err 4.101%)
+   chord 12: uniform (err 2.029%)
+   chord 16: uniform (err 1.114%)
+   chord 24: uniform (err 0.858%)
+
+6. WHAT THIS MEANS
+   Established at spanwise 2 and carried to other spanwise counts under the
+   Stage 1 separability result. If cosine spacing lowers the error at low
+   chord counts, the shortlist should adopt it there; if the three spacings
+   are within noise, spacing is not a lever and cspace can stay at 1.0.

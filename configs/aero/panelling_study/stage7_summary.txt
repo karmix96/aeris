@@ -1,0 +1,24 @@
+STAGE 7 — HONEST TIMINGS (serial, cache bypassed)
+============================================================
+1. RUN: 5 settings x 5 repeats on lhs30s2000:00 at +4.
+
+2. MEDIAN TIMINGS
+    setting  AVL-only s  end-to-end s  proj hours (2000x3)
+      c8s2u        2.90          2.91                  4.9
+     c12s2u        6.80          6.80                 11.3
+     c16s2u       11.44         11.45                 19.1
+     c24s4c       84.09         84.10                140.2
+     c48s2c       83.98         84.00                140.0
+
+3. SECTION-BUILD DILUTION
+   End-to-end includes the ~1.4 s per-design section build, a fixed cost
+   that does not scale with panelling and so dilutes the relative saving of
+   a cheaper mesh. The selection rule sees end-to-end, not AVL-only.
+
+4. INTERPOLATED-COST CORRECTIONS (>20% off)
+   None: all Stage 5 interpolated costs were within 20% of measured.
+
+5. WHAT THIS MEANS
+   A 2000-design x 3-angle sweep costs ~140 h at the production mesh
+   (c24s4c) vs ~19 h at c16s2u — a 7.3x wall-clock
+   difference, the concrete stake behind the gate-4/gate-6 discussion.

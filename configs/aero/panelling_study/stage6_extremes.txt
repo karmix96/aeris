@@ -1,0 +1,18 @@
+STAGE 6 — EXTREME-GEOMETRY REPORT (separate, per §7)
+============================================================
+1. RUN: 5 settings x 6 extremes at +4 deg (cached from Stage 6).
+   Worst gate-4 key-quantity error vs comparator, §4.5 floor applied.
+
+2. WORST KEY-QUANTITY ERROR PER SETTING, PER EXTREME [%]
+    setting | narrow_elevo  wide_elevon      high_ar strong_taper    min_chord    max_sweep |   worst  sign
+      c8s2u |         6.80         3.83         4.59         4.84         5.52        15.23 |   15.23    ok
+     c12s2u |         3.25         1.81         2.08         2.25         2.56         8.43 |    8.43    ok
+     c16s2u |         1.66         1.17         1.04         1.31         1.15         5.21 |    5.21    ok
+     c24s4c |         1.45         1.79         1.72         1.73         1.73         0.94 |    1.79    ok
+
+3. WHAT THIS MEANS
+   Extremes are stress shapes (narrow/wide elevon, high aspect ratio,
+   strong taper, min tip chord, max sweep). A larger error here than on
+   the normal designs is a DOCUMENTED LIMITATION, not a gate failure.
+   The controlling observation is unchanged: the error is dominated by
+   elevon-power resolution and shrinks monotonically with chordwise count.

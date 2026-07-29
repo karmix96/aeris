@@ -1,0 +1,50 @@
+STAGE 1 — 2D LATTICE (separability)
+============================================================
+1. RUN: 108 cells (chord(8, 12, 16) x span(2, 4, 6) x 4 geoms x angles(-2.0, 0.0, 4.0)). new=0 hits=108 fails=0
+   (grid is D4-corrected: chord 20 dropped to 16, illegal at span 6.)
+
+2. FAILURES: 0
+
+3. INTERACTION INDEX  I = rms(AB)/(rms(A)+rms(B))  per quantity
+   §4.5 floor applied: a quantity whose main-effect signal rms(A)+rms(B)
+   is below 1e-4 is mesh-insensitive; its I is a ratio of print-rounding
+   artifacts (NOT assessed). Such quantities carry NI = rms(AB)/scale.
+   quantity                        maxI    medI   maxNI%  status
+   cd_ind                         0.005   0.005    0.113  ratio
+   cd_total                       0.004   0.004    0.039  ratio
+   span_efficiency                0.014   0.005    0.000  ratio
+   l_over_d                       0.054   0.012    0.000  ratio
+   cl                             0.010   0.002    0.000  ratio
+   cm                             0.014   0.004    0.000  ratio
+   x_np                           0.024   0.009    0.000  ratio
+   CLa                            0.014   0.006    0.000  ratio
+   Cma                            0.010   0.005    0.000  ratio
+   Clp                            0.012   0.002    0.000  ratio
+   Cmq                            0.014   0.006    0.000  ratio
+   Cnb                              nan     nan    0.129  floored(normalised)
+   elevon_sym.CL                  0.006   0.004    0.000  ratio
+   elevon_sym.Cm                  0.005   0.004    0.010  ratio
+   elevon_diff.Cl                   nan     nan    0.021  floored(normalised)
+   elevon_diff.Cn                   nan     nan    0.495  floored(normalised)
+   elevon_diff.CY                   nan     nan    0.063  floored(normalised)
+   hinge_moments.elevon_sym         nan     nan    0.056  floored(normalised)
+   hinge_moments.elevon_diff        nan     nan    0.029  floored(normalised)
+
+   worst ratio-assessable cell: I=0.054 on l_over_d geom=lhs30s2000:01 angle=-2.0
+   worst normalised interaction among floored quantities: 0.495%
+   floored (mesh-insensitive) quantities: Cnb, elevon_diff.Cl, elevon_diff.Cn, elevon_diff.CY, hinge_moments.elevon_sym, hinge_moments.elevon_diff
+
+4. GATES
+   gate 1 (max I < 0.2 over ratio-assessable quantities): max I = 0.054  -> PASS
+      (worst floored-quantity normalised interaction = 0.495%, negligible)
+   gate 2 (l_over_d ranking identical across span 2,4,6 at +4, chord 12): PASS
+       span 2: ['01', '03', '00', '02']
+       span 4: ['01', '03', '00', '02']
+       span 6: ['01', '03', '00', '02']
+
+5. RESULT: BOTH GATES PASS — Stages 2 and 3 are interpretable.
+
+6. LIMITATION (record regardless): separability is demonstrated only on
+   chord 8-16 x span 2-6. Stages 2 and 3 evaluate outside that box
+   (chord 6 and 48; span 1 and 8); that is an extrapolation. The Stage 5
+   shortlist must lie inside the box unless Mike approves otherwise.

@@ -1,0 +1,66 @@
+{
+  "c8s2u": {
+    "gate4_literal_pct": 36.154,
+    "gate4_screened_pct": 36.154,
+    "gate4_at_plus4_pct": 6.962,
+    "gate4_pass": false,
+    "worst_literal": {
+      "sid": "lhs30s2000:02",
+      "angle": 0.0,
+      "q": "cl"
+    },
+    "worst_screened": {
+      "sid": "lhs30s2000:02",
+      "angle": 0.0,
+      "q": "cl"
+    }
+  },
+  "c12s2u": {
+    "gate4_literal_pct": 15.256,
+    "gate4_screened_pct": 15.256,
+    "gate4_at_plus4_pct": 3.189,
+    "gate4_pass": false,
+    "worst_literal": {
+      "sid": "lhs30s2000:02",
+      "angle": 0.0,
+      "q": "cl"
+    },
+    "worst_screened": {
+      "sid": "lhs30s2000:02",
+      "angle": 0.0,
+      "q": "cl"
+    }
+  },
+  "c16s2u": {
+    "gate4_literal_pct": 7.566,
+    "gate4_screened_pct": 7.566,
+    "gate4_at_plus4_pct": 2.215,
+    "gate4_pass": false,
+    "worst_literal": {
+      "sid": "lhs30s2000:24",
+      "angle": 0.0,
+      "q": "cd_ind"
+    },
+    "worst_screened": {
+      "sid": "lhs30s2000:24",
+      "angle": 0.0,
+      "q": "cd_ind"
+    }
+  },
+  "c24s4c": {
+    "gate4_literal_pct": 5.206,
+    "gate4_screened_pct": 5.206,
+    "gate4_at_plus4_pct": 2.951,
+    "gate4_pass": false,
+    "worst_literal": {
+      "sid": "lhs30s2000:03",
+      "angle": 0.0,
+      "q": "cl"
+    },
+    "worst_screened": {
+      "sid": "lhs30s2000:03",
+      "angle": 0.0,
+      "q": "cl"
+    }
+  }
+}

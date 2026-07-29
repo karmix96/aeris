@@ -1,0 +1,16 @@
+{
+  "sample_id": "lhs30s2000:05",
+  "nchordwise": 12,
+  "spanwise": 2,
+  "cspace": 1.0,
+  "alpha_deg": 4.0,
+  "beta_deg": 0.0,
+  "control_input_deg": 4.0,
+  "diff_input_deg": 4.0,
+  "viscous": true,
+  "velocity_mps": 28.0,
+  "altitude_m": 0.0,
+  "geom_config_sha256": "543da140a6d0eacdb86d907fc34529e875e43a4d9c573c356cb8894bc40452b3",
+  "src_git_sha": "6bb2627b75bbf1c3cc1a35eaf5559aaeee0e0d51",
+  "avl_version": "/usr/local/bin/avl:sha256=758a9c634d7bfc26"
+}

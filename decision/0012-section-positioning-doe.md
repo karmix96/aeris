@@ -26,38 +26,44 @@ measured against a non-converged (49-section) reference.
 
 ## Why (evidence)
 
-Measured against a **legitimate, converged reference** — dense uniform at N=201,
-verified Richardson-converged (< 0.6% between N=151 and 201) — with worst-case
-aggregation over designs × angles and a normalized (error/typical-scale) metric
-that removes the α=0 near-zero inflation. Section-placement error was shown
-**separable from the panel mesh** (2.74% at c16s2u vs 3.04% at c8s1u), so the
-reference was built on the cheap mesh where N≈201 is affordable and the *policy*
-transfers to the production mesh c16s2u.
+Two runs, both with worst-case aggregation over designs × angles and a normalized
+(error/typical-scale) metric that removes the α=0 near-zero inflation:
 
-**1. The hard points do essentially all the work** (ablation, worst-case over 14 designs):
+- **Primary — the full study at the production mesh c16s2u**, all **30 normal + 6
+  extreme designs**, reference = densest-affordable uniform (N=89).
+- **Cross-check — a converged-reference run at c8s1u** (uniform-N=201, Richardson
+  < 0.6%), which the c16s2u vortex cap forbids. Section-placement error is
+  **separable from the panel mesh** (2.74% at c16s2u vs 3.04% at c8s1u), so this
+  is a legitimate cross-check of the same quantity.
 
-| placement | worst-case section error |
-|---|---|
-| uniform, **no** mandatory nodes | **21.1 %** |
-| uniform **+ hard-point pins** | **5.2 %** |
-| adaptive density placement | 10.8 % |
+**1. The hard points do essentially all the work** — production mesh c16s2u,
+36 designs, worst-key resolvable error vs the densest-affordable reference:
 
-Pinning the control edges + planform breaks + fixed-airfoil stations cuts
-worst-case error by **+2.9 to +18.4 percentage points**.
+| placement | median | worst-case |
+|---|---|---|
+| uniform, **no** mandatory nodes | 12.7 % | **34.8 %** |
+| uniform **+ hard-point pins** | **1.0 %** | **7.8 %** |
+| adaptive density placement | 1.6 % | 9.3 % |
 
-**2. Adaptive density placement is counterproductive** — 2× worse than pinned
-uniform, on every design tested:
+Pinned-uniform beats no-pins on **35/36** designs — the pins (control edges +
+planform breaks + fixed-airfoil stations) cut the median error more than
+**12×**. (The converged-reference c8s1u run gives the same story: 21.1% → 5.2%.)
 
-| design set | uniform+pins | adaptive | adaptive wins |
-|---|---|---|---|
-| 6 hard/extreme cases | worst 2.9 % | worst 9.1 % | **0 / 6** |
-| 8 normal LHS designs | worst ~2 % | worst ~6.6 % | 0 / 8 |
+**2. Adaptive density placement never helps.** At the production mesh it beats
+pinned-uniform meaningfully (>0.3 pp) on **0 / 36** designs; worst-case 9.3% vs
+7.8%. Against the *converged* c8s1u reference it loses outright on all **14**
+designs tested (6 hard + 8 normal), worst 2.9% vs 9.1%. Adaptive *does* lower the
+control-gain ramp fraction (0.01–0.1 vs 0.12–0.39) — it does what it is told — but
+equidistributing the free budget **starves smooth-but-loaded regions** and the
+error rises. This is the "reduces the ramp yet worsens the error" paradox
+DECISION-0011 flagged in its flawed-metric section.
 
-Adaptive *does* lower the control-gain ramp fraction (0.01–0.1 vs 0.12–0.39) — it
-does what it is told — but equidistributing the free budget **starves
-smooth-but-loaded regions**, and the error rises. This is the same "reduces the
-ramp yet worsens the error" paradox DECISION-0011 flagged in its flawed-metric
-section; against a converged reference it dominates.
+**A finding the production mesh forced into the open:** c16s2u **cannot host a
+converged section reference** — its 6000-vortex cap limits sections to N≈89, and
+dense uniform is only converged there to ~1% (33/36 designs < 1%, 3 sensitive
+outliers up to 14%). A converged reference needs N≈150–200, affordable only at
+reduced panel density. So the *count* question genuinely cannot be answered at
+c16s2u alone; it is answered on the separability-justified reference mesh.
 
 **3. Count convergence (pinned uniform):**
 
@@ -89,15 +95,19 @@ adaptive advantage evaporates here: it was partly reference bias.
 
 ## Scope and honest limits
 
-- Established on **14 designs** (8 normal LHS + 6 extremes) × angles {−2,0,+4} at
-  the validation control state (sym+4,diff+4), on the c8s1u reference mesh with
-  policy transfer justified by separability. Robust: adaptive lost on **all 14**.
-- **NOT yet run** (recommended confirmatory work before this fully supersedes
-  DECISION-0011 in production): the full 30-design DoE ranking gate (G5), the
-  trim/stability decision gate (G4, |Δδ_trim| ≤ 0.5°), the deflection-transfer
-  check (G9), and honest end-to-end timings (G9). The placement conclusion is
-  unlikely to move — it is monotone and unanimous — but the count recommendation
-  should be confirmed against the trim gate.
+- The placement decision is established on **all 36 designs** (30 normal + 6
+  extreme) × angles {−2,0,+4} at the validation control state (sym+4,diff+4), **at
+  the production mesh c16s2u** — no transfer assumption. The adaptive-loses result
+  is additionally confirmed against a fully converged reference (c8s1u, 14 designs,
+  adaptive lost 14/14). Robust.
+- **NOT yet run** (recommended before this fully supersedes DECISION-0011 in
+  production): the complexity horse-race (Stage 5 — only the production adaptive
+  metric was tested, not the M3 hybrid, and the G6 predictivity gate); the DoE
+  ranking gate (G5); the trim/stability decision gate (G4, |Δδ_trim| ≤ 0.5°); the
+  deflection-transfer check (G9); honest timings (G9); and an isolation of the
+  DECISION-0011 reversal (reproduce its exact CL_δe/α=6 test against the converged
+  reference). The placement conclusion is monotone and unanimous and is unlikely to
+  move; the count recommendation should be confirmed against the trim gate.
 - Reference is converged-section AVL, **not CFD/truth**; AVL's own model error
   (vortex lattice + strip viscous, ~1.5 % short on elevon power per the panelling
   study) sits underneath all of this.

@@ -1,0 +1,19 @@
+REDO — FULL PLACEMENT STUDY @ PRODUCTION MESH c16s2u (36 designs, ref=uniform-89, normalized)
+================================================================================
+reference legitimacy (uniform 49v89, worst over designs): 14.171%
+  (a fully-converged <0.5% reference is vortex-capped out at c16s2u; N=89 is the densest legal)
+
+HARD-POINT ABLATION, worst-key resolvable error vs uniform-89 [%]:
+                 placement   worst  median
+                     nopin   34.84   12.72
+                    pinned    7.79    1.00
+                  adaptive    9.33    1.56
+
+pinned < nopin on 35/36   |   pinned <= adaptive on 30/36
+
+WORST OFFENDERS (pinned uniform, resolvable):
+           lhs30s2000:22: pinned=7.79%  nopin=2.92%  adaptive=9.33%
+           lhs30s2000:29: pinned=5.59%  nopin=10.01%  adaptive=5.32%
+           lhs30s2000:17: pinned=5.33%  nopin=5.55%  adaptive=5.82%
+           lhs30s2000:18: pinned=1.97%  nopin=13.57%  adaptive=1.79%
+           lhs30s2000:25: pinned=1.74%  nopin=10.84%  adaptive=1.62%

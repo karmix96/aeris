@@ -52,9 +52,11 @@ def distributions(key,fname):
     x=geo["span_fraction"]
     gain=prof.channels["control_gain"].normalised if "control_gain" in prof.channels else np.zeros_like(x)
     panels=[("chord [m]",geo["chord"],UNI),("LE sweep  x_le [m]",geo["x_le"],ACC),
-            ("twist [deg]",geo["twist_deg"],"#8a6410"),("thickness  t/c",geo["thickness"],"#6a3d9a"),
-            ("camber",geo["camber"],"#e07b39"),("control gain (elevon)",gain,ADA)]
-    fig,axes=plt.subplots(2,3,figsize=(9,5))
+            ("dihedral  z_le [m]",geo["z_le"],"#1b998b"),("twist [deg]",geo["twist_deg"],"#8a6410"),
+            ("thickness  t/c",geo["thickness"],"#6a3d9a"),("camber",geo["camber"],"#e07b39"),
+            ("control gain (elevon)",gain,ADA)]
+    fig,axes=plt.subplots(2,4,figsize=(11.5,5))
+    axes.ravel()[-1].axis("off")
     for ax,(t,v,col) in zip(axes.ravel(),panels):
         ax.plot(x,v,color=col,lw=1.8)
         if ctx["band"]: ax.axvspan(ctx["band"][0],ctx["band"][1],color=BAND,alpha=.25,lw=0)

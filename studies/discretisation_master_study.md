@@ -4,7 +4,25 @@ Sections, AVL panels, and the robustness of both across the design space.
 Synthesises Tasks 3–6.
 
 Date: 2026-07-25
-Decisions: `decision/0009-lowfi-discretisation.md`,
+
+> **SUPERSEDED for DoE use (2026-07-30).** Two later pre-registered, gated studies
+> re-examined both axes against a *legitimate converged reference* with
+> *decision-preserving* gates, and revised the recommendation below:
+> - **Panel density** → `studies/panelling_study_report.html` (1,165 runs). The
+>   knee is real but *nothing clears all seven gates*: ranking is safe cheaply,
+>   absolute control/induced effectiveness is not. Screening mesh **c16s2u**
+>   (chord 16 / span-2 / **uniform**), 7.3× cheaper than the chord-24/span-4/cosine
+>   grid recorded below; escalate for absolute numbers. Supersedes DECISION-0009/0010.
+> - **Section positioning** → `studies/section_positioning_report.html` +
+>   `decision/0012-section-positioning-doe.md` (918 runs). **Uniform placement +
+>   hard-point pins; adaptive density OFF** (adaptive wins 0/36). Revises
+>   DECISION-0011 — its "adaptive helps" was the pinning effect on a non-converged
+>   reference.
+> - **Unified, paper-ready synthesis:** `studies/discretisation_master_report.html`.
+>
+> The table in §1 is the *earlier* (2026-07-25) recommendation, kept for the record.
+
+Original decisions: `decision/0009-lowfi-discretisation.md`,
 `decision/0010-control-resolution-criterion.md`,
 `decision/0011-adaptive-section-placement.md`
 Evidence: `configs/aero/lowfi_discretisation_evidence/`,

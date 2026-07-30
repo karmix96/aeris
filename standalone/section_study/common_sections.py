@@ -163,6 +163,12 @@ def fractions_for(ctx: dict, n_sections: int, policy: str) -> np.ndarray:
     n = int(n_sections)
     if policy == "uniform":
         return _finalise(np.linspace(0.0, 1.0, n), pins)
+    if policy == "uniform_nopin":
+        # uniform with NO mandatory nodes (only span ends) — isolates the value
+        # of the hard-point / control-edge pins from the density rule.
+        fr = np.linspace(0.0, 1.0, n)
+        fr = np.unique(np.clip(fr, 0.0, 1.0))
+        return fr
     if policy == "clustered":
         # deliberately the OPPOSITE of adaptive: inboard-heavy (root-clustered),
         # so the dense reference is proven family-independent, not co-biased.

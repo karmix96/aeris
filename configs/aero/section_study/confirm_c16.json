@@ -1,0 +1,42 @@
+{
+  "extreme:narrow_elevon": {
+    "nopin": 6.592,
+    "pinned": 0.442,
+    "adaptive": 1.69
+  },
+  "extreme:wide_elevon": {
+    "nopin": 3.045,
+    "pinned": 1.349,
+    "adaptive": 4.565
+  },
+  "extreme:high_ar": {
+    "nopin": 17.675,
+    "pinned": 0.848,
+    "adaptive": 2.082
+  },
+  "extreme:strong_taper": {
+    "nopin": 11.295,
+    "pinned": 0.694,
+    "adaptive": 1.735
+  },
+  "extreme:min_chord": {
+    "nopin": 9.753,
+    "pinned": 0.732,
+    "adaptive": 1.658
+  },
+  "extreme:max_sweep": {
+    "nopin": 7.132,
+    "pinned": 0.617,
+    "adaptive": 1.319
+  },
+  "lhs30s2000:00": {
+    "nopin": 10.563,
+    "pinned": 0.81,
+    "adaptive": 1.812
+  },
+  "lhs30s2000:01": {
+    "nopin": 22.068,
+    "pinned": 0.528,
+    "adaptive": 1.426
+  }
+}

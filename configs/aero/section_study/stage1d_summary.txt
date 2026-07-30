@@ -1,0 +1,18 @@
+STAGE 1d — HARD-POINT ABLATION (c8s1u, ref=uniform-201, normalized worst-key %)
+==========================================================================
+          design    noPIN  uniform adaptive   what the pins buy
+   narrow_elevon     6.05     1.26     4.62   pins cut +4.79pp
+     wide_elevon     5.81     2.89     9.12   pins cut +2.92pp
+         high_ar    19.50     2.05     6.17   pins cut +17.44pp
+    strong_taper    10.93     1.39     5.44   pins cut +9.55pp
+       min_chord    10.83     1.62     6.83   pins cut +9.21pp
+       max_sweep     8.04     1.12     5.73   pins cut +6.93pp
+              00    14.69     1.81     6.51   pins cut +12.88pp
+              01    21.10     2.65    10.83   pins cut +18.45pp
+              02    13.58     3.73     8.77   pins cut +9.85pp
+              03     6.72     5.22    10.48   pins cut +1.50pp
+
+WORST over all designs: noPIN=21.10%  uniform(pinned)=5.22%  adaptive=10.83%
+
+READ: if pinned-uniform << noPIN and adaptive >= pinned-uniform, the value is
+in the HARD POINTS (control edges + planform breaks), not the density rule.

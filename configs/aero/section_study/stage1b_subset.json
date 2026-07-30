@@ -1,0 +1,233 @@
+{
+  "mesh": "c8s1u",
+  "N_ref": 201,
+  "legit": {
+    "lhs30s2000:00": {
+      "richardson_pct": 0.419,
+      "where": [
+        -2.0,
+        "hinge_moments.elevon_sym"
+      ],
+      "pass": true
+    },
+    "lhs30s2000:01": {
+      "richardson_pct": 0.296,
+      "where": [
+        -2.0,
+        "hinge_moments.elevon_sym"
+      ],
+      "pass": true
+    },
+    "lhs30s2000:02": {
+      "richardson_pct": 0.154,
+      "where": [
+        0.0,
+        "cl"
+      ],
+      "pass": true
+    },
+    "lhs30s2000:03": {
+      "richardson_pct": 3.794,
+      "where": [
+        0.0,
+        "cl"
+      ],
+      "pass": false
+    },
+    "lhs30s2000:04": {
+      "richardson_pct": 1.431,
+      "where": [
+        -2.0,
+        "hinge_moments.elevon_sym"
+      ],
+      "pass": false
+    },
+    "lhs30s2000:05": {
+      "richardson_pct": 0.106,
+      "where": [
+        0.0,
+        "cd_ind"
+      ],
+      "pass": true
+    },
+    "lhs30s2000:06": {
+      "richardson_pct": 0.198,
+      "where": [
+        4.0,
+        "elevon_sym.CL"
+      ],
+      "pass": true
+    },
+    "lhs30s2000:07": {
+      "richardson_pct": 0.337,
+      "where": [
+        4.0,
+        "cd_ind"
+      ],
+      "pass": true
+    }
+  },
+  "spectrum": {
+    "lhs30s2000:00": {
+      "uniform:cl": 0.962,
+      "uniform:cm": 1.324,
+      "uniform:cd_ind": 1.105,
+      "uniform:cd_total": 0.689,
+      "uniform:x_np": 0.148,
+      "uniform:elevon_sym.CL": 1.002,
+      "uniform:elevon_sym.Cm": 0.764,
+      "uniform:elevon_diff.Cl": 1.663,
+      "uniform:hinge_moments.elevon_sym": 1.738,
+      "adaptive:cl": 1.71,
+      "adaptive:cm": 1.908,
+      "adaptive:cd_ind": 6.424,
+      "adaptive:cd_total": 2.122,
+      "adaptive:x_np": 0.208,
+      "adaptive:elevon_sym.CL": 2.19,
+      "adaptive:elevon_sym.Cm": 1.816,
+      "adaptive:elevon_diff.Cl": 3.367,
+      "adaptive:hinge_moments.elevon_sym": 1.388
+    },
+    "lhs30s2000:01": {
+      "uniform:cl": 1.257,
+      "uniform:cm": 1.645,
+      "uniform:cd_ind": 1.067,
+      "uniform:cd_total": 0.731,
+      "uniform:x_np": 0.239,
+      "uniform:elevon_sym.CL": 0.592,
+      "uniform:elevon_sym.Cm": 0.429,
+      "uniform:elevon_diff.Cl": 1.016,
+      "uniform:hinge_moments.elevon_sym": 1.997,
+      "adaptive:cl": 2.494,
+      "adaptive:cm": 3.022,
+      "adaptive:cd_ind": 1.805,
+      "adaptive:cd_total": 1.314,
+      "adaptive:x_np": 0.326,
+      "adaptive:elevon_sym.CL": 1.681,
+      "adaptive:elevon_sym.Cm": 1.31,
+      "adaptive:elevon_diff.Cl": 2.72,
+      "adaptive:hinge_moments.elevon_sym": 16.716
+    },
+    "lhs30s2000:02": {
+      "uniform:cl": 2.974,
+      "uniform:cm": 2.365,
+      "uniform:cd_ind": 0.939,
+      "uniform:cd_total": 1.104,
+      "uniform:x_np": 0.136,
+      "uniform:elevon_sym.CL": 0.269,
+      "uniform:elevon_sym.Cm": 0.088,
+      "uniform:elevon_diff.Cl": 0.925,
+      "uniform:hinge_moments.elevon_sym": 1.848,
+      "adaptive:cl": 4.871,
+      "adaptive:cm": 4.459,
+      "adaptive:cd_ind": 3.585,
+      "adaptive:cd_total": 1.669,
+      "adaptive:x_np": 0.194,
+      "adaptive:elevon_sym.CL": 1.488,
+      "adaptive:elevon_sym.Cm": 1.16,
+      "adaptive:elevon_diff.Cl": 2.862,
+      "adaptive:hinge_moments.elevon_sym": 5.471
+    },
+    "lhs30s2000:03": {
+      "uniform:cl": 6.615,
+      "uniform:cm": 5.144,
+      "uniform:cd_ind": 1.959,
+      "uniform:cd_total": 0.967,
+      "uniform:x_np": 0.157,
+      "uniform:elevon_sym.CL": 1.347,
+      "uniform:elevon_sym.Cm": 1.243,
+      "uniform:elevon_diff.Cl": 1.478,
+      "uniform:hinge_moments.elevon_sym": 3.791,
+      "adaptive:cl": 11.64,
+      "adaptive:cm": 7.816,
+      "adaptive:cd_ind": 3.589,
+      "adaptive:cd_total": 1.334,
+      "adaptive:x_np": 0.253,
+      "adaptive:elevon_sym.CL": 3.108,
+      "adaptive:elevon_sym.Cm": 2.744,
+      "adaptive:elevon_diff.Cl": 3.793,
+      "adaptive:hinge_moments.elevon_sym": 11.21
+    },
+    "lhs30s2000:04": {
+      "uniform:cl": 2.166,
+      "uniform:cm": 2.924,
+      "uniform:cd_ind": 1.841,
+      "uniform:cd_total": 1.05,
+      "uniform:x_np": 0.158,
+      "uniform:elevon_sym.CL": 2.037,
+      "uniform:elevon_sym.Cm": 1.903,
+      "uniform:elevon_diff.Cl": 2.042,
+      "uniform:hinge_moments.elevon_sym": 3.428,
+      "adaptive:cl": 3.383,
+      "adaptive:cm": 4.202,
+      "adaptive:cd_ind": 2.337,
+      "adaptive:cd_total": 1.473,
+      "adaptive:x_np": 0.232,
+      "adaptive:elevon_sym.CL": 2.608,
+      "adaptive:elevon_sym.Cm": 2.19,
+      "adaptive:elevon_diff.Cl": 3.084,
+      "adaptive:hinge_moments.elevon_sym": 15.649
+    },
+    "lhs30s2000:05": {
+      "uniform:cl": 1.657,
+      "uniform:cm": 2.165,
+      "uniform:cd_ind": 1.014,
+      "uniform:cd_total": 0.749,
+      "uniform:x_np": 0.264,
+      "uniform:elevon_sym.CL": 0.659,
+      "uniform:elevon_sym.Cm": 0.575,
+      "uniform:elevon_diff.Cl": 1.096,
+      "uniform:hinge_moments.elevon_sym": 3.563,
+      "adaptive:cl": 1.84,
+      "adaptive:cm": 2.133,
+      "adaptive:cd_ind": 3.175,
+      "adaptive:cd_total": 0.94,
+      "adaptive:x_np": 0.268,
+      "adaptive:elevon_sym.CL": 1.377,
+      "adaptive:elevon_sym.Cm": 1.316,
+      "adaptive:elevon_diff.Cl": 2.366,
+      "adaptive:hinge_moments.elevon_sym": 2.934
+    },
+    "lhs30s2000:06": {
+      "uniform:cl": 1.927,
+      "uniform:cm": 3.092,
+      "uniform:cd_ind": 1.564,
+      "uniform:cd_total": 0.816,
+      "uniform:x_np": 0.307,
+      "uniform:elevon_sym.CL": 1.639,
+      "uniform:elevon_sym.Cm": 1.521,
+      "uniform:elevon_diff.Cl": 1.643,
+      "uniform:hinge_moments.elevon_sym": 3.104,
+      "adaptive:cl": 3.06,
+      "adaptive:cm": 4.318,
+      "adaptive:cd_ind": 1.666,
+      "adaptive:cd_total": 1.082,
+      "adaptive:x_np": 0.362,
+      "adaptive:elevon_sym.CL": 0.968,
+      "adaptive:elevon_sym.Cm": 0.77,
+      "adaptive:elevon_diff.Cl": 1.401,
+      "adaptive:hinge_moments.elevon_sym": 2.051
+    },
+    "lhs30s2000:07": {
+      "uniform:cl": 4.974,
+      "uniform:cm": 3.685,
+      "uniform:cd_ind": 1.19,
+      "uniform:cd_total": 0.622,
+      "uniform:x_np": 0.185,
+      "uniform:elevon_sym.CL": 0.493,
+      "uniform:elevon_sym.Cm": 0.385,
+      "uniform:elevon_diff.Cl": 1.127,
+      "uniform:hinge_moments.elevon_sym": 1.851,
+      "adaptive:cl": 1.28,
+      "adaptive:cm": 1.871,
+      "adaptive:cd_ind": 4.021,
+      "adaptive:cd_total": 1.78,
+      "adaptive:x_np": 0.241,
+      "adaptive:elevon_sym.CL": 1.153,
+      "adaptive:elevon_sym.Cm": 0.912,
+      "adaptive:elevon_diff.Cl": 2.48,
+      "adaptive:hinge_moments.elevon_sym": 1.836
+    }
+  },
+  "G1_richardson_pass": false
+}

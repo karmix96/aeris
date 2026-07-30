@@ -1,0 +1,12 @@
+STAGE 3 — COUNT CONVERGENCE, pinned uniform (c8s1u, ref=uniform-201, normalized worst-case %)
+============================================================================
+      N  resolvable-q  placement-limited
+     25          2.89               5.29
+     49          2.21               3.20
+    101          1.92               2.54
+    151          1.78               2.09
+
+resolvable = cl,cm,cd_total,x_np,elevon_sym.CL/Cm,elevon_diff.Cl
+placement-limited = cd_ind (Trefftz strip-distribution), hinge (print floor)
+
+resolvable quantities do NOT reach <1% by N=151 (report band)

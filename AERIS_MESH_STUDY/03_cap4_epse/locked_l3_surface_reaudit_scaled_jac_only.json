@@ -1,0 +1,195 @@
+{
+  "schema": "aeris.mesh_study.stage01_locked_surface_reaudit.v2",
+  "created_utc": "2026-08-12T09:20:36.587545+00:00",
+  "policy": {
+    "min_shape_metric": 1e-06,
+    "min_scaled_jacobian": 0.0,
+    "max_adjacent_normal_angle_deg": 180.0
+  },
+  "source": "existing locked L3 surface_report.json artifacts, no regeneration and no pyHyp",
+  "surface_count": 10,
+  "old_accepted_count": 10,
+  "current_accepted_count": 10,
+  "current_failed_count": 0,
+  "failure_count_by_check": {},
+  "locked_metric_ranges": {
+    "min_shape_metric": {
+      "min": 0.00037159673581748927,
+      "max": 0.00037159673582122835
+    },
+    "min_scaled_jacobian": {
+      "min": 0.004583968615050453,
+      "max": 0.00458396861509607
+    },
+    "max_adjacent_normal_angle_deg": {
+      "min": 163.3805421511155,
+      "max": 165.5804645549143
+    }
+  },
+  "probe_variant_count": 4,
+  "probe_failure_count_by_check": {
+    "positive_scaled_jacobian": 1
+  },
+  "probe_metric_ranges": {
+    "min_shape_metric": {
+      "min": 0.00037159673582016757,
+      "max": 0.00037159673582306787
+    },
+    "min_scaled_jacobian": {
+      "min": -0.41913557355801423,
+      "max": 0.004583968615118028
+    },
+    "max_adjacent_normal_angle_deg": {
+      "min": 165.28460213122244,
+      "max": 165.28460213122244
+    }
+  },
+  "rows": [
+    {
+      "sample_id": "lhs7_00",
+      "old_accepted_pre_pyhyp": true,
+      "current_accepted_pre_pyhyp": true,
+      "min_shape_metric": 0.00037159673582016757,
+      "min_scaled_jacobian": 0.004583968615083045,
+      "max_adjacent_normal_angle_deg": 165.28460213122244,
+      "failure_reasons": [],
+      "surface_report": "AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_00/surface/surface_report.json"
+    },
+    {
+      "sample_id": "lhs7_01",
+      "old_accepted_pre_pyhyp": true,
+      "current_accepted_pre_pyhyp": true,
+      "min_shape_metric": 0.0003715967358185505,
+      "min_scaled_jacobian": 0.004583968615063427,
+      "max_adjacent_normal_angle_deg": 165.5354798518374,
+      "failure_reasons": [],
+      "surface_report": "AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_01/surface/surface_report.json"
+    },
+    {
+      "sample_id": "lhs7_02",
+      "old_accepted_pre_pyhyp": true,
+      "current_accepted_pre_pyhyp": true,
+      "min_shape_metric": 0.00037159673582122835,
+      "min_scaled_jacobian": 0.00458396861509607,
+      "max_adjacent_normal_angle_deg": 164.73848275573064,
+      "failure_reasons": [],
+      "surface_report": "AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_02/surface/surface_report.json"
+    },
+    {
+      "sample_id": "lhs7_03",
+      "old_accepted_pre_pyhyp": true,
+      "current_accepted_pre_pyhyp": true,
+      "min_shape_metric": 0.00037159673581748927,
+      "min_scaled_jacobian": 0.004583968615050453,
+      "max_adjacent_normal_angle_deg": 165.26324291929797,
+      "failure_reasons": [],
+      "surface_report": "AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_03/surface/surface_report.json"
+    },
+    {
+      "sample_id": "lhs7_04",
+      "old_accepted_pre_pyhyp": true,
+      "current_accepted_pre_pyhyp": true,
+      "min_shape_metric": 0.000371596735819665,
+      "min_scaled_jacobian": 0.004583968615076744,
+      "max_adjacent_normal_angle_deg": 165.53233201376312,
+      "failure_reasons": [],
+      "surface_report": "AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_04/surface/surface_report.json"
+    },
+    {
+      "sample_id": "lhs7_05",
+      "old_accepted_pre_pyhyp": true,
+      "current_accepted_pre_pyhyp": true,
+      "min_shape_metric": 0.00037159673582070056,
+      "min_scaled_jacobian": 0.004583968615089558,
+      "max_adjacent_normal_angle_deg": 163.3805421511155,
+      "failure_reasons": [],
+      "surface_report": "AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_05/surface/surface_report.json"
+    },
+    {
+      "sample_id": "lhs7_06",
+      "old_accepted_pre_pyhyp": true,
+      "current_accepted_pre_pyhyp": true,
+      "min_shape_metric": 0.0003715967358203735,
+      "min_scaled_jacobian": 0.004583968615085793,
+      "max_adjacent_normal_angle_deg": 165.52268424342478,
+      "failure_reasons": [],
+      "surface_report": "AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_06/surface/surface_report.json"
+    },
+    {
+      "sample_id": "lhs7_07",
+      "old_accepted_pre_pyhyp": true,
+      "current_accepted_pre_pyhyp": true,
+      "min_shape_metric": 0.0003715967358183392,
+      "min_scaled_jacobian": 0.004583968615061111,
+      "max_adjacent_normal_angle_deg": 165.5804645549143,
+      "failure_reasons": [],
+      "surface_report": "AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_07/surface/surface_report.json"
+    },
+    {
+      "sample_id": "lhs7_08",
+      "old_accepted_pre_pyhyp": true,
+      "current_accepted_pre_pyhyp": true,
+      "min_shape_metric": 0.00037159673582026553,
+      "min_scaled_jacobian": 0.004583968615084584,
+      "max_adjacent_normal_angle_deg": 164.03576218364415,
+      "failure_reasons": [],
+      "surface_report": "AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_08/surface/surface_report.json"
+    },
+    {
+      "sample_id": "lhs7_09",
+      "old_accepted_pre_pyhyp": true,
+      "current_accepted_pre_pyhyp": true,
+      "min_shape_metric": 0.00037159673581854696,
+      "min_scaled_jacobian": 0.0045839686150635755,
+      "max_adjacent_normal_angle_deg": 165.45997153035404,
+      "failure_reasons": [],
+      "surface_report": "AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_09/surface/surface_report.json"
+    }
+  ],
+  "probe_rows": [
+    {
+      "variant": "A_baseline",
+      "topology_id": "wing_cap4_v1",
+      "accepted_under_current_policy": true,
+      "min_shape_metric": 0.00037159673582016757,
+      "min_scaled_jacobian": 0.004583968615083045,
+      "max_adjacent_normal_angle_deg": 165.28460213122244,
+      "failure_reasons": []
+    },
+    {
+      "variant": "B_smooth20",
+      "topology_id": "wing_cap4_v1",
+      "accepted_under_current_policy": false,
+      "min_shape_metric": 0.00037159673582016757,
+      "min_scaled_jacobian": -0.41913557355801423,
+      "max_adjacent_normal_angle_deg": 165.28460213122244,
+      "failure_reasons": [
+        {
+          "check": "positive_scaled_jacobian",
+          "value": -0.41913557355801423,
+          "required": "> 0.0"
+        }
+      ]
+    },
+    {
+      "variant": "C_cgrid",
+      "topology_id": "wing_cap4_cgrid_face_v1",
+      "accepted_under_current_policy": true,
+      "min_shape_metric": 0.00037159673582306787,
+      "min_scaled_jacobian": 0.0027338485143724783,
+      "max_adjacent_normal_angle_deg": 165.28460213122244,
+      "failure_reasons": []
+    },
+    {
+      "variant": "D_cgrid_smooth20",
+      "topology_id": "wing_cap4_cgrid_face_v1",
+      "accepted_under_current_policy": true,
+      "min_shape_metric": 0.00037159673582306787,
+      "min_scaled_jacobian": 0.004583968615118028,
+      "max_adjacent_normal_angle_deg": 165.28460213122244,
+      "failure_reasons": []
+    }
+  ],
+  "supersedes": "locked_l3_surface_reaudit_fixed_gate.json",
+  "supersedes_reason": "The v1 report used unsupported post-hoc min_shape_metric and max_adjacent_normal_angle thresholds. v2 restores the prior study values and retains only the mathematical positive scaled-Jacobian floor."
+}

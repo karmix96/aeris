@@ -1,0 +1,112 @@
+schema: aeris.mesh_study.lhs_authority.v1
+created_local: '2026-08-11'
+status: PROPOSED_FOR_STAGE_00_APPROVAL
+rationale: No pre-existing authoritative fixed N=100 LHS set was found. Seed 42 is
+  reused from the current staged CFD surface-option-sweep runbook; approval of Stage
+  00 freezes this proposal.
+set_identity_rule: 'A locked geometry set is identified by the quadruple (sampler id,
+  seed, n, geometry-config sha256). A seed alone is NOT an identifier: Latin hypercube
+  stratification depends on n, so seed 42 at n=100 and seed 42 at n=10 are different
+  point sets with zero shared rows. Always cite all four fields.'
+regeneration:
+  script: AERIS_MESH_STUDY/00_governance/make_lhs_sets.py
+  verify_command: .venv/bin/python AERIS_MESH_STUDY/00_governance/make_lhs_sets.py --check
+  note: The verify command regenerates every table in memory and fails on any drift.
+    It also re-asserts that the epsE calibration set does not intersect the Round C
+    hold-out.
+geometry_config:
+  path: configs/geometry/bwb.yaml
+  sha256: f114b48e3c400a2832cc3763e7cf7505ecd0925fb81cb92f70e28bb5e6234614
+  git_state_warning: configs/geometry/bwb.yaml is modified in the current working
+    tree; this hash is local until committed.
+sampler:
+  id: lhs_v1
+  implementation: src/aeris/dataset/sampling/samplers/lhs_v1.py
+  seed: 42
+  active_design_variable_count: 20
+  sample_field_count: 20
+  active_design_variables:
+  - c1_m
+  - c2_ratio
+  - c3_ratio
+  - c4_ratio
+  - b_total_m
+  - b3_ratio
+  - split_ratio
+  - sw1_deg
+  - sw2_deg
+  - sw3_deg
+  - twist_b0_deg
+  - twist_b1_deg
+  - twist_b2_deg
+  - twist_b3_deg
+  - dihedral_b1_deg
+  - dihedral_b2_deg
+  - dihedral_b3_deg
+  - elevon_start_frac
+  - elevon_end_frac
+  - elevon_hinge_frac
+  sample_fields:
+  - c1_m
+  - c2_ratio
+  - c3_ratio
+  - c4_ratio
+  - b_total_m
+  - b3_ratio
+  - split_ratio
+  - sw1_deg
+  - sw2_deg
+  - sw3_deg
+  - twist_b0_deg
+  - twist_b1_deg
+  - twist_b2_deg
+  - twist_b3_deg
+  - dihedral_b1_deg
+  - dihedral_b2_deg
+  - dihedral_b3_deg
+  - elevon_start_frac
+  - elevon_end_frac
+  - elevon_hinge_frac
+sets:
+- path: AERIS_MESH_STUDY/00_governance/lhs100_seed42_samples.csv
+  seed: 42
+  n: 100
+  sha256: 1690b28a4d0623d3e1f48f6d70f0b5047d83eb9e2aa16adf12d6bba515e0bb7d
+  usage: full_lhs_for_surface_laws_and_variable_delta_studies
+  runbook_reference: Section 8
+- path: AERIS_MESH_STUDY/00_governance/round_c_lhs10_seed42_samples.csv
+  seed: 42
+  n: 10
+  sha256: 7fcf7804517cb8253d5dd05f3011032849a6295753e048494bbd47ac8ce9bf80
+  usage: fixed_lhs_selection_for_strategy_tournament_round_c
+  runbook_reference: Section 7, Round C
+  tuning_policy: HELD OUT. RUNBOOK Section 7 forbids epsE or any other per-strategy
+    tuning on these ten geometries.
+- path: AERIS_MESH_STUDY/00_governance/epse_calibration_lhs10_seed7_samples.csv
+  seed: 7
+  n: 10
+  sha256: ec355304ac588e7a0c1865ef4cf367c61a74cd8001de07ea2501d4b04384a039
+  usage: stage_01_epse_common_start_calibration_on_current_design_space
+  runbook_reference: Section 4.2
+  rationale: 'RUNBOOK Section 4.2 requires ten locked geometries for the epsE sweep.
+    The historical ten came from a superseded aircraft (see reference_package_manifest.yaml),
+    so the calibration set is drawn from the current frozen design space instead. Seed
+    7 is arbitrary; what matters is that it is predeclared and frozen before any result
+    is seen, and that it is disjoint from the Round C hold-out.'
+  tuning_policy: epsE calibration is permitted on these ten geometries only.
+set_relationships:
+  lhs100_seed42_vs_round_c_lhs10_seed42:
+    shared_rows: 0
+    note: Disjoint by construction, not by selection - different n means different
+      stratification. The Round C ten are therefore a genuine hold-out with respect
+      to the surface-law fitting set.
+  epse_calibration_lhs10_seed7_vs_round_c_lhs10_seed42:
+    shared_rows: 0
+    note: Verified disjoint by make_lhs_sets.py on every run. This is the requirement
+      that keeps epsE untuned on the tournament hold-out.
+  epse_calibration_lhs10_seed7_vs_lhs100_seed42:
+    shared_rows: 0
+verification:
+  all_rows_within_frozen_bounds: true
+  dihedral_b1_deg_zero_in_all_rows: true
+  bwb_design_sample_constructed_for_all_rows: true

@@ -1,0 +1,221 @@
+{
+ "schema": "aeris.mesh_study.stage_gate.v1",
+ "created_local": "2026-08-12T00:00:00+03:00",
+ "stage": "01",
+ "name": "tmr_anchor_and_cap4_control_characterisation",
+ "overall_result": "PASS_WITH_FINDINGS",
+ "workflow_state_after_gate": "AWAITING_USER_APPROVAL",
+ "next_required_user_token": "APPROVE STAGE 01",
+ "allowed_check_results": [
+  "PASS",
+  "PASS_WITH_FINDINGS",
+  "FAIL",
+  "BLOCKED"
+ ],
+ "checks": [
+  {
+   "id": "stage00_user_approved",
+   "result": "PASS",
+   "evidence": "User supplied APPROVE STAGE 00 on 2026-08-11, authorizing Stage 01 execution."
+  },
+  {
+   "id": "tmr_anchor_surface_and_volume_reproduced",
+   "result": "PASS",
+   "evidence": "TMR solve mode passed 13/13 checks. surface.fmt SHA-256 matched 6625b41253dd527207e796c10f08ade30676b055625c7e9baefd30131962b6d4; volume audit was clean with zero negative-quality layers."
+  },
+  {
+   "id": "tmr_anchor_adflow_reproduced",
+   "result": "PASS",
+   "evidence": "ADflow force anchor matched the recorded values: CL 1.0917740093456412 and CD 0.013164679005086222."
+  },
+  {
+   "id": "cap4_current_control_surfaces_locked",
+   "result": "PASS",
+   "evidence": "Dry-run generated all 10 locked seed-7 current-design-space cap4 L3 surfaces successfully and wrote deterministic surface.fmt hashes in 03_cap4_epse/epse_calibration_report.json."
+  },
+  {
+   "id": "epse_common_start_selected",
+   "result": "PASS_WITH_FINDINGS",
+   "evidence": "No epsE candidate survives on the cap4 control: at L3 on lhs7_00, epsE 1.5 gives 10 inverted cells, 2.0 gives 4, and 3.0 gives none but 53 low/negative-quality layers (min quality -0.90808). Root cause established: the cap4 airfoil-face tip cap corners on an OML block split, every split lands on a smooth part of the contour, and the resulting corner is ~180 deg by construction (179.737 deg at split_x_fore 0.10, 0.20 and 0.35 alike). Recorded as an S0 volume-gate failure per ADR-0006; epsE_common_start re-based to Stage 02 per ADR-0007."
+  },
+  {
+   "id": "coarser_surface_escape_checked",
+   "result": "PASS_WITH_FINDINGS",
+   "evidence": "L1 and L2 probes at epsE 1.5 both produced valid volumes with ZERO inverted cells (vs 10 at L3) but still failed the quality rule: L1 60 low/negative-quality layers, L2 55, L3 53. The near-constant count across levels and across epsE confirms the defect is not a resolution or marching-parameter problem."
+  },
+  {
+   "id": "strategy_prototype_contract_seeded",
+   "result": "PASS",
+   "evidence": "04_strategy_prototypes/strategy_interface.py defines S0-S5 strategy ids, required artifact names, stable hashing, and common connectivity manifest helpers."
+  },
+  {
+   "id": "stage02_authorization",
+   "result": "BLOCKED",
+   "evidence": "Stage 02 requires the user token APPROVE STAGE 01. Scope on approval: S1 and S3 first, since both anchor tip blocks on genuine geometric features rather than arbitrary x/c splits. S2 remains blocked on its cross-field/quad-extraction dependency per the Stage 00 dependency audit."
+  },
+  {
+   "id": "cap4_root_cause_established",
+   "result": "PASS",
+   "evidence": "Three independent surface-only probes: (a) scale-invariant metrics identical to 11-12 significant figures across all 10 locked geometries, worst block tip_center_0 every time; (b) worst tip corner 179.737 deg and min_shape_metric 3.7160e-04 unchanged at split_x_fore 0.10 / 0.20 / 0.35, all verified applied; (c) cgrid_face tip matches airfoil_face to 11 significant figures with worse skew and scaled Jacobian. The corner is degenerate by construction and is not tunable."
+  },
+  {
+   "id": "geometry_cleared_of_defect",
+   "result": "PASS",
+   "evidence": "lhs7_00 tip-station section: 61 points, ZERO collapsed segments below 1e-9, min segment 3.728e-03, median 3.852e-02, max turning angle 41.96 deg at the leading edge. No cusp. The OML handed to the mesher is clean, so S1-S5 do not inherit the defect and no upstream geometry repair is required before Stage 02."
+  },
+  {
+   "id": "legacy_tip_closures_characterised",
+   "result": "PASS_WITH_FINDINGS",
+   "evidence": "All three legacy OML topologies fail at the tip; cap4 is least bad. mid4 rejected: positive_scaled_jacobian in tip_ring_2 (-6.898e-02), quad_triangle_normal_alignment -1.0. split8 rejected: tip_ring_5 (-2.838e-01), alignment -1.0, plus open_boundary_off_root_plane. Both were caught by the scaled-Jacobian gate added under ADR-0005; before that fix they would have been accepted silently and marched."
+  },
+  {
+   "id": "surface_validity_gate_implemented",
+   "result": "PASS",
+   "evidence": "min_scaled_jacobian > 0.0 is now a hard pre-pyHyp failure (check id positive_scaled_jacobian, src/aeris/mesh/surface.py) and is enforced end to end: export raises MeshBuildError and writes no CGNS. The post-hoc min_shape_metric 0.03 and 170 deg thresholds were rescinded as unsupported. 182 tests pass across tests/mesh and tests/cfd."
+  }
+ ],
+ "warnings": [
+  "The full 30-row L3 epsE sweep was never run; epse_calibration_report.json is dry-run evidence only. The marching findings rest on lhs7_00. This is sufficient because the surface defect was shown to be identical across all ten geometries to 11-12 significant figures.",
+  "The prepared L1 prevalence and L3 overnight campaigns are cancelled, not merely held: both would characterise a topology the tournament exists to replace.",
+  "Invalid L3 epsE 1.5 and 2.0 CGNS outputs were quarantined in their probe work directories.",
+  "The cap4 historical regression remains qualitative only, per Stage 00 ADR-0003.",
+  "No end-to-end regression test covers the real folded-surface path; the Variant B test injects the condition. tip_smooth_iters=20 does not fold the synthetic test geometry."
+ ],
+ "blockers": [],
+ "do_not_start_before_user_token": "APPROVE STAGE 01",
+ "stage02_authorized": false,
+ "artifacts": {
+  "tmr_anchor_report": "AERIS_MESH_STUDY/02_tmr/tmr_anchor_report.json",
+  "epse_surface_dry_run_report": "AERIS_MESH_STUDY/03_cap4_epse/epse_calibration_report.json",
+  "epse_l3_eps15_probe_report": "AERIS_MESH_STUDY/03_cap4_epse/epse_calibration_l3_probe_report.json",
+  "epse_l3_eps20_probe_report": "AERIS_MESH_STUDY/03_cap4_epse/epse_calibration_l3_eps20_probe_report.json",
+  "epse_l3_eps30_probe_report": "AERIS_MESH_STUDY/03_cap4_epse/epse_calibration_l3_eps30_probe_report.json",
+  "epse_l1_trial_report": "AERIS_MESH_STUDY/03_cap4_epse/epse_calibration_l1_trial_report.json",
+  "epse_l2_trial_report": "AERIS_MESH_STUDY/03_cap4_epse/epse_calibration_l2_trial_report.json",
+  "tip_topology_probe_report": "AERIS_MESH_STUDY/03_cap4_epse/tip_topology_probe_report.json",
+  "tip_corner_origin_probe_report": "AERIS_MESH_STUDY/03_cap4_epse/tip_corner_origin_probe_report.json",
+  "surface_region_diagnostic": "AERIS_MESH_STUDY/03_cap4_epse/lhs7_00_surface_region_diagnostic.md"
+ },
+ "evidence_summary": {
+  "tmr_status": "PASS",
+  "tmr_passed_checks": 13,
+  "tmr_total_checks": 13,
+  "cap4_l3_dry_run_status": "INCOMPLETE",
+  "cap4_l3_surface_count": 10,
+  "cap4_l3_surface_hashes": [
+   {
+    "sample_id": "lhs7_00",
+    "surface_fmt_sha256": "f2850c00701589395e58d645994573d1f3e159d9bafa4ffc9d853bc1df218d49",
+    "status": "surface_ok"
+   },
+   {
+    "sample_id": "lhs7_01",
+    "surface_fmt_sha256": "87f390b1ccd97a205fb1309190b909f3ba821769a79b3814d74b4090f64479d6",
+    "status": "surface_ok"
+   },
+   {
+    "sample_id": "lhs7_02",
+    "surface_fmt_sha256": "3ccb90dd4ac685290a248af7b13e8e0cab57c8c562c4631d0c12987ae0a1be68",
+    "status": "surface_ok"
+   },
+   {
+    "sample_id": "lhs7_03",
+    "surface_fmt_sha256": "0b9051163e7baba02e65f0fb0d1c3ba93b60ecdc3a64f649dd14dbd5ea0a0b42",
+    "status": "surface_ok"
+   },
+   {
+    "sample_id": "lhs7_04",
+    "surface_fmt_sha256": "6ea34ee1bb9061c1e0dd7dacd2f2b48b58653069b7bc82b2edd5584ef9eb859e",
+    "status": "surface_ok"
+   },
+   {
+    "sample_id": "lhs7_05",
+    "surface_fmt_sha256": "7dac6e1b6fb24d2a84b99b4f172353f36a307bfc99a0d6a62ce0636547aac4ef",
+    "status": "surface_ok"
+   },
+   {
+    "sample_id": "lhs7_06",
+    "surface_fmt_sha256": "75d7196af2515ef5196b150905182ebca0d2588942214cd31f47fc222da4dd75",
+    "status": "surface_ok"
+   },
+   {
+    "sample_id": "lhs7_07",
+    "surface_fmt_sha256": "7ad33cb40466cc3d80da554eeacf00064d971f34dcb60efdb98033ae1cdef78a",
+    "status": "surface_ok"
+   },
+   {
+    "sample_id": "lhs7_08",
+    "surface_fmt_sha256": "5053fa1fee1adff38b80501f352a710321ddee7d7bb1ab04b31dd0399a08d31e",
+    "status": "surface_ok"
+   },
+   {
+    "sample_id": "lhs7_09",
+    "surface_fmt_sha256": "2268139e889f2551e62912129200e0c553185dfbd9ec652d1ed12e5ee1f3a340",
+    "status": "surface_ok"
+   }
+  ],
+  "l1_eps15_first_row": {
+   "status": "FAIL",
+   "volume_report_status": "valid",
+   "inverted_cells": 0,
+   "low_quality_layers": 60,
+   "min_quality": -0.73949
+  },
+  "l2_eps15_first_row": {
+   "status": "FAIL",
+   "volume_report_status": "valid",
+   "inverted_cells": 0,
+   "low_quality_layers": 55,
+   "min_quality": -0.8279
+  },
+  "l3_eps15_first_row": {
+   "status": "FAIL",
+   "volume_report_status": "invalid",
+   "inverted_cells": 10,
+   "low_quality_layers": 53,
+   "min_quality": -1.0,
+   "min_volume": -5.44e-10
+  },
+  "l3_eps20_first_row": {
+   "status": "FAIL",
+   "volume_report_status": "invalid",
+   "inverted_cells": 4,
+   "low_quality_layers": 53,
+   "min_quality": -1.0,
+   "min_volume": -4.52e-11
+  },
+  "l3_eps30_first_row": {
+   "status": "FAIL",
+   "volume_report_status": "valid",
+   "inverted_cells": 0,
+   "low_quality_layers": 53,
+   "min_quality": -0.90808,
+   "min_volume": 2.05e-11
+  },
+  "cap4_root_cause": {
+   "mechanism": "airfoil-face tip cap corners on an OML block split that lies on a smooth contour; edges are collinear",
+   "worst_tip_corner_angle_deg": 179.737,
+   "invariant_to_split_x_fore": [
+    0.1,
+    0.2,
+    0.35
+   ],
+   "tip_station_collapsed_segments": 0,
+   "tip_station_max_turning_angle_deg": 41.96,
+   "mid4_min_scaled_jacobian": -0.06898033,
+   "split8_min_scaled_jacobian": -0.2838259
+  }
+ },
+ "findings": [
+  {
+   "id": "s0_cap4_fails_volume_gate",
+   "adr": "ADR-0006-s0-cap4-volume-gate-failure.md",
+   "detail": "S0/cap4 is recorded as failing the volume gate and is NOT repaired. It stays in the tournament as a documented regression baseline per RUNBOOK Section 6."
+  },
+  {
+   "id": "epse_common_start_rebased",
+   "adr": "ADR-0007-epse-common-start-rebasing.md",
+   "detail": "epsE_common_start moves to Stage 02, calibrated on the first strategy passing all hard surface gates on all ten calibration geometries, in an implementation order fixed in advance."
+  }
+ ]
+}

@@ -1,0 +1,203 @@
+{
+  "schema": "aeris.mesh_study.stage01_locked_surface_reaudit.v1",
+  "created_utc": "2026-08-11T22:48:00.381314+00:00",
+  "policy": {
+    "min_shape_metric": 0.03,
+    "min_scaled_jacobian": 0.0,
+    "max_adjacent_normal_angle_deg": 170.0,
+    "min_triangle_normal_alignment": -0.25
+  },
+  "source": "existing locked L3 surface_report.json artifacts, no regeneration and no pyHyp",
+  "surface_count": 10,
+  "old_accepted_count": 10,
+  "new_accepted_count": 0,
+  "new_failed_count": 10,
+  "failure_count_by_check": {
+    "minimum_shape_metric": 10
+  },
+  "rows": [
+    {
+      "sample_id": "lhs7_00",
+      "old_accepted_pre_pyhyp": true,
+      "new_accepted_pre_pyhyp": false,
+      "min_shape_metric": 0.00037159673582016757,
+      "min_scaled_jacobian": 0.004583968615083045,
+      "max_adjacent_normal_angle_deg": 165.28460213122244,
+      "min_triangle_normal_alignment": 0.993846328048348,
+      "failure_reasons": [
+        {
+          "check": "minimum_shape_metric",
+          "block": "tip_center_0",
+          "value": 0.00037159673582016757,
+          "required": "> 0.03"
+        }
+      ],
+      "surface_report": "AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_00/surface/surface_report.json"
+    },
+    {
+      "sample_id": "lhs7_01",
+      "old_accepted_pre_pyhyp": true,
+      "new_accepted_pre_pyhyp": false,
+      "min_shape_metric": 0.0003715967358185505,
+      "min_scaled_jacobian": 0.004583968615063427,
+      "max_adjacent_normal_angle_deg": 165.5354798518374,
+      "min_triangle_normal_alignment": 0.9858854777696544,
+      "failure_reasons": [
+        {
+          "check": "minimum_shape_metric",
+          "block": "tip_center_0",
+          "value": 0.0003715967358185505,
+          "required": "> 0.03"
+        }
+      ],
+      "surface_report": "AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_01/surface/surface_report.json"
+    },
+    {
+      "sample_id": "lhs7_02",
+      "old_accepted_pre_pyhyp": true,
+      "new_accepted_pre_pyhyp": false,
+      "min_shape_metric": 0.00037159673582122835,
+      "min_scaled_jacobian": 0.00458396861509607,
+      "max_adjacent_normal_angle_deg": 164.73848275573064,
+      "min_triangle_normal_alignment": 0.9941522603326786,
+      "failure_reasons": [
+        {
+          "check": "minimum_shape_metric",
+          "block": "tip_center_0",
+          "value": 0.00037159673582122835,
+          "required": "> 0.03"
+        }
+      ],
+      "surface_report": "AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_02/surface/surface_report.json"
+    },
+    {
+      "sample_id": "lhs7_03",
+      "old_accepted_pre_pyhyp": true,
+      "new_accepted_pre_pyhyp": false,
+      "min_shape_metric": 0.00037159673581748927,
+      "min_scaled_jacobian": 0.004583968615050453,
+      "max_adjacent_normal_angle_deg": 165.26324291929797,
+      "min_triangle_normal_alignment": 0.9876661022032267,
+      "failure_reasons": [
+        {
+          "check": "minimum_shape_metric",
+          "block": "tip_center_0",
+          "value": 0.00037159673581748927,
+          "required": "> 0.03"
+        }
+      ],
+      "surface_report": "AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_03/surface/surface_report.json"
+    },
+    {
+      "sample_id": "lhs7_04",
+      "old_accepted_pre_pyhyp": true,
+      "new_accepted_pre_pyhyp": false,
+      "min_shape_metric": 0.000371596735819665,
+      "min_scaled_jacobian": 0.004583968615076744,
+      "max_adjacent_normal_angle_deg": 165.53233201376312,
+      "min_triangle_normal_alignment": 0.9918380553665327,
+      "failure_reasons": [
+        {
+          "check": "minimum_shape_metric",
+          "block": "tip_center_0",
+          "value": 0.000371596735819665,
+          "required": "> 0.03"
+        }
+      ],
+      "surface_report": "AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_04/surface/surface_report.json"
+    },
+    {
+      "sample_id": "lhs7_05",
+      "old_accepted_pre_pyhyp": true,
+      "new_accepted_pre_pyhyp": false,
+      "min_shape_metric": 0.00037159673582070056,
+      "min_scaled_jacobian": 0.004583968615089558,
+      "max_adjacent_normal_angle_deg": 163.3805421511155,
+      "min_triangle_normal_alignment": 0.9891212689967822,
+      "failure_reasons": [
+        {
+          "check": "minimum_shape_metric",
+          "block": "tip_center_0",
+          "value": 0.00037159673582070056,
+          "required": "> 0.03"
+        }
+      ],
+      "surface_report": "AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_05/surface/surface_report.json"
+    },
+    {
+      "sample_id": "lhs7_06",
+      "old_accepted_pre_pyhyp": true,
+      "new_accepted_pre_pyhyp": false,
+      "min_shape_metric": 0.0003715967358203735,
+      "min_scaled_jacobian": 0.004583968615085793,
+      "max_adjacent_normal_angle_deg": 165.52268424342478,
+      "min_triangle_normal_alignment": 0.988177944940397,
+      "failure_reasons": [
+        {
+          "check": "minimum_shape_metric",
+          "block": "tip_center_0",
+          "value": 0.0003715967358203735,
+          "required": "> 0.03"
+        }
+      ],
+      "surface_report": "AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_06/surface/surface_report.json"
+    },
+    {
+      "sample_id": "lhs7_07",
+      "old_accepted_pre_pyhyp": true,
+      "new_accepted_pre_pyhyp": false,
+      "min_shape_metric": 0.0003715967358183392,
+      "min_scaled_jacobian": 0.004583968615061111,
+      "max_adjacent_normal_angle_deg": 165.5804645549143,
+      "min_triangle_normal_alignment": 0.9843196487299196,
+      "failure_reasons": [
+        {
+          "check": "minimum_shape_metric",
+          "block": "tip_center_0",
+          "value": 0.0003715967358183392,
+          "required": "> 0.03"
+        }
+      ],
+      "surface_report": "AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_07/surface/surface_report.json"
+    },
+    {
+      "sample_id": "lhs7_08",
+      "old_accepted_pre_pyhyp": true,
+      "new_accepted_pre_pyhyp": false,
+      "min_shape_metric": 0.00037159673582026553,
+      "min_scaled_jacobian": 0.004583968615084584,
+      "max_adjacent_normal_angle_deg": 164.03576218364415,
+      "min_triangle_normal_alignment": 0.9897810107078004,
+      "failure_reasons": [
+        {
+          "check": "minimum_shape_metric",
+          "block": "tip_center_0",
+          "value": 0.00037159673582026553,
+          "required": "> 0.03"
+        }
+      ],
+      "surface_report": "AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_08/surface/surface_report.json"
+    },
+    {
+      "sample_id": "lhs7_09",
+      "old_accepted_pre_pyhyp": true,
+      "new_accepted_pre_pyhyp": false,
+      "min_shape_metric": 0.00037159673581854696,
+      "min_scaled_jacobian": 0.0045839686150635755,
+      "max_adjacent_normal_angle_deg": 165.45997153035404,
+      "min_triangle_normal_alignment": 0.9854097300772936,
+      "failure_reasons": [
+        {
+          "check": "minimum_shape_metric",
+          "block": "tip_center_0",
+          "value": 0.00037159673581854696,
+          "required": "> 0.03"
+        }
+      ],
+      "surface_report": "AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_09/surface/surface_report.json"
+    }
+  ],
+  "status": "superseded",
+  "superseded_by": "locked_l3_surface_reaudit_scaled_jac_only.json",
+  "superseded_reason": "Used unsupported post-hoc min_shape_metric 0.03 and max_adjacent_normal_angle_deg 170.0 thresholds; corrected policy restores 1e-6 and 180.0 and keeps only min_scaled_jacobian > 0.0."
+}

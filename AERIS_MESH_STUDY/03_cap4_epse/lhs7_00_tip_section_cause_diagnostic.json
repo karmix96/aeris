@@ -1,0 +1,487 @@
+{
+  "schema": "aeris.mesh_study.stage01_lhs7_00_tip_section_cause.v1",
+  "created_utc": "2026-08-12T08:42:40.737095+00:00",
+  "sample_id": "lhs7_00",
+  "input_npz": "AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_00/surface/surface_blocks.npz",
+  "input_npz_sha256": "65d97e8c044049bef7907eb06f82771ee2721dae2412012e1e31dbc9d4488f0c",
+  "diagnosis": "The global worst surface cell is inherited from the tip-station boundary curves. It is at the lower leading-edge shoulder of tip_center_0, where the lower chord-side boundary from oml_1 and nose-wrap boundary from oml_0 meet at an almost degenerate angle. The blunt trailing-edge shoulder is also present in the top offenders, but it is not the global worst cell.",
+  "global_worst_shape_cell": {
+    "block": "tip_center_0",
+    "i": 0,
+    "j": 0,
+    "shape_metric": 0.00037159673582016757,
+    "scaled_jacobian": 0.004583968615083045,
+    "equiangle_skewness": 0.997081744723563,
+    "category": "leading_edge_shoulder_lower_side",
+    "center_m": {
+      "x": 0.6222513035239341,
+      "y": 1.1825637190154021,
+      "z": 0.05307216451468745
+    }
+  },
+  "global_worst_skew_cell": {
+    "block": "tip_center_0",
+    "i": 0,
+    "j": 0,
+    "skew": 0.997081744723563
+  },
+  "global_min_scaled_jacobian_cell": {
+    "block": "tip_center_0",
+    "i": 0,
+    "j": 0,
+    "scaled_jacobian": 0.004583968615083045
+  },
+  "worst_corner": {
+    "corner": "p00",
+    "semantic_label": "lower leading-edge shoulder: lower chord edge meets nose wrap",
+    "xyz_m": {
+      "x": 0.6152298119689593,
+      "y": 1.1826619739681898,
+      "z": 0.05125650862063408
+    },
+    "edge_lengths_m": [
+      0.0006515091693779748,
+      0.016047412764094444
+    ],
+    "corner_angle_deg": 179.73735702512067,
+    "corner_shape_metric": 0.00037159673582016757,
+    "corner_scaled_jacobian_abs": 0.004583968615083045,
+    "corner_equiangle_skewness": 0.997081744723563
+  },
+  "worst_cell_corner_metrics": [
+    {
+      "corner": "p00",
+      "semantic_label": "lower leading-edge shoulder: lower chord edge meets nose wrap",
+      "xyz_m": {
+        "x": 0.6152298119689593,
+        "y": 1.1826619739681898,
+        "z": 0.05125650862063408
+      },
+      "edge_lengths_m": [
+        0.0006515091693779748,
+        0.016047412764094444
+      ],
+      "corner_angle_deg": 179.73735702512067,
+      "corner_shape_metric": 0.00037159673582016757,
+      "corner_scaled_jacobian_abs": 0.004583968615083045,
+      "corner_equiangle_skewness": 0.997081744723563
+    },
+    {
+      "corner": "p10",
+      "semantic_label": "next lower chord cell corner",
+      "xyz_m": {
+        "x": 0.6145966723601998,
+        "y": 1.1826702749127715,
+        "z": 0.05110311524423719
+      },
+      "edge_lengths_m": [
+        0.014269645286190794,
+        0.0006515091693779748
+      ],
+      "corner_angle_deg": 1.4950082866818712,
+      "corner_shape_metric": 0.0023774131748060087,
+      "corner_scaled_jacobian_abs": 0.026089856230402123,
+      "corner_equiangle_skewness": 0.983388796814646
+    },
+    {
+      "corner": "p11",
+      "semantic_label": "interior blend corner",
+      "xyz_m": {
+        "x": 0.6283714768145814,
+        "y": 1.1824689756650846,
+        "z": 0.05482292941300103
+      },
+      "edge_lengths_m": [
+        0.0024522292939546096,
+        0.014269645286190794
+      ],
+      "corner_angle_deg": 171.5078027958149,
+      "corner_shape_metric": 0.04929968217564568,
+      "corner_scaled_jacobian_abs": 0.14767472115045707,
+      "corner_equiangle_skewness": 0.9056422532868323
+    },
+    {
+      "corner": "p01",
+      "semantic_label": "next nose-wrap cell corner",
+      "xyz_m": {
+        "x": 0.630807252951996,
+        "y": 1.1824536515155624,
+        "z": 0.05510610478087751
+      },
+      "edge_lengths_m": [
+        0.016047412764094444,
+        0.0024522292939546096
+      ],
+      "corner_angle_deg": 7.259831892382552,
+      "corner_shape_metric": 0.037740052089152425,
+      "corner_scaled_jacobian_abs": 0.12636919422894197,
+      "corner_equiangle_skewness": 0.9193352011957494
+    }
+  ],
+  "worst_cell_boundary_matches": {
+    "p00": [
+      {
+        "block": "oml_1",
+        "tip_edge_index": 0,
+        "distance_m": 0.0
+      },
+      {
+        "block": "oml_2",
+        "tip_edge_index": 8,
+        "distance_m": 0.0
+      },
+      {
+        "block": "oml_3",
+        "tip_edge_index": 48,
+        "distance_m": 0.02044881081659619
+      }
+    ],
+    "p10": [
+      {
+        "block": "oml_1",
+        "tip_edge_index": 1,
+        "distance_m": 0.0
+      },
+      {
+        "block": "oml_2",
+        "tip_edge_index": 8,
+        "distance_m": 0.0006515091693779748
+      },
+      {
+        "block": "oml_3",
+        "tip_edge_index": 48,
+        "distance_m": 0.020535587305849975
+      }
+    ],
+    "p11": [
+      {
+        "block": "oml_2",
+        "tip_edge_index": 7,
+        "distance_m": 0.0024522292939546096
+      },
+      {
+        "block": "oml_1",
+        "tip_edge_index": 0,
+        "distance_m": 0.013618368497286587
+      },
+      {
+        "block": "oml_3",
+        "tip_edge_index": 48,
+        "distance_m": 0.02287028617222819
+      }
+    ],
+    "p01": [
+      {
+        "block": "oml_2",
+        "tip_edge_index": 7,
+        "distance_m": 0.0
+      },
+      {
+        "block": "oml_1",
+        "tip_edge_index": 0,
+        "distance_m": 0.016047412764094444
+      },
+      {
+        "block": "oml_3",
+        "tip_edge_index": 48,
+        "distance_m": 0.024403715987477332
+      }
+    ]
+  },
+  "top20_worst_shape_cells": [
+    {
+      "rank": 1,
+      "i": 0,
+      "j": 0,
+      "category": "leading_edge_shoulder_lower_side",
+      "shape_metric": 0.00037159673582016757,
+      "scaled_jacobian": 0.004583968615083045,
+      "equiangle_skewness": 0.997081744723563,
+      "center_m": {
+        "x": 0.6222513035239341,
+        "y": 1.1825637190154021,
+        "z": 0.05307216451468745
+      }
+    },
+    {
+      "rank": 2,
+      "i": 47,
+      "j": 0,
+      "category": "trailing_edge_shoulder_lower_side",
+      "shape_metric": 0.0010974712655325157,
+      "scaled_jacobian": 0.013765979556545476,
+      "equiangle_skewness": 0.9912360284147884,
+      "center_m": {
+        "x": 0.5772401052757596,
+        "y": 1.183036853096898,
+        "z": 0.044329107199285886
+      }
+    },
+    {
+      "rank": 3,
+      "i": 1,
+      "j": 0,
+      "category": "near_le_lower_side",
+      "shape_metric": 0.002475557368768,
+      "scaled_jacobian": 0.027166892013730123,
+      "equiangle_skewness": 0.982702891285448,
+      "center_m": {
+        "x": 0.6207597215844888,
+        "y": 1.1825753263026444,
+        "z": 0.05285767314404932
+      }
+    },
+    {
+      "rank": 4,
+      "i": 47,
+      "j": 7,
+      "category": "trailing_edge_shoulder_upper_side",
+      "shape_metric": 0.0031169856018586567,
+      "scaled_jacobian": 0.039142335462524526,
+      "equiangle_skewness": 0.9750748478120237,
+      "center_m": {
+        "x": 0.5745052283196723,
+        "y": 1.1818012365269963,
+        "z": 0.06716209876132842
+      }
+    },
+    {
+      "rank": 5,
+      "i": 46,
+      "j": 0,
+      "category": "near_te_lower_side",
+      "shape_metric": 0.0034160194574250242,
+      "scaled_jacobian": 0.03800131005017475,
+      "equiangle_skewness": 0.9758017881568846,
+      "center_m": {
+        "x": 0.5787367242535728,
+        "y": 1.1830162222987608,
+        "z": 0.04471034426850196
+      }
+    },
+    {
+      "rank": 6,
+      "i": 0,
+      "j": 7,
+      "category": "leading_edge_shoulder_upper_side",
+      "shape_metric": 0.00410920799123486,
+      "scaled_jacobian": 0.05074310403312522,
+      "equiangle_skewness": 0.9676820574860917,
+      "center_m": {
+        "x": 0.6200173716538726,
+        "y": 1.1815906959468672,
+        "z": 0.07105268375886019
+      }
+    },
+    {
+      "rank": 7,
+      "i": 0,
+      "j": 3,
+      "category": "leading_edge_shoulder_mid_thickness",
+      "shape_metric": 0.0050173245347810485,
+      "scaled_jacobian": 0.006808786387975334,
+      "equiangle_skewness": 0.9956653584671447,
+      "center_m": {
+        "x": 0.6657484304891914,
+        "y": 1.1821021558170153,
+        "z": 0.0616014031723991
+      }
+    },
+    {
+      "rank": 8,
+      "i": 2,
+      "j": 0,
+      "category": "near_le_lower_side",
+      "shape_metric": 0.005471343317291994,
+      "scaled_jacobian": 0.05333733560917657,
+      "equiangle_skewness": 0.9660282770129979,
+      "center_m": {
+        "x": 0.6193505696716025,
+        "y": 1.182586533722156,
+        "z": 0.052650570939874186
+      }
+    },
+    {
+      "rank": 9,
+      "i": 46,
+      "j": 7,
+      "category": "near_te_upper_side",
+      "shape_metric": 0.005816903998325977,
+      "scaled_jacobian": 0.06493855852670452,
+      "equiangle_skewness": 0.9586297183101471,
+      "center_m": {
+        "x": 0.5760285439156467,
+        "y": 1.1817944197831047,
+        "z": 0.06728806555357614
+      }
+    },
+    {
+      "rank": 10,
+      "i": 45,
+      "j": 0,
+      "category": "near_te_lower_side",
+      "shape_metric": 0.006691330977331829,
+      "scaled_jacobian": 0.06589721344153968,
+      "equiangle_skewness": 0.9580181095197241,
+      "center_m": {
+        "x": 0.5801510703059455,
+        "y": 1.1829970287234983,
+        "z": 0.04506502285787024
+      }
+    },
+    {
+      "rank": 11,
+      "i": 1,
+      "j": 7,
+      "category": "near_le_upper_side",
+      "shape_metric": 0.0069262163662627335,
+      "scaled_jacobian": 0.07616756262718004,
+      "equiangle_skewness": 0.9514632152377108,
+      "center_m": {
+        "x": 0.6185197850127948,
+        "y": 1.1815961389637186,
+        "z": 0.07095210210524025
+      }
+    },
+    {
+      "rank": 12,
+      "i": 45,
+      "j": 7,
+      "category": "near_te_upper_side",
+      "shape_metric": 0.009498938607525414,
+      "scaled_jacobian": 0.09413339029303494,
+      "equiangle_skewness": 0.93998396431625,
+      "center_m": {
+        "x": 0.5774671957792235,
+        "y": 1.1817877946811661,
+        "z": 0.06741049098905828
+      }
+    },
+    {
+      "rank": 13,
+      "i": 3,
+      "j": 0,
+      "category": "mid_chord_lower_side",
+      "shape_metric": 0.009600064320564875,
+      "scaled_jacobian": 0.08303726320063456,
+      "equiangle_skewness": 0.9470758968942139,
+      "center_m": {
+        "x": 0.6180174294388683,
+        "y": 1.1825973673165717,
+        "z": 0.052450376659619324
+      }
+    },
+    {
+      "rank": 14,
+      "i": 2,
+      "j": 7,
+      "category": "near_le_upper_side",
+      "shape_metric": 0.01085226059453044,
+      "scaled_jacobian": 0.10614206125930134,
+      "equiangle_skewness": 0.932300338036649,
+      "center_m": {
+        "x": 0.6171039146201841,
+        "y": 1.1816012650270076,
+        "z": 0.07085737744495582
+      }
+    },
+    {
+      "rank": 15,
+      "i": 44,
+      "j": 0,
+      "category": "mid_chord_lower_side",
+      "shape_metric": 0.011258838309432225,
+      "scaled_jacobian": 0.09800407642039642,
+      "equiangle_skewness": 0.9375083569786388,
+      "center_m": {
+        "x": 0.581489506767569,
+        "y": 1.182979155275574,
+        "z": 0.0453953067789385
+      }
+    },
+    {
+      "rank": 16,
+      "i": 44,
+      "j": 7,
+      "category": "mid_chord_upper_side",
+      "shape_metric": 0.014582906774282232,
+      "scaled_jacobian": 0.12813119757611033,
+      "equiangle_skewness": 0.918204281227691,
+      "center_m": {
+        "x": 0.5788278158624839,
+        "y": 1.1817813702024782,
+        "z": 0.06752920910214144
+      }
+    },
+    {
+      "rank": 17,
+      "i": 4,
+      "j": 0,
+      "category": "mid_chord_lower_side",
+      "shape_metric": 0.015261941285430533,
+      "scaled_jacobian": 0.11703980580507038,
+      "equiangle_skewness": 0.925318978317255,
+      "center_m": {
+        "x": 0.6167542696129455,
+        "y": 1.1826078539267384,
+        "z": 0.052256594310566146
+      }
+    },
+    {
+      "rank": 18,
+      "i": 3,
+      "j": 7,
+      "category": "mid_chord_upper_side",
+      "shape_metric": 0.015938809399498485,
+      "scaled_jacobian": 0.13850974171484934,
+      "equiangle_skewness": 0.9115375489407579,
+      "center_m": {
+        "x": 0.6157634371067252,
+        "y": 1.181606116340181,
+        "z": 0.07076772989938797
+      }
+    },
+    {
+      "rank": 19,
+      "i": 43,
+      "j": 0,
+      "category": "mid_chord_lower_side",
+      "shape_metric": 0.017511995183115754,
+      "scaled_jacobian": 0.13457572070670112,
+      "equiangle_skewness": 0.9140657044836417,
+      "center_m": {
+        "x": 0.5827580424480362,
+        "y": 1.1829624955275018,
+        "z": 0.045703162708056806
+      }
+    },
+    {
+      "rank": 20,
+      "i": 43,
+      "j": 7,
+      "category": "mid_chord_upper_side",
+      "shape_metric": 0.021242628087631464,
+      "scaled_jacobian": 0.16535746157544723,
+      "equiangle_skewness": 0.8942444359853305,
+      "center_m": {
+        "x": 0.580116603705046,
+        "y": 1.1817751379589074,
+        "z": 0.06764437489736981
+      }
+    }
+  ],
+  "top20_category_counts": {
+    "leading_edge_shoulder_lower_side": 1,
+    "trailing_edge_shoulder_lower_side": 1,
+    "near_le_lower_side": 2,
+    "trailing_edge_shoulder_upper_side": 1,
+    "near_te_lower_side": 2,
+    "leading_edge_shoulder_upper_side": 1,
+    "leading_edge_shoulder_mid_thickness": 1,
+    "near_te_upper_side": 2,
+    "near_le_upper_side": 2,
+    "mid_chord_lower_side": 4,
+    "mid_chord_upper_side": 3
+  },
+  "replan_guidance": "Do not spend the next replan only on alternate tip caps or only on blunt trailing-edge thickening. The cap topology swap preserved the defect; the bad angles are already present in the tip-station OML boundary correspondence, especially the leading-edge shoulder and secondarily the trailing-edge shoulder."
+}

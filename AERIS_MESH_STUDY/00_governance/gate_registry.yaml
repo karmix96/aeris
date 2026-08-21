@@ -1,0 +1,316 @@
+schema: aeris.mesh_study.gate_registry.v1
+created_local: 2026-08-11
+status: STAGE_00_PROPOSED_AFTER_AUDIT
+policy:
+  gate_classes:
+  - mathematical_format
+  - reference_regression
+  - mission_solver
+  - diagnostic_data_derived
+  rule: Limits are frozen before the stage that uses them. Geometry fidelity is source-aware;
+    raw volume-CGNS file bytes are not a determinism criterion. Diagnostic warning
+    thresholds require calibration data before becoming hard gates.
+gates:
+- id: geometry_fidelity
+  class: mathematical_format
+  metric: Hausdorff/projection distance from generated mesh surface to prescribed
+    OML
+  region:
+  - OML
+  - tip
+  - trailing_edge_crown
+  - root
+  - planform_breaks
+  - elevon_interfaces
+  limit: No intentional physical-geometry modification. Direct neutral pyGeo or analytical
+    OML projection target <= 0.01% local chord; if the source representation tolerance
+    is looser than this value, compare against source tolerance and require an ADR
+    before Round A scoring.
+  direction: lower_is_better
+  source: RUNBOOK Section 2.3; 00_governance/geometry_fidelity_gate_resolution.md
+  rationale: Mesher must reproduce CAD/OML without false precision below the source
+    representation tolerance.
+  calibration_set: none
+  validation_set: all_strategy_and_production_sets
+  freeze_stage: '00'
+  note: 0.01% chord is 0.0056 mm at the minimum tip chord and 0.09 mm at nominal root
+    chord.
+- id: surface_validity
+  class: mathematical_format
+  metric: watertightness, consistent normals, conformal interfaces, and signed surface
+    scaled Jacobian
+  region:
+  - all_surface_blocks
+  limit: watertight = true; normals consistent = true; interfaces conformal = true;
+    min_scaled_jacobian > 0.0; folded/negative surface cell count = 0
+  direction: pass_fail
+  source: RUNBOOK Sections 2.3 and 7; ADR-0005-stage01-surface-validity-tightening.md
+  rationale: >-
+    pyHyp and solver export require a valid body-fitted surface. The
+    scaled-Jacobian floor is mathematical, not calibrated: non-positive means
+    folded or degenerate.
+  calibration_set: none
+  validation_set: all_surface_feasibility_cases
+  freeze_stage: '00'
+  implementation_check: positive_scaled_jacobian
+- id: boundary_labels_connectivity
+  class: mathematical_format
+  metric: block count, interfaces, boundary families, connectivity hash
+  region:
+  - root
+  - wall
+  - farfield
+  - tip
+  - interfaces
+  limit: deterministic and solver-readable; topology changes require an approved topology-class
+    policy
+  direction: pass_fail
+  source: RUNBOOK Sections 2.1, 4.3, 4.4
+  rationale: Automated DSE cannot mix untracked block graphs or boundary semantics.
+  calibration_set: none
+  validation_set: all_runs
+  freeze_stage: '00'
+- id: naca0012_tmr_reproduction
+  class: reference_regression
+  metric: NACA0012 TMR mesh/solver reproduction vs pinned local package
+  region:
+  - 2d_airfoil_ogrid
+  - pyHyp_volume
+  - ADflow_solution
+  limit: Stage 01 must reproduce topology, dimensions, orientation, labels, mesh quality
+    and declared CL/CD tolerances
+  direction: within_tolerance
+  source: configs/cfd/validation_naca0012_tmr*.yaml and configs/cfd/evidence/gci_study_naca0012.json
+  rationale: Prevents pyHyp/CGNS/ADflow regressions from contaminating wing strategy
+    selection.
+  calibration_set: pinned_local_TMR_configs
+  validation_set: Stage_01_TMR_rerun
+  freeze_stage: '00'
+  note: The local alpha=0 config explicitly says live NASA TMR values still need spot-checking
+    before citation.
+- id: cap4_historical_regression
+  class: reference_regression
+  metric: qualitative reproduction of the July 2026 cap4 failure mechanism using the
+    historical config
+  region:
+  - S0_CAP4
+  - trailing_edge_crown
+  - root
+  - tip
+  limit: 'Stage 01 must reproduce the failure MECHANISM and REGION reported in July
+    2026: localized inverted cells at the blunt trailing-edge crown on a spanwise
+    extremity, and negative-quality layers on the seed-6-equivalent case. Treat the old
+    campaign as 6/10 clean under current policy. Numerical equality is NOT required and
+    must not be claimed.'
+  direction: qualitative_match
+  source: AERIS_MESH_STUDY/00_governance/historical_reference_inputs/bwb_explore_wide.yaml;
+    configs/cfd/RESULTS_ARCHIVE.md; configs/cfd/RETENTION.md; configs/cfd/NEXT_STEPS.md;
+    configs/cfd/SURFACE_MESH_LAWS.md; configs/cfd/evidence/mesh_robustness_n10_cap4_report.json;
+    configs/cfd/evidence/remarch_te_inversion_report.json; 00_governance/reference_package_manifest.yaml
+  rationale: 'Preserves the historical control before shared code changes. It is a
+    sanity check on the mesher, not a current-aircraft result: the historical config is
+    a superseded airframe and the generator has drifted eight commits since, with no
+    stored per-sample design variables to verify geometry equality against.'
+  calibration_set: none
+  validation_set: Stage_01_historical_cap4_rerun
+  freeze_stage: '00'
+  authoritative_for_production_constants: false
+  note: Old bulk meshes are absent. Raw volume-CGNS byte hashes are invalid for determinism;
+    compare HDF5 dataset contents.
+- id: cap4_current_control_and_epse_common_start
+  class: reference_regression
+  metric: cap4 control reproduction and epsE_common_start selection on the CURRENT frozen
+    design space
+  region:
+  - S0_CAP4
+  - trailing_edge_crown
+  - root
+  - tip
+  - planform_breaks
+  limit: 'Stage 01 must generate the ten geometries in 00_governance/epse_calibration_lhs10_seed7_samples.csv
+    from configs/geometry/bwb.yaml, freeze their surface.fmt hashes as the byte-identical
+    surface inputs, then run epsE={1.5,2.0,3.0} to completion on all ten. Require zero
+    inversions, zero negative-volume cells, zero negative-quality layers and minimum
+    scaled quality > 0. Select the HIGHEST epsE passing all ten as epsE_common_start and
+    freeze it in the Stage 01 ADR. If none passes all ten, stop per RUNBOOK Section 16
+    and repair the TE-crown/spanwise-spacing mechanism before the tournament.'
+  direction: within_tolerance
+  source: RUNBOOK Section 4.2; 00_governance/lhs_authority.yaml; 00_governance/design_space_snapshot.yaml;
+    ADR-0006-s0-cap4-volume-gate-failure.md; ADR-0007-epse-common-start-rebasing.md
+  rationale: 'epsE_common_start propagates into every pyHyp strategy in the tournament,
+    so it must be calibrated on the aircraft actually being designed. Calibrating it on
+    the superseded historical airframe would freeze a constant derived from the wrong
+    geometry.'
+  calibration_set: epse_calibration_lhs10_seed7_samples.csv
+  freeze_stage: '02'
+  freeze_stage_history:
+  - stage: '01'
+    outcome: not achievable - the cap4 control surface is itself defective, see ADR-0006
+  - stage: '02'
+    outcome: pending - calibrated on the first strategy producing a clean surface, see
+      ADR-0007
+  validation_set: Round_B_training_extremes_and_Round_C
+  cap4_control_reproduction_status: CLOSED by ADR-0006. S0/cap4 is recorded as failing
+    the volume gate and is not repaired. It stays in the tournament as a documented
+    regression baseline.
+  epse_common_start_status: DEFERRED to Stage 02 by ADR-0007. Host strategy is the first
+    to pass all hard surface gates on all ten calibration geometries, in the Stage 02
+    implementation order fixed in advance.
+  tuning_policy: No epsE tuning is permitted on round_c_lhs10_seed42_samples.csv or on
+    the Round C extremes.
+- id: pyhyp_march
+  class: mathematical_format
+  metric: negative-volume cells, inverted cells, low/negative quality layers, pyHyp
+    grid ratio
+  region:
+  - all_volume_blocks
+  - wall_normal_layers
+  - trailing_edge_crown
+  limit: negative-volume cells = 0; inverted cells = 0; negative-quality layers =
+    0; minimum signed/scaled quality > 0; grid ratio target 1.0-1.2
+  direction: pass_fail
+  source: RUNBOOK Sections 2.3, 4.2, 7
+  rationale: A visually good surface that produces a failed volume mesh is a failed
+    strategy.
+  calibration_set: Stage_01_epsE_sweep_and_Round_B_training_extremes
+  validation_set: Round_C_and_production_locks
+  freeze_stage: '01'
+  note: 'Known shipped epsE problem: old evidence found epsE=6.0 causes TE-crown inversions
+    and epsE=3.0 still left 2 cells in one case; Stage 01 must complete epsE={1.5,2.0,3.0}.'
+- id: lhs_authority
+  class: mathematical_format
+  metric: fixed geometry sample tables, sampler seed, active-variable order, and table
+    hashes
+  region:
+  - full_lhs
+  - round_c_lhs
+  - epse_calibration_lhs
+  limit: 'Stage 00 approval freezes three locked sets, each identified by the quadruple
+    (sampler, seed, n, geometry-config sha256): lhs_v1/42/100 full LHS, lhs_v1/42/10
+    Round C hold-out, and lhs_v1/7/10 epsE calibration. The three are mutually disjoint
+    and must stay so. Regenerate and verify with make_lhs_sets.py --check.'
+  direction: pass_fail
+  source: 00_governance/lhs_authority.yaml
+  rationale: Later mesh-law and tournament comparisons need identical geometry samples
+    across agents and machines.
+  calibration_set: none
+  validation_set: Stage_06_to_10_geometry_sets
+  freeze_stage: '00'
+- id: strategy_dependency_availability
+  class: mathematical_format
+  metric: availability of required local libraries or approved implementation path
+    per strategy
+  region:
+  - S0
+  - S1
+  - S2
+  - S3
+  - S4
+  - S5
+  limit: No Stage 01 blocker. S2 is blocked before execution until a cross-field and
+    quad-extraction dependency or in-house implementation decision is approved.
+  direction: pass_fail
+  source: 00_governance/dependency_audit.yaml
+  rationale: Do not enter a strategy stage assuming missing cross-field, RBF, CGNS,
+    or direct-volume tooling exists.
+  calibration_set: none
+  validation_set: Stage_02_strategy_smoke
+  freeze_stage: '00'
+- id: volume_quality_target
+  class: diagnostic_data_derived
+  metric: minimum hex scaled quality / scaled Jacobian
+  region:
+  - all_volume_blocks
+  - worst_block
+  - worst_layer
+  limit: hard gate > 0; ranking target >= 0.30 unless solver evidence promotes it
+    to hard gate
+  direction: higher_is_better
+  source: RUNBOOK Section 2.3 and paper audit
+  rationale: 0.30 is a quality target; the tournament ranks worst case, not average.
+  calibration_set: Round_B
+  validation_set: Round_C
+  freeze_stage: '04'
+- id: boundary_layer_y_plus
+  class: mission_solver
+  metric: post-solve y+
+  region:
+  - wall
+  - root
+  - tip
+  - trailing_edge
+  - elevon_interfaces
+  limit: target y+ <= 1 for wall-resolved RANS unless ADflow/turbulence ADR changes
+    treatment
+  direction: lower_is_better
+  source: RUNBOOK Section 2.3; src/aeris/cfd/presets/data/adflow_rans_ank_nk_v1.yaml
+  rationale: Wall treatment must match intended low-Mach low-Re RANS use.
+  calibration_set: Stage_08_volume_laws
+  validation_set: Stage_09_CFD_validation
+  freeze_stage: 08
+- id: farfield_independence
+  class: mission_solver
+  metric: force/moment changes between largest two farfield extents
+  region:
+  - flow_solution
+  limit: predeclare numeric tolerance before running; changes must be small relative
+    to final discretization uncertainty or engineering tolerance
+  direction: lower_is_better
+  source: RUNBOOK Section 2.3; configs/cfd/study_farfield_distance.yaml
+  rationale: Avoid mixing boundary-location error into mesh convergence.
+  calibration_set: Stage_08_farfield_three_extents
+  validation_set: Stage_09_CFD_validation
+  freeze_stage: 08
+- id: iterative_convergence
+  class: mission_solver
+  metric: ADflow residual and force-history convergence
+  region:
+  - flow_solution
+  limit: from pinned ADflow preset; iterative uncertainty target <=10% of discretization
+    uncertainty where measurable
+  direction: lower_is_better
+  source: src/aeris/cfd/presets/data/adflow_rans_ank_nk_v1.yaml
+  rationale: Solver noise must be smaller than mesh uncertainty.
+  calibration_set: Stage_09
+  validation_set: Stage_10_mesh_independence
+  freeze_stage: 09
+- id: dse_automation_success
+  class: diagnostic_data_derived
+  metric: automatic mesh success rate with classified failures
+  region:
+  - production_geometry_set
+  limit: target >= 98%; no hand tuning; every failure classified
+  direction: higher_is_better
+  source: RUNBOOK Section 2.3
+  rationale: The production DSE requires unattended robust meshing.
+  calibration_set: training_LHS_and_extremes
+  validation_set: locked_validation_LHS_and_challenge_extremes
+  freeze_stage: 08
+- id: dse_mesh_noise
+  class: mission_solver
+  metric: production-to-next-level CFD coefficient differences
+  region:
+  - CL
+  - CD
+  - Cm
+  - LD
+  limit: < 1/5 of corresponding DoE variation for decision-driving outputs; report
+    absolute coefficient deltas
+  direction: lower_is_better
+  source: RUNBOOK Section 2.3
+  rationale: Surrogates must learn design physics rather than mesh noise.
+  calibration_set: Stage_10_mesh_independence
+  validation_set: production_DSE_audit
+  freeze_stage: '10'
+- id: ai_false_safe
+  class: diagnostic_data_derived
+  metric: false-safe predictions from AI evaluator/recommender
+  region:
+  - locked_challenge_set
+  limit: zero observed false-safe predictions; report statistical uncertainty
+  direction: lower_is_better
+  source: RUNBOOK Section 12
+  rationale: AI may be adopted only if it does not hide unsafe failures.
+  calibration_set: grouped_train_calibration_geometries
+  validation_set: untouched_challenge_geometries
+  freeze_stage: '11'

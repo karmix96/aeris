@@ -1,0 +1,111 @@
+{
+  "generated_utc": "2026-08-12T09:34:37.807012+00:00",
+  "hypotheses": {
+    "H1_cap4_blocking": "cap corners inherit cap4 OML splits on a smooth contour",
+    "H2_shared_geometry": "the tip-station section itself is defective"
+  },
+  "sample_id": "lhs7_00",
+  "schema": "aeris.mesh_study.stage01_tip_corner_origin_probe.v1",
+  "tip_station_geometry_check": {
+    "collapsed_segments_below_1e-9": 0,
+    "max_turning_angle_deg": 41.95808357679612,
+    "max_turning_at_index": 31,
+    "median_segment_length": 0.038521739863130955,
+    "min_segment_length": 0.0037278009603518673,
+    "n_points": 61,
+    "turning_angle_99th_pct_deg": 40.67416477039623
+  },
+  "variants": [
+    {
+      "accepted_pre_pyhyp": true,
+      "error": null,
+      "max_equiangle_skewness": 0.997081744723563,
+      "min_scaled_jacobian": 0.004583968615083045,
+      "min_shape_metric": 0.00037159673582016757,
+      "overrides": {
+        "oml_topology": "cap4",
+        "split_x_fore": 0.1
+      },
+      "tip_blocks": [
+        "tip_center_0"
+      ],
+      "tip_corner_angles": {
+        "tip_center_0": {
+          "at_ij": [
+            0,
+            0
+          ],
+          "worst_corner_angle_deg": 179.73735702512067
+        }
+      },
+      "topology_id": "wing_cap4_v1",
+      "variant": "cap4_split_0.10"
+    },
+    {
+      "accepted_pre_pyhyp": true,
+      "error": null,
+      "max_equiangle_skewness": 0.997081744723563,
+      "min_scaled_jacobian": 0.004583968615083045,
+      "min_shape_metric": 0.00037159673582016757,
+      "overrides": {
+        "oml_topology": "cap4",
+        "split_x_fore": 0.2
+      },
+      "tip_blocks": [
+        "tip_center_0"
+      ],
+      "tip_corner_angles": {
+        "tip_center_0": {
+          "at_ij": [
+            0,
+            0
+          ],
+          "worst_corner_angle_deg": 179.73735702512067
+        }
+      },
+      "topology_id": "wing_cap4_v1",
+      "variant": "cap4_split_0.20"
+    },
+    {
+      "accepted_pre_pyhyp": true,
+      "error": null,
+      "max_equiangle_skewness": 0.997081744723563,
+      "min_scaled_jacobian": 0.004583968615083045,
+      "min_shape_metric": 0.00037159673582016757,
+      "overrides": {
+        "oml_topology": "cap4",
+        "split_x_fore": 0.35
+      },
+      "tip_blocks": [
+        "tip_center_0"
+      ],
+      "tip_corner_angles": {
+        "tip_center_0": {
+          "at_ij": [
+            0,
+            0
+          ],
+          "worst_corner_angle_deg": 179.73735702512067
+        }
+      },
+      "topology_id": "wing_cap4_v1",
+      "variant": "cap4_split_0.35"
+    },
+    {
+      "error": "MeshBuildError: Surface mesh failed QC: positive_scaled_jacobian in tip_ring_2 (value=-6.898033e-02); quad_triangle_normal_alignment in tip_ring_2 (value=-1.000000e+00). Inspect /home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/tip_corner_origin_probe/mid4/surface/surface_report.json and /home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/tip_corner_origin_probe/mid4/surface/surface.vtk.",
+      "overrides": {
+        "oml_topology": "mid4"
+      },
+      "topology_id": "wing_mid4_v1",
+      "variant": "mid4"
+    },
+    {
+      "error": "MeshBuildError: Surface mesh failed QC: open_boundary_off_root_plane; positive_scaled_jacobian in tip_ring_5 (value=-2.838259e-01); quad_triangle_normal_alignment in tip_ring_4 (value=-1.000000e+00). Inspect /home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/tip_corner_origin_probe/split8/surface/surface_report.json and /home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/tip_corner_origin_probe/split8/surface/surface.vtk.",
+      "overrides": {
+        "oml_topology": "split8"
+      },
+      "topology_id": "wing_split8_v1",
+      "variant": "split8"
+    }
+  ]
+}

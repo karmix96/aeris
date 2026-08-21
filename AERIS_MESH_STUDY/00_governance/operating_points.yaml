@@ -1,0 +1,141 @@
+schema: aeris.mesh_study.operating_points.v1
+created_local: 2026-08-11
+status: STAGE_00_PROPOSED_AFTER_AUDIT
+source_status:
+  mission_config_found: false
+  sources_reviewed:
+  - README.md
+  - configs/cfd/study_farfield_distance.yaml
+  - configs/cfd/validation_naca0012_tmr.yaml
+  - configs/geometry/bwb.yaml
+  - configs/mass/baseline_uav.yaml
+  - studies/WING_MESH_PROJECT_BRIEF.md
+  decision_required: No standalone mission YAML was found. These values are provisional; replace them
+    if a mission authority exists outside the inspected paths.
+  cfd_usage_warning: Re_min_local_chord_diagnostic is a minimum-local-chord Reynolds diagnostic at the
+    declared speed and nominal altitude, NOT a flight point (renamed from Re_low on 2026-08-13; see renamed_identifiers).
+    RUNBOOK.md still uses the old name Re_low - that mapping is recorded here rather than editing the
+    plan document. Solver runs using the diagnostic or Re_high remain provisional until a mission authority
+    exists.
+common_state:
+  beta_deg: 0.0
+  p_rad_s: 0.0
+  q_rad_s: 0.0
+  r_rad_s: 0.0
+  control_deflection_deg: 0.0
+flow_model_assumptions:
+  atmosphere_model: 1976 ISA troposphere approximation with Sutherland viscosity
+  speed_mps: 28.0
+  nominal_altitude_m: 1500.0
+  high_re_altitude_m: 0.0
+  note: RUNBOOK asked Stage 00 to calculate exact Reynolds values from current mission/configuration.
+    These are explicit calculations from the available defaults, not final mission certification.
+reynolds_levels:
+- id: Re_min_local_chord_diagnostic
+  definition: 'DIAGNOSTIC ONLY: Reynolds number at the minimum local (tip) chord at the declared speed
+    and nominal altitude. This is NOT a flight point. Using it as a CFD condition at a fixed reference
+    chord implies a freestream of about 1.7 m/s, which is not the mission.'
+  speed_mps: 28.0
+  altitude_m: 1500.0
+  reference_chord_m: 0.056
+  chord_source: min(c1_m) * min(c4_ratio) = 0.70 * 0.08
+  temperature_K: 278.4
+  pressure_Pa: 84556.26746052071
+  density_kg_m3: 1.0580517702823453
+  dynamic_viscosity_Pa_s: 1.7418672487754365e-05
+  reynolds: 95244.06506690112
+  is_flight_point: false
+- id: Re_nom
+  definition: nominal reference chord at nominal mission point
+  speed_mps: 28.0
+  altitude_m: 1500.0
+  reference_chord_m: 0.9
+  chord_source: midpoint root chord from configs/geometry/bwb.yaml c1_m bounds
+  temperature_K: 278.4
+  pressure_Pa: 84556.26746052071
+  density_kg_m3: 1.0580517702823453
+  dynamic_viscosity_Pa_s: 1.7418672487754365e-05
+  reynolds: 1530708.188575197
+- id: Re_high
+  definition: diagnostic largest-root-chord Reynolds at declared speed and sea-level density; not a separately
+    confirmed high-speed flight point
+  speed_mps: 28.0
+  altitude_m: 0.0
+  reference_chord_m: 1.1
+  chord_source: max(c1_m) from configs/geometry/bwb.yaml
+  temperature_K: 288.15
+  pressure_Pa: 101325.0
+  density_kg_m3: 1.2249781262066513
+  dynamic_viscosity_Pa_s: 1.7892976260350732e-05
+  reynolds: 2108610.984454819
+primary_cfd_points:
+- alpha_deg: -2.0
+  reynolds_id: Re_nom
+  delta_e_deg: 0.0
+- alpha_deg: 0.0
+  reynolds_id: Re_nom
+  delta_e_deg: 0.0
+- alpha_deg: 4.0
+  reynolds_id: Re_min_local_chord_diagnostic
+  delta_e_deg: 0.0
+- alpha_deg: 4.0
+  reynolds_id: Re_nom
+  delta_e_deg: 0.0
+- alpha_deg: 4.0
+  reynolds_id: Re_high
+  delta_e_deg: 0.0
+- alpha_deg: 8.0
+  reynolds_id: Re_nom
+  delta_e_deg: 0.0
+stage_usage:
+  surface_feasibility: neutral CAD only; no AoA/Re
+  volume_feasibility: neutral CAD; first-layer sizing based on Re_high/worst wall shear
+  strategy_smoke:
+    alpha_deg: 4.0
+    reynolds_id: Re_nom
+    delta_e_deg: 0.0
+  winner_aoa_sweep:
+    alpha_deg:
+    - -2.0
+    - 0.0
+    - 4.0
+    - 8.0
+    reynolds_id: Re_nom
+  winner_re_sweep:
+    status: provisional_until_mission_authority
+    alpha_deg: 4.0
+    reynolds_id:
+    - Re_min_local_chord_diagnostic
+    - Re_nom
+    - Re_high
+control_deflection_pilot:
+  status: deferred_to_stage_12
+  geometries:
+  - baseline
+  - difficult_extreme
+  symmetric_deflection_deg:
+  - -5.0
+  - 5.0
+  alpha_deg:
+  - 0.0
+  - 4.0
+  - 8.0
+  reynolds_id: Re_nom
+renamed_identifiers:
+  Re_low:
+    new_id: Re_min_local_chord_diagnostic
+    date: '2026-08-13'
+    reason: The identifier implied a low-speed flight point. It is a minimum-local-chord diagnostic; the
+      warning already said so and the name now matches it.
+pending_recheck:
+  task_id: EPSE-RECHECK-ON-MISSION-FREEZE
+  trigger: adoption of an authoritative mission source and promotion of this file from STAGE_00_PROPOSED
+  action: re-run epsE_common_start under ADR-0008 before any Stage 03+ result depending on it is final
+  reason: first-cell height and boundary-layer spacing derive from Reynolds number, and pyHyp marching
+    depends on that spacing
+  recorded_by: ADR-0008 / Stage 02 close-out plan Phase 0.2 option (b)
+authority_status:
+  resolution: option (b) - proceed on provisional Reynolds numbers, explicitly conditional
+  authoritative: false
+  source: README/RUNBOOK defaults; no mission YAML exists in the repository
+  adr: ADR-0008-epse-selection-protocol.md

@@ -1,0 +1,122 @@
+{
+  "schema": "aeris.mesh_study.stage_gate.v1",
+  "created_local": "2026-08-11",
+  "stage": "00",
+  "name": "governance_and_reference_freeze_after_second_audit",
+  "overall_result": "PASS",
+  "workflow_state_after_gate": "AWAITING_USER_APPROVAL",
+  "next_required_user_token": "APPROVE STAGE 00",
+  "allowed_check_results": [
+    "PASS",
+    "FAIL",
+    "BLOCKED"
+  ],
+  "checks": [
+    {
+      "id": "workspace_created",
+      "result": "PASS",
+      "evidence": "AERIS_MESH_STUDY directory tree exists with runbook-defined stage folders."
+    },
+    {
+      "id": "runbook_copied_and_read",
+      "result": "PASS",
+      "evidence": "RUNBOOK.md and README.md are present in AERIS_MESH_STUDY; Stage 00 stop rule observed."
+    },
+    {
+      "id": "papers_available_and_inventoried",
+      "result": "PASS",
+      "evidence": "Five provided PDFs are present, hashed, and mapped in 01_references/paper_inventory.md."
+    },
+    {
+      "id": "repository_audit_written",
+      "result": "PASS",
+      "evidence": "01_references/repository_audit.md now includes retained CFD archive docs and Claude audit correction addendum."
+    },
+    {
+      "id": "strategy_notes_complete",
+      "result": "PASS",
+      "evidence": "S0-S5 notes explicitly include algorithm, inputs, outputs, missing details, dependencies, risks, and smallest feasible prototype."
+    },
+    {
+      "id": "geometry_topology_contract_frozen",
+      "result": "PASS",
+      "evidence": "00_governance/geometry_topology_contract.json freezes station IDs, semantic edges, control region, and strategy requirements."
+    },
+    {
+      "id": "design_space_snapshot_frozen",
+      "result": "PASS",
+      "evidence": "00_governance/design_space_snapshot.yaml records 20 parser-derived active fields and notes the pinned dihedral_b1_deg variable."
+    },
+    {
+      "id": "cap4_reference_input_restored",
+      "result": "PASS",
+      "evidence": "Historical config restored from 0783c30 parent and verified byte-for-byte, SHA-256 1c0bfef70f804b111d227fc0abaf55fa235c7463228cab912df1ac43636931d6. Relocated to 00_governance/historical_reference_inputs/bwb_explore_wide.yaml and re-verified after the move; configs/geometry/ holds only bwb.yaml, per DECISION-0001."
+    },
+    {
+      "id": "historical_config_scope_bounded",
+      "result": "PASS",
+      "evidence": "reference_package_manifest.yaml key historical_config_divergence records that the restored config is the superseded pre-rescale airframe (1.2-2.0 m chord, 2.4-4.0 m span, naca4412 whole wing, dihedral_b1 0-5 deg, 17 DVs) and conflicts with the frozen station-airfoil and flat-root-panel invariants. It is marked HISTORICAL_REGRESSION_INPUT_ONLY and is not authoritative for any production constant. ADR-0003 records the decision."
+    },
+    {
+      "id": "epse_calibration_basis_on_current_design_space",
+      "result": "PASS",
+      "evidence": "gate cap4_reproduction split into cap4_historical_regression (qualitative) and cap4_current_control_and_epse_common_start (quantitative). epsE is calibrated on 00_governance/epse_calibration_lhs10_seed7_samples.csv, drawn from configs/geometry/bwb.yaml; all 10 rows in bounds, dihedral_b1 zero, disjoint from the Round C hold-out per RUNBOOK Section 7."
+    },
+    {
+      "id": "historical_reproduction_limits_recorded",
+      "result": "PASS",
+      "evidence": "The July campaign report stores no per-sample design variables and eight commits touched params/sampling/planform/sections between the historical config's last version (2026-06-11) and HEAD. Geometry-level reproduction is recorded as unverifiable; the historical check is mechanism-and-region only."
+    },
+    {
+      "id": "cap4_reference_package_recorded",
+      "result": "PASS",
+      "evidence": "00_governance/reference_package_manifest.yaml records restored input, retained evidence, absent bulk artifacts, and correct determinism policy."
+    },
+    {
+      "id": "cap4_headline_corrected",
+      "result": "PASS",
+      "evidence": "Stage 00 report and S0 note now treat old cap4 campaign as 6/10 clean under the current policy, not 7/10."
+    },
+    {
+      "id": "dependency_audit_complete",
+      "result": "PASS",
+      "evidence": "00_governance/dependency_audit.yaml records available and missing dependencies. S2 is blocked before execution, but Stage 01 has no dependency blocker."
+    },
+    {
+      "id": "geometry_fidelity_gate_resolved",
+      "result": "PASS",
+      "evidence": "00_governance/geometry_fidelity_gate_resolution.md records absolute 0.01 percent chord values and updates the gate to be source-aware."
+    },
+    {
+      "id": "lhs_authority_proposed",
+      "result": "PASS",
+      "evidence": "00_governance/lhs_authority.yaml defines three locked sets by the quadruple (sampler, seed, n, geometry-config sha256): lhs_v1/42/100, lhs_v1/42/10 Round C hold-out, lhs_v1/7/10 epsE calibration. All three verified mutually disjoint and regenerable via make_lhs_sets.py --check."
+    },
+    {
+      "id": "operating_points_recorded",
+      "result": "PASS",
+      "evidence": "00_governance/operating_points.yaml records provisional Reynolds levels and clarifies Re_low as a local-chord diagnostic, not a confirmed low-speed mission point."
+    },
+    {
+      "id": "gate_registry_updated",
+      "result": "PASS",
+      "evidence": "00_governance/gate_registry.yaml includes revised fidelity, cap4, LHS, and dependency gates."
+    },
+    {
+      "id": "stage_status_stopped",
+      "result": "PASS",
+      "evidence": "00_governance/stage_status.json is set to AWAITING_USER_APPROVAL after validation."
+    }
+  ],
+  "warnings": [
+    "Operating points are provisional until a mission authority is found or explicitly accepted.",
+    "configs/geometry/bwb.yaml is modified in the current working tree, so its hash is local until committed.",
+    "S2 cross-field tip meshing is blocked before execution until cross-field and quad-extraction tooling is approved or implemented.",
+    "Old cap4 bulk surfaces are absent; Stage 01 must regenerate and freeze new surface.fmt hashes before epsE causality tests.",
+    "The historical cap4 config is a superseded airframe and conflicts with two frozen topology invariants. It is a qualitative regression input only and must never supply a production constant.",
+    "Historical geometry-level reproduction is unverifiable: no per-sample design variables were stored and the generator has drifted eight commits. Report the historical check as a mechanism-and-region match, never as numerical reproduction.",
+    "Seed 7 for the epsE calibration set is arbitrary but predeclared. Change it before approval if you want a different one; it must not be re-rolled after results are seen."
+  ],
+  "blockers": [],
+  "do_not_start_before_user_token": "APPROVE STAGE 00"
+}

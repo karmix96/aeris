@@ -1,0 +1,398 @@
+schema_version: aeris.s7.policy.v1
+policy_id: s7_gmsh_su2_preregistered_2026-08-21
+status: preregistered_development_no_results
+frozen_at_utc: '2026-08-21T00:00:00Z'
+governance_adr: ../../00_governance/decisions/ADR-0017-s7-unstructured-gmsh-su2-preregistration.md
+
+scope:
+  strategy: unstructured
+  mesher: gmsh
+  solver: su2
+  topology: tri_surface_prism_boundary_layer_tet_core
+  modeled_domain: full_mirrored_wing
+  result_acceptance_requires_claude_opus_review: true
+  no_gate_weakening: true
+
+software:
+  python: '3.13.9'
+  gmsh_python: '4.15.2'
+  gmsh_cli: '4.15.2'
+  su2_cfd: '8.5.0 Harrier'
+  numpy: '2.5.1'
+  scipy: '1.18.0'
+  pygeo: '1.17.0'
+  pyspline: '1.5.4'
+
+data:
+  development_set: lhs100_seed42
+  canonical_geometry_source: shared.geometry_sets
+  canonical_flow_source: S6_bounded_mesh_atlas.qualification.DEFAULT_FLOW
+  locked_holdout_set: round_c_lhs10_seed42
+  holdout_state: forbidden
+  holdout_unlock_requires:
+    - all_mesh_and_solver_settings_frozen
+    - all_retry_and_restart_settings_frozen
+    - all_gates_and_report_schemas_frozen
+    - development_program_complete
+    - claude_opus_max_no_acceptance_blocker
+  forbidden_before_unlock:
+    - construct_holdout_geometry
+    - generate_holdout_mesh
+    - run_holdout_solver
+    - inspect_holdout_metrics_or_plots
+    - tune_from_holdout
+
+flow_conditions:
+  schema_source: ../S6_bounded_mesh_atlas/examples/flows_single.csv
+  required_fields: [flow_id, alpha, mach, reynolds, temperature]
+  baseline:
+    flow_id: cruise
+    alpha: 2.0
+    mach: 0.2
+    reynolds: 1.0e6
+    temperature: 288.15
+
+geometry:
+  source: shared_pygeo_surface
+  exact_arbitrary_station_sections: true
+  mirror_plane: y=0
+  numerical_te_baseline: te_1p0mm
+  trailing_edge_variants:
+    te_0p5mm:
+      absolute_m: 0.0005
+      local_chord_fraction: 0.0025
+      rule: max
+    te_1p0mm:
+      absolute_m: 0.0010
+      local_chord_fraction: 0.0050
+      rule: max
+    te_1p5mm:
+      absolute_m: 0.0015
+      local_chord_fraction: 0.0075
+      rule: max
+  required_surface_labels:
+    - wall_upper
+    - wall_lower
+    - wall_te
+    - wall_tip
+  required_boundary_labels:
+    - wall_upper
+    - wall_lower
+    - wall_te
+    - wall_tip
+    - farfield
+  required_volume_labels:
+    - fluid
+
+grid_family:
+  characteristic_length: mean_aerodynamic_chord
+  coupled_refinement_required: true
+  monotonic_effective_counts_required: true
+  minimum_cell_count_ratio_between_levels: 1.35
+  levels:
+    coarse:
+      surface_edge_over_L: 0.0300
+      te_surface_edge_over_L: 0.0060
+      tip_surface_edge_over_L: 0.0120
+      first_cell_height_over_L: 7.20e-6
+      prism_layers: 24
+      prism_growth_ratio: 1.25
+      near_core_edge_over_L: 0.0500
+      far_core_edge_over_L: 0.3500
+      wake_edge_over_L: 0.0350
+    medium:
+      surface_edge_over_L: 0.0212
+      te_surface_edge_over_L: 0.00424
+      tip_surface_edge_over_L: 0.00848
+      first_cell_height_over_L: 5.09e-6
+      prism_layers: 32
+      prism_growth_ratio: 1.20
+      near_core_edge_over_L: 0.0354
+      far_core_edge_over_L: 0.2475
+      wake_edge_over_L: 0.0247
+    fine:
+      surface_edge_over_L: 0.0150
+      te_surface_edge_over_L: 0.0030
+      tip_surface_edge_over_L: 0.0060
+      first_cell_height_over_L: 3.60e-6
+      prism_layers: 40
+      prism_growth_ratio: 1.16
+      near_core_edge_over_L: 0.0250
+      far_core_edge_over_L: 0.1750
+      wake_edge_over_L: 0.0175
+  representative_grid_cases: 5
+  grid_convergence:
+    force_fields: [cl, cd, cmy]
+    report_observed_order: true
+    report_gci: true
+    asymptotic_ratio_tolerance: 0.15
+    max_fine_gci_percent:
+      cl: 2.0
+      cd: 5.0
+      cmy: 3.0
+
+laptop_smoke:
+  evidence_tier: laptop_smoke
+  campaign_claims_forbidden: true
+  surface_edge_over_L: 0.18
+  te_surface_edge_over_L: 0.08
+  tip_surface_edge_over_L: 0.10
+  first_cell_height_over_L: 0.003
+  prism_layers: 3
+  prism_growth_ratio: 1.30
+  near_core_edge_over_L: 0.22
+  far_core_edge_over_L: 0.75
+  wake_edge_over_L: 0.20
+  farfield:
+    upstream_over_L: 3.0
+    downstream_over_L: 5.0
+    radial_over_L: 3.0
+    wake_length_over_L: 4.0
+  su2_iterations: 5
+  su2_restart_iterations: 5
+
+gmsh:
+  random_factor: 1.0e-12
+  random_seed: 0
+  geometry_tolerance_over_L: 1.0e-10
+  mesh_size_from_points: false
+  mesh_size_from_curvature: 12
+  mesh_size_extend_from_boundary: false
+  msh_version: '4.1'
+  binary_mesh: false
+  save_all: false
+  post_generation_optimization: disabled_preserve_prism_schedule
+  retries:
+    - id: fixed_wall__frontal_delaunay_outer__delaunay_core
+      generated_surface_algorithm: 6
+      volume_algorithm: 1
+      optimize: Relocate3D
+      optimize_passes: 0
+    - id: fixed_wall__delaunay_outer__hxt_core
+      generated_surface_algorithm: 5
+      volume_algorithm: 10
+      optimize: Relocate3D
+      optimize_passes: 0
+    - id: fixed_wall__meshadapt_outer__delaunay_core
+      generated_surface_algorithm: 1
+      volume_algorithm: 1
+      optimize: Netgen
+      optimize_passes: 0
+  first_passing_attempt_wins: true
+  preserve_every_attempt: true
+  mutation_between_attempts_forbidden:
+    - geometry
+    - physical_sizes
+    - first_cell_height
+    - prism_layers
+    - prism_growth_ratio
+    - quality_thresholds
+
+farfield:
+  upstream_over_L: 20.0
+  downstream_over_L: 30.0
+  radial_over_L: 20.0
+  wake_length_over_L: 12.0
+
+mesh_gates:
+  missing_or_nonfinite_metric_fails: true
+  source_geometry:
+    # Node fidelity is a CORRECTNESS property: every tracked OML vertex must lie
+    # on the pyGeo B-spline.  It is grid independent and currently measures 0.0.
+    max_distance_over_local_chord: 1.0e-4
+    # Planar-facet centroid error is a RESOLUTION property that converges at
+    # O(h^2) and therefore cannot share the node-fidelity limit.  Measured on
+    # lhs100_seed42 index 0 (te_1p0mm): 1.832e-2 / 9.840e-4 / 4.926e-4 / 2.561e-4
+    # for laptop_smoke / coarse / medium / fine.  Limits below carry ~1.5x margin
+    # over measurement; see the 2026-08-21 facet-fidelity amendment in ADR-0017.
+    max_facet_centroid_over_local_chord:
+      laptop_smoke: 3.0e-2
+      coarse: 1.5e-3
+      medium: 8.0e-4
+      fine: 4.0e-4
+    su2_conversion_max_distance_over_L: 1.0e-12
+    max_te_opening_relative_error: 0.05
+    labels_exactly_match_required: true
+  surface:
+    closed: true
+    manifold: true
+    boundary_edge_count: 0
+    nonmanifold_edge_count: 0
+    zero_area_face_count: 0
+    duplicate_face_count: 0
+    self_intersection_count: 0
+    consistently_oriented: true
+  volume:
+    negative_cell_count: 0
+    zero_volume_cell_count: 0
+    orphan_cell_count: 0
+    nonmanifold_face_count: 0
+    su2_volume_cell_count_difference: 0
+    boundary_face_unassigned_count: 0
+    boundary_face_multiply_assigned_count: 0
+    boundary_marker_nonboundary_face_count: 0
+  prisms:
+    wall_face_coverage_fraction_min: 1.0
+    connected_column_fraction_min: 1.0
+    exact_layer_count_required: true
+    first_height_relative_error_max: 0.05
+    wall_normal_first_height_relative_error_max: 0.05
+    growth_ratio_relative_error_max: 0.03
+    missing_layer_count: 0
+    collapsed_layer_count: 0
+    unassigned_prism_count: 0
+    multiply_assigned_prism_count: 0
+  quality:
+    cell_quality_definition:
+      tetrahedra: gmsh_minSICN
+      prisms: gmsh_minSJ
+      rationale: preserve_sensitivity_to_tet_shape_without_rejecting_valid_high_aspect_wall_prisms
+    min_tet_signed_inverse_condition_number: 0.05
+    min_prism_scaled_jacobian: 0.05
+    min_te_prism_scaled_jacobian: 0.05
+    min_tip_prism_scaled_jacobian: 0.05
+    max_equiangle_skewness: 0.95
+    p99_equiangle_skewness: 0.85
+    max_nonorthogonality_deg: 75.0
+    p99_nonorthogonality_deg: 65.0
+    max_core_aspect_ratio: 50.0
+    max_prism_aspect_ratio: 100000.0
+    max_core_adjacent_volume_ratio: 5.0
+    max_prism_to_core_volume_ratio: 100.0
+  regional:
+    te_invalid_cell_count: 0
+    tip_invalid_cell_count: 0
+    te_prism_coverage_fraction_min: 1.0
+    tip_prism_coverage_fraction_min: 1.0
+    te_core_interface_coverage_fraction_min: 1.0
+    tip_core_interface_coverage_fraction_min: 1.0
+
+su2:
+  solver: RANS
+  turbulence_model: SA
+  restart_sol: false
+  numerical_method:
+    conv_num_method_flow: ROE
+    muscl_flow: true
+    slope_limiter_flow: VENKATAKRISHNAN
+    venkat_limiter_coeff: 0.5
+    time_discre_flow: EULER_IMPLICIT
+    conv_num_method_turb: SCALAR_UPWIND
+    muscl_turb: false
+    slope_limiter_turb: NONE
+    time_discre_turb: EULER_IMPLICIT
+    cfl_reduction_turb: 0.5
+    linear_solver: FGMRES
+    linear_solver_prec: LU_SGS
+    linear_solver_error: 1.0e-6
+    linear_solver_iter: 10
+    cfl_number: 10.0
+    cfl_adapt: true
+    cfl_adapt_param: [0.1, 2.0, 1.0, 100.0]
+  max_iterations: 20000
+  restart_extension_iterations: 10000
+  max_automatic_restarts: 1
+  required_outputs:
+    - HISTORY
+    - RESTART
+    - SURFACE_CSV
+  convergence:
+    process_exit_code: 0
+    minimum_history_rows: 200
+    residual_drop_orders_min: 6.0
+    residual_log10_final_max: -8.0
+    force_tail_rows: 200
+    force_tail_relative_range_max:
+      CL: 1.0e-3
+      CD: 1.0e-3
+      CMy: 1.0e-3
+    force_relative_denominator_floor:
+      CL: 1.0e-3
+      CD: 1.0e-5
+      CMy: 1.0e-4
+    drag_must_be_positive: true
+    restart_file_required: true
+  wall_y_plus:
+    p95_max: 1.0
+    p99_max: 2.0
+    max_max: 5.0
+    finite_wall_fraction_min: 1.0
+
+resource_safety:
+  production_min_available_ram_gib: 48.0
+  production_min_free_disk_gib: 100.0
+  memory_estimate_bytes_per_cell: 7000
+  laptop_max_estimated_memory_fraction: 0.40
+  laptop_min_free_disk_gib: 5.0
+  refuse_production_if_unknown: true
+  never_implicitly_coarsen: true
+
+provenance:
+  hash_algorithm: sha256
+  hash_required:
+    - source_tree
+    - policy
+    - resolved_config
+    - geometry
+    - mesh
+    - mesh_audit
+    - su2_config
+    - su2_stdout
+    - su2_history
+    - su2_surface
+    - restart
+    - result
+  record_versions: true
+  record_environment: true
+  record_command: true
+  verify_before_acceptance: true
+
+compatibility:
+  summary_schema: aeris.mesh_strategy_result.v1
+  method_values: [structured, unstructured]
+  future_dispatch_modes: [structured, unstructured, auto, compare]
+  common_fields:
+    - case_id
+    - geometry_set
+    - development_index
+    - geometry_id
+    - geometry_digest
+    - flow_condition
+    - flow_id
+    - reference_quantities
+    - method
+    - grid_level
+    - te_variant
+    - technical_accepted
+    - accepted
+    - acceptance_scope
+    - campaign_ready
+    - gate_results
+    - cell_counts
+    - runtime
+    - peak_memory
+    - y_plus
+    - forces
+    - provenance
+
+campaign_readiness:
+  development_meshes_passed: 100
+  development_meshes_total: 100
+  unattended_cfd_pilots_min: 10
+  unattended_cfd_pilots_target: 20
+  representative_grid_studies_passed: 5
+  unseen_holdout_target_approx: 10
+  restart_recovery_demonstrated: true
+  automatic_mesh_recovery_demonstrated: true
+  production_y_plus_passed: true
+
+review:
+  command:
+    - /home/mike/.local/bin/claude
+    - --model
+    - opus
+    - --effort
+    - max
+  preserve_prompt_and_output: true
+  model_identity_required: true
+  no_acceptance_blocker_required: true

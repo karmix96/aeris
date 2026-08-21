@@ -211,6 +211,65 @@ def _farfield_bounds(surface: SurfaceMesh, farfield: Mapping[str, Any], L: float
     )
 
 
+def trailing_edge_sample_points(
+    surface: SurfaceMesh, *, target_spacing: float, max_points: int
+) -> np.ndarray:
+    """Densified centre-line of the numerical trailing edge, for core refinement.
+
+    The trailing-edge ribbon is the only place where a millimetre-scale feature
+    is embedded in a centimetre-scale field, so it is the only place the core
+    needs a size of its own.
+
+    A Distance field sees a point cloud, not a curve: sampling only the existing
+    trailing-edge nodes leaves gaps of roughly one spanwise step (measured 18.6 mm
+    at graded resolution), so points midway between samples are already beyond the
+    refinement radius and the field silently does nothing.  The centre-line is
+    therefore resampled at the refinement size itself.
+    """
+    labels = np.asarray(surface.labels)
+    te_faces = np.asarray(surface.triangles)[labels == "wall_te"]
+    if len(te_faces) == 0:
+        return np.empty((0, 3), dtype=float)
+    points = np.asarray(surface.points, dtype=float)
+    nodes = np.unique(te_faces)
+    spacing = max(float(target_spacing), np.finfo(float).tiny)
+
+    collected: list[np.ndarray] = []
+    for side in (1.0, -1.0):
+        chosen = [n for n in nodes if np.sign(points[n][1]) == side or points[n][1] == 0.0]
+        if len(chosen) < 2:
+            continue
+        # One trailing-edge station per distinct spanwise position; its centre is
+        # the mean of the upper and lower corner nodes there.
+        ordered = sorted(chosen, key=lambda n: float(points[n][1]))
+        stations: list[np.ndarray] = []
+        bucket = [ordered[0]]
+        for node in ordered[1:]:
+            if abs(float(points[node][1] - points[bucket[-1]][1])) <= 0.25 * spacing:
+                bucket.append(node)
+            else:
+                stations.append(points[bucket].mean(axis=0))
+                bucket = [node]
+        stations.append(points[bucket].mean(axis=0))
+        line = np.asarray(stations, dtype=float)
+        if len(line) < 2:
+            collected.append(line)
+            continue
+        for start, end in zip(line[:-1], line[1:], strict=True):
+            steps = max(1, int(math.ceil(float(np.linalg.norm(end - start)) / spacing)))
+            for k in range(steps):
+                collected.append((start + (end - start) * (k / steps))[None, :])
+        collected.append(line[-1][None, :])
+
+    if not collected:
+        return np.empty((0, 3), dtype=float)
+    dense = np.vstack(collected)
+    if len(dense) > int(max_points):
+        step = int(math.ceil(len(dense) / float(max_points)))
+        dense = dense[::step]
+    return dense
+
+
 def _set_background_field(
     gmsh: Any,
     *,
@@ -222,7 +281,21 @@ def _set_background_field(
     wake_size: float,
     bl_thickness: float,
     wake_length: float,
+    te_points: np.ndarray,
+    te_refinement: Mapping[str, Any],
+    te_opening: float,
+    growth_ratio: float,
 ) -> dict[str, int]:
+    def ramp_length(small: float, large: float) -> float:
+        """Distance needed to grow `small` to `large` at the declared ratio.
+
+        Sum of a geometric cell sequence, so the field asks for a transition the
+        mesher can actually build one cell at a time.
+        """
+        if large <= small or growth_ratio <= 1.0:
+            return max(large - small, 0.0)
+        return small * (large / small - 1.0) / (growth_ratio - 1.0)
+
     field = gmsh.model.mesh.field
     distance = field.add("Distance")
     field.setNumbers(distance, "FacesList", top_surfaces)
@@ -232,7 +305,11 @@ def _set_background_field(
     field.setNumber(threshold, "SizeMin", near_size)
     field.setNumber(threshold, "SizeMax", far_size)
     field.setNumber(threshold, "DistMin", max(bl_thickness, near_size))
-    field.setNumber(threshold, "DistMax", max(6.0 * near_size, 2.0 * bl_thickness))
+    field.setNumber(
+        threshold,
+        "DistMax",
+        max(bl_thickness, near_size) + ramp_length(near_size, far_size),
+    )
 
     xmin, ymin, zmin, xmax, ymax, zmax = body_bounds
     outer_xmin, outer_ymin, outer_zmin, outer_xmax, outer_ymax, outer_zmax = bounds
@@ -249,11 +326,57 @@ def _set_background_field(
     # VIn to VOut across its faces, so cells straddling the wake box differ by the
     # full wake/far size ratio in one jump.  That is a dominant contributor to the
     # adjacent-core volume ratio.  Grade the step over several wake cells instead.
-    field.setNumber(wake, "Thickness", max(3.0 * wake_size, far_size - wake_size))
+    field.setNumber(wake, "Thickness", ramp_length(wake_size, far_size))
+    fields = [threshold, wake]
+    identifiers = {
+        "distance": distance,
+        "threshold": threshold,
+        "wake_box": wake,
+    }
+    if bool(te_refinement["enabled"]) and len(te_points):
+        # Distance to the trailing-edge line, offset by the boundary-layer
+        # thickness because the core begins at the prism cap.
+        tags = [
+            gmsh.model.geo.addPoint(float(x), float(y), float(z))
+            for x, y, z in te_points
+        ]
+        gmsh.model.geo.synchronize()
+        te_distance = field.add("Distance")
+        field.setNumbers(te_distance, "PointsList", tags)
+        te_threshold = field.add("Threshold")
+        field.setNumber(te_threshold, "InField", te_distance)
+        field.setNumber(
+            te_threshold, "SizeMin", float(te_refinement["size_over_te_opening"]) * te_opening
+        )
+        # Grade into the near-body size, not the far-field size: a ramp from a few
+        # millimetres to the far size over a couple of centimetres is far too steep
+        # to be realised, and the outer Threshold already handles near -> far.
+        field.setNumber(te_threshold, "SizeMax", near_size)
+        field.setNumber(
+            te_threshold,
+            "DistMin",
+            bl_thickness + float(te_refinement["dist_min_over_te_opening"]) * te_opening,
+        )
+        field.setNumber(
+            te_threshold,
+            "DistMax",
+            bl_thickness
+            + max(
+                float(te_refinement["dist_max_over_te_opening"]) * te_opening,
+                ramp_length(
+                    float(te_refinement["size_over_te_opening"]) * te_opening, near_size
+                ),
+            ),
+        )
+        fields.append(te_threshold)
+        identifiers["te_distance"] = te_distance
+        identifiers["te_threshold"] = te_threshold
+        identifiers["te_sample_points"] = len(tags)
     minimum = field.add("Min")
-    field.setNumbers(minimum, "FieldsList", [threshold, wake])
+    field.setNumbers(minimum, "FieldsList", fields)
     field.setAsBackgroundMesh(minimum)
-    return {"distance": distance, "threshold": threshold, "wake_box": wake, "minimum": minimum}
+    identifiers["minimum"] = minimum
+    return identifiers
 
 
 def _all_nodes(gmsh: Any) -> tuple[np.ndarray, np.ndarray, dict[int, int]]:
@@ -291,7 +414,21 @@ def write_su2_mesh(
     farfield_surfaces: Iterable[int],
 ) -> dict[str, Any]:
     """Write linear SU2 elements and split source wall triangles by S7 label."""
-    node_tags, coordinates, node_index = _all_nodes(gmsh)
+    all_tags, all_coordinates, _all_index = _all_nodes(gmsh)
+    # Only nodes referenced by a volume element belong in an SU2 mesh.  Geometric
+    # points that exist solely to drive a size field are meshed by Gmsh as
+    # isolated vertices and must not leak into the point list; boundary faces are
+    # faces of volume elements, so this set covers every marker too.
+    used: set[int] = set()
+    for _type, _tags, flat in zip(*gmsh.model.mesh.getElements(3), strict=True):
+        used.update(int(tag) for tag in np.asarray(flat, dtype=np.int64))
+    keep = np.array(sorted(used), dtype=np.int64)
+    positions = np.searchsorted(all_tags, keep)
+    if not np.array_equal(all_tags[positions], keep):
+        raise ValueError("volume connectivity references nodes absent from the model")
+    node_tags = keep
+    coordinates = all_coordinates[positions]
+    node_index = {int(tag): i for i, tag in enumerate(node_tags)}
     volume_types = {
         4: (10, 4, "tetrahedron"),
         5: (12, 8, "hexahedron"),
@@ -489,6 +626,19 @@ def generate_mesh(
             wake_size=float(absolute["wake_edge_m"]),
             bl_thickness=float(spec["boundary_layer_total_thickness_m"]),
             wake_length=float(spec["farfield"]["wake_length_over_L"]) * L,
+            te_points=trailing_edge_sample_points(
+                surface,
+                target_spacing=float(
+                    policy["gmsh"]["te_core_refinement"]["size_over_te_opening"]
+                )
+                * float(surface.metadata["fidelity"]["min_realized_te_opening_m"]),
+                max_points=int(policy["gmsh"]["te_core_refinement"]["max_sample_points"]),
+            ),
+            te_refinement=policy["gmsh"]["te_core_refinement"],
+            te_opening=float(
+                surface.metadata["fidelity"]["min_realized_te_opening_m"]
+            ),
+            growth_ratio=float(policy["gmsh"]["core_size_field"]["max_growth_ratio"]),
         )
         gmsh.option.setNumber(
             "Mesh.MeshSizeMin", min(float(absolute["near_core_edge_m"]), heights[0])

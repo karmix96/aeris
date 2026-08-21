@@ -38,7 +38,11 @@ GRADED = {
     "te_surface_edge_over_L": 0.020,
     "tip_surface_edge_over_L": 0.030,
     "prism_layers": 8,
-    "near_core_edge_over_L": 0.040,
+    # Production keeps the near core slightly COARSER than the surface triangles
+    # (coarse: 0.050 core vs 0.030 surface).  An earlier probe inverted that and
+    # asked the core to be finer than the cap it sits on, which forces refinement
+    # right at the prism cap.  Mirror the production ratio instead.
+    "near_core_edge_over_L": 0.133,
     "far_core_edge_over_L": 0.280,
     "wake_edge_over_L": 0.050,
     "farfield": {

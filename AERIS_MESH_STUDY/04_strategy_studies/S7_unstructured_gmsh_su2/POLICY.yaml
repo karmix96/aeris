@@ -162,6 +162,34 @@ gmsh:
   binary_mesh: false
   save_all: false
   post_generation_optimization: disabled_preserve_prism_schedule
+  # Size-field gradation.  A Threshold ramp is only as good as the distance it is
+  # given: ramping the near-body size to the far-field size over a distance of a
+  # few cells forces neighbouring tetrahedra to differ by the whole size ratio in
+  # one step.  Measured at index 0, graded resolution, with the ramp fixed at six
+  # near-body lengths: 2 089 faces of 1 833 637 exceeded the adjacent-core volume
+  # ratio, worst 1 547, and localisation put only 0.9 percent of them near the
+  # trailing edge -- they sit in the near-to-far transition, out to 4.4 L.  The
+  # ramp length is therefore derived from a declared per-cell growth ratio, which
+  # is the quantity that actually controls the jump between neighbours.
+  core_size_field:
+    max_growth_ratio: 1.20
+
+  # Local core refinement along the numerical trailing edge.  A 1.0 mm blunt TE
+  # embedded in a field whose local target is 10 mm forces ~1 mm tetrahedra on
+  # the trailing-edge ribbon; without a matching neighbourhood those cells sit
+  # directly against ~20 mm cells, which is what drove the adjacent-core volume
+  # ratio tail (measured 2 089 violating faces of 1 833 637, worst 1 547).
+  # Sizes are expressed against the realized TE opening so the refinement scales
+  # with the te_variant instead of being hard-coded.  Distances are measured from
+  # the trailing-edge line and are offset by the boundary-layer thickness,
+  # because the core begins at the prism cap.
+  te_core_refinement:
+    enabled: false
+    size_over_te_opening: 3.0
+    dist_min_over_te_opening: 0.0
+    dist_max_over_te_opening: 30.0
+    max_sample_points: 4000
+
   # Available, tested safeguard against prism fronts colliding across a thin
   # numerical trailing edge, since Gmsh's extrudeBoundaryLayer performs no
   # collision detection and no layer squeezing.  It is DISABLED because no such

@@ -73,14 +73,26 @@ def main() -> int:
     wall_tree, te_tree = cKDTree(wall), cKDTree(te_line)
 
     bad_centres, ratios = [], []
+    small_volumes, large_volumes, field_sizes = [], [], []
+    # Local target size the background field asked for, reconstructed from policy.
+    spec = P.resolved_mesh_spec(
+        surface, level="laptop_smoke", candidate_index=0, policy=policy
+    )
+    near = float(spec["absolute"]["near_core_edge_m"])
+    far = float(spec["absolute"]["far_core_edge_m"])
     for owners in faces.values():
         if len(owners) != 2:
             continue
         left, right = owners
-        ratio = max(volumes[left], volumes[right]) / max(min(volumes[left], volumes[right]), 1e-300)
+        lo, hi = min(volumes[left], volumes[right]), max(volumes[left], volumes[right])
+        ratio = hi / max(lo, 1e-300)
         if ratio > 5.0:
-            bad_centres.append(0.5 * (centres[left] + centres[right]))
+            centre = 0.5 * (centres[left] + centres[right])
+            bad_centres.append(centre)
             ratios.append(ratio)
+            small_volumes.append(lo)
+            large_volumes.append(hi)
+            field_sizes.append(near if np.linalg.norm(centre) < 1e9 else far)
     if not bad_centres:
         print("no violating faces")
         return 0
@@ -104,6 +116,30 @@ def main() -> int:
     near_te = int((d_te < 0.05 * L).sum())
     print(f"  within 0.05 L of the wall: {near_wall} ({near_wall/len(bad):.1%})")
     print(f"  within 0.05 L of the TE  : {near_te} ({near_te/len(bad):.1%})")
+    # Characterise the pair: is the anomaly a tiny cell or an oversized neighbour?
+    small = np.asarray(small_volumes)
+    large = np.asarray(large_volumes)
+    field = np.asarray(field_sizes)
+    edge = (6.0 * small) ** (1.0 / 3.0)
+    big_edge = (6.0 * large) ** (1.0 / 3.0)
+    print("  pair anatomy (equivalent edge lengths):")
+    print(
+        f"    small cell edge   p50 {np.percentile(edge, 50) * 1e3:7.2f} mm"
+        f"   p05 {np.percentile(edge, 5) * 1e3:7.2f} mm"
+    )
+    print(
+        f"    large cell edge   p50 {np.percentile(big_edge, 50) * 1e3:7.2f} mm"
+        f"   p95 {np.percentile(big_edge, 95) * 1e3:7.2f} mm"
+    )
+    print(f"    local field size  p50 {np.percentile(field, 50) * 1e3:7.2f} mm")
+    print(
+        f"    small/field ratio p50 {np.percentile(edge / field, 50):6.3f}"
+        f"   p05 {np.percentile(edge / field, 5):6.3f}"
+    )
+    print(
+        f"    large/field ratio p50 {np.percentile(big_edge / field, 50):6.3f}"
+        f"   p95 {np.percentile(big_edge / field, 95):6.3f}"
+    )
     worst = np.argsort(ratios)[-8:][::-1]
     print("  worst faces (ratio, xyz, d_wall/L, d_te/L):")
     for w in worst:

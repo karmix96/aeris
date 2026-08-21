@@ -546,6 +546,7 @@ def _prism_columns(
                     "first_height_m": None,
                     "last_height_m": None,
                     "min_prism_scaled_jacobian": None,
+                    "wall_normal_first_error": None,
                     "invalid_prism_count": 0,
                 }
             )
@@ -556,6 +557,7 @@ def _prism_columns(
         heights: list[float] = []
         cells: list[int] = []
         closed = False
+        column_normal_error: float | None = None
         outer_face: tuple[int, int, int] | None = None
         while current not in seen:
             seen.add(current)
@@ -584,12 +586,15 @@ def _prism_columns(
                 if normal_norm <= np.finfo(float).tiny:
                     projected_first_ratios.extend([0.0] * len(displacements))
                     projected_first_errors.extend([1.0] * len(displacements))
+                    column_normal_error = 1.0
                 else:
                     normal /= normal_norm
                     projected = np.abs((exit_points - entry_points) @ normal)
                     projected_ratios = projected / target_first_height
                     projected_first_ratios.extend(projected_ratios.tolist())
-                    projected_first_errors.extend(np.abs(projected_ratios - 1.0).tolist())
+                    column_errors = np.abs(projected_ratios - 1.0)
+                    projected_first_errors.extend(column_errors.tolist())
+                    column_normal_error = float(np.max(column_errors))
             heights.append(height)
             if height <= np.finfo(float).tiny:
                 collapsed += 1
@@ -621,6 +626,7 @@ def _prism_columns(
                 "min_prism_scaled_jacobian": (
                     float(np.min(column_quality)) if column_quality_finite else None
                 ),
+                "wall_normal_first_error": column_normal_error,
                 "invalid_prism_count": (
                     int(np.count_nonzero(~np.isfinite(column_quality) | (column_quality <= 0.0)))
                     if cells
@@ -653,6 +659,15 @@ def _prism_columns(
             ),
             "minimum_prism_scaled_jacobian": min(quality_values) if quality_values else None,
             "invalid_prism_count": sum(column["invalid_prism_count"] for column in selected),
+            # Normal extrusion at a sharp convex edge follows the averaged node
+            # normal, so its projection onto a face normal falls off with the
+            # included angle.  Splitting by label shows whether a large
+            # wall-normal error is geometry at a feature edge or a real defect.
+            "wall_normal_first_error": _stats(
+                column["wall_normal_first_error"]
+                for column in selected
+                if column.get("wall_normal_first_error") is not None
+            ),
         }
     return {
         "source_wall_triangle_count": len(surface.triangles),

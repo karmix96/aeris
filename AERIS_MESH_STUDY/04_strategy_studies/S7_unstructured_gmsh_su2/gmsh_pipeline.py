@@ -663,14 +663,50 @@ def generate_mesh(
             if optimization_policy == "core_volume_only"
             else []
         )
-        for _ in range(optimize_passes):
-            # Global relocation is forbidden: it can move intermediate prism
-            # nodes while leaving the wall and outer prism surface fixed,
-            # destroying the prescribed first height and growth schedule.
-            gmsh.model.mesh.optimize(
-                str(candidate["optimize"]),
-                dimTags=optimize_targets,
-            )
+        def _invalid_volume_cells() -> int:
+            """Cells with a non-positive Jacobian anywhere in the volume mesh."""
+            count = 0
+            for _type, element_tags, _conn in zip(
+                *gmsh.model.mesh.getElements(3), strict=True
+            ):
+                det = np.asarray(
+                    gmsh.model.mesh.getElementQualities(element_tags, "minDetJac"),
+                    dtype=float,
+                )
+                count += int(np.count_nonzero(~np.isfinite(det) | (det <= 0.0)))
+            return count
+
+        # Guarded optimization.  An optimizer is an improvement attempt, never a
+        # guarantee: Netgen was measured removing every sliver on index 0 while
+        # creating two inverted cells on index 49.  Keep the pre-optimization
+        # mesh and roll back rather than emit an invalid one.  Global relocation
+        # stays forbidden because it moves intermediate prism nodes and destroys
+        # the prescribed first height and growth schedule.
+        optimization_record: dict[str, Any] = {
+            "requested_passes": optimize_passes,
+            "method": str(candidate["optimize"]) if optimize_passes else None,
+            "invalid_before": None,
+            "invalid_after": None,
+            "rolled_back": False,
+        }
+        if optimize_passes:
+            rollback_path = output_dir / "pre_optimization.msh"
+            gmsh.write(str(rollback_path))
+            before = _invalid_volume_cells()
+            optimization_record["invalid_before"] = before
+            for _ in range(optimize_passes):
+                gmsh.model.mesh.optimize(
+                    str(candidate["optimize"]),
+                    dimTags=optimize_targets,
+                )
+            after = _invalid_volume_cells()
+            optimization_record["invalid_after"] = after
+            if after > before:
+                gmsh.model.mesh.clear()
+                gmsh.merge(str(rollback_path))
+                optimization_record["rolled_back"] = True
+                optimization_record["invalid_after_rollback"] = _invalid_volume_cells()
+            rollback_path.unlink(missing_ok=True)
 
         gmsh.write(str(msh_path))
         su2_report = write_su2_mesh(
@@ -699,6 +735,7 @@ def generate_mesh(
             "farfield_bounds_m": list(outer_bounds),
             "field_ids": field_ids,
             "gmsh_element_counts": gmsh_counts,
+            "optimization": optimization_record,
             "mesh_msh": str(msh_path.resolve()),
             "mesh_msh_sha256": sha256_file(msh_path),
             "mesh_su2": su2_report,

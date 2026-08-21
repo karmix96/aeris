@@ -94,6 +94,20 @@ def _tet_signed_volume(points: np.ndarray) -> np.ndarray:
     )
 
 
+def _sub_determinant(points: np.ndarray, i: int, j: int, k: int, fourth: int) -> np.ndarray:
+    """Signed volume of one tetrahedron drawn from an element's nodes."""
+    return np.linalg.det(
+        np.stack(
+            [
+                points[:, j] - points[:, i],
+                points[:, k] - points[:, i],
+                points[:, fourth] - points[:, i],
+            ],
+            axis=2,
+        )
+    ) / 6.0
+
+
 def _prism_signed_volume(points: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     def determinant(i: int, j: int, k: int, fourth: int) -> np.ndarray:
         return (
@@ -1344,6 +1358,7 @@ def audit_mesh(
         volumes_all: list[np.ndarray] = []
         negative_count = 0
         zero_count = 0
+        warped_prism_count = 0
         quality_report: dict[str, Any] = {}
         per_type: dict[int, dict[str, Any]] = {}
         volume_offset = 0
@@ -1375,10 +1390,36 @@ def audit_mesh(
                 family = "prism"
             min_det = _quality(gmsh, record["element_tags"], "minDetJac")
             quality_report[f"{family}_minDetJac"] = _stats(min_det)
-            negative = (np.min(subvolumes, axis=1) < 0.0) | (min_det < 0.0)
-            zero = (np.min(np.abs(subvolumes), axis=1) <= np.finfo(float).tiny) | (min_det == 0.0)
+            # Validity must be decomposition-free.  A prism's quad faces are
+            # bilinear, so splitting it into three tetrahedra is not unique, and
+            # for a warped prism the sub-volume signs depend on which split is
+            # chosen.  Measured on index 49: two prisms were negative under one
+            # split, positive under the other, with Gmsh's Jacobian positive
+            # (+5.07e-8, +6.15e-8) and the enclosed volume differing by 47 percent
+            # between splits.  Those elements are valid; the sub-volume test was
+            # reporting its own decomposition, not the mesh.
+            #
+            # The isoparametric Jacobian is the element's actual mapping and does
+            # not depend on any decomposition, so validity is decided on it.  The
+            # sub-volume disagreement is retained below as a WARPING diagnostic.
+            negative = min_det < 0.0
+            zero = min_det == 0.0
             negative_count += int(np.count_nonzero(negative))
             zero_count += int(np.count_nonzero(zero))
+            if element_type == PRISM:
+                alternative = np.column_stack(
+                    (
+                        _sub_determinant(cell_points, 0, 1, 2, 4),
+                        _sub_determinant(cell_points, 0, 2, 5, 4),
+                        _sub_determinant(cell_points, 0, 5, 3, 4),
+                    )
+                )
+                warped_prism_count = int(
+                    np.count_nonzero(
+                        (np.min(subvolumes, axis=1) < 0.0)
+                        != (np.min(alternative, axis=1) < 0.0)
+                    )
+                )
             element_record = {
                 "family": family,
                 "indices": indices,
@@ -1470,6 +1511,8 @@ def audit_mesh(
             "surface": topology,
             "volume": {
                 "negative_cell_count": negative_count,
+                "validity_criterion": "isoparametric_jacobian_min_det_positive",
+                "decomposition_sensitive_prism_count": warped_prism_count,
                 "zero_volume_cell_count": zero_count,
                 "signed_volume_m3": _stats(cell_volumes),
             },

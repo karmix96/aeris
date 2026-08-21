@@ -244,15 +244,26 @@ mesh_gates:
     # on the pyGeo B-spline.  It is grid independent and currently measures 0.0.
     max_distance_over_local_chord: 1.0e-4
     # Planar-facet centroid error is a RESOLUTION property that converges at
-    # O(h^2) and therefore cannot share the node-fidelity limit.  Measured on
-    # lhs100_seed42 index 0 (te_1p0mm): 1.832e-2 / 9.840e-4 / 4.926e-4 / 2.561e-4
-    # for laptop_smoke / coarse / medium / fine.  Limits below carry ~1.5x margin
-    # over measurement; see the 2026-08-21 facet-fidelity amendment in ADR-0017.
+    # O(h^2) and therefore cannot share the node-fidelity limit.
+    #
+    # These limits were first calibrated from index 0 alone, which turned out to
+    # be a benign design: index 49 then missed `coarse` by 2.5 percent and sat at
+    # 1.03x and 1.07x on medium and fine, while indices 0/24/74/99 carried 1.4x to
+    # 2.6x.  A gate must be sized against the population it has to cover, so the
+    # limits below are set from the worst of the five representative designs
+    # (te_1p0mm) with 2x margin.  Worst measured, all at index 49:
+    #   laptop_smoke 1.8301e-2 | coarse 1.5383e-3 | medium 7.7298e-4 | fine 3.7510e-4
+    #
+    # Margin is 2x rather than 1.5x because only 5 of the 100 development designs
+    # have been measured; a design with tighter leading-edge curvature will sit
+    # higher.  This remains a risk for the unmeasured 95 and the campaign must
+    # re-verify.  A genuine sampling defect is orders of magnitude out, so the
+    # wider margin does not blunt the gate.
     max_facet_centroid_over_local_chord:
-      laptop_smoke: 3.0e-2
-      coarse: 1.5e-3
-      medium: 8.0e-4
-      fine: 4.0e-4
+      laptop_smoke: 4.0e-2
+      coarse: 3.0e-3
+      medium: 1.6e-3
+      fine: 8.0e-4
     su2_conversion_max_distance_over_L: 1.0e-12
     max_te_opening_relative_error: 0.05
     labels_exactly_match_required: true

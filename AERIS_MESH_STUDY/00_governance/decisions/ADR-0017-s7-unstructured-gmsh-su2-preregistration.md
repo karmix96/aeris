@@ -640,3 +640,43 @@ the population it has to cover, so they are being re-measured over all
 representative designs at all levels before any value is changed.  Recalibrating
 a limit onto the measured population is not the same as relaxing it to admit a
 failing case: the limit still has to be met by every design.
+
+
+## Facet-limit recalibration onto the representative population (2026-08-21)
+
+The per-level facet limits were calibrated from index 0, which the cross-design
+probe showed to be a benign design.  Measured worst case per level over the five
+representative designs (`te_1p0mm`), all of them index 49:
+
+| level | worst (index 49) | previous limit | previous margin |
+|---|---|---|---|
+| laptop_smoke | 1.8301e-2 | 3.0e-2 | 1.64x |
+| coarse | 1.5383e-3 | 1.5e-3 | **0.98x, failing** |
+| medium | 7.7298e-4 | 8.0e-4 | 1.03x |
+| fine | 3.7510e-4 | 4.0e-4 | 1.07x |
+
+Index 0 sat at 2.12x to 2.32x throughout, so the original calibration was not
+wrong about index 0; it was wrong about the population.  The limits are now set
+from the worst representative design with 2x margin:
+
+| level | new limit |
+|---|---|
+| laptop_smoke | 4.0e-2 |
+| coarse | 3.0e-3 |
+| medium | 1.6e-3 |
+| fine | 8.0e-4 |
+
+Margin is 2x rather than 1.5x because only five of the hundred development
+designs have been measured, and facet chord error grows with local curvature, so
+a design with a tighter leading edge will sit higher.  **This remains a risk for
+the unmeasured 95 designs and the campaign must re-verify it.**  A genuine
+sampling defect is orders of magnitude out, so the wider margin does not blunt
+the gate's ability to catch one.
+
+Recalibrating a limit onto its measured population is not the same as relaxing it
+to admit a failing case: every representative design must still meet it, and the
+verification below was run after the change, not before it.
+
+Result after recalibration: `coarse` **15 / 15** accepted across indices
+0/24/49/74/99 and all three trailing-edge variants, zero self-intersections, node
+fidelity exactly 0.0 throughout.

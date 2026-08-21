@@ -514,3 +514,47 @@ maximum, justified by measurement; or (2) keep the maxima and treat the blunt
 trailing edge as requiring local core refinement so the tail disappears on its own.
 Option (2) is the scientifically stronger route if it works, because it removes the
 bad cells rather than reclassifying them, and it is testable.
+
+
+## Option 2 outcome: core gradation, not trailing-edge refinement (2026-08-21)
+
+The study owner chose option 2 -- remove the bad cells rather than reclassify
+them.  The first attempt refined the core along the trailing edge and changed
+nothing.  Localising the violating faces before designing further refinement
+showed the premise was wrong: only 0.9 percent of them were near the trailing
+edge (18 of 2 089 within 0.05 L), and their distance to the wall reached 4.4 L.
+They were in the near-to-far size transition, not at any geometric feature.
+
+Cause: the body Threshold ramped the near-body size to the far-field size over a
+`DistMax` fixed at six near-body lengths -- a 7x size change across roughly two
+or three cells, so neighbouring tetrahedra differed by most of the ratio in one
+step.  The ramp length is now derived from a declared per-cell growth ratio
+(`gmsh.core_size_field.max_growth_ratio`, 1.20) by summing the geometric cell
+sequence, and the same rule replaces the ad-hoc wake-box transition thickness.
+
+Measured at index 0, graded diagnostic resolution:
+
+| | before | after |
+|---|---|---|
+| tetrahedra | 921 739 | 1 351 156 |
+| violating adjacent-ratio faces | 2 089 of 1 833 637 | 1 246 of 2 692 249 |
+| violating fraction | 1.14e-3 | 4.63e-4 |
+| distance to wall, p95 | 4.396 L | 0.168 L |
+| skewness p99 | 0.775 | 0.723 |
+| non-orthogonality p99 | 60.8 deg | 56.3 deg |
+| tet minSICN violators | 17 of 921 739 | 12 of 1 351 156 |
+| prism minSJ violators | 0 | 0 |
+
+Every violator fraction improved by 1.4x to 2.5x, and the far-field transition
+defect is gone: all remaining violators sit in a thin band just outside the prism
+cap rather than spread through the domain.
+
+The trailing-edge refinement field is retained, tested and DISABLED, because
+measurement did not support it.  Its Distance field also required a densified
+centre-line, since 122 trailing-edge nodes over a 2.27 m span leave 18.6 mm gaps
+and points between samples fall outside the refinement radius, making the field
+silently inert -- a failure mode worth remembering for any future Distance field.
+
+Option 2 is therefore partly successful and not finished.  The remaining band at
+the prism-cap-to-core interface has not been diagnosed, and no gate has been
+relaxed.  The gates that still fail are the same maxima whose percentiles pass.

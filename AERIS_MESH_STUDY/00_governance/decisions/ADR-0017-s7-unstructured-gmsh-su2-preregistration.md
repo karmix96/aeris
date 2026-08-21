@@ -704,3 +704,93 @@ representative set, and nothing beyond it.  Specifically it does **not** establi
 volume-mesh quality at production resolution, any CFD result, or behaviour on the
 95 development designs that were not measured.  The facet limits are calibrated on
 five designs and the campaign must re-verify them on the rest.
+
+
+## Grid-family re-sizing and provisional fidelity limits (2026-08-21)
+
+### Volume behaviour across designs, first evidence beyond index 0
+
+The S6 ladder was narrow-and-deep before broad-and-cheap: a surface check on ten
+geometries, then *volume* on the same ten, then 100 geometries at smoke volume
+resolution, then production.  Surface-only on 100 was never a stage in S6, and it
+would be a weak gate for S7: the tip-cap sliver corrected earlier passed every
+surface gate and still produced inverted prisms and a Gmsh abort in the volume.
+
+The equivalent S7 rung was run through the real campaign runner: indices
+0/24/49/74/99 at `laptop_smoke`, all three mesher candidates, fifteen volume
+meshes.
+
+| measure | result |
+|---|---|
+| meshes generated | 15 / 15, no Gmsh failure |
+| prism wall coverage | 1.000000 in all 15 |
+| prism column continuity | 1.000000 in all 15 |
+| negative cells | 0 in all 15 |
+| trailing-edge prism minSJ | 0.330 to 0.389 |
+| tip prism minSJ | 0.368 to 0.491 |
+
+The volume stage is therefore robust across the design space, not only on index 0.
+
+### The family was never cost-validated, and it was ten times S6
+
+Estimated cells against S6 production (1 621 504 cells):
+
+| level | as preregistered | multiple of S6 |
+|---|---|---|
+| coarse | 16.2 M | 10.0x |
+| medium | 45.4 M | 28x |
+| fine | 126.7 M | 78x |
+
+A method comparison at that disparity measures grid size, not method, and `coarse`
+alone exceeded the declared 48 GiB production floor.  Every in-plane and core
+length is therefore multiplied by 2.0.  The first cell height, prism layer count
+and growth ratio are unchanged, so wall resolution and y+ are untouched:
+
+| level | est cells | multiple of S6 | ratio to previous level |
+|---|---|---|---|
+| coarse | 2.24 M | 1.4x | - |
+| medium | 6.15 M | 3.8x | 2.75x |
+| fine | 16.9 M | 10.4x | 2.75x |
+
+Level-to-level cell ratios of 2.75 remain well above the 1.35 minimum, and the
+family now brackets S6 production rather than dwarfing it.
+
+### Fidelity limits are PROVISIONAL, and that is the honest position
+
+Coarsening the family degrades planar-facet fidelity, measured not extrapolated
+(index 49, `coarse`): 1.538e-3 at scale 1.0, 3.034e-3 at 1.5, 5.175e-3 at 2.0,
+8.514e-3 at 2.5, against a 3.0e-3 limit.  The grid family and the facet limits are
+entangled: the family was expensive partly *because* the facet requirement was
+tight.
+
+Re-deriving the limits from the re-sized family gives, worst of the five
+representative designs with 2x margin: coarse 1.1e-2, medium 6.0e-3, fine 3.2e-3.
+As an internal check, `fine` at scale 2.0 measures 1.5383e-3, exactly the old
+`coarse` value, since it inherits the original coarse in-plane sizes.
+
+**These limits are derived from what the grid achieves, not from a required
+accuracy.**  Nobody has established how much planar-facet error moves CL, CD or
+CMy; the original 1.0e-4 was arbitrary.  A mesh-derived number must not be
+promoted into a scientific requirement, so:
+
+- the facet gate is explicitly a **regression guard** - it catches a sampling
+  defect, which is orders of magnitude out - and does **not** certify geometric
+  adequacy;
+- `campaign_readiness.geometric_fidelity_sensitivity_study_passed` is added and
+  set false.  It requires holding design and flow fixed, varying surface
+  resolution alone, and reporting dCL/dCD/dCMy against facet error.  Until it
+  passes, no accuracy claim may rest on this gate.
+
+Verification after the change, not before it: the surface stage accepts **45 / 45**
+over indices 0/24/49/74/99 x three trailing-edge variants x coarse/medium/fine,
+with zero self-intersections and node fidelity exactly 0.0 throughout.
+
+### Consequence for hardware
+
+A `coarse` volume run was attempted on the laptop and correctly refused by the
+resource preflight (`available_ram_below_production_floor`,
+`estimated_memory_exceeds_70_percent_available`).  The 48 GiB production floor was
+set for the original family; at 15.7 GB estimated for the re-sized `coarse` that
+floor is now likely over-conservative, but it is left unchanged because it is a
+safety limit and revisiting it is a separate decision.  No production-resolution
+volume mesh has been built.

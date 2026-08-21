@@ -89,37 +89,49 @@ grid_family:
   coupled_refinement_required: true
   monotonic_effective_counts_required: true
   minimum_cell_count_ratio_between_levels: 1.35
+  # Every in-plane length below is the preregistered 2026-08-21 value multiplied
+  # by 2.0.  The first cell height, prism layer count and growth ratio are
+  # UNCHANGED, so wall resolution and therefore y+ are unaffected; only in-plane
+  # and core spacing were coarsened.
+  #
+  # Reason: the original family was never cost-validated, and measured against S6
+  # production (1 621 504 cells) it was coarse 10.0x, medium 28x, fine 78x.  A
+  # comparison at that disparity is confounded by grid size rather than by method,
+  # and coarse alone exceeded the declared 48 GiB production floor.  At this scale
+  # the estimates are coarse 2.24 M (1.4x S6), medium 6.15 M, fine 16.9 M, which
+  # brackets S6 production and keeps level-to-level cell ratios near 2.75, well
+  # above the 1.35 minimum.  See the grid-family re-sizing amendment in ADR-0017.
   levels:
     coarse:
-      surface_edge_over_L: 0.0300
-      te_surface_edge_over_L: 0.0060
-      tip_surface_edge_over_L: 0.0120
+      surface_edge_over_L: 0.0600
+      te_surface_edge_over_L: 0.0120
+      tip_surface_edge_over_L: 0.0240
       first_cell_height_over_L: 7.20e-6
       prism_layers: 24
       prism_growth_ratio: 1.25
-      near_core_edge_over_L: 0.0500
-      far_core_edge_over_L: 0.3500
-      wake_edge_over_L: 0.0350
+      near_core_edge_over_L: 0.1000
+      far_core_edge_over_L: 0.7000
+      wake_edge_over_L: 0.0700
     medium:
-      surface_edge_over_L: 0.0212
-      te_surface_edge_over_L: 0.00424
-      tip_surface_edge_over_L: 0.00848
+      surface_edge_over_L: 0.0424
+      te_surface_edge_over_L: 0.00848
+      tip_surface_edge_over_L: 0.01696
       first_cell_height_over_L: 5.09e-6
       prism_layers: 32
       prism_growth_ratio: 1.20
-      near_core_edge_over_L: 0.0354
-      far_core_edge_over_L: 0.2475
-      wake_edge_over_L: 0.0247
+      near_core_edge_over_L: 0.0708
+      far_core_edge_over_L: 0.4950
+      wake_edge_over_L: 0.0494
     fine:
-      surface_edge_over_L: 0.0150
-      te_surface_edge_over_L: 0.0030
-      tip_surface_edge_over_L: 0.0060
+      surface_edge_over_L: 0.0300
+      te_surface_edge_over_L: 0.0060
+      tip_surface_edge_over_L: 0.0120
       first_cell_height_over_L: 3.60e-6
       prism_layers: 40
       prism_growth_ratio: 1.16
-      near_core_edge_over_L: 0.0250
-      far_core_edge_over_L: 0.1750
-      wake_edge_over_L: 0.0175
+      near_core_edge_over_L: 0.0500
+      far_core_edge_over_L: 0.3500
+      wake_edge_over_L: 0.0350
   representative_grid_cases: 5
   grid_convergence:
     force_fields: [cl, cd, cmy]
@@ -259,11 +271,25 @@ mesh_gates:
     # higher.  This remains a risk for the unmeasured 95 and the campaign must
     # re-verify.  A genuine sampling defect is orders of magnitude out, so the
     # wider margin does not blunt the gate.
+    #
+    # PROVISIONAL, PENDING AERODYNAMIC JUSTIFICATION.  These numbers are derived
+    # from what the grid family achieves, not from a required accuracy.  No one
+    # has established how much planar-facet error actually moves CL/CD/CMy, and
+    # the original 1.0e-4 was arbitrary.  A mesh-derived limit must not be
+    # promoted into a scientific requirement, so the geometric sensitivity study
+    # listed under campaign_readiness is a prerequisite for any accuracy claim
+    # that rests on this gate.  Until then the gate is a REGRESSION guard: it
+    # catches a sampling defect, which is orders of magnitude out, and it does
+    # not certify geometric adequacy.
+    #
+    # Values below are the worst of the five representative designs on the
+    # re-sized (x2.0) family, with 2x margin.  Worst measured, all at index 49:
+    #   coarse 5.1747e-3 | medium 2.8048e-3 | fine 1.5383e-3
     max_facet_centroid_over_local_chord:
       laptop_smoke: 4.0e-2
-      coarse: 3.0e-3
-      medium: 1.6e-3
-      fine: 8.0e-4
+      coarse: 1.1e-2
+      medium: 6.0e-3
+      fine: 3.2e-3
     su2_conversion_max_distance_over_L: 1.0e-12
     max_te_opening_relative_error: 0.05
     labels_exactly_match_required: true
@@ -439,6 +465,13 @@ campaign_readiness:
   restart_recovery_demonstrated: true
   automatic_mesh_recovery_demonstrated: true
   production_y_plus_passed: true
+  # The facet-fidelity limits are currently derived from what the grid family
+  # achieves rather than from a required accuracy.  Before any accuracy claim may
+  # rest on them, measure how planar-facet error actually moves the forces:
+  # hold the design and flow fixed, vary surface resolution alone, and report
+  # dCL/dCD/dCMy against facet error.  Until this passes, the facet gate is a
+  # regression guard only and geometric adequacy is UNPROVEN.
+  geometric_fidelity_sensitivity_study_passed: false
 
 review:
   command:

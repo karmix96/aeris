@@ -17,6 +17,36 @@
 
 These are software facts, not campaign results.
 
+## Lead session findings, 2026-08-21
+
+Real geometry and real volume meshes now exist for `lhs100_seed42` index 0.  Four
+source-surface/instrument defects and two mis-specified gates were corrected, and
+one causal claim was measured, then withdrawn.
+
+- [x] Tip cap: centre fan -> chordwise ladder -> planar Delaunay.  Self-intersections
+  24 -> 0; tip prism minSJ -4.471 -> +0.554; inverted cells 2 -> 0.
+- [x] Node vs facet fidelity separated; per-level facet limits calibrated.
+- [x] Self-intersection instrument distinguishes contact from interpenetration.
+- [x] Wake box size field graded with a transition thickness.
+- [x] Surface node distribution driven by the declared edge targets instead of
+  whatever a cosine produces at the chosen count.
+- [x] Mesh audit reports violating counts, not only extremes.
+- [x] WITHDRAWN: the "BL stack must fit inside the TE opening" law.  It was a
+  confound for the tip-cap slivers; the same geometry now meshes at 15.3x the
+  opening and the preregistered stacks are not condemned.
+
+Remaining, and the reason this is not finished:
+
+- [ ] Six gates still fail, all maxima whose p99 passes, driven by 17 bad tets of
+  921 739 at the blunt trailing edge.  Recorded in ADR-0017 as an open question
+  with two candidate resolutions; **no gate was relaxed**.
+- [ ] `wall_normal_first_cell_height` fails at ~0.5 against a 0.05 limit.  It is a
+  maximum over all columns, and normal extrusion at a sharp convex edge projects
+  onto a face normal by roughly cos(half-angle), so the metric may be measuring
+  geometry rather than a defect.  Not yet investigated.
+- [ ] Nothing above is production resolution.  `coarse` needs far more than the
+  9 GiB available on this laptop.
+
 ## Open numerical and operational gates
 
 - [ ] Run one real `lhs100_seed42` laptop diagnostic after the local execution

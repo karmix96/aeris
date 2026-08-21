@@ -132,3 +132,77 @@ code, passing tests, synthetic fixtures, plans, and failed execution approvals a
 not campaign results. A result is usable only with its evidence tier, current
 source/policy/software identities, immutable terminal manifests, verified hashes,
 and all applicable technical and governance gates.
+
+
+## Automating unstructured meshing for a fixed-topology design family (2026-08-22)
+
+### Why sliver tetrahedra survive next to the prism cap
+
+Slivers are the characteristic failure of 3-D Delaunay tetrahedralisation: four
+vertices near the equator of their circumsphere, almost zero volume, and a small
+radius-edge ratio, so the standard radius-edge quality criterion cannot even see
+them ([Labelle, Sliver Removal by Lattice Refinement](http://wismuth.com/papers/sliver.pdf);
+[Tournois et al., Perturbing Slivers in 3D Delaunay Meshes](https://www.researchgate.net/publication/40737375_Perturbing_Slivers_in_3D_Delaunay_Meshes)).
+The literature reports sliver-free results with dihedral angles bounded away from
+degeneracy **except near the boundary**, and that exception is precisely S7's
+situation: the prism cap is a hard constraint the core optimiser may not move, so
+a sliver touching it cannot be perturbed, exuded or swapped away.
+
+This matches what was measured here.  Netgen scoped to the core removes interior
+slivers readily (index 0 tet SICN minimum 0.029 to 0.146) but plateaus against
+the cap: index 49 improves 0.0404, 0.0430, 0.0443 for one, two and three passes
+and does not reach the 0.05 limit.  Only two cells of 918 670 are involved, both
+0.038 L from the wall, immediately above a 0.0287 L prism stack.  A recognised
+sliver-removal method is not missing; the elements are boundary-locked.
+
+Independent practitioner reports of Gmsh hybrid meshing describe the same
+behaviour, noting that the Delaunay algorithm tends to produce ill-shaped
+elements where a manually meshed region meets the unstructured fill, and
+recommending the mesh-quality plugin to locate them
+([Gmsh hybrid meshing discussion](https://www.cfd-online.com/Forums/openfoam-meshing/161688-gmsh-2d-airfoil-boundary-layer-hybrid-mesh.html);
+[NASA TM, Methods for Prismatic/Tetrahedral Grid Generation and Adaptation](https://ntrs.nasa.gov/api/citations/19960011648/downloads/19960011648.pdf)).
+The prism-for-boundary-layer, tetrahedra-for-freestream split S7 uses, built by
+normal extrusion with a prescribed growth to a y+ target, is the standard
+construction rather than an unusual one.
+
+### Distribution quality is resolution dependent, and that is not a defect
+
+Binary correctness - closure, manifoldness, orientation, labels, prism coverage
+and continuity, conversion fidelity, cell validity - is resolution independent.
+Face-quality *distributions* are not.  Measured on index 0 with everything else
+fixed: skewness p99 of 0.890, 0.872, 0.873 and 0.737 at 77 348, 136 167, 195 599
+and 1 207 177 cells, with non-orthogonality p99 of 75.3, 73.2, 73.5 and 57.7.
+
+A structured hexahedral mesh does not behave this way, which is why S6 could
+apply a single quality floor at smoke resolution and still pass 100 of 100.  For
+S7 the same policy would measure the tier rather than the method, so the
+distribution gates are enforced from the development and production tiers and
+reported below them.  The broad 100-design gate therefore tests what S6's smoke
+atlas actually tested: that meshing succeeds across the design space without
+manual repair.
+
+### Exploiting the fixed topology: morph rather than remesh
+
+Every AERIS BWB shares one parameterisation, so the design family has fixed
+topology.  The established way to exploit that is radial-basis-function mesh
+morphing: mesh once and deform the existing volume mesh to each new shape,
+preserving topology, avoiding remeshing noise, and costing a small fraction of a
+solve ([Biancolini et al., RBF morphing techniques for simulation-based design
+optimization](https://link.springer.com/article/10.1007/s00366-013-0330-1);
+[Automatic parametrization and mesh deformation for CFD optimization](https://arxiv.org/pdf/1311.6190)).
+
+S6 already works this way - its atlas deforms a template onto a target, measured
+at 1 621 504 cells with zero inverted cells - so the S7 analogue is direct and is
+the strongest available answer to generalisation:
+
+1. Freeze the surface sampling counts across the family so every design shares
+   one connectivity and node correspondence is exact and index-based, which is
+   stronger than the geometric correspondence generic RBF morphing must infer.
+2. Mesh a small number of template designs to full quality once.
+3. Deform a template's volume mesh onto each remaining design and audit the
+   result with the existing instruments, falling back to a full remesh when the
+   deformed mesh fails.
+
+The prerequisite is step 1: surface triangle counts currently vary per design
+(1 778, 1 646, 1 646, 1 778, 1 778 across the representative indices) because the
+sampling counts are derived from each design's own chord and span.

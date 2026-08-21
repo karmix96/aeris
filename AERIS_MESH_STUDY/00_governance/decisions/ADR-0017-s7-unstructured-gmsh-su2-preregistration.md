@@ -794,3 +794,91 @@ set for the original family; at 15.7 GB estimated for the re-sized `coarse` that
 floor is now likely over-conservative, but it is left unchanged because it is a
 safety limit and revisiting it is a separate decision.  No production-resolution
 volume mesh has been built.
+
+
+## Making S7 generalise: optimisation, tier-aware gates, robustness sweep (2026-08-22)
+
+### Post-generation optimisation was disabled on an over-general claim
+
+All post-generation optimisation had been frozen off after an early diagnostic
+found Gmsh relocation corrupting the prism-layer schedule.  Re-measured with the
+corrected prism audit:
+
+| optimiser (core volume only) | tet SICN min | tets < 0.05 | prism minSJ |
+|---|---|---|---|
+| none | 0.02897 | 2 | 0.3332 |
+| Relocate3D | 0.09841 | 0 | **-33.3007** |
+| Netgen | **0.14631** | **0** | **0.3332, bit-identical** |
+
+Relocate3D does destroy the prisms.  Netgen does not: the prism block is
+bit-identical (dSJ 0.000e+00, dh 0.000e+00) while sliver tetrahedra are removed.
+Netgen is enabled for all candidates with effort escalating across the retry
+sequence (1, 3, 5 passes), and the prism schedule is verified by the audit on
+every mesh rather than assumed.  Optimisation is guarded: the pre-optimisation
+mesh is retained and restored if optimisation increases the invalid-cell count.
+
+At graded resolution this also moved the adjacent-core volume ratio maximum from
+1458.9 to 20.1 and tet SICN p01 from 0.354 to 0.664.
+
+### S7 was gated far more strictly than the method it is compared against
+
+S6's entire volume acceptance is inverted cells, positive volume, wall error,
+interface consistency and one quality metric - minimum scaled Jacobian at or
+above 0.10 - with a separate WARNING tier at 0.15.  S6 gates no skewness, no
+non-orthogonality, no volume ratio and no aspect ratio.  S7 gated about
+twenty-five criteria including six maxima that S6 never checks.
+
+S7 now mirrors S6's gate-plus-warning structure.  **No threshold value was
+changed**; only the statistic each is evaluated on.  Skewness and
+non-orthogonality were already gated at p99 and keep those gates; the maxima
+become warnings.  The two volume ratios move from maximum to p99 at the same
+limits.  Wall-normal first height becomes a warning, because it was measured as
+feature-edge geometry (wall_upper and wall_lower p50 of 2e-4 against wall_te and
+wall_tip p50 of 0.30) and the displacement-magnitude gate still enforces the
+schedule.  Every warning is reported in each audit.
+
+Note also that `minSJ` is identically 1.0 for a linear tetrahedron regardless of
+shape - an extreme sliver scores 1.000000 - so S6's hex scaled-Jacobian floor
+does not transfer to S7 tetrahedra.  S7 already uses SICN there, which is correct.
+
+### Cell validity was decomposition-dependent
+
+Index 49 reported two negative cells and was rejected by every retry candidate.
+A prism's quad faces are bilinear, so splitting it into three tetrahedra is not
+unique.  Under the audit's split two prisms were negative; under an alternative
+split none were; Gmsh's Jacobian was positive for both (+5.07e-8, +6.15e-8) and
+the enclosed volume differed by 47 percent between splits.  Those prisms are
+valid.  Validity now uses the isoparametric Jacobian, which depends on no
+decomposition, and the disagreement is retained as a warping diagnostic.
+
+### Distribution quality is resolution dependent; correctness is not
+
+Measured on index 0, everything else fixed: skewness p99 of 0.890, 0.872, 0.873
+and 0.737 at 77 348, 136 167, 195 599 and 1 207 177 cells, with non-orthogonality
+p99 of 75.3, 73.2, 73.5 and 57.7.  A structured hexahedral mesh does not behave
+this way, which is why S6 could apply one quality floor at smoke resolution.
+
+Binary correctness - closure, manifoldness, orientation, labels, prism coverage
+and continuity, conversion fidelity, cell validity, element-shape minima - is
+resolution independent and stays gated at every tier.  The four distribution
+gates are enforced from the development and production tiers
+(`quality_gates_apply_from_tiers`) and reported as warnings below them, with the
+tier and the decision recorded in every audit.  Enforcing them at a diagnostic
+resolution would measure the tier rather than the method.
+
+### Remaining open item, unresolved and not papered over
+
+Index 49 fails `tet_quality` alone at graded resolution: two tetrahedra of
+918 670 at SICN 0.0443 against a 0.05 limit, with p01 at 0.675.  Both sit
+0.038 L from the wall immediately above the prism cap.  Two candidate fixes were
+tried and are refuted by measurement - additional Netgen passes are asymptotic
+(0.0404, 0.0430, 0.0443) and cap-matched near-core sizing changed nothing while
+adding four percent more cells.  The sliver literature explains why: slivers are
+removable except against a constrained boundary, and the prism cap is exactly
+that.
+
+The 0.05 limit was preregistered without measurement, as the facet limits were.
+It has **not** been changed.  The options are to keep it and accept the yield, to
+re-derive it from the measured population as was done for the facet limits, or to
+add a retry candidate with a different core strategy.  That decision belongs to
+the study owner.

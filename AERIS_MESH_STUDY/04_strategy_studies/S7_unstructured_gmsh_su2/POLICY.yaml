@@ -238,6 +238,12 @@ gmsh:
     max_total_thickness_over_te_opening: 1.0
     min_prism_layers: 8
 
+  # Optimizer effort ESCALATES across the retry sequence rather than being paid
+  # on every mesh.  Netgen passes show diminishing returns (index 49 tet SICN
+  # minimum 0.0404 at one pass, 0.0430 at two) and each pass is expensive, so
+  # easy designs stay cheap and only hard ones earn more work.  This mirrors S6,
+  # where 80 of 100 geometries passed first try and none needed more than five
+  # attempts.
   retries:
     - id: fixed_wall__frontal_delaunay_outer__delaunay_core
       generated_surface_algorithm: 6
@@ -248,12 +254,12 @@ gmsh:
       generated_surface_algorithm: 5
       volume_algorithm: 10
       optimize: Netgen
-      optimize_passes: 1
+      optimize_passes: 3
     - id: fixed_wall__meshadapt_outer__delaunay_core
       generated_surface_algorithm: 1
       volume_algorithm: 1
       optimize: Netgen
-      optimize_passes: 1
+      optimize_passes: 5
   first_passing_attempt_wins: true
   preserve_every_attempt: true
   mutation_between_attempts_forbidden:

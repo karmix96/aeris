@@ -545,14 +545,24 @@ def generate_mesh(
         gmsh_policy = policy["gmsh"]
         optimization_policy = str(gmsh_policy["post_generation_optimization"])
         optimize_passes = int(candidate["optimize_passes"])
-        if optimization_policy != "disabled_preserve_prism_schedule":
+        supported_optimization = {
+            # Nothing runs after generation; the prism schedule is trivially safe.
+            "disabled_preserve_prism_schedule",
+            # Optimizers run against the tetrahedral core volume only.  The prism
+            # schedule must still be verified by the audit, never assumed.
+            "core_volume_only",
+        }
+        if optimization_policy not in supported_optimization:
             raise ValueError(
                 f"unsupported S7 post-generation optimization policy: {optimization_policy!r}"
             )
-        if optimize_passes != 0:
+        if (
+            optimization_policy == "disabled_preserve_prism_schedule"
+            and optimize_passes != 0
+        ):
             raise ValueError(
-                "post-generation optimization is frozen off because Gmsh "
-                "relocation changes the prescribed prism-layer schedule"
+                "post-generation optimization is disabled by policy; a candidate "
+                "may not request optimization passes under it"
             )
         L = float(spec["characteristic_length_m"])
         gmsh.option.setNumber(
@@ -645,13 +655,21 @@ def generate_mesh(
         )
         gmsh.option.setNumber("Mesh.MeshSizeMax", float(absolute["far_core_edge_m"]))
         gmsh.model.mesh.generate(3)
+        # Scope every optimizer to the core volume so the boundary-layer prisms
+        # are never handed to a node-relocation pass.  Whether that is sufficient
+        # is a measurement, made by the prism audit, not an assumption.
+        optimize_targets = (
+            [(3, int(core_volume))]
+            if optimization_policy == "core_volume_only"
+            else []
+        )
         for _ in range(optimize_passes):
             # Global relocation is forbidden: it can move intermediate prism
             # nodes while leaving the wall and outer prism surface fixed,
             # destroying the prescribed first height and growth schedule.
             gmsh.model.mesh.optimize(
                 str(candidate["optimize"]),
-                dimTags=[(3, int(core_volume))],
+                dimTags=optimize_targets,
             )
 
         gmsh.write(str(msh_path))

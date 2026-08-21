@@ -144,17 +144,30 @@ grid_family:
       cmy: 3.0
 
 laptop_smoke:
+  # A REDUCED tier, not a degenerate one.  The original values (surface 0.18,
+  # 3 prism layers, near 0.22, far 0.75) could not satisfy the distribution
+  # quality gates at any setting: measured skewness p99 0.868 to 0.902 and
+  # non-orthogonality p99 73.3 to 77.3 across five retunings, because a mesh that
+  # cheap has too few cells for the outer field to grade smoothly.  Refining the
+  # surface made it worse, and the far/near ratio was ruled out by measurement.
+  #
+  # These values are the configuration that was actually verified to pass every
+  # gate on real geometry (skewness p99 0.737, non-orthogonality p99 57.7,
+  # adjacent-core volume ratio p99 1.81, tet SICN minimum 0.0863).  It costs about
+  # 1.2 M cells and roughly 40 s per case, which a 16 GiB laptop can carry for a
+  # handful of cases but not for a hundred: the 100-design broad gate belongs on
+  # the desktop at `coarse`.
   evidence_tier: laptop_smoke
   campaign_claims_forbidden: true
-  surface_edge_over_L: 0.18
-  te_surface_edge_over_L: 0.08
-  tip_surface_edge_over_L: 0.10
-  first_cell_height_over_L: 0.003
-  prism_layers: 3
-  prism_growth_ratio: 1.30
-  near_core_edge_over_L: 0.22
-  far_core_edge_over_L: 0.75
-  wake_edge_over_L: 0.20
+  surface_edge_over_L: 0.080
+  te_surface_edge_over_L: 0.020
+  tip_surface_edge_over_L: 0.030
+  first_cell_height_over_L: 1.0e-3
+  prism_layers: 8
+  prism_growth_ratio: 1.35
+  near_core_edge_over_L: 0.133
+  far_core_edge_over_L: 0.280
+  wake_edge_over_L: 0.050
   farfield:
     upstream_over_L: 3.0
     downstream_over_L: 5.0
@@ -173,7 +186,15 @@ gmsh:
   msh_version: '4.1'
   binary_mesh: false
   save_all: false
-  post_generation_optimization: disabled_preserve_prism_schedule
+  # Optimizers run against the tetrahedral CORE VOLUME only, never the prisms.
+  # An earlier diagnostic disabled all post-generation optimization after finding
+  # that Gmsh relocation corrupted the prism-layer schedule.  Re-measured with the
+  # corrected prism audit, that holds for Relocate3D (prism minSJ 0.3332 -> -33.3,
+  # first-layer height ruined) but NOT for Netgen, which leaves the prism block
+  # bit-identical (dSJ 0.000e+00, dh 0.000e+00) while removing sliver tetrahedra:
+  # tet SICN minimum 0.02897 -> 0.14631 and cells below 0.05 from 2 to 0.
+  # The prism schedule is verified by the audit on every mesh, never assumed.
+  post_generation_optimization: core_volume_only
   # Size-field gradation.  A Threshold ramp is only as good as the distance it is
   # given: ramping the near-body size to the far-field size over a distance of a
   # few cells forces neighbouring tetrahedra to differ by the whole size ratio in
@@ -221,18 +242,18 @@ gmsh:
     - id: fixed_wall__frontal_delaunay_outer__delaunay_core
       generated_surface_algorithm: 6
       volume_algorithm: 1
-      optimize: Relocate3D
-      optimize_passes: 0
+      optimize: Netgen
+      optimize_passes: 1
     - id: fixed_wall__delaunay_outer__hxt_core
       generated_surface_algorithm: 5
       volume_algorithm: 10
-      optimize: Relocate3D
-      optimize_passes: 0
+      optimize: Netgen
+      optimize_passes: 1
     - id: fixed_wall__meshadapt_outer__delaunay_core
       generated_surface_algorithm: 1
       volume_algorithm: 1
       optimize: Netgen
-      optimize_passes: 0
+      optimize_passes: 1
   first_passing_attempt_wins: true
   preserve_every_attempt: true
   mutation_between_attempts_forbidden:
@@ -286,7 +307,7 @@ mesh_gates:
     # re-sized (x2.0) family, with 2x margin.  Worst measured, all at index 49:
     #   coarse 5.1747e-3 | medium 2.8048e-3 | fine 1.5383e-3
     max_facet_centroid_over_local_chord:
-      laptop_smoke: 4.0e-2
+      laptop_smoke: 1.2e-2
       coarse: 1.1e-2
       medium: 6.0e-3
       fine: 3.2e-3

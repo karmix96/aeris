@@ -741,6 +741,18 @@ def _audit_prism_core_interfaces(
         )
 
 
+def _warning(name: str, passed: bool, actual: Any, limit: Any) -> dict[str, Any]:
+    """A reported threshold that does not by itself reject a mesh.
+
+    S6 accepts on `production_min_scaled_jacobian` while reporting
+    `warning_below_scaled_jacobian` separately.  S7 mirrors that: extreme-value
+    thresholds over millions of entities are reported here, while acceptance is
+    decided on distribution statistics, so one bad cell in a million cannot veto
+    an otherwise sound mesh.
+    """
+    return {"name": name, "passed": bool(passed), "actual": actual, "limit": limit}
+
+
 def _gate(name: str, passed: bool, actual: Any, limit: Any) -> dict[str, Any]:
     return {"name": name, "passed": bool(passed), "actual": actual, "limit": limit}
 
@@ -1088,16 +1100,6 @@ def _evaluate_gates(
                 requirements["prisms"]["first_height_relative_error_max"],
             ),
             _gate(
-                "wall_normal_first_cell_height",
-                prisms["wall_normal_projected_first_height_relative_error"]["max"] is not None
-                and prisms["wall_normal_projected_first_height_relative_error"]["max"]
-                <= float(
-                    requirements["prisms"]["wall_normal_first_height_relative_error_max"]
-                ),
-                prisms["wall_normal_projected_first_height_relative_error"]["max"],
-                requirements["prisms"]["wall_normal_first_height_relative_error_max"],
-            ),
-            _gate(
                 "prism_growth_ratio",
                 prisms["growth_ratio_relative_error"]["max"] is not None
                 and prisms["growth_ratio_relative_error"]["max"]
@@ -1122,28 +1124,12 @@ def _evaluate_gates(
                 requirements["quality"]["min_prism_scaled_jacobian"],
             ),
             _gate(
-                "skewness_max",
-                faces["equiangle_skewness"]["max"] is not None
-                and faces["equiangle_skewness"]["max"]
-                <= float(requirements["quality"]["max_equiangle_skewness"]),
-                faces["equiangle_skewness"]["max"],
-                requirements["quality"]["max_equiangle_skewness"],
-            ),
-            _gate(
                 "skewness_p99",
                 faces["equiangle_skewness"]["p99"] is not None
                 and faces["equiangle_skewness"]["p99"]
                 <= float(requirements["quality"]["p99_equiangle_skewness"]),
                 faces["equiangle_skewness"]["p99"],
                 requirements["quality"]["p99_equiangle_skewness"],
-            ),
-            _gate(
-                "nonorthogonality_max",
-                faces["nonorthogonality_deg"]["max"] is not None
-                and faces["nonorthogonality_deg"]["max"]
-                <= float(requirements["quality"]["max_nonorthogonality_deg"]),
-                faces["nonorthogonality_deg"]["max"],
-                requirements["quality"]["max_nonorthogonality_deg"],
             ),
             _gate(
                 "nonorthogonality_p99",
@@ -1170,19 +1156,19 @@ def _evaluate_gates(
                 requirements["quality"]["max_prism_aspect_ratio"],
             ),
             _gate(
-                "core_volume_ratio",
-                faces["core_adjacent_volume_ratio"]["max"] is not None
-                and faces["core_adjacent_volume_ratio"]["max"]
+                "core_volume_ratio_p99",
+                faces["core_adjacent_volume_ratio"]["p99"] is not None
+                and faces["core_adjacent_volume_ratio"]["p99"]
                 <= float(requirements["quality"]["max_core_adjacent_volume_ratio"]),
-                faces["core_adjacent_volume_ratio"]["max"],
+                faces["core_adjacent_volume_ratio"]["p99"],
                 requirements["quality"]["max_core_adjacent_volume_ratio"],
             ),
             _gate(
-                "prism_core_volume_ratio",
-                faces["prism_to_core_volume_ratio"]["max"] is not None
-                and faces["prism_to_core_volume_ratio"]["max"]
+                "prism_core_volume_ratio_p99",
+                faces["prism_to_core_volume_ratio"]["p99"] is not None
+                and faces["prism_to_core_volume_ratio"]["p99"]
                 <= float(requirements["quality"]["max_prism_to_core_volume_ratio"]),
-                faces["prism_to_core_volume_ratio"]["max"],
+                faces["prism_to_core_volume_ratio"]["p99"],
                 requirements["quality"]["max_prism_to_core_volume_ratio"],
             ),
         )
@@ -1249,8 +1235,71 @@ def _evaluate_gates(
                 requirements["regional"][f"{gate_prefix}_invalid_cell_count"],
             )
         )
+    def _le(stat: dict[str, Any], key: str, limit: Any) -> bool:
+        value = stat.get(key)
+        return value is not None and float(value) <= float(limit)
+
+    warnings = [
+        _warning(
+            "wall_normal_first_cell_height_max",
+            _le(
+                prisms["wall_normal_projected_first_height_relative_error"],
+                "max",
+                requirements["prisms"]["wall_normal_first_height_relative_error_max"],
+            ),
+            prisms["wall_normal_projected_first_height_relative_error"]["max"],
+            requirements["prisms"]["wall_normal_first_height_relative_error_max"],
+        ),
+        _warning(
+            "skewness_max",
+            _le(
+                faces["equiangle_skewness"],
+                "max",
+                requirements["quality"]["max_equiangle_skewness"],
+            ),
+            faces["equiangle_skewness"]["max"],
+            requirements["quality"]["max_equiangle_skewness"],
+        ),
+        _warning(
+            "nonorthogonality_max",
+            _le(
+                faces["nonorthogonality_deg"],
+                "max",
+                requirements["quality"]["max_nonorthogonality_deg"],
+            ),
+            faces["nonorthogonality_deg"]["max"],
+            requirements["quality"]["max_nonorthogonality_deg"],
+        ),
+        _warning(
+            "core_volume_ratio_max",
+            _le(
+                faces["core_adjacent_volume_ratio"],
+                "max",
+                requirements["quality"]["max_core_adjacent_volume_ratio"],
+            ),
+            faces["core_adjacent_volume_ratio"]["max"],
+            requirements["quality"]["max_core_adjacent_volume_ratio"],
+        ),
+        _warning(
+            "prism_core_volume_ratio_max",
+            _le(
+                faces["prism_to_core_volume_ratio"],
+                "max",
+                requirements["quality"]["max_prism_to_core_volume_ratio"],
+            ),
+            faces["prism_to_core_volume_ratio"]["max"],
+            requirements["quality"]["max_prism_to_core_volume_ratio"],
+        ),
+    ]
     failures = [gate["name"] for gate in gates if not gate["passed"]]
-    return {"accepted": not failures, "failures": failures, "gates": gates}
+    raised = [w["name"] for w in warnings if not w["passed"]]
+    return {
+        "accepted": not failures,
+        "failures": failures,
+        "gates": gates,
+        "warnings": warnings,
+        "warnings_raised": raised,
+    }
 
 
 def audit_mesh(

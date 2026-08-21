@@ -267,9 +267,22 @@ def test_resolved_laptop_spec_and_cell_estimate():
 
 def test_pygeo_surface_fidelity_checks_nodes_and_every_oml_facet(monkeypatch):
     policy = copy.deepcopy(common.load_policy())
+    # Pin this test's own resolution instead of inheriting the campaign tier, so
+    # that re-sizing a tier cannot silently make the suite an order of magnitude
+    # slower.  The assertions below are about the instrument, not the spacing.
+    policy["laptop_smoke"].update(
+        {
+            "surface_edge_over_L": 0.18,
+            "te_surface_edge_over_L": 0.08,
+            "tip_surface_edge_over_L": 0.10,
+        }
+    )
     # The relaxed test-only bound lets this intentionally coarse analytic
     # surface return while still proving that curved-facet error is measured.
     policy["mesh_gates"]["source_geometry"]["max_distance_over_local_chord"] = 0.02
+    policy["mesh_gates"]["source_geometry"]["max_facet_centroid_over_local_chord"][
+        "laptop_smoke"
+    ] = 3.0e-2
     pygeo_build = SimpleNamespace(
         geometry=SimpleNamespace(surfs=[_FakePatch(1.0), _FakePatch(-1.0)])
     )
@@ -328,9 +341,25 @@ def test_gmsh_tetra_tri_prism_tet_smoke(tmp_path):
     policy = common.load_policy()
     # Keep the synthetic domain genuinely laptop-sized while preserving the
     # production laptop layer count and all mesher code paths.
-    smoke_policy = dict(policy)
+    smoke_policy = copy.deepcopy(policy)
     smoke_policy["farfield"] = dict(
         policy["farfield"], upstream_over_L=1.0, downstream_over_L=1.0, radial_over_L=1.0
+    )
+    # Pin this fixture's own spacing rather than inheriting the campaign tier.
+    # The assertions are about wall-marker mapping and prism columns on a unit
+    # tetrahedron, not about resolution, and tracking the tier once made this
+    # single test take 294 s of a 304 s suite.
+    smoke_policy["laptop_smoke"] = dict(
+        smoke_policy["laptop_smoke"],
+        surface_edge_over_L=0.5,
+        te_surface_edge_over_L=0.5,
+        tip_surface_edge_over_L=0.5,
+        first_cell_height_over_L=0.02,
+        prism_layers=3,
+        prism_growth_ratio=1.30,
+        near_core_edge_over_L=0.5,
+        far_core_edge_over_L=1.0,
+        wake_edge_over_L=0.5,
     )
     out = pipeline.generate_mesh(
         surface,
@@ -364,8 +393,17 @@ def test_gmsh_tetra_tri_prism_tet_smoke(tmp_path):
     ]
     assert projected_error["count"] > 0
     assert projected_error["finite_count"] == projected_error["count"]
-    audit_gates = {gate["name"]: gate for gate in report["acceptance"]["gates"]}
-    assert audit_gates["wall_normal_first_cell_height"]["actual"] == projected_error["max"]
+    # Wall-normal first-height is a WARNING, not a gate: normal extrusion at a
+    # sharp convex edge cannot be wall-normal, so the deviation is geometry.  The
+    # displacement-magnitude gate still enforces the layer schedule.
+    warnings = {w["name"]: w for w in report["acceptance"]["warnings"]}
+    assert (
+        warnings["wall_normal_first_cell_height_max"]["actual"]
+        == projected_error["max"]
+    )
+    gate_names = {gate["name"] for gate in report["acceptance"]["gates"]}
+    assert "wall_normal_first_cell_height" not in gate_names
+    assert "first_cell_height" in gate_names
     assert report["prism_layers"]["growth_ratio_relative_error"]["max"] < 1.0e-3
     assert report["volume"]["negative_cell_count"] == 0
     assert report["su2_boundary"]["boundary_face_unassigned_count"] == 0

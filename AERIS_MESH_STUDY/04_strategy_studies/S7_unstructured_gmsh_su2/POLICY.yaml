@@ -162,6 +162,21 @@ gmsh:
   binary_mesh: false
   save_all: false
   post_generation_optimization: disabled_preserve_prism_schedule
+  # Available, tested safeguard against prism fronts colliding across a thin
+  # numerical trailing edge, since Gmsh's extrudeBoundaryLayer performs no
+  # collision detection and no layer squeezing.  It is DISABLED because no such
+  # collision is currently established: the PLC failures first attributed to it
+  # were caused by a degenerate tip-cap triangulation, and once the cap is
+  # Delaunay-triangulated the same geometry meshes at 15.3x the trailing-edge
+  # opening.  See the 2026-08-21 boundary-layer investigation in ADR-0017.
+  # When enabled this reduces only the layer COUNT; the first cell height (which
+  # sets y+) and the growth ratio are preserved exactly, and a stack that cannot
+  # fit even at the floor fails closed.
+  boundary_layer:
+    derive_prism_layers_from_te_opening: false
+    max_total_thickness_over_te_opening: 1.0
+    min_prism_layers: 8
+
   retries:
     - id: fixed_wall__frontal_delaunay_outer__delaunay_core
       generated_surface_algorithm: 6

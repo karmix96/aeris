@@ -64,9 +64,41 @@ def resolved_mesh_spec(
         "wake_edge_over_L",
     )
     absolute = {key.removesuffix("_over_L") + "_m": float(raw[key]) * L for key in keys}
-    heights = cumulative_layer_heights(
-        absolute["first_cell_height_m"], int(raw["prism_layers"]), float(raw["prism_growth_ratio"])
-    )
+    requested_layers = int(raw["prism_layers"])
+    growth = float(raw["prism_growth_ratio"])
+    first_height = absolute["first_cell_height_m"]
+    bl_policy = policy["gmsh"]["boundary_layer"]
+    te_opening_m = surface.metadata.get("fidelity", {}).get("min_realized_te_opening_m")
+    applied_layers = requested_layers
+    limit_m: float | None = None
+    if bool(bl_policy["derive_prism_layers_from_te_opening"]):
+        if (
+            te_opening_m is None
+            or not np.isfinite(float(te_opening_m))
+            or float(te_opening_m) <= 0.0
+        ):
+            raise ValueError(
+                "cannot derive prism layers: the source surface reports no finite "
+                "minimum realized trailing-edge opening"
+            )
+        limit_m = float(bl_policy["max_total_thickness_over_te_opening"]) * float(te_opening_m)
+        minimum_layers = int(bl_policy["min_prism_layers"])
+        while (
+            applied_layers > minimum_layers
+            and cumulative_layer_heights(first_height, applied_layers, growth)[-1] > limit_m
+        ):
+            applied_layers -= 1
+    heights = cumulative_layer_heights(first_height, applied_layers, growth)
+    if limit_m is not None and heights[-1] > limit_m:
+        # Fail closed: the floor on layer count cannot be met inside the opening.
+        raise ValueError(
+            f"boundary layer of {heights[-1]:.6e} m at the {bl_policy['min_prism_layers']}-layer "
+            f"floor exceeds the {limit_m:.6e} m trailing-edge budget; a blunter TE variant or a "
+            "smaller first cell height is required"
+        )
+    # The applied count is authoritative for every downstream consumer.
+    raw = dict(raw)
+    raw["prism_layers"] = applied_layers
     farfield = dict(policy["farfield"])
     if level == "laptop_smoke":
         farfield.update(dict(policy["laptop_smoke"]["farfield"]))
@@ -78,6 +110,15 @@ def resolved_mesh_spec(
         "absolute": absolute,
         "boundary_layer_cumulative_heights_m": heights,
         "boundary_layer_total_thickness_m": heights[-1],
+        "boundary_layer": {
+            "requested_prism_layers": requested_layers,
+            "applied_prism_layers": applied_layers,
+            "layers_removed_for_te_budget": requested_layers - applied_layers,
+            "min_realized_te_opening_m": te_opening_m,
+            "max_total_thickness_m": limit_m,
+            "first_cell_height_m": first_height,
+            "growth_ratio": growth,
+        },
         "farfield": farfield,
         "candidate_index": int(candidate_index),
         "candidate": candidate,

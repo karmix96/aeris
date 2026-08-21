@@ -60,7 +60,14 @@ def _tetra_surface() -> geometry.SurfaceMesh:
         triangles,
         ("wall_upper", "wall_lower", "wall_te", "wall_tip"),
         np.zeros(4),
-        {"reference_values": {"mean_aerodynamic_chord_m": 1.0}},
+        {
+            "reference_values": {"mean_aerodynamic_chord_m": 1.0},
+            # Any surface entering the pipeline must declare the trailing-edge
+            # opening that bounds how far prisms may be extruded.  This synthetic
+            # body is unit sized, so a generous opening keeps the fixture's
+            # 3-layer stack inside the budget.
+            "fidelity": {"min_realized_te_opening_m": 1.0},
+        },
     )
 
 
@@ -129,6 +136,70 @@ def test_self_intersection_report_counts_coplanar_overlapping_triangles():
         points, np.array([[0, 1, 2], [3, 4, 5]]), tolerance=1.0e-12
     )
     assert report["self_intersection_count"] == 1
+
+
+def test_prism_layers_are_derived_from_the_trailing_edge_budget():
+    """The TE-budget safeguard, which is disabled by default.
+
+    No trailing-edge collision is currently established -- the PLC failures once
+    attributed to one were a degenerate tip cap -- so the derivation is inert in
+    POLICY.  This test enables it explicitly to keep the mechanism verified in
+    case a future measurement justifies switching it on.  The first cell height
+    sets y+ and the growth ratio sets stretching; both are preserved exactly.
+    Only the layer COUNT is reduced, and only to the declared floor, below which
+    the build fails closed.
+    """
+    surface = _tetra_surface()
+    policy = copy.deepcopy(common.load_policy())
+    policy["laptop_smoke"] = {
+        "evidence_tier": "laptop_smoke",
+        "surface_edge_over_L": 0.5,
+        "te_surface_edge_over_L": 0.5,
+        "tip_surface_edge_over_L": 0.5,
+        "first_cell_height_over_L": 0.01,
+        "prism_layers": 20,
+        "prism_growth_ratio": 1.3,
+        "near_core_edge_over_L": 0.5,
+        "far_core_edge_over_L": 1.0,
+        "wake_edge_over_L": 0.5,
+        "farfield": policy["farfield"],
+    }
+    policy["gmsh"]["boundary_layer"]["derive_prism_layers_from_te_opening"] = True
+    policy["gmsh"]["boundary_layer"]["min_prism_layers"] = 2
+    # A 0.10 m opening cannot carry all 20 layers of a 0.01 m / 1.3 stack.
+    surface.metadata["fidelity"] = {"min_realized_te_opening_m": 0.10}
+    spec = pipeline.resolved_mesh_spec(
+        surface, level="laptop_smoke", candidate_index=0, policy=policy
+    )
+    bl = spec["boundary_layer"]
+    assert bl["requested_prism_layers"] == 20
+    assert bl["applied_prism_layers"] < 20
+    assert spec["relative"]["prism_layers"] == bl["applied_prism_layers"]
+    assert spec["boundary_layer_total_thickness_m"] <= 0.10
+    # first height and growth ratio are untouched
+    assert spec["absolute"]["first_cell_height_m"] == pytest.approx(0.01)
+    assert spec["relative"]["prism_growth_ratio"] == pytest.approx(1.3)
+
+    # A generous opening keeps every requested layer.
+    surface.metadata["fidelity"] = {"min_realized_te_opening_m": 1.0e3}
+    roomy = pipeline.resolved_mesh_spec(
+        surface, level="laptop_smoke", candidate_index=0, policy=policy
+    )
+    assert roomy["boundary_layer"]["applied_prism_layers"] == 20
+
+    # Too tight even at the floor must fail closed, never silently continue.
+    surface.metadata["fidelity"] = {"min_realized_te_opening_m": 1.0e-6}
+    with pytest.raises(ValueError, match="trailing-edge budget"):
+        pipeline.resolved_mesh_spec(
+            surface, level="laptop_smoke", candidate_index=0, policy=policy
+        )
+
+    # A surface that declares no opening at all must also fail closed.
+    surface.metadata["fidelity"] = {}
+    with pytest.raises(ValueError, match="minimum realized trailing-edge"):
+        pipeline.resolved_mesh_spec(
+            surface, level="laptop_smoke", candidate_index=0, policy=policy
+        )
 
 
 def test_one_sided_vertex_contact_is_not_an_interpenetration():

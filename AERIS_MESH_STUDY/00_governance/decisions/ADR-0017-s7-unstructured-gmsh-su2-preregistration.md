@@ -353,3 +353,77 @@ This is a correction of a mis-specified gate, made before any result existed and
 justified by measurement, not a weakening to admit a failing case.  Every other
 threshold in `POLICY.yaml` is unchanged.  S7 remains
 `preregistered_development_no_results`, and the hold-out remains forbidden.
+
+
+## Boundary-layer / trailing-edge investigation (2026-08-21, still pre-result)
+
+### What was first concluded, and why it was wrong
+
+Gmsh core meshing aborted with a PLC segment/facet error on the real index-0
+geometry.  A sweep holding everything else fixed produced an apparently clean law:
+
+| BL total thickness | multiple of 1.0 mm TE | Gmsh (fan/ladder tip cap) |
+|---|---|---|
+| 15.335 mm | 15.3x | PLC error |
+| 3.829 mm | 3.8x | PLC error |
+| 1.276 mm | 1.3x | completes |
+| 0.531 mm | 0.5x | completes |
+
+That was read as prism fronts colliding across the thin trailing edge, since
+`geo.extrudeBoundaryLayer` performs no collision detection or layer squeezing.  On
+that reading the preregistered levels were all condemned, at 3.2x, 4.6x and 4.5x
+the trailing-edge opening.
+
+**The reading was a confound and is withdrawn.**  The actual cause was a
+degenerate tip-cap triangulation.  The chordwise ladder inherited the wall's
+chordwise node distribution; near the trailing edge of the tip section that
+spacing is about 0.48 mm against a 0.95 mm opening, forcing three nearly collinear
+boundary nodes into one triangle with a 1.516 degree minimum angle.  Extruding a
+sliver produced inverted prisms and a self-intersecting boundary, which is what
+Gmsh reported.  A thinner stack merely scaled the defect below Gmsh's tolerance,
+which is why thickness appeared to be the governing variable.
+
+### What is actually established
+
+With the tip cap triangulated by planar Delaunay (below), the identical sweep
+completes at every thickness tested, including 15.335 mm at 15.3x the
+trailing-edge opening:
+
+| BL total thickness | multiple of TE opening | Gmsh (Delaunay tip cap) |
+|---|---|---|
+| 15.335 mm | 15.3x | completes (924 069 tet, 49 744 prism) |
+| 3.829 mm | 3.8x | completes (924 733 tet, 49 744 prism) |
+| 1.276 mm | 1.3x | completes (924 165 tet, 49 744 prism) |
+
+No trailing-edge thickness budget is therefore established, and none is imposed.
+The preregistered `coarse`, `medium` and `fine` stacks are **not** condemned.
+
+`gmsh.boundary_layer` remains in `POLICY.yaml` as an available, tested safeguard
+with `derive_prism_layers_from_te_opening: false`, so the derivation is inert
+unless a future measured collision justifies enabling it.  When enabled it reduces
+only the layer count, never the first cell height or growth ratio, and fails
+closed if the declared floor cannot fit.
+
+The general caution stands and is unchanged: Gmsh supplies no corner fans, no
+re-entrant treatment and no layer collision handling, so trailing-edge and tip
+behaviour remain hard-gated qualification criteria rather than assumptions.
+
+## Tip cap triangulation amendment (2026-08-21, still pre-result)
+
+The chordwise ladder that replaced the centre fan inherits the wall's chordwise
+node distribution, which near the tip trailing edge is finer than the local
+thickness.  Measured at index 0: a tip-cap triangle with a 1.516 degree minimum
+angle, whose extrusion produced two inverted prisms (minimum scaled Jacobian
+-0.80).  Those inversions persisted at half the trailing-edge opening, proving the
+defect was the triangulation and not the stack height.
+
+The tip section is planar to 7e-16 m, so the cap is now triangulated by planar
+Delaunay over the same perimeter nodes, maximising the minimum angle instead of
+following a fixed pattern.  Conformity is verified rather than assumed: every
+perimeter edge must be owned by exactly one kept triangle and no triangle may be
+degenerate, otherwise the routine returns nothing and the conformal ladder is used
+as a fallback.  Measured effect at index 0: tip-cap minimum angle 1.516 -> 7.209
+degrees, and the previously failing thick stacks now mesh.
+
+No gate moved.  The wall_tip prism coverage, continuity, quality and
+core-interface requirements are unchanged.

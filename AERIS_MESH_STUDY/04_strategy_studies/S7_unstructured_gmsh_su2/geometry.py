@@ -175,6 +175,77 @@ class _PointRegistry:
         return index
 
 
+def _polygon_delaunay_triangles(
+    perimeter_xyz: Array, tolerance: float
+) -> list[tuple[int, int, int]] | None:
+    """Delaunay-triangulate a closed planar polygon given by its perimeter.
+
+    Returns local index triples, or None when the result cannot be trusted.
+
+    A rigid upper/lower ladder inherits the wall's chordwise node distribution.
+    Near the trailing edge of the tip section that spacing is roughly half the
+    trailing-edge opening, so the ladder is forced to connect three nearly
+    collinear boundary nodes: measured 1.5 degree minimum angle at index 0,
+    which inverts prisms when extruded.  A Delaunay triangulation of the same
+    boundary nodes maximises the minimum angle instead.  Every perimeter edge
+    must survive, otherwise the cap would not match the wall it closes and this
+    returns None so the caller can fall back.
+    """
+    from scipy.spatial import Delaunay, QhullError
+
+    count = len(perimeter_xyz)
+    if count < 3:
+        return None
+    centre = perimeter_xyz.mean(axis=0)
+    _u, _s, basis = np.linalg.svd(perimeter_xyz - centre, full_matrices=False)
+    planar = (perimeter_xyz - centre) @ basis[:2].T
+    try:
+        triangulation = Delaunay(planar)
+    except (QhullError, ValueError):
+        return None
+
+    # Keep only triangles whose centroid is inside the polygon (it is not convex).
+    inside: list[tuple[int, int, int]] = []
+    for simplex in triangulation.simplices:
+        centroid = planar[simplex].mean(axis=0)
+        crossings = 0
+        for i in range(count):
+            a, b = planar[i], planar[(i + 1) % count]
+            if (a[1] > centroid[1]) != (b[1] > centroid[1]):
+                span = b[1] - a[1]
+                if abs(span) > np.finfo(float).tiny:
+                    x = a[0] + (centroid[1] - a[1]) / span * (b[0] - a[0])
+                    if x > centroid[0]:
+                        crossings += 1
+        if crossings % 2 == 1:
+            inside.append(tuple(int(v) for v in simplex))
+
+    if not inside:
+        return None
+    # Conformity: every perimeter edge must be owned by exactly one kept triangle.
+    owners: dict[tuple[int, int], int] = defaultdict(int)
+    for triangle in inside:
+        for a, b in (
+            (triangle[0], triangle[1]),
+            (triangle[1], triangle[2]),
+            (triangle[2], triangle[0]),
+        ):
+            owners[tuple(sorted((a, b)))] += 1
+    for i in range(count):
+        edge = tuple(sorted((i, (i + 1) % count)))
+        if owners.get(edge, 0) != 1:
+            return None
+    def _area2(triangle: tuple[int, int, int]) -> float:
+        first = planar[triangle[1]] - planar[triangle[0]]
+        second = planar[triangle[2]] - planar[triangle[0]]
+        return 0.5 * abs(float(first[0] * second[1] - first[1] * second[0]))
+
+    areas = [_area2(t) for t in inside]
+    if min(areas) <= tolerance * tolerance:
+        return None
+    return inside
+
+
 def _point_segment_distance(point: Array, start: Array, end: Array) -> float:
     """Shortest distance from one point to a finite segment."""
     axis = end - start
@@ -465,6 +536,27 @@ def build_surface(
         # adjacent wall_upper / wall_lower / wall_te faces.
         upper_tip = [int(node) for node in upper_grid[-1]]
         lower_tip = [int(node) for node in lower_grid[-1]]
+        # Perimeter walks the upper curve TE->LE then the lower curve back,
+        # skipping the shared leading-edge node and the repeated TE corner.
+        perimeter = upper_tip + [n for n in reversed(lower_tip) if n not in (upper_tip[-1],)]
+        deduped: list[int] = []
+        for node in perimeter:
+            if node not in deduped:
+                deduped.append(node)
+        cap = _polygon_delaunay_triangles(
+            np.asarray([registry.points[n] for n in deduped], dtype=float),
+            registry.tolerance,
+        )
+        if cap is not None:
+            for local in cap:
+                add_triangle(
+                    (deduped[local[0]], deduped[local[1]], deduped[local[2]]),
+                    "wall_tip",
+                    1.0,
+                )
+            continue
+        # Verified fallback: the chordwise ladder, used only when Delaunay cannot
+        # reproduce every perimeter edge.  It is always conformal by construction.
         for i in range(n_u - 1):
             a, b = upper_tip[i], upper_tip[i + 1]
             d, c = lower_tip[i], lower_tip[i + 1]
@@ -582,6 +674,9 @@ def build_surface(
     topology["observed_labels"] = sorted(observed)
 
     te_errors = np.asarray([frame["te_relative_error"] for _, _, frame in sections])
+    # The thinnest realized trailing edge bounds how far prisms may be extruded
+    # before opposing fronts collide; see the boundary-layer amendment.
+    realized_te = np.asarray([frame["realized_te_m"] for _, _, frame in sections])
     max_fidelity_m = max(fidelity_distances, default=float("inf"))
     max_fidelity_fraction = max(fidelity_fractions, default=float("inf"))
     max_facet_distance_m = max(facet_distances, default=float("inf"))
@@ -619,6 +714,8 @@ def build_surface(
         "oml_max_by_side_m": fidelity_by_side_m,
         "oml_facet_centroid_max_by_side_m": facet_by_side_m,
         "max_te_opening_relative_error": float(np.max(te_errors)),
+        "min_realized_te_opening_m": float(np.min(realized_te)),
+        "max_realized_te_opening_m": float(np.max(realized_te)),
         "limit_distance_over_local_chord": fidelity_limit,
         "limit_fraction_of_local_chord": fidelity_limit,
         "limit_facet_centroid_over_local_chord": facet_limit,

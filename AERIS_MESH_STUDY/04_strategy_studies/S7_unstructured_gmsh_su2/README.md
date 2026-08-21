@@ -12,32 +12,50 @@ The governing preregistration is
 [`POLICY.yaml`](POLICY.yaml) is the executable numerical contract. No threshold may
 be weakened to make a case pass.
 
-## Current state — 2026-08-21
+## Current state - 2026-08-21 (lead session)
 
 Status remains `preregistered_development_no_results`.
 
-- The complete software path exists: geometry → mesh → independent mesh audit →
-  SU2 → residual/force/y+ gates → method-neutral case report → qualification and
-  S6/S7 comparison report.
-- The focused laptop-safe suite passes 24/24 tests and Ruff passes. This includes
-  a real Gmsh synthetic tri/prism/tet generation-and-conversion test, fail-closed
-  mesh gates, a fake-solver one-restart test, digest-linked resume, batch behavior,
-  and manufactured unequal-grid Richardson/GCI checks.
-- Gmsh 4.15.2 and the pinned Python geometry stack are present. `SU2_CFD` is not
-  installed in the current environment.
-- A real BWB pyGeo laptop smoke was blocked by the Codex execution sandbox/usage
-  approval before the process launched. This is neither a mesh pass nor a Gmsh,
-  pyGeo, trailing-edge, or tip failure.
-- No real S7 BWB mesh, SU2 solution, force result, wall-y+ result, grid study,
-  hold-out case, or campaign result has been accepted.
-- The retained `mapping_fix`, `no_optimize_diagnostic`, and
-  `core_optimize_diagnostic` artifacts are synthetic development diagnostics under
-  older source digests. They are not campaign evidence.
-- The first Claude Opus/max audit attempt used the required model and effort but
-  ended at a session limit. Its failed record is preserved and is not acceptance.
+The first real BWB geometry and the first real BWB volume meshes in S7's history
+were produced in this session, on `lhs100_seed42` index 0.  Three source-surface
+defects and two mis-specified gates were found and corrected, all before any
+campaign result existed.  Suite 26 passed, Ruff clean.
 
-The locked `round_c_lhs10_seed42` hold-out remains forbidden. The runner has no
-unlock or bypass flag.
+What is now established on real geometry:
+
+- All four levels pass the pre-Gmsh gates with zero self-intersections
+  (laptop_smoke 1 778 tris, coarse 41 758, medium 84 290, fine 165 886).
+- Node fidelity is exactly 0.0 at every level: every tracked OML vertex lies on
+  the pyGeo B-spline.
+- Gmsh produces real hybrid meshes.  Prism wall coverage and column continuity
+  measured 1.000000, including at the trailing edge and the tip, with every
+  trailing-edge and tip prism face carrying exactly one adjacent core tet.
+- A ~975 000 cell hybrid mesh (924 069 tet + 49 744 prism) builds in about 38 s
+  on the laptop at a graded diagnostic resolution.
+
+Two findings worth reading carefully:
+
+- A tip-cap triangulation defect, not a trailing-edge collision, caused the Gmsh
+  PLC failures.  An apparent "boundary-layer thickness must fit inside the
+  trailing-edge opening" law was measured, then **withdrawn** once the cap was
+  fixed: the same geometry now meshes at 15.3x the trailing-edge opening.  The
+  preregistered `coarse`/`medium`/`fine` stacks are not condemned.  See the
+  boundary-layer investigation in ADR-0017.
+- Quality gates still fail at diagnostic resolution.  The distributions are
+  healthy in bulk (tet minSICN p50 ~ 0.85, prism minSJ p50 ~ 0.996, skewness p50
+  ~ 0.23, non-orthogonality p50 ~ 17 deg) with failures confined to thin tails and
+  to the adjacent-core volume ratio.  Whether that is diagnostic-tier grading or a
+  real core-meshing limitation is **the open question**, and it cannot be settled
+  on this laptop: `coarse` needs far more than the 9 GiB available here.
+
+Still true, and unchanged by any of the above:
+
+- `SU2_CFD` is absent, so no CFD, y+, force, grid-convergence or trailing-edge
+  sensitivity result exists.
+- No hold-out case has been constructed.  `round_c_lhs10_seed42` remains
+  forbidden and the runner has no bypass.
+- The required independent Claude Opus/max review has not completed; both
+  attempts ended at a session limit and are retained as failed records.
 
 ## Executable architecture
 

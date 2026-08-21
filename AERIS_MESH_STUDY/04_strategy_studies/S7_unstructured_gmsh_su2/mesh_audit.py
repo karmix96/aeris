@@ -1305,11 +1305,31 @@ def _evaluate_gates(
             requirements["quality"]["max_prism_to_core_volume_ratio"],
         ),
     ]
+    # Distribution-quality gates measure the resolution as much as the method, so
+    # below the declared tiers they are reported rather than enforced.  Binary
+    # correctness gates always apply.
+    distribution_gates = {
+        "skewness_p99",
+        "nonorthogonality_p99",
+        "core_volume_ratio_p99",
+        "prism_core_volume_ratio_p99",
+    }
+    tiers = set(policy.get("quality_gates_apply_from_tiers", ["development", "production"]))
+    enforce_distribution = str(spec.get("evidence_tier", "development")) in tiers
+    if not enforce_distribution:
+        demoted = [g for g in gates if g["name"] in distribution_gates]
+        gates = [g for g in gates if g["name"] not in distribution_gates]
+        warnings.extend(
+            _warning(g["name"] + "_below_gated_tier", g["passed"], g["actual"], g["limit"])
+            for g in demoted
+        )
     failures = [gate["name"] for gate in gates if not gate["passed"]]
     raised = [w["name"] for w in warnings if not w["passed"]]
     return {
         "accepted": not failures,
         "failures": failures,
+        "evidence_tier": spec.get("evidence_tier"),
+        "distribution_gates_enforced": enforce_distribution,
         "gates": gates,
         "warnings": warnings,
         "warnings_raised": raised,

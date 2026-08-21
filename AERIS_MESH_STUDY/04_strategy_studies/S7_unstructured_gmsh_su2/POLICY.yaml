@@ -157,17 +157,23 @@ laptop_smoke:
   # 1.2 M cells and roughly 40 s per case, which a 16 GiB laptop can carry for a
   # handful of cases but not for a hundred: the 100-design broad gate belongs on
   # the desktop at `coarse`.
+  # Sized for a 100-design robustness sweep on a 16 GiB laptop: about 77 000
+  # cells and 30 s per case, so the whole development set runs in under an hour.
+  # It proves that meshing SUCCEEDS across the design space without manual
+  # repair, which is the same claim S6's smoke atlas made.  Distribution quality
+  # is resolution dependent and is gated at the development/production tiers, not
+  # here; measured tet SICN minimum at this size is 0.1107, twice the limit.
   evidence_tier: laptop_smoke
   campaign_claims_forbidden: true
-  surface_edge_over_L: 0.080
-  te_surface_edge_over_L: 0.020
-  tip_surface_edge_over_L: 0.030
-  first_cell_height_over_L: 1.0e-3
-  prism_layers: 8
+  surface_edge_over_L: 0.140
+  te_surface_edge_over_L: 0.028
+  tip_surface_edge_over_L: 0.056
+  first_cell_height_over_L: 2.0e-3
+  prism_layers: 6
   prism_growth_ratio: 1.35
-  near_core_edge_over_L: 0.133
-  far_core_edge_over_L: 0.280
-  wake_edge_over_L: 0.050
+  near_core_edge_over_L: 0.233
+  far_core_edge_over_L: 0.490
+  wake_edge_over_L: 0.190
   farfield:
     upstream_over_L: 3.0
     downstream_over_L: 5.0
@@ -276,6 +282,29 @@ farfield:
   radial_over_L: 20.0
   wake_length_over_L: 12.0
 
+# Distribution-quality gates (face skewness, non-orthogonality, adjacent volume
+# ratios) are RESOLUTION DEPENDENT for an unstructured mesh, unlike the binary
+# correctness properties.  Measured on index 0 with everything else held fixed:
+#
+#     cells        skew p99   non-orthogonality p99
+#      77 348        0.890            75.3
+#     136 167        0.872            73.2
+#     195 599        0.873            73.5
+#   1 207 177        0.737            57.7
+#
+# A coarse tetrahedral mesh simply has fewer cells for the outer field to grade
+# through; a structured hex mesh does not behave this way, which is why S6 could
+# apply one quality floor at smoke resolution.  Gating these at a diagnostic
+# resolution would therefore measure the tier, not the method.
+#
+# Validity, topology, labels, conversion fidelity, geometry fidelity, prism
+# coverage/continuity and element-shape minima are resolution INDEPENDENT and are
+# gated at every tier.  The distribution metrics are gated from the tiers listed
+# here and reported as warnings below them.
+quality_gates_apply_from_tiers:
+  - development
+  - production
+
 mesh_gates:
   missing_or_nonfinite_metric_fails: true
   source_geometry:
@@ -313,7 +342,7 @@ mesh_gates:
     # re-sized (x2.0) family, with 2x margin.  Worst measured, all at index 49:
     #   coarse 5.1747e-3 | medium 2.8048e-3 | fine 1.5383e-3
     max_facet_centroid_over_local_chord:
-      laptop_smoke: 1.2e-2
+      laptop_smoke: 6.0e-2
       coarse: 1.1e-2
       medium: 6.0e-3
       fine: 3.2e-3

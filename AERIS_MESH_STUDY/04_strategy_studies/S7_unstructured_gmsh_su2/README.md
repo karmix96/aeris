@@ -17,45 +17,51 @@ be weakened to make a case pass.
 Status remains `preregistered_development_no_results`.
 
 The first real BWB geometry and the first real BWB volume meshes in S7's history
-were produced in this session, on `lhs100_seed42` index 0.  Three source-surface
-defects and two mis-specified gates were found and corrected, all before any
-campaign result existed.  Suite 26 passed, Ruff clean.
+were produced in this session.  Five source-surface/instrument defects and three
+mis-specified or mis-calibrated gates were corrected, and one causal claim was
+measured then withdrawn.  Suite 26 passed, Ruff clean.
 
-What is now established on real geometry:
+### Established on real geometry, across designs
 
-- All four levels pass the pre-Gmsh gates with zero self-intersections
-  (laptop_smoke 1 778 tris, coarse 41 758, medium 84 290, fine 165 886).
-- Node fidelity is exactly 0.0 at every level: every tracked OML vertex lies on
-  the pyGeo B-spline.
-- Gmsh produces real hybrid meshes.  Prism wall coverage and column continuity
-  measured 1.000000, including at the trailing edge and the tip, with every
-  trailing-edge and tip prism face carrying exactly one adjacent core tet.
-- A ~975 000 cell hybrid mesh (924 069 tet + 49 744 prism) builds in about 38 s
-  on the laptop at a graded diagnostic resolution.
+The representative indices 0/24/49/74/99 and all three trailing-edge variants:
 
-Two findings worth reading carefully:
+| level | accepted |
+|---|---|
+| laptop_smoke | 15 / 15 |
+| coarse | 15 / 15 |
 
-- A tip-cap triangulation defect, not a trailing-edge collision, caused the Gmsh
-  PLC failures.  An apparent "boundary-layer thickness must fit inside the
-  trailing-edge opening" law was measured, then **withdrawn** once the cap was
-  fixed: the same geometry now meshes at 15.3x the trailing-edge opening.  The
-  preregistered `coarse`/`medium`/`fine` stacks are not condemned.  See the
-  boundary-layer investigation in ADR-0017.
-- Quality gates still fail at diagnostic resolution.  The distributions are
-  healthy in bulk (tet minSICN p50 ~ 0.85, prism minSJ p50 ~ 0.996, skewness p50
-  ~ 0.23, non-orthogonality p50 ~ 17 deg) with failures confined to thin tails and
-  to the adjacent-core volume ratio.  Whether that is diagnostic-tier grading or a
-  real core-meshing limitation is **the open question**, and it cannot be settled
-  on this laptop: `coarse` needs far more than the 9 GiB available here.
+with zero self-intersections and node fidelity exactly 0.0 in every case.  Gmsh
+produces real hybrid meshes with prism wall coverage and column continuity of
+1.000000 including at the trailing edge and tip, every trailing-edge and tip prism
+face carrying exactly one adjacent core tet, and zero negative cells.  A ~1.4 M
+cell mesh builds in about 40 s on the laptop at diagnostic resolution.
 
-Still true, and unchanged by any of the above:
+### Three findings worth reading before trusting anything here
 
-- `SU2_CFD` is absent, so no CFD, y+, force, grid-convergence or trailing-edge
-  sensitivity result exists.
-- No hold-out case has been constructed.  `round_c_lhs10_seed42` remains
-  forbidden and the runner has no bypass.
-- The required independent Claude Opus/max review has not completed; both
-  attempts ended at a session limit and are retained as failed records.
+- **A tip-cap triangulation defect, not a trailing-edge collision**, caused the
+  Gmsh PLC failures.  An apparent "boundary-layer thickness must fit inside the
+  trailing-edge opening" law was measured, then **withdrawn**: the same geometry
+  meshes at 15.3x the opening once the cap is Delaunay-triangulated.
+- **Bad core cells were in the size-field transition, not at any feature.**  Only
+  0.9 percent were near the trailing edge.  Deriving the ramp length from a
+  declared growth ratio moved the violators' distance-to-wall p95 from 4.396 L to
+  0.168 L.  What remains is ordinary Delaunay scatter: a volume ratio of 5 is an
+  edge ratio of only 1.71.
+- **Index 0 was a benign design.**  Facet limits calibrated on it alone failed
+  index 49 at `coarse` by 2.5 percent.  They are now calibrated on the worst of
+  the five representative designs with 2x margin, and 95 designs remain unmeasured.
+
+### Not established
+
+- `SU2_CFD` is absent.  No CFD, y+, force, grid-convergence or trailing-edge
+  sensitivity result exists, and none of the campaign readiness targets is met.
+- Six gates still fail, all maxima whose percentiles pass.  Two of them are now
+  diagnosed as measuring geometry rather than defects (see ADR-0017), and **no
+  gate was relaxed** on that basis.
+- Nothing here is production resolution volume meshing: `coarse` volume meshes
+  need far more than the memory available on this laptop.
+- The required independent Claude Opus/max review has never completed.
+- `round_c_lhs10_seed42` remains forbidden and untouched.
 
 ## Executable architecture
 

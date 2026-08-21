@@ -680,3 +680,27 @@ verification below was run after the change, not before it.
 Result after recalibration: `coarse` **15 / 15** accepted across indices
 0/24/49/74/99 and all three trailing-edge variants, zero self-intersections, node
 fidelity exactly 0.0 throughout.
+
+
+## Design-space surface qualification complete (2026-08-21)
+
+After recalibration, the surface stage was verified over the full representative
+matrix: indices 0/24/49/74/99 x three trailing-edge variants x four levels.
+
+| level | accepted |
+|---|---|
+| laptop_smoke | 15 / 15 |
+| coarse | 15 / 15 |
+| medium | 15 / 15 |
+| fine | 15 / 15 |
+
+**60 / 60**, with zero self-intersections, zero boundary or non-manifold edges,
+and node fidelity exactly 0.0 in every case.  All three trailing-edge variants
+behave identically per design, as expected, since the variant changes the opening
+and not the sampling.
+
+This qualifies the surface stage for design space exploration on the
+representative set, and nothing beyond it.  Specifically it does **not** establish
+volume-mesh quality at production resolution, any CFD result, or behaviour on the
+95 development designs that were not measured.  The facet limits are calibrated on
+five designs and the campaign must re-verify them on the rest.

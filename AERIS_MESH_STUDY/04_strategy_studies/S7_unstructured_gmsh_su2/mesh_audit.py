@@ -1122,6 +1122,16 @@ def _evaluate_gates(
                 requirements["prisms"]["growth_ratio_relative_error_max"],
             ),
             _gate(
+                "tet_quality_p01",
+                quality["tet_minSICN"]["p01"] is not None
+                and quality["tet_minSICN"]["p01"]
+                >= float(
+                    requirements["quality"]["p01_tet_signed_inverse_condition_number"]
+                ),
+                quality["tet_minSICN"]["p01"],
+                requirements["quality"]["p01_tet_signed_inverse_condition_number"],
+            ),
+            _gate(
                 "tet_quality",
                 quality["tet_minSICN"]["min"] is not None
                 and quality["tet_minSICN"]["min"]

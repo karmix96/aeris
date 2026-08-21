@@ -149,6 +149,40 @@ def _level_spec(policy: dict[str, Any], level: str) -> dict[str, Any]:
     return dict(levels[level])
 
 
+def _blended_parameters(count: int, target_end_interval: float) -> Array:
+    """Monotone [0, 1] distribution whose end interval matches a target.
+
+    Pure cosine clustering refines the ends quadratically in the point count, so
+    once the count is fixed by the average-spacing requirement the end spacing is
+    whatever the cosine happens to give -- measured 22x finer than the requested
+    trailing-edge target at the tip of index 0.  That over-refinement is what
+    produces sliver wall triangles (0.85 degree minimum angle) and poisons the
+    core tetrahedra sitting on the prism cap.
+
+    Blending uniform and cosine lets the end interval be requested directly while
+    the count still controls the average.  Cosine is the finest end distribution
+    available at a given count, so a target it cannot reach is clamped and the
+    caller's count loop is responsible for adding points.
+    """
+    count = int(count)
+    cosine = _cosine_parameters(count)
+    if count < 3:
+        return cosine
+    uniform = np.linspace(0.0, 1.0, count)
+    uniform_end = float(uniform[1] - uniform[0])
+    cosine_end = float(cosine[1] - cosine[0])
+    target = float(target_end_interval)
+    if not np.isfinite(target) or target >= uniform_end:
+        return uniform
+    if target <= cosine_end or uniform_end - cosine_end <= np.finfo(float).tiny:
+        return cosine
+    weight = (uniform_end - target) / (uniform_end - cosine_end)
+    weight = float(np.clip(weight, 0.0, 1.0))
+    blended = (1.0 - weight) * uniform + weight * cosine
+    blended[0], blended[-1] = 0.0, 1.0
+    return blended
+
+
 def _cosine_parameters(count: int) -> Array:
     theta = np.linspace(0.0, math.pi, int(count))
     return 0.5 * (1.0 - np.cos(theta))
@@ -457,13 +491,18 @@ def build_surface(
     semi_span = 0.5 * float(reference["span_m"])
     n_u = max(17, int(math.ceil(1.15 * max_chord / surface_h)) + 1)
     n_v = max(13, int(math.ceil(1.10 * semi_span / surface_h)) + 1)
-    # Ensure the first cosine interval resolves the explicit TE/tip targets.
+    # Cosine is the finest end clustering available at a given count; add points
+    # only if even that cannot reach the declared TE/tip edge target.
     while max_chord * (1.0 - math.cos(math.pi / (n_u - 1))) * 0.5 > te_h:
         n_u += 1
     while semi_span * (1.0 - math.cos(math.pi / (n_v - 1))) * 0.5 > tip_h:
         n_v += 1
-    u = _cosine_parameters(n_u)
-    physical_span_fractions = _cosine_parameters(n_v)
+    # Request the declared edge targets directly instead of accepting whatever
+    # end spacing the cosine happens to produce at that count.  The largest chord
+    # and the full semi-span are the binding cases, so meeting the target there
+    # meets it everywhere.
+    u = _blended_parameters(n_u, te_h / max_chord)
+    physical_span_fractions = _blended_parameters(n_v, tip_h / semi_span)
     v_parameters = span_parameters_for_fractions(pygeo_build, physical_span_fractions)
 
     sections: list[tuple[Array, Array, dict[str, Any]]] = []

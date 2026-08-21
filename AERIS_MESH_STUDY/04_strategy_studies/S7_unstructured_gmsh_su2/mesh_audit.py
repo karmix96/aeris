@@ -48,6 +48,36 @@ def _stats(values: Iterable[float]) -> dict[str, Any]:
     }
 
 
+def _tail_counts(
+    values: Iterable[float], *, limit: float, side: str
+) -> dict[str, Any]:
+    """How many entities violate a limit, not merely how bad the worst one is.
+
+    A max-only verdict cannot distinguish a systematically poor mesh from a good
+    mesh with a handful of bad cells at a thin feature.  Reporting the violating
+    count and fraction alongside the extreme makes that distinction visible in
+    the artifact instead of leaving it to interpretation.
+    """
+    array = np.asarray(list(values), dtype=float)
+    finite = array[np.isfinite(array)]
+    if len(finite) == 0:
+        return {"total": int(len(array)), "finite": 0, "violating": None,
+                "violating_fraction": None, "limit": float(limit), "side": side}
+    violating = (
+        int(np.count_nonzero(finite > float(limit)))
+        if side == "above"
+        else int(np.count_nonzero(finite < float(limit)))
+    )
+    return {
+        "total": int(len(array)),
+        "finite": int(len(finite)),
+        "violating": violating,
+        "violating_fraction": violating / len(finite),
+        "limit": float(limit),
+        "side": side,
+    }
+
+
 def _tet_signed_volume(points: np.ndarray) -> np.ndarray:
     return (
         np.linalg.det(
@@ -464,6 +494,11 @@ def _face_audit(
         "equiangle_skewness": _stats(skewness),
         "core_adjacent_volume_ratio": _stats(core_volume_ratios),
         "prism_to_core_volume_ratio": _stats(prism_core_ratios),
+        # Retained for violator counting; stripped before the report is written.
+        "nonorthogonality_values": nonorthogonality,
+        "equiangle_skewness_values": skewness,
+        "core_adjacent_volume_ratio_values": core_volume_ratios,
+        "prism_to_core_volume_ratio_values": prism_core_ratios,
     }
 
 
@@ -1377,6 +1412,44 @@ def audit_mesh(
             "prism_layers": prism_columns,
             "quality": quality_report,
             "faces": faces,
+            "tail_counts": {
+                "tet_minSICN": _tail_counts(
+                    per_type[TET]["distortion"],
+                    limit=float(policy["mesh_gates"]["quality"][
+                        "min_tet_signed_inverse_condition_number"]),
+                    side="below",
+                ),
+                "prism_minSJ": _tail_counts(
+                    per_type[PRISM]["distortion"],
+                    limit=float(policy["mesh_gates"]["quality"][
+                        "min_prism_scaled_jacobian"]),
+                    side="below",
+                ),
+                "equiangle_skewness": _tail_counts(
+                    faces["equiangle_skewness_values"],
+                    limit=float(policy["mesh_gates"]["quality"][
+                        "max_equiangle_skewness"]),
+                    side="above",
+                ),
+                "nonorthogonality_deg": _tail_counts(
+                    faces["nonorthogonality_values"],
+                    limit=float(policy["mesh_gates"]["quality"][
+                        "max_nonorthogonality_deg"]),
+                    side="above",
+                ),
+                "core_adjacent_volume_ratio": _tail_counts(
+                    faces["core_adjacent_volume_ratio_values"],
+                    limit=float(policy["mesh_gates"]["quality"][
+                        "max_core_adjacent_volume_ratio"]),
+                    side="above",
+                ),
+                "prism_to_core_volume_ratio": _tail_counts(
+                    faces["prism_to_core_volume_ratio_values"],
+                    limit=float(policy["mesh_gates"]["quality"][
+                        "max_prism_to_core_volume_ratio"]),
+                    side="above",
+                ),
+            },
         }
         report["acceptance"] = _evaluate_gates(
             surface=surface,
@@ -1385,6 +1458,11 @@ def audit_mesh(
             markers=markers,
             policy=policy,
         )
+        # Raw per-entity arrays exist only to count violators; millions of
+        # numbers must not reach the artifact.
+        for key in list(faces):
+            if key.endswith("_values"):
+                del faces[key]
         write_json(output_path, report)
         return report
     finally:

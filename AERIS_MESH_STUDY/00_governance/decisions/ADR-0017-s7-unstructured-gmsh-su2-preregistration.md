@@ -427,3 +427,90 @@ degrees, and the previously failing thick stacks now mesh.
 
 No gate moved.  The wall_tip prism coverage, continuity, quality and
 core-interface requirements are unchanged.
+
+
+## Surface distribution amendment (2026-08-21, still pre-result)
+
+The chordwise and spanwise node distributions were pure cosine, with the point
+counts set independently by the average-edge requirement.  Cosine refines its ends
+quadratically in the count, so the end spacing was whatever that count happened to
+produce rather than the declared trailing-edge and tip targets.  Measured at index
+0, graded resolution: the end interval was 0.00394 in u, giving 0.48 mm chordwise
+spacing at the tip against a `te_surface_edge` target of 10.7 mm -- **22x finer
+than requested**.  The resulting sliver wall triangles degrade the tetrahedra that
+sit on the prism cap.
+
+Both distributions are now a monotone blend of uniform and cosine whose end
+interval matches the declared target directly, with the count still setting the
+average.  Cosine remains the finest end distribution available, so a target it
+cannot reach still forces additional points through the pre-existing loop.
+
+Measured effect at index 0 (same counts, same geometry, distribution only):
+
+| region | minimum angle | aspect ratio |
+|---|---|---|
+| wall_tip | 7.21 -> 20.65 deg | 7.4 -> 2.8 |
+| wall_upper | 0.85 -> 2.90 deg | 67.5 -> 19.7 |
+| wall_te | 1.25 -> 1.44 deg | 45.7 -> 39.8 |
+
+and on the resulting ~971 000 cell volume mesh:
+
+| metric | before | after |
+|---|---|---|
+| tet minSICN minimum | 1.68e-4 | 1.33e-3 |
+| skewness p99 | 0.814 | 0.775 |
+| non-orthogonality p99 | 63.9 | 60.8 deg |
+| adjacent core volume ratio maximum | 16 237 | 1 547 |
+| failing gates | 7 | 6 (`core_aspect_ratio` now passes) |
+
+No threshold moved.  This changes where nodes are placed, not what is required of
+them, and node fidelity remains exactly 0.0.
+
+## OPEN QUESTION, deliberately not amended: max-gated tail metrics
+
+After the tip-cap, distribution and size-field corrections, the graded diagnostic
+mesh at index 0 fails six gates.  Every one of them is a maximum over roughly one
+to two million entities, and every corresponding percentile passes:
+
+| metric | p50 | p99 | max | limit | p99 verdict |
+|---|---|---|---|---|---|
+| tet minSICN | 0.851 | 0.982 | min 1.33e-3 | >= 0.05 | passes (p01 0.341) |
+| prism minSJ | 0.998 | 1.000 | min 0.467 | >= 0.05 | passes outright |
+| equiangle skewness | 0.234 | 0.775 | 0.988 | <= 0.95 | passes |
+| non-orthogonality | 17.5 | 60.8 | 89.6 deg | <= 75 | passes |
+| adjacent core volume ratio | 1.22 | 3.10 | 1 547 | <= 5 | passes |
+| prism-to-core volume ratio | 6.01 | 12.6 | 312.6 | <= 100 | passes |
+
+The mesh is therefore good in bulk and bad in a thin tail, concentrated where a
+1.0 mm blunt trailing edge is embedded in a field whose local target is 10 mm and
+whose far-field cells are 150 mm.  Prism quality passes outright everywhere, and
+there are zero negative or zero-volume cells.
+
+The mesh audit now counts violators.  On the same ~971 000 cell mesh:
+
+| metric | violating | of | fraction |
+|---|---|---|---|
+| tet minSICN < 0.05 | 17 | 921 739 | 1.8e-5 |
+| equiangle skewness > 0.95 | 315 | 1 977 679 | 1.6e-4 |
+| non-orthogonality > 75 deg | 3 785 | 1 957 997 | 1.9e-3 |
+| adjacent core volume ratio > 5 | 2 089 | 1 833 637 | 1.1e-3 |
+| prism-to-core volume ratio > 100 | 10 | 6 218 | 1.6e-3 |
+| prism minSJ < 0.05 | **0** | 49 744 | 0 |
+
+Seventeen tetrahedra out of nearly a million, and not one bad prism.
+
+Gating validity on a maximum is correct and is retained: no cell may be inverted
+or degenerate.  Gating *quality* on a maximum over a million cells is a different
+proposition, and common practice is a high-percentile criterion plus a looser
+absolute bound.  Changing that here would be the third gate amendment in one
+session, and serially relaxing thresholds until a case passes is precisely the
+failure mode this ADR exists to prevent.
+
+**No gate is relaxed.**  The evidence is recorded, the mesh audit now reports the
+violating count and fraction for each of these metrics alongside the extreme, and
+the decision is deferred to the study owner.  The two candidate resolutions are:
+(1) keep maxima for validity and move quality to p99/p99.9 with a separate looser
+maximum, justified by measurement; or (2) keep the maxima and treat the blunt
+trailing edge as requiring local core refinement so the tail disappears on its own.
+Option (2) is the scientifically stronger route if it works, because it removes the
+bad cells rather than reclassifying them, and it is testable.

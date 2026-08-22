@@ -86,6 +86,42 @@ is one design at one flow condition, and it invokes SU2 directly rather than
 through the campaign.  `production_y_plus_passed` remains unmet until a converged
 campaign case demonstrates it.
 
+### Steady convergence is NOT achieved with the frozen numerics
+
+A converged coarse case was attempted and is not currently reachable.  The
+diagnosis was run on the cheap mesh so it could be carried to 3 000 iterations:
+
+| quantity | result |
+|---|---|
+| rms[Rho] start / min / final | -2.576 / -5.240 / -4.234 |
+| net residual drop over 3 000 iterations | **1.658 orders** (gate requires 6) |
+| behaviour | limit cycle between about -3.2 and -5.2, no descent |
+| CD by fifth of the run | 0.09441, 0.09158, 0.09154, 0.09150, 0.09163 |
+| CL by fifth of the run | 0.02239, 0.02289, 0.02277, 0.02272, 0.02282 |
+| CD over the last 200 iterations | mean 0.09143, spread 1.8e-3 |
+
+**The forces converge; the residual does not.**  That combination is the classic
+signature of limiter-induced limit cycling with MUSCL and a Venkatakrishnan
+limiter, which the frozen numerics use.
+
+One remedy was tested and is **refuted**: freezing the limiter at iteration 400
+(`LIMITER_ITER`) destabilised the solution instead of settling it - the density
+residual rose from about -3.4 to -1.3 and stayed there through iteration 700.
+Freezing that early, before the flow has developed, is worse than not freezing.
+
+Two further observations that bear on it, both unverified as causes:
+
+- SU2 reports `Dimensional simulation`, so residuals are absolute and not
+  comparable between equations: energy sits near 2e5 while density is near 0.5,
+  which is why `rms[RhoE]` reads positive.  The policy never set
+  `REF_DIMENSIONALIZATION`.
+- `MG level: 0`; no multigrid is configured, on a 20L/30L/20L domain.
+
+The residual gate as preregistered - six orders of drop and a final value at or
+below -8 - may therefore be unreachable for this configuration.  Nothing has been
+changed in response: the numerics remain exactly as frozen, and this is recorded
+as a finding for the study owner.
+
 ### What made it work
 
 - **Netgen optimisation scoped to the tetrahedral core.**  All optimisation had

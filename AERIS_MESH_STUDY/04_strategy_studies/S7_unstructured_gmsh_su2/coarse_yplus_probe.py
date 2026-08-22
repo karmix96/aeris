@@ -50,6 +50,13 @@ def main() -> int:
         restart=False,
     )
     options["ITER"] = iterations
+    # Diagnostic overrides, e.g. S7_SU2_EXTRA="LIMITER_ITER=500".  Frozen policy
+    # settings are never changed here; this only explores candidate numerics.
+    import os
+
+    for item in filter(None, os.environ.get("S7_SU2_EXTRA", "").split(";")):
+        key, _, value = item.partition("=")
+        options[key.strip()] = value.strip()
     lines = [f"{k}= {v}" for k, v in sorted(options.items())]
     atomic_write_text(ROOT / "case.cfg", "\n".join(lines) + "\n")
 

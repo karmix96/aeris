@@ -1,73 +1,62 @@
 # S7 reload and handoff
 
-Snapshot: 2026-08-21. Status: preregistered development; no accepted real S7 result.
+Snapshot: 2026-08-22.  Status: `preregistered_development_no_results`; meshing
+works across the development set, no CFD result is accepted.
 
 ## Reload order
 
-Read these files completely before changing or executing S7:
+1. repository `memories/memories.md`
+2. everything under `AERIS_MESH_STUDY/PROJECT_HANDOFF/`
+3. S6 strategy, policy, research and tests, plus ADR-0016
+4. `AERIS_MESH_STUDY/04_strategy_studies/COMMON_BRIEF.md`
+5. ADR-0017, then this directory's `POLICY.yaml`, `README.md`, `STUDY.md`,
+   `RESEARCH.md`, `ROADMAP.md`, `RUNBOOK.md`
+6. all S7 Python, shell and test files
 
-1. repository `memories/memories.md`;
-2. everything under `AERIS_MESH_STUDY/PROJECT_HANDOFF/`;
-3. S6 strategy/policy/research/tests plus ADR-0016;
-4. `AERIS_MESH_STUDY/04_strategy_studies/COMMON_BRIEF.md`;
-5. ADR-0017, then this directory's `POLICY.yaml`, `README.md`, `RESEARCH.md`,
-   `STUDY.md`, and `ROADMAP.md`;
-6. all S7 Python, shell, prompt, and test files.
-
-The locked set is `round_c_lhs10_seed42`. Its state is `forbidden`. Do not construct
-it, mesh it, solve it, inspect its values/plots, or add a bypass.
+The locked set is `round_c_lhs10_seed42`, state `forbidden`.  Do not construct,
+mesh, solve, inspect or add a bypass for it.
 
 ## Verified local state
 
-- `.venv/bin/python -m pytest -q <S7 directory>`: 24 passed.
-- `.venv/bin/python -m ruff check <S7 directory>`: all checks passed.
-- Pinned local stack observed earlier in this session: Python 3.13.9, Gmsh 4.15.2,
-  NumPy 2.5.1, SciPy 1.18.0, pyGeo 1.17.0, pyspline 1.5.4.
-- `SU2_CFD` is absent.
-- The Gmsh test is a synthetic closed tetrahedral wall, not a BWB.
-- The restart test uses a fake solver, not SU2.
-- The real BWB laptop smoke was blocked before launch by Codex sandbox/usage
-  approval. Do not label it a mesh failure or attempt an indirect workaround.
-- Retained synthetic optimizer diagnostics are older-source evidence and are never
-  accepted campaign artifacts.
-- The prior Claude Opus/max attempt is retained under
-  `AERIS_MESH_STUDY/artifacts/strategy_studies/S7_unstructured_gmsh_su2/claude/implementation_audit_20260821_01/`;
-  it hit the session limit and is not a completed review.
+- `pytest -q <S7 directory>`: 26 passed, about 12 s.
+- `ruff check <S7 directory>`: clean.
+- Python 3.13.9, Gmsh 4.15.2, NumPy 2.5.1, SciPy 1.18.0, pyGeo 1.17.0,
+  pyspline 1.5.4.
+- **SU2 8.5.0 "Harrier"** in `AERIS_MESH_STUDY/tools/su2_8.5.0/bin`, symlinked
+  into `.venv/bin`.  Self-contained: no sudo, no `LD_LIBRARY_PATH`.  It is
+  gitignored as a reproducible download; re-fetch from the official release if
+  the tree is cleaned.
+- Evidence lives under the gitignored `artifacts/` tree, so the numbers that
+  matter are transcribed into `STUDY.md` and `README.md`.
 
-## Important implementation invariants
+## Invariants worth knowing before editing
 
 - The pyGeo wall is full-wing, independently triangulated, and fixed inside every
-  retry. Gmsh surface algorithms do not remesh it.
-- The numerical-TE baseline is 1.0 mm with fixed 0.5 and 1.5 mm sensitivity members.
-- Node and facet-centroid fidelity, closure/orientation/intersections, exact labels,
-  zero inverted/zero-volume cells, prism coverage/schedule, face/cell quality, and
-  TE/tip prism-to-core continuity all fail closed.
-- Post-generation relocation is disabled because it altered prism layers.
-- Flow is exactly the frozen cruise mapping; supplied values and full-wing reference
-  quantities must equal the canonical pyGeo values.
-- Attempts are immutable. A stale/incomplete/tampered artifact is investigated or a
-  new output root is used; it is never repaired in place.
-- `mesh` and `cruise` case identities are separate. `accepted` is scoped technical
-  acceptance; `campaign_ready` stays false.
-- Qualification accepts only adjacent digest-verified case terminals for fixed
-  indices 0/24/49/74/99, matching design/flow/reference identity and current source,
-  policy, and software preflight.
+  retry; Gmsh surface algorithms do not remesh it.
+- The tip cap is planar Delaunay over the perimeter nodes, with the conformal
+  ladder as a verified fallback.  Both a centre fan and a rigid ladder were tried
+  and failed; see `STUDY.md`.
+- Post-generation optimisation is Netgen scoped to the core volume only, with
+  automatic rollback if it increases invalid cells.  Relocate3D must never be
+  used: it destroys the prism schedule.
+- Cell validity uses the isoparametric Jacobian, never a sub-volume decomposition.
+- Face quality is split by element family; gates read the core and its interface,
+  the prism interior is reported.
+- Distribution-quality gates are enforced from the development tier upward and
+  reported below it.  Binary correctness is gated at every tier.
+- Wall y+ comes from the surface Paraview file, not the CSV, because SU2 8.5 omits
+  every PRIMITIVE field from the CSV.
+- Attempts are immutable.  A stale or partial artifact is investigated or a new
+  output root is used; it is never repaired in place.
 
 ## Next safe actions
 
-1. Finish a successful read-only Claude audit using
-   `/home/mike/.local/bin/claude --model opus --effort max`; preserve command,
-   reported model usage, output, errors, and terminal hashes.
-2. On a later authorized local run, execute exactly one `laptop_smoke` BWB case and
-   inspect geometry/TE/tip behavior. Do not run all 100 on this laptop merely to
-   produce a count.
-3. Install/pin SU2 8.5.0 on a qualified desktop/HPC environment and perform one
-   bounded development solver smoke.
-4. Use Slurm arrays for production-resolution development meshes, then the fixed
-   10–20 pilots and five grid/TE groups.
-5. Keep the hold-out locked until a new explicit governance decision.
+1. Confirm multigrid over a longer run, then amend ADR-0017 with the measurements
+   if it reaches the residual gate.
+2. Run the remaining 95 coarse meshes on the desktop using `RUNBOOK.md`.
+3. Attempt a converged coarse CFD case; budget about 3 GB of RAM per MPI rank.
+4. Obtain the independent Claude Opus/max review.
 
-Exact commands and evidence interpretation are in `README.md`. Any common Gmsh
-failure triggers a superseding ADR, not gate weakening. Preserve failed attempts as
-scientific evidence and clearly distinguish implementation proof from numerical
-qualification.
+Never touch the hold-out until a superseding decision records that the
+development programme, pilots, y+, grid studies, recovery, schemas and
+independent review are all complete.

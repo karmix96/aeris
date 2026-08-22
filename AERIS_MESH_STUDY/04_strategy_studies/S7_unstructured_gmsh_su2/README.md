@@ -35,6 +35,34 @@ The three rejections (089, 029, 085) were boundary-locked slivers against the
 prism cap.  The worst-cell floor has been recalibrated onto that population and a
 distribution floor added; see the 2026-08-22 sections of ADR-0017.
 
+### Production resolution is validated on five designs
+
+Five representative designs at the `coarse` level, all accepted on the first
+candidate with no retries:
+
+| design | cells | tet SICN | tet p01 | prism SJ | core skew p99 | core nonortho p99 | neg |
+|---|---|---|---|---|---|---|---|
+| dev_000 | 2 549 227 | 0.0651 | 0.6702 | 0.6183 | 0.413 | 31.7 | 0 |
+| dev_024 | 2 231 389 | 0.0954 | 0.6764 | 0.6362 | 0.409 | 31.4 | 0 |
+| dev_049 | 2 201 979 | 0.0702 | 0.6773 | 0.6342 | 0.409 | 31.4 | 0 |
+| dev_074 | 2 505 872 | 0.0591 | 0.6753 | 0.6593 | 0.410 | 31.5 | 0 |
+| dev_099 | 2 575 993 | 0.1038 | 0.6737 | 0.6161 | 0.410 | 31.5 | 0 |
+
+Prism wall coverage and column continuity are 1.000000 on every design.  Core
+skewness p99 sits at 0.41 against a 0.85 limit and core non-orthogonality p99 at
+31.5 against 65, so production resolution carries roughly two-fold margin where
+the diagnostic tier had none.
+
+`dev_049` is worth noting: it was the hardest design at laptop resolution and the
+one that drove the whole tet-quality investigation, and it passes here at 0.0702
+without retries.  The extra cells give the core mesher room the diagnostic tier
+never had.
+
+Cost, measured: about **9.5 minutes and 263 MB per case** (245 s meshing at 1.8 GB
+peak, 325 s auditing at 5.3 GB peak).  The remaining 95 designs are a desktop job
+of roughly 16 hours sequential, or about four hours split four ways since each
+case is single-threaded.  See [`RUNBOOK.md`](RUNBOOK.md).
+
 ### What made it work
 
 - **Netgen optimisation scoped to the tetrahedral core.**  All optimisation had

@@ -80,6 +80,13 @@ with Path('surface_flow.csv').open('w', encoding='utf-8', newline='') as stream:
     writer.writerow(['Global_Index', 'Y_PLUS'])
     writer.writerows([(0, 0.5), (1, 0.75), (2, 1.0)])
 Path('restart_flow.dat').write_bytes(b'deterministic-restart')
+# SU2 8.5 omits PRIMITIVE fields from the surface CSV, so wall y+ arrives in the
+# surface Paraview file.  The fake solver writes one so that path is covered.
+vtk = ['# vtk DataFile Version 3.0', 'fake', 'ASCII', 'DATASET POLYDATA',
+       'POINTS 3 double', '0 0 0', '1 0 0', '0 1 0',
+       'POINT_DATA 3', 'SCALARS Y_Plus double 1', 'LOOKUP_TABLE default',
+       '0.51', '0.62', '0.73']
+Path('surface_flow.vtk').write_text(chr(10).join(vtk) + chr(10))
 """,
         encoding="utf-8",
     )

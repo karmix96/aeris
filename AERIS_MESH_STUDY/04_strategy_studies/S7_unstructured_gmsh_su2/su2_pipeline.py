@@ -47,6 +47,7 @@ WALL_MARKERS = ("wall_upper", "wall_lower", "wall_te", "wall_tip")
 FARFIELD_MARKER = "farfield"
 HISTORY_NAME = "history.csv"
 SURFACE_NAME = "surface_flow.csv"
+SURFACE_VTK_NAME = "surface_flow.vtk"
 RESTART_NAME = "restart_flow.dat"
 MAX_TIMEOUT_S = 24.0 * 60.0 * 60.0
 
@@ -237,20 +238,89 @@ def force_tail_gate(history: Mapping[str, Any], policy: Mapping[str, Any]) -> di
     }
 
 
+def read_surface_vtk_yplus(path: Path) -> dict[str, Any]:
+    """Read per-point wall y+ from SU2's legacy-ASCII surface Paraview file.
+
+    SU2 8.5 writes surface CSV without any PRIMITIVE field, so y+ is only
+    available here.  The file holds wall points alone, so it stays small.  Point
+    order matches the POINTS block, which is the same order the CSV uses, so the
+    two can be cross-checked.
+    """
+    if not Path(path).is_file():
+        # Absence must fail the gate closed, never raise: a solver that wrote no
+        # surface file has produced no y+ evidence.
+        return {
+            "path": str(Path(path)),
+            "point_count": None,
+            "values": [],
+            "complete": False,
+            "missing": True,
+        }
+    text = Path(path).read_text(encoding="utf-8", errors="replace").splitlines()
+    point_count: int | None = None
+    values: list[float] = []
+    index = 0
+    while index < len(text):
+        line = text[index].strip()
+        if line.upper().startswith("POINTS") and point_count is None:
+            parts = line.split()
+            if len(parts) >= 2:
+                point_count = int(parts[1])
+        # SCALARS <name> <type> [components]  then  LOOKUP_TABLE <name>
+        if line.upper().startswith("SCALARS"):
+            parts = line.split()
+            if len(parts) >= 2 and _normalise_header(parts[1]) == "yplus":
+                cursor = index + 1
+                if cursor < len(text) and text[cursor].strip().upper().startswith(
+                    "LOOKUP_TABLE"
+                ):
+                    cursor += 1
+                while cursor < len(text) and len(values) < (point_count or 0):
+                    stripped = text[cursor].strip()
+                    if not stripped or stripped[0].isalpha():
+                        break
+                    for token in stripped.split():
+                        try:
+                            values.append(float(token))
+                        except ValueError:
+                            pass
+                    cursor += 1
+                break
+        index += 1
+    return {
+        "path": str(Path(path).resolve()),
+        "point_count": point_count,
+        "values": values,
+        "complete": point_count is not None and len(values) == point_count,
+    }
+
+
 def parse_surface_yplus(
     path: Path,
     *,
     expected_wall_point_indices: set[int] | None = None,
+    vtk_path: Path | None = None,
 ) -> dict[str, Any]:
-    """Read wall ``y+`` values from SU2 surface CSV column-name aliases."""
+    """Read wall ``y+`` for the points the SU2 mesh declares as wall.
+
+    SU2 8.5 omits every PRIMITIVE field from the surface CSV, so y+ is taken from
+    the surface Paraview file when one is supplied.  The CSV still proves WHICH
+    points were written, by native mesh point id, and the two must agree on
+    count; the values are then aligned by row order, which is the order both
+    writers use for the same marker set.
+    """
     headers, rows = _read_csv(path)
-    yplus_index = _column(headers, ("Y_PLUS", "YPLUS", "Y+", "Wall_Y_Plus", "YPlus"))
+    external = read_surface_vtk_yplus(vtk_path) if vtk_path is not None else None
+    # "Y+" must NOT be listed: _normalise_header drops non-alphanumerics, so it
+    # collapses to "y" and matches the y COORDINATE column.  Measured on the first
+    # real run: wall y+ was reported as 1.135, which is the semi-span in metres.
+    yplus_index = _column(headers, ("Y_PLUS", "YPLUS", "Wall_Y_Plus", "YPlus"))
     marker_index = _column(headers, ("MARKER", "MARKER_TAG", "BOUNDARY", "BOUNDARY_MARKER"))
     point_index = _column(
         headers,
         ("Global_Index", "GlobalIndex", "Point_ID", "PointID", "Node_ID", "NodeID"),
     )
-    if yplus_index is None:
+    if yplus_index is None and not (external and external["complete"]):
         return {
             "path": str(Path(path).resolve()),
             "row_count": len(rows),
@@ -262,6 +332,24 @@ def parse_surface_yplus(
             "invalid_count": 0,
             "selection_proven": False,
         }
+    if yplus_index is None:
+        # y+ comes from the surface Paraview file; the CSV supplies the point
+        # identity.  Both writers emit the same marker set in the same order, and
+        # a count disagreement means that assumption broke, so fail closed.
+        if external["point_count"] != len(rows):
+            return {
+                "path": str(Path(path).resolve()),
+                "row_count": len(rows),
+                "wall_row_count": 0,
+                "yplus_column": None,
+                "yplus_source": "surface_vtk",
+                "marker_column": None,
+                "point_index_column": None,
+                "values": [],
+                "invalid_count": len(rows),
+                "selection_proven": False,
+                "vtk_point_count": external["point_count"],
+            }
     if marker_index is None and (point_index is None or expected_wall_point_indices is None):
         return {
             "path": str(Path(path).resolve()),
@@ -279,13 +367,13 @@ def parse_surface_yplus(
     wall_rows = 0
     observed_wall_points: set[int] = set()
     unexpected_wall_points = 0
-    for row in rows:
-        required_indices = [yplus_index]
+    for row_position, row in enumerate(rows):
+        required_indices = [] if yplus_index is None else [yplus_index]
         if expected_wall_point_indices is not None and point_index is not None:
             required_indices.append(point_index)
         elif marker_index is not None:
             required_indices.append(marker_index)
-        if len(row) <= max(required_indices):
+        if required_indices and len(row) <= max(required_indices):
             invalid_count += 1
             continue
         if expected_wall_point_indices is not None and point_index is not None:
@@ -304,11 +392,14 @@ def parse_surface_yplus(
             if marker not in WALL_MARKERS:
                 continue
         wall_rows += 1
-        try:
-            value = float(row[yplus_index])
-        except ValueError:
-            invalid_count += 1
-            continue
+        if yplus_index is None:
+            value = external["values"][row_position]
+        else:
+            try:
+                value = float(row[yplus_index])
+            except ValueError:
+                invalid_count += 1
+                continue
         if not math.isfinite(value) or value < 0.0:
             invalid_count += 1
             continue
@@ -317,7 +408,8 @@ def parse_surface_yplus(
         "path": str(Path(path).resolve()),
         "row_count": len(rows),
         "wall_row_count": wall_rows,
-        "yplus_column": headers[yplus_index],
+        "yplus_column": None if yplus_index is None else headers[yplus_index],
+        "yplus_source": "surface_csv" if yplus_index is not None else "surface_vtk",
         "marker_column": None if marker_index is None else headers[marker_index],
         "point_index_column": None if point_index is None else headers[point_index],
         "values": values,
@@ -343,8 +435,11 @@ def wall_yplus_gate(surface: Mapping[str, Any], policy: Mapping[str, Any]) -> di
     wall_rows = int(surface.get("wall_row_count", 0))
     valid_fraction = float(len(values) / wall_rows) if wall_rows else 0.0
     reasons: list[str] = []
-    if surface.get("yplus_column") is None:
-        reasons.append("missing_yplus_column")
+    # y+ legitimately arrives from the surface Paraview file, because SU2 8.5
+    # omits every PRIMITIVE field from the surface CSV.  Require a known source,
+    # not a CSV column.
+    if surface.get("yplus_column") is None and surface.get("yplus_source") != "surface_vtk":
+        reasons.append("missing_yplus_source")
     if not surface.get("selection_proven", False):
         reasons.append("wall_row_selection_not_proven")
     expected_points = surface.get("expected_wall_point_count")
@@ -527,10 +622,20 @@ def fixed_su2_options(
         "CONV_STARTITER": int(policy["su2"]["convergence"]["minimum_history_rows"]),
         "TABULAR_FORMAT": "CSV",
         "HISTORY_OUTPUT": "( ITER, RMS_RES, AERO_COEFF )",
-        "OUTPUT_FILES": "( RESTART, SURFACE_CSV )",
+        # SU2 8.5's SURFACE_CSV writer emits only a restart-like field set:
+        # measured, it carries COORDINATES and SOLUTION but no PRIMITIVE
+        # fields, so no Y_PLUS.  The surface Paraview writer does carry them
+        # and stays small because it holds wall points only (1 155 points,
+        # 387 KB on the smoke mesh).  Both are written: the CSV keeps the
+        # existing provenance, the VTK supplies wall y+.
+        "OUTPUT_FILES": "( RESTART, SURFACE_CSV, SURFACE_PARAVIEW_ASCII )",
         "CONV_FILENAME": HISTORY_NAME.removesuffix(".csv"),
         "SURFACE_FILENAME": SURFACE_NAME.removesuffix(".csv"),
-        "SURFACE_OUTPUT": "( COORDINATES, SOLUTION, PRIMITIVE, TURBULENCE, Y_PLUS )",
+        # SU2 8.5 has no SURFACE_OUTPUT option; the surface CSV carries the
+        # VOLUME_OUTPUT fields restricted to MARKER_PLOTTING.  Verified against
+        # the v8.5.0 config template and rejected by the solver as an invalid
+        # option name on the first real run.
+        "VOLUME_OUTPUT": "( COORDINATES, SOLUTION, PRIMITIVE )",
         "OUTPUT_WRT_FREQ": f"( {int(iterations)}, {int(iterations)} )",
         "WRT_RESTART_OVERWRITE": "YES",
         "WRT_SURFACE_OVERWRITE": "YES",
@@ -718,6 +823,7 @@ def _run_one_attempt(
         parse_surface_yplus(
             surface_path,
             expected_wall_point_indices=_su2_wall_point_indices(mesh),
+            vtk_path=attempt / SURFACE_VTK_NAME,
         )
         if surface_path.is_file()
         else None

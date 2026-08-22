@@ -179,8 +179,12 @@ laptop_smoke:
     downstream_over_L: 5.0
     radial_over_L: 3.0
     wake_length_over_L: 4.0
-  su2_iterations: 5
-  su2_restart_iterations: 5
+  # Enough iterations for the residual and force-tail gates to be evaluated at
+  # all: they need 200 history rows and a 200-row force tail, so a 5-iteration
+  # run could only ever fail them on row count and proved nothing about the
+  # solver chain.  This tier is still diagnostic and forbids campaign claims.
+  su2_iterations: 400
+  su2_restart_iterations: 400
 
 gmsh:
   random_factor: 1.0e-12

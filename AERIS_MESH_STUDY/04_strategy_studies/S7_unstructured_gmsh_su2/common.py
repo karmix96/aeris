@@ -195,8 +195,10 @@ def tool_versions() -> dict[str, Any]:
 
     for name, executable, version_args in (
         ("gmsh_cli", shutil.which("gmsh"), ["--version"]),
-        ("su2_cfd", shutil.which("SU2_CFD"), ["--version"]),
-        ("su2_sol", shutil.which("SU2_SOL"), ["--version"]),
+        # SU2 has no --version flag; it prints its banner on --help, e.g.
+        # 'SU2 v8.5.0 "Harrier", The Open-Source CFD Code'.
+        ("su2_cfd", shutil.which("SU2_CFD"), ["--help"]),
+        ("su2_sol", shutil.which("SU2_SOL"), ["--help"]),
         ("mpirun", shutil.which("mpirun"), ["--version"]),
     ):
         versions[f"{name}_path"] = executable
@@ -238,7 +240,14 @@ def verify_pinned_versions(
             mismatches.append(f"{policy_name}: expected {expected!r}, observed {actual!r}")
     expected_su2 = str(policy["su2_cfd"])
     actual_su2 = observed.get("su2_cfd")
-    if require_su2 and (actual_su2 is None or expected_su2.lower() not in str(actual_su2).lower()):
+    # SU2 reports 'SU2 v8.5.0 "Harrier", ...', so a plain substring test against
+    # '8.5.0 Harrier' fails on the interposed 'v' and the quotes.  Require every
+    # token of the pinned string instead; a wrong version still fails.
+    observed_su2 = str(actual_su2 or "").lower().replace('"', " ")
+    su2_matches = actual_su2 is not None and all(
+        token in observed_su2 for token in expected_su2.lower().split()
+    )
+    if require_su2 and not su2_matches:
         mismatches.append(
             f"su2_cfd: expected output containing {expected_su2!r}, observed {actual_su2!r}"
         )

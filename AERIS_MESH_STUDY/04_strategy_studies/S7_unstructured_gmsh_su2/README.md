@@ -86,7 +86,45 @@ is one design at one flow condition, and it invokes SU2 directly rather than
 through the campaign.  `production_y_plus_passed` remains unmet until a converged
 campaign case demonstrates it.
 
-### Steady convergence is NOT achieved with the frozen numerics
+### Steady convergence: diagnosed, and multigrid is the fix
+
+The preregistered numerics reach a limit cycle rather than converging.  A
+six-variant search on the cheap mesh, 1 500 iterations each, isolates why:
+
+| variant | rms final | orders dropped | CD | CD spread |
+|---|---|---|---|---|
+| first order (control) | **-8.021** | 5.445 | 0.29991 | 4.1e-06 |
+| **multigrid** | **-5.826** | **3.250** | **0.09099** | **2.4e-06** |
+| Venkatakrishnan coeff 0.05 | -4.320 | 1.745 | 0.09707 | 2.2e-03 |
+| limiter frozen at 1 200 | -3.961 | 1.385 | 0.09936 | 4.6e-02 |
+| baseline (as preregistered) | -3.685 | 1.109 | 0.09169 | 1.8e-03 |
+| non-dimensionalised | -4.125 | **-0.601** | 0.03135 | 7.9e-02 |
+
+First order converges to the -8 criterion and stops at iteration 460, which
+proves the setup is sound and implicates the limiter: a first-order scheme cannot
+limit-cycle.  It is a control only - its CD of 0.300 against 0.091 shows how
+dissipative it is.
+
+**Multigrid is the fix.**  It triples the residual drop against the preregistered
+baseline and tightens the force spread by a factor of 770, at the same CD, and it
+was still descending when the run ended.  The policy configures no multigrid at
+all (`MG level: 0`) on a 20L/30L/20L domain.
+
+Two candidates are refuted by measurement and should not be retried blindly:
+
+- **Non-dimensionalisation made it worse**, not better: the residual rose over the
+  run and the force spread grew to 7.9e-2.  This was the leading hypothesis, since
+  SU2 reports `Dimensional simulation` and absolute residuals are not comparable
+  between equations, and it is wrong.
+- **Freezing the limiter** fails at either end: at iteration 400 it destabilised
+  the solution outright, and at 1 200 it left the force spread 25 times worse than
+  baseline.
+
+Nothing has been changed in the frozen numerics.  The search runs entirely through
+overrides layered on the real config writer, and these results are evidence for a
+decision rather than a decision.
+
+### Superseded: first diagnosis of the stall
 
 A converged coarse case was attempted and is not currently reachable.  The
 diagnosis was run on the cheap mesh so it could be carried to 3 000 iterations:

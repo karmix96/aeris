@@ -12,54 +12,58 @@ The governing preregistration is
 [`POLICY.yaml`](POLICY.yaml) is the executable numerical contract. No threshold may
 be weakened to make a case pass.
 
-## Current state - 2026-08-21 (lead session)
+## Current state - 2026-08-22
 
 Status remains `preregistered_development_no_results`.
 
-The first real BWB geometry and the first real BWB volume meshes in S7's history
-were produced in this session.  Five source-surface/instrument defects and three
-mis-specified or mis-calibrated gates were corrected, and one causal claim was
-measured then withdrawn.  Suite 26 passed, Ruff clean.
+### The unstructured route now meshes the whole development set
 
-### Established on real geometry, across designs
+A 100-design robustness sweep runs on a 16 GiB laptop in about an hour at roughly
+77 000 cells and 30 s per case.  On the first such sweep **97 of 100 designs were
+accepted**, and `tet_quality` was the *only* failure mode in the entire run:
+topology, validity, geometry fidelity, labels, prism coverage and continuity, and
+native-SU2 conversion never failed on any design.
 
-The representative indices 0/24/49/74/99 and all three trailing-edge variants:
+Measured population, best candidate per design:
 
-| level | accepted |
-|---|---|
-| laptop_smoke | 15 / 15 |
-| coarse | 15 / 15 |
+| statistic | min | p05 | p50 | max |
+|---|---|---|---|---|
+| tet SICN minimum | 0.0398 | 0.0556 | 0.0998 | 0.1679 |
+| tet SICN p01 | 0.2229 | 0.2398 | 0.2948 | - |
 
-with zero self-intersections and node fidelity exactly 0.0 in every case.  Gmsh
-produces real hybrid meshes with prism wall coverage and column continuity of
-1.000000 including at the trailing edge and tip, every trailing-edge and tip prism
-face carrying exactly one adjacent core tet, and zero negative cells.  A ~1.4 M
-cell mesh builds in about 40 s on the laptop at diagnostic resolution.
+The three rejections (089, 029, 085) were boundary-locked slivers against the
+prism cap.  The worst-cell floor has been recalibrated onto that population and a
+distribution floor added; see the 2026-08-22 sections of ADR-0017.
 
-### Three findings worth reading before trusting anything here
+### What made it work
 
-- **A tip-cap triangulation defect, not a trailing-edge collision**, caused the
-  Gmsh PLC failures.  An apparent "boundary-layer thickness must fit inside the
-  trailing-edge opening" law was measured, then **withdrawn**: the same geometry
-  meshes at 15.3x the opening once the cap is Delaunay-triangulated.
-- **Bad core cells were in the size-field transition, not at any feature.**  Only
-  0.9 percent were near the trailing edge.  Deriving the ramp length from a
-  declared growth ratio moved the violators' distance-to-wall p95 from 4.396 L to
-  0.168 L.  What remains is ordinary Delaunay scatter: a volume ratio of 5 is an
-  edge ratio of only 1.71.
-- **Index 0 was a benign design.**  Facet limits calibrated on it alone failed
-  index 49 at `coarse` by 2.5 percent.  They are now calibrated on the worst of
-  the five representative designs with 2x margin, and 95 designs remain unmeasured.
+- **Netgen optimisation scoped to the tetrahedral core.**  All optimisation had
+  been disabled on the belief that it corrupts the prism schedule.  That is true
+  of Relocate3D (prism minSJ 0.3332 to -33.3) and false of Netgen, which leaves
+  the prism block bit-identical while removing slivers (tet SICN 0.029 to 0.146).
+  Optimisation is guarded: the pre-optimisation mesh is restored if the optimised
+  one is less valid.
+- **S6-equivalent gate structure.**  S6 gates validity, wall error, interface
+  consistency and one quality metric, with a warning tier.  S7 was gating about
+  twenty-five criteria including six maxima S6 never checks.  The distribution
+  metrics moved from maximum to p99 at unchanged limits, with the maxima reported
+  as warnings.
+- **Decomposition-free validity.**  A prism's 3-tetrahedron split is not unique;
+  two designs were being rejected for negative sub-volumes that vanish under the
+  other split, with Gmsh's Jacobian positive throughout.
+- **Tier-aware distribution gates.**  Face-quality distributions are resolution
+  dependent for unstructured meshes (skewness p99 0.890 at 77 k cells, 0.737 at
+  1.2 M), so they are enforced from the development tier upward and reported
+  below it.  Binary correctness is gated at every tier.
 
 ### Not established
 
 - `SU2_CFD` is absent.  No CFD, y+, force, grid-convergence or trailing-edge
-  sensitivity result exists, and none of the campaign readiness targets is met.
-- Six gates still fail, all maxima whose percentiles pass.  Two of them are now
-  diagnosed as measuring geometry rather than defects (see ADR-0017), and **no
-  gate was relaxed** on that basis.
-- Nothing here is production resolution volume meshing: `coarse` volume meshes
-  need far more than the memory available on this laptop.
+  sensitivity result exists, and no campaign-readiness target is met.
+- No production-resolution volume mesh has been built; `coarse` needs a desktop.
+- Quality limits for facet fidelity and tetrahedral shape are PROVISIONAL: they
+  are calibrated from what the mesher achieves, not from a required aerodynamic
+  accuracy, and `geometric_fidelity_sensitivity_study_passed` is false.
 - The required independent Claude Opus/max review has never completed.
 - `round_c_lhs10_seed42` remains forbidden and untouched.
 

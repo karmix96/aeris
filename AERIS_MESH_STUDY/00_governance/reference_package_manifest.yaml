@@ -1,0 +1,126 @@
+schema: aeris.mesh_study.reference_package_manifest.v1
+created_local: 2026-08-11
+status: PROPOSED_FOR_STAGE_00_APPROVAL
+purpose: 'Record the complete local reference package required before Stage 01 can
+  reproduce TMR and cap4 controls.
+
+  '
+repo_context:
+  branch: main
+  head: 6bb2627b75bbf1c3cc1a35eaf5559aaeee0e0d51
+  warning: 'configs/geometry/bwb.yaml is modified in the working tree, so its Stage
+    00 hash is local until committed.
+
+    '
+restored_inputs:
+- path: AERIS_MESH_STUDY/00_governance/historical_reference_inputs/bwb_explore_wide.yaml
+  original_repo_path: configs/geometry/bwb_explore_wide.yaml
+  restored_from: 0783c30244bcf479daf81b73f2b18575da588dbc^:configs/geometry/bwb_explore_wide.yaml
+  deletion_commit: 0783c30244bcf479daf81b73f2b18575da588dbc
+  sha256: 1c0bfef70f804b111d227fc0abaf55fa235c7463228cab912df1ac43636931d6
+  bytes: 2919
+  verification: byte-for-byte match to git-history parent of delete commit, re-verified
+    after relocation
+  location_rationale: 'Held inside the study tree, not in configs/geometry/. DECISION-0001
+    consolidated the repository to a single geometry config, and the study storage rule
+    keeps study inputs under AERIS_MESH_STUDY/. Restoring a second live-looking config
+    into configs/geometry/ would reopen the exact ambiguity DECISION-0001 closed.'
+  status: HISTORICAL_REGRESSION_INPUT_ONLY
+  authoritative_for: reproducing and explaining the July 2026 cap4 campaign
+  not_authoritative_for: 'any current-design-space result, including epsE_common_start,
+    strategy scoring, surface/volume laws and success-rate claims'
+historical_config_divergence:
+  summary: 'The restored config is NOT a subset of the current design space. It is the
+    pre-rescale aircraft that DECISION-0002 explicitly replaced, and it violates two
+    invariants frozen in geometry_topology_contract.json.'
+  compared_against: configs/geometry/bwb.yaml (sha256 f114b48e3c400a2832cc3763e7cf7505ecd0925fb81cb92f70e28bb5e6234614)
+  differences:
+  - field: c1_m
+    historical: 1.2 - 2.0 m
+    current: 0.70 - 1.10 m
+  - field: b_total_m (semi-span)
+    historical: 1.2 - 2.0 m, i.e. full span 2.4 - 4.0 m
+    current: 0.75 - 1.25 m, i.e. full span 1.5 - 2.5 m
+  - field: sw1_deg / sw2_deg / sw3_deg
+    historical: 30-55 / 10-45 / 0-30 deg
+    current: 20-40 / 15-35 / 5-25 deg
+  - field: airfoils
+    historical: no station_airfoils; naca4412 fallback applied to the whole wing
+    current: station_airfoils b0=mh91, b1=mh91, b2=e374, b3=nlf1015
+    contract_conflict: geometry_topology_contract.json airfoil_assignment
+  - field: dihedral_b1_deg
+    historical: 0 - 5 deg
+    current: pinned 0.0
+    contract_conflict: geometry_topology_contract.json flat_root_panel invariant; seed
+      0 under the historical config yields dihedral_b1 = 3.65 deg, a canted root panel
+  - field: active design variables
+    historical: 17 (no elevon_bounds)
+    current: 20
+  consequence: 'Any epsE value calibrated on the historical ten geometries would be
+    tuned on a roughly 4 m span NACA 4412 wing with a canted root panel, then frozen
+    as the trusted starting point for a 1.5-2.5 m span BWB with three different
+    airfoils. Stage 01 must therefore calibrate epsE_common_start on the current design
+    space; see lhs_authority.yaml, set epse_calibration_lhs10_seed7_samples.csv.'
+  generator_drift_warning: 'Eight commits touched params.py, sampling.py, planform.py
+    or sections.py between the historical config''s last version (2026-06-11) and HEAD,
+    including a49ee51 (DECISION-0002). The n=10 campaign report stores only seed,
+    block_count and quality metrics - it stores no per-sample design variables - so
+    there is no way to verify that seeds 0-9 under today''s generator reproduce the
+    July geometries. Historical reproduction is therefore qualitative: expect the same
+    failure mechanism and region, do not expect identical numbers.'
+surviving_reference_evidence:
+- path: configs/cfd/RESULTS_ARCHIVE.md
+  sha256: 93dfde349b3c1146a3e2ee66dd11b8a0046165c1d92cbfb3098bf6c82194a309
+  role: archived TMR, GCI, determinism, and cap4 failure summary
+  bytes: 6143
+- path: configs/cfd/RETENTION.md
+  sha256: 8361bc9b482c09593e3d5612aea0b00c2543558b23988f998ef6cf290df1ba40
+  role: retention and reproducibility policy
+  bytes: 3571
+- path: configs/cfd/NEXT_STEPS.md
+  sha256: e2a05c1313427023e4048fa72baa458eacd286c551f52843fdea3ba9514c4e22
+  role: staged cap4 epsE and TMR rerun commands
+  bytes: 5405
+- path: configs/cfd/STATUS.md
+  sha256: 80c1c19ff2d7b464c1d3379c9875e9a74a768a4eb79a51b1fbae0a3cf41532bb
+  role: last committed CFD campaign telemetry
+  bytes: 4244
+- path: configs/cfd/SURFACE_MESH_LAWS.md
+  sha256: 8e6f65bebc9f877a2cb1ddccd9d6e264a3c60c5b814e36b3eec79085eda65374
+  role: cap4 TE-crown inversion diagnosis and epsE dose response
+  bytes: 37769
+- path: configs/cfd/RUNBOOK.md
+  sha256: dadb974fd1618a28c879fe526c67bc6ec10277fd624bf4cd07879656152d70cf
+  role: staged CFD commands and surface-option sweep plan
+  bytes: 17270
+- path: configs/cfd/evidence/mesh_robustness_n10_cap4_report.json
+  role: original n=10 cap4 campaign report, stale headline only
+  sha256: ab03248af2f8b48f8a38ac179aee82f53079ec400122f316d2c4ca8cb5722c2e
+  bytes: 203563
+- path: configs/cfd/evidence/remarch_te_inversion_report.json
+  role: controlled remarch evidence isolating epsE
+  sha256: 3731d736244f6c06adb7b670c687ad4e1b73a58c39d32e2ba25febc87cd0b64d
+  bytes: 24102
+- path: configs/cfd/evidence/determinism_check.json
+  role: surface byte identity and CGNS dataset-content determinism evidence
+  sha256: 3b6c3bcc0e2c259cb34a9b9eec5bc4bcbdf021444753b4d61a46aa37f7b8fb46
+  bytes: 1555
+missing_bulk_artifacts:
+- path: data/cfd_cases/mesh_robustness_n10_cap4
+  status: absent
+  consequence: 'Stage 01 cannot compare regenerated cap4 surfaces to old deleted surface.fmt
+    files, and the historical config is not valid for current-design-space calibration
+    anyway. Stage 01 must generate the epsE calibration surfaces from configs/geometry/bwb.yaml
+    using epse_calibration_lhs10_seed7_samples.csv, record their surface hashes, and
+    use those frozen surfaces as the byte-identical inputs for the epsE causal
+    experiment.
+
+    '
+reproducibility_rules:
+  surface_fmt: compare raw bytes once Stage 01 regenerates and freezes surfaces
+  volume_cgns: compare HDF5 dataset contents, not raw CGNS file hashes
+  old_cap4_headline: 'Treat the old campaign as 6/10 clean under the current policy
+    because seed 6 carried 30 negative-quality layers even though it was originally
+    counted as ok.
+
+    '

@@ -1,0 +1,2093 @@
+#!/usr/bin/env python3
+"""Resumable mesh-and-CFD campaign runner for S6."""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import gc
+import hashlib
+import json
+import math
+import os
+import signal
+import socket
+import subprocess
+import sys
+import time
+import traceback
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Any, Iterator
+
+import numpy as np
+
+HERE = Path(__file__).resolve().parent
+STUDIES = HERE.parent
+REPO_ROOT = STUDIES.parents[1]
+for _path in (HERE, REPO_ROOT / "src", STUDIES):
+    if str(_path) not in sys.path:
+        sys.path.insert(0, str(_path))
+
+from atlas import (  # noqa: E402
+    ATLAS_SCHEMA,
+    MESH_DISTANCE_EXCLUDED,
+    mesh_distance_variable_names,
+    normalize_matrix,
+    rms_distance,
+)
+from cfd_qc import wall_yplus_summary  # noqa: E402
+from deform import (  # noqa: E402
+    DEFORMATION_SCHEMA,
+    WALL_TOLERANCE_M,
+    acceptance_report,
+    deform_volume_blocks,
+    load_surface_blocks,
+    sha256,
+    validate_template_correspondence,
+    volume_interface_report,
+    write_volume_blocks,
+    written_deformation_metadata,
+)
+from resolution import epsilon_tag  # noqa: E402
+from S1_tip_first import strategy_s1  # noqa: E402
+from shared.gates import EPSE_LADDER  # noqa: E402
+from shared.geometry_sets import _config, design_matrix  # noqa: E402
+from shared.pyhyp_runner import prepare, read_result  # noqa: E402
+from shared.qc import write_surface_artifacts  # noqa: E402
+from shared.volume_qc import volume_report  # noqa: E402
+from strategy_s6 import STRATEGY_ID, build_surface  # noqa: E402
+
+from aeris.cfd.case.spec import FlowConditions, SolveSpec  # noqa: E402
+from aeris.cfd.meshing.pyhyp_extrude import mach_aero_python  # noqa: E402
+from aeris.cfd.meshing.pyhyp_options import GRID_LEVELS  # noqa: E402
+from aeris.cfd.meshing.volume_audit import read_volume_blocks  # noqa: E402
+from aeris.cfd.solvers.adflow.parse import parse_force_history  # noqa: E402
+from aeris.cfd.solvers.base import get_solver_adapter  # noqa: E402
+from aeris.generators.bwb_segmented_v1.params import BWBDesignSample  # noqa: E402
+from aeris.geometry.registry import get_geometry_generator  # noqa: E402
+
+MANIFEST_SCHEMA = "aeris.mesh.s6_campaign_manifest.v2"
+DEVELOPMENT_REPORT_SCHEMA = "aeris.mesh.s6_atlas_development_validation.v2"
+HPC_PILOT_SCHEMA = "aeris.mesh.s6_hpc_pilot_package.v1"
+REGISTRY_SCHEMA = "aeris.mesh.s6_template_registry.v8"
+LEGACY_REGISTRY_SCHEMAS = frozenset({"aeris.mesh.s6_template_registry.v7"})
+MESH_REPORT_SCHEMA = "aeris.mesh.s6_campaign_mesh.v2"
+CFD_REPORT_SCHEMA = "aeris.mesh.s6_campaign_cfd_acceptance.v1"
+DESIGN_REPORT_SCHEMA = "aeris.mesh.s6_design_run.v2"
+DEFAULT_S1_ROOT = (
+    REPO_ROOT / "AERIS_MESH_STUDY/artifacts/strategy_studies" / "S1_tip_first/L2_smoke/smoke"
+)
+ATLAS_VOLUME_LEVELS = ("smoke", "fine", "production")
+LOCK_STALE_AFTER_S = 24.0 * 60.0 * 60.0
+NK_SUBSPACE_SIZE = 20
+PREFERRED_MIN_SCALED_QUALITY = 0.15
+REGISTRY_ASSET_KEYS = (
+    ("cgns", "cgns_sha256"),
+    ("surface_npz", "surface_npz_sha256"),
+    ("pyhyp_options", "pyhyp_options_sha256"),
+)
+
+
+class RegistryIntegrityError(RuntimeError):
+    """A frozen template asset is missing or differs from its registry hash."""
+
+
+def _combined_sha256(paths: list[Path]) -> str:
+    digest = hashlib.sha256()
+    for path in sorted({Path(path).resolve() for path in paths}):
+        if not path.is_file():
+            raise FileNotFoundError(path)
+        try:
+            label = path.relative_to(REPO_ROOT).as_posix()
+        except ValueError:
+            label = str(path)
+        digest.update(label.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def _mesh_implementation_sha256() -> str:
+    generator = REPO_ROOT / "src/aeris/generators/bwb_segmented_v1"
+    return _combined_sha256(
+        [
+            HERE / "campaign.py",
+            HERE / "deform.py",
+            HERE / "resolution.py",
+            HERE / "strategy_s6.py",
+            STUDIES / "S1_tip_first/strategy_s1.py",
+            STUDIES / "shared/pyhyp_runner.py",
+            REPO_ROOT / "configs/geometry/bwb.yaml",
+            *generator.glob("*.py"),
+        ]
+    )
+
+
+def _solver_implementation_sha256() -> str:
+    adflow = REPO_ROOT / "src/aeris/cfd/solvers/adflow"
+    return _combined_sha256(
+        [
+            HERE / "campaign.py",
+            HERE / "cfd_qc.py",
+            REPO_ROOT / "src/aeris/cfd/case/spec.py",
+            REPO_ROOT / "src/aeris/cfd/solvers/base.py",
+            REPO_ROOT / "src/aeris/cfd/presets/data/adflow_rans_ank_nk_v1.yaml",
+            *adflow.glob("*.py"),
+        ]
+    )
+
+
+def _default(value: Any) -> Any:
+    if isinstance(value, np.generic):
+        return value.item()
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, Path):
+        return str(value)
+    raise TypeError(type(value).__name__)
+
+
+def _write_json(path: Path, value: Any) -> Path:
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    temporary.write_text(
+        json.dumps(value, indent=2, sort_keys=True, default=_default) + "\n",
+        encoding="utf-8",
+    )
+    temporary.replace(path)
+    return path
+
+
+def _read_json(path: Path) -> dict[str, Any]:
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def _portable_repo_path(path: Path) -> str:
+    resolved = Path(path).resolve()
+    try:
+        return resolved.relative_to(REPO_ROOT.resolve()).as_posix()
+    except ValueError:
+        return str(resolved)
+
+
+def _resolve_registry_asset_path(
+    registry: dict[str, Any], registry_path: Path, value: str
+) -> Path:
+    candidate = Path(value)
+    if candidate.is_absolute():
+        return candidate.resolve()
+    base = registry.get("asset_path_base")
+    if base == "repository_root":
+        root = REPO_ROOT.resolve()
+    elif base == "registry_directory":
+        root = Path(registry_path).resolve().parent
+    else:
+        raise RegistryIntegrityError(
+            f"registry has relative asset path {value!r} without a supported path base"
+        )
+    return (root / candidate).resolve()
+
+
+def _materialize_registry_assets(
+    registry: dict[str, Any], registry_path: Path
+) -> dict[str, Any]:
+    schema = registry.get("schema")
+    if schema != REGISTRY_SCHEMA and schema not in LEGACY_REGISTRY_SCHEMAS:
+        raise ValueError("not an S6 template registry")
+    if schema == REGISTRY_SCHEMA and registry.get("asset_path_base") != "repository_root":
+        raise RegistryIntegrityError("current registry must use repository_root asset paths")
+    for template in registry.get("templates", []):
+        for path_key, hash_key in REGISTRY_ASSET_KEYS:
+            if path_key not in template or hash_key not in template:
+                raise RegistryIntegrityError(
+                    f"template {template.get('template_id')} lacks {path_key} provenance"
+                )
+            resolved = _resolve_registry_asset_path(registry, registry_path, template[path_key])
+            if not resolved.is_file():
+                raise RegistryIntegrityError(f"missing registry asset: {resolved}")
+            template[path_key] = str(resolved)
+    return registry
+
+
+def _verify_template_assets(template: dict[str, Any]) -> None:
+    for path_key, hash_key in REGISTRY_ASSET_KEYS:
+        if path_key not in template and hash_key not in template:
+            continue
+        path = Path(template.get(path_key, ""))
+        expected = template.get(hash_key)
+        if not path.is_file() or not expected:
+            raise RegistryIntegrityError(
+                f"template {template.get('template_id')} has incomplete {path_key} provenance"
+            )
+        actual = sha256(path)
+        if actual != expected:
+            raise RegistryIntegrityError(
+                f"template {template.get('template_id')} {path_key} hash mismatch"
+            )
+
+
+def verify_registry(registry_path: Path) -> dict[str, Any]:
+    registry_path = Path(registry_path).resolve()
+    registry = _materialize_registry_assets(_read_json(registry_path), registry_path)
+    verified: list[dict[str, Any]] = []
+    for template in registry["templates"]:
+        _verify_template_assets(template)
+        verified.append(
+            {
+                "template_id": template["template_id"],
+                "geometry_index": int(template["geometry_index"]),
+                "assets_verified": len(REGISTRY_ASSET_KEYS),
+            }
+        )
+    return {
+        "schema": "aeris.mesh.s6_template_registry_audit.v1",
+        "passed": True,
+        "registry": str(registry_path),
+        "registry_sha256": sha256(registry_path),
+        "template_count": len(verified),
+        "templates": verified,
+    }
+
+
+def _safe_id(value: str) -> str:
+    cleaned = "".join(char if char.isalnum() or char in "._-" else "_" for char in value)
+    if not cleaned or cleaned in {".", ".."}:
+        raise ValueError(f"unsafe empty identifier derived from {value!r}")
+    return cleaned
+
+
+def _process_is_alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def _remove_stale_lock(path: Path, *, stale_after_s: float) -> bool:
+    try:
+        original_stat = path.stat()
+    except FileNotFoundError:
+        return True
+    except OSError:
+        return False
+
+    try:
+        fields = dict(
+            token.split("=", 1)
+            for token in path.read_text(encoding="utf-8").split()
+            if "=" in token
+        )
+    except FileNotFoundError:
+        return True
+    except (OSError, ValueError):
+        fields = {}
+
+    stale = False
+    if fields.get("host") == socket.gethostname() and fields.get("pid"):
+        try:
+            owner_alive = _process_is_alive(int(fields["pid"]))
+        except ValueError:
+            pass
+        else:
+            if owner_alive:
+                return False
+            stale = True
+    if not stale:
+        try:
+            started = float(fields.get("started", original_stat.st_mtime))
+        except ValueError:
+            started = original_stat.st_mtime
+        stale = time.time() - started > stale_after_s
+    if not stale:
+        return False
+
+    try:
+        current_stat = path.stat()
+        if (current_stat.st_dev, current_stat.st_ino) != (
+            original_stat.st_dev,
+            original_stat.st_ino,
+        ):
+            return False
+        path.unlink()
+    except FileNotFoundError:
+        pass
+    return True
+
+
+@contextmanager
+def _case_lock(
+    path: Path,
+    *,
+    wait_s: float = 7200.0,
+    stale_after_s: float = LOCK_STALE_AFTER_S,
+) -> Iterator[None]:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    deadline = time.monotonic() + wait_s
+    while True:
+        try:
+            descriptor = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+        except FileExistsError as error:
+            if _remove_stale_lock(path, stale_after_s=stale_after_s):
+                continue
+            if time.monotonic() >= deadline:
+                raise RuntimeError(f"timed out waiting for case lock: {path}") from error
+            time.sleep(2.0)
+        else:
+            break
+    try:
+        os.write(
+            descriptor,
+            (f"pid={os.getpid()} host={socket.gethostname()} started={time.time()}\n").encode(),
+        )
+        yield
+    finally:
+        os.close(descriptor)
+        path.unlink(missing_ok=True)
+
+
+def _existing_accepted_mesh(
+    report_path: Path,
+    *,
+    manifest_sha256: str,
+    registry_sha256: str,
+    implementation_sha256: str,
+) -> dict[str, Any] | None:
+    if not report_path.is_file():
+        return None
+    existing = _read_json(report_path)
+    accepted = existing.get("accepted_mesh") or {}
+    mesh_path = Path(accepted.get("cgns", ""))
+    expected = accepted.get("cgns_sha256")
+    if (
+        existing.get("schema") == MESH_REPORT_SCHEMA
+        and existing.get("state") == "MESH_ACCEPTED"
+        and existing.get("manifest_sha256") == manifest_sha256
+        and existing.get("registry_sha256") == registry_sha256
+        and existing.get("mesh_implementation_sha256") == implementation_sha256
+        and mesh_path.is_file()
+        and expected == sha256(mesh_path)
+    ):
+        return existing
+    return None
+
+
+def _csv_rows(path: Path) -> list[dict[str, str]]:
+    with Path(path).open(newline="", encoding="utf-8") as stream:
+        return list(csv.DictReader(stream))
+
+
+def _finite(value: str | float, label: str) -> float:
+    result = float(value)
+    if not math.isfinite(result):
+        raise ValueError(f"{label} must be finite")
+    return result
+
+
+def sample_designs(*, count: int, seed: int, output: Path) -> dict[str, Any]:
+    if count < 1:
+        raise ValueError("count must be positive")
+    from aeris.dataset.sampling.samplers.lhs_v1 import build_lhs_design_matrix
+
+    config = _config()
+    names = config.active_design_variable_names()
+    matrix = build_lhs_design_matrix(config, count, np.random.default_rng(seed))
+    output = Path(output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    temporary = output.with_name(f".{output.name}.{os.getpid()}.tmp")
+    with temporary.open("w", newline="", encoding="utf-8") as stream:
+        writer = csv.writer(stream)
+        writer.writerow(["design_id", *names])
+        for index, row in enumerate(matrix):
+            writer.writerow(
+                [f"lhs{count}_seed{seed}_{index:05d}", *(float(value) for value in row)]
+            )
+    temporary.replace(output)
+    return {
+        "designs_csv": str(output.resolve()),
+        "designs_csv_sha256": sha256(output),
+        "count": count,
+        "seed": seed,
+        "design_variables": names,
+    }
+
+
+def make_manifest(designs_csv: Path, flows_csv: Path, output: Path) -> dict[str, Any]:
+    config = _config()
+    names = config.active_design_variable_names()
+    design_rows = _csv_rows(designs_csv)
+    flow_rows = _csv_rows(flows_csv)
+    if not design_rows or not flow_rows:
+        raise ValueError("design and flow CSV files must both contain rows")
+
+    design_records: list[tuple[str, dict[str, float]]] = []
+    seen_designs: set[str] = set()
+    for index, row in enumerate(design_rows):
+        design_id = _safe_id(row.get("design_id") or f"design_{index:05d}")
+        if design_id in seen_designs:
+            raise ValueError(f"duplicate design_id {design_id!r}")
+        missing = [name for name in names if row.get(name, "") == ""]
+        if missing:
+            raise ValueError(f"{design_id}: missing design variables {missing}")
+        values = {name: _finite(row[name], f"{design_id}.{name}") for name in names}
+        design_records.append((design_id, values))
+        seen_designs.add(design_id)
+
+    normalized_designs = normalize_matrix(
+        np.asarray(
+            [[values[name] for name in names] for _design_id, values in design_records],
+            dtype=float,
+        ),
+        names,
+    )
+    designs = [
+        {
+            "design_id": design_id,
+            "values": values,
+            "normalized_design": normalized,
+        }
+        for (design_id, values), normalized in zip(design_records, normalized_designs, strict=True)
+    ]
+
+    flows: list[dict[str, Any]] = []
+    seen_flows: set[str] = set()
+    for index, row in enumerate(flow_rows):
+        flow_id = _safe_id(row.get("flow_id") or f"flow_{index:05d}")
+        if flow_id in seen_flows:
+            raise ValueError(f"duplicate flow_id {flow_id!r}")
+        flow = {
+            "alpha": _finite(row.get("alpha", 2.0), f"{flow_id}.alpha"),
+            "mach": _finite(row.get("mach", 0.2), f"{flow_id}.mach"),
+            "reynolds": _finite(row.get("reynolds", 1.0e6), f"{flow_id}.reynolds"),
+            "temperature": _finite(row.get("temperature", 288.15), f"{flow_id}.temperature"),
+        }
+        if flow["mach"] < 0.0 or flow["reynolds"] <= 0.0 or flow["temperature"] <= 0.0:
+            raise ValueError(f"{flow_id}: invalid flow state {flow}")
+        flows.append({"flow_id": flow_id, **flow})
+        seen_flows.add(flow_id)
+
+    cases = [
+        {
+            "case_index": len(flows) * design_index + flow_index,
+            "case_id": _safe_id(f"{design['design_id']}__{flow['flow_id']}"),
+            "design_id": design["design_id"],
+            "flow_id": flow["flow_id"],
+        }
+        for design_index, design in enumerate(designs)
+        for flow_index, flow in enumerate(flows)
+    ]
+    manifest = {
+        "schema": MANIFEST_SCHEMA,
+        "strategy_id": STRATEGY_ID,
+        "design_variables": names,
+        "mesh_distance_excluded_variables": sorted(MESH_DISTANCE_EXCLUDED),
+        "mesh_distance_variables": mesh_distance_variable_names(),
+        "input_hashes": {
+            "designs_csv": sha256(designs_csv),
+            "flows_csv": sha256(flows_csv),
+        },
+        "counts": {
+            "designs": len(designs),
+            "flows": len(flows),
+            "cases": len(cases),
+        },
+        "designs": designs,
+        "flows": flows,
+        "cases": cases,
+    }
+    _write_json(output, manifest)
+    return manifest
+
+
+def prepare_hpc_pilot(
+    *,
+    development_report_path: Path,
+    atlas_manifest_path: Path,
+    registry_path: Path,
+    flows_path: Path,
+    output: Path,
+    count: int = 10,
+    required_indices: tuple[int, ...] = (7, 89, 95),
+) -> dict[str, Any]:
+    """Package representative development cases without touching the hold-out."""
+    if count < len(required_indices) or count > 100:
+        raise ValueError("pilot count must include every required index and be at most 100")
+    if len(required_indices) != len(set(required_indices)):
+        raise ValueError("required pilot indices must be unique")
+
+    development_report_path = Path(development_report_path).resolve()
+    atlas_manifest_path = Path(atlas_manifest_path).resolve()
+    registry_path = Path(registry_path).resolve()
+    flows_path = Path(flows_path).resolve()
+    output = Path(output).resolve()
+    report = _read_json(development_report_path)
+    atlas_manifest = _read_json(atlas_manifest_path)
+    registry = _read_json(registry_path)
+
+    if report.get("schema") != DEVELOPMENT_REPORT_SCHEMA:
+        raise ValueError("pilot requires the current S6 development report")
+    if report.get("set_name") != "lhs100_seed42" or report.get("volume_level") != "production":
+        raise ValueError("pilot requires the production lhs100_seed42 development report")
+    if report.get("attempted") != 100 or report.get("passed") != 100:
+        raise ValueError("pilot requires a complete 100/100 development report")
+    if atlas_manifest.get("schema") != ATLAS_SCHEMA:
+        raise ValueError("pilot requires the current S6 atlas manifest")
+    enrichment = atlas_manifest.get("quality_enrichment") or {}
+    if not enrichment.get("freeze_ready") or enrichment.get("requires_revalidation"):
+        raise ValueError("pilot requires a production-validated frozen-candidate atlas")
+    report_provenance = enrichment.get("development_report") or {}
+    if report_provenance.get("sha256") != sha256(development_report_path):
+        raise ValueError("atlas manifest is not bound to the supplied development report")
+    if registry.get("schema") != REGISTRY_SCHEMA:
+        raise ValueError("pilot requires the current portable registry schema")
+    registry_atlas = registry.get("atlas_manifest") or {}
+    if registry_atlas.get("sha256") != sha256(atlas_manifest_path):
+        raise ValueError("registry is not bound to the supplied atlas manifest")
+    registry_audit = verify_registry(registry_path)
+
+    matrix, names = design_matrix("lhs100_seed42")
+    normalized = normalize_matrix(matrix, names)
+    center = np.full(normalized.shape[1], 0.5)
+    center_distance = rms_distance(normalized, center)
+    rows = {int(row["geometry_index"]): row for row in report["rows"]}
+    assignments = {
+        int(row["geometry_index"]): row for row in atlas_manifest["assignments"]
+    }
+    expected = set(range(len(matrix)))
+    if set(rows) != expected or set(assignments) != expected:
+        raise ValueError("development report or atlas assignments are incomplete")
+    if any(row.get("state") != "PASS" for row in rows.values()):
+        raise ValueError("pilot selection cannot include a failed development row")
+
+    selected: list[dict[str, Any]] = []
+    selected_indices: set[int] = set()
+
+    def take(candidates: list[int], reason: str, limit: int) -> None:
+        added = 0
+        for index in candidates:
+            if len(selected) >= count or added >= limit:
+                break
+            if index in selected_indices:
+                continue
+            row = rows[index]
+            assignment = assignments[index]
+            selected.append(
+                {
+                    "pilot_index": len(selected),
+                    "geometry_index": index,
+                    "geometry_id": row["geometry_id"],
+                    "selection_reason": reason,
+                    "accepted_min_scaled_quality": float(
+                        row["accepted_min_scaled_quality"]
+                    ),
+                    "attempt_count": len(row["attempts"]),
+                    "accepted_template_index": int(row["accepted_template_index"]),
+                    "selected_identity_deformation": bool(
+                        row["selected_identity_deformation"]
+                    ),
+                    "center_distance_rms": float(center_distance[index]),
+                    "nearest_atlas_distance_rms": float(assignment["distance_rms"]),
+                }
+            )
+            selected_indices.add(index)
+            added += 1
+
+    regression_reasons = {
+        7: "known_unbuildable_seed_alternate_route",
+        89: "prior_16_template_hard_failure_regression",
+        95: "final_preferred_quality_miss_and_long_route",
+    }
+    for index in required_indices:
+        if index not in rows:
+            raise ValueError(f"required pilot geometry {index} is absent")
+        take([index], regression_reasons.get(index, "required_regression"), 1)
+
+    quality_order = sorted(
+        rows,
+        key=lambda index: (float(rows[index]["accepted_min_scaled_quality"]), index),
+    )
+    routing_order = sorted(
+        rows,
+        key=lambda index: (
+            -len(rows[index]["attempts"]),
+            float(rows[index]["accepted_min_scaled_quality"]),
+            index,
+        ),
+    )
+    extreme_order = sorted(rows, key=lambda index: (-float(center_distance[index]), index))
+    atlas_distance_order = sorted(
+        rows,
+        key=lambda index: (-float(assignments[index]["distance_rms"]), index),
+    )
+    easy_order = sorted(
+        (
+            index
+            for index in rows
+            if len(rows[index]["attempts"]) == 1
+            and float(rows[index]["accepted_min_scaled_quality"])
+            >= float(report["preferred_quality"])
+        ),
+        key=lambda index: (float(center_distance[index]), index),
+    )
+    take(quality_order, "lowest_accepted_quality", 2)
+    take(routing_order, "largest_template_search", 1)
+    take(extreme_order, "design_space_extreme", 2)
+    take(atlas_distance_order, "largest_nearest_atlas_distance", 1)
+    take(easy_order, "central_first_try_control", 1)
+    take(sorted(rows), "deterministic_fill", count)
+    if len(selected) != count:
+        raise RuntimeError(f"selected {len(selected)} pilot geometries; expected {count}")
+
+    output.mkdir(parents=True, exist_ok=True)
+    designs_path = output / "designs.csv"
+    temporary_designs = designs_path.with_name(f".{designs_path.name}.{os.getpid()}.tmp")
+    with temporary_designs.open("w", newline="", encoding="utf-8") as stream:
+        writer = csv.writer(stream)
+        writer.writerow(["design_id", *names])
+        for entry in selected:
+            index = entry["geometry_index"]
+            writer.writerow([entry["geometry_id"], *(float(value) for value in matrix[index])])
+    temporary_designs.replace(designs_path)
+
+    packaged_flows = output / "flows.csv"
+    temporary_flows = packaged_flows.with_name(f".{packaged_flows.name}.{os.getpid()}.tmp")
+    temporary_flows.write_bytes(flows_path.read_bytes())
+    temporary_flows.replace(packaged_flows)
+    manifest_path = output / "manifest.json"
+    manifest = make_manifest(designs_path, packaged_flows, manifest_path)
+
+    registry_relative = _portable_repo_path(registry_path)
+    package_relative = _portable_repo_path(output)
+    if Path(registry_relative).is_absolute() or Path(package_relative).is_absolute():
+        raise ValueError("HPC pilot registry and package must be inside the repository")
+    submit_path = output / "verify_and_submit.sh"
+    submit_text = f'''#!/usr/bin/env bash
+set -euo pipefail
+: "${{S6_REPO_ROOT:?Set S6_REPO_ROOT to the copied repository root}}"
+cd "$S6_REPO_ROOT"
+PYTHON="${{S6_PYTHON:-$S6_REPO_ROOT/.venv/bin/python}}"
+RUNNER="AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/campaign.py"
+"$PYTHON" "$RUNNER" verify-registry \\
+  --registry "{registry_relative}" \\
+  --output "{package_relative}/registry_audit_on_hpc.json"
+export S6_MANIFEST="$S6_REPO_ROOT/{package_relative}/manifest.json"
+export S6_REGISTRY="$S6_REPO_ROOT/{registry_relative}"
+export S6_CAMPAIGN_ROOT="${{S6_CAMPAIGN_ROOT:-$S6_REPO_ROOT/{package_relative}/runs}}"
+export S6_KEEP_ACCEPTED_MESH=1
+export S6_RETAIN_SURFACE_SOLUTION=1
+sbatch --array=0-{count - 1}%2 \\
+  AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/slurm_run_design_array.sh
+'''
+    temporary_submit = submit_path.with_name(f".{submit_path.name}.{os.getpid()}.tmp")
+    temporary_submit.write_text(submit_text, encoding="utf-8")
+    temporary_submit.chmod(0o755)
+    temporary_submit.replace(submit_path)
+
+    package = {
+        "schema": HPC_PILOT_SCHEMA,
+        "source_set": "lhs100_seed42",
+        "holdout_accessed": False,
+        "input_hashes": {
+            "development_report": sha256(development_report_path),
+            "atlas_manifest": sha256(atlas_manifest_path),
+            "registry": sha256(registry_path),
+            "flows": sha256(packaged_flows),
+        },
+        "registry_audit": {
+            "passed": registry_audit["passed"],
+            "template_count": registry_audit["template_count"],
+        },
+        "counts": manifest["counts"],
+        "selected": selected,
+        "artifacts": {
+            "designs": _portable_repo_path(designs_path),
+            "flows": _portable_repo_path(packaged_flows),
+            "manifest": _portable_repo_path(manifest_path),
+            "submit_script": _portable_repo_path(submit_path),
+            "submit_script_sha256": sha256(submit_path),
+        },
+        "minimum_memory_per_design_gb": 64,
+        "local_execution": "package_only_do_not_run_production_adflow_on_16gb_laptop",
+    }
+    _write_json(output / "pilot_package.json", package)
+    return package
+
+
+def _template_paths(index: int, root: Path, eps_e: float = 2.0) -> tuple[Path, Path]:
+    directory = Path(root) / f"lhs100_seed42_{index:03d}" / epsilon_tag(eps_e)
+    return directory / "wing_vol.cgns", directory / "surface_blocks.npz"
+
+
+def indices_from_atlas_manifest(path: Path) -> list[int]:
+    manifest = _read_json(path)
+    if manifest.get("schema") != ATLAS_SCHEMA:
+        raise ValueError("not a current S6 atlas manifest")
+    if manifest.get("set_name") != "lhs100_seed42":
+        raise ValueError("atlas manifest uses the wrong development set")
+    indices = [int(index) for index in manifest.get("template_indices", [])]
+    if not indices or len(indices) != len(set(indices)):
+        raise ValueError("atlas manifest template indices must be non-empty and unique")
+    return indices
+
+
+def _volume_level_from_normal_points(normal_points: int) -> str:
+    matches = [
+        level for level in ATLAS_VOLUME_LEVELS if int(GRID_LEVELS[level]["N"]) == normal_points
+    ]
+    if len(matches) != 1:
+        raise ValueError(f"normal point count {normal_points} is not a supported S6 atlas level")
+    return matches[0]
+
+
+def build_registry(
+    *,
+    indices: list[int],
+    source_root: Path,
+    output: Path,
+    production_floor: float,
+    preferred_quality: float = PREFERRED_MIN_SCALED_QUALITY,
+    atlas_manifest_path: Path | None = None,
+    eps_e: float = 2.0,
+) -> dict[str, Any]:
+    if not indices:
+        raise ValueError("at least one template index is required")
+    if not 0.0 < production_floor <= 1.0:
+        raise ValueError("production floor must be in (0, 1]")
+    if not production_floor <= preferred_quality <= 1.0:
+        raise ValueError("preferred quality must be between production floor and 1")
+    eps_tag = epsilon_tag(eps_e)
+    atlas_provenance: dict[str, Any] | None = None
+    if atlas_manifest_path is not None:
+        atlas_manifest_path = Path(atlas_manifest_path).resolve()
+        atlas_manifest = _read_json(atlas_manifest_path)
+        if atlas_manifest.get("schema") != ATLAS_SCHEMA:
+            raise ValueError("not a current S6 atlas manifest")
+        if atlas_manifest.get("set_name") != "lhs100_seed42":
+            raise ValueError("atlas manifest uses the wrong development set")
+        manifest_indices = [int(index) for index in atlas_manifest.get("template_indices", [])]
+        if manifest_indices != indices:
+            raise ValueError("registry indices differ from the atlas manifest")
+        enrichment = atlas_manifest.get("quality_enrichment") or {}
+        atlas_provenance = {
+            "path": _portable_repo_path(atlas_manifest_path),
+            "sha256": sha256(atlas_manifest_path),
+            "schema": atlas_manifest["schema"],
+            "template_selection": atlas_manifest.get("template_selection"),
+            "quality_enrichment": enrichment,
+            "freeze_ready": bool(enrichment.get("freeze_ready", False)),
+        }
+    matrix, names = design_matrix("lhs100_seed42")
+    normalized = normalize_matrix(matrix, names)
+    templates: list[dict[str, Any]] = []
+    volume_levels: set[str] = set()
+    first_cell_fractions: list[float] = []
+    for index in indices:
+        cgns, surface_path = _template_paths(index, source_root, eps_e)
+        options_path = cgns.parent / "pyhyp_options.json"
+        prepare_path = cgns.parent.parent / "prepare_manifest.json"
+        if not all(path.is_file() for path in (cgns, surface_path, options_path, prepare_path)):
+            raise FileNotFoundError(f"missing template files for index {index}")
+        native_options = _read_json(options_path)
+        prepare_manifest = _read_json(prepare_path)
+        characteristic_length = float(prepare_manifest["characteristic_length"])
+        if characteristic_length <= 0.0:
+            raise ValueError(f"template {index} has invalid characteristic length")
+        first_cell_fraction = float(native_options["s0"]) / characteristic_length
+        first_cell_fractions.append(first_cell_fraction)
+        surface = load_surface_blocks(surface_path)
+        volume = read_volume_blocks(cgns)
+        normal_points = int(next(iter(volume.values())).shape[0])
+        volume_level = _volume_level_from_normal_points(normal_points)
+        volume_levels.add(volume_level)
+        correspondence = validate_template_correspondence(volume, surface)
+        quality = volume_report(volume)
+        interfaces = volume_interface_report(volume)
+        accepted = bool(
+            correspondence["max_wall_error_m"] <= WALL_TOLERANCE_M
+            and quality.get("inverted_cells") == 0
+            and float(quality.get("min_volume", -1.0)) > 0.0
+            and float(quality.get("min_scaled_quality", -1.0)) >= production_floor
+            and interfaces["paired_face_count"] > 0
+            and interfaces["max_mismatch_m"] <= WALL_TOLERANCE_M
+        )
+        if not accepted:
+            raise ValueError(f"template {index} fails frozen mesh gates")
+        templates.append(
+            {
+                "template_id": (f"s1_lhs100_seed42_{index:03d}_n{normal_points}_{eps_tag}"),
+                "geometry_index": index,
+                "design": {
+                    name: float(value) for name, value in zip(names, matrix[index], strict=True)
+                },
+                "normalized_design": normalized[index],
+                "cgns": _portable_repo_path(cgns),
+                "cgns_sha256": sha256(cgns),
+                "surface_npz": _portable_repo_path(surface_path),
+                "surface_npz_sha256": sha256(surface_path),
+                "surface_level": "smoke",
+                "volume_level": volume_level,
+                "pyhyp_options": _portable_repo_path(options_path),
+                "pyhyp_options_sha256": sha256(options_path),
+                "normal_points": normal_points,
+                "first_cell_height_m": float(native_options["s0"]),
+                "first_cell_fraction_characteristic": first_cell_fraction,
+                "eps_e": eps_e,
+                "span_cells": int(next(iter(surface.values())).shape[1] - 1),
+                "quality": quality,
+                "interfaces": interfaces,
+            }
+        )
+        del volume, surface
+        gc.collect()
+
+    if len(volume_levels) != 1:
+        raise ValueError(f"registry mixes volume levels: {sorted(volume_levels)}")
+    volume_level = next(iter(volume_levels))
+    if not np.allclose(
+        first_cell_fractions,
+        first_cell_fractions[0],
+        rtol=1.0e-12,
+        atol=0.0,
+    ):
+        raise ValueError("registry mixes first-cell-height laws")
+
+    registry = {
+        "schema": REGISTRY_SCHEMA,
+        "strategy_id": STRATEGY_ID,
+        "set_name": "lhs100_seed42",
+        "mesh_distance_excluded_variables": sorted(MESH_DISTANCE_EXCLUDED),
+        "mesh_distance_variables": mesh_distance_variable_names(),
+        "production_floor": production_floor,
+        "preferred_quality": preferred_quality,
+        "volume_level": volume_level,
+        "normal_points": int(GRID_LEVELS[volume_level]["N"]),
+        "first_cell_fraction_characteristic": first_cell_fractions[0],
+        "eps_e": eps_e,
+        "asset_path_base": "repository_root",
+        "source_root": _portable_repo_path(source_root),
+        "atlas_manifest": atlas_provenance,
+        "registry_status": (
+            "frozen_candidate"
+            if atlas_provenance and atlas_provenance["freeze_ready"]
+            else "development"
+        ),
+        "template_count": len(templates),
+        "templates": templates,
+    }
+    _write_json(output, registry)
+    return registry
+
+
+def _resolve_case(
+    manifest: dict[str, Any], case_index: int
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    if manifest.get("schema") != MANIFEST_SCHEMA:
+        raise ValueError("not an S6 campaign manifest")
+    cases = manifest["cases"]
+    if case_index < 0 or case_index >= len(cases):
+        raise IndexError(f"case index {case_index} outside [0, {len(cases)})")
+    case = cases[case_index]
+    design = next(row for row in manifest["designs"] if row["design_id"] == case["design_id"])
+    flow = next(row for row in manifest["flows"] if row["flow_id"] == case["flow_id"])
+    return case, design, flow
+
+
+def _rank_templates(
+    registry: dict[str, Any], normalized_design: list[float]
+) -> list[tuple[float, dict[str, Any]]]:
+    target = np.asarray(normalized_design, dtype=float)
+    rows = [
+        (
+            float(rms_distance(np.asarray(template["normalized_design"]), target)),
+            template,
+        )
+        for template in registry["templates"]
+    ]
+    return sorted(rows, key=lambda row: (row[0], row[1]["template_id"]))
+
+
+def _attempt_template(
+    *,
+    pygeo_result: Any,
+    template: dict[str, Any],
+    distance_rms: float,
+    design_dir: Path,
+    production_floor: float,
+) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    _verify_template_assets(template)
+    template_surface = load_surface_blocks(Path(template["surface_npz"]))
+    span_cells = int(next(iter(template_surface.values())).shape[1] - 1)
+    try:
+        blocks, surface_info = build_surface(
+            pygeo_result,
+            level=template.get("surface_level", "smoke"),
+            span_cells=span_cells,
+        )
+    except Exception as error:
+        return (
+            {
+                "template_id": template["template_id"],
+                "distance_rms": distance_rms,
+                "state": "SURFACE_BUILD_ERROR",
+                "error_type": type(error).__name__,
+                "error": str(error),
+            },
+            None,
+        )
+    surface_qc = surface_info["surface_qc"]
+    if not surface_qc["accepted_pre_pyhyp"] or not surface_info["fidelity"]["passed"]:
+        return (
+            {
+                "template_id": template["template_id"],
+                "distance_rms": distance_rms,
+                "state": "FAIL_SURFACE_GATE",
+                "surface_failure_reasons": surface_qc["failure_reasons"],
+                "surface_fidelity": surface_info["fidelity"],
+                "surface_interfaces": surface_qc["surface_interfaces"],
+            },
+            None,
+        )
+    target_surface = {block.name: np.asarray(block.xyz, dtype=float) for block in blocks}
+    volume = read_volume_blocks(Path(template["cgns"]))
+    deformed, metadata = deform_volume_blocks(volume, template_surface, target_surface)
+    acceptance = acceptance_report(deformed, metadata, production_floor=production_floor)
+    attempt = {
+        "template_id": template["template_id"],
+        "distance_rms": distance_rms,
+        "state": "PASS" if acceptance["production_floor_passed"] else "FAIL",
+        "surface_min_scaled_jacobian": surface_info["surface_qc"]["global"]["min_scaled_jacobian"],
+        "surface_fidelity": surface_info["fidelity"],
+        "deformation": metadata,
+        "acceptance": acceptance,
+    }
+    if not acceptance["production_floor_passed"]:
+        gc.collect()
+        return attempt, None
+
+    attempt_dir = design_dir / "template_attempts" / _safe_id(str(template["template_id"]))
+    candidate = attempt_dir / "wing_vol.cgns"
+    try:
+        write_volume_blocks(Path(template["cgns"]), candidate, deformed)
+        written = read_volume_blocks(candidate)
+        written_metadata = written_deformation_metadata(written, target_surface, metadata)
+        independent = acceptance_report(
+            written, written_metadata, production_floor=production_floor
+        )
+    except Exception as error:
+        candidate.unlink(missing_ok=True)
+        attempt["state"] = "FAIL_WRITTEN_AUDIT"
+        attempt["written_audit_error_type"] = type(error).__name__
+        attempt["written_audit_error"] = str(error)
+        gc.collect()
+        return attempt, None
+    attempt["independent_written_acceptance"] = independent
+    attempt["independent_written_deformation"] = {
+        "max_wall_error_m": written_metadata["max_wall_error_m"],
+        "per_zone_max_wall_error_m": written_metadata["per_zone_max_wall_error_m"],
+        "deformed_interfaces": written_metadata["deformed_interfaces"],
+        "first_layer_spacing": written_metadata["first_layer_spacing"],
+    }
+    if not independent["production_floor_passed"]:
+        candidate.unlink(missing_ok=True)
+        attempt["state"] = "FAIL_WRITTEN_AUDIT"
+        gc.collect()
+        return attempt, None
+
+    surface_artifacts = write_surface_artifacts(blocks, attempt_dir / "surface")
+    _write_json(attempt_dir / "surface" / "surface_report.json", surface_info)
+    candidate_hash = sha256(candidate)
+    attempt["candidate_cgns"] = str(candidate.resolve())
+    attempt["candidate_cgns_sha256"] = candidate_hash
+    accepted = {
+        "cgns": str(candidate.resolve()),
+        "cgns_sha256": candidate_hash,
+        "surface_artifacts": surface_artifacts,
+        "reference_values": pygeo_result.reference_values,
+        "template_id": template["template_id"],
+        "distance_rms": distance_rms,
+        "acceptance": independent,
+        "deformation_replay": {
+            "schema": DEFORMATION_SCHEMA,
+            "implementation_sha256": sha256(HERE / "deform.py"),
+            "template_cgns": template["cgns"],
+            "template_cgns_sha256": template.get("cgns_sha256"),
+            "template_surface_npz": template["surface_npz"],
+            "template_surface_npz_sha256": template.get("surface_npz_sha256"),
+            "target_surface_artifacts": surface_artifacts,
+            "metadata": written_metadata,
+        },
+    }
+    gc.collect()
+    return attempt, accepted
+
+
+def _accepted_quality(candidate: dict[str, Any]) -> float:
+    return float(candidate["acceptance"]["quality"]["min_scaled_quality"])
+
+
+def _finalize_best_candidate(
+    candidates: list[dict[str, Any]],
+    *,
+    design_dir: Path,
+    attempts: list[dict[str, Any]],
+) -> dict[str, Any] | None:
+    if not candidates:
+        return None
+    accepted = min(
+        candidates,
+        key=lambda candidate: (
+            -_accepted_quality(candidate),
+            float(candidate["distance_rms"]),
+            str(candidate["template_id"]),
+        ),
+    )
+    staged = Path(accepted["cgns"])
+    final_cgns = design_dir / "wing_vol.cgns"
+    staged_hash = accepted["cgns_sha256"]
+    staged.replace(final_cgns)
+    if sha256(final_cgns) != staged_hash:
+        raise RuntimeError("selected mesh hash changed during finalization")
+    accepted["staged_cgns"] = str(staged)
+    accepted["cgns"] = str(final_cgns.resolve())
+
+    selected_key = (accepted["template_id"], staged_hash)
+    for attempt in attempts:
+        written = attempt.get("independent_written_acceptance")
+        attempt["selected"] = bool(
+            written is not None
+            and attempt.get("template_id") == selected_key[0]
+            and attempt.get("candidate_cgns_sha256") == selected_key[1]
+        )
+    for candidate in candidates:
+        if candidate is accepted:
+            continue
+        Path(candidate["cgns"]).unlink(missing_ok=True)
+    return accepted
+
+
+def _run_with_timeout(command: list[str], cwd: Path, log_path: Path, timeout_s: float) -> int:
+    with log_path.open("w", encoding="utf-8") as log:
+        process = subprocess.Popen(
+            command,
+            cwd=cwd,
+            stdout=log,
+            stderr=subprocess.STDOUT,
+            start_new_session=True,
+        )
+        try:
+            return process.wait(timeout=timeout_s)
+        except subprocess.TimeoutExpired:
+            os.killpg(process.pid, signal.SIGTERM)
+            try:
+                process.wait(timeout=30.0)
+            except subprocess.TimeoutExpired:
+                os.killpg(process.pid, signal.SIGKILL)
+                process.wait()
+            return 124
+
+
+def _target_specific_template(
+    *,
+    geometry_case: Any,
+    design_id: str,
+    design_dir: Path,
+    timeout_s: float,
+    volume_level: str,
+    s0_fraction: float,
+    eps_e: float,
+) -> tuple[dict[str, Any] | None, dict[str, Any]]:
+    if geometry_case.wing is None:
+        return None, {"state": "UNAVAILABLE", "reason": "AeroSandbox wing not built"}
+    blocks, info = strategy_s1.build_surface(geometry_case.wing, level="L2_smoke")
+    fallback_root = design_dir / "target_specific_s1"
+    prepared = prepare(
+        strategy_id=strategy_s1.STRATEGY_ID,
+        geometry_id=design_id,
+        blocks=blocks,
+        out_dir=fallback_root,
+        level=volume_level,
+        epse_ladder=(eps_e,),
+        s0_fraction_override=s0_fraction,
+    )
+    run_dir = Path(prepared["runs"][0]["dir"]).resolve()
+    runner = Path(prepared["runs"][0]["runner"]).resolve()
+    returncode = _run_with_timeout(
+        [str(mach_aero_python()), str(runner)],
+        run_dir,
+        run_dir / "run_stdout.log",
+        timeout_s,
+    )
+    result = read_result(run_dir) or {}
+    state = {
+        "state": "PASS" if returncode == 0 and result.get("march_completed") else "FAIL",
+        "return_code": returncode,
+        "march_result": result,
+        "eps_e": eps_e,
+        "first_cell_fraction_characteristic": s0_fraction,
+    }
+    cgns = run_dir / "wing_vol.cgns"
+    surface_npz = run_dir / "surface_blocks.npz"
+    if state["state"] != "PASS" or not cgns.is_file() or not surface_npz.is_file():
+        return None, state
+    template = {
+        "template_id": f"target_specific_s1_{design_id}",
+        "normalized_design": [],
+        "cgns": str(cgns),
+        "cgns_sha256": sha256(cgns),
+        "surface_npz": str(surface_npz),
+        "surface_npz_sha256": sha256(surface_npz),
+        "surface_level": "smoke",
+        "volume_level": volume_level,
+        "eps_e": eps_e,
+        "first_cell_fraction_characteristic": s0_fraction,
+    }
+    return template, state
+
+
+def mesh_case(
+    *,
+    manifest_path: Path,
+    registry_path: Path,
+    campaign_root: Path,
+    case_index: int,
+    max_templates: int,
+    allow_remesh: bool,
+    remesh_timeout_s: float,
+) -> dict[str, Any]:
+    manifest = _read_json(manifest_path)
+    registry_path = Path(registry_path).resolve()
+    registry = _materialize_registry_assets(_read_json(registry_path), registry_path)
+    volume_level = str(registry.get("volume_level", ""))
+    if volume_level not in ATLAS_VOLUME_LEVELS:
+        raise ValueError("registry has no supported volume_level")
+    manifest_hash = sha256(manifest_path)
+    registry_hash = sha256(registry_path)
+    implementation_hash = _mesh_implementation_sha256()
+    case, design, _flow = _resolve_case(manifest, case_index)
+    design_dir = Path(campaign_root).resolve() / "geometries" / _safe_id(case["design_id"])
+    report_path = design_dir / "mesh_report.json"
+    if existing := _existing_accepted_mesh(
+        report_path,
+        manifest_sha256=manifest_hash,
+        registry_sha256=registry_hash,
+        implementation_sha256=implementation_hash,
+    ):
+        return existing
+    with _case_lock(design_dir / ".mesh.lock"):
+        if existing := _existing_accepted_mesh(
+            report_path,
+            manifest_sha256=manifest_hash,
+            registry_sha256=registry_hash,
+            implementation_sha256=implementation_hash,
+        ):
+            return existing
+
+        started = time.monotonic()
+        design_dir.mkdir(parents=True, exist_ok=True)
+        sample = BWBDesignSample(**design["values"])
+        geometry_case = get_geometry_generator("bwb_segmented").run_full_case(
+            sample=sample,
+            config=_config(),
+            output_dir=design_dir / "geometry",
+            save_plot=False,
+            build_aerosandbox=allow_remesh,
+        )
+        if geometry_case.pygeo_result is None:
+            raise RuntimeError("pyGeo did not produce the master geometry")
+
+        ranked = _rank_templates(registry, design["normalized_design"])
+        template_ranking = [
+            {
+                "rank": rank,
+                "template_id": template["template_id"],
+                "distance_rms": distance,
+            }
+            for rank, (distance, template) in enumerate(ranked, start=1)
+        ]
+        limit = len(ranked) if max_templates <= 0 else min(max_templates, len(ranked))
+        attempts: list[dict[str, Any]] = []
+        candidates: list[dict[str, Any]] = []
+        preferred_quality = float(registry["preferred_quality"])
+        for distance, template in ranked[:limit]:
+            attempt_started = time.monotonic()
+            try:
+                attempt, candidate = _attempt_template(
+                    pygeo_result=geometry_case.pygeo_result,
+                    template=template,
+                    distance_rms=distance,
+                    design_dir=design_dir,
+                    production_floor=float(registry["production_floor"]),
+                )
+            except RegistryIntegrityError:
+                raise
+            except Exception as error:
+                attempt, candidate = (
+                    {
+                        "template_id": template["template_id"],
+                        "distance_rms": distance,
+                        "state": "TEMPLATE_ATTEMPT_ERROR",
+                        "error_type": type(error).__name__,
+                        "error": str(error),
+                    },
+                    None,
+                )
+            attempt["elapsed_s"] = time.monotonic() - attempt_started
+            attempts.append(attempt)
+            if candidate is not None:
+                candidates.append(candidate)
+            if candidate is not None and _accepted_quality(candidate) >= preferred_quality:
+                break
+
+        fallback: dict[str, Any] | None = None
+        best_quality = max(
+            (_accepted_quality(candidate) for candidate in candidates),
+            default=-1.0,
+        )
+        if best_quality < preferred_quality and allow_remesh:
+            try:
+                template, fallback = _target_specific_template(
+                    geometry_case=geometry_case,
+                    design_id=case["design_id"],
+                    design_dir=design_dir,
+                    timeout_s=remesh_timeout_s,
+                    volume_level=volume_level,
+                    s0_fraction=float(registry["first_cell_fraction_characteristic"]),
+                    eps_e=float(registry["eps_e"]),
+                )
+            except Exception as error:
+                template = None
+                fallback = {
+                    "state": "ERROR",
+                    "error_type": type(error).__name__,
+                    "error": str(error),
+                }
+            if template is not None:
+                attempt_started = time.monotonic()
+                try:
+                    attempt, candidate = _attempt_template(
+                        pygeo_result=geometry_case.pygeo_result,
+                        template=template,
+                        distance_rms=0.0,
+                        design_dir=design_dir,
+                        production_floor=float(registry["production_floor"]),
+                    )
+                except RegistryIntegrityError:
+                    raise
+                except Exception as error:
+                    attempt, candidate = (
+                        {
+                            "template_id": template["template_id"],
+                            "distance_rms": 0.0,
+                            "state": "FALLBACK_ATTEMPT_ERROR",
+                            "error_type": type(error).__name__,
+                            "error": str(error),
+                        },
+                        None,
+                    )
+                attempt["elapsed_s"] = time.monotonic() - attempt_started
+                attempts.append(attempt)
+                if candidate is not None:
+                    candidates.append(candidate)
+
+        accepted = _finalize_best_candidate(
+            candidates,
+            design_dir=design_dir,
+            attempts=attempts,
+        )
+        selected_quality = _accepted_quality(accepted) if accepted is not None else None
+
+        report = {
+            "schema": MESH_REPORT_SCHEMA,
+            "strategy_id": STRATEGY_ID,
+            "state": "MESH_ACCEPTED" if accepted is not None else "MESH_REJECTED",
+            "design_id": case["design_id"],
+            "design": design["values"],
+            "manifest_sha256": manifest_hash,
+            "registry_sha256": registry_hash,
+            "mesh_implementation_sha256": implementation_hash,
+            "production_floor": float(registry["production_floor"]),
+            "preferred_quality": preferred_quality,
+            "preferred_quality_met": bool(
+                selected_quality is not None and selected_quality >= preferred_quality
+            ),
+            "template_ranking": template_ranking,
+            "attempts": attempts,
+            "target_specific_fallback": fallback,
+            "accepted_mesh": accepted,
+            "elapsed_s": time.monotonic() - started,
+        }
+        _write_json(report_path, report)
+        return report
+
+
+def _existing_cfd_result(
+    path: Path,
+    *,
+    manifest_sha256: str,
+    mesh_sha256: str,
+    implementation_sha256: str,
+) -> dict[str, Any] | None:
+    if not path.is_file():
+        return None
+    report = _read_json(path)
+    return (
+        report
+        if report.get("schema") == CFD_REPORT_SCHEMA
+        and report.get("state") in {"CFD_ACCEPTED", "CFD_REJECTED"}
+        and report.get("manifest_sha256") == manifest_sha256
+        and report.get("mesh_sha256") == mesh_sha256
+        and report.get("solver_implementation_sha256") == implementation_sha256
+        else None
+    )
+
+
+def _existing_accepted_cfd(
+    path: Path,
+    *,
+    manifest_sha256: str,
+    mesh_sha256: str,
+    implementation_sha256: str,
+) -> dict[str, Any] | None:
+    report = _existing_cfd_result(
+        path,
+        manifest_sha256=manifest_sha256,
+        mesh_sha256=mesh_sha256,
+        implementation_sha256=implementation_sha256,
+    )
+    return report if report and report["state"] == "CFD_ACCEPTED" else None
+
+
+def _existing_accepted_design(
+    *,
+    campaign_root: Path,
+    design_id: str,
+    case_ids: list[str],
+    manifest_sha256: str,
+    registry_sha256: str,
+    mesh_implementation_sha256: str,
+    solver_implementation_sha256: str,
+) -> dict[str, Any] | None:
+    root = Path(campaign_root).resolve()
+    report_path = root / "geometries" / _safe_id(design_id) / "design_run_report.json"
+    if not report_path.is_file():
+        return None
+    report = _read_json(report_path)
+    mesh_hash = report.get("mesh_sha256")
+    if not (
+        report.get("schema") == DESIGN_REPORT_SCHEMA
+        and report.get("state") == "DESIGN_ACCEPTED"
+        and report.get("manifest_sha256") == manifest_sha256
+        and report.get("registry_sha256") == registry_sha256
+        and report.get("mesh_implementation_sha256") == mesh_implementation_sha256
+        and report.get("solver_implementation_sha256") == solver_implementation_sha256
+        and isinstance(mesh_hash, str)
+        and report.get("case_ids") == case_ids
+    ):
+        return None
+    for case_id in case_ids:
+        accepted = _existing_accepted_cfd(
+            root / "cases" / _safe_id(case_id) / "cfd_acceptance.json",
+            manifest_sha256=manifest_sha256,
+            mesh_sha256=mesh_hash,
+            implementation_sha256=solver_implementation_sha256,
+        )
+        if accepted is None:
+            return None
+    return report
+
+
+def _archive_previous_solver_outputs(case_dir: Path) -> None:
+    names = {
+        "adflow_run.json",
+        "adflow_run.log",
+        "solve_report.json",
+        "run_meta.json",
+        "cfd_acceptance.json",
+        "wall_yplus_summary.json",
+    }
+    paths = [case_dir / name for name in names]
+    paths.extend(case_dir.glob("aeris_cfd_*.cgns"))
+    existing = [path for path in paths if path.exists()]
+    if not existing:
+        return
+    attempts = case_dir / "previous_attempts"
+    attempts.mkdir(parents=True, exist_ok=True)
+    index = 0
+    while (target := attempts / f"attempt_{index:03d}").exists():
+        index += 1
+    target.mkdir()
+    for path in existing:
+        path.replace(target / path.name)
+
+
+FORCE_COEFFICIENT_FLOORS = {"cl": 0.10, "cd": 0.01}
+
+
+def _force_tail_gate(
+    log_path: Path,
+    *,
+    relative_range_max: float,
+    coefficient_floors: dict[str, float] | None = None,
+) -> dict[str, Any]:
+    coefficient_floors = coefficient_floors or FORCE_COEFFICIENT_FLOORS
+    history = parse_force_history(log_path.read_text(encoding="utf-8"))
+    if len(history) < 10:
+        return {"passed": False, "reason": "fewer_than_10_force_samples"}
+    count = min(25, max(10, len(history) // 5))
+    tail = history[-count:]
+    absolute_ranges: dict[str, float] = {}
+    ranges: dict[str, float] = {}
+    for key in ("cl", "cd"):
+        values = np.asarray([row[key] for row in tail], dtype=float)
+        absolute_ranges[key] = float(np.ptp(values))
+        denominator = max(abs(float(values.mean())), coefficient_floors[key])
+        ranges[key] = absolute_ranges[key] / denominator
+    return {
+        "passed": all(value <= relative_range_max for value in ranges.values()),
+        "tail_count": count,
+        "absolute_ranges": absolute_ranges,
+        "relative_ranges": ranges,
+        "coefficient_floors": coefficient_floors,
+        "limit": relative_range_max,
+    }
+
+
+def _wall_yplus_gate(workdir: Path) -> tuple[dict[str, Any], Path | None]:
+    candidates = sorted(Path(workdir).glob("aeris_cfd*_surf.cgns"))
+    if len(candidates) != 1:
+        return (
+            {
+                "passed": False,
+                "failure_reasons": [
+                    "missing_surface_solution" if not candidates else "multiple_surface_solutions"
+                ],
+                "candidate_count": len(candidates),
+            },
+            None,
+        )
+    try:
+        return wall_yplus_summary(candidates[0]), candidates[0]
+    except Exception as error:
+        return (
+            {
+                "passed": False,
+                "failure_reasons": ["wall_yplus_read_error"],
+                "error_type": type(error).__name__,
+                "error": str(error),
+            },
+            candidates[0],
+        )
+
+
+def _force_plausibility_gate(forces: dict[str, float]) -> dict[str, Any]:
+    required = ("cl", "cd", "cmy")
+    missing = [name for name in required if name not in forces]
+    nonfinite = [
+        name for name in required if name in forces and not math.isfinite(float(forces[name]))
+    ]
+    positive_drag = not missing and not nonfinite and float(forces["cd"]) > 0.0
+    reasons = []
+    if missing:
+        reasons.append("missing_force_coefficients")
+    if nonfinite:
+        reasons.append("nonfinite_force_coefficients")
+    if not missing and not nonfinite and not positive_drag:
+        reasons.append("nonpositive_drag")
+    return {
+        "passed": not reasons,
+        "required": list(required),
+        "missing": missing,
+        "nonfinite": nonfinite,
+        "positive_drag": positive_drag,
+        "failure_reasons": reasons,
+    }
+
+
+def solve_case(
+    *,
+    manifest_path: Path,
+    campaign_root: Path,
+    case_index: int,
+    mpi_np: int,
+    dry_run: bool,
+    retain_surface_solution: bool = False,
+    retry_rejected: bool = False,
+) -> dict[str, Any]:
+    manifest = _read_json(manifest_path)
+    case, _design, flow = _resolve_case(manifest, case_index)
+    root = Path(campaign_root).resolve()
+    design_dir = root / "geometries" / _safe_id(case["design_id"])
+    mesh_report = _read_json(design_dir / "mesh_report.json")
+    if mesh_report.get("state") != "MESH_ACCEPTED":
+        raise RuntimeError(f"{case['design_id']} has no accepted S6 mesh")
+    mesh = mesh_report["accepted_mesh"]
+    mesh_path = Path(mesh["cgns"])
+    if sha256(mesh_path) != mesh["cgns_sha256"]:
+        raise RuntimeError("accepted mesh hash changed after mesh acceptance")
+    manifest_hash = sha256(manifest_path)
+    solver_implementation_hash = _solver_implementation_sha256()
+
+    case_dir = root / "cases" / _safe_id(case["case_id"])
+    acceptance_path = case_dir / "cfd_acceptance.json"
+    if (
+        not dry_run
+        and (
+            existing := _existing_cfd_result(
+                acceptance_path,
+                manifest_sha256=manifest_hash,
+                mesh_sha256=mesh["cgns_sha256"],
+                implementation_sha256=solver_implementation_hash,
+            )
+        )
+        and (existing["state"] == "CFD_ACCEPTED" or not retry_rejected)
+    ):
+        return existing
+
+    with _case_lock(case_dir / ".solve.lock"):
+        if (
+            not dry_run
+            and (
+                existing := _existing_cfd_result(
+                    acceptance_path,
+                    manifest_sha256=manifest_hash,
+                    mesh_sha256=mesh["cgns_sha256"],
+                    implementation_sha256=solver_implementation_hash,
+                )
+            )
+            and (existing["state"] == "CFD_ACCEPTED" or not retry_rejected)
+        ):
+            return existing
+
+        refs = mesh["reference_values"]
+        solve = SolveSpec(
+            solver="adflow",
+            preset="rans_ank_nk_v1",
+            flow=FlowConditions(
+                alpha=float(flow["alpha"]),
+                mach=float(flow["mach"]),
+                reynolds=float(flow["reynolds"]),
+                temperature=float(flow["temperature"]),
+            ),
+            area_ref=0.5 * float(refs["area_m2"]),
+            chord_ref=float(refs["mean_aerodynamic_chord_m"]),
+            mpi_np=mpi_np,
+            raw_options={
+                "writeVolumeSolution": False,
+                "writeSurfaceSolution": True,
+                "monitorVariables": ["resrho", "resturb", "cl", "cd", "yplus"],
+                "NKSubspaceSize": NK_SUBSPACE_SIZE,
+            },
+        )
+        adapter = get_solver_adapter("adflow")
+        if not dry_run:
+            _archive_previous_solver_outputs(case_dir)
+        prepared = adapter.prepare(solve, mesh_path, case_dir)
+        if dry_run:
+            return {
+                "schema": CFD_REPORT_SCHEMA,
+                "state": "CFD_PREPARED",
+                "case_id": case["case_id"],
+                "command": list(prepared.command),
+            }
+
+        started = time.monotonic()
+        returncode = adapter.run(prepared)
+        solver_report = adapter.parse(prepared.workdir)
+        convergence = solver_report.convergence
+        orders = convergence.get("orders_dropped")
+        residual_passed = orders is not None and float(orders) >= 6.0
+        force_plausibility = _force_plausibility_gate(solver_report.forces)
+        finite_forces = not force_plausibility["missing"] and not force_plausibility["nonfinite"]
+        force_gate = _force_tail_gate(
+            prepared.workdir / prepared.log_name, relative_range_max=0.001
+        )
+        yplus_gate, surface_solution = _wall_yplus_gate(prepared.workdir)
+        _write_json(prepared.workdir / "wall_yplus_summary.json", yplus_gate)
+        accepted = bool(
+            returncode == 0
+            and solver_report.status == "converged"
+            and residual_passed
+            and force_plausibility["passed"]
+            and force_gate["passed"]
+            and yplus_gate["passed"]
+        )
+        surface_retained = bool(not accepted or retain_surface_solution)
+        report = {
+            "schema": CFD_REPORT_SCHEMA,
+            "state": "CFD_ACCEPTED" if accepted else "CFD_REJECTED",
+            "case_id": case["case_id"],
+            "design_id": case["design_id"],
+            "flow_id": case["flow_id"],
+            "manifest_sha256": manifest_hash,
+            "mesh_sha256": mesh["cgns_sha256"],
+            "solver_implementation_sha256": solver_implementation_hash,
+            "solver_preset": "rans_ank_nk_v1",
+            "nk_subspace_size": NK_SUBSPACE_SIZE,
+            "solver_return_code": returncode,
+            "solver_status": solver_report.status,
+            "residual_orders_dropped": orders,
+            "residual_gate_passed": residual_passed,
+            "force_tail_gate": force_gate,
+            "wall_yplus_gate": yplus_gate,
+            "force_plausibility_gate": force_plausibility,
+            "finite_forces": finite_forces,
+            "forces": solver_report.forces,
+            "solve_report": str(prepared.workdir / "solve_report.json"),
+            "surface_solution_retained": surface_retained,
+            "elapsed_s": time.monotonic() - started,
+        }
+        _write_json(acceptance_path, report)
+        if accepted and not retain_surface_solution and surface_solution is not None:
+            surface_solution.unlink(missing_ok=True)
+        return report
+
+
+def run_design(
+    *,
+    manifest_path: Path,
+    registry_path: Path,
+    campaign_root: Path,
+    design_index: int,
+    max_templates: int,
+    allow_remesh: bool,
+    remesh_timeout_s: float,
+    mpi_np: int,
+    dry_run: bool,
+    prune_accepted_mesh: bool,
+    retain_surface_solution: bool = False,
+    retry_rejected: bool = False,
+) -> dict[str, Any]:
+    manifest = _read_json(manifest_path)
+    if design_index < 0 or design_index >= len(manifest["designs"]):
+        raise IndexError(f"design index {design_index} outside [0, {len(manifest['designs'])})")
+    design_id = manifest["designs"][design_index]["design_id"]
+    case_indices = [
+        int(case["case_index"]) for case in manifest["cases"] if case["design_id"] == design_id
+    ]
+    if not case_indices:
+        raise ValueError(f"design {design_id} has no flow cases")
+    case_ids = [str(manifest["cases"][index]["case_id"]) for index in case_indices]
+    manifest_hash = sha256(manifest_path)
+    registry_hash = sha256(registry_path)
+    mesh_implementation_hash = _mesh_implementation_sha256()
+    solver_implementation_hash = _solver_implementation_sha256()
+    if not dry_run and (
+        existing := _existing_accepted_design(
+            campaign_root=campaign_root,
+            design_id=design_id,
+            case_ids=case_ids,
+            manifest_sha256=manifest_hash,
+            registry_sha256=registry_hash,
+            mesh_implementation_sha256=mesh_implementation_hash,
+            solver_implementation_sha256=solver_implementation_hash,
+        )
+    ):
+        return existing
+
+    mesh = mesh_case(
+        manifest_path=manifest_path,
+        registry_path=registry_path,
+        campaign_root=campaign_root,
+        case_index=case_indices[0],
+        max_templates=max_templates,
+        allow_remesh=allow_remesh,
+        remesh_timeout_s=remesh_timeout_s,
+    )
+    results: list[dict[str, Any]] = []
+    if mesh["state"] == "MESH_ACCEPTED":
+        for case_index in case_indices:
+            results.append(
+                solve_case(
+                    manifest_path=manifest_path,
+                    campaign_root=campaign_root,
+                    case_index=case_index,
+                    mpi_np=mpi_np,
+                    dry_run=dry_run,
+                    retain_surface_solution=retain_surface_solution,
+                    retry_rejected=retry_rejected,
+                )
+            )
+
+    all_accepted = bool(results) and all(result["state"] == "CFD_ACCEPTED" for result in results)
+    pruned = False
+    if all_accepted and prune_accepted_mesh and not dry_run:
+        mesh_path = Path(mesh["accepted_mesh"]["cgns"])
+        if mesh_path.is_file() and sha256(mesh_path) == mesh["accepted_mesh"]["cgns_sha256"]:
+            mesh_path.unlink()
+            pruned = True
+
+    report = {
+        "schema": DESIGN_REPORT_SCHEMA,
+        "state": (
+            "DESIGN_ACCEPTED"
+            if all_accepted
+            else "MESH_REJECTED"
+            if mesh["state"] == "MESH_REJECTED"
+            else "DESIGN_INCOMPLETE"
+            if dry_run
+            else "CFD_REJECTED"
+        ),
+        "design_index": design_index,
+        "design_id": design_id,
+        "case_indices": case_indices,
+        "case_ids": case_ids,
+        "manifest_sha256": manifest_hash,
+        "registry_sha256": registry_hash,
+        "mesh_implementation_sha256": mesh_implementation_hash,
+        "solver_implementation_sha256": solver_implementation_hash,
+        "mesh_sha256": (
+            mesh["accepted_mesh"]["cgns_sha256"] if mesh["state"] == "MESH_ACCEPTED" else None
+        ),
+        "mesh_state": mesh["state"],
+        "case_states": [result["state"] for result in results],
+        "accepted_mesh_pruned": pruned,
+    }
+    design_dir = Path(campaign_root).resolve() / "geometries" / _safe_id(design_id)
+    _write_json(design_dir / "design_run_report.json", report)
+    return report
+
+
+def collect(campaign_root: Path, manifest_path: Path, output: Path) -> dict[str, Any]:
+    manifest = _read_json(manifest_path)
+    if manifest.get("schema") != MANIFEST_SCHEMA:
+        raise ValueError("not an S6 campaign manifest")
+    manifest_hash = sha256(manifest_path)
+    root = Path(campaign_root).resolve()
+    fields = [
+        "case_index",
+        "case_id",
+        "design_id",
+        "flow_id",
+        "state",
+        "cl",
+        "cd",
+        "cmy",
+        "orders_dropped",
+        "yplus_p95",
+        "yplus_max",
+    ]
+    rows: list[dict[str, Any]] = []
+    for case in manifest["cases"]:
+        row = {
+            **case,
+            "state": "NOT_RUN",
+            "cl": None,
+            "cd": None,
+            "cmy": None,
+            "orders_dropped": None,
+            "yplus_p95": None,
+            "yplus_max": None,
+        }
+        path = root / "cases" / _safe_id(case["case_id"]) / "cfd_acceptance.json"
+        if not path.is_file():
+            mesh_path = root / "geometries" / _safe_id(case["design_id"]) / "mesh_report.json"
+            if mesh_path.is_file():
+                mesh_report = _read_json(mesh_path)
+                if mesh_report.get("manifest_sha256") != manifest_hash:
+                    row["state"] = "STALE_RESULT"
+                elif mesh_report.get("state") == "MESH_REJECTED":
+                    row["state"] = "MESH_REJECTED"
+            rows.append(row)
+            continue
+        report = _read_json(path)
+        if report.get("manifest_sha256") != manifest_hash:
+            row["state"] = "STALE_RESULT"
+        else:
+            row.update(
+                {
+                    "state": report["state"],
+                    "cl": report.get("forces", {}).get("cl"),
+                    "cd": report.get("forces", {}).get("cd"),
+                    "cmy": report.get("forces", {}).get("cmy"),
+                    "orders_dropped": report.get("residual_orders_dropped"),
+                    "yplus_p95": report.get("wall_yplus_gate", {}).get("statistics", {}).get("p95"),
+                    "yplus_max": report.get("wall_yplus_gate", {})
+                    .get("statistics", {})
+                    .get("maximum"),
+                }
+            )
+        rows.append(row)
+    states: dict[str, int] = {}
+    for row in rows:
+        states[row["state"]] = states.get(row["state"], 0) + 1
+    report = {
+        "schema": "aeris.mesh.s6_campaign_summary.v1",
+        "manifest_sha256": manifest_hash,
+        "counts": states,
+        "rows": rows,
+    }
+    _write_json(output, report)
+    csv_path = Path(output).with_suffix(".csv")
+    temporary = csv_path.with_name(f".{csv_path.name}.{os.getpid()}.tmp")
+    with temporary.open("w", newline="", encoding="utf-8") as stream:
+        writer = csv.DictWriter(stream, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
+    temporary.replace(csv_path)
+    return report
+
+
+def make_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+
+    manifest = commands.add_parser("make-manifest")
+    sampling = commands.add_parser("sample-designs")
+    sampling.add_argument("--count", type=int, required=True)
+    sampling.add_argument("--seed", type=int, required=True)
+    sampling.add_argument("--output", type=Path, required=True)
+
+    manifest.add_argument("--designs", type=Path, required=True)
+    manifest.add_argument("--flows", type=Path, required=True)
+    manifest.add_argument("--output", type=Path, required=True)
+
+    pilot = commands.add_parser("prepare-hpc-pilot")
+    pilot.add_argument("--development-report", type=Path, required=True)
+    pilot.add_argument("--atlas-manifest", type=Path, required=True)
+    pilot.add_argument("--registry", type=Path, required=True)
+    pilot.add_argument(
+        "--flows",
+        type=Path,
+        default=HERE / "examples/flows_single.csv",
+    )
+    pilot.add_argument("--output", type=Path, required=True)
+    pilot.add_argument("--count", type=int, default=10)
+    pilot.add_argument(
+        "--required-indices",
+        type=int,
+        nargs="*",
+        default=[7, 89, 95],
+    )
+
+    registry = commands.add_parser("build-registry")
+    registry_selection = registry.add_mutually_exclusive_group(required=True)
+    registry_selection.add_argument("--indices", type=int, nargs="+")
+    registry_selection.add_argument("--atlas-manifest", type=Path)
+    registry.add_argument("--source-root", type=Path, default=DEFAULT_S1_ROOT)
+    registry.add_argument("--eps-e", type=float, choices=EPSE_LADDER, default=2.0)
+    registry.add_argument("--production-floor", type=float, default=0.10)
+    registry.add_argument(
+        "--preferred-quality",
+        type=float,
+        default=PREFERRED_MIN_SCALED_QUALITY,
+    )
+    registry.add_argument("--output", type=Path, required=True)
+
+    registry_audit = commands.add_parser("verify-registry")
+    registry_audit.add_argument("--registry", type=Path, required=True)
+    registry_audit.add_argument("--output", type=Path, required=True)
+
+    mesh = commands.add_parser("mesh-case")
+    mesh.add_argument("--manifest", type=Path, required=True)
+    mesh.add_argument("--registry", type=Path, required=True)
+    mesh.add_argument("--campaign-root", type=Path, required=True)
+    mesh.add_argument("--case-index", type=int, required=True)
+    mesh.add_argument("--max-templates", type=int, default=0)
+    mesh.add_argument("--no-remesh", action="store_true")
+    mesh.add_argument("--remesh-timeout-s", type=float, default=3600.0)
+
+    solve = commands.add_parser("solve-case")
+    solve.add_argument("--manifest", type=Path, required=True)
+    solve.add_argument("--campaign-root", type=Path, required=True)
+    solve.add_argument("--case-index", type=int, required=True)
+    solve.add_argument("--np", type=int, default=4)
+    solve.add_argument("--dry-run", action="store_true")
+    solve.add_argument("--retain-surface-solution", action="store_true")
+    solve.add_argument("--retry-rejected", action="store_true")
+
+    design_run = commands.add_parser("run-design")
+    design_run.add_argument("--manifest", type=Path, required=True)
+    design_run.add_argument("--registry", type=Path, required=True)
+    design_run.add_argument("--campaign-root", type=Path, required=True)
+    design_run.add_argument("--design-index", type=int, required=True)
+    design_run.add_argument("--max-templates", type=int, default=0)
+    design_run.add_argument("--no-remesh", action="store_true")
+    design_run.add_argument("--remesh-timeout-s", type=float, default=3600.0)
+    design_run.add_argument("--np", type=int, default=4)
+    design_run.add_argument("--dry-run", action="store_true")
+    design_run.add_argument("--prune-accepted-mesh", action="store_true")
+    design_run.add_argument("--retain-surface-solution", action="store_true")
+    design_run.add_argument("--retry-rejected", action="store_true")
+
+    run = commands.add_parser("run-case")
+    run.add_argument("--manifest", type=Path, required=True)
+    run.add_argument("--registry", type=Path, required=True)
+    run.add_argument("--campaign-root", type=Path, required=True)
+    run.add_argument("--case-index", type=int, required=True)
+    run.add_argument("--max-templates", type=int, default=0)
+    run.add_argument("--no-remesh", action="store_true")
+    run.add_argument("--remesh-timeout-s", type=float, default=3600.0)
+    run.add_argument("--np", type=int, default=4)
+    run.add_argument("--dry-run", action="store_true")
+    run.add_argument("--retain-surface-solution", action="store_true")
+    run.add_argument("--retry-rejected", action="store_true")
+
+    summary = commands.add_parser("collect")
+    summary.add_argument("--manifest", type=Path, required=True)
+    summary.add_argument("--campaign-root", type=Path, required=True)
+    summary.add_argument("--output", type=Path, required=True)
+    return parser
+
+
+def _record_worker_error(args: argparse.Namespace, error: Exception) -> Path | None:
+    campaign_root = getattr(args, "campaign_root", None)
+    if campaign_root is None:
+        return None
+    index = getattr(args, "case_index", getattr(args, "design_index", "unknown"))
+    path = (
+        Path(campaign_root).resolve()
+        / "worker_errors"
+        / f"{_safe_id(args.command)}_{index}_{int(time.time())}_{os.getpid()}.json"
+    )
+    return _write_json(
+        path,
+        {
+            "schema": "aeris.mesh.s6_worker_error.v1",
+            "command": args.command,
+            "index": index,
+            "pid": os.getpid(),
+            "error_type": type(error).__name__,
+            "error": str(error),
+            "traceback": traceback.format_exc(),
+        },
+    )
+
+
+def main() -> int:
+    args = make_parser().parse_args()
+    try:
+        if args.command == "sample-designs":
+            result = sample_designs(count=args.count, seed=args.seed, output=args.output)
+        elif args.command == "make-manifest":
+            manifest_result = make_manifest(args.designs, args.flows, args.output)
+            result = {
+                "schema": manifest_result["schema"],
+                "manifest": str(args.output.resolve()),
+                "manifest_sha256": sha256(args.output),
+                "counts": manifest_result["counts"],
+            }
+        elif args.command == "prepare-hpc-pilot":
+            result = prepare_hpc_pilot(
+                development_report_path=args.development_report,
+                atlas_manifest_path=args.atlas_manifest,
+                registry_path=args.registry,
+                flows_path=args.flows,
+                output=args.output,
+                count=args.count,
+                required_indices=tuple(args.required_indices),
+            )
+            result = {
+                "schema": result["schema"],
+                "package": str((args.output / "pilot_package.json").resolve()),
+                "counts": result["counts"],
+            }
+        elif args.command == "build-registry":
+            registry_result = build_registry(
+                indices=(
+                    indices_from_atlas_manifest(args.atlas_manifest)
+                    if args.atlas_manifest
+                    else args.indices
+                ),
+                source_root=args.source_root,
+                output=args.output,
+                production_floor=args.production_floor,
+                preferred_quality=args.preferred_quality,
+                atlas_manifest_path=args.atlas_manifest,
+                eps_e=args.eps_e,
+            )
+            result = {
+                "schema": registry_result["schema"],
+                "registry": str(args.output.resolve()),
+                "registry_sha256": sha256(args.output),
+                "template_count": registry_result["template_count"],
+                "volume_level": registry_result["volume_level"],
+                "normal_points": registry_result["normal_points"],
+                "production_floor": registry_result["production_floor"],
+                "preferred_quality": registry_result["preferred_quality"],
+                "registry_status": registry_result["registry_status"],
+            }
+        elif args.command == "verify-registry":
+            result = verify_registry(args.registry)
+            _write_json(args.output, result)
+            result["output"] = str(args.output.resolve())
+        elif args.command == "run-design":
+            result = run_design(
+                manifest_path=args.manifest,
+                registry_path=args.registry,
+                campaign_root=args.campaign_root,
+                design_index=args.design_index,
+                max_templates=args.max_templates,
+                allow_remesh=not args.no_remesh,
+                remesh_timeout_s=args.remesh_timeout_s,
+                mpi_np=args.np,
+                dry_run=args.dry_run,
+                prune_accepted_mesh=args.prune_accepted_mesh,
+                retain_surface_solution=args.retain_surface_solution,
+                retry_rejected=args.retry_rejected,
+            )
+        elif args.command in {"mesh-case", "run-case"}:
+            result = mesh_case(
+                manifest_path=args.manifest,
+                registry_path=args.registry,
+                campaign_root=args.campaign_root,
+                case_index=args.case_index,
+                max_templates=args.max_templates,
+                allow_remesh=not args.no_remesh,
+                remesh_timeout_s=args.remesh_timeout_s,
+            )
+            if args.command == "run-case" and result["state"] == "MESH_ACCEPTED":
+                result = solve_case(
+                    manifest_path=args.manifest,
+                    campaign_root=args.campaign_root,
+                    case_index=args.case_index,
+                    mpi_np=args.np,
+                    dry_run=args.dry_run,
+                    retain_surface_solution=args.retain_surface_solution,
+                    retry_rejected=args.retry_rejected,
+                )
+        elif args.command == "solve-case":
+            result = solve_case(
+                manifest_path=args.manifest,
+                campaign_root=args.campaign_root,
+                case_index=args.case_index,
+                mpi_np=args.np,
+                dry_run=args.dry_run,
+                retain_surface_solution=args.retain_surface_solution,
+                retry_rejected=args.retry_rejected,
+            )
+        else:
+            collect_result = collect(args.campaign_root, args.manifest, args.output)
+            result = {
+                "schema": collect_result["schema"],
+                "summary": str(args.output.resolve()),
+                "summary_csv": str(args.output.with_suffix(".csv").resolve()),
+                "counts": collect_result["counts"],
+            }
+    except Exception as error:
+        try:
+            error_path = _record_worker_error(args, error)
+        except Exception:
+            error_path = None
+        print(
+            json.dumps(
+                {
+                    "status": "ERROR",
+                    "type": type(error).__name__,
+                    "error": str(error),
+                    "error_report": str(error_path) if error_path else None,
+                }
+            )
+        )
+        return 1
+    print(json.dumps({"status": "OK", "result": result}, indent=2, default=_default))
+    state = result.get("state") if isinstance(result, dict) else None
+    return 2 if state in {"MESH_REJECTED", "CFD_REJECTED"} else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,78 @@
+# Risks and Open Gates
+
+## Immediate blockers
+
+1. Run production-resolution CFD on adequate hardware and prove the y+ law.
+2. Define a true normal/tangential grid family and perform TE-opening sensitivity
+   before CFD policy freeze.
+3. Freeze wall, TE, CFD, fallback, and acceptance policies before using the locked
+   hold-out.
+
+## Technical risks
+
+- `3.6e-6` first-cell fraction and `epsE=1.5` passed 21/22 attempted seed meshes;
+  seed 007 failed one cell at quality `0.086926`. They remain development
+  candidates, not measured production CFD truth.
+- Seeds 002 and 068 have little campaign-quality margin (`0.10535` and `0.12314`).
+  Their worst cells are first-layer tip/trailing-edge cells. Production routing,
+  y+, and force/grid sensitivity must show whether this is acceptable.
+- The realized first-layer spacing is not uniform at the tip blocks. Across the
+  final complete audit, the largest selected-mesh p95 was `3.976e-5` of
+  characteristic length, about ten times the nominal `3.6e-6`; the median remains
+  close to nominal. Production wall y+ must decide whether the tip spacing is
+  acceptable. Do not infer y+ from the nominal `s0` value.
+- Seed 007 is deterministically unbuildable at the current `0.10` screen, but an
+  existing deformation route passed at `0.153736` in the final audit after six
+  attempts. Preserve the rejected seed and successful alternate route in reports.
+- Current `production` seed construction uses `L2_smoke` tangential surface
+  resolution and increases only wall-normal points to `N=257`. A proper grid
+  family and grid-convergence study must refine tangential and normal resolution
+  in a controlled way.
+- A positive internal volume-quality metric does not prove low CFD discretization
+  error, stable turbulence behavior, or acceptable wall-normal orthogonality.
+- The mesh-only TE opening may bias drag or wake behavior. Run a TE sensitivity
+  study against smaller feasible openings and document the modeled geometry.
+- Some template/target pairs have incompatible span counts. This is recoverable
+  because routing tries another template, but the cause and compatibility rate
+  should remain visible in reports.
+- Production meshes have roughly 2.3-3.5 million cells per seed. Local
+  16 GB memory was insufficient for the earlier `N=129` ADflow attempt; use an
+  HPC node with at least 64 GB for production pilots.
+- Accepted-result caches are only valid when geometry, mesh, policy, and
+  implementation fingerprints match. Never bypass stale-cache rejection.
+- Mesh routing/fallback passed 100/100 at production resolution, but recovery must
+  still be tested under real worker, solver, scheduler, and storage failures.
+- The 10,000 manifest test did not build 10,000 meshes and did not run CFD.
+
+## Validation still required for a 10,000-CFD campaign
+
+- Locked hold-out passes without tuning.
+- At least 99 of 100 representative production CFD cases finish automatically
+  with valid meshes and accepted solutions.
+- About 20 representative geometries pass a grid-convergence study for lift and
+  drag.
+- All 10,000 intended designs pass mesh preflight or are automatically recovered;
+  zero inverted cells reach the solver.
+- A 500-1,000-case HPC rehearsal proves scheduler restart, storage, failure
+  recovery, collection, provenance, and unattended operation.
+- Statistical checks confirm failed cases are not concentrated in a part of the
+  design space, which would bias the DSE data set.
+
+## Reduced proof for a 100-CFD campaign
+
+- 100/100 meshes pass hard gates.
+- 10-20 CFD pilots include extremes and difficult deformation cases.
+- Production y+ passes.
+- Five representative cases pass grid convergence.
+- Roughly ten locked unseen geometries pass without tuning.
+- Restart and failure recovery work unattended.
+
+## Research claims that must not be made yet
+
+- Do not say S6 is campaign-ready.
+- Do not say 100/100 smoke proves production robustness.
+- Do not say the 100/100 mesh audit proves CFD campaign robustness.
+- Do not say the TE floor has no aerodynamic effect.
+- Do not say the production wall law passes y+.
+- Do not say Gmsh plus SU2 is already a wall-resolved equivalent pipeline.
+- Do not call AI a guaranteed mesher; all AI outputs need deterministic checks.

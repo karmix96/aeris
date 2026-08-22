@@ -1,0 +1,130 @@
+# Next Actions
+
+Completed steps are retained for provenance. The three-case N65 laptop pilot is
+complete: 3/3 solvers passed and 0/3 passed the coarse y+ screen. This does not
+test the production wall law. The pre-fingerprint runs have a passing separate
+integrity audit; do not rerun them unless exact current-code provenance is needed.
+The next active step is P0 N257 wall-normal CFD/y+ validation on suitable HPC hardware.
+No heavy job is active locally.
+
+## Completed 1. Full production development audit
+
+Completed: `100/100` passed in 162 attempts; report hash starts `66f0db0c`.
+
+Check `LIVE_STATE.md`, the process list, and the checkpoint before running
+anything. The exact resumable command is:
+
+```bash
+.venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/development_atlas.py \
+  --atlas-manifest artifacts/s6_bounded_mesh_atlas/atlas_manifest_production_qualified21_eps15_s0p3p6_v7.json \
+  --template-root AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/maximin_v3/calibration_s0_3p6_production \
+  --eps-e 1.5 \
+  --preferred-quality 0.15 \
+  --output artifacts/s6_bounded_mesh_atlas/development_atlas_qualified21_production_written_v3
+```
+
+Do not start another memory-heavy mesh or CFD process while it runs. The validator
+must write and re-open each accepted CGNS, recompute wall/interface/volume gates,
+hash it, then prune it. Never replace this with the older in-memory-only smoke
+report.
+
+## Completed 2. Analyze the complete report
+
+Completed: the independent v2 auditor passed report integrity and all 100 cases.
+
+Require 100/100 hard passes. Report identity and non-identity rates separately,
+first-try and recovery counts, total/max attempts, worst/p05/median quality,
+cells below `0.10` and `0.15`, fidelity maxima, interface/wall errors, template
+utilization, realized first-layer spacing, failures, elapsed time, and hashes.
+Check that accepted CGNS paths were pruned only after their written audit.
+
+```bash
+.venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/audit_validation.py \
+  artifacts/s6_bounded_mesh_atlas/development_atlas_qualified21_production_written_v3/atlas_validation_report.json \
+  --expected-count 100 \
+  --output artifacts/s6_bounded_mesh_atlas/development_atlas_qualified21_production_written_v3/independent_report_audit.json
+```
+
+`N=257` on `L2_smoke` is the current wall-resolution candidate, not a complete
+grid family. Keep the all-direction refinement study open.
+
+## Completed 3. Enrich from production evidence
+
+Completed: no additions or unresolved cases; mesh-atlas `freeze_ready=true`.
+
+```bash
+.venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/run_s6.py enrich-atlas \
+  --atlas-manifest artifacts/s6_bounded_mesh_atlas/atlas_manifest_production_qualified21_eps15_s0p3p6_v7.json \
+  --development-report artifacts/s6_bounded_mesh_atlas/development_atlas_qualified21_production_written_v3/atlas_validation_report.json \
+  --output artifacts/s6_bounded_mesh_atlas/atlas_manifest_production_postvalidation_v8.json
+```
+
+If enrichment adds templates, build their production seeds and repeat the full
+development audit. Freeze atlas membership only when the report is complete and
+`requires_production_validation=false`, `freeze_ready=true`. This does not freeze
+the wall law, CFD settings, or unlock the hold-out.
+
+## Completed 4. Build the final production registry
+
+Completed: 21 portable immutable templates, registry hash starts `0bf036a8`.
+
+```bash
+.venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/campaign.py build-registry \
+  --atlas-manifest artifacts/s6_bounded_mesh_atlas/atlas_manifest_production_postvalidation_v8.json \
+  --source-root AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/maximin_v3/calibration_s0_3p6_production \
+  --eps-e 1.5 \
+  --production-floor 0.10 \
+  --preferred-quality 0.15 \
+  --output artifacts/s6_bounded_mesh_atlas/template_registry_qualified21_production_portable_v9.json
+```
+
+Every hash, volume level, `N`, and first-cell law was verified against its seed.
+
+## Completed 5. Prepare the representative HPC pilot
+
+Ten development cases are packaged under
+`artifacts/s6_bounded_mesh_atlas/hpc_pilot_package_v9/`. They include the weak,
+slow, extreme, prior-failure, and central-control routes. The hold-out was not used.
+
+## Next 0. Preserve source and evidence
+
+- Commit the S6 source, ADRs, tests, and handoff before the HPC run.
+- Back up canonical generated JSON/CGNS evidence outside the gitignored tree.
+
+## Next 1. Production CFD validation on HPC
+
+- No suitable HPC exists locally; do not run the P0 N257 ADflow case on the 16 GB laptop.
+- On a future node with at least 64 GB RAM, submit only package design index 0
+  first and measure memory/y+. Do not run `verify_and_submit.sh` unchanged for
+  the first canary because it submits all ten cases.
+- Design index 0 is geometry 007, the hardest known routing case (six attempts).
+  Use it for a memory ceiling; do not treat its y+ as representative of the median.
+- After the canary, run two more representative P0 development cases.
+- Use at least 64 GB RAM per production pilot until measured otherwise.
+- Start with representative easy, extreme, and worst-deformation cases.
+- Measure y+; do not infer success from coarse scaling.
+- Tune the wall-spacing law only on development cases, then refreeze policy.
+- Perform TE-opening sensitivity and grid convergence before hold-out.
+
+## Next 2. Release the locked hold-out once
+
+Release only after atlas, mesh resolution, TE policy, CFD options, fallback rules,
+and all acceptance gates are frozen. Do not tune after seeing hold-out outcomes.
+
+## Next 3. Campaign qualification
+
+Run the 100-case CFD reliability pilot, approximately 20-case grid convergence,
+10,000-mesh preflight, and 500-1,000-case HPC rehearsal described in
+`RISKS_AND_OPEN_GATES.md`.
+
+## Later work already requested
+
+1. S7 wall-resolved Gmsh prism/tetra plus SU2 software is implemented. Next obtain
+   a completed Opus/max audit, one real laptop diagnostic, then resource-qualified
+   development mesh/SU2 evidence; see `S7_RELOAD_AND_CLAUDE_HANDOFF_2026-08-21.md`.
+2. After comparable S6/S7 evidence, add governed common AERIS modes: structured,
+   unstructured, auto fallback, and compare.
+3. Build the AI-assisted research data set from geometry variables, candidate
+   order, deformation fields, per-cell quality, failures, timings, y+, and CFD
+   convergence. First model: template/failure/quality prediction, not AI-only
+   mesh generation.

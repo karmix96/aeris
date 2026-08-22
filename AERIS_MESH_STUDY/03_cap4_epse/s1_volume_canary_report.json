@@ -1,0 +1,376 @@
+{
+  "schema": "aeris.mesh_study.s1_volume_canary_report.v1",
+  "generated_utc": "2026-08-13T18:11:36.696921+00:00",
+  "adr": "ADR-0008-epse-selection-protocol.md",
+  "strategy": "S1_TIP_FIRST_SWEEP",
+  "geometries": [
+    "lhs7_00",
+    "lhs7_01",
+    "lhs7_02",
+    "lhs7_03",
+    "lhs7_04",
+    "lhs7_05",
+    "lhs7_06",
+    "lhs7_07",
+    "lhs7_08",
+    "lhs7_09"
+  ],
+  "cap4_reference": {
+    "bad_layers": 53,
+    "layer_count": 128,
+    "min_quality": -0.90808
+  },
+  "rows": [
+    {
+      "geometry": "lhs7_00",
+      "epsE": 1.5,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.22395,
+      "min_volume": 8.59e-11
+    },
+    {
+      "geometry": "lhs7_00",
+      "epsE": 2.0,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.23399,
+      "min_volume": 8.14e-11
+    },
+    {
+      "geometry": "lhs7_00",
+      "epsE": 3.0,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.24228,
+      "min_volume": 5.72e-11
+    },
+    {
+      "geometry": "lhs7_01",
+      "epsE": 1.5,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.22014,
+      "min_volume": 9.03e-11
+    },
+    {
+      "geometry": "lhs7_01",
+      "epsE": 2.0,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.17834,
+      "min_volume": 8.55e-11
+    },
+    {
+      "geometry": "lhs7_01",
+      "epsE": 3.0,
+      "state": "FAIL",
+      "failures": [
+        "min scaled quality = -0.54595, must be strictly > 0 (0.30 is a target, not a gate)",
+        "low/negative-quality layers = 1, must be 0"
+      ],
+      "inverted_cells": 0,
+      "low_quality_layers": 1,
+      "layer_count": 128,
+      "min_quality": -0.54595,
+      "min_volume": 7.83e-11
+    },
+    {
+      "geometry": "lhs7_02",
+      "epsE": 1.5,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.18914,
+      "min_volume": 6.7e-11
+    },
+    {
+      "geometry": "lhs7_02",
+      "epsE": 2.0,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.20535,
+      "min_volume": 6.34e-11
+    },
+    {
+      "geometry": "lhs7_02",
+      "epsE": 3.0,
+      "state": "FAIL",
+      "failures": [
+        "min scaled quality = -0.15497, must be strictly > 0 (0.30 is a target, not a gate)",
+        "low/negative-quality layers = 1, must be 0"
+      ],
+      "inverted_cells": 0,
+      "low_quality_layers": 1,
+      "layer_count": 128,
+      "min_quality": -0.15497,
+      "min_volume": 5.78e-11
+    },
+    {
+      "geometry": "lhs7_03",
+      "epsE": 1.5,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.18827,
+      "min_volume": 7.75e-11
+    },
+    {
+      "geometry": "lhs7_03",
+      "epsE": 2.0,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.20459,
+      "min_volume": 7.33e-11
+    },
+    {
+      "geometry": "lhs7_03",
+      "epsE": 3.0,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.22223,
+      "min_volume": 6.66e-11
+    },
+    {
+      "geometry": "lhs7_04",
+      "epsE": 1.5,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.22138,
+      "min_volume": 7.89e-11
+    },
+    {
+      "geometry": "lhs7_04",
+      "epsE": 2.0,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.23195,
+      "min_volume": 7.46e-11
+    },
+    {
+      "geometry": "lhs7_04",
+      "epsE": 3.0,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.24094,
+      "min_volume": 6.68e-11
+    },
+    {
+      "geometry": "lhs7_05",
+      "epsE": 1.5,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.19764,
+      "min_volume": 6.76e-11
+    },
+    {
+      "geometry": "lhs7_05",
+      "epsE": 2.0,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.21266,
+      "min_volume": 6.39e-11
+    },
+    {
+      "geometry": "lhs7_05",
+      "epsE": 3.0,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.22805,
+      "min_volume": 5.83e-11
+    },
+    {
+      "geometry": "lhs7_06",
+      "epsE": 1.5,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.09824,
+      "min_volume": 2.52e-11
+    },
+    {
+      "geometry": "lhs7_06",
+      "epsE": 2.0,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.11435,
+      "min_volume": 2.65e-11
+    },
+    {
+      "geometry": "lhs7_06",
+      "epsE": 3.0,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.13935,
+      "min_volume": 2.29e-11
+    },
+    {
+      "geometry": "lhs7_07",
+      "epsE": 1.5,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.08184,
+      "min_volume": 2.37e-11
+    },
+    {
+      "geometry": "lhs7_07",
+      "epsE": 2.0,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.09572,
+      "min_volume": 2.5e-11
+    },
+    {
+      "geometry": "lhs7_07",
+      "epsE": 3.0,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.11756,
+      "min_volume": 2.33e-11
+    },
+    {
+      "geometry": "lhs7_08",
+      "epsE": 1.5,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.22833,
+      "min_volume": 6.61e-11
+    },
+    {
+      "geometry": "lhs7_08",
+      "epsE": 2.0,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.2374,
+      "min_volume": 5.18e-11
+    },
+    {
+      "geometry": "lhs7_08",
+      "epsE": 3.0,
+      "state": "FAIL",
+      "failures": [
+        "min scaled quality = -0.04964, must be strictly > 0 (0.30 is a target, not a gate)",
+        "low/negative-quality layers = 9, must be 0"
+      ],
+      "inverted_cells": 0,
+      "low_quality_layers": 9,
+      "layer_count": 128,
+      "min_quality": -0.04964,
+      "min_volume": 2.75e-11
+    },
+    {
+      "geometry": "lhs7_09",
+      "epsE": 1.5,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.15245,
+      "min_volume": 6.65e-11
+    },
+    {
+      "geometry": "lhs7_09",
+      "epsE": 2.0,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.17142,
+      "min_volume": 6.2e-11
+    },
+    {
+      "geometry": "lhs7_09",
+      "epsE": 3.0,
+      "state": "PASS",
+      "failures": [],
+      "inverted_cells": 0,
+      "low_quality_layers": 0,
+      "layer_count": 128,
+      "min_quality": 0.08974,
+      "min_volume": 5.8e-11
+    }
+  ],
+  "epse_passing_all_geometries": [
+    1.5,
+    2.0
+  ],
+  "epsE_common_start": 2.0,
+  "selection_rule": "highest candidate passing the ADR-0008 checklist on every geometry",
+  "confirmation_level_required": "L4",
+  "caveats": [
+    "Reynolds numbers are provisional; see ADR-0008 and operating_points.yaml pending_recheck EPSE-RECHECK-ON-MISSION-FREEZE.",
+    "S1's spanwise geometric-progression law is computed but realised at native sections. Stage 03 redistributes spanwise points, after which epsE must be re-checked.",
+    "Selection is not final until confirmed at the finer level."
+  ]
+}

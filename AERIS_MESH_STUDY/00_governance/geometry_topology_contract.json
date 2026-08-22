@@ -1,0 +1,230 @@
+{
+  "schema": "aeris.mesh_study.geometry_topology_contract.v1",
+  "created_local": "2026-08-11",
+  "status": "STAGE_00_PROPOSED_AFTER_AUDIT",
+  "purpose": "Stable semantic geometry contract that every mesh strategy consumes before the winning mesh topology is selected.",
+  "source_paths": {
+    "geometry_config": {
+      "path": "configs/geometry/bwb.yaml",
+      "sha256": "f114b48e3c400a2832cc3763e7cf7505ecd0925fb81cb92f70e28bb5e6234614"
+    },
+    "params": {
+      "path": "src/aeris/generators/bwb_segmented_v1/params.py",
+      "sha256": "cac966e36ad82f57627eb82cc462530e0916d06db2944eafeb9988831d5f75f2"
+    },
+    "planform": {
+      "path": "src/aeris/generators/bwb_segmented_v1/planform.py",
+      "sha256": "1451c0a576a916198a813973119aad1781552a4b2edb95c8e4f8ed10ac2c8c5f"
+    },
+    "sections": {
+      "path": "src/aeris/generators/bwb_segmented_v1/sections.py",
+      "sha256": "a178c1259beb6a468c9283aefd8b59fd7e27c56ecc9b7de39a2942c1a8322205"
+    },
+    "sampling": {
+      "path": "src/aeris/generators/bwb_segmented_v1/sampling.py",
+      "sha256": "012ab55cb1288440a7d06d9e30fb9d4182903523ebaebaeba8749c900824d7ad"
+    },
+    "validation": {
+      "path": "src/aeris/generators/bwb_segmented_v1/validation.py",
+      "sha256": "38eb8a46748bcf81940c7423d82391238e178e0e371fe9ef48d1ba0560a9fa40"
+    }
+  },
+  "generator_identity": {
+    "public_id": "bwb_segmented",
+    "internal_family": "bwb_segmented",
+    "internal_version": "v1",
+    "python_package": "aeris.generators.bwb_segmented_v1",
+    "baseline_seed": 1001,
+    "pygeo_enabled": true,
+    "pygeo_frame_mode": "aeris_frame",
+    "pygeo_master_geometry": "neutral pyGeo B-spline loft",
+    "aerosandbox_build_default": false
+  },
+  "fixed_geometry_topology": {
+    "span_model": "half-wing mirrored about the root/symmetry plane",
+    "station_order_root_to_tip": [
+      {
+        "id": "b0",
+        "role": "root",
+        "always_exists": true,
+        "airfoil": "mh91",
+        "entities": [
+          "root_plane",
+          "leading_edge",
+          "trailing_edge",
+          "symmetry"
+        ]
+      },
+      {
+        "id": "b1",
+        "role": "inner planform break / flat-root-panel outboard boundary",
+        "always_exists": true,
+        "airfoil": "mh91",
+        "entities": [
+          "planform_break",
+          "airfoil_station"
+        ]
+      },
+      {
+        "id": "b2",
+        "role": "middle planform/airfoil break",
+        "always_exists": true,
+        "airfoil": "e374",
+        "entities": [
+          "planform_break",
+          "airfoil_station"
+        ]
+      },
+      {
+        "id": "b3",
+        "role": "physical tip station",
+        "always_exists": true,
+        "airfoil": "nlf1015",
+        "entities": [
+          "tip",
+          "airfoil_station"
+        ]
+      }
+    ],
+    "planform_segments": [
+      {
+        "id": "seg_b0_b1",
+        "from_station": "b0",
+        "to_station": "b1",
+        "le_sweep_variable": "sw1_deg",
+        "chord_variables": [
+          "c1_m",
+          "c2_ratio"
+        ],
+        "span_variables": [
+          "b_total_m",
+          "b3_ratio",
+          "split_ratio"
+        ],
+        "flat_root_panel": true
+      },
+      {
+        "id": "seg_b1_b2",
+        "from_station": "b1",
+        "to_station": "b2",
+        "le_sweep_variable": "sw2_deg",
+        "chord_variables": [
+          "c2_ratio",
+          "c3_ratio"
+        ],
+        "span_variables": [
+          "b_total_m",
+          "b3_ratio",
+          "split_ratio"
+        ],
+        "flat_root_panel": false
+      },
+      {
+        "id": "seg_b2_b3",
+        "from_station": "b2",
+        "to_station": "b3",
+        "le_sweep_variable": "sw3_deg",
+        "chord_variables": [
+          "c3_ratio",
+          "c4_ratio"
+        ],
+        "span_variables": [
+          "b_total_m",
+          "b3_ratio"
+        ],
+        "flat_root_panel": false
+      }
+    ],
+    "semantic_edges": {
+      "leading_edge": {
+        "stable_id": "LE",
+        "definition": "front_x/front_y curve produced by planform builder, lifted by section geometry",
+        "always_exists": true
+      },
+      "trailing_edge": {
+        "stable_id": "TE",
+        "definition": "rear_x/rear_y curve produced by planform builder, lifted by section geometry",
+        "always_exists": true,
+        "policy": "as-built TE thickness remains governed by DECISION-0004; mesh may add a documented mesh-only floor only after evidence"
+      },
+      "root": {
+        "stable_id": "ROOT_SYMMETRY",
+        "definition": "b0 plane, open half-model edge for pyHyp symmetry",
+        "always_exists": true
+      },
+      "tip": {
+        "stable_id": "TIP",
+        "definition": "b3 physical wingtip station; current cap4 closes the flat airfoil face",
+        "always_exists": true
+      },
+      "symmetry": {
+        "stable_id": "SYM",
+        "definition": "mirrored half-wing symmetry at root plane",
+        "always_exists": true
+      }
+    },
+    "airfoil_assignment": {
+      "rule": "step-function station resolver on span group boundaries",
+      "b0": "mh91",
+      "b1": "mh91",
+      "b2": "e374",
+      "b3": "nlf1015",
+      "fallback_airfoil_name": "mh91",
+      "source_function": "aeris.generators.bwb_segmented_v1.sections._resolve_station_airfoil"
+    },
+    "twist_dihedral_rules": {
+      "twist": "piecewise linear interpolation through b0/b1/b2/b3 station values",
+      "dihedral": "piecewise linear interpolation through station values with cumulative trapezoidal integration for z(y)",
+      "flat_root_panel": "dihedral_root_deg=0.0, dihedral_b1_deg min=max=0.0, pygeo.enforce_flat_root_panel=true"
+    },
+    "control_region": {
+      "id": "elevon",
+      "family": "trailing_edge",
+      "enabled": true,
+      "required": true,
+      "symmetric_pair": true,
+      "spanwise_start_variable": "elevon_start_frac",
+      "spanwise_end_variable": "elevon_end_frac",
+      "hinge_variable": "elevon_hinge_frac",
+      "default_geometry": {
+        "start_frac": 0.6,
+        "end_frac": 0.95,
+        "hinge_point": 0.75
+      },
+      "neutral_commands": {
+        "delta_e_sym_deg": 0.0,
+        "delta_a_diff_deg": 0.0
+      }
+    }
+  },
+  "mesh_strategy_requirements": {
+    "all_strategies": [
+      "consume station IDs b0/b1/b2/b3 instead of rediscovering anonymous raw coordinates where possible",
+      "preserve LE, TE, root symmetry, tip, planform breaks, and elevon entities in boundary labels/manifests",
+      "record connectivity signature and region mapping per run",
+      "do not alter the prescribed physical OML to make meshing easier"
+    ],
+    "S0_CAP4": "map existing cap4 blocks to LE/TE/root/tip/elevon entities and preserve known weak regions in regional QC",
+    "S1_TIP_FIRST_SWEEP": "use b3 tip station and ordered stations b2/b1/b0 for tip-to-root progression",
+    "S2_CROSS_FIELD_TIP": "project generated tip blocks back to TIP surface and prove deterministic singularity/block graph",
+    "S3_STATION_SWEEP": "anchor every sweep interval at b0/b1/b2/b3 plus elevon span boundaries where required",
+    "S4_ANALYTIC_MULTIBLOCK": "derive control vertices from station, LE/TE, root, tip, and local chord/thickness semantics",
+    "S5_FROZEN_RBF": "use the same b0/b1/b2/b3 and elevon landmarks as frozen RBF control correspondence"
+  },
+  "stage_00_findings": {
+    "active_design_variable_count_reported_by_parser": 20,
+    "pinned_active_variable": "dihedral_b1_deg has min=max=0.0 but remains in the sample contract; perturbation studies must treat it as pinned unless an ADR changes the flat-root-panel invariant.",
+    "baseline_generated_from_seed_1001": {
+      "semi_span_m": 0.815964194008996,
+      "full_span_m": 1.631928388017992,
+      "approx_area_m2": 0.6443883334743863,
+      "approx_aspect_ratio": 4.1328964620754745,
+      "realized_sections": 17
+    },
+    "known_limitations": [
+      "Current mesh boundary-label contract still needs Stage 01 harness work to convert these semantic entities into per-strategy CGNS/PLOT3D boundary records.",
+      "Physical split-elevon CAD is disabled by default and excluded from neutral strategy selection per RUNBOOK Section 5.3."
+    ],
+    "audit_correction": "Historical cap4 config is restored separately for reference reproduction; current geometry authority remains configs/geometry/bwb.yaml."
+  }
+}

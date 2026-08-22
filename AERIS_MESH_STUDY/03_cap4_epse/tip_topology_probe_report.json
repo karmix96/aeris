@@ -1,0 +1,166 @@
+{
+  "base_params": {
+    "cap_wrap_points": 9,
+    "cap_wrap_x": 0.4,
+    "chordwise_beta": 2.0,
+    "chordwise_distribution": "uniform",
+    "max_adjacent_normal_angle": 180.0,
+    "min_shape_metric": 1e-06,
+    "oml_topology": "cap4",
+    "points_per_side": 49,
+    "spanwise_allocation": "proportional",
+    "spanwise_beta": 2.0,
+    "spanwise_distribution": "uniform",
+    "spanwise_panels": 16,
+    "te_base_points": 0,
+    "te_thickness": 0.005,
+    "te_thickness_abs_floor": 0.0,
+    "tip_radial_points": 7,
+    "tip_smooth_iters": 0
+  },
+  "generated_utc": "2026-08-11T18:44:43.332501+00:00",
+  "geometry_config": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/configs/geometry/bwb.yaml",
+  "purpose": "surface-only comparison of cap4 tip-cap variants on lhs7_00",
+  "sample_id": "lhs7_00",
+  "schema": "aeris.mesh_study.stage01_tip_topology_probe.v1",
+  "variants": [
+    {
+      "accepted_pre_pyhyp": true,
+      "description": "Stage 01 L3 control: airfoil_face cap, no tip smoothing",
+      "error": null,
+      "global_max_adjacent_normal_angle_deg": 165.28460213122244,
+      "global_max_equiangle_skewness": 0.997081744723563,
+      "global_min_scaled_jacobian": 0.004583968615083045,
+      "global_min_shape_metric": 0.00037159673582016757,
+      "overrides": {},
+      "tip_block_names": [
+        "tip_center_0"
+      ],
+      "tip_cap_info": {
+        "camber_line_grid_row": true,
+        "camber_line_is_block_interface": false,
+        "camber_line_row_index": 4,
+        "center_block_count": 1,
+        "collar_ring": false,
+        "exact_singular_camber_cap_would_require_mixed_elements": false,
+        "quad_only": true,
+        "topology": "single_block_full_airfoil_face_camber_row",
+        "uses_cap_width_frac": false,
+        "uses_tip_radial_points": false
+      },
+      "tip_topology": "airfoil_face",
+      "topology_id": "wing_cap4_v1",
+      "total_cells": 28832,
+      "variant": "A_baseline",
+      "worst_tip_block": "tip_center_0",
+      "worst_tip_max_equiangle_skewness": 0.997081744723563,
+      "worst_tip_min_scaled_jacobian": 0.004583968615083045,
+      "worst_tip_min_shape_metric": 0.00037159673582016757
+    },
+    {
+      "accepted_pre_pyhyp": true,
+      "description": "airfoil_face cap + 20 tip smoothing iterations",
+      "error": null,
+      "global_max_adjacent_normal_angle_deg": 165.28460213122244,
+      "global_max_equiangle_skewness": 0.997862840862573,
+      "global_min_scaled_jacobian": -0.41913557355801423,
+      "global_min_shape_metric": 0.00037159673582016757,
+      "overrides": {
+        "tip_smooth_iters": 20
+      },
+      "tip_block_names": [
+        "tip_center_0"
+      ],
+      "tip_cap_info": {
+        "camber_line_grid_row": true,
+        "camber_line_is_block_interface": false,
+        "camber_line_row_index": 4,
+        "center_block_count": 1,
+        "collar_ring": false,
+        "exact_singular_camber_cap_would_require_mixed_elements": false,
+        "quad_only": true,
+        "topology": "single_block_full_airfoil_face_camber_row",
+        "uses_cap_width_frac": false,
+        "uses_tip_radial_points": false
+      },
+      "tip_topology": "airfoil_face",
+      "topology_id": "wing_cap4_v1",
+      "total_cells": 28832,
+      "variant": "B_smooth20",
+      "worst_tip_block": "tip_center_0",
+      "worst_tip_max_equiangle_skewness": 0.997862840862573,
+      "worst_tip_min_scaled_jacobian": -0.41913557355801423,
+      "worst_tip_min_shape_metric": 0.00037159673582016757
+    },
+    {
+      "accepted_pre_pyhyp": true,
+      "description": "two-block C-grid tip face, no tip smoothing",
+      "error": null,
+      "global_max_adjacent_normal_angle_deg": 165.28460213122244,
+      "global_max_equiangle_skewness": 0.9982595758130994,
+      "global_min_scaled_jacobian": 0.0027338485143724783,
+      "global_min_shape_metric": 0.00037159673582306787,
+      "overrides": {},
+      "tip_block_names": [
+        "tip_center_0",
+        "tip_center_1"
+      ],
+      "tip_cap_info": {
+        "camber_line_grid_row": false,
+        "camber_line_is_block_interface": true,
+        "camber_line_row_index": null,
+        "center_block_count": 2,
+        "collar_ring": false,
+        "exact_singular_camber_cap_would_require_mixed_elements": false,
+        "quad_only": true,
+        "topology": "two_block_cgrid_airfoil_face",
+        "uses_cap_width_frac": false,
+        "uses_tip_radial_points": false
+      },
+      "tip_topology": "cgrid_face",
+      "topology_id": "wing_cap4_cgrid_face_v1",
+      "total_cells": 28832,
+      "variant": "C_cgrid",
+      "worst_tip_block": "tip_center_0",
+      "worst_tip_max_equiangle_skewness": 0.9982595758130994,
+      "worst_tip_min_scaled_jacobian": 0.0027338485143724783,
+      "worst_tip_min_shape_metric": 0.00037159673582306787
+    },
+    {
+      "accepted_pre_pyhyp": true,
+      "description": "C-grid tip face + 20 tip smoothing iterations",
+      "error": null,
+      "global_max_adjacent_normal_angle_deg": 165.28460213122244,
+      "global_max_equiangle_skewness": 0.9970817447235478,
+      "global_min_scaled_jacobian": 0.004583968615118028,
+      "global_min_shape_metric": 0.00037159673582306787,
+      "overrides": {
+        "tip_smooth_iters": 20
+      },
+      "tip_block_names": [
+        "tip_center_0",
+        "tip_center_1"
+      ],
+      "tip_cap_info": {
+        "camber_line_grid_row": false,
+        "camber_line_is_block_interface": true,
+        "camber_line_row_index": null,
+        "center_block_count": 2,
+        "collar_ring": false,
+        "exact_singular_camber_cap_would_require_mixed_elements": false,
+        "quad_only": true,
+        "topology": "two_block_cgrid_airfoil_face",
+        "uses_cap_width_frac": false,
+        "uses_tip_radial_points": false
+      },
+      "tip_topology": "cgrid_face",
+      "topology_id": "wing_cap4_cgrid_face_v1",
+      "total_cells": 28832,
+      "variant": "D_cgrid_smooth20",
+      "worst_tip_block": "tip_center_0",
+      "worst_tip_max_equiangle_skewness": 0.9970817447235478,
+      "worst_tip_min_scaled_jacobian": 0.004583968615118028,
+      "worst_tip_min_shape_metric": 0.00037159673582306787
+    }
+  ]
+}

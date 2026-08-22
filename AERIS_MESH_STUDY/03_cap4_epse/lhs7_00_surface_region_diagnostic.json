@@ -1,0 +1,733 @@
+{
+  "schema": "aeris.mesh_study.stage01_surface_region_diagnostic.v1",
+  "created_utc": "2026-08-11T18:14:46.223607+00:00",
+  "sample_id": "lhs7_00",
+  "sample_index": 0,
+  "topology_id": "wing_cap4_v1",
+  "surface_recipe": "pygeo_study_l3_reference",
+  "inputs": {
+    "sample_dir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_00",
+    "surface_blocks_npz": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_00/surface/surface_blocks.npz",
+    "surface_blocks_npz_sha256": "65d97e8c044049bef7907eb06f82771ee2721dae2412012e1e31dbc9d4488f0c",
+    "surface_fmt_sha256": "f2850c00701589395e58d645994573d1f3e159d9bafa4ffc9d853bc1df218d49",
+    "geometry_topology_contract": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/00_governance/geometry_topology_contract.json",
+    "geometry_topology_contract_status": "STAGE_00_PROPOSED_AFTER_AUDIT"
+  },
+  "mapping": {
+    "semantic_sources": [
+      "geometry_topology_contract.fixed_geometry_topology.station_order_root_to_tip",
+      "geometry_topology_contract.fixed_geometry_topology.semantic_edges",
+      "src/aeris/mesh/surface.py cap4 block topology docstring"
+    ],
+    "station_y_m": {
+      "b0_root": 0.0,
+      "b1_planform_break": 0.2472106695945933,
+      "b2_planform_airfoil_break": 0.5783467306731843,
+      "b3_tip": 1.1831107369169227
+    },
+    "span_band_m": 0.0023519105966516296,
+    "region_priority": [
+      "tip_cap",
+      "root",
+      "planform_break_b1",
+      "planform_break_b2",
+      "te_crown",
+      "le_crown",
+      "mid_oml"
+    ]
+  },
+  "findings": {
+    "global_worst_shape_region": "tip_cap",
+    "global_worst_shape_value": 0.00037159673582016757,
+    "global_worst_skew_region": "tip_cap",
+    "global_worst_skew_value": 0.997081744723563,
+    "interpretation": "Both global worst surface cells are owned by the physical tip cap on lhs7_00."
+  },
+  "top_worst_shape_cells": [
+    {
+      "metric": "shape_metric",
+      "value": 0.00037159673582016757,
+      "block": "tip_center_0",
+      "i": 0,
+      "j": 0,
+      "cell_center_m": {
+        "x": 0.6222513035239341,
+        "y": 1.1825637190154021,
+        "z": 0.05307216451468745
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 0.0005470179015205634,
+      "span_fraction": 0.9995376443772744
+    },
+    {
+      "metric": "shape_metric",
+      "value": 0.0010974712655325157,
+      "block": "tip_center_0",
+      "i": 47,
+      "j": 0,
+      "cell_center_m": {
+        "x": 0.5772401052757596,
+        "y": 1.183036853096898,
+        "z": 0.044329107199285886
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 7.388382002471161e-05,
+      "span_fraction": 0.9999375512217755
+    },
+    {
+      "metric": "shape_metric",
+      "value": 0.002475557368768,
+      "block": "tip_center_0",
+      "i": 1,
+      "j": 0,
+      "cell_center_m": {
+        "x": 0.6207597215844888,
+        "y": 1.1825753263026444,
+        "z": 0.05285767314404932
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 0.0005354106142783088,
+      "span_fraction": 0.9995474551979188
+    },
+    {
+      "metric": "shape_metric",
+      "value": 0.0031169856018586567,
+      "block": "tip_center_0",
+      "i": 47,
+      "j": 7,
+      "cell_center_m": {
+        "x": 0.5745052283196723,
+        "y": 1.1818012365269963,
+        "z": 0.06716209876132842
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 0.001309500389926388,
+      "span_fraction": 0.9988931717471022
+    },
+    {
+      "metric": "shape_metric",
+      "value": 0.0034160194574250242,
+      "block": "tip_center_0",
+      "i": 46,
+      "j": 0,
+      "cell_center_m": {
+        "x": 0.5787367242535728,
+        "y": 1.1830162222987608,
+        "z": 0.04471034426850196
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 9.451461816190054e-05,
+      "span_fraction": 0.9999201134642661
+    },
+    {
+      "metric": "shape_metric",
+      "value": 0.00410920799123486,
+      "block": "tip_center_0",
+      "i": 0,
+      "j": 7,
+      "cell_center_m": {
+        "x": 0.6200173716538726,
+        "y": 1.1815906959468672,
+        "z": 0.07105268375886019
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 0.0015200409700555362,
+      "span_fraction": 0.9987152166550219
+    },
+    {
+      "metric": "shape_metric",
+      "value": 0.0050173245347810485,
+      "block": "tip_center_0",
+      "i": 0,
+      "j": 3,
+      "cell_center_m": {
+        "x": 0.6657484304891914,
+        "y": 1.1821021558170153,
+        "z": 0.0616014031723991
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 0.001008581099907424,
+      "span_fraction": 0.9991475175835732
+    },
+    {
+      "metric": "shape_metric",
+      "value": 0.005471343317291994,
+      "block": "tip_center_0",
+      "i": 2,
+      "j": 0,
+      "cell_center_m": {
+        "x": 0.6193505696716025,
+        "y": 1.182586533722156,
+        "z": 0.052650570939874186
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 0.0005242031947667591,
+      "span_fraction": 0.9995569280385936
+    },
+    {
+      "metric": "shape_metric",
+      "value": 0.005816903998325977,
+      "block": "tip_center_0",
+      "i": 46,
+      "j": 7,
+      "cell_center_m": {
+        "x": 0.5760285439156467,
+        "y": 1.1817944197831047,
+        "z": 0.06728806555357614
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 0.001316317133817968,
+      "span_fraction": 0.9988874100346278
+    },
+    {
+      "metric": "shape_metric",
+      "value": 0.006691330977331829,
+      "block": "tip_center_0",
+      "i": 45,
+      "j": 0,
+      "cell_center_m": {
+        "x": 0.5801510703059455,
+        "y": 1.1829970287234983,
+        "z": 0.04506502285787024
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 0.00011370819342437777,
+      "span_fraction": 0.9999038904898111
+    },
+    {
+      "metric": "shape_metric",
+      "value": 0.0069262163662627335,
+      "block": "tip_center_0",
+      "i": 1,
+      "j": 7,
+      "cell_center_m": {
+        "x": 0.6185197850127948,
+        "y": 1.1815961389637186,
+        "z": 0.07095210210524025
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 0.0015145979532040776,
+      "span_fraction": 0.9987198172529894
+    },
+    {
+      "metric": "shape_metric",
+      "value": 0.009498938607525414,
+      "block": "tip_center_0",
+      "i": 45,
+      "j": 7,
+      "cell_center_m": {
+        "x": 0.5774671957792235,
+        "y": 1.1817877946811661,
+        "z": 0.06741049098905828
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 0.0013229422357565745,
+      "span_fraction": 0.9988818103035697
+    }
+  ],
+  "top_worst_skew_cells": [
+    {
+      "metric": "equiangle_skewness",
+      "value": 0.997081744723563,
+      "block": "tip_center_0",
+      "i": 0,
+      "j": 0,
+      "cell_center_m": {
+        "x": 0.6222513035239341,
+        "y": 1.1825637190154021,
+        "z": 0.05307216451468745
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 0.0005470179015205634,
+      "span_fraction": 0.9995376443772744
+    },
+    {
+      "metric": "equiangle_skewness",
+      "value": 0.9956653584671447,
+      "block": "tip_center_0",
+      "i": 0,
+      "j": 3,
+      "cell_center_m": {
+        "x": 0.6657484304891914,
+        "y": 1.1821021558170153,
+        "z": 0.0616014031723991
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 0.001008581099907424,
+      "span_fraction": 0.9991475175835732
+    },
+    {
+      "metric": "equiangle_skewness",
+      "value": 0.9912360284147884,
+      "block": "tip_center_0",
+      "i": 47,
+      "j": 0,
+      "cell_center_m": {
+        "x": 0.5772401052757596,
+        "y": 1.183036853096898,
+        "z": 0.044329107199285886
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 7.388382002471161e-05,
+      "span_fraction": 0.9999375512217755
+    },
+    {
+      "metric": "equiangle_skewness",
+      "value": 0.982702891285448,
+      "block": "tip_center_0",
+      "i": 1,
+      "j": 0,
+      "cell_center_m": {
+        "x": 0.6207597215844888,
+        "y": 1.1825753263026444,
+        "z": 0.05285767314404932
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 0.0005354106142783088,
+      "span_fraction": 0.9995474551979188
+    },
+    {
+      "metric": "equiangle_skewness",
+      "value": 0.9803180226204502,
+      "block": "tip_center_0",
+      "i": 1,
+      "j": 3,
+      "cell_center_m": {
+        "x": 0.6591674785775763,
+        "y": 1.1821162193781511,
+        "z": 0.06134152225094547
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 0.0009945175387715555,
+      "span_fraction": 0.999159404519172
+    },
+    {
+      "metric": "equiangle_skewness",
+      "value": 0.9758017881568846,
+      "block": "tip_center_0",
+      "i": 46,
+      "j": 0,
+      "cell_center_m": {
+        "x": 0.5787367242535728,
+        "y": 1.1830162222987608,
+        "z": 0.04471034426850196
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 9.451461816190054e-05,
+      "span_fraction": 0.9999201134642661
+    },
+    {
+      "metric": "equiangle_skewness",
+      "value": 0.9750748478120237,
+      "block": "tip_center_0",
+      "i": 47,
+      "j": 7,
+      "cell_center_m": {
+        "x": 0.5745052283196723,
+        "y": 1.1818012365269963,
+        "z": 0.06716209876132842
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 0.001309500389926388,
+      "span_fraction": 0.9988931717471022
+    },
+    {
+      "metric": "equiangle_skewness",
+      "value": 0.9676820574860917,
+      "block": "tip_center_0",
+      "i": 0,
+      "j": 7,
+      "cell_center_m": {
+        "x": 0.6200173716538726,
+        "y": 1.1815906959468672,
+        "z": 0.07105268375886019
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 0.0015200409700555362,
+      "span_fraction": 0.9987152166550219
+    },
+    {
+      "metric": "equiangle_skewness",
+      "value": 0.9660282770129979,
+      "block": "tip_center_0",
+      "i": 2,
+      "j": 0,
+      "cell_center_m": {
+        "x": 0.6193505696716025,
+        "y": 1.182586533722156,
+        "z": 0.052650570939874186
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 0.0005242031947667591,
+      "span_fraction": 0.9995569280385936
+    },
+    {
+      "metric": "equiangle_skewness",
+      "value": 0.962501306979678,
+      "block": "tip_center_0",
+      "i": 2,
+      "j": 3,
+      "cell_center_m": {
+        "x": 0.6531588309075905,
+        "y": 1.1821294273714518,
+        "z": 0.06109745139035214
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 0.000981309545470932,
+      "span_fraction": 0.9991705683036669
+    },
+    {
+      "metric": "equiangle_skewness",
+      "value": 0.9586297183101471,
+      "block": "tip_center_0",
+      "i": 46,
+      "j": 7,
+      "cell_center_m": {
+        "x": 0.5760285439156467,
+        "y": 1.1817944197831047,
+        "z": 0.06728806555357614
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 0.001316317133817968,
+      "span_fraction": 0.9988874100346278
+    },
+    {
+      "metric": "equiangle_skewness",
+      "value": 0.9580181095197241,
+      "block": "tip_center_0",
+      "i": 45,
+      "j": 0,
+      "cell_center_m": {
+        "x": 0.5801510703059455,
+        "y": 1.1829970287234983,
+        "z": 0.04506502285787024
+      },
+      "semantic_region": "tip_cap",
+      "region_reason": "tip_center_* block closes the b3 physical tip face",
+      "nearest_station": "b3_tip",
+      "distance_to_nearest_station_m": 0.00011370819342437777,
+      "span_fraction": 0.9999038904898111
+    }
+  ],
+  "region_summary": {
+    "le_crown": {
+      "cell_count": 2013,
+      "min_shape_metric": 0.09379436466232523,
+      "max_equiangle_skewness": 0.4360264709850867,
+      "worst_shape_cell": {
+        "metric": "shape_metric",
+        "value": 0.09379436466232523,
+        "block": "oml_0",
+        "i": 7,
+        "j": 13,
+        "cell_center_m": {
+          "x": 0.34344785598634847,
+          "y": 0.06394506889513121,
+          "z": 0.07374779814851293
+        },
+        "semantic_region": "le_crown",
+        "region_reason": "oml_0 is the leading-edge crown block in cap4 topology",
+        "nearest_station": "b0_root",
+        "distance_to_nearest_station_m": 0.06394506889513121,
+        "span_fraction": 0.054048253388153805
+      },
+      "worst_skew_cell": {
+        "metric": "equiangle_skewness",
+        "value": 0.4360264709850867,
+        "block": "oml_0",
+        "i": 2,
+        "j": 26,
+        "cell_center_m": {
+          "x": 0.20022007251412602,
+          "y": 0.1212751306631799,
+          "z": -0.038195163118358216
+        },
+        "semantic_region": "le_crown",
+        "region_reason": "oml_0 is the leading-edge crown block in cap4 topology",
+        "nearest_station": "b0_root",
+        "distance_to_nearest_station_m": 0.1212751306631799,
+        "span_fraction": 0.10250530814994688
+      }
+    },
+    "planform_break_b1": {
+      "cell_count": 112,
+      "min_shape_metric": 0.13655111093102473,
+      "max_equiangle_skewness": 0.30008957787002166,
+      "worst_shape_cell": {
+        "metric": "shape_metric",
+        "value": 0.13655111093102473,
+        "block": "oml_0",
+        "i": 7,
+        "j": 53,
+        "cell_center_m": {
+          "x": 0.4131608962089965,
+          "y": 0.24916548129970872,
+          "z": 0.05746949492559481
+        },
+        "semantic_region": "planform_break_b1",
+        "region_reason": "cell center lies within one half median span cell of b1 planform break",
+        "nearest_station": "b1_planform_break",
+        "distance_to_nearest_station_m": 0.0019548117051154112,
+        "span_fraction": 0.21060199483018044
+      },
+      "worst_skew_cell": {
+        "metric": "equiangle_skewness",
+        "value": 0.30008957787002166,
+        "block": "oml_0",
+        "i": 2,
+        "j": 53,
+        "cell_center_m": {
+          "x": 0.2773578868645994,
+          "y": 0.24942252707408916,
+          "z": -0.02998780757634112
+        },
+        "semantic_region": "planform_break_b1",
+        "region_reason": "cell center lies within one half median span cell of b1 planform break",
+        "nearest_station": "b1_planform_break",
+        "distance_to_nearest_station_m": 0.0022118574794958434,
+        "span_fraction": 0.2108192574805476
+      }
+    },
+    "planform_break_b2": {
+      "cell_count": 112,
+      "min_shape_metric": 0.25448773162693505,
+      "max_equiangle_skewness": 0.22507988006187105,
+      "worst_shape_cell": {
+        "metric": "shape_metric",
+        "value": 0.25448773162693505,
+        "block": "oml_0",
+        "i": 2,
+        "j": 122,
+        "cell_center_m": {
+          "x": 0.4293747584720691,
+          "y": 0.5775720810299582,
+          "z": -0.0009388642952096736
+        },
+        "semantic_region": "planform_break_b2",
+        "region_reason": "cell center lies within one half median span cell of b2 planform/airfoil break",
+        "nearest_station": "b2_planform_airfoil_break",
+        "distance_to_nearest_station_m": 0.0007746496432261551,
+        "span_fraction": 0.48818091410027914
+      },
+      "worst_skew_cell": {
+        "metric": "equiangle_skewness",
+        "value": 0.22507988006187105,
+        "block": "oml_0",
+        "i": 3,
+        "j": 122,
+        "cell_center_m": {
+          "x": 0.39554059162429833,
+          "y": 0.577212176524761,
+          "z": 0.0059511126683877685
+        },
+        "semantic_region": "planform_break_b2",
+        "region_reason": "cell center lies within one half median span cell of b2 planform/airfoil break",
+        "nearest_station": "b2_planform_airfoil_break",
+        "distance_to_nearest_station_m": 0.001134554148423339,
+        "span_fraction": 0.48787671222469214
+      }
+    },
+    "tip_cap": {
+      "cell_count": 387,
+      "min_shape_metric": 0.00037159673582016757,
+      "max_equiangle_skewness": 0.997081744723563,
+      "worst_shape_cell": {
+        "metric": "shape_metric",
+        "value": 0.00037159673582016757,
+        "block": "tip_center_0",
+        "i": 0,
+        "j": 0,
+        "cell_center_m": {
+          "x": 0.6222513035239341,
+          "y": 1.1825637190154021,
+          "z": 0.05307216451468745
+        },
+        "semantic_region": "tip_cap",
+        "region_reason": "tip_center_* block closes the b3 physical tip face",
+        "nearest_station": "b3_tip",
+        "distance_to_nearest_station_m": 0.0005470179015205634,
+        "span_fraction": 0.9995376443772744
+      },
+      "worst_skew_cell": {
+        "metric": "equiangle_skewness",
+        "value": 0.997081744723563,
+        "block": "tip_center_0",
+        "i": 0,
+        "j": 0,
+        "cell_center_m": {
+          "x": 0.6222513035239341,
+          "y": 1.1825637190154021,
+          "z": 0.05307216451468745
+        },
+        "semantic_region": "tip_cap",
+        "region_reason": "tip_center_* block closes the b3 physical tip face",
+        "nearest_station": "b3_tip",
+        "distance_to_nearest_station_m": 0.0005470179015205634,
+        "span_fraction": 0.9995376443772744
+      }
+    },
+    "lower_mid_oml": {
+      "cell_count": 12096,
+      "min_shape_metric": 0.2756618574315917,
+      "max_equiangle_skewness": 0.2281200972515737,
+      "worst_shape_cell": {
+        "metric": "shape_metric",
+        "value": 0.2756618574315917,
+        "block": "oml_1",
+        "i": 47,
+        "j": 253,
+        "cell_center_m": {
+          "x": 0.5846415118218851,
+          "y": 1.1806922943820701,
+          "z": 0.04519874511867617
+        },
+        "semantic_region": "lower_mid_oml",
+        "region_reason": "oml_1 lower mid-chord OML block",
+        "nearest_station": "b3_tip",
+        "distance_to_nearest_station_m": 0.0024184425348525718,
+        "span_fraction": 0.9979558612229699
+      },
+      "worst_skew_cell": {
+        "metric": "equiangle_skewness",
+        "value": 0.2281200972515737,
+        "block": "oml_1",
+        "i": 47,
+        "j": 26,
+        "cell_center_m": {
+          "x": 0.41235861883530595,
+          "y": 0.1212751306631799,
+          "z": -0.05040780194077434
+        },
+        "semantic_region": "lower_mid_oml",
+        "region_reason": "oml_1 lower mid-chord OML block",
+        "nearest_station": "b0_root",
+        "distance_to_nearest_station_m": 0.1212751306631799,
+        "span_fraction": 0.10250530814994688
+      }
+    },
+    "te_crown": {
+      "cell_count": 2016,
+      "min_shape_metric": 0.09755158179032085,
+      "max_equiangle_skewness": 0.31666594537732046,
+      "worst_shape_cell": {
+        "metric": "shape_metric",
+        "value": 0.09755158179032085,
+        "block": "oml_2",
+        "i": 2,
+        "j": 13,
+        "cell_center_m": {
+          "x": 0.7885991571399935,
+          "y": 0.06394506889513121,
+          "z": 0.009471359964291496
+        },
+        "semantic_region": "te_crown",
+        "region_reason": "oml_2 is the trailing-edge crown block in cap4 topology",
+        "nearest_station": "b0_root",
+        "distance_to_nearest_station_m": 0.06394506889513121,
+        "span_fraction": 0.054048253388153805
+      },
+      "worst_skew_cell": {
+        "metric": "equiangle_skewness",
+        "value": 0.31666594537732046,
+        "block": "oml_2",
+        "i": 3,
+        "j": 13,
+        "cell_center_m": {
+          "x": 0.8768125020149435,
+          "y": 0.06394506889513121,
+          "z": -0.0016763102985091348
+        },
+        "semantic_region": "te_crown",
+        "region_reason": "oml_2 is the trailing-edge crown block in cap4 topology",
+        "nearest_station": "b0_root",
+        "distance_to_nearest_station_m": 0.06394506889513121,
+        "span_fraction": 0.054048253388153805
+      }
+    },
+    "upper_mid_oml": {
+      "cell_count": 12096,
+      "min_shape_metric": 0.27531004551637467,
+      "max_equiangle_skewness": 0.226420059974657,
+      "worst_shape_cell": {
+        "metric": "shape_metric",
+        "value": 0.27531004551637467,
+        "block": "oml_3",
+        "i": 0,
+        "j": 253,
+        "cell_center_m": {
+          "x": 0.5818105290175297,
+          "y": 1.17942478789429,
+          "z": 0.06861862713936036
+        },
+        "semantic_region": "upper_mid_oml",
+        "region_reason": "oml_3 upper mid-chord OML block",
+        "nearest_station": "b3_tip",
+        "distance_to_nearest_station_m": 0.0036859490226326397,
+        "span_fraction": 0.9968845274515572
+      },
+      "worst_skew_cell": {
+        "metric": "equiangle_skewness",
+        "value": 0.226420059974657,
+        "block": "oml_3",
+        "i": 0,
+        "j": 13,
+        "cell_center_m": {
+          "x": 0.39198104423620383,
+          "y": 0.06394506889513121,
+          "z": 0.06994633595316363
+        },
+        "semantic_region": "upper_mid_oml",
+        "region_reason": "oml_3 upper mid-chord OML block",
+        "nearest_station": "b0_root",
+        "distance_to_nearest_station_m": 0.06394506889513121,
+        "span_fraction": 0.054048253388153805
+      }
+    }
+  }
+}

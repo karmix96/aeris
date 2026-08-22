@@ -1,0 +1,158 @@
+{
+  "artifacts": {
+    "solve": {
+      "adflow_case.json": "948b0272046d82a79043d79b3b16fabb61488666cedce66d6aa2aca2715aedbb",
+      "adflow_options.json": "3cca1cd8164c6027190cfd89489b564c3ce02ff5a16e1828ed919fe80e5cd493",
+      "solve_report.json": "095d10f8b29672905ad754af77ac3c6c2813a3171bc484cc5daec8383a2a639a",
+      "verification.json": "f862bc960bd4637edc996a88e943bf5602d1a573ffae7c7b5bf94ea853d854dc"
+    },
+    "surface": {
+      "pyhyp_effective_options.json": "c6266b35e132a516ce4fea5229b0c82b0b2e23980f3092b0a4d7ed38115cdc44",
+      "pyhyp_options.json": "dc93d48e73f26ee00bdb683d47011316f58986591254ca2a333060897c35ccbf",
+      "surface.fmt": "6625b41253dd527207e796c10f08ade30676b055625c7e9baefd30131962b6d4",
+      "surface_report.json": "9a597baeaec2e1c6ee55f6e2d84e9d2b66b5b705c487361a5ff233e7bbd2f7be",
+      "volume_report.json": "e8a3ab9d2fb902ee9aa69454673515154a6ff2370b23103bc1361a837f0233d2"
+    }
+  },
+  "case": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/configs/cfd/validation_naca0012_tmr.yaml",
+  "case_sha256": "854dea540888178fb84cad2ab33b6e65af193bb5b3f3f7ba185302d6832d070d",
+  "checks": [
+    {
+      "detail": {
+        "actual": "6625b41253dd527207e796c10f08ade30676b055625c7e9baefd30131962b6d4",
+        "expected": "6625b41253dd527207e796c10f08ade30676b055625c7e9baefd30131962b6d4"
+      },
+      "name": "surface_fmt_sha256_matches_reference",
+      "passed": true
+    },
+    {
+      "detail": {
+        "actual": "airfoil_ogrid_v1",
+        "expected": "airfoil_ogrid_v1"
+      },
+      "name": "surface_topology_matches_reference",
+      "passed": true
+    },
+    {
+      "detail": {
+        "actual": 513,
+        "expected": 513
+      },
+      "name": "surface_loop_dimensions_match_reference",
+      "passed": true
+    },
+    {
+      "detail": {
+        "actual": 1.0,
+        "expected": 1.0
+      },
+      "name": "surface_characteristic_length_matches_reference",
+      "passed": true
+    },
+    {
+      "detail": {
+        "actual": 193,
+        "expected": 193
+      },
+      "name": "pyhyp_option_N_matches_reference",
+      "passed": true
+    },
+    {
+      "detail": {
+        "actual": 5e-06,
+        "expected": 5e-06
+      },
+      "name": "pyhyp_option_s0_matches_reference",
+      "passed": true
+    },
+    {
+      "detail": {
+        "actual": 100.0,
+        "expected": 100.0
+      },
+      "name": "pyhyp_option_marchDist_matches_reference",
+      "passed": true
+    },
+    {
+      "detail": {
+        "actual": 1,
+        "expected": 1
+      },
+      "name": "pyhyp_option_coarsen_matches_reference",
+      "passed": true
+    },
+    {
+      "detail": "valid",
+      "name": "volume_report_status_valid",
+      "passed": true
+    },
+    {
+      "detail": "clean",
+      "name": "volume_audit_clean",
+      "passed": true
+    },
+    {
+      "detail": 0,
+      "name": "no_negative_quality_layers",
+      "passed": true
+    },
+    {
+      "detail": {
+        "abs_tolerance": 0.003,
+        "actual": 1.0917740093456412,
+        "expected": 1.0917740093456412
+      },
+      "name": "adflow_cl_matches_historical_anchor",
+      "passed": true
+    },
+    {
+      "detail": {
+        "abs_tolerance": 0.001,
+        "actual": 0.013164679005086222,
+        "expected": 0.013164679005086222
+      },
+      "name": "adflow_cd_matches_historical_anchor",
+      "passed": true
+    }
+  ],
+  "environment": {
+    "git_branch": "main",
+    "git_head": "6bb2627b75bbf1c3cc1a35eaf5559aaeee0e0d51",
+    "mach_aero_mpirun": "/home/mike/miniconda3/envs/mach-aero/bin/mpirun",
+    "mach_aero_python": "/home/mike/miniconda3/envs/mach-aero/bin/python",
+    "platform": "Linux-7.0.0-28-generic-x86_64-with-glibc2.39",
+    "python": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/.venv/bin/python",
+    "python_version": "3.13.9 | packaged by Anaconda, Inc. | (main, Oct 21 2025, 19:16:10) [GCC 11.2.0]"
+  },
+  "error": null,
+  "generated_utc": "2026-08-11T14:51:30.264432+00:00",
+  "mode": "solve",
+  "reference": {
+    "case": "configs/cfd/validation_naca0012_tmr.yaml",
+    "characteristic_length": 1.0,
+    "force_tolerance": {
+      "cd_abs": 0.001,
+      "cl_abs": 0.003
+    },
+    "historical_adflow": {
+      "cd": 0.013164679005086222,
+      "cl": 1.0917740093456412
+    },
+    "n_loop_points": 513,
+    "pyhyp": {
+      "N": 193,
+      "coarsen": 1,
+      "marchDist": 100.0,
+      "s0": 5e-06
+    },
+    "surface_fmt_sha256": "6625b41253dd527207e796c10f08ade30676b055625c7e9baefd30131962b6d4",
+    "tmr_cfl3d": {
+      "cd": 0.01231,
+      "cl": 1.0909
+    },
+    "topology": "airfoil_ogrid_v1"
+  },
+  "schema": "aeris.mesh_study.stage01_tmr_anchor_report.v1",
+  "status": "PASS",
+  "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/tmr_anchor"
+}

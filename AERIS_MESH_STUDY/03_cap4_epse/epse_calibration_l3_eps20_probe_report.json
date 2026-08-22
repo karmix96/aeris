@@ -1,0 +1,155 @@
+{
+  "environment": {
+    "git_branch": "main",
+    "git_head": "6bb2627b75bbf1c3cc1a35eaf5559aaeee0e0d51",
+    "platform": "Linux-7.0.0-28-generic-x86_64-with-glibc2.39",
+    "python": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/.venv/bin/python",
+    "python_version": "3.13.9 | packaged by Anaconda, Inc. | (main, Oct 21 2025, 19:16:10) [GCC 11.2.0]"
+  },
+  "epsE_common_start": null,
+  "eps_values": [
+    2.0
+  ],
+  "generated_utc": "2026-08-11T15:36:36.093031+00:00",
+  "geometry_config": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/configs/geometry/bwb.yaml",
+  "geometry_config_sha256": "f114b48e3c400a2832cc3763e7cf7505ecd0925fb81cb92f70e28bb5e6234614",
+  "mode": "full",
+  "preset": "smoke",
+  "remarch_rows": [
+    {
+      "clean_for_stage01": false,
+      "dry_run": false,
+      "effective_options_sha256": "e3e714a0dbbd7e7b058797c4917bb468ebc1590c82bb4bae555452a0444bfcca",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 2.0
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 4.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.3350357804864138e-05
+          }
+        }
+      },
+      "epsE": 2.0,
+      "epsI": 4.0,
+      "error": "RuntimeError: pyHyp subprocess produced invalid marched volume metrics: min_volume=-4.52e-11, min_quality=-1.0, first_invalid_layer=42.\ninverted_localized: 4 of 3690496 cells (0.00011%) inverted, min volume -4.519e-11\n  domain.00005: 4 cells, layers 41-44, j[0, 0] i[47, 47], spanwise_edge=True, wall_adjacent=False, wall x[0.5852,0.5852] y[1.1830,1.1830]\nInvalid CGNS moved to /home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration_l3_eps20_probe/remarch/eps20/lhs7_00/surface/wing_vol_smoke.invalid.cgns. Inspect /home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration_l3_eps20_probe/remarch/eps20/lhs7_00/surface/pyhyp_stdout.log.",
+      "inverted_cells": 4,
+      "low_quality_layers": 53,
+      "min_quality": -1.0,
+      "min_volume": -4.52e-11,
+      "pyhyp_options_sha256": "ef61201d8b33f875f308999db8f7f1957507c848f041cf992cb26c6d2021ffb7",
+      "sample_id": "lhs7_00",
+      "sample_index": 0,
+      "seconds": 896.6904463350002,
+      "source_surface_fmt_sha256": "f2850c00701589395e58d645994573d1f3e159d9bafa4ffc9d853bc1df218d49",
+      "stage_status": null,
+      "variant": "eps20",
+      "volume_audit_classification": "inverted_localized",
+      "volume_report_sha256": "384523c19dde4a1c2d55a4408a7c5542d84b839042f20edab752eb7100683436",
+      "volume_report_status": "invalid",
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration_l3_eps20_probe/remarch/eps20/lhs7_00"
+    }
+  ],
+  "sample_csv": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/00_governance/epse_calibration_lhs10_seed7_samples.csv",
+  "sample_csv_sha256": "ec355304ac588e7a0c1865ef4cf367c61a74cd8001de07ea2501d4b04384a039",
+  "schema": "aeris.mesh_study.stage01_epse_calibration_report.v1",
+  "selection_rule": "highest epsE with all locked samples clean and zero low-quality layers",
+  "status": "FAIL",
+  "surface_recipe": "pygeo_study_l3_reference",
+  "surface_recipe_source": {
+    "base_preset": "smoke",
+    "base_preset_source": "src/aeris/cfd/presets/data/mesh_family_smoke.yaml",
+    "overlay_source": "configs/cfd/pygeo_surface_mesh_study.yaml",
+    "overlay_source_sha256": "510bbe4528a75bc029423cf4fd8df6ea6c569882e3ff96a6852b57226a0e9c0e",
+    "recipe": "pygeo_study_l3_reference",
+    "reference_level": "L3"
+  },
+  "surface_reference_manifest": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration_l3_eps20_probe/surface_reference_manifest.json",
+  "surfaces": [
+    {
+      "artifact_sha256": {
+        "surface.fmt": "f2850c00701589395e58d645994573d1f3e159d9bafa4ffc9d853bc1df218d49",
+        "surface.vtk": "5cd5d877676e0fd3df27fcc69493b5c67732c5c0aabfd02a809786f7bd864dd5",
+        "surface_blocks.npz": "65d97e8c044049bef7907eb06f82771ee2721dae2412012e1e31dbc9d4488f0c",
+        "surface_report.json": "0c3359bf2466ae04c72bf2296fd1f9929c2d80cc24f9f136f1aaa8c8ba664436"
+      },
+      "connectivity_json": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration_l3_eps20_probe/surfaces/lhs7_00/connectivity.json",
+      "design_sample": {
+        "b3_ratio": 0.511164329232357,
+        "b_total_m": 1.1831107369169227,
+        "c1_m": 0.940210612182623,
+        "c2_ratio": 0.6790053008464462,
+        "c3_ratio": 0.35923840776505517,
+        "c4_ratio": 0.16580239674884545,
+        "dihedral_b1_deg": 0.0,
+        "dihedral_b2_deg": 3.2739060299771214,
+        "dihedral_b3_deg": 3.0815314603025734,
+        "elevon_end_frac": 0.9089695605509318,
+        "elevon_hinge_frac": 0.7761361058502889,
+        "elevon_start_frac": 0.5637428677308144,
+        "split_ratio": 0.4274437054513041,
+        "sw1_deg": -38.1816413720189,
+        "sw2_deg": -30.307877121775043,
+        "sw3_deg": -12.498001506670484,
+        "twist_b0_deg": 0.7318550013218126,
+        "twist_b1_deg": -0.44300875410744656,
+        "twist_b2_deg": -4.924998666257613,
+        "twist_b3_deg": -6.887594557194893
+      },
+      "error": null,
+      "generator_id": "bwb_segmented",
+      "sample_hash": "630b5b9ead4a55a4a7b207de65ca8fe24a92661981f4ecfcd89a98d9e37fd5e9",
+      "sample_id": "lhs7_00",
+      "sample_index": 0,
+      "schema": "aeris.mesh_study.stage01_surface_manifest.v1",
+      "seconds": 5.448647012002766,
+      "status": "surface_ok",
+      "surface_dir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration_l3_eps20_probe/surfaces/lhs7_00/surface",
+      "surface_params": {
+        "cap_width_frac": 0.5,
+        "cap_wrap_points": 9,
+        "cap_wrap_x": 0.4,
+        "chordwise_beta": 2.0,
+        "chordwise_distribution": "uniform",
+        "max_adjacent_normal_angle": 180.0,
+        "min_shape_metric": 1e-06,
+        "points_per_side": 49,
+        "spanwise_allocation": "proportional",
+        "spanwise_beta": 2.0,
+        "spanwise_distribution": "uniform",
+        "spanwise_panels": 16,
+        "te_base_points": 0,
+        "te_thickness": 0.005,
+        "te_thickness_abs_floor": 0.0,
+        "tip_radial_points": 7,
+        "tip_smooth_iters": 0,
+        "tip_topology": "airfoil_face"
+      },
+      "surface_qc_json": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration_l3_eps20_probe/surfaces/lhs7_00/surface_qc.json",
+      "surface_recipe": "pygeo_study_l3_reference",
+      "surface_source": "generated",
+      "topology_id": "wing_cap4_v1",
+      "volume_preset": "smoke"
+    }
+  ],
+  "volume_level": "smoke",
+  "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration_l3_eps20_probe"
+}

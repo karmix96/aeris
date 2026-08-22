@@ -63,6 +63,29 @@ peak, 325 s auditing at 5.3 GB peak).  The remaining 95 designs are a desktop jo
 of roughly 16 hours sequential, or about four hours split four ways since each
 case is single-threaded.  See [`RUNBOOK.md`](RUNBOOK.md).
 
+### Wall resolution at coarse: y+ passes
+
+The diagnostic tier measured wall y+ around 44, with a first cell of 2.0e-3 L.
+Coarse uses 7.2e-6 L.  Measured on the index-0 coarse mesh (2 549 227 cells, SU2
+8.5.0, 120 iterations on 2 MPI ranks, 1 243 s):
+
+| statistic | value | limit |
+|---|---|---|
+| minimum | 0.0527 | - |
+| p50 | 0.3995 | - |
+| p95 | **0.5573** | 1.0 |
+| p99 | **0.7552** | 2.0 |
+| maximum | **0.8744** | 5.0 |
+
+All 5 293 wall points reported, and every wall-y+ limit passes.  This is the first
+evidence that S7's wall spacing actually delivers a wall-resolved boundary layer.
+
+It is a bounded diagnostic, not a campaign result: 120 iterations is far from
+converged (the density residual moves only from -3.62 to -3.79 over the run), it
+is one design at one flow condition, and it invokes SU2 directly rather than
+through the campaign.  `production_y_plus_passed` remains unmet until a converged
+campaign case demonstrates it.
+
 ### What made it work
 
 - **Netgen optimisation scoped to the tetrahedral core.**  All optimisation had

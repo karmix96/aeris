@@ -477,9 +477,22 @@ su2:
     finite_wall_fraction_min: 1.0
 
 resource_safety:
-  production_min_available_ram_gib: 48.0
-  production_min_free_disk_gib: 100.0
-  memory_estimate_bytes_per_cell: 7000
+  # Both floors below were set for the ORIGINAL grid family, which measured ten
+  # to seventy-eight times S6 production and has since been re-sized.  They are
+  # now calibrated against a measured coarse mesh: 2 549 227 cells built in 245 s
+  # at 1.8 GB peak RSS (706 bytes/cell) and audited in 325 s at 5.3 GB peak
+  # (2 078 bytes/cell), writing 263 MB of mesh files.
+  #
+  # The real protection is the "estimate must fit inside 70 percent of available
+  # RAM" rule, which is unchanged and still fail-closed; these floors only stop a
+  # run before it starts.  A coarse mesh needs about 6.4 GB by the recalibrated
+  # estimate, so 12 GiB leaves the 70 percent rule binding rather than the floor.
+  production_min_available_ram_gib: 12.0
+  production_min_free_disk_gib: 40.0
+  # Measured 2 078 bytes/cell at the audit peak, which dominates meshing; 2 500
+  # carries margin.  The previous 7 000 was never measured and over-predicted a
+  # coarse mesh by a factor of ten, which refused runs that fit comfortably.
+  memory_estimate_bytes_per_cell: 2500
   laptop_max_estimated_memory_fraction: 0.40
   laptop_min_free_disk_gib: 5.0
   refuse_production_if_unknown: true

@@ -53,6 +53,11 @@ flow_conditions:
     temperature: 288.15
 
 geometry:
+  # half_wing_symmetry_y0 meshes y >= 0 only, closed at the root by a symmetry
+  # plane, halving the cell count and matching S6's domain. The surface builder
+  # supports it; the volume pipeline does not yet, so the declared domain stays
+  # mirrored until it does. Override to develop against the half path.
+  modeled_domain: full_mirrored_wing
   source: shared_pygeo_surface
   exact_arbitrary_station_sections: true
   mirror_plane: y=0

@@ -7,7 +7,7 @@ from typing import Any
 import numpy as np
 from scipy.spatial import cKDTree
 
-from .geometry import LABELS, SurfaceMesh
+from .geometry import WALL_LABELS, SurfaceMesh
 
 
 def source_wall_correspondence(
@@ -55,7 +55,7 @@ def source_wall_rows(
         tuple(sorted(map(int, triangle))): label
         for triangle, label in zip(surface.triangles, surface.labels, strict=True)
     }
-    rows: dict[str, list[tuple[int, list[int]]]] = {label: [] for label in LABELS}
+    rows: dict[str, list[tuple[int, list[int]]]] = {label: [] for label in WALL_LABELS}
     types, _element_tags, connectivity = gmsh.model.mesh.getElements(2, int(source_surface_entity))
     for element_type, flat in zip(types, connectivity, strict=True):
         name, dim, order, width, _local, _primary = gmsh.model.mesh.getElementProperties(
@@ -72,6 +72,8 @@ def source_wall_rows(
             rows[label_by_face[key]].append((5, list(map(int, node_row))))
     if sum(map(len, rows.values())) != len(surface.triangles):
         raise ValueError("Gmsh wall triangle count changed during boundary-layer construction")
-    if any(not rows[label] for label in LABELS):
+    # Viscous walls only: a symmetry plane carries no prisms and is mapped
+    # separately, so its absence here is correct rather than an empty label.
+    if any(not rows[label] for label in WALL_LABELS):
         raise ValueError("one or more required S7 source-wall labels became empty")
     return rows

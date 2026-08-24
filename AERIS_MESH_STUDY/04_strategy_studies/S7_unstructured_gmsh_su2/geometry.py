@@ -33,7 +33,10 @@ from .intersections import self_intersection_report
 
 Array = np.ndarray
 SURFACE_SCHEMA = "aeris.s7.surface.v1"
-LABELS = ("wall_upper", "wall_lower", "wall_te", "wall_tip")
+LABELS = ("wall_upper", "wall_lower", "wall_te", "wall_tip", "symmetry")
+# "symmetry" appears only on a half model, where it caps the root at y=0.  It is
+# a boundary of the fluid domain, not a viscous wall, and carries no prisms.
+WALL_LABELS = ("wall_upper", "wall_lower", "wall_te", "wall_tip")
 
 
 @dataclass(frozen=True)
@@ -322,6 +325,30 @@ def _planform_record(stations: Sequence[Any]) -> dict[str, Any]:
     }
 
 
+def _oriented_cap(
+    nodes: Sequence[int],
+    registry: "_PointRegistry",
+    outward: Array,
+) -> list[tuple[int, int, int]] | None:
+    """Triangulate a closed planar section and wind it to face `outward`.
+
+    Used for the root cap of a half model.  The winding matters: the enclosed
+    signed volume check downstream only passes if every face points out of the
+    body, and a cap laid down in the wrong order silently inverts it.
+    """
+    perimeter = np.asarray([registry.points[n] for n in nodes], dtype=float)
+    cap = _polygon_delaunay_triangles(perimeter, registry.tolerance)
+    if cap is None:
+        return None
+    oriented: list[tuple[int, int, int]] = []
+    for a, b, c in cap:
+        normal = np.cross(perimeter[b] - perimeter[a], perimeter[c] - perimeter[a])
+        if float(normal @ outward) < 0.0:
+            a, b, c = a, c, b
+        oriented.append((int(nodes[a]), int(nodes[b]), int(nodes[c])))
+    return oriented
+
+
 def _point_segment_distance(point: Array, start: Array, end: Array) -> float:
     """Shortest distance from one point to a finite segment."""
     axis = end - start
@@ -574,7 +601,13 @@ def build_surface(
         labels.append(label)
         triangle_span.append(float(span_fraction))
 
-    for side in (1, -1):
+    # A half model is meshed for y >= 0 only and closed at the root by a symmetry
+    # cap; the full model mirrors and needs no cap because the two halves meet.
+    modeled_domain = str(policy["geometry"].get("modeled_domain", "full_mirrored_wing"))
+    half_model = modeled_domain == "half_wing_symmetry_y0"
+    sides = (1,) if half_model else (1, -1)
+
+    for side in sides:
         upper_grid = np.empty((n_v, n_u), dtype=np.int64)
         lower_grid = np.empty((n_v, n_u), dtype=np.int64)
         for j, (upper, lower, _frame) in enumerate(sections):
@@ -657,6 +690,31 @@ def build_surface(
             else:
                 add_triangle((a, b, d), "wall_tip", 1.0)
                 add_triangle((b, c, d), "wall_tip", 1.0)
+
+    if half_model:
+        # Close the root at y=0 so the surface stays watertight and every existing
+        # invariant - closure, orientation, self-intersection, enclosed volume -
+        # keeps working unchanged.  The cap is labelled symmetry rather than wall:
+        # it bounds the fluid domain but is not viscous and carries no prisms.
+        upper_root = [int(node) for node in side_grids[1][0][0]]
+        lower_root = [int(node) for node in side_grids[1][1][0]]
+        root_perimeter = upper_root + [
+            n for n in reversed(lower_root) if n not in (upper_root[-1],)
+        ]
+        root_nodes: list[int] = []
+        for node in root_perimeter:
+            if node not in root_nodes:
+                root_nodes.append(node)
+        # Outward from a y >= 0 half body is -y.
+        root_cap = _oriented_cap(root_nodes, registry, np.asarray([0.0, -1.0, 0.0]))
+        if root_cap is None:
+            raise RuntimeError(
+                "root symmetry cap could not be triangulated; the root section is "
+                "the largest and least degenerate section, so this indicates a "
+                "geometry defect rather than a cap-algorithm limit"
+            )
+        for triangle in root_cap:
+            add_triangle(triangle, "symmetry", 0.0)
 
     points = np.asarray(registry.points, dtype=float)
     fidelity_distances: list[float] = []

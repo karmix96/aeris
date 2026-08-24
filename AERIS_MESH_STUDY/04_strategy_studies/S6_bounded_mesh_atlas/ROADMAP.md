@@ -69,3 +69,9 @@ The first paper targets AI-assisted meshing: AI ranks templates and predicts fai
 quality, while deterministic deformation and hard gates retain authority. A working
 title is "Quality-Constrained AI-Assisted Mesh Atlas Deformation for Automated CFD
 Design Campaigns."
+
+## Joint validation programme
+
+The shared S6/S7 sequence this study feeds - staging, the paired comparison and
+the decisions that must be taken before any CFD is recorded - is in
+`../VALIDATION_PROGRAMME.md`.

@@ -66,3 +66,9 @@ works this way.  Surface triangle counts currently vary per design.
 The 16 GiB laptop carries the diagnostic tier and single coarse cases, but not the
 full coarse campaign and not converged CFD at production resolution.  Those are
 desktop or HPC work.
+
+## Joint validation programme
+
+The shared S6/S7 sequence this study feeds - staging, the paired comparison and
+the decisions that must be taken before any CFD is recorded - is in
+`../VALIDATION_PROGRAMME.md`.

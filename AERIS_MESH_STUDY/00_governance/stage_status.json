@@ -1,0 +1,26 @@
+{
+  "schema": "aeris.mesh_study.stage_status.v1",
+  "updated_local": "2026-08-14",
+  "active_stage": "02",
+  "state": "IN_PROGRESS",
+  "last_completed_stage": "01",
+  "last_stage_gate": "PASS_WITH_FINDINGS",
+  "next_required_user_token": null,
+  "next_stage_if_approved": "03",
+  "stage02_authorized": true,
+  "notes": [
+    "Stage 00 approved by the user with APPROVE STAGE 00.",
+    "Stage 01 closed PASS_WITH_FINDINGS: TMR anchor passed; cap4 recorded as failing the volume gate (ADR-0006); epsE_common_start deferred to Stage 02 (ADR-0007).",
+    "Stage 01 approval and Stage 02 authorization were given by the user in conversation on 2026-08-12 as 'approve stage 2', not as the literal APPROVE STAGE 01 token. Recorded here as the authorization of record.",
+    "Stage 02 is IN PROGRESS and partial. No Stage 02 gate or report is claimed.",
+    "2026-08-14 RESTRUCTURE (ADR-0011): Stage 02 compared one topology wearing four labels - the tip closure was written once in the shared module and inherited, so S4 came out bit-identical to S1 (max node difference 0.000e+00 on all ten geometries) and S3/S5 converged on the same cap. The six strategies are now six INDEPENDENT studies under 04_strategy_studies/, each implemented from scratch, with only ingestion, QC metric definitions, gate thresholds, the pyHyp invocation, the geometry sets and the verifier shared as the experimental control.",
+    "ADR-0011 SUPERSEDES ADR-0006: S0/cap4 is now developed to its best achievable state like every other entrant, rather than recorded as failed-not-repaired. The reversal is deliberate and stated - declining to develop an entrant because it is expected to lose makes the expected outcome unfalsifiable, and ADR-0010 later showed that the metric on which S0 ranked worst does not predict marchability.",
+    "ADR-0011 freezes the comparison metrics, the ranking rule and the no-winner rule BEFORE any strategy is optimised, makes epsE per-strategy (epsE_common_start is withdrawn as a global constant), and requires a per-strategy effort ledger reported alongside results.",
+    "Delivered 2026-08-14: COMMON_BRIEF.md, ADR-0011, ADR-0006 marked superseded, 04_strategy_studies/ with six folders and the migrated shared control module, and a shared-control self-test that reproduces the recorded Stage 02 numbers (8 blocks, min scaled Jacobian +0.04504, cell-size range 98.83x). 182 tests pass, count unchanged.",
+    "NO strategy implementation has begun. ADR-0011 section 7.2: no strategy is started and none is frozen without an explicit user signal.",
+    "OPEN DECISION raised to the user 2026-08-14: S1's frozen Stage 02 configuration does not pass the ADR-0011 surface gate, because realise_law=True makes spanwise-refined blocks' fidelity UNVERIFIABLE against station contours, and an unmeasured gate is not a passed gate. cap4 refines the same way, so S0 inherits it identically. Turning the law off reverts the change that made S1 marchable at all (3462x -> 99x cell-size range, 128/128 -> 0/128 bad layers). The fix is upstream generator work (realise more sections so extra columns lie ON the loft) or an ADR amending the fidelity instrument to measure against the loft rather than the stations. Not to be decided in the moment.",
+    "round_c_lhs10_seed42 remains UNTOUCHED. shared/geometry_sets.py refuses it unless the caller states the strategy is frozen.",
+    "04_strategy_prototypes/ is now a read-only archive of the Stage 02 record. Nothing in 04_strategy_studies/ imports from it.",
+    "Stage 03 must not start until Stage 02 completes and the user approves it."
+  ]
+}

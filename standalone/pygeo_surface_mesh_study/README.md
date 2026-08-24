@@ -17,7 +17,8 @@ The detailed statistical and scientific rationale is in METHODOLOGY.md.
 - flat b0-b1 root panel, so b1 dihedral is fixed at zero;
 - elevon dimensions fixed because split physical CAD is outside this study;
 - 14 uniformly spaced realised pyGeo source sections for every mesh;
-- constant cap4 OML/tip topology and trailing-edge policy.
+- constant cap4 OML topology, quad-only airfoil-face tip closure, and
+  trailing-edge policy.
 
 There are 16 independent clean-OML factors. Aspect ratio, total/panel taper,
 curvature, thickness, camber, twist rate, and dihedral rate are calculated from
@@ -58,9 +59,11 @@ These cases vary the same 16 geometry factors plus four individual numerical
 mesh controls: chordwise/block-side points, spanwise panels per section,
 cap-wrap points, and tip radial points.
 
-The cap-wrap and tip-radial ranges are intentionally bounded to the verified
-nonfolding cap4-tip domain. Higher values fold the thin BWB trailing-edge tip
-collar and belong to a separate topology-redesign campaign, not this law fit.
+The cap-wrap and tip-radial compatibility ranges are intentionally bounded to
+the verified nonfolding airfoil-face tip domain. In the collar-free topology,
+`tip_radial_points` controls LE/TE curvature blending rather than a physical
+collar. Values outside the screened domain belong to a separate topology-redesign
+campaign, not this law fit.
 
 The full registered execution plan is **5,217 cases** and **13,797 mesh
 builds**.

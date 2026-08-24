@@ -10,6 +10,8 @@ Architecture:
     - pyHyp is called in-process; the mach-aero conda env must be active.
 """
 
+# Typer command declarations intentionally use typer.Option(...) defaults.
+# ruff: noqa: B008
 from __future__ import annotations
 
 import json
@@ -256,10 +258,18 @@ def mesh_pyhyp(
         None,
         "--cap-wrap-x",
         help=(
-            "cap4 only: chordwise x/c station of the wrap corners (0.01-0.15).  "
+            "cap4 only: chordwise x/c station of the wrap corners (0.01-0.45).  "
             "Corners sit at x/c = cap_wrap_x and 1-cap_wrap_x.  Default 0.015 "
             "(the validated value; the old 0.03 default folded the coarse march "
             "at the root TE base — measured 2026-07-17)."
+        ),
+    ),
+    tip_topology: Optional[str] = typer.Option(
+        None,
+        "--tip-topology",
+        help=(
+            "Tip closure topology: auto, airfoil_face, cgrid_face, ring, or single. "
+            "cgrid_face is a flat two-block C-grid-like cap split by the camber line."
         ),
     ),
     max_adjacent_normal_angle: float = typer.Option(
@@ -669,6 +679,7 @@ def mesh_pyhyp(
             minimum_shape_metric=min_shape_metric,
             maximum_adjacent_normal_angle_deg=max_adjacent_normal_angle,
             oml_topology=oml_topology,
+            tip_topology=tip_topology or "auto",
             cap_width_frac=cap_width_frac,
             cap_wrap_points=cap_wrap_points,
             cap_wrap_x=cap_wrap_x,

@@ -383,6 +383,37 @@ def _sec(label: str) -> None:
     )
 
 
+def _config_discretisation() -> dict:
+    """The decided AVL discretisation from geometry.aero_discretisation.
+
+    The GUI must not carry its own copies of decided numbers. A hardcoded default
+    silently diverges the moment a decision is revised -- which is exactly what
+    happened when DECISION-0013 moved the DSE tier to 12 chordwise while this file
+    still offered 24.
+    """
+    d = {"n_sections": 25, "nchordwise": 12, "spanwise_panels_per_section": 4,
+         "cspace": 1.0, "section_placement": "auto", "span_margin": 0.0}
+    try:
+        from aeris.common.config import load_yaml_config
+        from aeris.geometry.config_resolver import resolve_generator_and_config
+        _, g = resolve_generator_and_config(
+            load_yaml_config(Path("configs/geometry/bwb.yaml")))
+        a = g.aero_discretisation
+        for k in d:
+            d[k] = getattr(a, k, d[k])
+    except Exception:
+        pass
+    return d
+
+
+def _config_n_sections(default: int = 25) -> int:
+    """Back-compat shim for the DoE tab."""
+    return int(_config_discretisation().get("n_sections", default))
+
+
+_DISC = _config_discretisation()
+
+
 def _note(text: str, kind: str = "info") -> None:
     c = {"info": "#3B82F6", "warn": "#F59E0B", "ok": "#22C55E", "err": "#EF4444"}.get(
         kind, "#3B82F6"
@@ -1092,7 +1123,13 @@ def _yaml_geometry_builder(pfx: str, root: Path | None = None) -> str:
         )
         pygeo_sections = int(
             p2.number_input(
-                "Extracted sections", min_value=4, value=25, key=f"{pfx}_pyg_sections"
+                "Extracted sections",
+                min_value=4,
+                value=_config_n_sections(),
+                key=f"{pfx}_pyg_sections",
+                help="FINAL spanwise station count, feature pins included. Default "
+                     "comes from the config's geometry.aero_discretisation "
+                     "(DECISION-0012).",
             )
         )
         pygeo_cst_order = int(
@@ -6475,15 +6512,17 @@ def pg_aero(root, exe, tmo, dry):
         )
         pd1, pd2, pd3, pd4 = st.columns(4)
         pg_nch = pd1.number_input(
-            "Chordwise panels", value=24, min_value=4, max_value=40, step=2,
-            key="pgn_nch",
-            help="24 is production. At 8 the elevon derivative carries ~7.7% error "
-                 "because too few panels land on the flap. 16 is the economy "
-                 "setting when control power is not the object of study.",
+            "Chordwise panels", value=_DISC["nchordwise"], min_value=4,
+            max_value=40, step=2, key="pgn_nch",
+            help="DECISION-0013: 12 is the DSE tier (14.6 s/point). 24 is the "
+                 "verification tier (57.3 s/point) -- AVL's cost is ~cubic in "
+                 "vortex count. The whole penalty at 12 is a consistent ~3% bias "
+                 "on the control derivatives, which cancels when designs are "
+                 "ranked; CL/Cm/Xnp stay under 0.7%.",
         )
         pg_spw = pd2.number_input(
-            "Spanwise panels / gap", value=4, min_value=1, max_value=10, step=1,
-            key="pgn_spw",
+            "Spanwise panels / gap", value=_DISC["spanwise_panels_per_section"],
+            min_value=1, max_value=10, step=1, key="pgn_spw",
             help="4 per section interval gives <=0.54% worst-seed error.",
         )
         pg_csp = pd3.selectbox(
@@ -6494,10 +6533,16 @@ def pg_aero(root, exe, tmo, dry):
                  "the neutral point and pitch damping by 14-15x — not recommended.",
         )
         pg_plc = pd4.selectbox(
-            "Section placement", ["auto", "always", "never"], index=0, key="pgn_plc",
-            help="'auto' uses adaptive placement only when evenly-spaced sections "
-                 "breach the 15% gain-ramp criterion (short elevons). Adaptive "
-                 "lowers the worst case across a design set from 1.23% to 0.84%.",
+            "Section placement", ["auto", "always", "never"],
+            index=["auto", "always", "never"].index(_DISC["section_placement"]),
+            key="pgn_plc",
+            help="DECISION-0014: 'auto' engages adaptive placement only where "
+                 "evenly-spaced sections breach the 15% gain-ramp criterion. It "
+                 "leaves benign geometries identical to 'never' and improves the "
+                 "worst case where the ramp is severe (narrow elevon 1.52% -> "
+                 "1.12%). 'always' for control-authority studies on short-span "
+                 "controls. NOTE: drag (CDind/cd_total/e) must NOT be used to "
+                 "judge placement -- the reference cannot resolve it.",
         )
         _strips = (int(pg_sec) - 1) * int(pg_spw)
         _vort = 2 * _strips * int(pg_nch)
@@ -12546,20 +12591,16 @@ def _adflow_resrho_from_line(line: str) -> float | None:
 
     Verified row layout (2026-07-17 smoke solve):
       Grid  Iter  IterTot  IterType  CFL  Step  LinRes  Res_rho  Res_turb  CL  CD  totalRes
-    After dropping the non-numeric IterType token the floats are
-    [IterTot, CFL, Step, LinRes, Res_rho, Res_turb, CL, CD, totalRes],
-    so Res_rho is floats[4].
+    The columns are positional. NK rows print ---- for CFL, so Res_rho must be
+    read directly from token 7 rather than by filtering numeric tokens.
     """
     parts = line.split()
-    if len(parts) < 10 or not parts[0].isdigit() or not parts[1].isdigit():
+    if len(parts) < 12 or not parts[0].isdigit() or not parts[1].isdigit():
         return None
-    floats = []
-    for tok in parts[2:]:
-        try:
-            floats.append(float(tok))
-        except ValueError:
-            continue
-    return floats[4] if len(floats) >= 9 else None
+    try:
+        return float(parts[7])
+    except ValueError:
+        return None
 
 
 def _parse_adflow_residuals(log_text: str) -> list[float]:

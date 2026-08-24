@@ -108,7 +108,7 @@ mesh:
 
   common:
     oml_topology: cap4
-    tip_topology: cap4
+    tip_topology: airfoil_face
     dense_airfoil_points_per_surface: 301
     split_x_fore: 0.20
     minimum_te_thickness: 0.002
@@ -117,12 +117,12 @@ mesh:
     te_base_points: 0
     minimum_shape_metric: 0.000001
     maximum_adjacent_normal_angle_deg: 180.0
-    cap_wrap_x: 0.15
+    cap_wrap_x: 0.40
     cap_width_frac: 0.50
     tip_inner_scale: 0.60
     tip_dome_scale: 0.0
     tip_conformal_ring: false
-    tip_smooth_iters: 20
+    tip_smooth_iters: 0
     chordwise_distribution: uniform
     chordwise_beta: 2.0
     spanwise_distribution: uniform
@@ -148,9 +148,9 @@ mesh_control:
     spanwise_panels_per_section:
       {parameter: spanwise_panels_per_section, units: panels, baseline: 16, low: 8, high: 32, integer: true, odd: false, description: "Spanwise panels between realised pyGeo source sections"}
     cap_wrap_points:
-      {parameter: cap_wrap_points, units: points, baseline: 9, low: 5, high: 13, integer: true, odd: true, description: "LE/TE cap wrap resolution inside the verified nonfolding cap4-tip domain"}
+      {parameter: cap_wrap_points, units: points, baseline: 9, low: 5, high: 13, integer: true, odd: true, description: "LE/TE cap wrap resolution inside the verified nonfolding airfoil-face tip domain"}
     tip_radial_points:
-      {parameter: tip_radial_points, units: points, baseline: 7, low: 5, high: 9, integer: true, odd: true, description: "Tip/collar radial resolution inside the verified nonfolding cap4-tip domain"}
+      {parameter: tip_radial_points, units: points, baseline: 7, low: 5, high: 9, integer: true, odd: true, description: "LE/TE curvature-blend control for the collar-free airfoil-face tip cap"}
 
 acceptance:
   require_limits_for_run: true
@@ -170,7 +170,7 @@ acceptance:
     oml.max_adjacent_normal_angle_deg:
       {operator: "<=", limit: 170.0, enabled: true, description: "Worst rotation between adjacent cell normals"}
     tip.min_shape_metric:
-      {operator: ">=", limit: 0.03, enabled: true, description: "Tip/collar quad Shape; larger is better"}
+      {operator: ">=", limit: 0.03, enabled: true, description: "Tip-cap quad Shape; larger is better"}
     tip.min_scaled_jacobian:
       {operator: ">=", limit: 0.03, enabled: true, description: "Worst tip corner scaled Jacobian"}
     tip.min_triangle_normal_alignment:
@@ -178,7 +178,7 @@ acceptance:
     tip.max_equiangle_skewness:
       {operator: "<=", limit: 0.98, enabled: true, description: "Worst tip equiangle skewness"}
     tip.max_aspect_ratio:
-      {operator: "<=", limit: 10.0, enabled: true, description: "Worst tip/collar surface-cell aspect ratio"}
+      {operator: "<=", limit: 10.0, enabled: true, description: "Worst tip-cap surface-cell aspect ratio"}
     tip.max_growth_ratio:
       {operator: "<=", limit: 2.50, enabled: true, description: "Worst tip adjacent cell-size ratio"}
     tip.max_adjacent_normal_angle_deg:

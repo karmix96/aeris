@@ -104,3 +104,25 @@ class WingCap4V1(_WingTopology):
     )
     OML_TOPOLOGY = "cap4"
     DEFAULT_TIP_RADIAL_POINTS = 3
+
+@register_topology
+class WingCap4CgridFaceV1(_WingTopology):
+    TOPOLOGY_ID = "wing_cap4_cgrid_face_v1"
+    DIMENSION = 3
+    DESCRIPTION = (
+        "Experimental cap4 OML with a two-block C-grid-like flat tip face; "
+        "for topology comparison against the one-block airfoil_face cap."
+    )
+    OML_TOPOLOGY = "cap4"
+    DEFAULT_TIP_RADIAL_POINTS = 3
+
+    def generate(
+        self,
+        geometry: object,
+        output_dir: Path,
+        params: Mapping[str, object],
+    ) -> dict[str, object]:
+        params_with_tip = dict(params)
+        params_with_tip.setdefault("tip_topology", "cgrid_face")
+        return super().generate(geometry, output_dir, params_with_tip)
+

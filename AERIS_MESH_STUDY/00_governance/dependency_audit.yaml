@@ -1,0 +1,72 @@
+schema: aeris.mesh_study.dependency_audit.v1
+created_local: 2026-08-11
+status: PROPOSED_FOR_STAGE_00_APPROVAL
+environments:
+  main_venv:
+    python: .venv/bin/python
+    available:
+      numpy: 2.5.1
+      scipy: 1.18.0
+      h5py: 3.16.0
+      gmsh: 4.15.2
+      pygeo: 1.17.0
+      pyspline: 1.5.4
+      pyhyp: 2.6.3
+      cgnsutilities: 2.9.0
+      networkx: 3.6.1
+      aerosandbox: present
+    unavailable:
+      adflow: null
+      idwarp: null
+      meshio: null
+      igl: null
+      pyigl: null
+      qex: null
+      quadpy: null
+      shapely: null
+  mach_aero:
+    python: /home/mike/miniconda3/envs/mach-aero/bin/python
+    available:
+      numpy: 2.4.6
+      scipy: 1.17.1
+      pyhyp: 2.6.3
+      cgnsutilities: 2.9.0
+      adflow: 2.13.1
+    unavailable:
+      h5py: null
+      gmsh: null
+      pygeo: null
+      pyspline: null
+      idwarp: null
+      meshio: null
+      igl: null
+      pyigl: null
+      qex: null
+      quadpy: null
+      shapely: null
+      networkx: null
+strategy_implications:
+  S0_cap4:
+    status: executable_after_stage01_tmr
+    dependency_gap: none for mesh generation; ADflow lives in mach-aero
+  S1_tip_first_sweep:
+    status: prototype_feasible
+    dependency_gap: no Openblademesh package; implement in AERIS with available TFI/Gmsh/pyHyp stack
+  S2_cross_field_tip:
+    status: blocked_until_dependency_or_implementation_decision
+    dependency_gap: no libigl or QEx-style cross-field/quad-extraction stack found
+  S3_station_sweep:
+    status: prototype_feasible
+    dependency_gap: none for smallest station-sweep prototype
+  S4_analytic_multiblock:
+    status: prototype_feasible_with_in_house_tfi
+    dependency_gap: no external direct-volume package found
+  S5_frozen_rbf:
+    status: prototype_feasible
+    dependency_gap: none for SciPy RBFInterpolator path
+stage01_impact:
+  status: no_blocker
+  reason: >
+    Stage 01 only reproduces TMR, cap4, epsE, and regression harnesses. S2
+    dependency decisions are required before executing S2 in Stage 02, not
+    before the Stage 01 control reproduction work.

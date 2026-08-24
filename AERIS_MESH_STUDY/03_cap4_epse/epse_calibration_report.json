@@ -1,0 +1,2221 @@
+{
+  "environment": {
+    "git_branch": "main",
+    "git_head": "6bb2627b75bbf1c3cc1a35eaf5559aaeee0e0d51",
+    "platform": "Linux-7.0.0-28-generic-x86_64-with-glibc2.39",
+    "python": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/.venv/bin/python",
+    "python_version": "3.13.9 | packaged by Anaconda, Inc. | (main, Oct 21 2025, 19:16:10) [GCC 11.2.0]"
+  },
+  "epsE_common_start": null,
+  "eps_values": [
+    1.5,
+    2.0,
+    3.0
+  ],
+  "generated_utc": "2026-08-11T14:43:20.991261+00:00",
+  "geometry_config": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/configs/geometry/bwb.yaml",
+  "geometry_config_sha256": "f114b48e3c400a2832cc3763e7cf7505ecd0925fb81cb92f70e28bb5e6234614",
+  "mode": "dry-run",
+  "preset": "smoke",
+  "remarch_rows": [
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "9cb611bbc21e5a73bf46ed0b773e48347f59db0546c7496f9dacfcefb52809c2",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 1.5
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 3.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.3350357804864138e-05
+          }
+        }
+      },
+      "epsE": 1.5,
+      "epsI": 3.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "fd66d94ba3748adf8844f38c81a55680b7319f6e73b3a743921e850d98269ead",
+      "sample_id": "lhs7_00",
+      "sample_index": 0,
+      "seconds": 0.01198340900009498,
+      "source_surface_fmt_sha256": "f2850c00701589395e58d645994573d1f3e159d9bafa4ffc9d853bc1df218d49",
+      "stage_status": "dry_run",
+      "variant": "eps15",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps15/lhs7_00"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "c7755191879d8bef9e11f85b31e7254315b046bbb961325822baac47d914525c",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 1.5
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 3.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.1216069538274458e-05
+          }
+        }
+      },
+      "epsE": 1.5,
+      "epsI": 3.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "05b392f6e7e68331ff0515659a6868f37892e3436fbba76a784e2a99c345e733",
+      "sample_id": "lhs7_01",
+      "sample_index": 1,
+      "seconds": 0.009142505001364043,
+      "source_surface_fmt_sha256": "87f390b1ccd97a205fb1309190b909f3ba821769a79b3814d74b4090f64479d6",
+      "stage_status": "dry_run",
+      "variant": "eps15",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps15/lhs7_01"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "af793bdf90888781081747860d6d494090a1066e11dd5feb6025f2956688db8a",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 1.5
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 3.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.0248815927016873e-05
+          }
+        }
+      },
+      "epsE": 1.5,
+      "epsI": 3.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "1386117a4be8a3264a3cce4f0f23ec42ce035c1e30172d5750be8dcc75e2fa94",
+      "sample_id": "lhs7_02",
+      "sample_index": 2,
+      "seconds": 0.008827393998217303,
+      "source_surface_fmt_sha256": "3ccb90dd4ac685290a248af7b13e8e0cab57c8c562c4631d0c12987ae0a1be68",
+      "stage_status": "dry_run",
+      "variant": "eps15",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps15/lhs7_02"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "e5933eedb8ff7d65521d956bd1bc039171515fcf72c00d4cf25de5fa28b470a0",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 1.5
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 3.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.3901982089859805e-05
+          }
+        }
+      },
+      "epsE": 1.5,
+      "epsI": 3.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "790291f02cbd59df2419c8faa5e12c589b24e0b6fe49077fbd4611382609d51d",
+      "sample_id": "lhs7_03",
+      "sample_index": 3,
+      "seconds": 0.010853736002900405,
+      "source_surface_fmt_sha256": "0b9051163e7baba02e65f0fb0d1c3ba93b60ecdc3a64f649dd14dbd5ea0a0b42",
+      "stage_status": "dry_run",
+      "variant": "eps15",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps15/lhs7_03"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "210fbae1be7db0a44ca398e4058574d3b75f71f3e1198c595dabec0620d0845e",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 1.5
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 3.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.2689100862313296e-05
+          }
+        }
+      },
+      "epsE": 1.5,
+      "epsI": 3.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "3ade0a4c2ba7cd94f4ede2acaa4947a9a5481a41e3cda7db2eed8a6616723108",
+      "sample_id": "lhs7_04",
+      "sample_index": 4,
+      "seconds": 0.009106387999054277,
+      "source_surface_fmt_sha256": "6ea34ee1bb9061c1e0dd7dacd2f2b48b58653069b7bc82b2edd5584ef9eb859e",
+      "stage_status": "dry_run",
+      "variant": "eps15",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps15/lhs7_04"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "4afee486d96ef5cfa2df4a5a0c42e41b3ca8fc983cefe5b49e2f0a8007a2ad2f",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 1.5
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 3.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.2994351469156015e-05
+          }
+        }
+      },
+      "epsE": 1.5,
+      "epsI": 3.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "b97d1bf6e3a54243c57262f6b4901b416dac94c0032f2e6732e2c494a613e7da",
+      "sample_id": "lhs7_05",
+      "sample_index": 5,
+      "seconds": 0.008461450001050252,
+      "source_surface_fmt_sha256": "7dac6e1b6fb24d2a84b99b4f172353f36a307bfc99a0d6a62ce0636547aac4ef",
+      "stage_status": "dry_run",
+      "variant": "eps15",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps15/lhs7_05"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "76f773ce044ffac3ea303e3e41c4dbeff576430dbbf7e2258512b11497dc1419",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 1.5
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 3.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.0543896220452052e-05
+          }
+        }
+      },
+      "epsE": 1.5,
+      "epsI": 3.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "24ea4bcb84590f1500165d84317edb9c3ff885030838280cb1d7dcfe0476170c",
+      "sample_id": "lhs7_06",
+      "sample_index": 6,
+      "seconds": 0.008498596998833818,
+      "source_surface_fmt_sha256": "75d7196af2515ef5196b150905182ebca0d2588942214cd31f47fc222da4dd75",
+      "stage_status": "dry_run",
+      "variant": "eps15",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps15/lhs7_06"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "bd3e7a826b8147e9310edccc438cf8484655ce75d19f11fd174a2ed95f55ed0e",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 1.5
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 3.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.0418035243358048e-05
+          }
+        }
+      },
+      "epsE": 1.5,
+      "epsI": 3.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "4aa393f46c1b35d0a71175a8677de445e3b52b05e7c8b6025fe69c774fe6ec7d",
+      "sample_id": "lhs7_07",
+      "sample_index": 7,
+      "seconds": 0.007925498000986408,
+      "source_surface_fmt_sha256": "7ad33cb40466cc3d80da554eeacf00064d971f34dcb60efdb98033ae1cdef78a",
+      "stage_status": "dry_run",
+      "variant": "eps15",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps15/lhs7_07"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "bc79aac8b6828b00d66fff577b14cfd0b0bdadbdc90790923d0dce92c7aa59a4",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 1.5
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 3.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.1007713665226846e-05
+          }
+        }
+      },
+      "epsE": 1.5,
+      "epsI": 3.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "66f3204a32d2ad27d6e7e18e24a39e4ac114f3600be85264eb6b4f59889ca8d8",
+      "sample_id": "lhs7_08",
+      "sample_index": 8,
+      "seconds": 0.007445503997587366,
+      "source_surface_fmt_sha256": "5053fa1fee1adff38b80501f352a710321ddee7d7bb1ab04b31dd0399a08d31e",
+      "stage_status": "dry_run",
+      "variant": "eps15",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps15/lhs7_08"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "ededa52d077e9e04aa8cec281eca472213edd6d9d270b96f2e08442f1c8995e4",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 1.5
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 3.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.3043070097097772e-05
+          }
+        }
+      },
+      "epsE": 1.5,
+      "epsI": 3.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "7dc4dc41d87428489f2906e229bed2feeecde4ffc5af414f93d3414fcd52bf60",
+      "sample_id": "lhs7_09",
+      "sample_index": 9,
+      "seconds": 0.007378472997515928,
+      "source_surface_fmt_sha256": "2268139e889f2551e62912129200e0c553185dfbd9ec652d1ed12e5ee1f3a340",
+      "stage_status": "dry_run",
+      "variant": "eps15",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps15/lhs7_09"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "1fd66bd2b21c1dbedc119138ced2b296cc8744e668fb38caacb60d1967a99927",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 2.0
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 4.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.3350357804864138e-05
+          }
+        }
+      },
+      "epsE": 2.0,
+      "epsI": 4.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "85637d8c05e4c155ced2f525dc94a59a7b5cc63e5efdac43c900415b18634426",
+      "sample_id": "lhs7_00",
+      "sample_index": 0,
+      "seconds": 0.00913607700204011,
+      "source_surface_fmt_sha256": "f2850c00701589395e58d645994573d1f3e159d9bafa4ffc9d853bc1df218d49",
+      "stage_status": "dry_run",
+      "variant": "eps20",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps20/lhs7_00"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "aff5b4ef4946f818ee7a103a6c8b58da9d8a8554cc3b6634c865dace66aa3f34",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 2.0
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 4.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.1216069538274458e-05
+          }
+        }
+      },
+      "epsE": 2.0,
+      "epsI": 4.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "feae77339437c9fa9ad5286058c27c2dd3a239eb6023826ffb5790bccecc4ff5",
+      "sample_id": "lhs7_01",
+      "sample_index": 1,
+      "seconds": 0.007485926002118504,
+      "source_surface_fmt_sha256": "87f390b1ccd97a205fb1309190b909f3ba821769a79b3814d74b4090f64479d6",
+      "stage_status": "dry_run",
+      "variant": "eps20",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps20/lhs7_01"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "445cca8154bf097b26dda2fb58b865b90a39dc0968061b39806b4bdad020a922",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 2.0
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 4.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.0248815927016873e-05
+          }
+        }
+      },
+      "epsE": 2.0,
+      "epsI": 4.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "13c6826403ed9cacea04b3c07a4863a4477e69be9186604276e94f4b82740685",
+      "sample_id": "lhs7_02",
+      "sample_index": 2,
+      "seconds": 0.007537247001891956,
+      "source_surface_fmt_sha256": "3ccb90dd4ac685290a248af7b13e8e0cab57c8c562c4631d0c12987ae0a1be68",
+      "stage_status": "dry_run",
+      "variant": "eps20",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps20/lhs7_02"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "7080b827352a24ba18c7fb27b4ec19d7441aa0d93b2efbc7b3af9f6b1140fe1e",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 2.0
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 4.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.3901982089859805e-05
+          }
+        }
+      },
+      "epsE": 2.0,
+      "epsI": 4.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "e376ed83c400490f4e28709ea445ffea60c2ed304ed9928b0d0f288eada2a394",
+      "sample_id": "lhs7_03",
+      "sample_index": 3,
+      "seconds": 0.007432507998601068,
+      "source_surface_fmt_sha256": "0b9051163e7baba02e65f0fb0d1c3ba93b60ecdc3a64f649dd14dbd5ea0a0b42",
+      "stage_status": "dry_run",
+      "variant": "eps20",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps20/lhs7_03"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "24a5713aa5eb3133d3b71337d9a19bf6331d638dd58c7c19bfc74be0ab640b14",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 2.0
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 4.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.2689100862313296e-05
+          }
+        }
+      },
+      "epsE": 2.0,
+      "epsI": 4.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "7c5eac76d9fa1991e36f038620fce3bca4a18e7e67fa66067bb35b61283ad125",
+      "sample_id": "lhs7_04",
+      "sample_index": 4,
+      "seconds": 0.007882284000515938,
+      "source_surface_fmt_sha256": "6ea34ee1bb9061c1e0dd7dacd2f2b48b58653069b7bc82b2edd5584ef9eb859e",
+      "stage_status": "dry_run",
+      "variant": "eps20",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps20/lhs7_04"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "a356d436442fbee65b8b5fbc84c8cc8481a09d9c55eabc6a504ba7e2426194f8",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 2.0
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 4.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.2994351469156015e-05
+          }
+        }
+      },
+      "epsE": 2.0,
+      "epsI": 4.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "4f5139827cf74506241a5f92c26faa0e2a4a76e697c912b2c2e9916ee576b874",
+      "sample_id": "lhs7_05",
+      "sample_index": 5,
+      "seconds": 0.00753784499829635,
+      "source_surface_fmt_sha256": "7dac6e1b6fb24d2a84b99b4f172353f36a307bfc99a0d6a62ce0636547aac4ef",
+      "stage_status": "dry_run",
+      "variant": "eps20",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps20/lhs7_05"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "2fcfb046151539627e403eb9537b4fd50060e54e61b953e7d177dbfdac797573",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 2.0
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 4.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.0543896220452052e-05
+          }
+        }
+      },
+      "epsE": 2.0,
+      "epsI": 4.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "25e913d645ae9deec9cc72d91715b120c0c100d9bc7e72fbc77ea8a58a98f41d",
+      "sample_id": "lhs7_06",
+      "sample_index": 6,
+      "seconds": 0.007443025999236852,
+      "source_surface_fmt_sha256": "75d7196af2515ef5196b150905182ebca0d2588942214cd31f47fc222da4dd75",
+      "stage_status": "dry_run",
+      "variant": "eps20",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps20/lhs7_06"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "c217ca22ab26081e89697a68c9b3f903f2697ec96583cfd7a58c9dc4372d3fad",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 2.0
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 4.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.0418035243358048e-05
+          }
+        }
+      },
+      "epsE": 2.0,
+      "epsI": 4.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "9838d5ceaefb876bba90513260a7141f652da8d8eff2ef899526e9634b05bf4c",
+      "sample_id": "lhs7_07",
+      "sample_index": 7,
+      "seconds": 0.007465675000275951,
+      "source_surface_fmt_sha256": "7ad33cb40466cc3d80da554eeacf00064d971f34dcb60efdb98033ae1cdef78a",
+      "stage_status": "dry_run",
+      "variant": "eps20",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps20/lhs7_07"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "92ebde584c8332c9ad467b14ed3e4b41b89c44872d02b0efd98d34b2a9043846",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 2.0
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 4.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.1007713665226846e-05
+          }
+        }
+      },
+      "epsE": 2.0,
+      "epsI": 4.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "99107acb733135c231e04e3d0af59ec235d7924d3887b2759d2d14e95ad4bcd1",
+      "sample_id": "lhs7_08",
+      "sample_index": 8,
+      "seconds": 0.007724273000349058,
+      "source_surface_fmt_sha256": "5053fa1fee1adff38b80501f352a710321ddee7d7bb1ab04b31dd0399a08d31e",
+      "stage_status": "dry_run",
+      "variant": "eps20",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps20/lhs7_08"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "54010a07ca22bf1634fad20ea1a55643d6a46100a8da1da53951f4d62f10af47",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 2.0
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 4.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.3043070097097772e-05
+          }
+        }
+      },
+      "epsE": 2.0,
+      "epsI": 4.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "53659b4bbc69abbf49344fe3ef9a962995a621ec461fac2f2f4ade3089852bf7",
+      "sample_id": "lhs7_09",
+      "sample_index": 9,
+      "seconds": 0.007437552001647418,
+      "source_surface_fmt_sha256": "2268139e889f2551e62912129200e0c553185dfbd9ec652d1ed12e5ee1f3a340",
+      "stage_status": "dry_run",
+      "variant": "eps20",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps20/lhs7_09"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "6bc2c7fd0394239d5f620d5f278adf185fe80f940f64f47da6aaf2c37aa534a9",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 3.0
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 6.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.3350357804864138e-05
+          }
+        }
+      },
+      "epsE": 3.0,
+      "epsI": 6.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "5729476a46ef579461b703cf0b0839b67484355b3b12f0b42864c28664d1d646",
+      "sample_id": "lhs7_00",
+      "sample_index": 0,
+      "seconds": 0.008576759999414207,
+      "source_surface_fmt_sha256": "f2850c00701589395e58d645994573d1f3e159d9bafa4ffc9d853bc1df218d49",
+      "stage_status": "dry_run",
+      "variant": "eps30",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps30/lhs7_00"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "666bbdaf65a3a8aee80f67855fcfb230f9a0bc3f87dcdbbc801e58a7f2854170",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 3.0
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 6.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.1216069538274458e-05
+          }
+        }
+      },
+      "epsE": 3.0,
+      "epsI": 6.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "611ab28a8083864426f054a2f8ba7bafdc0031833885ac8c1ef3563f2c855512",
+      "sample_id": "lhs7_01",
+      "sample_index": 1,
+      "seconds": 0.007414835999952629,
+      "source_surface_fmt_sha256": "87f390b1ccd97a205fb1309190b909f3ba821769a79b3814d74b4090f64479d6",
+      "stage_status": "dry_run",
+      "variant": "eps30",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps30/lhs7_01"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "b6fb1fb3ffd378acafc49380111f8037913994241bd904cd7622d7d44bd5e1dc",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 3.0
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 6.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.0248815927016873e-05
+          }
+        }
+      },
+      "epsE": 3.0,
+      "epsI": 6.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "63e253931e96d66be5d290d28abeb3c7dcdd5b3a5c4c426bdffc77af15f5d381",
+      "sample_id": "lhs7_02",
+      "sample_index": 2,
+      "seconds": 0.007915582998975879,
+      "source_surface_fmt_sha256": "3ccb90dd4ac685290a248af7b13e8e0cab57c8c562c4631d0c12987ae0a1be68",
+      "stage_status": "dry_run",
+      "variant": "eps30",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps30/lhs7_02"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "684dc72a7912412b6b5307d0dd3398fe51ef90cab55f29cfb213c410986178c8",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 3.0
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 6.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.3901982089859805e-05
+          }
+        }
+      },
+      "epsE": 3.0,
+      "epsI": 6.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "81b33a7e31c9caa7538614c5b856bb43c260df954baeb9cf119273b9dd95bb9c",
+      "sample_id": "lhs7_03",
+      "sample_index": 3,
+      "seconds": 0.007575203002488706,
+      "source_surface_fmt_sha256": "0b9051163e7baba02e65f0fb0d1c3ba93b60ecdc3a64f649dd14dbd5ea0a0b42",
+      "stage_status": "dry_run",
+      "variant": "eps30",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps30/lhs7_03"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "c263c497a7b69d7a1773efd180483bbcaa913236d83ecd91b51c6d86a81b1a32",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 3.0
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 6.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.2689100862313296e-05
+          }
+        }
+      },
+      "epsE": 3.0,
+      "epsI": 6.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "5c6987890aed733cee6b2f81b30226ed4f689b01660b0e47097656b0e974fa26",
+      "sample_id": "lhs7_04",
+      "sample_index": 4,
+      "seconds": 0.007327068000449799,
+      "source_surface_fmt_sha256": "6ea34ee1bb9061c1e0dd7dacd2f2b48b58653069b7bc82b2edd5584ef9eb859e",
+      "stage_status": "dry_run",
+      "variant": "eps30",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps30/lhs7_04"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "6d83e2c49050b1670545c1d8baf0092e2261656d5e5a1c13c033c7c106917c7b",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 3.0
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 6.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.2994351469156015e-05
+          }
+        }
+      },
+      "epsE": 3.0,
+      "epsI": 6.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "2998d8fb481f5a82ccf1a0845baec1f4619d38d91a2adb876a19c2d2b1fdcec3",
+      "sample_id": "lhs7_05",
+      "sample_index": 5,
+      "seconds": 0.007393746000161627,
+      "source_surface_fmt_sha256": "7dac6e1b6fb24d2a84b99b4f172353f36a307bfc99a0d6a62ce0636547aac4ef",
+      "stage_status": "dry_run",
+      "variant": "eps30",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps30/lhs7_05"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "7dd655c0b9f79629d6a815bead8575fc65ee2df5a98520006166b0813ceb8feb",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 3.0
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 6.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.0543896220452052e-05
+          }
+        }
+      },
+      "epsE": 3.0,
+      "epsI": 6.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "97ea871be018886057e127c5625d6b046478eb983cad0ff0c978f5b50d875c6c",
+      "sample_id": "lhs7_06",
+      "sample_index": 6,
+      "seconds": 0.007556330998340854,
+      "source_surface_fmt_sha256": "75d7196af2515ef5196b150905182ebca0d2588942214cd31f47fc222da4dd75",
+      "stage_status": "dry_run",
+      "variant": "eps30",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps30/lhs7_06"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "05b53618fd3b363f488e3b0b4638855bd3b4fe9b28fabb0230416ca85b3ff3c7",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 3.0
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 6.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.0418035243358048e-05
+          }
+        }
+      },
+      "epsE": 3.0,
+      "epsI": 6.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "532ea924c47871577ebefcd10150f41c0aed4cda86b043192f0dc9c4f47006eb",
+      "sample_id": "lhs7_07",
+      "sample_index": 7,
+      "seconds": 0.007593047001137165,
+      "source_surface_fmt_sha256": "7ad33cb40466cc3d80da554eeacf00064d971f34dcb60efdb98033ae1cdef78a",
+      "stage_status": "dry_run",
+      "variant": "eps30",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps30/lhs7_07"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "b4c279c10fd44b701194d472baef4b3b5b3d28570a29fb3caf54a07a186b4dfa",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 3.0
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 6.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.1007713665226846e-05
+          }
+        }
+      },
+      "epsE": 3.0,
+      "epsI": 6.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "0caf0f8a96545fa93404b1580d672b31747cf3b7eacd30e41e3db8bf48791dfb",
+      "sample_id": "lhs7_08",
+      "sample_index": 8,
+      "seconds": 0.007423554998240434,
+      "source_surface_fmt_sha256": "5053fa1fee1adff38b80501f352a710321ddee7d7bb1ab04b31dd0399a08d31e",
+      "stage_status": "dry_run",
+      "variant": "eps30",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps30/lhs7_08"
+    },
+    {
+      "clean_for_stage01": null,
+      "dry_run": true,
+      "effective_options_sha256": "d14d2777127e72b2c6a588228f10de65339e351328a09956d04e9343819734f7",
+      "effective_options_summary": {
+        "options": {
+          "N": {
+            "source": "level:smoke",
+            "value": 129
+          },
+          "cMax": {
+            "source": "preset:smoke",
+            "value": 0.5
+          },
+          "coarsen": {
+            "source": "level:smoke",
+            "value": 1
+          },
+          "epsE": {
+            "source": "raw",
+            "value": 3.0
+          },
+          "epsI": {
+            "source": "raw",
+            "value": 6.0
+          },
+          "s0": {
+            "source": "level:smoke",
+            "value": 1.3043070097097772e-05
+          }
+        }
+      },
+      "epsE": 3.0,
+      "epsI": 6.0,
+      "error": null,
+      "inverted_cells": null,
+      "low_quality_layers": null,
+      "min_quality": null,
+      "min_volume": null,
+      "pyhyp_options_sha256": "390f92effb6647dbe66cc542e7daf24117a17767834b46ac85c21e50e176080a",
+      "sample_id": "lhs7_09",
+      "sample_index": 9,
+      "seconds": 0.007367784000962274,
+      "source_surface_fmt_sha256": "2268139e889f2551e62912129200e0c553185dfbd9ec652d1ed12e5ee1f3a340",
+      "stage_status": "dry_run",
+      "variant": "eps30",
+      "volume_audit_classification": null,
+      "volume_report_sha256": null,
+      "volume_report_status": null,
+      "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/remarch/eps30/lhs7_09"
+    }
+  ],
+  "sample_csv": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/00_governance/epse_calibration_lhs10_seed7_samples.csv",
+  "sample_csv_sha256": "ec355304ac588e7a0c1865ef4cf367c61a74cd8001de07ea2501d4b04384a039",
+  "schema": "aeris.mesh_study.stage01_epse_calibration_report.v1",
+  "selection_rule": "highest epsE with all locked samples clean and zero low-quality layers",
+  "status": "INCOMPLETE",
+  "surface_recipe": "pygeo_study_l3_reference",
+  "surface_recipe_source": {
+    "base_preset": "smoke",
+    "base_preset_source": "src/aeris/cfd/presets/data/mesh_family_smoke.yaml",
+    "overlay_source": "configs/cfd/pygeo_surface_mesh_study.yaml",
+    "overlay_source_sha256": "510bbe4528a75bc029423cf4fd8df6ea6c569882e3ff96a6852b57226a0e9c0e",
+    "recipe": "pygeo_study_l3_reference",
+    "reference_level": "L3"
+  },
+  "surface_reference_manifest": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surface_reference_manifest.json",
+  "surfaces": [
+    {
+      "artifact_sha256": {
+        "surface.fmt": "f2850c00701589395e58d645994573d1f3e159d9bafa4ffc9d853bc1df218d49",
+        "surface.vtk": "5cd5d877676e0fd3df27fcc69493b5c67732c5c0aabfd02a809786f7bd864dd5",
+        "surface_blocks.npz": "65d97e8c044049bef7907eb06f82771ee2721dae2412012e1e31dbc9d4488f0c",
+        "surface_report.json": "05d5aa5fb3bdadc7452e47be69955b0f7ba8e5031c5aa5fe181edcd09afc721e"
+      },
+      "connectivity_json": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_00/connectivity.json",
+      "design_sample": {
+        "b3_ratio": 0.511164329232357,
+        "b_total_m": 1.1831107369169227,
+        "c1_m": 0.940210612182623,
+        "c2_ratio": 0.6790053008464462,
+        "c3_ratio": 0.35923840776505517,
+        "c4_ratio": 0.16580239674884545,
+        "dihedral_b1_deg": 0.0,
+        "dihedral_b2_deg": 3.2739060299771214,
+        "dihedral_b3_deg": 3.0815314603025734,
+        "elevon_end_frac": 0.9089695605509318,
+        "elevon_hinge_frac": 0.7761361058502889,
+        "elevon_start_frac": 0.5637428677308144,
+        "split_ratio": 0.4274437054513041,
+        "sw1_deg": -38.1816413720189,
+        "sw2_deg": -30.307877121775043,
+        "sw3_deg": -12.498001506670484,
+        "twist_b0_deg": 0.7318550013218126,
+        "twist_b1_deg": -0.44300875410744656,
+        "twist_b2_deg": -4.924998666257613,
+        "twist_b3_deg": -6.887594557194893
+      },
+      "error": null,
+      "generator_id": "bwb_segmented",
+      "sample_hash": "630b5b9ead4a55a4a7b207de65ca8fe24a92661981f4ecfcd89a98d9e37fd5e9",
+      "sample_id": "lhs7_00",
+      "sample_index": 0,
+      "schema": "aeris.mesh_study.stage01_surface_manifest.v1",
+      "seconds": 5.778291435999563,
+      "status": "surface_ok",
+      "surface_dir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_00/surface",
+      "surface_params": {
+        "cap_width_frac": 0.5,
+        "cap_wrap_points": 9,
+        "cap_wrap_x": 0.4,
+        "chordwise_beta": 2.0,
+        "chordwise_distribution": "uniform",
+        "max_adjacent_normal_angle": 180.0,
+        "min_shape_metric": 1e-06,
+        "points_per_side": 49,
+        "spanwise_allocation": "proportional",
+        "spanwise_beta": 2.0,
+        "spanwise_distribution": "uniform",
+        "spanwise_panels": 16,
+        "te_base_points": 0,
+        "te_thickness": 0.005,
+        "te_thickness_abs_floor": 0.0,
+        "tip_radial_points": 7,
+        "tip_smooth_iters": 0,
+        "tip_topology": "airfoil_face"
+      },
+      "surface_qc_json": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_00/surface_qc.json",
+      "surface_recipe": "pygeo_study_l3_reference",
+      "surface_source": "generated",
+      "topology_id": "wing_cap4_v1",
+      "volume_preset": "smoke"
+    },
+    {
+      "artifact_sha256": {
+        "surface.fmt": "87f390b1ccd97a205fb1309190b909f3ba821769a79b3814d74b4090f64479d6",
+        "surface.vtk": "30a286e23966490a0f96b1a70229ce6fc280ba81113177b06c604a5c05caf566",
+        "surface_blocks.npz": "375e46c9e78c9c5c324dd6d4a3d1846c4c3aa757208a58c10e633ea46fdc0b47",
+        "surface_report.json": "82dbee429ade4a58e6a3eeac420cfc2e68f3acfbc104d211375c6a8b8cb74483"
+      },
+      "connectivity_json": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_01/connectivity.json",
+      "design_sample": {
+        "b3_ratio": 0.4327082874767337,
+        "b_total_m": 0.960750201867794,
+        "c1_m": 0.8290082875996236,
+        "c2_ratio": 0.6155544807360291,
+        "c3_ratio": 0.49700830384952077,
+        "c4_ratio": 0.18579605724582893,
+        "dihedral_b1_deg": 0.0,
+        "dihedral_b2_deg": 0.9382258345602414,
+        "dihedral_b3_deg": 6.299693872890501,
+        "elevon_end_frac": 0.8567440910427838,
+        "elevon_hinge_frac": 0.7425615834152552,
+        "elevon_start_frac": 0.5523984691942361,
+        "split_ratio": 0.4624578420441002,
+        "sw1_deg": -28.37894633936551,
+        "sw2_deg": -24.319863865158318,
+        "sw3_deg": -7.647057600002814,
+        "twist_b0_deg": -0.17751885170148418,
+        "twist_b1_deg": -2.8765449529506073,
+        "twist_b2_deg": -1.1846414480491019,
+        "twist_b3_deg": -3.321525094780199
+      },
+      "error": null,
+      "generator_id": "bwb_segmented",
+      "sample_hash": "f8599537de4043620e7d2ba83f2382c476693d37f1bdc3f9d932dbcf0972a368",
+      "sample_id": "lhs7_01",
+      "sample_index": 1,
+      "schema": "aeris.mesh_study.stage01_surface_manifest.v1",
+      "seconds": 5.292779757997778,
+      "status": "surface_ok",
+      "surface_dir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_01/surface",
+      "surface_params": {
+        "cap_width_frac": 0.5,
+        "cap_wrap_points": 9,
+        "cap_wrap_x": 0.4,
+        "chordwise_beta": 2.0,
+        "chordwise_distribution": "uniform",
+        "max_adjacent_normal_angle": 180.0,
+        "min_shape_metric": 1e-06,
+        "points_per_side": 49,
+        "spanwise_allocation": "proportional",
+        "spanwise_beta": 2.0,
+        "spanwise_distribution": "uniform",
+        "spanwise_panels": 16,
+        "te_base_points": 0,
+        "te_thickness": 0.005,
+        "te_thickness_abs_floor": 0.0,
+        "tip_radial_points": 7,
+        "tip_smooth_iters": 0,
+        "tip_topology": "airfoil_face"
+      },
+      "surface_qc_json": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_01/surface_qc.json",
+      "surface_recipe": "pygeo_study_l3_reference",
+      "surface_source": "generated",
+      "topology_id": "wing_cap4_v1",
+      "volume_preset": "smoke"
+    },
+    {
+      "artifact_sha256": {
+        "surface.fmt": "3ccb90dd4ac685290a248af7b13e8e0cab57c8c562c4631d0c12987ae0a1be68",
+        "surface.vtk": "ddcce21f13855b992d6273c12d1d7cd4462584385641fc9cf86d4de9a2c2954c",
+        "surface_blocks.npz": "d7f7cc7dbddbfa026221e4c38f89771f8a9944bb3279199ae4862146f6590f02",
+        "surface_report.json": "eea591a1cfe3a2981d5bf145ff8c7f51341c5b066d3feda32da98663460e28c5"
+      },
+      "connectivity_json": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_02/connectivity.json",
+      "design_sample": {
+        "b3_ratio": 0.42328489731500896,
+        "b_total_m": 0.7619781980914762,
+        "c1_m": 0.8720066513964491,
+        "c2_ratio": 0.7260985501990347,
+        "c3_ratio": 0.428861527026536,
+        "c4_ratio": 0.14465158161332875,
+        "dihedral_b1_deg": 0.0,
+        "dihedral_b2_deg": 3.9943463479624404,
+        "dihedral_b3_deg": 5.579054574429254,
+        "elevon_end_frac": 0.8728469787829686,
+        "elevon_hinge_frac": 0.8173534419789954,
+        "elevon_start_frac": 0.6176784492944429,
+        "split_ratio": 0.44060700588768226,
+        "sw1_deg": -37.69787544384637,
+        "sw2_deg": -22.45695076038243,
+        "sw3_deg": -20.862569295756277,
+        "twist_b0_deg": -0.4169071205752184,
+        "twist_b1_deg": -1.8810032252993807,
+        "twist_b2_deg": -2.075771921178722,
+        "twist_b3_deg": -3.0117671167986533
+      },
+      "error": null,
+      "generator_id": "bwb_segmented",
+      "sample_hash": "d0377fdda940755834b4892e10c6e23ae4f45a3d5712c49cbb623aa4be9dd56a",
+      "sample_id": "lhs7_02",
+      "sample_index": 2,
+      "schema": "aeris.mesh_study.stage01_surface_manifest.v1",
+      "seconds": 5.315485503000673,
+      "status": "surface_ok",
+      "surface_dir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_02/surface",
+      "surface_params": {
+        "cap_width_frac": 0.5,
+        "cap_wrap_points": 9,
+        "cap_wrap_x": 0.4,
+        "chordwise_beta": 2.0,
+        "chordwise_distribution": "uniform",
+        "max_adjacent_normal_angle": 180.0,
+        "min_shape_metric": 1e-06,
+        "points_per_side": 49,
+        "spanwise_allocation": "proportional",
+        "spanwise_beta": 2.0,
+        "spanwise_distribution": "uniform",
+        "spanwise_panels": 16,
+        "te_base_points": 0,
+        "te_thickness": 0.005,
+        "te_thickness_abs_floor": 0.0,
+        "tip_radial_points": 7,
+        "tip_smooth_iters": 0,
+        "tip_topology": "airfoil_face"
+      },
+      "surface_qc_json": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_02/surface_qc.json",
+      "surface_recipe": "pygeo_study_l3_reference",
+      "surface_source": "generated",
+      "topology_id": "wing_cap4_v1",
+      "volume_preset": "smoke"
+    },
+    {
+      "artifact_sha256": {
+        "surface.fmt": "0b9051163e7baba02e65f0fb0d1c3ba93b60ecdc3a64f649dd14dbd5ea0a0b42",
+        "surface.vtk": "a44506a4b20009485da839f2f8814abe096d88b565704ede4cdd9b6cd38508d9",
+        "surface_blocks.npz": "3cc2b9ae57c4df1e573b3ef82cf196fc636f3c26756d34426079dcb4814ffaca",
+        "surface_report.json": "9c11eb1ee90d10fc197af7dbca2db014d5211ea28c4585387c8d19908779eb99"
+      },
+      "connectivity_json": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_03/connectivity.json",
+      "design_sample": {
+        "b3_ratio": 0.4582608534129471,
+        "b_total_m": 1.143703851307475,
+        "c1_m": 1.0787173981137488,
+        "c2_ratio": 0.7508920069693399,
+        "c3_ratio": 0.3750933560513019,
+        "c4_ratio": 0.12317820880648656,
+        "dihedral_b1_deg": 0.0,
+        "dihedral_b2_deg": 5.4802327133031135,
+        "dihedral_b3_deg": 8.76318095140148,
+        "elevon_end_frac": 0.9563955127672644,
+        "elevon_hinge_frac": 0.7865667669968911,
+        "elevon_start_frac": 0.6275074803403893,
+        "split_ratio": 0.5504748021582095,
+        "sw1_deg": -27.726471896914838,
+        "sw2_deg": -27.103751877178368,
+        "sw3_deg": -18.140006276197674,
+        "twist_b0_deg": -0.9898591889455459,
+        "twist_b1_deg": -2.4707909734684597,
+        "twist_b2_deg": -2.5915698582224436,
+        "twist_b3_deg": -2.0823144590487583
+      },
+      "error": null,
+      "generator_id": "bwb_segmented",
+      "sample_hash": "f842182ce43d58b3d3ceb32d3a351aa207d876fc7176bd30d60b955217c2c235",
+      "sample_id": "lhs7_03",
+      "sample_index": 3,
+      "schema": "aeris.mesh_study.stage01_surface_manifest.v1",
+      "seconds": 5.383714648000023,
+      "status": "surface_ok",
+      "surface_dir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_03/surface",
+      "surface_params": {
+        "cap_width_frac": 0.5,
+        "cap_wrap_points": 9,
+        "cap_wrap_x": 0.4,
+        "chordwise_beta": 2.0,
+        "chordwise_distribution": "uniform",
+        "max_adjacent_normal_angle": 180.0,
+        "min_shape_metric": 1e-06,
+        "points_per_side": 49,
+        "spanwise_allocation": "proportional",
+        "spanwise_beta": 2.0,
+        "spanwise_distribution": "uniform",
+        "spanwise_panels": 16,
+        "te_base_points": 0,
+        "te_thickness": 0.005,
+        "te_thickness_abs_floor": 0.0,
+        "tip_radial_points": 7,
+        "tip_smooth_iters": 0,
+        "tip_topology": "airfoil_face"
+      },
+      "surface_qc_json": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_03/surface_qc.json",
+      "surface_recipe": "pygeo_study_l3_reference",
+      "surface_source": "generated",
+      "topology_id": "wing_cap4_v1",
+      "volume_preset": "smoke"
+    },
+    {
+      "artifact_sha256": {
+        "surface.fmt": "6ea34ee1bb9061c1e0dd7dacd2f2b48b58653069b7bc82b2edd5584ef9eb859e",
+        "surface.vtk": "959441d3a11649bece78cb59d6d38bb9ffe372fc6cce5ba19a7c0eb64b7bf9c9",
+        "surface_blocks.npz": "fda91593a8315e6738dbfeb667be87abb0fb216894f744da59b2b4fc2d6f660d",
+        "surface_report.json": "3f45c08eee365197807ed770d548f2286cb177fe8384902be743c6486d30ee55"
+      },
+      "connectivity_json": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_04/connectivity.json",
+      "design_sample": {
+        "b3_ratio": 0.5235923381902277,
+        "b_total_m": 1.2065807907904154,
+        "c1_m": 0.775888552038783,
+        "c2_ratio": 0.6497240036920472,
+        "c3_ratio": 0.5127447702467106,
+        "c4_ratio": 0.19255335405860377,
+        "dihedral_b1_deg": 0.0,
+        "dihedral_b2_deg": 5.0283508581003264,
+        "dihedral_b3_deg": 7.077546572351004,
+        "elevon_end_frac": 0.9247283103176729,
+        "elevon_hinge_frac": 0.7302620186317902,
+        "elevon_start_frac": 0.6945464955347709,
+        "split_ratio": 0.5868842133399206,
+        "sw1_deg": -33.98964226836914,
+        "sw2_deg": -18.111043580705772,
+        "sw3_deg": -13.0981236088363,
+        "twist_b0_deg": -0.7574183610049322,
+        "twist_b1_deg": -0.02530936946978013,
+        "twist_b2_deg": -3.563844852866059,
+        "twist_b3_deg": -7.423957449784295
+      },
+      "error": null,
+      "generator_id": "bwb_segmented",
+      "sample_hash": "cc0a40bcb3b29c70da1ab562619cdc1b7fe6734fe4d9cb18f94efc6989871cfe",
+      "sample_id": "lhs7_04",
+      "sample_index": 4,
+      "schema": "aeris.mesh_study.stage01_surface_manifest.v1",
+      "seconds": 5.524793372998829,
+      "status": "surface_ok",
+      "surface_dir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_04/surface",
+      "surface_params": {
+        "cap_width_frac": 0.5,
+        "cap_wrap_points": 9,
+        "cap_wrap_x": 0.4,
+        "chordwise_beta": 2.0,
+        "chordwise_distribution": "uniform",
+        "max_adjacent_normal_angle": 180.0,
+        "min_shape_metric": 1e-06,
+        "points_per_side": 49,
+        "spanwise_allocation": "proportional",
+        "spanwise_beta": 2.0,
+        "spanwise_distribution": "uniform",
+        "spanwise_panels": 16,
+        "te_base_points": 0,
+        "te_thickness": 0.005,
+        "te_thickness_abs_floor": 0.0,
+        "tip_radial_points": 7,
+        "tip_smooth_iters": 0,
+        "tip_topology": "airfoil_face"
+      },
+      "surface_qc_json": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_04/surface_qc.json",
+      "surface_recipe": "pygeo_study_l3_reference",
+      "surface_source": "generated",
+      "topology_id": "wing_cap4_v1",
+      "volume_preset": "smoke"
+    },
+    {
+      "artifact_sha256": {
+        "surface.fmt": "7dac6e1b6fb24d2a84b99b4f172353f36a307bfc99a0d6a62ce0636547aac4ef",
+        "surface.vtk": "55a5f76452a3fed7e905fd8efd9b15516526222662d3863ed7e20ba409da430f",
+        "surface_blocks.npz": "5aa701f1457988339ebf8879c9efe2fcb7eb63eba3d37bf3af597c1e47c62d43",
+        "surface_report.json": "4e2a4525982d9737475195af1b95879761520232bc00254838457f005578adae"
+      },
+      "connectivity_json": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_05/connectivity.json",
+      "design_sample": {
+        "b3_ratio": 0.4956443175419488,
+        "b_total_m": 1.0650210040739534,
+        "c1_m": 1.0128491367353107,
+        "c2_ratio": 0.65538271745589,
+        "c3_ratio": 0.317300803022046,
+        "c4_ratio": 0.12871101970814605,
+        "dihedral_b1_deg": 0.0,
+        "dihedral_b2_deg": 1.7668827178841044,
+        "dihedral_b3_deg": 0.2474095916167709,
+        "elevon_end_frac": 0.9773939806280458,
+        "elevon_hinge_frac": 0.6609008948803669,
+        "elevon_start_frac": 0.5886962682475317,
+        "split_ratio": 0.5131552146007703,
+        "sw1_deg": -25.16219269817363,
+        "sw2_deg": -15.03921049823882,
+        "sw3_deg": -5.5658281914377525,
+        "twist_b0_deg": 0.5189369740976557,
+        "twist_b1_deg": -2.1554334635124683,
+        "twist_b2_deg": -2.7288505165730763,
+        "twist_b3_deg": -4.024032908403127
+      },
+      "error": null,
+      "generator_id": "bwb_segmented",
+      "sample_hash": "cc0e272b4658ee2cc3718e9b75cc2ef06aadd3929a13a3cc99c07c2f0195e5a5",
+      "sample_id": "lhs7_05",
+      "sample_index": 5,
+      "schema": "aeris.mesh_study.stage01_surface_manifest.v1",
+      "seconds": 5.397943653002585,
+      "status": "surface_ok",
+      "surface_dir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_05/surface",
+      "surface_params": {
+        "cap_width_frac": 0.5,
+        "cap_wrap_points": 9,
+        "cap_wrap_x": 0.4,
+        "chordwise_beta": 2.0,
+        "chordwise_distribution": "uniform",
+        "max_adjacent_normal_angle": 180.0,
+        "min_shape_metric": 1e-06,
+        "points_per_side": 49,
+        "spanwise_allocation": "proportional",
+        "spanwise_beta": 2.0,
+        "spanwise_distribution": "uniform",
+        "spanwise_panels": 16,
+        "te_base_points": 0,
+        "te_thickness": 0.005,
+        "te_thickness_abs_floor": 0.0,
+        "tip_radial_points": 7,
+        "tip_smooth_iters": 0,
+        "tip_topology": "airfoil_face"
+      },
+      "surface_qc_json": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_05/surface_qc.json",
+      "surface_recipe": "pygeo_study_l3_reference",
+      "surface_source": "generated",
+      "topology_id": "wing_cap4_v1",
+      "volume_preset": "smoke"
+    },
+    {
+      "artifact_sha256": {
+        "surface.fmt": "75d7196af2515ef5196b150905182ebca0d2588942214cd31f47fc222da4dd75",
+        "surface.vtk": "2b3e4f228c130498e986e40fe14af06c327d2a113b9eb9b10b7d9712b18adcb0",
+        "surface_blocks.npz": "1ffa65f225043ae405dd09f8bc46709f7d565f36e8dfc9b137894ddb64fbbaa0",
+        "surface_report.json": "48e260b89d613a19b8d1225c18e40ed20b4587ef1b059c65d7f7b474273a42e3"
+      },
+      "connectivity_json": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_06/connectivity.json",
+      "design_sample": {
+        "b3_ratio": 0.5355708593003686,
+        "b_total_m": 0.9483914025524411,
+        "c1_m": 0.7250038186641866,
+        "c2_ratio": 0.5748875070858599,
+        "c3_ratio": 0.5461787561591468,
+        "c4_ratio": 0.10245607252031458,
+        "dihedral_b1_deg": 0.0,
+        "dihedral_b2_deg": 4.260659380712795,
+        "dihedral_b3_deg": 4.752732136367006,
+        "elevon_end_frac": 0.9426346397279441,
+        "elevon_hinge_frac": 0.6701355759215919,
+        "elevon_start_frac": 0.6542176310639306,
+        "split_ratio": 0.5774561841712955,
+        "sw1_deg": -21.97145762063078,
+        "sw2_deg": -32.641187944865706,
+        "sw3_deg": -24.176707700186224,
+        "twist_b0_deg": -0.23196623656832205,
+        "twist_b1_deg": -1.766038514242433,
+        "twist_b2_deg": -4.184405663586782,
+        "twist_b3_deg": -5.996803949971869
+      },
+      "error": null,
+      "generator_id": "bwb_segmented",
+      "sample_hash": "46f90e264730d11f25a0846d5b553cf9abe326d05622787ca3ed5336cc95fc5e",
+      "sample_id": "lhs7_06",
+      "sample_index": 6,
+      "schema": "aeris.mesh_study.stage01_surface_manifest.v1",
+      "seconds": 5.333570799000881,
+      "status": "surface_ok",
+      "surface_dir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_06/surface",
+      "surface_params": {
+        "cap_width_frac": 0.5,
+        "cap_wrap_points": 9,
+        "cap_wrap_x": 0.4,
+        "chordwise_beta": 2.0,
+        "chordwise_distribution": "uniform",
+        "max_adjacent_normal_angle": 180.0,
+        "min_shape_metric": 1e-06,
+        "points_per_side": 49,
+        "spanwise_allocation": "proportional",
+        "spanwise_beta": 2.0,
+        "spanwise_distribution": "uniform",
+        "spanwise_panels": 16,
+        "te_base_points": 0,
+        "te_thickness": 0.005,
+        "te_thickness_abs_floor": 0.0,
+        "tip_radial_points": 7,
+        "tip_smooth_iters": 0,
+        "tip_topology": "airfoil_face"
+      },
+      "surface_qc_json": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_06/surface_qc.json",
+      "surface_recipe": "pygeo_study_l3_reference",
+      "surface_source": "generated",
+      "topology_id": "wing_cap4_v1",
+      "volume_preset": "smoke"
+    },
+    {
+      "artifact_sha256": {
+        "surface.fmt": "7ad33cb40466cc3d80da554eeacf00064d971f34dcb60efdb98033ae1cdef78a",
+        "surface.vtk": "b0df90f57bb99de810ac3ffc88bf8e74bbd9b6927eca6c66f23eea4476f95b28",
+        "surface_blocks.npz": "2adfcf6ea1d1bd2fe3315422629dbeb324f529b7d542e5dbc8fe3fc39131a0f9",
+        "surface_report.json": "26a97caf28d9cfb107b6d3ae567e38224c1f8ab7bcd0a7e36d5713516e42b3e4"
+      },
+      "connectivity_json": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_07/connectivity.json",
+      "design_sample": {
+        "b3_ratio": 0.4696235755783372,
+        "b_total_m": 0.8548352046965872,
+        "c1_m": 0.8110274276098077,
+        "c2_ratio": 0.5948165479803439,
+        "c3_ratio": 0.45668998261409466,
+        "c4_ratio": 0.0860932668356042,
+        "dihedral_b1_deg": 0.0,
+        "dihedral_b2_deg": 2.0275917745515404,
+        "dihedral_b3_deg": 1.3298522832824142,
+        "elevon_end_frac": 0.8924610839459682,
+        "elevon_hinge_frac": 0.7138807412968126,
+        "elevon_start_frac": 0.5366558862000413,
+        "split_ratio": 0.5285644049277896,
+        "sw1_deg": -34.133161215385144,
+        "sw2_deg": -34.273746098899295,
+        "sw3_deg": -15.960970360244282,
+        "twist_b0_deg": 0.12075580506337302,
+        "twist_b1_deg": -0.6366925900051399,
+        "twist_b2_deg": -4.373177672645841,
+        "twist_b3_deg": -4.932369804966278
+      },
+      "error": null,
+      "generator_id": "bwb_segmented",
+      "sample_hash": "bc6998abedd293c7fd3138a9e74e54c2219d360064390be000d005e218d17671",
+      "sample_id": "lhs7_07",
+      "sample_index": 7,
+      "schema": "aeris.mesh_study.stage01_surface_manifest.v1",
+      "seconds": 5.278396583002177,
+      "status": "surface_ok",
+      "surface_dir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_07/surface",
+      "surface_params": {
+        "cap_width_frac": 0.5,
+        "cap_wrap_points": 9,
+        "cap_wrap_x": 0.4,
+        "chordwise_beta": 2.0,
+        "chordwise_distribution": "uniform",
+        "max_adjacent_normal_angle": 180.0,
+        "min_shape_metric": 1e-06,
+        "points_per_side": 49,
+        "spanwise_allocation": "proportional",
+        "spanwise_beta": 2.0,
+        "spanwise_distribution": "uniform",
+        "spanwise_panels": 16,
+        "te_base_points": 0,
+        "te_thickness": 0.005,
+        "te_thickness_abs_floor": 0.0,
+        "tip_radial_points": 7,
+        "tip_smooth_iters": 0,
+        "tip_topology": "airfoil_face"
+      },
+      "surface_qc_json": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_07/surface_qc.json",
+      "surface_recipe": "pygeo_study_l3_reference",
+      "surface_source": "generated",
+      "topology_id": "wing_cap4_v1",
+      "volume_preset": "smoke"
+    },
+    {
+      "artifact_sha256": {
+        "surface.fmt": "5053fa1fee1adff38b80501f352a710321ddee7d7bb1ab04b31dd0399a08d31e",
+        "surface.vtk": "10e83edca69b5bd841ffdb83fc80e4e0b078b024da544ad76907965242b7a808",
+        "surface_blocks.npz": "599031f9bac0dabfa7eccac0c7926afb6055a287253549dd62af3ae29c427045",
+        "surface_report.json": "89e0b51273484a3cbe687be8ab8036b6a2ed5051d04b3b5822159f6155e24474"
+      },
+      "connectivity_json": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_08/connectivity.json",
+      "design_sample": {
+        "b3_ratio": 0.48354541411710716,
+        "b_total_m": 0.8201249149051991,
+        "c1_m": 0.9349421378158504,
+        "c2_ratio": 0.7153134901068259,
+        "c3_ratio": 0.3300151680996749,
+        "c4_ratio": 0.1558764361550985,
+        "dihedral_b1_deg": 0.0,
+        "dihedral_b2_deg": 2.551664730230584,
+        "dihedral_b3_deg": 9.131078988291321,
+        "elevon_end_frac": 0.8784808966453658,
+        "elevon_hinge_frac": 0.7584290655894439,
+        "elevon_start_frac": 0.6619361541767294,
+        "split_ratio": 0.40050393741603524,
+        "sw1_deg": -22.36948744400991,
+        "sw2_deg": -25.853334564777757,
+        "sw3_deg": -21.154480847663066,
+        "twist_b0_deg": 0.2958392989779248,
+        "twist_b1_deg": -1.2259935415406862,
+        "twist_b2_deg": -3.3335955387811134,
+        "twist_b3_deg": -5.40919808128263
+      },
+      "error": null,
+      "generator_id": "bwb_segmented",
+      "sample_hash": "2744a9ba3a6634143a863a4bb63b035b5a31129b7bc82c031cf487c61a9c8192",
+      "sample_id": "lhs7_08",
+      "sample_index": 8,
+      "schema": "aeris.mesh_study.stage01_surface_manifest.v1",
+      "seconds": 5.528288132001762,
+      "status": "surface_ok",
+      "surface_dir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_08/surface",
+      "surface_params": {
+        "cap_width_frac": 0.5,
+        "cap_wrap_points": 9,
+        "cap_wrap_x": 0.4,
+        "chordwise_beta": 2.0,
+        "chordwise_distribution": "uniform",
+        "max_adjacent_normal_angle": 180.0,
+        "min_shape_metric": 1e-06,
+        "points_per_side": 49,
+        "spanwise_allocation": "proportional",
+        "spanwise_beta": 2.0,
+        "spanwise_distribution": "uniform",
+        "spanwise_panels": 16,
+        "te_base_points": 0,
+        "te_thickness": 0.005,
+        "te_thickness_abs_floor": 0.0,
+        "tip_radial_points": 7,
+        "tip_smooth_iters": 0,
+        "tip_topology": "airfoil_face"
+      },
+      "surface_qc_json": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_08/surface_qc.json",
+      "surface_recipe": "pygeo_study_l3_reference",
+      "surface_source": "generated",
+      "topology_id": "wing_cap4_v1",
+      "volume_preset": "smoke"
+    },
+    {
+      "artifact_sha256": {
+        "surface.fmt": "2268139e889f2551e62912129200e0c553185dfbd9ec652d1ed12e5ee1f3a340",
+        "surface.vtk": "43568a4ba26c7ea21c2012da7eabcb45a1251bc8c53b7f370f11acfd9df9ee4d",
+        "surface_blocks.npz": "a49defbedf6b82628016845ba980e94cf1d212c151b8d46ed39b2ecdacc2a19c",
+        "surface_report.json": "b40112a4413b57bf3a13e31dad383d2a841a343cfebde46e045acaaded54197f"
+      },
+      "connectivity_json": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_09/connectivity.json",
+      "design_sample": {
+        "b3_ratio": 0.41391858527116787,
+        "b_total_m": 1.0335882581305642,
+        "c1_m": 1.0518827771500818,
+        "c2_ratio": 0.7878722205067843,
+        "c3_ratio": 0.4207511932450437,
+        "c4_ratio": 0.1083351687081699,
+        "dihedral_b1_deg": 0.0,
+        "dihedral_b2_deg": 0.128805763646258,
+        "dihedral_b3_deg": 2.457425698138217,
+        "elevon_end_frac": 0.9396556274998693,
+        "elevon_hinge_frac": 0.6969114059097737,
+        "elevon_start_frac": 0.5061282115841372,
+        "split_ratio": 0.49934296470794737,
+        "sw1_deg": -30.49404499280449,
+        "sw2_deg": -19.095921018584956,
+        "sw3_deg": -9.387921705475783,
+        "twist_b0_deg": 0.8613318981777744,
+        "twist_b1_deg": -0.9593890266008147,
+        "twist_b2_deg": -1.4246634852541549,
+        "twist_b3_deg": -6.769574212420363
+      },
+      "error": null,
+      "generator_id": "bwb_segmented",
+      "sample_hash": "236b45208899cd958149efa9a1783ed60630226b2c6b72472699d7e7976505a9",
+      "sample_id": "lhs7_09",
+      "sample_index": 9,
+      "schema": "aeris.mesh_study.stage01_surface_manifest.v1",
+      "seconds": 5.409122282999306,
+      "status": "surface_ok",
+      "surface_dir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_09/surface",
+      "surface_params": {
+        "cap_width_frac": 0.5,
+        "cap_wrap_points": 9,
+        "cap_wrap_x": 0.4,
+        "chordwise_beta": 2.0,
+        "chordwise_distribution": "uniform",
+        "max_adjacent_normal_angle": 180.0,
+        "min_shape_metric": 1e-06,
+        "points_per_side": 49,
+        "spanwise_allocation": "proportional",
+        "spanwise_beta": 2.0,
+        "spanwise_distribution": "uniform",
+        "spanwise_panels": 16,
+        "te_base_points": 0,
+        "te_thickness": 0.005,
+        "te_thickness_abs_floor": 0.0,
+        "tip_radial_points": 7,
+        "tip_smooth_iters": 0,
+        "tip_topology": "airfoil_face"
+      },
+      "surface_qc_json": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration/surfaces/lhs7_09/surface_qc.json",
+      "surface_recipe": "pygeo_study_l3_reference",
+      "surface_source": "generated",
+      "topology_id": "wing_cap4_v1",
+      "volume_preset": "smoke"
+    }
+  ],
+  "volume_level": "smoke",
+  "workdir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/stage01/epse_calibration"
+}

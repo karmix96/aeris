@@ -280,3 +280,176 @@ Decisions live in `decision/` (ADR-style); study write-ups in `studies/`.
   mesh study configs are all editable. Still: never delete evidence, never
   force-push. (NB: commit 66976b4 accidentally swept in Codex's uncommitted
   surface.py via `git add -A src/` — content intact, attribution wrong.)
+
+## DSE vs verification panelling (DECISION-0013, 2026-07-26)
+
+**AVL cost is ~cubic in vortex count, and we were running at 77% of its ceiling.**
+A single low-fi point cost 58 s: pyGeo loft 1.36 s + NeuralFoil viscous 0.60 s +
+**AVL 56.93 s**. 192 strips x 24 chordwise = 4608 vortices vs AVL's compiled ~6000
+limit. DECISION-0009 picked 24 chordwise on accuracy alone and never priced it —
+that made a 2000-design x 5-alpha sweep 6.7 days, i.e. not a DSE tool at all.
+
+Two tiers now:
+- **DSE (shipped default): nchordwise 12** — 2304 vortices, 14.6 s/point.
+- **Verification: nchordwise 24** — 57.3 s/point; use for promoted designs,
+  control-authority sizing, anything feeding CFD. `--nchordwise 24` / GUI field.
+
+Why it is safe: at every panel count the worst error is a CONTROL derivative.
+`Xnp` is 0.3350 from 6 panels up; at 12, CL 0.51% / Cm 0.67% / Xnp 0.00% /
+CL_de 3.76%. And the control error is a **consistent bias, not scatter** —
+cheap/rich ratio 0.9684 (nominal) vs 0.9687 (narrow elevon), spread ~1% of the
+bias — so it cancels when designs are RANKED, which is what a DSE does.
+
+**Guard added:** AVL's answer to exceeding its arrays is `status=FAILED` with every
+coefficient `None` — indistinguishable from a physics failure, and it silently
+produced an all-NaN study. `avl_limits_ok()` ran only at config-parse time.
+`write_native_avl` now RAISES on the NSMAX=500 strip limit and the ~6000 vortex
+limit. Never trust an AVL run's silence; check `status`.
+
+**Sliver merge (same date):** pins were unioned onto the base grid with
+`np.unique`, which only removes exact duplicates. Measured across 10 geometries the
+tightest interval was 2.4%-9.1% of uniform spacing (~0.001 of span) on EVERY
+geometry — one of 25 sections wasted on a near-duplicate station. Now a base
+station within `SLIVER_MERGE_FRACTION = 0.25` of a uniform interval from a pin is
+dropped in the pin's favour, and the largest-gap top-up respends the freed section.
+Remaining tight pairs are pin-vs-pin (real geometry features), which is legitimate.
+
+**Open, unexplained:** narrow-elevon-with-pins hangs AVL reproducibly (>8 min vs
+58 s norm) at 24 chordwise, with well-formed geometry and all `.af` files valid.
+Not the sliver (nominal has a tighter one and solves fine). Study runs now record
+TIMEOUT and continue instead of aborting.
+
+## Section placement (DECISION-0014, 2026-07-26, revised after audit)
+
+**`section_placement: auto` — gated adaptive placement is RETAINED.** An interim
+verdict of `never` was WITHDRAWN the same day; see why below, it is the useful part.
+
+Ranked on quantities the reference can resolve (control derivatives, forces,
+stability — NOT drag), matched 25-section budget, 10 geometries:
+
+| approach | mean | MAX |
+|---|---|---|
+| A uniform, no pins | 15.17% | 34.54% |
+| B uniform + hard pins | **0.82%** | 1.98% |
+| C adaptive, gated (auto) | 0.86% | **1.68%** |
+| D adaptive, forced | 0.91% | 1.68% |
+
+1. **Hard feature pins do nearly all the work** — without them, 34.54% worst case.
+2. **B and C tie on the mean** (0.04 pp, inside the reference's ~0.5% noise).
+3. **C has the better tail**, winning where the ramp is severe: narrow elevon
+   (66.7% ramp) 1.52% -> 1.12%, random_1020 (36.3%) 1.98% -> 1.42%. On benign
+   geometries the gate does not fire and C is identical to B. A budget sweep
+   confirms it: on the narrow elevon adaptive wins at 11/15/19/25 sections alike.
+
+### THE RULE THAT CAME OUT OF THE WITHDRAWN VERDICT
+
+**Never rank spanwise discretisation with drag.** `CDind`, `cd_total`, `e` cannot
+adjudicate placement in AVL. A reference disagrees with ITSELF by 1.2-2.9% on drag
+depending on how its OWN sections are placed, and it does NOT converge away:
+49/73/97 sections give 2.90%/1.37%/1.17%. AVL's Trefftz-plane drag is acutely
+sensitive to how stations sample the spanwise load. The withdrawn verdict came from
+ranking on an aggregate dominated by drag, against a reference that was itself
+uniform+pinned -- so it both used an unresolvable quantity AND flattered the
+candidate sharing its construction. Report drag; never decide with it.
+
+**Also: don't judge a method only on the quantities it targets** -- that is
+question-begging. Rank on everything the reference can actually resolve.
+
+**Config wiring bug fixed:** `run_pygeo_native_avl_case` had a hardcoded
+`nchordwise=24`, so `geometry.aero_discretisation` reached AVL only via CLI/GUI --
+every library caller (i.e. every study script) silently ran at 24 regardless of
+config. `build_pygeo_sections_from_config` now returns nchordwise/cspace/
+spanwise_panels in its meta; callers must pass them. The GUI now reads all four
+knobs from config via `_config_discretisation()`.
+
+**Sliver merge:** pins were unioned with `np.unique` (exact duplicates only), so all
+10 geometries wasted a station on a near-duplicate ~0.001 of span from its
+neighbour. Pins now absorb base stations within `SLIVER_MERGE_FRACTION = 0.25` of a
+uniform interval; the largest-gap top-up respends the freed section.
+
+**Settings of record: `studies/SETTINGS_OF_RECORD.md`.**
+
+## Automated CFD campaign strategy (S6, 2026-08-16)
+
+- **Order of work:** finish and validate structured `S6 atlas + ADflow`; then add
+  wall-resolved `Gmsh prism/tet + SU2`; then add common `auto` and `compare`
+  modes; only then train AI helpers from the captured S6 experience.
+- **S6 is a strong candidate, not production-ready.** The coarse ADflow pilot
+  converged by 7.59 residual orders, but its deliberately coarsened wall grid
+  failed y+ (p95 2.41, max 7.23). Fine templates are valid 10/10. The locked
+  hold-out remains untouched.
+- **10,000-case freeze gate:** production y+; locked hold-out without tuning;
+  at least 99/100 accepted CFD pilot cases; grid convergence on about 20 cases;
+  10,000/10,000 mesh preflight with automatic recovery; and a 500-1,000-case HPC
+  rehearsal proving restart, storage, and collection.
+- **100-case reduced gate:** preflight 100/100 meshes, run 10-20 extreme CFD
+  pilots, pass production y+, perform five grid-convergence cases, reserve about
+  ten unseen cases, and prove unattended recovery.
+- **AI/FFD rule:** pyGeo or FFD controls geometry; deterministic S6, IDWarp, or RBF
+  controls the accepted volume. AI may rank templates and predict quality,
+  failures, or useful CFD samples, but an AI-only mesh is never trusted. Every
+  result must pass the same wall, interface, volume, Jacobian, y+, and CFD gates.
+- Persist geometry DVs, rankings, attempted templates, deformation provenance,
+  mesh quality, failures, timing, y+, residual/force histories, and final forces
+  for the planned AI-assisted mesh-atlas paper. The persistent detailed work order
+  is `AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/ROADMAP.md`.
+- **Latest S6 mesh evidence (2026-08-16):** the geometry-active maximin smoke atlas
+  passed 100/100 development geometries in 131 attempts, with 80 first-try passes,
+  maximum five attempts, and worst accepted quality +0.15184. It needed no smoke
+  enrichment seeds. This does not unlock the holdout: production-resolution 100/100
+  validation and production y+ are still required.
+- **Production seed result (2026-08-16):** the governed development calibration is
+  now `N=257`, `epsE=1.5`, and first-cell fraction `3.6e-6`. All 16 deterministic
+  maximin templates pass the independent +0.10 scaled-quality floor. The minimum
+  is +0.10535253, and only three cells across the atlas are below +0.15; these are
+  first-layer tip/trailing-edge cells in seeds 002 and 068. The manifest remains
+  unfrozen pending complete development validation and production CFD/y+ evidence.
+  The current production label still refines wall-normal N while retaining the
+  L2_smoke tangential surface, so a true three-direction grid family remains open.
+- **First production development audit (2026-08-20):** the 16-template written-CGNS
+  run finished 99/100 in 220 attempts. Geometry 089 failed because its best quality
+  was +0.092659, below the +0.10 floor. The independent report auditor confirmed
+  report integrity but correctly rejected campaign acceptance. No gate was lowered.
+- **Production enrichment (2026-08-20):** six local seeds were attempted. Seeds
+  089, 095, 085, 008, and 094 passed; seed 007 failed one cell at +0.086926 and is
+  recorded as known-unbuildable under the fixed policy. The qualified atlas has 21
+  templates. In the running revalidation, geometry 007 already passes at +0.153736
+  through template 095, so the failed local seed is not required for acceptance.
+- **Production revalidation completed (2026-08-20):** the 21-template,
+  100-target production-resolution written-CGNS audit passed 100/100, and its
+  independent audit passed integrity and campaign acceptance. This freezes atlas
+  membership only. Do not open the locked hold-out or freeze the full CFD policy.
+- **Reload handoff:** start at `AERIS_MESH_STUDY/PROJECT_HANDOFF/README.md`. It
+  includes status, decisions, evidence, risks, exact commands, a future-agent
+  prompt, and a constrained Claude continuation prompt/logging contract. Never use
+  `artifacts/s6_bounded_mesh_atlas/atlas_manifest_frozen_candidate_v3.json`; its
+  smoke-level freeze flag is obsolete.
+
+## S6 grid/TE and laptop qualification (2026-08-21)
+
+- Three governed N65 development meshes passed hard mesh gates and all three
+  ADflow runs converged with 7.51-7.74 residual orders and stable forces.
+- The strict N65 y+ screen passed 0/3 (p95 1.10-1.37, p99 2.85-3.25, maximum
+  4.57-6.31). This proves the solver/rejection path only. N65 is too coarse to
+  validate, tune, or reject the production wall law.
+- The current P0 atlas (smoke tangential, N257, s0 fraction 3.6e-6) is separate
+  from the true G1/G2/G3 family. TE variants remain 0.5/1.0/1.5 mm with
+  0.25/0.50/0.75% local-chord floors.
+- Claude Opus/max found three high-severity cache/provenance risks. The runner now
+  binds source/registry and mesh hashes, MPI count, and solver artifacts. Mesh
+  fingerprints include governing quality, geometry-set, QC, and meshing modules;
+  41 focused tests and Ruff pass.
+- The three pilot reports predate those final fingerprints. Do not rewrite them.
+  Their separate `legacy_evidence_audit.json` passes asset/hash integrity but
+  records `current_cache_compatible=false`; rerun only for exact current-code
+  provenance. P0 span count is template-dependent (60-98), not fixed at 89.
+- The collector writes `laptop_summary_current.json` and cannot overwrite the
+  historical summary. The v1 plan file was written after the pilots, so it is a
+  policy snapshot, not preregistration proof. The final v3 G1/G2/G3 family now
+  refines endpoint and collar counts as well as chord/span/normal counts.
+- The next heavy action is one P0 development canary on >=64 GB, then two more
+- Pilot design index 0 is geometry 007, the hardest known route (six attempts).
+  It is good for peak-memory testing, but its y+ is not representative of the
+  median design.
+  only after memory and y+ are measured. Hold-out remains untouched.
+- Canonical detail: `AERIS_MESH_STUDY/PROJECT_HANDOFF/QUALIFICATION_UPDATE_2026-08-21.md`.

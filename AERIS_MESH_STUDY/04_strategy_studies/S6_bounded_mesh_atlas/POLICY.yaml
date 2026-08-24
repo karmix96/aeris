@@ -1,0 +1,190 @@
+schema: aeris.mesh.s6_campaign_policy.v3
+strategy: S6_BOUNDED_MESH_ATLAS
+production_status: development_not_frozen
+atlas_status: frozen_candidate_21_templates_pending_cfd_policy
+
+geometry:
+  source: exact_pygeo_bspline
+  family: bwb_segmented_v1
+  trailing_edge:
+    law: max_1mm_or_0.5pct_local_chord
+    status: declared_numerical_geometry
+    required_before_production: representative_aerodynamic_sensitivity
+  fidelity_max_fraction_local_chord: 1.0e-4
+  fidelity_instrument: tracked_parametric_coordinate_independent_pygeo_reevaluation
+
+routing:
+  metric: normalized_geometry_active_design_variable_rms
+  fixed_variables_omitted: true
+  neutral_oml_inactive_variables_omitted:
+    - elevon_start_frac
+    - elevon_end_frac
+    - elevon_hinge_frac
+  initial_template_selection: deterministic_maximin
+  initial_template_count: 16
+  template_count: 21_after_quality_aware_development_enrichment
+  template_attempt_limit: all_frozen_registry_templates
+  distance_role: ordering_only_not_acceptance
+  development_preferred_min_scaled_jacobian: 0.15
+  development_below_preferred_action: continue_search_then_add_target_seed
+  incompatible_template_surface: recoverable_attempt_failure
+  attempts_in_order:
+    - every_validated_template_by_increasing_distance
+    - target_specific_s1_pyhyp_at_registry_epsE_and_wall_law
+    - exact_wall_deformation_and_full_reaudit
+  manual_mesh_repair: forbidden
+
+surface_gates:
+  finite_coordinates: true
+  watertight_tip: true
+  deterministic_connectivity: true
+  expected_internal_edge_pairs: 20
+  internal_edge_mismatch_m_max: 1.0e-10
+  min_scaled_jacobian_strictly_greater_than: 0.0
+  min_cell_area_strictly_greater_than: 0.0
+
+volume_gates:
+  wall_error_m_max: 1.0e-10
+  internal_face_pair_count_must_match_template: true
+  internal_face_mismatch_m_max: 1.0e-10
+  written_cgns_reaudit_required: true
+  inverted_cells: 0
+  min_volume_strictly_greater_than: 0.0
+  min_scaled_jacobian_strictly_greater_than: 0.0
+  production_min_scaled_jacobian: 0.10
+  warning_below_scaled_jacobian: 0.15
+  ranking_target_scaled_jacobian: 0.30
+
+wall_spacing:
+  law: fraction_of_surface_bounding_box_diagonal
+  smoke_fraction: 8.8e-6
+  fine_fraction: 6.0e-6
+  production_candidate_fraction: 3.0e-6
+  production_development_fraction: 3.6e-6
+  production_development_epsE: 1.5
+  reference_reynolds: 1000000.0
+  production_status: candidate_pending_cfd_yplus_validation
+  basis: coarse_pilot_scaling_then_16_of_16_fixed_policy_seed_calibration
+  rule: one_mesh_must_satisfy_the_highest_reynolds_flow_for_each_design
+
+solver:
+  name: adflow
+  equations: RANS
+  turbulence_model: SA
+  strategy: rans_ank_nk_v1
+  nk_subspace_size: 20
+  residual_reduction_orders_min: 6.0
+  force_tail_relative_range_max: 0.001
+  force_coefficient_denominator_floors:
+    cl: 0.10
+    cd: 0.01
+  nonfinite_values_allowed: 0
+  required_force_coefficients: [cl, cd, cmy]
+  positive_drag_required: true
+  failed_case_retries: 0
+  retuning_per_case: forbidden
+
+  write_volume_solution: false
+  write_surface_solution_for_yplus_summary: true
+  solver_directory_stale_outputs_archived: true
+validation:
+  development_geometries: 100
+  final_development_mesh_pass_fraction_min: 1.0
+  preliminary_first10_seed_result:
+    passed: 100
+    attempted: 100
+    worst_min_scaled_jacobian: 0.11034071320567765
+    status: diagnostic_not_final_atlas
+  maximin16_smoke_result:
+    passed: 100
+    attempted: 100
+    template_attempts: 131
+    first_try_passes: 80
+    maximum_attempts: 5
+    worst_min_scaled_jacobian: 0.1518419858095897
+    quality_enrichment_additions: 0
+    status: passed_requires_production_resolution_repeat
+  production_seed_result:
+    passed: 16
+    attempted: 16
+    epsE: 1.5
+    first_cell_fraction_characteristic: 3.6e-6
+    worst_min_scaled_jacobian: 0.10535253036585776
+    p05_min_scaled_jacobian: 0.11869289396633859
+    cells_below_0_10: 0
+    cells_below_0_15: 3
+    status: passed_development_policy_not_yplus_frozen
+  production_enriched_seed_result:
+    passed: 21
+    attempted: 22
+    rejected_geometry_index: 7
+    rejected_min_scaled_jacobian: 0.08692647432146461
+    worst_qualified_min_scaled_jacobian: 0.10535253036585776
+    p05_qualified_min_scaled_jacobian: 0.12313968183316554
+    cells_below_0_10_across_qualified_seeds: 0
+    cells_below_0_15_across_qualified_seeds: 5
+    status: qualified_21_templates_one_known_unbuildable_seed
+  production_written_canary:
+    passed: 2
+    attempted: 2
+    worst_min_scaled_jacobian: 0.22677537296560618
+    status: passed_campaign_equivalent_written_audit
+  production_development_100_result:
+    passed: 100
+    attempted: 100
+    template_attempts: 162
+    first_try_passes: 74
+    maximum_attempts: 21
+    worst_min_scaled_jacobian: 0.14681110308186857
+    p05_min_scaled_jacobian: 0.16219309754305716
+    median_min_scaled_jacobian: 0.21984033709796363
+    cells_below_0_10: 0
+    cells_below_0_15: 1
+    report_sha256: 66f0db0cbe00a93bcc72ae96b153112ca92a8bd20a6a4b32a7a962f22254ce98
+    independent_audit_passed: true
+    status: passed_atlas_frozen_candidate_only
+  production_development_100_status: passed_independent_audit
+  holdout_unlock_requires_volume_level: production
+  holdout_use: once_after_freeze
+  cfd_pilot_cases_min: 100
+  cfd_pilot_acceptance_fraction_min: 0.99
+  grid_convergence_representatives_min: 20
+  target_wall_yplus: 1.0
+
+  wall_yplus_p95_max: 1.0
+  wall_yplus_p99_max: 2.0
+  wall_yplus_absolute_max: 5.0
+  wall_yplus_gate_implementation: implemented_not_yet_frozen
+  full_campaign_mesh_preflight_required: true
+  hpc_rehearsal_cases_min: 500
+  hpc_rehearsal_cases_target: 1000
+operations:
+  accepted_cache_requires_matching_manifest_registry_and_mesh_hashes: true
+  cache_requires_current_mesh_and_solver_implementation_hashes: true
+  completed_design_cache_survives_verified_mesh_pruning: true
+  cfd_rejected_cached_by_default: true
+  retry_rejected_requires_explicit_flag: true
+  atomic_reports_and_campaign_csv: true
+  stale_worker_lock_recovery_hours: 24
+  per_worker_error_report: true
+  checkpointed_development_validation: true
+  one_mesh_per_design_shared_across_flow_points: true
+  accepted_mesh_pruning_after_all_design_flows: true
+retention:
+  keep_every_case:
+    - inputs
+    - hashes
+    - mesh_qc_report
+    - solver_log
+    - solve_report
+    - cfd_acceptance_report
+    - compact_wall_yplus_summary
+    - template_ranking_attempts_failures_and_timing
+    - deformation_replay_provenance
+  keep_full_mesh_and_flow:
+    - failures
+    - validation_cases
+    - selected_campaign_cases
+  transient_mesh_pruning:
+    allowed_only_after_all_design_flow_cases_accepted: true
+    design_level_runner: run-design

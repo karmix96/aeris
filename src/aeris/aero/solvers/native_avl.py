@@ -192,6 +192,27 @@ def write_native_avl(
     if len(ordered) < 2:
         raise ValueError("native AVL writer needs at least two sections")
 
+    # AVL's compiled array limits. AeroDiscretisationConfig.avl_limits_ok() checks
+    # these at config-parse time, but nothing stopped a caller from passing an
+    # over-limit combination directly -- and AVL's response is not a diagnostic, it
+    # is a run that comes back status=FAILED with every coefficient None. That is
+    # indistinguishable from a physics failure, so it gets caught here instead.
+    _strips = (len(ordered) - 1) * int(spanwise_panels_per_section)
+    _total_strips = 2 * _strips if symmetric else _strips
+    _vortices = _total_strips * int(nchordwise)
+    if _total_strips > 500:
+        raise ValueError(
+            f"{len(ordered)} sections x {spanwise_panels_per_section} spanwise panels "
+            f"= {_total_strips} strips, over AVL's NSMAX=500. Reduce sections or "
+            f"spanwise panels."
+        )
+    if _vortices > 6000:
+        raise ValueError(
+            f"{_total_strips} strips x {nchordwise} chordwise = {_vortices} vortices, "
+            f"over AVL's ~6000 array limit. Reduce nchordwise (24 -> 16 is the "
+            f"economy setting) or spanwise panels."
+        )
+
     ref = realised_reference_metrics(ordered, symmetric=symmetric)
     s_ref = float(ref["s_ref_xy_m2"])
     c_ref = float(ref["c_ref_m"])

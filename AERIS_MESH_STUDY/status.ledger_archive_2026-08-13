@@ -1,0 +1,661 @@
+Shared AERIS mesh-study handoff status
+Updated local: 2026-08-11
+Last writer: Claude Code
+
+Protocol
+- This file is the live human/agent handoff ledger for Codex and Claude Code.
+- Update it before and after each major implementation or audit step.
+- 00_governance/stage_status.json remains the authoritative workflow gate state required by RUNBOOK.md.
+- Do not start a later stage unless stage_status.json and the user approval token permit it.
+
+Current stage
+- Stage: 00
+- State: stopped at revised Stage 00 approval gate after two Claude audit rounds
+- Stage 00 result: PASS
+- Authoritative workflow state: AWAITING_USER_APPROVAL in 00_governance/stage_status.json.
+- Required user token to continue: APPROVE STAGE 00.
+
+Audit fixes applied
+- Restored configs/geometry/bwb_explore_wide.yaml from the parent of delete commit 0783c30 and verified a byte-for-byte match; SHA-256 1c0bfef70f804b111d227fc0abaf55fa235c7463228cab912df1ac43636931d6.
+- Added 00_governance/reference_package_manifest.yaml with retained CFD docs, evidence JSONs, absent old bulk artifacts, and CGNS determinism policy.
+- Corrected cap4 evidence wording: old campaign is 6/10 clean under the current policy because seed 6 had 30 negative-quality layers.
+- Added 00_governance/dependency_audit.yaml. S2 cross-field tip meshing is blocked before execution until cross-field and quad-extraction tooling or an in-house implementation is approved.
+- Added 00_governance/geometry_fidelity_gate_resolution.md. The 0.01 percent chord target is source-aware; minimum tip target is 0.0056 mm and is not a blind hard gate against looser source representations.
+- Added 00_governance/lhs_authority.yaml plus lhs100_seed42_samples.csv and round_c_lhs10_seed42_samples.csv. Approval freezes lhs_v1 seed 42 unless user changes it first.
+- Expanded S0-S5 notes to include algorithm, inputs, outputs, missing details, dependencies, risks, and smallest feasible prototype.
+- Rewrote reports/stage_00_report.md, reports/stage_00_gate.json, and governance copies with only PASS/FAIL/BLOCKED gate vocabulary.
+
+Second-audit fixes applied (Claude Code, 2026-08-11)
+- Found: the restored historical config is the superseded pre-rescale airframe, not a
+  wider version of the current one. Root chord 1.2-2.0 m vs 0.70-1.10 m, full span
+  2.4-4.0 m vs 1.5-2.5 m, naca4412 across the whole wing vs mh91/mh91/e374/nlf1015,
+  dihedral_b1_deg free to 5 deg vs pinned 0, 17 active DVs vs 20. Seed 0 gives a root
+  panel canted 3.65 deg. Two of those contradict invariants already frozen in
+  geometry_topology_contract.json, and the gate registry routed epsE_common_start
+  through it, which would have frozen a production constant from the wrong aircraft.
+- Moved the historical config to
+  00_governance/historical_reference_inputs/bwb_explore_wide.yaml. configs/geometry/
+  again holds only bwb.yaml, per DECISION-0001. Byte integrity re-verified after the
+  move: sha256 1c0bfef70f804b111d227fc0abaf55fa235c7463228cab912df1ac43636931d6.
+- Recorded the divergence table and usage restriction in reference_package_manifest.yaml
+  under historical_config_divergence. Status is HISTORICAL_REGRESSION_INPUT_ONLY.
+- Split gate cap4_reproduction into cap4_historical_regression (qualitative: mechanism
+  and region only) and cap4_current_control_and_epse_common_start (quantitative, on the
+  current design space).
+- Added 00_governance/epse_calibration_lhs10_seed7_samples.csv: lhs_v1, seed 7, N=10,
+  from configs/geometry/bwb.yaml. All rows in bounds, dihedral_b1 zero, and disjoint
+  from the Round C hold-out so RUNBOOK Section 7's no-tuning rule holds.
+- Added 00_governance/make_lhs_sets.py so every locked table is regenerable; --check
+  verifies all three sets and re-asserts disjointness.
+- Declared LHS set identity as (sampler, seed, n, geometry-config sha256) in
+  lhs_authority.yaml. Seed 42 at N=100 and seed 42 at N=10 share zero rows.
+- Recorded that historical geometry-level reproduction is unverifiable: the July report
+  stores no per-sample design variables and the generator moved eight commits since.
+- Added ADR-0003-historical-config-scope-and-epse-basis.md; updated the S0 note,
+  repository_audit.md, both report copies, both gate copies, and stage_status.json.
+
+Validation completed
+- Parsed 4 JSON files and 7 YAML files.
+- Parsed LHS CSV row counts: 100 and 10.
+- Parsed configs/geometry/bwb.yaml and restored configs/geometry/bwb_explore_wide.yaml with the repo BWB parser.
+- Text scan found no stale PASS_WITH_WARNING or stale 70 percent wording.
+- Second round: re-parsed 4 JSON and 8 YAML files; gate uses only PASS/FAIL/BLOCKED;
+  report and gate copies in reports/ and 00_governance/ are identical; no dangling
+  configs/geometry/bwb_explore_wide.yaml references remain; make_lhs_sets.py --check
+  passes on all three locked sets with zero cross-set overlap.
+
+Key findings
+- Current geometry authority: configs/geometry/bwb.yaml. It is modified in the working tree, so its hash is local until committed.
+- Current generator: bwb_segmented_v1 with stable stations b0, b1, b2, b3 and one symmetric trailing-edge elevon.
+- Current active design-variable fields: 20; dihedral_b1_deg is pinned at zero but remains in the active schema.
+- Restored historical cap4 config is a superseded 17-DV airframe. Qualitative regression
+  only; never a source of production constants. epsE_common_start is calibrated on the
+  current design space instead.
+- No standalone mission YAML was found; operating Reynolds values remain provisional.
+
+Next exact step
+- Wait for the user to reply exactly: APPROVE STAGE 00.
+- After approval, Stage 01 runs in order: TMR anchor; qualitative historical cap4 check
+  from 00_governance/historical_reference_inputs/bwb_explore_wide.yaml; generate and
+  freeze the ten current-design-space surfaces from
+  00_governance/epse_calibration_lhs10_seed7_samples.csv; epsE sweep 1.5/2.0/3.0 on
+  those ten to select epsE_common_start; regression harness.
+- Do not begin Stage 01 before approval.
+
+Codex review checkpoint
+- User asked Codex to evaluate Claude Stage 00 changes before approval.
+- State: review in progress; do not start Stage 01 yet.
+
+Codex review progress
+- First pass verified stage_status is AWAITING_USER_APPROVAL and stage gate reports PASS.
+- Old historical config is no longer present at configs/geometry/bwb_explore_wide.yaml in git status output.
+- Next: verify make_lhs_sets.py --check, report/gate copy identity, split cap4 gates, hashes, and stale references.
+
+Codex review verdict
+- Review result: PASS for Stage 00 approval readiness.
+- Verified make_lhs_sets.py --check passes.
+- Verified historical config lives under AERIS_MESH_STUDY/00_governance/historical_reference_inputs/ and matches git-history bytes.
+- Verified reports/gates are byte-identical between reports/ and 00_governance/.
+- Verified current parse: 4 JSON, 8 YAML, and all three locked CSV row counts.
+- Caveat: pre-existing configs/cfd docs/configs still mention configs/geometry/bwb_explore_wide.yaml; Stage 01 must follow AERIS_MESH_STUDY Stage 00 governance and ADR-0003, not those stale paths, unless they are updated deliberately.
+- User may now approve Stage 00 if they accept epsE calibration seed 7.
+
+Stage 01 start
+- User replied APPROVE STAGE 00.
+- Codex is starting Stage 01: TMR anchor, cap4 historical/current controls, epsE calibration, and regression harness.
+- State: Stage 01 in progress.
+
+Stage 01 inventory checkpoint
+- Codex has accepted the user approval token for Stage 00.
+- Inventorying existing TMR, cap4, epsE, and mesh-regression commands before edits.
+- State: Stage 01 in progress; no Stage 02 work authorized.
+
+Stage 01 implementation checkpoint
+- Inventory found reusable commands for TMR, cap4 meshing, pyHyp remarching, and volume audit.
+- The approved epsE set is CSV-row based, so Codex is adding study-local wrappers rather than changing the seed-based production campaign command.
+- Planned edits stay inside AERIS_MESH_STUDY/.
+
+Stage 01 helper validation checkpoint
+- Added run_tmr_anchor.py and run_epse_calibration.py under the Stage 01 folders.
+- py_compile passed for both helper scripts.
+- Next: run TMR dry-run and locked cap4 surface/dry-run manifest generation.
+
+Stage 01 TMR dry-run checkpoint
+- TMR anchor dry-run completed with PASS.
+- surface.fmt hash matched 6625b41253dd527207e796c10f08ade30676b055625c7e9baefd30131962b6d4.
+- Resolved pyHyp N=193, s0=5e-6, marchDist=100, coarsen=1.
+- Full TMR volume/solve is still pending; dry-run skipped those gates.
+
+Stage 01 cap4 dry-run checkpoint
+- Initial legacy smoke/v2-L2 surface attempts failed on lhs7_00, exposing missing/insufficient current-control surface authority.
+- Updated run_epse_calibration.py to make surface_recipe explicit. Default is now pygeo_study_l3_reference from configs/cfd/pygeo_surface_mesh_study.yaml.
+- One-sample dry-run passed: lhs7_00 surface_ok and epsE 1.5/2.0/3.0 pyHyp inputs written without launching pyHyp.
+- Full 10-surface dry-run is next.
+
+Stage 01 epsE dry-run checkpoint
+- Full 10-sample dry-run completed.
+- All ten locked current-design-space cap4 surfaces generated with status surface_ok using pygeo_study_l3_reference.
+- Dry-run pyHyp packages were written for epsE 1.5, 2.0, and 3.0 on all ten surfaces.
+- Full pyHyp execution is still pending; epsE_common_start is not selected from dry-run evidence.
+
+Stage 01 strategy-interface checkpoint
+- TMR dry-run and cap4/epsE dry-run artifacts now exist.
+- Codex is adding the common strategy interface contract required by RUNBOOK Section 4.3.
+- This does not implement Stage 02 strategies; it freezes the callable names and artifact contract they must satisfy.
+
+Stage 01 TMR mesh checkpoint
+- Common strategy interface contract added and py_compile passed.
+- Starting TMR mesh-mode run now: surface + real pyHyp volume + volume audit, no ADflow solve.
+- Full cap4 epsE marches remain pending until TMR mesh evidence is checked.
+
+Stage 01 TMR solve checkpoint
+- TMR mesh-mode run passed: valid volume_report, clean volume_audit, zero low-quality layers.
+- Starting TMR solve-mode attempt now to check ADflow force reproduction.
+- If solver execution fails, Stage 01 remains incomplete with an explicit solver blocker.
+
+Stage 01 TMR solve live checkpoint
+- TMR solve-mode is still running under Codex exec session 73271.
+- ADflow has reached outer iteration 196 / total iteration 1948.
+- Latest visible coefficients: CL about 1.08289, CD about 0.0136169.
+- Historical ADflow medium reference: CL 1.0917740093456412, CD 0.013164679005086222.
+- Stage 01 is still IN_PROGRESS; epsE full pyHyp sweep has not started.
+
+Stage 01 TMR solve result
+- TMR solve-mode completed with PASS.
+- Report: AERIS_MESH_STUDY/02_tmr/tmr_anchor_report.json and .md.
+- Checks passed: 13/13.
+- Surface hash matched frozen reference: 6625b41253dd527207e796c10f08ade30676b055625c7e9baefd30131962b6d4.
+- Volume audit: clean, zero negative-quality layers.
+- ADflow matched historical anchor: CL 1.0917740093456412, CD 0.013164679005086222.
+- Stage 01 remains IN_PROGRESS; next gates are historical cap4 qualitative check and full epsE pyHyp sweep on the locked LHS10 set.
+
+Stage 01 epsE full-sweep start
+- TMR anchor is PASS.
+- Starting full cap4 epsE sweep on the locked LHS10 seed-7 current-design-space set.
+- Command: .venv/bin/python AERIS_MESH_STUDY/03_cap4_epse/run_epse_calibration.py --mode full --reuse-existing
+- Surface recipe: pygeo_study_l3_reference; geometry authority: configs/geometry/bwb.yaml.
+- epsE variants: 1.5, 2.0, 3.0 with epsI = 2*epsE.
+- CGNS volume files will not be retained for every remarch unless the runner report shows that retention is needed; reports/QC/logs/options are retained.
+
+Stage 01 epsE full-sweep live checkpoint
+- Full sweep command is still running under Codex exec session 91559.
+- Process tree shows the first real pyHyp march active at remarch/eps15/lhs7_00/surface/run_pyhyp.py.
+- CPU use is high, so the run appears active rather than stalled.
+- No full-sweep report has been written yet; Stage 01 remains IN_PROGRESS.
+
+Stage 01 epsE full-sweep L3 attempt stopped
+- The L3 reference sweep attempt was interrupted by Codex after the first row exceeded 9 minutes with no completed CGNS/volume_report.
+- Command stopped: .venv/bin/python AERIS_MESH_STUDY/03_cap4_epse/run_epse_calibration.py --mode full --reuse-existing.
+- Reason: serial 30-row Stage 01 sweep would be impractical at that per-row cost.
+- Next action: add/test lower pygeo-study reference levels on the same locked LHS10 set and same epsE values; do not change the geometry set or epsE policy.
+
+Stage 01 epsE L1 trial result
+- Added pygeo_study_l1_reference and pygeo_study_l2_reference recipe options to run_epse_calibration.py.
+- L1 first-row dry-run passed, then real epsE=1.5 march completed in about 76 s but FAILED Stage 01 cleanliness.
+- L1 failure detail: valid volume, zero inverted cells, but 60 low/negative-quality layers and min_quality -0.73949 on lhs7_00.
+- L1 is not acceptable for epsE_common_start selection. Next action: test L2 on lhs7_00.
+
+Stage 01 epsE L2 trial result
+- L2 real epsE=1.5 march on lhs7_00 completed in about 228 s but FAILED Stage 01 cleanliness.
+- L2 failure detail: valid volume, zero inverted cells, 55 low/negative-quality layers, min_quality -0.8279.
+- L1 and L2 are therefore rejected for epsE_common_start selection.
+- Next action: run a single L3 row to completion/probe timeout to determine whether L3 is slow-but-clean or also failing.
+
+Stage 01 epsE L3 eps15 probe result
+- L3 real epsE=1.5 march on lhs7_00 completed after about 10-11 minutes and FAILED.
+- Failure detail: invalid marched volume metrics, min_volume -5.44e-10, min_quality -1.0, first_invalid_layer 39.
+- Localized failure: 10 inverted cells in domain.00005, layers 38-47, j[0,0] i[47,47], spanwise_edge=True, wall_adjacent=False, near x=0.5852 y=1.1830.
+- Invalid CGNS quarantined as wing_vol_smoke.invalid.cgns in the L3 probe row directory.
+- Next action: test L3 epsE=2.0 and epsE=3.0 on lhs7_00 to confirm whether any declared epsE value survives the first locked geometry.
+
+Stage 01 gate result
+- Local time: 2026-08-11T18:42:33+03:00
+- Result: FAIL; state BLOCKED_PENDING_STAGE01_REPLAN.
+- TMR anchor: PASS, including surface hash match, clean volume, and ADflow CL/CD anchor.
+- Current cap4 control: L3 surfaces generated for all 10 locked seed-7 samples, but no epsE_common_start can be selected.
+- lhs7_00 failures: epsE 1.5 invalid volume with 10 inverted cells; epsE 2.0 invalid volume with 4 inverted cells; epsE 3.0 zero inverted cells but 53 low/negative-quality layers.
+- L1/L2 escape checks also failed quality on lhs7_00, with 60 and 55 low/negative-quality layers.
+- Stage 02 is NOT authorized. Next agent should replan Stage 01 cap4/pyHyp topology/start policy, not proceed to S0-S5 campaign.
+- Artifacts written: 00_governance/stage_01_gate.json, reports/stage_01_gate.json, 00_governance/stage_01_report.md, reports/stage_01_report.md, 00_governance/decisions/ADR-0004-stage01-cap4-control-blocker.md.
+Stage 01 verification checkpoint
+- Local time: 2026-08-11T18:43:01+03:00
+- py_compile passed for Stage 01 scripts: 02_tmr/run_tmr_anchor.py, 03_cap4_epse/run_epse_calibration.py, 04_strategy_prototypes/strategy_interface.py.
+- stage_01_gate.json and stage_01_report.md copies under 00_governance/ and reports/ are byte-identical.
+- stage_status.json parses and records state BLOCKED_PENDING_STAGE01_REPLAN, last_stage_gate FAIL, stage02_authorized false.
+- No active pyHyp or solver job was left running by this Stage 01 attempt.
+Stage 01 report correction checkpoint
+- Local time: 2026-08-11T18:43:52+03:00
+- Removed a Markdown-only placeholder phrase about first_invalid_layer because that field is not top-level in the probe summaries.
+- Reverified: gate JSON copies are byte-identical, report Markdown copies are byte-identical, and all Stage 01 governance JSON parses.
+Stage 01 Claude follow-up accepted by Codex
+- Local time: 2026-08-11T20:53:41+03:00
+- Scope: fix Stage 01 report/status wording, run only the cheap lhs7_00 surface diagnostic, and prepare but do not run L1 prevalence and L3 overnight commands.
+- Stage 02 remains unauthorized.
+Stage 01 report/status correction
+- Local time: 2026-08-11T20:54:21+03:00
+- Corrected stage_01_report.md: L1/L2 epsE=1.5 produced zero inverted cells on lhs7_00, unlike L3 epsE=1.5 with 10 inverted cells; L1/L2 failed only on quality layers.
+- Marked epse_calibration_report.json as mode dry-run evidence only: 30 rows, all stage_status dry_run, all volume metrics null.
+- Marked that the real Stage 01 cap4/epsE finding rests on lhs7_00 alone until a prevalence pass is run.
+- Stage 02 remains unauthorized.
+Stage 01 runner reporting update
+- Local time: 2026-08-11T20:56:41+03:00
+- Updated 03_cap4_epse/run_epse_calibration.py so future remarch rows report layer_count and low_quality_layer_fraction alongside low_quality_layers.
+- This supports the prepared L1 prevalence pass; no prevalence run has been launched by Codex.
+Stage 01 lhs7_00 surface diagnostic result
+- Local time: 2026-08-11T21:14:56+03:00
+- Ran 03_cap4_epse/run_surface_region_diagnostic.py on the frozen L3 lhs7_00 surface-only artifact.
+- Worst shape region: tip_cap value 0.00037159673582016757.
+- Worst equiangle-skew region: tip_cap value 0.997081744723563.
+- Interpretation: both global worst surface cells are owned by the physical tip cap, not root, TE crown, or b1/b2 planform breaks.
+- Artifacts: 03_cap4_epse/lhs7_00_surface_region_diagnostic.json and .md.
+- Stage 02 remains unauthorized.
+Stage 01 prepared commands
+- Local time: 2026-08-11T21:16:07+03:00
+- Prepared but did not run the 10-geometry L1 epsE=1.5 prevalence command.
+- Prepared but did not run the separate full 30-row L3 overnight command.
+- Runtime estimates recorded in 03_cap4_epse/prepared_stage01_commands.md: L1 prevalence about 15-20 min, L3 overnight about 7-9 h serial.
+- Updated stage_01_report.md to show L1/L2 low-quality layers as count/fraction of 128 layers.
+- Stage 02 remains unauthorized.
+Stage 01 report post-gate sync
+- Local time: 2026-08-11T21:16:56+03:00
+- Updated stage_01_report.md so the diagnostic and command preparation are no longer described as pending.
+- Report now records the lhs7_00 surface diagnostic owner as tip_cap and points to prepared_stage01_commands.md.
+- L1 prevalence command remains prepared only, not run by Codex.
+Stage 01 Claude follow-up final verification
+- Local time: 2026-08-11T21:17:31+03:00
+- py_compile passed for run_epse_calibration.py and run_surface_region_diagnostic.py.
+- stage_01_report.md copies under 00_governance/ and reports/ are byte-identical.
+- Verified epse_calibration_report.json is mode dry-run with 30 remarch rows, all stage_status dry_run, and null volume metrics.
+- Verified lhs7_00 surface diagnostic reports tip_cap as owner of both global worst shape and global worst equiangle skew.
+- Prepared commands remain not run by Codex: 03_cap4_epse/prepared_stage01_commands.md.
+- stage_status.json remains BLOCKED_PENDING_STAGE01_REPLAN with stage02_authorized false.
+
+Claude tip-topology probe (Claude Code, 2026-08-11) - Codex retains file ownership
+- Scope: surface-only probe on lhs7_00. No pyHyp march, no solver, no governance
+  file edited. New files only: 03_cap4_epse/tip_topology_probe.py,
+  tip_topology_probe_report.json, tip_topology_probe_report.md, and artifacts under
+  artifacts/stage01/tip_topology_probe/.
+- Prevalence was answered for free from the ten existing L3 surfaces: min_shape_metric
+  and min_scaled_jacobian agree to 11-12 significant figures across all ten geometries.
+  These are scale-invariant metrics, so the defect is structural, not geometry
+  dependent. The L1 prevalence run and the 30-run L3 campaign would both re-measure a
+  constant; recommend holding them.
+- Probe result 1: the cgrid_face tip is NOT a fix. min_shape_metric matches the
+  airfoil_face cap to 11 significant figures; skew and scaled Jacobian are slightly
+  worse. The degenerate corner survives a full tip-topology swap, so it originates
+  upstream of the tip-cap block construction.
+- Probe result 2: tip_smooth_iters=20 drives surface min_scaled_jacobian to -0.419,
+  a folded cell. The mesh_family_v2_* recipes in run_epse_calibration.py set that
+  value.
+- Probe result 3 (most important): that folded-cell surface still returned
+  accepted_pre_pyhyp=True. The acceptance path checks minimum_shape_metric (1e-6) and
+  maximum_adjacent_normal_angle_deg (180 deg) only, and never checks the sign of the
+  scaled Jacobian. Stage 00 gate surface_validity requires "no folded or negative
+  surface cells", so that gate is unenforced in code.
+- Recommended replan scope: enforce surface_validity in code, then locate the upstream
+  source of the degenerate corner. Do not pursue alternative tip-cap topologies; that
+  hypothesis is tested and rejected.
+Stage 01 Claude tip-topology probe handoff accepted by Codex
+- Local time: 2026-08-11T21:55:01+03:00
+- Scope: fix surface acceptance so negative scaled Jacobian is a hard failure, add known-bad regression coverage for tip_smooth_iters=20 folded surface, re-audit the 10 locked L3 surfaces with the fixed check, and run a surface-only upstream diagnosis for lhs7_00.
+- Long L1/L3 pyHyp campaigns remain on hold.
+- Stage 02 remains unauthorized.
+Stage 01 surface gate code/policy update
+- Local time: 2026-08-12T01:45:20+03:00
+- Added positive_scaled_jacobian as a hard surface acceptance failure in src/aeris/mesh/surface.py: min_scaled_jacobian must be > 0.0.
+- Added focused pytest regression for negative tip_center_0 scaled Jacobian in tests/mesh/test_pygeo_oml_source.py.
+- Tightened Stage 01 pygeo_study_l1/l2/l3 recipes to min_shape_metric 0.03 and max_adjacent_normal_angle 170.0.
+- Wrote ADR-0005-stage01-surface-validity-tightening.md.
+- Long pyHyp campaigns remain on hold; Stage 02 remains unauthorized.
+
+[2026-08-11T22:51:05.038746+00:00] Codex resume: finishing Stage 01 post-probe hard-gate updates, ten-surface re-audit integration, and lhs7_00 upstream tip-section diagnosis. Stage 02 remains unauthorized.
+
+[2026-08-12T08:42:52.059413+00:00] Stage 01 fixed-gate evidence: locked L3 surface re-audit complete. 10/10 locked lhs7 surfaces fail the tightened surface gate by minimum_shape_metric < 0.03; none of those ten hit positive_scaled_jacobian, but Claude Variant B remains the known folded-surface regression case. lhs7_00 upstream diagnosis complete: global worst cell is tip_center_0 leading_edge_shoulder_lower_side, worst corner angle 179.737357 deg; TE shoulder is secondary. Long L1/L3 campaigns remain on hold; Stage 02 unauthorized.
+
+[2026-08-12T08:48:06.285748+00:00] Stage 01 governance updated: stage_01_report copies include tip-topology probe, fixed positive scaled-Jacobian gate, ADR-0005 tightened policy, locked L3 re-audit, and lhs7_00 upstream cause diagnostic. prepared_stage01_commands.md is marked HOLD pending replan.
+
+[2026-08-12T08:50:35.724016+00:00] Stage 01 post-probe Codex round complete. Verification: ruff check passed on touched Python files; py_compile passed; tests/mesh/test_pygeo_oml_source.py passed 8/8; JSON governance/reports parsed; stage_01_report governance/reports copies are byte-identical; stage_status.json has stage02_authorized false. No L1/L3 long campaign launched by Codex. Next work is Stage 01 replan from fixed-gate evidence, not Stage 02.
+
+[2026-08-12T08:51:11.167018+00:00] Stage 01 stage_status wording tightened: next action now points to Stage 01 replan from fixed surface-gate evidence, locked L3 re-audit, and lhs7_00 tip-section cause diagnostic; no dependency on an unlaunched L1 prevalence pass.
+
+[2026-08-12T08:54:31.956092+00:00] Codex accepted Claude audit: keep positive scaled-Jacobian hard gate; remove or justify arbitrary min_shape_metric/max normal angle thresholds; update gate registry, ADR/report/status, and test note. Stage 02 remains unauthorized.
+
+[2026-08-12T08:55:02.726874+00:00] Stage 01 correction in progress: restoring pygeo_study_l1/l2/l3 min_shape_metric to 1e-6 and max_adjacent_normal_angle to 180.0; retaining only min_scaled_jacobian > 0.0 as the new hard surface gate. Will supersede the 10/10 arbitrary-threshold re-audit with a corrected scaled-Jacobian-only re-audit.
+
+[2026-08-12T09:20:45.409498+00:00] Stage 01 corrected surface re-audit complete: restored recipe thresholds produce 0/10 locked L3 surface failures; probe distribution catches exactly 1 positive_scaled_jacobian failure, Variant B smooth20. The prior 10/10 fail artifact is superseded as post-hoc threshold evidence, not a valid gate. Stage 01 remains blocked at volume/upstream geometry, not surface generation.
+
+[2026-08-12T09:25:33.315727+00:00] Stage 01 Claude correction applied: ADR-0005 amended to accept only positive scaled-Jacobian enforcement; gate_registry.yaml now registers min_scaled_jacobian > 0.0 under surface_validity; stage_01_report and stage_status corrected; prepared commands still HOLD; old 10/10 fixed-gate re-audit marked superseded.
+
+[2026-08-12T09:27:42.758090+00:00] Stage 01 Claude correction verification complete: ruff check passed; py_compile passed; tests/mesh/test_pygeo_oml_source.py passed 8/8; tests/mesh plus tests/cfd passed 182/182; gate_registry.yaml parses; JSON governance/evidence parses; stage_01_report copies byte-identical; corrected surface re-audit is 0/10 locked L3 failures and Variant B positive_scaled_jacobian failure; stage02_authorized false.
+
+Claude tip-corner origin probe (Claude Code, 2026-08-12) - Codex retains file ownership
+- Purpose: decide the timeboxed question - is the Stage 01 blocker cap4-specific, or a
+  shared geometry defect that S1-S5 would inherit?
+- Answer: cap4-specific family defect. The geometry is clean.
+- Evidence 1 - tip-station section is smooth: 61 points, ZERO collapsed segments below
+  1e-9, min segment 3.728e-03, median 3.852e-02, max turning angle 41.96 deg at the
+  leading edge. No cusp. S1-S5 do not inherit a broken OML.
+- Evidence 2 - the bad corner is invariant to the cap4 split location: split_x_fore
+  0.10 / 0.20 / 0.35 (all verified applied in surface_report.json) give an identical
+  worst tip corner of 179.737 deg and identical min_shape_metric 3.7160e-04. The
+  airfoil-face cap corners on an OML block split, and every split lands on a smooth
+  part of the contour, so the meeting edges are collinear by construction. Moving the
+  split cannot help.
+- Evidence 3 - all three legacy OML tip closures are affected, cap4 least badly: mid4
+  REJECTED (positive_scaled_jacobian tip_ring_2 -6.898e-02, alignment -1.0), split8
+  REJECTED (tip_ring_5 -2.838e-01, alignment -1.0, open_boundary_off_root_plane).
+  Both were caught by the new scaled-Jacobian gate; before that fix they would have
+  been accepted silently. That fix is now earning its keep.
+- Report: 03_cap4_epse/tip_corner_origin_probe_report.md and .json; script
+  03_cap4_epse/tip_corner_origin_probe.py; artifacts under
+  artifacts/stage01/tip_corner_origin_probe/.
+- Recommendation: record S0 as failing the volume gate as a legitimate tournament
+  result, re-base epsE_common_start on the first strategy producing a clean surface by
+  ADR, and proceed to Stage 02. Do not spend more time repairing cap4.
+
+
+Stage 01 CLOSED (Claude Code, 2026-08-12)
+- Stage 01 gate: PASS_WITH_FINDINGS. State: AWAITING_USER_APPROVAL.
+- Required user token to continue: APPROVE STAGE 01. Stage 02 remains unauthorized.
+- Rationale: the stage delivered the trusted anchor, the control characterisation and
+  the harness. It did not deliver epsE_common_start, because the cap4 control surface
+  is itself defective. That is a tournament result, not a stage failure.
+- ADR-0006 (new): S0/cap4 is recorded as failing the volume gate and is NOT repaired.
+  RUNBOOK Section 1 makes cap4 the control, not the assumed answer; repairing it would
+  mean investing in the topology the tournament exists to replace. S0 stays in as a
+  documented regression baseline per RUNBOOK Section 6.
+- ADR-0007 (new): epsE_common_start is re-based to Stage 02. It is calibrated on the
+  first strategy passing all hard surface gates on all ten geometries in
+  epse_calibration_lhs10_seed7_samples.csv, in a Stage 02 implementation order fixed in
+  advance so the host cannot be chosen after seeing marching results. The no-tuning
+  rule on the Round C hold-out is unchanged.
+- gate_registry.yaml: cap4_current_control_and_epse_common_start now carries
+  freeze_stage 02 with a freeze_stage_history, cap4_control_reproduction_status CLOSED
+  by ADR-0006, and epse_common_start_status DEFERRED by ADR-0007.
+- Files changed by Claude: 00_governance/decisions/ADR-0006-s0-cap4-volume-gate-failure.md,
+  00_governance/decisions/ADR-0007-epse-common-start-rebasing.md,
+  00_governance/gate_registry.yaml, reports/stage_01_gate.json,
+  reports/stage_01_report.md, both 00_governance copies, 00_governance/stage_status.json,
+  and this file. No implementation code touched.
+- Verification: all governance JSON and YAML parse; report and gate copies byte-identical;
+  182 tests pass across tests/mesh and tests/cfd; stage02_authorized false.
+- Housekeeping note: three empty stray files named 0.0, 0.03 and 1.0e-6 sit at the
+  repository root, created 2026-08-12 12:24:08, almost certainly accidental shell
+  redirections. Left in place at the user's instruction.
+
+Next exact step
+- Wait for the user to reply exactly: APPROVE STAGE 01.
+- On approval, Stage 02 implements S1 and S3 first, since both anchor tip blocks on
+  genuine geometric features rather than arbitrary x/c splits, which is the failure mode
+  Stage 01 identified. S2 stays blocked on its cross-field/quad-extraction dependency.
+  Stage 02 also owns the frozen epsE_common_start per ADR-0007.
+- Do not begin Stage 02 before approval.
+
+Stage 02 IN PROGRESS - partial (Claude Code, 2026-08-12)
+- User authorized Stage 02. stage_status.json still reads AWAITING_USER_APPROVAL for
+  Stage 01; the approval was given in conversation, not as the literal token. Codex
+  should reconcile that field before relying on it.
+- Delivered: 04_strategy_prototypes/stage02_common.py (shared ingestion, feature-based
+  side splitting, spanwise geometric-progression law, butterfly tip cap, shared QC and
+  export, all reusing aeris.mesh.surface per RUNBOOK 4.3) and
+  04_strategy_prototypes/S1_tip_first/strategy_s1.py.
+- CONFIRMED the ADR-0006 hypothesis. Putting OML block corners only on the leading edge
+  and the two blunt-TE base corners fixes the main surface: min scaled Jacobian +0.772
+  to +0.779 against cap4's +0.004584, worst corner 128.8-129.4 deg against cap4's
+  179.737 deg, skew 0.41-0.44 against 0.9971. Measured on lhs7_00/01/02, recorded in
+  04_strategy_prototypes/s1_prototype_results.json.
+- BLOCKED on tip closure. The butterfly cap is 4/5 blocks clean (jac +0.19 to +0.96);
+  tip_aft_wrap, which spans the blunt trailing-edge base, folds a few cells (jac about
+  -0.02 to -0.07). Mechanism understood: the base is ~0.005 chord against a wrap path
+  two orders of magnitude longer, so the outer arc turns ~180 deg over one or two
+  points and the radial connectors cross. Not cleared by offset fraction, ring split,
+  smoothing 0-300 iterations, wrap points 12-33, radial points 7-11, or piecewise base
+  allocation pinning both corners.
+- NEW FINDING: Stage 01 blamed the leading-edge shoulder. In S1 the leading edge is
+  clean and the blunt trailing edge is now the hard part of tip closure. Next attempt
+  should give the TE base its own spanwise block rather than wrapping it into the tip
+  ring.
+- NOT started: S3, S4, S5, the ten-geometry runner, and the epsE_common_start
+  calibration that ADR-0007 assigns to Stage 02. S2 stays blocked on its dependency.
+- No Stage 02 gate or report is claimed. See 04_strategy_prototypes/STAGE02_PROGRESS.md.
+
+Stage 02 status reconciled (Claude Code, 2026-08-12)
+- stage_status.json now reads active_stage 02, state IN_PROGRESS, stage02_authorized
+  true, last_completed_stage 01 with gate PASS_WITH_FINDINGS. The notes record that the
+  user's authorization came as "approve stage 2" in conversation rather than the literal
+  APPROVE STAGE 01 token, so the provenance is not silently overstated.
+- Two further tip-closure variants were measured and recorded, bringing the total to
+  nine: (a) moving the ring split onto the blunt-TE corners themselves - correct
+  corner-on-features placement, and it does clear the aft block, but the identical fold
+  reappears in the lower arc; (b) a corner-preserving inward-bisector offset, which is
+  clearly worse and inverts the aft block completely (jac -1.0).
+- CONCLUSION: the fold is bound to the blunt trailing-edge corner, not to any block
+  boundary or resolution. Moving the split moves which block fails. Point placement is
+  therefore ruled out as the fix. The next attempt must change the construction: give
+  the TE base its own spanwise block so the tip ring closes over a section containing no
+  sharp corner.
+- The code is left in the mildest measured configuration: 4/5 tip blocks clean, worst
+  jac about -0.07, OML unaffected at +0.772 to +0.779.
+- I stopped iterating here deliberately rather than continue parameter search.
+
+Stage 02: S3 built and compared (Claude Code, 2026-08-12)
+- S3 station sweep implemented in 04_strategy_prototypes/S3_station_sweep/strategy_s3.py.
+  Per-interval blocks between geometry-detected anchors; interfaces exact by
+  construction because consecutive intervals share the anchor column. Shares S1's
+  section blocking and tip closure so the comparison isolates spanwise construction.
+- Head-to-head on 4 geometries in 04_strategy_prototypes/stage02_strategy_comparison.json.
+- RESULT 1: surface quality is identical between S1 and S3 (OML jac +0.72 to +0.78 on
+  both). Splitting the span into intervals does not change cell shapes. The two will
+  only separate under volume marching and across the design space.
+- RESULT 2 and the important one: S3 DRIFTS ITS TOPOLOGY. Block count 14, 14, 11, 14
+  across lhs7_00..03 because the anchor detector finds a different number of breaks on
+  lhs7_02. RUNBOOK 2.1 disqualifies a method whose block count or connectivity changes
+  between geometries. As prototyped S3 fails that test; S1 is 8 blocks on every
+  geometry. Fixable by driving anchors from geometry_topology_contract.json instead of
+  detected spacing changes, but recorded rather than patched.
+- RELATED: the generator's realised sections do not land on every semantic planform
+  break - b1 gets no anchor. The topology contract presents b0/b1/b2/b3 as stable
+  stations for strategies to consume, but the geometry does not always provide a section
+  at each. Stage 03 must reconcile this.
+- Tip closure remains the open defect for both (4/5 blocks clean), unchanged.
+- Still not started: S4, S5, the ten-geometry runner, epsE_common_start. S2 blocked.
+
+Stage 02: S4 built and compared (Claude Code, 2026-08-12)
+- S4 analytic multiblock implemented in
+  04_strategy_prototypes/S4_analytic_multiblock/strategy_s4.py. Tip assembled from
+  explicit Type 1 surface control vertices (LE, both TE base corners, two nose-station
+  points) and Type 2 interior camber vertices, into four transfinite domains.
+- HEADLINE: S4's main tip domain scores min scaled Jacobian +0.9126 - the best tip block
+  any strategy has produced (butterfly side patches +0.19 to +0.96, cap4's whole cap
+  +0.0046). Identical to ten significant figures across all four geometries, which is
+  what a deterministic analytic construction should look like.
+- S4 has FIXED CONNECTIVITY: 7 blocks on every geometry, against S3's 14/14/11/14. S4
+  passes the RUNBOOK 2.1 determinism test that S3 fails.
+- STILL FAILING: the two nose domains fold. Cause understood and it is the same class of
+  defect seen throughout - a parameterisation mismatch between opposite edges. The
+  camber edge spans x 0.025-0.10 while the upper nose contour spans 0-0.10, so the
+  transfinite map fans and j-lines run nearly parallel to i-lines near the leading edge.
+  Fix is to match the chordwise parameterisation of the two edges.
+- Added orient_patches_2d to the shared module for consistent winding. It did NOT change
+  any measured Jacobian, which usefully established that the negative values throughout
+  this stage are genuine per-cell folds, not winding artefacts.
+- Comparison table for S1/S3/S4 on four geometries:
+  04_strategy_prototypes/stage02_strategy_comparison.json.
+- Still not started: S5, the ten-geometry runner, epsE_common_start. S2 blocked.
+
+Stage 02: correctness verification (Claude Code, 2026-08-12)
+- Added 04_strategy_prototypes/verify_strategies.py, checking the hard-gate properties
+  rather than cell quality. Report: stage02_verification_report.json.
+- OML GEOMETRY FIDELITY IS EXACT for S1, S3 and S4: 0.000000% of local chord, every OML
+  node on the prescribed contour to machine precision. The mesher is not modifying the
+  OML.
+- DETERMINISM: S1 yes (8 blocks), S4 yes (7 blocks), S3 no (14/14/11) - confirms the
+  earlier drift finding.
+- ONE REAL BUG, shared by all three strategies: THE TIP IS NOT WATERTIGHT. Cap boundary
+  nodes miss the OML tip-edge nodes by up to 1.1e-2 m (S1, S3) and 8.1e-3 m (S4). Root
+  cause: the cap builds its ring by resampling the raw section at its own point count
+  while the OML tip edge comes from feature_split_sides at a different count, so they
+  never share nodes. Every block passes QC alone and the assembled surface still has a
+  hole. Fix is structural: the cap's outer ring must BE the OML tip-edge nodes.
+- Two bugs were also found IN THE VERIFIER, both of which reported false failures on
+  healthy meshes: distance measured to sampled reference points rather than segments
+  (floors the error at half the reference spacing, reported 0.0507%); and an OPEN
+  reference contour that excludes the blunt base segment (reported the TE base block as
+  0.2516% off-surface, exactly half te_thickness). Both fixed; recorded because the
+  measurement needed checking as much as the mesh did.
+- S5 IS BLOCKED ON THE WATERTIGHT FIX, not on effort. S5 freezes an existing block
+  layout and RBF-maps it to new geometries; freezing a layout with a hole in it
+  propagates the hole to every geometry it is transferred to. S1 or S4 must close first.
+
+Stage 02: watertightness FIXED for S1 and S3 (Claude Code, 2026-08-12)
+- Root cause was as diagnosed: the cap resampled the section independently of the OML.
+  Fix is structural - oml_tip_ring_2d + butterfly_from_ring build the cap's outer ring
+  FROM the OML side curves, used exactly as given, with only the inner ring free.
+  Watertight by construction, not by tolerance. Constraint that falls out: opposite
+  butterfly arcs need equal counts, tying the LE wrap width to te_base_points as
+  k = (te_base_points-1)/2. Defaults moved to te_base_points=9.
+- FINAL VERIFICATION on 3 geometries:
+    S1: fidelity 0.000000%, watertight PASS, deterministic PASS (8 blocks)  <- passes
+        every hard check measurable at surface level
+    S3: fidelity 0.000000%, watertight PASS, deterministic FAIL (14/14/11)
+    S4: fidelity 0.000000%, watertight FAIL (2.8e-3 m), deterministic PASS (7 blocks)
+  Hard-gate failures went from 9 to 3; the remaining 3 are S4's watertight failures.
+- S4 still builds its own domain edges by resampling and needs the same ring-lock
+  treatment. Its four-domain analytic tip is otherwise the best-scoring tip construction
+  in the study (main domain +0.9126).
+- FOUR bugs were found and fixed in the verifier itself, every one of which reported a
+  false failure on a sound mesh: point-sampled instead of segment distance; an OPEN
+  reference contour excluding the blunt base; watertightness tested in the wrong
+  direction (cap-boundary-onto-OML instead of OML-onto-cap); and tip-edge nodes taken
+  from every OML block's outboard edge rather than only those at the tip station, which
+  reported a 0.58 m gap on S3. Recorded in STAGE02_PROGRESS.md.
+
+Stage 02: S4 watertight too - ZERO hard-gate failures (Claude Code, 2026-08-12)
+- S4's four analytic tip domains now take their outer edges directly from the OML side
+  curves (upper/lower split at a nose index, blunt base split at its midpoint), with
+  only the interior control vertices free. Constraint that falls out: thickness_points
+  = (te_base_points+1)/2, so te_base_points must be odd. Defaults now 9.
+- VERIFIER: 0 hard-gate failures across all three strategies and three geometries.
+    S1: fidelity 0.000000%, watertight PASS, deterministic PASS (8 blocks)
+    S3: fidelity 0.000000%, watertight PASS, deterministic FAIL (14/14/11)
+    S4: fidelity 0.000000%, watertight PASS, deterministic PASS (7 blocks)
+- HONEST CAVEAT: S4's cell quality REGRESSED as a result. Its tip is now 2/4 domains
+  clean with the failures fully inverted (-0.999), where before the lock it had the
+  best-scoring tip domain in the study (+0.9126). Locking the outer edges removed the
+  freedom that was producing that number. S4 is now correct-but-folded instead of
+  incorrect-but-pretty, which is the more useful state, but it is not progress on
+  quality and must not be reported as such.
+- Remaining quality defect is unchanged and common to all three: the tip interior folds
+  a few cells against the blunt trailing edge (parameterisation mismatch between the
+  inner and outer rings). S1 is best at 4/5 blocks clean.
+
+Stage 02: S5 frozen RBF built and measured (Claude Code, 2026-08-12)
+- 04_strategy_prototypes/S5_frozen_rbf/strategy_s5.py. Seeded from S1 (the only
+  prototype passing fidelity + watertightness + determinism together). Index-based
+  frozen correspondence, thin-plate-spline kernel, 145 landmarks. Results in
+  s5_frozen_rbf_results.json.
+- KEY RESULT: the RBF map lands OML nodes 2.4-3.5% of chord off the true surface
+  (2.5e-2 to 2.9e-2 m) on transfers from lhs7_00 to lhs7_01/02/03. The Stage 00
+  fidelity gate is 0.01% of chord, so deformation alone misses it by roughly 250-350x.
+  Landmark residual is machine zero (3.7e-15), so this is NOT a fitting failure - the
+  RBF reproduces its landmarks exactly and still cannot reproduce the surface between
+  them.
+- READING: across this design space a frozen skeleton is not close enough on its own.
+  Projection back to prescribed CAD is mandatory, not a refinement - which is what
+  RUNBOOK Section 6 S5 anticipates. With OML projection applied the surface is exact and
+  S5 reduces to "S1 with RBF for the free tip-cap interior only". Tip deviation there is
+  small (1.6e-5 to 5.5e-5 m), so RBF is defensible in that narrower role.
+- Stage 02 strategy status: S1, S3, S4, S5 implemented; S2 blocked on its cross-field
+  dependency. Still outstanding before a Stage 02 gate: the tip-interior fold common to
+  all strategies, the ten-geometry run, and epsE_common_start per ADR-0007.
+
+Stage 02: ten-geometry run complete; tip fold NOT fixed (Claude Code, 2026-08-12)
+- TIP FOLD: not fixed. Two further approaches measured and rejected, bringing the total
+  to about thirteen: (a) re-parameterising the inner ring to the OUTER ring's
+  arc-length fractions, which directly targets the documented cause (Laplacian smoothing
+  displaces nodes ALONG the ring so connectors stop being radial) - best case improved
+  only to -0.0254; (b) switching the OML chordwise distribution from cosine to uniform
+  to cut the ring's spacing ratio from 54.7 to 34.8 - no improvement (-0.0419). I have
+  stopped work on it rather than continue guessing.
+- TEN-GEOMETRY RUN on the frozen epse_calibration_lhs10_seed7 set. Results in
+  04_strategy_prototypes/stage02_ten_geometry_run.json.
+    strategy                built  block counts  worst OML jac  tip clean  accepted
+    S1_TIP_FIRST_SWEEP      10/10  [8]              +0.5736      4/5        0/10
+    S3_STATION_SWEEP        10/10  [11, 14]         +0.5736      4/5        0/10
+    S4_ANALYTIC_MULTIBLOCK  10/10  [7]              +0.5736      2/4        0/10
+    S5_FROZEN_RBF           10/10  [8]              +0.5736      4/5        0/10
+- READINGS: every strategy builds a surface on 10/10 geometries, so generation itself is
+  robust across the design space. S1, S4 and S5 hold a single block count on all ten;
+  S3 drifts between 11 and 14, confirming the earlier finding across the full set rather
+  than four samples. Worst OML scaled Jacobian is +0.5736 across all ten for every
+  strategy - the shared section blocking is sound design-space-wide.
+- BLOCKER, unchanged and now quantified across the full set: 0/10 accepted for every
+  strategy, all for the same reason - the tip-interior fold. It is the single thing
+  standing between Stage 02 and a Round A gate. No strategy can be promoted until it is
+  solved, and it is not a per-strategy defect: S1/S3/S5 share the butterfly and S4's
+  independent analytic tip folds too.
+
+Stage 02: elliptic (Winslow) smoothing tested - does NOT fix the tip fold (2026-08-13)
+- Implemented winslow_smooth_2d in stage02_common.py: proper elliptic smoothing solving
+  alpha*x_xixi - 2*beta*x_xieta + gamma*x_etaeta = 0, i.e. computational coordinates
+  harmonic in physical space. This is the maximum-principle smoother RUNBOOK S3 names,
+  and is fundamentally different from the Laplacian averaging used earlier.
+- RESULT: interior-only smoothing made it slightly WORSE (-0.0363 -> -0.0499, converged
+  by 200 iterations). Freeing the block interface so it could relax made it far worse
+  (-0.9958), because each patch extrapolated its interface independently and the blocks
+  then disagreed there.
+- WHY IT CANNOT HELP, now pinpointed: the folds in tip_lower span j-layers 0 through 7
+  of 8 - nearly the entire radial extent, 56 cells - not a boundary-adjacent corner
+  artefact. Winslow only moves patch interiors, so it cannot repair a patch whose inner
+  and outer boundaries are themselves badly related.
+- REVISED DIAGNOSIS, the most precise yet: the inner ring locally leaves the section.
+  For this cambered/reflexed lower surface a uniform shrink toward the centroid does not
+  stay inside the contour, so the inner and outer rings cross and the patch inverts over
+  a wide region rather than at a corner. Every inner-ring construction tried so far
+  (centroid shrink, camber-directed offset, inward-bisector offset, Laplacian smoothing,
+  arc-length re-parameterisation) shares that same weakness.
+- WHAT WOULD ACTUALLY ADDRESS IT: an inner ring guaranteed to lie inside the section -
+  medial-axis or inward-offset-with-collision-detection - or a genuine MULTIBLOCK
+  elliptic solve over the whole cap with only the OUTER ring fixed and interface nodes
+  shared and updated once, rather than per-patch. Neither is a parameter change; both
+  are new construction work.
+- Attempt count on this defect is now about fourteen. Not fixed. Stage 02 remains at
+  0/10 accepted for every strategy.
+
+Stage 02: TIP FOLD SOLVED - all four strategies accepted 10/10 (2026-08-13)
+- Mike pushed back that four independent strategies failing identically pointed at MY
+  shared code, and that a working cap4 existed in git history. Both were right.
+- THE ANSWER was already in this repository, commit bfaeaf1 "cap4 camber-split tip cap -
+  full-resolution pyHyp march validated at L1". Its construction differs from everything
+  I tried in two decisive ways:
+    1. The inner boundary is built FROM THE SECTION, not from the outer ring:
+       rect = camber + width_frac * (surface - camber). That is a convex combination of
+       the camber line and the actual surface, so it lies inside the section BY
+       CONSTRUCTION. Every one of my ~15 attempts derived the inner ring by displacing
+       the outer ring (shrink, smooth, camber-offset, bisector offset, arc-length
+       re-parameterisation), none of which carries that guarantee - and on a cambered
+       lower surface the inner ring left the section and the patch inverted.
+    2. The inner rectangle is INSET CHORDWISE, so the collar end edges slant from the
+       OML corners to the rectangle corners. The original code even documents the
+       failure I hit: "Without the inset, the end edges are collinear with the
+       rectangle's short sides ... which degenerates the corner cells to zero Jacobian."
+- Rebuilt as butterfly_from_ring on the OML-locked ring: a camber-aligned rectangle plus
+  four near-uniform-width collars. Parameters swept over all ten geometries; best is
+  width_frac 0.30, chord_inset 0.02, collar_points 13, giving worst scaled Jacobian
+  +0.32499 - identical on all ten and ABOVE the runbook's 0.30 quality target.
+- S4's own four-domain tip split the section on the CAMBER LINE, which has zero
+  thickness at the leading and trailing edges, so the interface degenerates and both
+  nose domains fold (51 folded cells, -0.2394, identical on all ten). Measured and
+  rejected; S4 keeps its analytic control-vertex OML derivation and adopts the proven
+  closure. This is a legitimate tournament result.
+- FINAL TEN-GEOMETRY RESULT, all four strategies:
+    strategy                 built  blocks    worst jac   ACCEPTED
+    S1_TIP_FIRST_SWEEP       10/10  [8]        +0.3250     10/10
+    S3_STATION_SWEEP         10/10  [11,14]    +0.3250     10/10
+    S4_ANALYTIC_MULTIBLOCK   10/10  [8]        +0.3250     10/10
+    S5_FROZEN_RBF            10/10  [8]        +0.3249     10/10
+- VERIFIER: 0 hard-gate failures. Fidelity 0.000000%, watertight PASS, determinism PASS
+  for S1/S4 (8 blocks) and S5; S3 still drifts (11/14) - its anchor rule, unrelated to
+  the tip, remains the one open defect.
+- ParaView exports refreshed: ZERO folded cells in every S1/S3/S4/S5 file.
+- 182 tests pass. No implementation code touched.

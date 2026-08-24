@@ -111,10 +111,15 @@ MONITOR_LINE = (
     "      1       5          5     *ANK    10.0  1.0  0.01  "
     "1.2345E-03  2.0E-04  0.4321  0.0123  4.5E-02"
 )
+NK_MONITOR_LINE = (
+    "      1     150       1480       NK     ----    1.00  0.540  "
+    "1.602654E-04  1.503105E-09  -1.946696E-02  3.366330E-02  2.804432E-01"
+)
 
 
 def test_resrho_column_convention():
     assert resrho_from_line(MONITOR_LINE) == pytest.approx(1.2345e-03)
+    assert resrho_from_line(NK_MONITOR_LINE) == pytest.approx(1.602654e-04)
     assert resrho_from_line("some text line") is None
 
 
@@ -127,6 +132,12 @@ def test_parse_monitor_history_orders_dropped():
     assert history["iterations"] == 2
     assert history["final_resrho"] == pytest.approx(1.2345e-08)
     assert history["orders_dropped"] == pytest.approx(5.0)
+
+
+def test_parse_monitor_history_keeps_newton_rows():
+    history = parse_monitor_history("\n".join([MONITOR_LINE, NK_MONITOR_LINE]))
+    assert history["iterations"] == 2
+    assert history["final_resrho"] == pytest.approx(1.602654e-04)
 
 
 def test_parse_produces_normalized_solve_report(tmp_path: Path):

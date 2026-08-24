@@ -1,0 +1,35 @@
+# Reload Prompt
+
+Paste the following into a new Codex/Claude coding session:
+
+```text
+Continue the AERIS automated mesh/CFD project from the repository root.
+
+First read every file in AERIS_MESH_STUDY/PROJECT_HANDOFF, then read the canonical
+S6 ROADMAP.md, POLICY.yaml, STUDY.md, README.md, RESEARCH.md, the latest JSON
+reports listed in EVIDENCE_INDEX.md, ADR-0011, and COMMON_BRIEF.md.
+
+Check running processes and the production seed checkpoint before launching or
+restarting anything. The immediate work is to finish and audit the production
+16-template maximin atlas, run the complete 100-development-target production
+validation, enrich/freeze only from production evidence, and build the production
+registry. Follow NEXT_ACTIONS.md in order and update the handoff files as evidence
+changes.
+
+Do not use atlas_manifest_frozen_candidate_v3.json: it is obsolete because smoke
+validation incorrectly marked it freeze-ready. Do not release or inspect the
+locked hold-out until the final production atlas, wall law, CFD policy, fallback,
+and gates are frozen. Do not tune on hold-out results. Do not run production
+ADflow locally on the 16 GB machine; prepare it for >=64 GB HPC. Never revert or
+overwrite unrelated dirty worktree changes.
+
+Be strict about claims: 100/100 smoke is not production proof, a converged pilot
+failed y+, and the 3e-6 first-cell fraction plus numerical TE floor still need
+production CFD/sensitivity validation. Run focused tests and independent review
+after changes. Keep answers brief and in simple words, but do the engineering
+work end-to-end.
+
+After S6+ADflow validation, implement Gmsh prism/tetra+SU2, then AERIS
+structured/unstructured/auto/compare modes, then the AI-assisted mesh research
+pipeline described in ROADMAP.md and FUTURE_EXTENSIONS.md.
+```

@@ -60,6 +60,13 @@ def _nearest_section_y_frac_ends(fracs: list[float]) -> list[float]:
     return ends
 
 
+# A base station closer to a feature pin than this fraction of the uniform spacing
+# is treated as a duplicate of it and dropped. 0.25 keeps any station that is at
+# least a quarter-interval away, which is well clear of the strip aspect ratios AVL
+# handles comfortably.
+SLIVER_MERGE_FRACTION = 0.25
+
+
 def build_pygeo_sections_from_config(
     config_path: "Path | str",
     *,
@@ -154,7 +161,6 @@ def build_pygeo_sections_from_config(
 
     disc = getattr(gcfg, "aero_discretisation", None)
     lo, hi = float(span_margin), float(1.0 - span_margin)
-    fractions = np.linspace(lo, hi, int(n_sections))
     placement_used = "uniform"
 
     # Snap two sections onto the elevon band edges so the control extent is the
@@ -199,12 +205,34 @@ def build_pygeo_sections_from_config(
     if band is not None:
         feature_pins += list(band)
     feature_pins = sorted({round(v, 9) for v in feature_pins if lo <= v <= hi})
+    interior_pins = [v for v in feature_pins if lo < v < hi]
+
+    # ``n_sections`` is the FINAL count, so the pins are paid for out of the
+    # budget rather than added on top. Asking for 25 and receiving 29 would
+    # silently spend 16% more strips and invalidate the AVL array arithmetic the
+    # config validates against.
+    n_base = int(n_sections) - (len(interior_pins) if snap_sections_to_control else 0)
+    n_base = max(2, n_base)
+    fractions = np.linspace(lo, hi, n_base)
+
     # Applied on BOTH paths. Uniform spacing needs the pins just as much as
     # adaptive does -- a kink that falls between two sections is mis-represented
     # whatever rule chose those sections.
     if snap_sections_to_control and feature_pins:
-        fractions = np.unique(np.concatenate([fractions, feature_pins]))
-        snapped = [v for v in feature_pins if v not in (lo, hi)]
+        # Merge, don't just union. A pin landing near a base station leaves a
+        # near-duplicate pair: measured across the 10 study geometries the tightest
+        # interval was 2.4%-9.1% of uniform spacing, i.e. ~0.001 of span, on EVERY
+        # geometry. That wastes one of the 25 stations on a station indistinguishable
+        # from its neighbour and subdivides a sliver interval into near-degenerate
+        # strips. Drop the base station and keep the pin; the largest-gap top-up
+        # below then spends the freed section somewhere useful.
+        _pins = np.asarray(feature_pins, dtype=float)
+        _uniform = (hi - lo) / max(1, n_base - 1)
+        _tol = SLIVER_MERGE_FRACTION * _uniform
+        _kept = [f for f in np.asarray(fractions, dtype=float)
+                 if not np.any(np.abs(_pins - f) < _tol)]
+        fractions = np.unique(np.concatenate([np.asarray(_kept, dtype=float), _pins]))
+        snapped = list(interior_pins)
     mode = getattr(disc, "section_placement", "never") if disc else "never"
     if band is not None and mode in {"auto", "always"}:
         from aeris.geometry.geometric_information import (
@@ -219,13 +247,25 @@ def build_pygeo_sections_from_config(
                     build, n_probe=301, chordwise_probe=21, control_band=band
                 )
                 adaptive = adaptive_span_fractions(
-                    profile, int(n_sections), must_include=feature_pins
+                    profile, n_base, must_include=feature_pins
                 )
                 if len(adaptive) >= 2:
                     fractions = adaptive
                     placement_used = "adaptive"
             except Exception:  # pragma: no cover - never fail a run over placement
                 placement_used = "uniform (adaptive failed)"
+
+    # Exact budget. A pin can coincide with a base station, and the dedupe then
+    # leaves the grid one short. Top up by bisecting the LARGEST remaining gap,
+    # which both restores the requested count and is a max-gap repair arriving as a
+    # consequence of exact budgeting rather than as a separately tuned policy.
+    fractions = np.unique(fractions)
+    while len(fractions) < int(n_sections):
+        gaps = np.diff(fractions)
+        k = int(np.argmax(gaps))
+        fractions = np.insert(fractions, k + 1, 0.5 * (fractions[k] + fractions[k + 1]))
+    max_gap_ratio = (float(np.max(np.diff(fractions)))
+                     / (1.0 / max(1, len(fractions) - 1)))
 
     ex = list(extract_sections(
         build, fractions,
@@ -238,7 +278,17 @@ def build_pygeo_sections_from_config(
             "span_margin": float(span_margin),
             "control_edges_snapped": snapped,
             "section_placement": placement_used,
-            "feature_pins": feature_pins}
+            "feature_pins": feature_pins,
+            "max_gap_ratio": max_gap_ratio,
+            # The AVL panelling the config asked for. run_pygeo_native_avl_case
+            # cannot read the config itself and its own defaults are only a
+            # fallback, so a caller that ignores these silently runs whatever the
+            # function signature happens to say -- which is how every study script
+            # ran at 24 chordwise while the config asked for something else.
+            "nchordwise": int(getattr(disc, "nchordwise", 24)) if disc else 24,
+            "cspace": float(getattr(disc, "cspace", 1.0)) if disc else 1.0,
+            "spanwise_panels_per_section": (
+                int(getattr(disc, "spanwise_panels_per_section", 4)) if disc else 4)}
     if band is not None:
         from aeris.geometry.geometric_information import ramp_fraction as _rf
 

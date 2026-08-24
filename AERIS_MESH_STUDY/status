@@ -1,0 +1,1894 @@
+# AERIS Mesh Study — Full State
+
+Updated: 2026-08-14 (restructure session) · Last writer: Claude Code
+Self-contained analytical record. Chronological ledger archived at
+`status.ledger_archive_2026-08-13`.
+
+## Protocol
+
+- This file is the live handoff record for Codex and Claude Code. Update it before
+  and after each major implementation or audit step.
+- `00_governance/stage_status.json` remains the authoritative workflow gate state.
+- Do not start a later stage unless `stage_status.json` and the user approval token
+  permit it.
+- **Report what was measured, not what it implies.** A surface prototype that has
+  not marched is not a working strategy. Never write "N of 6 working" unless N have
+  passed the hard gates end to end.
+- **Contradictions are defects.** Stage 02's `status` once showed S3 failing
+  determinism and declared "0 hard-gate failures" three lines later.
+- **Record negative results in full**, and **record errors rather than quietly
+  patching them**.
+- Maintain the **per-strategy effort ledger** (§0.4) so Codex can audit disparity at
+  a glance.
+
+---
+
+# 0. RESTRUCTURE — SIX INDEPENDENT STUDIES (2026-08-14)
+
+**The study has been restructured. `ADR-0011` is the governing decision.**
+Sections 1–5H below are the Stage 02 record and remain valid as *measurements*; the
+structure they describe is superseded.
+
+## 0.1 Why
+
+Stage 02 ran the six strategies as variants of one shared module. The tip closure
+was written once and inherited, so S3, S4 and S5 converged on S1's cap and scored
+identically — **S4 was bit-identical to S1**, max node difference `0.000e+00` on all
+ten geometries. The tournament compared **one topology wearing four labels**.
+
+**New structure:** six independent studies, each implemented from scratch in
+`04_strategy_studies/S<N>_<name>/`, developed to its best achievable state, then
+compared on metrics frozen in advance. This is a restructure, not a reset: Stage 00
+governance stands, and Stage 02's measured results stand as recorded findings.
+
+## 0.2 Delivered this session
+
+| # | item | state |
+|---|---|---|
+| 1 | `04_strategy_studies/COMMON_BRIEF.md` | **written** — Stage 02's lessons given to all six up front, so the last-built does not win on hindsight |
+| 2 | `00_governance/decisions/ADR-0011-independent-strategy-studies.md` | **written** — supersedes ADR-0006, re-scopes Rounds A/B/C, makes epsE per-strategy, freezes metrics + ranking + the no-winner rule |
+| 3 | ADR-0006 marked SUPERSEDED in its own header, with the reversal stated | **done** |
+| 4 | `04_strategy_studies/` — six folders, six `STUDY.md` logs, `shared/` control module migrated per ADR-0011 §4.1 | **done** |
+| 5 | Shared-control self-test reproducing the recorded Stage 02 numbers | **passes** |
+| 6 | Test suite | **182 passed**, unchanged count |
+
+**No strategy implementation has begun.** ADR-0011 §7.2: no strategy is started
+without an explicit user signal.
+
+## 0.3 The independence line (ADR-0011 §4)
+
+**Per-strategy, from scratch:** all blocking and block-graph construction; tip
+closure in full; spanwise distribution and station placement; chordwise laws, point
+counts, clustering, distribution choice; any smoothing, projection or deformation;
+the strategy's own pyHyp-facing surface staging.
+
+**Shared, as the experimental control:** CAD/section ingestion and 2D→3D mapping; QC
+metric *definitions*; gate thresholds; the pyHyp invocation; the geometry sets; the
+verifier.
+
+Migration hazard handled: `stage02_common.py` had S1's blocking baked in as
+defaults. `feature_split_sides` now **requires** `distribution` and
+`te_base_points` — a shared ingestion function must not choose a chordwise law. The
+tip closure, tip staging and spanwise laws moved into `S1_tip_first/` as
+`s1_stage02_prior_art.py`, which is prior art to read and beat, **not** S1's entry.
+Metric definitions and thresholds migrated **unchanged**, so every number below
+stays comparable. Migration was done by exact source extraction, recorded in
+`04_strategy_studies/migrate_from_stage02.py`.
+
+`04_strategy_prototypes/` is now a **read-only archive**. Nothing in
+`04_strategy_studies/` imports from it.
+
+## 0.4 EFFORT LEDGER — per strategy
+
+ADR-0011 §7.3. Effort is not capped, so it is measured. This is a **reported
+metric**, published alongside every comparison table, and the final report must
+state the disparity explicitly and assess whether it could account for the ranking.
+
+| strategy | attempts | sessions | wall-clock | marches | state |
+|---|---:|---:|---:|---:|---|
+| **S0 cap4** | **15** | **1** | ~1 session | **6** | **FREEZE VOID — every S0 number was measured on the WRONG trailing edge (chord fraction, root ~4.7 mm). Must be re-run on the corrected 1.0 mm edge before it means anything.** |
+| **S1 tip-first** | **20** | **2** | ~2 sessions | **120** | **PASSES the refinement set 10/10 at epsE 1.5 and 2.0, CONFIRMED at `fine`. epsE 2.0 selected. First strategy to clear ADR-0011 §7.1 steps 2-5.** |
+| **S2 cross-field** | **4** | **1** | ~1 session | **0** | **REJECTED 2026-08-15 on measurement — block count varies 27-39, fails the determinism hard gate. Unranked. ADR-0012 reinstated it first, so the exclusion is now measured rather than assumed.** |
+| **S3 station sweep** | **5** | **1** | ~1 session | **60** | **FAILED 30/30. Scoped by ADR-0013 as a sweep experiment on S1's surface; the paper's Eq. 5 cannot match the tip cap cell size (9469 um vs 558 um needed). RUNBOOK §6 S3's expectation falsified.** |
+| **S4 analytic multiblock** | **1** | **1** | ~1 session | **0** | **STARTED. Type 1/2 control vertices from the paper; primary risk (Type 2 self-intersection) CLEAR — 0 crossings in 680 advances. Volume not built. Generates volume WITHOUT pyHyp, so needs a non-pyHyp volume-gate route.** |
+| S5 frozen RBF | 0 | 0 | 0 | 0 | not started |
+
+Stage 02's effort is **not** carried into these rows. It was spent on a shared
+implementation that no longer exists, and attributing it to S1 would be as wrong as
+attributing none of it. It is recorded in §1–5H instead.
+
+## 0.5 Frozen before any strategy is optimised (ADR-0011 §6)
+
+**Hard gates:** fidelity ≤ 0.01% local chord · watertight, conformal interfaces ·
+consistent outward normals · surface `min_scaled_jacobian > 0` · deterministic block
+count and connectivity · pyHyp completes with zero inverted and zero negative-volume
+cells and **min scaled quality strictly > 0** · correct boundary families ·
+deterministic cell and block counts · no per-geometry manual repair · confirmed at a
+**genuinely finer** level, verified to be finer.
+
+**Ranking:** gates first (failures are *unranked*, not ranked last) → **robustness on
+the HOLD-OUT** → worst-case volume quality → cell count → runtime.
+
+**No-winner rule:** if nothing passes every hard gate on every hold-out geometry,
+report **no winner**, rank on nearest-miss, and raise it to the user. Fixed now so it
+cannot be chosen after seeing results.
+
+`0.30` remains a **ranking target, never a gate.** The hard gate is `> 0`.
+
+**epsE is per-strategy.** `epsE_common_start` is withdrawn as a global constant; it
+was calibrated on S1's cell distribution. Ladder `{1.5, 2.0, 3.0}`, never extended
+after a failure. S1's own value, carried forward as a starting point: **1.5**.
+
+**Geometry sets:** development on `lhs100_seed42`; **`round_c_lhs10_seed42` is the
+hold-out and is still untouched** — `shared/geometry_sets.py` refuses it unless the
+caller states the strategy is frozen. `epse_calibration_lhs10_seed7` keeps its role
+only as the basis of the recorded Stage 01/02 evidence.
+
+## 0.6 TWO FINDINGS FROM THE MIGRATION
+
+**(a) Instrument bug 7 — the verifier crashed on correctly oriented meshes.**
+`tip_edge_nodes` took each OML block's *last j column* as the outboard edge. That
+assumes the last column is outboard, and `orient_blocks_consistently` reverses the j
+index of every block it flips — seven of eight on `lhs7_00`, including all three OML
+blocks. After the orientation fix was wired in, no block matched the tip station and
+the check raised `ValueError: need at least one array to concatenate` instead of
+returning a result. A flipped strategy would have looked like a **harness crash
+rather than a finding**, which is worse than a false failure.
+
+Fixed by applying instrument bug 4's own principle properly: select the tip edge by
+spanwise **position**, not by index. This is the **seventh** measurement bug found in
+this study's own instruments. `verify the verifier` continues to earn its place in
+COMMON_BRIEF.
+
+**(b) S1's frozen Stage 02 configuration does NOT pass the ADR-0011 surface gate.**
+The self-test reproduces the recorded numbers exactly — 8 blocks, min scaled Jacobian
+**+0.04504** (recorded +0.045), cell-size range **98.83×** (recorded 99×), watertight,
+8/8 blocks reached by the orientation walk — and then the surface gate **FAILS** on
+one reason:
+
+```
+fidelity unverified for spanwise-refined blocks: ['oml_lower', 'oml_upper', 'te_base']
+```
+
+`realise_law = True` subdivides between the generator's realised stations, so those
+blocks' columns lie *between* stations and cannot be checked against a station
+contour. `shared/gates.py` treats **unverified as a failure**, on the grounds that a
+gate you did not measure is not a gate you passed.
+
+This is a decision with consequences and it is flagged rather than absorbed:
+
+- The interpolation deviates from the spline loft by **1.99e−02 m ≈ 7.4% of chord**
+  against a 0.01%-of-chord hard gate — measured, not assumed (§5B.5).
+- cap4 does the same thing (17 native stations refined to 255), so **S0 inherits the
+  identical problem**. This is not a penalty aimed at S1.
+- But the spanwise law is what made S1 marchable at all: 3462× → 99× cell-size range,
+  128/128 bad layers → 0/128 (§5F.2). Turning it off to pass the fidelity gate
+  reverts the one thing that worked.
+
+So as things stand, **every strategy that realises a spanwise law fails gate 1, and
+every strategy that does not fails to march.** The escape is upstream and is already
+identified: have the generator realise more sections, so extra columns lie *on* the
+loft instead of on chords of it — `pygeo.extraction.spanwise_sections` is already 25
+against the 17 the wing exposes. That is Stage 03 geometry work.
+
+**Open decision for the user.** Three options, none of which should be chosen
+silently: (i) do the generator work first, before any strategy is built; (ii) build
+the strategies now and carry gate 1 as a known, uniformly-applied failure until the
+generator work lands; (iii) amend the gate by ADR to measure fidelity against the
+loft rather than against the stations. Recommendation is **(iii) then (i)** —
+measuring against the loft is the physically correct instrument and would tell us
+whether 7.4% is real or an artefact of comparing against the wrong reference — but
+this is a governance change and needs an ADR, not a decision in the moment.
+
+## 0.7 S0 — BUILT AND WORKING (2026-08-14)
+
+Full log: `04_strategy_studies/S0_cap4/STUDY.md`. Implementation:
+`strategy_s0.py`; driver `run_s0.py`; artifacts in `S0_cap4/artifacts/`.
+
+**The user relaxed ADR-0011 §7.2 for this session** — "make trials and errors,
+change approaches, move like a lead researcher till every strategy works" — so S0
+was developed continuously instead of reporting at each plateau. Recorded here as
+the authorisation of record. The effort ledger (§0.4) is unaffected and still
+carries the count.
+
+| metric | Stage 01 cap4 | **S0 now** |
+|---|---:|---:|
+| min scaled Jacobian | +0.004584 | **+0.19113** |
+| worst tip corner | 179.737° | **168.38°** |
+| max skewness | ~1.000 | **0.878** |
+| cell-size range | 153× | **112–187×** |
+| fidelity, station columns | — | **0.0000000% of chord** |
+| blocks | 5 | 9 |
+| across 10 development geometries | — | **+0.19113 on all ten** |
+
+**42× the control it replaces and 4.2× S1's +0.045**, at a cell-size range better
+than cap4's own. Level-invariant across the five-level family; one connectivity
+signature on all ten geometries; watertight; normals consistent. It passes every
+hard surface gate. **Nothing has marched.**
+
+### What was wrong with cap4, precisely
+
+1. **The one-block airfoil-face tip cap is structurally broken.** Two of its four
+   sides are chordwise-extended arcs used as index *columns*, squashing 30% of
+   chord into one cell width. TFI, Laplacian and Winslow smoothing were all
+   measured; every elliptic variant converges to the same −0.02345, which is what
+   an elliptic solver doing its job looks like when the boundary is the defect.
+2. **The wrap-count law in `MESH_FAMILY_V2.md` was documented but never applied.**
+   `wrap_points ~ chord_points · wrap_x/(0.5 − wrap_x)`. Every parameter sweep in
+   this study held `wrap_points` fixed while narrowing the wrap band, which forced
+   a trade between Jacobian and cell-size range. Obeying the law removes the trade.
+
+### ADR-0006's "not tunable" conclusion rests on a null experiment
+
+ADR-0006 swept `split_x_fore` on `wing_cap4_v1` and read the resulting agreement to
+11–12 significant figures as evidence that cap4's tip corner is structural.
+**cap4 does not read `split_x_fore`** — `surface.py:776` passes `wrap_x=cap_wrap_x`
+for the cap4 path, while `split_x_fore` (line 792) reaches only `mid4`/`split8`. All
+three variants were the same mesh; identical numbers were guaranteed by
+construction. ADR-0006's other evidence stands (the corner really is ~180°, the
+geometry probe is sound, `mid4`/`split8` really are worse); one load-bearing claim
+does not. Recorded rather than quietly corrected.
+
+### Two more instrument bugs, found by building S0
+
+**Bug 7 — the verifier crashed on correctly oriented meshes.** `tip_edge_nodes`
+took each OML block's last j column as the outboard edge, but
+`orient_blocks_consistently` reverses j on every block it flips — seven of eight on
+`lhs7_00`. No block then matched the tip station and the check raised `ValueError`
+instead of returning a result: a harness crash where a finding belonged. Fixed by
+selecting on spanwise position.
+
+**Bug 8 — fidelity reported 835% of local chord on an exact mesh.** The check
+decided "not spanwise-refined" from block column COUNT and then assumed column *j*
+was station *j*. S0's proportional allocation produces blocks with the right column
+count and no column on a station. Two intermediate fixes were also wrong and are
+recorded: nearest-station-by-mean-y within half a station gap matched interpolated
+columns and reported 10–18%; tightening to node precision matched only 16 of 68 real
+station columns, because a block is a *sub-arc* and its mean y is not the whole
+contour's. The rule is now the measurement itself — a column is verified when it
+lies within the fidelity gate of a station contour. **All 68 station columns then
+measure exactly 0.0000000%, at every refinement level.**
+
+That is **eight** measurement bugs found in this study's own instruments.
+
+### S0 MARCHES — a valid volume exists (2026-08-14)
+
+**User direction: build a working volume first, refine after.** Recorded as the
+authorisation for running marches in-session, against the standing "heavy compute
+is prepared, not launched" invariant. Runs are single short marches, not campaigns.
+
+Surface `L1_coarse`, pyHyp `smoke` (N=129, coarsen=1), `lhs100_seed42_000`.
+pyHyp reported **`Normals are consistent!`** and read all 7,488 faces.
+
+| surface | epsE | layers | bad | min quality | min volume | pyHyp |
+|---|---:|---:|---:|---:|---:|---|
+| L1_coarse | 1.5 | 128 | 44 | −0.15739 | +2.21e−11 | valid |
+| L1_coarse | 2.0 | 128 | 53 | −0.68565 | +1.62e−11 | valid |
+| L1_coarse | 3.0 | 128 | 59 | −1.00000 | −2.13e−08 | invalid |
+| **L3_medium** | **1.5** | 128 | **35** | **−0.11063** | +6.76e−12 | **valid, `passed: True`** |
+| L3_medium | 2.0 | 128 | 48 | −0.43254 | +3.22e−12 | valid |
+| *cap4 Stage 01* | *—* | *128* | *53* | *−0.90808* | *+2.11e−11* | *valid* |
+
+**ADR-0010's range lever moves the volume result for S0 too.** Range 232.4 → 139.9
+at fixed epsE 1.5 took bad layers 44 → 35 and min quality −0.157 → −0.111. First
+evidence the lever generalises beyond S1. It is not sufficient alone: L4 already
+regresses the range to 210 because finer chordwise resolution shrinks the tip cells
+as well. **The remaining gap is the tip trailing-edge collar, not the global cell
+distribution.**
+
+**Complete, valid, non-inverted volume — 5.8× cap4's minimum quality.** It does
+**not** pass the frozen checklist (zero bad layers, min quality > 0). Bad layers
+2–39 and 44–49 are near-wall with positive volume throughout, so this is shape
+quality inherited from the surface, not an inversion.
+
+Less dissipation is uniformly better, as S1 also found. epsE 1.5 is the ladder
+floor; ADR-0008 §6 forbids going lower without an ADR.
+
+**The binding constraint is one 32-cell block.** `tip_collar_te` (skew 0.878, Jac
++0.191) has four cells in which to turn 180° around a blunt base 0.005 chord wide.
+Every attempt to resolve it better made things worse — `wrap_points` 5→15 (skew
+0.878→0.942, range 140→407), `te_base_points` 0→5 (skew →0.929), surface level
+L3→L4 (min-cell/`s0` 11.9→7.9) — because each puts more points into a tiny feature
+and shrinks the smallest cell, which is what ADR-0010 says governs the march.
+
+Also established: **the cell-size range has exactly one lever, `chord_points`**,
+because the largest cell is *chordwise* on the OML. `spanwise_panels` 8→32 leaves
+the range at 232.4 untouched while the spanwise maximum falls 12.25→3.11 mm.
+`L3_medium` is the optimum (range 139.9, min-cell/`s0` 11.9).
+
+### The base-cornered cap was built and REJECTED (attempts 14–15)
+
+The obvious remaining fix was to make the 180° blunt-base turn a block **corner**
+rather than a collar interior — which is the standard answer and what S1 does. It
+required decoupling the nose and TE wrap point counts in `cap4_sides` (they had
+been tied together in the shipped code and in Stage 02).
+
+Swept over `wrap_points` {3,5} × `x_aft` {0.88…0.96} × `width_frac` {0.30…0.60}:
+**negative everywhere, best −0.04917**, with skewness pinned at 0.998–1.000 in a
+run collar at every single setting, against `shoulder_collar`'s +0.19113.
+
+Matching the inner boundary to the outer arc-length distribution — the standard
+cure for a sheared collar — moved it from −0.05375 to −0.05375. **That null result
+is what identifies the cause:** the defect is not parameterisation. The blunt base
+is 0.005 chord wide while the cap's inner boundary sits ~0.12 chord away, so the
+block edge reaching between them is stretched by more than an order of magnitude
+however its points are distributed. S1 escapes this only because its inner
+boundary is a camber-aligned rectangle that follows the section — which S0 cannot
+adopt without adopting S1's OML.
+
+**`shoulder_collar` at +0.19113 is S0's best achievable cap.** The residual is
+limited by a frozen geometry constant (`te_thickness = 0.005`, DECISION-0004), not
+by the blocking. Both rejected closures stay selectable so the results remain
+reproducible rather than merely written down.
+
+### S0 EXTREME MARCH FAILED — and it is the study's cleanest ADR-0010 proof
+
+`thin_small_tip` (`c4_ratio` min, `b_total_m` max), surface L3_medium, pyHyp smoke,
+epsE 1.5:
+
+| | development geometry | **extreme** |
+|---|---:|---:|
+| surface min scaled Jacobian | +0.19113 | **+0.19113 — identical** |
+| cell-size range | 139.9 | **233.3** |
+| min-cell/`s0` | 11.9 | **5.5** |
+| layers completed | 128 | 128 (ran to completion) |
+| min volume | +6.76e-12 | **-7.03e-11** |
+| low-quality layers | 35 | **14** (fewer, but invalid) |
+| min quality | -0.11063 | **-1.00000**, first invalid layer **4** |
+| pyHyp `passed` | True | **False** |
+
+**S0 is not robust across the design space at the volume level.** The surface passes
+every hard surface gate on this geometry with a byte-identical Jacobian and pyHyp
+still returns `passed: False` with a negative minimum volume.
+
+**Correction:** first read mid-run at layer 95 and reported as aborted. It ran all
+128 layers and wrote a CGNS (now quarantined `.invalid.cgns`). The failure is
+localised — only 14 bad layers, fewer than the dev geometry's 35 — but a
+negative-volume cell appears at layer 4 and never recovers.
+
+The two metrics that *vary* — cell-size range and min-cell/`s0` — predicted it. The
+shape metrics that stayed constant predicted nothing. COMMON_BRIEF §11.5 was written
+before this march was read; it is now measured rather than argued.
+
+### S0 IS FROZEN (2026-08-14, user signal)
+
+Final configuration in `S0_cap4/STUDY.md` §10. Under ADR-0011 §6.3 a strategy
+failing a hard gate on any geometry is **unranked**, so S0 enters the comparison as
+a documented control and robustness baseline, not a candidate winner. The epsE
+ladder, finer-level confirmation and the hold-out run were **not** attempted — all
+three are downstream of a volume gate it does not pass.
+
+What S0 established for the study: cap4's OML is excellent and every cap4 failure
+has always been in the tip closure; the shipped one-block cap is structurally broken
+and no smoothing fixes it; a working cap4 surface exists at 42× the previous
+control; and a surface can pass every surface gate and still fail the march.
+
+### S1 — Openblademesh read in full and followed faithfully (2026-08-14)
+
+Full log: `04_strategy_studies/S1_tip_first/STUDY.md`.
+
+| metric | prior-art S1 | S0 (frozen) | **S1 now** |
+|---|---:|---:|---:|
+| min scaled Jacobian | +0.045 | +0.19113 | **+0.45487** |
+| max skewness | 0.789 | 0.878 | **0.699** |
+| cell-size range | 99 | 140 | **754-897** |
+
+**Best shape quality in the study, level-invariant — and a cell-size range 5-9x
+worse than anything that has marched.**
+
+**The source paper never achieved a full-wing pyHyp extrusion.** §4.1: "While the
+wingtip on its own can be meshed with Pyhyp the whole wing can only be meshed by
+software with different extrusion methods such as pointwise." §3.1.7 gives the
+reason: "Pyhyp cannot extrude the whole wing for too big step size differences
+between the wingtip and the wing." That is ADR-0010, reported by the source, and
+reached independently by this study before the thesis was read. §3.1.5 gives the
+spanwise law that would fix it (eq 3.5-3.10) and states it is **not used** because
+it was never finished; §4.2.3 names the growth limit (1.3-1.6) and states
+Openblademesh cannot enforce it. Enforcing it is this study's addition.
+
+**Two constants came from the code listing, not the prose.** "45 degrees" does not
+by itself place the outer nose split. Three readings were measured: at the inner
+station (vertical connection line, collinear with a near-vertical contour, skew
+1.000); solved aft for |dx|=|dz| (-0.816 to -0.902); and the listing's actual rule,
+`0.5 x inner station` — forward of it — which gives **+0.455**.
+
+**The paper's own progression degrades this geometry monotonically**: ratio 1.00
+-> +0.45487, 1.05 -> +0.00508, 1.12 -> -0.05444. Clustering shrinks cells at the
+0.0042-chord nose and 0.005-chord base, which are already the tightest features on
+a thin-TE BWB section. Defaulted off, knob retained.
+
+**The open problem is inherited from the paper's constants**: nose domain 0.42% of
+chord, TE domain 0.125%, so their cells are orders of magnitude finer than
+mid-chord. On a rotor blade with a thick blunt TE those domains are proportionally
+much larger. Next move is to scale the end stations with local feature size — a
+deviation from the paper, to be recorded as one.
+
+### S1 VOLUME IS VALID — 1 bad layer of 128 (2026-08-14)
+
+Four marches, L2_smoke / pyHyp smoke / epsE 1.5 / `lhs100_seed42_000`. pyHyp
+reported "Normals are consistent!" every time.
+
+| # | configuration | tip/OML jump | bad layers | min volume | passed |
+|---:|---|---:|---:|---:|---|
+| 1 | **exactly as the paper** | 28x | 126 / 126 | -7.33e+62 | False |
+| 2 | + `end_scale` 5.0 (range 810 -> 173) | 24x | 126 / 126 | -5.05e+17 | False |
+| 3 | + tip-anchored spanwise, eq 3.5-3.10 | 4.4x | 10 / 128 | -1.36e-11 | False |
+| 4 | **+ first spanwise cell matched to the tip cap** | **0.99x** | **1 / 128** | **+3.36e-12** | **True** |
+
+**Valid volume: zero inverted cells, positive minimum volume, no invalid layer, one
+low-quality layer (layer 5 at -0.09461).**
+
+**The epsE ladder then closed it.** `shared.gates.volume_gate_checklist`:
+
+| epsE | bad | min quality | min volume | checklist |
+|---:|---:|---:|---:|---|
+| 1.5 | 1 | -0.09461 | +3.36e-12 | FAIL |
+| 2.0 | 1 | -0.03468 | +3.65e-12 | FAIL |
+| **3.0** | **0** | **+0.14255** | **+3.88e-12** | **PASS** |
+
+**S1 is the first strategy in this study to pass the volume checklist on any
+geometry.**
+
+### THE REFINEMENT SET — 30 marches, no epsE passes all ten
+
+    epsE 1.5 -> 5/10      epsE 2.0 -> 6/10      epsE 3.0 -> 7/10
+
+All 30 completed 128 layers. **No value passes every geometry, so ADR-0008 section 6
+applies: stop and report, do not extend the ladder.** S1 does not clear the
+refinement set, and no epsE is selected.
+
+**The failures split in OPPOSITE directions and the split is predictable.** Three
+geometries need MORE dissipation than 1.5; two need LESS than 3.0. The requirement
+tracks **min-cell/`s0`** almost monotonically:
+
+| min-cell/`s0` | geometries | requirement |
+|---|---|---|
+| 6.9 - 9.7 | 001, 004, 000, 006 | need HIGH epsE; **004 fails at all three** |
+| 11.7 - 12.7 | 008, 007, 009 | pass at 2.0 and 3.0 |
+| 15.2 - 17.6 | 003, 005, 002 | need LOW epsE; 3.0 over-dissipates |
+
+Where the first marching layer is tight against the smallest surface cell the march
+needs more smoothing to survive; where it is roomy the same smoothing distorts cells
+that were fine. **A single constant cannot serve both ends of that range.**
+
+Union coverage is 9/10 — every geometry except 004 passes at some ladder value — but
+picking epsE per geometry by hand is the "no per-geometry manual repair" gate
+(ADR-0011 section 6.1 item 11). An automated **law** epsE(min/`s0`) would not be
+manual repair and the correlation is strong enough to fit one, but that deviates
+from ADR-0008's fixed ladder and needs an ADR first.
+
+### Instrument bug 10 — the checklist scored an INCOMPLETE march as PASS
+
+`lhs100_seed42_009` at epsE 3.0 was still running when first collected: 95 of 128
+layers, no bad layer *yet*, every other condition satisfied — **PASS**. A march that
+has not finished has not passed anything. `volume_gate_checklist` now requires
+`march_completed`. Found because the layer count in the table looked wrong, not
+because anything flagged it.
+
+**Also fixed: `prepare` generated commands with no output redirect**, so pyHyp wrote
+a CGNS and no `run_stdout.log` — and `collect` parses that log whenever
+`volume_report.json` is absent, which is always for the static runner. The first
+30-march campaign was unreadable and had to be re-run. That defect would have
+silently wasted every future campaign, S2-S5 included.
+
+**The epsE ordering is the OPPOSITE of everything else measured here.** S0 needed
+the ladder floor (1.5 best; 3.0 invalid); Stage 02's S1 at `fine` also preferred
+less dissipation. This S1 wants the ceiling. Per-strategy epsE (ADR-0011 section 5)
+is vindicated by exactly this. **Risk:** 3.0 is the TOP of the declared ladder, so a
+geometry needing more has nowhere to go, and ADR-0008 section 6 forbids extending it
+without an ADR.
+
+**S1's surface gate still fails one item** — fidelity unverified for the
+spanwise-refined blocks, with all 102 station columns at 0.0000000%. Same
+cross-cutting item as section 0.6(b). S1 cannot drop the refinement: it is what made
+the volume valid.
+
+Against S0's frozen best of 35/128 at -0.11063: **S1 has thirty-five times fewer bad
+layers at comparable minimum quality.** It is the best volume result in this study.
+
+**What fixed it was not the cell-size range.** Step 1->2 cut the range from 810 to
+173 and the march still exploded at layer 2 — the range is necessary but not
+sufficient, which is a correction to how ADR-0010 has been applied here. The cause
+was an **interface spacing jump**: outboard spanwise cells of 14-21 mm against
+tip-cap radial cells of 0.13-1.0 mm, 28:1 across the tip interface. RUNBOOK section 7
+Round A already lists "interface spacing jump" as a reported metric; nothing in this
+study had been measuring it.
+
+**The fix is the equation Openblademesh does not implement.** Section 3.1.5 gives
+eq 3.5-3.10 for one geometric series over the whole wing, states the requirement —
+"the cells on the wing need to be very small... as similar as possible to the cells
+on the wingtip on the edge" — and then says the formula "is given here but is not
+used" because the algebraic route "takes too long" and the numerical one "is yet to
+be finished". Implementing it by walking rather than solving took S1 from divergence
+to a valid volume.
+
+So: following the paper faithfully reproduced the paper's own reported failure
+(section 3.1.7, "Pyhyp cannot extrude the whole wing"), and fixing it required
+supplying the part the paper leaves undone.
+
+### DECISION-0004 VIOLATED, THEN VALIDATED (2026-08-14)
+
+**The study was meshing the wrong trailing edge.** Both S0 and S1 used
+`te_thickness = 0.005` as a chord **FRACTION**. Measured absolute edge:
+
+| geometry | root chord | root TE | tip chord | tip TE |
+|---|---:|---:|---:|---:|
+| lhs100_seed42_003 | 945.8 mm | **4.73 mm** | 178.5 mm | 0.89 mm |
+| lhs100_seed42_004 | 852.9 mm | **4.26 mm** | 93.4 mm | 0.47 mm |
+| lhs100_seed42_001 | 992.9 mm | **4.96 mm** | 91.6 mm | 0.46 mm |
+
+DECISION-0004 decides the opposite: "As-built aircraft TE: a **FIXED (constant along
+span) absolute thickness = 0.5 mm**", chosen explicitly for manufacturability over a
+fractional law, and "Mesh: model the AS-BUILT 0.5 mm TE." So the study meshed a
+root edge **~9x too thick** and a spanwise-VARYING edge — the exact option the
+decision rejected. Both strategies were consistently wrong, not inconsistent.
+
+**It was also the root cause of failures chased for two sessions.** Because the
+fraction shrinks with chord, the smallest surface cell sits at the TIP trailing edge
+and scales with tip chord. That is why S0's `thin_small_tip` extreme failed
+(min-cell/`s0` 5.5), why S1's geometry 004 failed at all three epsE, and why
+min-cell/`s0` varied 6.9 to 17.6 across ten geometries so that no single epsE could
+serve both ends.
+
+Fixed in `shared/ingestion.py` — the as-built edge is aircraft geometry, not a
+per-strategy meshing choice, so it now applies identically to S0, S1 and every later
+strategy. S1's min-cell/`s0` spread collapsed **2.55x -> 1.29x**.
+
+### ...and the constant 0.5 mm edge is NOT marchable inboard
+
+| epsE | fractional TE (wrong) | constant 0.5 mm (correct aircraft) |
+|---:|---:|---:|
+| 1.5 | 5/10 | **0/10** |
+| 2.0 | 6/10 | **1/10** |
+| 3.0 | 7/10 | **4/10** |
+
+The manufacturable edge is *harder* to mesh, because 0.5 mm is only ~0.05%c at the
+root. **DECISION-0004 anticipated exactly this and authorised the remedy:**
+
+> "If a real pyHyp march cannot advance the thin inboard TE (0.5 mm ~ 0.05%c at
+> root), apply a **mesh-only local inboard floor (~0.25%c)** — a NUMERICAL artifact
+> of the solver, not a change to the aircraft, and quantified here as ~0 drag. ...
+> **Pending pyHyp validation (see Open items).**"
+
+**This study has now produced that validation**, which DECISION-0004 lists as an open
+item: the pure constant edge does not march, and the floor is required. Implemented
+as `TE_MESH_FLOOR_FRAC = 0.0025`, i.e. `max(0.25%c, 0.5 mm)` — root 2.1 mm, tip
+0.5 mm. **The aircraft is unchanged**: constant 0.5 mm is still what goes to the shop.
+
+**S0 note:** the corrected edge also breaks S0's metric invariance — min scaled
+Jacobian is now geometry-dependent (0.140-0.196) instead of a constant +0.19113,
+which is more informative. But S0's min-cell/`s0` spread stays **2.16x**, because its
+smallest cell is in `tip_collar_te`, sized by `wrap_x x tip_chord` — still a chord
+fraction by construction. The TE fix helps S1 structurally and only partly helps S0.
+
+**All S0 results recorded before this fix are on the wrong aircraft and must be
+re-run**, including the `thin_small_tip` extreme failure.
+
+### S1 PASSES — first strategy to clear the refinement set (2026-08-15)
+
+| level | epsE 1.5 | **epsE 2.0** | epsE 3.0 |
+|---|---:|---:|---:|
+| `smoke` (N=129) | 10/10 | **10/10** | 8/10 |
+| **`fine` (N=193)** | **10/10** | **10/10** | 7/10 |
+
+**epsE = 2.0 selected** by the ADR-0008 rule (highest value passing every geometry),
+and **confirmed at a genuinely finer level** — the step that killed Stage 02's
+`epsE_common_start = 2.0`, which passed `smoke` and failed `fine`. At `fine`: zero
+bad layers on all ten, zero inverted cells, positive minimum volume, min quality
+**+0.193 to +0.364**, and quality IMPROVED at the finer level on every geometry.
+
+cap4's Stage 01 control, for scale: 53 of 128 bad layers at -0.908.
+
+**S1 has now completed ADR-0011 §7.1 steps 2-5** (baseline, refinement set, epsE
+ladder, finer-level confirmation). Steps 6-8 - report, freeze on the user's signal,
+then the single hold-out run - are outstanding. **`round_c_lhs10_seed42` remains
+untouched.**
+
+**S1's frozen-candidate configuration**
+
+    trailing edge      1.0 mm constant absolute; mesh floor max(0.5%c, 1.0 mm)
+    surface level      L2_smoke, end_scale 5.0
+    spanwise           tip-anchored geometric series (eq 3.5-3.10), first-cell
+                       factor 0.12, growth limit 1.15
+    progression ratio  1.0 - the paper's own clustering is OFF, measured worse
+    epsE               2.0
+
+**What it took, in order of effect:** the trailing edge as a constant absolute rather
+than a chord fraction; 1.0 mm rather than 0.5 mm (both sanctioned by DECISION-0004,
+"both give wing delta-CD ~ 0", but at 0.5 mm min-cell/`s0` falls to 7.6-17.6 where
+marches mostly fail, against 13.1-20.0 at 1.0 mm); a mesh-only inboard floor at
+0.5%c rather than the assumed 0.25%c; and implementing eq 3.5-3.10, the spanwise law
+Openblademesh states and never uses.
+
+**Two hypotheses I held and had to discard, both by measurement:**
+
+* *Cell-size range is the governing metric.* Cutting it 810 -> 173 changed nothing;
+  the march still exploded at layer 2. Range is necessary, not sufficient.
+* *The narrow min-cell/`s0` spread is what matters.* The constant 0.5 mm edge gave
+  the NARROWEST spread (1.29x) and the WORST marching (0/1/4). What predicts passing
+  is the absolute VALUE of min-cell/`s0`, not its spread.
+
+The metric that actually found it was the **interface spacing jump** - outboard
+spanwise cells of 14-21 mm against tip-cap radial cells of 0.13-1.0 mm, 28:1 across
+the tip interface. RUNBOOK §7 Round A lists it as a reported metric and nothing in
+this study had been measuring it.
+
+### ParaView inspection set
+
+`AERIS_MESH_STUDY/artifacts/paraview_inspection/` - curated and documented by its own
+README: three passing volumes (best/middle/worst of the ten) at epsE 2.0 `fine`, the
+SAME geometry at epsE 3.0 for failure contrast, and three surfaces with per-cell
+quality arrays. Regeneration commands included.
+
+### S2 BUILT — and it fails the determinism gate (2026-08-15)
+
+ADR-0012 reinstated S2 after finding **both** of ADR-0009's grounds wrong:
+
+* ADR-0009 said the quad-layout-to-structured-block step "does not exist". **It is
+  Algorithm 2, printed on p.157 of the paper the strategy is drawn from.**
+* ADR-0009 said there was "no concrete route" from available tooling. **gmsh 4.15.2,
+  installed throughout, provides `Mesh.Algorithm = 11`** — a cross-field quad mesher.
+  `igl`/`QEx`/`meshio`/`shapely` are not needed.
+
+Built to Algorithm 2 and measured on six geometries (tip section, size 0.04c):
+
+| geometry | quads | singularities | blocks |
+|---|---:|---:|---:|
+| 000 / 001 / 002 | 337 / 353 / 287 | 7 / 5 / 6 | **31 / 27 / 37** |
+| 003 / 004 / 005 | 347 / 353 / 287 | 7 / 5 / 6 | **39 / 27 / 37** |
+
+**Block count varies 27-39. ADR-0011 §6.1 gate 5 requires a deterministic block
+count and connectivity signature; RUNBOOK §2.1 separately disqualifies drifting
+connectivity.** S2 fails both.
+
+RUNBOOK §6 S2 named this risk in advance: "Record singularity count and block graph.
+**Topology drift across geometries is a production failure.**"
+
+The variation is not noise — geometries 001/004 and 002/005 give identical results
+because they share a tip section shape. The block count tracks section shape, and the
+design space varies it.
+
+**Two further gate problems found before stopping:** the cap boundary carries 122
+nodes against the OML's 61 (all 61 OML nodes survive exactly, but gmsh's pipeline
+inserts 61 more — a hanging-node interface pyHyp will not take); and algorithm 8, the
+alternative, leaves triangles that Algorithm 2 cannot consume.
+
+**Three readings of "opposite edge of e" were measured**, because the pseudocode is
+ambiguous and the difference is enormous: arbitrary-owner gave one 327-quad
+mega-block; face-based gave 64-110 blocks; vertex-based — the standard separatrix
+definition — gave a credible partition. The first two are recorded because each
+looked plausible and would have been reported as a method failure if not checked
+against what a partition should look like.
+
+**Stopped here deliberately** (COMMON_BRIEF §4). The cause is identified and no
+parameter addresses it: the singularity count is an output of the cross-field solve,
+not an input. A deterministic topology needs a constrained cross field with
+prescribed singularities — a research component, not a parameter change.
+
+### The fidelity item, now quantified rather than argued
+
+S0 **passes** the surface gate outright at `spanwise_panels=1`. With refinement the
+quality is identical (+0.19113) and every station column is still exact, but the
+interpolated columns are unverified against the loft. S0 needs the refinement:
+unrefined its cell-size range is 517× and aspect ratio 43. So §0.6(b) stands
+unchanged as a cross-cutting decision — it is upstream generator work, applies to
+cap4 in production, and will apply to every strategy equally.
+
+## 0.8 What has NOT changed
+
+- `stage_status.json` — still `active_stage 02`, `IN_PROGRESS`. **No stage gate is
+  claimed.** The restructure is Stage 02 work.
+- Stage 00 approval, the Stage 01 TMR anchor, and every Stage 02 measurement.
+- ADR-0001–0005 and ADR-0007–0010 remain in force. Only ADR-0006 is superseded.
+- The hold-out `round_c_lhs10_seed42` remains untouched.
+- 182 tests pass; no `src/aeris` implementation code has been modified.
+
+---
+
+# 1. WHERE WE ARE (Stage 02 record — structure superseded by §0)
+
+**Stage 02 of 13, in progress.** `stage_status.json`: `active_stage 02`,
+`state IN_PROGRESS`, `stage02_authorized true`.
+
+**What is actually established (surface only — nothing has marched):**
+S1 surface-valid and the reference candidate · S3 surface-valid, same OML and tip
+closure as S1, differing only in spanwise splitting · S4 **bit-identical to S1**
+on all ten geometries · S5 valid only as the reprojection hybrid, pure frozen RBF
+having failed fidelity by 250-350x · S2 **deferred**, no route to structured
+multiblock (ADR-0009) · S0/cap4 **failed** the volume gate (ADR-0006).
+**No strategy has passed the volume gate. cap4 was surface-valid too.**
+
+*Superseded by §0: S1 later marched clean (§5F), and ADR-0011 §3.1 reversed
+ADR-0006 so S0 is now developed rather than recorded as failed-not-repaired.*
+
+| stage | status |
+|---|---|
+| 00 governance + reference freeze | **APPROVED** (user token `APPROVE STAGE 00`) |
+| 01 TMR anchor, cap4 control, epsE | **PASS_WITH_FINDINGS** — cap4 failed and was recorded, not repaired |
+| 02 implement S1–S5 surface prototypes | **IN PROGRESS** — restructured 2026-08-14, see §0; no gate claimed |
+| 03–13 | not started |
+
+The study's purpose: `cap4` is the **control**, not the assumed answer. Six
+strategies compete; the winner is chosen on evidence, then frozen.
+
+---
+
+# 2. STAGE 00 — GOVERNANCE (approved)
+
+## 2.1 Design space — 20 active variables
+
+Authority `configs/geometry/bwb.yaml` (sha256 `f114b48e…6614`), parsed through
+`bwb_segmented_v1`. Verified against DECISION-0002 and the live parser.
+
+| variable | min | nominal | max | unit |
+|---|---:|---:|---:|---|
+| c1_m (root chord) | 0.70 | 0.90 | 1.10 | m |
+| c2_ratio | 0.55 | 0.675 | 0.80 | — |
+| c3_ratio | 0.30 | 0.425 | 0.55 | — |
+| c4_ratio (tip) | 0.08 | 0.14 | 0.20 | — |
+| b_total_m (**semi**-span) | 0.75 | 1.00 | 1.25 | m |
+| b3_ratio | 0.40 | 0.475 | 0.55 | — |
+| split_ratio | 0.40 | 0.50 | 0.60 | — |
+| sw1/sw2/sw3_deg | 20/15/5 | 30/25/15 | 40/35/25 | deg |
+| twist_b0/b1/b2/b3_deg | −1/−3/−5/−8 | 0/−1.5/−3/−5 | 1/0/−1/−2 | deg |
+| dihedral_b1_deg | 0 | 0 | 0 | deg (**pinned**, flat root panel) |
+| dihedral_b2/b3_deg | 0/0 | 3/5 | 6/10 | deg |
+| elevon_start/end/hinge_frac | 0.50/0.85/0.65 | 0.60/0.915/0.735 | 0.70/0.98/0.82 | — |
+
+Full span = 2 × b_total_m = 1.5–2.5 m. Aspect ratio ≈ 2.6–6.2.
+
+## 2.2 Geometry topology contract
+
+Stations root→tip `b0, b1, b2, b3`. Airfoils **mh91 / mh91 / e374 / nlf1015**.
+One symmetric trailing-edge elevon. `te_thickness = 0.005` chord (DECISION-0004).
+Flat root panel enforced (`dihedral_root_deg = 0`, `dihedral_b1` pinned,
+`pygeo.enforce_flat_root_panel: true`).
+
+**Known gap:** the generator's realised sections do not land on every semantic
+break — `b1` gets no section. Stage 03 must reconcile this.
+
+## 2.3 Locked geometry sets
+
+Identity = (sampler, seed, n, geometry-config sha256). A seed alone is not an
+identifier — seed 42 at N=100 and seed 42 at N=10 share **zero** rows.
+
+| set | sampler | seed | n | use |
+|---|---|---:|---:|---|
+| `lhs100_seed42_samples.csv` | lhs_v1 | 42 | 100 | surface laws, variable deltas |
+| `round_c_lhs10_seed42_samples.csv` | lhs_v1 | 42 | 10 | Round C hold-out — **no tuning** |
+| `epse_calibration_lhs10_seed7_samples.csv` | lhs_v1 | 7 | 10 | epsE calibration |
+
+All three mutually disjoint. Regenerate/verify: `make_lhs_sets.py --check`.
+
+## 2.4 Operating points — PROVISIONAL
+
+No mission YAML exists in the repo. Values below use README/RUNBOOK defaults.
+
+| id | V (m/s) | alt (m) | ref chord (m) | Re |
+|---|---:|---:|---:|---:|
+| `Re_min_local_chord_diagnostic` (was `Re_low`) | 28 | 1500 | 0.056 | 95,244 |
+| Re_nom | 28 | 1500 | 0.90 | 1,530,708 |
+| Re_high | 28 | 0 | 1.10 | 2,108,611 |
+
+**Renamed 2026-08-13** (Phase 0.2): `Re_low` → `Re_min_local_chord_diagnostic`,
+so the identifier matches the warning. It is a minimum-local-chord diagnostic, not
+a flight point — using it at a fixed reference chord implies a freestream of about
+1.7 m/s. No freestream velocity or Mach is stored per CFD point. `RUNBOOK.md`
+still uses the old name; the mapping is recorded in `operating_points.yaml` under
+`renamed_identifiers` rather than editing the plan document.
+
+**Resolution (Phase 0.2, option b):** epsE calibration proceeds on provisional
+Reynolds numbers, explicitly conditional, with the named re-check task
+`EPSE-RECHECK-ON-MISSION-FREEZE` recorded in `operating_points.yaml` under
+`pending_recheck`. First-cell height and boundary-layer spacing derive from Re, so
+the calibration must be re-run when a mission authority lands.
+
+## 2.5 Gates
+
+Frozen at Stage 00: geometry fidelity, surface validity, boundary/connectivity
+determinism, TMR reproduction, cap4 regression.
+
+- **Geometry fidelity:** ≤ 0.01% local chord. That is **0.090 mm** at the 0.90 m
+  root and **5.6 µm** at minimum tip chord (0.056 m) — tighter than the OML's own
+  CST refit allowance (0.1% chord). Source-aware resolution in
+  `geometry_fidelity_gate_resolution.md`.
+- **Surface validity:** watertight, conformal interfaces, `min_scaled_jacobian > 0`.
+  Implemented as check `positive_scaled_jacobian` (ADR-0005) and enforced
+  end-to-end — `export_surface_mesh` raises `MeshBuildError` and writes no CGNS.
+- **Volume:** zero inverted/negative cells, **min scaled quality strictly > 0**.
+  `0.30` is a *ranking target only* and is never a pass threshold — audited
+  2026-08-13 across `gate_registry.yaml`, `verify_strategies.py` and the Stage 02
+  narrative; no misuse found.
+
+## 2.6 Dependencies
+
+| | main `.venv` | `mach-aero` |
+|---|---|---|
+| pygeo 1.17.0, pyspline 1.5.4 | ✅ | ❌ |
+| pyhyp 2.6.3, cgnsutilities 2.9.0 | ✅ | ✅ |
+| adflow 2.13.1 | ❌ | ✅ |
+| gmsh 4.15.2, h5py, scipy, networkx | ✅ | partial |
+| **igl / QEx / meshio / shapely** | ❌ | ❌ |
+
+The last row was cited as blocking **S2**, but that framing was lazy — `meshio`
+and `shapely` are ordinary installs. **ADR-0009** resolves it properly: the real
+gap is that a cross-field produces a quad-dominant *unstructured* layout, and
+nothing available supplies the quad-layout-to-structured-multiblock decomposition
+pyHyp needs. S2 is **formally deferred**, not blocked pending an install.
+
+## 2.7 ADRs
+
+| ADR | subject |
+|---|---|
+| 0001 | Stage 00 governance freeze |
+| 0002 | Stage 00 audit corrections |
+| 0003 | Historical config scope; epsE basis moved to current design space |
+| 0004 | Stage 01 cap4 control blocker |
+| 0005 | Surface-validity tightening (scaled-Jacobian floor only; post-hoc thresholds rescinded) |
+| 0006 | S0/cap4 fails the volume gate — recorded, not repaired · **SUPERSEDED by 0011** |
+| 0007 | epsE_common_start re-based to Stage 02 · amended by 0011 §5.2 (withdrawn as a global constant) |
+| 0008 | **epsE selection protocol — fixed before any result** · protocol intact, now applied per strategy |
+| 0009 | S2 cross-field formally deferred · **SUPERSEDED by 0012** — both grounds falsified |
+| 0010 | **Marchability, not shape quality** — cell-size range and min-cell/`s0` predict the march; scaled Jacobian does not |
+| 0012 | **S2 reinstated** — Algorithm 2 is printed in the paper; gmsh supplies the cross field |
+| 0011 | **Six independent strategy studies** — supersedes 0006, re-scopes Rounds A/B/C, per-strategy epsE, metrics + ranking + no-winner rule frozen in advance, effort ledger |
+
+---
+
+# 3. STAGE 01 — TMR + CAP4 CONTROL (PASS_WITH_FINDINGS)
+
+## 3.1 TMR anchor — PASSED
+
+13/13 checks, real ADflow solve via `mach-aero` mpirun.
+`surface.fmt` sha256 matched reference exactly; volume audit clean.
+
+| | value |
+|---|---:|
+| CL (reproduced == recorded) | 1.0917740093456412 |
+| CD (reproduced == recorded) | 0.013164679005086222 |
+| NASA CFL3D reference | CL 1.0909, CD 0.01231 |
+
+**Note:** this reproduces AERIS's *own* historical values bit-for-bit. It is a
+self-consistency regression, **not** validation against NASA — CD differs from
+CFL3D by 8.5 counts.
+
+## 3.2 cap4 failed — no epsE_common_start
+
+L3 marches on `lhs7_00`:
+
+| epsE | inverted cells | low/negative-quality layers | min quality |
+|---:|---:|---:|---:|
+| 1.5 | 10 | 53 | −1.0 |
+| 2.0 | 4 | 53 | −0.90808… |
+| 3.0 | **0** | **53** | −0.90808 |
+
+Coarsening does not help: L1 → 60/128 bad layers, L2 → 55/128, L3 → 53/128.
+Note the layer count is nearly invariant to both epsE and mesh level.
+
+## 3.3 Root cause of cap4's failure
+
+Three surface-only probes:
+
+1. **Structural, not geometry-dependent.** Across all 10 locked geometries
+   `min_shape_metric` = 3.716e-04 and `min_scaled_jacobian` = 4.584e-03 agree to
+   **11–12 significant figures**, worst block `tip_center_0` every time. These are
+   scale-invariant metrics, so the worst cell has the same *shape* on every
+   aircraft. Prevalence 10/10 by construction.
+2. **The geometry is clean.** Tip section: 61 points, **zero** collapsed segments
+   below 1e-9, max turning angle 41.96° at the LE. No cusp. S1–S5 inherit nothing.
+3. **Not tunable.** Worst tip corner **179.737°** at `split_x_fore` 0.10, 0.20 and
+   0.35 alike — identical. The airfoil-face cap corners on an OML block split;
+   every split lands on a *smooth* part of the contour, so the two meeting edges
+   are collinear and the corner is ~180° by construction.
+
+**All three legacy tip closures fail; cap4 is least bad.** `mid4` rejected
+(`tip_ring_2` scaled Jacobian −6.898e-02, alignment −1.0); `split8` rejected
+(`tip_ring_5` −2.838e-01, alignment −1.0, plus open boundary off root plane).
+Both were caught by the scaled-Jacobian gate added mid-stage; before that fix they
+would have been accepted and marched.
+
+## 3.4 Decisions
+
+- **ADR-0006** — S0/cap4 recorded as failing the volume gate, **not repaired**.
+  RUNBOOK §1 makes cap4 the control, not the answer; repairing it would mean
+  investing in the topology the tournament exists to replace. S0 stays as a
+  documented regression baseline (§6).
+- **ADR-0007** — `epsE_common_start` re-based to Stage 02, calibrated on the first
+  strategy passing all hard surface gates on all ten calibration geometries, in an
+  implementation order **fixed in advance** so the host cannot be chosen after
+  seeing results. No epsE tuning on the Round C hold-out.
+
+---
+
+# 4. STAGE 02 — STRATEGY PROTOTYPES (in progress)
+
+## 4.1 Architecture
+
+RUNBOOK §4.3 — geometry ingestion, QC, manifests and export are **shared**;
+strategies differ only in how they block the wing. Shared module
+`04_strategy_prototypes/stage02_common.py` reuses the trusted `aeris.mesh.surface`
+chain that passes the TMR anchor.
+
+**All strategies use the same OML extraction** (`feature_split_sides` →
+`_map_sides_to_wing`). They differ in spanwise construction and derivation only.
+
+## 4.2 Final result — ten geometries, `epse_calibration_lhs10_seed7`
+
+| strategy | built | blocks | worst scaled Jac | max skew | **accepted** |
+|---|---:|---|---:|---:|---:|
+| S1 tip-first sweep | 10/10 | **[8]** | +0.3250 | 0.7893 | **10/10** |
+| S3 station sweep | 10/10 | [11, 14] | +0.3250 | 0.7893 | **10/10** |
+| S4 analytic multiblock | 10/10 | **[8]** | +0.3250 | 0.7893 | **10/10** |
+| S5 frozen RBF | 10/10 | **[8]** | +0.3249 | 0.7894 | **10/10** |
+| S2 cross-field tip | — | — | — | — | **not implemented** |
+| S0 cap4 | — | — | — | — | **failed (ADR-0006)** |
+
+**+0.3250 is above the runbook's 0.30 quality target.** Identical on all ten.
+
+## 4.3 Hard-gate verification — `verify_strategies.py`
+
+| check | S1 | S3 | S4 | S5 |
+|---|---|---|---|---|
+| mesh reproduces generated OML | **0.000000%** | **0.000000%** | **0.000000%** | **0.000000%** |
+| watertight tip | **PASS** | **PASS** | **PASS** | **PASS** |
+| deterministic connectivity | **PASS** | **PASS** | **PASS** | **PASS** |
+| block dimensions adapt to geometry | no | yes (3 sets) | no | no |
+| all nodes finite | PASS | PASS | PASS | PASS |
+
+**0 hard-gate failures.** Two corrections were needed to reach that honestly:
+
+- **The determinism criterion was wrong.** It hashed block *dimensions*, but
+  RUNBOOK §2.1 freezes the **connectivity** signature while explicitly allowing
+  "node positions, spacing and permitted counts [to] adapt to geometry". S3 was
+  being failed for doing exactly what the runbook permits. Now connectivity is the
+  gate and dimension variation is reported separately.
+- **S5 had a real watertightness bug**, found only once it was added to the table:
+  it projected the OML but left the tip cap at its RBF position, so the cap no
+  longer met the OML edge — 36 missing tip-edge nodes on lhs7_01 and lhs7_02. Cap
+  *boundaries* are now projected too; RBF is retained only in the cap interior,
+  which is what the strategy claimed all along.
+
+**Fidelity means one specific thing.** 0.000000% is *mesh vs generated OML*. It is
+**not** a statement about how well the generated OML represents the source/CST
+geometry — that was not measured, and the section polyline is itself an
+approximation (61 points; CST refit allowance 0.1% chord, ten times the mesh
+gate). See the 2026-08-13 addendum in `geometry_fidelity_gate_resolution.md`.
+
+## 4.4 THE TIP FOLD — solved
+
+For most of Stage 02 every strategy produced folded cells in the tip cap. ~15
+constructions were measured and rejected: offset fractions, ring split stations,
+Laplacian smoothing 0–400 iters, wrap points 12–33, radial points 7–11, piecewise
+TE-base allocation, ring split on the TE corners, inward-bisector offset,
+arc-length re-parameterisation, cosine→uniform distribution, and **elliptic
+(Winslow) smoothing** — which made it *worse* (−0.0363 → −0.0499).
+
+**The answer was already in this repository**, commit `bfaeaf1` *"cap4
+camber-split tip cap — full-resolution pyHyp march validated at L1"*. Two
+decisive properties, and every attempt above lacked both:
+
+1. **The inner boundary is built from the SECTION, not from the outer ring.**
+   `rect = camber + width_frac × (surface − camber)` is a convex combination of
+   the camber line and the actual surface, so it lies inside the section **by
+   construction**. Every attempt above derived the inner ring by *displacing the
+   outer ring*, which carries no such guarantee — on the cambered lower surface
+   the inner ring left the section and the patch inverted over a wide region.
+2. **The inner rectangle is inset chordwise**, so collar end edges slant. The
+   original code documents the exact failure hit here: *"Without the inset, the
+   end edges are collinear with the rectangle's short sides … which degenerates
+   the corner cells to zero Jacobian."*
+
+**Frozen cap parameters** (swept over all ten geometries):
+`width_frac = 0.30`, `chord_inset = 0.02`, `collar_points = 13`.
+Topology: camber-aligned rectangle + 4 near-uniform-width collars = 5 tip blocks.
+
+## 4.5 Per-strategy notes
+
+**S1 — tip-first sweep.** Cleanest. 8 blocks on every geometry. OML corners only
+on the LE and the two blunt-TE base corners. Spanwise geometric-progression law
+computed and recorded; realised at native sections (Stage 03 redistributes).
+
+**S3 — station sweep.** Per-interval blocks between anchors; interfaces exact by
+construction (consecutive intervals share the anchor column). **Open defect:**
+block count 11 vs 14 because anchors are detected from spacing changes. RUNBOOK
+§2.1 disqualifies drifting connectivity from the main DSE. Fix: drive anchors from
+`geometry_topology_contract.json` stations.
+
+**S4 — analytic multiblock.** Analytic control-vertex derivation of the OML
+(Type 1 surface vertices, Type 2 interior camber vertices). **Its own four-domain
+tip was measured and rejected:** splitting on the *camber line* degenerates at the
+LE/TE where the line has zero thickness — 51 folded cells, −0.2394, identical on
+all ten. Retained in `analytic_tip_domains` as the recorded negative result. S4
+now adopts the proven closure, so it no longer differs from S1 at the tip.
+
+**S5 — frozen RBF.** Seeded from S1. Index-based frozen correspondence,
+thin-plate-spline, 145 landmarks. **Key measurement:**
+
+| transfer | landmark residual | OML deviation *before* projection |
+|---|---:|---:|
+| lhs7_00 → 01 | 3.7e-15 m | 2.90e-02 m = **3.496% chord** |
+| lhs7_00 → 02 | 9.0e-15 m | 2.62e-02 m = **3.003% chord** |
+| lhs7_00 → 03 | 8.1e-15 m | 2.54e-02 m = **2.351% chord** |
+
+The fidelity gate is 0.01% chord, so deformation alone misses by ~250–350×.
+Landmark residual is machine zero, so this is **not** a fitting failure — the RBF
+reproduces its landmarks exactly and still cannot reproduce the surface between
+them. **Conclusion:** a frozen skeleton is not close enough on its own across this
+design space; projection to prescribed CAD is mandatory, not a refinement. With
+projection, S5 reduces to "S1 with RBF for the free tip-cap interior only", where
+deviation is small (1.6e-5 to 5.5e-5 m) and RBF is defensible.
+
+## 4.6 Bugs found and fixed in Stage 02
+
+**Watertightness (real, in the mesher).** The cap built its own ring by resampling
+the section at its own point count while the OML tip edge came from
+`feature_split_sides` at a different count — an **11 mm hole**, with every block
+passing QC individually. Fixed structurally: `oml_tip_ring_2d` +
+`butterfly_from_ring` take the cap's outer ring from the OML side curves exactly.
+Constraint that falls out: opposite arcs need equal counts, tying the LE wrap to
+`te_base_points` as `k = (te_base_points − 1)/2`. Defaults `te_base_points = 9`.
+
+**Four bugs in the verifier itself** — each reported a false failure on a sound
+mesh, and all are fixed:
+
+1. Distance measured to *sampled points* instead of polyline *segments* — floors
+   the error at half the reference spacing (reported 0.0507% on an exact mesh).
+2. **Open** reference contour excluding the blunt base — reported the TE base
+   block as 0.2516% off-surface, exactly half `te_thickness`.
+3. Watertightness tested backwards — required every cap boundary node to lie on
+   the OML edge, but the cap's internal interfaces are legitimately interior.
+4. Tip-edge nodes taken from *every* OML block's outboard edge — on segmented S3
+   each interval has its own, reporting a **0.58 m** gap on a sound mesh.
+
+---
+
+# 5. STAGE 02 CLOSE-OUT — WORK COMPLETED 2026-08-13
+
+Executed against the close-out plan. Phases 0, 2 and 3 are complete; Phase 1
+awaits the user launching the prepared marches; Phase 4 follows Phase 1.
+
+## 5.1 Phase 0 — rules frozen before any march ✅
+
+- **ADR-0008** fixes the epsE protocol *in advance of any result*: ladder
+  `{1.5, 2.0, 3.0}` (not extended after a failure), calibration at the Stage 01
+  level for direct cap4 comparability, confirmation at a finer level, a verbatim
+  pass checklist whose hard gate is **min scaled quality strictly > 0**, the
+  highest-passing tie-break, an early-stop rule, and the statement that ADR-0007's
+  pre-fixed order makes **S1** the host and the host is not re-chosen after
+  results.
+- **Operating points resolved** by option (b) — see §2.4. `Re_low` renamed;
+  `EPSE-RECHECK-ON-MISSION-FREEZE` recorded.
+
+## 5.2 Phase 1 — S1 volume canary: PREPARED, NOT RUN ⏳
+
+`03_cap4_epse/s1_volume_canary.py` builds the S1 surfaces, writes the pyHyp run
+inputs and emits the commands. Heavy compute is not launched in-session.
+
+**Run these three, then `collect`:**
+
+```
+(cd AERIS_MESH_STUDY/artifacts/stage02/s1_volume_canary/lhs7_00/eps15 && \
+   /home/mike/miniconda3/envs/mach-aero/bin/python run_pyhyp.py)
+(cd .../eps20 && /home/mike/miniconda3/envs/mach-aero/bin/python run_pyhyp.py)
+(cd .../eps30 && /home/mike/miniconda3/envs/mach-aero/bin/python run_pyhyp.py)
+
+.venv/bin/python AERIS_MESH_STUDY/03_cap4_epse/s1_volume_canary.py collect
+```
+
+`collect` applies the ADR-0008 checklist verbatim and prints the result **against
+cap4's 53/128 bad layers** so the comparison is explicit.
+
+**The stop condition is mandatory.** If S1 fails all three, do **not** march
+S3/S4/S5 — they share `stage02_common.py` ingestion and the same tip closure, so
+that would buy ten expensive copies of one failure. Diagnose the shared tip cap or
+the marching setup and report.
+
+## 5.3 Phase 2 — tournament cleaned up ✅
+
+**2.1 S1 and S4 are the same candidate.** Topology hash matches and **max node
+coordinate difference is exactly 0.000e+00 on all ten geometries**
+(`s1_s4_identity_check.json`). S4's analytic control-vertex derivation reproduces
+S1's mesh bit-for-bit. That is a legitimate finding — two derivations converging —
+not a disappointment. **Do not carry both into the volume screen.**
+
+**2.2 S3's anchor drift fixed.** Anchors now come from the contract stations
+`b0–b3` via the planform relations, not from detected spacing changes. Result:
+**14 blocks on all ten geometries**, 10/10 accepted (`s3_anchor_fix_results.json`).
+Station residuals 0.003–0.028 m because `b1` has no realised section, so each
+anchor snaps to the nearest one and the residual is reported.
+**The fixed S3 is a different strategy from the one measured earlier; its previous
+numbers do not transfer.**
+
+**2.3 S5 reclassified and verified.** Renamed **RBF + mandatory CAD
+reprojection**; pure frozen transfer is a recorded negative result. Added to the
+hard-gate table, which immediately exposed a real bug — see §4.3.
+
+**2.4 S2 formally deferred (ADR-0009)**, on the substance rather than the install
+list: a cross-field yields a quad-dominant *unstructured* layout, and the
+quad-layout-to-structured-multiblock decomposition pyHyp requires is supplied by
+none of the candidate packages. The paper's own minimum volume hex scaled Jacobian
+was 0.0539 — barely above the `> 0` hard gate.
+
+**Consequence, stated plainly:** with S2 deferred, S4 identical to S1, S5 reduced
+to S1-plus-reprojection and S3 sharing S1's OML and closure, **the six-strategy
+tournament has resolved to essentially one surviving surface topology**, reached
+by several derivations, with S3 the only genuine structural variant. That means
+the Round A/B/C structure needs explicit re-scoping before Stage 03 rather than a
+silent narrowing.
+
+**2.5 Volume screen** — deferred to after Phase 1, and it should now run on **S1
+and S3 only**, S4 being identical to S1 and S5 being a deformation layer on it.
+
+## 5.4 Phase 3 — record corrected ✅
+
+1. **§4.3 self-contradiction fixed** — it showed S3 failing while claiming zero
+   failures. Both the criterion and the wording are corrected.
+2. **"4 of 6 strategies working" replaced** with what was measured (§1).
+3. **0.30 audited** — correctly a ranking target everywhere; no misuse found.
+4. **Fidelity split into two questions** — addendum in
+   `geometry_fidelity_gate_resolution.md`. Stage 02 measured mesh-vs-generated-OML
+   only.
+5. **Degenerate sampling dimension checked** — `dihedral_b1_deg` (index 14) is
+   sampled with min == max, consuming an RNG column. Values are all zero, but
+   **locked-set identity depends on sampling all 20 dimensions**; reducing to 19
+   would change every locked set. Recorded, not changed.
+6. **Stray repo-root files deleted** (`0.0`, `0.03`, `1.0e-6`).
+
+## 5.5 Remaining open items
+
+| # | item | blocking? |
+|---|---|---|
+| 1 | **Run the Phase 1 canary** (commands above) | **yes — everything** |
+| 2 | Ten-geometry epsE calibration, if the canary passes | yes, Stage 03 |
+| 3 | Confirm the selected epsE at a finer level | yes |
+| 4 | Stage 02 report + gate + user approval (Phase 4) | yes |
+| 5 | Re-scope Round A/B/C for one surviving topology | yes, Stage 03 |
+| 6 | `b1` has no realised section — contract vs geometry | Stage 03 |
+| 7 | Spanwise redistribution; epsE re-check after it | Stage 03 |
+| 8 | Measure generated-OML vs source/CST accuracy | Stage 03 |
+| 9 | Mission authority → `EPSE-RECHECK-ON-MISSION-FREEZE` | Stage 09 |
+
+**Nothing is proven until item 1.** A +0.3250 surface is necessary, not
+sufficient — cap4's surface passed QC too.
+
+# 5B. SESSION 2026-08-13 (later) — CLEAN SLATE + S1 STEPWISE
+
+## 5B.1 Artifacts deleted, evidence kept
+
+- **DELETED** `artifacts/` (257 MB, fully regenerable) and
+  `04_strategy_prototypes/*.json` (Stage 02 results, minutes to regenerate).
+- **KEPT** `03_cap4_epse/*.json` — Stage 01 cap4 failure evidence from real pyHyp
+  marches (~15 min each). ADR-0006 rests on it and it cannot be cheaply
+  regenerated.
+
+## 5B.2 pyHyp REJECTED the S1 surface — inconsistent normals
+
+The first canary attempt never marched. pyHyp exited in ~2 s with
+`ERROR: Normal directions may be wrong`. Diagnosis: **all five tip blocks pointed
+inward** (outward-dot ≈ −0.985, 0% outward) while the OML blocks pointed the other
+way.
+
+This was a gap in **our own gate**. Stage 00 `surface_validity` says "watertight,
+**consistent normals**, conformal interfaces"; watertightness and scaled Jacobian
+were implemented, **consistent normals never was**. Per-block winding checks
+cannot see it — each block is individually well-formed while its neighbour faces
+the other way.
+
+**Fixed** by `orient_blocks_consistently()`: orientation is propagated across
+shared edges (correctly oriented neighbours traverse a shared edge in opposite
+directions), then the whole surface is flipped if its enclosed signed volume is
+negative. On `lhs7_00`: 8/8 blocks reached by the edge walk, **7 flipped**,
+enclosed volume +2.697e-02 m³ (outward), QC unchanged at +0.3250. Wired into S1,
+S3 and S4.
+
+## 5B.3 Kernel panic — unrelated, nothing lost
+
+`Timeout: Not all CPUs entered broadcast exception handler` — a CPU-level
+machine-check/NMI broadcast timeout on a 12th-gen i7-1255U under kernel 7.0.0.
+Not an application crash; the canary runs had exited in ~2 s and were consuming
+nothing. No MCE record or pstore dump survived, so it cannot be attributed with
+certainty. Study verified intact afterwards: 0 corrupt files, 182 tests pass.
+
+Before any long march: install `systemd-coredump`/`kdump-tools` so a repeat is
+diagnosable, `lm-sensors` to check thermals, and `intel-microcode`.
+
+## 5B.4 S1 build, step by step (`build_s1_stepwise.py`)
+
+Each step exported separately to `artifacts/stage02/s1_stepwise/`.
+
+| step | what | result |
+|---|---|---|
+| 1 | section ingestion + feature split | 17 sections × 61 raw pts → upper 49 / lower 49 / base 9 |
+| 2 | OML loft, **tip still open** | 3 blocks, 1664 cells, jac +0.7724 |
+| 3 | tip ring taken **from the OML edge** | 104 pts, corners `[4,48,56,100]`, arcs `[45,9,45,9]` |
+| 4 | tip cap: camber rectangle + 4 collars | 5 blocks, 1600 cells |
+| 5 | assembled, **before orientation** | 8 blocks, 3264 cells — *the state pyHyp rejected* |
+| 6 | normals propagated + globally flipped | **jac +0.3250, skew 0.789, accepted** |
+
+## 5B.5 Aspect ratio 947 — diagnosed, fix found, DEFERRED on purpose
+
+Measured decomposition: chordwise minimum edge **1.743e-04 m** (at the blunt TE,
+from cosine clustering) against spanwise median **6.766e-02 m** — ratio 388. So
+spanwise coarseness is the lever.
+
+The geometric-progression law was being computed and thrown away. Realising it
+works:
+
+| target cell | spanwise cells | total cells | **max AR** | min scaled Jac |
+|---|---:|---:|---:|---:|
+| off (native 17 stations) | 16 | 3264 | **947.5** | +0.3250 |
+| 0.045 m | 32 | 4928 | 495.7 | +0.3250 |
+| 0.020 m | 66 | 8464 | 204.0 | +0.3250 |
+| 0.010 m | 127 | 14808 | **103.0** | +0.3250 |
+
+**But it is defaulted OFF, deliberately.** Every new column is a linear blend of
+its two bounding stations, and the master geometry is a spline loft in span.
+Measured deviation from the realised stations: **1.99e-02 m ≈ 7.4% of chord**,
+against a geometry-fidelity **hard gate of 0.01% of chord**. Aspect ratio is a
+*ranking target*; fidelity is a *gate*. Trading the gate for the target is the
+wrong way round.
+
+**The correct fix is upstream:** have the generator realise more sections —
+`pygeo.extraction.spanwise_sections` is already 25 against the 17 the wing
+exposes — so extra columns lie ON the loft rather than on chords of it. That is
+Stage 03 geometry work, not a mesher change.
+
+`realise_law=True` remains available for experiments, with the fidelity cost
+recorded.
+
+## 5B.6 A second verifier blind spot, closed
+
+The fidelity check skipped any block whose spanwise dimension differed from the
+station count — which is exactly what a spanwise-refined block looks like. It
+would have reported a refined mesh as **fidelity-perfect** while its interpolated
+columns sat off the loft entirely. It now records
+`skipped_spanwise_refined_blocks` and `fidelity_unverified_for_refined_blocks`
+instead of skipping silently.
+
+## 5B.7 State for Codex
+
+- Canary **must be re-prepared**: the staged surfaces on disk carried the old
+  inconsistent normals. The orientation fix is in the code but not yet baked into
+  staged surface files.
+- S1/S3/S4/S5 all still surface-valid; **nothing has marched**.
+- Stage 02 gate still not claimed; `stage_status.json` unchanged
+  (`active_stage 02`, `IN_PROGRESS`).
+
+---
+
+# 5C. PHASE 1 CANARY — RUNNING (2026-08-13)
+
+## 5C.1 Orientation fix CONFIRMED by pyHyp
+
+pyHyp now reports **`Normals are consistent!`** and reads all 3264 faces. The
+`ERROR: Normal directions may be wrong` that blocked the first attempt is gone.
+`orient_blocks_consistently()` works.
+
+## 5C.2 A fast off-protocol run was attempted first — discard its numbers
+
+To answer "does it march at all" quickly, a run was made at `N=37`, `coarsen`
+hand-edited, `epsE=3.0`. It produced a CGNS but the march **numerically
+exploded**: `min_volume -3.2e+40`, `min_quality -1.0`, invalid from **layer 2**,
+36/36 bad layers. CGNS coordinates reached **1e+17 m** on a 1.18 m semi-span —
+about ten light-years — which is why ParaView could not determine an array range
+and refused to render it. ParaView was right; the mesh was destroyed.
+
+Cause was the settings, not the topology: `s0` 8.27e-06 m against a smallest
+surface edge of 1.74e-04 m, marching to 23.5 m in only 37 layers, giving a
+reported grid ratio of **1.514** against the 1.0-1.2 gate target.
+
+**These numbers must not be read as evidence about S1.** The run was
+off-protocol and its settings are not survivable for any surface. It is recorded
+only so the attempt is not repeated.
+
+## 5C.3 The proper ADR-0008 canary is RUNNING
+
+Re-prepared with the fixed normals, at Stage 01 settings so the comparison to
+cap4 is like-for-like:
+
+| setting | value |
+|---|---|
+| level | `smoke` (N=129, coarsen=1) |
+| s0 | 8.273402445439719e-06 |
+| marchDist | 23.5039842199992 |
+| epsE ladder | 1.5 / 2.0 / 3.0 (epsI = 2 x epsE) |
+| geometry | `lhs7_00` |
+| strategy | S1, 8 blocks, 3264 surface cells, surface jac +0.3250 |
+
+Artifacts: `artifacts/stage02/s1_volume_canary/lhs7_00/eps{15,20,30}/`.
+
+**Reference to beat — cap4 on the same geometry and settings:**
+53 of 128 bad layers, min quality -0.90808, and at epsE 1.5/2.0 it also had
+10/4 inverted cells.
+
+**When the runs finish:**
+
+```
+.venv/bin/python AERIS_MESH_STUDY/03_cap4_epse/s1_volume_canary.py collect
+```
+
+`collect` applies the ADR-0008 checklist verbatim and prints the result against
+cap4's 53/128.
+
+**ADR-0008 section 6 early-stop still binds:** if all three fail, do NOT march
+S3/S4/S5 - they share `stage02_common.py` ingestion and the same tip closure, so
+it would buy ten copies of one failure. Diagnose and report instead.
+
+## 5C.4 Bug fixed in the canary script
+
+`build_pyhyp_options` was being handed a relative `inputFile`, and the static
+runner executes from its own directory, so pyHyp raised "Input file not found".
+Paths are now absolute and verified before launch.
+
+---
+
+# 5D. THE CONTROL THAT SETTLED IT (2026-08-13)
+
+## 5D.1 cap4 marched through the NEW code path — my setup is sound
+
+| | cap4 control | S1 canary (first attempt) |
+|---|---:|---:|
+| min volume | **+2.11e-11** | -1.3e+51 |
+| min quality | -0.854 | -1.0 |
+| bad layers | **54 / 128** | 128 / 128 |
+| first invalid layer | **none** | **2** |
+| pyHyp `passed` | **True** | False |
+| max coordinate | **35.8 m** (marchDist 37.9) | 9.2e+24 m |
+| wall time | ~9 min | 8 s |
+
+54/128 reproduces Stage 01's cap4 result of **53/128** on the same geometry and
+settings, through an entirely new code path. That is a genuine regression anchor
+the study did not previously have, and it proves the marching setup is not the
+fault.
+
+**Conclusion: S1's SURFACE was breaking the march, not the pyHyp setup.**
+
+## 5D.2 The real Stage 02 lesson
+
+| | smallest surface cell | s0 (first layer) |
+|---|---:|---:|
+| cap4 | **650.6 um** | 13.4 um (49x margin) |
+| S1 (collar_points 13) | **11.9 um** | 13.4 um (**cell SMALLER than s0**) |
+
+cap4 has a *bad surface* (jac +0.0046, 179.7 deg corners) and marches to a
+usable-if-flawed volume. S1 had a *beautiful surface* (+0.3250, zero folds,
+watertight, consistent normals) and destroyed itself at layer 2.
+
+**Surface cell QUALITY and MARCHABILITY are different properties.** The whole
+stage was spent driving up the minimum scaled Jacobian, which produced a surface
+whose cells were 55x too small to march. This is a more useful finding than the
+tip-fold fix.
+
+Mechanism: the blunt TE is **4.70 mm wide at the root but only 0.78 mm at the
+tip**. A fixed `collar_points = 13` across a face that shrinks 6x spanwise makes
+microscopic cells at the narrow end - the smallest, 11.9 um, in `tip_collar_te`.
+
+## 5D.3 Two bugs fixed
+
+1. **`characteristic_length` was wrong.** `aeris.mesh.surface` computes it as the
+   bounding-box DIAGONAL, `norm(ptp(points, axis=0))`; the canary used the
+   x-extent only - **0.94 against the correct 1.5171**. pyHyp derives both `s0`
+   and `marchDist` from it, so both were inconsistent with every cap4 number the
+   study compares against. Corrected: s0 1.336e-05, marchDist 37.956.
+2. **`collar_points` 13 -> 5.** Smallest cell 11.9 um -> 29.9 um at the same
+   minimum scaled Jacobian (+0.3250). Measured sweep: `collar_points` is the
+   dominant lever, `te_base_points` barely matters.
+
+## 5D.4 A third missing gate, now measured
+
+`qc_blocks` now reports `min_cell_edge_m` and `min_cell_edge_block`. Nothing
+checked the smallest surface cell against the first marching layer before, so a
+mesh could pass every quality gate and still invert at layer 2. This is the same
+class of gap as the consistent-normals check: declared nowhere, caught only by
+pyHyp.
+
+Three gates have now been found missing in Stage 02: consistent normals,
+smallest-cell-vs-s0, and (in the verifier) silent skipping of spanwise-refined
+blocks.
+
+## 5D.5 Canary re-running
+
+Both fixes applied, same ADR-0008 protocol, epsE 1.5/2.0/3.0 on `lhs7_00`.
+A healthy march takes ~9 minutes; the exploded ones took 8 seconds, so runtime
+alone is a first indicator.
+
+---
+
+# 5E. THE REFRAMING — MARCHABILITY, NOT SHAPE QUALITY (2026-08-13)
+
+## 5E.1 The diagnosis
+
+| | min scaled Jac | cell-size range | min cell / s0 | march |
+|---|---:|---:|---:|---|
+| cap4 | **+0.0046** | **153x** | **48.7** | **completes** |
+| S1 (as built) | **+0.3250** | 3462x | 0.9 | **explodes at layer 2** |
+
+cap4's cell shape is 70x worse than S1's and it marches. S1's shape is excellent
+and it cannot march at all.
+
+March log shows the mechanism: at layer 2 the linear solver hits
+`kspMaxIts = 1500`, yields a small negative volume (-9.4e-09), then diverges by
+twelve orders of magnitude per layer. **An implicit hyperbolic solve is
+conditioned by the RANGE of cell sizes, not by individual cell shape.**
+
+## 5E.2 What was wrong with the whole approach
+
+Stage 02 was spent maximising the minimum scaled Jacobian - the tip-fold hunt
+(~15 constructions), the camber-split cap, collar tuning. Every gain came from
+**subdividing the tip more finely**, which improves shape and shrinks the
+smallest cell. The smallest cell is what breaks the march.
+
+Measured, the two objectives trade monotonically:
+
+| config | range | min scaled Jac |
+|---|---:|---:|
+| te_base 9, collar 5 | 1068x | +0.3250 |
+| te_base 5, collar 3 | 534x | +0.3119 |
+| te_base 3, collar 3 | **396x** | +0.1363 |
+| cap4 | **153x** | +0.0046 |
+
+Recorded as **ADR-0010**.
+
+## 5E.3 An inconsistency I had introduced
+
+cap4 refines 17 native stations to **255** by linear interpolation. That is
+exactly the spanwise law I had disabled on fidelity grounds - so S1 was being
+held to a standard the working baseline does not meet. The law is now enabled.
+The 7.4%-of-chord interpolation cost is real (an attempt to call it an
+over-estimate was itself wrong: the measurement spans two native intervals either
+way) and is inherited from cap4's established practice. Removing it for both is
+Stage 03 generator work.
+
+## 5E.4 New S1 defaults
+
+`te_base_points = 3`, `collar_points = 3`, `realise_law = True` @ 0.010 m.
+Staged surface: **range 396x** (was 3462x), **min/s0 6.0** (was 0.9).
+
+## 5E.5 RESULT — S1 MARCHES
+
+Live at layer 96 of 129 on epsE 3.0:
+
+| | now | before |
+|---|---|---|
+| Min Quality | **+0.376** | -1.0 |
+| Min Volume | **+8.6e-05** | -1e+51 |
+| cMax | **0.7000** (cap4's value) | collapsed to 0 |
+| Ratio | 1.22 | overflow |
+
+**Min quality +0.376 is above the 0.30 ranking target; cap4 only reached
+-0.854.** Zero negative volumes, solver converging normally.
+
+## 5E.6 Consequences for the study
+
+- **Stage 02's strategy ranking is void** - S1 "winning" was measured on the
+  wrong criterion. Ranking must be redone on marchability.
+- **Round A is weaker than assumed.** A surface can pass every stated surface
+  gate and be unmarchable. The two marchability metrics must be added to Round A
+  before Stage 03.
+- Three gates were found missing this stage: consistent normals, min-cell vs s0,
+  and cell-size range. None was caught by the declared gate set; all were caught
+  by pyHyp or by measurement.
+
+---
+
+# 5F. CANARY PASSES — S1 MARCHES CLEAN (2026-08-13, 20:19)
+
+## 5F.1 Result
+
+| epsE | layers | bad layers | min quality | min volume | passed |
+|---:|---:|---:|---:|---:|---|
+| 1.5 | 128 | **0** | **+0.224** | +8.59e-11 | **True** |
+| 2.0 | 128 | **0** | **+0.234** | +8.14e-11 | **True** |
+| 3.0 | 128 | **0** | **+0.242** | +5.72e-11 | **True** |
+| cap4 control | 128 | 54 | -0.854 | +2.11e-11 | True |
+
+**Minimum scaled quality is positive everywhere for the first time in this
+study.** cap4 has 54 layers containing negative-quality cells; S1 now has none.
+
+## 5F.2 The progression that got there
+
+| configuration | cell range | bad layers | min quality |
+|---|---:|---:|---:|
+| cap4 baseline | 153x | 54/128 | -0.854 |
+| S1 cosine, native span | 3462x | 128/128 | -1.0 (exploded, 1e+24 m) |
+| S1 cosine, spanwise law | 396x | 12/128 | -1.0 |
+| **S1 uniform, spanwise law** | **99x** | **0/128** | **+0.224** |
+
+Nothing about cell SHAPE changed between the last two rows. Only the cell-size
+distribution:
+
+1. spanwise law enabled - max cell 103 -> 20.3 mm
+2. uniform chordwise instead of cosine - min cell 29.9 -> 205.7 um
+
+That is ADR-0010 confirmed by experiment.
+
+## 5F.3 Frozen S1 configuration
+
+| parameter | value |
+|---|---|
+| chord_points | 49 |
+| chordwise distribution | **uniform** (was cosine) |
+| te_base_points | 3 |
+| collar_points | 3 |
+| realise_law | **True**, target 0.010 m |
+| tip closure | camber-split rectangle + 4 collars |
+| blocks | 8 |
+| cell-size range | **99x** (cap4: 153x) |
+| min cell / s0 | 15.4 (cap4: 48.7) |
+| min scaled Jacobian | +0.045 (cap4: +0.0046) |
+
+## 5F.4 epsE_common_start — NOT frozen yet
+
+All three candidates pass on `lhs7_00`. ADR-0008's rule selects the **highest**
+passing value, so the provisional answer is **epsE = 3.0**, which also has the
+best min quality (+0.242).
+
+**It is not frozen.** ADR-0008 requires all ten calibration geometries plus
+confirmation at a finer level. One geometry is not the protocol.
+
+## 5F.5 Next
+
+1. `s1_volume_canary.py prepare --all-ten` then run 30 marches (~2 min each,
+   about 1 hour) - the ADR-0008 ten-geometry calibration.
+2. Confirm the selected epsE at a finer level.
+3. Only then freeze `epsE_common_start` and write the Stage 02 report.
+4. Strategy ranking must be redone on marchability (ADR-0010); S3/S4/S5 need
+   re-measuring with the new defaults, which they inherit through
+   `stage02_common.py`.
+
+---
+
+# 5G. TEN-GEOMETRY CALIBRATION + CONFIRMATION (2026-08-14)
+
+## 5G.1 Calibration at `smoke` — 30 marches, all completed
+
+| epsE | passes | note |
+|---:|---:|---|
+| 1.5 | **10/10** | |
+| 2.0 | **10/10** | selected by ADR-0008 (highest passing all ten) |
+| 3.0 | 7/10 | fails lhs7_01, lhs7_02, lhs7_08 |
+
+Zero inverted cells anywhere. At epsE 2.0 every geometry gave 0/128 bad layers,
+min quality +0.096 to +0.237, all positive. cap4 for comparison: 53/128 bad,
+-0.908.
+
+**More dissipation is not monotonically better.** On lhs7_08, epsE 3.0 gives 9
+bad layers where 2.0 gives none. Calibrating on lhs7_00 alone - where all three
+passed - would have frozen 3.0 and failed three of ten later.
+
+## 5G.2 Confirmation at `fine` — epsE 2.0 FAILS 9/10
+
+| geometry | bad | minQ @ fine | minQ @ smoke |
+|---|---:|---:|---:|
+| lhs7_00 | 0 | +0.251 | +0.234 |
+| **lhs7_01** | **1** | **-0.210** | +0.178 |
+| lhs7_02 | 0 | +0.062 | +0.205 |
+| others | 0 | +0.119 .. +0.250 | - |
+
+**ADR-0008: a value passing at `smoke` and failing at `fine` is NOT selected.**
+epsE 2.0 is out. 1.5 cannot be silently substituted - it was only confirmed at
+`smoke`, so the ladder is being re-run at `fine`.
+
+This is what the confirmation step is for. Without it, `epsE_common_start = 2.0`
+would have been reported as the Stage 02 result and frozen into every downstream
+pyHyp strategy.
+
+Refinement is not uniformly harmful: 8 of 10 geometries IMPROVED at `fine`. Two
+degraded, one past zero.
+
+## 5G.3 A correction to ADR-0008 itself
+
+The ADR named **L4** as the confirmation level. L4 is N=37 with coarsen=4 -
+substantially COARSER than the `smoke` calibration level (N=129, coarsen=1), so
+it would have confirmed nothing. Only the coarsen=1 family
+(`smoke` -> `fine` -> `production`) is a refinement ladder at full surface
+resolution. ADR-0008 and the canary script are corrected; the error is recorded
+in the ADR rather than silently patched.
+
+## 5G.4 NEGATIVE RESULT — no surface metric predicts this failure
+
+Three hypotheses tested against the lhs7_01 failure, none holds:
+
+| hypothesis | evidence against |
+|---|---|
+| cell-size range | lhs7_01 has the **second-best** range (88x); the worst (190x, lhs7_07) passes |
+| max adjacent normal angle | lhs7_01 is 26.74 deg, mid-range of the passers (26.6-34.0) |
+| twist reversal | lhs7_03 and lhs7_04 also reverse twist and both pass |
+
+The bad cell is at **layer 0, the first cell off the wall**, with POSITIVE volume
+(7.97e-11) and negative quality (-0.210).
+
+**Cell-size range predicts catastrophic explosion; it does not predict marginal
+single-layer failure.** That is a real limit on the ADR-0010 marchability model
+and is recorded rather than papered over with a fourth story.
+
+## 5G.5 Running
+
+epsE 1.5 and 3.0 at `fine` on all ten (20 marches). Selection will be the highest
+value passing all ten **at `fine`**. If none passes all ten, ADR-0008 section 6
+applies: stop and report, do not extend the ladder.
+
+---
+
+# 5H. epsE CONFIRMED, AND A RESTRUCTURE AGREED (2026-08-14)
+
+## 5H.1 Ladder at the finer level `fine` (N=193, coarsen=1) — all ten geometries
+
+| epsE | passing all ten @ fine |
+|---:|---:|
+| **1.5** | **10/10** |
+| 2.0 | 9/10 (lhs7_01 fails, minQ -0.210) |
+| 3.0 | 6/10 |
+
+At 1.5 every geometry gives 0 bad layers, min quality +0.103 to +0.250, all
+positive. Ordering is monotonic: **less dissipation is uniformly better here**,
+the opposite of the usual expectation.
+
+`lhs7_01` was not a broken geometry - it has a narrower stable epsE window and
+passes at 1.5 (+0.204).
+
+**This was the first fully protocol-compliant result in the study:** calibrated on
+ten geometries, confirmed at a genuinely finer level, selected by a rule written
+before any result was seen. cap4 baseline: 53/128 bad at -0.908.
+
+`epsE_common_start = 2.0` from the earlier calibration is **superseded** - it
+failed finer-level confirmation. S1's own value is **1.5**.
+
+## 5H.2 RESTRUCTURE AGREED — six independent studies
+
+Stage 02 compared one topology wearing four labels: the tip closure was built once
+and inherited, so S3/S4/S5 converged on S1's cap. S4's own analytic tip was built,
+measured, rejected, and replaced by S1's.
+
+**The full restructure brief is `AERIS_MESH_STUDY/RESTRUCTURE_PROMPT.md`.**
+Headlines:
+
+- six independent studies, each implemented from scratch in
+  `04_strategy_studies/S<N>_<name>/`
+- a hard **independence line**: all blocking, tip closure, spanwise and chordwise
+  laws are per-strategy; only CAD ingestion, QC *definitions*, gate thresholds,
+  the pyHyp invocation, geometry sets and the verifier are shared
+- **`COMMON_BRIEF.md`** gives every strategy Stage 02's lessons up front, so the
+  last-built does not win on hindsight
+- **epsE is per-strategy**, not global - a value calibrated on S1's cell
+  distribution would rig the comparison
+- metrics and ranking **frozen before any strategy is optimised**
+- **robustness measured on the HOLD-OUT**, never the refinement set, or the
+  top-ranked criterion becomes a proxy for effort
+- an explicit **no-winner rule** if nothing passes all hard gates
+- a **per-strategy effort ledger** in `status`, reported with the results
+- ADR-0011 supersedes **ADR-0006** (S0 is now developed to its best state, not
+  recorded as failed-not-repaired)
+
+## 5H.3 Migration hazard, recorded
+
+`stage02_common.py` is **not** a clean shared module - S1's blocking decisions are
+baked in as defaults (`feature_split_sides(distribution="uniform")`,
+`butterfly_from_ring` width/inset/collar, `realise_spanwise_law`,
+`oml_tip_ring_2d`). Migrating it unchanged would hand every strategy S1's answers
+and recreate the exact problem the restructure exists to fix. §8 of the brief
+lists what moves to S1's folder and what stays shared with defaults stripped.
+
+## 5H.4 Objective restated
+
+The deliverable is **one scalable, robust method that runs unattended across the
+DSE** - not a well-documented catalogue of failures. Stage 02 was rigorous about
+recording what did not work and slow to produce something that did. If a strategy
+is close to passing, finish it.
+
+---
+
+# 6. FILE MAP
+
+```
+AERIS_MESH_STUDY/
+  status                                    this file
+  RUNBOOK.md                                the plan (v7, 13 stages)
+  00_governance/
+    stage_status.json                       AUTHORITATIVE workflow state
+    geometry_topology_contract.json         stations, airfoils, elevon, hashes
+    design_space_snapshot.yaml              20 variables + bounds + sources
+    gate_registry.yaml                      all gates, limits, freeze stages
+    operating_points.yaml                   provisional Re levels
+    dependency_audit.yaml                   per-strategy tooling availability
+    lhs_authority.yaml                      the three locked sets
+    make_lhs_sets.py --check                regenerate/verify locked sets
+    reference_package_manifest.yaml         Stage 01 reference package
+    geometry_fidelity_gate_resolution.md    source-aware fidelity gate
+    decisions/ADR-0001..0011
+    historical_reference_inputs/bwb_explore_wide.yaml   superseded airframe
+  02_tmr/tmr_anchor_report.json             13/13 PASS
+  03_cap4_epse/                             cap4 failure evidence + probes
+  04_strategy_studies/                      THE LIVE STRUCTURE (ADR-0011)
+    README.md                               layout, independence line, usage
+    COMMON_BRIEF.md                         Stage 02 lessons, given to all six
+    migrate_from_stage02.py                 provenance record of the migration
+    shared/                                 the experimental control
+      __init__.py       the independence line, stated
+      ingestion.py      sections + 2D->3D mapping; NO chordwise defaults
+      qc.py             QC metric DEFINITIONS, orientation, artifacts
+      gates.py          thresholds + frozen checklists; 0.30 is a target, not a gate
+      geometry_sets.py  locked sets; the hold-out is guarded
+      pyhyp_runner.py   the pyHyp invocation; prepare / collect
+      verify.py         the verifier; all SEVEN instrument bugs fixed
+      export_paraview.py  VTK with per-cell quality
+      selftest.py       reproduces the recorded Stage 02 numbers — run after any
+                        change to shared/
+    S0_cap4/ S1_tip_first/ S2_cross_field/
+    S3_station_sweep/ S4_analytic_multiblock/ S5_frozen_rbf/
+      STUDY.md          paper-vs-invented, attempts, results, effort ledger
+      artifacts/        this strategy's outputs
+  04_strategy_prototypes/                   ARCHIVED Stage 02 record — read-only,
+                                            not imported by 04_strategy_studies
+    stage02_common.py                       Stage 02 shared module (S1's defaults)
+    S1_tip_first/strategy_s1.py
+    S3_station_sweep/strategy_s3.py
+    S4_analytic_multiblock/strategy_s4.py
+    S5_frozen_rbf/strategy_s5.py
+    verify_strategies.py                    hard-gate checks
+    export_for_paraview.py                  VTK with per-cell quality
+    STAGE02_PROGRESS.md                     full Stage 02 narrative
+    stage02_ten_geometry_run.json           the results table
+    stage02_verification_report.json
+    s5_frozen_rbf_results.json
+  artifacts/stage02/paraview/               12 VTK files + README
+  reports/                                  stage gates + reports
+```
+
+**To inspect meshes:** open any `artifacts/stage02/paraview/*.vtk`, colour by
+`scaled_jacobian`, Threshold −1→0 to isolate folds (there are none). `is_tip`
+separates cap from OML.
+
+---
+
+# 5I. S4 COMPLETE — THE CONSTRUCTED VOLUME (2026-08-16)
+
+## 5I.1 Governance first: ADR-0014
+
+ADR-0011 §6.1's volume gate is phrased in terms of pyHyp's report, and RUNBOOK §6 S4
+exempts S4 from pyHyp. **ADR-0014 was written before any S4 volume existed**, restating
+the same five conditions in terms of the mesh rather than the tool, with every ADR-0008
+threshold unchanged. `shared/volume_qc.py` supplies them; `gates.volume_gate_checklist_direct`
+sits beside the pyHyp checklist rather than replacing it.
+
+**ADR-0014 §3.4 equivalence: VERIFIED**, against 6 completed S1 marches.
+
+- validity agreement: exact (0 inverted, min volume > 0 on both routes)
+- sign agreement: exact
+- **quality ratio in-house / pyHyp: 0.585 to 0.660** — a stable factor, recorded
+  because the two are different definitions of the same idea and the final report must
+  never mix them. S1's volumes read 0.193–0.364 through pyHyp and **0.170–0.231**
+  through the in-house metric.
+
+The check earned its place immediately: the first hexahedral scaled Jacobian ordered
+its corner triple product so "positive" meant the opposite of what `signed_cell_volumes`
+means by it. It passed a unit-cube test and scored every valid S1 volume at −1.0.
+
+## 5I.2 The result
+
+| | S4 | S1, same geometries and level |
+|---|---:|---:|
+| surface built / watertight | **10/10** | 10/10 |
+| deterministic connectivity | True, 1 signature | True |
+| worst surface min scaled Jacobian | **+0.01054** | +0.236 |
+| surface cell-size range | 198 – 426 | 114 |
+| **OML volume min scaled quality** | **+0.167 … +0.951** | — |
+| **OML volume mean scaled quality** | **0.92 … 0.98** | — |
+| OML volume inverted cells | **0** | — |
+| tip-cap volume | −0.71 … −0.81, 54–155 inverted | — |
+| volume gate | **FAIL 0/10** | PASS 10/10 (pyHyp route) |
+| in-house min scaled quality, whole mesh | negative (tip cap) | **0.170 – 0.231** |
+
+**Over the wing itself a constructed volume beats a marched one, and not narrowly.**
+S4's OML blocks mean 0.92–0.98 against S1's whole-mesh minimum of 0.170–0.231, and 96–98%
+of S4's cells sit at or above the 0.30 ranking target. S4 loses on the tip cap alone.
+
+Cell counts are **not** comparable — S4 builds the boundary layer, pyHyp marches to a
+far field (ADR-0014 §4).
+
+## 5I.3 The finding: the exchange rate between base count and corner sharpness
+
+ADR-0013 §2 said an O-H ring forces the nose wrap and the 1.0 mm base to equal counts,
+and that there are "essentially two ways to satisfy it", S0's and S1's. **There is a
+third**, and the paper states it — §2.3.1: *"a single boundary edge may consist of
+multiple control edges"*. The equality is between boundary edges, not arcs. S4's ring
+achieves perfectly balanced boundary edges (**23/22/23/22**) with the base at **3 points,
+chosen on physical grounds**.
+
+**And it has a price, now quantified.** The section has exactly two sharp corners, the
+two blunt-TE base corners, and putting a ring corner on both isolates the base again.
+So at most one is usable and the other three ring corners come from smooth contour.
+Interior angles at the eight Type 1 vertices, identical on every geometry:
+
+    v0 114.0°  v1 179.0°  v2 178.2°  v3 176.3°  v4 176.8°  v5 179.3°  v6 180.9°  v7 73.2°
+
+- **v6 is reflex.** Every ring containing it folds exactly one core cell at −0.01523;
+  every ring without it is positive. Exhaustive search, 22 admissible rings built.
+- **The cap's min scaled Jacobian is `sin(180° − flattest ring corner)`.** Selected ring
+  (1,3,5,7), flattest corner v5 at 179.31°, sin(0.69°) = 0.0120. **Measured 0.01198.**
+- It is **flat under refinement** — 0.0124 at L1 through L5, a 16x cell-count increase —
+  because it is set by an angle.
+
+**S0 and S1 keep the sharp corners and pay in cell-size range. S4 frees the base count
+and pays at the corners. Two ends of one constraint, and this is the first time the
+study can write down the exchange rate.**
+
+## 5I.4 Fourth confirmation of the central result, and a sharpening of it
+
+S4 uses a uniform spanwise law with **no tip anchoring** — deliberately, since anchoring
+is S1's fix for a marching problem S4 does not have. Its OML volume blocks are
+nonetheless excellent (0.92–0.98 mean, zero inverted).
+
+**So the tip-interface match is a property of hyperbolic marching, not of the mesh.**
+S1 needs it, S3 died without it, S4 does not need it because nothing marches through the
+interface.
+
+## 5I.5 Standing after S4
+
+- **S1** — the only strategy passing both gates. Hold-out still untouched.
+- **S0** — topology sound, all numbers void pending the 1.0 mm TE re-run.
+- **S2** rejected on measurement; **S3** falsified 30/30.
+- **S4** — complete. Surface passes every condition any strategy passes; volume fails,
+  in one place, for a reason that is now arithmetic rather than open.
+- **S5** — not started, and seeded from the strongest baseline by design, so it cannot
+  be independent of S1 under ADR-0011 §4.
+- **Open for every strategy:** fidelity unverified for spanwise-refined blocks. Where
+  S4's fidelity *is* verified it measures 8.7e-05 of local chord against a 1.0e-4 gate.
+
+# 5J. THE FIDELITY GATE IS GENERATOR-CHANGING, NOT MEASUREMENT-ONLY (2026-08-16)
+
+**Question:** the fidelity condition fails for every strategy ("fidelity unverified for
+spanwise-refined blocks"). Can `shared/exact_sections.py` be used to *verify* those
+columns where they are, or does the generator have to change? The two have very
+different prices — the first is an afternoon and re-runs nothing, the second
+re-identifies all three locked geometry sets and re-runs everything.
+
+**Answer: the generator has to change.** Settled on the measurements already in
+`shared/exact_sections.py`, no new runs needed.
+
+A measurement-only fix would require the interpolated columns to be *on* the loft and
+merely unproven. They are not on it. On `lhs100_seed42_000` the wing departs from a
+straight line between generator stations by a **median 0.447% of chord and up to 7.25%
+at the inboard/outboard spline junction — 45x to 700x the 0.01% gate.** Those columns
+are genuinely off the aircraft; no measurement makes them pass, and one that did would
+be an instrument bug of exactly the kind COMMON_BRIEF section 5 exists to prevent.
+
+Refining the station count does not rescue it either: 17 -> 35 -> 71 -> 143 stations
+gives 7.25% -> 3.08% -> 1.42% -> 0.68%, a ratio of ~2 per doubling. That is FIRST-order
+convergence — linear interpolation across a slope discontinuity — so reaching 0.01%
+needs of order 12,000 stations.
+
+**So the fix is the one `exact_sections.py` was written for:** the mesher asks the
+generator for sections at exactly the stations it wants, every mesh column is a real
+section, and the deviation is identically zero by construction on every geometry.
+`planform_curves()` already reproduces the generator to **0.000e+00** and `exact_z_at()`
+replaces the trapezoid integration of `tan(dihedral)` with its closed form, which is
+what makes a section at arbitrary `y` well defined at all.
+
+**Consequences, which are why this is an ADR and not a commit:**
+
+- it modifies `src/aeris` generator code, untouched by this study so far;
+- it changes what `configs/geometry/bwb.yaml` means, hence the sha256 identifying
+  `epse_calibration_lhs10_seed7`, `lhs100_seed42` and `round_c_lhs10_seed42`;
+- **every surface and volume result in this study is measured on the old sets** and
+  would have to be re-run, S1's 10/10 marches included;
+- the hold-out must be re-identified before it is used, or it is no longer the set the
+  study froze.
+
+**Recommendation: do it, and do it before the hold-out run**, not after. Running the
+hold-out on sets that are about to be re-identified spends the one-shot budget on a
+geometry set the final report will not be using.
+
+# 7. WORKING NOTES
+
+- **Heavy compute is not run in-session.** Long marches and campaigns are prepared
+  as commands for the user to launch.
+- **Findings live in tracked folders**, never `data/` (which gets wiped) or `/tmp`.
+- **The Stage 02 lesson:** four structurally independent strategies failing
+  *identically* was the signal that the defect was in shared infrastructure, not in
+  four separate designs. A ~15-variant parameter search was the wrong instrument;
+  the right move was reading the implementation already proven in this codebase.
+- **Verify the verifier.** Four of the "failures" in Stage 02 were measurement
+  bugs. Check the instrument before trusting a negative result.
+- 182 tests pass (`tests/mesh`, `tests/cfd`). No `src/aeris` implementation code
+  has been modified in Stage 02.

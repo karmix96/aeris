@@ -84,7 +84,12 @@ def test_unknown_id_lists_available():
 def test_aeris_wing_plugins_register():
     """The AERIS plugin module provides the three validated wing topologies."""
     ids = {t.TOPOLOGY_ID for t in list_topologies()}
-    assert {"wing_mid4_v1", "wing_split8_v1", "wing_cap4_v1"} <= ids
+    assert {
+        "wing_mid4_v1",
+        "wing_split8_v1",
+        "wing_cap4_v1",
+        "wing_cap4_cgrid_face_v1",
+    } <= ids
 
 
 def test_wing_adapter_rejects_unknown_params():

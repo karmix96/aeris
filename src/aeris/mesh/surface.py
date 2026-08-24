@@ -1034,6 +1034,65 @@ def _build_tip_airfoil_face_cap4(
     return [], [patch], [[0], [1], [2], [3]]
 
 
+def _build_tip_cgrid_face_cap4(
+    oml_blocks: Sequence[Array],
+    *,
+    collar_points: int,
+    width_frac: float,
+) -> tuple[list[Array], list[Array], list[list[int]]]:
+    """Two-block flat airfoil-face closure with a chordwise camber split.
+
+    This is an experimental wall-surface analogue of the C-mesh blocking used
+    in classical wing calculations: the dominant index direction runs
+    chordwise on the tip face, and the upper/lower halves meet on a camber-line
+    interface from the leading edge to the blunt trailing-edge midpoint. The
+    OML remains cap4, so the LE/TE wrap density knobs still work.
+    """
+    _ = collar_points, width_frac
+    if len(oml_blocks) != 4:
+        raise MeshBuildError("cgrid-face tip closure requires exactly 4 OML blocks.")
+
+    e_nose = oml_blocks[0][:, -1, :]  # upper nose shoulder -> LE -> lower nose shoulder
+    e_low = oml_blocks[1][:, -1, :]  # lower nose shoulder -> lower TE shoulder
+    e_te = oml_blocks[2][:, -1, :]  # lower TE shoulder -> TE mid -> upper TE shoulder
+    e_up = oml_blocks[3][:, -1, :]  # upper TE shoulder -> upper nose shoulder
+    n_wrap = len(e_nose)
+    n_chord = len(e_low)
+    if len(e_te) != n_wrap or len(e_up) != n_chord:
+        raise MeshBuildError("cgrid-face tip edges have inconsistent point counts.")
+    if n_wrap < 5 or n_wrap % 2 == 0:
+        raise MeshBuildError("cgrid-face tip closure requires odd cap_wrap_points >= 5.")
+
+    mid = n_wrap // 2
+    le = e_nose[mid]
+    te_mid = e_te[mid]
+
+    lower = e_low
+    upper = e_up[::-1]
+    if len(lower) != len(upper):
+        raise MeshBuildError("cgrid-face upper/lower chord edges must have equal counts.")
+
+    camber = 0.5 * (lower + upper)
+    camber[0] = le
+    camber[-1] = te_mid
+
+    lower_patch = _tfi_patch(
+        bottom=lower,
+        top=camber,
+        left=e_nose[mid:][::-1],
+        right=e_te[: mid + 1],
+    )
+    upper_patch = _tfi_patch(
+        bottom=camber,
+        top=upper,
+        left=e_nose[: mid + 1][::-1],
+        right=e_te[mid:],
+    )
+
+    # No ring blocks: the two cap patches cover the four OML tip edges.
+    return [], [lower_patch, upper_patch], [[0], [1], [2], [3]]
+
+
 def _build_tip_cap4(
     oml_blocks: Sequence[Array],
     *,
@@ -1481,8 +1540,7 @@ def _edge_contains_segment(edge: Array, segment: Array, tol: float) -> bool:
     if len(edge) < len(segment):
         return False
     candidates = [
-        edge[start : start + len(segment)]
-        for start in range(len(edge) - len(segment) + 1)
+        edge[start : start + len(segment)] for start in range(len(edge) - len(segment) + 1)
     ]
     return any(_edge_match(candidate, segment, tol) for candidate in candidates)
 
@@ -1840,10 +1898,18 @@ def build_surface_mesh(
         raise MeshBuildError("te_thickness must lie between 0 and 0.05 chord (0 = leave as-is).")
     if te_thickness_abs_floor < 0.0:
         raise MeshBuildError("te_thickness_abs_floor must be >= 0 (metres, 0 = disabled).")
-    if tip_topology not in ("auto", "airfoil_face", "camber_ribbon", "cap4", "ring", "single"):
+    if tip_topology not in (
+        "auto",
+        "airfoil_face",
+        "cgrid_face",
+        "camber_ribbon",
+        "cap4",
+        "ring",
+        "single",
+    ):
         raise MeshBuildError(
-            "tip_topology must be 'auto', 'airfoil_face', 'camber_ribbon', "
-            "'cap4', 'ring', or 'single'."
+            "tip_topology must be 'auto', 'airfoil_face', 'cgrid_face', "
+            "'camber_ribbon', 'cap4', 'ring', or 'single'."
         )
     if spanwise_distribution == "junction":
         raise MeshBuildError(
@@ -1919,6 +1985,8 @@ def build_surface_mesh(
     requested_tip = oml_topology if tip_topology == "auto" else tip_topology
     if requested_tip in {"cap4", "camber_ribbon"}:
         resolved_tip = "airfoil_face"
+    elif requested_tip == "cgrid_face":
+        resolved_tip = "cgrid_face"
     elif requested_tip in {"mid4", "split8"}:
         resolved_tip = "ring"
     else:
@@ -1928,6 +1996,12 @@ def build_surface_mesh(
         raw_ring, raw_center, tip_groups = _build_tip_single(raw_oml)
     elif resolved_tip == "airfoil_face":
         raw_ring, raw_center, tip_groups = _build_tip_airfoil_face_cap4(
+            raw_oml,
+            collar_points=tip_radial_points,
+            width_frac=cap_width_frac,
+        )
+    elif resolved_tip == "cgrid_face":
+        raw_ring, raw_center, tip_groups = _build_tip_cgrid_face_cap4(
             raw_oml,
             collar_points=tip_radial_points,
             width_frac=cap_width_frac,
@@ -1991,6 +2065,7 @@ def build_surface_mesh(
     )
     area_floor = max(1e-20, characteristic_length**2 * 1e-14)
     shape_floor = float(minimum_shape_metric)
+    scaled_jacobian_floor = 0.0
     alignment_floor = -0.25
 
     failure_reasons: list[dict[str, object]] = []
@@ -2049,6 +2124,20 @@ def build_surface_mesh(
                 "required_greater_than": shape_floor,
             }
         )
+    if not min_scaled_jac > scaled_jacobian_floor:
+        worst = min(qc_blocks, key=lambda item: float(item["min_scaled_jacobian"]))
+        failure_reasons.append(
+            {
+                "check": "positive_scaled_jacobian",
+                "message": (
+                    "At least one surface quad is folded or has a non-positive "
+                    "scaled Jacobian."
+                ),
+                "block": worst["name"],
+                "value": min_scaled_jac,
+                "required_greater_than": scaled_jacobian_floor,
+            }
+        )
     if not min_alignment > alignment_floor:
         worst = min(qc_blocks, key=lambda item: float(item["min_triangle_normal_alignment"]))
         failure_reasons.append(
@@ -2088,6 +2177,10 @@ def build_surface_mesh(
                 "quad-only full airfoil-face cap: 1 collar-free structured block with "
                 "a camber-line grid row and LE/TE curvature blending"
             ),
+            "cgrid_face": (
+                "quad-only C-grid-like flat tip cap: 2 collar-free chordwise blocks "
+                "split by a LE-to-TE camber-line interface"
+            ),
             "ring": "quad-only ring + center tip cap",
             "single": "single quad-only transfinite tip patch",
         }[resolved_tip],
@@ -2116,19 +2209,21 @@ def build_surface_mesh(
             "topology": (
                 "single_block_full_airfoil_face_camber_row"
                 if resolved_tip == "airfoil_face"
+                else "two_block_cgrid_airfoil_face"
+                if resolved_tip == "cgrid_face"
                 else resolved_tip
             ),
             "collar_ring": bool(raw_ring),
             "center_block_count": len(raw_center),
-            "camber_line_is_block_interface": False,
+            "camber_line_is_block_interface": bool(resolved_tip == "cgrid_face"),
             "camber_line_grid_row": bool(
                 resolved_tip == "airfoil_face" and cap_wrap_points % 2 == 1
             ),
             "camber_line_row_index": (
                 cap_wrap_points // 2 if resolved_tip == "airfoil_face" else None
             ),
-            "uses_tip_radial_points": bool(resolved_tip != "airfoil_face"),
-            "uses_cap_width_frac": bool(resolved_tip != "airfoil_face"),
+            "uses_tip_radial_points": bool(resolved_tip not in {"airfoil_face", "cgrid_face"}),
+            "uses_cap_width_frac": bool(resolved_tip not in {"airfoil_face", "cgrid_face"}),
             "exact_singular_camber_cap_would_require_mixed_elements": False,
         },
         "spanwise_distribution": spanwise_distribution,
@@ -2159,6 +2254,7 @@ def build_surface_mesh(
             "min_shape_metric": min_shape,
             "shape_floor": shape_floor,
             "min_scaled_jacobian": min_scaled_jac,
+            "scaled_jacobian_floor": scaled_jacobian_floor,
             "min_triangle_normal_alignment": min_alignment,
             "alignment_floor": alignment_floor,
             "max_adjacent_normal_angle_deg": max_adjacent_normal_angle,

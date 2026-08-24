@@ -121,29 +121,70 @@ def _segment_lookup_abs(y_m: float, ids: list, y_boundaries: list) -> str:
 # z-position helper (D21 fix)
 # ---------------------------------------------------------------------------
 
+def _segment_z_integral(y0: float, y1: float, d0: float, d1: float) -> float:
+    """Exact integral of tan(dihedral) over one segment, dihedral linear in y.
+
+    ``d0``/``d1`` are in RADIANS. With ``m = (d1 - d0) / (y1 - y0)``::
+
+        m == 0 :  integral = tan(d0) * (y1 - y0)
+        m != 0 :  integral = (ln|cos d0| - ln|cos d1|) / m
+
+    Both branches are exact and, crucially, **independent of how the span is
+    discretised**.
+    """
+    if y1 <= y0:
+        return 0.0
+    m = (d1 - d0) / (y1 - y0)
+    if abs(m) < 1e-14:
+        return float(np.tan(d0) * (y1 - y0))
+    return float((np.log(abs(np.cos(d0))) - np.log(abs(np.cos(d1)))) / m)
+
+
 def _cumulative_z(y_m: np.ndarray, dihedral_deg: np.ndarray) -> np.ndarray:
     """
-    Compute section LE z-coordinates by cumulative trapezoidal integration.
+    Section LE z-coordinates by EXACT integration of a piecewise-linear dihedral.
 
-    z(y_i) = z(y_{i-1}) + 0.5*(tan(d_{i-1}) + tan(d_i))*(y_i - y_{i-1})
+        z(y) = integral from 0 to y of tan(dihedral(s)) ds
+
+    ADR-0015 §3.1. This used to be a cumulative **trapezoid**::
+
+        z[i] = z[i-1] + 0.5*(tan(d[i-1]) + tan(d[i]))*(y[i] - y[i-1])
+
+    Dihedral is piecewise linear in ``y``, so ``tan(dihedral)`` is not, and the
+    trapezoid answer therefore **depended on the station array it was handed**.
+    That is a correctness defect in the generator, not a meshing inconvenience:
+    two runs of the same configuration asking for different station counts got
+    **different aircraft**, with the difference not converging to a truth but
+    simply moving. It also made "the exact section at arbitrary y" ill-defined,
+    which is what ADR-0015 needed in order to make the mesh fidelity gate
+    satisfiable at all.
+
+    The closed form below integrates the same quantity exactly, so `z(y)` is now a
+    property of the configuration rather than of the discretisation, and calling
+    this with any station array — including one station or ten thousand — gives
+    values lying on one curve.
 
     Parameters
     ----------
     y_m : ndarray, shape (N,)
         Spanwise positions, strictly increasing, starting at 0.
     dihedral_deg : ndarray, shape (N,)
-        Local dihedral angle at each spanwise station [degrees].
+        Local dihedral angle at each spanwise station [degrees]. Interpreted as a
+        piecewise-linear function of ``y`` through these points, which is exactly
+        how the caller builds it (`np.interp` over the group boundaries).
 
     Returns
     -------
     z : ndarray, shape (N,)
         Vertical LE position at each station [m].  z[0] is always 0.0.
     """
-    tan_d = np.tan(np.radians(dihedral_deg))
-    z = np.zeros(len(y_m), dtype=float)
-    for i in range(1, len(y_m)):
-        dy = y_m[i] - y_m[i - 1]
-        z[i] = z[i - 1] + 0.5 * (tan_d[i - 1] + tan_d[i]) * dy
+    y = np.asarray(y_m, dtype=float)
+    d = np.radians(np.asarray(dihedral_deg, dtype=float))
+    z = np.zeros(len(y), dtype=float)
+    for i in range(1, len(y)):
+        z[i] = z[i - 1] + _segment_z_integral(
+            float(y[i - 1]), float(y[i]), float(d[i - 1]), float(d[i])
+        )
     return z
 
 

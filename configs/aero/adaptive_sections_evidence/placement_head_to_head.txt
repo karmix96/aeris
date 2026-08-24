@@ -1,7 +1,0 @@
-design    placement    n    ramp      CL_de  err vs ref
-narrow    uniform     27  38.9%   0.004191       1.18%
-narrow    adaptive    25  25.0%   0.004212       0.68%
-          REF 49      51  11.1%   0.004241          --
-normal    uniform     27  11.8%   0.011594       0.33%
-normal    adaptive    25   5.0%   0.011646       0.78%
-          REF 49      51   6.2%   0.011556          --

@@ -1,0 +1,249 @@
+schema: aeris.mesh_study.design_space_snapshot.v1
+created_local: 2026-08-11
+status: STAGE_00_PROPOSED_AFTER_AUDIT
+authority:
+  design_space_file: configs/geometry/bwb.yaml
+  design_space_sha256: f114b48e3c400a2832cc3763e7cf7505ecd0925fb81cb92f70e28bb5e6234614
+  decision_records:
+  - path: decision/0001-single-unified-geometry-config.md
+    sha256: 926574e77b7581c3853b21a6cfa11cfc0ab909ce1df240ef6ae74f1a2bc24591
+  - path: decision/0002-doe-design-space-and-controls.md
+    sha256: bd308cab7dc87dd209c3bac536db56def9f70681ad19a2a4628df53cb0cefc5f
+  - path: decision/0004-te-thickness.md
+    sha256: 5f7cd7bf72162ea2d7c778e6b07493bbf9e8385d64ddac35bab384b84c357d08
+  parser_sources:
+  - path: src/aeris/generators/bwb_segmented_v1/params.py
+    sha256: cac966e36ad82f57627eb82cc462530e0916d06db2944eafeb9988831d5f75f2
+  - path: src/aeris/generators/bwb_segmented_v1/sampling.py
+    sha256: 012ab55cb1288440a7d06d9e30fb9d4182903523ebaebaeba8749c900824d7ad
+active_variable_count: 20
+normalization_rule: (value - min) / (max - min); sweep variables are positive LE-sweep
+  magnitudes in YAML and are negated by the sampler for internal aft-sweep convention.
+notes:
+- The active list is from BWBGeneratorConfig.active_design_variable_names(), not copied
+  from the runbook.
+- dihedral_b1_deg remains in the active sample schema with min=max=0 because the flat-root-panel
+  invariant pins it.
+- Baseline/nominal values below are midpoint values of the authoritative bounds, not
+  the random seed-1001 sample.
+variables:
+- name: c1_m
+  semantic_meaning: root chord c1
+  min: 0.7
+  baseline_nominal: 0.9
+  max: 1.1
+  unit: m
+  geometry_entities:
+  - b0_root
+  - all_station_chords
+  source_key: geometry.planform_bounds.c1_m
+  active_in_mesh_study: true
+- name: c2_ratio
+  semantic_meaning: chord at b1 divided by c1
+  min: 0.55
+  baseline_nominal: 0.675
+  max: 0.8
+  unit: '1'
+  geometry_entities:
+  - b1_station
+  source_key: geometry.planform_bounds.c2_ratio
+  active_in_mesh_study: true
+- name: c3_ratio
+  semantic_meaning: chord at b2 divided by c1
+  min: 0.3
+  baseline_nominal: 0.425
+  max: 0.55
+  unit: '1'
+  geometry_entities:
+  - b2_station
+  source_key: geometry.planform_bounds.c3_ratio
+  active_in_mesh_study: true
+- name: c4_ratio
+  semantic_meaning: tip chord at b3 divided by c1
+  min: 0.08
+  baseline_nominal: 0.14
+  max: 0.2
+  unit: '1'
+  geometry_entities:
+  - b3_tip_station
+  source_key: geometry.planform_bounds.c4_ratio
+  active_in_mesh_study: true
+- name: b_total_m
+  semantic_meaning: semi-span; full span is 2*b_total_m
+  min: 0.75
+  baseline_nominal: 1.0
+  max: 1.25
+  unit: m
+  geometry_entities:
+  - semispan
+  - station_y_coordinates
+  source_key: geometry.planform_bounds.b_total_m
+  active_in_mesh_study: true
+- name: b3_ratio
+  semantic_meaning: outer-panel semispan fraction
+  min: 0.4
+  baseline_nominal: 0.475
+  max: 0.55
+  unit: '1'
+  geometry_entities:
+  - seg_b2_b3
+  source_key: geometry.planform_bounds.b3_ratio
+  active_in_mesh_study: true
+- name: split_ratio
+  semantic_meaning: inner split of remaining span into b0-b1 and b1-b2
+  min: 0.4
+  baseline_nominal: 0.5
+  max: 0.6
+  unit: '1'
+  geometry_entities:
+  - b1_planform_break
+  - b2_planform_break
+  source_key: geometry.planform_bounds.split_ratio
+  active_in_mesh_study: true
+- name: sw1_deg
+  semantic_meaning: inner leading-edge sweep magnitude
+  min: 20.0
+  baseline_nominal: 30.0
+  max: 40.0
+  unit: deg
+  geometry_entities:
+  - seg_b0_b1_le
+  source_key: geometry.planform_bounds.sw1_deg
+  sample_scale: -1.0
+  active_in_mesh_study: true
+- name: sw2_deg
+  semantic_meaning: middle leading-edge sweep magnitude
+  min: 15.0
+  baseline_nominal: 25.0
+  max: 35.0
+  unit: deg
+  geometry_entities:
+  - seg_b1_b2_le
+  source_key: geometry.planform_bounds.sw2_deg
+  sample_scale: -1.0
+  active_in_mesh_study: true
+- name: sw3_deg
+  semantic_meaning: outer leading-edge sweep magnitude
+  min: 5.0
+  baseline_nominal: 15.0
+  max: 25.0
+  unit: deg
+  geometry_entities:
+  - seg_b2_b3_le
+  source_key: geometry.planform_bounds.sw3_deg
+  sample_scale: -1.0
+  active_in_mesh_study: true
+- name: twist_b0_deg
+  semantic_meaning: root twist
+  min: -1.0
+  baseline_nominal: 0.0
+  max: 1.0
+  unit: deg
+  geometry_entities:
+  - b0_station
+  source_key: geometry.section_bounds.twist_b0_deg
+  active_in_mesh_study: true
+- name: twist_b1_deg
+  semantic_meaning: b1 twist
+  min: -3.0
+  baseline_nominal: -1.5
+  max: 0.0
+  unit: deg
+  geometry_entities:
+  - b1_station
+  source_key: geometry.section_bounds.twist_b1_deg
+  active_in_mesh_study: true
+- name: twist_b2_deg
+  semantic_meaning: b2 twist
+  min: -5.0
+  baseline_nominal: -3.0
+  max: -1.0
+  unit: deg
+  geometry_entities:
+  - b2_station
+  source_key: geometry.section_bounds.twist_b2_deg
+  active_in_mesh_study: true
+- name: twist_b3_deg
+  semantic_meaning: tip twist
+  min: -8.0
+  baseline_nominal: -5.0
+  max: -2.0
+  unit: deg
+  geometry_entities:
+  - b3_tip_station
+  source_key: geometry.section_bounds.twist_b3_deg
+  active_in_mesh_study: true
+- name: dihedral_b1_deg
+  semantic_meaning: b1 dihedral pinned by flat-root-panel invariant
+  min: 0.0
+  baseline_nominal: 0.0
+  max: 0.0
+  unit: deg
+  geometry_entities:
+  - seg_b0_b1_root_panel
+  source_key: geometry.section_bounds.dihedral_b1_deg
+  active_in_mesh_study: true
+  pinned: true
+- name: dihedral_b2_deg
+  semantic_meaning: b2 dihedral
+  min: 0.0
+  baseline_nominal: 3.0
+  max: 6.0
+  unit: deg
+  geometry_entities:
+  - seg_b1_b2_panel
+  source_key: geometry.section_bounds.dihedral_b2_deg
+  active_in_mesh_study: true
+- name: dihedral_b3_deg
+  semantic_meaning: tip dihedral
+  min: 0.0
+  baseline_nominal: 5.0
+  max: 10.0
+  unit: deg
+  geometry_entities:
+  - seg_b2_b3_panel
+  - b3_tip_station
+  source_key: geometry.section_bounds.dihedral_b3_deg
+  active_in_mesh_study: true
+- name: elevon_start_frac
+  semantic_meaning: elevon spanwise start as semispan fraction
+  min: 0.5
+  baseline_nominal: 0.6
+  max: 0.7
+  unit: '1'
+  geometry_entities:
+  - elevon_control_region
+  source_key: geometry.elevon_bounds.elevon_start_frac
+  active_in_mesh_study: true
+- name: elevon_end_frac
+  semantic_meaning: elevon spanwise end as semispan fraction
+  min: 0.85
+  baseline_nominal: 0.915
+  max: 0.98
+  unit: '1'
+  geometry_entities:
+  - elevon_control_region
+  source_key: geometry.elevon_bounds.elevon_end_frac
+  active_in_mesh_study: true
+- name: elevon_hinge_frac
+  semantic_meaning: elevon hinge chord fraction
+  min: 0.65
+  baseline_nominal: 0.735
+  max: 0.82
+  unit: '1'
+  geometry_entities:
+  - elevon_control_region
+  source_key: geometry.elevon_bounds.elevon_hinge_frac
+  active_in_mesh_study: true
+cross_checks:
+  parser_validation: PASS
+  active_count_expected: 20
+  active_count_observed: 20
+  geometry_generator_validation: PASS
+  lhs_authority:
+    path: AERIS_MESH_STUDY/00_governance/lhs_authority.yaml
+    sampler: lhs_v1
+    seed: 42
+    full_lhs_n: 100
+    round_c_lhs_n: 10
+    status: PROPOSED_FOR_STAGE_00_APPROVAL

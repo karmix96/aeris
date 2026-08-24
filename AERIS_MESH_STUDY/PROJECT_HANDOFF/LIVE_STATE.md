@@ -1,0 +1,143 @@
+# Live State
+
+Updated: 2026-08-21, Europe/Athens
+
+This is the first file Codex or Claude must read. Update it after every material
+result and whenever a long job starts or stops.
+
+## Active process
+
+No mesh or CFD process is active. Three governed N65 development CFD pilots
+finished: 3/3 meshes passed, 3/3 ADflow solves converged, and 0/3 passed the
+strict coarse y+ screen. This validates the local solver and rejection path, not
+the production wall law. A separate legacy audit confirms all pilot assets and
+declared hashes, but the old reports are not current-cache compatible. The locked
+hold-out remains untouched.
+
+Read `QUALIFICATION_UPDATE_2026-08-21.md` for the complete result, reviewed
+grid/TE plan, Claude audit, fixes, and exact next action.
+
+Claude Opus/max found three cache/provenance risks; all are fixed. The final v3
+plan refines every declared direction, the collector cannot overwrite history,
+and production caches bind MPI plus solver artifacts. 41 focused tests pass.
+
+## Newest proved results
+
+- The final production-resolution development audit passed `100/100` with no
+  manual repair: 162 attempts, 74 first-try passes, and 21 identity targets.
+- Independent report integrity and campaign acceptance both passed. Selected
+  quality minimum/p05/median/maximum was `0.14681110`/`0.16219310`/
+  `0.21984034`/`0.24189830`; zero selected cells were below `0.10` and one was
+  below the preferred `0.15` threshold.
+- Maximum wall error was `6.94e-18 m`, interface mismatch `7.11e-15 m`, and
+  surface-fidelity error `1.4322e-5` local chord. Accepted CGNS files were
+  re-opened, audited, hashed, and pruned.
+- Final enrichment added no templates and left no unresolved cases. The
+  21-template atlas is a mesh-only frozen candidate; the final registry is bound
+  to production `N=257`, `epsE=1.5`, and first-cell fraction `3.6e-6`.
+- Fixed production seed policy under development: pyHyp `N=257`, `epsE=1.5`,
+  first-cell fraction `3.6e-6` of the surface bounding-box diagonal.
+- All 16 deterministic maximin templates passed: zero inverted cells, positive
+  volume, conformal interfaces, and independent minimum scaled quality at least
+  `0.10`.
+- Quality distribution: minimum `0.10535253`, p05 `0.11869289`, median
+  `0.20978257`, mean `0.20268391`, maximum `0.23470905`.
+- Across all 16 meshes, zero cells are below `0.10`; only three cells are below
+  `0.15`. They are first-layer tip/trailing-edge cells in seeds 002 and 068.
+- The initial qualified production manifest contained 16 templates and was not
+  frozen; it is retained only as pre-enrichment history.
+- The complete written-CGNS development audit finished `99/100`. It used 220
+  template attempts; 71 targets passed first try. Geometry 089 failed because its
+  best quality was `0.09265941`, below the hard `0.10` floor. No gate was lowered.
+- The independent report consistency audit passed. Across 99 selected meshes,
+  minimum quality was `0.10432232`, p05 `0.15375526`, and median `0.21779898`;
+  wall/interface/fidelity gates passed and accepted CGNS files were pruned.
+- Production enrichment added six local targets in deterministic priority order:
+  089, 007, 095, 085, 008, and 094. The atlas now has 22 candidate templates and
+  requires seed qualification plus a complete 100-target revalidation.
+- The enriched seed build completed `21/22`. Seeds 089, 095, 085, 008, and 094
+  passed. Seed 007 was rejected at `0.08692647` because one cell was below `0.10`;
+  it had zero inverted cells. The qualified atlas therefore has 21 templates.
+- Seed 007 is preserved as a known-unbuildable fallback under the fixed policy.
+  It may not block forever or be silently retried. The final audit proved a
+  better route through template 095 at quality `0.15373589` after six attempts.
+- New written-CGNS canary passed 2/2 targets (000 and 083). Worst accepted quality
+  was `0.22677537`; temporary CGNS files were written, re-opened, fully audited,
+  hashed, and pruned.
+- Independent S6 surface fidelity re-audit on target 000 passed: maximum error
+  `1.4081e-5` local chord against the `1.0e-4` gate. The instrument now tracks
+  parametric coordinates and independently re-evaluates pyGeo nodes; tip-cap
+  planarity error was `2.18e-16 m`.
+- Generator/mesh/CFD verification: 208 tests passed. Latest focused verification:
+  50 tests passed and Ruff passed.
+- Locked hold-out remains untouched.
+
+## Canonical new evidence
+
+- Seed report:
+  `AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/maximin_v3/calibration_s0_3p6_production/seed_build_report.json`
+- Seed report sha256:
+  `57d377dc346ec43e5a151b4deb843ace59540527139428c65836ebbe590583cf`.
+  This is the final stronger re-audit of the immutable 16 meshes.
+- Qualified manifest:
+  `artifacts/s6_bounded_mesh_atlas/atlas_manifest_production_qualified16_eps15_s0p3p6_v5.json`
+- Complete 16-template development report:
+  `artifacts/s6_bounded_mesh_atlas/development_atlas_maximin16_production_written_v2/atlas_validation_report.json`
+- Independent report audit:
+  `artifacts/s6_bounded_mesh_atlas/development_atlas_maximin16_production_written_v2/independent_report_audit.json`
+- Enriched 22-template manifest:
+  `artifacts/s6_bounded_mesh_atlas/atlas_manifest_production_enriched22_v6.json`
+- Enriched seed report:
+  `AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/maximin_v3/calibration_s0_3p6_production/seed_build_enriched22_report.json`
+- Qualified 21-template manifest:
+  `artifacts/s6_bounded_mesh_atlas/atlas_manifest_production_qualified21_eps15_s0p3p6_v7.json`
+- Final 100-target production report:
+  `artifacts/s6_bounded_mesh_atlas/development_atlas_qualified21_production_written_v3/atlas_validation_report.json`
+- Independent final report audit:
+  `artifacts/s6_bounded_mesh_atlas/development_atlas_qualified21_production_written_v3/independent_report_audit.json`
+- Final post-validation atlas manifest:
+  `artifacts/s6_bounded_mesh_atlas/atlas_manifest_production_postvalidation_v8.json`
+- Final portable production registry and independent asset audit:
+  `artifacts/s6_bounded_mesh_atlas/template_registry_qualified21_production_portable_v9.json`
+  and `template_registry_qualified21_production_portable_v9_audit.json`.
+- Laptop-prepared ten-case HPC pilot package:
+  `artifacts/s6_bounded_mesh_atlas/hpc_pilot_package_v9/`
+- Written canary:
+  `artifacts/s6_bounded_mesh_atlas/development_atlas_production_written_canary_v2/atlas_validation_report.json`
+- Fidelity re-audit:
+  `AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/fidelity_reaudit_v2/lhs100_seed42_000/surface_report.json`
+
+## Important code changes
+
+- Production seed paths and registries now support governed `epsE` values instead
+  of hard-coding `eps20`.
+- Campaign fallback now uses the registry's exact epsE and first-cell law.
+- Development validation now builds each pyGeo target once, enforces surface and
+  fidelity gates, writes/re-opens CGNS, recomputes wall/interface/volume evidence,
+  hashes it, and prunes temporary meshes by default.
+- Deformation reports realized first-layer spacing. No numerical y+ spacing gate
+  was invented; production CFD still controls that decision.
+- S6 fidelity is no longer measured against its own construction polyline.
+- Smoke/fine validation cannot set atlas `freeze_ready`.
+
+## Exact next action
+
+The laptop-safe N65 work is complete; do not run the P0 N257 CFD case on this laptop.
+On a node with at least 64 GB RAM, verify the package, then submit only design
+index 0 as a P0 memory/y+ canary. The packaged helper currently submits all ten,
+so do not run it unchanged for the first canary.
+Design index 0 is geometry 007, the hardest known routing case. It is a useful
+memory ceiling, but its y+ is not representative of the median geometry.
+
+
+```bash
+export S6_REPO_ROOT="$PWD"
+export S6_MANIFEST="$PWD/artifacts/s6_bounded_mesh_atlas/hpc_pilot_package_v9/manifest.json"
+export S6_REGISTRY="$PWD/artifacts/s6_bounded_mesh_atlas/template_registry_qualified21_production_portable_v9.json"
+export S6_CAMPAIGN_ROOT="$PWD/artifacts/s6_bounded_mesh_atlas/hpc_pilot_package_v9/runs"
+export S6_KEEP_ACCEPTED_MESH=1 S6_RETAIN_SURFACE_SOLUTION=1
+sbatch --array=0 AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/slurm_run_design_array.sh
+```
+
+Measure peak memory and y+ before submitting two more P0 cases. Do not open the
+hold-out. The wall, TE, final-grid, and CFD policies remain provisional.

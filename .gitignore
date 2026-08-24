@@ -49,3 +49,12 @@ artifacts/
 
 # Stray solver history (bare SU2/ADflow header, no data)
 history.csv
+
+# AERIS mesh study: downloaded third-party binaries and reference papers.
+# tools/ holds the SU2 8.5.0 prebuilt release (165 MB) and papers/ the reference
+# PDFs (206 MB); both are reproducible downloads, not project source.
+AERIS_MESH_STUDY/tools/
+AERIS_MESH_STUDY/papers/
+
+# ParaView mesh artifacts - regenerated, and wiped between campaigns
+data/surface_mesh_v3/

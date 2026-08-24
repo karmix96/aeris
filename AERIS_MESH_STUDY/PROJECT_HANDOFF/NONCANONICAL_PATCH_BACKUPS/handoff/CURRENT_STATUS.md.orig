@@ -1,0 +1,99 @@
+# Current Status
+
+Snapshot date: 2026-08-20
+
+## Objective
+
+Build a fully automated, open-source CFD workflow for approximately 10,000
+pyGeo-generated BWB configurations. A mesh is useful only if it passes hard
+geometry/mesh checks and then supports a converged, accepted CFD solution without
+manual repair.
+
+## Current activity
+
+No mesh or CFD process is active.
+
+Production seed construction is complete at one fixed provisional policy:
+`N=257`, `epsE=1.5`, and first-cell fraction `3.6e-6`. Of 22 attempted seeds,
+21 qualified. Seed 007 was rejected at `0.086926`, but another frozen template
+routes geometry 007 successfully at `0.153736`.
+
+The final 21-template production-resolution written-CGNS audit passed `100/100`.
+It used 162 attempts with 74 first-try passes. Worst accepted quality was
+`0.146811`; zero selected cells were below the hard `0.10` floor. The independent
+auditor confirmed report integrity, all gates, and campaign acceptance. Final
+enrichment added no templates and left no unresolved cases.
+
+Final atlas manifest:
+`artifacts/s6_bounded_mesh_atlas/atlas_manifest_production_postvalidation_v8.json`.
+Final portable registry and asset audit:
+`artifacts/s6_bounded_mesh_atlas/template_registry_qualified21_production_portable_v9.json`
+and `template_registry_qualified21_production_portable_v9_audit.json`.
+Laptop-prepared pilot package:
+`artifacts/s6_bounded_mesh_atlas/hpc_pilot_package_v9/`.
+
+These freeze mesh-atlas membership only. The wall law, CFD policy, TE sensitivity,
+and full campaign remain unproved. The locked hold-out remains untouched.
+
+## S6 evidence already established
+
+- Same-geometry S1-to-S6 deformation: 10/10 passed; worst minimum volume quality
+  `+0.146067`; 20/20 conformal interfaces.
+- Cross-geometry seed 000 to target 083 at `N=129`: 1,621,504 cells, minimum
+  volume quality `+0.196745`, zero inverted cells.
+- Prior fine S1 seed set: 10/10 pyHyp marches passed; minimum quality range
+  `+0.193` to `+0.364`.
+- Initial 16 maximin smoke seeds: 16/16 passed; quality range
+  `+0.150810` to `+0.214982`.
+- Full 100-case smoke atlas: 100/100 targets passed, 131 attempts, 80 first-try,
+  20 recovered with another template, maximum five attempts. Worst quality was
+  `+0.151842`; every template was selected at least twice.
+- A 10,000-design manifest was generated in about 2.06 seconds and matched the
+  vectorized reference byte-for-byte. This proves manifest generation only.
+- Coarse ADflow pilot converged by 7.5906 residual orders in 159 rows, but failed
+  wall resolution: y+ p95 `2.409`, p99 `3.782`, maximum `7.230`.
+- Independent surface fidelity re-audit on geometry 000 passed at `1.4081e-5`
+  local chord versus the `1.0e-4` limit.
+- First complete production audit: 99/100 targets passed, 220 attempts, 71
+  first-try passes, and one hard failure (geometry 089). Independent report
+  integrity checks passed; campaign acceptance correctly failed.
+- Final enriched production audit: 100/100 targets passed, 162 attempts, 74
+  first-try passes, minimum/p05/median quality `0.146811`/`0.162193`/`0.219840`.
+  Zero cells were below `0.10`; one was below `0.15`. Maximum wall/interface/
+  fidelity errors were `6.94e-18 m`/`7.11e-15 m`/`1.4322e-5` local chord.
+  Independent report audit passed, accepted meshes were pruned after written
+  re-audit, and the registry contains 21 hash-bound production templates.
+- Generator, mesh, and CFD suite: 208 tests passed. Latest focused checks:
+  50 tests and Ruff passed.
+
+## What is implemented
+
+- Deterministic 16-variable maximin atlas selection.
+- Exact pyGeo target surface plus declared mesh-only trailing-edge opening.
+- Affine plus bounded column deformation of structured volume meshes.
+- Surface, interface, volume, Jacobian, and metadata gates.
+- Nearest-first routing through all compatible templates; best accepted quality
+  is kept rather than blindly accepting the nearest template.
+- Target-specific S1/pyHyp fallback at the same volume resolution and wall law.
+- Atomic reports, checkpoints, stale-lock recovery, cache fingerprints, rejected
+  retry control, mesh pruning, and Slurm array/collection scripts.
+- ADflow RANS-SA configuration and acceptance checks for residual, forces, drag,
+  and wall y+.
+
+## Readiness state
+
+S6 is a strong candidate, but it is not campaign-ready. Its 21-template mesh atlas
+is now a frozen candidate backed by a 100/100 independent production-resolution
+audit. Production y+, hold-out, grid convergence, CFD reliability, and HPC
+rehearsal remain open.
+
+The immediate blocker is production CFD/y+ on suitable HPC hardware.
+The available 16 GB laptop is not suitable, so no production CFD is running. The
+ten-case package can be copied to a future node with at least 64 GB RAM.
+`production` currently refines wall-normal `N` while using the `L2_smoke`
+tangential seed surface; this is not a complete three-direction grid-convergence
+definition.
+
+The locked hold-out has not been used and must remain untouched until the wall
+law, TE policy, CFD options, fallback rules, and all acceptance thresholds are
+frozen.

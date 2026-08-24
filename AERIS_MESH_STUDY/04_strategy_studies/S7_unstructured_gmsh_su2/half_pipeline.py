@@ -376,32 +376,62 @@ def to_gmsh_model(gmsh: Any, assembled: Mapping[str, Any], *, name: str = "half"
     Gmsh model to be written at all.  Building it here means the half domain is
     audited by exactly the same instrument as the mirrored one, instead of
     acquiring a second, less exercised checker of its own.
+
+    Two things the audit depends on.  A node belongs to exactly one entity in
+    Gmsh, so the wall nodes are given to the wall surface and everything else to
+    the volume; putting them all on the volume leaves the wall reporting zero
+    nodes.  And the mirrored .msh carries wall_source, farfield and fluid, and
+    splits the wall into its four labels only when writing SU2, so this matches
+    that structure rather than inventing a different one.
     """
     points = np.asarray(assembled["points"], dtype=float)
     gmsh.model.add(name)
     gmsh.model.setCurrent(name)
 
-    volume = gmsh.model.addDiscreteEntity(3)
-    node_tags = np.arange(1, len(points) + 1, dtype=np.int64)
-    gmsh.model.mesh.addNodes(3, volume, node_tags, points.ravel())
+    combined: dict[str, list[tuple[int, Sequence[int]]]] = {}
+    for marker, rows in assembled["markers"].items():
+        key = "wall_source" if marker.startswith("wall_") else marker
+        combined.setdefault(key, []).extend(rows)
 
+    wall_nodes = np.unique(
+        np.concatenate([np.asarray(n, dtype=np.int64) for _c, n in combined["wall_source"]])
+    )
+    is_wall = np.zeros(len(points), dtype=bool)
+    is_wall[wall_nodes] = True
+    other_nodes = np.flatnonzero(~is_wall)
+
+    # Nodes for every entity first: Gmsh rejects an element whose nodes are not
+    # yet known, and the volume's elements touch nodes owned by the wall.
+    volume = gmsh.model.addDiscreteEntity(3)
+    gmsh.model.mesh.addNodes(
+        3, volume, (other_nodes + 1).astype(np.int64), points[other_nodes].ravel()
+    )
+    surfaces: dict[str, int] = {}
+    for marker in combined:
+        entity = gmsh.model.addDiscreteEntity(2)
+        surfaces[marker] = entity
+        if marker == "wall_source":
+            gmsh.model.mesh.addNodes(
+                2, entity, (wall_nodes + 1).astype(np.int64), points[wall_nodes].ravel()
+            )
+
+    element_tag = 1
     by_type: dict[int, list[Sequence[int]]] = {}
     for code, nodes in assembled["volume_rows"]:
         by_type.setdefault(_SU2_TO_GMSH[code], []).append(nodes)
-    tag = 1
     for element_type, rows in sorted(by_type.items()):
         block = np.asarray(rows, dtype=np.int64) + 1
         gmsh.model.mesh.addElementsByType(
             volume,
             element_type,
-            np.arange(tag, tag + len(block), dtype=np.int64),
+            np.arange(element_tag, element_tag + len(block), dtype=np.int64),
             block.ravel(),
         )
-        tag += len(block)
+        element_tag += len(block)
     gmsh.model.addPhysicalGroup(3, [volume], name="fluid")
 
-    for marker, rows in assembled["markers"].items():
-        entity = gmsh.model.addDiscreteEntity(2)
+    for marker, rows in combined.items():
+        entity = surfaces[marker]
         grouped: dict[int, list[Sequence[int]]] = {}
         for code, nodes in rows:
             grouped.setdefault(_SU2_TO_GMSH[code], []).append(nodes)
@@ -410,8 +440,8 @@ def to_gmsh_model(gmsh: Any, assembled: Mapping[str, Any], *, name: str = "half"
             gmsh.model.mesh.addElementsByType(
                 entity,
                 element_type,
-                np.arange(tag, tag + len(block), dtype=np.int64),
+                np.arange(element_tag, element_tag + len(block), dtype=np.int64),
                 block.ravel(),
             )
-            tag += len(block)
+            element_tag += len(block)
         gmsh.model.addPhysicalGroup(2, [entity], name=marker)

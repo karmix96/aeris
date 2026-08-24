@@ -513,6 +513,57 @@ def write_su2_mesh(
     }
 
 
+def _generate_half_mesh(
+    surface: SurfaceMesh,
+    *,
+    output_dir: Path,
+    spec: dict[str, Any],
+    msh_path: Path,
+    su2_path: Path,
+) -> dict[str, Any]:
+    """Build the half domain, whose prism layer is marched rather than extruded.
+
+    Kept separate from the mirrored path rather than folded into it: the two share
+    the level spec and nothing else, since one hands the whole job to Gmsh and
+    reads the model back, and the other assembles the mesh itself precisely so the
+    layer can respect the symmetry plane.
+    """
+    import gmsh
+
+    from . import half_pipeline
+
+    reference = float(surface.metadata["reference_values"]["mean_aerodynamic_chord_m"])
+    gmsh.initialize([])
+    try:
+        gmsh.logger.start()
+        gmsh.option.setNumber("General.Terminal", 0)
+        gmsh.option.setNumber("General.NumThreads", 1)
+        gmsh.option.setNumber("Mesh.MshFileVersion", 4.1)
+        assembled = half_pipeline.assemble(
+            gmsh, surface, spec, reference_length_m=reference
+        )
+        half_pipeline.to_gmsh_model(gmsh, assembled)
+        gmsh.write(str(msh_path))
+        log_lines = list(gmsh.logger.get())
+    finally:
+        gmsh.finalize()
+
+    su2_report = half_pipeline.write_su2(
+        su2_path, assembled["points"], assembled["volume_rows"], assembled["markers"]
+    )
+    (output_dir / "gmsh.log").write_text("\n".join(log_lines) + "\n", encoding="utf-8")
+    return {
+        "schema": GMSH_REPORT_SCHEMA,
+        "status": "completed",
+        "modeled_domain": "half_wing_symmetry_y0",
+        "spec": spec,
+        "half_domain": assembled["diagnostics"],
+        "mesh_msh": str(msh_path.resolve()),
+        "mesh_msh_sha256": sha256_file(msh_path),
+        "mesh_su2": su2_report,
+    }
+
+
 def generate_mesh(
     surface: SurfaceMesh,
     *,
@@ -533,6 +584,17 @@ def generate_mesh(
     gmsh_log_path = output_dir / "gmsh.log"
     report_path = output_dir / "gmsh_build_report.json"
     started = time.time()
+    if str(policy["geometry"].get("modeled_domain")) == "half_wing_symmetry_y0":
+        report = _generate_half_mesh(
+            surface,
+            output_dir=output_dir,
+            spec=spec,
+            msh_path=msh_path,
+            su2_path=su2_path,
+        )
+        report["wall_seconds"] = round(time.time() - started, 3)
+        write_json(report_path, report)
+        return report
     gmsh_initialized = False
     log_lines: list[str] = []
     try:

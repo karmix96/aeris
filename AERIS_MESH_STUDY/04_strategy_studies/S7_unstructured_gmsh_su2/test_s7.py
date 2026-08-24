@@ -286,10 +286,23 @@ def test_pygeo_surface_fidelity_checks_nodes_and_every_oml_facet(monkeypatch):
     pygeo_build = SimpleNamespace(
         geometry=SimpleNamespace(surfs=[_FakePatch(1.0), _FakePatch(-1.0)])
     )
+    # Two stations with a swept, dihedralled, twisted outer panel, so the planform
+    # record has something non-trivial to derive sweep from.
+    stations = [
+        SimpleNamespace(
+            index=0, y_m=0.0, x_le_m=0.0, z_le_m=0.0, chord_m=1.0,
+            twist_deg=0.0, dihedral_deg=0.0,
+        ),
+        SimpleNamespace(
+            index=1, y_m=1.0, x_le_m=1.0, z_le_m=0.1, chord_m=0.4,
+            twist_deg=-3.0, dihedral_deg=5.0,
+        ),
+    ]
     inner = SimpleNamespace(
         reference_values={"mean_aerodynamic_chord_m": 1.0, "span_m": 2.0},
         pygeo=pygeo_build,
         extracted=[SimpleNamespace(chord_m=1.0)],
+        stations=stations,
         geometry_id="synthetic_curved_patch",
     )
     case = SimpleNamespace(pygeo_result=inner)

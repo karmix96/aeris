@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import math
 from collections import defaultdict, deque
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
@@ -278,6 +279,47 @@ def _polygon_delaunay_triangles(
     if min(areas) <= tolerance * tolerance:
         return None
     return inside
+
+
+def _planform_record(stations: Sequence[Any]) -> dict[str, Any]:
+    """Per-station twist, dihedral and derived sweep, as actually built.
+
+    The mesh artifacts recorded aspect ratio but nothing about the shape that
+    produced it, so a failure could never be correlated with dihedral, twist or
+    sweep without going back to the design matrix.  These come off the station
+    frames pyGeo was handed, so they describe the geometry that was meshed rather
+    than what was requested.
+
+    Leading-edge sweep is not a station field; it is the angle of the LE segment
+    between consecutive stations, positive aft, and is undefined for a segment
+    with no spanwise extent.
+    """
+    ordered = sorted(stations, key=lambda s: float(s.y_m))
+    twist = [float(s.twist_deg) for s in ordered]
+    dihedral = [float(s.dihedral_deg) for s in ordered]
+
+    sweep_le_deg: list[float | None] = []
+    for inboard, outboard in zip(ordered[:-1], ordered[1:], strict=True):
+        run = float(outboard.y_m) - float(inboard.y_m)
+        if abs(run) <= np.finfo(float).tiny:
+            sweep_le_deg.append(None)
+            continue
+        sweep_le_deg.append(
+            math.degrees(math.atan2(float(outboard.x_le_m) - float(inboard.x_le_m), run))
+        )
+
+    finite = [s for s in sweep_le_deg if s is not None]
+    return {
+        "station_y_m": [float(s.y_m) for s in ordered],
+        "station_chord_m": [float(s.chord_m) for s in ordered],
+        "twist_deg": twist,
+        "dihedral_deg": dihedral,
+        "sweep_le_deg": sweep_le_deg,
+        "twist_deg_range": [min(twist), max(twist)] if twist else None,
+        "dihedral_deg_range": [min(dihedral), max(dihedral)] if dihedral else None,
+        "sweep_le_deg_range": [min(finite), max(finite)] if finite else None,
+        "root_dihedral_deg": dihedral[0] if dihedral else None,
+    }
 
 
 def _point_segment_distance(point: Array, start: Array, end: Array) -> float:
@@ -802,6 +844,7 @@ def build_surface(
         "te_variant": te_variant,
         "te_rule": variant,
         "reference_values": reference,
+        "planform": _planform_record(pygeo_result.pygeo_result.stations),
         "sampling": {
             "chordwise_points": n_u,
             "half_span_points": n_v,

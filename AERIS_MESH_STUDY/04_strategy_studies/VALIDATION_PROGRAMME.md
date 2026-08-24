@@ -139,6 +139,114 @@ Operating conditions may expand here.  Not before - varying angle of attack duri
 Stage 1 turns a twenty-case test into a hundred-case one and answers a question
 nobody asked yet.
 
+# Desktop execution - step by step
+
+This section is written to be handed to a fresh Claude Code session on the
+desktop.  It assumes nothing from any earlier conversation.
+
+## Step 1 - get the code
+
+    cd /path/to/v.0.1_Project
+    git checkout main
+    git pull
+
+Everything is on `main`.  There are no other branches to worry about.
+
+## Step 2 - open Claude Code and paste this as the first message
+
+    Read AERIS_MESH_STUDY/04_strategy_studies/VALIDATION_PROGRAMME.md and
+    AERIS_MESH_STUDY/04_strategy_studies/S7_unstructured_gmsh_su2/HANDOFF.md,
+    follow the HANDOFF reload order, then execute the S7 Stage 0 work in
+    RUNBOOK.md. I am on the desktop, heavy runs are allowed here.
+    Report progress with run_report.py and push it.
+
+## Step 3 - check the machine before running anything
+
+    free -g
+    df -h .
+    nproc
+
+S7 needs roughly **3 GB per MPI rank**, because every rank reads the whole mesh
+before partitioning.  The rule is `workers x ranks x 3 GB` must fit in RAM with
+headroom.  Eight ranks were OOM-killed on a 16 GiB machine; two were stable.  On
+32 GiB use no more than six ranks total.  If `free -g` shows less than 8 GiB
+available, the campaign will refuse to start - that is the floor working, not a
+bug, and it must not be lowered.
+
+## Step 4 - S7 Stage 0, the multigrid confirmation
+
+This is the single blocker on every S7 accuracy claim.  Full detail is in
+`S7_unstructured_gmsh_su2/RUNBOOK.md` under "Confirm multigrid".
+
+    export PATH="$PWD/AERIS_MESH_STUDY/tools/su2_8.5.0/bin:$PATH"
+    export SU2_RUN="$PWD/AERIS_MESH_STUDY/tools/su2_8.5.0/bin"
+    .venv/bin/python \
+      AERIS_MESH_STUDY/04_strategy_studies/S7_unstructured_gmsh_su2/convergence_matrix.py \
+      /path/to/coarse_mesh.su2  6000  2  3  round-two
+
+Arguments in order: mesh, iterations, ranks per variant, concurrent variants, and
+any fifth argument to select the three multigrid variants instead of all six.
+
+If `AERIS_MESH_STUDY/tools/su2_8.5.0` is missing on the desktop, SU2 8.5.0 is a
+gitignored download rather than lost work; re-fetch the pinned release before
+running.
+
+Two outcomes, both decisive.  If a variant reaches six orders, adopt it in a
+superseding ADR carrying the measurements.  If none does while CD stays flat, the
+residual gate was mis-derived and is re-derived - in an ADR, before the re-run.
+Neither outcome is "lower the gate until it passes".
+
+## Step 5 - report progress and push it back
+
+Run this at any time, including while a campaign is still going.  It reports
+whatever has landed so far.
+
+    .venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/run_report.py \
+      <artifacts_root> --name s7_stage0_multigrid --push
+
+It writes a small Markdown and JSON pair into
+`AERIS_MESH_STUDY/04_strategy_studies/RUN_LOG/` and, with `--push`, commits and
+pushes **only those two files**.  It never touches the artifacts and never
+commits mesh data.
+
+This exists because the artifact trees are large and get wiped between campaigns.
+A run recorded only there is a run nobody can evaluate later.
+
+Then, back on the laptop:
+
+    git pull
+
+and the reports are there to read.
+
+## Step 6 - what to run after Stage 0 passes
+
+In order, and not before Stage 0 is accepted:
+
+1. the remaining 95 coarse meshes - about 16 hours sequential, four hours split
+   four ways, see `RUNBOOK.md`;
+2. a converged coarse CFD case, which is what actually earns
+   `production_y_plus_passed`;
+3. S6 production-resolution meshes, which is S6's Stage 0 and the longer of the
+   two gaps;
+4. Stage 1, the twenty-case generalisation test, once **both** pipelines have one
+   accepted case.
+
+## Rules that hold regardless of what the session decides
+
+- The hold-out `round_c_lhs10_seed42` is forbidden: never constructed, meshed,
+  solved, inspected, or worked around.  It stays untouched until the Stage 4
+  freeze is recorded.
+- No acceptance threshold moves to rescue a failing case.  `POLICY.yaml` carries
+  `no_gate_weakening: true`.  A gate that is genuinely wrong is re-derived in a
+  superseding ADR that states the measurement showing the old value was wrong,
+  written before the re-run.
+- Everything lives under the project tree.  Nothing in `/tmp`, nothing in a
+  scratchpad.
+- Findings go in tracked files, because `data/` and the artifact trees are wiped.
+- Relocate3D must never be used as a Gmsh optimiser; it corrupts the boundary
+  layer.  `HANDOFF.md` carries the rest of these invariants.
+
+
 ## Sequence
 
     Stage 0   one accepted CFD each      S6 needs production meshes first

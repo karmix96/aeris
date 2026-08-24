@@ -80,6 +80,15 @@ geometry:
     - wall_lower
     - wall_te
     - wall_tip
+  # The label set a surface must carry depends on the domain: a half model closes
+  # its root with a symmetry cap, a mirrored one has no root boundary at all.
+  required_surface_labels_by_domain:
+    full_mirrored_wing: [wall_upper, wall_lower, wall_te, wall_tip]
+    half_wing_symmetry_y0: [wall_upper, wall_lower, wall_te, wall_tip, symmetry]
+  required_boundary_labels_by_domain:
+    full_mirrored_wing: [wall_upper, wall_lower, wall_te, wall_tip, farfield]
+    half_wing_symmetry_y0:
+      [wall_upper, wall_lower, wall_te, wall_tip, symmetry, farfield]
   required_boundary_labels:
     - wall_upper
     - wall_lower

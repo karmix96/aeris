@@ -806,7 +806,10 @@ def build_surface(
             tolerance=max(1.0e-13, 1.0e-10 * L),
         )
     )
-    required = set(policy["geometry"]["required_surface_labels"])
+    by_domain = policy["geometry"].get("required_surface_labels_by_domain") or {}
+    required = set(
+        by_domain.get(modeled_domain, policy["geometry"]["required_surface_labels"])
+    )
     observed = {label for label, count in topology["label_counts"].items() if count > 0}
     topology["labels_exact"] = observed == required
     topology["required_labels"] = sorted(required)

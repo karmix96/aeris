@@ -177,3 +177,73 @@ def prism_signed_volumes(points: Array, prisms: Array) -> Array:
         v2 = p[n[:, d]] - p[n[:, a]]
         total += np.einsum("ij,ij->i", np.cross(v0, v1), v2) / 6.0
     return total
+
+# Prism lateral faces, as (bottom_a, bottom_b, top_b, top_a) into the six-node
+# ordering emitted by `march`.
+_LATERAL = ((0, 1, 4, 3), (1, 2, 5, 4), (2, 0, 3, 5))
+
+
+def symmetry_quads(layer: PrismLayer, *, axis: int, tolerance: float = 1.0e-9) -> Array:
+    """The prism faces that lie in the symmetry plane.
+
+    These are the root end of the layer.  They exist only because the marching
+    directions were constrained; with a free march the same faces would be tilted
+    out of the plane and could not be a boundary at all.
+    """
+    coordinate = layer.points[:, axis]
+    quads = []
+    for face in _LATERAL:
+        nodes = layer.prisms[:, face]
+        on_plane = (np.abs(coordinate[nodes]) <= tolerance).all(axis=1)
+        if on_plane.any():
+            quads.append(nodes[on_plane])
+    if not quads:
+        return np.empty((0, 4), dtype=np.int64)
+    return np.vstack(quads)
+
+
+def top_boundary_loops(layer: PrismLayer) -> list[list[int]]:
+    """Ordered node loops bounding the open edge of the capping surface.
+
+    The tetrahedral core is bounded partly by the symmetry plane, and the hole in
+    that plane is exactly this loop, so it has to come back ordered rather than as
+    a set of edges.  More than one loop is possible in principle and is returned
+    rather than collapsed, because silently taking the first would be wrong for
+    any geometry that produced two.
+    """
+    counts: dict[tuple[int, int], int] = {}
+    for a, b, c in layer.top_triangles:
+        for edge in ((a, b), (b, c), (c, a)):
+            key = (int(min(edge)), int(max(edge)))
+            counts[key] = counts.get(key, 0) + 1
+    boundary = [edge for edge, count in counts.items() if count == 1]
+    if not boundary:
+        return []
+
+    neighbours: dict[int, list[int]] = {}
+    for a, b in boundary:
+        neighbours.setdefault(a, []).append(b)
+        neighbours.setdefault(b, []).append(a)
+    if any(len(v) != 2 for v in neighbours.values()):
+        raise ValueError(
+            "capping-surface boundary is not a set of simple closed loops; "
+            "the wall triangulation is non-manifold at its open edge"
+        )
+
+    loops: list[list[int]] = []
+    unvisited = set(neighbours)
+    while unvisited:
+        start = min(unvisited)
+        loop = [start]
+        unvisited.discard(start)
+        previous, current = None, start
+        while True:
+            options = [n for n in neighbours[current] if n != previous]
+            nxt = options[0] if options else None
+            if nxt is None or nxt == start:
+                break
+            loop.append(nxt)
+            unvisited.discard(nxt)
+            previous, current = current, nxt
+        loops.append(loop)
+    return loops

@@ -75,3 +75,39 @@ def test_heights_must_increase():
     points, triangles = _tilted_wall()
     with pytest.raises(ValueError, match="increase strictly"):
         pl.march(points, triangles, [0.2, 0.1], symmetry_axis=1)
+
+
+def test_symmetry_quads_are_the_root_end_of_the_layer():
+    points, triangles = _tilted_wall()
+    layer = pl.march(points, triangles, [0.1, 0.25], symmetry_axis=1)
+    quads = pl.symmetry_quads(layer, axis=1)
+
+    # One root edge per layer: the tilted wall has a single edge on the plane.
+    assert len(quads) == 2
+    assert np.allclose(layer.points[quads.ravel()][:, 1], 0.0, atol=1e-15)
+
+
+def test_symmetry_quads_vanish_without_the_constraint():
+    """A free march tilts the same faces off the plane, so none qualify."""
+    points, triangles = _tilted_wall()
+    free = pl.march(points, triangles, [0.1, 0.25], symmetry_axis=None)
+    assert len(pl.symmetry_quads(free, axis=1)) == 0
+
+
+def test_top_boundary_comes_back_as_one_ordered_loop():
+    points, triangles = _tilted_wall()
+    layer = pl.march(points, triangles, [0.1, 0.25], symmetry_axis=1)
+    loops = pl.top_boundary_loops(layer)
+
+    assert len(loops) == 1
+    loop = loops[0]
+    assert len(loop) == 4
+    assert len(set(loop)) == len(loop)
+    # Consecutive entries must be real edges of the capping surface.
+    edges = set()
+    for a, b, c in layer.top_triangles:
+        for e in ((a, b), (b, c), (c, a)):
+            edges.add((int(min(e)), int(max(e))))
+    for i, node in enumerate(loop):
+        nxt = loop[(i + 1) % len(loop)]
+        assert (min(node, nxt), max(node, nxt)) in edges

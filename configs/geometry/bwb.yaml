@@ -110,13 +110,26 @@ geometry:
     n_sections: 25                   # <=0.56% worst-seed on forces + stability
     span_margin: 0.0                 # FULL span; an inset opens a centreline gap
     spanwise_panels_per_section: 4   # 96/side; <=0.54% worst-seed
-    nchordwise: 24                   # was 8: elevon authority 7.7% -> ~1.1% error
+    # DECISION-0013: 12 is the DSE setting. AVL's cost is ~cubic in vortex count
+    # and 24 chordwise puts us at 4608 vortices = 77% of AVL's ~6000 array limit,
+    # costing 57 s per point. 12 costs 14.6 s (3.9x faster) and the entire penalty
+    # lands on the control derivatives as a monotone bias (CL_de 3.8%), while CL,
+    # Cm, Xnp and the stability derivatives stay under 0.7%. Raise to 24 for
+    # verification runs and for any design promoted to CFD.
+    nchordwise: 12                   # DSE tier; 24 = verification tier
     cspace: 1.0                      # cosine. uniform helps the elevon but
                                      # degrades Xnp/Cmq by 14-15x
     snap_sections_to_control: true   # sections land exactly on the elevon ends
-    # Adaptive section placement. auto = apply only when uniform spacing breaches
-    # the gain-ramp criterion below (the DoE-safe setting; worst case across the
-    # design set 1.23% -> 0.84%). always | never force it.
+    # DECISION-0014 (revised after audit): auto. The gate leaves the majority of
+    # geometries on plain uniform+pins (identical result on 5 of 10 tested) and
+    # engages only where the gain ramp is severe -- which is where it cuts the
+    # worst case: narrow elevon (66.7% ramp) 1.52% -> 1.12%, random_1020 (36.3%)
+    # 1.98% -> 1.42%. Worst case across all resolvable quantities: 1.68% (auto)
+    # vs 1.98% (never). Means are a tie (0.86% vs 0.82%) inside reference noise.
+    # NOTE: drag (CDind/cd_total/e) is deliberately NOT used to judge placement --
+    # the reference disagrees with ITSELF by 1.2-2.9% there at every affordable
+    # density, because AVL's Trefftz-plane drag is acutely sensitive to how
+    # stations sample the spanwise load.
     section_placement: auto
     ramp_fraction_limit: 0.15        # gain-ramp width / elevon band width
 

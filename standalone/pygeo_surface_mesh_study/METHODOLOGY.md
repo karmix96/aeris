@@ -5,7 +5,8 @@
 This is a deterministic computer experiment for the following bounded claim:
 
 > For the canonical clean BWB outer mold line, fixed station airfoils, fixed
-> cap4 topology, and registered geometry domain, predict the surface-quality
+> cap4 OML topology, fixed quad-only airfoil-face tip closure, and registered
+> geometry domain, predict the surface-quality
 > metrics at each member of the L1-L5 mesh family, select the coarsest family
 > member that satisfies every user-authored limit, and estimate which
 > individual numerical mesh controls are most useful for measured retry actions.
@@ -271,12 +272,14 @@ solution independence. They combine four considerations:
 1. algebraic quad-quality guidance from the Verdict/CUBIT/Knupp metric family;
 2. CFD meshing practice for skewness, aspect ratio, and smooth size transition;
 3. OpenFOAM-style hard validity floors for determinant/twist-like quantities;
-4. empirical pre-flight screening of the fixed cap4 BWB tip topology.
+4. empirical pre-flight screening of the fixed cap4 OML plus quad-only
+   airfoil-face BWB tip topology.
 
 The OML receives tighter shape/angle limits because it is the aerodynamic
-surface that seeds the volume mesh. The tip/collar receives separate relaxed
-limits because it is a small closure singularity at a blunt, thin BWB trailing
-edge. Applying near-square finite-element quad limits to that collar would
+surface that seeds the volume mesh. The collar-free airfoil-face tip cap
+receives separate relaxed limits because it is a small all-quad closure around
+the blunt, thin BWB leading/trailing-edge wrap. Applying near-square
+finite-element quad limits to that cap would
 reject the verified topology rather than identify a CFD-relevant failure.
 
 | Metric | Limit | Role |
@@ -288,10 +291,10 @@ reject the verified topology rather than identify a CFD-relevant failure.
 | `oml.max_aspect_ratio` | <= 25 | Allows aerodynamic surface stretching but rejects extreme tangential anisotropy. |
 | `oml.max_growth_ratio` | <= 2.50 | Hard upper gate on adjacent surface-size jumps; 1.1-1.5 remains the design target. |
 | `oml.max_adjacent_normal_angle_deg` | <= 170 | Fold/edge-wrap sentinel; not interpreted as a curvature-resolution target at LE/TE wraps. |
-| `tip.min_shape_metric` | >= 0.03 | Non-degenerate cap/collar floor for the small closure blocks. |
-| `tip.min_scaled_jacobian` | >= 0.03 | Positive, non-collapsed tip-collar Jacobian floor. |
+| `tip.min_shape_metric` | >= 0.03 | Non-degenerate tip-cap floor for the small closure block. |
+| `tip.min_scaled_jacobian` | >= 0.03 | Positive, non-collapsed tip-cap Jacobian floor. |
 | `tip.min_triangle_normal_alignment` | >= 0.95 | Same quad-orientation/planarity gate as OML. |
-| `tip.max_equiangle_skewness` | <= 0.98 | Absolute cap/collar skewness gate; tighter values are reported but not used as a hard topology rejection. |
+| `tip.max_equiangle_skewness` | <= 0.98 | Absolute tip-cap skewness gate; tighter values are reported but not used as a hard topology rejection. |
 | `tip.max_aspect_ratio` | <= 10 | Keeps the closure blocks below the usual non-boundary-layer CFD aspect-ratio target. |
 | `tip.max_growth_ratio` | <= 2.50 | Same hard size-jump gate as OML. |
 | `tip.max_adjacent_normal_angle_deg` | <= 10 | Tip cap should remain locally smooth; large jumps indicate a bad closure. |
@@ -304,7 +307,8 @@ variables cause the excursions. The study therefore records the continuous
 metrics and trains laws on them; acceptance only rejects meshes that cross the
 pre-registered hard limits.
 
-The limit set is valid only for this fixed airfoil signature and cap4 topology.
+The limit set is valid only for this fixed airfoil signature, cap4 OML
+topology, and airfoil-face structured tip closure.
 Changing the airfoils, enabling split physical CAD, changing the tip topology,
 or using the surface mesh as final CFD evidence requires a new pre-registration
 and a separate CFD solution-verification study.
@@ -336,12 +340,12 @@ numerical controls:
 - chordwise/block-side points;
 - spanwise panels per realised source-section interval;
 - cap wrap points;
-- tip/collar radial points.
+- LE/TE curvature-blend control (`tip_radial_points` compatibility field).
 
-Pre-flight structural screening bounds the cap-wrap and tip-radial ranges to
-the verified nonfolding cap4-tip domain. Higher values fold the thin BWB
-trailing-edge tip collar and are excluded from this law; they require a
-separate topology-redesign campaign.
+Pre-flight structural screening bounds the cap-wrap and curvature-blend ranges
+to the verified nonfolding airfoil-face tip domain. Values outside that domain
+fold the thin BWB LE/TE wrap corners and are excluded from this law; they
+require a separate topology-redesign campaign.
 
 Each mesh-control case samples all 16 geometry variables and these four mesh
 variables jointly. The training design is a 20-dimensional scrambled Sobol

@@ -37,9 +37,15 @@ def _cfg():
 
 def test_config_carries_the_decided_discretisation():
     d = _cfg().aero_discretisation
-    assert (d.n_sections, d.spanwise_panels_per_section, d.nchordwise) == (25, 4, 24)
+    # nchordwise 12 = the DSE tier (DECISION-0013). 24 is the verification tier
+    # and must be selected explicitly; shipping it as the default cost 58 s per
+    # design point and made a 2000-design sweep 6.7 days.
+    assert (d.n_sections, d.spanwise_panels_per_section, d.nchordwise) == (25, 4, 12)
     assert d.span_margin == 0.0
     assert d.cspace == 1.0
+    # DECISION-0014 (revised): gated adaptive placement. The gate leaves benign
+    # geometries on uniform+pins and engages only where the gain ramp is severe,
+    # which is where it improves the worst case (1.98% -> 1.68%).
     assert d.section_placement == "auto"
 
 
@@ -64,7 +70,7 @@ def test_band_edge_snapping_inserts_rather_than_moves():
     spacing away, which WIDENS the gain ramp -- the opposite of what
     DECISION-0010 requires. Inserting keeps the edge exact and the neighbour close.
     """
-    _, _, meta = build_pygeo_sections_from_config(CONFIG)
+    ex, _, meta = build_pygeo_sections_from_config(CONFIG)
     band = (meta["control"]["start_frac"], meta["control"]["end_frac"])
     n_req = _cfg().aero_discretisation.n_sections
 
@@ -74,8 +80,15 @@ def test_band_edge_snapping_inserts_rather_than_moves():
     inserted = np.unique(np.concatenate([np.linspace(0.0, 1.0, n_req), list(band)]))
 
     assert ramp_fraction(inserted, band) < ramp_fraction(moved, band)
-    # and the real builder gains sections rather than relocating them
-    assert meta["n_sections"] > n_req
+    # The real builder INSERTS the pins (it does not relocate a neighbour onto the
+    # edge) while still honouring the budget exactly: n_sections is the FINAL count,
+    # so the uniform base grid is reduced by the number of interior pins first.
+    # Both properties must hold together -- an exact count with a missing pin, or
+    # every pin present but an inflated count, are each a failure.
+    assert meta["n_sections"] == n_req
+    fracs = sorted(float(s.span_fraction) for s in ex)
+    for pin in meta["feature_pins"]:
+        assert any(abs(f - pin) < 1e-6 for f in fracs), f"pin {pin} was dropped"
 
 
 @pytest.mark.parametrize(
@@ -83,13 +96,29 @@ def test_band_edge_snapping_inserts_rather_than_moves():
     [((0.55, 0.92), False), ((0.70, 0.85), True)],
 )
 def test_adaptive_placement_is_reachable_and_gated(band, expect_adaptive):
-    """'auto' must engage adaptive placement only when the ramp criterion fails."""
+    """'auto' must engage adaptive placement only when the ramp criterion fails.
+
+    The shipped default is now 'never' (DECISION-0014), so this forces 'auto'
+    explicitly. The gate itself must keep working: adaptive placement remains the
+    documented exception for short-span control surfaces, where the gain ramp is
+    structurally unreachable by pinning alone.
+    """
     gcfg = _cfg()
+    forced = dataclasses.replace(gcfg, aero_discretisation=dataclasses.replace(
+        gcfg.aero_discretisation, section_placement="auto"))
     base = get_geometry_generator("bwb_segmented").sample_one(gcfg, seed=7000)
     sample = dataclasses.replace(
         base, elevon_start_frac=band[0], elevon_end_frac=band[1]
     )
-    _, _, meta = build_pygeo_sections_from_config(CONFIG, sample=sample)
+    # build_pygeo_sections_from_config re-reads the config from disk, so the
+    # forced setting has to be injected at the resolver.
+    import aeris.geometry.config_resolver as CR
+    original = CR.resolve_generator_and_config
+    CR.resolve_generator_and_config = lambda raw: ("bwb_segmented", forced)
+    try:
+        _, _, meta = build_pygeo_sections_from_config(CONFIG, sample=sample)
+    finally:
+        CR.resolve_generator_and_config = original
     used = meta["section_placement"] == "adaptive"
     assert used is expect_adaptive, (
         f"band {band}: placement={meta['section_placement']} "

@@ -464,12 +464,23 @@ def adaptive_span_fractions(
         fractions = np.concatenate([fractions, np.asarray(pins, dtype=float)])
 
     fractions = np.unique(np.clip(fractions, 0.0, 1.0))
-    # Enforce strict monotonic separation (extract_sections requires it).
-    keep = [fractions[0]]
+    # Enforce strict monotonic separation (extract_sections requires it). When a
+    # pinned station and an unpinned one fall within the tolerance the PIN wins:
+    # dropping a hard pin to keep an interpolated neighbour defeats the purpose of
+    # pinning, and it happened silently before this guard.
+    pinned = np.asarray(sorted(set(pins)), dtype=float) if pins else np.empty(0)
+
+    def _is_pin(v: float) -> bool:
+        return bool(pinned.size) and bool(np.any(np.abs(pinned - v) < 1e-9))
+
+    keep: list[float] = [float(fractions[0])]
     for f in fractions[1:]:
+        f = float(f)
         if f - keep[-1] >= float(min_spacing_frac):
             keep.append(f)
-        elif f == fractions[-1]:
+        elif _is_pin(f) and not _is_pin(keep[-1]):
+            keep[-1] = f          # replace the interpolated point with the pin
+        elif f == float(fractions[-1]):
             keep[-1] = f
     return np.asarray(keep, dtype=float)
 

@@ -120,38 +120,74 @@ def test_sym_cases_have_no_diff():
 
 # ── YAML config test ──────────────────────────────────────────────────────────
 
-def test_bwb_training_v2_yaml_has_two_surfaces(tmp_path):
-    """bwb_training_v2.yaml must have 2 surfaces: elevon_sym (d1) + elevon_diff (d2)."""
+def test_bwb_yaml_declares_one_physical_elevon():
+    """bwb.yaml declares ONE physical elevon; the two AVL slots are made by the writer.
+
+    Retargeted twice. Originally this asserted that bwb_training_v2.yaml listed two
+    control surfaces (elevon_sym + elevon_diff) -- that config encoded the AVL
+    control SLOTS in the geometry file. Both the config (DECISION-0001) and the
+    architecture (DECISION-0005) moved on: the geometry now describes the physical
+    hardware, and native_avl.py emits the symmetric/differential pair from it. The
+    invariant worth testing is that pairing, which is asserted in the test below.
+    """
     from pathlib import Path
-    config_path = Path(__file__).resolve().parents[2] / "configs" / "geometry" / "bwb_training_v2.yaml"
-    assert config_path.exists(), f"bwb_training_v2.yaml not found at {config_path}"
+    config_path = Path(__file__).resolve().parents[2] / "configs" / "geometry" / "bwb.yaml"
+    assert config_path.exists(), f"bwb.yaml not found at {config_path}"
     data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
     cs = data["geometry"]["control_surfaces"]
     assert cs["enabled"] is True
-    assert len(cs["surfaces"]) == 2
-    names = {s["name"] for s in cs["surfaces"]}
-    assert "elevon_sym"  in names
-    assert "elevon_diff" in names
-    sym_surf  = next(s for s in cs["surfaces"] if s["name"] == "elevon_sym")
-    diff_surf = next(s for s in cs["surfaces"] if s["name"] == "elevon_diff")
-    assert sym_surf["symmetric"]  is True
-    assert diff_surf["symmetric"] is False
+    assert len(cs["surfaces"]) == 1, "one physical elevon, not one per AVL slot"
+    surf = cs["surfaces"][0]
+    assert surf["name"] == "elevon"
+    assert surf["family"] == "trailing_edge"
+    assert surf["symmetric"] is True
+    assert 0.0 < surf["hinge_point"] < 1.0
+    span = surf["spanwise"]
+    assert 0.0 <= span["start_frac"] < span["end_frac"] <= 1.0
 
 
-def test_bwb_training_v2_parses_correctly():
-    """bwb_training_v2.yaml must be accepted by the BWB generator config parser."""
+def test_bwb_parses_correctly():
+    """bwb.yaml must be accepted by the BWB generator config parser."""
     from pathlib import Path
     from aeris.common.config import load_yaml_config
     from aeris.geometry.config_resolver import resolve_generator_and_config
-    config_path = Path(__file__).resolve().parents[2] / "configs" / "geometry" / "bwb_training_v2.yaml"
+    config_path = Path(__file__).resolve().parents[2] / "configs" / "geometry" / "bwb.yaml"
     raw = load_yaml_config(config_path)
     generator_id, typed_config = resolve_generator_and_config(raw)
-    assert generator_id == "bwb_segmented_v1"
+    assert generator_id == "bwb_segmented"
     cs = typed_config.control_surfaces
-    assert cs.enabled is True
-    assert len(cs.surfaces) == 2
-    sym_surf  = next(s for s in cs.surfaces if s.name == "elevon_sym")
-    diff_surf = next(s for s in cs.surfaces if s.name == "elevon_diff")
-    assert sym_surf.symmetric  is True
-    assert diff_surf.symmetric is False
-    assert diff_surf.side == "right"
+    assert cs is not None and cs.enabled is True
+    assert len(cs.surfaces) == 1
+
+
+def test_writer_turns_the_one_elevon_into_two_avl_controls(tmp_path):
+    """The real invariant: one physical elevon -> two AVL controls, SgnDup +1 / -1.
+
+    Net deflection is right = de_sym + da_diff, left = de_sym - da_diff, so the
+    signs must be opposite and both must sit on the same hinge x.
+    """
+    import dataclasses
+    from pathlib import Path
+    from aeris.common.config import load_yaml_config
+    from aeris.geometry.config_resolver import resolve_generator_and_config
+    from aeris.geometry.registry import get_geometry_generator
+    from aeris.generators.bwb_segmented_v1.pygeo_avl_adapter import (
+        build_pygeo_sections_from_config)
+    from aeris.aero.solvers.native_avl import write_native_avl
+
+    cfg = Path(__file__).resolve().parents[2] / "configs" / "geometry" / "bwb.yaml"
+    gid, gc = resolve_generator_and_config(load_yaml_config(cfg))
+    sample = get_geometry_generator(gid).sample_one(gc, seed=7000)
+    ex, semi, meta = build_pygeo_sections_from_config(cfg, sample=sample)
+
+    avl = tmp_path / "t.avl"
+    write_native_avl(ex, avl, control=meta["control"])
+    text = avl.read_text(encoding="utf-8")
+
+    sym = [l for l in text.splitlines() if "_sym" in l and "CONTROL" not in l]
+    dif = [l for l in text.splitlines() if "_diff" in l and "CONTROL" not in l]
+    assert sym and dif, "writer must emit both control slots"
+    assert len(sym) == len(dif), "every controlled section carries both slots"
+    assert sym[0].split()[-1] == "1", "symmetric slot must have SgnDup +1"
+    assert dif[0].split()[-1] == "-1", "differential slot must have SgnDup -1"
+    assert sym[0].split()[2] == dif[0].split()[2], "both slots share one hinge x"

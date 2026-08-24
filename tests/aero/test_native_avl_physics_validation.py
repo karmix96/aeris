@@ -221,3 +221,67 @@ def test_writer_needs_no_pygeo():
     for attr in ("y_m", "chord_m", "twist_deg", "le_xyz_m", "span_fraction", "cst"):
         assert hasattr(sec, attr)
     assert "pygeo" not in type(sec).__module__.lower()
+
+
+# ── AVL array limits must fail loudly, not silently ───────────────────────────
+
+def test_writer_refuses_over_limit_vortex_count(tmp_path):
+    """An over-limit mesh must raise, not produce a .avl that AVL rejects.
+
+    AVL's response to exceeding its compiled arrays is a run that returns with
+    every coefficient None and status=FAILED -- indistinguishable from a physics
+    failure. A 49-section x 4-panel x 24-chordwise mesh is 9216 vortices against a
+    ~6000 limit; that combination silently NaN'd an entire study before this guard
+    existed.
+    """
+    import numpy as np
+    import pytest
+    from aeris.aero.solvers.native_avl import write_native_avl
+
+    class _S:
+        def __init__(self, y, c):
+            self.y_m = float(y)
+            self.chord_m = float(c)
+            self.x_le_m = 0.0
+            self.z_le_m = 0.0
+            self.twist_deg = 0.0
+            self.span_fraction = float(y)
+            n = 41
+            th = np.linspace(0.0, 2.0 * np.pi, n)
+            self.direct_coordinates = np.column_stack(
+                [0.5 * (1 + np.cos(th)), 0.06 * np.sin(th)])
+
+    secs = [_S(y, 0.5) for y in np.linspace(0.0, 1.0, 49)]
+    with pytest.raises(ValueError, match="vortices"):
+        write_native_avl(secs, tmp_path / "over.avl", representation="direct",
+                         nchordwise=24, spanwise_panels_per_section=4)
+
+    # The panel-matched alternative used by the placement study is legal: 49
+    # sections x 2 panels is the SAME vortex count as 25 x 4, so a section-
+    # refinement reference can be built without crossing the limit.
+    assert 2 * (49 - 1) * 2 * 24 == 2 * (25 - 1) * 4 * 24 == 4608
+
+
+def test_writer_refuses_over_limit_strip_count(tmp_path):
+    """NSMAX=500 strips is the other compiled limit."""
+    import numpy as np
+    import pytest
+    from aeris.aero.solvers.native_avl import write_native_avl
+
+    class _S:
+        def __init__(self, y):
+            self.y_m = float(y)
+            self.chord_m = 0.5
+            self.x_le_m = 0.0
+            self.z_le_m = 0.0
+            self.twist_deg = 0.0
+            self.span_fraction = float(y)
+            n = 41
+            th = np.linspace(0.0, 2.0 * np.pi, n)
+            self.direct_coordinates = np.column_stack(
+                [0.5 * (1 + np.cos(th)), 0.06 * np.sin(th)])
+
+    secs = [_S(y) for y in np.linspace(0.0, 1.0, 60)]
+    with pytest.raises(ValueError, match="strips"):
+        write_native_avl(secs, tmp_path / "over.avl", representation="direct",
+                         nchordwise=4, spanwise_panels_per_section=8)

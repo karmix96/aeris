@@ -147,6 +147,31 @@ class TestCumulativeZFormula:
         # Error should be significant (>10mm for 1.6m span at 5deg ramp)
         assert (z_ray[-1] - z_integral[-1]) > 0.010
 
+    def test_piecewise_linear_dihedral_is_station_independent(self):
+        """Refining within each linear segment must not move common stations."""
+        boundaries_y = np.array([0.0, 0.35, 1.05, 1.6])
+        boundaries_d = np.array([0.0, 4.0, 1.5, 7.0])
+        coarse_z = _cumulative_z(boundaries_y, boundaries_d)
+
+        refined_y = np.unique(
+            np.concatenate(
+                [
+                    np.linspace(left, right, 101)
+                    for left, right in zip(
+                        boundaries_y[:-1], boundaries_y[1:], strict=True
+                    )
+                ]
+            )
+        )
+        refined_d = np.interp(refined_y, boundaries_y, boundaries_d)
+        refined_z = _cumulative_z(refined_y, refined_d)
+        common_z = np.interp(boundaries_y, refined_y, refined_z)
+
+        assert np.allclose(common_z, coarse_z, rtol=0.0, atol=2.0e-14)
+
+        trapezoid_limit = np.trapezoid(np.tan(np.radians(refined_d)), refined_y)
+        assert coarse_z[-1] == pytest.approx(trapezoid_limit, abs=2.0e-8)
+
     def test_section_geometry_z_values_are_non_negative_for_positive_dihedral(
         self, section_geometry
     ):

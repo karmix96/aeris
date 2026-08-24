@@ -1,14 +1,14 @@
 """
 ADflow output parsing: monitor history and run-report normalization.
 
-Monitor row layout (verified against a 2026-07-17 smoke solve; the same
-convention the GUI live chart uses):
+Monitor row layout (verified against ANK and NK solves; the same convention
+the GUI live chart uses):
 
     Grid  Iter  IterTot  IterType  CFL  Step  LinRes  Res_rho  Res_turb  CL  CD  totalRes
 
-After dropping the non-numeric IterType token the float columns are
-[IterTot, CFL, Step, LinRes, Res_rho, Res_turb, CL, CD, totalRes], so
-Res_rho is floats[4].
+The columns are positional. In NK rows CFL is ----, so collecting only
+numeric tokens shifts the later columns and silently drops the final Newton
+history. Res_rho, CL, and CD are always tokens 7, 9, and 10 respectively.
 """
 
 from __future__ import annotations
@@ -19,15 +19,12 @@ import math
 def resrho_from_line(line: str) -> float | None:
     """Extract Res_rho from one ADflow monitor row, else None."""
     parts = line.split()
-    if len(parts) < 10 or not parts[0].isdigit() or not parts[1].isdigit():
+    if len(parts) < 12 or not parts[0].isdigit() or not parts[1].isdigit():
         return None
-    floats: list[float] = []
-    for token in parts[2:]:
-        try:
-            floats.append(float(token))
-        except ValueError:
-            continue
-    return floats[4] if len(floats) >= 9 else None
+    try:
+        return float(parts[7])
+    except ValueError:
+        return None
 
 
 def parse_monitor_history(log_text: str) -> dict[str, object]:
@@ -53,22 +50,19 @@ def parse_monitor_history(log_text: str) -> dict[str, object]:
 def force_row_from_line(line: str) -> dict[str, float] | None:
     """Extract (Res_rho, CL, CD) from one monitor row, else None.
 
-    Same column layout as ``resrho_from_line``: after dropping the
-    non-numeric IterType token, floats = [IterTot, CFL, Step, LinRes,
-    Res_rho, Res_turb, CL, CD, totalRes] -> CL = floats[6], CD = floats[7].
+    Same positional column layout as resrho_from_line.
     """
     parts = line.split()
-    if len(parts) < 10 or not parts[0].isdigit() or not parts[1].isdigit():
+    if len(parts) < 12 or not parts[0].isdigit() or not parts[1].isdigit():
         return None
-    floats: list[float] = []
-    for token in parts[2:]:
-        try:
-            floats.append(float(token))
-        except ValueError:
-            continue
-    if len(floats) < 9:
+    try:
+        return {
+            "resrho": float(parts[7]),
+            "cl": float(parts[9]),
+            "cd": float(parts[10]),
+        }
+    except ValueError:
         return None
-    return {"resrho": floats[4], "cl": floats[6], "cd": floats[7]}
 
 
 def parse_force_history(log_text: str) -> list[dict[str, float]]:

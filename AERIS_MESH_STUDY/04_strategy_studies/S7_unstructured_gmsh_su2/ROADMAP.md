@@ -50,8 +50,13 @@ S7 and write a superseding ADR for one alternative; do not weaken a threshold.
 The specific capability Gmsh lacks is layer collision handling, which
 snappyHexMesh and cfMesh both provide.
 
-The fixed-topology exploit remains open and is the strongest available route to
-S6-style generalisation: freeze the surface sampling counts across the family so
+The fixed-topology exploit is now measured rather than merely proposed; see
+`FIXED_TOPOLOGY.md`.  Freezing the surface grid costs about 1.11x mean surface
+cells at `coarse` over six cases, and the wall is already a structured tensor
+grid, so index correspondence follows directly.  The blocker is the tip cap, whose
+Delaunay connectivity follows each design's geometry and which falls back to the
+ladder without recording that it did.  The next step is one instrumentation field,
+not a redesign.  Original framing: freeze the surface sampling counts across the family so
 node correspondence is exact and index-based, mesh a few templates to full
 quality, then deform onto the remaining designs and audit the result.  S6 already
 works this way.  Surface triangle counts currently vary per design.

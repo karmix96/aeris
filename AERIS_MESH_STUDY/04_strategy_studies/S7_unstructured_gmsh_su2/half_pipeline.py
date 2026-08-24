@@ -217,28 +217,78 @@ def write_su2(
     }
 
 
-def _core_from_shell(gmsh: Any, points: Array, triangles: Array) -> tuple[Array, Array]:
+def _invalid_cells(gmsh: Any) -> int:
+    """Count volume cells Gmsh reports as invalid."""
+    total = 0
+    for dim, tag in gmsh.model.getEntities(3):
+        types, tags, _ = gmsh.model.mesh.getElements(dim, tag)
+        for _element_type, group in zip(types, tags, strict=True):
+            quality = gmsh.model.mesh.getElementQualities(group)
+            total += int(np.count_nonzero(np.asarray(quality) <= 0.0))
+    return total
+
+
+def _core_from_shell(
+    gmsh: Any,
+    points: Array,
+    cap_triangles: Array,
+    outer_triangles: Array,
+    *,
+    configure_field: Any = None,
+    algorithm_3d: int | None = None,
+    optimize: str | None = None,
+    optimize_passes: int = 0,
+) -> tuple[Array, Array]:
     """Fill a watertight triangulated shell with tetrahedra.
 
     Built in its own model: the plane phase leaves geo curves behind, and
     createTopology on a discrete surface refuses to run alongside them.
+
+    The shell is split into the body cap and everything else so a distance field
+    can refine towards the body without also refining towards the farfield, which
+    is where all of the refinement would otherwise be wasted.
     """
     gmsh.model.add("half_core")
     gmsh.model.setCurrent("half_core")
-    entity = gmsh.model.addDiscreteEntity(2)
-    gmsh.model.mesh.addNodes(
-        2, entity, np.arange(1, len(points) + 1, dtype=np.int64), points.ravel()
-    )
-    gmsh.model.mesh.addElementsByType(
-        entity,
-        2,
-        np.arange(1, len(triangles) + 1, dtype=np.int64),
-        (triangles + 1).astype(np.int64).ravel(),
-    )
+    if algorithm_3d is not None:
+        gmsh.option.setNumber("Mesh.Algorithm3D", int(algorithm_3d))
+
+    node_tags = np.arange(1, len(points) + 1, dtype=np.int64)
+    entities = []
+    element_tag = 1
+    for block in (cap_triangles, outer_triangles):
+        entity = gmsh.model.addDiscreteEntity(2)
+        if not entities:
+            gmsh.model.mesh.addNodes(2, entity, node_tags, points.ravel())
+        gmsh.model.mesh.addElementsByType(
+            entity,
+            2,
+            np.arange(element_tag, element_tag + len(block), dtype=np.int64),
+            (np.asarray(block, dtype=np.int64) + 1).ravel(),
+        )
+        element_tag += len(block)
+        entities.append(entity)
+
     gmsh.model.mesh.createTopology()
-    gmsh.model.geo.addVolume([gmsh.model.geo.addSurfaceLoop([entity])])
+    gmsh.model.geo.addVolume([gmsh.model.geo.addSurfaceLoop(entities)])
     gmsh.model.geo.synchronize()
+    if configure_field is not None:
+        configure_field(entities[0])
     gmsh.model.mesh.generate(3)
+
+    # The same optimisation the mirrored core runs, and for the same reason: a raw
+    # Delaunay fill leaves slivers the quality gate refuses. Rolled back if it makes
+    # matters worse, since an optimiser that increases the invalid count has not
+    # improved the mesh whatever it did to the average.
+    if optimize and optimize_passes:
+        before = _invalid_cells(gmsh)
+        for _ in range(int(optimize_passes)):
+            gmsh.model.mesh.optimize(str(optimize))
+        if _invalid_cells(gmsh) > before:
+            raise ValueError(
+                f"core optimisation increased invalid cells from {before} to "
+                f"{_invalid_cells(gmsh)}"
+            )
 
     tags, coordinates, _ = gmsh.model.mesh.getNodes()
     index = {int(t): i for i, t in enumerate(tags)}
@@ -253,7 +303,9 @@ def _core_from_shell(gmsh: Any, points: Array, triangles: Array) -> tuple[Array,
     if not tetrahedra:
         # Gmsh reports an unfillable region as a warning and an empty volume, so
         # an empty result here is a failure that would otherwise pass silently.
-        raise ValueError("core meshing produced no tetrahedra; the shell did not bound a volume")
+        raise ValueError(
+            "core meshing produced no tetrahedra; the shell did not bound a volume"
+        )
     return coordinates.reshape(-1, 3), np.vstack(tetrahedra)
 
 
@@ -264,6 +316,7 @@ def assemble(
     *,
     reference_length_m: float,
     symmetry_axis: int = 1,
+    configure_field: Any = None,
 ) -> dict[str, Any]:
     """Build the whole half-domain mesh and return arrays ready for SU2.
 
@@ -308,7 +361,17 @@ def assemble(
             f"by exactly two triangles"
         )
 
-    core_points, tetrahedra = _core_from_shell(gmsh, shell_welded, shell_conn)
+    outer_count = len(symmetry_tris) + len(farfield_tris)
+    core_points, tetrahedra = _core_from_shell(
+        gmsh,
+        shell_welded,
+        shell_conn[outer_count:],
+        shell_conn[:outer_count],
+        configure_field=configure_field,
+        algorithm_3d=int(spec["candidate"]["volume_algorithm"]),
+        optimize=str(spec["candidate"]["optimize"]),
+        optimize_passes=int(spec["candidate"]["optimize_passes"]),
+    )
 
     quads = symmetry_quads(layer, axis=symmetry_axis)
     n_layer, n_plane = len(layer.points), len(plane_points)

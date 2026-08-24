@@ -518,6 +518,7 @@ def _generate_half_mesh(
     *,
     output_dir: Path,
     spec: dict[str, Any],
+    policy: dict[str, Any],
     msh_path: Path,
     su2_path: Path,
 ) -> dict[str, Any]:
@@ -539,8 +540,47 @@ def _generate_half_mesh(
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.NumThreads", 1)
         gmsh.option.setNumber("Mesh.MshFileVersion", 4.1)
+        absolute = spec["absolute"]
+        body_min = np.asarray(surface.points).min(axis=0)
+        body_max = np.asarray(surface.points).max(axis=0)
+        te_opening = float(surface.metadata["fidelity"]["min_realized_te_opening_m"])
+        policy_gmsh = policy["gmsh"]
+
+        def configure_field(cap_entity: int) -> None:
+            """The same size field the mirrored core uses.
+
+            Without it the core steps straight from the body's own spacing to the
+            farfield's, and the tetrahedra in between are what the quality gate
+            refuses - measured at 0.0076 against a 0.025 limit on the worst design.
+            """
+            bounds = gmsh.model.getBoundingBox(-1, -1)
+            _set_background_field(
+                gmsh,
+                top_surfaces=[cap_entity],
+                bounds=(bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]),
+                body_bounds=(*body_min.tolist(), *body_max.tolist()),
+                near_size=float(absolute["near_core_edge_m"]),
+                far_size=float(absolute["far_core_edge_m"]),
+                wake_size=float(absolute["wake_edge_m"]),
+                bl_thickness=float(spec["boundary_layer_total_thickness_m"]),
+                wake_length=float(spec["farfield"]["wake_length_over_L"]) * reference,
+                cap_size=float(absolute["surface_edge_m"]),
+                te_points=trailing_edge_sample_points(
+                    surface,
+                    target_spacing=float(
+                        policy_gmsh["te_core_refinement"]["size_over_te_opening"]
+                    )
+                    * te_opening,
+                    max_points=int(policy_gmsh["te_core_refinement"]["max_sample_points"]),
+                ),
+                te_refinement=policy_gmsh["te_core_refinement"],
+                te_opening=te_opening,
+                growth_ratio=float(policy["gmsh"]["core_size_field"]["max_growth_ratio"]),
+            )
+
         assembled = half_pipeline.assemble(
-            gmsh, surface, spec, reference_length_m=reference
+            gmsh, surface, spec, reference_length_m=reference,
+            configure_field=configure_field,
         )
         half_pipeline.to_gmsh_model(gmsh, assembled)
         gmsh.write(str(msh_path))
@@ -589,6 +629,7 @@ def generate_mesh(
             surface,
             output_dir=output_dir,
             spec=spec,
+            policy=policy,
             msh_path=msh_path,
             su2_path=su2_path,
         )

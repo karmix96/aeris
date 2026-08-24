@@ -362,6 +362,12 @@ def test_gmsh_tetra_tri_prism_tet_smoke(tmp_path):
     # Keep the synthetic domain genuinely laptop-sized while preserving the
     # production laptop layer count and all mesher code paths.
     smoke_policy = copy.deepcopy(policy)
+    # This exercises the mirrored Gmsh path specifically - it asserts wall and
+    # farfield markers with no symmetry plane - so it pins the domain rather than
+    # following whichever one the policy currently declares.
+    smoke_policy["geometry"] = dict(
+        smoke_policy["geometry"], modeled_domain="full_mirrored_wing"
+    )
     smoke_policy["farfield"] = dict(
         policy["farfield"], upstream_over_L=1.0, downstream_over_L=1.0, radial_over_L=1.0
     )

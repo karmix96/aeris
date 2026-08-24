@@ -43,21 +43,38 @@ class PrismLayer:
     diagnostics: dict[str, Any]
 
 
-def _area_weighted_normals(points: Array, triangles: Array) -> Array:
-    """Per-node outward normals, weighted by adjacent triangle area.
+def _vertex_normals(points: Array, triangles: Array) -> Array:
+    """Per-node outward normals, weighted by the angle each face subtends there.
 
-    Area weighting rather than a plain mean: a wall node at the trailing edge
-    touches many slivers and a few large faces, and an unweighted mean lets the
-    slivers dominate a direction they contribute almost no surface to.
+    Angle weighting rather than area: at the tip the flat cap faces are large
+    beside the thin faces of the upper and lower surfaces, and area weighting lets
+    them pull the normal round towards the cap, which is what squashes the prisms
+    along that edge.  The angle a face subtends at a vertex is a property of the
+    corner itself and does not care how big the face is elsewhere.
     """
     normals = np.zeros_like(points)
-    a = points[triangles[:, 0]]
-    b = points[triangles[:, 1]]
-    c = points[triangles[:, 2]]
-    # Cross product magnitude is twice the area, so this is area weighting already.
-    face = np.cross(b - a, c - a)
+    corners = points[triangles]
+    face = np.cross(corners[:, 1] - corners[:, 0], corners[:, 2] - corners[:, 0])
+    face_length = np.linalg.norm(face, axis=1)
+    usable = face_length > np.finfo(float).tiny
+    unit_face = np.zeros_like(face)
+    unit_face[usable] = face[usable] / face_length[usable, None]
+
     for column in range(3):
-        np.add.at(normals, triangles[:, column], face)
+        a = corners[:, column]
+        b = corners[:, (column + 1) % 3]
+        c = corners[:, (column + 2) % 3]
+        u, v = b - a, c - a
+        nu = np.linalg.norm(u, axis=1)
+        nv = np.linalg.norm(v, axis=1)
+        good = (nu > np.finfo(float).tiny) & (nv > np.finfo(float).tiny)
+        cosine = np.ones(len(u))
+        cosine[good] = np.clip(
+            np.einsum("ij,ij->i", u[good], v[good]) / (nu[good] * nv[good]), -1.0, 1.0
+        )
+        angle = np.arccos(cosine)
+        np.add.at(normals, triangles[:, column], unit_face * angle[:, None])
+
     lengths = np.linalg.norm(normals, axis=1)
     degenerate = lengths <= np.finfo(float).tiny
     if degenerate.any():
@@ -91,7 +108,7 @@ def march(
     if any(second <= first for first, second in zip(heights[:-1], heights[1:], strict=True)):
         raise ValueError(f"cumulative heights must increase strictly: {heights}")
 
-    directions = _area_weighted_normals(points, wall_triangles)
+    directions = _vertex_normals(points, wall_triangles)
 
     on_plane = np.zeros(len(points), dtype=bool)
     if symmetry_axis is not None:
@@ -112,6 +129,10 @@ def march(
                 )
             directions[on_plane] = constrained / lengths[:, None]
 
+    # March exactly the declared height along the node direction.  Scaling the
+    # step to keep a corner node clear of every adjacent face - the classic mitre -
+    # was tried and refused: it lifts the first cell off the wall by up to a factor
+    # of two, and the first cell height is what sets y+.
     wall_count = len(points)
     levels = [points]
     for height in heights:

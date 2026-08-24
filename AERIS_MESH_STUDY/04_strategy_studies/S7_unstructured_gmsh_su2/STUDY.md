@@ -136,6 +136,32 @@ whole wing whatever is meshed, while SU2 integrates force over the markers it is
 given, so leaving it alone would report CL and CD at exactly half their true value
 on a run that looked entirely healthy.
 
+### Verification of the half domain
+
+Breadth, at `laptop_smoke`: **20 / 20 accepted** over indices 0, 5, ... 95, in 192 s.
+
+Production resolution, index 0 at `coarse`: **accepted, no failures**.  1 549 111
+cells as 126 984 prisms and 1 422 127 tetrahedra over 318 865 nodes, meshed in
+146 s and audited in 202 s, 3.6 GB peak against the mirrored mesh's 5.3 GB.
+Quality: prism 0.61826, tet 0.10739, first-cell-height error exactly zero.
+
+Solver chain: SU2 8.5.0 accepts the mesh and reports the boundary as
+`Symmetry plane | symmetry` with 1 799 elements on it; `REF_AREA` is written as
+0.480549 against the whole-wing 0.961097, and the run exits zero.
+
+**Not verified: that the half and mirrored domains give the same converged
+coefficients.**  Both were run for 250 iterations at smoke resolution and neither
+converged - the mirrored dropped 1.500 orders and the half 2.339, against a gate of
+six - with CL still moving in both.  CL differed by 13.5 per cent and CD by 4.7 per
+cent, which is a comparison between two unconverged solutions on two different
+meshes and settles nothing about the physics.  It does establish that the reference
+area is right to within a factor: a missing halving would show as roughly 100 per
+cent, not 13.
+
+That the half mesh fell further in the same 250 iterations is a hint and no more.
+The comparison becomes meaningful only once the convergence problem is resolved,
+and it should be repeated then.
+
 ## Defects found and corrected, in order
 
 Each was found by measurement, and the fix preceded any change to acceptance

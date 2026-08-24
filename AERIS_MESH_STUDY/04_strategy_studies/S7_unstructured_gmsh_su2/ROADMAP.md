@@ -22,6 +22,13 @@
       as the fix and two leading hypotheses refuted.
 - [x] Desktop runbook with measured costs.
 
+## Domain
+
+S7 meshes the **half model**, y >= 0 closed by a symmetry plane at the root, which
+is the domain S6 meshes.  The mirrored model remains reachable through
+`modeled_domain` for comparison and passes the same audit.  Meshes produced before
+this change are mirrored and superseded.
+
 ## Next, in order
 
 1. **Confirm multigrid.**  A longer multigrid run, and multigrid with a late
@@ -29,8 +36,10 @@
    is, adopt multigrid through a superseding ADR amendment with the measurements.
    If it is not, the residual gate itself needs re-deriving, and the force-plateau
    criterion (CD spread 2.4e-6 under multigrid) is the candidate.
-2. **Remaining 95 coarse meshes on the desktop.**  About 16 hours sequential or
-   four hours split four ways.  See `RUNBOOK.md`.
+2. **The 100-design coarse sweep on the desktop, in the half domain.**  About 10
+   hours sequential.  This supersedes the mirrored meshes rather than adding to
+   them, and should run before the multigrid confirmation so that decision rests
+   on a mesh that will be kept.  See `RUNBOOK.md`.
 3. **A converged coarse CFD case**, which is what actually earns
    `production_y_plus_passed`.  Note MPI memory: each rank reads the full mesh
    before partitioning, so 2.5 M cells needed about 3 GB per rank; eight ranks was

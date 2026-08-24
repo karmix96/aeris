@@ -49,6 +49,15 @@ mesh, solve, inspect or add a bypass for it.
 - Attempts are immutable.  A stale or partial artifact is investigated or a new
   output root is used; it is never repaired in place.
 
+## Desktop status, 2026-08-24
+
+Stage 0 was attempted and is **blocked on machine memory**: the desktop is WSL2 on
+a 16 GB host, capped at 7.7 GiB, and the resource preflight rejects a coarse case
+at both the 8 GiB floor and the 70-percent rule.  The toolchain a fresh clone
+lacks - `.venv` at the pinned stack, SU2 8.5.0 - is now rebuilt, tests pass 26/26,
+and an MPICH/OpenMPI launcher defect that would have produced wrong convergence
+histories is fixed.  Read `DESKTOP_STAGE0_STATUS_2026-08-24.md` before resuming.
+
 ## Next safe actions
 
 1. Confirm multigrid over a longer run, then amend ADR-0017 with the measurements

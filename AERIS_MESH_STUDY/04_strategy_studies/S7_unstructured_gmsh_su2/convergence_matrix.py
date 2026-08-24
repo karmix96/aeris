@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -145,9 +146,14 @@ def run_variant(name: str, mesh: Path, iterations: int, ranks: int) -> dict[str,
         "\n".join(f"{k}= {v}" for k, v in sorted(options.items())) + "\n",
     )
     started = time.time()
+    # The linux64 SU2 release is statically linked against MPICH.  Launching it
+    # with an OpenMPI mpirun does not fail: each rank singleton-inits as rank 0
+    # of its own world, so -np N silently runs N duplicate serial solves that
+    # race on one history.csv.  SU2_MPI_LAUNCHER pins a matching launcher.
+    launcher = os.environ.get("SU2_MPI_LAUNCHER", "mpirun")
     with (directory / "su2.log").open("w", encoding="utf-8") as log:
         code = subprocess.run(
-            ["mpirun", "-np", str(ranks), "SU2_CFD", "case.cfg"],
+            [launcher, "-np", str(ranks), "SU2_CFD", "case.cfg"],
             cwd=directory,
             stdout=log,
             stderr=subprocess.STDOUT,

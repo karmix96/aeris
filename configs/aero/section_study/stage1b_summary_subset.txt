@@ -1,0 +1,20 @@
+STAGE 1b — CORRECTED REFERENCE LEGITIMACY (subset, c8s1u, N_ref=201)
+==================================================================
+Legitimacy = dense-uniform Richardson |N201-N151| < 0.5%: FAIL on all 8 designs
+  worst uniform Richardson band: 3.794%
+
+PLACEMENT-ERROR SPECTRUM vs converged reference (worst over angles), uniform-25 -> adaptive-25:
+                    quantity   uni25%   ada25%   verdict
+                          cl    6.615   11.640   uniform better
+                          cm    5.144    7.816   uniform better
+                      cd_ind    1.959    6.424   uniform better
+                    cd_total    1.104    2.122   uniform better
+                        x_np    0.307    0.362   tie
+               elevon_sym.CL    2.037    3.108   uniform better
+               elevon_sym.Cm    1.903    2.744   uniform better
+              elevon_diff.Cl    2.042    3.793   uniform better
+    hinge_moments.elevon_sym    3.791   16.716   uniform better
+
+READ: quantities where worst-case < 1% at uniform-25 are section-EASY;
+those that stay high (cd_ind, hinge) are section-sensitive — the ones a
+placement policy must earn its keep on.

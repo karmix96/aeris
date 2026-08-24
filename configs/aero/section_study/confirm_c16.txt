@@ -1,0 +1,14 @@
+CONFIRMATION @ PRODUCTION MESH c16s2u (ref=uniform-89, normalized worst-key %)
+======================================================================
+          design    noPIN   pinned  adaptive
+   narrow_elevon     6.59     0.44      1.69
+     wide_elevon     3.04     1.35      4.57
+         high_ar    17.68     0.85      2.08
+    strong_taper    11.29     0.69      1.74
+       min_chord     9.75     0.73      1.66
+       max_sweep     7.13     0.62      1.32
+              00    10.56     0.81      1.81
+              01    22.07     0.53      1.43
+
+WORST: noPIN=22.07  pinned=1.35  adaptive=4.57
+pinned<noPIN on 8/8; pinned<=adaptive on 8/8

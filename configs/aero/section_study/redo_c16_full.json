@@ -1,0 +1,232 @@
+{
+  "mesh": "c16s2u",
+  "ref": "uniform-89",
+  "n_designs": 36,
+  "legit": {
+    "lhs30s2000:00": 0.463,
+    "lhs30s2000:01": 0.163,
+    "lhs30s2000:02": 0.557,
+    "lhs30s2000:03": 0.493,
+    "lhs30s2000:04": 0.31,
+    "lhs30s2000:05": 0.428,
+    "lhs30s2000:06": 0.276,
+    "lhs30s2000:07": 0.307,
+    "lhs30s2000:08": 0.627,
+    "lhs30s2000:09": 0.177,
+    "lhs30s2000:10": 0.424,
+    "lhs30s2000:11": 0.394,
+    "lhs30s2000:12": 0.471,
+    "lhs30s2000:13": 0.308,
+    "lhs30s2000:14": 0.374,
+    "lhs30s2000:15": 0.49,
+    "lhs30s2000:16": 0.231,
+    "lhs30s2000:17": 8.809,
+    "lhs30s2000:18": 0.785,
+    "lhs30s2000:19": 0.3,
+    "lhs30s2000:20": 0.296,
+    "lhs30s2000:21": 0.752,
+    "lhs30s2000:22": 14.171,
+    "lhs30s2000:23": 0.414,
+    "lhs30s2000:24": 0.424,
+    "lhs30s2000:25": 0.442,
+    "lhs30s2000:26": 0.347,
+    "lhs30s2000:27": 0.999,
+    "lhs30s2000:28": 0.696,
+    "lhs30s2000:29": 5.989,
+    "extreme:narrow_elevon": 0.42,
+    "extreme:wide_elevon": 0.279,
+    "extreme:high_ar": 0.685,
+    "extreme:strong_taper": 0.463,
+    "extreme:min_chord": 0.424,
+    "extreme:max_sweep": 0.4
+  },
+  "ablation": {
+    "lhs30s2000:00": {
+      "nopin": 10.563,
+      "pinned": 0.81,
+      "adaptive": 1.812
+    },
+    "lhs30s2000:01": {
+      "nopin": 22.068,
+      "pinned": 0.528,
+      "adaptive": 1.426
+    },
+    "lhs30s2000:02": {
+      "nopin": 11.027,
+      "pinned": 0.364,
+      "adaptive": 1.696
+    },
+    "lhs30s2000:03": {
+      "nopin": 8.683,
+      "pinned": 0.636,
+      "adaptive": 1.333
+    },
+    "lhs30s2000:04": {
+      "nopin": 14.991,
+      "pinned": 0.713,
+      "adaptive": 1.231
+    },
+    "lhs30s2000:05": {
+      "nopin": 3.481,
+      "pinned": 1.123,
+      "adaptive": 1.334
+    },
+    "lhs30s2000:06": {
+      "nopin": 17.623,
+      "pinned": 1.056,
+      "adaptive": 1.446
+    },
+    "lhs30s2000:07": {
+      "nopin": 19.929,
+      "pinned": 0.912,
+      "adaptive": 1.388
+    },
+    "lhs30s2000:08": {
+      "nopin": 11.869,
+      "pinned": 1.066,
+      "adaptive": 1.349
+    },
+    "lhs30s2000:09": {
+      "nopin": 22.767,
+      "pinned": 0.926,
+      "adaptive": 0.848
+    },
+    "lhs30s2000:10": {
+      "nopin": 16.615,
+      "pinned": 1.056,
+      "adaptive": 1.595
+    },
+    "lhs30s2000:11": {
+      "nopin": 22.197,
+      "pinned": 1.142,
+      "adaptive": 1.872
+    },
+    "lhs30s2000:12": {
+      "nopin": 16.448,
+      "pinned": 0.893,
+      "adaptive": 0.955
+    },
+    "lhs30s2000:13": {
+      "nopin": 20.727,
+      "pinned": 0.925,
+      "adaptive": 1.323
+    },
+    "lhs30s2000:14": {
+      "nopin": 21.198,
+      "pinned": 1.43,
+      "adaptive": 2.064
+    },
+    "lhs30s2000:15": {
+      "nopin": 5.821,
+      "pinned": 0.48,
+      "adaptive": 1.219
+    },
+    "lhs30s2000:16": {
+      "nopin": 11.601,
+      "pinned": 1.025,
+      "adaptive": 1.041
+    },
+    "lhs30s2000:17": {
+      "nopin": 5.549,
+      "pinned": 5.335,
+      "adaptive": 5.82
+    },
+    "lhs30s2000:18": {
+      "nopin": 13.566,
+      "pinned": 1.968,
+      "adaptive": 1.786
+    },
+    "lhs30s2000:19": {
+      "nopin": 17.889,
+      "pinned": 0.998,
+      "adaptive": 1.526
+    },
+    "lhs30s2000:20": {
+      "nopin": 14.722,
+      "pinned": 1.075,
+      "adaptive": 1.195
+    },
+    "lhs30s2000:21": {
+      "nopin": 3.894,
+      "pinned": 0.54,
+      "adaptive": 1.658
+    },
+    "lhs30s2000:22": {
+      "nopin": 2.924,
+      "pinned": 7.789,
+      "adaptive": 9.33
+    },
+    "lhs30s2000:23": {
+      "nopin": 25.021,
+      "pinned": 1.157,
+      "adaptive": 1.008
+    },
+    "lhs30s2000:24": {
+      "nopin": 21.084,
+      "pinned": 1.277,
+      "adaptive": 1.037
+    },
+    "lhs30s2000:25": {
+      "nopin": 10.842,
+      "pinned": 1.738,
+      "adaptive": 1.619
+    },
+    "lhs30s2000:26": {
+      "nopin": 10.0,
+      "pinned": 0.72,
+      "adaptive": 1.138
+    },
+    "lhs30s2000:27": {
+      "nopin": 13.951,
+      "pinned": 1.002,
+      "adaptive": 1.966
+    },
+    "lhs30s2000:28": {
+      "nopin": 34.836,
+      "pinned": 1.581,
+      "adaptive": 1.735
+    },
+    "lhs30s2000:29": {
+      "nopin": 10.014,
+      "pinned": 5.592,
+      "adaptive": 5.321
+    },
+    "extreme:narrow_elevon": {
+      "nopin": 6.592,
+      "pinned": 0.442,
+      "adaptive": 1.69
+    },
+    "extreme:wide_elevon": {
+      "nopin": 3.045,
+      "pinned": 1.349,
+      "adaptive": 4.565
+    },
+    "extreme:high_ar": {
+      "nopin": 17.675,
+      "pinned": 0.848,
+      "adaptive": 2.082
+    },
+    "extreme:strong_taper": {
+      "nopin": 11.295,
+      "pinned": 0.694,
+      "adaptive": 1.735
+    },
+    "extreme:min_chord": {
+      "nopin": 9.753,
+      "pinned": 0.732,
+      "adaptive": 1.658
+    },
+    "extreme:max_sweep": {
+      "nopin": 7.132,
+      "pinned": 0.617,
+      "adaptive": 1.319
+    }
+  },
+  "worst": {
+    "nopin": 34.836,
+    "pinned": 7.789,
+    "adaptive": 9.33
+  },
+  "pinned_lt_nopin": "35/36",
+  "pinned_le_adaptive": "30/36"
+}

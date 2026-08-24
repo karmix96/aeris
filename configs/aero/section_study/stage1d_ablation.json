@@ -1,0 +1,52 @@
+{
+  "extreme:narrow_elevon": {
+    "nopin": 6.052,
+    "uniform": 1.264,
+    "adaptive": 4.615
+  },
+  "extreme:wide_elevon": {
+    "nopin": 5.815,
+    "uniform": 2.891,
+    "adaptive": 9.123
+  },
+  "extreme:high_ar": {
+    "nopin": 19.499,
+    "uniform": 2.054,
+    "adaptive": 6.17
+  },
+  "extreme:strong_taper": {
+    "nopin": 10.933,
+    "uniform": 1.388,
+    "adaptive": 5.441
+  },
+  "extreme:min_chord": {
+    "nopin": 10.829,
+    "uniform": 1.622,
+    "adaptive": 6.832
+  },
+  "extreme:max_sweep": {
+    "nopin": 8.043,
+    "uniform": 1.118,
+    "adaptive": 5.731
+  },
+  "lhs30s2000:00": {
+    "nopin": 14.694,
+    "uniform": 1.811,
+    "adaptive": 6.514
+  },
+  "lhs30s2000:01": {
+    "nopin": 21.1,
+    "uniform": 2.646,
+    "adaptive": 10.829
+  },
+  "lhs30s2000:02": {
+    "nopin": 13.579,
+    "uniform": 3.726,
+    "adaptive": 8.774
+  },
+  "lhs30s2000:03": {
+    "nopin": 6.72,
+    "uniform": 5.223,
+    "adaptive": 10.481
+  }
+}

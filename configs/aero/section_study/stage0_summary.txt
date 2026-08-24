@@ -1,0 +1,13 @@
+STAGE 0 — LOCK THE INPUTS (section positioning)
+============================================================
+1. MESH FROZEN: c16s2u (chord 16, span x2, cspace 0.0=uniform)
+2. REFERENCE COUNT N_ref=89 (realized ~92, 5824 vortices <= 6000)
+   Richardson levels (1/N chain): (25, 49, 89)
+3. DESIGN SET: 30 normal + 6 extreme
+4. MANDATORY NODES per design: span ends + planform breaks + elevon edges
+   design 0 pins: [0.0, 0.306058259, 0.541417399, 0.611584812, 0.947561507, 1.0]
+5. §9 HASH DISTINCTNESS (design 0): N=25 distinct=True, N=89 distinct=True
+   uniform=9ff854e88e adaptive=384226d5e6 clustered=c087e62414
+6. LEGALITY: all 36 designs legal at N_ref=89 (max vort 5888)
+7. GATES frozen: {'G1a_neutrality_pct': 0.5, 'G1b_richardson_pct': 0.5, 'G3_accuracy_pct': 1.0, 'G4_trim_deg': 0.5, 'G4_bias_pct': 5.0, 'G5_spearman': 0.98, 'G5_disp': 4, 'G5_regret_pct': 0.5, 'G6_predictivity_rho': 0.7, 'G8_gap_ratio': 2.0}
+8. git_sha=c75b1590ce9c22b7dae5e94b84afae8c933ac054

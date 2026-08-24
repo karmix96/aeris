@@ -1,0 +1,32 @@
+{
+  "extreme:narrow_elevon": {
+    "uniform": 1.2644859681484855,
+    "adaptive": 4.615026419695746,
+    "win": "uniform"
+  },
+  "extreme:wide_elevon": {
+    "uniform": 2.8912875867386267,
+    "adaptive": 9.122562674094702,
+    "win": "uniform"
+  },
+  "extreme:high_ar": {
+    "uniform": 2.0543175487465306,
+    "adaptive": 6.17035357731247,
+    "win": "uniform"
+  },
+  "extreme:strong_taper": {
+    "uniform": 1.3878180416345416,
+    "adaptive": 5.440950758269138,
+    "win": "uniform"
+  },
+  "extreme:min_chord": {
+    "uniform": 1.6221468099187546,
+    "adaptive": 6.83216694594252,
+    "win": "uniform"
+  },
+  "extreme:max_sweep": {
+    "uniform": 1.1179645335389423,
+    "adaptive": 5.731022149626149,
+    "win": "uniform"
+  }
+}

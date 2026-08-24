@@ -1,0 +1,14 @@
+STAGE 1c — ADAPTIVE vs UNIFORM ON HARD CASES (c8s1u, ref=uniform-201, normalized)
+==========================================================================
+reference legitimacy (uniform 151v201, worst): 0.399% -> ok
+
+          design  ramp_u  ramp_a | worst-key uniform-25 -> adaptive-25 (normalized %)
+   narrow_elevon    0.39     0.1 | uni= 1.26%@('cd_ind', -2.0)  ada= 4.62%@('cd_total', -2.0)  -> uniform
+     wide_elevon    0.13    0.02 | uni= 2.89%@('elevon_diff.Cl', 0.0)  ada= 9.12%@('hinge_moments.elevon_sym', -2.0)  -> uniform
+         high_ar    0.12    0.01 | uni= 2.05%@('hinge_moments.elevon_sym', 4.0)  ada= 6.17%@('cd_ind', 4.0)  -> uniform
+    strong_taper    0.12    0.01 | uni= 1.39%@('elevon_diff.Cl', 0.0)  ada= 5.44%@('cd_ind', 4.0)  -> uniform
+       min_chord    0.12    0.01 | uni= 1.62%@('cd_ind', 4.0)  ada= 6.83%@('cd_ind', 4.0)  -> uniform
+       max_sweep    0.12    0.01 | uni= 1.12%@('elevon_diff.Cl', 0.0)  ada= 5.73%@('cd_ind', -2.0)  -> uniform
+
+WORST-CASE per design: adaptive wins 0/6, uniform wins 6/6
+worst-case over ALL extremes: uniform=2.89%  adaptive=9.12%

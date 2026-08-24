@@ -204,3 +204,49 @@ def test_one_restart_is_digest_verified_and_resume_is_idempotent(tmp_path, monke
     changed["flow"] = dict(kwargs["flow"], alpha=3.0)
     with pytest.raises(RuntimeError, match="different mesh/flow/configuration"):
         su2.run_su2_pipeline(**changed)
+
+
+def _half_mesh(path: Path) -> Path:
+    """The same mesh with a symmetry marker, as the half domain produces."""
+    text = _native_mesh(path).read_text(encoding="utf-8")
+    text = text.replace("NMARK= 5", "NMARK= 6")
+    text += "MARKER_TAG= symmetry\nMARKER_ELEMS= 1\n5 0 1 2\n"
+    path.write_text(text, encoding="utf-8")
+    return path
+
+
+def test_half_domain_declares_the_symmetry_plane(tmp_path):
+    options = su2.fixed_su2_options(
+        _half_mesh(tmp_path / "half.su2"),
+        flow={"mach": 0.2, "alpha": 2.0, "reynolds": 1.0e6, "temperature": 288.15},
+        references={"area_ref": 1.0, "chord_ref": 1.0},
+        iterations=5,
+        restart=False,
+    )
+    # Without this SU2 treats the unlisted boundary as a wall, putting a viscous
+    # surface down the centreline instead of a plane of symmetry.
+    assert options["MARKER_SYM"] == "( symmetry )"
+    assert "symmetry" not in options["MARKER_HEATFLUX"]
+    assert "symmetry" not in options["MARKER_MONITORING"]
+
+
+def test_half_domain_halves_the_reference_area(tmp_path):
+    """Half the wing produces half the force; the reference must match it.
+
+    The reference values describe the whole wing whatever is meshed, so leaving
+    REF_AREA alone would report CL and CD at exactly half their true value while
+    the run looked entirely healthy.
+    """
+    common_flow = {"mach": 0.2, "alpha": 2.0, "reynolds": 1.0e6, "temperature": 288.15}
+    references = {"area_ref": 2.0, "chord_ref": 1.0}
+    mirrored = su2.fixed_su2_options(
+        _native_mesh(tmp_path / "full.su2"), flow=common_flow,
+        references=references, iterations=5, restart=False,
+    )
+    half = su2.fixed_su2_options(
+        _half_mesh(tmp_path / "half.su2"), flow=common_flow,
+        references=references, iterations=5, restart=False,
+    )
+    assert mirrored["REF_AREA"] == pytest.approx(2.0)
+    assert half["REF_AREA"] == pytest.approx(1.0)
+    assert "MARKER_SYM" not in mirrored

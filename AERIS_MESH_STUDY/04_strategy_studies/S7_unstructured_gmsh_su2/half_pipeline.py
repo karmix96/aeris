@@ -353,3 +353,65 @@ def assemble(
             "min_symmetry_coordinate_m": float(points[:, symmetry_axis].min()),
         },
     }
+
+
+# Gmsh element type codes for the shapes this domain uses.
+_GMSH_TRIANGLE = 2
+_GMSH_QUAD = 3
+_GMSH_TETRAHEDRON = 4
+_GMSH_PRISM = 6
+
+_SU2_TO_GMSH = {
+    SU2_TRIANGLE: _GMSH_TRIANGLE,
+    SU2_QUAD: _GMSH_QUAD,
+    SU2_TETRAHEDRON: _GMSH_TETRAHEDRON,
+    SU2_PRISM: _GMSH_PRISM,
+}
+
+
+def to_gmsh_model(gmsh: Any, assembled: Mapping[str, Any], *, name: str = "half") -> None:
+    """Load an assembled half mesh into a fresh Gmsh model.
+
+    The audit reads a .msh rather than the arrays, so the mesh has to exist as a
+    Gmsh model to be written at all.  Building it here means the half domain is
+    audited by exactly the same instrument as the mirrored one, instead of
+    acquiring a second, less exercised checker of its own.
+    """
+    points = np.asarray(assembled["points"], dtype=float)
+    gmsh.model.add(name)
+    gmsh.model.setCurrent(name)
+
+    volume = gmsh.model.addDiscreteEntity(3)
+    node_tags = np.arange(1, len(points) + 1, dtype=np.int64)
+    gmsh.model.mesh.addNodes(3, volume, node_tags, points.ravel())
+
+    by_type: dict[int, list[Sequence[int]]] = {}
+    for code, nodes in assembled["volume_rows"]:
+        by_type.setdefault(_SU2_TO_GMSH[code], []).append(nodes)
+    tag = 1
+    for element_type, rows in sorted(by_type.items()):
+        block = np.asarray(rows, dtype=np.int64) + 1
+        gmsh.model.mesh.addElementsByType(
+            volume,
+            element_type,
+            np.arange(tag, tag + len(block), dtype=np.int64),
+            block.ravel(),
+        )
+        tag += len(block)
+    gmsh.model.addPhysicalGroup(3, [volume], name="fluid")
+
+    for marker, rows in assembled["markers"].items():
+        entity = gmsh.model.addDiscreteEntity(2)
+        grouped: dict[int, list[Sequence[int]]] = {}
+        for code, nodes in rows:
+            grouped.setdefault(_SU2_TO_GMSH[code], []).append(nodes)
+        for element_type, faces in sorted(grouped.items()):
+            block = np.asarray(faces, dtype=np.int64) + 1
+            gmsh.model.mesh.addElementsByType(
+                entity,
+                element_type,
+                np.arange(tag, tag + len(block), dtype=np.int64),
+                block.ravel(),
+            )
+            tag += len(block)
+        gmsh.model.addPhysicalGroup(2, [entity], name=marker)

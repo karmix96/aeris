@@ -10,7 +10,7 @@ from typing import Any, Iterable
 import numpy as np
 
 from .common import load_policy, sha256_file, write_json
-from .geometry import LABELS, SurfaceMesh, surface_topology_report
+from .geometry import WALL_LABELS, SurfaceMesh, surface_topology_report
 from .gmsh_pipeline import resolved_mesh_spec
 from .intersections import self_intersection_report
 from .wall_mapping import source_wall_correspondence
@@ -323,11 +323,11 @@ def _su2_boundary_audit(
             for triangle, triangle_label in zip(surface.triangles, surface.labels, strict=True)
             if triangle_label == label
         }
-        for label in LABELS
+        for label in WALL_LABELS
     }
     labels: dict[str, Any] = {}
     all_exact = True
-    for label in LABELS:
+    for label in WALL_LABELS:
         actual_rows = marker_rows.get(label, [])
         actual = {tuple(sorted(row)) for row in actual_rows}
         expected = expected_by_label[label]
@@ -687,7 +687,7 @@ def _prism_columns(
         column["layers"] == expected_layers and column["closed"] for column in columns
     )
     label_summary: dict[str, Any] = {}
-    for label in LABELS:
+    for label in WALL_LABELS:
         selected = [column for column in columns if column["label"] == label]
         covered = sum(column["layers"] > 0 for column in selected)
         quality_values = [
@@ -751,7 +751,7 @@ def _audit_prism_core_interfaces(
         for local_face in local_faces:
             owners[tuple(sorted(int(row[index]) for index in local_face))].append(tet_index)
     outer_faces = prism_report.pop("_outer_faces")
-    for label in LABELS:
+    for label in WALL_LABELS:
         selected = [face for face_label, face in outer_faces if face_label == label]
         matched_faces = 0
         multiply_matched_faces = 0

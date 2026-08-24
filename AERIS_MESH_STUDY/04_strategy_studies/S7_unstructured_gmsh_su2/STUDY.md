@@ -103,6 +103,39 @@ setup is sound and implicating the limiter.  **Multigrid is the fix**: triple th
 residual drop, a 770-fold tighter force spread at the same CD, still descending
 when the run ended.  The policy configures no multigrid at all.
 
+## Half domain versus mirrored, measured
+
+S6 meshes y >= 0 and S7 mirrored the whole wing, so the two were solving different
+domains while their results were meant to be compared.  Neither policy declared a
+domain; the difference was found by reading coordinates out of the mesh files.
+S7 is now a half model and the mirrored path is kept for comparison.
+
+Both domains, same five designs, `laptop_smoke`, same machine:
+
+| design | full cells | half cells | full prism_q | half prism_q | full tet_q | half tet_q |
+|---|---|---|---|---|---|---|
+| 000 | 77 348 | 42 745 | 0.3795 | 0.3795 | 0.1107 | 0.1500 |
+| 024 | 66 469 | 37 905 | 0.3676 | 0.3676 | 0.1499 | 0.1863 |
+| 049 | 65 313 | 37 156 | 0.4261 | 0.4261 | 0.0664 | 0.0774 |
+| 074 | 76 476 | 42 466 | 0.4327 | 0.4327 | 0.0831 | 0.0893 |
+| 099 | 77 924 | 42 723 | 0.4111 | 0.4111 | 0.1679 | 0.2009 |
+
+5/5 accepted either way, all 56 gates.  Prism quality is identical to four decimals
+on every design, which is the point: the marched layer reproduces what Gmsh's
+extrusion was doing rather than approximating it.  Tetrahedral quality is higher on
+every design, because the half core runs the size field and the optimisation passes
+together.
+
+Cost falls by 1.791x in cells and 1.62x in wall time, 82.2 s against 50.6 s for the
+five.  Not 2x: only the spanwise extent is halved, the farfield box keeps its full
+reach upstream, downstream and radially, and the symmetry plane is new boundary
+that did not exist before.
+
+The reference area is halved with the domain.  The reference values describe the
+whole wing whatever is meshed, while SU2 integrates force over the markers it is
+given, so leaving it alone would report CL and CD at exactly half their true value
+on a run that looked entirely healthy.
+
 ## Defects found and corrected, in order
 
 Each was found by measurement, and the fix preceded any change to acceptance

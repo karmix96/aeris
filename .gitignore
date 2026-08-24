@@ -54,3 +54,6 @@ history.csv
 # PDFs (206 MB); both are reproducible downloads, not project source.
 AERIS_MESH_STUDY/tools/
 AERIS_MESH_STUDY/papers/
+
+# ParaView mesh artifacts - regenerated, and wiped between campaigns
+data/surface_mesh_v3/

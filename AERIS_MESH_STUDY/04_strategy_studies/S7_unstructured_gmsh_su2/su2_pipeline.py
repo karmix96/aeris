@@ -551,6 +551,25 @@ def fixed_su2_options(
     )
     if int(iterations) < 1 or int(iterations) > max_allowed:
         raise ValueError(f"iterations must be in [1, {max_allowed}] for this S7 solve")
+    # Fail closed if the solver stop is ever moved back onto the acceptance bar.
+    # A stop at the bar caps the achievable drop at initial + 8 and makes the
+    # drop gate unsatisfiable, which is how two genuinely converged runs came to
+    # be rejected.  See ADR-0017, residual-gate amendment 2026-08-25.
+    convergence = policy["su2"]["convergence"]
+    solver_stop = finite_float(
+        convergence["solver_stop_residual_log10"], "su2.convergence.solver_stop_residual_log10"
+    )
+    required_stop = min(
+        float(convergence["residual_log10_final_max"]),
+        float(convergence["assumed_worst_initial_residual_log10"])
+        - float(convergence["residual_drop_orders_min"]),
+    )
+    if solver_stop > required_stop:
+        raise ValueError(
+            "solver_stop_residual_log10 must sit at or below "
+            f"{required_stop} so that both residual conditions remain reachable; "
+            f"got {solver_stop}"
+        )
     mach = finite_float(flow["mach"], "flow.mach")
     alpha = finite_float(flow["alpha"], "flow.alpha")
     reynolds = finite_float(flow["reynolds"], "flow.reynolds")
@@ -637,7 +656,10 @@ def fixed_su2_options(
         + " )",
         "ITER": int(iterations),
         "CONV_FIELD": "RMS_DENSITY",
-        "CONV_RESIDUAL_MINVAL": int(policy["su2"]["convergence"]["residual_log10_final_max"]),
+        # NOT residual_log10_final_max: stopping the solver at the acceptance bar
+        # caps the achievable drop at initial + 8 and makes the drop gate
+        # unsatisfiable.  See ADR-0017, residual-gate amendment 2026-08-25.
+        "CONV_RESIDUAL_MINVAL": solver_stop,
         "CONV_STARTITER": int(policy["su2"]["convergence"]["minimum_history_rows"]),
         "TABULAR_FORMAT": "CSV",
         "HISTORY_OUTPUT": "( ITER, RMS_RES, AERO_COEFF )",

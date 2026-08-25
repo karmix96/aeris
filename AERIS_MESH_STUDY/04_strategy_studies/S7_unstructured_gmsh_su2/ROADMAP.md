@@ -31,11 +31,30 @@ this change are mirrored and superseded.
 
 ## Next, in order
 
-1. **Confirm multigrid.**  A longer multigrid run, and multigrid with a late
-   limiter freeze, to see whether the six-order residual gate is reachable.  If it
-   is, adopt multigrid through a superseding ADR amendment with the measurements.
-   If it is not, the residual gate itself needs re-deriving, and the force-plateau
-   criterion (CD spread 2.4e-6 under multigrid) is the candidate.
+1. **Confirm Newton-Krylov at coarse resolution.**  Superseded "confirm
+   multigrid", which is refuted: multigrid alone ends at 1.082 orders over 6 000
+   iterations and is bypassed entirely under `NEWTON_KRYLOV`.  Four
+   Newton-Krylov configurations pass both frozen gates at 42 745 cells and agree
+   on CL/CD/CMy to 5e-7; see `../RUN_LOG/s7_solver_tuning_matrix.md`.
+
+   The residual gate itself does **not** need re-deriving.  It was unsatisfiable
+   because the solver was being stopped at the acceptance bar; that is repaired
+   in `POLICY.yaml` as `solver_stop_residual_log10`, with both acceptance
+   thresholds unchanged.  See the 2026-08-25 amendment in ADR-0017.
+
+   The confirmation job is small - repeat two or three variants at `coarse`
+   (1.55 M cells), not all ten.  Recommended shortlist, cheapest first:
+
+   | rank | variant | why |
+   |---|---|---|
+   | 1 | `G_nk_cfl` | fewest options changed from the frozen block; fastest wall time of the passing set |
+   | 2 | `I_combined` | deepest drop (6.906) and most headroom if coarse converges more slowly |
+   | 3 | `F_nk_linear` | falls back if the high CFL destabilises at production resolution |
+
+   `J_nk_no_mg` need not be run: it is byte-identical to `I_combined`.  Adopt the
+   winner into `su2.numerical_method` through a superseding ADR amendment
+   carrying the coarse measurements.  **Do not adopt from the laptop matrix
+   alone** - 42 745 cells is a solver diagnostic, not a production result.
 2. **The 100-design coarse sweep on the desktop, in the half domain.**  About 10
    hours sequential.  This supersedes the mirrored meshes rather than adding to
    them, and should run before the multigrid confirmation so that decision rests

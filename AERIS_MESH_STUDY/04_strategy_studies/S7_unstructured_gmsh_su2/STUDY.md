@@ -99,9 +99,76 @@ A six-variant search, 1 500 iterations each:
 | non-dimensionalised | -4.125 | -0.601 | 0.03135 | 7.9e-02 |
 
 First order converges to the -8 criterion and stops at iteration 460, proving the
-setup is sound and implicating the limiter.  **Multigrid is the fix**: triple the
-residual drop, a 770-fold tighter force spread at the same CD, still descending
-when the run ended.  The policy configures no multigrid at all.
+setup is sound and implicating the limiter.  Multigrid tripled the residual drop
+at a 770-fold tighter force spread and was still descending when the run ended,
+and was read at the time as the fix.  **That reading was wrong** - see below.
+
+### Steady convergence: achieved, and the fix is not multigrid
+
+A ten-variant matrix on one 42 745-cell half-wing mesh, every variant carrying
+multigrid and adding one thing on top, each run to 6 000 iterations with the
+solver stop moved to -12 so that each could reach whatever it was capable of.
+Gates below are the frozen policy gates, evaluated by `su2_pipeline.residual_gate`
+and `force_tail_gate`:
+
+| variant | added to multigrid | drop | final rms | min at iter | gates |
+|---|---|---|---|---|---|
+| `I_combined` | NK + ILU/25 + CFL 25 | 6.906 | -9.508 | 5999 | **pass** |
+| `J_nk_no_mg` | as above, multigrid removed | 6.906 | -9.508 | 5999 | **pass** |
+| `G_nk_cfl` | NK + CFL 25 | 6.363 | -8.966 | 5999 | **pass** |
+| `F_nk_linear` | NK + ILU/25 | 6.265 | -8.868 | 5999 | **pass** |
+| `B_newton_krylov` | NK alone | 5.954 | -8.556 | 5999 | residual fail by 0.046 |
+| `D_high_cfl` | CFL 25 | 1.798 | -4.401 | 927 | fail |
+| `C_strong_linear` | ILU/25 | 1.465 | -4.068 | 953 | fail |
+| `A_baseline` | nothing | 1.082 | -3.685 | 3604 | fail |
+| `E_quasi_newton` | `QUASI_NEWTON_NUM_SAMPLES` | 1.082 | -3.685 | 3604 | fail |
+| `H_linear_cfl` | ILU/25 + CFL 25 | 1.036 | -3.639 | 5961 | fail |
+
+**Newton-Krylov is the discriminating ingredient.**  Every variant carrying it is
+monotonic and reached its minimum residual at iteration 5999 of 6000 - none turned
+around, all were still descending when the budget ran out.  Every variant without
+it limit-cycled, and none exceeded 3.02 orders of best drop.  Multigrid alone,
+given 6 000 iterations rather than 1 500, ends at 1.082 orders: the earlier
+"multigrid is the fix" reading was an artifact of stopping at 1 500 while the
+residual happened to be on a downswing.
+
+Newton-Krylov is necessary but **not sufficient** within the budget: alone it
+reaches 5.954 orders and misses the gate by 0.046.  It needs either the stronger
+linear solve or the higher CFL to clear six orders in 6 000 iterations, and both
+together are fastest.
+
+The accelerators are coupled, not additive.  `CFL_NUMBER= 25` with the aggressive
+ramp is the worst variant in the matrix without Newton-Krylov (`D`, 2.041 orders
+best) and the second best with it (`G`, 6.363).  The earlier matrix rejected a
+high CFL correctly *for the stock scheme*, and carrying that forward would have
+been the wrong lesson.
+
+Final forces separate exactly along the gate:
+
+| group | CL spread | CD spread | CMy spread |
+|---|---|---|---|
+| four gate-passing variants | 0.00 % | 0.00 % | 0.01 % |
+| five gate-failing variants | 5.54 % | 0.62 % | 10.74 % |
+
+The accepted runs agree to within 5e-7 on all three coefficients no matter how the
+solver reached them - CL 0.018883, CD 0.087040, CMy -0.006617.  The rejected runs
+disagree by a tenth of CMy.  The gate is discriminating what it was written to
+discriminate.
+
+Three SU2 8.5.0 behaviours are established here by byte comparison, not inference:
+
+1. `QUASI_NEWTON_NUM_SAMPLES` is a **no-op**.  `A_baseline` and `E_quasi_newton`
+   differ by that one line; their 6 000-row histories are byte-identical and SU2
+   never writes the string "quasi" to its log.
+2. Multigrid is **bypassed** under `NEWTON_KRYLOV`.  `I_combined` and `J_nk_no_mg`
+   differ by seven `MG*` options; their histories are byte-identical.  SU2 echoes
+   the multigrid settings regardless, so the log cannot be used to tell.
+3. SU2 **never reports Newton-Krylov activation**: "Newton" and "Krylov" appear
+   zero times in a run with `NEWTON_KRYLOV= YES`.  Whether it took effect can only
+   be established from the residual history.
+
+This matrix ran at 42 745 cells on a laptop.  It selects a solver configuration.
+It does **not** establish convergence at production resolution.
 
 ## Half domain versus mirrored, measured
 
@@ -202,6 +269,20 @@ criteria.
    only present in the surface Paraview file; and the alias `"Y+"` collapsed to
    `"y"` and matched the y coordinate, reporting wall y+ of 1.135, the semi-span.
 
+10. **The residual gate was unsatisfiable by construction.**
+   `CONV_RESIDUAL_MINVAL` was derived from `residual_log10_final_max`, halting SU2
+   at the acceptance bar, so the final residual was -8 by construction and the
+   achievable drop was exactly `initial + 8`.  Every S7 run starts between -2.576
+   and -2.687, capping the drop at 5.42 orders against a gate asking 6.0.  Two runs
+   that had genuinely converged - `conv_matrix/A_first_order` at 5.445 and
+   `solver_tuning/B_newton_krylov` at 5.397, both `Exit Success` - were rejected on
+   `insufficient_residual_drop` alone, and the same truncation caused
+   `B_newton_krylov`'s only force-tail failure (CMy 1.094e-3; the same
+   configuration run deeper reaches 2.9e-6).  The stop is now a separate policy
+   key, `solver_stop_residual_log10: -9.0`, checked fail-closed against
+   `min(residual_log10_final_max, assumed_worst_initial - drop_min)` on every
+   config emission.  **Neither acceptance threshold changed.**
+
 ## Refuted hypotheses, recorded so they are not retried
 
 - **A boundary-layer thickness limit tied to the trailing-edge opening.**  Measured
@@ -218,11 +299,23 @@ criteria.
   residual rose and the force spread grew to 7.9e-2.
 - **Limiter freezing**, at 400 and at 1 200.  Destabilised the solution or left
   forces 25 times worse than baseline.
+- **Multigrid as the convergence fix.**  It tripled the residual drop at 1 500
+  iterations and was still descending, which read as a fix.  Run to 6 000 it ends
+  at 1.082 orders having peaked at 3.019 and turned around; the earlier reading
+  caught a downswing.  It is also bypassed entirely under `NEWTON_KRYLOV`.
+- **Quasi-Newton acceleration.**  `QUASI_NEWTON_NUM_SAMPLES` is a no-op in
+  SU2 8.5.0: byte-identical 6 000-row history to the baseline.
+- **A stronger linear solve or a higher CFL as the fix.**  Neither clears 3.02
+  orders without Newton-Krylov, and combining them (`H`) is worse than either
+  alone.
 
 ## Not established
 
-- No converged CFD solution exists; the residual gate may be unreachable as
-  preregistered, and multigrid is a candidate fix that has not been adopted.
+- No converged CFD solution exists **at production resolution**.  Four solver
+  configurations pass both frozen gates at 42 745 cells; the coarse level is 1.55 M
+  and the matrix must be repeated there before any convergence claim.
+- The selected configuration is not yet wired into `POLICY.yaml`'s
+  `su2.numerical_method`; the matrix chose it, the policy does not yet carry it.
 - No production-resolution volume mesh beyond five designs.
 - No grid-convergence or trailing-edge sensitivity result.
 - Quality limits for facet fidelity and tetrahedral shape are provisional,

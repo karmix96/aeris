@@ -1,0 +1,619 @@
+"""The workbench shell: geometry, mesh, solver and post, over one 3D viewport.
+
+Both strategies get the same four-stage shell because the workflow is the same;
+what differs is which mesher and which solver sit behind stages two and three.
+That is expressed as a `StrategyProfile` rather than as two copies of the UI, so
+a change to the layout lands in both applications at once.
+
+Long work never runs on the UI thread.  Geometry, meshing and solving all go to
+a worker, and the interface polls a snapshot - which is what keeps the window
+responsive while a mesh builds or a solver runs.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import threading
+import time
+import traceback
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Callable
+
+from trame.app import get_server
+from trame.decorators import TrameApp, change
+from trame.ui.vuetify3 import SinglePageWithDrawerLayout
+from trame.widgets import html
+from trame.widgets import vtk as vtk_widgets
+from trame.widgets import vuetify3 as v3
+
+from . import charts, geometry as geo, meshing, postprocess as post, solvers
+from .environment import WORKSPACE, available_memory_gib, cpu_count, detect
+from .viewer import COLORMAPS, Scene
+
+GRID_LEVELS = ("laptop_smoke", "coarse", "medium", "fine")
+TE_VARIANTS = ("te_0p5mm", "te_1p0mm", "te_1p5mm")
+PYHYP_LEVELS = ("L1", "L2", "L3", "L4", "L5")
+
+
+@dataclass
+class StrategyProfile:
+    """What separates the two applications."""
+
+    key: str
+    title: str
+    subtitle: str
+    mesher: str                  # "gmsh" | "pyhyp"
+    solver: str                  # "su2"  | "adflow"
+    mesher_label: str
+    solver_label: str
+    accent: str = "#4da3ff"
+
+
+S7_PROFILE = StrategyProfile(
+    key="S7", title="AERIS S7 Workbench",
+    subtitle="pyGeo · Gmsh · SU2",
+    mesher="gmsh", solver="su2",
+    mesher_label="Gmsh unstructured", solver_label="SU2 RANS",
+    accent="#4da3ff",
+)
+S6_PROFILE = StrategyProfile(
+    key="S6", title="AERIS S6 Workbench",
+    subtitle="pyGeo · pyHyp · ADflow",
+    mesher="pyhyp", solver="adflow",
+    mesher_label="pyHyp hyperbolic", solver_label="ADflow RANS",
+    accent="#ff8a4c",
+)
+
+
+class Job:
+    """A single background task with a log the UI can read while it runs."""
+
+    def __init__(self) -> None:
+        self.busy = False
+        self.stage = ""
+        self.error = ""
+        self.lines: list[str] = []
+        self._lock = threading.Lock()
+
+    def log(self, message: str) -> None:
+        with self._lock:
+            self.lines.append(str(message))
+            if len(self.lines) > 2000:
+                del self.lines[:1000]
+
+    def tail(self, count: int = 200) -> list[str]:
+        with self._lock:
+            return self.lines[-count:]
+
+    def start(self, stage: str) -> None:
+        with self._lock:
+            self.busy, self.stage, self.error = True, stage, ""
+
+    def finish(self, error: str = "") -> None:
+        with self._lock:
+            self.busy, self.error = False, error
+
+
+@TrameApp()
+class Workbench:
+    def __init__(self, profile: StrategyProfile, server=None):
+        self.profile = profile
+        self.server = server or get_server(f"aeris_{profile.key.lower()}", client_type="vue3")
+        self.scene = Scene()
+        self.scene.show_orientation_axes()
+        self.job = Job()
+
+        self.workspace = WORKSPACE / profile.key.lower()
+        self.workspace.mkdir(parents=True, exist_ok=True)
+
+        self.env = detect()
+        self.case: Any = None
+        self.surface: Any = None
+        self.volume_dataset: Any = None
+        self.solution: Any = None
+        self.mesh_report: dict[str, Any] = {}
+        self.mesh_paths: dict[str, str] = {}
+
+        self.gmsh_settings = meshing.settings_from_policy(
+            meshing.study_policy(), "laptop_smoke")
+        self.pyhyp_settings = meshing.PyHypSettings()
+        self.flow = solvers.FlowConditions()
+        self.su2_settings = solvers.SU2Settings()
+        self.adflow_settings = solvers.ADflowSettings()
+        self.runner: solvers.SolverRun | None = None
+
+        self._build_state()
+        self._build_ui()
+
+    # ------------------------------------------------------------------ #
+    # state                                                               #
+    # ------------------------------------------------------------------ #
+
+    @property
+    def state(self):
+        return self.server.state
+
+    def _build_state(self) -> None:
+        state = self.state
+        variables = geo.design_variables()
+        state.design = {v.key: v.value for v in variables}
+        state.design_meta = [
+            {"key": v.key, "label": v.label, "unit": v.unit, "group": v.group,
+             "min": v.minimum, "max": v.maximum, "step": v.step, "decimals": v.decimals}
+            for v in variables
+        ]
+        state.groups = [
+            {"key": "planform", "label": "Planform"},
+            {"key": "section", "label": "Sections"},
+            {"key": "control", "label": "Control surfaces"},
+        ]
+
+        state.tab = "geometry"
+        state.title = self.profile.title
+        state.subtitle = self.profile.subtitle
+        state.accent = self.profile.accent
+        state.busy = False
+        state.stage = ""
+        state.error = ""
+        state.log_lines = []
+        state.capabilities = self.env.as_rows()
+        state.machine = f"{cpu_count()} cores · {available_memory_gib():.1f} GiB free"
+
+        # Geometry
+        state.geometry_ready = False
+        state.surface_level = "laptop_smoke"
+        state.te_variant = "te_1p0mm"
+        state.planform = {}
+        state.stations = []
+        state.surface_stats = {}
+        state.geometry_color = "label"
+
+        # Mesh
+        state.mesher = self.profile.mesher
+        state.mesh_ready = False
+        state.mesh_settings = self.gmsh_settings.as_dict()
+        state.pyhyp_settings = self.pyhyp_settings.as_dict()
+        state.mesh_stats = {}
+        state.mesh_estimate = 0
+        state.mesh_clip = False
+        state.mesh_clip_position = 0.0
+        state.mesh_show_edges = True
+        state.mesh_quality_field = "none"
+        state.mesh_auto = True
+        state.algorithms_2d = [{"value": k, "title": f"{k} · {v}"}
+                               for k, v in meshing.GMSH_ALGORITHMS_2D.items()]
+        state.algorithms_3d = [{"value": k, "title": f"{k} · {v}"}
+                               for k, v in meshing.GMSH_ALGORITHMS_3D.items()]
+        state.optimizers = list(meshing.OPTIMIZERS)
+        state.grid_levels = list(GRID_LEVELS)
+        state.te_variants = list(TE_VARIANTS)
+        state.pyhyp_levels = list(PYHYP_LEVELS)
+
+        # Solver
+        state.solver_label = self.profile.solver_label
+        state.flow = self.flow.as_dict()
+        state.su2 = self.su2_settings.as_dict()
+        state.adflow = self.adflow_settings.as_dict()
+        state.su2_turbulence = [{"value": k, "title": f"{k} — {v}"}
+                                for k, v in solvers.SU2_TURBULENCE.items()]
+        state.adflow_turbulence = [{"value": k, "title": f"{k} — {v}"}
+                                   for k, v in solvers.ADFLOW_TURBULENCE.items()]
+        state.convective_schemes = list(solvers.SU2_CONVECTIVE)
+        state.limiters = list(solvers.SU2_LIMITERS)
+        state.preconditioners = list(solvers.SU2_LINEAR_PREC)
+        state.adflow_smoothers = list(solvers.ADFLOW_SMOOTHERS)
+        state.adflow_equations = list(solvers.ADFLOW_EQUATIONS)
+        state.max_processes = cpu_count()
+        state.run_status = "idle"
+        state.run_iteration = 0
+        state.run_wall = 0.0
+        state.run_message = ""
+        state.residual_svg = charts.residual_chart({}, {})
+        state.force_svg = charts.force_chart({}, [], {})
+        state.solver_log = []
+        state.convergence = {}
+
+        # Post
+        state.post_files = {"surface": [], "volume": []}
+        state.post_source = ""
+        state.post_field = ""
+        state.post_association = "point"
+        state.post_fields = []
+        state.post_colormap = "Cool to warm"
+        state.colormaps = list(COLORMAPS)
+        state.post_range = [0.0, 1.0]
+        state.post_slice = False
+        state.post_slice_axis = "Y"
+        state.post_slice_position = 0.0
+        state.post_summary = {}
+        state.forces = {}
+        state.view_options = ["Isometric", "+X", "-X", "+Y", "-Y", "+Z", "-Z"]
+
+    # ------------------------------------------------------------------ #
+    # helpers                                                             #
+    # ------------------------------------------------------------------ #
+
+    def _push_log(self) -> None:
+        self.state.log_lines = self.job.tail(200)
+        self.state.busy = self.job.busy
+        self.state.stage = self.job.stage
+        self.state.error = self.job.error
+        self.state.flush()
+
+    def _run_async(self, stage: str, work: Callable[[], None]) -> None:
+        """Run one stage off the UI thread and keep the log flowing."""
+        if self.job.busy:
+            return
+        self.job.start(stage)
+        self.job.log(f"── {stage}")
+        self._push_log()
+
+        def target() -> None:
+            try:
+                work()
+                self.job.finish()
+            except Exception as exc:  # noqa: BLE001 - surfaced in the UI, not swallowed
+                self.job.log(f"ERROR {type(exc).__name__}: {exc}")
+                for line in traceback.format_exc().splitlines()[-6:]:
+                    self.job.log("  " + line)
+                self.job.finish(f"{type(exc).__name__}: {exc}")
+
+        threading.Thread(target=target, daemon=True, name=stage).start()
+
+    def update_view(self) -> None:
+        self.scene.render()
+        if hasattr(self, "html_view"):
+            self.html_view.update()
+
+    # ------------------------------------------------------------------ #
+    # geometry                                                            #
+    # ------------------------------------------------------------------ #
+
+    def build_geometry(self) -> None:
+        def work() -> None:
+            self.job.log("pyGeo: lofting sections")
+            started = time.time()
+            values = dict(self.state.design)
+            self.case = geo.build_case(values, self.workspace / "geometry")
+            summary = geo.planform_summary(self.case)
+            self.job.log(f"pyGeo: span {summary['span_m']:.4f} m, "
+                         f"area {summary['area_m2']:.4f} m2, MAC {summary['mac_m']:.4f} m")
+
+            self.job.log(f"Tessellating at {self.state.surface_level}")
+            self.surface = geo.build_surface(
+                self.case, level=self.state.surface_level,
+                te_variant=self.state.te_variant)
+            stats = geo.surface_statistics(self.surface)
+            self.job.log(f"Surface: {stats['triangles']} triangles, "
+                         f"wetted {stats['wetted_area_m2']:.4f} m2 "
+                         f"({time.time() - started:.1f}s)")
+
+            self.state.planform = {k: v for k, v in summary.items()
+                                   if k not in ("stations", "reference")}
+            self.state.stations = summary["stations"]
+            self.state.surface_stats = stats
+            self.state.geometry_ready = True
+            self.flow.area_ref_m2 = float(summary["area_m2"])
+            self.flow.chord_ref_m = float(summary["mac_m"])
+            self.state.flow = self.flow.as_dict()
+            self.state.mesh_estimate = meshing.estimate_gmsh_cells(
+                self.surface, self.gmsh_settings) if self.profile.mesher == "gmsh" else 0
+            self.show_geometry()
+            self._push_log()
+
+        self._run_async("Building geometry", work)
+
+    def show_geometry(self) -> None:
+        if self.surface is None:
+            return
+        polydata, labels = geo.surface_to_polydata(
+            self.surface, color_by=self.state.geometry_color)
+        self.scene.clear()
+        self.scene.add_surface(
+            "geometry", polydata,
+            scalars=self.state.geometry_color, association="cell",
+            colormap="viridis" if self.state.geometry_color == "span_fraction" else "rainbow",
+            edges=True, label="patch" if self.state.geometry_color == "label" else "span",
+        )
+        self.scene.reset_camera()
+        self.update_view()
+
+    # ------------------------------------------------------------------ #
+    # mesh                                                                #
+    # ------------------------------------------------------------------ #
+
+    def _sync_mesh_settings(self) -> None:
+        for key, value in dict(self.state.mesh_settings).items():
+            if hasattr(self.gmsh_settings, key):
+                current = getattr(self.gmsh_settings, key)
+                try:
+                    setattr(self.gmsh_settings, key, type(current)(value))
+                except (TypeError, ValueError):
+                    pass
+        self.gmsh_settings.level = self.state.surface_level
+        self.gmsh_settings.te_variant = self.state.te_variant
+
+    def build_mesh(self) -> None:
+        if self.surface is None and self.profile.mesher == "gmsh":
+            self.job.log("Build the geometry first")
+            self._push_log()
+            return
+
+        def work() -> None:
+            if self.profile.mesher == "gmsh":
+                self._sync_mesh_settings()
+                report = meshing.run_gmsh(
+                    self.surface, self.gmsh_settings,
+                    self.workspace / "mesh", log=self.job.log)
+                self.mesh_report = report
+                self.mesh_paths = {
+                    "msh": report.get("mesh_msh", ""),
+                    "su2": report.get("mesh_su2", ""),
+                }
+                path = Path(self.mesh_paths["msh"])
+            else:
+                for key, value in dict(self.state.pyhyp_settings).items():
+                    if hasattr(self.pyhyp_settings, key):
+                        current = getattr(self.pyhyp_settings, key)
+                        try:
+                            setattr(self.pyhyp_settings, key, type(current)(value))
+                        except (TypeError, ValueError):
+                            pass
+                report = meshing.run_pyhyp(
+                    self.pyhyp_settings, self.workspace / "mesh", log=self.job.log)
+                self.mesh_report = report
+                if not report.get("cgns"):
+                    raise RuntimeError("pyHyp did not produce a volume mesh")
+                self.mesh_paths = {"cgns": report["cgns"]}
+                path = Path(report["cgns"])
+
+            self.job.log(f"Reading {path.name} into the viewport")
+            self.volume_dataset = meshing.read_volume_mesh(path)
+            self.state.mesh_stats = meshing.summarize_mesh(self.volume_dataset)
+            self.state.mesh_ready = True
+            self.job.log(f"Mesh: {self.state.mesh_stats['cells']} cells, "
+                         f"{self.state.mesh_stats['points']} points")
+            self.show_mesh()
+            self._push_log()
+
+        self._run_async(f"Meshing with {self.profile.mesher_label}", work)
+
+    def show_mesh(self) -> None:
+        if self.volume_dataset is None:
+            return
+        bounds = meshing.mesh_bounds(self.volume_dataset)
+        clip_normal = clip_origin = None
+        if self.state.mesh_clip:
+            span = bounds[3] - bounds[2]
+            clip_normal = (0.0, 1.0, 0.0)
+            clip_origin = (0.0, bounds[2] + span * float(self.state.mesh_clip_position), 0.0)
+
+        dataset = self.volume_dataset
+        scalars = None
+        colormap = "coolwarm"
+        if self.state.mesh_quality_field != "none":
+            dataset, _ = meshing.cell_quality(dataset, self.state.mesh_quality_field)
+            scalars = "Quality"
+            colormap = "viridis"
+
+        polydata = meshing.mesh_surface(dataset, clip_normal=clip_normal, clip_origin=clip_origin)
+        self.scene.clear()
+        self.scene.add_surface(
+            "mesh", polydata, color=(0.55, 0.63, 0.74),
+            edges=bool(self.state.mesh_show_edges),
+            scalars=scalars, association="cell", colormap=colormap,
+            label=self.state.mesh_quality_field.replace("_", " "),
+        )
+        self.scene.reset_camera()
+        self.update_view()
+
+    # ------------------------------------------------------------------ #
+    # solver                                                              #
+    # ------------------------------------------------------------------ #
+
+    def _sync_solver_settings(self) -> None:
+        for key, value in dict(self.state.flow).items():
+            if hasattr(self.flow, key):
+                setattr(self.flow, key, float(value))
+        target, source = ((self.su2_settings, dict(self.state.su2))
+                          if self.profile.solver == "su2"
+                          else (self.adflow_settings, dict(self.state.adflow)))
+        for key, value in source.items():
+            if not hasattr(target, key):
+                continue
+            current = getattr(target, key)
+            try:
+                setattr(target, key, type(current)(value) if not isinstance(current, tuple)
+                        else tuple(value))
+            except (TypeError, ValueError):
+                pass
+
+    def start_solver(self) -> None:
+        if self.runner is not None and self.runner.running:
+            return
+        self._sync_solver_settings()
+        run_dir = self.workspace / "solve"
+        run_dir.mkdir(parents=True, exist_ok=True)
+
+        if self.profile.solver == "su2":
+            mesh = self.mesh_paths.get("su2")
+            if not mesh:
+                self.job.log("No SU2 mesh yet — build one on the Mesh tab")
+                self._push_log()
+                return
+            self.runner = solvers.SU2Runner()
+            self.runner.start(Path(mesh), self.flow, self.su2_settings, run_dir)
+        else:
+            mesh = self.mesh_paths.get("cgns")
+            if not mesh:
+                self.job.log("No CGNS volume mesh yet — march one on the Mesh tab")
+                self._push_log()
+                return
+            self.runner = solvers.ADflowRunner()
+            self.runner.start(Path(mesh), self.flow, self.adflow_settings, run_dir)
+
+        self.job.log(f"{self.profile.solver_label}: launched in {run_dir}")
+        self._push_log()
+        self.server.controller.start_monitor()
+
+    def stop_solver(self) -> None:
+        if self.runner is not None:
+            self.runner.stop()
+            self.job.log("Stop requested")
+            self._push_log()
+
+    def refresh_monitor(self) -> bool:
+        """Pull one snapshot from the running solver into the UI."""
+        if self.runner is None:
+            return False
+        snapshot = self.runner.snapshot()
+        history = snapshot["history"]
+        state = self.state
+        state.run_status = snapshot["status"]
+        state.run_iteration = snapshot["iteration"]
+        state.run_wall = snapshot["wall_seconds"]
+        state.run_message = snapshot["message"]
+        state.solver_log = snapshot["log_tail"][-160:]
+
+        residual_labels = {k: v for k, v in solvers.RESIDUAL_LABELS.items() if k in history}
+        gate = float(self.su2_settings.stop_residual) if self.profile.solver == "su2" else None
+        state.residual_svg = charts.residual_chart(history, residual_labels, gate=gate)
+        force_keys = [k for k in ("CL", "CD", "CMy", "yplus") if k in history]
+        state.force_svg = charts.force_chart(history, force_keys, solvers.FORCE_LABELS)
+        state.convergence = post.convergence_summary(history)
+        state.flush()
+        return snapshot["status"] == "running"
+
+    # ------------------------------------------------------------------ #
+    # post                                                                #
+    # ------------------------------------------------------------------ #
+
+    def load_results(self) -> None:
+        def work() -> None:
+            run_dir = self.workspace / "solve"
+            files = post.find_solution_files(run_dir)
+            self.state.post_files = files
+            candidates = files["surface"] + files["volume"]
+            if not candidates:
+                raise RuntimeError(f"no solution files under {run_dir}")
+            self.state.post_source = self.state.post_source or candidates[0]
+            self.job.log(f"Loading {Path(self.state.post_source).name}")
+            self.solution = post.load(Path(self.state.post_source))
+            fields = post.available_fields(self.solution)
+            self.state.post_fields = (
+                [{"value": f"point:{n}", "title": f"{n} (point)"} for n in fields["point"]]
+                + [{"value": f"cell:{n}", "title": f"{n} (cell)"} for n in fields["cell"]])
+            name, association = post.best_field(self.solution)
+            self.state.post_field = f"{association}:{name}" if name else ""
+            if self.profile.solver == "su2":
+                self.state.forces = post.su2_forces(run_dir)
+            else:
+                self.state.forces = solvers.ADflowRunner.read_result(run_dir)
+            self.job.log(f"{len(fields['point'])} point fields, {len(fields['cell'])} cell fields")
+            self.show_results()
+            self._push_log()
+
+        self._run_async("Loading results", work)
+
+    def show_results(self) -> None:
+        if self.solution is None:
+            return
+        selector = self.state.post_field or ""
+        association, _, name = selector.partition(":")
+        if not name:
+            return
+        low, high = post.field_range(self.solution, name, association)
+        self.state.post_range = [round(low, 6), round(high, 6)]
+        self.state.post_summary = post.surface_scalar_summary(self.solution, name, association)
+
+        dataset = self.solution
+        if self.state.post_slice:
+            axis = {"X": (1, 0, 0), "Y": (0, 1, 0), "Z": (0, 0, 1)}[self.state.post_slice_axis]
+            bounds = dataset.GetBounds()
+            index = {"X": 0, "Y": 2, "Z": 4}[self.state.post_slice_axis]
+            low_b, high_b = bounds[index], bounds[index + 1]
+            position = low_b + (high_b - low_b) * float(self.state.post_slice_position)
+            origin = [0.0, 0.0, 0.0]
+            origin[index // 2] = position
+            dataset = post.slice_plane(dataset, normal=axis, origin=tuple(origin))
+        else:
+            dataset = meshing.mesh_surface(dataset) if dataset.IsA("vtkUnstructuredGrid") else dataset
+
+        self.scene.clear()
+        self.scene.add_surface(
+            "solution", dataset, scalars=name, association=association,
+            colormap=COLORMAPS.get(self.state.post_colormap, "coolwarm"),
+            scalar_range=(low, high), label=name,
+        )
+        self.scene.reset_camera()
+        self.update_view()
+
+    # ------------------------------------------------------------------ #
+    # reactions                                                           #
+    # ------------------------------------------------------------------ #
+
+    @change("geometry_color")
+    def _on_geometry_color(self, **_kwargs):
+        self.show_geometry()
+
+    @change("mesh_clip", "mesh_clip_position", "mesh_show_edges", "mesh_quality_field")
+    def _on_mesh_display(self, **_kwargs):
+        if self.state.mesh_ready:
+            self.show_mesh()
+
+    @change("post_field", "post_colormap", "post_slice", "post_slice_position", "post_slice_axis")
+    def _on_post_display(self, **_kwargs):
+        if self.solution is not None:
+            self.show_results()
+
+    @change("mesh_settings")
+    def _on_mesh_settings(self, **_kwargs):
+        if self.surface is not None and self.profile.mesher == "gmsh":
+            self._sync_mesh_settings()
+            self.state.mesh_estimate = meshing.estimate_gmsh_cells(
+                self.surface, self.gmsh_settings)
+
+    def set_view(self, name: str) -> None:
+        self.scene.set_view(name)
+        self.update_view()
+
+    def reset_design(self) -> None:
+        self.state.design = {v.key: v.value for v in geo.design_variables()}
+
+    # ------------------------------------------------------------------ #
+    # layout                                                              #
+    # ------------------------------------------------------------------ #
+
+    def _build_ui(self) -> None:
+        from .ui.layout import build_layout
+
+        build_layout(self)
+        self.server.controller.start_monitor = self._start_monitor
+
+    def _start_monitor(self) -> None:
+        """Poll the running solver on the server's own event loop.
+
+        The solver writes on its reader thread; this coroutine is what carries
+        those numbers into client state.  It stops itself when the run does, so
+        an idle workbench is not pushing empty frames at the browser.
+        """
+        if getattr(self, "_monitor_task", None) is not None:
+            if not self._monitor_task.done():
+                return
+
+        async def loop() -> None:
+            while True:
+                still_running = self.refresh_monitor()
+                self._push_log()
+                if not still_running:
+                    break
+                await asyncio.sleep(0.7)
+            # One last pull so the final iteration is never missing from the plot.
+            self.refresh_monitor()
+            self._push_log()
+
+        self._monitor_task = asyncio.create_task(loop())
+
+    def start(self, **kwargs) -> None:
+        self.server.start(**kwargs)

@@ -1,0 +1,423 @@
+"""Interactive meshing for both strategies.
+
+Gmsh runs in process, because it is a Python API and a laptop-tier mesh returns
+in seconds - that is what makes the mesh tab feel live.  pyHyp cannot: it lives
+in the conda `mach-aero` interpreter, so it is driven exactly the way S6 already
+drives it, by writing a runner and launching the other Python.
+
+Neither mesher is reimplemented here.  The workbench builds a POLICY OVERLAY -
+a deep copy of the study policy with the user's settings written into it - and
+then calls the study's own generator.  The settings a user moves are therefore
+the same numbers the study freezes, and a workbench mesh is reproducible from a
+policy file rather than from whatever the GUI happened to be holding.
+"""
+
+from __future__ import annotations
+
+import copy
+import json
+import math
+import shutil
+import subprocess
+import sys
+import time
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+from typing import Any
+
+import numpy as np
+
+from .environment import REPO_ROOT, S6_DIR, S7_DIR, STRATEGY_DIR, conda_python, worker_env
+
+for _path in (str(REPO_ROOT / "src"), str(STRATEGY_DIR), str(S7_DIR.parent)):
+    if _path not in sys.path:
+        sys.path.insert(0, _path)
+
+
+# --------------------------------------------------------------------------- #
+# Gmsh                                                                          #
+# --------------------------------------------------------------------------- #
+
+GMSH_ALGORITHMS_2D = {
+    1: "MeshAdapt",
+    5: "Delaunay",
+    6: "Frontal-Delaunay",
+    7: "BAMG",
+    8: "Frontal-Delaunay for quads",
+}
+GMSH_ALGORITHMS_3D = {1: "Delaunay", 4: "Frontal", 7: "MMG3D", 9: "R-tree", 10: "HXT"}
+OPTIMIZERS = ("none", "Netgen", "Relocate3D", "HighOrder")
+
+
+@dataclass
+class GmshSettings:
+    """Every knob the mesh tab exposes, in the policy's own units.
+
+    Lengths are fractions of the mean aerodynamic chord, exactly as the policy
+    stores them, so a value here and a value in `POLICY.yaml` mean the same
+    thing.  `first_cell_height_over_L` is what sets y+, and the prism schedule
+    is the part a solver cares most about.
+    """
+
+    # Surface sizing
+    surface_edge_over_L: float = 0.140
+    te_surface_edge_over_L: float = 0.028
+    tip_surface_edge_over_L: float = 0.056
+    # Boundary layer
+    first_cell_height_over_L: float = 2.0e-3
+    prism_layers: int = 6
+    prism_growth_ratio: float = 1.35
+    # Core
+    near_core_edge_over_L: float = 0.233
+    far_core_edge_over_L: float = 0.490
+    wake_edge_over_L: float = 0.190
+    core_max_growth_ratio: float = 1.20
+    # Far field, in chords
+    upstream_over_L: float = 3.0
+    downstream_over_L: float = 5.0
+    radial_over_L: float = 3.0
+    wake_length_over_L: float = 4.0
+    # Algorithms
+    surface_algorithm: int = 6
+    volume_algorithm: int = 1
+    optimizer: str = "Netgen"
+    optimize_passes: int = 1
+    # Provenance
+    level: str = "laptop_smoke"
+    te_variant: str = "te_1p0mm"
+
+    def as_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+def study_policy() -> dict[str, Any]:
+    from S7_unstructured_gmsh_su2.common import load_policy
+
+    return load_policy()
+
+
+def settings_from_policy(policy: dict[str, Any], level: str) -> GmshSettings:
+    """Read one grid level out of the policy into editable settings."""
+    block = dict(policy["laptop_smoke"]) if level == "laptop_smoke" \
+        else dict(policy["grid_family"]["levels"][level])
+    farfield = dict(block.get("farfield") or policy["farfield"])
+    candidate = policy["gmsh"]["retries"][0]
+    settings = GmshSettings(level=level)
+    for key in ("surface_edge_over_L", "te_surface_edge_over_L", "tip_surface_edge_over_L",
+                "first_cell_height_over_L", "prism_layers", "prism_growth_ratio",
+                "near_core_edge_over_L", "far_core_edge_over_L", "wake_edge_over_L"):
+        if key in block:
+            setattr(settings, key, type(getattr(settings, key))(block[key]))
+    for key in ("upstream_over_L", "downstream_over_L", "radial_over_L", "wake_length_over_L"):
+        if key in farfield:
+            setattr(settings, key, float(farfield[key]))
+    settings.core_max_growth_ratio = float(policy["gmsh"]["core_size_field"]["max_growth_ratio"])
+    settings.surface_algorithm = int(candidate["generated_surface_algorithm"])
+    settings.volume_algorithm = int(candidate["volume_algorithm"])
+    settings.optimizer = str(candidate["optimize"])
+    settings.optimize_passes = int(candidate["optimize_passes"])
+    return settings
+
+
+def policy_overlay(settings: GmshSettings, base: dict[str, Any] | None = None) -> dict[str, Any]:
+    """A study policy with the user's settings written into the active level."""
+    policy = copy.deepcopy(base or study_policy())
+    level = settings.level
+    target = policy["laptop_smoke"] if level == "laptop_smoke" \
+        else policy["grid_family"]["levels"][level]
+
+    for key in ("surface_edge_over_L", "te_surface_edge_over_L", "tip_surface_edge_over_L",
+                "first_cell_height_over_L", "near_core_edge_over_L",
+                "far_core_edge_over_L", "wake_edge_over_L"):
+        target[key] = float(getattr(settings, key))
+    target["prism_layers"] = int(settings.prism_layers)
+    target["prism_growth_ratio"] = float(settings.prism_growth_ratio)
+
+    farfield = {
+        "upstream_over_L": float(settings.upstream_over_L),
+        "downstream_over_L": float(settings.downstream_over_L),
+        "radial_over_L": float(settings.radial_over_L),
+        "wake_length_over_L": float(settings.wake_length_over_L),
+    }
+    if level == "laptop_smoke":
+        target["farfield"] = farfield
+    else:
+        policy["farfield"] = farfield
+
+    policy["gmsh"]["core_size_field"]["max_growth_ratio"] = float(settings.core_max_growth_ratio)
+    candidate = policy["gmsh"]["retries"][0]
+    candidate["generated_surface_algorithm"] = int(settings.surface_algorithm)
+    candidate["volume_algorithm"] = int(settings.volume_algorithm)
+    candidate["optimize"] = settings.optimizer
+    candidate["optimize_passes"] = int(settings.optimize_passes)
+    return policy
+
+
+def estimate_gmsh_cells(surface: Any, settings: GmshSettings) -> int:
+    """Cheap cell-count estimate, so the user is warned before a slow mesh."""
+    from S7_unstructured_gmsh_su2 import gmsh_pipeline
+
+    policy = policy_overlay(settings)
+    spec = gmsh_pipeline.resolved_mesh_spec(
+        surface, level=settings.level, candidate_index=0, policy=policy)
+    try:
+        return int(gmsh_pipeline.estimate_cells(surface, spec, policy))
+    except Exception:  # noqa: BLE001 - an estimate must never block meshing
+        return 0
+
+
+def run_gmsh(surface: Any, settings: GmshSettings, output_dir: Path,
+             *, log: Any = None) -> dict[str, Any]:
+    """Generate one volume mesh with the study's Gmsh pipeline."""
+    from S7_unstructured_gmsh_su2 import gmsh_pipeline
+
+    output_dir = Path(output_dir)
+    if output_dir.exists():
+        shutil.rmtree(output_dir)
+    policy = policy_overlay(settings)
+    started = time.time()
+    if log:
+        log(f"Gmsh: level={settings.level} surface={settings.surface_edge_over_L:.4g} L "
+            f"layers={settings.prism_layers} growth={settings.prism_growth_ratio:.3g}")
+    report = gmsh_pipeline.generate_mesh(
+        surface, output_dir=output_dir, level=settings.level,
+        candidate_index=0, policy=policy)
+    report["wall_seconds"] = round(time.time() - started, 2)
+    report["settings"] = settings.as_dict()
+    (output_dir / "workbench_settings.json").write_text(
+        json.dumps(settings.as_dict(), indent=2), encoding="utf-8")
+    if log:
+        cells = report.get("volume_cell_count") or report.get("cells") or "?"
+        log(f"Gmsh: done in {report['wall_seconds']:.1f}s, {cells} cells")
+    return report
+
+
+def audit_gmsh(surface: Any, mesh_dir: Path, settings: GmshSettings) -> dict[str, Any]:
+    """Run the study's own mesh audit against a workbench mesh."""
+    from S7_unstructured_gmsh_su2 import mesh_audit
+
+    policy = policy_overlay(settings)
+    return mesh_audit.audit_mesh(
+        surface=surface, mesh_dir=Path(mesh_dir), level=settings.level, policy=policy)
+
+
+# --------------------------------------------------------------------------- #
+# pyHyp                                                                         #
+# --------------------------------------------------------------------------- #
+
+@dataclass
+class PyHypSettings:
+    """The hyperbolic marching controls S6 exposes."""
+
+    volume_level: str = "L3"
+    surface_level: str = "L3"
+    eps_e: float = 1.0
+    n_constant: int = 3
+    development_index: int = 0
+    set_name: str = "lhs100_seed42"
+
+    def as_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+def run_pyhyp(settings: PyHypSettings, output_dir: Path, *, log: Any = None) -> dict[str, Any]:
+    """March a volume mesh in the conda interpreter, streaming its log back.
+
+    S6 already stages pyHyp this way - `prepare()` writes a runner script and a
+    manifest, and the other Python executes it - so the workbench reuses that
+    rather than inventing a second path to the same mesher.
+    """
+    if str(S6_DIR) not in sys.path:
+        sys.path.insert(0, str(S6_DIR))
+    from resolution import first_cell_fraction  # noqa: PLC0415
+    from shared.pyhyp_runner import prepare, read_result  # noqa: PLC0415
+    from strategy_s6 import STRATEGY_ID, build_locked_surface  # noqa: PLC0415
+
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    if log:
+        log(f"pyHyp: building locked surface at {settings.surface_level}")
+    blocks, info, _case = build_locked_surface(
+        settings.set_name, settings.development_index,
+        output_dir / "_geometry", level=settings.surface_level)
+
+    manifest = prepare(
+        strategy_id=STRATEGY_ID,
+        geometry_id=info["locked_set_id"],
+        blocks=blocks,
+        out_dir=output_dir,
+        level=settings.volume_level,
+        epse_ladder=(settings.eps_e,),
+        s0_fraction_override=first_cell_fraction(settings.volume_level),
+    )
+    run_dir = Path(manifest["runs"][0]["dir"]).resolve()
+    runner = Path(manifest["runs"][0]["runner"]).resolve()
+    if log:
+        log(f"pyHyp: marching in {conda_python()}")
+
+    started = time.time()
+    log_path = run_dir / "run_stdout.log"
+    with log_path.open("w", encoding="utf-8") as handle:
+        process = subprocess.Popen(
+            [str(conda_python()), str(runner)], cwd=run_dir,
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            text=True, bufsize=1, env=worker_env())
+        for line in process.stdout:  # type: ignore[union-attr]
+            handle.write(line)
+            if log:
+                log(line.rstrip())
+        code = process.wait()
+
+    cgns = run_dir / "wing_vol.cgns"
+    result = read_result(run_dir) or {}
+    report = {
+        "return_code": code,
+        "wall_seconds": round(time.time() - started, 2),
+        "cgns": str(cgns) if cgns.is_file() else None,
+        "surface_npz": str(run_dir / "surface_blocks.npz"),
+        "log": str(log_path),
+        "march_result": result,
+        "settings": settings.as_dict(),
+        "marched": bool(code == 0 and result.get("march_completed")),
+    }
+    if log:
+        log(f"pyHyp: {'complete' if report['marched'] else 'FAILED'} "
+            f"in {report['wall_seconds']:.1f}s")
+    return report
+
+
+# --------------------------------------------------------------------------- #
+# Mesh -> VTK                                                                   #
+# --------------------------------------------------------------------------- #
+
+def gmsh_export_vtk(msh_path: Path, vtk_path: Path) -> Path:
+    """Re-export a .msh through the Gmsh API, which VTK can then read."""
+    import gmsh
+
+    gmsh.initialize([])
+    try:
+        gmsh.option.setNumber("General.Terminal", 0)
+        gmsh.open(str(msh_path))
+        gmsh.write(str(vtk_path))
+    finally:
+        gmsh.finalize()
+    return vtk_path
+
+
+def read_volume_mesh(path: Path):
+    """Read a volume mesh into a VTK dataset, whatever the study wrote."""
+    import vtk
+
+    path = Path(path)
+    suffix = path.suffix.lower()
+    if suffix == ".msh":
+        vtk_path = path.with_suffix(".vtk")
+        if not vtk_path.is_file() or vtk_path.stat().st_mtime < path.stat().st_mtime:
+            gmsh_export_vtk(path, vtk_path)
+        path, suffix = vtk_path, ".vtk"
+    if suffix == ".vtk":
+        reader = vtk.vtkUnstructuredGridReader()
+        reader.SetFileName(str(path))
+        reader.ReadAllScalarsOn()
+        reader.ReadAllVectorsOn()
+    elif suffix == ".vtu":
+        reader = vtk.vtkXMLUnstructuredGridReader()
+        reader.SetFileName(str(path))
+    elif suffix == ".cgns":
+        reader = vtk.vtkCGNSReader()
+        reader.SetFileName(str(path))
+        reader.UpdateInformation()
+        reader.EnableAllBases()
+        reader.EnableAllCellArrays()
+        reader.EnableAllPointArrays()
+    else:
+        raise ValueError(f"no reader for {path.name}")
+    reader.Update()
+    return reader.GetOutput()
+
+
+def mesh_surface(dataset, *, clip_normal=None, clip_origin=None):
+    """Outside of a volume mesh, optionally cut open so the interior shows."""
+    import vtk
+
+    source = dataset
+    if clip_normal is not None:
+        plane = vtk.vtkPlane()
+        plane.SetNormal(*clip_normal)
+        plane.SetOrigin(*(clip_origin or (0.0, 0.0, 0.0)))
+        clip = vtk.vtkClipDataSet()
+        clip.SetInputData(dataset)
+        clip.SetClipFunction(plane)
+        clip.InsideOutOn()
+        clip.Update()
+        source = clip.GetOutput()
+
+    surface = vtk.vtkDataSetSurfaceFilter()
+    surface.SetInputData(source)
+    surface.Update()
+    return surface.GetOutput()
+
+
+def mesh_slice(dataset, *, normal=(0.0, 1.0, 0.0), origin=(0.0, 0.0, 0.0)):
+    """A cut plane through the volume, which is how a mesh is really inspected."""
+    import vtk
+
+    plane = vtk.vtkPlane()
+    plane.SetNormal(*normal)
+    plane.SetOrigin(*origin)
+    cutter = vtk.vtkCutter()
+    cutter.SetInputData(dataset)
+    cutter.SetCutFunction(plane)
+    cutter.Update()
+    return cutter.GetOutput()
+
+
+def mesh_bounds(dataset) -> tuple[float, ...]:
+    return tuple(float(v) for v in dataset.GetBounds())
+
+
+def cell_quality(dataset, measure: str = "scaled_jacobian"):
+    """Per-cell quality, so the mesh tab can colour by it rather than assert it."""
+    import vtk
+
+    quality = vtk.vtkMeshQuality()
+    quality.SetInputData(dataset)
+    lookup = {
+        "scaled_jacobian": (quality.SetTetQualityMeasureToScaledJacobian,
+                            quality.SetHexQualityMeasureToScaledJacobian),
+        "aspect_ratio": (quality.SetTetQualityMeasureToAspectRatio,
+                         quality.SetHexQualityMeasureToMaxAspectFrobenius),
+        "condition": (quality.SetTetQualityMeasureToCondition,
+                      quality.SetHexQualityMeasureToCondition),
+    }
+    setters = lookup.get(measure, lookup["scaled_jacobian"])
+    for setter in setters:
+        try:
+            setter()
+        except Exception:  # noqa: BLE001 - not every measure exists for every cell type
+            pass
+    quality.Update()
+    output = quality.GetOutput()
+    array = output.GetCellData().GetArray("Quality")
+    if array is None:
+        return output, (0.0, 1.0)
+    return output, tuple(float(v) for v in array.GetRange())
+
+
+def summarize_mesh(dataset) -> dict[str, Any]:
+    counts: dict[str, int] = {}
+    for index in range(dataset.GetNumberOfCells()):
+        name = dataset.GetCell(index).GetClassName().replace("vtk", "")
+        counts[name] = counts.get(name, 0) + 1
+        if index > 200000:  # a census, not a survey; enough to name the topology
+            break
+    bounds = mesh_bounds(dataset)
+    return {
+        "points": int(dataset.GetNumberOfPoints()),
+        "cells": int(dataset.GetNumberOfCells()),
+        "cell_types": counts,
+        "bounds_m": [round(v, 5) for v in bounds],
+        "extent_m": [round(bounds[1] - bounds[0], 5),
+                     round(bounds[3] - bounds[2], 5),
+                     round(bounds[5] - bounds[4], 5)],
+    }

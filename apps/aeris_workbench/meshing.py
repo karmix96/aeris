@@ -414,42 +414,57 @@ def is_composite(dataset) -> bool:
 
 
 def mesh_surface(dataset, *, clip_normal=None, clip_origin=None):
-    """Outside of a volume mesh, optionally cut open so the interior shows."""
+    """The visible surface of a mesh, optionally cut open to show the interior.
+
+    Cutting keeps WHOLE CELLS on one side of the plane rather than slicing
+    through them.  Two reasons.  It is what you want when inspecting a mesh -
+    the cut face is made of real cell faces, so the boundary-layer stack and the
+    growth ratio are visible as they actually are, instead of the triangles a
+    clip leaves behind.  And it is the difference between a slider that responds
+    and one that does not: measured on the 1.62 M cell pyHyp mesh, extracting
+    every block takes 0.2 s, while clipping a SINGLE block takes 84.8 s because
+    vtkClipDataSet tetrahedralises every hexahedron it touches.
+    """
     import vtk
 
-    if is_composite(dataset):
-        geometry = vtk.vtkCompositeDataGeometryFilter()
-        geometry.SetInputData(dataset)
-        geometry.Update()
-        polydata = geometry.GetOutput()
-        if clip_normal is None:
-            return polydata
-        plane = vtk.vtkPlane()
-        plane.SetNormal(*clip_normal)
-        plane.SetOrigin(*(clip_origin or (0.0, 0.0, 0.0)))
-        clip = vtk.vtkClipPolyData()
-        clip.SetInputData(polydata)
-        clip.SetClipFunction(plane)
-        clip.InsideOutOn()
-        clip.Update()
-        return clip.GetOutput()
+    if clip_normal is None:
+        if is_composite(dataset):
+            geometry = vtk.vtkCompositeDataGeometryFilter()
+            geometry.SetInputData(dataset)
+            geometry.Update()
+            return geometry.GetOutput()
+        surface = vtk.vtkDataSetSurfaceFilter()
+        surface.SetInputData(dataset)
+        surface.Update()
+        return surface.GetOutput()
 
-    source = dataset
-    if clip_normal is not None:
-        plane = vtk.vtkPlane()
-        plane.SetNormal(*clip_normal)
-        plane.SetOrigin(*(clip_origin or (0.0, 0.0, 0.0)))
-        clip = vtk.vtkClipDataSet()
-        clip.SetInputData(dataset)
-        clip.SetClipFunction(plane)
-        clip.InsideOutOn()
-        clip.Update()
-        source = clip.GetOutput()
+    plane = vtk.vtkPlane()
+    plane.SetNormal(*clip_normal)
+    plane.SetOrigin(*(clip_origin or (0.0, 0.0, 0.0)))
 
-    surface = vtk.vtkDataSetSurfaceFilter()
-    surface.SetInputData(source)
-    surface.Update()
-    return surface.GetOutput()
+    append = vtk.vtkAppendPolyData()
+    pieces = 0
+    for block in iter_blocks(dataset):
+        extract = vtk.vtkExtractGeometry()
+        extract.SetInputData(block)
+        extract.SetImplicitFunction(plane)
+        extract.ExtractInsideOn()
+        extract.ExtractBoundaryCellsOff()
+        extract.Update()
+        kept = extract.GetOutput()
+        if not kept.GetNumberOfCells():
+            continue
+        surface = vtk.vtkDataSetSurfaceFilter()
+        surface.SetInputData(kept)
+        surface.Update()
+        piece = surface.GetOutput()
+        if piece.GetNumberOfPoints():
+            append.AddInputData(piece)
+            pieces += 1
+    if not pieces:
+        return vtk.vtkPolyData()
+    append.Update()
+    return append.GetOutput()
 
 
 def mesh_slice(dataset, *, normal=(0.0, 1.0, 0.0), origin=(0.0, 0.0, 0.0)):

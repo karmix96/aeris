@@ -95,14 +95,20 @@ class SU2Settings:
         return asdict(self)
 
 
-# Measured on this machine: ADflow was OOM-killed at iteration 0 on a 1 621 504
-# cell mesh with two ranks and 9.9 GiB available, having survived preprocessing.
-# Every rank reads the whole grid before partitioning, so cost scales with ranks
-# rather than being divided by them, and the ANK solver allocates again on the
-# first real iteration.  9.9 GiB / 1.62 M cells / 2 ranks is about 3.1 KiB per
-# cell per rank at the point it died, so this is a floor rather than a fit.
-ADFLOW_BYTES_PER_CELL_PER_RANK = 3300
-ADFLOW_MEMORY_FRACTION = 0.80
+# Calibrated from two OOM kills on this machine, both at iteration 0 on the same
+# 1 621 504 cell mesh, both after preprocessing had already succeeded:
+#
+#   2 ranks, 9.9 GiB free   -> killed
+#   1 rank, 10.33 GiB free  -> killed
+#
+# The second one is the binding observation: one rank exceeded 10.33 GiB on
+# 1.62 M cells, which is at least 6.85 KiB per cell.  8 KiB carries a little
+# margin over that.  Every figure here is a LOWER BOUND recovered from a
+# failure, not a measured peak - the run never got far enough to report one - so
+# this predicts refusals more reliably than it predicts successes, which is the
+# safer direction for a guard to err in.
+ADFLOW_BYTES_PER_CELL_PER_RANK = 8000
+ADFLOW_MEMORY_FRACTION = 0.75
 
 
 @dataclass
@@ -555,9 +561,12 @@ class ADflowRunner(SolverRun):
                     f"{forecast['cells']:,} cells on {forecast['ranks']} rank(s), "
                     f"and only {forecast['budget_gib']} GiB of the "
                     f"{forecast['available_gib']} GiB free is safe to use. "
-                    "Mesh a coarser volume level (L4 or L3 coarsen the surface "
-                    "fourfold) or drop to one rank - every rank holds its own "
-                    "copy of the grid, so more ranks need more memory, not less."
+                    "Mesh a coarser VOLUME LEVEL - L4 or L3 coarsen the surface "
+                    "fourfold in each direction, which is roughly a sixteenth of "
+                    "the cells - and keep MPI ranks at one, since every rank "
+                    "holds its own copy of the grid and more ranks need more "
+                    "memory rather than less. On this machine `smoke` and above "
+                    "are desktop-class meshes for ADflow, not laptop ones."
                 )
         runner = self.write_case(grid_file, flow, settings, output_dir)
         command = ["mpirun", "-n", str(max(1, settings.processes)),

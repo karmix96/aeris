@@ -363,9 +363,52 @@ def read_volume_mesh(path: Path):
     return reader.GetOutput()
 
 
+def iter_blocks(dataset):
+    """Yield every leaf dataset, whether or not the input is composite.
+
+    pyHyp writes CGNS, and VTK reads CGNS as a multiblock - thirteen structured
+    grids for one wing.  Gmsh gives back a single unstructured grid.  Everything
+    downstream has to cope with both, so it goes through here rather than
+    assuming a flat dataset and failing with `GetCell` on a multiblock.
+    """
+    if dataset is None:
+        return
+    if hasattr(dataset, "NewIterator"):
+        walker = dataset.NewIterator()
+        walker.InitTraversal()
+        while not walker.IsDoneWithTraversal():
+            leaf = walker.GetCurrentDataObject()
+            if leaf is not None and leaf.GetNumberOfPoints():
+                yield leaf
+            walker.GoToNextItem()
+    else:
+        yield dataset
+
+
+def is_composite(dataset) -> bool:
+    return hasattr(dataset, "NewIterator")
+
+
 def mesh_surface(dataset, *, clip_normal=None, clip_origin=None):
     """Outside of a volume mesh, optionally cut open so the interior shows."""
     import vtk
+
+    if is_composite(dataset):
+        geometry = vtk.vtkCompositeDataGeometryFilter()
+        geometry.SetInputData(dataset)
+        geometry.Update()
+        polydata = geometry.GetOutput()
+        if clip_normal is None:
+            return polydata
+        plane = vtk.vtkPlane()
+        plane.SetNormal(*clip_normal)
+        plane.SetOrigin(*(clip_origin or (0.0, 0.0, 0.0)))
+        clip = vtk.vtkClipPolyData()
+        clip.SetInputData(polydata)
+        clip.SetClipFunction(plane)
+        clip.InsideOutOn()
+        clip.Update()
+        return clip.GetOutput()
 
     source = dataset
     if clip_normal is not None:
@@ -392,15 +435,35 @@ def mesh_slice(dataset, *, normal=(0.0, 1.0, 0.0), origin=(0.0, 0.0, 0.0)):
     plane = vtk.vtkPlane()
     plane.SetNormal(*normal)
     plane.SetOrigin(*origin)
-    cutter = vtk.vtkCutter()
-    cutter.SetInputData(dataset)
-    cutter.SetCutFunction(plane)
-    cutter.Update()
-    return cutter.GetOutput()
+    append = vtk.vtkAppendPolyData()
+    pieces = 0
+    for block in iter_blocks(dataset):
+        cutter = vtk.vtkCutter()
+        cutter.SetInputData(block)
+        cutter.SetCutFunction(plane)
+        cutter.Update()
+        piece = cutter.GetOutput()
+        if piece.GetNumberOfPoints():
+            append.AddInputData(piece)
+            pieces += 1
+    if not pieces:
+        return vtk.vtkPolyData()
+    append.Update()
+    return append.GetOutput()
 
 
 def mesh_bounds(dataset) -> tuple[float, ...]:
-    return tuple(float(v) for v in dataset.GetBounds())
+    """Bounds across every block, since a multiblock reports them per leaf."""
+    lows = [float("inf")] * 3
+    highs = [float("-inf")] * 3
+    for block in iter_blocks(dataset):
+        bounds = block.GetBounds()
+        for axis in range(3):
+            lows[axis] = min(lows[axis], bounds[2 * axis])
+            highs[axis] = max(highs[axis], bounds[2 * axis + 1])
+    if lows[0] == float("inf"):
+        return (0.0,) * 6
+    return tuple(v for pair in zip(lows, highs) for v in pair)
 
 
 def cell_quality(dataset, measure: str = "scaled_jacobian"):
@@ -409,20 +472,42 @@ def cell_quality(dataset, measure: str = "scaled_jacobian"):
 
     quality = vtk.vtkMeshQuality()
     quality.SetInputData(dataset)
-    lookup = {
-        "scaled_jacobian": (quality.SetTetQualityMeasureToScaledJacobian,
-                            quality.SetHexQualityMeasureToScaledJacobian),
-        "aspect_ratio": (quality.SetTetQualityMeasureToAspectRatio,
-                         quality.SetHexQualityMeasureToMaxAspectFrobenius),
-        "condition": (quality.SetTetQualityMeasureToCondition,
-                      quality.SetHexQualityMeasureToCondition),
-    }
-    setters = lookup.get(measure, lookup["scaled_jacobian"])
-    for setter in setters:
-        try:
-            setter()
-        except Exception:  # noqa: BLE001 - not every measure exists for every cell type
-            pass
+    for setter_name in MEASURE_SETTERS.get(measure, MEASURE_SETTERS["scaled_jacobian"]):
+        setter = getattr(quality, setter_name, None)
+        if setter is not None:
+            try:
+                setter()
+            except Exception:  # noqa: BLE001 - not every measure suits every cell type
+                pass
+
+    if is_composite(dataset):
+        output = vtk.vtkMultiBlockDataSet()
+        output.SetNumberOfBlocks(0)
+        low, high = float("inf"), float("-inf")
+        index = 0
+        for block in iter_blocks(dataset):
+            step = vtk.vtkMeshQuality()
+            step.SetInputData(block)
+            for setter_name in MEASURE_SETTERS.get(measure, MEASURE_SETTERS["scaled_jacobian"]):
+                setter = getattr(step, setter_name, None)
+                if setter is not None:
+                    try:
+                        setter()
+                    except Exception:  # noqa: BLE001
+                        pass
+            step.Update()
+            result = step.GetOutput()
+            output.SetNumberOfBlocks(index + 1)
+            output.SetBlock(index, result)
+            array = result.GetCellData().GetArray("Quality")
+            if array is not None:
+                block_low, block_high = array.GetRange()
+                low, high = min(low, block_low), max(high, block_high)
+            index += 1
+        if low == float("inf"):
+            return output, (0.0, 1.0)
+        return output, (float(low), float(high))
+
     quality.Update()
     output = quality.GetOutput()
     array = output.GetCellData().GetArray("Quality")
@@ -431,20 +516,55 @@ def cell_quality(dataset, measure: str = "scaled_jacobian"):
     return output, tuple(float(v) for v in array.GetRange())
 
 
+MEASURE_SETTERS = {
+    "scaled_jacobian": ("SetTetQualityMeasureToScaledJacobian",
+                        "SetHexQualityMeasureToScaledJacobian"),
+    "aspect_ratio": ("SetTetQualityMeasureToAspectRatio",
+                     "SetHexQualityMeasureToMaxAspectFrobenius"),
+    "condition": ("SetTetQualityMeasureToCondition",
+                  "SetHexQualityMeasureToCondition"),
+}
+
+CELL_TYPE_NAMES = {5: "Triangle", 9: "Quad", 10: "Tetra", 12: "Hexahedron",
+                   13: "Wedge", 14: "Pyramid", 3: "Line", 1: "Vertex"}
+
+
 def summarize_mesh(dataset) -> dict[str, Any]:
+    """Counts, cell types and bounds, for a flat OR a multiblock mesh.
+
+    Cell types come from the type array rather than from GetCell in a loop: a
+    pyHyp CGNS carries well over a million cells and instantiating each one to
+    read its class name is far too slow to sit in front of a user.
+    """
+    import vtk
+    from vtk.util.numpy_support import vtk_to_numpy
+
+    points = cells = blocks = 0
     counts: dict[str, int] = {}
-    for index in range(dataset.GetNumberOfCells()):
-        name = dataset.GetCell(index).GetClassName().replace("vtk", "")
-        counts[name] = counts.get(name, 0) + 1
-        if index > 200000:  # a census, not a survey; enough to name the topology
-            break
+    for block in iter_blocks(dataset):
+        blocks += 1
+        points += int(block.GetNumberOfPoints())
+        cells += int(block.GetNumberOfCells())
+        if block.IsA("vtkStructuredGrid") or block.IsA("vtkRectilinearGrid"):
+            counts["Hexahedron"] = counts.get("Hexahedron", 0) + int(block.GetNumberOfCells())
+            continue
+        types = getattr(block, "GetCellTypesArray", lambda: None)()
+        if types is not None:
+            values, occurrences = np.unique(vtk_to_numpy(types), return_counts=True)
+            for value, occurrence in zip(values, occurrences):
+                name = CELL_TYPE_NAMES.get(int(value), f"type{int(value)}")
+                counts[name] = counts.get(name, 0) + int(occurrence)
+
     bounds = mesh_bounds(dataset)
-    return {
-        "points": int(dataset.GetNumberOfPoints()),
-        "cells": int(dataset.GetNumberOfCells()),
+    summary = {
+        "points": points,
+        "cells": cells,
         "cell_types": counts,
         "bounds_m": [round(v, 5) for v in bounds],
         "extent_m": [round(bounds[1] - bounds[0], 5),
                      round(bounds[3] - bounds[2], 5),
                      round(bounds[5] - bounds[4], 5)],
     }
+    if blocks > 1:
+        summary["blocks"] = blocks
+    return summary

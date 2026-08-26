@@ -86,14 +86,44 @@ def find_solution_files(run_dir: Path) -> dict[str, list[str]]:
     return {"surface": surface, "volume": volume}
 
 
+def iter_blocks(dataset):
+    """Yield leaf datasets, so a CGNS multiblock reads like a plain grid.
+
+    ADflow and pyHyp both write CGNS, which VTK returns as a multiblock; SU2
+    writes a single grid.  Every accessor below goes through here rather than
+    calling GetPointData on whatever it was handed.
+    """
+    if dataset is None:
+        return
+    if hasattr(dataset, "NewIterator"):
+        walker = dataset.NewIterator()
+        walker.InitTraversal()
+        while not walker.IsDoneWithTraversal():
+            leaf = walker.GetCurrentDataObject()
+            if leaf is not None and leaf.GetNumberOfPoints():
+                yield leaf
+            walker.GoToNextItem()
+    else:
+        yield dataset
+
+
+def first_block(dataset):
+    for block in iter_blocks(dataset):
+        return block
+    return dataset
+
+
 def available_fields(dataset) -> dict[str, list[str]]:
-    point, cell = [], []
-    pd, cd = dataset.GetPointData(), dataset.GetCellData()
-    for index in range(pd.GetNumberOfArrays()):
-        point.append(pd.GetArrayName(index))
-    for index in range(cd.GetNumberOfArrays()):
-        cell.append(cd.GetArrayName(index))
-    return {"point": [n for n in point if n], "cell": [n for n in cell if n]}
+    """The union of arrays across every block, in first-seen order."""
+    point: list[str] = []
+    cell: list[str] = []
+    for block in iter_blocks(dataset):
+        for source, target in ((block.GetPointData(), point), (block.GetCellData(), cell)):
+            for index in range(source.GetNumberOfArrays()):
+                name = source.GetArrayName(index)
+                if name and name not in target:
+                    target.append(name)
+    return {"point": point, "cell": cell}
 
 
 def best_field(dataset) -> tuple[str, str]:
@@ -112,11 +142,17 @@ def best_field(dataset) -> tuple[str, str]:
 
 
 def field_range(dataset, name: str, association: str = "point") -> tuple[float, float]:
-    data = dataset.GetPointData() if association == "point" else dataset.GetCellData()
-    array = data.GetArray(name)
-    if array is None:
+    """Range across every block, not just the first one."""
+    low, high = float("inf"), float("-inf")
+    for block in iter_blocks(dataset):
+        data = block.GetPointData() if association == "point" else block.GetCellData()
+        array = data.GetArray(name)
+        if array is None:
+            continue
+        block_low, block_high = array.GetRange()
+        low, high = min(low, block_low), max(high, block_high)
+    if low == float("inf"):
         return (0.0, 1.0)
-    low, high = array.GetRange()
     if low == high:
         high = low + 1.0
     return (float(low), float(high))
@@ -127,18 +163,41 @@ def slice_plane(dataset, *, normal=(0.0, 1.0, 0.0), origin=None):
     import vtk
 
     if origin is None:
-        bounds = dataset.GetBounds()
+        bounds = dataset_bounds(dataset)
         origin = ((bounds[0] + bounds[1]) / 2,
                   (bounds[2] + bounds[3]) / 2,
                   (bounds[4] + bounds[5]) / 2)
     plane = vtk.vtkPlane()
     plane.SetNormal(*normal)
     plane.SetOrigin(*origin)
-    cutter = vtk.vtkCutter()
-    cutter.SetInputData(dataset)
-    cutter.SetCutFunction(plane)
-    cutter.Update()
-    return cutter.GetOutput()
+    append = vtk.vtkAppendPolyData()
+    pieces = 0
+    for block in iter_blocks(dataset):
+        cutter = vtk.vtkCutter()
+        cutter.SetInputData(block)
+        cutter.SetCutFunction(plane)
+        cutter.Update()
+        piece = cutter.GetOutput()
+        if piece.GetNumberOfPoints():
+            append.AddInputData(piece)
+            pieces += 1
+    if not pieces:
+        return vtk.vtkPolyData()
+    append.Update()
+    return append.GetOutput()
+
+
+def dataset_bounds(dataset) -> tuple[float, ...]:
+    lows = [float("inf")] * 3
+    highs = [float("-inf")] * 3
+    for block in iter_blocks(dataset):
+        bounds = block.GetBounds()
+        for axis in range(3):
+            lows[axis] = min(lows[axis], bounds[2 * axis])
+            highs[axis] = max(highs[axis], bounds[2 * axis + 1])
+    if lows[0] == float("inf"):
+        return (0.0,) * 6
+    return tuple(v for pair in zip(lows, highs) for v in pair)
 
 
 def contour(dataset, name: str, values: list[float]):
@@ -175,13 +234,19 @@ def streamlines(dataset, *, seed_center, seed_radius, count=200, vector="Velocit
 def surface_scalar_summary(dataset, name: str, association: str = "point") -> dict[str, Any]:
     from vtk.util.numpy_support import vtk_to_numpy
 
-    data = dataset.GetPointData() if association == "point" else dataset.GetCellData()
-    array = data.GetArray(name)
-    if array is None:
+    collected = []
+    for block in iter_blocks(dataset):
+        data = block.GetPointData() if association == "point" else block.GetCellData()
+        array = data.GetArray(name)
+        if array is None:
+            continue
+        values = vtk_to_numpy(array)
+        if values.ndim > 1:
+            values = np.linalg.norm(values, axis=1)
+        collected.append(values)
+    if not collected:
         return {}
-    values = vtk_to_numpy(array)
-    if values.ndim > 1:
-        values = np.linalg.norm(values, axis=1)
+    values = np.concatenate(collected)
     finite = values[np.isfinite(values)]
     if not len(finite):
         return {}

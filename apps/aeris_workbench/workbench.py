@@ -584,15 +584,17 @@ class Workbench:
         dataset = self.solution
         if self.state.post_slice:
             axis = {"X": (1, 0, 0), "Y": (0, 1, 0), "Z": (0, 0, 1)}[self.state.post_slice_axis]
-            bounds = dataset.GetBounds()
+            bounds = post.dataset_bounds(dataset)
             index = {"X": 0, "Y": 2, "Z": 4}[self.state.post_slice_axis]
             low_b, high_b = bounds[index], bounds[index + 1]
             position = low_b + (high_b - low_b) * float(self.state.post_slice_position)
             origin = [0.0, 0.0, 0.0]
             origin[index // 2] = position
             dataset = post.slice_plane(dataset, normal=axis, origin=tuple(origin))
-        else:
-            dataset = meshing.mesh_surface(dataset) if dataset.IsA("vtkUnstructuredGrid") else dataset
+        elif not dataset.IsA("vtkPolyData"):
+            # A volume grid or a CGNS multiblock has to be reduced to a surface
+            # before a mapper will take it; a surface file already is one.
+            dataset = meshing.mesh_surface(dataset)
 
         self.scene.clear()
         self.scene.add_surface(

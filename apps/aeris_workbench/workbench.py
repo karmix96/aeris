@@ -33,7 +33,6 @@ from .viewer import COLORMAPS, Scene
 
 GRID_LEVELS = ("laptop_smoke", "coarse", "medium", "fine")
 TE_VARIANTS = ("te_0p5mm", "te_1p0mm", "te_1p5mm")
-PYHYP_LEVELS = ("L1", "L2", "L3", "L4", "L5")
 
 
 @dataclass
@@ -109,6 +108,7 @@ class Workbench:
 
         self.env = detect()
         self.case: Any = None
+        self._built_design: dict[str, float] | None = None
         self.surface: Any = None
         self.volume_dataset: Any = None
         self.solution: Any = None
@@ -137,7 +137,13 @@ class Workbench:
     def _build_state(self) -> None:
         state = self.state
         variables = geo.design_variables()
-        state.design = {v.key: v.value for v in variables}
+        self.design_keys = [v.key for v in variables]
+        # ONE FLAT STATE KEY PER VARIABLE.  A nested `design` dict looked tidier
+        # but the sliders mutate it in place in the browser, and that mutation
+        # did not come back across the wire - the sliders moved and the geometry
+        # never changed.  Flat keys are watched individually and always sync.
+        for variable in variables:
+            setattr(state, f"dv_{variable.key}", variable.value)
         state.design_meta = [
             {"key": v.key, "label": v.label, "unit": v.unit, "group": v.group,
              "min": v.minimum, "max": v.maximum, "step": v.step, "decimals": v.decimals}
@@ -173,7 +179,11 @@ class Workbench:
         state.mesher = self.profile.mesher
         state.mesh_ready = False
         state.mesh_settings = self.gmsh_settings.as_dict()
-        state.pyhyp_settings = self.pyhyp_settings.as_dict()
+        state.pyhyp_volume_level = self.pyhyp_settings.volume_level
+        state.pyhyp_surface_level = self.pyhyp_settings.surface_level
+        state.pyhyp_eps_e = self.pyhyp_settings.eps_e
+        state.pyhyp_n_constant = self.pyhyp_settings.n_constant
+        state.pyhyp_index = self.pyhyp_settings.development_index
         state.mesh_stats = {}
         state.mesh_estimate = 0
         state.mesh_clip = False
@@ -188,7 +198,9 @@ class Workbench:
         state.optimizers = list(meshing.OPTIMIZERS)
         state.grid_levels = list(GRID_LEVELS)
         state.te_variants = list(TE_VARIANTS)
-        state.pyhyp_levels = list(PYHYP_LEVELS)
+        levels = meshing.pyhyp_level_choices()
+        state.pyhyp_surface_levels = levels["surface"]
+        state.pyhyp_volume_levels = levels["volume"]
 
         # Solver
         state.solver_label = self.profile.solver_label
@@ -299,8 +311,14 @@ class Workbench:
         def work() -> None:
             self.job.log("pyGeo: lofting sections")
             started = time.time()
-            values = dict(self.state.design)
-            self.case = geo.build_case(values, self.workspace / "geometry")
+            values = self.design_values()
+            # Re-lofting takes seconds; changing only the tessellation does not.
+            # Skip pyGeo entirely when the design itself has not moved.
+            if self.case is not None and values == self._built_design:
+                self.job.log("pyGeo: design unchanged, reusing the existing loft")
+            else:
+                self.case = geo.build_case(values, self.workspace / "geometry")
+                self._built_design = dict(values)
             summary = geo.planform_summary(self.case)
             self.job.log(f"pyGeo: span {summary['span_m']:.4f} m, "
                          f"area {summary['area_m2']:.4f} m2, MAC {summary['mac_m']:.4f} m")
@@ -382,13 +400,14 @@ class Workbench:
                 }
                 path = Path(self.mesh_paths["msh"])
             else:
-                for key, value in dict(self.state.pyhyp_settings).items():
-                    if hasattr(self.pyhyp_settings, key):
-                        current = getattr(self.pyhyp_settings, key)
-                        try:
-                            setattr(self.pyhyp_settings, key, type(current)(value))
-                        except (TypeError, ValueError):
-                            pass
+                self.pyhyp_settings.volume_level = str(self.state.pyhyp_volume_level)
+                self.pyhyp_settings.surface_level = str(self.state.pyhyp_surface_level)
+                self.pyhyp_settings.eps_e = float(self.state.pyhyp_eps_e)
+                self.pyhyp_settings.n_constant = int(self.state.pyhyp_n_constant)
+                self.pyhyp_settings.development_index = int(self.state.pyhyp_index)
+                self.job.log(f"pyHyp: surface={self.pyhyp_settings.surface_level} "
+                             f"volume={self.pyhyp_settings.volume_level} "
+                             f"epsE={self.pyhyp_settings.eps_e}")
                 report = meshing.run_pyhyp(
                     self.pyhyp_settings, self.workspace / "mesh", log=self.job.log)
                 self.mesh_report = report
@@ -613,8 +632,13 @@ class Workbench:
         self.scene.set_view(name)
         self.update_view()
 
+    def design_values(self) -> dict[str, float]:
+        return {key: float(getattr(self.state, f"dv_{key}")) for key in self.design_keys}
+
     def reset_design(self) -> None:
-        self.state.design = {v.key: v.value for v in geo.design_variables()}
+        for variable in geo.design_variables():
+            setattr(self.state, f"dv_{variable.key}", variable.value)
+        self._built_design = None
 
     # ------------------------------------------------------------------ #
     # layout                                                              #

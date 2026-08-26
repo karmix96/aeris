@@ -205,12 +205,39 @@ def audit_gmsh(surface: Any, mesh_dir: Path, settings: GmshSettings) -> dict[str
 # pyHyp                                                                         #
 # --------------------------------------------------------------------------- #
 
+def pyhyp_level_choices() -> dict[str, list[str]]:
+    """The two DIFFERENT level vocabularies S6 uses, read from their sources.
+
+    The surface levels and the volume levels are unrelated name sets, and using
+    one where the other belongs is a KeyError deep inside the mesher.  The
+    volume list is further narrowed to the levels that also have a declared wall
+    spacing, because `prepare()` is given `first_cell_fraction(level)` and that
+    table is smaller than the grid table.
+    """
+    if str(S6_DIR) not in sys.path:
+        sys.path.insert(0, str(S6_DIR))
+    from resolution import S6_FIRST_CELL_FRACTION  # noqa: PLC0415
+    from strategy_s6 import LEVELS as SURFACE_LEVELS  # noqa: PLC0415
+
+    from aeris.cfd.meshing.pyhyp_options import GRID_LEVELS  # noqa: PLC0415
+
+    volume = [name for name in GRID_LEVELS if name in S6_FIRST_CELL_FRACTION]
+    order = {"coarse": 0, "smoke": 1, "medium": 2, "fine": 3, "production": 4}
+    return {
+        "surface": sorted(SURFACE_LEVELS, key=lambda n: order.get(n, 99)),
+        "volume": sorted(volume, key=lambda n: order.get(n, 99)),
+    }
+
+
 @dataclass
 class PyHypSettings:
-    """The hyperbolic marching controls S6 exposes."""
+    """The hyperbolic marching controls S6 exposes.
 
-    volume_level: str = "L3"
-    surface_level: str = "L3"
+    The two levels are named from different tables - see `pyhyp_level_choices`.
+    """
+
+    volume_level: str = "smoke"
+    surface_level: str = "smoke"
     eps_e: float = 1.0
     n_constant: int = 3
     development_index: int = 0

@@ -8,6 +8,7 @@ viewport persists across all four so the camera never resets under the user.
 
 from __future__ import annotations
 
+from .. import geometry as geo
 from trame.ui.vuetify3 import SinglePageWithDrawerLayout
 from trame.widgets import html
 from trame.widgets import vtk as vtk_widgets
@@ -43,22 +44,39 @@ def geometry_panel(app):
     with v3.VCard(**CARD):
         _section("Design variables", "Bounds come from configs/geometry/bwb.yaml")
         with v3.VCardText(classes="pt-0"):
+            # Sliders are unrolled in Python rather than emitted from a v-for,
+            # so each one binds to its OWN state key.  Bound through a shared
+            # dict they mutated it in place in the browser and the server never
+            # saw the change: the slider moved and the geometry did not.
+            groups = {"planform": "Planform", "section": "Sections",
+                      "control": "Control surfaces"}
+            variables = geo.design_variables()
             with v3.VExpansionPanels(multiple=True, model_value=([0],), variant="accordion"):
-                with v3.VExpansionPanel(v_for="g in groups", key="g.key"):
-                    v3.VExpansionPanelTitle("{{ g.label }}", classes="text-caption")
-                    with v3.VExpansionPanelText():
-                        with html.Div(v_for="m in design_meta.filter(d => d.group === g.key)",
-                                      key="m.key", classes="mb-2"):
-                            with html.Div(classes="d-flex justify-space-between text-caption"):
-                                html.Span("{{ m.label }}")
-                                html.Span("{{ design[m.key].toFixed(m.decimals) }} {{ m.unit }}",
-                                          classes="font-weight-medium")
-                            v3.VSlider(
-                                v_model=("design[m.key]",),
-                                min=("m.min",), max=("m.max",), step=("m.step",),
-                                density="compact", hide_details=True, thumb_label=False,
-                                color=("accent",),
-                            )
+                for group_key, group_label in groups.items():
+                    members = [v for v in variables if v.group == group_key]
+                    if not members:
+                        continue
+                    with v3.VExpansionPanel():
+                        v3.VExpansionPanelTitle(group_label, classes="text-caption")
+                        with v3.VExpansionPanelText():
+                            for variable in members:
+                                name = f"dv_{variable.key}"
+                                suffix = f" {variable.unit}" if variable.unit else ""
+                                with html.Div(classes="mb-2"):
+                                    with html.Div(classes="d-flex justify-space-between "
+                                                          "text-caption"):
+                                        html.Span(variable.label)
+                                        html.Span(
+                                            f"{{{{ Number({name}).toFixed"
+                                            f"({variable.decimals}) }}}}{suffix}",
+                                            classes="font-weight-medium")
+                                    v3.VSlider(
+                                        v_model=(name,),
+                                        min=variable.minimum, max=variable.maximum,
+                                        step=variable.step,
+                                        density="compact", hide_details=True,
+                                        thumb_label=False, color=("accent",),
+                                    )
             with v3.VRow(classes="mt-2"):
                 with v3.VCol(cols=6, classes="py-1"):
                     v3.VSelect(label="Surface level", v_model=("surface_level",),
@@ -152,14 +170,14 @@ def mesh_panel(app):
             else:
                 with v3.VRow():
                     with v3.VCol(cols=6, classes="py-1"):
-                        v3.VSelect(label="Volume level", v_model=("pyhyp_settings.volume_level",),
-                                   items=("pyhyp_levels",), **DENSE)
+                        v3.VSelect(label="Volume level", v_model=("pyhyp_volume_level",),
+                                   items=("pyhyp_volume_levels",), **DENSE)
                     with v3.VCol(cols=6, classes="py-1"):
-                        v3.VSelect(label="Surface level", v_model=("pyhyp_settings.surface_level",),
-                                   items=("pyhyp_levels",), **DENSE)
-                    _number("Smoothing εₑ", "pyhyp_settings.eps_e", step=0.1)
-                    _number("Constant layers", "pyhyp_settings.n_constant", step=1)
-                    _number("Design index", "pyhyp_settings.development_index", step=1)
+                        v3.VSelect(label="Surface level", v_model=("pyhyp_surface_level",),
+                                   items=("pyhyp_surface_levels",), **DENSE)
+                    _number("Smoothing εₑ", "pyhyp_eps_e", step=0.1)
+                    _number("Constant layers", "pyhyp_n_constant", step=1)
+                    _number("Design index", "pyhyp_index", step=1)
                 with html.Div(classes="text-caption text-medium-emphasis mt-2"):
                     html.Span("Runs in the conda mach-aero interpreter as a subprocess.")
 

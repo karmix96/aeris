@@ -190,6 +190,7 @@ class Workbench:
         state.mesh_clip_position = 0.0
         state.mesh_show_edges = True
         state.mesh_quality_field = "none"
+        state.mesh_quality_range = [0.0, 1.0]
         state.mesh_auto = True
         state.algorithms_2d = [{"value": k, "title": f"{k} · {v}"}
                                for k, v in meshing.GMSH_ALGORITHMS_2D.items()]
@@ -217,6 +218,7 @@ class Workbench:
         state.adflow_smoothers = list(solvers.ADFLOW_SMOOTHERS)
         state.adflow_equations = list(solvers.ADFLOW_EQUATIONS)
         state.max_processes = cpu_count()
+        state.memory_forecast = {}
         state.run_status = "idle"
         state.run_iteration = 0
         state.run_wall = 0.0
@@ -443,10 +445,18 @@ class Workbench:
         dataset = self.volume_dataset
         scalars = None
         colormap = "coolwarm"
+        scalar_range = None
         if self.state.mesh_quality_field != "none":
-            dataset, _ = meshing.cell_quality(dataset, self.state.mesh_quality_field)
+            # Range comes from the WHOLE mesh, not from whatever survives the
+            # clip.  A clip that removes every cell leaves an empty array whose
+            # range is VTK's uninitialised [1e299, -1e299], and rescaling per
+            # clip position would make the colours mean something different at
+            # every slider step anyway.
+            dataset, scalar_range = meshing.cell_quality(
+                dataset, self.state.mesh_quality_field)
             scalars = "Quality"
             colormap = "viridis"
+            self.state.mesh_quality_range = [round(v, 5) for v in scalar_range]
 
         polydata = meshing.mesh_surface(dataset, clip_normal=clip_normal, clip_origin=clip_origin)
         self.scene.clear()
@@ -454,6 +464,7 @@ class Workbench:
             "mesh", polydata, color=(0.55, 0.63, 0.74),
             edges=bool(self.state.mesh_show_edges),
             scalars=scalars, association="cell", colormap=colormap,
+            scalar_range=scalar_range,
             label=self.state.mesh_quality_field.replace("_", " "),
         )
         self.scene.reset_camera()
@@ -502,7 +513,16 @@ class Workbench:
                 self._push_log()
                 return
             self.runner = solvers.ADflowRunner()
-            self.runner.start(Path(mesh), self.flow, self.adflow_settings, run_dir)
+            cells = int(self.state.mesh_stats.get("cells") or 0)
+            try:
+                self.runner.start(Path(mesh), self.flow, self.adflow_settings,
+                                  run_dir, cells=cells)
+            except MemoryError as exc:
+                self.job.log(f"REFUSED: {exc}")
+                self.state.error = str(exc)
+                self.runner = None
+                self._push_log()
+                return
 
         self.job.log(f"{self.profile.solver_label}: launched in {run_dir}")
         self._push_log()
@@ -622,6 +642,17 @@ class Workbench:
     def _on_post_display(self, **_kwargs):
         if self.solution is not None:
             self.show_results()
+
+    @change("adflow", "mesh_stats")
+    def _on_adflow_memory(self, **_kwargs):
+        if self.profile.solver != "adflow":
+            return
+        cells = int(self.state.mesh_stats.get("cells") or 0)
+        if not cells:
+            self.state.memory_forecast = {}
+            return
+        ranks = int(dict(self.state.adflow).get("processes", 1) or 1)
+        self.state.memory_forecast = solvers.ADflowRunner.memory_forecast(cells, ranks)
 
     @change("mesh_settings")
     def _on_mesh_settings(self, **_kwargs):

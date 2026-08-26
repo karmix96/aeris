@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import math
 import subprocess
 import sys
 
@@ -30,7 +31,22 @@ LABEL_COLORS = [
 ]
 
 
+def _safe_range(low: float, high: float) -> tuple[float, float]:
+    """A range VTK will accept.
+
+    An empty array reports [1e299, -1e299], and handing that to a lookup table
+    is an error rather than a warning - it happened whenever a clip plane
+    removed every cell carrying the scalar.
+    """
+    if not (math.isfinite(low) and math.isfinite(high)) or low > high:
+        return (0.0, 1.0)
+    if low == high:
+        return (low, low + 1e-9)
+    return (low, high)
+
+
 def _lookup_table(name: str, low: float, high: float) -> vtk.vtkLookupTable:
+    low, high = _safe_range(low, high)
     table = vtk.vtkLookupTable()
     table.SetTableRange(low, high)
     if name == "gray":
@@ -182,9 +198,7 @@ class Scene:
                 else:
                     data.SetActiveScalars(scalars)
                     mapper.SetScalarModeToUsePointData()
-                low, high = scalar_range or array.GetRange()
-                if low == high:
-                    high = low + 1e-9
+                low, high = _safe_range(*(scalar_range or array.GetRange()))
                 table = _lookup_table(colormap, low, high)
                 mapper.SetLookupTable(table)
                 mapper.SetScalarRange(low, high)

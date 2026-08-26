@@ -221,12 +221,32 @@ def pyhyp_level_choices() -> dict[str, list[str]]:
 
     from aeris.cfd.meshing.pyhyp_options import GRID_LEVELS  # noqa: PLC0415
 
-    volume = [name for name in GRID_LEVELS if name in S6_FIRST_CELL_FRACTION]
-    order = {"coarse": 0, "smoke": 1, "medium": 2, "fine": 3, "production": 4}
+    # Every volume level is offered, including L1-L4.  They coarsen the surface
+    # by four in each direction, which is the difference between a mesh a laptop
+    # can solve and one the OOM killer takes: `smoke` gave 1.62 M cells and
+    # ADflow was killed at iteration 0 on 9.9 GiB free.  Levels outside the S6
+    # wall-spacing table simply keep their own s0_frac, which `prepare()`
+    # already falls back to when no override is given.
+    order = {"L4": 0, "L3": 1, "L2": 2, "L1": 3,
+             "coarse": 4, "smoke": 5, "medium": 6, "fine": 7, "production": 8}
     return {
         "surface": sorted(SURFACE_LEVELS, key=lambda n: order.get(n, 99)),
-        "volume": sorted(volume, key=lambda n: order.get(n, 99)),
+        "volume": sorted(GRID_LEVELS, key=lambda n: order.get(n, 99)),
+        "wall_spacing_levels": sorted(S6_FIRST_CELL_FRACTION),
     }
+
+
+def volume_level_has_wall_policy(level: str) -> bool:
+    """Whether S6 declares a wall spacing for this level.
+
+    When it does, that spacing is passed as an override.  When it does not, the
+    level's own `s0_frac` stands - which is what makes L1-L4 usable.
+    """
+    if str(S6_DIR) not in sys.path:
+        sys.path.insert(0, str(S6_DIR))
+    from resolution import S6_FIRST_CELL_FRACTION  # noqa: PLC0415
+
+    return level in S6_FIRST_CELL_FRACTION
 
 
 @dataclass
@@ -268,6 +288,10 @@ def run_pyhyp(settings: PyHypSettings, output_dir: Path, *, log: Any = None) -> 
         settings.set_name, settings.development_index,
         output_dir / "_geometry", level=settings.surface_level)
 
+    override = (first_cell_fraction(settings.volume_level)
+                if volume_level_has_wall_policy(settings.volume_level) else None)
+    if log and override is None:
+        log(f"pyHyp: {settings.volume_level} keeps its own wall spacing")
     manifest = prepare(
         strategy_id=STRATEGY_ID,
         geometry_id=info["locked_set_id"],
@@ -275,7 +299,7 @@ def run_pyhyp(settings: PyHypSettings, output_dir: Path, *, log: Any = None) -> 
         out_dir=output_dir,
         level=settings.volume_level,
         epse_ladder=(settings.eps_e,),
-        s0_fraction_override=first_cell_fraction(settings.volume_level),
+        s0_fraction_override=override,
     )
     run_dir = Path(manifest["runs"][0]["dir"]).resolve()
     runner = Path(manifest["runs"][0]["runner"]).resolve()

@@ -271,6 +271,17 @@ def solver_panel(app):
                     _number("L2 convergence", "adflow.l2_convergence", step=1e-9)
                     _number("MPI ranks", "adflow.processes", step=1)
 
+            with html.Div(v_if="memory_forecast.cells", classes="mt-2"):
+                v3.VAlert(
+                    density="compact", variant="tonal",
+                    type=("memory_forecast.fits ? 'info' : 'warning'",),
+                    text=("memory_forecast.estimated_gib + ' GiB needed for ' + "
+                          "memory_forecast.cells.toLocaleString() + ' cells on ' + "
+                          "memory_forecast.ranks + ' rank(s); ' + "
+                          "memory_forecast.budget_gib + ' GiB of ' + "
+                          "memory_forecast.available_gib + ' GiB free is safe to use.'",),
+                )
+
             with v3.VRow(classes="mt-2"):
                 with v3.VCol(cols=8):
                     v3.VBtn("Run", block=True, color=("accent",), click=app.start_solver,

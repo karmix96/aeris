@@ -95,6 +95,16 @@ class SU2Settings:
         return asdict(self)
 
 
+# Measured on this machine: ADflow was OOM-killed at iteration 0 on a 1 621 504
+# cell mesh with two ranks and 9.9 GiB available, having survived preprocessing.
+# Every rank reads the whole grid before partitioning, so cost scales with ranks
+# rather than being divided by them, and the ANK solver allocates again on the
+# first real iteration.  9.9 GiB / 1.62 M cells / 2 ranks is about 3.1 KiB per
+# cell per rank at the point it died, so this is a floor rather than a fit.
+ADFLOW_BYTES_PER_CELL_PER_RANK = 3300
+ADFLOW_MEMORY_FRACTION = 0.80
+
+
 @dataclass
 class ADflowSettings:
     equation: str = "RANS"
@@ -107,7 +117,9 @@ class ADflowSettings:
     n_subiterations: int = 3
     monitor_variables: tuple[str, ...] = ("resrho", "resturb", "cl", "cd", "cmy", "yplus")
     l2_convergence: float = 1e-8
-    processes: int = 2
+    # One rank by default.  More ranks means more copies of the grid, not
+    # fewer, so raising this makes an out-of-memory kill MORE likely.
+    processes: int = 1
 
     def as_dict(self) -> dict[str, Any]:
         out = asdict(self)
@@ -516,8 +528,37 @@ class ADflowRunner(SolverRun):
             out[name] = value
         return out
 
+    @staticmethod
+    def memory_forecast(cells: int, ranks: int) -> dict[str, Any]:
+        """Will this fit? Answer before mpirun, not after the OOM killer does."""
+        from .environment import available_memory_gib
+
+        need = cells * ADFLOW_BYTES_PER_CELL_PER_RANK * max(1, ranks) / (1024 ** 3)
+        have = available_memory_gib()
+        budget = have * ADFLOW_MEMORY_FRACTION
+        return {
+            "cells": int(cells),
+            "ranks": int(max(1, ranks)),
+            "estimated_gib": round(need, 2),
+            "available_gib": round(have, 2),
+            "budget_gib": round(budget, 2),
+            "fits": need <= budget,
+        }
+
     def start(self, grid_file: Path, flow: FlowConditions, settings: ADflowSettings,
-              output_dir: Path) -> Path:
+              output_dir: Path, *, cells: int = 0) -> Path:
+        if cells:
+            forecast = self.memory_forecast(cells, settings.processes)
+            if not forecast["fits"]:
+                raise MemoryError(
+                    f"ADflow needs about {forecast['estimated_gib']} GiB for "
+                    f"{forecast['cells']:,} cells on {forecast['ranks']} rank(s), "
+                    f"and only {forecast['budget_gib']} GiB of the "
+                    f"{forecast['available_gib']} GiB free is safe to use. "
+                    "Mesh a coarser volume level (L4 or L3 coarsen the surface "
+                    "fourfold) or drop to one rank - every rank holds its own "
+                    "copy of the grid, so more ranks need more memory, not less."
+                )
         runner = self.write_case(grid_file, flow, settings, output_dir)
         command = ["mpirun", "-n", str(max(1, settings.processes)),
                    str(conda_python()), runner.name]

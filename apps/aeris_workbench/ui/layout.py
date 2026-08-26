@@ -85,6 +85,33 @@ def geometry_panel(app):
                     v3.VSelect(label="Trailing edge", v_model=("te_variant",),
                                items=("te_variants",), **DENSE,
                                disabled=("surface_is_structured",))
+            with html.Div(v_if="surface_is_structured"):
+                with v3.VExpansionPanels(variant="accordion", classes="mt-3"):
+                    with v3.VExpansionPanel():
+                        v3.VExpansionPanelTitle("Local refinement", classes="text-caption")
+                        with v3.VExpansionPanelText():
+                            with html.Div(classes="text-caption text-medium-emphasis mb-2"):
+                                html.Span("Spanwise divisions are the lever for "
+                                          "trailing-edge aspect ratio. Adding points "
+                                          "across the edge, or clustering harder, "
+                                          "makes it worse.")
+                            with v3.VRow():
+                                _number("Chordwise divisions", "s6_surface.chord_points", step=2)
+                                _number("Spanwise divisions", "s6_surface.span_cells", step=2)
+                                _number("Max spanwise cell", "s6_surface.span_max_cell_m",
+                                        step=0.001, suffix="m")
+                                _number("LE/TE divisions", "s6_surface.end_points", step=1)
+                                _number("Tip collar divisions", "s6_surface.collar_points", step=2)
+                                _number("LE/TE clustering", "s6_surface.end_scale", step=0.5)
+                                _number("TE thickness", "s6_surface.te_abs_m",
+                                        step=0.0001, suffix="m")
+                                _number("TE floor", "s6_surface.te_floor_frac", step=0.001)
+                                _number("Tip first cell", "s6_surface.tip_first_cell_frac_of_tip_chord",
+                                        step=0.0005)
+                            v3.VBtn("Reset to level defaults", variant="text", size="small",
+                                    block=True, classes="mt-2",
+                                    click=app.reset_surface_controls)
+
             with html.Div(v_if="surface_level === 'laptop_smoke'",
                           classes="text-caption mt-1",
                           style="color:#e8a33d"):
@@ -124,6 +151,18 @@ def geometry_panel(app):
                           "surface_stats.min_edge_m?.toExponential(2) + ' … ' "
                           "+ surface_stats.max_edge_m?.toExponential(2) + ' m'")
                 v3.VDivider(classes="my-2")
+                with html.Div(v_if="surface_quality.quads"):
+                    _stat_row("Quads", "surface_quality.quads?.toLocaleString()")
+                    _stat_row("Aspect ratio, median", "surface_quality.aspect_median")
+                    _stat_row("Aspect ratio, p99", "surface_quality.aspect_p99")
+                    _stat_row("Smallest angle", "surface_quality.min_angle_deg + '°'")
+                    with html.Div(classes="text-caption text-medium-emphasis mt-2 mb-1"):
+                        html.Span("Worst patches by aspect ratio")
+                    with html.Div(v_for="p in quality_patches.slice(0, 4)", key="p.patch",
+                                  classes="d-flex justify-space-between text-caption"):
+                        html.Span("{{ p.patch }}", classes="text-medium-emphasis")
+                        html.Span("AR {{ p.aspect_median }} · {{ p.min_angle_deg }}°")
+                    v3.VDivider(classes="my-2")
                 v3.VSelect(label="Colour by", v_model=("geometry_color",),
                            items=(["label", "span_fraction"],), **DENSE)
 
@@ -182,8 +221,61 @@ def mesh_panel(app):
                                     v3.VSelect(label="Optimiser", v_model=("mesh_settings.optimizer",),
                                                items=("optimizers",), **DENSE)
                                 _number("Passes", "mesh_settings.optimize_passes", step=1, cols=5)
+                    with v3.VExpansionPanel():
+                        v3.VExpansionPanelTitle("Local refinement", classes="text-caption")
+                        with v3.VExpansionPanelText():
+                            with html.Div(classes="text-caption text-medium-emphasis mb-2"):
+                                html.Span("Sizes are fractions of the mean chord. Each "
+                                          "control also needs room to grow back to the "
+                                          "surrounding mesh — that is the distance.")
+                            v3.VSwitch(label="Leading edge sizing", v_model=("refine.le_enabled",),
+                                       density="compact", hide_details=True, color=("accent",))
+                            with v3.VRow(v_if="refine.le_enabled"):
+                                _number("LE size / L", "refine.le_size_over_L", step=0.002)
+                                _number("LE distance / L", "refine.le_distance_over_L", step=0.01)
+                            v3.VSwitch(label="Trailing edge sizing", v_model=("refine.te_enabled",),
+                                       density="compact", hide_details=True, color=("accent",))
+                            with v3.VRow(v_if="refine.te_enabled"):
+                                _number("TE size / L", "refine.te_size_over_L", step=0.002)
+                                _number("TE distance / L", "refine.te_distance_over_L", step=0.01)
+                            v3.VSwitch(label="Tip sizing", v_model=("refine.tip_enabled",),
+                                       density="compact", hide_details=True, color=("accent",))
+                            with v3.VRow(v_if="refine.tip_enabled"):
+                                _number("Tip size / L", "refine.tip_size_over_L", step=0.002)
+                                _number("Tip distance / L", "refine.tip_distance_over_L", step=0.01)
+                            v3.VSwitch(label="Curvature refinement",
+                                       v_model=("refine.curvature_enabled",),
+                                       density="compact", hide_details=True, color=("accent",))
+                            with v3.VRow(v_if="refine.curvature_enabled"):
+                                _number("Angle threshold", "refine.curvature_angle_deg",
+                                        step=5, suffix="°")
+                                _number("Size / L", "refine.curvature_size_over_L", step=0.002)
+                                _number("Distance / L", "refine.curvature_distance_over_L",
+                                        step=0.01)
+                    with v3.VExpansionPanel():
+                        v3.VExpansionPanelTitle("Refinement regions", classes="text-caption")
+                        with v3.VExpansionPanelText():
+                            with html.Div(classes="text-caption text-medium-emphasis mb-2"):
+                                html.Span("A body of influence: everything inside gets the "
+                                          "given size. Centre and extent are in chords.")
+                            for tag, label in (("region_a", "Box"), ("region_b", "Sphere")):
+                                v3.VSwitch(label=f"{label} region",
+                                           v_model=(f"refine.{tag}.enabled",),
+                                           density="compact", hide_details=True,
+                                           color=("accent",))
+                                with v3.VRow(v_if=f"refine.{tag}.enabled"):
+                                    _number("Size / L", f"refine.{tag}.size_over_L", step=0.005)
+                                    _number("Centre x", f"refine.{tag}.centre[0]", step=0.25)
+                                    _number("Centre y", f"refine.{tag}.centre[1]", step=0.25)
+                                    _number("Centre z", f"refine.{tag}.centre[2]", step=0.25)
+                                    _number("Extent x", f"refine.{tag}.extent[0]", step=0.25)
+                                    _number("Extent y", f"refine.{tag}.extent[1]", step=0.25,
+                                            cols=6)
+                                    _number("Extent z", f"refine.{tag}.extent[2]", step=0.25,
+                                            cols=6)
                 with html.Div(classes="text-caption text-medium-emphasis mt-2"):
-                    html.Span("Estimated cells: {{ mesh_estimate.toLocaleString() }}")
+                    html.Span("Estimated cells: {{ mesh_estimate.toLocaleString() }} "
+                              "(before local refinement)")
             else:
                 with v3.VRow():
                     with v3.VCol(cols=6, classes="py-1"):

@@ -27,7 +27,8 @@ from trame.widgets import html
 from trame.widgets import vtk as vtk_widgets
 from trame.widgets import vuetify3 as v3
 
-from . import charts, geometry as geo, meshing, postprocess as post, solvers
+from . import (charts, geometry as geo, meshing, postprocess as post,
+               refinement as refine_mod, solvers, surface_s6)
 from .environment import WORKSPACE, available_memory_gib, cpu_count, detect
 from .viewer import COLORMAPS, Scene
 
@@ -117,6 +118,9 @@ class Workbench:
 
         self.gmsh_settings = meshing.settings_from_policy(
             meshing.study_policy(), "laptop_smoke")
+        self.refine = refine_mod.RefinementSettings()
+        self.s6_surface = surface_s6.settings_from_level("smoke")
+        self.surface_info: dict[str, Any] = {}
         self.pyhyp_settings = meshing.PyHypSettings()
         self.flow = solvers.FlowConditions()
         self.su2_settings = solvers.SU2Settings()
@@ -182,6 +186,11 @@ class Workbench:
         state.stations = []
         state.surface_stats = {}
         state.geometry_color = "label"
+        state.s6_surface = self.s6_surface.as_dict()
+        state.s6_help = surface_s6.CONTROL_HELP
+        state.surface_quality = {}
+        state.quality_patches = []
+        state.refine = self.refine.as_dict()
 
         # Mesh
         state.mesher = self.profile.mesher
@@ -334,16 +343,23 @@ class Workbench:
                          f"area {summary['area_m2']:.4f} m2, MAC {summary['mac_m']:.4f} m")
 
             level = self.state.surface_level
+            quality: dict[str, Any] = {}
             if self.state.surface_is_structured:
                 self.job.log(f"Building S6's structured surface at {level}")
-                index = int(self.state.pyhyp_index)
-                blocks, _info, _case = geo.build_s6_surface(
-                    index, self.workspace / "geometry_s6", level=level)
+                self._sync_s6_surface(level)
+                blocks, info, _case = surface_s6.build_with_controls(
+                    self.s6_surface, int(self.state.pyhyp_index),
+                    self.workspace / "geometry_s6")
                 self.surface = blocks
+                self.surface_info = info
                 stats = geo.s6_surface_statistics(blocks)
-                self.job.log(f"Surface: {stats['blocks']} blocks, "
-                             f"{stats['points']:,} points, {stats['quads']:,} quads "
-                             f"({time.time() - started:.1f}s)")
+                quality = surface_s6.quad_quality(blocks)
+                stats["min_angle_deg"] = quality["min_angle_deg"]
+                stats["aspect_p99"] = quality["aspect_p99"]
+                self.job.log(
+                    f"Surface: {stats['blocks']} blocks, {stats['quads']:,} quads, "
+                    f"min angle {quality['min_angle_deg']:.2f} deg, aspect p99 "
+                    f"{quality['aspect_p99']:.1f} ({time.time() - started:.1f}s)")
             else:
                 self.job.log(f"Tessellating at {level}")
                 self.surface = geo.build_surface(
@@ -355,6 +371,9 @@ class Workbench:
 
             estimate = (meshing.estimate_gmsh_cells(self.surface, self.gmsh_settings)
                         if self.profile.mesher == "gmsh" else 0)
+            overall = {k: v for k, v in quality.items()
+                       if k not in ("patches", "per_cell_min_angle")}
+            patches = quality.get("patches", [])
             # The pyHyp tab marches whichever level the geometry tab just built.
             self.pyhyp_settings.surface_level = level
             self.flow.area_ref_m2 = float(summary["area_m2"])
@@ -365,6 +384,8 @@ class Workbench:
                                        if k not in ("stations", "reference")}
                 self.state.stations = summary["stations"]
                 self.state.surface_stats = stats
+                self.state.surface_quality = overall
+                self.state.quality_patches = patches
                 self.state.geometry_ready = True
                 self.state.flow = self.flow.as_dict()
                 self.state.mesh_estimate = estimate
@@ -373,6 +394,45 @@ class Workbench:
             return apply
 
         self._run_async("Building geometry", work)
+
+    def _sync_s6_surface(self, level: str) -> None:
+        self.s6_surface = surface_s6.settings_from_level(level)
+        for key, value in dict(self.state.s6_surface).items():
+            if key == "level" or not hasattr(self.s6_surface, key):
+                continue
+            current = getattr(self.s6_surface, key)
+            try:
+                setattr(self.s6_surface, key, type(current)(value))
+            except (TypeError, ValueError):
+                pass
+        self.s6_surface.level = level
+
+    def _sync_refinement(self) -> None:
+        for key, value in dict(self.state.refine).items():
+            if key in ("region_a", "region_b"):
+                region = getattr(self.refine, key)
+                for sub, sub_value in dict(value).items():
+                    if not hasattr(region, sub):
+                        continue
+                    current = getattr(region, sub)
+                    try:
+                        setattr(region, sub,
+                                tuple(sub_value) if isinstance(current, tuple)
+                                else type(current)(sub_value))
+                    except (TypeError, ValueError):
+                        pass
+                continue
+            if not hasattr(self.refine, key):
+                continue
+            current = getattr(self.refine, key)
+            try:
+                setattr(self.refine, key, type(current)(value))
+            except (TypeError, ValueError):
+                pass
+
+    def reset_surface_controls(self) -> None:
+        defaults = surface_s6.settings_from_level(self.state.surface_level)
+        self.state.s6_surface = defaults.as_dict()
 
     def show_geometry(self) -> None:
         if self.surface is None:
@@ -418,9 +478,10 @@ class Workbench:
         def work() -> None:
             if self.profile.mesher == "gmsh":
                 self._sync_mesh_settings()
+                self._sync_refinement()
                 report = meshing.run_gmsh(
-                    self.surface, self.gmsh_settings,
-                    self.workspace / "mesh", log=self.job.log)
+                    self.surface, self.gmsh_settings, self.workspace / "mesh",
+                    refine=self.refine, log=self.job.log)
                 self.mesh_report = report
                 self.mesh_paths = {
                     "msh": report.get("mesh_msh", ""),
@@ -437,7 +498,9 @@ class Workbench:
                              f"volume={self.pyhyp_settings.volume_level} "
                              f"epsE={self.pyhyp_settings.eps_e}")
                 report = meshing.run_pyhyp(
-                    self.pyhyp_settings, self.workspace / "mesh", log=self.job.log)
+                    self.pyhyp_settings, self.workspace / "mesh",
+                    blocks=self.surface, surface_info=self.surface_info,
+                    log=self.job.log)
                 self.mesh_report = report
                 if not report.get("cgns"):
                     raise RuntimeError("pyHyp did not produce a volume mesh")

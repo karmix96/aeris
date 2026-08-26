@@ -14,6 +14,7 @@ policy file rather than from whatever the GUI happened to be holding.
 
 from __future__ import annotations
 
+import contextlib
 import copy
 import json
 import math
@@ -28,6 +29,32 @@ from typing import Any
 import numpy as np
 
 from .environment import REPO_ROOT, S6_DIR, S7_DIR, STRATEGY_DIR, conda_python, worker_env
+
+
+@contextlib.contextmanager
+def _gmsh_off_main_thread():
+    """Let Gmsh initialise on a worker thread.
+
+    `gmsh.initialize` installs its own SIGINT handler, and Python refuses to set
+    a signal handler anywhere but the main thread - so meshing from the UI's
+    worker died with "signal only works in main thread of the main interpreter"
+    before Gmsh had drawn a single cell.  The API already supports skipping that
+    step; it is just not the default, so the default is supplied here for the
+    duration of one mesh.
+    """
+    import gmsh
+
+    original = gmsh.initialize
+
+    def initialize(argv=None, readConfigFiles=True, run=False, interruptible=True):
+        return original(argv if argv is not None else [], readConfigFiles, run,
+                        interruptible=False)
+
+    gmsh.initialize = initialize
+    try:
+        yield
+    finally:
+        gmsh.initialize = original
 
 for _path in (str(REPO_ROOT / "src"), str(STRATEGY_DIR), str(S7_DIR.parent)):
     if _path not in sys.path:
@@ -167,9 +194,16 @@ def estimate_gmsh_cells(surface: Any, settings: GmshSettings) -> int:
 
 
 def run_gmsh(surface: Any, settings: GmshSettings, output_dir: Path,
-             *, log: Any = None) -> dict[str, Any]:
-    """Generate one volume mesh with the study's Gmsh pipeline."""
+             *, refine: Any = None, log: Any = None) -> dict[str, Any]:
+    """Generate one volume mesh with the study's Gmsh pipeline.
+
+    `refine` carries the workbench's local controls.  They are applied by
+    wrapping the study's background-field builder for the duration of the call,
+    so the study's own sizing runs first and the local fields are added on top.
+    """
     from S7_unstructured_gmsh_su2 import gmsh_pipeline
+
+    from .refinement import RefinementSettings, applied
 
     output_dir = Path(output_dir)
     if output_dir.exists():
@@ -179,9 +213,20 @@ def run_gmsh(surface: Any, settings: GmshSettings, output_dir: Path,
     if log:
         log(f"Gmsh: level={settings.level} surface={settings.surface_edge_over_L:.4g} L "
             f"layers={settings.prism_layers} growth={settings.prism_growth_ratio:.3g}")
-    report = gmsh_pipeline.generate_mesh(
-        surface, output_dir=output_dir, level=settings.level,
-        candidate_index=0, policy=policy)
+
+    refine = refine or RefinementSettings()
+    reference = surface.metadata["reference_values"]["mean_aerodynamic_chord_m"]
+    with _gmsh_off_main_thread(), applied(
+            gmsh_pipeline, refine, surface=surface, L=float(reference),
+            growth=float(settings.core_max_growth_ratio), log=log) as fields:
+        report = gmsh_pipeline.generate_mesh(
+            surface, output_dir=output_dir, level=settings.level,
+            candidate_index=0, policy=policy)
+    if fields.get("workbench_refinement"):
+        report["workbench_refinement"] = {
+            "fields": len(fields["workbench_refinement"]),
+            "settings": refine.as_dict(),
+        }
     report["wall_seconds"] = round(time.time() - started, 2)
     report["settings"] = settings.as_dict()
     (output_dir / "workbench_settings.json").write_text(
@@ -267,7 +312,9 @@ class PyHypSettings:
         return asdict(self)
 
 
-def run_pyhyp(settings: PyHypSettings, output_dir: Path, *, log: Any = None) -> dict[str, Any]:
+def run_pyhyp(settings: PyHypSettings, output_dir: Path, *, blocks: Any = None,
+              surface_info: dict[str, Any] | None = None,
+              log: Any = None) -> dict[str, Any]:
     """March a volume mesh in the conda interpreter, streaming its log back.
 
     S6 already stages pyHyp this way - `prepare()` writes a runner script and a
@@ -282,11 +329,22 @@ def run_pyhyp(settings: PyHypSettings, output_dir: Path, *, log: Any = None) -> 
 
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    if log:
-        log(f"pyHyp: building locked surface at {settings.surface_level}")
-    blocks, info, _case = build_locked_surface(
-        settings.set_name, settings.development_index,
-        output_dir / "_geometry", level=settings.surface_level)
+    if blocks is None:
+        if log:
+            log(f"pyHyp: building locked surface at {settings.surface_level}")
+        blocks, info, _case = build_locked_surface(
+            settings.set_name, settings.development_index,
+            output_dir / "_geometry", level=settings.surface_level)
+    else:
+        # The surface the Geometry tab built, with the workbench's own controls
+        # applied.  Marching THAT is the point: otherwise the tab shows one
+        # surface and pyHyp meshes another.
+        info = dict(surface_info or {})
+        info.setdefault("locked_set_id", f"workbench_{settings.set_name}_"
+                                         f"{settings.development_index:03d}")
+        if log:
+            log(f"pyHyp: marching the surface from the Geometry tab "
+                f"({len(blocks)} blocks)")
 
     override = (first_cell_fraction(settings.volume_level)
                 if volume_level_has_wall_policy(settings.volume_level) else None)
@@ -345,7 +403,8 @@ def gmsh_export_vtk(msh_path: Path, vtk_path: Path) -> Path:
     """Re-export a .msh through the Gmsh API, which VTK can then read."""
     import gmsh
 
-    gmsh.initialize([])
+    with _gmsh_off_main_thread():
+        gmsh.initialize([])
     try:
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.open(str(msh_path))

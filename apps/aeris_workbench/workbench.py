@@ -234,15 +234,37 @@ class Workbench:
     # helpers                                                             #
     # ------------------------------------------------------------------ #
 
-    def _push_log(self) -> None:
-        self.state.log_lines = self.job.tail(200)
-        self.state.busy = self.job.busy
-        self.state.stage = self.job.stage
-        self.state.error = self.job.error
-        self.state.flush()
+    def _ui(self, function: Callable[[], None]) -> None:
+        """Run something on the server's event loop, from any thread.
 
-    def _run_async(self, stage: str, work: Callable[[], None]) -> None:
-        """Run one stage off the UI thread and keep the log flowing."""
+        Everything that touches VTK or client state has to land here.  An
+        OpenGL context belongs to the thread that made it, so rendering from a
+        worker aborts the process rather than raising - which is what "connection
+        lost" looks like from the browser.  `state.flush()` is no safer.
+        """
+        loop = getattr(self, "_loop", None)
+        if loop is None or threading.current_thread() is threading.main_thread():
+            function()
+            return
+        loop.call_soon_threadsafe(function)
+
+    def _push_log(self) -> None:
+        def apply() -> None:
+            self.state.log_lines = self.job.tail(200)
+            self.state.busy = self.job.busy
+            self.state.stage = self.job.stage
+            self.state.error = self.job.error
+            self.state.flush()
+
+        self._ui(apply)
+
+    def _run_async(self, stage: str, work: Callable[[], Callable[[], None] | None]) -> None:
+        """Compute off the UI thread; apply the result back on it.
+
+        `work` runs on a worker and must not touch VTK or state.  What it
+        returns - if anything - is a callable that does, and that is run on the
+        event loop.
+        """
         if self.job.busy:
             return
         self.job.start(stage)
@@ -251,13 +273,16 @@ class Workbench:
 
         def target() -> None:
             try:
-                work()
+                apply = work()
+                if apply is not None:
+                    self._ui(apply)
                 self.job.finish()
             except Exception as exc:  # noqa: BLE001 - surfaced in the UI, not swallowed
                 self.job.log(f"ERROR {type(exc).__name__}: {exc}")
                 for line in traceback.format_exc().splitlines()[-6:]:
                     self.job.log("  " + line)
                 self.job.finish(f"{type(exc).__name__}: {exc}")
+            self._push_log()
 
         threading.Thread(target=target, daemon=True, name=stage).start()
 
@@ -289,18 +314,22 @@ class Workbench:
                          f"wetted {stats['wetted_area_m2']:.4f} m2 "
                          f"({time.time() - started:.1f}s)")
 
-            self.state.planform = {k: v for k, v in summary.items()
-                                   if k not in ("stations", "reference")}
-            self.state.stations = summary["stations"]
-            self.state.surface_stats = stats
-            self.state.geometry_ready = True
+            estimate = (meshing.estimate_gmsh_cells(self.surface, self.gmsh_settings)
+                        if self.profile.mesher == "gmsh" else 0)
             self.flow.area_ref_m2 = float(summary["area_m2"])
             self.flow.chord_ref_m = float(summary["mac_m"])
-            self.state.flow = self.flow.as_dict()
-            self.state.mesh_estimate = meshing.estimate_gmsh_cells(
-                self.surface, self.gmsh_settings) if self.profile.mesher == "gmsh" else 0
-            self.show_geometry()
-            self._push_log()
+
+            def apply() -> None:
+                self.state.planform = {k: v for k, v in summary.items()
+                                       if k not in ("stations", "reference")}
+                self.state.stations = summary["stations"]
+                self.state.surface_stats = stats
+                self.state.geometry_ready = True
+                self.state.flow = self.flow.as_dict()
+                self.state.mesh_estimate = estimate
+                self.show_geometry()
+
+            return apply
 
         self._run_async("Building geometry", work)
 
@@ -370,12 +399,15 @@ class Workbench:
 
             self.job.log(f"Reading {path.name} into the viewport")
             self.volume_dataset = meshing.read_volume_mesh(path)
-            self.state.mesh_stats = meshing.summarize_mesh(self.volume_dataset)
-            self.state.mesh_ready = True
-            self.job.log(f"Mesh: {self.state.mesh_stats['cells']} cells, "
-                         f"{self.state.mesh_stats['points']} points")
-            self.show_mesh()
-            self._push_log()
+            stats = meshing.summarize_mesh(self.volume_dataset)
+            self.job.log(f"Mesh: {stats['cells']} cells, {stats['points']} points")
+
+            def apply() -> None:
+                self.state.mesh_stats = stats
+                self.state.mesh_ready = True
+                self.show_mesh()
+
+            return apply
 
         self._run_async(f"Meshing with {self.profile.mesher_label}", work)
 
@@ -493,26 +525,29 @@ class Workbench:
         def work() -> None:
             run_dir = self.workspace / "solve"
             files = post.find_solution_files(run_dir)
-            self.state.post_files = files
             candidates = files["surface"] + files["volume"]
             if not candidates:
                 raise RuntimeError(f"no solution files under {run_dir}")
-            self.state.post_source = self.state.post_source or candidates[0]
-            self.job.log(f"Loading {Path(self.state.post_source).name}")
-            self.solution = post.load(Path(self.state.post_source))
+            source = self.state.post_source or candidates[0]
+            self.job.log(f"Loading {Path(source).name}")
+            self.solution = post.load(Path(source))
             fields = post.available_fields(self.solution)
-            self.state.post_fields = (
-                [{"value": f"point:{n}", "title": f"{n} (point)"} for n in fields["point"]]
-                + [{"value": f"cell:{n}", "title": f"{n} (cell)"} for n in fields["cell"]])
+            options = ([{"value": f"point:{n}", "title": f"{n} (point)"} for n in fields["point"]]
+                       + [{"value": f"cell:{n}", "title": f"{n} (cell)"} for n in fields["cell"]])
             name, association = post.best_field(self.solution)
-            self.state.post_field = f"{association}:{name}" if name else ""
-            if self.profile.solver == "su2":
-                self.state.forces = post.su2_forces(run_dir)
-            else:
-                self.state.forces = solvers.ADflowRunner.read_result(run_dir)
+            forces = (post.su2_forces(run_dir) if self.profile.solver == "su2"
+                      else solvers.ADflowRunner.read_result(run_dir))
             self.job.log(f"{len(fields['point'])} point fields, {len(fields['cell'])} cell fields")
-            self.show_results()
-            self._push_log()
+
+            def apply() -> None:
+                self.state.post_files = files
+                self.state.post_source = source
+                self.state.post_fields = options
+                self.state.post_field = f"{association}:{name}" if name else ""
+                self.state.forces = forces
+                self.show_results()
+
+            return apply
 
         self._run_async("Loading results", work)
 
@@ -590,6 +625,15 @@ class Workbench:
 
         build_layout(self)
         self.server.controller.start_monitor = self._start_monitor
+        self._loop = None
+
+        @self.server.controller.add("on_server_ready")
+        def _capture_loop(*_args, **_kwargs) -> None:
+            # The one thread allowed to touch VTK and client state.  Workers
+            # marshal onto it through `_ui`.
+            self._loop = asyncio.get_running_loop()
+            self.job.log(f"Render backend: {self.scene.backend}")
+            self._push_log()
 
     def _start_monitor(self) -> None:
         """Poll the running solver on the server's own event loop.

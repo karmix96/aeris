@@ -10,6 +10,9 @@ from __future__ import annotations
 
 from typing import Any
 
+import subprocess
+import sys
+
 import vtk
 
 COLORMAPS = {
@@ -82,37 +85,67 @@ class Scene:
         self._axes: vtk.vtkOrientationMarkerWidget | None = None
 
     @staticmethod
-    def _make_window() -> tuple[Any, str]:
-        """Pick a render window that this machine can actually draw with.
+    def _probe_backend(kind: str) -> bool:
+        """Try a real render in a CHILD process, because failure here is fatal.
 
-        On a desktop session the default X/GLX window is right.  Over SSH or in
-        a container there is no GLX, and VTK's failure there is an X protocol
-        abort that takes the process down rather than an exception - so each
-        candidate is tried in a probe render before it is adopted.
+        A GLX failure is not a Python exception.  Xlib handles the protocol
+        error itself and calls exit(), so a try/except around Render() catches
+        nothing and the whole server disappears with status 0 and one line of X
+        output - which is exactly what happened the first time this ran without
+        access to the desktop's display.  EGL without a GPU segfaults instead.
+        Neither is survivable in process, so the probe is run somewhere it is
+        allowed to die.
         """
-        candidates: list[tuple[str, Any]] = [("glx", vtk.vtkRenderWindow)]
+        code = (
+            "import vtk\n"
+            f"kind={kind!r}\n"
+            "factory = getattr(vtk, kind) if kind != 'glx' else vtk.vtkRenderWindow\n"
+            "w = factory(); w.SetOffScreenRendering(1); w.SetSize(120, 90)\n"
+            "r = vtk.vtkRenderer(); w.AddRenderer(r)\n"
+            "s = vtk.vtkConeSource(); m = vtk.vtkPolyDataMapper()\n"
+            "m.SetInputConnection(s.GetOutputPort())\n"
+            "a = vtk.vtkActor(); a.SetMapper(m); r.AddActor(a); r.ResetCamera()\n"
+            "w.Render()\n"
+            "img = vtk.vtkWindowToImageFilter(); img.SetInput(w); img.Update()\n"
+            "print('RENDER_OK')\n"
+        )
+        try:
+            done = subprocess.run([sys.executable, "-c", code], capture_output=True,
+                                  text=True, timeout=60)
+        except Exception:  # noqa: BLE001
+            return False
+        return done.returncode == 0 and "RENDER_OK" in done.stdout
+
+    @classmethod
+    def _make_window(cls) -> tuple[Any, str]:
+        """Pick a render window this machine can actually draw with.
+
+        A desktop session wants plain GLX.  Over SSH or in a container there is
+        no usable GLX and the fallbacks matter.  Each is proven in a child
+        process first (see `_probe_backend`) so an unusable one is discovered
+        without taking the workbench down.
+        """
+        candidates = [("glx", None)]
         for name in ("vtkEGLRenderWindow", "vtkOSOpenGLRenderWindow"):
-            factory = getattr(vtk, name, None)
-            if factory is not None:
+            if getattr(vtk, name, None) is not None:
                 candidates.append((name.replace("vtk", "").replace("RenderWindow", "").lower(),
-                                   factory))
-        errors: list[str] = []
-        for label, factory in candidates:
-            try:
+                                   name))
+        tried: list[str] = []
+        for label, class_name in candidates:
+            if cls._probe_backend(class_name or "glx"):
+                factory = vtk.vtkRenderWindow if class_name is None else getattr(vtk, class_name)
                 window = factory()
                 window.SetOffScreenRendering(1)
-                window.SetSize(80, 60)
-                probe = vtk.vtkRenderer()
-                window.AddRenderer(probe)
-                window.Render()
-                window.RemoveRenderer(probe)
-                window.SetSize(1100, 760)
                 return window, label
-            except Exception as exc:  # noqa: BLE001
-                errors.append(f"{label}: {type(exc).__name__}")
-        window = vtk.vtkRenderWindow()
-        window.SetOffScreenRendering(1)
-        return window, "default (" + ", ".join(errors) + ")" if errors else "default"
+            tried.append(label)
+
+        # Nothing can draw here.  Say so plainly rather than starting a server
+        # that will die on the first frame with an X error and status 0.
+        raise RuntimeError(
+            "no usable OpenGL backend: tried " + ", ".join(tried) + ". "
+            "On a desktop run this from a terminal in that session so DISPLAY is "
+            "reachable; over SSH install VTK with EGL or OSMesa support."
+        )
 
     # -- content --------------------------------------------------------- #
 

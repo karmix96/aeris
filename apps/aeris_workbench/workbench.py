@@ -168,7 +168,15 @@ class Workbench:
 
         # Geometry
         state.geometry_ready = False
-        state.surface_level = "laptop_smoke"
+        # The two strategies tessellate differently and their level names are
+        # unrelated.  S6 marches a structured multiblock surface of its own; S7
+        # triangulates.  Showing one in the other's workbench is showing a
+        # surface that will never be meshed.
+        s6_surface = self.profile.mesher == "pyhyp"
+        state.surface_levels = (list(geo.S6_SURFACE_LEVELS) if s6_surface
+                                else list(GRID_LEVELS))
+        state.surface_level = "smoke" if s6_surface else "laptop_smoke"
+        state.surface_is_structured = s6_surface
         state.te_variant = "te_1p0mm"
         state.planform = {}
         state.stations = []
@@ -325,17 +333,30 @@ class Workbench:
             self.job.log(f"pyGeo: span {summary['span_m']:.4f} m, "
                          f"area {summary['area_m2']:.4f} m2, MAC {summary['mac_m']:.4f} m")
 
-            self.job.log(f"Tessellating at {self.state.surface_level}")
-            self.surface = geo.build_surface(
-                self.case, level=self.state.surface_level,
-                te_variant=self.state.te_variant)
-            stats = geo.surface_statistics(self.surface)
-            self.job.log(f"Surface: {stats['triangles']} triangles, "
-                         f"wetted {stats['wetted_area_m2']:.4f} m2 "
-                         f"({time.time() - started:.1f}s)")
+            level = self.state.surface_level
+            if self.state.surface_is_structured:
+                self.job.log(f"Building S6's structured surface at {level}")
+                index = int(self.state.pyhyp_index)
+                blocks, _info, _case = geo.build_s6_surface(
+                    index, self.workspace / "geometry_s6", level=level)
+                self.surface = blocks
+                stats = geo.s6_surface_statistics(blocks)
+                self.job.log(f"Surface: {stats['blocks']} blocks, "
+                             f"{stats['points']:,} points, {stats['quads']:,} quads "
+                             f"({time.time() - started:.1f}s)")
+            else:
+                self.job.log(f"Tessellating at {level}")
+                self.surface = geo.build_surface(
+                    self.case, level=level, te_variant=self.state.te_variant)
+                stats = geo.surface_statistics(self.surface)
+                self.job.log(f"Surface: {stats['triangles']} triangles, "
+                             f"wetted {stats['wetted_area_m2']:.4f} m2 "
+                             f"({time.time() - started:.1f}s)")
 
             estimate = (meshing.estimate_gmsh_cells(self.surface, self.gmsh_settings)
                         if self.profile.mesher == "gmsh" else 0)
+            # The pyHyp tab marches whichever level the geometry tab just built.
+            self.pyhyp_settings.surface_level = level
             self.flow.area_ref_m2 = float(summary["area_m2"])
             self.flow.chord_ref_m = float(summary["mac_m"])
 
@@ -356,14 +377,19 @@ class Workbench:
     def show_geometry(self) -> None:
         if self.surface is None:
             return
-        polydata, labels = geo.surface_to_polydata(
-            self.surface, color_by=self.state.geometry_color)
+        if self.state.surface_is_structured:
+            polydata, _names = geo.s6_blocks_to_polydata(self.surface)
+            scalars, colormap, label = "block", "rainbow", "block"
+        else:
+            polydata, _labels = geo.surface_to_polydata(
+                self.surface, color_by=self.state.geometry_color)
+            scalars = self.state.geometry_color
+            colormap = "viridis" if scalars == "span_fraction" else "rainbow"
+            label = "patch" if scalars == "label" else "span"
         self.scene.clear()
         self.scene.add_surface(
-            "geometry", polydata,
-            scalars=self.state.geometry_color, association="cell",
-            colormap="viridis" if self.state.geometry_color == "span_fraction" else "rainbow",
-            edges=True, label="patch" if self.state.geometry_color == "label" else "span",
+            "geometry", polydata, scalars=scalars, association="cell",
+            colormap=colormap, edges=True, label=label,
         )
         self.scene.reset_camera()
         self.update_view()

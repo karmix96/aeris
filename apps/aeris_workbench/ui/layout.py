@@ -80,10 +80,18 @@ def geometry_panel(app):
             with v3.VRow(classes="mt-2"):
                 with v3.VCol(cols=6, classes="py-1"):
                     v3.VSelect(label="Surface level", v_model=("surface_level",),
-                               items=("grid_levels",), **DENSE)
+                               items=("surface_levels",), **DENSE)
                 with v3.VCol(cols=6, classes="py-1"):
                     v3.VSelect(label="Trailing edge", v_model=("te_variant",),
-                               items=("te_variants",), **DENSE)
+                               items=("te_variants",), **DENSE,
+                               disabled=("surface_is_structured",))
+            with html.Div(v_if="surface_level === 'laptop_smoke'",
+                          classes="text-caption mt-1",
+                          style="color:#e8a33d"):
+                html.Span("laptop_smoke is a diagnostic tier: the surface edge is "
+                          "0.14 of the mean chord, so the leading edge, tip and "
+                          "trailing edge are deliberately under-resolved. Use "
+                          "coarse or finer to judge the geometry.")
             with v3.VRow(classes="mt-1"):
                 with v3.VCol(cols=12):
                     v3.VBtn("Build geometry", block=True, color=("accent",),
@@ -101,14 +109,23 @@ def geometry_panel(app):
             _stat_row("Mean aerodynamic chord", "planform.mac_m?.toFixed(4) + ' m'")
             _stat_row("Aspect ratio", "planform.aspect_ratio?.toFixed(3)")
             v3.VDivider(classes="my-2")
-            _stat_row("Triangles", "surface_stats.triangles")
-            _stat_row("Points", "surface_stats.points")
-            _stat_row("Wetted area", "surface_stats.wetted_area_m2?.toFixed(4) + ' m²'")
-            _stat_row("Edge length", "surface_stats.min_edge_m?.toExponential(2) + ' … ' "
-                                     "+ surface_stats.max_edge_m?.toExponential(2) + ' m'")
-            v3.VDivider(classes="my-2")
-            v3.VSelect(label="Colour by", v_model=("geometry_color",),
-                       items=(["label", "span_fraction"],), **DENSE)
+            with html.Div(v_if="surface_is_structured"):
+                _stat_row("Blocks", "surface_stats.blocks")
+                _stat_row("Points", "surface_stats.points?.toLocaleString()")
+                _stat_row("Quads", "surface_stats.quads?.toLocaleString()")
+                with html.Div(classes="text-caption text-medium-emphasis mt-2"):
+                    html.Span("The structured surface pyHyp marches from, block by "
+                              "block. Colour shows which block a face belongs to.")
+            with html.Div(v_else=True):
+                _stat_row("Triangles", "surface_stats.triangles?.toLocaleString()")
+                _stat_row("Points", "surface_stats.points?.toLocaleString()")
+                _stat_row("Wetted area", "surface_stats.wetted_area_m2?.toFixed(4) + ' m²'")
+                _stat_row("Edge length",
+                          "surface_stats.min_edge_m?.toExponential(2) + ' … ' "
+                          "+ surface_stats.max_edge_m?.toExponential(2) + ' m'")
+                v3.VDivider(classes="my-2")
+                v3.VSelect(label="Colour by", v_model=("geometry_color",),
+                           items=(["label", "span_fraction"],), **DENSE)
 
 
 def mesh_panel(app):

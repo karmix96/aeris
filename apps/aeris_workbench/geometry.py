@@ -248,3 +248,105 @@ def surface_statistics(surface: Any) -> dict[str, Any]:
             points[:, 1].min(), points[:, 1].max(),
             points[:, 2].min(), points[:, 2].max())],
     }
+
+
+# --------------------------------------------------------------------------- #
+# S6's own structured surface                                                   #
+# --------------------------------------------------------------------------- #
+#
+# S6 does not mesh the triangulated surface above.  It builds its own structured
+# multiblock OML - separate blocks for the upper and lower fore and aft panels,
+# a nose and base collar, and a six-block tip cap - and pyHyp marches from that.
+# Showing the S7 tessellation in the S6 workbench was misleading: it is not the
+# surface that gets meshed, and at the diagnostic tier it is far coarser than
+# anything S6 uses.
+
+S6_SURFACE_LEVELS = ("coarse", "smoke", "medium", "fine")
+
+
+def build_s6_surface(index: int, output_dir: Path, *, level: str = "smoke",
+                     set_name: str = DEVELOPMENT_SET):
+    """The structured surface S6 actually marches, with its own level names."""
+    from .environment import S6_DIR
+
+    if str(S6_DIR) not in sys.path:
+        sys.path.insert(0, str(S6_DIR))
+    from strategy_s6 import build_locked_surface  # noqa: PLC0415
+
+    blocks, info, case = build_locked_surface(
+        set_name, int(index), Path(output_dir), level=level)
+    return blocks, info, case
+
+
+def s6_blocks_to_polydata(blocks):
+    """Structured surface blocks as one quad mesh, tagged by block.
+
+    Each block is an (ni, nj, 3) lattice, so the quads follow the lattice
+    directly - no triangulation, which is the point: the picture then shows the
+    same cells pyHyp will march from.
+    """
+    import vtk
+    from vtk.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray
+
+    points: list[np.ndarray] = []
+    quads: list[np.ndarray] = []
+    block_ids: list[np.ndarray] = []
+    names: list[str] = []
+    offset = 0
+
+    for index, block in enumerate(blocks):
+        xyz = np.asarray(block.xyz, dtype=np.float64)
+        ni, nj = xyz.shape[0], xyz.shape[1]
+        points.append(xyz.reshape(-1, 3))
+        names.append(block.name)
+        if ni < 2 or nj < 2:
+            continue
+        i_index, j_index = np.meshgrid(np.arange(ni - 1), np.arange(nj - 1), indexing="ij")
+        corner = (i_index * nj + j_index).ravel() + offset
+        cell = np.column_stack([corner, corner + nj, corner + nj + 1, corner + 1])
+        quads.append(cell)
+        block_ids.append(np.full(len(cell), index, dtype=np.float64))
+        offset += ni * nj
+
+    if not quads:
+        return vtk.vtkPolyData(), []
+
+    coordinates = np.ascontiguousarray(np.concatenate(points))
+    connectivity = np.ascontiguousarray(np.concatenate(quads).astype(np.int64))
+
+    vtk_points = vtk.vtkPoints()
+    vtk_points.SetData(numpy_to_vtk(coordinates, deep=True))
+
+    cells = np.empty((len(connectivity), 5), dtype=np.int64)
+    cells[:, 0] = 4
+    cells[:, 1:] = connectivity
+    array = vtk.vtkCellArray()
+    array.SetCells(len(connectivity), numpy_to_vtkIdTypeArray(cells.ravel(), deep=True))
+
+    polydata = vtk.vtkPolyData()
+    polydata.SetPoints(vtk_points)
+    polydata.SetPolys(array)
+
+    tags = numpy_to_vtk(np.ascontiguousarray(np.concatenate(block_ids)), deep=True)
+    tags.SetName("block")
+    polydata.GetCellData().AddArray(tags)
+    polydata.GetCellData().SetActiveScalars("block")
+    return polydata, names
+
+
+def s6_surface_statistics(blocks) -> dict[str, Any]:
+    points = sum(int(np.asarray(b.xyz).shape[0] * np.asarray(b.xyz).shape[1]) for b in blocks)
+    quads = sum(int((np.asarray(b.xyz).shape[0] - 1) * (np.asarray(b.xyz).shape[1] - 1))
+                for b in blocks if np.asarray(b.xyz).shape[0] > 1
+                and np.asarray(b.xyz).shape[1] > 1)
+    every = np.concatenate([np.asarray(b.xyz).reshape(-1, 3) for b in blocks])
+    return {
+        "points": points,
+        "quads": quads,
+        "blocks": len(blocks),
+        "block_names": [b.name for b in blocks],
+        "bounds_m": [float(v) for v in (
+            every[:, 0].min(), every[:, 0].max(),
+            every[:, 1].min(), every[:, 1].max(),
+            every[:, 2].min(), every[:, 2].max())],
+    }

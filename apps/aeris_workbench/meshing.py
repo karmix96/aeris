@@ -266,19 +266,39 @@ def pyhyp_level_choices() -> dict[str, list[str]]:
 
     from aeris.cfd.meshing.pyhyp_options import GRID_LEVELS  # noqa: PLC0415
 
-    # Every volume level is offered, including L1-L4.  They coarsen the surface
-    # by four in each direction, which is the difference between a mesh a laptop
-    # can solve and one the OOM killer takes: `smoke` gave 1.62 M cells and
-    # ADflow was killed at iteration 0 on 9.9 GiB free.  Levels outside the S6
-    # wall-spacing table simply keep their own s0_frac, which `prepare()`
-    # already falls back to when no override is given.
-    order = {"L4": 0, "L3": 1, "L2": 2, "L1": 3,
-             "coarse": 4, "smoke": 5, "medium": 6, "fine": 7, "production": 8}
+    # L1-L4 all ask for coarsen=4, which needs every block dimension to survive
+    # three halvings.  S6's surface cannot: the spanwise direction is 89 cells
+    # (odd, so not even one halving) and the nose and base blocks are 2 cells
+    # across.  pyHyp answers "User specified coarsen is 4, can only coarsen 2
+    # levels" and stops.  That is why S6's own levels are all coarsen=1, and why
+    # offering the L family here was a mistake: it cannot ever work on this
+    # topology.  `coarsen_limit` re-derives it from the surface rather than
+    # trusting this note.
+    order = {"coarse": 0, "smoke": 1, "medium": 2, "fine": 3, "production": 4}
+    usable = [name for name, spec in GRID_LEVELS.items() if int(spec["coarsen"]) == 1]
     return {
         "surface": sorted(SURFACE_LEVELS, key=lambda n: order.get(n, 99)),
-        "volume": sorted(GRID_LEVELS, key=lambda n: order.get(n, 99)),
+        "volume": sorted(usable, key=lambda n: order.get(n, 99)),
         "wall_spacing_levels": sorted(S6_FIRST_CELL_FRACTION),
     }
+
+
+def coarsen_limit(blocks: Any) -> int:
+    """How many times pyHyp could halve this surface, from the surface itself."""
+    import numpy as np  # noqa: PLC0415
+
+    def halvings(count: int) -> int:
+        cells, times = count - 1, 0
+        while cells > 1 and cells % 2 == 0:
+            cells //= 2
+            times += 1
+        return times
+
+    worst = 99
+    for block in blocks:
+        ni, nj = np.asarray(block.xyz).shape[:2]
+        worst = min(worst, halvings(ni), halvings(nj))
+    return max(1, worst + 1)
 
 
 def volume_level_has_wall_policy(level: str) -> bool:
@@ -625,6 +645,52 @@ MEASURE_SETTERS = {
 
 CELL_TYPE_NAMES = {5: "Triangle", 9: "Quad", 10: "Tetra", 12: "Hexahedron",
                    13: "Wedge", 14: "Pyramid", 3: "Line", 1: "Vertex"}
+
+
+def validity_report(dataset) -> dict[str, Any]:
+    """Negative and near-degenerate cells, with where they are.
+
+    ADflow answers an inverted grid with "Negative volumes present in grid",
+    writes a failed_mesh file and returns nan for every force - after paying for
+    partitioning and preprocessing.  Checking here costs a second and says which
+    part of the wing is at fault.
+    """
+    import numpy as np  # noqa: PLC0415
+    import vtk  # noqa: PLC0415
+    from vtk.util.numpy_support import vtk_to_numpy  # noqa: PLC0415
+
+    quality, _range = cell_quality(dataset, "scaled_jacobian")
+    values, centres = [], []
+    for block in iter_blocks(quality):
+        array = block.GetCellData().GetArray("Quality")
+        if array is None:
+            continue
+        values.append(vtk_to_numpy(array))
+        centre = vtk.vtkCellCenters()
+        centre.SetInputData(block)
+        centre.Update()
+        centres.append(vtk_to_numpy(centre.GetOutput().GetPoints().GetData()))
+    if not values:
+        return {"checked": False}
+
+    value = np.concatenate(values)
+    centre = np.concatenate(centres)
+    inverted = value <= 0.0
+    report = {
+        "checked": True,
+        "cells": int(value.size),
+        "min_scaled_jacobian": round(float(value.min()), 5),
+        "inverted_count": int(inverted.sum()),
+        "below_0p01": int((value < 0.01).sum()),
+        "valid": bool(not inverted.any()),
+    }
+    if inverted.any():
+        bad = centre[inverted]
+        report["inverted_bounds_m"] = [round(float(v), 4) for v in (
+            bad[:, 0].min(), bad[:, 0].max(), bad[:, 1].min(),
+            bad[:, 1].max(), bad[:, 2].min(), bad[:, 2].max())]
+        report["inverted_centroid_m"] = [round(float(v), 4) for v in bad.mean(axis=0)]
+    return report
 
 
 def summarize_mesh(dataset) -> dict[str, Any]:

@@ -115,6 +115,7 @@ class Workbench:
         self.solution: Any = None
         self.mesh_report: dict[str, Any] = {}
         self.mesh_paths: dict[str, str] = {}
+        self.mesh_validity: dict[str, Any] = {}
 
         self.gmsh_settings = meshing.settings_from_policy(
             meshing.study_policy(), "laptop_smoke")
@@ -202,6 +203,7 @@ class Workbench:
         state.pyhyp_n_constant = self.pyhyp_settings.n_constant
         state.pyhyp_index = self.pyhyp_settings.development_index
         state.mesh_stats = {}
+        state.mesh_validity = {}
         state.mesh_estimate = 0
         state.mesh_clip = False
         state.mesh_clip_position = 0.0
@@ -512,8 +514,22 @@ class Workbench:
             stats = meshing.summarize_mesh(self.volume_dataset)
             self.job.log(f"Mesh: {stats['cells']} cells, {stats['points']} points")
 
+            validity = meshing.validity_report(self.volume_dataset)
+            self.mesh_validity = validity
+            if validity.get("checked"):
+                if validity["valid"]:
+                    self.job.log(f"Mesh check: valid, worst scaled Jacobian "
+                                 f"{validity['min_scaled_jacobian']}")
+                else:
+                    where = validity.get("inverted_centroid_m", [])
+                    self.job.log(
+                        f"Mesh check: {validity['inverted_count']} INVERTED cells, "
+                        f"worst {validity['min_scaled_jacobian']}, centred near "
+                        f"{where}. The solver will refuse this mesh.")
+
             def apply() -> None:
                 self.state.mesh_stats = stats
+                self.state.mesh_validity = validity
                 self.state.mesh_ready = True
                 self.show_mesh()
 
@@ -582,6 +598,23 @@ class Workbench:
 
     def start_solver(self) -> None:
         if self.runner is not None and self.runner.running:
+            return
+        # An inverted cell is fatal to both solvers, and both discover it only
+        # after partitioning: ADflow returns nan for every force and writes a
+        # failed_mesh file.  Refuse here instead, and say where the cells are.
+        validity = getattr(self, "mesh_validity", {})
+        if validity.get("checked") and not validity.get("valid", True):
+            message = (
+                f"Mesh has {validity['inverted_count']} inverted cells "
+                f"(worst scaled Jacobian {validity['min_scaled_jacobian']}) "
+                f"near {validity.get('inverted_centroid_m')}. Both solvers "
+                "reject a grid with negative volumes. Re-mesh at a finer "
+                "surface level, or raise the tip resolution - the tip cap is "
+                "where these appear."
+            )
+            self.job.log(f"REFUSED: {message}")
+            self.state.error = message
+            self._push_log()
             return
         self._sync_solver_settings()
         run_dir = self.workspace / "solve"

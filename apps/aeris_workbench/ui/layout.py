@@ -531,9 +531,14 @@ def build_layout(app):
                                "border-radius:8px; padding:8px 12px;"
                                "font:11.5px ui-monospace,Menlo,monospace; color:#c9d1d9"),
                     ):
+                        # Keyed by INDEX, not by text.  Solver logs repeat lines
+                        # constantly - every pyHyp banner is identical - and a
+                        # duplicate key makes Vue reuse and reorder nodes, which
+                        # is why the log appeared to print each stage several
+                        # times over.
                         html.Div("{{ line }}",
-                                 v_for="line in (tab === 'solver' && solver_log.length "
+                                 v_for="(line, i) in (tab === 'solver' && solver_log.length "
                                        "? solver_log : log_lines)",
-                                 key="line", style="white-space:pre-wrap")
+                                 key="i", style="white-space:pre-wrap")
 
         return layout

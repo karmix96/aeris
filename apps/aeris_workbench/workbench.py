@@ -119,12 +119,29 @@ class Workbench:
 
         self.gmsh_settings = meshing.settings_from_policy(
             meshing.study_policy(), "laptop_smoke")
+        if profile.mesher == "gmsh":
+            # The laptop tier's in-plane sizing with the COARSE tier's wall
+            # spacing.  Measured: 69 831 cells, every audit gate passed, and
+            # y+ p50 0.36 / p95 0.54 / max 0.79 against a gate of p95 <= 1.
+            # The policy default (1.07e-3 m) gives y+ 11 to 47 - forty times too
+            # coarse - and prisms are anisotropic, so fixing it costs almost
+            # nothing: 47 967 cells becomes 69 831.
+            self.gmsh_settings.first_cell_height_over_L = 7.20e-6
+            self.gmsh_settings.prism_layers = 24
+            self.gmsh_settings.prism_growth_ratio = 1.25
         self.refine = refine_mod.RefinementSettings()
         self.s6_surface = surface_s6.settings_from_level("smoke")
         self.surface_info: dict[str, Any] = {}
         self.pyhyp_settings = meshing.PyHypSettings()
         self.flow = solvers.FlowConditions()
-        self.su2_settings = solvers.SU2Settings()
+        # The configuration the S7 solver study selected: Newton-Krylov is what
+        # separates converging from limit-cycling, and it is not sufficient on
+        # its own - alone it reached 5.954 orders and missed the six-order gate
+        # by 0.046.  With the stronger linear solve and the higher CFL it
+        # reached 6.906, monotonically, still descending at the cap.
+        self.su2_settings = solvers.SU2Settings(
+            newton_krylov=True, linear_preconditioner="ILU", linear_iterations=25,
+            cfl=25.0, cfl_ceiling=1000.0, multigrid_levels=0, stop_residual=-9.0)
         self.adflow_settings = solvers.ADflowSettings()
         self.runner: solvers.SolverRun | None = None
 
@@ -204,6 +221,7 @@ class Workbench:
         state.pyhyp_index = self.pyhyp_settings.development_index
         state.mesh_stats = {}
         state.mesh_validity = {}
+        state.mesh_audit = {}
         state.mesh_estimate = 0
         state.mesh_clip = False
         state.mesh_clip_position = 0.0
@@ -514,6 +532,16 @@ class Workbench:
             stats = meshing.summarize_mesh(self.volume_dataset)
             self.job.log(f"Mesh: {stats['cells']} cells, {stats['points']} points")
 
+            audit: dict[str, Any] = {}
+            if self.profile.mesher == "gmsh":
+                try:
+                    report_json = meshing.audit_gmsh(
+                        self.surface, self.workspace / "mesh", self.gmsh_settings,
+                        log=self.job.log)
+                    audit = meshing.audit_summary(report_json)
+                except Exception as exc:  # noqa: BLE001 - an audit must not lose the mesh
+                    self.job.log(f"Mesh audit could not run: {type(exc).__name__}: {exc}")
+
             validity = meshing.validity_report(self.volume_dataset)
             self.mesh_validity = validity
             if validity.get("checked"):
@@ -530,6 +558,7 @@ class Workbench:
             def apply() -> None:
                 self.state.mesh_stats = stats
                 self.state.mesh_validity = validity
+                self.state.mesh_audit = audit
                 self.state.mesh_ready = True
                 self.show_mesh()
 
@@ -602,6 +631,16 @@ class Workbench:
         # An inverted cell is fatal to both solvers, and both discover it only
         # after partitioning: ADflow returns nan for every force and writes a
         # failed_mesh file.  Refuse here instead, and say where the cells are.
+        audit = dict(self.state.mesh_audit or {})
+        if audit and not audit.get("accepted", True):
+            message = ("Mesh audit rejected this mesh: "
+                       + ", ".join(audit.get("failed", [])[:4])
+                       + ". Fix the mesh before solving it.")
+            self.job.log(f"REFUSED: {message}")
+            self.state.error = message
+            self._push_log()
+            return
+
         validity = getattr(self, "mesh_validity", {})
         if validity.get("checked") and not validity.get("valid", True):
             message = (

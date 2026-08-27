@@ -237,13 +237,83 @@ def run_gmsh(surface: Any, settings: GmshSettings, output_dir: Path,
     return report
 
 
-def audit_gmsh(surface: Any, mesh_dir: Path, settings: GmshSettings) -> dict[str, Any]:
-    """Run the study's own mesh audit against a workbench mesh."""
+AUDIT_HEADLINE = (
+    "surface", "volume", "prisms", "quality", "regional", "source_geometry", "labels")
+
+
+def audit_gmsh(surface: Any, mesh_dir: Path, settings: GmshSettings,
+               *, log: Any = None) -> dict[str, Any]:
+    """Run the study's OWN mesh audit against a workbench mesh.
+
+    This is the difference between a mesh that looks right and one that has been
+    checked: closure, manifoldness, orientation, label coverage, prism layer
+    count and first height, element shape, and the distribution metrics.  The
+    audit is the study's, not a workbench re-implementation, so a mesh the
+    workbench calls acceptable is acceptable by the same rules the campaign uses.
+    """
     from S7_unstructured_gmsh_su2 import mesh_audit
 
+    mesh_dir = Path(mesh_dir)
     policy = policy_overlay(settings)
-    return mesh_audit.audit_mesh(
-        surface=surface, mesh_dir=Path(mesh_dir), level=settings.level, policy=policy)
+    with _gmsh_off_main_thread():
+        report = mesh_audit.audit_mesh(
+            msh_path=mesh_dir / "mesh.msh",
+            su2_path=mesh_dir / "mesh.su2",
+            surface=surface,
+            level=settings.level,
+            candidate_index=0,
+            output_path=mesh_dir / "mesh_audit.json",
+            policy=policy,
+        )
+    if log:
+        summary = audit_summary(report)
+        if summary["accepted"]:
+            log(f"Mesh audit: ACCEPTED at tier {summary['evidence_tier']}"
+                + (f", {len(summary['warnings'])} warnings" if summary["warnings"] else ""))
+        else:
+            log(f"Mesh audit: REJECTED — {', '.join(summary['failed'])}")
+        for row in summary["warnings"]:
+            log(f"   warning {row['gate']}: {row['actual']} against {row['limit']}")
+    return report
+
+
+def _rows(entries: Any) -> list[dict[str, Any]]:
+    out = []
+    for entry in entries or []:
+        if not isinstance(entry, dict) or "name" not in entry:
+            continue
+        actual, limit = entry.get("actual"), entry.get("limit")
+        fmt = (lambda v: f"{v:.4g}" if isinstance(v, (int, float)) else str(v)[:60])
+        out.append({
+            "gate": str(entry["name"]),
+            "passed": bool(entry.get("passed", False)),
+            "actual": fmt(actual),
+            "limit": fmt(limit),
+        })
+    return out
+
+
+def audit_summary(report: dict[str, Any]) -> dict[str, Any]:
+    """Flatten an audit into something a panel can render.
+
+    Distribution metrics are reported as WARNINGS below the development tier,
+    because they are resolution dependent and gating them on a diagnostic mesh
+    measures the tier rather than the method.  They are shown either way, so a
+    laptop mesh cannot look cleaner than it is.
+    """
+    acceptance = report.get("acceptance", {})
+    gates = _rows(acceptance.get("gates"))
+    warnings = [row for row in _rows(acceptance.get("warnings")) if not row["passed"]]
+    return {
+        "accepted": bool(acceptance.get("accepted", False)),
+        "evidence_tier": str(acceptance.get("evidence_tier", "")),
+        "distribution_gates_enforced": bool(
+            acceptance.get("distribution_gates_enforced", False)),
+        "rows": gates,
+        "warnings": warnings,
+        "failed": [r["gate"] for r in gates if not r["passed"]]
+                  + list(acceptance.get("failures", [])),
+    }
 
 
 # --------------------------------------------------------------------------- #

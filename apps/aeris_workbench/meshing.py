@@ -24,7 +24,7 @@ import sys
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 import numpy as np
 
@@ -239,6 +239,20 @@ def run_gmsh(surface: Any, settings: GmshSettings, output_dir: Path,
 
 AUDIT_HEADLINE = (
     "surface", "volume", "prisms", "quality", "regional", "source_geometry", "labels")
+
+
+def su2_mesh_path(report: Mapping[str, Any]) -> Path:
+    """The .su2 file a build report points at.
+
+    `mesh_msh` is a plain string but `mesh_su2` is a dict carrying the path
+    alongside its digest and marker counts, so the two cannot be read the same
+    way - which is exactly the mistake that reached the solver as
+    "argument should be a str or an os.PathLike object ... not 'dict'".
+    """
+    entry = report.get("mesh_su2")
+    if isinstance(entry, dict):
+        return Path(str(entry["path"]))
+    return Path(str(entry))
 
 
 def audit_gmsh(surface: Any, mesh_dir: Path, settings: GmshSettings,

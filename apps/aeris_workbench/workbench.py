@@ -503,9 +503,12 @@ class Workbench:
                     self.surface, self.gmsh_settings, self.workspace / "mesh",
                     refine=self.refine, log=self.job.log)
                 self.mesh_report = report
+                # mesh_su2 is a dict carrying the path with its digest and
+                # marker counts, while mesh_msh is a bare string; reading them
+                # the same way handed a dict to the solver.
                 self.mesh_paths = {
-                    "msh": report.get("mesh_msh", ""),
-                    "su2": report.get("mesh_su2", ""),
+                    "msh": str(report.get("mesh_msh", "")),
+                    "su2": str(meshing.su2_mesh_path(report)),
                 }
                 path = Path(self.mesh_paths["msh"])
             else:

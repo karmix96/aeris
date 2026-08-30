@@ -18,6 +18,8 @@ Updated: 2026-08-30
   tests pass; original verdict retention is required on policy changes.
 - Execution terminal-state validator: **PASS**; incomplete records are rejected
   and governed blocked records validate; eleven tests pass.
+- Full safe audit sweep: **PASS/CONDITIONAL as designed**; geometry and mission
+  remain conditional, while schemas, policy, half-domain, and holdout lock pass.
 - Holdout `round_c_lhs10_seed42`: **locked**; contents not read.
 - Heavy mesh/CFD/canary work: **BLOCKED**.
 

@@ -83,13 +83,19 @@ def audit_contract(dry: bool) -> int:
     dirs = ["schemas", "tests", "reviews", "reports", "paper", "studies"]
     missing += [d for d in dirs if not (ROOT / d).is_dir()]
     policy = load_yaml(ROOT / "POLICY.yaml") if not missing else {}
+    mission = REPO / "AERIS_MESH_STUDY/00_governance/operating_points.yaml"
+    mission_authority_present = mission.exists() and "mission_config_found: true" in mission.read_text(encoding="utf-8")
     checks = {"required_paths": not missing,
               "deletion_policy": policy.get("deletion_policy") == "explicit_human_approval_only",
               "heavy_work_blocked": policy.get("heavy_work", {}).get("blocked", True),
               "holdout_locked": policy.get("holdout", {}).get("locked", True)}
     ok = not missing and all(checks.values())
     status = "DRY_RUN" if dry and ok else ("PASS" if ok else "FAIL")
-    return result("audit-contract", status, details={"missing": missing, "checks": checks}, dry_run=dry)
+    if ok and not mission_authority_present:
+        status = "DRY_RUN" if dry else "CONDITIONAL"
+    return result("audit-contract", status, details={"missing": missing, "checks": checks,
+                  "mission_authority_present": mission_authority_present,
+                  "mission_gate": "OPEN_REQUIRED" if not mission_authority_present else "PASS"}, dry_run=dry)
 
 
 def audit_geometry(dry: bool) -> int:
@@ -99,6 +105,8 @@ def audit_geometry(dry: bool) -> int:
                "phase1_manifest": str(phase), "phase1_exists": phase.exists()}
     ok = phase.exists() and snap.exists()
     status = "DRY_RUN" if dry and ok else ("PASS" if ok else "FAIL")
+    if ok and phase.exists() and "not_frozen" in phase.read_text(encoding="utf-8"):
+        status = "DRY_RUN" if dry else "CONDITIONAL"
     return result("audit-geometry-space", status, details=details, dry_run=dry)
 
 

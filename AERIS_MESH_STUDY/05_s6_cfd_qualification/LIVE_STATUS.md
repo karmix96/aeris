@@ -13,6 +13,7 @@ Updated: 2026-08-30
 - M1 geometry semantic audit: **machine-green**; 20 live variables match 20
   snapshot variables with no bound differences.
 - Half-domain eligibility audit: **PASS**; six qualification tests pass.
+- Versioned execution/verdict schemas: **PASS**; eight qualification tests pass.
 - Holdout `round_c_lhs10_seed42`: **locked**; contents not read.
 - Heavy mesh/CFD/canary work: **BLOCKED**.
 
@@ -24,6 +25,7 @@ Updated: 2026-08-30
 - `b281936` — parser-based geometry semantic audit
 - `bd39f9f` — unresolved mission-authority documentation
 - `5670b46` — half-domain eligibility gate
+- `031db63` — versioned execution and verdict schemas
 
 ## Remaining gates before any canary
 

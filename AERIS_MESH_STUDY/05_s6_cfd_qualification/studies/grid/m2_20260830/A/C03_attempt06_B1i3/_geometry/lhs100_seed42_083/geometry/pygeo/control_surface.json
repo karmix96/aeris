@@ -1,0 +1,22 @@
+{
+  "delta_a_diff_deg": 0.0,
+  "delta_e_sym_deg": 0.0,
+  "enabled": true,
+  "end_frac": 0.906753383333486,
+  "family": "trailing_edge",
+  "geometry_id": "aeris_pygeo_bwb_cd5d52e956e8d49cfdc5",
+  "hinge_point": 0.7183242361674487,
+  "left_deflection_deg": 0.0,
+  "mixing": {
+    "left": "delta_e_sym_deg - delta_a_diff_deg",
+    "right": "delta_e_sym_deg + delta_a_diff_deg"
+  },
+  "name": "elevon",
+  "native_pygeo_geometry_state": "neutral",
+  "physical_deflected_cad_enabled": false,
+  "right_deflection_deg": 0.0,
+  "schema": "aeris.pygeo.control_surface.v1",
+  "sign_convention": "positive is trailing-edge down",
+  "start_frac": 0.5937505889673017,
+  "symmetric": true
+}

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Governed S6 qualification entry point.
 
-This deliberately starts as a safe, audit-first orchestrator.  Heavy commands
-write a blocked execution record until the M0--M2 gates authorize them.
+This is a safe, audit-first orchestrator. Heavy commands write a blocked
+execution record until every prerequisite gate explicitly authorizes them.
 """
 from __future__ import annotations
 
@@ -253,6 +253,55 @@ def cfd_contract_audit(dry: bool) -> int:
     return result("audit-cfd-contract", status, details=details, dry_run=dry)
 
 
+def grid_screen(dry: bool) -> int:
+    levels = [
+        ("C01", 17, 43, 61, 3192),
+        ("C02", 23, 57, 73, 5960),
+        ("C03", 29, 75, 97, 10064),
+    ]
+    rows = []
+    for name, ni, nj, nk, surface_quads in levels:
+        rows.append({"id": name, "points": [ni, nj, nk], "surface_quads": surface_quads,
+                     "hex_cells": surface_quads * (nk - 1)})
+    ratios = [(rows[i + 1]["hex_cells"] / rows[i]["hex_cells"]) ** (1 / 3) for i in range(2)]
+    finest_cells = rows[-1]["hex_cells"]
+    for row in rows:
+        row["forecast_peak_gib"] = 9.35 * row["hex_cells"] / finest_cells
+    meminfo = {}
+    for line in Path("/proc/meminfo").read_text().splitlines():
+        key, value = line.split(":", 1)
+        meminfo[key] = int(value.strip().split()[0]) * 1024
+    limit_gib = meminfo["MemTotal"] / 2**30
+    available_gib = meminfo["MemAvailable"] / 2**30
+    free_disk_gib = os.statvfs(REPO).f_bavail * os.statvfs(REPO).f_frsize / 2**30
+    forecast = rows[-1]["forecast_peak_gib"]
+    terminal_path = ROOT / "reports/m2_grid_screen_terminal_report.json"
+    terminal = json.loads(terminal_path.read_text(encoding="utf-8")) if terminal_path.exists() else None
+    terminal_no_go = bool(terminal and terminal.get("status") == "NO_GO_VOLUME_INVALID_CANARY_FORBIDDEN")
+    checks = {"ratios_in_band": all(1.25 <= r <= 1.35 for r in ratios),
+              "forecast_le_75pct_limit": forecast <= 0.75 * limit_gib,
+              "forecast_plus_2_le_available": forecast + 2 <= available_gib,
+              "free_disk_ge_29_gib": free_disk_gib >= 29.0,
+              "written_cgns_A_B_C_E": False,
+              "nominal_A_written": terminal_no_go,
+              "nominal_finest_zero_inversions": False}
+    mathematical_ok = all(value for key, value in checks.items()
+                          if key not in {"written_cgns_A_B_C_E", "nominal_A_written",
+                                         "nominal_finest_zero_inversions"})
+    if terminal_no_go:
+        status = "NO_GO_VOLUME_INVALID_CANARY_FORBIDDEN"
+        next_action = "versioned tip/collar topology redesign; CFD canary remains forbidden"
+    else:
+        status = "DRY_RUN" if dry and mathematical_ok else ("CONDITIONAL" if mathematical_ok else "FAIL")
+        next_action = "written CGNS screen on A/B/C/E"
+    return result("screen-grid-family", status, details={"levels": rows, "effective_ratios": ratios,
+                  "resource": {"wsl_limit_gib": limit_gib, "available_gib": available_gib,
+                               "free_disk_gib": free_disk_gib}, "checks": checks,
+                  "terminal_report": str(terminal_path) if terminal_no_go else None,
+                  "terminal_report_sha256": sha256(terminal_path) if terminal_no_go else None,
+                  "next": next_action}, dry_run=dry)
+
+
 def validate_execution(path_arg: str | None, dry: bool) -> int:
     path = Path(path_arg) if path_arg else ROOT / "schemas/execution.schema.json"
     try:
@@ -324,13 +373,15 @@ def dispatch(command: str, dry: bool, execution_arg: str | None = None, policy_a
     if command == "audit-policy": return policy_audit(dry)
     if command == "audit-moment-reference": return moment_audit(dry)
     if command == "audit-cfd-contract": return cfd_contract_audit(dry)
+    if command == "screen-grid-family": return grid_screen(dry)
     if command == "validate-execution": return validate_execution(execution_arg, dry)
     if command == "classify": return classify_execution(execution_arg, policy_arg, dry)
     if command in HEAVY:
         return result(command, "DRY_RUN" if dry else "BLOCKED",
-                      details={"reason": "M0-M2 gates and measured campaign forecast incomplete"}, dry_run=dry)
+                      details={"reason": "M2 terminal NO-GO: nominal A has inverted volume cells"},
+                      dry_run=dry)
     if command in {"inventory-host", "propose-wsl-config", "verify-host-policy", "write-plan",
-                   "test-identity", "check-resources", "screen-grid-family", "screen-tip-smoothing",
+                   "test-identity", "check-resources", "screen-tip-smoothing",
                    "freeze-nuisance-policy", "freeze-production", "render-report",
                    "prepare-independent-review", "collect-paper-package", "audit-all", "unlock-holdout"}:
         return result(command, "DRY_RUN" if dry else "CONDITIONAL",

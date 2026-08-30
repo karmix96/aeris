@@ -1,0 +1,29 @@
+schema_version: aeris.s6.grid_family_candidate.v1
+status: rejected_volume_invalid
+fixed_block_graph_count: 13
+solver_multigrid: single_grid_due_to_topology
+levels:
+  - id: C01
+    points: [17, 43, 61]
+    points_minus_one_factorization: ["16=2^4", "42=2*3*7", "60=2^2*3*5"]
+  - id: C02
+    points: [23, 57, 73]
+    points_minus_one_factorization: ["22=2*11", "56=2^3*7", "72=2^3*3^2"]
+  - id: C03_tentative_finest
+    points: [29, 75, 97]
+    points_minus_one_factorization: ["28=2^2*7", "74=2*37", "96=2^5*3"]
+effective_ratio_target: {min: 1.25, max: 1.35}
+memory_model:
+  finest_forecast_gib: 9.35
+  source: master-guide current measured/forecast model
+  conservative_rule: linear_with_exact_cell_count
+written_cgns_screen_required_geometries: [A, B, C, E]
+observed_terminal_result:
+  report: reports/m2_grid_screen_terminal_report.json
+  geometry_A_written: true
+  geometry_A_zero_inverted_cells: false
+  best_C03_inverted_cells: 6
+  best_C03_min_scaled_quality: -0.31140982102939085
+  geometries_B_C_E_not_run: prerequisite_A_failed
+  cfd_canary: forbidden
+next_authorized_work: versioned_tip_collar_topology_redesign

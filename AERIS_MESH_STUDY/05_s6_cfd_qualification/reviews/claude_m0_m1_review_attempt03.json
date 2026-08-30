@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "tool": "claude-code",
+  "version": "2.1.241",
+  "model": "opus",
+  "effort": "high",
+  "commit_reviewed": "752852c50960e3e5ea33d8e1d31fcebec03c78d0",
+  "permission_mode": "plan_read_only",
+  "scope": "qualification run/policy/schema/tests only",
+  "holdout_contents_accessed": false,
+  "status": "request_timed_out",
+  "go_decision": "NOT_OBTAINED"
+}

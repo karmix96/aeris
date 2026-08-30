@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "milestone": "M2",
+  "status": "NO_GO_VOLUME_INVALID_CANARY_FORBIDDEN",
+  "geometry_A": "lhs100_seed42_083",
+  "selection_basis": "normalized design-space medoid",
+  "family": [
+    {"id": "C01", "points": [17, 43, 61], "surface_quads": 3192, "hex_cells": 191520},
+    {"id": "C02", "points": [23, 57, 73], "surface_quads": 5960, "hex_cells": 429120},
+    {"id": "C03", "points": [29, 75, 97], "surface_quads": 10064, "hex_cells": 966144}
+  ],
+  "effective_ratios": [1.3085436301822166, 1.3106529267937872],
+  "resource_screen": {
+    "forecast_peak_gib": 9.35,
+    "wsl_limit_gib": 12.6647,
+    "available_gib_before_screen": 11.7834,
+    "forecast_le_75_percent_limit": true,
+    "forecast_plus_2_le_available": true,
+    "free_disk_gib": 942.738,
+    "measured_mesh_process_peak_rss_mib": 217.715
+  },
+  "written_results": {
+    "C01_B0_epsE1_5": {"inverted_cells": 6, "min_volume": -3.8944199959384583e-11, "min_scaled_quality": -0.8549371733545271},
+    "C03_B0_epsE1_5": {"inverted_cells": 18, "min_volume": -1.8940122593912546e-11, "min_scaled_quality": -0.6503224202842713},
+    "C03_B2_epsE2": {"march_nonpositive_layers": 3},
+    "C03_B2_epsE3": {"march_nonpositive_layers": 2},
+    "C03_B1_tip_surface_smoothing": {"iterations_tested": [1, 3, 20], "selected": false, "reason": "did not remove inversions; 20 iterations folded the surface"},
+    "C03_B3_epsE3_nConstantStart10": {
+      "inverted_cells": 6,
+      "min_volume": -3.670179816350609e-12,
+      "min_scaled_quality": -0.31140982102939085,
+      "cgns_bytes": 25473024,
+      "cgns_sha256": "71ef2971b26283d9248177cbca8b6ed1e2bf73bd248dfa775aa606a987bbc4b9",
+      "independent_audit_sha256": "0d48c94bdf154e8943cf3c23b9f53679d18968eaab4094fba818ea7dd9bb1a3c"
+    }
+  },
+  "independent_reader": "cgnsUtilities.readGrid ADF route plus direct signed-volume/scaled-Jacobian audit",
+  "conclusion": "The coupled family meets refinement and desktop resource gates but fails the mathematical zero-inversion gate on nominal geometry A. Screening B/C/E and the CFD canary are forbidden because the nominal finest mesh is invalid.",
+  "next_authorized_work": "topology or tip-collar redesign followed by a new versioned M2 family; do not weaken the zero-volume gate"
+}

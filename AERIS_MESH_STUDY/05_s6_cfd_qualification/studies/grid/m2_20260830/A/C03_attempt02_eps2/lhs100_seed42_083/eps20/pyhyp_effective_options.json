@@ -1,0 +1,112 @@
+{
+  "generated_utc": "2026-08-30T13:02:49.522279+00:00",
+  "input_sha256": {
+    "surface": "8c6b2f28646a5712e49e29c5e98dcdfe4227b1e554f2a0efe3b720f4f246c2e4"
+  },
+  "options": {
+    "BC": {
+      "source": "aeris-default",
+      "value": {}
+    },
+    "N": {
+      "source": "level:candidate_c03",
+      "value": 97
+    },
+    "autoConnect": {
+      "source": "aeris-default",
+      "value": true
+    },
+    "cMax": {
+      "source": "aeris-default",
+      "value": 0.7
+    },
+    "coarsen": {
+      "source": "level:candidate_c03",
+      "value": 1
+    },
+    "epsE": {
+      "source": "user",
+      "value": 2.0
+    },
+    "epsI": {
+      "source": "user",
+      "value": 4.0
+    },
+    "families": {
+      "source": "aeris-default",
+      "value": "wall"
+    },
+    "fileType": {
+      "source": "aeris-default",
+      "value": "PLOT3D"
+    },
+    "inputFile": {
+      "source": "derived",
+      "value": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C03_attempt02_eps2/lhs100_seed42_083/eps20/surface.fmt"
+    },
+    "kspMaxIts": {
+      "source": "aeris-default",
+      "value": 1500
+    },
+    "kspRelTol": {
+      "source": "aeris-default",
+      "value": 1e-08
+    },
+    "kspSubspaceSize": {
+      "source": "aeris-default",
+      "value": 50
+    },
+    "marchDist": {
+      "source": "derived",
+      "value": 32.854952219266465
+    },
+    "nConstantStart": {
+      "source": "aeris-default",
+      "value": 5
+    },
+    "outerFaceBC": {
+      "source": "aeris-default",
+      "value": "farfield"
+    },
+    "outputFile": {
+      "source": "derived",
+      "value": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C03_attempt02_eps2/lhs100_seed42_083/eps20/wing_vol.cgns"
+    },
+    "pGridRatio": {
+      "source": "aeris-default",
+      "value": -1.0
+    },
+    "ps0": {
+      "source": "aeris-default",
+      "value": -1.0
+    },
+    "s0": {
+      "source": "user",
+      "value": 4.731113119574371e-06
+    },
+    "theta": {
+      "source": "aeris-default",
+      "value": 3.0
+    },
+    "unattachedEdgesAreSymmetry": {
+      "source": "aeris-default",
+      "value": true
+    },
+    "volBlend": {
+      "source": "aeris-default",
+      "value": 0.004
+    },
+    "volCoef": {
+      "source": "aeris-default",
+      "value": 0.5
+    },
+    "volSmoothIter": {
+      "source": "aeris-default",
+      "value": 800
+    }
+  },
+  "overridden_curated_keys": [],
+  "schema": "aeris.cfd.effective_options.v1",
+  "tool": "pyhyp",
+  "warnings": []
+}

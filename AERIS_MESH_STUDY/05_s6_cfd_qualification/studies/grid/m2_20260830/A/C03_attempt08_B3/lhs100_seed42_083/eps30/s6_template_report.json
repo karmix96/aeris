@@ -1,0 +1,1283 @@
+{
+  "accepted": false,
+  "cgns": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C03_attempt08_B3/lhs100_seed42_083/eps30/wing_vol.cgns",
+  "direct_quality": {
+    "block_count": 13,
+    "cells_below_0_10": 31,
+    "cells_below_0_15": 104,
+    "fraction_at_or_above_0_30": 0.9980582604663487,
+    "generation_completed": true,
+    "independent_reader": "cgnsUtilities.readGrid ADF route",
+    "inverted_cells": 6,
+    "low_quality_blocks": [
+      "domain.00007",
+      "domain.00011",
+      "domain.00012"
+    ],
+    "mean_scaled_quality": 0.958858362796627,
+    "min_scaled_quality": -0.31140982102939085,
+    "min_volume": -3.670179816350609e-12,
+    "orientation": 1.0,
+    "per_block": {
+      "domain.00001": {
+        "cells": 198912,
+        "cells_below_0_10": 0,
+        "cells_below_0_15": 52,
+        "inverted_cells": 0,
+        "low_quality_cells": 0,
+        "mean_scaled_quality": 0.9539359239528806,
+        "min_scaled_quality": 0.1300493226054758,
+        "min_volume": 2.7943466392594327e-11,
+        "shape": [
+          97,
+          75,
+          29
+        ],
+        "worst_cell": {
+          "block": "domain.00001",
+          "cell_center_xyz_m": [
+            0.7991608119365159,
+            0.07675921661217401,
+            0.009230973972736263
+          ],
+          "cell_index_kji": [
+            0,
+            68,
+            0
+          ],
+          "edge_length_ratio": 2711.6021473903934,
+          "max_edge_length_m": 0.020704181760297206,
+          "min_edge_length_m": 7.63540543004165e-06,
+          "min_scaled_quality": 0.1300493226054758,
+          "wall_distance_m": 0.0,
+          "wall_layer_index": 0
+        }
+      },
+      "domain.00002": {
+        "cells": 198912,
+        "cells_below_0_10": 0,
+        "cells_below_0_15": 0,
+        "inverted_cells": 0,
+        "low_quality_cells": 0,
+        "mean_scaled_quality": 0.9699490690265182,
+        "min_scaled_quality": 0.48626732972942505,
+        "min_volume": 2.7524265609256286e-11,
+        "shape": [
+          97,
+          75,
+          29
+        ],
+        "worst_cell": {
+          "block": "domain.00002",
+          "cell_center_xyz_m": [
+            0.4865013086696547,
+            0.9763006182619194,
+            0.06383563203406707
+          ],
+          "cell_index_kji": [
+            1,
+            0,
+            0
+          ],
+          "edge_length_ratio": 120.64224916088767,
+          "max_edge_length_m": 0.002715205043097663,
+          "min_edge_length_m": 2.2506253505574854e-05,
+          "min_scaled_quality": 0.48626732972942505,
+          "wall_distance_m": 2.894541769573634e-05,
+          "wall_layer_index": 1
+        }
+      },
+      "domain.00003": {
+        "cells": 28416,
+        "cells_below_0_10": 0,
+        "cells_below_0_15": 0,
+        "inverted_cells": 0,
+        "low_quality_cells": 0,
+        "mean_scaled_quality": 0.9384841870501195,
+        "min_scaled_quality": 0.3201448954278733,
+        "min_volume": 2.5864845832932413e-11,
+        "shape": [
+          97,
+          75,
+          5
+        ],
+        "worst_cell": {
+          "block": "domain.00003",
+          "cell_center_xyz_m": [
+            0.4164517797414271,
+            0.9783295924735045,
+            0.03617135623628373
+          ],
+          "cell_index_kji": [
+            1,
+            0,
+            3
+          ],
+          "edge_length_ratio": 41.67599290000123,
+          "max_edge_length_m": 0.001713880732059649,
+          "min_edge_length_m": 4.112393281599773e-05,
+          "min_scaled_quality": 0.3201448954278733,
+          "wall_distance_m": 6.0841366214797015e-05,
+          "wall_layer_index": 1
+        }
+      },
+      "domain.00004": {
+        "cells": 198912,
+        "cells_below_0_10": 0,
+        "cells_below_0_15": 0,
+        "inverted_cells": 0,
+        "low_quality_cells": 0,
+        "mean_scaled_quality": 0.9624460077946616,
+        "min_scaled_quality": 0.37038305645728126,
+        "min_volume": 2.818812293950328e-11,
+        "shape": [
+          97,
+          75,
+          29
+        ],
+        "worst_cell": {
+          "block": "domain.00004",
+          "cell_center_xyz_m": [
+            0.4185329165200362,
+            0.978363485498098,
+            0.03559571967498673
+          ],
+          "cell_index_kji": [
+            1,
+            0,
+            0
+          ],
+          "edge_length_ratio": 68.45377965521246,
+          "max_edge_length_m": 0.0026330872136188207,
+          "min_edge_length_m": 3.846518376167301e-05,
+          "min_scaled_quality": 0.37038305645728126,
+          "wall_distance_m": 5.586879878292385e-05,
+          "wall_layer_index": 1
+        }
+      },
+      "domain.00005": {
+        "cells": 198912,
+        "cells_below_0_10": 0,
+        "cells_below_0_15": 3,
+        "inverted_cells": 0,
+        "low_quality_cells": 0,
+        "mean_scaled_quality": 0.9546821421479788,
+        "min_scaled_quality": 0.13473699981835488,
+        "min_volume": 2.93979610896391e-11,
+        "shape": [
+          97,
+          75,
+          29
+        ],
+        "worst_cell": {
+          "block": "domain.00005",
+          "cell_center_xyz_m": [
+            0.5642003980975785,
+            0.9698065163845124,
+            0.05387460128932997
+          ],
+          "cell_index_kji": [
+            0,
+            3,
+            27
+          ],
+          "edge_length_ratio": 131.32885601572755,
+          "max_edge_length_m": 0.005622624292089163,
+          "min_edge_length_m": 4.2813319651667526e-05,
+          "min_scaled_quality": 0.13473699981835488,
+          "wall_distance_m": 0.0,
+          "wall_layer_index": 0
+        }
+      },
+      "domain.00006": {
+        "cells": 28416,
+        "cells_below_0_10": 0,
+        "cells_below_0_15": 0,
+        "inverted_cells": 0,
+        "low_quality_cells": 0,
+        "mean_scaled_quality": 0.9659096605938983,
+        "min_scaled_quality": 0.6628758717831067,
+        "min_volume": 1.67349730495428e-11,
+        "shape": [
+          97,
+          75,
+          5
+        ],
+        "worst_cell": {
+          "block": "domain.00006",
+          "cell_center_xyz_m": [
+            0.8697848260960424,
+            0.008399178401551575,
+            0.0032931818453145753
+          ],
+          "cell_index_kji": [
+            47,
+            73,
+            2
+          ],
+          "edge_length_ratio": 40.45563733575072,
+          "max_edge_length_m": 0.01904146614328095,
+          "min_edge_length_m": 0.0004706752234614772,
+          "min_scaled_quality": 0.6628758717831067,
+          "wall_distance_m": 0.0071925020429741615,
+          "wall_layer_index": 47
+        }
+      },
+      "domain.00007": {
+        "cells": 21504,
+        "cells_below_0_10": 7,
+        "cells_below_0_15": 9,
+        "inverted_cells": 0,
+        "low_quality_cells": 2,
+        "mean_scaled_quality": 0.9414088710144272,
+        "min_scaled_quality": -0.06688685226740003,
+        "min_volume": 1.146295757053501e-11,
+        "shape": [
+          97,
+          9,
+          29
+        ],
+        "worst_cell": {
+          "block": "domain.00007",
+          "cell_center_xyz_m": [
+            0.5628922267352063,
+            0.9773293814419739,
+            0.05588392009037532
+          ],
+          "cell_index_kji": [
+            3,
+            6,
+            0
+          ],
+          "edge_length_ratio": 23.007743992310633,
+          "max_edge_length_m": 0.0029891409764193945,
+          "min_edge_length_m": 0.00012991890806062466,
+          "min_scaled_quality": -0.06688685226740003,
+          "wall_distance_m": 0.0006614946085714065,
+          "wall_layer_index": 3
+        }
+      },
+      "domain.00008": {
+        "cells": 21504,
+        "cells_below_0_10": 0,
+        "cells_below_0_15": 0,
+        "inverted_cells": 0,
+        "low_quality_cells": 0,
+        "mean_scaled_quality": 0.9573140773590206,
+        "min_scaled_quality": 0.5980135644293055,
+        "min_volume": 5.2115629950384745e-11,
+        "shape": [
+          97,
+          9,
+          29
+        ],
+        "worst_cell": {
+          "block": "domain.00008",
+          "cell_center_xyz_m": [
+            0.4201450701600457,
+            0.9808111032727452,
+            0.04109040620384177
+          ],
+          "cell_index_kji": [
+            18,
+            0,
+            27
+          ],
+          "edge_length_ratio": 9.10735531183831,
+          "max_edge_length_m": 0.0024938793424325863,
+          "min_edge_length_m": 0.0002738313436822747,
+          "min_scaled_quality": 0.5980135644293055,
+          "wall_distance_m": 0.0024905976009297116,
+          "wall_layer_index": 18
+        }
+      },
+      "domain.00009": {
+        "cells": 3072,
+        "cells_below_0_10": 0,
+        "cells_below_0_15": 0,
+        "inverted_cells": 0,
+        "low_quality_cells": 0,
+        "mean_scaled_quality": 0.933461270552353,
+        "min_scaled_quality": 0.6750931133077046,
+        "min_volume": 1.9936849136765297e-11,
+        "shape": [
+          97,
+          9,
+          5
+        ],
+        "worst_cell": {
+          "block": "domain.00009",
+          "cell_center_xyz_m": [
+            0.418571465283888,
+            0.9786400737895649,
+            0.03796954566376455
+          ],
+          "cell_index_kji": [
+            1,
+            0,
+            3
+          ],
+          "edge_length_ratio": 5.802973632208735,
+          "max_edge_length_m": 0.000635073898464202,
+          "min_edge_length_m": 0.00010943939068399306,
+          "min_scaled_quality": 0.6750931133077046,
+          "wall_distance_m": 0.00012176547114016538,
+          "wall_layer_index": 1
+        }
+      },
+      "domain.00010": {
+        "cells": 21504,
+        "cells_below_0_10": 0,
+        "cells_below_0_15": 0,
+        "inverted_cells": 0,
+        "low_quality_cells": 0,
+        "mean_scaled_quality": 0.95227624669167,
+        "min_scaled_quality": 0.5620209715267712,
+        "min_volume": 5.512608822045416e-11,
+        "shape": [
+          97,
+          9,
+          29
+        ],
+        "worst_cell": {
+          "block": "domain.00010",
+          "cell_center_xyz_m": [
+            0.4205065815909849,
+            0.9810205407552494,
+            0.03814521108685247
+          ],
+          "cell_index_kji": [
+            18,
+            0,
+            0
+          ],
+          "edge_length_ratio": 8.363767778806903,
+          "max_edge_length_m": 0.00233064830505889,
+          "min_edge_length_m": 0.00027866009275921797,
+          "min_scaled_quality": 0.5620209715267712,
+          "wall_distance_m": 0.0024933157297241043,
+          "wall_layer_index": 18
+        }
+      },
+      "domain.00011": {
+        "cells": 21504,
+        "cells_below_0_10": 4,
+        "cells_below_0_15": 10,
+        "inverted_cells": 0,
+        "low_quality_cells": 2,
+        "mean_scaled_quality": 0.9413966644184846,
+        "min_scaled_quality": -0.019487013911950925,
+        "min_volume": 1.1331281062451568e-11,
+        "shape": [
+          97,
+          9,
+          29
+        ],
+        "worst_cell": {
+          "block": "domain.00011",
+          "cell_center_xyz_m": [
+            0.5628021328768555,
+            0.97751500244362,
+            0.053989461923833915
+          ],
+          "cell_index_kji": [
+            3,
+            6,
+            27
+          ],
+          "edge_length_ratio": 27.28665545969967,
+          "max_edge_length_m": 0.002902151031204962,
+          "min_edge_length_m": 0.0001063578874842767,
+          "min_scaled_quality": -0.019487013911950925,
+          "wall_distance_m": 0.0005207462898291456,
+          "wall_layer_index": 3
+        }
+      },
+      "domain.00012": {
+        "cells": 3072,
+        "cells_below_0_10": 20,
+        "cells_below_0_15": 30,
+        "inverted_cells": 6,
+        "low_quality_cells": 15,
+        "mean_scaled_quality": 0.8984720300104089,
+        "min_scaled_quality": -0.31140982102939085,
+        "min_volume": -3.670179816350609e-12,
+        "shape": [
+          97,
+          9,
+          5
+        ],
+        "worst_cell": {
+          "block": "domain.00012",
+          "cell_center_xyz_m": [
+            0.5646766660582503,
+            0.9773173563657094,
+            0.05485144454265861
+          ],
+          "cell_index_kji": [
+            3,
+            6,
+            2
+          ],
+          "edge_length_ratio": 2.597401002488142,
+          "max_edge_length_m": 0.0005676756775146158,
+          "min_edge_length_m": 0.00021855527004525647,
+          "min_scaled_quality": -0.31140982102939085,
+          "wall_distance_m": 0.0008996337136170067,
+          "wall_layer_index": 3
+        }
+      },
+      "domain.00013": {
+        "cells": 21504,
+        "cells_below_0_10": 0,
+        "cells_below_0_15": 0,
+        "inverted_cells": 0,
+        "low_quality_cells": 0,
+        "mean_scaled_quality": 0.9801438125259923,
+        "min_scaled_quality": 0.5322431231233002,
+        "min_volume": 4.1343617040850234e-11,
+        "shape": [
+          97,
+          5,
+          57
+        ],
+        "worst_cell": {
+          "block": "domain.00013",
+          "cell_center_xyz_m": [
+            0.5613270487072368,
+            0.9790717078285711,
+            0.05583238494242533
+          ],
+          "cell_index_kji": [
+            13,
+            0,
+            55
+          ],
+          "edge_length_ratio": 15.954837156458023,
+          "max_edge_length_m": 0.002790055179379767,
+          "min_edge_length_m": 0.00017487205616827241,
+          "min_scaled_quality": 0.5322431231233002,
+          "wall_distance_m": 0.0018357230808362568,
+          "wall_layer_index": 13
+        }
+      }
+    },
+    "route": "direct",
+    "schema": "aeris.mesh_study.direct_volume_qc.v1",
+    "source_cgns": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C03_attempt08_B3/lhs100_seed42_083/eps30/wing_vol.cgns",
+    "total_cells": 966144,
+    "worst_cell": {
+      "block": "domain.00012",
+      "cell_center_xyz_m": [
+        0.5646766660582503,
+        0.9773173563657094,
+        0.05485144454265861
+      ],
+      "cell_index_kji": [
+        3,
+        6,
+        2
+      ],
+      "edge_length_ratio": 2.597401002488142,
+      "max_edge_length_m": 0.0005676756775146158,
+      "min_edge_length_m": 0.00021855527004525647,
+      "min_scaled_quality": -0.31140982102939085,
+      "wall_distance_m": 0.0008996337136170067,
+      "wall_layer_index": 3
+    }
+  },
+  "geometry_id": "lhs100_seed42_083",
+  "independent_audit_route": "ADF_cgnsUtilities",
+  "march_result": {
+    "march_completed": true,
+    "march_metrics": {
+      "first_invalid_layer": 4,
+      "first_low_quality_layer": 3,
+      "layer_count": 96,
+      "low_quality_layers": 4,
+      "min_quality": -1.0,
+      "min_volume": -3.67e-12,
+      "passed": false,
+      "quality_warning": true,
+      "rows": [
+        {
+          "grid_level": 2,
+          "min_quality": 0.19863,
+          "min_volume": 4.76e-12,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 3,
+          "min_quality": -0.24779,
+          "min_volume": 1.25e-12,
+          "quality_ok": false,
+          "valid": false,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 4,
+          "min_quality": -1.0,
+          "min_volume": -3.08e-12,
+          "quality_ok": false,
+          "valid": false,
+          "volume_valid": false
+        },
+        {
+          "grid_level": 5,
+          "min_quality": -1.0,
+          "min_volume": -3.67e-12,
+          "quality_ok": false,
+          "valid": false,
+          "volume_valid": false
+        },
+        {
+          "grid_level": 6,
+          "min_quality": -1.0,
+          "min_volume": 8.46e-13,
+          "quality_ok": false,
+          "valid": false,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 7,
+          "min_quality": 0.19044,
+          "min_volume": 6.22e-12,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 8,
+          "min_quality": 0.25746,
+          "min_volume": 3.6e-12,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 9,
+          "min_quality": 0.30379,
+          "min_volume": 3.93e-12,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 10,
+          "min_quality": 0.31928,
+          "min_volume": 4.85e-12,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 11,
+          "min_quality": 0.32545,
+          "min_volume": 5.73e-12,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 12,
+          "min_quality": 0.32832,
+          "min_volume": 7.85e-12,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 13,
+          "min_quality": 0.33574,
+          "min_volume": 1.04e-11,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 14,
+          "min_quality": 0.34556,
+          "min_volume": 1.36e-11,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 15,
+          "min_quality": 0.35418,
+          "min_volume": 1.75e-11,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 16,
+          "min_quality": 0.35893,
+          "min_volume": 2.31e-11,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 17,
+          "min_quality": 0.36854,
+          "min_volume": 2.92e-11,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 18,
+          "min_quality": 0.3777,
+          "min_volume": 3.69e-11,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 19,
+          "min_quality": 0.38751,
+          "min_volume": 4.61e-11,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 20,
+          "min_quality": 0.39458,
+          "min_volume": 5.82e-11,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 21,
+          "min_quality": 0.39914,
+          "min_volume": 7.5e-11,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 22,
+          "min_quality": 0.4087,
+          "min_volume": 9.31e-11,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 23,
+          "min_quality": 0.41797,
+          "min_volume": 1.16e-10,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 24,
+          "min_quality": 0.42684,
+          "min_volume": 1.4e-10,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 25,
+          "min_quality": 0.43081,
+          "min_volume": 1.77e-10,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 26,
+          "min_quality": 0.44039,
+          "min_volume": 2.14e-10,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 27,
+          "min_quality": 0.44944,
+          "min_volume": 2.6e-10,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 28,
+          "min_quality": 0.45894,
+          "min_volume": 3.13e-10,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 29,
+          "min_quality": 0.46581,
+          "min_volume": 3.85e-10,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 30,
+          "min_quality": 0.46946,
+          "min_volume": 4.89e-10,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 31,
+          "min_quality": 0.47751,
+          "min_volume": 5.94e-10,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 32,
+          "min_quality": 0.48466,
+          "min_volume": 7.23e-10,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 33,
+          "min_quality": 0.48545,
+          "min_volume": 8.76e-10,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 34,
+          "min_quality": 0.47517,
+          "min_volume": 1.12e-09,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 35,
+          "min_quality": 0.46639,
+          "min_volume": 1.36e-09,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 36,
+          "min_quality": 0.45822,
+          "min_volume": 1.65e-09,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 37,
+          "min_quality": 0.45125,
+          "min_volume": 1.99e-09,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 38,
+          "min_quality": 0.44487,
+          "min_volume": 2.44e-09,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 39,
+          "min_quality": 0.43869,
+          "min_volume": 3.08e-09,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 40,
+          "min_quality": 0.43444,
+          "min_volume": 3.74e-09,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 41,
+          "min_quality": 0.43091,
+          "min_volume": 4.54e-09,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 42,
+          "min_quality": 0.42844,
+          "min_volume": 5.48e-09,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 43,
+          "min_quality": 0.42495,
+          "min_volume": 6.92e-09,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 44,
+          "min_quality": 0.42395,
+          "min_volume": 8.38e-09,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 45,
+          "min_quality": 0.42334,
+          "min_volume": 1.02e-08,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 46,
+          "min_quality": 0.42369,
+          "min_volume": 1.23e-08,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 47,
+          "min_quality": 0.42344,
+          "min_volume": 1.5e-08,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 48,
+          "min_quality": 0.42197,
+          "min_volume": 1.88e-08,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 49,
+          "min_quality": 0.42302,
+          "min_volume": 2.27e-08,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 50,
+          "min_quality": 0.42174,
+          "min_volume": 2.87e-08,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 51,
+          "min_quality": 0.41961,
+          "min_volume": 3.69e-08,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 52,
+          "min_quality": 0.41774,
+          "min_volume": 4.78e-08,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 53,
+          "min_quality": 0.41621,
+          "min_volume": 6.22e-08,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 54,
+          "min_quality": 0.4148,
+          "min_volume": 8.13e-08,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 55,
+          "min_quality": 0.41274,
+          "min_volume": 1.06e-07,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 56,
+          "min_quality": 0.41077,
+          "min_volume": 1.4e-07,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 57,
+          "min_quality": 0.40916,
+          "min_volume": 1.86e-07,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 58,
+          "min_quality": 0.40773,
+          "min_volume": 2.46e-07,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 59,
+          "min_quality": 0.40649,
+          "min_volume": 3.29e-07,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 60,
+          "min_quality": 0.4053,
+          "min_volume": 4.41e-07,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 61,
+          "min_quality": 0.40423,
+          "min_volume": 5.95e-07,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 62,
+          "min_quality": 0.40317,
+          "min_volume": 8.07e-07,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 63,
+          "min_quality": 0.40213,
+          "min_volume": 1.1e-06,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 64,
+          "min_quality": 0.4011,
+          "min_volume": 1.51e-06,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 65,
+          "min_quality": 0.4001,
+          "min_volume": 2.08e-06,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 66,
+          "min_quality": 0.39908,
+          "min_volume": 2.88e-06,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 67,
+          "min_quality": 0.39807,
+          "min_volume": 4.01e-06,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 68,
+          "min_quality": 0.39702,
+          "min_volume": 5.61e-06,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 69,
+          "min_quality": 0.39595,
+          "min_volume": 7.89e-06,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 70,
+          "min_quality": 0.3941,
+          "min_volume": 1.12e-05,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 71,
+          "min_quality": 0.39074,
+          "min_volume": 1.62e-05,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 72,
+          "min_quality": 0.38778,
+          "min_volume": 2.35e-05,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 73,
+          "min_quality": 0.3853,
+          "min_volume": 3.42e-05,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 74,
+          "min_quality": 0.38321,
+          "min_volume": 4.99e-05,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 75,
+          "min_quality": 0.38143,
+          "min_volume": 7.3e-05,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 76,
+          "min_quality": 0.37907,
+          "min_volume": 0.000108,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 77,
+          "min_quality": 0.37648,
+          "min_volume": 0.00016,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 78,
+          "min_quality": 0.37443,
+          "min_volume": 0.000238,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 79,
+          "min_quality": 0.37317,
+          "min_volume": 0.000355,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 80,
+          "min_quality": 0.37166,
+          "min_volume": 0.000532,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 81,
+          "min_quality": 0.36965,
+          "min_volume": 0.000795,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 82,
+          "min_quality": 0.3684,
+          "min_volume": 0.00119,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 83,
+          "min_quality": 0.36816,
+          "min_volume": 0.00177,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 84,
+          "min_quality": 0.36899,
+          "min_volume": 0.00264,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 85,
+          "min_quality": 0.37039,
+          "min_volume": 0.00395,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 86,
+          "min_quality": 0.37112,
+          "min_volume": 0.00591,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 87,
+          "min_quality": 0.36888,
+          "min_volume": 0.00885,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 88,
+          "min_quality": 0.36634,
+          "min_volume": 0.0133,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 89,
+          "min_quality": 0.36419,
+          "min_volume": 0.0201,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 90,
+          "min_quality": 0.36242,
+          "min_volume": 0.0305,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 91,
+          "min_quality": 0.36087,
+          "min_volume": 0.0464,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 92,
+          "min_quality": 0.35935,
+          "min_volume": 0.0709,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 93,
+          "min_quality": 0.35774,
+          "min_volume": 0.109,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 94,
+          "min_quality": 0.35604,
+          "min_volume": 0.167,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 95,
+          "min_quality": 0.35432,
+          "min_volume": 0.258,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 96,
+          "min_quality": 0.35266,
+          "min_volume": 0.398,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        },
+        {
+          "grid_level": 97,
+          "min_quality": 0.35084,
+          "min_volume": 0.619,
+          "quality_ok": true,
+          "valid": true,
+          "volume_valid": true
+        }
+      ]
+    },
+    "source": "parsed from run_stdout.log",
+    "status": "invalid",
+    "volume_audit": {
+      "inverted_cells": null,
+      "min_volume": -3.67e-12
+    }
+  },
+  "return_code": 0,
+  "strategy_id": "S6_BOUNDED_MESH_ATLAS",
+  "surface_npz": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C03_attempt08_B3/lhs100_seed42_083/eps30/surface_blocks.npz"
+}

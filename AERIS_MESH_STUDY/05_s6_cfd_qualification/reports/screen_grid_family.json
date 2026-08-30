@@ -1,0 +1,67 @@
+{
+  "command": "screen-grid-family",
+  "created_at": "2026-08-30T13:21:59.520256+00:00",
+  "details": {
+    "checks": {
+      "forecast_le_75pct_limit": true,
+      "forecast_plus_2_le_available": true,
+      "free_disk_ge_29_gib": true,
+      "nominal_A_written": true,
+      "nominal_finest_zero_inversions": false,
+      "ratios_in_band": true,
+      "written_cgns_A_B_C_E": false
+    },
+    "effective_ratios": [
+      1.3085436301822166,
+      1.3106529267937872
+    ],
+    "levels": [
+      {
+        "forecast_peak_gib": 1.853462837837838,
+        "hex_cells": 191520,
+        "id": "C01",
+        "points": [
+          17,
+          43,
+          61
+        ],
+        "surface_quads": 3192
+      },
+      {
+        "forecast_peak_gib": 4.152871621621622,
+        "hex_cells": 429120,
+        "id": "C02",
+        "points": [
+          23,
+          57,
+          73
+        ],
+        "surface_quads": 5960
+      },
+      {
+        "forecast_peak_gib": 9.35,
+        "hex_cells": 966144,
+        "id": "C03",
+        "points": [
+          29,
+          75,
+          97
+        ],
+        "surface_quads": 10064
+      }
+    ],
+    "next": "versioned tip/collar topology redesign; CFD canary remains forbidden",
+    "resource": {
+      "available_gib": 11.68096923828125,
+      "free_disk_gib": 942.5263633728027,
+      "wsl_limit_gib": 12.664676666259766
+    },
+    "terminal_report": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_grid_screen_terminal_report.json",
+    "terminal_report_sha256": "5feb007690e42322ce207fba54c52574bb1be464bec1b4860ef24229ef8f8868"
+  },
+  "dry_run": false,
+  "git_head": "752852c50960e3e5ea33d8e1d31fcebec03c78d0",
+  "repo": "/home/mike_kara/aeris",
+  "schema_version": 1,
+  "status": "NO_GO_VOLUME_INVALID_CANARY_FORBIDDEN"
+}

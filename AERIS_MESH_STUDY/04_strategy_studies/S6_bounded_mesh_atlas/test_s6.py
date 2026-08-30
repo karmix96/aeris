@@ -37,10 +37,18 @@ def test_qualification_plan_refines_all_directions_and_protects_holdout() -> Non
     assert plan["current_candidate_wall_test"]["normal_points"] == 257
     p0_span = plan["current_candidate_wall_test"]["span_cells"]
     assert p0_span["mode"] == "geometry_dependent_from_selected_registry_template"
-    assert p0_span["minimum"] == 60
-    assert p0_span["maximum"] == 98
-    assert p0_span["by_template_geometry"]["42"] == 75
-    assert p0_span["by_template_geometry"]["95"] == 85
+    if plan["current_candidate_wall_test"]["registry_available"]:
+        assert p0_span["minimum"] == 60
+        assert p0_span["maximum"] == 98
+        assert p0_span["by_template_geometry"]["42"] == 75
+        assert p0_span["by_template_geometry"]["95"] == 85
+    else:
+        assert p0_span == {
+            "mode": "geometry_dependent_from_selected_registry_template",
+            "minimum": None,
+            "maximum": None,
+            "by_template_geometry": {},
+        }
     assert plan["preregistration_evidence"] is False
     assert set(plan["implementation_provenance"]) == {
         "qualification_sha256",

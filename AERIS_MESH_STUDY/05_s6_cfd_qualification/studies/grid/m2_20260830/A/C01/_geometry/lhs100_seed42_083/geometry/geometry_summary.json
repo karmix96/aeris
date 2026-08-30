@@ -1,0 +1,622 @@
+{
+  "generated_at_utc": "2026-08-30T12:57:24.085913+00:00",
+  "name": "bwb_segmented",
+  "generator": {
+    "family": "bwb_segmented",
+    "version": "v1",
+    "seed": 1001
+  },
+  "controls": {
+    "n_points": 12,
+    "n_spline_inboard": 12,
+    "n_spline_outboard": 6,
+    "curvature_strength": 0.85,
+    "spline_split_ratio": 0.55,
+    "segment_length_variation": 0.0,
+    "sweep_variation": 0.0
+  },
+  "config": {
+    "name": "bwb_segmented",
+    "generator": {
+      "family": "bwb_segmented",
+      "version": "v1",
+      "seed": 1001
+    },
+    "controls": {
+      "n_points": 12,
+      "n_spline_inboard": 12,
+      "n_spline_outboard": 6,
+      "curvature_strength": 0.85,
+      "spline_split_ratio": 0.55,
+      "segment_length_variation": 0.0,
+      "sweep_variation": 0.0
+    },
+    "planform_bounds": {
+      "c1_m": {
+        "min": 0.7,
+        "max": 1.1
+      },
+      "c2_ratio": {
+        "min": 0.55,
+        "max": 0.8
+      },
+      "c3_ratio": {
+        "min": 0.3,
+        "max": 0.55
+      },
+      "c4_ratio": {
+        "min": 0.08,
+        "max": 0.2
+      },
+      "b_total_m": {
+        "min": 0.75,
+        "max": 1.25
+      },
+      "b3_ratio": {
+        "min": 0.4,
+        "max": 0.55
+      },
+      "split_ratio": {
+        "min": 0.4,
+        "max": 0.6
+      },
+      "sw1_deg": {
+        "min": 20.0,
+        "max": 40.0
+      },
+      "sw2_deg": {
+        "min": 15.0,
+        "max": 35.0
+      },
+      "sw3_deg": {
+        "min": 5.0,
+        "max": 25.0
+      }
+    },
+    "section_bounds": {
+      "airfoil_name": "mh91",
+      "dihedral_root_deg": 0.0,
+      "twist_b0_deg": {
+        "min": -1.0,
+        "max": 1.0
+      },
+      "twist_b1_deg": {
+        "min": -3.0,
+        "max": 0.0
+      },
+      "twist_b2_deg": {
+        "min": -5.0,
+        "max": -1.0
+      },
+      "twist_b3_deg": {
+        "min": -8.0,
+        "max": -2.0
+      },
+      "dihedral_b1_deg": {
+        "min": 0.0,
+        "max": 0.0
+      },
+      "dihedral_b2_deg": {
+        "min": 0.0,
+        "max": 6.0
+      },
+      "dihedral_b3_deg": {
+        "min": 0.0,
+        "max": 10.0
+      },
+      "airfoil_library_id": null,
+      "segment_airfoils": [],
+      "station_airfoils": {
+        "b0": "mh91",
+        "b1": "mh91",
+        "b2": "e374",
+        "b3": "nlf1015"
+      }
+    },
+    "outputs": {
+      "save_plot": false,
+      "build_aerosandbox": false,
+      "save_detail_csv": false
+    },
+    "control_surfaces": {
+      "enabled": true,
+      "surfaces": [
+        {
+          "name": "elevon",
+          "family": "trailing_edge",
+          "hinge_point": 0.7183242361674487,
+          "symmetric": true,
+          "spanwise": {
+            "start_frac": 0.5937505889673017,
+            "end_frac": 0.906753383333486
+          },
+          "deflection_sign": "standard",
+          "side": null,
+          "required": true
+        }
+      ]
+    },
+    "elevon_bounds": {
+      "elevon_start_frac": {
+        "min": 0.5,
+        "max": 0.7
+      },
+      "elevon_end_frac": {
+        "min": 0.85,
+        "max": 0.98
+      },
+      "elevon_hinge_frac": {
+        "min": 0.65,
+        "max": 0.82
+      }
+    },
+    "pygeo": {
+      "enabled": true,
+      "airfoil_database": "data/airfoil_database",
+      "k_span": 3,
+      "frame_mode": "aeris_frame",
+      "n_ctl": null,
+      "tip": "none",
+      "tip_scale": 0.25,
+      "enforce_flat_root_panel": true,
+      "extraction": {
+        "spanwise_sections": 25,
+        "chordwise_points": 241,
+        "cst_order": 8
+      },
+      "surface_sampling": {
+        "chordwise_points": 141,
+        "spanwise_points": 121
+      },
+      "quality": {
+        "warn_plane_warp_chord": 0.003,
+        "max_plane_warp_chord": 0.01,
+        "max_cst_rms_chord": 0.001,
+        "fail_on_rejection": true
+      },
+      "commands": {
+        "delta_e_sym_deg": 0.0,
+        "delta_a_diff_deg": 0.0
+      },
+      "physical_cad": {
+        "enabled": false,
+        "topology": "split_elevon",
+        "hinge_gap_fraction": 0.005,
+        "boundary_clearance_fraction": 0.005,
+        "design_deflection_limit_deg": 20.0,
+        "chordwise_points": 81,
+        "minimum_te_thickness_fraction": 0.0005,
+        "tessellation_tolerance_m": 0.00075,
+        "tessellation_angular_tolerance_rad": 0.12,
+        "max_master_to_cad_deviation_cref": 0.005,
+        "fail_on_invalid": true
+      },
+      "outputs": {
+        "write_iges": false,
+        "write_tecplot": false,
+        "write_surface_npz": false,
+        "write_section_dat": false,
+        "write_step": false,
+        "verify_step_import": false,
+        "write_brep": false,
+        "write_stl": false,
+        "write_obj": false,
+        "write_vtk": false,
+        "write_cad_npz": false,
+        "save_visualization": false,
+        "visualization_dpi": 180
+      }
+    },
+    "aero_discretisation": {
+      "n_sections": 25,
+      "span_margin": 0.0,
+      "spanwise_panels_per_section": 4,
+      "nchordwise": 12,
+      "cspace": 1.0,
+      "snap_sections_to_control": true,
+      "section_placement": "auto",
+      "ramp_fraction_limit": 0.15
+    }
+  },
+  "sampled_planform": {
+    "c1_m": 0.8673307127842314,
+    "c2_ratio": 0.6303045812615714,
+    "c3_ratio": 0.4128048041958378,
+    "c4_ratio": 0.17276904208690497,
+    "c2_m": 0.5466825217367652,
+    "c3_m": 0.3580382850639311,
+    "c4_m": 0.14984789642028415,
+    "b_total_m": 0.9784909486280495,
+    "b3_ratio": 0.525769717804102,
+    "b1_m": 0.18964198869350007,
+    "b2_m": 0.27438805000051186,
+    "b3_m": 0.5144609099340376,
+    "split_ratio": 0.4086847248666001,
+    "sw1_deg": -36.68718097259055,
+    "sw2_deg": -32.058840599274106,
+    "sw3_deg": -11.20709622277216,
+    "elevon_start_frac": 0.5937505889673017,
+    "elevon_end_frac": 0.906753383333486,
+    "elevon_hinge_frac": 0.7183242361674487
+  },
+  "sampled_sections": {
+    "airfoil_name": "mh91",
+    "twist_b0_deg": 0.041800027820901864,
+    "twist_b1_deg": -1.456824644603822,
+    "twist_b2_deg": -4.268820505057192,
+    "twist_b3_deg": -6.536710769925316,
+    "dihedral_b0_deg": 0.0,
+    "dihedral_b1_deg": 0.0,
+    "dihedral_b2_deg": 2.6863737052256917,
+    "dihedral_b3_deg": 4.225974225208664,
+    "twist_boundaries_deg": [
+      0.041800027820901864,
+      -1.456824644603822,
+      -4.268820505057192,
+      -6.536710769925316
+    ],
+    "dihedral_boundaries_deg": [
+      0.0,
+      0.0,
+      2.6863737052256917,
+      4.225974225208664
+    ],
+    "group_boundary_y_m": [
+      0.0,
+      0.18964198869350007,
+      0.4640300386940119,
+      0.9784909486280496
+    ]
+  },
+  "discretization": {
+    "N1": 2,
+    "N2": 3,
+    "N3": 6,
+    "split_idx": 6,
+    "num_sections": 17
+  },
+  "metrics": {
+    "semi_span_m": 0.9784909486280496,
+    "full_span_m": 1.9569818972560993,
+    "approx_area_m2": 0.7900821940331892,
+    "approx_aspect_ratio_planform": 4.847316108515164,
+    "aspect_ratio_aerosandbox": null,
+    "n_xsecs_aerosandbox": null,
+    "aspect_ratio_pygeo": 4.847870749643729,
+    "n_sections_pygeo_extracted": 29,
+    "volume_pygeo_m3": 0.03608879816288451,
+    "wetted_area_pygeo_m2": 1.6320445014760505
+  },
+  "reference_values": {
+    "span_m": 1.95678951038572,
+    "span_yz_m": 1.958983878721353,
+    "area_m2": 0.789836484035178,
+    "area_yz_m2": 0.7903676753201432,
+    "mean_aerodynamic_chord_m": 0.494600003662239,
+    "aspect_ratio": 4.847870749643729,
+    "volume_m3": 0.03608879816288451,
+    "wetted_area_m2": 1.6320445014760505
+  },
+  "mean_angles_deg": null,
+  "aerodynamic_center": null,
+  "sectional_metrics": null,
+  "artifacts": {
+    "summary_path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C01/_geometry/lhs100_seed42_083/geometry/geometry_summary.json",
+    "control_points_path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C01/_geometry/lhs100_seed42_083/geometry/control_points.csv",
+    "planform_sections_path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C01/_geometry/lhs100_seed42_083/geometry/planform_sections.csv",
+    "section_3d_path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C01/_geometry/lhs100_seed42_083/geometry/section_3d.csv",
+    "plot_path": null,
+    "pygeo_dir": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C01/_geometry/lhs100_seed42_083/geometry/pygeo",
+    "pygeo": {
+      "control_surface_json": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C01/_geometry/lhs100_seed42_083/geometry/pygeo/control_surface.json",
+      "pygeo_manifest": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C01/_geometry/lhs100_seed42_083/geometry/pygeo/pygeo_manifest.json"
+    }
+  },
+  "geometry_info": {
+    "backend": "pygeo",
+    "geometry_id": "aeris_pygeo_bwb_cd5d52e956e8d49cfdc5",
+    "n_authored_sections": 17,
+    "n_extracted_sections": 29,
+    "symmetric": true
+  },
+  "control_surface_summary": {
+    "configured": {
+      "enabled": true,
+      "count": 1,
+      "names": [
+        "elevon"
+      ],
+      "definitions": [
+        {
+          "name": "elevon",
+          "family": "trailing_edge",
+          "hinge_point": 0.7183242361674487,
+          "symmetric": true,
+          "side": null,
+          "start_frac": 0.5937505889673017,
+          "end_frac": 0.906753383333486,
+          "deflection_sign": "standard",
+          "required": true
+        }
+      ]
+    },
+    "applied": {
+      "has_control_surfaces": false,
+      "control_surface_count": 0,
+      "applied_control_surfaces": []
+    },
+    "pygeo": {
+      "enabled": true,
+      "name": "elevon",
+      "family": "trailing_edge",
+      "hinge_point": 0.7183242361674487,
+      "symmetric": true,
+      "start_frac": 0.5937505889673017,
+      "end_frac": 0.906753383333486,
+      "delta_e_sym_deg": 0.0,
+      "delta_a_diff_deg": 0.0,
+      "right_deflection_deg": 0.0,
+      "left_deflection_deg": 0.0,
+      "mixing": {
+        "right": "delta_e_sym_deg + delta_a_diff_deg",
+        "left": "delta_e_sym_deg - delta_a_diff_deg"
+      },
+      "sign_convention": "positive is trailing-edge down"
+    }
+  },
+  "reference_conventions": {
+    "geometry_axes_origin": "aircraft geometry origin used to define section xyz_le coordinates",
+    "moment_reference_point_xyz_m": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "x_axis_positive_direction": "aft",
+    "primary_realization_backend": "pygeo",
+    "reference_area_definition": "symmetric xy-projected area integrated from realised pyGeo sections",
+    "reference_span_definition": "full mirrored y-span measured from realised pyGeo sections",
+    "reference_chord_definition": "area-weighted mean aerodynamic chord integrated from realised pyGeo sections"
+  },
+  "realization_backends": {
+    "aerosandbox": {
+      "enabled": false,
+      "role": "discrete wing realization and aerodynamic adapter"
+    },
+    "pygeo": {
+      "enabled": true,
+      "role": "master B-spline loft, section extraction, and CAD utilities"
+    }
+  },
+  "pygeo": {
+    "schema": "aeris.bwb_segmented_v1.pygeo.v1",
+    "enabled": true,
+    "engine": "MDOLab pyGeo",
+    "geometry_id": "aeris_pygeo_bwb_cd5d52e956e8d49cfdc5",
+    "master_geometry": "neutral pyGeo B-spline loft",
+    "reference_values": {
+      "span_m": 1.95678951038572,
+      "span_yz_m": 1.958983878721353,
+      "area_m2": 0.789836484035178,
+      "area_yz_m2": 0.7903676753201432,
+      "mean_aerodynamic_chord_m": 0.494600003662239,
+      "aspect_ratio": 4.847870749643729,
+      "volume_m3": 0.03608879816288451,
+      "wetted_area_m2": 1.6320445014760505
+    },
+    "metrics": {
+      "s_ref_xy_m2": 0.789836484035178,
+      "s_ref_yz_m2": 0.7903676753201432,
+      "b_ref_y_m": 1.95678951038572,
+      "b_ref_yz_m": 1.958983878721353,
+      "c_ref_m": 0.494600003662239,
+      "aspect_ratio_xy": 4.847870749643729,
+      "aspect_ratio_yz": 4.855484297906928,
+      "volume_m3": 0.03608879816288451,
+      "wetted_area_m2": 1.6320445014760505,
+      "pygeo_surface_area_m2": 1.631712894846837,
+      "semi_span_m": 0.9784909486280496,
+      "full_span_m": 1.9569818972560993,
+      "planform_area_m2": 0.7900821940331892,
+      "planform_aspect_ratio": 4.847316108515164,
+      "n_authored_sections": 17,
+      "n_extracted_sections": 29,
+      "max_plane_warp_chord": 0.0022027006117028417,
+      "max_cst_rms_chord": 0.0008221703038788965,
+      "max_cst_error_chord": 0.010611761013046957,
+      "all_cst_valid": true,
+      "frame_reconstruction_error": 8.604228440844963e-16,
+      "control_surface_enabled": true,
+      "control_surface_name": "elevon",
+      "control_surface_area_xy_m2": 0.04289347251572705,
+      "control_surface_area_yz_m2": 0.043124305798020554,
+      "control_surface_area_ratio_sref": 0.05430677536771858,
+      "control_hinge_length_m": 0.6156317494826582,
+      "control_span_m": 0.6123357589498888,
+      "control_hinge_fraction": 0.7183242361674487,
+      "control_span_start_fraction": 0.5937505889673017,
+      "control_span_end_fraction": 0.906753383333486,
+      "delta_e_sym_deg": 0.0,
+      "delta_a_diff_deg": 0.0,
+      "right_deflection_deg": 0.0,
+      "left_deflection_deg": 0.0,
+      "control_geometry_state": "neutral_master_plus_physical_cad_when_enabled",
+      "plane_warp_warning_chord": 0.003,
+      "plane_warp_limit_chord": 0.01,
+      "cst_rms_limit_chord": 0.001,
+      "section_planarity": "within_warning_limit",
+      "geometry_qc": "accepted"
+    },
+    "quality_status": "accepted",
+    "airfoil_names": [
+      "mh91",
+      "mh91",
+      "mh91",
+      "mh91",
+      "mh91",
+      "mh91",
+      "mh91",
+      "mh91",
+      "mh91",
+      "mh91",
+      "e374",
+      "e374",
+      "e374",
+      "e374",
+      "e374",
+      "e374",
+      "nlf1015"
+    ],
+    "control_surface": {
+      "enabled": true,
+      "name": "elevon",
+      "family": "trailing_edge",
+      "hinge_point": 0.7183242361674487,
+      "symmetric": true,
+      "start_frac": 0.5937505889673017,
+      "end_frac": 0.906753383333486,
+      "delta_e_sym_deg": 0.0,
+      "delta_a_diff_deg": 0.0,
+      "right_deflection_deg": 0.0,
+      "left_deflection_deg": 0.0,
+      "mixing": {
+        "right": "delta_e_sym_deg + delta_a_diff_deg",
+        "left": "delta_e_sym_deg - delta_a_diff_deg"
+      },
+      "sign_convention": "positive is trailing-edge down"
+    },
+    "pygeo": {
+      "k_span": 3,
+      "frame_mode": "asb_frame",
+      "rot_x_deg": [
+        90.0,
+        90.0,
+        90.0,
+        89.97484925096799,
+        89.80221688462161,
+        89.41007411622311,
+        88.92075181368416,
+        88.43142951018763,
+        87.94210720529914,
+        87.51357031894162,
+        87.23075228054519,
+        87.03026550104984,
+        86.80042076799307,
+        86.54382025098711,
+        86.28721973374871,
+        86.03061921625978,
+        85.90231895745035
+      ],
+      "rot_y_deg": [
+        0.04180002782090186,
+        -0.3531566973189114,
+        -0.7481134224587248,
+        179.99999999999966,
+        -180.0,
+        -179.99999999999997,
+        -180.0,
+        -180.0,
+        -180.0,
+        179.99999999999997,
+        -180.0,
+        179.99999999999997,
+        -180.0,
+        -179.99999999999997,
+        -180.0,
+        -180.0,
+        179.99999999999997
+      ],
+      "rot_z_deg": [
+        0.0,
+        0.0,
+        0.0,
+        -178.85692985240178,
+        -178.43786791606425,
+        -177.92566668308228,
+        -177.41346545010038,
+        -176.90126421711847,
+        -176.38906298413653,
+        -175.87686175115456,
+        -175.57352126841417,
+        -175.35319778413145,
+        -174.9752160733201,
+        -174.59723436250874,
+        -174.2192526516974,
+        -173.84127094088603,
+        -173.46328923007468
+      ],
+      "thickness_scale": [
+        1.0,
+        1.0,
+        1.0,
+        1.0000000963444322,
+        1.0000033128496133,
+        1.000009117128343,
+        1.0000091171283705,
+        1.0000091171284142,
+        1.0000091171284742,
+        1.000005149623045,
+        1.0000014910401065,
+        1.0000015704998588,
+        1.0000025071522585,
+        1.000002507152263,
+        1.0000025071522676,
+        1.0000025071522727,
+        1.0
+      ],
+      "frame_reconstruction_error": 8.604228440844963e-16,
+      "stdout": "pyGeo Initialization Type is: liftingSurface\nInterpolating missing sections ...\nSymmetrizing Knot Vectors ...\nComputing TE surfaces ...\nComputing Tip surfaces ...\nNo tip specified\n"
+    },
+    "exports": {
+      "physical_cad": "disabled"
+    },
+    "artifacts": {
+      "control_surface_json": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C01/_geometry/lhs100_seed42_083/geometry/pygeo/control_surface.json",
+      "pygeo_manifest": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C01/_geometry/lhs100_seed42_083/geometry/pygeo/pygeo_manifest.json"
+    },
+    "physical_cad": null
+  },
+  "pygeo_reference_values": {
+    "span_m": 1.95678951038572,
+    "span_yz_m": 1.958983878721353,
+    "area_m2": 0.789836484035178,
+    "area_yz_m2": 0.7903676753201432,
+    "mean_aerodynamic_chord_m": 0.494600003662239,
+    "aspect_ratio": 4.847870749643729,
+    "volume_m3": 0.03608879816288451,
+    "wetted_area_m2": 1.6320445014760505
+  },
+  "geometry_audit": {
+    "passed": true,
+    "errors": [],
+    "warnings": [],
+    "metrics": {
+      "full_span_m": 1.9569818972560993,
+      "semi_span_m": 0.9784909486280496,
+      "approx_area_m2": 0.7900821940331892,
+      "approx_aspect_ratio": 4.847316108515164,
+      "num_planform_points": 12,
+      "num_sections": 17,
+      "min_planform_chord_m": 0.14984789642028415,
+      "max_planform_chord_m": 0.8673307127842314,
+      "min_section_chord_m": 0.14984789642028412,
+      "max_section_chord_m": 0.8673307127842314,
+      "twist_min_deg": -6.536710769925316,
+      "twist_max_deg": 0.041800027820901864,
+      "dihedral_min_deg": 0.0,
+      "dihedral_max_deg": 4.225974225208664,
+      "finite_fractions": {
+        "planform.x_le": 1.0,
+        "planform.y_le": 1.0,
+        "planform.x_te": 1.0,
+        "planform.y_te": 1.0,
+        "planform.chords": 1.0,
+        "sections.x_le_m": 1.0,
+        "sections.y_m": 1.0,
+        "sections.z_le_m": 1.0,
+        "sections.chord_m": 1.0,
+        "sections.twist_array_deg": 1.0,
+        "sections.dihedral_array_deg": 1.0
+      }
+    }
+  }
+}

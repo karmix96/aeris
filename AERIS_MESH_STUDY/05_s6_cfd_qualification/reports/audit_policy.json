@@ -1,6 +1,6 @@
 {
   "command": "audit-policy",
-  "created_at": "2026-08-30T12:41:04.534837+00:00",
+  "created_at": "2026-08-30T13:21:59.190474+00:00",
   "details": {
     "immutable": true,
     "policy": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/convergence_v1.yaml",
@@ -9,7 +9,7 @@
     "thresholds_machine_readable": true
   },
   "dry_run": false,
-  "git_head": "ceca5cb9517b36f15a9ef256eaa9bd5ebe7d693a",
+  "git_head": "752852c50960e3e5ea33d8e1d31fcebec03c78d0",
   "repo": "/home/mike_kara/aeris",
   "schema_version": 1,
   "status": "PASS"

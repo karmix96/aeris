@@ -10,10 +10,13 @@ Linux-native repository. Read these files first, in order:
 5. `reports/m1_contract_status.md`
 6. `reports/audit_geometry_space.json`
 7. `host/m1_20260830/m1_gate.json`
+8. `reports/m2_grid_screen_terminal_report.md`
+9. `reports/m2_grid_screen_terminal_report.json`
 
 ## Non-negotiable safety order
 
-- Do not launch CFD, mesh generation, parallel heavy jobs, or canary runs.
+- Do not launch CFD or a canary. M2 is terminal NO-GO because every written
+  nominal mesh tested has inverted cells.
 - Do not inspect, parse, sample, visualize, copy, or hash the locked holdout
   sample contents. Only use its lock metadata.
 - Do not alter the live geometry YAML, governance snapshots, unrelated user
@@ -23,38 +26,52 @@ Linux-native repository. Read these files first, in order:
 - Keep every generated result immutable and small; never commit CGNS, restart,
   field, or other large solver artifacts.
 
+## Current terminal state
+
+- M0/M1 deterministic work is complete at commit `752852c`.
+- The candidate `17x43x61 -> 23x57x73 -> 29x75x97` family passes coupled
+  refinement and desktop resource gates.
+- Independent ADF-CGNS reopening and repository-authority volume QC reject the
+  nominal mesh. The best C03 attempt still has six inverted cells and
+  `qmin=-0.3114098210`.
+- Geometry B/C/E and the CFD canary were correctly not executed after geometry
+  A failed. Do not bypass this stop.
+- Three authenticated Claude Code review attempts timed out with zero model
+  tokens. No independent GO exists; see `reviews/claude_m0_m1_review_attempt0*.json`.
+
 ## Execute next, in order
 
-1. Inspect the current git status and preserve the three pre-existing unrelated
-   user changes. Do not stage them.
-2. Strengthen M1 tests and schemas using existing AERIS backends rather than
-   duplicating QC. Implement safe, read-only checks for:
-   - deterministic geometry identity/cache invalidation, including the 29x75
-     identity regression;
-   - explicit moment references (quarter-MAC and mission CG);
-   - residual fields (momentum, energy, SA) and normalized mass imbalance;
-   - terminal-state and classification-policy separation.
-3. Extend `run.py` with only audit/dry-run handlers until all M0–M2 gates are
-   machine-green. Heavy handlers must continue returning `BLOCKED`.
-4. Add focused pytest tests for each new invariant. Run:
-   `.venv/bin/pytest -q AERIS_MESH_STUDY/05_s6_cfd_qualification/tests`
-5. Run `audit-contract`, `audit-geometry-space`, `check-half-domain`, and
-   `check-holdout-lock`; save small JSON evidence under `reports/`.
-6. Update `LIVE_STATUS.md` with the new commit, test result, and remaining
-   gates. Commit only governed qualification files with a descriptive message.
-7. Attempt no push unless credentials are already available; report push as
-   pending if authentication fails.
+1. Inspect git status and preserve the three pre-existing unrelated user
+   changes. Do not stage them.
+2. Treat `reports/m2_grid_screen_terminal_report.json` as the governing M2
+   diagnosis. Verify its hashes and attempt records before changing topology.
+3. Design a **new versioned** tip/collar block topology. Do not mutate or
+   relabel the rejected family and do not weaken `zero_inverted_cells`.
+4. Start with cheap surface/topology checks. Only write a new volume mesh when
+   the changed topology has explicit tests and a distinct identity.
+5. Independently close, reopen, and audit each written CGNS. A valid nominal
+   finest mesh is required before B/C/E screening.
+6. Keep CFD and the canary blocked until nominal A and the required geometry
+   screens all satisfy the roadmap gates.
+7. Run focused qualification/meshing tests after every governed change. The
+   repository-wide suite currently cannot collect in this WSL environment
+   because optional project dependencies such as `aerosandbox` are absent.
+8. Update `LIVE_STATUS.md`, retain small evidence, and commit only governed
+   files. Never commit CGNS/restart/field artifacts; do not push without the
+   user's instruction.
 
 ## Claude review order
 
-When Claude authentication/session transport works, perform a read-only Opus
-adversarial review of the M0/M1 diff and evidence. Record the exact model,
-version, prompt scope, commit, result, and any findings under `reviews/`.
-Do not claim GO until all HIGH findings are closed. If transport fails, record
-the failure and continue with deterministic local tests.
+When Claude service transport works, first perform a read-only Opus adversarial
+review of commit `752852c` and the M2 terminal evidence. Challenge geometry
+identity, moment/reference semantics, residual normalization, immutable
+classification, ADF audit independence, and the decision to stop before CFD.
+Record model, version, prompt scope, commit, result, and findings under
+`reviews/`. Do not claim GO until all HIGH findings are closed. If transport
+fails again, retain the failure and preserve the review gate.
 
 ## Continuation behavior
 
-Continue this order until the next safe gate is complete or an external choice
-is required (mission authority, geometry freeze, or credentials). If the Codex
-session ends, start here and work independently within these constraints.
+Continue this order until the redesigned nominal family is independently
+volume-valid or a new governed NO-GO is established. If the Codex session ends,
+start here and work independently within these constraints.

@@ -62,3 +62,9 @@ AERIS_MESH_STUDY/papers/
 
 # ParaView mesh artifacts - regenerated, and wiped between campaigns
 data/surface_mesh_v3/
+
+# S6 qualification run records are versioned, but generated mesh payloads are
+# local-only. Their hashes and small independent audit reports remain tracked.
+AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/**/*.cgns
+AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/**/*.fmt
+AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/**/*.npz

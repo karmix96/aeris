@@ -52,6 +52,9 @@ class LevelSpec:
 
 
 LEVELS: dict[str, LevelSpec] = {
+    "candidate_c01": LevelSpec(17, 3, 5, 42, 801, 0.025),
+    "candidate_c02": LevelSpec(23, 4, 7, 56, 1001, 0.018),
+    "candidate_c03": LevelSpec(29, 5, 9, 74, 1201, 0.014),
     "coarse": LevelSpec(25, 3, 5, 63, 801, 0.020),
     "smoke": LevelSpec(33, 3, 7, 89, 1001, 0.015),
     "medium": LevelSpec(49, 4, 9, 127, 1201, 0.010),
@@ -450,6 +453,33 @@ def _attach_outer_edge(patch: Array, outer: Array) -> Array:
     return result
 
 
+def _smooth_tip_interiors(
+    blocks: list[SurfaceBlock], *, iterations: int, relaxation: float = 0.35
+) -> list[SurfaceBlock]:
+    """Smooth tip-cap interiors while preserving every boundary/interface edge."""
+    if iterations < 0:
+        raise ValueError("tip smoothing iterations must be non-negative")
+    if not 0.0 < relaxation <= 1.0:
+        raise ValueError("tip smoothing relaxation must lie in (0, 1]")
+    result = []
+    for block in blocks:
+        xyz = np.array(block.xyz, copy=True)
+        if min(xyz.shape[:2]) > 2:
+            for _ in range(iterations):
+                old = xyz.copy()
+                average = 0.25 * (
+                    old[:-2, 1:-1]
+                    + old[2:, 1:-1]
+                    + old[1:-1, :-2]
+                    + old[1:-1, 2:]
+                )
+                xyz[1:-1, 1:-1] = (
+                    (1.0 - relaxation) * old[1:-1, 1:-1] + relaxation * average
+                )
+        result.append(SurfaceBlock(name=block.name, xyz=xyz, family=block.family))
+    return result
+
+
 def _tip_blocks(
     tip_meta: dict[str, Any],
     oml_arrays: dict[str, Array],
@@ -491,6 +521,7 @@ def build_surface(
     end_scale: float = 5.0,
     tip_first_cell_frac_of_tip_chord: float = 0.0045,
     span_cells: int | None = None,
+    tip_surface_smoothing_iterations: int = 0,
 ) -> tuple[list[SurfaceBlock], dict[str, Any]]:
     """Build the exact-pyGeo S6 surface with fixed dimensions at each level."""
     if level not in LEVELS:
@@ -554,6 +585,15 @@ def build_surface(
     if tip_meta is None:
         raise RuntimeError("tip section was not built")
     tip_blocks, cap_info = _tip_blocks(tip_meta, oml_arrays, spec=spec, end_scale=end_scale)
+    tip_blocks = _smooth_tip_interiors(
+        tip_blocks, iterations=tip_surface_smoothing_iterations
+    )
+    cap_info["interior_smoothing"] = {
+        "method": "constrained_laplacian_tip_cap_only",
+        "iterations": int(tip_surface_smoothing_iterations),
+        "relaxation": 0.35,
+        "all_edges_fixed": True,
+    }
     tip_normal = _unit(
         np.cross(tip_frame.chord_axis, tip_frame.thickness_axis),
         "tip-cap normal",

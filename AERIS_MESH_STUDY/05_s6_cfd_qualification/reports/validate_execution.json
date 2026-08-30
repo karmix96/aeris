@@ -1,15 +1,15 @@
 {
   "command": "validate-execution",
-  "created_at": "2026-08-30T12:41:04.631442+00:00",
+  "created_at": "2026-08-30T13:21:59.284382+00:00",
   "details": {
     "accepted_requires_post_run_evidence": true,
     "missing": [],
-    "path": "/tmp/pytest-of-mike_kara/pytest-6/test_execution_validator_accep0/good.json",
+    "path": "/tmp/pytest-of-mike_kara/pytest-11/test_execution_validator_accep0/good.json",
     "required_inputs_present": true,
     "valid_terminal_state": true
   },
   "dry_run": false,
-  "git_head": "ceca5cb9517b36f15a9ef256eaa9bd5ebe7d693a",
+  "git_head": "752852c50960e3e5ea33d8e1d31fcebec03c78d0",
   "repo": "/home/mike_kara/aeris",
   "schema_version": 1,
   "status": "PASS"

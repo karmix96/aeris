@@ -1,0 +1,62 @@
+{
+  "schema": "aeris.mesh_study.strategy_march_prepare.v1",
+  "prepared_utc": "2026-08-30T13:06:56.788145+00:00",
+  "adr": "ADR-0011-independent-strategy-studies.md",
+  "strategy_id": "S6_BOUNDED_MESH_ATLAS",
+  "geometry_id": "lhs100_seed42_083",
+  "level": "candidate_c03",
+  "level_settings": {
+    "coarsen": 1,
+    "N": 97,
+    "s0_frac": 3.6e-06
+  },
+  "confirming_level": null,
+  "epse_ladder": [
+    1.5
+  ],
+  "characteristic_length": 1.3141980887706586,
+  "s0_fraction_override": 3.6e-06,
+  "surface": {
+    "block_count": 13,
+    "total_cells": 10064,
+    "global": {
+      "min_shape_metric": 0.012939021389264824,
+      "min_scaled_jacobian": 0.09807105576983388,
+      "max_equiangle_skewness": 0.937465510195259,
+      "max_aspect_ratio": 57.20604624330726,
+      "min_area": 1.727739111868625e-08,
+      "max_adjacent_normal_angle_deg": 56.74242167961471
+    }
+  },
+  "cap4_reference": {
+    "bad_layers": 53,
+    "layer_count": 128,
+    "min_quality": -0.90808,
+    "reproduced_via_new_code_path": {
+      "bad_layers": 54,
+      "min_volume": 2.11e-11
+    }
+  },
+  "runs": [
+    {
+      "epsE": 1.5,
+      "epsI": 3.0,
+      "dir": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C03_attempt06_B1i3/lhs100_seed42_083/eps15",
+      "runner": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C03_attempt06_B1i3/lhs100_seed42_083/eps15/run_pyhyp.py",
+      "surface_fmt_sha256": "d9d869eeb706a59eb8a1b5488304cb916805fe5b2e8a05eede3f6050c58e1301",
+      "s0": 4.731113119574371e-06,
+      "marchability": {
+        "min_cell_edge_m": 0.00010128032337023627,
+        "min_cell_edge_block": "tip_base",
+        "max_cell_edge_m": 0.020720564181797286,
+        "s0": 4.731113119574371e-06,
+        "cell_size_range": 204.5862759151353,
+        "min_cell_over_s0": 21.407292704797523,
+        "note": "ADR-0010: reported, not gated. Cell-size range predicts catastrophic explosion; it does NOT predict marginal single-layer failure (COMMON_BRIEF section 3)."
+      }
+    }
+  ],
+  "commands": [
+    "(cd /home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C03_attempt06_B1i3/lhs100_seed42_083/eps15 && /home/mike_kara/miniconda3/envs/mach-aero/bin/python run_pyhyp.py > run_stdout.log 2>&1)"
+  ]
+}

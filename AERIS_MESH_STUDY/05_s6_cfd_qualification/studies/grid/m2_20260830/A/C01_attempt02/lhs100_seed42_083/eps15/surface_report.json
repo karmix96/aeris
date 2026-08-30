@@ -1,0 +1,25 @@
+{
+  "strategy_id": "S6_BOUNDED_MESH_ATLAS",
+  "geometry_id": "lhs100_seed42_083",
+  "characteristic_length": 1.3141938075336832,
+  "accepted_pre_pyhyp": true,
+  "block_count": 13,
+  "total_cells": 3192,
+  "global": {
+    "min_shape_metric": 0.02873415748166412,
+    "min_scaled_jacobian": 0.22326688258463426,
+    "max_equiangle_skewness": 0.8566557163401547,
+    "max_aspect_ratio": 51.075637571005174,
+    "min_area": 7.492025558537032e-08,
+    "max_adjacent_normal_angle_deg": 82.26929466599434
+  },
+  "marchability": {
+    "min_cell_edge_m": 0.00020256550614087228,
+    "min_cell_edge_block": "tip_base",
+    "max_cell_edge_m": 0.03712269482358198,
+    "s0": 8.016582225955467e-06,
+    "cell_size_range": 183.26266663469025,
+    "min_cell_over_s0": 25.268312658856217,
+    "note": "ADR-0010: reported, not gated. Cell-size range predicts catastrophic explosion; it does NOT predict marginal single-layer failure (COMMON_BRIEF section 3)."
+  }
+}

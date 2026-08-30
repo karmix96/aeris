@@ -1,6 +1,6 @@
 {
   "command": "test-identity",
-  "created_at": "2026-08-30T12:41:04.441676+00:00",
+  "created_at": "2026-08-30T13:21:59.097939+00:00",
   "details": {
     "cache_invalidation_proven": true,
     "candidate_grid": [
@@ -26,7 +26,7 @@
     "stable_format_detected": true
   },
   "dry_run": false,
-  "git_head": "ceca5cb9517b36f15a9ef256eaa9bd5ebe7d693a",
+  "git_head": "752852c50960e3e5ea33d8e1d31fcebec03c78d0",
   "repo": "/home/mike_kara/aeris",
   "schema_version": 1,
   "status": "PASS"

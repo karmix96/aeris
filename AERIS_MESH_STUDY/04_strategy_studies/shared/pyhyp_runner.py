@@ -82,6 +82,8 @@ def prepare(
     epse_ladder=gates.EPSE_LADDER,
     confirming_level: str | None = None,
     s0_fraction_override: float | None = None,
+    n_constant_start_override: int | None = None,
+    vol_blend_override: float | None = None,
 ) -> dict:
     """Stage one geometry's surface and write pyHyp run inputs for each epsE.
 
@@ -118,6 +120,8 @@ def prepare(
         "epse_ladder": list(epse_ladder),
         "characteristic_length": char_len,
         "s0_fraction_override": s0_fraction_override,
+        "n_constant_start_override": n_constant_start_override,
+        "vol_blend_override": vol_blend_override,
         "surface": {
             "block_count": qc["block_count"],
             "total_cells": qc["total_cells"],
@@ -144,6 +148,8 @@ def prepare(
                 if s0_fraction_override is not None
                 else None
             ),
+            n_constant_start=n_constant_start_override,
+            vol_blend=vol_blend_override,
         )
         runner = write_pyhyp_run_inputs(sdir, effective)
         s0 = float(effective.values.get("s0", LEVELS[level]["s0_frac"] * char_len))

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "tool": "claude-code",
+  "version": "2.1.241",
+  "model": "opus",
+  "effort": "max",
+  "commit_reviewed": "752852c50960e3e5ea33d8e1d31fcebec03c78d0",
+  "permission_mode": "plan_read_only",
+  "holdout_contents_accessed": false,
+  "status": "request_timed_out",
+  "duration_seconds": 186.523,
+  "input_tokens": 0,
+  "output_tokens": 0,
+  "cost_usd": 0,
+  "go_decision": "NOT_OBTAINED"
+}

@@ -147,7 +147,11 @@ def qualify_atlas_seeds_command(args: argparse.Namespace) -> dict[str, Any]:
 def march_command(args: argparse.Namespace) -> dict[str, Any]:
     root = args.output.resolve()
     blocks, info, _case = build_locked_surface(
-        args.set_name, args.index, root / "_geometry", level=args.surface_level
+        args.set_name,
+        args.index,
+        root / "_geometry",
+        level=args.surface_level,
+        tip_surface_smoothing_iterations=args.tip_smoothing_iterations,
     )
     manifest = prepare(
         strategy_id=STRATEGY_ID,
@@ -157,6 +161,8 @@ def march_command(args: argparse.Namespace) -> dict[str, Any]:
         level=args.volume_level,
         epse_ladder=(args.eps_e,),
         s0_fraction_override=first_cell_fraction(args.volume_level),
+        n_constant_start_override=args.n_constant_start,
+        vol_blend_override=args.vol_blend,
     )
     run_dir = Path(manifest["runs"][0]["dir"]).resolve()
     runner = Path(manifest["runs"][0]["runner"]).resolve()
@@ -170,7 +176,26 @@ def march_command(args: argparse.Namespace) -> dict[str, Any]:
         )
     cgns = run_dir / "wing_vol.cgns"
     result = read_result(run_dir) or {}
-    quality = equivalence_against_pyhyp(cgns) if cgns.is_file() else None
+    quality = None
+    audit_route = None
+    if cgns.is_file():
+        try:
+            quality = equivalence_against_pyhyp(cgns)
+            audit_route = "HDF5"
+        except OSError:
+            audit_path = run_dir / "adf_volume_audit.json"
+            audit_script = STUDIES / "shared" / "adf_volume_audit.py"
+            audit = subprocess.run(
+                [str(mach_aero_python()), str(audit_script), str(cgns), str(audit_path)],
+                cwd=REPO_ROOT,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                check=False,
+            )
+            if audit.returncode == 0 and audit_path.is_file():
+                quality = json.loads(audit_path.read_text(encoding="utf-8"))
+                audit_route = "ADF_cgnsUtilities"
     accepted = bool(
         completed.returncode == 0
         and result.get("march_completed")
@@ -187,6 +212,7 @@ def march_command(args: argparse.Namespace) -> dict[str, Any]:
         "surface_npz": str(run_dir / "surface_blocks.npz"),
         "march_result": result,
         "direct_quality": quality,
+        "independent_audit_route": audit_route,
     }
     _write_json(run_dir / "s6_template_report.json", report)
     return report
@@ -244,6 +270,9 @@ def make_parser() -> argparse.ArgumentParser:
     march.add_argument("--surface-level", default="smoke")
     march.add_argument("--volume-level", default="smoke")
     march.add_argument("--eps-e", type=float, default=2.0)
+    march.add_argument("--tip-smoothing-iterations", type=int, default=0)
+    march.add_argument("--n-constant-start", type=int)
+    march.add_argument("--vol-blend", type=float)
     march.add_argument("--output", type=Path, required=True)
     march.set_defaults(function=march_command)
 

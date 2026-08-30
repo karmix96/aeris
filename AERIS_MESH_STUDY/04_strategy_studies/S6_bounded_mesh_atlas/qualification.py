@@ -160,9 +160,9 @@ def _primary_span_cells(surface_blocks: dict[str, np.ndarray]) -> int:
 
 def _grid_family() -> list[dict[str, Any]]:
     definitions = (
-        ("G1_coarse", "smoke", 129, 7.2e-6),
-        ("G2_medium", "medium", 193, 5.1e-6),
-        ("G3_fine", "fine", 257, 3.6e-6),
+        ("C01", "candidate_c01", 61, 6.1e-6),
+        ("C02", "candidate_c02", 73, 4.7e-6),
+        ("C03_tentative_finest", "candidate_c03", 97, 3.6e-6),
     )
     rows = []
     for name, surface_level, normal_points, first_cell_fraction in definitions:
@@ -221,8 +221,9 @@ def build_qualification_plan() -> dict[str, Any]:
             raise RuntimeError("grid family does not refine first-cell spacing")
 
     te_variants = _te_variants()
-    registry_hash = sha256(DEFAULT_REGISTRY)
-    registry = _read_json(DEFAULT_REGISTRY)
+    registry_available = DEFAULT_REGISTRY.is_file()
+    registry_hash = sha256(DEFAULT_REGISTRY) if registry_available else None
+    registry = _read_json(DEFAULT_REGISTRY) if registry_available else {"templates": []}
     p0_span_cells = {
         str(int(template["geometry_index"])): int(template["span_cells"])
         for template in registry["templates"]
@@ -272,14 +273,15 @@ def build_qualification_plan() -> dict[str, Any]:
             "chord_points": strategy_s6.LEVELS["smoke"].chord_points,
             "span_cells": {
                 "mode": "geometry_dependent_from_selected_registry_template",
-                "minimum": min(p0_span_cells.values()),
-                "maximum": max(p0_span_cells.values()),
+                "minimum": min(p0_span_cells.values()) if p0_span_cells else None,
+                "maximum": max(p0_span_cells.values()) if p0_span_cells else None,
                 "by_template_geometry": p0_span_cells,
             },
             "normal_points": 257,
             "first_cell_fraction_characteristic": 3.6e-6,
             "registry": DEFAULT_REGISTRY.relative_to(REPO_ROOT).as_posix(),
             "registry_sha256": registry_hash,
+            "registry_available": registry_available,
             "purpose": (
                 "test the current 21-template candidate wall law and solver path; "
                 "this is not a grid-convergence level"

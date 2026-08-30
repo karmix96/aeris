@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import csv
 import json
-import queue
 import re
 import shutil
 import signal
@@ -27,9 +26,10 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
-from .environment import REPO_ROOT, S7_DIR, STRATEGY_DIR, conda_python, worker_env
+from . import runs
+from .environment import REPO_ROOT, S6_DIR, S7_DIR, STRATEGY_DIR, conda_python, worker_env
 
-for _path in (str(REPO_ROOT / "src"), str(STRATEGY_DIR), str(S7_DIR.parent)):
+for _path in (str(REPO_ROOT / "src"), str(STRATEGY_DIR), str(S7_DIR.parent), str(S6_DIR)):
     if _path not in sys.path:
         sys.path.insert(0, _path)
 
@@ -95,20 +95,45 @@ class SU2Settings:
         return asdict(self)
 
 
-# Calibrated from two OOM kills on this machine, both at iteration 0 on the same
-# 1 621 504 cell mesh, both after preprocessing had already succeeded:
+# MEASURED, not extrapolated.  The earlier figure of 8000 was inferred from two
+# out-of-memory kills; it has since been checked by sampling RSS during real
+# ADflow start-ups on this machine, with volume and surface output disabled so
+# the writer could not be blamed:
 #
-#   2 ranks, 9.9 GiB free   -> killed
-#   1 rank, 10.33 GiB free  -> killed
+#     912 768 cells, 1 rank   -> 9.47 GiB, COMPLETED (11138 B/cell)
+#   1 216 128 cells, 1 rank   -> over 10.55 GiB, killed (9319 B/cell and rising)
+#   1 621 504 cells, 1 rank   -> over 9.04 GiB, killed
+#   1 621 504 cells, 4 ranks  -> over 9.11 GiB total, killed, same peak sooner
 #
-# The second one is the binding observation: one rank exceeded 10.33 GiB on
-# 1.62 M cells, which is at least 6.85 KiB per cell.  8 KiB carries a little
-# margin over that.  Every figure here is a LOWER BOUND recovered from a
-# failure, not a measured peak - the run never got far enough to report one - so
-# this predicts refusals more reliably than it predicts successes, which is the
-# safer direction for a guard to err in.
-ADFLOW_BYTES_PER_CELL_PER_RANK = 8000
-ADFLOW_MEMORY_FRACTION = 0.75
+# Three conclusions, all load-bearing.  The per-cell cost is around 11 KiB, so
+# the old 8000 was OPTIMISTIC rather than pessimistic.  Extra MPI ranks do not
+# reduce the total - they partition the work, not the footprint - so "use more
+# ranks" is not a way out of a memory ceiling.  And the per-cell figure RISES as
+# the mesh shrinks (11.1 KiB at 913 k against 9.3 KiB at 1.22 M), which says a
+# meaningful part of the footprint is fixed overhead rather than per-cell
+# storage; the linear model below therefore over-predicts small meshes slightly,
+# which is the safe direction.
+#
+# Calibrated so the one configuration measured to COMPLETE is allowed and both
+# configurations measured to die are refused:
+#
+#   913 k cells -> 9.6 GiB predicted against a 10.0 GiB budget   ALLOW (ran at 9.47)
+#   1.22 M      -> 12.8 GiB predicted                            REFUSE (died)
+#   1.62 M      -> 17.0 GiB predicted                            REFUSE (died)
+#
+# 9.3 KiB is high for structured RANS, and the likely reason is this topology:
+# S6's nose and base blocks are two cells across, and ADflow stores two halo
+# layers on each side, so those blocks cost roughly three times what their
+# interior alone would suggest.  It is a property of the mesh, not a
+# misconfiguration.
+#
+# The allocation arrives in two steps - one at the end of preprocessing, one at
+# iteration 0 - which is why a run that has printed its first iteration line has
+# NOT yet proved it will survive.
+ADFLOW_BYTES_PER_CELL_PER_RANK = 11000
+# 0.75 was too strict once the per-cell figure was corrected: the 913 k run
+# genuinely used 80% of available memory and completed.
+ADFLOW_MEMORY_FRACTION = 0.85
 
 
 @dataclass
@@ -141,7 +166,10 @@ class ADflowSettings:
 class RunState:
     """What the UI polls while a solve is in flight."""
 
-    status: str = "idle"          # idle | running | converged | diverged | failed | stopped
+    # A PROCESS state, never a physics one.  "completed" is what a zero exit
+    # code entitles the workbench to say; whether the solution converged is
+    # decided afterwards by the CFD gates, and is reported separately.
+    status: str = "idle"          # idle | running | completed | failed | stopped
     iteration: int = 0
     started_at: float = 0.0
     wall_seconds: float = 0.0
@@ -254,8 +282,12 @@ class SolverRun:
                 if self._stop.is_set():
                     self.state.status = "stopped"
                 elif code == 0:
-                    self.state.status = "converged"
-                    self.state.message = "solver exited cleanly"
+                    # NOT "converged".  A solver that limit-cycles for a
+                    # thousand iterations and then hits its cycle cap exits
+                    # zero, and the old workbench reported that as convergence.
+                    self.state.status = "completed"
+                    self.state.message = ("process exited cleanly; convergence is "
+                                          "decided by the CFD gates")
                 else:
                     self.state.status = "failed"
                     self.state.message = f"exit code {code}"
@@ -379,7 +411,7 @@ class SU2Runner(SolverRun):
         if len(cells) != len(self._columns):
             return None
         out: dict[str, float] = {}
-        for name, cell in zip(self._columns, cells):
+        for name, cell in zip(self._columns, cells, strict=True):
             if not _SU2_NUMBER.fullmatch(cell.replace(" ", "")):
                 return None
             key = {"Inner_Iter": "iteration", "Inner_Iter ": "iteration", "rms[Rho]": "rms_rho",
@@ -421,7 +453,7 @@ class SU2Runner(SolverRun):
         for row in rows[1:]:
             if len(row) != len(headers):
                 continue
-            for name, cell in zip(headers, row):
+            for name, cell in zip(headers, row, strict=True):
                 try:
                     out[name].append(float(cell))
                 except ValueError:
@@ -434,6 +466,12 @@ class SU2Runner(SolverRun):
 # --------------------------------------------------------------------------- #
 
 _ADFLOW_ROW = re.compile(r"^\s*\d+\s+\d+\s+\d+")
+
+#: The AeroProblem name, and therefore the stem ADflow gives its surface
+#: solution.  S6 globs `aeris_cfd*_surf.cgns`, so this is what makes its wall-y+
+#: gate applicable to a workbench run.
+ADFLOW_PROBLEM_NAME = "aeris_cfd_workbench"
+ADFLOW_RESULT_NAME = "adflow_result.json"
 
 ADFLOW_RUNNER = '''"""Generated by the AERIS workbench - one ADflow solve."""
 import json, sys
@@ -502,7 +540,13 @@ class ADflowRunner(SolverRun):
             "surfaceVariables": ["cp", "yplus", "cf", "vx", "vy", "vz"],
         }
         spec = {
-            "name": "workbench",
+            # The generated runner passes this straight to `AeroProblem(name=)`,
+            # and ADflow names its surface solution after it.  `aeris_cfd_*` is
+            # what S6's own wall-y+ gate globs for
+            # (`campaign._wall_yplus_gate`: `aeris_cfd*_surf.cgns`), so naming
+            # the problem this way lets the workbench reuse that gate rather
+            # than reimplement the y+ limits with its own CGNS reader.
+            "name": ADFLOW_PROBLEM_NAME,
             "grid_file": str(Path(grid_file).resolve()),
             "options": options,
             "flow": flow.as_dict(),
@@ -530,7 +574,7 @@ class ADflowRunner(SolverRun):
         # Grid / Iter / Iter_Tot / Iter_Type ... then the monitored variables.
         out: dict[str, float] = {"iteration": values[1]}
         names = ["rms_rho", "rms_turb", "CL", "CD", "CMy", "yplus"]
-        for name, value in zip(names, values[3:]):
+        for name, value in zip(names, values[3:], strict=False):
             out[name] = value
         return out
 
@@ -552,8 +596,15 @@ class ADflowRunner(SolverRun):
         }
 
     def start(self, grid_file: Path, flow: FlowConditions, settings: ADflowSettings,
-              output_dir: Path, *, cells: int = 0) -> Path:
-        if cells:
+              output_dir: Path, *, cells: int = 0, allow_over_budget: bool = False) -> Path:
+        # The forecast is ADVISORY.  `ADFLOW_BYTES_PER_CELL_PER_RANK` is a lower
+        # bound recovered from two OOM kills, not a measured peak, and published
+        # ADflow RANS runs sit nearer 1-3 KiB per cell - so this over-predicts
+        # far more often than it under-predicts.  Refusing outright on that
+        # basis takes a decision away from the person whose machine it is.  The
+        # default still declines, loudly, and `allow_over_budget` lets the user
+        # say "run it anyway" for their own hardware.
+        if cells and not allow_over_budget:
             forecast = self.memory_forecast(cells, settings.processes)
             if not forecast["fits"]:
                 raise MemoryError(
@@ -561,12 +612,20 @@ class ADflowRunner(SolverRun):
                     f"{forecast['cells']:,} cells on {forecast['ranks']} rank(s), "
                     f"and only {forecast['budget_gib']} GiB of the "
                     f"{forecast['available_gib']} GiB free is safe to use. "
-                    "Mesh a coarser VOLUME LEVEL - L4 or L3 coarsen the surface "
-                    "fourfold in each direction, which is roughly a sixteenth of "
-                    "the cells - and keep MPI ranks at one, since every rank "
-                    "holds its own copy of the grid and more ranks need more "
-                    "memory rather than less. On this machine `smoke` and above "
-                    "are desktop-class meshes for ADflow, not laptop ones."
+                    "Reduce the CELL COUNT, which is the surface quad count "
+                    "times the wall-normal layers. Both halves are reachable in "
+                    "experimental mode, and the wall-normal count is usually the "
+                    "better one to cut first - it shrinks the volume without "
+                    "coarsening the surface that carries tip-cap quality. Note "
+                    "that dropping below about N97 costs quality: the same "
+                    "march distance over fewer layers stretches every cell.\n\n"
+                    "Adding MPI ranks will NOT help - measured on this machine, "
+                    "1 rank and 4 ranks peak at the same total. L3 and L4 are "
+                    "not the answer either: they ask pyHyp to coarsen fourfold, "
+                    "which S6's surface cannot survive.\n\n"
+                    "This figure is a MEASURED peak, not a guess, and it was "
+                    "still climbing when sampling stopped - so overriding it is "
+                    "unlikely to end well."
                 )
         runner = self.write_case(grid_file, flow, settings, output_dir)
         command = ["mpirun", "-n", str(max(1, settings.processes)),
@@ -577,14 +636,127 @@ class ADflowRunner(SolverRun):
         return runner
 
     @staticmethod
-    def read_result(output_dir: Path) -> dict[str, Any]:
-        path = Path(output_dir) / "adflow_result.json"
+    def read_result(output_dir: Path, *, produced_after: float | None = None) -> dict[str, Any]:
+        """This run's forces, or nothing.
+
+        `produced_after` is the moment the solve was launched.  Without it a
+        failed rerun in a reused directory handed back the PREVIOUS run's
+        `adflow_result.json` and the interface showed those forces as current.
+        Unique run directories make that impossible by construction; this is the
+        second lock on the same door, for any caller that reuses a directory.
+        """
+        path = Path(output_dir) / ADFLOW_RESULT_NAME
         if not path.is_file():
             return {}
+        if produced_after is not None:
+            artifact = runs.claim_output(path, produced_after=produced_after)
+            if not artifact.fresh:
+                return {}
         try:
             return json.loads(path.read_text(encoding="utf-8"))
         except Exception:  # noqa: BLE001
             return {}
+
+
+# --------------------------------------------------------------------------- #
+# CFD acceptance                                                                #
+# --------------------------------------------------------------------------- #
+#
+# A solver process returning zero means the process finished.  It says nothing
+# about whether the answer is worth having: ADflow exits cleanly after hitting
+# its cycle cap while limit-cycling, and it exits cleanly having produced nan
+# forces on a grid with negative volumes.  The old workbench called both of
+# those "converged".
+#
+# S6 already decides this question, in `campaign.solve_case`, with five gates.
+# Every one of them is REUSED here rather than reimplemented - `_force_tail_gate`,
+# `_force_plausibility_gate` and `_wall_yplus_gate` are the study's functions,
+# and the residual threshold is its 6.0 orders.  A second implementation of a
+# gate is a second opinion, and the study's is the one that counts.
+
+CFD_RESIDUAL_ORDERS_MIN = 6.0
+CFD_FORCE_TAIL_RELATIVE_RANGE_MAX = 0.001
+
+
+def adflow_cfd_verdict(output_dir: Path, *, return_code: int | None,
+                       started_at: float | None = None,
+                       log_name: str = "adflow_stdout.log") -> dict[str, Any]:
+    """Apply S6's CFD acceptance gates to a workbench ADflow run."""
+    import campaign  # noqa: PLC0415
+
+    from aeris.cfd.solvers.adflow.parse import parse_monitor_history  # noqa: PLC0415
+
+    output_dir = Path(output_dir)
+    log_path = output_dir / log_name
+    raw = ADflowRunner.read_result(output_dir, produced_after=started_at)
+    # ADflow keys evalFunctions as "<problem>_<func>"; S6's gates want bare
+    # coefficient names, and this is the same normalisation its adapter does.
+    forces = {
+        (key.split("_")[-1] if "_" in key else key).lower(): float(value)
+        for key, value in raw.items() if isinstance(value, (int, float))
+    }
+
+    convergence: dict[str, Any] = {}
+    if log_path.is_file():
+        convergence = dict(parse_monitor_history(log_path.read_text(encoding="utf-8")))
+    orders = convergence.get("orders_dropped")
+    residual_passed = orders is not None and float(orders) >= CFD_RESIDUAL_ORDERS_MIN
+
+    plausibility = campaign._force_plausibility_gate(forces)
+    if log_path.is_file():
+        force_tail = campaign._force_tail_gate(
+            log_path, relative_range_max=CFD_FORCE_TAIL_RELATIVE_RANGE_MAX)
+    else:
+        force_tail = {"passed": False, "reason": "no solver log"}
+    yplus, _surface = campaign._wall_yplus_gate(output_dir)
+
+    finite_forces = not plausibility["missing"] and not plausibility["nonfinite"]
+    rows = [
+        _cfd_row("solver return code", return_code, "0", return_code == 0),
+        _cfd_row("forces recorded", sorted(forces) or "none",
+                 "cl, cd, cmy present", not plausibility["missing"]),
+        _cfd_row("finite forces", plausibility["nonfinite"] or "all finite",
+                 "no nan or inf", finite_forces),
+        _cfd_row("positive drag", forces.get("cd"), "> 0",
+                 bool(plausibility["positive_drag"])),
+        _cfd_row("residual reduction", orders,
+                 f">= {CFD_RESIDUAL_ORDERS_MIN:g} orders", bool(residual_passed)),
+        _cfd_row("force tail stability", force_tail.get("relative_ranges"),
+                 f"relative range <= {CFD_FORCE_TAIL_RELATIVE_RANGE_MAX:g}",
+                 bool(force_tail.get("passed"))),
+        _cfd_row("wall y+", yplus.get("percentiles"),
+                 "p95 <= 1, p99 <= 2, max <= 5", bool(yplus.get("passed"))),
+    ]
+    failed = [row["gate"] for row in rows if not row["passed"]]
+    accepted = not failed
+    return {
+        "mode": "experimental",
+        "state": "CFD_ACCEPTED" if accepted else "CFD_REJECTED",
+        "accepted": accepted,
+        "return_code": return_code,
+        "forces": forces,
+        "residual_orders_dropped": orders,
+        "residual_gate_passed": bool(residual_passed),
+        "finite_forces": finite_forces,
+        "force_plausibility_gate": plausibility,
+        "force_tail_gate": force_tail,
+        "wall_yplus_gate": yplus,
+        "rows": rows,
+        "failed": failed,
+    }
+
+
+def _cfd_row(name: str, actual: Any, limit: str, passed: bool) -> dict[str, Any]:
+    if isinstance(actual, float):
+        shown = f"{actual:.6g}"
+    elif isinstance(actual, dict):
+        shown = ", ".join(f"{k} {v:.3g}" if isinstance(v, float) else f"{k} {v}"
+                          for k, v in list(actual.items())[:3]) or "none"
+    elif isinstance(actual, (list, tuple)):
+        shown = ", ".join(str(v) for v in actual[:4]) or "none"
+    else:
+        shown = "-" if actual is None else str(actual)
+    return {"gate": name, "actual": shown, "limit": limit, "passed": bool(passed)}
 
 
 RESIDUAL_LABELS = {

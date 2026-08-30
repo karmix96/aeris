@@ -74,7 +74,8 @@ def find_solution_files(run_dir: Path) -> dict[str, list[str]]:
     run_dir = Path(run_dir)
     surface, volume = [], []
     for path in sorted(run_dir.rglob("*")):
-        if not path.is_file() or path.suffix.lower() not in (".vtk", ".vtu", ".vtp", ".cgns", ".vts"):
+        if not path.is_file() or path.suffix.lower() not in (
+                ".vtk", ".vtu", ".vtp", ".cgns", ".vts"):
             continue
         name = path.name.lower()
         if "surface" in name or "slice" in name or path.suffix.lower() == ".vtp":
@@ -197,7 +198,7 @@ def dataset_bounds(dataset) -> tuple[float, ...]:
             highs[axis] = max(highs[axis], bounds[2 * axis + 1])
     if lows[0] == float("inf"):
         return (0.0,) * 6
-    return tuple(v for pair in zip(lows, highs) for v in pair)
+    return tuple(v for pair in zip(lows, highs, strict=True) for v in pair)
 
 
 def contour(dataset, name: str, values: list[float]):
@@ -272,7 +273,7 @@ def su2_forces(run_dir: Path) -> dict[str, float]:
         return {}
     headers = [h.strip().strip('"') for h in rows[0]]
     out: dict[str, float] = {}
-    for name, cell in zip(headers, rows[-1]):
+    for name, cell in zip(headers, rows[-1], strict=False):
         if name in ("CL", "CD", "CMy", "CMx", "CMz", "CFx", "CFy", "CFz",
                     "CSF", "CEff", "rms[Rho]"):
             try:

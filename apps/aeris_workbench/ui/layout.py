@@ -8,11 +8,19 @@ viewport persists across all four so the camera never resets under the user.
 
 from __future__ import annotations
 
-from .. import geometry as geo
 from trame.ui.vuetify3 import SinglePageWithDrawerLayout
 from trame.widgets import html
 from trame.widgets import vtk as vtk_widgets
 from trame.widgets import vuetify3 as v3
+
+from .. import controls as control_defs
+from .. import geometry as geo
+
+
+def _surface_controls():
+    """The declared S6 surface controls, so the panel cannot drift from the table."""
+    return control_defs.surface_controls()
+
 
 CARD = {"classes": "mb-3", "variant": "flat", "color": "surface-variant"}
 DENSE = {"density": "compact", "hide_details": True, "variant": "outlined"}
@@ -40,7 +48,71 @@ def _stat_row(label: str, value_expr: str):
 
 # --------------------------------------------------------------------------- #
 
+def _verdict_card(title: str, state_expr: str, verdict: str, subtitle: str = ""):
+    """One acceptance verdict, as the gates that produced it.
+
+    A single word is not enough here.  "Accepted" without the gates behind it is
+    the claim this workbench was making before anything checked it, so the rows
+    are always drawn and always name their limit.
+    """
+    with v3.VCard(**CARD, v_if=f"{verdict}.rows && {verdict}.rows.length"):
+        _section(title, subtitle)
+        with v3.VCardText(classes="pt-0"):
+            with html.Div(classes="d-flex align-center mb-2"):
+                v3.VChip("{{ " + state_expr + " }}", size="x-small", label=True,
+                         color=(f"{verdict}.accepted ? 'success' : 'error'",))
+                v3.VSpacer()
+                html.Span("{{ " + verdict + ".mode }}",
+                          classes="text-caption text-medium-emphasis")
+            with html.Div(v_for=f"row in {verdict}.rows", key="row.gate",
+                          classes="d-flex justify-space-between text-caption py-1"):
+                html.Span("{{ row.gate }}",
+                          style=("row.passed ? '' : 'color:#ff6b6b'",))
+                html.Span("{{ row.actual }} / {{ row.limit }}",
+                          classes="font-weight-medium")
+
+
+def geometry_source_panel(app):
+    """Which geometry, chosen ONCE.
+
+    The sliders and the development index used to be simultaneously live, with
+    the sliders feeding the summary and the index feeding the surface that got
+    meshed.  Selecting a source here disables the other input, so the two can
+    no longer describe different aircraft at the same time.
+    """
+    with v3.VCard(**CARD):
+        _section("Geometry source", "One source drives the viewport, the mesh "
+                                    "and the solver references")
+        with v3.VCardText(classes="pt-0"):
+            v3.VSelect(label="Source", v_model=("geometry_source",),
+                       items=("geometry_sources",), **DENSE)
+            with html.Div(v_if="geometry_source === 'development_index'"):
+                with v3.VRow(classes="mt-1"):
+                    _number("Development index", "development_index", step=1, cols=7)
+                    with v3.VCol(cols=5, classes="py-1 d-flex align-center"):
+                        html.Span("of {{ development_set_size }} in "
+                                  "{{ development_set }}",
+                                  classes="text-caption text-medium-emphasis")
+                with html.Div(classes="text-caption mt-1", style="color:#e8a33d"):
+                    html.Span("The sliders are locked to this design and show "
+                              "its values. Switch to Interactive design to move them.")
+            with html.Div(v_if="design_fingerprint", classes="mt-2"):
+                _stat_row("Design fingerprint", "design_fingerprint")
+                _stat_row("Geometry id", "geometry_provenance.geometry_id")
+                _stat_row("areaRef", "geometry_provenance.flow_references?"
+                                     ".area_ref_m2?.toFixed(5) + ' m²'")
+                _stat_row("chordRef", "geometry_provenance.flow_references?"
+                                      ".chord_ref_m?.toFixed(5) + ' m'")
+                with html.Div(classes="text-caption text-medium-emphasis mt-1"):
+                    html.Span("Surface, mesh and solver all carry this fingerprint.")
+            with html.Div(v_if="geometry_ready && design_moved && "
+                               "geometry_source === 'interactive'",
+                          classes="text-caption mt-2", style="color:#e8a33d"):
+                html.Span("The sliders have moved since this geometry was built.")
+
+
 def geometry_panel(app):
+    geometry_source_panel(app)
     with v3.VCard(**CARD):
         _section("Design variables", "Bounds come from configs/geometry/bwb.yaml")
         with v3.VCardText(classes="pt-0"):
@@ -76,41 +148,96 @@ def geometry_panel(app):
                                         step=variable.step,
                                         density="compact", hide_details=True,
                                         thumb_label=False, color=("accent",),
+                                        # Disabled, not merely ignored: an
+                                        # indexed geometry and a slider design
+                                        # cannot both be live.
+                                        disabled=("sliders_locked",),
                                     )
             with v3.VRow(classes="mt-2"):
                 with v3.VCol(cols=6, classes="py-1"):
+                    # S7 chooses a tessellation level here.  S6 chooses a
+                    # QUALIFIED GRID instead, because for S6 a surface level on
+                    # its own is only half of a grid definition.
                     v3.VSelect(label="Surface level", v_model=("surface_level",),
-                               items=("surface_levels",), **DENSE)
+                               items=("surface_levels",), **DENSE,
+                               v_if="!surface_is_structured")
                 with v3.VCol(cols=6, classes="py-1"):
                     v3.VSelect(label="Trailing edge", v_model=("te_variant",),
                                items=("te_variants",), **DENSE,
-                               disabled=("surface_is_structured",))
+                               v_if="!surface_is_structured")
             with html.Div(v_if="surface_is_structured"):
+                v3.VSelect(label="Qualified grid family", v_model=("grid_name",),
+                           items=("grid_items",), classes="mt-2", **DENSE)
+                with html.Div(v_if="grid_summary",
+                              classes="text-caption text-medium-emphasis mt-1"):
+                    html.Span("{{ grid_summary }}")
+                    html.Br()
+                    html.Span("Sets the complete coupled definition: surface "
+                              "counts, wall-normal points and wall spacing "
+                              "together. G1, G2 and G3 are the only grids S6 "
+                              "qualifies — there is no G0 or G4.")
+                with html.Div(v_if="!grid_name"):
+                    v3.VSelect(label="Surface level basis", v_model=("surface_level",),
+                               items=("surface_levels",), classes="mt-2", **DENSE)
+                    with html.Div(classes="text-caption mt-1", style="color:#e8a33d"):
+                        # Measured, not assumed: `coarse` marches in 34 s and
+                        # then FAILS the production floor at min scaled
+                        # Jacobian -0.113, while G1 passes at +0.132.  That is
+                        # very likely why S6's qualified family starts at G1,
+                        # and it is why this box does not recommend `coarse` as
+                        # a cheap way out.
+                        html.Span("Manual: not a qualified S6 grid, and no "
+                                  "acceptance evidence behind it. The 'coarse' "
+                                  "level (869,888 cells) marches quickly but was "
+                                  "measured at min scaled Jacobian -0.113 on the "
+                                  "baseline design — below the 0.10 floor, so it "
+                                  "will not be solvable. G1 is the smallest grid "
+                                  "measured to pass.")
                 with v3.VExpansionPanels(variant="accordion", classes="mt-3"):
                     with v3.VExpansionPanel():
-                        v3.VExpansionPanelTitle("Local refinement", classes="text-caption")
+                        v3.VExpansionPanelTitle(
+                            "Experimental structured surface controls",
+                            classes="text-caption")
                         with v3.VExpansionPanelText():
                             with html.Div(classes="text-caption text-medium-emphasis mb-2"):
-                                html.Span("Spanwise divisions are the lever for "
-                                          "trailing-edge aspect ratio. Adding points "
-                                          "across the edge, or clustering harder, "
-                                          "makes it worse.")
+                                html.Span("These change the STRUCTURED SURFACE "
+                                          "only. pyHyp marches that surface "
+                                          "rigidly outward, so there is no "
+                                          "arbitrary 3D local refinement here: "
+                                          "refining a region of the volume means "
+                                          "refining the surface patch under it. "
+                                          "Spanwise divisions are the lever for "
+                                          "trailing-edge aspect ratio.")
+                            # Drawn from `controls.surface_controls()`, so a
+                            # control that is not declared - and therefore not
+                            # tested to reach an effective input - cannot appear.
+                            # Unrolled in Python, each bound to its OWN flat
+                            # state key - the same reason the design sliders are
+                            # unrolled.  A widget bound into a nested dict
+                            # mutates it in the browser and the server never
+                            # sees the change, so the box read 29 while the
+                            # mesher used 33.
                             with v3.VRow():
-                                _number("Chordwise divisions", "s6_surface.chord_points", step=2)
-                                _number("Spanwise divisions", "s6_surface.span_cells", step=2)
-                                _number("Max spanwise cell", "s6_surface.span_max_cell_m",
-                                        step=0.001, suffix="m")
-                                _number("LE/TE divisions", "s6_surface.end_points", step=1)
-                                _number("Tip collar divisions", "s6_surface.collar_points", step=2)
-                                _number("LE/TE clustering", "s6_surface.end_scale", step=0.5)
-                                _number("TE thickness", "s6_surface.te_abs_m",
-                                        step=0.0001, suffix="m")
-                                _number("TE floor", "s6_surface.te_floor_frac", step=0.001)
-                                _number("Tip first cell", "s6_surface.tip_first_cell_frac_of_tip_chord",
-                                        step=0.0005)
-                            v3.VBtn("Reset to level defaults", variant="text", size="small",
-                                    block=True, classes="mt-2",
+                                for control in _surface_controls():
+                                    with v3.VCol(cols=6, classes="py-1"):
+                                        v3.VTextField(
+                                            label=control.label,
+                                            v_model=(f"s6c_{control.key}",),
+                                            type="number", step=control.step,
+                                            min=control.minimum, max=control.maximum,
+                                            suffix=control.unit, hint=control.help,
+                                            persistent_hint=False,
+                                            density="compact", variant="outlined",
+                                            hide_details=True)
+                            with html.Div(v_if="control_problems.length", classes="mt-2"):
+                                v3.VAlert(density="compact", variant="tonal", type="warning",
+                                          text=("control_problems.join('; ')",))
+                            v3.VBtn("Reset to the grid definition", variant="text",
+                                    size="small", block=True, classes="mt-2",
                                     click=app.reset_surface_controls)
+                with html.Div(v_if="qualified_grid", classes="text-caption mt-2",
+                              style="color:#7bd88f"):
+                    html.Span("This surface matches {{ qualified_grid }}.")
 
             with html.Div(v_if="surface_level === 'laptop_smoke'",
                           classes="text-caption mt-1",
@@ -179,32 +306,44 @@ def mesh_panel(app):
                         v3.VExpansionPanelTitle("Surface sizing", classes="text-caption")
                         with v3.VExpansionPanelText():
                             with v3.VRow():
-                                _number("Surface edge / L", "mesh_settings.surface_edge_over_L", step=0.005)
-                                _number("TE edge / L", "mesh_settings.te_surface_edge_over_L", step=0.002)
-                                _number("Tip edge / L", "mesh_settings.tip_surface_edge_over_L", step=0.002)
+                                _number("Surface edge / L",
+                                        "mesh_settings.surface_edge_over_L", step=0.005)
+                                _number("TE edge / L",
+                                        "mesh_settings.te_surface_edge_over_L", step=0.002)
+                                _number("Tip edge / L",
+                                        "mesh_settings.tip_surface_edge_over_L", step=0.002)
                     with v3.VExpansionPanel():
                         v3.VExpansionPanelTitle("Boundary layer", classes="text-caption")
                         with v3.VExpansionPanelText():
                             with v3.VRow():
-                                _number("First cell / L", "mesh_settings.first_cell_height_over_L", step=1e-4)
+                                _number("First cell / L",
+                                        "mesh_settings.first_cell_height_over_L", step=1e-4)
                                 _number("Prism layers", "mesh_settings.prism_layers", step=1)
-                                _number("Growth ratio", "mesh_settings.prism_growth_ratio", step=0.01)
+                                _number("Growth ratio",
+                                        "mesh_settings.prism_growth_ratio", step=0.01)
                     with v3.VExpansionPanel():
                         v3.VExpansionPanelTitle("Volume core", classes="text-caption")
                         with v3.VExpansionPanelText():
                             with v3.VRow():
-                                _number("Near core / L", "mesh_settings.near_core_edge_over_L", step=0.01)
-                                _number("Far core / L", "mesh_settings.far_core_edge_over_L", step=0.01)
-                                _number("Wake edge / L", "mesh_settings.wake_edge_over_L", step=0.01)
-                                _number("Max growth", "mesh_settings.core_max_growth_ratio", step=0.01)
+                                _number("Near core / L",
+                                        "mesh_settings.near_core_edge_over_L", step=0.01)
+                                _number("Far core / L",
+                                        "mesh_settings.far_core_edge_over_L", step=0.01)
+                                _number("Wake edge / L",
+                                        "mesh_settings.wake_edge_over_L", step=0.01)
+                                _number("Max growth",
+                                        "mesh_settings.core_max_growth_ratio", step=0.01)
                     with v3.VExpansionPanel():
                         v3.VExpansionPanelTitle("Far field", classes="text-caption")
                         with v3.VExpansionPanelText():
                             with v3.VRow():
-                                _number("Upstream / L", "mesh_settings.upstream_over_L", step=0.5)
-                                _number("Downstream / L", "mesh_settings.downstream_over_L", step=0.5)
+                                _number("Upstream / L",
+                                        "mesh_settings.upstream_over_L", step=0.5)
+                                _number("Downstream / L",
+                                        "mesh_settings.downstream_over_L", step=0.5)
                                 _number("Radial / L", "mesh_settings.radial_over_L", step=0.5)
-                                _number("Wake length / L", "mesh_settings.wake_length_over_L", step=0.5)
+                                _number("Wake length / L",
+                                        "mesh_settings.wake_length_over_L", step=0.5)
                     with v3.VExpansionPanel():
                         v3.VExpansionPanelTitle("Algorithms", classes="text-caption")
                         with v3.VExpansionPanelText():
@@ -218,7 +357,8 @@ def mesh_panel(app):
                                                v_model=("mesh_settings.volume_algorithm",),
                                                items=("algorithms_3d",), **DENSE)
                                 with v3.VCol(cols=7, classes="py-1"):
-                                    v3.VSelect(label="Optimiser", v_model=("mesh_settings.optimizer",),
+                                    v3.VSelect(label="Optimiser",
+                                               v_model=("mesh_settings.optimizer",),
                                                items=("optimizers",), **DENSE)
                                 _number("Passes", "mesh_settings.optimize_passes", step=1, cols=5)
                     with v3.VExpansionPanel():
@@ -277,21 +417,106 @@ def mesh_panel(app):
                     html.Span("Estimated cells: {{ mesh_estimate.toLocaleString() }} "
                               "(before local refinement)")
             else:
-                with v3.VRow():
-                    with v3.VCol(cols=6, classes="py-1"):
-                        v3.VSelect(label="Volume level", v_model=("pyhyp_volume_level",),
-                                   items=("pyhyp_volume_levels",), **DENSE)
-                    with v3.VCol(cols=6, classes="py-1"):
-                        v3.VSelect(label="Surface level", v_model=("pyhyp_surface_level",),
-                                   items=("pyhyp_surface_levels",), **DENSE)
-                    _number("Smoothing εₑ", "pyhyp_eps_e", step=0.1)
-                    _number("Constant layers", "pyhyp_n_constant", step=1)
-                    _number("Design index", "pyhyp_index", step=1)
-                with html.Div(classes="text-caption text-medium-emphasis mt-2"):
-                    html.Span("Runs in the conda mach-aero interpreter as a subprocess.")
+                # Surface level and design index used to be repeated here.  They
+                # belong to the Geometry tab, and having them in two places is
+                # how the surface on screen and the surface marched came apart.
+                v3.VSelect(label="Mesh generation mode", v_model=("s6_mode",),
+                           items=("s6_modes",), **DENSE)
+                with html.Div(classes="text-caption text-medium-emphasis mt-1"):
+                    html.Span("{{ mode_help[s6_mode] }}")
 
-            v3.VBtn(f"Generate mesh", block=True, color=("accent",), classes="mt-3",
-                    loading=("busy",), click=app.build_mesh, prepend_icon="mdi-grid")
+                with html.Div(v_if="s6_mode === 'governed'", classes="mt-2"):
+                    v3.VAlert(
+                        density="compact", variant="tonal",
+                        type=("governed.available ? 'success' : 'error'",),
+                        text=("governed.available "
+                              "? 'Atlas ready — ' + governed.summary "
+                              ": 'Governed mode is DISABLED — ' + governed.summary",),
+                    )
+                    with html.Div(v_if="governed.available", classes="mt-2"):
+                        _stat_row("Registry", "governed.registry.split('/').pop()")
+                        _stat_row("Templates", "governed.template_count")
+                        _stat_row("Volume level", "governed.volume_level")
+                        _stat_row("Production floor", "governed.production_floor")
+                        _stat_row("Preferred quality", "governed.preferred_quality")
+                    with html.Div(v_else=True,
+                                  classes="text-caption text-medium-emphasis mt-2"):
+                        html.Span("This mode will not fall back to a direct "
+                                  "pyHyp march. Configure the paths below, or "
+                                  "switch to experimental mode deliberately.")
+                        with html.Div(v_for="row in configured_paths", key="row.variable",
+                                      classes="d-flex justify-space-between text-caption py-1"):
+                            html.Span("{{ row.variable }}",
+                                      classes="text-medium-emphasis")
+                            html.Span("{{ row.exists === 'yes' ? '✓' : '✗' }} "
+                                      "{{ row.path }}",
+                                      style="max-width:250px; overflow:hidden; "
+                                            "text-overflow:ellipsis; white-space:nowrap")
+
+                with html.Div(v_if="s6_mode === 'experimental'", classes="mt-2"):
+                    with v3.VRow():
+                        with v3.VCol(cols=12, classes="py-1"):
+                            v3.VSelect(label="Wall-normal level",
+                                       v_model=("pyhyp_volume_level",),
+                                       items=("pyhyp_volume_levels",), **DENSE)
+                        with v3.VCol(cols=6, classes="py-1"):
+                            v3.VSelect(label="Wall-normal points",
+                                       v_model=("pyhyp_normal_points",),
+                                       items=("pyhyp_normal_choices",), **DENSE)
+                        _number("Smoothing εₑ", "pyhyp_eps_e", step=0.5, cols=6)
+                        _number("Wall spacing s0/L", "pyhyp_s0_fraction", step=1e-6, cols=12)
+                    with html.Div(classes="text-caption text-medium-emphasis mt-1"):
+                        html.Span("Cells = surface quads × (N−1). Lowering N shrinks "
+                                  "the volume without coarsening the surface, which "
+                                  "is what carries the tip-cap quality the "
+                                  "production floor measures. Measured: ADflow needs "
+                                  "over 9 GiB for 1.62 M cells on this machine, and "
+                                  "extra MPI ranks do not reduce that.")
+                    with html.Div(classes="text-caption text-medium-emphasis mt-2"):
+                        html.Span("Runs in the conda mach-aero interpreter as a "
+                                  "subprocess. Constant-layer count is not "
+                                  "exposed: the shared pyHyp runner takes no such "
+                                  "argument, so pyHyp uses nConstantStart = 5.")
+
+                with html.Div(v_if="mesh_estimate", classes="mt-2"):
+                    v3.VAlert(density="compact", variant="tonal", type="info",
+                              text=("mesh_estimate.toLocaleString() + ' cells: ' + "
+                                    "'surface quads times wall-normal layers'",))
+
+            with html.Div(v_if="mesh_blockers.length", classes="mt-3"):
+                v3.VAlert(density="compact", variant="tonal", type="warning",
+                          text=("mesh_blockers.join(' · ')",))
+            v3.VBtn("Generate mesh", block=True, color=("accent",), classes="mt-3",
+                    loading=("busy",), click=app.build_mesh, prepend_icon="mdi-grid",
+                    disabled=("!can_mesh",))
+
+    _verdict_card("Mesh audit", "mesh_state", "mesh_verdict",
+                  "Every gate that decided whether this mesh is usable")
+
+    with v3.VCard(**CARD, v_if="mesh_attempts.length"):
+        _section("Template attempts",
+                 "Every atlas template S6 tried, and why each was rejected")
+        with v3.VCardText(classes="pt-0"):
+            with html.Div(v_for="a in mesh_attempts", key="a.template_id",
+                          classes="py-1"):
+                with html.Div(classes="d-flex justify-space-between text-caption"):
+                    html.Span("{{ a.template_id }}", classes="font-weight-medium")
+                    html.Span("{{ a.state }}",
+                              style=("a.state === 'PASS' ? 'color:#7bd88f' "
+                                     ": 'color:#ff6b6b'",))
+                with html.Div(classes="text-caption text-medium-emphasis"):
+                    html.Span("d {{ a.distance_rms }} · {{ a.reason || 'accepted' }}")
+
+    with v3.VCard(**CARD, v_if="mesh_provenance.run_id"):
+        _section("Provenance")
+        with v3.VCardText(classes="pt-0"):
+            _stat_row("Run id", "mesh_provenance.run_id")
+            _stat_row("Design fingerprint", "mesh_provenance.design_fingerprint")
+            _stat_row("Mode", "mesh_provenance.mode || 'gmsh'")
+            _stat_row("CGNS sha256", "(mesh_provenance.cgns_sha256 || '').slice(0, 16)")
+            _stat_row("Template", "mesh_provenance.template_id || '—'")
+            _stat_row("Registry sha256",
+                      "(mesh_provenance.registry_sha256 || '').slice(0, 16) || '—'")
 
     with v3.VCard(**CARD, v_if="mesh_ready"):
         _section("Mesh")
@@ -300,7 +525,8 @@ def mesh_panel(app):
             _stat_row("Points", "mesh_stats.points?.toLocaleString()")
             _stat_row("Cell types", "Object.entries(mesh_stats.cell_types || {})"
                                     ".map(([k,v]) => k + ' ' + v).join(', ')")
-            _stat_row("Extent", "(mesh_stats.extent_m || []).map(v => v.toFixed(2)).join(' × ') + ' m'")
+            _stat_row("Extent", "(mesh_stats.extent_m || [])"
+                                ".map(v => v.toFixed(2)).join(' × ') + ' m'")
             v3.VDivider(classes="my-2")
             v3.VSwitch(label="Show edges", v_model=("mesh_show_edges",),
                        density="compact", hide_details=True, color=("accent",))
@@ -384,20 +610,39 @@ def solver_panel(app):
                 v3.VAlert(
                     density="compact", variant="tonal",
                     type=("memory_forecast.fits ? 'info' : 'warning'",),
-                    text=("memory_forecast.estimated_gib + ' GiB needed for ' + "
+                    text=("memory_forecast.estimated_gib + ' GiB upper estimate for ' + "
                           "memory_forecast.cells.toLocaleString() + ' cells on ' + "
                           "memory_forecast.ranks + ' rank(s); ' + "
                           "memory_forecast.budget_gib + ' GiB of ' + "
-                          "memory_forecast.available_gib + ' GiB free is safe to use.'",),
+                          "memory_forecast.available_gib + ' GiB free is budgeted. '",),
                 )
+                with html.Div(classes="text-caption text-medium-emphasis mt-1"):
+                    # The number is a lower bound from two failures, so saying
+                    # only the pessimistic figure overstates the problem.
+                    html.Span("That figure assumes 8 KiB per cell, a LOWER BOUND "
+                              "recovered from two out-of-memory kills rather than "
+                              "a measured peak. Typical ADflow RANS runs use 1 to "
+                              "3 KiB per cell, which would be about "
+                              "{{ (memory_forecast.cells * 2000 / 1073741824)"
+                              ".toFixed(1) }} GiB here.")
+                v3.VSwitch(label="Run over the memory budget",
+                           v_model=("allow_over_budget",), v_if="!memory_forecast.fits",
+                           density="compact", hide_details=True, color="warning")
 
+            with html.Div(v_if="solve_blockers.length", classes="mt-3"):
+                v3.VAlert(density="compact", variant="tonal", type="warning",
+                          text=("solve_blockers.join(' · ')",))
             with v3.VRow(classes="mt-2"):
                 with v3.VCol(cols=8):
                     v3.VBtn("Run", block=True, color=("accent",), click=app.start_solver,
-                            prepend_icon="mdi-play", disabled=("run_status === 'running'",))
+                            prepend_icon="mdi-play",
+                            disabled=("run_status === 'running' || !can_solve",))
                 with v3.VCol(cols=4):
                     v3.VBtn("Stop", block=True, variant="tonal", color="error",
                             click=app.stop_solver, disabled=("run_status !== 'running'",))
+
+    _verdict_card("CFD acceptance", "cfd_state", "cfd_verdict",
+                  "A zero exit code is one gate among several, not the answer")
 
 
 def post_panel(app):
@@ -445,7 +690,7 @@ def post_panel(app):
 # --------------------------------------------------------------------------- #
 
 def build_layout(app):
-    state, ctrl = app.state, app.server.controller
+    ctrl = app.server.controller
 
     with SinglePageWithDrawerLayout(app.server, width=430,
                                     theme=("'dark'",)) as layout:
@@ -507,10 +752,19 @@ def build_layout(app):
                                "backdrop-filter:blur(6px)"),
                     ):
                         with html.Div(classes="d-flex align-center mb-2"):
+                            # Two chips, because they answer two questions.
+                            # The process state is not the acceptance state, and
+                            # showing only the first is how "exit code 0" came
+                            # to be displayed as "converged".
                             v3.VChip("{{ run_status }}", size="x-small", label=True,
                                      color=("run_status === 'running' ? 'primary' : "
-                                            "run_status === 'converged' ? 'success' : "
+                                            "run_status === 'completed' ? 'info' : "
                                             "run_status === 'idle' ? 'grey' : 'error'",),
+                                     classes="mr-2")
+                            v3.VChip("{{ cfd_state }}", size="x-small", label=True,
+                                     v_if="cfd_state !== 'none' && cfd_state !== 'running'",
+                                     color=("cfd_state === 'cfd_accepted' ? 'success' : "
+                                            "cfd_state === 'cfd_rejected' ? 'error' : 'grey'",),
                                      classes="mr-2")
                             html.Span("iteration {{ run_iteration }}",
                                       classes="text-caption mr-3")

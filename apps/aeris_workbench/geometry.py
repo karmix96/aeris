@@ -263,19 +263,11 @@ def surface_statistics(surface: Any) -> dict[str, Any]:
 
 S6_SURFACE_LEVELS = ("coarse", "smoke", "medium", "fine")
 
-
-def build_s6_surface(index: int, output_dir: Path, *, level: str = "smoke",
-                     set_name: str = DEVELOPMENT_SET):
-    """The structured surface S6 actually marches, with its own level names."""
-    from .environment import S6_DIR
-
-    if str(S6_DIR) not in sys.path:
-        sys.path.insert(0, str(S6_DIR))
-    from strategy_s6 import build_locked_surface  # noqa: PLC0415
-
-    blocks, info, case = build_locked_surface(
-        set_name, int(index), Path(output_dir), level=level)
-    return blocks, info, case
+# `build_s6_surface(index, ...)` used to live here.  It built its own geometry
+# from the locked development set, so calling it meant the workbench meshed a
+# design the sliders had never touched.  `surface_s6.build_from_case` replaces
+# it and takes the pyGeo result the workbench already holds; there is
+# deliberately no longer a way to build an S6 surface from an index alone.
 
 
 def s6_blocks_to_polydata(blocks):

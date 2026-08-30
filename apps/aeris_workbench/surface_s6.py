@@ -1,15 +1,22 @@
-"""Local surface controls for S6, without touching the S6 strategy.
+"""S6's structured surface, built from the geometry the workbench is showing.
 
-`geometry.build_s6_surface` already builds the structured multiblock S6 marches;
-what it cannot do is vary the resolution locally, because `strategy_s6`
-`build_surface` reads its chord, end and collar counts from its own `LEVELS`
-table rather than accepting them as arguments.
+Two things happen here, and the first one is a correctness fix.
 
-So a THROWAWAY level is registered under a name S6 does not use, the surface is
-built against it, and it is removed again.  S6's four declared levels are never
-read, written or shadowed - verified by comparing the table before and after -
-and no S6 file is modified.  A lock serialises the add/remove because meshing
-runs on a worker thread.
+**The surface comes from an explicit pyGeo case.**  This module used to call
+`build_locked_surface(set_name, index)`, which builds its OWN geometry from the
+locked development set - so the sliders drove the viewport and the planform
+summary while pyHyp marched a different aircraft entirely.  `strategy_s6`
+already exposes `build_surface(pygeo_result, ...)`, which takes the result
+directly, so the workbench now passes the one case it built and the surface
+cannot disagree with the picture.
+
+**Resolution is varied through a throwaway level.**  `build_surface` reads its
+chord, end and collar counts from `strategy_s6.LEVELS` rather than accepting
+them as arguments, so a scratch level is registered under a name S6 does not
+use, the surface is built against it, and it is removed again.  S6's four
+declared levels are never read, written or shadowed, and no S6 file is
+modified.  A lock serialises the add/remove because meshing runs on a worker
+thread.
 
 The quality metrics here are the reason the controls are worth having: the point
 of a refinement UI is that you can see whether the refinement helped.
@@ -21,7 +28,6 @@ import sys
 import threading
 import uuid
 from dataclasses import asdict, dataclass
-from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -79,11 +85,55 @@ def settings_from_level(level: str) -> S6SurfaceSettings:
     )
 
 
-def build_with_controls(settings: S6SurfaceSettings, index: int, output_dir: Path,
-                        *, set_name: str = "lhs100_seed42"):
-    """S6's own surface builder, driven by the workbench's local controls."""
-    from strategy_s6 import LEVELS, LevelSpec, build_locked_surface  # noqa: PLC0415
+def matches_qualified_grid(settings: S6SurfaceSettings) -> str:
+    """The qualified grid this surface IS, or an empty string.
 
+    A surface built from arbitrary counts is experimental even when the counts
+    happen to be reasonable, so the interface has to be able to tell the two
+    apart rather than trusting the level name it started from.
+    """
+    from . import grids  # noqa: PLC0415
+
+    for definition in grids.qualified_grids().values():
+        if (settings.level == definition.surface_level
+                and int(settings.chord_points) == definition.chord_points
+                and int(settings.end_points) == definition.end_points
+                and int(settings.collar_points) == definition.collar_points
+                and int(settings.span_cells) == definition.span_cells):
+            return definition.name
+    return ""
+
+
+def settings_from_grid(name: str) -> S6SurfaceSettings:
+    """The COMPLETE surface half of one qualified grid definition.
+
+    Selecting a grid has to set every coupled count at once.  Setting the
+    surface level and leaving the counts where a user last dragged them would
+    produce a surface that is not G-anything while the selector claimed it was.
+    """
+    from . import grids  # noqa: PLC0415
+
+    definition = grids.grid(name)
+    settings = settings_from_level(definition.surface_level)
+    settings.chord_points = definition.chord_points
+    settings.end_points = definition.end_points
+    settings.collar_points = definition.collar_points
+    settings.span_cells = definition.span_cells
+    return settings
+
+
+def build_from_case(settings: S6SurfaceSettings, pygeo_result: Any):
+    """S6's own surface builder, on THIS geometry, with the local controls.
+
+    The `pygeo_result` argument is the whole point: the surface pyHyp marches is
+    tessellated from the same loft the viewport is drawing and the same loft the
+    reference area came from, so all three cannot drift apart.
+    """
+    from strategy_s6 import LEVELS, LevelSpec, build_surface  # noqa: PLC0415
+
+    if settings.level not in LEVELS:
+        raise KeyError(f"unknown S6 surface level {settings.level!r}; "
+                       f"known: {sorted(LEVELS)}")
     base = LEVELS[settings.level]
     scratch = f"__workbench_{uuid.uuid4().hex[:8]}"
     override = LevelSpec(
@@ -94,11 +144,12 @@ def build_with_controls(settings: S6SurfaceSettings, index: int, output_dir: Pat
         dense_curve_points=int(base.dense_curve_points),
         span_max_cell_m=float(settings.span_max_cell_m),
     )
+    declared = dict(LEVELS)
     with _LEVEL_LOCK:
         LEVELS[scratch] = override
         try:
-            blocks, info, case = build_locked_surface(
-                set_name, int(index), Path(output_dir), level=scratch,
+            blocks, info = build_surface(
+                pygeo_result, level=scratch,
                 te_abs_m=float(settings.te_abs_m),
                 te_floor_frac=float(settings.te_floor_frac),
                 end_scale=float(settings.end_scale),
@@ -108,10 +159,14 @@ def build_with_controls(settings: S6SurfaceSettings, index: int, output_dir: Pat
             )
         finally:
             LEVELS.pop(scratch, None)
+    # S6's declared levels are the study's, not the workbench's, to modify.
+    if dict(LEVELS) != declared:
+        raise RuntimeError("the workbench altered S6's declared level table")
     info = dict(info)
     info["workbench_level_basis"] = settings.level
     info["workbench_controls"] = settings.as_dict()
-    return blocks, info, case
+    info["workbench_qualified_grid"] = matches_qualified_grid(settings)
+    return blocks, info
 
 
 def _patch_metrics(grid: np.ndarray) -> tuple[np.ndarray, np.ndarray]:

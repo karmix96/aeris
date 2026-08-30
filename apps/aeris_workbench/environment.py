@@ -33,11 +33,57 @@ MESH_STUDY = REPO_ROOT / "AERIS_MESH_STUDY"
 STRATEGY_DIR = MESH_STUDY / "04_strategy_studies"
 S6_DIR = STRATEGY_DIR / "S6_bounded_mesh_atlas"
 S7_DIR = STRATEGY_DIR / "S7_unstructured_gmsh_su2"
-WORKSPACE = REPO_ROOT / "apps" / "workspace"
+
+
+def _env_path(name: str, default: Path) -> Path:
+    """A path an operator can move without editing the source.
+
+    Every absolute path this workbench depends on used to be a literal under
+    `/home/mike`, which made the application unrunnable for anyone else and
+    untestable without that exact tree.  Each one now reads an environment
+    variable first and keeps the measured local value as its default, so the
+    behaviour on this machine is unchanged and the app is portable.
+    """
+    value = os.environ.get(name, "").strip()
+    return Path(value).expanduser() if value else default
+
+
+WORKSPACE = _env_path("AERIS_WORKBENCH_WORKSPACE", REPO_ROOT / "apps" / "workspace")
 
 # The MACH-Aero side of the house.  These paths are probed, never assumed.
-CONDA_MACH_AERO = Path("/home/mike/miniconda3/envs/mach-aero")
-MACH_AERO_PACKAGES = Path("/home/mike/packages/mach-aero")
+CONDA_MACH_AERO = _env_path("AERIS_MACH_AERO_ENV", Path("/home/mike/miniconda3/envs/mach-aero"))
+MACH_AERO_PACKAGES = _env_path(
+    "AERIS_MACH_AERO_PACKAGES", Path("/home/mike/packages/mach-aero"))
+
+# The governed S6 route needs artifacts the study produces, not the app.  The
+# names are S6's own (`README.md` exports exactly these three for its Slurm
+# arrays), so pointing the workbench at a campaign is the same gesture as
+# pointing a batch job at one.
+S6_REGISTRY = _env_path("S6_REGISTRY", REPO_ROOT / "template_registry.json")
+S6_MANIFEST = _env_path("S6_MANIFEST", REPO_ROOT / "campaign_manifest.json")
+S6_CAMPAIGN_ROOT = _env_path("S6_CAMPAIGN_ROOT", WORKSPACE / "s6_campaign")
+S6_FLOWS_CSV = _env_path("S6_FLOWS_CSV", S6_DIR / "examples" / "flows_single.csv")
+
+
+def configured_paths() -> list[dict[str, str]]:
+    """Every configurable path, with the variable that overrides it.
+
+    The UI shows this so a missing artifact is a location a user can see and
+    change, rather than a silent failure inside a hard-coded path.
+    """
+    rows = [
+        ("AERIS_WORKBENCH_WORKSPACE", "Workspace", WORKSPACE),
+        ("AERIS_MACH_AERO_ENV", "conda mach-aero", CONDA_MACH_AERO),
+        ("AERIS_MACH_AERO_PACKAGES", "MACH-Aero packages", MACH_AERO_PACKAGES),
+        ("S6_REGISTRY", "S6 template registry", S6_REGISTRY),
+        ("S6_CAMPAIGN_ROOT", "S6 campaign root", S6_CAMPAIGN_ROOT),
+        ("S6_FLOWS_CSV", "S6 flow definitions", S6_FLOWS_CSV),
+    ]
+    return [
+        {"variable": variable, "label": label, "path": str(path),
+         "exists": "yes" if path.exists() else "no"}
+        for variable, label, path in rows
+    ]
 
 
 @dataclass
@@ -151,7 +197,8 @@ def detect(*, quick: bool = False) -> Environment:
         "su2", "SU2_CFD", ok, path if ok else ver, ver.split(",")[0] if ok else "", "binary")
 
     ok, ver, path = _probe_binary("mpirun", ["--version"])
-    env.capabilities["mpi"] = Capability("mpi", "mpirun", ok, path if ok else ver, ver[:40], "binary")
+    env.capabilities["mpi"] = Capability(
+        "mpi", "mpirun", ok, path if ok else ver, ver[:40], "binary")
 
     conda_label = "conda mach-aero"
     if quick:
@@ -163,7 +210,24 @@ def detect(*, quick: bool = False) -> Environment:
         ok, ver, why = _probe_conda(module)
         env.capabilities[key] = Capability(key, label, ok, why, ver, conda_label)
 
+    env.capabilities["atlas"] = _atlas_capability()
     return env
+
+
+def _atlas_capability() -> Capability:
+    """Whether the governed S6 route has the artifacts it cannot run without.
+
+    Governed meshing deforms a FROZEN template out of a registry the study
+    built.  Without that registry there is no governed route at all, and the
+    honest answer is to disable the mode - not to march pyHyp directly and
+    present the result as if it had come through the atlas.
+    """
+    from .governed import availability  # noqa: PLC0415 - avoids an import cycle
+
+    found = availability()
+    return Capability(
+        "atlas", "S6 atlas artifacts", found.available,
+        found.summary(), "", "artifacts")
 
 
 def conda_python() -> Path:
@@ -206,5 +270,6 @@ if __name__ == "__main__":
     width = max(len(r["tool"]) for r in found.as_rows())
     for row in found.as_rows():
         mark = "OK " if row["status"] == "ready" else "-- "
-        print(f"{mark}{row['tool']:<{width}}  {row['version'][:34]:<34} {row['where']:<16} {row['detail'][:60]}")
+        print(f"{mark}{row['tool']:<{width}}  {row['version'][:34]:<34} "
+              f"{row['where']:<16} {row['detail'][:60]}")
     print(f"\ncores {cpu_count()}   memory available {available_memory_gib():.1f} GiB")

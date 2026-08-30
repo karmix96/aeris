@@ -27,7 +27,9 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from aeris_workbench import geometry as geo, meshing, postprocess as post, solvers  # noqa: E402
+from aeris_workbench import geometry as geo  # noqa: E402
+from aeris_workbench import meshing, solvers
+from aeris_workbench import postprocess as post
 from aeris_workbench.environment import S7_DIR, WORKSPACE, available_memory_gib  # noqa: E402
 
 sys.path.insert(0, str(S7_DIR.parent))

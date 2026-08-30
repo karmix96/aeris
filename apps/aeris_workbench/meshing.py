@@ -17,17 +17,17 @@ from __future__ import annotations
 import contextlib
 import copy
 import json
-import math
 import shutil
 import subprocess
 import sys
 import time
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Mapping
 
 import numpy as np
 
+from . import runs
 from .environment import REPO_ROOT, S6_DIR, S7_DIR, STRATEGY_DIR, conda_python, worker_env
 
 
@@ -291,13 +291,17 @@ def audit_gmsh(surface: Any, mesh_dir: Path, settings: GmshSettings,
     return report
 
 
+def _format_gate_value(value: Any) -> str:
+    return f"{value:.4g}" if isinstance(value, (int, float)) else str(value)[:60]
+
+
 def _rows(entries: Any) -> list[dict[str, Any]]:
     out = []
     for entry in entries or []:
         if not isinstance(entry, dict) or "name" not in entry:
             continue
         actual, limit = entry.get("actual"), entry.get("limit")
-        fmt = (lambda v: f"{v:.4g}" if isinstance(v, (int, float)) else str(v)[:60])
+        fmt = _format_gate_value
         out.append({
             "gate": str(entry["name"]),
             "passed": bool(entry.get("passed", False)),
@@ -400,74 +404,187 @@ def volume_level_has_wall_policy(level: str) -> bool:
 
 @dataclass
 class PyHypSettings:
-    """The hyperbolic marching controls S6 exposes.
+    """The hyperbolic marching controls the workbench actually passes through.
 
-    The two levels are named from different tables - see `pyhyp_level_choices`.
+    Every field here reaches `shared.pyhyp_runner.prepare`.  Two former fields
+    do not appear, deliberately:
+
+      * `n_constant` moved nothing.  `prepare` takes no such argument, so pyHyp
+        ran at the curated default `nConstantStart = 5` whatever the box showed
+        - and the box showed 3.
+      * `development_index` and `set_name` chose a SECOND geometry.  Geometry is
+        now chosen once, on the geometry tab, and the mesh follows it.
+
+    The two level names come from different tables - see `pyhyp_level_choices`.
     """
 
     volume_level: str = "smoke"
     surface_level: str = "smoke"
-    eps_e: float = 1.0
-    n_constant: int = 3
-    development_index: int = 0
-    set_name: str = "lhs100_seed42"
+    eps_e: float = 1.5
+    s0_fraction: float | None = None
+    normal_points_override: int | None = None
+    grid: str = ""
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
-def run_pyhyp(settings: PyHypSettings, output_dir: Path, *, blocks: Any = None,
-              surface_info: dict[str, Any] | None = None,
+def wall_spacing_fraction(settings: PyHypSettings) -> float | None:
+    """The wall spacing this march will actually use, and where it came from.
+
+    A qualified grid carries its own `first_cell_fraction_characteristic`, which
+    is NOT the same as `resolution.S6_FIRST_CELL_FRACTION` for the same level
+    (G1 is 7.2e-6 against smoke's 8.8e-6).  Selecting a grid therefore has to
+    override the level's spacing, or the wall-normal half of the definition is
+    silently the wrong one.  `None` means the level's own `s0_frac` stands.
+    """
+    if settings.s0_fraction is not None:
+        return float(settings.s0_fraction)
+    if volume_level_has_wall_policy(settings.volume_level):
+        if str(S6_DIR) not in sys.path:
+            sys.path.insert(0, str(S6_DIR))
+        from resolution import first_cell_fraction  # noqa: PLC0415
+
+        return float(first_cell_fraction(settings.volume_level))
+    return None
+
+
+def normal_points(volume_level: str) -> int:
+    from aeris.cfd.meshing.pyhyp_options import GRID_LEVELS  # noqa: PLC0415
+
+    return int(GRID_LEVELS[volume_level]["N"])
+
+
+def effective_normal_points(settings: PyHypSettings) -> int:
+    if settings.normal_points_override:
+        return int(settings.normal_points_override)
+    return normal_points(settings.volume_level)
+
+
+# The wall-normal counts S6's own atlas levels use, plus the two halvings below
+# the smallest of them.  A mesh is `surface quads x (N - 1)` cells, so this is
+# the only lever that shrinks the volume WITHOUT coarsening the surface - and
+# the surface is the part that has to stay fine, because that is what carries
+# the tip-cap quality the production floor measures.
+NORMAL_POINT_CHOICES = (33, 49, 65, 97, 129, 193, 257)
+
+
+@contextlib.contextmanager
+def _normal_points_override(level: str, points: int):
+    """Register a throwaway pyHyp grid level with a different N.
+
+    `prepare()` takes a level NAME and looks it up in
+    `aeris.cfd.meshing.pyhyp_options.GRID_LEVELS`; there is no argument for the
+    wall-normal count, and the table has no coarsen=1 entry below N129.  So a
+    scratch entry is added under a name the study does not use, and removed
+    again - the same mechanism `surface_s6` already uses for
+    `strategy_s6.LEVELS`, and for the same reason: no study file is modified and
+    no declared level is read, written or shadowed.
+
+    The entry inherits the level's own coarsening and wall spacing, so the only
+    thing that changes is N.
+    """
+    import uuid  # noqa: PLC0415
+
+    from aeris.cfd.meshing.pyhyp_options import GRID_LEVELS  # noqa: PLC0415
+
+    if points == int(GRID_LEVELS[level]["N"]):
+        yield level
+        return
+    scratch = f"__workbench_n{int(points)}_{uuid.uuid4().hex[:6]}"
+    declared = dict(GRID_LEVELS)
+    GRID_LEVELS[scratch] = dict(GRID_LEVELS[level]) | {"N": int(points)}
+    try:
+        yield scratch
+    finally:
+        GRID_LEVELS.pop(scratch, None)
+        if dict(GRID_LEVELS) != declared:
+            raise RuntimeError("the workbench altered the declared pyHyp grid table")
+
+
+def estimate_pyhyp_cells(blocks: Any, volume_level: str, points: int = 0) -> int:
+    """The volume cell count this march will produce, before it runs.
+
+    pyHyp extrudes the surface rigidly, so the answer is exact rather than an
+    estimate: surface quads times wall-normal cell layers, divided by the
+    coarsening in each direction.
+    """
+    from aeris.cfd.meshing.pyhyp_options import GRID_LEVELS  # noqa: PLC0415
+
+    from . import grids  # noqa: PLC0415
+
+    if volume_level not in GRID_LEVELS:
+        return 0
+    level = GRID_LEVELS[volume_level]
+    cells = grids.estimate_cells(blocks, int(points or level["N"]))
+    coarsen = max(1, int(level["coarsen"]))
+    return int(cells // (4 ** (coarsen - 1)))
+
+
+def characteristic_length(blocks: Any) -> float:
+    from shared.pyhyp_runner import characteristic_length as study_length  # noqa: PLC0415
+
+    return float(study_length(blocks))
+
+
+def run_pyhyp(settings: PyHypSettings, run: Any, *, blocks: Any,
+              surface_info: dict[str, Any], geometry_id: str,
               log: Any = None) -> dict[str, Any]:
-    """March a volume mesh in the conda interpreter, streaming its log back.
+    """March a volume mesh in the conda interpreter, and PROVE it is this run's.
 
     S6 already stages pyHyp this way - `prepare()` writes a runner script and a
     manifest, and the other Python executes it - so the workbench reuses that
     rather than inventing a second path to the same mesher.
+
+    What is new is the definition of success.  It used to be "a file called
+    `wing_vol.cgns` exists in the run directory", which is true of a directory
+    that still holds the output of a march from an hour ago.  A march now counts
+    only when the process returned zero, pyHyp reported `march_completed`, the
+    CGNS was written DURING this run, and its digest was recorded at the time.
+
+    There is also no longer a fallback that builds its own surface from a
+    development index.  Marching a surface nobody asked for is how the workbench
+    came to display one aircraft and mesh another; if there are no blocks, that
+    is an error.
     """
-    if str(S6_DIR) not in sys.path:
-        sys.path.insert(0, str(S6_DIR))
-    from resolution import first_cell_fraction  # noqa: PLC0415
     from shared.pyhyp_runner import prepare, read_result  # noqa: PLC0415
-    from strategy_s6 import STRATEGY_ID, build_locked_surface  # noqa: PLC0415
+    from strategy_s6 import STRATEGY_ID  # noqa: PLC0415
 
-    output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    if blocks is None:
-        if log:
-            log(f"pyHyp: building locked surface at {settings.surface_level}")
-        blocks, info, _case = build_locked_surface(
-            settings.set_name, settings.development_index,
-            output_dir / "_geometry", level=settings.surface_level)
-    else:
-        # The surface the Geometry tab built, with the workbench's own controls
-        # applied.  Marching THAT is the point: otherwise the tab shows one
-        # surface and pyHyp meshes another.
-        info = dict(surface_info or {})
-        info.setdefault("locked_set_id", f"workbench_{settings.set_name}_"
-                                         f"{settings.development_index:03d}")
-        if log:
-            log(f"pyHyp: marching the surface from the Geometry tab "
-                f"({len(blocks)} blocks)")
+    if not blocks:
+        raise RuntimeError("build the geometry before marching: pyHyp needs the "
+                           "structured surface from the Geometry tab")
 
-    override = (first_cell_fraction(settings.volume_level)
-                if volume_level_has_wall_policy(settings.volume_level) else None)
-    if log and override is None:
-        log(f"pyHyp: {settings.volume_level} keeps its own wall spacing")
-    manifest = prepare(
-        strategy_id=STRATEGY_ID,
-        geometry_id=info["locked_set_id"],
-        blocks=blocks,
-        out_dir=output_dir,
-        level=settings.volume_level,
-        epse_ladder=(settings.eps_e,),
-        s0_fraction_override=override,
-    )
+    march_root = Path(run.path) / "march"
+    march_root.mkdir(parents=True, exist_ok=True)
+    override = wall_spacing_fraction(settings)
+    if log:
+        log(f"pyHyp: marching the surface from the Geometry tab ({len(blocks)} blocks)")
+        log(f"pyHyp: volume level {settings.volume_level} "
+            f"(N{effective_normal_points(settings)}), epsE {settings.eps_e}, "
+            + (f"s0/L {override:.3e}" if override is not None
+               else "level default wall spacing"))
+
+    points = effective_normal_points(settings)
+    with _normal_points_override(settings.volume_level, points) as level:
+        manifest = prepare(
+            strategy_id=STRATEGY_ID,
+            geometry_id=geometry_id,
+            blocks=blocks,
+            out_dir=march_root,
+            level=level,
+            epse_ladder=(settings.eps_e,),
+            s0_fraction_override=override,
+        )
     run_dir = Path(manifest["runs"][0]["dir"]).resolve()
     runner = Path(manifest["runs"][0]["runner"]).resolve()
+    cgns = run_dir / "wing_vol.cgns"
+    # A fresh run directory should never hold one of these.  Recording the
+    # digest anyway is what makes "the file changed" checkable rather than
+    # assumed, and costs nothing when there is no file.
+    prior_digest = runs.existing_digest(cgns)
+
     if log:
         log(f"pyHyp: marching in {conda_python()}")
-
     started = time.time()
     log_path = run_dir / "run_stdout.log"
     with log_path.open("w", encoding="utf-8") as handle:
@@ -481,22 +598,148 @@ def run_pyhyp(settings: PyHypSettings, output_dir: Path, *, blocks: Any = None,
                 log(line.rstrip())
         code = process.wait()
 
-    cgns = run_dir / "wing_vol.cgns"
     result = read_result(run_dir) or {}
+    artifact = runs.claim_output(cgns, produced_after=started, previous_digest=prior_digest)
+    march_completed = bool(result.get("march_completed"))
+    marched = bool(code == 0 and march_completed and artifact.fresh)
+
+    reasons: list[str] = []
+    if code != 0:
+        reasons.append(f"pyHyp exited with code {code}")
+    if not march_completed:
+        reasons.append("pyHyp did not report march_completed")
+    if not artifact.fresh:
+        reasons.append(f"no fresh volume mesh: {artifact.reason}")
+
     report = {
         "return_code": code,
+        "march_completed": march_completed,
         "wall_seconds": round(time.time() - started, 2),
-        "cgns": str(cgns) if cgns.is_file() else None,
+        "cgns": str(cgns) if marched else None,
+        "cgns_artifact": artifact.as_dict(),
         "surface_npz": str(run_dir / "surface_blocks.npz"),
         "log": str(log_path),
         "march_result": result,
         "settings": settings.as_dict(),
-        "marched": bool(code == 0 and result.get("march_completed")),
+        "geometry_id": geometry_id,
+        "characteristic_length_m": float(manifest["characteristic_length"]),
+        "s0_fraction_used": override,
+        "normal_points": points,
+        "normal_points_is_override": points != normal_points(settings.volume_level),
+        "prepare_manifest": str(Path(march_root) / geometry_id / "prepare_manifest.json"),
+        "surface_qualified_grid": surface_info.get("workbench_qualified_grid", ""),
+        "marched": marched,
+        "failure_reasons": reasons,
     }
     if log:
-        log(f"pyHyp: {'complete' if report['marched'] else 'FAILED'} "
-            f"in {report['wall_seconds']:.1f}s")
+        log(f"pyHyp: {'complete' if marched else 'FAILED'} in "
+            f"{report['wall_seconds']:.1f}s"
+            + ("" if marched else " — " + "; ".join(reasons)))
     return report
+
+
+PRODUCTION_FLOOR = 0.10
+WALL_TOLERANCE_M = 1.0e-10
+
+
+def audit_pyhyp(report: dict[str, Any], *, log: Any = None) -> dict[str, Any]:
+    """Reopen the written CGNS and apply S6's own volume gates to it.
+
+    Not a workbench reimplementation: `shared.volume_qc.volume_report` is the
+    same V1-V5 report `deform.acceptance_report` scores a governed mesh with,
+    and `deform.volume_interface_report` and `deform.first_layer_spacing_report`
+    are the study's own conformity and wall-spacing measurements.  Reading the
+    file back from disk rather than scoring the array in memory is the point -
+    it is the written file that ADflow will open.
+
+    This is the EXPERIMENTAL path's audit.  It is a real audit and a mesh that
+    fails it must not be solved, but it is not governed acceptance: there is no
+    template, no deformation replay and no registry provenance behind it.
+    """
+    from deform import first_layer_spacing_report, volume_interface_report  # noqa: PLC0415
+    from shared.volume_qc import volume_report  # noqa: PLC0415
+
+    from aeris.cfd.meshing.volume_audit import read_volume_blocks  # noqa: PLC0415
+
+    if not report.get("marched") or not report.get("cgns"):
+        return {"mode": "experimental", "state": "NOT_AUDITED", "accepted": False,
+                "rows": [], "failed": ["no mesh to audit"],
+                "reason": "; ".join(report.get("failure_reasons") or ["no mesh"])}
+
+    path = Path(report["cgns"])
+    blocks = read_volume_blocks(path)
+    quality = volume_report(blocks)
+    interfaces = volume_interface_report(blocks)
+    length = float(report.get("characteristic_length_m") or 0.0)
+    spacing = (first_layer_spacing_report(blocks, characteristic_length_m=length)
+               if length > 0.0 else {})
+
+    requested = report.get("s0_fraction_used")
+    realized = spacing.get("median_fraction_characteristic")
+    wall_error = (abs(float(realized) - float(requested)) / float(requested)
+                  if requested and isinstance(realized, float) and realized == realized
+                  else None)
+
+    rows = [
+        _audit_row("generation completed", quality.get("generation_completed"),
+                   "true", bool(quality.get("generation_completed"))),
+        _audit_row("inverted cells", quality.get("inverted_cells"), "0",
+                   quality.get("inverted_cells") == 0),
+        _audit_row("minimum volume", quality.get("min_volume"), "> 0",
+                   isinstance(quality.get("min_volume"), (int, float))
+                   and float(quality["min_volume"]) > 0.0),
+        _audit_row("min scaled Jacobian", quality.get("min_scaled_quality"),
+                   f"> {PRODUCTION_FLOOR:.2f}",
+                   isinstance(quality.get("min_scaled_quality"), (int, float))
+                   and float(quality["min_scaled_quality"]) > PRODUCTION_FLOOR),
+        _audit_row("block interface conformity", interfaces.get("max_mismatch_m"),
+                   f"<= {WALL_TOLERANCE_M:g} m",
+                   interfaces.get("paired_face_count", 0) > 0
+                   and float(interfaces.get("max_mismatch_m", 1.0)) <= WALL_TOLERANCE_M),
+        _audit_row("first layer spacing finite", spacing.get("nonfinite_count"),
+                   "0 non-finite, 0 non-positive",
+                   int(spacing.get("nonfinite_count", 1)) == 0
+                   and int(spacing.get("nonpositive_count", 1)) == 0),
+        _audit_row("wall coordinate error", wall_error, "<= 5% of requested s0/L",
+                   wall_error is not None and wall_error <= 0.05),
+        _audit_row("written CGNS digest",
+                   (report.get("cgns_artifact") or {}).get("sha256", "")[:12],
+                   "recorded for this run",
+                   bool((report.get("cgns_artifact") or {}).get("fresh"))),
+    ]
+    failed = [row["gate"] for row in rows if not row["passed"]]
+    summary = {
+        "mode": "experimental",
+        "state": "MESH_AUDITED_ACCEPTED" if not failed else "MESH_AUDITED_REJECTED",
+        "accepted": not failed,
+        "cgns": str(path),
+        "cgns_sha256": (report.get("cgns_artifact") or {}).get("sha256", ""),
+        "cells": quality.get("total_cells"),
+        "min_scaled_quality": quality.get("min_scaled_quality"),
+        "inverted_cells": quality.get("inverted_cells"),
+        "interfaces": {k: interfaces.get(k) for k in
+                       ("paired_face_count", "max_mismatch_m")},
+        "first_layer_spacing": {k: spacing.get(k) for k in
+                                ("median_m", "median_fraction_characteristic")},
+        "requested_s0_fraction": requested,
+        "rows": rows,
+        "failed": failed,
+    }
+    if log:
+        if summary["accepted"]:
+            log(f"Volume audit: ACCEPTED, {quality.get('total_cells'):,} cells, "
+                f"min scaled Jacobian {quality.get('min_scaled_quality')}")
+        else:
+            log(f"Volume audit: REJECTED — {', '.join(failed)}")
+    return summary
+
+
+def _audit_row(name: str, actual: Any, limit: str, passed: bool) -> dict[str, Any]:
+    if isinstance(actual, float):
+        shown = f"{actual:.6g}"
+    else:
+        shown = "—" if actual is None else str(actual)
+    return {"gate": name, "actual": shown, "limit": limit, "passed": bool(passed)}
 
 
 # --------------------------------------------------------------------------- #
@@ -665,7 +908,7 @@ def mesh_bounds(dataset) -> tuple[float, ...]:
             highs[axis] = max(highs[axis], bounds[2 * axis + 1])
     if lows[0] == float("inf"):
         return (0.0,) * 6
-    return tuple(v for pair in zip(lows, highs) for v in pair)
+    return tuple(v for pair in zip(lows, highs, strict=True) for v in pair)
 
 
 def cell_quality(dataset, measure: str = "scaled_jacobian"):
@@ -784,7 +1027,6 @@ def summarize_mesh(dataset) -> dict[str, Any]:
     pyHyp CGNS carries well over a million cells and instantiating each one to
     read its class name is far too slow to sit in front of a user.
     """
-    import vtk
     from vtk.util.numpy_support import vtk_to_numpy
 
     points = cells = blocks = 0
@@ -799,7 +1041,7 @@ def summarize_mesh(dataset) -> dict[str, Any]:
         types = getattr(block, "GetCellTypesArray", lambda: None)()
         if types is not None:
             values, occurrences = np.unique(vtk_to_numpy(types), return_counts=True)
-            for value, occurrence in zip(values, occurrences):
+            for value, occurrence in zip(values, occurrences, strict=True):
                 name = CELL_TYPE_NAMES.get(int(value), f"type{int(value)}")
                 counts[name] = counts.get(name, 0) + int(occurrence)
 

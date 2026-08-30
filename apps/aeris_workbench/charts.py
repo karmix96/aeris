@@ -9,7 +9,7 @@ where a linear autoscale would hide exactly the decade that matters.
 
 from __future__ import annotations
 
-from typing import Any, Iterable
+from typing import Iterable
 
 RESIDUAL_COLORS = ("#4da3ff", "#ff8a4c", "#3fcf8e", "#ffd166", "#c792ea", "#ff6b8a")
 FORCE_COLORS = ("#4da3ff", "#ff8a4c", "#3fcf8e")

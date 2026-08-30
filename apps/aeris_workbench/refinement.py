@@ -5,13 +5,13 @@ target element size at a point, several fields are combined by taking the
 minimum, and the result is the background mesh size.  Every control a commercial
 mesher offers is one of those fields wearing a friendlier name:
 
-    workbench control        ANSYS / Fluent Meshing     Star-CCM+                Gmsh field
-    Leading edge sizing      Edge Sizing                Curve custom control     Distance -> Threshold
-    Trailing edge sizing     Edge Sizing                Curve custom control     Distance -> Threshold
-    Tip sizing               Face Sizing                Surface custom control   Distance -> Threshold
-    Refinement box           Body of Influence          Volumetric control       Box
-    Refinement sphere        Body of Influence          Volumetric control       Ball
-    Curvature refinement     Curvature Normal Angle     Surface curvature        MeshSizeFromCurvature
+  workbench control      ANSYS / Fluent Meshing   Star-CCM+                Gmsh field
+  Leading edge sizing    Edge Sizing              Curve custom control     Distance/Threshold
+  Trailing edge sizing   Edge Sizing              Curve custom control     Distance/Threshold
+  Tip sizing             Face Sizing              Surface custom control   Distance/Threshold
+  Refinement box         Body of Influence        Volumetric control       Box
+  Refinement sphere      Body of Influence        Volumetric control       Ball
+  Curvature refinement   Curvature Normal Angle   Surface curvature        FromCurvature
 
 A Threshold is the part worth understanding: below DistMin it returns SizeMin,
 above DistMax it returns SizeMax, and in between it interpolates.  So a control
@@ -116,7 +116,7 @@ def leading_edge_points(surface: Any, samples: int = 120) -> np.ndarray:
 
     edges = np.linspace(node_span.min(), node_span.max(), samples + 1)
     picked: list[np.ndarray] = []
-    for low, high in zip(edges[:-1], edges[1:]):
+    for low, high in zip(edges[:-1], edges[1:], strict=True):
         band = (node_span >= low) & (node_span <= high)
         if not band.any():
             continue

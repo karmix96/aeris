@@ -8,11 +8,10 @@ has and the thing people notice immediately when it is missing.
 
 from __future__ import annotations
 
-from typing import Any
-
 import math
 import subprocess
 import sys
+from typing import Any
 
 import vtk
 

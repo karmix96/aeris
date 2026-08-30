@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "attempt_id": "m1_host_resource_render_001",
+  "status": "FAILED",
+  "exit_code": 1,
+  "failure_type": "UNSUPPORTED_SVG_METADATA_KEY",
+  "message": "Matplotlib SVG backend rejected the Subject metadata key.",
+  "partial_outputs": [
+    "m1_host_resource_render_attempt001_partial.png",
+    "m1_host_resource_render_attempt001_partial.svg"
+  ],
+  "partial_outputs_preserved": true,
+  "cleanup_performed": false
+}
+

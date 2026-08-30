@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-08-30T11:42:27+03:00",
+  "inventory_mode": "read_only",
+  "computer_system": {
+    "manufacturer": "Gigabyte Technology Co., Ltd.",
+    "model": "B460MDS3H",
+    "total_physical_memory_bytes": 17033293824
+  },
+  "processor": {
+    "name": "Intel(R) Core(TM) i5-10400 CPU @ 2.90GHz",
+    "physical_cores": 6,
+    "logical_processors": 12,
+    "max_clock_speed_mhz": 2904
+  },
+  "physical_disks": [
+    {
+      "friendly_name": "Patriot P210 256GB",
+      "media_type": "SSD",
+      "bus_type": "RAID",
+      "size_bytes": 256060514304,
+      "health_status": "Healthy"
+    },
+    {
+      "friendly_name": "TOSHIBA HDWD110",
+      "media_type": "HDD",
+      "bus_type": "RAID",
+      "size_bytes": 1000204886016,
+      "health_status": "Healthy"
+    }
+  ],
+  "volumes": [
+    {
+      "drive_letter": "C",
+      "filesystem": "NTFS",
+      "size_bytes": 255409868800,
+      "free_bytes": 35761373184,
+      "physical_medium": "SSD",
+      "health_status": "Healthy"
+    },
+    {
+      "drive_letter": "D",
+      "filesystem": "NTFS",
+      "size_bytes": 1000186310656,
+      "free_bytes": 612930969600,
+      "physical_medium": "HDD",
+      "health_status": "Healthy"
+    }
+  ],
+  "wsl": {
+    "version": "2.7.11.0",
+    "kernel_version": "6.18.33.2-2",
+    "windows_version": "10.0.19045.6466",
+    "default_distribution": "Ubuntu",
+    "default_version": 2,
+    "running_distributions": ["Ubuntu"],
+    "user_wslconfig_present_before_change": false
+  },
+  "ubuntu_vhd": {
+    "path_redacted": "%LOCALAPPDATA%\\wsl\\{distribution-guid}\\ext4.vhdx",
+    "physical_size_bytes": 39155924992,
+    "host_volume": "C",
+    "located_only_not_modified": true
+  }
+}
+

@@ -1,0 +1,24 @@
+M-1 Windows read-only inventory
+Captured: 2026-08-30T11:42:27+03:00
+
+Physical RAM: 17,033,293,824 bytes (15.86 GiB)
+System: Gigabyte B460MDS3H
+CPU: Intel Core i5-10400, 6 cores, 12 logical processors
+
+Disk 0: Patriot P210 256GB, SSD/RAID, 256,060,514,304 bytes, Healthy
+Disk 1: TOSHIBA HDWD110, HDD/RAID, 1,000,204,886,016 bytes, Healthy
+C: NTFS, 255,409,868,800 bytes total, 35,761,373,184 bytes free
+D: NTFS, 1,000,186,310,656 bytes total, 612,930,969,600 bytes free
+
+WSL version: 2.7.11.0
+WSL kernel: 6.18.33.2-2
+Windows version: 10.0.19045.6466
+Default/running distro: Ubuntu, WSL2
+%USERPROFILE%\.wslconfig: absent before the proposed change
+
+Ubuntu VHD location: %LOCALAPPDATA%\wsl\{distribution-guid}\ext4.vhdx
+Ubuntu VHD physical size: 39,155,924,992 bytes (36.47 GiB)
+VHD host volume: C: SSD
+
+No disk, VHD, distribution, or WSL configuration was changed during inventory.
+

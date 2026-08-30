@@ -1,0 +1,4 @@
+83886080 bytes (84 MB, 80 MiB) copied, 1 s, 75.6 MB/s167772160 bytes (168 MB, 160 MiB) copied, 2 s, 82.0 MB/s268435456 bytes (268 MB, 256 MiB) copied, 3 s, 84.0 MB/s352321536 bytes (352 MB, 336 MiB) copied, 4 s, 85.5 MB/s402653184 bytes (403 MB, 384 MiB) copied, 5 s, 80.2 MB/s486539264 bytes (487 MB, 464 MiB) copied, 6 s, 80.7 MB/s570425344 bytes (570 MB, 544 MiB) copied, 7 s, 79.5 MB/s637534208 bytes (638 MB, 608 MiB) copied, 8 s, 78.7 MB/s704643072 bytes (705 MB, 672 MiB) copied, 9 s, 77.2 MB/s771751936 bytes (772 MB, 736 MiB) copied, 10 s, 76.1 MB/s822083584 bytes (822 MB, 784 MiB) copied, 11 s, 74.3 MB/s905969664 bytes (906 MB, 864 MiB) copied, 12 s, 74.3 MB/s973078528 bytes (973 MB, 928 MiB) copied, 13 s, 74.2 MB/s1040187392 bytes (1.0 GB, 992 MiB) copied, 14 s, 74.0 MB/s
+64+0 records in
+64+0 records out
+1073741824 bytes (1.1 GB, 1.0 GiB) copied, 14.7172 s, 73.0 MB/s

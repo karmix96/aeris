@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "milestone": "M-1",
+  "evaluated_at": "2026-08-30T13:05:45+03:00",
+  "status": "CONDITIONAL_GO_M0_M1_ONLY",
+  "gates": {
+    "wsl2_confirmed": true,
+    "physical_ram_inventoried": true,
+    "wsl_memory_policy_applied_and_verified": true,
+    "cpu_and_swap_verified": true,
+    "repository_linux_native": true,
+    "recovery_vhd_exported_and_hash_verified": true,
+    "registered_distro_relocated_with_supported_wsl_move": true,
+    "repository_identity_and_user_changes_preserved": true,
+    "linux_native_storage_benchmark_recorded": true,
+    "campaign_storage_forecast_complete": false,
+    "first_mesh_and_canary_footprints_measured": false
+  },
+  "resource_summary": {
+    "host_physical_memory_gib": 15.86,
+    "effective_wsl_memory_gib": 12.66,
+    "effective_swap_gib": 8.0,
+    "logical_processors": 12,
+    "c_free_gib": 69.45,
+    "d_free_gib": 497.90,
+    "direct_write_mb_per_second": 60.5,
+    "direct_read_mb_per_second": 73.0
+  },
+  "storage_capacity_envelope": {
+    "rule": "free >= 1.30 * forecast_remaining + 3 * active_case_footprint + 20 GiB",
+    "physical_free_gib": 497.90,
+    "absolute_forecast_upper_bound_at_zero_case_footprint_gib": 367.62,
+    "interpretation": "not a campaign forecast; actual bound decreases by 2.3077 GiB per GiB of active-case footprint"
+  },
+  "authorized_actions": [
+    "M0 scaffold and tests",
+    "M1 contract implementation and tests",
+    "read-only audits",
+    "small report generation"
+  ],
+  "blocked_actions": [
+    "heavy mesh generation",
+    "CFD canary",
+    "parallel heavy processes",
+    "holdout access"
+  ],
+  "next_gate": "Measure first written-mesh and complete-canary footprints, then produce the 56-59-run campaign storage forecast before M3.",
+  "deletion_policy": "explicit_human_approval_only",
+  "holdout_locked": true
+}
+

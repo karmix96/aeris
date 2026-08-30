@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "attempt_id": "m1_storage_export_20260830_002",
+  "requested_path": "D:\\AERIS_WSL_BACKUPS\\Ubuntu_pre_move_20260830_attempt02.vhdx",
+  "stdout_path": "D:\\AERIS_WSL_BACKUPS\\attempt02.stdout.log",
+  "stderr_path": "D:\\AERIS_WSL_BACKUPS\\attempt02.stderr.log",
+  "terminal_observation": "wsl_service_sharing_violation",
+  "output_vhd_created": false,
+  "active_export_process_found": false,
+  "error_code": "WSL/Service/ERROR_SHARING_VIOLATION",
+  "classification": "EXPORT_REJECTED_DISTRO_RUNNING",
+  "cleanup_performed": false,
+  "move_attempted": false,
+  "notes": "The Windows stdout/stderr logs are retained. Export must be controlled from Windows after wsl --shutdown."
+}
+

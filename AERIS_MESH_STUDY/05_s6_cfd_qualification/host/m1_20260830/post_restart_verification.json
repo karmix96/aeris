@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "verified_at": "2026-08-30T11:47:10+03:00",
+  "wsl_boot_id": "7b54b6b8-f209-4ed5-9f9a-b25b0398db88",
+  "wsl_boot_time": "2026-08-30T11:46:04+03:00",
+  "distribution": "Ubuntu",
+  "wsl_generation": 2,
+  "effective": {
+    "mem_total_kib": 13279880,
+    "mem_available_kib_at_verification": 12431412,
+    "swap_total_kib": 8388608,
+    "swap_used_kib": 0,
+    "logical_processors": 12
+  },
+  "configured": {
+    "memory": "13GB",
+    "swap": "8GB",
+    "processors": "omitted_use_all_supported",
+    "auto_memory_reclaim": "gradual"
+  },
+  "tentative_canary_precheck": {
+    "forecast_peak_gib": 9.35,
+    "seventy_five_percent_effective_limit_gib": 9.50,
+    "forecast_plus_two_gib": 11.35,
+    "mem_available_at_verification_gib": 11.86,
+    "fraction_gate_pass": true,
+    "available_headroom_gate_pass": true,
+    "interpretation": "eligible_for_later_measured_preflight_not_authorized_to_launch"
+  },
+  "verification_pass": true
+}
+

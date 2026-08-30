@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "attempt_id": "m1_storage_export_20260830_003",
+  "started_at": "2026-08-30T12:01:21.9275436+03:00",
+  "ended_at": "2026-08-30T12:07:22.2109294+03:00",
+  "elapsed_seconds": 360.2833858,
+  "exit_code": 0,
+  "backup_path": "D:\\AERIS_WSL_BACKUPS\\Ubuntu_pre_move_20260830_attempt03.vhdx",
+  "backup_exists": true,
+  "backup_length_bytes": 39155924992,
+  "backup_sha256": "a0ec879330d8c65a08eb34f20aa1db932b89943804340428a428b9897c30e9d1",
+  "d_free_bytes_after": 573775036416,
+  "move_attempted": false,
+  "classification": "EXPORT_COMPLETE_HASH_RECORDED",
+  "cleanup_performed": false
+}
+

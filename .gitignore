@@ -28,6 +28,9 @@ data/section_study/
 *.log
 *.png
 
+# Governed S6 qualification figures are small, hash-bound evidence.
+!AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/*.png
+
 # Secrets and Windows/WSL download metadata — never commit
 github_token.txt
 *:Zone.Identifier
@@ -46,6 +49,7 @@ artifacts/
 
 # Reference papers / strategy docs kept locally, not versioned
 *.pdf
+!AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/*.pdf
 
 # Stray solver history (bare SU2/ADflow header, no data)
 history.csv

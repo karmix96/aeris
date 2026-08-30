@@ -1,0 +1,24 @@
+M-1 WSL post-restart verification
+Verified: 2026-08-30T11:47:10+03:00
+Fresh WSL boot: 2026-08-30T11:46:04+03:00
+Boot ID: 7b54b6b8-f209-4ed5-9f9a-b25b0398db88
+
+Effective memory: 13,279,880 KiB (12.66 GiB)
+Available at verification: 12,431,412 KiB (11.86 GiB)
+Effective swap: 8,388,608 KiB (8.00 GiB), unused
+Logical processors: 12
+Ubuntu state/version: Running / WSL2
+
+Verified configuration:
+[wsl2]
+memory=13GB
+swap=8GB
+
+[experimental]
+autoMemoryReclaim=gradual
+
+Tentative 9.35 GiB canary arithmetic:
+- 75% of effective memory is about 9.50 GiB: PASS, narrowly.
+- forecast + 2 GiB = 11.35 GiB <= 11.86 GiB available: PASS at capture.
+- This permits only a later fresh preflight. It does not authorize a CFD launch.
+

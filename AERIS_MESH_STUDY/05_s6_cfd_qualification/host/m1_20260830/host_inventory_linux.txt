@@ -1,0 +1,19 @@
+M-1 Linux read-only inventory
+Captured: 2026-08-30T11:42:27+03:00
+
+Ubuntu 24.04.3 LTS under WSL2
+Kernel: 6.18.33.2-microsoft-standard-WSL2 x86_64
+Memory: 8,059,528 KiB total; 7,248,744 KiB available at capture
+Swap: 2,097,152 KiB total; unused at capture
+CPU: Intel Core i5-10400; 6 cores / 12 logical processors
+Root: /dev/sdd ext4; 1007G advertised; 13G used; 944G available
+Repository: /home/mike_kara/aeris (Linux-native), 2.3G
+Git: main at 44de99814b02e2f2bf0c87256b081acedf9daa38
+
+Pre-existing unrelated worktree state preserved:
+ M AERIS_MESH_STUDY/04_strategy_studies/S7_unstructured_gmsh_su2/campaign.py
+?? configs/aero/section_study/stage1_reference_subset.json
+?? configs/aero/section_study/stage1_summary_subset.txt
+
+No CFD or heavy mesh process was active or launched.
+

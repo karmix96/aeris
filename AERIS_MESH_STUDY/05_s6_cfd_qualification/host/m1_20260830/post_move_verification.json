@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "verified_at": "2026-08-30T13:03:13+03:00",
+  "wsl_boot_id": "cb706c68-b883-4d23-b7eb-568b5757a74e",
+  "wsl_boot_time": "2026-08-30T12:58:53+03:00",
+  "move_attempt_id": "m1_storage_move_20260830_001",
+  "move_exit_code": 0,
+  "move_elapsed_seconds": 303.0395175,
+  "source_base_path_redacted": "%LOCALAPPDATA%\\wsl\\{distribution-guid}",
+  "registered_base_path_after": "D:\\WSL\\Ubuntu",
+  "registered_vhd_after": "D:\\WSL\\Ubuntu\\ext4.vhdx",
+  "registered_vhd_exists": true,
+  "registered_vhd_length_bytes": 39155924992,
+  "recovery_vhd": {
+    "path": "D:\\AERIS_WSL_BACKUPS\\Ubuntu_pre_move_20260830_attempt03.vhdx",
+    "exists": true,
+    "length_bytes": 39155924992,
+    "sha256": "a0ec879330d8c65a08eb34f20aa1db932b89943804340428a428b9897c30e9d1",
+    "independent_sha256": "a0ec879330d8c65a08eb34f20aa1db932b89943804340428a428b9897c30e9d1"
+  },
+  "windows_free_bytes": {
+    "c": 74567122944,
+    "d": 534619099136
+  },
+  "linux": {
+    "root_device": "/dev/sdd",
+    "root_filesystem": "ext4",
+    "root_size_bytes": 1081101176832,
+    "root_used_bytes_after_benchmark": 14117593088,
+    "root_available_bytes_after_benchmark": 1011991228416,
+    "mem_total_kib": 13279876,
+    "mem_available_kib_at_verification": 12303944,
+    "swap_total_kib": 8388608,
+    "swap_used_kib": 96,
+    "logical_processors": 12
+  },
+  "repository": {
+    "path": "/home/mike_kara/aeris",
+    "branch": "main",
+    "commit": "44de99814b02e2f2bf0c87256b081acedf9daa38",
+    "remote": "https://github.com/karmix96/aeris.git",
+    "identity_preserved": true,
+    "preexisting_user_changes_preserved": [
+      "AERIS_MESH_STUDY/04_strategy_studies/S7_unstructured_gmsh_su2/campaign.py",
+      "configs/aero/section_study/stage1_reference_subset.json",
+      "configs/aero/section_study/stage1_summary_subset.txt"
+    ]
+  },
+  "unregister_used": false,
+  "cleanup_performed": false,
+  "verification_pass": true
+}
+

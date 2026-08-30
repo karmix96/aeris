@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-08-30T11:42:27+03:00",
+  "inventory_mode": "read_only",
+  "distribution": {
+    "name": "Ubuntu",
+    "version": "24.04.3 LTS",
+    "wsl_generation": 2,
+    "kernel": "6.18.33.2-microsoft-standard-WSL2",
+    "architecture": "x86_64"
+  },
+  "memory": {
+    "mem_total_kib": 8059528,
+    "mem_available_kib_at_capture": 7248744,
+    "swap_total_kib": 2097152,
+    "swap_free_kib_at_capture": 2097152
+  },
+  "cpu": {
+    "model": "Intel(R) Core(TM) i5-10400 CPU @ 2.90GHz",
+    "logical_processors_visible": 12,
+    "physical_cores": 6,
+    "threads_per_core": 2
+  },
+  "linux_root": {
+    "device": "/dev/sdd",
+    "filesystem": "ext4",
+    "advertised_size": "1007G",
+    "used": "13G",
+    "available": "944G",
+    "mountpoint": "/"
+  },
+  "swap_devices": [
+    {
+      "device": "/dev/sdc",
+      "type": "partition",
+      "size_bytes": 2147483648,
+      "used_bytes": 0
+    }
+  ],
+  "repository": {
+    "path": "/home/mike_kara/aeris",
+    "linux_native": true,
+    "size": "2.3G",
+    "branch": "main",
+    "commit": "44de99814b02e2f2bf0c87256b081acedf9daa38",
+    "remote": "https://github.com/karmix96/aeris.git"
+  },
+  "limits": {
+    "open_files": 1048576,
+    "max_user_processes": 31439,
+    "stack_kib": 8192,
+    "virtual_memory": "unlimited"
+  }
+}
+

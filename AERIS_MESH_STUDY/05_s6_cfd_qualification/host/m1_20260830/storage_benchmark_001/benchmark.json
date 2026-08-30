@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "benchmark_id": "m1_storage_benchmark_20260830_001",
+  "captured_at": "2026-08-30T13:05:45+03:00",
+  "filesystem": {
+    "device": "/dev/sdd",
+    "type": "ext4",
+    "host_backing": "D: TOSHIBA HDWD110 HDD via D:\\WSL\\Ubuntu\\ext4.vhdx",
+    "mount_options": "rw,nosuid,nodev,relatime,discard,errors=remount-ro,data=ordered"
+  },
+  "payload": {
+    "path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/host/m1_20260830/storage_benchmark_001/payload_1gib.bin",
+    "size_bytes": 1073741824,
+    "sha256": "c021ec6a0cb807564326d0a7364255c574f0a5f2163276c7ee7fc0dfac8a9588",
+    "source": "/dev/urandom",
+    "source_preflight_mb_per_second": 447,
+    "retained": true,
+    "git_ignored": true
+  },
+  "write": {
+    "direct_io": true,
+    "fdatasync": true,
+    "block_size_bytes": 16777216,
+    "elapsed_seconds": 17.7549,
+    "throughput_mb_per_second": 60.5,
+    "max_rss_kib": 18148,
+    "filesystem_output_blocks": 2097160,
+    "exit_code": 0,
+    "raw_dd": "write_dd.txt",
+    "raw_time": "write_time.txt"
+  },
+  "read": {
+    "direct_io": true,
+    "block_size_bytes": 16777216,
+    "elapsed_seconds": 14.7172,
+    "throughput_mb_per_second": 73.0,
+    "max_rss_kib": 18276,
+    "filesystem_input_blocks": 2097152,
+    "exit_code": 0,
+    "raw_dd": "read_dd.txt",
+    "raw_time": "read_time.txt"
+  },
+  "classification": "HDD_CLASS_BASELINE_RECORDED_WORKLOAD_FORECAST_PENDING",
+  "pass_for_m0_m1": true,
+  "heavy_mesh_or_cfd_authorized": false,
+  "cleanup_performed": false
+}
+

@@ -1,0 +1,72 @@
+schema_version: 1
+policy_id: desktop_resource_policy_v1
+status: applied_and_verified
+captured_at: "2026-08-30T11:42:27+03:00"
+
+host:
+  physical_memory_bytes: 17033293824
+  physical_memory_gib: 15.86
+  physical_cores: 6
+  logical_processors: 12
+
+wsl:
+  distribution: Ubuntu
+  generation: 2
+  version: 2.7.11.0
+  observed_memory_kib_before: 8059528
+  observed_swap_kib_before: 2097152
+  proposed_memory: 13GB
+  proposed_swap: 8GB
+  processors: omitted_use_all_supported
+  auto_memory_reclaim: gradual
+  windows_config_path: "C:\\Users\\mike\\.wslconfig"
+  windows_config_sha256: e6e2b6bc046d284660cd103dba2d032a64597faec26116d8fd261230030d93f9
+  applied_at: "2026-08-30T11:44:43+03:00"
+  effective_values_verified_after_restart: true
+  verified_at: "2026-08-30T11:47:10+03:00"
+  effective_memory_kib: 13279880
+  effective_memavailable_kib_at_verification: 12431412
+  effective_swap_kib: 8388608
+  effective_logical_processors: 12
+  rationale: >-
+    The confirmed 15.86 GiB host is treated under the master guide's dedicated
+    16 GiB exception. A 13 GB ceiling leaves approximately 2.86 GiB for Windows
+    while making the 9.35 GiB forecast canary testable. Swap is emergency
+    containment and never CFD capacity.
+
+preflight:
+  max_forecast_fraction_of_verified_wsl_limit: 0.75
+  minimum_memavailable_headroom_gib: 2
+  measured_peak_must_not_exceed_forecast: true
+  material_swap_fails_resource_classification: true
+  one_rank_canary_first: true
+  mpi_rank_increase_requires_measured_headroom: true
+
+storage:
+  repository_root: /home/mike_kara/aeris
+  repository_is_linux_native: true
+  existing_vhd_virtual_capacity_gib: 1007
+  existing_vhd_physical_size_bytes: 39155924992
+  existing_vhd_host_volume: C
+  c_free_bytes_before: 35761373184
+  d_free_bytes_before: 612930969600
+  decision: verified_export_then_supported_wsl_move_to_d_subject_to_benchmark
+  separate_vhd_rejected_reason: windows_session_not_elevated_and_hyper_v_cmdlets_unavailable
+  backup_path_windows: "D:\\AERIS_WSL_BACKUPS\\Ubuntu_pre_move_20260830_attempt03.vhdx"
+  move_destination_windows: "D:\\WSL\\Ubuntu"
+  move_existing_ubuntu_vhd: true_after_verified_export
+  resize_existing_ubuntu_vhd: false
+  deletion_policy: explicit_human_approval_only
+  minimum_free_space_formula: "1.30 * forecast_remaining + 3 * active_case_footprint + 20 GiB"
+  registered_base_path_verified: "D:\\WSL\\Ubuntu"
+  recovery_vhd_sha256: a0ec879330d8c65a08eb34f20aa1db932b89943804340428a428b9897c30e9d1
+  direct_write_mb_per_second: 60.5
+  direct_read_mb_per_second: 73.0
+  qualification_state: conditional_go_m0_m1_only
+
+heavy_work_authorized: false
+heavy_work_block_reason: >-
+  The WSL memory policy, recovery export, supported relocation, and HDD-class
+  direct-I/O baseline are verified. Actual mesh/canary footprints and the full
+  campaign capacity/I/O forecast remain unmeasured, and M0-M2 contract/mesh
+  screens do not yet exist.

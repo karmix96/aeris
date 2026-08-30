@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "attempt_id": "m1_storage_export_20260830_001",
+  "requested_path": "D:\\AERIS_WSL_BACKUPS\\Ubuntu_pre_move_20260830.vhdx",
+  "started_before": "2026-08-30T11:52:02+03:00",
+  "terminal_observation": "output_vhd_absent",
+  "directory_created": true,
+  "output_vhd_created": false,
+  "active_export_process_found": false,
+  "exit_code_available": false,
+  "classification": "EXPORT_ATTEMPT_INCOMPLETE_NO_OUTPUT",
+  "cleanup_performed": false,
+  "notes": "The orchestration handle disappeared. The empty directory is retained; no move was attempted."
+}
+

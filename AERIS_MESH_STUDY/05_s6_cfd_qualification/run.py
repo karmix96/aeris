@@ -152,10 +152,26 @@ def holdout_lock(dry: bool) -> int:
                            "contents_read": False}, dry_run=dry)
 
 
+def half_domain(dry: bool) -> int:
+    path = REPO / "AERIS_MESH_STUDY/00_governance/operating_points.yaml"
+    text = path.read_text(encoding="utf-8") if path.exists() else ""
+    required = {"beta_deg: 0.0", "p_rad_s: 0.0", "q_rad_s: 0.0", "r_rad_s: 0.0",
+                "control_deflection_deg: 0.0"}
+    state_ok = required.issubset(set(line.strip() for line in text.splitlines()))
+    details = {"operating_points": str(path), "state_zero_and_symmetric": state_ok,
+               "full_reference_area_multiplier": 2.0,
+               "half_reference_area_multiplier": 1.0,
+               "force_reconstruction_required": True,
+               "moment_reference_required": True}
+    status = "DRY_RUN" if dry and state_ok else ("PASS" if state_ok else "FAIL")
+    return result("check-half-domain", status, details=details, dry_run=dry)
+
+
 def dispatch(command: str, dry: bool) -> int:
     if command == "audit-contract": return audit_contract(dry)
     if command == "audit-geometry-space": return audit_geometry(dry)
     if command == "check-holdout-lock": return holdout_lock(dry)
+    if command == "check-half-domain": return half_domain(dry)
     if command in HEAVY:
         return result(command, "DRY_RUN" if dry else "BLOCKED",
                       details={"reason": "M0-M2 gates and measured campaign forecast incomplete"}, dry_run=dry)

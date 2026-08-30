@@ -34,3 +34,10 @@ def test_geometry_semantic_diff_is_empty():
     assert '"live_variable_count": 20' in out.stdout
     assert '"snapshot_variable_count": 20' in out.stdout
     assert '"bound_differences": []' in out.stdout
+
+
+def test_half_domain_contract():
+    out = invoke("check-half-domain")
+    assert out.returncode == 0
+    assert '"state_zero_and_symmetric": true' in out.stdout
+    assert '"force_reconstruction_required": true' in out.stdout

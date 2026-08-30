@@ -1,0 +1,17 @@
+{
+  "command": "check-half-domain",
+  "created_at": "2026-08-30T10:36:31.739696+00:00",
+  "details": {
+    "force_reconstruction_required": true,
+    "full_reference_area_multiplier": 2.0,
+    "half_reference_area_multiplier": 1.0,
+    "moment_reference_required": true,
+    "operating_points": "/home/mike_kara/aeris/AERIS_MESH_STUDY/00_governance/operating_points.yaml",
+    "state_zero_and_symmetric": true
+  },
+  "dry_run": false,
+  "git_head": "bd39f9f8d27c30873b1da60848a3b489300eed55",
+  "repo": "/home/mike_kara/aeris",
+  "schema_version": 1,
+  "status": "PASS"
+}

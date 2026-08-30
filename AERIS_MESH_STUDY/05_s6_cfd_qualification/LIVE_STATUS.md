@@ -38,6 +38,9 @@ Updated: 2026-08-30
 - C03 finest diagnostic: **NO-GO** for this bounded map (4 inverted cells in
   the tip-cap block, `qmin=-0.2468`). It is retained as a diagnostic and does
   not invalidate the passing C02 production family.
+- A governed C01 ladder probe at `s0_fraction=5.0e-6` passed A/B/C/E with
+  zero inversions and `qmin >= 0.1091`; it is provisional pending policy update
+  and independent review (`reports/m2_c01_ladder_probe_20260830.json`).
 - C02 family evidence: **independently reproduced**. All six recorded
   `output_sha256` values match the on-disk artifacts, and an independent ADF
   reopen plus repository volume QC reproduces every inverted-cell count,

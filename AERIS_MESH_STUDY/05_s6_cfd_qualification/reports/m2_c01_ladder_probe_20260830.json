@@ -1,0 +1,15 @@
+{
+  "schema": "aeris.s6.m2.c01_ladder_probe.v1",
+  "experiment_id": "m2_c01_ladder_probe_20260830",
+  "candidate_c01_s0_fraction": 5.0e-6,
+  "epsE": 1.5,
+  "development_set_only": true,
+  "holdout_touched": false,
+  "results": [
+    {"geometry":"A","index":83,"cells":191520,"inverted_cells":0,"min_scaled_quality":0.120251851395933,"production_floor_passed":true,"output_sha256":"1e5e4934d51ba0ddbb00071ac0b7f1a4ae82e236a247f01eaa5a8e86fd3197af"},
+    {"geometry":"B","index":7,"cells":191520,"inverted_cells":0,"min_scaled_quality":0.14974758488421372,"production_floor_passed":true,"output_sha256":"4c7d2daf153ccf5783cce498ab784da25d546b8f15f00f335a04e87ea240bb75"},
+    {"geometry":"C","index":85,"cells":191520,"inverted_cells":0,"min_scaled_quality":0.10913947207636704,"production_floor_passed":true,"output_sha256":"c50f64f96e9d994d7bc28949c021fb4d8038af4168a7cdf89cc58b62b105bfc7"},
+    {"geometry":"E","index":47,"cells":191520,"inverted_cells":0,"min_scaled_quality":0.12377000911840297,"production_floor_passed":true,"output_sha256":"590fc5b31ba3fe977541a7abcddc59f342ad0c01b599f80a5312d0260b247dbf"}
+  ],
+  "status": "candidate_pass_pending_governed_policy_update_and_independent_review"
+}

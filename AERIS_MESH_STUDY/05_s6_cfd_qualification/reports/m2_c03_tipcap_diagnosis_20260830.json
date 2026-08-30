@@ -1,0 +1,544 @@
+{
+  "cfd_canary": "still blocked pending the independent review gate and the governed C03 decision",
+  "cfd_run": false,
+  "deformation_attribution": {
+    "block": "domain.00012 (surface block tip_base)",
+    "conclusion": "deformation changes the block minimum by 0.002 (-0.2448 -> -0.2469); the fold is a marching defect, not a deformation defect",
+    "deformed_block_min_scaled_quality": -0.2468323061322934,
+    "footprint": "wall layers k=4..14 at the (j=0..1, i=0) corner of the tip_base column set",
+    "negative_scaled_jacobian_cells_deformed": 20,
+    "negative_scaled_jacobian_cells_template": 20,
+    "template_block_min_scaled_quality": -0.24483004182271884,
+    "template_to_target_tip_base_max_node_shift_m": 6e-06
+  },
+  "development_set_only": true,
+  "experiment_id": "m2_c03_tipcap_diagnosis_20260830",
+  "finding": "No. The four inverted cells are inherited from the S1/pyHyp C03 template march in the tip_base cap block; the bounded deformation neither creates nor materially worsens them.",
+  "gates_unchanged": "zero-inversion and positive-scaled-quality hard gates were not weakened; the 0.10 production floor was not lowered",
+  "holdout_touched": false,
+  "independent_reaudit_of_committed_family": {
+    "conclusion": "every committed C02-family number reproduces exactly; recorded output_sha256 values match the on-disk artifacts",
+    "method": "independent ADF reopen (cgnsUtilities) plus repository volume QC and wall-correspondence check",
+    "results": {
+      "A/C01": {
+        "blocks": 13,
+        "inverted_cells": 0,
+        "low_quality_blocks": [],
+        "max_wall_error_m": 2.7755575615628914e-17,
+        "min_scaled_quality": 0.1529220982555563,
+        "min_volume": 1.3342808992583919e-11,
+        "total_cells": 191520,
+        "worst_cell": {
+          "block": "domain.00006",
+          "cell_center_xyz_m": [
+            2.043842368322717,
+            0.014526818474031717,
+            -0.05131306470150881
+          ],
+          "cell_index_kji": [
+            48,
+            40,
+            0
+          ],
+          "edge_length_ratio": 11.454898640788072,
+          "max_edge_length_m": 0.45341115449456637,
+          "min_edge_length_m": 0.03958229301829708,
+          "min_scaled_quality": 0.1529220982555563,
+          "wall_distance_m": 0.9785610752896653,
+          "wall_layer_index": 48
+        }
+      },
+      "A/C02": {
+        "blocks": 13,
+        "inverted_cells": 0,
+        "low_quality_blocks": [],
+        "max_wall_error_m": 3.469446951953614e-18,
+        "min_scaled_quality": 0.1570641350775617,
+        "min_volume": 4.702808329056235e-12,
+        "total_cells": 429120,
+        "worst_cell": {
+          "block": "domain.00007",
+          "cell_center_xyz_m": [
+            0.562166290054039,
+            0.9772499092884657,
+            0.05559966752622206
+          ],
+          "cell_index_kji": [
+            0,
+            5,
+            0
+          ],
+          "edge_length_ratio": 30.805936108834604,
+          "max_edge_length_m": 0.0035553506866490957,
+          "min_edge_length_m": 0.00011541122055464769,
+          "min_scaled_quality": 0.1570641350775617,
+          "wall_distance_m": 0.0,
+          "wall_layer_index": 0
+        }
+      },
+      "A/C03": {
+        "blocks": 13,
+        "inverted_cells": 4,
+        "low_quality_blocks": [
+          "domain.00012"
+        ],
+        "max_wall_error_m": 3.469446951953614e-18,
+        "min_scaled_quality": -0.2468323061322934,
+        "min_volume": -3.6628795547281735e-13,
+        "total_cells": 966144,
+        "worst_cell": {
+          "block": "domain.00012",
+          "cell_center_xyz_m": [
+            0.5627107673863487,
+            0.9781688387444608,
+            0.05452916083385928
+          ],
+          "cell_index_kji": [
+            7,
+            1,
+            0
+          ],
+          "edge_length_ratio": 3.662503482934062,
+          "max_edge_length_m": 0.0004170977916204667,
+          "min_edge_length_m": 0.00011388324777409528,
+          "min_scaled_quality": -0.2468323061322934,
+          "wall_distance_m": 0.0008615410015055787,
+          "wall_layer_index": 7
+        }
+      },
+      "B/C02": {
+        "blocks": 13,
+        "inverted_cells": 0,
+        "low_quality_blocks": [],
+        "max_wall_error_m": 3.469446951953614e-18,
+        "min_scaled_quality": 0.1753939247131178,
+        "min_volume": 4.392124256320882e-12,
+        "total_cells": 429120,
+        "worst_cell": {
+          "block": "domain.00011",
+          "cell_center_xyz_m": [
+            0.6478077313802257,
+            0.9245881043239991,
+            0.054525048619249894
+          ],
+          "cell_index_kji": [
+            0,
+            5,
+            21
+          ],
+          "edge_length_ratio": 30.783370729901467,
+          "max_edge_length_m": 0.0027764471800164696,
+          "min_edge_length_m": 9.019308523350121e-05,
+          "min_scaled_quality": 0.1753939247131178,
+          "wall_distance_m": 0.0,
+          "wall_layer_index": 0
+        }
+      },
+      "C/C02": {
+        "blocks": 13,
+        "inverted_cells": 0,
+        "low_quality_blocks": [],
+        "max_wall_error_m": 3.469446951953614e-18,
+        "min_scaled_quality": 0.1545354273901248,
+        "min_volume": 3.945334845673965e-12,
+        "total_cells": 429120,
+        "worst_cell": {
+          "block": "domain.00005",
+          "cell_center_xyz_m": [
+            0.41199564320080345,
+            0.8839807576632637,
+            0.027635885489983497
+          ],
+          "cell_index_kji": [
+            0,
+            2,
+            21
+          ],
+          "edge_length_ratio": 29.36603646052786,
+          "max_edge_length_m": 0.0014233534497502813,
+          "min_edge_length_m": 4.846937555442565e-05,
+          "min_scaled_quality": 0.1545354273901248,
+          "wall_distance_m": 0.0,
+          "wall_layer_index": 0
+        }
+      },
+      "E/C02": {
+        "blocks": 13,
+        "inverted_cells": 0,
+        "low_quality_blocks": [],
+        "max_wall_error_m": 3.469446951953614e-18,
+        "min_scaled_quality": 0.16388312347099757,
+        "min_volume": 4.2200736467229704e-12,
+        "total_cells": 429120,
+        "worst_cell": {
+          "block": "domain.00011",
+          "cell_center_xyz_m": [
+            0.3199522288553457,
+            0.8731820107669658,
+            0.05815111724449999
+          ],
+          "cell_index_kji": [
+            0,
+            5,
+            21
+          ],
+          "edge_length_ratio": 17.115990148117,
+          "max_edge_length_m": 0.0014872899443298126,
+          "min_edge_length_m": 8.689476515581165e-05,
+          "min_scaled_quality": 0.16388312347099757,
+          "wall_distance_m": 0.0,
+          "wall_layer_index": 0
+        }
+      }
+    }
+  },
+  "question": "Is the C03 finest NO-GO caused by the S1-volume to S6-exact-wall deformation, and can it be repaired?",
+  "repair_matrix": {
+    "attempts": [
+      {
+        "N": 97,
+        "dir": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_repair_20260830/lhs100_seed42_083/eps20",
+        "epsE": 2.0,
+        "epsI": 4.0,
+        "inverted_cells": 0,
+        "min_scaled_quality": -0.24450721726789734,
+        "min_volume": 8.573539377351314e-14,
+        "nConstantStart": 5,
+        "output_sha256": "091e735e6b7656405350702c02bee3be2564fce19297723cd23449125bf3b7e5",
+        "s0_fraction": 3.6e-06,
+        "total_cells": 966144,
+        "wall_clock_s": 51.0,
+        "worst_block": "domain.00012"
+      },
+      {
+        "N": 97,
+        "dir": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_repair_20260830/lhs100_seed42_083/eps30",
+        "epsE": 3.0,
+        "epsI": 6.0,
+        "inverted_cells": 0,
+        "min_scaled_quality": -0.09649404454450881,
+        "min_volume": 1.0114846943191382e-12,
+        "nConstantStart": 5,
+        "output_sha256": "56606c06e2fa2bf1cfb98571167c352128df3b147c6165f298dd9e0ab3556dd5",
+        "s0_fraction": 3.6e-06,
+        "total_cells": 966144,
+        "wall_clock_s": 53.6,
+        "worst_block": "domain.00012"
+      },
+      {
+        "N": 97,
+        "dir": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_repair_20260830/eps30_ncs15/lhs100_seed42_083/eps30",
+        "epsE": 3.0,
+        "epsI": 6.0,
+        "inverted_cells": 0,
+        "min_scaled_quality": -0.11022950255473049,
+        "min_volume": 5.344735213977113e-13,
+        "nConstantStart": 15,
+        "output_sha256": "2fa9cc60f0b5617e8cf765a997b454bca1180b812dc72cfd98157a46f3614469",
+        "s0_fraction": 3.6e-06,
+        "total_cells": 966144,
+        "wall_clock_s": 53.7,
+        "worst_block": "domain.00012"
+      },
+      {
+        "N": 97,
+        "dir": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_repair_20260830/eps30_ncs25/lhs100_seed42_083/eps30",
+        "epsE": 3.0,
+        "epsI": 6.0,
+        "inverted_cells": 0,
+        "min_scaled_quality": -0.09482935656441777,
+        "min_volume": 5.588747871539829e-13,
+        "nConstantStart": 25,
+        "output_sha256": "5450e3e3ede533297a8f10a283cbbb9b9b2b789341570b44f553847f3b96648e",
+        "s0_fraction": 3.6e-06,
+        "total_cells": 966144,
+        "wall_clock_s": 54.2,
+        "worst_block": "domain.00012"
+      },
+      {
+        "N": 97,
+        "dir": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_repair_20260830/eps20_ncs25/lhs100_seed42_083/eps20",
+        "epsE": 2.0,
+        "epsI": 4.0,
+        "inverted_cells": 4,
+        "min_scaled_quality": -0.21867473961685133,
+        "min_volume": -3.404868301659243e-14,
+        "nConstantStart": 25,
+        "output_sha256": "3b0c1c16c4e014118141110d2173791f780d3d55977f6c736eb0856ab8e8f263",
+        "s0_fraction": 3.6e-06,
+        "total_cells": 966144,
+        "wall_clock_s": 51.9,
+        "worst_block": "domain.00012"
+      },
+      {
+        "N": 73,
+        "dir": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_repair_20260830/N73_s036_eps15/lhs100_seed42_083/eps15",
+        "epsE": 1.5,
+        "epsI": 3.0,
+        "inverted_cells": 0,
+        "min_scaled_quality": -0.21919034788001177,
+        "min_volume": 8.928660445570394e-15,
+        "nConstantStart": 5,
+        "output_sha256": "c770d05302f509e7009b4be29978cafb83c9c97c8f48cc551503eaab876bb3ce",
+        "s0_fraction": 3.6e-06,
+        "total_cells": 724608,
+        "wall_clock_s": 49.6,
+        "worst_block": "domain.00012"
+      },
+      {
+        "N": 97,
+        "dir": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_repair_20260830/N97_s047_eps15/lhs100_seed42_083/eps15",
+        "epsE": 1.5,
+        "epsI": 3.0,
+        "inverted_cells": 0,
+        "min_scaled_quality": -0.0638616947008864,
+        "min_volume": 9.416319170505336e-13,
+        "nConstantStart": 5,
+        "output_sha256": "e3ab95c203eedb046a516021ca3a99272c9465701ce45e1ef50aad0d1bb50b61",
+        "s0_fraction": 4.7e-06,
+        "total_cells": 966144,
+        "wall_clock_s": 49.3,
+        "worst_block": "domain.00012"
+      },
+      {
+        "N": 97,
+        "dir": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_repair_20260830/N97_s047_eps30/lhs100_seed42_083/eps30",
+        "epsE": 3.0,
+        "epsI": 6.0,
+        "inverted_cells": 0,
+        "min_scaled_quality": 0.020320520258826198,
+        "min_volume": 1.2350891009173954e-12,
+        "nConstantStart": 5,
+        "output_sha256": "b2b5cdfa67132e0fe060aa952d0930e827fa87fd8bba320deb61cb655dacee0a",
+        "s0_fraction": 4.7e-06,
+        "total_cells": 966144,
+        "wall_clock_s": 53.4,
+        "worst_block": "domain.00012"
+      },
+      {
+        "N": 97,
+        "dir": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_repair_20260830/N97_s061_eps15/lhs100_seed42_083/eps15",
+        "epsE": 1.5,
+        "epsI": 3.0,
+        "inverted_cells": 0,
+        "min_scaled_quality": 0.12646395809212876,
+        "min_volume": 1.749562868794492e-12,
+        "nConstantStart": 5,
+        "output_sha256": "e81342736dc45ea7e45be6868fd7e0feff773669c5ababda477c6da1aa299d6f",
+        "s0_fraction": 6.1e-06,
+        "total_cells": 966144,
+        "wall_clock_s": 49.4,
+        "worst_block": "domain.00007"
+      }
+    ],
+    "baseline": {
+      "N": 97,
+      "epsE": 1.5,
+      "inverted_cells": 4,
+      "min_scaled_quality": -0.2448300418,
+      "nConstantStart": 5,
+      "output_sha256": "ffa28bc735907549e30e977f814edfe5b7396568c472b72e15057aa9da3a44cd",
+      "s0_fraction": 3.6e-06
+    },
+    "conclusions": [
+      "epsE is the only smoothing lever with a real effect; at the ladder ceiling epsE=3.0 the fold shrinks but stays negative (qmin -0.0948).",
+      "nConstantStart (5 -> 15 -> 25) has no material effect.",
+      "Normal-layer count is not the driver: the same surface at N=73 still folds (qmin -0.2192).",
+      "Wall spacing is the dominant driver: at N=97, s0_fraction 4.7e-6 gives qmin -0.0639 and 6.1e-6 gives +0.1265 with the worst cell no longer in the tip cap."
+    ],
+    "controlled_surface_fmt_sha256": "0e4dbda066e3ebc7e86da5002f8665d5fb649d2fbacd17b1ae75de24f540c6c6"
+  },
+  "repaired_candidates_deformed_to_exact_c03_wall": {
+    "N97_s047_eps30": {
+      "deformed_interface_mismatch_m": 1.7763568394002505e-15,
+      "first_layer_median_m": 8.19977555121067e-06,
+      "first_layer_min_m": 3.515960510466459e-06,
+      "hard_gate_failure_reasons": [],
+      "hard_gate_passed": true,
+      "inverted_cells": 0,
+      "max_wall_error_m": 3.469446951953614e-18,
+      "min_scaled_quality": 0.0182078527727824,
+      "min_volume": 1.2148462305878533e-12,
+      "output_cgns_sha256": "aa42687763aed5bf58ff88e1e18bd3793d03aa42314367c24a7aacbbf849af36",
+      "production_floor_passed": false,
+      "template_cgns_sha256": "b2b5cdfa67132e0fe060aa952d0930e827fa87fd8bba320deb61cb655dacee0a",
+      "total_cells": 966144,
+      "worst_cell": {
+        "block": "domain.00012",
+        "cell_center_xyz_m": [
+          0.5624421457770474,
+          0.9783213544836602,
+          0.05467442866726466
+        ],
+        "cell_index_kji": [
+          8,
+          0,
+          0
+        ],
+        "edge_length_ratio": 2.5912993090234524,
+        "max_edge_length_m": 0.00028010862615926045,
+        "min_edge_length_m": 0.00010809582095895404,
+        "min_scaled_quality": 0.0182078527727824,
+        "wall_distance_m": 0.0010289056364936255,
+        "wall_layer_index": 8
+      }
+    },
+    "N97_s061_eps15": {
+      "deformed_interface_mismatch_m": 1.7763568394002505e-15,
+      "first_layer_median_m": 1.0276946920131026e-05,
+      "first_layer_min_m": 4.766820038906187e-06,
+      "hard_gate_failure_reasons": [],
+      "hard_gate_passed": true,
+      "inverted_cells": 0,
+      "max_wall_error_m": 3.469446951953614e-18,
+      "min_scaled_quality": 0.12670893059415347,
+      "min_volume": 1.7253886053142269e-12,
+      "output_cgns_sha256": "7de234f5e04dc6965aa4cfec388df5d70ff1929a8ce23cc9bbff9ae51595adcd",
+      "production_floor_passed": true,
+      "template_cgns_sha256": "e81342736dc45ea7e45be6868fd7e0feff773669c5ababda477c6da1aa299d6f",
+      "total_cells": 966144,
+      "worst_cell": {
+        "block": "domain.00007",
+        "cell_center_xyz_m": [
+          0.5625468008066424,
+          0.9772452405500053,
+          0.055480308723765415
+        ],
+        "cell_index_kji": [
+          0,
+          7,
+          0
+        ],
+        "edge_length_ratio": 27.19714254946641,
+        "max_edge_length_m": 0.0027983101242069325,
+        "min_edge_length_m": 0.00010288985760608272,
+        "min_scaled_quality": 0.12670893059415347,
+        "wall_distance_m": 0.0,
+        "wall_layer_index": 0
+      }
+    }
+  },
+  "review_findings": [
+    {
+      "claim": "The committed C02-family C01 rung was marched off the frozen wall-spacing ladder.",
+      "evidence": "artifacts/.../S1_tip_first/m2_deformation_20260830/C01_template/lhs100_seed42_083/prepare_manifest.json records level_settings.s0_frac=6.1e-06 for candidate_c01 but s0_fraction_override=3.6e-06, giving s0=4.731044780752643e-06 - the same absolute wall spacing as the C03 template (4.73106217171235e-06). resolution.py S6_FIRST_CELL_FRACTION['candidate_c01'] is 6.1e-06.",
+      "id": "F1",
+      "impact": "C01 and C03 share a wall spacing, so the A C01/C02/C03 sequence is not a coupled grid+wall-spacing refinement ladder. Any grid-convergence or refinement claim built on the C01 rung is not supported by the artifacts as marched. A concurrent session has since added C01 screens for B/C/E to m2_proven_route_family_20260830.json (geometry C at C01 is below the 0.10 production floor at qmin 0.0840); those rows inherit the same off-ladder wall spacing and should be re-read once F1 is closed.",
+      "severity": "HIGH",
+      "status": "open - requires either a re-march of C01 at 6.1e-06 or an explicit governed statement that C01 is a fixed-wall-spacing rung"
+    },
+    {
+      "claim": "The deformation route does not preserve the wall-spacing policy across geometries.",
+      "evidence": "The affine chord/span map scales wall-normal spacing with the geometry. B/C/E C02 use the geometry-A template (first layer min 3.334e-06 m, median 1.159e-05 m) with scales 0.81-0.95 and land at min 2.713e-06..2.754e-06 m, median 9.45e-06..9.59e-06 m - about 18 percent below the template.",
+      "id": "F2",
+      "impact": "Realized first-cell height, and therefore y+, differs per geometry in the atlas. The deformation report already marks first-layer spacing 'diagnostic_pending_production_yplus_validation'; this must be closed before the CFD canary, not after.",
+      "severity": "MEDIUM",
+      "status": "open"
+    },
+    {
+      "claim": "Interface evidence is complete and unchanged by deformation, but the pairing is heuristic.",
+      "evidence": "volume_interface_report pairs side faces by nearest matching wall edge; all six cases report 20 paired faces and 12 unmatched side faces before and after deformation, with max mismatch <= 3.6e-15 m.",
+      "id": "F3",
+      "impact": "No topology change is detectable across the deformation; the 12 unmatched faces are the same in template and output, so they are outer/symmetry faces rather than a deformation artifact.",
+      "severity": "INFO",
+      "status": "informational"
+    }
+  ],
+  "schema": "aeris.s6.m2_c03_tipcap_diagnosis.v1",
+  "template_volume_audit": {
+    "conclusion": "C01 and C02 templates are clean; the C03 template already fails the hard gate with 4 inverted cells and min_scaled_quality -0.2448300418",
+    "method": "same reader and QC applied to the three S1 template volumes before deformation",
+    "results": {
+      "C01_template": {
+        "cells_below_0_10": 0,
+        "inverted_cells": 0,
+        "low_quality_blocks": [],
+        "min_scaled_quality": 0.20460788487762915,
+        "min_volume": 1.3467460026668756e-11,
+        "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_deformation_20260830/C01_template/lhs100_seed42_083/eps15/wing_vol.cgns",
+        "sha256": "9dcab231bcfbb2daf7f61c8ab0906dd81b8ece7a8f2c9ee7003e787bce72eedb",
+        "total_cells": 191520,
+        "worst_cell": {
+          "block": "domain.00005",
+          "cell_center_xyz_m": [
+            0.5617684278484183,
+            0.976905828682872,
+            0.05424254823798906
+          ],
+          "cell_index_kji": [
+            0,
+            0,
+            15
+          ],
+          "edge_length_ratio": 71.54683195696774,
+          "max_edge_length_m": 0.004738629577698201,
+          "min_edge_length_m": 6.623115864233203e-05,
+          "min_scaled_quality": 0.20460788487762915,
+          "wall_distance_m": 0.0,
+          "wall_layer_index": 0
+        }
+      },
+      "C02_template": {
+        "cells_below_0_10": 0,
+        "inverted_cells": 0,
+        "low_quality_blocks": [],
+        "min_scaled_quality": 0.15613694756513377,
+        "min_volume": 4.752942477872759e-12,
+        "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_deformation_20260830/C02_template/lhs100_seed42_083/eps15/wing_vol.cgns",
+        "sha256": "b192a7bb5cb72a7f46f3710ec22ae483d1b770397d7abfc2002d97cf1154be2f",
+        "total_cells": 429120,
+        "worst_cell": {
+          "block": "domain.00007",
+          "cell_center_xyz_m": [
+            0.562152317113612,
+            0.977249981849956,
+            0.055598651144680176
+          ],
+          "cell_index_kji": [
+            0,
+            5,
+            0
+          ],
+          "edge_length_ratio": 30.962273131373884,
+          "max_edge_length_m": 0.003573255477309081,
+          "min_edge_length_m": 0.0001154067552517106,
+          "min_scaled_quality": 0.15613694756513377,
+          "wall_distance_m": 0.0,
+          "wall_layer_index": 0
+        }
+      },
+      "C03_template": {
+        "cells_below_0_10": 24,
+        "inverted_cells": 4,
+        "low_quality_blocks": [
+          "domain.00012"
+        ],
+        "min_scaled_quality": -0.24483004182271884,
+        "min_volume": -3.4644798000432163e-13,
+        "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_deformation_20260830/C03_template/lhs100_seed42_083/eps15/wing_vol.cgns",
+        "sha256": "ffa28bc735907549e30e977f814edfe5b7396568c472b72e15057aa9da3a44cd",
+        "total_cells": 966144,
+        "worst_cell": {
+          "block": "domain.00012",
+          "cell_center_xyz_m": [
+            0.5623693636615904,
+            0.9785048588100274,
+            0.05465127025850212
+          ],
+          "cell_index_kji": [
+            10,
+            0,
+            0
+          ],
+          "edge_length_ratio": 3.3549692516804788,
+          "max_edge_length_m": 0.0003777725250491218,
+          "min_edge_length_m": 0.00011260089041349586,
+          "min_scaled_quality": -0.24483004182271884,
+          "wall_distance_m": 0.0012185305441439363,
+          "wall_layer_index": 10
+        }
+      }
+    }
+  },
+  "verdict": "C03 is repairable at the C03 surface and normal resolution only by relaxing the finest-level wall-spacing fraction from 3.6e-6 to 6.1e-6, which inverts the ladder's wall-spacing ordering and is a governed y+ decision, not an automatic fix. Until that decision is taken, C03 stays NO-GO and C02 remains the production family."
+}

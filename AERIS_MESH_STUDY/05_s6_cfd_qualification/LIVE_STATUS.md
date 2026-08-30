@@ -38,6 +38,32 @@ Updated: 2026-08-30
 - C03 finest diagnostic: **NO-GO** for this bounded map (4 inverted cells in
   the tip-cap block, `qmin=-0.2468`). It is retained as a diagnostic and does
   not invalidate the passing C02 production family.
+- C02 family evidence: **independently reproduced**. All six recorded
+  `output_sha256` values match the on-disk artifacts, and an independent ADF
+  reopen plus repository volume QC reproduces every inverted-cell count,
+  `min_scaled_quality`, and exact-wall error.
+- C03 tip-cap failure is **attributed to the S1 template march, not to the
+  deformation**. The C03 template volume itself fails the hard gate before any
+  deformation (4 inverted cells, `qmin=-0.2448`, 20 negative scaled-Jacobian
+  cells in `domain.00012` / surface block `tip_base`, wall layers k=4..14 at
+  one corner). The bounded deformation moves that block minimum by 0.002
+  (`-0.2448 -> -0.2469`) and creates no new inversion; the C01 and C02
+  templates are clean.
+- C03 repair search (nine controlled marches on the byte-identical surface):
+  `nConstantStart` has no material effect; `epsE` at the frozen ceiling 3.0
+  reduces but does not clear the fold (`qmin=-0.0948`); normal-layer count is
+  not the driver (N=73 still folds); wall spacing is. At N=97 the fold clears
+  only when the first-cell fraction is relaxed from `3.6e-6` to `6.1e-6`, which
+  deforms to the exact C03 wall with **zero inverted cells, `qmin=+0.1267`**,
+  and moves the worst cell off the tip cap. That relaxation inverts the
+  ladder's wall-spacing ordering, so it is a governed y+ decision and is **not**
+  applied. Evidence: `reports/m2_c03_tipcap_diagnosis_20260830.json`.
+- Open review findings from this pass: **F1 (HIGH)** the committed C01 rung was
+  marched at `s0_frac=3.6e-6` instead of the frozen `6.1e-6`, so the A-family
+  C01/C02/C03 sequence is not a coupled grid-plus-wall-spacing ladder;
+  **F2 (MEDIUM)** the affine map scales wall-normal spacing, so B/C/E C02 land
+  about 18 percent below the template first-cell height and per-geometry y+
+  must be closed before the canary.
 - CFD canary: **blocked** pending the roadmap's independent review gate and a
   governed decision on the C03 finest-level diagnostic.
 - Focused verification: **73 passed** across S6 atlas, qualification
@@ -66,6 +92,7 @@ Updated: 2026-08-30
 - `reports/screen_grid_family.json`
 - `reports/s6_recovery_deformation_20260830.json`
 - `reports/m2_proven_route_family_20260830.json`
+- `reports/m2_c03_tipcap_diagnosis_20260830.json`
 - `studies/grid/m2_20260830/` (local run records; large CGNS files remain
   ignored and must not be committed)
 
@@ -76,6 +103,18 @@ M2 resolution/geometry campaign, with a new versioned experiment identity.
 Preserve every failed direct-march attempt and do not weaken the zero-inversion
 acceptance gate. A CFD canary remains unauthorized until the required nominal
 family screens and independent review gate are closed.
+
+Three decisions are now waiting on human governance, in this order:
+
+1. C03: accept the relaxed `6.1e-6` wall spacing at the finest level (and state
+   why a coarser wall spacing at the finest grid is acceptable), repair C03 some
+   other way, or formally retire the C03 rung and declare C02 the production
+   resolution.
+2. F1: re-march the C01 rung at its frozen `6.1e-6` fraction, or record that the
+   family is deliberately a fixed-wall-spacing sequence and drop any coupled
+   refinement claim.
+3. F2: close per-geometry first-cell height / y+ before the canary, since the
+   affine map rescales wall spacing with the geometry.
 
 ## Resume commands
 

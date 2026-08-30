@@ -40,6 +40,19 @@ Linux-native repository. Read these files first, in order:
   `qmin >= 0.1545`. Evidence: `reports/m2_proven_route_family_20260830.json`.
 - C03 finest remains a diagnostic NO-GO (4 tip-cap inversions,
   `qmin=-0.2468`); do not weaken the zero-inversion gate or call it production.
+- The C02 family evidence has been independently reproduced (hashes plus a
+  fresh ADF reopen and volume QC of all six meshes).
+- The C03 failure is now attributed: the S1 C03 template volume already fails
+  the hard gate before deformation (`qmin=-0.2448`, same 20 negative cells in
+  `tip_base`). The bounded deformation is exonerated. A nine-march controlled
+  search found one clean C03 route - relax the finest-level first-cell fraction
+  from `3.6e-6` to `6.1e-6`, which deforms to the exact wall with zero
+  inversions and `qmin=+0.1267` - but that inverts the ladder's wall-spacing
+  ordering and has NOT been adopted. Evidence:
+  `reports/m2_c03_tipcap_diagnosis_20260830.json`.
+- Two open review findings must be closed before the canary: F1 (the committed
+  C01 rung was marched off the frozen wall-spacing ladder) and F2 (the affine
+  map rescales wall-normal spacing, so per-geometry y+ is not preserved).
 - C01 B/C/E screens are complete; B and E pass the production floor, while C
   is positive-volume but below the `qmin=0.10` production floor (`qmin=0.0840`).
 - CFD canary remains blocked pending independent review and a governed decision
@@ -62,6 +75,8 @@ Linux-native repository. Read these files first, in order:
    and audit each written deformed CGNS. Geometry A is the reference recovery.
 6. The C02 production family is valid for A/B/C/E; C03 is retained as a
    diagnostic failure requiring either repair or explicit governed waiver.
+   Do not adopt the relaxed `6.1e-6` C03 wall spacing without a human decision,
+   and do not present it as a repair of the frozen C03 rung.
 7. Keep CFD and the canary blocked until nominal A and the required geometry
    screens all satisfy the roadmap gates.
 8. Run focused qualification/meshing tests after every governed change. The

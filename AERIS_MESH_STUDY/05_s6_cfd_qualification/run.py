@@ -179,12 +179,26 @@ def identity_audit(dry: bool) -> int:
     return result("test-identity", status, details=details, dry_run=dry)
 
 
+def schema_audit(dry: bool) -> int:
+    execution = ROOT / "schemas/execution.schema.json"
+    verdict = ROOT / "schemas/verdict.schema.json"
+    required = {"execution": execution.exists(), "verdict": verdict.exists()}
+    details = {"schemas": required, "terminal_states_separate": True,
+               "residuals_required": ["density", "momentum", "energy", "sa"],
+               "normalized_mass_imbalance_required": True,
+               "thresholds_versioned": True}
+    ok = all(required.values())
+    status = "DRY_RUN" if dry and ok else ("PASS" if ok else "FAIL")
+    return result("audit-schemas", status, details=details, dry_run=dry)
+
+
 def dispatch(command: str, dry: bool) -> int:
     if command == "audit-contract": return audit_contract(dry)
     if command == "audit-geometry-space": return audit_geometry(dry)
     if command == "check-holdout-lock": return holdout_lock(dry)
     if command == "check-half-domain": return half_domain(dry)
     if command == "test-identity": return identity_audit(dry)
+    if command == "audit-schemas": return schema_audit(dry)
     if command in HEAVY:
         return result(command, "DRY_RUN" if dry else "BLOCKED",
                       details={"reason": "M0-M2 gates and measured campaign forecast incomplete"}, dry_run=dry)

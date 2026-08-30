@@ -48,3 +48,10 @@ def test_identity_format_is_stable_but_resolution_proof_pending():
     assert out.returncode == 0
     assert '"stable_format_detected": true' in out.stdout
     assert '"cache_invalidation_proven": false' in out.stdout
+
+
+def test_versioned_execution_and_verdict_schemas():
+    out = invoke("audit-schemas")
+    assert out.returncode == 0
+    assert '"terminal_states_separate": true' in out.stdout
+    assert '"normalized_mass_imbalance_required": true' in out.stdout

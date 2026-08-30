@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aeris.s6.execution.v1",
+  "type": "object",
+  "required": ["schema_version", "execution_id", "terminal_state", "inputs", "artifacts"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "execution_id": {"type": "string", "minLength": 1},
+    "terminal_state": {"enum": ["geometry", "mesh", "resource", "solver", "convergence", "y_plus", "physics_qc", "accepted", "blocked"]},
+    "inputs": {"type": "object", "required": ["geometry_sha256", "policy_sha256", "mesh_identity"]},
+    "artifacts": {"type": "object", "required": ["hashes_only"]}
+  }
+}

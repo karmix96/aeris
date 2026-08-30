@@ -16,6 +16,8 @@ Updated: 2026-08-30
 - Versioned execution/verdict schemas: **PASS**; eight qualification tests pass.
 - Versioned convergence/classification policy: **PASS**; nine qualification
   tests pass; original verdict retention is required on policy changes.
+- Execution terminal-state validator: **PASS**; incomplete records are rejected
+  and governed blocked records validate; eleven tests pass.
 - Holdout `round_c_lhs10_seed42`: **locked**; contents not read.
 - Heavy mesh/CFD/canary work: **BLOCKED**.
 
@@ -29,6 +31,7 @@ Updated: 2026-08-30
 - `5670b46` — half-domain eligibility gate
 - `031db63` — versioned execution and verdict schemas
 - `f7c7cb2` — versioned classification threshold policy
+- `a79c1eb` — immutable execution terminal-state validator
 
 ## Remaining gates before any canary
 

@@ -94,8 +94,9 @@ Updated: 2026-08-30
 - Conservative flat-plate y+ preflight remains a high risk: estimated C03
   all-wall p95 is `1.68-2.17` and maximum `9.98-14.59`; only measured CFD can
   qualify it. CFD remains blocked pending independent review.
-- Two Claude Opus review attempts for `a92bf10` timed out with zero tokens, so
-  no independent GO is claimed.
+- Two Claude Opus review attempts for `a92bf10` timed out with zero tokens; an
+  interactive Opus/max review of `dbf918f` also stalled without a result. No
+  independent GO is claimed.
 - Focused verification: **74 passed** across S6 atlas, qualification
   orchestrator, ADflow contract, and SU2 contract tests.
 - Repository-wide pytest: collection is environment-blocked by absent optional

@@ -53,8 +53,9 @@ Linux-native repository. Read these files first, in order:
   1.68-2.17 and maximum 9.98-14.59. This is not measured y+; only one governed
   C03 canary can qualify it.
 - Two automated Claude Opus review attempts for `a92bf10` timed out with zero
-  tokens. No independent GO exists; see
-  `reviews/claude_a92bf10_review_attempts_20260831.json`.
+  tokens, and an interactive Opus/max review of `dbf918f` stalled. No
+  independent GO exists; see `reviews/claude_a92bf10_review_attempts_20260831.json`
+  and `reviews/claude_dbf918f_review_attempt_20260831.json`.
 - Three authenticated Claude Code review attempts timed out with zero model
   tokens. No independent GO exists; see `reviews/claude_m0_m1_review_attempt0*.json`.
 

@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "tool": "claude-code",
+  "version": "2.1.251",
+  "model": "opus",
+  "effort": "max",
+  "commit_reviewed": "dbf918f",
+  "permission_mode": "plan_read_only",
+  "scope": "redesigned coupled C01/C02/C03 family, R1-R5 dispositions, yplus preflight, one-canary gate",
+  "holdout_contents_accessed": false,
+  "status": "interactive_request_stalled_no_review_returned",
+  "go_decision": "NOT_OBTAINED"
+}

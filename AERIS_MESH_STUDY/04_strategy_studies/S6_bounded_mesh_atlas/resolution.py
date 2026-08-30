@@ -9,10 +9,9 @@ S6_FIRST_CELL_FRACTION = {
     # after exact-wall deformation for all A/B/C/E development geometries.
     "candidate_c01": 5.0e-6,
     "candidate_c02": 4.7e-6,
-    # C03=6.1e-6 is required by the repaired S1 tip-cap march. The resulting
-    # realized wall spacing is coarser on the OML; this is retained explicitly
-    # as a cap-surface validity requirement, not claimed as monotone y+.
-    "candidate_c03": 6.1e-6,
+    # The 5/6/7 collar-point cap re-spec removes the C03 fold while retaining
+    # the coupled coarse-to-fine wall-spacing law.
+    "candidate_c03": 3.6e-6,
     "smoke": 8.8e-6,
     "fine": 6.0e-6,
     # The fixed N257/epsE=1.5 development calibration passed all 16 seeds at

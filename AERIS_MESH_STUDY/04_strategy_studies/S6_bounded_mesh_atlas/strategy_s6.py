@@ -53,8 +53,8 @@ class LevelSpec:
 
 LEVELS: dict[str, LevelSpec] = {
     "candidate_c01": LevelSpec(17, 3, 5, 42, 801, 0.025),
-    "candidate_c02": LevelSpec(23, 4, 7, 56, 1001, 0.018),
-    "candidate_c03": LevelSpec(29, 5, 9, 74, 1201, 0.014),
+    "candidate_c02": LevelSpec(23, 4, 6, 56, 1001, 0.018),
+    "candidate_c03": LevelSpec(29, 5, 7, 74, 1201, 0.014),
     "coarse": LevelSpec(25, 3, 5, 63, 801, 0.020),
     "smoke": LevelSpec(33, 3, 7, 89, 1001, 0.015),
     "medium": LevelSpec(49, 4, 9, 127, 1201, 0.010),

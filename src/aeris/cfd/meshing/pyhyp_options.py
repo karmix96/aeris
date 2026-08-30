@@ -38,7 +38,7 @@ from aeris.cfd.options.schema import CuratedOption, ToolOptionSchema
 GRID_LEVELS: dict[str, dict[str, object]] = {
     "candidate_c01": {"coarsen": 1, "N": 61, "s0_frac": 5.0e-6},
     "candidate_c02": {"coarsen": 1, "N": 73, "s0_frac": 4.7e-6},
-    "candidate_c03": {"coarsen": 1, "N": 97, "s0_frac": 6.1e-6},
+    "candidate_c03": {"coarsen": 1, "N": 97, "s0_frac": 3.6e-6},
     "L1": {"coarsen": 4, "N": 257, "s0_frac": 4.4e-6},  # fine wall-resolved RANS (y+ ~ 0.2)
     "L2": {"coarsen": 4, "N": 193, "s0_frac": 8.8e-6},  # standard wall-resolved RANS
     "L3": {"coarsen": 4, "N": 129, "s0_frac": 2.2e-5},  # DEFAULT — validated baseline

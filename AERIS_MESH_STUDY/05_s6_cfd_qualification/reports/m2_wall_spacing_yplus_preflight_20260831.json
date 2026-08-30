@@ -1,0 +1,24 @@
+{
+  "schema": "aeris.s6.m2.wall_spacing_yplus_preflight.v1",
+  "experiment_id": "m2_wall_spacing_yplus_preflight_20260831",
+  "mission_authority": "s6_nominal_mission_20260830",
+  "flow": {"speed_mps":28.0,"density_kg_m3":1.0580517702823453,"dynamic_viscosity_Pa_s":1.7418672487754365e-5,"reynolds":1530708.188575197},
+  "estimate": {"correlation":"Cf=0.0592/Re^0.2","cf":0.003430387851294514,"friction_velocity_mps":1.159617194468696,"yplus_per_m":70437.91806292973},
+  "warning": "These are conservative flat-plate preflight estimates. Only measured CFD wall y+ can qualify a mesh.",
+  "policy_limits": {"p95":1.0,"p99":2.0,"maximum":5.0},
+  "results": [
+    {"case":"A/C01","estimated_oml_yplus_p95":4.1240,"estimated_all_wall_yplus_p95":6.3167,"p99":15.2824,"maximum":25.9420},
+    {"case":"B/C01","estimated_oml_yplus_p95":3.4967,"estimated_all_wall_yplus_p95":5.6912,"p99":13.4705,"maximum":22.9241},
+    {"case":"C/C01","estimated_oml_yplus_p95":3.4649,"estimated_all_wall_yplus_p95":5.5069,"p99":12.9794,"maximum":22.4169},
+    {"case":"E/C01","estimated_oml_yplus_p95":3.4144,"estimated_all_wall_yplus_p95":5.4351,"p99":12.8017,"maximum":22.1055},
+    {"case":"A/C02","estimated_oml_yplus_p95":2.4696,"estimated_all_wall_yplus_p95":3.4850,"p99":9.2215,"maximum":18.1586},
+    {"case":"B/C02","estimated_oml_yplus_p95":2.0739,"estimated_all_wall_yplus_p95":3.0878,"p99":8.2699,"maximum":17.0316},
+    {"case":"C/C02","estimated_oml_yplus_p95":2.0715,"estimated_all_wall_yplus_p95":3.0002,"p99":8.0195,"maximum":16.2969},
+    {"case":"E/C02","estimated_oml_yplus_p95":2.0416,"estimated_all_wall_yplus_p95":2.9613,"p99":7.9024,"maximum":16.0857},
+    {"case":"A/C03","estimated_oml_yplus_p95":1.4718,"estimated_all_wall_yplus_p95":1.9598,"p99":5.6722,"maximum":14.5884},
+    {"case":"B/C03","estimated_oml_yplus_p95":1.2331,"estimated_all_wall_yplus_p95":1.7411,"p99":4.9664,"maximum":13.7261},
+    {"case":"C/C03","estimated_oml_yplus_p95":1.7294,"estimated_all_wall_yplus_p95":2.1736,"p99":5.2889,"maximum":9.9826},
+    {"case":"E/C03","estimated_oml_yplus_p95":1.2144,"estimated_all_wall_yplus_p95":1.6833,"p99":4.8683,"maximum":12.9818}
+  ],
+  "verdict": "preflight_risk_high; actual_yplus_requires_one_governed_CFD_canary"
+}

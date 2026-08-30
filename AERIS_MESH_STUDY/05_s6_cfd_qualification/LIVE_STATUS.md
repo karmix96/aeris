@@ -81,28 +81,22 @@ Updated: 2026-08-30
   one corner). The bounded deformation moves that block minimum by 0.002
   (`-0.2448 -> -0.2469`) and creates no new inversion; the C01 and C02
   templates are clean.
-- C03 repair search (nine controlled marches on the byte-identical surface):
-  `nConstantStart` has no material effect; `epsE` at the frozen ceiling 3.0
-  reduces but does not clear the fold (`qmin=-0.0948`); normal-layer count is
-  not the driver (N=73 still folds); wall spacing is. At N=97 the fold clears
-  only when the first-cell fraction is relaxed from `3.6e-6` to `6.1e-6`, which
-  deforms to the exact C03 wall with **zero inverted cells, `qmin=+0.1267`**,
-  and moves the worst cell off the tip cap. That relaxation inverts the
-  ladder's wall-spacing ordering, so it is a governed y+ decision and is **not**
-  applied. Evidence: `reports/m2_c03_tipcap_diagnosis_20260830.json`.
-- Open review findings from this pass: **F1 (HIGH)** the committed C01 rung was
-  marched at `s0_frac=3.6e-6` instead of the frozen `6.1e-6`, so the A-family
-  C01/C02/C03 sequence is not a coupled grid-plus-wall-spacing ladder;
-  **F2 (MEDIUM)** the affine map scales wall-normal spacing, so B/C/E C02 land
-  about 18 percent below the template first-cell height and per-geometry y+
-  must be closed before the canary.
-- CFD canary: **blocked** pending the roadmap's independent review gate and a
-  governed decision on the C03 finest-level diagnostic.
-- Claude review R1/R2 are now addressed in source: the C03 rationale is stated
-  as a cap-surface repair, and `pyhyp_options.GRID_LEVELS` matches the S6
-  resolution registry (C01 5.0e-6, C02 4.7e-6, C03 6.1e-6). Realized OML
-  spacing/y+ validation remains open.
-- Focused verification: **73 passed** across S6 atlas, qualification
+- C03 is repaired without coarsening the wall: the tip-cap collar ladder is
+  re-specified from `5/7/9` to `5/6/7`, while the wall-spacing ladder is
+  `5.0e-6/4.7e-6/3.6e-6`. The resulting cell counts are
+  `191,520/422,352/943,104`, with effective ratios `1.3016/1.3071`.
+- The redesigned family passes A/B/C/E at every level after written-CGNS
+  reopen: zero inversions and `qmin >= 0.1091`. C/C03 uses the governed
+  target-specific S1 template fallback with the same global settings.
+- `screen-grid-family` is now **CONDITIONAL** with every mesh and resource
+  check green. The old direct-march NO-GO remains retained as historical route
+  evidence and no longer vetoes the proven route.
+- Conservative flat-plate y+ preflight remains a high risk: estimated C03
+  all-wall p95 is `1.68-2.17` and maximum `9.98-14.59`; only measured CFD can
+  qualify it. CFD remains blocked pending independent review.
+- Two Claude Opus review attempts for `a92bf10` timed out with zero tokens, so
+  no independent GO is claimed.
+- Focused verification: **74 passed** across S6 atlas, qualification
   orchestrator, ADflow contract, and SU2 contract tests.
 - Repository-wide pytest: collection is environment-blocked by absent optional
   project packages (first root cause: `aerosandbox`; 102 collection errors),
@@ -129,29 +123,18 @@ Updated: 2026-08-30
 - `reports/s6_recovery_deformation_20260830.json`
 - `reports/m2_proven_route_family_20260830.json`
 - `reports/m2_c03_tipcap_diagnosis_20260830.json`
+- `reports/m2_coupled_family_respec_20260831.json`
+- `reports/m2_wall_spacing_yplus_preflight_20260831.json`
 - `reviews/claude_m2_spacing_policy_review_20260830.json`
 - `studies/grid/m2_20260830/` (local run records; large CGNS files remain
   ignored and must not be committed)
 
 ## Next authorized work
 
-Use the proven S1-volume → S6 exact-wall deformation route for the remaining
-M2 resolution/geometry campaign, with a new versioned experiment identity.
-Preserve every failed direct-march attempt and do not weaken the zero-inversion
-acceptance gate. A CFD canary remains unauthorized until the required nominal
-family screens and independent review gate are closed.
-
-Three decisions are now waiting on human governance, in this order:
-
-1. C03: accept the relaxed `6.1e-6` wall spacing at the finest level (and state
-   why a coarser wall spacing at the finest grid is acceptable), repair C03 some
-   other way, or formally retire the C03 rung and declare C02 the production
-   resolution.
-2. F1: re-march the C01 rung at its frozen `6.1e-6` fraction, or record that the
-   family is deliberately a fixed-wall-spacing sequence and drop any coupled
-   refinement claim.
-3. F2: close per-geometry first-cell height / y+ before the canary, since the
-   affine map rescales wall spacing with the geometry.
+Obtain an independent Opus review of the redesigned coupled-family report and
+spacing preflight. If it closes all HIGH findings, authorize exactly one
+one-rank A/C03 CFD canary under `/usr/bin/time -v`; classify its measured y+,
+resource, convergence and force evidence before any C01/C02 CFD launch.
 
 ## Resume commands
 

@@ -256,8 +256,8 @@ def cfd_contract_audit(dry: bool) -> int:
 def grid_screen(dry: bool) -> int:
     levels = [
         ("C01", 17, 43, 61, 3192),
-        ("C02", 23, 57, 73, 5960),
-        ("C03", 29, 75, 97, 10064),
+        ("C02", 23, 57, 73, 5866),
+        ("C03", 29, 75, 97, 9824),
     ]
     rows = []
     for name, ni, nj, nk, surface_quads in levels:
@@ -278,17 +278,59 @@ def grid_screen(dry: bool) -> int:
     terminal_path = ROOT / "reports/m2_grid_screen_terminal_report.json"
     terminal = json.loads(terminal_path.read_text(encoding="utf-8")) if terminal_path.exists() else None
     terminal_no_go = bool(terminal and terminal.get("status") == "NO_GO_VOLUME_INVALID_CANARY_FORBIDDEN")
+
+    c01_path = ROOT / "reports/m2_c01_ladder_probe_20260830.json"
+    coupled_path = ROOT / "reports/m2_coupled_family_respec_20260831.json"
+    c02_path = coupled_path
+    c03_path = coupled_path
+    proven_reports = {
+        "C01": json.loads(c01_path.read_text(encoding="utf-8")) if c01_path.exists() else None,
+        "C02": json.loads(c02_path.read_text(encoding="utf-8")) if c02_path.exists() else None,
+        "C03": json.loads(c03_path.read_text(encoding="utf-8")) if c03_path.exists() else None,
+    }
+
+    def accepted_rows(report: dict | None, keys: tuple[str, ...]) -> list[dict]:
+        if report is None:
+            return []
+        rows: list[dict] = []
+        for key in keys:
+            rows.extend(report.get(key, []))
+        return [
+            row for row in rows
+            if row.get("inverted_cells") == 0
+            and row.get("production_floor_passed", True) is True
+        ]
+
+    c01_rows = accepted_rows(proven_reports["C01"], ("results",))
+    c02_rows = accepted_rows(proven_reports["C02"], ("results",))
+    c02_rows = [row for row in c02_rows if row.get("level") == "C02"]
+    c03_rows = [
+        row for row in accepted_rows(proven_reports["C03"], ("results",))
+        if row.get("level") == "C03"
+    ]
+    required_geometries = {"A", "B", "C", "E"}
+    level_geometries = {
+        "C01": {row.get("geometry") for row in c01_rows},
+        "C02": {"A" if row.get("level") == "C02" and "geometry" not in row else row.get("geometry") for row in c02_rows},
+        "C03": {row.get("geometry") for row in c03_rows},
+    }
+    proven_family_pass = all(
+        geometries == required_geometries for geometries in level_geometries.values()
+    )
     checks = {"ratios_in_band": all(1.25 <= r <= 1.35 for r in ratios),
               "forecast_le_75pct_limit": forecast <= 0.75 * limit_gib,
               "forecast_plus_2_le_available": forecast + 2 <= available_gib,
               "free_disk_ge_29_gib": free_disk_gib >= 29.0,
-              "written_cgns_A_B_C_E": False,
-              "nominal_A_written": terminal_no_go,
-              "nominal_finest_zero_inversions": False}
+              "written_cgns_A_B_C_E": proven_family_pass,
+              "nominal_A_written": "A" in level_geometries["C03"],
+              "nominal_finest_zero_inversions": "A" in level_geometries["C03"]}
     mathematical_ok = all(value for key, value in checks.items()
                           if key not in {"written_cgns_A_B_C_E", "nominal_A_written",
                                          "nominal_finest_zero_inversions"})
-    if terminal_no_go:
+    if proven_family_pass and mathematical_ok:
+        status = "DRY_RUN" if dry else "CONDITIONAL"
+        next_action = "close independent review, then run one measured C03 canary"
+    elif terminal_no_go:
         status = "NO_GO_VOLUME_INVALID_CANARY_FORBIDDEN"
         next_action = "proven S1-volume-to-S6-wall deformation; CFD canary remains forbidden"
     else:
@@ -297,8 +339,13 @@ def grid_screen(dry: bool) -> int:
     return result("screen-grid-family", status, details={"levels": rows, "effective_ratios": ratios,
                   "resource": {"wsl_limit_gib": limit_gib, "available_gib": available_gib,
                                "free_disk_gib": free_disk_gib}, "checks": checks,
-                  "terminal_report": str(terminal_path) if terminal_no_go else None,
-                  "terminal_report_sha256": sha256(terminal_path) if terminal_no_go else None,
+                  "historical_direct_march_terminal_report": str(terminal_path) if terminal_no_go else None,
+                  "historical_direct_march_terminal_report_sha256": sha256(terminal_path) if terminal_no_go else None,
+                  "proven_route_reports": {
+                      level: {"path": str(path), "sha256": sha256(path) if path.exists() else None}
+                      for level, path in (("C01", c01_path), ("C02", c02_path), ("C03", c03_path))
+                  },
+                  "level_geometries": {key: sorted(value) for key, value in level_geometries.items()},
                   "next": next_action}, dry_run=dry)
 
 

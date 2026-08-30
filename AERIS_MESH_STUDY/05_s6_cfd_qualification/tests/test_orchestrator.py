@@ -114,10 +114,11 @@ def test_reclassification_retains_execution_and_prior_verdict(tmp_path):
 
 def test_three_level_family_math_and_resource_screen():
     out = invoke("screen-grid-family")
-    assert out.returncode != 0
+    assert out.returncode == 0
     assert '"ratios_in_band": true' in out.stdout
     assert '"forecast_le_75pct_limit": true' in out.stdout
-    assert '"written_cgns_A_B_C_E": false' in out.stdout
+    assert '"written_cgns_A_B_C_E": true' in out.stdout
     assert '"nominal_A_written": true' in out.stdout
-    assert '"status": "NO_GO_VOLUME_INVALID_CANARY_FORBIDDEN"' in out.stdout
-    assert "CFD canary remains forbidden" in out.stdout
+    assert '"nominal_finest_zero_inversions": true' in out.stdout
+    assert '"status": "CONDITIONAL"' in out.stdout
+    assert "close independent review" in out.stdout

@@ -1,23 +1,45 @@
 {
   "command": "screen-grid-family",
-  "created_at": "2026-08-30T13:47:47.647525+00:00",
+  "created_at": "2026-08-30T21:41:46.479574+00:00",
   "details": {
     "checks": {
       "forecast_le_75pct_limit": true,
       "forecast_plus_2_le_available": true,
       "free_disk_ge_29_gib": true,
       "nominal_A_written": true,
-      "nominal_finest_zero_inversions": false,
+      "nominal_finest_zero_inversions": true,
       "ratios_in_band": true,
-      "written_cgns_A_B_C_E": false
+      "written_cgns_A_B_C_E": true
     },
     "effective_ratios": [
-      1.3085436301822166,
-      1.3106529267937872
+      1.3016277751359597,
+      1.307058454431521
     ],
+    "historical_direct_march_terminal_report": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_grid_screen_terminal_report.json",
+    "historical_direct_march_terminal_report_sha256": "33e2357e81d5cd08b7b5fcc5461fcf71c4b66e792a80e8464924846a9746c230",
+    "level_geometries": {
+      "C01": [
+        "A",
+        "B",
+        "C",
+        "E"
+      ],
+      "C02": [
+        "A",
+        "B",
+        "C",
+        "E"
+      ],
+      "C03": [
+        "A",
+        "B",
+        "C",
+        "E"
+      ]
+    },
     "levels": [
       {
-        "forecast_peak_gib": 1.853462837837838,
+        "forecast_peak_gib": 1.8987428745928339,
         "hex_cells": 191520,
         "id": "C01",
         "points": [
@@ -28,40 +50,52 @@
         "surface_quads": 3192
       },
       {
-        "forecast_peak_gib": 4.152871621621622,
-        "hex_cells": 429120,
+        "forecast_peak_gib": 4.187227707654722,
+        "hex_cells": 422352,
         "id": "C02",
         "points": [
           23,
           57,
           73
         ],
-        "surface_quads": 5960
+        "surface_quads": 5866
       },
       {
         "forecast_peak_gib": 9.35,
-        "hex_cells": 966144,
+        "hex_cells": 943104,
         "id": "C03",
         "points": [
           29,
           75,
           97
         ],
-        "surface_quads": 10064
+        "surface_quads": 9824
       }
     ],
-    "next": "proven S1-volume-to-S6-wall deformation; CFD canary remains forbidden",
-    "resource": {
-      "available_gib": 11.659271240234375,
-      "free_disk_gib": 942.0054817199707,
-      "wsl_limit_gib": 12.664676666259766
+    "next": "close independent review, then run one measured C03 canary",
+    "proven_route_reports": {
+      "C01": {
+        "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_c01_ladder_probe_20260830.json",
+        "sha256": "27e8db844cd7adf5bbe931ca009decd9996674096aace255a00c301c4bc0f25c"
+      },
+      "C02": {
+        "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_coupled_family_respec_20260831.json",
+        "sha256": "ce06e7e605e3a2ca7ff4fbb4da9b9c485202495542298eb434bb34ff343c7537"
+      },
+      "C03": {
+        "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_coupled_family_respec_20260831.json",
+        "sha256": "ce06e7e605e3a2ca7ff4fbb4da9b9c485202495542298eb434bb34ff343c7537"
+      }
     },
-    "terminal_report": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_grid_screen_terminal_report.json",
-    "terminal_report_sha256": "33e2357e81d5cd08b7b5fcc5461fcf71c4b66e792a80e8464924846a9746c230"
+    "resource": {
+      "available_gib": 11.468280792236328,
+      "free_disk_gib": 940.7092666625977,
+      "wsl_limit_gib": 12.664676666259766
+    }
   },
   "dry_run": false,
-  "git_head": "fe004df54ce64f1c68c5a5337a1bfc590f72e34b",
+  "git_head": "a92bf1070510805a4eac8280007ce1d64207d1c1",
   "repo": "/home/mike_kara/aeris",
   "schema_version": 1,
-  "status": "NO_GO_VOLUME_INVALID_CANARY_FORBIDDEN"
+  "status": "CONDITIONAL"
 }

@@ -1,0 +1,15 @@
+{
+  "schema": "aeris.s6.m2.c03_family_repair.v1",
+  "experiment_id": "m2_c03_family_repair_20260831",
+  "route": "repaired_S1_C03_template_to_exact_S6_wall",
+  "settings": {"normal_points": 97, "s0_fraction": 6.1e-6, "epsE": 1.5},
+  "development_set_only": true,
+  "holdout_touched": false,
+  "results": [
+    {"geometry":"A","index":83,"cells":966144,"inverted_cells":0,"min_scaled_quality":0.12670893059415347,"production_floor_passed":true,"output_sha256":"7de234f5e04dc6965aa4cfec388df5d70ff1929a8ce23cc9bbff9ae51595adcd"},
+    {"geometry":"B","index":7,"cells":966144,"inverted_cells":0,"min_scaled_quality":0.1422204906830506,"production_floor_passed":true,"target_surface_sha256":"bd2857130bd47c84384caee7efff01d28ecc72d6a6276753749574c28fb0221a","output_sha256":"99ac13e57e397c05e64ecdf567757453376039394cf8091fa18aed2e55700c23"},
+    {"geometry":"C","index":85,"cells":966144,"inverted_cells":0,"min_scaled_quality":0.13005645232294594,"production_floor_passed":true,"target_surface_sha256":"0928b2182ddb3d301841f67f16bd2a726950b3dec37709869cde94229741b871","output_sha256":"78ed434628893067d2fa786ef5584b2e81154714e66c18c3414cd676af8ca62f"},
+    {"geometry":"E","index":47,"cells":966144,"inverted_cells":0,"min_scaled_quality":0.13202279287551363,"production_floor_passed":true,"target_surface_sha256":"35f06fa53a5951427f2029d1f02f334d7293b243216f3814f1bbf2ad5d083d89","output_sha256":"2fa29be800b19d06cbdd0d2475ca3e0d571856fe7fc65386856875c2229e7c0d"}
+  ],
+  "verdict": "mesh_valid_but_rejected_as_nonmonotone_wall_spacing; diagnostic_only; CFD_not_run"
+}

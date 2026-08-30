@@ -21,6 +21,7 @@ import qualification
 import resolution
 import strategy_s6
 import yaml
+from aeris.cfd.meshing.pyhyp_options import GRID_LEVELS
 from shared import volume_qc
 
 
@@ -460,6 +461,14 @@ def test_production_wall_policy_matches_tested_calibration_and_is_numeric() -> N
     assert wall["production_development_epsE"] == pytest.approx(1.5)
     assert isinstance(wall["reference_reynolds"], (int, float))
     assert wall["reference_reynolds"] == pytest.approx(resolution.REFERENCE_REYNOLDS)
+
+
+def test_candidate_wall_spacing_registry_matches_pyhyp_defaults() -> None:
+    """Prevent silent fallback to a retired C01/C02/C03 spacing value."""
+    for level in ("candidate_c01", "candidate_c02", "candidate_c03"):
+        assert GRID_LEVELS[level]["s0_frac"] == pytest.approx(
+            resolution.first_cell_fraction(level)
+        )
 
 
 def _cube() -> tuple[dict[str, np.ndarray], dict[str, np.ndarray]]:

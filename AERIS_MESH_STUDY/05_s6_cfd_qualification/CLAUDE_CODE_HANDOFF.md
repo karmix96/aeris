@@ -12,11 +12,13 @@ Linux-native repository. Read these files first, in order:
 7. `host/m1_20260830/m1_gate.json`
 8. `reports/m2_grid_screen_terminal_report.md`
 9. `reports/m2_grid_screen_terminal_report.json`
+10. `reports/m2_coupled_family_respec_20260831.json`
+11. `reports/m2_wall_spacing_yplus_preflight_20260831.json`
 
 ## Non-negotiable safety order
 
-- Do not launch CFD or a canary. The direct-march M2 experiment is terminal
-  NO-GO because every written nominal mesh tested has inverted cells.
+- Do not launch CFD or a canary until the redesigned coupled family receives
+  the required independent GO. The direct-march NO-GO remains historical.
 - Do not inspect, parse, sample, visualize, copy, or hash the locked holdout
   sample contents. Only use its lock metadata.
 - Do not alter the live geometry YAML, governance snapshots, unrelated user
@@ -29,54 +31,30 @@ Linux-native repository. Read these files first, in order:
 ## Current terminal state
 
 - M0/M1 deterministic work is complete at commit `752852c`.
-- The candidate `17x43x61 -> 23x57x73 -> 29x75x97` family passes coupled
-  refinement and desktop resource gates.
+- The redesigned coupled family uses collar counts `5 -> 6 -> 7`, wall-spacing
+  fractions `5.0e-6 -> 4.7e-6 -> 3.6e-6`, and 191,520 -> 422,352 -> 943,104
+  cells (`r_eff=1.3016, 1.3071`).
 - Independent ADF-CGNS reopening and repository-authority volume QC reject the
   direct-march nominal mesh. The best C03 attempt still has six inverted cells
   and `qmin=-0.3114098210`.
-- Proven S6 remains the preferred route: reuse a valid S1/Openblademesh volume
-  and apply bounded exact-wall deformation. The C02 production family now
-  passes: geometry A plus independent B/C/E all have zero inverted cells and
-  `qmin >= 0.1545`. Evidence: `reports/m2_proven_route_family_20260830.json`.
-- C03 finest remains a diagnostic NO-GO (4 tip-cap inversions,
-  `qmin=-0.2468`); do not weaken the zero-inversion gate or call it production.
+- Proven S6 remains the route: valid S1/Openblademesh volume followed by exact
+  S6-wall deformation. C01/C02/C03 now pass the production floor on A/B/C/E;
+  C03 geometry C uses the governed target-specific S1 fallback with identical
+  global settings. Evidence: `reports/m2_coupled_family_respec_20260831.json`.
 - The C02 family evidence has been independently reproduced (hashes plus a
   fresh ADF reopen and volume QC of all six meshes).
-- The C03 failure is now attributed: the S1 C03 template volume already fails
-  the hard gate before deformation (`qmin=-0.2448`, same 20 negative cells in
-  `tip_base`). The bounded deformation is exonerated. A nine-march controlled
-  search found one clean C03 route - relax the finest-level first-cell fraction
-  from `3.6e-6` to `6.1e-6`, which deforms to the exact wall with zero
-  inversions and `qmin=+0.1267` - but that inverts the ladder's wall-spacing
-  ordering and has NOT been adopted. Evidence:
-  `reports/m2_c03_tipcap_diagnosis_20260830.json`.
-- Two open review findings must be closed before the canary: F1 (the committed
-  C01 rung was marched off the frozen wall-spacing ladder) and F2 (the affine
-  map rescales wall-normal spacing, so per-geometry y+ is not preserved).
-- C01 B/C/E screens are complete; B and E pass the production floor, while C
-  is positive-volume but below the `qmin=0.10` production floor (`qmin=0.0840`).
-- The resolution policy now records C01=`5.0e-6` and repaired C03=`6.1e-6`.
-  The C01 probe passes A/B/C/E (`qmin >= 0.1091`, zero inversions). Review
-  this non-monotone fraction/physical-spacing rationale before CFD; do not run
-  CFD yet.
-- Review R1 is closed by correcting the explanation: C03 is valid only after
-  a cap-surface marching repair; no claim of finer realized OML spacing is
-  made. Review R2 is closed by synchronizing `src/aeris/cfd/meshing/pyhyp_options.py`
-  with `resolution.py`. Independently compute realized OML spacing/y+ before
-  any CFD authorization.
-- That review is done and is NOT a GO
-  (`reviews/claude_m2_spacing_policy_review_20260830.json`). The probe numbers
-  and the repaired C03 mesh reproduce exactly, but the non-monotone rationale
-  fails on the aerodynamic wall: realized OML first-cell spacing is coarser at
-  C03 than at C01 (medians `8.37e-6..1.08e-5` m against `6.47e-6..7.29e-6` m);
-  only the tip-cap blocks get finer. Two HIGH findings are open - R1 (ladder
-  coarsens the wall as it refines the grid) and R2 (`GRID_LEVELS` in
-  `src/aeris/cfd/meshing/pyhyp_options.py` still holds the retired fractions
-  and is the silent fallback for callers that omit `s0_fraction_override`,
-  including `march_s1.prepare`). R3 records that repaired C03 has geometry A
-  only. Close R1-R3 and compute realized y+ before any canary.
-- CFD canary remains blocked pending independent review and a governed decision
-  on whether C02 is the production resolution or C03 is repaired.
+- The old C03 fold is attributed to its 9-point tip-cap collar. Re-specifying
+  the coupled collar ladder to `5/6/7` removes the fold while retaining the
+  finer 3.6e-6 C03 wall-spacing fraction; the rejected 6.1e-6 path is retained.
+- R1-R3 are mechanically closed by the coupled re-spec, synchronized candidate
+  registries, a regression test, and A/B/C/E written-CGNS evidence. They still
+  require independent review of the new evidence.
+- Flat-plate preflight y+ remains a high risk: estimated C03 all-wall p95 is
+  1.68-2.17 and maximum 9.98-14.59. This is not measured y+; only one governed
+  C03 canary can qualify it.
+- Two automated Claude Opus review attempts for `a92bf10` timed out with zero
+  tokens. No independent GO exists; see
+  `reviews/claude_a92bf10_review_attempts_20260831.json`.
 - Three authenticated Claude Code review attempts timed out with zero model
   tokens. No independent GO exists; see `reviews/claude_m0_m1_review_attempt0*.json`.
 
@@ -84,21 +62,14 @@ Linux-native repository. Read these files first, in order:
 
 1. Inspect git status and preserve the three pre-existing unrelated user
    changes. Do not stage them.
-2. Treat `reports/m2_grid_screen_terminal_report.json` as the governing M2
-   diagnosis. Verify its hashes and attempt records before changing topology.
-3. Retain the successful geometry-A recovery evidence and locate/regenerate the
-   remaining proven S1/Openblademesh template volumes; bind each by hashes and
-   a new experiment identity.
-4. Build the exact S6 target surface, then use bounded S1-volume-to-S6-wall
-   deformation. Do not direct-march the exact wall as the first recovery route.
-5. Start with cheap surface/interface checks, then independently close, reopen,
-   and audit each written deformed CGNS. Geometry A is the reference recovery.
-6. The C02 production family is valid for A/B/C/E; C03 is retained as a
-   diagnostic failure requiring either repair or explicit governed waiver.
-   Do not adopt the relaxed `6.1e-6` C03 wall spacing without a human decision,
-   and do not present it as a repair of the frozen C03 rung.
-7. Keep CFD and the canary blocked until nominal A and the required geometry
-   screens all satisfy the roadmap gates.
+2. Independently reproduce `m2_coupled_family_respec_20260831.json`, including
+   the target-specific C/C03 route and exact output hashes.
+3. Verify candidate spacing registries agree and the 5/6/7 collar plus
+   5.0/4.7/3.6e-6 spacing ladders are monotonic.
+4. Review the preflight y+ calculation as an estimate only; do not treat it as
+   measured acceptance evidence.
+5. If no HIGH finding remains, issue the M2 independent GO for one A/C03
+   canary. Do not authorize C01/C02 CFD until that canary is classified.
 8. Run focused qualification/meshing tests after every governed change. The
    repository-wide suite currently cannot collect in this WSL environment
    because optional project dependencies such as `aerosandbox` are absent.

@@ -14,6 +14,8 @@ Updated: 2026-08-30
   snapshot variables with no bound differences.
 - Half-domain eligibility audit: **PASS**; six qualification tests pass.
 - Versioned execution/verdict schemas: **PASS**; eight qualification tests pass.
+- Versioned convergence/classification policy: **PASS**; nine qualification
+  tests pass; original verdict retention is required on policy changes.
 - Holdout `round_c_lhs10_seed42`: **locked**; contents not read.
 - Heavy mesh/CFD/canary work: **BLOCKED**.
 
@@ -26,6 +28,7 @@ Updated: 2026-08-30
 - `bd39f9f` — unresolved mission-authority documentation
 - `5670b46` — half-domain eligibility gate
 - `031db63` — versioned execution and verdict schemas
+- `f7c7cb2` — versioned classification threshold policy
 
 ## Remaining gates before any canary
 

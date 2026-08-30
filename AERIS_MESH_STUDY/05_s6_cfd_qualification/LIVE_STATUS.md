@@ -98,6 +98,10 @@ Updated: 2026-08-30
   must be closed before the canary.
 - CFD canary: **blocked** pending the roadmap's independent review gate and a
   governed decision on the C03 finest-level diagnostic.
+- Claude review R1/R2 are now addressed in source: the C03 rationale is stated
+  as a cap-surface repair, and `pyhyp_options.GRID_LEVELS` matches the S6
+  resolution registry (C01 5.0e-6, C02 4.7e-6, C03 6.1e-6). Realized OML
+  spacing/y+ validation remains open.
 - Focused verification: **73 passed** across S6 atlas, qualification
   orchestrator, ADflow contract, and SU2 contract tests.
 - Repository-wide pytest: collection is environment-blocked by absent optional

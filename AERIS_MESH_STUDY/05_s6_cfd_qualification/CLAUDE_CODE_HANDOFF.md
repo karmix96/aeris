@@ -59,6 +59,11 @@ Linux-native repository. Read these files first, in order:
   The C01 probe passes A/B/C/E (`qmin >= 0.1091`, zero inversions). Review
   this non-monotone fraction/physical-spacing rationale before CFD; do not run
   CFD yet.
+- Review R1 is closed by correcting the explanation: C03 is valid only after
+  a cap-surface marching repair; no claim of finer realized OML spacing is
+  made. Review R2 is closed by synchronizing `src/aeris/cfd/meshing/pyhyp_options.py`
+  with `resolution.py`. Independently compute realized OML spacing/y+ before
+  any CFD authorization.
 - That review is done and is NOT a GO
   (`reviews/claude_m2_spacing_policy_review_20260830.json`). The probe numbers
   and the repaired C03 mesh reproduce exactly, but the non-monotone rationale

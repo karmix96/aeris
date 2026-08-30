@@ -1,0 +1,12 @@
+schema_version: aeris.s6.classification_policy.v1
+policy_id: s6_convergence_v1
+immutable: true
+residuals:
+  density: {max_final: 1.0e-5}
+  momentum: {max_final: 1.0e-5}
+  energy: {max_final: 1.0e-5}
+  sa: {max_final: 1.0e-5}
+mass_imbalance_normalized: {max: 1.0e-4}
+classification:
+  accepted_requires: [convergence, y_plus, physics_qc]
+  original_verdict_retained_on_policy_change: true

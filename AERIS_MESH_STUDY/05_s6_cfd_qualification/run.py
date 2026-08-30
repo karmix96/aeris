@@ -192,6 +192,19 @@ def schema_audit(dry: bool) -> int:
     return result("audit-schemas", status, details=details, dry_run=dry)
 
 
+def policy_audit(dry: bool) -> int:
+    path = ROOT / "policies/convergence_v1.yaml"
+    text = path.read_text(encoding="utf-8") if path.exists() else ""
+    required = ["policy_id:", "density:", "momentum:", "energy:", "sa:",
+                "mass_imbalance_normalized:", "original_verdict_retained_on_policy_change: true"]
+    ok = path.exists() and all(item in text for item in required)
+    details = {"policy": str(path), "policy_sha256": sha256(path) if path.exists() else None,
+               "thresholds_machine_readable": ok, "immutable": "immutable: true" in text,
+               "reclassification_retains_original": "original_verdict_retained_on_policy_change: true" in text}
+    status = "DRY_RUN" if dry and ok else ("PASS" if ok else "FAIL")
+    return result("audit-policy", status, details=details, dry_run=dry)
+
+
 def dispatch(command: str, dry: bool) -> int:
     if command == "audit-contract": return audit_contract(dry)
     if command == "audit-geometry-space": return audit_geometry(dry)
@@ -199,6 +212,7 @@ def dispatch(command: str, dry: bool) -> int:
     if command == "check-half-domain": return half_domain(dry)
     if command == "test-identity": return identity_audit(dry)
     if command == "audit-schemas": return schema_audit(dry)
+    if command == "audit-policy": return policy_audit(dry)
     if command in HEAVY:
         return result(command, "DRY_RUN" if dry else "BLOCKED",
                       details={"reason": "M0-M2 gates and measured campaign forecast incomplete"}, dry_run=dry)

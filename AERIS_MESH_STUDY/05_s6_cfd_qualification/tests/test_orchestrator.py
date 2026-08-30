@@ -55,3 +55,10 @@ def test_versioned_execution_and_verdict_schemas():
     assert out.returncode == 0
     assert '"terminal_states_separate": true' in out.stdout
     assert '"normalized_mass_imbalance_required": true' in out.stdout
+
+
+def test_versioned_classification_policy():
+    out = invoke("audit-policy")
+    assert out.returncode == 0
+    assert '"thresholds_machine_readable": true' in out.stdout
+    assert '"reclassification_retains_original": true' in out.stdout

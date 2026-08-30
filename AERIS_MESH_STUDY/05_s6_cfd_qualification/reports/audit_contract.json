@@ -1,6 +1,6 @@
 {
   "command": "audit-contract",
-  "created_at": "2026-08-30T12:30:25.739179+00:00",
+  "created_at": "2026-08-30T12:31:11.544427+00:00",
   "details": {
     "checks": {
       "deletion_policy": true,
@@ -13,7 +13,7 @@
     "mission_gate": "OPEN_REQUIRED"
   },
   "dry_run": true,
-  "git_head": "036a2945018230e94e94de8ed738209c43df72ea",
+  "git_head": "ec911a7ad905f76ecf3e69310fc89c5e537898fe",
   "repo": "/home/mike_kara/aeris",
   "schema_version": 1,
   "status": "DRY_RUN"

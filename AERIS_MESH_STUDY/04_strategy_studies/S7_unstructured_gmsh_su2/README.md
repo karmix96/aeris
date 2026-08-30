@@ -1,5 +1,10 @@
 # S7 — unstructured Gmsh + SU2
 
+**Domain: half model.** S7 meshes y >= 0, closed at the root by a symmetry plane,
+which is the domain S6 meshes. The mirrored model is kept reachable through
+`modeled_domain` and passes the same audit; see `STUDY.md` for the comparison.
+
+
 S7 is the unstructured sibling of
 [`S6_bounded_mesh_atlas`](../S6_bounded_mesh_atlas/) inside the same governed
 `AERIS_MESH_STUDY`. It derives a full-wing triangular wall from the shared pyGeo

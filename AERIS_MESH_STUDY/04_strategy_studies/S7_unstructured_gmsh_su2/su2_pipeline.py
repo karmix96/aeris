@@ -45,6 +45,7 @@ PIPELINE_REQUEST_SCHEMA = "aeris.s7.su2_pipeline_request.v1"
 ATTEMPT_RESULT_SCHEMA = "aeris.s7.su2_attempt_result.v1"
 WALL_MARKERS = ("wall_upper", "wall_lower", "wall_te", "wall_tip")
 FARFIELD_MARKER = "farfield"
+SYMMETRY_MARKER = "symmetry"
 HISTORY_NAME = "history.csv"
 SURFACE_NAME = "surface_flow.csv"
 SURFACE_VTK_NAME = "surface_flow.vtk"
@@ -531,13 +532,18 @@ def fixed_su2_options(
     policy = load_policy()
     numerical = policy["su2"]["numerical_method"]
     mesh_path = Path(mesh_path).resolve()
-    required_markers = set((*WALL_MARKERS, FARFIELD_MARKER))
+    # A mirrored mesh has no symmetry plane and a half mesh must have one; any
+    # other marker set means the mesh is not what either domain produces.
+    mirrored_markers = set((*WALL_MARKERS, FARFIELD_MARKER))
+    half_markers = mirrored_markers | {SYMMETRY_MARKER}
     markers = _su2_mesh_markers(mesh_path)
-    if set(markers) != required_markers:
+    if set(markers) not in (mirrored_markers, half_markers):
         raise ValueError(
-            "native SU2 mesh markers must exactly equal "
-            f"{sorted(required_markers)}; found {sorted(markers)}"
+            "native SU2 mesh markers must equal "
+            f"{sorted(mirrored_markers)} or {sorted(half_markers)}; "
+            f"found {sorted(markers)}"
         )
+    half_domain = SYMMETRY_MARKER in markers
     max_allowed = int(
         policy["su2"]["restart_extension_iterations"]
         if restart
@@ -545,11 +551,39 @@ def fixed_su2_options(
     )
     if int(iterations) < 1 or int(iterations) > max_allowed:
         raise ValueError(f"iterations must be in [1, {max_allowed}] for this S7 solve")
+    # Fail closed if the solver stop is ever moved back onto the acceptance bar.
+    # A stop at the bar caps the achievable drop at initial + 8 and makes the
+    # drop gate unsatisfiable, which is how two genuinely converged runs came to
+    # be rejected.  See ADR-0017, residual-gate amendment 2026-08-25.
+    convergence = policy["su2"]["convergence"]
+    solver_stop = finite_float(
+        convergence["solver_stop_residual_log10"], "su2.convergence.solver_stop_residual_log10"
+    )
+    required_stop = min(
+        float(convergence["residual_log10_final_max"]),
+        float(convergence["assumed_worst_initial_residual_log10"])
+        - float(convergence["residual_drop_orders_min"]),
+    )
+    if solver_stop > required_stop:
+        raise ValueError(
+            "solver_stop_residual_log10 must sit at or below "
+            f"{required_stop} so that both residual conditions remain reachable; "
+            f"got {solver_stop}"
+        )
     mach = finite_float(flow["mach"], "flow.mach")
     alpha = finite_float(flow["alpha"], "flow.alpha")
     reynolds = finite_float(flow["reynolds"], "flow.reynolds")
     temperature = finite_float(flow["temperature"], "flow.temperature")
     area = finite_float(references["area_ref"], "references.area_ref")
+    if half_domain:
+        # The reference values describe the whole wing regardless of what is
+        # meshed - area_ref and span are identical for both domains - but SU2
+        # integrates forces over the markers it is given, which on a half mesh is
+        # half the wing. Dividing half the force by the whole area would report CL
+        # and CD at exactly half their true value, and the run would look healthy
+        # while doing it. Halving the reference here keeps the coefficients
+        # comparable with the mirrored domain and with S6.
+        area = 0.5 * area
     chord = finite_float(references["chord_ref"], "references.chord_ref")
     if mach <= 0.0 or reynolds <= 0.0 or temperature <= 0.0 or area <= 0.0 or chord <= 0.0:
         raise ValueError(
@@ -585,6 +619,10 @@ def fixed_su2_options(
         "REF_ORIGIN_MOMENT_Z": origin[2],
         "MARKER_HEATFLUX": "( " + ", ".join(f"{name}, 0.0" for name in WALL_MARKERS) + " )",
         "MARKER_FAR": f"( {FARFIELD_MARKER} )",
+        # Declared only when the mesh has one. SU2 treats an unlisted boundary as
+        # a wall, so omitting this on a half mesh would put a viscous surface down
+        # the centreline rather than a plane of symmetry.
+        **({"MARKER_SYM": f"( {SYMMETRY_MARKER} )"} if half_domain else {}),
         "MARKER_MONITORING": "( " + ", ".join(WALL_MARKERS) + " )",
         "MARKER_PLOTTING": "( " + ", ".join(WALL_MARKERS) + " )",
         "CONV_NUM_METHOD_FLOW": str(numerical["conv_num_method_flow"]),
@@ -618,7 +656,10 @@ def fixed_su2_options(
         + " )",
         "ITER": int(iterations),
         "CONV_FIELD": "RMS_DENSITY",
-        "CONV_RESIDUAL_MINVAL": int(policy["su2"]["convergence"]["residual_log10_final_max"]),
+        # NOT residual_log10_final_max: stopping the solver at the acceptance bar
+        # caps the achievable drop at initial + 8 and makes the drop gate
+        # unsatisfiable.  See ADR-0017, residual-gate amendment 2026-08-25.
+        "CONV_RESIDUAL_MINVAL": solver_stop,
         "CONV_STARTITER": int(policy["su2"]["convergence"]["minimum_history_rows"]),
         "TABULAR_FORMAT": "CSV",
         "HISTORY_OUTPUT": "( ITER, RMS_RES, AERO_COEFF )",

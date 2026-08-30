@@ -10,7 +10,7 @@ from typing import Any, Iterable
 import numpy as np
 
 from .common import load_policy, sha256_file, write_json
-from .geometry import LABELS, SurfaceMesh, surface_topology_report
+from .geometry import WALL_LABELS, SurfaceMesh, surface_topology_report
 from .gmsh_pipeline import resolved_mesh_spec
 from .intersections import self_intersection_report
 from .wall_mapping import source_wall_correspondence
@@ -323,11 +323,11 @@ def _su2_boundary_audit(
             for triangle, triangle_label in zip(surface.triangles, surface.labels, strict=True)
             if triangle_label == label
         }
-        for label in LABELS
+        for label in WALL_LABELS
     }
     labels: dict[str, Any] = {}
     all_exact = True
-    for label in LABELS:
+    for label in WALL_LABELS:
         actual_rows = marker_rows.get(label, [])
         actual = {tuple(sorted(row)) for row in actual_rows}
         expected = expected_by_label[label]
@@ -560,6 +560,16 @@ def _prism_columns(
     target_first_height: float,
     target_growth: float,
 ) -> dict[str, Any]:
+    # Only wall triangles carry a boundary layer.  A half model's symmetry cap is
+    # part of the surface but is a domain boundary, not a viscous wall, so counting
+    # it here would demand prisms that must not exist and report the layer as
+    # incomplete on a correct mesh.
+    wall_triangle_count = int(
+        sum(1 for label in surface.labels if label in WALL_LABELS)
+    )
+    if not wall_triangle_count:
+        raise ValueError("surface carries no wall triangles to audit")
+
     triangle_faces: dict[tuple[int, int, int], list[tuple[int, int]]] = defaultdict(list)
     for prism_index, row in enumerate(prism_node_tags):
         triangle_faces[tuple(sorted(map(int, row[:3])))].append((prism_index, 0))
@@ -577,6 +587,11 @@ def _prism_columns(
     for source_index, (triangle, label) in enumerate(
         zip(surface.triangles, surface.labels, strict=True)
     ):
+        # A symmetry cap is surface but not wall: it bounds the domain and carries
+        # no boundary layer, so a column there is absent by design and counting it
+        # as missing would report a correct mesh as incomplete.
+        if label not in WALL_LABELS:
+            continue
         source_key = tuple(sorted(int(source_node_tags_by_index[int(node)]) for node in triangle))
         owners = triangle_faces.get(source_key, [])
         covered = len(owners) == 1
@@ -687,7 +702,7 @@ def _prism_columns(
         column["layers"] == expected_layers and column["closed"] for column in columns
     )
     label_summary: dict[str, Any] = {}
-    for label in LABELS:
+    for label in WALL_LABELS:
         selected = [column for column in columns if column["label"] == label]
         covered = sum(column["layers"] > 0 for column in selected)
         quality_values = [
@@ -715,13 +730,13 @@ def _prism_columns(
             ),
         }
     return {
-        "source_wall_triangle_count": len(surface.triangles),
+        "source_wall_triangle_count": wall_triangle_count,
         "prism_count": len(prism_node_tags),
-        "expected_prism_count": len(surface.triangles) * expected_layers,
+        "expected_prism_count": wall_triangle_count * expected_layers,
         "covered_wall_triangle_count": covered_count,
-        "wall_face_coverage_fraction": covered_count / len(surface.triangles),
+        "wall_face_coverage_fraction": covered_count / wall_triangle_count,
         "exact_connected_column_count": exact_count,
-        "connected_column_fraction": exact_count / len(surface.triangles),
+        "connected_column_fraction": exact_count / wall_triangle_count,
         "layer_count": _stats(column["layers"] for column in columns),
         "missing_layer_count": int(
             sum(max(0, expected_layers - int(column["layers"])) for column in columns)
@@ -751,7 +766,7 @@ def _audit_prism_core_interfaces(
         for local_face in local_faces:
             owners[tuple(sorted(int(row[index]) for index in local_face))].append(tet_index)
     outer_faces = prism_report.pop("_outer_faces")
-    for label in LABELS:
+    for label in WALL_LABELS:
         selected = [face for face_label, face in outer_faces if face_label == label]
         matched_faces = 0
         multiply_matched_faces = 0
@@ -825,7 +840,11 @@ def _evaluate_gates(
     quality = mesh["quality"]
     faces = mesh["faces"]
     su2_boundary = mesh["su2_boundary"]
-    required_markers = set(policy["geometry"]["required_boundary_labels"])
+    domain = str(policy["geometry"].get("modeled_domain", "full_mirrored_wing"))
+    by_domain = policy["geometry"].get("required_boundary_labels_by_domain") or {}
+    required_markers = set(
+        by_domain.get(domain, policy["geometry"]["required_boundary_labels"])
+    )
     observed_markers = set(markers)
     te_error = surface.metadata.get("fidelity", {}).get("max_te_opening_relative_error")
     te_error_passed = (
@@ -856,10 +875,13 @@ def _evaluate_gates(
         float(su2_boundary["max_point_distance_from_gmsh_m"]) / characteristic_length
     )
     physical_names = mesh["physical_names_in_msh"]
-    physical_surface_exact = set(physical_names.get("2", [])) == {
-        "wall_source",
-        "farfield",
-    }
+    # The half domain adds a symmetry plane to the .msh; the mirrored one has none.
+    expected_physical_surfaces = {"farfield", "wall_source"}
+    if domain == "half_wing_symmetry_y0":
+        expected_physical_surfaces.add("symmetry")
+    physical_surface_exact = (
+        set(physical_names.get("2", [])) == expected_physical_surfaces
+    )
     physical_volume_exact = set(physical_names.get("3", [])) == set(
         policy["geometry"]["required_volume_labels"]
     )
@@ -935,7 +957,7 @@ def _evaluate_gates(
                 "msh_surface_physical_labels",
                 physical_surface_exact,
                 physical_names.get("2", []),
-                ["farfield", "wall_source"],
+                sorted(expected_physical_surfaces),
             ),
             _gate(
                 "msh_volume_physical_labels",

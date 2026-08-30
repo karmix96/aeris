@@ -69,3 +69,29 @@ histories is fixed.  Read `DESKTOP_STAGE0_STATUS_2026-08-24.md` before resuming.
 Never touch the hold-out until a superseding decision records that the
 development programme, pilots, y+, grid studies, recovery, schemas and
 independent review are all complete.
+
+## The half domain
+
+S7 meshes y >= 0, closed at the root by a cap labelled `symmetry`, and this is the
+declared domain.  Things to know before changing any of it:
+
+- The prism layer is **marched here, not extruded by Gmsh** (`prism_layer.py`).
+  Gmsh offers no way to constrain its extrusion direction, and at the root the
+  wall does not meet the plane perpendicularly, so its layer leaves the domain -
+  measured at 0.705 mm against a 15.449 mm layer.
+- Vertex normals are **angle-weighted, not area-weighted**.  Area weighting lets
+  the large flat tip-cap faces steer the direction and drops prism quality from
+  0.3795 to 0.0311, below the 0.05 gate.
+- **Do not scale the step to mitre corners.**  It raises quality and lifts the
+  first cell off the wall by up to a factor of two, which is what sets y+: the
+  relative error went from zero to 0.9977 against a 0.05 limit.  It was tried,
+  measured and deleted.
+- The core needs **both** the background size field and the optimisation passes.
+  With neither, tet quality was 0.0076 against a 0.025 gate; the field alone gave
+  0.0117 and the passes took it to 0.0774.
+- `REF_AREA` is **halved** for a half mesh.  The reference values describe the
+  whole wing whatever is meshed, so leaving it alone reports CL and CD at half
+  their true value on a run that looks entirely healthy.
+- `symmetry` is not a wall label.  It carries no prisms, and `WALL_LABELS` rather
+  than `LABELS` is what the audit, the wall mapping and the solver config iterate.
+

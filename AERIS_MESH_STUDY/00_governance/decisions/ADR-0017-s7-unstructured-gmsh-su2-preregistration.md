@@ -882,3 +882,163 @@ It has **not** been changed.  The options are to keep it and accept the yield, t
 re-derive it from the measured population as was done for the facet limits, or to
 add a retry candidate with a different core strategy.  That decision belongs to
 the study owner.
+
+
+## Residual gate: the solver stop made the drop condition unsatisfiable (2026-08-25, still pre-result)
+
+### The defect
+
+`su2.convergence` carries two residual conditions and requires both:
+
+    residual_drop_orders_min: 6.0
+    residual_log10_final_max: -8.0
+
+`su2_pipeline.fixed_su2_options` derived the solver's own stopping criterion from
+the second of them:
+
+    "CONV_RESIDUAL_MINVAL": int(policy["su2"]["convergence"]["residual_log10_final_max"])
+
+SU2 therefore halts the instant the residual touches -8.  For any run that
+converges, the final residual is -8 by construction and the achievable drop is
+exactly `initial + 8` - a property of the free-stream normalisation and the mesh,
+not of convergence.  A better solver cannot pass such a condition and a worse one
+fails it for the same reason, so the condition stops measuring anything.
+
+Measured initial residual across every S7 history that exists - 18 runs, all
+tiers, both domains - lies between -2.576 and -2.687.  The largest drop the
+solver was permitted to reach is therefore 5.42 orders, against a gate asking for
+6.0.  The restart path cannot supply the difference either: a restart from a
+converged -8 field re-converges immediately, the chain initial is still the
+free-stream -2.6, and the chain drop is still about 5.4.
+
+Two runs had already converged by SU2's own criterion and were rejected by this
+arithmetic alone:
+
+| run | iters | initial | final | drop | residual gate |
+|---|---|---|---|---|---|
+| `conv_matrix/A_first_order` | 460 | -2.576 | -8.021 | 5.445 | `insufficient_residual_drop` |
+| `solver_tuning/B_newton_krylov` | 1071 | -2.603 | -8.000 | 5.397 | `insufficient_residual_drop` |
+
+Both exited `Exit Success` with SU2's own convergence flag set, and
+`A_first_order` passes the force-tail gate outright.  `insufficient_residual_drop`
+was the only failure reason recorded for either.
+
+The defect also truncated the force tail.  `B_newton_krylov` failed
+`unstable_CMy_tail` at 1.094e-3 against a 1.0e-3 limit; the same configuration run
+to a deeper stop reaches a CMy relative range of 2.9e-6.  The tail was not
+unsettled, it was cut short.  One defect, two symptoms.
+
+### The gates themselves are sound, and worth keeping
+
+A ten-variant solver matrix on one 42 745-cell half-wing mesh, every variant run
+to 6000 iterations with the stop moved to -12 so that each could reach what it was
+capable of, separates cleanly into runs the residual gate accepts and runs it
+rejects.  Final forces:
+
+| group | CL spread | CD spread | CMy spread |
+|---|---|---|---|
+| four gate-passing variants | 0.00 % | 0.00 % | 0.01 % |
+| five gate-failing variants | 5.54 % | 0.62 % | 10.74 % |
+
+The runs the gate accepts agree on all three coefficients to within 5e-7 no matter
+how the solver reached them; the runs it rejects disagree by up to a tenth of CMy.
+The gate is discriminating exactly what it was written to discriminate.  That is
+the reason to repair its arithmetic rather than relax it.
+
+The neighbouring gates were audited at the same time and are not defective.  The
+force-tail denominator floors never bind - CL, CD and CMy means sit 10x to 100x
+above them - so that gate measures real variation.  `minimum_history_rows` (200),
+`force_tail_rows` (200) and SU2's `CONV_STARTITER` (200) are mutually consistent,
+so no converged run can be short-changed on rows.
+
+### Decision
+
+The solver's stopping value is separated from the acceptance bar.  A new key
+`su2.convergence.solver_stop_residual_log10` supplies `CONV_RESIDUAL_MINVAL`, and
+`fixed_su2_options` reads that instead of `residual_log10_final_max`.
+
+The value must satisfy
+
+    stop <= min(residual_log10_final_max,
+                assumed_worst_initial_residual_log10 - residual_drop_orders_min)
+
+The demanding case is the *most* negative initial residual, not the least: the
+drop is `initial - final`, so a run starting lower has less room above the bar.
+The most negative initial measured over the 18 histories is -2.687, which requires
+a final of -8.687.  A second key, `assumed_worst_initial_residual_log10`, declares
+the bound at **-3.0** - deliberately below the measured span, and an assumption
+rather than a measurement - which makes the required stop -9.0.  That is the
+declared value.  A design starting below -3.0 fails closed on
+`insufficient_residual_drop`, which is the correct outcome and no longer a
+certainty.
+
+`fixed_su2_options` recomputes `min(...)` from the policy on every call and
+refuses to emit a configuration whose stop sits above it, so the defect cannot be
+reintroduced by editing one number in isolation.
+
+Measured cost, `I_combined`, iterations to reach each level:
+
+| -8.0 | -8.6 | -9.0 | -9.5 |
+|---|---|---|---|
+| 447 | 580 | 1310 | 5872 |
+
+So the declared stop costs about 2.9x the iterations of the old one on the fastest
+variant.  Two of the four passing variants did not reach -9.0 within the 6000
+iterations used here; the production budget is `max_iterations: 20000`, which
+leaves headroom, but that has been measured only to 6000 and the campaign must
+confirm it at production resolution.
+
+**Both acceptance thresholds are unchanged.**  `residual_drop_orders_min` remains
+6.0 and `residual_log10_final_max` remains -8.0.  The change makes a run continue
+further rather than stop sooner, so it cannot admit a case that a correct
+implementation of the preregistered gate would have refused.  This is a correction
+of a mis-specified stopping criterion, made before any result exists and justified
+by measurement, in the same class as the facet-fidelity separation above and not a
+weakening to rescue a failing case.  S7 remains
+`preregistered_development_no_results`, and the hold-out remains forbidden.
+
+### The solver finding that exposed it
+
+Ten variants, all on multigrid, each adding one thing.  Newton-Krylov is the
+discriminating ingredient and nothing else came close:
+
+| variant | added | drop @6000 | monotonic | gate |
+|---|---|---|---|---|
+| `I_combined` | NK + ILU/25 + CFL 25 | 6.906 | yes | pass |
+| `J_nk_no_mg` | as above, no multigrid | 6.906 | yes | pass |
+| `G_nk_cfl` | NK + CFL 25 | 6.363 | yes | pass |
+| `F_nk_linear` | NK + ILU/25 | 6.265 | yes | pass |
+| `B_newton_krylov` | NK alone | 5.954 | yes | fail, 0.046 short |
+| `A_baseline` | - | 1.082 | no | fail |
+| `E_quasi_newton` | `QUASI_NEWTON_NUM_SAMPLES` | 1.082 | no | fail |
+| `C_strong_linear` | ILU/25 | 1.465 | no | fail |
+| `H_linear_cfl` | ILU/25 + CFL 25 | 1.036 | no | fail |
+| `D_high_cfl` | CFL 25 | 1.798 | no | fail |
+
+Three results are established by byte comparison rather than inference:
+
+1. **`QUASI_NEWTON_NUM_SAMPLES` is a no-op.**  `A_baseline` and `E_quasi_newton`
+   differ by that one line and their 6000-row histories are byte-identical.  SU2
+   never writes the string "quasi" to its log.
+2. **Multigrid is bypassed under `NEWTON_KRYLOV`.**  `I_combined` and `J_nk_no_mg`
+   differ by seven `MG*` options and their histories are byte-identical.  SU2 does
+   echo the multigrid settings, so the log cannot be used to tell.
+3. **SU2 8.5.0 never reports Newton-Krylov activation.**  The strings "Newton" and
+   "Krylov" appear zero times in a run with `NEWTON_KRYLOV= YES`.  Whether the
+   option took effect can only be established from the residual history.
+
+The accelerators are coupled, not additive.  `CFL_NUMBER= 25` with the aggressive
+ramp is the *worst* variant in the matrix without Newton-Krylov (`D`, 2.041
+orders) and the second *best* with it (`G`, 6.363).  An earlier convergence matrix
+rejected a high CFL on the stock scheme; that conclusion was correct for that
+scheme and would have been the wrong lesson to carry forward.
+
+Every gate-passing variant reached its minimum residual at iteration 5999 of 6000
+- none had turned around, all were still descending when the budget ran out.
+Every gate-failing variant except `H` reached its minimum between iteration 927
+and 3604 and then climbed back, which is the limit cycle this study has been
+chasing since the first convergence matrix.
+
+This matrix ran at 42 745 cells on a laptop.  It selects a solver configuration;
+it does not establish convergence at production resolution, where the campaign
+must repeat it.

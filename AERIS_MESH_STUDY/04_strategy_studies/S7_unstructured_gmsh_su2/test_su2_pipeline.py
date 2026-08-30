@@ -204,3 +204,97 @@ def test_one_restart_is_digest_verified_and_resume_is_idempotent(tmp_path, monke
     changed["flow"] = dict(kwargs["flow"], alpha=3.0)
     with pytest.raises(RuntimeError, match="different mesh/flow/configuration"):
         su2.run_su2_pipeline(**changed)
+
+
+def _half_mesh(path: Path) -> Path:
+    """The same mesh with a symmetry marker, as the half domain produces."""
+    text = _native_mesh(path).read_text(encoding="utf-8")
+    text = text.replace("NMARK= 5", "NMARK= 6")
+    text += "MARKER_TAG= symmetry\nMARKER_ELEMS= 1\n5 0 1 2\n"
+    path.write_text(text, encoding="utf-8")
+    return path
+
+
+def test_half_domain_declares_the_symmetry_plane(tmp_path):
+    options = su2.fixed_su2_options(
+        _half_mesh(tmp_path / "half.su2"),
+        flow={"mach": 0.2, "alpha": 2.0, "reynolds": 1.0e6, "temperature": 288.15},
+        references={"area_ref": 1.0, "chord_ref": 1.0},
+        iterations=5,
+        restart=False,
+    )
+    # Without this SU2 treats the unlisted boundary as a wall, putting a viscous
+    # surface down the centreline instead of a plane of symmetry.
+    assert options["MARKER_SYM"] == "( symmetry )"
+    assert "symmetry" not in options["MARKER_HEATFLUX"]
+    assert "symmetry" not in options["MARKER_MONITORING"]
+
+
+def test_half_domain_halves_the_reference_area(tmp_path):
+    """Half the wing produces half the force; the reference must match it.
+
+    The reference values describe the whole wing whatever is meshed, so leaving
+    REF_AREA alone would report CL and CD at exactly half their true value while
+    the run looked entirely healthy.
+    """
+    common_flow = {"mach": 0.2, "alpha": 2.0, "reynolds": 1.0e6, "temperature": 288.15}
+    references = {"area_ref": 2.0, "chord_ref": 1.0}
+    mirrored = su2.fixed_su2_options(
+        _native_mesh(tmp_path / "full.su2"), flow=common_flow,
+        references=references, iterations=5, restart=False,
+    )
+    half = su2.fixed_su2_options(
+        _half_mesh(tmp_path / "half.su2"), flow=common_flow,
+        references=references, iterations=5, restart=False,
+    )
+    assert mirrored["REF_AREA"] == pytest.approx(2.0)
+    assert half["REF_AREA"] == pytest.approx(1.0)
+    assert "MARKER_SYM" not in mirrored
+
+
+def test_solver_stop_sits_below_the_acceptance_bar(tmp_path):
+    """The solver must not be told to stop exactly where the gate is set.
+
+    Deriving CONV_RESIDUAL_MINVAL from residual_log10_final_max halts SU2 the
+    instant the residual touches the bar, so the final residual is the bar by
+    construction and the achievable drop is exactly `initial + 8`.  Every S7 run
+    starts near -2.6, which capped the drop at 5.4 orders against a gate asking
+    for 6.0 and rejected two genuinely converged runs.  See ADR-0017.
+    """
+    options = su2.fixed_su2_options(
+        _native_mesh(tmp_path / "mesh.su2"),
+        flow={"mach": 0.2, "alpha": 2.0, "reynolds": 1.0e6, "temperature": 288.15},
+        references={"area_ref": 1.0, "chord_ref": 1.0},
+        iterations=5,
+        restart=False,
+    )
+    limits = su2.load_policy()["su2"]["convergence"]
+    stop = float(options["CONV_RESIDUAL_MINVAL"])
+    assert stop == pytest.approx(float(limits["solver_stop_residual_log10"]))
+    assert stop < float(limits["residual_log10_final_max"])
+    # The reachable drop must leave room for the drop gate on a run starting at
+    # the assumed worst free-stream residual.  The demanding case is the MOST
+    # negative initial, because the drop is initial - final.
+    assert (
+        float(limits["assumed_worst_initial_residual_log10"]) - stop
+        >= float(limits["residual_drop_orders_min"])
+    )
+    # And that assumption must bound every initial residual S7 has measured.
+    assert float(limits["assumed_worst_initial_residual_log10"]) <= -2.687
+
+
+def test_a_solver_stop_at_the_bar_is_refused(tmp_path, monkeypatch):
+    """Fail closed rather than silently reinstate an unsatisfiable gate."""
+    policy = su2.load_policy()
+    policy["su2"]["convergence"]["solver_stop_residual_log10"] = policy["su2"][
+        "convergence"
+    ]["residual_log10_final_max"]
+    monkeypatch.setattr(su2, "load_policy", lambda: policy)
+    with pytest.raises(ValueError, match="solver_stop_residual_log10"):
+        su2.fixed_su2_options(
+            _native_mesh(tmp_path / "mesh.su2"),
+            flow={"mach": 0.2, "alpha": 2.0, "reynolds": 1.0e6, "temperature": 288.15},
+            references={"area_ref": 1.0, "chord_ref": 1.0},
+            iterations=5,
+            restart=False,
+        )

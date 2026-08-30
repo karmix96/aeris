@@ -92,7 +92,14 @@ def test_orientation_and_topology_report_for_closed_tetrahedron():
     assert report["nonmanifold_edge_count"] == 0
     assert report["zero_area_face_count"] == 0
     assert report["duplicate_face_count"] == 0
-    assert report["label_counts"] == {"wall_upper": 1, "wall_lower": 1, "wall_te": 1, "wall_tip": 1}
+    assert report["label_counts"] == {
+        "wall_upper": 1,
+        "wall_lower": 1,
+        "wall_te": 1,
+        "wall_tip": 1,
+        # present in the label set for the half model, unused here
+        "symmetry": 0,
+    }
 
 
 def test_self_intersections_ignore_adjacent_closed_tetra_faces():
@@ -355,6 +362,12 @@ def test_gmsh_tetra_tri_prism_tet_smoke(tmp_path):
     # Keep the synthetic domain genuinely laptop-sized while preserving the
     # production laptop layer count and all mesher code paths.
     smoke_policy = copy.deepcopy(policy)
+    # This exercises the mirrored Gmsh path specifically - it asserts wall and
+    # farfield markers with no symmetry plane - so it pins the domain rather than
+    # following whichever one the policy currently declares.
+    smoke_policy["geometry"] = dict(
+        smoke_policy["geometry"], modeled_domain="full_mirrored_wing"
+    )
     smoke_policy["farfield"] = dict(
         policy["farfield"], upstream_over_L=1.0, downstream_over_L=1.0, radial_over_L=1.0
     )
@@ -384,7 +397,10 @@ def test_gmsh_tetra_tri_prism_tet_smoke(tmp_path):
     assert out["status"] == "completed"
     assert Path(out["mesh_msh"]).is_file()
     assert out["mesh_su2"]["volume_element_count"] > 0
-    assert set(out["mesh_su2"]["marker_counts"]) == set((*geometry.LABELS, "farfield"))
+    # Mirrored domain: viscous walls plus farfield, no symmetry plane.
+    assert set(out["mesh_su2"]["marker_counts"]) == set(
+        (*geometry.WALL_LABELS, "farfield")
+    )
     assert out["gmsh_element_counts"]
     report = audit.audit_mesh(
         msh_path=Path(out["mesh_msh"]),

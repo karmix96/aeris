@@ -9,7 +9,7 @@ scope:
   mesher: gmsh
   solver: su2
   topology: tri_surface_prism_boundary_layer_tet_core
-  modeled_domain: full_mirrored_wing
+  modeled_domain: half_wing_symmetry_y0
   result_acceptance_requires_claude_opus_review: true
   no_gate_weakening: true
 
@@ -53,6 +53,10 @@ flow_conditions:
     temperature: 288.15
 
 geometry:
+  # y >= 0 only, closed at the root by a symmetry plane, which halves the cell
+  # count and matches the domain S6 meshes. full_mirrored_wing remains available
+  # for comparison; both pass the same audit at the same quality.
+  modeled_domain: half_wing_symmetry_y0
   source: shared_pygeo_surface
   exact_arbitrary_station_sections: true
   mirror_plane: y=0
@@ -75,6 +79,15 @@ geometry:
     - wall_lower
     - wall_te
     - wall_tip
+  # The label set a surface must carry depends on the domain: a half model closes
+  # its root with a symmetry cap, a mirrored one has no root boundary at all.
+  required_surface_labels_by_domain:
+    full_mirrored_wing: [wall_upper, wall_lower, wall_te, wall_tip]
+    half_wing_symmetry_y0: [wall_upper, wall_lower, wall_te, wall_tip, symmetry]
+  required_boundary_labels_by_domain:
+    full_mirrored_wing: [wall_upper, wall_lower, wall_te, wall_tip, farfield]
+    half_wing_symmetry_y0:
+      [wall_upper, wall_lower, wall_te, wall_tip, symmetry, farfield]
   required_boundary_labels:
     - wall_upper
     - wall_lower
@@ -463,6 +476,34 @@ su2:
     minimum_history_rows: 200
     residual_drop_orders_min: 6.0
     residual_log10_final_max: -8.0
+    # The value handed to SU2 as CONV_RESIDUAL_MINVAL, DELIBERATELY BELOW the
+    # acceptance bar above.  It was previously derived from
+    # residual_log10_final_max, which halted the solver the instant it touched the
+    # bar: the final residual was then -8 by construction and the achievable drop
+    # was exactly initial + 8, a property of the free-stream normalisation rather
+    # than of convergence.  Every S7 run starts between -2.576 and -2.687, capping
+    # the drop at 5.42 orders against a gate asking for 6.0, so no case could pass
+    # and two that had genuinely converged were rejected on the arithmetic alone.
+    #
+    # The value must satisfy
+    #   stop <= min(residual_log10_final_max,
+    #               assumed_worst_initial_residual_log10 - residual_drop_orders_min)
+    # The demanding case is the MOST negative initial residual, because the drop
+    # is initial - final: a run starting lower has less room above the bar.  The
+    # most negative initial measured over 18 histories is -2.687, which requires a
+    # final of -8.687.  The assumed bound below is -3.0, giving a required stop of
+    # -9.0; a design starting below -3.0 fails closed on
+    # insufficient_residual_drop, which is correct and no longer a certainty.
+    #
+    # Measured cost on the fastest passing variant, iterations to reach each level:
+    # -8.0 at 447, -8.6 at 580, -9.0 at 1310, -9.5 at 5872.  Neither acceptance
+    # threshold above is changed by this key.  See the 2026-08-25 residual-gate
+    # amendment in ADR-0017.
+    solver_stop_residual_log10: -9.0
+    # Measured free-stream initial residuals span -2.576 to -2.687 over every S7
+    # history.  This bound is deliberately below the measured span; it is an
+    # assumption the guard enforces, not a measurement.
+    assumed_worst_initial_residual_log10: -3.0
     force_tail_rows: 200
     force_tail_relative_range_max:
       CL: 1.0e-3

@@ -1,0 +1,273 @@
+{
+  "report": "s7_solver_tuning_matrix",
+  "date_utc": "2026-08-25",
+  "tier": "laptop_diagnostic",
+  "campaign_claims_forbidden": true,
+  "mesh": {
+    "cells": 42745,
+    "domain": "half_wing_symmetry_y0",
+    "area_ref": 0.9610974474634779,
+    "chord_ref": 0.5349896481665188
+  },
+  "flow": {
+    "mach": 0.2,
+    "alpha": 2.0,
+    "reynolds": 1000000.0,
+    "temperature": 288.15
+  },
+  "solver": "SU2 8.5.0 Harrier, RANS-SA",
+  "iterations_budget": 6000,
+  "solver_stop_residual_log10_used": -12.0,
+  "gates": {
+    "residual_drop_orders_min": 6.0,
+    "residual_log10_final_max": -8.0
+  },
+  "variants": [
+    {
+      "variant": "I_combined",
+      "added": "NK + ILU/25 + CFL 25",
+      "newton_krylov": true,
+      "iterations": 6000,
+      "wall_s": 4802,
+      "initial_log10": -2.602933,
+      "final_log10": -9.508454,
+      "orders_dropped": 6.905521,
+      "best_orders_dropped": 6.905521,
+      "min_residual_at_iteration": 5999,
+      "monotonic": true,
+      "residual_gate_passed": true,
+      "residual_failure_reasons": [],
+      "force_tail_passed": true,
+      "force_failure_reasons": [],
+      "CL": 0.018883,
+      "CD": 0.08704,
+      "CMy": -0.006617,
+      "accepted": true
+    },
+    {
+      "variant": "J_nk_no_mg",
+      "added": "NK + ILU/25 + CFL 25, no multigrid",
+      "newton_krylov": true,
+      "iterations": 6000,
+      "wall_s": 5067,
+      "initial_log10": -2.602933,
+      "final_log10": -9.508454,
+      "orders_dropped": 6.905521,
+      "best_orders_dropped": 6.905521,
+      "min_residual_at_iteration": 5999,
+      "monotonic": true,
+      "residual_gate_passed": true,
+      "residual_failure_reasons": [],
+      "force_tail_passed": true,
+      "force_failure_reasons": [],
+      "CL": 0.018883,
+      "CD": 0.08704,
+      "CMy": -0.006617,
+      "accepted": true
+    },
+    {
+      "variant": "G_nk_cfl",
+      "added": "NK + CFL 25",
+      "newton_krylov": true,
+      "iterations": 6000,
+      "wall_s": 4158,
+      "initial_log10": -2.602933,
+      "final_log10": -8.965521,
+      "orders_dropped": 6.362589,
+      "best_orders_dropped": 6.362589,
+      "min_residual_at_iteration": 5999,
+      "monotonic": true,
+      "residual_gate_passed": true,
+      "residual_failure_reasons": [],
+      "force_tail_passed": true,
+      "force_failure_reasons": [],
+      "CL": 0.018883,
+      "CD": 0.08704,
+      "CMy": -0.006617,
+      "accepted": true
+    },
+    {
+      "variant": "F_nk_linear",
+      "added": "NK + ILU/25",
+      "newton_krylov": true,
+      "iterations": 6000,
+      "wall_s": 4569,
+      "initial_log10": -2.602933,
+      "final_log10": -8.86812,
+      "orders_dropped": 6.265187,
+      "best_orders_dropped": 6.265187,
+      "min_residual_at_iteration": 5999,
+      "monotonic": true,
+      "residual_gate_passed": true,
+      "residual_failure_reasons": [],
+      "force_tail_passed": true,
+      "force_failure_reasons": [],
+      "CL": 0.018883,
+      "CD": 0.08704,
+      "CMy": -0.006617,
+      "accepted": true
+    },
+    {
+      "variant": "B_newton_krylov",
+      "added": "NK alone",
+      "newton_krylov": true,
+      "iterations": 6000,
+      "wall_s": 4671,
+      "initial_log10": -2.602933,
+      "final_log10": -8.556442,
+      "orders_dropped": 5.95351,
+      "best_orders_dropped": 5.95351,
+      "min_residual_at_iteration": 5999,
+      "monotonic": true,
+      "residual_gate_passed": false,
+      "residual_failure_reasons": [
+        "insufficient_residual_drop"
+      ],
+      "force_tail_passed": true,
+      "force_failure_reasons": [],
+      "CL": 0.018882,
+      "CD": 0.087041,
+      "CMy": -0.006617,
+      "accepted": false
+    },
+    {
+      "variant": "D_high_cfl",
+      "added": "CFL 25",
+      "newton_krylov": false,
+      "iterations": 6000,
+      "wall_s": 3142,
+      "initial_log10": -2.602933,
+      "final_log10": -4.40098,
+      "orders_dropped": 1.798047,
+      "best_orders_dropped": 2.041298,
+      "min_residual_at_iteration": 927,
+      "monotonic": false,
+      "residual_gate_passed": false,
+      "residual_failure_reasons": [
+        "insufficient_residual_drop",
+        "final_residual_above_limit"
+      ],
+      "force_tail_passed": false,
+      "force_failure_reasons": [
+        "unstable_CL_tail",
+        "unstable_CD_tail",
+        "unstable_CMy_tail"
+      ],
+      "CL": 0.019238,
+      "CD": 0.08684,
+      "CMy": -0.006937,
+      "accepted": false
+    },
+    {
+      "variant": "C_strong_linear",
+      "added": "ILU/25",
+      "newton_krylov": false,
+      "iterations": 6000,
+      "wall_s": 3708,
+      "initial_log10": -2.602933,
+      "final_log10": -4.067697,
+      "orders_dropped": 1.464764,
+      "best_orders_dropped": 2.836187,
+      "min_residual_at_iteration": 953,
+      "monotonic": false,
+      "residual_gate_passed": false,
+      "residual_failure_reasons": [
+        "insufficient_residual_drop",
+        "final_residual_above_limit"
+      ],
+      "force_tail_passed": false,
+      "force_failure_reasons": [
+        "unstable_CL_tail",
+        "unstable_CMy_tail"
+      ],
+      "CL": 0.018811,
+      "CD": 0.087093,
+      "CMy": -0.006777,
+      "accepted": false
+    },
+    {
+      "variant": "A_baseline",
+      "added": "nothing",
+      "newton_krylov": false,
+      "iterations": 6000,
+      "wall_s": 2913,
+      "initial_log10": -2.602933,
+      "final_log10": -3.684836,
+      "orders_dropped": 1.081903,
+      "best_orders_dropped": 3.019051,
+      "min_residual_at_iteration": 3604,
+      "monotonic": false,
+      "residual_gate_passed": false,
+      "residual_failure_reasons": [
+        "insufficient_residual_drop",
+        "final_residual_above_limit"
+      ],
+      "force_tail_passed": false,
+      "force_failure_reasons": [
+        "unstable_CL_tail",
+        "unstable_CD_tail",
+        "unstable_CMy_tail"
+      ],
+      "CL": 0.019888,
+      "CD": 0.08707,
+      "CMy": -0.007543,
+      "accepted": false
+    },
+    {
+      "variant": "E_quasi_newton",
+      "added": "QUASI_NEWTON_NUM_SAMPLES",
+      "newton_krylov": false,
+      "iterations": 6000,
+      "wall_s": 2976,
+      "initial_log10": -2.602933,
+      "final_log10": -3.684836,
+      "orders_dropped": 1.081903,
+      "best_orders_dropped": 3.019051,
+      "min_residual_at_iteration": 3604,
+      "monotonic": false,
+      "residual_gate_passed": false,
+      "residual_failure_reasons": [
+        "insufficient_residual_drop",
+        "final_residual_above_limit"
+      ],
+      "force_tail_passed": false,
+      "force_failure_reasons": [
+        "unstable_CL_tail",
+        "unstable_CD_tail",
+        "unstable_CMy_tail"
+      ],
+      "CL": 0.019888,
+      "CD": 0.08707,
+      "CMy": -0.007543,
+      "accepted": false
+    },
+    {
+      "variant": "H_linear_cfl",
+      "added": "ILU/25 + CFL 25",
+      "newton_krylov": false,
+      "iterations": 6000,
+      "wall_s": 4440,
+      "initial_log10": -2.602933,
+      "final_log10": -3.639058,
+      "orders_dropped": 1.036125,
+      "best_orders_dropped": 2.098562,
+      "min_residual_at_iteration": 5961,
+      "monotonic": false,
+      "residual_gate_passed": false,
+      "residual_failure_reasons": [
+        "insufficient_residual_drop",
+        "final_residual_above_limit"
+      ],
+      "force_tail_passed": false,
+      "force_failure_reasons": [
+        "unstable_CL_tail",
+        "unstable_CD_tail",
+        "unstable_CMy_tail"
+      ],
+      "CL": 0.019429,
+      "CD": 0.087381,
+      "CMy": -0.006912,
+      "accepted": false
+    }
+  ]
+}

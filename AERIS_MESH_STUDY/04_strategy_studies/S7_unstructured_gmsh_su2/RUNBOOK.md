@@ -1,13 +1,17 @@
 # S7 desktop runbook - coarse volume over the development set
 
-Everything here is measured on the laptop, not estimated.  One `coarse` case at
-index 0: **2 549 227 cells** (2 295 259 tetrahedra, 253 968 prisms), meshed in
-**245 s at 1.8 GB peak RSS**, audited in **325 s at 5.3 GB peak**, writing
-**263 MB**.  Roughly **9.5 minutes and 263 MB per case**, single-threaded.
+**The declared domain is now the half model**, y >= 0 closed by a symmetry plane.
+Every number below is re-measured on it; the mirrored figures this file used to
+carry no longer apply and were roughly 1.7x larger.
 
-For the full development set budget about **16 hours and 26 GB**.  The audit is
-about 57 percent of the wall time and is single-threaded Python, so running
-several cases in parallel scales almost linearly if the machine has the RAM.
+Measured on the laptop, not estimated.  One `coarse` case at index 0:
+**1 549 111 cells** (1 422 127 tetrahedra, 126 984 prisms) over 318 865 nodes,
+meshed in **146 s** and audited in **202 s**, **3.6 GB peak RSS**.  Roughly
+**6 minutes per case**, single-threaded.
+
+For the full development set budget about **10 hours**.  The audit is about 58
+per cent of the wall time and is single-threaded Python, so running several cases
+side by side scales almost linearly given the RAM.
 
 ## Before starting
 
@@ -104,12 +108,13 @@ The arguments are mesh, iterations, MPI ranks per variant, concurrent variants,
 and any fifth argument to select G/H/I instead of the full six.  Drop the fifth
 argument to re-run the whole matrix from scratch.
 
-**Watch the memory.**  Every rank reads the entire mesh before partitioning, so a
-2.55 M cell coarse mesh costs about **3 GB per rank** and the concurrent variants
-multiply it: `workers x ranks x 3 GB` must fit in RAM with room to spare.  On the
-16 GiB laptop eight ranks were OOM-killed and four ranks drove free memory to
-290 MB; two ranks were stable.  The `2 3` above is six ranks, about 18 GB, which
-needs a 32 GiB machine.  On 16 GiB use `2 1` and accept the serial wall time.
+**Watch the memory.**  Every rank reads the entire mesh before partitioning.  The
+half domain's coarse mesh is 1.55 M cells against the mirrored 2.55 M, so the cost
+falls from about 3 GB per rank to about **1.8 GB**, and `workers x ranks x 1.8 GB`
+must fit in RAM with room to spare.  The mirrored figures behind the earlier
+guidance - eight ranks OOM-killed on 16 GiB, four ranks leaving 290 MB free, two
+stable - were measured on the larger mesh and are now conservative rather than
+wrong.  The `2 3` above is six ranks, about 11 GB.
 
 Read the result from the printed table or `conv_matrix/matrix.json`, ranked by
 `best_drop`.  Two outcomes, both decisive:

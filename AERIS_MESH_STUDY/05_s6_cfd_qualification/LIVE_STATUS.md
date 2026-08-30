@@ -29,6 +29,9 @@ Updated: 2026-08-30
   S6 wall. The failed experiment remarched the exact wall directly.
 - Best controlled C03 result: six inverted cells, minimum signed volume
   `-3.670179816350609e-12`, and `qmin=-0.3114098210`.
+- Proven-route recovery: **PASS** for geometry A. A regenerated S1 production
+  volume was deformed onto an exact S6 wall with 13 blocks, 2,905,088 cells,
+  zero inverted cells, and minimum scaled quality `+0.2383233`.
 - Geometry B/C/E screens and CFD canary: **not run; forbidden by the governed
   zero-inversion gate**. This is a deliberate terminal stop, not unfinished
   execution.
@@ -56,16 +59,17 @@ Updated: 2026-08-30
 - `reports/m2_grid_screen_terminal_report.json`
 - `reports/m2_grid_screen_terminal_report.md`
 - `reports/screen_grid_family.json`
+- `reports/s6_recovery_deformation_20260830.json`
 - `studies/grid/m2_20260830/` (local run records; large CGNS files remain
   ignored and must not be committed)
 
 ## Next authorized work
 
-Run the proven S1-volume → S6 exact-wall deformation route at the required
-resolution, with a new versioned experiment identity. Preserve every failed
-direct-march attempt and do not weaken the zero-inversion acceptance gate. A CFD
-canary remains unauthorized until a nominal finest written mesh passes
-independent zero-inversion validation and the independent review gate is closed.
+Use the proven S1-volume → S6 exact-wall deformation route for the remaining
+M2 resolution/geometry campaign, with a new versioned experiment identity.
+Preserve every failed direct-march attempt and do not weaken the zero-inversion
+acceptance gate. A CFD canary remains unauthorized until the required nominal
+family screens and independent review gate are closed.
 
 ## Resume commands
 

@@ -36,7 +36,8 @@ Linux-native repository. Read these files first, in order:
   and `qmin=-0.3114098210`.
 - Proven S6 remains the preferred route: reuse a valid S1/Openblademesh volume
   and apply bounded exact-wall deformation. The next experiment must validate
-  that route at the required resolution before any topology redesign.
+  that route at the required resolution before any topology redesign. Geometry A
+  now passes this recovery route: 0 inverted cells and `qmin=+0.2383`.
 - Geometry B/C/E and the CFD canary were correctly not executed after geometry
   A failed. Do not bypass this stop.
 - Three authenticated Claude Code review attempts timed out with zero model
@@ -48,12 +49,13 @@ Linux-native repository. Read these files first, in order:
    changes. Do not stage them.
 2. Treat `reports/m2_grid_screen_terminal_report.json` as the governing M2
    diagnosis. Verify its hashes and attempt records before changing topology.
-3. Locate or regenerate the proven S1/Openblademesh template volume and its
-   source surface; bind both by hashes and a new experiment identity.
+3. Retain the successful geometry-A recovery evidence and locate/regenerate the
+   remaining proven S1/Openblademesh template volumes; bind each by hashes and
+   a new experiment identity.
 4. Build the exact S6 target surface, then use bounded S1-volume-to-S6-wall
    deformation. Do not direct-march the exact wall as the first recovery route.
 5. Start with cheap surface/interface checks, then independently close, reopen,
-   and audit the written deformed CGNS.
+   and audit each written deformed CGNS. Geometry A is the reference recovery.
 6. A valid nominal finest mesh is required before B/C/E screening.
 7. Keep CFD and the canary blocked until nominal A and the required geometry
    screens all satisfy the roadmap gates.

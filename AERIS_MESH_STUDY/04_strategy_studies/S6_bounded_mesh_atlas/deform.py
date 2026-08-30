@@ -163,6 +163,24 @@ def validate_template_correspondence(
     return {"max_wall_error_m": maximum, "per_zone_max_wall_error_m": errors}
 
 
+def _read_volume_blocks_any(path: Path) -> dict[str, Array]:
+    """Read HDF5-CGNS or ADF-CGNS into the common KJI coordinate convention."""
+    try:
+        return read_volume_blocks(path)
+    except (ModuleNotFoundError, OSError) as exc:
+        # pyHyp in mach-aero writes ADF-CGNS. The normal repository reader uses
+        # h5py for HDF5-CGNS, so use cgnsUtilities only for the ADF fallback.
+        if isinstance(exc, ModuleNotFoundError) and exc.name != "h5py":
+            raise
+        from cgnsutilities.cgnsutilities import readGrid
+
+        grid = readGrid(str(path))
+        return {
+            block.name: np.asarray(block.coords, dtype=float).transpose(2, 1, 0, 3)
+            for block in grid.blocks
+        }
+
+
 def _common_layer_fraction(blocks: dict[str, Array]) -> Array:
     """One physical-distance weight shared by every block and interface node."""
     layer_spacings = []
@@ -349,28 +367,49 @@ def write_volume_blocks(
     blocks: dict[str, Array],
 ) -> Path:
     """Copy a structured CGNS template and replace only its coordinate arrays."""
-    import h5py
-
     template_cgns = Path(template_cgns)
     output_cgns = Path(output_cgns)
     output_cgns.parent.mkdir(parents=True, exist_ok=True)
     if template_cgns.resolve() == output_cgns.resolve():
         raise ValueError("output CGNS must differ from the immutable template")
     shutil.copy2(template_cgns, output_cgns)
-    with h5py.File(str(output_cgns), "r+") as handle:
-        zones = list(_iter_zone_coordinate_arrays(handle))
-        if [name for name, _ in zones] != list(blocks):
+    try:
+        import h5py
+
+        with h5py.File(str(output_cgns), "r+") as handle:
+            zones = list(_iter_zone_coordinate_arrays(handle))
+            if [name for name, _ in zones] != list(blocks):
+                raise ValueError("CGNS zone order/names differ from the deformed blocks")
+            for (zone, arrays), (block_name, xyz) in zip(zones, blocks.items(), strict=True):
+                if zone != block_name:
+                    raise ValueError(f"zone mismatch: {zone} != {block_name}")
+                for axis, dataset in enumerate(arrays):
+                    if dataset.shape != xyz[..., axis].shape:
+                        raise ValueError(
+                            f"{zone} coordinate shape {dataset.shape} "
+                            f"does not match {xyz[..., axis].shape}"
+                        )
+                    dataset[...] = xyz[..., axis]
+    except (ModuleNotFoundError, OSError) as exc:
+        if isinstance(exc, ModuleNotFoundError) and exc.name != "h5py":
+            raise
+        from cgnsutilities.cgnsutilities import readGrid
+
+        grid = readGrid(str(template_cgns))
+        names = [block.name for block in grid.blocks]
+        if names != list(blocks):
             raise ValueError("CGNS zone order/names differ from the deformed blocks")
-        for (zone, arrays), (block_name, xyz) in zip(zones, blocks.items(), strict=True):
-            if zone != block_name:
-                raise ValueError(f"zone mismatch: {zone} != {block_name}")
-            for axis, dataset in enumerate(arrays):
-                if dataset.shape != xyz[..., axis].shape:
-                    raise ValueError(
-                        f"{zone} coordinate shape {dataset.shape} "
-                        f"does not match {xyz[..., axis].shape}"
-                    )
-                dataset[...] = xyz[..., axis]
+        for block in grid.blocks:
+            xyz = np.asarray(blocks[block.name], dtype=float)
+            expected = np.asarray(block.coords).shape
+            replacement = xyz.transpose(2, 1, 0, 3)
+            if replacement.shape != expected:
+                raise ValueError(
+                    f"{block.name} coordinate shape {expected} "
+                    f"does not match {replacement.shape}"
+                )
+            block.coords = replacement
+        grid.writeToCGNS(str(output_cgns))
     return output_cgns
 
 
@@ -431,11 +470,11 @@ def deform_cgns(
     """Run, write, and independently score one atlas deformation."""
     template_surface = load_surface_blocks(template_surface_npz)
     target_surface = load_surface_blocks(target_surface_npz)
-    template_volume = read_volume_blocks(Path(template_cgns))
+    template_volume = _read_volume_blocks_any(Path(template_cgns))
     blocks, deformation = deform_volume_blocks(template_volume, template_surface, target_surface)
     in_memory_acceptance = acceptance_report(blocks, deformation, production_floor=production_floor)
     write_volume_blocks(template_cgns, output_cgns, blocks)
-    written = read_volume_blocks(Path(output_cgns))
+    written = _read_volume_blocks_any(Path(output_cgns))
     written_metadata = written_deformation_metadata(written, target_surface, deformation)
     acceptance = acceptance_report(written, written_metadata, production_floor=production_floor)
     report = {

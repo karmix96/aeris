@@ -16,4 +16,6 @@ six inverted cells and `qmin=-0.3114`. Tip-cap-only smoothing and the governed
 Therefore the required A/B/C/E family screen stops at nominal geometry A and no
 CFD canary is authorized for this direct-march route. The next scientific action
 is to run the proven S1-volume → S6 exact-wall deformation route at the required
-resolution, not to redesign topology or weaken the zero-volume gate.
+resolution, not to redesign topology or weaken the zero-volume gate. That
+recovery has now passed for geometry A: zero inverted cells and
+`min_scaled_quality=+0.2383`.

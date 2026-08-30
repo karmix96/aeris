@@ -57,7 +57,11 @@ def _write_json(path: Path, value: Any) -> Path:
 def surface_command(args: argparse.Namespace) -> dict[str, Any]:
     root = args.output.resolve()
     blocks, info, _case = build_locked_surface(
-        args.set_name, args.index, root / "_geometry", level=args.level
+        args.set_name,
+        args.index,
+        root / "_geometry",
+        level=args.level,
+        span_cells=args.span_cells,
     )
     target = root / info["locked_set_id"]
     artifacts = write_surface_artifacts(blocks, target)
@@ -237,6 +241,7 @@ def make_parser() -> argparse.ArgumentParser:
     surface.add_argument("--set-name", default="lhs100_seed42")
     surface.add_argument("--index", type=int, required=True)
     surface.add_argument("--level", default="smoke")
+    surface.add_argument("--span-cells", type=int)
     surface.add_argument("--output", type=Path, required=True)
     surface.set_defaults(function=surface_command)
 

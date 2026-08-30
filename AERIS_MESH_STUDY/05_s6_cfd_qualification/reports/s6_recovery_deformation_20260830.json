@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "experiment_id": "s6_proven_s1_to_exact_wall_recovery_20260830_083",
+  "route": "S1_Openblademesh_volume_to_S6_exact_wall_bounded_deformation",
+  "geometry_id": "lhs100_seed42_083",
+  "template_surface_sha256": "7a901a3177c4037ffb9b456dcf2e3753620ac9f3fe27a1d5c2b4bddcee92e4fb",
+  "template_volume_sha256": "dc2806a9e432f05c1189a9ff4f978471fcb87e2b16c68ea59dd81bdf0630ed6e",
+  "target_surface_sha256": "fc4b43f9876365818df818ea8f4538268ffd393ce01139653c6d11332224e1b6",
+  "output_volume_sha256": "e24c4643e6f94fc88125c6e498005f319d95f2eedbd47860083a66ce9304808e",
+  "template_policy": {"normal_points": 257, "eps_e": 1.5, "span_columns": 80},
+  "independent_acceptance": {
+    "hard_gate_passed": true,
+    "production_floor_passed": true,
+    "block_count": 13,
+    "total_cells": 2905088,
+    "inverted_cells": 0,
+    "min_volume_m3": 6.524394936585722e-12,
+    "min_scaled_quality": 0.23832329525655024,
+    "mean_scaled_quality": 0.9688666175172074,
+    "independent_reopen": "cgnsUtilities ADF reader plus shared signed-volume/scaled-Jacobian audit"
+  },
+  "conclusion": "The proven S1-to-S6 deformation route passes the written-volume hard gates for geometry A. The prior M2 NO-GO is scoped to the direct exact-wall march experiment; CFD remains gated by the broader roadmap and independent review requirements."
+}

@@ -1,13 +1,13 @@
 {
   "command": "check-holdout-lock",
-  "created_at": "2026-08-30T12:31:11.633811+00:00",
+  "created_at": "2026-08-30T12:32:01.883359+00:00",
   "details": {
     "contents_read": false,
     "locked": true,
     "metadata_path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/00_governance/round_c_lhs10_seed42_samples.csv"
   },
   "dry_run": false,
-  "git_head": "ec911a7ad905f76ecf3e69310fc89c5e537898fe",
+  "git_head": "5d67aa67b14de1f8750b627f02a515f44fd65cd4",
   "repo": "/home/mike_kara/aeris",
   "schema_version": 1,
   "status": "PASS"

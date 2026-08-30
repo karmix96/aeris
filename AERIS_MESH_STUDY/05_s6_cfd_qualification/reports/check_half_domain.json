@@ -1,6 +1,6 @@
 {
   "command": "check-half-domain",
-  "created_at": "2026-08-30T12:31:11.723322+00:00",
+  "created_at": "2026-08-30T12:32:01.973483+00:00",
   "details": {
     "force_reconstruction_required": true,
     "full_reference_area_multiplier": 2.0,
@@ -10,7 +10,7 @@
     "state_zero_and_symmetric": true
   },
   "dry_run": false,
-  "git_head": "ec911a7ad905f76ecf3e69310fc89c5e537898fe",
+  "git_head": "5d67aa67b14de1f8750b627f02a515f44fd65cd4",
   "repo": "/home/mike_kara/aeris",
   "schema_version": 1,
   "status": "PASS"

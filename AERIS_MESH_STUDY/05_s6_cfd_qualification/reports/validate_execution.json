@@ -1,0 +1,22 @@
+{
+  "command": "validate-execution",
+  "created_at": "2026-08-30T12:32:02.308986+00:00",
+  "details": {
+    "accepted_requires_post_run_evidence": true,
+    "missing": [
+      "schema_version",
+      "execution_id",
+      "terminal_state",
+      "inputs",
+      "artifacts"
+    ],
+    "path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/schemas/execution.schema.json",
+    "required_inputs_present": false,
+    "valid_terminal_state": false
+  },
+  "dry_run": false,
+  "git_head": "5d67aa67b14de1f8750b627f02a515f44fd65cd4",
+  "repo": "/home/mike_kara/aeris",
+  "schema_version": 1,
+  "status": "FAIL"
+}

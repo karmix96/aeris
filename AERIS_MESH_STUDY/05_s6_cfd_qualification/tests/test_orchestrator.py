@@ -62,3 +62,19 @@ def test_versioned_classification_policy():
     assert out.returncode == 0
     assert '"thresholds_machine_readable": true' in out.stdout
     assert '"reclassification_retains_original": true' in out.stdout
+
+
+def test_execution_validator_rejects_incomplete_record(tmp_path):
+    path = tmp_path / "bad.json"
+    path.write_text('{"schema_version": 1}', encoding="utf-8")
+    out = invoke("validate-execution", "--execution", str(path))
+    assert out.returncode != 0
+
+
+def test_execution_validator_accepts_governed_record(tmp_path):
+    path = tmp_path / "good.json"
+    path.write_text('{"schema_version":1,"execution_id":"x","terminal_state":"blocked",'
+                    '"inputs":{"geometry_sha256":"g","policy_sha256":"p","mesh_identity":"m"},'
+                    '"artifacts":{"hashes_only":true}}', encoding="utf-8")
+    out = invoke("validate-execution", "--execution", str(path))
+    assert out.returncode == 0

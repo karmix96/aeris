@@ -205,7 +205,25 @@ def policy_audit(dry: bool) -> int:
     return result("audit-policy", status, details=details, dry_run=dry)
 
 
-def dispatch(command: str, dry: bool) -> int:
+def validate_execution(path_arg: str | None, dry: bool) -> int:
+    path = Path(path_arg) if path_arg else ROOT / "schemas/execution.schema.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return result("validate-execution", "FAIL", details={"error": str(exc)}, dry_run=dry)
+    required = ["schema_version", "execution_id", "terminal_state", "inputs", "artifacts"]
+    missing = [key for key in required if key not in data]
+    states = {"geometry", "mesh", "resource", "solver", "convergence", "y_plus", "physics_qc", "accepted", "blocked"}
+    valid_state = data.get("terminal_state") in states
+    inputs_ok = all(key in data.get("inputs", {}) for key in ("geometry_sha256", "policy_sha256", "mesh_identity"))
+    ok = not missing and valid_state and inputs_ok
+    details = {"path": str(path), "missing": missing, "valid_terminal_state": valid_state,
+               "required_inputs_present": inputs_ok, "accepted_requires_post_run_evidence": True}
+    status = "DRY_RUN" if dry and ok else ("PASS" if ok else "FAIL")
+    return result("validate-execution", status, details=details, dry_run=dry)
+
+
+def dispatch(command: str, dry: bool, execution_arg: str | None = None) -> int:
     if command == "audit-contract": return audit_contract(dry)
     if command == "audit-geometry-space": return audit_geometry(dry)
     if command == "check-holdout-lock": return holdout_lock(dry)
@@ -213,6 +231,7 @@ def dispatch(command: str, dry: bool) -> int:
     if command == "test-identity": return identity_audit(dry)
     if command == "audit-schemas": return schema_audit(dry)
     if command == "audit-policy": return policy_audit(dry)
+    if command == "validate-execution": return validate_execution(execution_arg, dry)
     if command in HEAVY:
         return result(command, "DRY_RUN" if dry else "BLOCKED",
                       details={"reason": "M0-M2 gates and measured campaign forecast incomplete"}, dry_run=dry)
@@ -234,7 +253,7 @@ def main() -> int:
     p.add_argument("--policy")
     p.add_argument("--scope")
     args, _ = p.parse_known_args()
-    return dispatch(args.command, args.dry_run)
+    return dispatch(args.command, args.dry_run, getattr(args, "execution", None))
 
 
 if __name__ == "__main__":

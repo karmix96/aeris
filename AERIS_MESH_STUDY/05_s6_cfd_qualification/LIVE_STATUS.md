@@ -33,6 +33,8 @@ Updated: 2026-08-30
   C02 and independent B/C/E C02 deformations all reopen with zero inverted
   cells and minimum scaled quality in `[0.1545, 0.1754]`. Evidence is in
   `reports/m2_proven_route_family_20260830.json`.
+- Missing C01 screens are now complete: B and E pass the 0.10 production
+  floor; C has zero inversions but `qmin=0.0840`, below that floor.
 - C03 finest diagnostic: **NO-GO** for this bounded map (4 inverted cells in
   the tip-cap block, `qmin=-0.2468`). It is retained as a diagnostic and does
   not invalidate the passing C02 production family.

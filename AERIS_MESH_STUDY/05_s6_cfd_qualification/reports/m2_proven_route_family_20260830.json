@@ -18,5 +18,10 @@
     {"geometry":"C","index":85,"level":"C02","cells":429120,"inverted_cells":0,"min_scaled_quality":0.1545354273901248,"hard_gate_passed":true,"output_sha256":"ce46bed1b076b78cb48b9ef05eed536bc54d7a46b1fe7e987d2a089e68fb4029"},
     {"geometry":"E","index":47,"level":"C02","cells":429120,"inverted_cells":0,"min_scaled_quality":0.16388312347099757,"hard_gate_passed":true,"output_sha256":"33d251b8326d08b976e1bced8cb9b8f108611da3e01a9d23a4a6bcdb1fc342b7"}
   ],
-  "verdict": "C02_production_family_pass; C03_finest_diagnostic_no_go; CFD_canary_remains_blocked"
+  "independent_geometry_results_c01": [
+    {"geometry":"B","index":7,"level":"C01","cells":191520,"inverted_cells":0,"min_scaled_quality":0.1812037829631621,"hard_gate_passed":true,"production_floor_passed":true,"output_sha256":"f94d2b4590b63017d5aaa5e8e7f6c829cafc1cdf4c0dd439fa9264a081ce301e"},
+    {"geometry":"C","index":85,"level":"C01","cells":191520,"inverted_cells":0,"min_scaled_quality":0.08398214586766525,"hard_gate_passed":true,"production_floor_passed":false,"output_sha256":"d4ca1456b96a855c8a0ac87441d2da015db058e3b790d9d9a639812e5aac6f17"},
+    {"geometry":"E","index":47,"level":"C01","cells":191520,"inverted_cells":0,"min_scaled_quality":0.19328955691376992,"hard_gate_passed":true,"production_floor_passed":true,"output_sha256":"5df82143c0e3adb0aaa65ee46b18fea0e17de0c51588a3157a4717192dc8329a"}
+  ],
+  "verdict": "C02_production_family_pass; C01_geometry_C_below_production_floor; C03_finest_diagnostic_no_go; CFD_canary_remains_blocked"
 }

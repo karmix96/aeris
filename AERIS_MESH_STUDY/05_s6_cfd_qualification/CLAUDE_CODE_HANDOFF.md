@@ -40,6 +40,8 @@ Linux-native repository. Read these files first, in order:
   `qmin >= 0.1545`. Evidence: `reports/m2_proven_route_family_20260830.json`.
 - C03 finest remains a diagnostic NO-GO (4 tip-cap inversions,
   `qmin=-0.2468`); do not weaken the zero-inversion gate or call it production.
+- C01 B/C/E screens are complete; B and E pass the production floor, while C
+  is positive-volume but below the `qmin=0.10` production floor (`qmin=0.0840`).
 - CFD canary remains blocked pending independent review and a governed decision
   on whether C02 is the production resolution or C03 is repaired.
 - Three authenticated Claude Code review attempts timed out with zero model

@@ -1,5 +1,10 @@
 schema_version: aeris.s6.geometry_design_space_phase1.v1
-status: proposed_semantic_snapshot_not_frozen
+status: frozen_for_s6_phase1_qualification
 source: AERIS_MESH_STUDY/00_governance/design_space_snapshot.yaml
 source_sha256: 3681df2645a47e0c4bf182cf64b3d6b9317fb5fde406c1103ea74e71491b0b6d
-note: Provenance stub pending parser-derived semantic diff during M1. Never overwrite live geometry config.
+live_config: configs/geometry/bwb.yaml
+live_config_sha256: f114b48e3c400a2832cc3763e7cf7505ecd0925fb81cb92f70e28bb5e6234614
+active_variable_count: 20
+semantic_diff_result: no_bound_differences
+development_holdout_identity_regeneration_required: false
+freeze_decision: The parser-based audit found the live 20-variable bounds identical to the governed snapshot; freeze by hash without modifying either source.

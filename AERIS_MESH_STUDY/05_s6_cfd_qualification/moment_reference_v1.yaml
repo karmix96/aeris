@@ -1,0 +1,15 @@
+schema_version: aeris.s6.moment_reference.v1
+authority_id: s6_moment_reference_20260830
+mission_cg:
+  source: configs/mass/baseline_uav.yaml
+  source_sha256: 6b92ab550ba977d0c15129dff56fb226c0066a00f17c6c6ef4a5941d56c862a4
+  xyz_m: [0.40, 0.0, 0.0]
+quarter_mac:
+  definition: aerodynamic mean chord leading-edge point plus 0.25 times local MAC chord vector
+  evaluation: per_geometry_from_realized_planform
+coefficient_contract:
+  primary_pitch_coefficient: CMy
+  reference_area: full_geometry_area
+  half_domain_force_multiplier: 2.0
+  half_domain_reference_area_multiplier: 2.0
+  implicit_origin_forbidden: true

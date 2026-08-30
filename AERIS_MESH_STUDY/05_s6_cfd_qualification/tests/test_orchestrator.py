@@ -1,6 +1,7 @@
 from pathlib import Path
 import subprocess
 import sys
+import hashlib
 
 ROOT = Path(__file__).resolve().parents[1]
 RUN = ROOT / "run.py"
@@ -43,11 +44,12 @@ def test_half_domain_contract():
     assert '"force_reconstruction_required": true' in out.stdout
 
 
-def test_identity_format_is_stable_but_resolution_proof_pending():
+def test_29x75_identity_and_cache_invalidation():
     out = invoke("test-identity")
     assert out.returncode == 0
     assert '"stable_format_detected": true' in out.stdout
-    assert '"cache_invalidation_proven": false' in out.stdout
+    assert '"candidate_grid": [' in out.stdout
+    assert '"cache_invalidation_proven": true' in out.stdout
 
 
 def test_versioned_execution_and_verdict_schemas():
@@ -78,3 +80,33 @@ def test_execution_validator_accepts_governed_record(tmp_path):
                     '"artifacts":{"hashes_only":true}}', encoding="utf-8")
     out = invoke("validate-execution", "--execution", str(path))
     assert out.returncode == 0
+
+
+def test_moment_references_are_explicit():
+    out = invoke("audit-moment-reference")
+    assert out.returncode == 0
+    assert '"quarter_mac_per_geometry": true' in out.stdout
+    assert '"implicit_origin_forbidden": true' in out.stdout
+
+
+def test_cfd_monitor_and_residual_contract():
+    out = invoke("audit-cfd-contract")
+    assert out.returncode == 0
+    assert '"cmy_monitored": true' in out.stdout
+    assert '"component_residuals_stored": true' in out.stdout
+
+
+def test_reclassification_retains_execution_and_prior_verdict(tmp_path):
+    execution = tmp_path / "execution.json"
+    execution.write_text('{"execution_id":"e1","status":"converged","convergence":{'
+                         '"residual_components_l2":{"density":1e-6,"momentum":1e-6,"energy":1e-6,"sa":1e-6},'
+                         '"mass_imbalance_normalized":1e-5}}', encoding="utf-8")
+    before = hashlib.sha256(execution.read_bytes()).hexdigest()
+    strict = tmp_path / "strict.yaml"
+    strict.write_text("policy_id: strict\nresiduals:\n  density: {max_final: 1e-7}\n  momentum: {max_final: 1e-7}\n  energy: {max_final: 1e-7}\n  sa: {max_final: 1e-7}\nmass_imbalance_normalized: {max: 1e-6}\n")
+    lenient = tmp_path / "lenient.yaml"
+    lenient.write_text("policy_id: lenient\nresiduals:\n  density: {max_final: 1e-5}\n  momentum: {max_final: 1e-5}\n  energy: {max_final: 1e-5}\n  sa: {max_final: 1e-5}\nmass_imbalance_normalized: {max: 1e-4}\n")
+    assert invoke("classify", "--execution", str(execution), "--policy", str(strict)).returncode != 0
+    assert invoke("classify", "--execution", str(execution), "--policy", str(lenient)).returncode == 0
+    assert len(list((tmp_path / "verdicts").glob("verdict_*.json"))) == 2
+    assert hashlib.sha256(execution.read_bytes()).hexdigest() == before

@@ -1,0 +1,17 @@
+{
+  "command": "audit-moment-reference",
+  "created_at": "2026-08-30T12:41:04.678428+00:00",
+  "details": {
+    "cmy_required": true,
+    "contract": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/moment_reference_v1.yaml",
+    "contract_sha256": "02780694efd968b7c85e205fdfc1771ca2e43950cd0a71ad428c64a1183e50c5",
+    "implicit_origin_forbidden": true,
+    "mission_cg_explicit": true,
+    "quarter_mac_per_geometry": true
+  },
+  "dry_run": false,
+  "git_head": "ceca5cb9517b36f15a9ef256eaa9bd5ebe7d693a",
+  "repo": "/home/mike_kara/aeris",
+  "schema_version": 1,
+  "status": "PASS"
+}

@@ -38,6 +38,19 @@ def parse_history_csv(path: Path) -> dict[str, object]:
     rho_key = next((name for name in headers if name.lower() == "rms[rho]"), None)
     resrho = columns.get(rho_key, []) if rho_key else []
 
+    def history(*aliases: str) -> list[float]:
+        key = next((name for name in headers if name.lower() in aliases), None)
+        return columns.get(key, []) if key else []
+
+    residual_components = {
+        "density": resrho,
+        "momentum_x": history("rms[rhou]", "rms[rho_u]"),
+        "momentum_y": history("rms[rhov]", "rms[rho_v]"),
+        "momentum_z": history("rms[rhow]", "rms[rho_w]"),
+        "energy": history("rms[rhoe]", "rms[rho_e]"),
+        "sa": history("rms[nu_tilde]", "rms[nutilde]", "rms[nu]"),
+    }
+
     final_coefficients: dict[str, float] = {}
     if rows:
         for name in headers:
@@ -50,5 +63,7 @@ def parse_history_csv(path: Path) -> dict[str, object]:
         "final_resrho_log10": resrho[-1] if resrho else None,
         "initial_resrho_log10": resrho[0] if resrho else None,
         "orders_dropped": (resrho[0] - resrho[-1]) if len(resrho) >= 2 else None,
+        "residual_components_log10": residual_components,
+        "residual_components_complete": all(residual_components.values()),
         "final_coefficients": final_coefficients,
     }

@@ -4,6 +4,7 @@ status: M0_IMPLEMENTATION
 authority:
   geometry_snapshot: AERIS_MESH_STUDY/00_governance/design_space_snapshot.yaml
   operating_points: AERIS_MESH_STUDY/00_governance/operating_points.yaml
-  mission_authority: absent_provisional
+  mission_authority: AERIS_MESH_STUDY/05_s6_cfd_qualification/mission_authority_v1.yaml
+  moment_reference: AERIS_MESH_STUDY/05_s6_cfd_qualification/moment_reference_v1.yaml
 resource_policy: host/m1_20260830/desktop_resource_policy_v1.yaml
 holdout_locked: true

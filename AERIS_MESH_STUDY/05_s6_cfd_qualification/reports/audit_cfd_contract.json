@@ -1,0 +1,20 @@
+{
+  "command": "audit-cfd-contract",
+  "created_at": "2026-08-30T12:41:04.724937+00:00",
+  "details": {
+    "cmy_monitored": true,
+    "component_residuals_stored": true,
+    "missing_contract_tokens": [],
+    "normalized_mass_imbalance_stored": true,
+    "sources": {
+      "/home/mike_kara/aeris/src/aeris/cfd/solvers/adflow/adapter.py": "17399703cc2e848434b267f1cd39574bb0b6aa7fc48c63c3080975a487e47eec",
+      "/home/mike_kara/aeris/src/aeris/cfd/solvers/adflow/options_schema.py": "ce8debcadfd1fe901bfe7f783ba9d837b9caa6f0eca19d5cf866a4bfc4a29919",
+      "/home/mike_kara/aeris/src/aeris/cfd/solvers/su2/parse.py": "1195614714f6288ac97b28d99a2090971a51722dabd10948b3a84b68a271d2bd"
+    }
+  },
+  "dry_run": false,
+  "git_head": "ceca5cb9517b36f15a9ef256eaa9bd5ebe7d693a",
+  "repo": "/home/mike_kara/aeris",
+  "schema_version": 1,
+  "status": "PASS"
+}

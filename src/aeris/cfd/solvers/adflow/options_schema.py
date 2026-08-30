@@ -43,7 +43,7 @@ ADFLOW_SCHEMA = ToolOptionSchema(
             "monitor_variables",
             "monitorVariables",
             list,
-            ["resrho", "resturb", "cl", "cd"],
+            ["resrho", "resturb", "cl", "cd", "cmy"],
             doc="Per-iteration monitor columns (drives live residual charts).",
         ),
         CuratedOption(

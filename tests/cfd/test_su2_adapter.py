@@ -78,10 +78,10 @@ def test_format_su2_value():
     assert format_su2_value("( wall, 0.0 )") == "( wall, 0.0 )"
 
 
-HISTORY_CSV = """"Inner_Iter","rms[Rho]","rms[RhoU]","CL","CD","CMz"
-0, -2.0, -1.5, 0.1, 0.05, -0.01
-1, -4.0, -3.2, 0.8, 0.02, -0.02
-2, -8.5, -7.1, 1.0850, 0.01240, -0.0300
+HISTORY_CSV = """"Inner_Iter","rms[Rho]","rms[RhoU]","rms[RhoV]","rms[RhoW]","rms[RhoE]","rms[nu_tilde]","CL","CD","CMy"
+0, -2.0, -1.5, -1.4, -1.3, -1.2, -1.1, 0.1, 0.05, -0.01
+1, -4.0, -3.2, -3.1, -3.0, -2.9, -2.8, 0.8, 0.02, -0.02
+2, -8.5, -7.1, -7.0, -6.9, -6.8, -6.7, 1.0850, 0.01240, -0.0300
 """
 
 
@@ -94,6 +94,8 @@ def test_parse_history_csv(tmp_path: Path):
     assert history["orders_dropped"] == pytest.approx(6.5)
     assert history["final_coefficients"]["cl"] == pytest.approx(1.0850)
     assert history["final_coefficients"]["cd"] == pytest.approx(0.01240)
+    assert history["final_coefficients"]["cmy"] == pytest.approx(-0.0300)
+    assert history["residual_components_complete"] is True
 
 
 def test_parse_produces_same_report_schema_as_adflow(tmp_path: Path):

@@ -1,0 +1,25 @@
+schema_version: aeris.s6.mission_authority.v1
+authority_id: s6_nominal_mission_20260830
+status: authoritative_for_s6_qualification
+decision_basis: Adopt the existing nominal 28 m/s, 1500 m operating point; diagnostic low-local-chord and sea-level maximum-Re points are not mission flight points.
+source_operating_points: AERIS_MESH_STUDY/00_governance/operating_points.yaml
+source_operating_points_sha256: abec3756c6bb6c4a6056039e519678708d0490610f4cbe65bd52b38a5cbca9fe
+flow:
+  atmosphere: ISA_1976_troposphere_sutherland
+  speed_mps: 28.0
+  altitude_m: 1500.0
+  temperature_K: 278.4
+  pressure_Pa: 84556.26746052071
+  density_kg_m3: 1.0580517702823453
+  dynamic_viscosity_Pa_s: 1.7418672487754365e-05
+  reference_chord_m: 0.9
+  reynolds: 1530708.188575197
+  mach: 0.0837
+state:
+  alpha_deg: [-2.0, 0.0, 4.0, 8.0]
+  beta_deg: 0.0
+  p_rad_s: 0.0
+  q_rad_s: 0.0
+  r_rad_s: 0.0
+  control_deflection_deg: 0.0
+high_load_case: {alpha_deg: 8.0, reynolds: 1530708.188575197}

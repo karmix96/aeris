@@ -47,6 +47,8 @@ import json
 import time
 from pathlib import Path
 
+import numpy
+
 
 def main():
     here = Path(__file__).parent
@@ -72,6 +74,29 @@ def main():
     solver = ADFLOW(options=options)
     solver(ap)
 
+    # The nonlinear residual vector is cell-major with `nw` states per cell:
+    # rho, three momentum equations, energy, then turbulence equations.  Store
+    # globally reduced component L2 norms so acceptance never depends on the
+    # density/turbulence monitor columns alone.
+    residual = numpy.asarray(solver.getResidual(ap), dtype=float)
+    nstate = int(solver.adflow.flowvarrefstate.nw)
+    if nstate < 5 or residual.size % nstate:
+        raise RuntimeError(f"unexpected ADflow residual layout: size={residual.size}, nstate={nstate}")
+    residual = residual.reshape((-1, nstate))
+    local_sumsq = numpy.sum(residual * residual, axis=0)
+    global_sumsq = MPI.COMM_WORLD.allreduce(local_sumsq, op=MPI.SUM)
+    local_rho_sum = float(numpy.sum(residual[:, 0]))
+    local_rho_abs = float(numpy.sum(numpy.abs(residual[:, 0])))
+    global_rho_sum = MPI.COMM_WORLD.allreduce(local_rho_sum, op=MPI.SUM)
+    global_rho_abs = MPI.COMM_WORLD.allreduce(local_rho_abs, op=MPI.SUM)
+    component_l2 = {
+        "density": float(numpy.sqrt(global_sumsq[0])),
+        "momentum": float(numpy.sqrt(numpy.sum(global_sumsq[1:4]))),
+        "energy": float(numpy.sqrt(global_sumsq[4])),
+        "sa": float(numpy.sqrt(numpy.sum(global_sumsq[5:]))) if nstate > 5 else None,
+    }
+    mass_imbalance_normalized = abs(global_rho_sum) / max(global_rho_abs, 1.0e-300)
+
     funcs = {}
     solver.evalFunctions(ap, funcs)
     solver.checkSolutionFailure(ap, funcs)
@@ -81,6 +106,9 @@ def main():
             "schema": "aeris.cfd.adflow_run.v1",
             "solve_failed": bool(funcs.get("fail", False)),
             "functions": {k: float(v) for k, v in funcs.items() if k != "fail"},
+            "residual_components_l2": component_l2,
+            "mass_imbalance_normalized": float(mass_imbalance_normalized),
+            "mass_imbalance_definition": "abs(sum continuity residual)/sum(abs continuity residual)",
             "elapsed_seconds": time.time() - t0,
         }
         (here / "adflow_run.json").write_text(json.dumps(report, indent=2))
@@ -199,6 +227,9 @@ class AdflowAdapter(SolverAdapter):
             return report
 
         run = json.loads(run_json.read_text(encoding="utf-8"))
+        convergence["residual_components_l2"] = run.get("residual_components_l2", {})
+        convergence["mass_imbalance_normalized"] = run.get("mass_imbalance_normalized")
+        convergence["mass_imbalance_definition"] = run.get("mass_imbalance_definition")
         status = "failed" if run.get("solve_failed") else "converged"
         # ADflow keys evalFunctions as "<AeroProblem name>_<func>"; normalize
         # to bare coefficient names for the solve_report/dataset schema.

@@ -1,0 +1,27 @@
+{
+  "command": "classify",
+  "created_at": "2026-08-30T12:41:04.819684+00:00",
+  "details": {
+    "execution_unchanged_sha256": "5d787b2067bbc8f5103a25d28a30fb9017668c9607a6ffd10889651d37e36dac",
+    "verdict": {
+      "checks": {
+        "mass_imbalance": true,
+        "residuals": true,
+        "solver_status": "converged"
+      },
+      "classification": "PASS",
+      "created_at": "2026-08-30T12:41:04.819468+00:00",
+      "execution_id": "e1",
+      "execution_sha256": "5d787b2067bbc8f5103a25d28a30fb9017668c9607a6ffd10889651d37e36dac",
+      "policy_id": "lenient",
+      "policy_sha256": "4d6c9c8666fa1c4c6fe30974d9e1625b7784d0946d541e2d413918efcb07c88c",
+      "schema_version": 1
+    },
+    "verdict_path": "/tmp/pytest-of-mike_kara/pytest-6/test_reclassification_retains_0/verdicts/verdict_048e618db021bbec5e396fbe.json"
+  },
+  "dry_run": false,
+  "git_head": "ceca5cb9517b36f15a9ef256eaa9bd5ebe7d693a",
+  "repo": "/home/mike_kara/aeris",
+  "schema_version": 1,
+  "status": "PASS"
+}

@@ -30,7 +30,7 @@ def test_default_options_equal_legacy_smoke_driver_dict():
     assert effective.values == {
         "gridFile": str(GRID),
         "outputDirectory": str(OUT),
-        "monitorVariables": ["resrho", "resturb", "cl", "cd"],
+        "monitorVariables": ["resrho", "resturb", "cl", "cd", "cmy"],
         "surfaceVariables": ["cp", "cf", "yplus", "vx", "vy", "vz"],
         "writeTecplotSurfaceSolution": False,
         "equationType": "RANS",

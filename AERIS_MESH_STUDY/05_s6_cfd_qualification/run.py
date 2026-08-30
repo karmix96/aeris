@@ -84,8 +84,8 @@ def audit_contract(dry: bool) -> int:
     dirs = ["schemas", "tests", "reviews", "reports", "paper", "studies"]
     missing += [d for d in dirs if not (ROOT / d).is_dir()]
     policy = load_yaml(ROOT / "POLICY.yaml") if not missing else {}
-    mission = REPO / "AERIS_MESH_STUDY/00_governance/operating_points.yaml"
-    mission_authority_present = mission.exists() and "mission_config_found: true" in mission.read_text(encoding="utf-8")
+    mission = ROOT / "mission_authority_v1.yaml"
+    mission_authority_present = mission.exists() and "status: authoritative_for_s6_qualification" in mission.read_text(encoding="utf-8")
     checks = {"required_paths": not missing,
               "deletion_policy": policy.get("deletion_policy") == "explicit_human_approval_only",
               "heavy_work_blocked": policy.get("heavy_work", {}).get("blocked", True),
@@ -172,11 +172,30 @@ def identity_audit(dry: bool) -> int:
     text = source.read_text(encoding="utf-8") if source.exists() else ""
     stable = 'return f"{set_name}_{index:03d}"' in text
     examples = {"baseline_0": "baseline_000", "lhs100_seed42_29": "lhs100_seed42_029"}
+    base = mesh_identity(29, 75, 97, "geometry-a", "implementation-a")
+    mutations = {
+        "chord_31": mesh_identity(31, 75, 97, "geometry-a", "implementation-a"),
+        "span_77": mesh_identity(29, 77, 97, "geometry-a", "implementation-a"),
+        "normal_99": mesh_identity(29, 75, 99, "geometry-a", "implementation-a"),
+        "geometry_b": mesh_identity(29, 75, 97, "geometry-b", "implementation-a"),
+        "implementation_b": mesh_identity(29, 75, 97, "geometry-a", "implementation-b"),
+    }
+    invalidates = len({base, *mutations.values()}) == len(mutations) + 1
     details = {"source": str(source), "source_sha256": sha256(source) if source.exists() else None,
                "stable_format_detected": stable, "examples": examples,
-               "mesh_resolution_in_key_required": True, "cache_invalidation_proven": False}
-    status = "DRY_RUN" if dry and stable else ("CONDITIONAL" if stable else "FAIL")
+               "candidate_grid": [29, 75, 97], "candidate_mesh_identity": base,
+               "mutation_identities": mutations, "mesh_resolution_in_key_required": True,
+               "cache_invalidation_proven": invalidates}
+    ok = stable and invalidates
+    status = "DRY_RUN" if dry and ok else ("PASS" if ok else "FAIL")
     return result("test-identity", status, details=details, dry_run=dry)
+
+
+def mesh_identity(chord: int, span: int, normal: int, geometry_hash: str, implementation_hash: str) -> str:
+    payload = {"chord_points": chord, "span_points": span, "normal_points": normal,
+               "geometry_sha256": geometry_hash, "implementation_sha256": implementation_hash}
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def schema_audit(dry: bool) -> int:
@@ -205,6 +224,35 @@ def policy_audit(dry: bool) -> int:
     return result("audit-policy", status, details=details, dry_run=dry)
 
 
+def moment_audit(dry: bool) -> int:
+    path = ROOT / "moment_reference_v1.yaml"
+    text = path.read_text(encoding="utf-8") if path.exists() else ""
+    required = ["mission_cg:", "quarter_mac:", "primary_pitch_coefficient: CMy",
+                "implicit_origin_forbidden: true", "evaluation: per_geometry_from_realized_planform"]
+    ok = path.exists() and all(token in text for token in required)
+    details = {"contract": str(path), "contract_sha256": sha256(path) if path.exists() else None,
+               "mission_cg_explicit": ok, "quarter_mac_per_geometry": ok,
+               "cmy_required": ok, "implicit_origin_forbidden": ok}
+    status = "DRY_RUN" if dry and ok else ("PASS" if ok else "FAIL")
+    return result("audit-moment-reference", status, details=details, dry_run=dry)
+
+
+def cfd_contract_audit(dry: bool) -> int:
+    adflow = REPO / "src/aeris/cfd/solvers/adflow/adapter.py"
+    options = REPO / "src/aeris/cfd/solvers/adflow/options_schema.py"
+    su2 = REPO / "src/aeris/cfd/solvers/su2/parse.py"
+    combined = "\n".join(p.read_text(encoding="utf-8") for p in (adflow, options, su2))
+    required = ["residual_components_l2", "mass_imbalance_normalized", '"momentum"',
+                '"energy"', '"sa"', '"cmy"']
+    missing = [token for token in required if token not in combined]
+    ok = not missing
+    details = {"sources": {str(p): sha256(p) for p in (adflow, options, su2)},
+               "missing_contract_tokens": missing, "cmy_monitored": '"cmy"' in options.read_text(),
+               "component_residuals_stored": ok, "normalized_mass_imbalance_stored": ok}
+    status = "DRY_RUN" if dry and ok else ("PASS" if ok else "FAIL")
+    return result("audit-cfd-contract", status, details=details, dry_run=dry)
+
+
 def validate_execution(path_arg: str | None, dry: bool) -> int:
     path = Path(path_arg) if path_arg else ROOT / "schemas/execution.schema.json"
     try:
@@ -223,7 +271,50 @@ def validate_execution(path_arg: str | None, dry: bool) -> int:
     return result("validate-execution", status, details=details, dry_run=dry)
 
 
-def dispatch(command: str, dry: bool, execution_arg: str | None = None) -> int:
+def classify_execution(execution_arg: str | None, policy_arg: str | None, dry: bool) -> int:
+    if not execution_arg or not policy_arg:
+        return result("classify", "FAIL", details={"reason": "--execution and --policy are required"}, dry_run=dry)
+    execution_path, policy_path = Path(execution_arg), Path(policy_arg)
+    try:
+        execution = json.loads(execution_path.read_text(encoding="utf-8"))
+        policy = load_yaml(policy_path)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        return result("classify", "FAIL", details={"error": str(exc)}, dry_run=dry)
+    residuals = execution.get("convergence", {}).get("residual_components_l2", {})
+    limits = policy.get("residuals", {})
+    residual_pass = all(
+        residuals.get(name) is not None and float(residuals[name]) <= float(limits[name]["max_final"])
+        for name in ("density", "momentum", "energy", "sa") if name in limits
+    ) and all(name in limits for name in ("density", "momentum", "energy", "sa"))
+    mass = execution.get("convergence", {}).get("mass_imbalance_normalized")
+    mass_limit = float(policy.get("mass_imbalance_normalized", {}).get("max", -1))
+    mass_pass = mass is not None and mass_limit >= 0 and float(mass) <= mass_limit
+    accepted = execution.get("status") == "converged" and residual_pass and mass_pass
+    execution_hash, policy_hash = sha256(execution_path), sha256(policy_path)
+    verdict = {"schema_version": 1, "execution_id": execution.get("execution_id", execution_hash[:16]),
+               "execution_sha256": execution_hash, "policy_id": policy.get("policy_id"),
+               "policy_sha256": policy_hash, "classification": "PASS" if accepted else "FAIL",
+               "checks": {"solver_status": execution.get("status"), "residuals": residual_pass,
+                          "mass_imbalance": mass_pass}, "created_at": now()}
+    verdict_id = hashlib.sha256(f"{execution_hash}:{policy_hash}".encode()).hexdigest()[:24]
+    verdict_path = execution_path.parent / "verdicts" / f"verdict_{verdict_id}.json"
+    if not dry:
+        verdict_path.parent.mkdir(parents=True, exist_ok=True)
+        if verdict_path.exists():
+            prior = json.loads(verdict_path.read_text(encoding="utf-8"))
+            verdict["created_at"] = prior.get("created_at", verdict["created_at"])
+            if prior != verdict:
+                return result("classify", "FAIL", details={"reason": "immutable verdict collision"}, dry_run=dry)
+        else:
+            tmp = verdict_path.with_suffix(".json.tmp")
+            tmp.write_text(json.dumps(verdict, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            tmp.replace(verdict_path)
+    return result("classify", "DRY_RUN" if dry else ("PASS" if accepted else "FAIL"),
+                  details={"verdict": verdict, "verdict_path": str(verdict_path),
+                           "execution_unchanged_sha256": sha256(execution_path)}, dry_run=dry)
+
+
+def dispatch(command: str, dry: bool, execution_arg: str | None = None, policy_arg: str | None = None) -> int:
     if command == "audit-contract": return audit_contract(dry)
     if command == "audit-geometry-space": return audit_geometry(dry)
     if command == "check-holdout-lock": return holdout_lock(dry)
@@ -231,13 +322,16 @@ def dispatch(command: str, dry: bool, execution_arg: str | None = None) -> int:
     if command == "test-identity": return identity_audit(dry)
     if command == "audit-schemas": return schema_audit(dry)
     if command == "audit-policy": return policy_audit(dry)
+    if command == "audit-moment-reference": return moment_audit(dry)
+    if command == "audit-cfd-contract": return cfd_contract_audit(dry)
     if command == "validate-execution": return validate_execution(execution_arg, dry)
+    if command == "classify": return classify_execution(execution_arg, policy_arg, dry)
     if command in HEAVY:
         return result(command, "DRY_RUN" if dry else "BLOCKED",
                       details={"reason": "M0-M2 gates and measured campaign forecast incomplete"}, dry_run=dry)
     if command in {"inventory-host", "propose-wsl-config", "verify-host-policy", "write-plan",
                    "test-identity", "check-resources", "screen-grid-family", "screen-tip-smoothing",
-                   "freeze-nuisance-policy", "freeze-production", "classify", "render-report",
+                   "freeze-nuisance-policy", "freeze-production", "render-report",
                    "prepare-independent-review", "collect-paper-package", "audit-all", "unlock-holdout"}:
         return result(command, "DRY_RUN" if dry else "CONDITIONAL",
                       details={"next": "implement governed handler; no heavy work launched"}, dry_run=dry)
@@ -253,7 +347,7 @@ def main() -> int:
     p.add_argument("--policy")
     p.add_argument("--scope")
     args, _ = p.parse_known_args()
-    return dispatch(args.command, args.dry_run, getattr(args, "execution", None))
+    return dispatch(args.command, args.dry_run, getattr(args, "execution", None), getattr(args, "policy", None))
 
 
 if __name__ == "__main__":

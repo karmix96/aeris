@@ -1,20 +1,33 @@
 {
   "command": "test-identity",
-  "created_at": "2026-08-30T12:32:02.018518+00:00",
+  "created_at": "2026-08-30T12:41:04.441676+00:00",
   "details": {
-    "cache_invalidation_proven": false,
+    "cache_invalidation_proven": true,
+    "candidate_grid": [
+      29,
+      75,
+      97
+    ],
+    "candidate_mesh_identity": "9e51a52d2298b318c4f3c7a7d47c91858baa4f3d0edec77a26cb298403ab34e9",
     "examples": {
       "baseline_0": "baseline_000",
       "lhs100_seed42_29": "lhs100_seed42_029"
     },
     "mesh_resolution_in_key_required": true,
+    "mutation_identities": {
+      "chord_31": "3ec83be89d2a11ca38456f0d77d7684cea822a9191a3f479ccba11e4100b8cf8",
+      "geometry_b": "0857fbaa2070f77b48dcb36db43da9667c92ba24876c0003680ebeed692ecc4b",
+      "implementation_b": "409111d7898ae09c7eda5c705c7dbe69466c0bb9447eeb9320e68b3aed0d1587",
+      "normal_99": "fcc555a3b1ccaff976f31c3bb4f3001fffa077f7bbffe69cf4e2abfefc61de27",
+      "span_77": "8da425005fea818b30ef178b6924eff4da8da02954f8ab8f62dbeab4464bfafe"
+    },
     "source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/shared/geometry_sets.py",
     "source_sha256": "b27f51f5666976139240812b61988a891c9e89e524db9c7b7e06f90754ab5c83",
     "stable_format_detected": true
   },
   "dry_run": false,
-  "git_head": "5d67aa67b14de1f8750b627f02a515f44fd65cd4",
+  "git_head": "ceca5cb9517b36f15a9ef256eaa9bd5ebe7d693a",
   "repo": "/home/mike_kara/aeris",
   "schema_version": 1,
-  "status": "CONDITIONAL"
+  "status": "PASS"
 }

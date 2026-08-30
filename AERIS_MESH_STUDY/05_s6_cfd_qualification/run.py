@@ -378,7 +378,7 @@ def dispatch(command: str, dry: bool, execution_arg: str | None = None, policy_a
     if command == "classify": return classify_execution(execution_arg, policy_arg, dry)
     if command in HEAVY:
         return result(command, "DRY_RUN" if dry else "BLOCKED",
-                      details={"reason": "M2 terminal NO-GO: nominal A has inverted volume cells"},
+                      details={"reason": "CFD canary blocked: M2 family and independent review gates incomplete"},
                       dry_run=dry)
     if command in {"inventory-host", "propose-wsl-config", "verify-host-policy", "write-plan",
                    "test-identity", "check-resources", "screen-tip-smoothing",

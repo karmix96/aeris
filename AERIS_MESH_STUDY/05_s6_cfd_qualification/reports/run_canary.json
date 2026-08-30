@@ -1,11 +1,11 @@
 {
   "command": "run-canary",
-  "created_at": "2026-08-30T13:21:58.910752+00:00",
+  "created_at": "2026-08-30T13:48:34.054546+00:00",
   "details": {
-    "reason": "M2 terminal NO-GO: nominal A has inverted volume cells"
+    "reason": "CFD canary blocked: M2 family and independent review gates incomplete"
   },
   "dry_run": false,
-  "git_head": "752852c50960e3e5ea33d8e1d31fcebec03c78d0",
+  "git_head": "9fb9b5de5b2fc673e7a20b0646476f4eb2052838",
   "repo": "/home/mike_kara/aeris",
   "schema_version": 1,
   "status": "BLOCKED"

@@ -1,6 +1,6 @@
 {
   "command": "audit-schemas",
-  "created_at": "2026-08-30T13:21:59.143591+00:00",
+  "created_at": "2026-08-30T13:47:47.015683+00:00",
   "details": {
     "normalized_mass_imbalance_required": true,
     "residuals_required": [
@@ -17,7 +17,7 @@
     "thresholds_versioned": true
   },
   "dry_run": false,
-  "git_head": "752852c50960e3e5ea33d8e1d31fcebec03c78d0",
+  "git_head": "fe004df54ce64f1c68c5a5337a1bfc590f72e34b",
   "repo": "/home/mike_kara/aeris",
   "schema_version": 1,
   "status": "PASS"

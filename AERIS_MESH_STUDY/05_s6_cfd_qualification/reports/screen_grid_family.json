@@ -1,6 +1,6 @@
 {
   "command": "screen-grid-family",
-  "created_at": "2026-08-30T13:30:36.973065+00:00",
+  "created_at": "2026-08-30T13:47:47.647525+00:00",
   "details": {
     "checks": {
       "forecast_le_75pct_limit": true,
@@ -52,15 +52,15 @@
     ],
     "next": "proven S1-volume-to-S6-wall deformation; CFD canary remains forbidden",
     "resource": {
-      "available_gib": 11.694080352783203,
-      "free_disk_gib": 942.53076171875,
+      "available_gib": 11.659271240234375,
+      "free_disk_gib": 942.0054817199707,
       "wsl_limit_gib": 12.664676666259766
     },
     "terminal_report": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_grid_screen_terminal_report.json",
     "terminal_report_sha256": "33e2357e81d5cd08b7b5fcc5461fcf71c4b66e792a80e8464924846a9746c230"
   },
   "dry_run": false,
-  "git_head": "15abe0a10d917f2ed544e73dbaa29610af6371eb",
+  "git_head": "fe004df54ce64f1c68c5a5337a1bfc590f72e34b",
   "repo": "/home/mike_kara/aeris",
   "schema_version": 1,
   "status": "NO_GO_VOLUME_INVALID_CANARY_FORBIDDEN"

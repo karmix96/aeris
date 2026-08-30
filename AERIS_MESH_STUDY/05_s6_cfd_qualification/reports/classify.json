@@ -1,6 +1,6 @@
 {
   "command": "classify",
-  "created_at": "2026-08-30T13:21:59.473336+00:00",
+  "created_at": "2026-08-30T13:47:47.569207+00:00",
   "details": {
     "execution_unchanged_sha256": "5d787b2067bbc8f5103a25d28a30fb9017668c9607a6ffd10889651d37e36dac",
     "verdict": {
@@ -10,17 +10,17 @@
         "solver_status": "converged"
       },
       "classification": "PASS",
-      "created_at": "2026-08-30T13:21:59.473136+00:00",
+      "created_at": "2026-08-30T13:47:47.568959+00:00",
       "execution_id": "e1",
       "execution_sha256": "5d787b2067bbc8f5103a25d28a30fb9017668c9607a6ffd10889651d37e36dac",
       "policy_id": "lenient",
       "policy_sha256": "4d6c9c8666fa1c4c6fe30974d9e1625b7784d0946d541e2d413918efcb07c88c",
       "schema_version": 1
     },
-    "verdict_path": "/tmp/pytest-of-mike_kara/pytest-11/test_reclassification_retains_0/verdicts/verdict_048e618db021bbec5e396fbe.json"
+    "verdict_path": "/tmp/pytest-of-mike_kara/pytest-12/test_reclassification_retains_0/verdicts/verdict_048e618db021bbec5e396fbe.json"
   },
   "dry_run": false,
-  "git_head": "752852c50960e3e5ea33d8e1d31fcebec03c78d0",
+  "git_head": "fe004df54ce64f1c68c5a5337a1bfc590f72e34b",
   "repo": "/home/mike_kara/aeris",
   "schema_version": 1,
   "status": "PASS"

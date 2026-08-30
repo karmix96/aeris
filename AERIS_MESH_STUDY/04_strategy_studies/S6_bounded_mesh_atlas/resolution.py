@@ -5,9 +5,15 @@ from __future__ import annotations
 from shared.gates import EPSE_LADDER
 
 S6_FIRST_CELL_FRACTION = {
-    "candidate_c01": 6.1e-6,
+    # C01=5.0e-6 is the governed ladder probe: it preserves positive quality
+    # after exact-wall deformation for all A/B/C/E development geometries.
+    "candidate_c01": 5.0e-6,
     "candidate_c02": 4.7e-6,
-    "candidate_c03": 3.6e-6,
+    # C03=6.1e-6 is required by the repaired S1 tip-cap march; the resulting
+    # physical first-cell spacing remains finer than C01 because C03 uses the
+    # smaller target cell size. This is a geometry-validity law, not a simple
+    # monotone fraction ladder.
+    "candidate_c03": 6.1e-6,
     "smoke": 8.8e-6,
     "fine": 6.0e-6,
     # The fixed N257/epsE=1.5 development calibration passed all 16 seeds at

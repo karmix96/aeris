@@ -55,9 +55,10 @@ Linux-native repository. Read these files first, in order:
   map rescales wall-normal spacing, so per-geometry y+ is not preserved).
 - C01 B/C/E screens are complete; B and E pass the production floor, while C
   is positive-volume but below the `qmin=0.10` production floor (`qmin=0.0840`).
-- A new C01 ladder probe at `s0_fraction=5.0e-6` passes A/B/C/E (`qmin >=
-  0.1091`, zero inversions). Treat it as provisional until the resolution
-  policy is updated and independently reviewed; do not run CFD yet.
+- The resolution policy now records C01=`5.0e-6` and repaired C03=`6.1e-6`.
+  The C01 probe passes A/B/C/E (`qmin >= 0.1091`, zero inversions). Review
+  this non-monotone fraction/physical-spacing rationale before CFD; do not run
+  CFD yet.
 - CFD canary remains blocked pending independent review and a governed decision
   on whether C02 is the production resolution or C03 is repaired.
 - Three authenticated Claude Code review attempts timed out with zero model

@@ -1,0 +1,20 @@
+{
+  "command": "audit-geometry-space",
+  "created_at": "2026-08-30T10:35:39.140492+00:00",
+  "details": {
+    "bound_differences": [],
+    "live_config": "/home/mike_kara/aeris/configs/geometry/bwb.yaml",
+    "live_config_sha256": "f114b48e3c400a2832cc3763e7cf7505ecd0925fb81cb92f70e28bb5e6234614",
+    "live_variable_count": 20,
+    "phase1_exists": true,
+    "phase1_manifest": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/geometry_design_space_phase1_v1.yaml",
+    "snapshot": "/home/mike_kara/aeris/AERIS_MESH_STUDY/00_governance/design_space_snapshot.yaml",
+    "snapshot_sha256": "3681df2645a47e0c4bf182cf64b3d6b9317fb5fde406c1103ea74e71491b0b6d",
+    "snapshot_variable_count": 20
+  },
+  "dry_run": false,
+  "git_head": "7fe707bc437993058da6696338eac1efdc1843be",
+  "repo": "/home/mike_kara/aeris",
+  "schema_version": 1,
+  "status": "CONDITIONAL"
+}

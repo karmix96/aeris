@@ -26,3 +26,11 @@ def test_holdout_is_metadata_locked():
 
 def test_no_destructive_cleanup_policy():
     assert "explicit_human_approval_only" in (ROOT / "POLICY.yaml").read_text()
+
+
+def test_geometry_semantic_diff_is_empty():
+    out = invoke("audit-geometry-space")
+    assert out.returncode == 0
+    assert '"live_variable_count": 20' in out.stdout
+    assert '"snapshot_variable_count": 20' in out.stdout
+    assert '"bound_differences": []' in out.stdout

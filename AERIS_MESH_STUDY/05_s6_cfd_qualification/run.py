@@ -10,6 +10,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -101,13 +102,43 @@ def audit_contract(dry: bool) -> int:
 def audit_geometry(dry: bool) -> int:
     snap = REPO / "AERIS_MESH_STUDY/00_governance/design_space_snapshot.yaml"
     phase = ROOT / "geometry_design_space_phase1_v1.yaml"
+    live = REPO / "configs/geometry/bwb.yaml"
+    live_bounds = extract_live_bounds(live.read_text(encoding="utf-8")) if live.exists() else {}
+    snap_bounds = extract_snapshot_bounds(snap.read_text(encoding="utf-8")) if snap.exists() else {}
+    names = sorted(set(live_bounds) | set(snap_bounds))
+    diff = [{"name": n, "live": live_bounds.get(n), "snapshot": snap_bounds.get(n),
+             "equal": live_bounds.get(n) == snap_bounds.get(n)} for n in names
+            if live_bounds.get(n) != snap_bounds.get(n)]
     details = {"snapshot": str(snap), "snapshot_sha256": sha256(snap) if snap.exists() else None,
+               "live_config": str(live), "live_config_sha256": sha256(live) if live.exists() else None,
+               "live_variable_count": len(live_bounds), "snapshot_variable_count": len(snap_bounds),
+               "bound_differences": diff,
                "phase1_manifest": str(phase), "phase1_exists": phase.exists()}
-    ok = phase.exists() and snap.exists()
+    ok = phase.exists() and snap.exists() and live.exists() and not diff
     status = "DRY_RUN" if dry and ok else ("PASS" if ok else "FAIL")
     if ok and phase.exists() and "not_frozen" in phase.read_text(encoding="utf-8"):
         status = "DRY_RUN" if dry else "CONDITIONAL"
     return result("audit-geometry-space", status, details=details, dry_run=dry)
+
+
+def extract_live_bounds(text: str) -> dict[str, tuple[float, float]]:
+    """Extract the canonical inline `{min, max}` entries from live YAML."""
+    out = {}
+    for match in re.finditer(r"^\s{4,}(\w+):\s*\{min:\s*([-+0-9.eE]+),\s*max:\s*([-+0-9.eE]+)\}", text, re.M):
+        out[match.group(1)] = (float(match.group(2)), float(match.group(3)))
+    return out
+
+
+def extract_snapshot_bounds(text: str) -> dict[str, tuple[float, float]]:
+    """Extract bounds from snapshot variable blocks without loading holdout data."""
+    out = {}
+    for block in re.findall(r"(?ms)^- name:\s*(\w+)(.*?)(?=^- name:|\Z)", text):
+        name, body = block
+        mn = re.search(r"^\s+min:\s*([-+0-9.eE]+)", body, re.M)
+        mx = re.search(r"^\s+max:\s*([-+0-9.eE]+)", body, re.M)
+        if mn and mx:
+            out[name] = (float(mn.group(1)), float(mx.group(1)))
+    return out
 
 
 def holdout_lock(dry: bool) -> int:

@@ -21,9 +21,12 @@ Updated: 2026-08-30
 - Independent Claude review: **not obtained**. Three authenticated Claude Code
   requests (Opus twice, Sonnet once) timed out with zero model tokens; failure
   records are retained under `reviews/` and no Claude GO is claimed.
-- M2 candidate family: **terminal NO-GO**. The coupled
+- M2 direct-march candidate family: **terminal NO-GO for that route**. The coupled
   `17x43x61 -> 23x57x73 -> 29x75x97` refinement and resource screens pass, but
   independently reopened written ADF-CGNS meshes contain inverted cells.
+- This does **not** invalidate proven S6: its successful production path reuses
+  a valid S1/Openblademesh volume and applies bounded deformation to the exact
+  S6 wall. The failed experiment remarched the exact wall directly.
 - Best controlled C03 result: six inverted cells, minimum signed volume
   `-3.670179816350609e-12`, and `qmin=-0.3114098210`.
 - Geometry B/C/E screens and CFD canary: **not run; forbidden by the governed
@@ -58,11 +61,11 @@ Updated: 2026-08-30
 
 ## Next authorized work
 
-Create a new, versioned tip/collar block-topology design and re-enter M2 with a
-new family identifier. Preserve every failed attempt and do not weaken the
-zero-inversion acceptance gate. A CFD canary remains unauthorized until a
-nominal finest written mesh passes independent zero-inversion validation and
-the independent review gate is closed.
+Run the proven S1-volume → S6 exact-wall deformation route at the required
+resolution, with a new versioned experiment identity. Preserve every failed
+direct-march attempt and do not weaken the zero-inversion acceptance gate. A CFD
+canary remains unauthorized until a nominal finest written mesh passes
+independent zero-inversion validation and the independent review gate is closed.
 
 ## Resume commands
 

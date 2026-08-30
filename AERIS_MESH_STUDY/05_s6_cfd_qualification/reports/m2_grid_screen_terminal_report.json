@@ -35,6 +35,6 @@
     }
   },
   "independent_reader": "cgnsUtilities.readGrid ADF route plus direct signed-volume/scaled-Jacobian audit",
-  "conclusion": "The coupled family meets refinement and desktop resource gates but fails the mathematical zero-inversion gate on nominal geometry A. Screening B/C/E and the CFD canary are forbidden because the nominal finest mesh is invalid.",
-  "next_authorized_work": "topology or tip-collar redesign followed by a new versioned M2 family; do not weaken the zero-volume gate"
+  "conclusion": "The coupled direct-march experiment meets refinement and desktop resource gates but fails the mathematical zero-inversion gate on nominal geometry A. This does not reject the proven S6 atlas strategy, whose production route reuses a valid S1/Openblademesh volume and applies bounded exact-wall deformation. Screening B/C/E and the CFD canary are forbidden for this direct-march route because the nominal finest mesh is invalid.",
+  "next_authorized_work": "run proven S1-volume-to-S6-exact-wall deformation at required resolution; do not weaken the zero-volume gate"
 }

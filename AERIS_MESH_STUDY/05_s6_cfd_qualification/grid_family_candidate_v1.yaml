@@ -26,4 +26,4 @@ observed_terminal_result:
   best_C03_min_scaled_quality: -0.31140982102939085
   geometries_B_C_E_not_run: prerequisite_A_failed
   cfd_canary: forbidden
-next_authorized_work: versioned_tip_collar_topology_redesign
+next_authorized_work: proven_s1_volume_to_s6_exact_wall_deformation

@@ -290,7 +290,7 @@ def grid_screen(dry: bool) -> int:
                                          "nominal_finest_zero_inversions"})
     if terminal_no_go:
         status = "NO_GO_VOLUME_INVALID_CANARY_FORBIDDEN"
-        next_action = "versioned tip/collar topology redesign; CFD canary remains forbidden"
+        next_action = "proven S1-volume-to-S6-wall deformation; CFD canary remains forbidden"
     else:
         status = "DRY_RUN" if dry and mathematical_ok else ("CONDITIONAL" if mathematical_ok else "FAIL")
         next_action = "written CGNS screen on A/B/C/E"

@@ -15,8 +15,8 @@ Linux-native repository. Read these files first, in order:
 
 ## Non-negotiable safety order
 
-- Do not launch CFD or a canary. M2 is terminal NO-GO because every written
-  nominal mesh tested has inverted cells.
+- Do not launch CFD or a canary. The direct-march M2 experiment is terminal
+  NO-GO because every written nominal mesh tested has inverted cells.
 - Do not inspect, parse, sample, visualize, copy, or hash the locked holdout
   sample contents. Only use its lock metadata.
 - Do not alter the live geometry YAML, governance snapshots, unrelated user
@@ -32,8 +32,11 @@ Linux-native repository. Read these files first, in order:
 - The candidate `17x43x61 -> 23x57x73 -> 29x75x97` family passes coupled
   refinement and desktop resource gates.
 - Independent ADF-CGNS reopening and repository-authority volume QC reject the
-  nominal mesh. The best C03 attempt still has six inverted cells and
-  `qmin=-0.3114098210`.
+  direct-march nominal mesh. The best C03 attempt still has six inverted cells
+  and `qmin=-0.3114098210`.
+- Proven S6 remains the preferred route: reuse a valid S1/Openblademesh volume
+  and apply bounded exact-wall deformation. The next experiment must validate
+  that route at the required resolution before any topology redesign.
 - Geometry B/C/E and the CFD canary were correctly not executed after geometry
   A failed. Do not bypass this stop.
 - Three authenticated Claude Code review attempts timed out with zero model
@@ -45,18 +48,19 @@ Linux-native repository. Read these files first, in order:
    changes. Do not stage them.
 2. Treat `reports/m2_grid_screen_terminal_report.json` as the governing M2
    diagnosis. Verify its hashes and attempt records before changing topology.
-3. Design a **new versioned** tip/collar block topology. Do not mutate or
-   relabel the rejected family and do not weaken `zero_inverted_cells`.
-4. Start with cheap surface/topology checks. Only write a new volume mesh when
-   the changed topology has explicit tests and a distinct identity.
-5. Independently close, reopen, and audit each written CGNS. A valid nominal
-   finest mesh is required before B/C/E screening.
-6. Keep CFD and the canary blocked until nominal A and the required geometry
+3. Locate or regenerate the proven S1/Openblademesh template volume and its
+   source surface; bind both by hashes and a new experiment identity.
+4. Build the exact S6 target surface, then use bounded S1-volume-to-S6-wall
+   deformation. Do not direct-march the exact wall as the first recovery route.
+5. Start with cheap surface/interface checks, then independently close, reopen,
+   and audit the written deformed CGNS.
+6. A valid nominal finest mesh is required before B/C/E screening.
+7. Keep CFD and the canary blocked until nominal A and the required geometry
    screens all satisfy the roadmap gates.
-7. Run focused qualification/meshing tests after every governed change. The
+8. Run focused qualification/meshing tests after every governed change. The
    repository-wide suite currently cannot collect in this WSL environment
    because optional project dependencies such as `aerosandbox` are absent.
-8. Update `LIVE_STATUS.md`, retain small evidence, and commit only governed
+9. Update `LIVE_STATUS.md`, retain small evidence, and commit only governed
    files. Never commit CGNS/restart/field artifacts; do not push without the
    user's instruction.
 

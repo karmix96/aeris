@@ -29,12 +29,15 @@ Updated: 2026-08-30
   S6 wall. The failed experiment remarched the exact wall directly.
 - Best controlled C03 result: six inverted cells, minimum signed volume
   `-3.670179816350609e-12`, and `qmin=-0.3114098210`.
-- Proven-route recovery: **PASS** for geometry A. A regenerated S1 production
-  volume was deformed onto an exact S6 wall with 13 blocks, 2,905,088 cells,
-  zero inverted cells, and minimum scaled quality `+0.2383233`.
-- Geometry B/C/E screens and CFD canary: **not run; forbidden by the governed
-  zero-inversion gate**. This is a deliberate terminal stop, not unfinished
-  execution.
+- Proven-route recovery: **C02 production family PASS**. Geometry A C01 and
+  C02 and independent B/C/E C02 deformations all reopen with zero inverted
+  cells and minimum scaled quality in `[0.1545, 0.1754]`. Evidence is in
+  `reports/m2_proven_route_family_20260830.json`.
+- C03 finest diagnostic: **NO-GO** for this bounded map (4 inverted cells in
+  the tip-cap block, `qmin=-0.2468`). It is retained as a diagnostic and does
+  not invalidate the passing C02 production family.
+- CFD canary: **blocked** pending the roadmap's independent review gate and a
+  governed decision on the C03 finest-level diagnostic.
 - Focused verification: **73 passed** across S6 atlas, qualification
   orchestrator, ADflow contract, and SU2 contract tests.
 - Repository-wide pytest: collection is environment-blocked by absent optional
@@ -60,6 +63,7 @@ Updated: 2026-08-30
 - `reports/m2_grid_screen_terminal_report.md`
 - `reports/screen_grid_family.json`
 - `reports/s6_recovery_deformation_20260830.json`
+- `reports/m2_proven_route_family_20260830.json`
 - `studies/grid/m2_20260830/` (local run records; large CGNS files remain
   ignored and must not be committed)
 

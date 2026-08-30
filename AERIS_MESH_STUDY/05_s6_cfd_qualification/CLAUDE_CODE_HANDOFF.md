@@ -35,11 +35,13 @@ Linux-native repository. Read these files first, in order:
   direct-march nominal mesh. The best C03 attempt still has six inverted cells
   and `qmin=-0.3114098210`.
 - Proven S6 remains the preferred route: reuse a valid S1/Openblademesh volume
-  and apply bounded exact-wall deformation. The next experiment must validate
-  that route at the required resolution before any topology redesign. Geometry A
-  now passes this recovery route: 0 inverted cells and `qmin=+0.2383`.
-- Geometry B/C/E and the CFD canary were correctly not executed after geometry
-  A failed. Do not bypass this stop.
+  and apply bounded exact-wall deformation. The C02 production family now
+  passes: geometry A plus independent B/C/E all have zero inverted cells and
+  `qmin >= 0.1545`. Evidence: `reports/m2_proven_route_family_20260830.json`.
+- C03 finest remains a diagnostic NO-GO (4 tip-cap inversions,
+  `qmin=-0.2468`); do not weaken the zero-inversion gate or call it production.
+- CFD canary remains blocked pending independent review and a governed decision
+  on whether C02 is the production resolution or C03 is repaired.
 - Three authenticated Claude Code review attempts timed out with zero model
   tokens. No independent GO exists; see `reviews/claude_m0_m1_review_attempt0*.json`.
 
@@ -56,7 +58,8 @@ Linux-native repository. Read these files first, in order:
    deformation. Do not direct-march the exact wall as the first recovery route.
 5. Start with cheap surface/interface checks, then independently close, reopen,
    and audit each written deformed CGNS. Geometry A is the reference recovery.
-6. A valid nominal finest mesh is required before B/C/E screening.
+6. The C02 production family is valid for A/B/C/E; C03 is retained as a
+   diagnostic failure requiring either repair or explicit governed waiver.
 7. Keep CFD and the canary blocked until nominal A and the required geometry
    screens all satisfy the roadmap gates.
 8. Run focused qualification/meshing tests after every governed change. The

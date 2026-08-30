@@ -575,6 +575,26 @@ def map_patch_2d_to_tip(wing, patch_2d: Array) -> Array:
 OML_NAMES = [f"oml_{k}" for k in ARC_ORDER]
 
 
+def _resample_oml_spanwise(blocks: list[SurfaceBlock], span_cells: int) -> list[SurfaceBlock]:
+    """Resample only OML columns while preserving every tip-cap block exactly."""
+    if span_cells < 2:
+        raise MeshBuildError("span_cells must be at least two")
+    out: list[SurfaceBlock] = []
+    for block in blocks:
+        if not block.name.startswith("oml_") or block.xyz.shape[1] == span_cells + 1:
+            out.append(block)
+            continue
+        old_t = np.linspace(0.0, 1.0, block.xyz.shape[1])
+        new_t = np.linspace(0.0, 1.0, span_cells + 1)
+        xyz = np.stack(
+            [np.column_stack([np.interp(new_t, old_t, block.xyz[i, :, axis]) for axis in range(3)])
+             for i in range(block.xyz.shape[0])],
+            axis=0,
+        )
+        out.append(SurfaceBlock(name=block.name, xyz=xyz, family=block.family))
+    return out
+
+
 def build_surface(
     wing,
     *,
@@ -586,6 +606,7 @@ def build_surface(
     spanwise_first_cell_factor: float = 0.12,
     growth_limit: float = GROWTH_LIMIT,
     realise_law: bool = True,
+    span_cells: int | None = None,
     **overrides,
 ) -> tuple[list[SurfaceBlock], dict]:
     """Build S1: 6 OML blocks swept tip-to-root plus the 7-domain tip."""
@@ -639,6 +660,10 @@ def build_surface(
 
     blocks = [SurfaceBlock(name=n, xyz=b, family="wall") for n, b in zip(OML_NAMES, oml, strict=True)]
 
+    native_span_cells = int(sum(len(np.atleast_1d(c)) for c in counts))
+    if span_cells is not None and int(span_cells) != native_span_cells:
+        blocks = _resample_oml_spanwise(blocks, int(span_cells))
+
     cap_2d, cap_info = tip_domains_2d(tip_geom, collar_points=cfg["collar_points"])
     blocks += [
         SurfaceBlock(name=n, xyz=map_patch_2d_to_tip(wing, p), family="wall")
@@ -665,8 +690,9 @@ def build_surface(
             "segment_lengths_m": lengths,
             "cells_per_interval": [int(len(np.atleast_1d(c))) for c in counts],
             "realised": bool(realise_law),
-            "spanwise_cells": int(sum(len(np.atleast_1d(c)) for c in counts))
-            if realise_law else len(xsecs) - 1,
+            "spanwise_cells": int(span_cells) if span_cells is not None else native_span_cells,
+            "requested_span_cells": int(span_cells) if span_cells is not None else None,
+            "realized_span_cells": int(span_cells) if span_cells is not None else native_span_cells,
             "native_stations": len(xsecs),
         },
         "source": "Openblademesh (Heider 2023) §3.1.4, followed faithfully",

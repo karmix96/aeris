@@ -1,0 +1,22 @@
+{
+  "schema": "aeris.s6.m2_proven_route_family.v1",
+  "experiment_id": "m2_proven_route_family_20260830",
+  "route": "S1_valid_volume_to_S6_exact_wall_bounded_deformation",
+  "development_set_only": true,
+  "holdout_touched": false,
+  "direct_march_route": "rejected_by_existing_terminal_report",
+  "production_floor_min_scaled_quality": 0.1,
+  "nominal_geometry": "A",
+  "nominal_geometry_index": 83,
+  "resolution_results": [
+    {"level":"C01","dimensions":"17x43x61","cells":191520,"inverted_cells":0,"min_scaled_quality":0.1529220982555563,"hard_gate_passed":true,"production_floor_passed":true,"output_sha256":"28d462be5936b68bde1f786e9c7bcdfb4d3c10bc2d8d9de630a2f47c2657e97d"},
+    {"level":"C02","dimensions":"23x57x73","cells":429120,"inverted_cells":0,"min_scaled_quality":0.1570641350775617,"hard_gate_passed":true,"production_floor_passed":true,"output_sha256":"3bd632221000d02e0bba1a26793577041f7a72e682bde04f47801e0c4f09740b"},
+    {"level":"C03","dimensions":"29x75x97","cells":966144,"inverted_cells":4,"min_scaled_quality":-0.2468323061322934,"hard_gate_passed":false,"production_floor_passed":false,"output_sha256":"590e1b85a62446beff5052f16e86bfa23d1db558b1b76f8c563062946aa57534"}
+  ],
+  "independent_geometry_results": [
+    {"geometry":"B","index":7,"level":"C02","cells":429120,"inverted_cells":0,"min_scaled_quality":0.1753939247131178,"hard_gate_passed":true,"output_sha256":"d39051bb4086b3cf71c9aa0455e3acacc42111d5ba0ee462b8c0c1b2d16cd030"},
+    {"geometry":"C","index":85,"level":"C02","cells":429120,"inverted_cells":0,"min_scaled_quality":0.1545354273901248,"hard_gate_passed":true,"output_sha256":"ce46bed1b076b78cb48b9ef05eed536bc54d7a46b1fe7e987d2a089e68fb4029"},
+    {"geometry":"E","index":47,"level":"C02","cells":429120,"inverted_cells":0,"min_scaled_quality":0.16388312347099757,"hard_gate_passed":true,"output_sha256":"33d251b8326d08b976e1bced8cb9b8f108611da3e01a9d23a4a6bcdb1fc342b7"}
+  ],
+  "verdict": "C02_production_family_pass; C03_finest_diagnostic_no_go; CFD_canary_remains_blocked"
+}

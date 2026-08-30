@@ -167,11 +167,24 @@ def half_domain(dry: bool) -> int:
     return result("check-half-domain", status, details=details, dry_run=dry)
 
 
+def identity_audit(dry: bool) -> int:
+    source = REPO / "AERIS_MESH_STUDY/04_strategy_studies/shared/geometry_sets.py"
+    text = source.read_text(encoding="utf-8") if source.exists() else ""
+    stable = 'return f"{set_name}_{index:03d}"' in text
+    examples = {"baseline_0": "baseline_000", "lhs100_seed42_29": "lhs100_seed42_029"}
+    details = {"source": str(source), "source_sha256": sha256(source) if source.exists() else None,
+               "stable_format_detected": stable, "examples": examples,
+               "mesh_resolution_in_key_required": True, "cache_invalidation_proven": False}
+    status = "DRY_RUN" if dry and stable else ("CONDITIONAL" if stable else "FAIL")
+    return result("test-identity", status, details=details, dry_run=dry)
+
+
 def dispatch(command: str, dry: bool) -> int:
     if command == "audit-contract": return audit_contract(dry)
     if command == "audit-geometry-space": return audit_geometry(dry)
     if command == "check-holdout-lock": return holdout_lock(dry)
     if command == "check-half-domain": return half_domain(dry)
+    if command == "test-identity": return identity_audit(dry)
     if command in HEAVY:
         return result(command, "DRY_RUN" if dry else "BLOCKED",
                       details={"reason": "M0-M2 gates and measured campaign forecast incomplete"}, dry_run=dry)

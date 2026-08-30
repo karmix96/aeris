@@ -41,3 +41,10 @@ def test_half_domain_contract():
     assert out.returncode == 0
     assert '"state_zero_and_symmetric": true' in out.stdout
     assert '"force_reconstruction_required": true' in out.stdout
+
+
+def test_identity_format_is_stable_but_resolution_proof_pending():
+    out = invoke("test-identity")
+    assert out.returncode == 0
+    assert '"stable_format_detected": true' in out.stdout
+    assert '"cache_invalidation_proven": false' in out.stdout

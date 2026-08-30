@@ -1,0 +1,20 @@
+{
+  "command": "test-identity",
+  "created_at": "2026-08-30T12:29:47.490587+00:00",
+  "details": {
+    "cache_invalidation_proven": false,
+    "examples": {
+      "baseline_0": "baseline_000",
+      "lhs100_seed42_29": "lhs100_seed42_029"
+    },
+    "mesh_resolution_in_key_required": true,
+    "source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/shared/geometry_sets.py",
+    "source_sha256": "b27f51f5666976139240812b61988a891c9e89e524db9c7b7e06f90754ab5c83",
+    "stable_format_detected": true
+  },
+  "dry_run": false,
+  "git_head": "cdf5641bf96ea8ddc451fa9f928b948872bef136",
+  "repo": "/home/mike_kara/aeris",
+  "schema_version": 1,
+  "status": "CONDITIONAL"
+}

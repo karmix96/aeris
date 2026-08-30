@@ -1,0 +1,9 @@
+schema_version: aeris.s6.experiment_manifest.v1
+study: S6 automated CFD qualification
+status: M0_IMPLEMENTATION
+authority:
+  geometry_snapshot: AERIS_MESH_STUDY/00_governance/design_space_snapshot.yaml
+  operating_points: AERIS_MESH_STUDY/00_governance/operating_points.yaml
+  mission_authority: absent_provisional
+resource_policy: host/m1_20260830/desktop_resource_policy_v1.yaml
+holdout_locked: true

@@ -1,0 +1,12 @@
+{
+  "command": "run-canary",
+  "created_at": "2026-08-30T10:21:37.869623+00:00",
+  "details": {
+    "reason": "M0-M2 gates and measured campaign forecast incomplete"
+  },
+  "dry_run": false,
+  "git_head": "56fd14ae3a5c4079b5dd3732e536a1d1bbde3c7b",
+  "repo": "/home/mike_kara/aeris",
+  "schema_version": 1,
+  "status": "BLOCKED"
+}

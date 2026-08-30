@@ -25,18 +25,18 @@ Then say: `Continue M-1 from the durable checkpoint; do not launch CFD.`
 
 ## Current work order
 
-The master guide is the controlling work order. M-1 is active. No CFD or heavy
-mesh process has been launched.
+The master guide is the controlling work order. M−1 is verified and M0
+implementation is active. No CFD or heavy mesh process has been launched.
 
 Completed read-only findings:
 
 - Physical RAM: 17,033,293,824 bytes (15.86 GiB).
 - CPU: Intel Core i5-10400, 6 physical cores, 12 logical processors.
 - WSL: version 2.7.11.0; Ubuntu 24.04.3 LTS; WSL2.
-- Current WSL memory: 8,059,528 KiB (7.69 GiB).
+- Effective WSL memory: 13,279,876 KiB (12.66 GiB); swap 8 GiB.
 - Current WSL swap: 2,097,152 KiB (2 GiB).
 - Linux root: ext4, 1 TiB advertised, about 944 GiB available.
-- Ubuntu VHD physical file: 39,155,924,992 bytes (36.47 GiB), on C:.
+- Ubuntu VHD physical file: 39,155,924,992 bytes (36.47 GiB), relocated to D:\\WSL\\Ubuntu.
 - C: SSD free: 35,761,373,184 bytes (33.30 GiB).
 - D: HDD free: 612,930,969,600 bytes (570.84 GiB).
 - Repository: `/home/mike_kara/aeris`, Linux-native, commit
@@ -65,7 +65,9 @@ Approved engineering decision:
 1. Commit/push the governed M-1 files without staging pre-existing user changes
    or the ignored 1 GiB benchmark payload.
 2. Continue M0/M1 implementation and tests; do not launch mesh/CFD work.
-3. Measure real written-mesh and complete-canary footprints before completing
+3. Retry the independent Claude M0/M1 review when its authentication/session
+   transport is available.
+4. Measure real written-mesh and complete-canary footprints before completing
    the campaign storage forecast or lifting the heavy-work block.
 
 The Windows file `C:\Users\mike\.wslconfig` was atomically created and verified

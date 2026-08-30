@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "tool": "claude",
+  "version": "2.1.241",
+  "model_requested": "opus",
+  "status": "transport_timeout_no_report",
+  "started_at_local": "2026-08-30",
+  "prompt_scope": "M0/M1 scaffold only; no holdout contents, edits, mesh, or CFD",
+  "review_text_path": "reviews/claude_m0_m1_review.txt",
+  "action": "retry after Claude authentication/session transport is available"
+}

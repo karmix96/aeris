@@ -1,0 +1,5 @@
+schema_version: aeris.s6.geometry_design_space_phase1.v1
+status: proposed_semantic_snapshot_not_frozen
+source: AERIS_MESH_STUDY/00_governance/design_space_snapshot.yaml
+source_sha256: 3681df2645a47e0c4bf182cf64b3d6b9317fb5fde406c1103ea74e71491b0b6d
+note: Provenance stub pending parser-derived semantic diff during M1. Never overwrite live geometry config.

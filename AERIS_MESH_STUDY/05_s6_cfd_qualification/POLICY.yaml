@@ -1,0 +1,14 @@
+schema_version: aeris.s6.qualification.policy.v1
+deletion_policy: explicit_human_approval_only
+qualification_state: conditional_go_m0_m1_only
+heavy_work:
+  blocked: true
+  reason: M0-M2 contract, measured mesh/canary footprints, and campaign forecast are incomplete
+holdout:
+  id: round_c_lhs10_seed42
+  locked: true
+  unlock_requires: valid_freeze_manifest_and_m8_gate
+execution:
+  immutable_records: true
+  atomic_outputs: true
+  retain_large_artifact_hashes_only: true

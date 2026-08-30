@@ -1,0 +1,3 @@
+Claude Code 2.1.241 was invoked in read-only plan mode for the M0/M1 scope,
+but the non-interactive transport timed out before producing review text.
+See claude_m0_m1_review_attempt.json. This is not an independent review.

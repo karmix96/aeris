@@ -42,6 +42,34 @@ Updated: 2026-08-30
   probe passed with zero inversions and `qmin >= 0.1091`. C03 is governed at
   `6.1e-6` using the repaired tip-cap template. Independent review remains
   required before CFD (`reports/m2_c01_ladder_probe_20260830.json`).
+- Independent review of that policy (`ab5e83e`, `8ffa83f`) is now on record:
+  `reviews/claude_m2_spacing_policy_review_20260830.json`. The probe itself
+  reproduces exactly - A/B/C/E at `5.0e-6` give zero inversions and
+  `qmin` 0.1091..0.1497, every recorded hash matches - and the repaired C03
+  mesh for geometry A reproduces at `qmin=+0.1267` with an exact wall. The
+  review is **not** a GO: it returns two HIGH findings.
+- **R1 (HIGH)**: the non-monotone fraction policy does *not* produce physically
+  ordered wall spacing. On the five OML blocks the realized first-cell median
+  is C01 `6.47e-6..7.29e-6` m, C02 `6.38e-6..8.04e-6` m, C03
+  `8.37e-6..1.08e-5` m, so C03 is 1.3-1.5x **coarser** at the aerodynamic wall
+  than C01, not finer. The whole-mesh percentile that suggested otherwise is
+  dominated by the tip-cap blocks, where realized spacing is 24-48x the nominal
+  `s0`. The characteristic length is identical at every level, so nominal
+  spacing is strictly C02 `6.177e-6` < C01 `6.571e-6` < C03 `8.016e-6` m.
+- **R2 (HIGH)**: `resolution.py` and `src/aeris/cfd/meshing/pyhyp_options.py`
+  `GRID_LEVELS` now disagree (`c01` 5.0e-6 vs 6.1e-6, `c03` 6.1e-6 vs 3.6e-6,
+  `production` 3.6e-6 vs 4.4e-6). `build_pyhyp_options` falls back to
+  `GRID_LEVELS` whenever a caller omits `s0_fraction_override`, which
+  `march_s1.prepare` does, so an S1-entry march silently uses `3.6e-6` at C03 -
+  the configuration proven to fold.
+- **R3 (MEDIUM)**: repaired C03 is screened on geometry A only; B/C/E have not
+  been marched or deformed at C03.
+- Adding normal layers is not an alternative C03 repair: at `3.6e-6` on the C03
+  surface the fold deepens monotonically (N=73 `-0.2192`, N=97 `-0.2448`,
+  N=129 `-0.3350` with 7 inversions, N=257 `-0.5290` with 15). The
+  production-configuration recovery mesh marches the same geometry at `3.6e-6`
+  with 257 layers cleanly (`qmin=0.2383`), so the ceiling belongs to the C03
+  candidate cap surface, not to the fraction itself.
 - C02 family evidence: **independently reproduced**. All six recorded
   `output_sha256` values match the on-disk artifacts, and an independent ADF
   reopen plus repository volume QC reproduces every inverted-cell count,
@@ -97,6 +125,7 @@ Updated: 2026-08-30
 - `reports/s6_recovery_deformation_20260830.json`
 - `reports/m2_proven_route_family_20260830.json`
 - `reports/m2_c03_tipcap_diagnosis_20260830.json`
+- `reviews/claude_m2_spacing_policy_review_20260830.json`
 - `studies/grid/m2_20260830/` (local run records; large CGNS files remain
   ignored and must not be committed)
 

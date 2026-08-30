@@ -59,6 +59,17 @@ Linux-native repository. Read these files first, in order:
   The C01 probe passes A/B/C/E (`qmin >= 0.1091`, zero inversions). Review
   this non-monotone fraction/physical-spacing rationale before CFD; do not run
   CFD yet.
+- That review is done and is NOT a GO
+  (`reviews/claude_m2_spacing_policy_review_20260830.json`). The probe numbers
+  and the repaired C03 mesh reproduce exactly, but the non-monotone rationale
+  fails on the aerodynamic wall: realized OML first-cell spacing is coarser at
+  C03 than at C01 (medians `8.37e-6..1.08e-5` m against `6.47e-6..7.29e-6` m);
+  only the tip-cap blocks get finer. Two HIGH findings are open - R1 (ladder
+  coarsens the wall as it refines the grid) and R2 (`GRID_LEVELS` in
+  `src/aeris/cfd/meshing/pyhyp_options.py` still holds the retired fractions
+  and is the silent fallback for callers that omit `s0_fraction_override`,
+  including `march_s1.prepare`). R3 records that repaired C03 has geometry A
+  only. Close R1-R3 and compute realized y+ before any canary.
 - CFD canary remains blocked pending independent review and a governed decision
   on whether C02 is the production resolution or C03 is repaired.
 - Three authenticated Claude Code review attempts timed out with zero model

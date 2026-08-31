@@ -318,7 +318,47 @@ and a geometry build were running and read 6.35 s per iteration against the clea
 8.50 — a 25 per cent error, in the direction that would have made 4 ranks look
 better than it is.
 
-### M1B — The confirmation runs
+### M1B — The confirmation runs — **LAUNCHED 2026-08-31 21:05**
+
+`G_nk_cfl` is running on the laptop, detached (own session, survives a closed
+terminal), at **one rank** on the index-0 coarse half mesh:
+
+    --variants G_nk_cfl --ranks 1 --iterations 8000 --stop-residual -10.0
+    --output <lead_work>/nk_coarse_confirm
+
+Two deliberate deviations from the numbers written above, both documented rather
+than silent:
+
+- **8 000 iterations, not 6 000.** The coarse requirement is -9.6643, and the
+  only comparable datum is 5 872 iterations to reach -9.5 at smoke resolution
+  with 36× fewer cells. A 6 000 budget was likely to end "still descending",
+  which costs a night and settles nothing. At 4.60 s/iteration this is ~10.2 h.
+- **Solver stop at -10.0, the shipped policy value**, rather than the -12.0 the
+  tuning default uses. -10.0 sits below the -9.6643 the gate needs, so the run
+  stops as soon as it has demonstrably passed instead of grinding on.
+
+Verified at launch: `NEWTON_KRYLOV= YES`, `CFL_NUMBER= 25.0`,
+`CONV_RESIDUAL_MINVAL= -10.0`, `ITER= 8000`, `REF_AREA= 0.4805` (correctly halved
+for the half mesh), `MARKER_SYM= ( symmetry )`, and an initial residual of
+-3.664311635 exactly matching the probes.
+
+Check progress any time, without touching the run:
+
+```bash
+AERIS_MESH_STUDY/04_strategy_studies/S7_unstructured_gmsh_su2/m1b_progress.sh
+```
+
+It reports orders dropped against the requirement derived from the run's own
+initial residual, and distinguishes "still descending" from "turned around" by
+how long ago the minimum was — the signal that separated the two classes in the
+laptop matrix, where every passing variant hit its minimum at iteration 5999 of
+6000 and every failing one peaked between 927 and 3604 and climbed back.
+
+To stop it: `pkill -f "solver_tuning.py.*nk_coarse_confirm"`. The attempt
+directory then holds no `result.json`, and the tool will refuse to reuse it —
+investigate it or point at a new output root.
+
+### M1B — the original instructions
 
 One variant at a time, each to its own output root. Sequential is the default at
 this cell count and should not be overridden.

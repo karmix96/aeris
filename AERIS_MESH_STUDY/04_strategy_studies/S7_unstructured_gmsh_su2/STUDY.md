@@ -170,6 +170,42 @@ Three SU2 8.5.0 behaviours are established here by byte comparison, not inferenc
 This matrix ran at 42 745 cells on a laptop.  It selects a solver configuration.
 It does **not** establish convergence at production resolution.
 
+### Coarse resolution: cost measured, and the gate found unsatisfiable again
+
+Two bounded probes of the shortlisted `G_nk_cfl` on the index-0 `coarse` half mesh
+(1 549 111 cells, two MPI ranks, 5 and 25 iterations, wall 65 s and 174 s) settle
+two things the confirmation budget depends on.
+
+**Cost.**  Differencing the two separates startup from iteration:
+
+| quantity | measured |
+|---|---|
+| per iteration, 2 ranks | 5.45 s |
+| startup: mesh read, partition, preprocessing | 37.8 s |
+| 6 000 iterations, 2 ranks | 9.1 h per variant |
+
+Memory follows ranks x cells, because each rank reads the whole mesh before
+partitioning: **1.20 GiB per rank per million cells**, so 1.86 GiB per rank here.
+That reproduces the recorded OOM exactly - eight ranks at 2.5 M cells needs 24 GiB
+against a 16 GiB machine - and four ranks at coarse, 7.44 GiB, is what fits the
+desktop budget.
+
+**And the residual gate was unsatisfiable at this resolution.**  Every
+`laptop_smoke` history starts between -2.576 and -2.687, so the policy's assumed
+worst initial residual of -3.0 and its derived solver stop of -9.0 were safe
+there.  The coarse mesh starts at **-3.6643**, identically on both probes, and a
+run starting there must reach -9.6643 to drop six orders.  A solver stopping at
+-9.0 halts having dropped 5.336 and is rejected on `insufficient_residual_drop`,
+which is indistinguishable from a solver that failed to converge.
+
+This is defect 10 recurring one resolution level up, from the same cause.  It is
+recorded as defect 11 below.  Neither acceptance threshold changed.
+
+The cost consequence is real: at smoke the fastest passing variant needed 5 872
+iterations to reach -9.5, and coarse asks -9.6643 with 36 times the cells.  A
+6 000-iteration confirmation may land short.  That is a measurement to make, not a
+threshold to lower.
+
 ## Half domain versus mirrored, measured
 
 S6 meshes y >= 0 and S7 mirrored the whole wing, so the two were solving different
@@ -279,9 +315,26 @@ criteria.
    `insufficient_residual_drop` alone, and the same truncation caused
    `B_newton_krylov`'s only force-tail failure (CMy 1.094e-3; the same
    configuration run deeper reaches 2.9e-6).  The stop is now a separate policy
-   key, `solver_stop_residual_log10: -9.0`, checked fail-closed against
+   key, `solver_stop_residual_log10`, checked fail-closed against
    `min(residual_log10_final_max, assumed_worst_initial - drop_min)` on every
-   config emission.  **Neither acceptance threshold changed.**
+   config emission.  It was set to -9.0 here; defect 11 supersedes that value.
+   **Neither acceptance threshold changed.**
+
+11. **The repaired stop was itself calibrated at the wrong resolution.**  The
+   assumption behind it, `assumed_worst_initial_residual_log10: -3.0`, bounded
+   every `laptop_smoke` initial residual (-2.576 to -2.687) and none at coarse
+   (-3.6643).  The stop of -9.0 that followed truncates a coarse run at 5.336
+   orders against a gate asking 6.0.  The assumption is now set from the
+   measurement (-4.0) and the stop follows (-10.0) - but raising a constant would
+   only move the defect to the next resolution, so `residual_gate` now derives the
+   required final residual **from each run's own initial** and reports
+   `solver_stop_truncates_drop_gate` when the stop sits above it.  The gate names
+   a truncated setup instead of blaming the solver.  The reason provably cannot
+   fire on a run that would otherwise pass - such a run descended past
+   `initial - 6.0` without stopping, so the stop is at or below it - and a test
+   asserts that on all three measured initial residuals.  Verified on the real
+   coarse history: the reason fires under the old stop and clears under the new.
+   **Neither acceptance threshold changed.**
 
 ## Refuted hypotheses, recorded so they are not retried
 
@@ -313,7 +366,14 @@ criteria.
 
 - No converged CFD solution exists **at production resolution**.  Four solver
   configurations pass both frozen gates at 42 745 cells; the coarse level is 1.55 M
-  and the matrix must be repeated there before any convergence claim.
+  and the matrix must be repeated there before any convergence claim.  The coarse
+  chain is now measured to start, run and parse - `G_nk_cfl` exits 0 on two ranks
+  and its history reads back - but 25 iterations is a start-check, not a result.
+- **How many iterations coarse convergence needs is unmeasured.**  The requirement
+  is now known to be -9.6643 rather than smoke's -8.687, and the only comparable
+  datum is 5 872 iterations to -9.5 at smoke.
+- The 4-rank speedup is **assumed at 1.8x** in the wall-time budget; only the
+  2-rank cost is measured.
 - The selected configuration is not yet wired into `POLICY.yaml`'s
   `su2.numerical_method`; the matrix chose it, the policy does not yet carry it.
 - No production-resolution volume mesh beyond five designs.

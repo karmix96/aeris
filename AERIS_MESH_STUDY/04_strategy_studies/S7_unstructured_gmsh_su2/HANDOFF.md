@@ -1,7 +1,9 @@
 # S7 reload and handoff
 
-Snapshot: 2026-08-22.  Status: `preregistered_development_no_results`; meshing
-works across the development set, no CFD result is accepted.
+Snapshot: 2026-08-31.  Status: `preregistered_development_no_results`; meshing
+works across the development set, no CFD result is accepted.  The solver
+configuration is selected at 42 745 cells and unconfirmed at production
+resolution; that confirmation is the next job.
 
 ## Reload order
 
@@ -18,7 +20,7 @@ mesh, solve, inspect or add a bypass for it.
 
 ## Verified local state
 
-- `pytest -q <S7 directory>`: 26 passed, about 12 s.
+- `pytest -q <S7 directory>`: 51 passed, about 11 s.
 - `ruff check <S7 directory>`: clean.
 - Python 3.13.9, Gmsh 4.15.2, NumPy 2.5.1, SciPy 1.18.0, pyGeo 1.17.0,
   pyspline 1.5.4.
@@ -51,11 +53,25 @@ mesh, solve, inspect or add a bypass for it.
 
 ## Next safe actions
 
-1. Confirm multigrid over a longer run, then amend ADR-0017 with the measurements
-   if it reaches the residual gate.
+1. Confirm **Newton-Krylov** at coarse resolution - not multigrid, which is
+   refuted and is bypassed entirely under `NEWTON_KRYLOV`.  The commands, the
+   shortlist and the stop/go gates are M1 of
+   `../../AERIS_S7_UNSTRUCTURED_CFD_MASTER_EXECUTION_GUIDE.md`.  Then amend
+   ADR-0017 with the coarse measurements and adopt the winner into
+   `su2.numerical_method`.
 2. Run the remaining 95 coarse meshes on the desktop using `RUNBOOK.md`.
-3. Attempt a converged coarse CFD case; budget about 3 GB of RAM per MPI rank.
+3. Record which tip caps took the ladder fallback - one instrumentation field,
+   and the blocker on the fixed-topology exploit.
 4. Obtain the independent Claude Opus/max review.
+
+Two things to know before budgeting any coarse solve.  **Memory is 1.20 GiB per
+rank per million cells**, because each rank reads the whole mesh before
+partitioning; four ranks at coarse is 7.44 GiB and eight is the recorded OOM.
+`solver_tuning.py` computes and enforces this.  **The coarse mesh starts at a
+density residual of -3.6643**, not smoke's -2.576 to -2.687, so it must reach
+-9.6643 to drop six orders; the solver stop is -10.0 for that reason and
+`residual_gate` reports `solver_stop_truncates_drop_gate` if a future resolution
+starts lower still.
 
 Never touch the hold-out until a superseding decision records that the
 development programme, pilots, y+, grid studies, recovery, schemas and

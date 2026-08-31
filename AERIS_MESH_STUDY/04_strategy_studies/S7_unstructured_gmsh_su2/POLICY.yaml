@@ -489,21 +489,31 @@ su2:
     #   stop <= min(residual_log10_final_max,
     #               assumed_worst_initial_residual_log10 - residual_drop_orders_min)
     # The demanding case is the MOST negative initial residual, because the drop
-    # is initial - final: a run starting lower has less room above the bar.  The
-    # most negative initial measured over 18 histories is -2.687, which requires a
-    # final of -8.687.  The assumed bound below is -3.0, giving a required stop of
-    # -9.0; a design starting below -3.0 fails closed on
-    # insufficient_residual_drop, which is correct and no longer a certainty.
+    # is initial - final: a run starting lower has less room above the bar.
     #
-    # Measured cost on the fastest passing variant, iterations to reach each level:
-    # -8.0 at 447, -8.6 at 580, -9.0 at 1310, -9.5 at 5872.  Neither acceptance
-    # threshold above is changed by this key.  See the 2026-08-25 residual-gate
-    # amendment in ADR-0017.
-    solver_stop_residual_log10: -9.0
-    # Measured free-stream initial residuals span -2.576 to -2.687 over every S7
-    # history.  This bound is deliberately below the measured span; it is an
-    # assumption the guard enforces, not a measurement.
-    assumed_worst_initial_residual_log10: -3.0
+    # 2026-08-31: the assumption above was falsified by resolution.  Every smoke
+    # history starts between -2.576 and -2.687, so a bound of -3.0 and a stop of
+    # -9.0 were safe there.  The COARSE mesh starts at -3.6643, measured on two
+    # independent index-0 runs, which demands a final of -9.6643; a solver
+    # stopping at -9.0 halts having dropped 5.336 orders against a gate asking
+    # 6.0.  That is defect 10 recurring one resolution level up, from the same
+    # cause: a stop derived from an assumption the physics did not honour.  The
+    # bound is now set from the measurement rather than below the smoke span, and
+    # the stop follows it.  Neither acceptance threshold above is changed.
+    #
+    # Measured cost on the fastest passing variant at smoke resolution, iterations
+    # to reach each level: -8.0 at 447, -8.6 at 580, -9.0 at 1310, -9.5 at 5872.
+    # The coarse requirement of -9.6643 therefore sits beyond a 6 000-iteration
+    # budget on that curve, and the coarse confirmation is budgeted accordingly.
+    # See the 2026-08-25 and 2026-08-31 residual-gate amendments in ADR-0017.
+    solver_stop_residual_log10: -10.0
+    # Measured free-stream initial residuals: -2.576 to -2.687 at laptop_smoke
+    # over 18 histories, and -3.6643 at coarse.  The bound is set below the
+    # worst MEASURED value with 0.34 of margin.  It remains an assumption, and
+    # `su2_pipeline.residual_gate` now checks each run's own initial residual
+    # against the stop rather than trusting this key, so a design starting below
+    # it is reported as a truncated setup instead of a failed solve.
+    assumed_worst_initial_residual_log10: -4.0
     force_tail_rows: 200
     force_tail_relative_range_max:
       CL: 1.0e-3

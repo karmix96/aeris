@@ -149,7 +149,18 @@ def test_resume_reloads_a_result_and_refuses_a_partial_attempt(tmp_path: Path) -
     done = root / "G_nk_cfl"
     done.mkdir(parents=True)
     (done / "result.json").write_text(
-        json.dumps({"variant": "G_nk_cfl", "exit": 0, "rms_final": -9.5}), encoding="utf-8"
+        json.dumps(
+            {
+                "variant": "G_nk_cfl",
+                "exit": 0,
+                "rms_final": -9.5,
+                "iterations": 10,
+                "iterations_requested": 10,
+                "completed_requested_iterations": True,
+                "stopped_at_solver_stop": False,
+            }
+        ),
+        encoding="utf-8",
     )
     case = {"mesh": "/m.su2", "cells": 10, "area_ref": 1.0, "chord_ref": 0.5}
     # Reloaded without touching the solver: at coarse a re-run costs hours and
@@ -160,3 +171,74 @@ def test_resume_reloads_a_result_and_refuses_a_partial_attempt(tmp_path: Path) -
     (root / "I_combined").mkdir()
     with pytest.raises(SystemExit, match="interrupted part way"):
         tuning.run_variant("I_combined", root, case, 10, 60, -12.0, 1)
+
+
+def test_a_killed_run_is_not_resumed_as_a_result(tmp_path: Path) -> None:
+    """Exit 0 is not evidence the run did what it was asked.
+
+    SU2 handles SIGTERM and exits cleanly, so a terminated run writes exit 0 with
+    a partial history.  Measured: G_nk_cfl killed at iteration 1853 of 8000
+    recorded exit 0 and nothing marking it short.  Resuming from that would adopt
+    a partial run as an answer.
+    """
+    root = tmp_path / "runs"
+    directory = root / "G_nk_cfl"
+    directory.mkdir(parents=True)
+    (directory / "result.json").write_text(
+        json.dumps(
+            {
+                "variant": "G_nk_cfl",
+                "exit": 0,
+                "iterations": 1853,
+                "iterations_requested": 8000,
+                "rms_final": -4.06,
+                "solver_stop_residual": -10.0,
+                "completed_requested_iterations": False,
+                "stopped_at_solver_stop": False,
+                "truncated": True,
+                "error": "truncated: 1853 of 8000 iterations",
+            }
+        ),
+        encoding="utf-8",
+    )
+    case = {"mesh": "/m.su2", "cells": 10, "area_ref": 1.0, "chord_ref": 0.5}
+    with pytest.raises(SystemExit, match="incomplete run"):
+        tuning.run_variant("G_nk_cfl", root, case, 8000, 60, -10.0, 1)
+
+
+def test_a_record_predating_completeness_tracking_is_refused(tmp_path: Path) -> None:
+    """Fail closed rather than assume an old record finished."""
+    root = tmp_path / "runs"
+    directory = root / "G_nk_cfl"
+    directory.mkdir(parents=True)
+    (directory / "result.json").write_text(
+        json.dumps({"variant": "G_nk_cfl", "exit": 0, "iterations": 1853}),
+        encoding="utf-8",
+    )
+    case = {"mesh": "/m.su2", "cells": 10, "area_ref": 1.0, "chord_ref": 0.5}
+    with pytest.raises(SystemExit, match="predates completeness tracking"):
+        tuning.run_variant("G_nk_cfl", root, case, 8000, 60, -10.0, 1)
+
+
+def test_an_early_stop_at_the_solver_stop_is_a_real_result(tmp_path: Path) -> None:
+    """Stopping short for the declared reason is completion, not truncation."""
+    root = tmp_path / "runs"
+    directory = root / "G_nk_cfl"
+    directory.mkdir(parents=True)
+    (directory / "result.json").write_text(
+        json.dumps(
+            {
+                "variant": "G_nk_cfl",
+                "exit": 0,
+                "iterations": 1200,
+                "iterations_requested": 8000,
+                "rms_final": -10.4,
+                "completed_requested_iterations": False,
+                "stopped_at_solver_stop": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    case = {"mesh": "/m.su2", "cells": 10, "area_ref": 1.0, "chord_ref": 0.5}
+    report = tuning.run_variant("G_nk_cfl", root, case, 8000, 60, -10.0, 1)
+    assert report["reused"] is True

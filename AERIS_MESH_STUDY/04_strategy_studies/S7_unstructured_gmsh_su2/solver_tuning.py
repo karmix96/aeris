@@ -395,6 +395,25 @@ def run_variant(
         # reloaded, never re-run: at coarse resolution re-running it silently
         # costs hours and produces the same numbers.
         report = json.loads(result_path.read_text(encoding="utf-8"))
+        # But only a COMPLETE result is evidence.  Fail closed on anything that
+        # did not finish, and on any record written before completeness was
+        # tracked, rather than silently adopting a partial run as an answer.
+        if report.get("error") or report.get("truncated"):
+            raise SystemExit(
+                f"{result_path} records an incomplete run "
+                f"({report.get('error', 'truncated')}).  It is evidence to read, "
+                "not a result to resume from; use a new output root."
+            )
+        if "completed_requested_iterations" not in report:
+            raise SystemExit(
+                f"{result_path} predates completeness tracking, so whether it "
+                "finished cannot be established from it.  Inspect it and use a "
+                "new output root."
+            )
+        if not report["completed_requested_iterations"] and not report.get(
+            "stopped_at_solver_stop"
+        ):
+            raise SystemExit(f"{result_path} records a run that stopped short.")
         report["reused"] = True
         print(json.dumps(report), flush=True)
         return report
@@ -446,6 +465,8 @@ def run_variant(
         "wall_s": round(time.time() - started),
         "ranks": int(ranks),
         "cells": int(case.get("cells", 0)) or None,
+        "iterations_requested": int(iterations),
+        "solver_stop_residual": float(stop_residual),
         "command": command,
     }
     report.update(_history(directory))
@@ -454,6 +475,24 @@ def run_variant(
     if code == -9:
         report["error"] = report.get("error", "timed out")
         report["timed_out"] = True
+    # Exit code 0 is NOT evidence that the run finished what it was asked to do.
+    # SU2 handles SIGTERM and exits cleanly, so a killed run reports exit 0 with
+    # a partial history -- measured: G_nk_cfl terminated at iteration 1853 of
+    # 8000 wrote exit 0 and nothing marking it short.  A run is complete only if
+    # it did the iterations asked of it, or stopped early for the declared
+    # reason of reaching the solver stop.
+    achieved = int(report.get("iterations") or 0)
+    reached_stop = (
+        report.get("rms_final") is not None
+        and float(report["rms_final"]) <= float(stop_residual)
+    )
+    report["stopped_at_solver_stop"] = bool(reached_stop)
+    report["completed_requested_iterations"] = achieved >= int(iterations)
+    if not report["completed_requested_iterations"] and not reached_stop:
+        report["truncated"] = True
+        report["error"] = report.get(
+            "error", f"truncated: {achieved} of {iterations} iterations"
+        )
     result_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(json.dumps(report), flush=True)
     return report

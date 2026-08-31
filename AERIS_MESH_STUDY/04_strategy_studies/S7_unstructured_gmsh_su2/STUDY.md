@@ -448,6 +448,50 @@ criteria.
    coarse history: the reason fires under the old stop and clears under the new.
    **Neither acceptance threshold changed.**
 
+### G_nk_cfl at coarse: stalls at 2.21 orders, then destabilises
+
+The first coarse confirmation, one rank, 1 549 111 cells, stopped by hand at
+iteration 1853 of 8000 once the outcome was settled:
+
+| phase | iterations | behaviour |
+|---|---|---|
+| descent | 0 - 719 | smooth, monotone, to **-5.8709** |
+| plateau | 719 - 1000 | stable between -5.82 and -5.84 |
+| destabilisation | ~1000 | jumps up 1.8 orders |
+| oscillation | 1000 - 1853 | between about -4.0 and -5.6, envelope not recovering |
+
+Its best was a drop of **2.207 orders against the 6.0 the gate asks**, so it was
+never close; the destabilisation only ended a run that had already stalled.
+
+The oscillation band, roughly -4.0 to -5.6, is the same band the unaccelerated
+baseline occupied at smoke resolution (-3.2 to -5.2).  **The configuration
+selected at 42 745 cells does not reproduce that behaviour at 1.55 M.**
+
+The suspected mechanism is its own accelerator: `G_nk_cfl` carries
+`CFL_NUMBER 25` with `CFL_ADAPT_PARAM` ramping to 1000, and the ramp continues
+while the residual falls.  Once the residual plateaued the CFL kept climbing past
+stability.  This is the failure the shortlist anticipated, which is why
+`F_nk_linear` - Newton-Krylov and ILU/25 at the frozen CFL of 10, capped at 100 -
+was listed as the fallback "if the high CFL destabilises at production
+resolution".  It is running now.  `I_combined` carries the same CFL 25 and would
+be expected to fail the same way.
+
+### Defect 12: exit code 0 does not mean a run finished
+
+Terminating `G_nk_cfl` exposed this.  SU2 handles `SIGTERM` and exits **cleanly**,
+so a run killed at iteration 1853 of a requested 8000 wrote `"exit": 0` and
+carried nothing marking it short.  The resume path reloads any directory holding
+a `result.json`, so a killed run would have been adopted as a completed result -
+and at coarse resolution nobody re-runs a variant that already "has" a result.
+
+Attempt records now carry `iterations_requested`, `completed_requested_iterations`
+and `stopped_at_solver_stop`, and a run counts as complete only if it did the
+iterations asked of it or stopped early for the one declared reason, reaching the
+solver stop.  Resume fails closed on an incomplete record, and also on any record
+written before this tracking existed, since whether those finished cannot be
+established from them.  Three tests cover it, including that a legitimate early
+stop at the solver stop still counts as a result.
+
 ## Refuted hypotheses, recorded so they are not retried
 
 - **A boundary-layer thickness limit tied to the trailing-edge opening.**  Measured
@@ -473,6 +517,10 @@ criteria.
 - **A stronger linear solve or a higher CFL as the fix.**  Neither clears 3.02
   orders without Newton-Krylov, and combining them (`H`) is worse than either
   alone.
+- **`G_nk_cfl` as the production configuration.**  It passed both gates at
+  42 745 cells and agreed with three other variants to 5e-7, then stalled at 2.21
+  orders and destabilised at 1.55 M.  A solver configuration selected on a laptop
+  mesh is a hypothesis about production, not a result at it.
 
 ## Not established
 

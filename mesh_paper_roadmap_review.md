@@ -395,3 +395,138 @@ Sources for everything else: `AERIS_MESH_AGENT/results/exp01–exp04`,
 `AERIS_MESH_STUDY/AERIS_S6_AUTOMATED_CFD_MASTER_EXECUTION_GUIDE.md` (lines 34–44,
 259–271), `AERIS_MESH_STUDY/AERIS_S7_UNSTRUCTURED_CFD_MASTER_EXECUTION_GUIDE.md`
 (lines 215–250), and `free -g` / `nproc` on the host.
+
+---
+
+# Addendum — Luminary's "what physics AI sees", and what it changes
+
+**Source:** <https://luminary.ai/resources/what-physics-ai-sees/> — how Large
+Physics Models acquire spatial context. Two methods: **multi-radius neighbour
+gathering** (collect surface points within several radii of a query point, in
+physical space, so "the resulting context does not depend on how elements connect
+to one another"), and **frequency/positional encoding** (raw coordinates bias a
+network toward smooth functions — "it represents a gradual pressure gradient
+easily and sharp features poorly" — so coordinates are lifted into sine/cosine
+bands whose range must match the feature scale). Cost noted: neighbour gathering
+is paid at prediction time.
+
+It uses AI in the opposite place from AERIS. Luminary replaces the solver; AERIS
+builds the mesh the solver runs on. Nothing in the go/no-go structure changes.
+Three things do.
+
+## 1. It upgrades Paper 1's motivation, and supplies the missing demand side
+
+An LPM is trained on solved cases. Producing those — across a design family,
+without manual repair, with grid-converged uncertainty and provenance on every
+record — is precisely what Paper 1 is. The current framing motivates the data
+factory from *design optimisation*; the physics-AI literature is the larger and
+faster-growing consumer, and it needs exactly the property Paper 1 already
+proves (cross-campaign outcome determinism, zero disagreements over 384
+attempts). Cite the trend in the introduction. No experimental change.
+
+This also defuses the obvious referee question — *"if physics AI is replacing
+solvers, why publish a mesher?"* — with the honest answer: the surrogate's
+ceiling is the corpus it was trained on.
+
+## 2. It gives Paper 3 a second, larger audience for the same experiment
+
+The LPM field's core premise is that **form matters more than connectivity**. The
+paired S6/S7 campaign is a direct empirical test of it: the same geometry, the
+same operating point, two topologies (hex vs prism-tet), compared *at matched
+numerical uncertainty* rather than matched cell count.
+
+The residual CL/CD/Cm disagreement that survives grid convergence is then not
+just a pipeline-comparison result. It is **an irreducible noise floor on any
+surrogate trained across mixed-topology data, and a bound on how well a
+"mesh-independent" representation can possibly do.** Nobody can measure it
+without exactly the campaign already specified.
+
+This costs one extra analysis and a paragraph. It does not reduce the hardware
+problem in Finding 1 — it raises the value of the same spend, which is the
+argument for solving Finding 1 rather than descoping.
+
+## 3. It supplies the mechanism Finding 3 was missing
+
+Finding 3 established that the incumbent **misroutes** and that routing, not
+stopping, is the defect. It did not say *why*. Luminary's framing answers it:
+ask what the decision can actually see.
+
+The atlas manifest is explicit — routing is `distance_rms` in design-variable
+space plus an `inside_trust_radius` flag. That is a **global** metric over
+design parameters. But hyperbolic marching fails **locally and geometrically**:
+folded cells at the tip collar, the TE closure, regions of high surface
+curvature. Proximity in design space is the wrong metric for a local geometric
+event, and the model inherits the same blindness: exp02's design+surface feature
+set is *worse* at classification than design-only (balanced accuracy 0.60 vs
+0.63) while better at quality ranking (Spearman 0.84 vs 0.76) — the signature of
+surface features that are global aggregates rather than local descriptors.
+
+**Reframe Paper 2 as a representation question, not a policy-learning one:** the
+incumbent misroutes because it looks at the wrong thing, and here is what it
+should look at. That is a better paper than a 10-minute saving, and it converts
+the ablation ladder into the argument:
+
+    design variables only
+    -> + global surface aggregates        (current; already shown to add little)
+    -> + multi-radius local descriptors sampled at the tip collar, TE and
+         high-curvature bands                                        [steal #1]
+
+## Ideas worth stealing, ranked by value per hour
+
+### Steal 1 — multi-radius local geometry descriptors as routing features
+
+Directly transferable and cheap. Sample neighbour-gathered surface descriptors at
+several radii, at the locations where marching is known to fail, and feed those
+instead of global aggregates. Evaluated on the existing 247 cells with the
+existing grouped-out-of-fold protocol; no new meshing. Luminary's runtime caveat
+does not apply — feature extraction is milliseconds against a ~20 s attempt.
+
+**Test:** does it beat design-only on balanced accuracy and on `FAIL_FOLDED`
+recall specifically? Folding is the failure mode with a local geometric cause, so
+that is where the representation claim lives or dies.
+
+### Steal 2 — predict *where* the mesh will fail, not just whether
+
+The strongest idea available, and the ledger cannot currently support it. Every
+attempt records scalars only: `min_scaled_quality`, `inverted_cells`,
+`min_volume`, `surface_min_scaled_jacobian`. No location. Yet the S6 guide's own
+diagnostics checklist already asks to *"locate qmin and every cell below 0.15 by
+block, layer and physical region."*
+
+**Add block/layer/region indices for qmin and for the first inverted cell to the
+attempt record — before the 2100-cell matrix campaign runs.** Finding 2 blocks
+that campaign behind the wall-spacing freeze anyway, so the instrumentation
+window is free. Recording it later means re-running it.
+
+What it buys, in ascending order of value: a diagnostic; a per-template defect
+map that tells you which template feature to fix; a supervised target for Paper 4
+that says *redistribute nodes here*; and a claim — "see the defect before it
+forms" — that is materially more novel than template routing.
+
+### Steal 3 — frequency encoding for Paper 4's node distribution
+
+Paper 4 already plans to predict monotone spline/log-spacing coefficients. The
+smooth-function bias is exactly its failure mode: clustering at the LE, TE and
+tip is sharp, and a raw-coordinate network smears it. Encode the curve parameter
+in frequency bands chosen to span the actual clustering scales — wall spacing at
+`3.6e-6 · L` against chord, roughly five decades. This is a stated inductive bias
+rather than "we trained a network," it costs nothing, and it is the kind of
+architectural justification a reviewer asks for.
+
+### Not worth stealing
+
+SDF and voxel-grid encodings. They exist to give a *solver-replacing* model
+mesh-independent context. AERIS has the exact CAD-conforming pyGeo surface in
+hand at decision time; discretising it into an SDF discards fidelity to buy
+nothing.
+
+## Changes this adds to the edit list
+
+| section | edit |
+|---|---|
+| Paper 1 → scientific question | add the physics-AI training-corpus motivation |
+| Paper 2 → correct framing | recast as a representation question; add the three-rung ablation ladder |
+| Paper 2 → minimum experiment | add multi-radius local descriptors as a feature set |
+| Paper 3 → research questions | add: what disagreement survives matched numerical uncertainty, and what does it bound for mesh-independent surrogates |
+| Paper 4 → defensible method | add frequency encoding of the curve parameter, bands matched to clustering scale |
+| Immediate execution order | insert, before matrix completion: extend the attempt record with qmin and first-inverted-cell localisation |

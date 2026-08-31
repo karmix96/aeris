@@ -206,6 +206,67 @@ iterations to reach -9.5, and coarse asks -9.6643 with 36 times the cells.  A
 6 000-iteration confirmation may land short.  That is a measurement to make, not a
 threshold to lower.
 
+### The rank sweep: parallelism does not help, and does not change the answer
+
+A clean sweep on an idle machine, 5- and 25-iteration probes differenced at each
+rank count, on the index-0 `coarse` half mesh:
+
+| ranks | s/iteration | startup | GiB | 6 000 iterations |
+|---|---|---|---|---|
+| **1** | **4.60** | 12.0 s | **1.86** | **7.7 h** |
+| 2 | 5.65 | 39.8 s | 3.72 | 9.4 h |
+| 4 | 8.50 | 59.5 s | 7.44 | 14.2 h |
+
+More ranks are monotonically slower.  The solve is memory-bandwidth bound, so
+extra ranks buy halo exchange and partitioning for no arithmetic gain, and each
+holds another full copy of the mesh.  One rank is simultaneously the fastest and
+the smallest; four ranks is 1.85x slower per iteration and costs four times the
+memory to be so.
+
+The three histories are **identical to the byte** (sha `9378f811...`), so the
+decomposition is a pure cost choice and results are reproducible across it.  The
+serial laptop matrix and a multi-rank production run are therefore the same
+experiment.  Checked over 25 iterations; worth re-checking at 6 000.
+
+Measurement hygiene, recorded because it nearly went the other way: a first
+4-rank probe taken while a test suite and a geometry build were running read
+6.35 s per iteration against the clean 8.50 - a 25 per cent error, in the
+direction that would have made 4 ranks look acceptable.
+
+### The grid family, measured where it can be and bounded where it cannot
+
+Surfaces built at all three levels for index 0.  Surface triangles and prisms are
+**exact**; only the tetrahedral count is estimated, by two independent methods
+that agree:
+
+| level | surface tris | prisms | cells | GiB/rank | tip cap min angle |
+|---|---|---|---|---|---|
+| coarse | 5 356 | 126 984 | 1 549 111 (measured) | 1.86 | 12.91 deg |
+| medium | 10 826 | 343 456 | ~4 317 000 | 5.18 | 9.48 deg |
+| fine | 21 010 | 835 160 | ~12 056 000 | 14.47 | 7.03 deg |
+
+Surface triangles scale as r^2 exactly as the edge-length definitions require
+(2.021x and 3.923x against 2.0 and 4.0).  The two tet estimates - an r^3 scaling
+of the measured coarse core, and the pipeline's own conservative ceiling
+de-rated by the 1.2035x factor it over-counts coarse by - agree to 1.4 per cent
+at medium and 2.8 per cent at fine.
+
+**Consequence: `fine` is not solvable on the inventoried host.**  At 14.47 GiB
+for a *single* rank against the S6 guide's reported 11.36 GiB available, and with
+every rank holding the whole mesh, no decomposition rescues it.  That is the same
+`RESOURCE_BLOCKED` wall S6 hit, and it blocks the three-level grid convergence M5
+requires.  `medium` fits at one rank, 5.18 GiB, about 21 h for 6 000 iterations.
+The laptop refuses `medium` meshing outright on its own resource preflight.
+
+**And the tip cap degrades with refinement.**  Minimum cap angle falls
+monotonically: 18.33 deg at `laptop_smoke`, 12.91 at `coarse`, 9.48 at `medium`,
+7.03 at `fine`.  Refining chordwise on a thin cambered tip section makes the
+Delaunay cap more slender, not less.  **The rejected rigid ladder measured
+7.209 deg**, so the accepted construction at `fine` is worse than the one thrown
+out for being too slender.  This was invisible before the tip-cap instrumentation
+existed, and it is a quality trend the grid study must account for rather than a
+defect in any one mesh.
+
 ## Half domain versus mirrored, measured
 
 S6 meshes y >= 0 and S7 mirrored the whole wing, so the two were solving different

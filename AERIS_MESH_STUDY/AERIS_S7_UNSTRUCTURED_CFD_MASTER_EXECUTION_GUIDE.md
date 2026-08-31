@@ -236,19 +236,35 @@ guide's reported desktop budget of about 11.36 GiB available:
 does not fit, in the spirit of the S6 guide's `RESOURCE_REJECTED`. Overriding it
 requires `--allow-overcommit` deliberately.
 
-## Wall time
+## Wall time — measured, and the parallelism assumption is dead
 
-From the measured 5.45 s per iteration on 2 ranks and 37.8 s of startup, assuming
-a 1.8× speedup at 4 ranks (**assumed, not measured — verify it at M1A**):
+M1A ran a clean rank sweep on an idle machine, differencing 5- and 25-iteration
+probes at each rank count. The guide previously assumed a 1.8× speedup at 4
+ranks. **There is no speedup. More ranks are monotonically slower:**
 
-| iterations | 2 ranks | 4 ranks |
-|---|---|---|
-| 3 000 | 4.6 h | 2.5 h |
-| 6 000 | 9.1 h | 5.1 h |
-| 12 000 | 18.2 h | 10.1 h |
+| ranks | s/iteration | startup | GiB | 6 000 iterations |
+|---|---|---|---|---|
+| **1** | **4.60** | 12.0 s | **1.86** | **7.7 h** |
+| 2 | 5.65 | 39.8 s | 3.72 | 9.4 h |
+| 4 | 8.50 | 59.5 s | 7.44 | 14.2 h |
 
-The shortlist is three variants. Run them **sequentially** — concurrency
-multiplies memory both ways, and three variants at 4 ranks each is 22.3 GiB.
+The solve is memory-bandwidth bound: extra ranks buy halo exchange and
+partitioning cost for no arithmetic gain, and each holds another full copy of the
+mesh. **One rank is simultaneously the fastest and the smallest.** Four ranks is
+1.85× slower per iteration than one, and costs four times the memory to be so.
+
+**Rank count does not change the numerics.** The 1-, 2- and 4-rank
+25-iteration histories are identical to the byte, sha `9378f811…`. The
+decomposition is a pure cost choice; results are reproducible across it, and the
+serial laptop matrix and a production run are the same experiment. This was
+checked over 25 iterations and should be re-checked at the end of M1B, where
+accumulated divergence would show if it exists.
+
+The shortlist is three variants. Run them **sequentially at one rank**: 7.7 h
+each, 23 h for all three, in 1.86 GiB. Concurrency is now genuinely tempting —
+three single-rank solves fit in 5.6 GiB — but they would contend for the memory
+bandwidth that is the actual bottleneck, so the sequential number is the one to
+plan against.
 
 ---
 
@@ -280,27 +296,27 @@ history is byte-identical to `I_combined`.
 | 2 | `I_combined` | deepest drop (6.906) and the most headroom if coarse converges more slowly |
 | 3 | `F_nk_linear` | the fallback if the high CFL destabilises at production resolution |
 
-### M1A — Calibrate the rank speedup, ~15 minutes
+### M1A — Calibrate the rank speedup — **DONE 2026-08-31**
 
-Before committing 15 hours, measure what 4 ranks actually buys. Two bounded probes
-at 4 ranks, differenced the same way the 2-rank numbers were:
+Ran as a clean sweep over 1, 2 and 4 ranks; results in the wall-time table above.
+The stop/go fired: the job is memory-bandwidth bound and more ranks do not help,
+so **M1B runs at one rank**. Reproduce with:
 
 ```bash
 cd /home/mike/Desktop/Start_Up/Code/v.0.1_Project
 LW=AERIS_MESH_STUDY/artifacts/strategy_studies/S7_unstructured_gmsh_su2/lead_work
-for N in 5 25; do
-  .venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/S7_unstructured_gmsh_su2/solver_tuning.py \
-    $LW/nk_coarse/case.json --variants G_nk_cfl --ranks 4 --iterations $N \
-    --timeout 1800 --output $LW/nk_coarse_rate4_$N
-done
+S7=AERIS_MESH_STUDY/04_strategy_studies/S7_unstructured_gmsh_su2
+for R in 1 2 4; do for N in 5 25; do
+  .venv/bin/python $S7/solver_tuning.py $LW/nk_coarse/case.json \
+    --variants G_nk_cfl --ranks $R --iterations $N --timeout 2400 \
+    --output $LW/ranksweep_r${R}_n${N}
+done; done
 ```
 
-Per-iteration cost is `(wall_25 - wall_5) / 20`. Multiply by the iteration budget
-to get the real M1B wall time before starting it.
-
-**Stop/go:** if 4 ranks is not materially faster than 2, the job is
-memory-bandwidth bound and more ranks will not help; run at 2 ranks and budget 9 h
-per variant.
+Run it on an idle machine. The first 4-rank attempt was taken while a test suite
+and a geometry build were running and read 6.35 s per iteration against the clean
+8.50 — a 25 per cent error, in the direction that would have made 4 ranks look
+better than it is.
 
 ### M1B — The confirmation runs
 
@@ -313,7 +329,7 @@ LW=AERIS_MESH_STUDY/artifacts/strategy_studies/S7_unstructured_gmsh_su2/lead_wor
 # Build the case from the geometry, never by typing reference values.
 .venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/S7_unstructured_gmsh_su2/solver_tuning.py \
   $LW/nk_coarse/case.json --from-case-dir $LW/half_coarse \
-  --variants G_nk_cfl --ranks 4 --iterations 6000 --timeout 43200 \
+  --variants G_nk_cfl --ranks 1 --iterations 6000 --timeout 43200 \
   --output $LW/nk_coarse_confirm
 ```
 
@@ -349,19 +365,37 @@ Only after M1B, and only from the coarse measurements:
 **Do not adopt from the laptop matrix alone.** 42 745 cells is a solver
 diagnostic, not a production result.
 
-## M2 — Record the tip-cap fallback
+## M2 — Record the tip-cap fallback — **DONE 2026-08-31**
 
-One instrumentation field, not a redesign: the Delaunay cap falls back to the
-conformal ladder without recording that it did. Until that is recorded, the
-fixed-topology exploit cannot be evaluated, because nothing distinguishes a design
-whose cap connectivity followed its geometry from one that took the fallback.
+The Delaunay cap fell back to the conformal ladder without recording that it had,
+so a design whose cap connectivity followed its geometry was indistinguishable
+from one that took the fallback. `build_surface` now publishes
+`metadata["tip_cap"]`:
+
+| field | meaning |
+|---|---|
+| `by_side[...].construction` | `planar_delaunay` or `chordwise_ladder` |
+| `by_side[...].used_fallback` | the flag the fixed-topology question needs |
+| `by_side[...].perimeter_nodes`, `.triangles` | cap size |
+| `by_side[...].min_angle_deg` | the metric the cap has always been judged by |
+| `any_fallback`, `min_angle_deg` | case-level rollup |
+
+Both branches write through one record builder, so they cannot drift apart — a
+family comparison is only meaningful if every design reports the same fields, and
+a test pins that.
+
+Verified on a real geometry: development index 0 at `laptop_smoke` reports
+`planar_delaunay`, no fallback, 33 perimeter nodes, 31 triangles, minimum angle
+**18.33°**. For scale, the abandoned centre fan measured 1.516° and the rigid
+ladder 7.209°.
+
+**What this does not yet answer:** how many of the 100 designs take the fallback.
+That is a census the M3 sweep produces for free now that the field exists, and it
+is the input the fixed-topology decision actually needs.
 
 Measured context: freezing the surface grid costs about 1.11× mean surface cells
 at `coarse` over six cases, and the wall is already a structured tensor grid, so
 index correspondence follows directly.
-
-**Stop/go:** this is cheap and unblocks a comparison with S6's fixed topology. Do
-it while M1B runs — it touches no shared state.
 
 ## M3 — The 100-design coarse sweep in the half domain
 
@@ -384,10 +418,57 @@ bounded 120-iteration diagnostic. Re-measure it on the M1B converged solution.
 
 **Stop/go:** y+ from an unconverged run is not evidence, however good it looks.
 
-## M5 — Grid and sensitivity
+## M5 — Grid and sensitivity — **BLOCKED ON HARDWARE, measured 2026-08-31**
 
-- [ ] Five coupled coarse/medium/fine grid studies with unequal-grid Richardson
-      and GCI.
+The machinery exists — `qualification.py` already implements unequal-grid
+Richardson, GCI, asymptotic-ratio checks and the S6/S7 comparison. M5 is a
+*running* problem, not a building one. The problem is that it cannot be run here.
+
+Surfaces were built at all three levels for index 0. Surface triangles and prisms
+are exact; the tetrahedral counts come from two independent estimates that agree
+to 1.4% at medium and 2.8% at fine:
+
+| level | prisms (exact) | cells | GiB/rank | 6 000 iters | solvable on 11.36 GiB |
+|---|---|---|---|---|---|
+| coarse | 126 984 | 1 549 111 (measured) | 1.86 | 7.7 h | yes |
+| medium | 343 456 | ~4 317 000 | 5.18 | 21.5 h | yes, 1 rank only |
+| **fine** | **835 160** | **~12 056 000** | **14.47** | 60 h | **NO** |
+
+**`fine` needs more than the entire host budget for a single rank.** Every rank
+holds the whole mesh, so no decomposition rescues it. Without `fine` there is no
+three-level family, and without that there is no Richardson extrapolation, no GCI,
+and therefore no grid-convergence result. This is the same terminal state S6
+reached, `RESOURCE_BLOCKED_16GB`.
+
+Re-run the forecast against the real desktop inventory before accepting this:
+
+```bash
+PYTHONPATH=AERIS_MESH_STUDY/04_strategy_studies .venv/bin/python \
+  -m S7_unstructured_gmsh_su2.grid_family_forecast \
+  --prisms 126984 --tets 1422127 --budget-gib <actual free GiB>
+```
+
+At 64 GiB `fine` becomes solvable and M5 proceeds as written. **The desktop's
+actual RAM is the single input that decides whether S7 can reach S6-level
+readiness on this hardware.** Do not redefine the grid levels to fit the host:
+that changes a preregistered definition and hollows out the study it feeds.
+
+### A second M5 problem, independent of memory
+
+The tip cap **degrades monotonically with refinement**: minimum angle 18.33° at
+`laptop_smoke`, 12.91° at `coarse`, 9.48° at `medium`, **7.03° at `fine`**. The
+rigid ladder rejected earlier in this study measured 7.209°, so the accepted
+Delaunay construction at `fine` is more slender than the one thrown out for being
+too slender. Refining chordwise on a thin cambered tip section makes cap triangles
+thinner, not fatter.
+
+This was invisible until M2 added the instrumentation. It means a `fine` mesh may
+fail quality gates for reasons that have nothing to do with memory, and it must be
+resolved before the grid family is trusted even on a larger host.
+
+### Still required, once unblocked
+
+- [ ] Five coupled coarse/medium/fine grid studies with Richardson and GCI.
 - [ ] The three declared trailing-edge variants.
 - [ ] Geometric fidelity sensitivity, which replaces the provisional facet and
       tetrahedral limits with limits tied to a required accuracy. Until this

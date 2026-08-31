@@ -95,7 +95,10 @@ def test_a_level_needing_more_than_the_whole_budget_is_not_solvable():
     )}
     assert rows["coarse"]["solvable"] is True
     assert rows["fine"]["solvable"] is False
-    assert rows["fine"]["max_ranks"] == 0
+    assert rows["fine"]["min_ranks_that_fit"] == 0
+    # And unsolvable for the right reason: the replicated mesh alone exceeds the
+    # budget, so no rank count can reach it.
+    assert rows["fine"]["floor_gib"] > rows["fine"]["usable_gib"]
     # And it becomes solvable on a bigger host, rather than being impossible.
     big = {r["level"]: r for r in forecast.solvability(
         forecast.level_forecast(
@@ -110,10 +113,44 @@ def test_a_level_needing_more_than_the_whole_budget_is_not_solvable():
 def test_the_memory_law_is_shared_with_the_solver_tool():
     """One law, not two copies that can drift."""
     tuning = importlib.import_module("s7_forecast_test_package.solver_tuning")
+    assert forecast.gib_per_rank is tuning.gib_per_rank
     assert (
-        forecast.GIB_PER_RANK_PER_MILLION_CELLS
-        is tuning.GIB_PER_RANK_PER_MILLION_CELLS
+        forecast.MESH_GIB_PER_MILLION_CELLS is tuning.MESH_GIB_PER_MILLION_CELLS
     )
+
+
+def test_memory_model_reproduces_both_measurements():
+    """Two parts, because only one of them divides by rank count.
+
+    A single coefficient cannot fit both a 1-rank and an 8-rank measurement; the
+    one this study carried under-predicted the single-rank case by 49 per cent.
+    """
+    tuning = importlib.import_module("s7_forecast_test_package.solver_tuning")
+    # Measured 2026-08-31: 2 847 MiB for 1 549 111 cells at one rank.
+    assert tuning.gib_per_rank(1_549_111, 1) == pytest.approx(2847 / 1024, rel=0.02)
+    # The original datum: about 3 GiB per rank at 2.5 M cells on eight ranks.
+    assert tuning.gib_per_rank(2_500_000, 8) == pytest.approx(3.0, rel=0.02)
+    # ILU/25 stores far more state: F_nk_linear measured 4 360 MiB on the same
+    # mesh at the same rank count as G_nk_cfl's 2 847.
+    assert tuning.gib_per_rank(1_549_111, 1, strong_linear=True) == pytest.approx(
+        4360 / 1024, rel=0.02
+    )
+    assert tuning.variant_is_strong_linear("F_nk_linear") is True
+    assert tuning.variant_is_strong_linear("G_nk_cfl") is False
+
+
+def test_adding_ranks_never_beats_the_replicated_mesh():
+    """The floor is real: per-rank cost approaches it but never goes below."""
+    tuning = importlib.import_module("s7_forecast_test_package.solver_tuning")
+    cells = 12_056_000
+    floor = cells / 1.0e6 * tuning.MESH_GIB_PER_MILLION_CELLS
+    previous = float("inf")
+    for ranks in (1, 2, 4, 8, 16, 64, 256):
+        value = tuning.gib_per_rank(cells, ranks)
+        assert value > floor
+        assert value < previous
+        previous = value
+    assert tuning.gib_per_rank(cells, 4096) == pytest.approx(floor, rel=0.01)
 
 
 def test_census_summary_counts_what_the_decisions_need():

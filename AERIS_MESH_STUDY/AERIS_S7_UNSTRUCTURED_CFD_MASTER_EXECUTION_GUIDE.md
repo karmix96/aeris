@@ -216,21 +216,39 @@ the same way.
 
 ## Memory
 
-Each MPI rank reads the whole mesh before partitioning, so peak memory scales with
-**ranks × cells**, not with cells. The datum is the OOM that stopped the first
-attempt: about 3 GB per rank at 2.5 M cells, and eight ranks killed on 16 GiB.
+Memory has two parts and **only one of them divides**. Every rank reads the whole
+mesh before partitioning, so that part is replicated; the solver state belongs to
+a rank's own partition, so that part is divided:
 
-    GiB per rank ≈ 1.20 × (cells / 1e6)
+    GiB per rank = cells_M × (1.115 + STATE / ranks)
 
-At the coarse 1 549 111 cells that is **1.86 GiB per rank**. Against the S6
-guide's reported desktop budget of about 11.36 GiB available:
+The single coefficient this guide used to carry (1.20 GiB per million cells, back-
+fitted from the 8-rank OOM alone) **under-predicted a single-rank run by 49 per
+cent** — 1.86 GiB forecast against 2 847 MiB measured. A one-parameter law cannot
+fit both a 1-rank and an 8-rank measurement.
 
-| ranks | estimated peak | verdict |
-|---|---|---|
-| 2 | 3.72 GiB | fits, measured |
-| **4** | **7.44 GiB** | **fits — the desktop recommendation** |
-| 6 | 11.15 GiB | at the budget; do not |
-| 8 | 14.87 GiB | refused; this is the recorded OOM |
+`STATE` also depends on the numerical method, which the single coefficient hid
+too. On the same mesh at the same rank count, `F_nk_linear` (ILU, 25 Krylov
+vectors) measured **4 360 MiB** against `G_nk_cfl`'s (LU_SGS, 10) **2 847 MiB**:
+
+| variant class | STATE GiB/Mcell |
+|---|---|
+| LU_SGS / 10 iterations | 0.680 |
+| **ILU / 25 iterations** | **1.634** |
+
+At the coarse 1 549 111 cells, against the S6 guide's reported 11.36 GiB:
+
+| ranks | GiB/rank (LU_SGS) | total | verdict |
+|---|---|---|---|
+| **1** | **2.78** | **2.78** | **fits — and is also the fastest** |
+| 2 | 2.34 | 4.68 | fits, slower |
+| 4 | 2.15 | 8.59 | fits, slowest |
+| 8 | 2.06 | 16.5 | refused; this is the recorded OOM |
+
+**The floor matters more than the total.** Because the mesh is replicated, one
+rank cannot cost less than `1.115 × cells_M` however the job is decomposed. A
+level whose floor exceeds the budget is unsolvable on the host at any rank count
+— which is exactly what rules out `fine`, whose floor is **13.63 GiB**.
 
 `solver_tuning.py` computes this plan, prints it, and **refuses to launch** when it
 does not fit, in the spirit of the S6 guide's `RESOURCE_REJECTED`. Overriding it
@@ -468,14 +486,16 @@ Surfaces were built at all three levels for index 0. Surface triangles and prism
 are exact; the tetrahedral counts come from two independent estimates that agree
 to 1.4% at medium and 2.8% at fine:
 
-| level | prisms (exact) | cells | GiB/rank | 6 000 iters | solvable on 11.36 GiB |
-|---|---|---|---|---|---|
-| coarse | 126 984 | 1 549 111 (measured) | 1.86 | 7.7 h | yes |
-| medium | 343 456 | ~4 317 000 | 5.18 | 21.5 h | yes, 1 rank only |
-| **fine** | **835 160** | **~12 056 000** | **14.47** | 60 h | **NO** |
+| level | prisms (exact) | cells | GiB @ 1 rank | **floor** | 6 000 iters | solvable on 11.36 GiB |
+|---|---|---|---|---|---|---|
+| coarse | 126 984 | 1 549 111 (measured) | 2.78 | 1.73 | 7.7 h | yes |
+| medium | 343 456 | ~4 317 000 | 7.80 | 4.85 | 21.5 h | yes, 1 rank |
+| **fine** | **835 160** | **~12 056 000** | **21.94** | **13.63** | 60 h | **NO** |
 
-**`fine` needs more than the entire host budget for a single rank.** Every rank
-holds the whole mesh, so no decomposition rescues it. Without `fine` there is no
+**`fine`'s replicated-mesh floor alone, 13.63 GiB, exceeds the whole budget.** No
+rank count reaches it. Note also that `medium` at 7.80 GiB is single-rank-only for
+an LU_SGS variant, and an ILU variant there needs 11.9 GiB at one rank — it would
+have to be decomposed purely to fit, at a wall-time penalty. Without `fine` there is no
 three-level family, and without that there is no Richardson extrapolation, no GCI,
 and therefore no grid-convergence result. This is the same terminal state S6
 reached, `RESOURCE_BLOCKED_16GB`.

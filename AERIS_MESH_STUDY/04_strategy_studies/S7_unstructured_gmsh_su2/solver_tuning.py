@@ -123,11 +123,47 @@ SHORTLIST: tuple[str, ...] = (
     "F_nk_linear",
 )
 
-# Measured, not estimated: each MPI rank reads the whole mesh before
-# partitioning, so memory scales with ranks x cells rather than with cells.  The
-# datum is the OOM that stopped the first attempt - about 3 GB per rank at 2.5 M
-# cells, and eight ranks killed on a 16 GiB machine.  See ROADMAP.md step 3.
-GIB_PER_RANK_PER_MILLION_CELLS = 3.0 / 2.5
+# Memory has two parts and only one of them divides.  Every rank reads the WHOLE
+# mesh before partitioning, so that part is replicated; the solver state belongs
+# to a rank's own partition, so that part is divided.  A single coefficient
+# cannot describe both, and the single coefficient this module used to carry
+# (1.20 GiB per million cells, from the 8-rank OOM) under-predicted a
+# single-rank run by 49 per cent - 1.86 GiB forecast against 2.78 measured.
+#
+#   per rank GiB = cells_M * (MESH + STATE / ranks)
+#
+# Fitted to two measurements:
+#   1 rank,  1.549 M cells, LU_SGS/10 : 2 847 MiB  (measured 2026-08-31)
+#   8 ranks, 2.500 M cells, LU_SGS/10 : ~3 000 MiB (the recorded OOM)
+MESH_GIB_PER_MILLION_CELLS = 1.115
+SOLVER_STATE_GIB_PER_MILLION_CELLS = 0.680
+
+# The state term depends on the numerical method, which the single coefficient
+# also hid.  ILU with 25 Krylov vectors stores far more than LU_SGS with 10:
+# F_nk_linear measured 4 360 MiB against G_nk_cfl's 2 847 on the same mesh, both
+# at one rank.  Variants carrying STRONG_LINEAR use this instead.
+SOLVER_STATE_GIB_PER_MILLION_CELLS_STRONG_LINEAR = 1.634
+
+# Retained so callers and tests can still speak of one number: what a rank costs
+# in the 8-rank configuration the original datum came from.
+GIB_PER_RANK_PER_MILLION_CELLS = MESH_GIB_PER_MILLION_CELLS + (
+    SOLVER_STATE_GIB_PER_MILLION_CELLS / 8.0
+)
+
+
+def gib_per_rank(cells: float, ranks: int, *, strong_linear: bool = False) -> float:
+    """Peak RSS of one rank: replicated mesh plus its share of solver state."""
+    state = (
+        SOLVER_STATE_GIB_PER_MILLION_CELLS_STRONG_LINEAR
+        if strong_linear
+        else SOLVER_STATE_GIB_PER_MILLION_CELLS
+    )
+    return (cells / 1.0e6) * (MESH_GIB_PER_MILLION_CELLS + state / max(int(ranks), 1))
+
+
+def variant_is_strong_linear(name: str) -> bool:
+    """Does this variant carry the ILU/25 linear solve, and so the larger state?"""
+    return VARIANTS.get(name, {}).get("LINEAR_SOLVER_PREC") == "ILU"
 
 # Leave the operating system its working set rather than planning to the last
 # byte; an OOM kill loses the whole run, and at coarse that is hours.
@@ -207,15 +243,23 @@ def available_memory_gib() -> float | None:
     return None
 
 
-def memory_plan(cells: int, ranks: int, workers: int) -> dict[str, Any]:
+def memory_plan(
+    cells: int, ranks: int, workers: int, *, strong_linear: bool = False
+) -> dict[str, Any]:
     """Estimate peak RSS for the whole run and say whether it fits.
 
     Concurrency multiplies both ways: `workers` variants each running `ranks`
     MPI processes, and every one of those processes holds the full mesh.  The
     laptop OOM was exactly this arithmetic ignored.
+
+    `floor_gib` is what one rank costs with the solver state divided to nothing.
+    Because the mesh is replicated it cannot be reduced by adding ranks, so a
+    level whose floor exceeds the host budget is unsolvable there at any
+    decomposition - which is what rules `fine` out on this machine.
     """
     processes = int(ranks) * int(workers)
-    required = (cells / 1.0e6) * GIB_PER_RANK_PER_MILLION_CELLS * processes
+    per_rank = gib_per_rank(cells, ranks, strong_linear=strong_linear)
+    required = per_rank * processes
     available = available_memory_gib()
     budget = None if available is None else available * MEMORY_HEADROOM_FRACTION
     return {
@@ -223,6 +267,9 @@ def memory_plan(cells: int, ranks: int, workers: int) -> dict[str, Any]:
         "ranks": int(ranks),
         "workers": int(workers),
         "concurrent_processes": processes,
+        "strong_linear": bool(strong_linear),
+        "gib_per_rank": round(per_rank, 2),
+        "floor_gib": round((cells / 1.0e6) * MESH_GIB_PER_MILLION_CELLS, 2),
         "estimated_peak_gib": round(required, 2),
         "available_gib": None if available is None else round(available, 2),
         "budget_gib": None if budget is None else round(budget, 2),
@@ -490,7 +537,13 @@ def main() -> int:
     # laptop matrix ran; at 1.55 M cells it is how a run gets OOM-killed.
     workers = args.workers if args.workers is not None else (1 if production else 4)
 
-    plan = memory_plan(cells, args.ranks, workers)
+    # The largest of the selected variants sets the requirement.
+    plan = memory_plan(
+        cells,
+        args.ranks,
+        workers,
+        strong_linear=any(variant_is_strong_linear(n) for n in selected),
+    )
     print(json.dumps({"memory_plan": plan}, indent=2), flush=True)
     if plan["fits"] is False and not args.allow_overcommit:
         raise SystemExit(

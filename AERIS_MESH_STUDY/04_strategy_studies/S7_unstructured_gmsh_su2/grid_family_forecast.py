@@ -32,7 +32,11 @@ from pathlib import Path
 from typing import Any
 
 from .common import load_policy
-from .solver_tuning import GIB_PER_RANK_PER_MILLION_CELLS, MEMORY_HEADROOM_FRACTION
+from .solver_tuning import (
+    MEMORY_HEADROOM_FRACTION,
+    MESH_GIB_PER_MILLION_CELLS,
+    gib_per_rank,
+)
 
 # Measured on the index-0 coarse half mesh by a rank sweep on an idle machine,
 # differencing 5- and 25-iteration probes:
@@ -93,7 +97,10 @@ def level_forecast(
                 "tetrahedra": int(round(forecast_tets)),
                 "cells": int(round(cells)),
                 "source": source,
-                "gib_per_rank": round(cells / 1.0e6 * GIB_PER_RANK_PER_MILLION_CELLS, 2),
+                "gib_per_rank_1": round(gib_per_rank(cells, 1), 2),
+                # The mesh is replicated on every rank, so this is the least any
+                # rank can cost no matter how the job is decomposed.
+                "floor_gib": round(cells / 1.0e6 * MESH_GIB_PER_MILLION_CELLS, 2),
             }
         )
     return rows
@@ -104,8 +111,17 @@ def solvability(rows: list[dict[str, Any]], budget_gib: float) -> list[dict[str,
     usable = budget_gib * MEMORY_HEADROOM_FRACTION
     out = []
     for row in rows:
-        per_rank = float(row["gib_per_rank"])
-        max_ranks = int(usable // per_rank) if per_rank > 0 else 0
+        floor = float(row["floor_gib"])
+        # Search upward: more ranks lower the per-rank cost toward the floor, so
+        # a level is solvable if ANY rank count fits, and unsolvable outright
+        # once the floor alone exceeds the budget.
+        max_ranks = 0
+        if floor <= usable:
+            for candidate in range(1, 65):
+                if gib_per_rank(row["cells"], candidate) <= usable:
+                    max_ranks = candidate
+                    break
+        per_rank = gib_per_rank(row["cells"], max_ranks) if max_ranks else floor
         # No division by ranks: the sweep shows they do not help.  This is the
         # single-rank cost, which is also the cheapest memory footprint.
         seconds = row["cells"] / 1.0e6 * SECONDS_PER_ITERATION_PER_MILLION_CELLS
@@ -113,7 +129,8 @@ def solvability(rows: list[dict[str, Any]], budget_gib: float) -> list[dict[str,
             {
                 **row,
                 "usable_gib": round(usable, 2),
-                "max_ranks": max_ranks,
+                "min_ranks_that_fit": max_ranks,
+                "gib_per_rank_at_that_count": round(per_rank, 2),
                 # A level needing more than the whole budget for ONE rank cannot
                 # be solved on this host at any decomposition.
                 "solvable": max_ranks >= 1,
@@ -161,11 +178,12 @@ def main() -> int:
         args.budget_gib,
     )
 
-    print("%-8s %10s %10s %10s %6s %9s %8s %9s" % (
-        "level", "cells", "source", "GiB/rank", "ranks", "s/iter", "h/6000", "solvable"))
+    print("%-8s %10s %9s %9s %8s %7s %8s %9s" % (
+        "level", "cells", "1 rank", "floor", "min rank", "s/iter", "h/6000", "solvable"))
     for r in rows:
-        print("%-8s %10d %10s %10.2f %6d %9.1f %8.1f %9s" % (
-            r["level"], r["cells"], r["source"], r["gib_per_rank"], r["max_ranks"],
+        print("%-8s %10d %9.2f %9.2f %8s %7.1f %8.1f %9s" % (
+            r["level"], r["cells"], r["gib_per_rank_1"], r["floor_gib"],
+            r["min_ranks_that_fit"] or "-",
             r["seconds_per_iteration_at_max_ranks"], r["hours_for_6000_iterations"],
             "yes" if r["solvable"] else "NO"))
     print(

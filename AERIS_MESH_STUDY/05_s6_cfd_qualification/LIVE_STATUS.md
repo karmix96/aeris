@@ -152,9 +152,25 @@ Updated: 2026-09-01
   continuity-residual ratio is not the required signed net/gross boundary mass
   flux. It is retained as a diagnostic but cannot satisfy conservation or
   yield ACCEPTED. This does not block the expressly measurement-only canary.
-- The latest focused suite is **72 passed**. The zero-launch preflight passes
-  41 identity/governance checks; forecast is 9.35 GiB against about 11.50 GiB
+- The latest focused suite is **73 passed**. The zero-launch preflight passes
+  43 identity/governance and 18 solver-environment checks; forecast is 9.35 GiB
+  against about 11.50 GiB
   available, leaving about 0.15 GiB above the mandatory 2 GiB headroom.
+- Launcher commit `e660899` was retained, but its post-commit readiness audit
+  caught a legacy `/home/mike/...` mach-aero default that does not exist on
+  this WSL host. No CFD process started and the authorization remains
+  unconsumed. Immutable canary policy v1 is preserved; v2 supersedes it solely
+  to bind `/home/mike_kara/miniconda3/envs/mach-aero` and exact Python,
+  ADflow, OpenMPI, mpi4py, NumPy, source, shared-library, and binary hashes.
+- The v2 dry-run passes all static environment/import checks. A real one-rank
+  non-CFD MPI readiness probe also passes outside the sandbox with
+  `AERIS_MPI_READY 0 1`; the launcher must repeat that probe before consuming
+  authorization. Exact prepare-only coverage verifies RANS/SA, histories,
+  fields, one rank, Reynolds length, and moment references without CFD.
+- A read-only Claude Opus/max review request for `e660899` timed out without a
+  verdict or workspace changes. The prior scientific GO in `5f17ceb` remains
+  the binding authorization; the environment follow-up still needs its final
+  committed audit before launch.
 
 ## Local commits
 
@@ -186,11 +202,11 @@ Updated: 2026-09-01
 
 ## Next authorized work
 
-Commit the governed one-shot wiring, obtain a read-only Claude review of that
-exact commit, and launch exactly one one-rank A/C03 measurement canary only if
-the review and a fresh zero-launch preflight remain green. Monitor it with the
-host watchdog, retain every log, and report a measurement-only result. Do not
-launch C01/C02 or classify ACCEPTED.
+Commit the v2 environment binding, rerun the complete focused/preflight audit,
+and make one more read-only Claude review attempt. If the governed checks stay
+green, launch exactly one one-rank A/C03 measurement canary under the watchdog,
+retain every log, and report measurement-only. Do not launch C01/C02 or
+classify ACCEPTED.
 
 ## Resume commands
 

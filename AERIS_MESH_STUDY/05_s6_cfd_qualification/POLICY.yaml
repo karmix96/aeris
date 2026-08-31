@@ -7,7 +7,7 @@ heavy_work:
   reason: All heavy work remains blocked except the exact one-shot M2 A/C03 measurement canary below
   exceptions:
     run-canary:
-      policy: policies/m2_a_c03_canary_v1.yaml
+      policy: policies/m2_a_c03_canary_v2.yaml
       maximum_process_launches: 1
       accepted_classification_allowed: false
       automatic_retry_allowed: false

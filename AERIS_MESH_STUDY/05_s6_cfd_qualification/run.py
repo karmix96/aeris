@@ -244,7 +244,7 @@ def cfd_contract_audit(dry: bool) -> int:
     adflow = REPO / "src/aeris/cfd/solvers/adflow/adapter.py"
     options = REPO / "src/aeris/cfd/solvers/adflow/options_schema.py"
     su2 = REPO / "src/aeris/cfd/solvers/su2/parse.py"
-    canary_policy = ROOT / "policies/m2_a_c03_canary_v1.yaml"
+    canary_policy = ROOT / "policies/m2_a_c03_canary_v2.yaml"
     convergence_policy = ROOT / "policies/convergence_v2.yaml"
     combined = "\n".join(p.read_text(encoding="utf-8") for p in (adflow, options, su2))
     canary_text = canary_policy.read_text(encoding="utf-8")

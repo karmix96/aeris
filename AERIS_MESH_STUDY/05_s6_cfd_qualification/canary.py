@@ -34,9 +34,10 @@ for _path in (REPO / "src", S6):
 from cfd_qc import wall_yplus_summary  # noqa: E402
 
 from aeris.cfd.case.spec import FlowConditions, SolveSpec  # noqa: E402
+from aeris.cfd.env import MACH_AERO_PREFIX_ENV  # noqa: E402
 from aeris.cfd.solvers.base import get_solver_adapter  # noqa: E402
 
-CANARY_POLICY = ROOT / "policies/m2_a_c03_canary_v1.yaml"
+CANARY_POLICY = ROOT / "policies/m2_a_c03_canary_v2.yaml"
 GIB = 2**30
 
 
@@ -171,6 +172,7 @@ def _policy_identity_checks(policy: dict[str, Any]) -> dict[str, bool]:
     authorization = policy["authorization"]
     flow_policy = policy["flow"]
     refs = policy["references"]
+    solver_policy = policy["solver"]
 
     mesh_path = _repo_path(mesh_policy["path"])
     surface_path = _repo_path(mesh_policy["target_surface_path"])
@@ -180,6 +182,8 @@ def _policy_identity_checks(policy: dict[str, Any]) -> dict[str, bool]:
     moment_path = _repo_path(refs["authority_path"])
     reference_evidence_path = _repo_path(refs["evidence_path"])
     classification_path = _repo_path(policy["classification_policy"]["path"])
+    preset_path = _repo_path(solver_policy["preset_path"])
+    superseded_policy_path = _repo_path(policy["supersedes_path"])
 
     review = _read_json(review_path) if review_path.is_file() else {}
     decision = review.get("decision", {})
@@ -224,6 +228,10 @@ def _policy_identity_checks(policy: dict[str, Any]) -> dict[str, bool]:
 
     return {
         "policy_immutable": policy.get("immutable") is True,
+        "immutable_v1_supersession_chain": (
+            policy.get("supersedes") == "m2_a_c03_measurement_canary_v1"
+            and _hash_matches(superseded_policy_path, policy["supersedes_sha256"])
+        ),
         "measurement_only": policy.get("scope", {}).get("purpose") == "measurement_only",
         "one_process_launch": policy.get("scope", {}).get("maximum_process_launches") == 1,
         "automatic_retry_forbidden": (
@@ -347,9 +355,19 @@ def _policy_identity_checks(policy: dict[str, Any]) -> dict[str, bool]:
             and policy.get("solver", {}).get("retain_surface_solution") is True
         ),
         "solver_scope_is_one_rank_rans_sa": (
-            policy.get("solver", {}).get("mpi_processes") == 1
-            and policy.get("solver", {}).get("equations") == "RANS"
-            and policy.get("solver", {}).get("turbulence_model") == "SA"
+            solver_policy.get("mpi_processes") == 1
+            and solver_policy.get("equations") == "RANS"
+            and solver_policy.get("turbulence_model") == "SA"
+        ),
+        "solver_preset_sha256": _hash_matches(preset_path, solver_policy["preset_sha256"]),
+        "solver_history_and_output_controls": (
+            solver_policy.get("store_convergence_history") is True
+            and solver_policy.get("write_volume_solution") is False
+            and solver_policy.get("write_surface_solution") is True
+            and solver_policy.get("retain_surface_solution") is True
+            and solver_policy.get("nk_subspace_size") == 20
+            and set(solver_policy.get("surface_variables", []))
+            == {"cp", "cf", "yplus", "vx", "vy", "vz"}
         ),
         "full_native_history_requested": {
             "resrho",
@@ -383,7 +401,8 @@ def _resource_preflight(policy: dict[str, Any]) -> dict[str, Any]:
         + float(resource["prelaunch_headroom_gib"])
         <= available_gib,
         "free_disk_pass": free_disk_gib >= float(resource["minimum_free_disk_gib"]),
-        "swap_not_active_materially": snapshot["swap_used_bytes"] <= 0.05 * GIB,
+        "preexisting_swap_within_limit": snapshot["swap_used_bytes"]
+        <= float(resource["maximum_preexisting_swap_gib"]) * GIB,
     }
     return {
         "passed": all(checks.values()),
@@ -395,13 +414,165 @@ def _resource_preflight(policy: dict[str, Any]) -> dict[str, Any]:
         - forecast_gib
         - float(resource["prelaunch_headroom_gib"]),
         "free_disk_gib": free_disk_gib,
+        "preexisting_swap_used_gib": snapshot["swap_used_bytes"] / GIB,
         "snapshot": snapshot,
     }
 
 
-def preflight() -> dict[str, Any]:
+def _solver_environment_preflight(policy: dict[str, Any], *, run_mpi_probe: bool) -> dict[str, Any]:
+    governed = policy["solver"]["environment"]
+    paths = {
+        key: Path(str(governed[key])).resolve()
+        for key in (
+            "prefix",
+            "python",
+            "python_realpath",
+            "mpirun",
+            "mpirun_realpath",
+            "adflow_init",
+            "adflow_python_source",
+            "adflow_library",
+        )
+    }
+    checks = {
+        "policy_requires_non_cfd_mpi_probe": (
+            governed.get("prelaunch_non_cfd_mpi_probe_required") is True
+        ),
+        "prefix_exists": paths["prefix"].is_dir(),
+        "python_exists_and_executable": paths["python"].is_file()
+        and os.access(paths["python"], os.X_OK),
+        "python_realpath": paths["python"] == paths["python_realpath"],
+        "python_sha256": _hash_matches(paths["python_realpath"], governed["python_sha256"]),
+        "mpirun_exists_and_executable": paths["mpirun"].is_file()
+        and os.access(paths["mpirun"], os.X_OK),
+        "mpirun_realpath": paths["mpirun"] == paths["mpirun_realpath"],
+        "mpirun_sha256": _hash_matches(paths["mpirun_realpath"], governed["mpirun_sha256"]),
+        "adflow_init_sha256": _hash_matches(paths["adflow_init"], governed["adflow_init_sha256"]),
+        "adflow_python_source_sha256": _hash_matches(
+            paths["adflow_python_source"], governed["adflow_python_source_sha256"]
+        ),
+        "adflow_library_sha256": _hash_matches(
+            paths["adflow_library"], governed["adflow_library_sha256"]
+        ),
+    }
+    import_probe: dict[str, Any] = {}
+    if checks["python_exists_and_executable"]:
+        probe_source = (
+            "import adflow,baseclasses,json,mpi4py,numpy,sys;"
+            "print(json.dumps({"
+            "'python_version':'.'.join(map(str,sys.version_info[:3])),"
+            "'adflow_version':adflow.__version__,"
+            "'baseclasses_version':baseclasses.__version__,"
+            "'mpi4py_version':mpi4py.__version__,"
+            "'numpy_version':numpy.__version__,"
+            "'adflow_file':adflow.__file__}))"
+        )
+        try:
+            completed = subprocess.run(
+                [str(paths["python"]), "-c", probe_source],
+                cwd=REPO,
+                text=True,
+                capture_output=True,
+                timeout=30,
+                check=False,
+            )
+            import_probe = {
+                "returncode": completed.returncode,
+                "stdout": completed.stdout.strip(),
+                "stderr": completed.stderr.strip(),
+            }
+            observed = json.loads(completed.stdout.strip()) if completed.returncode == 0 else {}
+        except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError) as error:
+            import_probe = {"error_type": type(error).__name__, "error": str(error)}
+            observed = {}
+    else:
+        observed = {}
+    for key in (
+        "python_version",
+        "adflow_version",
+        "baseclasses_version",
+        "mpi4py_version",
+        "numpy_version",
+    ):
+        checks[f"import_{key}"] = observed.get(key) == str(governed[key])
+    checks["import_adflow_path"] = (
+        Path(str(observed.get("adflow_file", "missing"))).resolve() == paths["adflow_init"]
+    )
+
+    mpirun_version: dict[str, Any] = {}
+    if checks["mpirun_exists_and_executable"]:
+        try:
+            completed = subprocess.run(
+                [str(paths["mpirun"]), "--version"],
+                cwd=REPO,
+                text=True,
+                capture_output=True,
+                timeout=30,
+                check=False,
+            )
+            combined = f"{completed.stdout}\n{completed.stderr}"
+            mpirun_version = {
+                "returncode": completed.returncode,
+                "stdout": completed.stdout.strip(),
+                "stderr": completed.stderr.strip(),
+            }
+            checks["openmpi_version"] = (
+                completed.returncode == 0 and str(governed["openmpi_version"]) in combined
+            )
+        except (OSError, subprocess.TimeoutExpired) as error:
+            mpirun_version = {"error_type": type(error).__name__, "error": str(error)}
+            checks["openmpi_version"] = False
+    else:
+        checks["openmpi_version"] = False
+
+    mpi_probe: dict[str, Any] = {"executed": False, "kind": "non_cfd_readiness_probe"}
+    if run_mpi_probe:
+        probe_source = (
+            "from mpi4py import MPI;"
+            "print('AERIS_MPI_READY',MPI.COMM_WORLD.rank,MPI.COMM_WORLD.size)"
+        )
+        try:
+            completed = subprocess.run(
+                [str(paths["mpirun"]), "-np", "1", str(paths["python"]), "-c", probe_source],
+                cwd=REPO,
+                text=True,
+                capture_output=True,
+                timeout=60,
+                check=False,
+            )
+            mpi_probe = {
+                "executed": True,
+                "kind": "non_cfd_readiness_probe",
+                "returncode": completed.returncode,
+                "stdout": completed.stdout.strip(),
+                "stderr": completed.stderr.strip(),
+            }
+            checks["one_rank_mpi_probe"] = (
+                completed.returncode == 0 and "AERIS_MPI_READY 0 1" in completed.stdout
+            )
+        except (OSError, subprocess.TimeoutExpired) as error:
+            mpi_probe = {
+                "executed": True,
+                "kind": "non_cfd_readiness_probe",
+                "error_type": type(error).__name__,
+                "error": str(error),
+            }
+            checks["one_rank_mpi_probe"] = False
+
+    return {
+        "passed": all(checks.values()),
+        "checks": checks,
+        "governed": governed,
+        "import_probe": import_probe,
+        "mpirun_version_probe": mpirun_version,
+        "mpi_probe": mpi_probe,
+    }
+
+
+def preflight(*, run_mpi_probe: bool = False) -> dict[str, Any]:
     policy = _load_policy()
     identity_checks = _policy_identity_checks(policy)
+    environment = _solver_environment_preflight(policy, run_mpi_probe=run_mpi_probe)
     resources = _resource_preflight(policy)
     consumed = _repo_path(policy["attempt"]["consumed_record"])
     attempt_dir = _repo_path(policy["attempt"]["directory"])
@@ -416,9 +587,11 @@ def preflight() -> dict[str, Any]:
         "policy_sha256": _sha256(CANARY_POLICY),
         "identity_checks": identity_checks,
         "resource": resources,
+        "solver_environment": environment,
         "one_shot_checks": one_shot_checks,
         "passed": all(identity_checks.values())
         and resources["passed"]
+        and environment["passed"]
         and all(one_shot_checks.values()),
     }
 
@@ -427,13 +600,19 @@ def _governed_sources_clean() -> tuple[bool, list[str]]:
     paths = [
         ".gitignore",
         "src/aeris/cfd/case/spec.py",
+        "src/aeris/cfd/env.py",
+        "src/aeris/cfd/solvers/base.py",
         "src/aeris/cfd/solvers/adflow/adapter.py",
+        "src/aeris/cfd/solvers/adflow/options_schema.py",
+        "src/aeris/cfd/solvers/adflow/parse.py",
+        "src/aeris/cfd/presets/data/adflow_rans_ank_nk_v1.yaml",
         "AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/cfd_qc.py",
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/run.py",
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/canary.py",
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/POLICY.yaml",
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/convergence_v2.yaml",
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/m2_a_c03_canary_v1.yaml",
+        "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/m2_a_c03_canary_v2.yaml",
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/grid_family_candidate_v1.yaml",
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_reference_contract_20260831.json",
     ]
@@ -458,6 +637,7 @@ def _git_head() -> str | None:
 def _solver_source_hashes() -> dict[str, str]:
     paths = [
         REPO / "src/aeris/cfd/case/spec.py",
+        REPO / "src/aeris/cfd/env.py",
         REPO / "src/aeris/cfd/solvers/base.py",
         REPO / "src/aeris/cfd/solvers/adflow/adapter.py",
         REPO / "src/aeris/cfd/solvers/adflow/options_schema.py",
@@ -977,9 +1157,43 @@ def _postprocess(
     }
 
 
+def _build_solve_spec(policy: dict[str, Any]) -> SolveSpec:
+    refs = policy["references"]
+    flow = policy["flow"]
+    solver = policy["solver"]
+    return SolveSpec(
+        solver="adflow",
+        preset=str(solver["preset"]),
+        flow=FlowConditions(
+            alpha=float(flow["alpha_deg"]),
+            mach=float(flow["mach"]),
+            reynolds=float(flow["reynolds"]),
+            temperature=float(flow["temperature_K"]),
+        ),
+        area_ref=float(refs["solver_half_area_m2"]),
+        chord_ref=float(refs["chord_ref_m"]),
+        reynolds_length_ref=float(flow["reynolds_length_m"]),
+        moment_reference=tuple(float(value) for value in refs["primary_moment_reference_xyz_m"]),
+        secondary_moment_reference=tuple(
+            float(value) for value in refs["secondary_moment_reference_xyz_m"]
+        ),
+        mpi_np=int(solver["mpi_processes"]),
+        raw_options={
+            "equationType": str(solver["equations"]),
+            "turbulenceModel": str(solver["turbulence_model"]),
+            "writeVolumeSolution": bool(solver["write_volume_solution"]),
+            "writeSurfaceSolution": bool(solver["write_surface_solution"]),
+            "storeConvHist": bool(solver["store_convergence_history"]),
+            "monitorVariables": list(solver["monitor_variables"]),
+            "surfaceVariables": list(solver["surface_variables"]),
+            "NKSubspaceSize": int(solver["nk_subspace_size"]),
+        },
+    )
+
+
 def execute_canary(*, dry_run: bool, execute_token: str | None) -> dict[str, Any]:
     policy = _load_policy()
-    preflight_report = preflight()
+    preflight_report = preflight(run_mpi_probe=False)
     if dry_run:
         return {
             "status": "DRY_RUN" if preflight_report["passed"] else "BLOCKED",
@@ -1021,37 +1235,24 @@ def execute_canary(*, dry_run: bool, execute_token: str | None) -> dict[str, Any
                 "preflight": preflight_report,
             },
         }
+    preflight_report = preflight(run_mpi_probe=True)
+    if not preflight_report["passed"]:
+        return {
+            "status": "BLOCKED",
+            "details": {
+                "reason": "non-CFD one-rank MPI readiness probe failed",
+                "process_launched": False,
+                "authorization_consumed": False,
+                "preflight": preflight_report,
+            },
+        }
 
     attempt_dir = _repo_path(policy["attempt"]["directory"])
     attempt_dir.mkdir(parents=True, exist_ok=False)
     mesh_path = _repo_path(policy["mesh"]["path"])
-    refs = policy["references"]
-    flow = policy["flow"]
     solver = policy["solver"]
-    solve_spec = SolveSpec(
-        solver="adflow",
-        preset=str(solver["preset"]),
-        flow=FlowConditions(
-            alpha=float(flow["alpha_deg"]),
-            mach=float(flow["mach"]),
-            reynolds=float(flow["reynolds"]),
-            temperature=float(flow["temperature_K"]),
-        ),
-        area_ref=float(refs["solver_half_area_m2"]),
-        chord_ref=float(refs["chord_ref_m"]),
-        reynolds_length_ref=float(flow["reynolds_length_m"]),
-        moment_reference=tuple(float(value) for value in refs["primary_moment_reference_xyz_m"]),
-        secondary_moment_reference=tuple(
-            float(value) for value in refs["secondary_moment_reference_xyz_m"]
-        ),
-        mpi_np=1,
-        raw_options={
-            "writeVolumeSolution": False,
-            "writeSurfaceSolution": True,
-            "monitorVariables": list(solver["monitor_variables"]),
-            "NKSubspaceSize": 20,
-        },
-    )
+    os.environ[MACH_AERO_PREFIX_ENV] = str(solver["environment"]["prefix"])
+    solve_spec = _build_solve_spec(policy)
     adapter = get_solver_adapter("adflow")
     prepared = adapter.prepare(solve_spec, mesh_path, attempt_dir)
     time_path = attempt_dir / "time_verbose.txt"

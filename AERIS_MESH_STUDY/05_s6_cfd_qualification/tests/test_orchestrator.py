@@ -1,4 +1,5 @@
 import hashlib
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -36,7 +37,7 @@ def test_canary_dry_run_is_exactly_scoped_and_launches_nothing():
 
 
 def test_canary_policy_retains_complete_logs_and_full_residual_history():
-    policy = yaml.safe_load((ROOT / "policies/m2_a_c03_canary_v1.yaml").read_text())
+    policy = yaml.safe_load((ROOT / "policies/m2_a_c03_canary_v2.yaml").read_text())
     assert policy["solver"]["monitor_variables"] == [
         "resrho",
         "resmom",
@@ -51,6 +52,41 @@ def test_canary_policy_retains_complete_logs_and_full_residual_history():
     assert policy["artifacts"]["retention"] == "retain_all_cfd_logs_and_measurement_evidence"
     assert policy["solver"]["write_volume_solution"] is False
     assert policy["solver"]["retain_surface_solution"] is True
+    assert policy["solver"]["environment"]["prefix"] == (
+        "/home/mike_kara/miniconda3/envs/mach-aero"
+    )
+    assert policy["solver"]["environment"]["prelaunch_non_cfd_mpi_probe_required"] is True
+    assert policy["resource"]["maximum_preexisting_swap_gib"] == 0.25
+    assert policy["watchdog"]["maximum_swap_growth_gib"] == 0.25
+
+
+def test_governed_canary_prepares_exact_solver_contract(tmp_path, monkeypatch):
+    sys.path.insert(0, str(ROOT))
+    from canary import _build_solve_spec, _load_policy, _repo_path
+
+    from aeris.cfd.solvers.base import get_solver_adapter
+
+    policy = _load_policy()
+    environment = policy["solver"]["environment"]
+    monkeypatch.setenv("MACH_AERO_CONDA_PREFIX", environment["prefix"])
+    prepared = get_solver_adapter("adflow").prepare(
+        _build_solve_spec(policy), _repo_path(policy["mesh"]["path"]), tmp_path
+    )
+    options = json.loads((tmp_path / "adflow_options.json").read_text())
+    case = json.loads((tmp_path / "adflow_case.json").read_text())
+    assert prepared.command[:3] == (environment["mpirun"], "-np", "1")
+    assert prepared.command[3] == environment["python"]
+    assert options["equationType"] == "RANS"
+    assert options["turbulenceModel"] == "SA"
+    assert options["monitorVariables"] == policy["solver"]["monitor_variables"]
+    assert options["surfaceVariables"] == policy["solver"]["surface_variables"]
+    assert options["storeConvHist"] is True
+    assert options["writeVolumeSolution"] is False
+    assert options["writeSurfaceSolution"] is True
+    assert options["NKSubspaceSize"] == 20
+    assert case["reynolds_length_ref"] == 0.9
+    assert case["moment_reference"] == [0.4, 0.0, 0.0]
+    compile((tmp_path / "run_adflow.py").read_text(), "run_adflow.py", "exec")
 
 
 def test_holdout_is_metadata_locked():

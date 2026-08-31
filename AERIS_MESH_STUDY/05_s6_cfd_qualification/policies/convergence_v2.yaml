@@ -1,0 +1,41 @@
+schema_version: aeris.s6.classification_policy.v2
+policy_id: s6_convergence_v2
+immutable: true
+supersedes: s6_convergence_v1
+residuals:
+  source: ADflow_native_convergence_history
+  values: RMS_residuals_reported_by_ADflow
+  momentum_aggregation: maximum_of_x_y_z_RMS
+  density: {history_key: RSDMassRMS, max_final: 1.0e-5}
+  momentum:
+    history_keys: [RSDMomentumXRMS, RSDMomentumYRMS, RSDMomentumZRMS]
+    max_final: 1.0e-5
+  energy: {history_key: RSDEnergyStagnationDensityRMS, max_final: 1.0e-5}
+  sa: {history_key: RSDTurbulentSANuTildeRMS, max_final: 1.0e-5}
+mass_imbalance_normalized:
+  max: 1.0e-4
+  required_definition: signed_net_boundary_mass_flux_over_gross_boundary_mass_flux
+force_tail:
+  sample_window: 200
+  maximum_relative_range: 1.0e-3
+  coefficients: [cl, cd, cmy]
+  denominator_floors: {cl: 0.10, cd: 0.01, cmy: 0.05}
+wall_y_plus:
+  source_field: ADflow_YPlus
+  wall_distance_convention: >-
+    ADflow YPlus sampled at the first off-wall cell centroid; values are not
+    rescaled to the full first-cell height.
+  included_surfaces: no_slip_wall_zones_only
+  threshold_scope: global_and_each_no_slip_wall_zone
+  target: 1.0
+  p95_max: 1.0
+  p99_max: 2.0
+  absolute_max: 5.0
+physics_qc:
+  required_surface_fields: [cp, cf, yplus]
+  finite_required: true
+  unexplained_conformal_interface_discontinuity_allowed: false
+classification:
+  accepted_requires: [solver, convergence, force_tail, conservation, y_plus, physics_qc, resource]
+  measurement_only_execution_may_be_accepted: false
+  original_verdict_retained_on_policy_change: true

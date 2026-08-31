@@ -1,0 +1,108 @@
+schema_version: aeris.s6.m2_canary_policy.v1
+policy_id: m2_a_c03_measurement_canary_v1
+immutable: true
+scope:
+  purpose: measurement_only
+  maximum_process_launches: 1
+  automatic_retry_allowed: false
+  accepted_classification_allowed: false
+  development_set_only: true
+  holdout_access_allowed: false
+  geometry_set: lhs100_seed42
+  geometry_label: A
+  geometry_index: 83
+  grid_level: C03
+authorization:
+  independent_review_commit: 5f17ceb7a78a4d1525f73f57ad88f909f57c5c59
+  independent_review_path: AERIS_MESH_STUDY/05_s6_cfd_qualification/reviews/claude_m2_coupled_family_review_20260831.json
+  independent_review_sha256: 78c33614674914103afec70b1bff820179771b4548f64ad2ddd91d139d9475d4
+  required_review_verdict: GO
+  execute_token_sha256: 58b7be864ad2225e86ddf8a2e761a6d7baea3db534e5c64d4dcbf3b6bc23ec7b
+mesh:
+  path: AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03/lhs100_seed42_083/wing_vol_deformed.cgns
+  sha256: be2805ff85b6b1043863d7678d1551a52b6e8a65b299534d4ec0aaeffa51aeb4
+  target_surface_path: AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03/lhs100_seed42_083/surface_blocks.npz
+  target_surface_sha256: dd35106445ddbab88dbd79fe64c09c53d4a63622a7d0cd8deaca7cd28b0f3a19
+  evidence_path: AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_coupled_family_respec_20260831.json
+  evidence_sha256: ce06e7e605e3a2ca7ff4fbb4da9b9c485202495542298eb434bb34ff343c7537
+  cells: 943104
+  inverted_cells: 0
+  min_scaled_quality: 0.1670988318034351
+flow:
+  authority_path: AERIS_MESH_STUDY/05_s6_cfd_qualification/mission_authority_v1.yaml
+  authority_sha256: 13a3379dcc9d2a1c626e17e703e3249b6c59a6d3b8f4f1b6068caf22da280c9b
+  condition: high_load_case
+  alpha_deg: 8.0
+  mach: 0.0837
+  reynolds: 1530708.188575197
+  reynolds_length_m: 0.9
+  temperature_K: 278.4
+  speed_mps: 28.0
+  density_kg_m3: 1.0580517702823453
+  dynamic_viscosity_Pa_s: 1.7418672487754365e-5
+references:
+  authority_path: AERIS_MESH_STUDY/05_s6_cfd_qualification/moment_reference_v1.yaml
+  authority_sha256: 02780694efd968b7c85e205fdfc1771ca2e43950cd0a71ad428c64a1183e50c5
+  evidence_path: AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_reference_contract_20260831.json
+  evidence_sha256: a20c3e9e5dfdcc642eaeecdae36cfb1ee68028e9e18e6b52d9909917e08a5192
+  full_area_m2: 0.789836484035178
+  solver_half_area_m2: 0.394918242017589
+  full_span_m: 1.95678951038572
+  chord_ref_m: 0.494600003662239
+  primary_moment_reference_name: mission_cg
+  primary_moment_reference_xyz_m: [0.4, 0.0, 0.0]
+  secondary_moment_reference_name: geometry_quarter_mac
+  secondary_moment_reference_xyz_m: [0.33306678536067347, 0.0, 0.011273822668934992]
+  force_multiplier: 1.0
+  interpretation: half-domain forces divided by half-area give full-aircraft symmetric coefficients
+solver:
+  name: adflow
+  equations: RANS
+  turbulence_model: SA
+  preset: rans_ank_nk_v1
+  mpi_processes: 1
+  write_volume_solution: false
+  write_surface_solution: true
+  retain_surface_solution: true
+  monitor_variables: [resrho, resmom, resrhoe, resturb, cl, cd, cmy, cdp, cdv]
+artifacts:
+  retention: retain_all_cfd_logs_and_measurement_evidence
+  required:
+    - combined_solver_stdout_stderr
+    - native_iteration_convergence_history
+    - resolved_solver_options_with_provenance
+    - case_definition
+    - static_runner
+    - solve_report
+    - gnu_time_verbose
+    - resource_watchdog_timeline
+    - surface_solution
+    - launch_and_execution_records
+  volume_solution: disabled_by_independent_reviewed_resource_envelope
+  deletion_policy: explicit_human_approval_only
+classification_policy:
+  path: AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/convergence_v2.yaml
+  result_mode: measurement_only_no_accepted_verdict
+resource:
+  model: fixed_bytes_per_cell_v1_precanary
+  anchor_cells: 943104
+  anchor_forecast_peak_gib: 9.35
+  bytes_per_cell: 10645.152660152009
+  forecast_peak_gib: 9.35
+  forecast_max_fraction_wsl_memory: 0.75
+  prelaunch_headroom_gib: 2.0
+  minimum_free_disk_gib: 29.0
+  measured_peak_must_not_exceed_forecast_for_resource_pass: true
+watchdog:
+  poll_interval_seconds: 2.0
+  heartbeat_interval_seconds: 30.0
+  minimum_mem_available_gib: 2.0
+  maximum_swap_growth_gib: 0.25
+  minimum_runtime_free_disk_gib: 10.0
+  terminate_grace_seconds: 15.0
+  threshold_breach_action: terminate_process_group_and_record_RESOURCE_BLOCKED_HOST
+attempt:
+  id: m2_a_c03_measurement_20260831_001
+  directory: AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260831_001
+  consumed_record: AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_canary_authorization_consumed_20260831.json
+  execution_record: AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_canary_execution_20260831.json

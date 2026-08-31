@@ -11,7 +11,6 @@ import hashlib
 import json
 import os
 import re
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -212,10 +211,14 @@ def schema_audit(dry: bool) -> int:
 
 
 def policy_audit(dry: bool) -> int:
-    path = ROOT / "policies/convergence_v1.yaml"
+    root_policy = load_yaml(ROOT / "POLICY.yaml")
+    relative = root_policy.get("classification_policy", "policies/convergence_v1.yaml")
+    path = ROOT / relative
     text = path.read_text(encoding="utf-8") if path.exists() else ""
     required = ["policy_id:", "density:", "momentum:", "energy:", "sa:",
-                "mass_imbalance_normalized:", "original_verdict_retained_on_policy_change: true"]
+                "mass_imbalance_normalized:", "wall_y_plus:", "p95_max:",
+                "p99_max:", "absolute_max:", "wall_distance_convention:",
+                "original_verdict_retained_on_policy_change: true"]
     ok = path.exists() and all(item in text for item in required)
     details = {"policy": str(path), "policy_sha256": sha256(path) if path.exists() else None,
                "thresholds_machine_readable": ok, "immutable": "immutable: true" in text,
@@ -241,15 +244,42 @@ def cfd_contract_audit(dry: bool) -> int:
     adflow = REPO / "src/aeris/cfd/solvers/adflow/adapter.py"
     options = REPO / "src/aeris/cfd/solvers/adflow/options_schema.py"
     su2 = REPO / "src/aeris/cfd/solvers/su2/parse.py"
+    canary_policy = ROOT / "policies/m2_a_c03_canary_v1.yaml"
+    convergence_policy = ROOT / "policies/convergence_v2.yaml"
     combined = "\n".join(p.read_text(encoding="utf-8") for p in (adflow, options, su2))
-    required = ["residual_components_l2", "mass_imbalance_normalized", '"momentum"',
-                '"energy"', '"sa"', '"cmy"']
+    canary_text = canary_policy.read_text(encoding="utf-8")
+    convergence_text = convergence_policy.read_text(encoding="utf-8")
+    required = ["convergence_history", "residual_components_final", '"momentum"',
+                '"energy"', '"sa"', '"cmy"', "RSDMassRMS", "RSDMomentumXRMS",
+                "RSDEnergyStagnationDensityRMS", "RSDTurbulentSANuTildeRMS"]
     missing = [token for token in required if token not in combined]
-    ok = not missing
+    monitored = all(
+        token in canary_text
+        for token in ("resrho", "resmom", "resrhoe", "resturb", "cl", "cd", "cmy")
+    )
+    boundary_flux_required = (
+        "signed_net_boundary_mass_flux_over_gross_boundary_mass_flux" in convergence_text
+    )
+    boundary_flux_available = (
+        "signed_net_boundary_mass_flux_over_gross_boundary_mass_flux" in combined
+    )
+    ok = not missing and monitored
     details = {"sources": {str(p): sha256(p) for p in (adflow, options, su2)},
                "missing_contract_tokens": missing, "cmy_monitored": '"cmy"' in options.read_text(),
-               "component_residuals_stored": ok, "normalized_mass_imbalance_stored": ok}
-    status = "DRY_RUN" if dry and ok else ("PASS" if ok else "FAIL")
+               "component_residuals_stored": not missing,
+               "full_native_residual_history_monitored": monitored,
+               "continuity_residual_diagnostic_stored": "mass_imbalance_normalized" in combined,
+               "governed_boundary_flux_definition_required": boundary_flux_required,
+               "governed_boundary_flux_measurement_available": boundary_flux_available,
+               "acceptance_contract_complete": ok and boundary_flux_available}
+    if dry and ok:
+        status = "DRY_RUN"
+    elif ok and boundary_flux_available:
+        status = "PASS"
+    elif ok:
+        status = "CONDITIONAL"
+    else:
+        status = "FAIL"
     return result("audit-cfd-contract", status, details=details, dry_run=dry)
 
 
@@ -264,9 +294,11 @@ def grid_screen(dry: bool) -> int:
         rows.append({"id": name, "points": [ni, nj, nk], "surface_quads": surface_quads,
                      "hex_cells": surface_quads * (nk - 1)})
     ratios = [(rows[i + 1]["hex_cells"] / rows[i]["hex_cells"]) ** (1 / 3) for i in range(2)]
-    finest_cells = rows[-1]["hex_cells"]
+    memory_model_path = ROOT / "grid_family_candidate_v1.yaml"
+    memory_model_policy = load_yaml(memory_model_path).get("memory_model", {})
+    bytes_per_cell = float(memory_model_policy["bytes_per_cell"])
     for row in rows:
-        row["forecast_peak_gib"] = 9.35 * row["hex_cells"] / finest_cells
+        row["forecast_peak_gib"] = bytes_per_cell * row["hex_cells"] / 2**30
     meminfo = {}
     for line in Path("/proc/meminfo").read_text().splitlines():
         key, value = line.split(":", 1)
@@ -298,7 +330,8 @@ def grid_screen(dry: bool) -> int:
         return [
             row for row in rows
             if row.get("inverted_cells") == 0
-            and row.get("production_floor_passed", True) is True
+            and row.get("production_floor_passed") is True
+            and row.get("geometry") in {"A", "B", "C", "E"}
         ]
 
     c01_rows = accepted_rows(proven_reports["C01"], ("results",))
@@ -311,7 +344,7 @@ def grid_screen(dry: bool) -> int:
     required_geometries = {"A", "B", "C", "E"}
     level_geometries = {
         "C01": {row.get("geometry") for row in c01_rows},
-        "C02": {"A" if row.get("level") == "C02" and "geometry" not in row else row.get("geometry") for row in c02_rows},
+        "C02": {row.get("geometry") for row in c02_rows},
         "C03": {row.get("geometry") for row in c03_rows},
     }
     proven_family_pass = all(
@@ -329,7 +362,7 @@ def grid_screen(dry: bool) -> int:
                                          "nominal_finest_zero_inversions"})
     if proven_family_pass and mathematical_ok:
         status = "DRY_RUN" if dry else "CONDITIONAL"
-        next_action = "close independent review, then run one measured C03 canary"
+        next_action = "run exactly one governed measurement-only A/C03 canary"
     elif terminal_no_go:
         status = "NO_GO_VOLUME_INVALID_CANARY_FORBIDDEN"
         next_action = "proven S1-volume-to-S6-wall deformation; CFD canary remains forbidden"
@@ -338,7 +371,10 @@ def grid_screen(dry: bool) -> int:
         next_action = "written CGNS screen on A/B/C/E"
     return result("screen-grid-family", status, details={"levels": rows, "effective_ratios": ratios,
                   "resource": {"wsl_limit_gib": limit_gib, "available_gib": available_gib,
-                               "free_disk_gib": free_disk_gib}, "checks": checks,
+                               "free_disk_gib": free_disk_gib,
+                               "memory_model_path": str(memory_model_path),
+                               "memory_model_sha256": sha256(memory_model_path),
+                               "bytes_per_cell": bytes_per_cell}, "checks": checks,
                   "historical_direct_march_terminal_report": str(terminal_path) if terminal_no_go else None,
                   "historical_direct_march_terminal_report_sha256": sha256(terminal_path) if terminal_no_go else None,
                   "proven_route_reports": {
@@ -376,22 +412,67 @@ def classify_execution(execution_arg: str | None, policy_arg: str | None, dry: b
         policy = load_yaml(policy_path)
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         return result("classify", "FAIL", details={"error": str(exc)}, dry_run=dry)
-    residuals = execution.get("convergence", {}).get("residual_components_l2", {})
+    convergence = execution.get("convergence", {})
+    residuals = convergence.get(
+        "residual_components_final", convergence.get("residual_components_l2", {})
+    )
     limits = policy.get("residuals", {})
     residual_pass = all(
         residuals.get(name) is not None and float(residuals[name]) <= float(limits[name]["max_final"])
         for name in ("density", "momentum", "energy", "sa") if name in limits
     ) and all(name in limits for name in ("density", "momentum", "energy", "sa"))
-    mass = execution.get("convergence", {}).get("mass_imbalance_normalized")
-    mass_limit = float(policy.get("mass_imbalance_normalized", {}).get("max", -1))
-    mass_pass = mass is not None and mass_limit >= 0 and float(mass) <= mass_limit
-    accepted = execution.get("status") == "converged" and residual_pass and mass_pass
+    mass = convergence.get("mass_imbalance_normalized")
+    mass_definition = convergence.get("mass_imbalance_definition")
+    mass_policy = policy.get("mass_imbalance_normalized", {})
+    mass_limit = float(mass_policy.get("max", -1))
+    required_mass_definition = mass_policy.get("required_definition")
+    mass_definition_pass = (
+        required_mass_definition is None or mass_definition == required_mass_definition
+    )
+    mass_pass = (
+        mass is not None
+        and mass_limit >= 0
+        and float(mass) <= mass_limit
+        and mass_definition_pass
+    )
+    required = set(policy.get("classification", {}).get("accepted_requires", []))
+    measurements = execution.get("classification_measurements", {})
+    yplus_pass = measurements.get("y_plus", {}).get("passed") is True
+    physics_pass = measurements.get("surface_fields", {}).get("passed") is True
+    force_tail_pass = measurements.get("force_tail", {}).get("passed") is True
+    resource_pass = execution.get("resource", {}).get("passed") is True
+    conservation_pass = measurements.get("conservation", {}).get("passed", mass_pass) is True
+    additional_checks = {
+        "y_plus": yplus_pass,
+        "physics_qc": physics_pass,
+        "force_tail": force_tail_pass,
+        "resource": resource_pass,
+        "conservation": conservation_pass,
+    }
+    required_additional_pass = all(
+        additional_checks[name] for name in required if name in additional_checks
+    )
+    measurement_only = execution.get("measurement_only") is True
+    measurement_allowed = policy.get("classification", {}).get(
+        "measurement_only_execution_may_be_accepted", False
+    ) is True
+    accepted = (
+        execution.get("status") == "converged"
+        and residual_pass
+        and mass_pass
+        and required_additional_pass
+        and (not measurement_only or measurement_allowed)
+    )
     execution_hash, policy_hash = sha256(execution_path), sha256(policy_path)
     verdict = {"schema_version": 1, "execution_id": execution.get("execution_id", execution_hash[:16]),
                "execution_sha256": execution_hash, "policy_id": policy.get("policy_id"),
                "policy_sha256": policy_hash, "classification": "PASS" if accepted else "FAIL",
                "checks": {"solver_status": execution.get("status"), "residuals": residual_pass,
-                          "mass_imbalance": mass_pass}, "created_at": now()}
+                          "mass_imbalance": mass_pass, **additional_checks,
+                          "mass_imbalance_definition": mass_definition_pass,
+                          "measurement_only": measurement_only,
+                          "measurement_only_acceptance_allowed": measurement_allowed},
+               "created_at": now()}
     verdict_id = hashlib.sha256(f"{execution_hash}:{policy_hash}".encode()).hexdigest()[:24]
     verdict_path = execution_path.parent / "verdicts" / f"verdict_{verdict_id}.json"
     if not dry:
@@ -410,7 +491,8 @@ def classify_execution(execution_arg: str | None, policy_arg: str | None, dry: b
                            "execution_unchanged_sha256": sha256(execution_path)}, dry_run=dry)
 
 
-def dispatch(command: str, dry: bool, execution_arg: str | None = None, policy_arg: str | None = None) -> int:
+def dispatch(command: str, dry: bool, execution_arg: str | None = None,
+             policy_arg: str | None = None, execute_token: str | None = None) -> int:
     if command == "audit-contract": return audit_contract(dry)
     if command == "audit-geometry-space": return audit_geometry(dry)
     if command == "check-holdout-lock": return holdout_lock(dry)
@@ -423,9 +505,14 @@ def dispatch(command: str, dry: bool, execution_arg: str | None = None, policy_a
     if command == "screen-grid-family": return grid_screen(dry)
     if command == "validate-execution": return validate_execution(execution_arg, dry)
     if command == "classify": return classify_execution(execution_arg, policy_arg, dry)
+    if command == "run-canary":
+        from canary import execute_canary
+
+        outcome = execute_canary(dry_run=dry, execute_token=execute_token)
+        return result(command, outcome["status"], details=outcome["details"], dry_run=dry)
     if command in HEAVY:
         return result(command, "DRY_RUN" if dry else "BLOCKED",
-                      details={"reason": "CFD canary blocked: M2 family and independent review gates incomplete"},
+                      details={"reason": "heavy work blocked; the one-shot exception applies only to run-canary"},
                       dry_run=dry)
     if command in {"inventory-host", "propose-wsl-config", "verify-host-policy", "write-plan",
                    "test-identity", "check-resources", "screen-tip-smoothing",
@@ -444,8 +531,10 @@ def main() -> int:
     p.add_argument("--execution")
     p.add_argument("--policy")
     p.add_argument("--scope")
+    p.add_argument("--execute-token")
     args, _ = p.parse_known_args()
-    return dispatch(args.command, args.dry_run, getattr(args, "execution", None), getattr(args, "policy", None))
+    return dispatch(args.command, args.dry_run, getattr(args, "execution", None),
+                    getattr(args, "policy", None), getattr(args, "execute_token", None))
 
 
 if __name__ == "__main__":

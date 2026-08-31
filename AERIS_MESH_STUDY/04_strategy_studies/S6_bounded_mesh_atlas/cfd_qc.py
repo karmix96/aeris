@@ -14,6 +14,10 @@ YPLUS_TARGET = 1.0
 YPLUS_P95_MAX = 1.0
 YPLUS_P99_MAX = 2.0
 YPLUS_ABSOLUTE_MAX = 5.0
+YPLUS_WALL_DISTANCE_CONVENTION = (
+    "ADflow YPlus sampled at the first off-wall cell centroid; values are not "
+    "rescaled to the full first-cell height"
+)
 
 
 def _sha256(path: Path) -> str:
@@ -31,11 +35,12 @@ def wall_yplus_summary(
     p95_max: float = YPLUS_P95_MAX,
     p99_max: float = YPLUS_P99_MAX,
     absolute_max: float = YPLUS_ABSOLUTE_MAX,
+    wall_distance_convention: str = YPLUS_WALL_DISTANCE_CONVENTION,
+    enforce_each_region: bool = True,
 ) -> dict[str, Any]:
-    """Read YPlus only from ADflow no-slip wall zones and apply frozen limits."""
+    """Read ADflow no-slip-wall YPlus and apply global and regional limits."""
     surface_cgns = Path(surface_cgns).resolve()
-    arrays: list[np.ndarray] = []
-    zones: set[str] = set()
+    zone_arrays: dict[str, list[np.ndarray]] = {}
 
     with h5py.File(surface_cgns, "r") as handle:
 
@@ -51,8 +56,7 @@ def wall_yplus_summary(
                 return
             values = np.asarray(obj[()]).reshape(-1)
             if values.size:
-                arrays.append(values.astype(float, copy=False))
-                zones.add(zone)
+                zone_arrays.setdefault(zone, []).append(values.astype(float, copy=False))
 
         handle.visititems(collect)
 
@@ -62,7 +66,7 @@ def wall_yplus_summary(
         "p99_max": float(p99_max),
         "absolute_max": float(absolute_max),
     }
-    if not arrays:
+    if not zone_arrays:
         return {
             "schema": YPLUS_SCHEMA,
             "passed": False,
@@ -70,53 +74,76 @@ def wall_yplus_summary(
             "surface_cgns": str(surface_cgns),
             "surface_cgns_sha256": _sha256(surface_cgns),
             "thresholds": thresholds,
+            "wall_distance_convention": wall_distance_convention,
+            "threshold_scope": "global_and_each_no_slip_wall_zone",
             "wall_zone_count": 0,
             "sample_count": 0,
         }
 
-    values = np.concatenate(arrays)
-    finite_mask = np.isfinite(values)
-    finite = values[finite_mask]
-    nonfinite_count = int(values.size - finite.size)
-    negative_count = int(np.count_nonzero(finite < 0.0))
-    if finite.size:
-        statistics = {
-            "minimum": float(np.min(finite)),
-            "mean": float(np.mean(finite)),
-            "p50": float(np.percentile(finite, 50.0)),
-            "p95": float(np.percentile(finite, 95.0)),
-            "p99": float(np.percentile(finite, 99.0)),
-            "maximum": float(np.max(finite)),
-            "fraction_at_or_below_target": float(np.mean(finite <= target)),
-        }
-    else:
-        statistics = {
-            key: None
-            for key in (
-                "minimum",
-                "mean",
-                "p50",
-                "p95",
-                "p99",
-                "maximum",
-                "fraction_at_or_below_target",
-            )
+    def summarize(values: np.ndarray) -> dict[str, Any]:
+        finite_mask = np.isfinite(values)
+        finite = values[finite_mask]
+        nonfinite_count = int(values.size - finite.size)
+        negative_count = int(np.count_nonzero(finite < 0.0))
+        if finite.size:
+            statistics = {
+                "minimum": float(np.min(finite)),
+                "mean": float(np.mean(finite)),
+                "p50": float(np.percentile(finite, 50.0)),
+                "p95": float(np.percentile(finite, 95.0)),
+                "p99": float(np.percentile(finite, 99.0)),
+                "maximum": float(np.max(finite)),
+                "fraction_at_or_below_target": float(np.mean(finite <= target)),
+            }
+        else:
+            statistics = {
+                key: None
+                for key in (
+                    "minimum",
+                    "mean",
+                    "p50",
+                    "p95",
+                    "p99",
+                    "maximum",
+                    "fraction_at_or_below_target",
+                )
+            }
+
+        failures: list[str] = []
+        if nonfinite_count:
+            failures.append("nonfinite_yplus")
+        if negative_count:
+            failures.append("negative_yplus")
+        if not finite.size:
+            failures.append("no_finite_yplus")
+        else:
+            if statistics["p95"] > p95_max:
+                failures.append("p95_above_limit")
+            if statistics["p99"] > p99_max:
+                failures.append("p99_above_limit")
+            if statistics["maximum"] > absolute_max:
+                failures.append("maximum_above_limit")
+        return {
+            "passed": not failures,
+            "failure_reasons": failures,
+            "sample_count": int(values.size),
+            "nonfinite_count": nonfinite_count,
+            "negative_count": negative_count,
+            "statistics": statistics,
         }
 
-    failures: list[str] = []
-    if nonfinite_count:
-        failures.append("nonfinite_yplus")
-    if negative_count:
-        failures.append("negative_yplus")
-    if not finite.size:
-        failures.append("no_finite_yplus")
-    else:
-        if statistics["p95"] > p95_max:
-            failures.append("p95_above_limit")
-        if statistics["p99"] > p99_max:
-            failures.append("p99_above_limit")
-        if statistics["maximum"] > absolute_max:
-            failures.append("maximum_above_limit")
+    regions = {
+        zone: summarize(np.concatenate(arrays))
+        for zone, arrays in sorted(zone_arrays.items())
+    }
+    values = np.concatenate(
+        [array for arrays in zone_arrays.values() for array in arrays]
+    )
+    overall = summarize(values)
+    failed_regions = [zone for zone, report in regions.items() if not report["passed"]]
+    failures = list(overall["failure_reasons"])
+    if enforce_each_region and failed_regions:
+        failures.append("one_or_more_wall_regions_above_limit")
 
     return {
         "schema": YPLUS_SCHEMA,
@@ -125,10 +152,15 @@ def wall_yplus_summary(
         "surface_cgns": str(surface_cgns),
         "surface_cgns_sha256": _sha256(surface_cgns),
         "thresholds": thresholds,
-        "wall_zone_count": len(zones),
-        "dataset_count": len(arrays),
-        "sample_count": int(values.size),
-        "nonfinite_count": nonfinite_count,
-        "negative_count": negative_count,
-        "statistics": statistics,
+        "wall_distance_convention": wall_distance_convention,
+        "threshold_scope": "global_and_each_no_slip_wall_zone",
+        "enforce_each_region": bool(enforce_each_region),
+        "wall_zone_count": len(zone_arrays),
+        "dataset_count": sum(len(arrays) for arrays in zone_arrays.values()),
+        "sample_count": overall["sample_count"],
+        "nonfinite_count": overall["nonfinite_count"],
+        "negative_count": overall["negative_count"],
+        "statistics": overall["statistics"],
+        "failed_regions": failed_regions,
+        "regions": regions,
     }

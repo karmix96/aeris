@@ -1,29 +1,39 @@
 schema_version: aeris.s6.grid_family_candidate.v1
-status: rejected_volume_invalid
+status: conditional_selected_for_one_measurement_canary
 fixed_block_graph_count: 13
 solver_multigrid: single_grid_due_to_topology
 levels:
   - id: C01
     points: [17, 43, 61]
+    collar_points: 5
+    first_cell_fraction: 5.0e-6
+    cells: 191520
     points_minus_one_factorization: ["16=2^4", "42=2*3*7", "60=2^2*3*5"]
   - id: C02
     points: [23, 57, 73]
+    collar_points: 6
+    first_cell_fraction: 4.7e-6
+    cells: 422352
     points_minus_one_factorization: ["22=2*11", "56=2^3*7", "72=2^3*3^2"]
-  - id: C03_tentative_finest
+  - id: C03
     points: [29, 75, 97]
+    collar_points: 7
+    first_cell_fraction: 3.6e-6
+    cells: 943104
     points_minus_one_factorization: ["28=2^2*7", "74=2*37", "96=2^5*3"]
 effective_ratio_target: {min: 1.25, max: 1.35}
 memory_model:
-  finest_forecast_gib: 9.35
-  source: master-guide current measured/forecast model
+  model: fixed_bytes_per_cell_v1_precanary
+  anchor_cells: 943104
+  anchor_forecast_gib: 9.35
+  bytes_per_cell: 10645.152660152009
+  source: independent M2 review estimate, frozen before the measured canary
   conservative_rule: linear_with_exact_cell_count
 written_cgns_screen_required_geometries: [A, B, C, E]
-observed_terminal_result:
-  report: reports/m2_grid_screen_terminal_report.json
-  geometry_A_written: true
-  geometry_A_zero_inverted_cells: false
-  best_C03_inverted_cells: 6
-  best_C03_min_scaled_quality: -0.31140982102939085
-  geometries_B_C_E_not_run: prerequisite_A_failed
-  cfd_canary: forbidden
-next_authorized_work: proven_s1_volume_to_s6_exact_wall_deformation
+selected_family_evidence:
+  report: reports/m2_coupled_family_respec_20260831.json
+  independent_review: reviews/claude_m2_coupled_family_review_20260831.json
+  review_verdict: GO_one_measurement_only_A_C03_canary
+  all_A_B_C_E_written_valid: true
+  holdout_touched: false
+next_authorized_work: exactly_one_measurement_only_A_C03_canary

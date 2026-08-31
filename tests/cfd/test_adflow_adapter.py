@@ -67,6 +67,9 @@ def _spec(**kwargs) -> SolveSpec:
         flow=FlowConditions(alpha=2.0, mach=0.2, reynolds=1.0e6),
         area_ref=1.094,
         chord_ref=0.8774,
+        reynolds_length_ref=0.9,
+        moment_reference=(0.4, 0.0, 0.0),
+        secondary_moment_reference=(0.3, 0.0, 0.01),
         mpi_np=4,
     )
     base.update(kwargs)
@@ -82,6 +85,11 @@ def test_prepare_writes_static_runner_and_manifests(tmp_path: Path):
     runner_text = (workdir / "run_adflow.py").read_text()
     assert "20000" not in runner_text  # nothing baked in
     assert "adflow_options.json" in runner_text
+    assert "RSDMomentumXRMS" in runner_text
+    assert "RSDEnergyStagnationDensityRMS" in runner_text
+    assert "residual_components_final" in runner_text
+    assert "residual_vector_component_l2_diagnostic" in runner_text
+    compile(runner_text, "run_adflow.py", "exec")
 
     options = json.loads((workdir / "adflow_options.json").read_text())
     assert options["MGCycle"] == "sg"
@@ -90,7 +98,10 @@ def test_prepare_writes_static_runner_and_manifests(tmp_path: Path):
     case = json.loads((workdir / "adflow_case.json").read_text())
     assert case["alpha"] == 2.0
     assert case["area_ref"] == 1.094
-    assert case["eval_funcs"] == ["cl", "cd", "cmy"]
+    assert case["reynolds_length_ref"] == 0.9
+    assert case["moment_reference"] == [0.4, 0.0, 0.0]
+    assert case["secondary_moment_reference"] == [0.3, 0.0, 0.01]
+    assert case["eval_funcs"] == ["cl", "cd", "cmy", "cdp", "cdv"]
 
     manifest = json.loads((workdir / "adflow_effective_options.json").read_text())
     assert manifest["extra"]["solver_preset"] == "rans_ank_nk_v1"

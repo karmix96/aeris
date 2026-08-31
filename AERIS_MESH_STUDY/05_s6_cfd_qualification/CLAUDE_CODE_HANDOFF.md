@@ -17,8 +17,10 @@ Linux-native repository. Read these files first, in order:
 
 ## Non-negotiable safety order
 
-- Do not launch CFD or a canary until the redesigned coupled family receives
-  the required independent GO. The direct-march NO-GO remains historical.
+- The coupled family has an independent GO for exactly one measurement-only
+  A/C03 canary. Do not launch it until the exact launcher commit receives a
+  read-only wiring review and its fresh preflight passes. The direct-march
+  NO-GO remains historical.
 - Do not inspect, parse, sample, visualize, copy, or hash the locked holdout
   sample contents. Only use its lock metadata.
 - Do not alter the live geometry YAML, governance snapshots, unrelated user
@@ -46,16 +48,14 @@ Linux-native repository. Read these files first, in order:
 - The old C03 fold is attributed to its 9-point tip-cap collar. Re-specifying
   the coupled collar ladder to `5/6/7` removes the fold while retaining the
   finer 3.6e-6 C03 wall-spacing fraction; the rejected 6.1e-6 path is retained.
-- R1-R3 are mechanically closed by the coupled re-spec, synchronized candidate
-  registries, a regression test, and A/B/C/E written-CGNS evidence. They still
-  require independent review of the new evidence.
-- Flat-plate preflight y+ remains a high risk: estimated C03 all-wall p95 is
-  1.68-2.17 and maximum 9.98-14.59. This is not measured y+; only one governed
-  C03 canary can qualify it.
-- Two automated Claude Opus review attempts for `a92bf10` timed out with zero
-  tokens, and an interactive Opus/max review of `dbf918f` stalled. No
-  independent GO exists; see `reviews/claude_a92bf10_review_attempts_20260831.json`
-  and `reviews/claude_dbf918f_review_attempt_20260831.json`.
+- R1-R3 are closed by the coupled re-spec, synchronized candidate registries,
+  regression coverage, A/B/C/E written-CGNS evidence, and the independent
+  review in `reviews/claude_m2_coupled_family_review_20260831.json`.
+- Flat-plate preflight y+ used full first-cell height and is not acceptance
+  evidence. ADflow uses the first-cell centroid, so the expected values are
+  about half; only the governed canary can measure them.
+- Earlier Claude review attempts timed out and are retained as transport
+  history. A later independent review completed and issued the bounded GO.
 - An independent Claude Code review of `dbf918f` is now COMPLETE and closes
   R1/R2/R3: `reviews/claude_m2_coupled_family_review_20260831.json`. All twelve
   claimed family meshes were reopened and reproduce exactly; realized OML
@@ -75,42 +75,51 @@ Linux-native repository. Read these files first, in order:
   refinement step; C/C03 needs a geometry-specific template; the y+ preflight
   has no committed generator and ungoverned limits; two `grid_screen` gate
   defaults are permissive; the memory forecast cannot fail on the finest level.
-- Three authenticated Claude Code review attempts timed out with zero model
-  tokens. No independent GO exists; see `reviews/claude_m0_m1_review_attempt0*.json`.
+- The one-shot launcher now binds the exact reviewed mesh/flow/reference
+  contract, freezes numeric cell-centroid y+ gates, keeps all other heavy work
+  blocked, consumes authorization before process start, forbids retry and
+  ACCEPTED, and uses a memory/swap/disk/OOM watchdog.
+- It retains every CFD log and evidence artifact except the volume solution,
+  which stays disabled under the reviewed resource envelope. Native histories
+  include density, x/y/z momentum, energy, SA, CL/CD/CMy and CDp/CDv.
+- The acceptance contract remains honestly CONDITIONAL because the current
+  continuity-residual ratio is not the governed signed boundary-flux mass
+  balance. The canary is measurement-only, so this gap cannot be hidden by an
+  ACCEPTED verdict.
+- Latest focused verification: 72 passed. Zero-launch preflight passes 41
+  identity/governance checks and all resource checks. No CFD has been launched;
+  the one-shot authorization is unconsumed.
 
 ## Execute next, in order
 
-1. Inspect git status and preserve the three pre-existing unrelated user
-   changes. Do not stage them.
-2. Independently reproduce `m2_coupled_family_respec_20260831.json`, including
-   the target-specific C/C03 route and exact output hashes.
-3. Verify candidate spacing registries agree and the 5/6/7 collar plus
-   5.0/4.7/3.6e-6 spacing ladders are monotonic.
-4. Review the preflight y+ calculation as an estimate only; do not treat it as
-   measured acceptance evidence.
-5. The M2 independent GO for one A/C03 canary is ISSUED (see the review
-   above). Before launching it, put the y+ limit and wall-distance convention
-   into the immutable policy, and wire `run-canary` with the review's caps.
-   Do not authorize C01/C02 CFD until that canary is classified.
-8. Run focused qualification/meshing tests after every governed change. The
-   repository-wide suite currently cannot collect in this WSL environment
-   because optional project dependencies such as `aerosandbox` are absent.
-9. Update `LIVE_STATUS.md`, retain small evidence, and commit only governed
+1. Inspect the current commit and working tree. Preserve the three unrelated
+   user changes and do not stage them.
+2. Perform a read-only adversarial review of the exact launcher commit. Verify
+   all reviewed caps, mesh/mission/reference hashes, full residual/log capture,
+   one-shot consumption, no-retry behavior, watchdog termination, and the
+   impossibility of ACCEPTED classification. Do not run CFD during the review.
+3. Return an explicit `GO_ONE_MEASUREMENT_CANARY` or `NO_GO`, with severity and
+   file/line evidence. Record the review under `reviews/`.
+4. If and only if GO, run the focused suite and `run-canary --dry-run` again.
+5. Execute the one-shot token exactly once, monitor it, retain all artifacts,
+   and do not retry under any outcome. Never touch the holdout.
+6. Postprocess and report the result as measurement-only. Do not authorize
+   C01/C02, broader campaigns, grid independence, or ACCEPTED.
+7. Update `LIVE_STATUS.md`, retain small evidence, and commit only governed
    files. Never commit CGNS/restart/field artifacts; do not push without the
    user's instruction.
 
 ## Claude review order
 
-When Claude service transport works, first perform a read-only Opus adversarial
-review of commit `752852c` and the M2 terminal evidence. Challenge geometry
-identity, moment/reference semantics, residual normalization, immutable
-classification, ADF audit independence, and the decision to stop before CFD.
-Record model, version, prompt scope, commit, result, and findings under
-`reviews/`. Do not claim GO until all HIGH findings are closed. If transport
-fails again, retain the failure and preserve the review gate.
+Perform a read-only Opus/max adversarial review of the exact current launcher
+commit and the bound M2 GO. Challenge identity, moment/reference and Reynolds
+semantics, native residual naming/normalization, immutable classification,
+complete artifact retention, one-shot durability, watchdog safety, and the
+honest boundary-flux gap. Record model, version, scope, commit, result, and
+findings under `reviews/`. Do not launch CFD in the review process.
 
 ## Continuation behavior
 
-Continue this order until the redesigned nominal family is independently
-volume-valid or a new governed NO-GO is established. If the Codex session ends,
-start here and work independently within these constraints.
+Continue this order through the sole measurement result or a governed NO-GO.
+If the Codex session ends, start here and work independently within these
+constraints; never consume the token twice.

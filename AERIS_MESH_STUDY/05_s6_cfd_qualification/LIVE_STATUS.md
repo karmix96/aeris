@@ -1,6 +1,6 @@
 # S6 qualification live status
 
-Updated: 2026-08-30
+Updated: 2026-09-01
 
 ## Current state
 
@@ -9,18 +9,20 @@ Updated: 2026-08-30
   swap 8 GiB; 12 logical CPUs.
 - Direct-I/O baseline on relocated HDD: 60.5 MB/s write, 73.0 MB/s read.
 - Recovery VHD: independently SHA-256 verified and retained.
-- M0/M1 contracts: **complete and committed** (`752852c`); geometry identity,
-  moment-reference, CFD residual/mass-imbalance, immutable classification,
-  mission-authority, and frozen-design-space audits are machine-green.
+- M0/M1 baseline contracts are committed (`752852c`). Geometry identity,
+  moment-reference, immutable classification, mission authority, and frozen
+  design-space remain machine-green; the later strict boundary-flux audit is
+  CONDITIONAL as documented below.
 - Geometry semantic audit: **PASS**; 20 live variables match 20 frozen
   variables with no bound differences.
-- Half-domain, schema, policy, execution-state, mission, moment-reference, CFD
-  contract, geometry-freeze, and holdout-lock audits: **PASS**.
+- Half-domain, schema, policy, execution-state, mission, moment-reference,
+  geometry-freeze, and holdout-lock audits: **PASS**. CFD capture is green;
+  acceptance conservation remains **CONDITIONAL** pending boundary flux.
 - Holdout `round_c_lhs10_seed42`: **locked and untouched**; contents were not
   read, parsed, copied, visualized, or hashed.
-- Independent Claude review: **not obtained**. Three authenticated Claude Code
-  requests (Opus twice, Sonnet once) timed out with zero model tokens; failure
-  records are retained under `reviews/` and no Claude GO is claimed.
+- Early Claude review requests timed out with zero model tokens; those failure
+  records remain under `reviews/`. A later review completed and issued the
+  tightly bounded GO described below.
 - M2 direct-march candidate family: **terminal NO-GO for that route**. The coupled
   `17x43x61 -> 23x57x73 -> 29x75x97` refinement and resource screens pass, but
   independently reopened written ADF-CGNS meshes contain inverted cells.
@@ -91,9 +93,9 @@ Updated: 2026-08-30
 - `screen-grid-family` is now **CONDITIONAL** with every mesh and resource
   check green. The old direct-march NO-GO remains retained as historical route
   evidence and no longer vetoes the proven route.
-- Conservative flat-plate y+ preflight remains a high risk: estimated C03
-  all-wall p95 is `1.68-2.17` and maximum `9.98-14.59`; only measured CFD can
-  qualify it. CFD remains blocked pending independent review.
+- The conservative flat-plate y+ preflight used full first-cell height:
+  estimated C03 all-wall p95 is `1.68-2.17` and maximum `9.98-14.59`. It is not
+  measured acceptance evidence; the bounded GO below permits one canary.
 - Two Claude Opus review attempts for `a92bf10` timed out with zero tokens; an
   interactive Opus/max review of `dbf918f` also stalled without a result. A
   completed independent Claude Code review of `dbf918f` is now on record:
@@ -132,6 +134,27 @@ Updated: 2026-08-30
 - Repository-wide pytest: collection is environment-blocked by absent optional
   project packages (first root cause: `aerosandbox`; 102 collection errors),
   not by a failing governed S6 test.
+- The one-shot launcher is now implemented but **has not launched CFD**. Its
+  immutable policy binds the reviewed A/C03 mesh, geometry A/index 83,
+  high-load mission point, one MPI rank, one launch maximum, no retry, no
+  ACCEPTED verdict, and no holdout access. Every other heavy command remains
+  blocked.
+- `convergence_v2.yaml` now governs measured ADflow cell-centroid y+ at both
+  global and per-wall-zone scope (`p95 <= 1`, `p99 <= 2`, `max <= 5`). The
+  runner retains native density, all three momentum, energy, and SA residual
+  histories plus CL/CD/CMy/CDp/CDv histories.
+- All CFD logs and measurement evidence are retained: combined solver output,
+  native convergence history, resolved options and provenance, case, static
+  runner, solve report, GNU-time report, watchdog timeline, surface solution,
+  and immutable launch/execution records. Volume output alone stays disabled
+  to preserve the independently reviewed memory envelope.
+- The acceptance audit is deliberately **CONDITIONAL**: the existing
+  continuity-residual ratio is not the required signed net/gross boundary mass
+  flux. It is retained as a diagnostic but cannot satisfy conservation or
+  yield ACCEPTED. This does not block the expressly measurement-only canary.
+- The latest focused suite is **72 passed**. The zero-launch preflight passes
+  41 identity/governance checks; forecast is 9.35 GiB against about 11.50 GiB
+  available, leaving about 0.15 GiB above the mandatory 2 GiB headroom.
 
 ## Local commits
 
@@ -163,10 +186,11 @@ Updated: 2026-08-30
 
 ## Next authorized work
 
-Obtain an independent Opus review of the redesigned coupled-family report and
-spacing preflight. If it closes all HIGH findings, authorize exactly one
-one-rank A/C03 CFD canary under `/usr/bin/time -v`; classify its measured y+,
-resource, convergence and force evidence before any C01/C02 CFD launch.
+Commit the governed one-shot wiring, obtain a read-only Claude review of that
+exact commit, and launch exactly one one-rank A/C03 measurement canary only if
+the review and a fresh zero-launch preflight remain green. Monitor it with the
+host watchdog, retain every log, and report a measurement-only result. Do not
+launch C01/C02 or classify ACCEPTED.
 
 ## Resume commands
 
@@ -177,5 +201,7 @@ cd /home/mike_kara/aeris
 .venv/bin/python AERIS_MESH_STUDY/05_s6_cfd_qualification/run.py audit-geometry-space
 .venv/bin/python AERIS_MESH_STUDY/05_s6_cfd_qualification/run.py check-half-domain
 .venv/bin/python AERIS_MESH_STUDY/05_s6_cfd_qualification/run.py check-holdout-lock
+.venv/bin/python AERIS_MESH_STUDY/05_s6_cfd_qualification/run.py audit-cfd-contract
 .venv/bin/python AERIS_MESH_STUDY/05_s6_cfd_qualification/run.py screen-grid-family
+.venv/bin/python AERIS_MESH_STUDY/05_s6_cfd_qualification/run.py run-canary --dry-run
 ```

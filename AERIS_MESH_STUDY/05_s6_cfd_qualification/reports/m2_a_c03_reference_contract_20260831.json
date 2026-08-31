@@ -1,0 +1,66 @@
+{
+  "schema": "aeris.s6.m2.reference_contract.v1",
+  "case": {
+    "geometry_set": "lhs100_seed42",
+    "geometry_index": 83,
+    "geometry_label": "A",
+    "design_vector_canonical_sha256": "fe8ef8d7750c006c9fce275396969e8e9899e665b7153284a3c10019ef7df2f4"
+  },
+  "design_vector": {
+    "b3_ratio": 0.525769717804102,
+    "b_total_m": 0.9784909486280495,
+    "c1_m": 0.8673307127842314,
+    "c2_ratio": 0.6303045812615714,
+    "c3_ratio": 0.4128048041958378,
+    "c4_ratio": 0.17276904208690497,
+    "dihedral_b1_deg": 0.0,
+    "dihedral_b2_deg": 2.6863737052256917,
+    "dihedral_b3_deg": 4.225974225208664,
+    "elevon_end_frac": 0.906753383333486,
+    "elevon_hinge_frac": 0.7183242361674487,
+    "elevon_start_frac": 0.5937505889673017,
+    "split_ratio": 0.4086847248666001,
+    "sw1_deg": -36.68718097259055,
+    "sw2_deg": -32.058840599274106,
+    "sw3_deg": -11.20709622277216,
+    "twist_b0_deg": 0.041800027820901864,
+    "twist_b1_deg": -1.456824644603822,
+    "twist_b2_deg": -4.268820505057192,
+    "twist_b3_deg": -6.536710769925316
+  },
+  "solver_references_from_realized_pygeo": {
+    "full_area_m2": 0.789836484035178,
+    "solver_half_area_m2": 0.394918242017589,
+    "full_span_m": 1.95678951038572,
+    "chord_ref_m": 0.494600003662239,
+    "source_manifest": "AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C03_attempt03_eps3/_geometry/lhs100_seed42_083/geometry/pygeo/pygeo_manifest.json",
+    "source_manifest_sha256": "bf8e63faa85959ad8cf36eb362db41b8ebe6379aeb6b55320c9f234dc0e9bb63"
+  },
+  "moment_references": {
+    "primary": {
+      "name": "mission_cg",
+      "xyz_m": [0.4, 0.0, 0.0],
+      "authority": "AERIS_MESH_STUDY/05_s6_cfd_qualification/moment_reference_v1.yaml",
+      "authority_sha256": "02780694efd968b7c85e205fdfc1771ca2e43950cd0a71ad428c64a1183e50c5"
+    },
+    "secondary": {
+      "name": "geometry_quarter_mac",
+      "xyz_m": [0.33306678536067347, 0.0, 0.011273822668934992],
+      "definition": "AeroSandbox wing aerodynamic_center(chord_fraction=0.25) regenerated from the locked lhs100_seed42 row 83",
+      "regenerated_reference_values": {
+        "area_m2": 0.790390451907752,
+        "mean_aerodynamic_chord_m": 0.4945744794601347,
+        "span_m": 1.9584066329361027
+      },
+      "note": "Solver normalization uses the realized pyGeo references above; the regenerated AeroSandbox wing is used only to locate the geometry-relative quarter-MAC point."
+    }
+  },
+  "implementation_sha256": {
+    "geometry_sets.py": "b27f51f5666976139240812b61988a891c9e89e524db9c7b7e06f90754ab5c83",
+    "aerosandbox_adapter.py": "a1d1caef0d1c549bb97fdd45a272228f3a7e829a8c4743af81bec71b26202150",
+    "pygeo_adapter.py": "9d4d5d8dc8ebe056538896c1458caba22146aff4b5851388ecb4397add472832",
+    "configs/geometry/bwb.yaml": "f114b48e3c400a2832cc3763e7cf7505ecd0925fb81cb92f70e28bb5e6234614",
+    "lhs_authority.yaml": "3624e7ad3ae671c9b5bcf8eb18fd6a8dc8fb37d2a620ee34381e189b73ac2043"
+  },
+  "holdout_touched": false
+}

@@ -65,6 +65,9 @@ class SolveSpec:
     flow: FlowConditions | None = None
     area_ref: float | None = None
     chord_ref: float | None = None
+    reynolds_length_ref: float | None = None
+    moment_reference: tuple[float, float, float] | None = None
+    secondary_moment_reference: tuple[float, float, float] | None = None
     mpi_np: int = 1
     overrides: dict[str, object] = field(default_factory=dict)
     raw_options: dict[str, object] = field(default_factory=dict)

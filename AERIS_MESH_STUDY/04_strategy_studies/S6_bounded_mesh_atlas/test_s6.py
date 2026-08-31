@@ -1407,6 +1407,9 @@ def test_wall_yplus_gate_reads_only_no_slip_wall_zones(tmp_path) -> None:
     assert report["wall_zone_count"] == 1
     assert report["sample_count"] == 100
     assert report["statistics"]["maximum"] == pytest.approx(0.9)
+    assert report["threshold_scope"] == "global_and_each_no_slip_wall_zone"
+    assert "first off-wall cell centroid" in report["wall_distance_convention"]
+    assert report["regions"]["NSWallAdiabaticBCZone1"]["passed"]
 
 
 def test_wall_yplus_gate_rejects_large_wall_values(tmp_path) -> None:
@@ -1418,3 +1421,5 @@ def test_wall_yplus_gate_rejects_large_wall_values(tmp_path) -> None:
     report = cfd_qc.wall_yplus_summary(path)
     assert not report["passed"]
     assert "maximum_above_limit" in report["failure_reasons"]
+    assert report["failed_regions"] == ["NSWallAdiabaticBCZone1"]
+    assert "one_or_more_wall_regions_above_limit" in report["failure_reasons"]

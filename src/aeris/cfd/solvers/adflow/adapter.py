@@ -29,7 +29,7 @@ from aeris.cfd.solvers.base import (
 )
 
 DEFAULT_SOLVER_PRESET = "rans_ank_nk_v1"
-DEFAULT_EVAL_FUNCS = ("cl", "cd", "cmy")
+DEFAULT_EVAL_FUNCS = ("cl", "cd", "cmy", "cdp", "cdv")
 
 OPTIONS_JSON_NAME = "adflow_options.json"
 CASE_JSON_NAME = "adflow_case.json"
@@ -65,14 +65,54 @@ def main():
         alpha=case["alpha"],
         mach=case["mach"],
         reynolds=case["reynolds"],
-        reynoldsLength=case["chord_ref"],
+        reynoldsLength=case["reynolds_length_ref"],
         T=case["temperature"],
         areaRef=case["area_ref"],
         chordRef=case["chord_ref"],
+        xRef=case["moment_reference"][0] if case["moment_reference"] is not None else None,
+        yRef=case["moment_reference"][1] if case["moment_reference"] is not None else None,
+        zRef=case["moment_reference"][2] if case["moment_reference"] is not None else None,
         evalFuncs=case["eval_funcs"],
     )
     solver = ADFLOW(options=options)
     solver(ap)
+
+    # Preserve the full native convergence history, including force and
+    # pressure/viscous-drag tails.  ADflow owns the column definitions, so this
+    # is safer than reconstructing a variable-width monitor table from stdout.
+    history = solver.getConvergenceHistory()
+    serial_history = {}
+    for key, values in history.items():
+        array = numpy.asarray(values)
+        serial_history[str(key)] = array.tolist()
+
+    history_by_key = {key.casefold(): values for key, values in serial_history.items()}
+
+    def final_history_value(key):
+        values = history_by_key.get(key.casefold())
+        if not isinstance(values, list) or not values:
+            return None
+        return float(values[-1])
+
+    native_residual_final = {
+        "density": final_history_value("RSDMassRMS"),
+        "momentum_x": final_history_value("RSDMomentumXRMS"),
+        "momentum_y": final_history_value("RSDMomentumYRMS"),
+        "momentum_z": final_history_value("RSDMomentumZRMS"),
+        "energy": final_history_value("RSDEnergyStagnationDensityRMS"),
+        "sa": final_history_value("RSDTurbulentSANuTildeRMS"),
+    }
+    momentum_values = [
+        native_residual_final[name]
+        for name in ("momentum_x", "momentum_y", "momentum_z")
+        if native_residual_final[name] is not None
+    ]
+    native_residual_components = {
+        "density": native_residual_final["density"],
+        "momentum": max(momentum_values) if len(momentum_values) == 3 else None,
+        "energy": native_residual_final["energy"],
+        "sa": native_residual_final["sa"],
+    }
 
     # The nonlinear residual vector is cell-major with `nw` states per cell:
     # rho, three momentum equations, energy, then turbulence equations.  Store
@@ -81,7 +121,9 @@ def main():
     residual = numpy.asarray(solver.getResidual(ap), dtype=float)
     nstate = int(solver.adflow.flowvarrefstate.nw)
     if nstate < 5 or residual.size % nstate:
-        raise RuntimeError(f"unexpected ADflow residual layout: size={residual.size}, nstate={nstate}")
+        raise RuntimeError(
+            f"unexpected ADflow residual layout: size={residual.size}, nstate={nstate}"
+        )
     residual = residual.reshape((-1, nstate))
     local_sumsq = numpy.sum(residual * residual, axis=0)
     global_sumsq = MPI.COMM_WORLD.allreduce(local_sumsq, op=MPI.SUM)
@@ -89,7 +131,7 @@ def main():
     local_rho_abs = float(numpy.sum(numpy.abs(residual[:, 0])))
     global_rho_sum = MPI.COMM_WORLD.allreduce(local_rho_sum, op=MPI.SUM)
     global_rho_abs = MPI.COMM_WORLD.allreduce(local_rho_abs, op=MPI.SUM)
-    component_l2 = {
+    residual_vector_component_l2 = {
         "density": float(numpy.sqrt(global_sumsq[0])),
         "momentum": float(numpy.sqrt(numpy.sum(global_sumsq[1:4]))),
         "energy": float(numpy.sqrt(global_sumsq[4])),
@@ -101,14 +143,37 @@ def main():
     solver.evalFunctions(ap, funcs)
     solver.checkSolutionFailure(ap, funcs)
 
+    secondary_funcs = None
+    secondary_reference = case.get("secondary_moment_reference")
+    if secondary_reference is not None:
+        primary_reference = case["moment_reference"]
+        ap.xRef, ap.yRef, ap.zRef = secondary_reference
+        secondary_funcs = {}
+        solver.evalFunctions(ap, secondary_funcs)
+        ap.xRef, ap.yRef, ap.zRef = primary_reference
+
     if MPI.COMM_WORLD.rank == 0:
         report = {
             "schema": "aeris.cfd.adflow_run.v1",
             "solve_failed": bool(funcs.get("fail", False)),
             "functions": {k: float(v) for k, v in funcs.items() if k != "fail"},
-            "residual_components_l2": component_l2,
+            "secondary_reference_functions": (
+                None
+                if secondary_funcs is None
+                else {k: float(v) for k, v in secondary_funcs.items() if k != "fail"}
+            ),
+            "convergence_history": serial_history,
+            "residual_components_final": native_residual_components,
+            "residual_component_monitor_final": native_residual_final,
+            "residual_components_definition": (
+                "ADflow native RMS convergence monitors; momentum is the maximum "
+                "of the x/y/z component RMS values"
+            ),
+            "residual_vector_component_l2_diagnostic": residual_vector_component_l2,
             "mass_imbalance_normalized": float(mass_imbalance_normalized),
-            "mass_imbalance_definition": "abs(sum continuity residual)/sum(abs continuity residual)",
+            "mass_imbalance_definition": (
+                "abs(sum continuity residual)/sum(abs continuity residual)"
+            ),
             "elapsed_seconds": time.time() - t0,
         }
         (here / "adflow_run.json").write_text(json.dumps(report, indent=2))
@@ -132,6 +197,18 @@ class AdflowAdapter(SolverAdapter):
             raise ValueError(
                 "solve.area_ref and solve.chord_ref are required (HALF-model "
                 "reference area for symmetry-plane meshes; mean aerodynamic chord)."
+            )
+        if solve.reynolds_length_ref is not None and solve.reynolds_length_ref <= 0.0:
+            raise ValueError("solve.reynolds_length_ref must be positive")
+        for name, reference in (
+            ("moment_reference", solve.moment_reference),
+            ("secondary_moment_reference", solve.secondary_moment_reference),
+        ):
+            if reference is not None and len(reference) != 3:
+                raise ValueError(f"solve.{name} must contain exactly three coordinates")
+        if solve.secondary_moment_reference is not None and solve.moment_reference is None:
+            raise ValueError(
+                "solve.moment_reference is required when secondary_moment_reference is set"
             )
         workdir = workdir.expanduser().resolve()
         workdir.mkdir(parents=True, exist_ok=True)
@@ -171,6 +248,19 @@ class AdflowAdapter(SolverAdapter):
             "temperature": solve.flow.temperature,
             "area_ref": solve.area_ref,
             "chord_ref": solve.chord_ref,
+            "reynolds_length_ref": (
+                solve.reynolds_length_ref
+                if solve.reynolds_length_ref is not None
+                else solve.chord_ref
+            ),
+            "moment_reference": (
+                list(solve.moment_reference) if solve.moment_reference is not None else None
+            ),
+            "secondary_moment_reference": (
+                list(solve.secondary_moment_reference)
+                if solve.secondary_moment_reference is not None
+                else None
+            ),
             "eval_funcs": list(DEFAULT_EVAL_FUNCS),
         }
         (workdir / CASE_JSON_NAME).write_text(
@@ -219,7 +309,13 @@ class AdflowAdapter(SolverAdapter):
                     "reynolds": case["reynolds"],
                     "temperature": case["temperature"],
                 },
-                refs={"area_ref": case["area_ref"], "chord_ref": case["chord_ref"]},
+                refs={
+                    "area_ref": case["area_ref"],
+                    "chord_ref": case["chord_ref"],
+                    "reynolds_length_ref": case["reynolds_length_ref"],
+                    "moment_reference": case.get("moment_reference"),
+                    "secondary_moment_reference": case.get("secondary_moment_reference"),
+                },
                 convergence=convergence,
                 artifacts={"log": str(log_path)},
             )
@@ -227,7 +323,15 @@ class AdflowAdapter(SolverAdapter):
             return report
 
         run = json.loads(run_json.read_text(encoding="utf-8"))
-        convergence["residual_components_l2"] = run.get("residual_components_l2", {})
+        convergence["residual_components_final"] = run.get("residual_components_final", {})
+        convergence["residual_component_monitor_final"] = run.get(
+            "residual_component_monitor_final", {}
+        )
+        convergence["residual_components_definition"] = run.get("residual_components_definition")
+        convergence["residual_vector_component_l2_diagnostic"] = run.get(
+            "residual_vector_component_l2_diagnostic", {}
+        )
+        convergence["native_history"] = run.get("convergence_history", {})
         convergence["mass_imbalance_normalized"] = run.get("mass_imbalance_normalized")
         convergence["mass_imbalance_definition"] = run.get("mass_imbalance_definition")
         status = "failed" if run.get("solve_failed") else "converged"
@@ -246,7 +350,13 @@ class AdflowAdapter(SolverAdapter):
                 "reynolds": case["reynolds"],
                 "temperature": case["temperature"],
             },
-            refs={"area_ref": case["area_ref"], "chord_ref": case["chord_ref"]},
+            refs={
+                "area_ref": case["area_ref"],
+                "chord_ref": case["chord_ref"],
+                "reynolds_length_ref": case["reynolds_length_ref"],
+                "moment_reference": case.get("moment_reference"),
+                "secondary_moment_reference": case.get("secondary_moment_reference"),
+            },
             forces=functions,
             convergence=convergence,
             artifacts={

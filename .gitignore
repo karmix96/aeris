@@ -68,3 +68,7 @@ data/surface_mesh_v3/
 AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/**/*.cgns
 AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/**/*.fmt
 AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/**/*.npz
+
+# One-shot S6 CFD canaries retain their complete local solver package and fields;
+# only small hash-bound execution summaries under reports/ are versioned.
+AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/

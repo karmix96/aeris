@@ -476,6 +476,60 @@ was listed as the fallback "if the high CFL destabilises at production
 resolution".  It is running now.  `I_combined` carries the same CFL 25 and would
 be expected to fail the same way.
 
+### Defect 13: the solver was selected on a mesh of the wrong problem class
+
+`F_nk_linear` cleared iteration 1000 without destabilising, which confirms the
+CFL diagnosis for `G_nk_cfl`.  It then stalled in the same place G did:
+
+| variant | best residual | orders dropped | behaviour |
+|---|---|---|---|
+| `G_nk_cfl` | -5.8709 | 2.207 | plateau, then CFL-driven blow-up |
+| `F_nk_linear` | -5.7739 | 2.108 | plateau, stable, creeping |
+
+`F` is monotone and its best value is its latest, but it creeps at about 0.01
+orders per 100 iterations.  Reaching -9.6643 would need roughly **44 000 further
+iterations, some 53 hours**; the policy ceiling of 20 000 iterations reaches only
+-7.40.  The forces have not converged either - CMy's relative range over the last
+200 iterations is 8.77e-2 against a limit of 1.0e-3 - so this is not the benign
+case of a stalled residual over a settled solution.
+
+**Two configurations that differ in every accelerator reach the same plateau.**
+The limit is therefore not the solver settings, and the cause is upstream.  It is
+in the declared levels:
+
+| level | surface edge / L | first cell / L | layers | wall-normal aspect ratio |
+|---|---|---|---|---|
+| `laptop_smoke` | 0.140 | 2.0e-3 | 6 | **70** |
+| `coarse` | 0.060 | 7.2e-6 | 24 | **8 333** |
+| `medium` | 0.0424 | 5.09e-6 | 32 | 8 330 |
+| `fine` | 0.030 | 3.6e-6 | 40 | 8 333 |
+
+The ten-variant matrix, and with it the finding that Newton-Krylov is the
+discriminating ingredient, was established entirely on `laptop_smoke`: a mesh
+**119 times less anisotropic** than any production level, with a first cell of
+about 1 mm that is **not wall-resolved at all**.  Extreme wall-normal stretching
+is the classic source of stiffness in an implicit RANS solve, and it is precisely
+what `laptop_smoke` does not have.
+
+`solver_tuning.py` states the assumption in its own docstring - "the settings that
+fix a stall generally transfer; the resolution that fixes an accuracy claim does
+not".  That is true between meshes of the same problem class.  These are not:
+one resolves the boundary layer and one does not.  The search was cheap because
+it removed the very feature that makes the production problem hard.
+
+This does not refute Newton-Krylov.  It establishes that **Newton-Krylov was never
+tested against the anisotropy it now has to survive**, and that no configuration
+in the matrix has been.  The measured tet quality rules out the obvious
+alternative: tets are healthy at coarse, minimum SICN 0.107 and median 0.908.
+The prisms carry aspect ratios to 14 064 by design, because that is what a
+wall-resolved layer at y+ under one requires.
+
+**Consequence for the campaign.**  The solver search must be redone against
+production anisotropy, not production cell count, and the two are separable: a
+small mesh can carry an aspect ratio of 8 333.  Until that exists, no shortlist
+ordering means anything, and `I_combined` should not be run - it carries both
+ingredients that have now each failed separately at this anisotropy.
+
 ### Defect 12: exit code 0 does not mean a run finished
 
 Terminating `G_nk_cfl` exposed this.  SU2 handles `SIGTERM` and exits **cleanly**,
@@ -517,6 +571,9 @@ stop at the solver stop still counts as a result.
 - **A stronger linear solve or a higher CFL as the fix.**  Neither clears 3.02
   orders without Newton-Krylov, and combining them (`H`) is worse than either
   alone.
+- **The laptop matrix as evidence about production convergence.**  It ran at a
+  wall-normal aspect ratio of 70 on a mesh that does not resolve the boundary
+  layer; production runs at 8 333.  Cheap because it removed the hard part.
 - **`G_nk_cfl` as the production configuration.**  It passed both gates at
   42 745 cells and agreed with three other variants to 5e-7, then stalled at 2.21
   orders and destabilised at 1.55 M.  A solver configuration selected on a laptop

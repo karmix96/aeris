@@ -242,3 +242,31 @@ def test_an_early_stop_at_the_solver_stop_is_a_real_result(tmp_path: Path) -> No
     case = {"mesh": "/m.su2", "cells": 10, "area_ref": 1.0, "chord_ref": 0.5}
     report = tuning.run_variant("G_nk_cfl", root, case, 8000, 60, -10.0, 1)
     assert report["reused"] is True
+
+
+def test_the_anisotropy_shortlist_isolates_the_preconditioner() -> None:
+    """Both plateaued variants shared everything except the accelerator.
+
+    The new screen has to separate the preconditioner from Newton-Krylov, or a
+    pass could not be attributed.  `K_linelet` carries LINELET without NK for
+    exactly that reason.
+    """
+    assert set(tuning.ANISOTROPY_SHORTLIST) <= set(tuning.VARIANTS)
+    for name in tuning.ANISOTROPY_SHORTLIST:
+        assert tuning.VARIANTS[name]["LINEAR_SOLVER_PREC"] == "LINELET", name
+    assert "NEWTON_KRYLOV" not in tuning.VARIANTS["K_linelet"]
+    assert tuning.VARIANTS["L_nk_linelet"]["NEWTON_KRYLOV"] == "YES"
+
+
+def test_linelet_is_budgeted_as_a_heavy_linear_solve() -> None:
+    """LINELET stores a preconditioner over 25 Krylov vectors, as ILU does.
+
+    Budgeting it at the LU_SGS rate would under-forecast memory by the same
+    factor that already cost a 49 per cent error once.
+    """
+    assert tuning.variant_is_strong_linear("L_nk_linelet") is True
+    assert tuning.variant_is_strong_linear("K_linelet") is True
+    assert tuning.variant_is_strong_linear("G_nk_cfl") is False
+    heavy = tuning.memory_plan(1_549_111, 1, 1, strong_linear=True)
+    light = tuning.memory_plan(1_549_111, 1, 1, strong_linear=False)
+    assert heavy["estimated_peak_gib"] > light["estimated_peak_gib"]

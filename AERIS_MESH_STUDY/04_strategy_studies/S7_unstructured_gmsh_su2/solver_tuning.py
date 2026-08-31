@@ -87,6 +87,29 @@ HIGH_CFL: dict[str, Any] = {
     "CFL_ADAPT_PARAM": "( 0.1, 2.0, 1.0, 1000.0 )",
 }
 
+# Line-implicit preconditioning, and the reason it belongs here.
+#
+# Both shortlisted variants plateau at about 2.1 orders on the coarse mesh, from
+# opposite directions - one with an aggressive CFL, one with a strong linear
+# solve - so the limit is not the accelerator.  The levels say why: laptop_smoke,
+# where the whole ten-variant matrix ran, has a wall-normal aspect ratio of 70
+# and a first cell around a millimetre that does not resolve the boundary layer.
+# Every production level sits at 8 333, with prisms measured to 14 064.
+#
+# Extreme wall-normal stretching is the classic source of stiffness in an
+# implicit RANS solve, and LINELET is the classic answer: it solves implicitly
+# ALONG the lines of stretched cells rather than treating each cell in
+# isolation, which is the same class of method S6's ADflow policy already names.
+# SU2 8.5.0 provides it as a LINEAR_SOLVER_PREC option, verified present in the
+# pinned binary ("Using a linelet preconditioning", "Computed linelet structure").
+#
+# This was never in the matrix, because at an aspect ratio of 70 there is nothing
+# for it to do.
+LINELET: dict[str, Any] = {
+    "LINEAR_SOLVER_PREC": "LINELET",
+    "LINEAR_SOLVER_ITER": 25,
+}
+
 # POLICY.yaml su2.convergence, quoted not redefined.  A variant is only
 # interesting if it can satisfy BOTH; see the stop-residual note in main().
 GATE_DROP_ORDERS = 6.0
@@ -104,7 +127,17 @@ VARIANTS: dict[str, dict[str, Any]] = {
     "I_combined": {**MULTIGRID, **NEWTON_KRYLOV, **STRONG_LINEAR, **HIGH_CFL},
     # No multigrid, to check it is still earning its place once the rest improves.
     "J_nk_no_mg": {**NEWTON_KRYLOV, **STRONG_LINEAR, **HIGH_CFL},
+    # Added 2026-09-01, after both shortlisted variants plateaued at ~2.1 orders
+    # on a mesh 119x more anisotropic than the one they were selected on.
+    "K_linelet": {**MULTIGRID, **LINELET},
+    "L_nk_linelet": {**MULTIGRID, **NEWTON_KRYLOV, **LINELET},
+    "M_nk_linelet_cfl": {**MULTIGRID, **NEWTON_KRYLOV, **LINELET, **HIGH_CFL},
 }
+
+# The anisotropy shortlist: what to screen on a PRODUCTION mesh, since the
+# laptop-mesh matrix has been shown not to transfer.  `K_linelet` isolates the
+# preconditioner without Newton-Krylov, so the two effects can be told apart.
+ANISOTROPY_SHORTLIST: tuple[str, ...] = ("L_nk_linelet", "K_linelet", "M_nk_linelet_cfl")
 
 # The coarse confirmation ROADMAP.md prescribes, cheapest first.  Four variants
 # passed both gates on the laptop mesh and agreed on CL/CD/CMy to 5e-7, so the
@@ -162,8 +195,12 @@ def gib_per_rank(cells: float, ranks: int, *, strong_linear: bool = False) -> fl
 
 
 def variant_is_strong_linear(name: str) -> bool:
-    """Does this variant carry the ILU/25 linear solve, and so the larger state?"""
-    return VARIANTS.get(name, {}).get("LINEAR_SOLVER_PREC") == "ILU"
+    """Does this variant carry a heavy linear solve, and so the larger state?
+
+    ILU and LINELET both store a preconditioner over 25 Krylov vectors, so both
+    are budgeted at the measured ILU rate rather than the LU_SGS one.
+    """
+    return VARIANTS.get(name, {}).get("LINEAR_SOLVER_PREC") in ("ILU", "LINELET")
 
 # Leave the operating system its working set rather than planning to the last
 # byte; an OOM kill loses the whole run, and at coarse that is hours.
@@ -525,6 +562,8 @@ def main() -> int:
     parser.add_argument("--smoke", action="store_true", help="30 iterations, prove each starts")
     parser.add_argument("--shortlist", action="store_true",
                         help=f"run only {', '.join(SHORTLIST)} (ROADMAP.md step 1)")
+    parser.add_argument("--anisotropy-shortlist", action="store_true",
+                        help=f"run only {', '.join(ANISOTROPY_SHORTLIST)}")
     parser.add_argument("--variants", type=str, default=None,
                         help="comma-separated variant names to run")
     parser.add_argument("--from-case-dir", type=Path, default=None,
@@ -548,10 +587,12 @@ def main() -> int:
         print(f"wrote {args.case}: {json.dumps(case, indent=2)}")
     case = json.loads(args.case.read_text(encoding="utf-8"))
 
-    if args.shortlist and args.variants:
-        parser.error("--shortlist and --variants both select variants; pass one")
-    if args.shortlist:
-        selected: tuple[str, ...] = SHORTLIST
+    if sum(bool(x) for x in (args.shortlist, args.variants, args.anisotropy_shortlist)) > 1:
+        parser.error("pass only one of --shortlist, --anisotropy-shortlist, --variants")
+    if args.anisotropy_shortlist:
+        selected: tuple[str, ...] = ANISOTROPY_SHORTLIST
+    elif args.shortlist:
+        selected = SHORTLIST
     elif args.variants:
         selected = tuple(n.strip() for n in args.variants.split(",") if n.strip())
         unknown = [n for n in selected if n not in VARIANTS]

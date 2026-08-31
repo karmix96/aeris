@@ -56,6 +56,25 @@ Linux-native repository. Read these files first, in order:
   tokens, and an interactive Opus/max review of `dbf918f` stalled. No
   independent GO exists; see `reviews/claude_a92bf10_review_attempts_20260831.json`
   and `reviews/claude_dbf918f_review_attempt_20260831.json`.
+- An independent Claude Code review of `dbf918f` is now COMPLETE and closes
+  R1/R2/R3: `reviews/claude_m2_coupled_family_review_20260831.json`. All twelve
+  claimed family meshes were reopened and reproduce exactly; realized OML
+  first-cell medians order C01 > C02 > C03 for every geometry, and the cap
+  orders too. It issues a **GO for exactly one measurement-only A/C03 canary**
+  on `m2_coupled_family_20260831/candidate_c03/lhs100_seed42_083/wing_vol_deformed.cgns`
+  (`be2805ff...`, 943,104 cells, `qmin=0.1671`).
+- GO conditions, all binding: no ACCEPTED classification until a numeric y+
+  limit and its wall-distance convention are in the immutable policy; state the
+  y+ convention when reporting, because ADflow's cell-centred y+ reads about
+  half the preflight numbers (A/C03 OML p95 `0.74`, not `1.47`); run under a
+  memory watchdog (forecast 9.35 GiB against 11.47 GiB available, 0.12 GiB of
+  margin); one run, geometry A, development set, holdout untouched; and wiring
+  `run-canary` is itself a governed change that must keep every other heavy
+  command blocked.
+- Non-blocking findings carried forward: C01 to C02 is not a wall-normal
+  refinement step; C/C03 needs a geometry-specific template; the y+ preflight
+  has no committed generator and ungoverned limits; two `grid_screen` gate
+  defaults are permissive; the memory forecast cannot fail on the finest level.
 - Three authenticated Claude Code review attempts timed out with zero model
   tokens. No independent GO exists; see `reviews/claude_m0_m1_review_attempt0*.json`.
 
@@ -69,8 +88,10 @@ Linux-native repository. Read these files first, in order:
    5.0/4.7/3.6e-6 spacing ladders are monotonic.
 4. Review the preflight y+ calculation as an estimate only; do not treat it as
    measured acceptance evidence.
-5. If no HIGH finding remains, issue the M2 independent GO for one A/C03
-   canary. Do not authorize C01/C02 CFD until that canary is classified.
+5. The M2 independent GO for one A/C03 canary is ISSUED (see the review
+   above). Before launching it, put the y+ limit and wall-distance convention
+   into the immutable policy, and wire `run-canary` with the review's caps.
+   Do not authorize C01/C02 CFD until that canary is classified.
 8. Run focused qualification/meshing tests after every governed change. The
    repository-wide suite currently cannot collect in this WSL environment
    because optional project dependencies such as `aerosandbox` are absent.

@@ -95,8 +95,38 @@ Updated: 2026-08-30
   all-wall p95 is `1.68-2.17` and maximum `9.98-14.59`; only measured CFD can
   qualify it. CFD remains blocked pending independent review.
 - Two Claude Opus review attempts for `a92bf10` timed out with zero tokens; an
-  interactive Opus/max review of `dbf918f` also stalled without a result. No
-  independent GO is claimed.
+  interactive Opus/max review of `dbf918f` also stalled without a result. A
+  completed independent Claude Code review of `dbf918f` is now on record:
+  `reviews/claude_m2_coupled_family_review_20260831.json`.
+- That review **closes R1, R2 and R3** against independently reproduced
+  evidence. All twelve claimed family meshes reopen with zero inversions,
+  every `output_sha256` and `target_surface_sha256` matches on disk, every
+  `qmin` matches to full precision, walls are exact to `<= 3.5e-18` m, and all
+  interfaces stay conformal at 20 pairs with `<= 3.6e-15` m mismatch. Realized
+  OML first-cell medians now order C01 `6.47-7.29e-6` > C02 `6.37-7.83e-6` >
+  C03 `4.90-6.20e-6` m for geometry A, with the same ordering for B/C/E, and
+  the tip cap orders `3.13e-4 > 2.22e-4 > 1.55e-4` m.
+- The review issues an explicit **GO for exactly one measurement-only A/C03
+  canary**, bound to
+  `m2_coupled_family_20260831/candidate_c03/lhs100_seed42_083/wing_vol_deformed.cgns`
+  (`sha256 be2805ff...`, 943,104 cells, `qmin=0.1671`). Conditions: the result
+  may not be classified ACCEPTED until a numeric y+ limit and its wall-distance
+  convention enter the immutable policy; the y+ convention must be stated when
+  reporting; the run needs a memory watchdog; one run only; and wiring
+  `run-canary` is itself a governed change that must keep the other heavy
+  commands blocked.
+- The y+ preflight reproduces exactly from the meshes, but it uses the **full
+  first-cell height**. ADflow reports y+ at the first cell centroid, which
+  halves every published number: A/C03 then reads OML p95 `0.74`, p99 `1.82`,
+  with about 3 percent of OML wall nodes above `y+ = 1` and the large tail on
+  the tip cap. Its limits `{p95 1.0, p99 2.0, max 5.0}` are in no governed
+  policy file, and its generator is not in the repository.
+- Residual non-blocking findings: C01 to C02 is not a wall-normal refinement
+  step (6 percent nominal, slightly reversed in the realized upper OML
+  median), C/C03 needs a geometry-specific template (the A-template route
+  lands at `qmin=0.0886`), the y+ preflight is unreproducible and ungoverned,
+  two `grid_screen` gate defaults are permissive, and the memory forecast
+  `9.35 x cells / finest_cells` cannot fail on the finest level.
 - Focused verification: **74 passed** across S6 atlas, qualification
   orchestrator, ADflow contract, and SU2 contract tests.
 - Repository-wide pytest: collection is environment-blocked by absent optional
@@ -127,6 +157,7 @@ Updated: 2026-08-30
 - `reports/m2_coupled_family_respec_20260831.json`
 - `reports/m2_wall_spacing_yplus_preflight_20260831.json`
 - `reviews/claude_m2_spacing_policy_review_20260830.json`
+- `reviews/claude_m2_coupled_family_review_20260831.json`
 - `studies/grid/m2_20260830/` (local run records; large CGNS files remain
   ignored and must not be committed)
 

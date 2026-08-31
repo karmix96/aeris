@@ -1,0 +1,581 @@
+{
+  "additional_findings": [
+    {
+      "id": "S1",
+      "severity": "MEDIUM",
+      "summary": "C01 to C02 is not a wall-normal refinement step (6 percent nominal, slightly reversed in the realized upper OML median for all four geometries)."
+    },
+    {
+      "id": "S2",
+      "severity": "MEDIUM",
+      "summary": "C03 geometry C needs its own template; the A-template route lands at qmin 0.0886, below the floor. Atlas scaling to 16 seeds must budget per-geometry template fallbacks."
+    },
+    {
+      "id": "S3",
+      "severity": "MEDIUM",
+      "summary": "The y+ preflight has no committed generator, its p99 and maximum columns are all-wall values under OML-sounding key names, and its acceptance limits are not in the immutable policy."
+    },
+    {
+      "id": "S4",
+      "severity": "LOW",
+      "summary": "grid_screen gate code: accepted_rows treats a missing production_floor_passed as a pass, and the C02 geometry comprehension maps a row without a geometry key to 'A'. Neither fires on today's reports; both weaken the gate for future ones."
+    },
+    {
+      "id": "S5",
+      "severity": "MEDIUM",
+      "summary": "The memory forecast is 9.35 GiB x cells / finest_cells, so the finest level always forecasts exactly 9.35 GiB whatever its size - the resource check cannot fail on the finest mesh. Anchor a GiB-per-cell coefficient instead. Today it passes with 0.12 GiB of margin on forecast+2 <= available (11.35 vs 11.47)."
+    }
+  ],
+  "decision": {
+    "basis": "R1, R2 and R3 are closed against independently reproduced evidence; the mesh is valid, exact at the wall, conformal at interfaces, and its predicted wall resolution at the convention ADflow actually uses is appropriate for a wall-resolved run.",
+    "bound_artifact": {
+      "cells": 943104,
+      "inverted_cells": 0,
+      "min_scaled_quality": 0.1670988318034351,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03/lhs100_seed42_083/wing_vol_deformed.cgns",
+      "sha256": "be2805ff85b6b1043863d7678d1551a52b6e8a65b299534d4ec0aaeffa51aeb4"
+    },
+    "conditions": [
+      "Measurement only. The canary result may not be classified ACCEPTED until a numeric y+ limit and its wall-distance convention are written into the immutable policy; today policies/convergence_v1.yaml names y_plus with no threshold.",
+      "State the y+ convention when reporting. ADflow's cell-centred y+ will read about half the preflight numbers; that is a definition change, not a mesh change.",
+      "Run under a memory watchdog. Forecast 9.35 GiB against 11.47 GiB available leaves 0.12 GiB on the governed margin check; an OOM is a resource outcome, not a mesh verdict, and must not trigger a blind rerun.",
+      "One run, geometry A, development set, holdout untouched, mission-authority flow point; no sweep, no second level.",
+      "run-canary is currently hard-blocked in run.py for every HEAVY command. Wiring it is itself a governed change that must carry these caps and must leave the BLOCKED path intact for the other heavy commands."
+    ],
+    "not_authorized": [
+      "any C01 or C02 canary",
+      "any holdout geometry",
+      "the broader CFD campaign",
+      "classification of the canary as ACCEPTED",
+      "grid-convergence claims across C01/C02/C03"
+    ],
+    "scope": "exactly one measurement-only CFD canary, geometry A at C03",
+    "verdict": "GO"
+  },
+  "r1_physical_spacing_ordering": {
+    "consequence": "adequate for a single-level canary; a three-point Richardson argument over C01/C02/C03 on wall-dependent quantities is still not supported",
+    "finding": "C03 is now strictly finer than C01 on every OML block for every geometry, and the cap blocks order monotonically too, so the reversal R1 named is gone. The residual is the C01 to C02 step: nominal spacing refines only 6 percent there while the grid refines 1.30, and the realized upper OML median is about 7 percent COARSER at C02 than at C01 for all four geometries.",
+    "nominal_fractions": {
+      "C01": 5e-06,
+      "C02": 4.7e-06,
+      "C03": 3.6e-06
+    },
+    "realized_oml_median_first_cell_m": {
+      "A": {
+        "C01": [
+          6.469e-06,
+          7.288e-06
+        ],
+        "C02": [
+          6.367e-06,
+          7.825e-06
+        ],
+        "C03": [
+          4.902e-06,
+          6.197e-06
+        ]
+      },
+      "B": {
+        "C01": [
+          5.331e-06,
+          6.019e-06
+        ],
+        "C02": [
+          5.248e-06,
+          6.458e-06
+        ],
+        "C03": [
+          4.043e-06,
+          5.131e-06
+        ]
+      },
+      "C": {
+        "C01": [
+          5.343e-06,
+          6.03e-06
+        ],
+        "C02": [
+          5.259e-06,
+          6.469e-06
+        ],
+        "C03": [
+          4.236e-06,
+          4.753e-06
+        ]
+      },
+      "E": {
+        "C01": [
+          5.263e-06,
+          5.941e-06
+        ],
+        "C02": [
+          5.181e-06,
+          6.374e-06
+        ],
+        "C03": [
+          3.99e-06,
+          5.058e-06
+        ]
+      }
+    },
+    "tip_base_median_first_cell_m": {
+      "A": [
+        0.0003131,
+        0.0002218,
+        0.0001551
+      ]
+    },
+    "verdict": "CLOSED with a residual caveat"
+  },
+  "r2_policy_divergence": {
+    "evidence": "resolution.py and GRID_LEVELS now both read 5.0e-6 / 4.7e-6 / 3.6e-6, and test_candidate_wall_spacing_registry_matches_pyhyp_defaults enforces the equality. Focused suite: 74 passed.",
+    "verdict": "CLOSED"
+  },
+  "r3_c03_single_geometry": {
+    "deviation": "geometry C at C03 uses a C-specific S1 template ('target_specific_C'). The A-template attempt exists on disk and I audited it: valid mesh, qmin 0.0886, below the production floor. The family therefore passes, but the single-template atlas property does not hold at C03.",
+    "evidence": "C03 now carries A/B/C/E with qmin 0.1251 / 0.1670 / 0.1955 / 0.1380, all above the 0.10 floor, independently reproduced.",
+    "verdict": "CLOSED with a disclosed route deviation"
+  },
+  "reproduction": {
+    "conclusion": "all twelve claimed family meshes reproduce exactly - every recorded output_sha256 and target_surface_sha256 matches on disk, every qmin matches to full precision, zero inverted cells throughout, exact wall <= 3.5e-18 m, 20 conformal interface pairs with mismatch <= 3.6e-15 m. Cell counts 191520 / 422352 / 943104 give refinement ratios 1.3016 and 1.3071. Every target surface carries the current 5/6/7 collar level spec.",
+    "meshes_checked": 13,
+    "method": "independent ADF reopen, repository volume QC, exact-wall correspondence against each report's own target surface, interface audit, realized first-layer spacing per surface block",
+    "results": {
+      "C01/A": {
+        "artifact": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_c01_ladder_probe_20260830/A/wing_vol_deformed.cgns",
+        "cells": 191520,
+        "interface_mismatch_m": 1.7763568394002505e-15,
+        "interface_pairs": 20,
+        "inverted_cells": 0,
+        "max_wall_error_m": 1.734723475976807e-18,
+        "min_scaled_quality": 0.120251851395933,
+        "min_volume": 1.9504964512858743e-11,
+        "output_sha256": "1e5e4934d51ba0ddbb00071ac0b7f1a4ae82e236a247f01eaa5a8e86fd3197af",
+        "reported_qmin": 0.120251851395933,
+        "spacing_all_wall": {
+          "max_m": 0.0003682956075425131,
+          "median_m": 1.0353655592687377e-05,
+          "min_m": 2.7994165737678474e-06,
+          "p05_m": 4.092289628060359e-06,
+          "p95_m": 8.967772928800805e-05
+        },
+        "spacing_oml_max": 0.00021696246871845813,
+        "spacing_oml_median_max": 7.2883600535853466e-06,
+        "spacing_oml_median_min": 6.468859795744395e-06,
+        "spacing_oml_min": 2.7994165737678474e-06,
+        "target_surface_npz": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_deformation_20260830/C01/lhs100_seed42_083/surface_blocks.npz",
+        "target_surface_sha256": "49a1da9a98822190c5a7844dd4f0fb4fc434d9fa12db500b7ff250cda8b8234a",
+        "template_cgns": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c01_ladder_probe_20260830/lhs100_seed42_083/lhs100_seed42_083/eps15/wing_vol.cgns",
+        "tip_base_median_m": 0.0003130949360885195,
+        "yplus_oml_median_max_estimate": 0.5133769082675748
+      },
+      "C01/B": {
+        "artifact": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_c01_ladder_probe_20260830/B/wing_vol_deformed.cgns",
+        "cells": 191520,
+        "interface_mismatch_m": 1.7763568394002505e-15,
+        "interface_pairs": 20,
+        "inverted_cells": 0,
+        "max_wall_error_m": 3.469446951953614e-18,
+        "min_scaled_quality": 0.14974758488421372,
+        "min_volume": 1.7201377668255393e-11,
+        "output_sha256": "4c7d2daf153ccf5783cce498ab784da25d546b8f15f00f335a04e87ea240bb75",
+        "reported_qmin": 0.14974758488421372,
+        "spacing_all_wall": {
+          "max_m": 0.00032545099396666036,
+          "median_m": 8.614397659103526e-06,
+          "min_m": 2.3070859407925795e-06,
+          "p05_m": 3.389420414306843e-06,
+          "p95_m": 8.079678075794979e-05
+        },
+        "spacing_oml_max": 0.00018662550597606717,
+        "spacing_oml_median_max": 6.0187343694660885e-06,
+        "spacing_oml_median_min": 5.331248512499713e-06,
+        "spacing_oml_min": 2.3070859407925795e-06,
+        "target_surface_npz": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_deformation_20260830/B_C01/lhs100_seed42_007/surface_blocks.npz",
+        "target_surface_sha256": "5f05076e4c0c3eda66bc5bd3fcd12f743fea0441dd4fda72f935b358a886809c",
+        "template_cgns": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c01_ladder_probe_20260830/lhs100_seed42_083/lhs100_seed42_083/eps15/wing_vol.cgns",
+        "tip_base_median_m": 0.00028348341254037855,
+        "yplus_oml_median_max_estimate": 0.4239471183589914
+      },
+      "C01/C": {
+        "artifact": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_c01_ladder_probe_20260830/C/wing_vol_deformed.cgns",
+        "cells": 191520,
+        "interface_mismatch_m": 1.7763568394002505e-15,
+        "interface_pairs": 20,
+        "inverted_cells": 0,
+        "max_wall_error_m": 3.469446951953614e-18,
+        "min_scaled_quality": 0.10913947207636704,
+        "min_volume": 1.553136410791016e-11,
+        "output_sha256": "c50f64f96e9d994d7bc28949c021fb4d8038af4168a7cdf89cc58b62b105bfc7",
+        "reported_qmin": 0.10913947207636704,
+        "spacing_all_wall": {
+          "max_m": 0.0003182500212839184,
+          "median_m": 8.579328753296982e-06,
+          "min_m": 2.3122009044469593e-06,
+          "p05_m": 3.3956130906778593e-06,
+          "p95_m": 7.818066317675929e-05
+        },
+        "spacing_oml_max": 0.00018418963279547387,
+        "spacing_oml_median_max": 6.030456204339189e-06,
+        "spacing_oml_median_min": 5.343045781619317e-06,
+        "spacing_oml_min": 2.3122009044469593e-06,
+        "target_surface_npz": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_deformation_20260830/C_C01/lhs100_seed42_085/surface_blocks.npz",
+        "target_surface_sha256": "7e0d38126ec0fdccfe45a840e23e6d7b311a8732799c94befc0e6555eece23e6",
+        "template_cgns": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c01_ladder_probe_20260830/lhs100_seed42_083/lhs100_seed42_083/eps15/wing_vol.cgns",
+        "tip_base_median_m": 0.00027488796470801044,
+        "yplus_oml_median_max_estimate": 0.4247727800033301
+      },
+      "C01/E": {
+        "artifact": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_c01_ladder_probe_20260830/E/wing_vol_deformed.cgns",
+        "cells": 191520,
+        "interface_mismatch_m": 1.7763568394002505e-15,
+        "interface_pairs": 20,
+        "inverted_cells": 0,
+        "max_wall_error_m": 3.469446951953614e-18,
+        "min_scaled_quality": 0.12377000911840297,
+        "min_volume": 1.6714156817147045e-11,
+        "output_sha256": "590fc5b31ba3fe977541a7abcddc59f342ad0c01b599f80a5312d0260b247dbf",
+        "reported_qmin": 0.12377000911840297,
+        "spacing_all_wall": {
+          "max_m": 0.00031382901127800366,
+          "median_m": 8.453682038774327e-06,
+          "min_m": 2.2777529167569636e-06,
+          "p05_m": 3.3450804655145616e-06,
+          "p95_m": 7.716118405556147e-05
+        },
+        "spacing_oml_max": 0.0001815602376342353,
+        "spacing_oml_median_max": 5.940677287806326e-06,
+        "spacing_oml_median_min": 5.263444103206132e-06,
+        "spacing_oml_min": 2.2777529167569636e-06,
+        "target_surface_npz": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_deformation_20260830/E_C01/lhs100_seed42_047/surface_blocks.npz",
+        "target_surface_sha256": "4ec997c88e7fc20e9dd58aca65d5f32c0ca2bda7e4d8733ef69d5dc00bda1f66",
+        "template_cgns": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c01_ladder_probe_20260830/lhs100_seed42_083/lhs100_seed42_083/eps15/wing_vol.cgns",
+        "tip_base_median_m": 0.00027116092461491897,
+        "yplus_oml_median_max_estimate": 0.41844894003680966
+      },
+      "C02/A": {
+        "artifact": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c02/lhs100_seed42_083/wing_vol_deformed.cgns",
+        "cells": 422352,
+        "interface_mismatch_m": 3.552713678800501e-15,
+        "interface_pairs": 20,
+        "inverted_cells": 0,
+        "max_wall_error_m": 3.469446951953614e-18,
+        "min_scaled_quality": 0.1821369939579923,
+        "min_volume": 6.332930629358455e-12,
+        "output_sha256": "23f0625169a310aff7c71af3eac09c931c383f37a56e629e1545d5605088397d",
+        "reported_qmin": 0.1821369939579923,
+        "spacing_all_wall": {
+          "max_m": 0.0002577961178486125,
+          "median_m": 1.054545374893629e-05,
+          "min_m": 3.3557135132268034e-06,
+          "p05_m": 4.3217282396394405e-06,
+          "p95_m": 4.94756666552704e-05
+        },
+        "spacing_oml_max": 0.00014854290865085195,
+        "spacing_oml_median_max": 7.825386242256715e-06,
+        "spacing_oml_median_min": 6.366622039245105e-06,
+        "spacing_oml_min": 3.3557135132268034e-06,
+        "target_surface_npz": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c02/lhs100_seed42_083/surface_blocks.npz",
+        "target_surface_sha256": "3de77dda365844c00051dd30c3afd2d46f292d6908b3fcb1e954a76af00fd082",
+        "template_cgns": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_coupled_family_20260831/C02_collar06/lhs100_seed42_083/eps15/wing_vol.cgns",
+        "tip_base_median_m": 0.00022179503565445945,
+        "yplus_oml_median_max_estimate": 0.551203914942856
+      },
+      "C02/B": {
+        "artifact": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c02_B/lhs100_seed42_007/wing_vol_deformed.cgns",
+        "cells": 422352,
+        "interface_mismatch_m": 3.552713678800501e-15,
+        "interface_pairs": 20,
+        "inverted_cells": 0,
+        "max_wall_error_m": 3.469446951953614e-18,
+        "min_scaled_quality": 0.19973457587493296,
+        "min_volume": 5.825200553450995e-12,
+        "output_sha256": "9f813001018e460a973a1696d0e1f7abae7b568362021e1ece92539f13e8319a",
+        "reported_qmin": 0.19973457587493296,
+        "spacing_all_wall": {
+          "max_m": 0.0002417962315202051,
+          "median_m": 8.70856002749964e-06,
+          "min_m": 2.7654258961019245e-06,
+          "p05_m": 3.586549689182835e-06,
+          "p95_m": 4.3837107602538764e-05
+        },
+        "spacing_oml_max": 0.0001286568294308172,
+        "spacing_oml_median_max": 6.458489431854241e-06,
+        "spacing_oml_median_min": 5.247549307682332e-06,
+        "spacing_oml_min": 2.7654258961019245e-06,
+        "target_surface_npz": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c02_B/lhs100_seed42_007/surface_blocks.npz",
+        "target_surface_sha256": "39eb36622306af78d9e00ebe36ae40cd869fa697a3241d6d3bf885beb6dd5770",
+        "template_cgns": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_coupled_family_20260831/C02_collar06/lhs100_seed42_083/eps15/wing_vol.cgns",
+        "tip_base_median_m": 0.00020411740550278898,
+        "yplus_oml_median_max_estimate": 0.4549225494112466
+      },
+      "C02/C": {
+        "artifact": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c02_C/lhs100_seed42_085/wing_vol_deformed.cgns",
+        "cells": 422352,
+        "interface_mismatch_m": 3.552713678800501e-15,
+        "interface_pairs": 20,
+        "inverted_cells": 0,
+        "max_wall_error_m": 3.469446951953614e-18,
+        "min_scaled_quality": 0.14455628717574343,
+        "min_volume": 4.7274917864824704e-12,
+        "output_sha256": "d6076fcbd01edcb736026d207270392b39176e21a8085cb4c4223aef8dad439b",
+        "reported_qmin": 0.14455628717574343,
+        "spacing_all_wall": {
+          "max_m": 0.00023136613457164088,
+          "median_m": 8.714453379546388e-06,
+          "min_m": 2.771452702681129e-06,
+          "p05_m": 3.587674987243494e-06,
+          "p95_m": 4.259298886743157e-05
+        },
+        "spacing_oml_max": 0.00012666958492525685,
+        "spacing_oml_median_max": 6.469013344637888e-06,
+        "spacing_oml_median_min": 5.25880319952712e-06,
+        "spacing_oml_min": 2.771452702681129e-06,
+        "target_surface_npz": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c02_C/lhs100_seed42_085/surface_blocks.npz",
+        "target_surface_sha256": "beae9ba6c0bc0fa33daddecd63c041b1f5b981ef15cd9ff1dc702b9cf6fd41f9",
+        "template_cgns": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_coupled_family_20260831/C02_collar06/lhs100_seed42_083/eps15/wing_vol.cgns",
+        "tip_base_median_m": 0.00019680864005866831,
+        "yplus_oml_median_max_estimate": 0.45566383191760257
+      },
+      "C02/E": {
+        "artifact": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c02_E/lhs100_seed42_047/wing_vol_deformed.cgns",
+        "cells": 422352,
+        "interface_mismatch_m": 1.7763568394002505e-15,
+        "interface_pairs": 20,
+        "inverted_cells": 0,
+        "max_wall_error_m": 3.469446951953614e-18,
+        "min_scaled_quality": 0.1875455254586057,
+        "min_volume": 5.275596020537307e-12,
+        "output_sha256": "710c6d88f8adc8837d63009e5e2dc844ab46f8c24741c4cb2195f80e75b5414d",
+        "reported_qmin": 0.1875455254586057,
+        "spacing_all_wall": {
+          "max_m": 0.00022836750474436828,
+          "median_m": 8.58608156271057e-06,
+          "min_m": 2.730588691070575e-06,
+          "p05_m": 3.534896467227268e-06,
+          "p95_m": 4.204094579251042e-05
+        },
+        "spacing_oml_max": 0.000124886135535695,
+        "spacing_oml_median_max": 6.373761105114797e-06,
+        "spacing_oml_median_min": 5.1812642236028894e-06,
+        "spacing_oml_min": 2.730588691070575e-06,
+        "target_surface_npz": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c02_E/lhs100_seed42_047/surface_blocks.npz",
+        "target_surface_sha256": "d90a13bdee9969206b5e319f4ba3a89983796721fe6702f25bed384f1e7ba852",
+        "template_cgns": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_coupled_family_20260831/C02_collar06/lhs100_seed42_083/eps15/wing_vol.cgns",
+        "tip_base_median_m": 0.00019419780119925813,
+        "yplus_oml_median_max_estimate": 0.44895446247476456
+      },
+      "C03/A": {
+        "artifact": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03/lhs100_seed42_083/wing_vol_deformed.cgns",
+        "cells": 943104,
+        "interface_mismatch_m": 3.552713678800501e-15,
+        "interface_pairs": 20,
+        "inverted_cells": 0,
+        "max_wall_error_m": 3.469446951953614e-18,
+        "min_scaled_quality": 0.1670988318034351,
+        "min_volume": 1.819212703125271e-12,
+        "output_sha256": "be2805ff85b6b1043863d7678d1551a52b6e8a65b299534d4ec0aaeffa51aeb4",
+        "reported_qmin": 0.1670988318034351,
+        "spacing_all_wall": {
+          "max_m": 0.00020710938619854436,
+          "median_m": 5.67099566774795e-06,
+          "min_m": 2.8267747025080695e-06,
+          "p05_m": 3.9773594531784965e-06,
+          "p95_m": 2.782241150790516e-05
+        },
+        "spacing_oml_max": 9.373767886474006e-05,
+        "spacing_oml_median_max": 6.197345737738425e-06,
+        "spacing_oml_median_min": 4.9022551180484415e-06,
+        "spacing_oml_min": 2.8267747025080695e-06,
+        "target_surface_npz": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03/lhs100_seed42_083/surface_blocks.npz",
+        "target_surface_sha256": "dd35106445ddbab88dbd79fe64c09c53d4a63622a7d0cd8deaca7cd28b0f3a19",
+        "template_cgns": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_cap_respec_20260831/collar07/lhs100_seed42_083/eps15/wing_vol.cgns",
+        "tip_base_median_m": 0.00015505021372604113,
+        "yplus_oml_median_max_estimate": 0.436528131282466
+      },
+      "C03/B": {
+        "artifact": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03_B/lhs100_seed42_007/wing_vol_deformed.cgns",
+        "cells": 943104,
+        "interface_mismatch_m": 3.552713678800501e-15,
+        "interface_pairs": 20,
+        "inverted_cells": 0,
+        "max_wall_error_m": 3.469446951953614e-18,
+        "min_scaled_quality": 0.12506682386212817,
+        "min_volume": 1.7889784013643757e-12,
+        "output_sha256": "1b2c2b94176cf7e8027f4db5d3d156dc05cbf35080bcdbd7125b88ef7e90a282",
+        "reported_qmin": 0.12506682386212817,
+        "spacing_all_wall": {
+          "max_m": 0.00019486784269829495,
+          "median_m": 4.686886346024061e-06,
+          "min_m": 2.329632598235899e-06,
+          "p05_m": 3.2939905606838006e-06,
+          "p95_m": 2.4718436724750736e-05
+        },
+        "spacing_oml_max": 8.257619310875929e-05,
+        "spacing_oml_median_max": 5.1310334811071525e-06,
+        "spacing_oml_median_min": 4.042966490234203e-06,
+        "spacing_oml_min": 2.329632598235899e-06,
+        "target_surface_npz": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03_B/lhs100_seed42_007/surface_blocks.npz",
+        "target_surface_sha256": "4c9bcd1cc29c181102e5bcc96dd8654c4679bab9884b3679ae1ff2de7098ce53",
+        "template_cgns": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_cap_respec_20260831/collar07/lhs100_seed42_083/eps15/wing_vol.cgns",
+        "tip_base_median_m": 0.0001439537072882208,
+        "yplus_oml_median_max_estimate": 0.36141931592037474
+      },
+      "C03/C": {
+        "artifact": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03_C_target_specific/lhs100_seed42_085/wing_vol_deformed.cgns",
+        "cells": 943104,
+        "interface_mismatch_m": 1.7763568394002505e-15,
+        "interface_pairs": 20,
+        "inverted_cells": 0,
+        "max_wall_error_m": 1.734723475976807e-18,
+        "min_scaled_quality": 0.19545578448494028,
+        "min_volume": 2.3104688545717716e-12,
+        "output_sha256": "2f2a25d8415dcc98063917f7476e4d746c722ef21bec7885a3e61c4bb3763f48",
+        "reported_qmin": 0.19545578448494028,
+        "spacing_all_wall": {
+          "max_m": 0.00014172225887215296,
+          "median_m": 7.1635311744164445e-06,
+          "min_m": 2.75096688333341e-06,
+          "p05_m": 3.2363983554017406e-06,
+          "p95_m": 3.0857891366052264e-05
+        },
+        "spacing_oml_max": 6.888772161704987e-05,
+        "spacing_oml_median_max": 4.753032814351381e-06,
+        "spacing_oml_median_min": 4.236477390716071e-06,
+        "spacing_oml_min": 2.75096688333341e-06,
+        "target_surface_npz": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03_C_target_specific/lhs100_seed42_085/surface_blocks.npz",
+        "target_surface_sha256": "66808a63cd1f4f45246ba8b89811ab261213b041917500e7dd74ea1ef18a9bb2",
+        "template_cgns": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_coupled_family_20260831/C03_collar07_geometry_C/lhs100_seed42_085/eps15/wing_vol.cgns",
+        "tip_base_median_m": 0.0001178435841647458,
+        "yplus_oml_median_max_estimate": 0.3347937359276989
+      },
+      "C03/E": {
+        "artifact": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03_E/lhs100_seed42_047/wing_vol_deformed.cgns",
+        "cells": 943104,
+        "interface_mismatch_m": 3.552713678800501e-15,
+        "interface_pairs": 20,
+        "inverted_cells": 0,
+        "max_wall_error_m": 3.469446951953614e-18,
+        "min_scaled_quality": 0.13795938358845553,
+        "min_volume": 1.4952436243646086e-12,
+        "output_sha256": "4eae4e0fc2b45e01005b44f4a1607d7b89f23d1be89d802e4acc03f862257159",
+        "reported_qmin": 0.13795938358845553,
+        "spacing_all_wall": {
+          "max_m": 0.00018430196537111705,
+          "median_m": 4.619565653043436e-06,
+          "min_m": 2.300012973022612e-06,
+          "p05_m": 3.244732890770692e-06,
+          "p95_m": 2.3897125055374925e-05
+        },
+        "spacing_oml_max": 7.970730266203961e-05,
+        "spacing_oml_median_max": 5.057566492680822e-06,
+        "spacing_oml_median_min": 3.99020992689793e-06,
+        "spacing_oml_min": 2.300012973022612e-06,
+        "target_surface_npz": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03_E/lhs100_seed42_047/surface_blocks.npz",
+        "target_surface_sha256": "06d6991a8daedc65d0ddfead18f79b6329c3b9233a3869523c90a1f53f4bcc82",
+        "template_cgns": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_cap_respec_20260831/collar07/lhs100_seed42_083/eps15/wing_vol.cgns",
+        "tip_base_median_m": 0.0001365058736467912,
+        "yplus_oml_median_max_estimate": 0.35624445420927064
+      },
+      "C03_rejectedA/C": {
+        "artifact": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03_C/lhs100_seed42_085/wing_vol_deformed.cgns",
+        "cells": 943104,
+        "interface_mismatch_m": 1.7763568394002505e-15,
+        "interface_pairs": 20,
+        "inverted_cells": 0,
+        "max_wall_error_m": 3.469446951953614e-18,
+        "min_scaled_quality": 0.08864190817930973,
+        "min_volume": 1.3397560262071872e-12,
+        "output_sha256": "d3d1f895b09147a875d35ba81f701c565607ebcea8b6b03409fac632e4e6a95a",
+        "reported_qmin": 0.08864190817930973,
+        "spacing_all_wall": {
+          "max_m": 0.00018673406555790587,
+          "median_m": 4.689098071237847e-06,
+          "min_m": 2.334797528503109e-06,
+          "p05_m": 3.2937876361602647e-06,
+          "p95_m": 2.4254786109103504e-05
+        },
+        "spacing_oml_max": 8.08337412283265e-05,
+        "spacing_oml_median_max": 5.133701673414403e-06,
+        "spacing_oml_median_min": 4.05055625440196e-06,
+        "spacing_oml_min": 2.334797528503109e-06,
+        "target_surface_npz": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03_C/lhs100_seed42_085/surface_blocks.npz",
+        "target_surface_sha256": "66808a63cd1f4f45246ba8b89811ab261213b041917500e7dd74ea1ef18a9bb2",
+        "template_cgns": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_cap_respec_20260831/collar07/lhs100_seed42_083/eps15/wing_vol.cgns",
+        "tip_base_median_m": 0.0001383575652381622,
+        "yplus_oml_median_max_estimate": 0.361607257831489
+      }
+    }
+  },
+  "review_id": "claude_m2_coupled_family_review_20260831",
+  "reviewer": {
+    "mode": "read-only adversarial review plus independent reproduction; no CFD executed",
+    "model": "claude-opus-5",
+    "tool": "Claude Code"
+  },
+  "schema": "aeris.s6.review.m2_coupled_family.v1",
+  "scope": {
+    "cfd_run": false,
+    "commits": [
+      "dbf918f Validate coupled three-level S6 mesh family",
+      "a92bf10 Synchronize candidate wall spacing policy"
+    ],
+    "development_set_only": true,
+    "holdout_touched": false,
+    "reports": [
+      "reports/m2_coupled_family_respec_20260831.json",
+      "reports/m2_c03_family_repair_20260831.json",
+      "reports/m2_wall_spacing_yplus_preflight_20260831.json",
+      "reports/m2_c01_ladder_probe_20260830.json",
+      "reports/screen_grid_family.json"
+    ]
+  },
+  "yplus_preflight_audit": {
+    "a_c03_both_conventions": {
+      "all": {
+        "fraction_above_yplus1_full": 0.22718282000565132,
+        "fraction_above_yplus1_halfcell": 0.04935480832626919,
+        "max_spacing_m": 0.00020710938619854436,
+        "p95_spacing_m": 2.782241150790516e-05,
+        "p99_spacing_m": 8.052804559091453e-05,
+        "yplus_max_full": 14.588353975116737,
+        "yplus_max_halfcell": 7.294176987558369,
+        "yplus_p95_full": 1.959752742106937,
+        "yplus_p95_halfcell": 0.9798763710534685,
+        "yplus_p99_full": 5.672227877100708,
+        "yplus_p99_halfcell": 2.836113938550354
+      },
+      "oml_no_base": {
+        "fraction_above_yplus1_full": 0.18038567493112947,
+        "fraction_above_yplus1_halfcell": 0.009146005509641873,
+        "max_spacing_m": 9.373767886474006e-05,
+        "p95_spacing_m": 1.850007298415181e-05,
+        "p99_spacing_m": 2.77644497965953e-05,
+        "yplus_max_full": 6.60268694328378,
+        "yplus_max_halfcell": 3.30134347164189,
+        "yplus_p95_full": 1.3031066250159051,
+        "yplus_p95_halfcell": 0.6515533125079526,
+        "yplus_p99_full": 1.9556700398349058,
+        "yplus_p99_halfcell": 0.9778350199174529
+      },
+      "oml_with_base": {
+        "fraction_above_yplus1_full": 0.21142857142857144,
+        "fraction_above_yplus1_halfcell": 0.03291005291005291,
+        "max_spacing_m": 0.00013359294597489735,
+        "p95_spacing_m": 2.0895179150993447e-05,
+        "p99_spacing_m": 5.181156622748924e-05,
+        "yplus_max_full": 9.410008982365218,
+        "yplus_max_halfcell": 4.705004491182609,
+        "yplus_p95_full": 1.4718129169479142,
+        "yplus_p95_halfcell": 0.7359064584739571,
+        "yplus_p99_full": 3.6494988566439446,
+        "yplus_p99_halfcell": 1.8247494283219723
+      }
+    },
+    "convention": "the numbers use the FULL first-cell height. ADflow is cell-centred and reports y+ at the first cell centroid, which halves them.",
+    "governance_gap": "policies/convergence_v1.yaml requires y_plus for acceptance but declares no numeric limit, and the preflight's limits {p95 1.0, p99 2.0, max 5.0} appear in no governed policy file. The generator script is not in the repository, so the report cannot be regenerated or tested.",
+    "practical_reading": "at the cell-centroid convention A/C03 gives OML p95 0.74 (0.65 excluding oml_base), p99 1.82, and about 3 percent of OML wall nodes above y+ 1; the large tail values sit on the tip cap, not on the wing.",
+    "reproduction": "recomputing from the meshes with the report's own yplus_per_m = 70437.918 reproduces every published column exactly (A/C01 6.3167 / 15.2824 / 25.9420; A/C02 3.4850 / 9.2215 / 18.1586; A/C03 1.9598 / 5.6722 / 14.5884; C/C03 2.1736 / 5.2889 / 9.9826).",
+    "verdict": "arithmetically reproducible, conservatively framed, ungoverned thresholds"
+  }
+}

@@ -1,0 +1,901 @@
+policy,geometry_index,attempts,seconds,accepted_template,accepted_quality,reached_preferred,succeeded,stopped_early
+atlas (as run),0,1,25.58394915700046,56,0.22677537296560618,True,True,False
+atlas (as run),1,1,23.859756334999474,41,0.20897439162686468,True,True,False
+atlas (as run),2,2,38.80859465800131,68,0.17668039200670344,True,True,False
+atlas (as run),3,1,20.24055423899881,42,0.2131881110927137,True,True,False
+atlas (as run),4,2,20.0061360339987,42,0.23153874382044373,True,True,False
+atlas (as run),5,2,32.27239980599916,2,0.2098118459126222,True,True,False
+atlas (as run),6,1,24.16490584300118,41,0.2332847751968215,True,True,False
+atlas (as run),7,6,90.75268580100055,95,0.1537358946331951,True,True,False
+atlas (as run),8,1,22.004087326000445,8,0.2250290156545478,True,True,False
+atlas (as run),9,1,20.01738314300019,42,0.24083434770609752,True,True,False
+atlas (as run),10,1,25.194722631998957,56,0.21779897553921623,True,True,False
+atlas (as run),11,3,44.16651395000008,2,0.1628320393122548,True,True,False
+atlas (as run),12,4,59.874974372001816,68,0.16240170374886362,True,True,False
+atlas (as run),13,1,19.723314152999592,2,0.17164621766216775,True,True,False
+atlas (as run),14,1,19.93785676599873,85,0.21740407651408666,True,True,False
+atlas (as run),15,1,20.404020526999375,43,0.22427206226025667,True,True,False
+atlas (as run),16,1,17.235330273999352,16,0.22061175480861958,True,True,False
+atlas (as run),17,1,24.747335797001142,56,0.23448174702235605,True,True,False
+atlas (as run),18,1,19.296191856001315,2,0.19539841780699382,True,True,False
+atlas (as run),19,1,20.16727828599869,42,0.22278313346714682,True,True,False
+atlas (as run),20,1,20.024505577999662,88,0.1870934153408419,True,True,False
+atlas (as run),21,4,23.992123474003165,41,0.23337093780893794,True,True,False
+atlas (as run),22,1,25.784067511000103,92,0.18632440061177116,True,True,False
+atlas (as run),23,1,20.00266772299983,42,0.2350409558422074,True,True,False
+atlas (as run),24,1,24.904215992999525,24,0.22456372422482881,True,True,False
+atlas (as run),25,1,19.75315886899989,94,0.2291825380068795,True,True,False
+atlas (as run),26,1,20.062941195001258,42,0.2351639532620596,True,True,False
+atlas (as run),27,2,24.75305385200045,65,0.15822957963273449,True,True,False
+atlas (as run),28,1,17.353710277000573,16,0.22267317430552155,True,True,False
+atlas (as run),29,1,18.613957180999932,29,0.20497485775217694,True,True,False
+atlas (as run),30,1,23.925304599999436,81,0.22779845342141897,True,True,False
+atlas (as run),31,2,33.08719768799892,42,0.23647458851221143,True,True,False
+atlas (as run),32,1,25.51175981599954,70,0.20761238718027306,True,True,False
+atlas (as run),33,1,25.45628573799877,70,0.20501075564931495,True,True,False
+atlas (as run),34,1,19.69436743500046,85,0.20693503092107302,True,True,False
+atlas (as run),35,1,20.20479191099912,43,0.18672539850432288,True,True,False
+atlas (as run),36,3,22.80600176000189,95,0.20972515600022185,True,True,False
+atlas (as run),37,5,60.816324171000815,68,0.2366829595275011,True,True,False
+atlas (as run),38,1,19.721417352999197,90,0.23528866626337888,True,True,False
+atlas (as run),39,1,20.4800363939994,43,0.2238290357872832,True,True,False
+atlas (as run),40,2,22.5431663950003,95,0.20562477882219815,True,True,False
+atlas (as run),41,1,23.81959146600093,41,0.20528709750064908,True,True,False
+atlas (as run),42,1,20.09799678499985,42,0.23762518200142468,True,True,False
+atlas (as run),43,1,20.20646851499987,43,0.208253968271176,True,True,False
+atlas (as run),44,1,20.03641074299958,42,0.19605493115754904,True,True,False
+atlas (as run),45,1,23.72330139099904,41,0.22083148848584078,True,True,False
+atlas (as run),46,1,20.01729569500094,88,0.21482466176226298,True,True,False
+atlas (as run),47,1,18.655309006000607,47,0.2133493043635396,True,True,False
+atlas (as run),48,2,25.152556163000554,24,0.2175726816599492,True,True,False
+atlas (as run),49,1,19.989840229000038,42,0.18206014502305118,True,True,False
+atlas (as run),50,1,20.0930274930015,88,0.21372937732003458,True,True,False
+atlas (as run),51,1,25.075836152998818,24,0.2254465526340172,True,True,False
+atlas (as run),52,1,23.554031433999626,81,0.2340263365090765,True,True,False
+atlas (as run),53,1,20.077986893000343,42,0.22004312987922162,True,True,False
+atlas (as run),54,2,49.76548820099924,24,0.17835233836783343,True,True,False
+atlas (as run),55,1,18.857580629999575,47,0.22770241887097045,True,True,False
+atlas (as run),56,1,24.53208119900046,56,0.23505308165180194,True,True,False
+atlas (as run),57,2,40.352182427001026,42,0.17452360469164255,True,True,False
+atlas (as run),58,3,42.12617777000014,65,0.2001750678174796,True,True,False
+atlas (as run),59,1,20.05062573199939,42,0.2037579278806228,True,True,False
+atlas (as run),60,1,23.846345343001303,81,0.223468487966965,True,True,False
+atlas (as run),61,1,19.968350782000925,42,0.23799424068665115,True,True,False
+atlas (as run),62,1,18.736471801001244,47,0.2397181631915261,True,True,False
+atlas (as run),63,2,30.10912822100181,16,0.2176103185730569,True,True,False
+atlas (as run),64,2,50.50283209599911,70,0.23715557587280633,True,True,False
+atlas (as run),65,1,16.321516492000228,65,0.20192194042049696,True,True,False
+atlas (as run),66,1,25.605867398000555,92,0.19574152412668952,True,True,False
+atlas (as run),67,1,23.71511008000016,81,0.2327901439393763,True,True,False
+atlas (as run),68,3,47.23317533399859,85,0.19140934181036565,True,True,False
+atlas (as run),69,1,25.382087419999152,70,0.20160045250557326,True,True,False
+atlas (as run),70,1,25.602855690998695,70,0.23697914107206194,True,True,False
+atlas (as run),71,1,20.2390599320006,43,0.1877199812999176,True,True,False
+atlas (as run),72,2,49.966755050001666,70,0.15537630902637492,True,True,False
+atlas (as run),73,1,24.700699081000494,56,0.23741366776209036,True,True,False
+atlas (as run),74,1,18.761003572000845,47,0.2278698296627202,True,True,False
+atlas (as run),75,2,32.08168587399814,42,0.23561208074456128,True,True,False
+atlas (as run),76,2,48.6624914039985,81,0.23066650340925565,True,True,False
+atlas (as run),77,1,18.6792540990009,29,0.21963754431670562,True,True,False
+atlas (as run),78,1,20.035986271999718,42,0.23105685646721358,True,True,False
+atlas (as run),79,1,25.527796510999906,70,0.19075158703716835,True,True,False
+atlas (as run),80,1,24.59339942800034,56,0.18017633370155337,True,True,False
+atlas (as run),81,1,23.78351512500012,81,0.23194615081934394,True,True,False
+atlas (as run),82,1,25.455009806999442,70,0.23184907801873833,True,True,False
+atlas (as run),83,1,20.073158960998626,42,0.24189829546753208,True,True,False
+atlas (as run),84,2,23.695728253000198,81,0.22400555949162398,True,True,False
+atlas (as run),85,1,19.748576039999534,85,0.19909278355980742,True,True,False
+atlas (as run),86,1,25.459937804998845,70,0.22583805550417976,True,True,False
+atlas (as run),87,1,20.042804553999304,42,0.22923685898467233,True,True,False
+atlas (as run),88,1,20.100868899999114,88,0.1914548627603411,True,True,False
+atlas (as run),89,3,45.810017022002285,85,0.17418398241792596,True,True,False
+atlas (as run),90,1,19.72520659699876,90,0.23243170398110294,True,True,False
+atlas (as run),91,1,21.90937133099942,8,0.23309388479260754,True,True,False
+atlas (as run),92,1,25.55845232000138,92,0.19040354831202808,True,True,False
+atlas (as run),93,1,20.018292169001143,42,0.23782557024326356,True,True,False
+atlas (as run),94,1,19.75013067100008,94,0.2264396033299129,True,True,False
+atlas (as run),95,21,253.71692757300116,95,0.14681110308186857,False,True,False
+atlas (as run),96,1,25.47139300100025,70,0.15415554098866818,True,True,False
+atlas (as run),97,1,20.031455368000024,42,0.17337045194977407,True,True,False
+atlas (as run),98,1,19.982499820000157,42,0.24062483324894013,True,True,False
+atlas (as run),99,3,44.77526211299846,85,0.22945982476712615,True,True,False
+atlas ordering + accept-first-valid,0,1,25.58394915700046,56,0.22677537296560618,True,True,False
+atlas ordering + accept-first-valid,1,1,23.859756334999474,41,0.20897439162686468,True,True,False
+atlas ordering + accept-first-valid,2,1,19.39734776000114,2,0.10421801029673715,False,True,True
+atlas ordering + accept-first-valid,3,1,20.24055423899881,42,0.2131881110927137,True,True,False
+atlas ordering + accept-first-valid,4,2,20.0061360339987,42,0.23153874382044373,True,True,False
+atlas ordering + accept-first-valid,5,2,32.27239980599916,2,0.2098118459126222,True,True,False
+atlas ordering + accept-first-valid,6,1,24.16490584300118,41,0.2332847751968215,True,True,False
+atlas ordering + accept-first-valid,7,2,34.92650246199992,8,0.11512233777199117,False,True,True
+atlas ordering + accept-first-valid,8,1,22.004087326000445,8,0.2250290156545478,True,True,False
+atlas ordering + accept-first-valid,9,1,20.01738314300019,42,0.24083434770609752,True,True,False
+atlas ordering + accept-first-valid,10,1,25.194722631998957,56,0.21779897553921623,True,True,False
+atlas ordering + accept-first-valid,11,3,44.16651395000008,2,0.1628320393122548,True,True,False
+atlas ordering + accept-first-valid,12,3,40.801952551002614,90,0.13796656233419458,False,True,True
+atlas ordering + accept-first-valid,13,1,19.723314152999592,2,0.17164621766216775,True,True,False
+atlas ordering + accept-first-valid,14,1,19.93785676599873,85,0.21740407651408666,True,True,False
+atlas ordering + accept-first-valid,15,1,20.404020526999375,43,0.22427206226025667,True,True,False
+atlas ordering + accept-first-valid,16,1,17.235330273999352,16,0.22061175480861958,True,True,False
+atlas ordering + accept-first-valid,17,1,24.747335797001142,56,0.23448174702235605,True,True,False
+atlas ordering + accept-first-valid,18,1,19.296191856001315,2,0.19539841780699382,True,True,False
+atlas ordering + accept-first-valid,19,1,20.16727828599869,42,0.22278313346714682,True,True,False
+atlas ordering + accept-first-valid,20,1,20.024505577999662,88,0.1870934153408419,True,True,False
+atlas ordering + accept-first-valid,21,4,23.992123474003165,41,0.23337093780893794,True,True,False
+atlas ordering + accept-first-valid,22,1,25.784067511000103,92,0.18632440061177116,True,True,False
+atlas ordering + accept-first-valid,23,1,20.00266772299983,42,0.2350409558422074,True,True,False
+atlas ordering + accept-first-valid,24,1,24.904215992999525,24,0.22456372422482881,True,True,False
+atlas ordering + accept-first-valid,25,1,19.75315886899989,94,0.2291825380068795,True,True,False
+atlas ordering + accept-first-valid,26,1,20.062941195001258,42,0.2351639532620596,True,True,False
+atlas ordering + accept-first-valid,27,2,24.75305385200045,65,0.15822957963273449,True,True,False
+atlas ordering + accept-first-valid,28,1,17.353710277000573,16,0.22267317430552155,True,True,False
+atlas ordering + accept-first-valid,29,1,18.613957180999932,29,0.20497485775217694,True,True,False
+atlas ordering + accept-first-valid,30,1,23.925304599999436,81,0.22779845342141897,True,True,False
+atlas ordering + accept-first-valid,31,2,33.08719768799892,42,0.23647458851221143,True,True,False
+atlas ordering + accept-first-valid,32,1,25.51175981599954,70,0.20761238718027306,True,True,False
+atlas ordering + accept-first-valid,33,1,25.45628573799877,70,0.20501075564931495,True,True,False
+atlas ordering + accept-first-valid,34,1,19.69436743500046,85,0.20693503092107302,True,True,False
+atlas ordering + accept-first-valid,35,1,20.20479191099912,43,0.18672539850432288,True,True,False
+atlas ordering + accept-first-valid,36,3,22.80600176000189,95,0.20972515600022185,True,True,False
+atlas ordering + accept-first-valid,37,5,60.816324171000815,68,0.2366829595275011,True,True,False
+atlas ordering + accept-first-valid,38,1,19.721417352999197,90,0.23528866626337888,True,True,False
+atlas ordering + accept-first-valid,39,1,20.4800363939994,43,0.2238290357872832,True,True,False
+atlas ordering + accept-first-valid,40,2,22.5431663950003,95,0.20562477882219815,True,True,False
+atlas ordering + accept-first-valid,41,1,23.81959146600093,41,0.20528709750064908,True,True,False
+atlas ordering + accept-first-valid,42,1,20.09799678499985,42,0.23762518200142468,True,True,False
+atlas ordering + accept-first-valid,43,1,20.20646851499987,43,0.208253968271176,True,True,False
+atlas ordering + accept-first-valid,44,1,20.03641074299958,42,0.19605493115754904,True,True,False
+atlas ordering + accept-first-valid,45,1,23.72330139099904,41,0.22083148848584078,True,True,False
+atlas ordering + accept-first-valid,46,1,20.01729569500094,88,0.21482466176226298,True,True,False
+atlas ordering + accept-first-valid,47,1,18.655309006000607,47,0.2133493043635396,True,True,False
+atlas ordering + accept-first-valid,48,2,25.152556163000554,24,0.2175726816599492,True,True,False
+atlas ordering + accept-first-valid,49,1,19.989840229000038,42,0.18206014502305118,True,True,False
+atlas ordering + accept-first-valid,50,1,20.0930274930015,88,0.21372937732003458,True,True,False
+atlas ordering + accept-first-valid,51,1,25.075836152998818,24,0.2254465526340172,True,True,False
+atlas ordering + accept-first-valid,52,1,23.554031433999626,81,0.2340263365090765,True,True,False
+atlas ordering + accept-first-valid,53,1,20.077986893000343,42,0.22004312987922162,True,True,False
+atlas ordering + accept-first-valid,54,1,24.7125970649995,56,0.13858968512006245,False,True,True
+atlas ordering + accept-first-valid,55,1,18.857580629999575,47,0.22770241887097045,True,True,False
+atlas ordering + accept-first-valid,56,1,24.53208119900046,56,0.23505308165180194,True,True,False
+atlas ordering + accept-first-valid,57,1,20.37293022599988,88,0.11892873968389257,False,True,True
+atlas ordering + accept-first-valid,58,3,42.12617777000014,65,0.2001750678174796,True,True,False
+atlas ordering + accept-first-valid,59,1,20.05062573199939,42,0.2037579278806228,True,True,False
+atlas ordering + accept-first-valid,60,1,23.846345343001303,81,0.223468487966965,True,True,False
+atlas ordering + accept-first-valid,61,1,19.968350782000925,42,0.23799424068665115,True,True,False
+atlas ordering + accept-first-valid,62,1,18.736471801001244,47,0.2397181631915261,True,True,False
+atlas ordering + accept-first-valid,63,2,30.10912822100181,16,0.2176103185730569,True,True,False
+atlas ordering + accept-first-valid,64,1,24.853536831000383,56,0.13029277303964776,False,True,True
+atlas ordering + accept-first-valid,65,1,16.321516492000228,65,0.20192194042049696,True,True,False
+atlas ordering + accept-first-valid,66,1,25.605867398000555,92,0.19574152412668952,True,True,False
+atlas ordering + accept-first-valid,67,1,23.71511008000016,81,0.2327901439393763,True,True,False
+atlas ordering + accept-first-valid,68,1,19.10293770899989,68,0.12158214528994177,False,True,True
+atlas ordering + accept-first-valid,69,1,25.382087419999152,70,0.20160045250557326,True,True,False
+atlas ordering + accept-first-valid,70,1,25.602855690998695,70,0.23697914107206194,True,True,False
+atlas ordering + accept-first-valid,71,1,20.2390599320006,43,0.1877199812999176,True,True,False
+atlas ordering + accept-first-valid,72,1,24.647120309000456,56,0.12566895661048655,False,True,True
+atlas ordering + accept-first-valid,73,1,24.700699081000494,56,0.23741366776209036,True,True,False
+atlas ordering + accept-first-valid,74,1,18.761003572000845,47,0.2278698296627202,True,True,False
+atlas ordering + accept-first-valid,75,2,32.08168587399814,42,0.23561208074456128,True,True,False
+atlas ordering + accept-first-valid,76,1,24.90485172099943,24,0.12084071180377735,False,True,True
+atlas ordering + accept-first-valid,77,1,18.6792540990009,29,0.21963754431670562,True,True,False
+atlas ordering + accept-first-valid,78,1,20.035986271999718,42,0.23105685646721358,True,True,False
+atlas ordering + accept-first-valid,79,1,25.527796510999906,70,0.19075158703716835,True,True,False
+atlas ordering + accept-first-valid,80,1,24.59339942800034,56,0.18017633370155337,True,True,False
+atlas ordering + accept-first-valid,81,1,23.78351512500012,81,0.23194615081934394,True,True,False
+atlas ordering + accept-first-valid,82,1,25.455009806999442,70,0.23184907801873833,True,True,False
+atlas ordering + accept-first-valid,83,1,20.073158960998626,42,0.24189829546753208,True,True,False
+atlas ordering + accept-first-valid,84,2,23.695728253000198,81,0.22400555949162398,True,True,False
+atlas ordering + accept-first-valid,85,1,19.748576039999534,85,0.19909278355980742,True,True,False
+atlas ordering + accept-first-valid,86,1,25.459937804998845,70,0.22583805550417976,True,True,False
+atlas ordering + accept-first-valid,87,1,20.042804553999304,42,0.22923685898467233,True,True,False
+atlas ordering + accept-first-valid,88,1,20.100868899999114,88,0.1914548627603411,True,True,False
+atlas ordering + accept-first-valid,89,1,16.374329509000745,89,0.1299622861069467,False,True,True
+atlas ordering + accept-first-valid,90,1,19.72520659699876,90,0.23243170398110294,True,True,False
+atlas ordering + accept-first-valid,91,1,21.90937133099942,8,0.23309388479260754,True,True,False
+atlas ordering + accept-first-valid,92,1,25.55845232000138,92,0.19040354831202808,True,True,False
+atlas ordering + accept-first-valid,93,1,20.018292169001143,42,0.23782557024326356,True,True,False
+atlas ordering + accept-first-valid,94,1,19.75013067100008,94,0.2264396033299129,True,True,False
+atlas ordering + accept-first-valid,95,1,22.372922050999478,95,0.14681110308186857,False,True,True
+atlas ordering + accept-first-valid,96,1,25.47139300100025,70,0.15415554098866818,True,True,False
+atlas ordering + accept-first-valid,97,1,20.031455368000024,42,0.17337045194977407,True,True,False
+atlas ordering + accept-first-valid,98,1,19.982499820000157,42,0.24062483324894013,True,True,False
+atlas ordering + accept-first-valid,99,3,44.77526211299846,85,0.22945982476712615,True,True,False
+learned ranking (design only),0,1,25.58394915700046,56,0.22677537296560618,True,True,False
+learned ranking (design only),1,1,23.859756334999474,41,0.20897439162686468,True,True,False
+learned ranking (design only),2,1,19.411246898000172,68,0.17668039200670344,True,True,False
+learned ranking (design only),3,1,20.24055423899881,42,0.2131881110927137,True,True,False
+learned ranking (design only),4,1,19.998775619998924,42,0.23153874382044373,True,True,False
+learned ranking (design only),5,1,19.490374771999996,2,0.2098118459126222,True,True,False
+learned ranking (design only),6,1,24.16490584300118,41,0.2332847751968215,True,True,False
+learned ranking (design only),7,2,32.76618905000032,95,0.1537358946331951,True,True,False
+learned ranking (design only),8,1,22.004087326000445,8,0.2250290156545478,True,True,False
+learned ranking (design only),9,1,20.01738314300019,42,0.24083434770609752,True,True,False
+learned ranking (design only),10,1,25.194722631998957,56,0.21779897553921623,True,True,False
+learned ranking (design only),11,1,19.68713983699854,2,0.1628320393122548,True,True,False
+learned ranking (design only),12,3,47.19011322300139,68,0.16240170374886362,True,True,False
+learned ranking (design only),13,1,19.723314152999592,2,0.17164621766216775,True,True,False
+learned ranking (design only),14,1,19.93785676599873,85,0.21740407651408666,True,True,False
+learned ranking (design only),15,1,20.404020526999375,43,0.22427206226025667,True,True,False
+learned ranking (design only),16,1,17.235330273999352,16,0.22061175480861958,True,True,False
+learned ranking (design only),17,1,24.747335797001142,56,0.23448174702235605,True,True,False
+learned ranking (design only),18,1,19.296191856001315,2,0.19539841780699382,True,True,False
+learned ranking (design only),19,1,20.16727828599869,42,0.22278313346714682,True,True,False
+learned ranking (design only),20,1,20.024505577999662,88,0.1870934153408419,True,True,False
+learned ranking (design only),21,2,23.97809972900177,41,0.23337093780893794,True,True,False
+learned ranking (design only),22,1,25.784067511000103,92,0.18632440061177116,True,True,False
+learned ranking (design only),23,1,20.00266772299983,42,0.2350409558422074,True,True,False
+learned ranking (design only),24,1,24.904215992999525,24,0.22456372422482881,True,True,False
+learned ranking (design only),25,1,19.75315886899989,94,0.2291825380068795,True,True,False
+learned ranking (design only),26,1,20.062941195001258,42,0.2351639532620596,True,True,False
+learned ranking (design only),27,2,24.75305385200045,65,0.15822957963273449,True,True,False
+learned ranking (design only),28,1,17.353710277000573,16,0.22267317430552155,True,True,False
+learned ranking (design only),29,1,18.613957180999932,29,0.20497485775217694,True,True,False
+learned ranking (design only),30,1,23.925304599999436,81,0.22779845342141897,True,True,False
+learned ranking (design only),31,1,20.132118894000087,42,0.23647458851221143,True,True,False
+learned ranking (design only),32,1,25.51175981599954,70,0.20761238718027306,True,True,False
+learned ranking (design only),33,1,25.45628573799877,70,0.20501075564931495,True,True,False
+learned ranking (design only),34,1,19.69436743500046,85,0.20693503092107302,True,True,False
+learned ranking (design only),35,1,20.20479191099912,43,0.18672539850432288,True,True,False
+learned ranking (design only),36,3,22.80600176000189,95,0.20972515600022185,True,True,False
+learned ranking (design only),37,3,39.164491178999015,68,0.2366829595275011,True,True,False
+learned ranking (design only),38,1,19.721417352999197,90,0.23528866626337888,True,True,False
+learned ranking (design only),39,1,20.4800363939994,43,0.2238290357872832,True,True,False
+learned ranking (design only),40,2,22.5431663950003,95,0.20562477882219815,True,True,False
+learned ranking (design only),41,1,23.81959146600093,41,0.20528709750064908,True,True,False
+learned ranking (design only),42,1,20.09799678499985,42,0.23762518200142468,True,True,False
+learned ranking (design only),43,1,20.20646851499987,43,0.208253968271176,True,True,False
+learned ranking (design only),44,1,20.03641074299958,42,0.19605493115754904,True,True,False
+learned ranking (design only),45,1,23.72330139099904,41,0.22083148848584078,True,True,False
+learned ranking (design only),46,1,20.01729569500094,88,0.21482466176226298,True,True,False
+learned ranking (design only),47,1,18.655309006000607,47,0.2133493043635396,True,True,False
+learned ranking (design only),48,1,25.14534944099978,24,0.2175726816599492,True,True,False
+learned ranking (design only),49,1,19.989840229000038,42,0.18206014502305118,True,True,False
+learned ranking (design only),50,1,20.0930274930015,88,0.21372937732003458,True,True,False
+learned ranking (design only),51,1,25.075836152998818,24,0.2254465526340172,True,True,False
+learned ranking (design only),52,1,23.554031433999626,81,0.2340263365090765,True,True,False
+learned ranking (design only),53,1,20.077986893000343,42,0.22004312987922162,True,True,False
+learned ranking (design only),54,2,49.76548820099924,24,0.17835233836783343,True,True,False
+learned ranking (design only),55,1,18.857580629999575,47,0.22770241887097045,True,True,False
+learned ranking (design only),56,1,24.53208119900046,56,0.23505308165180194,True,True,False
+learned ranking (design only),57,1,19.979252201001145,42,0.17452360469164255,True,True,False
+learned ranking (design only),58,1,16.406057796000823,65,0.2001750678174796,True,True,False
+learned ranking (design only),59,1,20.05062573199939,42,0.2037579278806228,True,True,False
+learned ranking (design only),60,1,23.846345343001303,81,0.223468487966965,True,True,False
+learned ranking (design only),61,1,19.968350782000925,42,0.23799424068665115,True,True,False
+learned ranking (design only),62,1,18.736471801001244,47,0.2397181631915261,True,True,False
+learned ranking (design only),63,1,17.376894143000754,16,0.2176103185730569,True,True,False
+learned ranking (design only),64,2,50.50283209599911,70,0.23715557587280633,True,True,False
+learned ranking (design only),65,1,16.321516492000228,65,0.20192194042049696,True,True,False
+learned ranking (design only),66,1,25.605867398000555,92,0.19574152412668952,True,True,False
+learned ranking (design only),67,1,23.71511008000016,81,0.2327901439393763,True,True,False
+learned ranking (design only),68,1,19.726243098999475,85,0.19140934181036565,True,True,False
+learned ranking (design only),69,1,25.382087419999152,70,0.20160045250557326,True,True,False
+learned ranking (design only),70,1,25.602855690998695,70,0.23697914107206194,True,True,False
+learned ranking (design only),71,1,20.2390599320006,43,0.1877199812999176,True,True,False
+learned ranking (design only),72,1,25.31963474100121,70,0.15537630902637492,True,True,False
+learned ranking (design only),73,1,24.700699081000494,56,0.23741366776209036,True,True,False
+learned ranking (design only),74,1,18.761003572000845,47,0.2278698296627202,True,True,False
+learned ranking (design only),75,1,20.014335569998366,42,0.23561208074456128,True,True,False
+learned ranking (design only),76,1,23.75763968299907,81,0.23066650340925565,True,True,False
+learned ranking (design only),77,1,18.6792540990009,29,0.21963754431670562,True,True,False
+learned ranking (design only),78,1,20.035986271999718,42,0.23105685646721358,True,True,False
+learned ranking (design only),79,1,25.527796510999906,70,0.19075158703716835,True,True,False
+learned ranking (design only),80,1,24.59339942800034,56,0.18017633370155337,True,True,False
+learned ranking (design only),81,1,23.78351512500012,81,0.23194615081934394,True,True,False
+learned ranking (design only),82,1,25.455009806999442,70,0.23184907801873833,True,True,False
+learned ranking (design only),83,1,20.073158960998626,42,0.24189829546753208,True,True,False
+learned ranking (design only),84,1,23.68867787599993,81,0.22400555949162398,True,True,False
+learned ranking (design only),85,1,19.748576039999534,85,0.19909278355980742,True,True,False
+learned ranking (design only),86,1,25.459937804998845,70,0.22583805550417976,True,True,False
+learned ranking (design only),87,1,20.042804553999304,42,0.22923685898467233,True,True,False
+learned ranking (design only),88,1,20.100868899999114,88,0.1914548627603411,True,True,False
+learned ranking (design only),89,2,29.43568751300154,85,0.17418398241792596,True,True,False
+learned ranking (design only),90,1,19.72520659699876,90,0.23243170398110294,True,True,False
+learned ranking (design only),91,1,21.90937133099942,8,0.23309388479260754,True,True,False
+learned ranking (design only),92,1,25.55845232000138,92,0.19040354831202808,True,True,False
+learned ranking (design only),93,1,20.018292169001143,42,0.23782557024326356,True,True,False
+learned ranking (design only),94,1,19.75013067100008,94,0.2264396033299129,True,True,False
+learned ranking (design only),95,21,253.71692757300116,95,0.14681110308186857,False,True,False
+learned ranking (design only),96,1,25.47139300100025,70,0.15415554098866818,True,True,False
+learned ranking (design only),97,1,20.031455368000024,42,0.17337045194977407,True,True,False
+learned ranking (design only),98,1,19.982499820000157,42,0.24062483324894013,True,True,False
+learned ranking (design only),99,1,19.61458205300005,85,0.22945982476712615,True,True,False
+learned ranking + accept-first-valid (design only),0,1,25.58394915700046,56,0.22677537296560618,True,True,False
+learned ranking + accept-first-valid (design only),1,1,23.859756334999474,41,0.20897439162686468,True,True,False
+learned ranking + accept-first-valid (design only),2,1,19.411246898000172,68,0.17668039200670344,True,True,False
+learned ranking + accept-first-valid (design only),3,1,20.24055423899881,42,0.2131881110927137,True,True,False
+learned ranking + accept-first-valid (design only),4,1,19.998775619998924,42,0.23153874382044373,True,True,False
+learned ranking + accept-first-valid (design only),5,1,19.490374771999996,2,0.2098118459126222,True,True,False
+learned ranking + accept-first-valid (design only),6,1,24.16490584300118,41,0.2332847751968215,True,True,False
+learned ranking + accept-first-valid (design only),7,2,32.76618905000032,95,0.1537358946331951,True,True,False
+learned ranking + accept-first-valid (design only),8,1,22.004087326000445,8,0.2250290156545478,True,True,False
+learned ranking + accept-first-valid (design only),9,1,20.01738314300019,42,0.24083434770609752,True,True,False
+learned ranking + accept-first-valid (design only),10,1,25.194722631998957,56,0.21779897553921623,True,True,False
+learned ranking + accept-first-valid (design only),11,1,19.68713983699854,2,0.1628320393122548,True,True,False
+learned ranking + accept-first-valid (design only),12,1,19.7023651340005,90,0.13796656233419458,False,True,True
+learned ranking + accept-first-valid (design only),13,1,19.723314152999592,2,0.17164621766216775,True,True,False
+learned ranking + accept-first-valid (design only),14,1,19.93785676599873,85,0.21740407651408666,True,True,False
+learned ranking + accept-first-valid (design only),15,1,20.404020526999375,43,0.22427206226025667,True,True,False
+learned ranking + accept-first-valid (design only),16,1,17.235330273999352,16,0.22061175480861958,True,True,False
+learned ranking + accept-first-valid (design only),17,1,24.747335797001142,56,0.23448174702235605,True,True,False
+learned ranking + accept-first-valid (design only),18,1,19.296191856001315,2,0.19539841780699382,True,True,False
+learned ranking + accept-first-valid (design only),19,1,20.16727828599869,42,0.22278313346714682,True,True,False
+learned ranking + accept-first-valid (design only),20,1,20.024505577999662,88,0.1870934153408419,True,True,False
+learned ranking + accept-first-valid (design only),21,2,23.97809972900177,41,0.23337093780893794,True,True,False
+learned ranking + accept-first-valid (design only),22,1,25.784067511000103,92,0.18632440061177116,True,True,False
+learned ranking + accept-first-valid (design only),23,1,20.00266772299983,42,0.2350409558422074,True,True,False
+learned ranking + accept-first-valid (design only),24,1,24.904215992999525,24,0.22456372422482881,True,True,False
+learned ranking + accept-first-valid (design only),25,1,19.75315886899989,94,0.2291825380068795,True,True,False
+learned ranking + accept-first-valid (design only),26,1,20.062941195001258,42,0.2351639532620596,True,True,False
+learned ranking + accept-first-valid (design only),27,2,24.75305385200045,65,0.15822957963273449,True,True,False
+learned ranking + accept-first-valid (design only),28,1,17.353710277000573,16,0.22267317430552155,True,True,False
+learned ranking + accept-first-valid (design only),29,1,18.613957180999932,29,0.20497485775217694,True,True,False
+learned ranking + accept-first-valid (design only),30,1,23.925304599999436,81,0.22779845342141897,True,True,False
+learned ranking + accept-first-valid (design only),31,1,20.132118894000087,42,0.23647458851221143,True,True,False
+learned ranking + accept-first-valid (design only),32,1,25.51175981599954,70,0.20761238718027306,True,True,False
+learned ranking + accept-first-valid (design only),33,1,25.45628573799877,70,0.20501075564931495,True,True,False
+learned ranking + accept-first-valid (design only),34,1,19.69436743500046,85,0.20693503092107302,True,True,False
+learned ranking + accept-first-valid (design only),35,1,20.20479191099912,43,0.18672539850432288,True,True,False
+learned ranking + accept-first-valid (design only),36,3,22.80600176000189,95,0.20972515600022185,True,True,False
+learned ranking + accept-first-valid (design only),37,3,39.164491178999015,68,0.2366829595275011,True,True,False
+learned ranking + accept-first-valid (design only),38,1,19.721417352999197,90,0.23528866626337888,True,True,False
+learned ranking + accept-first-valid (design only),39,1,20.4800363939994,43,0.2238290357872832,True,True,False
+learned ranking + accept-first-valid (design only),40,2,22.5431663950003,95,0.20562477882219815,True,True,False
+learned ranking + accept-first-valid (design only),41,1,23.81959146600093,41,0.20528709750064908,True,True,False
+learned ranking + accept-first-valid (design only),42,1,20.09799678499985,42,0.23762518200142468,True,True,False
+learned ranking + accept-first-valid (design only),43,1,20.20646851499987,43,0.208253968271176,True,True,False
+learned ranking + accept-first-valid (design only),44,1,20.03641074299958,42,0.19605493115754904,True,True,False
+learned ranking + accept-first-valid (design only),45,1,23.72330139099904,41,0.22083148848584078,True,True,False
+learned ranking + accept-first-valid (design only),46,1,20.01729569500094,88,0.21482466176226298,True,True,False
+learned ranking + accept-first-valid (design only),47,1,18.655309006000607,47,0.2133493043635396,True,True,False
+learned ranking + accept-first-valid (design only),48,1,25.14534944099978,24,0.2175726816599492,True,True,False
+learned ranking + accept-first-valid (design only),49,1,19.989840229000038,42,0.18206014502305118,True,True,False
+learned ranking + accept-first-valid (design only),50,1,20.0930274930015,88,0.21372937732003458,True,True,False
+learned ranking + accept-first-valid (design only),51,1,25.075836152998818,24,0.2254465526340172,True,True,False
+learned ranking + accept-first-valid (design only),52,1,23.554031433999626,81,0.2340263365090765,True,True,False
+learned ranking + accept-first-valid (design only),53,1,20.077986893000343,42,0.22004312987922162,True,True,False
+learned ranking + accept-first-valid (design only),54,1,24.7125970649995,56,0.13858968512006245,False,True,True
+learned ranking + accept-first-valid (design only),55,1,18.857580629999575,47,0.22770241887097045,True,True,False
+learned ranking + accept-first-valid (design only),56,1,24.53208119900046,56,0.23505308165180194,True,True,False
+learned ranking + accept-first-valid (design only),57,1,19.979252201001145,42,0.17452360469164255,True,True,False
+learned ranking + accept-first-valid (design only),58,1,16.406057796000823,65,0.2001750678174796,True,True,False
+learned ranking + accept-first-valid (design only),59,1,20.05062573199939,42,0.2037579278806228,True,True,False
+learned ranking + accept-first-valid (design only),60,1,23.846345343001303,81,0.223468487966965,True,True,False
+learned ranking + accept-first-valid (design only),61,1,19.968350782000925,42,0.23799424068665115,True,True,False
+learned ranking + accept-first-valid (design only),62,1,18.736471801001244,47,0.2397181631915261,True,True,False
+learned ranking + accept-first-valid (design only),63,1,17.376894143000754,16,0.2176103185730569,True,True,False
+learned ranking + accept-first-valid (design only),64,1,24.853536831000383,56,0.13029277303964776,False,True,True
+learned ranking + accept-first-valid (design only),65,1,16.321516492000228,65,0.20192194042049696,True,True,False
+learned ranking + accept-first-valid (design only),66,1,25.605867398000555,92,0.19574152412668952,True,True,False
+learned ranking + accept-first-valid (design only),67,1,23.71511008000016,81,0.2327901439393763,True,True,False
+learned ranking + accept-first-valid (design only),68,1,19.726243098999475,85,0.19140934181036565,True,True,False
+learned ranking + accept-first-valid (design only),69,1,25.382087419999152,70,0.20160045250557326,True,True,False
+learned ranking + accept-first-valid (design only),70,1,25.602855690998695,70,0.23697914107206194,True,True,False
+learned ranking + accept-first-valid (design only),71,1,20.2390599320006,43,0.1877199812999176,True,True,False
+learned ranking + accept-first-valid (design only),72,1,25.31963474100121,70,0.15537630902637492,True,True,False
+learned ranking + accept-first-valid (design only),73,1,24.700699081000494,56,0.23741366776209036,True,True,False
+learned ranking + accept-first-valid (design only),74,1,18.761003572000845,47,0.2278698296627202,True,True,False
+learned ranking + accept-first-valid (design only),75,1,20.014335569998366,42,0.23561208074456128,True,True,False
+learned ranking + accept-first-valid (design only),76,1,23.75763968299907,81,0.23066650340925565,True,True,False
+learned ranking + accept-first-valid (design only),77,1,18.6792540990009,29,0.21963754431670562,True,True,False
+learned ranking + accept-first-valid (design only),78,1,20.035986271999718,42,0.23105685646721358,True,True,False
+learned ranking + accept-first-valid (design only),79,1,25.527796510999906,70,0.19075158703716835,True,True,False
+learned ranking + accept-first-valid (design only),80,1,24.59339942800034,56,0.18017633370155337,True,True,False
+learned ranking + accept-first-valid (design only),81,1,23.78351512500012,81,0.23194615081934394,True,True,False
+learned ranking + accept-first-valid (design only),82,1,25.455009806999442,70,0.23184907801873833,True,True,False
+learned ranking + accept-first-valid (design only),83,1,20.073158960998626,42,0.24189829546753208,True,True,False
+learned ranking + accept-first-valid (design only),84,1,23.68867787599993,81,0.22400555949162398,True,True,False
+learned ranking + accept-first-valid (design only),85,1,19.748576039999534,85,0.19909278355980742,True,True,False
+learned ranking + accept-first-valid (design only),86,1,25.459937804998845,70,0.22583805550417976,True,True,False
+learned ranking + accept-first-valid (design only),87,1,20.042804553999304,42,0.22923685898467233,True,True,False
+learned ranking + accept-first-valid (design only),88,1,20.100868899999114,88,0.1914548627603411,True,True,False
+learned ranking + accept-first-valid (design only),89,2,29.43568751300154,85,0.17418398241792596,True,True,False
+learned ranking + accept-first-valid (design only),90,1,19.72520659699876,90,0.23243170398110294,True,True,False
+learned ranking + accept-first-valid (design only),91,1,21.90937133099942,8,0.23309388479260754,True,True,False
+learned ranking + accept-first-valid (design only),92,1,25.55845232000138,92,0.19040354831202808,True,True,False
+learned ranking + accept-first-valid (design only),93,1,20.018292169001143,42,0.23782557024326356,True,True,False
+learned ranking + accept-first-valid (design only),94,1,19.75013067100008,94,0.2264396033299129,True,True,False
+learned ranking + accept-first-valid (design only),95,1,22.372922050999478,95,0.14681110308186857,False,True,True
+learned ranking + accept-first-valid (design only),96,1,25.47139300100025,70,0.15415554098866818,True,True,False
+learned ranking + accept-first-valid (design only),97,1,20.031455368000024,42,0.17337045194977407,True,True,False
+learned ranking + accept-first-valid (design only),98,1,19.982499820000157,42,0.24062483324894013,True,True,False
+learned ranking + accept-first-valid (design only),99,1,19.61458205300005,85,0.22945982476712615,True,True,False
+learned ranking + ceiling stopping (design only),0,1,25.58394915700046,56,0.22677537296560618,True,True,False
+learned ranking + ceiling stopping (design only),1,1,23.859756334999474,41,0.20897439162686468,True,True,False
+learned ranking + ceiling stopping (design only),2,1,19.411246898000172,68,0.17668039200670344,True,True,False
+learned ranking + ceiling stopping (design only),3,1,20.24055423899881,42,0.2131881110927137,True,True,False
+learned ranking + ceiling stopping (design only),4,1,19.998775619998924,42,0.23153874382044373,True,True,False
+learned ranking + ceiling stopping (design only),5,1,19.490374771999996,2,0.2098118459126222,True,True,False
+learned ranking + ceiling stopping (design only),6,1,24.16490584300118,41,0.2332847751968215,True,True,False
+learned ranking + ceiling stopping (design only),7,2,32.76618905000032,95,0.1537358946331951,True,True,False
+learned ranking + ceiling stopping (design only),8,1,22.004087326000445,8,0.2250290156545478,True,True,False
+learned ranking + ceiling stopping (design only),9,1,20.01738314300019,42,0.24083434770609752,True,True,False
+learned ranking + ceiling stopping (design only),10,1,25.194722631998957,56,0.21779897553921623,True,True,False
+learned ranking + ceiling stopping (design only),11,1,19.68713983699854,2,0.1628320393122548,True,True,False
+learned ranking + ceiling stopping (design only),12,2,28.11709140200219,90,0.13796656233419458,False,True,True
+learned ranking + ceiling stopping (design only),13,1,19.723314152999592,2,0.17164621766216775,True,True,False
+learned ranking + ceiling stopping (design only),14,1,19.93785676599873,85,0.21740407651408666,True,True,False
+learned ranking + ceiling stopping (design only),15,1,20.404020526999375,43,0.22427206226025667,True,True,False
+learned ranking + ceiling stopping (design only),16,1,17.235330273999352,16,0.22061175480861958,True,True,False
+learned ranking + ceiling stopping (design only),17,1,24.747335797001142,56,0.23448174702235605,True,True,False
+learned ranking + ceiling stopping (design only),18,1,19.296191856001315,2,0.19539841780699382,True,True,False
+learned ranking + ceiling stopping (design only),19,1,20.16727828599869,42,0.22278313346714682,True,True,False
+learned ranking + ceiling stopping (design only),20,1,20.024505577999662,88,0.1870934153408419,True,True,False
+learned ranking + ceiling stopping (design only),21,2,23.97809972900177,41,0.23337093780893794,True,True,False
+learned ranking + ceiling stopping (design only),22,1,25.784067511000103,92,0.18632440061177116,True,True,False
+learned ranking + ceiling stopping (design only),23,1,20.00266772299983,42,0.2350409558422074,True,True,False
+learned ranking + ceiling stopping (design only),24,1,24.904215992999525,24,0.22456372422482881,True,True,False
+learned ranking + ceiling stopping (design only),25,1,19.75315886899989,94,0.2291825380068795,True,True,False
+learned ranking + ceiling stopping (design only),26,1,20.062941195001258,42,0.2351639532620596,True,True,False
+learned ranking + ceiling stopping (design only),27,2,24.75305385200045,65,0.15822957963273449,True,True,False
+learned ranking + ceiling stopping (design only),28,1,17.353710277000573,16,0.22267317430552155,True,True,False
+learned ranking + ceiling stopping (design only),29,1,18.613957180999932,29,0.20497485775217694,True,True,False
+learned ranking + ceiling stopping (design only),30,1,23.925304599999436,81,0.22779845342141897,True,True,False
+learned ranking + ceiling stopping (design only),31,1,20.132118894000087,42,0.23647458851221143,True,True,False
+learned ranking + ceiling stopping (design only),32,1,25.51175981599954,70,0.20761238718027306,True,True,False
+learned ranking + ceiling stopping (design only),33,1,25.45628573799877,70,0.20501075564931495,True,True,False
+learned ranking + ceiling stopping (design only),34,1,19.69436743500046,85,0.20693503092107302,True,True,False
+learned ranking + ceiling stopping (design only),35,1,20.20479191099912,43,0.18672539850432288,True,True,False
+learned ranking + ceiling stopping (design only),36,3,22.80600176000189,95,0.20972515600022185,True,True,False
+learned ranking + ceiling stopping (design only),37,3,39.164491178999015,68,0.2366829595275011,True,True,False
+learned ranking + ceiling stopping (design only),38,1,19.721417352999197,90,0.23528866626337888,True,True,False
+learned ranking + ceiling stopping (design only),39,1,20.4800363939994,43,0.2238290357872832,True,True,False
+learned ranking + ceiling stopping (design only),40,2,22.5431663950003,95,0.20562477882219815,True,True,False
+learned ranking + ceiling stopping (design only),41,1,23.81959146600093,41,0.20528709750064908,True,True,False
+learned ranking + ceiling stopping (design only),42,1,20.09799678499985,42,0.23762518200142468,True,True,False
+learned ranking + ceiling stopping (design only),43,1,20.20646851499987,43,0.208253968271176,True,True,False
+learned ranking + ceiling stopping (design only),44,1,20.03641074299958,42,0.19605493115754904,True,True,False
+learned ranking + ceiling stopping (design only),45,1,23.72330139099904,41,0.22083148848584078,True,True,False
+learned ranking + ceiling stopping (design only),46,1,20.01729569500094,88,0.21482466176226298,True,True,False
+learned ranking + ceiling stopping (design only),47,1,18.655309006000607,47,0.2133493043635396,True,True,False
+learned ranking + ceiling stopping (design only),48,1,25.14534944099978,24,0.2175726816599492,True,True,False
+learned ranking + ceiling stopping (design only),49,1,19.989840229000038,42,0.18206014502305118,True,True,False
+learned ranking + ceiling stopping (design only),50,1,20.0930274930015,88,0.21372937732003458,True,True,False
+learned ranking + ceiling stopping (design only),51,1,25.075836152998818,24,0.2254465526340172,True,True,False
+learned ranking + ceiling stopping (design only),52,1,23.554031433999626,81,0.2340263365090765,True,True,False
+learned ranking + ceiling stopping (design only),53,1,20.077986893000343,42,0.22004312987922162,True,True,False
+learned ranking + ceiling stopping (design only),54,1,24.7125970649995,56,0.13858968512006245,False,True,True
+learned ranking + ceiling stopping (design only),55,1,18.857580629999575,47,0.22770241887097045,True,True,False
+learned ranking + ceiling stopping (design only),56,1,24.53208119900046,56,0.23505308165180194,True,True,False
+learned ranking + ceiling stopping (design only),57,1,19.979252201001145,42,0.17452360469164255,True,True,False
+learned ranking + ceiling stopping (design only),58,1,16.406057796000823,65,0.2001750678174796,True,True,False
+learned ranking + ceiling stopping (design only),59,1,20.05062573199939,42,0.2037579278806228,True,True,False
+learned ranking + ceiling stopping (design only),60,1,23.846345343001303,81,0.223468487966965,True,True,False
+learned ranking + ceiling stopping (design only),61,1,19.968350782000925,42,0.23799424068665115,True,True,False
+learned ranking + ceiling stopping (design only),62,1,18.736471801001244,47,0.2397181631915261,True,True,False
+learned ranking + ceiling stopping (design only),63,1,17.376894143000754,16,0.2176103185730569,True,True,False
+learned ranking + ceiling stopping (design only),64,2,50.50283209599911,70,0.23715557587280633,True,True,False
+learned ranking + ceiling stopping (design only),65,1,16.321516492000228,65,0.20192194042049696,True,True,False
+learned ranking + ceiling stopping (design only),66,1,25.605867398000555,92,0.19574152412668952,True,True,False
+learned ranking + ceiling stopping (design only),67,1,23.71511008000016,81,0.2327901439393763,True,True,False
+learned ranking + ceiling stopping (design only),68,1,19.726243098999475,85,0.19140934181036565,True,True,False
+learned ranking + ceiling stopping (design only),69,1,25.382087419999152,70,0.20160045250557326,True,True,False
+learned ranking + ceiling stopping (design only),70,1,25.602855690998695,70,0.23697914107206194,True,True,False
+learned ranking + ceiling stopping (design only),71,1,20.2390599320006,43,0.1877199812999176,True,True,False
+learned ranking + ceiling stopping (design only),72,1,25.31963474100121,70,0.15537630902637492,True,True,False
+learned ranking + ceiling stopping (design only),73,1,24.700699081000494,56,0.23741366776209036,True,True,False
+learned ranking + ceiling stopping (design only),74,1,18.761003572000845,47,0.2278698296627202,True,True,False
+learned ranking + ceiling stopping (design only),75,1,20.014335569998366,42,0.23561208074456128,True,True,False
+learned ranking + ceiling stopping (design only),76,1,23.75763968299907,81,0.23066650340925565,True,True,False
+learned ranking + ceiling stopping (design only),77,1,18.6792540990009,29,0.21963754431670562,True,True,False
+learned ranking + ceiling stopping (design only),78,1,20.035986271999718,42,0.23105685646721358,True,True,False
+learned ranking + ceiling stopping (design only),79,1,25.527796510999906,70,0.19075158703716835,True,True,False
+learned ranking + ceiling stopping (design only),80,1,24.59339942800034,56,0.18017633370155337,True,True,False
+learned ranking + ceiling stopping (design only),81,1,23.78351512500012,81,0.23194615081934394,True,True,False
+learned ranking + ceiling stopping (design only),82,1,25.455009806999442,70,0.23184907801873833,True,True,False
+learned ranking + ceiling stopping (design only),83,1,20.073158960998626,42,0.24189829546753208,True,True,False
+learned ranking + ceiling stopping (design only),84,1,23.68867787599993,81,0.22400555949162398,True,True,False
+learned ranking + ceiling stopping (design only),85,1,19.748576039999534,85,0.19909278355980742,True,True,False
+learned ranking + ceiling stopping (design only),86,1,25.459937804998845,70,0.22583805550417976,True,True,False
+learned ranking + ceiling stopping (design only),87,1,20.042804553999304,42,0.22923685898467233,True,True,False
+learned ranking + ceiling stopping (design only),88,1,20.100868899999114,88,0.1914548627603411,True,True,False
+learned ranking + ceiling stopping (design only),89,2,29.43568751300154,85,0.17418398241792596,True,True,False
+learned ranking + ceiling stopping (design only),90,1,19.72520659699876,90,0.23243170398110294,True,True,False
+learned ranking + ceiling stopping (design only),91,1,21.90937133099942,8,0.23309388479260754,True,True,False
+learned ranking + ceiling stopping (design only),92,1,25.55845232000138,92,0.19040354831202808,True,True,False
+learned ranking + ceiling stopping (design only),93,1,20.018292169001143,42,0.23782557024326356,True,True,False
+learned ranking + ceiling stopping (design only),94,1,19.75013067100008,94,0.2264396033299129,True,True,False
+learned ranking + ceiling stopping (design only),95,4,52.45682566699725,95,0.14681110308186857,False,True,True
+learned ranking + ceiling stopping (design only),96,1,25.47139300100025,70,0.15415554098866818,True,True,False
+learned ranking + ceiling stopping (design only),97,1,20.031455368000024,42,0.17337045194977407,True,True,False
+learned ranking + ceiling stopping (design only),98,1,19.982499820000157,42,0.24062483324894013,True,True,False
+learned ranking + ceiling stopping (design only),99,1,19.61458205300005,85,0.22945982476712615,True,True,False
+learned ranking (design+surface),0,1,25.58394915700046,56,0.22677537296560618,True,True,False
+learned ranking (design+surface),1,1,23.859756334999474,41,0.20897439162686468,True,True,False
+learned ranking (design+surface),2,2,38.80859465800131,68,0.17668039200670344,True,True,False
+learned ranking (design+surface),3,1,20.24055423899881,42,0.2131881110927137,True,True,False
+learned ranking (design+surface),4,1,19.998775619998924,42,0.23153874382044373,True,True,False
+learned ranking (design+surface),5,1,19.490374771999996,2,0.2098118459126222,True,True,False
+learned ranking (design+surface),6,1,24.16490584300118,41,0.2332847751968215,True,True,False
+learned ranking (design+surface),7,4,65.56828968599984,95,0.1537358946331951,True,True,False
+learned ranking (design+surface),8,1,22.004087326000445,8,0.2250290156545478,True,True,False
+learned ranking (design+surface),9,1,20.01738314300019,42,0.24083434770609752,True,True,False
+learned ranking (design+surface),10,1,25.194722631998957,56,0.21779897553921623,True,True,False
+learned ranking (design+surface),11,3,44.16651395000008,2,0.1628320393122548,True,True,False
+learned ranking (design+surface),12,3,47.19011322300139,68,0.16240170374886362,True,True,False
+learned ranking (design+surface),13,1,19.723314152999592,2,0.17164621766216775,True,True,False
+learned ranking (design+surface),14,1,19.93785676599873,85,0.21740407651408666,True,True,False
+learned ranking (design+surface),15,1,20.404020526999375,43,0.22427206226025667,True,True,False
+learned ranking (design+surface),16,1,17.235330273999352,16,0.22061175480861958,True,True,False
+learned ranking (design+surface),17,1,24.747335797001142,56,0.23448174702235605,True,True,False
+learned ranking (design+surface),18,1,19.296191856001315,2,0.19539841780699382,True,True,False
+learned ranking (design+surface),19,1,20.16727828599869,42,0.22278313346714682,True,True,False
+learned ranking (design+surface),20,1,20.024505577999662,88,0.1870934153408419,True,True,False
+learned ranking (design+surface),21,2,23.97809972900177,41,0.23337093780893794,True,True,False
+learned ranking (design+surface),22,1,25.784067511000103,92,0.18632440061177116,True,True,False
+learned ranking (design+surface),23,1,20.00266772299983,42,0.2350409558422074,True,True,False
+learned ranking (design+surface),24,1,24.904215992999525,24,0.22456372422482881,True,True,False
+learned ranking (design+surface),25,1,19.75315886899989,94,0.2291825380068795,True,True,False
+learned ranking (design+surface),26,1,20.062941195001258,42,0.2351639532620596,True,True,False
+learned ranking (design+surface),27,2,24.75305385200045,65,0.15822957963273449,True,True,False
+learned ranking (design+surface),28,1,17.353710277000573,16,0.22267317430552155,True,True,False
+learned ranking (design+surface),29,1,18.613957180999932,29,0.20497485775217694,True,True,False
+learned ranking (design+surface),30,1,23.925304599999436,81,0.22779845342141897,True,True,False
+learned ranking (design+surface),31,1,20.132118894000087,42,0.23647458851221143,True,True,False
+learned ranking (design+surface),32,1,25.51175981599954,70,0.20761238718027306,True,True,False
+learned ranking (design+surface),33,1,25.45628573799877,70,0.20501075564931495,True,True,False
+learned ranking (design+surface),34,1,19.69436743500046,85,0.20693503092107302,True,True,False
+learned ranking (design+surface),35,1,20.20479191099912,43,0.18672539850432288,True,True,False
+learned ranking (design+surface),36,3,22.80600176000189,95,0.20972515600022185,True,True,False
+learned ranking (design+surface),37,3,39.164491178999015,68,0.2366829595275011,True,True,False
+learned ranking (design+surface),38,1,19.721417352999197,90,0.23528866626337888,True,True,False
+learned ranking (design+surface),39,1,20.4800363939994,43,0.2238290357872832,True,True,False
+learned ranking (design+surface),40,2,22.5431663950003,95,0.20562477882219815,True,True,False
+learned ranking (design+surface),41,1,23.81959146600093,41,0.20528709750064908,True,True,False
+learned ranking (design+surface),42,1,20.09799678499985,42,0.23762518200142468,True,True,False
+learned ranking (design+surface),43,1,20.20646851499987,43,0.208253968271176,True,True,False
+learned ranking (design+surface),44,1,20.03641074299958,42,0.19605493115754904,True,True,False
+learned ranking (design+surface),45,1,23.72330139099904,41,0.22083148848584078,True,True,False
+learned ranking (design+surface),46,1,20.01729569500094,88,0.21482466176226298,True,True,False
+learned ranking (design+surface),47,1,18.655309006000607,47,0.2133493043635396,True,True,False
+learned ranking (design+surface),48,1,25.14534944099978,24,0.2175726816599492,True,True,False
+learned ranking (design+surface),49,1,19.989840229000038,42,0.18206014502305118,True,True,False
+learned ranking (design+surface),50,1,20.0930274930015,88,0.21372937732003458,True,True,False
+learned ranking (design+surface),51,1,25.075836152998818,24,0.2254465526340172,True,True,False
+learned ranking (design+surface),52,1,23.554031433999626,81,0.2340263365090765,True,True,False
+learned ranking (design+surface),53,1,20.077986893000343,42,0.22004312987922162,True,True,False
+learned ranking (design+surface),54,2,49.76548820099924,24,0.17835233836783343,True,True,False
+learned ranking (design+surface),55,1,18.857580629999575,47,0.22770241887097045,True,True,False
+learned ranking (design+surface),56,1,24.53208119900046,56,0.23505308165180194,True,True,False
+learned ranking (design+surface),57,1,19.979252201001145,42,0.17452360469164255,True,True,False
+learned ranking (design+surface),58,1,16.406057796000823,65,0.2001750678174796,True,True,False
+learned ranking (design+surface),59,1,20.05062573199939,42,0.2037579278806228,True,True,False
+learned ranking (design+surface),60,1,23.846345343001303,81,0.223468487966965,True,True,False
+learned ranking (design+surface),61,1,19.968350782000925,42,0.23799424068665115,True,True,False
+learned ranking (design+surface),62,1,18.736471801001244,47,0.2397181631915261,True,True,False
+learned ranking (design+surface),63,1,17.376894143000754,16,0.2176103185730569,True,True,False
+learned ranking (design+surface),64,2,50.50283209599911,70,0.23715557587280633,True,True,False
+learned ranking (design+surface),65,1,16.321516492000228,65,0.20192194042049696,True,True,False
+learned ranking (design+surface),66,1,25.605867398000555,92,0.19574152412668952,True,True,False
+learned ranking (design+surface),67,1,23.71511008000016,81,0.2327901439393763,True,True,False
+learned ranking (design+surface),68,1,19.726243098999475,85,0.19140934181036565,True,True,False
+learned ranking (design+surface),69,1,25.382087419999152,70,0.20160045250557326,True,True,False
+learned ranking (design+surface),70,1,25.602855690998695,70,0.23697914107206194,True,True,False
+learned ranking (design+surface),71,1,20.2390599320006,43,0.1877199812999176,True,True,False
+learned ranking (design+surface),72,1,25.31963474100121,70,0.15537630902637492,True,True,False
+learned ranking (design+surface),73,1,24.700699081000494,56,0.23741366776209036,True,True,False
+learned ranking (design+surface),74,1,18.761003572000845,47,0.2278698296627202,True,True,False
+learned ranking (design+surface),75,1,20.014335569998366,42,0.23561208074456128,True,True,False
+learned ranking (design+surface),76,1,23.75763968299907,81,0.23066650340925565,True,True,False
+learned ranking (design+surface),77,1,18.6792540990009,29,0.21963754431670562,True,True,False
+learned ranking (design+surface),78,1,20.035986271999718,42,0.23105685646721358,True,True,False
+learned ranking (design+surface),79,1,25.527796510999906,70,0.19075158703716835,True,True,False
+learned ranking (design+surface),80,1,24.59339942800034,56,0.18017633370155337,True,True,False
+learned ranking (design+surface),81,1,23.78351512500012,81,0.23194615081934394,True,True,False
+learned ranking (design+surface),82,1,25.455009806999442,70,0.23184907801873833,True,True,False
+learned ranking (design+surface),83,1,20.073158960998626,42,0.24189829546753208,True,True,False
+learned ranking (design+surface),84,1,23.68867787599993,81,0.22400555949162398,True,True,False
+learned ranking (design+surface),85,1,19.748576039999534,85,0.19909278355980742,True,True,False
+learned ranking (design+surface),86,1,25.459937804998845,70,0.22583805550417976,True,True,False
+learned ranking (design+surface),87,1,20.042804553999304,42,0.22923685898467233,True,True,False
+learned ranking (design+surface),88,1,20.100868899999114,88,0.1914548627603411,True,True,False
+learned ranking (design+surface),89,1,19.736038919001658,85,0.17418398241792596,True,True,False
+learned ranking (design+surface),90,1,19.72520659699876,90,0.23243170398110294,True,True,False
+learned ranking (design+surface),91,1,21.90937133099942,8,0.23309388479260754,True,True,False
+learned ranking (design+surface),92,1,25.55845232000138,92,0.19040354831202808,True,True,False
+learned ranking (design+surface),93,1,20.018292169001143,42,0.23782557024326356,True,True,False
+learned ranking (design+surface),94,1,19.75013067100008,94,0.2264396033299129,True,True,False
+learned ranking (design+surface),95,21,253.71692757300116,95,0.14681110308186857,False,True,False
+learned ranking (design+surface),96,1,25.47139300100025,70,0.15415554098866818,True,True,False
+learned ranking (design+surface),97,1,20.031455368000024,42,0.17337045194977407,True,True,False
+learned ranking (design+surface),98,1,19.982499820000157,42,0.24062483324894013,True,True,False
+learned ranking (design+surface),99,1,19.61458205300005,85,0.22945982476712615,True,True,False
+learned ranking + accept-first-valid (design+surface),0,1,25.58394915700046,56,0.22677537296560618,True,True,False
+learned ranking + accept-first-valid (design+surface),1,1,23.859756334999474,41,0.20897439162686468,True,True,False
+learned ranking + accept-first-valid (design+surface),2,1,19.39734776000114,2,0.10421801029673715,False,True,True
+learned ranking + accept-first-valid (design+surface),3,1,20.24055423899881,42,0.2131881110927137,True,True,False
+learned ranking + accept-first-valid (design+surface),4,1,19.998775619998924,42,0.23153874382044373,True,True,False
+learned ranking + accept-first-valid (design+surface),5,1,19.490374771999996,2,0.2098118459126222,True,True,False
+learned ranking + accept-first-valid (design+surface),6,1,24.16490584300118,41,0.2332847751968215,True,True,False
+learned ranking + accept-first-valid (design+surface),7,1,22.69481272899975,8,0.11512233777199117,False,True,True
+learned ranking + accept-first-valid (design+surface),8,1,22.004087326000445,8,0.2250290156545478,True,True,False
+learned ranking + accept-first-valid (design+surface),9,1,20.01738314300019,42,0.24083434770609752,True,True,False
+learned ranking + accept-first-valid (design+surface),10,1,25.194722631998957,56,0.21779897553921623,True,True,False
+learned ranking + accept-first-valid (design+surface),11,3,44.16651395000008,2,0.1628320393122548,True,True,False
+learned ranking + accept-first-valid (design+surface),12,1,19.7023651340005,90,0.13796656233419458,False,True,True
+learned ranking + accept-first-valid (design+surface),13,1,19.723314152999592,2,0.17164621766216775,True,True,False
+learned ranking + accept-first-valid (design+surface),14,1,19.93785676599873,85,0.21740407651408666,True,True,False
+learned ranking + accept-first-valid (design+surface),15,1,20.404020526999375,43,0.22427206226025667,True,True,False
+learned ranking + accept-first-valid (design+surface),16,1,17.235330273999352,16,0.22061175480861958,True,True,False
+learned ranking + accept-first-valid (design+surface),17,1,24.747335797001142,56,0.23448174702235605,True,True,False
+learned ranking + accept-first-valid (design+surface),18,1,19.296191856001315,2,0.19539841780699382,True,True,False
+learned ranking + accept-first-valid (design+surface),19,1,20.16727828599869,42,0.22278313346714682,True,True,False
+learned ranking + accept-first-valid (design+surface),20,1,20.024505577999662,88,0.1870934153408419,True,True,False
+learned ranking + accept-first-valid (design+surface),21,2,23.97809972900177,41,0.23337093780893794,True,True,False
+learned ranking + accept-first-valid (design+surface),22,1,25.784067511000103,92,0.18632440061177116,True,True,False
+learned ranking + accept-first-valid (design+surface),23,1,20.00266772299983,42,0.2350409558422074,True,True,False
+learned ranking + accept-first-valid (design+surface),24,1,24.904215992999525,24,0.22456372422482881,True,True,False
+learned ranking + accept-first-valid (design+surface),25,1,19.75315886899989,94,0.2291825380068795,True,True,False
+learned ranking + accept-first-valid (design+surface),26,1,20.062941195001258,42,0.2351639532620596,True,True,False
+learned ranking + accept-first-valid (design+surface),27,2,24.75305385200045,65,0.15822957963273449,True,True,False
+learned ranking + accept-first-valid (design+surface),28,1,17.353710277000573,16,0.22267317430552155,True,True,False
+learned ranking + accept-first-valid (design+surface),29,1,18.613957180999932,29,0.20497485775217694,True,True,False
+learned ranking + accept-first-valid (design+surface),30,1,23.925304599999436,81,0.22779845342141897,True,True,False
+learned ranking + accept-first-valid (design+surface),31,1,20.132118894000087,42,0.23647458851221143,True,True,False
+learned ranking + accept-first-valid (design+surface),32,1,25.51175981599954,70,0.20761238718027306,True,True,False
+learned ranking + accept-first-valid (design+surface),33,1,25.45628573799877,70,0.20501075564931495,True,True,False
+learned ranking + accept-first-valid (design+surface),34,1,19.69436743500046,85,0.20693503092107302,True,True,False
+learned ranking + accept-first-valid (design+surface),35,1,20.20479191099912,43,0.18672539850432288,True,True,False
+learned ranking + accept-first-valid (design+surface),36,3,22.80600176000189,95,0.20972515600022185,True,True,False
+learned ranking + accept-first-valid (design+surface),37,3,39.164491178999015,68,0.2366829595275011,True,True,False
+learned ranking + accept-first-valid (design+surface),38,1,19.721417352999197,90,0.23528866626337888,True,True,False
+learned ranking + accept-first-valid (design+surface),39,1,20.4800363939994,43,0.2238290357872832,True,True,False
+learned ranking + accept-first-valid (design+surface),40,2,22.5431663950003,95,0.20562477882219815,True,True,False
+learned ranking + accept-first-valid (design+surface),41,1,23.81959146600093,41,0.20528709750064908,True,True,False
+learned ranking + accept-first-valid (design+surface),42,1,20.09799678499985,42,0.23762518200142468,True,True,False
+learned ranking + accept-first-valid (design+surface),43,1,20.20646851499987,43,0.208253968271176,True,True,False
+learned ranking + accept-first-valid (design+surface),44,1,20.03641074299958,42,0.19605493115754904,True,True,False
+learned ranking + accept-first-valid (design+surface),45,1,23.72330139099904,41,0.22083148848584078,True,True,False
+learned ranking + accept-first-valid (design+surface),46,1,20.01729569500094,88,0.21482466176226298,True,True,False
+learned ranking + accept-first-valid (design+surface),47,1,18.655309006000607,47,0.2133493043635396,True,True,False
+learned ranking + accept-first-valid (design+surface),48,1,25.14534944099978,24,0.2175726816599492,True,True,False
+learned ranking + accept-first-valid (design+surface),49,1,19.989840229000038,42,0.18206014502305118,True,True,False
+learned ranking + accept-first-valid (design+surface),50,1,20.0930274930015,88,0.21372937732003458,True,True,False
+learned ranking + accept-first-valid (design+surface),51,1,25.075836152998818,24,0.2254465526340172,True,True,False
+learned ranking + accept-first-valid (design+surface),52,1,23.554031433999626,81,0.2340263365090765,True,True,False
+learned ranking + accept-first-valid (design+surface),53,1,20.077986893000343,42,0.22004312987922162,True,True,False
+learned ranking + accept-first-valid (design+surface),54,1,24.7125970649995,56,0.13858968512006245,False,True,True
+learned ranking + accept-first-valid (design+surface),55,1,18.857580629999575,47,0.22770241887097045,True,True,False
+learned ranking + accept-first-valid (design+surface),56,1,24.53208119900046,56,0.23505308165180194,True,True,False
+learned ranking + accept-first-valid (design+surface),57,1,19.979252201001145,42,0.17452360469164255,True,True,False
+learned ranking + accept-first-valid (design+surface),58,1,16.406057796000823,65,0.2001750678174796,True,True,False
+learned ranking + accept-first-valid (design+surface),59,1,20.05062573199939,42,0.2037579278806228,True,True,False
+learned ranking + accept-first-valid (design+surface),60,1,23.846345343001303,81,0.223468487966965,True,True,False
+learned ranking + accept-first-valid (design+surface),61,1,19.968350782000925,42,0.23799424068665115,True,True,False
+learned ranking + accept-first-valid (design+surface),62,1,18.736471801001244,47,0.2397181631915261,True,True,False
+learned ranking + accept-first-valid (design+surface),63,1,17.376894143000754,16,0.2176103185730569,True,True,False
+learned ranking + accept-first-valid (design+surface),64,1,24.853536831000383,56,0.13029277303964776,False,True,True
+learned ranking + accept-first-valid (design+surface),65,1,16.321516492000228,65,0.20192194042049696,True,True,False
+learned ranking + accept-first-valid (design+surface),66,1,25.605867398000555,92,0.19574152412668952,True,True,False
+learned ranking + accept-first-valid (design+surface),67,1,23.71511008000016,81,0.2327901439393763,True,True,False
+learned ranking + accept-first-valid (design+surface),68,1,19.726243098999475,85,0.19140934181036565,True,True,False
+learned ranking + accept-first-valid (design+surface),69,1,25.382087419999152,70,0.20160045250557326,True,True,False
+learned ranking + accept-first-valid (design+surface),70,1,25.602855690998695,70,0.23697914107206194,True,True,False
+learned ranking + accept-first-valid (design+surface),71,1,20.2390599320006,43,0.1877199812999176,True,True,False
+learned ranking + accept-first-valid (design+surface),72,1,25.31963474100121,70,0.15537630902637492,True,True,False
+learned ranking + accept-first-valid (design+surface),73,1,24.700699081000494,56,0.23741366776209036,True,True,False
+learned ranking + accept-first-valid (design+surface),74,1,18.761003572000845,47,0.2278698296627202,True,True,False
+learned ranking + accept-first-valid (design+surface),75,1,20.014335569998366,42,0.23561208074456128,True,True,False
+learned ranking + accept-first-valid (design+surface),76,1,23.75763968299907,81,0.23066650340925565,True,True,False
+learned ranking + accept-first-valid (design+surface),77,1,18.6792540990009,29,0.21963754431670562,True,True,False
+learned ranking + accept-first-valid (design+surface),78,1,20.035986271999718,42,0.23105685646721358,True,True,False
+learned ranking + accept-first-valid (design+surface),79,1,25.527796510999906,70,0.19075158703716835,True,True,False
+learned ranking + accept-first-valid (design+surface),80,1,24.59339942800034,56,0.18017633370155337,True,True,False
+learned ranking + accept-first-valid (design+surface),81,1,23.78351512500012,81,0.23194615081934394,True,True,False
+learned ranking + accept-first-valid (design+surface),82,1,25.455009806999442,70,0.23184907801873833,True,True,False
+learned ranking + accept-first-valid (design+surface),83,1,20.073158960998626,42,0.24189829546753208,True,True,False
+learned ranking + accept-first-valid (design+surface),84,1,23.68867787599993,81,0.22400555949162398,True,True,False
+learned ranking + accept-first-valid (design+surface),85,1,19.748576039999534,85,0.19909278355980742,True,True,False
+learned ranking + accept-first-valid (design+surface),86,1,25.459937804998845,70,0.22583805550417976,True,True,False
+learned ranking + accept-first-valid (design+surface),87,1,20.042804553999304,42,0.22923685898467233,True,True,False
+learned ranking + accept-first-valid (design+surface),88,1,20.100868899999114,88,0.1914548627603411,True,True,False
+learned ranking + accept-first-valid (design+surface),89,1,19.736038919001658,85,0.17418398241792596,True,True,False
+learned ranking + accept-first-valid (design+surface),90,1,19.72520659699876,90,0.23243170398110294,True,True,False
+learned ranking + accept-first-valid (design+surface),91,1,21.90937133099942,8,0.23309388479260754,True,True,False
+learned ranking + accept-first-valid (design+surface),92,1,25.55845232000138,92,0.19040354831202808,True,True,False
+learned ranking + accept-first-valid (design+surface),93,1,20.018292169001143,42,0.23782557024326356,True,True,False
+learned ranking + accept-first-valid (design+surface),94,1,19.75013067100008,94,0.2264396033299129,True,True,False
+learned ranking + accept-first-valid (design+surface),95,1,22.372922050999478,95,0.14681110308186857,False,True,True
+learned ranking + accept-first-valid (design+surface),96,1,25.47139300100025,70,0.15415554098866818,True,True,False
+learned ranking + accept-first-valid (design+surface),97,1,20.031455368000024,42,0.17337045194977407,True,True,False
+learned ranking + accept-first-valid (design+surface),98,1,19.982499820000157,42,0.24062483324894013,True,True,False
+learned ranking + accept-first-valid (design+surface),99,1,19.61458205300005,85,0.22945982476712615,True,True,False
+learned ranking + ceiling stopping (design+surface),0,1,25.58394915700046,56,0.22677537296560618,True,True,False
+learned ranking + ceiling stopping (design+surface),1,1,23.859756334999474,41,0.20897439162686468,True,True,False
+learned ranking + ceiling stopping (design+surface),2,2,38.80859465800131,68,0.17668039200670344,True,True,False
+learned ranking + ceiling stopping (design+surface),3,1,20.24055423899881,42,0.2131881110927137,True,True,False
+learned ranking + ceiling stopping (design+surface),4,1,19.998775619998924,42,0.23153874382044373,True,True,False
+learned ranking + ceiling stopping (design+surface),5,1,19.490374771999996,2,0.2098118459126222,True,True,False
+learned ranking + ceiling stopping (design+surface),6,1,24.16490584300118,41,0.2332847751968215,True,True,False
+learned ranking + ceiling stopping (design+surface),7,2,32.72967358599999,8,0.11512233777199117,False,True,True
+learned ranking + ceiling stopping (design+surface),8,1,22.004087326000445,8,0.2250290156545478,True,True,False
+learned ranking + ceiling stopping (design+surface),9,1,20.01738314300019,42,0.24083434770609752,True,True,False
+learned ranking + ceiling stopping (design+surface),10,1,25.194722631998957,56,0.21779897553921623,True,True,False
+learned ranking + ceiling stopping (design+surface),11,3,44.16651395000008,2,0.1628320393122548,True,True,False
+learned ranking + ceiling stopping (design+surface),12,1,19.7023651340005,90,0.13796656233419458,False,True,True
+learned ranking + ceiling stopping (design+surface),13,1,19.723314152999592,2,0.17164621766216775,True,True,False
+learned ranking + ceiling stopping (design+surface),14,1,19.93785676599873,85,0.21740407651408666,True,True,False
+learned ranking + ceiling stopping (design+surface),15,1,20.404020526999375,43,0.22427206226025667,True,True,False
+learned ranking + ceiling stopping (design+surface),16,1,17.235330273999352,16,0.22061175480861958,True,True,False
+learned ranking + ceiling stopping (design+surface),17,1,24.747335797001142,56,0.23448174702235605,True,True,False
+learned ranking + ceiling stopping (design+surface),18,1,19.296191856001315,2,0.19539841780699382,True,True,False
+learned ranking + ceiling stopping (design+surface),19,1,20.16727828599869,42,0.22278313346714682,True,True,False
+learned ranking + ceiling stopping (design+surface),20,1,20.024505577999662,88,0.1870934153408419,True,True,False
+learned ranking + ceiling stopping (design+surface),21,2,23.97809972900177,41,0.23337093780893794,True,True,False
+learned ranking + ceiling stopping (design+surface),22,1,25.784067511000103,92,0.18632440061177116,True,True,False
+learned ranking + ceiling stopping (design+surface),23,1,20.00266772299983,42,0.2350409558422074,True,True,False
+learned ranking + ceiling stopping (design+surface),24,1,24.904215992999525,24,0.22456372422482881,True,True,False
+learned ranking + ceiling stopping (design+surface),25,1,19.75315886899989,94,0.2291825380068795,True,True,False
+learned ranking + ceiling stopping (design+surface),26,1,20.062941195001258,42,0.2351639532620596,True,True,False
+learned ranking + ceiling stopping (design+surface),27,2,24.75305385200045,65,0.15822957963273449,True,True,False
+learned ranking + ceiling stopping (design+surface),28,1,17.353710277000573,16,0.22267317430552155,True,True,False
+learned ranking + ceiling stopping (design+surface),29,1,18.613957180999932,29,0.20497485775217694,True,True,False
+learned ranking + ceiling stopping (design+surface),30,1,23.925304599999436,81,0.22779845342141897,True,True,False
+learned ranking + ceiling stopping (design+surface),31,1,20.132118894000087,42,0.23647458851221143,True,True,False
+learned ranking + ceiling stopping (design+surface),32,1,25.51175981599954,70,0.20761238718027306,True,True,False
+learned ranking + ceiling stopping (design+surface),33,1,25.45628573799877,70,0.20501075564931495,True,True,False
+learned ranking + ceiling stopping (design+surface),34,1,19.69436743500046,85,0.20693503092107302,True,True,False
+learned ranking + ceiling stopping (design+surface),35,1,20.20479191099912,43,0.18672539850432288,True,True,False
+learned ranking + ceiling stopping (design+surface),36,3,22.80600176000189,95,0.20972515600022185,True,True,False
+learned ranking + ceiling stopping (design+surface),37,3,39.164491178999015,68,0.2366829595275011,True,True,False
+learned ranking + ceiling stopping (design+surface),38,1,19.721417352999197,90,0.23528866626337888,True,True,False
+learned ranking + ceiling stopping (design+surface),39,1,20.4800363939994,43,0.2238290357872832,True,True,False
+learned ranking + ceiling stopping (design+surface),40,2,22.5431663950003,95,0.20562477882219815,True,True,False
+learned ranking + ceiling stopping (design+surface),41,1,23.81959146600093,41,0.20528709750064908,True,True,False
+learned ranking + ceiling stopping (design+surface),42,1,20.09799678499985,42,0.23762518200142468,True,True,False
+learned ranking + ceiling stopping (design+surface),43,1,20.20646851499987,43,0.208253968271176,True,True,False
+learned ranking + ceiling stopping (design+surface),44,1,20.03641074299958,42,0.19605493115754904,True,True,False
+learned ranking + ceiling stopping (design+surface),45,1,23.72330139099904,41,0.22083148848584078,True,True,False
+learned ranking + ceiling stopping (design+surface),46,1,20.01729569500094,88,0.21482466176226298,True,True,False
+learned ranking + ceiling stopping (design+surface),47,1,18.655309006000607,47,0.2133493043635396,True,True,False
+learned ranking + ceiling stopping (design+surface),48,1,25.14534944099978,24,0.2175726816599492,True,True,False
+learned ranking + ceiling stopping (design+surface),49,1,19.989840229000038,42,0.18206014502305118,True,True,False
+learned ranking + ceiling stopping (design+surface),50,1,20.0930274930015,88,0.21372937732003458,True,True,False
+learned ranking + ceiling stopping (design+surface),51,1,25.075836152998818,24,0.2254465526340172,True,True,False
+learned ranking + ceiling stopping (design+surface),52,1,23.554031433999626,81,0.2340263365090765,True,True,False
+learned ranking + ceiling stopping (design+surface),53,1,20.077986893000343,42,0.22004312987922162,True,True,False
+learned ranking + ceiling stopping (design+surface),54,2,49.76548820099924,24,0.17835233836783343,True,True,False
+learned ranking + ceiling stopping (design+surface),55,1,18.857580629999575,47,0.22770241887097045,True,True,False
+learned ranking + ceiling stopping (design+surface),56,1,24.53208119900046,56,0.23505308165180194,True,True,False
+learned ranking + ceiling stopping (design+surface),57,1,19.979252201001145,42,0.17452360469164255,True,True,False
+learned ranking + ceiling stopping (design+surface),58,1,16.406057796000823,65,0.2001750678174796,True,True,False
+learned ranking + ceiling stopping (design+surface),59,1,20.05062573199939,42,0.2037579278806228,True,True,False
+learned ranking + ceiling stopping (design+surface),60,1,23.846345343001303,81,0.223468487966965,True,True,False
+learned ranking + ceiling stopping (design+surface),61,1,19.968350782000925,42,0.23799424068665115,True,True,False
+learned ranking + ceiling stopping (design+surface),62,1,18.736471801001244,47,0.2397181631915261,True,True,False
+learned ranking + ceiling stopping (design+surface),63,1,17.376894143000754,16,0.2176103185730569,True,True,False
+learned ranking + ceiling stopping (design+surface),64,2,50.50283209599911,70,0.23715557587280633,True,True,False
+learned ranking + ceiling stopping (design+surface),65,1,16.321516492000228,65,0.20192194042049696,True,True,False
+learned ranking + ceiling stopping (design+surface),66,1,25.605867398000555,92,0.19574152412668952,True,True,False
+learned ranking + ceiling stopping (design+surface),67,1,23.71511008000016,81,0.2327901439393763,True,True,False
+learned ranking + ceiling stopping (design+surface),68,1,19.726243098999475,85,0.19140934181036565,True,True,False
+learned ranking + ceiling stopping (design+surface),69,1,25.382087419999152,70,0.20160045250557326,True,True,False
+learned ranking + ceiling stopping (design+surface),70,1,25.602855690998695,70,0.23697914107206194,True,True,False
+learned ranking + ceiling stopping (design+surface),71,1,20.2390599320006,43,0.1877199812999176,True,True,False
+learned ranking + ceiling stopping (design+surface),72,1,25.31963474100121,70,0.15537630902637492,True,True,False
+learned ranking + ceiling stopping (design+surface),73,1,24.700699081000494,56,0.23741366776209036,True,True,False
+learned ranking + ceiling stopping (design+surface),74,1,18.761003572000845,47,0.2278698296627202,True,True,False
+learned ranking + ceiling stopping (design+surface),75,1,20.014335569998366,42,0.23561208074456128,True,True,False
+learned ranking + ceiling stopping (design+surface),76,1,23.75763968299907,81,0.23066650340925565,True,True,False
+learned ranking + ceiling stopping (design+surface),77,1,18.6792540990009,29,0.21963754431670562,True,True,False
+learned ranking + ceiling stopping (design+surface),78,1,20.035986271999718,42,0.23105685646721358,True,True,False
+learned ranking + ceiling stopping (design+surface),79,1,25.527796510999906,70,0.19075158703716835,True,True,False
+learned ranking + ceiling stopping (design+surface),80,1,24.59339942800034,56,0.18017633370155337,True,True,False
+learned ranking + ceiling stopping (design+surface),81,1,23.78351512500012,81,0.23194615081934394,True,True,False
+learned ranking + ceiling stopping (design+surface),82,1,25.455009806999442,70,0.23184907801873833,True,True,False
+learned ranking + ceiling stopping (design+surface),83,1,20.073158960998626,42,0.24189829546753208,True,True,False
+learned ranking + ceiling stopping (design+surface),84,1,23.68867787599993,81,0.22400555949162398,True,True,False
+learned ranking + ceiling stopping (design+surface),85,1,19.748576039999534,85,0.19909278355980742,True,True,False
+learned ranking + ceiling stopping (design+surface),86,1,25.459937804998845,70,0.22583805550417976,True,True,False
+learned ranking + ceiling stopping (design+surface),87,1,20.042804553999304,42,0.22923685898467233,True,True,False
+learned ranking + ceiling stopping (design+surface),88,1,20.100868899999114,88,0.1914548627603411,True,True,False
+learned ranking + ceiling stopping (design+surface),89,1,19.736038919001658,85,0.17418398241792596,True,True,False
+learned ranking + ceiling stopping (design+surface),90,1,19.72520659699876,90,0.23243170398110294,True,True,False
+learned ranking + ceiling stopping (design+surface),91,1,21.90937133099942,8,0.23309388479260754,True,True,False
+learned ranking + ceiling stopping (design+surface),92,1,25.55845232000138,92,0.19040354831202808,True,True,False
+learned ranking + ceiling stopping (design+surface),93,1,20.018292169001143,42,0.23782557024326356,True,True,False
+learned ranking + ceiling stopping (design+surface),94,1,19.75013067100008,94,0.2264396033299129,True,True,False
+learned ranking + ceiling stopping (design+surface),95,5,78.24927891599873,95,0.14681110308186857,False,True,True
+learned ranking + ceiling stopping (design+surface),96,1,25.47139300100025,70,0.15415554098866818,True,True,False
+learned ranking + ceiling stopping (design+surface),97,1,20.031455368000024,42,0.17337045194977407,True,True,False
+learned ranking + ceiling stopping (design+surface),98,1,19.982499820000157,42,0.24062483324894013,True,True,False
+learned ranking + ceiling stopping (design+surface),99,1,19.61458205300005,85,0.22945982476712615,True,True,False
+oracle (upper bound),0,1,25.58394915700046,56,0.22677537296560618,True,True,False
+oracle (upper bound),1,1,23.859756334999474,41,0.20897439162686468,True,True,False
+oracle (upper bound),2,1,19.411246898000172,68,0.17668039200670344,True,True,False
+oracle (upper bound),3,1,20.24055423899881,42,0.2131881110927137,True,True,False
+oracle (upper bound),4,1,19.998775619998924,42,0.23153874382044373,True,True,False
+oracle (upper bound),5,1,19.490374771999996,2,0.2098118459126222,True,True,False
+oracle (upper bound),6,1,24.16490584300118,41,0.2332847751968215,True,True,False
+oracle (upper bound),7,1,22.73132819300008,95,0.1537358946331951,True,True,False
+oracle (upper bound),8,1,22.004087326000445,8,0.2250290156545478,True,True,False
+oracle (upper bound),9,1,20.01738314300019,42,0.24083434770609752,True,True,False
+oracle (upper bound),10,1,25.194722631998957,56,0.21779897553921623,True,True,False
+oracle (upper bound),11,1,19.68713983699854,2,0.1628320393122548,True,True,False
+oracle (upper bound),12,1,19.0730218209992,68,0.16240170374886362,True,True,False
+oracle (upper bound),13,1,19.723314152999592,2,0.17164621766216775,True,True,False
+oracle (upper bound),14,1,19.93785676599873,85,0.21740407651408666,True,True,False
+oracle (upper bound),15,1,20.404020526999375,43,0.22427206226025667,True,True,False
+oracle (upper bound),16,1,17.235330273999352,16,0.22061175480861958,True,True,False
+oracle (upper bound),17,1,24.747335797001142,56,0.23448174702235605,True,True,False
+oracle (upper bound),18,1,19.296191856001315,2,0.19539841780699382,True,True,False
+oracle (upper bound),19,1,20.16727828599869,42,0.22278313346714682,True,True,False
+oracle (upper bound),20,1,20.024505577999662,88,0.1870934153408419,True,True,False
+oracle (upper bound),21,1,23.97126326200123,41,0.23337093780893794,True,True,False
+oracle (upper bound),22,1,25.784067511000103,92,0.18632440061177116,True,True,False
+oracle (upper bound),23,1,20.00266772299983,42,0.2350409558422074,True,True,False
+oracle (upper bound),24,1,24.904215992999525,24,0.22456372422482881,True,True,False
+oracle (upper bound),25,1,19.75315886899989,94,0.2291825380068795,True,True,False
+oracle (upper bound),26,1,20.062941195001258,42,0.2351639532620596,True,True,False
+oracle (upper bound),27,1,16.238133965000088,65,0.15822957963273449,True,True,False
+oracle (upper bound),28,1,17.353710277000573,16,0.22267317430552155,True,True,False
+oracle (upper bound),29,1,18.613957180999932,29,0.20497485775217694,True,True,False
+oracle (upper bound),30,1,23.925304599999436,81,0.22779845342141897,True,True,False
+oracle (upper bound),31,1,20.132118894000087,42,0.23647458851221143,True,True,False
+oracle (upper bound),32,1,25.51175981599954,70,0.20761238718027306,True,True,False
+oracle (upper bound),33,1,25.45628573799877,70,0.20501075564931495,True,True,False
+oracle (upper bound),34,1,19.69436743500046,85,0.20693503092107302,True,True,False
+oracle (upper bound),35,1,20.20479191099912,43,0.18672539850432288,True,True,False
+oracle (upper bound),36,1,22.791986562000602,95,0.20972515600022185,True,True,False
+oracle (upper bound),37,1,18.934983424000166,68,0.2366829595275011,True,True,False
+oracle (upper bound),38,1,19.721417352999197,90,0.23528866626337888,True,True,False
+oracle (upper bound),39,1,20.4800363939994,43,0.2238290357872832,True,True,False
+oracle (upper bound),40,1,22.5360171909997,95,0.20562477882219815,True,True,False
+oracle (upper bound),41,1,23.81959146600093,41,0.20528709750064908,True,True,False
+oracle (upper bound),42,1,20.09799678499985,42,0.23762518200142468,True,True,False
+oracle (upper bound),43,1,20.20646851499987,43,0.208253968271176,True,True,False
+oracle (upper bound),44,1,20.03641074299958,42,0.19605493115754904,True,True,False
+oracle (upper bound),45,1,23.72330139099904,41,0.22083148848584078,True,True,False
+oracle (upper bound),46,1,20.01729569500094,88,0.21482466176226298,True,True,False
+oracle (upper bound),47,1,18.655309006000607,47,0.2133493043635396,True,True,False
+oracle (upper bound),48,1,25.14534944099978,24,0.2175726816599492,True,True,False
+oracle (upper bound),49,1,19.989840229000038,42,0.18206014502305118,True,True,False
+oracle (upper bound),50,1,20.0930274930015,88,0.21372937732003458,True,True,False
+oracle (upper bound),51,1,25.075836152998818,24,0.2254465526340172,True,True,False
+oracle (upper bound),52,1,23.554031433999626,81,0.2340263365090765,True,True,False
+oracle (upper bound),53,1,20.077986893000343,42,0.22004312987922162,True,True,False
+oracle (upper bound),54,1,25.052891135999744,24,0.17835233836783343,True,True,False
+oracle (upper bound),55,1,18.857580629999575,47,0.22770241887097045,True,True,False
+oracle (upper bound),56,1,24.53208119900046,56,0.23505308165180194,True,True,False
+oracle (upper bound),57,1,19.979252201001145,42,0.17452360469164255,True,True,False
+oracle (upper bound),58,1,16.406057796000823,65,0.2001750678174796,True,True,False
+oracle (upper bound),59,1,20.05062573199939,42,0.2037579278806228,True,True,False
+oracle (upper bound),60,1,23.846345343001303,81,0.223468487966965,True,True,False
+oracle (upper bound),61,1,19.968350782000925,42,0.23799424068665115,True,True,False
+oracle (upper bound),62,1,18.736471801001244,47,0.2397181631915261,True,True,False
+oracle (upper bound),63,1,17.376894143000754,16,0.2176103185730569,True,True,False
+oracle (upper bound),64,1,25.649295264998727,70,0.23715557587280633,True,True,False
+oracle (upper bound),65,1,16.321516492000228,65,0.20192194042049696,True,True,False
+oracle (upper bound),66,1,25.605867398000555,92,0.19574152412668952,True,True,False
+oracle (upper bound),67,1,23.71511008000016,81,0.2327901439393763,True,True,False
+oracle (upper bound),68,1,19.726243098999475,85,0.19140934181036565,True,True,False
+oracle (upper bound),69,1,25.382087419999152,70,0.20160045250557326,True,True,False
+oracle (upper bound),70,1,25.602855690998695,70,0.23697914107206194,True,True,False
+oracle (upper bound),71,1,20.2390599320006,43,0.1877199812999176,True,True,False
+oracle (upper bound),72,1,25.31963474100121,70,0.15537630902637492,True,True,False
+oracle (upper bound),73,1,24.700699081000494,56,0.23741366776209036,True,True,False
+oracle (upper bound),74,1,18.761003572000845,47,0.2278698296627202,True,True,False
+oracle (upper bound),75,1,20.014335569998366,42,0.23561208074456128,True,True,False
+oracle (upper bound),76,1,23.75763968299907,81,0.23066650340925565,True,True,False
+oracle (upper bound),77,1,18.6792540990009,29,0.21963754431670562,True,True,False
+oracle (upper bound),78,1,20.035986271999718,42,0.23105685646721358,True,True,False
+oracle (upper bound),79,1,25.527796510999906,70,0.19075158703716835,True,True,False
+oracle (upper bound),80,1,24.59339942800034,56,0.18017633370155337,True,True,False
+oracle (upper bound),81,1,23.78351512500012,81,0.23194615081934394,True,True,False
+oracle (upper bound),82,1,25.455009806999442,70,0.23184907801873833,True,True,False
+oracle (upper bound),83,1,20.073158960998626,42,0.24189829546753208,True,True,False
+oracle (upper bound),84,1,23.68867787599993,81,0.22400555949162398,True,True,False
+oracle (upper bound),85,1,19.748576039999534,85,0.19909278355980742,True,True,False
+oracle (upper bound),86,1,25.459937804998845,70,0.22583805550417976,True,True,False
+oracle (upper bound),87,1,20.042804553999304,42,0.22923685898467233,True,True,False
+oracle (upper bound),88,1,20.100868899999114,88,0.1914548627603411,True,True,False
+oracle (upper bound),89,1,19.736038919001658,85,0.17418398241792596,True,True,False
+oracle (upper bound),90,1,19.72520659699876,90,0.23243170398110294,True,True,False
+oracle (upper bound),91,1,21.90937133099942,8,0.23309388479260754,True,True,False
+oracle (upper bound),92,1,25.55845232000138,92,0.19040354831202808,True,True,False
+oracle (upper bound),93,1,20.018292169001143,42,0.23782557024326356,True,True,False
+oracle (upper bound),94,1,19.75013067100008,94,0.2264396033299129,True,True,False
+oracle (upper bound),95,1,22.372922050999478,95,0.14681110308186857,False,True,False
+oracle (upper bound),96,1,25.47139300100025,70,0.15415554098866818,True,True,False
+oracle (upper bound),97,1,20.031455368000024,42,0.17337045194977407,True,True,False
+oracle (upper bound),98,1,19.982499820000157,42,0.24062483324894013,True,True,False
+oracle (upper bound),99,1,19.61458205300005,85,0.22945982476712615,True,True,False

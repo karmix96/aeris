@@ -1,3 +1,4 @@
+import ctypes
 import hashlib
 import json
 import subprocess
@@ -5,6 +6,7 @@ import sys
 from pathlib import Path
 
 import h5py
+import numpy as np
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -187,6 +189,25 @@ def test_force_tail_reads_adflow_canonical_monitor_names():
     assert _force_tail(raw, policy)["passed"] is True
 
 
+def test_residual_measurement_ignores_policy_metadata_rows():
+    sys.path.insert(0, str(ROOT))
+    from canary import _residual_measurement
+
+    policy = yaml.safe_load((ROOT / "policies/convergence_v2.yaml").read_text())
+    raw = {
+        "residual_components_final": {
+            "density": 1.0e-6,
+            "momentum": 2.0e-6,
+            "energy": 3.0e-6,
+            "sa": 4.0e-6,
+        },
+        "residual_components_definition": "ADflow native RMS monitors",
+    }
+    result = _residual_measurement(raw, policy)
+    assert result["passed"] is True
+    assert set(result["checks"]) == {"density", "momentum", "energy", "sa"}
+
+
 def test_surface_field_reader_recognizes_adflow_cgns_names(tmp_path):
     sys.path.insert(0, str(ROOT))
     from canary import _surface_field_presence
@@ -201,6 +222,153 @@ def test_surface_field_reader_recognizes_adflow_cgns_names(tmp_path):
     assert result["field_presence_passed"] is True
     assert result["passed"] is False
     assert result["failure_reasons"] == ["interface_discontinuity_not_evaluated"]
+
+
+def test_surface_field_reader_reads_adflow_adf_and_filters_wall_yplus(tmp_path):
+    sys.path.insert(0, str(ROOT))
+    sys.path.insert(
+        0,
+        str(ROOT.parents[0] / "04_strategy_studies/S6_bounded_mesh_atlas"),
+    )
+    from canary import _surface_field_presence
+    from cfd_qc import (
+        _CGNS_SIZE,
+        _check_cgns,
+        _load_cgns_library,
+        wall_yplus_summary,
+    )
+
+    library, _ = _load_cgns_library()
+    int_pointer = ctypes.POINTER(ctypes.c_int)
+    size_pointer = ctypes.POINTER(_CGNS_SIZE)
+    library.cg_base_write.argtypes = [
+        ctypes.c_int,
+        ctypes.c_char_p,
+        ctypes.c_int,
+        ctypes.c_int,
+        int_pointer,
+    ]
+    library.cg_base_write.restype = ctypes.c_int
+    library.cg_zone_write.argtypes = [
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_char_p,
+        size_pointer,
+        ctypes.c_int,
+        int_pointer,
+    ]
+    library.cg_zone_write.restype = ctypes.c_int
+    library.cg_sol_write.argtypes = [
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_char_p,
+        ctypes.c_int,
+        int_pointer,
+    ]
+    library.cg_sol_write.restype = ctypes.c_int
+    library.cg_field_write.argtypes = [
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_char_p,
+        ctypes.c_void_p,
+        int_pointer,
+    ]
+    library.cg_field_write.restype = ctypes.c_int
+
+    surface = tmp_path / "surface_adf.cgns"
+    file_number = ctypes.c_int()
+    _check_cgns(
+        library.cg_open(str(surface).encode(), 1, ctypes.byref(file_number)),
+        "create ADF fixture",
+        library,
+    )
+    try:
+        base = ctypes.c_int()
+        _check_cgns(
+            library.cg_base_write(file_number.value, b"BaseSurfaceSol", 2, 3, ctypes.byref(base)),
+            "write fixture base",
+            library,
+        )
+        zone_size = (_CGNS_SIZE * 6)(3, 2, 2, 1, 0, 0)
+        for zone_name, yplus_values in (
+            (b"wall1", [0.5, 0.6]),
+            (b"Far1", [100.0, 100.0]),
+        ):
+            zone = ctypes.c_int()
+            solution = ctypes.c_int()
+            _check_cgns(
+                library.cg_zone_write(
+                    file_number.value,
+                    base.value,
+                    zone_name,
+                    zone_size,
+                    2,
+                    ctypes.byref(zone),
+                ),
+                "write fixture zone",
+                library,
+            )
+            _check_cgns(
+                library.cg_sol_write(
+                    file_number.value,
+                    base.value,
+                    zone.value,
+                    b"Flow solution",
+                    3,
+                    ctypes.byref(solution),
+                ),
+                "write fixture solution",
+                library,
+            )
+            for field_name, field_values in (
+                (b"CoefPressure", [0.1, 0.2]),
+                (b"SkinFrictionMagnitude", [0.01, 0.02]),
+                (b"YPlus", yplus_values),
+            ):
+                values = (ctypes.c_double * 2)(*field_values)
+                field = ctypes.c_int()
+                _check_cgns(
+                    library.cg_field_write(
+                        file_number.value,
+                        base.value,
+                        zone.value,
+                        solution.value,
+                        4,
+                        field_name,
+                        values,
+                        ctypes.byref(field),
+                    ),
+                    "write fixture field",
+                    library,
+                )
+    finally:
+        _check_cgns(library.cg_close(file_number.value), "close ADF fixture", library)
+
+    presence = _surface_field_presence(surface)
+    assert presence["field_presence_passed"] is True
+    assert presence["surface_reader"]["file_backend"] == "ADF"
+    yplus = wall_yplus_summary(surface)
+    assert yplus["passed"] is True
+    assert yplus["wall_zone_count"] == 1
+    assert yplus["sample_count"] == 2
+    assert yplus["statistics"]["maximum"] == 0.6
+
+
+def test_adflow_adf_reader_removes_symmetric_rind_planes():
+    sys.path.insert(
+        0,
+        str(ROOT.parents[0] / "04_strategy_studies/S6_bounded_mesh_atlas"),
+    )
+    from cfd_qc import _trim_symmetric_rind
+
+    stored = np.arange(12.0)
+    physical, widths = _trim_symmetric_rind(stored, (4, 3), (2, 1))
+    assert widths == (1, 1)
+    assert physical.tolist() == [5.0, 6.0]
 
 
 def test_reclassification_retains_execution_and_prior_verdict(tmp_path):

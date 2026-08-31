@@ -129,7 +129,7 @@ Updated: 2026-09-01
   lands at `qmin=0.0886`), the y+ preflight is unreproducible and ungoverned,
   two `grid_screen` gate defaults are permissive, and the memory forecast
   `9.35 x cells / finest_cells` cannot fail on the finest level.
-- Focused verification: **74 passed** across S6 atlas, qualification
+- Focused verification: **76 passed** across S6 atlas, qualification
   orchestrator, ADflow contract, and SU2 contract tests.
 - Repository-wide pytest: collection is environment-blocked by absent optional
   project packages (first root cause: `aerosandbox`; 102 collection errors),
@@ -152,10 +152,10 @@ Updated: 2026-09-01
   continuity-residual ratio is not the required signed net/gross boundary mass
   flux. It is retained as a diagnostic but cannot satisfy conservation or
   yield ACCEPTED. This does not block the expressly measurement-only canary.
-- The latest focused suite is **73 passed**. The zero-launch preflight passes
-  43 identity/governance and 18 solver-environment checks; forecast is 9.35 GiB
-  against about 11.50 GiB
-  available, leaving about 0.15 GiB above the mandatory 2 GiB headroom.
+- The latest focused suite is **76 passed**. The zero-launch preflight passes
+  43 identity/governance and 19 solver-environment checks; forecast is 9.35 GiB
+  against about 11.70 GiB available, leaving about 0.35 GiB above the mandatory
+  2 GiB headroom.
 - Launcher commit `e660899` was retained, but its post-commit readiness audit
   caught a legacy `/home/mike/...` mach-aero default that does not exist on
   this WSL host. No CFD process started and the authorization remains
@@ -167,10 +167,18 @@ Updated: 2026-09-01
   `AERIS_MPI_READY 0 1`; the launcher must repeat that probe before consuming
   authorization. Exact prepare-only coverage verifies RANS/SA, histories,
   fields, one rank, Reynolds length, and moment references without CFD.
-- A read-only Claude Opus/max review request for `e660899` timed out without a
-  verdict or workspace changes. The prior scientific GO in `5f17ceb` remains
-  the binding authorization; the environment follow-up still needs its final
-  committed audit before launch.
+- A post-commit audit also caught two result-path defects before launch. The
+  residual evaluator iterated policy metadata as residual rows, and the
+  surface checker assumed HDF5 even though this ADflow/CGNS build writes ADF.
+  Both are corrected. A real binary ADF fixture now proves Cp/Cf/y+ extraction,
+  including exact `wall`-family selection, farfield exclusion, and removal of
+  CGNS rind/ghost planes before physical-wall statistics; the launch preflight
+  independently opens the exact ADF mesh through the installed CGNS library
+  and records its path and SHA-256.
+- Two read-only Claude reviews of the launcher/environment follow-up timed out
+  without a verdict or workspace changes. The prior scientific GO in
+  `5f17ceb` remains the binding authorization; one shorter exact-commit wiring
+  review will be attempted before launch.
 
 ## Local commits
 
@@ -184,6 +192,8 @@ Updated: 2026-09-01
 - `f7c7cb2` — versioned classification threshold policy
 - `a79c1eb` — immutable execution terminal-state validator
 - `752852c` — complete M1 scientific and classification contracts
+- `e660899` — governed one-shot A/C03 measurement canary
+- `5dd98fb` — relocated solver-environment binding
 
 ## Terminal evidence
 
@@ -202,11 +212,10 @@ Updated: 2026-09-01
 
 ## Next authorized work
 
-Commit the v2 environment binding, rerun the complete focused/preflight audit,
-and make one more read-only Claude review attempt. If the governed checks stay
-green, launch exactly one one-rank A/C03 measurement canary under the watchdog,
-retain every log, and report measurement-only. Do not launch C01/C02 or
-classify ACCEPTED.
+Commit the residual and ADF-result-reader fixes, then make one short read-only
+Claude review of that exact commit. If the governed checks remain green, launch
+exactly one one-rank A/C03 measurement canary under the watchdog, retain every
+log, and report measurement-only. Do not launch C01/C02 or classify ACCEPTED.
 
 ## Resume commands
 

@@ -86,8 +86,8 @@ Linux-native repository. Read these files first, in order:
   continuity-residual ratio is not the governed signed boundary-flux mass
   balance. The canary is measurement-only, so this gap cannot be hidden by an
   ACCEPTED verdict.
-- Latest focused verification: 73 passed. Zero-launch preflight passes 43
-  identity/governance checks, 18 solver-environment checks, and all resource
+- Latest focused verification: 76 passed. Zero-launch preflight passes 43
+  identity/governance checks, 19 solver-environment checks, and all resource
   checks. No CFD has been launched; the one-shot authorization is unconsumed.
 - Commit `e660899` is retained. A post-commit audit found that the legacy
   solver resolver defaulted to nonexistent `/home/mike/...`; it was caught
@@ -98,8 +98,17 @@ Linux-native repository. Read these files first, in order:
   one-rank non-CFD MPI readiness probe.
 - The static v2 environment/import audit is green, exact prepare-only coverage
   is green, and an out-of-sandbox probe returned `AERIS_MPI_READY 0 1`.
-- A read-only Opus/max review of `e660899` timed out with no verdict and no
-  workspace mutation. Do not mistake that transport failure for a NO-GO or GO.
+- A post-commit audit caught and repaired two prelaunch result-path defects:
+  policy metadata was being treated as residual rows, and the surface reader
+  assumed HDF5 although this solver writes ADF CGNS. A real ADF fixture now
+  proves Cp/Cf/y+ extraction, exact `wall`-family selection, farfield
+  exclusion, and removal of rind/ghost planes before physical-wall statistics.
+  The preflight opens the bound mesh with the installed CGNS library and
+  records that library's path and SHA-256.
+- Two read-only launcher review attempts timed out with no verdict and no
+  workspace mutation. Do not mistake those transport failures for a NO-GO or
+  GO. Make one short exact-commit review after the result-reader fix is
+  committed.
 
 ## Execute next, in order
 

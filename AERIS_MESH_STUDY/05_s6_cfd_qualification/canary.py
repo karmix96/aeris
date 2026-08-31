@@ -31,7 +31,7 @@ for _path in (REPO / "src", S6):
     if str(_path) not in sys.path:
         sys.path.insert(0, str(_path))
 
-from cfd_qc import wall_yplus_summary  # noqa: E402
+from cfd_qc import read_surface_field_arrays, wall_yplus_summary  # noqa: E402
 
 from aeris.cfd.case.spec import FlowConditions, SolveSpec  # noqa: E402
 from aeris.cfd.env import MACH_AERO_PREFIX_ENV  # noqa: E402
@@ -525,6 +525,29 @@ def _solver_environment_preflight(policy: dict[str, Any], *, run_mpi_probe: bool
     else:
         checks["openmpi_version"] = False
 
+    surface_reader_probe: dict[str, Any]
+    try:
+        probe_fields, surface_reader_probe = read_surface_field_arrays(
+            _repo_path(policy["mesh"]["path"]), ["YPlus"]
+        )
+        cgns_library = Path(str(surface_reader_probe.get("cgns_library", "")))
+        surface_reader_probe["cgns_library_exists"] = cgns_library.is_file()
+        surface_reader_probe["cgns_library_sha256"] = (
+            _sha256(cgns_library) if cgns_library.is_file() else None
+        )
+        surface_reader_probe["probe_field_zone_count"] = len(probe_fields)
+        checks["adf_surface_reader_ready"] = bool(
+            surface_reader_probe.get("file_backend") == "ADF"
+            and surface_reader_probe.get("reader") == "CGNS_MLL_via_ctypes"
+            and surface_reader_probe["cgns_library_exists"]
+        )
+    except Exception as error:
+        surface_reader_probe = {
+            "error_type": type(error).__name__,
+            "error": str(error),
+        }
+        checks["adf_surface_reader_ready"] = False
+
     mpi_probe: dict[str, Any] = {"executed": False, "kind": "non_cfd_readiness_probe"}
     if run_mpi_probe:
         probe_source = (
@@ -565,6 +588,7 @@ def _solver_environment_preflight(policy: dict[str, Any], *, run_mpi_probe: bool
         "governed": governed,
         "import_probe": import_probe,
         "mpirun_version_probe": mpirun_version,
+        "surface_reader_probe": surface_reader_probe,
         "mpi_probe": mpi_probe,
     }
 
@@ -887,10 +911,31 @@ def _force_tail(raw_run: dict[str, Any], classification: dict[str, Any]) -> dict
     return {"passed": not failures, "failure_reasons": failures, "coefficients": rows}
 
 
+def _residual_measurement(
+    raw_run: dict[str, Any], classification: dict[str, Any]
+) -> dict[str, Any]:
+    residuals = raw_run.get("residual_components_final", {})
+    checks: dict[str, bool] = {}
+    for name in ("density", "momentum", "energy", "sa"):
+        definition = classification["residuals"][name]
+        value = residuals.get(name)
+        checks[name] = bool(
+            value is not None
+            and math.isfinite(float(value))
+            and float(value) <= float(definition["max_final"])
+        )
+    return {
+        "passed": all(checks.values()),
+        "checks": checks,
+        "values": residuals,
+        "definition": raw_run.get("residual_components_definition"),
+        "component_monitor_values": raw_run.get("residual_component_monitor_final", {}),
+    }
+
+
 def _surface_field_presence(surface: Path | None) -> dict[str, Any]:
     if surface is None or not surface.is_file():
         return {"passed": False, "failure_reasons": ["missing_surface_solution"]}
-    import h5py
     import numpy as np
 
     aliases = {
@@ -900,19 +945,18 @@ def _surface_field_presence(surface: Path | None) -> dict[str, Any]:
     }
     counts = {field: 0 for field in aliases}
     nonfinite = {field: 0 for field in aliases}
-    with h5py.File(surface, "r") as handle:
-
-        def collect(name: str, obj: Any) -> None:
-            if not isinstance(obj, h5py.Dataset):
-                return
-            parts = {part.casefold() for part in name.split("/")}
+    requested = sorted({name for names in aliases.values() for name in names})
+    fields, reader = read_surface_field_arrays(surface, requested)
+    for zone_fields in fields.values():
+        for field_name, arrays in zone_fields.items():
+            folded = field_name.casefold()
             for field, names in aliases.items():
-                if parts.intersection(names):
-                    values = np.asarray(obj[()]).reshape(-1)
-                    counts[field] += int(values.size)
-                    nonfinite[field] += int(values.size - np.count_nonzero(np.isfinite(values)))
-
-        handle.visititems(collect)
+                if folded not in names:
+                    continue
+                for values in arrays:
+                    flat = np.asarray(values).reshape(-1)
+                    counts[field] += int(flat.size)
+                    nonfinite[field] += int(flat.size - np.count_nonzero(np.isfinite(flat)))
     failures = [f"missing_{field}" for field, count in counts.items() if count == 0]
     failures.extend(f"nonfinite_{field}" for field, count in nonfinite.items() if count > 0)
     field_presence_passed = not failures
@@ -923,6 +967,7 @@ def _surface_field_presence(surface: Path | None) -> dict[str, Any]:
         "failure_reasons": failures,
         "sample_counts": counts,
         "nonfinite_counts": nonfinite,
+        "surface_reader": reader,
         "interface_discontinuity_check": "not_evaluated_in_measurement_canary",
     }
 
@@ -997,15 +1042,8 @@ def _postprocess(
                 "wall_distance_convention": yplus_policy["wall_distance_convention"],
             }
 
-    residuals = raw_run.get("residual_components_final", {})
-    residual_checks: dict[str, bool] = {}
-    for name, definition in classification["residuals"].items():
-        value = residuals.get(name)
-        residual_checks[name] = bool(
-            value is not None
-            and math.isfinite(float(value))
-            and float(value) <= float(definition["max_final"])
-        )
+    residual_measurement = _residual_measurement(raw_run, classification)
+    residuals = residual_measurement["values"]
     force_tail = (
         _force_tail(raw_run, classification)
         if raw_run
@@ -1129,13 +1167,7 @@ def _postprocess(
             "normalized_solve_report_convergence": solve_convergence,
         },
         "classification_measurements": {
-            "residuals": {
-                "passed": bool(residual_checks) and all(residual_checks.values()),
-                "checks": residual_checks,
-                "values": residuals,
-                "definition": raw_run.get("residual_components_definition"),
-                "component_monitor_values": raw_run.get("residual_component_monitor_final", {}),
-            },
+            "residuals": residual_measurement,
             "force_tail": force_tail,
             "conservation": conservation,
             "y_plus": yplus,

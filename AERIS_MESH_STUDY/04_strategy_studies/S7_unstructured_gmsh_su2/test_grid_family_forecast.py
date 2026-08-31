@@ -114,3 +114,22 @@ def test_the_memory_law_is_shared_with_the_solver_tool():
         forecast.GIB_PER_RANK_PER_MILLION_CELLS
         is tuning.GIB_PER_RANK_PER_MILLION_CELLS
     )
+
+
+def test_census_summary_counts_what_the_decisions_need():
+    """The summary must surface fallbacks and sub-ladder caps, not just averages."""
+    census = importlib.import_module("s7_forecast_test_package.tip_cap_census")
+    rows = [
+        {"index": 0, "status": "ok", "any_fallback": False, "min_angle_deg": 12.9},
+        {"index": 1, "status": "ok", "any_fallback": True, "min_angle_deg": 7.0},
+        {"index": 2, "status": "ok", "any_fallback": False, "min_angle_deg": 7.5},
+        {"index": 3, "status": "error", "error": "boom"},
+    ]
+    s = census.summarise(rows)
+    assert s["designs"] == 4 and s["surfaces_built"] == 3
+    assert s["errors"] == [3]
+    assert s["fallback_count"] == 1 and s["fallback_indices"] == [1]
+    # 7.209 is the rigid ladder this study rejected; a Delaunay cap below it is
+    # more slender than the construction thrown out for being too slender.
+    assert s["below_rejected_ladder_7p209"] == [1]
+    assert s["min_angle_deg"]["min"] == 7.0

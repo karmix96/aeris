@@ -267,6 +267,57 @@ out for being too slender.  This was invisible before the tip-cap instrumentatio
 existed, and it is a quality trend the grid study must account for rather than a
 defect in any one mesh.
 
+### The tip-cap census: 100 designs, two levels
+
+The M2 instrumentation made two questions answerable that one geometry could not
+settle.  Surfaces only, `lhs100_seed42`, `te_1p0mm`.
+
+**The ladder fallback never fires.**  Zero fallbacks in 194 surfaces across both
+levels.  The tip cap is always planar Delaunay.  For the fixed-topology exploit
+this removes one obstacle - there are not two connectivity families to reconcile -
+though Delaunay connectivity still follows each design's perimeter, so index
+correspondence across designs is still not automatic.
+
+**The cap degrades with refinement across the whole design space, not just on
+index 0:**
+
+| level | surfaces | min | median | max | below the rejected ladder's 7.209 deg |
+|---|---|---|---|---|---|
+| coarse | 96 / 100 | 12.64 | 13.35 | 15.19 | 0 |
+| fine | 98 / 100 | 6.74 | **7.41** | 8.48 | **20 of 96** |
+
+Every one of the 96 designs measured at both levels degrades, and the ratio is
+remarkably tight: coarse/fine between 1.751 and 1.874, median 1.802 for a
+refinement ratio of 2.  This is a systematic geometric consequence of refining
+chordwise on a thin cambered tip section, not a per-design accident.
+
+**At `fine`, 21 per cent of the design space has a tip cap more slender than the
+rigid ladder this study rejected for being too slender**, and the median design
+sits only 0.2 degrees above it.  Any `fine` grid level has to answer this before
+the grid family can be trusted, independently of whether it fits memory.
+
+### Surface acceptance over the FULL development set, at coarse
+
+The recorded "60 / 60" surface qualification is 5 indices x 3 TE variants x 4
+levels - five distinct designs.  Over all 100 designs at one TE variant:
+
+| level | accepted | failures |
+|---|---|---|
+| coarse | **96 / 100** | 15, 39, 50, 63 |
+| fine | **98 / 100** | 15, 39 |
+
+Every failure is `surface_facet_fidelity` and none is a correctness gate: node
+fidelity, closure, orientation and self-intersection pass throughout.  Facet
+fidelity is a *resolution* gate, and the counts behave as a resolution gate
+should - refining from coarse to fine recovers indices 50 and 63.
+
+This does not contradict the 100/100 volume result, which ran at the diagnostic
+tier where distribution-quality gates are reported rather than enforced.  It does
+mean **the coarse sweep in M3 should be expected to reject about 4 per cent of the
+development set on the provisional facet limit**, and that the limit is doing real
+work rather than being decorative.  Whether 4 per cent is the right answer is
+exactly what the deferred geometric-fidelity sensitivity study must decide.
+
 ## Half domain versus mirrored, measured
 
 S6 meshes y >= 0 and S7 mirrored the whole wing, so the two were solving different

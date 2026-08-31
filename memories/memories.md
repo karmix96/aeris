@@ -453,3 +453,146 @@ uniform interval; the largest-gap top-up respends the freed section.
   median design.
   only after memory and y+ are measured. Hold-out remains untouched.
 - Canonical detail: `AERIS_MESH_STUDY/PROJECT_HANDOFF/QUALIFICATION_UPDATE_2026-08-21.md`.
+
+## AI paper direction (2026-08-30)
+
+- **Mike's framing (mine was rejected):** Paper 1 = use AI to make BWB meshing
+  robust; Paper 2 = use the resulting corpus of new meshes for a more AI-native
+  contribution. Plan: `studies/PAPER_PLAN_AI_MESHING.md`.
+- **Atlas ledger numbers that justify Paper 1** (qualified21 v3 checkpoint, 100
+  LHS geometries): 162 attempts, PASS 116 / FAIL 32 / SURFACE_BUILD_ERROR 14;
+  74/100 first-pass; retry tail 2,3,4,5,6 and one geometry needing **21**;
+  failures co-occur as inverted_cells + positive_volume + positive_scaled_quality
+  (folding); 20 of 21 templates used, template 42 takes 21/100; ~25 s per attempt.
+  **The problem is routing COST, not infeasibility** — the atlas reaches 100/100.
+  A feasibility boundary requires deliberately widening the design space.
+- **Hardware ceiling, measured:** 12 cores, 15 GiB RAM, **NO GPU** (`nvidia-smi`
+  absent; torch 2.12.0+cu130, `cuda.is_available()==False`). DoMINO/GeoTransolver/
+  SMART-scale training is not runnable locally. Re-check if cluster GPU appears.
+- **HF labels do not exist yet:** `cfd_pilot_083` and `cfd_pilot_083_n65`
+  `solve_report.json` both read `status: failed`, `forces: {}`. Anything needing
+  RANS is gated on the S6 desktop campaign; the meshing paper is not.
+- **Paper 2 decided (Mike, 2026-08-30): the AI BUILDS the mesh.** Not the flow
+  surrogate. Replace the fixed analytic distribution family in
+  `src/aeris/mesh/surface.py:170` (`uniform/cosine/cluster_*/tanh`) with a learned
+  free-form monotone parametric-coordinate field. Three guarantees by
+  construction: predict in PARAMETER space so exact-wall fidelity is inherited
+  (nodes re-evaluated on the pyGeo curve at tracked parametric coords); monotone
+  via positive increments + cumsum so no surface tangling; volume still audited by
+  `volume_audit`/`quality`. AI-native part = differentiable mesh-quality loss
+  (scaled Jacobian/skewness/AR/growth are differentiable), so self-supervised
+  refinement needs NO reference mesh and can use the full 10,000-design pool.
+  Flow surrogate + mesh-fingerprint-leakage study deferred until CFD converges.
+- **Agent framing (2026-08-30):** P1+P2 are two halves of one meshing agent.
+  **Corrected attempt accounting:** of 162 attempts, 127 are up to first PASS and
+  **35 are spent AFTER a PASS** searching for higher quality — the loop has two
+  thresholds (`preferred_quality` 0.15, production floor 0.1) and no stopping
+  rule. Failures are THREE classes, not one: SURFACE_BUILD_ERROR 14 (pre-extrusion),
+  FAIL_folded 19 (inverted>0), FAIL_low_quality 13 (valid, 0 inverted, below floor).
+  **Decisive case `lhs100_seed42_095`:** 21 attempts, first attempt (0.147) was the
+  BEST of all 21, accepted 0.1468 after scanning the whole atlas — it fell 0.003
+  short of the 0.15 preference and nothing told it 0.147 was the ceiling. A
+  stopping-rule failure, not a meshing failure.
+  Agent's new content beyond P1/P2 = failure-conditioned next action (the
+  `volume_audit._cluster_report` diagnostic — block, layer range, j/i range,
+  `on_spanwise_edge`, `wall_adjacent`, wall bbox — is recorded but NEVER used to
+  pick the next attempt) + a learned stopping rule.
+  **Key link:** the atlas has a per-geometry quality CEILING no routing policy can
+  exceed; P1 finds it faster, P2 raises it.
+  Scope honestly: contextual bandit / imitation, NOT deep RL (162 attempts; even
+  5,000 is not deep-RL territory). NOT an LLM agent — 20-dim numeric decision
+  space, and it would forfeit S6's reproducibility covenant.
+
+## AERIS_MESH_AGENT — paper built end to end (2026-08-30)
+
+- **Folder `AERIS_MESH_AGENT/`** (new top-level): `src/mesh_agent/` (ledger,
+  features, outcome, policy, paths), `experiments/exp01..exp05`, `tests/`,
+  `paper/PAPER.md` + `build_paper.py`, `runbook/`, generated `tables/ figures/
+  results/`. Reproduces in ~12 min, CPU only. **Set `OMP_NUM_THREADS=1`** —
+  HistGradientBoosting on 247 rows oversubscribes 12 cores and runs 60x slower
+  (25 CPU-min vs 24 s).
+- **Dataset:** pooled production config `eps_e 1.5 | 3.6e-06 | 257 | production`
+  = 384 attempts, 100 geometries, 21 templates, **247 of 2100 cells (11.8%)**,
+  **0 conflicts** across overlapping campaigns (determinism verified).
+- **KEY DISCOVERY:** the atlas baseline is NOT a blind scan —
+  `development_atlas.py` does `ordered_slots = np.argsort(distances[index])`,
+  i.e. nearest-template-first in normalised design space. Any learned routing
+  must be compared against that heuristic, not a strawman.
+- **Templates ARE geometry indices** from the same lhs100_seed42 pool
+  {2,8,16,24,29,41,42,43,47,56,65,68,70,81,85,88,89,90,92,94,95}, so campaigns
+  with different candidate_counts pool cleanly.
+- **Results:** atlas 162 attempts -> **114** (-29.6%) with learned ranking +
+  ceiling stopping on **design variables alone**, quality -0.30%, first-attempt
+  74%->90%, worst case 21->4. Oracle = 100. Ablation: stopping rule ALONE with no
+  model = 127 (-21.6%) but costs -2.79% quality. Wall-clock only 48->38 min
+  (-21%) because saved attempts are the cheap failures; 36 of 48 min is
+  irreducible (one successful extrusion per geometry).
+- **exp02:** design-only PASS AUC 0.891, quality Spearman 0.756; +surface
+  features raise Spearman to 0.843 but NOT AUC (0.894) — feasibility is
+  predictable from the design vector alone; the surface build buys only ranking
+  precision, and did not win on policy cost.
+- **Honest limits stated in the paper:** restricted replay (policies may only
+  reorder templates the atlas actually tried -> lower bound); selection bias in
+  which cells exist; **no infeasible geometry in the data** (100/100 pass
+  eventually) so the claim is routing COST, never meshability.
+- **Runbook `runbook/RUNBOOK_matrix_completion.md`:** Campaign A completes the
+  100x21 matrix in **~8 h mesh-only** via the trick `--preferred-quality 1.01`
+  (unreachable, so nothing accepts early and every template is attempted);
+  resume is default; do NOT pass `--retain-written-meshes`. Campaign B widens the
+  design space for a real feasibility boundary. Campaign C varies `eps_e`.
+- Hold-out `round_c_lhs10_seed42` untouched; a test tokenises src/experiments to
+  prove the name never appears as live code.
+- **Robustness (exp04, 20 grouped partitions):** learned ranking + ceiling
+  stopping = 112.8 +/- 3.4 attempts (range 107-119) vs atlas 162 — spread an
+  order of magnitude below the saving. accept-first-valid is cheaper (106.0 +/-
+  1.7) but gives up 1.2% quality, so it is reported, not headlined. Both exp03
+  and exp04 select their headline under a **0.5% accepted-quality constraint**;
+  selecting on attempts alone silently rewards buying speed with quality.
+- 9 invariant tests in `tests/test_mesh_agent.py` guard the claims (determinism,
+  no template invention under restricted replay, nothing beats the oracle, no
+  acceptance below the floor, stopping never costs attempts, out-of-fold really
+  holds out its own geometry, hold-out name never appears as live code).
+- Not committed to git — build is complete and reproducible; commit when Mike asks.
+
+## S7 unstructured: coarse confirmation made executable (2026-08-31)
+
+- **The job:** ROADMAP step 1, confirm **Newton-Krylov** at `coarse` (1.55 M
+  cells). Not multigrid — that is refuted and is *bypassed entirely* under
+  `NEWTON_KRYLOV` (byte-identical histories). Shortlist, cheapest first:
+  `G_nk_cfl`, `I_combined`, `F_nk_linear`. `J_nk_no_mg` is a duplicate of
+  `I_combined` and must not be run.
+- **`solver_tuning.py` can now do it.** It was 10 variants, 4 in parallel, serial
+  SU2, unconditional `rmtree` — none of which survives 1.55 M cells. Added:
+  `--shortlist` / `--variants`, `--ranks` (mpirun), `--from-case-dir`, a memory
+  plan that **refuses** rather than OOMs, sequential default above 250 k cells,
+  and an immutable resumable run root (`request.json` identity + per-variant
+  `result.json`; a part-way directory is reported, never deleted).
+- **Memory law, measured:** `1.20 GiB per rank per million cells` — each rank
+  reads the whole mesh before partitioning. At coarse that is 1.86 GiB/rank, so
+  **4 ranks = 7.44 GiB is the desktop recommendation** and 8 ranks reproduces the
+  recorded OOM. Concurrency multiplies both ways (workers x ranks).
+- **Cost, measured** by differencing 5- and 25-iteration probes (65 s, 174 s):
+  **5.45 s/iteration on 2 ranks**, 37.8 s startup → 6 000 iters = 9.1 h/variant
+  at 2 ranks. The 4-rank speedup is **assumed 1.8x, not measured** (guide M1A).
+- **DEFECT 11 — defect 10 recurring one resolution up.** Smoke histories start at
+  -2.576..-2.687; **coarse starts at -3.6643**, so it must reach **-9.6643** to
+  drop six orders. The stop of -9.0 (derived from `assumed_worst_initial: -3.0`,
+  calibrated on smoke) truncates it at 5.336 orders and it is then rejected as
+  `insufficient_residual_drop` — indistinguishable from a failed solve. Fixed:
+  assumption -3.0→**-4.0**, stop -9.0→**-10.0**, and structurally,
+  `su2_pipeline.residual_gate` now derives the required final **from each run's
+  own initial residual** and reports `solver_stop_truncates_drop_gate`. The reason
+  provably cannot fire on a run that would pass; verified on the real coarse
+  history (fires under the old stop, clears under the new).
+  **Neither acceptance threshold has ever changed** (drop 6.0, final -8.0).
+- **Cost consequence, not to be wished away:** smoke needed 5 872 iterations to
+  reach -9.5 and coarse asks -9.6643 with 36x the cells, so **6 000 iterations may
+  land short**. Extend the budget; do not lower the gate.
+- **New doc:** `AERIS_MESH_STUDY/AERIS_S7_UNSTRUCTURED_CFD_MASTER_EXECUTION_GUIDE.md`,
+  written in the shape of the S6 master guide Mike pointed to. Milestones M0–M6
+  with stop/go gates, per-run preflight, failure handling, permitted claims. Key
+  stop/go: a variant *still descending* at the iteration budget has NOT failed —
+  that misreading is exactly what the multigrid episode was.
+- Per S6 guide §16, S7 stays outside the Paper 1 critical path and earns a matched
+  comparison only by independently passing mesh, y+, convergence and grid gates.
+- 51 tests pass, ruff clean. Not committed; awaiting Mike.

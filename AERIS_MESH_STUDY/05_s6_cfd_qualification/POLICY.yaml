@@ -1,6 +1,6 @@
 schema_version: aeris.s6.qualification.policy.v1
 deletion_policy: explicit_human_approval_only
-qualification_state: m2_resource_corrected_canary_pending_independent_review
+qualification_state: conditional_go_m2_resource_corrected_canary
 classification_policy: policies/convergence_v2.yaml
 heavy_work:
   blocked: true

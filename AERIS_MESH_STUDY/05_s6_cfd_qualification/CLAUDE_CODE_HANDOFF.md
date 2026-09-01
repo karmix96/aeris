@@ -11,15 +11,16 @@ Read these files first, in order:
 3. `LIVE_STATUS.md`
 4. `POLICY.yaml`
 5. `reviews/claude_m2_coupled_family_review_20260831.json`
-6. `reports/m2_coupled_family_respec_20260831.json`
-7. `reports/m2_a_c03_canary_authorization_consumed_20260831.json`
-8. `reports/m2_a_c03_canary_execution_20260831.json`
-9. `reports/m2_a_c03_resource_blocked_postmortem_20260901.json`
-10. `reports/m2_a_c03_memory_correction_plan_20260901.json`
-11. `policies/m2_a_c03_canary_v3.yaml`
-12. `studies/canary/m2_a_c03_measurement_20260831_001/launch_record.json`
-13. `studies/canary/m2_a_c03_measurement_20260831_001/adflow_run.log`
-14. `studies/canary/m2_a_c03_measurement_20260831_001/resource_watchdog.jsonl`
+6. `reviews/claude_m2_c03_resource_plan_review_20260901.json`
+7. `reports/m2_coupled_family_respec_20260831.json`
+8. `reports/m2_a_c03_canary_authorization_consumed_20260831.json`
+9. `reports/m2_a_c03_canary_execution_20260831.json`
+10. `reports/m2_a_c03_resource_blocked_postmortem_20260901.json`
+11. `reports/m2_a_c03_memory_correction_plan_20260901.json`
+12. `policies/m2_a_c03_canary_v3.yaml`
+13. `studies/canary/m2_a_c03_measurement_20260831_001/launch_record.json`
+14. `studies/canary/m2_a_c03_measurement_20260831_001/adflow_run.log`
+15. `studies/canary/m2_a_c03_measurement_20260831_001/resource_watchdog.jsonl`
 
 ## Non-negotiable safety state
 
@@ -27,9 +28,9 @@ Read these files first, in order:
   consumed permanently. **Never launch or retry v2.**
 - Never reuse or reconstruct the old execute token.
 - The user explicitly authorized one fresh resource-corrected A/C03 attempt.
-  Proposed policy v3 is nevertheless fail-closed: do not launch while its
-  resource-review fields say `PENDING_INDEPENDENT_REVIEW` or any preflight gate
-  is red.
+  Policy v3 now hash-binds the independent `GO_RESOURCE_PLAN`; do not launch if
+  any exact-commit, MPI, identity, resource, environment or one-shot preflight
+  gate is red.
 - Do not run C01, C02, another C03, TMR, wall/TE/farfield studies, development
   campaigns, or holdout cases without a new immutable authorization and
   explicit user approval.
@@ -94,8 +95,10 @@ the current v3 state, launch nothing, and preserve the v2 terminal summary.
 - Current preflight leaves about 0.49 GiB beyond the mandatory 2 GiB headroom.
 - The watchdog now sums RSS by POSIX session, because OpenMPI descendants did
   not remain in the time wrapper's process group during v2.
-- All v3 checks except the seven intentionally absent independent-resource-
-  review bindings are green. No v3 CFD has launched or consumed authorization.
+- Claude Sonnet 5 returned `GO_RESOURCE_PLAN` with no HIGH findings. Its review
+  is committed at `591bf90`, hash-bound into v3, and all dry identity/resource/
+  environment/one-shot checks are green. No v3 CFD has launched or consumed
+  authorization.
 
 ## Execute next, in order
 
@@ -104,28 +107,18 @@ the current v3 state, launch nothing, and preserve the v2 terminal summary.
    - `AERIS_MESH_STUDY/04_strategy_studies/S7_unstructured_gmsh_su2/campaign.py`
    - `configs/aero/section_study/stage1_reference_subset.json`
    - `configs/aero/section_study/stage1_summary_subset.txt`
-2. Independently reproduce the resource-plan arithmetic and inspect the exact
-   ADflow 2.13.1 option/source semantics. Verify the observed maximum of 8
-   linear iterations from the immutable v2 log.
-3. Review the v3 policy and launcher diff adversarially. Return
-   `GO_RESOURCE_PLAN` or `NO_GO_RESOURCE_PLAN` with severity-ranked findings,
-   bound mesh hash/cells, `ANKSubspaceSize`, `NKSubspaceSize`, forecast, and
-   watchdog limits. This review itself must not run CFD.
-4. If GO, write
-   `reviews/claude_m2_c03_resource_plan_review_20260901.json`, commit it, then
-   bind its exact commit/blob SHA-256 into v3. Never fabricate the review.
-5. Run the focused suite and a dry preflight. The exact expected state before
+2. Verify the committed resource-review binding and perform a final read-only
+   exact-commit wiring review. Any HIGH finding closes the launch gate.
+3. Run the focused suite and a dry preflight. The exact expected state before
    launch is: every identity/resource/environment check green; v3 consumed
    record absent; v3 attempt directory absent; process not launched.
-6. Obtain a final read-only exact-commit wiring review. Any HIGH finding closes
-   the launch gate.
-7. If and only if all gates are green, execute exactly one v3 A/C03 process
+4. If and only if all gates are green, execute exactly one v3 A/C03 process
    under the existing watchdog. Authorization must be consumed before process
    start. Do not retry under any terminal outcome and never touch the holdout.
-8. Retain and hash every small log, residual history, watchdog sample, options
+5. Retain and hash every small log, residual history, watchdog sample, options
    file, surface/y+ result and terminal record. Never commit CGNS, restart,
    surface/volume field, or other large artifacts.
-9. Update both handoffs and commit only governed study work. GitHub push remains
+6. Update both handoffs and commit only governed study work. GitHub push remains
    separately blocked until the user authenticates this desktop.
 
 ## Review questions

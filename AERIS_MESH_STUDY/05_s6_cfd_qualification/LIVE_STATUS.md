@@ -1,6 +1,6 @@
 # S6 qualification live status
 
-Updated: 2026-09-01T07:40:41+03:00
+Updated: 2026-09-01T22:46:05+03:00
 
 ## Executive state
 
@@ -12,8 +12,9 @@ Updated: 2026-09-01T07:40:41+03:00
   not reuse its execute token, and do not launch C01, C02, a holdout case, or a
   campaign under that authorization.
 - The user has explicitly authorized engineering one fresh resource-corrected
-  A/C03 attempt today. Policy v3 is fail-closed pending independent resource
-  review; no new CFD has launched yet.
+  A/C03 attempt today. Claude Sonnet returned `GO_RESOURCE_PLAN` with no HIGH
+  findings and the review is hash-bound in policy v3; no new CFD has launched
+  yet.
 - The result is measurement-only and not accepted. It did not converge and did
   not reach surface-output finalization, so measured y+ is unavailable.
 - The development-set/holdout separation remains intact. Holdout
@@ -44,9 +45,14 @@ Updated: 2026-09-01T07:40:41+03:00
   groups; system `MemAvailable`, which triggered the safe stop, was valid.
 - Evidence: `reports/m2_a_c03_memory_correction_plan_20260901.json` and proposed
   `policies/m2_a_c03_canary_v3.yaml`.
-- The seven resource-review checks are intentionally red until an independent
-  Claude review is recorded and hash-bound. Every other identity, solver,
-  resource, and one-shot preflight check is green.
+- The independent review is recorded at
+  `reviews/claude_m2_c03_resource_plan_review_20260901.json` and bound to commit
+  `591bf90` and its exact blob SHA-256. A fresh dry preflight now has zero failed
+  identity checks; resource, solver environment and one-shot checks are green.
+- The review has three MEDIUM cautions: thin remaining margin, dependence on
+  PETSc realizing the smaller restart allocation, and point-in-time available
+  memory. They are handled by immediate prelaunch measurement and the unchanged
+  fail-safe watchdog. There are no HIGH findings.
 
 ## Exact canary outcome
 
@@ -102,6 +108,7 @@ Immutable/governed records:
 - `reports/m2_a_c03_resource_blocked_postmortem_20260901.json`
 - `reports/run_canary.json`
 - `reviews/claude_m2_coupled_family_review_20260831.json`
+- `reviews/claude_m2_c03_resource_plan_review_20260901.json`
 
 Complete small run artifacts are retained under:
 
@@ -154,9 +161,9 @@ the raw solver log, watchdog timeline, solve report, and GNU-time file.
 
 ## Next authorized work
 
-1. Independently review commit `539a5d9` and the exact v3 solver/resource
-   wiring. Bind a real review record in place of the two `PENDING` values.
-2. Commit the reviewed v3 policy and code, rerun all 78 focused tests, the real
+1. Commit the reviewed v3 policy binding and code, then run a final exact-commit
+   wiring review.
+2. Rerun all 78 focused tests, the real
    one-rank MPI probe, and every identity/resource gate.
 3. If and only if every gate is green, consume the new v3 one-shot before
    launch and run exactly one A/C03 attempt under the unchanged watchdog.
@@ -166,7 +173,7 @@ the raw solver log, watchdog timeline, solve report, and GNU-time file.
 The user has explicitly authorized that single new run after these gates. The
 old v2 GO/token never authorizes it.
 
-GitHub push status: local evidence commits `826c64a` and `539a5d9` are ready,
+GitHub push status: all local evidence commits through `591bf90` are ready,
 but this desktop has neither an HTTPS GitHub credential, `gh`, nor an SSH key.
 The remote push requires one user authentication step; no evidence is lost.
 

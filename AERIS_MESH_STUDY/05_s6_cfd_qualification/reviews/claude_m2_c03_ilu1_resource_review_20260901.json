@@ -1,0 +1,93 @@
+{
+  "schema": "aeris.s6.claude_m2_c03_ilu1_resource_review.v1",
+  "created_at": "2026-09-01T23:09:25+03:00",
+  "decision": {
+    "verdict": "GO_ILU1_RESOURCE_PLAN",
+    "high_findings": 0,
+    "reviewed_commit": "4eae0b0",
+    "not_cfd_execution_authorization": true,
+    "bound_artifact": {
+      "sha256": "be2805ff85b6b1043863d7678d1551a52b6e8a65b299534d4ec0aaeffa51aeb4",
+      "cells": 943104
+    },
+    "bound_solver_change": {
+      "ANKSubspaceSize": 10,
+      "NKSubspaceSize": 20,
+      "ANKPCILUFill": 1,
+      "NKPCILUFill": 1
+    },
+    "bound_resource_policy": {
+      "forecast_peak_gib": 9.45,
+      "minimum_mem_available_gib": 2.0,
+      "maximum_swap_growth_gib": 0.25
+    }
+  },
+  "normalization_note": "Claude returned the artifact digest key as 'sha'; it is recorded as the repository-standard 'sha256' without changing the value. Findings and verdict are otherwise transcribed without substantive alteration.",
+  "findings": [
+    {
+      "id": "R1",
+      "severity": "MEDIUM",
+      "finding": "Memory saving is unverified: the 9.45 GiB forecast assumes at least 0.481370 GiB reduction from the v3 peak RSS of 9.931370 GiB driven solely by lowering ILU fill from 2 to 1.",
+      "disposition": "Direction is supported by installed ADflow documentation, but mesh-specific magnitude is unknown. Keep the fail-closed watchdog authoritative and never retry automatically."
+    },
+    {
+      "id": "R2",
+      "severity": "MEDIUM",
+      "finding": "The 9.45 GiB forecast is 74.617 percent of WSL-visible memory, leaving only about 0.05 GiB below the 75-percent prelaunch ceiling.",
+      "disposition": "Require a fresh same-session resource snapshot and all existing prelaunch gates immediately before authorization consumption."
+    },
+    {
+      "id": "R3",
+      "severity": "MEDIUM",
+      "finding": "Lowering ANK and NK ILU fill weakens the approximate linear preconditioner, so memory saved may be offset by slower or stalled convergence.",
+      "disposition": "Accepted as efficacy risk, not host-safety risk. Preserve unchanged convergence semantics and record a solver outcome if it does not converge."
+    },
+    {
+      "id": "R4",
+      "severity": "MEDIUM",
+      "finding": "The v3 solve stopped at nonlinear iteration 15 before satisfying unchanged full convergence criteria; successful completion is not established by the prior partial history.",
+      "disposition": "Authorize only a single measurement attempt, not an aerodynamic verdict or campaign."
+    },
+    {
+      "id": "R5",
+      "severity": "LOW",
+      "finding": "The independent mesh GO is conditional and limited to one measurement.",
+      "disposition": "Do not generalize v4 to other runs."
+    },
+    {
+      "id": "R6",
+      "severity": "LOW",
+      "finding": "External Windows or WSL pressure can lower live MemAvailable because the Windows host has 16 GB physical RAM and WSL remains capped at 13 GB.",
+      "disposition": "Treat launch timing and live preflight as binding."
+    },
+    {
+      "id": "R7",
+      "severity": "LOW",
+      "finding": "One MPI rank provides no memory-distribution lever.",
+      "disposition": "Keep rank identity unchanged; do not improvise parallel decomposition."
+    }
+  ],
+  "rationale": "The proposal is a minimal, physically motivated, correctness-preserving one-shot engineering attempt. It changes only the approximate linear preconditioner and iteration path, not the converged nonlinear RANS/SA equations. The prior run demonstrated controlled progress and correct watchdog behavior with no OOM or swap growth. Residual efficacy uncertainty is bounded by the unchanged fail-closed resource controls and one-shot governance. No HIGH finding is present.",
+  "conditions": [
+    "Use a fresh v4 authorization; never reuse or retry consumed v3 authorization.",
+    "Immediately before launch, require forecast 9.45 GiB plus 2.0 GiB to fit live MemAvailable, forecast at or below 75 percent WSL-visible memory, preexisting swap at or below 0.25 GiB, adequate disk, exact hashes, successful real one-rank MPI probe, and all identity checks green.",
+    "The only permitted solver-option deltas versus v3 are ANKPCILUFill 2 to 1 and NKPCILUFill 2 to 1. Retain ANKSubspaceSize 10, NKSubspaceSize 20, ADflow 2.13.1, one rank, RANS/SA, and all flow, mesh, reference, convergence, and output settings.",
+    "Keep the full-session watchdog unchanged: MemAvailable floor 2.0 GiB, swap-growth limit 0.25 GiB, OOM monitoring, two-second sampling, and terminate-and-record on any breach.",
+    "Development-only measurement; no ACCEPTED classification and no holdout access.",
+    "Retain every log, residual history, option dump, watchdog sample, and surface output regardless of outcome.",
+    "Any further attempt after any terminal outcome requires a new independent review."
+  ],
+  "independence_and_limits": {
+    "review_mode": "bounded_no_tools_reasoning_over_frozen_evidence_facts",
+    "source_facts_supplied_by": "Codex from committed repository and installed ADflow evidence",
+    "cfd_executed": false,
+    "holdout_accessed": false,
+    "statement": "This resource-plan GO is not by itself CFD authorization. The mesh GO, exact hash binding, green tests/MPI/preflight, and the user's explicit instruction are also required."
+  },
+  "model": {
+    "cli": "Claude Code",
+    "cli_version": "2.1.251",
+    "name": "claude-sonnet-5",
+    "tools": false
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "created_at": "2026-09-01T19:48:28+00:00",
+  "decision": {
+    "high_findings": 0,
+    "not_cfd_execution_authorization": true,
+    "reviewed_commit": "12bee1e",
+    "verdict": "GO_EXACT_WIRING"
+  },
+  "evidence": {
+    "attempt_directory_absent": true,
+    "authorization_unconsumed": true,
+    "environment_preflight": true,
+    "failed_identity_checks": [],
+    "focused_tests_passed": 78,
+    "resource": {
+      "available_gib": 11.787933,
+      "forecast_gib": 9.25,
+      "headroom_gib": 2.0,
+      "margin_beyond_headroom_gib": 0.537933,
+      "passed": true
+    },
+    "resource_review_commit": "591bf9091ddb4c87e2ef28e225f8c1cc40cd63e3",
+    "resource_review_sha256": "e87829441803a0b0b50f1a9c4cb312a16cbd18fdb41b4e9cb39b4993d09a0a47"
+  },
+  "findings": [
+    {
+      "finding": "The policy, root state and handoffs consistently bind the independent resource review and move only from pending review to conditional GO.",
+      "id": "W1",
+      "severity": "INFO"
+    },
+    {
+      "finding": "The resource arithmetic, mesh identity, ANK/NK limits, watchdog limits and preflight result reconcile exactly.",
+      "id": "W2",
+      "severity": "INFO"
+    },
+    {
+      "disposition": "Re-read MemAvailable in the real pre-consumption preflight; abort without consumption if the gate is not green.",
+      "finding": "The live margin beyond the mandatory 2 GiB headroom is thin.",
+      "id": "W3",
+      "severity": "LOW"
+    },
+    {
+      "disposition": "The user's explicit one-run instruction is required in addition to the scientific, resource and exact-wiring reviews.",
+      "finding": "Conditional GO and this review do not by themselves authorize CFD execution.",
+      "id": "W4",
+      "severity": "LOW"
+    }
+  ],
+  "model": {
+    "cli": "Claude Code",
+    "cli_version": "2.1.251",
+    "effort": "high",
+    "name": "claude-sonnet-5"
+  },
+  "schema": "aeris.s6.claude_m2_c03_exact_wiring_review.v1"
+}

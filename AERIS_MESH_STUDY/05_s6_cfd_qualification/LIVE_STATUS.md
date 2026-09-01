@@ -1,16 +1,19 @@
 # S6 qualification live status
 
-Updated: 2026-09-01T07:17:48+03:00
+Updated: 2026-09-01T07:40:41+03:00
 
 ## Executive state
 
 - No CFD process is running.
-- The only authorized A/C03 measurement canary was launched exactly once and
+- The v2 A/C03 measurement canary was launched exactly once and
   ended as **`RESOURCE_BLOCKED_HOST`**. This is a host-memory outcome, not a
   mesh verdict.
-- The one-shot authorization is permanently consumed. **Do not retry it**, do
+- The v2 one-shot authorization is permanently consumed. **Do not retry it**, do
   not reuse its execute token, and do not launch C01, C02, a holdout case, or a
   campaign under that authorization.
+- The user has explicitly authorized engineering one fresh resource-corrected
+  A/C03 attempt today. Policy v3 is fail-closed pending independent resource
+  review; no new CFD has launched yet.
 - The result is measurement-only and not accepted. It did not converge and did
   not reach surface-output finalization, so measured y+ is unavailable.
 - The development-set/holdout separation remains intact. Holdout
@@ -18,6 +21,32 @@ Updated: 2026-09-01T07:17:48+03:00
 - WSL/storage qualification remains verified: Ubuntu is registered at
   `D:\WSL\Ubuntu`, with a 13 GB WSL cap (12.66 GiB visible), 8 GiB swap,
   12 logical CPUs, and a verified recovery VHD.
+
+## Active resource correction
+
+- Exact ADflow 2.13.1 source proves that the ungoverned default
+  `ANKSubspaceSize=-1` becomes `ANKMaxIter=40`. The v2 policy constrained only
+  the later `NKSubspaceSize=20`.
+- The completed v2 steps needed at most 8 linear iterations. Policy v3 proposes
+  an explicit `ANKSubspaceSize=10`, retains `NKSubspaceSize=20`, and changes no
+  mesh, flow, RANS/SA physics, reference quantity, ILU fill, or rank count.
+- One five-state flow vector is 37,724,160 bytes. Removing 30 ANK basis vectors
+  therefore saves at least 1.0540 GiB. Subtracting that from the measured
+  9.864723 GiB drop gives 8.810722 GiB.
+- The governed proposal forecasts 9.25 GiB, retaining 0.439278 GiB uncertainty
+  above that calculation. With 11.742 GiB currently available, it passes the
+  75-percent-WSL gate and leaves 2.492 GiB projected total headroom.
+- Windows has 16 GB physical RAM in two 8 GB modules, four reported slots, and
+  a 64 GB board limit. The 13 GB WSL cap remains unchanged; increasing it was
+  rejected before correcting the hidden solver allocation.
+- The watchdog now measures the full POSIX process session. The v2
+  process-group metric saw only the time wrapper because OpenMPI changed process
+  groups; system `MemAvailable`, which triggered the safe stop, was valid.
+- Evidence: `reports/m2_a_c03_memory_correction_plan_20260901.json` and proposed
+  `policies/m2_a_c03_canary_v3.yaml`.
+- The seven resource-review checks are intentionally red until an independent
+  Claude review is recorded and hash-bound. Every other identity, solver,
+  resource, and one-shot preflight check is green.
 
 ## Exact canary outcome
 
@@ -114,30 +143,32 @@ the raw solver log, watchdog timeline, solve report, and GNU-time file.
 
 ## Verification
 
-- Focused post-run verification: **77 passed** across the S6 atlas,
+- Focused post-run verification: **78 passed** across the S6 atlas,
   qualification orchestrator, and ADflow adapter suites.
 - Ruff and `git diff --check`: pass.
-- The consumed-state regression test now requires `run-canary --dry-run` to
-  return BLOCKED with no process launch and preserves the terminal run summary.
+- The one-shot regression test now reflects both prelaunch and consumed states,
+  always launches nothing, and preserves the terminal v2 run summary.
 - Repository-wide pytest remains collection-blocked by absent optional project
   packages (first root cause previously observed: `aerosandbox`), not by the
   governed focused suite.
 
 ## Next authorized work
 
-Continue with read-only resource diagnosis only:
+1. Independently review commit `539a5d9` and the exact v3 solver/resource
+   wiring. Bind a real review record in place of the two `PENDING` values.
+2. Commit the reviewed v3 policy and code, rerun all 78 focused tests, the real
+   one-rank MPI probe, and every identity/resource gate.
+3. If and only if every gate is green, consume the new v3 one-shot before
+   launch and run exactly one A/C03 attempt under the unchanged watchdog.
+4. Retain all logs, residuals, watchdog samples, surface/y+ output and terminal
+   records. Never retry v3 automatically under any outcome.
 
-1. Reproduce all evidence hashes and the 16-row postmortem from the raw log.
-2. Measure Windows physical memory, current WSL limits, swap and available
-   headroom.
-3. Audit ADflow/PETSc memory-reduction choices and improve the forecast using
-   this measured 9.864723 GiB drop.
-4. Produce a resource plan that distinguishes a host-RAM increase from a
-   solver-memory reduction.
+The user has explicitly authorized that single new run after these gates. The
+old v2 GO/token never authorizes it.
 
-Before any additional CFD, require a new immutable one-shot policy, a fresh
-independent review, demonstrated headroom, and explicit user authorization.
-Never infer permission to retry from the previous GO.
+GitHub push status: local evidence commits `826c64a` and `539a5d9` are ready,
+but this desktop has neither an HTTPS GitHub credential, `gh`, nor an SSH key.
+The remote push requires one user authentication step; no evidence is lost.
 
 ## Safe resume commands
 

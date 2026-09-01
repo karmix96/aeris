@@ -37,7 +37,7 @@ from aeris.cfd.case.spec import FlowConditions, SolveSpec  # noqa: E402
 from aeris.cfd.env import MACH_AERO_PREFIX_ENV  # noqa: E402
 from aeris.cfd.solvers.base import get_solver_adapter  # noqa: E402
 
-CANARY_POLICY = ROOT / "policies/m2_a_c03_canary_v2.yaml"
+CANARY_POLICY = ROOT / "policies/m2_a_c03_canary_v3.yaml"
 GIB = 2**30
 
 
@@ -105,8 +105,14 @@ def _oom_kills() -> int | None:
     return None
 
 
-def _process_group_rss_bytes(process_group: int | None) -> int:
-    if process_group is None:
+def _process_session_rss_bytes(process_session: int | None) -> int:
+    """Sum RSS for every process in the launcher's POSIX session.
+
+    OpenMPI may place descendants in a different process group, so grouping by
+    field 5 of /proc/<pid>/stat misses the solver. ``start_new_session=True``
+    gives the launcher a unique session ID (field 6) that its descendants keep.
+    """
+    if process_session is None:
         return 0
     page_size = os.sysconf("SC_PAGE_SIZE")
     total_pages = 0
@@ -116,7 +122,7 @@ def _process_group_rss_bytes(process_group: int | None) -> int:
         try:
             stat = (entry / "stat").read_text(encoding="utf-8")
             tail = stat[stat.rfind(")") + 2 :].split()
-            if int(tail[2]) != process_group:  # field 5 (pgrp)
+            if int(tail[3]) != process_session:  # field 6 (session)
                 continue
             resident_pages = int((entry / "statm").read_text().split()[1])
             total_pages += resident_pages
@@ -125,7 +131,7 @@ def _process_group_rss_bytes(process_group: int | None) -> int:
     return total_pages * page_size
 
 
-def _resource_snapshot(*, process_group: int | None = None) -> dict[str, Any]:
+def _resource_snapshot(*, process_session: int | None = None) -> dict[str, Any]:
     memory = _meminfo()
     disk = os.statvfs(REPO)
     return {
@@ -136,7 +142,7 @@ def _resource_snapshot(*, process_group: int | None = None) -> dict[str, Any]:
         "swap_free_bytes": memory["SwapFree"],
         "swap_used_bytes": memory["SwapTotal"] - memory["SwapFree"],
         "free_disk_bytes": disk.f_bavail * disk.f_frsize,
-        "process_group_rss_bytes": _process_group_rss_bytes(process_group),
+        "process_session_rss_bytes": _process_session_rss_bytes(process_session),
         "oom_kill_count": _oom_kills(),
     }
 
@@ -184,10 +190,21 @@ def _policy_identity_checks(policy: dict[str, Any]) -> dict[str, bool]:
     classification_path = _repo_path(policy["classification_policy"]["path"])
     preset_path = _repo_path(solver_policy["preset_path"])
     superseded_policy_path = _repo_path(policy["supersedes_path"])
+    resource_policy = policy["resource"]
+    resource_evidence = resource_policy["evidence"]
+    resource_review_path = _repo_path(authorization["resource_review_path"])
+    resource_plan_path = _repo_path(resource_evidence["correction_plan_path"])
+    previous_execution_path = _repo_path(resource_evidence["previous_execution_path"])
+    previous_postmortem_path = _repo_path(resource_evidence["previous_postmortem_path"])
 
     review = _read_json(review_path) if review_path.is_file() else {}
     decision = review.get("decision", {})
     bound = decision.get("bound_artifact", {})
+    resource_review = _read_json(resource_review_path) if resource_review_path.is_file() else {}
+    resource_decision = resource_review.get("decision", {})
+    resource_bound_artifact = resource_decision.get("bound_artifact", {})
+    resource_bound_solver = resource_decision.get("bound_solver_change", {})
+    resource_bound_policy = resource_decision.get("bound_resource_policy", {})
     family = _read_json(evidence_path) if evidence_path.is_file() else {}
     a_c03 = [
         row
@@ -222,14 +239,24 @@ def _policy_identity_checks(policy: dict[str, Any]) -> dict[str, bool]:
         if classification_path.is_file()
         else {}
     )
+    superseded_policy = (
+        yaml.safe_load(superseded_policy_path.read_text(encoding="utf-8"))
+        if superseded_policy_path.is_file()
+        else {}
+    )
+    previous_execution = (
+        _read_json(previous_execution_path) if previous_execution_path.is_file() else {}
+    )
     yplus = classification.get("wall_y_plus", {}) if isinstance(classification, dict) else {}
     review_commit = str(authorization["independent_review_commit"])
     review_relative_path = str(authorization["independent_review_path"])
+    resource_review_commit = str(authorization["resource_review_commit"])
+    resource_review_relative_path = str(authorization["resource_review_path"])
 
     return {
         "policy_immutable": policy.get("immutable") is True,
-        "immutable_v1_supersession_chain": (
-            policy.get("supersedes") == "m2_a_c03_measurement_canary_v1"
+        "immutable_policy_supersession_chain": (
+            policy.get("supersedes") == superseded_policy.get("policy_id")
             and _hash_matches(superseded_policy_path, policy["supersedes_sha256"])
         ),
         "measurement_only": policy.get("scope", {}).get("purpose") == "measurement_only",
@@ -254,6 +281,47 @@ def _policy_identity_checks(policy: dict[str, Any]) -> dict[str, bool]:
         "review_go": decision.get("verdict") == authorization["required_review_verdict"],
         "review_bound_mesh": bound.get("sha256") == mesh_policy["sha256"],
         "review_bound_cells": bound.get("cells") == mesh_policy["cells"],
+        "resource_review_sha256": _hash_matches(
+            resource_review_path, authorization["resource_review_sha256"]
+        ),
+        "resource_review_commit_is_ancestor": _git_is_ancestor(resource_review_commit),
+        "resource_review_commit_blob_sha256": (
+            _git_blob_sha256(resource_review_commit, resource_review_relative_path)
+            == authorization["resource_review_sha256"]
+        ),
+        "resource_review_go": (
+            resource_decision.get("verdict")
+            == authorization["required_resource_review_verdict"]
+        ),
+        "resource_review_bound_mesh": (
+            resource_bound_artifact.get("sha256") == mesh_policy["sha256"]
+            and resource_bound_artifact.get("cells") == mesh_policy["cells"]
+        ),
+        "resource_review_bound_solver_memory": (
+            resource_bound_solver.get("ANKSubspaceSize")
+            == solver_policy.get("ank_subspace_size")
+            and resource_bound_solver.get("NKSubspaceSize")
+            == solver_policy.get("nk_subspace_size")
+        ),
+        "resource_review_bound_forecast": math.isclose(
+            float(resource_bound_policy.get("forecast_peak_gib", math.nan)),
+            float(resource_policy["forecast_peak_gib"]),
+            rel_tol=0.0,
+            abs_tol=1.0e-14,
+        ),
+        "resource_plan_sha256": _hash_matches(
+            resource_plan_path, resource_evidence["correction_plan_sha256"]
+        ),
+        "prior_resource_execution_sha256": _hash_matches(
+            previous_execution_path, resource_evidence["previous_execution_sha256"]
+        ),
+        "prior_resource_postmortem_sha256": _hash_matches(
+            previous_postmortem_path, resource_evidence["previous_postmortem_sha256"]
+        ),
+        "prior_terminal_resource_outcome": (
+            previous_execution.get("status") == "RESOURCE_BLOCKED_HOST"
+            and previous_execution.get("automatic_retry_allowed") is False
+        ),
         "family_row_unique": len(a_c03) == 1,
         "family_row_mesh": bool(a_c03 and a_c03[0].get("output_sha256") == mesh_policy["sha256"]),
         "family_row_valid": bool(
@@ -365,6 +433,7 @@ def _policy_identity_checks(policy: dict[str, Any]) -> dict[str, bool]:
             and solver_policy.get("write_volume_solution") is False
             and solver_policy.get("write_surface_solution") is True
             and solver_policy.get("retain_surface_solution") is True
+            and solver_policy.get("ank_subspace_size") == 10
             and solver_policy.get("nk_subspace_size") == 20
             and set(solver_policy.get("surface_variables", []))
             == {"cp", "cf", "yplus", "vx", "vy", "vz"}
@@ -637,6 +706,7 @@ def _governed_sources_clean() -> tuple[bool, list[str]]:
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/convergence_v2.yaml",
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/m2_a_c03_canary_v1.yaml",
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/m2_a_c03_canary_v2.yaml",
+        "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/m2_a_c03_canary_v3.yaml",
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/grid_family_candidate_v1.yaml",
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_reference_contract_20260831.json",
     ]
@@ -746,7 +816,7 @@ def _run_with_watchdog(
             print(f"canary process group {process.pid} started", flush=True)
             try:
                 while process.poll() is None:
-                    snapshot = _resource_snapshot(process_group=process.pid)
+                    snapshot = _resource_snapshot(process_session=process.pid)
                     elapsed = time.monotonic() - started_monotonic
                     snapshot["elapsed_seconds"] = elapsed
                     samples.write(json.dumps(snapshot, sort_keys=True) + "\n")
@@ -755,7 +825,7 @@ def _run_with_watchdog(
                         samples.flush()
                         os.fsync(samples.fileno())
 
-                    maximum_rss = max(maximum_rss, snapshot["process_group_rss_bytes"])
+                    maximum_rss = max(maximum_rss, snapshot["process_session_rss_bytes"])
                     minimum_available = min(minimum_available, snapshot["mem_available_bytes"])
                     swap_growth = max(0, snapshot["swap_used_bytes"] - baseline["swap_used_bytes"])
                     maximum_swap_growth = max(maximum_swap_growth, swap_growth)
@@ -791,7 +861,7 @@ def _run_with_watchdog(
                         print(
                             "canary heartbeat "
                             f"elapsed={elapsed:.0f}s "
-                            f"rss={snapshot['process_group_rss_bytes'] / GIB:.2f}GiB "
+                            f"rss={snapshot['process_session_rss_bytes'] / GIB:.2f}GiB "
                             f"available={snapshot['mem_available_bytes'] / GIB:.2f}GiB "
                             f"swap_growth={swap_growth / GIB:.2f}GiB",
                             flush=True,
@@ -818,7 +888,7 @@ def _run_with_watchdog(
         "watchdog_stopped": stop_reason is not None,
         "watchdog_stop_reason": stop_reason,
         "sample_count": sample_count,
-        "maximum_sampled_process_group_rss_bytes": maximum_rss,
+        "maximum_sampled_process_session_rss_bytes": maximum_rss,
         "minimum_mem_available_bytes": minimum_available,
         "maximum_swap_growth_bytes": maximum_swap_growth,
         "minimum_free_disk_bytes": minimum_free_disk,
@@ -1080,7 +1150,7 @@ def _postprocess(
         - int(runtime["minimum_mem_available_bytes"]),
     )
     measured_peak_bytes = max(
-        int(runtime["maximum_sampled_process_group_rss_bytes"]),
+        int(runtime["maximum_sampled_process_session_rss_bytes"]),
         time_rss_bytes,
         system_available_drop_bytes,
     )
@@ -1218,6 +1288,7 @@ def _build_solve_spec(policy: dict[str, Any]) -> SolveSpec:
             "storeConvHist": bool(solver["store_convergence_history"]),
             "monitorVariables": list(solver["monitor_variables"]),
             "surfaceVariables": list(solver["surface_variables"]),
+            "ANKSubspaceSize": int(solver["ank_subspace_size"]),
             "NKSubspaceSize": int(solver["nk_subspace_size"]),
         },
     )

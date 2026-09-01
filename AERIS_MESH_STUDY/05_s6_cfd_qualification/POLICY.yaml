@@ -1,13 +1,16 @@
 schema_version: aeris.s6.qualification.policy.v1
 deletion_policy: explicit_human_approval_only
-qualification_state: conditional_go_m2_single_measurement_canary
+qualification_state: m2_resource_corrected_canary_pending_independent_review
 classification_policy: policies/convergence_v2.yaml
 heavy_work:
   blocked: true
-  reason: All heavy work remains blocked except the exact one-shot M2 A/C03 measurement canary below
+  reason: >-
+    All heavy work remains blocked. A fresh one-shot M2 A/C03 resource-corrected
+    canary may become executable only after its independent review and preflight
+    gates pass; the consumed v2 attempt remains permanently non-retryable.
   exceptions:
     run-canary:
-      policy: policies/m2_a_c03_canary_v2.yaml
+      policy: policies/m2_a_c03_canary_v3.yaml
       maximum_process_launches: 1
       accepted_classification_allowed: false
       automatic_retry_allowed: false

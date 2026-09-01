@@ -15,15 +15,21 @@ Read these files first, in order:
 7. `reports/m2_a_c03_canary_authorization_consumed_20260831.json`
 8. `reports/m2_a_c03_canary_execution_20260831.json`
 9. `reports/m2_a_c03_resource_blocked_postmortem_20260901.json`
-10. `studies/canary/m2_a_c03_measurement_20260831_001/launch_record.json`
-11. `studies/canary/m2_a_c03_measurement_20260831_001/adflow_run.log`
-12. `studies/canary/m2_a_c03_measurement_20260831_001/resource_watchdog.jsonl`
+10. `reports/m2_a_c03_memory_correction_plan_20260901.json`
+11. `policies/m2_a_c03_canary_v3.yaml`
+12. `studies/canary/m2_a_c03_measurement_20260831_001/launch_record.json`
+13. `studies/canary/m2_a_c03_measurement_20260831_001/adflow_run.log`
+14. `studies/canary/m2_a_c03_measurement_20260831_001/resource_watchdog.jsonl`
 
 ## Non-negotiable safety state
 
-- The one authorized measurement-only A/C03 canary has already run. Its
-  authorization is consumed permanently. **Do not launch or retry CFD.**
+- The v2 measurement-only A/C03 canary has already run. Its authorization is
+  consumed permanently. **Never launch or retry v2.**
 - Never reuse or reconstruct the old execute token.
+- The user explicitly authorized one fresh resource-corrected A/C03 attempt.
+  Proposed policy v3 is nevertheless fail-closed: do not launch while its
+  resource-review fields say `PENDING_INDEPENDENT_REVIEW` or any preflight gate
+  is red.
 - Do not run C01, C02, another C03, TMR, wall/TE/farfield studies, development
   campaigns, or holdout cases without a new immutable authorization and
   explicit user approval.
@@ -70,8 +76,26 @@ and retains every component without positional shifts. Its regression test uses
 the actual final completed row. The structured postmortem contains all 16
 re-parsed rows.
 
-Focused verification is **77 passed**. The consumed-state dry-run test must
-remain permanently blocked and launch nothing.
+Focused verification is **78 passed**. The one-shot dry-run test must reflect
+the current v3 state, launch nothing, and preserve the v2 terminal summary.
+
+## Resource-corrected v3 state
+
+- The desktop has 16 GB physical RAM, four reported slots, two installed 8 GB
+  modules, and a 64 GB board limit. WSL remains capped at 13 GB with 8 GB swap.
+- Exact ADflow source maps default `ANKSubspaceSize=-1` to
+  `ANKMaxIter=40`. The v2 policy constrained `NKSubspaceSize=20` but left this
+  earlier ANK allocation unbounded.
+- The v2 log used at most 8 linear iterations per nonlinear step. V3 sets
+  `ANKSubspaceSize=10` and retains `NKSubspaceSize=20` and ILU fill 2.
+- Thirty removed five-state basis vectors are a lower-bound 1.0540 GiB saving.
+  The v3 forecast is 9.25 GiB: 0.4393 GiB above the vector-subtraction estimate
+  and 73.04 percent of WSL-visible RAM.
+- Current preflight leaves about 0.49 GiB beyond the mandatory 2 GiB headroom.
+- The watchdog now sums RSS by POSIX session, because OpenMPI descendants did
+  not remain in the time wrapper's process group during v2.
+- All v3 checks except the seven intentionally absent independent-resource-
+  review bindings are green. No v3 CFD has launched or consumed authorization.
 
 ## Execute next, in order
 
@@ -80,29 +104,29 @@ remain permanently blocked and launch nothing.
    - `AERIS_MESH_STUDY/04_strategy_studies/S7_unstructured_gmsh_su2/campaign.py`
    - `configs/aero/section_study/stage1_reference_subset.json`
    - `configs/aero/section_study/stage1_summary_subset.txt`
-2. Independently recompute the hashes of every retained canary artifact and
-   compare them with the immutable execution and postmortem records.
-3. Independently parse all 16 expanded monitor rows and audit the watchdog
-   samples. Report any mismatch with exact file/line evidence. Do not run CFD.
-4. Perform a read-only Windows/WSL resource audit: physical RAM, WSL cap, swap,
-   current headroom, and whether raising the WSL cap is safe for the Windows
-   host.
-5. Review ADflow/PETSc memory controls against the exact solver version and
-   current options. Separate evidence-backed reductions from speculation. Do
-   not change the governed solver policy during the audit.
-6. Replace the old 9.35 GiB anchor with a proposed conservative model based on
-   the observed 9.864723 GiB drop plus explicit safety headroom.
-7. Write a short resource recommendation with alternatives:
-   - add/allocate more physical RAM;
-   - reduce solver memory while retaining the same mesh and scientific
-     contract;
-   - or declare this host unsuitable for C03 and defer.
-8. Update `LIVE_STATUS.md` and this handoff with findings. Commit only small,
-   governed evidence/code; never commit CGNS, restart, surface/volume field, or
-   other large artifacts.
-9. Stop before any CFD. A future solve requires a new immutable one-shot policy,
-   fresh independent review, demonstrated memory headroom, and explicit user
-   authorization.
+2. Independently reproduce the resource-plan arithmetic and inspect the exact
+   ADflow 2.13.1 option/source semantics. Verify the observed maximum of 8
+   linear iterations from the immutable v2 log.
+3. Review the v3 policy and launcher diff adversarially. Return
+   `GO_RESOURCE_PLAN` or `NO_GO_RESOURCE_PLAN` with severity-ranked findings,
+   bound mesh hash/cells, `ANKSubspaceSize`, `NKSubspaceSize`, forecast, and
+   watchdog limits. This review itself must not run CFD.
+4. If GO, write
+   `reviews/claude_m2_c03_resource_plan_review_20260901.json`, commit it, then
+   bind its exact commit/blob SHA-256 into v3. Never fabricate the review.
+5. Run the focused suite and a dry preflight. The exact expected state before
+   launch is: every identity/resource/environment check green; v3 consumed
+   record absent; v3 attempt directory absent; process not launched.
+6. Obtain a final read-only exact-commit wiring review. Any HIGH finding closes
+   the launch gate.
+7. If and only if all gates are green, execute exactly one v3 A/C03 process
+   under the existing watchdog. Authorization must be consumed before process
+   start. Do not retry under any terminal outcome and never touch the holdout.
+8. Retain and hash every small log, residual history, watchdog sample, options
+   file, surface/y+ result and terminal record. Never commit CGNS, restart,
+   surface/volume field, or other large artifacts.
+9. Update both handoffs and commit only governed study work. GitHub push remains
+   separately blocked until the user authenticates this desktop.
 
 ## Review questions
 
@@ -119,12 +143,14 @@ Return a severity-ranked, evidence-backed answer to:
    identity?
 5. Is the Windows host physically capable of a safe larger WSL allocation?
 
-Do not turn a resource audit into a scientific GO. No prior review authorizes a
-second launch.
+Do not treat the resource review alone as a scientific GO. The existing mesh
+GO, the new resource review, green exact preflight, and the user's explicit
+one-run instruction are all required together.
 
 ## Continuation behavior
 
-If Codex runs out of credits, continue the ordered read-only audit above and
-leave both status files current. Do not wait for Codex if useful read-only
-evidence work remains. Stop at the authorization boundary: no CFD, no holdout,
-no policy mutation, and no destructive cleanup.
+If Codex runs out of credits, continue the ordered review and v3 gate closure
+above and leave both status files current. Do not wait for Codex while useful
+evidence work remains. The only permitted heavy action is the one v3 A/C03 run
+after every listed gate is green; under any ambiguity stop with no CFD. Never
+touch the holdout or perform destructive cleanup.

@@ -1,6 +1,7 @@
 import ctypes
 import hashlib
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -45,19 +46,23 @@ def test_heavy_work_is_blocked():
     assert invoke_preserving_report("run-tmr").returncode != 0
 
 
-def test_consumed_canary_dry_run_is_permanently_blocked_and_launches_nothing():
+def test_canary_dry_run_reflects_one_shot_state_and_launches_nothing():
     out = invoke_preserving_report("run-canary", "--dry-run")
+    payload = json.loads(out.stdout.split("\nrecord:", 1)[0])
+    policy = yaml.safe_load((ROOT / "policies/m2_a_c03_canary_v3.yaml").read_text())
+    consumed = ROOT.parents[1] / policy["attempt"]["consumed_record"]
+    attempt = ROOT.parents[1] / policy["attempt"]["directory"]
 
-    assert out.returncode == 3
-    assert '"status": "BLOCKED"' in out.stdout
-    assert '"process_launched": false' in out.stdout
-    assert '"attempt_directory_absent": false' in out.stdout
-    assert '"authorization_not_consumed": false' in out.stdout
-    assert "exactly one measurement-only A/C03 canary" in out.stdout
+    checks = payload["details"]["preflight"]["one_shot_checks"]
+    assert checks["authorization_not_consumed"] is (not consumed.exists())
+    assert checks["attempt_directory_absent"] is (not attempt.exists())
+    assert payload["details"]["process_launched"] is False
+    assert payload["details"]["scope"] == "exactly one measurement-only A/C03 canary"
+    assert out.returncode in {0, 3}
 
 
 def test_canary_policy_retains_complete_logs_and_full_residual_history():
-    policy = yaml.safe_load((ROOT / "policies/m2_a_c03_canary_v2.yaml").read_text())
+    policy = yaml.safe_load((ROOT / "policies/m2_a_c03_canary_v3.yaml").read_text())
     assert policy["solver"]["monitor_variables"] == [
         "resrho",
         "resmom",
@@ -76,8 +81,18 @@ def test_canary_policy_retains_complete_logs_and_full_residual_history():
         "/home/mike_kara/miniconda3/envs/mach-aero"
     )
     assert policy["solver"]["environment"]["prelaunch_non_cfd_mpi_probe_required"] is True
+    assert policy["solver"]["ank_subspace_size"] == 10
+    assert policy["solver"]["nk_subspace_size"] == 20
+    assert policy["resource"]["forecast_peak_gib"] == 9.25
     assert policy["resource"]["maximum_preexisting_swap_gib"] == 0.25
     assert policy["watchdog"]["maximum_swap_growth_gib"] == 0.25
+
+
+def test_watchdog_counts_the_full_launcher_process_session():
+    sys.path.insert(0, str(ROOT))
+    from canary import _process_session_rss_bytes
+
+    assert _process_session_rss_bytes(os.getsid(0)) > 0
 
 
 def test_governed_canary_prepares_exact_solver_contract(tmp_path, monkeypatch):
@@ -103,6 +118,7 @@ def test_governed_canary_prepares_exact_solver_contract(tmp_path, monkeypatch):
     assert options["storeConvHist"] is True
     assert options["writeVolumeSolution"] is False
     assert options["writeSurfaceSolution"] is True
+    assert options["ANKSubspaceSize"] == 10
     assert options["NKSubspaceSize"] == 20
     assert case["reynolds_length_ref"] == 0.9
     assert case["moment_reference"] == [0.4, 0.0, 0.0]

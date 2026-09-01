@@ -713,6 +713,7 @@ def _governed_sources_clean() -> tuple[bool, list[str]]:
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/m2_a_c03_canary_v1.yaml",
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/m2_a_c03_canary_v2.yaml",
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/m2_a_c03_canary_v3.yaml",
+        "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/m2_a_c03_canary_v4.yaml",
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/grid_family_candidate_v1.yaml",
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_reference_contract_20260831.json",
     ]

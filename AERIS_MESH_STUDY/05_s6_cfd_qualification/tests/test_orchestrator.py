@@ -90,6 +90,11 @@ def test_canary_policy_retains_complete_logs_and_full_residual_history():
     assert policy["watchdog"]["maximum_swap_growth_gib"] == 0.25
 
 
+def test_governed_source_cleanliness_includes_active_v4_policy():
+    source = (ROOT / "canary.py").read_text()
+    assert 'policies/m2_a_c03_canary_v4.yaml"' in source
+
+
 def test_watchdog_counts_the_full_launcher_process_session():
     sys.path.insert(0, str(ROOT))
     from canary import _process_session_rss_bytes

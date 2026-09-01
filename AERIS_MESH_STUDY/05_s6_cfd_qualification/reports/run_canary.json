@@ -1,12 +1,17 @@
 {
   "command": "run-canary",
-  "created_at": "2026-08-30T13:48:34.054546+00:00",
+  "created_at": "2026-08-31T22:16:29.503769+00:00",
   "details": {
-    "reason": "CFD canary blocked: M2 family and independent review gates incomplete"
+    "accepted": false,
+    "automatic_retry_allowed": false,
+    "execution_record": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_canary_execution_20260831.json",
+    "execution_record_sha256": "be6c3c32e4f3434ee9b20f08933fe5f8fdcaf5b4e6103d78cee72e532fad2c06",
+    "execution_status": "RESOURCE_BLOCKED_HOST",
+    "process_launched": true
   },
   "dry_run": false,
-  "git_head": "9fb9b5de5b2fc673e7a20b0646476f4eb2052838",
+  "git_head": "e4829b0f327e2a6dd199d8c87d84217c36a8ccda",
   "repo": "/home/mike_kara/aeris",
   "schema_version": 1,
-  "status": "BLOCKED"
+  "status": "FAIL"
 }

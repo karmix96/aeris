@@ -1,0 +1,58 @@
+{
+  "accepted_classification_allowed": false,
+  "attempt_id": "m2_a_c03_measurement_20260831_001",
+  "automatic_retry_allowed": false,
+  "command": [
+    "/usr/bin/time",
+    "-v",
+    "-o",
+    "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260831_001/time_verbose.txt",
+    "--",
+    "/home/mike_kara/miniconda3/envs/mach-aero/bin/mpirun",
+    "-np",
+    "1",
+    "/home/mike_kara/miniconda3/envs/mach-aero/bin/python",
+    "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260831_001/run_adflow.py"
+  ],
+  "created_at": "2026-08-31T22:11:15.798157+00:00",
+  "git_head": "e4829b0f327e2a6dd199d8c87d84217c36a8ccda",
+  "mesh_path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03/lhs100_seed42_083/wing_vol_deformed.cgns",
+  "mesh_sha256": "be2805ff85b6b1043863d7678d1551a52b6e8a65b299534d4ec0aaeffa51aeb4",
+  "policy_path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/m2_a_c03_canary_v2.yaml",
+  "policy_sha256": "893acc3dadd90a1b72bbc8cfbdb8c4f1c806438f06a6c16e98c797cbaa5d0480",
+  "prepared_artifacts": {
+    "case": {
+      "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260831_001/adflow_case.json",
+      "sha256": "f32116b7b26a0901b582c79b82090f4132a748978b5a6cef72333944f7ac13bb",
+      "size_bytes": 442
+    },
+    "effective_options": {
+      "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260831_001/adflow_effective_options.json",
+      "sha256": "c60ecf85e31c475121e188dcbfe2d449d41e6e25d07e66756b89db25012add32",
+      "size_bytes": 2976
+    },
+    "options": {
+      "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260831_001/adflow_options.json",
+      "sha256": "6a648554c6e0b3dabe980863b3991ebe7b0ef0183478e7eb111fb3449fa317c5",
+      "size_bytes": 939
+    },
+    "runner": {
+      "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260831_001/run_adflow.py",
+      "sha256": "1099235a9c7e32d2fc5d3db9b238d2276227e719623fec20f20aa30c9e61c196",
+      "size_bytes": 6201
+    }
+  },
+  "process_launch_limit": 1,
+  "schema": "aeris.s6.m2_canary_launch.v1",
+  "solver_source_sha256": {
+    "AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/cfd_qc.py": "f15ed51a2554681499a3f5d008cef3973b0ac2424473484f93f15931e05ba033",
+    "AERIS_MESH_STUDY/05_s6_cfd_qualification/canary.py": "718860db8aa20efb5f822012aed027af45dae0fcafe5aa8c77f8a497b8a48e47",
+    "src/aeris/cfd/case/spec.py": "b0d98b9d9c65e8fa8de7f369dbed6c17620f9f2d9767d4c4e560a00bb7dcaf31",
+    "src/aeris/cfd/env.py": "bc8d105b857a9c9b557c6334882e54f869fe283723d674b7b898b6f9324f6c79",
+    "src/aeris/cfd/presets/data/adflow_rans_ank_nk_v1.yaml": "87816b5a91f6f25b41f983f8384b21d0be5136a38279e71bdfe1bedf3cd2884e",
+    "src/aeris/cfd/solvers/adflow/adapter.py": "709b173c6ec2c2db9b39d0e4cbf5431819b5dc4801f441cf6ef99185c38fe6f9",
+    "src/aeris/cfd/solvers/adflow/options_schema.py": "ce8debcadfd1fe901bfe7f783ba9d837b9caa6f0eca19d5cf866a4bfc4a29919",
+    "src/aeris/cfd/solvers/adflow/parse.py": "1a4e5da0a1c0cc6d089fb4e1960a01638c8055ed68f6128854910b2d227e0315",
+    "src/aeris/cfd/solvers/base.py": "5699c4478542ba2578e3fd862b12a9ad7173a89da703f8fbe8553b42f6b02ccb"
+  }
+}

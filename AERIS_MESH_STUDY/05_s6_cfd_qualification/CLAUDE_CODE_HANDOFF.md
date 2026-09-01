@@ -1,145 +1,130 @@
 # Claude Code continuation order — S6 qualification
 
-You are continuing the AERIS S6 automated CFD qualification study in a shared
-Linux-native repository. Read these files first, in order:
+This is the live handoff for continuing the AERIS S6 automated CFD
+qualification study. Work in the existing Linux-native repository and preserve
+the evidence chain.
+
+Read these files first, in order:
 
 1. `MASTER_EXECUTION_GUIDE.md`
 2. `SESSION_RESUME.md`
 3. `LIVE_STATUS.md`
 4. `POLICY.yaml`
-5. `reports/m1_contract_status.md`
-6. `reports/audit_geometry_space.json`
-7. `host/m1_20260830/m1_gate.json`
-8. `reports/m2_grid_screen_terminal_report.md`
-9. `reports/m2_grid_screen_terminal_report.json`
-10. `reports/m2_coupled_family_respec_20260831.json`
-11. `reports/m2_wall_spacing_yplus_preflight_20260831.json`
+5. `reviews/claude_m2_coupled_family_review_20260831.json`
+6. `reports/m2_coupled_family_respec_20260831.json`
+7. `reports/m2_a_c03_canary_authorization_consumed_20260831.json`
+8. `reports/m2_a_c03_canary_execution_20260831.json`
+9. `reports/m2_a_c03_resource_blocked_postmortem_20260901.json`
+10. `studies/canary/m2_a_c03_measurement_20260831_001/launch_record.json`
+11. `studies/canary/m2_a_c03_measurement_20260831_001/adflow_run.log`
+12. `studies/canary/m2_a_c03_measurement_20260831_001/resource_watchdog.jsonl`
 
-## Non-negotiable safety order
+## Non-negotiable safety state
 
-- The coupled family has an independent GO for exactly one measurement-only
-  A/C03 canary. Do not launch it until the exact launcher commit receives a
-  read-only wiring review and its fresh preflight passes. The direct-march
-  NO-GO remains historical.
+- The one authorized measurement-only A/C03 canary has already run. Its
+  authorization is consumed permanently. **Do not launch or retry CFD.**
+- Never reuse or reconstruct the old execute token.
+- Do not run C01, C02, another C03, TMR, wall/TE/farfield studies, development
+  campaigns, or holdout cases without a new immutable authorization and
+  explicit user approval.
 - Do not inspect, parse, sample, visualize, copy, or hash the locked holdout
-  sample contents. Only use its lock metadata.
-- Do not alter the live geometry YAML, governance snapshots, unrelated user
-  changes, WSL registration, VHDs, or backup files.
-- Do not delete or clean broad directories. The policy is
-  `explicit_human_approval_only`.
-- Keep every generated result immutable and small; never commit CGNS, restart,
-  field, or other large solver artifacts.
+  contents. Its lock metadata is the only permitted holdout input.
+- Do not classify this result ACCEPTED. It is measurement-only,
+  non-converged, and has no surface/y+ output.
+- Do not alter live geometry YAML, governance snapshots, WSL registration,
+  VHDs, backup files, or unrelated user work.
+- Never delete or broadly clean results. Keep the existing evidence immutable.
 
-## Current terminal state
+## Terminal outcome to reproduce
 
-- M0/M1 deterministic work is complete at commit `752852c`.
-- The redesigned coupled family uses collar counts `5 -> 6 -> 7`, wall-spacing
-  fractions `5.0e-6 -> 4.7e-6 -> 3.6e-6`, and 191,520 -> 422,352 -> 943,104
-  cells (`r_eff=1.3016, 1.3071`).
-- Independent ADF-CGNS reopening and repository-authority volume QC reject the
-  direct-march nominal mesh. The best C03 attempt still has six inverted cells
-  and `qmin=-0.3114098210`.
-- Proven S6 remains the route: valid S1/Openblademesh volume followed by exact
-  S6-wall deformation. C01/C02/C03 now pass the production floor on A/B/C/E;
-  C03 geometry C uses the governed target-specific S1 fallback with identical
-  global settings. Evidence: `reports/m2_coupled_family_respec_20260831.json`.
-- The C02 family evidence has been independently reproduced (hashes plus a
-  fresh ADF reopen and volume QC of all six meshes).
-- The old C03 fold is attributed to its 9-point tip-cap collar. Re-specifying
-  the coupled collar ladder to `5/6/7` removes the fold while retaining the
-  finer 3.6e-6 C03 wall-spacing fraction; the rejected 6.1e-6 path is retained.
-- R1-R3 are closed by the coupled re-spec, synchronized candidate registries,
-  regression coverage, A/B/C/E written-CGNS evidence, and the independent
-  review in `reviews/claude_m2_coupled_family_review_20260831.json`.
-- Flat-plate preflight y+ used full first-cell height and is not acceptance
-  evidence. ADflow uses the first-cell centroid, so the expected values are
-  about half; only the governed canary can measure them.
-- Earlier Claude review attempts timed out and are retained as transport
-  history. A later independent review completed and issued the bounded GO.
-- An independent Claude Code review of `dbf918f` is now COMPLETE and closes
-  R1/R2/R3: `reviews/claude_m2_coupled_family_review_20260831.json`. All twelve
-  claimed family meshes were reopened and reproduce exactly; realized OML
-  first-cell medians order C01 > C02 > C03 for every geometry, and the cap
-  orders too. It issues a **GO for exactly one measurement-only A/C03 canary**
-  on `m2_coupled_family_20260831/candidate_c03/lhs100_seed42_083/wing_vol_deformed.cgns`
-  (`be2805ff...`, 943,104 cells, `qmin=0.1671`).
-- GO conditions, all binding: no ACCEPTED classification until a numeric y+
-  limit and its wall-distance convention are in the immutable policy; state the
-  y+ convention when reporting, because ADflow's cell-centred y+ reads about
-  half the preflight numbers (A/C03 OML p95 `0.74`, not `1.47`); run under a
-  memory watchdog (forecast 9.35 GiB against 11.47 GiB available, 0.12 GiB of
-  margin); one run, geometry A, development set, holdout untouched; and wiring
-  `run-canary` is itself a governed change that must keep every other heavy
-  command blocked.
-- Non-blocking findings carried forward: C01 to C02 is not a wall-normal
-  refinement step; C/C03 needs a geometry-specific template; the y+ preflight
-  has no committed generator and ungoverned limits; two `grid_screen` gate
-  defaults are permissive; the memory forecast cannot fail on the finest level.
-- The one-shot launcher now binds the exact reviewed mesh/flow/reference
-  contract, freezes numeric cell-centroid y+ gates, keeps all other heavy work
-  blocked, consumes authorization before process start, forbids retry and
-  ACCEPTED, and uses a memory/swap/disk/OOM watchdog.
-- It retains every CFD log and evidence artifact except the volume solution,
-  which stays disabled under the reviewed resource envelope. Native histories
-  include density, x/y/z momentum, energy, SA, CL/CD/CMy and CDp/CDv.
-- The acceptance contract remains honestly CONDITIONAL because the current
-  continuity-residual ratio is not the governed signed boundary-flux mass
-  balance. The canary is measurement-only, so this gap cannot be hidden by an
-  ACCEPTED verdict.
-- Latest focused verification: 76 passed. Zero-launch preflight passes 43
-  identity/governance checks, 19 solver-environment checks, and all resource
-  checks. No CFD has been launched; the one-shot authorization is unconsumed.
-- Commit `e660899` is retained. A post-commit audit found that the legacy
-  solver resolver defaulted to nonexistent `/home/mike/...`; it was caught
-  before any CFD launch or authorization consumption. Immutable canary policy
-  v1 remains unchanged. Policy v2 supersedes it and binds the real
-  `/home/mike_kara/miniconda3/envs/mach-aero` environment, exact versions and
-  hashes, explicit RANS/SA/history/output controls, and a pre-consumption
-  one-rank non-CFD MPI readiness probe.
-- The static v2 environment/import audit is green, exact prepare-only coverage
-  is green, and an out-of-sandbox probe returned `AERIS_MPI_READY 0 1`.
-- A post-commit audit caught and repaired two prelaunch result-path defects:
-  policy metadata was being treated as residual rows, and the surface reader
-  assumed HDF5 although this solver writes ADF CGNS. A real ADF fixture now
-  proves Cp/Cf/y+ extraction, exact `wall`-family selection, farfield
-  exclusion, and removal of rind/ghost planes before physical-wall statistics.
-  The preflight opens the bound mesh with the installed CGNS library and
-  records that library's path and SHA-256.
-- Two read-only launcher review attempts timed out with no verdict and no
-  workspace mutation. Do not mistake those transport failures for a NO-GO or
-  GO. Make one short exact-commit review after the result-reader fix is
-  committed.
+- Execution: `m2_a_c03_measurement_20260831_001`.
+- Bound commit: `e4829b0f327e2a6dd199d8c87d84217c36a8ccda`.
+- Mesh SHA-256:
+  `be2805ff85b6b1043863d7678d1551a52b6e8a65b299534d4ec0aaeffa51aeb4`.
+- Solver: ADflow 2.13.1, one MPI rank, RANS/SA, A/C03, development index 83.
+- Terminal status: **`RESOURCE_BLOCKED_HOST`**.
+- Elapsed time: 339.6016 s.
+- Watchdog trigger: available memory 1.964928 GiB below the governed 2.0 GiB
+  floor.
+- Forecast: 9.35 GiB. Measured available-memory drop: 9.864723 GiB.
+  Underprediction: 0.514723 GiB.
+- No OOM kill and no material swap growth.
+- Sixteen native monitor rows exist, through completed iteration 15.
+- Density fell `396.30185 -> 0.0636363`; total residual fell
+  `1.409082e6 -> 2361.3372`. This was not convergence.
+- No surface solution was written, so no measured cell-centroid y+ exists.
+- The outcome is a host-resource finding, not a mesh-quality verdict.
+
+## Evidence-retention state
+
+The complete small attempt directory is retained at:
+
+`studies/canary/m2_a_c03_measurement_20260831_001/`
+
+It contains the case, launch record, requested and effective options, static
+runner, combined solver log, complete watchdog timeline, solve report, and
+GNU-time file. No large surface/volume/restart artifact was produced.
+
+The post-run parser now supports both legacy and expanded ADflow monitor rows
+and retains every component without positional shifts. Its regression test uses
+the actual final completed row. The structured postmortem contains all 16
+re-parsed rows.
+
+Focused verification is **77 passed**. The consumed-state dry-run test must
+remain permanently blocked and launch nothing.
 
 ## Execute next, in order
 
-1. Inspect the current commit and working tree. Preserve the three unrelated
-   user changes and do not stage them.
-2. Perform a read-only adversarial review of the exact current launcher commit. Verify
-   all reviewed caps, mesh/mission/reference hashes, full residual/log capture,
-   one-shot consumption, no-retry behavior, watchdog termination, and the
-   impossibility of ACCEPTED classification. Do not run CFD during the review.
-3. Return an explicit `GO_ONE_MEASUREMENT_CANARY` or `NO_GO`, with severity and
-   file/line evidence. Record the review under `reviews/`.
-4. If and only if GO, run the focused suite and `run-canary --dry-run` again.
-5. Execute the one-shot token exactly once, monitor it, retain all artifacts,
-   and do not retry under any outcome. Never touch the holdout.
-6. Postprocess and report the result as measurement-only. Do not authorize
-   C01/C02, broader campaigns, grid independence, or ACCEPTED.
-7. Update `LIVE_STATUS.md`, retain small evidence, and commit only governed
-   files. Never commit CGNS/restart/field artifacts; do not push without the
-   user's instruction.
+1. Inspect `git status`. Preserve these unrelated user changes if still
+   present:
+   - `AERIS_MESH_STUDY/04_strategy_studies/S7_unstructured_gmsh_su2/campaign.py`
+   - `configs/aero/section_study/stage1_reference_subset.json`
+   - `configs/aero/section_study/stage1_summary_subset.txt`
+2. Independently recompute the hashes of every retained canary artifact and
+   compare them with the immutable execution and postmortem records.
+3. Independently parse all 16 expanded monitor rows and audit the watchdog
+   samples. Report any mismatch with exact file/line evidence. Do not run CFD.
+4. Perform a read-only Windows/WSL resource audit: physical RAM, WSL cap, swap,
+   current headroom, and whether raising the WSL cap is safe for the Windows
+   host.
+5. Review ADflow/PETSc memory controls against the exact solver version and
+   current options. Separate evidence-backed reductions from speculation. Do
+   not change the governed solver policy during the audit.
+6. Replace the old 9.35 GiB anchor with a proposed conservative model based on
+   the observed 9.864723 GiB drop plus explicit safety headroom.
+7. Write a short resource recommendation with alternatives:
+   - add/allocate more physical RAM;
+   - reduce solver memory while retaining the same mesh and scientific
+     contract;
+   - or declare this host unsuitable for C03 and defer.
+8. Update `LIVE_STATUS.md` and this handoff with findings. Commit only small,
+   governed evidence/code; never commit CGNS, restart, surface/volume field, or
+   other large artifacts.
+9. Stop before any CFD. A future solve requires a new immutable one-shot policy,
+   fresh independent review, demonstrated memory headroom, and explicit user
+   authorization.
 
-## Claude review order
+## Review questions
 
-Perform a read-only Opus/max adversarial review of the exact current launcher
-commit and the bound M2 GO. Challenge identity, moment/reference and Reynolds
-semantics, native residual naming/normalization, immutable classification,
-complete artifact retention, one-shot durability, watchdog safety, and the
-honest boundary-flux gap. Record model, version, scope, commit, result, and
-findings under `reviews/`. Do not launch CFD in the review process.
+Return a severity-ranked, evidence-backed answer to:
+
+1. Did the watchdog stop occur exactly under policy, without OOM or swap-growth
+   ambiguity?
+2. Is the 9.864723 GiB available-memory drop a sound peak anchor, or do the raw
+   samples justify a higher value?
+3. How much total WSL-visible memory is required to preserve at least 2 GiB
+   headroom plus forecast uncertainty?
+4. Which exact ADflow/PETSc options can reduce peak memory without changing the
+   turbulence model, mesh, flow point, convergence semantics, or one-rank
+   identity?
+5. Is the Windows host physically capable of a safe larger WSL allocation?
+
+Do not turn a resource audit into a scientific GO. No prior review authorizes a
+second launch.
 
 ## Continuation behavior
 
-Continue this order through the sole measurement result or a governed NO-GO.
-If the Codex session ends, start here and work independently within these
-constraints; never consume the token twice.
+If Codex runs out of credits, continue the ordered read-only audit above and
+leave both status files current. Do not wait for Codex if useful read-only
+evidence work remains. Stop at the authorization boundary: no CFD, no holdout,
+no policy mutation, and no destructive cleanup.

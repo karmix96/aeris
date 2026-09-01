@@ -1,232 +1,150 @@
 # S6 qualification live status
 
-Updated: 2026-09-01
+Updated: 2026-09-01T07:17:48+03:00
 
-## Current state
+## Executive state
 
-- M-1 host/WSL/storage qualification: **verified**.
-- WSL Ubuntu: relocated to `D:\WSL\Ubuntu`; effective memory 12.66 GiB;
-  swap 8 GiB; 12 logical CPUs.
-- Direct-I/O baseline on relocated HDD: 60.5 MB/s write, 73.0 MB/s read.
-- Recovery VHD: independently SHA-256 verified and retained.
-- M0/M1 baseline contracts are committed (`752852c`). Geometry identity,
-  moment-reference, immutable classification, mission authority, and frozen
-  design-space remain machine-green; the later strict boundary-flux audit is
-  CONDITIONAL as documented below.
-- Geometry semantic audit: **PASS**; 20 live variables match 20 frozen
-  variables with no bound differences.
-- Half-domain, schema, policy, execution-state, mission, moment-reference,
-  geometry-freeze, and holdout-lock audits: **PASS**. CFD capture is green;
-  acceptance conservation remains **CONDITIONAL** pending boundary flux.
-- Holdout `round_c_lhs10_seed42`: **locked and untouched**; contents were not
-  read, parsed, copied, visualized, or hashed.
-- Early Claude review requests timed out with zero model tokens; those failure
-  records remain under `reviews/`. A later review completed and issued the
-  tightly bounded GO described below.
-- M2 direct-march candidate family: **terminal NO-GO for that route**. The coupled
-  `17x43x61 -> 23x57x73 -> 29x75x97` refinement and resource screens pass, but
-  independently reopened written ADF-CGNS meshes contain inverted cells.
-- This does **not** invalidate proven S6: its successful production path reuses
-  a valid S1/Openblademesh volume and applies bounded deformation to the exact
-  S6 wall. The failed experiment remarched the exact wall directly.
-- Best controlled C03 result: six inverted cells, minimum signed volume
-  `-3.670179816350609e-12`, and `qmin=-0.3114098210`.
-- Proven-route recovery: **C02 production family PASS**. Geometry A C01 and
-  C02 and independent B/C/E C02 deformations all reopen with zero inverted
-  cells and minimum scaled quality in `[0.1545, 0.1754]`. Evidence is in
-  `reports/m2_proven_route_family_20260830.json`.
-- Missing C01 screens are now complete: B and E pass the 0.10 production
-  floor; C has zero inversions but `qmin=0.0840`, below that floor.
-- C03 finest diagnostic: **NO-GO** for this bounded map (4 inverted cells in
-  the tip-cap block, `qmin=-0.2468`). It is retained as a diagnostic and does
-  not invalidate the passing C02 production family.
-- The governed C01 ladder value is now `s0_fraction=5.0e-6`; its A/B/C/E
-  probe passed with zero inversions and `qmin >= 0.1091`. C03 is governed at
-  `6.1e-6` using the repaired tip-cap template. Independent review remains
-  required before CFD (`reports/m2_c01_ladder_probe_20260830.json`).
-- Independent review of that policy (`ab5e83e`, `8ffa83f`) is now on record:
-  `reviews/claude_m2_spacing_policy_review_20260830.json`. The probe itself
-  reproduces exactly - A/B/C/E at `5.0e-6` give zero inversions and
-  `qmin` 0.1091..0.1497, every recorded hash matches - and the repaired C03
-  mesh for geometry A reproduces at `qmin=+0.1267` with an exact wall. The
-  review is **not** a GO: it returns two HIGH findings.
-- **R1 (HIGH)**: the non-monotone fraction policy does *not* produce physically
-  ordered wall spacing. On the five OML blocks the realized first-cell median
-  is C01 `6.47e-6..7.29e-6` m, C02 `6.38e-6..8.04e-6` m, C03
-  `8.37e-6..1.08e-5` m, so C03 is 1.3-1.5x **coarser** at the aerodynamic wall
-  than C01, not finer. The whole-mesh percentile that suggested otherwise is
-  dominated by the tip-cap blocks, where realized spacing is 24-48x the nominal
-  `s0`. The characteristic length is identical at every level, so nominal
-  spacing is strictly C02 `6.177e-6` < C01 `6.571e-6` < C03 `8.016e-6` m.
-- **R2 (HIGH)**: `resolution.py` and `src/aeris/cfd/meshing/pyhyp_options.py`
-  `GRID_LEVELS` now disagree (`c01` 5.0e-6 vs 6.1e-6, `c03` 6.1e-6 vs 3.6e-6,
-  `production` 3.6e-6 vs 4.4e-6). `build_pyhyp_options` falls back to
-  `GRID_LEVELS` whenever a caller omits `s0_fraction_override`, which
-  `march_s1.prepare` does, so an S1-entry march silently uses `3.6e-6` at C03 -
-  the configuration proven to fold.
-- **R3 (MEDIUM)**: repaired C03 is screened on geometry A only; B/C/E have not
-  been marched or deformed at C03.
-- Adding normal layers is not an alternative C03 repair: at `3.6e-6` on the C03
-  surface the fold deepens monotonically (N=73 `-0.2192`, N=97 `-0.2448`,
-  N=129 `-0.3350` with 7 inversions, N=257 `-0.5290` with 15). The
-  production-configuration recovery mesh marches the same geometry at `3.6e-6`
-  with 257 layers cleanly (`qmin=0.2383`), so the ceiling belongs to the C03
-  candidate cap surface, not to the fraction itself.
-- C02 family evidence: **independently reproduced**. All six recorded
-  `output_sha256` values match the on-disk artifacts, and an independent ADF
-  reopen plus repository volume QC reproduces every inverted-cell count,
-  `min_scaled_quality`, and exact-wall error.
-- C03 tip-cap failure is **attributed to the S1 template march, not to the
-  deformation**. The C03 template volume itself fails the hard gate before any
-  deformation (4 inverted cells, `qmin=-0.2448`, 20 negative scaled-Jacobian
-  cells in `domain.00012` / surface block `tip_base`, wall layers k=4..14 at
-  one corner). The bounded deformation moves that block minimum by 0.002
-  (`-0.2448 -> -0.2469`) and creates no new inversion; the C01 and C02
-  templates are clean.
-- C03 is repaired without coarsening the wall: the tip-cap collar ladder is
-  re-specified from `5/7/9` to `5/6/7`, while the wall-spacing ladder is
-  `5.0e-6/4.7e-6/3.6e-6`. The resulting cell counts are
-  `191,520/422,352/943,104`, with effective ratios `1.3016/1.3071`.
-- The redesigned family passes A/B/C/E at every level after written-CGNS
-  reopen: zero inversions and `qmin >= 0.1091`. C/C03 uses the governed
-  target-specific S1 template fallback with the same global settings.
-- `screen-grid-family` is now **CONDITIONAL** with every mesh and resource
-  check green. The old direct-march NO-GO remains retained as historical route
-  evidence and no longer vetoes the proven route.
-- The conservative flat-plate y+ preflight used full first-cell height:
-  estimated C03 all-wall p95 is `1.68-2.17` and maximum `9.98-14.59`. It is not
-  measured acceptance evidence; the bounded GO below permits one canary.
-- Two Claude Opus review attempts for `a92bf10` timed out with zero tokens; an
-  interactive Opus/max review of `dbf918f` also stalled without a result. A
-  completed independent Claude Code review of `dbf918f` is now on record:
-  `reviews/claude_m2_coupled_family_review_20260831.json`.
-- That review **closes R1, R2 and R3** against independently reproduced
-  evidence. All twelve claimed family meshes reopen with zero inversions,
-  every `output_sha256` and `target_surface_sha256` matches on disk, every
-  `qmin` matches to full precision, walls are exact to `<= 3.5e-18` m, and all
-  interfaces stay conformal at 20 pairs with `<= 3.6e-15` m mismatch. Realized
-  OML first-cell medians now order C01 `6.47-7.29e-6` > C02 `6.37-7.83e-6` >
-  C03 `4.90-6.20e-6` m for geometry A, with the same ordering for B/C/E, and
-  the tip cap orders `3.13e-4 > 2.22e-4 > 1.55e-4` m.
-- The review issues an explicit **GO for exactly one measurement-only A/C03
-  canary**, bound to
-  `m2_coupled_family_20260831/candidate_c03/lhs100_seed42_083/wing_vol_deformed.cgns`
-  (`sha256 be2805ff...`, 943,104 cells, `qmin=0.1671`). Conditions: the result
-  may not be classified ACCEPTED until a numeric y+ limit and its wall-distance
-  convention enter the immutable policy; the y+ convention must be stated when
-  reporting; the run needs a memory watchdog; one run only; and wiring
-  `run-canary` is itself a governed change that must keep the other heavy
-  commands blocked.
-- The y+ preflight reproduces exactly from the meshes, but it uses the **full
-  first-cell height**. ADflow reports y+ at the first cell centroid, which
-  halves every published number: A/C03 then reads OML p95 `0.74`, p99 `1.82`,
-  with about 3 percent of OML wall nodes above `y+ = 1` and the large tail on
-  the tip cap. Its limits `{p95 1.0, p99 2.0, max 5.0}` are in no governed
-  policy file, and its generator is not in the repository.
-- Residual non-blocking findings: C01 to C02 is not a wall-normal refinement
-  step (6 percent nominal, slightly reversed in the realized upper OML
-  median), C/C03 needs a geometry-specific template (the A-template route
-  lands at `qmin=0.0886`), the y+ preflight is unreproducible and ungoverned,
-  two `grid_screen` gate defaults are permissive, and the memory forecast
-  `9.35 x cells / finest_cells` cannot fail on the finest level.
-- Focused verification: **76 passed** across S6 atlas, qualification
-  orchestrator, ADflow contract, and SU2 contract tests.
-- Repository-wide pytest: collection is environment-blocked by absent optional
-  project packages (first root cause: `aerosandbox`; 102 collection errors),
-  not by a failing governed S6 test.
-- The one-shot launcher is now implemented but **has not launched CFD**. Its
-  immutable policy binds the reviewed A/C03 mesh, geometry A/index 83,
-  high-load mission point, one MPI rank, one launch maximum, no retry, no
-  ACCEPTED verdict, and no holdout access. Every other heavy command remains
-  blocked.
-- `convergence_v2.yaml` now governs measured ADflow cell-centroid y+ at both
-  global and per-wall-zone scope (`p95 <= 1`, `p99 <= 2`, `max <= 5`). The
-  runner retains native density, all three momentum, energy, and SA residual
-  histories plus CL/CD/CMy/CDp/CDv histories.
-- All CFD logs and measurement evidence are retained: combined solver output,
-  native convergence history, resolved options and provenance, case, static
-  runner, solve report, GNU-time report, watchdog timeline, surface solution,
-  and immutable launch/execution records. Volume output alone stays disabled
-  to preserve the independently reviewed memory envelope.
-- The acceptance audit is deliberately **CONDITIONAL**: the existing
-  continuity-residual ratio is not the required signed net/gross boundary mass
-  flux. It is retained as a diagnostic but cannot satisfy conservation or
-  yield ACCEPTED. This does not block the expressly measurement-only canary.
-- The latest focused suite is **76 passed**. The zero-launch preflight passes
-  43 identity/governance and 19 solver-environment checks; forecast is 9.35 GiB
-  against about 11.70 GiB available, leaving about 0.35 GiB above the mandatory
-  2 GiB headroom.
-- Launcher commit `e660899` was retained, but its post-commit readiness audit
-  caught a legacy `/home/mike/...` mach-aero default that does not exist on
-  this WSL host. No CFD process started and the authorization remains
-  unconsumed. Immutable canary policy v1 is preserved; v2 supersedes it solely
-  to bind `/home/mike_kara/miniconda3/envs/mach-aero` and exact Python,
-  ADflow, OpenMPI, mpi4py, NumPy, source, shared-library, and binary hashes.
-- The v2 dry-run passes all static environment/import checks. A real one-rank
-  non-CFD MPI readiness probe also passes outside the sandbox with
-  `AERIS_MPI_READY 0 1`; the launcher must repeat that probe before consuming
-  authorization. Exact prepare-only coverage verifies RANS/SA, histories,
-  fields, one rank, Reynolds length, and moment references without CFD.
-- A post-commit audit also caught two result-path defects before launch. The
-  residual evaluator iterated policy metadata as residual rows, and the
-  surface checker assumed HDF5 even though this ADflow/CGNS build writes ADF.
-  Both are corrected. A real binary ADF fixture now proves Cp/Cf/y+ extraction,
-  including exact `wall`-family selection, farfield exclusion, and removal of
-  CGNS rind/ghost planes before physical-wall statistics; the launch preflight
-  independently opens the exact ADF mesh through the installed CGNS library
-  and records its path and SHA-256.
-- Two read-only Claude reviews of the launcher/environment follow-up timed out
-  without a verdict or workspace changes. The prior scientific GO in
-  `5f17ceb` remains the binding authorization; one shorter exact-commit wiring
-  review will be attempted before launch.
+- No CFD process is running.
+- The only authorized A/C03 measurement canary was launched exactly once and
+  ended as **`RESOURCE_BLOCKED_HOST`**. This is a host-memory outcome, not a
+  mesh verdict.
+- The one-shot authorization is permanently consumed. **Do not retry it**, do
+  not reuse its execute token, and do not launch C01, C02, a holdout case, or a
+  campaign under that authorization.
+- The result is measurement-only and not accepted. It did not converge and did
+  not reach surface-output finalization, so measured y+ is unavailable.
+- The development-set/holdout separation remains intact. Holdout
+  `round_c_lhs10_seed42` is locked and its contents remain untouched.
+- WSL/storage qualification remains verified: Ubuntu is registered at
+  `D:\WSL\Ubuntu`, with a 13 GB WSL cap (12.66 GiB visible), 8 GiB swap,
+  12 logical CPUs, and a verified recovery VHD.
 
-## Local commits
+## Exact canary outcome
 
-- `56fd14a` — desktop WSL resource qualification
-- `cc9522e` — governed S6 qualification scaffold
-- `7fe707b` — expose M1 contract gates
-- `b281936` — parser-based geometry semantic audit
-- `bd39f9f` — unresolved mission-authority documentation
-- `5670b46` — half-domain eligibility gate
-- `031db63` — versioned execution and verdict schemas
-- `f7c7cb2` — versioned classification threshold policy
-- `a79c1eb` — immutable execution terminal-state validator
-- `752852c` — complete M1 scientific and classification contracts
-- `e660899` — governed one-shot A/C03 measurement canary
-- `5dd98fb` — relocated solver-environment binding
+- Execution ID: `m2_a_c03_measurement_20260831_001`.
+- Bound code: `e4829b0f327e2a6dd199d8c87d84217c36a8ccda`.
+- Bound mesh:
+  `m2_coupled_family_20260831/candidate_c03/lhs100_seed42_083/wing_vol_deformed.cgns`.
+- Mesh SHA-256:
+  `be2805ff85b6b1043863d7678d1551a52b6e8a65b299534d4ec0aaeffa51aeb4`.
+- Mesh size/quality: 943,104 cells, zero inversions, independently reproduced
+  `qmin=0.1671`.
+- Solver: ADflow 2.13.1, RANS/SA, one MPI rank, geometry A, development index
+  83, alpha 8 degrees, Mach 0.0837, Reynolds 1,530,708.1886, temperature
+  278.4 K.
+- Preflight passed all 43 identity/governance checks, all 19 solver-environment
+  checks, the real one-rank non-CFD MPI probe, and the prelaunch resource gate.
+- Authorization was consumed at `2026-08-31T22:11:16.533348Z`, before process
+  start, as required.
+- The watchdog terminated the process after 339.6016 s when available memory
+  fell to 1.964928 GiB, below the governed 2.0 GiB floor.
+- Forecast peak use was 9.35 GiB. The observed available-memory drop was
+  9.864723 GiB, so the forecast underpredicted this run by 0.514723 GiB.
+- There was no kernel OOM event and no material swap growth. The watchdog
+  performed its intended controlled stop; blind retry is forbidden.
+- ADflow completed monitor iteration 15 (16 rows including iteration 0) before
+  termination. It had not converged and did not write the requested surface
+  solution.
 
-## Terminal evidence
+## Diagnostic solver history
 
-- `reports/m2_grid_screen_terminal_report.json`
-- `reports/m2_grid_screen_terminal_report.md`
-- `reports/screen_grid_family.json`
-- `reports/s6_recovery_deformation_20260830.json`
-- `reports/m2_proven_route_family_20260830.json`
-- `reports/m2_c03_tipcap_diagnosis_20260830.json`
-- `reports/m2_coupled_family_respec_20260831.json`
-- `reports/m2_wall_spacing_yplus_preflight_20260831.json`
-- `reviews/claude_m2_spacing_policy_review_20260830.json`
+The raw native log retains every completed expanded monitor row: density,
+x/y/z momentum, energy and SA residuals plus CL, CD, CDp, CDv and CMy.
+
+- Density residual: `396.30185 -> 0.0636363` (3.794 orders).
+- Energy residual: `1388.99984 -> 0.248184` (3.748 orders).
+- Total residual: `1.409082e6 -> 2361.3372` (2.776 orders).
+- Final completed-row forces were CL `0.418634`, CD `0.0811233`, CDp
+  `0.0598966`, CDv `0.0212267`, CMy `0.0242157`.
+- These values are transient diagnostics only. They are not converged
+  aerodynamic results and must not be used for acceptance or design ranking.
+
+The parser was corrected after the run to recognize both legacy and expanded
+ADflow monitor layouts without positional shifts. The structured postmortem
+re-parses the immutable raw log and records all 16 rows. This post-run parser
+change does not alter the code identity or outcome of the launched solve.
+
+## Retained evidence
+
+Immutable/governed records:
+
+- `reports/m2_a_c03_canary_authorization_consumed_20260831.json`
+- `reports/m2_a_c03_canary_execution_20260831.json`
+- `reports/m2_a_c03_resource_blocked_postmortem_20260901.json`
+- `reports/run_canary.json`
 - `reviews/claude_m2_coupled_family_review_20260831.json`
-- `studies/grid/m2_20260830/` (local run records; large CGNS files remain
-  ignored and must not be committed)
+
+Complete small run artifacts are retained under:
+
+`studies/canary/m2_a_c03_measurement_20260831_001/`
+
+- `launch_record.json`
+- `adflow_case.json`
+- `adflow_options.json`
+- `adflow_effective_options.json`
+- `run_adflow.py`
+- `adflow_run.log`
+- `resource_watchdog.jsonl`
+- `solve_report.json`
+- `time_verbose.txt`
+
+No surface CGNS, restart, volume field, or other large solver artifact exists:
+the controlled stop occurred before final output. The execution record hashes
+the raw solver log, watchdog timeline, solve report, and GNU-time file.
+
+## Mesh-family state
+
+- The original exact-wall direct-march route remains historical NO-GO because
+  reopened meshes contained inverted cells.
+- The proven S6 route remains valid: march a clean S1/Openblademesh volume,
+  then apply bounded deformation to the exact S6 wall.
+- The redesigned coupled family uses collar counts `5/6/7`, wall-spacing
+  fractions `5.0e-6/4.7e-6/3.6e-6`, and
+  `191,520/422,352/943,104` cells.
+- A/B/C/E reopen cleanly at all three levels with zero inversions and
+  `qmin >= 0.1091`; C/C03 uses its governed geometry-specific template.
+- Independent review `5f17ceb` closed R1-R3 and authorized only the consumed
+  A/C03 measurement canary.
+- C01 to C02 is not a strong wall-normal refinement step, so a three-level
+  Richardson/grid-independence claim is still not authorized. Grid independence
+  requires converged, comparable solutions and a separately governed ladder.
+- The resource-stopped A/C03 solve neither validates nor invalidates the mesh
+  aerodynamically. C02 remains the screened production mesh family; no C02 CFD
+  has been authorized here.
+
+## Verification
+
+- Focused post-run verification: **77 passed** across the S6 atlas,
+  qualification orchestrator, and ADflow adapter suites.
+- Ruff and `git diff --check`: pass.
+- The consumed-state regression test now requires `run-canary --dry-run` to
+  return BLOCKED with no process launch and preserves the terminal run summary.
+- Repository-wide pytest remains collection-blocked by absent optional project
+  packages (first root cause previously observed: `aerosandbox`), not by the
+  governed focused suite.
 
 ## Next authorized work
 
-Commit the residual and ADF-result-reader fixes, then make one short read-only
-Claude review of that exact commit. If the governed checks remain green, launch
-exactly one one-rank A/C03 measurement canary under the watchdog, retain every
-log, and report measurement-only. Do not launch C01/C02 or classify ACCEPTED.
+Continue with read-only resource diagnosis only:
 
-## Resume commands
+1. Reproduce all evidence hashes and the 16-row postmortem from the raw log.
+2. Measure Windows physical memory, current WSL limits, swap and available
+   headroom.
+3. Audit ADflow/PETSc memory-reduction choices and improve the forecast using
+   this measured 9.864723 GiB drop.
+4. Produce a resource plan that distinguishes a host-RAM increase from a
+   solver-memory reduction.
+
+Before any additional CFD, require a new immutable one-shot policy, a fresh
+independent review, demonstrated headroom, and explicit user authorization.
+Never infer permission to retry from the previous GO.
+
+## Safe resume commands
 
 ```bash
 cd /home/mike_kara/aeris
-.venv/bin/pytest -q AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/test_s6.py AERIS_MESH_STUDY/05_s6_cfd_qualification/tests tests/cfd/test_adflow_adapter.py tests/cfd/test_su2_adapter.py
-.venv/bin/python AERIS_MESH_STUDY/05_s6_cfd_qualification/run.py audit-contract
-.venv/bin/python AERIS_MESH_STUDY/05_s6_cfd_qualification/run.py audit-geometry-space
-.venv/bin/python AERIS_MESH_STUDY/05_s6_cfd_qualification/run.py check-half-domain
-.venv/bin/python AERIS_MESH_STUDY/05_s6_cfd_qualification/run.py check-holdout-lock
-.venv/bin/python AERIS_MESH_STUDY/05_s6_cfd_qualification/run.py audit-cfd-contract
-.venv/bin/python AERIS_MESH_STUDY/05_s6_cfd_qualification/run.py screen-grid-family
-.venv/bin/python AERIS_MESH_STUDY/05_s6_cfd_qualification/run.py run-canary --dry-run
+.venv/bin/python -m pytest -q tests/cfd/test_adflow_adapter.py AERIS_MESH_STUDY/05_s6_cfd_qualification/tests/test_orchestrator.py AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/test_s6.py
+git status --short
 ```
+
+There is deliberately no CFD execute command or reusable token in this file.

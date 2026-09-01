@@ -1,0 +1,27 @@
+{
+  "alpha": 8.0,
+  "area_ref": 0.394918242017589,
+  "chord_ref": 0.494600003662239,
+  "eval_funcs": [
+    "cl",
+    "cd",
+    "cmy",
+    "cdp",
+    "cdv"
+  ],
+  "mach": 0.0837,
+  "moment_reference": [
+    0.4,
+    0.0,
+    0.0
+  ],
+  "name": "aeris_cfd",
+  "reynolds": 1530708.188575197,
+  "reynolds_length_ref": 0.9,
+  "secondary_moment_reference": [
+    0.33306678536067347,
+    0.0,
+    0.011273822668934992
+  ],
+  "temperature": 278.4
+}

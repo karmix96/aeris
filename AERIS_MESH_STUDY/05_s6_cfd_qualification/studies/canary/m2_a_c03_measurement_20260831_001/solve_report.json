@@ -1,0 +1,56 @@
+{
+  "artifacts": {
+    "log": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260831_001/adflow_run.log"
+  },
+  "convergence": {
+    "final_resrho": 0.0636362633294688,
+    "initial_resrho": 396.30185060621,
+    "iterations": 16,
+    "orders_dropped": 3.794321430060598,
+    "resrho": [
+      396.30185060621,
+      130.6843499115963,
+      29.918873976924914,
+      3.2284419503049904,
+      2.454791967376431,
+      1.9281922579983035,
+      1.1596750190856493,
+      0.6976679582214091,
+      0.4533017484777469,
+      0.24361414948914806,
+      0.16340485637189212,
+      0.1882070754237027,
+      0.101283550863807,
+      0.08501332831094953,
+      0.09070367919312135,
+      0.0636362633294688
+    ]
+  },
+  "elapsed_seconds": null,
+  "flow": {
+    "alpha": 8.0,
+    "mach": 0.0837,
+    "reynolds": 1530708.188575197,
+    "temperature": 278.4
+  },
+  "forces": {},
+  "refs": {
+    "area_ref": 0.394918242017589,
+    "chord_ref": 0.494600003662239,
+    "moment_reference": [
+      0.4,
+      0.0,
+      0.0
+    ],
+    "reynolds_length_ref": 0.9,
+    "secondary_moment_reference": [
+      0.33306678536067347,
+      0.0,
+      0.011273822668934992
+    ]
+  },
+  "schema": "aeris.cfd.solve_report.v1",
+  "solver_id": "adflow",
+  "solver_version": null,
+  "status": "failed"
+}

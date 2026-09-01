@@ -1,0 +1,477 @@
+{
+  "accepted_classification_allowed": false,
+  "artifacts": {
+    "adflow_run": {
+      "exists": false,
+      "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260831_001/adflow_run.json",
+      "sha256": null,
+      "size_bytes": null
+    },
+    "hashes_only": true,
+    "solve_report": {
+      "exists": true,
+      "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260831_001/solve_report.json",
+      "sha256": "093d55a74395eeb951bfda386782cf07529c27ae436862ca06e25eac052d8e8a",
+      "size_bytes": 1330
+    },
+    "solver_log": {
+      "exists": true,
+      "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260831_001/adflow_run.log",
+      "sha256": "9c2442f571a7964088e3fdc2a44ffba1007f9970f771c68ca91cfefdb30f4c96",
+      "size_bytes": 18218
+    },
+    "surface_solution": null,
+    "time_verbose": {
+      "exists": true,
+      "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260831_001/time_verbose.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    "watchdog_samples": {
+      "exists": true,
+      "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260831_001/resource_watchdog.jsonl",
+      "sha256": "6023b14a9a957abb4cb67195d31e2b5cc36c506df4919918d0803589e05d24f6",
+      "size_bytes": 55500
+    }
+  },
+  "automatic_retry_allowed": false,
+  "classification_measurements": {
+    "accepted": false,
+    "conservation": {
+      "measured_definition": null,
+      "measured_value": null,
+      "note": "The current runner metric is retained but cannot substitute for the governed signed boundary-flux balance.",
+      "passed": false,
+      "required_definition": "signed_net_boundary_mass_flux_over_gross_boundary_mass_flux"
+    },
+    "force_tail": {
+      "coefficients": {},
+      "failure_reasons": [
+        "missing_convergence_history"
+      ],
+      "passed": false
+    },
+    "reason": "The independent GO expressly forbids an ACCEPTED verdict for this one-shot canary.",
+    "residuals": {
+      "checks": {
+        "density": false,
+        "energy": false,
+        "momentum": false,
+        "sa": false
+      },
+      "component_monitor_values": {},
+      "definition": null,
+      "passed": false,
+      "values": {}
+    },
+    "surface_fields": {
+      "failure_reasons": [
+        "missing_surface_solution"
+      ],
+      "passed": false
+    },
+    "verdict": "MEASUREMENT_ONLY_NOT_ACCEPTED",
+    "y_plus": {
+      "candidate_count": 0,
+      "failure_reasons": [
+        "missing_surface_solution"
+      ],
+      "passed": false,
+      "wall_distance_convention": "ADflow YPlus sampled at the first off-wall cell centroid; values are not rescaled to the full first-cell height."
+    }
+  },
+  "convergence": {
+    "mass_imbalance_definition": null,
+    "mass_imbalance_normalized": null,
+    "residual_components_definition": null,
+    "residual_components_final": {}
+  },
+  "created_at": "2026-08-31T22:16:29.166172+00:00",
+  "execution_id": "m2_a_c03_measurement_20260831_001",
+  "holdout_accessed": false,
+  "inputs": {
+    "classification_policy_sha256": "9f46e65fdd5f8870ba42c5b874b0be24988e28664fb237f82a75b10879d35d57",
+    "flow": {
+      "alpha_deg": 8.0,
+      "authority_path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/mission_authority_v1.yaml",
+      "authority_sha256": "13a3379dcc9d2a1c626e17e703e3249b6c59a6d3b8f4f1b6068caf22da280c9b",
+      "condition": "high_load_case",
+      "density_kg_m3": 1.0580517702823453,
+      "dynamic_viscosity_Pa_s": 1.7418672487754365e-05,
+      "mach": 0.0837,
+      "reynolds": 1530708.188575197,
+      "reynolds_length_m": 0.9,
+      "speed_mps": 28.0,
+      "temperature_K": 278.4
+    },
+    "geometry_sha256": "dd35106445ddbab88dbd79fe64c09c53d4a63622a7d0cd8deaca7cd28b0f3a19",
+    "git_head": "e4829b0f327e2a6dd199d8c87d84217c36a8ccda",
+    "mesh_identity": "be2805ff85b6b1043863d7678d1551a52b6e8a65b299534d4ec0aaeffa51aeb4",
+    "mesh_sha256": "be2805ff85b6b1043863d7678d1551a52b6e8a65b299534d4ec0aaeffa51aeb4",
+    "policy_sha256": "893acc3dadd90a1b72bbc8cfbdb8c4f1c806438f06a6c16e98c797cbaa5d0480",
+    "references": {
+      "authority_path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/moment_reference_v1.yaml",
+      "authority_sha256": "02780694efd968b7c85e205fdfc1771ca2e43950cd0a71ad428c64a1183e50c5",
+      "chord_ref_m": 0.494600003662239,
+      "evidence_path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_reference_contract_20260831.json",
+      "evidence_sha256": "a20c3e9e5dfdcc642eaeecdae36cfb1ee68028e9e18e6b52d9909917e08a5192",
+      "force_multiplier": 1.0,
+      "full_area_m2": 0.789836484035178,
+      "full_span_m": 1.95678951038572,
+      "interpretation": "half-domain forces divided by half-area give full-aircraft symmetric coefficients",
+      "primary_moment_reference_name": "mission_cg",
+      "primary_moment_reference_xyz_m": [
+        0.4,
+        0.0,
+        0.0
+      ],
+      "secondary_moment_reference_name": "geometry_quarter_mac",
+      "secondary_moment_reference_xyz_m": [
+        0.33306678536067347,
+        0.0,
+        0.011273822668934992
+      ],
+      "solver_half_area_m2": 0.394918242017589
+    },
+    "solver": {
+      "environment": {
+        "adflow_init": "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/adflow/__init__.py",
+        "adflow_init_sha256": "450b0038aebad14692b69435c2669519ddf72640a91ff27e2e219e1ae5f8a3b1",
+        "adflow_library": "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/adflow/libadflow.so",
+        "adflow_library_sha256": "4f67c840276177be12f9fcfac3753da308d330f28550f3dd46a2e95a2d36ee1f",
+        "adflow_python_source": "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/adflow/pyADflow.py",
+        "adflow_python_source_sha256": "2a080ffeb022939a011a4a52b21cb498c9f6626d4ea8f944cb23a805de73d27b",
+        "adflow_version": "2.13.1",
+        "baseclasses_version": "1.9.0",
+        "mpi4py_version": "4.1.2",
+        "mpirun": "/home/mike_kara/miniconda3/envs/mach-aero/bin/mpirun",
+        "mpirun_realpath": "/home/mike_kara/packages/openmpi-5.0.10/opt-gfortran/bin/mpirun",
+        "mpirun_sha256": "039c4057503a6e18675692f5eff375b22ae1d97dc5cc106cbb8fc34113e4e357",
+        "numpy_version": "2.4.6",
+        "openmpi_version": "5.0.10",
+        "prefix": "/home/mike_kara/miniconda3/envs/mach-aero",
+        "prelaunch_non_cfd_mpi_probe_required": true,
+        "python": "/home/mike_kara/miniconda3/envs/mach-aero/bin/python",
+        "python_realpath": "/home/mike_kara/miniconda3/envs/mach-aero/bin/python3.11",
+        "python_sha256": "350c07c53ed101c90c8ca7914668740533064bd7a3df4e013e32943e6e9e6d98",
+        "python_version": "3.11.15"
+      },
+      "equations": "RANS",
+      "monitor_variables": [
+        "resrho",
+        "resmom",
+        "resrhoe",
+        "resturb",
+        "cl",
+        "cd",
+        "cmy",
+        "cdp",
+        "cdv"
+      ],
+      "mpi_processes": 1,
+      "name": "adflow",
+      "nk_subspace_size": 20,
+      "preset": "rans_ank_nk_v1",
+      "preset_path": "src/aeris/cfd/presets/data/adflow_rans_ank_nk_v1.yaml",
+      "preset_sha256": "87816b5a91f6f25b41f983f8384b21d0be5136a38279e71bdfe1bedf3cd2884e",
+      "retain_surface_solution": true,
+      "store_convergence_history": true,
+      "surface_variables": [
+        "cp",
+        "cf",
+        "yplus",
+        "vx",
+        "vy",
+        "vz"
+      ],
+      "turbulence_model": "SA",
+      "write_surface_solution": true,
+      "write_volume_solution": false
+    },
+    "solver_source_sha256": {
+      "AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/cfd_qc.py": "f15ed51a2554681499a3f5d008cef3973b0ac2424473484f93f15931e05ba033",
+      "AERIS_MESH_STUDY/05_s6_cfd_qualification/canary.py": "718860db8aa20efb5f822012aed027af45dae0fcafe5aa8c77f8a497b8a48e47",
+      "src/aeris/cfd/case/spec.py": "b0d98b9d9c65e8fa8de7f369dbed6c17620f9f2d9767d4c4e560a00bb7dcaf31",
+      "src/aeris/cfd/env.py": "bc8d105b857a9c9b557c6334882e54f869fe283723d674b7b898b6f9324f6c79",
+      "src/aeris/cfd/presets/data/adflow_rans_ank_nk_v1.yaml": "87816b5a91f6f25b41f983f8384b21d0be5136a38279e71bdfe1bedf3cd2884e",
+      "src/aeris/cfd/solvers/adflow/adapter.py": "709b173c6ec2c2db9b39d0e4cbf5431819b5dc4801f441cf6ef99185c38fe6f9",
+      "src/aeris/cfd/solvers/adflow/options_schema.py": "ce8debcadfd1fe901bfe7f783ba9d837b9caa6f0eca19d5cf866a4bfc4a29919",
+      "src/aeris/cfd/solvers/adflow/parse.py": "1a4e5da0a1c0cc6d089fb4e1960a01638c8055ed68f6128854910b2d227e0315",
+      "src/aeris/cfd/solvers/base.py": "5699c4478542ba2578e3fd862b12a9ad7173a89da703f8fbe8553b42f6b02ccb"
+    }
+  },
+  "measurement_only": true,
+  "preflight": {
+    "created_at": "2026-08-31T22:11:15.155673+00:00",
+    "identity_checks": {
+      "accepted_verdict_forbidden": true,
+      "automatic_retry_forbidden": true,
+      "classification_policy_immutable": true,
+      "complete_log_retention": true,
+      "development_set_only": true,
+      "family_evidence_sha256": true,
+      "family_row_mesh": true,
+      "family_row_unique": true,
+      "family_row_valid": true,
+      "full_native_history_requested": true,
+      "half_area_contract": true,
+      "holdout_access_forbidden": true,
+      "immutable_v1_supersession_chain": true,
+      "measurement_only": true,
+      "mesh_sha256": true,
+      "mission_flow_values": true,
+      "mission_high_load_alpha": true,
+      "mission_reynolds": true,
+      "mission_sha256": true,
+      "moment_authority_sha256": true,
+      "moment_references_match_evidence": true,
+      "one_process_launch": true,
+      "policy_immutable": true,
+      "reference_area_matches": true,
+      "reference_chord_matches": true,
+      "reference_evidence_sha256": true,
+      "reference_geometry_identity": true,
+      "reference_source_manifest_sha256": true,
+      "reference_span_matches": true,
+      "review_bound_cells": true,
+      "review_bound_mesh": true,
+      "review_commit_blob_sha256": true,
+      "review_commit_is_ancestor": true,
+      "review_go": true,
+      "review_sha256": true,
+      "solver_history_and_output_controls": true,
+      "solver_preset_sha256": true,
+      "solver_scope_is_one_rank_rans_sa": true,
+      "surface_sha256": true,
+      "thermodynamic_reynolds_consistent": true,
+      "volume_output_matches_review": true,
+      "yplus_centroid_convention": true,
+      "yplus_global_and_regional": true,
+      "yplus_numeric_limits": true
+    },
+    "one_shot_checks": {
+      "attempt_directory_absent": true,
+      "authorization_not_consumed": true
+    },
+    "passed": true,
+    "policy": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/m2_a_c03_canary_v2.yaml",
+    "policy_sha256": "893acc3dadd90a1b72bbc8cfbdb8c4f1c806438f06a6c16e98c797cbaa5d0480",
+    "resource": {
+      "checks": {
+        "anchored_forecast_matches_policy": true,
+        "forecast_le_memory_fraction": true,
+        "forecast_plus_headroom_le_available": true,
+        "free_disk_pass": true,
+        "preexisting_swap_within_limit": true
+      },
+      "forecast_peak_gib": 9.35,
+      "free_disk_gib": 940.7161178588867,
+      "mem_available_gib": 11.816551208496094,
+      "passed": true,
+      "preexisting_swap_used_gib": 0.07905960083007812,
+      "prelaunch_margin_gib": 0.4665512084960941,
+      "snapshot": {
+        "created_at": "2026-08-31T22:11:15.155243+00:00",
+        "free_disk_bytes": 1010086240256,
+        "mem_available_bytes": 12687925248,
+        "mem_total_bytes": 13598601216,
+        "oom_kill_count": 0,
+        "process_group_rss_bytes": 0,
+        "swap_free_bytes": 8505044992,
+        "swap_total_bytes": 8589934592,
+        "swap_used_bytes": 84889600
+      },
+      "wsl_memory_limit_gib": 12.664684295654297
+    },
+    "schema": "aeris.s6.m2_canary_preflight.v1",
+    "solver_environment": {
+      "checks": {
+        "adf_surface_reader_ready": true,
+        "adflow_init_sha256": true,
+        "adflow_library_sha256": true,
+        "adflow_python_source_sha256": true,
+        "import_adflow_path": true,
+        "import_adflow_version": true,
+        "import_baseclasses_version": true,
+        "import_mpi4py_version": true,
+        "import_numpy_version": true,
+        "import_python_version": true,
+        "mpirun_exists_and_executable": true,
+        "mpirun_realpath": true,
+        "mpirun_sha256": true,
+        "one_rank_mpi_probe": true,
+        "openmpi_version": true,
+        "policy_requires_non_cfd_mpi_probe": true,
+        "prefix_exists": true,
+        "python_exists_and_executable": true,
+        "python_realpath": true,
+        "python_sha256": true
+      },
+      "governed": {
+        "adflow_init": "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/adflow/__init__.py",
+        "adflow_init_sha256": "450b0038aebad14692b69435c2669519ddf72640a91ff27e2e219e1ae5f8a3b1",
+        "adflow_library": "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/adflow/libadflow.so",
+        "adflow_library_sha256": "4f67c840276177be12f9fcfac3753da308d330f28550f3dd46a2e95a2d36ee1f",
+        "adflow_python_source": "/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/adflow/pyADflow.py",
+        "adflow_python_source_sha256": "2a080ffeb022939a011a4a52b21cb498c9f6626d4ea8f944cb23a805de73d27b",
+        "adflow_version": "2.13.1",
+        "baseclasses_version": "1.9.0",
+        "mpi4py_version": "4.1.2",
+        "mpirun": "/home/mike_kara/miniconda3/envs/mach-aero/bin/mpirun",
+        "mpirun_realpath": "/home/mike_kara/packages/openmpi-5.0.10/opt-gfortran/bin/mpirun",
+        "mpirun_sha256": "039c4057503a6e18675692f5eff375b22ae1d97dc5cc106cbb8fc34113e4e357",
+        "numpy_version": "2.4.6",
+        "openmpi_version": "5.0.10",
+        "prefix": "/home/mike_kara/miniconda3/envs/mach-aero",
+        "prelaunch_non_cfd_mpi_probe_required": true,
+        "python": "/home/mike_kara/miniconda3/envs/mach-aero/bin/python",
+        "python_realpath": "/home/mike_kara/miniconda3/envs/mach-aero/bin/python3.11",
+        "python_sha256": "350c07c53ed101c90c8ca7914668740533064bd7a3df4e013e32943e6e9e6d98",
+        "python_version": "3.11.15"
+      },
+      "import_probe": {
+        "returncode": 0,
+        "stderr": "",
+        "stdout": "{\"python_version\": \"3.11.15\", \"adflow_version\": \"2.13.1\", \"baseclasses_version\": \"1.9.0\", \"mpi4py_version\": \"4.1.2\", \"numpy_version\": \"2.4.6\", \"adflow_file\": \"/home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/adflow/__init__.py\"}"
+      },
+      "mpi_probe": {
+        "executed": true,
+        "kind": "non_cfd_readiness_probe",
+        "returncode": 0,
+        "stderr": "",
+        "stdout": "AERIS_MPI_READY 0 1"
+      },
+      "mpirun_version_probe": {
+        "returncode": 0,
+        "stderr": "",
+        "stdout": "mpirun (Open MPI) 5.0.10\n\nReport bugs to https://www.open-mpi.org/community/help/"
+      },
+      "passed": true,
+      "surface_reader_probe": {
+        "cgns_library": "/home/mike_kara/packages/CGNS-4.5.2/opt-gfortran/lib/libcgns.so.4.5",
+        "cgns_library_exists": true,
+        "cgns_library_sha256": "fb4b6d119fa0ad2b24498bac4a474b2276ef549cab76527e35f772d2b1513f69",
+        "file_backend": "ADF",
+        "probe_field_zone_count": 0,
+        "reader": "CGNS_MLL_via_ctypes",
+        "solution_layouts": {}
+      }
+    }
+  },
+  "prepared_artifacts": {
+    "case": {
+      "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260831_001/adflow_case.json",
+      "sha256": "f32116b7b26a0901b582c79b82090f4132a748978b5a6cef72333944f7ac13bb",
+      "size_bytes": 442
+    },
+    "effective_options": {
+      "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260831_001/adflow_effective_options.json",
+      "sha256": "c60ecf85e31c475121e188dcbfe2d449d41e6e25d07e66756b89db25012add32",
+      "size_bytes": 2976
+    },
+    "options": {
+      "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260831_001/adflow_options.json",
+      "sha256": "6a648554c6e0b3dabe980863b3991ebe7b0ef0183478e7eb111fb3449fa317c5",
+      "size_bytes": 939
+    },
+    "runner": {
+      "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260831_001/run_adflow.py",
+      "sha256": "1099235a9c7e32d2fc5d3db9b238d2276227e719623fec20f20aa30c9e61c196",
+      "size_bytes": 6201
+    }
+  },
+  "resource": {
+    "checks": {
+      "measured_peak_le_forecast": false,
+      "minimum_mem_available_ge_2_gib": false,
+      "no_kernel_oom_kill": true,
+      "swap_growth_within_limit": true,
+      "watchdog_not_triggered": false
+    },
+    "forecast_peak_gib": 9.35,
+    "measured_peak_bytes": 10592165888,
+    "measured_peak_gib": 9.864723205566406,
+    "passed": false,
+    "system_mem_available_drop_bytes": 10592165888,
+    "time_verbose": {
+      "fields": {},
+      "maximum_resident_set_kib": null,
+      "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260831_001/time_verbose.txt",
+      "present": true,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "watchdog_classification": "resource_outcome_not_mesh_verdict"
+  },
+  "runtime": {
+    "baseline": {
+      "created_at": "2026-08-31T22:11:16.669384+00:00",
+      "free_disk_bytes": 1010086203392,
+      "mem_available_bytes": 12701990912,
+      "mem_total_bytes": 13598601216,
+      "oom_kill_count": 0,
+      "process_group_rss_bytes": 0,
+      "swap_free_bytes": 8505044992,
+      "swap_total_bytes": 8589934592,
+      "swap_used_bytes": 84889600
+    },
+    "elapsed_seconds": 339.6016478099991,
+    "ended": {
+      "created_at": "2026-08-31T22:16:28.970456+00:00",
+      "free_disk_bytes": 1010068258816,
+      "mem_available_bytes": 3736326144,
+      "mem_total_bytes": 13598601216,
+      "oom_kill_count": 0,
+      "process_group_rss_bytes": 0,
+      "swap_free_bytes": 8505593856,
+      "swap_total_bytes": 8589934592,
+      "swap_used_bytes": 84340736
+    },
+    "ended_at": "2026-08-31T22:16:28.970616+00:00",
+    "launch_or_watchdog_error": null,
+    "maximum_sampled_process_group_rss_bytes": 10694656,
+    "maximum_swap_growth_bytes": 0,
+    "minimum_free_disk_bytes": 1010068258816,
+    "minimum_mem_available_bytes": 2109825024,
+    "process_launched": true,
+    "returncode": -15,
+    "sample_count": 163,
+    "started_at": "2026-08-31T22:11:16.669666+00:00",
+    "watchdog_stop_reason": "mem_available_below_watchdog_floor",
+    "watchdog_stopped": true
+  },
+  "schema": "aeris.s6.execution_result.v1",
+  "schema_version": 1,
+  "solver": {
+    "forces_at_geometry_quarter_mac": {},
+    "forces_at_mission_cg": {},
+    "normalized_solve_report_convergence": {
+      "final_resrho": 0.0636362633294688,
+      "initial_resrho": 396.30185060621,
+      "iterations": 16,
+      "orders_dropped": 3.794321430060598,
+      "resrho": [
+        396.30185060621,
+        130.6843499115963,
+        29.918873976924914,
+        3.2284419503049904,
+        2.454791967376431,
+        1.9281922579983035,
+        1.1596750190856493,
+        0.6976679582214091,
+        0.4533017484777469,
+        0.24361414948914806,
+        0.16340485637189212,
+        0.1882070754237027,
+        0.101283550863807,
+        0.08501332831094953,
+        0.09070367919312135,
+        0.0636362633294688
+      ]
+    },
+    "parse_error": null,
+    "returncode": -15,
+    "status": "failed"
+  },
+  "status": "RESOURCE_BLOCKED_HOST",
+  "terminal_state": "resource"
+}

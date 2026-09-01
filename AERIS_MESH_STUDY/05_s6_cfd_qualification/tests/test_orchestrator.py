@@ -22,19 +22,37 @@ def invoke(command, *extra):
     )
 
 
+def invoke_preserving_report(command, *extra):
+    report = ROOT / "reports" / f"{command.replace('-', '_')}.json"
+    existed = report.exists()
+    prior_report = report.read_bytes() if existed else None
+    try:
+        return invoke(command, *extra)
+    finally:
+        # CLI smoke tests must not obscure immutable terminal run evidence.
+        if existed:
+            report.write_bytes(prior_report)
+        elif report.exists():
+            report.unlink()
+
+
 def test_contract_dry_run():
     assert invoke("audit-contract", "--dry-run").returncode == 0
 
 
 def test_heavy_work_is_blocked():
-    assert invoke("run-canary").returncode != 0
-    assert invoke("run-tmr").returncode != 0
+    assert invoke_preserving_report("run-canary").returncode != 0
+    assert invoke_preserving_report("run-tmr").returncode != 0
 
 
-def test_canary_dry_run_is_exactly_scoped_and_launches_nothing():
-    out = invoke("run-canary", "--dry-run")
-    assert out.returncode == 0
+def test_consumed_canary_dry_run_is_permanently_blocked_and_launches_nothing():
+    out = invoke_preserving_report("run-canary", "--dry-run")
+
+    assert out.returncode == 3
+    assert '"status": "BLOCKED"' in out.stdout
     assert '"process_launched": false' in out.stdout
+    assert '"attempt_directory_absent": false' in out.stdout
+    assert '"authorization_not_consumed": false' in out.stdout
     assert "exactly one measurement-only A/C03 canary" in out.stdout
 
 

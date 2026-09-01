@@ -1,0 +1,118 @@
+{
+  "extra": {
+    "solver_preset": "rans_ank_nk_v1"
+  },
+  "generated_utc": "2026-08-31T22:11:15.797617+00:00",
+  "input_sha256": {
+    "volume_mesh": "be2805ff85b6b1043863d7678d1551a52b6e8a65b299534d4ec0aaeffa51aeb4"
+  },
+  "options": {
+    "ANKSwitchTol": {
+      "source": "preset:rans_ank_nk_v1",
+      "value": 1.0
+    },
+    "L2Convergence": {
+      "source": "preset:rans_ank_nk_v1",
+      "value": 1e-08
+    },
+    "MGCycle": {
+      "source": "preset:rans_ank_nk_v1",
+      "value": "sg"
+    },
+    "NKSubspaceSize": {
+      "source": "raw",
+      "value": 20
+    },
+    "NKSwitchTol": {
+      "source": "preset:rans_ank_nk_v1",
+      "value": 1e-06
+    },
+    "equationType": {
+      "source": "raw",
+      "value": "RANS"
+    },
+    "gridFile": {
+      "source": "derived",
+      "value": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03/lhs100_seed42_083/wing_vol_deformed.cgns"
+    },
+    "liftIndex": {
+      "source": "aeris-default",
+      "value": 3
+    },
+    "monitorVariables": {
+      "source": "raw",
+      "value": [
+        "resrho",
+        "resmom",
+        "resrhoe",
+        "resturb",
+        "cl",
+        "cd",
+        "cmy",
+        "cdp",
+        "cdv"
+      ]
+    },
+    "nCycles": {
+      "source": "preset:rans_ank_nk_v1",
+      "value": 20000
+    },
+    "outputDirectory": {
+      "source": "derived",
+      "value": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260831_001"
+    },
+    "storeConvHist": {
+      "source": "raw",
+      "value": true
+    },
+    "surfaceVariables": {
+      "source": "raw",
+      "value": [
+        "cp",
+        "cf",
+        "yplus",
+        "vx",
+        "vy",
+        "vz"
+      ]
+    },
+    "turbulenceModel": {
+      "source": "raw",
+      "value": "SA"
+    },
+    "useANKSolver": {
+      "source": "preset:rans_ank_nk_v1",
+      "value": true
+    },
+    "useNKSolver": {
+      "source": "preset:rans_ank_nk_v1",
+      "value": true
+    },
+    "writeSurfaceSolution": {
+      "source": "raw",
+      "value": true
+    },
+    "writeTecplotSurfaceSolution": {
+      "source": "aeris-default",
+      "value": false
+    },
+    "writeVolumeSolution": {
+      "source": "raw",
+      "value": false
+    }
+  },
+  "overridden_curated_keys": [
+    "equation_type",
+    "turbulence_model",
+    "monitor_variables",
+    "surface_variables"
+  ],
+  "schema": "aeris.cfd.effective_options.v1",
+  "tool": "adflow",
+  "warnings": [
+    "raw pass-through key 'equationType' overrides curated option 'equation_type' (validation bypassed)",
+    "raw pass-through key 'turbulenceModel' overrides curated option 'turbulence_model' (validation bypassed)",
+    "raw pass-through key 'monitorVariables' overrides curated option 'monitor_variables' (validation bypassed)",
+    "raw pass-through key 'surfaceVariables' overrides curated option 'surface_variables' (validation bypassed)"
+  ]
+}

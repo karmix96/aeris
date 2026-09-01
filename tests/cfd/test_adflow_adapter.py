@@ -12,7 +12,12 @@ from aeris.cfd.options.layers import OptionLayer
 from aeris.cfd.presets.registry import get_preset
 from aeris.cfd.solvers.adflow.adapter import AdflowAdapter
 from aeris.cfd.solvers.adflow.options_schema import build_adflow_options
-from aeris.cfd.solvers.adflow.parse import parse_monitor_history, resrho_from_line
+from aeris.cfd.solvers.adflow.parse import (
+    monitor_row_from_line,
+    parse_force_history,
+    parse_monitor_history,
+    resrho_from_line,
+)
 from aeris.cfd.solvers.base import get_solver_adapter
 
 GRID = Path("/tmp/mesh/wing_vol_smoke.cgns")
@@ -126,6 +131,15 @@ NK_MONITOR_LINE = (
     "      1     150       1480       NK     ----    1.00  0.540  "
     "1.602654E-04  1.503105E-09  -1.946696E-02  3.366330E-02  2.804432E-01"
 )
+EXPANDED_MONITOR_LINE = (
+    "1 15 66 ANK 1.04E+04 1.00 0.024 "
+    "6.3636263329468798E-02 2.3780352644818645E+00 "
+    "1.8572449175023992E-01 3.9636867517964725E-01 "
+    "2.4818396616999797E-01 1.1135145428648152E-07 "
+    "4.1863419234557991E-01 8.1123329765720689E-02 "
+    "5.9896632768439165E-02 2.1226696997281545E-02 "
+    "2.4215656028885577E-02 2.3613371918651546E+03"
+)
 
 
 def test_resrho_column_convention():
@@ -149,6 +163,31 @@ def test_parse_monitor_history_keeps_newton_rows():
     history = parse_monitor_history("\n".join([MONITOR_LINE, NK_MONITOR_LINE]))
     assert history["iterations"] == 2
     assert history["final_resrho"] == pytest.approx(1.602654e-04)
+
+
+def test_expanded_monitor_history_retains_all_native_components():
+    row = monitor_row_from_line(EXPANDED_MONITOR_LINE)
+    assert row is not None
+    assert row["layout"] == "expanded_components_v1"
+    assert row["residual_density"] == pytest.approx(6.3636263329468798e-02)
+    assert row["residual_momentum_x"] == pytest.approx(2.3780352644818645)
+    assert row["residual_momentum_y"] == pytest.approx(1.8572449175023992e-01)
+    assert row["residual_momentum_z"] == pytest.approx(3.9636867517964725e-01)
+    assert row["residual_energy"] == pytest.approx(2.4818396616999797e-01)
+    assert row["residual_sa"] == pytest.approx(1.1135145428648152e-07)
+    assert row["cl"] == pytest.approx(4.1863419234557991e-01)
+    assert row["cd"] == pytest.approx(8.1123329765720689e-02)
+    assert row["cd_pressure"] == pytest.approx(5.9896632768439165e-02)
+    assert row["cd_viscous"] == pytest.approx(2.1226696997281545e-02)
+    assert row["cmy"] == pytest.approx(2.4215656028885577e-02)
+    assert row["total_residual"] == pytest.approx(2.3613371918651546e03)
+    assert parse_force_history(EXPANDED_MONITOR_LINE) == [
+        {
+            "resrho": pytest.approx(6.3636263329468798e-02),
+            "cl": pytest.approx(4.1863419234557991e-01),
+            "cd": pytest.approx(8.1123329765720689e-02),
+        }
+    ]
 
 
 def test_parse_produces_normalized_solve_report(tmp_path: Path):

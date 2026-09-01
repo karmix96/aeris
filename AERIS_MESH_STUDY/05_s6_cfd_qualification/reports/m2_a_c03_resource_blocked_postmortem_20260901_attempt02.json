@@ -1,0 +1,96 @@
+{
+  "schema": "aeris.s6.m2_a_c03_resource_postmortem.v2",
+  "created_at": "2026-09-01T23:01:12+03:00",
+  "execution_id": "m2_a_c03_measurement_20260901_002",
+  "status": "RESOURCE_BLOCKED_HOST",
+  "terminal_state": "resource",
+  "accepted": false,
+  "automatic_retry_allowed": false,
+  "holdout_accessed": false,
+  "interpretation": "Host-memory outcome only; neither a mesh-quality failure nor a converged aerodynamic result.",
+  "identity": {
+    "git_head": "b31f135d3d3e9b4f83ebd3b578d7cc18fe1edd59",
+    "mesh_sha256": "be2805ff85b6b1043863d7678d1551a52b6e8a65b299534d4ec0aaeffa51aeb4",
+    "cells": 943104,
+    "policy_sha256": "fab78f59fc96f702e804ffa89a67b92b9fb4c219299ef624fb95e28438b42bfc",
+    "solver": "ADflow 2.13.1 RANS/SA",
+    "mpi_processes": 1,
+    "ank_subspace_size": 10,
+    "nk_subspace_size": 20,
+    "ank_pc_ilu_fill": 2,
+    "nk_pc_ilu_fill": 2
+  },
+  "immutable_records": {
+    "authorization_consumed": {
+      "path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_canary_authorization_consumed_20260901_attempt02.json",
+      "sha256": "dbfccb2bd633220f68fde4313e5dc2b3b743cc1f330dbb4507b4aa9b5cf60b40"
+    },
+    "execution": {
+      "path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_canary_execution_20260901_attempt02.json",
+      "sha256": "027a0d3316c3ff5475595a3567cce90d6e221d23e4cace0f4bf25d9bb455e60b"
+    }
+  },
+  "resource_measurement": {
+    "elapsed_seconds": 290.70777205099876,
+    "forecast_peak_gib": 9.25,
+    "maximum_process_session_rss_bytes": 10663727104,
+    "maximum_process_session_rss_gib": 9.93136978149414,
+    "minimum_mem_available_bytes": 2139316224,
+    "minimum_mem_available_gib": 1.9923943281173706,
+    "watchdog_floor_gib": 2.0,
+    "watchdog_stop_reason": "mem_available_below_watchdog_floor",
+    "returncode": -15,
+    "kernel_oom_kills": 0,
+    "maximum_swap_growth_bytes": 0,
+    "process_session_sampling_valid": true,
+    "forecast_passed": false,
+    "watchdog_passed": false
+  },
+  "native_monitor_history": {
+    "source_path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260901_002/solve_report.json",
+    "source_sha256": "a82c3355763cff1d53d9d03137a863f136cec39de6a67bf43e647676c867d173",
+    "row_count": 16,
+    "last_completed_nonlinear_iteration": 15,
+    "last_completed_total_linear_iteration": 66,
+    "reductions": {
+      "residual_density": {"initial": 396.30185060621, "final": 0.0636362633294688, "orders_reduced": 3.794321430060598},
+      "residual_momentum_x": {"initial": 135.84090529341756, "final": 2.3780352644818645, "orders_reduced": 1.7568122766142906},
+      "residual_momentum_y": {"initial": 1.0158582711240727, "final": 0.18572449175023992, "orders_reduced": 0.737963942435967},
+      "residual_momentum_z": {"initial": 20.623986052990638, "final": 0.39636867517964725, "orders_reduced": 1.7162732812256718},
+      "residual_energy": {"initial": 1388.9998363981317, "final": 0.24818396616999797, "orders_reduced": 3.7479284739442456},
+      "residual_sa": {"initial": 0.0006344296784255992, "final": 1.1135145428648152e-7, "orders_reduced": 3.755687597511954},
+      "total_residual": {"initial": 1409082.0471454472, "final": 2361.3371918651546, "orders_reduced": 2.775778274216453}
+    },
+    "last_transient_forces": {
+      "cl": 0.4186341923455799,
+      "cd": 0.08112332976572069,
+      "cd_pressure": 0.059896632768439165,
+      "cd_viscous": 0.021226696997281545,
+      "cmy": 0.024215656028885577,
+      "usable_as_aerodynamic_result": false
+    }
+  },
+  "retained_artifacts": {
+    "directory": "AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260901_002",
+    "combined_solver_stdout_stderr_sha256": "80c998e2dfbc6cd42c98bf7f23469b1a6e0e9fe421b2a1781d82ed447169fea5",
+    "resource_watchdog_timeline_sha256": "2515856eee5aa3b37094b7903ea2418dc3e5bbf4affab1400c23326239e0239a",
+    "effective_options_sha256": "ff20d6b0848bb6f7f1e39bd8a5f1d1da3d4f9866b82aad328b9c003e8bd655e9",
+    "launch_record_sha256": "b8495ea97b6e5d197e34d73be509c0200537157269bc380b4b134e8d0ead2e8b",
+    "surface_solution_exists": false,
+    "volume_solution_requested": false,
+    "deletion_policy": "explicit_human_approval_only"
+  },
+  "finding": {
+    "ank_basis_cap_alone_was_insufficient": true,
+    "measured_peak_exceeded_forecast_gib": 0.6813697814941406,
+    "solver_was_not_diverging_at_stop": true,
+    "next_memory_lever": "Set ANKPCILUFill and NKPCILUFill from 2 to 1 under a new immutable policy; retain the ANK restart cap, mesh, flow, physics, rank, watchdog, and output policy.",
+    "rationale": "ADflow documents ILU fill 1 as typical for easy cases and states that higher fill consumes more memory. Changing both ANK and NK preconditioners prevents the later NK phase from restoring the fill-2 peak. This changes the linear preconditioner and iteration path, but not the converged RANS/SA equations.",
+    "forbidden_actions": [
+      "reuse_or_retry_the_consumed_v3_authorization",
+      "lower_the_2_gib_watchdog_floor",
+      "treat_swap_as_solver_capacity",
+      "interpret_transient_forces_as_converged_results"
+    ]
+  }
+}

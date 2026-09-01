@@ -1,0 +1,131 @@
+{
+  "alternatives": [
+    {
+      "decision": "selected",
+      "name": "explicit_ank_gmres_restart_10",
+      "reason": "Minimum numerical change. The prior policy constrained NKSubspaceSize but left ANKSubspaceSize at -1, which exact ADflow source maps to ANKMaxIter=40. The observed solve used at most 8 linear iterations per nonlinear step."
+    },
+    {
+      "decision": "deferred",
+      "name": "reduce_ank_ilu_fill_2_to_1",
+      "reason": "Would reduce matrix-factor memory but changes preconditioner strength and the iteration path more materially. Not needed if the Krylov correction performs as bounded."
+    },
+    {
+      "decision": "rejected_for_this_attempt",
+      "name": "raise_wsl_cap_above_13_gb",
+      "reason": "The 16 GB Windows host would retain less than the roadmap's intended approximately 3 GB Windows allowance. Solver memory should be corrected before squeezing the host."
+    },
+    {
+      "decision": "rejected",
+      "name": "lower_watchdog_floor_or_use_swap_as_capacity",
+      "reason": "Would weaken machine safety and violate the governed resource semantics."
+    },
+    {
+      "decision": "not_required_now",
+      "name": "install_more_physical_ram",
+      "reason": "The board reports four slots and a 64 GB limit, so 32 GB is a robust future upgrade, but the identified hidden ANK allocation should be corrected first."
+    }
+  ],
+  "created_at": "2026-09-01T04:34:35+00:00",
+  "decision": {
+    "ank_subspace_size": 10,
+    "automatic_retry": false,
+    "forecast_peak_gib": 9.25,
+    "forecast_prelaunch_headroom_gib": 2.0,
+    "forecast_wsl_fraction": 0.7303774641405,
+    "minimum_change": true,
+    "nk_subspace_size": 20,
+    "status": "PROPOSED_FOR_INDEPENDENT_REVIEW",
+    "watchdog_minimum_mem_available_gib": 2.0,
+    "watchdog_swap_growth_limit_gib": 0.25,
+    "wsl_configuration_change": false
+  },
+  "forecast": {
+    "conservative_cushion_above_vector_subtraction_gib": 0.4392778544921878,
+    "governed_forecast_gib": 9.25,
+    "lower_bound_ank_basis_saving_bytes": 1131724800,
+    "lower_bound_ank_basis_saving_gib": 1.0540008544921875,
+    "observed_previous_available_memory_drop_gib": 9.864723,
+    "previous_forecast_gib": 9.35,
+    "previous_forecast_underestimate_gib": 0.514723,
+    "vector_subtraction_implied_peak_gib": 8.810722145507812
+  },
+  "host": {
+    "physical_memory_bytes": 17033293824,
+    "physical_memory_modules": [
+      {
+        "capacity_bytes": 8589934592,
+        "configured_clock_mhz": 2666,
+        "locator": "ChannelA-DIMM1"
+      },
+      {
+        "capacity_bytes": 8589934592,
+        "configured_clock_mhz": 2666,
+        "locator": "ChannelB-DIMM1"
+      }
+    ],
+    "physical_memory_slots": 4,
+    "platform_max_memory_kib": 67108864,
+    "verified_wsl_config": {
+      "auto_memory_reclaim": "gradual",
+      "memory": "13GB",
+      "swap": "8GB"
+    },
+    "wsl_visible_memory_bytes": 13598601216
+  },
+  "identity": {
+    "cells": 943104,
+    "mesh_sha256": "be2805ff85b6b1043863d7678d1551a52b6e8a65b299534d4ec0aaeffa51aeb4",
+    "previous_execution_path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_canary_execution_20260831.json",
+    "previous_execution_sha256": "be6c3c32e4f3434ee9b20f08933fe5f8fdcaf5b4e6103d78cee72e532fad2c06",
+    "previous_policy_path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/m2_a_c03_canary_v2.yaml",
+    "previous_policy_sha256": "893acc3dadd90a1b72bbc8cfbdb8c4f1c806438f06a6c16e98c797cbaa5d0480",
+    "previous_postmortem_path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_resource_blocked_postmortem_20260901.json",
+    "previous_postmortem_sha256": "f0bff1044abe2985603cb6b954c22334edc0b3c630eaf2ec98314976d6c12d16"
+  },
+  "invalidation_triggers": [
+    "mesh cell count or equation-state count changes",
+    "ADflow, PETSc, compiler, precision, MPI rank count, or solver-library identity changes",
+    "ANKSubspaceSize, ANKMaxIter, NKSubspaceSize, ILU fill, or preconditioner type changes",
+    "measured peak exceeds 9.25 GiB",
+    "available memory, swap, OOM, or watchdog policy changes",
+    "the run needs more than 10 ANK GMRES basis vectors before convergence"
+  ],
+  "measured_previous_run": {
+    "last_completed_nonlinear_iteration": 15,
+    "maximum_observed_linear_iterations_per_nonlinear_step": 8,
+    "no_kernel_oom": true,
+    "resource_status": "RESOURCE_BLOCKED_HOST",
+    "swap_growth_material": false,
+    "watchdog_elapsed_seconds": 339.6016,
+    "watchdog_minimum_available_gib": 1.9649276733398438
+  },
+  "mechanism": {
+    "adflow_commit": "2602568068b083a1a1c7745bfd21de9a476fb530",
+    "adflow_options_document_sha256": "3fa772bbd4650fc657b5d763f98a61c430ba663ad9001eef85af25455aaf373b",
+    "adflow_python_source_sha256": "2a080ffeb022939a011a4a52b21cb498c9f6626d4ea8f944cb23a805de73d27b",
+    "adflow_solver_source_sha256": "a5c1b00402731252b45b0834230cf45c1c822110831487369271f04028138381",
+    "ank_default": {
+      "ANKMaxIter": 40,
+      "ANKSubspaceSize": -1,
+      "effective_gmres_restart": 40
+    },
+    "bytes_per_flow_vector": 37724160,
+    "calculation": "943104 cells * 5 decoupled flow states * 8 bytes per real64 value",
+    "exact_source_behavior": "NKSolvers.F90 sets subspace=ANK_maxIter when ANK_subspace<0, then passes subspace to setupStandardKSP/GMRES.",
+    "proposed_effective_gmres_restart": 10,
+    "removed_basis_vector_count": 30,
+    "source_locations": [
+      "/home/mike_kara/packages/mdolab/adflow/adflow/pyADflow.py:5816",
+      "/home/mike_kara/packages/mdolab/adflow/src/NKSolver/NKSolvers.F90:1749",
+      "/home/mike_kara/packages/mdolab/adflow/src/NKSolver/NKSolvers.F90:2017",
+      "/home/mike_kara/packages/mdolab/adflow/doc/options.yaml:1034"
+    ]
+  },
+  "process_rss_finding": {
+    "action": "replace process-group-only sampling with process-session sampling before another launch",
+    "previous_maximum_sampled_process_group_rss_gib": 0.009960174560546875,
+    "reason": "mpirun descendants changed process group, so the previous process-group sum saw only the time wrapper. System MemAvailable remained valid and controlled the stop."
+  },
+  "schema": "aeris.s6.m2_a_c03_memory_correction_plan.v1"
+}

@@ -24,9 +24,9 @@ authorization:
   independent_review_path: AERIS_MESH_STUDY/05_s6_cfd_qualification/reviews/claude_m2_coupled_family_review_20260831.json
   independent_review_sha256: 78c33614674914103afec70b1bff820179771b4548f64ad2ddd91d139d9475d4
   required_review_verdict: GO
-  resource_review_commit: PENDING
+  resource_review_commit: 59264557f379685c147b567b28c7bb3d2100d105
   resource_review_path: AERIS_MESH_STUDY/05_s6_cfd_qualification/reviews/claude_m2_c03_ilu1_resource_review_20260901.json
-  resource_review_sha256: PENDING
+  resource_review_sha256: 354e866b304c39e5bcdebb0a75cb7562c14c713acd24ae0e2b6fd3faf1f6bbf3
   required_resource_review_verdict: GO_ILU1_RESOURCE_PLAN
   execute_token_sha256: a62b72bd469f791a5b859f69f74b9d08835015298aa380576662d007c021833e
 mesh:

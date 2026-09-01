@@ -37,7 +37,7 @@ from aeris.cfd.case.spec import FlowConditions, SolveSpec  # noqa: E402
 from aeris.cfd.env import MACH_AERO_PREFIX_ENV  # noqa: E402
 from aeris.cfd.solvers.base import get_solver_adapter  # noqa: E402
 
-CANARY_POLICY = ROOT / "policies/m2_a_c03_canary_v3.yaml"
+CANARY_POLICY = ROOT / "policies/m2_a_c03_canary_v4.yaml"
 GIB = 2**30
 
 
@@ -302,6 +302,10 @@ def _policy_identity_checks(policy: dict[str, Any]) -> dict[str, bool]:
             == solver_policy.get("ank_subspace_size")
             and resource_bound_solver.get("NKSubspaceSize")
             == solver_policy.get("nk_subspace_size")
+            and resource_bound_solver.get("ANKPCILUFill")
+            == solver_policy.get("ank_pc_ilu_fill")
+            and resource_bound_solver.get("NKPCILUFill")
+            == solver_policy.get("nk_pc_ilu_fill")
         ),
         "resource_review_bound_forecast": math.isclose(
             float(resource_bound_policy.get("forecast_peak_gib", math.nan)),
@@ -435,6 +439,8 @@ def _policy_identity_checks(policy: dict[str, Any]) -> dict[str, bool]:
             and solver_policy.get("retain_surface_solution") is True
             and solver_policy.get("ank_subspace_size") == 10
             and solver_policy.get("nk_subspace_size") == 20
+            and solver_policy.get("ank_pc_ilu_fill") == 1
+            and solver_policy.get("nk_pc_ilu_fill") == 1
             and set(solver_policy.get("surface_variables", []))
             == {"cp", "cf", "yplus", "vx", "vy", "vz"}
         ),
@@ -1290,6 +1296,8 @@ def _build_solve_spec(policy: dict[str, Any]) -> SolveSpec:
             "surfaceVariables": list(solver["surface_variables"]),
             "ANKSubspaceSize": int(solver["ank_subspace_size"]),
             "NKSubspaceSize": int(solver["nk_subspace_size"]),
+            "ANKPCILUFill": int(solver["ank_pc_ilu_fill"]),
+            "NKPCILUFill": int(solver["nk_pc_ilu_fill"]),
         },
     )
 

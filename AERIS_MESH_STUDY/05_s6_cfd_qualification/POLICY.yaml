@@ -5,12 +5,12 @@ classification_policy: policies/convergence_v2.yaml
 heavy_work:
   blocked: true
   reason: >-
-    All heavy work remains blocked. A fresh one-shot M2 A/C03 resource-corrected
+    All heavy work remains blocked. A fresh one-shot M2 A/C03 ILU-fill-corrected
     canary may become executable only after its independent review and preflight
-    gates pass; the consumed v2 attempt remains permanently non-retryable.
+    gates pass; the consumed v2 and v3 attempts remain permanently non-retryable.
   exceptions:
     run-canary:
-      policy: policies/m2_a_c03_canary_v3.yaml
+      policy: policies/m2_a_c03_canary_v4.yaml
       maximum_process_launches: 1
       accepted_classification_allowed: false
       automatic_retry_allowed: false

@@ -1,0 +1,114 @@
+{
+  "schema": "aeris.s6.m2_a_c03_ilu1_correction_plan.v1",
+  "created_at": "2026-09-01T23:08:00+03:00",
+  "status": "PROPOSED_FOR_INDEPENDENT_REVIEW",
+  "purpose": "Complete one sub-million-cell A/C03 measurement canary within the verified 13 GB WSL cap without weakening host safety.",
+  "identity": {
+    "cells": 943104,
+    "mesh_sha256": "be2805ff85b6b1043863d7678d1551a52b6e8a65b299534d4ec0aaeffa51aeb4",
+    "prior_execution_path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_canary_execution_20260901_attempt02.json",
+    "prior_execution_sha256": "027a0d3316c3ff5475595a3567cce90d6e221d23e4cace0f4bf25d9bb455e60b",
+    "prior_postmortem_path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_resource_blocked_postmortem_20260901_attempt02.json",
+    "prior_postmortem_sha256": "2d6f3021631be34a335166545b759cae2c3f1b6b152e0ddcebffb3bcbba382a0"
+  },
+  "measured_attempt02": {
+    "terminal_status": "RESOURCE_BLOCKED_HOST",
+    "elapsed_seconds": 290.70777205099876,
+    "last_completed_nonlinear_iteration": 15,
+    "maximum_process_session_rss_gib": 9.93136978149414,
+    "minimum_mem_available_gib": 1.9923943281173706,
+    "kernel_oom_kills": 0,
+    "maximum_swap_growth_gib": 0.0,
+    "density_residual_orders_reduced": 3.794321430060598,
+    "total_residual_orders_reduced": 2.775778274216453,
+    "interpretation": "The solver was progressing when the unchanged watchdog performed a controlled host-memory stop. This is not a mesh verdict."
+  },
+  "source_evidence": {
+    "adflow_version": "2.13.1",
+    "adflow_commit": "2602568068b083a1a1c7745bfd21de9a476fb530",
+    "options_document_path": "/home/mike_kara/packages/mdolab/adflow/doc/options.yaml",
+    "options_document_sha256": "3fa772bbd4650fc657b5d763f98a61c430ba663ad9001eef85af25455aaf373b",
+    "python_source_path": "/home/mike_kara/packages/mdolab/adflow/adflow/pyADflow.py",
+    "python_source_sha256": "2a080ffeb022939a011a4a52b21cb498c9f6626d4ea8f944cb23a805de73d27b",
+    "defaults": {
+      "ANKPCILUFill": 2,
+      "NKPCILUFill": 2
+    },
+    "documentation": "ADflow describes ILU fill 1 as typical for easy cases and up to 3 for difficult cases; more fill strengthens the linear preconditioner but costs more memory per iteration.",
+    "source_locations": [
+      "/home/mike_kara/packages/mdolab/adflow/adflow/pyADflow.py:5798",
+      "/home/mike_kara/packages/mdolab/adflow/adflow/pyADflow.py:5824",
+      "/home/mike_kara/packages/mdolab/adflow/doc/options.yaml:946",
+      "/home/mike_kara/packages/mdolab/adflow/doc/options.yaml:1080"
+    ]
+  },
+  "decision": {
+    "solver_change": {
+      "ANKSubspaceSize": 10,
+      "NKSubspaceSize": 20,
+      "ANKPCILUFill": 1,
+      "NKPCILUFill": 1
+    },
+    "unchanged": [
+      "943104-cell A/C03 mesh and its hash",
+      "mission-authority alpha, Mach, Reynolds, and temperature",
+      "steady RANS equations and SA turbulence model",
+      "one MPI rank",
+      "nonlinear residual equations and convergence policy",
+      "surface and complete native history retention",
+      "13 GB WSL cap and 8 GB configured swap",
+      "2.0 GiB MemAvailable watchdog floor",
+      "0.25 GiB swap-growth watchdog limit"
+    ],
+    "numerical_effect": "The approximate linear preconditioner and linear-iteration path may change. The converged nonlinear RANS/SA fixed point does not change.",
+    "forecast_peak_gib": 9.45,
+    "required_saving_from_attempt02_peak_gib": 0.48136978149414134,
+    "forecast_wsl_fraction": 0.7461694093111054,
+    "prelaunch_headroom_gib": 2.0,
+    "automatic_retry": false,
+    "wsl_configuration_change": false
+  },
+  "forecast_basis": {
+    "classification": "bounded engineering hypothesis, not a measured guarantee",
+    "attempt02_peak_anchor_gib": 9.93136978149414,
+    "governed_forecast_gib": 9.45,
+    "maximum_fraction_gate": 0.75,
+    "reason": "A 0.4814 GiB reduction is required. ILU factor storage is one of the dominant allocated structures, and ADflow explicitly identifies fill as a memory lever. Exact mesh-specific fill-factor savings cannot be known without launching the governed solve, so the unchanged watchdog remains the terminal authority.",
+    "failure_semantics": "If the forecast is exceeded or the watchdog fires, record a resource outcome and do not retry."
+  },
+  "alternatives": [
+    {
+      "name": "reduce_ank_and_nk_ilu_fill_2_to_1",
+      "decision": "selected",
+      "reason": "Direct documented memory lever that changes only the approximate linear preconditioner. Applying it to both phases prevents NK from restoring fill 2 later."
+    },
+    {
+      "name": "disable_full_viscous_ank_preconditioner_terms",
+      "decision": "deferred",
+      "reason": "Also changes the approximate Jacobian stencil and could save memory, but is a broader preconditioner change than lowering fill."
+    },
+    {
+      "name": "raise_wsl_cap_above_13_gb",
+      "decision": "rejected_for_today",
+      "reason": "The 16 GB physical host would retain less Windows margin and prior abrupt WSL shutdowns make this inferior to solver-side memory reduction."
+    },
+    {
+      "name": "lower_watchdog_floor_or_rely_on_swap",
+      "decision": "rejected",
+      "reason": "Would weaken host safety and does not reduce the solver working set."
+    },
+    {
+      "name": "substitute_C02",
+      "decision": "rejected",
+      "reason": "Would not answer whether the required sub-million C03 measurement can execute on this desktop."
+    }
+  ],
+  "invalidation_triggers": [
+    "mesh, cell count, flow point, equations, turbulence model, precision, rank count, or solver-library identity changes",
+    "ANKSubspaceSize, NKSubspaceSize, ANKPCILUFill, or NKPCILUFill differs from 10, 20, 1, 1",
+    "watchdog or WSL configuration changes",
+    "measured peak exceeds 9.45 GiB",
+    "prelaunch forecast plus 2 GiB exceeds live MemAvailable",
+    "independent review returns any HIGH finding"
+  ]
+}

@@ -1,0 +1,158 @@
+schema_version: aeris.s6.m2_canary_policy.v4
+policy_id: m2_a_c03_measurement_canary_v4
+immutable: true
+supersedes: m2_a_c03_measurement_canary_v3
+supersedes_path: AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/m2_a_c03_canary_v3.yaml
+supersedes_sha256: fab78f59fc96f702e804ffa89a67b92b9fb4c219299ef624fb95e28438b42bfc
+supersession_reason: >-
+  authorize one fresh human-directed ILU-fill-corrected attempt after v3
+  terminated as RESOURCE_BLOCKED_HOST; v3 remains consumed and may never be
+  retried
+scope:
+  purpose: measurement_only
+  maximum_process_launches: 1
+  automatic_retry_allowed: false
+  accepted_classification_allowed: false
+  development_set_only: true
+  holdout_access_allowed: false
+  geometry_set: lhs100_seed42
+  geometry_label: A
+  geometry_index: 83
+  grid_level: C03
+authorization:
+  independent_review_commit: 5f17ceb7a78a4d1525f73f57ad88f909f57c5c59
+  independent_review_path: AERIS_MESH_STUDY/05_s6_cfd_qualification/reviews/claude_m2_coupled_family_review_20260831.json
+  independent_review_sha256: 78c33614674914103afec70b1bff820179771b4548f64ad2ddd91d139d9475d4
+  required_review_verdict: GO
+  resource_review_commit: PENDING
+  resource_review_path: AERIS_MESH_STUDY/05_s6_cfd_qualification/reviews/claude_m2_c03_ilu1_resource_review_20260901.json
+  resource_review_sha256: PENDING
+  required_resource_review_verdict: GO_ILU1_RESOURCE_PLAN
+  execute_token_sha256: a62b72bd469f791a5b859f69f74b9d08835015298aa380576662d007c021833e
+mesh:
+  path: AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03/lhs100_seed42_083/wing_vol_deformed.cgns
+  sha256: be2805ff85b6b1043863d7678d1551a52b6e8a65b299534d4ec0aaeffa51aeb4
+  target_surface_path: AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03/lhs100_seed42_083/surface_blocks.npz
+  target_surface_sha256: dd35106445ddbab88dbd79fe64c09c53d4a63622a7d0cd8deaca7cd28b0f3a19
+  evidence_path: AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_coupled_family_respec_20260831.json
+  evidence_sha256: ce06e7e605e3a2ca7ff4fbb4da9b9c485202495542298eb434bb34ff343c7537
+  cells: 943104
+  inverted_cells: 0
+  min_scaled_quality: 0.1670988318034351
+flow:
+  authority_path: AERIS_MESH_STUDY/05_s6_cfd_qualification/mission_authority_v1.yaml
+  authority_sha256: 13a3379dcc9d2a1c626e17e703e3249b6c59a6d3b8f4f1b6068caf22da280c9b
+  condition: high_load_case
+  alpha_deg: 8.0
+  mach: 0.0837
+  reynolds: 1530708.188575197
+  reynolds_length_m: 0.9
+  temperature_K: 278.4
+  speed_mps: 28.0
+  density_kg_m3: 1.0580517702823453
+  dynamic_viscosity_Pa_s: 1.7418672487754365e-5
+references:
+  authority_path: AERIS_MESH_STUDY/05_s6_cfd_qualification/moment_reference_v1.yaml
+  authority_sha256: 02780694efd968b7c85e205fdfc1771ca2e43950cd0a71ad428c64a1183e50c5
+  evidence_path: AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_reference_contract_20260831.json
+  evidence_sha256: a20c3e9e5dfdcc642eaeecdae36cfb1ee68028e9e18e6b52d9909917e08a5192
+  full_area_m2: 0.789836484035178
+  solver_half_area_m2: 0.394918242017589
+  full_span_m: 1.95678951038572
+  chord_ref_m: 0.494600003662239
+  primary_moment_reference_name: mission_cg
+  primary_moment_reference_xyz_m: [0.4, 0.0, 0.0]
+  secondary_moment_reference_name: geometry_quarter_mac
+  secondary_moment_reference_xyz_m: [0.33306678536067347, 0.0, 0.011273822668934992]
+  force_multiplier: 1.0
+  interpretation: half-domain forces divided by half-area give full-aircraft symmetric coefficients
+solver:
+  name: adflow
+  equations: RANS
+  turbulence_model: SA
+  preset: rans_ank_nk_v1
+  preset_path: src/aeris/cfd/presets/data/adflow_rans_ank_nk_v1.yaml
+  preset_sha256: 87816b5a91f6f25b41f983f8384b21d0be5136a38279e71bdfe1bedf3cd2884e
+  mpi_processes: 1
+  ank_subspace_size: 10
+  nk_subspace_size: 20
+  ank_pc_ilu_fill: 1
+  nk_pc_ilu_fill: 1
+  store_convergence_history: true
+  write_volume_solution: false
+  write_surface_solution: true
+  retain_surface_solution: true
+  monitor_variables: [resrho, resmom, resrhoe, resturb, cl, cd, cmy, cdp, cdv]
+  surface_variables: [cp, cf, yplus, vx, vy, vz]
+  environment:
+    prefix: /home/mike_kara/miniconda3/envs/mach-aero
+    python: /home/mike_kara/miniconda3/envs/mach-aero/bin/python
+    python_realpath: /home/mike_kara/miniconda3/envs/mach-aero/bin/python3.11
+    python_sha256: 350c07c53ed101c90c8ca7914668740533064bd7a3df4e013e32943e6e9e6d98
+    python_version: 3.11.15
+    mpirun: /home/mike_kara/miniconda3/envs/mach-aero/bin/mpirun
+    mpirun_realpath: /home/mike_kara/packages/openmpi-5.0.10/opt-gfortran/bin/mpirun
+    mpirun_sha256: 039c4057503a6e18675692f5eff375b22ae1d97dc5cc106cbb8fc34113e4e357
+    openmpi_version: 5.0.10
+    adflow_version: 2.13.1
+    baseclasses_version: 1.9.0
+    mpi4py_version: 4.1.2
+    numpy_version: 2.4.6
+    adflow_init: /home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/adflow/__init__.py
+    adflow_init_sha256: 450b0038aebad14692b69435c2669519ddf72640a91ff27e2e219e1ae5f8a3b1
+    adflow_python_source: /home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/adflow/pyADflow.py
+    adflow_python_source_sha256: 2a080ffeb022939a011a4a52b21cb498c9f6626d4ea8f944cb23a805de73d27b
+    adflow_library: /home/mike_kara/miniconda3/envs/mach-aero/lib/python3.11/site-packages/adflow/libadflow.so
+    adflow_library_sha256: 4f67c840276177be12f9fcfac3753da308d330f28550f3dd46a2e95a2d36ee1f
+    prelaunch_non_cfd_mpi_probe_required: true
+artifacts:
+  retention: retain_all_cfd_logs_and_measurement_evidence
+  required:
+    - combined_solver_stdout_stderr
+    - native_iteration_convergence_history
+    - resolved_solver_options_with_provenance
+    - case_definition
+    - static_runner
+    - solve_report
+    - gnu_time_verbose
+    - resource_watchdog_timeline
+    - surface_solution
+    - launch_and_execution_records
+  volume_solution: disabled_by_resource_policy
+  deletion_policy: explicit_human_approval_only
+classification_policy:
+  path: AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/convergence_v2.yaml
+  result_mode: measurement_only_no_accepted_verdict
+resource:
+  model: measured_v3_minus_ilu_fill_v1
+  anchor_cells: 943104
+  previous_measured_peak_gib: 9.93136978149414
+  required_ilu_saving_gib: 0.48136978149414134
+  forecast_classification: bounded_engineering_hypothesis
+  bytes_per_cell: 10759.004560260586
+  forecast_peak_gib: 9.45
+  forecast_max_fraction_wsl_memory: 0.75
+  prelaunch_headroom_gib: 2.0
+  minimum_free_disk_gib: 29.0
+  maximum_preexisting_swap_gib: 0.25
+  measured_peak_must_not_exceed_forecast_for_resource_pass: true
+  evidence:
+    correction_plan_path: AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_ilu1_correction_plan_20260901.json
+    correction_plan_sha256: 6868f52ee2a96e93f42345d2ae3bf37795bc0483c083987bee787aafd4d70a48
+    previous_execution_path: AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_canary_execution_20260901_attempt02.json
+    previous_execution_sha256: 027a0d3316c3ff5475595a3567cce90d6e221d23e4cace0f4bf25d9bb455e60b
+    previous_postmortem_path: AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_resource_blocked_postmortem_20260901_attempt02.json
+    previous_postmortem_sha256: 2d6f3021631be34a335166545b759cae2c3f1b6b152e0ddcebffb3bcbba382a0
+watchdog:
+  poll_interval_seconds: 2.0
+  heartbeat_interval_seconds: 30.0
+  minimum_mem_available_gib: 2.0
+  maximum_swap_growth_gib: 0.25
+  minimum_runtime_free_disk_gib: 10.0
+  terminate_grace_seconds: 15.0
+  threshold_breach_action: terminate_process_session_and_record_RESOURCE_BLOCKED_HOST
+attempt:
+  id: m2_a_c03_measurement_20260901_003
+  directory: AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260901_003
+  consumed_record: AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_canary_authorization_consumed_20260901_attempt03.json
+  execution_record: AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_canary_execution_20260901_attempt03.json

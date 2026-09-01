@@ -49,7 +49,7 @@ def test_heavy_work_is_blocked():
 def test_canary_dry_run_reflects_one_shot_state_and_launches_nothing():
     out = invoke_preserving_report("run-canary", "--dry-run")
     payload = json.loads(out.stdout.split("\nrecord:", 1)[0])
-    policy = yaml.safe_load((ROOT / "policies/m2_a_c03_canary_v3.yaml").read_text())
+    policy = yaml.safe_load((ROOT / "policies/m2_a_c03_canary_v4.yaml").read_text())
     consumed = ROOT.parents[1] / policy["attempt"]["consumed_record"]
     attempt = ROOT.parents[1] / policy["attempt"]["directory"]
 
@@ -62,7 +62,7 @@ def test_canary_dry_run_reflects_one_shot_state_and_launches_nothing():
 
 
 def test_canary_policy_retains_complete_logs_and_full_residual_history():
-    policy = yaml.safe_load((ROOT / "policies/m2_a_c03_canary_v3.yaml").read_text())
+    policy = yaml.safe_load((ROOT / "policies/m2_a_c03_canary_v4.yaml").read_text())
     assert policy["solver"]["monitor_variables"] == [
         "resrho",
         "resmom",
@@ -83,7 +83,9 @@ def test_canary_policy_retains_complete_logs_and_full_residual_history():
     assert policy["solver"]["environment"]["prelaunch_non_cfd_mpi_probe_required"] is True
     assert policy["solver"]["ank_subspace_size"] == 10
     assert policy["solver"]["nk_subspace_size"] == 20
-    assert policy["resource"]["forecast_peak_gib"] == 9.25
+    assert policy["solver"]["ank_pc_ilu_fill"] == 1
+    assert policy["solver"]["nk_pc_ilu_fill"] == 1
+    assert policy["resource"]["forecast_peak_gib"] == 9.45
     assert policy["resource"]["maximum_preexisting_swap_gib"] == 0.25
     assert policy["watchdog"]["maximum_swap_growth_gib"] == 0.25
 
@@ -120,6 +122,8 @@ def test_governed_canary_prepares_exact_solver_contract(tmp_path, monkeypatch):
     assert options["writeSurfaceSolution"] is True
     assert options["ANKSubspaceSize"] == 10
     assert options["NKSubspaceSize"] == 20
+    assert options["ANKPCILUFill"] == 1
+    assert options["NKPCILUFill"] == 1
     assert case["reynolds_length_ref"] == 0.9
     assert case["moment_reference"] == [0.4, 0.0, 0.0]
     compile((tmp_path / "run_adflow.py").read_text(), "run_adflow.py", "exec")

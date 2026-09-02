@@ -1,6 +1,20 @@
 # Claude Code continuation order — S6 qualification
 
-Updated: 2026-09-02T20:06:55+03:00
+Updated: 2026-09-02T22:49:49+03:00
+
+## Human-directed six-rank execution override
+
+At 2026-09-02 22:49 EEST the principal investigator explicitly ordered one
+immediate corrected-mesh CFD run with six MPI ranks and directed Codex not to
+wait for the Claude audit. Policy `policies/m2_a_c03_canary_v5.yaml` and the
+honest waiver record
+`reviews/human_m2_a_c03_six_rank_override_20260902.json` bind attempt04. Do not
+reinterpret this as closure of the earlier Claude findings. Periodic
+checkpoints are disabled because multi-rank signal collectives are unverified;
+all residuals/logs/resource samples and final surface/double-volume outputs are
+still required. No retry is authorized. If attempt04 is running, monitor it;
+do not start any second process. If terminal, audit and classify it before any
+further action.
 
 ## Current correction order — 2026-09-02 19:59 EEST
 

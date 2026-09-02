@@ -42,7 +42,7 @@ from aeris.cfd.case.spec import FlowConditions, SolveSpec  # noqa: E402
 from aeris.cfd.env import MACH_AERO_PREFIX_ENV  # noqa: E402
 from aeris.cfd.solvers.base import get_solver_adapter  # noqa: E402
 
-CANARY_POLICY = ROOT / "policies/m2_a_c03_canary_v4.yaml"
+CANARY_POLICY = ROOT / "policies/m2_a_c03_canary_v5.yaml"
 GIB = 2**30
 
 
@@ -453,13 +453,12 @@ def _policy_identity_checks(policy: dict[str, Any]) -> dict[str, bool]:
             )
         ),
         "checkpoint_policy_bound": (
-            policy.get("checkpoint", {}).get("enabled") is True
-            and resource_bound_checkpoint == policy.get("checkpoint")
+            resource_bound_checkpoint == policy.get("checkpoint")
         )
         if recovery_policy
         else True,
-        "solver_scope_is_one_rank_rans_sa": (
-            solver_policy.get("mpi_processes") == 1
+        "solver_scope_is_governed_rank_rans_sa": (
+            solver_policy.get("mpi_processes") in {1, 6}
             and solver_policy.get("equations") == "RANS"
             and solver_policy.get("turbulence_model") == "SA"
         ),
@@ -685,13 +684,21 @@ def _solver_environment_preflight(policy: dict[str, Any], *, run_mpi_probe: bool
 
     mpi_probe: dict[str, Any] = {"executed": False, "kind": "non_cfd_readiness_probe"}
     if run_mpi_probe:
+        mpi_processes = int(policy["solver"]["mpi_processes"])
         probe_source = (
             "from mpi4py import MPI;"
             "print('AERIS_MPI_READY',MPI.COMM_WORLD.rank,MPI.COMM_WORLD.size)"
         )
         try:
             completed = subprocess.run(
-                [str(paths["mpirun"]), "-np", "1", str(paths["python"]), "-c", probe_source],
+                [
+                    str(paths["mpirun"]),
+                    "-np",
+                    str(mpi_processes),
+                    str(paths["python"]),
+                    "-c",
+                    probe_source,
+                ],
                 cwd=REPO,
                 text=True,
                 capture_output=True,
@@ -705,8 +712,18 @@ def _solver_environment_preflight(policy: dict[str, Any], *, run_mpi_probe: bool
                 "stdout": completed.stdout.strip(),
                 "stderr": completed.stderr.strip(),
             }
-            checks["one_rank_mpi_probe"] = (
-                completed.returncode == 0 and "AERIS_MPI_READY 0 1" in completed.stdout
+            observed_lines = {
+                line.strip() for line in completed.stdout.splitlines()
+                if line.startswith("AERIS_MPI_READY")
+            }
+            checks["governed_rank_mpi_probe"] = (
+                completed.returncode == 0
+                and len(observed_lines) == mpi_processes
+                and observed_lines
+                == {
+                    f"AERIS_MPI_READY {rank} {mpi_processes}"
+                    for rank in range(mpi_processes)
+                }
             )
         except (OSError, subprocess.TimeoutExpired) as error:
             mpi_probe = {
@@ -715,7 +732,7 @@ def _solver_environment_preflight(policy: dict[str, Any], *, run_mpi_probe: bool
                 "error_type": type(error).__name__,
                 "error": str(error),
             }
-            checks["one_rank_mpi_probe"] = False
+            checks["governed_rank_mpi_probe"] = False
 
     return {
         "passed": all(checks.values()),
@@ -765,6 +782,7 @@ def _governed_sources_clean() -> tuple[bool, list[str]]:
         "src/aeris/cfd/solvers/adflow/options_schema.py",
         "src/aeris/cfd/solvers/adflow/parse.py",
         "src/aeris/cfd/presets/data/adflow_rans_ank_nk_v1.yaml",
+        "src/aeris/cfd/presets/data/adflow_rans_ank_memory_safe_v1.yaml",
         "AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/cfd_qc.py",
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/run.py",
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/canary.py",
@@ -774,8 +792,12 @@ def _governed_sources_clean() -> tuple[bool, list[str]]:
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/m2_a_c03_canary_v2.yaml",
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/m2_a_c03_canary_v3.yaml",
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/m2_a_c03_canary_v4.yaml",
+        "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/m2_a_c03_canary_v5.yaml",
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/grid_family_candidate_v1.yaml",
         "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_reference_contract_20260831.json",
+        "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_desktop_recovery_plan_20260902.json",
+        "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_c03_wall_normal_recovery_family_20260902.json",
+        "AERIS_MESH_STUDY/05_s6_cfd_qualification/reviews/human_m2_a_c03_six_rank_override_20260902.json",
     ]
     completed = subprocess.run(
         ["git", "status", "--short", "--", *paths],
@@ -1839,7 +1861,7 @@ def execute_canary(*, dry_run: bool, execute_token: str | None) -> dict[str, Any
         return {
             "status": "BLOCKED",
             "details": {
-                "reason": "non-CFD one-rank MPI readiness probe failed",
+                "reason": "non-CFD governed-rank MPI readiness probe failed",
                 "process_launched": False,
                 "authorization_consumed": False,
                 "preflight": preflight_report,

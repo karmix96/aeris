@@ -1,6 +1,29 @@
 # S6 qualification live status
 
-Updated: 2026-09-02T20:06:55+03:00
+Updated: 2026-09-02T22:49:49+03:00
+
+## Six-rank attempt04 launch state
+
+- The principal investigator explicitly directed one immediate CFD run on the
+  corrected mesh with six MPI ranks and waived the pending Claude audit. The
+  waiver is retained honestly in
+  `reviews/human_m2_a_c03_six_rank_override_20260902.json`; it does not claim
+  that Claude's findings were closed.
+- New immutable policy: `policies/m2_a_c03_canary_v5.yaml`. It binds attempt
+  `m2_a_c03_measurement_20260902_004`, corrected mesh SHA-256
+  `0fe4a4c00bbed1e47fcdaa46b60d00334d48c0cfe9b617cb2a3b0ec51cbd7ced`,
+  six MPI ranks, ANK-only RANS/SA, complete residual/log/resource retention,
+  final surface output and final double-precision volume output.
+- Periodic SIGUSR1 checkpoints are disabled for this attempt because their
+  collective semantics have not been validated for six ranks. This avoids
+  signaling only one member of an MPI collective. No automatic retry exists.
+- Non-CFD identity, environment, RAM, swap and disk preflight passed. At the
+  recorded preflight, MemAvailable was 11.6673 GiB, the 9.45 GiB forecast plus
+  2 GiB headroom passed by 0.2173 GiB, existing swap was 0.2138 GiB, and free
+  disk was 940.6 GiB. The six-rank memory increment is explicitly unmeasured;
+  the live 2 GiB watchdog floor remains authoritative.
+- The next action is commit the governed policy/orchestrator, run the real
+  six-rank MPI readiness probe, consume the fresh token once, and launch.
 
 ## Immediate continuation checkpoint
 

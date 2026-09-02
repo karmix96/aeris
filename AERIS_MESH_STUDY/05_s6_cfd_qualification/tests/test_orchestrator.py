@@ -8,6 +8,7 @@ from pathlib import Path
 
 import h5py
 import numpy as np
+import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -102,6 +103,107 @@ def test_watchdog_counts_the_full_launcher_process_session():
     assert _process_session_rss_bytes(os.getsid(0)) > 0
 
 
+def test_checkpoint_signal_target_requires_one_exact_python_rank(monkeypatch, tmp_path):
+    sys.path.insert(0, str(ROOT))
+    import canary
+
+    python = tmp_path / "python"
+    runner = tmp_path / "run_adflow.py"
+    records = [
+        {"pid": 10, "executable": str(python), "argv": [str(python), str(runner)]},
+        {"pid": 11, "executable": "/usr/bin/mpirun", "argv": ["mpirun", str(runner)]},
+    ]
+    monkeypatch.setattr(canary, "_session_process_records", lambda _session: records)
+
+    selected = canary._checkpoint_signal_target(99, executable_realpath=python, runner_path=runner)
+    assert selected["selected_pid"] == 10
+    assert selected["match_count"] == 1
+
+    records.append({"pid": 12, "executable": str(python), "argv": [str(python), str(runner)]})
+    ambiguous = canary._checkpoint_signal_target(99, executable_realpath=python, runner_path=runner)
+    assert ambiguous["selected_pid"] is None
+    assert ambiguous["match_count"] == 2
+
+
+def test_durable_checkpoint_copy_refuses_overwrite(tmp_path):
+    sys.path.insert(0, str(ROOT))
+    from canary import _durable_copy
+
+    source = tmp_path / "forced.cgns"
+    destination = tmp_path / "checkpoints/checkpoint_0001.cgns"
+    source.write_bytes(b"restart-state")
+    _durable_copy(source, destination)
+    assert destination.read_bytes() == b"restart-state"
+    with pytest.raises(FileExistsError, match="refusing to overwrite"):
+        _durable_copy(source, destination)
+
+
+def test_solution_selection_prefers_normal_output_and_retains_forced(tmp_path):
+    sys.path.insert(0, str(ROOT))
+    from canary import _solution_selection
+
+    final = tmp_path / "aeris_cfd_000_surf.cgns"
+    forced = tmp_path / "aeris_cfd_forced_surf.cgns"
+    final.write_bytes(b"final")
+    forced.write_bytes(b"forced")
+    selected = _solution_selection(tmp_path, "surf")
+    assert selected["selected"] == final
+    assert selected["forced_candidates"] == [forced]
+
+
+def test_watchdog_captures_versioned_sigusr1_checkpoint(tmp_path):
+    sys.path.insert(0, str(ROOT))
+    from canary import _run_with_watchdog
+
+    runner = tmp_path / "run_adflow.py"
+    runner.write_text(
+        "import pathlib, signal, time\n"
+        "target = pathlib.Path(__file__).parent / 'aeris_cfd_forced_vol.cgns'\n"
+        "def checkpoint(_signal, _frame):\n"
+        "    target.write_bytes(str(time.time_ns()).encode())\n"
+        "signal.signal(signal.SIGUSR1, checkpoint)\n"
+        "time.sleep(0.8)\n",
+        encoding="utf-8",
+    )
+    runtime = _run_with_watchdog(
+        [sys.executable, str(runner)],
+        workdir=tmp_path,
+        log_path=tmp_path / "solver.log",
+        samples_path=tmp_path / "resources.jsonl",
+        watchdog_policy={
+            "poll_interval_seconds": 0.02,
+            "heartbeat_interval_seconds": 10.0,
+            "minimum_mem_available_gib": 0.0,
+            "maximum_swap_growth_gib": 100.0,
+            "minimum_runtime_free_disk_gib": 0.0,
+            "terminate_grace_seconds": 1.0,
+        },
+        checkpoint_policy={
+            "enabled": True,
+            "events_filename": "checkpoint_events.jsonl",
+            "directory": "checkpoints",
+            "forced_volume_filename": "aeris_cfd_forced_vol.cgns",
+            "interval_seconds": 0.1,
+            "stable_seconds": 0.04,
+            "maximum_write_wait_seconds": 0.4,
+            "solver_executable_realpath": str(Path(sys.executable).resolve()),
+            "runner_filename": runner.name,
+        },
+    )
+    checkpointing = runtime["checkpointing"]
+    assert runtime["returncode"] == 0
+    assert runtime["watchdog_stopped"] is False
+    assert checkpointing["request_count"] >= 1
+    assert checkpointing["captured_count"] >= 1
+    assert checkpointing["failure_count"] <= (
+        checkpointing["request_count"] - checkpointing["captured_count"]
+    )
+    for checkpoint in checkpointing["checkpoints"]:
+        path = Path(checkpoint["path"])
+        assert path.is_file()
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == checkpoint["sha256"]
+
+
 def test_governed_canary_prepares_exact_solver_contract(tmp_path, monkeypatch):
     sys.path.insert(0, str(ROOT))
     from canary import _build_solve_spec, _load_policy, _repo_path
@@ -132,6 +234,55 @@ def test_governed_canary_prepares_exact_solver_contract(tmp_path, monkeypatch):
     assert case["reynolds_length_ref"] == 0.9
     assert case["moment_reference"] == [0.4, 0.0, 0.0]
     compile((tmp_path / "run_adflow.py").read_text(), "run_adflow.py", "exec")
+
+
+def test_recovery_solver_contract_disables_nk_and_enables_restart_output(tmp_path, monkeypatch):
+    sys.path.insert(0, str(ROOT))
+    from canary import _build_solve_spec, _load_policy, _repo_path
+
+    from aeris.cfd.solvers.base import get_solver_adapter
+
+    policy = json.loads(json.dumps(_load_policy()))
+    solver = policy["solver"]
+    solver.update(
+        {
+            "preset": "rans_ank_memory_safe_v1",
+            "use_nk_solver": False,
+            "nk_switch_tol": 1.0e-10,
+            "n_cycles": 20000,
+            "l2_convergence": 1.0e-8,
+            "write_volume_solution": True,
+            "solution_precision": "double",
+            "time_limit_seconds": 27000.0,
+            "surface_variables": [
+                "cp",
+                "cf",
+                "cfx",
+                "cfy",
+                "cfz",
+                "yplus",
+                "rho",
+                "vx",
+                "vy",
+                "vz",
+            ],
+        }
+    )
+    monkeypatch.setenv("MACH_AERO_CONDA_PREFIX", solver["environment"]["prefix"])
+    workdir = tmp_path / "recovery"
+    get_solver_adapter("adflow").prepare(
+        _build_solve_spec(policy), _repo_path(policy["mesh"]["path"]), workdir
+    )
+    options = json.loads((workdir / "adflow_options.json").read_text())
+    assert options["useNKSolver"] is False
+    assert options["NKSwitchTol"] == 1.0e-10
+    assert options["nCycles"] == 20000
+    assert options["L2Convergence"] == 1.0e-8
+    assert options["writeVolumeSolution"] is True
+    assert options["solutionPrecision"] == "double"
+    assert options["timeLimit"] == 27000.0
+    assert "rho" in options["surfaceVariables"]
+    compile((workdir / "run_adflow.py").read_text(), "run_adflow.py", "exec")
 
 
 def test_holdout_is_metadata_locked():

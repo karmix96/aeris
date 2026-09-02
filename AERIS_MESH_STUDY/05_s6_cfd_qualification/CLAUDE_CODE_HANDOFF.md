@@ -1,25 +1,61 @@
 # Claude Code continuation order — S6 qualification
 
-Updated: 2026-09-02T07:19:28+03:00
+Updated: 2026-09-02T15:15:00+03:00
 
-This is the live post-run handoff for the AERIS S6 automated CFD qualification
-study. Preserve the evidence chain. **No CFD is currently authorized.**
+This is the live recovery-audit handoff for the AERIS S6 automated CFD
+qualification study. Preserve the evidence chain. A mesh correction and
+restartable low-memory solver path have been implemented but are not yet
+independently accepted. **No CFD is currently authorized.**
 
 ## Read first, in order
 
 1. `MASTER_EXECUTION_GUIDE.md`
 2. `LIVE_STATUS.md`
-3. `policies/m2_a_c03_canary_v4.yaml`
-4. `reports/m2_a_c03_canary_authorization_consumed_20260901_attempt03.json`
-5. `reports/m2_a_c03_canary_execution_20260901_attempt03.json`
-6. `reports/m2_a_c03_solver_postmortem_20260902_attempt03.json`
-7. `reviews/claude_m2_a_c03_attempt03_postrun_review_20260902.json`
-8. `studies/canary/m2_a_c03_measurement_20260901_003/adflow_effective_options.json`
-9. `studies/canary/m2_a_c03_measurement_20260901_003/solve_report.json`
-10. `studies/canary/m2_a_c03_measurement_20260901_003/adflow_run.log`
-11. `studies/canary/m2_a_c03_measurement_20260901_003/resource_watchdog.jsonl`
+3. `reports/m2_a_c03_desktop_recovery_plan_20260902.json`
+4. `reports/m2_c03_wall_normal_recovery_family_20260902.json`
+5. `04_strategy_studies/S6_bounded_mesh_atlas/wall_normal.py`
+6. `05_s6_cfd_qualification/canary.py`
+7. `../../src/aeris/cfd/presets/data/adflow_rans_ank_memory_safe_v1.yaml`
+8. `policies/m2_a_c03_canary_v4.yaml`
+9. `reports/m2_a_c03_canary_authorization_consumed_20260901_attempt03.json`
+10. `reports/m2_a_c03_canary_execution_20260901_attempt03.json`
+11. `reports/m2_a_c03_solver_postmortem_20260902_attempt03.json`
+12. `reviews/claude_m2_a_c03_attempt03_postrun_review_20260902.json`
+13. `studies/canary/m2_a_c03_measurement_20260901_003/adflow_effective_options.json`
+14. `studies/canary/m2_a_c03_measurement_20260901_003/solve_report.json`
+15. `studies/canary/m2_a_c03_measurement_20260901_003/adflow_run.log`
+16. `studies/canary/m2_a_c03_measurement_20260901_003/resource_watchdog.jsonl`
 
 Do not read or inspect the locked holdout contents.
+
+## Recovery candidate to audit
+
+- Recovery-plan SHA-256:
+  `1b2f2f91d5c435b73468e16acfdbdccecc7e7e9154af17ccbe3ac28ba16c68b8`.
+- Family-report SHA-256:
+  `392ef9850de8e7795c35ef50082a3583bc1ed21855668e16b59b925e2dfa65e9`.
+- Four development meshes A/B/C/E were redistributed with one common method.
+  Each retains 943,104 cells, zero inversions, exact wall/farfield, 20 paired
+  interfaces, and qmin above 0.10. Re-open and recompute; do not trust reports.
+- The selected A output file SHA-256 is
+  `0fe4a4c00bbed1e47fcdaa46b60d00334d48c0cfe9b617cb2a3b0ec51cbd7ced`;
+  its deterministic coordinate-payload hash is
+  `6295e5ab83aa145dad887ec4ccbb2093067de87578d22099695f97897bdf480f`.
+- Actual attempt03 y+ scaled facewise only by the exact new/old local
+  first-cell height projects to global p95 0.2366, p99 0.2682, max 0.2932,
+  with no failed wall region. Treat this only as a projection.
+- Proposed numerical change: one-rank ANK remains; NK is disabled. All
+  subspace and ILU values stay 10/20 and 1/1. Limits remain nCycles 20,000 and
+  L2 1e-8; an independent 27,000-second wall-clock cap is added.
+- Proposed resource model: measured pre-NK/ANK peak 8.31702 GiB, forecast 9.2
+  GiB, unchanged 75% WSL cap, 2 GiB headroom/floor and 0.25 GiB swap limits.
+  Check both the phase attribution and arithmetic.
+- Final volume output is double precision. Surface output adds rho and vector
+  skin friction. Native SIGUSR1 is requested every 1,800 s; the watchdog
+  targets only the exact MPI Python rank, waits for a stable forced volume,
+  fsyncs a numbered copy, and records its hash. Inspect failure/race behavior.
+- Focused suite currently reports 77 passed, including a live subprocess
+  SIGUSR1 checkpoint test. Re-run it.
 
 ## Terminal attempt03 outcome
 
@@ -71,6 +107,8 @@ Do not read or inspect the locked holdout contents.
   - `AERIS_MESH_STUDY/04_strategy_studies/S7_unstructured_gmsh_su2/campaign.py`
   - `configs/aero/section_study/stage1_reference_subset.json`
   - `configs/aero/section_study/stage1_summary_subset.txt`
+- Do not create policy v5, an attempt directory, or an execute token. The
+  review output is evidence for Codex; it does not launch or self-authorize.
 
 ## Evidence retention
 
@@ -86,37 +124,38 @@ retained locally with SHA-256
 repository policy permits its hash but not the CGNS file itself to be committed.
 No volume or restart state exists.
 
-## Continuation order while Codex is unavailable
+## Independent audit order while Codex is unavailable
 
-Work through these read-only/analysis tasks without waiting for Codex:
+Work through these read-only/mesh-QC tasks without waiting for Codex:
 
-1. Inspect `git status` and verify the exact hashes in the postmortem. Preserve
-   every unrelated change and every attempt03 artifact.
-2. Read the locally installed ADflow 2.13.1 Python and Fortran sources plus its
-   shipped documentation. Build a source-cited option map for:
-   - NK and ANK preconditioner fill and subspace memory behavior;
-   - NK linear tolerances, Jacobian/preconditioner lag and globalization;
-   - ANK-to-NK switching and an ANK-biased/ANK-only path;
-   - multigrid behavior;
-   - restart/volume-solution write and warm-start semantics;
-   - any way to compute signed boundary mass flux from retained surface data.
-3. Rank candidate numerical fixes by expected convergence benefit, peak-memory
-   risk, equation/physics equivalence, need for a cold start and evidence
-   strength. Treat stronger NK ILU as a hypothesis, not a proven unique cause.
-4. Analyze the retained y+ region map and the S6 surface/volume generator.
-   Propose the smallest separately governed wall-normal change that corrects
-   `oml_nose`, `oml_base` and all tip/cap blocks while preserving positive
-   volume quality. Quantify its expected cell and memory impact. Do not march a
-   mesh unless a later human instruction expressly authorizes it.
-5. Determine whether signed boundary mass balance and interface discontinuity
-   can be computed read-only from the retained surface CGNS. If the necessary
-   mass-flux fields are absent, record that fact; do not invent a pass.
-6. Draft, but do not activate, a bounded next-action proposal. It must use the
-   measured 9.855 GiB peak as a lower-bound memory anchor, preserve a 2 GiB
-   floor, require restart/volume-state insurance, change only one numerical
-   lever per isolation attempt, and state that no launch is authorized.
-7. Update this handoff and `LIVE_STATUS.md` with exact evidence and leave an
-   explicit `cfd_authorized: false` statement.
+1. Inspect `git status` and the review-target commit. Preserve unrelated changes
+   and every existing CFD artifact.
+2. Independently hash and reopen all four v3 output CGNS files. Recompute cells,
+   signed volumes, scaled quality, wall/farfield fidelity, paired interfaces,
+   per-zone first-cell spacing, and deterministic coordinate hashes.
+3. Recompute A's facewise y+ projection from the retained attempt03 surface and
+   old/new meshes. Verify CGNS ordering and sample-count correspondence. State
+   explicitly why this is not actual candidate y+.
+4. Recompute ANK/NK row counts and NK linear statistics from `adflow_run.json`.
+   Recompute the RSS phase change from `resource_watchdog.jsonl`. Check whether
+   ANK-only is the lowest-memory coherent single lever and whether 9.2 GiB is a
+   defensible bound for that changed execution.
+5. Inspect the exact installed ADflow 2.13.1 docs and Python/Fortran/C sources.
+   Verify useNKSolver semantics, nCycles/L2/timeLimit, automatic volume output,
+   double restart precision, SIGUSR1 behavior and forced filenames.
+6. Audit `canary.py` for exact option propagation, target-PID uniqueness,
+   checkpoint completeness/races, final-versus-forced output selection,
+   immutable retention and resource/watchdog behavior. Re-run the focused
+   suite. Do not initialize ADflow.
+7. Return one severity-ranked JSON review. It must include `decision.verdict`,
+   `decision.bound_artifact`, plus `resource_decision.verdict`,
+   `bound_artifact`, `bound_solver_change`, `bound_resource_policy`,
+   `bound_output_controls` and `bound_checkpoint_policy`. Use
+   `GO_DESKTOP_RECOVERY_CANARY` only if there is no unresolved HIGH finding;
+   otherwise use `NO_GO_DESKTOP_RECOVERY_CANARY` and prescribe exact fixes.
+8. Do not edit governed files and do not run CFD. End with
+   `cfd_authorized: false`; only Codex may convert a GO into a separate
+   immutable policy and fresh one-shot authorization.
 
 ## Required output from the continuation analysis
 
@@ -124,16 +163,16 @@ Return a severity-ranked report answering:
 
 1. Which solver mechanism most likely caused the near-unit NK linear residual,
    and what local source evidence supports that conclusion?
-2. What is the lowest-memory option change most likely to clear density and
-   energy below `1e-5`?
-3. Can it fit while keeping `MemAvailable >= 2 GiB`, using 9.855 GiB—not the
-   failed 9.45 GiB forecast—as the baseline?
-4. How will the next run retain a valid restart so six hours of work cannot be
-   lost again?
-5. What minimal local wall-spacing/collar change fixes all measured y+ failures,
-   and what cell/memory penalty does it imply?
-6. Can the required conservation and interface checks be recovered from the
-   retained fields?
+2. Is ANK-only the lowest-memory option most likely to clear density and energy
+   below `1e-5`, without changing equations or turbulence physics?
+3. Is the 8.317 GiB phase anchor defensible, does 9.2 GiB fit the immutable
+   resource arithmetic, and what uncertainty remains for checkpoint writes?
+4. Is every completed checkpoint valid, durable, versioned and restartable
+   after an abrupt WSL shutdown?
+5. Does one geometry-independent redistribution fix every known y+ hotspot
+   without changing cells, wall, farfield or interfaces?
+6. Are all residuals/logs/output fields retained, and which acceptance checks
+   remain deliberately unproven?
 
 Separate measured facts, source-backed behavior, engineering estimates and
 untested hypotheses. No review may authorize CFD by itself.

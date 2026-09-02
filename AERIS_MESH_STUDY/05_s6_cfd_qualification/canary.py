@@ -14,6 +14,7 @@ import json
 import math
 import os
 import re
+import shutil
 import signal
 import subprocess
 import sys
@@ -201,10 +202,14 @@ def _policy_identity_checks(policy: dict[str, Any]) -> dict[str, bool]:
     decision = review.get("decision", {})
     bound = decision.get("bound_artifact", {})
     resource_review = _read_json(resource_review_path) if resource_review_path.is_file() else {}
-    resource_decision = resource_review.get("decision", {})
+    resource_decision = resource_review.get(
+        "resource_decision", resource_review.get("decision", {})
+    )
     resource_bound_artifact = resource_decision.get("bound_artifact", {})
     resource_bound_solver = resource_decision.get("bound_solver_change", {})
     resource_bound_policy = resource_decision.get("bound_resource_policy", {})
+    resource_bound_output = resource_decision.get("bound_output_controls", {})
+    resource_bound_checkpoint = resource_decision.get("bound_checkpoint_policy", {})
     family = _read_json(evidence_path) if evidence_path.is_file() else {}
     a_c03 = [
         row
@@ -252,6 +257,14 @@ def _policy_identity_checks(policy: dict[str, Any]) -> dict[str, bool]:
     review_relative_path = str(authorization["independent_review_path"])
     resource_review_commit = str(authorization["resource_review_commit"])
     resource_review_relative_path = str(authorization["resource_review_path"])
+    recovery_policy = policy.get("schema_version") == "aeris.s6.m2_canary_policy.v5"
+    optional_solver_bindings = {
+        "useNKSolver": "use_nk_solver",
+        "NKSwitchTol": "nk_switch_tol",
+        "nCycles": "n_cycles",
+        "L2Convergence": "l2_convergence",
+        "timeLimit": "time_limit_seconds",
+    }
 
     return {
         "policy_immutable": policy.get("immutable") is True,
@@ -290,22 +303,22 @@ def _policy_identity_checks(policy: dict[str, Any]) -> dict[str, bool]:
             == authorization["resource_review_sha256"]
         ),
         "resource_review_go": (
-            resource_decision.get("verdict")
-            == authorization["required_resource_review_verdict"]
+            resource_decision.get("verdict") == authorization["required_resource_review_verdict"]
         ),
         "resource_review_bound_mesh": (
             resource_bound_artifact.get("sha256") == mesh_policy["sha256"]
             and resource_bound_artifact.get("cells") == mesh_policy["cells"]
         ),
         "resource_review_bound_solver_memory": (
-            resource_bound_solver.get("ANKSubspaceSize")
-            == solver_policy.get("ank_subspace_size")
-            and resource_bound_solver.get("NKSubspaceSize")
-            == solver_policy.get("nk_subspace_size")
-            and resource_bound_solver.get("ANKPCILUFill")
-            == solver_policy.get("ank_pc_ilu_fill")
-            and resource_bound_solver.get("NKPCILUFill")
-            == solver_policy.get("nk_pc_ilu_fill")
+            resource_bound_solver.get("ANKSubspaceSize") == solver_policy.get("ank_subspace_size")
+            and resource_bound_solver.get("NKSubspaceSize") == solver_policy.get("nk_subspace_size")
+            and resource_bound_solver.get("ANKPCILUFill") == solver_policy.get("ank_pc_ilu_fill")
+            and resource_bound_solver.get("NKPCILUFill") == solver_policy.get("nk_pc_ilu_fill")
+            and all(
+                resource_bound_solver.get(review_key) == solver_policy.get(policy_key)
+                for review_key, policy_key in optional_solver_bindings.items()
+                if policy_key in solver_policy
+            )
         ),
         "resource_review_bound_forecast": math.isclose(
             float(resource_bound_policy.get("forecast_peak_gib", math.nan)),
@@ -422,10 +435,25 @@ def _policy_identity_checks(policy: dict[str, Any]) -> dict[str, bool]:
             == "retain_all_cfd_logs_and_measurement_evidence"
         ),
         "volume_output_matches_review": (
-            policy.get("solver", {}).get("write_volume_solution") is False
-            and policy.get("solver", {}).get("write_surface_solution") is True
-            and policy.get("solver", {}).get("retain_surface_solution") is True
+            (
+                policy.get("solver", {}).get("write_volume_solution") is True
+                and policy.get("solver", {}).get("solution_precision") == "double"
+                and resource_bound_output.get("writeVolumeSolution") is True
+                and resource_bound_output.get("solutionPrecision") == "double"
+            )
+            if recovery_policy
+            else (
+                policy.get("solver", {}).get("write_volume_solution") is False
+                and policy.get("solver", {}).get("write_surface_solution") is True
+                and policy.get("solver", {}).get("retain_surface_solution") is True
+            )
         ),
+        "checkpoint_policy_bound": (
+            policy.get("checkpoint", {}).get("enabled") is True
+            and resource_bound_checkpoint == policy.get("checkpoint")
+        )
+        if recovery_policy
+        else True,
         "solver_scope_is_one_rank_rans_sa": (
             solver_policy.get("mpi_processes") == 1
             and solver_policy.get("equations") == "RANS"
@@ -434,15 +462,43 @@ def _policy_identity_checks(policy: dict[str, Any]) -> dict[str, bool]:
         "solver_preset_sha256": _hash_matches(preset_path, solver_policy["preset_sha256"]),
         "solver_history_and_output_controls": (
             solver_policy.get("store_convergence_history") is True
-            and solver_policy.get("write_volume_solution") is False
             and solver_policy.get("write_surface_solution") is True
             and solver_policy.get("retain_surface_solution") is True
             and solver_policy.get("ank_subspace_size") == 10
             and solver_policy.get("nk_subspace_size") == 20
             and solver_policy.get("ank_pc_ilu_fill") == 1
             and solver_policy.get("nk_pc_ilu_fill") == 1
-            and set(solver_policy.get("surface_variables", []))
-            == {"cp", "cf", "yplus", "vx", "vy", "vz"}
+            and (
+                (
+                    solver_policy.get("write_volume_solution") is True
+                    and solver_policy.get("solution_precision") == "double"
+                    and solver_policy.get("use_nk_solver") is False
+                    and math.isclose(
+                        float(solver_policy.get("nk_switch_tol", math.nan)),
+                        1.0e-10,
+                        rel_tol=0.0,
+                        abs_tol=0.0,
+                    )
+                    and {
+                        "cp",
+                        "cf",
+                        "cfx",
+                        "cfy",
+                        "cfz",
+                        "yplus",
+                        "rho",
+                        "vx",
+                        "vy",
+                        "vz",
+                    }.issubset(set(solver_policy.get("surface_variables", [])))
+                )
+                if recovery_policy
+                else (
+                    solver_policy.get("write_volume_solution") is False
+                    and set(solver_policy.get("surface_variables", []))
+                    == {"cp", "cf", "yplus", "vx", "vy", "vz"}
+                )
+            )
         ),
         "full_native_history_requested": {
             "resrho",
@@ -735,7 +791,7 @@ def _git_head() -> str | None:
     return completed.stdout.strip() if completed.returncode == 0 else None
 
 
-def _solver_source_hashes() -> dict[str, str]:
+def _solver_source_hashes(policy: dict[str, Any]) -> dict[str, str]:
     paths = [
         REPO / "src/aeris/cfd/case/spec.py",
         REPO / "src/aeris/cfd/env.py",
@@ -743,7 +799,7 @@ def _solver_source_hashes() -> dict[str, str]:
         REPO / "src/aeris/cfd/solvers/adflow/adapter.py",
         REPO / "src/aeris/cfd/solvers/adflow/options_schema.py",
         REPO / "src/aeris/cfd/solvers/adflow/parse.py",
-        REPO / "src/aeris/cfd/presets/data/adflow_rans_ank_nk_v1.yaml",
+        _repo_path(policy["solver"]["preset_path"]),
         S6 / "cfd_qc.py",
         Path(__file__),
     ]
@@ -779,6 +835,70 @@ def _terminate_process_group(process: subprocess.Popen[Any], grace_seconds: floa
             pass
 
 
+def _session_process_records(process_session: int) -> list[dict[str, Any]]:
+    """Return executable and argv evidence for every process in one session."""
+    records: list[dict[str, Any]] = []
+    for entry in Path("/proc").iterdir():
+        if not entry.name.isdigit():
+            continue
+        try:
+            stat = (entry / "stat").read_text(encoding="utf-8")
+            tail = stat[stat.rfind(")") + 2 :].split()
+            if int(tail[3]) != process_session:
+                continue
+            argv = [
+                item.decode("utf-8", errors="replace")
+                for item in (entry / "cmdline").read_bytes().split(b"\0")
+                if item
+            ]
+            records.append(
+                {
+                    "pid": int(entry.name),
+                    "executable": str((entry / "exe").resolve()),
+                    "argv": argv,
+                }
+            )
+        except (FileNotFoundError, PermissionError, IndexError, ValueError, OSError):
+            continue
+    return sorted(records, key=lambda row: row["pid"])
+
+
+def _checkpoint_signal_target(
+    process_session: int, *, executable_realpath: Path, runner_path: Path
+) -> dict[str, Any]:
+    """Select only the one MPI Python rank running the exact static runner."""
+    expected_executable = str(Path(executable_realpath).resolve())
+    expected_runner = str(Path(runner_path).resolve())
+    records = _session_process_records(process_session)
+    matches = [
+        row
+        for row in records
+        if row["executable"] == expected_executable and expected_runner in row["argv"]
+    ]
+    return {
+        "selected_pid": matches[0]["pid"] if len(matches) == 1 else None,
+        "match_count": len(matches),
+        "matches": matches,
+        "session_process_count": len(records),
+    }
+
+
+def _durable_copy(source: Path, destination: Path) -> None:
+    """Copy a completed native checkpoint and fsync file plus directory."""
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if destination.exists():
+        raise FileExistsError(f"refusing to overwrite checkpoint: {destination}")
+    with source.open("rb") as source_stream, destination.open("xb") as destination_stream:
+        shutil.copyfileobj(source_stream, destination_stream, length=1024 * 1024)
+        destination_stream.flush()
+        os.fsync(destination_stream.fileno())
+    directory_fd = os.open(destination.parent, os.O_RDONLY)
+    try:
+        os.fsync(directory_fd)
+    finally:
+        os.close(directory_fd)
+
+
 def _run_with_watchdog(
     command: list[str],
     *,
@@ -786,6 +906,7 @@ def _run_with_watchdog(
     log_path: Path,
     samples_path: Path,
     watchdog_policy: dict[str, Any],
+    checkpoint_policy: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     baseline = _resource_snapshot()
     started_wall = _now()
@@ -801,11 +922,93 @@ def _run_with_watchdog(
     minimum_free_disk = baseline["free_disk_bytes"]
     process: subprocess.Popen[Any] | None = None
     launch_error: dict[str, str] | None = None
+    checkpoint_policy = dict(checkpoint_policy or {})
+    checkpoint_enabled = checkpoint_policy.get("enabled") is True
+    checkpoint_events_path = workdir / str(
+        checkpoint_policy.get("events_filename", "checkpoint_events.jsonl")
+    )
+    checkpoint_directory = workdir / str(checkpoint_policy.get("directory", "checkpoints"))
+    checkpoint_source = workdir / str(
+        checkpoint_policy.get("forced_volume_filename", "aeris_cfd_forced_vol.cgns")
+    )
+    checkpoint_interval = float(checkpoint_policy.get("interval_seconds", math.inf))
+    checkpoint_stable_seconds = float(checkpoint_policy.get("stable_seconds", 15.0))
+    checkpoint_max_wait = float(checkpoint_policy.get("maximum_write_wait_seconds", 900.0))
+    next_checkpoint = started_monotonic + checkpoint_interval
+    checkpoint_request_count = 0
+    checkpoints: list[dict[str, Any]] = []
+    checkpoint_failures: list[dict[str, Any]] = []
+    pending_checkpoint: dict[str, Any] | None = None
+    checkpoint_stream = (
+        checkpoint_events_path.open("x", encoding="utf-8", buffering=1)
+        if checkpoint_enabled
+        else None
+    )
 
-    with (
-        log_path.open("x", encoding="utf-8") as solver_log,
-        samples_path.open("x", encoding="utf-8", buffering=1) as samples,
-    ):
+    def checkpoint_event(payload: dict[str, Any]) -> None:
+        if checkpoint_stream is None:
+            return
+        checkpoint_stream.write(json.dumps(payload, sort_keys=True) + "\n")
+        checkpoint_stream.flush()
+        os.fsync(checkpoint_stream.fileno())
+
+    def forced_signature() -> tuple[int, int] | None:
+        try:
+            stat = checkpoint_source.stat()
+        except FileNotFoundError:
+            return None
+        return stat.st_size, stat.st_mtime_ns
+
+    def capture_pending(now: float, *, writer_exited: bool = False) -> bool:
+        nonlocal pending_checkpoint
+        if pending_checkpoint is None:
+            return False
+        signature = forced_signature()
+        if (
+            signature is None
+            or signature[0] <= 0
+            or signature == pending_checkpoint["baseline_signature"]
+        ):
+            return False
+        if signature != pending_checkpoint.get("last_signature"):
+            pending_checkpoint["last_signature"] = signature
+            pending_checkpoint["stable_since"] = now
+            if not writer_exited:
+                return False
+        stable_for = now - float(pending_checkpoint["stable_since"])
+        if not writer_exited and stable_for < checkpoint_stable_seconds:
+            return False
+        number = int(pending_checkpoint["number"])
+        destination = checkpoint_directory / f"checkpoint_{number:04d}.cgns"
+        _durable_copy(checkpoint_source, destination)
+        captured = {
+            "event": "checkpoint_captured",
+            "number": number,
+            "created_at": _now(),
+            "elapsed_seconds": now - started_monotonic,
+            "source": str(checkpoint_source),
+            "path": str(destination),
+            "size_bytes": destination.stat().st_size,
+            "sha256": _sha256(destination),
+            "source_signature": list(signature),
+            "stable_seconds": stable_for,
+            "writer_exited": writer_exited,
+        }
+        checkpoints.append(captured)
+        checkpoint_event(captured)
+        pending_checkpoint = None
+        return True
+
+    try:
+        solver_log = log_path.open("x", encoding="utf-8")
+        samples = samples_path.open("x", encoding="utf-8", buffering=1)
+        if checkpoint_enabled:
+            checkpoint_directory.mkdir(parents=True, exist_ok=False)
+    except Exception:
+        if checkpoint_stream is not None:
+            checkpoint_stream.close()
+        raise
+    try:
         try:
             process = subprocess.Popen(
                 command,
@@ -837,6 +1040,70 @@ def _run_with_watchdog(
                     swap_growth = max(0, snapshot["swap_used_bytes"] - baseline["swap_used_bytes"])
                     maximum_swap_growth = max(maximum_swap_growth, swap_growth)
                     minimum_free_disk = min(minimum_free_disk, snapshot["free_disk_bytes"])
+
+                    if checkpoint_enabled:
+                        if pending_checkpoint is not None:
+                            if capture_pending(time.monotonic()):
+                                next_checkpoint = time.monotonic() + checkpoint_interval
+                            elif (
+                                time.monotonic() - float(pending_checkpoint["requested_monotonic"])
+                                > checkpoint_max_wait
+                            ):
+                                failure = {
+                                    "event": "checkpoint_write_timeout",
+                                    "number": pending_checkpoint["number"],
+                                    "created_at": _now(),
+                                    "elapsed_seconds": elapsed,
+                                    "maximum_write_wait_seconds": checkpoint_max_wait,
+                                }
+                                checkpoint_failures.append(failure)
+                                checkpoint_event(failure)
+                                pending_checkpoint = None
+                                next_checkpoint = time.monotonic() + checkpoint_interval
+                        elif time.monotonic() >= next_checkpoint:
+                            checkpoint_request_count += 1
+                            target = _checkpoint_signal_target(
+                                process.pid,
+                                executable_realpath=Path(
+                                    str(checkpoint_policy["solver_executable_realpath"])
+                                ),
+                                runner_path=workdir
+                                / str(checkpoint_policy.get("runner_filename", "run_adflow.py")),
+                            )
+                            request = {
+                                "event": "checkpoint_requested",
+                                "number": checkpoint_request_count,
+                                "created_at": _now(),
+                                "elapsed_seconds": elapsed,
+                                "signal": "SIGUSR1",
+                                "target": target,
+                                "baseline_signature": forced_signature(),
+                            }
+                            selected_pid = target["selected_pid"]
+                            if selected_pid is None:
+                                request["result"] = "target_not_unique"
+                                checkpoint_failures.append(request)
+                                next_checkpoint = time.monotonic() + min(60.0, checkpoint_interval)
+                            else:
+                                try:
+                                    os.kill(int(selected_pid), signal.SIGUSR1)
+                                    request["result"] = "signal_sent"
+                                    pending_checkpoint = {
+                                        "number": checkpoint_request_count,
+                                        "requested_monotonic": time.monotonic(),
+                                        "baseline_signature": request["baseline_signature"],
+                                        "last_signature": None,
+                                        "stable_since": None,
+                                    }
+                                except (ProcessLookupError, PermissionError, OSError) as error:
+                                    request["result"] = "signal_error"
+                                    request["error_type"] = type(error).__name__
+                                    request["error"] = str(error)
+                                    checkpoint_failures.append(request)
+                                    next_checkpoint = time.monotonic() + min(
+                                        60.0, checkpoint_interval
+                                    )
+                            checkpoint_event(request)
 
                     if (
                         snapshot["mem_available_bytes"]
@@ -881,8 +1148,15 @@ def _run_with_watchdog(
                 _terminate_process_group(process, float(watchdog_policy["terminate_grace_seconds"]))
 
         returncode = process.wait() if process is not None else None
+        if checkpoint_enabled and pending_checkpoint is not None:
+            capture_pending(time.monotonic(), writer_exited=True)
         samples.flush()
         os.fsync(samples.fileno())
+    finally:
+        solver_log.close()
+        samples.close()
+        if checkpoint_stream is not None:
+            checkpoint_stream.close()
 
     ended = _resource_snapshot()
     return {
@@ -901,6 +1175,16 @@ def _run_with_watchdog(
         "minimum_free_disk_bytes": minimum_free_disk,
         "baseline": baseline,
         "ended": ended,
+        "checkpointing": {
+            "enabled": checkpoint_enabled,
+            "events_path": str(checkpoint_events_path) if checkpoint_enabled else None,
+            "request_count": checkpoint_request_count,
+            "captured_count": len(checkpoints),
+            "failure_count": len(checkpoint_failures),
+            "checkpoints": checkpoints,
+            "failures": checkpoint_failures,
+            "pending_at_exit": pending_checkpoint is not None,
+        },
     }
 
 
@@ -1058,6 +1342,26 @@ def _artifact(path: Path) -> dict[str, Any]:
     }
 
 
+def _solution_selection(workdir: Path, kind: str) -> dict[str, Any]:
+    """Select the unique normal output while retaining forced-write evidence."""
+    candidates = sorted(workdir.glob(f"aeris_cfd*_{kind}.cgns"))
+    final = [
+        path
+        for path in candidates
+        if "_forced_" not in path.name and "_intermediate_" not in path.name
+    ]
+    forced = [path for path in candidates if "_forced_" in path.name]
+    selected = (
+        final[0] if len(final) == 1 else forced[0] if not final and len(forced) == 1 else None
+    )
+    return {
+        "selected": selected,
+        "final_candidates": final,
+        "forced_candidates": forced,
+        "all_candidates": candidates,
+    }
+
+
 def _postprocess(
     *,
     policy: dict[str, Any],
@@ -1086,15 +1390,16 @@ def _postprocess(
     classification_path = _repo_path(policy["classification_policy"]["path"])
     classification = yaml.safe_load(classification_path.read_text(encoding="utf-8"))
     yplus_policy = classification["wall_y_plus"]
-    surface_candidates = sorted(prepared.workdir.glob("aeris_cfd*_surf.cgns"))
-    surface_solution = surface_candidates[0] if len(surface_candidates) == 1 else None
+    surface_selection = _solution_selection(prepared.workdir, "surf")
+    surface_candidates = surface_selection["all_candidates"]
+    surface_solution = surface_selection["selected"]
     if surface_solution is None:
         yplus = {
             "passed": False,
             "failure_reasons": [
                 "missing_surface_solution"
                 if not surface_candidates
-                else "multiple_surface_solutions"
+                else "no_unique_final_surface_solution"
             ],
             "candidate_count": len(surface_candidates),
             "wall_distance_convention": yplus_policy["wall_distance_convention"],
@@ -1186,11 +1491,32 @@ def _postprocess(
         terminal_state = "solver"
         execution_status = "MEASUREMENT_COMPLETE"
 
+    volume_selection = _solution_selection(prepared.workdir, "vol")
+    volume_solution = volume_selection["selected"]
+    checkpoint_events_path = runtime.get("checkpointing", {}).get("events_path")
+    checkpoint_paths = [
+        Path(str(row["path"])) for row in runtime.get("checkpointing", {}).get("checkpoints", [])
+    ]
     artifacts = {
         "solver_log": _artifact(prepared.workdir / prepared.log_name),
         "adflow_run": _artifact(raw_run_path),
         "solve_report": _artifact(prepared.workdir / "solve_report.json"),
         "surface_solution": _artifact(surface_solution) if surface_solution else None,
+        "surface_solution_selection": {
+            key: [_artifact(path) for path in value]
+            for key, value in surface_selection.items()
+            if key != "selected"
+        },
+        "volume_solution": _artifact(volume_solution) if volume_solution else None,
+        "volume_solution_selection": {
+            key: [_artifact(path) for path in value]
+            for key, value in volume_selection.items()
+            if key != "selected"
+        },
+        "checkpoint_events": (
+            _artifact(Path(str(checkpoint_events_path))) if checkpoint_events_path else None
+        ),
+        "versioned_checkpoints": [_artifact(path) for path in checkpoint_paths],
         "time_verbose": _artifact(time_path),
         "watchdog_samples": _artifact(samples_path),
     }
@@ -1270,6 +1596,33 @@ def _build_solve_spec(policy: dict[str, Any]) -> SolveSpec:
     refs = policy["references"]
     flow = policy["flow"]
     solver = policy["solver"]
+    raw_options: dict[str, Any] = {
+        "equationType": str(solver["equations"]),
+        "turbulenceModel": str(solver["turbulence_model"]),
+        "writeVolumeSolution": bool(solver["write_volume_solution"]),
+        "writeSurfaceSolution": bool(solver["write_surface_solution"]),
+        "storeConvHist": bool(solver["store_convergence_history"]),
+        "monitorVariables": list(solver["monitor_variables"]),
+        "surfaceVariables": list(solver["surface_variables"]),
+        "ANKSubspaceSize": int(solver["ank_subspace_size"]),
+        "NKSubspaceSize": int(solver["nk_subspace_size"]),
+        "ANKPCILUFill": int(solver["ank_pc_ilu_fill"]),
+        "NKPCILUFill": int(solver["nk_pc_ilu_fill"]),
+    }
+    optional_options = {
+        "useNKSolver": ("use_nk_solver", bool),
+        "NKSwitchTol": ("nk_switch_tol", float),
+        "nCycles": ("n_cycles", int),
+        "L2Convergence": ("l2_convergence", float),
+        "solutionPrecision": ("solution_precision", str),
+        "timeLimit": ("time_limit_seconds", float),
+        "restartFile": ("restart_file", str),
+    }
+    for adflow_name, (policy_name, constructor) in optional_options.items():
+        value = solver.get(policy_name)
+        if value is not None:
+            raw_options[adflow_name] = constructor(value)
+
     return SolveSpec(
         solver="adflow",
         preset=str(solver["preset"]),
@@ -1287,19 +1640,7 @@ def _build_solve_spec(policy: dict[str, Any]) -> SolveSpec:
             float(value) for value in refs["secondary_moment_reference_xyz_m"]
         ),
         mpi_np=int(solver["mpi_processes"]),
-        raw_options={
-            "equationType": str(solver["equations"]),
-            "turbulenceModel": str(solver["turbulence_model"]),
-            "writeVolumeSolution": bool(solver["write_volume_solution"]),
-            "writeSurfaceSolution": bool(solver["write_surface_solution"]),
-            "storeConvHist": bool(solver["store_convergence_history"]),
-            "monitorVariables": list(solver["monitor_variables"]),
-            "surfaceVariables": list(solver["surface_variables"]),
-            "ANKSubspaceSize": int(solver["ank_subspace_size"]),
-            "NKSubspaceSize": int(solver["nk_subspace_size"]),
-            "ANKPCILUFill": int(solver["ank_pc_ilu_fill"]),
-            "NKPCILUFill": int(solver["nk_pc_ilu_fill"]),
-        },
+        raw_options=raw_options,
     )
 
 
@@ -1381,7 +1722,7 @@ def execute_canary(*, dry_run: bool, execute_token: str | None) -> dict[str, Any
         "mesh_sha256": _sha256(mesh_path),
         "command": timed_command,
         "prepared_artifacts": _prepared_artifacts(prepared),
-        "solver_source_sha256": _solver_source_hashes(),
+        "solver_source_sha256": _solver_source_hashes(policy),
         "process_launch_limit": 1,
         "automatic_retry_allowed": False,
         "accepted_classification_allowed": False,
@@ -1409,6 +1750,7 @@ def execute_canary(*, dry_run: bool, execute_token: str | None) -> dict[str, Any
         log_path=attempt_dir / prepared.log_name,
         samples_path=samples_path,
         watchdog_policy=policy["watchdog"],
+        checkpoint_policy=policy.get("checkpoint"),
     )
     execution = _postprocess(
         policy=policy,

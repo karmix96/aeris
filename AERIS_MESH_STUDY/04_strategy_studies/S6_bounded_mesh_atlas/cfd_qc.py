@@ -9,7 +9,6 @@ import os
 from pathlib import Path
 from typing import Any, Iterable
 
-import h5py
 import numpy as np
 
 YPLUS_SCHEMA = "aeris.mesh.s6_wall_yplus.v1"
@@ -399,6 +398,8 @@ def _read_adf_surface_fields(
 def _read_hdf5_surface_fields(
     surface_cgns: Path, field_names: set[str]
 ) -> tuple[dict[str, dict[str, list[np.ndarray]]], dict[str, Any]]:
+    import h5py
+
     arrays: dict[str, dict[str, list[np.ndarray]]] = {}
     with h5py.File(surface_cgns, "r") as handle:
 

@@ -1,0 +1,23 @@
+schema: aeris.cfd.preset.v1
+name: rans_ank_memory_safe_v1
+kind: solver_strategy
+tool: adflow
+description: >-
+  Single-grid RANS startup and end game using only ADflow ANK. This avoids the
+  separate NK allocation and the stalled early-NK regime measured on the AERIS
+  943k-cell C03 desktop canary.
+citation: >-
+  ADflow solvers.rst recommends lowering NKSwitchTol when NK repeatedly solves
+  near its 0.8 linear-tolerance ceiling and states that difficult RANS cases
+  may remain in ANK longer. AERIS attempt m2_a_c03_measurement_20260901_003
+  measured healthy ANK convergence and an NK plateau with 653/728 linear
+  residuals above 0.8, while NK increased peak resident memory by about 1.54
+  GiB. This governed preset changes only the ANK-to-NK choice.
+solver:
+  mg_cycle: sg
+  use_ank_solver: true
+  ank_switch_tol: 1.0
+  use_nk_solver: false
+  nk_switch_tol: 1.0e-10
+  n_cycles: 20000
+  l2_convergence: 1.0e-8

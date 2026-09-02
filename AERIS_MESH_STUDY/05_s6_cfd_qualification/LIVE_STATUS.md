@@ -1,6 +1,6 @@
 # S6 qualification live status
 
-Updated: 2026-09-02T07:19:28+03:00
+Updated: 2026-09-02T15:15:00+03:00
 
 ## Executive state
 
@@ -20,10 +20,45 @@ Updated: 2026-09-02T07:19:28+03:00
 - Actual ADflow cell-centroid y+ was measured. The global p95 and p99 passed,
   but the global maximum and nine of thirteen wall-region gates failed. Every
   tip/cap region failed; `tip_base` was worst.
-- The independent Claude post-run verdict reproduces the evidence and keeps
-  the CFD gate closed. **No new CFD, retry, or token reuse is authorized.**
+- The post-run failure has now been converted into a bounded recovery design:
+  one deterministic wall-normal correction, one low-memory ANK-only solver
+  change, final double-precision volume output, and native SIGUSR1 checkpoints.
+- The correction has passed mesh-only qualification on development geometries
+  A/B/C/E, and 77 focused tests pass. It has not yet been independently
+  reviewed. **No new CFD, retry, or token reuse is currently authorized.**
 - The development/holdout separation remains intact. The locked holdout was
   not accessed.
+
+## Recovery implementation awaiting independent review
+
+- Family evidence:
+  `reports/m2_c03_wall_normal_recovery_family_20260902.json`, SHA-256
+  `392ef9850de8e7795c35ef50082a3583bc1ed21855668e16b59b925e2dfa65e9`.
+- Recovery plan:
+  `reports/m2_a_c03_desktop_recovery_plan_20260902.json`, SHA-256
+  `1b2f2f91d5c435b73468e16acfdbdccecc7e7e9154af17ccbe3ac28ba16c68b8`.
+- The same dimensionless layer law was applied to all 13 blocks on A/B/C/E.
+  Every output retains 943,104 cells, zero inversions, exact wall and
+  farfield, 20 conformal paired interfaces, and `qmin=0.1251...0.1955`.
+- All per-block realized first-cell medians are now within
+  `4.05e-6...5.06e-6 m`. The old A tip-base median was `1.5505e-4 m`.
+- A facewise diagnostic using the actual attempt03 y+ and exact local height
+  ratios projects p95 `0.2366`, p99 `0.2682`, max `0.2932`, with no failed
+  region. This is screening evidence only; actual CFD y+ remains mandatory.
+- The proposed retry keeps one MPI rank and ILU/subspaces 1/1 and 10/20, but
+  disables the failed NK end game (`useNKSolver=false`) so the healthy ANK
+  solver continues. The previous ANK phase peaked near 8.317 GiB; the proposed
+  conservative forecast is 9.2 GiB, below the existing 75% WSL-memory cap.
+- The retry is capped at 27,000 seconds and 20,000 minor iterations. It writes
+  the final volume solution in double precision and adds `rho` plus vector Cf
+  to the retained surface fields.
+- Every 1,800 seconds the watchdog will signal only the exact MPI Python rank
+  with ADflow's native SIGUSR1, wait for the forced volume file to stabilize,
+  then fsync an immutable numbered checkpoint and SHA-256 event record. A live
+  synthetic signal/copy integration test passes.
+- The next attempt, policy and token do not yet exist. Claude must independently
+  reproduce this evidence and return an explicit GO with no unresolved HIGH
+  finding before those are created.
 
 ## Exact attempt03 identity
 
@@ -93,9 +128,9 @@ Updated: 2026-09-02T07:19:28+03:00
 - The required signed boundary mass-flux balance was not measured; the
   available continuity-residual surrogate cannot replace it.
 - Conformal-interface field-discontinuity QC was not evaluated.
-- Therefore C03 cannot support viscous acceptance or grid-independence claims.
-  A separately governed tip/cap and narrow-OML wall-normal correction is
-  required.
+- Therefore the old C03 cannot support viscous acceptance or grid-independence
+  claims. The separately governed correction candidate is now implemented and
+  mesh-qualified above, but still requires independent review and actual CFD.
 
 ## Evidence retained
 
@@ -141,37 +176,37 @@ restart state exists. Nothing may be deleted without explicit human approval.
   Richardson or grid-independence claim remains unauthorized even if a solver
   eventually converges.
 
-## Next work — no CFD authorized
+## Next work — audit first; no CFD currently authorized
 
-1. Commit and push the complete attempt03 evidence, residual/resource logs,
-   postmortem, independent review and both live handoffs.
-2. Re-anchor any future resource model at no less than the measured 9.855 GiB
-   peak and preserve the unchanged 2 GiB watchdog floor.
-3. Perform read-only ADflow source/options analysis for one bounded convergence
-   lever and for restart/volume-state semantics. Stronger NK ILU, an ANK-biased
-   path, subspace changes and continuation must be compared analytically before
-   any new policy.
-4. Design and independently audit a C03 wall-normal/tip-cap correction using
-   the measured per-block y+ evidence. Do not claim mesh independence yet.
-5. Attempt a read-only derivation of the governed signed boundary mass balance
-   and interface-field QC from retained artifacts.
-6. A new heavy action requires a new immutable policy, independent GO, all
-   gates green, a fresh one-shot authorization, and explicit user approval.
+1. Commit and push the exact mesh recovery, solver/checkpoint implementation,
+   tests, reports and these handoffs without staging unrelated S7/section work
+   or test-generated transient reports.
+2. Ask Claude Code to independently re-open all four meshes, reproduce hashes,
+   QC, y+ projection, NK diagnosis, option wiring, memory arithmetic and the
+   real SIGUSR1 checkpoint test. Claude must not run CFD or inspect holdout.
+3. Resolve every HIGH finding. If the verdict is GO, freeze policy v5 against
+   the reviewed commit and exact A mesh; run dry identity/resource/MPI gates.
+4. Only after all gates are green, consume one fresh token and launch one
+   measurement-only A/C03 run. Preserve every residual, log, resource sample,
+   forced/final surface, forced/final volume and checkpoint.
+5. Postprocess actual residuals, forces, y+, resources and field presence. Do
+   not claim acceptance or grid independence; signed boundary flux and seam QC
+   remain separate required work unless implemented and measured.
 
 ## Claude continuation order if Codex credits stop
 
-Read `CLAUDE_CODE_HANDOFF.md` and execute only its read-only post-run analysis
-order. Preserve all attempt03 evidence and unrelated user changes. Do not run
-CFD, do not generate or inspect holdout data, and do not create or reuse an
-execute token. Leave both handoffs current with exact file hashes and a clear
-`cfd_authorized: false` state.
+Read `CLAUDE_CODE_HANDOFF.md` and execute its current independent recovery
+audit. Preserve all attempt03 and mesh-recovery evidence plus unrelated user
+changes. Do not run CFD, do not inspect holdout, and do not create or reuse an
+execute token. Leave an explicit `cfd_authorized: false` state unless Codex has
+subsequently committed a Claude GO, immutable policy v5 and green preflight.
 
 ## Safe resume commands
 
 ```bash
 cd /home/mike_kara/aeris
 git status --short
-.venv/bin/python -m pytest -q tests/cfd/test_adflow_adapter.py AERIS_MESH_STUDY/05_s6_cfd_qualification/tests/test_orchestrator.py AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/test_s6.py
+.venv/bin/python -m pytest -q AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/test_s6.py AERIS_MESH_STUDY/05_s6_cfd_qualification/tests
 ```
 
 There is deliberately no CFD execute command or reusable token in this file.

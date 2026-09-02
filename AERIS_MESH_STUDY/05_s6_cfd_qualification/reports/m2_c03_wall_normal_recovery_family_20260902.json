@@ -1,0 +1,120 @@
+{
+  "schema": "aeris.s6.m2_wall_normal_recovery_family.v1",
+  "created_at": "2026-09-02T14:31:00+03:00",
+  "cfd_run": false,
+  "holdout_accessed": false,
+  "method": "common dimensionless wall-normal redistribution from healthy OML zones domain.00001 through domain.00005",
+  "method_properties": {
+    "wall_moved": false,
+    "farfield_moved": false,
+    "column_paths_changed": false,
+    "surface_graph_changed": false,
+    "cell_count_changed": false,
+    "per_geometry_tuning": false
+  },
+  "implementation": {
+    "path": "AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/wall_normal.py",
+    "sha256": "5e30e93ef8e2606a7196d741a5148feb76f1a3fe3115a7d02637183380c6e37d"
+  },
+  "results": [
+    {
+      "geometry": "A",
+      "geometry_index": 83,
+      "level": "C03",
+      "input_sha256": "be2805ff85b6b1043863d7678d1551a52b6e8a65b299534d4ec0aaeffa51aeb4",
+      "input_coordinate_payload_sha256": "5240ca81cd6d0e31bc8a23b990c4652d91908d357b04fa5d0ec4c8df560ba0e4",
+      "output_path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_wall_normal_recovery_20260902_v3/candidate_c03/lhs100_seed42_083/wing_vol_redistributed.cgns",
+      "output_sha256": "0fe4a4c00bbed1e47fcdaa46b60d00334d48c0cfe9b617cb2a3b0ec51cbd7ced",
+      "output_coordinate_payload_sha256": "6295e5ab83aa145dad887ec4ccbb2093067de87578d22099695f97897bdf480f",
+      "evidence_path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_wall_normal_redistribution_20260902_v3.json",
+      "evidence_sha256": "0e5b80b325a228fd8f81904c8dd719ac2ac2f0c023001670475d178ea8bd464a",
+      "cells": 943104,
+      "inverted_cells": 0,
+      "min_scaled_quality": 0.16709883180270516,
+      "min_volume_m3": 1.1671481429247506e-13,
+      "production_floor_passed": true,
+      "realized_first_cell_median_range_m": [4.851131055467702e-06, 5.059934068431058e-06]
+    },
+    {
+      "geometry": "B",
+      "geometry_index": 7,
+      "level": "C03",
+      "input_sha256": "1b2c2b94176cf7e8027f4db5d3d156dc05cbf35080bcdbd7125b88ef7e90a282",
+      "input_coordinate_payload_sha256": "f587ee02fa509b73ee348d2a41ce170008153e6cecfb3a89a1f59f1b26907ea3",
+      "output_path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_wall_normal_recovery_20260902_v3/candidate_c03_B/lhs100_seed42_007/wing_vol_redistributed.cgns",
+      "output_sha256": "fd74a87d61f82002cc6c43a1e148efc071d47cc5b7fa9ac39f69e0ec44889a66",
+      "output_coordinate_payload_sha256": "4ce1f6d032cd42a2e63239ef8ec28e9348760c76c33baeb031c3709d720d563b",
+      "evidence_path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_b_c03_wall_normal_redistribution_20260902_v3.json",
+      "evidence_sha256": "8abffdec73fff349d395e72e3f62339653fb337de27efc4d660d6c04f84ef4b9",
+      "cells": 943104,
+      "inverted_cells": 0,
+      "min_scaled_quality": 0.12506682386039278,
+      "min_volume_m3": 1.0504208378816434e-13,
+      "production_floor_passed": true,
+      "realized_first_cell_median_range_m": [4.13185792235522e-06, 4.509284735823539e-06]
+    },
+    {
+      "geometry": "C",
+      "geometry_index": 85,
+      "level": "C03",
+      "input_sha256": "2f2a25d8415dcc98063917f7476e4d746c722ef21bec7885a3e61c4bb3763f48",
+      "input_coordinate_payload_sha256": "21f7f7d3ca12e3a42be13a5e9def4c0da9b80ef97efce7e2cb3aa8a3a01a720b",
+      "output_path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_wall_normal_recovery_20260902_v3/candidate_c03_C_target_specific/lhs100_seed42_085/wing_vol_redistributed.cgns",
+      "output_sha256": "97ad95736786a9874d288b94d76ec3aa3008b90d723e029c2fa4e3bacdf95ff0",
+      "output_coordinate_payload_sha256": "fcfddfde91b8bad16ad06ac053de6286b251ce2270c0712c3d0cd4943360df0e",
+      "evidence_path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_c_c03_wall_normal_redistribution_20260902_v3.json",
+      "evidence_sha256": "dd3d7d3bdf9ca2b4a5c0347bf09d2a8262cd42f17b10351b3507e0b8ceb0ebfa",
+      "cells": 943104,
+      "inverted_cells": 0,
+      "min_scaled_quality": 0.19545578448531598,
+      "min_volume_m3": 1.0564436837663639e-13,
+      "production_floor_passed": true,
+      "realized_first_cell_median_range_m": [4.165838145063724e-06, 4.356237694601549e-06]
+    },
+    {
+      "geometry": "E",
+      "geometry_index": 47,
+      "level": "C03",
+      "input_sha256": "4eae4e0fc2b45e01005b44f4a1607d7b89f23d1be89d802e4acc03f862257159",
+      "input_coordinate_payload_sha256": "c903c3a67e58c457dff4fe27fb9c2e227eb7efc38b092a20693d5900f3147721",
+      "output_path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_wall_normal_recovery_20260902_v3/candidate_c03_E/lhs100_seed42_047/wing_vol_redistributed.cgns",
+      "output_sha256": "133e5116455318a80e4ca0167b2cf2944a41469e5bc24218af82f0c9b090e629",
+      "output_coordinate_payload_sha256": "33df85ad5e6f6c42beb86e1758e15a6ac28b657d8f5b93d9975437c2b383ffec",
+      "evidence_path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_e_c03_wall_normal_redistribution_20260902_v3.json",
+      "evidence_sha256": "f10671f242c56415139bbefaf2754af833d102f3c36e3bd68627450abe90efaf",
+      "cells": 943104,
+      "inverted_cells": 0,
+      "min_scaled_quality": 0.13795938358785062,
+      "min_volume_m3": 1.0431193939788676e-13,
+      "production_floor_passed": true,
+      "realized_first_cell_median_range_m": [4.054430030607755e-06, 4.357661436821674e-06]
+    }
+  ],
+  "a_yplus_projection": {
+    "status": "diagnostic_projection_not_cfd_acceptance",
+    "source_execution": "m2_a_c03_measurement_20260901_003",
+    "method": "measured face yplus times candidate/source local first-cell-height ratio",
+    "global_p50": 0.17716303594734548,
+    "global_p95": 0.23658978689869894,
+    "global_p99": 0.2681625411395804,
+    "global_maximum": 0.29316813485443327,
+    "fraction_at_or_below_one": 1.0,
+    "failed_regions": [],
+    "accepted_classification_allowed": false
+  },
+  "family_gate": {
+    "passed": true,
+    "criteria": [
+      "all_four_development_geometries_present",
+      "zero_inversions",
+      "positive_volume",
+      "min_scaled_quality_strictly_above_0.10",
+      "exact_wall_and_farfield",
+      "20_conformal_interface_pairs",
+      "unchanged_cell_count",
+      "uniform_method"
+    ],
+    "authorizes_cfd": false,
+    "required_next_gate": "independent_review_of_mesh_and_desktop_solver_recovery"
+  }
+}

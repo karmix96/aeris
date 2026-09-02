@@ -20,9 +20,11 @@ import pytest
 import qualification
 import resolution
 import strategy_s6
+import wall_normal
 import yaml
-from aeris.cfd.meshing.pyhyp_options import GRID_LEVELS
 from shared import volume_qc
+
+from aeris.cfd.meshing.pyhyp_options import GRID_LEVELS
 
 
 def test_qualification_plan_refines_all_directions_and_protects_holdout() -> None:
@@ -466,9 +468,7 @@ def test_production_wall_policy_matches_tested_calibration_and_is_numeric() -> N
 def test_candidate_wall_spacing_registry_matches_pyhyp_defaults() -> None:
     """Prevent silent fallback to a retired C01/C02/C03 spacing value."""
     for level in ("candidate_c01", "candidate_c02", "candidate_c03"):
-        assert GRID_LEVELS[level]["s0_frac"] == pytest.approx(
-            resolution.first_cell_fraction(level)
-        )
+        assert GRID_LEVELS[level]["s0_frac"] == pytest.approx(resolution.first_cell_fraction(level))
 
 
 def _cube() -> tuple[dict[str, np.ndarray], dict[str, np.ndarray]]:
@@ -516,6 +516,95 @@ def test_deformation_reports_realized_first_layer_spacing() -> None:
     written = deform.written_deformation_metadata(deformed, surface, metadata)
     assert written["max_wall_error_m"] == pytest.approx(0.0)
     assert written["first_layer_spacing"]["deformed"]["median_m"] == pytest.approx(expected)
+
+
+def test_wall_normal_reference_law_uses_selected_healthy_columns() -> None:
+    i = np.linspace(0.0, 1.0, 3)
+    j = np.linspace(0.0, 1.0, 2)
+    k = np.array([0.0, 1.0, 3.0, 10.0])
+    kk, jj, ii = np.meshgrid(k, j, i, indexing="ij")
+    reference = np.stack((ii, jj, kk), axis=-1)
+    distorted = reference.copy()
+    distorted[1, ..., 2] = 8.0
+    distorted[2, ..., 2] = 9.0
+
+    fraction, metadata = wall_normal.reference_layer_fraction(
+        {"healthy": reference, "excluded": distorted}, ["healthy"]
+    )
+
+    np.testing.assert_allclose(fraction, [0.0, 0.1, 0.3, 1.0])
+    assert metadata["reference_zones"] == ["healthy"]
+    assert metadata["reference_column_count"] == 6
+    assert metadata["median_layer_spacing_m"] == pytest.approx([1.0, 2.0, 7.0])
+
+
+def test_wall_normal_redistribution_preserves_endpoints_and_interfaces() -> None:
+    i = np.linspace(0.0, 1.0, 5)
+    old_k = np.array([0.0, 8.0, 9.0, 10.0])
+
+    def block(y0: float, y1: float) -> np.ndarray:
+        j = np.linspace(y0, y1, 3)
+        kk, jj, ii = np.meshgrid(old_k, j, i, indexing="ij")
+        return np.stack((ii, jj, kk), axis=-1)
+
+    source = {"left": block(0.0, 0.5), "right": block(0.5, 1.0)}
+    fraction = np.array([0.0, 0.1, 0.3, 1.0])
+    redistributed = wall_normal.redistribute_volume_columns(source, fraction)
+
+    for zone in source:
+        np.testing.assert_array_equal(redistributed[zone][0], source[zone][0])
+        np.testing.assert_array_equal(redistributed[zone][-1], source[zone][-1])
+        np.testing.assert_allclose(redistributed[zone][:, 0, 0, 2], [0.0, 1.0, 3.0, 10.0])
+    interfaces = deform.volume_interface_report(redistributed)
+    assert interfaces["paired_face_count"] == 1
+    assert interfaces["max_mismatch_m"] == pytest.approx(0.0)
+    assert wall_normal.coordinate_payload_sha256(redistributed) == (
+        wall_normal.coordinate_payload_sha256(
+            {name: values.copy() for name, values in redistributed.items()}
+        )
+    )
+    changed = {name: values.copy() for name, values in redistributed.items()}
+    changed["left"][1, 0, 0, 2] += 1.0e-12
+    assert wall_normal.coordinate_payload_sha256(changed) != (
+        wall_normal.coordinate_payload_sha256(redistributed)
+    )
+
+
+def test_wall_normal_yplus_projection_uses_local_height_ratio(tmp_path: Path, monkeypatch) -> None:
+    volume, _surface = _cube()
+    candidate = {"zone": volume["zone"].copy()}
+    candidate["zone"][1, ..., 2] *= 0.5
+    surface_solution = tmp_path / "surface.cgns"
+    surface_solution.write_bytes(b"test surface")
+    measured = np.full(12, 1.5)
+
+    monkeypatch.setattr(
+        cfd_qc,
+        "read_surface_field_arrays",
+        lambda _path, _fields: (
+            {"NSWallAdiabaticBCZone1": {"YPlus": [measured]}},
+            {"reader": "synthetic"},
+        ),
+    )
+    report = wall_normal.projected_wall_yplus(
+        source_surface_cgns=surface_solution,
+        source_blocks=volume,
+        candidate_blocks=candidate,
+    )
+
+    assert report["status"] == "diagnostic_projection_not_cfd_acceptance"
+    assert report["accepted_classification_allowed"] is False
+    assert report["projected_gate_passed"]
+    assert report["global"]["statistics"]["maximum"] == pytest.approx(0.75)
+    region = report["regions"]["NSWallAdiabaticBCZone1"]
+    assert region["volume_zone"] == "zone"
+    assert region["first_cell_height_ratio"]["p50"] == pytest.approx(0.5)
+
+
+def test_wall_normal_redistribution_rejects_invalid_law() -> None:
+    volume, _surface = _cube()
+    with pytest.raises(ValueError, match="increase strictly"):
+        wall_normal.redistribute_volume_columns(volume, np.array([0.0, 0.5, 0.5, 1.0]))
 
 
 def test_atlas_selection_is_deterministic_and_unique() -> None:

@@ -1,0 +1,68 @@
+{
+  "schema": "aeris.s6.human_directed_audit_waiver.v1",
+  "created_at": "2026-09-02T20:14:00+03:00",
+  "reviewer_role": "human principal investigator",
+  "independent_review_performed": false,
+  "audit_waived_by_user": true,
+  "user_direction": "run it and dont wait for the claude audit. set mpi rank 6 and ran the cfd with the new mesh",
+  "cfd_authorized": true,
+  "decision": {
+    "verdict": "USER_DIRECTED_AUDIT_WAIVER_GO",
+    "bound_artifact": {
+      "sha256": "0fe4a4c00bbed1e47fcdaa46b60d00334d48c0cfe9b617cb2a3b0ec51cbd7ced",
+      "cells": 943104
+    },
+    "conditions": [
+      "one fresh measurement-only development-set launch",
+      "exact corrected A/C03 mesh",
+      "exactly six MPI ranks",
+      "ANK-only RANS/SA",
+      "resource watchdog remains mandatory",
+      "no automatic retry and no accepted classification"
+    ]
+  },
+  "resource_decision": {
+    "verdict": "USER_DIRECTED_SIX_RANK_RESOURCE_RISK_ACCEPTED",
+    "bound_artifact": {
+      "sha256": "0fe4a4c00bbed1e47fcdaa46b60d00334d48c0cfe9b617cb2a3b0ec51cbd7ced",
+      "cells": 943104
+    },
+    "bound_solver_change": {
+      "ANKSubspaceSize": 10,
+      "NKSubspaceSize": 20,
+      "ANKPCILUFill": 1,
+      "NKPCILUFill": 1,
+      "useNKSolver": false,
+      "NKSwitchTol": 1e-10,
+      "nCycles": 20000,
+      "L2Convergence": 1e-11,
+      "timeLimit": 27000.0,
+      "mpi_processes": 6
+    },
+    "bound_resource_policy": {
+      "forecast_peak_gib": 9.45,
+      "six_rank_increment_measured": false,
+      "risk_disposition": "unknown MPI duplication is controlled by the live 2 GiB MemAvailable floor; a watchdog termination is a resource measurement, not a mesh verdict"
+    },
+    "bound_output_controls": {
+      "writeVolumeSolution": true,
+      "solutionPrecision": "double",
+      "writeSurfaceSolution": true,
+      "storeConvHist": true,
+      "surfaceVariables": ["cp", "cf", "cfx", "cfy", "cfz", "yplus", "rho", "vx", "vy", "vz"]
+    },
+    "bound_checkpoint_policy": {
+      "enabled": false,
+      "reason": "periodic native signal targeting is not validated for a six-rank collective solve; final double volume remains required"
+    }
+  },
+  "known_risks": [
+    "six-rank peak memory has not been measured",
+    "corrected-mesh ANK convergence is extrapolated from the prior mesh",
+    "no periodic restart exists for this six-rank attempt",
+    "pending Claude HIGH findings were waived, not represented as closed"
+  ],
+  "holdout_access_allowed": false,
+  "automatic_retry_allowed": false,
+  "accepted_classification_allowed": false
+}

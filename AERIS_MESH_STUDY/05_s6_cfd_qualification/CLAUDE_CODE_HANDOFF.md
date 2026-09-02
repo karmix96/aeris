@@ -1,6 +1,6 @@
 # Claude Code continuation order — S6 qualification
 
-Updated: 2026-09-02T15:15:00+03:00
+Updated: 2026-09-02T15:35:08+03:00
 
 This is the live recovery-audit handoff for the AERIS S6 automated CFD
 qualification study. Preserve the evidence chain. A mesh correction and
@@ -14,24 +14,27 @@ independently accepted. **No CFD is currently authorized.**
 3. `reports/m2_a_c03_desktop_recovery_plan_20260902.json`
 4. `reports/m2_c03_wall_normal_recovery_family_20260902.json`
 5. `04_strategy_studies/S6_bounded_mesh_atlas/wall_normal.py`
-6. `05_s6_cfd_qualification/canary.py`
-7. `../../src/aeris/cfd/presets/data/adflow_rans_ank_memory_safe_v1.yaml`
-8. `policies/m2_a_c03_canary_v4.yaml`
-9. `reports/m2_a_c03_canary_authorization_consumed_20260901_attempt03.json`
-10. `reports/m2_a_c03_canary_execution_20260901_attempt03.json`
-11. `reports/m2_a_c03_solver_postmortem_20260902_attempt03.json`
-12. `reviews/claude_m2_a_c03_attempt03_postrun_review_20260902.json`
-13. `studies/canary/m2_a_c03_measurement_20260901_003/adflow_effective_options.json`
-14. `studies/canary/m2_a_c03_measurement_20260901_003/solve_report.json`
-15. `studies/canary/m2_a_c03_measurement_20260901_003/adflow_run.log`
-16. `studies/canary/m2_a_c03_measurement_20260901_003/resource_watchdog.jsonl`
+6. `04_strategy_studies/S6_bounded_mesh_atlas/cfd_qc.py`
+7. `05_s6_cfd_qualification/canary.py`
+8. `../../src/aeris/cfd/presets/data/adflow_rans_ank_memory_safe_v1.yaml`
+9. `policies/m2_a_c03_canary_v4.yaml`
+10. `reports/m2_a_c03_canary_authorization_consumed_20260901_attempt03.json`
+11. `reports/m2_a_c03_canary_execution_20260901_attempt03.json`
+12. `reports/m2_a_c03_solver_postmortem_20260902_attempt03.json`
+13. `reviews/claude_m2_a_c03_attempt03_postrun_review_20260902.json`
+14. `studies/canary/m2_a_c03_measurement_20260901_003/adflow_effective_options.json`
+15. `studies/canary/m2_a_c03_measurement_20260901_003/solve_report.json`
+16. `studies/canary/m2_a_c03_measurement_20260901_003/adflow_run.log`
+17. `studies/canary/m2_a_c03_measurement_20260901_003/resource_watchdog.jsonl`
 
 Do not read or inspect the locked holdout contents.
 
 ## Recovery candidate to audit
 
+- Immutable implementation review target:
+  `b7da6401fd7c8940f3038e8df2c8b23538fc9f2d`.
 - Recovery-plan SHA-256:
-  `1b2f2f91d5c435b73468e16acfdbdccecc7e7e9154af17ccbe3ac28ba16c68b8`.
+  `5da822a743d946a05610d1e40e0ac64b979f04f77182ef3633b0d44e865818e2`.
 - Family-report SHA-256:
   `392ef9850de8e7795c35ef50082a3583bc1ed21855668e16b59b925e2dfa65e9`.
 - Four development meshes A/B/C/E were redistributed with one common method.
@@ -52,10 +55,14 @@ Do not read or inspect the locked holdout contents.
   Check both the phase attribution and arithmetic.
 - Final volume output is double precision. Surface output adds rho and vector
   skin friction. Native SIGUSR1 is requested every 1,800 s; the watchdog
-  targets only the exact MPI Python rank, waits for a stable forced volume,
-  fsyncs a numbered copy, and records its hash. Inspect failure/race behavior.
-- Focused suite currently reports 77 passed, including a live subprocess
-  SIGUSR1 checkpoint test. Re-run it.
+  targets only the exact MPI Python rank. It requires all 13 zones, all three
+  coordinates, and fully readable finite Density/Velocity/Pressure/SA fields;
+  hashes source and fsynced staging copy independently; reopens the staging
+  copy; then atomically publishes and directory-fsyncs it. Inspect remaining
+  crash windows and do not equate structural validation with a tested restart.
+- Focused suite currently reports 78 passed, including live subprocess
+  SIGUSR1 publication, invalid-checkpoint nonpublication, and real ADF-CGNS
+  full-field inventory tests. Re-run it.
 
 ## Terminal attempt03 outcome
 

@@ -1,6 +1,6 @@
 # S6 qualification live status
 
-Updated: 2026-09-02T15:15:00+03:00
+Updated: 2026-09-02T15:35:08+03:00
 
 ## Executive state
 
@@ -24,10 +24,13 @@ Updated: 2026-09-02T15:15:00+03:00
   one deterministic wall-normal correction, one low-memory ANK-only solver
   change, final double-precision volume output, and native SIGUSR1 checkpoints.
 - The correction has passed mesh-only qualification on development geometries
-  A/B/C/E, and 77 focused tests pass. It has not yet been independently
+  A/B/C/E, and 78 focused tests pass. It has not yet been independently
   reviewed. **No new CFD, retry, or token reuse is currently authorized.**
 - The development/holdout separation remains intact. The locked holdout was
   not accessed.
+- The two recovery commits are local but not pushed because this WSL session
+  has no GitHub HTTPS credential helper or usable SSH key. No work is lost;
+  retry `git push origin main` after GitHub authentication is restored.
 
 ## Recovery implementation awaiting independent review
 
@@ -36,7 +39,9 @@ Updated: 2026-09-02T15:15:00+03:00
   `392ef9850de8e7795c35ef50082a3583bc1ed21855668e16b59b925e2dfa65e9`.
 - Recovery plan:
   `reports/m2_a_c03_desktop_recovery_plan_20260902.json`, SHA-256
-  `1b2f2f91d5c435b73468e16acfdbdccecc7e7e9154af17ccbe3ac28ba16c68b8`.
+  `5da822a743d946a05610d1e40e0ac64b979f04f77182ef3633b0d44e865818e2`.
+- Independent review target commit:
+  `b7da6401fd7c8940f3038e8df2c8b23538fc9f2d`.
 - The same dimensionless layer law was applied to all 13 blocks on A/B/C/E.
   Every output retains 943,104 cells, zero inversions, exact wall and
   farfield, 20 conformal paired interfaces, and `qmin=0.1251...0.1955`.
@@ -53,9 +58,12 @@ Updated: 2026-09-02T15:15:00+03:00
   the final volume solution in double precision and adds `rho` plus vector Cf
   to the retained surface fields.
 - Every 1,800 seconds the watchdog will signal only the exact MPI Python rank
-  with ADflow's native SIGUSR1, wait for the forced volume file to stabilize,
-  then fsync an immutable numbered checkpoint and SHA-256 event record. A live
-  synthetic signal/copy integration test passes.
+  with ADflow's native SIGUSR1. A checkpoint is not published merely because
+  its size is stable: all 13 zones must reopen with three coordinate arrays
+  and complete finite Density/Velocity/Pressure/SA fields. Source and staged
+  copy hashes must match, the copy is reopened again, and only then is it
+  atomically linked and directory-fsynced as an immutable numbered checkpoint.
+  Positive signal/copy and invalid-checkpoint nonpublication tests pass.
 - The next attempt, policy and token do not yet exist. Claude must independently
   reproduce this evidence and return an explicit GO with no unresolved HIGH
   finding before those are created.
@@ -178,18 +186,17 @@ restart state exists. Nothing may be deleted without explicit human approval.
 
 ## Next work — audit first; no CFD currently authorized
 
-1. Commit and push the exact mesh recovery, solver/checkpoint implementation,
-   tests, reports and these handoffs without staging unrelated S7/section work
-   or test-generated transient reports.
-2. Ask Claude Code to independently re-open all four meshes, reproduce hashes,
-   QC, y+ projection, NK diagnosis, option wiring, memory arithmetic and the
-   real SIGUSR1 checkpoint test. Claude must not run CFD or inspect holdout.
-3. Resolve every HIGH finding. If the verdict is GO, freeze policy v5 against
+1. Ask Claude Code to independently audit immutable implementation commit
+   `b7da6401fd7c8940f3038e8df2c8b23538fc9f2d`: re-open all four meshes and
+   reproduce hashes, QC, y+ projection, NK diagnosis, option wiring, memory
+   arithmetic and the real SIGUSR1 checkpoint test. Claude must not run CFD or
+   inspect holdout.
+2. Resolve every HIGH finding. If the verdict is GO, freeze policy v5 against
    the reviewed commit and exact A mesh; run dry identity/resource/MPI gates.
-4. Only after all gates are green, consume one fresh token and launch one
+3. Only after all gates are green, consume one fresh token and launch one
    measurement-only A/C03 run. Preserve every residual, log, resource sample,
    forced/final surface, forced/final volume and checkpoint.
-5. Postprocess actual residuals, forces, y+, resources and field presence. Do
+4. Postprocess actual residuals, forces, y+, resources and field presence. Do
    not claim acceptance or grid independence; signed boundary flux and seam QC
    remain separate required work unless implemented and measured.
 

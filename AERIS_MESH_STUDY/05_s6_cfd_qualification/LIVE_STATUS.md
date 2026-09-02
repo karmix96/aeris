@@ -27,6 +27,23 @@ Updated: 2026-09-02T20:06:55+03:00
   reset; there is no partial Claude code to reconcile.
 - **No CFD process is running and `cfd_authorized` remains false.**
 
+## CPU-parallelism finding
+
+- Attempt03 did **not** use the whole desktop CPU. Its immutable command was
+  `mpirun -np 1 ... run_adflow.py`; GNU time reports 22,857 s user time versus
+  22,909 s user+system and 6:21:49 wall time, or 99% of one logical CPU.
+- WSL exposes an Intel i5-10400 with 6 physical cores / 12 logical CPUs. The
+  run therefore left roughly eleven logical CPUs unused; this materially
+  explains why the 943,104-cell case took more than six hours compared with a
+  Fluent run partitioned across the desktop.
+- One rank was a deliberate memory-safety choice, not an ADflow speed optimum.
+  Before another multi-hour canary, add a separately governed 1/2/4/6-rank
+  scaling-and-memory qualification design. Do not assume 12 ranks are best:
+  MPI halo/partition and per-rank solver structures can increase total memory,
+  and the six physical cores are the first meaningful ceiling to test.
+- The current one-rank recovery plan remains unchanged until that design is
+  source-reviewed and resource-bounded; no MPI scaling CFD is authorized yet.
+
 ## Executive state
 
 - **No CFD process is running.**

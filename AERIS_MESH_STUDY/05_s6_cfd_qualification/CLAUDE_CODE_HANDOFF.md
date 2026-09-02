@@ -37,6 +37,13 @@ bounded corrections:
    component-residual margin versus the current unbounded `1e-11` extrapolation.
 6. Add focused regression tests and run the full existing focused suite.
    Refresh both handoffs with exact test result and remaining gate.
+7. Add a read-only MPI scaling assessment before policy v5. Attempt03 used
+   exactly one MPI rank and GNU time measured 99% of one CPU, while this host
+   exposes 6 physical / 12 logical CPUs. Design (do not execute) the cheapest
+   governed 1/2/4/6-rank fixed-work benchmark that can measure elapsed time,
+   peak full-session RSS and convergence-rate invariance on the exact corrected
+   mesh. Quantify duplicated/halo-memory risk from installed ADflow/OpenMPI
+   sources where possible. No ADflow initialization is authorized by this item.
 
 H1 in the historical Claude review is a false source-reading conclusion, not a
 code defect. Installed

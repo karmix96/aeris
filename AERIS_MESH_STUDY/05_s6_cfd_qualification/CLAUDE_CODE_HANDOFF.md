@@ -1,6 +1,53 @@
 # Claude Code continuation order — S6 qualification
 
-Updated: 2026-09-02T19:30:54+03:00
+Updated: 2026-09-02T20:06:55+03:00
+
+## Current correction order — 2026-09-02 19:59 EEST
+
+Delegation status at 20:06 EEST: Claude Opus exited before making any code
+change because its session limit was reached; the CLI reported a reset at
+00:20 Europe/Athens. The implementation files and tests therefore remain at
+commit `21ec3ef35fe48c3c7965f7b91cd98e5274047688`. Resume this exact order after
+the reset. Do not assume any item below was implemented merely because the
+delegation was attempted.
+
+The first independent recovery review is complete and retained at
+`reviews/claude_m2_a_c03_desktop_recovery_review_20260902.json`; its verdict is
+`NO_GO_DESKTOP_RECOVERY_CANARY`. Do not launch CFD. Implement and test these
+bounded corrections:
+
+1. Extend checkpoint inventory to require finite `ReferenceState` arrays
+   `Density`, `Pressure`, and ADflow's actual `Mach_Velocity`; require density
+   and pressure to be strictly positive. Keep the label
+   `structurally_validated_not_restart_tested` until a separately governed real
+   restart round-trip exists.
+2. Move watchdog resource sampling onto an independent continuous thread so
+   hashing/copying/CGNS validation cannot create a sampling blind spot. Record
+   the maximum sample gap and samples observed during checkpoint capture.
+3. Record the latest parseable ADflow nonlinear iteration, total minor
+   iteration and component residual row with every checkpoint request and
+   completed checkpoint. Assert/record native `monitor.writevolume=true`
+   immediately before `solver(ap)`.
+4. Add a governed, transparent ANK density-slope diagnostic and terminal
+   `SOLVER_STAGNATION_MEASURED` classification; it must not silently convert a
+   partial result into acceptance or trigger an automatic blind rerun.
+5. Correct the resource plan with itemized write/validator allowances, an
+   explicit MemAvailable preflight check, and a note that bytes/cell is derived.
+   Reconsider whether `L2Convergence=1e-10` provides the best defensible
+   component-residual margin versus the current unbounded `1e-11` extrapolation.
+6. Add focused regression tests and run the full existing focused suite.
+   Refresh both handoffs with exact test result and remaining gate.
+
+H1 in the historical Claude review is a false source-reading conclusion, not a
+code defect. Installed
+`/home/mike_kara/packages/mdolab/adflow/adflow/pyADflow.py` calls
+`self._setForcedFileNames()` immediately after `setAeroProblem()` (near line
+1214), and `_setForcedFileNames` assigns
+`self.adflow.inputio.forcedvolumefile = <outputDirectory>/<AP.name>_forced_vol.cgns`
+(near lines 6631-6648). With AP name `aeris_cfd`, the watchdog's path is exact.
+Add a source-contract regression/evidence record and ask the next independent
+review to withdraw H1. Do not initialize ADflow merely to prove this source
+fact.
 
 This is the live recovery-audit handoff for the AERIS S6 automated CFD
 qualification study. Preserve the evidence chain. A mesh correction and

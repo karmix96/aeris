@@ -1,0 +1,94 @@
+{
+  "schema": "aeris.s6.independent_safety_and_scientific_review.compact.v1",
+  "review_id": "claude_m2_a_c03_desktop_recovery_review_20260902",
+  "created_at": "2026-09-02",
+  "reviewer": "Claude Opus 5 via Claude Code 2.1.258",
+  "transcription": "faithful compact transcription of the final read-only review; the full session is retained at the source_session path and bound by SHA-256",
+  "source_session": {
+    "path": "/home/mike_kara/.claude/projects/-home-mike-kara-aeris/56a1b44b-d502-4ef0-a83a-fbacf61af5b2.jsonl",
+    "sha256": "b3cd264fd706c8f27b6cb732e9c82db4b2b93cdd9cf4d0e26f0e3232e9811ff5"
+  },
+  "review_mode": "read_only",
+  "cfd_run": false,
+  "holdout_accessed": false,
+  "files_edited": false,
+  "cfd_authorized": false,
+  "decision": {
+    "verdict": "NO_GO_DESKTOP_RECOVERY_CANARY",
+    "bound_artifact": {
+      "path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_desktop_recovery_plan_20260902.json",
+      "sha256": "e1eaea665ff8df4b04507f5cd3dfa2d44db1a170244cb7dbb8d3294c7e8bc17b"
+    },
+    "implementation_target": "21ec3ef35fe48c3c7965f7b91cd98e5274047688",
+    "unresolved_high_findings": ["H1", "H2", "H3", "H4"]
+  },
+  "findings": [
+    {
+      "id": "H1",
+      "severity": "HIGH",
+      "title": "Reviewer concluded that the forced-volume filename was not assigned",
+      "required_action": "Prove the exact ADflow-internal filename assignment and watched path before reconsideration.",
+      "lead_researcher_disposition": "REBUTTAL_PENDING_COMMIT: installed pyADflow.py calls _setForcedFileNames immediately after setAeroProblem and assigns inputio.forcedvolumefile to <outputDirectory>/<aeroProblem.name>_forced_vol.cgns; exact source evidence will be recorded and independently re-reviewed."
+    },
+    {
+      "id": "H2",
+      "severity": "HIGH",
+      "title": "Structural checkpoint validation omits ADflow ReferenceState requirements",
+      "required_action": "Require finite ReferenceState Density, Pressure and Mach_Velocity values, require positive density/pressure, and describe checkpoints as structurally validated until a separately authorized restart round-trip is executed.",
+      "lead_researcher_disposition": "ACCEPTED_FOR_CORRECTION"
+    },
+    {
+      "id": "H3",
+      "severity": "HIGH",
+      "title": "The resource sampler pauses during synchronous checkpoint validation and the 9.2 GiB estimate lacks itemized checkpoint allowances",
+      "required_action": "Use a dedicated continuous sampler, report maximum sampling gap, add explicit write/validation allowances and a MemAvailable preflight bound, and mark bytes-per-cell as derived.",
+      "lead_researcher_disposition": "ACCEPTED_FOR_CORRECTION"
+    },
+    {
+      "id": "H4",
+      "severity": "HIGH",
+      "title": "The 1e-11 stop extrapolates the old-mesh ANK trend without a defined stagnation outcome",
+      "required_action": "Add a governed density-residual slope diagnostic and a defined recorded stagnation outcome; explicitly disclose mesh-change uncertainty and avoid presenting the fitted runtime as guaranteed.",
+      "lead_researcher_disposition": "ACCEPTED_FOR_CORRECTION"
+    },
+    {
+      "id": "M1",
+      "severity": "MEDIUM",
+      "title": "Projected facewise y+ correspondence relies on zone and element ordering",
+      "required_action": "Strengthen the ordering assertion while retaining projection-only status."
+    },
+    {
+      "id": "M2",
+      "severity": "MEDIUM",
+      "title": "In-process CGNS validation could make watchdog robustness depend on the CGNS library",
+      "required_action": "Keep resource monitoring independent of validation and fail closed on validator failure."
+    },
+    {
+      "id": "M3",
+      "severity": "MEDIUM",
+      "title": "Checkpoint filenames are numbered but not bound to a recorded solver state",
+      "required_action": "Record nonlinear iteration, total minor iteration and component residual snapshot with every checkpoint."
+    },
+    {
+      "id": "M4",
+      "severity": "MEDIUM",
+      "title": "The native write-volume flag is mutable",
+      "required_action": "Assert and record monitor.writevolume immediately before the solver call."
+    }
+  ],
+  "independently_reproduced_by_reviewer": {
+    "ank_phase_peak_gib": 8.317020416259766,
+    "nk_allocation_and_plateau": true,
+    "solver_option_semantics": true,
+    "checkpoint_publication_mechanics": true,
+    "signal_targeting": true,
+    "mesh_artifact_hashes": true
+  },
+  "verification_not_performed_by_reviewer": [
+    "reopen and recompute four mesh QC records",
+    "recompute facewise yplus projection",
+    "recompute complete ANK/NK statistics from JSON",
+    "run focused Python tests"
+  ],
+  "next_gate": "Resolve or rebut every HIGH finding, rerun local verification, then obtain a new independent read-only review. This review itself authorizes no CFD."
+}

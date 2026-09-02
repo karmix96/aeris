@@ -1,6 +1,31 @@
 # S6 qualification live status
 
-Updated: 2026-09-02T19:30:54+03:00
+Updated: 2026-09-02T20:06:55+03:00
+
+## Immediate continuation checkpoint
+
+- Claude Opus completed the requested read-only recovery audit. Its historical
+  verdict is **`NO_GO_DESKTOP_RECOVERY_CANARY`** with four HIGH findings; the
+  compact retained review is
+  `reviews/claude_m2_a_c03_desktop_recovery_review_20260902.json`.
+- H1 ("forced checkpoint filename is not wired") is contradicted by the exact
+  installed ADflow 2.13.1 source: `pyADflow.__call__` invokes
+  `_setForcedFileNames()` after `setAeroProblem()`, and that method assigns
+  `inputio.forcedvolumefile` to
+  `<outputDirectory>/<aeroProblem.name>_forced_vol.cgns`. For this governed
+  runner that is exactly `aeris_cfd_forced_vol.cgns`. Preserve H1 in the
+  historical review, record the source proof, and require Claude to reconsider
+  it in the next independent review.
+- H2-H4 are accepted for correction: validate the CGNS `ReferenceState`, keep
+  resource sampling alive during checkpoint I/O, itemize the checkpoint memory
+  allowance and MemAvailable bound, bind checkpoints to live solver state, and
+  define a measured convergence-stagnation outcome.
+- Codex attempted to delegate those bounded implementation/test tasks to
+  Claude Opus. Claude stopped before editing any implementation file with
+  `You've hit your session limit · resets 12:20am (Europe/Athens)`. The
+  Claude continuation order remains ready below for execution after that
+  reset; there is no partial Claude code to reconcile.
+- **No CFD process is running and `cfd_authorized` remains false.**
 
 ## Executive state
 

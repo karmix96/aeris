@@ -102,6 +102,10 @@ def _load_cgns_library() -> tuple[ctypes.CDLL, str]:
         size_pointer,
     ]
     library.cg_zone_read.restype = ctypes.c_int
+    library.cg_ngrids.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int, int_pointer]
+    library.cg_ngrids.restype = ctypes.c_int
+    library.cg_ncoords.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int, int_pointer]
+    library.cg_ncoords.restype = ctypes.c_int
     library.cg_index_dim.argtypes = [
         ctypes.c_int,
         ctypes.c_int,
@@ -438,6 +442,277 @@ def read_surface_field_arrays(
     if signature == b"\x89HDF\r\n\x1a\n":
         return _read_hdf5_surface_fields(surface_cgns, requested)
     return _read_adf_surface_fields(surface_cgns, requested)
+
+
+def cgns_volume_restart_inventory(
+    path: Path,
+    *,
+    expected_zones: int | None = None,
+    required_fields: Iterable[str] = (),
+    minimum_coordinate_arrays: int = 3,
+    maximum_field_values: int = 2_000_000,
+) -> dict[str, Any]:
+    """Verify that an ADF-CGNS checkpoint has restart fields in every zone.
+
+    This bounded-memory validation is intended to run beside ADflow. It opens
+    the ADF tree, checks grid and solution metadata, then reads and checks one
+    required state field at a time. It never loads coordinates or a complete
+    multi-field state into Python.
+    """
+    path = Path(path).resolve()
+    with path.open("rb") as stream:
+        if stream.read(8) == b"\x89HDF\r\n\x1a\n":
+            raise ValueError("checkpoint inventory currently requires ADF-CGNS")
+    library, loaded_from = _load_cgns_library()
+    file_number = ctypes.c_int()
+    _check_cgns(
+        library.cg_open(os.fsencode(path), _CGNS_MODE_READ, ctypes.byref(file_number)),
+        "open ADF CGNS checkpoint",
+        library,
+    )
+    required = frozenset(required_fields)
+    zones: list[dict[str, Any]] = []
+    try:
+        number_of_bases = ctypes.c_int()
+        _check_cgns(
+            library.cg_nbases(file_number.value, ctypes.byref(number_of_bases)),
+            "read checkpoint base count",
+            library,
+        )
+        for base_index in range(1, number_of_bases.value + 1):
+            number_of_zones = ctypes.c_int()
+            _check_cgns(
+                library.cg_nzones(file_number.value, base_index, ctypes.byref(number_of_zones)),
+                f"read checkpoint zone count for base {base_index}",
+                library,
+            )
+            for zone_index in range(1, number_of_zones.value + 1):
+                zone_name = ctypes.create_string_buffer(_CGNS_NAME_BYTES)
+                zone_size = (_CGNS_SIZE * 9)()
+                _check_cgns(
+                    library.cg_zone_read(
+                        file_number.value,
+                        base_index,
+                        zone_index,
+                        zone_name,
+                        zone_size,
+                    ),
+                    f"read checkpoint zone {zone_index}",
+                    library,
+                )
+                number_of_grids = ctypes.c_int()
+                number_of_coordinates = ctypes.c_int()
+                _check_cgns(
+                    library.cg_ngrids(
+                        file_number.value,
+                        base_index,
+                        zone_index,
+                        ctypes.byref(number_of_grids),
+                    ),
+                    f"read checkpoint grid count for zone {zone_index}",
+                    library,
+                )
+                _check_cgns(
+                    library.cg_ncoords(
+                        file_number.value,
+                        base_index,
+                        zone_index,
+                        ctypes.byref(number_of_coordinates),
+                    ),
+                    f"read checkpoint coordinate count for zone {zone_index}",
+                    library,
+                )
+                number_of_solutions = ctypes.c_int()
+                _check_cgns(
+                    library.cg_nsols(
+                        file_number.value,
+                        base_index,
+                        zone_index,
+                        ctypes.byref(number_of_solutions),
+                    ),
+                    f"read checkpoint solution count for zone {zone_index}",
+                    library,
+                )
+                solution_fields: list[list[str]] = []
+                solutions: list[dict[str, Any]] = []
+                for solution_index in range(1, number_of_solutions.value + 1):
+                    solution_name = ctypes.create_string_buffer(_CGNS_NAME_BYTES)
+                    grid_location = ctypes.c_int()
+                    _check_cgns(
+                        library.cg_sol_info(
+                            file_number.value,
+                            base_index,
+                            zone_index,
+                            solution_index,
+                            solution_name,
+                            ctypes.byref(grid_location),
+                        ),
+                        f"read checkpoint solution {solution_index} metadata",
+                        library,
+                    )
+                    data_dimension = ctypes.c_int()
+                    dimensions = (_CGNS_SIZE * 9)()
+                    _check_cgns(
+                        library.cg_sol_size(
+                            file_number.value,
+                            base_index,
+                            zone_index,
+                            solution_index,
+                            ctypes.byref(data_dimension),
+                            dimensions,
+                        ),
+                        f"read checkpoint solution {solution_index} dimensions",
+                        library,
+                    )
+                    shape = tuple(int(dimensions[i]) for i in range(data_dimension.value))
+                    value_count = int(np.prod(shape, dtype=np.int64)) if shape else 0
+                    number_of_fields = ctypes.c_int()
+                    _check_cgns(
+                        library.cg_nfields(
+                            file_number.value,
+                            base_index,
+                            zone_index,
+                            solution_index,
+                            ctypes.byref(number_of_fields),
+                        ),
+                        f"read checkpoint fields for zone {zone_index} solution {solution_index}",
+                        library,
+                    )
+                    fields: list[str] = []
+                    for field_index in range(1, number_of_fields.value + 1):
+                        data_type = ctypes.c_int()
+                        field_name = ctypes.create_string_buffer(_CGNS_NAME_BYTES)
+                        _check_cgns(
+                            library.cg_field_info(
+                                file_number.value,
+                                base_index,
+                                zone_index,
+                                solution_index,
+                                field_index,
+                                ctypes.byref(data_type),
+                                field_name,
+                            ),
+                            (
+                                f"read checkpoint field {field_index} for zone "
+                                f"{zone_index} solution {solution_index}"
+                            ),
+                            library,
+                        )
+                        fields.append(field_name.value.decode("utf-8", errors="replace"))
+                    solution_fields.append(fields)
+                    has_required_fields = required.issubset(fields)
+                    required_fields_fully_read_and_finite = not required
+                    field_checks: dict[str, dict[str, Any]] = {}
+                    if required and has_required_fields and 0 < value_count <= maximum_field_values:
+                        read_min = (_CGNS_SIZE * data_dimension.value)(
+                            *([1] * data_dimension.value)
+                        )
+                        read_max = (_CGNS_SIZE * data_dimension.value)(*shape)
+                        required_fields_fully_read_and_finite = True
+                        for required_field in sorted(required):
+                            values = np.empty(value_count, dtype=np.float64)
+                            _check_cgns(
+                                library.cg_field_read(
+                                    file_number.value,
+                                    base_index,
+                                    zone_index,
+                                    solution_index,
+                                    os.fsencode(required_field),
+                                    _CGNS_REAL_DOUBLE,
+                                    read_min,
+                                    read_max,
+                                    values.ctypes.data_as(ctypes.c_void_p),
+                                ),
+                                (
+                                    f"read required checkpoint field {required_field} "
+                                    f"for zone {zone_index} solution {solution_index}"
+                                ),
+                                library,
+                            )
+                            finite = bool(np.isfinite(values).all())
+                            field_checks[required_field] = {
+                                "value_count": value_count,
+                                "all_finite": finite,
+                            }
+                            required_fields_fully_read_and_finite &= finite
+                    solutions.append(
+                        {
+                            "name": solution_name.value.decode("utf-8", errors="replace"),
+                            "grid_location": grid_location.value,
+                            "shape": list(shape),
+                            "value_count_per_field": value_count,
+                            "within_validation_value_limit": (
+                                0 < value_count <= maximum_field_values
+                            ),
+                            "fields": fields,
+                            "has_required_restart_field_set": has_required_fields,
+                            "required_field_checks": field_checks,
+                            "required_fields_fully_read_and_finite": (
+                                required_fields_fully_read_and_finite
+                            ),
+                        }
+                    )
+                zones.append(
+                    {
+                        "name": zone_name.value.decode("utf-8", errors="replace"),
+                        "grid_count": number_of_grids.value,
+                        "coordinate_array_count": number_of_coordinates.value,
+                        "solution_count": number_of_solutions.value,
+                        "solutions": solutions,
+                        "solution_fields": solution_fields,
+                        "solution_field_counts": [len(fields) for fields in solution_fields],
+                        "has_required_restart_field_set": any(
+                            required.issubset(fields) for fields in map(set, solution_fields)
+                        ),
+                        "has_readable_finite_required_restart_state": any(
+                            solution["required_fields_fully_read_and_finite"]
+                            for solution in solutions
+                        ),
+                    }
+                )
+    finally:
+        _check_cgns(library.cg_close(file_number.value), "close ADF CGNS checkpoint", library)
+
+    failure_reasons: list[str] = []
+    if expected_zones is not None and len(zones) != expected_zones:
+        failure_reasons.append("zone_count_mismatch")
+    if not zones:
+        failure_reasons.append("no_zones")
+    if any(zone["grid_count"] <= 0 for zone in zones):
+        failure_reasons.append("zone_without_grid")
+    if any(zone["coordinate_array_count"] < minimum_coordinate_arrays for zone in zones):
+        failure_reasons.append("zone_without_complete_coordinates")
+    if any(not zone["solution_field_counts"] for zone in zones):
+        failure_reasons.append("zone_without_solution")
+    if any(
+        field_count <= 0
+        for zone in zones
+        for field_count in zone["solution_field_counts"]
+    ):
+        failure_reasons.append("solution_without_fields")
+    if required and any(not zone["has_required_restart_field_set"] for zone in zones):
+        failure_reasons.append("zone_without_required_restart_field_set")
+    if required and any(
+        zone["has_required_restart_field_set"]
+        and not zone["has_readable_finite_required_restart_state"]
+        for zone in zones
+    ):
+        failure_reasons.append("zone_without_readable_finite_restart_state")
+    return {
+        "passed": not failure_reasons,
+        "failure_reasons": failure_reasons,
+        "path": str(path),
+        "file_backend": "ADF",
+        "reader": "CGNS_MLL_metadata_plus_bounded_full_required_field_reads",
+        "cgns_library": loaded_from,
+        "base_count": number_of_bases.value,
+        "zone_count": len(zones),
+        "expected_zone_count": expected_zones,
+        "minimum_coordinate_arrays": minimum_coordinate_arrays,
+        "required_fields": sorted(required),
+        "maximum_field_values": maximum_field_values,
+        "zones": zones,
+    }
 
 
 def _is_no_slip_wall_zone(zone_name: str) -> bool:

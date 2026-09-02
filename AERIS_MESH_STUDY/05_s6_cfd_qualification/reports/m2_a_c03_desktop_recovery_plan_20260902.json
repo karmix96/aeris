@@ -1,6 +1,6 @@
 {
   "schema": "aeris.s6.m2_desktop_recovery_plan.v1",
-  "created_at": "2026-09-02T15:05:00+03:00",
+  "created_at": "2026-09-02T15:30:21+03:00",
   "status": "PENDING_INDEPENDENT_REVIEW",
   "cfd_run": false,
   "holdout_accessed": false,
@@ -93,6 +93,7 @@
   },
   "bound_checkpoint_policy": {
     "enabled": true,
+    "validate_cgns_restart": true,
     "events_filename": "checkpoint_events.jsonl",
     "directory": "checkpoints",
     "forced_volume_filename": "aeris_cfd_forced_vol.cgns",
@@ -100,7 +101,19 @@
     "stable_seconds": 20.0,
     "maximum_write_wait_seconds": 900.0,
     "solver_executable_realpath": "/home/mike_kara/miniconda3/envs/mach-aero/bin/python3.11",
-    "runner_filename": "run_adflow.py"
+    "runner_filename": "run_adflow.py",
+    "expected_zone_count": 13,
+    "minimum_coordinate_arrays_per_zone": 3,
+    "maximum_validation_field_values": 2000000,
+    "required_restart_fields": [
+      "Density",
+      "VelocityX",
+      "VelocityY",
+      "VelocityZ",
+      "Pressure",
+      "TurbulentSANuTilde"
+    ],
+    "publication_contract": "stable_native_source_then_metadata_reopen_then_independent_source_and_copy_sha256_match_then_copy_metadata_reopen_then_atomic_hardlink_and_directory_fsync"
   },
   "bound_resource_policy": {
     "model": "measured_ank_phase_plus_checkpoint_margin_v1",
@@ -121,11 +134,15 @@
     "mesh_redistribution_path": "AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/wall_normal.py",
     "mesh_redistribution_sha256": "5e30e93ef8e2606a7196d741a5148feb76f1a3fe3115a7d02637183380c6e37d",
     "canary_orchestrator_path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/canary.py",
-    "canary_orchestrator_sha256": "30d33f407fb5f686fb12398725eb5a76dd739f008ae9fe655db436a46e0a0885",
+    "canary_orchestrator_sha256": "b57147d6c5d9eda2342fd7fa93c2606add8feb2d633ef856838f33bbcbf90191",
+    "cgns_restart_validator_path": "AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/cfd_qc.py",
+    "cgns_restart_validator_sha256": "b31021d95e278ad352e9399bd961248eb29f3cd49b7b08b55b243db57b295d41",
     "solver_preset_path": "src/aeris/cfd/presets/data/adflow_rans_ank_memory_safe_v1.yaml",
     "solver_preset_sha256": "b923c505c52e6c0c5f2119c3542caee09fcb7c7cff57728cf5ce038cca55b152",
-    "focused_tests": "77 passed",
-    "checkpoint_signal_integration_test": "passed"
+    "focused_tests": "78 passed",
+    "checkpoint_signal_integration_test": "passed",
+    "invalid_checkpoint_nonpublication_test": "passed",
+    "cgns_inventory_fixture_test": "passed"
   },
   "local_adflow_authority": {
     "repository_commit": "2602568068b083a1a1c7745bfd21de9a476fb530",

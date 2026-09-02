@@ -151,9 +151,17 @@ def test_solution_selection_prefers_normal_output_and_retains_forced(tmp_path):
     assert selected["forced_candidates"] == [forced]
 
 
-def test_watchdog_captures_versioned_sigusr1_checkpoint(tmp_path):
+def test_watchdog_captures_versioned_sigusr1_checkpoint(tmp_path, monkeypatch):
     sys.path.insert(0, str(ROOT))
-    from canary import _run_with_watchdog
+    import canary
+
+    inspected: list[Path] = []
+
+    def valid_inventory(path, **_requirements):
+        inspected.append(Path(path))
+        return {"passed": True, "path": str(path), "test_inventory": True}
+
+    monkeypatch.setattr(canary, "cgns_volume_restart_inventory", valid_inventory)
 
     runner = tmp_path / "run_adflow.py"
     runner.write_text(
@@ -165,7 +173,7 @@ def test_watchdog_captures_versioned_sigusr1_checkpoint(tmp_path):
         "time.sleep(0.8)\n",
         encoding="utf-8",
     )
-    runtime = _run_with_watchdog(
+    runtime = canary._run_with_watchdog(
         [sys.executable, str(runner)],
         workdir=tmp_path,
         log_path=tmp_path / "solver.log",
@@ -180,6 +188,9 @@ def test_watchdog_captures_versioned_sigusr1_checkpoint(tmp_path):
         },
         checkpoint_policy={
             "enabled": True,
+            "validate_cgns_restart": True,
+            "expected_zone_count": 13,
+            "required_restart_fields": ["Density", "TurbulentSANuTilde"],
             "events_filename": "checkpoint_events.jsonl",
             "directory": "checkpoints",
             "forced_volume_filename": "aeris_cfd_forced_vol.cgns",
@@ -195,6 +206,9 @@ def test_watchdog_captures_versioned_sigusr1_checkpoint(tmp_path):
     assert runtime["watchdog_stopped"] is False
     assert checkpointing["request_count"] >= 1
     assert checkpointing["captured_count"] >= 1
+    assert checkpointing["restart_validation_enabled"] is True
+    assert checkpointing["expected_zone_count"] == 13
+    assert len(inspected) >= 2
     assert checkpointing["failure_count"] <= (
         checkpointing["request_count"] - checkpointing["captured_count"]
     )
@@ -202,6 +216,74 @@ def test_watchdog_captures_versioned_sigusr1_checkpoint(tmp_path):
         path = Path(checkpoint["path"])
         assert path.is_file()
         assert hashlib.sha256(path.read_bytes()).hexdigest() == checkpoint["sha256"]
+        assert checkpoint["source_sha256"] == checkpoint["sha256"]
+        assert checkpoint["source_inventory"]["passed"] is True
+        assert checkpoint["copied_inventory"]["passed"] is True
+        assert not path.with_name(f"{path.stem}.pending.cgns").exists()
+
+
+def test_watchdog_never_publishes_checkpoint_that_fails_restart_inventory(
+    tmp_path, monkeypatch
+):
+    sys.path.insert(0, str(ROOT))
+    import canary
+
+    monkeypatch.setattr(
+        canary,
+        "cgns_volume_restart_inventory",
+        lambda _path, **_requirements: {
+            "passed": False,
+            "failure_reasons": ["zone_without_required_restart_field_set"],
+        },
+    )
+    runner = tmp_path / "run_adflow.py"
+    runner.write_text(
+        "import pathlib, signal, time\n"
+        "target = pathlib.Path(__file__).parent / 'aeris_cfd_forced_vol.cgns'\n"
+        "def checkpoint(_signal, _frame):\n"
+        "    target.write_bytes(b'incomplete-restart')\n"
+        "signal.signal(signal.SIGUSR1, checkpoint)\n"
+        "time.sleep(0.7)\n",
+        encoding="utf-8",
+    )
+    runtime = canary._run_with_watchdog(
+        [sys.executable, str(runner)],
+        workdir=tmp_path,
+        log_path=tmp_path / "solver.log",
+        samples_path=tmp_path / "resources.jsonl",
+        watchdog_policy={
+            "poll_interval_seconds": 0.02,
+            "heartbeat_interval_seconds": 10.0,
+            "minimum_mem_available_gib": 0.0,
+            "maximum_swap_growth_gib": 100.0,
+            "minimum_runtime_free_disk_gib": 0.0,
+            "terminate_grace_seconds": 1.0,
+        },
+        checkpoint_policy={
+            "enabled": True,
+            "validate_cgns_restart": True,
+            "expected_zone_count": 13,
+            "required_restart_fields": ["Density", "TurbulentSANuTilde"],
+            "events_filename": "checkpoint_events.jsonl",
+            "directory": "checkpoints",
+            "forced_volume_filename": "aeris_cfd_forced_vol.cgns",
+            "interval_seconds": 0.05,
+            "stable_seconds": 0.02,
+            "maximum_write_wait_seconds": 0.5,
+            "solver_executable_realpath": str(Path(sys.executable).resolve()),
+            "runner_filename": runner.name,
+        },
+    )
+    checkpointing = runtime["checkpointing"]
+    events = [
+        json.loads(line)
+        for line in (tmp_path / "checkpoint_events.jsonl").read_text().splitlines()
+    ]
+    assert runtime["returncode"] == 0
+    assert checkpointing["captured_count"] == 0
+    assert checkpointing["failure_count"] >= 1
+    assert any(row["event"] == "checkpoint_validation_wait" for row in events)
+    assert not list((tmp_path / "checkpoints").glob("checkpoint_[0-9][0-9][0-9][0-9].cgns"))
 
 
 def test_governed_canary_prepares_exact_solver_contract(tmp_path, monkeypatch):
@@ -429,6 +511,7 @@ def test_surface_field_reader_reads_adflow_adf_and_filters_wall_yplus(tmp_path):
         _CGNS_SIZE,
         _check_cgns,
         _load_cgns_library,
+        cgns_volume_restart_inventory,
         wall_yplus_summary,
     )
 
@@ -461,6 +544,16 @@ def test_surface_field_reader_reads_adflow_adf_and_filters_wall_yplus(tmp_path):
         int_pointer,
     ]
     library.cg_sol_write.restype = ctypes.c_int
+    library.cg_coord_write.argtypes = [
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_char_p,
+        ctypes.c_void_p,
+        int_pointer,
+    ]
+    library.cg_coord_write.restype = ctypes.c_int
     library.cg_field_write.argtypes = [
         ctypes.c_int,
         ctypes.c_int,
@@ -506,6 +599,26 @@ def test_surface_field_reader_reads_adflow_adf_and_filters_wall_yplus(tmp_path):
                 "write fixture zone",
                 library,
             )
+            for coordinate_name, coordinate_values in (
+                (b"CoordinateX", [0.0, 1.0, 2.0, 0.0, 1.0, 2.0]),
+                (b"CoordinateY", [0.0, 0.0, 0.0, 1.0, 1.0, 1.0]),
+                (b"CoordinateZ", [0.0] * 6),
+            ):
+                coordinate = ctypes.c_int()
+                values = (ctypes.c_double * 6)(*coordinate_values)
+                _check_cgns(
+                    library.cg_coord_write(
+                        file_number.value,
+                        base.value,
+                        zone.value,
+                        4,
+                        coordinate_name,
+                        values,
+                        ctypes.byref(coordinate),
+                    ),
+                    "write fixture coordinate",
+                    library,
+                )
             _check_cgns(
                 library.cg_sol_write(
                     file_number.value,
@@ -550,6 +663,22 @@ def test_surface_field_reader_reads_adflow_adf_and_filters_wall_yplus(tmp_path):
     assert yplus["wall_zone_count"] == 1
     assert yplus["sample_count"] == 2
     assert yplus["statistics"]["maximum"] == 0.6
+
+    inventory = cgns_volume_restart_inventory(
+        surface,
+        expected_zones=2,
+        required_fields=["CoefPressure", "SkinFrictionMagnitude", "YPlus"],
+    )
+    assert inventory["passed"] is True
+    assert inventory["zone_count"] == 2
+    assert all(zone["coordinate_array_count"] == 3 for zone in inventory["zones"])
+    missing = cgns_volume_restart_inventory(
+        surface,
+        expected_zones=2,
+        required_fields=["TurbulentSANuTilde"],
+    )
+    assert missing["passed"] is False
+    assert missing["failure_reasons"] == ["zone_without_required_restart_field_set"]
 
 
 def test_adflow_adf_reader_removes_symmetric_rind_planes():

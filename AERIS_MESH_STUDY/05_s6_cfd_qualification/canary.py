@@ -32,7 +32,11 @@ for _path in (REPO / "src", S6):
     if str(_path) not in sys.path:
         sys.path.insert(0, str(_path))
 
-from cfd_qc import read_surface_field_arrays, wall_yplus_summary  # noqa: E402
+from cfd_qc import (  # noqa: E402
+    cgns_volume_restart_inventory,
+    read_surface_field_arrays,
+    wall_yplus_summary,
+)
 
 from aeris.cfd.case.spec import FlowConditions, SolveSpec  # noqa: E402
 from aeris.cfd.env import MACH_AERO_PREFIX_ENV  # noqa: E402
@@ -899,6 +903,24 @@ def _durable_copy(source: Path, destination: Path) -> None:
         os.close(directory_fd)
 
 
+def _publish_durable_checkpoint(staging: Path, destination: Path) -> None:
+    """Atomically publish an already fsynced checkpoint without overwriting."""
+    if destination.exists():
+        raise FileExistsError(f"refusing to overwrite checkpoint: {destination}")
+    os.link(staging, destination)
+    directory_fd = os.open(destination.parent, os.O_RDONLY)
+    try:
+        os.fsync(directory_fd)
+    finally:
+        os.close(directory_fd)
+    staging.unlink()
+    directory_fd = os.open(destination.parent, os.O_RDONLY)
+    try:
+        os.fsync(directory_fd)
+    finally:
+        os.close(directory_fd)
+
+
 def _run_with_watchdog(
     command: list[str],
     *,
@@ -934,6 +956,22 @@ def _run_with_watchdog(
     checkpoint_interval = float(checkpoint_policy.get("interval_seconds", math.inf))
     checkpoint_stable_seconds = float(checkpoint_policy.get("stable_seconds", 15.0))
     checkpoint_max_wait = float(checkpoint_policy.get("maximum_write_wait_seconds", 900.0))
+    checkpoint_validate_restart = checkpoint_policy.get("validate_cgns_restart", True) is True
+    checkpoint_expected_zones_raw = checkpoint_policy.get("expected_zone_count")
+    checkpoint_expected_zones = (
+        int(checkpoint_expected_zones_raw)
+        if checkpoint_expected_zones_raw is not None
+        else None
+    )
+    checkpoint_required_fields = tuple(
+        str(value) for value in checkpoint_policy.get("required_restart_fields", [])
+    )
+    checkpoint_minimum_coordinates = int(
+        checkpoint_policy.get("minimum_coordinate_arrays_per_zone", 3)
+    )
+    checkpoint_maximum_field_values = int(
+        checkpoint_policy.get("maximum_validation_field_values", 2_000_000)
+    )
     next_checkpoint = started_monotonic + checkpoint_interval
     checkpoint_request_count = 0
     checkpoints: list[dict[str, Any]] = []
@@ -973,14 +1011,101 @@ def _run_with_watchdog(
         if signature != pending_checkpoint.get("last_signature"):
             pending_checkpoint["last_signature"] = signature
             pending_checkpoint["stable_since"] = now
+            pending_checkpoint["invalid_signature"] = None
             if not writer_exited:
                 return False
         stable_for = now - float(pending_checkpoint["stable_since"])
         if not writer_exited and stable_for < checkpoint_stable_seconds:
             return False
+
+        source_inventory: dict[str, Any] | None = None
+        if checkpoint_validate_restart:
+            try:
+                source_inventory = cgns_volume_restart_inventory(
+                    checkpoint_source,
+                    expected_zones=checkpoint_expected_zones,
+                    required_fields=checkpoint_required_fields,
+                    minimum_coordinate_arrays=checkpoint_minimum_coordinates,
+                    maximum_field_values=checkpoint_maximum_field_values,
+                )
+            except Exception as error:
+                source_inventory = {
+                    "passed": False,
+                    "failure_reasons": ["checkpoint_inventory_error"],
+                    "error_type": type(error).__name__,
+                    "error": str(error),
+                }
+            if not source_inventory["passed"]:
+                if pending_checkpoint.get("invalid_signature") != signature:
+                    validation_wait = {
+                        "event": "checkpoint_validation_wait",
+                        "number": pending_checkpoint["number"],
+                        "created_at": _now(),
+                        "elapsed_seconds": now - started_monotonic,
+                        "source_signature": list(signature),
+                        "inventory": source_inventory,
+                    }
+                    checkpoint_event(validation_wait)
+                    pending_checkpoint["invalid_signature"] = signature
+                pending_checkpoint["last_validation"] = source_inventory
+                return False
+
+        if forced_signature() != signature:
+            pending_checkpoint["last_signature"] = forced_signature()
+            pending_checkpoint["stable_since"] = now
+            pending_checkpoint["invalid_signature"] = None
+            return False
+
         number = int(pending_checkpoint["number"])
         destination = checkpoint_directory / f"checkpoint_{number:04d}.cgns"
-        _durable_copy(checkpoint_source, destination)
+        staging = checkpoint_directory / f"checkpoint_{number:04d}.pending.cgns"
+        try:
+            source_sha256 = _sha256(checkpoint_source)
+            if forced_signature() != signature:
+                raise RuntimeError("checkpoint source changed while hashing")
+            _durable_copy(checkpoint_source, staging)
+            if forced_signature() != signature:
+                raise RuntimeError("checkpoint source changed while copying")
+            staging_sha256 = _sha256(staging)
+            if staging_sha256 != source_sha256:
+                raise RuntimeError("checkpoint source and durable copy hashes differ")
+            copied_inventory = (
+                cgns_volume_restart_inventory(
+                    staging,
+                    expected_zones=checkpoint_expected_zones,
+                    required_fields=checkpoint_required_fields,
+                    minimum_coordinate_arrays=checkpoint_minimum_coordinates,
+                    maximum_field_values=checkpoint_maximum_field_values,
+                )
+                if checkpoint_validate_restart
+                else {
+                    "passed": True,
+                    "validation_skipped_by_policy": True,
+                }
+            )
+            if not copied_inventory["passed"]:
+                raise RuntimeError("durable checkpoint copy failed CGNS restart inventory")
+            _publish_durable_checkpoint(staging, destination)
+        except Exception as error:
+            failure = {
+                "event": "checkpoint_capture_failed",
+                "number": number,
+                "created_at": _now(),
+                "elapsed_seconds": now - started_monotonic,
+                "source": str(checkpoint_source),
+                "source_signature": list(signature),
+                "staging_path": str(staging),
+                "staging_exists": staging.exists(),
+                "error_type": type(error).__name__,
+                "error": str(error),
+            }
+            if staging.is_file():
+                failure["staging_size_bytes"] = staging.stat().st_size
+                failure["staging_sha256"] = _sha256(staging)
+            checkpoint_failures.append(failure)
+            checkpoint_event(failure)
+            pending_checkpoint = None
+            return False
         captured = {
             "event": "checkpoint_captured",
             "number": number,
@@ -989,10 +1114,13 @@ def _run_with_watchdog(
             "source": str(checkpoint_source),
             "path": str(destination),
             "size_bytes": destination.stat().st_size,
-            "sha256": _sha256(destination),
+            "sha256": staging_sha256,
+            "source_sha256": source_sha256,
             "source_signature": list(signature),
             "stable_seconds": stable_for,
             "writer_exited": writer_exited,
+            "source_inventory": source_inventory,
+            "copied_inventory": copied_inventory,
         }
         checkpoints.append(captured)
         checkpoint_event(captured)
@@ -1045,6 +1173,8 @@ def _run_with_watchdog(
                         if pending_checkpoint is not None:
                             if capture_pending(time.monotonic()):
                                 next_checkpoint = time.monotonic() + checkpoint_interval
+                            elif pending_checkpoint is None:
+                                next_checkpoint = time.monotonic() + checkpoint_interval
                             elif (
                                 time.monotonic() - float(pending_checkpoint["requested_monotonic"])
                                 > checkpoint_max_wait
@@ -1094,6 +1224,7 @@ def _run_with_watchdog(
                                         "baseline_signature": request["baseline_signature"],
                                         "last_signature": None,
                                         "stable_since": None,
+                                        "invalid_signature": None,
                                     }
                                 except (ProcessLookupError, PermissionError, OSError) as error:
                                     request["result"] = "signal_error"
@@ -1150,6 +1281,16 @@ def _run_with_watchdog(
         returncode = process.wait() if process is not None else None
         if checkpoint_enabled and pending_checkpoint is not None:
             capture_pending(time.monotonic(), writer_exited=True)
+            if pending_checkpoint is not None:
+                failure = {
+                    "event": "checkpoint_incomplete_at_process_exit",
+                    "number": pending_checkpoint["number"],
+                    "created_at": _now(),
+                    "elapsed_seconds": time.monotonic() - started_monotonic,
+                    "last_validation": pending_checkpoint.get("last_validation"),
+                }
+                checkpoint_failures.append(failure)
+                checkpoint_event(failure)
         samples.flush()
         os.fsync(samples.fileno())
     finally:
@@ -1181,6 +1322,11 @@ def _run_with_watchdog(
             "request_count": checkpoint_request_count,
             "captured_count": len(checkpoints),
             "failure_count": len(checkpoint_failures),
+            "restart_validation_enabled": checkpoint_validate_restart,
+            "expected_zone_count": checkpoint_expected_zones,
+            "required_restart_fields": list(checkpoint_required_fields),
+            "minimum_coordinate_arrays_per_zone": checkpoint_minimum_coordinates,
+            "maximum_validation_field_values": checkpoint_maximum_field_values,
             "checkpoints": checkpoints,
             "failures": checkpoint_failures,
             "pending_at_exit": pending_checkpoint is not None,

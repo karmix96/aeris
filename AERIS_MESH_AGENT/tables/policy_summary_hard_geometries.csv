@@ -1,0 +1,10 @@
+policy,geometries,total_attempts,mean_attempts,max_attempts,mean_quality
+atlas (as run),26,88,3.3846153846153846,21,0.19961626582575992
+atlas ordering + accept-first-valid,26,53,2.0384615384615383,5,0.176873441290095
+learned ranking (design only),26,59,2.269230769230769,21,0.19961626582575992
+learned ranking (design+surface),26,63,2.423076923076923,21,0.19961626582575992
+learned ranking + accept-first-valid (design only),26,35,1.3461538461538463,3,0.19303701207592922
+learned ranking + accept-first-valid (design+surface),26,35,1.3461538461538463,3,0.18876486059242265
+learned ranking + ceiling stopping (design only),26,40,1.5384615384615385,4,0.19714711987720454
+learned ranking + ceiling stopping (design+surface),26,43,1.6538461538461537,5,0.1971913158920725
+oracle (upper bound),26,26,1.0,1,0.19961626582575992

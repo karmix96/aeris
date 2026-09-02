@@ -439,3 +439,41 @@ def test_gmsh_tetra_tri_prism_tet_smoke(tmp_path):
     assert report["su2_boundary"]["boundary_face_multiply_assigned_count"] == 0
     assert report["su2_boundary"]["boundary_marker_nonboundary_face_count"] == 0
     assert report["su2_boundary"]["volume_element_count"] == report["counts"]["volume_cells"]
+
+
+def test_min_triangle_angle_matches_known_shapes():
+    """The metric the tip cap is judged by, on shapes whose angles are known."""
+    geometry = importlib.import_module("s7_test_package.geometry")
+    equilateral = np.asarray([[[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.5, 3.0**0.5 / 2, 0.0]]])
+    assert geometry._min_triangle_angle_deg(equilateral) == pytest.approx(60.0)
+    right = np.asarray([[[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]])
+    assert geometry._min_triangle_angle_deg(right) == pytest.approx(45.0)
+    # A sliver of the kind the centre fan produced: the minimum must find it even
+    # when it is one triangle among many healthy ones.
+    sliver = np.asarray([[[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.5, 0.001, 0.0]]])
+    assert geometry._min_triangle_angle_deg(sliver) < 1.0
+    both = np.concatenate([equilateral, sliver])
+    assert geometry._min_triangle_angle_deg(both) == pytest.approx(
+        geometry._min_triangle_angle_deg(sliver)
+    )
+
+
+def test_both_tip_cap_constructions_report_the_same_fields():
+    """A family comparison is only meaningful if every design reports alike.
+
+    The Delaunay branch and the ladder fallback share one record builder for
+    exactly this reason; this pins the shape so a future edit to one path cannot
+    silently produce a record the other does not.
+    """
+    geometry = importlib.import_module("s7_test_package.geometry")
+    corners = [[[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.5, 3.0**0.5 / 2, 0.0]]]
+    delaunay = geometry._tip_cap_record(
+        "planar_delaunay", used_fallback=False, perimeter_nodes=33, corners=corners
+    )
+    ladder = geometry._tip_cap_record(
+        "chordwise_ladder", used_fallback=True, perimeter_nodes=33, corners=corners
+    )
+    assert delaunay.keys() == ladder.keys()
+    assert delaunay["used_fallback"] is False and ladder["used_fallback"] is True
+    assert delaunay["triangles"] == ladder["triangles"] == 1
+    assert delaunay["min_angle_deg"] == pytest.approx(60.0)

@@ -1042,3 +1042,64 @@ chasing since the first convergence matrix.
 This matrix ran at 42 745 cells on a laptop.  It selects a solver configuration;
 it does not establish convergence at production resolution, where the campaign
 must repeat it.
+
+## Residual gate, second amendment: the stop was calibrated at the wrong resolution (2026-08-31, still pre-result)
+
+The 2026-08-25 amendment separated the solver stop from the acceptance bar and
+set `solver_stop_residual_log10` to -9.0, derived from
+`assumed_worst_initial_residual_log10: -3.0`.  That assumption was calibrated on
+`laptop_smoke` histories, where the measured initial residuals span -2.576 to
+-2.687, and the amendment noted in the policy comment that "a design starting
+below -3.0 fails closed on `insufficient_residual_drop`, which is correct and no
+longer a certainty."
+
+**Resolution, not design, is what falsified it.**  Two independent bounded probes
+on the index-0 `coarse` half mesh (1 549 111 cells, two MPI ranks, 5 and 25
+iterations) both report an initial density residual of **-3.6643**.  A run
+starting there must reach **-9.6643** to drop the six orders the gate asks.  A
+solver stopping at -9.0 halts having dropped 5.336 orders and is then rejected on
+`insufficient_residual_drop` — indistinguishable, in the recorded evidence, from a
+solver that genuinely failed to converge.
+
+This is defect 10 recurring one resolution level up, from the same cause: a stop
+derived from an assumption rather than from the run in front of it.
+
+### Amended
+
+- `assumed_worst_initial_residual_log10`: -3.0 → **-4.0**, now set below the worst
+  *measured* initial residual with 0.34 of margin, rather than below the smoke
+  span.
+- `solver_stop_residual_log10`: -9.0 → **-10.0**, which follows from the fail-closed
+  condition `stop <= min(residual_log10_final_max, assumed_worst_initial - drop_min)`
+  already enforced on every config emission.
+
+### Not amended
+
+`residual_drop_orders_min` remains 6.0 and `residual_log10_final_max` remains
+-8.0.  **Neither acceptance threshold has ever been changed by either residual
+amendment**, and no result was reclassified as accepted by this one.
+
+### Structural repair, so a third recurrence is not possible
+
+Raising a constant would leave the same defect available at the next resolution.
+`su2_pipeline.residual_gate` now derives, for **each run from its own initial
+residual**, the final residual the drop gate requires, and appends
+`solver_stop_truncates_drop_gate` when the configured stop sits above it.  The
+gate therefore reports a truncated *setup* rather than a failed *solve*,
+regardless of whether the assumption key is right.
+
+The new reason is provably non-weakening: a run satisfying the drop gate descended
+to at or below `initial - 6.0` without the solver stopping there, so the stop is
+necessarily at or below that level and the reason cannot fire.  A test asserts
+this on the three measured initial residuals (-2.6029, -3.6643, -2.5755).
+Verified on the real coarse history: under the previous stop of -9.0 the run
+carries `solver_stop_truncates_drop_gate`; under the repaired stop of -10.0 it
+does not, and its remaining failures are honest ones from a 25-iteration probe.
+
+### Cost consequence, recorded rather than avoided
+
+At smoke resolution the fastest passing variant needed 5 872 iterations to reach
+-9.5.  Coarse demands -9.6643 with 36 times the cells, at a measured **5.45 s per
+iteration on two ranks**.  A 6 000-iteration confirmation budget may therefore
+land short.  That is a measurement the coarse confirmation must make; it is not a
+reason to lower a threshold.

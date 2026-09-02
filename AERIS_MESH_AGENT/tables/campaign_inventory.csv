@@ -1,0 +1,7 @@
+campaign,config_key,attempts,geometries,templates
+development_atlas_maximin16_production_written_v2,1.5|3.5999999999999994e-06|257|production,220,100,16
+development_atlas_maximin16_smoke,None|None|None|None,131,100,16
+development_atlas_production_written_canary_v2,1.5|3.5999999999999994e-06|257|production,2,2,2
+development_atlas_qualified21_production_written_v3,1.5|3.5999999999999994e-06|257|production,162,100,21
+development_atlas_smoke_all100,None|None|None|None,184,100,10
+production_seed_failure_canary,None|3e-06|257|production,28,2,14

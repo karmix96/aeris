@@ -325,6 +325,51 @@ def _planform_record(stations: Sequence[Any]) -> dict[str, Any]:
     }
 
 
+def _min_triangle_angle_deg(corners: Array) -> float:
+    """Smallest interior angle over a set of triangles, in degrees.
+
+    This is the metric the tip cap has been judged by throughout: the centre fan
+    gave 1.516 degrees, the rigid ladder 7.209, and planar Delaunay 20.649.
+    Recording it per design turns "which construction was used" into "and what it
+    was worth", which is what the fixed-topology comparison needs.
+    """
+    corners = np.asarray(corners, dtype=float)
+    if corners.size == 0:
+        return float("nan")
+    smallest = np.inf
+    for a, b, c in ((0, 1, 2), (1, 2, 0), (2, 0, 1)):
+        u = corners[:, b] - corners[:, a]
+        v = corners[:, c] - corners[:, a]
+        nu = np.linalg.norm(u, axis=1)
+        nv = np.linalg.norm(v, axis=1)
+        valid = (nu > 0.0) & (nv > 0.0)
+        if not np.any(valid):
+            continue
+        cosine = np.sum(u[valid] * v[valid], axis=1) / (nu[valid] * nv[valid])
+        angles = np.degrees(np.arccos(np.clip(cosine, -1.0, 1.0)))
+        smallest = min(smallest, float(np.min(angles)))
+    return float(smallest) if np.isfinite(smallest) else float("nan")
+
+
+def _tip_cap_record(
+    construction: str, *, used_fallback: bool, perimeter_nodes: int, corners: Array
+) -> dict[str, Any]:
+    """One record shape for both tip-cap constructions.
+
+    Written by both the Delaunay branch and the ladder fallback so the two cannot
+    drift apart: a comparison across the design family is only meaningful if
+    every design reports the same fields.
+    """
+    corners = np.asarray(corners, dtype=float)
+    return {
+        "construction": construction,
+        "used_fallback": bool(used_fallback),
+        "perimeter_nodes": int(perimeter_nodes),
+        "triangles": int(len(corners)),
+        "min_angle_deg": _min_triangle_angle_deg(corners),
+    }
+
+
 def _oriented_cap(
     nodes: Sequence[int],
     registry: "_PointRegistry",
@@ -607,6 +652,13 @@ def build_surface(
     half_model = modeled_domain == "half_wing_symmetry_y0"
     sides = (1,) if half_model else (1, -1)
 
+    # Which construction each tip cap actually got.  The Delaunay cap falls back
+    # to the ladder when it cannot reproduce every perimeter edge, and until now
+    # nothing recorded that it had -- so a design whose cap connectivity followed
+    # its geometry was indistinguishable from one that took the fallback.  That
+    # is the blocker on the fixed-topology exploit, which needs index
+    # correspondence to be exact across the family.
+    tip_cap_records: dict[str, dict[str, Any]] = {}
     for side in sides:
         upper_grid = np.empty((n_v, n_u), dtype=np.int64)
         lower_grid = np.empty((n_v, n_u), dtype=np.int64)
@@ -662,13 +714,25 @@ def build_surface(
             registry.tolerance,
         )
         if cap is not None:
+            cap_start = len(triangles)
             for local in cap:
                 add_triangle(
                     (deduped[local[0]], deduped[local[1]], deduped[local[2]]),
                     "wall_tip",
                     1.0,
                 )
+            tip_cap_records[f"side_{'positive' if side > 0 else 'negative'}"] = (
+                _tip_cap_record(
+                    "planar_delaunay",
+                    used_fallback=False,
+                    perimeter_nodes=len(deduped),
+                    corners=[
+                        [registry.points[n] for n in tri] for tri in triangles[cap_start:]
+                    ],
+                )
+            )
             continue
+        cap_start = len(triangles)
         # Verified fallback: the chordwise ladder, used only when Delaunay cannot
         # reproduce every perimeter edge.  It is always conformal by construction.
         for i in range(n_u - 1):
@@ -690,6 +754,12 @@ def build_surface(
             else:
                 add_triangle((a, b, d), "wall_tip", 1.0)
                 add_triangle((b, c, d), "wall_tip", 1.0)
+        tip_cap_records[f"side_{'positive' if side > 0 else 'negative'}"] = _tip_cap_record(
+            "chordwise_ladder",
+            used_fallback=True,
+            perimeter_nodes=len(deduped),
+            corners=[[registry.points[n] for n in tri] for tri in triangles[cap_start:]],
+        )
 
     if half_model:
         # Close the root at y=0 so the surface stays watertight and every existing
@@ -916,6 +986,14 @@ def build_surface(
             "surface_edge_target_m": surface_h,
             "te_edge_target_m": te_h,
             "tip_edge_target_m": tip_h,
+        },
+        "tip_cap": {
+            "by_side": tip_cap_records,
+            "any_fallback": any(r["used_fallback"] for r in tip_cap_records.values()),
+            "min_angle_deg": min(
+                (r["min_angle_deg"] for r in tip_cap_records.values()),
+                default=float("nan"),
+            ),
         },
         "topology": topology,
         "orientation": orientation,

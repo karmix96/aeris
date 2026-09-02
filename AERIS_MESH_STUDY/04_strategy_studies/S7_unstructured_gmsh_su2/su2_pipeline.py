@@ -173,6 +173,22 @@ def residual_gate(
         reasons.append("insufficient_residual_drop")
     if final is None or final > float(limits["residual_log10_final_max"]):
         reasons.append("final_residual_above_limit")
+    # Was the drop gate reachable at all for THIS run?  The drop is
+    # initial - final, so a run must be allowed to descend to
+    # initial - residual_drop_orders_min before the solver stops.  When the stop
+    # sits above that, the solver halts before the gate can be met and the run
+    # fails on arithmetic rather than on physics.  That is defect 10, and it
+    # recurred at coarse resolution because the stop was derived from an assumed
+    # worst initial residual of -3.0 while the coarse mesh starts at -3.6643.
+    # Checking each run's OWN initial residual removes the dependence on that
+    # assumption being right, so the next resolution that starts lower still is
+    # reported as a truncated setup instead of a failed solve.
+    solver_stop = float(limits["solver_stop_residual_log10"])
+    required_final = (
+        initial - float(limits["residual_drop_orders_min"]) if initial is not None else None
+    )
+    if required_final is not None and solver_stop > required_final:
+        reasons.append("solver_stop_truncates_drop_gate")
     return {
         "passed": not reasons,
         "row_count": row_count,
@@ -184,6 +200,8 @@ def residual_gate(
         "minimum_rows": int(limits["minimum_history_rows"]),
         "minimum_orders_dropped": float(limits["residual_drop_orders_min"]),
         "maximum_final_log10": float(limits["residual_log10_final_max"]),
+        "solver_stop_log10": solver_stop,
+        "required_final_for_drop_gate": required_final,
         "failure_reasons": reasons,
     }
 

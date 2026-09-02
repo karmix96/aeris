@@ -142,3 +142,14 @@ The mesh campaign above runs no CFD; `--run-cfd` requires the pinned SU2 8.5.0,
 which is now installed under `AERIS_MESH_STUDY/tools/su2_8.5.0` and is gitignored
 as a reproducible download.  The hold-out `round_c_lhs10_seed42` is forbidden and
 the runner has no bypass.
+
+
+## The coarse solver confirmation
+
+This runbook covers **meshing**.  The coarse Newton-Krylov confirmation - the
+commands, the measured wall-time and memory budget, and the stop/go gates that
+decide whether a variant has failed or merely run out of iterations - is M1 of
+`../../AERIS_S7_UNSTRUCTURED_CFD_MASTER_EXECUTION_GUIDE.md`.
+
+Do not run it beside a coarse meshing campaign.  Meshing peaks at about 6 GB per
+concurrent case and a four-rank solve holds 7.44 GiB; the host does not carry both.

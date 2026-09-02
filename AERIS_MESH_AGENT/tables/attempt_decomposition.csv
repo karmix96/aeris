@@ -1,0 +1,4 @@
+class,attempts,recoverable_by
+irreducible (one successful extrusion per geometry),100,nothing
+routing (spent before any mesh passed),27,better routing only
+quality search (spent after a mesh had already passed),35,"better routing, or stopping"

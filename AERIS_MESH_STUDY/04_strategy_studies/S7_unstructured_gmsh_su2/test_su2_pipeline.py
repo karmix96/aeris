@@ -280,7 +280,11 @@ def test_solver_stop_sits_below_the_acceptance_bar(tmp_path):
         >= float(limits["residual_drop_orders_min"])
     )
     # And that assumption must bound every initial residual S7 has measured.
-    assert float(limits["assumed_worst_initial_residual_log10"]) <= -2.687
+    # laptop_smoke starts between -2.576 and -2.687; COARSE starts at -3.6643,
+    # which is what falsified the earlier -3.0 bound.  A resolution change moves
+    # this number, so it is asserted against the measurement rather than against
+    # the level the assumption was first calibrated on.
+    assert float(limits["assumed_worst_initial_residual_log10"]) <= -3.6643
 
 
 def test_a_solver_stop_at_the_bar_is_refused(tmp_path, monkeypatch):
@@ -298,3 +302,60 @@ def test_a_solver_stop_at_the_bar_is_refused(tmp_path, monkeypatch):
             iterations=5,
             restart=False,
         )
+
+
+def _history_file(path: Path, initial: float, final: float, rows: int = 200) -> Path:
+    """A linear residual descent from `initial` to `final` with steady forces."""
+    step = (final - initial) / (rows - 1)
+    path.write_text(
+        '"Inner_Iter","rms[Rho]","CL","CD","CMy"\n'
+        + "\n".join(
+            f"{i},{initial + step * i},0.42,0.018,-0.031" for i in range(rows)
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return path
+
+
+def test_gate_names_a_truncated_setup_instead_of_blaming_the_solver(tmp_path):
+    """Defect 10, recurring at coarse: the stop halted the run above the gate.
+
+    A coarse run starts at -3.6643 and must reach -9.6643 to drop six orders.  A
+    solver stopping at -9.0 cannot get there, so the drop gate is unsatisfiable
+    by construction and `insufficient_residual_drop` alone would read as a solver
+    that failed to converge.
+    """
+    policy = su2.load_policy()
+    policy["su2"]["convergence"]["solver_stop_residual_log10"] = -9.0
+    parsed = su2.parse_su2_history(_history_file(tmp_path / "coarse.csv", -3.6643, -9.0))
+    result = su2.residual_gate(parsed, policy)
+    assert result["passed"] is False
+    assert "solver_stop_truncates_drop_gate" in result["failure_reasons"]
+    assert result["required_final_for_drop_gate"] == pytest.approx(-9.6643)
+
+
+def test_the_shipped_policy_stop_reaches_the_gate_at_coarse(tmp_path):
+    """The repaired stop must let a coarse run satisfy the drop gate."""
+    policy = su2.load_policy()
+    parsed = su2.parse_su2_history(_history_file(tmp_path / "coarse.csv", -3.6643, -9.7))
+    result = su2.residual_gate(parsed, policy)
+    assert "solver_stop_truncates_drop_gate" not in result["failure_reasons"]
+    assert result["passed"] is True
+
+
+def test_the_truncation_reason_never_fires_on_a_run_that_would_pass(tmp_path):
+    """The guard adds a diagnosis; it must not reclassify passing evidence.
+
+    A run that satisfied the drop gate descended to at or below
+    initial - drop_min without the solver stopping there, so the stop is
+    necessarily at or below that level and the new reason cannot fire.
+    """
+    policy = su2.load_policy()
+    for initial, final in ((-2.6029, -8.7), (-3.6643, -9.7), (-2.5755, -9.0)):
+        parsed = su2.parse_su2_history(
+            _history_file(tmp_path / f"{initial}_{final}.csv", initial, final)
+        )
+        result = su2.residual_gate(parsed, policy)
+        if result["orders_dropped"] >= 6.0 and final <= -8.0:
+            assert result["passed"] is True, (initial, final, result["failure_reasons"])

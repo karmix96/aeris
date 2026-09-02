@@ -170,6 +170,154 @@ Three SU2 8.5.0 behaviours are established here by byte comparison, not inferenc
 This matrix ran at 42 745 cells on a laptop.  It selects a solver configuration.
 It does **not** establish convergence at production resolution.
 
+### Coarse resolution: cost measured, and the gate found unsatisfiable again
+
+Two bounded probes of the shortlisted `G_nk_cfl` on the index-0 `coarse` half mesh
+(1 549 111 cells, two MPI ranks, 5 and 25 iterations, wall 65 s and 174 s) settle
+two things the confirmation budget depends on.
+
+**Cost.**  Differencing the two separates startup from iteration:
+
+| quantity | measured |
+|---|---|
+| per iteration, 2 ranks | 5.45 s |
+| startup: mesh read, partition, preprocessing | 37.8 s |
+| 6 000 iterations, 2 ranks | 9.1 h per variant |
+
+Memory follows ranks x cells, because each rank reads the whole mesh before
+partitioning: **1.20 GiB per rank per million cells**, so 1.86 GiB per rank here.
+That reproduces the recorded OOM exactly - eight ranks at 2.5 M cells needs 24 GiB
+against a 16 GiB machine - and four ranks at coarse, 7.44 GiB, is what fits the
+desktop budget.
+
+**And the residual gate was unsatisfiable at this resolution.**  Every
+`laptop_smoke` history starts between -2.576 and -2.687, so the policy's assumed
+worst initial residual of -3.0 and its derived solver stop of -9.0 were safe
+there.  The coarse mesh starts at **-3.6643**, identically on both probes, and a
+run starting there must reach -9.6643 to drop six orders.  A solver stopping at
+-9.0 halts having dropped 5.336 and is rejected on `insufficient_residual_drop`,
+which is indistinguishable from a solver that failed to converge.
+
+This is defect 10 recurring one resolution level up, from the same cause.  It is
+recorded as defect 11 below.  Neither acceptance threshold changed.
+
+The cost consequence is real: at smoke the fastest passing variant needed 5 872
+iterations to reach -9.5, and coarse asks -9.6643 with 36 times the cells.  A
+6 000-iteration confirmation may land short.  That is a measurement to make, not a
+threshold to lower.
+
+### The rank sweep: parallelism does not help, and does not change the answer
+
+A clean sweep on an idle machine, 5- and 25-iteration probes differenced at each
+rank count, on the index-0 `coarse` half mesh:
+
+| ranks | s/iteration | startup | GiB | 6 000 iterations |
+|---|---|---|---|---|
+| **1** | **4.60** | 12.0 s | **1.86** | **7.7 h** |
+| 2 | 5.65 | 39.8 s | 3.72 | 9.4 h |
+| 4 | 8.50 | 59.5 s | 7.44 | 14.2 h |
+
+More ranks are monotonically slower.  The solve is memory-bandwidth bound, so
+extra ranks buy halo exchange and partitioning for no arithmetic gain, and each
+holds another full copy of the mesh.  One rank is simultaneously the fastest and
+the smallest; four ranks is 1.85x slower per iteration and costs four times the
+memory to be so.
+
+The three histories are **identical to the byte** (sha `9378f811...`), so the
+decomposition is a pure cost choice and results are reproducible across it.  The
+serial laptop matrix and a multi-rank production run are therefore the same
+experiment.  Checked over 25 iterations; worth re-checking at 6 000.
+
+Measurement hygiene, recorded because it nearly went the other way: a first
+4-rank probe taken while a test suite and a geometry build were running read
+6.35 s per iteration against the clean 8.50 - a 25 per cent error, in the
+direction that would have made 4 ranks look acceptable.
+
+### The grid family, measured where it can be and bounded where it cannot
+
+Surfaces built at all three levels for index 0.  Surface triangles and prisms are
+**exact**; only the tetrahedral count is estimated, by two independent methods
+that agree:
+
+| level | surface tris | prisms | cells | GiB/rank | tip cap min angle |
+|---|---|---|---|---|---|
+| coarse | 5 356 | 126 984 | 1 549 111 (measured) | 1.86 | 12.91 deg |
+| medium | 10 826 | 343 456 | ~4 317 000 | 5.18 | 9.48 deg |
+| fine | 21 010 | 835 160 | ~12 056 000 | 14.47 | 7.03 deg |
+
+Surface triangles scale as r^2 exactly as the edge-length definitions require
+(2.021x and 3.923x against 2.0 and 4.0).  The two tet estimates - an r^3 scaling
+of the measured coarse core, and the pipeline's own conservative ceiling
+de-rated by the 1.2035x factor it over-counts coarse by - agree to 1.4 per cent
+at medium and 2.8 per cent at fine.
+
+**Consequence: `fine` is not solvable on the inventoried host.**  At 14.47 GiB
+for a *single* rank against the S6 guide's reported 11.36 GiB available, and with
+every rank holding the whole mesh, no decomposition rescues it.  That is the same
+`RESOURCE_BLOCKED` wall S6 hit, and it blocks the three-level grid convergence M5
+requires.  `medium` fits at one rank, 5.18 GiB, about 21 h for 6 000 iterations.
+The laptop refuses `medium` meshing outright on its own resource preflight.
+
+**And the tip cap degrades with refinement.**  Minimum cap angle falls
+monotonically: 18.33 deg at `laptop_smoke`, 12.91 at `coarse`, 9.48 at `medium`,
+7.03 at `fine`.  Refining chordwise on a thin cambered tip section makes the
+Delaunay cap more slender, not less.  **The rejected rigid ladder measured
+7.209 deg**, so the accepted construction at `fine` is worse than the one thrown
+out for being too slender.  This was invisible before the tip-cap instrumentation
+existed, and it is a quality trend the grid study must account for rather than a
+defect in any one mesh.
+
+### The tip-cap census: 100 designs, two levels
+
+The M2 instrumentation made two questions answerable that one geometry could not
+settle.  Surfaces only, `lhs100_seed42`, `te_1p0mm`.
+
+**The ladder fallback never fires.**  Zero fallbacks in 194 surfaces across both
+levels.  The tip cap is always planar Delaunay.  For the fixed-topology exploit
+this removes one obstacle - there are not two connectivity families to reconcile -
+though Delaunay connectivity still follows each design's perimeter, so index
+correspondence across designs is still not automatic.
+
+**The cap degrades with refinement across the whole design space, not just on
+index 0:**
+
+| level | surfaces | min | median | max | below the rejected ladder's 7.209 deg |
+|---|---|---|---|---|---|
+| coarse | 96 / 100 | 12.64 | 13.35 | 15.19 | 0 |
+| fine | 98 / 100 | 6.74 | **7.41** | 8.48 | **20 of 96** |
+
+Every one of the 96 designs measured at both levels degrades, and the ratio is
+remarkably tight: coarse/fine between 1.751 and 1.874, median 1.802 for a
+refinement ratio of 2.  This is a systematic geometric consequence of refining
+chordwise on a thin cambered tip section, not a per-design accident.
+
+**At `fine`, 21 per cent of the design space has a tip cap more slender than the
+rigid ladder this study rejected for being too slender**, and the median design
+sits only 0.2 degrees above it.  Any `fine` grid level has to answer this before
+the grid family can be trusted, independently of whether it fits memory.
+
+### Surface acceptance over the FULL development set, at coarse
+
+The recorded "60 / 60" surface qualification is 5 indices x 3 TE variants x 4
+levels - five distinct designs.  Over all 100 designs at one TE variant:
+
+| level | accepted | failures |
+|---|---|---|
+| coarse | **96 / 100** | 15, 39, 50, 63 |
+| fine | **98 / 100** | 15, 39 |
+
+Every failure is `surface_facet_fidelity` and none is a correctness gate: node
+fidelity, closure, orientation and self-intersection pass throughout.  Facet
+fidelity is a *resolution* gate, and the counts behave as a resolution gate
+should - refining from coarse to fine recovers indices 50 and 63.
+
+This does not contradict the 100/100 volume result, which ran at the diagnostic
+tier where distribution-quality gates are reported rather than enforced.  It does
+mean **the coarse sweep in M3 should be expected to reject about 4 per cent of the
+development set on the provisional facet limit**, and that the limit is doing real
+work rather than being decorative.  Whether 4 per cent is the right answer is
+exactly what the deferred geometric-fidelity sensitivity study must decide.
+
 ## Half domain versus mirrored, measured
 
 S6 meshes y >= 0 and S7 mirrored the whole wing, so the two were solving different
@@ -279,9 +427,124 @@ criteria.
    `insufficient_residual_drop` alone, and the same truncation caused
    `B_newton_krylov`'s only force-tail failure (CMy 1.094e-3; the same
    configuration run deeper reaches 2.9e-6).  The stop is now a separate policy
-   key, `solver_stop_residual_log10: -9.0`, checked fail-closed against
+   key, `solver_stop_residual_log10`, checked fail-closed against
    `min(residual_log10_final_max, assumed_worst_initial - drop_min)` on every
-   config emission.  **Neither acceptance threshold changed.**
+   config emission.  It was set to -9.0 here; defect 11 supersedes that value.
+   **Neither acceptance threshold changed.**
+
+11. **The repaired stop was itself calibrated at the wrong resolution.**  The
+   assumption behind it, `assumed_worst_initial_residual_log10: -3.0`, bounded
+   every `laptop_smoke` initial residual (-2.576 to -2.687) and none at coarse
+   (-3.6643).  The stop of -9.0 that followed truncates a coarse run at 5.336
+   orders against a gate asking 6.0.  The assumption is now set from the
+   measurement (-4.0) and the stop follows (-10.0) - but raising a constant would
+   only move the defect to the next resolution, so `residual_gate` now derives the
+   required final residual **from each run's own initial** and reports
+   `solver_stop_truncates_drop_gate` when the stop sits above it.  The gate names
+   a truncated setup instead of blaming the solver.  The reason provably cannot
+   fire on a run that would otherwise pass - such a run descended past
+   `initial - 6.0` without stopping, so the stop is at or below it - and a test
+   asserts that on all three measured initial residuals.  Verified on the real
+   coarse history: the reason fires under the old stop and clears under the new.
+   **Neither acceptance threshold changed.**
+
+### G_nk_cfl at coarse: stalls at 2.21 orders, then destabilises
+
+The first coarse confirmation, one rank, 1 549 111 cells, stopped by hand at
+iteration 1853 of 8000 once the outcome was settled:
+
+| phase | iterations | behaviour |
+|---|---|---|
+| descent | 0 - 719 | smooth, monotone, to **-5.8709** |
+| plateau | 719 - 1000 | stable between -5.82 and -5.84 |
+| destabilisation | ~1000 | jumps up 1.8 orders |
+| oscillation | 1000 - 1853 | between about -4.0 and -5.6, envelope not recovering |
+
+Its best was a drop of **2.207 orders against the 6.0 the gate asks**, so it was
+never close; the destabilisation only ended a run that had already stalled.
+
+The oscillation band, roughly -4.0 to -5.6, is the same band the unaccelerated
+baseline occupied at smoke resolution (-3.2 to -5.2).  **The configuration
+selected at 42 745 cells does not reproduce that behaviour at 1.55 M.**
+
+The suspected mechanism is its own accelerator: `G_nk_cfl` carries
+`CFL_NUMBER 25` with `CFL_ADAPT_PARAM` ramping to 1000, and the ramp continues
+while the residual falls.  Once the residual plateaued the CFL kept climbing past
+stability.  This is the failure the shortlist anticipated, which is why
+`F_nk_linear` - Newton-Krylov and ILU/25 at the frozen CFL of 10, capped at 100 -
+was listed as the fallback "if the high CFL destabilises at production
+resolution".  It is running now.  `I_combined` carries the same CFL 25 and would
+be expected to fail the same way.
+
+### Defect 13: the solver was selected on a mesh of the wrong problem class
+
+`F_nk_linear` cleared iteration 1000 without destabilising, which confirms the
+CFL diagnosis for `G_nk_cfl`.  It then stalled in the same place G did:
+
+| variant | best residual | orders dropped | behaviour |
+|---|---|---|---|
+| `G_nk_cfl` | -5.8709 | 2.207 | plateau, then CFL-driven blow-up |
+| `F_nk_linear` | -5.7739 | 2.108 | plateau, stable, creeping |
+
+`F` is monotone and its best value is its latest, but it creeps at about 0.01
+orders per 100 iterations.  Reaching -9.6643 would need roughly **44 000 further
+iterations, some 53 hours**; the policy ceiling of 20 000 iterations reaches only
+-7.40.  The forces have not converged either - CMy's relative range over the last
+200 iterations is 8.77e-2 against a limit of 1.0e-3 - so this is not the benign
+case of a stalled residual over a settled solution.
+
+**Two configurations that differ in every accelerator reach the same plateau.**
+The limit is therefore not the solver settings, and the cause is upstream.  It is
+in the declared levels:
+
+| level | surface edge / L | first cell / L | layers | wall-normal aspect ratio |
+|---|---|---|---|---|
+| `laptop_smoke` | 0.140 | 2.0e-3 | 6 | **70** |
+| `coarse` | 0.060 | 7.2e-6 | 24 | **8 333** |
+| `medium` | 0.0424 | 5.09e-6 | 32 | 8 330 |
+| `fine` | 0.030 | 3.6e-6 | 40 | 8 333 |
+
+The ten-variant matrix, and with it the finding that Newton-Krylov is the
+discriminating ingredient, was established entirely on `laptop_smoke`: a mesh
+**119 times less anisotropic** than any production level, with a first cell of
+about 1 mm that is **not wall-resolved at all**.  Extreme wall-normal stretching
+is the classic source of stiffness in an implicit RANS solve, and it is precisely
+what `laptop_smoke` does not have.
+
+`solver_tuning.py` states the assumption in its own docstring - "the settings that
+fix a stall generally transfer; the resolution that fixes an accuracy claim does
+not".  That is true between meshes of the same problem class.  These are not:
+one resolves the boundary layer and one does not.  The search was cheap because
+it removed the very feature that makes the production problem hard.
+
+This does not refute Newton-Krylov.  It establishes that **Newton-Krylov was never
+tested against the anisotropy it now has to survive**, and that no configuration
+in the matrix has been.  The measured tet quality rules out the obvious
+alternative: tets are healthy at coarse, minimum SICN 0.107 and median 0.908.
+The prisms carry aspect ratios to 14 064 by design, because that is what a
+wall-resolved layer at y+ under one requires.
+
+**Consequence for the campaign.**  The solver search must be redone against
+production anisotropy, not production cell count, and the two are separable: a
+small mesh can carry an aspect ratio of 8 333.  Until that exists, no shortlist
+ordering means anything, and `I_combined` should not be run - it carries both
+ingredients that have now each failed separately at this anisotropy.
+
+### Defect 12: exit code 0 does not mean a run finished
+
+Terminating `G_nk_cfl` exposed this.  SU2 handles `SIGTERM` and exits **cleanly**,
+so a run killed at iteration 1853 of a requested 8000 wrote `"exit": 0` and
+carried nothing marking it short.  The resume path reloads any directory holding
+a `result.json`, so a killed run would have been adopted as a completed result -
+and at coarse resolution nobody re-runs a variant that already "has" a result.
+
+Attempt records now carry `iterations_requested`, `completed_requested_iterations`
+and `stopped_at_solver_stop`, and a run counts as complete only if it did the
+iterations asked of it or stopped early for the one declared reason, reaching the
+solver stop.  Resume fails closed on an incomplete record, and also on any record
+written before this tracking existed, since whether those finished cannot be
+established from them.  Three tests cover it, including that a legitimate early
+stop at the solver stop still counts as a result.
 
 ## Refuted hypotheses, recorded so they are not retried
 
@@ -308,12 +571,26 @@ criteria.
 - **A stronger linear solve or a higher CFL as the fix.**  Neither clears 3.02
   orders without Newton-Krylov, and combining them (`H`) is worse than either
   alone.
+- **The laptop matrix as evidence about production convergence.**  It ran at a
+  wall-normal aspect ratio of 70 on a mesh that does not resolve the boundary
+  layer; production runs at 8 333.  Cheap because it removed the hard part.
+- **`G_nk_cfl` as the production configuration.**  It passed both gates at
+  42 745 cells and agreed with three other variants to 5e-7, then stalled at 2.21
+  orders and destabilised at 1.55 M.  A solver configuration selected on a laptop
+  mesh is a hypothesis about production, not a result at it.
 
 ## Not established
 
 - No converged CFD solution exists **at production resolution**.  Four solver
   configurations pass both frozen gates at 42 745 cells; the coarse level is 1.55 M
-  and the matrix must be repeated there before any convergence claim.
+  and the matrix must be repeated there before any convergence claim.  The coarse
+  chain is now measured to start, run and parse - `G_nk_cfl` exits 0 on two ranks
+  and its history reads back - but 25 iterations is a start-check, not a result.
+- **How many iterations coarse convergence needs is unmeasured.**  The requirement
+  is now known to be -9.6643 rather than smoke's -8.687, and the only comparable
+  datum is 5 872 iterations to -9.5 at smoke.
+- The 4-rank speedup is **assumed at 1.8x** in the wall-time budget; only the
+  2-rank cost is measured.
 - The selected configuration is not yet wired into `POLICY.yaml`'s
   `su2.numerical_method`; the matrix chose it, the policy does not yet carry it.
 - No production-resolution volume mesh beyond five designs.

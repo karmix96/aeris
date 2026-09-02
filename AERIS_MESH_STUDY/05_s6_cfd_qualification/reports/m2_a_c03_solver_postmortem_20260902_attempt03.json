@@ -1,0 +1,292 @@
+{
+  "schema": "aeris.s6.m2_a_c03_solver_postmortem.v1",
+  "created_at": "2026-09-02T07:10:17+03:00",
+  "execution_id": "m2_a_c03_measurement_20260901_003",
+  "status": "SOLVER_MEASUREMENT_FAILED",
+  "terminal_state": "solver",
+  "accepted": false,
+  "automatic_retry_allowed": false,
+  "holdout_accessed": false,
+  "interpretation": "The desktop successfully completed the full 943104-cell ADflow workload without OOM, swap growth, or watchdog intervention. The one-shot measurement remains scientifically unaccepted because ADflow exhausted its 20000-minor-iteration allowance before the governed density and energy residual limits, the resource forecast underpredicted measured peak RSS, the global maximum and per-region y-plus limits failed, signed boundary mass balance was not measured, and interface field continuity was not evaluated.",
+  "identity": {
+    "git_head": "579c561368d68aacdda067c978246128b3d27a21",
+    "mesh_sha256": "be2805ff85b6b1043863d7678d1551a52b6e8a65b299534d4ec0aaeffa51aeb4",
+    "target_surface_sha256": "dd35106445ddbab88dbd79fe64c09c53d4a63622a7d0cd8deaca7cd28b0f3a19",
+    "cells": 943104,
+    "inverted_cells": 0,
+    "min_scaled_quality": 0.1670988318034351,
+    "policy_sha256": "95a70fad10e745d6f8f82267bfd887470b38fb8a77301f430b61d6e2272cfb3c",
+    "classification_policy_sha256": "9f46e65fdd5f8870ba42c5b874b0be24988e28664fb237f82a75b10879d35d57",
+    "solver": "ADflow 2.13.1 RANS/SA",
+    "mpi_processes": 1,
+    "ank_subspace_size": 10,
+    "nk_subspace_size": 20,
+    "ank_pc_ilu_fill": 1,
+    "nk_pc_ilu_fill": 1,
+    "n_cycles": 20000,
+    "flow": {
+      "geometry_label": "A",
+      "development_index": 83,
+      "grid_level": "C03",
+      "alpha_deg": 8.0,
+      "mach": 0.0837,
+      "reynolds": 1530708.188575197,
+      "temperature_K": 278.4
+    }
+  },
+  "immutable_records": {
+    "authorization_consumed": {
+      "path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_canary_authorization_consumed_20260901_attempt03.json",
+      "sha256": "06cc70657dd9df843e3477c863ac6f9f7125c2f5f5a99d2f66782fccff73733b"
+    },
+    "execution": {
+      "path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_canary_execution_20260901_attempt03.json",
+      "sha256": "b7e3d35a94ff874e509fe9488ba4611d8609fbf00a45323ceff3ac48772289b7"
+    },
+    "exact_wiring_review": {
+      "path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/reviews/claude_m2_c03_ilu1_exact_wiring_review_20260901.json",
+      "sha256": "7507a80a7cef4c5a59466cc06cb960c9844a7fbdf87720673cd5bbac18657bc8"
+    }
+  },
+  "resource_measurement": {
+    "watchdog_elapsed_seconds": 23963.437049565007,
+    "solver_elapsed_seconds": 22904.072474002838,
+    "forecast_peak_gib": 9.45,
+    "maximum_process_session_rss_bytes": 10581766144,
+    "maximum_process_session_rss_gib": 9.855037689208984,
+    "forecast_underprediction_gib": 0.4050376892089851,
+    "wsl_visible_memory_gib": 12.664684295654297,
+    "peak_fraction_wsl_visible_memory": 0.7781510742111905,
+    "minimum_mem_available_bytes": 2197381120,
+    "minimum_mem_available_gib": 2.0464706420898438,
+    "watchdog_floor_gib": 2.0,
+    "minimum_headroom_above_watchdog_floor_gib": 0.04647064208984375,
+    "maximum_swap_growth_bytes": 0,
+    "kernel_oom_kills": 0,
+    "watchdog_stopped": false,
+    "watchdog_stop_reason": null,
+    "solver_returncode": 0,
+    "watchdog_samples": 11715,
+    "gnu_time_maximum_resident_set_kib": 10322264,
+    "gnu_time_cpu_percent": 99,
+    "resource_policy_passed": false,
+    "failed_resource_checks": [
+      "measured_peak_le_forecast"
+    ],
+    "resource_engineering_result": "The ILU-fill-1 configuration made the complete run physically executable on the 16 GB desktop, but the measured peak exceeded the immutable 9.45 GiB forecast and left only 0.0465 GiB above the 2 GiB watchdog floor. Future policy must use the measured 9.855 GiB peak as a lower-bound anchor or reduce memory further."
+  },
+  "native_solver_history": {
+    "source_path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260901_003/solve_report.json",
+    "source_sha256": "6e771256b0c0d2273271e027f251ae094b903def9fbaf881c2d0bb54eaa2127e",
+    "row_count": 944,
+    "last_nonlinear_iteration": 943,
+    "last_total_minor_iteration": 20021,
+    "ank_rows": 215,
+    "nk_rows": 728,
+    "first_nk_row": {
+      "nonlinear_iteration": 216,
+      "total_minor_iteration": 2287,
+      "iteration_type": "*NK",
+      "residual_density": 0.0007165479725179182,
+      "residual_energy": 0.0006558517221875742,
+      "total_residual": 1.281340621866055
+    },
+    "final_row": {
+      "nonlinear_iteration": 943,
+      "total_minor_iteration": 20021,
+      "iteration_type": "NK",
+      "linear_residual": 0.954,
+      "step": 0.1,
+      "residual_density": 0.00012023608510516739,
+      "residual_energy": 0.000025863411557091564,
+      "total_residual": 0.12573965255011235
+    },
+    "reductions": {
+      "density": {
+        "initial": 396.30185060621,
+        "final": 0.00012023608510516739,
+        "orders_reduced": 6.517991273206704,
+        "governed_limit": 0.00001,
+        "passed": false
+      },
+      "energy": {
+        "initial": 1388.9998363981317,
+        "final": 0.000025863411557091564,
+        "orders_reduced": 7.730016383912819,
+        "governed_limit": 0.00001,
+        "passed": false
+      },
+      "momentum_x": {
+        "initial": 135.84090529341756,
+        "final": 0.000006133333664770234,
+        "orders_reduced": 7.345333975448053,
+        "passed": true
+      },
+      "momentum_y": {
+        "initial": 1.0158582711240727,
+        "final": 0.000002795512605042385,
+        "orders_reduced": 5.56037166613239,
+        "passed": true
+      },
+      "momentum_z": {
+        "initial": 20.623986052990638,
+        "final": 0.000006972862165093815,
+        "orders_reduced": 6.470961525871953,
+        "passed": true
+      },
+      "sa": {
+        "initial": 0.0006344296784255992,
+        "final": 3.930133639327479e-9,
+        "orders_reduced": 5.207976172674744,
+        "passed": true
+      }
+    },
+    "nk_behavior": {
+      "all_nk_rows_linear_residual_median": 0.978,
+      "last_200_nk_rows_linear_residual_median": 0.9775,
+      "last_200_nk_rows_linear_residual_p95": 0.997,
+      "last_200_nk_rows_step_0_01_count": 98,
+      "last_200_nk_rows_full_step_count": 21,
+      "last_200_density_start": 0.00015974293311233693,
+      "last_200_density_final": 0.00012023608510516739,
+      "last_200_density_ratio": 0.7526848466004633,
+      "last_200_density_log10_slope_per_1000_minor_iterations": -0.022881258933094055,
+      "last_200_energy_start": 0.000033985553855509884,
+      "last_200_energy_final": 0.000025863411557091564,
+      "last_200_energy_ratio": 0.7610119189774063,
+      "last_200_energy_log10_slope_per_1000_minor_iterations": -0.01483066445613759,
+      "diagnosis": "The nonlinear solution was still improving slowly rather than diverging, but the ILU-fill-1 NK linear solves were ineffective: median linear residual remained near 0.98 and nearly half of the last 200 NK rows accepted a 0.01 step. A straight-line log-residual extrapolation is not an authorization or convergence guarantee."
+    }
+  },
+  "classification_measurements": {
+    "residuals_passed": false,
+    "force_tail_passed": true,
+    "force_tail_last_200": {
+      "cl": {
+        "mean": 0.39290505417443583,
+        "absolute_range": 0.00010850493761821456,
+        "relative_range": 0.00027616070718714203
+      },
+      "cd": {
+        "mean": 0.038876999130717585,
+        "absolute_range": 0.00000640249662871295,
+        "relative_range": 0.0001646859781328697
+      },
+      "cmy_mission_cg": {
+        "mean": 0.05163456238501331,
+        "absolute_range": 0.000016903950588065264,
+        "relative_range": 0.0003273766602691603
+      }
+    },
+    "final_forces_diagnostic_only": {
+      "mission_cg": {
+        "cl": 0.3928886949117117,
+        "cd": 0.03887714210391708,
+        "cd_pressure": 0.03164294093632657,
+        "cd_viscous": 0.007234201167590513,
+        "cmy": 0.05163649318623291
+      },
+      "geometry_quarter_mac": {
+        "cl": 0.3928886949117117,
+        "cd": 0.03887714210391708,
+        "cmy": -0.0013782927155416807
+      },
+      "usable_as_accepted_aerodynamic_result": false
+    },
+    "conservation": {
+      "passed": false,
+      "measured_value": 0.4590111463741992,
+      "measured_definition": "abs(sum continuity residual)/sum(abs continuity residual)",
+      "required_definition": "signed_net_boundary_mass_flux_over_gross_boundary_mass_flux",
+      "finding": "The available diagnostic cannot substitute for the governed signed boundary-flux balance."
+    },
+    "wall_y_plus": {
+      "convention": "ADflow YPlus at first off-wall cell centroid",
+      "passed": false,
+      "sample_count": 9824,
+      "global": {
+        "p50": 0.20156624168157578,
+        "p95": 0.7845140784978869,
+        "p99": 1.99068829774857,
+        "maximum": 5.856842994689941,
+        "fraction_at_or_below_1": 0.9740431596091205
+      },
+      "limits": {
+        "p95_max": 1.0,
+        "p99_max": 2.0,
+        "absolute_max": 5.0,
+        "scope": "global_and_each_no_slip_wall_zone"
+      },
+      "zone_to_surface_block": {
+        "NSWallAdiabaticBCZone1": "oml_upper_aft",
+        "NSWallAdiabaticBCZone4": "oml_upper_fore",
+        "NSWallAdiabaticBCZone7": "oml_nose",
+        "NSWallAdiabaticBCZone10": "oml_lower_fore",
+        "NSWallAdiabaticBCZone13": "oml_lower_aft",
+        "NSWallAdiabaticBCZone16": "oml_base",
+        "NSWallAdiabaticBCZone19": "tip_upper_aft",
+        "NSWallAdiabaticBCZone21": "tip_upper_fore",
+        "NSWallAdiabaticBCZone23": "tip_nose",
+        "NSWallAdiabaticBCZone25": "tip_lower_fore",
+        "NSWallAdiabaticBCZone27": "tip_lower_aft",
+        "NSWallAdiabaticBCZone29": "tip_base",
+        "NSWallAdiabaticBCZone31": "tip_centre"
+      },
+      "failed_surface_blocks": {
+        "oml_nose": {"p95": 1.0703128278255463, "p99": 1.2103353500366212, "maximum": 1.2889894247055054},
+        "oml_base": {"p95": 1.060055911540985, "p99": 1.7941792309284232, "maximum": 2.7868638038635254},
+        "tip_upper_aft": {"p95": 3.099098372459413, "p99": 4.12275598526001, "maximum": 4.248584747314453},
+        "tip_upper_fore": {"p95": 1.4216498196125031, "p99": 1.7775075232982636, "maximum": 1.841779112815857},
+        "tip_nose": {"p95": 2.3512998938560483, "p99": 2.3796413922309876, "maximum": 2.381162166595459},
+        "tip_lower_fore": {"p95": 1.2667911946773531, "p99": 1.6891008341312412, "maximum": 1.7511838674545288},
+        "tip_lower_aft": {"p95": 3.2712170839309693, "p99": 4.289222950935366, "maximum": 4.485873222351074},
+        "tip_base": {"p95": 5.792974209785461, "p99": 5.854343886375427, "maximum": 5.856842994689941},
+        "tip_centre": {"p95": 2.8578976273536663, "p99": 4.148235297203065, "maximum": 4.268341541290283}
+      },
+      "finding": "The global p95 and p99 pass narrowly, but the global maximum exceeds 5.0; every tip/cap wall block and two narrow OML blocks also fail the immutable per-region rule. The worst region is tip_base. This is measured evidence that the existing C03 tip/collar wall-normal treatment is not yet acceptable under convergence_v2."
+    },
+    "surface_fields": {
+      "cp_samples": 31168,
+      "cf_samples": 31168,
+      "yplus_samples": 31168,
+      "nonfinite_cp": 0,
+      "nonfinite_cf": 0,
+      "nonfinite_yplus": 0,
+      "field_presence_passed": true,
+      "interface_discontinuity_check": "not_evaluated_in_measurement_canary",
+      "passed": false
+    }
+  },
+  "retained_artifacts": {
+    "directory": "AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260901_003",
+    "adflow_case_sha256": "f32116b7b26a0901b582c79b82090f4132a748978b5a6cef72333944f7ac13bb",
+    "requested_options_sha256": "99659c6b4d6bd337e5105f15331afce29b83dd71cc42a6b3fe34a2e51e459489",
+    "effective_options_sha256": "80a3635ff0bdd4203e0fcc12a46def201a24c18eab29bc4b387492f98b31a27a",
+    "static_runner_sha256": "1099235a9c7e32d2fc5d3db9b238d2276227e719623fec20f20aa30c9e61c196",
+    "launch_record_sha256": "0f37d7fab387fa3da43c76ea11c1f2da4737660faf4e136aa4d060e1f6905fe7",
+    "adflow_run_json_sha256": "bfe4b516b73fe567cdcec10f408cba5bb3fa99e0b849ecf1f2289fca9ecb8f9c",
+    "combined_solver_stdout_stderr_sha256": "31e2411761d91e645d38a8c0e9520b3ebc480d3f0ab01c9a448376ecd23e46b6",
+    "resource_watchdog_timeline_sha256": "84cecc3f3da8167e1b61eb46c538ee21a9cd54b3d990a7364135269c70f20e2c",
+    "solve_report_sha256": "6e771256b0c0d2273271e027f251ae094b903def9fbaf881c2d0bb54eaa2127e",
+    "gnu_time_verbose_sha256": "6bb335f799df2f0e1b3e544853c651f793affd74013ba36167fd4ff8b6ea1532",
+    "surface_solution": {
+      "path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260901_003/aeris_cfd_000_surf.cgns",
+      "sha256": "3abf9350bd92d66933f3a02fabbc84e62291aa2501534ee2d9531ec1818ab973",
+      "size_bytes": 1515520,
+      "retained_on_disk": true,
+      "git_policy": "hash_only_do_not_commit_cgns"
+    },
+    "volume_solution_requested": false,
+    "restart_available": false,
+    "deletion_policy": "explicit_human_approval_only"
+  },
+  "decision": {
+    "desktop_submillion_execution_proven": true,
+    "resource_policy_passed": false,
+    "solver_convergence_passed": false,
+    "mesh_aerodynamic_acceptance_passed": false,
+    "new_cfd_authorized": false,
+    "consumed_token_reuse_forbidden": true,
+    "next_step": "Obtain an independent read-only review of this terminal evidence. Any future attempt requires a new immutable policy, a new one-shot token, a corrected peak-memory model, a convergence strategy that addresses weak NK linear solves, restart/volume retention sufficient to avoid another irreversible cold start, and explicit human authorization. The measured y-plus failures require a separately governed mesh/wall-treatment decision before acceptance or grid independence."
+  }
+}

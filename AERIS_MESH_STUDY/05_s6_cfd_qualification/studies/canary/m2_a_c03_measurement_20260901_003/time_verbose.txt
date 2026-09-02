@@ -1,0 +1,23 @@
+	Command being timed: "/home/mike_kara/miniconda3/envs/mach-aero/bin/mpirun -np 1 /home/mike_kara/miniconda3/envs/mach-aero/bin/python /home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260901_003/run_adflow.py"
+	User time (seconds): 22857.19
+	System time (seconds): 48.89
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 6:21:49
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 10322264
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 4
+	Minor (reclaiming a frame) page faults: 23280583
+	Voluntary context switches: 3204
+	Involuntary context switches: 101468
+	Swaps: 0
+	File system inputs: 40
+	File system outputs: 28744
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

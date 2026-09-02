@@ -1,0 +1,143 @@
+{
+  "schema": "aeris.s6.m2_a_c03_independent_solver_review.v1",
+  "created_at": "2026-09-02T07:19:28+03:00",
+  "reviewer": "Claude Sonnet via Claude Code 2.1.251",
+  "review_mode": "read_only",
+  "cfd_run_by_review": false,
+  "holdout_accessed": false,
+  "cfd_authorized": false,
+  "verdict": "POSTMORTEM_FAITHFUL; DESKTOP_SUBMILLION_EXECUTABILITY_PROVEN; GOVERNED_RESOURCE_POLICY_FAILED; ITERATION_BUDGET_EXHAUSTED_WITH PRACTICAL_NK_STAGNATION; RESIDUAL_AND_YPLUS_GATES_FAILED; NO_NEW_CFD_AUTHORIZED",
+  "evidence_reviewed": [
+    "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_solver_postmortem_20260902_attempt03.json",
+    "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_canary_execution_20260901_attempt03.json",
+    "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/m2_a_c03_canary_v4.yaml",
+    "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/convergence_v2.yaml",
+    "AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260901_003/adflow_effective_options.json",
+    "AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260901_003/adflow_run.log"
+  ],
+  "reproduction": {
+    "all_postmortem_measurements_match_execution_evidence": true,
+    "solver_returncode": 0,
+    "solve_failed": true,
+    "terminal_status": "SOLVER_MEASUREMENT_FAILED",
+    "surface_solution_written": true,
+    "native_rows": 944,
+    "last_nonlinear_iteration": 943,
+    "last_total_minor_iteration": 20021,
+    "density_final": 0.00012023608510516739,
+    "energy_final": 0.000025863411557091564,
+    "density_limit": 0.00001,
+    "energy_limit": 0.00001,
+    "peak_rss_gib": 9.855037689208984,
+    "forecast_peak_gib": 9.45,
+    "minimum_mem_available_gib": 2.0464706420898438,
+    "watchdog_floor_gib": 2.0,
+    "watchdog_stopped": false,
+    "swap_growth_bytes": 0,
+    "kernel_oom_kills": 0,
+    "force_tail_passed": true,
+    "wall_yplus_passed": false,
+    "signed_boundary_mass_balance_measured": false,
+    "interface_discontinuity_evaluated": false
+  },
+  "findings": [
+    {
+      "severity": "HIGH",
+      "id": "F1_RESOURCE_POLICY_FAILED_THIN_MARGIN",
+      "finding": "The full 943104-cell one-rank RANS/SA workload completed without OOM, swap growth, or watchdog intervention, proving one exact desktop execution. The resource policy nevertheless failed because measured peak RSS 9.855 GiB exceeded the immutable 9.45 GiB forecast and minimum available memory stayed only 0.0465 GiB above the 2 GiB watchdog floor.",
+      "required_action": "Use at least the measured 9.855 GiB as the next lower-bound peak anchor or reduce memory. Do not describe the run as having comfortable headroom."
+    },
+    {
+      "severity": "HIGH",
+      "id": "F2_RESIDUAL_GATES_UNMET",
+      "finding": "Density finished at 1.20236e-4 and energy at 2.58634e-5, above their 1e-5 limits. Momentum and SA passed. ADflow reached its nCycles total-minor-iteration allowance, wrote the surface solution, and returned solve_failed=true; this was budget exhaustion, not a crash.",
+      "required_action": "Do not accept or rank this diagnostic force result."
+    },
+    {
+      "severity": "HIGH",
+      "id": "F3_PRACTICAL_NK_STAGNATION",
+      "finding": "The tail was still decreasing and was not divergent, but NK was practically stalled: the last-200 median linear residual was 0.9775, p95 was 0.997, 98 of 200 updates used step 0.01, and only 21 used a full step. Density declined only 0.0229 orders per 1000 minor iterations over that window.",
+      "required_action": "Treat weak NK linear solves as the leading hypothesis. More cycles alone is an expensive blind retry and not the primary correction."
+    },
+    {
+      "severity": "HIGH",
+      "id": "F4_WALL_YPLUS_FAILED",
+      "finding": "Nine of thirteen no-slip wall regions failed: oml_nose, oml_base, and every tip/cap block. Tip_base was worst at p95 5.79, p99 5.85, and maximum 5.86. The global maximum also exceeded the 5.0 limit, although global p95 and p99 passed.",
+      "required_action": "A separately governed wall-normal/tip-cap mesh correction is required before C03 can support viscous acceptance or grid-independence claims. Solver tuning cannot repair this mesh measurement."
+    },
+    {
+      "severity": "MEDIUM",
+      "id": "F5_CONSERVATION_UNPROVEN",
+      "finding": "The runner measured a continuity-residual surrogate, not the required signed boundary mass-flux balance.",
+      "required_action": "Derive the governed balance from retained fields if possible; otherwise leave conservation unproven until an authorized run emits the necessary data."
+    },
+    {
+      "severity": "MEDIUM",
+      "id": "F6_NO_RESTART",
+      "finding": "No volume or restart state exists, so approximately 22900 seconds of solver progress cannot be resumed.",
+      "required_action": "A future immutable policy should require periodic restart/volume-state retention, after checking its memory and disk behavior."
+    },
+    {
+      "severity": "MEDIUM",
+      "id": "F7_INTERFACE_QC_UNPROVEN",
+      "finding": "Cp, Cf, and y-plus exist and are finite, but surface/interface discontinuity QC was not evaluated.",
+      "required_action": "Complete the governed interface-field check before any acceptance."
+    },
+    {
+      "severity": "LOW",
+      "id": "F8_ITERATION_TERMINOLOGY",
+      "finding": "The 20000 budget refers to total minor iterations, not 20000 nonlinear iterations; only 943 nonlinear rows were completed.",
+      "required_action": "Use precise wording in handoffs and reports."
+    }
+  ],
+  "resource_conclusion": {
+    "desktop_submillion_execution_proven": true,
+    "governed_resource_policy_passed": false,
+    "interpretation": "The host ran this exact sub-million-cell configuration once to normal solver termination, but did so at a razor-thin memory margin and outside the bound forecast. Any memory-increasing solver change needs a new bounded resource case."
+  },
+  "numerical_conclusion": {
+    "divergence": false,
+    "convergence": false,
+    "classification": "practical_stagnation_after_slow_tail_reduction",
+    "leading_hypothesis": "ILU-fill-1 NK preconditioning was too weak for efficient linear reduction under the current subspace and switching strategy.",
+    "causal_status": "hypothesis_supported_by_monitor_history_not_yet_isolated_by_controlled_comparison",
+    "more_cycles_only": "not_recommended_as_primary_action",
+    "straight_line_extrapolation_is_authorization": false
+  },
+  "yplus_conclusion": {
+    "global_p95": 0.7845140784978869,
+    "global_p99": 1.99068829774857,
+    "global_maximum": 5.856842994689941,
+    "failed_region_count": 9,
+    "worst_surface_block": "tip_base",
+    "implication": "C03 near-wall resolution is not acceptable under convergence_v2, independently of solver convergence."
+  },
+  "option_assessment": {
+    "raise_ncycles_only": "Reject as the first response; it repeats a six-hour cold start with poor extrapolated odds and no restart.",
+    "nk_ilu_fill_2": "Directly targets the leading linear-solver hypothesis but increases memory; not currently safe or authorized without source review, a corrected resource envelope, and a bounded probe/new policy.",
+    "increase_nk_subspace": "Adds memory and may not address weak preconditioning; low-priority under the current 0.0465 GiB watchdog margin.",
+    "ank_biased_or_ank_only": "Plausible lower-memory alternative if stronger NK cannot fit, but its asymptotic convergence is unproven and it requires separate governance.",
+    "multigrid_or_flow_continuation": "Not the cheapest first correction; it changes startup/path behavior and needs separate technical justification and governance.",
+    "write_restart_or_volume_state": "Mandatory insurance for a future long run, not itself a convergence correction; verify peak-memory behavior first."
+  },
+  "next_action": {
+    "launch_now": false,
+    "order": [
+      "Seal and commit all attempt03 evidence and both live handoffs.",
+      "Correct the resource model using the measured 9.855 GiB peak.",
+      "Perform read-only ADflow source/options analysis to identify one bounded convergence lever and confirm restart semantics.",
+      "Separately design and audit a C03 wall-normal/tip-cap correction for the measured y-plus failures.",
+      "Only after new immutable policy, independent review, green gates, and explicit human authorization may one bounded probe or CFD run launch."
+    ]
+  },
+  "forbidden_actions": [
+    "launch_any_cfd_in_the_current_state",
+    "reuse_any_consumed_token_or_authorization",
+    "blind_same_configuration_retry",
+    "claim_convergence_or_acceptance_from_force_tail_stability",
+    "claim_c03_grid_independence",
+    "touch_or_inspect_the_locked_holdout",
+    "overwrite_or_delete_immutable_run_evidence"
+  ],
+  "lead_researcher_note": "The reviewer's preconditioner attribution is retained as a leading hypothesis, not a proven unique root cause. Any proposed memory probe is itself a new governed heavy action and is not authorized by this review."
+}

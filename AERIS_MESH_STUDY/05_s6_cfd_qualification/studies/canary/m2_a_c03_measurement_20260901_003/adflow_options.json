@@ -1,0 +1,41 @@
+{
+  "ANKPCILUFill": 1,
+  "ANKSubspaceSize": 10,
+  "ANKSwitchTol": 1.0,
+  "L2Convergence": 1e-08,
+  "MGCycle": "sg",
+  "NKPCILUFill": 1,
+  "NKSubspaceSize": 20,
+  "NKSwitchTol": 1e-06,
+  "equationType": "RANS",
+  "gridFile": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03/lhs100_seed42_083/wing_vol_deformed.cgns",
+  "liftIndex": 3,
+  "monitorVariables": [
+    "resrho",
+    "resmom",
+    "resrhoe",
+    "resturb",
+    "cl",
+    "cd",
+    "cmy",
+    "cdp",
+    "cdv"
+  ],
+  "nCycles": 20000,
+  "outputDirectory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260901_003",
+  "storeConvHist": true,
+  "surfaceVariables": [
+    "cp",
+    "cf",
+    "yplus",
+    "vx",
+    "vy",
+    "vz"
+  ],
+  "turbulenceModel": "SA",
+  "useANKSolver": true,
+  "useNKSolver": true,
+  "writeSurfaceSolution": true,
+  "writeTecplotSurfaceSolution": false,
+  "writeVolumeSolution": false
+}

@@ -1,0 +1,71 @@
+{
+  "schema": "aeris.s6.claude_m2_c03_ilu1_exact_wiring_review.v1",
+  "created_at": "2026-09-01T23:12:00+03:00",
+  "decision": {
+    "verdict": "GO_EXACT_WIRING",
+    "high_findings": 0,
+    "reviewed_commit": "579c561368d68aacdda067c978246128b3d27a21",
+    "reviewed_policy_sha256": "95a70fad10e745d6f8f82267bfd887470b38fb8a77301f430b61d6e2272cfb3c",
+    "not_cfd_execution_authorization": true
+  },
+  "evidence": {
+    "focused_tests_passed": 79,
+    "ruff_changed_python_passed": true,
+    "diff_check_passed": true,
+    "failed_identity_checks": [],
+    "failed_environment_checks": [],
+    "one_rank_mpi_probe": "AERIS_MPI_READY 0 1",
+    "attempt_directory_absent": true,
+    "authorization_unconsumed": true,
+    "resource": {
+      "available_gib": 11.706356048583984,
+      "forecast_gib": 9.45,
+      "mandatory_headroom_gib": 2.0,
+      "margin_beyond_headroom_gib": 0.2563560485839851,
+      "preexisting_swap_gib": 0.1155548095703125,
+      "passed": true
+    },
+    "resource_review_commit": "59264557f379685c147b567b28c7bb3d2100d105",
+    "resource_review_sha256": "354e866b304c39e5bcdebb0a75cb7562c14c713acd24ae0e2b6fd3faf1f6bbf3"
+  },
+  "findings": [
+    {
+      "id": "L1",
+      "severity": "LOW",
+      "finding": "Preflight margin beyond forecast plus mandatory headroom is only 0.256356 GiB; unmeasured ILU savings may underperform.",
+      "disposition": "Success is not assured, but any overrun remains fail-closed under the unchanged watchdog."
+    },
+    {
+      "id": "L2",
+      "severity": "LOW",
+      "finding": "The swap-growth limit leaves little transient headroom.",
+      "disposition": "Retain the limit; swap is containment rather than solver capacity."
+    },
+    {
+      "id": "L3",
+      "severity": "LOW",
+      "finding": "The real MPI readiness evidence is a non-CFD one-rank probe.",
+      "disposition": "Accepted for the governed single-rank launch; the execution path performs the same probe again immediately before authorization consumption."
+    },
+    {
+      "id": "L4",
+      "severity": "LOW",
+      "finding": "The solver manifest was not independently re-read by the no-tools reviewer.",
+      "disposition": "The executable preflight verifies the pinned Python, mpirun, ADflow library, Python source, versions, mesh, policy, and review hashes."
+    }
+  ],
+  "rationale": "The committed source, active policy, bound mesh review, bound resource review, requested solver options, resource arithmetic, one-shot state, tests, and fail-closed watchdog are mutually consistent. No HIGH finding exists. Efficacy uncertainty does not create an uncontrolled host-safety path.",
+  "conditions": [
+    "Launch exactly once from the reviewed governed-source tree; never retry automatically.",
+    "Re-run all executable identity, environment, MPI, one-shot, and live-resource checks immediately before authorization consumption.",
+    "Keep the 2.0 GiB MemAvailable and 0.25 GiB swap-growth watchdog limits unchanged.",
+    "Retain every residual, log, option record, watchdog sample, and surface result; no volume output.",
+    "Never classify ACCEPTED and never access the holdout."
+  ],
+  "model": {
+    "cli": "Claude Code",
+    "cli_version": "2.1.251",
+    "name": "claude-sonnet-5",
+    "tools": false
+  }
+}

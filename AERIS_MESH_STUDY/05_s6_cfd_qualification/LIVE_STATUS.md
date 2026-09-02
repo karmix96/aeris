@@ -1,6 +1,6 @@
 # S6 qualification live status
 
-Updated: 2026-09-02T15:35:08+03:00
+Updated: 2026-09-02T19:30:54+03:00
 
 ## Executive state
 
@@ -24,11 +24,11 @@ Updated: 2026-09-02T15:35:08+03:00
   one deterministic wall-normal correction, one low-memory ANK-only solver
   change, final double-precision volume output, and native SIGUSR1 checkpoints.
 - The correction has passed mesh-only qualification on development geometries
-  A/B/C/E, and 78 focused tests pass. It has not yet been independently
+  A/B/C/E, and 79 focused tests pass. It has not yet been independently
   reviewed. **No new CFD, retry, or token reuse is currently authorized.**
 - The development/holdout separation remains intact. The locked holdout was
   not accessed.
-- The two recovery commits are local but not pushed because this WSL session
+- The recovery commits are local but not pushed because this WSL session
   has no GitHub HTTPS credential helper or usable SSH key. No work is lost;
   retry `git push origin main` after GitHub authentication is restored.
 
@@ -39,9 +39,9 @@ Updated: 2026-09-02T15:35:08+03:00
   `392ef9850de8e7795c35ef50082a3583bc1ed21855668e16b59b925e2dfa65e9`.
 - Recovery plan:
   `reports/m2_a_c03_desktop_recovery_plan_20260902.json`, SHA-256
-  `5da822a743d946a05610d1e40e0ac64b979f04f77182ef3633b0d44e865818e2`.
+  `e1eaea665ff8df4b04507f5cd3dfa2d44db1a170244cb7dbb8d3294c7e8bc17b`.
 - Independent review target commit:
-  `b7da6401fd7c8940f3038e8df2c8b23538fc9f2d`.
+  `21ec3ef35fe48c3c7965f7b91cd98e5274047688`.
 - The same dimensionless layer law was applied to all 13 blocks on A/B/C/E.
   Every output retains 943,104 cells, zero inversions, exact wall and
   farfield, 20 conformal paired interfaces, and `qmin=0.1251...0.1955`.
@@ -57,6 +57,11 @@ Updated: 2026-09-02T15:35:08+03:00
 - The retry is capped at 27,000 seconds and 20,000 minor iterations. It writes
   the final volume solution in double precision and adds `rho` plus vector Cf
   to the retained surface fields.
+- Measured late-ANK fits showed that the old `L2Convergence=1e-8` could stop
+  while density was still `4.41e-5...6.70e-5`, above its unchanged `1e-5`
+  limit. The candidate now uses `1e-11`; the same four fits project density
+  `6.79e-7...1.81e-6` in about 3.11...3.52 hours. This is an engineering
+  forecast, not a substitute for the actual run.
 - Every 1,800 seconds the watchdog will signal only the exact MPI Python rank
   with ADflow's native SIGUSR1. A checkpoint is not published merely because
   its size is stable: all 13 zones must reopen with three coordinate arrays
@@ -187,7 +192,7 @@ restart state exists. Nothing may be deleted without explicit human approval.
 ## Next work — audit first; no CFD currently authorized
 
 1. Ask Claude Code to independently audit immutable implementation commit
-   `b7da6401fd7c8940f3038e8df2c8b23538fc9f2d`: re-open all four meshes and
+   `21ec3ef35fe48c3c7965f7b91cd98e5274047688`: re-open all four meshes and
    reproduce hashes, QC, y+ projection, NK diagnosis, option wiring, memory
    arithmetic and the real SIGUSR1 checkpoint test. Claude must not run CFD or
    inspect holdout.

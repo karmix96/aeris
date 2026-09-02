@@ -1,6 +1,6 @@
 # Claude Code continuation order — S6 qualification
 
-Updated: 2026-09-02T15:35:08+03:00
+Updated: 2026-09-02T19:30:54+03:00
 
 This is the live recovery-audit handoff for the AERIS S6 automated CFD
 qualification study. Preserve the evidence chain. A mesh correction and
@@ -12,29 +12,30 @@ independently accepted. **No CFD is currently authorized.**
 1. `MASTER_EXECUTION_GUIDE.md`
 2. `LIVE_STATUS.md`
 3. `reports/m2_a_c03_desktop_recovery_plan_20260902.json`
-4. `reports/m2_c03_wall_normal_recovery_family_20260902.json`
-5. `04_strategy_studies/S6_bounded_mesh_atlas/wall_normal.py`
-6. `04_strategy_studies/S6_bounded_mesh_atlas/cfd_qc.py`
-7. `05_s6_cfd_qualification/canary.py`
-8. `../../src/aeris/cfd/presets/data/adflow_rans_ank_memory_safe_v1.yaml`
-9. `policies/m2_a_c03_canary_v4.yaml`
-10. `reports/m2_a_c03_canary_authorization_consumed_20260901_attempt03.json`
-11. `reports/m2_a_c03_canary_execution_20260901_attempt03.json`
-12. `reports/m2_a_c03_solver_postmortem_20260902_attempt03.json`
-13. `reviews/claude_m2_a_c03_attempt03_postrun_review_20260902.json`
-14. `studies/canary/m2_a_c03_measurement_20260901_003/adflow_effective_options.json`
-15. `studies/canary/m2_a_c03_measurement_20260901_003/solve_report.json`
-16. `studies/canary/m2_a_c03_measurement_20260901_003/adflow_run.log`
-17. `studies/canary/m2_a_c03_measurement_20260901_003/resource_watchdog.jsonl`
+4. `reports/m2_a_c03_ank_only_convergence_forecast_20260902.json`
+5. `reports/m2_c03_wall_normal_recovery_family_20260902.json`
+6. `04_strategy_studies/S6_bounded_mesh_atlas/wall_normal.py`
+7. `04_strategy_studies/S6_bounded_mesh_atlas/cfd_qc.py`
+8. `05_s6_cfd_qualification/canary.py`
+9. `../../src/aeris/cfd/presets/data/adflow_rans_ank_memory_safe_v1.yaml`
+10. `policies/m2_a_c03_canary_v4.yaml`
+11. `reports/m2_a_c03_canary_authorization_consumed_20260901_attempt03.json`
+12. `reports/m2_a_c03_canary_execution_20260901_attempt03.json`
+13. `reports/m2_a_c03_solver_postmortem_20260902_attempt03.json`
+14. `reviews/claude_m2_a_c03_attempt03_postrun_review_20260902.json`
+15. `studies/canary/m2_a_c03_measurement_20260901_003/adflow_effective_options.json`
+16. `studies/canary/m2_a_c03_measurement_20260901_003/solve_report.json`
+17. `studies/canary/m2_a_c03_measurement_20260901_003/adflow_run.log`
+18. `studies/canary/m2_a_c03_measurement_20260901_003/resource_watchdog.jsonl`
 
 Do not read or inspect the locked holdout contents.
 
 ## Recovery candidate to audit
 
 - Immutable implementation review target:
-  `b7da6401fd7c8940f3038e8df2c8b23538fc9f2d`.
+  `21ec3ef35fe48c3c7965f7b91cd98e5274047688`.
 - Recovery-plan SHA-256:
-  `5da822a743d946a05610d1e40e0ac64b979f04f77182ef3633b0d44e865818e2`.
+  `e1eaea665ff8df4b04507f5cd3dfa2d44db1a170244cb7dbb8d3294c7e8bc17b`.
 - Family-report SHA-256:
   `392ef9850de8e7795c35ef50082a3583bc1ed21855668e16b59b925e2dfa65e9`.
 - Four development meshes A/B/C/E were redistributed with one common method.
@@ -49,7 +50,10 @@ Do not read or inspect the locked holdout contents.
   with no failed wall region. Treat this only as a projection.
 - Proposed numerical change: one-rank ANK remains; NK is disabled. All
   subspace and ILU values stay 10/20 and 1/1. Limits remain nCycles 20,000 and
-  L2 1e-8; an independent 27,000-second wall-clock cap is added.
+  the independent 27,000-second wall-clock cap. `L2Convergence` is tightened
+  from 1e-8 to 1e-11 because all four late-ANK fits predict 1e-8 would stop
+  before density passes 1e-5. Independently reproduce the fit and decide
+  whether 1e-11 has defensible convergence and time margins.
 - Proposed resource model: measured pre-NK/ANK peak 8.31702 GiB, forecast 9.2
   GiB, unchanged 75% WSL cap, 2 GiB headroom/floor and 0.25 GiB swap limits.
   Check both the phase attribution and arithmetic.
@@ -60,7 +64,7 @@ Do not read or inspect the locked holdout contents.
   hashes source and fsynced staging copy independently; reopens the staging
   copy; then atomically publishes and directory-fsyncs it. Inspect remaining
   crash windows and do not equate structural validation with a tested restart.
-- Focused suite currently reports 78 passed, including live subprocess
+- Focused suite currently reports 79 passed, including live subprocess
   SIGUSR1 publication, invalid-checkpoint nonpublication, and real ADF-CGNS
   full-field inventory tests. Re-run it.
 

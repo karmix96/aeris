@@ -12,7 +12,11 @@ citation: >-
   may remain in ANK longer. AERIS attempt m2_a_c03_measurement_20260901_003
   measured healthy ANK convergence and an NK plateau with 653/728 linear
   residuals above 0.8, while NK increased peak resident memory by about 1.54
-  GiB. This governed preset changes only the ANK-to-NK choice.
+  GiB. Late-ANK extrapolation also shows that L2Convergence 1e-8 may stop with
+  density still above the separate 1e-5 component limit; 1e-11 gives a
+  measured-fit density margin while remaining inside the time budget. This
+  governed preset changes the ANK-to-NK choice and aligns the solver stop with
+  the pre-existing component acceptance limit.
 solver:
   mg_cycle: sg
   use_ank_solver: true
@@ -20,4 +24,4 @@ solver:
   use_nk_solver: false
   nk_switch_tol: 1.0e-10
   n_cycles: 20000
-  l2_convergence: 1.0e-8
+  l2_convergence: 1.0e-11

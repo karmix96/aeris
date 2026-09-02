@@ -96,6 +96,42 @@ def test_governed_source_cleanliness_includes_active_v4_policy():
     assert 'policies/m2_a_c03_canary_v4.yaml"' in source
 
 
+def test_desktop_recovery_plan_matches_candidate_solver_and_implementation():
+    plan_path = ROOT / "reports/m2_a_c03_desktop_recovery_plan_20260902.json"
+    plan = json.loads(plan_path.read_text())
+    preset_path = ROOT.parents[1] / plan["implementation"]["solver_preset_path"]
+    preset = yaml.safe_load(preset_path.read_text())["solver"]
+    bound = plan["bound_solver_change"]
+    assert preset["use_nk_solver"] is bound["useNKSolver"]
+    assert preset["nk_switch_tol"] == bound["NKSwitchTol"]
+    assert preset["n_cycles"] == bound["nCycles"]
+    assert preset["l2_convergence"] == bound["L2Convergence"] == 1e-11
+    assert bound["timeLimit"] == 27000.0
+
+    for path_key, hash_key in (
+        ("mesh_redistribution_path", "mesh_redistribution_sha256"),
+        ("canary_orchestrator_path", "canary_orchestrator_sha256"),
+        ("cgns_restart_validator_path", "cgns_restart_validator_sha256"),
+        ("solver_preset_path", "solver_preset_sha256"),
+    ):
+        path = ROOT.parents[1] / plan["implementation"][path_key]
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == plan["implementation"][hash_key]
+
+    checkpoint = plan["bound_checkpoint_policy"]
+    assert checkpoint["validate_cgns_restart"] is True
+    assert checkpoint["expected_zone_count"] == 13
+    assert checkpoint["minimum_coordinate_arrays_per_zone"] == 3
+    assert checkpoint["maximum_validation_field_values"] == 2_000_000
+    assert checkpoint["required_restart_fields"] == [
+        "Density",
+        "VelocityX",
+        "VelocityY",
+        "VelocityZ",
+        "Pressure",
+        "TurbulentSANuTilde",
+    ]
+
+
 def test_watchdog_counts_the_full_launcher_process_session():
     sys.path.insert(0, str(ROOT))
     from canary import _process_session_rss_bytes

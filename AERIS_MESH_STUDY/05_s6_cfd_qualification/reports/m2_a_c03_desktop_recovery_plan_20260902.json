@@ -1,6 +1,6 @@
 {
   "schema": "aeris.s6.m2_desktop_recovery_plan.v1",
-  "created_at": "2026-09-02T15:30:21+03:00",
+  "created_at": "2026-09-02T19:26:31+03:00",
   "status": "PENDING_INDEPENDENT_REVIEW",
   "cfd_run": false,
   "holdout_accessed": false,
@@ -58,6 +58,8 @@
     }
   },
   "bound_solver_change": {
+    "convergence_forecast_path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_ank_only_convergence_forecast_20260902.json",
+    "convergence_forecast_sha256": "d7fc3f53ade30938ac80bf4451f6b6979c1199c67adcc5067d10edf3e1560f85",
     "preset": "rans_ank_memory_safe_v1",
     "ANKSubspaceSize": 10,
     "NKSubspaceSize": 20,
@@ -66,9 +68,10 @@
     "useNKSolver": false,
     "NKSwitchTol": 1e-10,
     "nCycles": 20000,
-    "L2Convergence": 1e-08,
+    "L2Convergence": 1e-11,
     "timeLimit": 27000.0,
-    "change_isolated": "disable_the_failed_NK_end_game_and_continue_with_measured_healthy_ANK"
+    "change_isolated": "disable_the_failed_NK_end_game_continue_with_measured_healthy_ANK_and_align_its_stop_with_the_preexisting_component_residual_limit",
+    "stop_tolerance_rationale": "attempt03 late-ANK fits predict L2Convergence 1e-8 stops with density 4.41e-5 to 6.70e-5; 1e-11 predicts density 6.79e-7 to 1.81e-6 in 3.11 to 3.52 hours at the measured ANK rate"
   },
   "bound_output_controls": {
     "storeConvHist": true,
@@ -138,8 +141,8 @@
     "cgns_restart_validator_path": "AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/cfd_qc.py",
     "cgns_restart_validator_sha256": "b31021d95e278ad352e9399bd961248eb29f3cd49b7b08b55b243db57b295d41",
     "solver_preset_path": "src/aeris/cfd/presets/data/adflow_rans_ank_memory_safe_v1.yaml",
-    "solver_preset_sha256": "b923c505c52e6c0c5f2119c3542caee09fcb7c7cff57728cf5ce038cca55b152",
-    "focused_tests": "78 passed",
+    "solver_preset_sha256": "efc690f68aca1ea21d5a64810147a7f44d146071ed3df692a5d389bfa213e47f",
+    "focused_tests": "79 passed",
     "checkpoint_signal_integration_test": "passed",
     "invalid_checkpoint_nonpublication_test": "passed",
     "cgns_inventory_fixture_test": "passed"

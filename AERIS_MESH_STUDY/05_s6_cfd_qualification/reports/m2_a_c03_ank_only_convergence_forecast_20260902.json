@@ -1,0 +1,92 @@
+{
+  "schema": "aeris.s6.m2_ank_only_convergence_forecast.v1",
+  "created_at": "2026-09-02T19:26:31+03:00",
+  "cfd_run": false,
+  "holdout_accessed": false,
+  "purpose": "align the proposed ANK-only solver stop with the immutable per-component residual limit before independent review",
+  "source_measurement": {
+    "execution_id": "m2_a_c03_measurement_20260901_003",
+    "convergence_history_path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260901_003/adflow_run.json",
+    "convergence_history_sha256": "bfe4b516b73fe567cdcec10f408cba5bb3fa99e0b849ecf1f2289fca9ecb8f9c",
+    "initial_total_residual": 1409082.0471454472,
+    "last_ank_row_index": 215,
+    "last_ank_total_minor_iterations": 2264,
+    "last_ank_density_residual": 0.0007499850231081882,
+    "last_ank_energy_residual": 0.000727391122439563,
+    "estimated_ank_phase_elapsed_seconds": 3145.624782523999,
+    "estimated_ank_minor_iterations_per_hour_including_initialization": 2591.027399479047
+  },
+  "method": {
+    "type": "ordinary_least_squares_on_log10_residual_versus_total_minor_iterations",
+    "end_row_inclusive": 215,
+    "start_rows": [100, 125, 150, 175],
+    "quantities_fitted_independently": [
+      "totalR",
+      "RSDMassRMS",
+      "RSDEnergyStagnationDensityRMS"
+    ],
+    "status": "engineering_extrapolation_not_a_CFD_measurement",
+    "limitations": [
+      "the corrected mesh can change convergence slopes",
+      "log-linear behavior may not persist into the terminal regime",
+      "the ANK elapsed anchor includes initialization and is inferred from the measured pre-NK memory phase",
+      "actual convergence and component residuals remain mandatory"
+    ]
+  },
+  "candidate_comparison": {
+    "l2_1e_minus_8": {
+      "absolute_totalR_target": 0.014090820471454473,
+      "predicted_total_minor_iteration_range": [4595.279075502996, 5053.565782106395],
+      "predicted_density_range": [4.405993861382395e-05, 6.700553527881465e-05],
+      "predicted_energy_range": [3.6328733283748068e-06, 5.488946963245702e-06],
+      "density_component_limit": 1e-05,
+      "assessment": "reject; all four measured-window fits predict solver termination before density passes"
+    },
+    "l2_1e_minus_9": {
+      "absolute_totalR_target": 0.0014090820471454474,
+      "predicted_total_minor_iteration_range": [5752.137569925007, 6411.718829428858],
+      "predicted_density_range": [1.096376168862178e-05, 2.011152542513471e-05],
+      "predicted_energy_range": [2.592609249646781e-07, 4.7177496154499454e-07],
+      "density_component_limit": 1e-05,
+      "assessment": "reject; all four fits remain above the density limit"
+    },
+    "l2_1e_minus_10": {
+      "absolute_totalR_target": 0.00014090820471454474,
+      "predicted_total_minor_iteration_range": [6908.996064347017, 7769.871876751321],
+      "predicted_density_range": [2.7281942314639605e-06, 6.036418532331676e-06],
+      "predicted_energy_range": [1.8502221557945195e-08, 4.0549055370936105e-08],
+      "assessment": "passes the measured-fit component margin but leaves limited slope-change margin"
+    },
+    "l2_1e_minus_11": {
+      "absolute_totalR_target": 1.4090820471454472e-05,
+      "predicted_total_minor_iteration_range": [8065.854558769026, 9128.024924073783],
+      "predicted_density_range": [6.788768285904668e-07, 1.8118142670539492e-06],
+      "predicted_energy_range": [1.3204157264575559e-09, 3.4851910879090265e-09],
+      "predicted_elapsed_hours_at_measured_ank_rate_range": [3.112994698701662, 3.522936471420205],
+      "assessment": "selected; at least 5.5x density margin in all four fits and still below half of the 7.5-hour cap"
+    }
+  },
+  "source_backed_semantics": {
+    "options_path": "/home/mike_kara/packages/mdolab/adflow/doc/options.yaml",
+    "options_sha256": "3fa772bbd4650fc657b5d763f98a61c430ba663ad9001eef85af25455aaf373b",
+    "solver_convergence_path": "/home/mike_kara/packages/mdolab/adflow/src/solver/solvers.F90",
+    "solver_convergence_sha256": "b1567dc3cf78ffa76c8e2c6fd5a7b13a3970cbb134277aa68df1be3dd7264c69",
+    "ank_path": "/home/mike_kara/packages/mdolab/adflow/src/NKSolver/NKSolvers.F90",
+    "ank_sha256": "a5c1b00402731252b45b0834230cf45c1c822110831487369271f04028138381",
+    "facts": [
+      "L2Convergence is relative to the freestream total residual on the fine grid",
+      "the steady convergence test compares totalR with L2Conv times totalR0",
+      "the default ANK linear absolute tolerance is another factor 0.01 below the nonlinear target",
+      "installed ADflow documentation explicitly permits tighter tolerances, including an example at 1e-12"
+    ]
+  },
+  "decision": {
+    "selected_l2_convergence": 1e-11,
+    "n_cycles_unchanged": 20000,
+    "time_limit_seconds_unchanged": 27000.0,
+    "component_limits_unchanged": true,
+    "equations_or_turbulence_changed": false,
+    "requires_independent_review": true,
+    "cfd_authorized": false
+  }
+}

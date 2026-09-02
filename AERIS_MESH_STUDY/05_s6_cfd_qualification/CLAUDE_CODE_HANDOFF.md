@@ -1,8 +1,16 @@
 # Claude Code continuation order — S6 qualification
 
-Updated: 2026-09-02T22:49:49+03:00
+Updated: 2026-09-02T22:53:26+03:00
 
 ## Human-directed six-rank execution override
+
+**Attempt04 is RUNNING; do not launch anything.** It started at
+2026-09-02T19:50:42Z in process session 84539 after every non-CFD gate and the
+six-rank MPI probe passed. At elapsed 154 s RSS was 9.11 GiB, MemAvailable was
+2.88 GiB and swap growth was zero. The one-shot token is consumed and must
+never be reconstructed. Monitor only
+`studies/canary/m2_a_c03_measurement_20260902_004/` and, after terminal exit,
+preserve and audit every generated artifact before changing any policy.
 
 At 2026-09-02 22:49 EEST the principal investigator explicitly ordered one
 immediate corrected-mesh CFD run with six MPI ranks and directed Codex not to

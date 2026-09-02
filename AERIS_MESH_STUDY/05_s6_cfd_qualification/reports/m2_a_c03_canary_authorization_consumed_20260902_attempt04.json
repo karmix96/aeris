@@ -1,0 +1,11 @@
+{
+  "attempt_id": "m2_a_c03_measurement_20260902_004",
+  "created_at": "2026-09-02T19:50:42.669337+00:00",
+  "git_head": "c69145f03510a121eab6077b7ee052624053f316",
+  "launch_record": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260902_004/launch_record.json",
+  "maximum_process_launches": 1,
+  "mesh_sha256": "0fe4a4c00bbed1e47fcdaa46b60d00334d48c0cfe9b617cb2a3b0ec51cbd7ced",
+  "no_automatic_retry": true,
+  "policy_sha256": "30912de24995b158cc0d8f63fc55ffde2c7b5149c97acf035561999053b29cff",
+  "schema": "aeris.s6.m2_canary_authorization_consumed.v1"
+}

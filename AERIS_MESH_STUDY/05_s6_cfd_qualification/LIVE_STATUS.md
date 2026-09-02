@@ -1,8 +1,16 @@
 # S6 qualification live status
 
-Updated: 2026-09-02T22:49:49+03:00
+Updated: 2026-09-02T22:53:26+03:00
 
 ## Six-rank attempt04 launch state
+
+**RUNNING. Do not launch another CFD process.** The one-shot token was consumed
+at 2026-09-02T19:50:42Z and POSIX process session 84539 started. Six-rank MPI
+readiness had passed on ranks 0 through 5. At elapsed 154 s the full-session
+RSS was 9.11 GiB, MemAvailable was 2.88 GiB, swap growth was zero, and ADflow
+was advancing in ANK on the corrected mesh. The combined log had reached at
+least nonlinear iteration 15 / total minor iteration 128 with linear residuals
+near 0.05. Monitor the existing attempt; never reconstruct the token or retry.
 
 - The principal investigator explicitly directed one immediate CFD run on the
   corrected mesh with six MPI ranks and waived the pending Claude audit. The

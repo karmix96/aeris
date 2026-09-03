@@ -1,0 +1,134 @@
+{
+  "answer": "No. Every surface that resolves the leading edge better is a surface pyHyp will not march, and no marching parameter recovers it.",
+  "authorizes_cfd": false,
+  "cfd_run": false,
+  "correlations": [
+    {
+      "claim": "cell-size jump at the nose/fore seam predicts marching",
+      "detail": "separated cleanly on the first 10 observations, then failed 4 of 5 predictions on a held-out test. The jump was collinear with end_scale in the original sample, so it was a proxy, not a cause.",
+      "id": "X1",
+      "status": "REFUTED"
+    },
+    {
+      "claim": "an absolute floor on surface cell size near 1.6 to 1.9 mm",
+      "detail": "marching cases have a minimum nose cell of 1857 to 2650 um and failing cases 617 to 1525 um, with clean separation. The tip_nose cell separates just as cleanly at 794 to 1016 um against 364 to 677 um. The two are collinear because both scale with end_scale, so this is not claimed as a mechanism.",
+      "id": "X2",
+      "significance": "the floor runs the wrong way: the march fails as cells get smaller, and every route to a resolved leading edge makes them smaller",
+      "status": "CONSISTENT_WITH_ALL_15_OBSERVATIONS_BUT_CONFOUNDED"
+    }
+  ],
+  "created_at": "2026-09-03T21:30:00+03:00",
+  "holdout_accessed": false,
+  "marchable_envelope": {
+    "best_configuration": "end_points 7, end_scale 5.0, no clustering, epsE 3.0",
+    "best_leading_edge_resolution_that_marches_deg_per_cell": 17.2,
+    "current_c03_deg_per_cell": 25.74,
+    "end_points": "5, 6 and 7 march; 8, 9, 10 and 16 segmentation fault",
+    "end_scale": "5.0 only, except end_points 5 which also marches at 3.0",
+    "le_cluster": "0.0 only; every clustered surface tested failed",
+    "target_deg_per_cell": 10.0,
+    "verdict": "the envelope cannot reach the target"
+  },
+  "marches_run_this_session": 36,
+  "method": {
+    "control": {
+      "eps_e": 1.5,
+      "level": "candidate_c03",
+      "marches": true,
+      "min_volume": -1.65e-12
+    },
+    "geometry": "lhs100_seed42_083",
+    "healthy": "return code 0 and march_completed true; the raw template march is not the acceptance path, so small negative volumes are normal and a segmentation fault is not",
+    "tool": "run_s6.py march-template"
+  },
+  "parameters_tested_without_effect": [
+    {
+      "parameter": "cMax",
+      "result": "identical minimum volume across all three; no effect on the failure",
+      "values": [
+        0.2,
+        0.3,
+        0.5
+      ]
+    },
+    {
+      "parameter": "volSmoothIter",
+      "result": "more smoothing made the failure worse",
+      "values": [
+        800,
+        1500,
+        3000
+      ]
+    },
+    {
+      "parameter": "nConstantStart",
+      "result": "no effect",
+      "values": [
+        5,
+        10,
+        20
+      ]
+    },
+    {
+      "parameter": "volBlend",
+      "result": "no effect",
+      "values": [
+        0.004,
+        0.01,
+        0.03
+      ]
+    },
+    {
+      "parameter": "theta",
+      "result": "no effect",
+      "values": [
+        3.0,
+        5.0
+      ]
+    },
+    {
+      "parameter": "marchDistFactor",
+      "result": "no effect; 0 of 5 marched",
+      "values": [
+        10.0,
+        15.0,
+        25.0
+      ]
+    },
+    {
+      "parameter": "s0_frac (first cell height)",
+      "result": "0 of 6 marched; the 2.7x unused y+ margin does not buy marching robustness",
+      "values": [
+        3.6e-06,
+        5e-06,
+        7e-06,
+        9e-06
+      ]
+    }
+  ],
+  "question": "Can the leading-edge wrap be refined on the frozen S6 topology with pyHyp as installed?",
+  "schema": "aeris.s6.marching_envelope.v1",
+  "what_remains": [
+    {
+      "cost": "half a day",
+      "note": "the only cheap option left and the only one not yet attempted; all work so far has been black-box",
+      "option": "Locate the first negative cell by block rather than by parameter search"
+    },
+    {
+      "cost": "topology change",
+      "note": "invalidates the atlas and every stored mesh identity",
+      "option": "Decouple the nose point count from the trailing-edge base and tip cap"
+    },
+    {
+      "cost": "large",
+      "note": "pyHyp marching outward from a sharply curved nose is the specific thing failing",
+      "option": "Generate the volume mesh with a tool that does not march hyperbolically"
+    }
+  ],
+  "what_this_rules_out": [
+    "Shrinking the nose block so the same cells cover less curve.",
+    "Clustering the neighbouring blocks toward the leading edge.",
+    "Spending the unused y+ margin on a taller first cell.",
+    "Every marching-robustness parameter reachable from the CLI."
+  ]
+}

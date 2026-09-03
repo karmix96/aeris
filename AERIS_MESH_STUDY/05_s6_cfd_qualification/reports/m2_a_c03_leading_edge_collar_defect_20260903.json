@@ -98,6 +98,41 @@
     }
   ],
   "holdout_accessed": false,
+  "mechanism": {
+    "cgns_zone": "NSWallAdiabaticBCZone7",
+    "conclusion": "Four cells absorb a median 103 degrees of surface turning around the leading edge, 34.3 degrees per cell, at roughly one cell per nose radius. The surface normal rotates so far within a single cell that the pressure reconstruction there is meaningless, which is how cp exceeds its physical maximum. This is a resolution deficit in the chordwise wrap direction, not a wall-spacing, smoothing or solver problem.",
+    "controlled_contrast": {
+      "block": "oml_base",
+      "cgns_zone": "NSWallAdiabaticBCZone16",
+      "cp_above_unity_faces": 0,
+      "interpretation": "The trailing-edge collar uses the identical end_points value and the identical block width, and is completely clean. It turns through zero degrees because the trailing edge is a blunt flat base. Block width is therefore not the discriminator; surface turning per cell is.",
+      "total_turning_deg_median": 0.0,
+      "wrap_vertices": 5
+    },
+    "controlling_parameter": "end_points in strategy_s6.LEVELS",
+    "end_points_by_level": {
+      "candidate_c01": 3,
+      "candidate_c02": 4,
+      "candidate_c03": 5
+    },
+    "measured_on_c03": {
+      "cell_size_along_wrap_m_median": 0.00278,
+      "cells_per_nose_radius": 1.04,
+      "local_nose_radius_m_median": 0.00288,
+      "total_turning_deg": {
+        "maximum": 107.9,
+        "median": 103.0,
+        "minimum": 84.4
+      },
+      "turning_per_cell_deg_median": 34.3,
+      "wrap_arc_as_fraction_of_chord": 0.0225,
+      "wrap_arc_length_m_median": 0.01111,
+      "wrap_cells": 4,
+      "wrap_vertices": 5
+    },
+    "refinement_family_consequence": "end_points is 3, 4 and 5 at C01, C02 and C03, so the wrap carries 2, 3 and 4 cells and absorbs roughly 50, 40 and 34 degrees of turning per cell. The leading edge is severely under-resolved at every level of the planned family, and the sequence is nowhere near the asymptotic range. A Richardson or GCI estimate built on this family would be arithmetically well formed and physically meaningless for any pressure-derived quantity.",
+    "surface_block": "oml_nose"
+  },
   "physical_bound": {
     "derivation": "isentropic stagnation cp = (2/(gamma M^2))((1+0.2 M^2)^3.5 - 1)",
     "mach": 0.0837,
@@ -105,9 +140,10 @@
     "note": "cp above this requires total pressure above freestream stagnation."
   },
   "recommended_next_actions": [
-    "Resolve the leading-edge collar chordwise before any further C03 CFD: the current four cells across the stagnation region are the prime suspect.",
-    "Re-check cp bounds and the interface gate on the rebuilt collar, mesh-only where possible.",
-    "Treat this as an M2B-scope topology decision rather than a smoothing tweak.",
+    "Raise the leading-edge wrap resolution until turning per cell is small; a conventional wall-resolved target is at most 5 to 10 degrees, implying roughly 12 to 24 wrap cells against the present 4.",
+    "Decide explicitly whether end_points may be decoupled from chord_points and collar_points. The master guide couples them, so raising the leading-edge wrap alone needs a prospective policy version with an ADR rather than an in-place edit.",
+    "Rebuild C01 and C02 with the same decision before any grid-convergence work, so the family shares one leading-edge law.",
+    "Re-run the interface and cp-bound checks on the rebuilt meshes; the cp bound needs CFD, the turning-per-cell measure does not and can screen candidates mesh-only.",
     "Do not use attempt03 or attempt04 pressure drag in any paper claim."
   ],
   "schema": "aeris.s6.leading_edge_collar_defect.v1",

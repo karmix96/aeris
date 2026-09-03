@@ -1065,3 +1065,50 @@ def test_leading_edge_collar_defect_report_matches_the_retained_surfaces():
         over = sum(int((values > 1.0).sum()) for values in cp.values())
         assert over == recorded["wall_faces_with_cp_above_unity"]
     assert report["authorizes_cfd"] is False
+
+
+def _wrap_turning_deg(vertices):
+    """Total surface turning absorbed across a collar wrap, per span station."""
+    out = []
+    for j in range(vertices.shape[1]):
+        segments = np.diff(vertices[:, j, :], axis=0)
+        lengths = np.linalg.norm(segments, axis=1)
+        unit = segments / lengths[:, None]
+        cosines = np.clip((unit[:-1] * unit[1:]).sum(axis=1), -1.0, 1.0)
+        out.append(float(np.degrees(np.arccos(cosines)).sum()))
+    return np.array(out)
+
+
+def test_leading_edge_wrap_is_starved_of_chordwise_cells():
+    cfd_qc = _cfd_qc()
+    coords = cfd_qc.read_surface_zone_coordinates(ATTEMPT04_SURFACE)
+    nose = coords["NSWallAdiabaticBCZone7"]
+    assert nose.shape[:2] == (5, 75)  # end_points = 5 at C03
+    turning = _wrap_turning_deg(nose)
+    # Four cells absorb about a right angle and a half of surface turning.
+    assert np.median(turning) > 90.0
+    assert np.median(turning) / 3.0 > 25.0
+
+
+def test_trailing_edge_wrap_has_the_same_width_but_no_turning():
+    cfd_qc = _cfd_qc()
+    coords = cfd_qc.read_surface_zone_coordinates(ATTEMPT04_SURFACE)
+    base = coords["NSWallAdiabaticBCZone16"]
+    # Identical end_points and identical block width as the leading edge.
+    assert base.shape[:2] == (5, 75)
+    assert np.median(_wrap_turning_deg(base)) < 1.0
+    # And, unlike the leading edge, no physically impossible pressure.
+    assert _wall_cp(ATTEMPT04_SURFACE)["NSWallAdiabaticBCZone16"].max() <= MAX_ADMISSIBLE_CP
+
+
+def test_end_points_starve_the_wrap_at_every_family_level():
+    sys.path.insert(0, str(ROOT.parents[0] / "04_strategy_studies/S6_bounded_mesh_atlas"))
+    import strategy_s6
+
+    levels = strategy_s6.LEVELS
+    # The wrap carries end_points-1 cells, so C01/C02/C03 give 2, 3 and 4 cells
+    # around a leading edge that turns through roughly 100 degrees.
+    assert levels["candidate_c01"].end_points == 3
+    assert levels["candidate_c02"].end_points == 4
+    assert levels["candidate_c03"].end_points == 5
+    assert max(spec.end_points for spec in levels.values()) == 5

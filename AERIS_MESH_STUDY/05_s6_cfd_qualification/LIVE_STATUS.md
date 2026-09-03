@@ -31,6 +31,32 @@ Evidence: `reports/m2_a_c03_leading_edge_collar_defect_20260903.json`.
 - The conformal-interface defect at `Zone23.j1 <-> Zone7.j0` is a symptom of this,
   not a separate problem.
 
+### Mechanism, measured 2026-09-03
+
+The controlling parameter is `end_points` in `strategy_s6.LEVELS`: 3 at C01, 4 at
+C02, 5 at C03. On C03 the four wrap cells absorb a median **103 degrees of
+surface turning, 34.3 degrees per cell**, at a median 1.04 cells per local nose
+radius (nose radius 0.00288 m, wrap cell 0.00278 m). The surface normal rotates
+so far inside one cell that the pressure reconstruction there is meaningless.
+
+The controlled contrast is decisive: `oml_base`, the trailing-edge collar, has
+the **identical** `end_points` value and the identical 5-vertex width, turns
+through **0.0 degrees** because the trailing edge is a blunt flat base, and has
+**zero** faces above the cp bound. Block width is not the discriminator; turning
+per cell is.
+
+**This breaks the planned mesh-independence study.** The wrap carries 2, 3 and 4
+cells at C01, C02 and C03, absorbing roughly 50, 40 and 34 degrees per cell. The
+leading edge is severely under-resolved at every level, so the sequence is
+nowhere near the asymptotic range. A Richardson or GCI estimate on this family
+would be arithmetically well formed and physically meaningless for any
+pressure-derived quantity. Fix the leading-edge law before building the family,
+not after.
+
+Note that `end_points` is coupled to `chord_points` and `collar_points` by the
+master guide, so raising the leading-edge wrap alone requires a prospective
+policy version with an ADR, not an in-place edit.
+
 **Consequence for the plan.** The leading-edge collar must be resolved chordwise
 before further C03 CFD, and before C01/C02 are corrected, because a grid family
 built on the same collar topology will inherit the defect at every level and a

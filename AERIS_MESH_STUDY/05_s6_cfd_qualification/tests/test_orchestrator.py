@@ -550,8 +550,14 @@ def test_surface_field_reader_recognizes_adflow_cgns_names(tmp_path):
         zone.create_dataset("YPlus", data=[0.5, 0.6])
     result = _surface_field_presence(surface)
     assert result["field_presence_passed"] is True
+    # Fields parse, but a stub file carries no zone geometry, so the interface
+    # check cannot run and must fail closed rather than pass by default.
     assert result["passed"] is False
-    assert result["failure_reasons"] == ["interface_discontinuity_not_evaluated"]
+    assert result["failure_reasons"] == [
+        "conformal_interface_discontinuity",
+        "interface_discontinuity_not_evaluated",
+    ]
+    assert result["interface_discontinuity_check"]["error"]
 
 
 def test_surface_field_reader_reads_adflow_adf_and_filters_wall_yplus(tmp_path):
@@ -909,3 +915,90 @@ def test_conservation_enforces_the_threshold():
     assert canary._conservation(
         _raw_run(mass_imbalance_normalized=1.0e-4), CLASSIFICATION
     )["passed"] is True
+
+
+ATTEMPT04_SURFACE = (
+    ROOT
+    / "studies/canary/m2_a_c03_measurement_20260902_004/aeris_cfd_000_surf.cgns"
+)
+
+
+def _cfd_qc():
+    sys.path.insert(0, str(ROOT.parents[0] / "04_strategy_studies/S6_bounded_mesh_atlas"))
+    import cfd_qc
+
+    return cfd_qc
+
+
+def test_edge_cell_rows_and_centres_agree_on_orientation():
+    cfd_qc = _cfd_qc()
+    cells = np.arange(12, dtype=float).reshape(3, 4)
+    face, inner = cfd_qc._edge_cell_rows(cells, "i0")
+    assert list(face) == [0.0, 1.0, 2.0, 3.0]
+    assert list(inner) == [4.0, 5.0, 6.0, 7.0]
+    face, inner = cfd_qc._edge_cell_rows(cells, "j1")
+    assert list(face) == [3.0, 7.0, 11.0]
+    assert list(inner) == [2.0, 6.0, 10.0]
+
+    # A unit-spaced patch puts the i0 face row half a cell in from the edge and
+    # the inner row one full cell further.
+    ii, jj = np.meshgrid(np.arange(4.0), np.arange(5.0), indexing="ij")
+    vertices = np.stack([ii, jj, np.zeros_like(ii)], axis=-1)
+    face_c, inner_c = cfd_qc._edge_cell_centres(vertices, "i0")
+    assert face_c.shape == (4, 3)
+    assert face_c[0][0] == pytest.approx(0.5)
+    assert inner_c[0][0] == pytest.approx(1.5)
+
+
+def test_safe_gradient_never_divides_by_zero():
+    cfd_qc = _cfd_qc()
+    out = cfd_qc._safe_gradient(np.array([1.0, 2.0]), np.array([0.0, 2.0]))
+    assert np.isnan(out[0])
+    assert out[1] == pytest.approx(1.0)
+
+
+def test_attempt04_surface_interfaces_are_fully_matched():
+    cfd_qc = _cfd_qc()
+    result = cfd_qc.conformal_interface_discontinuity(ATTEMPT04_SURFACE)
+    # The governed mesh family declares 20 conformal paired interfaces, and the
+    # geometric match must find exactly that many with no wall zone left out.
+    assert result["matched_interface_count"] == 20
+    assert result["wall_zones_without_matched_interface"] == []
+    assert len(result["wall_zones_examined"]) == 13
+    assert result["reshape_failures"] == []
+    for interface in result["interfaces"]:
+        assert set(interface["fields"]) == {"cp", "cf", "yplus"}
+
+
+def test_attempt04_surface_records_the_known_tip_collar_defect():
+    cfd_qc = _cfd_qc()
+    result = cfd_qc.conformal_interface_discontinuity(ATTEMPT04_SURFACE)
+    assert result["passed"] is False
+    reasons = {(d["interface"], d["field"], d["reason"]) for d in result["defects"]}
+    assert (
+        "NSWallAdiabaticBCZone23.j1<->NSWallAdiabaticBCZone7.j0",
+        "cp",
+        "jump_exceeds_global_field_range",
+    ) in reasons
+    # Shear-based fields stay continuous, so this is a pressure-field defect at
+    # one tip-collar seam rather than a global topology failure.
+    assert result["gradient_ratio_summary"]["cf"]["median"] < 1.5
+    assert result["gradient_ratio_summary"]["yplus"]["median"] < 1.5
+
+
+def test_interface_threshold_is_declared_uncalibrated():
+    cfd_qc = _cfd_qc()
+    result = cfd_qc.conformal_interface_discontinuity(ATTEMPT04_SURFACE)
+    assert result["gradient_ratio_threshold_calibrated"] is False
+    assert "C01/C02/C03" in result["gradient_ratio_calibration_requirement"]
+
+
+def test_surface_field_check_no_longer_reports_the_gap_as_unevaluated():
+    sys.path.insert(0, str(ROOT))
+    from canary import _surface_field_presence
+
+    result = _surface_field_presence(ATTEMPT04_SURFACE)
+    assert result["field_presence_passed"] is True
+    assert "interface_discontinuity_not_evaluated" not in result["failure_reasons"]
+    assert "conformal_interface_discontinuity" in result["failure_reasons"]
+    assert result["interface_discontinuity_check"]["matched_interface_count"] == 20

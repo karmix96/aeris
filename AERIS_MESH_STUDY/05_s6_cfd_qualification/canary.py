@@ -34,6 +34,7 @@ for _path in (REPO / "src", S6):
 
 from cfd_qc import (  # noqa: E402
     cgns_volume_restart_inventory,
+    conformal_interface_discontinuity,
     read_surface_field_arrays,
     wall_yplus_summary,
 )
@@ -1489,15 +1490,28 @@ def _surface_field_presence(surface: Path | None) -> dict[str, Any]:
     failures = [f"missing_{field}" for field, count in counts.items() if count == 0]
     failures.extend(f"nonfinite_{field}" for field, count in nonfinite.items() if count > 0)
     field_presence_passed = not failures
-    failures.append("interface_discontinuity_not_evaluated")
+
+    try:
+        interface = conformal_interface_discontinuity(surface)
+    except Exception as exc:  # fail closed on an unreadable interface geometry
+        interface = {
+            "passed": False,
+            "error": f"{type(exc).__name__}: {exc}",
+            "defects": [],
+        }
+    if not interface.get("passed"):
+        failures.append("conformal_interface_discontinuity")
+    if interface.get("error"):
+        failures.append("interface_discontinuity_not_evaluated")
+
     return {
-        "passed": False,
+        "passed": field_presence_passed and bool(interface.get("passed")),
         "field_presence_passed": field_presence_passed,
         "failure_reasons": failures,
         "sample_counts": counts,
         "nonfinite_counts": nonfinite,
         "surface_reader": reader,
-        "interface_discontinuity_check": "not_evaluated_in_measurement_canary",
+        "interface_discontinuity_check": interface,
     }
 
 

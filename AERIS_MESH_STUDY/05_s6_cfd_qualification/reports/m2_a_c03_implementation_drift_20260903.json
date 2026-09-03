@@ -3,10 +3,16 @@
   "created_at": "2026-09-03T01:40:00+03:00",
   "declared_drift": {
     "canary_orchestrator_sha256": {
-      "current_sha256": "3b6159fb95fc64098f2a7f8e15b7159747dca0cc9b5ec6309876d446e2dda895",
+      "current_sha256": "b8e21b7109d48e481f88aaeb0167e34b1fd5b6507b2ace9d7c522cceaf847203",
       "path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/canary.py",
-      "reason": "Bound to acceptance policy v5 (six MPI ranks, checkpoints disabled for collective safety) by the human-directed six-rank override, then corrected on 2026-09-03 to classify conservation from the governed signed-net-over-gross boundary mass flux and to fail closed on an incomplete or errored boundary integration.",
+      "reason": "Bound to acceptance policy v5 (six MPI ranks, checkpoints disabled for collective safety) by the human-directed six-rank override; then on 2026-09-03 the conservation gate was moved to the governed signed-net-over-gross boundary mass flux and made fail-closed, and the conformal-interface discontinuity check was wired into the surface physics QC in place of the previous unconditional interface_discontinuity_not_evaluated failure.",
       "reviewed_sha256": "b57147d6c5d9eda2342fd7fa93c2606add8feb2d633ef856838f33bbcbf90191"
+    },
+    "cgns_restart_validator_sha256": {
+      "current_sha256": "9e83fdff5d15c6aabe5bef7f908c7f9a720a848d4ae1f271126e1d539cd04610",
+      "path": "AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/cfd_qc.py",
+      "reason": "cfd_qc.py gained read_surface_zone_coordinates and conformal_interface_discontinuity on 2026-09-03 to implement the physics_qc interface gate. The restart inventory itself is unchanged.",
+      "reviewed_sha256": "b31021d95e278ad352e9399bd961248eb29f3cd49b7b08b55b243db57b295d41"
     }
   },
   "purpose": "The desktop recovery plan pins the SHA-256 of every implementation file that the first independent review saw. Those files have since changed. The plan is immutable evidence and is never rewritten, so each divergence is declared here instead.",
@@ -14,5 +20,6 @@
   "reference_plan_sha256": "e1eaea665ff8df4b04507f5cd3dfa2d44db1a170244cb7dbb8d3294c7e8bc17b",
   "requires_fresh_independent_review_before_cfd": true,
   "reviewed_implementation_still_matches_plan": false,
-  "schema": "aeris.s6.implementation_drift.v1"
+  "schema": "aeris.s6.implementation_drift.v1",
+  "updated_at": "2026-09-03T02:30:00+03:00"
 }

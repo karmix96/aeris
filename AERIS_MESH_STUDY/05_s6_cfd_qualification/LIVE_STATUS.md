@@ -1,6 +1,41 @@
 # S6 qualification live status
 
-Updated: 2026-09-03T01:10:00+03:00
+Updated: 2026-09-03T02:40:00+03:00
+
+## P1 and P2 are implemented — 2026-09-03
+
+- **P1 done.** The runner now integrates boundary mass flux with ADflow's native
+  `mdot` cost function on every CGNS boundary family and reports signed net over
+  gross. Classification fails closed on a wrong definition, an incomplete or
+  errored integration, a missing value or a non-finite family flux. The old
+  interior-residual cancellation ratio survives only as a labelled diagnostic.
+  `audit-cfd-contract` moved from CONDITIONAL to PASS. The governed number for
+  attempt04 cannot be recovered after the fact; it will first be measured in the
+  successor attempt.
+- **P2 done, and it found a defect.** `conformal_interface_discontinuity` in
+  `cfd_qc.py` matches wall-zone edges geometrically and compares surface fields
+  across them. On the retained attempt04 surface it matched exactly 20 interfaces
+  with zero vertex mismatch, agreeing with the 20 conformal pairs the mesh family
+  gate declares, and left no wall zone out.
+  Evidence: `reports/m2_a_c03_interface_discontinuity_20260903_attempt04.json`.
+- **Finding I1 (HIGH).** At `NSWallAdiabaticBCZone23.j1 <-> NSWallAdiabaticBCZone7.j0`,
+  a four-cell tip-collar seam, cp jumps by 8.5403 while cp varies by only 5.8040
+  over the entire wall. A continuous field cannot do that, so this is a defect,
+  not an under-resolved gradient. cf (1.73) and y+ (0.86) stay continuous at the
+  same seam, so it is confined to the pressure field.
+- **Finding I2 (MEDIUM).** The two seams joining two full-resolution wall blocks
+  are continuous at cp gradient ratios 0.821 and 0.909. All eighteen seams that
+  touch a narrow tip, cap or leading-edge collar strip are worse, median 4.449,
+  maximum 17.503. cf and y+ medians across all twenty interfaces are 1.02 and
+  0.94, so the wall shear solution is smooth and this is specific to chordwise
+  pressure resolution in the collar strips. This feeds the M2B tip and
+  outer-front smoothing decision directly.
+- The gradient-ratio threshold is deliberately **not** calibrated. One grid
+  cannot separate an under-resolved physical gradient from a topology defect, so
+  only defect-level tests are gated now: non-finite jumps, cell-row length
+  mismatches, and a jump larger than the field's own global range. Calibrate the
+  ratio across C01/C02/C03 at M5.
+- 185 focused tests pass. `cfd_authorized` remains false.
 
 ## Six-rank attempt04 terminal state
 

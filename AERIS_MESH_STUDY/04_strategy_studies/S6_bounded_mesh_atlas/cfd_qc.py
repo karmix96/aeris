@@ -844,3 +844,440 @@ def wall_yplus_summary(
         "failed_regions": failed_regions,
         "regions": regions,
     }
+
+
+def read_surface_zone_coordinates(surface_cgns: Path) -> dict[str, np.ndarray]:
+    """Vertex coordinates of every structured surface zone, shaped (ni, nj, 3).
+
+    The CGNS mid-level library reads both ADF and HDF5 backed files, so this
+    single path serves whichever backend ADflow wrote.
+    """
+    surface_cgns = Path(surface_cgns).resolve()
+    library, _ = _load_cgns_library()
+    size_pointer = ctypes.POINTER(_CGNS_SIZE)
+    library.cg_coord_read.argtypes = [
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_char_p,
+        ctypes.c_int,
+        size_pointer,
+        size_pointer,
+        ctypes.c_void_p,
+    ]
+    library.cg_coord_read.restype = ctypes.c_int
+
+    file_number = ctypes.c_int()
+    _check_cgns(
+        library.cg_open(os.fsencode(surface_cgns), _CGNS_MODE_READ, ctypes.byref(file_number)),
+        "open CGNS surface file for coordinates",
+        library,
+    )
+    zones: dict[str, np.ndarray] = {}
+    try:
+        number_of_bases = ctypes.c_int()
+        _check_cgns(
+            library.cg_nbases(file_number.value, ctypes.byref(number_of_bases)),
+            "read CGNS base count",
+            library,
+        )
+        for base_index in range(1, number_of_bases.value + 1):
+            number_of_zones = ctypes.c_int()
+            _check_cgns(
+                library.cg_nzones(file_number.value, base_index, ctypes.byref(number_of_zones)),
+                f"read zone count for base {base_index}",
+                library,
+            )
+            for zone_index in range(1, number_of_zones.value + 1):
+                zone_name_buffer = ctypes.create_string_buffer(_CGNS_NAME_BYTES)
+                zone_size = (_CGNS_SIZE * 9)()
+                _check_cgns(
+                    library.cg_zone_read(
+                        file_number.value, base_index, zone_index, zone_name_buffer, zone_size
+                    ),
+                    f"read zone {zone_index}",
+                    library,
+                )
+                zone_name = zone_name_buffer.value.decode("utf-8", errors="replace")
+                index_dimension = ctypes.c_int()
+                _check_cgns(
+                    library.cg_index_dim(
+                        file_number.value, base_index, zone_index, ctypes.byref(index_dimension)
+                    ),
+                    f"read index dimension for zone {zone_name}",
+                    library,
+                )
+                if index_dimension.value != 2:
+                    continue
+                vertex_shape = (int(zone_size[0]), int(zone_size[1]))
+                rmin = (_CGNS_SIZE * 2)(1, 1)
+                rmax = (_CGNS_SIZE * 2)(vertex_shape[0], vertex_shape[1])
+                count = vertex_shape[0] * vertex_shape[1]
+                stacked = np.empty((*vertex_shape, 3), dtype=float)
+                for axis, name in enumerate(("CoordinateX", "CoordinateY", "CoordinateZ")):
+                    buffer = np.empty(count, dtype=np.float64)
+                    _check_cgns(
+                        library.cg_coord_read(
+                            file_number.value,
+                            base_index,
+                            zone_index,
+                            name.encode("ascii"),
+                            _CGNS_REAL_DOUBLE,
+                            rmin,
+                            rmax,
+                            buffer.ctypes.data_as(ctypes.c_void_p),
+                        ),
+                        f"read {name} for zone {zone_name}",
+                        library,
+                    )
+                    stacked[..., axis] = buffer.reshape(vertex_shape, order="F")
+                zones[zone_name] = stacked
+    finally:
+        _check_cgns(
+            library.cg_close(file_number.value), "close CGNS surface file", library
+        )
+    return zones
+
+
+_INTERFACE_EDGES = ("i0", "i1", "j0", "j1")
+
+
+def _edge_vertices(coordinates: np.ndarray, edge: str) -> np.ndarray:
+    if edge == "i0":
+        return coordinates[0, :, :]
+    if edge == "i1":
+        return coordinates[-1, :, :]
+    if edge == "j0":
+        return coordinates[:, 0, :]
+    if edge == "j1":
+        return coordinates[:, -1, :]
+    raise ValueError(f"unknown edge {edge!r}")
+
+
+def _edge_cell_rows(cells: np.ndarray, edge: str) -> tuple[np.ndarray, np.ndarray]:
+    """The cell row touching an edge and the next row in from it."""
+    if edge == "i0":
+        return cells[0, :], cells[1, :]
+    if edge == "i1":
+        return cells[-1, :], cells[-2, :]
+    if edge == "j0":
+        return cells[:, 0], cells[:, 1]
+    if edge == "j1":
+        return cells[:, -1], cells[:, -2]
+    raise ValueError(f"unknown edge {edge!r}")
+
+
+def _edge_cell_centres(
+    vertices: np.ndarray, edge: str
+) -> tuple[np.ndarray, np.ndarray]:
+    """Centroids of the cell row touching an edge and of the next row in.
+
+    Raw field jumps punish an interface merely for sitting where cells are
+    large, so the gradient form needs the distance the jump is taken over.
+    """
+    if edge in ("i0", "i1"):
+        first, second, third = (0, 1, 2) if edge == "i0" else (-1, -2, -3)
+        face = 0.25 * (
+            vertices[first, :-1]
+            + vertices[second, :-1]
+            + vertices[first, 1:]
+            + vertices[second, 1:]
+        )
+        inner = 0.25 * (
+            vertices[second, :-1]
+            + vertices[third, :-1]
+            + vertices[second, 1:]
+            + vertices[third, 1:]
+        )
+        return face, inner
+    if edge in ("j0", "j1"):
+        first, second, third = (0, 1, 2) if edge == "j0" else (-1, -2, -3)
+        face = 0.25 * (
+            vertices[:-1, first]
+            + vertices[:-1, second]
+            + vertices[1:, first]
+            + vertices[1:, second]
+        )
+        inner = 0.25 * (
+            vertices[:-1, second]
+            + vertices[:-1, third]
+            + vertices[1:, second]
+            + vertices[1:, third]
+        )
+        return face, inner
+    raise ValueError(f"unknown edge {edge!r}")
+
+
+def _safe_gradient(values: np.ndarray, distances: np.ndarray) -> np.ndarray:
+    return np.divide(
+        values,
+        distances,
+        out=np.full(values.shape, np.nan),
+        where=distances > 0.0,
+    )
+
+
+def conformal_interface_discontinuity(
+    surface_cgns: Path,
+    *,
+    fields: Iterable[str] = ("cp", "cf", "yplus"),
+    zone_predicate=None,
+    match_tolerance_fraction: float = 1.0e-9,
+) -> dict[str, Any]:
+    """Measure surface-field jumps across point-matched wall-zone interfaces.
+
+    A conformal interface is physically invisible: the jump across it should be
+    no larger than the jump between neighbouring cells inside either zone. This
+    returns, per interface and per field, the median and maximum interface jump
+    together with the local in-zone jump that sets the natural scale, so a
+    policy can gate on the ratio without this function choosing the threshold.
+    """
+    surface_cgns = Path(surface_cgns).resolve()
+    if zone_predicate is None:
+        zone_predicate = _is_no_slip_wall_zone
+
+    aliases = {
+        "cp": {"cp", "coefpressure"},
+        "cf": {"cf", "skinfrictionmagnitude"},
+        "yplus": {"yplus"},
+    }
+    wanted = {name: aliases.get(name, {name}) for name in fields}
+    requested = sorted({alias for names in wanted.values() for alias in names})
+
+    coordinates = read_surface_zone_coordinates(surface_cgns)
+    raw_fields, reader = read_surface_field_arrays(surface_cgns, requested)
+    layouts = reader.get("solution_layouts", {})
+
+    zone_cells: dict[str, dict[str, np.ndarray]] = {}
+    reshape_failures: list[str] = []
+    for zone_name, per_field in raw_fields.items():
+        if not zone_predicate(zone_name) or zone_name not in coordinates:
+            continue
+        layout = layouts.get(zone_name) or []
+        if not layout:
+            reshape_failures.append(f"{zone_name}:missing_layout")
+            continue
+        physical_shape = tuple(int(v) for v in layout[0]["physical_shape"])
+        if len(physical_shape) != 2:
+            reshape_failures.append(f"{zone_name}:non_2d_solution")
+            continue
+        resolved: dict[str, np.ndarray] = {}
+        for canonical, names in wanted.items():
+            for field_name, arrays in per_field.items():
+                if field_name.casefold() not in names or not arrays:
+                    continue
+                flat = np.asarray(arrays[0], dtype=float).reshape(-1)
+                if flat.size != physical_shape[0] * physical_shape[1]:
+                    reshape_failures.append(f"{zone_name}:{canonical}:size_mismatch")
+                    break
+                resolved[canonical] = flat.reshape(physical_shape, order="F")
+                break
+        if resolved:
+            zone_cells[zone_name] = resolved
+
+    all_points = np.concatenate(
+        [coordinates[name].reshape(-1, 3) for name in zone_cells] or [np.zeros((1, 3))]
+    )
+    diagonal = float(np.linalg.norm(all_points.max(axis=0) - all_points.min(axis=0)))
+    tolerance = max(diagonal * match_tolerance_fraction, 1.0e-12)
+
+    edges = []
+    for zone_name in sorted(zone_cells):
+        for edge in _INTERFACE_EDGES:
+            vertices = _edge_vertices(coordinates[zone_name], edge)
+            edges.append((zone_name, edge, np.asarray(vertices, dtype=float)))
+
+    interfaces: list[dict[str, Any]] = []
+    used: set[tuple[str, str]] = set()
+    for a in range(len(edges)):
+        zone_a, edge_a, verts_a = edges[a]
+        if (zone_a, edge_a) in used:
+            continue
+        for b in range(a + 1, len(edges)):
+            zone_b, edge_b, verts_b = edges[b]
+            if zone_a == zone_b or (zone_b, edge_b) in used:
+                continue
+            if verts_a.shape != verts_b.shape:
+                continue
+            forward = float(np.abs(verts_a - verts_b).max())
+            reversed_ = float(np.abs(verts_a - verts_b[::-1]).max())
+            if min(forward, reversed_) > tolerance:
+                continue
+            flip = reversed_ < forward
+            used.add((zone_a, edge_a))
+            used.add((zone_b, edge_b))
+
+            centre_face_a, centre_inner_a = _edge_cell_centres(
+                coordinates[zone_a], edge_a
+            )
+            centre_face_b, centre_inner_b = _edge_cell_centres(
+                coordinates[zone_b], edge_b
+            )
+            if flip:
+                centre_face_b = centre_face_b[::-1]
+                centre_inner_b = centre_inner_b[::-1]
+            span_interface = np.linalg.norm(centre_face_a - centre_face_b, axis=1)
+            span_a = np.linalg.norm(centre_face_a - centre_inner_a, axis=1)
+            span_b = np.linalg.norm(centre_face_b - centre_inner_b, axis=1)
+
+            per_field: dict[str, Any] = {}
+            for field in sorted(set(zone_cells[zone_a]) & set(zone_cells[zone_b])):
+                face_a, inner_a = _edge_cell_rows(zone_cells[zone_a][field], edge_a)
+                face_b, inner_b = _edge_cell_rows(zone_cells[zone_b][field], edge_b)
+                if flip:
+                    face_b, inner_b = face_b[::-1], inner_b[::-1]
+                if face_a.shape != face_b.shape or face_a.shape != span_interface.shape:
+                    per_field[field] = {"error": "cell_row_length_mismatch"}
+                    continue
+                jump = np.abs(face_a - face_b)
+                local = np.concatenate(
+                    [np.abs(face_a - inner_a), np.abs(face_b - inner_b)]
+                )
+                local_scale = float(np.median(local))
+                median_jump = float(np.median(jump))
+                interface_gradient = _safe_gradient(jump, span_interface)
+                local_gradient = np.concatenate(
+                    [
+                        _safe_gradient(np.abs(face_a - inner_a), span_a),
+                        _safe_gradient(np.abs(face_b - inner_b), span_b),
+                    ]
+                )
+                median_interface_gradient = float(np.nanmedian(interface_gradient))
+                median_local_gradient = float(np.nanmedian(local_gradient))
+                per_field[field] = {
+                    "cells": int(jump.size),
+                    "median_interface_jump": median_jump,
+                    "maximum_interface_jump": float(jump.max()),
+                    "median_local_in_zone_jump": local_scale,
+                    "jump_ratio": (
+                        median_jump / local_scale if local_scale > 0.0 else None
+                    ),
+                    "median_interface_gradient_per_m": median_interface_gradient,
+                    "median_local_gradient_per_m": median_local_gradient,
+                    "gradient_ratio": (
+                        median_interface_gradient / median_local_gradient
+                        if median_local_gradient > 0.0
+                        else None
+                    ),
+                    "finite": bool(np.isfinite(jump).all()),
+                }
+            interfaces.append(
+                {
+                    "zone_a": zone_a,
+                    "edge_a": edge_a,
+                    "zone_b": zone_b,
+                    "edge_b": edge_b,
+                    "orientation": "reversed" if flip else "forward",
+                    "vertices": int(verts_a.shape[0]),
+                    "fields": per_field,
+                }
+            )
+            break
+
+    participating = {i["zone_a"] for i in interfaces} | {i["zone_b"] for i in interfaces}
+
+    # Field range across every wall zone, used for the defect test below.
+    field_ranges: dict[str, float] = {}
+    for per_field in zone_cells.values():
+        for field, values in per_field.items():
+            finite = values[np.isfinite(values)]
+            if finite.size:
+                span = float(finite.max() - finite.min())
+                field_ranges[field] = max(field_ranges.get(field, 0.0), span)
+
+    # A conformal interface cannot legitimately jump by more than the whole
+    # field varies over the entire wall, nor carry a non-finite value. Those are
+    # topology or solution defects. Everything softer than that is a resolution
+    # question that only the grid family can settle, so it is measured and
+    # reported rather than judged here.
+    defects: list[dict[str, Any]] = []
+    ratios: dict[str, list[float]] = {}
+    for interface in interfaces:
+        for field, stats in interface["fields"].items():
+            if "error" in stats:
+                defects.append(
+                    {"interface": _interface_label(interface), "field": field,
+                     "reason": stats["error"]}
+                )
+                continue
+            if not stats["finite"]:
+                defects.append(
+                    {"interface": _interface_label(interface), "field": field,
+                     "reason": "non_finite_interface_jump"}
+                )
+            span = field_ranges.get(field, 0.0)
+            if span > 0.0 and stats["maximum_interface_jump"] > span:
+                defects.append(
+                    {
+                        "interface": _interface_label(interface),
+                        "field": field,
+                        "reason": "jump_exceeds_global_field_range",
+                        "maximum_interface_jump": stats["maximum_interface_jump"],
+                        "global_field_range": span,
+                    }
+                )
+            ratio = stats.get("gradient_ratio")
+            if ratio is not None and np.isfinite(ratio):
+                ratios.setdefault(field, []).append(float(ratio))
+
+    gradient_ratio_summary = {
+        field: {
+            "interfaces": len(values),
+            "median": float(np.median(values)),
+            "p95": float(np.percentile(values, 95)),
+            "maximum": float(max(values)),
+        }
+        for field, values in sorted(ratios.items())
+    }
+    worst = sorted(
+        (
+            {
+                "interface": _interface_label(interface),
+                "field": field,
+                "gradient_ratio": stats.get("gradient_ratio"),
+                "median_interface_jump": stats.get("median_interface_jump"),
+            }
+            for interface in interfaces
+            for field, stats in interface["fields"].items()
+            if stats.get("gradient_ratio") is not None
+        ),
+        key=lambda row: row["gradient_ratio"],
+        reverse=True,
+    )[:10]
+
+    passed = not defects and not reshape_failures and bool(interfaces)
+    return {
+        "definition": (
+            "Median absolute surface-field jump across point-matched wall-zone "
+            "edges, divided by the median absolute jump between neighbouring "
+            "cells inside the same zones. A conformal interface should give a "
+            "ratio near one."
+        ),
+        "surface_reader": {k: v for k, v in reader.items() if k != "solution_layouts"},
+        "match_tolerance_m": tolerance,
+        "wall_zones_examined": sorted(zone_cells),
+        "wall_zones_with_matched_interface": sorted(participating),
+        "wall_zones_without_matched_interface": sorted(set(zone_cells) - participating),
+        "matched_interface_count": len(interfaces),
+        "interfaces": interfaces,
+        "reshape_failures": reshape_failures,
+        "global_field_range": field_ranges,
+        "defects": defects,
+        "gradient_ratio_summary": gradient_ratio_summary,
+        "worst_gradient_ratios": worst,
+        "gradient_ratio_threshold_calibrated": False,
+        "gradient_ratio_calibration_requirement": (
+            "A single grid cannot separate an under-resolved physical gradient "
+            "from a topology defect. Calibrate the acceptable ratio across the "
+            "C01/C02/C03 family at M5: a ratio that falls with refinement is "
+            "discretization error, a ratio that does not is a defect."
+        ),
+        "passed": passed,
+    }
+
+
+def _interface_label(interface: dict[str, Any]) -> str:
+    return (
+        f"{interface['zone_a']}.{interface['edge_a']}"
+        f"<->{interface['zone_b']}.{interface['edge_b']}"
+    )

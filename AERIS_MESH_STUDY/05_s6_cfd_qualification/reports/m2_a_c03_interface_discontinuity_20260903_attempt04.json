@@ -1,0 +1,254 @@
+{
+  "authorizes_cfd": false,
+  "cfd_run": false,
+  "created_at": "2026-09-03T02:35:00+03:00",
+  "defects": [
+    {
+      "field": "cp",
+      "global_field_range": 5.803973913192749,
+      "interface": "NSWallAdiabaticBCZone23.j1<->NSWallAdiabaticBCZone7.j0",
+      "maximum_interface_jump": 8.540348529815674,
+      "reason": "jump_exceeds_global_field_range"
+    }
+  ],
+  "execution_id": "m2_a_c03_measurement_20260902_004",
+  "findings": [
+    {
+      "disposition": "must_be_explained_before_C03_is_used_for_force_or_moment_labels",
+      "finding": "At NSWallAdiabaticBCZone23.j1 <-> NSWallAdiabaticBCZone7.j0, a four-cell tip-collar seam, the pressure coefficient jumps by 8.5403 across a conformal interface while cp varies by only 5.8040 over the entire wall. A continuous field cannot do this, so it is a defect rather than an under-resolved gradient.",
+      "id": "I1",
+      "severity": "HIGH",
+      "supporting": "Skin friction (gradient ratio 1.73) and y+ (0.86) stay continuous at the same seam, so the defect is confined to the pressure field, not the whole solution."
+    },
+    {
+      "disposition": "feeds_M2B_tip_and_outer_front_smoothing_decision",
+      "finding": "cp gradient ratios separate by interface type. The only two seams joining two full-resolution wall blocks are continuous, at ratios 0.821 and 0.909. All eighteen seams touching a narrow tip, cap or leading-edge collar strip are worse, with a median of 4.449 and a maximum of 17.503 at NSWallAdiabaticBCZone16.j0 <-> NSWallAdiabaticBCZone29.j1.",
+      "id": "I2",
+      "severity": "MEDIUM",
+      "supporting": "cf and yplus medians are 1.02 and 0.94 across all 20 interfaces, so the wall shear solution is smooth and the problem is specific to chordwise pressure resolution in the collar strips."
+    }
+  ],
+  "geometric_match": {
+    "counts_agree": true,
+    "declared_conformal_pairs_in_mesh_family_gate": 20,
+    "match_tolerance_m": 1.3141980944454624e-09,
+    "matched_interface_count": 20,
+    "maximum_vertex_mismatch": 0.0,
+    "note": "Every matched edge pair agreed to the exact double-precision vertex, so the pairing is geometric fact rather than a tolerance artifact.",
+    "wall_zones_examined": 13,
+    "wall_zones_without_matched_interface": []
+  },
+  "global_field_range": {
+    "cf": 0.015062269987538457,
+    "cp": 5.803973913192749,
+    "yplus": 0.31207866221666336
+  },
+  "gradient_ratio_summary": {
+    "cf": {
+      "interfaces": 20,
+      "maximum": 2.854906971957576,
+      "median": 1.023457463528655,
+      "p95": 2.410092658578698
+    },
+    "cp": {
+      "interfaces": 20,
+      "maximum": 17.502887009829475,
+      "median": 3.2700741543863945,
+      "p95": 9.812868564946019
+    },
+    "yplus": {
+      "interfaces": 20,
+      "maximum": 10.744676729774149,
+      "median": 0.9378268592096743,
+      "p95": 2.6241168442389364
+    }
+  },
+  "holdout_accessed": false,
+  "implementation": {
+    "functions": [
+      "read_surface_zone_coordinates",
+      "conformal_interface_discontinuity"
+    ],
+    "path": "AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/cfd_qc.py",
+    "sha256": "9e83fdff5d15c6aabe5bef7f908c7f9a720a848d4ae1f271126e1d539cd04610"
+  },
+  "result": false,
+  "schema": "aeris.s6.conformal_interface_discontinuity.v1",
+  "stratification": {
+    "definition": "A wall block is full-resolution when both of its vertex dimensions are at least 29. The remaining zones are the narrow tip, cap and leading-edge collar strips, which are 5 or 7 vertices across in one direction.",
+    "full_resolution_zones": [
+      "NSWallAdiabaticBCZone1",
+      "NSWallAdiabaticBCZone10",
+      "NSWallAdiabaticBCZone13",
+      "NSWallAdiabaticBCZone4"
+    ],
+    "main_to_main": {
+      "cf": {
+        "interfaces": 2,
+        "maximum": 1.1168830268144074,
+        "median": 1.0397495910184835
+      },
+      "cp": {
+        "interfaces": 2,
+        "maximum": 0.9092630016108045,
+        "median": 0.8649315454474438
+      },
+      "yplus": {
+        "interfaces": 2,
+        "maximum": 1.0647241651814434,
+        "median": 1.030132594606059
+      }
+    },
+    "narrow_strip_zones": [
+      "NSWallAdiabaticBCZone16",
+      "NSWallAdiabaticBCZone19",
+      "NSWallAdiabaticBCZone21",
+      "NSWallAdiabaticBCZone23",
+      "NSWallAdiabaticBCZone25",
+      "NSWallAdiabaticBCZone27",
+      "NSWallAdiabaticBCZone29",
+      "NSWallAdiabaticBCZone31",
+      "NSWallAdiabaticBCZone7"
+    ],
+    "touches_narrow_strip": {
+      "cf": {
+        "interfaces": 18,
+        "maximum": 2.854906971957576,
+        "median": 1.023457463528655
+      },
+      "cp": {
+        "interfaces": 18,
+        "maximum": 17.502887009829475,
+        "median": 4.448578519501829
+      },
+      "yplus": {
+        "interfaces": 18,
+        "maximum": 10.744676729774149,
+        "median": 0.8977600145158373
+      }
+    },
+    "zone_vertex_shapes": {
+      "NSWallAdiabaticBCZone1": [
+        29,
+        75
+      ],
+      "NSWallAdiabaticBCZone10": [
+        29,
+        75
+      ],
+      "NSWallAdiabaticBCZone13": [
+        29,
+        75
+      ],
+      "NSWallAdiabaticBCZone16": [
+        5,
+        75
+      ],
+      "NSWallAdiabaticBCZone19": [
+        29,
+        7
+      ],
+      "NSWallAdiabaticBCZone21": [
+        29,
+        7
+      ],
+      "NSWallAdiabaticBCZone23": [
+        5,
+        7
+      ],
+      "NSWallAdiabaticBCZone25": [
+        29,
+        7
+      ],
+      "NSWallAdiabaticBCZone27": [
+        29,
+        7
+      ],
+      "NSWallAdiabaticBCZone29": [
+        5,
+        7
+      ],
+      "NSWallAdiabaticBCZone31": [
+        57,
+        5
+      ],
+      "NSWallAdiabaticBCZone4": [
+        29,
+        75
+      ],
+      "NSWallAdiabaticBCZone7": [
+        5,
+        75
+      ]
+    }
+  },
+  "surface_solution_path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260902_004/aeris_cfd_000_surf.cgns",
+  "surface_solution_sha256": "3fdf5f4b6d5f9d4ab4748d3c8754f84715b068d29f19fe656350469522fa8192",
+  "threshold_status": {
+    "gate_applied_now": "Only defect-level tests are gated today: a non-finite jump, a cell-row length mismatch, or a jump larger than the field's own global range. The gradient ratio is measured and reported but not gated, because one grid cannot separate an under-resolved physical gradient from a topology defect.",
+    "gradient_ratio_threshold_calibrated": false,
+    "requirement": "A single grid cannot separate an under-resolved physical gradient from a topology defect. Calibrate the acceptable ratio across the C01/C02/C03 family at M5: a ratio that falls with refinement is discretization error, a ratio that does not is a defect."
+  },
+  "worst_gradient_ratios": [
+    {
+      "field": "cp",
+      "gradient_ratio": 17.502887009829475,
+      "interface": "NSWallAdiabaticBCZone16.j0<->NSWallAdiabaticBCZone29.j1",
+      "median_interface_jump": 2.4416987355798483
+    },
+    {
+      "field": "yplus",
+      "gradient_ratio": 10.744676729774149,
+      "interface": "NSWallAdiabaticBCZone1.i0<->NSWallAdiabaticBCZone16.i1",
+      "median_interface_jump": 0.0768699049949646
+    },
+    {
+      "field": "cp",
+      "gradient_ratio": 9.40813075205741,
+      "interface": "NSWallAdiabaticBCZone13.j0<->NSWallAdiabaticBCZone27.j1",
+      "median_interface_jump": 0.5922786593437195
+    },
+    {
+      "field": "cp",
+      "gradient_ratio": 8.107066258373612,
+      "interface": "NSWallAdiabaticBCZone1.j0<->NSWallAdiabaticBCZone19.j1",
+      "median_interface_jump": 1.7930096834897995
+    },
+    {
+      "field": "cp",
+      "gradient_ratio": 8.076033239109275,
+      "interface": "NSWallAdiabaticBCZone21.j1<->NSWallAdiabaticBCZone4.j0",
+      "median_interface_jump": 1.0496456623077393
+    },
+    {
+      "field": "cp",
+      "gradient_ratio": 6.883604867430062,
+      "interface": "NSWallAdiabaticBCZone10.i0<->NSWallAdiabaticBCZone7.i1",
+      "median_interface_jump": 0.9722703881561756
+    },
+    {
+      "field": "cp",
+      "gradient_ratio": 6.071800514989948,
+      "interface": "NSWallAdiabaticBCZone10.j0<->NSWallAdiabaticBCZone25.j1",
+      "median_interface_jump": 0.7357411831617355
+    },
+    {
+      "field": "cp",
+      "gradient_ratio": 5.853819180366648,
+      "interface": "NSWallAdiabaticBCZone13.i1<->NSWallAdiabaticBCZone16.i0",
+      "median_interface_jump": 2.2593997418880463
+    },
+    {
+      "field": "cp",
+      "gradient_ratio": 5.473749381073068,
+      "interface": "NSWallAdiabaticBCZone23.j1<->NSWallAdiabaticBCZone7.j0",
+      "median_interface_jump": 5.975830614566803
+    },
+    {
+      "field": "cp",
+      "gradient_ratio": 5.344713303202139,
+      "interface": "NSWallAdiabaticBCZone1.i0<->NSWallAdiabaticBCZone16.i1",
+      "median_interface_jump": 1.9645906388759613
+    }
+  ]
+}

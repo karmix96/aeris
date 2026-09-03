@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leading Edge Inspector — AERIS S6</title>
+<style>
+:root{
+  --paper:#F2F4F1; --panel:#FBFCFA; --ink:#161A19; --ink-2:#4A524F; --ink-3:#7C8582;
+  --rule:#DBDFD9; --rule-2:#C6CCC4;
+  --signal:#C6462C; --signal-soft:rgba(198,70,44,.16);
+  --truth:#1B6B74; --mesh:#8A918F; --ok:#3F7A4B;
+  --shadow:0 1px 2px rgba(22,26,25,.06), 0 8px 24px rgba(22,26,25,.05);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0F1312; --panel:#171C1B; --ink:#E7EBE7; --ink-2:#A8B1AD; --ink-3:#79837F;
+  --rule:#252C2A; --rule-2:#333B39;
+  --signal:#F0705A; --signal-soft:rgba(240,112,90,.20);
+  --truth:#5BC3CD; --mesh:#7C8582; --ok:#6FB57C;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.32);
+}}
+:root[data-theme="dark"]{
+  --paper:#0F1312; --panel:#171C1B; --ink:#E7EBE7; --ink-2:#A8B1AD; --ink-3:#79837F;
+  --rule:#252C2A; --rule-2:#333B39;
+  --signal:#F0705A; --signal-soft:rgba(240,112,90,.20);
+  --truth:#5BC3CD; --mesh:#7C8582; --ok:#6FB57C;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.32);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper); color:var(--ink); font-size:15px; line-height:1.55;
+  font-family:"IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.wrap{max-width:1180px; margin:0 auto; padding:32px 22px 64px}
+header{border-bottom:1px solid var(--rule); padding-bottom:18px; margin-bottom:22px}
+.eyebrow{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink-3); margin:0 0 8px}
+h1{font-size:clamp(24px,3.6vw,34px); line-height:1.14; margin:0 0 8px; font-weight:600;
+  letter-spacing:-.02em; text-wrap:balance}
+.lede{margin:0; color:var(--ink-2); max-width:66ch}
+.lede b{color:var(--ink); font-weight:600}
+.stage{display:grid; grid-template-columns:minmax(0,1fr) 260px; gap:20px; align-items:start}
+@media(max-width:880px){.stage{grid-template-columns:minmax(0,1fr)}}
+.viewer{background:var(--panel); border:1px solid var(--rule); border-radius:4px;
+  box-shadow:var(--shadow); overflow:hidden}
+.bar{display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:11px 13px;
+  border-bottom:1px solid var(--rule)}
+.seg{display:flex; border:1px solid var(--rule-2); border-radius:3px; overflow:hidden}
+.seg button{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:12px; letter-spacing:.04em;
+  padding:6px 11px; background:transparent; color:var(--ink-2); border:0;
+  border-right:1px solid var(--rule-2); cursor:pointer}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink); color:var(--paper)}
+.seg button:focus-visible{outline:2px solid var(--signal); outline-offset:-2px}
+.spacer{flex:1}
+.toggle{display:inline-flex; align-items:center; gap:7px; font-size:12.5px; color:var(--ink-2);
+  font-family:"IBM Plex Mono",ui-monospace,monospace; cursor:pointer; user-select:none}
+.toggle input{accent-color:var(--truth); width:14px; height:14px; cursor:pointer}
+svg{display:block; width:100%; height:auto; background:var(--panel); touch-action:none; cursor:grab}
+svg.dragging{cursor:grabbing}
+.slider{display:flex; align-items:center; gap:11px; padding:10px 14px; border-top:1px solid var(--rule)}
+.slider label{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11px;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); white-space:nowrap}
+.slider input[type=range]{flex:1; accent-color:var(--signal); cursor:pointer}
+.slider output{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:12.5px;
+  font-variant-numeric:tabular-nums; color:var(--ink-2); min-width:9ch; text-align:right}
+.cap{padding:10px 14px; border-top:1px solid var(--rule); font-size:12.5px; color:var(--ink-2);
+  font-family:"IBM Plex Mono",ui-monospace,monospace; display:flex; flex-wrap:wrap; gap:8px 16px}
+.key{display:inline-flex; align-items:center; gap:6px}
+.sw{width:15px; height:3px; border-radius:2px; display:inline-block}
+.readout{display:flex; flex-direction:column; gap:12px}
+.metric{background:var(--panel); border:1px solid var(--rule); border-radius:4px; padding:12px 14px}
+.metric .k{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10.5px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--ink-3); margin-bottom:4px}
+.metric .v{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:24px; font-weight:600;
+  font-variant-numeric:tabular-nums; letter-spacing:-.02em; line-height:1.1}
+.metric .n{font-size:12.5px; color:var(--ink-2); margin-top:3px; line-height:1.4}
+.metric.alarm{border-left:3px solid var(--signal)} .metric.alarm .v{color:var(--signal)}
+.metric.good{border-left:3px solid var(--ok)} .metric.good .v{color:var(--ok)}
+.hint{font-size:12px; color:var(--ink-3); font-family:"IBM Plex Mono",ui-monospace,monospace;
+  padding:0 2px; line-height:1.5}
+.note{border-left:2px solid var(--rule-2); padding:2px 0 2px 15px; color:var(--ink-2);
+  margin:26px 0 0; max-width:66ch; font-size:14px}
+.note b{color:var(--ink)}
+footer{margin-top:34px; padding-top:16px; border-top:1px solid var(--rule);
+  font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11.5px; color:var(--ink-3);
+  display:flex; flex-wrap:wrap; gap:6px 20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <p class="eyebrow">AERIS S6 · leading-edge geometry cross-check</p>
+  <h1>The nose is a polygon, not a curve</h1>
+  <p class="lede">Every mesh in the study wraps the leading edge in <b>2 to 4 cells</b>. The nodes
+  sit on the exact aerofoil to within microns — it is the straight segments between them that cut
+  the corner. Drag to pan, scroll to zoom, and walk the slider along the span.</p>
+</header>
+
+<div class="stage">
+  <div class="viewer">
+    <div class="bar">
+      <div class="seg" id="levels" role="group" aria-label="Grid level"></div>
+      <span class="spacer"></span>
+      <label class="toggle"><input type="checkbox" id="truth" checked> true surface</label>
+      <label class="toggle"><input type="checkbox" id="nodes" checked> nodes</label>
+      <div class="seg" id="views" role="group" aria-label="View">
+        <button type="button" data-v="nose" aria-pressed="true">nose</button>
+        <button type="button" data-v="section" aria-pressed="false">section</button>
+      </div>
+    </div>
+    <svg id="plot" viewBox="0 0 860 470" role="img" aria-label="Leading edge mesh section"></svg>
+    <div class="slider">
+      <label for="span">span</label>
+      <input type="range" id="span" min="0" max="8" value="4" step="1">
+      <output id="spanout"></output>
+    </div>
+    <div class="cap">
+      <span class="key"><span class="sw" style="background:var(--signal)"></span>leading-edge wrap</span>
+      <span class="key"><span class="sw" style="background:var(--truth)"></span>true aerofoil</span>
+      <span class="key"><span class="sw" style="background:var(--mesh)"></span>other blocks</span>
+    </div>
+  </div>
+
+  <div class="readout" id="readout"></div>
+</div>
+
+<p class="note"><b>What you are looking at.</b> The shaded band is the difference between the mesh
+and the real surface. The first cell off the wall is 4.7 µm tall — that is the boundary layer the
+solver resolves. When the corner cut is hundreds of microns, the shape underneath the boundary
+layer is far more wrong than the boundary layer is fine. That mismatch drives surface pressure
+above its physical ceiling of cp = 1.0018, measured at <b>cp = 4.160</b> on 137 of 296 faces of
+this block, identically on two different meshes.</p>
+
+<footer>
+  <span id="foot-levels"></span>
+  <span>geometry lhs100_seed42_083</span>
+  <span>65 meshes screened · 0 pass</span>
+  <span>cfd_authorized: false</span>
+</footer>
+</div>
+
+<script>
+const MESH = /*__MESH_DATA__*/null;
+(function(){
+  if(!MESH){ document.body.innerHTML = "<p style='padding:2rem'>No mesh data embedded.</p>"; return; }
+  const NAMES = Object.keys(MESH.levels);
+  const ORDER = ["oml_lower_aft","oml_lower_fore","oml_nose","oml_upper_fore","oml_upper_aft","oml_base"];
+  const W = 860, H = 470, PAD = 36;
+  const S = {level:NAMES[NAMES.length-2] || NAMES[0], station:Math.floor(MESH.stations.length/2),
+             view:"nose", truth:true, nodes:true, zoom:1, panx:0, pany:0};
+  const plot = document.getElementById("plot");
+
+  const segLv = document.getElementById("levels");
+  NAMES.forEach(function(n){
+    const b=document.createElement("button"); b.type="button"; b.textContent=n; b.dataset.level=n;
+    b.setAttribute("aria-pressed", String(n===S.level)); segLv.appendChild(b);
+  });
+  segLv.addEventListener("click", function(e){
+    const b=e.target.closest("button"); if(!b) return;
+    S.level=b.dataset.level;
+    Array.prototype.forEach.call(segLv.children,function(c){
+      c.setAttribute("aria-pressed", String(c.dataset.level===S.level)); });
+    draw();
+  });
+  const segV = document.getElementById("views");
+  segV.addEventListener("click", function(e){
+    const b=e.target.closest("button"); if(!b) return;
+    S.view=b.dataset.v; S.zoom=1; S.panx=0; S.pany=0;
+    Array.prototype.forEach.call(segV.children,function(c){
+      c.setAttribute("aria-pressed", String(c.dataset.v===S.view)); });
+    draw();
+  });
+  document.getElementById("truth").addEventListener("change",function(e){ S.truth=e.target.checked; draw(); });
+  document.getElementById("nodes").addEventListener("change",function(e){ S.nodes=e.target.checked; draw(); });
+  const span = document.getElementById("span");
+  span.max = String(MESH.stations.length-1); span.value = String(S.station);
+  span.addEventListener("input", function(e){ S.station=+e.target.value; draw(); });
+
+  let drag=null;
+  plot.addEventListener("pointerdown", function(e){
+    drag={x:e.clientX,y:e.clientY,px:S.panx,py:S.pany}; plot.classList.add("dragging");
+    plot.setPointerCapture(e.pointerId);
+  });
+  plot.addEventListener("pointermove", function(e){
+    if(!drag) return;
+    S.panx = drag.px + (e.clientX-drag.x); S.pany = drag.py + (e.clientY-drag.y); draw();
+  });
+  plot.addEventListener("pointerup", function(e){
+    drag=null; plot.classList.remove("dragging");
+    try{ plot.releasePointerCapture(e.pointerId); }catch(_){}
+  });
+  plot.addEventListener("wheel", function(e){
+    e.preventDefault();
+    const f = Math.exp(-e.deltaY*0.0015);
+    S.zoom = Math.min(400, Math.max(0.25, S.zoom*f));
+    draw();
+  }, {passive:false});
+
+  function bounds(pts){
+    let a=Infinity,b=-Infinity,c=Infinity,d=-Infinity;
+    for(let i=0;i<pts.length;i++){
+      const p=pts[i];
+      if(p[0]<a)a=p[0]; if(p[0]>b)b=p[0]; if(p[1]<c)c=p[1]; if(p[1]>d)d=p[1];
+    }
+    return {x0:a,x1:b,y0:c,y1:d};
+  }
+
+  function draw(){
+    const L = MESH.levels[S.level];
+    const sec = L.sections[S.station];
+    const met = L.metrics[S.station];
+    const ref = MESH.reference[S.station];
+    const nose = sec.oml_nose;
+    let all=[]; ORDER.forEach(function(n){ if(sec[n]) all=all.concat(sec[n]); });
+    const b = S.view==="nose" ? bounds(nose) : bounds(all);
+    const mx=(b.x1-b.x0)*(S.view==="nose"?0.6:0.05)+1e-7, my=(b.y1-b.y0)*(S.view==="nose"?0.6:0.15)+1e-7;
+    const bx0=b.x0-mx, bx1=b.x1+mx, by0=b.y0-my, by1=b.y1+my;
+    const bw=bx1-bx0, bh=by1-by0;
+    const s = Math.min((W-2*PAD)/bw,(H-2*PAD)/bh) * S.zoom;
+    const cx=(bx0+bx1)/2, cy=(by0+by1)/2;
+    const X=function(x){ return W/2 + (x-cx)*s + S.panx; };
+    const Y=function(y){ return H/2 - (y-cy)*s + S.pany; };
+    const d=function(p){ return p.map(function(q,i){ return (i?"L":"M")+X(q[0]).toFixed(2)+" "+Y(q[1]).toFixed(2); }).join(" "); };
+
+    let g="";
+    ORDER.forEach(function(n){
+      if(n==="oml_nose"||!sec[n]) return;
+      g+='<path d="'+d(sec[n])+'" fill="none" stroke="var(--mesh)" stroke-width="1.3" stroke-linejoin="round"/>';
+      if(S.nodes && S.view==="nose"){
+        sec[n].forEach(function(p){ g+='<circle cx="'+X(p[0]).toFixed(2)+'" cy="'+Y(p[1]).toFixed(2)+'" r="2.3" fill="var(--mesh)"/>'; });
+      }
+    });
+    if(S.truth){
+      const back = ref.slice().reverse().map(function(q){ return "L"+X(q[0]).toFixed(2)+" "+Y(q[1]).toFixed(2); }).join(" ");
+      g+='<path d="'+d(nose)+" "+back+' Z" fill="var(--signal-soft)" stroke="none"/>';
+      g+='<path d="'+d(ref)+'" fill="none" stroke="var(--truth)" stroke-width="2" stroke-linejoin="round"/>';
+    }
+    g+='<path d="'+d(nose)+'" fill="none" stroke="var(--signal)" stroke-width="2.6" stroke-linejoin="round"/>';
+    if(S.nodes){
+      nose.forEach(function(p){ g+='<circle cx="'+X(p[0]).toFixed(2)+'" cy="'+Y(p[1]).toFixed(2)+'" r="4" fill="var(--signal)"/>'; });
+    }
+    // scale bar, sized to a round number of the current view
+    const target=bw/(5*S.zoom);
+    const pow=Math.pow(10,Math.floor(Math.log10(target)));
+    let step=pow; [1,2,5,10].some(function(m){ if(pow*m>=target){ step=pow*m; return true; } return false; });
+    const px=step*s, y0=H-18;
+    g+='<line x1="'+PAD+'" y1="'+y0+'" x2="'+(PAD+px).toFixed(1)+'" y2="'+y0+'" stroke="var(--ink-3)" stroke-width="1.5"/>';
+    g+='<text x="'+(PAD+px+8).toFixed(1)+'" y="'+(y0+4)+'" fill="var(--ink-3)" font-family="IBM Plex Mono, monospace" font-size="11">'
+      +(step>=0.001?(step*1000).toFixed(step>=0.01?0:1)+" mm":(step*1e6).toFixed(0)+" µm")+'</text>';
+    plot.innerHTML=g;
+
+    document.getElementById("spanout").textContent = "y = "+MESH.stations[S.station].toFixed(3)+" m";
+    const ratio = met.cut / MESH.first_cell_um;
+    const good = met.turn <= 10;
+    document.getElementById("readout").innerHTML =
+      '<div class="metric"><div class="k">grid level</div><div class="v">'+S.level+'</div>'
+      +'<div class="n">'+L.wrap_cells+' cells wrap the leading edge</div></div>'
+      +'<div class="metric '+(good?"good":"alarm")+'"><div class="k">turn per cell</div><div class="v">'+met.turn.toFixed(1)+'°</div>'
+      +'<div class="n">'+(good?"within":"far above")+' the 10° working target</div></div>'
+      +'<div class="metric '+(ratio<10?"good":"alarm")+'"><div class="k">corner cut</div><div class="v">'+met.cut.toFixed(0)+' µm</div>'
+      +'<div class="n">'+ratio.toFixed(0)+'× the '+MESH.first_cell_um+' µm first cell height</div></div>'
+      +'<p class="hint">drag to pan · scroll to zoom · slider walks the span</p>';
+  }
+
+  document.getElementById("foot-levels").textContent = NAMES.join(" · ");
+  draw();
+})();
+</script>
+</body>
+</html>

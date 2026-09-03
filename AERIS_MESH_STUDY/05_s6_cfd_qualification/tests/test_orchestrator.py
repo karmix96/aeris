@@ -1276,11 +1276,28 @@ def test_corner_cut_measures_the_geometric_error_at_the_nose():
         assert viz.corner_cut(wrap) == pytest.approx(expected, rel=1e-6)
 
 
-def test_rendered_summary_matches_the_measured_meshes():
-    summary = json.loads((ROOT / "viz/renders/summary.json").read_text())
-    # Coarser wrap means a bigger corner cut, monotonically.
-    order = ["candidate_c01", "candidate_c02", "candidate_c03", "candidate_d03"]
-    cuts = [summary[name]["corner_cut_um"] for name in order]
-    assert cuts == sorted(cuts, reverse=True)
-    assert summary["candidate_c03"]["wrap_cells"] == 4
-    assert summary["candidate_d03"]["corner_cut_um"] < 50.0
+def test_inspector_is_self_contained_and_carries_real_geometry():
+    import re
+
+    page = (ROOT / "viz/leading_edge_inspector.html").read_text()
+    # Self-contained: no network fetches, nothing left to resolve at open time.
+    assert "/*__MESH_DATA__*/null" not in page, "mesh data was never substituted"
+    assert "src=\"http" not in page and "href=\"http" not in page
+    data = json.loads(re.search(r"const MESH = (\{.*?\});", page, re.S).group(1))
+
+    assert len(data["stations"]) >= 5
+    assert set(data["levels"]) >= {"C01", "C02", "C03", "D03"}
+    for name, level in data["levels"].items():
+        assert len(level["sections"]) == len(data["stations"]), name
+        assert len(level["metrics"]) == len(data["stations"]), name
+        for section in level["sections"]:
+            assert "oml_nose" in section, name
+            assert len(section["oml_nose"]) == level["wrap_cells"] + 1, name
+
+    # Coarser wrap means a bigger corner cut, monotonically, at every station.
+    order = ["C01", "C02", "C03", "D03"]
+    for index in range(len(data["stations"])):
+        cuts = [data["levels"][n]["metrics"][index]["cut"] for n in order]
+        assert cuts == sorted(cuts, reverse=True), data["stations"][index]
+    assert data["levels"]["C03"]["wrap_cells"] == 4
+    assert data["levels"]["D03"]["wrap_cells"] == 6

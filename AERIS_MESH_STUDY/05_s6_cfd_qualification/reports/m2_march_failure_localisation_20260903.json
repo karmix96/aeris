@@ -1,0 +1,55 @@
+{
+  "answer": "The tip cap. Comparing the two neighbouring configurations either side of the marching boundary, the blocks that degrade most are tip_nose and tip_base, not the leading edge itself. They cannot be treated separately: the tip cap collar is built from the same section arcs as the leading edge, so conformity forces both to share end_scale.",
+  "authorizes_cfd": false,
+  "cfd_run": false,
+  "conclusion": "Fix #1 is answered and it points at the same place as everything else. The march does not fail on the leading edge; it fails on the tip cap that the leading-edge parameter drags along with it. Since the two are welded together by the block layout, no parameter can separate them, which is consistent with all 41 marches run so far.",
+  "controlled_comparison": {
+    "failing": {
+      "end_scale": 3.0,
+      "segfault": true
+    },
+    "held_fixed": "chord_points 29, collar_points 7, span_cells 74, N 97, s0_frac 3.6e-6, no clustering, epsE 3.0",
+    "interpretation": "tip_base already holds the smallest cells in the entire mesh at 1.065e-8 m2, roughly 0.10 mm square. Shrinking the nose block halves the tip cap cells as collateral damage, because end_scale is passed to the tip block construction as well as the leading edge.",
+    "marching": {
+      "end_scale": 5.0,
+      "min_volume": 3.88e-12
+    },
+    "min_surface_cell_area_m2": {
+      "oml_nose": {
+        "failing": 6.922e-07,
+        "marching": 8.933e-07,
+        "ratio": 0.775
+      },
+      "tip_base": {
+        "failing": 1.065e-08,
+        "marching": 1.895e-08,
+        "ratio": 0.562
+      },
+      "tip_nose": {
+        "failing": 9.25e-08,
+        "marching": 1.833e-07,
+        "ratio": 0.505
+      },
+      "tip_upper_fore": {
+        "failing": 7.577e-07,
+        "marching": 8.575e-07,
+        "ratio": 0.884
+      }
+    },
+    "varied": "end_scale only"
+  },
+  "created_at": "2026-09-03T22:30:00+03:00",
+  "holdout_accessed": false,
+  "marches_run_cumulative": 41,
+  "measurement_caveat": "Cell volumes computed from the written mesh come out negative in every block, including runs that march successfully. That is an orientation convention, not a defect: the surface report lists all 13 blocks as flipped. Compare magnitudes, not signs.",
+  "question": "Which cells does the pyHyp march actually fail on when the leading edge is refined?",
+  "recommended_next_actions": [
+    "Treat the leading-edge resolution problem as a block-layout problem, not a meshing-parameter problem.",
+    "Cost the topology change: a separate tip-cap scale, or a tip cap that does not inherit the nose extent.",
+    "In parallel, evaluate a volume mesher that does not march hyperbolically, since the failure mode is specific to marching from a sharply curved, finely resolved surface.",
+    "Do not spend further effort on pyHyp parameters; the envelope is mapped and closed."
+  ],
+  "schema": "aeris.s6.march_failure_localisation.v1",
+  "why_the_tip_cap_cannot_be_spared": "_tip_blocks is built from the tip section's arcs, which _section_arcs defines using end_scale. The tip cap collar must match the OML blocks edge for edge, so a separate tip scale would break conformity. Sparing the tip cap requires changing the block layout, not adding a parameter.",
+  "why_the_volume_file_cannot_localise_it": "By the time pyHyp writes the failing volume, every one of the 13 blocks is non-finite in its first three layers. Divergence propagates before any output exists, so the origin cannot be recovered from the written mesh. A short march is not a substitute either: at 20 wall-normal points the growth ratio needed to span 25 chord lengths is itself unmarchable, and at 6 points pyHyp's own reporting divides by an empty array."
+}

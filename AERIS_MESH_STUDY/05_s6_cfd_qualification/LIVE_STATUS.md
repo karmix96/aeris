@@ -1,6 +1,45 @@
 # S6 qualification live status
 
-Updated: 2026-09-03T03:15:00+03:00
+Updated: 2026-09-03T05:15:00+03:00
+
+## Leading-edge redesign attempt — 2026-09-03
+
+Evidence: `reports/m2_leading_edge_wrap_redesign_20260903.json`. 25 pyHyp
+marches were run. **No CFD.** The outcome is a designed fix that is not yet
+buildable at the finest level.
+
+**What was found.** The nose block extent was a hard-coded constant,
+`end_scale = 5.0`, and every block was resampled with uniform arc-length
+spacing. Both are now level properties, `end_scale` and `le_cluster`, defaulting
+to the previous behaviour. The rebuilt `candidate_c03` surface is bit-identical
+to the policy-bound surface
+`dd35106445ddbab88dbd79fe64c09c53d4a63622a7d0cd8deaca7cd28b0f3a19`, so the C
+family and every stored mesh identity are untouched.
+
+**The designed family.** `candidate_d01/d02/d03` resolve the leading edge at
+15.02, 12.43 and 10.63 degrees per wrap cell, against the C family's 37.92,
+31.77 and 25.74. Every D level beats the finest C level. D03 does it with 22272
+*fewer* cells than C03 and 9.11 GiB against 9.33, and both effective refinement
+ratios, 1.2703 and 1.3031, sit inside the 1.25 to 1.35 band.
+
+**What blocks it.** The pyHyp hyperbolic march. `candidate_d03` segmentation
+faults at epsE 1.5, 2.0 and 3.0 and at nConstantStart 10 and 20 crossed with
+volBlend 0.010 and 0.030; d02 marches at epsE 3.0 and d01 at epsE 2.0, both with
+minimum volumes far more negative than the C03 control's -1.65e-12. The march is
+knife-edge tuned to the exact C03 surface: changing only `chord_points` from 29
+to 21, at the C03 `end_points`, also faults. The governed epsE ladder is
+decisive rather than cosmetic, and `end_points` 6 at epsE 3.0 marches with a
+*positive* minimum volume of 3.88e-12, cleaner than the control.
+
+**Status: `SURFACE_QUALIFIED_VOLUME_MARCH_UNRESOLVED`.** The D family is a
+candidate, not a qualified family, and authorizes nothing. The remaining work is
+a pyHyp marching-parameter study over cMax, volSmoothIter, epsI and marchDist;
+the knobs reachable from the CLI are exhausted. An interim worth considering is
+`end_points` 6 at the existing `end_scale` 5.0, which marches cleanly and still
+improves turning per cell from 25.7 to 20.6 degrees.
+
+Do not build C01 or C02 corrections and do not start the grid-convergence study
+until the leading-edge law is settled: the family must share one law.
 
 ## CRITICAL — leading-edge collar defect, 2026-09-03
 
@@ -35,7 +74,7 @@ Evidence: `reports/m2_a_c03_leading_edge_collar_defect_20260903.json`.
 
 The controlling parameter is `end_points` in `strategy_s6.LEVELS`: 3 at C01, 4 at
 C02, 5 at C03. On C03 the four wrap cells absorb a median **103 degrees of
-surface turning, 34.3 degrees per cell**, at a median 1.04 cells per local nose
+surface turning, 25.7 degrees per cell**, at a median 1.04 cells per local nose
 radius (nose radius 0.00288 m, wrap cell 0.00278 m). The surface normal rotates
 so far inside one cell that the pressure reconstruction there is meaningless.
 
@@ -46,7 +85,7 @@ through **0.0 degrees** because the trailing edge is a blunt flat base, and has
 per cell is.
 
 **This breaks the planned mesh-independence study.** The wrap carries 2, 3 and 4
-cells at C01, C02 and C03, absorbing roughly 50, 40 and 34 degrees per cell. The
+cells at C01, C02 and C03, absorbing a measured 37.9, 31.8 and 25.7 degrees per cell. The
 leading edge is severely under-resolved at every level, so the sequence is
 nowhere near the asymptotic range. A Richardson or GCI estimate on this family
 would be arithmetically well formed and physically meaningless for any

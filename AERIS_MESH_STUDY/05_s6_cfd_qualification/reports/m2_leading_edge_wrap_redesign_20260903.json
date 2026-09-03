@@ -1,0 +1,175 @@
+{
+  "authorizes_cfd": false,
+  "candidate_d_family": {
+    "comparison_with_c_family": {
+      "forecast_gib": {
+        "c03": 9.33,
+        "d03": 9.11
+      },
+      "note": "Every D level resolves the leading edge better than the finest C level, and D03 does so with 22272 fewer cells and 0.22 GiB less memory than C03.",
+      "turning_per_cell_deg": {
+        "c01": 37.92,
+        "c02": 31.77,
+        "c03": 25.74,
+        "d01": 15.02,
+        "d02": 12.43,
+        "d03": 10.63
+      }
+    },
+    "effective_refinement_ratios": {
+      "band": [
+        1.25,
+        1.35
+      ],
+      "d01_to_d02": 1.2703,
+      "d02_to_d03": 1.3031,
+      "in_band": true
+    },
+    "levels": {
+      "candidate_d01": {
+        "N": 61,
+        "cells": 203040,
+        "chord_points": 16,
+        "collar_points": 5,
+        "end_points": 5,
+        "end_scale": 1.0,
+        "faces": 3384,
+        "forecast_gib": 2.01,
+        "le_cluster": 2.2,
+        "span_cells": 44,
+        "turning_per_cell_deg": 15.02
+      },
+      "candidate_d02": {
+        "N": 73,
+        "cells": 416160,
+        "chord_points": 21,
+        "collar_points": 6,
+        "end_points": 6,
+        "end_scale": 1.0,
+        "faces": 5780,
+        "forecast_gib": 4.12,
+        "le_cluster": 2.2,
+        "span_cells": 57,
+        "turning_per_cell_deg": 12.43
+      },
+      "candidate_d03": {
+        "N": 97,
+        "cells": 920832,
+        "chord_points": 27,
+        "collar_points": 7,
+        "end_points": 7,
+        "end_scale": 1.0,
+        "faces": 9592,
+        "forecast_gib": 9.11,
+        "le_cluster": 2.2,
+        "span_cells": 74,
+        "turning_per_cell_deg": 10.63
+      }
+    },
+    "memory_gate": {
+      "all_levels_pass": true,
+      "bytes_per_cell_measured": 10620,
+      "limit_gib": 9.499,
+      "rule": "forecast must not exceed 75 percent of the verified WSL limit",
+      "source": "attempt04 measured peak 9.3295 GiB over 943104 cells on six ranks"
+    },
+    "status": "SURFACE_QUALIFIED_VOLUME_MARCH_UNRESOLVED"
+  },
+  "cell_budget_model": {
+    "faces": "2*(E-1)*S + 2*(E-1)*(C-1) + 4*(P-1)*S + 4*(P-1)*(C-1) + (2P-2)*(E-1), with P=chord_points, E=end_points, C=collar_points, S=span_cells",
+    "note": "tip_centre is (2P-1, E): its second dimension follows end_points, not collar_points. An earlier form of this model coincidentally matched the C family and was wrong for any other end_points.",
+    "validated_exactly_against": {
+      "candidate_c01": 191520,
+      "candidate_c02": 422352,
+      "candidate_c03": 943104
+    },
+    "volume_cells": "faces * (N-1)"
+  },
+  "cfd_run": false,
+  "conclusion": "The leading-edge resolution problem is solvable on paper and is not solved in practice yet. The surface design exists, is measurably 2.4 times better resolved at every level, fits the host with room to spare, and keeps the C family bit-identical. What blocks it is the pyHyp hyperbolic march, whose parameters are tuned to the exact C03 surface and do not transfer. The remaining work is a marching-parameter study for the new surface, not further surface design.",
+  "created_at": "2026-09-03T05:00:00+03:00",
+  "end_scale_sensitivity_on_c03": {
+    "definition": "median total wrap turning and per-cell turning at fixed end_points=5",
+    "measurements": [
+      {
+        "end_scale": 1.0,
+        "nose_xfrac": 0.00212,
+        "total_turning_deg": 59.7,
+        "turning_per_cell_deg": 14.9
+      },
+      {
+        "end_scale": 2.0,
+        "nose_xfrac": 0.00424,
+        "total_turning_deg": 75.2,
+        "turning_per_cell_deg": 18.8
+      },
+      {
+        "end_scale": 3.0,
+        "nose_xfrac": 0.00636,
+        "total_turning_deg": 87.2,
+        "turning_per_cell_deg": 21.8
+      },
+      {
+        "end_scale": 5.0,
+        "nose_xfrac": 0.01061,
+        "total_turning_deg": 103.0,
+        "turning_per_cell_deg": 25.7
+      },
+      {
+        "end_scale": 8.0,
+        "nose_xfrac": 0.01697,
+        "total_turning_deg": 114.2,
+        "turning_per_cell_deg": 28.5
+      }
+    ]
+  },
+  "holdout_accessed": false,
+  "new_level_parameters": {
+    "c_family_preserved": "Both default to the previous behaviour, and the rebuilt candidate_c03 surface is bit-identical to the policy-bound surface dd35106445ddbab88dbd79fe64c09c53d4a63622a7d0cd8deaca7cd28b0f3a19.",
+    "end_scale": "Half-extent of the nose block as a multiple of NOSE_END_FRAC. Was a hard-coded 5.0. Smaller values hug the stagnation line so the same wrap cells absorb less turning.",
+    "le_cluster": "One-sided tanh clustering of the fore blocks toward the leading edge. Was uniform arc-length spacing everywhere."
+  },
+  "purpose": "Attempt to remove the leading-edge collar defect recorded in m2_a_c03_leading_edge_collar_defect_20260903.json by redesigning the surface resolution, and record exactly how far that got.",
+  "recommended_next_actions": [
+    "Run a marching-parameter study for candidate_d03 over cMax, volSmoothIter, epsI, marchDist and the first-layer treatment; the four knobs reachable from the CLI today are exhausted.",
+    "Consider end_points 6 at end_scale 5.0 as an interim: it marches with a positive minimum volume and still improves turning per cell from 25.7 to 20.6 degrees.",
+    "Do not build C01 or C02 corrections, and do not start the grid-convergence study, until the leading-edge law is settled; the family must share one law.",
+    "Do not use attempt03 or attempt04 pressure drag in any paper claim."
+  ],
+  "schema": "aeris.s6.leading_edge_wrap_redesign.v1",
+  "volume_march_sweep": {
+    "control": {
+      "eps_e": 1.5,
+      "level": "candidate_c03",
+      "march_completed": true,
+      "min_volume": -1.65e-12,
+      "note": "The raw template march is not the acceptance path even for C03; the accepted mesh comes from march, deform and wall-normal redistribution. The control establishes what a healthy march looks like: return code 0 and a min volume near zero rather than a segmentation fault.",
+      "return_code": 0
+    },
+    "findings": [
+      {
+        "finding": "end_points cannot be raised far. At chord_points 29 and epsE 3.0 the wrap marches at end_points 6 and 7 and segmentation-faults at 8, 9 and 10. end_points 6 at epsE 3.0 produced a positive minimum volume of 3.88e-12, cleaner than the C03 control itself.",
+        "id": "M1"
+      },
+      {
+        "finding": "The march is knife-edge sensitive to the surface. Changing chord_points alone from 29 to 21 at the C03 end_points of 5 also segmentation-faults, so the C03 pyHyp settings are tuned to that exact surface rather than being robust across the family.",
+        "id": "M2"
+      },
+      {
+        "finding": "The governed epsE ladder matters and was decisive: end_points 6 fails at epsE 1.5 and succeeds at 3.0.",
+        "id": "M3"
+      },
+      {
+        "finding": "candidate_d03 does not march. It fails at epsE 1.5, 2.0 and 3.0, and at nConstantStart 10 and 20 crossed with volBlend 0.010 and 0.030. candidate_d02 marches at epsE 3.0 and candidate_d01 at epsE 2.0, both with negative minimum volumes far larger than the C03 control's.",
+        "id": "M4",
+        "severity": "OPEN"
+      },
+      {
+        "finding": "Clustering hurts marching. At end_scale 2.0 the unclustered surface reaches a minimum volume of -2.12e-10, the closest any variant came to the control, while the same surface with le_cluster 1.5 diverges.",
+        "id": "M5"
+      }
+    ],
+    "marches_run": 25,
+    "tool": "run_s6.py march-template, pyHyp in the mach-aero environment"
+  }
+}

@@ -1281,3 +1281,66 @@ def _interface_label(interface: dict[str, Any]) -> str:
         f"{interface['zone_a']}.{interface['edge_a']}"
         f"<->{interface['zone_b']}.{interface['edge_b']}"
     )
+
+
+def leading_edge_wrap_resolution(
+    surface_blocks: Path | dict, *, block_name: str = "oml_nose"
+) -> dict[str, Any]:
+    """Measure how much surface turning each leading-edge wrap cell absorbs.
+
+    This is the mesh-only screen for the defect recorded in
+    ``m2_a_c03_leading_edge_collar_defect_20260903.json``: when a wrap cell has
+    to absorb tens of degrees of turning, the surface normal rotates so far
+    inside one cell that the pressure reconstruction stops being meaningful and
+    cp climbs above its physical bound.
+
+    Convention: the wrap polyline at one span station has ``n`` points, so
+    ``n-1`` cells and ``n-2`` interior joints. Total turning is the sum of the
+    joint angles, and turning *per cell* divides that total by ``n-1``. Dividing
+    by the joint count instead overstates the figure by ``(n-1)/(n-2)``.
+    """
+    if isinstance(surface_blocks, dict):
+        blocks = surface_blocks
+    else:
+        loaded = np.load(Path(surface_blocks), allow_pickle=True)
+        blocks = {name: loaded[name] for name in loaded.files}
+    if block_name not in blocks:
+        raise KeyError(f"{block_name!r} not among surface blocks {sorted(blocks)}")
+
+    wrap = np.asarray(blocks[block_name], dtype=float)
+    if wrap.ndim != 3 or wrap.shape[-1] != 3 or wrap.shape[0] < 3:
+        raise ValueError(f"{block_name!r} is not a usable wrap block: shape {wrap.shape}")
+
+    points = int(wrap.shape[0])
+    cells = points - 1
+    totals = []
+    for station in range(wrap.shape[1]):
+        segments = np.diff(wrap[:, station, :], axis=0)
+        lengths = np.linalg.norm(segments, axis=1)
+        if not np.all(lengths > 0.0):
+            raise ValueError(f"degenerate wrap segment in {block_name!r}")
+        unit = segments / lengths[:, None]
+        cosines = np.clip((unit[:-1] * unit[1:]).sum(axis=1), -1.0, 1.0)
+        totals.append(float(np.degrees(np.arccos(cosines)).sum()))
+    totals = np.array(totals)
+
+    return {
+        "block": block_name,
+        "wrap_points": points,
+        "wrap_cells": cells,
+        "span_stations": int(wrap.shape[1]),
+        "total_turning_deg": {
+            "minimum": float(totals.min()),
+            "median": float(np.median(totals)),
+            "maximum": float(totals.max()),
+        },
+        "turning_per_cell_deg": {
+            "minimum": float(totals.min() / cells),
+            "median": float(np.median(totals) / cells),
+            "maximum": float(totals.max() / cells),
+        },
+        "convention": (
+            "total joint turning divided by the number of wrap cells, not by the "
+            "number of joints"
+        ),
+    }

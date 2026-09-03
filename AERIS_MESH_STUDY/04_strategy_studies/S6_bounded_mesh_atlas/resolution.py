@@ -12,6 +12,13 @@ S6_FIRST_CELL_FRACTION = {
     # The 5/6/7 collar-point cap re-spec removes the C03 fold while retaining
     # the coupled coarse-to-fine wall-spacing law.
     "candidate_c03": 3.6e-6,
+    # Candidate D family (ADR-0001) reuses the C family wall-spacing law exactly.
+    # D redistributes surface cells into the leading-edge wrap; it deliberately
+    # does not touch the wall-normal law, which the recovery validated and which
+    # y+ passes with margin.
+    "candidate_d01": 5.0e-6,
+    "candidate_d02": 4.7e-6,
+    "candidate_d03": 3.6e-6,
     "smoke": 8.8e-6,
     "fine": 6.0e-6,
     # The fixed N257/epsE=1.5 development calibration passed all 16 seeds at

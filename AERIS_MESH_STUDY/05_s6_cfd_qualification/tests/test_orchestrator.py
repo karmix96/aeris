@@ -1111,4 +1111,87 @@ def test_end_points_starve_the_wrap_at_every_family_level():
     assert levels["candidate_c01"].end_points == 3
     assert levels["candidate_c02"].end_points == 4
     assert levels["candidate_c03"].end_points == 5
-    assert max(spec.end_points for spec in levels.values()) == 5
+    # Before the D family, no level anywhere used more than 5.
+    legacy = {name: spec for name, spec in levels.items() if not name.startswith("candidate_d")}
+    assert max(spec.end_points for spec in legacy.values()) == 5
+
+
+C03_POLICY_SURFACE_SHA256 = "dd35106445ddbab88dbd79fe64c09c53d4a63622a7d0cd8deaca7cd28b0f3a19"
+
+
+def _strategy_s6():
+    sys.path.insert(0, str(ROOT.parents[0] / "04_strategy_studies"))
+    sys.path.insert(0, str(ROOT.parents[0] / "04_strategy_studies/S6_bounded_mesh_atlas"))
+    import strategy_s6
+
+    return strategy_s6
+
+
+def test_new_level_knobs_default_to_the_c_family_behaviour():
+    strategy_s6 = _strategy_s6()
+    for name in ("candidate_c01", "candidate_c02", "candidate_c03"):
+        spec = strategy_s6.LEVELS[name]
+        assert spec.end_scale == 5.0, name
+        assert spec.le_cluster == 0.0, name
+
+
+def test_uniform_spacing_path_is_bit_identical_to_linspace():
+    strategy_s6 = _strategy_s6()
+    # The C family must keep byte-for-byte identical meshes, and
+    # total * linspace(0, 1, n) is not the same in floating point as
+    # linspace(0, total, n).
+    for total, count in ((1.0, 29), (0.4946, 75), (2.27, 97)):
+        got = strategy_s6._stretched_arc_targets(total, count, 0.0, True)
+        assert np.array_equal(got, np.linspace(0.0, total, count))
+
+
+def test_clustering_refines_toward_the_requested_end():
+    strategy_s6 = _strategy_s6()
+    at_end = strategy_s6._stretched_arc_targets(1.0, 21, 2.2, True)
+    spacing = np.diff(at_end)
+    assert spacing[-1] < spacing[0]
+    assert at_end[0] == pytest.approx(0.0)
+    assert at_end[-1] == pytest.approx(1.0)
+    at_start = strategy_s6._stretched_arc_targets(1.0, 21, 2.2, False)
+    spacing = np.diff(at_start)
+    assert spacing[0] < spacing[-1]
+    assert at_start[0] == pytest.approx(0.0)
+    assert at_start[-1] == pytest.approx(1.0)
+
+
+def test_candidate_d_family_resolves_the_wrap_better_than_every_c_level():
+    strategy_s6 = _strategy_s6()
+    report = json.loads(
+        (ROOT / "reports/m2_leading_edge_wrap_redesign_20260903.json").read_text()
+    )
+    turning = report["candidate_d_family"]["comparison_with_c_family"]["turning_per_cell_deg"]
+    assert max(turning[d] for d in ("d01", "d02", "d03")) < min(
+        turning[c] for c in ("c01", "c02", "c03")
+    )
+    for name in ("candidate_d01", "candidate_d02", "candidate_d03"):
+        spec = strategy_s6.LEVELS[name]
+        assert spec.end_scale == 1.0
+        assert spec.le_cluster == 2.2
+
+
+def test_candidate_d_family_is_not_presented_as_qualified():
+    report = json.loads(
+        (ROOT / "reports/m2_leading_edge_wrap_redesign_20260903.json").read_text()
+    )
+    assert report["candidate_d_family"]["status"] == (
+        "SURFACE_QUALIFIED_VOLUME_MARCH_UNRESOLVED"
+    )
+    assert report["authorizes_cfd"] is False
+    open_findings = [
+        f for f in report["volume_march_sweep"]["findings"] if f.get("severity") == "OPEN"
+    ]
+    assert open_findings, "the unresolved d03 march must stay recorded as open"
+
+
+def test_no_probe_levels_leak_into_the_governed_tables():
+    strategy_s6 = _strategy_s6()
+    from aeris.cfd.meshing.pyhyp_options import GRID_LEVELS
+    from resolution import S6_FIRST_CELL_FRACTION
+
+    for table in (strategy_s6.LEVELS, GRID_LEVELS, S6_FIRST_CELL_FRACTION):
+        assert not [name for name in table if name.startswith("probe_")]

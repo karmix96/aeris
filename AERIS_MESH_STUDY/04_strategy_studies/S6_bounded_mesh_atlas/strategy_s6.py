@@ -49,12 +49,29 @@ class LevelSpec:
     span_cells: int
     dense_curve_points: int
     span_max_cell_m: float
+    #: Half-extent of the nose block as a multiple of NOSE_END_FRAC. Smaller
+    #: values hug the stagnation line, so the same wrap cells absorb less
+    #: surface turning. 5.0 reproduces the C family exactly.
+    end_scale: float = 5.0
+    #: One-sided tanh clustering of the fore blocks toward the leading edge.
+    #: 0.0 is the uniform arc-length spacing the C family uses.
+    le_cluster: float = 0.0
 
 
 LEVELS: dict[str, LevelSpec] = {
     "candidate_c01": LevelSpec(17, 3, 5, 42, 801, 0.025),
     "candidate_c02": LevelSpec(23, 4, 6, 56, 1001, 0.018),
     "candidate_c03": LevelSpec(29, 5, 7, 74, 1201, 0.014),
+    # Candidate D family (ADR-0001). The C family starves the leading-edge wrap:
+    # `end_points` of 3/4/5 leaves 2/3/4 cells to absorb roughly 103 degrees of
+    # surface turning, which drives cp above its physical bound and contaminates
+    # about a third of the pressure drag. D moves cells from the four low-curvature
+    # OML quadrant blocks into the wrap, keeping the total number of cells around a
+    # section essentially unchanged: 118 for D03 against 120 for C03. It is a
+    # redistribution by curvature, not a refinement, and it fits the same host.
+    "candidate_d01": LevelSpec(16, 5, 5, 44, 801, 0.025, end_scale=1.0, le_cluster=2.2),
+    "candidate_d02": LevelSpec(21, 6, 6, 57, 1001, 0.018, end_scale=1.0, le_cluster=2.2),
+    "candidate_d03": LevelSpec(27, 7, 7, 74, 1201, 0.014, end_scale=1.0, le_cluster=2.2),
     "coarse": LevelSpec(25, 3, 5, 63, 801, 0.020),
     "smoke": LevelSpec(33, 3, 7, 89, 1001, 0.015),
     "medium": LevelSpec(49, 4, 9, 127, 1201, 0.010),
@@ -174,8 +191,35 @@ def _point_at_u(points: Array, u: Array, value: float) -> Array:
     return np.array([np.interp(value, u, points[:, axis]) for axis in range(3)])
 
 
+def _stretched_arc_targets(
+    total: float, count: int, cluster: float, cluster_at_end: bool
+) -> Array:
+    """Arc-length sample positions, optionally clustered toward one end.
+
+    ``cluster`` of zero returns the uniform spacing the C family uses, so this
+    is a no-op for every level that does not ask for clustering.
+    """
+    if cluster <= 0.0:
+        # Bit-identical to the pre-clustering code path: total * linspace(0, 1)
+        # is not the same in floating point as linspace(0, total).
+        return np.linspace(0.0, total, count)
+    fraction = np.linspace(0.0, 1.0, count)
+    scale = np.tanh(cluster)
+    if cluster_at_end:
+        # Fine cells at fraction 1: the arc-length derivative of tanh(b*s)
+        # decays toward s = 1, so samples bunch up at the far end.
+        stretched = np.tanh(cluster * fraction) / scale
+    else:
+        stretched = 1.0 - np.tanh(cluster * (1.0 - fraction)) / scale
+    return total * stretched
+
+
 def _resample_polyline_with_parameter(
-    points: Array, parameter: Array, count: int
+    points: Array,
+    parameter: Array,
+    count: int,
+    cluster: float = 0.0,
+    cluster_at_end: bool = True,
 ) -> tuple[Array, Array, Array]:
     points = np.asarray(points, dtype=float)
     parameter = np.asarray(parameter, dtype=float)
@@ -187,7 +231,7 @@ def _resample_polyline_with_parameter(
     cumulative = np.concatenate([[0.0], np.cumsum(distance)])
     if cumulative[-1] <= 1.0e-14:
         raise ValueError("cannot resample a zero-length curve")
-    target = np.linspace(0.0, cumulative[-1], count)
+    target = _stretched_arc_targets(cumulative[-1], count, cluster, cluster_at_end)
     sampled = np.column_stack([np.interp(target, cumulative, points[:, axis]) for axis in range(3)])
     sampled_parameter = np.interp(target, cumulative, parameter)
     return sampled, sampled_parameter, target
@@ -248,7 +292,13 @@ def surface_interface_report(
 
 
 def _segment_with_parameter(
-    points: Array, u: Array, u0: float, u1: float, count: int
+    points: Array,
+    u: Array,
+    u0: float,
+    u1: float,
+    count: int,
+    cluster: float = 0.0,
+    cluster_at_end: bool = True,
 ) -> tuple[Array, Array, Array]:
     lo, hi = min(u0, u1), max(u0, u1)
     mask = (u > lo) & (u < hi)
@@ -259,7 +309,7 @@ def _segment_with_parameter(
         interior_u = interior_u[::-1]
     curve = np.vstack([_point_at_u(points, u, u0), interior, _point_at_u(points, u, u1)])
     curve_u = np.concatenate([[u0], interior_u, [u1]])
-    return _resample_polyline_with_parameter(curve, curve_u, count)
+    return _resample_polyline_with_parameter(curve, curve_u, count, cluster, cluster_at_end)
 
 
 def _section_arcs(
@@ -302,10 +352,10 @@ def _section_arcs(
         upper, u, 0.0, u_mid_upper, spec.chord_points
     )
     upper_fore, upper_fore_u, _ = _segment_with_parameter(
-        upper, u, u_mid_upper, u_nose_upper, spec.chord_points
+        upper, u, u_mid_upper, u_nose_upper, spec.chord_points, spec.le_cluster, True
     )
     lower_fore, lower_fore_u, _ = _segment_with_parameter(
-        lower, u, u_nose_lower, u_mid_lower, spec.chord_points
+        lower, u, u_nose_lower, u_mid_lower, spec.chord_points, spec.le_cluster, False
     )
     lower_aft, lower_aft_u, _ = _segment_with_parameter(
         lower, u, u_mid_lower, 0.0, spec.chord_points
@@ -518,7 +568,7 @@ def build_surface(
     level: str = "smoke",
     te_abs_m: float = 0.001,
     te_floor_frac: float = 0.005,
-    end_scale: float = 5.0,
+    end_scale: float | None = None,
     tip_first_cell_frac_of_tip_chord: float = 0.0045,
     span_cells: int | None = None,
     tip_surface_smoothing_iterations: int = 0,
@@ -527,6 +577,9 @@ def build_surface(
     if level not in LEVELS:
         raise KeyError(f"unknown level {level!r}; known: {sorted(LEVELS)}")
     spec = LEVELS[level]
+    # The nose extent is a level property; an explicit argument still wins so
+    # the sensitivity sweeps that established it stay reproducible.
+    end_scale = spec.end_scale if end_scale is None else float(end_scale)
     if span_cells is not None:
         if span_cells < 2:
             raise ValueError("span_cells must be at least 2")

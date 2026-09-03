@@ -27,6 +27,10 @@ LEVEL_TABLE = {
     "candidate_c01": (61, 1, 5.0e-6),
     "candidate_c02": (73, 1, 4.7e-6),
     "candidate_c03": (97, 1, 3.6e-6),
+    # Candidate D family shares the C family's validated wall-normal law exactly.
+    "candidate_d01": (61, 1, 5.0e-6),
+    "candidate_d02": (73, 1, 4.7e-6),
+    "candidate_d03": (97, 1, 3.6e-6),
     "L1": (257, 4, 4.4e-6),
     "L2": (193, 4, 8.8e-6),
     "L3": (129, 4, 2.2e-5),

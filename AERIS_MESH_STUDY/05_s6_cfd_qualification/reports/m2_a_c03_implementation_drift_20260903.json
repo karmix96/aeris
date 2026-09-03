@@ -5,13 +5,13 @@
     "canary_orchestrator_sha256": {
       "current_sha256": "b8e21b7109d48e481f88aaeb0167e34b1fd5b6507b2ace9d7c522cceaf847203",
       "path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/canary.py",
-      "reason": "Bound to acceptance policy v5 (six MPI ranks, checkpoints disabled for collective safety) by the human-directed six-rank override; then on 2026-09-03 the conservation gate was moved to the governed signed-net-over-gross boundary mass flux and made fail-closed, and the conformal-interface discontinuity check was wired into the surface physics QC in place of the previous unconditional interface_discontinuity_not_evaluated failure.",
+      "reason": "Bound to acceptance policy v5 (six MPI ranks, checkpoints disabled for collective safety) by the human-directed six-rank override; then on 2026-09-03 the conservation gate was moved to the governed signed-net-over-gross boundary mass flux and made fail-closed, and the conformal-interface discontinuity check was wired into the surface physics QC.",
       "reviewed_sha256": "b57147d6c5d9eda2342fd7fa93c2606add8feb2d633ef856838f33bbcbf90191"
     },
     "cgns_restart_validator_sha256": {
-      "current_sha256": "9e83fdff5d15c6aabe5bef7f908c7f9a720a848d4ae1f271126e1d539cd04610",
+      "current_sha256": "2cf6a1a6108380e664e2e20c8ddc38eec568503fe022033f306aa60edccb7ffd",
       "path": "AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/cfd_qc.py",
-      "reason": "cfd_qc.py gained read_surface_zone_coordinates and conformal_interface_discontinuity on 2026-09-03 to implement the physics_qc interface gate. The restart inventory itself is unchanged.",
+      "reason": "cfd_qc.py gained read_surface_zone_coordinates, conformal_interface_discontinuity and leading_edge_wrap_resolution on 2026-09-03 to implement the physics_qc interface gate and the mesh-only leading-edge screen. The restart inventory itself is unchanged.",
       "reviewed_sha256": "b31021d95e278ad352e9399bd961248eb29f3cd49b7b08b55b243db57b295d41"
     }
   },
@@ -21,5 +21,5 @@
   "requires_fresh_independent_review_before_cfd": true,
   "reviewed_implementation_still_matches_plan": false,
   "schema": "aeris.s6.implementation_drift.v1",
-  "updated_at": "2026-09-03T02:30:00+03:00"
+  "updated_at": "2026-09-03T05:10:00+03:00"
 }

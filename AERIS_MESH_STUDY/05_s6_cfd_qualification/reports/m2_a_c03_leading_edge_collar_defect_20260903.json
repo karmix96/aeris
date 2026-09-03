@@ -100,7 +100,7 @@
   "holdout_accessed": false,
   "mechanism": {
     "cgns_zone": "NSWallAdiabaticBCZone7",
-    "conclusion": "Four cells absorb a median 103 degrees of surface turning around the leading edge, 34.3 degrees per cell, at roughly one cell per nose radius. The surface normal rotates so far within a single cell that the pressure reconstruction there is meaningless, which is how cp exceeds its physical maximum. This is a resolution deficit in the chordwise wrap direction, not a wall-spacing, smoothing or solver problem.",
+    "conclusion": "Four cells absorb a median 103 degrees of surface turning, 25.7 degrees per cell, at roughly one cell per nose radius. The surface normal rotates so far within a single cell that the pressure reconstruction there is meaningless, which is how cp exceeds its physical maximum. This is a resolution deficit in the chordwise wrap direction, not a wall-spacing, smoothing or solver problem.",
     "controlled_contrast": {
       "block": "oml_base",
       "cgns_zone": "NSWallAdiabaticBCZone16",
@@ -124,13 +124,14 @@
         "median": 103.0,
         "minimum": 84.4
       },
-      "turning_per_cell_deg_median": 34.3,
+      "turning_per_cell_convention": "total joint turning divided by the four wrap cells. An earlier revision of this record divided by the three interior joints and reported 34.3, which overstates the per-cell figure by 4/3. The conclusion is unchanged.",
+      "turning_per_cell_deg_median": 25.7,
       "wrap_arc_as_fraction_of_chord": 0.0225,
       "wrap_arc_length_m_median": 0.01111,
       "wrap_cells": 4,
       "wrap_vertices": 5
     },
-    "refinement_family_consequence": "end_points is 3, 4 and 5 at C01, C02 and C03, so the wrap carries 2, 3 and 4 cells and absorbs roughly 50, 40 and 34 degrees of turning per cell. The leading edge is severely under-resolved at every level of the planned family, and the sequence is nowhere near the asymptotic range. A Richardson or GCI estimate built on this family would be arithmetically well formed and physically meaningless for any pressure-derived quantity.",
+    "refinement_family_consequence": "end_points is 3, 4 and 5 at C01, C02 and C03, so the wrap carries 2, 3 and 4 cells and absorbs a measured 37.9, 31.8 and 25.7 degrees of turning per cell. The leading edge is severely under-resolved at every level of the planned family, and the sequence is nowhere near the asymptotic range. A Richardson or GCI estimate built on this family would be arithmetically well formed and physically meaningless for any pressure-derived quantity.",
     "surface_block": "oml_nose"
   },
   "physical_bound": {

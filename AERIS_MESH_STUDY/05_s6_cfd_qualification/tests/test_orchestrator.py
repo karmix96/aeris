@@ -1258,7 +1258,7 @@ def test_corner_cut_measures_the_geometric_error_at_the_nose():
     import importlib.util
 
     spec = importlib.util.spec_from_file_location(
-        "aeris_viz", ROOT / "viz/visualize_surface.py"
+        "aeris_viz", ROOT / "viz/build_inspector.py"
     )
     viz = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(viz)
@@ -1270,10 +1270,9 @@ def test_corner_cut_measures_the_geometric_error_at_the_nose():
         arc = np.stack(
             [np.cos(theta), np.zeros_like(theta), np.sin(theta)], axis=-1
         )
-        wrap = np.repeat(arc[:, None, :], 3, axis=1)
         half_angle = (np.pi / 2.0) / (points - 1) / 2.0
         expected = 1.0 - np.cos(half_angle)
-        assert viz.corner_cut(wrap) == pytest.approx(expected, rel=1e-6)
+        assert viz.corner_cut(arc) == pytest.approx(expected, rel=1e-6)
 
 
 def test_inspector_is_self_contained_and_carries_real_geometry():

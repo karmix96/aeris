@@ -1,6 +1,43 @@
 # S6 qualification live status
 
-Updated: 2026-09-03T02:40:00+03:00
+Updated: 2026-09-03T03:15:00+03:00
+
+## CRITICAL — leading-edge collar defect, 2026-09-03
+
+Evidence: `reports/m2_a_c03_leading_edge_collar_defect_20260903.json`.
+**Do not use attempt03 or attempt04 pressure drag in any paper claim.**
+
+- `NSWallAdiabaticBCZone7` is the leading-edge collar: a four-cell-wide strip
+  wrapping the stagnation line over the full half span. At mid-span its five
+  chordwise vertices run x = 0.32478, 0.32282, 0.32157, 0.32289, 0.32541, so it
+  straddles the local chordwise minimum.
+- **137 of its 296 faces carry cp above the physical maximum of 1.0018** for this
+  Mach 0.0837 case, peaking at 5.328 on the pre-correction mesh and 4.160 on the
+  corrected one. The count is identical on both meshes, so this is a property of
+  the collar block, not of wall spacing. The wall-normal recovery neither caused
+  nor fixed it.
+- The strip is 2.25 percent of wall area but supplies 0.02459 of the 0.03079
+  total pressure drag, about 80 percent, because a leading-edge collar faces the
+  flow. Clipping its cp to the physical bound removes 0.01071 of pressure drag,
+  **34.8 percent of c_Dp**. Lift moves by only 1.02 percent. Clipping is a bound
+  on the contaminated fraction, not a correction.
+- The stored CGNS rind planes around Zone7 are well behaved, maximum cp 0.676 and
+  0.420, while the physical interior rows carry the impossible values, so this is
+  not a rind or index-mapping artifact of the reader.
+- An independent surface quadrature over all wall zones reproduces ADflow's own
+  forces: c_L 0.39045 against 0.39024 reported, and pressure c_D 0.03079 against
+  0.030787 reported. The reader, areas and normals are validated against the
+  solver itself.
+- The conformal-interface defect at `Zone23.j1 <-> Zone7.j0` is a symptom of this,
+  not a separate problem.
+
+**Consequence for the plan.** The leading-edge collar must be resolved chordwise
+before further C03 CFD, and before C01/C02 are corrected, because a grid family
+built on the same collar topology will inherit the defect at every level and a
+mesh-independence study would then converge on a wrong answer. Treat this as an
+M2B-scope topology decision, not a smoothing tweak. Attempt05 should wait until
+the collar is rebuilt; running it first would spend two hours reproducing a known
+bad pressure field.
 
 ## P1 and P2 are implemented — 2026-09-03
 

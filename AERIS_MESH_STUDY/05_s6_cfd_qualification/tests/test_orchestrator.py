@@ -1002,3 +1002,66 @@ def test_surface_field_check_no_longer_reports_the_gap_as_unevaluated():
     assert "interface_discontinuity_not_evaluated" not in result["failure_reasons"]
     assert "conformal_interface_discontinuity" in result["failure_reasons"]
     assert result["interface_discontinuity_check"]["matched_interface_count"] == 20
+
+
+ATTEMPT03_SURFACE = (
+    ROOT
+    / "studies/canary/m2_a_c03_measurement_20260901_003/aeris_cfd_000_surf.cgns"
+)
+
+
+def _wall_cp(surface):
+    cfd_qc = _cfd_qc()
+    coords = cfd_qc.read_surface_zone_coordinates(surface)
+    raw, reader = cfd_qc.read_surface_field_arrays(surface, ["coefpressure"])
+    layouts = reader["solution_layouts"]
+    out = {}
+    for zone, per_field in raw.items():
+        if not cfd_qc._is_no_slip_wall_zone(zone) or zone not in coords:
+            continue
+        shape = tuple(layouts[zone][0]["physical_shape"])
+        for name, arrays in per_field.items():
+            if name.casefold() == "coefpressure":
+                out[zone] = np.asarray(arrays[0]).reshape(shape, order="F")
+    return out
+
+
+# The physical stagnation bound for this Mach 0.0837 case; cp cannot exceed it.
+MAX_ADMISSIBLE_CP = 1.0018
+
+
+def test_leading_edge_collar_carries_impossible_pressure_on_both_meshes():
+    for surface, expected_max in (
+        (ATTEMPT03_SURFACE, 5.3),
+        (ATTEMPT04_SURFACE, 4.1),
+    ):
+        cp = _wall_cp(surface)
+        collar = cp["NSWallAdiabaticBCZone7"]
+        assert int((collar > MAX_ADMISSIBLE_CP).sum()) == 137
+        assert collar.max() > expected_max
+    # Identical face counts on two different meshes: a collar-block property,
+    # not a consequence of the wall-normal correction.
+
+
+def test_trailing_edge_collar_is_clean():
+    cp = _wall_cp(ATTEMPT04_SURFACE)
+    assert cp["NSWallAdiabaticBCZone16"].max() <= MAX_ADMISSIBLE_CP
+
+
+def test_leading_edge_collar_defect_report_matches_the_retained_surfaces():
+    report = json.loads(
+        (ROOT / "reports/m2_a_c03_leading_edge_collar_defect_20260903.json").read_text()
+    )
+    for key, surface in (
+        ("attempt03_pre_correction_mesh", ATTEMPT03_SURFACE),
+        ("attempt04_corrected_mesh", ATTEMPT04_SURFACE),
+    ):
+        recorded = report[key]
+        assert (
+            hashlib.sha256(surface.read_bytes()).hexdigest()
+            == recorded["surface_solution_sha256"]
+        )
+        cp = _wall_cp(surface)
+        over = sum(int((values > 1.0).sum()) for values in cp.values())
+        assert over == recorded["wall_faces_with_cp_above_unity"]
+    assert report["authorizes_cfd"] is False

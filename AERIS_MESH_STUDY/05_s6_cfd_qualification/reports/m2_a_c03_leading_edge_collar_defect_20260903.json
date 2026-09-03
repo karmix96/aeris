@@ -1,0 +1,126 @@
+{
+  "attempt03_pre_correction_mesh": {
+    "fraction_of_wall_faces": 0.016693811074918567,
+    "independent_quadrature_check": {
+      "cd_pressure": 0.03164293979061995,
+      "cl_pressure": 0.3930973313696967,
+      "note": "reproduces ADflow's own reported forces, validating the reader and normals"
+    },
+    "leading_edge_collar_zone7": {
+      "cd_pressure_contribution": 0.026451689508837,
+      "cd_pressure_contribution_with_cp_clipped_to_unity": 0.013717074420728758,
+      "cd_pressure_from_impossible_cp": 0.012734615088108242,
+      "cl_contribution": 0.01708015126037283,
+      "cl_from_impossible_cp": 0.004725065126677785,
+      "fraction_of_wall_area": 0.022502243313174033,
+      "wall_area_m2": 0.01845966036400353
+    },
+    "mesh_sha256_prefix": "be2805ff",
+    "surface_solution_sha256": "3abf9350bd92d66933f3a02fabbc84e62291aa2501534ee2d9531ec1818ab973",
+    "wall_faces": 9824,
+    "wall_faces_with_cp_above_unity": 164,
+    "zones_with_cp_above_unity": {
+      "NSWallAdiabaticBCZone13": {
+        "faces": 2072,
+        "faces_over_unity": 27,
+        "maximum_cp": 1.659188985824585
+      },
+      "NSWallAdiabaticBCZone7": {
+        "faces": 296,
+        "faces_over_unity": 137,
+        "maximum_cp": 5.327611923217773
+      }
+    }
+  },
+  "attempt04_corrected_mesh": {
+    "fraction_of_wall_faces": 0.014556188925081433,
+    "independent_quadrature_check": {
+      "cd_pressure": 0.030786801524230998,
+      "cl_pressure": 0.3904538921252099,
+      "note": "reproduces ADflow's own reported forces, validating the reader and normals"
+    },
+    "leading_edge_collar_zone7": {
+      "cd_pressure_contribution": 0.024586587696187493,
+      "cd_pressure_contribution_with_cp_clipped_to_unity": 0.013881050429104815,
+      "cd_pressure_from_impossible_cp": 0.010705537267082677,
+      "cl_contribution": 0.01616546269535085,
+      "cl_from_impossible_cp": 0.003990012492460556,
+      "fraction_of_wall_area": 0.022502243313174033,
+      "wall_area_m2": 0.01845966036400353
+    },
+    "mesh_sha256_prefix": "0fe4a4c0",
+    "surface_solution_sha256": "3fdf5f4b6d5f9d4ab4748d3c8754f84715b068d29f19fe656350469522fa8192",
+    "wall_faces": 9824,
+    "wall_faces_with_cp_above_unity": 143,
+    "zones_with_cp_above_unity": {
+      "NSWallAdiabaticBCZone13": {
+        "faces": 2072,
+        "faces_over_unity": 6,
+        "maximum_cp": 1.2558943033218384
+      },
+      "NSWallAdiabaticBCZone7": {
+        "faces": 296,
+        "faces_over_unity": 137,
+        "maximum_cp": 4.159572601318359
+      }
+    }
+  },
+  "authorizes_cfd": false,
+  "cfd_run": false,
+  "consequences": [
+    "C03 pressure drag and any drag-derived quantity are not currently defensible.",
+    "The conformal interface defect at Zone23.j1 <-> Zone7.j0 is a symptom of this, not a separate problem.",
+    "The wall-normal recovery did not cause it and does not fix it.",
+    "A grid-independence study on C01/C02/C03 will inherit the same collar topology unless it is changed first."
+  ],
+  "created_at": "2026-09-03T03:10:00+03:00",
+  "findings": [
+    {
+      "finding": "137 of Zone7's 296 faces carry cp > 1 in both attempts, with a maximum of 5.328 before the wall-normal correction and 4.160 after. The count is identical across the two meshes, so this is a property of the collar block rather than of the wall spacing.",
+      "id": "L1",
+      "severity": "CRITICAL"
+    },
+    {
+      "caveat": "Clipping is a bound on the contaminated fraction, not a correction. The true value is unknown until the collar resolves the stagnation region properly.",
+      "finding": "Zone7 occupies 2.25 percent of the wall area but contributes 0.02459 of the 0.03079 total pressure drag, about 80 percent, because a leading-edge collar faces the flow. Clipping its cp to the physical maximum removes 0.01071 of pressure drag, 34.8 percent of c_Dp. Lift is barely affected at 1.02 percent.",
+      "id": "L2",
+      "severity": "CRITICAL"
+    },
+    {
+      "finding": "The rind planes stored around Zone7 are well behaved, maximum cp 0.676 and 0.420, while the physical interior rows carry the impossible values. The anomaly is therefore in Zone7's own solution and is not a CGNS rind or index-mapping artifact of the reader.",
+      "id": "L3",
+      "severity": "HIGH"
+    },
+    {
+      "finding": "An independent surface quadrature over all wall zones reproduces ADflow's own reported forces to five significant figures for pressure drag and to 0.05 percent for lift, so the reader, cell areas and normals used for these conclusions are validated against the solver itself.",
+      "id": "L4",
+      "severity": "HIGH"
+    }
+  ],
+  "holdout_accessed": false,
+  "physical_bound": {
+    "derivation": "isentropic stagnation cp = (2/(gamma M^2))((1+0.2 M^2)^3.5 - 1)",
+    "mach": 0.0837,
+    "maximum_admissible_cp": 1.0018,
+    "note": "cp above this requires total pressure above freestream stagnation."
+  },
+  "recommended_next_actions": [
+    "Resolve the leading-edge collar chordwise before any further C03 CFD: the current four cells across the stagnation region are the prime suspect.",
+    "Re-check cp bounds and the interface gate on the rebuilt collar, mesh-only where possible.",
+    "Treat this as an M2B-scope topology decision rather than a smoothing tweak.",
+    "Do not use attempt03 or attempt04 pressure drag in any paper claim."
+  ],
+  "schema": "aeris.s6.leading_edge_collar_defect.v1",
+  "summary": "The leading-edge collar strip NSWallAdiabaticBCZone7 carries surface pressure coefficients above the physical maximum of about 1.0018 for this Mach 0.0837 case, over roughly half of its faces, on both the pre-correction and the corrected C03 mesh. The same strip supplies about four fifths of the total pressure drag, so the C03 pressure-drag label is not trustworthy until the collar is fixed.",
+  "zone_identification": {
+    "cells": 296,
+    "evidence": "At mid-span the five chordwise vertices run x = 0.32478, 0.32282, 0.32157, 0.32289, 0.32541, so the strip straddles the local chordwise minimum, which is the stagnation line. It spans y = 0.0003 to 0.9786, the full half span.",
+    "role": "leading-edge collar: a four-cell-wide strip wrapping the leading edge",
+    "trailing_edge_counterpart": "NSWallAdiabaticBCZone16, x 0.5639 to 0.8673, unaffected",
+    "vertex_shape": [
+      5,
+      75
+    ],
+    "zone": "NSWallAdiabaticBCZone7"
+  }
+}

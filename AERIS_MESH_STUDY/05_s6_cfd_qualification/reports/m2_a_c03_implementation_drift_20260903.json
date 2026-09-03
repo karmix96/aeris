@@ -1,0 +1,18 @@
+{
+  "cfd_authorized": false,
+  "created_at": "2026-09-03T01:40:00+03:00",
+  "declared_drift": {
+    "canary_orchestrator_sha256": {
+      "current_sha256": "3b6159fb95fc64098f2a7f8e15b7159747dca0cc9b5ec6309876d446e2dda895",
+      "path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/canary.py",
+      "reason": "Bound to acceptance policy v5 (six MPI ranks, checkpoints disabled for collective safety) by the human-directed six-rank override, then corrected on 2026-09-03 to classify conservation from the governed signed-net-over-gross boundary mass flux and to fail closed on an incomplete or errored boundary integration.",
+      "reviewed_sha256": "b57147d6c5d9eda2342fd7fa93c2606add8feb2d633ef856838f33bbcbf90191"
+    }
+  },
+  "purpose": "The desktop recovery plan pins the SHA-256 of every implementation file that the first independent review saw. Those files have since changed. The plan is immutable evidence and is never rewritten, so each divergence is declared here instead.",
+  "reference_plan_path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_desktop_recovery_plan_20260902.json",
+  "reference_plan_sha256": "e1eaea665ff8df4b04507f5cd3dfa2d44db1a170244cb7dbb8d3294c7e8bc17b",
+  "requires_fresh_independent_review_before_cfd": true,
+  "reviewed_implementation_still_matches_plan": false,
+  "schema": "aeris.s6.implementation_drift.v1"
+}

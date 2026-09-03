@@ -21,6 +21,12 @@ SURFACE = Path("/tmp/surface/surface.fmt")
 
 # level -> (N, coarsen, s0_frac) — the validated table (DSE_READINESS §5)
 LEVEL_TABLE = {
+    # S6 M2 bounded-mesh-atlas family; the governed source of truth for the
+    # wall-normal count and first-cell fraction is
+    # AERIS_MESH_STUDY/05_s6_cfd_qualification/grid_family_candidate_v1.yaml.
+    "candidate_c01": (61, 1, 5.0e-6),
+    "candidate_c02": (73, 1, 4.7e-6),
+    "candidate_c03": (97, 1, 3.6e-6),
     "L1": (257, 4, 4.4e-6),
     "L2": (193, 4, 8.8e-6),
     "L3": (129, 4, 2.2e-5),

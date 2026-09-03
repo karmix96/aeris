@@ -108,6 +108,14 @@ def test_desktop_recovery_plan_matches_candidate_solver_and_implementation():
     assert preset["l2_convergence"] == bound["L2Convergence"] == 1e-11
     assert bound["timeLimit"] == 27000.0
 
+    # The plan is immutable evidence of what the first independent review saw.
+    # Later corrections are legitimate, but each one must be declared with its
+    # exact current hash and a reason; silent drift stays a failure.
+    drift = json.loads(
+        (ROOT / "reports/m2_a_c03_implementation_drift_20260903.json").read_text()
+    )
+    assert drift["requires_fresh_independent_review_before_cfd"] is True
+    assert drift["cfd_authorized"] is False
     for path_key, hash_key in (
         ("mesh_redistribution_path", "mesh_redistribution_sha256"),
         ("canary_orchestrator_path", "canary_orchestrator_sha256"),
@@ -115,7 +123,14 @@ def test_desktop_recovery_plan_matches_candidate_solver_and_implementation():
         ("solver_preset_path", "solver_preset_sha256"),
     ):
         path = ROOT.parents[1] / plan["implementation"][path_key]
-        assert hashlib.sha256(path.read_bytes()).hexdigest() == plan["implementation"][hash_key]
+        current = hashlib.sha256(path.read_bytes()).hexdigest()
+        if current == plan["implementation"][hash_key]:
+            continue
+        declared = drift["declared_drift"].get(hash_key)
+        assert declared is not None, f"undeclared implementation drift in {path_key}"
+        assert declared["reviewed_sha256"] == plan["implementation"][hash_key]
+        assert declared["current_sha256"] == current
+        assert declared["reason"] != "undeclared"
 
     checkpoint = plan["bound_checkpoint_policy"]
     assert checkpoint["validate_cgns_restart"] is True
@@ -336,14 +351,15 @@ def test_governed_canary_prepares_exact_solver_contract(tmp_path, monkeypatch):
     )
     options = json.loads((tmp_path / "adflow_options.json").read_text())
     case = json.loads((tmp_path / "adflow_case.json").read_text())
-    assert prepared.command[:3] == (environment["mpirun"], "-np", "1")
+    ranks = str(policy["solver"]["mpi_processes"])
+    assert prepared.command[:3] == (environment["mpirun"], "-np", ranks)
     assert prepared.command[3] == environment["python"]
     assert options["equationType"] == "RANS"
     assert options["turbulenceModel"] == "SA"
     assert options["monitorVariables"] == policy["solver"]["monitor_variables"]
     assert options["surfaceVariables"] == policy["solver"]["surface_variables"]
     assert options["storeConvHist"] is True
-    assert options["writeVolumeSolution"] is False
+    assert options["writeVolumeSolution"] is policy["solver"]["write_volume_solution"]
     assert options["writeSurfaceSolution"] is True
     assert options["ANKSubspaceSize"] == 10
     assert options["NKSubspaceSize"] == 20
@@ -483,7 +499,9 @@ def test_cfd_monitor_and_residual_contract():
     assert '"cmy_monitored": true' in out.stdout
     assert '"component_residuals_stored": true' in out.stdout
     assert '"full_native_residual_history_monitored": true' in out.stdout
-    assert '"governed_boundary_flux_measurement_available": false' in out.stdout
+    assert '"governed_boundary_flux_definition_required": true' in out.stdout
+    assert '"governed_boundary_flux_measurement_available": true' in out.stdout
+    assert '"acceptance_contract_complete": true' in out.stdout
 
 
 def test_force_tail_reads_adflow_canonical_monitor_names():
@@ -798,3 +816,96 @@ def test_three_level_family_math_and_resource_screen():
     assert '"nominal_finest_zero_inversions": true' in out.stdout
     assert '"status": "CONDITIONAL"' in out.stdout
     assert "exactly one governed measurement-only A/C03 canary" in out.stdout
+
+
+def _load_canary():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("aeris_canary", ROOT / "canary.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+CLASSIFICATION = {
+    "mass_imbalance_normalized": {
+        "max": 1.0e-4,
+        "required_definition": "signed_net_boundary_mass_flux_over_gross_boundary_mass_flux",
+    }
+}
+
+
+def _raw_run(**overrides):
+    run = {
+        "mass_imbalance_definition": (
+            "signed_net_boundary_mass_flux_over_gross_boundary_mass_flux"
+        ),
+        "mass_imbalance_normalized": 1.0e-6,
+        "boundary_mass_flux": {
+            "complete": True,
+            "error": None,
+            "signed_net": 1.0e-6,
+            "gross": 1.0,
+            "family_count": 4,
+            "per_family": {},
+            "granularity_note": "note",
+        },
+        "residual_cancellation_ratio_diagnostic": 0.14,
+    }
+    run.update(overrides)
+    return run
+
+
+def test_conservation_passes_on_governed_boundary_flux():
+    canary = _load_canary()
+    result = canary._conservation(_raw_run(), CLASSIFICATION)
+    assert result["passed"] is True
+    assert result["boundary_flux_complete"] is True
+    assert result["measured_definition"] == CLASSIFICATION["mass_imbalance_normalized"][
+        "required_definition"
+    ]
+
+
+def test_conservation_rejects_interior_residual_cancellation_ratio():
+    canary = _load_canary()
+    legacy = _raw_run(
+        mass_imbalance_definition=(
+            "abs(sum continuity residual)/sum(abs continuity residual)"
+        ),
+        mass_imbalance_normalized=1.0e-9,
+    )
+    result = canary._conservation(legacy, CLASSIFICATION)
+    assert result["passed"] is False
+
+
+def test_conservation_fails_closed_on_incomplete_integration():
+    canary = _load_canary()
+    run = _raw_run()
+    run["boundary_mass_flux"] = dict(run["boundary_mass_flux"], complete=False)
+    assert canary._conservation(run, CLASSIFICATION)["passed"] is False
+
+
+def test_conservation_fails_closed_when_integration_errored():
+    canary = _load_canary()
+    run = _raw_run()
+    run["boundary_mass_flux"] = dict(run["boundary_mass_flux"], error="mdot blew up")
+    assert canary._conservation(run, CLASSIFICATION)["passed"] is False
+
+
+def test_conservation_fails_closed_when_boundary_flux_absent():
+    canary = _load_canary()
+    run = _raw_run()
+    del run["boundary_mass_flux"]
+    result = canary._conservation(run, CLASSIFICATION)
+    assert result["passed"] is False
+    assert result["boundary_flux_complete"] is False
+
+
+def test_conservation_enforces_the_threshold():
+    canary = _load_canary()
+    assert canary._conservation(
+        _raw_run(mass_imbalance_normalized=1.0e-3), CLASSIFICATION
+    )["passed"] is False
+    assert canary._conservation(
+        _raw_run(mass_imbalance_normalized=1.0e-4), CLASSIFICATION
+    )["passed"] is True

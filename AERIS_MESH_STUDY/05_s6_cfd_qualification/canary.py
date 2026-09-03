@@ -1530,6 +1530,48 @@ def _solution_selection(workdir: Path, kind: str) -> dict[str, Any]:
     }
 
 
+def _conservation(raw_run: dict[str, Any], classification: dict[str, Any]) -> dict[str, Any]:
+    """Apply the governed signed-net-over-gross boundary mass flux gate.
+
+    Fails closed: a wrong metric definition, an incomplete or errored boundary
+    integration, or a missing value never passes, whatever value is reported.
+    """
+    mass_definition = raw_run.get("mass_imbalance_definition")
+    required_mass_definition = classification["mass_imbalance_normalized"]["required_definition"]
+    mass_value = raw_run.get("mass_imbalance_normalized")
+    boundary_flux = raw_run.get("boundary_mass_flux") or {}
+    # Fail closed: an incomplete or errored boundary integration never passes,
+    # even if a normalized value happens to be present.
+    flux_complete = bool(boundary_flux.get("complete")) and boundary_flux.get("error") is None
+    conservation = {
+        "passed": bool(
+            mass_definition == required_mass_definition
+            and flux_complete
+            and mass_value is not None
+            and float(mass_value) <= float(classification["mass_imbalance_normalized"]["max"])
+        ),
+        "measured_value": mass_value,
+        "measured_definition": mass_definition,
+        "required_definition": required_mass_definition,
+        "boundary_flux_complete": flux_complete,
+        "boundary_flux_error": boundary_flux.get("error"),
+        "boundary_flux_signed_net": boundary_flux.get("signed_net"),
+        "boundary_flux_gross": boundary_flux.get("gross"),
+        "boundary_flux_family_count": boundary_flux.get("family_count"),
+        "boundary_flux_per_family": boundary_flux.get("per_family"),
+        "boundary_flux_granularity_note": boundary_flux.get("granularity_note"),
+        "residual_cancellation_ratio_diagnostic": raw_run.get(
+            "residual_cancellation_ratio_diagnostic"
+        ),
+        "note": (
+            "Acceptance uses the governed signed net over gross boundary mass flux, "
+            "integrated by ADflow per CGNS boundary family. The interior residual "
+            "cancellation ratio is retained only as a diagnostic."
+        ),
+    }
+    return conservation
+
+
 def _postprocess(
     *,
     policy: dict[str, Any],
@@ -1603,23 +1645,7 @@ def _postprocess(
             "coefficients": {},
         }
     )
-    mass_definition = raw_run.get("mass_imbalance_definition")
-    required_mass_definition = classification["mass_imbalance_normalized"]["required_definition"]
-    mass_value = raw_run.get("mass_imbalance_normalized")
-    conservation = {
-        "passed": bool(
-            mass_definition == required_mass_definition
-            and mass_value is not None
-            and float(mass_value) <= float(classification["mass_imbalance_normalized"]["max"])
-        ),
-        "measured_value": mass_value,
-        "measured_definition": mass_definition,
-        "required_definition": required_mass_definition,
-        "note": (
-            "The current runner metric is retained but cannot substitute for the "
-            "governed signed boundary-flux balance."
-        ),
-    }
+    conservation = _conservation(raw_run, classification)
     surface_fields = _surface_field_presence(surface_solution)
     time_report = _parse_time_verbose(time_path)
     time_rss = time_report.get("maximum_resident_set_kib")

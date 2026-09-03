@@ -137,10 +137,82 @@ def main():
         "energy": float(numpy.sqrt(global_sumsq[4])),
         "sa": float(numpy.sqrt(numpy.sum(global_sumsq[5:]))) if nstate > 5 else None,
     }
-    mass_imbalance_normalized = abs(global_rho_sum) / max(global_rho_abs, 1.0e-300)
+    residual_cancellation_ratio = abs(global_rho_sum) / max(global_rho_abs, 1.0e-300)
+
+    # Governed conservation metric: signed net boundary mass flux over gross
+    # boundary mass flux.  ADflow integrates rho*(V.n)*dA over a family with its
+    # native `mdot` cost function, so let the solver do the integration rather
+    # than reconstructing face normals here.  Every CGNS boundary family is
+    # measured, including walls and symmetry planes, whose mdot must be ~0.
+    boundary_families = [
+        name
+        for name in solver.families
+        if name.lower() not in (solver.allFamilies.lower(), solver.allWallsGroup.lower())
+    ]
+    boundary_families.sort()
+    flux_handles = {}
+    for family in boundary_families:
+        flux_handles[family] = {
+            "mdot": "aeris_mdot_%s" % family,
+            "area": "aeris_area_%s" % family,
+        }
+        solver.addFunction("mdot", family, name=flux_handles[family]["mdot"])
+        solver.addFunction("area", family, name=flux_handles[family]["area"])
+
+    flux_raw = {}
+    boundary_flux_error = None
+    if flux_handles:
+        requested = [h[k] for h in flux_handles.values() for k in ("mdot", "area")]
+        try:
+            solver.evalFunctions(ap, flux_raw, evalFuncs=requested)
+        except Exception as exc:  # fail closed: record, never silently pass
+            boundary_flux_error = "%s: %s" % (type(exc).__name__, exc)
+
+    def _flux_value(handle):
+        # evalFunctions lower-cases names and prefixes the AeroProblem name.
+        for key in ("%s_%s" % (ap.name, handle.lower()), handle.lower(), handle):
+            if key in flux_raw:
+                return float(flux_raw[key])
+        return None
+
+    per_family_flux = {}
+    signed_net = 0.0
+    gross = 0.0
+    complete = boundary_flux_error is None and bool(flux_handles)
+    for family, handles in flux_handles.items():
+        mdot = _flux_value(handles["mdot"])
+        area = _flux_value(handles["area"])
+        per_family_flux[family] = {"mdot": mdot, "area": area}
+        if mdot is None or not numpy.isfinite(mdot):
+            complete = False
+            continue
+        signed_net += mdot
+        gross += abs(mdot)
+
+    if complete and gross > 0.0:
+        mass_imbalance_normalized = abs(signed_net) / gross
+    else:
+        mass_imbalance_normalized = None
+
+    boundary_mass_flux = {
+        "definition": "signed_net_boundary_mass_flux_over_gross_boundary_mass_flux",
+        "signed_net": signed_net if complete else None,
+        "gross": gross if complete else None,
+        "normalized": mass_imbalance_normalized,
+        "per_family": per_family_flux,
+        "family_count": len(flux_handles),
+        "complete": complete,
+        "error": boundary_flux_error,
+        "granularity_note": (
+            "Gross flux is summed as the absolute per-CGNS-boundary-family mdot. "
+            "Inflow and outflow that cancel inside a single family shrink the "
+            "denominator, so this normalized value is an upper bound on the true "
+            "boundary imbalance and the gate is therefore conservative."
+        ),
+    }
 
     funcs = {}
-    solver.evalFunctions(ap, funcs)
+    solver.evalFunctions(ap, funcs, evalFuncs=list(case["eval_funcs"]))
     solver.checkSolutionFailure(ap, funcs)
 
     secondary_funcs = None
@@ -170,9 +242,17 @@ def main():
                 "of the x/y/z component RMS values"
             ),
             "residual_vector_component_l2_diagnostic": residual_vector_component_l2,
-            "mass_imbalance_normalized": float(mass_imbalance_normalized),
-            "mass_imbalance_definition": (
-                "abs(sum continuity residual)/sum(abs continuity residual)"
+            "boundary_mass_flux": boundary_mass_flux,
+            "mass_imbalance_normalized": (
+                None
+                if mass_imbalance_normalized is None
+                else float(mass_imbalance_normalized)
+            ),
+            "mass_imbalance_definition": boundary_mass_flux["definition"],
+            "residual_cancellation_ratio_diagnostic": float(residual_cancellation_ratio),
+            "residual_cancellation_ratio_definition": (
+                "abs(sum continuity residual)/sum(abs continuity residual); retained "
+                "as a diagnostic only and never used for acceptance"
             ),
             "elapsed_seconds": time.time() - t0,
         }
@@ -334,6 +414,10 @@ class AdflowAdapter(SolverAdapter):
         convergence["native_history"] = run.get("convergence_history", {})
         convergence["mass_imbalance_normalized"] = run.get("mass_imbalance_normalized")
         convergence["mass_imbalance_definition"] = run.get("mass_imbalance_definition")
+        convergence["boundary_mass_flux"] = run.get("boundary_mass_flux", {})
+        convergence["residual_cancellation_ratio_diagnostic"] = run.get(
+            "residual_cancellation_ratio_diagnostic"
+        )
         status = "failed" if run.get("solve_failed") else "converged"
         # ADflow keys evalFunctions as "<AeroProblem name>_<func>"; normalize
         # to bare coefficient names for the solve_report/dataset schema.

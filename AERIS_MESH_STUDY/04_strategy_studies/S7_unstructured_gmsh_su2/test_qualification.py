@@ -21,6 +21,14 @@ common = importlib.import_module("s7_qual_package.common")
 qualification = importlib.import_module("s7_qual_package.qualification")
 
 
+def _family():
+    """The three rungs policy declares, so the fixtures track the real family."""
+    from S7_unstructured_gmsh_su2.common import load_policy
+    from S7_unstructured_gmsh_su2.qualification import executable_family
+
+    return executable_family(load_policy())
+
+
 def _result(index, level, cells, forces=None):
     policy = common.load_policy()
     fields = policy["grid_family"]["grid_convergence"]["force_fields"]
@@ -95,7 +103,7 @@ def test_plan_is_fixed_and_policy_driven():
 
 def test_collect_uses_actual_counts_and_reports_gci(tmp_path):
     paths = []
-    for level, cells in zip(("coarse", "medium", "fine"), (1000, 2000, 5000), strict=True):
+    for level, cells in zip(_family(), (1000, 2000, 5000), strict=True):
         paths.append(_write_result(tmp_path, level, _result(0, level, cells)))
     summary = qualification.collect_qualification(paths)
     entry = summary["grid_convergence"]["0"]
@@ -109,7 +117,7 @@ def test_manufactured_unequal_grid_order_and_fine_gci_limit(tmp_path):
     fields = policy["grid_family"]["grid_convergence"]["force_fields"]
     paths = []
     counts = (1000, 2300, 6000)
-    for level, cells in zip(("coarse", "medium", "fine"), counts, strict=True):
+    for level, cells in zip(_family(), counts, strict=True):
         h = cells ** (-1.0 / 3.0)
         forces = {field: 1.0 + 20.0 * h**2 for field in fields}
         paths.append(_write_result(tmp_path, f"limit-{level}", _result(0, level, cells, forces)))
@@ -133,9 +141,10 @@ def test_te_sensitivity_reports_deltas_and_missing_evidence(tmp_path):
         ("te_1p0mm", 1.0),
         ("te_1p5mm", 1.2),
     ):
-        row = _result(0, "medium", 2000, {field: value for field in fields})
+        level = _family()[1]
+        row = _result(0, level, 2000, {field: value for field in fields})
         row["te_variant"] = variant
-        row["case_id"] = f"dev_000__medium__{variant}__cruise"
+        row["case_id"] = f"dev_000__{level}__{variant}__cruise"
         paths.append(_write_result(tmp_path, variant, row))
     sensitivity = qualification.collect_qualification(paths)["trailing_edge_sensitivity"]["0"]
     assert sensitivity["status"] == "complete"
@@ -150,9 +159,9 @@ def test_te_sensitivity_reports_deltas_and_missing_evidence(tmp_path):
 
 def test_collect_rejects_bad_provenance_and_never_fakes_gci(tmp_path):
     paths = []
-    for level, cells in zip(("coarse", "medium", "fine"), (2000, 1500, 5000), strict=True):
+    for level, cells in zip(_family(), (2000, 1500, 5000), strict=True):
         paths.append(_write_result(tmp_path, level, _result(0, level, cells)))
-    bad = _result(1, "coarse", 1000)
+    bad = _result(1, _family()[0], 1000)
     bad["provenance"]["policy_sha256"] = "wrong"
     paths.append(_write_result(tmp_path, "bad", bad))
     summary = qualification.collect_qualification(paths)
@@ -162,12 +171,12 @@ def test_collect_rejects_bad_provenance_and_never_fakes_gci(tmp_path):
 
 def test_collect_rejects_out_of_plan_and_mixed_grid_geometry(tmp_path):
     paths = []
-    for level, cells in zip(("coarse", "medium", "fine"), (1000, 2300, 6000), strict=True):
+    for level, cells in zip(_family(), (1000, 2300, 6000), strict=True):
         row = _result(0, level, cells)
-        if level == "fine":
+        if level == _family()[2]:
             row["geometry_id"] = "different-design"
         paths.append(_write_result(tmp_path, f"mixed-{level}", row))
-    outside = _result(1, "medium", 2300)
+    outside = _result(1, _family()[1], 2300)
     paths.append(_write_result(tmp_path, "outside", outside))
     summary = qualification.collect_qualification(paths)
     assert summary["grid_convergence"]["0"]["status"] == "invalid_mixed_geometry_or_flow"

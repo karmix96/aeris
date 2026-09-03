@@ -68,14 +68,38 @@ def _force_fields(policy: Mapping[str, Any]) -> tuple[str, ...]:
     return fields
 
 
+def executable_family(policy: Mapping[str, Any]) -> tuple[str, str, str]:
+    """The three rungs this study actually runs, coarsest first.
+
+    The coarse/medium/fine definitions are preregistered and are never edited to
+    fit a host. When the host cannot hold the finest rung, the study declares
+    which three it executed instead, and that choice lives in policy where it is
+    visible and reversible rather than hidden in code.
+    """
+    family = policy["grid_family"].get("executable_family")
+    defined = policy["grid_family"]["levels"]
+    if family is None:
+        family = ["coarse", "medium", "fine"]
+    family = tuple(str(name) for name in family)
+    if len(family) != 3:
+        raise ValueError(
+            f"a grid-convergence family needs exactly three rungs, got {family!r}"
+        )
+    missing = [name for name in family if name not in defined]
+    if missing:
+        raise ValueError(f"executable_family names undefined levels: {missing}")
+    edges = [float(defined[name]["surface_edge_over_L"]) for name in family]
+    if not all(a > b for a, b in zip(edges, edges[1:], strict=False)):
+        raise ValueError(
+            f"executable_family must run coarsest to finest; surface edges were {edges}"
+        )
+    return family
+
+
 def build_qualification_plan() -> dict[str, Any]:
     """Return the immutable S7 development qualification plan, without I/O."""
     policy = load_policy()
-    levels = tuple(policy["grid_family"]["levels"])
-    if levels != ("coarse", "medium", "fine"):
-        raise ValueError(
-            "S7 qualification requires policy levels coarse, medium, fine in that order"
-        )
+    levels = executable_family(policy)
     if int(policy["grid_family"]["representative_grid_cases"]) != len(REPRESENTATIVE_INDICES):
         raise ValueError(
             "policy representative-grid count does not match the frozen five-case plan"
@@ -100,10 +124,12 @@ def build_qualification_plan() -> dict[str, Any]:
             ],
         },
         "trailing_edge_study": {
-            "grid_level": "medium",
+            # The middle rung of whichever family is executed: coarse enough to
+            # afford three variants per case, fine enough to resolve the change.
+            "grid_level": levels[1],
             "variants": list(required_variants),
             "cases": [
-                {"index": index, "grid_level": "medium", "variants": list(required_variants)}
+                {"index": index, "grid_level": levels[1], "variants": list(required_variants)}
                 for index in REPRESENTATIVE_INDICES
             ],
         },
@@ -339,13 +365,14 @@ def _grid_report(
     tolerance = float(policy["grid_family"]["grid_convergence"]["asymptotic_ratio_tolerance"])
     report: dict[str, Any] = {}
     for index in REPRESENTATIVE_INDICES:
-        cases = [rows.get((index, level, BASELINE_TE)) for level in ("coarse", "medium", "fine")]
+        family = executable_family(policy)
+        cases = [rows.get((index, level, BASELINE_TE)) for level in family]
         if any(case is None for case in cases):
             report[str(index)] = {
                 "status": "missing_evidence",
                 "missing_levels": [
                     level
-                    for level, case in zip(("coarse", "medium", "fine"), cases, strict=True)
+                    for level, case in zip(family, cases, strict=True)
                     if case is None
                 ],
             }
@@ -504,9 +531,10 @@ def collect_qualification(
         )
     grid = _grid_report(selected, policy)
     te: dict[str, Any] = {}
+    te_level = executable_family(policy)[1]
     for index in REPRESENTATIVE_INDICES:
         variants = {
-            variant: selected.get((index, "medium", variant))
+            variant: selected.get((index, te_level, variant))
             for variant in ("te_0p5mm", "te_1p0mm", "te_1p5mm")
         }
         unavailable = [variant for variant, row in variants.items() if row is None]

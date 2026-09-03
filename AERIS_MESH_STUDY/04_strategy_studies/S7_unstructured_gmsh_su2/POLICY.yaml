@@ -114,7 +114,32 @@ grid_family:
   # the estimates are coarse 2.24 M (1.4x S6), medium 6.15 M, fine 16.9 M, which
   # brackets S6 production and keeps level-to-level cell ratios near 2.75, well
   # above the 1.35 minimum.  See the grid-family re-sizing amendment in ADR-0017.
+  # The desktop-executable rung, added 2026-09-04. It continues the same sqrt(2)
+  # ladder downward: every in-plane length is the `coarse` value multiplied by
+  # 1.414214, so the family stays coupled and monotonic. Prism layers step 20 /
+  # 24 / 32 / 40 and the growth ratio 1.30 / 1.25 / 1.20 / 1.16, chosen so the
+  # prism stack covers a comparable boundary-layer thickness to `coarse`
+  # (6.4e-3 L against 6.1e-3 L) rather than by pattern.
+  #
+  # It exists because `fine` cannot run here: its replicated-mesh floor alone is
+  # 13.63 GiB against a measured 11.36 GiB budget. Adding a rung below leaves the
+  # preregistered coarse/medium/fine definitions untouched and lets the study
+  # declare which three it actually executed. See `executable_family`.
+  #
+  # Projected wall y+ from the measured `coarse` values scaled by 1.414214:
+  # p95 0.788, p99 1.068, max 1.236, against gates of 1.0 / 2.0 / 5.0. The rung
+  # is still wall-resolved; this must be confirmed by measurement, not assumed.
   levels:
+    xcoarse:
+      surface_edge_over_L: 0.0849
+      te_surface_edge_over_L: 0.01697
+      tip_surface_edge_over_L: 0.03394
+      first_cell_height_over_L: 1.018e-5
+      prism_layers: 20
+      prism_growth_ratio: 1.30
+      near_core_edge_over_L: 0.1414
+      far_core_edge_over_L: 0.9900
+      wake_edge_over_L: 0.0990
     coarse:
       surface_edge_over_L: 0.0600
       te_surface_edge_over_L: 0.0120
@@ -146,6 +171,18 @@ grid_family:
       far_core_edge_over_L: 0.3500
       wake_edge_over_L: 0.0350
   representative_grid_cases: 5
+  # Which three rungs the study actually runs. The definitions above are
+  # preregistered and are never edited to fit a host; this list records the
+  # host-imposed choice explicitly instead, so it is visible, auditable and
+  # reversible. Restore [coarse, medium, fine] on a machine that can hold the
+  # 13.63 GiB `fine` floor.
+  executable_family: [xcoarse, coarse, medium]
+  executable_family_reason: >-
+    fine requires a 13.63 GiB replicated-mesh floor against a measured 11.36 GiB
+    budget, so no rank count reaches it on this host. The three executed rungs
+    keep the same sqrt(2) refinement and the same coupled definition; the cost is
+    a coarser finest grid and therefore a larger discretization uncertainty,
+    which must be reported rather than absorbed.
   grid_convergence:
     force_fields: [cl, cd, cmy]
     report_observed_order: true
@@ -360,6 +397,11 @@ mesh_gates:
     #   coarse 5.1747e-3 | medium 2.8048e-3 | fine 1.5383e-3
     max_facet_centroid_over_local_chord:
       laptop_smoke: 6.0e-2
+      # xcoarse is one sqrt(2) step coarser than `coarse`, and this error
+      # converges at O(h^2), so its limit is exactly twice the coarse limit.
+      # Derived, not calibrated: it must be confirmed against a measured mesh
+      # before any accuracy claim rests on it.
+      xcoarse: 2.2e-2
       coarse: 1.1e-2
       medium: 6.0e-3
       fine: 3.2e-3

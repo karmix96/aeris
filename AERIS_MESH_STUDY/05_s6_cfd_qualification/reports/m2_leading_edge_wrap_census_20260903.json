@@ -1,0 +1,744 @@
+{
+  "answer": "Every mesh. All 65 surface meshes present in AERIS_MESH_STUDY carry between 2 and 4 cells around the leading edge, and none reaches the conventional wall-resolved target of at most 10 degrees of surface turning per wrap cell. The best mesh anywhere in the study is 24.6 degrees per cell.",
+  "authorizes_cfd": false,
+  "census": {
+    "best_deg_per_cell": 24.604527783856867,
+    "by_study": {
+      "05_s6_cfd_qualification/studies": {
+        "median_deg_per_cell": 25.7446968044872,
+        "meshes": 9,
+        "min_deg_per_cell": 25.7446968044872
+      },
+      "S1_tip_first": {
+        "median_deg_per_cell": 24.65035850986971,
+        "meshes": 29,
+        "min_deg_per_cell": 24.604527783856867
+      },
+      "S6_bounded_mesh_atlas": {
+        "median_deg_per_cell": 30.411797382642913,
+        "meshes": 27,
+        "min_deg_per_cell": 25.562128556139484
+      }
+    },
+    "by_wrap_cell_count": {
+      "2": {
+        "max_deg_per_cell": 37.97007822461764,
+        "median_deg_per_cell": 37.38432252847902,
+        "meshes": 15,
+        "min_deg_per_cell": 35.90845504545697
+      },
+      "3": {
+        "max_deg_per_cell": 31.766486382645997,
+        "median_deg_per_cell": 31.650155707165776,
+        "meshes": 10,
+        "min_deg_per_cell": 30.18026203696135
+      },
+      "4": {
+        "max_deg_per_cell": 25.7446968044872,
+        "median_deg_per_cell": 25.143038327818513,
+        "meshes": 40,
+        "min_deg_per_cell": 24.604527783856867
+      }
+    },
+    "median_deg_per_cell": 25.7446968044872,
+    "meshes_meeting_target": 0,
+    "meshes_screened": 65,
+    "worst_deg_per_cell": 37.97007822461764
+  },
+  "cfd_run": false,
+  "created_at": "2026-09-03T06:00:00+03:00",
+  "evidence_status": {
+    "cause_measured_on_all": 65,
+    "consequence_demonstrated_count": 2,
+    "consequence_demonstrated_on": [
+      "m2_a_c03_measurement_20260901_003",
+      "m2_a_c03_measurement_20260902_004"
+    ],
+    "honest_limitation": "Physically impossible surface pressure has been demonstrated only on the two meshes where CFD was actually run. For the remaining 63 the geometric cause is measured and is the same or worse, so the same consequence is expected, but it has not been demonstrated and is not claimed."
+  },
+  "findings": [
+    {
+      "finding": "The defect is architectural, not a property of C03. S1_tip_first, the earliest strategy study, already builds the leading edge with 2 to 4 wrap cells, and S6_bounded_mesh_atlas inherited that construction. Every level in every family carries it: coarse, smoke, medium, fine, C01, C02 and C03.",
+      "id": "C1",
+      "severity": "CRITICAL"
+    },
+    {
+      "finding": "Refinement does not relieve it. Across the families the wrap moves only from 3 to 5 points while chordwise and spanwise counts roughly double, so turning per cell improves from about 38 to about 25 degrees and never approaches the target. A grid-convergence study on any of these families would therefore not be in the asymptotic range for pressure-derived quantities.",
+      "id": "C2",
+      "severity": "HIGH"
+    },
+    {
+      "finding": "Nothing in the existing gate set detects this. Integrated forces, residual convergence, y+, cell quality, inversion counts and interface conformity all pass on these meshes. The defect is visible only in the surface pressure at the nose or in the mesh geometry itself.",
+      "id": "C3",
+      "severity": "HIGH"
+    }
+  ],
+  "holdout_accessed": false,
+  "meshes": [
+    {
+      "median_total_turning_deg": 75.83158974388553,
+      "median_turning_per_cell_deg": 37.915794871942765,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C01_attempt02/lhs100_seed42_083/eps15/surface_blocks.npz",
+      "span_stations": 43,
+      "study": "05_s6_cfd_qualification/studies",
+      "wrap_cells": 2,
+      "wrap_points": 3
+    },
+    {
+      "median_total_turning_deg": 75.83158974388553,
+      "median_turning_per_cell_deg": 37.915794871942765,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C01_attempt03/lhs100_seed42_083/eps15/surface_blocks.npz",
+      "span_stations": 43,
+      "study": "05_s6_cfd_qualification/studies",
+      "wrap_cells": 2,
+      "wrap_points": 3
+    },
+    {
+      "median_total_turning_deg": 102.9787872179488,
+      "median_turning_per_cell_deg": 25.7446968044872,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C03_attempt01/lhs100_seed42_083/eps15/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "05_s6_cfd_qualification/studies",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 102.9787872179488,
+      "median_turning_per_cell_deg": 25.7446968044872,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C03_attempt02_eps2/lhs100_seed42_083/eps20/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "05_s6_cfd_qualification/studies",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 102.9787872179488,
+      "median_turning_per_cell_deg": 25.7446968044872,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C03_attempt03_eps3/lhs100_seed42_083/eps30/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "05_s6_cfd_qualification/studies",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 102.9787872179488,
+      "median_turning_per_cell_deg": 25.7446968044872,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C03_attempt05_B1i1/lhs100_seed42_083/eps15/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "05_s6_cfd_qualification/studies",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 102.9787872179488,
+      "median_turning_per_cell_deg": 25.7446968044872,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C03_attempt06_B1i3/lhs100_seed42_083/eps15/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "05_s6_cfd_qualification/studies",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 102.9787872179488,
+      "median_turning_per_cell_deg": 25.7446968044872,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C03_attempt07_B2_eps1/lhs100_seed42_083/eps10/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "05_s6_cfd_qualification/studies",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 102.9787872179488,
+      "median_turning_per_cell_deg": 25.7446968044872,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/grid/m2_20260830/A/C03_attempt08_B3/lhs100_seed42_083/eps30/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "05_s6_cfd_qualification/studies",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 71.81691009091394,
+      "median_turning_per_cell_deg": 35.90845504545697,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/L2_smoke/production/lhs100_seed42_083/eps15/surface_blocks.npz",
+      "span_stations": 80,
+      "study": "S1_tip_first",
+      "wrap_cells": 2,
+      "wrap_points": 3
+    },
+    {
+      "median_total_turning_deg": 71.81691009091394,
+      "median_turning_per_cell_deg": 35.90845504545697,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/L2_smoke/production/lhs100_seed42_083/eps20/surface_blocks.npz",
+      "span_stations": 80,
+      "study": "S1_tip_first",
+      "wrap_cells": 2,
+      "wrap_points": 3
+    },
+    {
+      "median_total_turning_deg": 71.81691009091394,
+      "median_turning_per_cell_deg": 35.90845504545697,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/L2_smoke/production/lhs100_seed42_083/eps30/surface_blocks.npz",
+      "span_stations": 80,
+      "study": "S1_tip_first",
+      "wrap_cells": 2,
+      "wrap_points": 3
+    },
+    {
+      "median_total_turning_deg": 72.50615111779373,
+      "median_turning_per_cell_deg": 36.25307555889687,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c01_ladder_fix_20260830/lhs100_seed42_083/lhs100_seed42_083/eps15/surface_blocks.npz",
+      "span_stations": 43,
+      "study": "S1_tip_first",
+      "wrap_cells": 2,
+      "wrap_points": 3
+    },
+    {
+      "median_total_turning_deg": 72.50615111779373,
+      "median_turning_per_cell_deg": 36.25307555889687,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c01_ladder_fix_20260830/lhs100_seed42_083/lhs100_seed42_083/eps30/surface_blocks.npz",
+      "span_stations": 43,
+      "study": "S1_tip_first",
+      "wrap_cells": 2,
+      "wrap_points": 3
+    },
+    {
+      "median_total_turning_deg": 72.50615111779373,
+      "median_turning_per_cell_deg": 36.25307555889687,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c01_ladder_probe_20260830/lhs100_seed42_083/lhs100_seed42_083/eps15/surface_blocks.npz",
+      "span_stations": 43,
+      "study": "S1_tip_first",
+      "wrap_cells": 2,
+      "wrap_points": 3
+    },
+    {
+      "median_total_turning_deg": 98.89579239799016,
+      "median_turning_per_cell_deg": 24.72394809949754,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_cap_respec_20260831/collar07/lhs100_seed42_083/eps15/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S1_tip_first",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 98.74001119885705,
+      "median_turning_per_cell_deg": 24.685002799714262,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_cap_respec_20260831/collar08/lhs100_seed42_083/eps15/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S1_tip_first",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 98.74001119885705,
+      "median_turning_per_cell_deg": 24.685002799714262,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_cap_respec_20260831/collar08_eps20/lhs100_seed42_083/eps20/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S1_tip_first",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 98.74001119885705,
+      "median_turning_per_cell_deg": 24.685002799714262,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_cap_respec_20260831/collar08_eps30/lhs100_seed42_083/eps30/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S1_tip_first",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 98.52858757242967,
+      "median_turning_per_cell_deg": 24.632146893107418,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_cap_respec_20260831/collar11/lhs100_seed42_083/eps15/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S1_tip_first",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 98.41811113542747,
+      "median_turning_per_cell_deg": 24.604527783856867,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_cap_respec_20260831/collar13/lhs100_seed42_083/eps15/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S1_tip_first",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 98.60143403947885,
+      "median_turning_per_cell_deg": 24.65035850986971,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_normal_probe_20260830/N129_s036_eps15/lhs100_seed42_083/eps15/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S1_tip_first",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 98.60143403947885,
+      "median_turning_per_cell_deg": 24.65035850986971,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_normal_probe_20260830/N257_s036_eps15/lhs100_seed42_083/eps15/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S1_tip_first",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 98.60143403947885,
+      "median_turning_per_cell_deg": 24.65035850986971,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_repair_20260830/N73_s036_eps15/lhs100_seed42_083/eps15/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S1_tip_first",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 98.60143403947885,
+      "median_turning_per_cell_deg": 24.65035850986971,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_repair_20260830/N97_s047_eps15/lhs100_seed42_083/eps15/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S1_tip_first",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 98.60143403947885,
+      "median_turning_per_cell_deg": 24.65035850986971,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_repair_20260830/N97_s047_eps30/lhs100_seed42_083/eps30/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S1_tip_first",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 98.60143403947885,
+      "median_turning_per_cell_deg": 24.65035850986971,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_repair_20260830/N97_s061_eps15/lhs100_seed42_083/eps15/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S1_tip_first",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 98.60143403947885,
+      "median_turning_per_cell_deg": 24.65035850986971,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_repair_20260830/eps20_ncs25/lhs100_seed42_083/eps20/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S1_tip_first",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 98.60143403947885,
+      "median_turning_per_cell_deg": 24.65035850986971,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_repair_20260830/eps30_ncs15/lhs100_seed42_083/eps30/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S1_tip_first",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 98.60143403947885,
+      "median_turning_per_cell_deg": 24.65035850986971,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_repair_20260830/eps30_ncs25/lhs100_seed42_083/eps30/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S1_tip_first",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 98.60143403947885,
+      "median_turning_per_cell_deg": 24.65035850986971,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_repair_20260830/lhs100_seed42_083/eps20/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S1_tip_first",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 98.60143403947885,
+      "median_turning_per_cell_deg": 24.65035850986971,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_c03_repair_20260830/lhs100_seed42_083/eps30/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S1_tip_first",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 90.54078611088404,
+      "median_turning_per_cell_deg": 30.18026203696135,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_coupled_family_20260831/C02_collar06/lhs100_seed42_083/eps15/surface_blocks.npz",
+      "span_stations": 57,
+      "study": "S1_tip_first",
+      "wrap_cells": 3,
+      "wrap_points": 4
+    },
+    {
+      "median_total_turning_deg": 98.89579239799016,
+      "median_turning_per_cell_deg": 24.72394809949754,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_coupled_family_20260831/C03_collar07_eps20/lhs100_seed42_083/eps20/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S1_tip_first",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 98.42522763868591,
+      "median_turning_per_cell_deg": 24.606306909671478,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_coupled_family_20260831/C03_collar07_geometry_C/lhs100_seed42_085/eps15/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S1_tip_first",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 73.76202149713862,
+      "median_turning_per_cell_deg": 36.88101074856931,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_deformation_20260830/C01_template/lhs100_seed42_083/eps15/surface_blocks.npz",
+      "span_stations": 43,
+      "study": "S1_tip_first",
+      "wrap_cells": 2,
+      "wrap_points": 3
+    },
+    {
+      "median_total_turning_deg": 90.68478333019195,
+      "median_turning_per_cell_deg": 30.228261110063983,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_deformation_20260830/C02_template/lhs100_seed42_083/eps15/surface_blocks.npz",
+      "span_stations": 57,
+      "study": "S1_tip_first",
+      "wrap_cells": 3,
+      "wrap_points": 4
+    },
+    {
+      "median_total_turning_deg": 98.60143403947885,
+      "median_turning_per_cell_deg": 24.65035850986971,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S1_tip_first/m2_deformation_20260830/C03_template/lhs100_seed42_083/eps15/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S1_tip_first",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 102.55350466118013,
+      "median_turning_per_cell_deg": 25.638376165295032,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_c03_family_repair_20260831/B/lhs100_seed42_007/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 102.33358661800769,
+      "median_turning_per_cell_deg": 25.58339665450192,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_c03_family_repair_20260831/C/lhs100_seed42_085/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 102.24851422455794,
+      "median_turning_per_cell_deg": 25.562128556139484,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_c03_family_repair_20260831/E/lhs100_seed42_047/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 95.299459147938,
+      "median_turning_per_cell_deg": 31.766486382645997,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c02/lhs100_seed42_083/surface_blocks.npz",
+      "span_stations": 57,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 3,
+      "wrap_points": 4
+    },
+    {
+      "median_total_turning_deg": 95.16238611463896,
+      "median_turning_per_cell_deg": 31.72079537154632,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c02_B/lhs100_seed42_007/surface_blocks.npz",
+      "span_stations": 57,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 3,
+      "wrap_points": 4
+    },
+    {
+      "median_total_turning_deg": 94.95046712149733,
+      "median_turning_per_cell_deg": 31.650155707165776,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c02_C/lhs100_seed42_085/surface_blocks.npz",
+      "span_stations": 57,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 3,
+      "wrap_points": 4
+    },
+    {
+      "median_total_turning_deg": 91.23539214792874,
+      "median_turning_per_cell_deg": 30.411797382642913,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c02_E/lhs100_seed42_047/surface_blocks.npz",
+      "span_stations": 57,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 3,
+      "wrap_points": 4
+    },
+    {
+      "median_total_turning_deg": 102.9787872179488,
+      "median_turning_per_cell_deg": 25.7446968044872,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03/lhs100_seed42_083/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 102.55350466118013,
+      "median_turning_per_cell_deg": 25.638376165295032,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03_B/lhs100_seed42_007/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 102.33358661800769,
+      "median_turning_per_cell_deg": 25.58339665450192,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03_C/lhs100_seed42_085/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 102.33358661800769,
+      "median_turning_per_cell_deg": 25.58339665450192,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03_C_target_specific/lhs100_seed42_085/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 102.24851422455794,
+      "median_turning_per_cell_deg": 25.562128556139484,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03_E/lhs100_seed42_047/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 102.9787872179488,
+      "median_turning_per_cell_deg": 25.7446968044872,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03_eps20_A/lhs100_seed42_083/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 102.55350466118013,
+      "median_turning_per_cell_deg": 25.638376165295032,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03_eps20_B/lhs100_seed42_007/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 102.33358661800769,
+      "median_turning_per_cell_deg": 25.58339665450192,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03_eps20_C/lhs100_seed42_085/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 102.24851422455794,
+      "median_turning_per_cell_deg": 25.562128556139484,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_coupled_family_20260831/candidate_c03_eps20_E/lhs100_seed42_047/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 75.75366534910607,
+      "median_turning_per_cell_deg": 37.876832674553036,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_deformation_20260830/B_C01/lhs100_seed42_007/surface_blocks.npz",
+      "span_stations": 43,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 2,
+      "wrap_points": 3
+    },
+    {
+      "median_total_turning_deg": 95.16238611463896,
+      "median_turning_per_cell_deg": 31.72079537154632,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_deformation_20260830/B_C02/lhs100_seed42_007/surface_blocks.npz",
+      "span_stations": 57,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 3,
+      "wrap_points": 4
+    },
+    {
+      "median_total_turning_deg": 75.83158974388553,
+      "median_turning_per_cell_deg": 37.915794871942765,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_deformation_20260830/C01/lhs100_seed42_083/surface_blocks.npz",
+      "span_stations": 43,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 2,
+      "wrap_points": 3
+    },
+    {
+      "median_total_turning_deg": 95.299459147938,
+      "median_turning_per_cell_deg": 31.766486382645997,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_deformation_20260830/C02/lhs100_seed42_083/surface_blocks.npz",
+      "span_stations": 57,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 3,
+      "wrap_points": 4
+    },
+    {
+      "median_total_turning_deg": 102.9787872179488,
+      "median_turning_per_cell_deg": 25.7446968044872,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_deformation_20260830/C03/lhs100_seed42_083/surface_blocks.npz",
+      "span_stations": 75,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 4,
+      "wrap_points": 5
+    },
+    {
+      "median_total_turning_deg": 74.76864505695804,
+      "median_turning_per_cell_deg": 37.38432252847902,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_deformation_20260830/C_C01/lhs100_seed42_085/surface_blocks.npz",
+      "span_stations": 43,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 2,
+      "wrap_points": 3
+    },
+    {
+      "median_total_turning_deg": 94.95046712149733,
+      "median_turning_per_cell_deg": 31.650155707165776,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_deformation_20260830/C_C02/lhs100_seed42_085/surface_blocks.npz",
+      "span_stations": 57,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 3,
+      "wrap_points": 4
+    },
+    {
+      "median_total_turning_deg": 74.79490535350367,
+      "median_turning_per_cell_deg": 37.39745267675183,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_deformation_20260830/E_C01/lhs100_seed42_047/surface_blocks.npz",
+      "span_stations": 43,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 2,
+      "wrap_points": 3
+    },
+    {
+      "median_total_turning_deg": 91.23539214792874,
+      "median_turning_per_cell_deg": 30.411797382642913,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/m2_deformation_20260830/E_C02/lhs100_seed42_047/surface_blocks.npz",
+      "span_stations": 57,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 3,
+      "wrap_points": 4
+    },
+    {
+      "median_total_turning_deg": 75.94015644923527,
+      "median_turning_per_cell_deg": 37.97007822461764,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/recovery_deformation_20260830/lhs100_seed42_083/surface_blocks.npz",
+      "span_stations": 90,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 2,
+      "wrap_points": 3
+    },
+    {
+      "median_total_turning_deg": 75.71437305243025,
+      "median_turning_per_cell_deg": 37.85718652621512,
+      "meets_target": false,
+      "path": "AERIS_MESH_STUDY/artifacts/strategy_studies/S6_bounded_mesh_atlas/recovery_deformation_20260830_span79/lhs100_seed42_083/surface_blocks.npz",
+      "span_stations": 80,
+      "study": "S6_bounded_mesh_atlas",
+      "wrap_cells": 2,
+      "wrap_points": 3
+    }
+  ],
+  "method": {
+    "convention": "median over span stations of total joint turning divided by the number of wrap cells",
+    "measurement": "cfd_qc.leading_edge_wrap_resolution on the oml_nose block",
+    "requires_cfd": false,
+    "target_basis": "conventional wall-resolved RANS practice for a rounded leading edge; it is not a governed AERIS threshold and is recorded here as a reference, not a gate",
+    "target_deg_per_cell": 10.0
+  },
+  "question": "Is the starved leading-edge wrap recorded in m2_a_c03_leading_edge_collar_defect_20260903.json specific to grid level C03, or does it affect every mesh the study has built?",
+  "schema": "aeris.s6.leading_edge_wrap_census.v1",
+  "what_is_unaffected": [
+    "Lift and pitching moment, which the attempt04 evidence shows move by about 1 percent.",
+    "Block topology, interface conformity and the 13-block graph.",
+    "The wall-normal law and y+, which the recovery validated independently.",
+    "The qualification harness, provenance chain and holdout separation."
+  ]
+}

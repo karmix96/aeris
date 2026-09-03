@@ -1195,3 +1195,59 @@ def test_no_probe_levels_leak_into_the_governed_tables():
 
     for table in (strategy_s6.LEVELS, GRID_LEVELS, S6_FIRST_CELL_FRACTION):
         assert not [name for name in table if name.startswith("probe_")]
+
+
+def _census():
+    return json.loads(
+        (ROOT / "reports/m2_leading_edge_wrap_census_20260903.json").read_text()
+    )
+
+
+def test_census_covers_every_surface_mesh_in_the_study():
+    census = _census()
+    # The census stores repo-relative paths; ROOT here is absolute.
+    repo = ROOT.parents[1]
+    on_disk = sorted(
+        str(p.relative_to(repo)) for p in ROOT.parents[0].rglob("surface_blocks.npz")
+    )
+    recorded = sorted(m["path"] for m in census["meshes"])
+    assert recorded == on_disk, "the census must cover every mesh, with none added or dropped"
+    assert census["census"]["meshes_screened"] == len(on_disk)
+
+
+def test_no_existing_mesh_resolves_the_leading_edge():
+    cfd_qc = _cfd_qc()
+    census = _census()
+    assert census["census"]["meshes_meeting_target"] == 0
+    # Re-measure a sample rather than trusting the stored numbers alone.
+    repo = ROOT.parents[1]
+    for record in census["meshes"][:5]:
+        measured = cfd_qc.leading_edge_wrap_resolution(repo / record["path"])
+        assert measured["wrap_cells"] == record["wrap_cells"]
+        assert measured["turning_per_cell_deg"]["median"] == pytest.approx(
+            record["median_turning_per_cell_deg"]
+        )
+        assert measured["turning_per_cell_deg"]["median"] > census["method"][
+            "target_deg_per_cell"
+        ]
+
+
+def test_the_defect_predates_s6():
+    census = _census()
+    studies = census["census"]["by_study"]
+    # S1_tip_first is the earliest strategy study; if it is clean the defect
+    # would be S6's doing, and it is not.
+    s1 = next(k for k in studies if k.startswith("S1"))
+    assert studies[s1]["min_deg_per_cell"] > census["method"]["target_deg_per_cell"]
+    assert studies[s1]["meshes"] > 0
+
+
+def test_census_does_not_overclaim_the_consequence():
+    census = _census()
+    status = census["evidence_status"]
+    # Impossible pressure was shown on the two CFD runs only; the rest is cause,
+    # not demonstrated effect.
+    assert status["consequence_demonstrated_count"] == 2
+    assert status["cause_measured_on_all"] == census["census"]["meshes_screened"]
+    assert "not claimed" in status["honest_limitation"]
+    assert census["authorizes_cfd"] is False

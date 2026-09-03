@@ -84,6 +84,11 @@ def prepare(
     s0_fraction_override: float | None = None,
     n_constant_start_override: int | None = None,
     vol_blend_override: float | None = None,
+    c_max_override: float | None = None,
+    vol_smooth_iter_override: int | None = None,
+    vol_coef_override: float | None = None,
+    theta_override: float | None = None,
+    march_dist_factor_override: float | None = None,
 ) -> dict:
     """Stage one geometry's surface and write pyHyp run inputs for each epsE.
 
@@ -122,6 +127,11 @@ def prepare(
         "s0_fraction_override": s0_fraction_override,
         "n_constant_start_override": n_constant_start_override,
         "vol_blend_override": vol_blend_override,
+        "c_max_override": c_max_override,
+        "vol_smooth_iter_override": vol_smooth_iter_override,
+        "vol_coef_override": vol_coef_override,
+        "theta_override": theta_override,
+        "march_dist_factor_override": march_dist_factor_override,
         "surface": {
             "block_count": qc["block_count"],
             "total_cells": qc["total_cells"],
@@ -150,6 +160,15 @@ def prepare(
             ),
             n_constant_start=n_constant_start_override,
             vol_blend=vol_blend_override,
+            c_max=c_max_override,
+            vol_smooth_iter=vol_smooth_iter_override,
+            vol_coef=vol_coef_override,
+            theta=theta_override,
+            **(
+                {}
+                if march_dist_factor_override is None
+                else {"march_dist_factor": march_dist_factor_override}
+            ),
         )
         runner = write_pyhyp_run_inputs(sdir, effective)
         s0 = float(effective.values.get("s0", LEVELS[level]["s0_frac"] * char_len))

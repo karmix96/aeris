@@ -167,6 +167,11 @@ def march_command(args: argparse.Namespace) -> dict[str, Any]:
         s0_fraction_override=first_cell_fraction(args.volume_level),
         n_constant_start_override=args.n_constant_start,
         vol_blend_override=args.vol_blend,
+        c_max_override=args.c_max,
+        vol_smooth_iter_override=args.vol_smooth_iter,
+        vol_coef_override=args.vol_coef,
+        theta_override=args.theta,
+        march_dist_factor_override=args.march_dist_factor,
     )
     run_dir = Path(manifest["runs"][0]["dir"]).resolve()
     runner = Path(manifest["runs"][0]["runner"]).resolve()
@@ -278,6 +283,14 @@ def make_parser() -> argparse.ArgumentParser:
     march.add_argument("--tip-smoothing-iterations", type=int, default=0)
     march.add_argument("--n-constant-start", type=int)
     march.add_argument("--vol-blend", type=float)
+    # Marching-robustness knobs. The options builder has always accepted these;
+    # they simply had no path from the CLI, which is what stalled the
+    # candidate_d03 marching study.
+    march.add_argument("--c-max", type=float)
+    march.add_argument("--vol-smooth-iter", type=int)
+    march.add_argument("--vol-coef", type=float)
+    march.add_argument("--theta", type=float)
+    march.add_argument("--march-dist-factor", type=float)
     march.add_argument("--output", type=Path, required=True)
     march.set_defaults(function=march_command)
 

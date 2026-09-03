@@ -1,6 +1,40 @@
 # S6 qualification live status
 
-Updated: 2026-09-03T05:15:00+03:00
+Updated: 2026-09-03T06:05:00+03:00
+
+## Study-wide census — every mesh is affected, 2026-09-03
+
+Evidence: `reports/m2_leading_edge_wrap_census_20260903.json`. Mesh-only, no CFD.
+
+**All 65 surface meshes in AERIS_MESH_STUDY carry the starved leading-edge
+wrap.** Every one has between 2 and 4 cells around the leading edge. The best
+mesh anywhere in the study is 24.6 degrees of surface turning per wrap cell and
+the worst is 38.0; none reaches the conventional wall-resolved reference of at
+most 10. Zero of 65 pass.
+
+- **The defect predates S6.** `S1_tip_first`, the earliest strategy study, already
+  builds the leading edge with 2 to 4 wrap cells across its 29 meshes.
+  `S6_bounded_mesh_atlas` inherited the construction across its 27, and the 9
+  meshes under the CFD studies carry it too.
+- **Refinement does not relieve it.** The wrap moves only from 3 to 5 points
+  while chordwise and spanwise counts roughly double, so turning per cell goes
+  from about 38 to about 25 degrees and never approaches the target. A
+  grid-convergence study on any of these families would not be in the asymptotic
+  range for any pressure-derived quantity.
+- **No existing gate detects it.** Integrated forces, residual convergence, y+,
+  cell quality, inversion counts and interface conformity all pass on these
+  meshes. It is visible only in the surface pressure at the nose, or in the mesh
+  geometry measured directly.
+
+**Honest limit on the claim.** Physically impossible surface pressure has been
+demonstrated only on the two meshes where CFD actually ran, attempt03 and
+attempt04. For the other 63 the geometric cause is measured and is the same or
+worse, so the same consequence is expected; it has not been demonstrated and is
+not claimed.
+
+**What is unaffected:** lift and pitching moment, which moved by about 1 percent;
+the 13-block topology and interface conformity; the wall-normal law and y+; and
+the qualification harness, provenance chain and holdout separation.
 
 ## Leading-edge redesign attempt — 2026-09-03
 

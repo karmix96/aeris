@@ -1,16 +1,51 @@
 # S6 qualification live status
 
-Updated: 2026-09-02T22:53:26+03:00
+Updated: 2026-09-03T01:10:00+03:00
 
-## Six-rank attempt04 launch state
+## Six-rank attempt04 terminal state
 
-**RUNNING. Do not launch another CFD process.** The one-shot token was consumed
-at 2026-09-02T19:50:42Z and POSIX process session 84539 started. Six-rank MPI
-readiness had passed on ranks 0 through 5. At elapsed 154 s the full-session
-RSS was 9.11 GiB, MemAvailable was 2.88 GiB, swap growth was zero, and ADflow
-was advancing in ANK on the corrected mesh. The combined log had reached at
-least nonlinear iteration 15 / total minor iteration 128 with linear residuals
-near 0.05. Monitor the existing attempt; never reconstruct the token or retry.
+**TERMINAL. No CFD process is running and `cfd_authorized` remains false.**
+Attempt `m2_a_c03_measurement_20260902_004` exited normally with return code 0
+at 2026-09-02T21:52:26Z after 7848.54 s of governed session time and 7300.82 s
+of solver time. The watchdog never fired. The one-shot token is consumed and
+must never be reconstructed.
+
+Terminal status is `SOLVER_MEASUREMENT_FAILED` with verdict
+`MEASUREMENT_ONLY_NOT_ACCEPTED`. Postmortem:
+`reports/m2_a_c03_solver_postmortem_20260902_attempt04.json`.
+
+- ADflow stopped because the configured 20000-cycle budget was exhausted at
+  total minor iteration 20022, **not** because it stagnated. The final 100
+  nonlinear rows decayed monotonically at 1.050e-3 per minor iteration with
+  CFL pinned at 1e5. Relative L2 reached 2.9935e-9 against the 1e-11 solver
+  target; totalR fell 8.524 orders from 1.979672e6 to 5.926224e-3. The 27000 s
+  time limit was not binding.
+- Every governed residual component gate passed at 1e-5: density 6.084239e-6,
+  momentum 1.970297e-7, energy 4.121112e-7, SA 4.530294e-13. The density margin
+  is only 1.64x, which is thin against the requirement that the solve target be
+  demonstrably stricter than the acceptance need.
+- Wall y+ passed globally and in all 13 no-slip regions: maximum 0.375, p95
+  0.236, p99 0.269, with 100 percent of faces at or below target. The
+  wall-normal correction resolved the attempt03 failure completely.
+- The 200-sample force tail passed for all three coefficients. c_L 0.39023993,
+  c_D 0.03785000, c_My 0.05209145 at mission_cg and -0.00053425 at quarter MAC.
+  Pressure plus viscous drag reconciles with total drag to machine precision.
+- Resource policy passed. Six ranks peaked at 9.3295 GiB against the 9.45 GiB
+  forecast, below the 9.855 GiB that one rank required in attempt03. Minimum
+  MemAvailable was 2.4131 GiB, swap growth was zero, and 3852 samples were
+  taken. A final double-precision volume solution was written.
+- Three gates remain failed or unevaluated and are tracked as P1, P2 and P3 in
+  the postmortem: the mass-conservation metric is computed with the wrong
+  definition, the conformal-interface discontinuity check is unimplemented, and
+  the density residual margin is too thin.
+- **Attempt04 can never become ACCEPTED.** Policy v5 sets
+  `accepted_classification_allowed: false` and
+  `result_mode: measurement_only_no_accepted_verdict`, and `convergence_v2.yaml`
+  sets `measurement_only_execution_may_be_accepted: false`. That was the cost of
+  the audit waiver. An acceptance-permitting successor policy and a new attempt
+  are required for an accepted result.
+
+## Six-rank attempt04 authorization record
 
 - The principal investigator explicitly directed one immediate CFD run on the
   corrected mesh with six MPI ranks and waived the pending Claude audit. The

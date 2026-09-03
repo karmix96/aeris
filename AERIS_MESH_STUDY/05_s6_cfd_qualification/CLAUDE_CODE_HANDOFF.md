@@ -1,28 +1,64 @@
 # Claude Code continuation order — S6 qualification
 
-Updated: 2026-09-02T22:53:26+03:00
+Updated: 2026-09-03T01:10:00+03:00
 
-## Human-directed six-rank execution override
+## Attempt04 is terminal — no CFD is authorized
 
-**Attempt04 is RUNNING; do not launch anything.** It started at
-2026-09-02T19:50:42Z in process session 84539 after every non-CFD gate and the
-six-rank MPI probe passed. At elapsed 154 s RSS was 9.11 GiB, MemAvailable was
-2.88 GiB and swap growth was zero. The one-shot token is consumed and must
-never be reconstructed. Monitor only
-`studies/canary/m2_a_c03_measurement_20260902_004/` and, after terminal exit,
-preserve and audit every generated artifact before changing any policy.
+**No CFD process is running. Do not launch anything. `cfd_authorized` is false.**
+Attempt `m2_a_c03_measurement_20260902_004` exited with return code 0 at
+2026-09-02T21:52:26Z. The watchdog never fired and the one-shot token is
+consumed; never reconstruct it. Terminal status `SOLVER_MEASUREMENT_FAILED`,
+verdict `MEASUREMENT_ONLY_NOT_ACCEPTED`. Read
+`reports/m2_a_c03_solver_postmortem_20260902_attempt04.json` and
+`LIVE_STATUS.md` before doing anything else.
 
-At 2026-09-02 22:49 EEST the principal investigator explicitly ordered one
-immediate corrected-mesh CFD run with six MPI ranks and directed Codex not to
-wait for the Claude audit. Policy `policies/m2_a_c03_canary_v5.yaml` and the
-honest waiver record
-`reviews/human_m2_a_c03_six_rank_override_20260902.json` bind attempt04. Do not
-reinterpret this as closure of the earlier Claude findings. Periodic
-checkpoints are disabled because multi-rank signal collectives are unverified;
-all residuals/logs/resource samples and final surface/double-volume outputs are
-still required. No retry is authorized. If attempt04 is running, monitor it;
-do not start any second process. If terminal, audit and classify it before any
-further action.
+ADflow stopped on the configured 20000-cycle budget, not on stagnation. Every
+governed residual component gate passed at 1e-5 and every wall y+ region passed.
+Attempt04 is good evidence but is structurally barred from ever being ACCEPTED,
+because policy v5 sets `accepted_classification_allowed: false` and
+`convergence_v2.yaml` sets `measurement_only_execution_may_be_accepted: false`.
+
+## Current correction order — 2026-09-03
+
+Work these in order. None of them authorizes CFD. Preserve every attempt03 and
+attempt04 artifact; deletion requires explicit human approval.
+
+P1. **Correct the mass-conservation metric.** The runner in
+    `src/aeris/cfd/solvers/adflow/adapter.py` reports
+    `abs(sum continuity residual)/sum(abs continuity residual)`, an interior
+    residual cancellation ratio. `policies/convergence_v2.yaml` requires
+    `signed_net_boundary_mass_flux_over_gross_boundary_mass_flux`. Integrate the
+    boundary flux with ADflow's native `mdot` cost function per CGNS boundary
+    family, record per-family values and areas, and state the family-granularity
+    limitation explicitly. The attempt04 value 0.1406843082066956 does not
+    evaluate the governed gate; the true value is unknown.
+
+P2. **Implement the conformal-interface discontinuity check** required by
+    `physics_qc`. `surface_fields` currently fails only on
+    `interface_discontinuity_not_evaluated`. Run it against the retained
+    attempt04 surface solution; no CFD is needed.
+
+P3. **Raise the cycle budget in the successor policy.** The density residual
+    finished only 1.64x below its 1e-5 gate. Do not relax the solver tolerance
+    to compensate. Note for the pending 1e-10-versus-1e-11 item: attempt04 ended
+    at totalR 5.926224e-3, above the 1.979672e-4 that 1e-10 corresponds to, so
+    neither tolerance was reached and neither could have changed this outcome.
+    Only the iteration budget was binding.
+
+P4. **Add a governed restart-from-volume-solution path.** Attempt04 wrote a
+    valid double-precision volume solution. A validated restart would let the
+    successor attempt resume rather than repeat the 2 h already spent. This is
+    the same round-trip test that the checkpoint label
+    `structurally_validated_not_restart_tested` currently defers.
+
+P5. Then the previously issued items 1 through 6 below, then a fresh independent
+    review, then an acceptance-permitting policy v6 and a new execute token.
+
+Item 7 below is now partly answered by measurement rather than design: six ranks
+delivered 3.14x speedup at 599 percent CPU and reduced total resident memory
+from 9.855 GiB to 9.3295 GiB. The host has 6 physical and 12 logical CPUs, so 6
+ranks remains the defensible operating point until a scaling study says
+otherwise.
 
 ## Current correction order — 2026-09-02 19:59 EEST
 

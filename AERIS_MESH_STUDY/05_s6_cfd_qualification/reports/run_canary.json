@@ -1,16 +1,16 @@
 {
   "command": "run-canary",
-  "created_at": "2026-09-02T02:36:53.024791+00:00",
+  "created_at": "2026-09-02T21:52:27.894645+00:00",
   "details": {
     "accepted": false,
     "automatic_retry_allowed": false,
-    "execution_record": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_canary_execution_20260901_attempt03.json",
-    "execution_record_sha256": "b7e3d35a94ff874e509fe9488ba4611d8609fbf00a45323ceff3ac48772289b7",
+    "execution_record": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_canary_execution_20260902_attempt04.json",
+    "execution_record_sha256": "c35316e1a308c3d1430835f05c5a09bc58011fd4190d275c2242f7755b23f958",
     "execution_status": "SOLVER_MEASUREMENT_FAILED",
     "process_launched": true
   },
   "dry_run": false,
-  "git_head": "579c561368d68aacdda067c978246128b3d27a21",
+  "git_head": "7abbea7ed76514c6c5d39a3451854b33ce0cd40c",
   "repo": "/home/mike_kara/aeris",
   "schema_version": 1,
   "status": "FAIL"

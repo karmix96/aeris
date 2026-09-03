@@ -1,0 +1,204 @@
+{
+  "accepted_classification_allowed": false,
+  "artifacts": {
+    "adflow_run_json_sha256": "bc4f5bedee15f75737a6930b73a0c0ef6e568ea48e1a1e3b7ab4f99af1c34a50",
+    "attempt_directory": "AERIS_MESH_STUDY/05_s6_cfd_qualification/studies/canary/m2_a_c03_measurement_20260902_004",
+    "resource_watchdog_sha256": "c0649b11719d67e8c412a56959370c91a25ca54e5a0fdf3ec1676168cdc161ac",
+    "retention": "retain_all; deletion requires explicit human approval",
+    "solver_log_sha256": "e68e4ada9621a8c12d1cffe389e41bb513911c27b209e0a3e2020f8098c421c9",
+    "surface_solution_sha256": "3fdf5f4b6d5f9d4ab4748d3c8754f84715b068d29f19fe656350469522fa8192",
+    "time_verbose_sha256": "d7474cd1bbe6b0d908ef3ebd19c13d1170c660e44f7bb7772089f4a0b4f1873f",
+    "volume_solution_sha256": "3529f87173c757c4285b788a150598d72426b6836231e9ec2e58d0e7f3f76ec0"
+  },
+  "authorizes_cfd": false,
+  "cfd_run": false,
+  "comparison_with_attempt03": {
+    "current_mesh_sha256": "0fe4a4c00bbed1e47fcdaa46b60d00334d48c0cfe9b617cb2a3b0ec51cbd7ced",
+    "current_terminal_iteration_type": "ANK",
+    "elapsed_seconds": {
+      "current": 7848.539062274009,
+      "previous": 23963.437049565007
+    },
+    "interpretation": "Attempt03 stagnated in NK on the pre-correction mesh and failed the density, energy and wall y+ gates. Attempt04 ran ANK-only on the wall-normal-corrected mesh, passed every residual component gate and every wall y+ region, and stopped solely on the iteration budget. Six ranks reduced both wall time and total resident memory.",
+    "measured_peak_gib": {
+      "current": 9.329509735107422,
+      "previous": 9.855037689208984
+    },
+    "mesh_changed": true,
+    "mpi_processes": {
+      "current": 6,
+      "previous": 1
+    },
+    "previous_execution_record_sha256": "b7e3d35a94ff874e509fe9488ba4611d8609fbf00a45323ceff3ac48772289b7",
+    "previous_mesh_sha256": "be2805ff85b6b1043863d7678d1551a52b6e8a65b299534d4ec0aaeffa51aeb4",
+    "previous_terminal_iteration_type": "NK",
+    "residual_components_final": {
+      "current": {
+        "density": 6.084238842710401e-06,
+        "energy": 4.121112120953995e-07,
+        "momentum": 1.970297289619344e-07,
+        "sa": 4.5302939940912606e-13
+      },
+      "previous": {
+        "density": 0.00012023608510516739,
+        "energy": 2.5863411557091564e-05,
+        "momentum": 6.972862165093815e-06,
+        "sa": 3.930133639327479e-09
+      }
+    },
+    "residual_gates_passed": {
+      "current": true,
+      "previous": false
+    },
+    "volume_solution_written": {
+      "current": true,
+      "previous": false
+    },
+    "y_plus_failed_regions": {
+      "current": [],
+      "previous": [
+        "NSWallAdiabaticBCZone16",
+        "NSWallAdiabaticBCZone19",
+        "NSWallAdiabaticBCZone21",
+        "NSWallAdiabaticBCZone23",
+        "NSWallAdiabaticBCZone25",
+        "NSWallAdiabaticBCZone27",
+        "NSWallAdiabaticBCZone29",
+        "NSWallAdiabaticBCZone31",
+        "NSWallAdiabaticBCZone7"
+      ]
+    },
+    "y_plus_passed": {
+      "current": true,
+      "previous": false
+    }
+  },
+  "convergence": {
+    "component_gate_max_final": 1e-05,
+    "component_gates_passed": {
+      "density": true,
+      "energy": true,
+      "momentum": true,
+      "sa": true
+    },
+    "late_tail_diagnostic": {
+      "extrapolated_extra_minor_iterations_to_1e-11": 5432.209712310141,
+      "extrapolation_status": "diagnostic_extrapolation_not_a_measurement",
+      "log_decay_per_minor_iteration": 0.0010495961309346885,
+      "minor_iterations_spanned": 2878,
+      "monotone_decreasing": true,
+      "window_nonlinear_rows": 100
+    },
+    "narrowest_component_margin": {
+      "component": "density",
+      "gate": 1e-05,
+      "margin_factor": 1.643590966515248,
+      "value": 6.084238842710401e-06
+    },
+    "nk_switch_note": "useNKSolver was false. The configured NKSwitchTol of 1e-10 corresponds to totalR 1.979672e-04, and the run terminated at totalR 5.926224e-03, which is above it. Neither 1e-10 nor 1e-11 was reached, so the pending 1e-10-versus-1e-11 review item could not have changed this outcome; only the iteration budget was binding.",
+    "orders_of_magnitude_dropped": 8.523815161570099,
+    "relative_l2_final": 2.993538434078212e-09,
+    "residual_components_final": {
+      "density": 6.084238842710401e-06,
+      "energy": 4.121112120953995e-07,
+      "momentum": 1.970297289619344e-07,
+      "sa": 4.5302939940912606e-13
+    },
+    "solver_l2_convergence_target": 1e-11,
+    "target_reached": false,
+    "totalR_final": 0.00592622439610828,
+    "totalR_initial": 1979672.059207457
+  },
+  "created_at": "2026-09-03T00:00:00+03:00",
+  "execution_id": "m2_a_c03_measurement_20260902_004",
+  "execution_record": "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_a_c03_canary_execution_20260902_attempt04.json",
+  "execution_record_sha256": "c35316e1a308c3d1430835f05c5a09bc58011fd4190d275c2242f7755b23f958",
+  "forces": {
+    "at_geometry_quarter_mac": {
+      "cd": 0.037850002271147896,
+      "cdp": 0.030786801735272245,
+      "cdv": 0.0070632005358756645,
+      "cl": 0.3902399310991199,
+      "cmy": -0.0005342483819336935
+    },
+    "at_mission_cg": {
+      "cd": 0.037850002271147896,
+      "cdp": 0.030786801735272245,
+      "cdv": 0.0070632005358756645,
+      "cl": 0.3902399310991199,
+      "cmy": 0.05209144699923379
+    },
+    "decomposition_reconciles": true,
+    "tail_passed": true
+  },
+  "gate_status": {
+    "failed": [
+      "adflow_status_converged",
+      "normalized_mass_imbalance",
+      "conformal_interface_discontinuity_check"
+    ],
+    "not_evaluable_yet": [
+      "iterative_versus_discretization_uncertainty"
+    ],
+    "passed": [
+      "process_exit_code_zero",
+      "histories_present_and_finite",
+      "primary_l2_drop_at_least_six_orders",
+      "no_sustained_late_residual_growth",
+      "force_tail_relative_range",
+      "force_decomposition_reconciles",
+      "wall_y_plus_global_and_per_region",
+      "resource_policy"
+    ]
+  },
+  "holdout_accessed": false,
+  "open_findings": [
+    {
+      "disposition": "correct_the_metric_before_the_next_attempt",
+      "finding": "The reported mass-conservation metric is abs(sum continuity residual)/sum(abs continuity residual), an interior-residual cancellation ratio. The governed acceptance definition is signed net boundary mass flux over gross boundary mass flux. The measured 0.1406843082066956 therefore does not evaluate the governed gate at all, and the true boundary-flux value is currently unknown.",
+      "id": "P1",
+      "severity": "HIGH"
+    },
+    {
+      "disposition": "implement_and_run_on_retained_attempt04_surface_solution",
+      "finding": "The conformal-interface discontinuity check required by physics_qc is not implemented; surface_fields fails only on interface_discontinuity_not_evaluated.",
+      "id": "P2",
+      "severity": "MEDIUM"
+    },
+    {
+      "disposition": "raise_n_cycles_in_the_successor_policy",
+      "finding": "The density residual finished only 1.64 times below its 1e-5 acceptance gate. The master guide requires the solve target to be demonstrably stricter than the acceptance need, so the next attempt must carry a larger cycle budget rather than a relaxed solver tolerance.",
+      "id": "P3",
+      "severity": "MEDIUM"
+    }
+  ],
+  "required_next_gate": "implement_P1_P2_P3_then_independent_review_then_acceptance_permitting_policy",
+  "resource": {
+    "forecast_peak_gib": 9.45,
+    "forecast_respected": true,
+    "maximum_swap_growth_bytes": 0,
+    "measured_peak_gib": 9.329509735107422,
+    "minimum_mem_available_bytes": 2591096832,
+    "mpi_processes": 6,
+    "sample_count": 3852,
+    "watchdog_classification": "not_triggered"
+  },
+  "schema": "aeris.s6.solver_postmortem.v1",
+  "stop_cause": {
+    "cause": "configured_iteration_budget_exhausted",
+    "elapsed_seconds": 7300.824058532715,
+    "final_cfl": 100000.0,
+    "final_iteration_type": "ANK",
+    "final_total_minor_iteration": 20022,
+    "n_cycles_configured": 20000,
+    "nonlinear_rows_recorded": 774,
+    "not_stagnation": true,
+    "returncode": 0,
+    "time_limit_seconds": 27000.0,
+    "time_limit_was_not_binding": true,
+    "watchdog_stopped": false
+  },
+  "terminal_status": "SOLVER_MEASUREMENT_FAILED",
+  "verdict": "MEASUREMENT_ONLY_NOT_ACCEPTED",
+  "why_not_accepted_structurally": "policies/m2_a_c03_canary_v5.yaml sets accepted_classification_allowed=false and result_mode=measurement_only_no_accepted_verdict, and policies/convergence_v2.yaml sets measurement_only_execution_may_be_accepted=false. Attempt04 therefore cannot be reclassified as ACCEPTED under any later policy revision; an acceptance-permitting attempt is required."
+}

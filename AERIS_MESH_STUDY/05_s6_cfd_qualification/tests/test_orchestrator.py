@@ -1251,3 +1251,36 @@ def test_census_does_not_overclaim_the_consequence():
     assert status["cause_measured_on_all"] == census["census"]["meshes_screened"]
     assert "not claimed" in status["honest_limitation"]
     assert census["authorizes_cfd"] is False
+
+
+def test_corner_cut_measures_the_geometric_error_at_the_nose():
+    sys.path.insert(0, str(ROOT / "viz"))
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "aeris_viz", ROOT / "viz/visualize_surface.py"
+    )
+    viz = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(viz)
+
+    # A quarter circle of unit radius sampled with n points: the straight
+    # segments fall inside the arc by a sagitta with a known closed form.
+    for points in (5, 9, 17):
+        theta = np.linspace(0.0, np.pi / 2.0, points)
+        arc = np.stack(
+            [np.cos(theta), np.zeros_like(theta), np.sin(theta)], axis=-1
+        )
+        wrap = np.repeat(arc[:, None, :], 3, axis=1)
+        half_angle = (np.pi / 2.0) / (points - 1) / 2.0
+        expected = 1.0 - np.cos(half_angle)
+        assert viz.corner_cut(wrap) == pytest.approx(expected, rel=1e-6)
+
+
+def test_rendered_summary_matches_the_measured_meshes():
+    summary = json.loads((ROOT / "viz/renders/summary.json").read_text())
+    # Coarser wrap means a bigger corner cut, monotonically.
+    order = ["candidate_c01", "candidate_c02", "candidate_c03", "candidate_d03"]
+    cuts = [summary[name]["corner_cut_um"] for name in order]
+    assert cuts == sorted(cuts, reverse=True)
+    assert summary["candidate_c03"]["wrap_cells"] == 4
+    assert summary["candidate_d03"]["corner_cut_um"] < 50.0

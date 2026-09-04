@@ -1,0 +1,104 @@
+{
+  "schema": "aeris.s8.defect.v1",
+  "defect_id": 14,
+  "created_at": "2026-09-04T00:00:00+03:00",
+  "title": "solve_s8.py omitted liftIndex, so every S8 run applied angle of attack as sideslip",
+
+  "summary": "ADflow's liftIndex defaults to 2, which makes alpha a rotation about z -- into the SPANWISE direction on an AERIS mesh, where span is +y. solve_s8.py never set it. Every S8 CFD run therefore solved sideslip rather than incidence, and reported the spanwise force as lift. The alpha 0 flow field is unaffected because the freestream is (1,0,0) at either setting; the alpha 0 force DECOMPOSITION is not.",
+
+  "how_it_was_found": "The alpha 8 surface solution reported cp_max = 0.0072 over the whole wall. A wing at incidence always has a stagnation point, so cp_max must approach 1.0. Reading the ReferenceState written into that file gave a freestream unit vector of (0.990268, 0.139173, 0.000000): sin(8 deg) in the SPANWISE component.",
+
+  "evidence": {
+    "written_reference_state": {
+      "alpha_0_run": [1.0, 0.0, 0.0],
+      "alpha_8_run": [0.990268068741, 0.139173100960, 0.0],
+      "note": "sin(8 deg) = 0.1391731. The y component is spanwise on this mesh."
+    },
+    "adflow_default": {
+      "source": "adflow/pyADflow.py, option table: \"liftIndex\": [int, [2, 3]]",
+      "value": 2,
+      "meaning": "first element of the allowed list is the default"
+    },
+    "adflow_semantics": {
+      "source": "adflow/src/utils/flowUtils.F90, getDirVector",
+      "lift_index_2": "alpha is a rotation about the z axis -> freestream moves in the x-y plane",
+      "lift_index_3": "alpha is a rotation about the y axis -> freestream moves in the x-z plane",
+      "lift_direction": "flowUtils.F90:1360, refDir2(liftIndex) = one -> lift is measured along the liftIndex axis"
+    },
+    "direct_probe": {
+      "script": "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/verify_lift_index.py",
+      "report": "AERIS_MESH_STUDY/artifacts/s8_cfd/lift_index_probe/lift_index_probe.json",
+      "method": "ADflow constructed on oh_probe with nCycles 0, setAeroProblem called, inputphysics direction arrays read back. No solve.",
+      "lift_index_2_alpha_8": [0.990268, 0.139173, 0.0],
+      "lift_index_3_alpha_8": [0.990268, 0.0, 0.139173],
+      "conclusion": "reproduces the corrupted run exactly, and shows the correct setting produces incidence"
+    },
+    "surface_pressure_integration": {
+      "method": "integral of -cp*n dA over both wall zones of the alpha 0 surface solution, divided by the reference area 0.394918242017589",
+      "validation": "the x component integrates to 0.012494, which equals ADflow's reported CDp of 0.012494 to six decimals; the integration is therefore exact and its other components are trustworthy",
+      "force_x_drag": 0.012494,
+      "force_y_spanwise": 0.029155,
+      "force_z_lift": -0.160694,
+      "reported_cl": 0.032301,
+      "note": "reported CL (0.032301) is the spanwise force: pressure part 0.029155 plus the viscous y component. True lift is about -0.161, five times larger and of the opposite sign to what was recorded."
+    }
+  },
+
+  "why_the_geometry_gives_negative_lift_at_alpha_0": "configs/geometry/bwb.yaml sets washout across the span (twist_b2 -5..-1 deg, twist_b3 -8..-2 deg). At alpha 0 the outboard sections sit at negative effective incidence, and the measured cp confirms it: at mid-span the suction side is the -z side. A mean effective washout near 2 degrees on a wing of aspect ratio about 4.8 gives CL near -0.16, which is what the integration returns. This is physical, not a second defect.",
+
+  "what_is_corrupted_and_what_is_not": {
+    "alpha_0_flow_field": "INTACT. The freestream is (1,0,0) at liftIndex 2 and 3 alike, so the solved field, cp, y+ and cf are identical.",
+    "alpha_0_cp_bound_verdict": "INTACT. 30 of 4416 physical OML wall cells over the 1.0018 bound stands unchanged.",
+    "alpha_0_cd_cdp_cdv": "INTACT. dragDirection is the freestream direction, (1,0,0) at either setting.",
+    "alpha_0_cmy": "INTACT. surfaceIntegrations.F90 assigns costFuncMomYCoef = cMoment(2), the moment about the y axis, with no liftDirection term. Pitching moment is about y on this mesh.",
+    "alpha_0_cl": "WRONG. 0.032301 is the spanwise force coefficient. True lift is about -0.161.",
+    "all_alpha_nonzero_runs": "WRONG THROUGHOUT. They solved sideslip against a root symmetry plane."
+  },
+
+  "consequence_for_the_alpha_8_stall": {
+    "observed": "ANK drops the residual from 7.30e5 to 6.07e1 by iteration 101, NK takes over near 151, and the total residual then freezes at 13.4682379 -- eight significant figures unchanged over 340 further iterations, drifting upward in the last digits. Killed at iteration 592 of 30000 with no result written.",
+    "leading_hypothesis": "The freestream carried v_y = 0.139 V while the root plane at y=0 is an impermeable symmetry boundary. A symmetry plane asserts mirror symmetry; a spanwise crossflow is antisymmetric. The two cannot both hold, so the discrete problem has no consistent steady solution and the residual cannot be driven to zero.",
+    "status": "INFERRED, NOT PROVEN. The defect is proven; that it is the cause of this particular stall is not. The test is to re-run alpha 8 at liftIndex 3 and see whether the residual clears 13.47.",
+    "second_contributing_divergence": "solve_s8.py also omitted NKSwitchTol, taking ADflow's default of 1e-5 against the governed C03 value of 1e-6, so it handed the flow to Newton-Krylov ten times earlier than policy. The alpha 0 run converged on the default, which shows one case survived it, not that it is safe."
+  },
+
+  "root_cause": "solve_s8.py constructs ADFLOW(options={...}) by hand and so bypasses the curated option layer in src/aeris/cfd/solvers/adflow/options_schema.py, where lift_index is an AERIS-wide default of 3 carrying the citation 'AERIS meshes span +y, lift +z'. The governed C03 canary went through that layer and its adflow_options.json records liftIndex 3. S8 did not and got ADflow's 2. Its docstring claims 'solver settings follow policies/m2_a_c03_canary_v4.yaml'; five options in fact diverged.",
+
+  "divergences_from_the_governed_option_set": [
+    {"option": "liftIndex", "governed": 3, "s8_effective": 2, "severity": "corrupts every result"},
+    {"option": "NKSwitchTol", "governed": 1e-06, "s8_effective": 1e-05, "severity": "switches to NK ten times early"},
+    {"option": "ANKSwitchTol", "governed": 1.0, "s8_effective": 1000.0, "severity": "minor"},
+    {"option": "MGCycle", "governed": "sg", "s8_effective": "sg", "severity": "none, default coincides"},
+    {"option": "useANKSolver", "governed": true, "s8_effective": true, "severity": "none, default coincides"}
+  ],
+
+  "invalidates": [
+    "ADR-0018's statement that the S8 result is 'directly comparable' with C03: C03 ran liftIndex 3 and S8 ran 2, so the force comparison was never like for like",
+    "the CL of 0.032301 in reports/s8_oh_first_cfd_point_20260904.json",
+    "artifacts/s8_cfd/oh_L3_a8_nCycles4000_unconverged/result.json in full",
+    "artifacts/s8_cfd/oh_L3_a8 in full"
+  ],
+  "does_not_invalidate": [
+    "the cp bound verdict IMPROVED_NOT_ELIMINATED, and its 25.4x and 68x margins over C03",
+    "the alpha 0 CD, CDp, CDv and CMy",
+    "the measured y+ range, on the OML and on the tip cap",
+    "any mesh quality result: no mesh was touched"
+  ],
+
+  "fix": {
+    "file": "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/solve_s8.py",
+    "changes": [
+      "liftIndex set to 3 explicitly, with the geometry convention stated at the option",
+      "NKSwitchTol 1e-6, ANKSwitchTol 1.0, MGCycle sg and useANKSolver set explicitly, so the docstring's claim of following the canary policy is now true",
+      "verify_flow_directions() reads velDirFreeStream and liftDirection back out of ADflow after setAeroProblem and before the solve, and refuses to run unless they equal (cos a, 0, sin a) and (-sin a, 0, cos a) to 1e-9",
+      "the realised directions are recorded in result.json, so every future run carries its own evidence"
+    ],
+    "why_a_check_and_not_just_the_option": "Setting the option is one line and one line can be dropped again. The check runs in seconds, before the expensive part, and fails closed if the arrays cannot be read at all -- because an unverifiable freestream is exactly the state this defect lived in."
+  },
+
+  "still_to_do": [
+    "re-run alpha 0 at liftIndex 3 to obtain the true CL, and to confirm CD, CDp, CDv and CMy reproduce bit-for-bit as predicted",
+    "re-run alpha 8 at liftIndex 3 and record whether the residual clears the 13.4682379 floor",
+    "audit every other hand-rolled ADflow driver in the tree for the same omission"
+  ]
+}

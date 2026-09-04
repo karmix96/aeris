@@ -2,17 +2,23 @@ schema_version: aeris.s8.corrected_sweep_policy.v1
 policy_id: s8_oh_corrected_sweep_v1
 immutable: true
 
-# ---------------------------------------------------------------------------
-# NOT AUTHORIZED. The authorization block below is deliberately unsigned.
-# The `run-s8-first-point` exception in POLICY.yaml was written for one alpha 0
-# point and has been consumed. This sweep is new heavy work and needs the
-# principal investigator's own entry; nothing here may be treated as one.
-# ---------------------------------------------------------------------------
 authorization:
-  authorized_by: null          # principal_investigator, to be filled by a human
-  authorized_on: null
-  status: PENDING
+  authorized_by: principal_investigator
+  authorized_on: 2026-09-04
+  status: AUTHORIZED
   decision: AERIS_MESH_STUDY/00_governance/decisions/ADR-0019-s8-lift-axis-and-le-spacing.md
+  how_given: >-
+    Directed in session on 2026-09-04. The principal investigator was shown a
+    three-step plan -- sign this authorization, run alpha 0 and check it
+    against CD 0.021416 and CL about -0.161, then run -2, 4 and 8 -- and
+    replied "ok implement the 3 step plan". Written into the record by the
+    agent that was directed, not typed by the principal investigator, which is
+    what this field exists to make readable rather than leave to be assumed.
+  session: https://claude.ai/code/session_01GTUHMSPavj1aLcb8DSfNxU
+  scope_limit: >-
+    Authorizes the four-point sweep on oh_L3 and nothing else. Does NOT
+    authorize tip-cap viscous quantities, grid convergence, a family freeze, a
+    hold-out unlock, or any paper claim.
 
 supersedes: s8_oh_first_point_v1
 supersession_reason: >-

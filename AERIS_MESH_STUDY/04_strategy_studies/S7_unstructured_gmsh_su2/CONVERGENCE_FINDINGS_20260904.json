@@ -92,6 +92,72 @@
     "why_the_control_is_not_a_fair_comparison": "laptop_smoke puts its first cell 1.070 mm from the wall against xcoarse's 5.4 um, a factor of 196, so its prism aspect ratio is 70 against 8340, a factor of 119 that matches the 119x already noted in solver_tuning. It converges because it is not wall-resolved, not because it is smaller."
   },
   "note": "Nothing here earns a POLICY.yaml change. M1C requires adoption from coarse measurements, deliberately.",
+  "option2_surface_anisotropy_bound": {
+    "bug_found_and_fixed": "The first guard read max_surface_anisotropy > 1.0, so a bound of exactly 1.0 was silently skipped and the mesh rebuilt byte-identical. Corrected to > 0.0.",
+    "implemented": "build_surface max_surface_anisotropy, per level, committed as ae0c26d",
+    "measured": [
+      {
+        "best_orders": 1.663,
+        "bound": "none",
+        "cells": 610612,
+        "median_min_angle_deg": 17.31,
+        "p5": 3.43,
+        "span_over_chord": 2.75,
+        "triangles": 2791,
+        "turned_at": 341,
+        "under_15_deg_percent": 38.8
+      },
+      {
+        "best_orders": 2.27,
+        "bound": 1.5,
+        "cells": 649731,
+        "median_min_angle_deg": 24.22,
+        "p5": 5.76,
+        "span_over_chord": 1.47,
+        "triangles": 4457,
+        "turned_at": 1193,
+        "under_15_deg_percent": 21.2
+      },
+      {
+        "best_orders": 2.288,
+        "bound": 1.0,
+        "cells": 711093,
+        "median_min_angle_deg": 28.49,
+        "p5": 8.45,
+        "span_over_chord": 0.83,
+        "triangles": 6417,
+        "turned_at": 367,
+        "under_15_deg_percent": 13.2
+      }
+    ],
+    "verdict": "Triangle quality is causal and insufficient. Going from 17.31 to 24.22 degrees bought 0.61 orders and moved the turning point 3.5 times later. Going on to 28.49 bought 0.018. The response saturates near 2.3 orders, well short of the 9.66 requirement.",
+    "why_it_saturates": "Even at a global ratio of 1.0 the median minimum angle is only 28.49 degrees and 13.2 percent of triangles remain under 15, because leading and trailing edge clustering stretches cells locally in a way no global ratio can undo."
+  },
+  "option3_case": {
+    "claim": "The mesh type is the discriminator, not the triangle angles.",
+    "existence_proof": {
+      "S6_structured_hex": {
+        "first_cell_um": 4.7,
+        "orders": 8.524,
+        "outcome": "converged",
+        "y_plus_max": 0.375
+      },
+      "S7_tet_prism": {
+        "first_cell_um": 5.4,
+        "orders": 2.288,
+        "outcome": "plateaus",
+        "y_plus_p99": 0.64
+      },
+      "reading": "The same aircraft at the same wall resolution converges 8.5 orders on a structured hexahedral boundary layer and plateaus at 2.3 on a tetrahedral-prism one. Prism aspect ratio near 8000 is therefore not inherently fatal; it is fatal on this element type. A hexahedron stays orthogonal under stretching, and so does a quadrilateral surface cell, which is why chordwise clustering costs S6 nothing in cell quality."
+    },
+    "expected_gain_is_not_extrapolated": "The triangle-angle response saturates, so option 3 is not justified by extrapolating that curve. It is justified by S6 reaching 8.5 orders at the same y+, which says the limit is the element type rather than the angle.",
+    "scope": [
+      "Emit the wall as quadrilaterals instead of splitting each into two triangles; the sections already form a structured n_u by n_v grid, so the quads exist and are being discarded.",
+      "Extrude hexahedra rather than prisms through the boundary layer.",
+      "Handle the quad-to-tet interface with pyramids, and keep triangles only where the tip cap topology genuinely needs them.",
+      "Extend the SU2 writer and the audit to mixed element types."
+    ]
+  },
   "requirement_orders": 9.66,
   "residual_field_localisation": {
     "by_radius_percent": {
@@ -120,7 +186,7 @@
       "verdict": "passes"
     }
   },
-  "result": "ROOT CAUSE IDENTIFIED. Twenty-two runs; the mesh, not the solver.",
+  "result": "ROOT CAUSE IDENTIFIED AND PARTLY MITIGATED. 1.663 to 2.288 orders at unchanged y+; the remainder is the element type.",
   "root_cause": {
     "architectural_conclusion": "A wing surface genuinely wants anisotropic cells, fine chordwise and coarse spanwise. Triangles cannot carry that anisotropy without becoming slivers, because a stretched triangle has a small angle by construction, whereas a stretched quadrilateral keeps its right angles. So on this pipeline the choice is between leading and trailing edge resolution and near-wall cell quality, and at y+ below 1 that choice cannot be dodged. This is also why S6, which builds a structured hexahedral boundary layer, never met it.",
     "chain": [

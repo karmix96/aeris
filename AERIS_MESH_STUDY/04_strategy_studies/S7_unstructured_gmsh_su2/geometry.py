@@ -624,7 +624,9 @@ def build_surface(
     # spanwise points is the only lever that shortens the long edge without
     # giving up leading and trailing edge resolution.
     max_aniso = spec.get("max_surface_anisotropy")
-    if max_aniso is not None and float(max_aniso) > 1.0:
+    # A bound of exactly 1.0 asks for near-equilateral triangles and is valid;
+    # only a missing or non-positive value disables the check.
+    if max_aniso is not None and float(max_aniso) > 0.0:
         limit = float(max_aniso)
         # Measure the chordwise edge on a real section rather than from the
         # parameter spacing.  Parameter spacing times the chord predicts 41.9 mm

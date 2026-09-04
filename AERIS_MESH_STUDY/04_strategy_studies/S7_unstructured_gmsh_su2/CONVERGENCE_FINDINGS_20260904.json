@@ -38,6 +38,12 @@
       "hypothesis": "the energy equation fails to converge while the others do",
       "id": "H5",
       "verdict": "REFUTED, measurement error on my part"
+    },
+    {
+      "evidence": "SU2 confirms 'Gradient for upwind reconstruction: inverse-distance weighted Least-Squares' in its own banner, and the trajectory is identical to Green-Gauss at 1.663 orders reached at iteration 341, the same figure multigrid on and off also produce.",
+      "hypothesis": "least-squares gradients fix the stall on stretched cells",
+      "id": "H6",
+      "verdict": "REFUTED"
     }
   ],
   "mesh": {
@@ -55,9 +61,54 @@
       "p50": 0.9059
     }
   },
+  "mesh_vs_solver_control": {
+    "answer": "the mesh, and specifically the wall-resolved prism layer",
+    "evidence": {
+      "laptop_smoke_42745_cells": {
+        "at_iteration": 484,
+        "best_orders": 4.687,
+        "trend": "still descending"
+      },
+      "same_solver": "L_nk_linelet, identical settings, identical geometry and flow",
+      "xcoarse_610612_cells": {
+        "at_iteration": 341,
+        "best_orders": 1.663,
+        "trend": "turned"
+      }
+    },
+    "question": "is the stall the solver or the mesh?",
+    "why_the_control_is_not_a_fair_comparison": "laptop_smoke puts its first cell 1.070 mm from the wall against xcoarse's 5.4 um, a factor of 196, so its prism aspect ratio is 70 against 8340, a factor of 119 that matches the 119x already noted in solver_tuning. It converges because it is not wall-resolved, not because it is smaller."
+  },
   "note": "Nothing here earns a POLICY.yaml change. M1C requires adoption from coarse measurements, deliberately.",
   "requirement_orders": 9.66,
-  "result": "NOT SOLVED. Ten configurations, none reaching 2.2 orders.",
+  "residual_field_localisation": {
+    "by_radius_percent": {
+      "0.5_to_1.5": 19.7,
+      "0_to_0.5": 22.9,
+      "1.5_to_3": 10.8,
+      "3_to_6": 17.0,
+      "6_to_12": 26.7
+    },
+    "by_region_percent": {
+      "far_wake_5_to_10": 26.6,
+      "mid_wake_2_to_5": 9.9,
+      "near_wake_under_2_chords": 4.5,
+      "outflow_10_to_17": 12.9,
+      "over_the_wing": 29.0,
+      "upstream_of_wing": 17.2
+    },
+    "concentration": "the top 0.1% of points carry 18.4% of the total residual",
+    "interpretation": "The residual is distributed rather than localised at a mesh defect. About 44% of it sits upstream of the wing and in the outer field beyond six chords, where the flow should be uniform freestream and the residual should be negligible. That points at the outer domain and its grading or the farfield treatment rather than at the boundary layer, and it is not what a single bad cell looks like.",
+    "method": "700 iterations with VOLUME_OUTPUT RESIDUAL, ASCII VTK, 129 640 points",
+    "worst_points": "just above the wing surface, x 0.14 to 0.47, z 0.04 to 0.10, y+ zero so not at the wall",
+    "y_plus_measured": {
+      "gate_p95": 1.0,
+      "max": 1.137,
+      "p99": 0.64,
+      "verdict": "passes"
+    }
+  },
+  "result": "NOT SOLVED. Fifteen configurations, none reaching 2.2 orders.",
   "schema": "aeris.s7.convergence_screen.v1",
   "screens": [
     {

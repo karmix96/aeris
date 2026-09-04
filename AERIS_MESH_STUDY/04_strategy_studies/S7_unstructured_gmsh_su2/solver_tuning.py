@@ -165,6 +165,22 @@ VARIANTS: dict[str, dict[str, Any]] = {
     "R_venkat_wang": {**NEWTON_KRYLOV, **LINELET,
                       "SLOPE_LIMITER_FLOW": "VENKATAKRISHNAN_WANG"},
     "S_venkat_loose": {**NEWTON_KRYLOV, **LINELET, "VENKAT_LIMITER_COEFF": 0.05},
+    # Added 2026-09-04. The mesh that converges and the mesh that does not differ
+    # by 119x in prism aspect ratio, 70 against 8340, because the wall-resolved
+    # layer puts the first cell 196x closer to the wall. Aspect ratios of that
+    # order are ordinary for wall-resolved RANS, so the question is why this
+    # solve cannot take them.
+    #
+    # NUM_METHOD_GRAD is set nowhere in this study, so SU2 uses its GREEN_GAUSS
+    # default, and Green-Gauss gradients lose accuracy on strongly stretched
+    # cells in exactly this way. Least squares is the standard remedy and has
+    # never been tried, because no variant here has ever varied a spatial
+    # setting.
+    "T_lsq_grad": {**NEWTON_KRYLOV, **LINELET,
+                   "NUM_METHOD_GRAD": "WEIGHTED_LEAST_SQUARES"},
+    "U_lsq_grad_nolim": {**NEWTON_KRYLOV, **LINELET,
+                         "NUM_METHOD_GRAD": "WEIGHTED_LEAST_SQUARES",
+                         "VENKAT_LIMITER_COEFF": 0.05},
 }
 
 # The anisotropy shortlist: what to screen on a PRODUCTION mesh, since the

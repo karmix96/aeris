@@ -12,7 +12,7 @@ import json
 import math
 from collections import defaultdict, deque
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -46,10 +46,26 @@ class SurfaceMesh:
     labels: tuple[str, ...]
     triangle_span_fraction: Array
     metadata: dict[str, Any]
+    #: Structured wall faces kept as quadrilaterals instead of being split.
+    #: A stretched quad keeps its right angles where a split one cannot, so
+    #: chordwise clustering costs nothing in cell quality. Empty by default, so
+    #: a level that does not ask for quad walls is bit-identical to before.
+    quads: Array = field(default_factory=lambda: np.zeros((0, 4), dtype=np.int64))
+    quad_labels: tuple[str, ...] = ()
+    quad_span_fraction: Array = field(default_factory=lambda: np.zeros(0, dtype=float))
 
     def __post_init__(self) -> None:
         points = np.asarray(self.points)
         triangles = np.asarray(self.triangles)
+        quads = np.asarray(self.quads)
+        if quads.size and (quads.ndim != 2 or quads.shape[1] != 4):
+            raise ValueError("surface quads must have shape (Q, 4)")
+        if len(self.quad_labels) != len(quads):
+            raise ValueError("one label is required per quad")
+        if np.asarray(self.quad_span_fraction).shape != (len(quads),):
+            raise ValueError("one span fraction is required per quad")
+        if quads.size and (quads.min() < 0 or quads.max() >= len(points)):
+            raise ValueError("surface quad connectivity references an invalid point")
         if points.ndim != 2 or points.shape[1] != 3:
             raise ValueError("surface points must have shape (N, 3)")
         if triangles.ndim != 2 or triangles.shape[1] != 3:
@@ -678,12 +694,41 @@ def build_surface(
     triangle_span: list[float] = []
     side_grids: dict[int, tuple[Array, Array]] = {}
 
+    quads: list[tuple[int, int, int, int]] = []
+    quad_labels: list[str] = []
+    quad_span: list[float] = []
+    # A level asks for quad walls explicitly; anything else keeps the split so
+    # existing mesh identities do not move.
+    quad_wall = str(spec.get("wall_element", "triangle")).lower() == "quad"
+
     def add_triangle(nodes: tuple[int, int, int], label: str, span_fraction: float) -> None:
         if len(set(nodes)) != 3:
             raise ValueError(f"degenerate {label} triangle connectivity {nodes}")
         triangles.append(nodes)
         labels.append(label)
         triangle_span.append(float(span_fraction))
+
+    def add_quad(nodes: tuple[int, int, int, int], label: str, span_fraction: float) -> None:
+        if len(set(nodes)) != 4:
+            raise ValueError(f"degenerate {label} quad connectivity {nodes}")
+        quads.append(nodes)
+        quad_labels.append(label)
+        quad_span.append(float(span_fraction))
+
+    def add_face(nodes: tuple[int, ...], label: str, span_fraction: float) -> None:
+        """One structured wall face.
+
+        The two triangles are always emitted, so topology, orientation,
+        self-intersection, labelling and the audit all keep working unchanged.
+        When the level asks for a quad wall the undivided quad is recorded as
+        well, and the boundary-layer extrusion uses that instead, which is the
+        only place the distinction matters.
+        """
+        a, b, c, d = nodes
+        if quad_wall:
+            add_quad((a, b, c, d), label, span_fraction)
+        add_triangle((a, b, c), label, span_fraction)
+        add_triangle((a, c, d), label, span_fraction)
 
     # A half model is meshed for y >= 0 only and closed at the root by a symmetry
     # cap; the full model mirrors and needs no cap because the two halves meet.
@@ -715,20 +760,17 @@ def build_surface(
             for i in range(n_u - 1):
                 a, b = int(upper_grid[j, i]), int(upper_grid[j, i + 1])
                 c, d = int(upper_grid[j + 1, i]), int(upper_grid[j + 1, i + 1])
-                add_triangle((a, b, d), "wall_upper", span_mid)
-                add_triangle((a, d, c), "wall_upper", span_mid)
+                add_face((a, b, d, c), "wall_upper", span_mid)
                 a, b = int(lower_grid[j, i]), int(lower_grid[j, i + 1])
                 c, d = int(lower_grid[j + 1, i]), int(lower_grid[j + 1, i + 1])
-                add_triangle((a, d, b), "wall_lower", span_mid)
-                add_triangle((a, c, d), "wall_lower", span_mid)
+                add_face((a, c, d, b), "wall_lower", span_mid)
 
             # Numerical trailing-edge base between upper/lower u=0 curves.
             a = int(upper_grid[j, 0])
             b = int(lower_grid[j, 0])
             c = int(upper_grid[j + 1, 0])
             d = int(lower_grid[j + 1, 0])
-            add_triangle((a, c, d), "wall_te", span_mid)
-            add_triangle((a, d, b), "wall_te", span_mid)
+            add_face((a, c, d, b), "wall_te", span_mid)
 
         # Flat declared tip cap.  The tip section is a thin cambered airfoil and is
         # therefore NOT star-shaped about the mean of its boundary points, so a
@@ -1048,6 +1090,9 @@ def build_surface(
         labels=tuple(labels),
         triangle_span_fraction=np.asarray(triangle_span, dtype=float),
         metadata=metadata,
+        quads=np.asarray(quads, dtype=np.int64).reshape(-1, 4),
+        quad_labels=tuple(quad_labels),
+        quad_span_fraction=np.asarray(quad_span, dtype=float),
     )
 
 
@@ -1061,6 +1106,11 @@ def write_surface(surface: SurfaceMesh, output_dir: Path) -> dict[str, Any]:
         triangles=np.asarray(surface.triangles, dtype=np.int64),
         labels=np.asarray(surface.labels, dtype="U32"),
         triangle_span_fraction=np.asarray(surface.triangle_span_fraction, dtype=np.float64),
+        # Written unconditionally; a triangle wall stores empty arrays, which
+        # load back as an empty quad set and reproduce the previous behaviour.
+        quads=np.asarray(surface.quads, dtype=np.int64).reshape(-1, 4),
+        quad_labels=np.asarray(surface.quad_labels, dtype="U32"),
+        quad_span_fraction=np.asarray(surface.quad_span_fraction, dtype=np.float64),
     )
     report_path = write_json(output_dir / "source_surface_report.json", surface.metadata)
     # ASCII STL is diagnostic only; NPZ is the authoritative labeled source.
@@ -1095,11 +1145,23 @@ def load_surface(path: Path, report_path: Path | None = None) -> SurfaceMesh:
         triangles = np.asarray(archive["triangles"], dtype=np.int64)
         labels = tuple(str(value) for value in archive["labels"].tolist())
         span = np.asarray(archive["triangle_span_fraction"], dtype=float)
+        # Archives written before quad walls existed carry no quad arrays.
+        if "quads" in archive.files:
+            quads = np.asarray(archive["quads"], dtype=np.int64).reshape(-1, 4)
+            quad_labels = tuple(str(value) for value in archive["quad_labels"].tolist())
+            quad_span = np.asarray(archive["quad_span_fraction"], dtype=float)
+        else:
+            quads = np.zeros((0, 4), dtype=np.int64)
+            quad_labels = ()
+            quad_span = np.zeros(0, dtype=float)
     metadata: dict[str, Any] = {}
     candidate = report_path or Path(path).with_name("source_surface_report.json")
     if candidate.is_file():
         metadata = json.loads(candidate.read_text(encoding="utf-8"))
-    return SurfaceMesh(points, triangles, labels, span, metadata)
+    return SurfaceMesh(
+        points, triangles, labels, span, metadata,
+        quads=quads, quad_labels=quad_labels, quad_span_fraction=quad_span,
+    )
 
 
 def build_and_write_surface(

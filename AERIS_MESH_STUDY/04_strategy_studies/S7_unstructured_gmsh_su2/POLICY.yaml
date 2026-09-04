@@ -181,6 +181,20 @@ grid_family:
       near_core_edge_over_L: 0.1414
       far_core_edge_over_L: 0.9900
       wake_edge_over_L: 0.0990
+    xc_quad:
+      surface_edge_over_L: 0.0849
+      te_surface_edge_over_L: 0.01697
+      tip_surface_edge_over_L: 0.03394
+      first_cell_height_over_L: 1.018e-5
+      prism_layers: 20
+      prism_growth_ratio: 1.30
+      near_core_edge_over_L: 0.1414
+      far_core_edge_over_L: 0.9900
+      wake_edge_over_L: 0.0990
+      # Keep the structured wall faces as quadrilaterals. A stretched quad holds
+      # its right angles, so chordwise clustering costs nothing in cell quality;
+      # splitting it on the diagonal is what manufactured the slivers.
+      wall_element: quad
     xc_aniso10:
       surface_edge_over_L: 0.0849
       te_surface_edge_over_L: 0.01697
@@ -512,6 +526,7 @@ mesh_gates:
       # Derived, not calibrated: it must be confirmed against a measured mesh
       # before any accuracy claim rests on it.
       xcoarse: 2.2e-2
+      xc_quad: 2.2e-2
       xc_aniso10: 2.2e-2
       xc_aniso15: 2.2e-2
       xc_iso: 2.2e-2

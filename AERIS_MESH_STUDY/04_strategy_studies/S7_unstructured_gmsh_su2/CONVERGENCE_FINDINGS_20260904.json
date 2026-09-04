@@ -158,6 +158,41 @@
       "Extend the SU2 writer and the audit to mixed element types."
     ]
   },
+  "option3_quad_wall": {
+    "done": [
+      "SurfaceMesh carries optional quads, quad_labels and quad_span_fraction, defaulting empty so untouched levels are bit-identical.",
+      "build_surface emits the structured wall as quads under a per-level wall_element: quad, while still emitting the split triangles so topology, orientation, self-intersection, labelling and the audit all keep working unchanged.",
+      "Quads persist through write_surface and load_surface, and archives without them load as an empty quad set.",
+      "Level xc_quad builds and is accepted end to end at 610 694 cells."
+    ],
+    "measured_on_index_0_xc_quad": {
+      "reading": "The sliver population goes to zero. The worst quad angle, 43.21 degrees, is better than the median split-triangle angle of 17.42. Same points and same geometry; the only difference is that the diagonal is not cut. This is measurement on the real wall rather than an extrapolation of the saturating triangle-angle curve.",
+      "same_wall_two_representations": {
+        "quads": {
+          "count": 1372,
+          "median_min_angle_deg": 78.57,
+          "p5": 52.41,
+          "under_15_deg_percent": 0.0,
+          "worst": 43.21
+        },
+        "split_triangles": {
+          "count": 2838,
+          "median_min_angle_deg": 17.42,
+          "p5": 3.48,
+          "under_15_deg_percent": 38.2,
+          "worst": 1.36
+        }
+      }
+    },
+    "not_done": [
+      "prism_layer.march extrudes triangles into prisms; it needs to extrude quads into hexahedra. The marcher itself is shape-generic, so this part is small.",
+      "The boundary-layer cap that feeds the tetrahedral core would become quads, so the core needs pyramids at the interface. This is the substantial piece and it drives the rest.",
+      "PrismLayer, prism_signed_volumes, symmetry_quads and top_boundary_loops all assume six-node prisms.",
+      "The SU2 writer needs hexahedra (type 12) and pyramids (type 14); mesh_audit needs hexahedral quality metrics."
+    ],
+    "note_on_scope": "A patch to gmsh_pipeline that adds quads as element type 3 was written and then reverted. The half-model runs build the layer explicitly through prism_layer.march rather than through gmsh.extrudeBoundaryLayer, so that patch sits on a path these runs never exercise and would have been untested code.",
+    "status": "SURFACE STAGE DONE AND MEASURED; VOLUME STAGE NOT STARTED"
+  },
   "requirement_orders": 9.66,
   "residual_field_localisation": {
     "by_radius_percent": {

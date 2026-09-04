@@ -44,6 +44,18 @@
       "hypothesis": "least-squares gradients fix the stall on stretched cells",
       "id": "H6",
       "verdict": "REFUTED"
+    },
+    {
+      "evidence": "far_core_edge_over_L from 0.99 to 0.72, which grew the mesh from 610 612 to 1 085 644 cells, moved the best drop from 1.663 to 1.793 and still turned, at iteration 274 instead of 341. A 0.13 order gain is not the fix.",
+      "hypothesis": "the outer core is too coarse, so disturbances cannot leave cleanly",
+      "id": "H7",
+      "verdict": "REFUTED"
+    },
+    {
+      "evidence": "28 chords upstream and radial, 42 downstream, 1 209 515 cells, reached 1.657, indistinguishable from the 1.663 baseline. CL stayed near 0.006 in both, so the forces are as insensitive to the outer domain as the residual is.",
+      "hypothesis": "the farfield sits too close at 20 chords",
+      "id": "H8",
+      "verdict": "REFUTED"
     }
   ],
   "mesh": {
@@ -108,7 +120,39 @@
       "verdict": "passes"
     }
   },
-  "result": "NOT SOLVED. Fifteen configurations, none reaching 2.2 orders.",
+  "result": "NOT SOLVED. Seventeen variations, none past 2.2 orders.",
+  "running": {
+    "levels": [
+      {
+        "level": "xcoarse",
+        "prism_layers": 20,
+        "result": "1.663, turns",
+        "s0_over_L": 1.018e-05,
+        "y_plus_p99": 0.64
+      },
+      {
+        "level": "xc_yp2",
+        "prism_layers": 16,
+        "s0_over_L": 3.05e-05,
+        "y_plus_estimate": 1.9
+      },
+      {
+        "level": "xc_yp6",
+        "prism_layers": 11,
+        "s0_over_L": 0.0001018,
+        "y_plus_estimate": 6.4
+      },
+      {
+        "level": "xc_yp20",
+        "prism_layers": 8,
+        "s0_over_L": 0.000305,
+        "y_plus_estimate": 19.2
+      }
+    ],
+    "rationale": "laptop_smoke converges to 4.687 orders with its first cell 196x taller than xcoarse's. Everything else tried, solver and domain alike, leaves the plateau at 1.6 to 1.8. So the first cell height is bisected directly, holding the prism stack thickness near 0.0064 L so only wall spacing varies.",
+    "test": "wall-spacing bisection, the one variable that ever changed convergence",
+    "what_it_decides": "Where convergence returns tells us whether wall-resolved RANS is viable on this pipeline at all. If it needs y+ above 5 then the wall-resolved approach is off the table here and wall functions become a deliberate modelling choice rather than a workaround, which is a change of meshing approach and a decision for the principal investigator, not a tuning step."
+  },
   "schema": "aeris.s7.convergence_screen.v1",
   "screens": [
     {

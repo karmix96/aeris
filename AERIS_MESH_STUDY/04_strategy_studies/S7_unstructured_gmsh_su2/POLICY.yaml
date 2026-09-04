@@ -151,6 +151,56 @@ grid_family:
   # sqrt(2) ladder downward instead would have pushed y+ p95 to about 1.1 and
   # failed the 1.0 gate, so the family is closed up between the buildable rungs
   # rather than stretched below them. Projected y+ p95 is 0.663.
+    xc_yp2:
+      surface_edge_over_L: 0.0849
+      te_surface_edge_over_L: 0.01697
+      tip_surface_edge_over_L: 0.03394
+      first_cell_height_over_L: 3.05e-05
+      prism_layers: 16
+      prism_growth_ratio: 1.30
+      near_core_edge_over_L: 0.1414
+      far_core_edge_over_L: 0.9900
+      wake_edge_over_L: 0.0990
+    xc_yp6:
+      surface_edge_over_L: 0.0849
+      te_surface_edge_over_L: 0.01697
+      tip_surface_edge_over_L: 0.03394
+      first_cell_height_over_L: 0.0001018
+      prism_layers: 11
+      prism_growth_ratio: 1.30
+      near_core_edge_over_L: 0.1414
+      far_core_edge_over_L: 0.9900
+      wake_edge_over_L: 0.0990
+    xc_yp20:
+      surface_edge_over_L: 0.0849
+      te_surface_edge_over_L: 0.01697
+      tip_surface_edge_over_L: 0.03394
+      first_cell_height_over_L: 0.000305
+      prism_layers: 8
+      prism_growth_ratio: 1.30
+      near_core_edge_over_L: 0.1414
+      far_core_edge_over_L: 0.9900
+      wake_edge_over_L: 0.0990
+    xc_farfine:
+      surface_edge_over_L: 0.0849
+      te_surface_edge_over_L: 0.01697
+      tip_surface_edge_over_L: 0.03394
+      first_cell_height_over_L: 1.018e-5
+      prism_layers: 20
+      prism_growth_ratio: 1.30
+      near_core_edge_over_L: 0.1414
+      far_core_edge_over_L: 0.7200
+      wake_edge_over_L: 0.0990
+    xc_farbig:
+      surface_edge_over_L: 0.0849
+      te_surface_edge_over_L: 0.01697
+      tip_surface_edge_over_L: 0.03394
+      first_cell_height_over_L: 1.018e-5
+      prism_layers: 20
+      prism_growth_ratio: 1.30
+      near_core_edge_over_L: 0.1414
+      far_core_edge_over_L: 0.9900
+      wake_edge_over_L: 0.0990
     mcoarse:
       surface_edge_over_L: 0.071372
       te_surface_edge_over_L: 0.0142702
@@ -427,6 +477,11 @@ mesh_gates:
       # Derived, not calibrated: it must be confirmed against a measured mesh
       # before any accuracy claim rests on it.
       xcoarse: 2.2e-2
+      xc_yp2: 2.2e-2
+      xc_yp6: 2.2e-2
+      xc_yp20: 2.2e-2
+      xc_farfine: 2.2e-2
+      xc_farbig: 2.2e-2
       mcoarse: 1.556e-2
       coarse: 1.1e-2
       medium: 6.0e-3
@@ -700,3 +755,14 @@ review:
   preserve_prompt_and_output: true
   model_identity_required: true
   no_acceptance_blocker_required: true
+
+# Domain-extent overrides by level, used by the 2026-09-04 residual-localisation
+# study. About 44% of the residual sits upstream of the wing and beyond six
+# chords, where the flow should be uniform freestream, so the outer domain is
+# under test rather than the boundary layer.
+level_farfield_overrides:
+  xc_farbig:
+    upstream_over_L: 28.0
+    downstream_over_L: 42.0
+    radial_over_L: 28.0
+    wake_length_over_L: 17.0

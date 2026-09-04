@@ -102,6 +102,12 @@ def resolved_mesh_spec(
     farfield = dict(policy["farfield"])
     if level == "laptop_smoke":
         farfield.update(dict(policy["laptop_smoke"]["farfield"]))
+    # A level may override the domain extent, which laptop_smoke already did by
+    # name. Naming it in policy rather than in code lets a domain-size study be
+    # run without editing the pipeline.
+    override = (policy.get("level_farfield_overrides") or {}).get(level)
+    if override:
+        farfield.update(dict(override))
     return {
         "level": level,
         "evidence_tier": evidence_tier,

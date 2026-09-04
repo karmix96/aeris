@@ -140,6 +140,27 @@ grid_family:
       near_core_edge_over_L: 0.1414
       far_core_edge_over_L: 0.9900
       wake_edge_over_L: 0.0990
+  # The middle rung of the desktop-executable family, added 2026-09-04. Every
+  # value is the geometric mean of `xcoarse` and `coarse`, which keeps the ladder
+  # uniform between the two rungs this host can actually build: measured cell
+  # counts 610 612 and 1 549 111 give a ratio of 1.593 per step, comfortably
+  # above the 1.35 minimum, at a linear h ratio of 1.1678.
+  #
+  # It exists because `medium` cannot be meshed here at all: the resource
+  # preflight estimates 12.01 GiB against 11.57 GiB available. Extending the
+  # sqrt(2) ladder downward instead would have pushed y+ p95 to about 1.1 and
+  # failed the 1.0 gate, so the family is closed up between the buildable rungs
+  # rather than stretched below them. Projected y+ p95 is 0.663.
+    mcoarse:
+      surface_edge_over_L: 0.071372
+      te_surface_edge_over_L: 0.0142702
+      tip_surface_edge_over_L: 0.0285405
+      first_cell_height_over_L: 8.5613e-6
+      prism_layers: 22
+      prism_growth_ratio: 1.275
+      near_core_edge_over_L: 0.118912
+      far_core_edge_over_L: 0.832466
+      wake_edge_over_L: 0.0832466
     coarse:
       surface_edge_over_L: 0.0600
       te_surface_edge_over_L: 0.0120
@@ -176,13 +197,17 @@ grid_family:
   # host-imposed choice explicitly instead, so it is visible, auditable and
   # reversible. Restore [coarse, medium, fine] on a machine that can hold the
   # 13.63 GiB `fine` floor.
-  executable_family: [xcoarse, coarse, medium]
+  executable_family: [xcoarse, mcoarse, coarse]
   executable_family_reason: >-
-    fine requires a 13.63 GiB replicated-mesh floor against a measured 11.36 GiB
-    budget, so no rank count reaches it on this host. The three executed rungs
-    keep the same sqrt(2) refinement and the same coupled definition; the cost is
-    a coarser finest grid and therefore a larger discretization uncertainty,
-    which must be reported rather than absorbed.
+    Neither fine nor medium can run here. fine needs a 13.63 GiB replicated-mesh
+    floor against a measured 11.36 GiB budget, and medium is refused by the
+    resource preflight at an estimated 12.01 GiB to mesh against 11.57 GiB
+    available. The three executed rungs are therefore closed up between the two
+    that this host does build, at a measured cell ratio of 1.593 per step against
+    the 1.35 minimum. The cost is a linear h ratio of 1.1678 rather than 1.414,
+    which leaves less separation between grids and so demands that iterative
+    error be shown small against the discretization difference before any GCI is
+    believed. That must be reported, not absorbed.
   grid_convergence:
     force_fields: [cl, cd, cmy]
     report_observed_order: true
@@ -402,6 +427,7 @@ mesh_gates:
       # Derived, not calibrated: it must be confirmed against a measured mesh
       # before any accuracy claim rests on it.
       xcoarse: 2.2e-2
+      mcoarse: 1.556e-2
       coarse: 1.1e-2
       medium: 6.0e-3
       fine: 3.2e-3

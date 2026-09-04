@@ -1,0 +1,123 @@
+{
+  "authorizes_adoption": false,
+  "case": {
+    "alpha_deg": 2.0,
+    "mach": 0.2,
+    "ref_area_m2": 0.48054872373173896,
+    "reynolds": 1000000.0,
+    "setup_verified": "Wall markers cover the wing: wetted 0.99419 m2 against a half planform of 0.48055, a ratio of 2.07 which is right for a thin wing. REF_AREA is correctly halved for the half mesh, symmetry sits at y=0, farfield reaches 20 chords upstream and radially and 30 downstream."
+  },
+  "created_at": "2026-09-04T15:30:00+03:00",
+  "hypotheses_refuted": [
+    {
+      "evidence": "carried by most variants; all still plateau",
+      "hypothesis": "Newton-Krylov fixes the stall",
+      "id": "H1",
+      "verdict": "REFUTED"
+    },
+    {
+      "evidence": "the ANISOTROPY_SHORTLIST was screened for the first time and all three failed at 1.4 to 1.8 orders",
+      "hypothesis": "LINELET preconditioning fixes the anisotropy stall",
+      "id": "H2",
+      "verdict": "REFUTED"
+    },
+    {
+      "evidence": "N and O without multigrid reach rms -4.925 against L's -4.944 with it; indistinguishable",
+      "hypothesis": "agglomeration multigrid on a stretched boundary layer causes the stall",
+      "id": "H3",
+      "verdict": "REFUTED"
+    },
+    {
+      "evidence": "the limiter is load-bearing. Removing it diverges, and freezing it at iteration 1000 diverges within 20 iterations, rms -4.9422 to -2.9373. The scheme needs limiting to stay stable at all.",
+      "hypothesis": "the slope limiter chatters and caps convergence",
+      "id": "H4",
+      "verdict": "REFUTED, and the opposite is true"
+    },
+    {
+      "evidence": "rms[RhoE] sits near +0.5 while rms[Rho] reaches -4.9, which looks like five orders of discrepancy but is unnormalised scaling: RhoE is about 2.1e5 times Rho for air at 288 K, and the measured ratio is 2.7 to 2.9e5 across every variant. The equations converge together.",
+      "hypothesis": "the energy equation fails to converge while the others do",
+      "id": "H5",
+      "verdict": "REFUTED, measurement error on my part"
+    }
+  ],
+  "mesh": {
+    "cells": 610612,
+    "geometry": "dev_000",
+    "level": "xcoarse",
+    "prism_aspect_ratio": {
+      "max": 13773.4,
+      "p50": 703.3,
+      "p95": 8033.2
+    },
+    "quality_gates": "passed",
+    "tet_minSICN": {
+      "min": 0.1443,
+      "p50": 0.9059
+    }
+  },
+  "note": "Nothing here earns a POLICY.yaml change. M1C requires adoption from coarse measurements, deliberately.",
+  "requirement_orders": 9.66,
+  "result": "NOT SOLVED. Ten configurations, none reaching 2.2 orders.",
+  "schema": "aeris.s7.convergence_screen.v1",
+  "screens": [
+    {
+      "best_orders": 1.93,
+      "note": "flat at rms -5.07 after 11 500 iterations",
+      "variant": "shipped policy (EULER_IMPLICIT, LU_SGS)"
+    },
+    {
+      "best_orders": 1.399,
+      "turned_at": 195,
+      "variant": "K_linelet"
+    },
+    {
+      "best_orders": 1.809,
+      "turned_at": 1315,
+      "variant": "L_nk_linelet"
+    },
+    {
+      "best_orders": 1.815,
+      "turned_at": 927,
+      "variant": "M_nk_linelet_cfl"
+    },
+    {
+      "best_orders": 0.814,
+      "turned_at": 103,
+      "variant": "J_nk_no_mg"
+    },
+    {
+      "best_orders": 1.663,
+      "turned_at": 341,
+      "variant": "N_linelet_no_mg"
+    },
+    {
+      "best_orders": 1.663,
+      "turned_at": 341,
+      "variant": "O_nk_linelet_no_mg"
+    },
+    {
+      "best_orders": 0.07,
+      "diverged": true,
+      "note": "CL reached 97.77 and CD -1.48; unlimited MUSCL is unstable here",
+      "variant": "P_nolimiter"
+    },
+    {
+      "best_orders": 1.757,
+      "diverged": true,
+      "note": "rms jumped from -4.9422 to -2.9373 within 20 iterations of the freeze at 1000",
+      "variant": "Q_limiter_frozen"
+    }
+  ],
+  "still_open": [
+    "VENKATAKRISHNAN_WANG and a looser Venkatakrishnan coefficient, running at the time of writing.",
+    "Whether the prism layer's extreme aspect ratio is itself the limit, which would be a mesh-generation question and not a solver one.",
+    "Whether index 0's geometry is unusual; every screen so far has used it alone."
+  ],
+  "what_is_established": [
+    "The failure is independent of the linear solver, the preconditioner, multigrid and the CFL ramp.",
+    "It is not a setup error: markers, wetted area, reference values, symmetry and domain extent all check out.",
+    "It is not mesh invalidity: the quality gates pass with tet SICN p50 0.906.",
+    "The forces are solver-independent and physically implausible, CL near 0.006 and CD near 0.078 where lift-line and flat-plate estimates give roughly 0.11 and 0.012.",
+    "The scheme cannot run unlimited, so the reconstruction is genuinely struggling on this mesh."
+  ]
+}

@@ -132,6 +132,39 @@ VARIANTS: dict[str, dict[str, Any]] = {
     "K_linelet": {**MULTIGRID, **LINELET},
     "L_nk_linelet": {**MULTIGRID, **NEWTON_KRYLOV, **LINELET},
     "M_nk_linelet_cfl": {**MULTIGRID, **NEWTON_KRYLOV, **LINELET, **HIGH_CFL},
+    # Added 2026-09-04. Every variant screened so far carries MULTIGRID, and all
+    # of them plateau between 1.4 and 2.1 orders on the production mesh whatever
+    # else changes. Agglomeration multigrid on a boundary layer whose prism
+    # aspect ratio runs to 13 773 is a known way to stall an otherwise healthy
+    # solve, so LINELET without multigrid is the one cell of the matrix that has
+    # never been tested. J_nk_no_mg is the existing no-multigrid control, but it
+    # uses ILU rather than LINELET, so it cannot separate the two effects.
+    "N_linelet_no_mg": {**LINELET},
+    "O_nk_linelet_no_mg": {**NEWTON_KRYLOV, **LINELET},
+    # Added 2026-09-04. Every variant from A to O varies the linear solver, the
+    # preconditioner, multigrid or the CFL ramp, and not one of them touches the
+    # spatial discretisation. All of them plateau between 1.4 and 2.1 orders,
+    # which is what a limiter that never stops switching does to an otherwise
+    # healthy solve, and it would be immune to every knob tried so far.
+    #
+    # The case is Mach 0.2. A slope limiter is there to stop oscillations at
+    # shocks and there are none, so P removes it outright. Q keeps it but freezes
+    # it, which is the standard remedy where a limiter is genuinely wanted.
+    "P_nolimiter": {**NEWTON_KRYLOV, **LINELET, "SLOPE_LIMITER_FLOW": "NONE"},
+    "Q_limiter_frozen": {**NEWTON_KRYLOV, **LINELET, "LIMITER_ITER": 1000},
+    # Added 2026-09-04, after P and Q showed the limiter is load-bearing rather
+    # than obstructive: removing it diverges, and freezing it diverges within 20
+    # iterations of the freeze. So the reconstruction genuinely needs limiting,
+    # and the question becomes which limiter behaves on a boundary layer whose
+    # prism aspect ratio reaches 13 773.
+    #
+    # Venkatakrishnan's epsilon scales with a cell length that is ambiguous on a
+    # highly stretched cell. The Wang variant normalises by the local solution
+    # range instead, which is the standard remedy on stretched unstructured
+    # meshes. R keeps the coefficient, S loosens it.
+    "R_venkat_wang": {**NEWTON_KRYLOV, **LINELET,
+                      "SLOPE_LIMITER_FLOW": "VENKATAKRISHNAN_WANG"},
+    "S_venkat_loose": {**NEWTON_KRYLOV, **LINELET, "VENKAT_LIMITER_COEFF": 0.05},
 }
 
 # The anisotropy shortlist: what to screen on a PRODUCTION mesh, since the

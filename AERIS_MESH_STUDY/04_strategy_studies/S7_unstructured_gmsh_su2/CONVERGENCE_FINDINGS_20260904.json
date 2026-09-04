@@ -120,7 +120,52 @@
       "verdict": "passes"
     }
   },
-  "result": "NOT SOLVED. Seventeen variations, none past 2.2 orders.",
+  "result": "ROOT CAUSE IDENTIFIED. Twenty-two runs; the mesh, not the solver.",
+  "root_cause": {
+    "architectural_conclusion": "A wing surface genuinely wants anisotropic cells, fine chordwise and coarse spanwise. Triangles cannot carry that anisotropy without becoming slivers, because a stretched triangle has a small angle by construction, whereas a stretched quadrilateral keeps its right angles. So on this pipeline the choice is between leading and trailing edge resolution and near-wall cell quality, and at y+ below 1 that choice cannot be dodged. This is also why S6, which builds a structured hexahedral boundary layer, never met it.",
+    "chain": [
+      "The wall triangulation is poor: median minimum angle 17.31 degrees, p5 3.43, worst 1.36, with 38.8 percent of triangles below 15 degrees, spread over the whole wing rather than one region.",
+      "The cause is anisotropy, not coarseness. Chordwise spacing is clustered to 17.35 mm at the leading and trailing edges while spanwise spacing is uniform at 47.65 mm, a ratio of 2.75. A quad of that aspect split on its diagonal gives a 20.0 degree minimum angle against the 17.31 measured, and 41 percent of the triangles have a maximum angle within 5 degrees of 90, which is the signature of a diagonal split.",
+      "A prism layer extrudes every surface triangle, so each sliver becomes 20 sliver prisms: 1083 bad triangles produce about 21 660 bad cells.",
+      "The wall spacing decides whether that is survivable. Prism aspect ratio is surface edge over first cell height: 278 at y+ 20 and 8340 at y+ 0.64, a factor of 30.",
+      "So the same mesh defect is tolerable at y+ 20 and fatal at y+ below about 6."
+    ],
+    "decisive_evidence": {
+      "geometry_independence": {
+        "index_0": 1.663,
+        "index_24": 1.732,
+        "index_49": 1.794
+      },
+      "identical_surface_triangulation": "The converging and non-converging meshes have byte-identical wall triangle statistics, median minimum angle 17.31 and 38.8 percent below 15 degrees in both, because surface quality depends only on surface_edge_over_L which is unchanged between them. Only the wall spacing differs.",
+      "prism_extrusion_is_not_the_fault": "The angle between the extrusion direction and the wall normal is p50 0.46, p95 19.68 and max 49.13 degrees, and only 15 prisms of 55 820 exceed 45 degrees, all at one tip location. The marching direction is sound; the fault is in-plane triangle shape.",
+      "y_plus_20_still_descending": true,
+      "y_plus_sweep": {
+        "0.64": 1.663,
+        "2": 1.857,
+        "20": 3.463,
+        "6": 1.663
+      }
+    },
+    "options": [
+      {
+        "consequence": "Compromises exactly what the study measures. Skin friction would come from an assumed log law at Re 1e6 where that law is weakest, and wall functions are unreliable at the tip and trailing edge. Also note y+ 20 with no wall function enabled, which is what was run here, is the worst case of all: the first cell sits in the buffer layer with nothing modelling it.",
+        "cost": "cheap",
+        "option": "Accept y+ around 20 with wall functions"
+      },
+      {
+        "consequence": "Keeps triangles but costs cells wherever the ratio is currently large. Worth measuring before committing to the larger change.",
+        "cost": "moderate, a surface-generation change",
+        "option": "Cluster spanwise as well as chordwise, bounding the ratio everywhere"
+      },
+      {
+        "consequence": "The correct fix. A stretched quad keeps 90 degree angles, so chordwise clustering costs nothing in cell quality. This is what S6 does and why S6 does not have this problem.",
+        "cost": "a pipeline change",
+        "option": "Quad-dominant surface with a hexahedral or prism boundary layer"
+      }
+    ],
+    "verdict": "Sliver wall triangles, made fatal by the wall-resolved prism aspect ratio.",
+    "why_the_obvious_fix_fails": "surface_edge_over_L scales both directions at once, so refining it preserves the ratio. Measured: 0.0849 to 0.0500 moved the median minimum angle from 17.31 to 17.53 degrees and the fraction below 15 degrees from 38.8 to 38.9 percent, for 21 percent more cells and no quality gain. The lever is the chordwise-to-spanwise ratio, not the size."
+  },
   "running": {
     "levels": [
       {

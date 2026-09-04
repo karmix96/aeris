@@ -1,0 +1,352 @@
+{
+  "schema": "aeris.s8.oh_grid_first_build.v1",
+  "created_at": "2026-09-03T21:40:00+03:00",
+  "strategy_id": "S8_OH_STRUCTURED",
+  "reference": "Zhang, Han, Zhang, Xu, Song (2026), Eng. Appl. Comp. Fluid Mech., figure 28 (O-H grids of the CRM wing)",
+  "purpose": "Replace the six-block section topology whose leading-edge collar caused the cp defect, with the paper's O-H: one O-ring per section, wall-normal march to the far field, spanwise H.",
+  "cfd_run": false,
+  "authorizes_cfd": false,
+  "holdout_accessed": false,
+  "topology": {
+    "xi": "one closed O-ring per section: upper TE corner -> LE -> lower TE corner -> across the 1.0 mm blunt base",
+    "eta": "wall-normal, marched in the section plane to a circular far field",
+    "zeta": "spanwise, root symmetry plane -> tip, tanh-clustered toward the tip",
+    "blocks": 3,
+    "collar_blocks": 0,
+    "note": "There is no end_points. Leading-edge resolution is requested in degrees of turning per cell and solved for, so it cannot shrink the trailing edge or the tip cap.",
+    "block_layout": {
+      "o_wing": "(n_ring+1, n_normal, n_span)  O-ring x wall-normal x root->tip; eta0 viscous wall, zeta0 root symmetry plane",
+      "o_out": "(n_ring+1, n_normal, n_out)   the annulus continued outboard to the spanwise far field; its zeta0 plane IS o_wing's last plane",
+      "cap_out": "(n_chord, n_base, n_out)      the tip cap continued outboard; its zeta0 face is the tip cap, a viscous wall"
+    }
+  },
+  "delivered_oh_L3": {
+    "block_shape": null,
+    "cells": 282624,
+    "target_le_turn_deg": 10.0,
+    "worst_le_turn_per_cell_deg": 10.019,
+    "all_49_stations_met_target": true,
+    "min_cell_over_s0": 19.308,
+    "s0_requested_m": 4.731841e-06,
+    "wall_spacing_delivered_m": [
+      4.391097e-06,
+      4.731841e-06
+    ],
+    "negative_cells": 0,
+    "min_cell_volume_m3": 3.58807964e-14,
+    "wall_orthogonality_median_deg": 0.2399,
+    "wall_orthogonality_worst_deg": 31.91,
+    "wall_orthogonality_worst_location": "the two 90-degree corners of the blunt trailing-edge base; geometric, not a mesh defect",
+    "normal_growth_ratio": 1.253,
+    "farfield_root_chords": 40.0,
+    "smoothing_ladder_rung_used": 4,
+    "cells_closed": 567256
+  },
+  "comparison": {
+    "le_turn_per_cell_deg": {
+      "c01": 37.92,
+      "c02": 31.77,
+      "c03": 25.74,
+      "d03": 10.63,
+      "s8_oh_L3": 10.02
+    },
+    "min_cell_over_s0": {
+      "c03": 21.41,
+      "d01": 13.78,
+      "d02": 10.61,
+      "d03": 8.83,
+      "s8_oh_L3": 19.39
+    },
+    "marches": {
+      "c03": "yes",
+      "d03": "segmentation fault at every governed setting",
+      "s8_oh_L3": "not applicable; the volume grid is built directly, no hyperbolic march"
+    }
+  },
+  "defects_found_and_fixed_during_the_build": [
+    {
+      "id": "B1",
+      "finding": "Resampling a uniform dense polyline cannot place a 100 um cell at the nose; the root section's dense sampling is 560 um. Ring nodes are now re-evaluated on the exact pyGeo loft at tracked parameters, the same instrument S6 uses for its fidelity check."
+    },
+    {
+      "id": "B2",
+      "finding": "A tanh normal distribution cannot span 4.7 um to 35 m. Its solver saturates and silently returns a first cell of 25 metres. Replaced with constant geometric growth, which also reports the growth ratio."
+    },
+    {
+      "id": "B3",
+      "finding": "A cubic Hermite from wall to far field is exact at both ends and folds in the middle: 113 cells at the tip station, layers 35-51, on the concave lower-aft surface. Replaced with an explicit layer-by-layer march."
+    },
+    {
+      "id": "B4",
+      "finding": "Smoothing the coordinates drags the first layers along the wall and drove median wall orthogonality error from 0.2 to 75 degrees. Only the marching increment may be smoothed."
+    },
+    {
+      "id": "B5",
+      "finding": "Building the global far-field frame from world axes (x, z) reverses handedness against the local frame's +y normal, so the xi-eta-zeta triad inverts mid-blend and every outer-layer cell reports negative. Reads exactly like a fold and is not one. Fixed by Rodrigues-rotating the local frame."
+    },
+    {
+      "id": "B6",
+      "finding": "Blends keyed to distance fraction do nothing until the last three layers, because geometric growth puts almost all the distance there. Keyed to layer-index fraction instead."
+    },
+    {
+      "id": "B7",
+      "finding": "Rotating the marching frame near the wall tilts the boundary layer out of the section plane and inverted 7522 near-wall cells. The frame rotation is now confined to the outer 60 percent."
+    },
+    {
+      "id": "B8",
+      "finding": "A centroid butterfly tip cap is textbook on a circle and nonsense on an aerofoil. The tip ring's distance to its centroid ranges 7.7 to 80.2 mm, a ratio of 10.4, so a 65 percent pull-in moves points up to 52 mm across a section only 22.9 mm thick: upper and lower surfaces crossed. Collar reached 0.0075 with a 180 degree normal flip, centre patch went to -0.1485. Replaced with a chordwise H patch, whose chords across the thickness cannot cross because the section is convex in that direction everywhere."
+    },
+    {
+      "id": "B9",
+      "finding": "The cap's base side was assembled reversed against its nose side, which a transfinite patch happily interpolates into a fold: -0.977 minimum scaled Jacobian. The patch perimeter is now checked against the tip ring node for node, which makes that class of error impossible to ship."
+    },
+    {
+      "id": "B10",
+      "finding": "Extruding the cap outboard gave all 3864 cap cells negative volumes. Same signature and same cause as B5: xi runs aft and eta runs upward, so i x j is -y, and extruding that outboard is left-handed. The cap is now oriented against the outboard direction at construction time."
+    },
+    {
+      "id": "B11",
+      "finding": "Raising n_base to give the cap's nose arc more points makes the cap WORSE, not better: 0.049 at n_base 5 falls to -0.133 at 13, because the same count also thins the trailing-edge base column into slivers. The two ends of a single-block chordwise cap have very different lengths and must share a point count; 5 to 9 is the usable range. Measured rather than assumed."
+    }
+  ],
+  "status": "CFD_RUN_COMPLETE_DEFECT_IMPROVED_NOT_ELIMINATED",
+  "open_work": [
+    "Add an S8 policy entry and an ADR before any solve; POLICY.yaml blocks heavy work and names only the C03 canary as an exception.",
+    "Two-block tip cap. The single chordwise patch leaves one poor cell, the nose-arc column at scaled Jacobian 0.049 and skewness 0.969. Adding a small O-collar around the nose, as S6's cap does, decouples the nose arc's point count from the trailing-edge base and should clear the 0.30 quality target.",
+    "Tip-cap y+. The tip cap's wall normal IS the spanwise direction, so its first cell is set by the outboard span law, currently 20 s0. That is about 20 times the OML's y+, not wall-resolved. Wall-resolving it at these station counts is impossible in this topology: it needs either a much longer outboard stack or a march over the closed body, which is what a hyperbolic marcher does natively.",
+    "The o_wing/o_out interface carries a 10x spanwise cell-size jump, because the OML span law ends at 0.95 mm while the outboard stack starts at 20 s0. Clustering the OML span law toward the tip would close it but costs root resolution at these station counts.",
+    "Bring oh_L2->oh_L1 inside the refinement band: it is 1.3523 against a 1.35 ceiling.",
+    "Write CGNS with the boundary conditions already recorded in the summary, so ADflow can read it. Plot3D is written today.",
+    "Re-measure y+ on the OML against the delivered wall spacing before any CFD."
+  ],
+  "files": {
+    "surface_and_ring": "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/section_o.py",
+    "strategy": "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/strategy_s8.py",
+    "march": "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/march_o.py",
+    "driver": "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/build_volume.py",
+    "vtk": "AERIS_MESH_STUDY/artifacts/paraview_inspection/s8_oh/oh_L3_volume.vtk",
+    "plot3d": "AERIS_MESH_STUDY/artifacts/paraview_inspection/s8_oh/oh_L3_volume.xyz",
+    "paraview_opener": "AERIS_MESH_STUDY/artifacts/paraview_inspection/s8_oh/open_in_paraview.py",
+    "surface_exporter": "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/export_surface.py",
+    "surface_vtk": "AERIS_MESH_STUDY/artifacts/paraview_inspection/s8_oh/oh_L3_surface.vtk",
+    "paraview_surface_opener": "AERIS_MESH_STUDY/artifacts/paraview_inspection/s8_oh/open_surface.py"
+  },
+  "grid_family": {
+    "levels": {
+      "oh_probe": {
+        "cells": 61440,
+        "shape": [
+          65,
+          41,
+          25
+        ],
+        "le_turn": 12.02,
+        "min_s0": 16.0,
+        "ortho": 0.57,
+        "growth": 1.456,
+        "negative_cells": 0,
+        "all_stations_met_target": true,
+        "smoothing_ladder_rung": 4
+      },
+      "oh_L3": {
+        "cells": 282624,
+        "shape": [
+          93,
+          65,
+          49
+        ],
+        "le_turn": 10.02,
+        "min_s0": 19.4,
+        "ortho": 0.24,
+        "growth": 1.253,
+        "negative_cells": 0,
+        "all_stations_met_target": true,
+        "smoothing_ladder_rung": 4
+      },
+      "oh_L2": {
+        "cells": 614400,
+        "shape": [
+          121,
+          81,
+          65
+        ],
+        "le_turn": 8.02,
+        "min_s0": 17.3,
+        "ortho": 0.13,
+        "growth": 1.194,
+        "negative_cells": 0,
+        "all_stations_met_target": true,
+        "smoothing_ladder_rung": 4
+      },
+      "oh_L1": {
+        "cells": 1519232,
+        "shape": [
+          167,
+          105,
+          89
+        ],
+        "le_turn": 6.02,
+        "min_s0": 14.0,
+        "ortho": 0.07,
+        "growth": 1.143,
+        "negative_cells": 0,
+        "all_stations_met_target": true,
+        "smoothing_ladder_rung": 4
+      }
+    },
+    "effective_refinement_ratios": {
+      "oh_L3_to_oh_L2": 1.2954,
+      "oh_L2_to_oh_L1": 1.3523
+    },
+    "band": [
+      1.25,
+      1.35
+    ],
+    "in_band": false,
+    "note": "Every level builds with zero inverted cells at the lowest rung of the smoothing ladder, and every level delivers its requested leading-edge turning at all span stations. The target is refined with the grid (12, 10, 8, 6 degrees), so this is a genuine refinement family rather than a family that refines everywhere except the leading edge -- which is what broke the C family's convergence study.",
+    "in_band_detail": "oh_L3->oh_L2 is 1.2954, inside the band. oh_L2->oh_L1 is 1.3523, which is 0.0023 above the 1.35 ceiling. Recorded as out of band rather than rounded into it; oh_L1 needs a small reduction in one dimension to land inside.",
+    "closed_totals": {
+      "oh_probe": 181680,
+      "oh_L3": 555144,
+      "oh_L2": 1056480,
+      "oh_L1": 2316902
+    },
+    "closed_note": "Closed cell counts including the outboard blocks. Every level: zero negative cells in all three blocks, interfaces matching to under 1e-15 m."
+  },
+  "tip_closure": {
+    "surface": "One chordwise transfinite H patch whose perimeter IS the tip ring, node for node. xi runs nose arc -> trailing-edge base, eta across the thickness. Zero collapsed edges: neither the leading-edge line a naive H cap leaves nor the pole a naive O cap leaves.",
+    "volume": "o_out and cap_out together fill the whole disc outboard of the tip, so the domain is closed: root symmetry plane, viscous wall on the OML and the tip cap, far field on the cylinder and the outboard end.",
+    "interface_match_m": {
+      "o_wing_zetamax_to_o_out_zeta0": 0.0,
+      "cap_out_perimeter_to_o_out_eta0": 9.99e-16
+    },
+    "tip_cap_first_cell_in_s0": 20.0,
+    "oml_tip_span_cell_m": 0.00095393,
+    "interface_span_jump": 10.08,
+    "outboard_span_growth_ratio": 1.2937,
+    "n_out": 46
+  },
+  "surface_only_export": {
+    "blocks": {
+      "oml_ring": [
+        93,
+        49
+      ],
+      "tip_cap": [
+        43,
+        5
+      ]
+    },
+    "quads": 4584,
+    "oml_ring_min_scaled_jacobian": 0.681,
+    "oml_ring_max_skewness": 0.5231,
+    "tip_cap_min_scaled_jacobian": 0.0491,
+    "tip_cap_max_skewness": 0.9687,
+    "cells_below_scaled_jacobian_0p05": 1,
+    "note": "Two blocks for the whole closed wing surface, against thirteen for candidate_c03. The O-ring OML is far better than any earlier strategy: 0.681 minimum scaled Jacobian against 0.241 for the whole C03 surface and 0.051 for D03. The weak block is now the tip cap, and it is one cell: the nose-arc column at i=0, where a 43x5 patch bridges a 0.89 mm nose arc. By i=1 the scaled Jacobian is already 0.277."
+  },
+  "cfd_readiness": {
+    "cgns_written": true,
+    "writer": "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/write_cgns.py",
+    "runs_under": "the MACH-Aero interpreter, because cgnsutilities needs libcgns and the venv cannot load it",
+    "boundary_conditions": {
+      "o_wing": {
+        "jMin": "bcwallviscous/wall",
+        "jMax": "bcfarfield/far",
+        "kMin": "bcsymmetryplane/sym"
+      },
+      "o_out": {
+        "jMax": "bcfarfield/far",
+        "kMax": "bcfarfield/far"
+      },
+      "cap_out": {
+        "kMin": "bcwallviscous/wall (the tip cap)",
+        "kMax": "bcfarfield/far"
+      }
+    },
+    "block_to_block_connections": 14,
+    "explicit_bcs": 7,
+    "unclaimed_faces": 0,
+    "unclaimed_faces_method": "cgns_utils fillOpenBCs adds nothing, so every face is claimed by a BC or a connection",
+    "root_symmetry_plane_y_spread_m": 1.55e-14,
+    "adflow_acceptance": {
+      "oh_probe": {
+        "accepted": true,
+        "cells": 181680,
+        "load_imbalance": 0.0,
+        "ranks": 1
+      },
+      "oh_L3": {
+        "accepted": true,
+        "cells": 555144,
+        "load_imbalance": 0.04,
+        "ranks": 4
+      },
+      "families_resolved": [
+        "wall",
+        "sym",
+        "far"
+      ],
+      "method": "solver construction only, nCycles 0, no solve call: a mesh-acceptance check, not CFD",
+      "script": "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/preflight_adflow.py",
+      "oh_L3_final": {
+        "accepted": true,
+        "cells": 567256,
+        "load_imbalance": 0.018,
+        "ranks": 6
+      }
+    },
+    "solve_status": "LAUNCHED 2026-09-03 on 6 ranks, alpha 0, oh_L3",
+    "solve_block_reason": "05_s6_cfd_qualification/POLICY.yaml sets heavy_work.blocked true with a single exception for the M2 A/C03 canary, which this is not, and S8 has no policy entry. solve_s8.py refuses to run without --i-have-authorization.",
+    "forecast_memory_gib": 5.49,
+    "memory_limit_gib": 9.499,
+    "memory_note": "555,144 cells at attempt04's measured 10,620 bytes/cell. Fits with margin; C03's 943,104 cells did not.",
+    "runbook": "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/RUNBOOK_cfd.md",
+    "acceptance_check_script": "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/check_cp_bound.py"
+  },
+  "governance": {
+    "adr": "AERIS_MESH_STUDY/00_governance/decisions/ADR-0018-s8-oh-structured-grid.md",
+    "policy": "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/s8_oh_first_point_v1.yaml",
+    "policy_exception": "POLICY.yaml heavy_work.exceptions.run-s8-first-point",
+    "authorized_by": "principal_investigator",
+    "authorized_on": "2026-09-03",
+    "minimum_mpi_processes": 6,
+    "authorizes": [
+      "surface pressure measured against its physical bound"
+    ],
+    "does_not_authorize": [
+      "tip-cap viscous quantities",
+      "drag decomposition including the tip cap",
+      "family freeze",
+      "holdout unlock",
+      "paper claims"
+    ]
+  },
+  "tip_cap_resolution_fix": {
+    "problem": "The tip cap's wall normal IS the spanwise direction, so its first cell is set by the span law, not by the wall-normal law. A tanh span clustering controls the shape of the distribution but not the size of any particular cell, so the cap's first cell was whatever fell out: 0.95 mm, about 200 times the OML's 4.7 um.",
+    "fix": "The span law is now a two-sided stretching solved in spanwise arc length and inverted onto the loft parameter v, so the LAST spanwise cell is a request in metres. It is set to 10 s0 and the outboard stack starts from the same value.",
+    "before": {
+      "oml_tip_span_cell_m": 0.0009539268,
+      "outboard_first_cell_in_s0": 20.0,
+      "interface_span_jump": 10.08,
+      "tip_cap_yplus_scale_vs_oml": 20.0
+    },
+    "after": {
+      "oml_tip_span_cell_m": 4.828959912e-05,
+      "outboard_first_cell_in_s0": 10.21,
+      "interface_span_jump": 1.0,
+      "tip_cap_yplus_scale_vs_oml": 10.21
+    },
+    "span_law": {
+      "ds_root_m": 0.019969458,
+      "ds_tip_m": 4.735426e-05,
+      "max_span_growth_ratio": 1.260459
+    },
+    "cost": {
+      "cells_before": 555144,
+      "cells_after": 567256
+    },
+    "residual_limitation": "y+ on the cap is still about ten times the OML's. Wall-resolving it needs a march over the closed body rather than stacked section planes, which is the recorded next step; the interface jump, which was the worse of the two problems, is gone."
+  },
+  "first_cfd_point": "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_oh_first_cfd_point_20260904.json"
+}

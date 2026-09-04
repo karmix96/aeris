@@ -14,6 +14,17 @@ heavy_work:
       maximum_process_launches: 1
       accepted_classification_allowed: false
       automatic_retry_allowed: false
+    run-s8-first-point:
+      policy: policies/s8_oh_first_point_v1.yaml
+      decision: AERIS_MESH_STUDY/00_governance/decisions/ADR-0018-s8-oh-structured-grid.md
+      authorized_by: principal_investigator
+      authorized_on: 2026-09-03
+      scope: >-
+        The first CFD point on the S8 O-H grid, on lhs100_seed42[83] at the
+        nominal mission operating point. Authorizes measurement of surface
+        pressure against its physical bound. Does NOT authorize tip-cap viscous
+        quantities, a family freeze, a hold-out unlock, or any paper claim.
+      minimum_mpi_processes: 6
 holdout:
   id: round_c_lhs10_seed42
   locked: true

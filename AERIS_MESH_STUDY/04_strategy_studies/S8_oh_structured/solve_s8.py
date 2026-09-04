@@ -194,14 +194,37 @@ def main() -> int:
         failed = bool(solver.adflow.killsignals.routinefailed)
     except Exception:  # noqa: BLE001 - reported, never assumed converged
         failed = None
+    # Defect 16.  This read `iteration.totalr`, which does not exist -- ADflow's
+    # own convergence check uses `totalrfinal` (pyADflow.py:2007,
+    # `L2Conv = iterationModule.totalrfinal / iterationModule.totalr0`).  The
+    # attribute error was caught and turned into None, and None made
+    # `converged` False, so the first corrected alpha 0 run was recorded as not
+    # converged when it had in fact reached 9.14e-9 against a 1e-8 target in 279
+    # iterations.  Failing closed is right; failing closed on a typo is not,
+    # because a wrongly-rejected run costs exactly as much machine time as a
+    # wrongly-accepted one and looks like a real result to whoever reads it next.
     residual = None
+    residual_source = None
     try:
-        residual = float(solver.adflow.iteration.totalr / solver.adflow.iteration.totalr0)
-    except Exception:  # noqa: BLE001 - absence is reported, never assumed converged
-        residual = None
+        iteration = solver.adflow.iteration
+        residual = float(iteration.totalrfinal / iteration.totalr0)
+        residual_source = "adflow.iteration.totalrfinal/totalr0"
+    except Exception as direct_error:  # noqa: BLE001 - fall through, then report
+        try:
+            history = solver.getConvergenceHistory()
+            series = history.get("RSDRho") or history.get("Res rho")
+            residual = float(series[-1] / series[0])
+            residual_source = "getConvergenceHistory"
+        except Exception as history_error:  # noqa: BLE001 - never assumed converged
+            residual = None
+            residual_source = (
+                f"UNAVAILABLE: {type(direct_error).__name__}: {direct_error}; "
+                f"fallback {type(history_error).__name__}: {history_error}"
+            )
     result = {
         "converged": (residual is not None and residual <= args.l2),
         "relative_residual": residual,
+        "residual_source": residual_source,
         "l2_target": args.l2,
         "n_cycles_budget": args.n_cycles,
         "grid": str(args.grid),

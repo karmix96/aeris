@@ -1,0 +1,106 @@
+{
+  "schema": "aeris.s8.corrected_sweep.v1",
+  "created_at": "2026-09-05T00:30:00+03:00",
+  "policy": "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/s8_oh_corrected_sweep_v1.yaml",
+  "decision": "AERIS_MESH_STUDY/00_governance/decisions/ADR-0019-s8-lift-axis-and-le-spacing.md",
+  "grid": "oh_L3 rebuilt 2026-09-04 with smooth_le_spacing, 567256 cells, 0 inverted",
+  "geometry": "lhs100_seed42[83]",
+  "operating_point": "mission_authority_v1.yaml verbatim, M 0.0837, Re 1530708",
+
+  "results": [
+    {"alpha_deg": -2.0, "cl": -0.298397, "cd": 0.026005, "cdp": 0.017417, "cdv": 0.008588,
+     "cmy": -0.005953, "relative_residual": 9.96e-09, "converged": true, "freestream_verified": true},
+    {"alpha_deg": 0.0, "cl": -0.159963, "cd": 0.020838, "cdp": 0.011841, "cdv": 0.008996,
+     "cmy": 0.001280, "relative_residual": 9.14e-09, "converged": true, "freestream_verified": true},
+    {"alpha_deg": 4.0, "cl": 0.120266, "cd": 0.019864, "cdp": 0.010440, "cdv": 0.009425,
+     "cmy": 0.015378, "relative_residual": 5.73e-08, "converged": false, "freestream_verified": true,
+     "status": "RESIDUAL_STALLED_FORCES_CONVERGED"},
+    {"alpha_deg": 8.0, "cl": 0.401834, "cd": 0.030922, "cdp": 0.021511, "cdv": 0.009411,
+     "cmy": 0.028522, "relative_residual": 8.76e-09, "converged": true, "freestream_verified": true}
+  ],
+
+  "headline": "Three of four angles converged with a verified freestream. alpha 8 -- the run that never converged before defect 14 was fixed -- now converges to 8.76e-9. The lift curve is linear to 1.7 percent and agrees with AVL on the same loft.",
+
+  "the_alpha_8_question_is_answered": {
+    "before": "stalled with the residual frozen at 13.4682379 to eight significant figures, killed at iteration 592",
+    "after": "converged to 8.76e-9 relative, 8 orders, with lift_direction (0,0,1)",
+    "conclusion": "Defect 14 WAS blocking alpha 8. The hypothesis in ADR-0019 that the sideslip made the problem inconsistent with the root symmetry plane is supported for this case."
+  },
+
+  "but_the_hypothesis_does_not_generalise": {
+    "finding": "alpha 4 stalled with the SAME signature and it has no sideslip at all.",
+    "evidence": {
+      "residual_frozen_at": 5.2371905e-05,
+      "relative": 5.734e-08,
+      "orders_dropped": 7.242,
+      "orders_required": 8.0,
+      "spread_over_last_120_iterations": 2.88e-06,
+      "nk_step_length": 0.0,
+      "nk_linear_residual": 1.0
+    },
+    "mechanism": "The Krylov solve stopped reducing the linear residual (1.000 = no reduction), so Newton-Krylov took null steps. This is a linear-solver breakdown, not a physics or a mesh-validity problem: the mesh has zero inverted cells and the forces settled to under 2e-8 relative over 150 iterations.",
+    "consequence": "ADR-0019 recorded the sideslip-versus-symmetry-plane explanation as INFERRED, NOT PROVEN. It is now known to be true for alpha 8 and insufficient as a general account. A second, independent stall mechanism exists and is undiagnosed.",
+    "candidates_not_yet_tested": [
+      "the tip cap carries one surface cell at scaled Jacobian 0.049 and max skewness 0.9687",
+      "cell volume spans 3.6e-14 to 1.5e+02 m3 across the domain, a range of about 1e15",
+      "NKPCILUFill is 1; a stronger preconditioner or a larger NKSubspaceSize may be the fix"
+    ],
+    "cost_of_the_kill": "alpha 4 was stopped to unblock alpha 8, and ADflow writes solutions only at the end, so its volume and surface files do not exist. Where its residual lived cannot now be inspected. The forces were recovered from the log; the flow field was not."
+  },
+
+  "lift_curve": {
+    "slope_per_degree": {"-2_to_0": 0.06922, "0_to_4": 0.07006, "4_to_8": 0.07039},
+    "reading": "gently increasing slope, total spread 1.7 percent, which is what a real wing does at low to moderate incidence. AVL is flat at 0.0723-0.0727 because a vortex-lattice method is linear by construction."
+  },
+
+  "avl_cross_check": {
+    "method": "AVL run on the identical pyGeo loft via build_locked_surface, the same call build_volume.py makes",
+    "script": "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/verify_against_avl.py",
+    "reference_area_check": "AVL s_ref 0.78984 m2 against the CFD full area 0.789836 m2 -- CL is directly comparable",
+    "cl": {"-2.0": {"avl": -0.33038, "cfd": -0.298397, "diff": 0.031983},
+            "0.0": {"avl": -0.18575, "cfd": -0.159963, "diff": 0.025787},
+            "4.0": {"avl": 0.10491, "cfd": 0.120266, "diff": 0.015356},
+            "8.0": {"avl": 0.39435, "cfd": 0.401834, "diff": 0.007484}},
+    "reading": "The gap closes monotonically with incidence, from 0.032 to 0.0075, and at alpha 8 the two agree to 1.9 percent. That is the right trend: at alpha 0 the flow is set by camber and viscous decambering, where an inviscid method differs most; at higher alpha it is set by incidence, where a vortex-lattice method is at its best.",
+    "moment_disagreement": {
+      "note": "AVL uses c_ref 0.4946 and moment reference x=0; the CFD uses c_ref 0.9 and x=0.4. The printed moments were never comparable. Transferred to a common reference (the transfer reproduces AVL's own reported x_np of 0.336126 m to four decimals):",
+      "cfd_dCMy_dCL": {"-2_to_0": 0.05225, "0_to_4": 0.05031, "4_to_8": 0.04668},
+      "cfd_verdict": "statically STABLE, neutral point about x = 0.446 m",
+      "avl_verdict": "statically UNSTABLE about x = 0.4, neutral point x = 0.336 m",
+      "status": "UNRESOLVED. Four CFD points are self-consistent and disagree with AVL on the SIGN of static stability, which for a tailless BWB is design-critical. The CFD moment moved 18 percent from the leading-edge respacing alone, so it is the less grid-converged of the two. Neither method is currently entitled to win."
+    }
+  },
+
+  "surface_pressure_bound": {
+    "definition": "cp must not exceed the isentropic stagnation bound 1.0018 at M 0.0837",
+    "by_alpha": {
+      "-2.0": {"over_bound": 14, "te_corner": 11, "leading_edge": 3, "peak_excess": 0.0911, "le_stations": [0]},
+      "0.0": {"over_bound": 23, "te_corner": 20, "leading_edge": 3, "peak_excess": 0.1809, "le_stations": [0]},
+      "8.0": {"over_bound": 61, "te_corner": 25, "leading_edge": 36, "peak_excess": 0.4626,
+               "le_stations": [0, 11, 14, 15, 17, 18]}
+    },
+    "new_finding": "The leading-edge excess grows sharply with incidence: 3 cells at alpha -2 and 0, 36 at alpha 8, and the peak excess more than doubles to 0.4626. target_le_turn_deg 10 was calibrated against a conventional wall-resolved reference at cruise attitude; at the mission's high-load case the suction peak sharpens and 10 degrees per cell is no longer enough. This is a resolution requirement that varies with the operating point, which the level definitions do not currently express.",
+    "drag_cost": {
+      "method": "per-cell pressure force projected on the freestream direction (cos a, 0, sin a), which reproduces ADflow's CDp to five decimals at every angle",
+      "-2.0": {"share_of_cdp_in_over_bound_le_cells": 0.0176, "cdp_change_if_clipped": -0.00096},
+      "0.0": {"share_of_cdp_in_over_bound_le_cells": 0.0266, "cdp_change_if_clipped": -0.00212},
+      "8.0": {"share_of_cdp_in_over_bound_le_cells": 0.0315, "cdp_change_if_clipped": -0.00268},
+      "reading": "Even at alpha 8, with twelve times as many contaminated leading-edge cells and a peak excess of 0.46, clipping every one to the physical bound moves pressure drag by 0.27 percent. The defect is real and it is small."
+    }
+  },
+
+  "what_is_accepted": {
+    "alpha_-2_and_0_and_8": "qualified: converged, freestream verified, force tails settled",
+    "alpha_4_lift": "accepted as corroboration only. It sits on the lift curve to 1.2 percent and was predicted to +0.117 before it ran, but it FAILS the residual gate at 7.242 of 8 orders and no threshold was weakened to admit it.",
+    "alpha_4_drag_and_moment": "REJECTED. Drag and moment are exactly the quantities a hidden residual imbalance corrupts, and its flow field no longer exists to check."
+  },
+
+  "not_established": [
+    "grid convergence at any angle. CDp moved 5.2 percent and CMy 18 percent from one mesh respacing, so no drag or moment figure here is converged.",
+    "the cause of the alpha 4 Newton-Krylov breakdown",
+    "which of the two 2026-09-04 fixes moved cp: both are in every solution here",
+    "tip-cap viscous quantities",
+    "any comparison against experiment",
+    "the static stability sign, on which CFD and AVL disagree"
+  ]
+}

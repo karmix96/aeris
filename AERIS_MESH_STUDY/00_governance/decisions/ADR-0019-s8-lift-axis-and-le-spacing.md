@@ -195,3 +195,61 @@ the solved field is identical:
   is the defect.
 - Whether `1.15` is the right growth limit is unswept. It is the value that
   removes this step at a cost of zero.
+
+---
+
+## Addendum, 2026-09-05: the sweep ran, and the stall hypothesis was half right
+
+`reports/s8_corrected_sweep_20260905.json`.
+
+**alpha 8 converges.** The run that froze at 13.4682379 to eight significant
+figures now reaches 8.76e-9 in 8 orders, with `lift_direction (0,0,1)` recorded
+by its own verification block. Defect 14 was blocking it, and the
+sideslip-versus-symmetry-plane account above is supported for that case.
+
+**And the account does not generalise.** `alpha 4` stalled with the identical
+signature — residual frozen at 5.2371905e-05 to eight significant figures, 7.242
+of the 8 orders required — and `alpha 4` carries no sideslip at all. The NK step
+length reads 0.00 and the linear residual 1.000, so the Krylov solve stopped
+reducing and Newton-Krylov took null steps. That is a linear-solver breakdown,
+not a physics one: zero inverted cells, and forces settled to under 2e-8
+relative over 150 iterations.
+
+The section above recorded that explanation as *INFERRED, NOT PROVEN*. It is now
+**proven for alpha 8 and insufficient in general.** A second, independent stall
+mechanism exists and is undiagnosed.
+
+**`alpha 4` was stopped to unblock `alpha 8`, and that cost its flow field.**
+ADflow writes solutions only at the end, so no volume or surface file exists for
+it and where its residual lived can no longer be inspected. Its forces were
+recovered from the log. Letting it reach its six-hour time limit would have
+produced the files; that trade was made for machine time and it was made too
+cheaply.
+
+**Results.** Three of four angles qualified. The lift curve is linear to 1.7 per
+cent with a gently increasing slope, and agrees with AVL run on the identical
+loft — the gap closing monotonically from 0.032 at alpha -2 to 0.0075 at alpha
+8, which is the right direction for an inviscid method.
+
+**Two things this opened.**
+
+1. **Leading-edge resolution is operating-point dependent.** Over-bound cp cells
+   at the leading edge go from 3 at alpha -2 and 0 to **36 at alpha 8**, with the
+   peak excess more than doubling to 0.4626. `target_le_turn_deg 10` was
+   calibrated at cruise attitude; the high-load case sharpens the suction peak
+   and 10 degrees per cell no longer suffices. The level definitions express
+   resolution as a property of the mesh alone, and it is not. The cost is still
+   small — clipping every excess moves CDp by 0.27 per cent at alpha 8 — so this
+   is a specification gap, not a broken result.
+
+2. **CFD and AVL disagree on the sign of static stability.** Four self-consistent
+   CFD points give `dCMy/dCL` of 0.052, 0.050, 0.047 — statically stable, neutral
+   point near x = 0.446 m. AVL gives an unstable wing with its neutral point at
+   x = 0.336 m. For a tailless BWB that is design-critical. The CFD moment moved
+   18 per cent from the leading-edge respacing alone, so it is the less
+   grid-converged of the two, and neither method is currently entitled to win.
+
+**Nothing here is grid-converged.** CDp moved 5.2 per cent and CMy 18 per cent
+from one respacing. No drag or moment figure in this sweep may be quoted as
+converged, and the grid-convergence study that would settle it still does not fit
+on this host.

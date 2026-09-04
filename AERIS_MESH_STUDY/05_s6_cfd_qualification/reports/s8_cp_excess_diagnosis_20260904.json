@@ -2,20 +2,20 @@
   "schema": "aeris.s8.cp_excess_diagnosis.v1",
   "created_at": "2026-09-04T00:00:00+03:00",
   "supersedes_open_question": "s8_oh_first_cfd_point_20260904.json open_questions[0], which proposed rebuilding at target_le_turn_deg 6 as 'the decisive and cheap test' of whether the residual excess is resolution",
-
   "question": "The first S8 CFD point left 30 of 4416 physical OML wall cells above the 1.0018 cp bound, peaking at 0.1706 excess. Where are they, what causes them, and do they matter?",
-
   "method": {
     "locator": "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/locate_cp_excess.py",
     "note": "check_cp_bound.py concatenates every zone's cp array and discards the structure, so it can say whether the bound is exceeded but never where. The surface zones are structured, so every cp cell has an (i, j) address and four corner nodes; the locator walks them and reports position, y+ and skin friction per over-bound cell.",
     "surface": "AERIS_MESH_STUDY/artifacts/s8_cfd/oh_L3_a0/s8_a0_000_surf.cgns",
     "ring_index_convention": "i = 0 upper trailing-edge corner, 44 leading edge, 88 lower trailing-edge corner, 89-91 the blunt base interior; j = 0 root symmetry plane, 47 tip"
   },
-
   "finding_1_it_is_two_defects_not_one": {
     "trailing_edge_corner_cluster": {
       "cells": 19,
-      "ring_indices": [0, 87],
+      "ring_indices": [
+        0,
+        87
+      ],
       "span_indices": "26 to 37",
       "span_y_m": "0.9515 to 0.9753, the outer 2.5 percent of a 0.9772 m semi-span",
       "peak_excess": 0.1011,
@@ -23,32 +23,101 @@
     },
     "leading_edge_cluster": {
       "cells": 11,
-      "ring_indices": [34, 35, 36, 37, 38, 39, 41, 42, 47],
-      "span_indices": [0, 11, 13, 14],
+      "ring_indices": [
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        41,
+        42,
+        47
+      ],
+      "span_indices": [
+        0,
+        11,
+        13,
+        14
+      ],
       "peak_excess": 0.1706,
       "location": "the root symmetry station, and three stations at mid-span"
     },
     "wall_resolution_is_not_the_cause": "y+ over every over-bound cell is 0.05 to 0.33, against limits of 1.0 at p95. This is not a boundary-layer resolution defect."
   },
-
   "finding_2_the_trailing_edge_corner_is_uncontrolled_and_harmless": {
     "measurement": "turning absorbed by one cell at the blunt-base corner, against the leading edge on the same section",
     "per_station": [
-      {"j": 0,  "le_turn_deg": 10.00, "te_corner_turn_deg": 86.02, "ratio": 8.60,  "cp_i0": 0.878, "cp_i87": 0.869},
-      {"j": 10, "le_turn_deg": 10.00, "te_corner_turn_deg": 86.02, "ratio": 8.60,  "cp_i0": 0.995, "cp_i87": 0.829},
-      {"j": 20, "le_turn_deg": 9.98,  "te_corner_turn_deg": 88.62, "ratio": 8.88,  "cp_i0": 0.905, "cp_i87": 0.821},
-      {"j": 25, "le_turn_deg": 9.99,  "te_corner_turn_deg": 98.02, "ratio": 9.82,  "cp_i0": 0.902, "cp_i87": 0.977},
-      {"j": 30, "le_turn_deg": 10.00, "te_corner_turn_deg": 103.39, "ratio": 10.34, "cp_i0": 1.011, "cp_i87": 1.068},
-      {"j": 33, "le_turn_deg": 9.99,  "te_corner_turn_deg": 104.81, "ratio": 10.49, "cp_i0": 1.100, "cp_i87": 1.059},
-      {"j": 40, "le_turn_deg": 10.01, "te_corner_turn_deg": 106.00, "ratio": 10.59, "cp_i0": 0.843, "cp_i87": 0.848},
-      {"j": 47, "le_turn_deg": 10.01, "te_corner_turn_deg": 106.26, "ratio": 10.61, "cp_i0": 0.655, "cp_i87": 0.469}
+      {
+        "j": 0,
+        "le_turn_deg": 10.0,
+        "te_corner_turn_deg": 86.02,
+        "ratio": 8.6,
+        "cp_i0": 0.878,
+        "cp_i87": 0.869
+      },
+      {
+        "j": 10,
+        "le_turn_deg": 10.0,
+        "te_corner_turn_deg": 86.02,
+        "ratio": 8.6,
+        "cp_i0": 0.995,
+        "cp_i87": 0.829
+      },
+      {
+        "j": 20,
+        "le_turn_deg": 9.98,
+        "te_corner_turn_deg": 88.62,
+        "ratio": 8.88,
+        "cp_i0": 0.905,
+        "cp_i87": 0.821
+      },
+      {
+        "j": 25,
+        "le_turn_deg": 9.99,
+        "te_corner_turn_deg": 98.02,
+        "ratio": 9.82,
+        "cp_i0": 0.902,
+        "cp_i87": 0.977
+      },
+      {
+        "j": 30,
+        "le_turn_deg": 10.0,
+        "te_corner_turn_deg": 103.39,
+        "ratio": 10.34,
+        "cp_i0": 1.011,
+        "cp_i87": 1.068
+      },
+      {
+        "j": 33,
+        "le_turn_deg": 9.99,
+        "te_corner_turn_deg": 104.81,
+        "ratio": 10.49,
+        "cp_i0": 1.1,
+        "cp_i87": 1.059
+      },
+      {
+        "j": 40,
+        "le_turn_deg": 10.01,
+        "te_corner_turn_deg": 106.0,
+        "ratio": 10.59,
+        "cp_i0": 0.843,
+        "cp_i87": 0.848
+      },
+      {
+        "j": 47,
+        "le_turn_deg": 10.01,
+        "te_corner_turn_deg": 106.26,
+        "ratio": 10.61,
+        "cp_i0": 0.655,
+        "cp_i87": 0.469
+      }
     ],
     "the_structural_point": "ADR-0018 replaced the C family's coupled `end_points` with a leading-edge resolution that is REQUESTED in degrees of turning per cell and solved for. It delivers: 10.00 degrees at every one of the 49 stations. The same discipline was never applied to the other end of the section. The trailing-edge corner spacing is a bare constant, ds_te_frac = 0.004 of local chord, and the corner is a geometric turn of 86 to 106 degrees taken in a single cell -- four times worse per cell than the C family's leading-edge collar, which was 25.7 and was the defect S8 exists to fix.",
     "why_refinement_cannot_fix_it": "The leading edge is smooth: it is C1, so turning per cell falls to zero as the spacing falls. The blunt-base corner is a genuine C0 kink, so turning per cell stays at about 103 degrees no matter how small the cells become. 'Degrees of turning per cell' is the wrong instrument at a corner.",
     "why_the_band_is_where_it_is": "The corner turn grows from 86 degrees at the root to 106 at the tip, because the 1.0 mm blunt base (DECISION-0004, an absolute size) is 0.115 percent of the 0.867 m root chord and 0.67 percent of the 0.149 m tip chord, so the surface meets the base at a progressively blunter angle. The excess appears where the turn passes about 100 degrees AND the section is still loaded. Outboard of j 38 the turn is larger still, at 106 degrees, and cp falls back to 0.84, 0.59 and 0.47 because the tip has unloaded.",
     "verdict": "REAL BUT NEGLIGIBLE. See finding 4."
   },
-
   "finding_3_the_leading_edge_cluster_sits_on_a_spanwise_spacing_cliff": {
     "measurement": "leading-edge cell size as a fraction of local chord, read off the delivered oh_L3 mesh, station by station",
     "profile": "flat at 0.001521 for j 0 to 10, then 0.001199 at j 11, then 0.000463 at j 12 -- a 2.59x drop in a single spanwise station -- then flat at 0.000464 for j 13 to 19, then a smooth recovery to 0.001345 at the tip",
@@ -57,23 +126,36 @@
     "why_it_was_invisible": "The acceptance metric is worst_le_turn_per_cell_deg, and every station met 10 degrees, so the aggregate reported success. The per-station ds_le that would have shown the cliff was computed inside build_oml_ring and discarded; only the aggregate reached the summary. This is the same class of defect ADR-0018 was written to fix -- a quantity that matters going uncontrolled because the acceptance metric cannot see it -- one level down.",
     "correlation_with_the_defect": "The leading-edge over-bound cells sit at j 11, 13 and 14, immediately either side of the cliff at j 12, and at j 0, the root symmetry station where the inboard plateau begins.",
     "present_at_every_level": {
-      "oh_L3": {"worst_station_step": 2.587, "stations": 49},
-      "oh_probe": {"worst_station_step": 3.340, "stations": 25}
+      "oh_L3": {
+        "worst_station_step": 2.587,
+        "stations": 49
+      },
+      "oh_probe": {
+        "worst_station_step": 3.34,
+        "stations": 25
+      }
     }
   },
-
   "finding_4_only_the_leading_edge_cluster_matters_for_drag": {
     "method": "per-cell pressure-drag contribution, integral of -cp*n_x dA over the OML divided by the reference area 0.394918242017589",
     "validation": "the full integral returns 0.012494, which equals ADflow's reported CDp of 0.012494 to six decimals",
     "oml_cdp": 0.012494,
-    "from_19_te_corner_cells": {"cdp": 0.000001, "percent_of_cdp": 0.01},
-    "from_11_le_cells": {"cdp": 0.001225, "percent_of_cdp": 9.8},
+    "from_19_te_corner_cells": {
+      "cdp": 1e-06,
+      "percent_of_cdp": 0.01
+    },
+    "from_11_le_cells": {
+      "cdp": 0.001225,
+      "percent_of_cdp": 9.8
+    },
     "area_of_all_30_cells_percent_of_wetted": 0.0709,
     "cdp_if_every_excess_is_clipped_to_the_bound": 0.012403,
-    "change": {"absolute": -9.079e-05, "percent": -0.727},
+    "change": {
+      "absolute": -9.079e-05,
+      "percent": -0.727
+    },
     "reading": "The trailing-edge corner cells are over the bound and aerodynamically irrelevant: their normals are almost streamwise, so they carry 0.01 percent of pressure drag. The eleven leading-edge cells carry 9.8 percent of pressure drag in 0.07 percent of the wetted area. The entire residual defect is worth 0.73 percent of CDp, which is 0.42 percent of total CD. C03's contaminated leading-edge collar supplied roughly 80 percent of pressure drag and peaked at cp 5.328."
   },
-
   "consequence_for_the_plan": {
     "the_previously_proposed_test_was_right_for_the_wrong_reason": "Rebuilding at target_le_turn_deg 6 was proposed because the excess was assumed to be leading-edge resolution. Only 11 of 30 cells are at the leading edge, so that test cannot clear the bound. It remains the right test of the part that matters, because those 11 cells carry all of the drag error -- but it is a CHORDWISE refinement and the defect under them is a SPANWISE discontinuity, so on its own it would refine the cliff rather than remove it.",
     "ordering": [
@@ -82,7 +164,6 @@
       "3. Leave the trailing-edge corner alone unless a decision is taken to round the blunt base, which would change DECISION-0004 geometry for 0.01 percent of pressure drag. Record it as measured and benign."
     ]
   },
-
   "fix_implemented": {
     "file": "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/strategy_s8.py",
     "function": "smooth_le_spacing",
@@ -91,14 +172,86 @@
     "safety": "The envelope only ever reduces a spacing, enforced by an elementwise minimum against the input rather than by tolerance. A smaller leading-edge cell absorbs less turning, so no station can come out worse than the target it was solved for and all_stations_met_target cannot be broken by smoothing. Denormalising through a divide and a multiply put two of oh_L3's 49 stations 1.4e-16 above their input; the minimum makes the guarantee hold by construction rather than by rounding.",
     "cost": "zero. n_side is fixed, so a smaller end spacing redistributes a section's existing points rather than adding any.",
     "measured_effect": {
-      "oh_L3": {"worst_step_before": 2.587, "worst_step_after": 1.150, "stations_clamped": 11, "of": 49},
-      "oh_probe": {"worst_step_before": 3.340, "worst_step_after": 1.150, "stations_clamped": 12, "of": 25, "negative_cells": 0, "worst_le_turn_deg": 12.018, "target": 12.0, "all_stations_met_target": true}
+      "oh_L3": {
+        "worst_step_before": 2.587,
+        "worst_step_after": 1.15,
+        "stations_clamped": 11,
+        "of": 49
+      },
+      "oh_probe": {
+        "worst_step_before": 3.34,
+        "worst_step_after": 1.15,
+        "stations_clamped": 12,
+        "of": 25,
+        "negative_cells": 0,
+        "worst_le_turn_deg": 12.018,
+        "target": 12.0,
+        "all_stations_met_target": true
+      }
     },
-    "also_changed": "build_volume.py now writes le_spacing_smoothing and the full per-station block into the summary. The cliff was invisible because the number that would have shown it was computed and thrown away."
+    "also_changed": "build_volume.py now writes le_spacing_smoothing and the full per-station block into the summary. The cliff was invisible because the number that would have shown it was computed and thrown away.",
+    "verified_on_the_rebuilt_oh_L3_mesh": {
+      "method": "the rebuilt o_wing eta=0 wall compared node for node against the pre-fix wall read out of the alpha 0 CFD surface file",
+      "cells": 567256,
+      "cells_before": 567256,
+      "negative_cells": 0,
+      "min_cell_over_s0": 19.308,
+      "min_cell_over_s0_before": 19.308,
+      "worst_le_turn_per_cell_deg": 10.019,
+      "all_stations_met_target": true,
+      "worst_spanwise_step_before": 2.589,
+      "worst_spanwise_step_after": 1.151,
+      "stations_clamped": 11,
+      "le_turning_at_clamped_stations": {
+        "note": "the envelope refines the inboard plateau to match the outboard one, so these stations now absorb LESS turning than the 10 degrees they were solved for. Strictly better, at zero cost.",
+        "j6": {
+          "before": 10.0,
+          "after": 5.469
+        },
+        "j8": {
+          "before": 10.0,
+          "after": 4.915
+        },
+        "j10": {
+          "before": 10.001,
+          "after": 3.136
+        },
+        "j11": {
+          "before": 10.009,
+          "after": 6.351
+        }
+      },
+      "leading_edge_cells_that_grew": {
+        "count": 14,
+        "largest_ratio": 1.000036,
+        "explanation": "0.004 percent, at stations the envelope did NOT clamp and therefore did not rebuild. This is the per-station bisection settling within its own 0.02 degree tolerance between two independent builds, not the filter coarsening anything. The filter's own guarantee is exact by construction."
+      },
+      "trailing_edge_left_alone": {
+        "corner_spacing_ratio_range": [
+          0.9991,
+          1.0001
+        ],
+        "corner_turning_before_after_deg": {
+          "j0": [
+            86.02,
+            86.02
+          ],
+          "j30": [
+            103.39,
+            103.39
+          ],
+          "j47": [
+            106.26,
+            106.25
+          ]
+        },
+        "explanation": "the two-sided stretching responds slightly to a changed spacing at the other end of the section. At most 0.09 percent, and the corner turning is unchanged to two decimals, so finding 2 is unaffected by this fix."
+      },
+      "cost": "zero cells, zero change to the marchability floor. The inboard half of the wing gains 1.6x to 3.2x finer leading-edge resolution because those points were being spent on chord the section did not need."
+    }
   },
-
   "not_established": [
-    "that removing the cliff clears the leading-edge cp excess. The mesh is rebuilt and clean; no CFD has been run on it.",
+    "that removing the cliff clears the leading-edge cp excess. The mesh is rebuilt, verified and clean; no CFD has been run on it. That run is also the run that has to carry the defect 14 fix, so the two changes will land in the same solution and their effects on cp are not separable without a third run.",
     "that 1.15 is the right growth limit. It is the value that removes this cliff at a cost of zero; it has not been swept.",
     "anything about the trailing-edge corner at a finer level, where the corner turn is unchanged by construction but the cells are smaller"
   ]

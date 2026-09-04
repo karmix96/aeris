@@ -38,6 +38,11 @@ def main() -> int:
         "outputDirectory": str(args.out),
         "equationType": "RANS",
         "turbulenceModel": "SA",
+        # Harmless here -- nCycles is 0 and nothing solves, so no direction is
+        # ever used -- but the omission is the defect-14 pattern and an options
+        # dict that reads as complete should not quietly be missing the one
+        # option that voided every S8 result.  AERIS meshes span +y, lift +z.
+        "liftIndex": 3,
         "nCycles": 0,
         "writeVolumeSolution": False,
         "writeSurfaceSolution": False,

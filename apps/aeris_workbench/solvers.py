@@ -465,6 +465,28 @@ class SU2Runner(SolverRun):
 # ADflow                                                                        #
 # --------------------------------------------------------------------------- #
 
+def _curated_lift_index() -> int:
+    """The AERIS lift axis, read from the curated ADflow schema.
+
+    Hard-coding a 3 here would be a second place for the convention to drift
+    from, which is how defect 14 happened in the first place.  If the schema
+    ever stops carrying it, that is a failure worth raising rather than
+    papering over with a literal.
+    """
+    from aeris.cfd.solvers.adflow.options_schema import ADFLOW_SCHEMA
+
+    for option in ADFLOW_SCHEMA.curated:
+        if option.native == "liftIndex":
+            return int(option.default)
+    raise RuntimeError(
+        "the curated ADflow schema no longer carries liftIndex; the AERIS mesh "
+        "convention (span +y, lift +z) has lost its single source of truth"
+    )
+
+
+_CURATED_LIFT_INDEX = _curated_lift_index()
+
+
 _ADFLOW_ROW = re.compile(r"^\s*\d+\s+\d+\s+\d+")
 
 #: The AeroProblem name, and therefore the stem ADflow gives its surface
@@ -522,6 +544,16 @@ class ADflowRunner(SolverRun):
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
         options = {
+            # Defect 14, 2026-09-04: this dict is hand-built and bypasses
+            # `aeris.cfd.solvers.adflow.options_schema`, so ADflow's own default
+            # of liftIndex 2 applied.  AERIS meshes span +y, so at 2 the angle
+            # of attack becomes SIDESLIP and any run at non-zero alpha is void.
+            # The same omission in S8's solve_s8.py silently corrupted every
+            # result it produced; see
+            # AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/
+            # s8_lift_index_defect_20260904.json.  Taken from the schema rather
+            # than retyped, so there is one source of truth for the convention.
+            "liftIndex": _CURATED_LIFT_INDEX,
             "equationType": settings.equation,
             "turbulenceModel": settings.turbulence,
             "smoother": settings.smoother,

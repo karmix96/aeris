@@ -615,6 +615,43 @@ def build_surface(
     # end spacing the cosine happens to produce at that count.  The largest chord
     # and the full semi-span are the binding cases, so meeting the target there
     # meets it everywhere.
+    # Bound the surface anisotropy where a level asks for it.  The chordwise
+    # count is driven well above its size target by the trailing-edge clustering
+    # requirement while the spanwise count is not, so the surface quads come out
+    # stretched -- measured 2.75 to 1 on candidate xcoarse.  Splitting a quad of
+    # that aspect on its diagonal gives a 20 degree minimum angle, and the prism
+    # layer then extrudes every sliver through all of its layers.  Adding
+    # spanwise points is the only lever that shortens the long edge without
+    # giving up leading and trailing edge resolution.
+    max_aniso = spec.get("max_surface_anisotropy")
+    if max_aniso is not None and float(max_aniso) > 1.0:
+        limit = float(max_aniso)
+        # Measure the chordwise edge on a real section rather than from the
+        # parameter spacing.  Parameter spacing times the chord predicts 41.9 mm
+        # where the built mesh carries 17.4 mm, because the blended distribution
+        # is dense where the section curves; using it would silently do nothing.
+        probe_v = float(
+            span_parameters_for_fractions(pygeo_build, np.array([0.5], dtype=float))[0]
+        )
+        probe_upper, _probe_lower, _probe_frame = _opened_section(
+            pygeo,
+            _blended_parameters(n_u, te_h / max_chord),
+            probe_v,
+            te_abs_m=float(variant["absolute_m"]),
+            te_floor_frac=float(variant["local_chord_fraction"]),
+        )
+        chord_edge = float(
+            np.median(np.linalg.norm(np.diff(np.asarray(probe_upper), axis=0), axis=1))
+        )
+        if chord_edge > 0.0:
+            while n_v < 4000:
+                span_edge = semi_span * float(
+                    np.median(np.diff(_blended_parameters(n_v, tip_h / semi_span)))
+                )
+                if span_edge / chord_edge <= limit:
+                    break
+                n_v += 1
+
     u = _blended_parameters(n_u, te_h / max_chord)
     physical_span_fractions = _blended_parameters(n_v, tip_h / semi_span)
     v_parameters = span_parameters_for_fractions(pygeo_build, physical_span_fractions)

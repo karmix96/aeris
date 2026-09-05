@@ -1,0 +1,101 @@
+schema_version: aeris.s8.corrected_sweep_policy.v1
+policy_id: s8_oh_corrected_sweep_v1
+immutable: true
+
+authorization:
+  authorized_by: principal_investigator
+  authorized_on: 2026-09-04
+  status: AUTHORIZED
+  decision: AERIS_MESH_STUDY/00_governance/decisions/ADR-0019-s8-lift-axis-and-le-spacing.md
+  how_given: >-
+    Directed in session on 2026-09-04. The principal investigator was shown a
+    three-step plan -- sign this authorization, run alpha 0 and check it
+    against CD 0.021416 and CL about -0.161, then run -2, 4 and 8 -- and
+    replied "ok implement the 3 step plan". Written into the record by the
+    agent that was directed, not typed by the principal investigator, which is
+    what this field exists to make readable rather than leave to be assumed.
+  session: https://claude.ai/code/session_01GTUHMSPavj1aLcb8DSfNxU
+  scope_limit: >-
+    Authorizes the four-point sweep on oh_L3 and nothing else. Does NOT
+    authorize tip-cap viscous quantities, grid convergence, a family freeze, a
+    hold-out unlock, or any paper claim.
+
+supersedes: s8_oh_first_point_v1
+supersession_reason: >-
+  The first point ran with ADflow's default liftIndex of 2, which on a span-+y
+  mesh applies angle of attack as sideslip (defect 14,
+  reports/s8_lift_index_defect_20260904.json). Its CL is withdrawn and both
+  alpha 8 runs are void. Its cp-bound verdict, CD, CDp, CDv, CMy and y+ stand,
+  because at alpha 0 the freestream is (1,0,0) at either lift axis.
+
+scope:
+  purpose: measurement_only
+  development_set_only: true
+  holdout_access_allowed: false
+  geometry_set: lhs100_seed42
+  geometry_index: 83
+  grid_level: oh_L3
+  automatic_retry_allowed: false
+  accepted_classification_allowed: false
+
+mesh:
+  path: AERIS_MESH_STUDY/artifacts/paraview_inspection/s8_oh/oh_L3_volume.cgns
+  rebuilt_on: 2026-09-04
+  rebuild_reason: defect 15, the spanwise leading-edge spacing step
+  cells: 567256
+  inverted_cells: 0
+  min_cell_over_s0: 19.308
+  worst_le_turn_per_cell_deg: 10.019
+  worst_le_spanwise_spacing_step: 1.151
+
+flow:
+  authority_path: AERIS_MESH_STUDY/05_s6_cfd_qualification/mission_authority_v1.yaml
+  mach: 0.0837
+  reynolds: 1530708.188575197
+  reynolds_length_m: 0.9
+  temperature_K: 278.4
+  alpha_deg_sweep: [-2.0, 0.0, 4.0, 8.0]
+
+references:
+  solver_half_area_m2: 0.394918242017589
+  moment_reference_xyz_m: [0.4, 0.0, 0.0]
+  note: >-
+    Unchanged from the C03 contract, so results remain comparable on the
+    quantities that were ever comparable.
+
+solver:
+  lift_index: 3
+  lift_index_note: >-
+    AERIS meshes span +y and lift +z. This is not optional and it is not
+    checked by convention: solve_s8.py reads velDirFreeStream and liftDirection
+    back out of ADflow before the solve and refuses to run unless they equal
+    (cos a, 0, sin a) and (-sin a, 0, cos a) to 1e-9.
+  nk_switch_tol: 1.0e-6
+  ank_switch_tol: 1.0
+  mg_cycle: sg
+  l2_convergence: 1.0e-8
+  n_cycles: 30000
+  minimum_mpi_processes: 6
+
+what_this_can_settle:
+  - the true lift at four incidences, and therefore a lift-curve slope
+  - whether alpha 8 converges once the freestream is consistent with the root
+    symmetry plane, which is the open test of defect 14's stall hypothesis
+  - whether surface cp stays inside the 1.0018 bound with the spanwise spacing
+    step removed
+
+what_this_cannot_settle:
+  - which of the two fixes moved cp. Both land in the same solution; separating
+    them needs a third run and is not worth the machine time unless the
+    combined result is ambiguous.
+  - tip-cap viscous quantities. The cap's wall normal IS the spanwise
+    direction; measured cap y+ reached 4.2 against the OML's 0.9.
+  - grid convergence. oh_L2 needs 11.2 GiB and oh_L1 24.6 GiB against 15.3 on
+    this host.
+  - any freeze, hold-out unlock or paper claim.
+
+cost_forecast:
+  basis: the alpha 0 run, 1808 s wall on 6 ranks at 567,256 cells, converged
+  per_alpha_point_s: 1810
+  four_point_sweep_h: 2.0
+  note: alpha 8 may cost more or may not converge at all; that is the question.

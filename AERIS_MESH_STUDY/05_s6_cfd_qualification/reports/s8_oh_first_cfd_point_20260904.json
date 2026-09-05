@@ -1,0 +1,118 @@
+{
+  "schema": "aeris.s8.first_cfd_point.v1",
+  "created_at": "2026-09-04T00:20:00+03:00",
+  "authorization": {
+    "policy": "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/s8_oh_first_point_v1.yaml",
+    "policy_exception": "POLICY.yaml heavy_work.exceptions.run-s8-first-point",
+    "decision": "AERIS_MESH_STUDY/00_governance/decisions/ADR-0018-s8-oh-structured-grid.md",
+    "authorized_by": "principal_investigator",
+    "authorized_on": "2026-09-03"
+  },
+  "execution": {
+    "grid": "AERIS_MESH_STUDY/artifacts/paraview_inspection/s8_oh/oh_L3_volume.cgns",
+    "cells": 567256,
+    "blocks": [
+      "o_wing",
+      "o_out",
+      "cap_out"
+    ],
+    "mpi_processes": 6,
+    "adflow_line": "This is a parallel executable running on 6 processors.",
+    "load_imbalance_cells": 0.018,
+    "load_imbalance_faces": 0.026,
+    "wall_time_s": 1808.381,
+    "init_time_s": 3.746,
+    "routine_failed": false,
+    "solver": "RANS SA, ANK then NK, L2Convergence 1e-8",
+    "geometry": "lhs100_seed42[83]",
+    "alpha_deg": 0.0,
+    "operating_point": "mission_authority_v1.yaml verbatim, M 0.0837, Re 1530708"
+  },
+  "forces": {
+    "cd": 0.021416089729801753,
+    "cdp": 0.012494219073837673,
+    "cdv": 0.008921870655964084,
+    "cmy": 0.0010851618638613705,
+    "area_ref_m2": 0.394918242017589,
+    "moment_ref_xyz_m": [
+      0.4,
+      0.0,
+      0.0
+    ],
+    "note": "Same reference contract as the C03 canary, so these are comparable.",
+    "cl_WITHDRAWN": 0.03230132128656514,
+    "cl_withdrawn_reason": "Defect 14. solve_s8.py omitted liftIndex, so ADflow ran at its default of 2 and measured lift along +y, which is SPANWISE on this mesh. 0.03230132128656514 is the spanwise force coefficient. Integrating -cp*n dA over the wall gives a z component of -0.160694, and the same integration reproduces the reported CDp to six decimals, so it is exact. True CL at alpha 0 is about -0.161; negative is physical here because the geometry carries washout.",
+    "unaffected": "cd, cdp, cdv and cmy stand. dragDirection is the freestream direction, which is (1,0,0) at either liftIndex, and cmy is cMoment(2) with no liftDirection term."
+  },
+  "acceptance_question": {
+    "definition": "surface cp must not exceed the isentropic stagnation bound 1.0018 at M 0.0837",
+    "method": "physical interior cells only; rind planes separated and reported apart, because a rind value is not a physical value",
+    "script": "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/check_cp_bound.py",
+    "reader_validated_against": {
+      "file": "artifacts/s6_bounded_mesh_atlas/cfd_pilot_083_n65_lowmem/aeris_cfd_000_surf.cgns",
+      "result": "364 of 38544 values over the bound, peak cp 2.765",
+      "why": "a known-positive control: the reader detects the defect where the defect is known to exist, so a clean report on S8 would be a real negative"
+    },
+    "result_oml_wall_interior": {
+      "cells": 4416,
+      "over_bound": 30,
+      "fraction": 0.0068,
+      "cp_min": -3.2571,
+      "cp_max": 1.1724,
+      "peak_excess": 0.1706,
+      "yplus_range": [
+        0.0,
+        1.6
+      ]
+    },
+    "result_tip_cap_interior": {
+      "cells": 168,
+      "over_bound": 0,
+      "cp_min": -9.4975,
+      "cp_max": 0.098,
+      "yplus_range": [
+        1.0,
+        4.2
+      ],
+      "note": "The cap is clean and better resolved than forecast. y+ of 10 s0 was a conservative proxy; measured y+ is at most 4.2 because cap shear is low."
+    },
+    "rind_planes": {
+      "oml_over_bound": 11,
+      "tip_cap_over_bound": 0,
+      "note": "reported for completeness and excluded from the verdict"
+    },
+    "c03_comparison": {
+      "c03_over_bound": 137,
+      "c03_of_faces": 296,
+      "c03_fraction": 0.4628,
+      "c03_peak_cp": 5.328,
+      "c03_peak_excess": 4.3262,
+      "peak_excess_reduction_factor": 25.4,
+      "extent_reduction_factor": 68.1
+    },
+    "verdict": "IMPROVED_NOT_ELIMINATED",
+    "verdict_detail": "The defect is not gone. 30 of 4416 physical OML wall cells still exceed the bound, by at most 0.1706. But it is 25.4 times smaller in magnitude and 68 times smaller in extent than C03, and the leading-edge collar as a distinct contaminated strip no longer exists because there is no collar.",
+    "still_valid": "Yes. At alpha 0 the freestream is (1,0,0) at liftIndex 2 and 3 alike, so the solved field, cp, y+ and cf are identical and the IMPROVED_NOT_ELIMINATED verdict is unaffected by defect 14."
+  },
+  "open_questions": [
+    "SUPERSEDED by reports/s8_cp_excess_diagnosis_20260904.json. Only 11 of the 30 over-bound cells are at the leading edge; 19 are at the blunt trailing-edge corners and carry 0.01 percent of pressure drag. The 11 that matter sit on a 2.6x spanwise cliff in leading-edge spacing, so a target_le_turn_deg 6 rebuild -- a chordwise refinement -- would have refined the cliff rather than removed it. The cliff is now fixed by smooth_le_spacing(); the turn-target sweep is the SECOND test, not the first.",
+    "cp_min of -9.4975 sits on the tip cap at the tip leading edge, x 0.4159 y 0.9784. Suction has no isentropic upper bound so this is not automatically wrong, but it is a strong local peak at the 90 degree corner where the OML meets the cap, and it should be checked against a refined tip before any tip claim.",
+    "oh_L2 at 1.06M cells needs 11.2 GiB and oh_L1 at 2.32M needs 24.6 GiB against 15.3 GiB on this host, so a full grid-convergence study cannot run here. It needs the desktop or a coarser family."
+  ],
+  "not_established": [
+    "tip-cap viscous quantities",
+    "drag decomposition including the tip cap",
+    "grid convergence",
+    "any comparison against experiment",
+    "family freeze",
+    "any force at any angle of attack: alpha 0's CL is withdrawn and both alpha 8 runs are void"
+  ],
+  "amended_by": {
+    "adr": "AERIS_MESH_STUDY/00_governance/decisions/ADR-0019-s8-lift-axis-and-le-spacing.md",
+    "date": "2026-09-04",
+    "reports": [
+      "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_lift_index_defect_20260904.json",
+      "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_cp_excess_diagnosis_20260904.json"
+    ]
+  }
+}

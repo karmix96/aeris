@@ -1,0 +1,72 @@
+schema_version: aeris.s8.oh_first_point.policy.v1
+policy_id: s8_oh_first_point_v1
+decision: AERIS_MESH_STUDY/00_governance/decisions/ADR-0018-s8-oh-structured-grid.md
+authorized_by: principal_investigator
+authorized_on: 2026-09-03
+
+grid:
+  strategy_id: S8_OH_STRUCTURED
+  level: oh_L3
+  geometry_set: lhs100_seed42
+  geometry_index: 83
+  cgns: AERIS_MESH_STUDY/artifacts/paraview_inspection/s8_oh/oh_L3_volume.cgns
+  blocks: [o_wing, o_out, cap_out]
+  cells: 567256
+  inverted_cells: 0
+  boundary_conditions:
+    wall: bcwallviscous
+    sym: bcsymmetryplane
+    far: bcfarfield
+  unclaimed_faces: 0
+
+# mission_authority_v1.yaml verbatim, authority_id s6_nominal_mission_20260830
+# alpha 8.0 is added because the C03 canary ran at 8.0, not 0.0. Comparing S8
+# at 0 against C03 at 8 is a comparison of two flight conditions, not of two
+# meshes, and the cp-bound claim is only meaningful at the matching alpha.
+# 8.0 is mission_authority_v1.yaml's high_load_case.
+flow:
+  alpha_deg: [0.0, 8.0]
+  comparison_alpha_deg: 8.0
+  beta_deg: 0.0
+  mach: 0.0837
+  reynolds: 1530708.188575197
+  reynolds_length_m: 0.9
+  temperature_K: 278.4
+
+# the C03 reference contract, unchanged, so the comparison is like for like
+references:
+  solver_half_area_m2: 0.394918242017589
+  chord_ref_m: 0.9
+  primary_moment_reference_xyz_m: [0.4, 0.0, 0.0]
+
+solver:
+  name: adflow
+  equations: RANS
+  turbulence_model: SA
+  mpi_processes: 6
+  ank_subspace_size: 10
+  nk_subspace_size: 20
+  ank_pc_ilu_fill: 1
+  nk_pc_ilu_fill: 1
+  use_nk_solver: true
+  l2_convergence: 1.0e-8
+  n_cycles: 4000
+  write_surface_solution: true
+  write_volume_solution: false
+
+acceptance:
+  primary_question: does surface cp stay inside its physical bound
+  cp_physical_max_at_mach_0p0837: 1.0018
+  c03_reference: 137 of 296 leading-edge collar faces exceeded it, peaking at 5.328
+  c03_reference_alpha_deg: 8.0
+  c03_reference_forces: {cl: 0.3928886949117117, cd: 0.03887714210391708,
+                         cdp: 0.03164294093632657, cdv: 0.007234201167590513,
+                         cmy: 0.05163649318623291, status: failed,
+                         source: studies/canary/m2_a_c03_measurement_20260901_003/solve_report.json}
+
+not_authorized:
+  - tip_cap_viscous_quantities
+  - drag_decomposition_including_the_tip_cap
+  - family_freeze
+  - holdout_unlock
+  - paper_claims

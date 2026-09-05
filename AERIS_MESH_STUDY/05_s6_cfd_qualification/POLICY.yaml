@@ -14,6 +14,35 @@ heavy_work:
       maximum_process_launches: 1
       accepted_classification_allowed: false
       automatic_retry_allowed: false
+    run-s8-first-point:
+      policy: policies/s8_oh_first_point_v1.yaml
+      decision: AERIS_MESH_STUDY/00_governance/decisions/ADR-0018-s8-oh-structured-grid.md
+      authorized_by: principal_investigator
+      authorized_on: 2026-09-03
+      scope: >-
+        The first CFD point on the S8 O-H grid, on lhs100_seed42[83] at the
+        nominal mission operating point. Authorizes measurement of surface
+        pressure against its physical bound. Does NOT authorize tip-cap viscous
+        quantities, a family freeze, a hold-out unlock, or any paper claim.
+      minimum_mpi_processes: 6
+    run-s8-corrected-sweep:
+      policy: policies/s8_oh_corrected_sweep_v1.yaml
+      decision: AERIS_MESH_STUDY/00_governance/decisions/ADR-0019-s8-lift-axis-and-le-spacing.md
+      authorized_by: principal_investigator
+      authorized_on: 2026-09-04
+      authorization_note: >-
+        Directed in session; see the how_given field of the policy file for how
+        the decision was given and by what route it reached this record.
+      scope: >-
+        The corrected alpha sweep on the rebuilt S8 oh_L3 grid, on
+        lhs100_seed42[83] at the nominal mission operating point, after defect
+        14 (lift axis) and defect 15 (spanwise leading-edge spacing) were
+        fixed. Authorizes lift-curve measurement and a repeat of the
+        surface-pressure bound check. Does NOT authorize tip-cap viscous
+        quantities, grid convergence, a family freeze, a hold-out unlock, or
+        any paper claim.
+      alpha_deg: [-2.0, 0.0, 4.0, 8.0]
+      minimum_mpi_processes: 6
 holdout:
   id: round_c_lhs10_seed42
   locked: true

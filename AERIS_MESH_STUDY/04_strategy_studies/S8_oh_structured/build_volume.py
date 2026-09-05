@@ -189,6 +189,19 @@ def main() -> int:
             planes.append(grid)
             march_reports.append(report)
         volume = np.stack(planes, axis=2)
+        # Defect 21 guard.  The wall layer of the volume must BE the surface
+        # ring, not a projection of it.  This is checked rather than trusted
+        # because the failure is silent: the span-normal frame moved the wing by
+        # 1.194e-03 m and every cell-quality metric -- orthogonality, first-cell
+        # height, scaled Jacobian -- was unchanged, so nothing complained.
+        # Quality metrics do not check position.
+        wall_error = float(np.abs(volume[:-1, 0, :, :] - ring_xyz).max())
+        if wall_error > 1.0e-9:
+            raise SystemExit(
+                f"the volume's wall layer is {wall_error:.3e} m from the surface "
+                f"ring it was built from. The mesh is not on the geometry. "
+                f"(frame_mode={args.frame_mode})"
+            )
         folded = int((hex_volumes(volume) <= 0.0).sum())
         fold_ladder.append({"smoothing_floor": floor, "folded_hexes": folded})
         print(f"  smoothing floor {floor:>3}: {folded} folded hexes in o_wing")
@@ -361,6 +374,7 @@ def main() -> int:
             "frame_mode": args.frame_mode,
             "smoothing_used": sorted({r["normal_smoothing"] for r in march_reports}),
             "fold_ladder_3d": fold_ladder,
+            "wall_layer_error_m": wall_error,
             "stations_not_converged": [
                 j for j, r in enumerate(march_reports) if not r["converged"]
             ],

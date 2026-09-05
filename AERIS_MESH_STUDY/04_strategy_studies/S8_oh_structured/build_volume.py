@@ -124,6 +124,12 @@ def main() -> int:
     ap.add_argument("--out", type=Path,
                     default=REPO / "AERIS_MESH_STUDY/artifacts/paraview_inspection/s8_oh")
     ap.add_argument("--no-plot3d", action="store_true")
+    ap.add_argument("--frame-mode", default="svd", choices=("svd", "span_normal"),
+                    help="how each section's marching plane is chosen. 'svd' "
+                         "best-fits the section ring (the 2026-09-05 baseline, "
+                         "tagged s8-svd-frame-baseline); 'span_normal' forces "
+                         "the plane square to the span, which removes the tilt "
+                         "the far-field blend cannot finish removing.")
     ap.add_argument("--allow-folded-cells", action="store_true",
                     help="write the grid even if the smoothing ladder cannot "
                          "clear every fold. For diagnosis only: a grid with "
@@ -178,7 +184,7 @@ def main() -> int:
             grid, report = march_section_auto(
                 ring_xyz[:, j, :], n_normal=level.n_normal, first_cell=s0,
                 farfield_radius=radius, global_origin_xz=global_origin_xz,
-                min_smoothing=floor,
+                min_smoothing=floor, frame_mode=args.frame_mode,
             )
             planes.append(grid)
             march_reports.append(report)
@@ -352,6 +358,7 @@ def main() -> int:
             "wall_orthogonality_worst_deg": max(
                 r["wall_orthogonality_worst_deg"] for r in march_reports
             ),
+            "frame_mode": args.frame_mode,
             "smoothing_used": sorted({r["normal_smoothing"] for r in march_reports}),
             "fold_ladder_3d": fold_ladder,
             "stations_not_converged": [

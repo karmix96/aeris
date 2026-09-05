@@ -46,13 +46,14 @@ BUILD = REPO / "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/build_volu
 
 
 def screen_one(index: int, level: str, set_name: str, out_root: Path,
-               python: str, timeout: int) -> dict:
+               python: str, timeout: int, frame_mode: str = "svd") -> dict:
     directory = out_root / f"{set_name}_{index:03d}"
     directory.mkdir(parents=True, exist_ok=True)
     started = time.time()
     proc = subprocess.run(
         [python, str(BUILD), "--level", level, "--set-name", set_name,
-         "--index", str(index), "--out", str(directory), "--no-plot3d"],
+         "--index", str(index), "--out", str(directory), "--no-plot3d",
+         "--frame-mode", frame_mode],
         capture_output=True, text=True, timeout=timeout, cwd=REPO,
     )
     elapsed = time.time() - started
@@ -108,6 +109,8 @@ def main() -> int:
                     default=REPO / "AERIS_MESH_STUDY/artifacts/s8_robustness")
     ap.add_argument("--python", default=str(REPO / ".venv/bin/python"))
     ap.add_argument("--timeout", type=int, default=3600)
+    ap.add_argument("--frame-mode", default="svd",
+                    choices=("svd", "span_normal"))
     ap.add_argument("--report", type=Path,
                     default=REPO / "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports"
                                    "/s8_robustness_screen.json")
@@ -122,7 +125,8 @@ def main() -> int:
     for index in args.indices:
         try:
             record = screen_one(index, args.level, args.set_name,
-                                args.out_root, args.python, args.timeout)
+                                args.out_root, args.python, args.timeout,
+                                args.frame_mode)
         except subprocess.TimeoutExpired:
             record = {"index": index, "built": False, "error": "TIMEOUT",
                       "wall_time_s": args.timeout}

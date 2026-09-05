@@ -37,10 +37,51 @@ import numpy as np
 Array = np.ndarray
 
 
-def plane_frame(ring: Array) -> tuple[Array, Array, Array, Array, float]:
-    """Best-fit plane of a section ring: origin, two in-plane axes, normal, residual."""
+#: How the marching plane is chosen.  "svd" best-fits the section ring, which is
+#: the original behaviour and is kept selectable; "span_normal" forces the plane
+#: normal to the spanwise axis.
+#:
+#: Why the choice exists.  A swept, tapered, twisted section's best-fit plane sits
+#: up to 8 degrees off perpendicular-to-span.  The march then has to blend that
+#: tilt away before the far field, and it does not finish in time: at eta 0.83 the
+#: blend is 51 per cent complete, leaving 3.89 degrees, which at a 29 m radius is a
+#: 1.97 m excursion in y against a local spanwise cell of 0.02 to 0.05 m.
+#: Neighbouring rings interleave, the spanwise edges reverse, and 15 of 100 designs
+#: fold.  A plane that is square to the span by construction has no tilt to blend.
+#:
+#: The risk this trades against is recorded rather than assumed: the section ring
+#: is a genuine 3-D curve, so forcing a plane it does not lie in throws its nodes
+#: out of plane, and the comment on the blend below records that tilting cells out
+#: of the section plane once inverted 7522 of them near the WALL.  Far-field
+#: folding and near-wall folding pull in opposite directions.
+FRAME_MODE_DEFAULT = "svd"
+
+
+def plane_frame(ring: Array, mode: str = FRAME_MODE_DEFAULT
+                ) -> tuple[Array, Array, Array, Array, float]:
+    """The plane a section is marched in: origin, two in-plane axes, normal, residual.
+
+    `residual` is the largest out-of-plane distance of a ring node, so it measures
+    directly what the chosen plane costs the wall: for "svd" it is the smallest
+    possible by construction, and for "span_normal" it is how far the section
+    genuinely departs from square-to-span.
+    """
     origin = ring.mean(axis=0)
     centred = ring - origin
+    if mode == "span_normal":
+        normal = np.array([0.0, 1.0, 0.0])
+        # e1 along the chord: the ring's longest in-plane extent, which puts the
+        # frame in the same place the SVD would have and keeps the two modes
+        # comparable rather than arbitrarily rotated against each other.
+        flat = centred - np.outer(centred @ normal, normal)
+        _u, _s, vt = np.linalg.svd(flat, full_matrices=False)
+        e1 = vt[0] - (vt[0] @ normal) * normal
+        e1 /= np.linalg.norm(e1)
+        e2 = np.cross(normal, e1)
+        residual = float(np.abs(centred @ normal).max())
+        return origin, e1, e2, normal, residual
+    if mode != "svd":
+        raise ValueError(f"unknown frame mode {mode!r}; expected 'svd' or 'span_normal'")
     _u, _s, vt = np.linalg.svd(centred, full_matrices=False)
     e1, e2, normal = vt[0], vt[1], vt[2]
     # SVD fixes the plane but not its handedness, and the handedness decides the
@@ -113,9 +154,10 @@ def march_section(
     smoothing_growth: float = 6.0,
     radial_blend_power: float = 2.0,
     global_origin_xz: tuple[float, float] | None = None,
+    frame_mode: str = FRAME_MODE_DEFAULT,
 ) -> tuple[Array, dict]:
     """March one closed ring out to a circle.  Returns (n_ring+1, n_normal, 3)."""
-    origin, e1, e2, plane_normal, residual = plane_frame(ring)
+    origin, e1, e2, plane_normal, residual = plane_frame(ring, frame_mode)
     basis = np.column_stack([e1, e2])
     pts2 = (ring - origin) @ basis
     centre2 = pts2.mean(axis=0)

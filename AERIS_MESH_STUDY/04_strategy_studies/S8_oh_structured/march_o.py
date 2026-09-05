@@ -235,6 +235,28 @@ def march_section(
             # the section plane and inverted 7522 of them, all near the wall.
             # The rotation is only needed where neighbouring stations' planes
             # disagree enough to cross, which is far outside the boundary layer.
+            # Defect 20, MECHANISM IDENTIFIED, FIX NOT YET FOUND.
+            #
+            # This squared ramp reaches 1 only at the far field.  At eta 0.83 it
+            # is 51 per cent blended, leaving 3.89 degrees of residual tilt, and
+            # at a 29 m radius that is a 1.97 m excursion in y against a local
+            # spanwise cell of 0.02 to 0.05 m.  Neighbouring rings interleave and
+            # the spanwise edges REVERSE: on lhs100_seed42[65], 643 of them ran
+            # backwards in y (most negative dy -0.036 m), which is exactly the
+            # 644 folded cells that design reports.
+            #
+            # The obvious repair -- finish the blend earlier, linear to eta 0.70
+            # -- was tried and is WORSE: 644 folds become 8429 on that design,
+            # and 2813 to 8325 on four others.  Rotating the frame over a shorter
+            # eta range turns it faster per layer and tilts cells out of the
+            # section plane, which is the failure recorded above at 7522 cells
+            # near the wall.  The two failure modes pull in opposite directions.
+            #
+            # The tilt exists because `plane_frame` best-fits each section ring
+            # by SVD, and a swept, tapered, twisted section's best-fit plane is
+            # not perpendicular to the span.  A march in a plane whose normal IS
+            # the span direction would have no tilt to blend away at all; that is
+            # the next thing to try, and it is a larger change than a ramp.
             w = float(np.clip((eta[k] - 0.40) / 0.60, 0.0, 1.0)) ** 2
             a1 = (1.0 - w) * e1 + w * e1g
             a1 /= np.linalg.norm(a1)

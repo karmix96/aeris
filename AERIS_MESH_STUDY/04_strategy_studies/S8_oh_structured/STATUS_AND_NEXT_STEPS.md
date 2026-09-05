@@ -11,8 +11,8 @@ desktop commands are `HANDOFF_desktop.md`; this file is what to *do*.
 | | state |
 |---|---|
 | topology | O-H, 3 volume blocks, 2 surface blocks, no collars |
-| design-space meshing | **100/100 build, 100/100 valid** at `gci_C` (span-normal frame) |
-| fine-level meshing | screen at `gci_F` **running** — was 15/100 clean when this was written |
+| design-space meshing | **100/100 build, 100/100 valid** at `gci_C`, default path |
+| fine-level meshing | index 83 clean at all 4 levels; index 65 at 3; a 51-design `gci_F` screen was clean when stopped |
 | determinism (ADR-0011 §6.1) | **PASSES** — `o_wing` identical on all 100 |
 | CFD | 4 angles on index 83 at `gci_C`, 3 converged, 1 solver-frozen |
 | AVL cross-check | CL agrees to 1.9 % at alpha 8; neutral point to 3.7 % of MAC |
@@ -28,26 +28,47 @@ tilt before a 40 m radius amplified it into a ~2 m spanwise excursion against
 
 ---
 
-## 2. The one thing that is NOT yet switched on
+## 2. The fold fix is in, and it is the default
 
-**`--frame-mode` still defaults to `svd`, the old behaviour.**
+`FRAME_MODE_DEFAULT = "span_normal"` in `march_o.py`, and the same in
+`build_volume.py` and `robustness_screen.py`. The old behaviour stays selectable
+as `--frame-mode svd`, and the pre-fix tree is tagged `s8-svd-frame-baseline`.
 
-`FRAME_MODE_DEFAULT = "svd"` in `march_o.py`, and `--frame-mode svd` in
-`build_volume.py`. Every result above marked "span-normal" was produced by
-passing the flag explicitly.
+**What the fix is.** The marching plane was best-fitted to each section ring by
+SVD. On a swept, tapered, twisted section that plane sits up to 8 degrees off
+square-to-span, and the far-field blend could not remove the tilt before a 40 m
+radius amplified it into a ~2 m spanwise excursion against 4 cm cells.
+Neighbouring rings interleaved, spanwise edges reversed, 15 of 100 designs
+folded. The plane is now square to the span by construction.
 
-It was left that way deliberately: the fine-level screen was still running, and
-the working method should not be replaced by an unproven one. **Flipping the
-default is step 1 below, gated on that screen.**
+**And the correction to that fix, which matters as much.** The march works in
+2-D in-plane coordinates, so the wall layer it produces is the ring PROJECTED
+onto the marching plane. With the SVD frame that cost nothing; with a
+span-normal plane it moved the wing surface by up to 1.194e-03 m — the same
+order as the 1.0 mm blunt trailing edge. Every node now keeps its own
+out-of-plane displacement, decayed to zero by the far field, so eta 0 is the
+exact loft and the far field is a clean cylinder.
 
-The old approach is preserved two ways: git tag `s8-svd-frame-baseline`, and the
-`svd` mode itself, which stays selectable forever.
+| | folds | wall vs exact loft |
+|---|---|---|
+| `svd` (old default) | 645 on index 65 | 7.296e-06 m |
+| `span_normal`, projected | 0 | **1.194e-03 m** — deformed the wing |
+| `span_normal` + offset restored | **0** | **2.220e-16 m** |
 
----
+**Verified:** 100/100 designs build with zero inverted cells (11.0 min); index 83
+clean at all four ladder levels and index 65 at three; the grid family untouched
+(LE 1.310/1.286/1.335, TE 1.300/1.308/1.298, s0 1.298/1.299/1.300, global r_h
+1.2512/1.2590/1.2664, identical to the baseline).
+
+**A guard now enforces it.** `build_volume` asserts the wall layer IS the
+surface ring to 1e-9 m and records the measured error in every summary. It
+exists because defect 21 was silent: wall orthogonality, first-cell height,
+scaled Jacobian and inverted-cell count were ALL unchanged while the wing moved
+1.2 mm. Quality metrics do not check position.
 
 ## 3. Exact next steps
 
-### Step 1 — finish validating the fold fix, then make it the default
+### Step 1 — DONE. The fold fix is validated and is the default.
 
 ```bash
 # check the fine screen that was running

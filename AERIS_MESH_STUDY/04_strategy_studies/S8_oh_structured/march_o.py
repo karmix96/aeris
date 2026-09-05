@@ -54,7 +54,7 @@ Array = np.ndarray
 #: out of plane, and the comment on the blend below records that tilting cells out
 #: of the section plane once inverted 7522 of them near the WALL.  Far-field
 #: folding and near-wall folding pull in opposite directions.
-FRAME_MODE_DEFAULT = "svd"
+FRAME_MODE_DEFAULT = "span_normal"
 
 
 def plane_frame(ring: Array, mode: str = FRAME_MODE_DEFAULT

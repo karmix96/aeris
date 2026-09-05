@@ -124,7 +124,8 @@ def main() -> int:
     ap.add_argument("--out", type=Path,
                     default=REPO / "AERIS_MESH_STUDY/artifacts/paraview_inspection/s8_oh")
     ap.add_argument("--no-plot3d", action="store_true")
-    ap.add_argument("--frame-mode", default="svd", choices=("svd", "span_normal"),
+    ap.add_argument("--frame-mode", default="span_normal",
+                    choices=("svd", "span_normal"),
                     help="how each section's marching plane is chosen. 'svd' "
                          "best-fits the section ring (the 2026-09-05 baseline, "
                          "tagged s8-svd-frame-baseline); 'span_normal' forces "

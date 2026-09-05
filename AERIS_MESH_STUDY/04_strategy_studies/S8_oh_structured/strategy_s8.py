@@ -86,6 +86,27 @@ class OHLevel:
     #: every station still met 10 degrees.  See
     #: reports/s8_cp_excess_diagnosis_20260904.json.
     le_span_growth_max: float = 1.15
+    #: How much finer the leading-edge cell is than the one the turning target
+    #: alone would give.  1.0 is the baseline.  A grid family sets this to its
+    #: cumulative refinement ratio so the leading-edge SPACING refines with
+    #: everything else.
+    #:
+    #: Scaling the turning target instead does not work, and the measurement is
+    #: on record: scaling `target_le_turn_deg` by 1.30 refined the delivered
+    #: spacing by only 1.142.  ds = R*theta holds for constant R, and as the
+    #: cell shrinks it sits closer to the nose where the curvature is higher, so
+    #: the spacing responds to theta roughly as its square root.  Solving for
+    #: the baseline target and then dividing the answer is exact, needs no
+    #: curvature model, and stays self-contained within one build.
+    le_refine_factor: float = 1.0
+    #: `n_side` of the family's BASELINE level.  The turning solve's answer is
+    #: not level-independent -- with more points on the same section, hitting the
+    #: same turning target lands on a different spacing, measured as 0.0001297 m
+    #: at n_side 45 and 0.0001570 at n_side 58.  Dividing each level's own answer
+    #: by the ratio therefore refines by 1.056 rather than 1.30.  The profile has
+    #: to be established ONCE, at the baseline resolution, and then divided.  0
+    #: means "this level is the baseline; solve at my own n_side".
+    le_baseline_n_side: int = 0
     #: The LAST spanwise cell on the OML, in multiples of s0.  This is not an
     #: OML requirement -- the spanwise direction is tangential to the OML wall --
     #: it is the TIP CAP's requirement.  The cap's wall normal IS the spanwise
@@ -148,7 +169,11 @@ def refined_level(base: OHLevel, ratio: float, *, scale_first_cell: bool = True,
         # scales the leading-edge cell by 1/r, which is what uniform refinement
         # means.  The legacy 10/8/6 ladder had this part right in intent; what
         # was wrong there was that it scaled inconsistently with everything else.
-        target_le_turn_deg=base.target_le_turn_deg / ratio,
+        # The TARGET stays at the baseline's value; the delivered spacing is
+        # divided by the cumulative factor after the solve. See le_refine_factor.
+        target_le_turn_deg=base.target_le_turn_deg,
+        le_refine_factor=base.le_refine_factor * ratio,
+        le_baseline_n_side=base.le_baseline_n_side or base.n_side,
         ds_te_frac=base.ds_te_frac / ratio,
         farfield_chords=base.farfield_chords,
         le_span_growth_max=base.le_span_growth_max,
@@ -327,10 +352,15 @@ def build_oml_ring(
                 pygeo, np.asarray(u, dtype=float), _v, frame=_frame, upper=is_upper
             )
 
+        # The turning solve establishes the leading-edge spacing at the FAMILY
+        # BASELINE resolution, not at this level's, because its answer moves
+        # with the point count. The ring it returns is discarded when they
+        # differ; only `ds_le_solved_m` is wanted.
+        solve_n_side = level.le_baseline_n_side or level.n_side
         ring, metrics = ring_for_target_turning(
             upper,
             lower,
-            n_side=level.n_side,
+            n_side=solve_n_side,
             n_base=level.n_base,
             target_turn_deg=level.target_le_turn_deg,
             ds_te=level.ds_te_frac * frame.chord,
@@ -352,12 +382,20 @@ def build_oml_ring(
     ds_smooth, le_smoothing = smooth_le_spacing(
         ds_solved, chords, level.le_span_growth_max
     )
+    # Refine the leading edge by the family's ratio.  This happens AFTER the
+    # envelope so the spanwise smoothness the envelope establishes is preserved
+    # exactly -- dividing every station by one constant cannot reintroduce a step.
+    if level.le_refine_factor != 1.0:
+        ds_smooth = ds_smooth / level.le_refine_factor
+        le_smoothing["le_refine_factor"] = level.le_refine_factor
 
     rings: list[Array] = []
     stations: list[dict[str, Any]] = []
     for d, ds_new, ds_old in zip(solved, ds_smooth, ds_solved):
         ring, metrics = d["ring"], d["metrics"]
-        rebuilt = bool(ds_new < ds_old * (1.0 - 1.0e-12))
+        rebuilt = bool(ds_new < ds_old * (1.0 - 1.0e-12)
+                       or level.le_refine_factor != 1.0
+                       or (level.le_baseline_n_side or level.n_side) != level.n_side)
         if rebuilt:
             ring, metrics = section_ring(
                 d["upper"],
@@ -372,6 +410,8 @@ def build_oml_ring(
             metrics["ds_le_solved_m"] = float(ds_new)
             # Refining can only reduce the turning a cell absorbs, so the target
             # stays met; recorded from the rebuilt ring rather than assumed.
+            # A refined leading edge absorbs LESS turning than the baseline
+            # target, which is the point; the gate is one-sided.
             metrics["turn_target_met"] = bool(
                 metrics["le_turn_per_cell_deg"] <= level.target_le_turn_deg + 0.2
             )

@@ -72,6 +72,8 @@ def main() -> int:
     ap.add_argument("--timeout-sec", type=int, default=900)
     ap.add_argument("--nchordwise", type=int, default=24)
     ap.add_argument("--spanwise-panels-per-section", type=int, default=4)
+    #: the CFD moment reference, so both codes take moments about one point
+    ap.add_argument("--moment-reference", type=float, nargs=3, default=[0.4, 0.0, 0.0])
     args = ap.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
 
@@ -108,6 +110,13 @@ def main() -> int:
             timeout_sec=args.timeout_sec,
             nchordwise=args.nchordwise,
             spanwise_panels_per_section=args.spanwise_panels_per_section,
+            # The CFD takes its moments about (0.4, 0, 0); AVL defaults to the
+            # origin.  Transferring afterwards works and was checked against
+            # AVL's own reported neutral point, but a moment comparison should
+            # not depend on getting an arm right by hand -- set the same point
+            # in both codes and the only remaining difference is c_ref, which is
+            # a pure scale factor.
+            moment_reference_m=tuple(args.moment_reference),
         )
         record = result if isinstance(result, dict) else getattr(result, "__dict__", {})
         rows.append({"alpha_deg": float(alpha), "raw": _plain(record)})

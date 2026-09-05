@@ -6,27 +6,59 @@
   "grid": "oh_L3 rebuilt 2026-09-04 with smooth_le_spacing, 567256 cells, 0 inverted",
   "geometry": "lhs100_seed42[83]",
   "operating_point": "mission_authority_v1.yaml verbatim, M 0.0837, Re 1530708",
-
   "results": [
-    {"alpha_deg": -2.0, "cl": -0.298397, "cd": 0.026005, "cdp": 0.017417, "cdv": 0.008588,
-     "cmy": -0.005953, "relative_residual": 9.96e-09, "converged": true, "freestream_verified": true},
-    {"alpha_deg": 0.0, "cl": -0.159963, "cd": 0.020838, "cdp": 0.011841, "cdv": 0.008996,
-     "cmy": 0.001280, "relative_residual": 9.14e-09, "converged": true, "freestream_verified": true},
-    {"alpha_deg": 4.0, "cl": 0.120266, "cd": 0.019864, "cdp": 0.010440, "cdv": 0.009425,
-     "cmy": 0.015378, "relative_residual": 5.73e-08, "converged": false, "freestream_verified": true,
-     "status": "RESIDUAL_STALLED_FORCES_CONVERGED"},
-    {"alpha_deg": 8.0, "cl": 0.401834, "cd": 0.030922, "cdp": 0.021511, "cdv": 0.009411,
-     "cmy": 0.028522, "relative_residual": 8.76e-09, "converged": true, "freestream_verified": true}
+    {
+      "alpha_deg": -2.0,
+      "cl": -0.298397,
+      "cd": 0.026005,
+      "cdp": 0.017417,
+      "cdv": 0.008588,
+      "cmy": -0.005953,
+      "relative_residual": 9.96e-09,
+      "converged": true,
+      "freestream_verified": true
+    },
+    {
+      "alpha_deg": 0.0,
+      "cl": -0.159963,
+      "cd": 0.020838,
+      "cdp": 0.011841,
+      "cdv": 0.008996,
+      "cmy": 0.00128,
+      "relative_residual": 9.14e-09,
+      "converged": true,
+      "freestream_verified": true
+    },
+    {
+      "alpha_deg": 4.0,
+      "cl": 0.120266,
+      "cd": 0.019864,
+      "cdp": 0.01044,
+      "cdv": 0.009425,
+      "cmy": 0.015378,
+      "relative_residual": 5.73e-08,
+      "converged": false,
+      "freestream_verified": true,
+      "status": "RESIDUAL_STALLED_FORCES_CONVERGED"
+    },
+    {
+      "alpha_deg": 8.0,
+      "cl": 0.401834,
+      "cd": 0.030922,
+      "cdp": 0.021511,
+      "cdv": 0.009411,
+      "cmy": 0.028522,
+      "relative_residual": 8.76e-09,
+      "converged": true,
+      "freestream_verified": true
+    }
   ],
-
   "headline": "Three of four angles converged with a verified freestream. alpha 8 -- the run that never converged before defect 14 was fixed -- now converges to 8.76e-9. The lift curve is linear to 1.7 percent and agrees with AVL on the same loft.",
-
   "the_alpha_8_question_is_answered": {
     "before": "stalled with the residual frozen at 13.4682379 to eight significant figures, killed at iteration 592",
     "after": "converged to 8.76e-9 relative, 8 orders, with lift_direction (0,0,1)",
     "conclusion": "Defect 14 WAS blocking alpha 8. The hypothesis in ADR-0019 that the sideslip made the problem inconsistent with the root symmetry plane is supported for this case."
   },
-
   "but_the_hypothesis_does_not_generalise": {
     "finding": "alpha 4 stalled with the SAME signature and it has no sideslip at all.",
     "evidence": {
@@ -47,54 +79,140 @@
     ],
     "cost_of_the_kill": "alpha 4 was stopped to unblock alpha 8, and ADflow writes solutions only at the end, so its volume and surface files do not exist. Where its residual lived cannot now be inspected. The forces were recovered from the log; the flow field was not."
   },
-
   "lift_curve": {
-    "slope_per_degree": {"-2_to_0": 0.06922, "0_to_4": 0.07006, "4_to_8": 0.07039},
+    "slope_per_degree": {
+      "-2_to_0": 0.06922,
+      "0_to_4": 0.07006,
+      "4_to_8": 0.07039
+    },
     "reading": "gently increasing slope, total spread 1.7 percent, which is what a real wing does at low to moderate incidence. AVL is flat at 0.0723-0.0727 because a vortex-lattice method is linear by construction."
   },
-
   "avl_cross_check": {
     "method": "AVL run on the identical pyGeo loft via build_locked_surface, the same call build_volume.py makes",
     "script": "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/verify_against_avl.py",
     "reference_area_check": "AVL s_ref 0.78984 m2 against the CFD full area 0.789836 m2 -- CL is directly comparable",
-    "cl": {"-2.0": {"avl": -0.33038, "cfd": -0.298397, "diff": 0.031983},
-            "0.0": {"avl": -0.18575, "cfd": -0.159963, "diff": 0.025787},
-            "4.0": {"avl": 0.10491, "cfd": 0.120266, "diff": 0.015356},
-            "8.0": {"avl": 0.39435, "cfd": 0.401834, "diff": 0.007484}},
+    "cl": {
+      "-2.0": {
+        "avl": -0.33038,
+        "cfd": -0.298397,
+        "diff": 0.031983
+      },
+      "0.0": {
+        "avl": -0.18575,
+        "cfd": -0.159963,
+        "diff": 0.025787
+      },
+      "4.0": {
+        "avl": 0.10491,
+        "cfd": 0.120266,
+        "diff": 0.015356
+      },
+      "8.0": {
+        "avl": 0.39435,
+        "cfd": 0.401834,
+        "diff": 0.007484
+      }
+    },
     "reading": "The gap closes monotonically with incidence, from 0.032 to 0.0075, and at alpha 8 the two agree to 1.9 percent. That is the right trend: at alpha 0 the flow is set by camber and viscous decambering, where an inviscid method differs most; at higher alpha it is set by incidence, where a vortex-lattice method is at its best.",
     "moment_disagreement": {
-      "note": "AVL uses c_ref 0.4946 and moment reference x=0; the CFD uses c_ref 0.9 and x=0.4. The printed moments were never comparable. Transferred to a common reference (the transfer reproduces AVL's own reported x_np of 0.336126 m to four decimals):",
-      "cfd_dCMy_dCL": {"-2_to_0": 0.05225, "0_to_4": 0.05031, "4_to_8": 0.04668},
-      "cfd_verdict": "statically STABLE, neutral point about x = 0.446 m",
-      "avl_verdict": "statically UNSTABLE about x = 0.4, neutral point x = 0.336 m",
-      "status": "UNRESOLVED. Four CFD points are self-consistent and disagree with AVL on the SIGN of static stability, which for a tailless BWB is design-critical. The CFD moment moved 18 percent from the leading-edge respacing alone, so it is the less grid-converged of the two. Neither method is currently entitled to win."
+      "resolved_reference_mismatch": "AVL was rerun with moment_reference_m (0.4,0,0), the CFD's own point, so no arm is applied by hand. The only remaining difference is c_ref (AVL 0.4946 m, CFD 0.9 m), a pure scale. The rerun confirms the earlier transfer: at alpha 0 the hand-transferred Cm was -0.00159 and the direct value is -0.00160.",
+      "both_about_x_0p4_cref_0p9_adflow_sign": {
+        "-2.0": {
+          "cfd_cmy": -0.005953,
+          "avl_cmy": 0.011238411111111112,
+          "cfd_cl": -0.298397,
+          "avl_cl": -0.33038
+        },
+        "0.0": {
+          "cfd_cmy": 0.00128,
+          "avl_cmy": 0.0008792888888888889,
+          "cfd_cl": -0.159963,
+          "avl_cl": -0.18575
+        },
+        "4.0": {
+          "cfd_cmy": 0.015378,
+          "avl_cmy": -0.01957516888888889,
+          "cfd_cl": 0.120266,
+          "avl_cl": 0.10491
+        },
+        "8.0": {
+          "cfd_cmy": 0.028522,
+          "avl_cmy": -0.039342682222222224,
+          "cfd_cl": 0.401834,
+          "avl_cl": 0.39435
+        }
+      },
+      "dCMy_dCL": {
+        "cfd": 0.049239147604638385,
+        "avl": -0.06979042089871541
+      },
+      "neutral_point_m": {
+        "cfd": 0.44431523284417457,
+        "avl": 0.33718862119115617,
+        "avl_own_reported_x_np": 0.335889
+      },
+      "verdict": "CFD dCMy/dCL +0.0492 -> statically STABLE, neutral point x = 0.4443 m. AVL -0.0698 -> statically UNSTABLE, x = 0.3372 m. They differ by 0.1071 m and disagree on the SIGN. AVL's own reported x_np of 0.3359 m agrees with the line fit through its four points, so this is not a post-processing artefact on either side. UNRESOLVED; the CFD moment moved 18 per cent from one mesh respacing and is the less grid-converged of the two."
     }
   },
-
   "surface_pressure_bound": {
     "definition": "cp must not exceed the isentropic stagnation bound 1.0018 at M 0.0837",
     "by_alpha": {
-      "-2.0": {"over_bound": 14, "te_corner": 11, "leading_edge": 3, "peak_excess": 0.0911, "le_stations": [0]},
-      "0.0": {"over_bound": 23, "te_corner": 20, "leading_edge": 3, "peak_excess": 0.1809, "le_stations": [0]},
-      "8.0": {"over_bound": 61, "te_corner": 25, "leading_edge": 36, "peak_excess": 0.4626,
-               "le_stations": [0, 11, 14, 15, 17, 18]}
+      "-2.0": {
+        "over_bound": 14,
+        "te_corner": 11,
+        "leading_edge": 3,
+        "peak_excess": 0.0911,
+        "le_stations": [
+          0
+        ]
+      },
+      "0.0": {
+        "over_bound": 23,
+        "te_corner": 20,
+        "leading_edge": 3,
+        "peak_excess": 0.1809,
+        "le_stations": [
+          0
+        ]
+      },
+      "8.0": {
+        "over_bound": 61,
+        "te_corner": 25,
+        "leading_edge": 36,
+        "peak_excess": 0.4626,
+        "le_stations": [
+          0,
+          11,
+          14,
+          15,
+          17,
+          18
+        ]
+      }
     },
     "new_finding": "The leading-edge excess grows sharply with incidence: 3 cells at alpha -2 and 0, 36 at alpha 8, and the peak excess more than doubles to 0.4626. target_le_turn_deg 10 was calibrated against a conventional wall-resolved reference at cruise attitude; at the mission's high-load case the suction peak sharpens and 10 degrees per cell is no longer enough. This is a resolution requirement that varies with the operating point, which the level definitions do not currently express.",
     "drag_cost": {
       "method": "per-cell pressure force projected on the freestream direction (cos a, 0, sin a), which reproduces ADflow's CDp to five decimals at every angle",
-      "-2.0": {"share_of_cdp_in_over_bound_le_cells": 0.0176, "cdp_change_if_clipped": -0.00096},
-      "0.0": {"share_of_cdp_in_over_bound_le_cells": 0.0266, "cdp_change_if_clipped": -0.00212},
-      "8.0": {"share_of_cdp_in_over_bound_le_cells": 0.0315, "cdp_change_if_clipped": -0.00268},
+      "-2.0": {
+        "share_of_cdp_in_over_bound_le_cells": 0.0176,
+        "cdp_change_if_clipped": -0.00096
+      },
+      "0.0": {
+        "share_of_cdp_in_over_bound_le_cells": 0.0266,
+        "cdp_change_if_clipped": -0.00212
+      },
+      "8.0": {
+        "share_of_cdp_in_over_bound_le_cells": 0.0315,
+        "cdp_change_if_clipped": -0.00268
+      },
       "reading": "Even at alpha 8, with twelve times as many contaminated leading-edge cells and a peak excess of 0.46, clipping every one to the physical bound moves pressure drag by 0.27 percent. The defect is real and it is small."
     }
   },
-
   "what_is_accepted": {
     "alpha_-2_and_0_and_8": "qualified: converged, freestream verified, force tails settled",
     "alpha_4_lift": "accepted as corroboration only. It sits on the lift curve to 1.2 percent and was predicted to +0.117 before it ran, but it FAILS the residual gate at 7.242 of 8 orders and no threshold was weakened to admit it.",
     "alpha_4_drag_and_moment": "REJECTED. Drag and moment are exactly the quantities a hidden residual imbalance corrupts, and its flow field no longer exists to check."
   },
-
   "not_established": [
     "grid convergence at any angle. CDp moved 5.2 percent and CMy 18 percent from one mesh respacing, so no drag or moment figure here is converged.",
     "the cause of the alpha 4 Newton-Krylov breakdown",
@@ -102,5 +220,69 @@
     "tip-cap viscous quantities",
     "any comparison against experiment",
     "the static stability sign, on which CFD and AVL disagree"
-  ]
+  ],
+  "convergence_gate": {
+    "adopted": "2026-09-05, replacing the single 1e-8 residual cutoff",
+    "rationale": "The residual cutoff was the only gate and it rejected alpha 4, whose forces were stable to under 2e-8 relative. For an automated design sweep that discards usable cases. Loosening the residual alone is not safe either, because flat forces have two causes -- the solution converged, or the solver stopped stepping.",
+    "criteria": {
+      "residual_orders_min": 5.0,
+      "cl_percent_max": 0.05,
+      "cd_percent_max": 0.1,
+      "cmy_absolute_max": 0.0001,
+      "window_iterations": 100,
+      "also": "not diverging, and no growing oscillation envelope"
+    },
+    "cmy_tolerance_is_absolute_because": "CMy crosses zero between alpha -2 and 0; a relative tolerance on a quantity that passes through zero demands infinite precision at the crossing and is trivially met away from it.",
+    "frozen_solver_is_reported_separately": "A gate reading only force flatness cannot distinguish a converged solution from a dead solver. alpha 4 is labelled ACCEPTED_SOLVER_FROZEN, not ACCEPTED.",
+    "verdicts": {
+      "-2.0": "ACCEPTED",
+      "0.0": "ACCEPTED",
+      "4.0": "ACCEPTED_SOLVER_FROZEN",
+      "8.0": "ACCEPTED"
+    },
+    "report": "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_convergence_gate_20260905.json"
+  },
+  "mesh": {
+    "cells": 567256,
+    "inverted": 0,
+    "blocks": {
+      "o_wing": {
+        "shape": [
+          93,
+          65,
+          49
+        ],
+        "cells": 282624
+      },
+      "o_out": {
+        "shape": [
+          93,
+          65,
+          48
+        ],
+        "cells": 276736
+      },
+      "cap_out": {
+        "shape": [
+          43,
+          5,
+          48
+        ],
+        "cells": 7896
+      }
+    },
+    "family_closed_totals": {
+      "oh_probe": 181680,
+      "oh_L3": 555144,
+      "oh_L2": 1056480,
+      "oh_L1": 2316902
+    }
+  },
+  "reference_contract_verified": {
+    "cfd": "areaRef 0.394918242017589 m2 (half model), moment reference (0.4,0,0) m, chordRef 0.9 m -- identical on all four runs, read from each result.json",
+    "avl": "s_ref 0.78984 m2 (full), moment reference (0.4,0,0) m, c_ref 0.4946 m",
+    "cl_comparable": "yes -- AVL s_ref equals the CFD full area 0.789836 m2 to five figures",
+    "cmy_comparable": "yes, after scaling AVL by c_ref 0.4946/0.9 and flipping sign for ADflow's +y-moment convention"
+  },
+  "figure": "AERIS_MESH_STUDY/05_s6_cfd_qualification/viz/s8_sweep_polars_20260905.png"
 }

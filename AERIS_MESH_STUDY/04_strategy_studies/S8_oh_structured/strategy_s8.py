@@ -215,6 +215,11 @@ LEVELS["legacy_L0"] = LEVELS["oh_L0"]
 #: keeps the family a refinement of ONE mesh: every level meets the same
 #: leading-edge turning target, uses the same trailing-edge fraction, the same
 #: far field and the same clustering laws, and differs only in spacing.
+#: One level BELOW the baseline, so a complete three-level GCI fits a 16 GB host.
+#: gci_CC / gci_C / gci_M are 299k / 567k / 1.11M cells at 4.3 / 6.5 / 11.3 GiB
+#: measured; gci_C / gci_M / gci_F is the same family one rung up and needs 21 GiB
+#: at the top, which is a bigger machine.
+LEVELS["gci_CC"] = refined_level(LEVELS["oh_L3"], 1.0 / GCI_RATIO, name="gci_CC")
 LEVELS["gci_C"] = LEVELS["oh_L3"]
 LEVELS["gci_M"] = refined_level(LEVELS["oh_L3"], GCI_RATIO, name="gci_M")
 LEVELS["gci_F"] = refined_level(LEVELS["oh_L3"], GCI_RATIO ** 2, name="gci_F")

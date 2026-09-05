@@ -1,0 +1,130 @@
+{
+  "level": "gci_C",
+  "a": {
+    "label": "svd",
+    "dir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/s8_cmp_svd",
+    "metrics": {
+      "topology/o_wing/shape": [
+        93,
+        65,
+        49
+      ],
+      "topology/o_wing/cells": 282624,
+      "topology/o_out/shape": [
+        93,
+        65,
+        48
+      ],
+      "topology/o_out/cells": 276736,
+      "topology/cap_out/shape": [
+        43,
+        5,
+        48
+      ],
+      "topology/cap_out/cells": 7896,
+      "geometry/wall_layer_error_m": 2.220446049250313e-16,
+      "geometry/farfield_radius_m": 35.00963259255157,
+      "geometry/root_plane_y_spread_m": 8.112737594348044e-18,
+      "geometry/span_extent_m": 0.9786739004082158,
+      "geometry/chord_extent_m": 0.8673375388766239,
+      "geometry/thickness_extent_m": 0.1325565325240489,
+      "geometry/interface_o_wing_to_o_out_m": 0.0,
+      "validity/o_wing/min_cell_volume_m3": 3.5878860528342296e-14,
+      "validity/o_wing/max_cell_volume_m3": 1.2633850596042557,
+      "validity/o_out/min_cell_volume_m3": 3.6224595228553485e-14,
+      "validity/o_out/max_cell_volume_m3": 145.82820114183468,
+      "validity/cap_out/min_cell_volume_m3": 1.0416997379707416e-12,
+      "validity/cap_out/max_cell_volume_m3": 0.0003812059365957091,
+      "validity/inverted_cells_total": 0,
+      "quality/o_wing/scaled_jacobian_min": 0.015807434071497532,
+      "quality/o_wing/scaled_jacobian_p001": 0.023512773338115564,
+      "quality/o_wing/scaled_jacobian_p01": 0.03500586640217309,
+      "quality/o_wing/scaled_jacobian_p1": 0.08534338387088894,
+      "quality/o_wing/scaled_jacobian_median": 0.9484009908018677,
+      "quality/o_wing/neighbour_volume_ratio_p99": 1.3084423862750525,
+      "quality/wall_nonorthogonality_median_deg": 1.0850943325910127,
+      "quality/wall_nonorthogonality_p99_deg": 48.421092379590725,
+      "quality/wall_nonorthogonality_max_deg": 59.327536522071476,
+      "resolution/first_cell_min_m": 4.391096651762986e-06,
+      "resolution/first_cell_max_m": 4.731841181561161e-06,
+      "resolution/ds_le_midspan_m": 0.00012776070342627235,
+      "resolution/ds_te_midspan_m": 0.0006696881209922985,
+      "resolution/ds_span_min_m": 4.871891915630076e-05,
+      "resolution/ds_span_max_m": 0.06231861289476734,
+      "resolution/normal_growth_max": 1.2787897188666528,
+      "resolution/worst_le_turn_deg": 10.019014447235243
+    }
+  },
+  "b": {
+    "label": "span_normal",
+    "dir": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/AERIS_MESH_STUDY/artifacts/s8_cmp_sn",
+    "metrics": {
+      "topology/o_wing/shape": [
+        93,
+        65,
+        49
+      ],
+      "topology/o_wing/cells": 282624,
+      "topology/o_out/shape": [
+        93,
+        65,
+        48
+      ],
+      "topology/o_out/cells": 276736,
+      "topology/cap_out/shape": [
+        43,
+        5,
+        48
+      ],
+      "topology/cap_out/cells": 7896,
+      "geometry/wall_layer_error_m": 2.220446049250313e-16,
+      "geometry/farfield_radius_m": 35.00963259255157,
+      "geometry/root_plane_y_spread_m": 8.112737594348044e-18,
+      "geometry/span_extent_m": 0.9786739004082159,
+      "geometry/chord_extent_m": 0.8673375388766239,
+      "geometry/thickness_extent_m": 0.1325565325240489,
+      "geometry/interface_o_wing_to_o_out_m": 0.0,
+      "validity/o_wing/min_cell_volume_m3": 3.540908504714995e-14,
+      "validity/o_wing/max_cell_volume_m3": 1.1661711335221068,
+      "validity/o_out/min_cell_volume_m3": 3.621975010100912e-14,
+      "validity/o_out/max_cell_volume_m3": 145.83060522314906,
+      "validity/cap_out/min_cell_volume_m3": 1.0416997379707416e-12,
+      "validity/cap_out/max_cell_volume_m3": 0.0003812059365957091,
+      "validity/inverted_cells_total": 0,
+      "quality/o_wing/scaled_jacobian_min": 0.016371339203730163,
+      "quality/o_wing/scaled_jacobian_p001": 0.023872618821164586,
+      "quality/o_wing/scaled_jacobian_p01": 0.035609639089777254,
+      "quality/o_wing/scaled_jacobian_p1": 0.08780850919838733,
+      "quality/o_wing/scaled_jacobian_median": 0.9467542224690875,
+      "quality/o_wing/neighbour_volume_ratio_p99": 1.310167724831293,
+      "quality/wall_nonorthogonality_median_deg": 1.0825769164115764,
+      "quality/wall_nonorthogonality_p99_deg": 48.418450184118754,
+      "quality/wall_nonorthogonality_max_deg": 59.09413907293767,
+      "resolution/first_cell_min_m": 4.390926057552533e-06,
+      "resolution/first_cell_max_m": 4.731841181772509e-06,
+      "resolution/ds_le_midspan_m": 0.00012776070342625763,
+      "resolution/ds_te_midspan_m": 0.0006696881209922985,
+      "resolution/ds_span_min_m": 4.871891915632305e-05,
+      "resolution/ds_span_max_m": 0.06231861289476733,
+      "resolution/normal_growth_max": 1.278788305603067,
+      "resolution/worst_le_turn_deg": 10.019014447235243
+    }
+  },
+  "changed": [
+    "quality/o_wing/neighbour_volume_ratio_p99",
+    "quality/o_wing/scaled_jacobian_median",
+    "quality/o_wing/scaled_jacobian_min",
+    "quality/o_wing/scaled_jacobian_p001",
+    "quality/o_wing/scaled_jacobian_p01",
+    "quality/o_wing/scaled_jacobian_p1",
+    "quality/wall_nonorthogonality_max_deg",
+    "quality/wall_nonorthogonality_median_deg",
+    "quality/wall_nonorthogonality_p99_deg",
+    "resolution/first_cell_min_m",
+    "resolution/normal_growth_max",
+    "validity/o_out/max_cell_volume_m3",
+    "validity/o_out/min_cell_volume_m3",
+    "validity/o_wing/max_cell_volume_m3",
+    "validity/o_wing/min_cell_volume_m3"
+  ]
+}

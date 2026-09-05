@@ -85,9 +85,17 @@ def main() -> int:
 
     print(f"building {args.set_name}[{args.index}] -- the same call build_volume.py makes")
     with tempfile.TemporaryDirectory() as tmp:
-        _b, _i, case = strategy_s6.build_locked_surface(
-            args.set_name, args.index, Path(tmp), level="candidate_c01"
-        )
+        # Defect 18 (see build_volume.py).  This called `build_locked_surface`, which builds an entire
+        # S6 candidate_c01 SURFACE -- the C-family surface S8 exists to replace
+        # -- purely so that `case.pygeo_result` could be read off the end of it.
+        # S8 needs the pyGeo loft and nothing else, and it was inheriting S6's
+        # own span-clustering constraints for free: on lhs100_seed42[0] the C01
+        # spec raises "42 span cells capped at 0.025 m cannot cover the
+        # 1.14972 m quarter-chord line" and S8 never got to build anything.
+        # `build_pygeo_case` is the loft on its own.
+        case = strategy_s6.build_pygeo_case(args.set_name, args.index, Path(tmp))
+        if case.pygeo_result is None:
+            raise RuntimeError("the canonical geometry config produced no pyGeo result")
     pygeo_result = case.pygeo_result
     sections = pygeo_result.extracted
     semispan = max(float(s.y_m) for s in sections)

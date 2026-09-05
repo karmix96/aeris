@@ -103,7 +103,10 @@ def refined_level(base: OHLevel, ratio: float, *, scale_first_cell: bool = True,
     meshes that happen to have different cell counts.  Everything that defines
     where cells go is held fixed -- the leading-edge turning target, the
     trailing-edge fraction, the far-field distance, the clustering laws -- and
-    only the number of INTERVALS changes, by `ratio` in all three directions.
+    only the SPACING changes, by `ratio` in all three directions.  That means the
+    interval counts AND the spacing requests that pin the leading and trailing
+    edges: see the comment on those two fields for why holding them fixed is the
+    trap it looks like a safeguard against.
 
     The hand-written oh_L3/L2/L1 ladder was not this.  It refined the three
     directions at 1.31 / 1.33 / 1.25, and it also moved the leading-edge target
@@ -134,9 +137,19 @@ def refined_level(base: OHLevel, ratio: float, *, scale_first_cell: bool = True,
         n_base=intervals(base.n_base, odd=True),
         n_span=intervals(base.n_span),
         n_cap_collar=max(int(round(base.n_cap_collar * ratio)), 2),
-        # HELD FIXED: the resolution requests, not the resolution
-        target_le_turn_deg=base.target_le_turn_deg,
-        ds_te_frac=base.ds_te_frac,
+        # SCALED, and this is the correction that matters.  Holding these fixed
+        # looks like "same clustering law, finer sampling" and is not: a turning
+        # TARGET and a chord FRACTION are absolute spacing constraints, so
+        # freezing them freezes the cell size at the two places every cp-bound
+        # violation lives.  Measured on the first attempt: across four levels the
+        # trailing-edge spacing ratio was 1.000 exactly and the leading edge went
+        # 0.881, 0.963, 1.009 -- slightly COARSER -- while s0 refined at 1.30.
+        # For a smooth nose ds = R*theta, so scaling the turning target by 1/r
+        # scales the leading-edge cell by 1/r, which is what uniform refinement
+        # means.  The legacy 10/8/6 ladder had this part right in intent; what
+        # was wrong there was that it scaled inconsistently with everything else.
+        target_le_turn_deg=base.target_le_turn_deg / ratio,
+        ds_te_frac=base.ds_te_frac / ratio,
         farfield_chords=base.farfield_chords,
         le_span_growth_max=base.le_span_growth_max,
         tip_span_first_cell_in_s0=base.tip_span_first_cell_in_s0,
@@ -170,10 +183,17 @@ LEVELS["legacy_L2"] = LEVELS["oh_L2"]
 LEVELS["legacy_L1"] = LEVELS["oh_L1"]
 LEVELS["legacy_L0"] = LEVELS["oh_L0"]
 
-#: gci_M is oh_L3 unchanged -- the mesh the sweep was run on.
-LEVELS["gci_M"] = LEVELS["oh_L3"]
-LEVELS["gci_C"] = refined_level(LEVELS["oh_L3"], 1.0 / GCI_RATIO, name="gci_C")
-LEVELS["gci_F"] = refined_level(LEVELS["oh_L3"], GCI_RATIO, name="gci_F")
+#: Four levels, each a factor GCI_RATIO finer than the last in every direction.
+#: `gci_C` is oh_L3 unchanged -- the mesh the 2026-09-05 alpha sweep ran on --
+#: so the family starts from a solved level rather than needing one built for it.
+#: Generating all four from the same baseline by successive powers of one ratio
+#: keeps the family a refinement of ONE mesh: every level meets the same
+#: leading-edge turning target, uses the same trailing-edge fraction, the same
+#: far field and the same clustering laws, and differs only in spacing.
+LEVELS["gci_C"] = LEVELS["oh_L3"]
+LEVELS["gci_M"] = refined_level(LEVELS["oh_L3"], GCI_RATIO, name="gci_M")
+LEVELS["gci_F"] = refined_level(LEVELS["oh_L3"], GCI_RATIO ** 2, name="gci_F")
+LEVELS["gci_FF"] = refined_level(LEVELS["oh_L3"], GCI_RATIO ** 3, name="gci_FF")
 
 
 def _span_coordinate(pygeo: Any, v: float) -> float:

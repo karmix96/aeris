@@ -1,0 +1,48 @@
+{
+  "set_name": "lhs100_seed42",
+  "level": "gci_F",
+  "records": [
+    {
+      "index": 0,
+      "level": "gci_F",
+      "wall_time_s": 25.6,
+      "returncode": 0,
+      "built": true,
+      "cells": 2217680,
+      "blocks": [
+        "cap_out",
+        "o_out",
+        "o_wing"
+      ],
+      "block_shapes": {
+        "o_wing": [
+          157,
+          109,
+          82
+        ],
+        "o_out": [
+          157,
+          109,
+          50
+        ],
+        "cap_out": [
+          71,
+          9,
+          50
+        ]
+      },
+      "negative_cells": 0,
+      "min_cell_volume_m3": 7.632807813046081e-15,
+      "min_cell_over_s0": 14.95940507826572,
+      "worst_le_turn_per_cell_deg": 5.066577649695737,
+      "target_le_turn_deg": 10.0,
+      "all_stations_met_target": true,
+      "le_spacing_step_before": 2.281844568970433,
+      "le_spacing_step_after": 1.1500000000000001,
+      "le_stations_clamped": 8,
+      "n_stations": 82,
+      "wall_orthogonality_median_deg": null,
+      "outboard_span_growth": 1.2966481765100317
+    }
+  ]
+}

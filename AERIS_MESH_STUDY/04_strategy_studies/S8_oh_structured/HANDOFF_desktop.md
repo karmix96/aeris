@@ -47,6 +47,35 @@ moments about the same point.
    1.35. It needs a small reduction before it can be used in a convergence
    study.
 
+## UPDATE 2026-09-05: the convergence family is rebuilt, and it FITS HERE
+
+The `oh_L3 / oh_L2 / oh_L1` ladder was never a convergence family.  It refined
+the three directions at 1.31 / 1.33 / 1.25 AND moved the leading-edge target
+from 10 to 8 to 6 degrees and the trailing-edge fraction from 0.004 to 0.003.
+With the resolution law changing between levels, a shift in CD cannot be
+attributed to the grid and Richardson extrapolation over it means nothing.
+
+`strategy_s8.refined_level` now generates the family from one ratio, holding
+every law fixed.  `gci_M` IS `oh_L3` bit for bit, so the alpha sweep already run
+is the medium level.
+
+| level | cells | inverted | LE turning | memory |
+|---|---|---|---|---|
+| `gci_C` | 298,712 | 0 | 10.013 deg | 2.95 GiB |
+| `gci_M` | 567,256 | 0 | 10.019 deg | 5.61 GiB |
+| `gci_F` | 1,111,152 | 0 | 10.018 deg | **10.99 GiB** |
+
+Effective refinement 1.2383 and 1.2512 -- consistent with each other, both in
+band, against the legacy ladder's 1.2954 and 1.3523 (the second out of band).
+
+**The fine level needs 11.0 GiB against the legacy `oh_L1`'s 24.6, so the whole
+family fits on a 15.3 GiB host.**  The grid-convergence study may not need the
+desktop at all.  It is tight at the fine level -- close other work first -- and
+the desktop is still the safer place to run it.
+
+Use `--level gci_C` and `--level gci_F` in the commands below; `gci_M` is
+already solved.
+
 ## The job for the desktop: grid convergence on index 83
 
 This is why it needs the desktop. Measured at 10,620 bytes/cell:

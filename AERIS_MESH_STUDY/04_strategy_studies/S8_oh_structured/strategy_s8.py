@@ -95,6 +95,64 @@ class OHLevel:
     tip_span_first_cell_in_s0: float = 10.0
 
 
+def refined_level(base: OHLevel, ratio: float, *, scale_first_cell: bool = True,
+                  name: str = "") -> OHLevel:
+    """One level of a grid-convergence family, generated from a baseline.
+
+    A convergence family is the SAME mesh at a different spacing, not three
+    meshes that happen to have different cell counts.  Everything that defines
+    where cells go is held fixed -- the leading-edge turning target, the
+    trailing-edge fraction, the far-field distance, the clustering laws -- and
+    only the number of INTERVALS changes, by `ratio` in all three directions.
+
+    The hand-written oh_L3/L2/L1 ladder was not this.  It refined the three
+    directions at 1.31 / 1.33 / 1.25, and it also moved the leading-edge target
+    from 10 to 8 to 6 degrees and the trailing-edge fraction from 0.004 to
+    0.003.  With the resolution LAW changing between levels, a shift in CD
+    cannot be attributed to the grid, and Richardson extrapolation over it means
+    nothing.  That ladder is kept below as the `legacy_*` names, because the
+    alpha sweep was run on `oh_L3` and that mesh must remain reproducible.
+
+    `scale_first_cell` divides s0 by the ratio as well, so the wall-normal
+    direction is refined like the other two.  That is the honest choice for a
+    formal study -- the whole mesh gets finer -- and it does mean y+ falls
+    between levels rather than being held constant.  Both are defensible; this
+    one is uniform refinement, and at a measured y+ of about 0.56 at p95 there
+    is no risk of leaving the wall-resolved regime by making it smaller.  Pass
+    False to hold the first cell instead, which isolates everything but the wall.
+    """
+    def intervals(points: int, *, odd: bool = False, minimum: int = 3) -> int:
+        n = max(int(round((points - 1) * ratio)), minimum - 1) + 1
+        if odd and n % 2 == 0:
+            n += 1
+        return n
+
+    return OHLevel(
+        n_side=intervals(base.n_side),
+        # the nose arc must stay odd so it can centre on the leading edge and
+        # match the base point count -- build_tip_cap raises otherwise
+        n_base=intervals(base.n_base, odd=True),
+        n_span=intervals(base.n_span),
+        n_cap_collar=max(int(round(base.n_cap_collar * ratio)), 2),
+        # HELD FIXED: the resolution requests, not the resolution
+        target_le_turn_deg=base.target_le_turn_deg,
+        ds_te_frac=base.ds_te_frac,
+        farfield_chords=base.farfield_chords,
+        le_span_growth_max=base.le_span_growth_max,
+        tip_span_first_cell_in_s0=base.tip_span_first_cell_in_s0,
+        # the dense sampling only has to stay well finer than the ring spacing
+        dense_points=int(round(base.dense_points * ratio)),
+        n_normal=intervals(base.n_normal),
+        s0_frac=base.s0_frac / ratio if scale_first_cell else base.s0_frac,
+    )
+
+
+#: The grid-convergence family.  `gci_M` is the mesh the 2026-09-05 alpha sweep
+#: ran on, bit for bit: it IS oh_L3.  Coarse and fine are generated from it by
+#: one ratio, so the family is a refinement of one mesh rather than three
+#: separately designed ones.
+GCI_RATIO = 1.3
+
 LEVELS: dict[str, OHLevel] = {
     # Matched to the C family's cells-around-a-section (120) so the leading-edge
     # comparison is like for like, then refined by span and normal count.
@@ -104,6 +162,18 @@ LEVELS: dict[str, OHLevel] = {
     "oh_L0": OHLevel(113, 9, 121, 8, 4.5, 0.002, 4801, 137, 40.0, 3.6e-6),
     "oh_probe": OHLevel(31, 5, 25, 3, 12.0, 0.005, 1201, 41, 40.0, 3.6e-6),
 }
+
+#: The hand-written ladder, kept reachable because the alpha sweep ran on oh_L3
+#: and that mesh must stay reproducible.  It is NOT a convergence family; see
+#: `refined_level`.
+LEVELS["legacy_L2"] = LEVELS["oh_L2"]
+LEVELS["legacy_L1"] = LEVELS["oh_L1"]
+LEVELS["legacy_L0"] = LEVELS["oh_L0"]
+
+#: gci_M is oh_L3 unchanged -- the mesh the sweep was run on.
+LEVELS["gci_M"] = LEVELS["oh_L3"]
+LEVELS["gci_C"] = refined_level(LEVELS["oh_L3"], 1.0 / GCI_RATIO, name="gci_C")
+LEVELS["gci_F"] = refined_level(LEVELS["oh_L3"], GCI_RATIO, name="gci_F")
 
 
 def _span_coordinate(pygeo: Any, v: float) -> float:

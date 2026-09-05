@@ -48,7 +48,7 @@ for _p in (
 
 import march_o  # noqa: E402
 import strategy_s8  # noqa: E402
-from march_o import march_section_auto  # noqa: E402
+from march_o import SMOOTHING_LADDER, march_section_auto  # noqa: E402
 
 Array = np.ndarray
 
@@ -124,6 +124,10 @@ def main() -> int:
     ap.add_argument("--out", type=Path,
                     default=REPO / "AERIS_MESH_STUDY/artifacts/paraview_inspection/s8_oh")
     ap.add_argument("--no-plot3d", action="store_true")
+    ap.add_argument("--allow-folded-cells", action="store_true",
+                    help="write the grid even if the smoothing ladder cannot "
+                         "clear every fold. For diagnosis only: a grid with "
+                         "inverted cells must never reach a solver.")
     ap.add_argument("--open-tip", action="store_true",
                     help="skip the outboard blocks and write the wing block alone")
     args = ap.parse_args()
@@ -154,16 +158,46 @@ def main() -> int:
     flat = ring_xyz.reshape(-1, 3)
     global_origin_xz = (float(flat[:, 0].mean()), float(flat[:, 2].mean()))
 
-    planes = []
-    march_reports = []
-    for j in range(ring_xyz.shape[1]):
-        grid, report = march_section_auto(
-            ring_xyz[:, j, :], n_normal=level.n_normal, first_cell=s0,
-            farfield_radius=radius, global_origin_xz=global_origin_xz,
+    # Defect 19.  march_section_auto climbs its ladder on an IN-PLANE fold test,
+    # inside one section at a time.  A fold that lives BETWEEN two neighbouring
+    # sections is invisible to it: on lhs100_seed42[65] every section is clean
+    # in plane and the assembled hexes carry 645 folds, so the ladder stopped at
+    # its first rung and the build wrote an invalid grid and exited zero.
+    #
+    # The fix is to climb the same ladder on the assembled 3D hex volumes, which
+    # is the quantity that actually has to be positive, and to raise the floor
+    # for EVERY section when it is not -- a fold between sections j and j+1 is
+    # not attributable to either one alone.
+    volume = None
+    march_reports: list[dict] = []
+    fold_ladder: list[dict] = []
+    for floor in SMOOTHING_LADDER:
+        planes = []
+        march_reports = []
+        for j in range(ring_xyz.shape[1]):
+            grid, report = march_section_auto(
+                ring_xyz[:, j, :], n_normal=level.n_normal, first_cell=s0,
+                farfield_radius=radius, global_origin_xz=global_origin_xz,
+                min_smoothing=floor,
+            )
+            planes.append(grid)
+            march_reports.append(report)
+        volume = np.stack(planes, axis=2)
+        folded = int((hex_volumes(volume) <= 0.0).sum())
+        fold_ladder.append({"smoothing_floor": floor, "folded_hexes": folded})
+        print(f"  smoothing floor {floor:>3}: {folded} folded hexes in o_wing")
+        if folded == 0:
+            break
+    else:
+        message = (
+            f"o_wing still has {fold_ladder[-1]['folded_hexes']} folded cells at "
+            f"the top of the smoothing ladder ({SMOOTHING_LADDER[-1]}). A grid "
+            f"with inverted cells is not a grid. Ladder: "
+            + ", ".join(f"{a['smoothing_floor']}->{a['folded_hexes']}" for a in fold_ladder)
         )
-        planes.append(grid)
-        march_reports.append(report)
-    volume = np.stack(planes, axis=2)
+        if not args.allow_folded_cells:
+            raise SystemExit(message)
+        print(f"WARNING, --allow-folded-cells was passed: {message}")
 
     # --- close the tip -------------------------------------------------------
     # The outboard region is the tip plane translated along the span.  A pure
@@ -319,6 +353,7 @@ def main() -> int:
                 r["wall_orthogonality_worst_deg"] for r in march_reports
             ),
             "smoothing_used": sorted({r["normal_smoothing"] for r in march_reports}),
+            "fold_ladder_3d": fold_ladder,
             "stations_not_converged": [
                 j for j, r in enumerate(march_reports) if not r["converged"]
             ],

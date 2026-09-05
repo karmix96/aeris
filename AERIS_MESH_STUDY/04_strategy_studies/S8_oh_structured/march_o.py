@@ -291,10 +291,23 @@ def march_section(
 SMOOTHING_LADDER = (4, 8, 15, 25, 40, 60)
 
 
-def march_section_auto(ring: Array, **kwargs) -> tuple[Array, dict]:
-    """March a ring, climbing the smoothing ladder until no cell is folded."""
+def march_section_auto(ring: Array, min_smoothing: int = 0, **kwargs) -> tuple[Array, dict]:
+    """March a ring, climbing the smoothing ladder until no cell is folded.
+
+    The fold test here is the IN-PLANE one: signed areas of the quads inside a
+    single section.  It cannot see a fold that lives BETWEEN two neighbouring
+    sections, because it never looks at more than one.  On lhs100_seed42[65] the
+    in-plane test is clean on every section and the assembled hexes carry 645
+    folds, so the ladder stopped at its first rung with an invalid grid.
+
+    `min_smoothing` is how the caller raises the floor after seeing the
+    assembled volume: `build_volume` climbs the same ladder on the 3D hex
+    volumes and re-marches every section at the higher floor.  Defect 19.
+    """
     attempts = []
     for smoothing in SMOOTHING_LADDER:
+        if smoothing < min_smoothing:
+            continue
         grid, report = march_section(ring, normal_smoothing=smoothing, **kwargs)
         attempts.append({
             "normal_smoothing": smoothing,

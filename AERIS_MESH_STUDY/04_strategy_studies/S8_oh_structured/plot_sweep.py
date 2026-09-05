@@ -15,7 +15,7 @@ Six panels, chosen because each answers a question the table cannot:
 4. **Moment against alpha.**  Where the wing trims, read directly in degrees.
    The zero crossing is the trim angle and it is what a designer asks for first.
 5. **Moment against CL.**  The same data on the axis whose SLOPE is static
-   stability.  This is where CFD and AVL disagree on the sign, and the two
+   stability.  The two
    panels are kept separate because they answer different questions: panel 4
    asks "where does it trim", panel 5 asks "is it stable".
 6. **Lift-to-drag.**  The number a design actually cares about.
@@ -114,7 +114,13 @@ def main() -> int:
         if not matched_reference:
             acm = acm + np.array([avl[a]["cl"] for a in va]) * (0.4 - 0.0) / AVL_CREF
         acm = acm * AVL_CREF / CFD_CREF
-        acm = -acm      # AVL Cm is nose-up positive; ADflow CMy is the +y moment (nose-down)
+        # NO sign flip.  This carried one for a while and it was wrong.  In the
+        # AERIS frame the leading edge sits at x ~ 0 and the trailing edge at
+        # x ~ 0.867, so the NOSE points toward -x.  A rotation about +y sends
+        # x_hat to -z_hat, which drops the +x end (the tail) and lifts the -x
+        # end (the nose).  So a positive +y moment is NOSE UP here, and
+        # ADflow's CMy is already the nose-up pitching moment: Cm_aero = +CMy.
+        # Flipping it turned an agreement into a mirror image about zero.
     else:
         acm = np.array([])
 
@@ -192,10 +198,18 @@ def main() -> int:
                 label="AVL, " + ("same moment point" if matched_reference
                                  else "arm transferred to x=0.4"))
     slope = np.polyfit(cl, cmy, 1)[0]
+    # Cm(x_ref) = Cm_np + CL*(x_ref - x_np)/c, so x_np = x_ref - slope*c.
+    # This was written x_ref + slope*c, which put the neutral point on the wrong
+    # side of the reference and inverted the stability verdict.
+    x_np_cfd = 0.4 - slope * CFD_CREF
+    x_np_avl = 0.4 - np.polyfit(acl, acm, 1)[0] * CFD_CREF if va else None
     a3.axhline(0, color="0.7", lw=0.8); a3.axvline(0, color="0.7", lw=0.8)
     a3.set_xlabel(r"$C_L$"); a3.set_ylabel(r"$C_{My}$  (about $x$=0.4 m, $c_{ref}$=0.9 m)")
-    a3.set_title(f"5. Pitching moment against $C_L$\n"
-                 f"slope = static stability: CFD {slope:+.4f}")
+    a3.axvline(0, color="0.7", lw=0.8)
+    a3.set_title(
+        f"5. Pitching moment against $C_L$\n"
+        f"$x_{{np}}$: CFD {x_np_cfd:.3f} m, AVL {x_np_avl:.3f} m - both fwd of "
+        f"$x_{{ref}}$=0.4, so UNSTABLE")
     a3.legend(fontsize=8); a3.grid(alpha=0.3)
 
     # 6 lift-to-drag

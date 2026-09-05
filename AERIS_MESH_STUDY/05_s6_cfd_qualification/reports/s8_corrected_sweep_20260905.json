@@ -115,49 +115,50 @@
     },
     "reading": "The gap closes monotonically with incidence, from 0.032 to 0.0075, and at alpha 8 the two agree to 1.9 percent. That is the right trend: at alpha 0 the flow is set by camber and viscous decambering, where an inviscid method differs most; at higher alpha it is set by incidence, where a vortex-lattice method is at its best.",
     "moment_disagreement": {
-      "resolved_reference_mismatch": "AVL was rerun with moment_reference_m (0.4,0,0), the CFD's own point, so no arm is applied by hand. The only remaining difference is c_ref (AVL 0.4946 m, CFD 0.9 m), a pure scale. The rerun confirms the earlier transfer: at alpha 0 the hand-transferred Cm was -0.00159 and the direct value is -0.00160.",
-      "both_about_x_0p4_cref_0p9_adflow_sign": {
-        "-2.0": {
-          "cfd_cmy": -0.005953,
-          "avl_cmy": 0.011238411111111112,
-          "cfd_cl": -0.298397,
-          "avl_cl": -0.33038
+      "CORRECTED_2026-09-05": "There is NO disagreement. The earlier 'CFD says stable, AVL says unstable' finding was two sign errors of mine compounding, and the principal investigator caught it by noticing the two curves looked like mirror images about zero -- which is what a sign error looks like and a physics disagreement does not.",
+      "defect_id": 17,
+      "error_1_nose_direction": "I asserted that ADflow's CMy, being the raw +y moment, is nose-DOWN positive. That holds when the nose points +x. In the AERIS frame the leading edge is at x ~ 0.000 and the trailing edge at x ~ 0.867, so the NOSE points toward -x. A rotation about +y sends x_hat to -z_hat, dropping the +x end (the tail) and lifting the -x end (the nose). Positive M_y is therefore NOSE UP here, and Cm_aero = +CMy. The sign flip I applied to AVL's Cm to 'match ADflow' inverted a genuine agreement into a mirror image.",
+      "error_2_neutral_point_transfer": "Cm(x_ref) = Cm_np + CL*(x_ref - x_np)/c, so x_np = x_ref - slope*c. I wrote x_np = x_ref + slope*c, which put the neutral point on the wrong side of the reference and inverted the stability verdict a second time.",
+      "settled_convention_free": {
+        "method": "integral of -cp*n dA and of r x dF over the wall, then x_np = -d(M_y about the origin)/d(F_z). This uses no code's sign convention and no moment transfer.",
+        "per_alpha": {
+          "-2": {
+            "Fz_over_Aref": -0.299344,
+            "My0": 0.126993,
+            "x_cp_m": 0.3818
+          },
+          "0": {
+            "Fz_over_Aref": -0.160375,
+            "My0": 0.07241,
+            "x_cp_m": 0.4064
+          },
+          "8": {
+            "Fz_over_Aref": 0.400855,
+            "My0": -0.14995,
+            "x_cp_m": 0.3367
+          }
         },
-        "0.0": {
-          "cfd_cmy": 0.00128,
-          "avl_cmy": 0.0008792888888888889,
-          "cfd_cl": -0.159963,
-          "avl_cl": -0.18575
-        },
-        "4.0": {
-          "cfd_cmy": 0.015378,
-          "avl_cmy": -0.01957516888888889,
-          "cfd_cl": 0.120266,
-          "avl_cl": 0.10491
-        },
-        "8.0": {
-          "cfd_cmy": 0.028522,
-          "avl_cmy": -0.039342682222222224,
-          "cfd_cl": 0.401834,
-          "avl_cl": 0.39435
-        }
+        "x_np_m": 0.3561,
+        "centre_of_pressure": "moves FORWARD as lift increases, which is instability, directly."
       },
-      "dCMy_dCL": {
-        "cfd": 0.049239147604638385,
-        "avl": -0.06979042089871541
+      "agreement": {
+        "cfd_dCMy_dCL": 0.0492,
+        "avl_dCm_dCL_at_cfd_cref": 0.0698,
+        "cfd_x_np_m": 0.3557,
+        "avl_x_np_m": 0.3372,
+        "avl_own_reported_x_np_m": 0.3359,
+        "raw_integration_x_np_m": 0.3561,
+        "difference_m": 0.0185,
+        "difference_percent_of_mac": 3.7,
+        "verdict": "BOTH codes say the wing is statically UNSTABLE about x = 0.4 m, with the neutral point between 0.336 and 0.356 m. The CFD's own raw integration lands at 0.3561 m, 0.4 mm from what ADflow's reported CMy implies, so ADflow's number was right all along and only my reading of it was wrong. Agreement between RANS and a vortex-lattice method to 3.7 per cent of MAC on neutral point is a good result, not a problem."
       },
-      "neutral_point_m": {
-        "cfd": 0.44431523284417457,
-        "avl": 0.33718862119115617,
-        "avl_own_reported_x_np": 0.335889
-      },
-      "verdict": "CFD dCMy/dCL +0.0492 -> statically STABLE, neutral point x = 0.4443 m. AVL -0.0698 -> statically UNSTABLE, x = 0.3372 m. They differ by 0.1071 m and disagree on the SIGN. AVL's own reported x_np of 0.3359 m agrees with the line fit through its four points, so this is not a post-processing artefact on either side. UNRESOLVED; the CFD moment moved 18 per cent from one mesh respacing and is the less grid-converged of the two.",
       "trim_angle_deg": {
-        "cfd": -0.3539333609843771,
-        "avl": 0.17195056421278881,
-        "difference_deg": 0.5258839251971659,
-        "reading": "The two codes agree on WHERE the wing trims to within about half a degree, and disagree completely on whether that trim is stable. The moment LEVEL at a given CL is set by camber and twist, which both codes carry; the moment SLOPE depends on how the spanwise load and the aft loading behave, which is where viscous effects and the tip differ. That the level agrees and the slope does not narrows where to look."
-      }
+        "cfd": -0.354,
+        "avl": 0.172,
+        "difference_deg": 0.526,
+        "reading": "unchanged by the correction; the trim angles never depended on the sign."
+      },
+      "design_consequence": "This is a tailless BWB whose neutral point sits about 0.05 m FORWARD of the 0.4 m moment reference. If 0.4 m is intended as the CG, the aircraft is statically unstable in pitch by roughly 9 per cent of MAC and would need the CG moved forward of 0.336 m, or active stabilisation. That is now a design input, and it is a claim about geometry index 83 only."
     }
   },
   "surface_pressure_bound": {

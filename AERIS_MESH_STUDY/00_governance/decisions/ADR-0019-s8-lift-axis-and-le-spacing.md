@@ -253,3 +253,54 @@ loft — the gap closing monotonically from 0.032 at alpha -2 to 0.0075 at alpha
 from one respacing. No drag or moment figure in this sweep may be quoted as
 converged, and the grid-convergence study that would settle it still does not fit
 on this host.
+
+## Correction, 2026-09-05: defect 17 — the moment "disagreement" was mine
+
+The addendum above reported that CFD and AVL disagree on the sign of static
+stability. **They do not.** Both say the wing is statically unstable about
+x = 0.4 m, and they agree on the neutral point to 3.7 per cent of MAC.
+
+The principal investigator caught it by looking at the plot and noticing the two
+Cm curves were mirror images about zero — which is what a sign error looks like,
+and what a physics disagreement does not.
+
+Two errors compounded:
+
+1. **Nose direction.** I took ADflow's `CMy`, the raw +y moment, to be nose-down
+   positive. That holds when the nose points +x. In the AERIS frame the leading
+   edge is at x ≈ 0.000 and the trailing edge at x ≈ 0.867, so the **nose points
+   toward −x**. A rotation about +y sends x̂ → −ẑ, dropping the tail and lifting
+   the nose, so **positive M_y is nose UP** and `Cm_aero = +CMy`. The sign flip I
+   applied to AVL's Cm "to match ADflow" inverted a real agreement.
+2. **Neutral-point transfer.** `x_np = x_ref − slope·c`, not `x_ref + slope·c`.
+   That inverted the verdict a second time and moved the CFD neutral point
+   0.089 m to the wrong side of the reference.
+
+Settled convention-free, by integrating `-cp n dA` and `r × dF` over the wall and
+taking `x_np = -d(M_y about the origin)/d(F_z)` — no sign convention, no transfer:
+
+| | x_np |
+|---|---|
+| CFD, raw integration | **0.3561 m** |
+| CFD, from ADflow's reported CMy | 0.3557 m |
+| AVL, from its four points | 0.3372 m |
+| AVL, its own reported `x_np` | 0.3359 m |
+
+The centre of pressure moves **forward** with increasing lift — 0.3818 m at
+alpha −2 to 0.3367 m at alpha 8 — which is instability read directly off the
+pressure field.
+
+ADflow's number was right the whole time; only my reading of it was wrong. RANS
+and a vortex-lattice method agreeing on neutral point to 3.7 per cent of MAC is
+a good cross-check result.
+
+**Design consequence.** Geometry index 83 has its neutral point about 0.05 m
+forward of the 0.4 m moment reference. If 0.4 m is intended as the CG, this
+aircraft is statically unstable in pitch by roughly 9 per cent of MAC. That is a
+design input now, not a solver artefact — and it is a statement about index 83
+alone.
+
+**Method note.** The convention-free check cost one short script and settled in
+minutes what two codes' conventions had confused for hours. Where a sign or a
+reference is in question, integrate the field directly rather than reconciling
+two reporting conventions.

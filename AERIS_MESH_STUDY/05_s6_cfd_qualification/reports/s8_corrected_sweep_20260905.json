@@ -151,7 +151,13 @@
         "avl": 0.33718862119115617,
         "avl_own_reported_x_np": 0.335889
       },
-      "verdict": "CFD dCMy/dCL +0.0492 -> statically STABLE, neutral point x = 0.4443 m. AVL -0.0698 -> statically UNSTABLE, x = 0.3372 m. They differ by 0.1071 m and disagree on the SIGN. AVL's own reported x_np of 0.3359 m agrees with the line fit through its four points, so this is not a post-processing artefact on either side. UNRESOLVED; the CFD moment moved 18 per cent from one mesh respacing and is the less grid-converged of the two."
+      "verdict": "CFD dCMy/dCL +0.0492 -> statically STABLE, neutral point x = 0.4443 m. AVL -0.0698 -> statically UNSTABLE, x = 0.3372 m. They differ by 0.1071 m and disagree on the SIGN. AVL's own reported x_np of 0.3359 m agrees with the line fit through its four points, so this is not a post-processing artefact on either side. UNRESOLVED; the CFD moment moved 18 per cent from one mesh respacing and is the less grid-converged of the two.",
+      "trim_angle_deg": {
+        "cfd": -0.3539333609843771,
+        "avl": 0.17195056421278881,
+        "difference_deg": 0.5258839251971659,
+        "reading": "The two codes agree on WHERE the wing trims to within about half a degree, and disagree completely on whether that trim is stable. The moment LEVEL at a given CL is set by camber and twist, which both codes carry; the moment SLOPE depends on how the spanwise load and the aft loading behave, which is where viscous effects and the tip differ. That the level agrees and the slope does not narrows where to look."
+      }
     }
   },
   "surface_pressure_bound": {

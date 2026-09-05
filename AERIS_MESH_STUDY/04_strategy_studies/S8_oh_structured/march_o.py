@@ -158,6 +158,24 @@ def march_section(
 ) -> tuple[Array, dict]:
     """March one closed ring out to a circle.  Returns (n_ring+1, n_normal, 3)."""
     origin, e1, e2, plane_normal, residual = plane_frame(ring, frame_mode)
+    # Defect 21.  The march works in 2-D in-plane coordinates, so the wall layer
+    # it produces is the ring PROJECTED onto the marching plane, not the ring.
+    # With the SVD frame that costs nothing -- the plane is the best fit, so the
+    # residual is ~1e-16 -- but a span-normal plane deliberately does not fit,
+    # and projecting onto it moved the wing surface by up to 1.194e-03 m, about
+    # 1100 ppm of root chord and the same order as the 1.0 mm blunt trailing
+    # edge itself.  A fold fix that deforms the aircraft is not a fix.
+    #
+    # The plane has two jobs and only one of them needs to be span-normal:
+    # WHERE THE SURFACE IS (eta 0) must be the exact loft, and WHICH WAY WE
+    # MARCH (eta > 0) is what has to be square to the span.  So each node keeps
+    # its own out-of-plane displacement and that displacement is decayed to zero
+    # by the far field, where a true cylinder of parallel circles is what stops
+    # neighbouring stations crossing.
+    #
+    # This cannot reintroduce the fold: the offset is at most 1.2 mm and
+    # shrinking, against the ~2 m excursions that caused it.
+    out_of_plane = (ring - origin) @ plane_normal
     basis = np.column_stack([e1, e2])
     pts2 = (ring - origin) @ basis
     centre2 = pts2.mean(axis=0)
@@ -233,8 +251,14 @@ def march_section(
         layers.append(current.copy())
 
     out2 = np.stack(layers, axis=1)
+    # decay the wall out-of-plane offset to zero over the same range the frame
+    # blend uses, so the surface is exact at eta 0 and the far field is clean
+    offset_decay = np.clip((1.0 - eta) / 0.60, 0.0, 1.0) ** 2
+
     if global_origin_xz is None:
         grid = origin[None, None, :] + out2 @ basis.T
+        grid = grid + (out_of_plane[:, None, None] * offset_decay[None, :, None]
+                       * plane_normal[None, None, :])
     else:
         # Rotate the marching plane from the section's own best-fit plane at the
         # wall to the global x-z plane at the far field, and slide its centre to
@@ -306,7 +330,8 @@ def march_section(
             a2 = a2 - (a2 @ a1) * a1
             a2 /= np.linalg.norm(a2)
             org = (1.0 - w) * origin + w * origin_g
-            grid[:, k, :] = org + out2[:, k, 0:1] * a1 + out2[:, k, 1:2] * a2
+            grid[:, k, :] = (org + out2[:, k, 0:1] * a1 + out2[:, k, 1:2] * a2
+                             + out_of_plane[:, None] * offset_decay[k] * plane_normal)
     grid = np.concatenate([grid, grid[:1]], axis=0)  # explicit periodic closure
 
     p = np.concatenate([out2, out2[:1]], axis=0)

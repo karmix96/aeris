@@ -56,6 +56,9 @@ ROW = re.compile(r"^ +1 +\d+ +\d+ ")
 #: ADflow monitorVariables order in solve_s8.py, after the four leading columns:
 #: resrho, resmom(3), resrhoe, resturb, cl, cd, cdp, cdv, cmy, totalR
 COLUMNS = {"resrho": 0, "cl": 6, "cd": 7, "cdp": 8, "cdv": 9, "cmy": 10}
+#: The linear-solve residual column, read from the RAW row rather than the
+#: post-column-7 slice, because it sits before the residuals.
+RAW_LINRES = 6
 
 
 def read_history(log: Path) -> np.ndarray | None:
@@ -66,8 +69,33 @@ def read_history(log: Path) -> np.ndarray | None:
     return np.array([[float(c) for c in r[7:width]] for r in rows])
 
 
+def read_linres(log: Path) -> np.ndarray | None:
+    """The linear-solve residual per iteration, when ADflow printed one.
+
+    ADflow writes `----` for CFL and a linear residual of 1.000 when the Krylov
+    solve achieves no reduction at all.  That is the definitive signature of a
+    dead Newton step, and it is what actually diagnosed the gci_M NK stall --
+    `Step 0.01  LinRes 1.000` -- while the residual drifted about four per cent
+    and so never tripped the "residual is bit-flat" test below.  A run can have
+    forces frozen to thirteen significant figures and still pass that test.
+    """
+    values = []
+    for line in log.read_text().splitlines():
+        if not ROW.match(line):
+            continue
+        parts = line.split()
+        if len(parts) <= RAW_LINRES:
+            continue
+        try:
+            values.append(float(parts[RAW_LINRES]))
+        except ValueError:
+            values.append(np.nan)
+    return np.array(values) if values else None
+
+
 def gate(history: np.ndarray, *, window: int, min_orders: float,
-         cl_pct: float, cd_pct: float, cmy_abs: float) -> dict:
+         cl_pct: float, cd_pct: float, cmy_abs: float,
+         linres: np.ndarray | None = None) -> dict:
     resid = history[:, COLUMNS["resrho"]]
     tail = history[-window:]
     orders = math.log10(resid[0] / resid[-1])
@@ -91,6 +119,15 @@ def gate(history: np.ndarray, *, window: int, min_orders: float,
     )
     # a frozen solver: the residual is not merely flat, it is IDENTICAL
     frozen = bool((late.max() - late.min()) / late.mean() < 1e-4)
+    # ...or the linear solve is achieving nothing, which is the same failure with
+    # a drifting residual and is invisible to the test above.
+    linear_dead = False
+    if linres is not None and len(linres) >= window:
+        tail = linres[-window:]
+        tail = tail[np.isfinite(tail)]
+        if tail.size:
+            linear_dead = bool(np.median(tail) > 0.99)
+    frozen = frozen or linear_dead
 
     checks = {
         "residual_orders": {"value": orders, "limit": min_orders, "pass": orders >= min_orders},
@@ -104,6 +141,7 @@ def gate(history: np.ndarray, *, window: int, min_orders: float,
     return {
         "passes": passed,
         "solver_frozen": frozen,
+        "linear_solve_dead": linear_dead,
         "verdict": (
             "ACCEPTED" if passed and not frozen else
             "ACCEPTED_SOLVER_FROZEN" if passed else
@@ -122,8 +160,10 @@ def gate(history: np.ndarray, *, window: int, min_orders: float,
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--runs", nargs="+", required=True)
-    ap.add_argument("--window", type=int, default=100,
-                    help="iterations of force tail to judge stability over")
+    ap.add_argument("--window", type=int, default=0,
+                    help="iterations of force tail to judge stability over. 0 "
+                         "means ADAPTIVE: min(100, max(20, 25%% of the run)). See "
+                         "why below.")
     ap.add_argument("--min-orders", type=float, default=5.0)
     ap.add_argument("--cl-pct", type=float, default=0.05)
     ap.add_argument("--cd-pct", type=float, default=0.10)
@@ -141,17 +181,35 @@ def main() -> int:
         if history is None:
             continue
         alpha = float(re.search(r"_a(-?\d+)", directory.name).group(1))
-        record = gate(history, window=args.window, min_orders=args.min_orders,
-                      cl_pct=args.cl_pct, cd_pct=args.cd_pct, cmy_abs=args.cmy_abs)
+        # A TAIL, not a fixed count.
+        #
+        # The window was a flat 100 iterations. That is a tail on a run of 1300
+        # and it is 65 per cent of a run of 155, and once the stopping target
+        # moved to 1e-6 the runs got short: gci_M converged in 156 to 187
+        # iterations, so the window reached back through most of each run into
+        # the rapidly-converging approach and measured "did this run change
+        # while it was converging", which is trivially yes. It rejected three of
+        # four gci_M runs whose forces had in fact settled to 2e-06 over their
+        # last 40 iterations.
+        #
+        # This is a calibration fault, not a threshold to relax, and the fix is
+        # tested as one: on every run where 100 IS a tail the verdict is
+        # unchanged, INCLUDING gci_C alpha 4, which stays ACCEPTED_SOLVER_FROZEN.
+        # The failure mode this gate exists to catch is not blinded by it.
+        window = args.window or max(20, min(100, len(history) // 4))
+        record = gate(history, window=window, min_orders=args.min_orders,
+                      cl_pct=args.cl_pct, cd_pct=args.cd_pct, cmy_abs=args.cmy_abs,
+                      linres=read_linres(log))
         record["alpha_deg"] = alpha
         record["directory"] = str(directory)
         results.append(record)
     results.sort(key=lambda r: r["alpha_deg"])
 
     print(f"gate: residual >= {args.min_orders} orders, CL < {args.cl_pct} %, "
-          f"CD < {args.cd_pct} %, |dCMy| < {args.cmy_abs:g}, over {args.window} iterations\n")
+          f"CD < {args.cd_pct} %, |dCMy| < {args.cmy_abs:g}, over "
+          f"{'an adaptive tail of min(100, max(20, 25%)) iterations' if not args.window else f'{args.window} iterations'}\n")
     print(f"{'alpha':>6}{'orders':>8}{'rel resid':>11}{'CL %':>9}{'CD %':>9}"
-          f"{'dCMy':>10}{'iters':>7}   verdict")
+          f"{'dCMy':>10}{'iters':>7}{'win':>6}   verdict")
     for r in results:
         c = r["checks"]
         print(f"{r['alpha_deg']:>6.1f}{c['residual_orders']['value']:>8.3f}"
@@ -162,6 +220,11 @@ def main() -> int:
         failed = [k for k, v in r["checks"].items() if not v["pass"]]
         if failed:
             print(f"\n  alpha {r['alpha_deg']:g} failed: {', '.join(failed)}")
+        if r.get("linear_solve_dead"):
+            print(f"\n  alpha {r['alpha_deg']:g}: the LINEAR SOLVE is dead -- median "
+                  f"linear residual above 0.99 over the tail, meaning the Krylov "
+                  f"solve reduced nothing. The residual may still drift, so the "
+                  f"flatness test alone does not see this.")
         if r["solver_frozen"]:
             print(f"\n  alpha {r['alpha_deg']:g}: the residual is FROZEN, not merely flat "
                   f"(spread under 1e-4 relative over the tail). The forces are stable "

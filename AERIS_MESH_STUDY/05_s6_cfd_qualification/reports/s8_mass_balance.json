@@ -5,52 +5,52 @@
       "zones": {
         "FarFieldBCZone2": {
           "cells": 168,
-          "net_flux": -5.703623063046578e-07,
-          "throughput": 5.706685616723996e-07,
+          "net_flux": -5.703640224980641e-07,
+          "throughput": 5.706702751355047e-07,
           "area_m2": 0.002314945765688972,
           "max_velocity_magnitude": 0.09903564304113388
         },
         "FarFieldBCZone3": {
           "cells": 4324,
-          "net_flux": 0.00023704210604477867,
-          "throughput": 476.98756892178693,
+          "net_flux": 0.0002385011752973898,
+          "throughput": 476.9875712463829,
           "area_m2": 7569.813668241145,
-          "max_velocity_magnitude": 0.09906759113073349
+          "max_velocity_magnitude": 0.09905935823917389
         },
         "FarFieldBCZone4": {
           "cells": 5888,
-          "net_flux": -6.86740010516481e-06,
-          "throughput": 0.0013205605504219495,
+          "net_flux": -9.586580497293503e-06,
+          "throughput": 0.0013222694451042734,
           "area_m2": 3788.7301768548186,
           "max_velocity_magnitude": 0.09903573989868164
         },
         "FarFieldBCZone6": {
           "cells": 4416,
-          "net_flux": -0.0002745760379538664,
-          "throughput": 13.48956062214907,
+          "net_flux": -0.00027451948035373507,
+          "throughput": 13.489559141387677,
           "area_m2": 224.25426881816594,
-          "max_velocity_magnitude": 0.09906526654958725
+          "max_velocity_magnitude": 0.09905794262886047
         },
         "NSWallAdiabaticBCZone1": {
           "cells": 168,
-          "net_flux": 7.630907348300154e-09,
-          "throughput": 5.9210432189694184e-08,
+          "net_flux": 7.63096022742903e-09,
+          "throughput": 5.92118813493195e-08,
           "area_m2": 0.002314949142652889,
-          "max_velocity_magnitude": 0.08736446499824524
+          "max_velocity_magnitude": 0.08736027032136917
         },
         "NSWallAdiabaticBCZone5": {
           "cells": 4416,
-          "net_flux": -1.8257325763118648e-08,
-          "throughput": 7.608798229263669e-07,
+          "net_flux": -1.8258430835506558e-08,
+          "throughput": 7.60880675579193e-07,
           "area_m2": 0.8186279355414073,
-          "max_velocity_magnitude": 0.07113425433635712
+          "max_velocity_magnitude": 0.07113070785999298
         },
         "SymmetryBCZone7": {
           "cells": 5888,
-          "net_flux": -1.6517570477495214e-06,
-          "throughput": 0.0009776016710802134,
+          "net_flux": -1.5717053554293438e-06,
+          "throughput": 0.000977562645295337,
           "area_m2": 3847.3683481019175,
-          "max_velocity_magnitude": 0.11663337796926498
+          "max_velocity_magnitude": 0.11663366109132767
         }
       },
       "wing_centroid_m": [
@@ -58,15 +58,84 @@
         0.7424207136205929,
         0.03613532986205195
       ],
-      "far_field_net_flux": -4.4971694320557226e-05,
-      "far_field_throughput": 490.478450675155,
-      "relative_imbalance": 9.168943968619343e-08,
-      "wall_leakage_abs": 8.20090255116061e-07,
-      "wall_leakage_relative": 1.6720209705180477e-09,
-      "symmetry_leakage_abs": 0.0009776016710802134,
-      "symmetry_leakage_relative": 1.993159270778404e-06,
+      "far_field_net_flux": -4.6175249576136854e-05,
+      "far_field_throughput": 490.478453227886,
+      "relative_imbalance": 9.414327840958779e-08,
+      "wall_leakage_abs": 8.200925569285124e-07,
+      "wall_leakage_relative": 1.6720256548099191e-09,
+      "symmetry_leakage_abs": 0.000977562645295337,
+      "symmetry_leakage_relative": 1.9930796936377183e-06,
       "units": "fluxes are rho/rho_inf * V * area, so m^4/s per unit density; only the RATIOS are interpreted",
       "directory": "AERIS_MESH_STUDY/artifacts/s8_cfd/gci_C_a-2",
+      "alpha_deg": -2.0
+    },
+    {
+      "surface_file": "AERIS_MESH_STUDY/artifacts/s8_cfd/gci_M_a-2/s8_a-2_000_surf.cgns",
+      "zones": {
+        "FarFieldBCZone2": {
+          "cells": 324,
+          "net_flux": -5.711526943906886e-07,
+          "throughput": 5.722473148306037e-07,
+          "area_m2": 0.0023162661666795417,
+          "max_velocity_magnitude": 0.09903562813997269
+        },
+        "FarFieldBCZone3": {
+          "cells": 5760,
+          "net_flux": 0.00018535179716503054,
+          "throughput": 477.3020090782632,
+          "area_m2": 7570.474921465033,
+          "max_velocity_magnitude": 0.09905263781547546
+        },
+        "FarFieldBCZone4": {
+          "cells": 9960,
+          "net_flux": -2.5160794129547203e-05,
+          "throughput": 0.0013285864314842887,
+          "area_m2": 3790.02717070457,
+          "max_velocity_magnitude": 0.09903573244810104
+        },
+        "FarFieldBCZone6": {
+          "cells": 7440,
+          "net_flux": -0.0002056996585164226,
+          "throughput": 13.490633438176621,
+          "area_m2": 224.38664427290155,
+          "max_velocity_magnitude": 0.09905751794576645
+        },
+        "NSWallAdiabaticBCZone1": {
+          "cells": 324,
+          "net_flux": 6.127961547438778e-09,
+          "throughput": 4.703841315773812e-08,
+          "area_m2": 0.0023162666613997457,
+          "max_velocity_magnitude": 0.0728771910071373
+        },
+        "NSWallAdiabaticBCZone5": {
+          "cells": 7440,
+          "net_flux": -3.976562965036344e-09,
+          "throughput": 4.945464013811525e-07,
+          "area_m2": 0.8184543967794156,
+          "max_velocity_magnitude": 0.058270346373319626
+        },
+        "SymmetryBCZone7": {
+          "cells": 9960,
+          "net_flux": -6.590317809489476e-07,
+          "throughput": 0.0008114707602512745,
+          "area_m2": 3848.8035276862765,
+          "max_velocity_magnitude": 0.11704602837562561
+        }
+      },
+      "wing_centroid_m": [
+        0.4675525621182074,
+        0.7453324282280198,
+        0.03629110999874727
+      ],
+      "far_field_net_flux": -4.607980817532994e-05,
+      "far_field_throughput": 490.79397167511866,
+      "relative_imbalance": 9.388829291862715e-08,
+      "wall_leakage_abs": 5.415848145388906e-07,
+      "wall_leakage_relative": 1.1034870960016457e-09,
+      "symmetry_leakage_abs": 0.0008114707602512745,
+      "symmetry_leakage_relative": 1.653383715129305e-06,
+      "units": "fluxes are rho/rho_inf * V * area, so m^4/s per unit density; only the RATIOS are interpreted",
+      "directory": "AERIS_MESH_STUDY/artifacts/s8_cfd/gci_M_a-2",
       "alpha_deg": -2.0
     },
     {
@@ -74,52 +143,52 @@
       "zones": {
         "FarFieldBCZone2": {
           "cells": 168,
-          "net_flux": 1.383517042363045e-09,
-          "throughput": 3.9268505268874314e-08,
+          "net_flux": 1.379315395243843e-09,
+          "throughput": 3.926859030275702e-08,
           "area_m2": 0.002314945765688972,
           "max_velocity_magnitude": 0.09903544932603836
         },
         "FarFieldBCZone3": {
           "cells": 4324,
-          "net_flux": 0.000214916790529757,
-          "throughput": 477.344844742367,
+          "net_flux": 0.00021869708355848382,
+          "throughput": 477.3448476537834,
           "area_m2": 7569.813668241145,
-          "max_velocity_magnitude": 0.09904950112104416
+          "max_velocity_magnitude": 0.0990443080663681
         },
         "FarFieldBCZone4": {
           "cells": 5888,
-          "net_flux": 4.2482479653725095e-06,
-          "throughput": 0.0008988085304643387,
+          "net_flux": -3.7692201667495106e-06,
+          "throughput": 0.0009003981343178007,
           "area_m2": 3788.7301768548186,
           "max_velocity_magnitude": 0.09903550148010254
         },
         "FarFieldBCZone6": {
           "cells": 4416,
-          "net_flux": -0.0002591007447925513,
-          "throughput": 13.487667492660561,
+          "net_flux": -0.00026141507172529105,
+          "throughput": 13.487664789893337,
           "area_m2": 224.25426881816594,
-          "max_velocity_magnitude": 0.09904742985963821
+          "max_velocity_magnitude": 0.09904532879590988
         },
         "NSWallAdiabaticBCZone1": {
           "cells": 168,
-          "net_flux": 6.873646393050855e-09,
-          "throughput": 4.5705318425428406e-08,
+          "net_flux": 6.875610649713975e-09,
+          "throughput": 4.571093895158097e-08,
           "area_m2": 0.002314949142652889,
-          "max_velocity_magnitude": 0.08543002605438232
+          "max_velocity_magnitude": 0.08542909473180771
         },
         "NSWallAdiabaticBCZone5": {
           "cells": 4416,
-          "net_flux": -1.758412693083785e-08,
-          "throughput": 7.431967784836227e-07,
+          "net_flux": -1.7594776755736707e-08,
+          "throughput": 7.432035650509834e-07,
           "area_m2": 0.8186279355414073,
-          "max_velocity_magnitude": 0.0688600242137909
+          "max_velocity_magnitude": 0.06885910034179688
         },
         "SymmetryBCZone7": {
           "cells": 5888,
-          "net_flux": -1.4691074290590083e-06,
-          "throughput": 0.0004986190397695481,
+          "net_flux": -1.5705241249226149e-06,
+          "throughput": 0.000498713431738455,
           "area_m2": 3847.3683481019175,
-          "max_velocity_magnitude": 0.11566086113452911
+          "max_velocity_magnitude": 0.11566079407930374
         }
       },
       "wing_centroid_m": [
@@ -127,15 +196,84 @@
         0.7424207136205929,
         0.03613532986205195
       ],
-      "far_field_net_flux": -3.993432278037945e-05,
-      "far_field_throughput": 490.8334110828265,
-      "relative_imbalance": 8.136023725907418e-08,
-      "wall_leakage_abs": 7.889020969090511e-07,
-      "wall_leakage_relative": 1.6072705710246088e-09,
-      "symmetry_leakage_abs": 0.0004986190397695481,
-      "symmetry_leakage_relative": 1.015862059327921e-06,
+      "far_field_net_flux": -4.648582901816149e-05,
+      "far_field_throughput": 490.83341288107965,
+      "relative_imbalance": 9.470795548595668e-08,
+      "wall_leakage_abs": 7.889145040025644e-07,
+      "wall_leakage_relative": 1.6072958427418724e-09,
+      "symmetry_leakage_abs": 0.000498713431738455,
+      "symmetry_leakage_relative": 1.0160543651890394e-06,
       "units": "fluxes are rho/rho_inf * V * area, so m^4/s per unit density; only the RATIOS are interpreted",
       "directory": "AERIS_MESH_STUDY/artifacts/s8_cfd/gci_C_a0",
+      "alpha_deg": 0.0
+    },
+    {
+      "surface_file": "AERIS_MESH_STUDY/artifacts/s8_cfd/gci_M_a0/s8_a0_000_surf.cgns",
+      "zones": {
+        "FarFieldBCZone2": {
+          "cells": 324,
+          "net_flux": 1.0471483185396557e-09,
+          "throughput": 5.529570294673195e-08,
+          "area_m2": 0.0023162661666795417,
+          "max_velocity_magnitude": 0.09903543442487717
+        },
+        "FarFieldBCZone3": {
+          "cells": 5760,
+          "net_flux": 0.00016221100867375642,
+          "throughput": 477.2559838957045,
+          "area_m2": 7570.474921465033,
+          "max_velocity_magnitude": 0.09904257208108902
+        },
+        "FarFieldBCZone4": {
+          "cells": 9960,
+          "net_flux": -1.0635718424990175e-05,
+          "throughput": 0.0009054566132347883,
+          "area_m2": 3790.02717070457,
+          "max_velocity_magnitude": 0.09903549402952194
+        },
+        "FarFieldBCZone6": {
+          "cells": 7440,
+          "net_flux": -0.00019033830238681076,
+          "throughput": 13.489955389207966,
+          "area_m2": 224.38664427290155,
+          "max_velocity_magnitude": 0.09904539585113525
+        },
+        "NSWallAdiabaticBCZone1": {
+          "cells": 324,
+          "net_flux": 5.31999653034179e-09,
+          "throughput": 3.710599637517589e-08,
+          "area_m2": 0.0023162666613997457,
+          "max_velocity_magnitude": 0.07475059479475021
+        },
+        "NSWallAdiabaticBCZone5": {
+          "cells": 7440,
+          "net_flux": -3.3184741368039282e-09,
+          "throughput": 4.84935247514799e-07,
+          "area_m2": 0.8184543967794156,
+          "max_velocity_magnitude": 0.059198446571826935
+        },
+        "SymmetryBCZone7": {
+          "cells": 9960,
+          "net_flux": -5.673041812949736e-07,
+          "throughput": 0.00040734014526418345,
+          "area_m2": 3848.8035276862765,
+          "max_velocity_magnitude": 0.1158028319478035
+        }
+      },
+      "wing_centroid_m": [
+        0.4675525621182074,
+        0.7453324282280198,
+        0.03629110999874727
+      ],
+      "far_field_net_flux": -3.876196498972596e-05,
+      "far_field_throughput": 490.7468447968214,
+      "relative_imbalance": 7.898566317991134e-08,
+      "wall_leakage_abs": 5.220412438899748e-07,
+      "wall_leakage_relative": 1.0637689257199604e-09,
+      "symmetry_leakage_abs": 0.00040734014526418345,
+      "symmetry_leakage_relative": 8.300412923344013e-07,
+      "units": "fluxes are rho/rho_inf * V * area, so m^4/s per unit density; only the RATIOS are interpreted",
+      "directory": "AERIS_MESH_STUDY/artifacts/s8_cfd/gci_M_a0",
       "alpha_deg": 0.0
     },
     {
@@ -143,52 +281,52 @@
       "zones": {
         "FarFieldBCZone2": {
           "cells": 168,
-          "net_flux": 1.1441156100593434e-06,
-          "throughput": 1.1442621306163434e-06,
+          "net_flux": 1.1441150219222958e-06,
+          "throughput": 1.1442615427156927e-06,
           "area_m2": 0.002314945765688972,
-          "max_velocity_magnitude": 0.09903522580862045
+          "max_velocity_magnitude": 0.09903524070978165
         },
         "FarFieldBCZone3": {
           "cells": 4324,
-          "net_flux": 0.0002361849038259277,
-          "throughput": 477.26206774279495,
+          "net_flux": 0.00020121957204424605,
+          "throughput": 477.2620421915996,
           "area_m2": 7569.813668241145,
-          "max_velocity_magnitude": 0.09904254972934723
+          "max_velocity_magnitude": 0.09904235601425171
         },
         "FarFieldBCZone4": {
           "cells": 5888,
-          "net_flux": 1.661560302482983e-05,
-          "throughput": 0.0008050451522670529,
+          "net_flux": 1.931288688779713e-05,
+          "throughput": 0.0008026388573125061,
           "area_m2": 3788.7301768548186,
           "max_velocity_magnitude": 0.09903538972139359
         },
         "FarFieldBCZone6": {
           "cells": 4416,
-          "net_flux": -0.00026490857869464023,
-          "throughput": 13.487853656099512,
+          "net_flux": -0.0002659980959793986,
+          "throughput": 13.487853333321196,
           "area_m2": 224.25426881816594,
-          "max_velocity_magnitude": 0.0990474596619606
+          "max_velocity_magnitude": 0.09904696047306061
         },
         "NSWallAdiabaticBCZone1": {
           "cells": 168,
-          "net_flux": 6.9316377352792895e-09,
-          "throughput": 3.381711625403684e-08,
+          "net_flux": 6.9316441920066265e-09,
+          "throughput": 3.382208717033926e-08,
           "area_m2": 0.002314949142652889,
-          "max_velocity_magnitude": 0.07896372675895691
+          "max_velocity_magnitude": 0.07896332442760468
         },
         "NSWallAdiabaticBCZone5": {
           "cells": 4416,
-          "net_flux": -1.6137275712991855e-08,
-          "throughput": 7.199032845320084e-07,
+          "net_flux": -1.6146244654001828e-08,
+          "throughput": 7.199023852421004e-07,
           "area_m2": 0.8186279355414073,
-          "max_velocity_magnitude": 0.061898667365312576
+          "max_velocity_magnitude": 0.061898380517959595
         },
         "SymmetryBCZone7": {
           "cells": 5888,
-          "net_flux": -2.1296429953001005e-06,
-          "throughput": 0.0009154397894144056,
+          "net_flux": -1.2478281512571434e-06,
+          "throughput": 0.0009156952171057334,
           "area_m2": 3847.3683481019175,
-          "max_velocity_magnitude": 0.12305256724357605
+          "max_velocity_magnitude": 0.123052679002285
         }
       },
       "wing_centroid_m": [
@@ -196,15 +334,84 @@
         0.7424207136205929,
         0.03613532986205195
       ],
-      "far_field_net_flux": -1.0963956233823362e-05,
-      "far_field_throughput": 490.75072758830885,
-      "relative_imbalance": 2.234119200944116e-08,
-      "wall_leakage_abs": 7.537204007860453e-07,
-      "wall_leakage_relative": 1.5358518254064451e-09,
-      "symmetry_leakage_abs": 0.0009154397894144056,
-      "symmetry_leakage_relative": 1.8653865148873883e-06,
+      "far_field_net_flux": -4.432152202543316e-05,
+      "far_field_throughput": 490.75069930803966,
+      "relative_imbalance": 9.031372158598383e-08,
+      "wall_leakage_abs": 7.537244724124396e-07,
+      "wall_leakage_relative": 1.5358602106429884e-09,
+      "symmetry_leakage_abs": 0.0009156952171057334,
+      "symmetry_leakage_relative": 1.865907105984499e-06,
       "units": "fluxes are rho/rho_inf * V * area, so m^4/s per unit density; only the RATIOS are interpreted",
       "directory": "AERIS_MESH_STUDY/artifacts/s8_cfd/gci_C_a4",
+      "alpha_deg": 4.0
+    },
+    {
+      "surface_file": "AERIS_MESH_STUDY/artifacts/s8_cfd/gci_M_a4/s8_a4_000_surf.cgns",
+      "zones": {
+        "FarFieldBCZone2": {
+          "cells": 324,
+          "net_flux": 1.144673693367526e-06,
+          "throughput": 1.1449952604216918e-06,
+          "area_m2": 0.0023162661666795417,
+          "max_velocity_magnitude": 0.09903524070978165
+        },
+        "FarFieldBCZone3": {
+          "cells": 5760,
+          "net_flux": 0.00014875260248195017,
+          "throughput": 477.1875063291445,
+          "area_m2": 7570.474921465033,
+          "max_velocity_magnitude": 0.09904061257839203
+        },
+        "FarFieldBCZone4": {
+          "cells": 9960,
+          "net_flux": 9.475841435905742e-06,
+          "throughput": 0.000807256295207393,
+          "area_m2": 3790.02717070457,
+          "max_velocity_magnitude": 0.09903538227081299
+        },
+        "FarFieldBCZone6": {
+          "cells": 7440,
+          "net_flux": -0.00019197016700635825,
+          "throughput": 13.489613708870243,
+          "area_m2": 224.38664427290155,
+          "max_velocity_magnitude": 0.09904560446739197
+        },
+        "NSWallAdiabaticBCZone1": {
+          "cells": 324,
+          "net_flux": 4.686575913235168e-09,
+          "throughput": 2.6810154697712155e-08,
+          "area_m2": 0.0023162666613997457,
+          "max_velocity_magnitude": 0.07084359973669052
+        },
+        "NSWallAdiabaticBCZone5": {
+          "cells": 7440,
+          "net_flux": -3.0796872642850813e-09,
+          "throughput": 4.732776565773441e-07,
+          "area_m2": 0.8184543967794156,
+          "max_velocity_magnitude": 0.055565521121025085
+        },
+        "SymmetryBCZone7": {
+          "cells": 9960,
+          "net_flux": -5.766149132566483e-07,
+          "throughput": 0.0008005862959844465,
+          "area_m2": 3848.8035276862765,
+          "max_velocity_magnitude": 0.12309873104095459
+        }
+      },
+      "wing_centroid_m": [
+        0.4675525621182074,
+        0.7453324282280198,
+        0.03629110999874727
+      ],
+      "far_field_net_flux": -3.259704939513483e-05,
+      "far_field_throughput": 490.6779284393053,
+      "relative_imbalance": 6.643267916862689e-08,
+      "wall_leakage_abs": 5.000878112750563e-07,
+      "wall_leakage_relative": 1.0191773101873177e-09,
+      "symmetry_leakage_abs": 0.0008005862959844465,
+      "symmetry_leakage_relative": 1.6315922310401528e-06,
+      "units": "fluxes are rho/rho_inf * V * area, so m^4/s per unit density; only the RATIOS are interpreted",
+      "directory": "AERIS_MESH_STUDY/artifacts/s8_cfd/gci_M_a4",
       "alpha_deg": 4.0
     },
     {
@@ -212,52 +419,52 @@
       "zones": {
         "FarFieldBCZone2": {
           "cells": 168,
-          "net_flux": 2.2812617465306734e-06,
-          "throughput": 2.2812617465306734e-06,
+          "net_flux": 2.2812572440807366e-06,
+          "throughput": 2.2812572440807366e-06,
           "area_m2": 0.002314945765688972,
           "max_velocity_magnitude": 0.0990353375673294
         },
         "FarFieldBCZone3": {
           "cells": 4324,
-          "net_flux": 0.00022751111709854062,
-          "throughput": 477.11011294046716,
+          "net_flux": 0.00021992181916038675,
+          "throughput": 477.11010746998494,
           "area_m2": 7569.813668241145,
-          "max_velocity_magnitude": 0.09906470775604248
+          "max_velocity_magnitude": 0.09906050562858582
         },
         "FarFieldBCZone4": {
           "cells": 5888,
-          "net_flux": 2.2340867559097708e-05,
-          "throughput": 0.0016409590624302725,
+          "net_flux": 1.7855930975091307e-05,
+          "throughput": 0.001643915897964238,
           "area_m2": 3788.7301768548186,
-          "max_velocity_magnitude": 0.09903576970100403
+          "max_velocity_magnitude": 0.09903577715158463
         },
         "FarFieldBCZone6": {
           "cells": 4416,
-          "net_flux": -0.00030713628796967866,
-          "throughput": 13.489252339155687,
+          "net_flux": -0.0003018922884503256,
+          "throughput": 13.489260660272784,
           "area_m2": 224.25426881816594,
-          "max_velocity_magnitude": 0.09907375276088715
+          "max_velocity_magnitude": 0.0990738645195961
         },
         "NSWallAdiabaticBCZone1": {
           "cells": 168,
-          "net_flux": 8.657100446661118e-09,
-          "throughput": 5.307332012741809e-08,
+          "net_flux": 8.653323167505035e-09,
+          "throughput": 5.306118268365323e-08,
           "area_m2": 0.002314949142652889,
-          "max_velocity_magnitude": 0.06936056911945343
+          "max_velocity_magnitude": 0.06936069577932358
         },
         "NSWallAdiabaticBCZone5": {
           "cells": 4416,
-          "net_flux": -1.462735205168898e-08,
-          "throughput": 7.16983167594845e-07,
+          "net_flux": -1.4672649918538571e-08,
+          "throughput": 7.169615962448035e-07,
           "area_m2": 0.8186279355414073,
-          "max_velocity_magnitude": 0.054580897092819214
+          "max_velocity_magnitude": 0.05458046868443489
         },
         "SymmetryBCZone7": {
           "cells": 5888,
-          "net_flux": -1.3766143688493887e-06,
-          "throughput": 0.002004848310099052,
+          "net_flux": -1.0747653452527752e-06,
+          "throughput": 0.0020024277060499067,
           "area_m2": 3847.3683481019175,
-          "max_velocity_magnitude": 0.13082581758499146
+          "max_velocity_magnitude": 0.1308247596025467
         }
       },
       "wing_centroid_m": [
@@ -265,15 +472,84 @@
         0.7424207136205929,
         0.03613532986205195
       ],
-      "far_field_net_flux": -5.5003041565509635e-05,
-      "far_field_throughput": 490.6010085199471,
-      "relative_imbalance": 1.1211359253305183e-07,
-      "wall_leakage_abs": 7.70056487722263e-07,
-      "wall_leakage_relative": 1.5696186398910627e-09,
-      "symmetry_leakage_abs": 0.002004848310099052,
-      "symmetry_leakage_relative": 4.086514856843263e-06,
+      "far_field_net_flux": -6.183328107076677e-05,
+      "far_field_throughput": 490.60101432741294,
+      "relative_imbalance": 1.2603577910562784e-07,
+      "wall_leakage_abs": 7.700227789284567e-07,
+      "wall_leakage_relative": 1.5695499121299529e-09,
+      "symmetry_leakage_abs": 0.0020024277060499067,
+      "symmetry_leakage_relative": 4.081580851998696e-06,
       "units": "fluxes are rho/rho_inf * V * area, so m^4/s per unit density; only the RATIOS are interpreted",
       "directory": "AERIS_MESH_STUDY/artifacts/s8_cfd/gci_C_a8",
+      "alpha_deg": 8.0
+    },
+    {
+      "surface_file": "AERIS_MESH_STUDY/artifacts/s8_cfd/gci_M_a8/s8_a8_000_surf.cgns",
+      "zones": {
+        "FarFieldBCZone2": {
+          "cells": 324,
+          "net_flux": 2.2827139208045634e-06,
+          "throughput": 2.2827823484402186e-06,
+          "area_m2": 0.0023162661666795417,
+          "max_velocity_magnitude": 0.0990353375673294
+        },
+        "FarFieldBCZone3": {
+          "cells": 5760,
+          "net_flux": 0.00016738211794122053,
+          "throughput": 477.1732465817315,
+          "area_m2": 7570.474921465033,
+          "max_velocity_magnitude": 0.09905443340539932
+        },
+        "FarFieldBCZone4": {
+          "cells": 9960,
+          "net_flux": 1.815378788127573e-05,
+          "throughput": 0.0016426831759420708,
+          "area_m2": 3790.02717070457,
+          "max_velocity_magnitude": 0.09903579950332642
+        },
+        "FarFieldBCZone6": {
+          "cells": 7440,
+          "net_flux": -0.00022870936021724656,
+          "throughput": 13.489489046746584,
+          "area_m2": 224.38664427290155,
+          "max_velocity_magnitude": 0.09907034784555435
+        },
+        "NSWallAdiabaticBCZone1": {
+          "cells": 324,
+          "net_flux": 5.770470138282775e-09,
+          "throughput": 3.9944288510075104e-08,
+          "area_m2": 0.0023162666613997457,
+          "max_velocity_magnitude": 0.06474411487579346
+        },
+        "NSWallAdiabaticBCZone5": {
+          "cells": 7440,
+          "net_flux": -3.6115118140330015e-09,
+          "throughput": 4.75705312128572e-07,
+          "area_m2": 0.8184543967794156,
+          "max_velocity_magnitude": 0.050414763391017914
+        },
+        "SymmetryBCZone7": {
+          "cells": 9960,
+          "net_flux": -7.405123629654461e-07,
+          "throughput": 0.0017235076830315475,
+          "area_m2": 3848.8035276862765,
+          "max_velocity_magnitude": 0.13049371540546417
+        }
+      },
+      "wing_centroid_m": [
+        0.4675525621182074,
+        0.7453324282280198,
+        0.03629110999874727
+      ],
+      "far_field_net_flux": -4.089074047394572e-05,
+      "far_field_throughput": 490.6643805944364,
+      "relative_imbalance": 8.333749522312355e-08,
+      "wall_leakage_abs": 5.156496006386471e-07,
+      "wall_leakage_relative": 1.050921202011732e-09,
+      "symmetry_leakage_abs": 0.0017235076830315475,
+      "symmetry_leakage_relative": 3.5125999587406982e-06,
+      "units": "fluxes are rho/rho_inf * V * area, so m^4/s per unit density; only the RATIOS are interpreted",
+      "directory": "AERIS_MESH_STUDY/artifacts/s8_cfd/gci_M_a8",
       "alpha_deg": 8.0
     }
   ]

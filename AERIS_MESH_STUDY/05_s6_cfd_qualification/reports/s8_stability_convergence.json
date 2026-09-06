@@ -1,0 +1,160 @@
+{
+  "plan_section": "3.4",
+  "x_ref_m": 0.4,
+  "c_ref_m": 0.9,
+  "excluded": [],
+  "levels": {
+    "gci_C": {
+      "n_points": 4,
+      "points": [
+        {
+          "dir": "gci_C_a-2",
+          "alpha": -2.0,
+          "verdict": "ACCEPTED",
+          "cd": 0.025986623479308035,
+          "cdp": 0.017398802525807857,
+          "cdv": 0.00858782095350018,
+          "cl": -0.29811721779479944,
+          "cmy": -0.005980389788585376
+        },
+        {
+          "dir": "gci_C_a0",
+          "alpha": 0.0,
+          "verdict": "ACCEPTED",
+          "cd": 0.02082367543602555,
+          "cdp": 0.011827825298184384,
+          "cdv": 0.008995850137841167,
+          "cl": -0.15968495488314063,
+          "cmy": 0.001253348632132364
+        },
+        {
+          "dir": "gci_C_a4",
+          "alpha": 4.0,
+          "verdict": "ACCEPTED",
+          "cd": 0.01985843527839387,
+          "cdp": 0.010434435780243072,
+          "cdv": 0.009423999498150802,
+          "cl": 0.12053086367260252,
+          "cmy": 0.015352414525625739
+        },
+        {
+          "dir": "gci_C_a8",
+          "alpha": 8.0,
+          "verdict": "ACCEPTED",
+          "cd": 0.03092197388302308,
+          "cdp": 0.021511181678760385,
+          "cdv": 0.009410792204262705,
+          "cl": 0.4020771673745069,
+          "cmy": 0.028502334738185964
+        }
+      ],
+      "dCMy_dCL": {
+        "slope": 0.04925227333190417,
+        "intercept": 0.00898396806436292,
+        "n_points": 4,
+        "residual_rms": 0.0003020732701240129,
+        "residual_max_abs": 0.0004320274187293201,
+        "r_squared": 0.9994805635946592,
+        "slope_standard_error": 0.0007939447821479651
+      },
+      "dCL_dalpha_per_deg": {
+        "slope": 0.07005017937886678,
+        "intercept": -0.15892398385487455,
+        "n_points": 4,
+        "residual_rms": 0.0007612381195475305,
+        "residual_max_abs": 0.000907124817808691,
+        "r_squared": 0.9999919937885733,
+        "slope_standard_error": 0.00014015529820642122
+      },
+      "x_np_m": 0.3556729540012863,
+      "x_np_formula": "x_np = x_ref - (dCMy/dCL) * c_ref",
+      "static_margin_m": 0.04432704599871373,
+      "stability": "UNSTABLE: neutral point forward of the moment reference",
+      "condition": "ok"
+    },
+    "gci_M": {
+      "n_points": 4,
+      "points": [
+        {
+          "dir": "gci_M_a-2",
+          "alpha": -2.0,
+          "verdict": "ACCEPTED",
+          "cd": 0.023016957687444512,
+          "cdp": 0.014479087177792078,
+          "cdv": 0.008537870509652436,
+          "cl": -0.2981188544659373,
+          "cmy": -0.006073007262776578
+        },
+        {
+          "dir": "gci_M_a0",
+          "alpha": 0.0,
+          "verdict": "ACCEPTED",
+          "cd": 0.017983864424676616,
+          "cdp": 0.009078645289163653,
+          "cdv": 0.008905219135512961,
+          "cl": -0.15991404739449466,
+          "cmy": 0.0012439606035067625
+        },
+        {
+          "dir": "gci_M_a4",
+          "alpha": 4.0,
+          "verdict": "ACCEPTED",
+          "cd": 0.017050265124821523,
+          "cdp": 0.007760356964489201,
+          "cdv": 0.009289908160332323,
+          "cl": 0.11982773267353639,
+          "cmy": 0.015455272556967053
+        },
+        {
+          "dir": "gci_M_a8",
+          "alpha": 8.0,
+          "verdict": "ACCEPTED",
+          "cd": 0.027937431486223442,
+          "cdp": 0.018655673593140076,
+          "cdv": 0.009281757893083371,
+          "cl": 0.40090532833666687,
+          "cmy": 0.028720126824872044
+        }
+      ],
+      "dCMy_dCL": {
+        "slope": 0.04976919974119269,
+        "intercept": 0.009056453994509942,
+        "n_points": 4,
+        "residual_rms": 0.00030810612744007807,
+        "residual_max_abs": 0.00043508820049363746,
+        "r_squared": 0.999469005324467,
+        "slope_standard_error": 0.0008111591614146956
+      },
+      "dCL_dalpha_per_deg": {
+        "slope": 0.06993289607533773,
+        "intercept": -0.15915720040090148,
+        "n_points": 4,
+        "residual_rms": 0.0007594411885612274,
+        "residual_max_abs": 0.0009041380856396608,
+        "r_squared": 0.9999920047918445,
+        "slope_standard_error": 0.00013982445639520012
+      },
+      "x_np_m": 0.35520772023292657,
+      "x_np_formula": "x_np = x_ref - (dCMy/dCL) * c_ref",
+      "static_margin_m": 0.04479227976707345,
+      "stability": "UNSTABLE: neutral point forward of the moment reference",
+      "condition": "ok"
+    }
+  },
+  "movement_with_refinement": {
+    "coarse_level": "gci_C",
+    "fine_level": "gci_M",
+    "dCMy_dCL": {
+      "coarse": 0.04925227333190417,
+      "fine": 0.04976919974119269,
+      "change": 0.0005169264092885206
+    },
+    "x_np_m": {
+      "coarse": 0.3556729540012863,
+      "fine": 0.35520772023292657,
+      "change_m": -0.0004652337683597185,
+      "change_percent_of_cref": -0.051692640928857614
+    }
+  },
+  "statement": "Two levels. The movement of the stability result under one refinement step, not an uncertainty band on it."
+}

@@ -40,9 +40,13 @@ import argparse
 import glob
 import json
 import re
+import sys
 from pathlib import Path
 
 import numpy as np
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
 
 FUNCTIONS = ("cl", "cd", "cdp", "cdv", "cmy")
 CP_PHYSICAL_MAX = 1.0018
@@ -53,27 +57,16 @@ PURPOSE = "surrogate-training dataset, not certification"
 
 
 def cgns_variable(path: Path, name: str) -> np.ndarray | None:
-    try:
-        import h5py
-    except ImportError:
-        return None
-    if not path.exists():
-        return None
-    found: list[np.ndarray] = []
+    """One field, whichever CGNS container the file uses.
 
-    def walk(node):
-        for key, item in node.items():
-            if isinstance(item, h5py.Group):
-                if key == name and " data" in item:
-                    found.append(np.array(item[" data"]).ravel())
-                walk(item)
-
-    try:
-        with h5py.File(path, "r") as handle:
-            walk(handle)
-    except OSError:
-        return None
-    return np.concatenate(found) if found else None
+    This was an h5py reader. ADflow writes ADF here -- the linked CGNS was built
+    without HDF5 -- so it silently returned None for every run and this script
+    printed "no cp" for a quantity that was present in every file. Same defect
+    as the blank cp panel in plot_sweep.py, in a second place, which is why the
+    reader now lives in one module instead of being copied per script.
+    """
+    import cgns_read
+    return cgns_read.read_variable(path, name)
 
 
 def main() -> int:
@@ -212,20 +205,47 @@ def main() -> int:
         readings = []
         for alpha, row in cp_table.items():
             c = row.get(levels[0]); f = row.get(levels[-1])
-            if isinstance(c, dict) and isinstance(f, dict) and c["cells_over_bound"]:
-                ratio = f["cells_over_bound"] / c["cells_over_bound"]
+            if isinstance(c, dict) and isinstance(f, dict) and c["peak_excess"] > 0:
+                # Judge on the PEAK EXCESS, not the cell count.
+                #
+                # The count is the wrong metric the moment the cell size
+                # changes: a finer grid puts more, smaller cells over the same
+                # physical patch, so the count can rise while the region shrinks
+                # and the overshoot weakens. Measured here, the count went UP at
+                # three of four angles while the peak excess fell by 33 to 72 per
+                # cent -- a count-based rule called that STRUCTURAL and it is the
+                # opposite of what the data says. Same class of mistake as
+                # judging force stability over a fixed iteration window: a metric
+                # that does not account for the thing that changed.
+                ratio = f["peak_excess"] / c["peak_excess"]
+                count_ratio = (f["cells_over_bound"] / c["cells_over_bound"]
+                               if c["cells_over_bound"] else float("nan"))
                 readings.append({
-                    "alpha": alpha, "coarse": c["cells_over_bound"],
-                    "fine": f["cells_over_bound"], "ratio": ratio,
-                    "reading": ("DISCRETIZATION: the count falls with refinement"
+                    "alpha": alpha,
+                    "coarse_peak_excess": c["peak_excess"],
+                    "fine_peak_excess": f["peak_excess"],
+                    "peak_excess_ratio": ratio,
+                    "coarse_count": c["cells_over_bound"],
+                    "fine_count": f["cells_over_bound"],
+                    "count_ratio": count_ratio,
+                    "count_note": ("the count is reported but NOT used for the "
+                                   "verdict: it scales with cell size, so it can "
+                                   "rise under refinement while the excess falls"),
+                    "reading": ("DISCRETIZATION: the peak excess falls with "
+                                "refinement, so resolution is the cause"
                                 if ratio < 0.7 else
-                                "STRUCTURAL: the count does not fall with refinement"
+                                "STRUCTURAL: the peak excess does not fall with "
+                                "refinement; resolution will not fix it"
                                 if ratio > 0.9 else
-                                "ambiguous: the count falls, but not decisively")})
+                                "ambiguous: the peak excess falls, but not decisively")})
         report["cp_over_bound_reading"] = readings
         for r in readings:
-            print(f"\n  alpha {r['alpha']:g}: {r['coarse']} -> {r['fine']} cells "
-                  f"({r['ratio']:.2f}x).  {r['reading']}")
+            print(f"\n  alpha {r['alpha']:g}: peak excess "
+                  f"{r['coarse_peak_excess']:.3f} -> {r['fine_peak_excess']:.3f} "
+                  f"({r['peak_excess_ratio']:.2f}x); count "
+                  f"{r['coarse_count']} -> {r['fine_count']}"
+                  f" ({r['count_ratio']:.2f}x, not used for the verdict)"
+                  f"\n    {r['reading']}")
 
     # ---- 4. PLAN 3.5, the choice -------------------------------------------
     print(f"\n\nPLAN 3.5 -- the campaign level\n")

@@ -1,0 +1,301 @@
+{
+  "plan_sections": [
+    "3.4",
+    "3.5"
+  ],
+  "purpose": "surrogate-training dataset, not certification",
+  "levels": [
+    "gci_C",
+    "gci_M"
+  ],
+  "alphas": [
+    -2.0,
+    0.0,
+    4.0,
+    8.0
+  ],
+  "gate_verdicts": {
+    "-2.0": {
+      "gci_C": "ACCEPTED",
+      "gci_M": "ACCEPTED"
+    },
+    "0.0": {
+      "gci_C": "ACCEPTED",
+      "gci_M": "ACCEPTED"
+    },
+    "4.0": {
+      "gci_C": "ACCEPTED",
+      "gci_M": "ACCEPTED"
+    },
+    "8.0": {
+      "gci_C": "ACCEPTED",
+      "gci_M": "ACCEPTED"
+    }
+  },
+  "solver_frozen_points": [],
+  "movement": {
+    "coarse_level": "gci_C",
+    "fine_level": "gci_M",
+    "by_alpha": {
+      "-2.0": {
+        "cl": {
+          "coarse": -0.29811721779479944,
+          "fine": -0.2981188544659373,
+          "change": -1.636671137839052e-06,
+          "change_percent": 0.0005490025534068979
+        },
+        "cd": {
+          "coarse": 0.025986623479308035,
+          "fine": 0.023016957687444512,
+          "change": -0.0029696657918635225,
+          "change_percent": -11.4276708331428
+        },
+        "cdp": {
+          "coarse": 0.017398802525807857,
+          "fine": 0.014479087177792078,
+          "change": -0.002919715348015779,
+          "change_percent": -16.781128147669527
+        },
+        "cdv": {
+          "coarse": 0.00858782095350018,
+          "fine": 0.008537870509652436,
+          "change": -4.9950443847743276e-05,
+          "change_percent": -0.5816428185706961
+        },
+        "cmy": {
+          "coarse": -0.005980389788585376,
+          "fine": -0.006073007262776578,
+          "change": -9.26174741912025e-05,
+          "change_percent": 1.5486862473074783
+        }
+      },
+      "0.0": {
+        "cl": {
+          "coarse": -0.15968495488314063,
+          "fine": -0.15991404739449466,
+          "change": -0.00022909251135402875,
+          "change_percent": 0.14346530737456223
+        },
+        "cd": {
+          "coarse": 0.02082367543602555,
+          "fine": 0.017983864424676616,
+          "change": -0.0028398110113489333,
+          "change_percent": -13.637414874590197
+        },
+        "cdp": {
+          "coarse": 0.011827825298184384,
+          "fine": 0.009078645289163653,
+          "change": -0.0027491800090207307,
+          "change_percent": -23.243326137415476
+        },
+        "cdv": {
+          "coarse": 0.008995850137841167,
+          "fine": 0.008905219135512961,
+          "change": -9.063100232820608e-05,
+          "change_percent": -1.007475679780008
+        },
+        "cmy": {
+          "coarse": 0.001253348632132364,
+          "fine": 0.0012439606035067625,
+          "change": -9.388028625601603e-06,
+          "change_percent": -0.7490356940534123
+        }
+      },
+      "4.0": {
+        "cl": {
+          "coarse": 0.12053086367260252,
+          "fine": 0.11982773267353639,
+          "change": -0.0007031309990661316,
+          "change_percent": -0.5833617860534406
+        },
+        "cd": {
+          "coarse": 0.01985843527839387,
+          "fine": 0.017050265124821523,
+          "change": -0.002808170153572348,
+          "change_percent": -14.140943705809786
+        },
+        "cdp": {
+          "coarse": 0.010434435780243072,
+          "fine": 0.007760356964489201,
+          "change": -0.0026740788157538714,
+          "change_percent": -25.627440448836403
+        },
+        "cdv": {
+          "coarse": 0.009423999498150802,
+          "fine": 0.009289908160332323,
+          "change": -0.00013409133781847916,
+          "change_percent": -1.422870808140332
+        },
+        "cmy": {
+          "coarse": 0.015352414525625739,
+          "fine": 0.015455272556967053,
+          "change": 0.00010285803134131404,
+          "change_percent": 0.6699795082371365
+        }
+      },
+      "8.0": {
+        "cl": {
+          "coarse": 0.4020771673745069,
+          "fine": 0.40090532833666687,
+          "change": -0.0011718390378400168,
+          "change_percent": -0.2914463025821435
+        },
+        "cd": {
+          "coarse": 0.03092197388302308,
+          "fine": 0.027937431486223442,
+          "change": -0.002984542396799638,
+          "change_percent": -9.651849549094358
+        },
+        "cdp": {
+          "coarse": 0.021511181678760385,
+          "fine": 0.018655673593140076,
+          "change": -0.002855508085620309,
+          "change_percent": -13.27452916470771
+        },
+        "cdv": {
+          "coarse": 0.009410792204262705,
+          "fine": 0.009281757893083371,
+          "change": -0.00012903431117933413,
+          "change_percent": -1.371131232935808
+        },
+        "cmy": {
+          "coarse": 0.028502334738185964,
+          "fine": 0.028720126824872044,
+          "change": 0.00021779208668607983,
+          "change_percent": 0.764120163090686
+        }
+      }
+    }
+  },
+  "worst_change_percent": {
+    "cl": 0.5833617860534406,
+    "cd": 14.140943705809786,
+    "cdp": 25.627440448836403,
+    "cdv": 1.422870808140332,
+    "cmy": 1.5486862473074783
+  },
+  "cp_over_bound": {
+    "-2.0": {
+      "gci_C": {
+        "cells_over_bound": 56,
+        "peak_cp": 1.0935897827148438,
+        "peak_excess": 0.09178978271484373,
+        "of_faces": 25268
+      },
+      "gci_M": {
+        "cells_over_bound": 93,
+        "peak_cp": 1.0636489391326904,
+        "peak_excess": 0.061848939132690406,
+        "of_faces": 41208
+      }
+    },
+    "0.0": {
+      "gci_C": {
+        "cells_over_bound": 67,
+        "peak_cp": 1.1833168268203735,
+        "peak_excess": 0.1815168268203735,
+        "of_faces": 25268
+      },
+      "gci_M": {
+        "cells_over_bound": 78,
+        "peak_cp": 1.0526068210601807,
+        "peak_excess": 0.05080682106018064,
+        "of_faces": 41208
+      }
+    },
+    "4.0": {
+      "gci_C": {
+        "cells_over_bound": 55,
+        "peak_cp": 1.3192691802978516,
+        "peak_excess": 0.31746918029785154,
+        "of_faces": 25268
+      },
+      "gci_M": {
+        "cells_over_bound": 99,
+        "peak_cp": 1.1567047834396362,
+        "peak_excess": 0.1549047834396362,
+        "of_faces": 41208
+      }
+    },
+    "8.0": {
+      "gci_C": {
+        "cells_over_bound": 101,
+        "peak_cp": 1.4518356323242188,
+        "peak_excess": 0.4500356323242187,
+        "of_faces": 25268
+      },
+      "gci_M": {
+        "cells_over_bound": 79,
+        "peak_cp": 1.1332873106002808,
+        "peak_excess": 0.13148731060028074,
+        "of_faces": 41208
+      }
+    }
+  },
+  "cp_over_bound_reading": [
+    {
+      "alpha": -2.0,
+      "coarse_peak_excess": 0.09178978271484373,
+      "fine_peak_excess": 0.061848939132690406,
+      "peak_excess_ratio": 0.6738107151297194,
+      "coarse_count": 56,
+      "fine_count": 93,
+      "count_ratio": 1.6607142857142858,
+      "count_note": "the count is reported but NOT used for the verdict: it scales with cell size, so it can rise under refinement while the excess falls",
+      "reading": "DISCRETIZATION: the peak excess falls with refinement, so resolution is the cause"
+    },
+    {
+      "alpha": 0.0,
+      "coarse_peak_excess": 0.1815168268203735,
+      "fine_peak_excess": 0.05080682106018064,
+      "peak_excess_ratio": 0.27990143916772164,
+      "coarse_count": 67,
+      "fine_count": 78,
+      "count_ratio": 1.164179104477612,
+      "count_note": "the count is reported but NOT used for the verdict: it scales with cell size, so it can rise under refinement while the excess falls",
+      "reading": "DISCRETIZATION: the peak excess falls with refinement, so resolution is the cause"
+    },
+    {
+      "alpha": 4.0,
+      "coarse_peak_excess": 0.31746918029785154,
+      "fine_peak_excess": 0.1549047834396362,
+      "peak_excess_ratio": 0.4879364456553029,
+      "coarse_count": 55,
+      "fine_count": 99,
+      "count_ratio": 1.8,
+      "count_note": "the count is reported but NOT used for the verdict: it scales with cell size, so it can rise under refinement while the excess falls",
+      "reading": "DISCRETIZATION: the peak excess falls with refinement, so resolution is the cause"
+    },
+    {
+      "alpha": 8.0,
+      "coarse_peak_excess": 0.4500356323242187,
+      "fine_peak_excess": 0.13148731060028074,
+      "peak_excess_ratio": 0.29217088860544593,
+      "coarse_count": 101,
+      "fine_count": 79,
+      "count_ratio": 0.7821782178217822,
+      "count_note": "the count is reported but NOT used for the verdict: it scales with cell size, so it can rise under refinement while the excess falls",
+      "reading": "DISCRETIZATION: the peak excess falls with refinement, so resolution is the cause"
+    }
+  ],
+  "campaign_level_decision": {
+    "purpose": "surrogate-training dataset, not certification",
+    "levels_available": [
+      "gci_C",
+      "gci_M"
+    ],
+    "movement_summary": {
+      "cl": 0.5833617860534406,
+      "cd": 14.140943705809786,
+      "cdp": 25.627440448836403,
+      "cdv": 1.422870808140332,
+      "cmy": 1.5486862473074783
+    },
+    "proposed": "gci_C",
+    "basis": "PLAN 3.5 asks for the COARSEST level whose uncertainty is acceptable for a surrogate-training dataset, not certification. Between gci_C and gci_M the outputs move cdp 25.63 %, cd 14.14 %, cmy 1.55 %, cdv 1.42 %, cl 0.58 %. The coarsest level is proposed because the campaign arithmetic is what shapes this decision -- PLAN 0.9: 100 designs is about 8 days of solving -- and because these movements are what the dataset must CARRY as a stated uncertainty, not what it must eliminate.",
+    "mandatory_caveat": "Two levels. The movements above are the movement under one refinement step, NOT an uncertainty band: there is no observed order and no extrapolation. PLAN 3.5's phrase 'whose GCI band is acceptable' cannot be satisfied on this host, and the choice rests on the movement alone. Any dataset built at this level must state that.",
+    "expected_split": "PLAN 3.5: expect CD and CMy to need a finer level than CL. Running the campaign at a level converged for lift while carrying a stated uncertainty on drag and moment is legitimate -- provided it is stated.",
+    "chosen": null,
+    "status": "PROPOSAL ONLY. Re-run with --choose <level> --reason '...' to record a decision."
+  }
+}

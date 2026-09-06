@@ -1,0 +1,124 @@
+{
+  "schema_version": "aeris.s8.dataset.v1",
+  "purpose": "Trusted S8 CFD results with the provenance needed to reproduce and to believe them. Surrogate-training dataset, NOT certification.",
+  "environment": {
+    "collected_utc": "2026-09-06T17:25:45.900798+00:00",
+    "git_commit": "62306ccd25e5f1ee25097b6cc517b5bd199acd1c",
+    "git_dirty": true,
+    "git_describe": "checkpoint-geometry-stable-430-g62306cc-dirty",
+    "adflow_version": "2.13.1",
+    "mach_python": "/home/mike_kara/miniconda3/envs/mach-aero/bin/python",
+    "mpirun": "/home/mike_kara/miniconda3/envs/mach-aero/bin/mpirun",
+    "host": "Linux DESKTOP-ADGQCQ3 6.18.33.2-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Thu Jun 18 21:54:43 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux"
+  },
+  "policy": "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/s8_campaign_v1.yaml",
+  "acceptance": {
+    "authority": "convergence_gate.py",
+    "criteria": "at least five orders of residual drop, CL/CD/CMy settled over an adaptive tail, residual neither diverging nor growing in envelope, and the linear solve not dead",
+    "accepted_verdicts": [
+      "ACCEPTED"
+    ],
+    "stopping_rule": "L2Convergence 1e-6; see reports/s8_l2_sensitivity.json"
+  },
+  "counts": {
+    "runs_found": 9,
+    "rows": 9,
+    "excluded": 0
+  },
+  "meshes": {
+    "gci_C_83": {
+      "level": "gci_C",
+      "index": 83,
+      "cells": 567256,
+      "folded": 0,
+      "wall_layer_error_m": 2.220446049250313e-16,
+      "frame_mode": "span_normal",
+      "blocks_sha256": "54ccbd6cb54ee75a1cc0203c448ce3725ada5eebb8539250e4bc41c432e94805"
+    },
+    "gci_M_83": {
+      "level": "gci_M",
+      "index": 83,
+      "cells": 1111152,
+      "folded": 0,
+      "wall_layer_error_m": 2.220446049250313e-16,
+      "frame_mode": "span_normal",
+      "blocks_sha256": "fcfc44d63fb5fb6eee04ebaf7aeb068a7a9e6f8be82b6e8d7421cbe9cf80a2cd"
+    }
+  },
+  "excluded_runs": [],
+  "row_schema": {
+    "identity_and_provenance": [
+      "geometry_set",
+      "geometry_index",
+      "geometry_hash",
+      "design_vector",
+      "mesher",
+      "frame_mode",
+      "grid_level",
+      "cells",
+      "mesh_hash",
+      "git_commit",
+      "adflow_version",
+      "turbulence_model",
+      "solver_options_hash"
+    ],
+    "operating_point_and_references": [
+      "alpha_deg",
+      "beta_deg",
+      "mach",
+      "reynolds",
+      "temperature_K",
+      "area_ref",
+      "chord_ref",
+      "moment_ref_xyz"
+    ],
+    "results": [
+      "CL",
+      "CD",
+      "CDp",
+      "CDv",
+      "CMy",
+      "CMx",
+      "CMz"
+    ],
+    "convergence": [
+      "gate_verdict",
+      "relative_residual",
+      "orders_dropped",
+      "iterations",
+      "cl_pct",
+      "cd_pct",
+      "cmy_abs",
+      "lift_index_realised",
+      "velocity_direction_error"
+    ],
+    "mesh_state": [
+      "wall_layer_error_m",
+      "inverted_cells",
+      "worst_le_turn_deg",
+      "min_cell_over_s0",
+      "scaled_jacobian_min_p001_p01"
+    ],
+    "physics_checks": [
+      "yplus_min_p50_p95_p99_max",
+      "cp_cells_over_bound",
+      "cp_peak_excess"
+    ],
+    "fields": [
+      "surface_field_path",
+      "volume_field_path",
+      "node_ordering",
+      "connectivity_hash"
+    ],
+    "low_fidelity": [
+      "avl_cl",
+      "avl_cd",
+      "avl_cm",
+      "avl_status"
+    ]
+  },
+  "field_files": {
+    "surface": "copied, gzipped, under fields/",
+    "volume": "referenced by path and sha256 only; artifacts/ is wiped"
+  }
+}

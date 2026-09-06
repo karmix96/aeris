@@ -1,0 +1,50 @@
+{
+  "passes": true,
+  "solver_frozen": false,
+  "linear_solve_dead": false,
+  "verdict": "ACCEPTED",
+  "iterations": 155,
+  "residual_initial": 1101.6036112254474,
+  "residual_final": 0.0004335520820286452,
+  "relative_residual": 3.935645068795232e-07,
+  "window": 39,
+  "checks": {
+    "residual_orders": {
+      "value": 6.404984074776811,
+      "limit": 5.0,
+      "pass": true
+    },
+    "cl_percent": {
+      "value": 0.00419283894142275,
+      "limit": 0.05,
+      "pass": true
+    },
+    "cd_percent": {
+      "value": 0.010602843056196425,
+      "limit": 0.1,
+      "pass": true
+    },
+    "cmy_absolute": {
+      "value": 3.636980480652835e-07,
+      "limit": 0.0001,
+      "pass": true
+    },
+    "not_diverging": {
+      "value": false,
+      "pass": true
+    },
+    "no_growing_oscillation": {
+      "value": false,
+      "pass": true
+    }
+  },
+  "forces": {
+    "cl": 0.11982773267353636,
+    "cd": 0.01705026512482152,
+    "cdp": 0.007760356964489199,
+    "cdv": 0.009289908160332323,
+    "cmy": 0.015455272556967051
+  },
+  "alpha_deg": 4.0,
+  "directory": "AERIS_MESH_STUDY/artifacts/s8_cfd/gci_M_a4"
+}

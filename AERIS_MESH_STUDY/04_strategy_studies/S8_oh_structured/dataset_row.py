@@ -51,6 +51,7 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[2]
+sys.path.insert(0, str(HERE))
 for extra in (HERE, HERE.parent, HERE.parent / "S6_bounded_mesh_atlas", REPO / "src"):
     if str(extra) not in sys.path:
         sys.path.insert(0, str(extra))
@@ -141,28 +142,17 @@ def adflow_version(mach_python: str | None) -> str | None:
 
 
 def cgns_variable(path: Path, name: str) -> np.ndarray | None:
-    """Pull one named variable out of an ADflow CGNS surface solution."""
-    try:
-        import h5py
-    except ImportError:
-        return None
-    if not path.exists():
-        return None
-    found: list[np.ndarray] = []
+    """One field, whichever CGNS container the file uses.
 
-    def walk(node):
-        for key, item in node.items():
-            if isinstance(item, h5py.Group):
-                if key == name and " data" in item:
-                    found.append(np.array(item[" data"]).ravel())
-                walk(item)
-
-    try:
-        with h5py.File(path, "r") as handle:
-            walk(handle)
-    except OSError:
-        return None
-    return np.concatenate(found) if found else None
+    This was a private h5py reader -- the THIRD copy of one in this directory,
+    after check_cp_bound.py and analyse_refinement.py. ADflow writes ADF here,
+    h5py cannot open it, and every copy therefore returned None silently: the
+    cp panel came out blank, the refinement analysis printed "no cp", and every
+    dataset row recorded cp_cells_over_bound and yplus as absent. Three separate
+    places, one cause, because the reader was copied instead of shared.
+    """
+    import cgns_read
+    return cgns_read.read_variable(path, name)
 
 
 def surface_file(run: Path) -> Path | None:
@@ -336,9 +326,16 @@ def build_row(*, run: Path, level: str, index: int, set_name: str,
 
     # ---- low fidelity -------------------------------------------------------
     if avl:
-        point = next((p for p in avl.get("points", [])
-                      if abs(float(p.get("alpha_deg", 1e9)) - (row["alpha_deg"] or 1e9)) < 1e-6),
-                     None)
+        # `row["alpha_deg"] or 1e9` is wrong and was wrong here: 0.0 is FALSY,
+        # so alpha 0 -- the cruise point, the one every comparison is anchored
+        # on -- fell through to the sentinel and never matched its AVL point,
+        # while every other angle matched fine. A guard that fails for exactly
+        # one value is worse than one that fails for all of them.
+        alpha = row["alpha_deg"]
+        point = None
+        if alpha is not None:
+            point = next((p for p in avl.get("points", [])
+                          if abs(float(p.get("alpha_deg", 1e9)) - alpha) < 1e-6), None)
         if point:
             row.update(avl_cl=point.get("cl"), avl_cd=point.get("cd"),
                        avl_cm=point.get("cm") if "cm" in point else point.get("cmy"),

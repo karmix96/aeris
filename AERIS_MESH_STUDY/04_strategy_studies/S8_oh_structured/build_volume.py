@@ -135,6 +135,15 @@ def main() -> int:
                     help="write the grid even if the smoothing ladder cannot "
                          "clear every fold. For diagnosis only: a grid with "
                          "inverted cells must never reach a solver.")
+    # PLAN 2.2. The family refines the near body systematically and the far
+    # field only weakly -- o_out and cap_out do not refine spanwise -- so one
+    # run at a larger far field says how much of the answer that costs. The
+    # override is a CLI flag rather than a new LEVELS entry on purpose: it must
+    # be the SAME level in every other respect, or the comparison measures two
+    # things at once.
+    ap.add_argument("--farfield-chords", type=float, default=None,
+                    help="override the level's far-field radius, in root chords "
+                         "(PLAN 2.2 sensitivity). Recorded in the summary.")
     ap.add_argument("--open-tip", action="store_true",
                     help="skip the outboard blocks and write the wing block alone")
     args = ap.parse_args()
@@ -142,6 +151,11 @@ def main() -> int:
     import strategy_s6
 
     level = strategy_s8.LEVELS[args.level]
+    if args.farfield_chords is not None:
+        import dataclasses
+        level = dataclasses.replace(level, farfield_chords=args.farfield_chords)
+        print(f"far-field overridden to {args.farfield_chords} root chords "
+              f"(PLAN 2.2 sensitivity); every other level parameter unchanged")
     with tempfile.TemporaryDirectory() as tmp:
         # Defect 18.  This called `build_locked_surface`, which builds an entire
         # S6 candidate_c01 SURFACE -- the C-family surface S8 exists to replace

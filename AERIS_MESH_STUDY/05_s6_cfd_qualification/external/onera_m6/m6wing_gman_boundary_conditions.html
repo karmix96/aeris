@@ -1,0 +1,547 @@
+<HTML>
+
+<HEAD>
+<TITLE> ONERA M6 Wing: Instructions for GMAN </TITLE>
+</HEAD>
+
+<BODY TEXT="#000000" BGCOLOR="#FFFFFF" LINK="#0000EE" 
+  VLINK="#551A8B" ALINK="#FF0000">
+
+<!---------------------------------------------------------------------->
+
+<P><B>ONERA M6 Wing: Instructions for GMAN </B>
+
+<P> The boundary conditions are set within the common grid file <A
+HREF="run.cgd">run.cgd</A> by using GMAN.  The procedure using
+the interactive graphics interface is as follows
+
+<OL>
+
+<P><LI> Start GMAN.
+
+<BLOCKQUOTE>
+   <B> gman </B>
+</BLOCKQUOTE>
+
+<P><LI> Hit <B>RETURN</B> to select the default version of GMAN (if prompted).
+
+<P><LI> Read in the common grid file by typing at the <b>GMAN:</b> prompt.
+
+<BLOCKQUOTE>
+   <B> file run.cgd </B>
+</BLOCKQUOTE>
+
+<P><LI> Specify that units are feet. (Note: WIND requires dimensional
+values. The default units are inches.  The grid has been
+nondimensionalized by the wing span.  Here we use units of feet to be
+consistent with the default units (english engineering) of WIND.  Thus
+it is implied here that the wing span is 1.0 ft.  This presents no
+problem here because we still match the Mach and Reynolds numbers and
+use the consistent value of the mean aerodynamic chord in feet in using
+the Reynolds number and assumed temperature of 460 R to compute the
+value of pressure to input to WIND.)
+
+<BLOCKQUOTE>
+   <B> units feet </B>
+</BLOCKQUOTE>
+
+<P><LI> Switch to graphics mode.
+
+<BLOCKQUOTE>
+   <B> swi </B>
+</BLOCKQUOTE>
+
+<P><LI> Display some of the grid.
+
+<BLOCKQUOTE>
+   Pick <b> SHOW </b> <i>(upper right panel)</i><br>
+   Pick <b> SHOW SURFACES</b> <br>
+   Pick <b> PICK ZONE</b> <br>
+   Pick <b> 3</b> <I>(from the zone list)</I><BR>
+   Pick <b> PICK K-PLANE</b> <br>
+   Pick <b> K=1</b> <BR>
+   Pick <b> NEXT PLANE</b> <I>(to step through surfaces)</I> <BR>
+   Pick <b> PREVIOUS PLANE</b> <I>(to step back to K1)</I> <BR>
+   Pick <b> PICK J-PLANE</b> <br>
+   Pick <b> J=1</b> <BR>
+</blockquote>
+
+<P> At this point the J1 and K1 grid surfaces of zone 3 will be
+displayed.  The J1 surface is the top of the wing.  Moving the mouse so
+that the cross-cursor is near the upper-right most grid point and
+clicking the left mouse button will cause the coordinates of that point
+to be displayed in the middle right panel.  It should indicate that the
+coordinates of point (73,49,1) are approximately x = 0.633 ft, y = 6.37
+ft, and z = 0.0 ft.  Note that the units are feet, which was desired
+from the <b> units feet </b> command.
+
+<P> The grid can be rotated by depressing the left mouse button and
+moving the mouse down and to the right.  The grid near the wing can be
+viewed better by "zooming" by depressing the middle mouse button and
+moving the mouse down.  The grid can then be translated by depressing
+the right mouse button and moving the mouse around.  These mouse
+operations are the same as in PLOT3D.
+
+<P> One may realized that the zoom used a inconvenient center point.  The
+center point can be changed by picking <B>center</B> from the top right
+menu.  A prompt will be written to "pick center point" using the left
+mouse button.  A prompt will then ask to "pick outer limit of display
+area".  This operation can be used to do a quick zoom to a location of
+the grid.
+
+<P> One can reset the display by using the <b>Reset</b> option in the
+list in the upper right-hand corner.
+
+
+<P><LI> Specify the boundary conditions.
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(left panel)</i>
+</blockquote>
+
+<p> GMAN defaults to the last zone that was displayed, which was zone
+3. Note that the "*" to the left of the zone number or surface
+indicates the "active" zone and boundary, respectively. The sequence is
+to select the zone, then the boundary, and then specify the boundary
+condition type on that boundary or a subregion of that boundary.  The
+initial boundary condition type is <b> UNDEFINED</b>.  GMAN is now
+waiting for the zone and boundary to be specified.  Let us start with
+zone 1.
+
+<blockquote>
+   Pick <b> 1 </b> <i>(from the zone list)</i><br>
+   Pick <b> I1 </b> <i>(lower left panel)</i><br>
+</blockquote>
+
+<P> At this point, the I1 grid surface is displayed.  Since the I1 grid
+surface is a constant-x grid plane, the view may show a line.  Pressing
+on the left mouse button and moving the mouse to the right will turn
+the grid slightly to show the three-dimensional nature of the grid.  To
+select the boundary condition type, execute the following menu choices
+
+<blockquote>
+   Pick <b> MODIFY BNDY</b> <br> 
+   Pick <b> CHANGE ALL</b> <br> 
+   Pick <b>  OUTFLOW </b> 
+</blockquote>
+
+<p> At this point, the bottom panel should contain the text "1617 points 
+were changed".  The boundary condition specification is now saved for 
+this boundary by the following menu choices
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<p> The common grid file <b>run.cgd</b> is modified to include this 
+boundary condition specification. 
+
+<p> The boundary condition specification can be checked by selecting
+
+<blockquote>
+   Pick <b>IDENTIFY PNTS.</b> <i>(left panel)</i><br>
+   Pick <b>OUTFLOW </b>
+</blockquote> 
+
+<p> The individual grid points will show up in color to indicate that 
+those points are specified as <b>OUTFLOW</b>.
+
+<p> The boundary condition type is now specified for the IMAX boundary 
+of zone 1, which is coupled to the I1 boundary of zone 2.
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> IMAX</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> SEL OTHER BND</b> <br>
+   Pick <b> 2 </b> <i>(from the zone list)</i><br>
+   Pick <b> I1 </b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<P> During the above operations, the IMAX surface of zone 1 is displayed. 
+After it is indicated that this surface is to be coupled to the I1 boundary 
+of zone 2, that grid surface is displayed in another color.  The fact that 
+they are coincident is a check that the coupling will be good.  The 
+message area will indicate that "1617 undefined points were changed".
+
+<p> The J1 boundary of zone 1 is coupled to the J1 boundary of zone 4.
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> J1</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> 4 </b> <i>(from the zone list)</i><br>
+   Pick <b> J1 </b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<p> The JMAX boundary of zone 1 is a farfield boundary,
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> JMAX</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> CHANGE ALL</b> <br>
+   Pick <b> FREESTREAM</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<p> The K1 boundary of zone 1 is on the symmetry plane,
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> K1</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> CHANGE ALL</b> <br>
+   Pick <b> REFLECTION</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<p> The KMAX boundary of zone 1 is coupled to the KMAX boundary of 
+zone 4,
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> KMAX</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> 4 </b> <i>(from the zone list)</i><br>
+   Pick <b> KMAX </b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<P> The boundary conditions for the remaining zones are specified in 
+a similar manner.  The I1 boundary of zone 2 is coupled to the IMAX 
+boundary of zone 1,
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> 2 </b> <i>(from the zone list)</i><br>
+   Pick <b> I1</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> 1 </b> <i>(from the zone list)</i><br>
+   Pick <b> IMAX </b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<P> The IMAX boundary of zone 2 is coupled to the I1 boundary of zone 3,
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> IMAX</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> 3 </b> <i>(from the zone list)</i><br>
+   Pick <b> I1 </b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<P> The J1 boundary of zone 2 is the lower surface of the wing and is specified
+as a viscous wall,
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> J1</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> CHANGE ALL</b> <br>
+   Pick <b> VISCOUS WALL</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<P> The JMAX boundary of zone 2 is a farfield boundary,
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> JMAX</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> CHANGE ALL</b> <br>
+   Pick <b> FREESTREAM</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<p> The K1 boundary of zone 2 is on the symmetry plane,
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> K1</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> CHANGE ALL</b> <br>
+   Pick <b> REFLECTION</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<p> The KMAX boundary of zone 2 is coupled to the KMAX boundary of 
+zone 3,
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> KMAX</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> 3 </b> <i>(from the zone list)</i><br>
+   Pick <b> KMAX </b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<P> The I1 boundary of zone 3 is coupled to the IMAX 
+boundary of zone 2,
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> 3 </b> <i>(from the zone list)</i><br>
+   Pick <b> I1</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> 2 </b> <i>(from the zone list)</i><br>
+   Pick <b> IMAX </b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<P> The IMAX boundary of zone 3 is coupled to the I1 boundary of zone 4,
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> IMAX</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> 4 </b> <i>(from the zone list)</i><br>
+   Pick <b> I1 </b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<P> The J1 boundary of zone 3 is the upper surface of the wing and is specified
+as a viscous wall,
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> J1</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> CHANGE ALL</b> <br>
+   Pick <b> VISCOUS WALL</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<P> The JMAX boundary of zone 3 is a farfield boundary,
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> JMAX</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> CHANGE ALL</b> <br>
+   Pick <b> FREESTREAM</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<p> The K1 boundary of zone 3 is on the symmetry plane,
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> K1</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> CHANGE ALL</b> <br>
+   Pick <b> REFLECTION</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<p> The KMAX boundary of zone 3 is coupled to the KMAX boundary of 
+zone 2,
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> KMAX</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> 2 </b> <i>(from the zone list)</i><br>
+   Pick <b> KMAX </b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<P> The I1 boundary of zone 4 is coupled to the IMAX 
+boundary of zone 3,
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> 4 </b> <i>(from the zone list)</i><br>
+   Pick <b> I1</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> 3 </b> <i>(from the zone list)</i><br>
+   Pick <b> IMAX </b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<P> The IMAX boundary of zone 4 is an outflow boundary,
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> IMAX</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> CHANGE ALL</b> <br>
+   Pick <b> OUTFLOW</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<P> The J1 boundary of zone 4 is coupled to the J1 boundary of zone 1,
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> J1</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> 1 </b> <i>(from the zone list)</i><br>
+   Pick <b> J1 </b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<P> The JMAX boundary of zone 4 is a farfield boundary,
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> JMAX</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> CHANGE ALL</b> <br>
+   Pick <b> FREESTREAM</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<p> The K1 boundary of zone 4 is on the symmetry plane,
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> K1</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> CHANGE ALL</b> <br>
+   Pick <b> REFLECTION</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+<p> The KMAX boundary of zone 4 is coupled to the KMAX boundary of 
+zone 1,
+
+<blockquote>
+   Pick <b> BOUNDARY COND. </b> <i>(top left panel)</i><br>
+   Pick <b> PICK ZONE/BNDY</b> <br>
+   Pick <b> KMAX</b> <br>
+   Pick <b> MODIFY BNDY</b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> 1 </b> <i>(from the zone list)</i><br>
+   Pick <b> KMAX </b> <br>
+   Pick <b> COUPLE</b> <br>
+   Pick <b> BOUNDARY COND. </b> <br>
+   Pick <b> YES-UPDATE FILE</b>
+</blockquote> 
+
+
+<p><li> Exit GMAN.
+
+<blockquote>
+   Pick <b> TOP </b> <i>(top left panel)</i><br>
+   Pick <b> END </b> <br>
+   Pick <b> YES-TERMINATE </b>
+</blockquote>
+
+<p> The boundary conditions have now been set in the common grid 
+file <a href="run.cgd"> run.cgd</a>.
+
+</OL>
+
+<!---------------------------------------------------------------------->
+<P><HR>
+<address>
+Web site curator, and responsible official for content: John W. Slater, 
+<a href="mailto:john.w.slater@grc.nasa.gov">john.w.slater@grc.nasa.gov</a>
+</address>
+
+
+
+
+<div id="footer">
+
+<!-- <img src="images/nasa_logo.gif" class="right"
+      width= "50" height="40" alt="NASA meatball" />
+-->
+
+<div>
+  <span style="font-weight: bold;">Responsible NASA Official/Curator:</span> 
+      <a href="mailto:john.w.slater@nasa.gov">John W. Slater</a>
+</div>
+
+<span><span style="font-weight: bold;">Web Policies: </span>
+      <a href="http://www.grc.nasa.gov/Doc/grcwebpolicies.html">Web Privacy Policy and Important Notices</a></span><br />
+		<span style="font-weight: bold;">Adobe Reader Download: </span>  
+        <a href="http://www.adobe.com/products/acrobat/readstep2.html" title="Go to Adobe Web Site">
+        Adobe Reader</a>
+<!-- <span class="notprinted"><span style="font-weight: bold;">Adobe Reader Download: </span>  
+        <a href="http://www.adobe.com/products/acrobat/readstep2.html" title="Go to Adobe Web Site">
+        Adobe Reader</a>
+</span> -->
+
+<!-- We participate in the US government's analytics program. See the data at analytics.usa.gov. -->
+
+<script language="javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NASA&subagency=GRC"></script>
+
+
+</div>
+
+</BODY>
+</HTML>

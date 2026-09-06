@@ -131,7 +131,13 @@ GRID_SOURCES = {
         "https://github.com/TMBWG/turbmodels/raw/main/Onerawingnumerics_grids/wing_release_072319.tar.gz",
     "TMR generator archive via git-lfs media host":
         "https://media.githubusercontent.com/media/TMBWG/turbmodels/main/Onerawingnumerics_grids/wing_release_072319.tar.gz",
-    "NASA WIND archive structured grid (m6wing.cgd)":
+    # THE GRID. The page links m6wing.cgd, which does not exist; the server
+    # answers 300 Multiple Choices and NAMES the file that does exist in the
+    # response BODY. A probe that reads only the status code concludes there is
+    # no grid, which is what this one did and it was wrong.
+    "NASA WIND archive PLOT3D grid (m6wing.x.fmt) -- THE GRID":
+        f"{WIND}/m6wing01/m6wing.x.fmt",
+    "NASA WIND archive structured grid (m6wing.cgd, the page's own link)":
         f"{WIND}/m6wing01/m6wing.cgd",
     "NASA WIND archive case bundle (m6wing02.tar.Z)":
         f"{WIND}/m6wing02/m6wing02.tar.Z",
@@ -243,6 +249,14 @@ def cmd_grids(args) -> int:
               "probed": results, "available": available}
     if available:
         report["verdict"] = "a grid source is reachable; PLAN 5 can proceed"
+        report["resolution"] = (
+            "RESOLVED 2026-09-06. m6wing01/m6wing.x.fmt is a PLOT3D grid: 4 blocks, "
+            "316,932 points, about 290k cells, with its boundary conditions "
+            "documented in m6wing01/m6wing.gman.html. onera_m6.py converts it to "
+            "CGNS, coarsens a family from it, solves and compares against the seven "
+            "measured stations. An earlier verdict here said BLOCKED because the "
+            "m6wing.cgd link 404s and the 300 response was read as a failure "
+            "instead of as the directory listing it is.")
         print(f"A source is reachable: {available[0]}")
     else:
         report["verdict"] = "BLOCKED"

@@ -242,9 +242,14 @@ def cmd_grid(args) -> int:
           f"{n_b2b} block-to-block, {n_boco} BCs)")
 
     # a coarsened family, so gci.py can be exercised on a case with a known answer
+    # cgnsutilities' coarsen() mutates the Grid in place and returns None, so
+    # the returned value must not be reassigned. Coarsening halves each block's
+    # intervals, which is the standard way to build a systematically refined
+    # family from one delivered grid -- every level is the same mesh at a
+    # different spacing, which is what a convergence family has to be.
     current = grid
     for level in range(1, args.levels):
-        current = current.coarsen()
+        current.coarsen()
         name = f"m6_L{level}"
         path = args.out / f"{name}.cgns"
         current.writeToCGNS(str(path))
@@ -288,8 +293,21 @@ def experiment() -> dict:
     out = {}
     for number, rows in sorted(sections.items()):
         a = np.array(rows)
+        # Columns are NP, X/L, Y/b, Z/L, Cp. Y/b is the SPAN station and Z/L is
+        # the VERTICAL coordinate -- so in the experiment's frame z is up, while
+        # in this grid Y is up and z is span. Their Z maps to our Y, and getting
+        # that backwards silently compares an upper surface against a lower one.
+        #
+        # The measurements are NOT pre-split by surface: all 34 (or 45) points
+        # of a station sit in one list, upper and lower interleaved. Splitting
+        # them by the sign of their own vertical coordinate is what makes an
+        # upper-to-upper comparison possible at all.
+        vertical = a[:, 3]
+        upper = vertical >= 0.0
         out[number] = {"eta": float(np.mean(a[:, 2])), "x_over_c": a[:, 1],
-                       "z_over_c": a[:, 3], "cp": a[:, 4], "n": len(a)}
+                       "vertical": vertical, "cp": a[:, 4], "n": len(a),
+                       "upper": upper,
+                       "n_upper": int(upper.sum()), "n_lower": int((~upper).sum())}
     return out
 
 
@@ -382,14 +400,21 @@ def cmd_solve(args) -> int:
 
 
 def surface_cp(run: Path) -> dict:
-    """Wall cp from the surface solution, with each point's station."""
+    """Wall cp, kept STRUCTURED so a spanwise station can be selected by index.
+
+    Flattening loses the only reliable way to pick a station. The grid's
+    spanwise planes are not constant-z -- a single k-plane spans about 0.012 of
+    semispan near mid-span, because the C-grid follows the sweep -- so a
+    tolerance band on z either misses a row entirely (eta 0.44 returned nothing)
+    or catches two (eta 0.99 returned 384 cells where a row is 144). The row
+    index is exact and the z value is not.
+    """
     import cgns_read
     surfaces = sorted(run.glob("*surf*.cgns"))
     if not surfaces:
         raise SystemExit(f"no surface solution in {run}")
-    zones = cgns_read.surface_zones(surfaces[0])
-    xs, ys, zs, cps = [], [], [], []
-    for name, node in zones:
+    rows = []
+    for name, node in cgns_read.surface_zones(surfaces[0]):
         if "Wall" not in name and "wall" not in name:
             continue
         g, s = node["GridCoordinates"], node["Flow solution"]
@@ -398,14 +423,66 @@ def surface_cp(run: Path) -> dict:
         shape = (xyz[0].shape[0] - 1, xyz[0].shape[1] - 1)
         if cp.shape != shape:
             cp = cp[1:-1, 1:-1]
-        centre = [0.25 * (c[:-1, :-1] + c[:-1, 1:] + c[1:, :-1] + c[1:, 1:]) for c in xyz]
-        xs.append(centre[0].ravel()); ys.append(centre[1].ravel())
-        zs.append(centre[2].ravel()); cps.append(cp.ravel())
-    if not xs:
+        centre = [0.25 * (c[:-1, :-1] + c[:-1, 1:] + c[1:, :-1] + c[1:, 1:])
+                  for c in xyz]
+        # orient so axis 0 is SPANWISE: the wing's span is much longer than its
+        # chord here, so the axis whose mean z varies most is the spanwise one.
+        z = centre[2]
+        span_axis = 0 if np.ptp(z.mean(axis=1)) > np.ptp(z.mean(axis=0)) else 1
+        if span_axis == 1:
+            centre = [c.T for c in centre]; cp = cp.T
+        rows.append({"name": name, "x": centre[0], "y": centre[1],
+                     "z": centre[2], "cp": cp})
+    if not rows:
         raise SystemExit(f"{surfaces[0]} has no wall zone")
-    return {"x": np.concatenate(xs), "y": np.concatenate(ys),
-            "z": np.concatenate(zs), "cp": np.concatenate(cps),
-            "file": str(surfaces[0])}
+    return {"zones": rows, "file": str(surfaces[0]),
+            "x": np.concatenate([r["x"].ravel() for r in rows]),
+            "y": np.concatenate([r["y"].ravel() for r in rows]),
+            "z": np.concatenate([r["z"].ravel() for r in rows]),
+            "cp": np.concatenate([r["cp"].ravel() for r in rows])}
+
+
+def station_slice(surf: dict, eta: float) -> dict:
+    """The spanwise cell row nearest a measured station, from every wall zone.
+
+    Exact by construction: each zone contributes the one row whose mean z is
+    closest to the station, so upper and lower surfaces are both represented and
+    the count is the same at every station.
+    """
+    target = eta * GEOMETRY["semispan"]
+    x, y, cp, zs = [], [], [], []
+    for zone in surf["zones"]:
+        means = zone["z"].mean(axis=1)
+        k = int(np.argmin(np.abs(means - target)))
+        x.append(zone["x"][k]); y.append(zone["y"][k])
+        cp.append(zone["cp"][k]); zs.append(means[k])
+    return {"x": np.concatenate(x), "y": np.concatenate(y),
+            "cp": np.concatenate(cp),
+            "z_actual": float(np.mean(zs)),
+            "z_requested": target}
+
+
+def shock_position(xc: np.ndarray, cp: np.ndarray) -> dict:
+    """Where the upper-surface shock sits, as x/c.
+
+    A shock is a rapid PRESSURE RISE going aft, so it is the largest positive
+    d(cp)/d(x/c) on the upper surface. This is the quantity a transonic
+    validation should be read on, and pointwise cp is not: cp jumps by order one
+    across a shock, so a shock placed two cells early produces a huge pointwise
+    error from a solution whose physics is right. RMS over a station is
+    therefore dominated by the shock and says more about grid resolution than
+    about whether the code reproduces the flow.
+    """
+    order = np.argsort(xc)
+    x, c = xc[order], cp[order]
+    keep = (x > 0.05) & (x < 0.98)          # ignore the stagnation region and the TE
+    x, c = x[keep], c[keep]
+    if x.size < 6:
+        return {"x_over_c": float("nan"), "strength": float("nan")}
+    grad = np.gradient(c, x)
+    i = int(np.argmax(grad))
+    return {"x_over_c": float(x[i]), "strength": float(grad[i]),
+            "cp_before": float(c[max(i - 2, 0)]), "cp_after": float(c[min(i + 2, c.size - 1)])}
 
 
 def cmd_compare(args) -> int:
@@ -413,43 +490,80 @@ def cmd_compare(args) -> int:
     exp = experiment()
     surf = surface_cp(args.run)
     report = {"case": CASE, "run": str(args.run), "stations": []}
-    print(f"{'stn':>4}{'eta':>7}{'exp pts':>9}{'cfd pts':>9}"
+    print(f"{'stn':>4}{'eta':>7}{'exp pts':>9}{'cfd pts':>9}{'z used':>9}"
           f"{'cp_min exp':>12}{'cp_min cfd':>12}{'rms dcp':>10}")
     for number, data in exp.items():
         eta = data["eta"]
-        band = args.band * GEOMETRY["semispan"]
-        pick = np.abs(surf["z"] - eta * GEOMETRY["semispan"]) <= band
+        sl = station_slice(surf, eta)
         x_le, chord = local_chord(eta)
-        xc = (surf["x"][pick] - x_le) / chord
-        cp = surf["cp"][pick]
-        upper = surf["y"][pick] >= 0
+        xc = (sl["x"] - x_le) / chord
+        cp = sl["cp"]
+        upper = sl["y"] >= 0
+        pick = cp
         entry = {"station": number, "eta": eta, "n_experiment": data["n"],
-                 "n_cfd_cells": int(pick.sum()),
-                 "band_used": band, "x_le": x_le, "chord": chord,
+                 "n_cfd_cells": int(cp.size),
+                 "z_requested": sl["z_requested"], "z_actual": sl["z_actual"],
+                 "x_le": x_le, "chord": chord,
+                 "n_experiment_upper": data["n_upper"],
+                 "n_experiment_lower": data["n_lower"],
                  "experiment": {"x_over_c": data["x_over_c"].tolist(),
-                                "cp": data["cp"].tolist()},
+                                "cp": data["cp"].tolist(),
+                                "upper": data["upper"].tolist()},
                  "cfd": {"x_over_c": xc.tolist(), "cp": cp.tolist(),
                          "upper": upper.tolist()}}
         rms = float("nan")
-        if pick.sum() > 5:
+        if cp.size > 5:
             # interpolate CFD onto the measured abscissae, upper and lower apart
             errs = []
-            for side, mask in (("upper", upper), ("lower", ~upper)):
-                if mask.sum() < 3:
+            for mask, exp_mask in ((upper, data["upper"]), (~upper, ~data["upper"])):
+                # upper against upper, lower against lower. Comparing a computed
+                # upper surface against interleaved measurements that include the
+                # lower surface is meaningless and produces a large RMS from a
+                # solution that is in fact correct -- it did here, 0.40 against a
+                # cp_min that agreed to one per cent.
+                if mask.sum() < 3 or exp_mask.sum() < 2:
                     continue
                 order = np.argsort(xc[mask])
                 xi, ci = xc[mask][order], cp[mask][order]
-                inside = (data["x_over_c"] >= xi.min()) & (data["x_over_c"] <= xi.max())
+                ex, ecp = data["x_over_c"][exp_mask], data["cp"][exp_mask]
+                inside = (ex >= xi.min()) & (ex <= xi.max())
                 if inside.sum():
-                    pred = np.interp(data["x_over_c"][inside], xi, ci)
-                    errs.append(pred - data["cp"][inside])
+                    errs.append(np.interp(ex[inside], xi, ci) - ecp[inside])
             if errs:
                 rms = float(np.sqrt(np.mean(np.concatenate(errs) ** 2)))
         entry["rms_dcp_vs_experiment"] = rms
+        # shock position, computed the same way for both, so the comparison is
+        # like for like
+        eu = data["upper"]
+        entry["shock_experiment"] = shock_position(data["x_over_c"][eu], data["cp"][eu])
+        entry["shock_cfd"] = shock_position(xc[upper], cp[upper])
+        entry["shock_dx_over_c"] = (entry["shock_cfd"]["x_over_c"]
+                                    - entry["shock_experiment"]["x_over_c"])
+        entry["cp_min_experiment"] = float(data["cp"].min())
+        entry["cp_min_cfd"] = float(cp.min())
+        entry["cp_min_error"] = float(abs(cp.min() - data["cp"].min())
+                                      / abs(data["cp"].min()))
         report["stations"].append(entry)
-        print(f"{number:>4}{eta:>7.2f}{data['n']:>9}{int(pick.sum()):>9}"
-              f"{data['cp'].min():>12.3f}{(cp.min() if pick.sum() else float('nan')):>12.3f}"
-              f"{rms:>10.4f}")
+        print(f"{number:>4}{eta:>7.2f}{data['n']:>9}{int(cp.size):>9}"
+              f"{sl['z_actual']:>9.3f}"
+              f"{data['cp'].min():>12.3f}{cp.min():>12.3f}{rms:>10.4f}")
+    print(f"\n{'stn':>4}{'eta':>7}{'shock exp':>11}{'shock cfd':>11}{'dx/c':>9}"
+          f"{'cp_min err':>12}")
+    for s in report["stations"]:
+        print(f"{s['station']:>4}{s['eta']:>7.2f}"
+              f"{s['shock_experiment']['x_over_c']:>11.3f}"
+              f"{s['shock_cfd']['x_over_c']:>11.3f}"
+              f"{s['shock_dx_over_c']:>+9.3f}"
+              f"{100 * s['cp_min_error']:>11.1f}%")
+    dx = [abs(s["shock_dx_over_c"]) for s in report["stations"]
+          if np.isfinite(s["shock_dx_over_c"])]
+    pk = [s["cp_min_error"] for s in report["stations"]]
+    if dx:
+        report["shock_position_mean_abs_error_x_over_c"] = float(np.mean(dx))
+        report["cp_min_mean_relative_error"] = float(np.mean(pk))
+        print(f"\n  mean |shock position error|  {np.mean(dx):.3f} x/c")
+        print(f"  mean |suction peak error|    {100 * np.mean(pk):.1f} %")
+
     valid = [s["rms_dcp_vs_experiment"] for s in report["stations"]
              if np.isfinite(s["rms_dcp_vs_experiment"])]
     if valid:
@@ -481,19 +595,20 @@ def cmd_plot(args) -> int:
     for idx, (number, data) in enumerate(exp.items()):
         a = ax.flat[idx]
         eta = data["eta"]
-        band = args.band * GEOMETRY["semispan"]
-        pick = np.abs(surf["z"] - eta * GEOMETRY["semispan"]) <= band
+        sl = station_slice(surf, eta)
         x_le, chord = local_chord(eta)
-        xc = (surf["x"][pick] - x_le) / chord
-        cp, upper = surf["cp"][pick], surf["y"][pick] >= 0
+        xc = (sl["x"] - x_le) / chord
+        cp, upper = sl["cp"], sl["y"] >= 0
         for side, mask, colour in (("upper", upper, "C0"), ("lower", ~upper, "C2")):
             if mask.sum() < 3:
                 continue
             order = np.argsort(xc[mask])
             a.plot(xc[mask][order], cp[mask][order], "-", color=colour, lw=1.4,
                    label=f"CFD {side}")
-        a.plot(data["x_over_c"], data["cp"], "ko", ms=3.5, mfc="none",
-               label="experiment")
+        for emask, mk, lab in ((data["upper"], "ko", "experiment upper"),
+                               (~data["upper"], "ks", "experiment lower")):
+            a.plot(data["x_over_c"][emask], data["cp"][emask], mk, ms=3.5,
+                   mfc="none", label=lab)
         a.invert_yaxis()
         a.set_title(f"$\\eta$ = {eta:.2f}   (station {number})", fontsize=10)
         a.set_xlabel("$x/c$"); a.set_ylabel("$c_p$")

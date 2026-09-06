@@ -133,6 +133,25 @@ def main() -> int:
         print(f"  alpha {alpha:>5.1f}: status={status}  CL={cl}")
 
     (args.out / "avl_sweep.json").write_text(json.dumps(rows, indent=2, default=str) + "\n")
+    # Record the moment reference that was USED, next to the numbers it applies
+    # to.  Without this the file is a set of moment coefficients about an
+    # unstated point, and a consumer has no way to know whether an arm still
+    # needs applying.  plot_sweep.py guessed from the OUTPUT DIRECTORY NAME
+    # ("xref04" in the path), so running this script into any other directory
+    # silently made it transfer an arm that had already been applied -- which
+    # put the AVL neutral point 63 mm AHEAD of the leading edge and turned a
+    # 3.7 %-of-MAC agreement into an apparent factor-of-ten disagreement.
+    # That is defect 17 again (PLAN 0.7): a stability "disagreement" that was
+    # a convention error, not physics.
+    (args.out / "avl_reference.json").write_text(json.dumps({
+        "moment_reference_m": list(args.moment_reference),
+        "avl_c_ref_note": "AVL reports Cm about the point above, scaled by ITS "
+                          "own c_ref, which is not the CFD's chordRef. Only the "
+                          "chord scale differs once the point is shared.",
+        "cfd_moment_reference_m": [0.4, 0.0, 0.0],
+        "arm_already_applied": True,
+        "set_name": args.set_name, "index": args.index,
+    }, indent=2) + "\n")
     _report(rows)
     return 0
 

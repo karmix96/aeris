@@ -97,7 +97,28 @@ def main() -> int:
             avl, avl_source = found, base
         if len(found) == len(cfd):
             break
-    matched_reference = "xref04" in avl_source
+    # Whether AVL already took moments about the CFD point is a FACT recorded by
+    # verify_against_avl.py, not something to infer from a directory name. This
+    # read "xref04" in avl_source, so pointing --avl at any other directory made
+    # the arm below get applied a second time on top of an arm AVL had already
+    # applied. The result put the AVL neutral point at x = -0.063 m -- 63 mm
+    # ahead of a leading edge that sits at x = 0 -- and reported a factor-of-ten
+    # stability disagreement where the two codes actually agree to 3.7 % of MAC.
+    # PLAN 0.7: when a sign or a reference is in doubt, do not reason about the
+    # convention, check it.
+    reference_file = Path(avl_source) / "avl_reference.json"
+    if reference_file.exists():
+        matched_reference = bool(json.loads(reference_file.read_text())
+                                 .get("arm_already_applied"))
+        reference_source = "recorded in avl_reference.json"
+    elif "xref04" in avl_source:
+        matched_reference, reference_source = True, "legacy directory-name convention"
+    else:
+        raise SystemExit(
+            f"{avl_source} has no avl_reference.json, so the moment reference AVL "
+            f"used is unknown, and applying or not applying the transfer arm is a "
+            f"coin flip that silently changes the neutral point by 0.4 m. Re-run "
+            f"verify_against_avl.py to record it. Refusing to guess.")
 
     alphas = sorted(cfd)
     cl = np.array([cfd[a]["cl"] for a in alphas])
@@ -202,14 +223,38 @@ def main() -> int:
     # This was written x_ref + slope*c, which put the neutral point on the wrong
     # side of the reference and inverted the stability verdict.
     x_np_cfd = 0.4 - slope * CFD_CREF
+    # AVL's Cm here has been rescaled to the CFD chord, so the arm uses CFD_CREF.
     x_np_avl = 0.4 - np.polyfit(acl, acm, 1)[0] * CFD_CREF if va else None
+    # AVL also REPORTS a neutral point directly, computed from its own
+    # derivatives in its own reference system. It needs no arm, no chord
+    # rescale and no sign convention from us, so it is the independent check on
+    # everything above -- exactly the convention-free measurement PLAN 0.7 says
+    # to reach for instead of reconciling conventions by hand. If the
+    # transferred value and this one disagree, the transfer is wrong.
+    x_np_avl_self = None
+    self_reported = [avl[a].get("x_np") for a in va if avl[a].get("x_np") is not None]
+    if self_reported:
+        x_np_avl_self = float(np.mean(self_reported))
+        if x_np_avl is not None and abs(x_np_avl - x_np_avl_self) > 0.05:
+            print(f"  WARNING: AVL neutral point transferred here is "
+                  f"{x_np_avl:.4f} m but AVL itself reports {x_np_avl_self:.4f} m. "
+                  f"They should agree; the moment transfer is wrong.")
     a3.axhline(0, color="0.7", lw=0.8); a3.axvline(0, color="0.7", lw=0.8)
     a3.set_xlabel(r"$C_L$"); a3.set_ylabel(r"$C_{My}$  (about $x$=0.4 m, $c_{ref}$=0.9 m)")
     a3.axvline(0, color="0.7", lw=0.8)
+    stable = "aft of" if x_np_cfd > 0.4 else "fwd of"
+    verdict = "STABLE" if x_np_cfd > 0.4 else "UNSTABLE"
+    self_txt = (f", AVL self-reported {x_np_avl_self:.3f} m"
+                if x_np_avl_self is not None else "")
     a3.set_title(
         f"5. Pitching moment against $C_L$\n"
-        f"$x_{{np}}$: CFD {x_np_cfd:.3f} m, AVL {x_np_avl:.3f} m - both fwd of "
-        f"$x_{{ref}}$=0.4, so UNSTABLE")
+        f"$x_{{np}}$: CFD {x_np_cfd:.3f} m, AVL {x_np_avl:.3f} m{self_txt}\n"
+        f"both {stable} $x_{{ref}}$=0.4, so {verdict}")
+    if x_np_avl_self is not None:
+        a3.axvline(np.nan)  # keep the legend order stable
+        a3.annotate(f"AVL's own $x_{{np}}$ = {x_np_avl_self:.3f} m\n"
+                    f"(no arm, no chord rescale)",
+                    (0.03, 0.80), xycoords="axes fraction", fontsize=7, color="C1")
     a3.legend(fontsize=8); a3.grid(alpha=0.3)
 
     # 6 lift-to-drag

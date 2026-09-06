@@ -1,0 +1,207 @@
+{
+  "gate": {
+    "min_orders": 5.0,
+    "cl_pct": 0.05,
+    "cd_pct": 0.1,
+    "cmy_abs": 0.0001,
+    "window": 100
+  },
+  "results": [
+    {
+      "passes": true,
+      "solver_frozen": false,
+      "verdict": "ACCEPTED",
+      "iterations": 212,
+      "residual_initial": 932.0421762018932,
+      "residual_final": 9.346551758464029e-06,
+      "relative_residual": 1.0028035208182936e-08,
+      "window": 100,
+      "checks": {
+        "residual_orders": {
+          "value": 7.9987841499139885,
+          "limit": 5.0,
+          "pass": true
+        },
+        "cl_percent": {
+          "value": 0.022810636035971246,
+          "limit": 0.05,
+          "pass": true
+        },
+        "cd_percent": {
+          "value": 0.015171169137819933,
+          "limit": 0.1,
+          "pass": true
+        },
+        "cmy_absolute": {
+          "value": 5.153235211026799e-06,
+          "limit": 0.0001,
+          "pass": true
+        },
+        "not_diverging": {
+          "value": false,
+          "pass": true
+        },
+        "no_growing_oscillation": {
+          "value": false,
+          "pass": true
+        }
+      },
+      "forces": {
+        "cl": -0.2981172079844438,
+        "cd": 0.025986590126326807,
+        "cdp": 0.017398751289963682,
+        "cdv": 0.008587838836363127,
+        "cmy": -0.005980289368304019
+      },
+      "alpha_deg": -2.0,
+      "directory": "AERIS_MESH_STUDY/artifacts/s8_cfd/gci_C_a-2"
+    },
+    {
+      "passes": true,
+      "solver_frozen": false,
+      "verdict": "ACCEPTED",
+      "iterations": 277,
+      "residual_initial": 923.3745929669132,
+      "residual_final": 8.587136543447321e-06,
+      "relative_residual": 9.299732317580695e-09,
+      "window": 100,
+      "checks": {
+        "residual_orders": {
+          "value": 8.03152955194829,
+          "limit": 5.0,
+          "pass": true
+        },
+        "cl_percent": {
+          "value": 0.0010799908460788319,
+          "limit": 0.05,
+          "pass": true
+        },
+        "cd_percent": {
+          "value": 0.0008758552808342852,
+          "limit": 0.1,
+          "pass": true
+        },
+        "cmy_absolute": {
+          "value": 1.3691068364673868e-07,
+          "limit": 0.0001,
+          "pass": true
+        },
+        "not_diverging": {
+          "value": false,
+          "pass": true
+        },
+        "no_growing_oscillation": {
+          "value": false,
+          "pass": true
+        }
+      },
+      "forces": {
+        "cl": -0.1596881807747589,
+        "cd": 0.02082343094087248,
+        "cdp": 0.011827640779302597,
+        "cdv": 0.008995790161569883,
+        "cmy": 0.0012533343986285892
+      },
+      "alpha_deg": 0.0,
+      "directory": "AERIS_MESH_STUDY/artifacts/s8_cfd/gci_C_a0"
+    },
+    {
+      "passes": true,
+      "solver_frozen": true,
+      "verdict": "ACCEPTED_SOLVER_FROZEN",
+      "iterations": 1338,
+      "residual_initial": 913.2197300794118,
+      "residual_final": 0.00023497971947009034,
+      "relative_residual": 2.573090700193884e-07,
+      "window": 100,
+      "checks": {
+        "residual_orders": {
+          "value": 6.589544904850884,
+          "limit": 5.0,
+          "pass": true
+        },
+        "cl_percent": {
+          "value": 6.063153630669899e-09,
+          "limit": 0.05,
+          "pass": true
+        },
+        "cd_percent": {
+          "value": 8.118392415986162e-09,
+          "limit": 0.1,
+          "pass": true
+        },
+        "cmy_absolute": {
+          "value": 8.791353062198581e-13,
+          "limit": 0.0001,
+          "pass": true
+        },
+        "not_diverging": {
+          "value": false,
+          "pass": true
+        },
+        "no_growing_oscillation": {
+          "value": false,
+          "pass": true
+        }
+      },
+      "forces": {
+        "cl": 0.12053090051441451,
+        "cd": 0.019858226226038084,
+        "cdp": 0.010434168361923644,
+        "cdv": 0.009424057864114441,
+        "cmy": 0.01535232921343283
+      },
+      "alpha_deg": 4.0,
+      "directory": "AERIS_MESH_STUDY/artifacts/s8_cfd/gci_C_a4"
+    },
+    {
+      "passes": true,
+      "solver_frozen": false,
+      "verdict": "ACCEPTED",
+      "iterations": 1223,
+      "residual_initial": 913.0190934168579,
+      "residual_final": 0.00010931979040290369,
+      "relative_residual": 1.1973439678439612e-07,
+      "window": 100,
+      "checks": {
+        "residual_orders": {
+          "value": 6.921781069411946,
+          "limit": 5.0,
+          "pass": true
+        },
+        "cl_percent": {
+          "value": 7.54515529954962e-07,
+          "limit": 0.05,
+          "pass": true
+        },
+        "cd_percent": {
+          "value": 2.078628541240045e-06,
+          "limit": 0.1,
+          "pass": true
+        },
+        "cmy_absolute": {
+          "value": 2.0481495666135885e-10,
+          "limit": 0.0001,
+          "pass": true
+        },
+        "not_diverging": {
+          "value": false,
+          "pass": true
+        },
+        "no_growing_oscillation": {
+          "value": false,
+          "pass": true
+        }
+      },
+      "forces": {
+        "cl": 0.4020971927760208,
+        "cd": 0.03092159440354524,
+        "cdp": 0.021511318826847845,
+        "cdv": 0.009410275576697397,
+        "cmy": 0.02850020382164405
+      },
+      "alpha_deg": 8.0,
+      "directory": "AERIS_MESH_STUDY/artifacts/s8_cfd/gci_C_a8"
+    }
+  ]
+}

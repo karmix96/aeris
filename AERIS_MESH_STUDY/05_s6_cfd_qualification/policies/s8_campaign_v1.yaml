@@ -1,0 +1,157 @@
+schema_version: aeris.s8.campaign_policy.v1
+policy_id: s8_campaign_v1
+immutable: true
+
+authorization:
+  authorized_by: principal_investigator
+  authorized_on: 2026-09-06
+  status: AUTHORIZED
+  decision: AERIS_MESH_STUDY/00_governance/decisions/ADR-0020-s8-desktop-campaign.md
+  plan: AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/PLAN_desktop_campaign.md
+  how_given: >-
+    Directed in session on 2026-09-06. The principal investigator was asked how
+    section 6 of PLAN_desktop_campaign.md should be written, given that the
+    host cannot hold the planned third grid level, and replied "do everything in
+    the plan except the meshes that dont fit in the desktop" and "Write it,
+    authorized by me, today". Written into the record by the agent that was
+    directed, not typed by the principal investigator, which is what this field
+    exists to make readable rather than leave to be assumed.
+  session: https://claude.ai/code/session_01YG7MjAnRRsTCeXXf2TVBKZ
+  scope_limit: >-
+    Authorizes grid refinement on lhs100_seed42[83], the ten-geometry pilot,
+    the far-field sensitivity run and the ONERA M6 validation runs, and nothing
+    else. Does NOT authorize a hold-out unlock, a family freeze, a design-space
+    campaign beyond the ten pilot geometries, or any paper claim.
+
+supersedes: s8_oh_corrected_sweep_v1
+supersession_reason: >-
+  The span-normal frame fix (defects 20 and 21) moved every cell, so the meshes
+  the corrected sweep ran on no longer exist and its numbers are a regression
+  reference only. That exception was in any case consumed and covered oh_L3
+  alone.
+
+scope:
+  purpose: measurement_only
+  development_set_only: true
+  holdout_access_allowed: false
+  geometry_set: lhs100_seed42
+  automatic_retry_allowed: false
+  accepted_classification_allowed: false
+  work_packages:
+    - id: grid_refinement_83
+      geometry_index: 83
+      grid_levels: [gci_C, gci_M]
+      alpha_deg: [-2.0, 0.0, 4.0, 8.0]
+      note: >-
+        PLAN section 3. Two levels, not three: see host_constraint below. A
+        two-level study is a refinement TREND and not a grid-convergence index,
+        and must be reported as one.
+    - id: farfield_sensitivity
+      geometry_index: 83
+      grid_levels: [gci_C]
+      alpha_deg: [0.0]
+      farfield_chords: [40.0, 60.0]
+      note: PLAN section 2.2, one run, closing the weak far-field refinement question.
+    - id: ten_geometry_pilot
+      geometry_indices: [12, 13, 16, 23, 29, 36, 47, 65, 81, 83]
+      grid_levels: [SELECTED_BY_WORK_PACKAGE_grid_refinement_83]
+      alpha_deg: [-2.0, 0.0, 4.0, 8.0]
+      note: PLAN section 4. Level chosen per section 3.5 and recorded before the pilot runs.
+    - id: tmr_onera_m6
+      geometry_set: EXTERNAL_TMR_ONERA_M6
+      note: >-
+        PLAN section 5. Published grids, published experiment. Validates the
+        SOLVER CONFIGURATION and the convergence gate, not the S8 mesher.
+
+host_constraint:
+  measured_on: 2026-09-06
+  host: WSL2 on a 15.86 GiB Windows host, wsl2.memory 13GB
+  available_gib: 12.4
+  memory_law_gib: 1.51 + 9.46e-9 * cells
+  levels_that_fit: [gci_CC, gci_C, gci_M]
+  levels_refused:
+    gci_MF: 16.6 GiB required against 12.4 available
+    gci_F: 22.5 GiB required against 12.4 available
+    gci_FF: 44.6 GiB required against 12.4 available
+  consequence: >-
+    PLAN section 2.1 gives the rule and this host lands on its third branch:
+    "available < 14 GiB -> two levels only. That is a trend, not a GCI. Say so."
+    gci_F does not become reachable by raising the WSL memory cap, because the
+    Windows host has only 15.86 GiB of physical memory in total. Three levels
+    require a different machine. gci.py refuses to emit a GCI band from two
+    levels; the trend is reported by its --two-level-trend path, which states
+    the limitation in the report it writes.
+
+flow:
+  authority_path: AERIS_MESH_STUDY/05_s6_cfd_qualification/mission_authority_v1.yaml
+  mach: 0.0837
+  reynolds: 1530708.188575197
+  reynolds_length_m: 0.9
+  temperature_K: 278.4
+  onera_m6_note: >-
+    The validation case runs at M 0.8395, alpha 3.06, Re 11.72e6, which is the
+    published condition and NOT this project's operating point. The regime gap
+    is large and must be stated wherever the validation is cited.
+
+references:
+  solver_half_area_m2: 0.394918242017589
+  moment_reference_xyz_m: [0.4, 0.0, 0.0]
+
+solver:
+  lift_index: 3
+  nk_switch_tol: 1.0e-6
+  ank_switch_tol: 1.0
+  mg_cycle: sg
+  nk_subspace_size: 20
+  nk_pc_ilu_fill: 1
+  l2_convergence: 1.0e-8
+  n_cycles: 30000
+  minimum_mpi_processes: 6
+  unchanged_from: s8_oh_corrected_sweep_v1
+  note: >-
+    The option set is held fixed across the grid study, the pilot and the ONERA
+    M6 validation on purpose. A validation establishes nothing about a
+    configuration it did not run.
+
+execution_rules:
+  one_measurement_at_a_time: true
+  one_measurement_at_a_time_reason: >-
+    PLAN section 0.2. A memory probe run over a live rank sweep read 11.86 GiB
+    for something that was not, and the wall-guard negative test corrupted one
+    design of a 100-design screen. run_campaign.py holds an exclusive lock for
+    the duration of every run and refuses to start a second.
+  regression_gate: >-
+    PLAN section 3.2. gci_C alpha 0 runs alone and first. A second-decimal shift
+    in CD against the pre-fix reference stops the campaign; run_campaign.py
+    enforces this and does not continue on its own.
+  gate_after_every_run: true
+  frozen_runs_excluded_from_extrapolation: true
+
+what_this_can_settle:
+  - whether CL, CD, CDp, CDv and CMy move monotonically between gci_C and gci_M,
+    and by how much, at four incidences
+  - how dCMy/dCL and the neutral point move with refinement
+  - whether the alpha 4 Newton-Krylov stall recurs on the rebuilt meshes, at a
+    finer level, and on other geometries
+  - whether the leading-edge over-bound cp count falls with refinement
+    (discretization) or holds (structural)
+  - whether the CFD-AVL relationship holds across ten designs
+  - whether y plus stays in band as planform varies
+  - whether this solver configuration reproduces published ONERA M6 data
+
+what_this_cannot_settle:
+  - a grid-convergence index. Two levels give a trend and no uncertainty band.
+  - an observed order of accuracy. Richardson extrapolation needs three levels.
+  - validation of the S8 MESHER. No public experimental case is an AERIS BWB.
+  - tip-cap viscous quantities
+  - any freeze, hold-out unlock or paper claim
+
+cost_forecast:
+  basis: the corrected alpha 0 run, 1808 s wall on 6 ranks at 567,256 cells
+  gci_C_per_point_s: 1810
+  gci_M_per_point_s: 3900
+  grid_refinement_83_h: 6.3
+  ten_geometry_pilot_h: 20.0
+  note: >-
+    alpha 4 may cost more or may not converge at all; that is one of the
+    questions. The pilot forecast assumes the gci_C level is selected in 3.5.

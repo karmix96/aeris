@@ -149,18 +149,34 @@ def main() -> int:
     ap.add_argument("--max-listed", type=int, default=40)
     args = ap.parse_args()
 
-    import h5py
+    # CGNS has two container formats and ADflow writes whichever its linked
+    # library supports. On this host that is ADF, which h5py cannot open at all
+    # -- it raises "file signature not found" -- so opening with h5py
+    # unconditionally meant this script had nothing to read and the cp panel of
+    # plot_sweep.py came out BLANK rather than wrong. cgns_read handles both.
+    import cgns_read
 
     report = {"surface_file": str(args.surface), "cp_physical_max": CP_PHYSICAL_MAX}
     zone_reports = []
-    with h5py.File(args.surface, "r") as handle:
-        for name, node in zones(handle):
+    if cgns_read.is_hdf5(args.surface):
+        import h5py
+        handle = h5py.File(args.surface, "r")
+        found = zones(handle)
+    else:
+        handle = None
+        found = cgns_read.surface_zones(args.surface)
+    report["container_format"] = "HDF5" if handle else "ADF"
+    try:
+        for name, node in found:
             if "Wall" not in name:
                 continue
             # the OML is the larger wall zone; the leading-edge offset only
             # means anything there
             le = args.le_index if "Zone5" in name else None
             zone_reports.append(analyse_zone(name, node, le_index=le))
+    finally:
+        if handle is not None:
+            handle.close()
 
     report["zones"] = zone_reports
     report["total_interior_over_bound"] = sum(

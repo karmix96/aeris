@@ -1,0 +1,161 @@
+{
+  "case": {
+    "name": "TMR Case 2308",
+    "mach": 0.84,
+    "alpha_deg": 3.06,
+    "reynolds": 14600000.0,
+    "reynolds_length": "root chord, sharp trailing edge, normalised to 1.0",
+    "temperature_R": 540.0,
+    "temperature_K": 300.0,
+    "plan_stated_mach": 0.8395,
+    "plan_stated_reynolds": 11720000.0,
+    "plan_reynolds_note": "11.72e6 is the ORIGINAL EXPERIMENT's Re, on the blunt model's mean aerodynamic chord of 646.07 mm. The TMR CFD exercise specifies Rec_root = 14.6e6 on the sharp-TE geometry. Do not mix them.",
+    "geometry": "sharp trailing edge, per AIAA 2016-1357; root chord normalised to 1",
+    "reference": "Schmitt, V. and Charpin, F., 'Pressure Distributions on the ONERA-M6-Wing at Transonic Mach Numbers', AGARD AR-138, 1979"
+  },
+  "stations_eta": [
+    0.2,
+    0.44,
+    0.65,
+    0.8,
+    0.9,
+    0.96,
+    0.99
+  ],
+  "files": {
+    "cp1u.ex": {
+      "url": "https://www.grc.nasa.gov/WWW/wind/valid/m6wing/cp1u.ex",
+      "bytes": 968,
+      "sha256": "a8627b71ec1c52c735449eb7805430ccc4f1d9a6e42446cd75994f8ee6c32a7d",
+      "status": "fetched"
+    },
+    "cp1l.ex": {
+      "url": "https://www.grc.nasa.gov/WWW/wind/valid/m6wing/cp1l.ex",
+      "bytes": 528,
+      "sha256": "be359618173376678544df0541be6807499c6a7cb2aac08ab72f747f5d435378",
+      "status": "fetched"
+    },
+    "cp2u.ex": {
+      "url": "https://www.grc.nasa.gov/WWW/wind/valid/m6wing/cp2u.ex",
+      "bytes": 1012,
+      "sha256": "e3a504325e8b7bde352ef734c671f4a7b1f06036df8c159e5eaba463244361a3",
+      "status": "fetched"
+    },
+    "cp2l.ex": {
+      "url": "https://www.grc.nasa.gov/WWW/wind/valid/m6wing/cp2l.ex",
+      "bytes": 484,
+      "sha256": "4ae7855d346dbb5d3d4cb5f243db9a9022016c0bebd9f018df395d45e767fb82",
+      "status": "fetched"
+    },
+    "cp3u.ex": {
+      "url": "https://www.grc.nasa.gov/WWW/wind/valid/m6wing/cp3u.ex",
+      "bytes": 1012,
+      "sha256": "28085a18c727276f72ed8b3ab2aa63c2e38db37587e389a1d04e7703422dd6eb",
+      "status": "fetched"
+    },
+    "cp3l.ex": {
+      "url": "https://www.grc.nasa.gov/WWW/wind/valid/m6wing/cp3l.ex",
+      "bytes": 484,
+      "sha256": "97f9a8d46e6f1d7991c0e9e6ecf4da0558ae3bc350ec476e477a8ecb15d7df23",
+      "status": "fetched"
+    },
+    "cp4u.ex": {
+      "url": "https://www.grc.nasa.gov/WWW/wind/valid/m6wing/cp4u.ex",
+      "bytes": 1012,
+      "sha256": "e70e342d769dfbe43b28b8b5ec7f40dec6a3671705edc91e7808bd66c1b4ca2e",
+      "status": "fetched"
+    },
+    "cp4l.ex": {
+      "url": "https://www.grc.nasa.gov/WWW/wind/valid/m6wing/cp4l.ex",
+      "bytes": 484,
+      "sha256": "63be5e5686fe0c28623a60ed7e5735c6b858b7eac6ecc48b4f277209da907603",
+      "status": "fetched"
+    },
+    "cp5u.ex": {
+      "url": "https://www.grc.nasa.gov/WWW/wind/valid/m6wing/cp5u.ex",
+      "bytes": 1428,
+      "sha256": "f8d1910d6cfcfbbf591ce403743467f975f406eb602227a1ae3e03aa7eb79ec0",
+      "status": "fetched"
+    },
+    "cp5l.ex": {
+      "url": "https://www.grc.nasa.gov/WWW/wind/valid/m6wing/cp5l.ex",
+      "bytes": 672,
+      "sha256": "27f29407f411dbc28b1f0b94fe7e3ccdfaff3642684e8c787dad0fa364704802",
+      "status": "fetched"
+    },
+    "cp6u.ex": {
+      "url": "https://www.grc.nasa.gov/WWW/wind/valid/m6wing/cp6u.ex",
+      "bytes": 1364,
+      "sha256": "c57b9e6d6d2ea83318c94ca840bd1a4c92912301a15c570d029047c84d2435df",
+      "status": "fetched"
+    },
+    "cp6l.ex": {
+      "url": "https://www.grc.nasa.gov/WWW/wind/valid/m6wing/cp6l.ex",
+      "bytes": 616,
+      "sha256": "131ff760c83a7449600752bcee44e596a6642d12c3626f81cc8e4a113a095a2c",
+      "status": "fetched"
+    },
+    "cp7u.ex": {
+      "url": "https://www.grc.nasa.gov/WWW/wind/valid/m6wing/cp7u.ex",
+      "bytes": 1364,
+      "sha256": "641c8d461cd27a7cf3fc5c8ce700fab1820e32a60babbfd195197177fa0f57d2",
+      "status": "fetched"
+    },
+    "cp7l.ex": {
+      "url": "https://www.grc.nasa.gov/WWW/wind/valid/m6wing/cp7l.ex",
+      "bytes": 616,
+      "sha256": "387692bcc5f099a87e77262d31fcf3b06903705827740ef4ce9146dfc1b68b7d",
+      "status": "fetched"
+    },
+    "airfoil.txt": {
+      "url": "https://www.grc.nasa.gov/WWW/wind/valid/m6wing/airfoil.txt",
+      "bytes": 1512,
+      "sha256": "66b2a7bcd5a0cab274396de1c5c55d0f5cad90911a1e19ddae4e77db16834ab7",
+      "status": "fetched"
+    },
+    "case_2308.dat": {
+      "url": "https://raw.githubusercontent.com/TMBWG/turbmodels/main/Onerawingnumerics_val/case_2308.dat",
+      "bytes": 22695,
+      "sha256": "020c5fcc58060737024eb87d9404f56bc563f3f6f15e337675c47477fa91f0d0",
+      "status": "fetched"
+    },
+    "case_2565.dat": {
+      "url": "https://raw.githubusercontent.com/TMBWG/turbmodels/main/Onerawingnumerics_val/case_2565.dat",
+      "bytes": 22695,
+      "sha256": "6345287f200034492fe258bfa3748920e6b76661727b2eb22f74f1458747f95e",
+      "status": "fetched"
+    },
+    "profile_ONERA-D.dat": {
+      "url": "https://raw.githubusercontent.com/TMBWG/turbmodels/main/Onerawingnumerics_val/profile_ONERA-D.dat",
+      "bytes": 12636,
+      "sha256": "855972cf06b1bcd753006791b6a34e7dbb08ccbc03275192fd3b38694efc5b8a",
+      "status": "fetched"
+    },
+    "profile_M6_streamwise_alongy=0.dat": {
+      "url": "https://raw.githubusercontent.com/TMBWG/turbmodels/main/Onerawingnumerics_val/profile_M6_streamwise_alongy=0.dat",
+      "bytes": 1712,
+      "sha256": "cd9531b8720eb9ac2c60eb700f4d23b33dcdfbfa01e68b24cf0a46dcf11d34c6",
+      "status": "fetched"
+    },
+    "AileM6_with_sharp_TE.igs": {
+      "url": "https://raw.githubusercontent.com/TMBWG/turbmodels/main/Onerawingnumerics_grids/AileM6_with_sharp_TE.igs",
+      "bytes": 256608,
+      "sha256": "cbca6850bd30dedf81349195e7c19425ded86caaf8f42e1cf7ed609026badeb9",
+      "status": "fetched"
+    },
+    "AileM6_with_sharp_TE.stp": {
+      "url": "https://raw.githubusercontent.com/TMBWG/turbmodels/main/Onerawingnumerics_grids/AileM6_with_sharp_TE.stp",
+      "bytes": 197124,
+      "sha256": "0ed2862f3952d04b747b0f90e47062d059ff98b2e48933a323d1c6b66771a7bf",
+      "status": "fetched"
+    },
+    "ONERAb114.tec": {
+      "url": "https://www.grc.nasa.gov/WWW/wind/valid/m6wing/ONERAb114.tec",
+      "bytes": 18597,
+      "sha256": "1e99e2ba5b70c2988c3a12b3daeaf1d31ebeed5a4241f15a77af5f95d49ba0ea",
+      "status": "fetched"
+    }
+  },
+  "what_this_is": "Published ONERA M6 data: experimental surface pressures at the seven span stations (NASA WIND validation archive, upper and lower surface per station), the TMR case files, the section profiles, and the sharp-trailing-edge CAD. Archived into the repository because artifacts/ is gitignored and wiped, and because experimental data gets harder to obtain with time, not easier.",
+  "what_is_missing": "The GRID FAMILY. Run the `grids` subcommand: TMR publishes a grid GENERATOR rather than grids, and its archive is a dead link."
+}

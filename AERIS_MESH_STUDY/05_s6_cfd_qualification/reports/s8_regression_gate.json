@@ -1,0 +1,60 @@
+{
+  "gate": {
+    "min_orders": 5.0,
+    "cl_pct": 0.05,
+    "cd_pct": 0.1,
+    "cmy_abs": 0.0001,
+    "window": 100
+  },
+  "results": [
+    {
+      "passes": true,
+      "solver_frozen": false,
+      "verdict": "ACCEPTED",
+      "iterations": 277,
+      "residual_initial": 923.3745929669132,
+      "residual_final": 8.587136543447321e-06,
+      "relative_residual": 9.299732317580695e-09,
+      "window": 100,
+      "checks": {
+        "residual_orders": {
+          "value": 8.03152955194829,
+          "limit": 5.0,
+          "pass": true
+        },
+        "cl_percent": {
+          "value": 0.0010799908460788319,
+          "limit": 0.05,
+          "pass": true
+        },
+        "cd_percent": {
+          "value": 0.0008758552808342852,
+          "limit": 0.1,
+          "pass": true
+        },
+        "cmy_absolute": {
+          "value": 1.3691068364673868e-07,
+          "limit": 0.0001,
+          "pass": true
+        },
+        "not_diverging": {
+          "value": false,
+          "pass": true
+        },
+        "no_growing_oscillation": {
+          "value": false,
+          "pass": true
+        }
+      },
+      "forces": {
+        "cl": -0.1596881807747589,
+        "cd": 0.02082343094087248,
+        "cdp": 0.011827640779302597,
+        "cdv": 0.008995790161569883,
+        "cmy": 0.0012533343986285892
+      },
+      "alpha_deg": 0.0,
+      "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_cfd/gci_C_a0"
+    }
+  ]
+}

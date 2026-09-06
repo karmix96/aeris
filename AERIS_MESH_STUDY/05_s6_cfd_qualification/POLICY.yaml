@@ -43,6 +43,28 @@ heavy_work:
         any paper claim.
       alpha_deg: [-2.0, 0.0, 4.0, 8.0]
       minimum_mpi_processes: 6
+    run-s8-campaign:
+      policy: policies/s8_campaign_v1.yaml
+      decision: AERIS_MESH_STUDY/00_governance/decisions/ADR-0020-s8-desktop-campaign.md
+      plan: AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/PLAN_desktop_campaign.md
+      authorized_by: principal_investigator
+      authorized_on: 2026-09-06
+      authorization_note: >-
+        Directed in session; see the how_given field of the policy file for how
+        the decision was given and by what route it reached this record.
+      scope: >-
+        Grid refinement on lhs100_seed42[83] at the two levels this host can
+        hold, one far-field sensitivity run, the ten-geometry pilot, and the
+        ONERA M6 solver validation. Authorizes a refinement TREND and not a
+        grid-convergence index: the third level does not fit on any machine
+        available here, and PLAN section 2.1 requires that limitation be stated
+        rather than worked around. Does NOT authorize a hold-out unlock, a
+        family freeze, a design-space campaign beyond the ten pilot geometries,
+        or any paper claim.
+      geometry_indices: [12, 13, 16, 23, 29, 36, 47, 65, 81, 83]
+      grid_levels: [gci_C, gci_M]
+      alpha_deg: [-2.0, 0.0, 4.0, 8.0]
+      minimum_mpi_processes: 6
 holdout:
   id: round_c_lhs10_seed42
   locked: true

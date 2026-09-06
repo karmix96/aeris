@@ -40,6 +40,29 @@ What this refuses to do
   unless iterative error is far below discretization error.
 * report a GCI when the three values are not monotonic, or when p is
   non-physical.  It reports the condition instead.
+* produce anything at all from two grid levels, unless --two-level-trend is
+  passed, which produces a TREND and says so in every line of its output.
+
+Two levels
+----------
+`--two-level-trend` exists because a host may not hold the third level:
+PLAN_desktop_campaign.md 2.1 anticipates exactly this and instructs that the
+result be reported as "a trend, not a GCI. Say so."
+
+Two points give the DIRECTION and the MAGNITUDE of the movement between two
+grids.  They do not give an observed order of accuracy, because p is what the
+third point measures; without p there is no Richardson extrapolation and no
+GCI band.
+
+An assumed-order band is offered alongside, and it is an ASSUMPTION rather than
+a measurement.  Roache's own guidance for the two-grid case is to assume the
+formal order and raise the safety factor from 1.25 to 3.0, precisely because
+the order is no longer being checked.  It is reported under a name that cannot
+be mistaken for a GCI, with the assumed p attached to it, and PLAN 3.4 is the
+warning that goes with it: "Do not expect p ~ 2. RANS on stretched grids
+frequently gives observed orders below the nominal spatial order."  If the true
+order is below the assumed one, the band is optimistic -- and nothing in a
+two-level study can tell you whether it is.
 """
 
 from __future__ import annotations
@@ -112,6 +135,48 @@ def gci_triplet(f1: float, f2: float, f3: float,
     return out
 
 
+#: Roache's safety factor for a TWO-grid comparison, where the order is assumed
+#: rather than observed.  1.25 is for three grids with a measured p; 3.0 is the
+#: price of not measuring it.
+TWO_LEVEL_SAFETY_FACTOR = 3.0
+
+
+def trend_pair(f1: float, f2: float, r21: float,
+               assumed_p: float = 2.0) -> dict:
+    """Movement between two grids.  f1 is the FINER.  Not a GCI."""
+    out: dict = {
+        "f1_fine": f1, "f2_coarse": f2, "r21": r21,
+        "change_fine_minus_coarse": f1 - f2,
+        "relative_change": abs((f1 - f2) / f1) if f1 != 0 else float("nan"),
+        "p_observed": None,
+        "p_observed_why_absent": ("the observed order is what the THIRD grid "
+                                  "measures; two points cannot separate the order "
+                                  "from the coefficient"),
+        "f_extrapolated": None,
+        "gci_21": None,
+        "gci_21_why_absent": ("a GCI band requires an observed order. This is a "
+                              "refinement trend, not a grid-convergence index."),
+    }
+    denom = r21 ** assumed_p - 1.0
+    ea21 = abs((f1 - f2) / f1) if f1 != 0 else float("nan")
+    out["assumed_order_band"] = {
+        "assumed_p": assumed_p,
+        "safety_factor": TWO_LEVEL_SAFETY_FACTOR,
+        "band": TWO_LEVEL_SAFETY_FACTOR * ea21 / denom,
+        "band_percent": 100.0 * TWO_LEVEL_SAFETY_FACTOR * ea21 / denom,
+        "extrapolated_if_p_assumed": (r21 ** assumed_p * f1 - f2) / denom,
+        "what_this_is": (f"an ASSUMPTION, not a measurement: p was set to "
+                         f"{assumed_p}, not observed, and the safety factor raised "
+                         f"from 1.25 to {TWO_LEVEL_SAFETY_FACTOR} because of that. "
+                         f"If the true order is lower -- which PLAN 3.4 warns is "
+                         f"common for RANS on stretched grids -- this band is "
+                         f"optimistic, and no two-level study can tell you whether "
+                         f"it is. Do not report it as a GCI."),
+    }
+    out["condition"] = "TREND_ONLY: two levels. No observed order, no GCI band."
+    return out
+
+
 def load(directory: Path) -> dict | None:
     result = directory / "result.json"
     if not result.exists():
@@ -126,6 +191,56 @@ def load(directory: Path) -> dict | None:
     return d
 
 
+def report_trend(kept: list[dict], args) -> int:
+    """PLAN 2.1's third branch, made explicit in every line of the output."""
+    f, c = kept[0], kept[1]
+    r21 = (f["cells"] / c["cells"]) ** (1.0 / 3.0)
+
+    banner = "=" * 78
+    print(f"\n{banner}\nREFINEMENT TREND -- NOT A GRID-CONVERGENCE INDEX\n{banner}")
+    print("Two grid levels. Two points give the direction and the size of the")
+    print("movement between them. They do NOT give an observed order of accuracy,")
+    print("a Richardson extrapolation, or an uncertainty band: all three need a")
+    print("third level. PLAN 2.1: \"That is a trend, not a GCI. Say so.\"\n")
+    for tag, r in (("fine", f), ("coarse", c)):
+        print(f"  {tag:>7}  {r['level']:<9} {r['cells']:>10,} cells")
+    print(f"\n  r21 = {r21:.4f}   (from the cell counts, not assumed)")
+
+    report = {"study": "TREND_NOT_GCI", "plan_section": "2.1",
+              "statement": ("Two grid levels. A refinement trend, not a "
+                            "grid-convergence index. No observed order, no "
+                            "Richardson extrapolation, no uncertainty band."),
+              "grids": [{"level": r["level"], "cells": r["cells"], "dir": r["dir"]}
+                        for r in (f, c)],
+              "r21": r21, "assumed_order": args.assumed_order, "functions": {}}
+
+    print(f"\n{'':>6}{'fine':>12}{'coarse':>12}{'change':>12}{'change %':>11}"
+          f"{'assumed band %':>16}")
+    for name in FUNCTIONS:
+        if not all(name in r["short"] for r in (f, c)):
+            continue
+        g = trend_pair(f["short"][name], c["short"][name], r21, args.assumed_order)
+        report["functions"][name] = g
+        print(f"{name:>6}{g['f1_fine']:>12.6f}{g['f2_coarse']:>12.6f}"
+              f"{g['change_fine_minus_coarse']:>+12.6f}"
+              f"{100 * g['relative_change']:>11.2f}"
+              f"{g['assumed_order_band']['band_percent']:>16.2f}")
+
+    print(f"\n  The last column assumes p = {args.assumed_order} and applies a safety")
+    print(f"  factor of {TWO_LEVEL_SAFETY_FACTOR} instead of 1.25, because the order was NOT measured.")
+    print("  It is an assumption. PLAN 3.4: \"Do not expect p ~ 2. RANS on stretched")
+    print("  grids frequently gives observed orders below the nominal spatial order.\"")
+    print("  If the true order is lower, that band is optimistic, and no two-level")
+    print("  study can tell you whether it is.\n")
+    print("  What would close this: a third level. On this host that means a")
+    print("  different machine -- see reports/s8_level_selection.json.")
+
+    if args.out:
+        args.out.write_text(json.dumps(report, indent=2) + "\n")
+        print(f"\nwrote {args.out}")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--runs", nargs="+", required=True,
@@ -137,6 +252,14 @@ def main() -> int:
     ap.add_argument("--allow-frozen", action="store_true",
                     help="include ACCEPTED_SOLVER_FROZEN runs. Do not use for a "
                          "publishable GCI: a stalled solver bounds no iterative error.")
+    ap.add_argument("--two-level-trend", action="store_true",
+                    help="accept TWO levels and report the refinement TREND. Not a "
+                         "GCI: no observed order, no extrapolation, no uncertainty "
+                         "band. PLAN 2.1 requires this when the third level does not "
+                         "fit the host.")
+    ap.add_argument("--assumed-order", type=float, default=2.0,
+                    help="with --two-level-trend, the order ASSUMED for the "
+                         "sensitivity band. Assumed, never measured.")
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
 
@@ -173,11 +296,18 @@ def main() -> int:
         print(f"  REFUSED {Path(r['dir']).name}: gate verdict {r['gate_verdict']}. "
               f"A GCI needs iterative error far below discretization error.")
 
+    kept.sort(key=lambda r: -r["cells"])          # finest first
+
+    if len(kept) == 2 and args.two_level_trend:
+        return report_trend(kept, args)
+
     if len(kept) < 3:
         print(f"\nneed three accepted grid levels, have {len(kept)}. No GCI.")
+        if len(kept) == 2:
+            print("  Two levels are a refinement TREND, not a grid-convergence index.\n"
+                  "  Pass --two-level-trend to report the movement between them, and\n"
+                  "  read PLAN 2.1 on why the band is absent rather than estimated.")
         return 1
-
-    kept.sort(key=lambda r: -r["cells"])          # finest first
     f, m, c = kept[0], kept[1], kept[2]
     r21 = (f["cells"] / m["cells"]) ** (1.0 / 3.0)
     r32 = (m["cells"] / c["cells"]) ** (1.0 / 3.0)

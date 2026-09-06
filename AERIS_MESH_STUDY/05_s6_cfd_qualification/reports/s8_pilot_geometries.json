@@ -1,0 +1,111 @@
+{
+  "plan_section": "4.1",
+  "set_name": "lhs100_seed42",
+  "n_designs": 100,
+  "n_design_variables": 20,
+  "design_variable_names": [
+    "c1_m",
+    "c2_ratio",
+    "c3_ratio",
+    "c4_ratio",
+    "b_total_m",
+    "b3_ratio",
+    "split_ratio",
+    "sw1_deg",
+    "sw2_deg",
+    "sw3_deg",
+    "twist_b0_deg",
+    "twist_b1_deg",
+    "twist_b2_deg",
+    "twist_b3_deg",
+    "dihedral_b1_deg",
+    "dihedral_b2_deg",
+    "dihedral_b3_deg",
+    "elevon_start_frac",
+    "elevon_end_frac",
+    "elevon_hinge_frac"
+  ],
+  "seed_set": [
+    65,
+    23,
+    16,
+    13,
+    83
+  ],
+  "seed_set_rationale": {
+    "65_23_16_13": "four of the fifteen designs that folded before the span-normal frame fix; the fix exists for these and none has been through CFD",
+    "83": "the reference: the grid family, the AVL cross-check and every prior S8 result are on it"
+  },
+  "method": "maximin over design variables normalised to [0,1] over the set",
+  "maximin_trace": [
+    {
+      "added": 29,
+      "distance_to_nearest_chosen": 1.8917802517093654
+    },
+    {
+      "added": 81,
+      "distance_to_nearest_chosen": 1.8533892834276593
+    },
+    {
+      "added": 47,
+      "distance_to_nearest_chosen": 1.8290145827728364
+    },
+    {
+      "added": 12,
+      "distance_to_nearest_chosen": 1.810518844405508
+    },
+    {
+      "added": 36,
+      "distance_to_nearest_chosen": 1.702867850684447
+    }
+  ],
+  "selected": [
+    12,
+    13,
+    16,
+    23,
+    29,
+    36,
+    47,
+    65,
+    81,
+    83
+  ],
+  "selected_in_selection_order": [
+    65,
+    23,
+    16,
+    13,
+    83,
+    29,
+    81,
+    47,
+    12,
+    36
+  ],
+  "former_folders_included": [
+    12,
+    13,
+    16,
+    23,
+    65
+  ],
+  "coverage": {
+    "these_ten": 1.6918396895600332,
+    "random_10_median_of_200": 1.776833496756141,
+    "random_10_best_of_200": 1.6334309821249038,
+    "first_10": 1.8293575653380545,
+    "s6_s7_representative_five": 1.866431280987322
+  },
+  "s6_s7_representative_five": {
+    "indices": [
+      0,
+      24,
+      49,
+      74,
+      99
+    ],
+    "source": "S7_unstructured_gmsh_su2.qualification.REPRESENTATIVE_INDICES"
+  },
+  "coverage_definition": "worst distance from any of the designs to its nearest chosen one, in normalised design-variable space; lower is better"
+}

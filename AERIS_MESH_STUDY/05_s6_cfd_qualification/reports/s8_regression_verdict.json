@@ -1,0 +1,45 @@
+{
+  "plan_section": "3.2",
+  "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_cfd/gci_C_a0",
+  "reference": {
+    "cl": -0.159963,
+    "cd": 0.020838,
+    "cdp": 0.011841,
+    "cdv": 0.008996,
+    "cmy": 0.00128
+  },
+  "reference_note": "pre-fix oh_L3. A REGRESSION REFERENCE ONLY -- it ran on meshes the frame fix destroyed and may not be quoted as a result.",
+  "measured": {
+    "cd": 0.02082343094087248,
+    "cdp": 0.011827640779302597,
+    "cdv": 0.008995790161569884,
+    "cl": -0.1596881807747589,
+    "cmy": 0.0012533343986285892
+  },
+  "deltas": {
+    "cl": 0.00027481922524108526,
+    "cd": -1.4569059127517853e-05,
+    "cdp": -1.3359220697404042e-05,
+    "cdv": -2.0983843011627978e-07,
+    "cmy": -2.6665601371410937e-05
+  },
+  "checks": {
+    "cd_shift": {
+      "value": 1.4569059127517853e-05,
+      "abort_at": 0.005,
+      "pass": true,
+      "reading": "CD essentially unmoved"
+    },
+    "flow_directions": {
+      "lift_index_realised": 3,
+      "velocity_direction_error": 0.0,
+      "pass": true,
+      "reading": "defect 14: alpha applied as sideslip if liftIndex is not 3"
+    },
+    "gate": {
+      "verdict": "ACCEPTED",
+      "pass": true
+    }
+  },
+  "passed": true
+}

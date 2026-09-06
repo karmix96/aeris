@@ -124,7 +124,7 @@ def main() -> int:
     else:
         acm = np.array([])
 
-    fig, ax = plt.subplots(2, 4, figsize=(21.5, 9.4))
+    fig, ax = plt.subplots(2, 5, figsize=(26.5, 9.4))
     fig.suptitle(
         "S8 O-H structured grid, oh_L3 (567,256 cells) - lhs100_seed42[83], "
         "M 0.0837, Re 1.53e6\nADflow RANS-SA against AVL on the identical pyGeo loft",
@@ -268,6 +268,48 @@ def main() -> int:
     a6.set_title("8. Surface pressure above its physical bound\n"
                  "(leading-edge resolution is operating-point dependent)")
     a6.legend(fontsize=7); a6.grid(alpha=0.3, axis="y")
+
+    # 9 global mass balance -- the INTEGRAL conservation statement, which a
+    # per-cell residual does not make. A solver can drive resrho to 1e-8 on a
+    # domain whose boundary fluxes do not close.
+    a7 = ax[0, 4]
+    mb_path = Path("AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_mass_balance.json")
+    if mb_path.exists():
+        mb = {r["alpha_deg"]: r for r in json.loads(mb_path.read_text())["runs"]}
+        ks = sorted(k for k in mb if k in alphas)
+        a7.semilogy(ks, [mb[k]["relative_imbalance"] for k in ks], "o-",
+                    color="C0", label="far-field net / throughput")
+        a7.semilogy(ks, [mb[k]["wall_leakage_relative"] for k in ks], "s--",
+                    color="C2", label="wall leakage (no-slip: should be 0)")
+        a7.semilogy(ks, [mb[k]["symmetry_leakage_relative"] for k in ks], "^--",
+                    color="C1", label="symmetry leakage (should be 0)")
+        a7.axhline(1e-3, color="C3", ls=":", lw=1)
+        a7.annotate("1e-3: domain closes", (ks[0], 1.3e-3), fontsize=7, color="C3")
+    else:
+        a7.annotate("run mass_balance.py", (0.5, 0.5), xycoords="axes fraction",
+                    ha="center", fontsize=9, style="italic", color="C3")
+    a7.set_xlabel(r"$\alpha$  [deg]"); a7.set_ylabel("relative flux imbalance")
+    a7.set_title("9. Global mass balance\n"
+                 "(integral conservation, not a per-cell residual)")
+    a7.legend(fontsize=7); a7.grid(alpha=0.3)
+
+    # 10 cp distribution over the bound, per angle
+    a8 = ax[1, 4]
+    for alpha in alphas:
+        loc = Path(cfd[alpha]["dir"]) / "cp_excess_locations.json"
+        if not loc.exists():
+            continue
+        d = json.loads(loc.read_text())
+        z = [x for x in d["zones"] if "Zone5" in x["zone"]]
+        if not z:
+            continue
+        a8.bar(alpha, z[0]["interior_over_bound"], width=1.2, color="C3")
+        a8.annotate(f"{z[0]['interior_over_bound']}", (alpha, z[0]["interior_over_bound"]),
+                    textcoords="offset points", xytext=(0, 3), ha="center", fontsize=8)
+    a8.set_xlabel(r"$\alpha$  [deg]"); a8.set_ylabel("OML cells over the cp bound")
+    a8.set_title("10. Over-bound cp on the OML\n"
+                 "(total; rises with incidence)")
+    a8.grid(alpha=0.3, axis="y")
 
     fig.tight_layout(rect=(0, 0, 1, 0.94))
     args.out.parent.mkdir(parents=True, exist_ok=True)

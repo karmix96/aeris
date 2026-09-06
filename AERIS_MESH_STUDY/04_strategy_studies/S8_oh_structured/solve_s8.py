@@ -181,7 +181,16 @@ def main() -> int:
         xRef=MOMENT_REF_XYZ[0],
         yRef=MOMENT_REF_XYZ[1],
         zRef=MOMENT_REF_XYZ[2],
-        evalFuncs=["cl", "cd", "cmy", "cdp", "cdv"],
+        # cmx and cmz are here for the dataset schema (PLAN 4.4), not for the
+        # aerodynamics: on a half model at zero sideslip they are half-model
+        # quantities, and CMy is the one that carries the stability result.
+        # Adding them changes no solver setting and cannot change the solution
+        # -- evalFunctions integrates a solution that has already converged --
+        # so it is safe to add mid-campaign, which almost nothing else here is.
+        # The regression anchor gci_C_a0 ran before this line existed and
+        # therefore carries no CMx/CMz; dataset_row.py records that as an
+        # explicit absence rather than a blank.
+        evalFuncs=["cl", "cd", "cmy", "cdp", "cdv", "cmx", "cmz"],
     )
     # Build the state, check it, and only then spend the run.
     solver.setAeroProblem(problem)

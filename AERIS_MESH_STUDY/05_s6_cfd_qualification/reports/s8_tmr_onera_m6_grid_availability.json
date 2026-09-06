@@ -1,0 +1,57 @@
+{
+  "plan_section": "5",
+  "step": "1 -- obtain the grid family",
+  "probed": {
+    "TMR generator archive (tar.gz), linked from onerawingnumerics_grids.html": {
+      "url": "https://raw.githubusercontent.com/TMBWG/turbmodels/main/Onerawingnumerics_grids/wing_release_072319.tar.gz",
+      "status": 404,
+      "available": false,
+      "note": "Not Found"
+    },
+    "TMR generator archive (zip), same page": {
+      "url": "https://tmbwg.github.io/turbmodels/Onerawingnumerics_grids/wing_release_072319.zip",
+      "status": 404,
+      "available": false,
+      "note": "Not Found"
+    },
+    "TMR generator archive via github.com/raw": {
+      "url": "https://github.com/TMBWG/turbmodels/raw/main/Onerawingnumerics_grids/wing_release_072319.tar.gz",
+      "status": 404,
+      "available": false,
+      "note": "Not Found"
+    },
+    "TMR generator archive via git-lfs media host": {
+      "url": "https://media.githubusercontent.com/media/TMBWG/turbmodels/main/Onerawingnumerics_grids/wing_release_072319.tar.gz",
+      "status": 404,
+      "available": false,
+      "note": "Not Found"
+    },
+    "NASA WIND archive structured grid (m6wing.cgd)": {
+      "url": "https://www.grc.nasa.gov/WWW/wind/valid/m6wing/m6wing01/m6wing.cgd",
+      "status": 300,
+      "available": false,
+      "note": "Multiple Choices"
+    },
+    "NASA WIND archive case bundle (m6wing02.tar.Z)": {
+      "url": "https://www.grc.nasa.gov/WWW/wind/valid/m6wing/m6wing02/m6wing02.tar.Z",
+      "status": 206,
+      "content_length": "1024",
+      "content_type": "application/x-compress",
+      "available": false,
+      "note": "downloads fine, and holds a WIND SOLUTION (nsl2.gen) plus post-processing scripts. The grid it refers to lives in m6wing01 and is not in the bundle."
+    }
+  },
+  "available": [],
+  "verdict": "BLOCKED",
+  "finding": "TMR does not publish ONERA M6 grid FILES. Its grids page publishes a Fortran grid GENERATOR plus a coarsening program, distributed as wing_release_072319.tar.gz -- and that archive is a dead link on every route: it 404s from the GitHub Pages host, from github.com/raw and from the LFS media host, and it does not appear in the GitHub API listing of the directory that is supposed to contain it. The directory holds only the CAD, the namelist inputs and images. The NASA WIND archive's structured grid returns HTTP 500.",
+  "consequence": "PLAN 5 steps 1-4 cannot be executed as written. The published EXPERIMENT is available and is archived by the `fetch` subcommand; what is missing is the published GRID. Note that step 4 -- 'Run gci.py on the three levels' -- needs a FAMILY, so even a single recovered grid would only unblock steps 2 and 3.",
+  "not_actually_grids": {
+    "https://www.grc.nasa.gov/WWW/wind/valid/m6wing/ONERAb114.tec": "downloads fine, and is the EXPERIMENT, not a grid: 'M6 WING - SURFACE PRESSURE DISTRIBUTIONS - TEST 2308', cp at the seven sections.",
+    "https://www.grc.nasa.gov/WWW/wind/valid/m6wing/m6wing02/m6wing02.tar.Z": "downloads fine, and holds a WIND SOLUTION (nsl2.gen) plus post-processing scripts. The grid it refers to lives in m6wing01 and is not in the bundle."
+  },
+  "options": [
+    "Mesh the published sharp-TE CAD with a mesher available here. This still validates the solver configuration against experiment, which is the point of PLAN 5, but the mesh becomes a variable that PLAN 5 deliberately wanted held fixed by using published grids. Say which was done.",
+    "Obtain wing_release_072319.tar.gz from the TMR maintainers or a mirror, build the Fortran generator, and produce the family as intended.",
+    "Use a different published case that ships grids. PLAN 5 already notes that a LOW-SPEED case would be a better match for this project's M 0.0837 and Reynolds regime than transonic M6, so a substitution here is not purely a fallback -- it may be an improvement."
+  ]
+}

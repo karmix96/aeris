@@ -1,0 +1,63 @@
+{
+  "available_gib": 11.81955337524414,
+  "headroom_gib": 0.5,
+  "budget_gib": 11.31955337524414,
+  "memory_law": "1.51 GiB + 9.46 GiB per million cells",
+  "marginal_band_gib": 1.5,
+  "level_memory": {
+    "gci_CC": {
+      "cells": 299000,
+      "cells_measured": true,
+      "memory_gib": 4.34,
+      "verdict": "fits"
+    },
+    "gci_C": {
+      "cells": 567256,
+      "cells_measured": true,
+      "memory_gib": 6.88,
+      "verdict": "fits"
+    },
+    "gci_M": {
+      "cells": 1111152,
+      "cells_measured": true,
+      "memory_gib": 12.02,
+      "verdict": "marginal"
+    },
+    "gci_MF": {
+      "cells": 1600000,
+      "cells_measured": false,
+      "memory_gib": 16.65,
+      "verdict": "refused"
+    },
+    "gci_F": {
+      "cells": 2217680,
+      "cells_measured": true,
+      "memory_gib": 22.49,
+      "verdict": "refused"
+    },
+    "gci_FF": {
+      "cells": 4700000,
+      "cells_measured": false,
+      "memory_gib": 45.97,
+      "verdict": "refused"
+    }
+  },
+  "host": {
+    "is_wsl": true,
+    "host_physical_gib": 15.86349105834961,
+    "wslconfig": "/mnt/c/Users/mike/.wslconfig",
+    "wslconfig_text": "[wsl2]\nmemory=13GB\nswap=8GB\n\n[experimental]\nautoMemoryReclaim=gradual\n"
+  },
+  "selected_levels": [
+    "gci_C",
+    "gci_M"
+  ],
+  "n_levels": 2,
+  "study": "TREND_NOT_GCI",
+  "rule": "PLAN 2.1: available < 14 GiB",
+  "statement": "TWO LEVELS ONLY. This is a refinement TREND, not a grid-convergence index. Two points give a direction and a magnitude of movement. They do NOT give an observed order of accuracy, a Richardson extrapolation, or an uncertainty band -- all three need a third point. Report it as a trend and say the band is absent. gci_M is MARGINAL: predicted 12.0 GiB against a 11.3 GiB budget. The memory law is a two-point fit, so that gap is not a refusal and it is not a pass either -- it is a measurement waiting to be taken. Run it under run_campaign.py --watch-memory, which samples resident set size and swap and aborts on sustained paging, rather than finding out after eight hours that the answer came from disk.",
+  "marginal_levels": [
+    "gci_M"
+  ],
+  "can_this_host_become_bigger": "No. gci_F needs 23.0 GiB and the Windows host has 15.86 GiB of physical memory in total, so no .wslconfig change reaches it. A third level needs a different machine."
+}

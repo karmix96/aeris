@@ -225,6 +225,15 @@ LEVELS["gci_M"] = refined_level(LEVELS["oh_L3"], GCI_RATIO, name="gci_M")
 LEVELS["gci_F"] = refined_level(LEVELS["oh_L3"], GCI_RATIO ** 2, name="gci_F")
 LEVELS["gci_FF"] = refined_level(LEVELS["oh_L3"], GCI_RATIO ** 3, name="gci_FF")
 
+#: A half-step between `gci_M` and `gci_F`, for a host that can hold about 17 GiB
+#: but not the 22.5 GiB `gci_F` asks for.  PLAN_desktop_campaign.md 2.1 offers it
+#: as the fallback third level, and is explicit about the price: the ratio
+#: between the top two levels falls from about 1.259 to about 1.13, and a small
+#: refinement ratio makes the OBSERVED ORDER noisy, because p is inferred from
+#: differences that shrink with r.  It weakens the study; it does not invalidate
+#: it.  Prefer a machine that fits `gci_F`.
+LEVELS["gci_MF"] = refined_level(LEVELS["oh_L3"], GCI_RATIO ** 1.5, name="gci_MF")
+
 
 def _span_coordinate(pygeo: Any, v: float) -> float:
     """The spanwise coordinate of one section, used to invert arc length to v."""

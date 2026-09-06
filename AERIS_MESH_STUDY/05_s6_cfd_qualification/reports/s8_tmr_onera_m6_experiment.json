@@ -1,0 +1,68 @@
+{
+  "case": {
+    "name": "TMR Case 2308",
+    "mach": 0.84,
+    "alpha_deg": 3.06,
+    "reynolds": 14600000.0,
+    "reynolds_length": "root chord, sharp trailing edge, normalised to 1.0",
+    "temperature_R": 540.0,
+    "temperature_K": 300.0,
+    "plan_stated_mach": 0.8395,
+    "plan_stated_reynolds": 11720000.0,
+    "plan_reynolds_note": "11.72e6 is the ORIGINAL EXPERIMENT's Re, on the blunt model's mean aerodynamic chord of 646.07 mm. The TMR CFD exercise specifies Rec_root = 14.6e6 on the sharp-TE geometry. Do not mix them.",
+    "geometry": "sharp trailing edge, per AIAA 2016-1357; root chord normalised to 1",
+    "reference": "Schmitt, V. and Charpin, F., 'Pressure Distributions on the ONERA-M6-Wing at Transonic Mach Numbers', AGARD AR-138, 1979"
+  },
+  "stations": [
+    {
+      "station": 1,
+      "eta": 0.2,
+      "n_upper": 22,
+      "n_lower": 12,
+      "experimental_cp_min_upper": -0.444
+    },
+    {
+      "station": 2,
+      "eta": 0.44,
+      "n_upper": 23,
+      "n_lower": 11,
+      "experimental_cp_min_upper": -0.781
+    },
+    {
+      "station": 3,
+      "eta": 0.65,
+      "n_upper": 23,
+      "n_lower": 11,
+      "experimental_cp_min_upper": -0.752
+    },
+    {
+      "station": 4,
+      "eta": 0.8,
+      "n_upper": 23,
+      "n_lower": 11,
+      "experimental_cp_min_upper": -0.752
+    },
+    {
+      "station": 5,
+      "eta": 0.9,
+      "n_upper": 31,
+      "n_lower": 14,
+      "experimental_cp_min_upper": -0.726
+    },
+    {
+      "station": 6,
+      "eta": 0.96,
+      "n_upper": 31,
+      "n_lower": 14,
+      "experimental_cp_min_upper": -0.69
+    },
+    {
+      "station": 7,
+      "eta": 0.99,
+      "n_upper": 31,
+      "n_lower": 14,
+      "experimental_cp_min_upper": -0.636
+    }
+  ],
+  "scope": "This is the EXPERIMENT, catalogued. It is not a validation until a solution is run against it."
+}

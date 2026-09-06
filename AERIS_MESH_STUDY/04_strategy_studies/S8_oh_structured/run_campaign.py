@@ -350,7 +350,8 @@ def build_level(env: dict, level: str, index: int, out: Path,
 
 
 def solve(env: dict, grid: Path, alpha: float, out: Path, *,
-          ranks: int = 6, watch_memory: bool = False) -> dict:
+          ranks: int = 6, watch_memory: bool = False,
+          solver_args: list[str] | None = None) -> dict:
     """One ADflow point.  Judged by the gate, never by its exit status."""
     out.mkdir(parents=True, exist_ok=True)
     result = out / "result.json"
@@ -360,7 +361,7 @@ def solve(env: dict, grid: Path, alpha: float, out: Path, *,
 
     cmd = [env["mpirun"], "-np", str(ranks), env["mach_python"],
            str(HERE / "solve_s8.py"), "--grid", str(grid), "--alpha", str(alpha),
-           "--out", str(out), "--i-have-authorization"]
+           "--out", str(out), "--i-have-authorization"] + list(solver_args or [])
     log = out / "run.log"
     print(f"  solving {out.name}: alpha {alpha:g} on {grid.name} ...", flush=True)
     started = time.time()
@@ -416,6 +417,21 @@ def gate(env: dict, pattern: str, out: Path | None = None) -> dict:
     if proc.returncode != 0:
         print(proc.stderr)
     return json.loads(out.read_text()) if out and out.exists() else {}
+
+
+def solver_flags(args) -> list[str]:
+    """Solver overrides to pass through to solve_s8.py.
+
+    Kept in one place so that a run's configuration is decided once, not per
+    call site: two stages that disagree about the solver would produce results
+    that look comparable and are not.
+    """
+    flags = []
+    if getattr(args, "no_nk", False):
+        flags.append("--no-nk")
+    if getattr(args, "nk_switch_tol", None) is not None:
+        flags += ["--nk-switch-tol", str(args.nk_switch_tol)]
+    return flags
 
 
 # --------------------------------------------------------------------------- #
@@ -526,7 +542,8 @@ def stage_sweep(args, env, auth) -> int:
             out = CFD / f"{level}_a{alpha:g}"
             with Exclusive(f"PLAN 3.3 {level} alpha {alpha:g}"):
                 record = solve(env, grid, alpha, out, ranks=args.ranks,
-                               watch_memory=args.watch_memory or level in args.marginal)
+                               watch_memory=args.watch_memory or level in args.marginal,
+                               solver_args=solver_flags(args))
             done.append(record)
             if record.get("aborted"):
                 print(f"\n{level} was aborted by the memory watchdog. Skipping the rest "
@@ -588,7 +605,8 @@ def stage_pilot(args, env, auth) -> int:
             with Exclusive(f"PLAN 4.2 g{index} alpha {alpha:g}"):
                 record = solve(env, directory / f"{level}_volume.cgns", alpha, out,
                                ranks=args.ranks,
-                               watch_memory=args.watch_memory or level in args.marginal)
+                               watch_memory=args.watch_memory or level in args.marginal,
+                               solver_args=solver_flags(args))
             if record.get("aborted"):
                 raise SystemExit(f"g{index} alpha {alpha:g} aborted on memory. Stopping.")
         # PLAN 4.2: "Check the gate after each geometry, not at the end."
@@ -640,6 +658,11 @@ def main() -> int:
                          "paging. Required for a level select_levels.py calls marginal.")
     ap.add_argument("--marginal", nargs="*", default=["gci_M"],
                     help="levels to watch even without --watch-memory")
+    ap.add_argument("--no-nk", action="store_true",
+                    help="converge with ANK alone. See solve_s8.py --no-nk: NK "
+                         "froze at gci_M with LinRes 1.000 while ANK was still "
+                         "descending. Uses less memory. Recorded in result.json.")
+    ap.add_argument("--nk-switch-tol", type=float, default=None)
     ap.add_argument("--force", action="store_true",
                     help="proceed past a failed regression verdict. PLAN 3.2 says stop; "
                          "this exists so that overriding it is a deliberate, recorded act.")

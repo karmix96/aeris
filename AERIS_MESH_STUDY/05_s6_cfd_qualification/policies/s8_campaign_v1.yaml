@@ -104,7 +104,60 @@ solver:
   mg_cycle: sg
   nk_subspace_size: 20
   nk_pc_ilu_fill: 1
-  l2_convergence: 1.0e-8
+  l2_convergence: 1.0e-6
+  l2_convergence_changed_on: 2026-09-06
+  l2_convergence_rationale: >-
+    Lowered from 1e-8 to 1e-6 after measuring what the difference is worth.
+    Reading the forces off the four gci_C runs at the iteration where the
+    relative residual first crossed 1e-6, against their final values: CL moves
+    at most 5.0e-05, CD at most 1.2e-05 and CMy at most 2.1e-06. The sweep took
+    308 minutes and would have taken 63 -- alpha 4 and alpha 8 were done at 12
+    and 11 per cent of their length. The grid-to-grid discretization difference
+    this campaign exists to measure is order 1e-2 on CD, so iterative error at
+    1e-6 sits three orders below the signal, which is the condition PLAN 0.6
+    requires. 1e-8 was in any case never achieved on the hard angles: neither
+    alpha 4 nor alpha 8 ever reached even 1e-7.
+  l2_convergence_is_the_stopping_rule_not_the_acceptance_rule: >-
+    ACCEPTANCE is convergence_gate.py: at least five orders of residual drop,
+    CL/CD/CMy settled over the tail, and a residual history that is neither
+    diverging nor growing in envelope. The stopping rule and the acceptance rule
+    are recorded together here because the previous arrangement -- gate relaxed
+    to five orders while the solver still drove to 1e-8 -- let them drift apart
+    unnoticed, and the whole cost of that drift was machine time.
+  l2_convergence_caveat: >-
+    Stopping at 1e-6 halts alpha 4 while it is still healthy, so it is graded
+    ACCEPTED rather than ACCEPTED_SOLVER_FROZEN. The stall was only ever visible
+    because that run continued about 1180 iterations past the useful point.
+    Diagnosing solver weak spots is now a deliberate investigation with --l2
+    tightened, not something a campaign run surfaces for free.
+  l2_convergence_evidence: AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_l2_sensitivity.json
+  l2_convergence_evidence_summary: >-
+    Worst relative force change against the final value, over the four gci_C
+    runs, and the median fraction of the run each target needs:
+      1e-4  10 % of run   dCL 6.5e-3  dCD 6.7e-3  dCMy 1.2e-1
+      1e-5  22 % of run   dCL 5.1e-4  dCD 7.4e-4  dCMy 1.1e-3
+      1e-6  36 % of run   dCL 5.0e-5  dCD 1.2e-5  dCMy 7.5e-5
+      1e-7  84 % of run   dCL 4.9e-6  dCD 1.3e-5  dCMy 1.7e-5
+    1e-6 is the knee, and the margin above it is thinner than it looks: at 1e-5
+    CMy still moves 1.1e-3, about a tenth of the 1e-2 discretization difference
+    this campaign exists to measure, and CMy is the quantity PLAN 3.5 flags as
+    most grid-sensitive. 1e-7 costs 84 per cent of the run to buy nothing.
+    Reproduce with l2_sensitivity.py.
+  l2_convergence_strict_mode: >-
+    1e-6 is the AUTOMATED CAMPAIGN target. A stricter target remains available
+    for verification work -- pass `--l2 1e-7` or tighter to solve_s8.py, which
+    records it in result.json. Use it when the question is about the solver
+    rather than about the aerodynamics: publication-grade verification, or
+    diagnosing a stall, which at 1e-6 halts before it becomes visible.
+  l2_convergence_revalidation: >-
+    The evidence above is from ONE geometry, index 83. Re-run l2_sensitivity.py
+    on a handful of pilot geometries with a tightened target before the figure
+    is relied on across the design space: a tolerance justified on one geometry
+    is justified on one geometry.
+  l2_convergence_external_corroboration: >-
+    ADflow's own steady RANS tutorial uses L2Convergence 1e-6 with the NK solver
+    disabled, which is the configuration this campaign has arrived at
+    independently for gci_M.
   n_cycles: 30000
   minimum_mpi_processes: 6
   unchanged_from: s8_oh_corrected_sweep_v1

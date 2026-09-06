@@ -108,7 +108,40 @@ def main() -> int:
     ap.add_argument("--area-ref", type=float, default=AREA_REF_M2,
                     help="solver half area in m2, from the study's reference contract")
     ap.add_argument("--time-limit", type=float, default=21600.0)
-    ap.add_argument("--l2", type=float, default=1.0e-8)
+    # 1e-6, not 1e-8, and the reason is measured rather than assumed.
+    #
+    # Replaying the four gci_C runs and reading the forces off at the iteration
+    # where the relative residual first crossed 1e-6, against their final values:
+    #
+    #     alpha   1e-6 at    of run     dCL        dCD        dCMy
+    #      -2     it 187      88 %    +3.3e-08   +1.3e-06   -1.0e-07
+    #       0     it 165      60 %    -2.0e-05   +1.2e-05   +1.4e-08
+    #       4     it 158      12 %    -3.1e-07   +1.1e-05   +8.5e-08
+    #       8     it 136      11 %    -5.0e-05   +1.2e-05   +2.1e-06
+    #
+    # Everything after 1e-6 moves the forces in the fifth decimal. The sweep
+    # cost 308 minutes and would have cost 63 -- a 4.9x saving -- for changes of
+    # order 1e-5 relative, against a GRID-to-grid discretization difference of
+    # order 1e-2 on CD. Iterative error three orders below the signal being
+    # measured is the condition PLAN 0.6 asks for, and 1e-6 meets it.
+    #
+    # It was also never being achieved: alpha 4 and alpha 8 never reached even
+    # 1e-7, so 1e-8 was aspirational and those runs stopped on other grounds
+    # after grinding through ~1180 useless iterations.
+    #
+    # This is the STOPPING rule. Acceptance is convergence_gate.py -- five orders
+    # of residual drop AND settled forces AND a healthy residual history. The two
+    # are stated together in policies/s8_campaign_v1.yaml because the previous
+    # split (gate relaxed to five orders, solver still driving to 1e-8) is how
+    # they drifted apart.
+    #
+    # Caveat worth keeping visible: stopping at 1e-6 means alpha 4 halts while
+    # still healthy and is graded ACCEPTED rather than ACCEPTED_SOLVER_FROZEN.
+    # The stall only became visible because the run continued 1180 iterations
+    # past the useful point. Diagnosing solver weak spots is now a deliberate
+    # investigation with --l2 tightened, not something a campaign run surfaces
+    # for free.
+    ap.add_argument("--l2", type=float, default=1.0e-6)
     # 4000 was carried over from the canary policy and is far too small here:
     # it caps the CUMULATIVE linear-iteration counter, and both first runs hit
     # it at 4004 and 4028, stopping at 4.6e-6 and 1.5e-5 relative instead of the
@@ -116,6 +149,31 @@ def main() -> int:
     # `routine_failed` stays false, so an unconverged run looks exactly like a
     # converged one unless the residual is checked.
     ap.add_argument("--n-cycles", type=int, default=30000)
+    # PLAN 0.5 territory: these change the solver, so they default to the
+    # governed values and every use is recorded in result.json.
+    #
+    # Why --no-nk exists. On gci_M (1,111,152 cells) ANK converged cleanly to
+    # 3.3e-05 by iteration 300, NK took over at 302, and the residual went UP to
+    # 2.8e-04 and froze there for 450 iterations with `Step 0.01` and
+    # `LinRes 1.000` -- the Krylov solve achieving no reduction at all -- while
+    # the forces sat still to THIRTEEN significant figures. That is PLAN 0.6's
+    # signature, and on a mesh where alpha -2 converged in 212 iterations at
+    # gci_C, so refinement made it worse (PLAN 0.8).
+    #
+    # The likely cause is the preconditioner. This project runs NKSubspaceSize
+    # 20 and NKPCILUFill 1 against ADflow's defaults of 60 and 2, about 3x
+    # leaner on Krylov memory, chosen because gci_M peaks at 12.7 GiB against
+    # 12.8 available. Restoring the defaults would not fit. So on this host the
+    # finer mesh can be held in memory or converged by NK, not both -- and
+    # ANK alone, which needs no Krylov subspace, is the way out rather than a
+    # compromise.
+    ap.add_argument("--no-nk", action="store_true",
+                    help="disable the Newton-Krylov stage and converge with ANK "
+                         "alone. Uses LESS memory. Changes the solver relative to "
+                         "the governed setup, so it is recorded in result.json and "
+                         "must be stated wherever the result is used.")
+    ap.add_argument("--nk-switch-tol", type=float, default=None,
+                    help="override NKSwitchTol (governed value 1e-6)")
     ap.add_argument("--i-have-authorization", action="store_true")
     args = ap.parse_args()
 
@@ -168,6 +226,17 @@ def main() -> int:
                              "cl", "cd", "cmy", "cdp", "cdv"],
         "surfaceVariables": ["cp", "cf", "yplus", "vx", "vy", "vz"],
     })
+    # Solver overrides, applied AFTER the governed dict above so that the
+    # governed values remain the literal defaults in this file and a reader can
+    # see exactly what was changed and why.
+    overrides: dict = {}
+    if args.no_nk:
+        overrides["useNKSolver"] = False
+    if args.nk_switch_tol is not None:
+        overrides["NKSwitchTol"] = args.nk_switch_tol
+    for key, value in overrides.items():
+        solver.setOption(key, value)
+
     problem = AeroProblem(
         name=f"s8_a{args.alpha:g}",
         alpha=args.alpha,
@@ -243,6 +312,10 @@ def main() -> int:
         "moment_ref_xyz_m": list(MOMENT_REF_XYZ),
         "routine_failed": failed,
         "flow_directions": directions,
+        # Empty unless a flag was passed. Recorded either way, so a row that
+        # used the governed setup says so positively rather than by omission.
+        "solver_overrides": overrides,
+        "solver_is_governed_configuration": not overrides,
         "functions": {k: float(v) for k, v in funcs.items()},
     }
     (args.out / "result.json").write_text(json.dumps(result, indent=2) + "\n")

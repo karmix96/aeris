@@ -1,13 +1,28 @@
 # S8 — complete desktop plan: grid convergence, ten geometries, TMR validation
 
-**Written 2026-09-06, revised after external review.** Self-contained: everything
-needed to execute is here, including the traps this project has already fallen
-into. **Read §0 before running anything** — it is the part that would otherwise
-be re-learned the expensive way.
+**Written 2026-09-06; execution status refreshed 2026-09-07.** This file remains the
+self-contained campaign plan. The status block below is authoritative where it conflicts
+with older prose later in the document.
 
-Companions: `AUDIT_2026-09-05.md` (technical account),
-`STATUS_AND_NEXT_STEPS.md` (state). This file supersedes `HANDOFF_desktop.md`
-for the CFD plan.
+## Execution status — 2026-09-07
+
+- **Far-field/domain sensitivity is complete.** The tracked 40→60 chord test at α=0 gives
+  ΔCL = −2.49e−5 and ΔCD = +6.92e−5.
+- **ONERA M6 solver validation is complete on the tracked delivered-grid comparison.**
+  The tracked report gives mean shock-position error 0.01496 x/c, mean suction-peak
+  relative error 1.025%, and mean RMS ΔCp 0.3239 across the seven stations. This validates
+  the solver configuration against external experiment; it does not validate the S8 mesher.
+- **The S8 coarse and medium four-angle sweeps are complete and accepted.**
+  `gci_C` and `gci_M` both have α = −2, 0, 4, 8 accepted by the current gate.
+- **The S8 study is still two-level only.** All current `s8_gci_a*.json` reports correctly say
+  `TREND_NOT_GCI`. The missing publication-critical step is `gci_F` at the same four α.
+- **Fine-grid robustness is 61/61 clean so far at `gci_F`.** Finish the remaining 39.
+- **Immediate order:** finish the `gci_F` robustness screen → run four `gci_F` CFD points
+  → compute real three-level GCI → select/freeze the production level → run the ten-geometry
+  pilot → freeze policy → unlock the untouched holdout.
+- The tracked ONERA comparison report is a delivered-grid result. No tracked three-level
+  ONERA GCI report exists; do not imply one unless those additional artifacts are committed.
+
 
 **Everything runs on 6 MPI ranks.**
 
@@ -456,18 +471,26 @@ does **not** authorize a hold-out unlock, a family freeze, or a paper claim.
 
 ---
 
-## 7. Known-open problems
+## 7. Known-open problems — refreshed 2026-09-07
 
-1. **The α=4 Newton-Krylov stall.** Undiagnosed; not a mesh-validity problem.
-   Untested candidates: the tip cap's one cell at scaled Jacobian 0.049, and a
-   cell-volume span of ~1e15 across the domain.
-2. **Leading-edge resolution is operating-point dependent** — 3 over-bound cells
-   at cruise, 36 at α=8. §3.4 tests whether refinement clears it.
-3. **The blunt trailing-edge corner takes 86–106 deg of turning in one cell.** A
-   C0 kink; refinement cannot reduce it. Worth 0.01–0.2 % of CDp and 0.00 mm of
-   neutral-point shift — **leave it alone.**
-4. **Far-field weak refinement** (§2.2). One sensitivity run would close it.
-5. **No experimental validation** until §5 is done.
+1. **The third S8 grid is still missing from the solved family.** `gci_C` and `gci_M`
+   are a refinement trend only. `gci_F` at α = −2, 0, 4, 8 is the immediate
+   publication-critical numerical-verification step.
+2. **Pressure drag is still strongly grid-sensitive.** At α=0 the C→M change is
+   about 15.8% in CD and 30.3% in CDp. The third level decides whether the family is
+   entering a usable asymptotic regime and which level can support the campaign.
+3. **Leading-edge resolution remains operating-point dependent.** Re-evaluate the
+   over-bound Cp-cell count at α=8 on `gci_F`; the trend across C/M/F determines
+   whether the excess is principally discretization-driven.
+4. **The blunt trailing-edge corner remains a known C0 feature.** Prior sensitivity
+   showed negligible practical influence relative to the main pressure-drag issue;
+   leave it unchanged unless new evidence contradicts that conclusion.
+5. **Far-field/domain sensitivity is closed.** The 40→60 chord test moved CL by
+   −2.49e−5 and CD by +6.92e−5 at α=0.
+6. **ONERA M6 external validation is closed for the tracked delivered-grid solver
+   comparison.** Keep the limitation explicit: it validates the solver configuration,
+   not the S8 mesher, and it is transonic whereas the AERIS campaign is low-speed.
+   The repository does not currently contain a three-level ONERA GCI report.
 
 ---
 

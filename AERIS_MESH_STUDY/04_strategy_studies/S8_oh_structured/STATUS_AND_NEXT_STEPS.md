@@ -1,12 +1,42 @@
 # S8 — status, continuation, and exact next steps
 
-**Last updated:** 2026-09-05, end of session · **Read this first** if you are
-picking S8 up cold. The full technical account is `AUDIT_2026-09-05.md`; the
-desktop commands are `HANDOFF_desktop.md`; this file is what to *do*.
+**Last updated:** 2026-09-07 · **This status block supersedes the 2026-09-05 execution state below.**
+The full technical account remains `AUDIT_2026-09-05.md`; the current execution plan is
+`PLAN_desktop_campaign.md`.
+
+## 0. Authoritative execution status — 2026-09-07
+
+| item | current state |
+|---|---|
+| deterministic O-H mesher | **PASS** — 100/100 at `gci_C`, exact-wall guard and determinism checks in place |
+| fine-level robustness | **61/61 clean so far at `gci_F`**; finish the remaining 39 before the final robustness claim |
+| `gci_C` CFD | **DONE** — α = −2, 0, 4, 8; all four accepted by the current convergence gate |
+| `gci_M` CFD | **DONE** — α = −2, 0, 4, 8; all four accepted by the current convergence gate |
+| grid convergence | **NOT YET A GCI** — current reports are explicitly `TREND_NOT_GCI`; `gci_F` is the missing third level |
+| far-field/domain sensitivity | **DONE** — 40→60 chord test at α=0: ΔCL = −2.49e−5, ΔCD = +6.92e−5 |
+| ONERA M6 external validation | **DONE for solver-configuration validation on the tracked delivered-grid run** — mean shock-position error 0.01496 x/c; mean suction-peak relative error 1.025%; mean RMS ΔCp 0.3239 |
+| ONERA M6 three-level GCI | **not evidenced in tracked reports**; the tracked comparison report is the delivered-grid run. Treat any locally completed extra levels separately until their reports are committed. |
+| production/campaign level | **not frozen** — choose only after the real 3-level S8 GCI |
+| ten-geometry pilot | **NEXT AFTER GCI** — indices 12, 13, 16, 23, 29, 36, 47, 65, 81, 83 |
+| untouched holdout | **LOCKED** — unlock only after mesher, solver, gates, and campaign level are frozen |
+
+### Exact next sequence
+
+1. Finish `gci_F` robustness from **61 → 100 designs**.
+2. Run `gci_F` at **α = −2, 0, 4, 8** on index 83 (**4 CFD runs**).
+3. Re-run `convergence_gate.py` and `gci.py` with `gci_C/gci_M/gci_F`; report observed order, Richardson extrapolation, GCI bands, and any oscillatory/non-asymptotic triplets.
+4. Select and freeze the campaign level using the measured uncertainty, especially for **CD/CDp**.
+5. Run the ten-geometry end-to-end pilot at the selected level and the four α points; gate every geometry before continuing.
+6. Freeze the numerical/qualification policy, then unlock and evaluate the untouched holdout.
+7. Only after those gates, proceed to the Paper-1 optimization/demo campaign.
+
+**Important:** current C→M movement is small for CL but still large for pressure drag
+(e.g. at α=0, CD changes ≈15.8% and CDp ≈30.3%). Do not promote a production level
+or quote a discretization uncertainty until the third S8 grid is solved.
 
 ---
 
-## 1. Status in one table
+## 1. Historical status table (2026-09-05)
 
 | | state |
 |---|---|

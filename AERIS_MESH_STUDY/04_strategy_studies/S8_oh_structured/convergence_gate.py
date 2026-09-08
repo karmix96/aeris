@@ -95,10 +95,12 @@ def read_linres(log: Path) -> np.ndarray | None:
 
 def gate(history: np.ndarray, *, window: int, min_orders: float,
          cl_pct: float, cd_pct: float, cmy_abs: float,
-         linres: np.ndarray | None = None) -> dict:
+         linres: np.ndarray | None = None,
+         l2_target: float | None = None) -> dict:
     resid = history[:, COLUMNS["resrho"]]
     tail = history[-window:]
     orders = math.log10(resid[0] / resid[-1])
+    relative_residual = float(resid[-1] / resid[0])
 
     def spread(name: str) -> float:
         v = tail[:, COLUMNS[name]]
@@ -137,11 +139,43 @@ def gate(history: np.ndarray, *, window: int, min_orders: float,
         "not_diverging": {"value": diverging, "pass": not diverging},
         "no_growing_oscillation": {"value": growing_envelope, "pass": not growing_envelope},
     }
-    passed = all(c["pass"] for c in checks.values())
+    # Two routes to acceptance, not one hurdle made of both.
+    #
+    # This gate exists because a strict residual cutoff alone "rejected alpha 4,
+    # whose forces were stable to under 2e-8 relative" -- i.e. the force-stability
+    # test was added to RESCUE runs that miss the residual target. It was then
+    # applied as an ADDITIONAL requirement, so a run that hits a strict residual
+    # target also had to pass a criterion built for runs that did not.
+    #
+    # Once the stopping target moved to 1e-6 the runs got short, and a short tail
+    # is still descending monotonically, so its SPREAD over the window is
+    # dominated by the approach rather than by the remaining error. Measured on
+    # g12 alpha 0, which this gate rejected on a 0.107 % CL tail spread: taking
+    # the same case on to 1e-8 moved CL by 0.015 % and CD by 0.018 %. The metric
+    # overstated the error sevenfold, and 14 of 40 pilot runs were refused on it.
+    #
+    # So: a run is accepted if it MET ITS RESIDUAL TARGET and is healthy, OR if
+    # it dropped enough orders and its forces settled. Health -- not diverging,
+    # no growing envelope, linear solve alive -- is required either way, because
+    # that is what distinguishes convergence from a solver that stopped.
+    health = ("not_diverging", "no_growing_oscillation")
+    healthy = all(checks[k]["pass"] for k in health)
+    settled = all(checks[k]["pass"] for k in
+                  ("residual_orders", "cl_percent", "cd_percent", "cmy_absolute"))
+    hit_target = (l2_target is not None
+                  and math.isfinite(relative_residual)
+                  and relative_residual <= l2_target)
+    checks["residual_target_met"] = {
+        "value": relative_residual, "limit": l2_target,
+        "pass": bool(hit_target),
+        "note": "the run reached the L2Convergence target it was given"}
+    passed = healthy and (hit_target or settled)
     return {
         "passes": passed,
         "solver_frozen": frozen,
         "linear_solve_dead": linear_dead,
+        "accepted_via": ("residual target" if passed and hit_target else
+                         "force settling" if passed else None),
         "verdict": (
             "ACCEPTED" if passed and not frozen else
             "ACCEPTED_SOLVER_FROZEN" if passed else
@@ -168,6 +202,9 @@ def main() -> int:
     ap.add_argument("--cl-pct", type=float, default=0.05)
     ap.add_argument("--cd-pct", type=float, default=0.10)
     ap.add_argument("--cmy-abs", type=float, default=1.0e-4)
+    ap.add_argument("--l2-target", type=float, default=None,
+                    help="override the residual target; by default each run's own "
+                         "l2_target is read from its result.json")
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
 
@@ -180,7 +217,17 @@ def main() -> int:
         history = read_history(log)
         if history is None:
             continue
-        alpha = float(re.search(r"_a(-?\d+)", directory.name).group(1))
+        # Accept both naming schemes. The refinement study writes gci_C_a-2 and
+        # the pilot writes a bare a-2, and a regex requiring the underscore
+        # returned None on the pilot and crashed -- so NO pilot geometry got a
+        # gate verdict at all, silently, because the driver runs this as a
+        # subprocess and only checks the return code loosely.
+        match = re.search(r"_a(-?\d+(?:\.\d+)?)$", directory.name) or \
+            re.fullmatch(r"a(-?\d+(?:\.\d+)?)", directory.name)
+        if match is None:
+            print(f"  skipping {directory.name}: no alpha in the directory name")
+            continue
+        alpha = float(match.group(1))
         # A TAIL, not a fixed count.
         #
         # The window was a flat 100 iterations. That is a tail on a run of 1300
@@ -197,9 +244,18 @@ def main() -> int:
         # unchanged, INCLUDING gci_C alpha 4, which stays ACCEPTED_SOLVER_FROZEN.
         # The failure mode this gate exists to catch is not blinded by it.
         window = args.window or max(20, min(100, len(history) // 4))
+        # the target the run was actually given, from its own record -- not a
+        # constant here, because a verification run may have been tightened
+        target = args.l2_target
+        result = directory / "result.json"
+        if target is None and result.exists():
+            try:
+                target = json.loads(result.read_text()).get("l2_target")
+            except (OSError, ValueError):
+                target = None
         record = gate(history, window=window, min_orders=args.min_orders,
                       cl_pct=args.cl_pct, cd_pct=args.cd_pct, cmy_abs=args.cmy_abs,
-                      linres=read_linres(log))
+                      linres=read_linres(log), l2_target=target)
         record["alpha_deg"] = alpha
         record["directory"] = str(directory)
         results.append(record)

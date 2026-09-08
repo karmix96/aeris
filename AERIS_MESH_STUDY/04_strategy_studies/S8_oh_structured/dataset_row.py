@@ -382,7 +382,12 @@ def main() -> int:
         ap.error("--run-dir, --level and --index are required unless --print-schema")
 
     mesh_dir = args.mesh_dir or args.run_dir
-    runs = sorted(p for p in args.run_dir.glob("a*") if p.is_dir())
+    # `a*` also matches the avl/ directory the pilot writes beside the runs,
+    # which became a fifth "run" row with 29 empty fields. A run is a directory
+    # that actually holds a run.
+    runs = sorted(p for p in args.run_dir.glob("a*")
+                  if p.is_dir() and ((p / "result.json").exists()
+                                     or (p / "run.log").exists()))
     if not runs:
         runs = [args.run_dir]
 

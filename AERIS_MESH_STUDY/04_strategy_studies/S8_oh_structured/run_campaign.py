@@ -593,6 +593,13 @@ def stage_pilot(args, env, auth) -> int:
         raise SystemExit(f"{selection} does not exist. Run select_pilot_geometries.py "
                          f"first: PLAN 4.4 says the set is fixed BEFORE the first case.")
     indices = json.loads(selection.read_text())["selected"]
+    if args.indices:
+        missing = [i for i in args.indices if i not in indices]
+        if missing:
+            raise SystemExit(f"{missing} are not in the authorized pilot set "
+                             f"{indices}. The set is fixed BEFORE the first case "
+                             f"(PLAN 4.1) and is not extended from the command line.")
+        indices = [i for i in indices if i in args.indices]
     level = args.level
     print(f"\nPLAN 4.2 -- ten geometries at {level}, alphas {ALPHAS}\n")
     print(f"  {indices}\n")
@@ -651,6 +658,12 @@ def main() -> int:
     ap.add_argument("stage", choices=sorted(STAGES))
     ap.add_argument("--levels", nargs="+", default=["gci_C", "gci_M"])
     ap.add_argument("--level", default="gci_C", help="single level, for the pilot")
+    ap.add_argument("--indices", type=int, nargs="*", default=None,
+                    help="run the pilot on a SUBSET of the authorized ten. Used "
+                         "for the second grid level, where the question is only "
+                         "whether the refinement offset is geometry-independent, "
+                         "which three geometries answer and ten re-confirm. "
+                         "Cannot add a geometry the policy does not authorize.")
     ap.add_argument("--index", type=int, default=REFERENCE_INDEX)
     ap.add_argument("--ranks", type=int, default=6)
     ap.add_argument("--watch-memory", action="store_true",

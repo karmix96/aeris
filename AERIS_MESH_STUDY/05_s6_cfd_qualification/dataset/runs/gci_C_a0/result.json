@@ -4,7 +4,7 @@
   "residual_source": "adflow.iteration.totalrfinal/totalr0",
   "l2_target": 1e-06,
   "n_cycles_budget": 30000,
-  "grid": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_gci83/gci_C_volume.cgns",
+  "grid": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_pilot/g83/gci_C_volume.cgns",
   "alpha_deg": 0.0,
   "mission": {
     "mach": 0.0837,

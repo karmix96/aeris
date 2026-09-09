@@ -608,7 +608,20 @@ def stage_pilot(args, env, auth) -> int:
         directory = PILOT / f"g{index}"
         build_level(env, level, index, directory)
         for alpha in ALPHAS:
-            out = directory / f"a{alpha:g}"
+            # The LEVEL must be in the path. It was not, so every run directory
+            # was s8_pilot/g83/a0 regardless of grid, and running a second level
+            # over the same geometries silently SKIPPED all twelve runs -- the
+            # resumability check found the first level's result.json sitting
+            # there and reported "already run".
+            #
+            # Nothing was lost only by luck: without that check the second level
+            # would have OVERWRITTEN the first. What did happen is worse in kind,
+            # because it is quiet: the post-processing then read the newly built
+            # gci_M mesh summary and wrote dataset rows claiming grid_level
+            # gci_M and 1,111,152 cells for forces produced on a 567,256-cell
+            # gci_C solve. Correct-looking numbers, wrong label, which is the one
+            # defect a surrogate cannot survive.
+            out = directory / f"{level}_a{alpha:g}"
             with Exclusive(f"PLAN 4.2 g{index} alpha {alpha:g}"):
                 record = solve(env, directory / f"{level}_volume.cgns", alpha, out,
                                ranks=args.ranks,
@@ -617,14 +630,16 @@ def stage_pilot(args, env, auth) -> int:
             if record.get("aborted"):
                 raise SystemExit(f"g{index} alpha {alpha:g} aborted on memory. Stopping.")
         # PLAN 4.2: "Check the gate after each geometry, not at the end."
-        gate(env, str(directory / "a*"), directory / "gate.json")
+        gate(env, str(directory / f"{level}_a*"), directory / f"{level}_gate.json")
         subprocess.run([env["venv_python"], str(HERE / "verify_against_avl.py"),
                         "--index", str(index), "--alphas", *[str(a) for a in ALPHAS],
                         "--out", str(directory / "avl")], check=False)
         subprocess.run([env["venv_python"], str(HERE / "dataset_row.py"),
                         "--run-dir", str(directory), "--level", level,
-                        "--index", str(index),
-                        "--out", str(directory / "dataset_rows.json")], check=False)
+                        "--index", str(index), "--gate",
+                        str(directory / f"{level}_gate.json"),
+                        "--out", str(directory / f"{level}_dataset_rows.json")],
+                       check=False)
     return 0
 
 

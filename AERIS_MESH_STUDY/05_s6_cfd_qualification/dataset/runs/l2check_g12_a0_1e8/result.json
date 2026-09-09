@@ -1,11 +1,11 @@
 {
-  "converged": true,
-  "relative_residual": 9.9099623617843e-07,
+  "converged": false,
+  "relative_residual": 4.247989268369808e-08,
   "residual_source": "adflow.iteration.totalrfinal/totalr0",
-  "l2_target": 1e-06,
+  "l2_target": 1e-08,
   "n_cycles_budget": 30000,
-  "grid": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_pilot/g83/gci_C_volume.cgns",
-  "alpha_deg": -2.0,
+  "grid": "AERIS_MESH_STUDY/artifacts/s8_pilot/g12/gci_C_volume.cgns",
+  "alpha_deg": 0.0,
   "mission": {
     "mach": 0.0837,
     "reynolds": 1530708.188575197,
@@ -23,27 +23,27 @@
   "flow_directions": {
     "lift_index_requested": 3,
     "lift_index_realised": 3,
-    "alpha_deg": -2.0,
+    "alpha_deg": 0.0,
     "velocity_direction_expected": [
-      0.9993908270190958,
+      1.0,
       0.0,
-      -0.03489949670250097
+      0.0
     ],
     "velocity_direction_realised": [
-      0.9993908270190958,
+      1.0,
       0.0,
-      -0.03489949670250097
+      0.0
     ],
     "velocity_direction_error": 0.0,
     "lift_direction_expected": [
-      0.03489949670250097,
+      -0.0,
       0.0,
-      0.9993908270190958
+      1.0
     ],
     "lift_direction_realised": [
-      0.03489949670250097,
       0.0,
-      0.9993908270190958
+      0.0,
+      1.0
     ],
     "lift_direction_error": 0.0,
     "tolerance": 1e-09
@@ -53,12 +53,12 @@
   },
   "solver_is_governed_configuration": false,
   "functions": {
-    "s8_a-2_cd": 0.025986623479308035,
-    "s8_a-2_cdp": 0.017398802525807857,
-    "s8_a-2_cdv": 0.00858782095350018,
-    "s8_a-2_cl": -0.29811721779479944,
-    "s8_a-2_cmx": -0.14307014906717058,
-    "s8_a-2_cmy": -0.005980389788585376,
-    "s8_a-2_cmz": -0.005689076442816637
+    "s8_a0_cd": 0.019343767896760324,
+    "s8_a0_cdp": 0.010324920627769534,
+    "s8_a0_cdv": 0.00901884726899079,
+    "s8_a0_cl": -0.09684322822757839,
+    "s8_a0_cmx": -0.036999908528363434,
+    "s8_a0_cmy": -0.0016379944601863884,
+    "s8_a0_cmz": -0.006260405453910809
   }
 }

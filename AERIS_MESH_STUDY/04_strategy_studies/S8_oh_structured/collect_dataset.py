@@ -174,17 +174,42 @@ def main() -> int:
         record = verdicts.get(name)
         verdict = record["verdict"] if record else None
         # level and index: from the directory layout the campaign writes
+        # Level, from the run's own recorded grid path first. The directory
+        # name is a convention and the grid path is a fact, and a one-off
+        # verification run (l2check_...) matches no naming convention at all
+        # while still having been solved on a perfectly identifiable mesh.
         level = None
-        for candidate in ("gci_CC", "gci_C", "gci_M", "gci_MF", "gci_F", "oh_L3"):
-            if name.startswith(candidate) or candidate in str(run):
+        grid = Path(result.get("grid", ""))
+        for candidate in ("gci_FF", "gci_MF", "gci_CC", "gci_F", "gci_M", "gci_C", "oh_L3"):
+            if grid.name.startswith(candidate + "_") or candidate == grid.stem.replace("_volume", ""):
                 level = candidate
                 break
+        if level is None:
+            for candidate in ("gci_CC", "gci_C", "gci_M", "gci_MF", "gci_F", "oh_L3"):
+                if name.startswith(candidate) or candidate in str(run):
+                    level = candidate
+                    break
         index = 83
         for part in run.parts:
             if part.startswith("g") and part[1:].isdigit():
                 index = int(part[1:])
         mesh_dir = run.parent if (run.parent / f"{level}_summary.json").exists() \
             else ARTIFACTS / "s8_gci83"
+
+        # The pilot writes a gate PER GEOMETRY AND LEVEL beside the runs; the
+        # refinement study writes one shared report. Using only the shared one
+        # left every pilot row without a verdict, without iteration counts and
+        # without the force-tail spreads the verdict was based on -- 54 of 62
+        # rows incomplete, and the verdict is the field that says whether the
+        # row may be used at all.
+        run_gate = gate
+        local = run.parent / f"{level}_gate.json"
+        if local.exists():
+            run_gate = json.loads(local.read_text())
+            for r in run_gate["results"]:
+                verdicts.setdefault(Path(r["directory"]).name, r)
+            record = record or verdicts.get(name)
+            verdict = record["verdict"] if record else verdict
 
         if verdict is not None and verdict not in ACCEPTABLE and not args.include_rejected:
             excluded.append({"run": name, "directory": str(run), "verdict": verdict,
@@ -194,7 +219,7 @@ def main() -> int:
 
         row = dataset_row.build_row(
             run=run, level=level or "unknown", index=index,
-            set_name=args.set_name, mesh_dir=mesh_dir, gate=gate,
+            set_name=args.set_name, mesh_dir=mesh_dir, gate=run_gate,
             avl=avl_for(index, args),
             mach_python=env.get("mach_python"), cache=cache)
         row["run_name"] = name

@@ -1,0 +1,297 @@
+{
+  "plan_step": "4 - prepare the high-fidelity batch",
+  "ranks_per_case": 24,
+  "parallel_efficiency_assumed": 0.75,
+  "solver": {
+    "configuration": "ANK only (--no-nk), L2Convergence 1e-6",
+    "why_ank_only": "NK froze at 1,111,152 cells with this project's lean preconditioner -- Step 0.01, LinRes 1.000 -- while ANK alone converged the same case in a fifth of the time. ANK-only is the configuration PROVEN at these cell counts and it uses about 2 GiB less.",
+    "l2_evidence": "reports/s8_l2_sensitivity.json"
+  },
+  "memory_laws": {
+    "ank_only": "2.69 + 7.23 GiB per million cells",
+    "ank_then_nk": "1.51 + 9.46 GiB per million cells",
+    "cell_variation_margin": 1.05,
+    "note": "both fitted to runs on the development host, not datasheet values"
+  },
+  "levels": {
+    "gci_F": {
+      "cells_nominal": 2217680,
+      "cells_measured": true,
+      "cells_sized_for": 2328564,
+      "memory_gib_ank_only": 19.5,
+      "memory_gib_with_nk": 23.5,
+      "geometries": 10,
+      "four_angle_minutes_at_ranks": 112.8,
+      "level_hours": 18.8
+    },
+    "gci_FF": {
+      "cells_nominal": 4700000,
+      "cells_measured": false,
+      "cells_sized_for": 4935000,
+      "memory_gib_ank_only": 38.4,
+      "memory_gib_with_nk": 48.2,
+      "geometries": 1,
+      "four_angle_minutes_at_ranks": 299.5,
+      "level_hours": 5.0
+    }
+  },
+  "reference_geometry": {
+    "index": 83,
+    "levels_after_batch": [
+      "gci_C",
+      "gci_F",
+      "gci_FF",
+      "gci_M"
+    ],
+    "note": "PLAN step 6 needs three or more levels of ONE geometry. gci_C and gci_M already exist on the development host and must be carried to the cloud, or re-run there, for the GCI to be computable at all."
+  },
+  "cases": [
+    {
+      "index": 12,
+      "level": "gci_F",
+      "alpha_deg": -2.0
+    },
+    {
+      "index": 12,
+      "level": "gci_F",
+      "alpha_deg": 0.0
+    },
+    {
+      "index": 12,
+      "level": "gci_F",
+      "alpha_deg": 4.0
+    },
+    {
+      "index": 12,
+      "level": "gci_F",
+      "alpha_deg": 8.0
+    },
+    {
+      "index": 13,
+      "level": "gci_F",
+      "alpha_deg": -2.0
+    },
+    {
+      "index": 13,
+      "level": "gci_F",
+      "alpha_deg": 0.0
+    },
+    {
+      "index": 13,
+      "level": "gci_F",
+      "alpha_deg": 4.0
+    },
+    {
+      "index": 13,
+      "level": "gci_F",
+      "alpha_deg": 8.0
+    },
+    {
+      "index": 16,
+      "level": "gci_F",
+      "alpha_deg": -2.0
+    },
+    {
+      "index": 16,
+      "level": "gci_F",
+      "alpha_deg": 0.0
+    },
+    {
+      "index": 16,
+      "level": "gci_F",
+      "alpha_deg": 4.0
+    },
+    {
+      "index": 16,
+      "level": "gci_F",
+      "alpha_deg": 8.0
+    },
+    {
+      "index": 23,
+      "level": "gci_F",
+      "alpha_deg": -2.0
+    },
+    {
+      "index": 23,
+      "level": "gci_F",
+      "alpha_deg": 0.0
+    },
+    {
+      "index": 23,
+      "level": "gci_F",
+      "alpha_deg": 4.0
+    },
+    {
+      "index": 23,
+      "level": "gci_F",
+      "alpha_deg": 8.0
+    },
+    {
+      "index": 29,
+      "level": "gci_F",
+      "alpha_deg": -2.0
+    },
+    {
+      "index": 29,
+      "level": "gci_F",
+      "alpha_deg": 0.0
+    },
+    {
+      "index": 29,
+      "level": "gci_F",
+      "alpha_deg": 4.0
+    },
+    {
+      "index": 29,
+      "level": "gci_F",
+      "alpha_deg": 8.0
+    },
+    {
+      "index": 36,
+      "level": "gci_F",
+      "alpha_deg": -2.0
+    },
+    {
+      "index": 36,
+      "level": "gci_F",
+      "alpha_deg": 0.0
+    },
+    {
+      "index": 36,
+      "level": "gci_F",
+      "alpha_deg": 4.0
+    },
+    {
+      "index": 36,
+      "level": "gci_F",
+      "alpha_deg": 8.0
+    },
+    {
+      "index": 47,
+      "level": "gci_F",
+      "alpha_deg": -2.0
+    },
+    {
+      "index": 47,
+      "level": "gci_F",
+      "alpha_deg": 0.0
+    },
+    {
+      "index": 47,
+      "level": "gci_F",
+      "alpha_deg": 4.0
+    },
+    {
+      "index": 47,
+      "level": "gci_F",
+      "alpha_deg": 8.0
+    },
+    {
+      "index": 65,
+      "level": "gci_F",
+      "alpha_deg": -2.0
+    },
+    {
+      "index": 65,
+      "level": "gci_F",
+      "alpha_deg": 0.0
+    },
+    {
+      "index": 65,
+      "level": "gci_F",
+      "alpha_deg": 4.0
+    },
+    {
+      "index": 65,
+      "level": "gci_F",
+      "alpha_deg": 8.0
+    },
+    {
+      "index": 81,
+      "level": "gci_F",
+      "alpha_deg": -2.0
+    },
+    {
+      "index": 81,
+      "level": "gci_F",
+      "alpha_deg": 0.0
+    },
+    {
+      "index": 81,
+      "level": "gci_F",
+      "alpha_deg": 4.0
+    },
+    {
+      "index": 81,
+      "level": "gci_F",
+      "alpha_deg": 8.0
+    },
+    {
+      "index": 83,
+      "level": "gci_F",
+      "alpha_deg": -2.0
+    },
+    {
+      "index": 83,
+      "level": "gci_F",
+      "alpha_deg": 0.0
+    },
+    {
+      "index": 83,
+      "level": "gci_F",
+      "alpha_deg": 4.0
+    },
+    {
+      "index": 83,
+      "level": "gci_F",
+      "alpha_deg": 8.0
+    },
+    {
+      "index": 83,
+      "level": "gci_FF",
+      "alpha_deg": -2.0
+    },
+    {
+      "index": 83,
+      "level": "gci_FF",
+      "alpha_deg": 0.0
+    },
+    {
+      "index": 83,
+      "level": "gci_FF",
+      "alpha_deg": 4.0
+    },
+    {
+      "index": 83,
+      "level": "gci_FF",
+      "alpha_deg": 8.0
+    }
+  ],
+  "case_count": 44,
+  "total_solver_hours": 23.8,
+  "upload": {
+    "meshes": "BUILD IN THE CLOUD, do not upload. build_volume.py needs only the project venv and takes about 12 s per design; a gci_F CGNS is roughly 56 MB and gci_FF 120 MB, so ten of each is gigabytes of transfer to avoid seconds of compute.",
+    "required_repo_paths": [
+      "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/",
+      "AERIS_MESH_STUDY/04_strategy_studies/shared/",
+      "AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/",
+      "AERIS_MESH_STUDY/05_s6_cfd_qualification/POLICY.yaml",
+      "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/",
+      "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_pilot_geometries.json",
+      "src/aeris/"
+    ],
+    "environment": "MACH-Aero (ADflow + cgnsutilities) and the project venv. env_s8.py resolves both by VERIFYING them -- it imports adflow to confirm -- so the hard-coded paths in the plan documents do not need editing per host.",
+    "trap": "the MPI launcher must be the one the MACH-Aero env's mpi4py was built against. A mismatched runtime does not error: the ranks fail to form a communicator, every process believes it is rank 0 of 1, and they overwrite each other's output while reporting success."
+  },
+  "acceptance": {
+    "gate": "convergence_gate.py, unchanged from the pilot",
+    "routes": "(residual target met AND healthy) OR (orders AND forces settled)",
+    "provenance": "dataset_row.py 53-field schema; collect_dataset.py archive",
+    "rule": "check the gate after EVERY geometry, not at the end. A geometry that stalls should surface in minutes, not after the batch."
+  },
+  "authorization": {
+    "current": "POLICY.yaml heavy_work.exceptions.run-s8-campaign",
+    "covers": "gci_C and gci_M on the ten pilot geometries",
+    "REQUIRED": "This batch runs gci_F and gci_FF, which the current entry does NOT authorize -- it names grid_levels [gci_C, gci_M]. A new signed entry is needed before any cloud run, on the same terms as PLAN 6."
+  }
+}

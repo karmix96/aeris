@@ -92,6 +92,19 @@ CP_PHYSICAL_MAX = 1.0018
 NODE_ORDERING = "structured (i=xi around the ring, j=eta wall-normal, k=zeta spanwise), C-order in the npz, Fortran-order in the CGNS"
 
 
+def repo_relative(path: Path) -> str:
+    """A repo-relative path string, whatever form the caller passed.
+
+    relative_to() raises when the argument is relative and REPO is absolute, so
+    a run directory given as a relative path made every row fail on the FIELD
+    PATH -- the one thing the AI work needs most.
+    """
+    try:
+        return str(Path(path).resolve().relative_to(REPO))
+    except ValueError:
+        return str(path)
+
+
 def sha256_file(path: Path, limit: int | None = None) -> str | None:
     if not path.exists():
         return None
@@ -296,7 +309,7 @@ def build_row(*, run: Path, level: str, index: int, set_name: str,
     # ---- physics checks -----------------------------------------------------
     surface = surface_file(run)
     if surface:
-        row["surface_field_path"] = str(surface.relative_to(REPO))
+        row["surface_field_path"] = repo_relative(surface)
         cp = cgns_variable(surface, "CoefPressure")
         if cp is not None and cp.size:
             over = cp > CP_PHYSICAL_MAX
@@ -319,7 +332,7 @@ def build_row(*, run: Path, level: str, index: int, set_name: str,
             absent(field, "no surface CGNS beside the run")
     vol = volume_file(run)
     if vol:
-        row["volume_field_path"] = str(vol.relative_to(REPO))
+        row["volume_field_path"] = repo_relative(vol)
     else:
         absent("volume_field_path", "no volume CGNS beside the run")
     row["node_ordering"] = NODE_ORDERING
@@ -385,9 +398,15 @@ def main() -> int:
     # `a*` also matches the avl/ directory the pilot writes beside the runs,
     # which became a fifth "run" row with 29 empty fields. A run is a directory
     # that actually holds a run.
-    runs = sorted(p for p in args.run_dir.glob("a*")
+    # Runs for THIS level only. Globbing a* picked up every level's runs in a
+    # shared geometry directory, and the avl/ directory besides.
+    runs = sorted(p for p in args.run_dir.glob(f"{args.level}_a*")
                   if p.is_dir() and ((p / "result.json").exists()
                                      or (p / "run.log").exists()))
+    if not runs:
+        runs = sorted(p for p in args.run_dir.glob("a*")
+                      if p.is_dir() and ((p / "result.json").exists()
+                                         or (p / "run.log").exists()))
     if not runs:
         runs = [args.run_dir]
 
@@ -395,13 +414,24 @@ def main() -> int:
     gate_path = args.gate or (args.run_dir / "gate.json")
     if gate_path.exists():
         gate = json.loads(gate_path.read_text())
+    # verify_against_avl.py writes avl_sweep.json (a LIST of {alpha_deg, raw})
+    # beside avl_reference.json (the moment reference). Taking the
+    # alphabetically first json picked the reference file, which has no points,
+    # so every row lost its low-fidelity counterpart -- and those are what the
+    # multifidelity correction this campaign exists to build is fitted on.
     avl = None
-    avl_path = args.avl or (args.run_dir / "avl" / "avl_verification.json")
-    if avl_path.exists():
-        avl = json.loads(avl_path.read_text())
-    elif (args.run_dir / "avl").is_dir():
-        found = sorted((args.run_dir / "avl").glob("*.json"))
-        avl = json.loads(found[0].read_text()) if found else None
+    for candidate in ([args.avl] if args.avl else []) + [
+            args.run_dir / "avl" / "avl_sweep.json",
+            args.run_dir / "avl" / "avl_verification.json"]:
+        if candidate and candidate.exists():
+            raw = json.loads(candidate.read_text())
+            if isinstance(raw, list):
+                avl = {"points": [{"alpha_deg": r["alpha_deg"], **r.get("raw", {})}
+                                  for r in raw], "status": "ok",
+                       "source": str(candidate)}
+            else:
+                avl = raw
+            break
 
     try:
         import env_s8

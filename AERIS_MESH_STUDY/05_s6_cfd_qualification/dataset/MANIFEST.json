@@ -2,10 +2,10 @@
   "schema_version": "aeris.s8.dataset.v1",
   "purpose": "Trusted S8 CFD results with the provenance needed to reproduce and to believe them. Surrogate-training dataset, NOT certification.",
   "environment": {
-    "collected_utc": "2026-09-06T17:25:45.900798+00:00",
-    "git_commit": "62306ccd25e5f1ee25097b6cc517b5bd199acd1c",
+    "collected_utc": "2026-09-09T13:42:55.115928+00:00",
+    "git_commit": "756e2e3481b1148f7a456e7f3359a12af5113f3a",
     "git_dirty": true,
-    "git_describe": "checkpoint-geometry-stable-430-g62306cc-dirty",
+    "git_describe": "checkpoint-geometry-stable-432-g756e2e3-dirty",
     "adflow_version": "2.13.1",
     "mach_python": "/home/mike_kara/miniconda3/envs/mach-aero/bin/python",
     "mpirun": "/home/mike_kara/miniconda3/envs/mach-aero/bin/mpirun",
@@ -21,8 +21,8 @@
     "stopping_rule": "L2Convergence 1e-6; see reports/s8_l2_sensitivity.json"
   },
   "counts": {
-    "runs_found": 9,
-    "rows": 9,
+    "runs_found": 62,
+    "rows": 62,
     "excluded": 0
   },
   "meshes": {
@@ -43,6 +43,105 @@
       "wall_layer_error_m": 2.220446049250313e-16,
       "frame_mode": "span_normal",
       "blocks_sha256": "fcfc44d63fb5fb6eee04ebaf7aeb068a7a9e6f8be82b6e8d7421cbe9cf80a2cd"
+    },
+    "gci_C_12": {
+      "level": "gci_C",
+      "index": 12,
+      "cells": 573312,
+      "folded": 0,
+      "wall_layer_error_m": 2.220446049250313e-16,
+      "frame_mode": "span_normal",
+      "blocks_sha256": "b79f2436c23982ee7daa0476da84ad07a5750e82a81a3b62286c0d37c12554a3"
+    },
+    "gci_C_13": {
+      "level": "gci_C",
+      "index": 13,
+      "cells": 573312,
+      "folded": 0,
+      "wall_layer_error_m": 2.220446049250313e-16,
+      "frame_mode": "span_normal",
+      "blocks_sha256": "7fe8afef30a1c978db105d53896a85e13f90f9cc19bbf88740b6df2c56167332"
+    },
+    "gci_C_16": {
+      "level": "gci_C",
+      "index": 16,
+      "cells": 573312,
+      "folded": 0,
+      "wall_layer_error_m": 2.220446049250313e-16,
+      "frame_mode": "span_normal",
+      "blocks_sha256": "ea4519aa4a8ceda8fcf7515bc3c840a3301907006e76154123bc821a8fcb5131"
+    },
+    "gci_C_23": {
+      "level": "gci_C",
+      "index": 23,
+      "cells": 567256,
+      "folded": 0,
+      "wall_layer_error_m": 2.220446049250313e-16,
+      "frame_mode": "span_normal",
+      "blocks_sha256": "7f1db0bb77657b832bb065c985ee66d842c0186ec8430dcb2fd13d06d16189c1"
+    },
+    "gci_C_29": {
+      "level": "gci_C",
+      "index": 29,
+      "cells": 567256,
+      "folded": 0,
+      "wall_layer_error_m": 1.196959198423997e-16,
+      "frame_mode": "span_normal",
+      "blocks_sha256": "8863fad201568a342c49d0685577bfd897e1264a94cf27d5cd93b9aa747377e2"
+    },
+    "gci_M_29": {
+      "level": "gci_M",
+      "index": 29,
+      "cells": 1111152,
+      "folded": 0,
+      "wall_layer_error_m": 2.220446049250313e-16,
+      "frame_mode": "span_normal",
+      "blocks_sha256": "39e159ba59c76fac9b5e4d0e66e3a70f6ad0b55930a6de523b49d42c7f2ed838"
+    },
+    "gci_C_36": {
+      "level": "gci_C",
+      "index": 36,
+      "cells": 567256,
+      "folded": 0,
+      "wall_layer_error_m": 2.220446049250313e-16,
+      "frame_mode": "span_normal",
+      "blocks_sha256": "be142e817cdd41c072cd040fd00489f8fbc2be2f5d09ccd0d82113cf21960286"
+    },
+    "gci_C_47": {
+      "level": "gci_C",
+      "index": 47,
+      "cells": 567256,
+      "folded": 0,
+      "wall_layer_error_m": 1.5265566588595902e-16,
+      "frame_mode": "span_normal",
+      "blocks_sha256": "8e956113b4d6325fbb15b8add885f39d6f6eea752862ba3323f6ae87a308f0b6"
+    },
+    "gci_C_65": {
+      "level": "gci_C",
+      "index": 65,
+      "cells": 573312,
+      "folded": 0,
+      "wall_layer_error_m": 2.220446049250313e-16,
+      "frame_mode": "span_normal",
+      "blocks_sha256": "17dccfa6ac6a8deae85ddbee0fbe7cc65527b3b99352468063e6bf71e6179012"
+    },
+    "gci_M_65": {
+      "level": "gci_M",
+      "index": 65,
+      "cells": 1121436,
+      "folded": 0,
+      "wall_layer_error_m": 2.220446049250313e-16,
+      "frame_mode": "span_normal",
+      "blocks_sha256": "351a0abe2c47907cd35cf95f870ae580b261503aefc9098c2419a6752070b442"
+    },
+    "gci_C_81": {
+      "level": "gci_C",
+      "index": 81,
+      "cells": 567256,
+      "folded": 0,
+      "wall_layer_error_m": 2.220446049250313e-16,
+      "frame_mode": "span_normal",
+      "blocks_sha256": "c8b8197734d18a0ecb107d2d828fbbdacd6d66e1fc6de214132092e8ea9a6715"
     }
   },
   "excluded_runs": [],

@@ -65,6 +65,33 @@ heavy_work:
       grid_levels: [gci_C, gci_M]
       alpha_deg: [-2.0, 0.0, 4.0, 8.0]
       minimum_mpi_processes: 6
+    run-s8-cloud-hf:
+      policy: policies/s8_cloud_hf_v1.yaml
+      decision: AERIS_MESH_STUDY/00_governance/decisions/ADR-0020-s8-desktop-campaign.md
+      plan: AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_cloud_batch.json
+      authorized_by: principal_investigator
+      authorized_on: 2026-09-09
+      authorization_note: >-
+        Directed in session after the ten-geometry generalization completed:
+        "ok proceed. make it cloud ready." Written into the record by the agent
+        that was directed, not typed by the principal investigator.
+      scope: >-
+        The high-fidelity batch on rented compute: gci_F on the ten authorized
+        pilot geometries and gci_FF on the reference geometry, four incidences
+        each, plus the mesh builds those require. Authorizes the grid levels the
+        desktop cannot hold, which is the whole reason for renting. Does NOT
+        authorize a hold-out unlock, a family freeze, geometries outside the
+        authorized ten, a solver other than the one validated against ONERA M6,
+        or any paper claim.
+      geometry_indices: [12, 13, 16, 23, 29, 36, 47, 65, 81, 83]
+      grid_levels: [gci_C, gci_M, gci_F, gci_FF]
+      alpha_deg: [-2.0, 0.0, 4.0, 8.0]
+      minimum_mpi_processes: 6
+      preflight_required: true
+      preflight_reason: >-
+        cloud_preflight.py must pass on the rented host before any solve. Every
+        failure it checks for is one this project has actually hit, and on
+        rented compute each of them bills.
 holdout:
   id: round_c_lhs10_seed42
   locked: true

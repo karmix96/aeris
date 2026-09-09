@@ -1,0 +1,102 @@
+schema_version: aeris.s8.cloud_hf_policy.v1
+policy_id: s8_cloud_hf_v1
+immutable: true
+
+authorization:
+  authorized_by: principal_investigator
+  authorized_on: 2026-09-09
+  status: AUTHORIZED
+  decision: AERIS_MESH_STUDY/00_governance/decisions/ADR-0020-s8-desktop-campaign.md
+  how_given: >-
+    Directed in session on 2026-09-09, after the ten-geometry generalization
+    completed and the cloud batch was planned and shown: "ok proceed. make it
+    cloud ready." Written into the record by the agent that was directed.
+  session: https://claude.ai/code/session_01LrNWdij37TMcqzzPVtFUa9
+  scope_limit: >-
+    The high-fidelity batch only. Does NOT authorize a hold-out unlock, a family
+    freeze, geometries outside the authorized ten, a different solver, or any
+    paper claim.
+
+extends: s8_campaign_v1
+extends_reason: >-
+  s8_campaign_v1 authorizes gci_C and gci_M, which is what the development host
+  can hold. gci_F needs 19.5 GiB and gci_FF 38.4 GiB on the ANK-only memory law,
+  against 12.8 GiB available there, so these levels are the reason for renting
+  compute at all and they need their own signed entry.
+
+scope:
+  purpose: measurement_only
+  development_set_only: true
+  holdout_access_allowed: false
+  geometry_set: lhs100_seed42
+  automatic_retry_allowed: false
+  work_packages:
+    - id: hf_ten_geometries
+      grid_level: gci_F
+      geometry_indices: [12, 13, 16, 23, 29, 36, 47, 65, 81, 83]
+      alpha_deg: [-2.0, 0.0, 4.0, 8.0]
+    - id: hf_reference_finest
+      grid_level: gci_FF
+      geometry_indices: [83]
+      alpha_deg: [-2.0, 0.0, 4.0, 8.0]
+      note: >-
+        The reference geometry must carry every level, or there is no
+        grid-convergence study. Ten geometries at one fine level contain none.
+        With gci_C and gci_M already measured on the development host, index 83
+        reaches four levels at r about 1.25 each.
+
+solver:
+  configuration: ANK only
+  l2_convergence: 1.0e-6
+  minimum_mpi_processes: 6
+  unchanged_from: s8_campaign_v1
+  why_ank_only: >-
+    The Newton-Krylov stage FAILED at 1,111,152 cells with this project's lean
+    preconditioner -- NKSubspaceSize 20 and NKPCILUFill 1 against ADflow's
+    defaults of 60 and 2 -- freezing with Step 0.01 and a linear residual of
+    1.000 while ANK alone converged the same case in a fifth of the time. ANK
+    only is the configuration proven at these cell counts and it needs about
+    2 GiB less. Restoring ADflow's NK defaults may converge but is UNPROVEN
+    here and must be sized on the 9.46 GiB-per-million law with a larger
+    subspace on top.
+  solver_change_requires_revalidation: >-
+    The ONERA M6 validation establishes this ADflow configuration and no other.
+    A different solver, or restored NK defaults, requires that validation to be
+    repeated before any high-fidelity result is quoted.
+
+sizing:
+  memory_law_ank_only: 2.69 GiB + 7.23 GiB per million cells
+  memory_law_ank_then_nk: 1.51 GiB + 9.46 GiB per million cells
+  laws_fitted_to: runs on the development host, not datasheet values
+  cell_variation_margin: 1.05
+  cell_variation_reason: >-
+    Cell count varies with geometry because the leading-edge turning solve
+    adapts per section: 567,256 to 573,312 was the spread over ten designs at
+    gci_C. Size on the maximum plus margin, not on the reference geometry.
+  required_gib:
+    gci_F: 19.5
+    gci_FF: 38.4
+
+execution_rules:
+  preflight_required: true
+  one_measurement_at_a_time: true
+  gate_after_every_geometry: true
+  gate_after_every_geometry_reason: >-
+    A geometry that stalls must surface in minutes, not after the batch. On
+    rented compute the difference is the bill.
+  build_meshes_on_the_rented_host: >-
+    build_volume.py needs only the project venv and takes about 12 s per design.
+    A gci_F CGNS is roughly 56 MB and gci_FF 120 MB, so uploading them is
+    gigabytes of transfer to avoid seconds of compute.
+
+what_this_can_settle:
+  - whether the constant -0.00273 CDp offset between gci_C and gci_M converges
+    toward zero with further refinement, or persists
+  - an observed order of accuracy and a genuine GCI band on index 83, which
+    four levels make computable for the first time
+  - whether the ten-geometry results hold at high fidelity
+
+what_this_cannot_settle:
+  - validation of the S8 mesher. No public experimental case is an AERIS BWB.
+  - anything about a solver configuration it did not run
+  - any freeze, hold-out unlock or paper claim

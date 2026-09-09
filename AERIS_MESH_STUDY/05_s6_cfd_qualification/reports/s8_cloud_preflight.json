@@ -1,0 +1,72 @@
+{
+  "checks": [
+    {
+      "check": "interpreters",
+      "pass": true,
+      "detail": "mach-aero /home/mike_kara/miniconda3/envs/mach-aero/bin/python (found an env whose interpreter imports adflow)",
+      "fatal": true
+    },
+    {
+      "check": "mpi launcher",
+      "pass": true,
+      "detail": "/home/mike_kara/miniconda3/envs/mach-aero/bin/mpirun -- the MACH-Aero env's own mpirun, which its mpi4py was built against",
+      "fatal": false
+    },
+    {
+      "check": "mpi communicator",
+      "pass": true,
+      "detail": "6 distinct ranks reporting size {'6'} (want 6 ranks each reporting 6)",
+      "fatal": true
+    },
+    {
+      "check": "memory for gci_FF",
+      "pass": false,
+      "detail": "12.7 GiB available, 38.4 GiB needed (4,700,000 cells x 1.05 margin, ANK-only law)",
+      "fatal": true
+    },
+    {
+      "check": "disk",
+      "pass": true,
+      "detail": "936 GiB free at /home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts, about 13 GiB needed (44 runs x ~0.3 GiB of volume solution)",
+      "fatal": true
+    },
+    {
+      "check": "authorization",
+      "pass": true,
+      "detail": "signed entries ['run-s8-corrected-sweep', 'run-s8-campaign', 'run-s8-cloud-hf']; levels ['gci_F', 'gci_FF'] and 10 geometries all covered",
+      "fatal": true
+    },
+    {
+      "check": "design set",
+      "pass": true,
+      "detail": "lhs100_seed42 loads, 100 designs, highest index requested 83",
+      "fatal": true
+    },
+    {
+      "check": "CGNS reader",
+      "pass": true,
+      "detail": "ADF container, read 23040 cp values from m6_a3.06_000_surf.cgns",
+      "fatal": true
+    }
+  ],
+  "fatal_failures": 1,
+  "warnings": 0,
+  "verdict": "NOT READY",
+  "levels": [
+    "gci_F",
+    "gci_FF"
+  ],
+  "geometries": [
+    12,
+    13,
+    16,
+    23,
+    29,
+    36,
+    47,
+    65,
+    81,
+    83
+  ],
+  "ranks": 6
+}

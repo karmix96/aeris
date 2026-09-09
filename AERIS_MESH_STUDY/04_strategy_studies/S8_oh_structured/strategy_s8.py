@@ -28,6 +28,7 @@ and it is what keeps the topology free of collapsed edges.
 from __future__ import annotations
 
 import sys
+import dataclasses as _dataclasses
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -233,6 +234,32 @@ LEVELS["gci_FF"] = refined_level(LEVELS["oh_L3"], GCI_RATIO ** 3, name="gci_FF")
 #: differences that shrink with r.  It weakens the study; it does not invalidate
 #: it.  Prefer a machine that fits `gci_F`.
 LEVELS["gci_MF"] = refined_level(LEVELS["oh_L3"], GCI_RATIO ** 1.5, name="gci_MF")
+
+#: An EDGE-refined coarse level: gci_C's interval counts exactly, with the
+#: leading- and trailing-edge spacing refined by GCI_RATIO and nothing else
+#: touched.  It exists to test one hypothesis cheaply.
+#:
+#: Refining gci_C to gci_M drops pressure drag by 0.00273 +/- 6 % across three
+#: geometries and four incidences -- a CONSTANT offset, independent of the
+#: design and of the operating point, which makes it a property of the
+#: discretization rather than of the flow.  Two other measurements point the
+#: same way: over-bound surface cp peak excess falls 33 to 72 per cent with
+#: refinement, and taking the far field from 40 to 60 root chords is worth
+#: +0.000039 on CDp -- seventy-two times smaller, and the other sign.
+#:
+#: If that offset is edge resolution, redistributing the SAME number of surface
+#: points toward the edges should recover most of it at gci_C's cost. If it is
+#: not, this level moves CDp very little and the answer is that global
+#: refinement is genuinely required, which is worth knowing before buying it on
+#: ten geometries.
+#:
+#: Same n_side, n_span, n_normal, far field and clustering laws as gci_C. Only
+#: the two edge SPACINGS change, so the comparison isolates one variable.
+LEVELS["gci_C_edge"] = _dataclasses.replace(
+    LEVELS["gci_C"],
+    le_refine_factor=GCI_RATIO,
+    ds_te_frac=LEVELS["gci_C"].ds_te_frac / GCI_RATIO,
+)
 
 
 def _span_coordinate(pygeo: Any, v: float) -> float:

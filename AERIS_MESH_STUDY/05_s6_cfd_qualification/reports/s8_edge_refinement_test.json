@@ -1,0 +1,29 @@
+{
+  "test": "edge-refined coarse level, gci_C interval counts with gci_M edge spacings",
+  "cells": 567256,
+  "cells_note": "identical to gci_C, so only the edge spacing differs",
+  "hypothesis": "the constant -0.00273 CDp offset is leading/trailing edge resolution",
+  "verdict": "REFUTED - edge refinement recovers about 7 per cent of the offset",
+  "consequence": "global near-body refinement is genuinely required; there is no cheap redistribution that buys gci_M drag at gci_C cost",
+  "supporting": "CDv is converged to 1.4 per cent while CDp is not, so the boundary layer is resolved for skin friction but the pressure field is not resolved for form drag",
+  "rows": [
+    {
+      "alpha": 0,
+      "cdp_gci_C": 0.011827825298184384,
+      "cdp_edge": 0.01163481942487628,
+      "cdp_gci_M": 0.009078645289163653,
+      "edge_move": -0.00019300587330810422,
+      "full_gap": -0.0027491800090207307,
+      "fraction_recovered": 0.07020488752093527
+    },
+    {
+      "alpha": 4,
+      "cdp_gci_C": 0.010434435780243072,
+      "cdp_edge": 0.010256051872170026,
+      "cdp_gci_M": 0.007760356964489201,
+      "edge_move": -0.00017838390807304629,
+      "full_gap": -0.0026740788157538714,
+      "fraction_recovered": 0.06670854539594287
+    }
+  ]
+}

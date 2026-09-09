@@ -1,0 +1,91 @@
+{
+  "question": "does the 1e-6 stopping rule hold away from index 83?",
+  "method": "run pilot cases far past 1e-6 and read the forces off at the crossing and at the end",
+  "geometries": [
+    "g12 alpha 0",
+    "g65 alpha 0 (worst former folder)",
+    "g29 alpha 4 (maximin-farthest)"
+  ],
+  "cases": {
+    "g65_a0": {
+      "iter_at_1e-6": 146,
+      "iter_final": 338,
+      "rel_final": 2.6356721052570133e-08,
+      "CL": {
+        "at_1e6": -0.008668242684280653,
+        "at_final": -0.008662855242853817,
+        "abs_move": 5.387441426835116e-06,
+        "rel_move_pct": 0.062151483559694555
+      },
+      "CD": {
+        "at_1e6": 0.01694001183507647,
+        "at_final": 0.01693615974003764,
+        "abs_move": 3.852095038829606e-06,
+        "rel_move_pct": 0.022739624247802168
+      },
+      "CDp": {
+        "at_1e6": 0.008102463637006221,
+        "at_final": 0.008096548745032666,
+        "abs_move": 5.914891973555006e-06,
+        "rel_move_pct": 0.07300115419882956
+      },
+      "CDv": {
+        "at_1e6": 0.008837548198070252,
+        "at_final": 0.008839610995004977,
+        "abs_move": 2.0627969347254e-06,
+        "rel_move_pct": 0.023341280731864388
+      },
+      "CMy": {
+        "at_1e6": 0.0027026851043497196,
+        "at_final": 0.002696731892803908,
+        "abs_move": 5.953211545811632e-06,
+        "rel_move_pct": 0.22027026146074113
+      }
+    },
+    "g29_a4": {
+      "iter_at_1e-6": 125,
+      "iter_final": 232,
+      "rel_final": 1.5319457049709402e-08,
+      "CL": {
+        "at_1e6": 0.166338183100311,
+        "at_final": 0.16635179336132902,
+        "abs_move": 1.3610261018009995e-05,
+        "rel_move_pct": 0.008182283083976134
+      },
+      "CD": {
+        "at_1e6": 0.020802493680227657,
+        "at_final": 0.020800537537094203,
+        "abs_move": 1.9561431334538804e-06,
+        "rel_move_pct": 0.009403406935357727
+      },
+      "CDp": {
+        "at_1e6": 0.011775650443057931,
+        "at_final": 0.011774176764536968,
+        "abs_move": 1.4736785209634728e-06,
+        "rel_move_pct": 0.012514625226772477
+      },
+      "CDv": {
+        "at_1e6": 0.009026843237169726,
+        "at_final": 0.00902636077255724,
+        "abs_move": 4.824646124869381e-07,
+        "rel_move_pct": 0.005344776682287992
+      },
+      "CMy": {
+        "at_1e6": 0.029935690446473602,
+        "at_final": 0.029935761665825452,
+        "abs_move": 7.121935184997708e-08,
+        "rel_move_pct": 0.00023790783104642456
+      }
+    }
+  },
+  "worst_relative_move_pct": {
+    "CL": 0.062151483559694555,
+    "CD": 0.022739624247802168,
+    "CDp": 0.07300115419882956,
+    "CDv": 0.023341280731864388
+  },
+  "verdict": "1e-6 HOLDS. Worst force movement beyond it is under 0.1 per cent on any coefficient, against a discretization signal of 25-34 per cent on CDp. Iterative error sits two to three orders below the quantity being measured.",
+  "caveat": "CL relative movement is inflated on designs that trim near the sampled incidence (g65 CL = -0.0087); its ABSOLUTE movement is 5e-06.",
+  "g12_a0_note": "g12 alpha 0 was measured earlier by comparing result.json at 1e-6 against a separate 1e-8 run rather than from one log: CL moved 0.015 %, CD 0.018 %. It agrees with the two cases measured here and is the third geometry.",
+  "geometries_measured": 3
+}

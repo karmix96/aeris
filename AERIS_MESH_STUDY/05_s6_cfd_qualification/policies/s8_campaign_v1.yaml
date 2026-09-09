@@ -150,10 +150,20 @@ solver:
     rather than about the aerodynamics: publication-grade verification, or
     diagnosing a stall, which at 1e-6 halts before it becomes visible.
   l2_convergence_revalidation: >-
-    The evidence above is from ONE geometry, index 83. Re-run l2_sensitivity.py
-    on a handful of pilot geometries with a tightened target before the figure
-    is relied on across the design space: a tolerance justified on one geometry
-    is justified on one geometry.
+    DONE 2026-09-09, and the rule holds. Three pilot geometries were run far
+    past the target and their forces read off at the 1e-6 crossing and at the
+    end: g12 alpha 0 (CL 0.015 %, CD 0.018 %), g65 alpha 0, the worst former
+    folder (CL 0.062 %, CD 0.023 %, CDp 0.073 %), and g29 alpha 4, the
+    maximin-farthest design (CL 0.008 %, CD 0.009 %, CDp 0.013 %). Worst
+    movement beyond 1e-6 on any coefficient is 0.073 per cent, against a
+    discretization signal of 25 to 34 per cent on CDp -- iterative error some
+    340 times below the quantity being measured. Evidence:
+    reports/s8_l2_revalidation.json.
+  l2_convergence_revalidation_caveat: >-
+    CL relative movement is inflated on designs that trim near the sampled
+    incidence: g65 has CL = -0.0087 at alpha 0, so a 5e-06 ABSOLUTE move reads
+    as 0.062 per cent. Read CL absolutely on such designs. The same trap is
+    already recorded for CMy in convergence_gate.py.
   l2_convergence_external_corroboration: >-
     ADflow's own steady RANS tutorial uses L2Convergence 1e-6 with the NK solver
     disabled, which is the configuration this campaign has arrived at

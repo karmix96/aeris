@@ -188,6 +188,11 @@ def main() -> int:
                     help="override ANKSwitchTol (governed 1.0: ANK from the start)")
     ap.add_argument("--n-cycles-coarse", type=int, default=None,
                     help="override nCyclesCoarse, the coarse-grid start budget")
+    # ADflow's default freestream eddy-viscosity ratio, 0.009, is SA chi ~1.3; the
+    # TMR prescribes chi = 3 (ratio 0.21) so the ft2 term cannot hold a boundary
+    # layer laminar. Every S8 run so far used the default.
+    ap.add_argument("--eddy-vis-inf-ratio", type=float, default=None,
+                    help="override eddyVisInfRatio (ADflow default 0.009)")
     ap.add_argument("--i-have-authorization", action="store_true")
     args = ap.parse_args()
 
@@ -203,7 +208,8 @@ def main() -> int:
     init_overrides = {key: getattr(args, flag) for flag, key in (
         ("turbulence_model", "turbulenceModel"), ("mg_cycle", "MGCycle"),
         ("smoother", "smoother"), ("ank_switch_tol", "ANKSwitchTol"),
-        ("n_cycles_coarse", "nCyclesCoarse")) if getattr(args, flag) is not None}
+        ("n_cycles_coarse", "nCyclesCoarse"),
+        ("eddy_vis_inf_ratio", "eddyVisInfRatio")) if getattr(args, flag) is not None}
 
     from adflow import ADFLOW
     from baseclasses import AeroProblem

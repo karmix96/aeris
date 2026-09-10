@@ -1,0 +1,92 @@
+{
+  "schema": "aeris.s8.onera_m6_loads.v1",
+  "run": "../../artifacts/onera_m6/run_L0_nonk",
+  "solver_overrides": {
+    "useNKSolver": false
+  },
+  "why": "the WIND archive gives cp only; integrated cp is the one measured load",
+  "stations": [
+    {
+      "station": 1,
+      "eta": 0.2,
+      "chord": 0.61474,
+      "cn_experiment": 0.23095717999999996,
+      "cn_cfd_at_measured_points": 0.2679793658317754,
+      "cn_cfd_full_resolution": 0.2747212638629512,
+      "difference": 0.03702218583177544,
+      "relative_difference": 0.16029891701905716
+    },
+    {
+      "station": 2,
+      "eta": 0.43999999999999995,
+      "chord": 0.543988,
+      "cn_experiment": 0.26902603500000005,
+      "cn_cfd_at_measured_points": 0.271840025425509,
+      "cn_cfd_full_resolution": 0.29706923885227327,
+      "difference": 0.00281399042550895,
+      "relative_difference": 0.010459918593042303
+    },
+    {
+      "station": 3,
+      "eta": 0.6499999999999999,
+      "chord": 0.48208000000000006,
+      "cn_experiment": 0.284059655,
+      "cn_cfd_at_measured_points": 0.2812597296492712,
+      "cn_cfd_full_resolution": 0.29658550015043256,
+      "difference": -0.0027999253507288158,
+      "relative_difference": -0.009856821626882619
+    },
+    {
+      "station": 4,
+      "eta": 0.8,
+      "chord": 0.43786,
+      "cn_experiment": 0.25289839000000014,
+      "cn_cfd_at_measured_points": 0.249969783834466,
+      "cn_cfd_full_resolution": 0.2770129607107278,
+      "difference": -0.002928606165534142,
+      "relative_difference": -0.011580169274838565
+    },
+    {
+      "station": 5,
+      "eta": 0.8999999999999998,
+      "chord": 0.4083800000000001,
+      "cn_experiment": 0.21310452999999996,
+      "cn_cfd_at_measured_points": 0.20449255744844905,
+      "cn_cfd_full_resolution": 0.23379628810492475,
+      "difference": -0.008611972551550912,
+      "relative_difference": -0.0404119637980052
+    },
+    {
+      "station": 6,
+      "eta": 0.9600000000000001,
+      "chord": 0.390692,
+      "cn_experiment": 0.17011446499999994,
+      "cn_cfd_at_measured_points": 0.1643984898495673,
+      "cn_cfd_full_resolution": 0.18727747702822464,
+      "difference": -0.005715975150432651,
+      "relative_difference": -0.03360075905616053
+    },
+    {
+      "station": 7,
+      "eta": 0.9900000000000002,
+      "chord": 0.38184799999999997,
+      "cn_experiment": 0.2106007600000001,
+      "cn_cfd_at_measured_points": 0.17978052913357204,
+      "cn_cfd_full_resolution": 0.20119642778649738,
+      "difference": -0.030820230866428072,
+      "relative_difference": -0.14634434779071098
+    }
+  ],
+  "span_integrated_cn": {
+    "cn_experiment": 0.2465802290201562,
+    "cn_cfd_at_measured_points": 0.2595483441004773,
+    "cn_cfd_full_resolution": 0.2762444552541703
+  },
+  "cl_from_solver": 0.2664592844603841,
+  "summary": {
+    "mean_abs_relative_difference": 0.058936128165528186,
+    "worst_station": 1,
+    "worst_relative_difference": 0.16029891701905716,
+    "span_integrated_relative_difference": 0.0525918689095752
+  }
+}

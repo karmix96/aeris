@@ -31,6 +31,12 @@ echo -e "\n=== 1/5 preflight"
 # 2. gci_F on the ten authorized geometries.
 #    --no-nk because Newton-Krylov FAILED at 1.11M cells with this project's
 #    lean preconditioner; ANK alone is what is proven at these counts.
+echo -e "\n=== 1b/5 scaling probe: time to answer at three rank counts"
+# AUDIT C8: the batch estimate assumed 75 % efficiency on 24 ranks, and the desktop
+# says otherwise. Measured here before the hours bill; a failure is not fatal.
+"$PY" "$S/run_campaign.py" probe --probe-ranks $((RANKS / 4)) $((RANKS / 2)) "$RANKS" \
+  --no-nk || echo "probe failed -- the batch runs, but its duration is unmeasured"
+
 echo -e "\n=== 2/5 gci_F, ten geometries"
 "$PY" "$S/run_campaign.py" pilot --level gci_F --ranks "$RANKS" \
   --watch-memory --no-nk
@@ -47,7 +53,7 @@ echo -e "\n=== 4/5 collect"
 
 # 5. The grid-convergence study index 83 can finally support: four levels.
 echo -e "\n=== 5/5 grid convergence on the reference"
-C='{"gci_C":567256,"gci_M":1111152,"gci_F":2217680,"gci_FF":4700000}'
+C='{"gci_C":567256,"gci_M":1111152,"gci_F":2217680,"gci_FF":4504420}'
 "$PY" "$S/convergence_gate.py" \
   --runs "$REPO/AERIS_MESH_STUDY/artifacts/s8_pilot/g83/*_a*" \
   --out "$Q/reports/s8_hf_gate.json"

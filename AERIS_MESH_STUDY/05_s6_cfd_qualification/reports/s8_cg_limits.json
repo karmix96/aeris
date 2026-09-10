@@ -1,0 +1,464 @@
+{
+  "schema": "aeris.s8.cg_limits.v1",
+  "question": "AUDIT_2026-09-10 next step 12: stability needs each design's CG",
+  "finding": "the project has one mass model (configs/mass/baseline_uav.yaml, x_cg 0.40 m for every design); no per-design CG exists, so stability is reported as a CG limit per design, not a verdict",
+  "formula": "x_np = x_ref - (dCMy/dCL) * c_ref;  aft CG = x_np - SM * MAC",
+  "moment_reference_m": 0.4,
+  "cfd_chord_ref_m": 0.9,
+  "designs": {
+    "12": {
+      "planform": {
+        "avl_s_ref_m2": 0.8007952814845193,
+        "avl_c_ref_m": 0.606642406429209,
+        "avl_b_ref_m": 1.6386953836970086,
+        "half_area_from_sections_m2": 0.40039764118186827,
+        "mac_m": 0.6061661319833795,
+        "x_mac_le_m": 0.14464513402322196,
+        "n_sections": 29
+      },
+      "cfd_neutral_point": {
+        "gci_C": {
+          "x_np_m": 0.3031731949825123,
+          "dcmy_dcl": 0.10758533890831973,
+          "alphas": [
+            -2.0,
+            0.0,
+            4.0,
+            8.0
+          ],
+          "fit_rms_cmy": 0.0002988935902484343
+        }
+      },
+      "neutral_point_level_used": "gci_C",
+      "x_np_m": 0.3031731949825123,
+      "neutral_point_pct_mac": 26.15257642992779,
+      "avl_neutral_point": {
+        "x_np_m": 0.281816,
+        "spread_over_alpha_m": 0.004533000000000009,
+        "n_alphas": 4
+      },
+      "x_np_cfd_minus_avl_m": 0.021357194982512262,
+      "static_margin_if_cg_at_0p40_pct_mac": -15.973641533001821,
+      "verdict_if_cg_at_0p40": "unstable",
+      "aft_cg_limit_m": {
+        "static_margin_5pct": 0.2728648883833433,
+        "static_margin_10pct": 0.24255658178417433
+      }
+    },
+    "13": {
+      "planform": {
+        "avl_s_ref_m2": 1.03237628519338,
+        "avl_c_ref_m": 0.7114113487442866,
+        "avl_b_ref_m": 1.738945345210214,
+        "half_area_from_sections_m2": 0.5161881404255084,
+        "mac_m": 0.7110295590313237,
+        "x_mac_le_m": 0.2053862328297756,
+        "n_sections": 29
+      },
+      "cfd_neutral_point": {
+        "gci_C": {
+          "x_np_m": 0.39016022597484196,
+          "dcmy_dcl": 0.010933082250175625,
+          "alphas": [
+            -2.0,
+            0.0,
+            4.0,
+            8.0
+          ],
+          "fit_rms_cmy": 0.0002691673389986232
+        }
+      },
+      "neutral_point_level_used": "gci_C",
+      "x_np_m": 0.39016022597484196,
+      "neutral_point_pct_mac": 25.98682302277201,
+      "avl_neutral_point": {
+        "x_np_m": 0.3645775,
+        "spread_over_alpha_m": 0.0040140000000000176,
+        "n_alphas": 4
+      },
+      "x_np_cfd_minus_avl_m": 0.025582725974841958,
+      "static_margin_if_cg_at_0p40_pct_mac": -1.3838769289090251,
+      "verdict_if_cg_at_0p40": "unstable",
+      "aft_cg_limit_m": {
+        "static_margin_5pct": 0.3546087480232758,
+        "static_margin_10pct": 0.3190572700717096
+      }
+    },
+    "16": {
+      "planform": {
+        "avl_s_ref_m2": 0.6911281191521013,
+        "avl_c_ref_m": 0.5636971422953466,
+        "avl_b_ref_m": 1.6214956724477245,
+        "half_area_from_sections_m2": 0.3455640589815656,
+        "mac_m": 0.563229436569917,
+        "x_mac_le_m": 0.10430266637138046,
+        "n_sections": 29
+      },
+      "cfd_neutral_point": {
+        "gci_C": {
+          "x_np_m": 0.23753642057632574,
+          "dcmy_dcl": 0.18051508824852697,
+          "alphas": [
+            -2.0,
+            0.0,
+            4.0,
+            8.0
+          ],
+          "fit_rms_cmy": 0.00031124896505724
+        }
+      },
+      "neutral_point_level_used": "gci_C",
+      "x_np_m": 0.23753642057632574,
+      "neutral_point_pct_mac": 23.655325086760833,
+      "avl_neutral_point": {
+        "x_np_m": 0.219698,
+        "spread_over_alpha_m": 0.005951999999999985,
+        "n_alphas": 4
+      },
+      "x_np_cfd_minus_avl_m": 0.01783842057632573,
+      "static_margin_if_cg_at_0p40_pct_mac": -28.845008601305008,
+      "verdict_if_cg_at_0p40": "unstable",
+      "aft_cg_limit_m": {
+        "static_margin_5pct": 0.2093749487478299,
+        "static_margin_10pct": 0.18121347691933404
+      }
+    },
+    "23": {
+      "planform": {
+        "avl_s_ref_m2": 0.7597701653437585,
+        "avl_c_ref_m": 0.5135219341705288,
+        "avl_b_ref_m": 1.7860596439351952,
+        "half_area_from_sections_m2": 0.3798850813323973,
+        "mac_m": 0.5131173009444056,
+        "x_mac_le_m": 0.12302727729269655,
+        "n_sections": 29
+      },
+      "cfd_neutral_point": {
+        "gci_C": {
+          "x_np_m": 0.2549181770633353,
+          "dcmy_dcl": 0.161202025485183,
+          "alphas": [
+            -2.0,
+            0.0,
+            4.0,
+            8.0
+          ],
+          "fit_rms_cmy": 0.0003004364322289892
+        }
+      },
+      "neutral_point_level_used": "gci_C",
+      "x_np_m": 0.2549181770633353,
+      "neutral_point_pct_mac": 25.70384969048796,
+      "avl_neutral_point": {
+        "x_np_m": 0.23598775,
+        "spread_over_alpha_m": 0.004174000000000011,
+        "n_alphas": 4
+      },
+      "x_np_cfd_minus_avl_m": 0.01893042706333531,
+      "static_margin_if_cg_at_0p40_pct_mac": -28.274591924621895,
+      "verdict_if_cg_at_0p40": "unstable",
+      "aft_cg_limit_m": {
+        "static_margin_5pct": 0.22926231201611502,
+        "static_margin_10pct": 0.20360644696889474
+      }
+    },
+    "29": {
+      "planform": {
+        "avl_s_ref_m2": 0.7848179992885438,
+        "avl_c_ref_m": 0.6033654612182946,
+        "avl_b_ref_m": 1.5864003165932494,
+        "half_area_from_sections_m2": 0.392408999344448,
+        "mac_m": 0.603020879510786,
+        "x_mac_le_m": 0.1400105290690115,
+        "n_sections": 29
+      },
+      "cfd_neutral_point": {
+        "gci_C": {
+          "x_np_m": 0.300640469725446,
+          "dcmy_dcl": 0.11039947808283776,
+          "alphas": [
+            -2.0,
+            0.0,
+            4.0,
+            8.0
+          ],
+          "fit_rms_cmy": 0.0002659381846022561
+        },
+        "gci_M": {
+          "x_np_m": 0.2996171302349142,
+          "dcmy_dcl": 0.11153652196120643,
+          "alphas": [
+            -2.0,
+            0.0,
+            4.0,
+            8.0
+          ],
+          "fit_rms_cmy": 0.0002706380572546453
+        }
+      },
+      "neutral_point_level_used": "gci_M",
+      "x_np_m": 0.2996171302349142,
+      "neutral_point_pct_mac": 26.467839935391137,
+      "avl_neutral_point": {
+        "x_np_m": 0.2794485,
+        "spread_over_alpha_m": 0.00384000000000001,
+        "n_alphas": 4
+      },
+      "x_np_cfd_minus_avl_m": 0.02016863023491422,
+      "static_margin_if_cg_at_0p40_pct_mac": -16.64666567541138,
+      "verdict_if_cg_at_0p40": "unstable",
+      "aft_cg_limit_m": {
+        "static_margin_5pct": 0.2694660862593749,
+        "static_margin_10pct": 0.2393150422838356
+      }
+    },
+    "36": {
+      "planform": {
+        "avl_s_ref_m2": 0.8486809052269915,
+        "avl_c_ref_m": 0.5275004728262369,
+        "avl_b_ref_m": 2.1631483707525696,
+        "half_area_from_sections_m2": 0.42434045426066985,
+        "mac_m": 0.5270437223597202,
+        "x_mac_le_m": 0.18595088466051873,
+        "n_sections": 29
+      },
+      "cfd_neutral_point": {
+        "gci_C": {
+          "x_np_m": 0.33179417028766445,
+          "dcmy_dcl": 0.07578425523592845,
+          "alphas": [
+            -2.0,
+            0.0,
+            4.0,
+            8.0
+          ],
+          "fit_rms_cmy": 0.00027902668827717
+        }
+      },
+      "neutral_point_level_used": "gci_C",
+      "x_np_m": 0.33179417028766445,
+      "neutral_point_pct_mac": 27.671951953846463,
+      "avl_neutral_point": {
+        "x_np_m": 0.31301375,
+        "spread_over_alpha_m": 0.004674999999999985,
+        "n_alphas": 4
+      },
+      "x_np_cfd_minus_avl_m": 0.018780420287664468,
+      "static_margin_if_cg_at_0p40_pct_mac": -12.941209015251951,
+      "verdict_if_cg_at_0p40": "unstable",
+      "aft_cg_limit_m": {
+        "static_margin_5pct": 0.30544198416967844,
+        "static_margin_10pct": 0.27908979805169243
+      }
+    },
+    "47": {
+      "planform": {
+        "avl_s_ref_m2": 0.5954974894485571,
+        "avl_c_ref_m": 0.4613888242246674,
+        "avl_b_ref_m": 1.7477355801886303,
+        "half_area_from_sections_m2": 0.29774874571948945,
+        "mac_m": 0.4610324823146923,
+        "x_mac_le_m": 0.11444549162387338,
+        "n_sections": 29
+      },
+      "cfd_neutral_point": {
+        "gci_C": {
+          "x_np_m": 0.23867880216520346,
+          "dcmy_dcl": 0.17924577537199618,
+          "alphas": [
+            -2.0,
+            0.0,
+            4.0,
+            8.0
+          ],
+          "fit_rms_cmy": 0.00032028190351812426
+        }
+      },
+      "neutral_point_level_used": "gci_C",
+      "x_np_m": 0.23867880216520346,
+      "neutral_point_pct_mac": 26.94675870073092,
+      "avl_neutral_point": {
+        "x_np_m": 0.22286175,
+        "spread_over_alpha_m": 0.00622700000000001,
+        "n_alphas": 4
+      },
+      "x_np_cfd_minus_avl_m": 0.01581705216520346,
+      "static_margin_if_cg_at_0p40_pct_mac": -34.99128673642602,
+      "verdict_if_cg_at_0p40": "unstable",
+      "aft_cg_limit_m": {
+        "static_margin_5pct": 0.21562717804946885,
+        "static_margin_10pct": 0.1925755539337342
+      }
+    },
+    "65": {
+      "planform": {
+        "avl_s_ref_m2": 0.7849810776004077,
+        "avl_c_ref_m": 0.6774692661837034,
+        "avl_b_ref_m": 1.5026275421153477,
+        "half_area_from_sections_m2": 0.3924905384599625,
+        "mac_m": 0.6769461047206228,
+        "x_mac_le_m": 0.10652335278975103,
+        "n_sections": 29
+      },
+      "cfd_neutral_point": {
+        "gci_C": {
+          "x_np_m": 0.26241195405041845,
+          "dcmy_dcl": 0.1528756066106462,
+          "alphas": [
+            -2.0,
+            0.0,
+            4.0,
+            8.0
+          ],
+          "fit_rms_cmy": 0.0003543311408519884
+        },
+        "gci_M": {
+          "x_np_m": 0.2601165259530895,
+          "dcmy_dcl": 0.15542608227434504,
+          "alphas": [
+            -2.0,
+            0.0,
+            4.0,
+            8.0
+          ],
+          "fit_rms_cmy": 0.0003594192336808082
+        }
+      },
+      "neutral_point_level_used": "gci_M",
+      "x_np_m": 0.2601165259530895,
+      "neutral_point_pct_mac": 22.689128734513762,
+      "avl_neutral_point": {
+        "x_np_m": 0.24085099999999998,
+        "spread_over_alpha_m": 0.0062309999999999865,
+        "n_alphas": 4
+      },
+      "x_np_cfd_minus_avl_m": 0.019265525953089502,
+      "static_margin_if_cg_at_0p40_pct_mac": -20.663901169006767,
+      "verdict_if_cg_at_0p40": "unstable",
+      "aft_cg_limit_m": {
+        "static_margin_5pct": 0.22626922071705835,
+        "static_margin_10pct": 0.19242191548102722
+      }
+    },
+    "81": {
+      "planform": {
+        "avl_s_ref_m2": 0.9292756939197215,
+        "avl_c_ref_m": 0.5630899656753537,
+        "avl_b_ref_m": 2.2490009440723915,
+        "half_area_from_sections_m2": 0.4646378505003155,
+        "mac_m": 0.5625242534507172,
+        "x_mac_le_m": 0.15564984697459353,
+        "n_sections": 29
+      },
+      "cfd_neutral_point": {
+        "gci_C": {
+          "x_np_m": 0.31506962868628074,
+          "dcmy_dcl": 0.09436707923746587,
+          "alphas": [
+            -2.0,
+            0.0,
+            4.0,
+            8.0
+          ],
+          "fit_rms_cmy": 0.0002903967069101699
+        }
+      },
+      "neutral_point_level_used": "gci_C",
+      "x_np_m": 0.31506962868628074,
+      "neutral_point_pct_mac": 28.340072580649004,
+      "avl_neutral_point": {
+        "x_np_m": 0.29503149999999995,
+        "spread_over_alpha_m": 0.0046419999999999795,
+        "n_alphas": 4
+      },
+      "x_np_cfd_minus_avl_m": 0.0200381286862808,
+      "static_margin_if_cg_at_0p40_pct_mac": -15.098081690296405,
+      "verdict_if_cg_at_0p40": "unstable",
+      "aft_cg_limit_m": {
+        "static_margin_5pct": 0.2869434160137449,
+        "static_margin_10pct": 0.258817203341209
+      }
+    },
+    "83": {
+      "planform": {
+        "avl_s_ref_m2": 0.789836484035178,
+        "avl_c_ref_m": 0.494600003662239,
+        "avl_b_ref_m": 1.95678951038572,
+        "half_area_from_sections_m2": 0.39491824343669485,
+        "mac_m": 0.4941299873503455,
+        "x_mac_le_m": 0.20980042807572782,
+        "n_sections": 29
+      },
+      "cfd_neutral_point": {
+        "gci_C": {
+          "x_np_m": 0.3556729540012863,
+          "dcmy_dcl": 0.04925227333190415,
+          "alphas": [
+            -2.0,
+            -2.0,
+            0.0,
+            0.0,
+            4.0,
+            4.0,
+            8.0,
+            8.0
+          ],
+          "fit_rms_cmy": 0.00030207327012401336
+        },
+        "gci_M": {
+          "x_np_m": 0.3552077202329266,
+          "dcmy_dcl": 0.04976919974119267,
+          "alphas": [
+            -2.0,
+            -2.0,
+            0.0,
+            0.0,
+            4.0,
+            4.0,
+            8.0,
+            8.0
+          ],
+          "fit_rms_cmy": 0.0003081061274400775
+        }
+      },
+      "neutral_point_level_used": "gci_M",
+      "x_np_m": 0.3552077202329266,
+      "neutral_point_pct_mac": 29.42693134996943,
+      "avl_neutral_point": {
+        "x_np_m": 0.3370625,
+        "spread_over_alpha_m": 0.004392000000000007,
+        "n_alphas": 4
+      },
+      "x_np_cfd_minus_avl_m": 0.01814522023292664,
+      "static_margin_if_cg_at_0p40_pct_mac": -9.064877848693486,
+      "verdict_if_cg_at_0p40": "unstable",
+      "aft_cg_limit_m": {
+        "static_margin_5pct": 0.33050122086540934,
+        "static_margin_10pct": 0.30579472149789205
+      }
+    }
+  },
+  "summary": {
+    "unstable_if_cg_at_0p40": [
+      12,
+      13,
+      16,
+      23,
+      29,
+      36,
+      47,
+      65,
+      81,
+      83
+    ],
+    "x_np_range_m": [
+      0.23753642057632574,
+      0.39016022597484196
+    ],
+    "cfd_minus_avl_neutral_point_m": {
+      "mean": 0.019592374615709434,
+      "min": 0.01581705216520346,
+      "max": 0.025582725974841958
+    }
+  }
+}

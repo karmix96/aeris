@@ -1,0 +1,83 @@
+{
+  "schema": "aeris.s8.surrogate_check.v1",
+  "level": "gci_C",
+  "rows": 44,
+  "geometries": [
+    12,
+    13,
+    16,
+    23,
+    29,
+    36,
+    47,
+    65,
+    81,
+    83
+  ],
+  "method": "leave one geometry out: correction fitted on nine, error on the tenth",
+  "CL": {
+    "none": {
+      "rms": 0.021618912506985794,
+      "max_abs": 0.035242116768717,
+      "median_relative_where_abs_cl_gt_0p1": 0.10077260663822789
+    },
+    "offset_per_alpha": {
+      "rms": 0.003818573234501632,
+      "max_abs": 0.009438998238553653
+    },
+    "linear": {
+      "rms": 0.004125911865544823,
+      "max_abs": 0.01200932882120409
+    }
+  },
+  "CMy_cfd_chord": {
+    "none": {
+      "rms": 0.007955888962491168,
+      "max_abs": 0.016371671764752932
+    },
+    "offset_per_alpha": {
+      "rms": 0.0019455448690451787,
+      "max_abs": 0.0034447362687673247
+    },
+    "linear": {
+      "rms": 0.003063822918673803,
+      "max_abs": 0.010202849803279962
+    }
+  },
+  "neutral_point_m": {
+    "none": {
+      "rms": 0.020129354705135348,
+      "max_abs": 0.025582725974841958
+    },
+    "constant_offset": {
+      "rms": 0.002801912194660525,
+      "max_abs": 0.006235501359456091
+    }
+  },
+  "drag_not_from_avl": {
+    "definition": "CFD CD minus AVL induced CD, per incidence across geometries",
+    "by_alpha": {
+      "-2": {
+        "mean": 0.017825412351619743,
+        "std": 0.0008091948056795922,
+        "coefficient_of_variation": 0.04539557288872833
+      },
+      "0": {
+        "mean": 0.017911379116017093,
+        "std": 0.0006800470081726993,
+        "coefficient_of_variation": 0.037967316964698336
+      },
+      "4": {
+        "mean": 0.01868391487708325,
+        "std": 0.0007139438091952174,
+        "coefficient_of_variation": 0.03821168175364067
+      },
+      "8": {
+        "mean": 0.020030794329929564,
+        "std": 0.0009351684128248455,
+        "coefficient_of_variation": 0.046686536610659406
+      }
+    },
+    "note": "gci_C carries the chordwise CDp offset, a near-constant ~0.0027; it shifts the mean and barely changes the spread"
+  }
+}

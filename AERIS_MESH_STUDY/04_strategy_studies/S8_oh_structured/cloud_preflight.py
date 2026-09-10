@@ -50,7 +50,7 @@ sys.path.insert(0, str(HERE))
 QUAL = REPO / "AERIS_MESH_STUDY/05_s6_cfd_qualification"
 MEM_ANK = (2.69, 7.23)
 CELL_MARGIN = 1.05
-CELLS = {"gci_C": 567_256, "gci_M": 1_111_152, "gci_F": 2_217_680, "gci_FF": 4_700_000}
+CELLS = {"gci_C": 567_256, "gci_M": 1_111_152, "gci_F": 2_217_680, "gci_FF": 4_504_420}  # gci_FF measured 2026-09-11
 
 
 class Check:
@@ -163,6 +163,26 @@ def check_geometry(c: Check, indices: list[int]) -> None:
         c.add("design set", False, f"{type(exc).__name__}: {exc}")
 
 
+def check_reference_areas(c: Check, indices: list[int]) -> None:
+    """Defect 23: every geometry was once normalised by index 83's area, because
+    solve_s8.py defaults to it. run_campaign.py now refuses a geometry with no
+    recorded area, but only when that geometry's first solve starts -- hours
+    into a billed batch. This refuses before anything bills."""
+    try:
+        areas = json.loads((HERE / "reference_areas.json").read_text())["areas"]
+    except Exception as exc:  # noqa: BLE001
+        c.add("reference areas", False, f"{type(exc).__name__}: {exc}")
+        return
+    missing = [i for i in indices if str(i) not in areas]
+    values = {i: float(areas[str(i)]["half_area_m2"]) for i in indices if str(i) in areas}
+    implausible = [i for i, a in values.items() if not 0.05 < a < 2.0]
+    c.add("reference areas", not missing and not implausible,
+          f"{len(values)}/{len(indices)} geometries have their own half-area "
+          f"({min(values.values(), default=0):.4f}-{max(values.values(), default=0):.4f} m2)"
+          + (f"; MISSING {missing}" if missing else "")
+          + (f"; IMPLAUSIBLE {implausible}" if implausible else ""))
+
+
 def check_cgns_reader(c: Check) -> None:
     try:
         import cgns_read
@@ -243,6 +263,7 @@ def main() -> int:
     check_disk(c, args.out_dir, len(batch.get("cases", [])) or 44)
     check_authorization(c, levels, indices)
     check_geometry(c, indices)
+    check_reference_areas(c, indices)
     check_cgns_reader(c)
     if args.smoke and env:
         check_smoke(c, env, args.ranks)

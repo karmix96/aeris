@@ -59,7 +59,7 @@ sys.path.insert(0, str(HERE))
 QUAL = REPO / "AERIS_MESH_STUDY/05_s6_cfd_qualification"
 
 #: measured cell counts where known; the finer two scale as r^3 from gci_M
-CELLS = {"gci_C": 567_256, "gci_M": 1_111_152, "gci_F": 2_217_680, "gci_FF": 4_700_000}
+CELLS = {"gci_C": 567_256, "gci_M": 1_111_152, "gci_F": 2_217_680, "gci_FF": 4_504_420}  # gci_FF measured: 2026-09-11 build of index 83, 0 folded cells
 CELLS_MEASURED = {"gci_C", "gci_M", "gci_F"}
 
 MEM_ANK = (2.69, 7.23)          # GiB base, GiB per million cells

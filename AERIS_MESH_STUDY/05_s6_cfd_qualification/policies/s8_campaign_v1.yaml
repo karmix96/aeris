@@ -218,3 +218,20 @@ cost_forecast:
   note: >-
     alpha 4 may cost more or may not converge at all; that is one of the
     questions. The pilot forecast assumes the gci_C level is selected in 3.5.
+
+amendments:
+  - date: 2026-09-11
+    how_given: >-
+      Directed in session: "continue implementing the checklist" -- the next-steps
+      checklist of AUDIT_2026-09-10.md. Written into the record by the agent that
+      was directed, not typed by the principal investigator.
+    adds:
+      - gci_M on pilot geometries 47 and 13, the smallest and largest wing (already
+        inside grid_levels and geometry_indices)
+      - gci_C_chord on geometries 47 and 13 at alpha 0 and 4
+      - solver sensitivity on geometry 83 at gci_C -- multigrid (MGCycle 2w and 3w,
+        DADI smoother), Menter SST, and time-to-residual at 1, 2 and 4 ranks
+      - a gci_FF mesh build on geometry 83 with no solve, for its real cell count
+      - ONERA M6 L0, L1 and L2 with --no-nk, the campaign's solver configuration
+    does_not_add: >-
+      cloud spend, a solve at any level above gci_M, or geometries outside the ten.

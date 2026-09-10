@@ -174,6 +174,20 @@ def main() -> int:
                          "must be stated wherever the result is used.")
     ap.add_argument("--nk-switch-tol", type=float, default=None,
                     help="override NKSwitchTol (governed value 1e-6)")
+    # Solver-sensitivity studies from the pre-cloud checklist (2026-09-11). Each
+    # changes the solver, so each defaults to the governed value and every use
+    # is recorded in result.json alongside --no-nk.
+    ap.add_argument("--turbulence-model", default=None,
+                    choices=["SA", "SA-Edwards", "Menter SST", "k-omega Wilcox"],
+                    help="override turbulenceModel (governed value SA)")
+    ap.add_argument("--mg-cycle", default=None,
+                    help="override MGCycle (governed 'sg'), e.g. 2w or 3w")
+    ap.add_argument("--smoother", default=None, choices=["DADI", "Runge-Kutta"],
+                    help="multigrid smoother, used before the ANK switch")
+    ap.add_argument("--ank-switch-tol", type=float, default=None,
+                    help="override ANKSwitchTol (governed 1.0: ANK from the start)")
+    ap.add_argument("--n-cycles-coarse", type=int, default=None,
+                    help="override nCyclesCoarse, the coarse-grid start budget")
     ap.add_argument("--i-have-authorization", action="store_true")
     args = ap.parse_args()
 
@@ -183,6 +197,13 @@ def main() -> int:
             "run is POLICY.yaml heavy_work.exceptions.run-s8-first-point, "
             "policies/s8_oh_first_point_v1.yaml and ADR-0018."
         )
+
+    # Turbulence model and multigrid cycle size ADflow's allocation, so they
+    # enter the options at construction rather than through setOption.
+    init_overrides = {key: getattr(args, flag) for flag, key in (
+        ("turbulence_model", "turbulenceModel"), ("mg_cycle", "MGCycle"),
+        ("smoother", "smoother"), ("ank_switch_tol", "ANKSwitchTol"),
+        ("n_cycles_coarse", "nCyclesCoarse")) if getattr(args, flag) is not None}
 
     from adflow import ADFLOW
     from baseclasses import AeroProblem
@@ -225,6 +246,7 @@ def main() -> int:
         "monitorVariables": ["resrho", "resmom", "resrhoe", "resturb",
                              "cl", "cd", "cmy", "cdp", "cdv"],
         "surfaceVariables": ["cp", "cf", "yplus", "vx", "vy", "vz"],
+        **init_overrides,
     })
     # Solver overrides, applied AFTER the governed dict above so that the
     # governed values remain the literal defaults in this file and a reader can
@@ -314,8 +336,8 @@ def main() -> int:
         "flow_directions": directions,
         # Empty unless a flag was passed. Recorded either way, so a row that
         # used the governed setup says so positively rather than by omission.
-        "solver_overrides": overrides,
-        "solver_is_governed_configuration": not overrides,
+        "solver_overrides": {**init_overrides, **overrides},
+        "solver_is_governed_configuration": not (init_overrides or overrides),
         "functions": {k: float(v) for k, v in funcs.items()},
     }
     (args.out / "result.json").write_text(json.dumps(result, indent=2) + "\n")

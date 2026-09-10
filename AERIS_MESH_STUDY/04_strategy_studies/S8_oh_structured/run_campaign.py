@@ -671,6 +671,55 @@ def stage_pilot(args, env, auth) -> int:
     return 0
 
 
+def stage_probe(args, env, auth) -> int:
+    """Time to the stopping target at several rank counts, on THIS host.
+
+    AUDIT_2026-09-10 C8: on the six-core desktop, time per nonlinear step was
+    flat beyond two ranks, while cloud_batch.py priced the batch at 75 %
+    efficiency on 24. Renting the machine is the first moment its real curve can
+    be measured, so this measures it before the batch bills its hours: one gci_C
+    point on the reference geometry, converged to the governed target, at each
+    rank count.
+    """
+    index, level = REFERENCE_INDEX, "gci_C"
+    check_in_scope(auth, index=index, level=level)
+    directory = ARTIFACTS / "s8_probe" / f"g{index}"
+    built = build_level(env, level, index, directory)
+    runs = []
+    for ranks in args.probe_ranks:
+        out = directory / f"{level}_a0_np{ranks}"
+        with Exclusive(f"scaling probe, {ranks} ranks"):
+            record = solve(env, Path(built["cgns"]), 0.0, out, ranks=ranks,
+                           solver_args=solver_flags(args),
+                           area_ref=reference_half_area(index))
+        result = (json.loads((out / "result.json").read_text())
+                  if (out / "result.json").exists() else {})
+        runs.append({"ranks": ranks, "wall_seconds": record.get("wall_seconds"),
+                     "converged": result.get("converged"),
+                     "relative_residual": result.get("relative_residual")})
+    timed = [r for r in runs if r["wall_seconds"] and r["converged"]]
+    for r in timed:
+        speedup = timed[0]["wall_seconds"] / r["wall_seconds"]
+        r["speedup_vs_fewest"] = round(speedup, 3)
+        r["efficiency_vs_fewest"] = round(speedup * timed[0]["ranks"] / r["ranks"], 3)
+        r["core_hours_per_point"] = round(r["wall_seconds"] * r["ranks"] / 3600, 3)
+    report = {"schema": "aeris.s8.scaling_probe.v1", "host_cpus": os.cpu_count(),
+              "case": f"{level} index {index} alpha 0", "runs": runs,
+              "reading": ("the batch rents every core for its whole length, so the "
+                          "cheapest machine is the one with the fewest core-hours per "
+                          "point; efficiency under 0.5 pays for cores that mostly wait")}
+    (REPORTS / "s8_scaling_probe.json").write_text(json.dumps(report, indent=2) + "\n")
+    nan = float("nan")
+    print(f"\n  {'ranks':>6}{'wall s':>9}{'speed-up':>10}{'efficiency':>12}{'core-h/pt':>11}")
+    for r in runs:
+        print(f"  {r['ranks']:>6}{r['wall_seconds'] or nan:>9.0f}"
+              f"{r.get('speedup_vs_fewest', nan):>10.2f}"
+              f"{r.get('efficiency_vs_fewest', nan):>12.2f}"
+              f"{r.get('core_hours_per_point', nan):>11.3f}")
+    print(f"\n  wrote {REPORTS / 's8_scaling_probe.json'}")
+    return 0
+
+
 def stage_status(args, env, auth) -> int:
     print("\nS8 campaign state\n")
     print(f"  authorization : {auth['exception']}, signed by {auth['authorized_by']} "
@@ -692,7 +741,8 @@ def stage_status(args, env, auth) -> int:
 
 
 STAGES = {"build": stage_build, "regression": stage_regression, "sweep": stage_sweep,
-          "farfield": stage_farfield, "pilot": stage_pilot, "status": stage_status}
+          "farfield": stage_farfield, "pilot": stage_pilot, "status": stage_status,
+          "probe": stage_probe}
 
 
 def main() -> int:
@@ -709,6 +759,8 @@ def main() -> int:
                          "Cannot add a geometry the policy does not authorize.")
     ap.add_argument("--index", type=int, default=REFERENCE_INDEX)
     ap.add_argument("--ranks", type=int, default=6)
+    ap.add_argument("--probe-ranks", type=int, nargs="+", default=[6, 12, 24],
+                    help="probe stage: the rank counts to time")
     ap.add_argument("--watch-memory", action="store_true",
                     help="sample RSS and swap throughout and abort on sustained "
                          "paging. Required for a level select_levels.py calls marginal.")

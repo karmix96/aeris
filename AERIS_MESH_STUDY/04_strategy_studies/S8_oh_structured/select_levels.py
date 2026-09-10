@@ -50,7 +50,7 @@ CELLS = {
 }
 #: gci_MF has never been built here.  Its count is estimated from the h-law,
 #: cells ~ r^3, and is flagged as an estimate wherever it is used.
-CELLS_ESTIMATED = {"gci_MF": 1_600_000, "gci_FF": 4_700_000}
+CELLS_ESTIMATED = {"gci_MF": 1_600_000, "gci_FF": 4_700_000}  # superseded: built 2026-09-11 at 4,504,420
 
 MEM_BASE_GIB = 1.51
 MEM_PER_MCELL_GIB = 9.46

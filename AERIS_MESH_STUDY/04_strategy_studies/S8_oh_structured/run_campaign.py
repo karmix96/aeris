@@ -72,6 +72,28 @@ CFD = ARTIFACTS / "s8_cfd"
 PILOT = ARTIFACTS / "s8_pilot"
 LOCK = ARTIFACTS / ".s8_campaign.lock"
 VERDICT = REPORTS / "s8_regression_verdict.json"
+REFERENCE_AREAS = HERE / "reference_areas.json"
+
+
+def reference_half_area(index: int) -> float:
+    """This geometry's own planform half-area, from the geometry, not the mesh.
+
+    Defect 23. solve_s8.py's --area-ref default is index 83's area, and nothing
+    passed anything else, so all ten pilot geometries were normalised by it:
+    their own areas span -24.6 to +30.7 per cent of it. The forces were right and
+    every coefficient of nine geometries was wrong, and it was invisible because
+    the one geometry everything was checked on was the one it happened to fit.
+
+    Fail-closed: a geometry with no recorded area is refused, never quietly given
+    index 83's. And it comes from the GEOMETRY so it is identical at every grid
+    level -- a per-mesh area differs between levels and would plant a fake
+    grid-independent offset inside the GCI the fine levels exist to compute.
+    """
+    entry = json.loads(REFERENCE_AREAS.read_text())["areas"].get(str(index))
+    if entry is None:
+        raise SystemExit(f"no reference area for geometry {index} in {REFERENCE_AREAS}. "
+                         f"Refusing to fall back to index 83's area -- that is defect 23.")
+    return float(entry["half_area_m2"])
 
 ALPHAS = (-2.0, 0.0, 4.0, 8.0)
 REFERENCE_INDEX = 83
@@ -351,7 +373,8 @@ def build_level(env: dict, level: str, index: int, out: Path,
 
 def solve(env: dict, grid: Path, alpha: float, out: Path, *,
           ranks: int = 6, watch_memory: bool = False,
-          solver_args: list[str] | None = None) -> dict:
+          solver_args: list[str] | None = None,
+          area_ref: float | None = None) -> dict:
     """One ADflow point.  Judged by the gate, never by its exit status."""
     out.mkdir(parents=True, exist_ok=True)
     result = out / "result.json"
@@ -361,7 +384,8 @@ def solve(env: dict, grid: Path, alpha: float, out: Path, *,
 
     cmd = [env["mpirun"], "-np", str(ranks), env["mach_python"],
            str(HERE / "solve_s8.py"), "--grid", str(grid), "--alpha", str(alpha),
-           "--out", str(out), "--i-have-authorization"] + list(solver_args or [])
+           "--out", str(out), "--i-have-authorization"] + list(solver_args or []) + \
+          (["--area-ref", repr(area_ref)] if area_ref is not None else [])
     log = out / "run.log"
     print(f"  solving {out.name}: alpha {alpha:g} on {grid.name} ...", flush=True)
     started = time.time()
@@ -460,7 +484,8 @@ def stage_regression(args, env, auth) -> int:
     out = CFD / "gci_C_a0"
     with Exclusive("PLAN 3.2 regression, gci_C alpha 0"):
         record = solve(env, grid, 0.0, out, ranks=args.ranks,
-                       watch_memory=args.watch_memory)
+                       watch_memory=args.watch_memory,
+                       area_ref=reference_half_area(REFERENCE_INDEX))
     if record.get("failed") or record.get("aborted"):
         raise SystemExit("the regression run did not produce a result. Campaign stopped.")
 
@@ -543,7 +568,8 @@ def stage_sweep(args, env, auth) -> int:
             with Exclusive(f"PLAN 3.3 {level} alpha {alpha:g}"):
                 record = solve(env, grid, alpha, out, ranks=args.ranks,
                                watch_memory=args.watch_memory or level in args.marginal,
-                               solver_args=solver_flags(args))
+                               solver_args=solver_flags(args),
+                               area_ref=reference_half_area(REFERENCE_INDEX))
             done.append(record)
             if record.get("aborted"):
                 print(f"\n{level} was aborted by the memory watchdog. Skipping the rest "
@@ -566,7 +592,8 @@ def stage_farfield(args, env, auth) -> int:
     out = CFD / "farfield60_gci_C_a0"
     with Exclusive("PLAN 2.2 far-field sensitivity"):
         record = solve(env, out_mesh / "gci_C_volume.cgns", 0.0, out,
-                       ranks=args.ranks, watch_memory=args.watch_memory)
+                       ranks=args.ranks, watch_memory=args.watch_memory,
+                       area_ref=reference_half_area(REFERENCE_INDEX))
     baseline = CFD / "gci_C_a0" / "result.json"
     report = {"plan_section": "2.2", "farfield_chords": {"baseline": 40.0, "test": 60.0},
               "test": record.get("functions", {})}
@@ -626,7 +653,8 @@ def stage_pilot(args, env, auth) -> int:
                 record = solve(env, directory / f"{level}_volume.cgns", alpha, out,
                                ranks=args.ranks,
                                watch_memory=args.watch_memory or level in args.marginal,
-                               solver_args=solver_flags(args))
+                               solver_args=solver_flags(args),
+                               area_ref=reference_half_area(index))
             if record.get("aborted"):
                 raise SystemExit(f"g{index} alpha {alpha:g} aborted on memory. Stopping.")
         # PLAN 4.2: "Check the gate after each geometry, not at the end."

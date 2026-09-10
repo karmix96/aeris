@@ -1,0 +1,67 @@
+{
+  "schema": "aeris.s8.reference_areas.v1",
+  "rule": "Each geometry is normalised by its OWN planform half-area, taken from the geometry and not the mesh, so it is identical at every grid level. Defect 23: every pilot geometry was solved against index 83s area.",
+  "units": "m2, half model",
+  "areas": {
+    "12": {
+      "half_area_m2": 0.4004,
+      "source": "AVL s_ref / 2, from the pyGeo loft (level-independent)",
+      "mesh_trapezoid_half_area_m2": 0.399845,
+      "mesh_vs_geometry_pct": -0.139
+    },
+    "13": {
+      "half_area_m2": 0.5162,
+      "source": "AVL s_ref / 2, from the pyGeo loft (level-independent)",
+      "mesh_trapezoid_half_area_m2": 0.515218,
+      "mesh_vs_geometry_pct": -0.19
+    },
+    "16": {
+      "half_area_m2": 0.345565,
+      "source": "AVL s_ref / 2, from the pyGeo loft (level-independent)",
+      "mesh_trapezoid_half_area_m2": 0.344825,
+      "mesh_vs_geometry_pct": -0.214
+    },
+    "23": {
+      "half_area_m2": 0.379885,
+      "source": "AVL s_ref / 2, from the pyGeo loft (level-independent)",
+      "mesh_trapezoid_half_area_m2": 0.379408,
+      "mesh_vs_geometry_pct": -0.126
+    },
+    "29": {
+      "half_area_m2": 0.39241,
+      "source": "AVL s_ref / 2, from the pyGeo loft (level-independent)",
+      "mesh_trapezoid_half_area_m2": 0.39201,
+      "mesh_vs_geometry_pct": -0.102
+    },
+    "36": {
+      "half_area_m2": 0.42434,
+      "source": "AVL s_ref / 2, from the pyGeo loft (level-independent)",
+      "mesh_trapezoid_half_area_m2": 0.424354,
+      "mesh_vs_geometry_pct": 0.003
+    },
+    "47": {
+      "half_area_m2": 0.29775,
+      "source": "AVL s_ref / 2, from the pyGeo loft (level-independent)",
+      "mesh_trapezoid_half_area_m2": 0.297641,
+      "mesh_vs_geometry_pct": -0.037
+    },
+    "65": {
+      "half_area_m2": 0.39249,
+      "source": "AVL s_ref / 2, from the pyGeo loft (level-independent)",
+      "mesh_trapezoid_half_area_m2": 0.392141,
+      "mesh_vs_geometry_pct": -0.089
+    },
+    "81": {
+      "half_area_m2": 0.46464,
+      "source": "AVL s_ref / 2, from the pyGeo loft (level-independent)",
+      "mesh_trapezoid_half_area_m2": 0.464504,
+      "mesh_vs_geometry_pct": -0.029
+    },
+    "83": {
+      "half_area_m2": 0.39492,
+      "source": "AVL s_ref / 2, from the pyGeo loft (level-independent)",
+      "mesh_trapezoid_half_area_m2": 0.394239,
+      "mesh_vs_geometry_pct": -0.172
+    }
+  }
+}

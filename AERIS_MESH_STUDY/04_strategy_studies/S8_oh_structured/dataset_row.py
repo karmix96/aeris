@@ -178,6 +178,14 @@ def volume_file(run: Path) -> Path | None:
     return candidates[0] if candidates else None
 
 
+def _own_area(index: int) -> float | None:
+    table = HERE / "reference_areas.json"
+    if not table.exists():
+        return None
+    entry = json.loads(table.read_text()).get("areas", {}).get(str(index))
+    return float(entry["half_area_m2"]) if entry else None
+
+
 def build_row(*, run: Path, level: str, index: int, set_name: str,
               mesh_dir: Path, gate: dict | None, avl: dict | None,
               mach_python: str | None, cache: dict) -> dict:
@@ -288,6 +296,23 @@ def build_row(*, run: Path, level: str, index: int, set_name: str,
         row["lift_index_realised"] = directions.get("lift_index_realised")
         row["velocity_direction_error"] = directions.get("velocity_direction_error")
 
+    # ---- defect 23: this geometry's OWN area -------------------------------
+    # The solver was given index 83's area for every pilot geometry. Forces were
+    # right; coefficients were scaled by solver_area / own_area. Every moment
+    # and force coefficient divides by the same S, so one factor corrects all of
+    # them, and the original is kept so the correction is visible, not silent.
+    own = _own_area(index)
+    used = row.get("area_ref")
+    if own and used and abs(used / own - 1.0) > 0.005:
+        factor = used / own
+        for field in ("CL", "CD", "CDp", "CDv", "CMy", "CMx", "CMz"):
+            if row[field] is not None:
+                row[field] *= factor
+        row["coefficients_rescaled"] = {
+            "solver_area_m2": used, "own_area_m2": own, "factor": factor,
+            "reason": "defect 23: solved against index 83's area; rescaled to this geometry's own"}
+        row["area_ref"] = own
+
     # ---- convergence, from the gate rather than from the run ---------------
     entry = None
     if gate:
@@ -349,6 +374,11 @@ def build_row(*, run: Path, level: str, index: int, set_name: str,
         if alpha is not None:
             point = next((p for p in avl.get("points", [])
                           if abs(float(p.get("alpha_deg", 1e9)) - alpha) < 1e-6), None)
+        if point and point.get("s_ref") and row.get("area_ref") and \
+                abs((float(point["s_ref"]) / 2.0) / row["area_ref"] - 1.0) > 0.005:
+            for field in SCHEMA["low_fidelity"]:
+                absent(field, "CFD and AVL reference areas differ (defect 23); not paired")
+            point = None
         if point:
             row.update(avl_cl=point.get("cl"), avl_cd=point.get("cd"),
                        avl_cm=point.get("cm") if "cm" in point else point.get("cmy"),

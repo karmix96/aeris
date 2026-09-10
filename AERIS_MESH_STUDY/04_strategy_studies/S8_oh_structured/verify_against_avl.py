@@ -152,6 +152,30 @@ def main() -> int:
         "arm_already_applied": True,
         "set_name": args.set_name, "index": args.index,
     }, indent=2) + "\n")
+    # Defect 23. The docstring has always said this script "refuses to compare if
+    # they disagree". There was no code that did. Nine pilot geometries were then
+    # compared against CFD normalised by a different wing's area, and the
+    # resulting -25 to +32 per cent "disagreement" was reported as a finding
+    # about AVL. A promise in a docstring is not a check.
+    s_ref = next((float(r["raw"]["s_ref"]) for r in rows
+                  if isinstance(r.get("raw"), dict) and r["raw"].get("s_ref")), None)
+    table = Path(__file__).resolve().parent / "reference_areas.json"
+    entry = (json.loads(table.read_text()).get("areas", {}).get(str(args.index))
+             if table.exists() else None)
+    cfd_half = float(entry["half_area_m2"]) if entry else ADFLOW_HALF_AREA_M2
+    mismatch = abs((s_ref / 2.0) / cfd_half - 1.0) if s_ref else None
+    ref_path = args.out / "avl_reference.json"
+    ref = json.loads(ref_path.read_text())
+    ref.update({"avl_s_ref_m2": s_ref, "cfd_half_area_m2": cfd_half,
+                "cfd_area_source": "reference_areas.json" if entry else "legacy index-83 constant",
+                "area_mismatch_fraction": mismatch})
+    ref_path.write_text(json.dumps(ref, indent=2) + "\n")
+    if mismatch is None or mismatch > 0.005:
+        print(f"\nREFUSING TO COMPARE. AVL half area "
+              f"{(s_ref / 2.0 if s_ref else float('nan')):.5f} m2, CFD reference "
+              f"{cfd_half:.5f} m2 ({'from reference_areas.json' if entry else 'the legacy index-83 constant'}). "
+              f"A lift coefficient divided by a different wing's area is not comparable.")
+        return 1
     _report(rows)
     return 0
 

@@ -680,3 +680,18 @@ LEVELS["gci_C_normal"] = directional_level(LEVELS["gci_C"], normal=GCI_RATIO)
 #: where global refinement is heading, chord-only is a legitimate, much cheaper
 #: route to converged drag across the design space.
 LEVELS["gci_C_chord2"] = directional_level(LEVELS["gci_C"], chord=GCI_RATIO ** 2)
+
+#: FIRST-CELL HEIGHT alone: gci_C with s0 divided by GCI_RATIO and every count
+#: held, n_normal included. The last untested mesh parameter.
+#:
+#: gci_C_normal added wall-normal LAYERS at fixed s0 and moved CDp the wrong
+#: way. gci_M does both at once -- more layers AND a smaller first cell
+#: (2.77e-6 against 3.6e-6) -- so the two effects are confounded inside the
+#: family. This separates them. Holding n_normal while shrinking s0 raises the
+#: wall-normal growth ratio, which is the unavoidable price of moving one
+#: parameter; it is recorded by the build and should be read alongside CDp.
+#:
+#: y+ on the OML is 0.68-0.83 at p99 on all ten pilot geometries, so this does
+#: not move the grid out of the wall-resolved regime -- it moves it further in.
+LEVELS["gci_C_s0"] = _dataclasses.replace(
+    LEVELS["gci_C"], s0_frac=LEVELS["gci_C"].s0_frac / GCI_RATIO)

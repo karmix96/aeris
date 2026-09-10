@@ -252,6 +252,12 @@ def main() -> int:
     ap.add_argument("--allow-frozen", action="store_true",
                     help="include ACCEPTED_SOLVER_FROZEN runs. Do not use for a "
                          "publishable GCI: a stalled solver bounds no iterative error.")
+    ap.add_argument("--ratios", type=float, nargs=2, default=None,
+                    metavar=("R21", "R32"),
+                    help="refinement ratios, overriding the cell-count estimate. "
+                         "REQUIRED for a directional family: (N1/N2)^(1/3) assumes "
+                         "all three directions refine together, and when only one "
+                         "does, it understates r by a cube root. See below.")
     ap.add_argument("--two-level-trend", action="store_true",
                     help="accept TWO levels and report the refinement TREND. Not a "
                          "GCI: no observed order, no extrapolation, no uncertainty "
@@ -311,6 +317,18 @@ def main() -> int:
     f, m, c = kept[0], kept[1], kept[2]
     r21 = (f["cells"] / m["cells"]) ** (1.0 / 3.0)
     r32 = (m["cells"] / c["cells"]) ** (1.0 / 3.0)
+    ratio_source = "cell counts, (N1/N2)^(1/3)"
+    if args.ratios:
+        # A DIRECTIONAL family refines one axis. Its cell count grows by roughly
+        # r, not r^3, so (N1/N2)^(1/3) returns about r^(1/3) -- 1.09 for a
+        # chordwise ratio of 1.29. The extrapolated value and the GCI band are
+        # insensitive to that, because p is solved FOR and only r^p enters them;
+        # but the reported order comes out about three times too large, trips the
+        # 0.5-4 plausibility check, and a perfectly good triplet is refused as
+        # "not in the asymptotic range". The ratio has to be the one in the
+        # direction that actually refined.
+        r21, r32 = args.ratios
+        ratio_source = "given explicitly (--ratios), for a directional family"
 
     print(f"\ngrids, finest first:")
     for tag, r in (("fine", f), ("medium", m), ("coarse", c)):
@@ -320,7 +338,8 @@ def main() -> int:
 
     report = {"grids": [{"level": r["level"], "cells": r["cells"], "dir": r["dir"]}
                         for r in (f, m, c)],
-              "r21": r21, "r32": r32, "functions": {}}
+              "r21": r21, "r32": r32, "ratio_source": ratio_source,
+              "functions": {}}
     print(f"\n{'':>6}{'fine':>12}{'medium':>12}{'coarse':>12}{'p':>8}"
           f"{'extrapolated':>14}{'GCI21 %':>10}  condition")
     for name in FUNCTIONS:

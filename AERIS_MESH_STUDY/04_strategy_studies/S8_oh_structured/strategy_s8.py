@@ -255,6 +255,53 @@ LEVELS["gci_MF"] = refined_level(LEVELS["oh_L3"], GCI_RATIO ** 1.5, name="gci_MF
 #:
 #: Same n_side, n_span, n_normal, far field and clustering laws as gci_C. Only
 #: the two edge SPACINGS change, so the comparison isolates one variable.
+def directional_level(base: OHLevel, *, chord: float = 1.0, span: float = 1.0,
+                      normal: float = 1.0, edges: bool = False,
+                      scale_first_cell: bool = False) -> OHLevel:
+    """Refine ONE direction at a time, holding the others.
+
+    `refined_level` scales all three directions together, which is what a
+    convergence family needs and what makes a Richardson extrapolation legal.
+    It is the wrong tool for asking WHICH direction an error lives in, because
+    it changes every one of them at once.
+
+    That question is now the expensive one. Going from gci_C to gci_M drops
+    pressure drag by a constant 0.00273 -- the same to within 6 per cent across
+    three geometries and four incidences -- while CL, CDv, CMy and the neutral
+    point are all converged. Refining the leading and trailing edge SPACING at
+    fixed cell count recovers 7 per cent of it, so the error is not at the
+    edges. What remains is chordwise, spanwise or wall-normal resolution over
+    the body, and those cost very different amounts to buy: the spanwise
+    direction is the one o_out and cap_out do NOT refine, so a spanwise-driven
+    error is cheap to fix and a chordwise one is not.
+
+    `edges` scales the leading- and trailing-edge spacing requests with the
+    chordwise count, as refined_level does. Off by default here, because the
+    point of a directional test is to move ONE thing.
+
+    `scale_first_cell` likewise defaults off: dividing s0 by the normal ratio
+    changes y+ as well as the count, which is two variables again.
+    """
+    def intervals(points: int, ratio: float, *, odd: bool = False,
+                  minimum: int = 3) -> int:
+        n = max(int(round((points - 1) * ratio)), minimum - 1) + 1
+        if odd and n % 2 == 0:
+            n += 1
+        return n
+
+    return _dataclasses.replace(
+        base,
+        n_side=intervals(base.n_side, chord),
+        n_base=intervals(base.n_base, chord, odd=True),
+        n_span=intervals(base.n_span, span),
+        n_normal=intervals(base.n_normal, normal),
+        le_refine_factor=base.le_refine_factor * (chord if edges else 1.0),
+        le_baseline_n_side=base.le_baseline_n_side or base.n_side,
+        ds_te_frac=base.ds_te_frac / (chord if edges else 1.0),
+        s0_frac=base.s0_frac / (normal if scale_first_cell else 1.0),
+    )
+
+
 LEVELS["gci_C_edge"] = _dataclasses.replace(
     LEVELS["gci_C"],
     le_refine_factor=GCI_RATIO,
@@ -613,3 +660,23 @@ def _smooth_patch(patch: Array, iterations: int) -> Array:
             out[:-2, 1:-1] + out[2:, 1:-1] + out[1:-1, :-2] + out[1:-1, 2:]
         )
     return out
+
+#: One direction at a time, from gci_C, at the family's own ratio. Together
+#: with gci_C_edge these four isolate every axis the mesh has, so the constant
+#: CDp offset can be attributed instead of guessed at.
+LEVELS["gci_C_chord"] = directional_level(LEVELS["gci_C"], chord=GCI_RATIO)
+LEVELS["gci_C_span"] = directional_level(LEVELS["gci_C"], span=GCI_RATIO)
+LEVELS["gci_C_normal"] = directional_level(LEVELS["gci_C"], normal=GCI_RATIO)
+
+#: The second chordwise step, at gci_F's chordwise ratio. With gci_C and
+#: gci_C_chord it makes a THREE-level family in the one direction that carries
+#: the pressure-drag error -- 45, 58, 75 chordwise points at r = 1.29 each -- and
+#: at about 977k cells it fits the development host, where gci_F (2.2M) does not.
+#:
+#: What it tests: chord-only refinement recovered 88 per cent of the gci_C ->
+#: gci_M CDp offset from ONE step. One step cannot show whether that direction
+#: keeps converging, or where to. Three levels can -- an observed order and an
+#: extrapolated CDp in the chordwise direction -- and if that extrapolation lands
+#: where global refinement is heading, chord-only is a legitimate, much cheaper
+#: route to converged drag across the design space.
+LEVELS["gci_C_chord2"] = directional_level(LEVELS["gci_C"], chord=GCI_RATIO ** 2)

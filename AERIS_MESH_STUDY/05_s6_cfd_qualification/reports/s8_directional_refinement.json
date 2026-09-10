@@ -1,0 +1,132 @@
+{
+  "question": "which mesh direction carries the constant gci_C -> gci_M pressure-drag offset?",
+  "reference": {
+    "geometry": 83,
+    "gci_C_cells": 567256,
+    "gci_M_cells": 1111152,
+    "cdp_gci_C": {
+      "0": 0.011827825298184384,
+      "4": 0.010434435780243072
+    },
+    "cdp_gci_M": {
+      "0": 0.009078645289163653,
+      "4": 0.007760356964489201
+    }
+  },
+  "method": "refine ONE direction at gci_C, everything else held, and measure the fraction of the gci_C->gci_M CDp gap each recovers",
+  "rows": [
+    {
+      "direction": "chord",
+      "change": "n_side 45->58",
+      "level": "gci_C_chord",
+      "cells": 744828,
+      "alpha": 0,
+      "cdp": 0.009400451715388855,
+      "cdp_recovered_fraction": 0.8829445779580543,
+      "cl_change_pct": 0.1960865566475946,
+      "cdv_change_pct": 1.6295188139251318,
+      "gate_verdict": "ACCEPTED"
+    },
+    {
+      "direction": "chord",
+      "change": "n_side 45->58",
+      "level": "gci_C_chord",
+      "cells": 744828,
+      "alpha": 4,
+      "cdp": 0.008067784163154594,
+      "cdp_recovered_fraction": 0.8850343539411633,
+      "cl_change_pct": -0.6233529516075782,
+      "cdv_change_pct": 1.2338566167956586,
+      "gate_verdict": "ACCEPTED"
+    },
+    {
+      "direction": "span",
+      "change": "n_span 49->63",
+      "level": "gci_C_span",
+      "cells": 649688,
+      "alpha": 0,
+      "cdp": 0.011525916477701358,
+      "cdp_recovered_fraction": 0.1098177709325649,
+      "cl_change_pct": -0.013928806986287309,
+      "cdv_change_pct": 0.2756562697684789,
+      "gate_verdict": "ACCEPTED"
+    },
+    {
+      "direction": "span",
+      "change": "n_span 49->63",
+      "level": "gci_C_span",
+      "cells": 649688,
+      "alpha": 4,
+      "cdp": 0.010114257136601908,
+      "cdp_recovered_fraction": 0.11973418350831203,
+      "cl_change_pct": -0.024784936966145685,
+      "cdv_change_pct": 0.2761161454871368,
+      "gate_verdict": "ACCEPTED"
+    },
+    {
+      "direction": "normal",
+      "change": "n_normal 65->84, s0 held",
+      "level": "gci_C_normal",
+      "cells": 733316,
+      "alpha": 0,
+      "cdp": 0.012252067180207904,
+      "cdp_recovered_fraction": -0.15431578893760306,
+      "cl_change_pct": -0.0915807090167129,
+      "cdv_change_pct": -2.847455979140574,
+      "gate_verdict": "ACCEPTED"
+    },
+    {
+      "direction": "normal",
+      "change": "n_normal 65->84, s0 held",
+      "level": "gci_C_normal",
+      "cells": 733316,
+      "alpha": 4,
+      "cdp": 0.010846156524551148,
+      "cdp_recovered_fraction": -0.15396731834622626,
+      "cl_change_pct": 0.01444091213292416,
+      "cdv_change_pct": -2.6717843058951565,
+      "gate_verdict": "ACCEPTED"
+    },
+    {
+      "direction": "edges",
+      "change": "LE/TE spacing only",
+      "level": "gci_C_edge",
+      "cells": 567256,
+      "alpha": 0,
+      "cdp": 0.01163481942487628,
+      "cdp_recovered_fraction": 0.07020488752093527,
+      "cl_change_pct": -0.18438812650189407,
+      "cdv_change_pct": -0.1518335122358153,
+      "gate_verdict": "ACCEPTED"
+    },
+    {
+      "direction": "edges",
+      "change": "LE/TE spacing only",
+      "level": "gci_C_edge",
+      "cells": 567256,
+      "alpha": 4,
+      "cdp": 0.010256051872170026,
+      "cdp_recovered_fraction": 0.06670854539594287,
+      "cl_change_pct": 0.030480712476232196,
+      "cdv_change_pct": -0.19523461859739552,
+      "gate_verdict": "ACCEPTED"
+    }
+  ],
+  "decomposition_alpha0": {
+    "chord": 0.883,
+    "span": 0.11,
+    "normal": -0.154,
+    "edges": 0.07
+  },
+  "findings": [
+    "CHORDWISE resolution carries the error: 88.3 % and 88.5 % recovered at alpha 0 and 4, identical, so it is not an incidence effect.",
+    "Spanwise gives 11-12 %, edge spacing 7 %. Neither is where the error lives.",
+    "Wall-normal refinement at FIXED first-cell height moves CDp the WRONG way, -15.4 % at both angles, while lowering CDv 2.7-2.9 %. More layers at the same s0 resolves the outer boundary layer differently; it is not a route to converged pressure drag. First-cell height itself remains untested.",
+    "The four directions are close to additive -- chord + span - normal + edges accounts for roughly nine tenths of what global refinement does -- so the decomposition is essentially complete.",
+    "Physically consistent with CDv being converged while CDp is not: pressure drag on a swept wing is set by how well the chordwise pressure distribution is resolved, from leading-edge suction through trailing-edge recovery."
+  ],
+  "consequence": "A chord-only refinement may deliver converged pressure drag far more cheaply than global refinement. Whether it keeps converging is tested by gci_C_chord2 (chord x1.69, ~977k cells, fits the development host), which with gci_C and gci_C_chord makes a three-level chordwise family.",
+  "all_gate_verdicts": [
+    "ACCEPTED"
+  ]
+}

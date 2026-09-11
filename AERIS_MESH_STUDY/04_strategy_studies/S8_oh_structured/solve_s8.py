@@ -193,6 +193,13 @@ def main() -> int:
     # layer laminar. Every S8 run so far used the default.
     ap.add_argument("--eddy-vis-inf-ratio", type=float, default=None,
                     help="override eddyVisInfRatio (ADflow default 0.009)")
+    # SA's ft2 term damps production where chi is small; with the default freestream
+    # it is the suspected route by which part of the boundary layer stays laminar.
+    ap.add_argument("--no-ft2", action="store_true",
+                    help="SA without the ft2 term (useft2SA False; default True)")
+    ap.add_argument("--turbulence-order", default=None,
+                    choices=["first order", "second order"],
+                    help="advection order of the SA variable (ADflow default first)")
     ap.add_argument("--i-have-authorization", action="store_true")
     args = ap.parse_args()
 
@@ -209,7 +216,10 @@ def main() -> int:
         ("turbulence_model", "turbulenceModel"), ("mg_cycle", "MGCycle"),
         ("smoother", "smoother"), ("ank_switch_tol", "ANKSwitchTol"),
         ("n_cycles_coarse", "nCyclesCoarse"),
-        ("eddy_vis_inf_ratio", "eddyVisInfRatio")) if getattr(args, flag) is not None}
+        ("eddy_vis_inf_ratio", "eddyVisInfRatio"),
+        ("turbulence_order", "turbulenceOrder")) if getattr(args, flag) is not None}
+    if args.no_ft2:
+        init_overrides["useft2SA"] = False
 
     from adflow import ADFLOW
     from baseclasses import AeroProblem

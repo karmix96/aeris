@@ -1,0 +1,78 @@
+{
+  "schema": "aeris.s8.naca0012_tmr.v1",
+  "case": {
+    "mach": 0.15,
+    "reynolds": 6000000.0,
+    "reynolds_length": 1.0,
+    "temperature_K": 300.0,
+    "alpha_deg": 10.0
+  },
+  "reference_sa_no_point_vortex": {
+    "CL": [
+      1.09085,
+      1.09103
+    ],
+    "CD": [
+      0.0122715,
+      0.012274
+    ],
+    "CM": [
+      0.00677,
+      0.0068
+    ],
+    "CDp": [
+      0.006066,
+      0.006068
+    ],
+    "CDv": [
+      0.0062057,
+      0.0062061
+    ]
+  },
+  "levels": {
+    "o256": {
+      "CL": 1.0929356888537989,
+      "CD": 0.014283827572485055,
+      "CDp": 0.007728696007085257,
+      "CDv": 0.0065551315653998325,
+      "CM": 0.004061901884191927
+    },
+    "o512": {
+      "CL": 1.099044425961815,
+      "CD": 0.012812978828209656,
+      "CDp": 0.006587698644484419,
+      "CDv": 0.006225280183725257,
+      "CM": 0.004473984821579023
+    }
+  },
+  "verification": {
+    "CL": {
+      "finest_grid": "o512",
+      "finest_value": 1.099044425961815,
+      "finest_vs_reference_pct": 0.7428846647675438
+    },
+    "CD": {
+      "finest_grid": "o512",
+      "finest_value": 0.012812978828209656,
+      "finest_vs_reference_pct": 4.4018563745668855
+    },
+    "CM": {
+      "finest_grid": "o512",
+      "finest_value": 0.004473984821579023,
+      "finest_vs_reference_pct": -34.06065111895323
+    },
+    "CDp": {
+      "finest_grid": "o512",
+      "finest_value": 0.006587698644484419,
+      "finest_vs_reference_pct": 8.582473124846215
+    },
+    "CDv": {
+      "finest_grid": "o512",
+      "finest_value": 0.006225280183725257,
+      "finest_vs_reference_pct": 0.31228643267304707
+    }
+  },
+  "sensitivity_on_o1024": {
+    "prandtl_glauert_cl_change_pct": -0.7832485995281746
+  }
+}

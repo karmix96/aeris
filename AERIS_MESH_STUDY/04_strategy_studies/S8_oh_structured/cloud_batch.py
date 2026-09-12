@@ -69,6 +69,12 @@ MEM_NK = (1.51, 9.46)
 CELL_VARIATION = 1.05
 #: measured four-angle wall times on 6 ranks, minutes
 MEASURED_MIN = {"gci_C": 54.6, "gci_M": 137.8}
+#: measured on this desktop, index 83 gci_C alpha 0, time to the 1e-6 target at
+#: 1/2/4/6 ranks (reports/s8_rank_scaling_time_to_answer.json): efficiency 1.00,
+#: 0.95, 0.62, 0.43. Extrapolating that curve, 24 ranks on one case is worth about
+#: 0.3 -- not 0.75. The estimate below is therefore optimistic, and the batch's
+#: real lever is CONCURRENCY: several cases at 2-4 ranks each, memory permitting.
+#: run_campaign.py probe measures the rented host before the batch bills.
 PARALLEL_EFFICIENCY = 0.75
 REFERENCE_INDEX = 83
 

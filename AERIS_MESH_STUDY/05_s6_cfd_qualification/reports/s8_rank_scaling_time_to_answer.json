@@ -1,0 +1,43 @@
+{
+  "schema": "aeris.s8.rank_scaling_time_to_answer.v1",
+  "case": "index 83 gci_C alpha 0, ANK only, L2 1e-6, idle 6-core host",
+  "why": "the earlier test (AUDIT C8) fixed the cycle budget, which measures throughput, not time to an answer",
+  "runs": [
+    {
+      "ranks": 1,
+      "wall_seconds_to_1e-6": 2121,
+      "outer_iterations": 250,
+      "speedup": 1.0,
+      "efficiency": 1.0,
+      "core_hours_per_point": 0.589
+    },
+    {
+      "ranks": 2,
+      "wall_seconds_to_1e-6": 1121,
+      "outer_iterations": 225,
+      "speedup": 1.892,
+      "efficiency": 0.946,
+      "core_hours_per_point": 0.623
+    },
+    {
+      "ranks": 4,
+      "wall_seconds_to_1e-6": 849,
+      "outer_iterations": 180,
+      "speedup": 2.498,
+      "efficiency": 0.625,
+      "core_hours_per_point": 0.943
+    },
+    {
+      "ranks": 6,
+      "wall_seconds_to_1e-6": 827,
+      "outer_iterations": 165,
+      "speedup": 2.565,
+      "efficiency": 0.427,
+      "core_hours_per_point": 1.378
+    }
+  ],
+  "forces_identical": "CD 0.020828 / 0.020825 / 0.020824 / 0.020824 across 1, 2, 4, 6 ranks",
+  "finding": "time to the answer does keep improving past 2 ranks: 2.56x on 6 ranks (43 % efficiency), 1.89x on 2 (95 %), 2.50x on 4 (62 %). The fixed-budget test's 'flat beyond 2 ranks' was an artefact of that test, not the solver",
+  "cost": "core-hours per point rise with rank count: 0.59, 0.62, 0.94, 1.38. A rented machine is paid for whole, so the cheapest batch runs MANY CASES AT ONCE with 2-4 ranks each, not one case on all cores; concurrency is then limited by memory, about 18.6 GiB per gci_F case",
+  "supersedes": "reports/s8_s0_and_ranks.json rank_scaling section (fixed-cycle test)"
+}

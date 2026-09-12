@@ -337,8 +337,21 @@ def main() -> int:
                 f"UNAVAILABLE: {type(direct_error).__name__}: {direct_error}; "
                 f"fallback {type(history_error).__name__}: {history_error}"
             )
+    # A run that stops after one iteration can still report a tiny residual
+    # ratio. Menter SST did exactly that here: one DADI iteration, ratio 9e-9,
+    # CL -1.17 and CD 2.21 written out as "converged". Forces no wing at this
+    # mission can produce are not a result, whatever the residual says.
+    coefficients = {k.split("_")[-1]: float(v) for k, v in funcs.items()}
+    BOUNDS = {"cl": (-3.0, 3.0), "cd": (0.0, 0.5), "cdp": (-0.05, 0.5),
+              "cdv": (0.0, 0.1), "cmy": (-3.0, 3.0), "cmx": (-3.0, 3.0),
+              "cmz": (-3.0, 3.0)}
+    implausible = {k: v for k, v in coefficients.items()
+                   if k in BOUNDS and not BOUNDS[k][0] <= v <= BOUNDS[k][1]}
+    if implausible:
+        print(f"IMPLAUSIBLE FORCES {implausible} -- not recording this as converged")
     result = {
-        "converged": (residual is not None and residual <= args.l2),
+        "converged": ((residual is not None and residual <= args.l2)) and not implausible,
+        "implausible_forces": implausible or None,
         "relative_residual": residual,
         "residual_source": residual_source,
         "l2_target": args.l2,

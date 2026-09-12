@@ -52,6 +52,11 @@ echo -e "\n=== 4/5 collect"
 "$PY" "$S/collect_dataset.py" --out "$Q/dataset"
 
 # 5. The grid-convergence study index 83 can finally support: four levels.
+echo -e "\n=== 4b/5 audit the archive"
+# Every check this campaign learned to make, on every archived row. A batch that
+# produces rows nobody has judged is not a finished batch.
+"$PY" "$S/audit_runs.py" || echo "ARCHIVE AUDIT FOUND PROBLEMS -- see reports/s8_archive_audit.json"
+
 echo -e "\n=== 5/5 grid convergence on the reference"
 C='{"gci_C":567256,"gci_M":1111152,"gci_F":2217680,"gci_FF":4504420}'
 "$PY" "$S/convergence_gate.py" \

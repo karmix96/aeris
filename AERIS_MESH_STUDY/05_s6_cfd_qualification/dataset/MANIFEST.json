@@ -2,10 +2,10 @@
   "schema_version": "aeris.s8.dataset.v1",
   "purpose": "Trusted S8 CFD results with the provenance needed to reproduce and to believe them. Surrogate-training dataset, NOT certification.",
   "environment": {
-    "collected_utc": "2026-09-12T17:41:44.516746+00:00",
-    "git_commit": "687c19698861b532521b98559751eb25fec29fce",
+    "collected_utc": "2026-09-12T21:54:18.978181+00:00",
+    "git_commit": "aa6d8a571235d7b5141900948901e869da4897e8",
     "git_dirty": true,
-    "git_describe": "checkpoint-geometry-stable-448-g687c196-dirty",
+    "git_describe": "checkpoint-geometry-stable-451-gaa6d8a5-dirty",
     "adflow_version": "2.13.1",
     "mach_python": "/home/mike_kara/miniconda3/envs/mach-aero/bin/python",
     "mpirun": "/home/mike_kara/miniconda3/envs/mach-aero/bin/mpirun",
@@ -22,8 +22,8 @@
   },
   "counts": {
     "runs_found": 70,
-    "rows": 70,
-    "excluded": 0
+    "rows": 69,
+    "excluded": 1
   },
   "meshes": {
     "gci_C_83": {
@@ -162,7 +162,14 @@
       "blocks_sha256": "c8b8197734d18a0ecb107d2d828fbbdacd6d66e1fc6de214132092e8ea9a6715"
     }
   },
-  "excluded_runs": [],
+  "excluded_runs": [
+    {
+      "run": "l2check_g12_a0_1e8",
+      "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_cfd/l2check_g12_a0_1e8",
+      "verdict": "never judged",
+      "reason": "gate verdict is not ACCEPTED"
+    }
+  ],
   "row_schema": {
     "identity_and_provenance": [
       "geometry_set",

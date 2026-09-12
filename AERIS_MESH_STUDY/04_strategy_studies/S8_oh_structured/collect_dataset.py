@@ -39,6 +39,7 @@ import argparse
 import gzip
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -189,10 +190,22 @@ def main() -> int:
                 if name.startswith(candidate) or candidate in str(run):
                     level = candidate
                     break
-        index = 83
-        for part in run.parts:
-            if part.startswith("g") and part[1:].isdigit():
-                index = int(part[1:])
+        # Geometry, by the same principle as the level above: the grid the solver
+        # was handed is a FACT, the directory it ran in is a convention. The
+        # stopping-rule check l2check_g12_a0_1e8 was solved on g12's mesh from a
+        # directory with no geometry in its name, and was archived as geometry 83
+        # -- a wrong label on a correct number, which is the one defect a
+        # surrogate cannot survive.
+        index, index_source = None, None
+        for text, source in ((str(grid), "grid path"), (str(run), "run directory")):
+            match = re.search(r"(?:^|[_/])g(\d+)(?:[_/]|$)", text)
+            if match:
+                index, index_source = int(match.group(1)), source
+                break
+        if index is None:
+            index, index_source = 83, "reference-geometry directory"
+            print(f"  {name}: no geometry in the grid path or directory; "
+                  f"taking the reference geometry 83")
         mesh_dir = run.parent if (run.parent / f"{level}_summary.json").exists() \
             else ARTIFACTS / "s8_gci83"
 
@@ -211,10 +224,16 @@ def main() -> int:
             record = record or verdicts.get(name)
             verdict = record["verdict"] if record else verdict
 
-        if verdict is not None and verdict not in ACCEPTABLE and not args.include_rejected:
-            excluded.append({"run": name, "directory": str(run), "verdict": verdict,
+        # A MISSING verdict used to pass this filter, which is the wrong way round:
+        # "no gate has judged this run" is a weaker claim than "the gate rejected
+        # it". l2check_g12_a0_1e8 -- a one-off whose log was lost, so no gate could
+        # read it -- sat in the archive unjudged. An unjudged run is not training
+        # data; it is a run somebody still has to look at.
+        if verdict not in ACCEPTABLE and not args.include_rejected:
+            excluded.append({"run": name, "directory": str(run),
+                             "verdict": verdict or "never judged",
                              "reason": "gate verdict is not ACCEPTED"})
-            print(f"  EXCLUDED {name:<24} {verdict}")
+            print(f"  EXCLUDED {name:<24} {verdict or 'never judged'}")
             continue
 
         row = dataset_row.build_row(

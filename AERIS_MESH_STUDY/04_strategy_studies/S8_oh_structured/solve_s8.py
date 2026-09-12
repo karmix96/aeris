@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 
 #: mission_authority_v1.yaml, authority_id s6_nominal_mission_20260830
@@ -28,6 +29,9 @@ MISSION = {
 }
 #: the C03 reference contract, unchanged, so the numbers are comparable
 AREA_REF_M2 = 0.394918242017589
+#: A run that reports convergence after fewer iterations than this did not
+#: converge; it failed in a way that flattered the residual ratio.
+MIN_ITERATIONS = 10
 MOMENT_REF_XYZ = (0.4, 0.0, 0.0)
 
 
@@ -345,12 +349,41 @@ def main() -> int:
     BOUNDS = {"cl": (-3.0, 3.0), "cd": (0.0, 0.5), "cdp": (-0.05, 0.5),
               "cdv": (0.0, 0.1), "cmy": (-3.0, 3.0), "cmx": (-3.0, 3.0),
               "cmz": (-3.0, 3.0)}
+    # A NaN fails every comparison, so a plain range test lets it through.
     implausible = {k: v for k, v in coefficients.items()
-                   if k in BOUNDS and not BOUNDS[k][0] <= v <= BOUNDS[k][1]}
+                   if k in BOUNDS and not (math.isfinite(v)
+                                           and BOUNDS[k][0] <= v <= BOUNDS[k][1])}
     if implausible:
         print(f"IMPLAUSIBLE FORCES {implausible} -- not recording this as converged")
+    # Every governed setting that actually reached the solver, read back FROM it.
+    # A row that claims the governed configuration should be able to prove it,
+    # and a defaulted option nobody chose (eddyVisInfRatio) should be visible.
+    effective = {}
+    for key in ("equationType", "turbulenceModel", "turbulenceOrder", "useft2SA",
+                "eddyVisInfRatio", "liftIndex", "MGCycle", "smoother",
+                "useANKSolver", "ANKSwitchTol", "useNKSolver", "NKSwitchTol",
+                "ANKSubspaceSize", "NKSubspaceSize", "ANKPCILUFill", "NKPCILUFill",
+                "L2Convergence", "nCycles", "useWallFunctions", "useQCR"):
+        try:
+            effective[key] = solver.getOption(key)
+        except Exception:  # noqa: BLE001 - an option this build does not carry
+            pass
+    try:
+        completed = int(solver.adflow.iteration.itertot)
+    except Exception:  # noqa: BLE001 - reported, never assumed
+        completed = None
+    # Menter SST stopped after ONE iteration with a residual ratio of 9e-9 and
+    # wrote CL -1.17, CD 2.21 as converged: its initial residual was meaningless,
+    # so the ratio was too. No flow reaches a converged state in one step.
+    too_few = completed is not None and completed < MIN_ITERATIONS
+    if too_few:
+        print(f"ONLY {completed} ITERATIONS -- not recording this as converged")
+
     result = {
-        "converged": ((residual is not None and residual <= args.l2)) and not implausible,
+        "converged": (((residual is not None and residual <= args.l2)) and not implausible) and not too_few,
+        "iterations_completed": completed,
+        "too_few_iterations": too_few,
+        "solver_options_effective": effective,
         "implausible_forces": implausible or None,
         "relative_residual": residual,
         "residual_source": residual_source,

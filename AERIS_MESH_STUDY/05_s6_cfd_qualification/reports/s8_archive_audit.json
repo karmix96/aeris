@@ -1,0 +1,19 @@
+{
+  "schema": "aeris.s8.archive_audit.v1",
+  "rows": 69,
+  "sound": 69,
+  "checks": [
+    "gate verdict",
+    "physical force bounds and finiteness",
+    "per-equation convergence",
+    "residual against the stopping rule",
+    "reference area is this geometry's own",
+    "moment reference and chord",
+    "no folded cells",
+    "grid on the design surface",
+    "y+ below 1",
+    "not converged in fewer than ten iterations",
+    "freestream direction"
+  ],
+  "findings": []
+}

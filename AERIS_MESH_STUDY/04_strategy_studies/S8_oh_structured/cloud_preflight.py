@@ -200,8 +200,14 @@ def check_cgns_reader(c: Check) -> None:
         c.add("CGNS reader", False, f"{type(exc).__name__}: {exc}")
 
 
-def check_smoke(c: Check, env: dict, ranks: int) -> None:
-    """Build the coarsest mesh and solve twenty iterations. End to end."""
+def check_smoke(c: Check, env: dict, ranks: int, extra: list[str] | None = None) -> None:
+    """Build the coarsest mesh and solve twenty iterations. End to end.
+
+    `extra` carries the batch's own solver flags, so a setting that aborts
+    the solver -- Menter SST does, in this build -- is caught here rather
+    than an hour into a billed batch.
+    """
+    extra = list(extra or [])
     with tempfile.TemporaryDirectory() as tmp:
         out = Path(tmp)
         build = subprocess.run(
@@ -224,7 +230,7 @@ def check_smoke(c: Check, env: dict, ranks: int) -> None:
             [env["mpirun"], "-np", str(ranks), env["mach_python"],
              str(HERE / "solve_s8.py"), "--grid", str(out / "gci_CC_volume.cgns"),
              "--alpha", "0.0", "--out", str(out / "run"), "--n-cycles", "20",
-             "--l2", "1e-12", "--no-nk", "--i-have-authorization"],
+             "--l2", "1e-12", "--no-nk", "--i-have-authorization", *extra],
             capture_output=True, text=True, timeout=3600)
         log = (out / "run" / "run.log")
         ran = "parallel executable running on" in (solve.stdout + (log.read_text() if log.exists() else ""))
@@ -266,7 +272,7 @@ def main() -> int:
     check_reference_areas(c, indices)
     check_cgns_reader(c)
     if args.smoke and env:
-        check_smoke(c, env, args.ranks)
+        check_smoke(c, env, args.ranks, args.solver_args)
 
     fatal = [r for r in c.results if not r["pass"] and r["fatal"]]
     warn = [r for r in c.results if not r["pass"] and not r["fatal"]]

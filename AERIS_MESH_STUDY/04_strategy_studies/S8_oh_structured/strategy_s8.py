@@ -695,3 +695,12 @@ LEVELS["gci_C_chord2"] = directional_level(LEVELS["gci_C"], chord=GCI_RATIO ** 2
 #: not move the grid out of the wall-resolved regime -- it moves it further in.
 LEVELS["gci_C_s0"] = _dataclasses.replace(
     LEVELS["gci_C"], s0_frac=LEVELS["gci_C"].s0_frac / GCI_RATIO)
+
+#: The two halves of the wall-normal direction, together, which is what gci_M
+#: actually does to it: more layers AND a proportionally smaller first cell.
+#: Separately, more layers at fixed s0 moved CDp the WRONG way (-15 % of the
+#: gap) and a smaller s0 alone recovered only 1 %. Neither result is meaningful
+#: on its own if the pair is what matters, and nothing so far has tested the
+#: pair in isolation. This does.
+LEVELS["gci_C_normal_s0"] = directional_level(
+    LEVELS["gci_C"], normal=GCI_RATIO, scale_first_cell=True)

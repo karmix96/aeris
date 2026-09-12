@@ -100,6 +100,7 @@ def cmd_grid(args) -> int:
     report = json.loads(report_path.read_text()) if report_path.exists() else {}
     for name in args.levels:
         cells = LEVELS[name]
+        name = name + args.suffix
         surface = OUT / f"{name}_surface.xyz"
         write_surface(surface, surface_loop(cells))
         s0 = S0_AT_1024 * 1024 / cells
@@ -109,7 +110,8 @@ def cmd_grid(args) -> int:
             "autoConnect": True,
             "BC": {1: {"jLow": "zSymm", "jHigh": "zSymm"}},
             "families": "wall",
-            "N": cells // 4 + 1, "s0": s0, "marchDist": FARFIELD_CHORDS,
+            "N": (args.normal_cells or cells // 4) + 1, "s0": s0,
+            "marchDist": FARFIELD_CHORDS,
             "ps0": -1.0, "pGridRatio": -1.0, "cMax": 3.0,
             "epsE": 1.0, "epsI": 2.0, "theta": 3.0,
             "volCoef": 0.25, "volBlend": 0.0001, "volSmoothIter": 100,
@@ -256,15 +258,19 @@ def cmd_compare(args) -> int:
         verdict[key] = entry
     report["verification"] = verdict
 
-    base = load("o1024_m0.15")
     sensitivity = {}
-    for name, label in (("o1024_m0.15_chi3", "freestream chi 3 (TMR) vs ADflow default"),
-                        (f"o1024_m{AERIS_MACH:g}", f"M {AERIS_MACH} (AERIS) vs M 0.15")):
-        other = load(name)
-        if base and other and not other.get("unconverged"):
+    # whichever level the single-change runs were done on -- o1024 would not
+    # converge, so they were repeated on o512
+    pairs = [(lvl, f"{lvl}_m0.15_chi3", "freestream chi 3 (TMR) vs ADflow default")
+             for lvl in LEVELS] + \
+            [(lvl, f"{lvl}_m{AERIS_MACH:g}", f"M {AERIS_MACH} (AERIS) vs M 0.15")
+             for lvl in LEVELS]
+    for lvl, name, label in pairs:
+        base, other = load(f"{lvl}_m0.15"), load(name)
+        if base and other and not other.get("unconverged") and not base.get("unconverged"):
             delta = {k: 100 * (other["coefficients"][k] - base["coefficients"][k])
                      / base["coefficients"][k] for k in ("CL", "CD", "CDp", "CDv")}
-            sensitivity[name] = {"label": label, "percent_change": delta}
+            sensitivity[name] = {"label": label, "grid": lvl, "percent_change": delta}
             print(f"  {label}: " + "  ".join(f"{k} {v:+.2f}%" for k, v in delta.items()))
     beta = lambda m: np.sqrt(1 - m ** 2)  # noqa: E731
     sensitivity["prandtl_glauert_cl_change_pct"] = 100 * (beta(0.15) / beta(AERIS_MACH) - 1)
@@ -286,6 +292,12 @@ def main() -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     g = sub.add_parser("grid")
     g.add_argument("--levels", nargs="+", default=list(LEVELS), choices=list(LEVELS))
+    # The 1024-point level would not converge: its trailing-edge cells pinch,
+    # worst quality 0.10. These let a gentler version be built without disturbing
+    # the family the two converged levels belong to.
+    g.add_argument("--normal-cells", type=int, default=None,
+                   help="cells away from the wall (default: a quarter of the surface count)")
+    g.add_argument("--suffix", default="", help="suffix for the grid's name")
     s = sub.add_parser("solve")
     s.add_argument("--grid", type=Path, required=True)
     s.add_argument("--out", type=Path, required=True)

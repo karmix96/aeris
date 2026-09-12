@@ -235,3 +235,26 @@ amendments:
       - ONERA M6 L0, L1 and L2 with --no-nk, the campaign's solver configuration
     does_not_add: >-
       cloud spend, a solve at any level above gci_M, or geometries outside the ten.
+
+convergence_acceptance:
+  decided_on: 2026-09-12
+  how_given: >-
+    Directed in session: "lets follow fluent process. i think that it stops, after
+    each one of them converges. we should do the same. what limits and also check
+    that every passed run has all the variables indeed converged."
+  rule: >-
+    A run is accepted only if EVERY equation has dropped its own limit, on top of the
+    existing routes (residual target met, or orders plus settled forces) and the health
+    checks. Residuals are normalised by the largest value in the first five iterations,
+    which is how Fluent scales them.
+  limits_orders: {continuity: 3.0, momentum_x: 3.0, momentum_y: 3.0, momentum_z: 3.0,
+                  energy: 6.0, turbulence: 3.0}
+  why_these_limits: >-
+    They are Fluent's own defaults (1e-3 for flow and turbulence, 1e-6 for energy).
+    Measured over 77 runs the actual drops are continuity 5.91-7.43, momentum 4.55-6.28,
+    energy 6.12-7.48 and turbulence 3.32-5.33, so every run already clears them and no
+    verdict changed. Tightening turbulence to 1e-4 would reject 48 of the 77, and
+    reports/s8_l2_revalidation.json shows those are converged in the sense that matters:
+    carried 20-40x further, no force moves by more than 0.073 per cent.
+  evidence: reports/s8_equation_convergence.json
+  recorded_in_every_row: equation_orders (dataset_row schema v2)

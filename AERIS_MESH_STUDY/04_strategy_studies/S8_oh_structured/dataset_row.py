@@ -70,7 +70,8 @@ SCHEMA: dict[str, tuple[str, ...]] = {
         "area_ref", "chord_ref", "moment_ref_xyz"),
     "results": ("CL", "CD", "CDp", "CDv", "CMy", "CMx", "CMz"),
     "convergence": (
-        "gate_verdict", "relative_residual", "orders_dropped", "iterations",
+        "gate_verdict", "relative_residual", "orders_dropped", "equation_orders",
+        "iterations",
         "cl_pct", "cd_pct", "cmy_abs",
         "lift_index_realised", "velocity_direction_error"),
     "mesh_state": (
@@ -322,12 +323,15 @@ def build_row(*, run: Path, level: str, index: int, set_name: str,
         checks = entry["checks"]
         row.update(gate_verdict=entry["verdict"], iterations=entry["iterations"],
                    orders_dropped=checks["residual_orders"]["value"],
+                   # Fluent's per-equation test: continuity, each momentum
+                   # component, energy and turbulence, each against its own limit
+                   equation_orders=entry.get("equation_orders"),
                    cl_pct=checks["cl_percent"]["value"],
                    cd_pct=checks["cd_percent"]["value"],
                    cmy_abs=checks["cmy_absolute"]["value"])
     else:
         for field in ("gate_verdict", "iterations", "orders_dropped",
-                      "cl_pct", "cd_pct", "cmy_abs"):
+                      "equation_orders", "cl_pct", "cd_pct", "cmy_abs"):
             if row[field] is None:
                 absent(field, "convergence_gate.py has not judged this run")
 
@@ -391,7 +395,7 @@ def build_row(*, run: Path, level: str, index: int, set_name: str,
             absent(field, "verify_against_avl.py has not been run for this geometry")
 
     row["missing_fields"] = missing
-    row["schema_version"] = "aeris.s8.dataset_row.v1"
+    row["schema_version"] = "aeris.s8.dataset_row.v2"
     return row
 
 
@@ -498,7 +502,7 @@ def main() -> int:
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(json.dumps(
-            {"schema_version": "aeris.s8.dataset_row.v1", "schema": SCHEMA,
+            {"schema_version": "aeris.s8.dataset_row.v2", "schema": SCHEMA,
              "rows": rows}, indent=2) + "\n")
         print(f"\nwrote {args.out}")
     return 0

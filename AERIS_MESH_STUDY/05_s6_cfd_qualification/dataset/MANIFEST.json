@@ -2,10 +2,10 @@
   "schema_version": "aeris.s8.dataset.v1",
   "purpose": "Trusted S8 CFD results with the provenance needed to reproduce and to believe them. Surrogate-training dataset, NOT certification.",
   "environment": {
-    "collected_utc": "2026-09-10T20:27:39.723712+00:00",
-    "git_commit": "b56bc545e88e9ce602badbccd5cd15c09201b423",
+    "collected_utc": "2026-09-12T17:41:44.516746+00:00",
+    "git_commit": "687c19698861b532521b98559751eb25fec29fce",
     "git_dirty": true,
-    "git_describe": "checkpoint-geometry-stable-440-gb56bc54-dirty",
+    "git_describe": "checkpoint-geometry-stable-448-g687c196-dirty",
     "adflow_version": "2.13.1",
     "mach_python": "/home/mike_kara/miniconda3/envs/mach-aero/bin/python",
     "mpirun": "/home/mike_kara/miniconda3/envs/mach-aero/bin/mpirun",
@@ -21,8 +21,8 @@
     "stopping_rule": "L2Convergence 1e-6; see reports/s8_l2_sensitivity.json"
   },
   "counts": {
-    "runs_found": 62,
-    "rows": 62,
+    "runs_found": 70,
+    "rows": 70,
     "excluded": 0
   },
   "meshes": {
@@ -61,6 +61,15 @@
       "wall_layer_error_m": 2.220446049250313e-16,
       "frame_mode": "span_normal",
       "blocks_sha256": "7fe8afef30a1c978db105d53896a85e13f90f9cc19bbf88740b6df2c56167332"
+    },
+    "gci_M_13": {
+      "level": "gci_M",
+      "index": 13,
+      "cells": 1121436,
+      "folded": 0,
+      "wall_layer_error_m": 3.0878077872387166e-16,
+      "frame_mode": "span_normal",
+      "blocks_sha256": "ea609c385edd2ae748d01e36129bc9d957747ba47508810506b6ee29126cc917"
     },
     "gci_C_16": {
       "level": "gci_C",
@@ -115,6 +124,15 @@
       "wall_layer_error_m": 1.5265566588595902e-16,
       "frame_mode": "span_normal",
       "blocks_sha256": "8e956113b4d6325fbb15b8add885f39d6f6eea752862ba3323f6ae87a308f0b6"
+    },
+    "gci_M_47": {
+      "level": "gci_M",
+      "index": 47,
+      "cells": 1111152,
+      "folded": 0,
+      "wall_layer_error_m": 2.220446049250313e-16,
+      "frame_mode": "span_normal",
+      "blocks_sha256": "8130b42430e7896def1c825f2abf250f7d4635d32bc4464c7c33de1a2a80148b"
     },
     "gci_C_65": {
       "level": "gci_C",
@@ -184,6 +202,7 @@
       "gate_verdict",
       "relative_residual",
       "orders_dropped",
+      "equation_orders",
       "iterations",
       "cl_pct",
       "cd_pct",

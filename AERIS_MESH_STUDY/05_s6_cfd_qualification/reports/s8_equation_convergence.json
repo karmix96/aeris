@@ -1,0 +1,4826 @@
+{
+  "schema": "aeris.s8.equation_convergence.v1",
+  "normalisation": "final / max(first 5 iterations), as Fluent scales residuals",
+  "summary": {
+    "rho": {
+      "worst": 5.911077637659856,
+      "median": 6.255032571677196,
+      "best": 7.4348036722894735,
+      "n": 77
+    },
+    "rhou": {
+      "worst": 4.875753116005715,
+      "median": 5.112456180575759,
+      "best": 6.276684960873248,
+      "n": 77
+    },
+    "rhov": {
+      "worst": 4.550966530206135,
+      "median": 4.888795657433258,
+      "best": 5.640073949650954,
+      "n": 77
+    },
+    "rhow": {
+      "worst": 4.992298109109715,
+      "median": 5.194516337370229,
+      "best": 6.0427398507235,
+      "n": 77
+    },
+    "rhoE": {
+      "worst": 6.119465350282817,
+      "median": 6.354110745151145,
+      "best": 7.475444455344412,
+      "n": 77
+    },
+    "nuturb": {
+      "worst": 3.3239735426120802,
+      "median": 3.8864258870633694,
+      "best": 5.32776829132542,
+      "n": 77
+    },
+    "totalRes": {
+      "worst": 6.000046914742237,
+      "median": 6.00718804270563,
+      "best": 6.03620765009581,
+      "n": 77
+    }
+  },
+  "runs": [
+    {
+      "run": "../../artifacts/s8_aniso/gci_C_chord2_a0",
+      "iterations": 182,
+      "equations": {
+        "rho": {
+          "initial": 864.3854670305644,
+          "fluent_reference": 864.3854670305644,
+          "final": 0.00036943189774295407,
+          "ratio_vs_fluent_reference": 4.273925370495511e-07,
+          "orders_vs_fluent_reference": 6.369173065575075,
+          "ratio_vs_iteration_zero": 4.273925370495511e-07
+        },
+        "rhou": {
+          "initial": 151.7415615832146,
+          "fluent_reference": 220.06060149131824,
+          "final": 0.000933551626043677,
+          "ratio_vs_fluent_reference": 4.2422479067908354e-06,
+          "orders_vs_fluent_reference": 5.372403955950198,
+          "ratio_vs_iteration_zero": 6.152247388937804e-06
+        },
+        "rhov": {
+          "initial": 2.1013214253015664,
+          "fluent_reference": 64.23684053951584,
+          "final": 0.0008570218208601414,
+          "ratio_vs_fluent_reference": 1.3341593603641467e-05,
+          "orders_vs_fluent_reference": 4.874792292463533,
+          "ratio_vs_iteration_zero": 0.0004078489899455281
+        },
+        "rhow": {
+          "initial": 5.949865033021448,
+          "fluent_reference": 122.52538305749168,
+          "final": 0.0006163384977850667,
+          "ratio_vs_fluent_reference": 5.030292355795915e-06,
+          "orders_vs_fluent_reference": 5.2984067734293205,
+          "ratio_vs_iteration_zero": 0.0001035886519046095
+        },
+        "rhoE": {
+          "initial": 3029.5848742683265,
+          "fluent_reference": 3029.5848742683265,
+          "final": 0.0010020421777350687,
+          "ratio_vs_fluent_reference": 3.3075230413443076e-07,
+          "orders_vs_fluent_reference": 6.480497121685032,
+          "ratio_vs_iteration_zero": 3.3075230413443076e-07
+        },
+        "nuturb": {
+          "initial": 0.0006897055349504896,
+          "fluent_reference": 0.0006897055349504896,
+          "final": 2.5175548310091175e-07,
+          "ratio_vs_fluent_reference": 0.00036501879475127596,
+          "orders_vs_fluent_reference": 3.4376847732240114,
+          "ratio_vs_iteration_zero": 0.00036501879475127596
+        },
+        "totalRes": {
+          "initial": 3114153.7230165224,
+          "fluent_reference": 3114153.7230165224,
+          "final": 3.0374368856071574,
+          "ratio_vs_fluent_reference": 9.753651090367326e-07,
+          "orders_vs_fluent_reference": 6.010832784138998,
+          "ratio_vs_iteration_zero": 9.753651090367326e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_aniso/gci_C_chord2_a4",
+      "iterations": 158,
+      "equations": {
+        "rho": {
+          "initial": 852.8672035348682,
+          "fluent_reference": 852.8672035348682,
+          "final": 0.0005726110981113942,
+          "ratio_vs_fluent_reference": 6.713953775430689e-07,
+          "orders_vs_fluent_reference": 6.1730216531303785,
+          "ratio_vs_iteration_zero": 6.713953775430689e-07
+        },
+        "rhou": {
+          "initial": 150.80724426553581,
+          "fluent_reference": 218.22746455391425,
+          "final": 0.0018412128445781427,
+          "ratio_vs_fluent_reference": 8.437127051546078e-06,
+          "orders_vs_fluent_reference": 5.073805410965103,
+          "ratio_vs_iteration_zero": 1.220904773868955e-05
+        },
+        "rhov": {
+          "initial": 2.0917654842297004,
+          "fluent_reference": 63.64113768774277,
+          "final": 0.000834554943992757,
+          "ratio_vs_fluent_reference": 1.3113451052486315e-05,
+          "orders_vs_fluent_reference": 4.882283000467122,
+          "ratio_vs_iteration_zero": 0.00039897156267500254
+        },
+        "rhow": {
+          "initial": 12.088837454107328,
+          "fluent_reference": 120.39557272515118,
+          "final": 0.0007706463245237008,
+          "ratio_vs_fluent_reference": 6.40095235298224e-06,
+          "orders_vs_fluent_reference": 5.193755405566889,
+          "ratio_vs_iteration_zero": 6.374858851806833e-05
+        },
+        "rhoE": {
+          "initial": 2989.2143266249673,
+          "fluent_reference": 2989.2143266249673,
+          "final": 0.0011097608815905647,
+          "ratio_vs_fluent_reference": 3.712550390602345e-07,
+          "orders_vs_fluent_reference": 6.430327642937487,
+          "ratio_vs_iteration_zero": 3.712550390602345e-07
+        },
+        "nuturb": {
+          "initial": 0.000688945630045425,
+          "fluent_reference": 0.000688945630045425,
+          "final": 1.7079328787411288e-07,
+          "ratio_vs_fluent_reference": 0.0002479053214443813,
+          "orders_vs_fluent_reference": 3.605714150726628,
+          "ratio_vs_iteration_zero": 0.0002479053214443813
+        },
+        "totalRes": {
+          "initial": 3072726.0337032024,
+          "fluent_reference": 3072726.0337032024,
+          "final": 2.9876705342211447,
+          "ratio_vs_fluent_reference": 9.723192049830912e-07,
+          "orders_vs_fluent_reference": 6.012191136097546,
+          "ratio_vs_iteration_zero": 9.723192049830912e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_aniso/gci_C_chord_a0",
+      "iterations": 159,
+      "equations": {
+        "rho": {
+          "initial": 899.707594722617,
+          "fluent_reference": 899.707594722617,
+          "final": 0.00041020643048834916,
+          "ratio_vs_fluent_reference": 4.559330530213177e-07,
+          "orders_vs_fluent_reference": 6.341098922330984,
+          "ratio_vs_iteration_zero": 4.559330530213177e-07
+        },
+        "rhou": {
+          "initial": 152.88610739384313,
+          "fluent_reference": 235.31426954123478,
+          "final": 0.001537507537734467,
+          "ratio_vs_fluent_reference": 6.5338474404122155e-06,
+          "orders_vs_fluent_reference": 5.184831010136161,
+          "ratio_vs_iteration_zero": 1.0056554934541971e-05
+        },
+        "rhov": {
+          "initial": 2.208447442868353,
+          "fluent_reference": 69.81889625999746,
+          "final": 0.0011490483018659963,
+          "ratio_vs_fluent_reference": 1.6457554665245264e-05,
+          "orders_vs_fluent_reference": 4.783634693685379,
+          "ratio_vs_iteration_zero": 0.000520296874429396
+        },
+        "rhow": {
+          "initial": 6.32196622313014,
+          "fluent_reference": 126.74317286828789,
+          "final": 0.0005948261182049814,
+          "ratio_vs_fluent_reference": 4.6931610180149705e-06,
+          "orders_vs_fluent_reference": 5.328534545289791,
+          "ratio_vs_iteration_zero": 9.408878459816736e-05
+        },
+        "rhoE": {
+          "initial": 3153.386044565338,
+          "fluent_reference": 3153.386044565338,
+          "final": 0.0010423376900005445,
+          "ratio_vs_fluent_reference": 3.3054553907123036e-07,
+          "orders_vs_fluent_reference": 6.480768699552243,
+          "ratio_vs_iteration_zero": 3.3054553907123036e-07
+        },
+        "nuturb": {
+          "initial": 0.0007009190495697898,
+          "fluent_reference": 0.0007009190495697898,
+          "final": 2.1910481902715117e-07,
+          "ratio_vs_fluent_reference": 0.00031259646768287057,
+          "orders_vs_fluent_reference": 3.505015933784858,
+          "ratio_vs_iteration_zero": 0.00031259646768287057
+        },
+        "totalRes": {
+          "initial": 2833169.875523895,
+          "fluent_reference": 2833169.875523895,
+          "final": 2.7418813141500458,
+          "ratio_vs_fluent_reference": 9.677786488687097e-07,
+          "orders_vs_fluent_reference": 6.014223963525998,
+          "ratio_vs_iteration_zero": 9.677786488687097e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_aniso/gci_C_chord_a4",
+      "iterations": 154,
+      "equations": {
+        "rho": {
+          "initial": 889.0721346362551,
+          "fluent_reference": 889.0721346362551,
+          "final": 0.0003832505224056436,
+          "ratio_vs_fluent_reference": 4.310679724119825e-07,
+          "orders_vs_fluent_reference": 6.365454243259436,
+          "ratio_vs_iteration_zero": 4.310679724119825e-07
+        },
+        "rhou": {
+          "initial": 152.02935378870217,
+          "fluent_reference": 233.3347517307999,
+          "final": 0.002527533109056406,
+          "ratio_vs_fluent_reference": 1.0832218905705227e-05,
+          "orders_vs_fluent_reference": 4.965282572017571,
+          "ratio_vs_iteration_zero": 1.6625296668492687e-05
+        },
+        "rhov": {
+          "initial": 2.199563431728786,
+          "fluent_reference": 69.20265726308153,
+          "final": 0.0007606068517974446,
+          "ratio_vs_fluent_reference": 1.0991006442222497e-05,
+          "orders_vs_fluent_reference": 4.958962537577348,
+          "ratio_vs_iteration_zero": 0.00034579900757835026
+        },
+        "rhow": {
+          "initial": 12.327805515248636,
+          "fluent_reference": 125.05892857686752,
+          "final": 0.0007367603750658048,
+          "ratio_vs_fluent_reference": 5.891305670454028e-06,
+          "orders_vs_fluent_reference": 5.229788443305848,
+          "ratio_vs_iteration_zero": 5.9764114071598846e-05
+        },
+        "rhoE": {
+          "initial": 3116.1096643345204,
+          "fluent_reference": 3116.1096643345204,
+          "final": 0.0010027280318107654,
+          "ratio_vs_fluent_reference": 3.217884284649876e-07,
+          "orders_vs_fluent_reference": 6.492429577216976,
+          "ratio_vs_iteration_zero": 3.217884284649876e-07
+        },
+        "nuturb": {
+          "initial": 0.0007003511738591843,
+          "fluent_reference": 0.0007003511738591843,
+          "final": 1.2482678282639251e-07,
+          "ratio_vs_fluent_reference": 0.00017823455929766278,
+          "orders_vs_fluent_reference": 3.7490080833682717,
+          "ratio_vs_iteration_zero": 0.00017823455929766278
+        },
+        "totalRes": {
+          "initial": 2799732.3025386725,
+          "fluent_reference": 2799732.3025386725,
+          "final": 2.7590487823397574,
+          "ratio_vs_fluent_reference": 9.85468782082478e-07,
+          "orders_vs_fluent_reference": 6.006357128851872,
+          "ratio_vs_iteration_zero": 9.85468782082478e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_aniso/gci_C_normal_a0",
+      "iterations": 196,
+      "equations": {
+        "rho": {
+          "initial": 812.1324012391945,
+          "fluent_reference": 812.1324012391945,
+          "final": 0.00041962953971916067,
+          "ratio_vs_fluent_reference": 5.167008964041673e-07,
+          "orders_vs_fluent_reference": 6.286760785013182,
+          "ratio_vs_iteration_zero": 5.167008964041673e-07
+        },
+        "rhou": {
+          "initial": 134.6904788463983,
+          "fluent_reference": 216.37160307817055,
+          "final": 0.0018441234192139973,
+          "ratio_vs_fluent_reference": 8.522945677616272e-06,
+          "orders_vs_fluent_reference": 5.069410279595262,
+          "ratio_vs_iteration_zero": 1.3691564801080298e-05
+        },
+        "rhov": {
+          "initial": 2.004622653652614,
+          "fluent_reference": 66.3268514351259,
+          "final": 0.0005849363312753063,
+          "ratio_vs_fluent_reference": 8.818997413851777e-06,
+          "orders_vs_fluent_reference": 5.054580784752654,
+          "ratio_vs_iteration_zero": 0.00029179373495031414
+        },
+        "rhow": {
+          "initial": 5.758639705071638,
+          "fluent_reference": 119.16324066238035,
+          "final": 0.0004885051046124287,
+          "ratio_vs_fluent_reference": 4.09946139343833e-06,
+          "orders_vs_fluent_reference": 5.387273199188394,
+          "ratio_vs_iteration_zero": 8.482994763193848e-05
+        },
+        "rhoE": {
+          "initial": 2846.4446389470095,
+          "fluent_reference": 2846.4446389470095,
+          "final": 0.0007702788018376669,
+          "ratio_vs_fluent_reference": 2.7061084951317287e-07,
+          "orders_vs_fluent_reference": 6.567654795361289,
+          "ratio_vs_iteration_zero": 2.7061084951317287e-07
+        },
+        "nuturb": {
+          "initial": 0.000622692592772603,
+          "fluent_reference": 0.000622692592772603,
+          "final": 1.8406961475839183e-07,
+          "ratio_vs_fluent_reference": 0.00029560270492186665,
+          "orders_vs_fluent_reference": 3.529291596233687,
+          "ratio_vs_iteration_zero": 0.00029560270492186665
+        },
+        "totalRes": {
+          "initial": 2537426.2129497854,
+          "fluent_reference": 2537426.2129497854,
+          "final": 2.4430669208223312,
+          "ratio_vs_fluent_reference": 9.62812990720325e-07,
+          "orders_vs_fluent_reference": 6.016458058654494,
+          "ratio_vs_iteration_zero": 9.62812990720325e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_aniso/gci_C_normal_a4",
+      "iterations": 164,
+      "equations": {
+        "rho": {
+          "initial": 803.2011253950759,
+          "fluent_reference": 803.2011253950759,
+          "final": 0.00024896085643626934,
+          "ratio_vs_fluent_reference": 3.099607913445232e-07,
+          "orders_vs_fluent_reference": 6.508693239003342,
+          "ratio_vs_iteration_zero": 3.099607913445232e-07
+        },
+        "rhou": {
+          "initial": 133.98408655262415,
+          "fluent_reference": 214.37420150897165,
+          "final": 0.0024442734851447714,
+          "ratio_vs_fluent_reference": 1.1401901291944765e-05,
+          "orders_vs_fluent_reference": 4.9430227230713415,
+          "ratio_vs_iteration_zero": 1.8243013390883164e-05
+        },
+        "rhov": {
+          "initial": 1.9965177720572806,
+          "fluent_reference": 65.71838596520986,
+          "final": 0.0005800162638917456,
+          "ratio_vs_fluent_reference": 8.825783764665125e-06,
+          "orders_vs_fluent_reference": 5.054246717152041,
+          "ratio_vs_iteration_zero": 0.00029051394984281904
+        },
+        "rhow": {
+          "initial": 10.973842539405062,
+          "fluent_reference": 118.09634713373394,
+          "final": 0.000606449784640737,
+          "ratio_vs_fluent_reference": 5.13521204812529e-06,
+          "orders_vs_fluent_reference": 5.289441618390106,
+          "ratio_vs_iteration_zero": 5.5263211811458634e-05
+        },
+        "rhoE": {
+          "initial": 2815.1413110842386,
+          "fluent_reference": 2815.1413110842386,
+          "final": 0.0006440675591251821,
+          "ratio_vs_fluent_reference": 2.2878693747601698e-07,
+          "orders_vs_fluent_reference": 6.64056877508894,
+          "ratio_vs_iteration_zero": 2.2878693747601698e-07
+        },
+        "nuturb": {
+          "initial": 0.0006223420959966859,
+          "fluent_reference": 0.0006223420959966859,
+          "final": 1.1534942153298013e-07,
+          "ratio_vs_fluent_reference": 0.00018534729094333094,
+          "orders_vs_fluent_reference": 3.732013757284596,
+          "ratio_vs_iteration_zero": 0.00018534729094333094
+        },
+        "totalRes": {
+          "initial": 2509564.502015741,
+          "fluent_reference": 2509564.502015741,
+          "final": 2.4945819323562444,
+          "ratio_vs_fluent_reference": 9.940298128828877e-07,
+          "orders_vs_fluent_reference": 6.002600590073145,
+          "ratio_vs_iteration_zero": 9.940298128828877e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_aniso/gci_C_s0_a0",
+      "iterations": 270,
+      "equations": {
+        "rho": {
+          "initial": 1193.654036339079,
+          "fluent_reference": 1193.654036339079,
+          "final": 0.0014648758972889905,
+          "ratio_vs_fluent_reference": 1.2272198247506834e-06,
+          "orders_vs_fluent_reference": 5.911077637659856,
+          "ratio_vs_iteration_zero": 1.2272198247506834e-06
+        },
+        "rhou": {
+          "initial": 210.5220645160256,
+          "fluent_reference": 309.5346704198215,
+          "final": 0.0028209225594774522,
+          "ratio_vs_fluent_reference": 9.113430025952951e-06,
+          "orders_vs_fluent_reference": 5.040318136640562,
+          "ratio_vs_iteration_zero": 1.3399652744060538e-05
+        },
+        "rhov": {
+          "initial": 3.7988369448958723,
+          "fluent_reference": 90.48645147607422,
+          "final": 0.0012271495331679912,
+          "ratio_vs_fluent_reference": 1.356169363644971e-05,
+          "orders_vs_fluent_reference": 4.867686070717171,
+          "ratio_vs_iteration_zero": 0.00032303295744682924
+        },
+        "rhow": {
+          "initial": 11.024007000916324,
+          "fluent_reference": 163.96443465121783,
+          "final": 0.001241298756109108,
+          "ratio_vs_fluent_reference": 7.570536615148134e-06,
+          "orders_vs_fluent_reference": 5.120873335726077,
+          "ratio_vs_iteration_zero": 0.00011259959795072067
+        },
+        "rhoE": {
+          "initial": 4183.64061144233,
+          "fluent_reference": 4183.64061144233,
+          "final": 0.0018674877365001967,
+          "ratio_vs_fluent_reference": 4.4637862329584075e-07,
+          "orders_vs_fluent_reference": 6.350296611577087,
+          "ratio_vs_iteration_zero": 4.4637862329584075e-07
+        },
+        "nuturb": {
+          "initial": 0.0011751529435270992,
+          "fluent_reference": 0.0011751529435270992,
+          "final": 8.372055078322197e-08,
+          "ratio_vs_fluent_reference": 7.124225935387053e-05,
+          "orders_vs_fluent_reference": 4.1472623159162705,
+          "ratio_vs_iteration_zero": 7.124225935387053e-05
+        },
+        "totalRes": {
+          "initial": 3298032.7353322846,
+          "fluent_reference": 3298032.7353322846,
+          "final": 3.1528450298165116,
+          "ratio_vs_fluent_reference": 9.559774819818018e-07,
+          "orders_vs_fluent_reference": 6.019552337395682,
+          "ratio_vs_iteration_zero": 9.559774819818018e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_aniso/gci_C_s0_a4",
+      "iterations": 174,
+      "equations": {
+        "rho": {
+          "initial": 1180.4647513566374,
+          "fluent_reference": 1180.4647513566374,
+          "final": 0.0005653618847173727,
+          "ratio_vs_fluent_reference": 4.789316106792991e-07,
+          "orders_vs_fluent_reference": 6.319726497493775,
+          "ratio_vs_iteration_zero": 4.789316106792991e-07
+        },
+        "rhou": {
+          "initial": 209.52019468386547,
+          "fluent_reference": 306.7960412511164,
+          "final": 0.003580877753506655,
+          "ratio_vs_fluent_reference": 1.1671851236749375e-05,
+          "orders_vs_fluent_reference": 4.932860256367396,
+          "ratio_vs_iteration_zero": 1.7090847776796227e-05
+        },
+        "rhov": {
+          "initial": 3.7837000293770156,
+          "fluent_reference": 89.66083408928597,
+          "final": 0.0007756457683124312,
+          "ratio_vs_fluent_reference": 8.650887270801298e-06,
+          "orders_vs_fluent_reference": 5.062939347211323,
+          "ratio_vs_iteration_zero": 0.00020499663353073497
+        },
+        "rhow": {
+          "initial": 18.227518327076858,
+          "fluent_reference": 162.73211901970078,
+          "final": 0.0009063674109584878,
+          "ratio_vs_fluent_reference": 5.569689723322294e-06,
+          "orders_vs_fluent_reference": 5.254168997860794,
+          "ratio_vs_iteration_zero": 4.972522285779765e-05
+        },
+        "rhoE": {
+          "initial": 4137.41332931001,
+          "fluent_reference": 4137.41332931001,
+          "final": 0.0010440002359762325,
+          "ratio_vs_fluent_reference": 2.5233162676312513e-07,
+          "orders_vs_fluent_reference": 6.598028312431732,
+          "ratio_vs_iteration_zero": 2.5233162676312513e-07
+        },
+        "nuturb": {
+          "initial": 0.001174610241623378,
+          "fluent_reference": 0.001174610241623378,
+          "final": 1.5256956083896762e-07,
+          "ratio_vs_fluent_reference": 0.0001298895203128042,
+          "orders_vs_fluent_reference": 3.8864258870633694,
+          "ratio_vs_iteration_zero": 0.0001298895203128042
+        },
+        "totalRes": {
+          "initial": 3261658.660687499,
+          "fluent_reference": 3261658.660687499,
+          "final": 3.2109103089286664,
+          "ratio_vs_fluent_reference": 9.844409372536438e-07,
+          "orders_vs_fluent_reference": 6.006810334776532,
+          "ratio_vs_iteration_zero": 9.844409372536438e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_aniso/gci_C_span_a0",
+      "iterations": 179,
+      "equations": {
+        "rho": {
+          "initial": 977.0319358515634,
+          "fluent_reference": 977.0319358515634,
+          "final": 0.0006650172050638752,
+          "ratio_vs_fluent_reference": 6.806504277511239e-07,
+          "orders_vs_fluent_reference": 6.167075878215892,
+          "ratio_vs_iteration_zero": 6.806504277511239e-07
+        },
+        "rhou": {
+          "initial": 161.25797076198126,
+          "fluent_reference": 247.58339905344238,
+          "final": 0.0024186675876444945,
+          "ratio_vs_fluent_reference": 9.769102439386134e-06,
+          "orders_vs_fluent_reference": 5.010145336335312,
+          "ratio_vs_iteration_zero": 1.4998747511305829e-05
+        },
+        "rhov": {
+          "initial": 2.4240000937364345,
+          "fluent_reference": 73.59234127023467,
+          "final": 0.0007964402565917701,
+          "ratio_vs_fluent_reference": 1.0822325296965382e-05,
+          "orders_vs_fluent_reference": 4.965679416203307,
+          "ratio_vs_iteration_zero": 0.0003285644495846989
+        },
+        "rhow": {
+          "initial": 6.939641656726866,
+          "fluent_reference": 133.21915429228574,
+          "final": 0.0008416746736313773,
+          "ratio_vs_fluent_reference": 6.3179704007482635e-06,
+          "orders_vs_fluent_reference": 5.199422413065534,
+          "ratio_vs_iteration_zero": 0.00012128503390596677
+        },
+        "rhoE": {
+          "initial": 3424.4013904773733,
+          "fluent_reference": 3424.4013904773733,
+          "final": 0.0011188974468546165,
+          "ratio_vs_fluent_reference": 3.2674249285322197e-07,
+          "orders_vs_fluent_reference": 6.48579438186486,
+          "ratio_vs_iteration_zero": 3.2674249285322197e-07
+        },
+        "nuturb": {
+          "initial": 0.000751062807256922,
+          "fluent_reference": 0.000751062807256922,
+          "final": 1.6175743077480797e-07,
+          "ratio_vs_fluent_reference": 0.00021537137668364706,
+          "orders_vs_fluent_reference": 3.6668120158679307,
+          "ratio_vs_iteration_zero": 0.00021537137668364706
+        },
+        "totalRes": {
+          "initial": 2873279.5557463393,
+          "fluent_reference": 2873279.5557463393,
+          "final": 2.733793866328591,
+          "ratio_vs_fluent_reference": 9.514541879021873e-07,
+          "orders_vs_fluent_reference": 6.021612117960531,
+          "ratio_vs_iteration_zero": 9.514541879021873e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_aniso/gci_C_span_a4",
+      "iterations": 168,
+      "equations": {
+        "rho": {
+          "initial": 966.3005293781143,
+          "fluent_reference": 966.3005293781143,
+          "final": 0.00046976960575917024,
+          "ratio_vs_fluent_reference": 4.861526941949433e-07,
+          "orders_vs_fluent_reference": 6.313227303101958,
+          "ratio_vs_iteration_zero": 4.861526941949433e-07
+        },
+        "rhou": {
+          "initial": 160.39800792258976,
+          "fluent_reference": 245.43958578640377,
+          "final": 0.0026404474842642357,
+          "ratio_vs_fluent_reference": 1.0758034307318751e-05,
+          "orders_vs_fluent_reference": 4.968267075088988,
+          "ratio_vs_iteration_zero": 1.6461847116820498e-05
+        },
+        "rhov": {
+          "initial": 2.414100783805959,
+          "fluent_reference": 72.93202677542298,
+          "final": 0.000876847045549562,
+          "ratio_vs_fluent_reference": 1.202279827283021e-05,
+          "orders_vs_fluent_reference": 4.919994439736593,
+          "ratio_vs_iteration_zero": 0.0003632189059510455
+        },
+        "rhow": {
+          "initial": 13.164694466973136,
+          "fluent_reference": 131.9998635121717,
+          "final": 0.0009228353876035354,
+          "ratio_vs_fluent_reference": 6.991184407690247e-06,
+          "orders_vs_fluent_reference": 5.155449242258626,
+          "ratio_vs_iteration_zero": 7.0099263596181e-05
+        },
+        "rhoE": {
+          "initial": 3386.7887708232383,
+          "fluent_reference": 3386.7887708232383,
+          "final": 0.001346852525356177,
+          "ratio_vs_fluent_reference": 3.9767833676523995e-07,
+          "orders_vs_fluent_reference": 6.400468066241992,
+          "ratio_vs_iteration_zero": 3.9767833676523995e-07
+        },
+        "nuturb": {
+          "initial": 0.0007506238528017171,
+          "fluent_reference": 0.0007506238528017171,
+          "final": 1.0182724199889881e-07,
+          "ratio_vs_fluent_reference": 0.00013565681615209375,
+          "orders_vs_fluent_reference": 3.8675583799866313,
+          "ratio_vs_iteration_zero": 0.00013565681615209375
+        },
+        "totalRes": {
+          "initial": 2841768.192260746,
+          "fluent_reference": 2841768.192260746,
+          "final": 2.752812308504802,
+          "ratio_vs_fluent_reference": 9.686969950616641e-07,
+          "orders_vs_fluent_reference": 6.013812047460617,
+          "ratio_vs_iteration_zero": 9.686969950616641e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_checklist/chi3/a0",
+      "iterations": 165,
+      "equations": {
+        "rho": {
+          "initial": 923.3745929669132,
+          "fluent_reference": 923.3745929669132,
+          "final": 0.00023678365204200707,
+          "ratio_vs_fluent_reference": 2.564329296533846e-07,
+          "orders_vs_fluent_reference": 6.591026205953222,
+          "ratio_vs_iteration_zero": 2.564329296533846e-07
+        },
+        "rhou": {
+          "initial": 151.7704051771391,
+          "fluent_reference": 232.99875909954682,
+          "final": 0.0008912770665874933,
+          "ratio_vs_fluent_reference": 3.825243834052792e-06,
+          "orders_vs_fluent_reference": 5.417340876220566,
+          "ratio_vs_iteration_zero": 5.872535330898258e-06
+        },
+        "rhov": {
+          "initial": 2.2801921243368604,
+          "fluent_reference": 69.91872237271308,
+          "final": 0.0004082172884416488,
+          "ratio_vs_fluent_reference": 5.838454631158453e-06,
+          "orders_vs_fluent_reference": 5.233702090212016,
+          "ratio_vs_iteration_zero": 0.0001790275845989816
+        },
+        "rhow": {
+          "initial": 6.548365513158243,
+          "fluent_reference": 123.20706848885224,
+          "final": 0.00044468226163392303,
+          "ratio_vs_fluent_reference": 3.6092268656985197e-06,
+          "orders_vs_fluent_reference": 5.442585818571031,
+          "ratio_vs_iteration_zero": 6.790736722627676e-05
+        },
+        "rhoE": {
+          "initial": 3236.3373134374233,
+          "fluent_reference": 3236.3373134374233,
+          "final": 0.0005812844017486004,
+          "ratio_vs_fluent_reference": 1.7961180972548208e-07,
+          "orders_vs_fluent_reference": 6.7456651112656525,
+          "ratio_vs_iteration_zero": 1.7961180972548208e-07
+        },
+        "nuturb": {
+          "initial": 0.004118266433167699,
+          "fluent_reference": 0.004118266433167699,
+          "final": 3.09828486841428e-07,
+          "ratio_vs_fluent_reference": 7.523274461946681e-05,
+          "orders_vs_fluent_reference": 4.123593094084754,
+          "ratio_vs_iteration_zero": 7.523274461946681e-05
+        },
+        "totalRes": {
+          "initial": 2537534.3668340226,
+          "fluent_reference": 2537534.3668340226,
+          "final": 2.51517146564445,
+          "ratio_vs_fluent_reference": 9.911871533714542e-07,
+          "orders_vs_fluent_reference": 6.003844335421384,
+          "ratio_vs_iteration_zero": 9.911871533714542e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_checklist/chi3/a4",
+      "iterations": 221,
+      "equations": {
+        "rho": {
+          "initial": 913.2197300794118,
+          "fluent_reference": 913.2197300794118,
+          "final": 0.00024464330604011383,
+          "ratio_vs_fluent_reference": 2.6789095546461766e-07,
+          "orders_vs_fluent_reference": 6.572041948796104,
+          "ratio_vs_iteration_zero": 2.6789095546461766e-07
+        },
+        "rhou": {
+          "initial": 150.96771126332058,
+          "fluent_reference": 231.135446816421,
+          "final": 0.0030769003965027673,
+          "ratio_vs_fluent_reference": 1.3312109582856805e-05,
+          "orders_vs_fluent_reference": 4.875753116005715,
+          "ratio_vs_iteration_zero": 2.0381181980933544e-05
+        },
+        "rhov": {
+          "initial": 2.2709473398164834,
+          "fluent_reference": 69.30356554028373,
+          "final": 0.000593303074558875,
+          "ratio_vs_fluent_reference": 8.56093146050341e-06,
+          "orders_vs_fluent_reference": 5.067478979931623,
+          "ratio_vs_iteration_zero": 0.00026125796232986194
+        },
+        "rhow": {
+          "initial": 12.395527218715626,
+          "fluent_reference": 122.24688921456723,
+          "final": 0.0005406581454859142,
+          "ratio_vs_fluent_reference": 4.422674057062943e-06,
+          "orders_vs_fluent_reference": 5.354315066154934,
+          "ratio_vs_iteration_zero": 4.3617196424658005e-05
+        },
+        "rhoE": {
+          "initial": 3200.745407373572,
+          "fluent_reference": 3200.745407373572,
+          "final": 0.0007037241273506018,
+          "ratio_vs_fluent_reference": 2.198625750518705e-07,
+          "orders_vs_fluent_reference": 6.65784868983752,
+          "ratio_vs_iteration_zero": 2.198625750518705e-07
+        },
+        "nuturb": {
+          "initial": 0.004117213315136185,
+          "fluent_reference": 0.004117213315136185,
+          "final": 2.741230712815216e-08,
+          "ratio_vs_fluent_reference": 6.657975924486547e-06,
+          "orders_vs_fluent_reference": 5.176657779603135,
+          "ratio_vs_iteration_zero": 6.657975924486547e-06
+        },
+        "totalRes": {
+          "initial": 2509673.821683998,
+          "fluent_reference": 2509673.821683998,
+          "final": 2.4684778687140114,
+          "ratio_vs_fluent_reference": 9.835851365966179e-07,
+          "orders_vs_fluent_reference": 6.00718804270563,
+          "ratio_vs_iteration_zero": 9.835851365966179e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_checklist/dir_g13/gci_C_chord_a0",
+      "iterations": 173,
+      "equations": {
+        "rho": {
+          "initial": 837.8318814533689,
+          "fluent_reference": 837.8318814533689,
+          "final": 0.00046571937995200494,
+          "ratio_vs_fluent_reference": 5.558625665379689e-07,
+          "orders_vs_fluent_reference": 6.255032571677196,
+          "ratio_vs_iteration_zero": 5.558625665379689e-07
+        },
+        "rhou": {
+          "initial": 143.19648225406408,
+          "fluent_reference": 206.4428636369328,
+          "final": 0.0014358704276485768,
+          "ratio_vs_fluent_reference": 6.955292144047252e-06,
+          "orders_vs_fluent_reference": 5.157684623560792,
+          "ratio_vs_iteration_zero": 1.0027274448690762e-05
+        },
+        "rhov": {
+          "initial": 2.614991734865628,
+          "fluent_reference": 86.4047376616574,
+          "final": 0.0007373513059249691,
+          "ratio_vs_fluent_reference": 8.533690696594441e-06,
+          "orders_vs_fluent_reference": 5.068863102184067,
+          "ratio_vs_iteration_zero": 0.0002819707978782036
+        },
+        "rhow": {
+          "initial": 5.577526462391858,
+          "fluent_reference": 113.94441319829915,
+          "final": 0.0004630786430208917,
+          "ratio_vs_fluent_reference": 4.064075017131284e-06,
+          "orders_vs_fluent_reference": 5.391038284182435,
+          "ratio_vs_iteration_zero": 8.302580832979245e-05
+        },
+        "rhoE": {
+          "initial": 2936.517843641347,
+          "fluent_reference": 2936.517843641347,
+          "final": 0.0013744123933434765,
+          "ratio_vs_fluent_reference": 4.6804156028528493e-07,
+          "orders_vs_fluent_reference": 6.329715581538732,
+          "ratio_vs_iteration_zero": 4.6804156028528493e-07
+        },
+        "nuturb": {
+          "initial": 0.000637134506429305,
+          "fluent_reference": 0.000637134506429305,
+          "final": 2.052561737492992e-07,
+          "ratio_vs_fluent_reference": 0.00032215516767349024,
+          "orders_vs_fluent_reference": 3.4919348977676403,
+          "ratio_vs_iteration_zero": 0.00032215516767349024
+        },
+        "totalRes": {
+          "initial": 2652494.9171207435,
+          "fluent_reference": 2652494.9171207435,
+          "final": 2.6229669696699807,
+          "ratio_vs_fluent_reference": 9.888678589880898e-07,
+          "orders_vs_fluent_reference": 6.004861738682377,
+          "ratio_vs_iteration_zero": 9.888678589880898e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_checklist/dir_g13/gci_C_chord_a4",
+      "iterations": 158,
+      "equations": {
+        "rho": {
+          "initial": 827.6457667930562,
+          "fluent_reference": 827.6457667930562,
+          "final": 0.0003514868191732842,
+          "ratio_vs_fluent_reference": 4.2468267618309425e-07,
+          "orders_vs_fluent_reference": 6.371935454553326,
+          "ratio_vs_iteration_zero": 4.2468267618309425e-07
+        },
+        "rhou": {
+          "initial": 142.40750551491527,
+          "fluent_reference": 204.5742242330764,
+          "final": 0.0023446000606928397,
+          "ratio_vs_fluent_reference": 1.1460877192532232e-05,
+          "orders_vs_fluent_reference": 4.940782141068717,
+          "ratio_vs_iteration_zero": 1.6464020293138792e-05
+        },
+        "rhov": {
+          "initial": 2.6116287535294003,
+          "fluent_reference": 85.88596640194653,
+          "final": 0.0006253097142945656,
+          "ratio_vs_fluent_reference": 7.280697190599388e-06,
+          "orders_vs_fluent_reference": 5.137827031190743,
+          "ratio_vs_iteration_zero": 0.00023943284950034003
+        },
+        "rhow": {
+          "initial": 11.322571362016669,
+          "fluent_reference": 112.3133892030184,
+          "final": 0.0006410567625629779,
+          "ratio_vs_fluent_reference": 5.7077501365772125e-06,
+          "orders_vs_fluent_reference": 5.24353504688901,
+          "ratio_vs_iteration_zero": 5.661759524991847e-05
+        },
+        "rhoE": {
+          "initial": 2900.8164191107635,
+          "fluent_reference": 2900.8164191107635,
+          "final": 0.0009195276769639404,
+          "ratio_vs_fluent_reference": 3.169892692643469e-07,
+          "orders_vs_fluent_reference": 6.498955439290641,
+          "ratio_vs_iteration_zero": 3.169892692643469e-07
+        },
+        "nuturb": {
+          "initial": 0.00063665179021815,
+          "fluent_reference": 0.00063665179021815,
+          "final": 1.2424124383492783e-07,
+          "ratio_vs_fluent_reference": 0.0001951478747783876,
+          "orders_vs_fluent_reference": 3.7096361739602104,
+          "ratio_vs_iteration_zero": 0.0001951478747783876
+        },
+        "totalRes": {
+          "initial": 2620299.605564316,
+          "fluent_reference": 2620299.605564316,
+          "final": 2.5756142273205924,
+          "ratio_vs_fluent_reference": 9.82946462248503e-07,
+          "orders_vs_fluent_reference": 6.007470136067399,
+          "ratio_vs_iteration_zero": 9.82946462248503e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_checklist/dir_g47/gci_C_chord_a0",
+      "iterations": 144,
+      "equations": {
+        "rho": {
+          "initial": 1038.0852604483923,
+          "fluent_reference": 1038.0852604483923,
+          "final": 0.0005874150153767075,
+          "ratio_vs_fluent_reference": 5.658639398491974e-07,
+          "orders_vs_fluent_reference": 6.247287980960406,
+          "ratio_vs_iteration_zero": 5.658639398491974e-07
+        },
+        "rhou": {
+          "initial": 184.63948298287528,
+          "fluent_reference": 276.5288273375986,
+          "final": 0.002434179700639482,
+          "ratio_vs_fluent_reference": 8.80262547697325e-06,
+          "orders_vs_fluent_reference": 5.055387775565509,
+          "ratio_vs_iteration_zero": 1.3183419176196699e-05
+        },
+        "rhov": {
+          "initial": 2.488152496050497,
+          "fluent_reference": 70.16208588917168,
+          "final": 0.001514436083915346,
+          "ratio_vs_fluent_reference": 2.1584821270957588e-05,
+          "orders_vs_fluent_reference": 4.66585154308639,
+          "ratio_vs_iteration_zero": 0.0006086588689074509
+        },
+        "rhow": {
+          "initial": 7.93093867144354,
+          "fluent_reference": 149.2888129667311,
+          "final": 0.001045813703233632,
+          "ratio_vs_fluent_reference": 7.005305236546364e-06,
+          "orders_vs_fluent_reference": 5.154572936800805,
+          "ratio_vs_iteration_zero": 0.00013186505993284644
+        },
+        "rhoE": {
+          "initial": 3638.3872836498317,
+          "fluent_reference": 3638.3872836498317,
+          "final": 0.00180308472117607,
+          "ratio_vs_fluent_reference": 4.955725107326436e-07,
+          "orders_vs_fluent_reference": 6.304892791820246,
+          "ratio_vs_iteration_zero": 4.955725107326436e-07
+        },
+        "nuturb": {
+          "initial": 0.0009286270763663055,
+          "fluent_reference": 0.0009286270763663055,
+          "final": 6.776583384374886e-08,
+          "ratio_vs_fluent_reference": 7.297421706560061e-05,
+          "orders_vs_fluent_reference": 4.136830555824886,
+          "ratio_vs_iteration_zero": 7.297421706560061e-05
+        },
+        "totalRes": {
+          "initial": 3269263.0315433023,
+          "fluent_reference": 3269263.0315433023,
+          "final": 3.1554334929177896,
+          "ratio_vs_fluent_reference": 9.651818964925017e-07,
+          "orders_vs_fluent_reference": 6.015390832564271,
+          "ratio_vs_iteration_zero": 9.651818964925017e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_checklist/dir_g47/gci_C_chord_a4",
+      "iterations": 126,
+      "equations": {
+        "rho": {
+          "initial": 1029.0967490240796,
+          "fluent_reference": 1029.0967490240796,
+          "final": 0.0005831121194040874,
+          "ratio_vs_fluent_reference": 5.666251690689612e-07,
+          "orders_vs_fluent_reference": 6.246704138348952,
+          "ratio_vs_iteration_zero": 5.666251690689612e-07
+        },
+        "rhou": {
+          "initial": 183.86677090088352,
+          "fluent_reference": 274.1829909362387,
+          "final": 0.002632606619442813,
+          "ratio_vs_fluent_reference": 9.601640898486756e-06,
+          "orders_vs_fluent_reference": 5.017654540683243,
+          "ratio_vs_iteration_zero": 1.4318011930834222e-05
+        },
+        "rhov": {
+          "initial": 2.5063843732627435,
+          "fluent_reference": 69.91968876233588,
+          "final": 0.0014125183447359798,
+          "ratio_vs_fluent_reference": 2.020201133241987e-05,
+          "orders_vs_fluent_reference": 4.694605389608525,
+          "ratio_vs_iteration_zero": 0.000563568126183775
+        },
+        "rhow": {
+          "initial": 15.338942275062882,
+          "fluent_reference": 148.95428242490883,
+          "final": 0.0012353628406183224,
+          "ratio_vs_fluent_reference": 8.293570486911622e-06,
+          "orders_vs_fluent_reference": 5.081258459928633,
+          "ratio_vs_iteration_zero": 8.053768105162635e-05
+        },
+        "rhoE": {
+          "initial": 3606.88330051363,
+          "fluent_reference": 3606.88330051363,
+          "final": 0.0015604575217399144,
+          "ratio_vs_fluent_reference": 4.3263321591738247e-07,
+          "orders_vs_fluent_reference": 6.363880140153864,
+          "ratio_vs_iteration_zero": 4.3263321591738247e-07
+        },
+        "nuturb": {
+          "initial": 0.0009283914999620215,
+          "fluent_reference": 0.0009283914999620215,
+          "final": 6.596180989759261e-08,
+          "ratio_vs_fluent_reference": 7.104956249630782e-05,
+          "orders_vs_fluent_reference": 4.1484385919944184,
+          "ratio_vs_iteration_zero": 7.104956249630782e-05
+        },
+        "totalRes": {
+          "initial": 3241010.169292954,
+          "fluent_reference": 3241010.169292954,
+          "final": 3.18996983328319,
+          "ratio_vs_fluent_reference": 9.842517198824778e-07,
+          "orders_vs_fluent_reference": 6.006893817650441,
+          "ratio_vs_iteration_zero": 9.842517198824778e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_checklist/mg/base",
+      "iterations": 166,
+      "equations": {
+        "rho": {
+          "initial": 923.3745929669132,
+          "fluent_reference": 923.3745929669132,
+          "final": 0.00038965853353324675,
+          "ratio_vs_fluent_reference": 4.2199399517938567e-07,
+          "orders_vs_fluent_reference": 6.374693728846411,
+          "ratio_vs_iteration_zero": 4.2199399517938567e-07
+        },
+        "rhou": {
+          "initial": 151.77271255802643,
+          "fluent_reference": 232.39396922480432,
+          "final": 0.002104774469514102,
+          "ratio_vs_fluent_reference": 9.056923794257613e-06,
+          "orders_vs_fluent_reference": 5.043019286433307,
+          "ratio_vs_iteration_zero": 1.3867937352107316e-05
+        },
+        "rhov": {
+          "initial": 2.2791886874783938,
+          "fluent_reference": 69.76172019302895,
+          "final": 0.0007119828736599566,
+          "ratio_vs_fluent_reference": 1.020592484947214e-05,
+          "orders_vs_fluent_reference": 4.991147633885398,
+          "ratio_vs_iteration_zero": 0.0003123843486814016
+        },
+        "rhow": {
+          "initial": 6.547223766867168,
+          "fluent_reference": 122.93510120065551,
+          "final": 0.0006569233218571835,
+          "ratio_vs_fluent_reference": 5.34365950360222e-06,
+          "orders_vs_fluent_reference": 5.2721612227663925,
+          "ratio_vs_iteration_zero": 0.00010033616464761825
+        },
+        "rhoE": {
+          "initial": 3236.3376415553184,
+          "fluent_reference": 3236.3376415553184,
+          "final": 0.0010170316773620324,
+          "ratio_vs_fluent_reference": 3.1425388510244176e-07,
+          "orders_vs_fluent_reference": 6.502719344451481,
+          "ratio_vs_iteration_zero": 3.1425388510244176e-07
+        },
+        "nuturb": {
+          "initial": 0.0007076725023508814,
+          "fluent_reference": 0.0007076725023508814,
+          "final": 2.134269685792289e-07,
+          "ratio_vs_fluent_reference": 0.000301590026276599,
+          "orders_vs_fluent_reference": 3.5205830248866774,
+          "ratio_vs_iteration_zero": 0.000301590026276599
+        },
+        "totalRes": {
+          "initial": 2537350.7028265144,
+          "fluent_reference": 2537350.7028265144,
+          "final": 2.5104027784765055,
+          "ratio_vs_fluent_reference": 9.89379503463991e-07,
+          "orders_vs_fluent_reference": 6.0046370909646525,
+          "ratio_vs_iteration_zero": 9.89379503463991e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g12/gci_C_a-2",
+      "iterations": 146,
+      "equations": {
+        "rho": {
+          "initial": 929.3984802806574,
+          "fluent_reference": 929.3984802806574,
+          "final": 0.000737072832863813,
+          "ratio_vs_fluent_reference": 7.930643835798329e-07,
+          "orders_vs_fluent_reference": 6.100691553794104,
+          "ratio_vs_iteration_zero": 7.930643835798329e-07
+        },
+        "rhou": {
+          "initial": 159.1951946771711,
+          "fluent_reference": 229.21212047530705,
+          "final": 0.0019668426053413403,
+          "ratio_vs_fluent_reference": 8.580883948295517e-06,
+          "orders_vs_fluent_reference": 5.066467971580992,
+          "ratio_vs_iteration_zero": 1.235491190126601e-05
+        },
+        "rhov": {
+          "initial": 3.2258760026547417,
+          "fluent_reference": 94.16917807784921,
+          "final": 0.0008106305720917236,
+          "ratio_vs_fluent_reference": 8.608236671892572e-06,
+          "orders_vs_fluent_reference": 5.065085801170718,
+          "ratio_vs_iteration_zero": 0.00025129005932795107
+        },
+        "rhow": {
+          "initial": 8.775022390168612,
+          "fluent_reference": 131.58500874442967,
+          "final": 0.0010891729768004945,
+          "ratio_vs_fluent_reference": 8.277333316258961e-06,
+          "orders_vs_fluent_reference": 5.082109556037425,
+          "ratio_vs_iteration_zero": 0.00012412195985058518
+        },
+        "rhoE": {
+          "initial": 3257.4514217135134,
+          "fluent_reference": 3257.4514217135134,
+          "final": 0.0015286686393063845,
+          "ratio_vs_fluent_reference": 4.6928363355370033e-07,
+          "orders_vs_fluent_reference": 6.328564591709644,
+          "ratio_vs_iteration_zero": 4.6928363355370033e-07
+        },
+        "nuturb": {
+          "initial": 0.0007695647804618003,
+          "fluent_reference": 0.0007695647804618003,
+          "final": 1.669109460654158e-07,
+          "ratio_vs_fluent_reference": 0.00021689005305733445,
+          "orders_vs_fluent_reference": 3.663760365004566,
+          "ratio_vs_iteration_zero": 0.00021689005305733445
+        },
+        "totalRes": {
+          "initial": 2567730.059316675,
+          "fluent_reference": 2567730.059316675,
+          "final": 2.5540356545229708,
+          "ratio_vs_fluent_reference": 9.946667272348135e-07,
+          "orders_vs_fluent_reference": 6.002322409473578,
+          "ratio_vs_iteration_zero": 9.946667272348135e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g12/gci_C_a0",
+      "iterations": 138,
+      "equations": {
+        "rho": {
+          "initial": 924.1498649910395,
+          "fluent_reference": 924.1498649910395,
+          "final": 0.0008905551377310849,
+          "ratio_vs_fluent_reference": 9.636479660576693e-07,
+          "orders_vs_fluent_reference": 6.016081590911439,
+          "ratio_vs_iteration_zero": 9.636479660576693e-07
+        },
+        "rhou": {
+          "initial": 159.07667254280418,
+          "fluent_reference": 228.48544457546302,
+          "final": 0.0019420571475935065,
+          "ratio_vs_fluent_reference": 8.499697436753323e-06,
+          "orders_vs_fluent_reference": 5.070596533566552,
+          "ratio_vs_iteration_zero": 1.2208308839694518e-05
+        },
+        "rhov": {
+          "initial": 3.2310349869971193,
+          "fluent_reference": 94.08603222621355,
+          "final": 0.0011936414066298627,
+          "ratio_vs_fluent_reference": 1.2686701504852058e-05,
+          "orders_vs_fluent_reference": 4.896651278177155,
+          "ratio_vs_iteration_zero": 0.00036943004685294884
+        },
+        "rhow": {
+          "initial": 6.5734568223012175,
+          "fluent_reference": 130.218235419084,
+          "final": 0.0007418200036995393,
+          "ratio_vs_fluent_reference": 5.696744402288395e-06,
+          "orders_vs_fluent_reference": 5.24437326574008,
+          "ratio_vs_iteration_zero": 0.00011285082168377962
+        },
+        "rhoE": {
+          "initial": 3239.0555340012334,
+          "fluent_reference": 3239.0555340012334,
+          "final": 0.001903492430725577,
+          "ratio_vs_fluent_reference": 5.876689703971134e-07,
+          "orders_vs_fluent_reference": 6.23086723993232,
+          "ratio_vs_iteration_zero": 5.876689703971134e-07
+        },
+        "nuturb": {
+          "initial": 0.0007693392082286393,
+          "fluent_reference": 0.0007693392082286393,
+          "final": 9.791978767518226e-08,
+          "ratio_vs_fluent_reference": 0.0001272777815401312,
+          "orders_vs_fluent_reference": 3.8952474030760875,
+          "ratio_vs_iteration_zero": 0.0001272777815401312
+        },
+        "totalRes": {
+          "initial": 2553253.4549236,
+          "fluent_reference": 2553253.4549236,
+          "final": 2.5251331755178006,
+          "ratio_vs_fluent_reference": 9.889864911955477e-07,
+          "orders_vs_fluent_reference": 6.004809640495135,
+          "ratio_vs_iteration_zero": 9.889864911955477e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g12/gci_C_a4",
+      "iterations": 131,
+      "equations": {
+        "rho": {
+          "initial": 921.2554948261757,
+          "fluent_reference": 921.2554948261757,
+          "final": 0.0006512996689911838,
+          "ratio_vs_fluent_reference": 7.069696437621491e-07,
+          "orders_vs_fluent_reference": 6.150599233769758,
+          "ratio_vs_iteration_zero": 7.069696437621491e-07
+        },
+        "rhou": {
+          "initial": 158.80627871066818,
+          "fluent_reference": 226.5136640421902,
+          "final": 0.0017850819587529963,
+          "ratio_vs_fluent_reference": 7.880681133746125e-06,
+          "orders_vs_fluent_reference": 5.1034362444592585,
+          "ratio_vs_iteration_zero": 1.1240625831962646e-05
+        },
+        "rhov": {
+          "initial": 3.242119226706687,
+          "fluent_reference": 93.74663488441396,
+          "final": 0.0015601908526019313,
+          "ratio_vs_fluent_reference": 1.6642633141185145e-05,
+          "orders_vs_fluent_reference": 4.778777960003407,
+          "ratio_vs_iteration_zero": 0.0004812256254335094
+        },
+        "rhow": {
+          "initial": 13.174614185031993,
+          "fluent_reference": 132.71913321970632,
+          "final": 0.001142283939203278,
+          "ratio_vs_fluent_reference": 8.606776668080818e-06,
+          "orders_vs_fluent_reference": 5.065159466126765,
+          "ratio_vs_iteration_zero": 8.670340726190337e-05
+        },
+        "rhoE": {
+          "initial": 3228.9110652772,
+          "fluent_reference": 3228.9110652772,
+          "final": 0.0019415108995355665,
+          "ratio_vs_fluent_reference": 6.012896794879326e-07,
+          "orders_vs_fluent_reference": 6.220916250303689,
+          "ratio_vs_iteration_zero": 6.012896794879326e-07
+        },
+        "nuturb": {
+          "initial": 0.000770001374541146,
+          "fluent_reference": 0.000770001374541146,
+          "final": 1.853798667417582e-08,
+          "ratio_vs_fluent_reference": 2.4075264391862742e-05,
+          "orders_vs_fluent_reference": 4.618428934803779,
+          "ratio_vs_iteration_zero": 2.4075264391862742e-05
+        },
+        "totalRes": {
+          "initial": 2545279.7877131505,
+          "fluent_reference": 2545279.7877131505,
+          "final": 2.5287274396700714,
+          "ratio_vs_fluent_reference": 9.934968453672629e-07,
+          "orders_vs_fluent_reference": 6.002833507559465,
+          "ratio_vs_iteration_zero": 9.934968453672629e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g12/gci_C_a8",
+      "iterations": 150,
+      "equations": {
+        "rho": {
+          "initial": 928.5687441662832,
+          "fluent_reference": 928.5687441662832,
+          "final": 0.0008278443025966534,
+          "ratio_vs_fluent_reference": 8.915272108797228e-07,
+          "orders_vs_fluent_reference": 6.049865396903025,
+          "ratio_vs_iteration_zero": 8.915272108797228e-07
+        },
+        "rhou": {
+          "initial": 158.48984831243953,
+          "fluent_reference": 223.8593203399222,
+          "final": 0.0010173275926368078,
+          "ratio_vs_fluent_reference": 4.54449513691024e-06,
+          "orders_vs_fluent_reference": 5.3425143569816544,
+          "ratio_vs_iteration_zero": 6.4188817357645235e-06
+        },
+        "rhov": {
+          "initial": 3.254035470617375,
+          "fluent_reference": 93.18139667268206,
+          "final": 0.0014470841979952846,
+          "ratio_vs_fluent_reference": 1.5529754325087568e-05,
+          "orders_vs_fluent_reference": 4.808835414593576,
+          "ratio_vs_iteration_zero": 0.0004447044941771133
+        },
+        "rhow": {
+          "initial": 23.856634915508323,
+          "fluent_reference": 141.74419858032093,
+          "final": 0.0012132351143550938,
+          "ratio_vs_fluent_reference": 8.559328187725443e-06,
+          "orders_vs_fluent_reference": 5.067560321282373,
+          "ratio_vs_iteration_zero": 5.085524922739268e-05
+        },
+        "rhoE": {
+          "initial": 3254.5433370182495,
+          "fluent_reference": 3254.5433370182495,
+          "final": 0.002353505138345195,
+          "ratio_vs_fluent_reference": 7.23144507426173e-07,
+          "orders_vs_fluent_reference": 6.1407749080903145,
+          "ratio_vs_iteration_zero": 7.23144507426173e-07
+        },
+        "nuturb": {
+          "initial": 0.000772391172024337,
+          "fluent_reference": 0.000772391172024337,
+          "final": 4.9255805760562795e-09,
+          "ratio_vs_fluent_reference": 6.377054469883404e-06,
+          "orders_vs_fluent_reference": 5.1953798734520165,
+          "ratio_vs_iteration_zero": 6.377054469883404e-06
+        },
+        "totalRes": {
+          "initial": 2565472.823117092,
+          "fluent_reference": 2565472.823117092,
+          "final": 2.4915140965822413,
+          "ratio_vs_fluent_reference": 9.71171502629683e-07,
+          "orders_vs_fluent_reference": 6.012704069712244,
+          "ratio_vs_iteration_zero": 9.71171502629683e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g13/gci_C_a-2",
+      "iterations": 212,
+      "equations": {
+        "rho": {
+          "initial": 868.6213848791051,
+          "fluent_reference": 868.6213848791051,
+          "final": 0.00018426155980579115,
+          "ratio_vs_fluent_reference": 2.1213104237749882e-07,
+          "orders_vs_fluent_reference": 6.67339577397854,
+          "ratio_vs_iteration_zero": 2.1213104237749882e-07
+        },
+        "rhou": {
+          "initial": 142.49616585548367,
+          "fluent_reference": 213.24216551261208,
+          "final": 0.00034602675780798356,
+          "ratio_vs_fluent_reference": 1.6226938840926281e-06,
+          "orders_vs_fluent_reference": 5.789763400684165,
+          "ratio_vs_iteration_zero": 2.428323286669453e-06
+        },
+        "rhov": {
+          "initial": 2.642238944687903,
+          "fluent_reference": 88.56952432832415,
+          "final": 0.0002555573388316175,
+          "ratio_vs_fluent_reference": 2.8853868276888937e-06,
+          "orders_vs_fluent_reference": 5.5397959551706375,
+          "ratio_vs_iteration_zero": 9.6719995496775e-05
+        },
+        "rhow": {
+          "initial": 8.03800115788933,
+          "fluent_reference": 120.7939929459033,
+          "final": 0.0002983518500030965,
+          "ratio_vs_fluent_reference": 2.469922905327843e-06,
+          "orders_vs_fluent_reference": 5.607316602332737,
+          "ratio_vs_iteration_zero": 3.7117666960057973e-05
+        },
+        "rhoE": {
+          "initial": 3044.4331220553795,
+          "fluent_reference": 3044.4331220553795,
+          "final": 0.00034929981642414646,
+          "ratio_vs_fluent_reference": 1.1473394304300719e-07,
+          "orders_vs_fluent_reference": 6.940308080830009,
+          "ratio_vs_iteration_zero": 1.1473394304300719e-07
+        },
+        "nuturb": {
+          "initial": 0.000643837519130631,
+          "fluent_reference": 0.000643837519130631,
+          "final": 3.053533849373139e-07,
+          "ratio_vs_fluent_reference": 0.00047427087714557286,
+          "orders_vs_fluent_reference": 3.3239735426120802,
+          "ratio_vs_iteration_zero": 0.00047427087714557286
+        },
+        "totalRes": {
+          "initial": 2399594.9304769337,
+          "fluent_reference": 2399594.9304769337,
+          "final": 2.36476988062569,
+          "ratio_vs_fluent_reference": 9.854871130919076e-07,
+          "orders_vs_fluent_reference": 6.006349050481105,
+          "ratio_vs_iteration_zero": 9.854871130919076e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g13/gci_C_a0",
+      "iterations": 197,
+      "equations": {
+        "rho": {
+          "initial": 860.4050938732637,
+          "fluent_reference": 860.4050938732637,
+          "final": 0.0008497184220711712,
+          "ratio_vs_fluent_reference": 9.875794879897973e-07,
+          "orders_vs_fluent_reference": 6.005427938935888,
+          "ratio_vs_iteration_zero": 9.875794879897973e-07
+        },
+        "rhou": {
+          "initial": 142.13303122225153,
+          "fluent_reference": 212.46717333091198,
+          "final": 0.0015917554278200863,
+          "ratio_vs_fluent_reference": 7.491771095109217e-06,
+          "orders_vs_fluent_reference": 5.125415500604016,
+          "ratio_vs_iteration_zero": 1.1199053549565685e-05
+        },
+        "rhov": {
+          "initial": 2.6403898909259933,
+          "fluent_reference": 88.37534629686166,
+          "final": 0.0007350821206645304,
+          "ratio_vs_fluent_reference": 8.317728319788595e-06,
+          "orders_vs_fluent_reference": 5.079995269008782,
+          "ratio_vs_iteration_zero": 0.0002783990815866723
+        },
+        "rhow": {
+          "initial": 5.798166599962328,
+          "fluent_reference": 117.81802179179608,
+          "final": 0.0007196952873862755,
+          "ratio_vs_fluent_reference": 6.108533112685392e-06,
+          "orders_vs_fluent_reference": 5.21406306758908,
+          "ratio_vs_iteration_zero": 0.00012412463060149936
+        },
+        "rhoE": {
+          "initial": 3015.635789169384,
+          "fluent_reference": 3015.635789169384,
+          "final": 0.0016027799065074459,
+          "ratio_vs_fluent_reference": 5.314898809278656e-07,
+          "orders_vs_fluent_reference": 6.274504999624268,
+          "ratio_vs_iteration_zero": 5.314898809278656e-07
+        },
+        "nuturb": {
+          "initial": 0.0006432343800608295,
+          "fluent_reference": 0.0006432343800608295,
+          "final": 1.6452238320961303e-07,
+          "ratio_vs_fluent_reference": 0.00025577361582267177,
+          "orders_vs_fluent_reference": 3.592144256939462,
+          "ratio_vs_iteration_zero": 0.00025577361582267177
+        },
+        "totalRes": {
+          "initial": 2376927.283653251,
+          "fluent_reference": 2376927.283653251,
+          "final": 2.344755392281735,
+          "ratio_vs_fluent_reference": 9.864649240249079e-07,
+          "orders_vs_fluent_reference": 6.0059183524525945,
+          "ratio_vs_iteration_zero": 9.864649240249079e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g13/gci_C_a4",
+      "iterations": 171,
+      "equations": {
+        "rho": {
+          "initial": 850.6664235507483,
+          "fluent_reference": 850.6664235507483,
+          "final": 0.0004200019216097224,
+          "ratio_vs_fluent_reference": 4.937328075752672e-07,
+          "orders_vs_fluent_reference": 6.306508013806371,
+          "ratio_vs_iteration_zero": 4.937328075752672e-07
+        },
+        "rhou": {
+          "initial": 141.39433059503668,
+          "fluent_reference": 210.4249796506148,
+          "final": 0.0026090206015558035,
+          "ratio_vs_fluent_reference": 1.2398815986047695e-05,
+          "orders_vs_fluent_reference": 4.90661978542464,
+          "ratio_vs_iteration_zero": 1.8452087792884865e-05
+        },
+        "rhov": {
+          "initial": 2.6357356324523113,
+          "fluent_reference": 87.81336897482792,
+          "final": 0.0005825073889196193,
+          "ratio_vs_fluent_reference": 6.633470458087054e-06,
+          "orders_vs_fluent_reference": 5.178259200635331,
+          "ratio_vs_iteration_zero": 0.00022100372349470016
+        },
+        "rhow": {
+          "initial": 11.365018522004194,
+          "fluent_reference": 116.70178559865508,
+          "final": 0.0006955086813995654,
+          "ratio_vs_fluent_reference": 5.959708995297333e-06,
+          "orders_vs_fluent_reference": 5.22477494576682,
+          "ratio_vs_iteration_zero": 6.119732053695889e-05
+        },
+        "rhoE": {
+          "initial": 2981.502654678411,
+          "fluent_reference": 2981.502654678411,
+          "final": 0.0009428567806690189,
+          "ratio_vs_fluent_reference": 3.1623543222057493e-07,
+          "orders_vs_fluent_reference": 6.499989471672061,
+          "ratio_vs_iteration_zero": 3.1623543222057493e-07
+        },
+        "nuturb": {
+          "initial": 0.0006429040357710313,
+          "fluent_reference": 0.0006429040357710313,
+          "final": 7.573015406944325e-08,
+          "ratio_vs_fluent_reference": 0.00011779386946703559,
+          "orders_vs_fluent_reference": 3.9288773116365197,
+          "ratio_vs_iteration_zero": 0.00011779386946703559
+        },
+        "totalRes": {
+          "initial": 2350065.3052936797,
+          "fluent_reference": 2350065.3052936797,
+          "final": 2.305208040972837,
+          "ratio_vs_fluent_reference": 9.809123328531344e-07,
+          "orders_vs_fluent_reference": 6.008369805116936,
+          "ratio_vs_iteration_zero": 9.809123328531344e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g13/gci_C_a8",
+      "iterations": 169,
+      "equations": {
+        "rho": {
+          "initial": 850.2195414107713,
+          "fluent_reference": 850.2195414107713,
+          "final": 0.0007105861028483627,
+          "ratio_vs_fluent_reference": 8.357677849526787e-07,
+          "orders_vs_fluent_reference": 6.077914372947028,
+          "ratio_vs_iteration_zero": 8.357677849526787e-07
+        },
+        "rhou": {
+          "initial": 140.6554643078357,
+          "fluent_reference": 207.73644287628525,
+          "final": 0.0008196576434724934,
+          "ratio_vs_fluent_reference": 3.945661301039172e-06,
+          "orders_vs_fluent_reference": 5.403880197695819,
+          "ratio_vs_iteration_zero": 5.827414153485053e-06
+        },
+        "rhov": {
+          "initial": 2.6298789592340848,
+          "fluent_reference": 87.02731907193541,
+          "final": 0.0011956251444099689,
+          "ratio_vs_fluent_reference": 1.3738503692405875e-05,
+          "orders_vs_fluent_reference": 4.862060565203552,
+          "ratio_vs_iteration_zero": 0.0004546312446098956
+        },
+        "rhow": {
+          "initial": 20.799891131278613,
+          "fluent_reference": 122.07102203272713,
+          "final": 0.0012274360281026762,
+          "ratio_vs_fluent_reference": 1.005509749704235e-05,
+          "orders_vs_fluent_reference": 4.997613714005856,
+          "ratio_vs_iteration_zero": 5.901165637626215e-05
+        },
+        "rhoE": {
+          "initial": 2979.9363660202775,
+          "fluent_reference": 2979.9363660202775,
+          "final": 0.0022113263645420584,
+          "ratio_vs_fluent_reference": 7.42071672991896e-07,
+          "orders_vs_fluent_reference": 6.129554146362989,
+          "ratio_vs_iteration_zero": 7.42071672991896e-07
+        },
+        "nuturb": {
+          "initial": 0.0006439180436235584,
+          "fluent_reference": 0.0006439180436235584,
+          "final": 1.6690324181020576e-08,
+          "ratio_vs_fluent_reference": 2.591995106566376e-05,
+          "orders_vs_fluent_reference": 4.586365822706238,
+          "ratio_vs_iteration_zero": 2.591995106566376e-05
+        },
+        "totalRes": {
+          "initial": 2348844.934439258,
+          "fluent_reference": 2348844.934439258,
+          "final": 2.2753933609035966,
+          "ratio_vs_fluent_reference": 9.687286408486574e-07,
+          "orders_vs_fluent_reference": 6.01379785998378,
+          "ratio_vs_iteration_zero": 9.687286408486574e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g13/gci_M_a-2",
+      "iterations": 354,
+      "equations": {
+        "rho": {
+          "initial": 1048.3628912005515,
+          "fluent_reference": 1048.3628912005515,
+          "final": 3.852192377751607e-05,
+          "ratio_vs_fluent_reference": 3.674483721319246e-08,
+          "orders_vs_fluent_reference": 7.4348036722894735,
+          "ratio_vs_iteration_zero": 3.674483721319246e-08
+        },
+        "rhou": {
+          "initial": 186.3484209859801,
+          "fluent_reference": 263.2143466942781,
+          "final": 0.0001391953079839116,
+          "ratio_vs_fluent_reference": 5.288287273549953e-07,
+          "orders_vs_fluent_reference": 6.276684960873248,
+          "ratio_vs_iteration_zero": 7.469626372330997e-07
+        },
+        "rhov": {
+          "initial": 4.237104271498844,
+          "fluent_reference": 108.28079479486868,
+          "final": 0.0002480147358165148,
+          "ratio_vs_fluent_reference": 2.2904776076529867e-06,
+          "orders_vs_fluent_reference": 5.640073949650954,
+          "ratio_vs_iteration_zero": 5.8534017556471744e-05
+        },
+        "rhow": {
+          "initial": 11.286672145726396,
+          "fluent_reference": 145.61390042064556,
+          "final": 0.0001319662829782244,
+          "ratio_vs_fluent_reference": 9.062753116083266e-07,
+          "orders_vs_fluent_reference": 6.0427398507235,
+          "ratio_vs_iteration_zero": 1.1692222585573404e-05
+        },
+        "rhoE": {
+          "initial": 3674.408735309267,
+          "fluent_reference": 3674.408735309267,
+          "final": 0.00012295409839420103,
+          "ratio_vs_fluent_reference": 3.3462281213484065e-08,
+          "orders_vs_fluent_reference": 7.475444455344412,
+          "ratio_vs_iteration_zero": 3.3462281213484065e-08
+        },
+        "nuturb": {
+          "initial": 0.000988229720916591,
+          "fluent_reference": 0.000988229720916591,
+          "final": 3.808687964490509e-07,
+          "ratio_vs_fluent_reference": 0.0003854051222986818,
+          "orders_vs_fluent_reference": 3.4140825175703715,
+          "ratio_vs_iteration_zero": 0.0003854051222986818
+        },
+        "totalRes": {
+          "initial": 4051242.6385123637,
+          "fluent_reference": 4051242.6385123637,
+          "final": 4.049262162110845,
+          "ratio_vs_fluent_reference": 9.995111434741796e-07,
+          "orders_vs_fluent_reference": 6.000212359602525,
+          "ratio_vs_iteration_zero": 9.995111434741796e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g13/gci_M_a0",
+      "iterations": 204,
+      "equations": {
+        "rho": {
+          "initial": 1038.4997709189224,
+          "fluent_reference": 1038.4997709189224,
+          "final": 0.0003025833860622158,
+          "ratio_vs_fluent_reference": 2.913658669317502e-07,
+          "orders_vs_fluent_reference": 6.535561326524335,
+          "ratio_vs_iteration_zero": 2.913658669317502e-07
+        },
+        "rhou": {
+          "initial": 185.97856287750892,
+          "fluent_reference": 262.3292174544573,
+          "final": 0.000893770477744502,
+          "ratio_vs_fluent_reference": 3.4070565467976074e-06,
+          "orders_vs_fluent_reference": 5.467620658402074,
+          "ratio_vs_iteration_zero": 4.805771503531652e-06
+        },
+        "rhov": {
+          "initial": 4.235610591234496,
+          "fluent_reference": 108.06831559366684,
+          "final": 0.0006290226483862165,
+          "ratio_vs_fluent_reference": 5.820601949153349e-06,
+          "orders_vs_fluent_reference": 5.235032099597977,
+          "ratio_vs_iteration_zero": 0.0001485081394611594
+        },
+        "rhow": {
+          "initial": 8.533528167050266,
+          "fluent_reference": 141.7664480635686,
+          "final": 0.0006625953451598826,
+          "ratio_vs_fluent_reference": 4.673851635633648e-06,
+          "orders_vs_fluent_reference": 5.330325077747875,
+          "ratio_vs_iteration_zero": 7.764611918881356e-05
+        },
+        "rhoE": {
+          "initial": 3639.8394008297646,
+          "fluent_reference": 3639.8394008297646,
+          "final": 0.0010380671237427118,
+          "ratio_vs_fluent_reference": 2.851958587804908e-07,
+          "orders_vs_fluent_reference": 6.5448567849977275,
+          "ratio_vs_iteration_zero": 2.851958587804908e-07
+        },
+        "nuturb": {
+          "initial": 0.0009874993839881201,
+          "fluent_reference": 0.0009874993839881201,
+          "final": 3.3732685403293697e-07,
+          "ratio_vs_fluent_reference": 0.0003415970273020394,
+          "orders_vs_fluent_reference": 3.466485917350533,
+          "ratio_vs_iteration_zero": 0.0003415970273020394
+        },
+        "totalRes": {
+          "initial": 4013192.6192379985,
+          "fluent_reference": 4013192.6192379985,
+          "final": 3.9879526399999476,
+          "ratio_vs_fluent_reference": 9.93710748116834e-07,
+          "orders_vs_fluent_reference": 6.002740012763587,
+          "ratio_vs_iteration_zero": 9.93710748116834e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g13/gci_M_a4",
+      "iterations": 184,
+      "equations": {
+        "rho": {
+          "initial": 1026.7140472598953,
+          "fluent_reference": 1026.7140472598953,
+          "final": 0.0005527146225217521,
+          "ratio_vs_fluent_reference": 5.38333554505115e-07,
+          "orders_vs_fluent_reference": 6.268948549624681,
+          "ratio_vs_iteration_zero": 5.38333554505115e-07
+        },
+        "rhou": {
+          "initial": 185.12081146529877,
+          "fluent_reference": 259.93759097889836,
+          "final": 0.0018530457001591735,
+          "ratio_vs_fluent_reference": 7.128810008513171e-06,
+          "orders_vs_fluent_reference": 5.146982959610738,
+          "ratio_vs_iteration_zero": 1.0009926412333873e-05
+        },
+        "rhov": {
+          "initial": 4.228986862469927,
+          "fluent_reference": 107.4254028867638,
+          "final": 0.0014927642836864807,
+          "ratio_vs_fluent_reference": 1.3895822064172202e-05,
+          "orders_vs_fluent_reference": 4.857115755660764,
+          "ratio_vs_iteration_zero": 0.0003529839018735178
+        },
+        "rhow": {
+          "initial": 15.409776961061656,
+          "fluent_reference": 140.12491966569354,
+          "final": 0.0010590039687650961,
+          "ratio_vs_fluent_reference": 7.557570568401686e-06,
+          "orders_vs_fluent_reference": 5.12161778893025,
+          "ratio_vs_iteration_zero": 6.872286155997264e-05
+        },
+        "rhoE": {
+          "initial": 3598.5315055020637,
+          "fluent_reference": 3598.5315055020637,
+          "final": 0.001906996828524496,
+          "ratio_vs_fluent_reference": 5.299375107898169e-07,
+          "orders_vs_fluent_reference": 6.2757753385485895,
+          "ratio_vs_iteration_zero": 5.299375107898169e-07
+        },
+        "nuturb": {
+          "initial": 0.0009870440070787279,
+          "fluent_reference": 0.0009870440070787279,
+          "final": 1.808166910090896e-07,
+          "ratio_vs_fluent_reference": 0.00018319010065644158,
+          "orders_vs_fluent_reference": 3.737097998716433,
+          "ratio_vs_iteration_zero": 0.00018319010065644158
+        },
+        "totalRes": {
+          "initial": 3967736.7917236714,
+          "fluent_reference": 3967736.7917236714,
+          "final": 3.961657903505647,
+          "ratio_vs_fluent_reference": 9.984679204954562e-07,
+          "orders_vs_fluent_reference": 6.000665883898548,
+          "ratio_vs_iteration_zero": 9.984679204954562e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g13/gci_M_a8",
+      "iterations": 199,
+      "equations": {
+        "rho": {
+          "initial": 1025.9558300118838,
+          "fluent_reference": 1025.9558300118838,
+          "final": 0.0007089589160432265,
+          "ratio_vs_fluent_reference": 6.910228445556126e-07,
+          "orders_vs_fluent_reference": 6.160507595027468,
+          "ratio_vs_iteration_zero": 6.910228445556126e-07
+        },
+        "rhou": {
+          "initial": 184.1248410445287,
+          "fluent_reference": 256.730527144193,
+          "final": 0.0010790621598588722,
+          "ratio_vs_fluent_reference": 4.2030925260898785e-06,
+          "orders_vs_fluent_reference": 5.37643104941213,
+          "ratio_vs_iteration_zero": 5.860492010406745e-06
+        },
+        "rhov": {
+          "initial": 4.2176115112533425,
+          "fluent_reference": 106.50090897542937,
+          "final": 0.0013758074506184767,
+          "ratio_vs_fluent_reference": 1.2918269560834328e-05,
+          "orders_vs_fluent_reference": 4.888795657433258,
+          "ratio_vs_iteration_zero": 0.00032620535270912844
+        },
+        "rhow": {
+          "initial": 27.631101481427994,
+          "fluent_reference": 146.64506459209912,
+          "final": 0.001285296844491902,
+          "ratio_vs_fluent_reference": 8.764678498161681e-06,
+          "orders_vs_fluent_reference": 5.057264009865124,
+          "ratio_vs_iteration_zero": 4.651630863705535e-05
+        },
+        "rhoE": {
+          "initial": 3595.873998315552,
+          "fluent_reference": 3595.873998315552,
+          "final": 0.0024848467061507236,
+          "ratio_vs_fluent_reference": 6.910271904173291e-07,
+          "orders_vs_fluent_reference": 6.160504863746089,
+          "ratio_vs_iteration_zero": 6.910271904173291e-07
+        },
+        "nuturb": {
+          "initial": 0.0009881770176221258,
+          "fluent_reference": 0.0009881770176221258,
+          "final": 6.917463072574507e-08,
+          "ratio_vs_fluent_reference": 7.000226628646115e-05,
+          "orders_vs_fluent_reference": 4.154887899703282,
+          "ratio_vs_iteration_zero": 7.000226628646115e-05
+        },
+        "totalRes": {
+          "initial": 3964836.258676259,
+          "fluent_reference": 3964836.258676259,
+          "final": 3.647687343254096,
+          "ratio_vs_fluent_reference": 9.200095805398911e-07,
+          "orders_vs_fluent_reference": 6.03620765009581,
+          "ratio_vs_iteration_zero": 9.200095805398911e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g16/gci_C_a-2",
+      "iterations": 163,
+      "equations": {
+        "rho": {
+          "initial": 999.5850796895617,
+          "fluent_reference": 999.5850796895617,
+          "final": 0.0005472322652732664,
+          "ratio_vs_fluent_reference": 5.474594173046468e-07,
+          "orders_vs_fluent_reference": 6.261648069170755,
+          "ratio_vs_iteration_zero": 5.474594173046468e-07
+        },
+        "rhou": {
+          "initial": 169.59618539148468,
+          "fluent_reference": 253.79036168319655,
+          "final": 0.0011800765764169807,
+          "ratio_vs_fluent_reference": 4.649808482049669e-06,
+          "orders_vs_fluent_reference": 5.332564934615834,
+          "ratio_vs_iteration_zero": 6.958155183107271e-06
+        },
+        "rhov": {
+          "initial": 2.9161274768883674,
+          "fluent_reference": 80.45588219243794,
+          "final": 0.0006343047932993172,
+          "ratio_vs_fluent_reference": 7.883883390678122e-06,
+          "orders_vs_fluent_reference": 5.103259807928814,
+          "ratio_vs_iteration_zero": 0.00021751614026700492
+        },
+        "rhow": {
+          "initial": 9.765996202958956,
+          "fluent_reference": 143.18179033146455,
+          "final": 0.000552382991426919,
+          "ratio_vs_fluent_reference": 3.857913706401892e-06,
+          "orders_vs_fluent_reference": 5.4136474908581835,
+          "ratio_vs_iteration_zero": 5.656186833858843e-05
+        },
+        "rhoE": {
+          "initial": 3503.448849070967,
+          "fluent_reference": 3503.448849070967,
+          "final": 0.001200607690026198,
+          "ratio_vs_fluent_reference": 3.426930838007158e-07,
+          "orders_vs_fluent_reference": 6.465094660371693,
+          "ratio_vs_iteration_zero": 3.426930838007158e-07
+        },
+        "nuturb": {
+          "initial": 0.0008347308777149258,
+          "fluent_reference": 0.0008347308777149258,
+          "final": 3.0332293815148227e-07,
+          "ratio_vs_fluent_reference": 0.0003633781213195662,
+          "orders_vs_fluent_reference": 3.4396412247336126,
+          "ratio_vs_iteration_zero": 0.0003633781213195662
+        },
+        "totalRes": {
+          "initial": 2761583.8977606273,
+          "fluent_reference": 2761583.8977606273,
+          "final": 2.7343776886992814,
+          "ratio_vs_fluent_reference": 9.901483315124312e-07,
+          "orders_vs_fluent_reference": 6.004299740016755,
+          "ratio_vs_iteration_zero": 9.901483315124312e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g16/gci_C_a0",
+      "iterations": 150,
+      "equations": {
+        "rho": {
+          "initial": 989.7035126423175,
+          "fluent_reference": 989.7035126423175,
+          "final": 0.0008479872831524204,
+          "ratio_vs_fluent_reference": 8.568094104146987e-07,
+          "orders_vs_fluent_reference": 6.067115772254711,
+          "ratio_vs_iteration_zero": 8.568094104146987e-07
+        },
+        "rhou": {
+          "initial": 169.13626118016455,
+          "fluent_reference": 252.8287841397788,
+          "final": 0.0024516758135956548,
+          "ratio_vs_fluent_reference": 9.696980594742023e-06,
+          "orders_vs_fluent_reference": 5.013363473483885,
+          "ratio_vs_iteration_zero": 1.4495270242400126e-05
+        },
+        "rhov": {
+          "initial": 2.9273485384640683,
+          "fluent_reference": 80.50286195426271,
+          "final": 0.001053894931819786,
+          "ratio_vs_fluent_reference": 1.309139707875915e-05,
+          "orders_vs_fluent_reference": 4.883014004234599,
+          "ratio_vs_iteration_zero": 0.00036001689514318896
+        },
+        "rhow": {
+          "initial": 7.19829852766145,
+          "fluent_reference": 139.57467783295127,
+          "final": 0.0007998084257030581,
+          "ratio_vs_fluent_reference": 5.7303261459811635e-06,
+          "orders_vs_fluent_reference": 5.241820659120051,
+          "ratio_vs_iteration_zero": 0.00011111076077625475
+        },
+        "rhoE": {
+          "initial": 3468.814893632264,
+          "fluent_reference": 3468.814893632264,
+          "final": 0.0015348656969347084,
+          "ratio_vs_fluent_reference": 4.4247552665674827e-07,
+          "orders_vs_fluent_reference": 6.354110745151145,
+          "ratio_vs_iteration_zero": 4.4247552665674827e-07
+        },
+        "nuturb": {
+          "initial": 0.0008339428248936708,
+          "fluent_reference": 0.0008339428248936708,
+          "final": 1.4059263659349666e-07,
+          "ratio_vs_fluent_reference": 0.00016858786045844627,
+          "orders_vs_fluent_reference": 3.773173700919586,
+          "ratio_vs_iteration_zero": 0.00016858786045844627
+        },
+        "totalRes": {
+          "initial": 2734322.554886712,
+          "fluent_reference": 2734322.554886712,
+          "final": 2.710282730982576,
+          "ratio_vs_fluent_reference": 9.912081243446672e-07,
+          "orders_vs_fluent_reference": 6.00383514696331,
+          "ratio_vs_iteration_zero": 9.912081243446672e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g16/gci_C_a4",
+      "iterations": 145,
+      "equations": {
+        "rho": {
+          "initial": 977.6029204446405,
+          "fluent_reference": 977.6029204446405,
+          "final": 0.0006479044176271171,
+          "ratio_vs_fluent_reference": 6.627480381630124e-07,
+          "orders_vs_fluent_reference": 6.1786515491719936,
+          "ratio_vs_iteration_zero": 6.627480381630124e-07
+        },
+        "rhou": {
+          "initial": 168.16395807416743,
+          "fluent_reference": 250.31660826599224,
+          "final": 0.0027116575689497937,
+          "ratio_vs_fluent_reference": 1.0832911118979062e-05,
+          "orders_vs_fluent_reference": 4.965254820104254,
+          "ratio_vs_iteration_zero": 1.6125081735729827e-05
+        },
+        "rhov": {
+          "initial": 2.95173499781936,
+          "fluent_reference": 80.44496716176074,
+          "final": 0.0011249072469422942,
+          "ratio_vs_fluent_reference": 1.3983562758877167e-05,
+          "orders_vs_fluent_reference": 4.854382164112966,
+          "ratio_vs_iteration_zero": 0.00038110035208897033
+        },
+        "rhow": {
+          "initial": 13.77931100931261,
+          "fluent_reference": 137.77250129393533,
+          "final": 0.0008944516908261297,
+          "ratio_vs_fluent_reference": 6.4922367121566e-06,
+          "orders_vs_fluent_reference": 5.187605653832057,
+          "ratio_vs_iteration_zero": 6.491265711483132e-05
+        },
+        "rhoE": {
+          "initial": 3426.4034652725686,
+          "fluent_reference": 3426.4034652725686,
+          "final": 0.0013356472080595957,
+          "ratio_vs_fluent_reference": 3.8981025486248324e-07,
+          "orders_vs_fluent_reference": 6.409146739944905,
+          "ratio_vs_iteration_zero": 3.8981025486248324e-07
+        },
+        "nuturb": {
+          "initial": 0.0008333764157446888,
+          "fluent_reference": 0.0008333764157446888,
+          "final": 9.349110928981681e-08,
+          "ratio_vs_fluent_reference": 0.00011218353138332453,
+          "orders_vs_fluent_reference": 3.9500708931181556,
+          "ratio_vs_iteration_zero": 0.00011218353138332453
+        },
+        "totalRes": {
+          "initial": 2700945.365085983,
+          "fluent_reference": 2700945.365085983,
+          "final": 2.6766212387262938,
+          "ratio_vs_fluent_reference": 9.909942175528178e-07,
+          "orders_vs_fluent_reference": 6.003928879613847,
+          "ratio_vs_iteration_zero": 9.909942175528178e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g16/gci_C_a8",
+      "iterations": 132,
+      "equations": {
+        "rho": {
+          "initial": 976.1785615389323,
+          "fluent_reference": 976.1785615389323,
+          "final": 0.0007306274197283009,
+          "ratio_vs_fluent_reference": 7.48456735800955e-07,
+          "orders_vs_fluent_reference": 6.125833298789138,
+          "ratio_vs_iteration_zero": 7.48456735800955e-07
+        },
+        "rhou": {
+          "initial": 167.14272423654427,
+          "fluent_reference": 247.0319650213608,
+          "final": 0.0015835596852237952,
+          "ratio_vs_fluent_reference": 6.410343232653576e-06,
+          "orders_vs_fluent_reference": 5.19311871618217,
+          "ratio_vs_iteration_zero": 9.474296248652169e-06
+        },
+        "rhov": {
+          "initial": 2.978264331883077,
+          "fluent_reference": 80.18599120563532,
+          "final": 0.0018331661965616645,
+          "ratio_vs_fluent_reference": 2.286142715203891e-05,
+          "orders_vs_fluent_reference": 4.640896661739997,
+          "ratio_vs_iteration_zero": 0.000615514941685046
+        },
+        "rhow": {
+          "initial": 24.979607846478196,
+          "fluent_reference": 143.3029022281214,
+          "final": 0.001130844893899715,
+          "ratio_vs_fluent_reference": 7.891290939101447e-06,
+          "orders_vs_fluent_reference": 5.102851944589382,
+          "ratio_vs_iteration_zero": 4.5270722456883955e-05
+        },
+        "rhoE": {
+          "initial": 3421.4112225611807,
+          "fluent_reference": 3421.4112225611807,
+          "final": 0.0020582701953345897,
+          "ratio_vs_fluent_reference": 6.015851534484128e-07,
+          "orders_vs_fluent_reference": 6.220702890260482,
+          "ratio_vs_iteration_zero": 6.015851534484128e-07
+        },
+        "nuturb": {
+          "initial": 0.000834328474198997,
+          "fluent_reference": 0.000834328474198997,
+          "final": 1.4832760234973166e-08,
+          "ratio_vs_fluent_reference": 1.7778082246579757e-05,
+          "orders_vs_fluent_reference": 4.750115088959057,
+          "ratio_vs_iteration_zero": 1.7778082246579757e-05
+        },
+        "totalRes": {
+          "initial": 2697028.722761224,
+          "fluent_reference": 2697028.722761224,
+          "final": 2.6162803768898835,
+          "ratio_vs_fluent_reference": 9.700602573528879e-07,
+          "orders_vs_fluent_reference": 6.013201287771847,
+          "ratio_vs_iteration_zero": 9.700602573528879e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g23/gci_C_a-2",
+      "iterations": 192,
+      "equations": {
+        "rho": {
+          "initial": 974.9004357212702,
+          "fluent_reference": 974.9004357212702,
+          "final": 0.00024607129502797785,
+          "ratio_vs_fluent_reference": 2.524065904698509e-07,
+          "orders_vs_fluent_reference": 6.597899309620763,
+          "ratio_vs_iteration_zero": 2.524065904698509e-07
+        },
+        "rhou": {
+          "initial": 163.92160810448797,
+          "fluent_reference": 246.11763968018101,
+          "final": 0.0017351089467516282,
+          "ratio_vs_fluent_reference": 7.049917060013762e-06,
+          "orders_vs_fluent_reference": 5.151815992312181,
+          "ratio_vs_iteration_zero": 1.058499222168211e-05
+        },
+        "rhov": {
+          "initial": 2.2830906747579616,
+          "fluent_reference": 66.113874692084,
+          "final": 0.0008756181444689898,
+          "ratio_vs_fluent_reference": 1.32440905717152e-05,
+          "orders_vs_fluent_reference": 4.877977857921357,
+          "ratio_vs_iteration_zero": 0.0003835231575118308
+        },
+        "rhow": {
+          "initial": 9.747296968456798,
+          "fluent_reference": 132.151549276503,
+          "final": 0.0005321347122588767,
+          "ratio_vs_fluent_reference": 4.026700520517409e-06,
+          "orders_vs_fluent_reference": 5.395050669156711,
+          "ratio_vs_iteration_zero": 5.459305425708445e-05
+        },
+        "rhoE": {
+          "initial": 3416.930856616957,
+          "fluent_reference": 3416.930856616957,
+          "final": 0.0006604071988154372,
+          "ratio_vs_fluent_reference": 1.932749670765345e-07,
+          "orders_vs_fluent_reference": 6.713824392037375,
+          "ratio_vs_iteration_zero": 1.932749670765345e-07
+        },
+        "nuturb": {
+          "initial": 0.0007897464764913233,
+          "fluent_reference": 0.0007897464764913233,
+          "final": 2.7553763545367867e-07,
+          "ratio_vs_fluent_reference": 0.00034889378256910264,
+          "orders_vs_fluent_reference": 3.457306769789463,
+          "ratio_vs_iteration_zero": 0.00034889378256910264
+        },
+        "totalRes": {
+          "initial": 2679071.1495833118,
+          "fluent_reference": 2679071.1495833118,
+          "final": 2.625213048825229,
+          "ratio_vs_fluent_reference": 9.798967262342176e-07,
+          "orders_vs_fluent_reference": 6.008819693276906,
+          "ratio_vs_iteration_zero": 9.798967262342176e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g23/gci_C_a0",
+      "iterations": 183,
+      "equations": {
+        "rho": {
+          "initial": 968.0836012601196,
+          "fluent_reference": 968.0836012601196,
+          "final": 0.00022420618781213776,
+          "ratio_vs_fluent_reference": 2.3159796067229796e-07,
+          "orders_vs_fluent_reference": 6.635265269092559,
+          "ratio_vs_iteration_zero": 2.3159796067229796e-07
+        },
+        "rhou": {
+          "initial": 163.69176131476402,
+          "fluent_reference": 245.50439913355896,
+          "final": 0.0006993463935623444,
+          "ratio_vs_fluent_reference": 2.8486104364341225e-06,
+          "orders_vs_fluent_reference": 5.5453669389230384,
+          "ratio_vs_iteration_zero": 4.2723371533498646e-06
+        },
+        "rhov": {
+          "initial": 2.290889718825451,
+          "fluent_reference": 66.01995411509844,
+          "final": 0.00047537737533066333,
+          "ratio_vs_fluent_reference": 7.200510538100281e-06,
+          "orders_vs_fluent_reference": 5.142636709677188,
+          "ratio_vs_iteration_zero": 0.00020750775186786002
+        },
+        "rhow": {
+          "initial": 7.450428031843026,
+          "fluent_reference": 130.0585891582948,
+          "final": 0.0004546660558713847,
+          "ratio_vs_fluent_reference": 3.4958556663874686e-06,
+          "orders_vs_fluent_reference": 5.456446506411051,
+          "ratio_vs_iteration_zero": 6.102549463307992e-05
+        },
+        "rhoE": {
+          "initial": 3393.0384314547405,
+          "fluent_reference": 3393.0384314547405,
+          "final": 0.0006331428581768838,
+          "ratio_vs_fluent_reference": 1.866005560996338e-07,
+          "orders_vs_fluent_reference": 6.729087066320266,
+          "ratio_vs_iteration_zero": 1.866005560996338e-07
+        },
+        "nuturb": {
+          "initial": 0.000789263671037439,
+          "fluent_reference": 0.000789263671037439,
+          "final": 3.265074277022876e-07,
+          "ratio_vs_fluent_reference": 0.0004136861225008792,
+          "orders_vs_fluent_reference": 3.3833290476865017,
+          "ratio_vs_iteration_zero": 0.0004136861225008792
+        },
+        "totalRes": {
+          "initial": 2660366.033484999,
+          "fluent_reference": 2660366.033484999,
+          "final": 2.6126908896630607,
+          "ratio_vs_fluent_reference": 9.820794795821817e-07,
+          "orders_vs_fluent_reference": 6.007853363387004,
+          "ratio_vs_iteration_zero": 9.820794795821817e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g23/gci_C_a4",
+      "iterations": 140,
+      "equations": {
+        "rho": {
+          "initial": 962.187040100868,
+          "fluent_reference": 962.187040100868,
+          "final": 0.0006773403881317626,
+          "ratio_vs_fluent_reference": 7.039591679189066e-07,
+          "orders_vs_fluent_reference": 6.152452530718379,
+          "ratio_vs_iteration_zero": 7.039591679189066e-07
+        },
+        "rhou": {
+          "initial": 163.20630982060305,
+          "fluent_reference": 243.6798163515252,
+          "final": 0.0022553198664070216,
+          "ratio_vs_fluent_reference": 9.255259217503533e-06,
+          "orders_vs_fluent_reference": 5.033611413199043,
+          "ratio_vs_iteration_zero": 1.3818827647571207e-05
+        },
+        "rhov": {
+          "initial": 2.3110188106250775,
+          "fluent_reference": 65.85495045709969,
+          "final": 0.0010550469567524074,
+          "ratio_vs_fluent_reference": 1.6020769121065595e-05,
+          "orders_vs_fluent_reference": 4.79531663825074,
+          "ratio_vs_iteration_zero": 0.0004565289351613029
+        },
+        "rhow": {
+          "initial": 13.699474211667708,
+          "fluent_reference": 131.2845976255603,
+          "final": 0.0008276606652674525,
+          "ratio_vs_fluent_reference": 6.3043241951964665e-06,
+          "orders_vs_fluent_reference": 5.2003614616725855,
+          "ratio_vs_iteration_zero": 6.04155059150038e-05
+        },
+        "rhoE": {
+          "initial": 3372.371415456311,
+          "fluent_reference": 3372.371415456311,
+          "final": 0.0015598930460507317,
+          "ratio_vs_fluent_reference": 4.6255078515415085e-07,
+          "orders_vs_fluent_reference": 6.334840577516566,
+          "ratio_vs_iteration_zero": 4.6255078515415085e-07
+        },
+        "nuturb": {
+          "initial": 0.0007894746262131182,
+          "fluent_reference": 0.0007894746262131182,
+          "final": 1.438631077147433e-07,
+          "ratio_vs_fluent_reference": 0.00018222638567221987,
+          "orders_vs_fluent_reference": 3.7393887386572793,
+          "ratio_vs_iteration_zero": 0.00018222638567221987
+        },
+        "totalRes": {
+          "initial": 2644193.9726600586,
+          "fluent_reference": 2644193.9726600586,
+          "final": 2.592277294595753,
+          "ratio_vs_fluent_reference": 9.803657830699622e-07,
+          "orders_vs_fluent_reference": 6.008611854991591,
+          "ratio_vs_iteration_zero": 9.803657830699622e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g23/gci_C_a8",
+      "iterations": 147,
+      "equations": {
+        "rho": {
+          "initial": 966.80383391363,
+          "fluent_reference": 966.80383391363,
+          "final": 0.0008626249450538697,
+          "ratio_vs_fluent_reference": 8.922440259281521e-07,
+          "orders_vs_fluent_reference": 6.049516351206568,
+          "ratio_vs_iteration_zero": 8.922440259281521e-07
+        },
+        "rhou": {
+          "initial": 162.69228648645048,
+          "fluent_reference": 241.0661472803784,
+          "final": 0.0018311029694063079,
+          "ratio_vs_fluent_reference": 7.5958527983466496e-06,
+          "orders_vs_fluent_reference": 5.119423460138972,
+          "ratio_vs_iteration_zero": 1.125500789835422e-05
+        },
+        "rhov": {
+          "initial": 2.3367205827836846,
+          "fluent_reference": 65.7261078247765,
+          "final": 0.0010856554064643704,
+          "ratio_vs_fluent_reference": 1.651787154898461e-05,
+          "orders_vs_fluent_reference": 4.78204591549534,
+          "ratio_vs_iteration_zero": 0.00046460642939647183
+        },
+        "rhow": {
+          "initial": 24.518062019361654,
+          "fluent_reference": 139.42264445415046,
+          "final": 0.0011884044941895603,
+          "ratio_vs_fluent_reference": 8.523755225288175e-06,
+          "orders_vs_fluent_reference": 5.069369030313185,
+          "ratio_vs_iteration_zero": 4.847057215415679e-05
+        },
+        "rhoE": {
+          "initial": 3388.5527239329517,
+          "fluent_reference": 3388.5527239329517,
+          "final": 0.0021835992926256703,
+          "ratio_vs_fluent_reference": 6.444046973810275e-07,
+          "orders_vs_fluent_reference": 6.190841302456382,
+          "ratio_vs_iteration_zero": 6.444046973810275e-07
+        },
+        "nuturb": {
+          "initial": 0.0007914935388995899,
+          "fluent_reference": 0.0007914935388995899,
+          "final": 4.6741809993734486e-08,
+          "ratio_vs_fluent_reference": 5.905520095428628e-05,
+          "orders_vs_fluent_reference": 4.2287418483251304,
+          "ratio_vs_iteration_zero": 5.905520095428628e-05
+        },
+        "totalRes": {
+          "initial": 2656880.0336316796,
+          "fluent_reference": 2656880.0336316796,
+          "final": 2.5734191172343386,
+          "ratio_vs_fluent_reference": 9.685868705621389e-07,
+          "orders_vs_fluent_reference": 6.013861422220162,
+          "ratio_vs_iteration_zero": 9.685868705621389e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g29/gci_C_a-2",
+      "iterations": 140,
+      "equations": {
+        "rho": {
+          "initial": 1017.2896442296085,
+          "fluent_reference": 1017.2896442296085,
+          "final": 0.0005909685146118941,
+          "ratio_vs_fluent_reference": 5.809245360591805e-07,
+          "orders_vs_fluent_reference": 6.235880280177112,
+          "ratio_vs_iteration_zero": 5.809245360591805e-07
+        },
+        "rhou": {
+          "initial": 175.34847253591204,
+          "fluent_reference": 243.76434273328178,
+          "final": 0.001970772371137515,
+          "ratio_vs_fluent_reference": 8.084744261771966e-06,
+          "orders_vs_fluent_reference": 5.092333713229176,
+          "ratio_vs_iteration_zero": 1.1239176153837856e-05
+        },
+        "rhov": {
+          "initial": 3.876451935901747,
+          "fluent_reference": 108.59793288801445,
+          "final": 0.00123546888344281,
+          "ratio_vs_fluent_reference": 1.137654143672162e-05,
+          "orders_vs_fluent_reference": 4.943989747012964,
+          "ratio_vs_iteration_zero": 0.000318711260676424
+        },
+        "rhow": {
+          "initial": 10.0590756723028,
+          "fluent_reference": 134.81996298482187,
+          "final": 0.0009763453929524236,
+          "ratio_vs_fluent_reference": 7.241845876061703e-06,
+          "orders_vs_fluent_reference": 5.140150722254191,
+          "ratio_vs_iteration_zero": 9.706114406125262e-05
+        },
+        "rhoE": {
+          "initial": 3565.5012470304796,
+          "fluent_reference": 3565.5012470304796,
+          "final": 0.002003372893597425,
+          "ratio_vs_fluent_reference": 5.618769297208717e-07,
+          "orders_vs_fluent_reference": 6.250358799370861,
+          "ratio_vs_iteration_zero": 5.618769297208717e-07
+        },
+        "nuturb": {
+          "initial": 0.0008922576014030109,
+          "fluent_reference": 0.0008922576014030109,
+          "final": 1.5910081551559304e-07,
+          "ratio_vs_fluent_reference": 0.00017831264790058214,
+          "orders_vs_fluent_reference": 3.748817850775196,
+          "ratio_vs_iteration_zero": 0.00017831264790058214
+        },
+        "totalRes": {
+          "initial": 2795711.898978564,
+          "fluent_reference": 2795711.898978564,
+          "final": 2.7423476793833172,
+          "ratio_vs_fluent_reference": 9.809121177276013e-07,
+          "orders_vs_fluent_reference": 6.0083699003627995,
+          "ratio_vs_iteration_zero": 9.809121177276013e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g29/gci_C_a0",
+      "iterations": 137,
+      "equations": {
+        "rho": {
+          "initial": 1009.4703992033068,
+          "fluent_reference": 1009.4703992033068,
+          "final": 0.0005831669054003025,
+          "ratio_vs_fluent_reference": 5.77695894659763e-07,
+          "orders_vs_fluent_reference": 6.23830071871953,
+          "ratio_vs_iteration_zero": 5.77695894659763e-07
+        },
+        "rhou": {
+          "initial": 175.09526522315727,
+          "fluent_reference": 243.09820605051252,
+          "final": 0.0017173989886146933,
+          "ratio_vs_fluent_reference": 7.064630449217881e-06,
+          "orders_vs_fluent_reference": 5.150910551163349,
+          "ratio_vs_iteration_zero": 9.808369097964383e-06
+        },
+        "rhov": {
+          "initial": 3.8814562726006097,
+          "fluent_reference": 108.42802418055872,
+          "final": 0.001204013045233707,
+          "ratio_vs_fluent_reference": 1.1104260677375582e-05,
+          "orders_vs_fluent_reference": 4.954510351516658,
+          "ratio_vs_iteration_zero": 0.00031019621520224106
+        },
+        "rhow": {
+          "initial": 7.5852288384042135,
+          "fluent_reference": 132.20157428219454,
+          "final": 0.0011790897105172574,
+          "ratio_vs_fluent_reference": 8.918877985525337e-06,
+          "orders_vs_fluent_reference": 5.049689777388946,
+          "ratio_vs_iteration_zero": 0.00015544550278397603
+        },
+        "rhoE": {
+          "initial": 3538.0955421278595,
+          "fluent_reference": 3538.0955421278595,
+          "final": 0.0019225972082450907,
+          "ratio_vs_fluent_reference": 5.433988950702033e-07,
+          "orders_vs_fluent_reference": 6.26488124899763,
+          "ratio_vs_iteration_zero": 5.433988950702033e-07
+        },
+        "nuturb": {
+          "initial": 0.000891790338084154,
+          "fluent_reference": 0.000891790338084154,
+          "final": 1.8746746889606953e-07,
+          "ratio_vs_fluent_reference": 0.00021021473421522886,
+          "orders_vs_fluent_reference": 3.677336846994231,
+          "ratio_vs_iteration_zero": 0.00021021473421522886
+        },
+        "totalRes": {
+          "initial": 2774257.973679981,
+          "fluent_reference": 2774257.973679981,
+          "final": 2.750877029312104,
+          "ratio_vs_fluent_reference": 9.915721808895577e-07,
+          "orders_vs_fluent_reference": 6.003675666107155,
+          "ratio_vs_iteration_zero": 9.915721808895577e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g29/gci_C_a4",
+      "iterations": 126,
+      "equations": {
+        "rho": {
+          "initial": 1002.121986201722,
+          "fluent_reference": 1002.121986201722,
+          "final": 0.000539845976127982,
+          "ratio_vs_fluent_reference": 5.387028561005084e-07,
+          "orders_vs_fluent_reference": 6.268650721900857,
+          "ratio_vs_iteration_zero": 5.387028561005084e-07
+        },
+        "rhou": {
+          "initial": 174.55246415992548,
+          "fluent_reference": 241.1988015528851,
+          "final": 0.002660091659708699,
+          "ratio_vs_fluent_reference": 1.1028627184639842e-05,
+          "orders_vs_fluent_reference": 4.957478544063994,
+          "ratio_vs_iteration_zero": 1.5239496460339369e-05
+        },
+        "rhov": {
+          "initial": 3.8897303766923876,
+          "fluent_reference": 107.8841793012071,
+          "final": 0.0010158443330697642,
+          "ratio_vs_fluent_reference": 9.416063964611334e-06,
+          "orders_vs_fluent_reference": 5.026130599932742,
+          "ratio_vs_iteration_zero": 0.0002611606036132464
+        },
+        "rhow": {
+          "initial": 14.561246775518418,
+          "fluent_reference": 132.94065518456475,
+          "final": 0.000961117810216494,
+          "ratio_vs_fluent_reference": 7.2296755938365936e-06,
+          "orders_vs_fluent_reference": 5.140881189699596,
+          "ratio_vs_iteration_zero": 6.600518657732011e-05
+        },
+        "rhoE": {
+          "initial": 3512.34007142813,
+          "fluent_reference": 3512.34007142813,
+          "final": 0.0016827344711450433,
+          "ratio_vs_fluent_reference": 4.79092125740785e-07,
+          "orders_vs_fluent_reference": 6.319580967057591,
+          "ratio_vs_iteration_zero": 4.79092125740785e-07
+        },
+        "nuturb": {
+          "initial": 0.0008919123621754695,
+          "fluent_reference": 0.0008919123621754695,
+          "final": 1.7790187711809715e-08,
+          "ratio_vs_fluent_reference": 1.994611630723174e-05,
+          "orders_vs_fluent_reference": 4.700141652886143,
+          "ratio_vs_iteration_zero": 1.994611630723174e-05
+        },
+        "totalRes": {
+          "initial": 2754105.2392233186,
+          "fluent_reference": 2754105.2392233186,
+          "final": 2.62922773775352,
+          "ratio_vs_fluent_reference": 9.546576871169182e-07,
+          "orders_vs_fluent_reference": 6.020152326056519,
+          "ratio_vs_iteration_zero": 9.546576871169182e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g29/gci_C_a8",
+      "iterations": 149,
+      "equations": {
+        "rho": {
+          "initial": 1006.087290476125,
+          "fluent_reference": 1006.087290476125,
+          "final": 0.0006987898437679994,
+          "ratio_vs_fluent_reference": 6.945618440695152e-07,
+          "orders_vs_fluent_reference": 6.158289078447106,
+          "ratio_vs_iteration_zero": 6.945618440695152e-07
+        },
+        "rhou": {
+          "initial": 173.97896549320663,
+          "fluent_reference": 238.55258276551442,
+          "final": 0.0010578007394017768,
+          "ratio_vs_fluent_reference": 4.4342455954104825e-06,
+          "orders_vs_fluent_reference": 5.353180256693398,
+          "ratio_vs_iteration_zero": 6.080049599117089e-06
+        },
+        "rhov": {
+          "initial": 3.8955743947461445,
+          "fluent_reference": 107.07732016448774,
+          "final": 0.002377288835754579,
+          "ratio_vs_fluent_reference": 2.220160938005066e-05,
+          "orders_vs_fluent_reference": 4.653615542687125,
+          "ratio_vs_iteration_zero": 0.0006102537379239282
+        },
+        "rhow": {
+          "initial": 26.23761363474389,
+          "fluent_reference": 141.37785541407223,
+          "final": 0.0010780101117453804,
+          "ratio_vs_fluent_reference": 7.625028039844486e-06,
+          "orders_vs_fluent_reference": 5.11775855492841,
+          "ratio_vs_iteration_zero": 4.1086438986123256e-05
+        },
+        "rhoE": {
+          "initial": 3526.238113531831,
+          "fluent_reference": 3526.238113531831,
+          "final": 0.0022240308535608185,
+          "ratio_vs_fluent_reference": 6.307092096322616e-07,
+          "orders_vs_fluent_reference": 6.200170827381075,
+          "ratio_vs_iteration_zero": 6.307092096322616e-07
+        },
+        "nuturb": {
+          "initial": 0.0008939034030439002,
+          "fluent_reference": 0.0008939034030439002,
+          "final": 4.202641060113748e-09,
+          "ratio_vs_fluent_reference": 4.701448776012047e-06,
+          "orders_vs_fluent_reference": 5.32776829132542,
+          "ratio_vs_iteration_zero": 4.701448776012047e-06
+        },
+        "totalRes": {
+          "initial": 2765006.3776474516,
+          "fluent_reference": 2765006.3776474516,
+          "final": 2.753835469472186,
+          "ratio_vs_fluent_reference": 9.95959897862959e-07,
+          "orders_vs_fluent_reference": 6.001758148009487,
+          "ratio_vs_iteration_zero": 9.95959897862959e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g29/gci_M_a-2",
+      "iterations": 178,
+      "equations": {
+        "rho": {
+          "initial": 1228.6395253311146,
+          "fluent_reference": 1228.6395253311146,
+          "final": 0.00040564001251911647,
+          "ratio_vs_fluent_reference": 3.301538035818909e-07,
+          "orders_vs_fluent_reference": 6.4812836950133805,
+          "ratio_vs_iteration_zero": 3.301538035818909e-07
+        },
+        "rhou": {
+          "initial": 232.23721304047135,
+          "fluent_reference": 319.1835843203457,
+          "final": 0.001350518109040171,
+          "ratio_vs_fluent_reference": 4.231164055369263e-06,
+          "orders_vs_fluent_reference": 5.37354013539659,
+          "ratio_vs_iteration_zero": 5.815252824295734e-06
+        },
+        "rhov": {
+          "initial": 6.221274582810793,
+          "fluent_reference": 141.2586878980114,
+          "final": 0.0011379301761401009,
+          "ratio_vs_fluent_reference": 8.055647359273824e-06,
+          "orders_vs_fluent_reference": 5.093899553536059,
+          "ratio_vs_iteration_zero": 0.00018290949241883168
+        },
+        "rhow": {
+          "initial": 14.319341318399024,
+          "fluent_reference": 177.8902988298695,
+          "final": 0.0007639713588112665,
+          "ratio_vs_fluent_reference": 4.294620695094298e-06,
+          "orders_vs_fluent_reference": 5.367075187432703,
+          "ratio_vs_iteration_zero": 5.335240929201361e-05
+        },
+        "rhoE": {
+          "initial": 4306.2613121083805,
+          "fluent_reference": 4306.2613121083805,
+          "final": 0.0013925485686255787,
+          "ratio_vs_fluent_reference": 3.233776279925232e-07,
+          "orders_vs_fluent_reference": 6.490290028880692,
+          "ratio_vs_iteration_zero": 3.233776279925232e-07
+        },
+        "nuturb": {
+          "initial": 0.0013738688441791392,
+          "fluent_reference": 0.0013738688441791392,
+          "final": 3.7669246911355803e-07,
+          "ratio_vs_fluent_reference": 0.00027418371899875544,
+          "orders_vs_fluent_reference": 3.5619583371428822,
+          "ratio_vs_iteration_zero": 0.00027418371899875544
+        },
+        "totalRes": {
+          "initial": 4726820.42076923,
+          "fluent_reference": 4726820.42076923,
+          "final": 4.7136479502498805,
+          "ratio_vs_fluent_reference": 9.972132492147424e-07,
+          "orders_vs_fluent_reference": 6.001211959989136,
+          "ratio_vs_iteration_zero": 9.972132492147424e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g29/gci_M_a0",
+      "iterations": 152,
+      "equations": {
+        "rho": {
+          "initial": 1219.2723933632765,
+          "fluent_reference": 1219.2723933632765,
+          "final": 0.000576475236099145,
+          "ratio_vs_fluent_reference": 4.7280266430783276e-07,
+          "orders_vs_fluent_reference": 6.32532008481096,
+          "ratio_vs_iteration_zero": 4.7280266430783276e-07
+        },
+        "rhou": {
+          "initial": 232.01292500893462,
+          "fluent_reference": 318.16162011021663,
+          "final": 0.0033004238818752367,
+          "ratio_vs_fluent_reference": 1.0373419272670014e-05,
+          "orders_vs_fluent_reference": 4.984078068443294,
+          "ratio_vs_iteration_zero": 1.4225172506006467e-05
+        },
+        "rhov": {
+          "initial": 6.229956445672645,
+          "fluent_reference": 140.98695516365765,
+          "final": 0.0014068407107566492,
+          "ratio_vs_fluent_reference": 9.978516871462246e-06,
+          "orders_vs_fluent_reference": 5.000934004043851,
+          "ratio_vs_iteration_zero": 0.00022581870724535272
+        },
+        "rhow": {
+          "initial": 11.21516667184588,
+          "fluent_reference": 174.31951649030822,
+          "final": 0.0008714460970164564,
+          "ratio_vs_fluent_reference": 4.999130989816088e-06,
+          "orders_vs_fluent_reference": 5.301105483489659,
+          "ratio_vs_iteration_zero": 7.770246510951111e-05
+        },
+        "rhoE": {
+          "initial": 4273.430391808264,
+          "fluent_reference": 4273.430391808264,
+          "final": 0.0017809829261733162,
+          "ratio_vs_fluent_reference": 4.167572097552545e-07,
+          "orders_vs_fluent_reference": 6.380116878290986,
+          "ratio_vs_iteration_zero": 4.167572097552545e-07
+        },
+        "nuturb": {
+          "initial": 0.0013732898218893276,
+          "fluent_reference": 0.0013732898218893276,
+          "final": 1.6111599287676436e-07,
+          "ratio_vs_fluent_reference": 0.0001173211876391148,
+          "orders_vs_fluent_reference": 3.9306235493182893,
+          "ratio_vs_iteration_zero": 0.0001173211876391148
+        },
+        "totalRes": {
+          "initial": 4690859.245621365,
+          "fluent_reference": 4690859.245621365,
+          "final": 4.682378692867904,
+          "ratio_vs_fluent_reference": 9.981921110164675e-07,
+          "orders_vs_fluent_reference": 6.000785866803652,
+          "ratio_vs_iteration_zero": 9.981921110164675e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g29/gci_M_a4",
+      "iterations": 142,
+      "equations": {
+        "rho": {
+          "initial": 1210.3274233490583,
+          "fluent_reference": 1210.3274233490583,
+          "final": 0.0008316608706726814,
+          "ratio_vs_fluent_reference": 6.87137095821079e-07,
+          "orders_vs_fluent_reference": 6.162956604980389,
+          "ratio_vs_iteration_zero": 6.87137095821079e-07
+        },
+        "rhou": {
+          "initial": 231.37618955035282,
+          "fluent_reference": 315.36760556386355,
+          "final": 0.0014282123241602792,
+          "ratio_vs_fluent_reference": 4.528722351196147e-06,
+          "orders_vs_fluent_reference": 5.3440243044086015,
+          "ratio_vs_iteration_zero": 6.172684954903137e-06
+        },
+        "rhov": {
+          "initial": 6.2413214033713125,
+          "fluent_reference": 140.16456618108498,
+          "final": 0.0023639903734670115,
+          "ratio_vs_fluent_reference": 1.6865820213169033e-05,
+          "orders_vs_fluent_reference": 4.772992533490996,
+          "ratio_vs_iteration_zero": 0.0003787644027096695
+        },
+        "rhow": {
+          "initial": 19.964649967598522,
+          "fluent_reference": 174.45429301982716,
+          "final": 0.001604196936014614,
+          "ratio_vs_fluent_reference": 9.19551424184381e-06,
+          "orders_vs_fluent_reference": 5.036423978644469,
+          "ratio_vs_iteration_zero": 8.035186885911515e-05
+        },
+        "rhoE": {
+          "initial": 4242.079110937315,
+          "fluent_reference": 4242.079110937315,
+          "final": 0.002804403735806039,
+          "ratio_vs_fluent_reference": 6.610918048594308e-07,
+          "orders_vs_fluent_reference": 6.179738226482036,
+          "ratio_vs_iteration_zero": 6.610918048594308e-07
+        },
+        "nuturb": {
+          "initial": 0.0013733684500644764,
+          "fluent_reference": 0.0013733684500644764,
+          "final": 7.013965634855926e-08,
+          "ratio_vs_fluent_reference": 5.107125938801519e-05,
+          "orders_vs_fluent_reference": 4.291823432559148,
+          "ratio_vs_iteration_zero": 5.107125938801519e-05
+        },
+        "totalRes": {
+          "initial": 4656537.444819745,
+          "fluent_reference": 4656537.444819745,
+          "final": 4.624895721852986,
+          "ratio_vs_fluent_reference": 9.932048816654616e-07,
+          "orders_vs_fluent_reference": 6.002961154527096,
+          "ratio_vs_iteration_zero": 9.932048816654616e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g29/gci_M_a8",
+      "iterations": 162,
+      "equations": {
+        "rho": {
+          "initial": 1214.749503110974,
+          "fluent_reference": 1214.749503110974,
+          "final": 0.0008741872876899528,
+          "ratio_vs_fluent_reference": 7.196440792535076e-07,
+          "orders_vs_fluent_reference": 6.142882243338892,
+          "ratio_vs_iteration_zero": 7.196440792535076e-07
+        },
+        "rhou": {
+          "initial": 230.5091649515982,
+          "fluent_reference": 311.5899703085303,
+          "final": 0.0017614574190299016,
+          "ratio_vs_fluent_reference": 5.6531261814548805e-06,
+          "orders_vs_fluent_reference": 5.247711320696261,
+          "ratio_vs_iteration_zero": 7.641593857666217e-06
+        },
+        "rhov": {
+          "initial": 6.244553320855617,
+          "fluent_reference": 138.98344306604113,
+          "final": 0.0016299497247407038,
+          "ratio_vs_fluent_reference": 1.1727653947716609e-05,
+          "orders_vs_fluent_reference": 4.93078885740404,
+          "ratio_vs_iteration_zero": 0.00026101942620891433
+        },
+        "rhow": {
+          "initial": 35.2822319955588,
+          "fluent_reference": 184.09625172786966,
+          "final": 0.0016042471419896191,
+          "ratio_vs_fluent_reference": 8.714176018971916e-06,
+          "orders_vs_fluent_reference": 5.059773671931117,
+          "ratio_vs_iteration_zero": 4.546898116285715e-05
+        },
+        "rhoE": {
+          "initial": 4257.578090416882,
+          "fluent_reference": 4257.578090416882,
+          "final": 0.003060158332245943,
+          "ratio_vs_fluent_reference": 7.187556557409629e-07,
+          "orders_vs_fluent_reference": 6.143418724914588,
+          "ratio_vs_iteration_zero": 7.187556557409629e-07
+        },
+        "nuturb": {
+          "initial": 0.0013756492070894479,
+          "fluent_reference": 0.0013756492070894479,
+          "final": 7.182795906519019e-09,
+          "ratio_vs_fluent_reference": 5.221386287654056e-06,
+          "orders_vs_fluent_reference": 5.282214175705059,
+          "ratio_vs_iteration_zero": 5.221386287654056e-06
+        },
+        "totalRes": {
+          "initial": 4673556.637868174,
+          "fluent_reference": 4673556.637868174,
+          "final": 4.529862459381854,
+          "ratio_vs_fluent_reference": 9.692537847253167e-07,
+          "orders_vs_fluent_reference": 6.013562494491904,
+          "ratio_vs_iteration_zero": 9.692537847253167e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g36/gci_C_a-2",
+      "iterations": 135,
+      "equations": {
+        "rho": {
+          "initial": 876.026613515936,
+          "fluent_reference": 876.026613515936,
+          "final": 0.000640151663920969,
+          "ratio_vs_fluent_reference": 7.307445390862248e-07,
+          "orders_vs_fluent_reference": 6.136234421476623,
+          "ratio_vs_iteration_zero": 7.307445390862248e-07
+        },
+        "rhou": {
+          "initial": 143.1112623375973,
+          "fluent_reference": 221.62649850183854,
+          "final": 0.0017986281717549248,
+          "ratio_vs_fluent_reference": 8.115582675868536e-06,
+          "orders_vs_fluent_reference": 5.090680293603617,
+          "ratio_vs_iteration_zero": 1.2568040714447673e-05
+        },
+        "rhov": {
+          "initial": 1.856887703480824,
+          "fluent_reference": 59.92845264534243,
+          "final": 0.0009954972963454704,
+          "ratio_vs_fluent_reference": 1.6611430003655188e-05,
+          "orders_vs_fluent_reference": 4.779592979471279,
+          "ratio_vs_iteration_zero": 0.0005361106622007155
+        },
+        "rhow": {
+          "initial": 7.700699379100058,
+          "fluent_reference": 120.7863663815608,
+          "final": 0.001098909717010447,
+          "ratio_vs_fluent_reference": 9.097961549228342e-06,
+          "orders_vs_fluent_reference": 5.041055902963664,
+          "ratio_vs_iteration_zero": 0.0001427025862083284
+        },
+        "rhoE": {
+          "initial": 3070.388012560662,
+          "fluent_reference": 3070.388012560662,
+          "final": 0.0017665621093953406,
+          "ratio_vs_fluent_reference": 5.753546790075082e-07,
+          "orders_vs_fluent_reference": 6.240064350704539,
+          "ratio_vs_iteration_zero": 5.753546790075082e-07
+        },
+        "nuturb": {
+          "initial": 0.0006441887175172097,
+          "fluent_reference": 0.0006441887175172097,
+          "final": 1.0183820736143281e-07,
+          "ratio_vs_fluent_reference": 0.00015808753645039147,
+          "orders_vs_fluent_reference": 3.801102368297947,
+          "ratio_vs_iteration_zero": 0.00015808753645039147
+        },
+        "totalRes": {
+          "initial": 2407215.1314555653,
+          "fluent_reference": 2407215.1314555653,
+          "final": 2.381870692408047,
+          "ratio_vs_fluent_reference": 9.89471469036424e-07,
+          "orders_vs_fluent_reference": 6.004596723962572,
+          "ratio_vs_iteration_zero": 9.89471469036424e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g36/gci_C_a0",
+      "iterations": 137,
+      "equations": {
+        "rho": {
+          "initial": 871.2770975956159,
+          "fluent_reference": 871.2770975956159,
+          "final": 0.00042419036811708577,
+          "ratio_vs_fluent_reference": 4.868604595342691e-07,
+          "orders_vs_fluent_reference": 6.312595495331662,
+          "ratio_vs_iteration_zero": 4.868604595342691e-07
+        },
+        "rhou": {
+          "initial": 142.99120629107068,
+          "fluent_reference": 221.0713033472674,
+          "final": 0.002521914685228193,
+          "ratio_vs_fluent_reference": 1.1407698091265475e-05,
+          "orders_vs_fluent_reference": 4.942801981096037,
+          "ratio_vs_iteration_zero": 1.7636851598374675e-05
+        },
+        "rhov": {
+          "initial": 1.8559995801909663,
+          "fluent_reference": 59.803143130361754,
+          "final": 0.0008433621772551248,
+          "ratio_vs_fluent_reference": 1.4102305215241339e-05,
+          "orders_vs_fluent_reference": 4.850709890151057,
+          "ratio_vs_iteration_zero": 0.00045439782759452464
+        },
+        "rhow": {
+          "initial": 5.7417401834566,
+          "fluent_reference": 119.69368773482736,
+          "final": 0.000634215367679014,
+          "ratio_vs_fluent_reference": 5.298653418416449e-06,
+          "orders_vs_fluent_reference": 5.275834486485259,
+          "ratio_vs_iteration_zero": 0.000110456995164349
+        },
+        "rhoE": {
+          "initial": 3053.7413887812504,
+          "fluent_reference": 3053.7413887812504,
+          "final": 0.0010824957822093313,
+          "ratio_vs_fluent_reference": 3.5448181243708916e-07,
+          "orders_vs_fluent_reference": 6.450406042457898,
+          "ratio_vs_iteration_zero": 3.5448181243708916e-07
+        },
+        "nuturb": {
+          "initial": 0.0006439798942587493,
+          "fluent_reference": 0.0006439798942587493,
+          "final": 7.034353948356646e-08,
+          "ratio_vs_fluent_reference": 0.00010923250882628119,
+          "orders_vs_fluent_reference": 3.961648091459482,
+          "ratio_vs_iteration_zero": 0.00010923250882628119
+        },
+        "totalRes": {
+          "initial": 2394183.1915905057,
+          "fluent_reference": 2394183.1915905057,
+          "final": 2.299322031313204,
+          "ratio_vs_fluent_reference": 9.60378487072126e-07,
+          "orders_vs_fluent_reference": 6.017557576905834,
+          "ratio_vs_iteration_zero": 9.60378487072126e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g36/gci_C_a4",
+      "iterations": 116,
+      "equations": {
+        "rho": {
+          "initial": 869.0414702507674,
+          "fluent_reference": 869.0414702507674,
+          "final": 0.0006211365452435103,
+          "ratio_vs_fluent_reference": 7.147375200222349e-07,
+          "orders_vs_fluent_reference": 6.145853419086863,
+          "ratio_vs_iteration_zero": 7.147375200222349e-07
+        },
+        "rhou": {
+          "initial": 142.7846564881763,
+          "fluent_reference": 219.4310856848847,
+          "final": 0.001890137961760089,
+          "ratio_vs_fluent_reference": 8.613811283212775e-06,
+          "orders_vs_fluent_reference": 5.064804647265447,
+          "ratio_vs_iteration_zero": 1.3237682593133579e-05
+        },
+        "rhov": {
+          "initial": 1.8536421978822843,
+          "fluent_reference": 59.50321173442366,
+          "final": 0.0015582620555261765,
+          "ratio_vs_fluent_reference": 2.6187864656466843e-05,
+          "orders_vs_fluent_reference": 4.581899912255215,
+          "ratio_vs_iteration_zero": 0.0008406487817910228
+        },
+        "rhow": {
+          "initial": 11.8621767379545,
+          "fluent_reference": 122.43985978041376,
+          "final": 0.000988390728255671,
+          "ratio_vs_fluent_reference": 8.072458838390309e-06,
+          "orders_vs_fluent_reference": 5.0929941607803615,
+          "ratio_vs_iteration_zero": 8.332287994775806e-05
+        },
+        "rhoE": {
+          "initial": 3045.90568980512,
+          "fluent_reference": 3045.90568980512,
+          "final": 0.00147803177907124,
+          "ratio_vs_fluent_reference": 4.852519840053898e-07,
+          "orders_vs_fluent_reference": 6.314032680275856,
+          "ratio_vs_iteration_zero": 4.852519840053898e-07
+        },
+        "nuturb": {
+          "initial": 0.000644732787778014,
+          "fluent_reference": 0.000644732787778014,
+          "final": 1.1945024808285896e-08,
+          "ratio_vs_fluent_reference": 1.8527093758412442e-05,
+          "orders_vs_fluent_reference": 4.732192700685082,
+          "ratio_vs_iteration_zero": 1.8527093758412442e-05
+        },
+        "totalRes": {
+          "initial": 2388058.16829499,
+          "fluent_reference": 2388058.16829499,
+          "final": 2.3290158344632794,
+          "ratio_vs_fluent_reference": 9.752760068345132e-07,
+          "orders_vs_fluent_reference": 6.010872459909657,
+          "ratio_vs_iteration_zero": 9.752760068345132e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g36/gci_C_a8",
+      "iterations": 128,
+      "equations": {
+        "rho": {
+          "initial": 876.5350615252538,
+          "fluent_reference": 876.5350615252538,
+          "final": 0.0007175346432619566,
+          "ratio_vs_fluent_reference": 8.186034703658957e-07,
+          "orders_vs_fluent_reference": 6.086926418550309,
+          "ratio_vs_iteration_zero": 8.186034703658957e-07
+        },
+        "rhou": {
+          "initial": 142.6253456258277,
+          "fluent_reference": 217.09296040403336,
+          "final": 0.0015526937442601372,
+          "ratio_vs_fluent_reference": 7.152206784459556e-06,
+          "orders_vs_fluent_reference": 5.145559937717244,
+          "ratio_vs_iteration_zero": 1.088652046694121e-05
+        },
+        "rhov": {
+          "initial": 1.8505472841454336,
+          "fluent_reference": 59.1448558341877,
+          "final": 0.0016632228670779231,
+          "ratio_vs_fluent_reference": 2.8121175436470077e-05,
+          "orders_vs_fluent_reference": 4.550966530206135,
+          "ratio_vs_iteration_zero": 0.0008987735041020499
+        },
+        "rhow": {
+          "initial": 21.540995558359487,
+          "fluent_reference": 131.27352643150553,
+          "final": 0.0012575155851018277,
+          "ratio_vs_fluent_reference": 9.579354034935296e-06,
+          "orders_vs_fluent_reference": 5.018663775735829,
+          "ratio_vs_iteration_zero": 5.837778396522715e-05
+        },
+        "rhoE": {
+          "initial": 3072.1699868933933,
+          "fluent_reference": 3072.1699868933933,
+          "final": 0.0016416014697477202,
+          "ratio_vs_fluent_reference": 5.343459107898267e-07,
+          "orders_vs_fluent_reference": 6.27217750980345,
+          "ratio_vs_iteration_zero": 5.343459107898267e-07
+        },
+        "nuturb": {
+          "initial": 0.0006474251871541558,
+          "fluent_reference": 0.0006474251871541558,
+          "final": 1.1361407800779056e-08,
+          "ratio_vs_fluent_reference": 1.7548603338587504e-05,
+          "orders_vs_fluent_reference": 4.755757442530435,
+          "ratio_vs_iteration_zero": 1.7548603338587504e-05
+        },
+        "totalRes": {
+          "initial": 2408640.7618499408,
+          "fluent_reference": 2408640.7618499408,
+          "final": 2.379465833239109,
+          "ratio_vs_fluent_reference": 9.87887388990119e-07,
+          "orders_vs_fluent_reference": 6.005292558577905,
+          "ratio_vs_iteration_zero": 9.87887388990119e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g47/gci_C_a-2",
+      "iterations": 138,
+      "equations": {
+        "rho": {
+          "initial": 1072.2504842890285,
+          "fluent_reference": 1072.2504842890285,
+          "final": 0.0005732592477030585,
+          "ratio_vs_fluent_reference": 5.346318384581253e-07,
+          "orders_vs_fluent_reference": 6.271945181653281,
+          "ratio_vs_iteration_zero": 5.346318384581253e-07
+        },
+        "rhou": {
+          "initial": 183.20681349972173,
+          "fluent_reference": 273.5499386448181,
+          "final": 0.002666227231512488,
+          "ratio_vs_fluent_reference": 9.74676596427376e-06,
+          "orders_vs_fluent_reference": 5.011139461928044,
+          "ratio_vs_iteration_zero": 1.4553100840414638e-05
+        },
+        "rhov": {
+          "initial": 2.489805340525953,
+          "fluent_reference": 68.79344992131936,
+          "final": 0.0013940709556533387,
+          "ratio_vs_fluent_reference": 2.0264588521839932e-05,
+          "orders_vs_fluent_reference": 4.69326221030416,
+          "ratio_vs_iteration_zero": 0.0005599116256047758
+        },
+        "rhow": {
+          "initial": 10.65656107778958,
+          "fluent_reference": 147.3670885378687,
+          "final": 0.001012113967514635,
+          "ratio_vs_fluent_reference": 6.867978308837618e-06,
+          "orders_vs_fluent_reference": 5.163171085142892,
+          "ratio_vs_iteration_zero": 9.497566429981662e-05
+        },
+        "rhoE": {
+          "initial": 3758.1341394596666,
+          "fluent_reference": 3758.1341394596666,
+          "final": 0.0017146909594447114,
+          "ratio_vs_fluent_reference": 4.562612444938553e-07,
+          "orders_vs_fluent_reference": 6.340786419277481,
+          "ratio_vs_iteration_zero": 4.562612444938553e-07
+        },
+        "nuturb": {
+          "initial": 0.0009373492717479137,
+          "fluent_reference": 0.0009373492717479137,
+          "final": 9.659413688432875e-08,
+          "ratio_vs_fluent_reference": 0.00010305031410992157,
+          "orders_vs_fluent_reference": 3.9869506801002195,
+          "ratio_vs_iteration_zero": 0.00010305031410992157
+        },
+        "totalRes": {
+          "initial": 2946697.2773888786,
+          "fluent_reference": 2946697.2773888786,
+          "final": 2.8459644803883206,
+          "ratio_vs_fluent_reference": 9.65815016773688e-07,
+          "orders_vs_fluent_reference": 6.015106046345853,
+          "ratio_vs_iteration_zero": 9.65815016773688e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g47/gci_C_a0",
+      "iterations": 136,
+      "equations": {
+        "rho": {
+          "initial": 1063.6285065539994,
+          "fluent_reference": 1063.6285065539994,
+          "final": 0.0006938923326201186,
+          "ratio_vs_fluent_reference": 6.523822258847012e-07,
+          "orders_vs_fluent_reference": 6.185497879798145,
+          "ratio_vs_iteration_zero": 6.523822258847012e-07
+        },
+        "rhou": {
+          "initial": 182.85890713969425,
+          "fluent_reference": 272.7663890745243,
+          "final": 0.002215554338462174,
+          "ratio_vs_fluent_reference": 8.122534253503087e-06,
+          "orders_vs_fluent_reference": 5.090308448517789,
+          "ratio_vs_iteration_zero": 1.211619588631584e-05
+        },
+        "rhov": {
+          "initial": 2.4990101620507033,
+          "fluent_reference": 68.67829226823635,
+          "final": 0.001203051502643015,
+          "ratio_vs_fluent_reference": 1.75172017665242e-05,
+          "orders_vs_fluent_reference": 4.7565352677122466,
+          "ratio_vs_iteration_zero": 0.00048141120869063753
+        },
+        "rhow": {
+          "initial": 8.165615777919875,
+          "fluent_reference": 144.6053097000576,
+          "final": 0.0012050226472438577,
+          "ratio_vs_fluent_reference": 8.333183959450264e-06,
+          "orders_vs_fluent_reference": 5.0791890307877745,
+          "ratio_vs_iteration_zero": 0.00014757278324340013
+        },
+        "rhoE": {
+          "initial": 3727.914903796096,
+          "fluent_reference": 3727.914903796096,
+          "final": 0.002050668835130334,
+          "ratio_vs_fluent_reference": 5.500846687895585e-07,
+          "orders_vs_fluent_reference": 6.259570458945671,
+          "ratio_vs_iteration_zero": 5.500846687895585e-07
+        },
+        "nuturb": {
+          "initial": 0.0009367472018304867,
+          "fluent_reference": 0.0009367472018304867,
+          "final": 1.3487119396783179e-07,
+          "ratio_vs_fluent_reference": 0.00014397821920821496,
+          "orders_vs_fluent_reference": 3.841703202301554,
+          "ratio_vs_iteration_zero": 0.00014397821920821496
+        },
+        "totalRes": {
+          "initial": 2923038.400505425,
+          "fluent_reference": 2923038.400505425,
+          "final": 2.8494938852475498,
+          "ratio_vs_fluent_reference": 9.74839702672001e-07,
+          "orders_vs_fluent_reference": 6.011066791448497,
+          "ratio_vs_iteration_zero": 9.74839702672001e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g47/gci_C_a4",
+      "iterations": 132,
+      "equations": {
+        "rho": {
+          "initial": 1055.0440004553695,
+          "fluent_reference": 1055.0440004553695,
+          "final": 0.0004341455820907687,
+          "ratio_vs_fluent_reference": 4.114952380217188e-07,
+          "orders_vs_fluent_reference": 6.385635186242372,
+          "ratio_vs_iteration_zero": 4.114952380217188e-07
+        },
+        "rhou": {
+          "initial": 182.13530947926938,
+          "fluent_reference": 270.5414824460579,
+          "final": 0.003305539013082836,
+          "ratio_vs_fluent_reference": 1.2218233533712942e-05,
+          "orders_vs_fluent_reference": 4.912991578219103,
+          "ratio_vs_iteration_zero": 1.814880937986971e-05
+        },
+        "rhov": {
+          "initial": 2.520072820199693,
+          "fluent_reference": 68.42767154734162,
+          "final": 0.0007863345008430961,
+          "ratio_vs_fluent_reference": 1.1491469504395913e-05,
+          "orders_vs_fluent_reference": 4.939624431116513,
+          "ratio_vs_iteration_zero": 0.00031202848367722414
+        },
+        "rhow": {
+          "initial": 15.46762829066576,
+          "fluent_reference": 145.13750084668632,
+          "final": 0.0008733358263570637,
+          "ratio_vs_fluent_reference": 6.0172996039086964e-06,
+          "orders_vs_fluent_reference": 5.220598364262877,
+          "ratio_vs_iteration_zero": 5.64621679513785e-05
+        },
+        "rhoE": {
+          "initial": 3697.8269826664045,
+          "fluent_reference": 3697.8269826664045,
+          "final": 0.0011876370316853818,
+          "ratio_vs_fluent_reference": 3.211716062575238e-07,
+          "orders_vs_fluent_reference": 6.493262856266161,
+          "ratio_vs_iteration_zero": 3.211716062575238e-07
+        },
+        "nuturb": {
+          "initial": 0.0009367027584060417,
+          "fluent_reference": 0.0009367027584060417,
+          "final": 2.1938824046860403e-08,
+          "ratio_vs_fluent_reference": 2.3421329605341425e-05,
+          "orders_vs_fluent_reference": 4.630388454102587,
+          "ratio_vs_iteration_zero": 2.3421329605341425e-05
+        },
+        "totalRes": {
+          "initial": 2899490.516763978,
+          "fluent_reference": 2899490.516763978,
+          "final": 2.813520774856229,
+          "ratio_vs_fluent_reference": 9.70350052393447e-07,
+          "orders_vs_fluent_reference": 6.01307156635437,
+          "ratio_vs_iteration_zero": 9.70350052393447e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g47/gci_C_a8",
+      "iterations": 122,
+      "equations": {
+        "rho": {
+          "initial": 1058.3157303883354,
+          "fluent_reference": 1058.3157303883354,
+          "final": 0.0007501234709821801,
+          "ratio_vs_fluent_reference": 7.087898719098996e-07,
+          "orders_vs_fluent_reference": 6.149482496827932,
+          "ratio_vs_iteration_zero": 7.087898719098996e-07
+        },
+        "rhou": {
+          "initial": 181.3997779077215,
+          "fluent_reference": 267.45148003938965,
+          "final": 0.0017808756851298573,
+          "ratio_vs_fluent_reference": 6.658686969567616e-06,
+          "orders_vs_fluent_reference": 5.176611401173667,
+          "ratio_vs_iteration_zero": 9.817408299340878e-06
+        },
+        "rhov": {
+          "initial": 2.544253875761268,
+          "fluent_reference": 68.15715698959477,
+          "final": 0.0016352033979445534,
+          "ratio_vs_fluent_reference": 2.3991660893282156e-05,
+          "orders_vs_fluent_reference": 4.61993968567872,
+          "ratio_vs_iteration_zero": 0.0006427044932594563
+        },
+        "rhow": {
+          "initial": 27.657759985261634,
+          "fluent_reference": 153.51761092309476,
+          "final": 0.0014841450449321065,
+          "ratio_vs_fluent_reference": 9.66758820703375e-06,
+          "orders_vs_fluent_reference": 5.014681856735811,
+          "ratio_vs_iteration_zero": 5.366107181937305e-05
+        },
+        "rhoE": {
+          "initial": 3709.2940475581845,
+          "fluent_reference": 3709.2940475581845,
+          "final": 0.0022665505588332305,
+          "ratio_vs_fluent_reference": 6.110463419111497e-07,
+          "orders_vs_fluent_reference": 6.213925851503613,
+          "ratio_vs_iteration_zero": 6.110463419111497e-07
+        },
+        "nuturb": {
+          "initial": 0.0009387481979611336,
+          "fluent_reference": 0.0009387481979611336,
+          "final": 1.2618596662117318e-08,
+          "ratio_vs_fluent_reference": 1.3441939691094626e-05,
+          "orders_vs_fluent_reference": 4.871538057446143,
+          "ratio_vs_iteration_zero": 1.3441939691094626e-05
+        },
+        "totalRes": {
+          "initial": 2908486.862631272,
+          "fluent_reference": 2908486.862631272,
+          "final": 2.79422363695772,
+          "ratio_vs_fluent_reference": 9.607138587622228e-07,
+          "orders_vs_fluent_reference": 6.017405944345129,
+          "ratio_vs_iteration_zero": 9.607138587622228e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g47/gci_M_a-2",
+      "iterations": 163,
+      "equations": {
+        "rho": {
+          "initial": 1295.0846921844413,
+          "fluent_reference": 1295.0846921844413,
+          "final": 0.0006048983513718037,
+          "ratio_vs_fluent_reference": 4.6707242778965396e-07,
+          "orders_vs_fluent_reference": 6.330615769218829,
+          "ratio_vs_iteration_zero": 4.6707242778965396e-07
+        },
+        "rhou": {
+          "initial": 242.7056170261719,
+          "fluent_reference": 359.09427964844997,
+          "final": 0.002152323214190016,
+          "ratio_vs_fluent_reference": 5.9937552229935846e-06,
+          "orders_vs_fluent_reference": 5.222300997038328,
+          "ratio_vs_iteration_zero": 8.86804038803075e-06
+        },
+        "rhov": {
+          "initial": 3.9783885794274867,
+          "fluent_reference": 88.39629830904376,
+          "final": 0.0016251424941152617,
+          "ratio_vs_fluent_reference": 1.8384734714043953e-05,
+          "orders_vs_fluent_reference": 4.7355426324830745,
+          "ratio_vs_iteration_zero": 0.00040849265014457917
+        },
+        "rhow": {
+          "initial": 15.223381230680628,
+          "fluent_reference": 194.5398359680194,
+          "final": 0.0011646012774875428,
+          "ratio_vs_fluent_reference": 5.98644114040989e-06,
+          "orders_vs_fluent_reference": 5.222831283188001,
+          "ratio_vs_iteration_zero": 7.650082855052263e-05
+        },
+        "rhoE": {
+          "initial": 4539.145826062563,
+          "fluent_reference": 4539.145826062563,
+          "final": 0.00201885380922685,
+          "ratio_vs_fluent_reference": 4.447651356859105e-07,
+          "orders_vs_fluent_reference": 6.351869263630723,
+          "ratio_vs_iteration_zero": 4.447651356859105e-07
+        },
+        "nuturb": {
+          "initial": 0.0014429926879987911,
+          "fluent_reference": 0.0014429926879987911,
+          "final": 2.9718196460092524e-07,
+          "ratio_vs_fluent_reference": 0.0002059483510017441,
+          "orders_vs_fluent_reference": 3.6862416810258947,
+          "ratio_vs_iteration_zero": 0.0002059483510017441
+        },
+        "totalRes": {
+          "initial": 4982332.467721966,
+          "fluent_reference": 4982332.467721966,
+          "final": 4.933341244036395,
+          "ratio_vs_fluent_reference": 9.901670103304104e-07,
+          "orders_vs_fluent_reference": 6.004291547273502,
+          "ratio_vs_iteration_zero": 9.901670103304104e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g47/gci_M_a0",
+      "iterations": 148,
+      "equations": {
+        "rho": {
+          "initial": 1284.7450910762734,
+          "fluent_reference": 1284.7450910762734,
+          "final": 0.0005732594059688242,
+          "ratio_vs_fluent_reference": 4.462047840856787e-07,
+          "orders_vs_fluent_reference": 6.350465777640543,
+          "ratio_vs_iteration_zero": 4.462047840856787e-07
+        },
+        "rhou": {
+          "initial": 242.37161965369515,
+          "fluent_reference": 357.8988272725541,
+          "final": 0.0032438621577267515,
+          "ratio_vs_fluent_reference": 9.06362891001155e-06,
+          "orders_vs_fluent_reference": 5.042697883995657,
+          "ratio_vs_iteration_zero": 1.3383836615696339e-05
+        },
+        "rhov": {
+          "initial": 3.990024887565618,
+          "fluent_reference": 88.26222870820509,
+          "final": 0.0017896618819726305,
+          "ratio_vs_fluent_reference": 2.0276645040193267e-05,
+          "orders_vs_fluent_reference": 4.693003901462217,
+          "ratio_vs_iteration_zero": 0.0004485340148002269
+        },
+        "rhow": {
+          "initial": 12.070541243361644,
+          "fluent_reference": 190.78431862451941,
+          "final": 0.0012190635272491422,
+          "ratio_vs_fluent_reference": 6.389746998275933e-06,
+          "orders_vs_fluent_reference": 5.194516337370229,
+          "ratio_vs_iteration_zero": 0.0001009949349139238
+        },
+        "rhoE": {
+          "initial": 4502.906460598033,
+          "fluent_reference": 4502.906460598033,
+          "final": 0.0016456884767522845,
+          "ratio_vs_fluent_reference": 3.6547249896319633e-07,
+          "orders_vs_fluent_reference": 6.4371452972229,
+          "ratio_vs_iteration_zero": 3.6547249896319633e-07
+        },
+        "nuturb": {
+          "initial": 0.0014422530086575119,
+          "fluent_reference": 0.0014422530086575119,
+          "final": 1.8247981038909634e-07,
+          "ratio_vs_fluent_reference": 0.00012652413223873492,
+          "orders_vs_fluent_reference": 3.8978266326022326,
+          "ratio_vs_iteration_zero": 0.00012652413223873492
+        },
+        "totalRes": {
+          "initial": 4942633.042201634,
+          "fluent_reference": 4942633.042201634,
+          "final": 4.89662540822683,
+          "ratio_vs_fluent_reference": 9.906916751492621e-07,
+          "orders_vs_fluent_reference": 6.004061486398717,
+          "ratio_vs_iteration_zero": 9.906916751492621e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g47/gci_M_a4",
+      "iterations": 132,
+      "equations": {
+        "rho": {
+          "initial": 1274.2860513229296,
+          "fluent_reference": 1274.2860513229296,
+          "final": 0.0007025106816151457,
+          "ratio_vs_fluent_reference": 5.512974742883028e-07,
+          "orders_vs_fluent_reference": 6.258613997190903,
+          "ratio_vs_iteration_zero": 5.512974742883028e-07
+        },
+        "rhou": {
+          "initial": 241.51748902565822,
+          "fluent_reference": 354.635349352581,
+          "final": 0.0031147335105423954,
+          "ratio_vs_fluent_reference": 8.782918894657918e-06,
+          "orders_vs_fluent_reference": 5.056361127695913,
+          "ratio_vs_iteration_zero": 1.289651330472177e-05
+        },
+        "rhov": {
+          "initial": 4.015224896595716,
+          "fluent_reference": 87.94856609584214,
+          "final": 0.0018293923430404925,
+          "ratio_vs_fluent_reference": 2.0800706870500973e-05,
+          "orders_vs_fluent_reference": 4.681921906155425,
+          "ratio_vs_iteration_zero": 0.0004556139170663969
+        },
+        "rhow": {
+          "initial": 21.219761652808955,
+          "fluent_reference": 190.62066050043973,
+          "final": 0.001585074548115111,
+          "ratio_vs_fluent_reference": 8.31533446560193e-06,
+          "orders_vs_fluent_reference": 5.080120277575676,
+          "ratio_vs_iteration_zero": 7.469803733187962e-05
+        },
+        "rhoE": {
+          "initial": 4466.248436883892,
+          "fluent_reference": 4466.248436883892,
+          "final": 0.002085768202754805,
+          "ratio_vs_fluent_reference": 4.670067579603898e-07,
+          "orders_vs_fluent_reference": 6.3306768348007605,
+          "ratio_vs_iteration_zero": 4.670067579603898e-07
+        },
+        "nuturb": {
+          "initial": 0.0014421080235318764,
+          "fluent_reference": 0.0014421080235318764,
+          "final": 1.0702504186481459e-07,
+          "ratio_vs_fluent_reference": 7.42143030330688e-05,
+          "orders_vs_fluent_reference": 4.129512386773309,
+          "ratio_vs_iteration_zero": 7.42143030330688e-05
+        },
+        "totalRes": {
+          "initial": 4902491.554386774,
+          "fluent_reference": 4902491.554386774,
+          "final": 4.89340619437611,
+          "ratio_vs_fluent_reference": 9.981467872183206e-07,
+          "orders_vs_fluent_reference": 6.0008055867775045,
+          "ratio_vs_iteration_zero": 9.981467872183206e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g47/gci_M_a8",
+      "iterations": 135,
+      "equations": {
+        "rho": {
+          "initial": 1277.8290327655573,
+          "fluent_reference": 1277.8290327655573,
+          "final": 0.0010832671847620999,
+          "ratio_vs_fluent_reference": 8.477403134421085e-07,
+          "orders_vs_fluent_reference": 6.071737163912218,
+          "ratio_vs_iteration_zero": 8.477403134421085e-07
+        },
+        "rhou": {
+          "initial": 240.44666215326612,
+          "fluent_reference": 350.228972180791,
+          "final": 0.002069946466848454,
+          "ratio_vs_fluent_reference": 5.910266229430988e-06,
+          "orders_vs_fluent_reference": 5.228392955773796,
+          "ratio_vs_iteration_zero": 8.608755257035024e-06
+        },
+        "rhov": {
+          "initial": 4.0425442014984,
+          "fluent_reference": 87.58303705385856,
+          "final": 0.0016940879892278664,
+          "ratio_vs_fluent_reference": 1.934264951540901e-05,
+          "orders_vs_fluent_reference": 4.713484037434502,
+          "ratio_vs_iteration_zero": 0.0004190648029525416
+        },
+        "rhow": {
+          "initial": 37.2332773983912,
+          "fluent_reference": 200.10982028135297,
+          "final": 0.0014594255558598643,
+          "ratio_vs_fluent_reference": 7.29312311513709e-06,
+          "orders_vs_fluent_reference": 5.1370864550543915,
+          "ratio_vs_iteration_zero": 3.919680613243367e-05
+        },
+        "rhoE": {
+          "initial": 4478.666182029772,
+          "fluent_reference": 4478.666182029772,
+          "final": 0.003319336397612539,
+          "ratio_vs_fluent_reference": 7.411439617739462e-07,
+          "orders_vs_fluent_reference": 6.130097425311582,
+          "ratio_vs_iteration_zero": 7.411439617739462e-07
+        },
+        "nuturb": {
+          "initial": 0.0014444546478803372,
+          "fluent_reference": 0.0014444546478803372,
+          "final": 1.5807153189071415e-08,
+          "ratio_vs_fluent_reference": 1.0943336443458158e-05,
+          "orders_vs_fluent_reference": 4.960850248562678,
+          "ratio_vs_iteration_zero": 1.0943336443458158e-05
+        },
+        "totalRes": {
+          "initial": 4916132.6416243045,
+          "fluent_reference": 4916132.6416243045,
+          "final": 4.887827875159078,
+          "ratio_vs_fluent_reference": 9.942424729907461e-07,
+          "orders_vs_fluent_reference": 6.002507688198113,
+          "ratio_vs_iteration_zero": 9.942424729907461e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g65/gci_C_a-2",
+      "iterations": 154,
+      "equations": {
+        "rho": {
+          "initial": 910.2717470906305,
+          "fluent_reference": 910.2717470906305,
+          "final": 0.0006282387730738061,
+          "ratio_vs_fluent_reference": 6.901661784865393e-07,
+          "orders_vs_fluent_reference": 6.1610463270737466,
+          "ratio_vs_iteration_zero": 6.901661784865393e-07
+        },
+        "rhou": {
+          "initial": 157.12568837194237,
+          "fluent_reference": 224.20124080520844,
+          "final": 0.0012303115157995827,
+          "ratio_vs_fluent_reference": 5.4875321446972175e-06,
+          "orders_vs_fluent_reference": 5.260622922745497,
+          "ratio_vs_iteration_zero": 7.830110585655687e-06
+        },
+        "rhov": {
+          "initial": 3.2335095825419513,
+          "fluent_reference": 90.79110618045333,
+          "final": 0.0008015963539004879,
+          "ratio_vs_fluent_reference": 8.829018475744333e-06,
+          "orders_vs_fluent_reference": 5.054087574368243,
+          "ratio_vs_iteration_zero": 0.0002479028849113015
+        },
+        "rhow": {
+          "initial": 8.648178920187503,
+          "fluent_reference": 129.77015700423186,
+          "final": 0.0009081158815938143,
+          "ratio_vs_fluent_reference": 6.997879193166116e-06,
+          "orders_vs_fluent_reference": 5.155033559165801,
+          "ratio_vs_iteration_zero": 0.00010500660196495163
+        },
+        "rhoE": {
+          "initial": 3190.4140030871854,
+          "fluent_reference": 3190.4140030871854,
+          "final": 0.0014340619265744536,
+          "ratio_vs_fluent_reference": 4.4949085767138433e-07,
+          "orders_vs_fluent_reference": 6.347279137085919,
+          "ratio_vs_iteration_zero": 4.4949085767138433e-07
+        },
+        "nuturb": {
+          "initial": 0.000757770895737948,
+          "fluent_reference": 0.000757770895737948,
+          "final": 2.2226497085705346e-07,
+          "ratio_vs_fluent_reference": 0.00029331420896101167,
+          "orders_vs_fluent_reference": 3.532666898069938,
+          "ratio_vs_iteration_zero": 0.00029331420896101167
+        },
+        "totalRes": {
+          "initial": 2514930.199351521,
+          "fluent_reference": 2514930.199351521,
+          "final": 2.4385562408617742,
+          "ratio_vs_fluent_reference": 9.696317780471838e-07,
+          "orders_vs_fluent_reference": 6.013393159674919,
+          "ratio_vs_iteration_zero": 9.696317780471838e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g65/gci_C_a0",
+      "iterations": 147,
+      "equations": {
+        "rho": {
+          "initial": 905.8600310007673,
+          "fluent_reference": 905.8600310007673,
+          "final": 0.0005605356109789316,
+          "ratio_vs_fluent_reference": 6.187883246815388e-07,
+          "orders_vs_fluent_reference": 6.208457889177934,
+          "ratio_vs_iteration_zero": 6.187883246815388e-07
+        },
+        "rhou": {
+          "initial": 157.07533384308132,
+          "fluent_reference": 223.5355189441166,
+          "final": 0.0026048932759695463,
+          "ratio_vs_fluent_reference": 1.165315153615817e-05,
+          "orders_vs_fluent_reference": 4.93355660599693,
+          "ratio_vs_iteration_zero": 1.6583719494569667e-05
+        },
+        "rhov": {
+          "initial": 3.25587515142953,
+          "fluent_reference": 90.88058377146338,
+          "final": 0.0008673835013777672,
+          "ratio_vs_fluent_reference": 9.544211374774716e-06,
+          "orders_vs_fluent_reference": 5.020259950951112,
+          "ratio_vs_iteration_zero": 0.0002664056393553458
+        },
+        "rhow": {
+          "initial": 6.4144047243571025,
+          "fluent_reference": 128.6500843595854,
+          "final": 0.000677497545074247,
+          "ratio_vs_fluent_reference": 5.266203659692885e-06,
+          "orders_vs_fluent_reference": 5.278502349451275,
+          "ratio_vs_iteration_zero": 0.00010562126560265507
+        },
+        "rhoE": {
+          "initial": 3174.9513313850725,
+          "fluent_reference": 3174.9513313850725,
+          "final": 0.0011797719675853936,
+          "ratio_vs_fluent_reference": 3.7158741802530814e-07,
+          "orders_vs_fluent_reference": 6.429938999669488,
+          "ratio_vs_iteration_zero": 3.7158741802530814e-07
+        },
+        "nuturb": {
+          "initial": 0.0007576326835102577,
+          "fluent_reference": 0.0007576326835102577,
+          "final": 8.930012283369028e-08,
+          "ratio_vs_fluent_reference": 0.00011786730532788747,
+          "orders_vs_fluent_reference": 3.928606645157819,
+          "ratio_vs_iteration_zero": 0.00011786730532788747
+        },
+        "totalRes": {
+          "initial": 2502763.181625286,
+          "fluent_reference": 2502763.181625286,
+          "final": 2.453562822865796,
+          "ratio_vs_fluent_reference": 9.803415844053055e-07,
+          "orders_vs_fluent_reference": 6.008622574945731,
+          "ratio_vs_iteration_zero": 9.803415844053055e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g65/gci_C_a4",
+      "iterations": 139,
+      "equations": {
+        "rho": {
+          "initial": 904.5007123844752,
+          "fluent_reference": 904.5007123844752,
+          "final": 0.0007438020028142461,
+          "ratio_vs_fluent_reference": 8.223343471487273e-07,
+          "orders_vs_fluent_reference": 6.084951569809383,
+          "ratio_vs_iteration_zero": 8.223343471487273e-07
+        },
+        "rhou": {
+          "initial": 156.92855464036518,
+          "fluent_reference": 221.70228990501764,
+          "final": 0.0013089519434181854,
+          "ratio_vs_fluent_reference": 5.904097535388428e-06,
+          "orders_vs_fluent_reference": 5.22884647660319,
+          "ratio_vs_iteration_zero": 8.341069261855654e-06
+        },
+        "rhov": {
+          "initial": 3.3029313557784357,
+          "fluent_reference": 90.91933168799925,
+          "final": 0.0015834184689525084,
+          "ratio_vs_fluent_reference": 1.74156413114232e-05,
+          "orders_vs_fluent_reference": 4.7590605285049605,
+          "ratio_vs_iteration_zero": 0.00047939793425689527
+        },
+        "rhow": {
+          "initial": 12.888297154797064,
+          "fluent_reference": 131.4632642886643,
+          "final": 0.000896468300077011,
+          "ratio_vs_fluent_reference": 6.8191544225508085e-06,
+          "orders_vs_fluent_reference": 5.166269474667211,
+          "ratio_vs_iteration_zero": 6.955676838528996e-05
+        },
+        "rhoE": {
+          "initial": 3170.187000345409,
+          "fluent_reference": 3170.187000345409,
+          "final": 0.0021130525462561326,
+          "ratio_vs_fluent_reference": 6.665387707494555e-07,
+          "orders_vs_fluent_reference": 6.176174583785261,
+          "ratio_vs_iteration_zero": 6.665387707494555e-07
+        },
+        "nuturb": {
+          "initial": 0.0007584235703514783,
+          "fluent_reference": 0.0007584235703514783,
+          "final": 1.1237005447679145e-08,
+          "ratio_vs_fluent_reference": 1.481626611692929e-05,
+          "orders_vs_fluent_reference": 4.829261230171049,
+          "ratio_vs_iteration_zero": 1.481626611692929e-05
+        },
+        "totalRes": {
+          "initial": 2499025.160602443,
+          "fluent_reference": 2499025.160602443,
+          "final": 2.400979052709866,
+          "ratio_vs_fluent_reference": 9.607662582040826e-07,
+          "orders_vs_fluent_reference": 6.017382257617112,
+          "ratio_vs_iteration_zero": 9.607662582040826e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g65/gci_C_a8",
+      "iterations": 161,
+      "equations": {
+        "rho": {
+          "initial": 913.0984306077378,
+          "fluent_reference": 913.0984306077378,
+          "final": 0.0008239859338172329,
+          "ratio_vs_fluent_reference": 9.024064725079052e-07,
+          "orders_vs_fluent_reference": 6.044597798373602,
+          "ratio_vs_iteration_zero": 9.024064725079052e-07
+        },
+        "rhou": {
+          "initial": 156.72113298972343,
+          "fluent_reference": 219.20861649151695,
+          "final": 0.0010481664711884569,
+          "ratio_vs_fluent_reference": 4.781593387908725e-06,
+          "orders_vs_fluent_reference": 5.320427357725809,
+          "ratio_vs_iteration_zero": 6.688099117157273e-06
+        },
+        "rhov": {
+          "initial": 3.3522242375438323,
+          "fluent_reference": 90.77388767446125,
+          "final": 0.0013087156101117478,
+          "ratio_vs_fluent_reference": 1.4417313653075454e-05,
+          "orders_vs_fluent_reference": 4.841115653231721,
+          "ratio_vs_iteration_zero": 0.0003904021680454888
+        },
+        "rhow": {
+          "initial": 23.44026652902511,
+          "fluent_reference": 140.53450335110549,
+          "final": 0.001269053538632625,
+          "ratio_vs_fluent_reference": 9.030191934162069e-06,
+          "orders_vs_fluent_reference": 5.044303018782661,
+          "ratio_vs_iteration_zero": 5.4139893719263334e-05
+        },
+        "rhoE": {
+          "initial": 3200.3211439774045,
+          "fluent_reference": 3200.3211439774045,
+          "final": 0.0023628441417556175,
+          "ratio_vs_fluent_reference": 7.383146988864503e-07,
+          "orders_vs_fluent_reference": 6.131758485252559,
+          "ratio_vs_iteration_zero": 7.383146988864503e-07
+        },
+        "nuturb": {
+          "initial": 0.0007610179218247098,
+          "fluent_reference": 0.0007610179218247098,
+          "final": 6.484236176438139e-09,
+          "ratio_vs_fluent_reference": 8.520477626717041e-06,
+          "orders_vs_fluent_reference": 5.069536059595552,
+          "ratio_vs_iteration_zero": 8.520477626717041e-06
+        },
+        "totalRes": {
+          "initial": 2522761.87932543,
+          "fluent_reference": 2522761.87932543,
+          "final": 2.4753994277048093,
+          "ratio_vs_fluent_reference": 9.812259523941733e-07,
+          "orders_vs_fluent_reference": 6.0082309736815835,
+          "ratio_vs_iteration_zero": 9.812259523941733e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g65/gci_M_a-2",
+      "iterations": 166,
+      "equations": {
+        "rho": {
+          "initial": 1099.523748859877,
+          "fluent_reference": 1099.523748859877,
+          "final": 0.0004218721271844743,
+          "ratio_vs_fluent_reference": 3.836862347192808e-07,
+          "orders_vs_fluent_reference": 6.41602378144462,
+          "ratio_vs_iteration_zero": 3.836862347192808e-07
+        },
+        "rhou": {
+          "initial": 207.1891405230186,
+          "fluent_reference": 276.676944053847,
+          "final": 0.0023815627103010496,
+          "ratio_vs_fluent_reference": 8.607738235816095e-06,
+          "orders_vs_fluent_reference": 5.065110948516577,
+          "ratio_vs_iteration_zero": 1.149463096516132e-05
+        },
+        "rhov": {
+          "initial": 5.287358784499686,
+          "fluent_reference": 112.19384986129533,
+          "final": 0.0012406579472733204,
+          "ratio_vs_fluent_reference": 1.1058163605287983e-05,
+          "orders_vs_fluent_reference": 4.956316988972417,
+          "ratio_vs_iteration_zero": 0.00023464606769459416
+        },
+        "rhow": {
+          "initial": 12.199700041370415,
+          "fluent_reference": 155.46184903976342,
+          "final": 0.0008303492727205928,
+          "ratio_vs_fluent_reference": 5.341177130269493e-06,
+          "orders_vs_fluent_reference": 5.272363019218086,
+          "ratio_vs_iteration_zero": 6.806308924848927e-05
+        },
+        "rhoE": {
+          "initial": 3853.7229747709393,
+          "fluent_reference": 3853.7229747709393,
+          "final": 0.0014180789720412473,
+          "ratio_vs_fluent_reference": 3.6797636501765835e-07,
+          "orders_vs_fluent_reference": 6.4341800750005245,
+          "ratio_vs_iteration_zero": 3.6797636501765835e-07
+        },
+        "nuturb": {
+          "initial": 0.001165526990269422,
+          "fluent_reference": 0.001165526990269422,
+          "final": 2.428919814211555e-07,
+          "ratio_vs_fluent_reference": 0.00020839670247791415,
+          "orders_vs_fluent_reference": 3.6811091572869854,
+          "ratio_vs_iteration_zero": 0.00020839670247791415
+        },
+        "totalRes": {
+          "initial": 4249576.737087355,
+          "fluent_reference": 4249576.737087355,
+          "final": 4.234475686337566,
+          "ratio_vs_fluent_reference": 9.964464576864804e-07,
+          "orders_vs_fluent_reference": 6.001546032393531,
+          "ratio_vs_iteration_zero": 9.964464576864804e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g65/gci_M_a0",
+      "iterations": 160,
+      "equations": {
+        "rho": {
+          "initial": 1094.200154223579,
+          "fluent_reference": 1094.200154223579,
+          "final": 0.0003084296033678637,
+          "ratio_vs_fluent_reference": 2.8187676832006914e-07,
+          "orders_vs_fluent_reference": 6.5499407162751195,
+          "ratio_vs_iteration_zero": 2.8187676832006914e-07
+        },
+        "rhou": {
+          "initial": 207.18048217944784,
+          "fluent_reference": 275.9356124993907,
+          "final": 0.002819506102829253,
+          "ratio_vs_fluent_reference": 1.0217985555726262e-05,
+          "orders_vs_fluent_reference": 4.9906347155774995,
+          "ratio_vs_iteration_zero": 1.3608936870738426e-05
+        },
+        "rhov": {
+          "initial": 5.319730754936524,
+          "fluent_reference": 112.31432582866992,
+          "final": 0.0010415850849786893,
+          "ratio_vs_fluent_reference": 9.273839978059228e-06,
+          "orders_vs_fluent_reference": 5.032740402212637,
+          "ratio_vs_iteration_zero": 0.00019579657936863343
+        },
+        "rhow": {
+          "initial": 9.488929220656342,
+          "fluent_reference": 153.89537152683315,
+          "final": 0.0009224332779612382,
+          "ratio_vs_fluent_reference": 5.993898769076385e-06,
+          "orders_vs_fluent_reference": 5.222290596125572,
+          "ratio_vs_iteration_zero": 9.721152476859071e-05
+        },
+        "rhoE": {
+          "initial": 3835.0642313858107,
+          "fluent_reference": 3835.0642313858107,
+          "final": 0.0009868570298424504,
+          "ratio_vs_fluent_reference": 2.573247722335662e-07,
+          "orders_vs_fluent_reference": 6.589518402959973,
+          "ratio_vs_iteration_zero": 2.573247722335662e-07
+        },
+        "nuturb": {
+          "initial": 0.0011653334408375027,
+          "fluent_reference": 0.0011653334408375027,
+          "final": 1.9884947671897037e-07,
+          "ratio_vs_fluent_reference": 0.00017063740707214329,
+          "orders_vs_fluent_reference": 3.7679257568484537,
+          "ratio_vs_iteration_zero": 0.00017063740707214329
+        },
+        "totalRes": {
+          "initial": 4229048.526900493,
+          "fluent_reference": 4229048.526900493,
+          "final": 4.088881989810724,
+          "ratio_vs_fluent_reference": 9.668562476410034e-07,
+          "orders_vs_fluent_reference": 6.014638092098134,
+          "ratio_vs_iteration_zero": 9.668562476410034e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g65/gci_M_a4",
+      "iterations": 165,
+      "equations": {
+        "rho": {
+          "initial": 1092.3925749049313,
+          "fluent_reference": 1092.3925749049313,
+          "final": 0.0008240858883097989,
+          "ratio_vs_fluent_reference": 7.543862044114657e-07,
+          "orders_vs_fluent_reference": 6.122406262214998,
+          "ratio_vs_iteration_zero": 7.543862044114657e-07
+        },
+        "rhou": {
+          "initial": 206.9847514104895,
+          "fluent_reference": 273.815453931212,
+          "final": 0.001506348696858804,
+          "ratio_vs_fluent_reference": 5.501328267750838e-06,
+          "orders_vs_fluent_reference": 5.259532439649539,
+          "ratio_vs_iteration_zero": 7.2775829455737664e-06
+        },
+        "rhov": {
+          "initial": 5.383630409151031,
+          "fluent_reference": 112.37254927643917,
+          "final": 0.001508858393197024,
+          "ratio_vs_fluent_reference": 1.342728631603076e-05,
+          "orders_vs_fluent_reference": 4.872011750328902,
+          "ratio_vs_iteration_zero": 0.00028026782645262655
+        },
+        "rhow": {
+          "initial": 17.64560975294819,
+          "fluent_reference": 157.14247890893077,
+          "final": 0.0015995414204547607,
+          "ratio_vs_fluent_reference": 1.0178924448441134e-05,
+          "orders_vs_fluent_reference": 4.992298109109715,
+          "ratio_vs_iteration_zero": 9.064812397245229e-05
+        },
+        "rhoE": {
+          "initial": 3828.728751696108,
+          "fluent_reference": 3828.728751696108,
+          "final": 0.00280264594522901,
+          "ratio_vs_fluent_reference": 7.320043092599474e-07,
+          "orders_vs_fluent_reference": 6.135486362271789,
+          "ratio_vs_iteration_zero": 7.320043092599474e-07
+        },
+        "nuturb": {
+          "initial": 0.0011662109902724855,
+          "fluent_reference": 0.0011662109902724855,
+          "final": 4.7207828899443613e-08,
+          "ratio_vs_fluent_reference": 4.0479663880044115e-05,
+          "orders_vs_fluent_reference": 4.392763102286048,
+          "ratio_vs_iteration_zero": 4.0479663880044115e-05
+        },
+        "totalRes": {
+          "initial": 4222099.873554998,
+          "fluent_reference": 4222099.873554998,
+          "final": 4.217484767833114,
+          "ratio_vs_fluent_reference": 9.989069169702046e-07,
+          "orders_vs_fluent_reference": 6.000474979571476,
+          "ratio_vs_iteration_zero": 9.989069169702046e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g65/gci_M_a8",
+      "iterations": 197,
+      "equations": {
+        "rho": {
+          "initial": 1102.3853203281828,
+          "fluent_reference": 1102.3853203281828,
+          "final": 0.0008518521756604296,
+          "ratio_vs_fluent_reference": 7.727354128834291e-07,
+          "orders_vs_fluent_reference": 6.111969184471099,
+          "ratio_vs_iteration_zero": 7.727354128834291e-07
+        },
+        "rhou": {
+          "initial": 206.5541881214826,
+          "fluent_reference": 270.8565159594587,
+          "final": 0.0013187681918603717,
+          "ratio_vs_fluent_reference": 4.868881175661886e-06,
+          "orders_vs_fluent_reference": 5.312570824218545,
+          "ratio_vs_iteration_zero": 6.384611243441612e-06
+        },
+        "rhov": {
+          "initial": 5.445419813465676,
+          "fluent_reference": 112.19142062336174,
+          "final": 0.0017824727216468595,
+          "ratio_vs_fluent_reference": 1.5887781006275032e-05,
+          "orders_vs_fluent_reference": 4.798936755028313,
+          "ratio_vs_iteration_zero": 0.0003273343071252434
+        },
+        "rhow": {
+          "initial": 31.41202379812888,
+          "fluent_reference": 168.30810177885286,
+          "final": 0.0012493596874975635,
+          "ratio_vs_fluent_reference": 7.423051381918323e-06,
+          "orders_vs_fluent_reference": 5.129417533276445,
+          "ratio_vs_iteration_zero": 3.977329494994156e-05
+        },
+        "rhoE": {
+          "initial": 3863.7523113390866,
+          "fluent_reference": 3863.7523113390866,
+          "final": 0.00293456631155351,
+          "ratio_vs_fluent_reference": 7.595120170983366e-07,
+          "orders_vs_fluent_reference": 6.119465350282817,
+          "ratio_vs_iteration_zero": 7.595120170983366e-07
+        },
+        "nuturb": {
+          "initial": 0.0011692378832531675,
+          "fluent_reference": 0.0011692378832531675,
+          "final": 6.6884456911021545e-09,
+          "ratio_vs_fluent_reference": 5.720346378525566e-06,
+          "orders_vs_fluent_reference": 5.242577673002818,
+          "ratio_vs_iteration_zero": 5.720346378525566e-06
+        },
+        "totalRes": {
+          "initial": 4260682.67574546,
+          "fluent_reference": 4260682.67574546,
+          "final": 4.211895896180501,
+          "ratio_vs_fluent_reference": 9.885495392926854e-07,
+          "orders_vs_fluent_reference": 6.005001561957432,
+          "ratio_vs_iteration_zero": 9.885495392926854e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g81/gci_C_a-2",
+      "iterations": 131,
+      "equations": {
+        "rho": {
+          "initial": 823.0896787695702,
+          "fluent_reference": 823.0896787695702,
+          "final": 0.00044446235061592314,
+          "ratio_vs_fluent_reference": 5.399926181559537e-07,
+          "orders_vs_fluent_reference": 6.267612177058602,
+          "ratio_vs_iteration_zero": 5.399926181559537e-07
+        },
+        "rhou": {
+          "initial": 131.97521184014124,
+          "fluent_reference": 206.4836312557405,
+          "final": 0.001744733510442492,
+          "ratio_vs_fluent_reference": 8.449742479981624e-06,
+          "orders_vs_fluent_reference": 5.0731565266984955,
+          "ratio_vs_iteration_zero": 1.322016071136033e-05
+        },
+        "rhov": {
+          "initial": 1.6319655813196154,
+          "fluent_reference": 59.22257420725967,
+          "final": 0.001111988146472669,
+          "ratio_vs_fluent_reference": 1.8776423709328705e-05,
+          "orders_vs_fluent_reference": 4.726387122996855,
+          "ratio_vs_iteration_zero": 0.0006813796560424454
+        },
+        "rhow": {
+          "initial": 6.976857648491736,
+          "fluent_reference": 113.05913114888695,
+          "final": 0.0007032221885601582,
+          "ratio_vs_fluent_reference": 6.219950404838056e-06,
+          "orders_vs_fluent_reference": 5.206213078169476,
+          "ratio_vs_iteration_zero": 0.00010079354115992054
+        },
+        "rhoE": {
+          "initial": 2884.849035047712,
+          "fluent_reference": 2884.849035047712,
+          "final": 0.0011109464747395626,
+          "ratio_vs_fluent_reference": 3.850969188483684e-07,
+          "orders_vs_fluent_reference": 6.414429956143575,
+          "ratio_vs_iteration_zero": 3.850969188483684e-07
+        },
+        "nuturb": {
+          "initial": 0.000562461360492706,
+          "fluent_reference": 0.000562461360492706,
+          "final": 1.502015029653111e-07,
+          "ratio_vs_fluent_reference": 0.00026704323801680755,
+          "orders_vs_fluent_reference": 3.573418414621142,
+          "ratio_vs_iteration_zero": 0.00026704323801680755
+        },
+        "totalRes": {
+          "initial": 2261666.447047028,
+          "fluent_reference": 2261666.447047028,
+          "final": 2.1910383418109602,
+          "ratio_vs_fluent_reference": 9.68771652721698e-07,
+          "orders_vs_fluent_reference": 6.0137785775927695,
+          "ratio_vs_iteration_zero": 9.68771652721698e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g81/gci_C_a0",
+      "iterations": 133,
+      "equations": {
+        "rho": {
+          "initial": 816.4149775642655,
+          "fluent_reference": 816.4149775642655,
+          "final": 0.0005925556910755181,
+          "ratio_vs_fluent_reference": 7.258020827145764e-07,
+          "orders_vs_fluent_reference": 6.1391817899104,
+          "ratio_vs_iteration_zero": 7.258020827145764e-07
+        },
+        "rhou": {
+          "initial": 131.68722345349877,
+          "fluent_reference": 205.88329474517215,
+          "final": 0.0015891501347569763,
+          "ratio_vs_fluent_reference": 7.718693916978133e-06,
+          "orders_vs_fluent_reference": 5.112456180575759,
+          "ratio_vs_iteration_zero": 1.2067610608542712e-05
+        },
+        "rhov": {
+          "initial": 1.6292006442470683,
+          "fluent_reference": 59.06544517259683,
+          "final": 0.0008955348729732366,
+          "ratio_vs_fluent_reference": 1.5161739158256887e-05,
+          "orders_vs_fluent_reference": 4.819250979211026,
+          "ratio_vs_iteration_zero": 0.000549677460621866
+        },
+        "rhow": {
+          "initial": 4.989267226551263,
+          "fluent_reference": 110.94681247417819,
+          "final": 0.0010382885652849307,
+          "ratio_vs_fluent_reference": 9.358435291023637e-06,
+          "orders_vs_fluent_reference": 5.0287967582362745,
+          "ratio_vs_iteration_zero": 0.0002081044205769327
+        },
+        "rhoE": {
+          "initial": 2861.4548183979714,
+          "fluent_reference": 2861.4548183979714,
+          "final": 0.0016490383307436742,
+          "ratio_vs_fluent_reference": 5.762936811516434e-07,
+          "orders_vs_fluent_reference": 6.239356142271877,
+          "ratio_vs_iteration_zero": 5.762936811516434e-07
+        },
+        "nuturb": {
+          "initial": 0.0005620122026516368,
+          "fluent_reference": 0.0005620122026516368,
+          "final": 1.1786081125922442e-07,
+          "ratio_vs_fluent_reference": 0.00020971219255230377,
+          "orders_vs_fluent_reference": 3.678376319156716,
+          "ratio_vs_iteration_zero": 0.00020971219255230377
+        },
+        "totalRes": {
+          "initial": 2243348.9564489108,
+          "fluent_reference": 2243348.9564489108,
+          "final": 2.242480589271732,
+          "ratio_vs_fluent_reference": 9.996129148010244e-07,
+          "orders_vs_fluent_reference": 6.000168141510587,
+          "ratio_vs_iteration_zero": 9.996129148010244e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g81/gci_C_a4",
+      "iterations": 132,
+      "equations": {
+        "rho": {
+          "initial": 809.7105396296795,
+          "fluent_reference": 809.7105396296795,
+          "final": 0.0003228258131121925,
+          "ratio_vs_fluent_reference": 3.986928628344601e-07,
+          "orders_vs_fluent_reference": 6.39936153875284,
+          "ratio_vs_iteration_zero": 3.986928628344601e-07
+        },
+        "rhou": {
+          "initial": 131.14303771458907,
+          "fluent_reference": 204.18994084394842,
+          "final": 0.002629600067034773,
+          "ratio_vs_fluent_reference": 1.287820573416218e-05,
+          "orders_vs_fluent_reference": 4.890144641171393,
+          "ratio_vs_iteration_zero": 2.005138902423214e-05
+        },
+        "rhov": {
+          "initial": 1.6232928873565793,
+          "fluent_reference": 58.689586031560836,
+          "final": 0.0006242317506370579,
+          "ratio_vs_fluent_reference": 1.0636158692640493e-05,
+          "orders_vs_fluent_reference": 4.9732151915713905,
+          "ratio_vs_iteration_zero": 0.00038454659383962205
+        },
+        "rhow": {
+          "initial": 10.617062268959339,
+          "fluent_reference": 111.33257176296968,
+          "final": 0.0005621305582834535,
+          "ratio_vs_fluent_reference": 5.049111409015557e-06,
+          "orders_vs_fluent_reference": 5.296785046459022,
+          "ratio_vs_iteration_zero": 5.2945960383686465e-05
+        },
+        "rhoE": {
+          "initial": 2837.956361142294,
+          "fluent_reference": 2837.956361142294,
+          "final": 0.0007712739866059029,
+          "ratio_vs_fluent_reference": 2.7177091133827746e-07,
+          "orders_vs_fluent_reference": 6.565797029286118,
+          "ratio_vs_iteration_zero": 2.7177091133827746e-07
+        },
+        "nuturb": {
+          "initial": 0.0005620333719303818,
+          "fluent_reference": 0.0005620333719303818,
+          "final": 1.7019968212256116e-08,
+          "ratio_vs_fluent_reference": 3.0282842731915846e-05,
+          "orders_vs_fluent_reference": 4.518803358866946,
+          "ratio_vs_iteration_zero": 3.0282842731915846e-05
+        },
+        "totalRes": {
+          "initial": 2224955.672258139,
+          "fluent_reference": 2224955.672258139,
+          "final": 2.176174862245886,
+          "ratio_vs_fluent_reference": 9.780756036533776e-07,
+          "orders_vs_fluent_reference": 6.009627573657773,
+          "ratio_vs_iteration_zero": 9.780756036533776e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g81/gci_C_a8",
+      "iterations": 126,
+      "equations": {
+        "rho": {
+          "initial": 812.1092750653934,
+          "fluent_reference": 812.1092750653934,
+          "final": 0.0007367596622124005,
+          "ratio_vs_fluent_reference": 9.072173965173277e-07,
+          "orders_vs_fluent_reference": 6.042288630476035,
+          "ratio_vs_iteration_zero": 9.072173965173277e-07
+        },
+        "rhou": {
+          "initial": 130.6586719411878,
+          "fluent_reference": 201.84847556462023,
+          "final": 0.0013776256499431038,
+          "ratio_vs_fluent_reference": 6.825048572150686e-06,
+          "orders_vs_fluent_reference": 5.165894253511828,
+          "ratio_vs_iteration_zero": 1.0543698550397037e-05
+        },
+        "rhov": {
+          "initial": 1.6169739682774986,
+          "fluent_reference": 58.23876475571805,
+          "final": 0.0012580711133802019,
+          "ratio_vs_fluent_reference": 2.160195393321217e-05,
+          "orders_vs_fluent_reference": 4.665506964403095,
+          "ratio_vs_iteration_zero": 0.0007780404249305124
+        },
+        "rhow": {
+          "initial": 19.50361356280449,
+          "fluent_reference": 117.69673908953763,
+          "final": 0.001041326796112555,
+          "ratio_vs_fluent_reference": 8.84754160708197e-06,
+          "orders_vs_fluent_reference": 5.0531773863413525,
+          "ratio_vs_iteration_zero": 5.339148013568513e-05
+        },
+        "rhoE": {
+          "initial": 2846.363672720414,
+          "fluent_reference": 2846.363672720414,
+          "final": 0.0017103691528571588,
+          "ratio_vs_fluent_reference": 6.00896213385998e-07,
+          "orders_vs_fluent_reference": 6.2212005327328885,
+          "ratio_vs_iteration_zero": 6.00896213385998e-07
+        },
+        "nuturb": {
+          "initial": 0.0005636348252328981,
+          "fluent_reference": 0.0005636348252328981,
+          "final": 1.500033523706329e-08,
+          "ratio_vs_fluent_reference": 2.6613570640999762e-05,
+          "orders_vs_fluent_reference": 4.574896853909641,
+          "ratio_vs_iteration_zero": 2.6613570640999762e-05
+        },
+        "totalRes": {
+          "initial": 2231551.841857751,
+          "fluent_reference": 2231551.841857751,
+          "final": 2.1376640187277216,
+          "ratio_vs_fluent_reference": 9.579271153961325e-07,
+          "orders_vs_fluent_reference": 6.018667533286205,
+          "ratio_vs_iteration_zero": 9.579271153961325e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g83/gci_C_a-2",
+      "iterations": 188,
+      "equations": {
+        "rho": {
+          "initial": 932.0421762018932,
+          "fluent_reference": 932.0421762018932,
+          "final": 0.00016544407572128094,
+          "ratio_vs_fluent_reference": 1.7750706990049715e-07,
+          "orders_vs_fluent_reference": 6.750784344819438,
+          "ratio_vs_iteration_zero": 1.7750706990049715e-07
+        },
+        "rhou": {
+          "initial": 152.17317339074825,
+          "fluent_reference": 233.04196862924275,
+          "final": 0.0005322759091669295,
+          "ratio_vs_fluent_reference": 2.284034555225337e-06,
+          "orders_vs_fluent_reference": 5.641297329922616,
+          "ratio_vs_iteration_zero": 3.4978301188485995e-06
+        },
+        "rhov": {
+          "initial": 2.282882905553532,
+          "fluent_reference": 70.01729372971775,
+          "final": 0.0003823762550666005,
+          "ratio_vs_fluent_reference": 5.461168729866331e-06,
+          "orders_vs_fluent_reference": 5.262714405167835,
+          "ratio_vs_iteration_zero": 0.0001674970950706232
+        },
+        "rhow": {
+          "initial": 8.830984633621544,
+          "fluent_reference": 125.99246763570302,
+          "final": 0.00044543319367907464,
+          "ratio_vs_fluent_reference": 3.5353954251218295e-06,
+          "orders_vs_fluent_reference": 5.451562004400541,
+          "ratio_vs_iteration_zero": 5.043981075260966e-05
+        },
+        "rhoE": {
+          "initial": 3266.716732176208,
+          "fluent_reference": 3266.716732176208,
+          "final": 0.0005403922854004818,
+          "ratio_vs_fluent_reference": 1.6542367450405946e-07,
+          "orders_vs_fluent_reference": 6.78140233655669,
+          "ratio_vs_iteration_zero": 1.6542367450405946e-07
+        },
+        "nuturb": {
+          "initial": 0.0007083658814556012,
+          "fluent_reference": 0.0007083658814556012,
+          "final": 3.2262678065071516e-07,
+          "ratio_vs_fluent_reference": 0.00045545217393553515,
+          "orders_vs_fluent_reference": 3.3415572206369504,
+          "ratio_vs_iteration_zero": 0.00045545217393553515
+        },
+        "totalRes": {
+          "initial": 2561137.54915928,
+          "fluent_reference": 2561137.54915928,
+          "final": 2.538077671552095,
+          "ratio_vs_fluent_reference": 9.9099623617843e-07,
+          "orders_vs_fluent_reference": 6.003927994969864,
+          "ratio_vs_iteration_zero": 9.9099623617843e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g83/gci_C_a0",
+      "iterations": 166,
+      "equations": {
+        "rho": {
+          "initial": 923.3745929669132,
+          "fluent_reference": 923.3745929669132,
+          "final": 0.00038965853353324675,
+          "ratio_vs_fluent_reference": 4.2199399517938567e-07,
+          "orders_vs_fluent_reference": 6.374693728846411,
+          "ratio_vs_iteration_zero": 4.2199399517938567e-07
+        },
+        "rhou": {
+          "initial": 151.77271255802643,
+          "fluent_reference": 232.39396922480432,
+          "final": 0.002104774469514102,
+          "ratio_vs_fluent_reference": 9.056923794257613e-06,
+          "orders_vs_fluent_reference": 5.043019286433307,
+          "ratio_vs_iteration_zero": 1.3867937352107316e-05
+        },
+        "rhov": {
+          "initial": 2.2791886874783938,
+          "fluent_reference": 69.76172019302895,
+          "final": 0.0007119828736599566,
+          "ratio_vs_fluent_reference": 1.020592484947214e-05,
+          "orders_vs_fluent_reference": 4.991147633885398,
+          "ratio_vs_iteration_zero": 0.0003123843486814016
+        },
+        "rhow": {
+          "initial": 6.547223766867168,
+          "fluent_reference": 122.93510120065551,
+          "final": 0.0006569233218571835,
+          "ratio_vs_fluent_reference": 5.34365950360222e-06,
+          "orders_vs_fluent_reference": 5.2721612227663925,
+          "ratio_vs_iteration_zero": 0.00010033616464761825
+        },
+        "rhoE": {
+          "initial": 3236.3376415553184,
+          "fluent_reference": 3236.3376415553184,
+          "final": 0.0010170316773620324,
+          "ratio_vs_fluent_reference": 3.1425388510244176e-07,
+          "orders_vs_fluent_reference": 6.502719344451481,
+          "ratio_vs_iteration_zero": 3.1425388510244176e-07
+        },
+        "nuturb": {
+          "initial": 0.0007076725023508814,
+          "fluent_reference": 0.0007076725023508814,
+          "final": 2.134269685792289e-07,
+          "ratio_vs_fluent_reference": 0.000301590026276599,
+          "orders_vs_fluent_reference": 3.5205830248866774,
+          "ratio_vs_iteration_zero": 0.000301590026276599
+        },
+        "totalRes": {
+          "initial": 2537350.7028265144,
+          "fluent_reference": 2537350.7028265144,
+          "final": 2.5104027784765055,
+          "ratio_vs_fluent_reference": 9.89379503463991e-07,
+          "orders_vs_fluent_reference": 6.0046370909646525,
+          "ratio_vs_iteration_zero": 9.89379503463991e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g83/gci_C_a4",
+      "iterations": 159,
+      "equations": {
+        "rho": {
+          "initial": 913.2197300794118,
+          "fluent_reference": 913.2197300794118,
+          "final": 0.0003109301356385098,
+          "ratio_vs_fluent_reference": 3.404768046475211e-07,
+          "orders_vs_fluent_reference": 6.467912469527166,
+          "ratio_vs_iteration_zero": 3.404768046475211e-07
+        },
+        "rhou": {
+          "initial": 150.97010647593288,
+          "fluent_reference": 230.53481569053838,
+          "final": 0.002839931297262291,
+          "ratio_vs_fluent_reference": 1.2318882459274665e-05,
+          "orders_vs_fluent_reference": 4.909428688582648,
+          "ratio_vs_iteration_zero": 1.881121609803609e-05
+        },
+        "rhov": {
+          "initial": 2.269972363918494,
+          "fluent_reference": 69.14742577689273,
+          "final": 0.0006920680924365515,
+          "ratio_vs_fluent_reference": 1.0008587950468903e-05,
+          "orders_vs_fluent_reference": 4.99962719011079,
+          "ratio_vs_iteration_zero": 0.000304879523397317
+        },
+        "rhow": {
+          "initial": 12.39505991690023,
+          "fluent_reference": 121.9761019111367,
+          "final": 0.000724491447622323,
+          "ratio_vs_fluent_reference": 5.9396179765618105e-06,
+          "orders_vs_fluent_reference": 5.226241487006442,
+          "ratio_vs_iteration_zero": 5.845001577075914e-05
+        },
+        "rhoE": {
+          "initial": 3200.745749890746,
+          "fluent_reference": 3200.745749890746,
+          "final": 0.0008872960216189646,
+          "ratio_vs_fluent_reference": 2.7721540258211745e-07,
+          "orders_vs_fluent_reference": 6.557182643213969,
+          "ratio_vs_iteration_zero": 2.7721540258211745e-07
+        },
+        "nuturb": {
+          "initial": 0.0007072738087498643,
+          "fluent_reference": 0.0007072738087498643,
+          "final": 8.780676234249614e-08,
+          "ratio_vs_fluent_reference": 0.00012414818880073932,
+          "orders_vs_fluent_reference": 3.906059611990064,
+          "ratio_vs_iteration_zero": 0.00012414818880073932
+        },
+        "totalRes": {
+          "initial": 2509488.2210259475,
+          "fluent_reference": 2509488.2210259475,
+          "final": 2.4664287121178576,
+          "ratio_vs_fluent_reference": 9.82841318581489e-07,
+          "orders_vs_fluent_reference": 6.007516594097996,
+          "ratio_vs_iteration_zero": 9.82841318581489e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g83/gci_C_a8",
+      "iterations": 137,
+      "equations": {
+        "rho": {
+          "initial": 913.0190934168579,
+          "fluent_reference": 913.0190934168579,
+          "final": 0.000903801484853348,
+          "ratio_vs_fluent_reference": 9.899042543250502e-07,
+          "orders_vs_fluent_reference": 6.004406809270302,
+          "ratio_vs_iteration_zero": 9.899042543250502e-07
+        },
+        "rhou": {
+          "initial": 150.18405201127982,
+          "fluent_reference": 227.933677104332,
+          "final": 0.001660485907182501,
+          "ratio_vs_fluent_reference": 7.284952045162012e-06,
+          "orders_vs_fluent_reference": 5.137573302725847,
+          "ratio_vs_iteration_zero": 1.105633977073536e-05
+        },
+        "rhov": {
+          "initial": 2.258448607582817,
+          "fluent_reference": 68.40497926497285,
+          "final": 0.0010824751909164422,
+          "ratio_vs_fluent_reference": 1.5824508720679192e-05,
+          "orders_vs_fluent_reference": 4.800669763977906,
+          "ratio_vs_iteration_zero": 0.0004793003424040713
+        },
+        "rhow": {
+          "initial": 22.433411932348182,
+          "fluent_reference": 127.89923495130918,
+          "final": 0.0009231129250383188,
+          "ratio_vs_fluent_reference": 7.2175015385334e-06,
+          "orders_vs_fluent_reference": 5.1416131148699655,
+          "ratio_vs_iteration_zero": 4.11490203907513e-05
+        },
+        "rhoE": {
+          "initial": 3200.0424890393897,
+          "fluent_reference": 3200.0424890393897,
+          "final": 0.0022052455946882615,
+          "ratio_vs_fluent_reference": 6.891300981913671e-07,
+          "orders_vs_fluent_reference": 6.161698781585864,
+          "ratio_vs_iteration_zero": 6.891300981913671e-07
+        },
+        "nuturb": {
+          "initial": 0.0007084086652846955,
+          "fluent_reference": 0.0007084086652846955,
+          "final": 3.774598032292755e-08,
+          "ratio_vs_fluent_reference": 5.3282776132838786e-05,
+          "orders_vs_fluent_reference": 4.273413155689035,
+          "ratio_vs_iteration_zero": 5.3282776132838786e-05
+        },
+        "totalRes": {
+          "initial": 2508950.762022762,
+          "fluent_reference": 2508950.762022762,
+          "final": 2.452534262050874,
+          "ratio_vs_fluent_reference": 9.775139070778719e-07,
+          "orders_vs_fluent_reference": 6.009877055186095,
+          "ratio_vs_iteration_zero": 9.775139070778719e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g83/gci_M_a-2",
+      "iterations": 302,
+      "equations": {
+        "rho": {
+          "initial": 1124.2976030953294,
+          "fluent_reference": 1124.2976030953294,
+          "final": 4.767765588511431e-05,
+          "ratio_vs_fluent_reference": 4.240661525369428e-08,
+          "orders_vs_fluent_reference": 7.372566390009185,
+          "ratio_vs_iteration_zero": 4.240661525369428e-08
+        },
+        "rhou": {
+          "initial": 199.3101585723672,
+          "fluent_reference": 304.5017807810067,
+          "final": 0.0001713110835120331,
+          "ratio_vs_fluent_reference": 5.625946852351499e-07,
+          "orders_vs_fluent_reference": 6.24980437487958,
+          "ratio_vs_iteration_zero": 8.595200803567273e-07
+        },
+        "rhov": {
+          "initial": 3.6186418832517533,
+          "fluent_reference": 90.40981582345715,
+          "final": 0.0003865151175128194,
+          "ratio_vs_fluent_reference": 4.275145502647254e-06,
+          "orders_vs_fluent_reference": 5.369049099667632,
+          "ratio_vs_iteration_zero": 0.00010681220468423155
+        },
+        "rhow": {
+          "initial": 12.471403829155477,
+          "fluent_reference": 166.12796812551233,
+          "final": 0.00016237371312482728,
+          "ratio_vs_fluent_reference": 9.77401427086325e-07,
+          "orders_vs_fluent_reference": 6.009927031201786,
+          "ratio_vs_iteration_zero": 1.3019682094266906e-05
+        },
+        "rhoE": {
+          "initial": 3940.552386046284,
+          "fluent_reference": 3940.552386046284,
+          "final": 0.0001435550628749689,
+          "ratio_vs_fluent_reference": 3.643018765168695e-08,
+          "orders_vs_fluent_reference": 7.438538591703946,
+          "ratio_vs_iteration_zero": 3.643018765168695e-08
+        },
+        "nuturb": {
+          "initial": 0.0010880271265758515,
+          "fluent_reference": 0.0010880271265758515,
+          "final": 4.074357093748493e-07,
+          "ratio_vs_fluent_reference": 0.00037447201399940926,
+          "orders_vs_fluent_reference": 3.4265806335580633,
+          "ratio_vs_iteration_zero": 0.00037447201399940926
+        },
+        "totalRes": {
+          "initial": 4324687.422944168,
+          "fluent_reference": 4324687.422944168,
+          "final": 4.324220273012844,
+          "ratio_vs_fluent_reference": 9.998919806483943e-07,
+          "orders_vs_fluent_reference": 6.000046914742237,
+          "ratio_vs_iteration_zero": 9.998919806483943e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g83/gci_M_a0",
+      "iterations": 187,
+      "equations": {
+        "rho": {
+          "initial": 1113.896990702031,
+          "fluent_reference": 1113.896990702031,
+          "final": 0.0003495118158424614,
+          "ratio_vs_fluent_reference": 3.137739115554863e-07,
+          "orders_vs_fluent_reference": 6.503383168264999,
+          "ratio_vs_iteration_zero": 3.137739115554863e-07
+        },
+        "rhou": {
+          "initial": 198.89894408327882,
+          "fluent_reference": 303.51099435835204,
+          "final": 0.0010348286904419703,
+          "ratio_vs_fluent_reference": 3.4095262105074178e-06,
+          "orders_vs_fluent_reference": 5.467305966596387,
+          "ratio_vs_iteration_zero": 5.202786245102882e-06
+        },
+        "rhov": {
+          "initial": 3.6123931828296256,
+          "fluent_reference": 90.08237697336129,
+          "final": 0.0007685191467969418,
+          "ratio_vs_fluent_reference": 8.531292941173216e-06,
+          "orders_vs_fluent_reference": 5.068985145307852,
+          "ratio_vs_iteration_zero": 0.00021274515477713108
+        },
+        "rhow": {
+          "initial": 9.648932953016683,
+          "fluent_reference": 162.08347651012414,
+          "final": 0.0006780295274968434,
+          "ratio_vs_fluent_reference": 4.183211898558284e-06,
+          "orders_vs_fluent_reference": 5.378490135887032,
+          "ratio_vs_iteration_zero": 7.026989728277276e-05
+        },
+        "rhoE": {
+          "initial": 3904.0991671790607,
+          "fluent_reference": 3904.0991671790607,
+          "final": 0.0009353233864511103,
+          "ratio_vs_fluent_reference": 2.395746999241661e-07,
+          "orders_vs_fluent_reference": 6.620559047148662,
+          "ratio_vs_iteration_zero": 2.395746999241661e-07
+        },
+        "nuturb": {
+          "initial": 0.0010871836432012956,
+          "fluent_reference": 0.0010871836432012956,
+          "final": 3.616065962298841e-07,
+          "ratio_vs_fluent_reference": 0.00033260856939045343,
+          "orders_vs_fluent_reference": 3.478066565726709,
+          "ratio_vs_iteration_zero": 0.00033260856939045343
+        },
+        "totalRes": {
+          "initial": 4284746.845974865,
+          "fluent_reference": 4284746.845974865,
+          "final": 4.241951001907813,
+          "ratio_vs_fluent_reference": 9.900120484113886e-07,
+          "orders_vs_fluent_reference": 6.004359520021903,
+          "ratio_vs_iteration_zero": 9.900120484113886e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g83/gci_M_a4",
+      "iterations": 156,
+      "equations": {
+        "rho": {
+          "initial": 1101.6036112254474,
+          "fluent_reference": 1101.6036112254474,
+          "final": 0.0004335520820286452,
+          "ratio_vs_fluent_reference": 3.935645068795232e-07,
+          "orders_vs_fluent_reference": 6.404984074776811,
+          "ratio_vs_iteration_zero": 3.935645068795232e-07
+        },
+        "rhou": {
+          "initial": 197.96181705492072,
+          "fluent_reference": 300.78976289407814,
+          "final": 0.0022984185000711555,
+          "ratio_vs_fluent_reference": 7.6412790048328e-06,
+          "orders_vs_fluent_reference": 5.116833942700292,
+          "ratio_vs_iteration_zero": 1.1610413231524862e-05
+        },
+        "rhov": {
+          "initial": 3.5959411187647308,
+          "fluent_reference": 89.28149005780593,
+          "final": 0.001095747531511949,
+          "ratio_vs_fluent_reference": 1.227295300294047e-05,
+          "orders_vs_fluent_reference": 4.911050928831153,
+          "ratio_vs_iteration_zero": 0.00030471787365872043
+        },
+        "rhow": {
+          "initial": 16.863762175881526,
+          "fluent_reference": 160.27013528308578,
+          "final": 0.0011150807154021495,
+          "ratio_vs_fluent_reference": 6.957507794153776e-06,
+          "orders_vs_fluent_reference": 5.1575462984749,
+          "ratio_vs_iteration_zero": 6.612289142673825e-05
+        },
+        "rhoE": {
+          "initial": 3861.011936353821,
+          "fluent_reference": 3861.011936353821,
+          "final": 0.001193497062635243,
+          "ratio_vs_fluent_reference": 3.091150927034771e-07,
+          "orders_vs_fluent_reference": 6.50987978976744,
+          "ratio_vs_iteration_zero": 3.091150927034771e-07
+        },
+        "nuturb": {
+          "initial": 0.0010866352588170896,
+          "fluent_reference": 0.0010866352588170896,
+          "final": 2.5173380276739615e-07,
+          "ratio_vs_fluent_reference": 0.00023166356946804155,
+          "orders_vs_fluent_reference": 3.63514225633932,
+          "ratio_vs_iteration_zero": 0.00023166356946804155
+        },
+        "totalRes": {
+          "initial": 4237549.43242136,
+          "fluent_reference": 4237549.43242136,
+          "final": 4.173563030395294,
+          "ratio_vs_fluent_reference": 9.849001402705751e-07,
+          "orders_vs_fluent_reference": 6.006607800698289,
+          "ratio_vs_iteration_zero": 9.849001402705751e-07
+        }
+      }
+    },
+    {
+      "run": "../../artifacts/s8_pilot/g83/gci_M_a8",
+      "iterations": 166,
+      "equations": {
+        "rho": {
+          "initial": 1101.1110039650412,
+          "fluent_reference": 1101.1110039650412,
+          "final": 0.0007538194790134593,
+          "ratio_vs_fluent_reference": 6.84598988021186e-07,
+          "orders_vs_fluent_reference": 6.164563747174682,
+          "ratio_vs_iteration_zero": 6.84598988021186e-07
+        },
+        "rhou": {
+          "initial": 196.89427302444656,
+          "fluent_reference": 297.09766105986824,
+          "final": 0.0016990683124734386,
+          "ratio_vs_fluent_reference": 5.718888214778166e-06,
+          "orders_vs_fluent_reference": 5.242688392381369,
+          "ratio_vs_iteration_zero": 8.629343486605529e-06
+        },
+        "rhov": {
+          "initial": 3.5744327423723266,
+          "fluent_reference": 88.29796583342987,
+          "final": 0.0012507926900209717,
+          "ratio_vs_fluent_reference": 1.4165588960231946e-05,
+          "orders_vs_fluent_reference": 4.8487653641819195,
+          "ratio_vs_iteration_zero": 0.00034992760534943766
+        },
+        "rhow": {
+          "initial": 29.880184393217153,
+          "fluent_reference": 166.92639718844742,
+          "final": 0.0015325828300314938,
+          "ratio_vs_fluent_reference": 9.181189169867019e-06,
+          "orders_vs_fluent_reference": 5.03710106428199,
+          "ratio_vs_iteration_zero": 5.129094284904723e-05
+        },
+        "rhoE": {
+          "initial": 3859.2853199316596,
+          "fluent_reference": 3859.2853199316596,
+          "final": 0.0025370834860664743,
+          "ratio_vs_fluent_reference": 6.573972318044112e-07,
+          "orders_vs_fluent_reference": 6.1821721289958,
+          "ratio_vs_iteration_zero": 6.573972318044112e-07
+        },
+        "nuturb": {
+          "initial": 0.0010879114467404675,
+          "fluent_reference": 0.0010879114467404675,
+          "final": 8.529670463887354e-08,
+          "ratio_vs_fluent_reference": 7.840408784596781e-05,
+          "orders_vs_fluent_reference": 4.105661293404022,
+          "ratio_vs_iteration_zero": 7.840408784596781e-05
+        },
+        "totalRes": {
+          "initial": 4235683.615314017,
+          "fluent_reference": 4235683.615314017,
+          "final": 4.018464275913218,
+          "ratio_vs_fluent_reference": 9.48716816663207e-07,
+          "orders_vs_fluent_reference": 6.022863401180353,
+          "ratio_vs_iteration_zero": 9.48716816663207e-07
+        }
+      }
+    }
+  ],
+  "limit_orders": 3.0,
+  "failing": []
+}

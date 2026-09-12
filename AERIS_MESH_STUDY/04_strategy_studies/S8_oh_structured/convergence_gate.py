@@ -56,6 +56,26 @@ ROW = re.compile(r"^ +1 +\d+ +\d+ ")
 #: ADflow monitorVariables order in solve_s8.py, after the four leading columns:
 #: resrho, resmom(3), resrhoe, resturb, cl, cd, cdp, cdv, cmy, totalR
 COLUMNS = {"resrho": 0, "cl": 6, "cd": 7, "cdp": 8, "cdv": 9, "cmy": 10}
+#: Fluent judges a run equation by equation, and so does this gate. Columns of the
+#: same table, and the orders each must drop.
+EQUATION_COLUMNS = {"rho": 0, "rhou": 1, "rhov": 2, "rhow": 3, "rhoE": 4, "nuturb": 5}
+#: Fluent's own defaults: 1e-3 for continuity, momentum and turbulence, 1e-6 for
+#: energy. Measured over 77 runs of this campaign, the actual drops are
+#: continuity 5.91-7.43, momentum 4.55-6.28, energy 6.12-7.48, turbulence
+#: 3.32-5.33 -- so every run already clears these, and turbulence is the laggard
+#: in every single one (reports/s8_equation_convergence.json). Tightening
+#: turbulence to 4.0 would reject 48 of the 77, and the evidence says those are
+#: converged: carrying four of them 20-40x further moved no force by more than
+#: 0.073 % (reports/s8_l2_revalidation.json). So the limit is set where Fluent
+#: sets it, and the force-settling test below does the fine work.
+EQUATION_LIMITS = {"rho": 3.0, "rhou": 3.0, "rhov": 3.0, "rhow": 3.0,
+                   "rhoE": 6.0, "nuturb": 3.0}
+#: Residuals are normalised by the LARGEST value in the first five iterations,
+#: which is what Fluent scales by. Iteration zero is the freestream guess, where
+#: an equation can start artificially small -- nuturb starts near 7e-4 while
+#: continuity starts near 9e+2 -- and dividing by it would demand a fall from
+#: nowhere.
+FLUENT_WINDOW = 5
 #: The linear-solve residual column, read from the RAW row rather than the
 #: post-column-7 slice, because it sits before the residuals.
 RAW_LINRES = 6
@@ -91,6 +111,24 @@ def read_linres(log: Path) -> np.ndarray | None:
         except ValueError:
             values.append(np.nan)
     return np.array(values) if values else None
+
+
+def equation_orders(history: np.ndarray) -> dict:
+    """Each equation's own drop, Fluent-style. One lagging equation can hide
+    behind five healthy ones in both `totalRes` and the continuity residual."""
+    out = {}
+    for name, column in EQUATION_COLUMNS.items():
+        if column >= history.shape[1]:
+            continue
+        series = np.abs(history[:, column])
+        reference, final = float(series[:FLUENT_WINDOW].max()), float(series[-1])
+        if not (reference > 0 and final > 0):
+            continue
+        orders = math.log10(reference / final)
+        limit = EQUATION_LIMITS[name]
+        out[name] = {"orders": orders, "limit": limit, "pass": orders >= limit,
+                     "final": final, "reference_first_five": reference}
+    return out
 
 
 def gate(history: np.ndarray, *, window: int, min_orders: float,
@@ -165,11 +203,20 @@ def gate(history: np.ndarray, *, window: int, min_orders: float,
     hit_target = (l2_target is not None
                   and math.isfinite(relative_residual)
                   and relative_residual <= l2_target)
+    equations = equation_orders(history)
+    short = sorted(k for k, v in equations.items() if not v["pass"])
+    checks["every_equation"] = {
+        "value": {k: round(v["orders"], 2) for k, v in equations.items()},
+        "limit": EQUATION_LIMITS, "pass": not short,
+        "note": "Fluent's per-equation test: continuity, each momentum component, "
+                "energy and turbulence, each against its own limit"}
     checks["residual_target_met"] = {
         "value": relative_residual, "limit": l2_target,
         "pass": bool(hit_target),
         "note": "the run reached the L2Convergence target it was given"}
-    passed = healthy and (hit_target or settled)
+    # Every equation must clear its own limit by EITHER route: a combined
+    # residual or a settled force can both be reached with one equation lagging.
+    passed = healthy and not short and (hit_target or settled)
     return {
         "passes": passed,
         "solver_frozen": frozen,
@@ -181,6 +228,8 @@ def gate(history: np.ndarray, *, window: int, min_orders: float,
             "ACCEPTED_SOLVER_FROZEN" if passed else
             "REJECTED"
         ),
+        "equations_short_of_limit": short,
+        "equation_orders": {k: round(v["orders"], 3) for k, v in equations.items()},
         "iterations": int(len(history) - 1),
         "residual_initial": float(resid[0]),
         "residual_final": float(resid[-1]),

@@ -741,6 +741,20 @@ LEVELS["m6_oh_deep"] = _dataclasses.replace(LEVELS["gci_C"], s0_frac=3.9e-7, n_n
 #: only 0.3 % of the wetted area, but it is the face the tip vortex rolls off,
 #: and it is the one region of the model that is not wall-resolved. Setting it to
 #: 2 asks whether that costs anything measurable in the forces.
+#: The two gridding guidelines the published workshops set that this family does
+#: not meet, each as a single change so the cost of meeting them can be measured
+#: rather than argued about (reports/s8_mesh_guidelines.json).
+#:
+#: Far field. The DPW asks for about 100 reference chords; this family uses 40.
+#: Reaching 100 while holding the viscous-layer growth under 1.25 needs more
+#: layers: ln(86.7 / 4.73e-6) / ln(1.25) = 75, so 95 gives 1.195 with margin.
+LEVELS["gci_C_ff100"] = _dataclasses.replace(
+    LEVELS["gci_C"], farfield_chords=100.0, n_normal=95)
+#: Trailing edge. The DPW asks for about 0.1 % of local chord at both edges. The
+#: leading edge already delivers 0.096 % through the turning target; the trailing
+#: edge is at 0.40 %, four times coarser, and it is where the wake leaves.
+LEVELS["gci_C_te"] = _dataclasses.replace(LEVELS["gci_C"], ds_te_frac=0.001)
+
 LEVELS["gci_C_coarse_cap"] = _dataclasses.replace(
     LEVELS["gci_C"], tip_span_first_cell_in_s0=10.0)
 

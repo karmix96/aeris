@@ -114,7 +114,18 @@ class OHLevel:
     #: direction, so this number sets y+ on the cap, and the outboard stack
     #: starts from the same value so the o_wing/o_out interface carries no
     #: cell-size jump.  10 gives a cap y+ about ten times the OML's.
-    tip_span_first_cell_in_s0: float = 10.0
+    #: CHANGED 2026-09-13, from 10 to 2, by direction: "we should mandatory
+    #: achieve <1". The argument is stronger than a rule of thumb. A wall-resolved
+    #: RANS integrates to the wall and needs the first cell inside the viscous
+    #: sublayer, y+ <= 1; a wall-function RANS needs it in the log layer, y+ >= 30.
+    #: Between those, 3 < y+ < 30, is the buffer layer, where neither assumption
+    #: holds -- and 10 x s0 put the cap at y+ 4.2 (coarse) to 1.9 (extra-fine),
+    #: squarely in it, at every level of the family. Refining cannot fix that: the
+    #: cap is defined as a MULTIPLE of s0, so the ratio never changes; only this
+    #: number does. At 2 the cap lands near y+ 0.8 on the coarse grid and finer
+    #: above it. ADflow runs useWallFunctions False, so the resolved branch is the
+    #: only one available to us.
+    tip_span_first_cell_in_s0: float = 2.0
 
 
 def refined_level(base: OHLevel, ratio: float, *, scale_first_cell: bool = True,
@@ -723,6 +734,15 @@ LEVELS["m6_oh"] = _dataclasses.replace(
 #: march has the furthest to turn, and a turn spread over more layers is gentler.
 LEVELS["m6_oh_fine_normal"] = _dataclasses.replace(LEVELS["gci_C"], s0_frac=3.9e-7, n_normal=97)
 LEVELS["m6_oh_deep"] = _dataclasses.replace(LEVELS["gci_C"], s0_frac=3.9e-7, n_normal=129)
+
+#: The tip cap at the resolution the wing gets. `tip_span_first_cell_in_s0` is 10
+#: by default, which is a deliberate choice and puts the cap's y+ about ten times
+#: the wing's: measured, 2.9-4.5 on the cap against 0.86 on the OML. The cap is
+#: only 0.3 % of the wetted area, but it is the face the tip vortex rolls off,
+#: and it is the one region of the model that is not wall-resolved. Setting it to
+#: 2 asks whether that costs anything measurable in the forces.
+LEVELS["gci_C_coarse_cap"] = _dataclasses.replace(
+    LEVELS["gci_C"], tip_span_first_cell_in_s0=10.0)
 
 LEVELS["gci_C_normal_s0"] = directional_level(
     LEVELS["gci_C"], normal=GCI_RATIO, scale_first_cell=True)

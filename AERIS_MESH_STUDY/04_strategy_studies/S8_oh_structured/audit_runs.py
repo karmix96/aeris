@@ -76,9 +76,14 @@ def checks(row: dict, areas: dict) -> list[str]:
     if wall is not None and wall > 1.0e-9:
         bad.append(f"grid sits {wall:.2e} m off the design surface")
 
+    # The 99th percentile was the wrong statistic: it passes a mesh whose worst
+    # one per cent sits in the buffer layer, which is exactly where the tip cap
+    # was. A wall-resolved RANS needs EVERY wall cell at y+ <= 1; the alternative,
+    # wall functions at y+ >= 30, is not available (useWallFunctions is False).
     yplus = row.get("yplus_min_p50_p95_p99_max")
-    if yplus and len(yplus) >= 4 and yplus[3] > YPLUS_LIMIT:
-        bad.append(f"y+ p99 {yplus[3]:.2f} above {YPLUS_LIMIT:g}")
+    if yplus and len(yplus) >= 5 and yplus[4] > YPLUS_LIMIT:
+        bad.append(f"worst y+ {yplus[4]:.2f} above {YPLUS_LIMIT:g} "
+                   f"(p99 {yplus[3]:.2f}; the tip cap is the usual culprit)")
 
     if row.get("iterations") is not None and row["iterations"] < 10:
         bad.append(f"converged in {row['iterations']} iterations")

@@ -54,6 +54,10 @@ Array = np.ndarray
 
 #: Growth ceiling for the outboard spanwise stack.
 OUTBOARD_GROWTH_CEILING = 1.30
+#: The tip cap's first cell, as a multiple of the wing's. Above about 3 the cap
+#: sits in the buffer layer, where neither the resolved nor the wall-function
+#: assumption holds. See strategy_s8.OHLevel.tip_span_first_cell_in_s0.
+TIP_CAP_SCALE_LIMIT = 3.0
 
 
 def hex_volumes(xyz: Array) -> Array:
@@ -146,6 +150,9 @@ def main() -> int:
     ap.add_argument("--farfield-chords", type=float, default=None,
                     help="override the level's far-field radius, in root chords "
                          "(PLAN 2.2 sensitivity). Recorded in the summary.")
+    ap.add_argument("--allow-coarse-tip-cap", action="store_true",
+                    help="write a mesh whose tip cap cannot be wall-resolved. For "
+                         "reproducing pre-2026-09-13 grids, which used 10 x s0.")
     ap.add_argument("--open-tip", action="store_true",
                     help="skip the outboard blocks and write the wing block alone")
     args = ap.parse_args()
@@ -290,10 +297,20 @@ def main() -> int:
             "first_cell_in_s0": float(first_out / s0),
             "interface_span_jump": float(tip_span_cell / first_out),
             "tip_cap_yplus_scale_vs_oml": float(first_out / s0),
+        }
+        scale = float(first_out / s0)
+        if scale > TIP_CAP_SCALE_LIMIT and not args.allow_coarse_tip_cap:
+            raise SystemExit(
+                f"the tip cap's first cell is {scale:.1f} x the wing's, which puts it in "
+                f"the buffer layer (y+ roughly {scale * 0.4:.1f}); a wall-resolved RANS "
+                f"needs every wall cell at y+ <= 1 and this solver has no wall functions. "
+                f"Lower tip_span_first_cell_in_s0, or pass --allow-coarse-tip-cap and say "
+                f"so wherever the result is used.")
+        outboard.update({
             "span_extent_m": float(offsets[-1]),
             "span_growth_ratio": span_growth,
             "tip_cap": cap_info,
-        }
+        })
 
     per_block = {}
     worst = np.inf

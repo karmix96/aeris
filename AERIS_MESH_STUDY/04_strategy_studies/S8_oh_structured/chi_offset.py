@@ -23,14 +23,27 @@ BASE = STUDY / "artifacts/s8_pilot"
 KEYS = ("cl", "cd", "cdp", "cdv")
 
 
-def forces(path: Path) -> dict | None:
+def forces(path: Path, area: float | None = None) -> tuple[dict, float] | None:
+    """Coefficients from a run, and the area they were divided by.
+
+    Defect 23 lives on in the RAW run files: only the archive was rescaled. Every
+    pre-fix run of the nine non-reference geometries was normalised by index 83's
+    area, so comparing one of those against a new run of the same geometry
+    compares two different normalisations -- which shows up as a 7 % "change in
+    lift" from a setting that cannot move lift at all. `area` rescales to a
+    common basis.
+    """
     result = path / "result.json"
     if not result.exists():
         return None
     data = json.loads(result.read_text())
     if not data.get("converged"):
         return None
-    return {k.split("_")[-1]: float(v) for k, v in data["functions"].items()}
+    used = float(data.get("area_ref_m2") or 0.0) or None
+    values = {k.split("_")[-1]: float(v) for k, v in data["functions"].items()}
+    if area and used and abs(used / area - 1) > 1e-6:
+        values = {k: v * used / area for k, v in values.items()}
+    return values, used
 
 
 def main() -> int:
@@ -41,17 +54,26 @@ def main() -> int:
 
     pairs = []
     for run in sorted(CHI3.glob("g*/gci_*_a*")):
-        new = forces(run)
-        old = forces(BASE / run.parent.name / run.name)
-        if not (new and old):
+        got_new = forces(run)
+        if not got_new:
             continue
+        new, own_area = got_new
+        # the new runs carry each geometry's own area; the old ones must be put
+        # on that same basis before anything is compared
+        got_old = forces(BASE / run.parent.name / run.name, area=own_area)
+        if not got_old:
+            continue
+        old, old_area = got_old
         index = int(run.parent.name[1:])
         level, _, alpha = run.name.partition("_a")
         pairs.append({"geometry": index, "level": level, "alpha_deg": float(alpha),
                       "default_chi": {k: old[k] for k in KEYS},
                       "chi_3": {k: new[k] for k in KEYS},
                       "percent_change": {k: 100 * (new[k] - old[k]) / old[k]
-                                         if old[k] else None for k in KEYS}})
+                                         if old[k] else None for k in KEYS},
+                      "area_m2": own_area,
+                      "baseline_rescaled_from_m2": old_area if old_area and own_area
+                      and abs(old_area / own_area - 1) > 1e-6 else None})
     if not pairs:
         print("no matched pairs yet")
         return 0

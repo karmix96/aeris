@@ -206,6 +206,13 @@ def main() -> int:
     # turbresscale" -- on ONE rank, which leaves the other five waiting forever,
     # so the run neither fails nor honours its time limit. SA-Edwards is an SA
     # variant and takes SA's value; a two-equation model takes SST's pair.
+    # ADflow carries a low-speed preconditioner and the campaign has it OFF -- the
+    # default, never chosen. At M 0.0837 a central scheme's artificial dissipation
+    # scales with the acoustic speed, not the flow speed, so it is roughly 1/M
+    # times larger than the physics it is damping. This is the standard low-Mach
+    # accuracy problem and the preconditioner is the standard answer to it.
+    ap.add_argument("--low-speed-preconditioner", action="store_true",
+                    help="ADflow's low-speed preconditioner (default off)")
     ap.add_argument("--turb-res-scale", type=float, nargs="+", default=None,
                     help="turbResScale; required for any model but SA and Menter SST")
     ap.add_argument("--turbulence-order", default=None,
@@ -234,6 +241,8 @@ def main() -> int:
                                           else list(args.turb_res_scale))
     if args.no_ft2:
         init_overrides["useft2SA"] = False
+    if args.low_speed_preconditioner:
+        init_overrides["lowSpeedPreconditioner"] = True
 
     from adflow import ADFLOW
     from baseclasses import AeroProblem

@@ -455,6 +455,8 @@ def solver_flags(args) -> list[str]:
         flags.append("--no-nk")
     if getattr(args, "nk_switch_tol", None) is not None:
         flags += ["--nk-switch-tol", str(args.nk_switch_tol)]
+    if getattr(args, "eddy_vis_inf_ratio", None) is not None:
+        flags += ["--eddy-vis-inf-ratio", str(args.eddy_vis_inf_ratio)]
     return flags
 
 
@@ -632,7 +634,7 @@ def stage_pilot(args, env, auth) -> int:
     print(f"  {indices}\n")
     for index in indices:
         check_in_scope(auth, index=index, level=level)
-        directory = PILOT / f"g{index}"
+        directory = (Path(args.out_root) if args.out_root else PILOT) / f"g{index}"
         build_level(env, level, index, directory)
         for alpha in ALPHAS:
             # The LEVEL must be in the path. It was not, so every run directory
@@ -771,6 +773,11 @@ def main() -> int:
                          "froze at gci_M with LinRes 1.000 while ANK was still "
                          "descending. Uses less memory. Recorded in result.json.")
     ap.add_argument("--nk-switch-tol", type=float, default=None)
+    ap.add_argument("--eddy-vis-inf-ratio", type=float, default=None,
+                    help="freestream turbulence; 0.21 is the TMR's chi = 3")
+    ap.add_argument("--out-root", default=None,
+                    help="write runs under this tree instead of artifacts/s8_pilot, so a "
+                         "re-run does not overwrite the results it is meant to be compared with")
     ap.add_argument("--force", action="store_true",
                     help="proceed past a failed regression verdict. PLAN 3.2 says stop; "
                          "this exists so that overriding it is a deliberate, recorded act.")

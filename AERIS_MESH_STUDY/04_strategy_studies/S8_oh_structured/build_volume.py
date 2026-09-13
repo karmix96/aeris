@@ -121,6 +121,8 @@ def main() -> int:
     ap.add_argument("--level", default="oh_L3", choices=sorted(strategy_s8.LEVELS))
     ap.add_argument("--set-name", default="lhs100_seed42")
     ap.add_argument("--index", type=int, default=83)
+    ap.add_argument("--geometry", default="aeris", choices=("aeris", "m6"),
+                    help="'m6' meshes the ONERA M6 wing instead of a design from the set")
     ap.add_argument("--out", type=Path,
                     default=REPO / "AERIS_MESH_STUDY/artifacts/paraview_inspection/s8_oh")
     ap.add_argument("--no-plot3d", action="store_true")
@@ -156,19 +158,29 @@ def main() -> int:
         level = dataclasses.replace(level, farfield_chords=args.farfield_chords)
         print(f"far-field overridden to {args.farfield_chords} root chords "
               f"(PLAN 2.2 sensitivity); every other level parameter unchanged")
-    with tempfile.TemporaryDirectory() as tmp:
-        # Defect 18.  This called `build_locked_surface`, which builds an entire
-        # S6 candidate_c01 SURFACE -- the C-family surface S8 exists to replace
-        # -- purely so that `case.pygeo_result` could be read off the end of it.
-        # S8 needs the pyGeo loft and nothing else, and it was inheriting S6's
-        # own span-clustering constraints for free: on lhs100_seed42[0] the C01
-        # spec raises "42 span cells capped at 0.025 m cannot cover the
-        # 1.14972 m quarter-chord line" and S8 never got to build anything.
-        # `build_pygeo_case` is the loft on its own.
-        case = strategy_s6.build_pygeo_case(args.set_name, args.index, Path(tmp))
-        if case.pygeo_result is None:
-            raise RuntimeError("the canonical geometry config produced no pyGeo result")
-    pygeo = case.pygeo_result.pygeo.geometry
+    if args.geometry == "m6":
+        # The mesher asks a geometry for an upper and a lower surface it can
+        # evaluate, and nothing else. So the one wing with public wind-tunnel
+        # data can go through OUR mesher, which is the only way to put our mesh
+        # -- not just our solver -- in front of a measurement.
+        import m6_loft
+        pygeo = m6_loft.M6Loft()
+        geometry_note = pygeo.description
+    else:
+        with tempfile.TemporaryDirectory() as tmp:
+            # Defect 18.  This called `build_locked_surface`, which builds an entire
+            # S6 candidate_c01 SURFACE -- the C-family surface S8 exists to replace
+            # -- purely so that `case.pygeo_result` could be read off the end of it.
+            # S8 needs the pyGeo loft and nothing else, and it was inheriting S6's
+            # own span-clustering constraints for free: on lhs100_seed42[0] the C01
+            # spec raises "42 span cells capped at 0.025 m cannot cover the
+            # 1.14972 m quarter-chord line" and S8 never got to build anything.
+            # `build_pygeo_case` is the loft on its own.
+            case = strategy_s6.build_pygeo_case(args.set_name, args.index, Path(tmp))
+            if case.pygeo_result is None:
+                raise RuntimeError("the canonical geometry config produced no pyGeo result")
+        pygeo = case.pygeo_result.pygeo.geometry
+        geometry_note = {"set_name": args.set_name, "index": args.index}
 
     ring_xyz, surface_report = strategy_s8.build_oml_ring(pygeo, level)
     root_chord = surface_report["stations"][0]["chord_m"]
@@ -339,7 +351,8 @@ def main() -> int:
         "schema": "aeris.s8.oh_volume.v1",
         "strategy_id": strategy_s8.STRATEGY_ID,
         "level": args.level,
-        "geometry": f"{args.set_name}[{args.index}]",
+        "geometry": (geometry_note if args.geometry != "aeris"
+                     else f"{args.set_name}[{args.index}]"),
         "blocks": per_block,
         "block_shape": list(volume.shape[:3]),
         "cells": total_cells,

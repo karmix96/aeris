@@ -702,5 +702,27 @@ LEVELS["gci_C_s0"] = _dataclasses.replace(
 #: gap) and a smaller s0 alone recovered only 1 %. Neither result is meaningful
 #: on its own if the pair is what matters, and nothing so far has tested the
 #: pair in isolation. This does.
+#: The ONERA M6, meshed by US rather than by NASA. Same counts as gci_C; only the
+#: first cell changes, because the M6 flies at Re 11.72e6 against AERIS's 1.53e6
+#: and a wall-resolved first cell has to shrink with it. s0_frac 3.9e-7 of the
+#: bounding-box diagonal gives s0 ~5.4e-7 in semispan units, y+ about 0.45 --
+#: against the y+ 9 of the grid NASA distributes with the case, which is why
+#: that comparison could never speak about friction or drag.
+LEVELS["m6_oh"] = _dataclasses.replace(
+    LEVELS["gci_C"], s0_frac=3.9e-7, n_normal=97, farfield_chords=120.0)
+#: Why 97 layers and 120 chords rather than gci_C's 65 and 40. The M6 is swept 30
+#: degrees across a full semispan, so its planform reaches nearly one root chord
+#: aft; the far-field circle is shared by every station, and at the ROOT leading
+#: edge the march therefore has further to turn than on any AERIS wing. Measured,
+#: on folded cells in o_wing: 40 chords/65 layers 649, 80/65 174, 40/97 579,
+#: 80/97 24, 120/97 ZERO. A longer, gentler march is the fix; a shorter one is
+#: worse (15 chords gives 1699). Nothing about the section or the topology
+#: changed -- only how far and over how many layers the march travels.
+#: A variant with half again as many wall-normal layers, for the diagnosis in
+#: reports/s8_m6_own_mesh.json: the M6's leading edge at the root is where the
+#: march has the furthest to turn, and a turn spread over more layers is gentler.
+LEVELS["m6_oh_fine_normal"] = _dataclasses.replace(LEVELS["gci_C"], s0_frac=3.9e-7, n_normal=97)
+LEVELS["m6_oh_deep"] = _dataclasses.replace(LEVELS["gci_C"], s0_frac=3.9e-7, n_normal=129)
+
 LEVELS["gci_C_normal_s0"] = directional_level(
     LEVELS["gci_C"], normal=GCI_RATIO, scale_first_cell=True)

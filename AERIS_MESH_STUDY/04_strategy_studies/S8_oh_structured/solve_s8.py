@@ -201,6 +201,13 @@ def main() -> int:
     # it is the suspected route by which part of the boundary layer stays laminar.
     ap.add_argument("--no-ft2", action="store_true",
                     help="SA without the ft2 term (useft2SA False; default True)")
+    # ADflow ships residual scalings for SA (1e4) and Menter SST ([1e3, 1e-6]) only.
+    # Every other model raises "does not have default values specified for
+    # turbresscale" -- on ONE rank, which leaves the other five waiting forever,
+    # so the run neither fails nor honours its time limit. SA-Edwards is an SA
+    # variant and takes SA's value; a two-equation model takes SST's pair.
+    ap.add_argument("--turb-res-scale", type=float, nargs="+", default=None,
+                    help="turbResScale; required for any model but SA and Menter SST")
     ap.add_argument("--turbulence-order", default=None,
                     choices=["first order", "second order"],
                     help="advection order of the SA variable (ADflow default first)")
@@ -222,6 +229,9 @@ def main() -> int:
         ("n_cycles_coarse", "nCyclesCoarse"),
         ("eddy_vis_inf_ratio", "eddyVisInfRatio"),
         ("turbulence_order", "turbulenceOrder")) if getattr(args, flag) is not None}
+    if args.turb_res_scale:
+        init_overrides["turbResScale"] = (args.turb_res_scale[0] if len(args.turb_res_scale) == 1
+                                          else list(args.turb_res_scale))
     if args.no_ft2:
         init_overrides["useft2SA"] = False
 

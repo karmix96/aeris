@@ -335,7 +335,7 @@ def cmd_solve(args) -> int:
     options = {
         "gridFile": str(args.grid), "outputDirectory": str(args.out),
         "equationType": "RANS", "turbulenceModel": "SA",
-        "liftIndex": LIFT_INDEX,
+        "liftIndex": args.lift_index,
         "MGCycle": "sg",
         "useANKSolver": True, "ANKSwitchTol": 1.0,
         "useNKSolver": not args.no_nk, "NKSwitchTol": 1.0e-6,
@@ -362,20 +362,26 @@ def cmd_solve(args) -> int:
     # defect 14's guard, re-aimed at this geometry: lift is +y here, so the
     # freestream must rotate in the x-y plane and NOT toward the span.
     a = np.radians(args.alpha)
-    want_vel = np.array([np.cos(a), np.sin(a), 0.0])
-    want_lift = np.array([-np.sin(a), np.cos(a), 0.0])
+    # liftIndex 2 rotates the freestream in x-y (the WIND grid spans +z);
+    # liftIndex 3 rotates it in x-z (our own mesh spans +y, as every AERIS grid).
+    if args.lift_index == 2:
+        want_vel = np.array([np.cos(a), np.sin(a), 0.0])
+        want_lift = np.array([-np.sin(a), np.cos(a), 0.0])
+    else:
+        want_vel = np.array([np.cos(a), 0.0, np.sin(a)])
+        want_lift = np.array([-np.sin(a), 0.0, np.cos(a)])
     physics = solver.adflow.inputphysics
     got_vel = np.array(physics.veldirfreestream, dtype=float).ravel()[:3]
     got_lift = np.array(physics.liftdirection, dtype=float).ravel()[:3]
     got_index = int(physics.liftindex)
     errors = (float(np.linalg.norm(got_vel - want_vel)),
               float(np.linalg.norm(got_lift - want_lift)))
-    directions = {"lift_index_requested": LIFT_INDEX, "lift_index_realised": got_index,
+    directions = {"lift_index_requested": args.lift_index, "lift_index_realised": got_index,
                   "velocity_direction_expected": want_vel.tolist(),
                   "velocity_direction_realised": got_vel.tolist(),
                   "velocity_direction_error": errors[0],
                   "lift_direction_error": errors[1]}
-    if got_index != LIFT_INDEX or max(errors) > 1.0e-9:
+    if got_index != args.lift_index or max(errors) > 1.0e-9:
         raise SystemExit(f"freestream is not what this geometry asked for: {directions}. "
                          f"A z-component here is SIDESLIP against the root symmetry "
                          f"plane. Not running.")
@@ -442,7 +448,7 @@ def surface_cp(run: Path) -> dict:
             "cp": np.concatenate([r["cp"].ravel() for r in rows])}
 
 
-def station_slice(surf: dict, eta: float) -> dict:
+def station_slice(surf: dict, eta: float, span: str = "z") -> dict:
     """The spanwise cell row nearest a measured station, from every wall zone.
 
     Exact by construction: each zone contributes the one row whose mean z is
@@ -452,7 +458,7 @@ def station_slice(surf: dict, eta: float) -> dict:
     target = eta * GEOMETRY["semispan"]
     x, y, cp, zs = [], [], [], []
     for zone in surf["zones"]:
-        means = zone["z"].mean(axis=1)
+        means = zone[span].mean(axis=1)
         k = int(np.argmin(np.abs(means - target)))
         x.append(zone["x"][k]); y.append(zone["y"][k])
         cp.append(zone["cp"][k]); zs.append(means[k])
@@ -489,16 +495,17 @@ def cmd_compare(args) -> int:
     """Computed cp against the seven measured stations."""
     exp = experiment()
     surf = surface_cp(args.run)
+    span, vert = args.span_axis, ("y" if args.span_axis == "z" else "z")
     report = {"case": CASE, "run": str(args.run), "stations": []}
     print(f"{'stn':>4}{'eta':>7}{'exp pts':>9}{'cfd pts':>9}{'z used':>9}"
           f"{'cp_min exp':>12}{'cp_min cfd':>12}{'rms dcp':>10}")
     for number, data in exp.items():
         eta = data["eta"]
-        sl = station_slice(surf, eta)
+        sl = station_slice(surf, eta, span=span)
         x_le, chord = local_chord(eta)
         xc = (sl["x"] - x_le) / chord
         cp = sl["cp"]
-        upper = sl["y"] >= 0
+        upper = sl[vert] >= 0
         pick = cp
         entry = {"station": number, "eta": eta, "n_experiment": data["n"],
                  "n_cfd_cells": int(cp.size),
@@ -588,6 +595,7 @@ def cmd_plot(args) -> int:
 
     exp = experiment()
     surf = surface_cp(args.run)
+    span, vert = args.span_axis, ("y" if args.span_axis == "z" else "z")
     result = json.loads((args.run / "result.json").read_text()) \
         if (args.run / "result.json").exists() else {}
 
@@ -595,10 +603,10 @@ def cmd_plot(args) -> int:
     for idx, (number, data) in enumerate(exp.items()):
         a = ax.flat[idx]
         eta = data["eta"]
-        sl = station_slice(surf, eta)
+        sl = station_slice(surf, eta, span=span)
         x_le, chord = local_chord(eta)
         xc = (sl["x"] - x_le) / chord
-        cp, upper = sl["cp"], sl["y"] >= 0
+        cp, upper = sl["cp"], sl[vert] >= 0
         for side, mask, colour in (("upper", upper, "C0"), ("lower", ~upper, "C2")):
             if mask.sum() < 3:
                 continue
@@ -669,6 +677,8 @@ def main() -> int:
     s.add_argument("--n-cycles", type=int, default=30000)
     s.add_argument("--time-limit", type=float, default=21600.0)
     s.add_argument("--no-nk", action="store_true")
+    s.add_argument("--lift-index", type=int, default=LIFT_INDEX, choices=(2, 3),
+                   help="2 for the WIND grid (spans +z), 3 for a mesh of ours (spans +y)")
     s.set_defaults(func=cmd_solve)
 
     c = sub.add_parser("compare", help="computed cp against the seven stations")
@@ -677,12 +687,16 @@ def main() -> int:
                    help="spanwise half-width, in semispans, of the strip of wall "
                         "cells taken as one station")
     c.add_argument("--out", type=Path, default=None)
+    c.add_argument("--span-axis", default="z", choices=("z", "y"),
+                   help="z for the WIND grid, y for a mesh of ours")
     c.set_defaults(func=cmd_compare)
 
     pl = sub.add_parser("plot", help="cp panels, convergence and forces")
     pl.add_argument("--run", type=Path, required=True)
     pl.add_argument("--band", type=float, default=0.01)
     pl.add_argument("--out", type=Path, required=True)
+    pl.add_argument("--span-axis", default="z", choices=("z", "y"),
+                   help="z for the WIND grid, y for a mesh of ours")
     pl.set_defaults(func=cmd_plot)
 
     args = ap.parse_args()

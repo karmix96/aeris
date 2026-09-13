@@ -42,8 +42,12 @@ def sections(index: int) -> list[dict]:
     for i, line in enumerate(lines):
         key = line.upper()
         if key.startswith("SECTION"):
-            xle, yle, zle, chord = (float(v) for v in lines[i + 1].split()[:4])
-            out.append({"x_le": xle, "y_le": yle, "chord": chord, "afile": None})
+            values = [float(v) for v in lines[i + 1].split()[:5]]
+            xle, yle, zle, chord = values[:4]
+            out.append({"x_le": xle, "y_le": yle, "z_le": zle, "chord": chord,
+                        # incidence, which carries the twist
+                        "ainc": values[4] if len(values) > 4 else 0.0,
+                        "afile": None})
         elif key.startswith("AFIL") and out:  # AVL accepts AFIL and AFILE
             out[-1]["afile"] = lines[i + 1]
     return sorted(out, key=lambda s: s["y_le"])

@@ -1,0 +1,398 @@
+{
+  "schema": "aeris.s8.geometry_audit.v1",
+  "question": "does the mesh the solver integrated match the design vector?",
+  "source": "the built mesh (o_wing wall block), not any export",
+  "tolerances": {
+    "root_chord_m": 0.01,
+    "semi_span_m": 0.01,
+    "tip_over_root": 0.05,
+    "outer_sweep_deg": 1.0,
+    "twist_change_deg": 0.6
+  },
+  "twist_note": "measured as the leading-edge-to-trailing-edge line angle, which is not the generator's nominal twist axis; near the rounded tip the two differ by a few tenths of a degree by construction",
+  "designs": {
+    "12": {
+      "root_chord_m": {
+        "asked_for": 0.9856341145748986,
+        "built": 0.9855700712376669,
+        "difference": -6.404333723164513e-05,
+        "within_tolerance": true
+      },
+      "semi_span_m": {
+        "asked_for": 0.819371571826454,
+        "built": 0.8192585400270126,
+        "difference": -0.00011303179944144315,
+        "within_tolerance": true
+      },
+      "tip_over_root": {
+        "asked_for": 0.10236906636150339,
+        "built": 0.10231143130701044,
+        "difference": -5.763505449295214e-05,
+        "within_tolerance": true
+      },
+      "outer_sweep_deg": {
+        "asked_for": 13.919424078298475,
+        "built": 13.85791130925683,
+        "difference": -0.06151276904164504,
+        "within_tolerance": true
+      },
+      "twist_change_deg": {
+        "asked_for": -2.949674394415914,
+        "built": -2.4004347400598243,
+        "difference": 0.5492396543560898,
+        "within_tolerance": true
+      },
+      "measured_twist_deg": {
+        "root": 0.700521257153747,
+        "tip": -1.6999134829060771
+      }
+    },
+    "13": {
+      "root_chord_m": {
+        "asked_for": 1.0883505996772644,
+        "built": 1.0883574998279704,
+        "difference": 6.900150705924091e-06,
+        "within_tolerance": true
+      },
+      "semi_span_m": {
+        "asked_for": 0.8695127698460962,
+        "built": 0.8689421670544102,
+        "difference": -0.0005706027916859702,
+        "within_tolerance": true
+      },
+      "tip_over_root": {
+        "asked_for": 0.1585985803502378,
+        "built": 0.15741245280911184,
+        "difference": -0.0011861275411259586,
+        "within_tolerance": true
+      },
+      "outer_sweep_deg": {
+        "asked_for": 15.678740120361457,
+        "built": 16.37532779562834,
+        "difference": 0.6965876752668834,
+        "within_tolerance": true
+      },
+      "twist_change_deg": {
+        "asked_for": -7.204173036014085,
+        "built": -6.771261698832671,
+        "difference": 0.43291133718141417,
+        "within_tolerance": true
+      },
+      "measured_twist_deg": {
+        "root": -0.149966858090265,
+        "tip": -6.9212285569229355
+      }
+    },
+    "16": {
+      "root_chord_m": {
+        "asked_for": 0.9007996328099004,
+        "built": 0.9008031968603962,
+        "difference": 3.5640504958411867e-06,
+        "within_tolerance": true
+      },
+      "semi_span_m": {
+        "asked_for": 0.8107772078204171,
+        "built": 0.8103328687124369,
+        "difference": -0.00044433910798014065,
+        "within_tolerance": true
+      },
+      "tip_over_root": {
+        "asked_for": 0.1042508691903227,
+        "built": 0.1034261217480812,
+        "difference": -0.0008247474422414941,
+        "within_tolerance": true
+      },
+      "outer_sweep_deg": {
+        "asked_for": 5.603402565692818,
+        "built": 5.57021415990707,
+        "difference": -0.03318840578574811,
+        "within_tolerance": true
+      },
+      "twist_change_deg": {
+        "asked_for": -7.498730290189406,
+        "built": -6.9247358880295815,
+        "difference": 0.5739944021598244,
+        "within_tolerance": true
+      },
+      "measured_twist_deg": {
+        "root": -0.19529169848530345,
+        "tip": -7.120027586514885
+      }
+    },
+    "23": {
+      "root_chord_m": {
+        "asked_for": 0.8617486076754893,
+        "built": 0.8616806381138109,
+        "difference": -6.796956167842705e-05,
+        "within_tolerance": true
+      },
+      "semi_span_m": {
+        "asked_for": 0.8932646106328199,
+        "built": 0.8913686402194,
+        "difference": -0.001895970413419934,
+        "within_tolerance": true
+      },
+      "tip_over_root": {
+        "asked_for": 0.1975637781400467,
+        "built": 0.19714096330180417,
+        "difference": -0.0004228148382425245,
+        "within_tolerance": true
+      },
+      "outer_sweep_deg": {
+        "asked_for": 7.325691358318728,
+        "built": 7.34194148135581,
+        "difference": 0.016250123037081288,
+        "within_tolerance": true
+      },
+      "twist_change_deg": {
+        "asked_for": -3.1179979476120927,
+        "built": -2.927077739074655,
+        "difference": 0.19092020853743774,
+        "within_tolerance": true
+      },
+      "measured_twist_deg": {
+        "root": -0.6864491744568554,
+        "tip": -3.6135269135315102
+      }
+    },
+    "29": {
+      "root_chord_m": {
+        "asked_for": 0.8732494665655282,
+        "built": 0.8732165776526015,
+        "difference": -3.2888912926631875e-05,
+        "within_tolerance": true
+      },
+      "semi_span_m": {
+        "asked_for": 0.7932671960450475,
+        "built": 0.7925202601920388,
+        "difference": -0.0007469358530086678,
+        "within_tolerance": true
+      },
+      "tip_over_root": {
+        "asked_for": 0.08329123108007011,
+        "built": 0.08298515517374927,
+        "difference": -0.0003060759063208407,
+        "within_tolerance": true
+      },
+      "outer_sweep_deg": {
+        "asked_for": 24.351849385757145,
+        "built": 24.31890623096831,
+        "difference": -0.03294315478883547,
+        "within_tolerance": true
+      },
+      "twist_change_deg": {
+        "asked_for": -6.02797079400505,
+        "built": -5.343809442065326,
+        "difference": 0.684161351939724,
+        "within_tolerance": false
+      },
+      "measured_twist_deg": {
+        "root": 0.5580271238697254,
+        "tip": -4.785782318195601
+      }
+    },
+    "36": {
+      "root_chord_m": {
+        "asked_for": 0.8229790486236312,
+        "built": 0.8229784956380849,
+        "difference": -5.529855463537459e-07,
+        "within_tolerance": true
+      },
+      "semi_span_m": {
+        "asked_for": 1.0816536787102744,
+        "built": 1.0811848081977231,
+        "difference": -0.0004688705125512893,
+        "within_tolerance": true
+      },
+      "tip_over_root": {
+        "asked_for": 0.10659650156510996,
+        "built": 0.10649710004416893,
+        "difference": -9.940152094102539e-05,
+        "within_tolerance": true
+      },
+      "outer_sweep_deg": {
+        "asked_for": 10.713496881351524,
+        "built": 10.70892368018096,
+        "difference": -0.004573201170563479,
+        "within_tolerance": true
+      },
+      "twist_change_deg": {
+        "asked_for": -2.540729814190242,
+        "built": -1.9377304195419445,
+        "difference": 0.6029993946482977,
+        "within_tolerance": false
+      },
+      "measured_twist_deg": {
+        "root": -0.2617773663018204,
+        "tip": -2.199507785843765
+      }
+    },
+    "47": {
+      "root_chord_m": {
+        "asked_for": 0.7057555137590081,
+        "built": 0.7057414101486088,
+        "difference": -1.4103610399329725e-05,
+        "within_tolerance": true
+      },
+      "semi_span_m": {
+        "asked_for": 0.8739379491811468,
+        "built": 0.8730288788490591,
+        "difference": -0.000909070332087647,
+        "within_tolerance": true
+      },
+      "tip_over_root": {
+        "asked_for": 0.0903210084895341,
+        "built": 0.08986489143965304,
+        "difference": -0.0004561170498810635,
+        "within_tolerance": true
+      },
+      "outer_sweep_deg": {
+        "asked_for": 6.227637116436796,
+        "built": 6.220630215576988,
+        "difference": -0.007006900859807708,
+        "within_tolerance": true
+      },
+      "twist_change_deg": {
+        "asked_for": -6.820049318550211,
+        "built": -6.063382071357138,
+        "difference": 0.7566672471930733,
+        "within_tolerance": false
+      },
+      "measured_twist_deg": {
+        "root": 0.4419509358656191,
+        "tip": -5.621431135491519
+      }
+    },
+    "65": {
+      "root_chord_m": {
+        "asked_for": 1.0697846251022962,
+        "built": 1.0697714977121309,
+        "difference": -1.3127390165346142e-05,
+        "within_tolerance": true
+      },
+      "semi_span_m": {
+        "asked_for": 0.7514227043755591,
+        "built": 0.7508505865698663,
+        "difference": -0.0005721178056928844,
+        "within_tolerance": true
+      },
+      "tip_over_root": {
+        "asked_for": 0.09882519805899931,
+        "built": 0.09874821054944931,
+        "difference": -7.698750955e-05,
+        "within_tolerance": true
+      },
+      "outer_sweep_deg": {
+        "asked_for": 14.940740073909303,
+        "built": 14.889132362158957,
+        "difference": -0.0516077117503464,
+        "within_tolerance": true
+      },
+      "twist_change_deg": {
+        "asked_for": -2.90787643418484,
+        "built": -2.358482719706447,
+        "difference": 0.5493937144783931,
+        "within_tolerance": true
+      },
+      "measured_twist_deg": {
+        "root": 0.3803714451522021,
+        "tip": -1.9781112745542446
+      }
+    },
+    "81": {
+      "root_chord_m": {
+        "asked_for": 0.936458120294144,
+        "built": 0.936400627693141,
+        "difference": -5.749260100296194e-05,
+        "within_tolerance": true
+      },
+      "semi_span_m": {
+        "asked_for": 1.1245941159676534,
+        "built": 1.1235463236297087,
+        "difference": -0.0010477923379446086,
+        "within_tolerance": true
+      },
+      "tip_over_root": {
+        "asked_for": 0.10086541003419638,
+        "built": 0.10046573170864107,
+        "difference": -0.00039967832555531935,
+        "within_tolerance": true
+      },
+      "outer_sweep_deg": {
+        "asked_for": 15.08859964362371,
+        "built": 15.08660535183061,
+        "difference": -0.001994291793099734,
+        "within_tolerance": true
+      },
+      "twist_change_deg": {
+        "asked_for": -4.704820927947259,
+        "built": -4.392408337923789,
+        "difference": 0.3124125900234702,
+        "within_tolerance": true
+      },
+      "measured_twist_deg": {
+        "root": -0.5970260897105242,
+        "tip": -4.989434427634313
+      }
+    },
+    "83": {
+      "root_chord_m": {
+        "asked_for": 0.8673307127842314,
+        "built": 0.8673375388766239,
+        "difference": 6.8260923925533845e-06,
+        "within_tolerance": true
+      },
+      "semi_span_m": {
+        "asked_for": 0.9784909486280495,
+        "built": 0.9772364568747856,
+        "difference": -0.0012544917532639754,
+        "within_tolerance": true
+      },
+      "tip_over_root": {
+        "asked_for": 0.17276904208690497,
+        "built": 0.1717144877003804,
+        "difference": -0.0010545543865245754,
+        "within_tolerance": true
+      },
+      "outer_sweep_deg": {
+        "asked_for": 11.20709622277216,
+        "built": 11.192003532392492,
+        "difference": -0.015092690379667317,
+        "within_tolerance": true
+      },
+      "twist_change_deg": {
+        "asked_for": -6.578510797746217,
+        "built": -6.106848825788078,
+        "difference": 0.47166197195813897,
+        "within_tolerance": true
+      },
+      "measured_twist_deg": {
+        "root": -0.11154952441711091,
+        "tip": -6.218398350205189
+      }
+    }
+  },
+  "outside_tolerance": [
+    {
+      "geometry": 29,
+      "quantity": "twist_change_deg",
+      "asked_for": -6.02797079400505,
+      "built": -5.343809442065326,
+      "difference": 0.684161351939724
+    },
+    {
+      "geometry": 36,
+      "quantity": "twist_change_deg",
+      "asked_for": -2.540729814190242,
+      "built": -1.9377304195419445,
+      "difference": 0.6029993946482977
+    },
+    {
+      "geometry": 47,
+      "quantity": "twist_change_deg",
+      "asked_for": -6.820049318550211,
+      "built": -6.063382071357138,
+      "difference": 0.7566672471930733
+    }
+  ]
+}

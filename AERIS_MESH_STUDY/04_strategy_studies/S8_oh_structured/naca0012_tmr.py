@@ -103,7 +103,7 @@ def cmd_grid(args) -> int:
         name = name + args.suffix
         surface = OUT / f"{name}_surface.xyz"
         write_surface(surface, surface_loop(cells))
-        s0 = S0_AT_1024 * 1024 / cells
+        s0 = args.s0 or S0_AT_1024 * 1024 / cells
         hyp = pyHyp(options={
             "inputFile": str(surface), "fileType": "PLOT3D",
             "unattachedEdgesAreSymmetry": False, "outerFaceBC": "farfield",
@@ -229,9 +229,13 @@ def load(name: str) -> dict | None:
 
 
 def cmd_compare(args) -> int:
-    family = {name: load(f"{name}_m0.15") for name in LEVELS}
-    family = {k: v for k, v in family.items() if v and not v.get("unconverged")}
-    names = [n for n in LEVELS if n in family]
+    wanted = args.family or [f"{name}_m0.15" for name in LEVELS]
+    family = {}
+    for run in wanted:
+        loaded = load(run)
+        if loaded and not loaded.get("unconverged"):
+            family[run] = loaded
+    names = [n for n in wanted if n in family]
     report: dict = {"schema": "aeris.s8.naca0012_tmr.v1", "case": CASE,
                     "reference_sa_no_point_vortex": REFERENCE,
                     "levels": {n: family[n]["coefficients"] for n in names}}
@@ -298,6 +302,11 @@ def main() -> int:
     g.add_argument("--normal-cells", type=int, default=None,
                    help="cells away from the wall (default: a quarter of the surface count)")
     g.add_argument("--suffix", default="", help="suffix for the grid's name")
+    # Holding s0 and the wall-normal count fixed while the surface count doubles
+    # gives a CHORDWISE family -- the same one-direction refinement the wing
+    # study leans on, here against an answer that is already known.
+    g.add_argument("--s0", type=float, default=None,
+                   help="first cell height (default: scaled with the surface count)")
     s = sub.add_parser("solve")
     s.add_argument("--grid", type=Path, required=True)
     s.add_argument("--out", type=Path, required=True)
@@ -310,7 +319,9 @@ def main() -> int:
     s.add_argument("--eddy-vis-inf-ratio", type=float, default=None)
     s.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
                    help="extra ADflow option, recorded as an override")
-    sub.add_parser("compare")
+    cp = sub.add_parser("compare")
+    cp.add_argument("--family", nargs="+", default=None,
+                    help="run names, coarsest first, to treat as the convergence family")
     args = ap.parse_args()
     return {"grid": cmd_grid, "solve": cmd_solve, "compare": cmd_compare}[args.cmd](args)
 

@@ -211,6 +211,10 @@ def main() -> int:
     # scales with the acoustic speed, not the flow speed, so it is roughly 1/M
     # times larger than the physics it is damping. This is the standard low-Mach
     # accuracy problem and the preconditioner is the standard answer to it.
+    # A general escape hatch for the settings this audit keeps turning up. Every use
+    # lands in solver_overrides like any other, so a row still says what it ran.
+    ap.add_argument("--set-option", action="append", default=[], metavar="KEY=VALUE",
+                    help="any other ADflow option, e.g. vis4=0.0078")
     ap.add_argument("--low-speed-preconditioner", action="store_true",
                     help="ADflow's low-speed preconditioner (default off)")
     ap.add_argument("--turb-res-scale", type=float, nargs="+", default=None,
@@ -243,6 +247,12 @@ def main() -> int:
         init_overrides["useft2SA"] = False
     if args.low_speed_preconditioner:
         init_overrides["lowSpeedPreconditioner"] = True
+    for item in args.set_option:
+        key, _, value = item.partition("=")
+        try:
+            init_overrides[key] = json.loads(value)
+        except json.JSONDecodeError:
+            init_overrides[key] = value
 
     from adflow import ADFLOW
     from baseclasses import AeroProblem

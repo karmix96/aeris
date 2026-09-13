@@ -67,7 +67,13 @@ SCHEMA: dict[str, tuple[str, ...]] = {
         "git_commit", "adflow_version", "turbulence_model", "solver_options_hash"),
     "operating_point_and_references": (
         "alpha_deg", "beta_deg", "mach", "reynolds", "temperature_K",
-        "area_ref", "chord_ref", "moment_ref_xyz"),
+        "area_ref", "chord_ref", "moment_ref_xyz",
+        # The mission fixes ONE flight condition -- 28 m/s at 1500 m, Re 1.70e6 per
+        # metre -- and every design flies it. The "reynolds" above is that condition
+        # quoted on a 0.9 m reference chord, which is nobody's actual chord: the ten
+        # wings run 0.71 to 1.09 m at the root and 0.46 to 0.71 m on the mean chord.
+        # Reading 1.53e6 as "this wing's Reynolds number" is wrong by up to 50 %.
+        "reynolds_per_metre", "reynolds_mac", "reynolds_root_chord", "mac_m"),
     "results": ("CL", "CD", "CDp", "CDv", "CMy", "CMx", "CMz"),
     "convergence": (
         "gate_verdict", "relative_residual", "orders_dropped", "equation_orders",
@@ -395,6 +401,20 @@ def build_row(*, run: Path, level: str, index: int, set_name: str,
             absent(field, "verify_against_avl.py has not been run for this geometry")
 
     row["missing_fields"] = missing
+    # each design's own Reynolds numbers, from the one flight condition
+    try:
+        from cg_limits import planform, sections
+        shape = planform(index)
+        root_chord = max(s["chord"] for s in sections(index))
+        per_metre = float(row["reynolds"]) / float(row["chord_ref"])
+        row["reynolds_per_metre"] = per_metre
+        row["mac_m"] = shape["mac_m"]
+        row["reynolds_mac"] = per_metre * shape["mac_m"]
+        row["reynolds_root_chord"] = per_metre * root_chord
+    except Exception as exc:  # noqa: BLE001 - recorded as absent, never guessed
+        for field in ("reynolds_per_metre", "reynolds_mac", "reynolds_root_chord", "mac_m"):
+            absent(field, f"planform unavailable: {type(exc).__name__}")
+
     row["schema_version"] = "aeris.s8.dataset_row.v2"
     return row
 

@@ -30,49 +30,107 @@
     ]
   },
   "levels": {
-    "o256": {
-      "CL": 1.0929356888537989,
-      "CD": 0.014283827572485055,
-      "CDp": 0.007728696007085257,
-      "CDv": 0.0065551315653998325,
-      "CM": 0.004061901884191927
+    "o256s0_m0.15": {
+      "CL": 1.1204582535211642,
+      "CD": 0.013082757907740928,
+      "CDp": 0.006959953959748113,
+      "CDv": 0.006122803947992825,
+      "CM": -0.0002483121884397486
     },
-    "o512": {
-      "CL": 1.099044425961815,
-      "CD": 0.012812978828209656,
-      "CDp": 0.006587698644484419,
-      "CDv": 0.006225280183725257,
-      "CM": 0.004473984821579023
+    "o512s0_m0.15": {
+      "CL": 1.1002354454878984,
+      "CD": 0.012662793639496182,
+      "CDp": 0.006485205017941351,
+      "CDv": 0.006177588621554865,
+      "CM": 0.004342442029096251
+    },
+    "o1024n128_m0.15": {
+      "CL": 1.0888317627922086,
+      "CD": 0.012600224611270961,
+      "CDp": 0.006434761463527934,
+      "CDv": 0.006165463147743008,
+      "CM": 0.006755303122625699
     }
   },
   "verification": {
     "CL": {
-      "finest_grid": "o512",
-      "finest_value": 1.099044425961815,
-      "finest_vs_reference_pct": 0.7428846647675438
+      "finest_grid": "o1024n128_m0.15",
+      "finest_value": 1.0888317627922086,
+      "finest_vs_reference_pct": -0.19324960197548977,
+      "richardson_finest_three": {
+        "monotone": true,
+        "observed_order": 0.8264835338744149,
+        "extrapolated": 1.0740860851829006,
+        "gci_fine_pct": 1.6928324137392505
+      },
+      "extrapolated_vs_reference_pct": -1.544898419445562
     },
     "CD": {
-      "finest_grid": "o512",
-      "finest_value": 0.012812978828209656,
-      "finest_vs_reference_pct": 4.4018563745668855
+      "finest_grid": "o1024n128_m0.15",
+      "finest_value": 0.012600224611270961,
+      "finest_vs_reference_pct": 2.66830670608431,
+      "richardson_finest_three": {
+        "monotone": true,
+        "observed_order": 2.746745982035997,
+        "extrapolated": 0.012589270678888329,
+        "gci_fine_pct": 0.1086680269655063
+      },
+      "extrapolated_vs_reference_pct": 2.5790526075111933
     },
     "CM": {
-      "finest_grid": "o512",
-      "finest_value": 0.004473984821579023,
-      "finest_vs_reference_pct": -34.06065111895323
+      "finest_grid": "o1024n128_m0.15",
+      "finest_value": 0.006755303122625699,
+      "finest_vs_reference_pct": -0.4376842649123068,
+      "richardson_finest_three": {
+        "monotone": true,
+        "observed_order": 0.9279863311210639,
+        "extrapolated": 0.009428482349142515,
+        "gci_fine_pct": 49.46445736763967
+      },
+      "extrapolated_vs_reference_pct": 38.960683111901496
     },
     "CDp": {
-      "finest_grid": "o512",
-      "finest_value": 0.006587698644484419,
-      "finest_vs_reference_pct": 8.582473124846215
+      "finest_grid": "o1024n128_m0.15",
+      "finest_value": 0.006434761463527934,
+      "finest_vs_reference_pct": 6.061669087323788,
+      "richardson_finest_three": {
+        "monotone": true,
+        "observed_order": 3.2344229434329623,
+        "extrapolated": 0.006428764480558918,
+        "gci_fine_pct": 0.11649582900248327
+      },
+      "extrapolated_vs_reference_pct": 5.962823150798068
     },
     "CDv": {
-      "finest_grid": "o512",
-      "finest_value": 0.006225280183725257,
-      "finest_vs_reference_pct": 0.31228643267304707
+      "finest_grid": "o1024n128_m0.15",
+      "finest_value": 0.006165463147743008,
+      "finest_vs_reference_pct": -0.6515872356465945,
+      "richardson_finest_three": {
+        "monotone": false
+      }
     }
   },
   "sensitivity_on_o1024": {
+    "o512_m0.15_chi3": {
+      "label": "freestream chi 3 (TMR) vs ADflow default",
+      "grid": "o512",
+      "percent_change": {
+        "CL": -0.030445195745161698,
+        "CD": 0.5766636726707822,
+        "CDp": 0.8455845684258309,
+        "CDv": 0.29208695191926465
+      }
+    },
+    "o512_m0.0837": {
+      "label": "M 0.0837 (AERIS) vs M 0.15",
+      "grid": "o512",
+      "percent_change": {
+        "CL": -0.4538443314842286,
+        "CD": 1.3119232379936612,
+        "CDp": 0.9537011993245299,
+        "CDv": 1.6909999652921375
+      }
+    },
     "prandtl_glauert_cl_change_pct": -0.7832485995281746
   }
 }

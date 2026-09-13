@@ -1,15 +1,15 @@
 {
   "command": "audit-policy",
-  "created_at": "2026-08-30T13:47:47.065644+00:00",
+  "created_at": "2026-09-03T18:25:22.389785+00:00",
   "details": {
     "immutable": true,
-    "policy": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/convergence_v1.yaml",
-    "policy_sha256": "47669c8a51b53b7f3ead6d359c81c4122c43d767f1834aedf93de40c7483c673",
+    "policy": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/convergence_v2.yaml",
+    "policy_sha256": "9f46e65fdd5f8870ba42c5b874b0be24988e28664fb237f82a75b10879d35d57",
     "reclassification_retains_original": true,
     "thresholds_machine_readable": true
   },
   "dry_run": false,
-  "git_head": "fe004df54ce64f1c68c5a5337a1bfc590f72e34b",
+  "git_head": "79af4d842e0b8b8893468d2c36282c99d66928cb",
   "repo": "/home/mike_kara/aeris",
   "schema_version": 1,
   "status": "PASS"

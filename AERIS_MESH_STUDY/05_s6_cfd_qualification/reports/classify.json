@@ -1,27 +1,35 @@
 {
   "command": "classify",
-  "created_at": "2026-08-30T13:47:47.569207+00:00",
+  "created_at": "2026-09-03T18:25:23.379504+00:00",
   "details": {
-    "execution_unchanged_sha256": "5d787b2067bbc8f5103a25d28a30fb9017668c9607a6ffd10889651d37e36dac",
+    "execution_unchanged_sha256": "91b79660dfdbd3feb3812c753ea8a745f28421281c4895a54b967b1e51ac3a86",
     "verdict": {
       "checks": {
+        "conservation": true,
+        "force_tail": false,
         "mass_imbalance": true,
+        "mass_imbalance_definition": true,
+        "measurement_only": true,
+        "measurement_only_acceptance_allowed": false,
+        "physics_qc": false,
         "residuals": true,
-        "solver_status": "converged"
+        "resource": false,
+        "solver_status": "converged",
+        "y_plus": false
       },
-      "classification": "PASS",
-      "created_at": "2026-08-30T13:47:47.568959+00:00",
-      "execution_id": "e1",
-      "execution_sha256": "5d787b2067bbc8f5103a25d28a30fb9017668c9607a6ffd10889651d37e36dac",
-      "policy_id": "lenient",
-      "policy_sha256": "4d6c9c8666fa1c4c6fe30974d9e1625b7784d0946d541e2d413918efcb07c88c",
+      "classification": "FAIL",
+      "created_at": "2026-09-03T18:25:23.379022+00:00",
+      "execution_id": "m1",
+      "execution_sha256": "91b79660dfdbd3feb3812c753ea8a745f28421281c4895a54b967b1e51ac3a86",
+      "policy_id": "guarded",
+      "policy_sha256": "fe0be2da05b698d46cd0b2ebfed51cc45a6f5ca136b99b1ebf5a20f48e40f1e5",
       "schema_version": 1
     },
-    "verdict_path": "/tmp/pytest-of-mike_kara/pytest-12/test_reclassification_retains_0/verdicts/verdict_048e618db021bbec5e396fbe.json"
+    "verdict_path": "/tmp/pytest-of-mike_kara/pytest-71/test_measurement_only_executio0/verdicts/verdict_64792d3081c90b43d9cdbe8b.json"
   },
   "dry_run": false,
-  "git_head": "fe004df54ce64f1c68c5a5337a1bfc590f72e34b",
+  "git_head": "79af4d842e0b8b8893468d2c36282c99d66928cb",
   "repo": "/home/mike_kara/aeris",
   "schema_version": 1,
-  "status": "PASS"
+  "status": "FAIL"
 }

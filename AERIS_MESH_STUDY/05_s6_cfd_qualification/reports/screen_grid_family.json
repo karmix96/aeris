@@ -1,6 +1,6 @@
 {
   "command": "screen-grid-family",
-  "created_at": "2026-08-30T21:41:46.479574+00:00",
+  "created_at": "2026-09-03T18:25:23.432185+00:00",
   "details": {
     "checks": {
       "forecast_le_75pct_limit": true,
@@ -50,7 +50,7 @@
         "surface_quads": 3192
       },
       {
-        "forecast_peak_gib": 4.187227707654722,
+        "forecast_peak_gib": 4.187227707654723,
         "hex_cells": 422352,
         "id": "C02",
         "points": [
@@ -72,7 +72,7 @@
         "surface_quads": 9824
       }
     ],
-    "next": "close independent review, then run one measured C03 canary",
+    "next": "run exactly one governed measurement-only A/C03 canary",
     "proven_route_reports": {
       "C01": {
         "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/m2_c01_ladder_probe_20260830.json",
@@ -88,13 +88,16 @@
       }
     },
     "resource": {
-      "available_gib": 11.468280792236328,
-      "free_disk_gib": 940.7092666625977,
-      "wsl_limit_gib": 12.664676666259766
+      "available_gib": 11.637149810791016,
+      "bytes_per_cell": 10645.152660152009,
+      "free_disk_gib": 939.1257972717285,
+      "memory_model_path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/grid_family_candidate_v1.yaml",
+      "memory_model_sha256": "3f4a27164b623fb9bbaadd31c150f7c3133cd6b8d97df229072a07b1014adc35",
+      "wsl_limit_gib": 12.664684295654297
     }
   },
   "dry_run": false,
-  "git_head": "a92bf1070510805a4eac8280007ce1d64207d1c1",
+  "git_head": "79af4d842e0b8b8893468d2c36282c99d66928cb",
   "repo": "/home/mike_kara/aeris",
   "schema_version": 1,
   "status": "CONDITIONAL"

@@ -6,36 +6,36 @@
   "verdict": "ACCEPTED",
   "equations_short_of_limit": [],
   "equation_orders": {
-    "rho": 6.165,
-    "rhou": 5.243,
-    "rhov": 4.849,
-    "rhow": 5.037,
-    "rhoE": 6.182,
-    "nuturb": 4.106
+    "rho": 6.261,
+    "rhou": 4.988,
+    "rhov": 4.89,
+    "rhow": 5.198,
+    "rhoE": 6.352,
+    "nuturb": 3.914
   },
-  "iterations": 165,
-  "residual_initial": 1101.1110039650412,
-  "residual_final": 0.0007538194790134593,
-  "relative_residual": 6.84598988021186e-07,
-  "window": 41,
+  "iterations": 197,
+  "residual_initial": 913.6717930347241,
+  "residual_final": 0.0005009412602709122,
+  "relative_residual": 5.482726555528829e-07,
+  "window": 49,
   "checks": {
     "residual_orders": {
-      "value": 6.164563747174682,
+      "value": 6.261003413497566,
       "limit": 5.0,
       "pass": true
     },
     "cl_percent": {
-      "value": 0.0037281587187843425,
+      "value": 0.01133555202241969,
       "limit": 0.05,
       "pass": true
     },
     "cd_percent": {
-      "value": 0.006736518731144098,
+      "value": 0.008867601354216485,
       "limit": 0.1,
       "pass": true
     },
     "cmy_absolute": {
-      "value": 1.0547652379670758e-06,
+      "value": 5.361583112297764e-07,
       "limit": 0.0001,
       "pass": true
     },
@@ -49,12 +49,12 @@
     },
     "every_equation": {
       "value": {
-        "rho": 6.16,
-        "rhou": 5.24,
-        "rhov": 4.85,
-        "rhow": 5.04,
-        "rhoE": 6.18,
-        "nuturb": 4.11
+        "rho": 6.26,
+        "rhou": 4.99,
+        "rhov": 4.89,
+        "rhow": 5.2,
+        "rhoE": 6.35,
+        "nuturb": 3.91
       },
       "limit": {
         "rho": 3.0,
@@ -68,19 +68,19 @@
       "note": "Fluent's per-equation test: continuity, each momentum component, energy and turbulence, each against its own limit"
     },
     "residual_target_met": {
-      "value": 6.84598988021186e-07,
+      "value": 5.482726555528829e-07,
       "limit": 1e-06,
       "pass": true,
       "note": "the run reached the L2Convergence target it was given"
     }
   },
   "forces": {
-    "cl": 0.40090532833666687,
-    "cd": 0.02793743148622345,
-    "cdp": 0.018655673593140076,
-    "cdv": 0.009281757893083371,
-    "cmy": 0.028720126824872044
+    "cl": -0.1597098398477057,
+    "cd": 0.02089291813534262,
+    "cdp": 0.011866587991326236,
+    "cdv": 0.00902633014401638,
+    "cmy": 0.0012647303813272497
   },
-  "alpha_deg": 8.0,
-  "directory": "../../artifacts/s8_cfd/gci_M_a8"
+  "alpha_deg": 0.0,
+  "directory": "../../artifacts/s8_cfd/farfield60_gci_C_a0"
 }

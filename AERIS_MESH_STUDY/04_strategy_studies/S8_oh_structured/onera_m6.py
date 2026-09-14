@@ -450,11 +450,18 @@ def surface_cp(run: Path, span: str = "z") -> dict:
 
 
 def station_slice(surf: dict, eta: float, span: str = "z") -> dict:
-    """The spanwise cell row nearest a measured station, from every wall zone.
+    """Every wall zone's surface, interpolated to exactly a measured station.
 
-    Exact by construction: each zone contributes the one row whose mean z is
-    closest to the station, so upper and lower surfaces are both represented and
-    the count is the same at every station.
+    Each chordwise column is interpolated along the span to the station's own
+    span coordinate, so upper and lower surfaces are both represented and the
+    count is the same at every station.
+
+    This was once the NEAREST row, and x/c was then normalised by the leading
+    edge and chord at the REQUESTED station. On a 30-degree swept wing a row
+    delta-eta off the station sits delta-eta * tan(30) * semispan further aft,
+    so the whole section slid along x/c: on our own M6 mesh stations 2 and 3
+    started at x/c +0.04 and -0.03, and read as shock-position errors of 0.043
+    and 0.476 x/c that no flow produced.
     """
     target = eta * GEOMETRY["semispan"]
     x, y, zc, cp, zs = [], [], [], [], []
@@ -467,10 +474,14 @@ def station_slice(surf: dict, eta: float, span: str = "z") -> dict:
         # spans anything is not a slice of the wing.
         if np.ptp(zone[span]) < 0.05 * GEOMETRY["semispan"]:
             continue
-        means = zone[span].mean(axis=1)
-        k = int(np.argmin(np.abs(means - target)))
-        x.append(zone["x"][k]); y.append(zone["y"][k]); zc.append(zone["z"][k])
-        cp.append(zone["cp"][k]); zs.append(means[k])
+        s = zone[span]
+        row = {key: np.empty(s.shape[1]) for key in ("x", "y", "z", "cp")}
+        for j in range(s.shape[1]):
+            order = np.argsort(s[:, j])
+            for key in row:
+                row[key][j] = np.interp(target, s[order, j], zone[key][order, j])
+        x.append(row["x"]); y.append(row["y"]); zc.append(row["z"])
+        cp.append(row["cp"]); zs.append(row[span].mean())
     return {"x": np.concatenate(x), "y": np.concatenate(y), "z": np.concatenate(zc),
             "cp": np.concatenate(cp),
             "z_actual": float(np.mean(zs)),

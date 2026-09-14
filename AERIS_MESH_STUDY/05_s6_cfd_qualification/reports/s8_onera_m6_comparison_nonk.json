@@ -576,12 +576,14 @@
       "shock_experiment": {
         "x_over_c": 0.06036,
         "strength": 4.180474126943665,
+        "steepest_x_over_c": 0.06036,
         "cp_before": -0.629,
         "cp_after": -0.442
       },
       "shock_cfd": {
         "x_over_c": 0.0508235771539851,
         "strength": 18.60255892561558,
+        "steepest_x_over_c": 0.0508235771539851,
         "cp_before": -0.8889805788590652,
         "cp_after": -0.5704113904638086
       },
@@ -1155,12 +1157,14 @@
       "shock_experiment": {
         "x_over_c": 0.09913,
         "strength": 6.370869049654165,
+        "steepest_x_over_c": 0.09913,
         "cp_before": -1.092,
         "cp_after": -0.538
       },
       "shock_cfd": {
         "x_over_c": 0.11592933134231825,
         "strength": 9.223545002223599,
+        "steepest_x_over_c": 0.11592933134231825,
         "cp_before": -0.9745193730237955,
         "cp_after": -0.5489399648679674
       },
@@ -1734,12 +1738,14 @@
       "shock_experiment": {
         "x_over_c": 0.50024,
         "strength": 4.877257171255979,
+        "steepest_x_over_c": 0.50024,
         "cp_before": -0.692,
         "cp_after": -0.205
       },
       "shock_cfd": {
         "x_over_c": 0.4733483066593333,
         "strength": 8.0171016415199,
+        "steepest_x_over_c": 0.4733483066593333,
         "cp_before": -0.7394512795768231,
         "cp_after": -0.16798412803738066
       },
@@ -2313,12 +2319,14 @@
       "shock_experiment": {
         "x_over_c": 0.39977,
         "strength": 4.367313008799559,
+        "steepest_x_over_c": 0.39977,
         "cp_before": -0.628,
         "cp_after": -0.244
       },
       "shock_cfd": {
         "x_over_c": 0.385204578161527,
         "strength": 4.597712407539126,
+        "steepest_x_over_c": 0.385204578161527,
         "cp_before": -0.5425486240327531,
         "cp_after": -0.19520774642286748
       },
@@ -2925,12 +2933,14 @@
       "shock_experiment": {
         "x_over_c": 0.29983,
         "strength": 9.773258307258157,
+        "steepest_x_over_c": 0.29983,
         "cp_before": -0.999,
         "cp_after": -0.18
       },
       "shock_cfd": {
         "x_over_c": 0.2807804245924135,
         "strength": 10.180527611601976,
+        "steepest_x_over_c": 0.2807804245924135,
         "cp_before": -0.9124866066891867,
         "cp_after": -0.20922810875370396
       },
@@ -3537,12 +3547,14 @@
       "shock_experiment": {
         "x_over_c": 0.2201,
         "strength": 10.655758042357487,
+        "steepest_x_over_c": 0.2201,
         "cp_before": -1.127,
         "cp_after": -0.159
       },
       "shock_cfd": {
         "x_over_c": 0.223201488933166,
         "strength": 12.283532961081942,
+        "steepest_x_over_c": 0.223201488933166,
         "cp_before": -0.939177522974563,
         "cp_after": -0.16307746453970912
       },
@@ -4149,12 +4161,14 @@
       "shock_experiment": {
         "x_over_c": 0.17991,
         "strength": 8.418149833812492,
+        "steepest_x_over_c": 0.17991,
         "cp_before": -1.209,
         "cp_after": -0.207
       },
       "shock_cfd": {
         "x_over_c": 0.1877385886552448,
         "strength": 11.554755737197553,
+        "steepest_x_over_c": 0.1877385886552448,
         "cp_before": -0.8706039185665719,
         "cp_after": -0.1959781000583387
       },

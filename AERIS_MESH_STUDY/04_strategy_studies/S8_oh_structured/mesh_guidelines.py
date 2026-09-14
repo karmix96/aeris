@@ -76,6 +76,21 @@ def main() -> int:
     yplus = s0 * RE_PER_METRE * (cf / 2) ** 0.5
 
     dpw = "AIAA Drag Prediction Workshop gridding guidelines"
+
+    # Edge spacing on EVERY span row, worst reported. It was once read on the
+    # ring k = n_span // 2 beside the lowest-x node. That ring is picked by index,
+    # and moving span rows toward the tip for the wall-resolved tip cap moved it
+    # from 93 % to 96 % of semispan: the verdict flipped from pass to fail on a
+    # mesh whose mid-span spacing had not changed at all.
+    def edge_spacing(k: int) -> tuple[float, float]:
+        section = wall[:, k, :]
+        c = float(np.ptp(section[:, 0]))
+        seg = np.linalg.norm(np.diff(section, axis=0), axis=1)
+        i = int(np.argmin(section[:, 0]))
+        return float(seg[max(i - 3, 0):i + 3].min()) / c, float(max(seg[0], seg[-1])) / c
+    edges = np.array([edge_spacing(k) for k in range(wall.shape[1])])
+    le_k, te_k = int(np.argmax(edges[:, 0])), int(np.argmax(edges[:, 1]))
+
     checks = [
         check("first cell, y+ (estimated)", yplus, "<= 1", yplus <= 1.0,
               "TMR / DPW", "measured y+ from the solution is the authority; this is the mesh's own estimate"),
@@ -85,10 +100,15 @@ def main() -> int:
               ">= 2", np.sum(np.abs(growth[:5] - 1) < 0.01) >= 2, dpw),
         check("cells inside the boundary layer", int(np.sum(distance < delta)), ">= 30",
               np.sum(distance < delta) >= 30, "common practice for wall-resolved RANS"),
-        check("leading-edge spacing, % of local chord", 100 * float(around[max(le - 1, 0)]) / chord,
-              "~0.1 %", around[max(le - 1, 0)] / chord <= 0.0015, dpw),
-        check("trailing-edge spacing, % of local chord", 100 * float(around[0]) / chord,
-              "~0.1 %", around[0] / chord <= 0.0015, dpw),
+        check("leading-edge spacing, % of local chord", 100 * float(edges[le_k, 0]),
+              "~0.1 %", edges[le_k, 0] <= 0.0015, dpw,
+              f"worst of {wall.shape[1]} span rows, at y = {span[le_k]:.4f} m "
+              f"({100 * span[le_k] / semispan:.1f} % semispan); median "
+              f"{100 * float(np.median(edges[:, 0])):.3f} %"),
+        check("trailing-edge spacing, % of local chord", 100 * float(edges[te_k, 1]),
+              "~0.1 %", edges[te_k, 1] <= 0.0015, dpw,
+              f"worst of {wall.shape[1]} span rows, at y = {span[te_k]:.4f} m; median "
+              f"{100 * float(np.median(edges[:, 1])):.3f} %"),
         check("spanwise spacing at the root, % of semispan", 100 * float(dspan[0]) / semispan,
               "~0.1 %", dspan[0] / semispan <= 0.0015, dpw,
               "DPW clusters at the root for a wing-body junction; this wing meets a symmetry plane"),

@@ -488,7 +488,7 @@ def station_slice(surf: dict, eta: float, span: str = "z") -> dict:
             "z_requested": target}
 
 
-def shock_position(xc: np.ndarray, cp: np.ndarray) -> dict:
+def shock_position(xc: np.ndarray, cp: np.ndarray, near: float | None = None) -> dict:
     """Where the upper-surface shock sits, as x/c.
 
     A shock is a rapid PRESSURE RISE going aft, so it is the largest positive
@@ -498,6 +498,14 @@ def shock_position(xc: np.ndarray, cp: np.ndarray) -> dict:
     error from a solution whose physics is right. RMS over a station is
     therefore dominated by the shock and says more about grid resolution than
     about whether the code reproduces the flow.
+
+    A station can carry TWO shocks: inboard, the M6's lambda has a forward and a
+    rear leg. "The largest rise" then picks one leg in the experiment and can
+    pick the other in the CFD -- at station 3 on our own mesh that read as a
+    0.34 x/c error between two solutions with both legs in place. So given the
+    measured position `near`, the computed shock is the rise (a local maximum of
+    the gradient at least 30 % as steep as the steepest) closest to it, and the
+    steepest is reported alongside so a missing leg still shows.
     """
     order = np.argsort(xc)
     x, c = xc[order], cp[order]
@@ -506,8 +514,15 @@ def shock_position(xc: np.ndarray, cp: np.ndarray) -> dict:
     if x.size < 6:
         return {"x_over_c": float("nan"), "strength": float("nan")}
     grad = np.gradient(c, x)
-    i = int(np.argmax(grad))
+    i = steepest = int(np.argmax(grad))
+    if near is not None and np.isfinite(near):
+        inner = np.arange(1, grad.size - 1)
+        peaks = inner[(grad[inner] >= grad[inner - 1]) & (grad[inner] >= grad[inner + 1])
+                      & (grad[inner] >= 0.3 * grad[steepest])]
+        peaks = np.union1d(peaks, [steepest])
+        i = int(peaks[np.argmin(np.abs(x[peaks] - near))])
     return {"x_over_c": float(x[i]), "strength": float(grad[i]),
+            "steepest_x_over_c": float(x[steepest]),
             "cp_before": float(c[max(i - 2, 0)]), "cp_after": float(c[min(i + 2, c.size - 1)])}
 
 
@@ -563,7 +578,8 @@ def cmd_compare(args) -> int:
         # like for like
         eu = data["upper"]
         entry["shock_experiment"] = shock_position(data["x_over_c"][eu], data["cp"][eu])
-        entry["shock_cfd"] = shock_position(xc[upper], cp[upper])
+        entry["shock_cfd"] = shock_position(xc[upper], cp[upper],
+                                            near=entry["shock_experiment"]["x_over_c"])
         entry["shock_dx_over_c"] = (entry["shock_cfd"]["x_over_c"]
                                     - entry["shock_experiment"]["x_over_c"])
         entry["cp_min_experiment"] = float(data["cp"].min())

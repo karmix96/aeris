@@ -760,3 +760,12 @@ LEVELS["gci_C_coarse_cap"] = _dataclasses.replace(
 
 LEVELS["gci_C_normal_s0"] = directional_level(
     LEVELS["gci_C"], normal=GCI_RATIO, scale_first_cell=True)
+
+#: The wall-normal direction's THIRD level, as gci_F refines it: layers and first
+#: cell both at GCI_RATIO squared, ~960k cells, which fits the development host.
+#: Read on TOTAL drag the first step is small and opposite to the chordwise error
+#: (+0.9 counts against -28 for gci_C -> gci_M), with about 3 counts moving from
+#: viscous to pressure drag. One step cannot say whether that has converged; this
+#: gives the direction an observed order and an extrapolated value.
+LEVELS["gci_C_normal_s0_2"] = directional_level(
+    LEVELS["gci_C"], normal=GCI_RATIO ** 2, scale_first_cell=True)

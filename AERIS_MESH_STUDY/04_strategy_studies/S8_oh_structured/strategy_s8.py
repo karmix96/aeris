@@ -767,5 +767,10 @@ LEVELS["gci_C_normal_s0"] = directional_level(
 #: (+0.9 counts against -28 for gci_C -> gci_M), with about 3 counts moving from
 #: viscous to pressure drag. One step cannot say whether that has converged; this
 #: gives the direction an observed order and an extrapolated value.
-LEVELS["gci_C_normal_s0_2"] = directional_level(
-    LEVELS["gci_C"], normal=GCI_RATIO ** 2, scale_first_cell=True)
+#: The tip cap stays at the OLD 10 x s0, because the two levels it extends were
+#: built with it and the wall-resolved cap alone moves drag by 1.5 counts: a new
+#: cap here would put that into the "normal direction". Build with
+#: --allow-coarse-tip-cap.
+LEVELS["gci_C_normal_s0_2"] = _dataclasses.replace(
+    directional_level(LEVELS["gci_C"], normal=GCI_RATIO ** 2, scale_first_cell=True),
+    tip_span_first_cell_in_s0=10.0)

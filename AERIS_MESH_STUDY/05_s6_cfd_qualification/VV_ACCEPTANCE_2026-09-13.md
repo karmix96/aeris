@@ -27,7 +27,7 @@ Measured on index 83 by `mesh_guidelines.py`, which now runs on any built mesh:
 | Growth in the viscous layer | < 1.25 | **1.253** | 1.190 | coarse marginally over |
 | Constant-spacing layers at the wall | ≥ 2 | **0** | **0** | **not met** |
 | Cells inside the boundary layer | ≥ 30 | **20** | **26** | met only at fine (33) and extra-fine (43) |
-| Leading-edge spacing | ~0.1 % chord | 0.096 % | 0.074 % | met |
+| Leading-edge spacing, worst span row | ~0.1 % chord (≤ 0.15 accepted) | **0.166 %** at the tip; 0.05–0.07 % inboard | 0.140 % | **coarse not met** in the outer 8 % of span; medium met |
 | Trailing-edge spacing | ~0.1 % chord | **0.40 %** | **0.31 %** | **not met**, 4× coarse |
 | Spanwise at the tip | ~0.1 % semispan | 0.005 % | 0.004 % | met |
 | Spanwise at the root | ~0.1 % semispan | **2.04 %** | **1.59 %** | deviation, justified below |
@@ -36,8 +36,10 @@ Measured on index 83 by `mesh_guidelines.py`, which now runs on any built mesh:
 | Same family, stretching, topology | required | yes | yes | met |
 | Refinement factor | ≥ 1.3 | 1.3 exactly | — | met, at the minimum |
 
-**Four gaps and two deviations.** None of them was known before this audit, and none would have
-been caught by any check the campaign had.
+**Five gaps and two deviations.** None of them was known before this audit, and none would have
+been caught by any check the campaign had. (Four until 15 Sept: leading-edge spacing had been
+read on one ring picked by index, 93 % of semispan, and passed. Measured on every span row it
+meets 0.1 % inboard, 0.05–0.07 %, but not in the outer 8 % of span, 0.17 % at the tip.)
 
 ## What is being done about each
 
@@ -83,8 +85,13 @@ campaign's range — that is its value: it says where our setup stops being trus
 A result is fit to train a surrogate, or to be quoted, when **all** of these hold.
 
 **A. Geometry.** The built mesh reproduces the design vector: root chord, span and tip ratio
-within 1 %, outer sweep within 1°, twist within 0.5°. *Measured by* `geometry_audit.py`.
-*Status:* 47/50 measurements pass; twist is systematically 0.5° short and unexplained.
+within 1 %, outer sweep within 1°, twist within 0.2° at every generator station inboard of 95 %
+semispan. *Measured by* `geometry_audit.py`.
+*Status (15 Sept):* 49/50. Twist was never short — the old check measured it wrongly (last span
+row, extreme-x points). rms error 0.02–0.08° per design. The one outside is g12, +0.25° where its
+twist has a sharp V at a span break: the loft's spline rounds it by 0.15° and the mesh's span rows
+by 0.09°, within about 2 cm. CFD and AVL fly the same rounded wing (AVL's sections lie within
+0.13 % of chord of the loft).
 
 **B. Mesh.** Every guideline in the table above met at the level the answer is taken from;
 y+ ≤ 1 on every wall cell at every level; zero folded cells; a rebuild reproduces all 37
@@ -110,7 +117,14 @@ before either number is used. *Measured by* `su2_mesh.py` + `su2_config.py`. *St
 **F. Validation against measurement.** ONERA M6 **on our own mesh**: suction peak within 2 %,
 shock position within 0.02 x/c, integrated sectional load within 5 % at stations 2–6. NACA 0012
 against the TMR's agreed answer: lift within 0.5 %, drag within 2 % after extrapolation.
-*Status:* M6 on our mesh running; NACA at −0.19 % lift, +2.7 % drag on the finest converged grid.
+**NACA 4412 (TMR 2DN44), set before its results exist:** CL within 1 % and CD within 3 % of the
+CFL3D–FUN3D SA band after extrapolation (the band itself is 0.23 % wide in lift and 3 % in drag),
+upper-surface separation within 0.05 x/c of CFL3D's 0.79; cp and the six velocity profiles are
+reported against experiment as trends, because TMR itself calls the case weak as validation.
+*Status (15 Sept):* M6 on our mesh converged — suction peak 2.6 % (**not met**), shock position
+0.021 x/c (**marginal**), sectional loads not yet integrated on it. NACA 0012 at −0.19 % lift,
++2.7 % drag on the finest converged grid. NACA 4412 grids built (3.6e-8 chord from TMR's wall
+points), queued in `queue18.sh`.
 
 **G. Model form.** SA against a second turbulence model, reported as a band, not a number. The
 transition assumption carried as an explicit bound (fully turbulent section drag is 1.4–2.0×

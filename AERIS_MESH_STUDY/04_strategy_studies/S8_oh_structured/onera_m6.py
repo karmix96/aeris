@@ -405,7 +405,7 @@ def cmd_solve(args) -> int:
     return 0
 
 
-def surface_cp(run: Path) -> dict:
+def surface_cp(run: Path, span: str = "z") -> dict:
     """Wall cp, kept STRUCTURED so a spanwise station can be selected by index.
 
     Flattening loses the only reliable way to pick a station. The grid's
@@ -433,8 +433,9 @@ def surface_cp(run: Path) -> dict:
                   for c in xyz]
         # orient so axis 0 is SPANWISE: the wing's span is much longer than its
         # chord here, so the axis whose mean z varies most is the spanwise one.
-        z = centre[2]
-        span_axis = 0 if np.ptp(z.mean(axis=1)) > np.ptp(z.mean(axis=0)) else 1
+        # on the WIND grid the span is z; on a mesh of ours it is y
+        s_coord = centre["xyz".index(span)]
+        span_axis = 0 if np.ptp(s_coord.mean(axis=1)) > np.ptp(s_coord.mean(axis=0)) else 1
         if span_axis == 1:
             centre = [c.T for c in centre]; cp = cp.T
         rows.append({"name": name, "x": centre[0], "y": centre[1],
@@ -456,13 +457,21 @@ def station_slice(surf: dict, eta: float, span: str = "z") -> dict:
     the count is the same at every station.
     """
     target = eta * GEOMETRY["semispan"]
-    x, y, cp, zs = [], [], [], []
+    x, y, zc, cp, zs = [], [], [], [], []
     for zone in surf["zones"]:
+        # A tip cap is a wall zone too, but it is a flat face at one span
+        # station, so its "nearest row" is chosen at EVERY station and its cells
+        # land in every slice -- at the tip leading edge's x, which drifts forward
+        # in x/c as eta grows. On our own M6 mesh that put a cp -1.9 spike into all
+        # seven stations and read as a 62 % suction-peak error. A zone that barely
+        # spans anything is not a slice of the wing.
+        if np.ptp(zone[span]) < 0.05 * GEOMETRY["semispan"]:
+            continue
         means = zone[span].mean(axis=1)
         k = int(np.argmin(np.abs(means - target)))
-        x.append(zone["x"][k]); y.append(zone["y"][k])
+        x.append(zone["x"][k]); y.append(zone["y"][k]); zc.append(zone["z"][k])
         cp.append(zone["cp"][k]); zs.append(means[k])
-    return {"x": np.concatenate(x), "y": np.concatenate(y),
+    return {"x": np.concatenate(x), "y": np.concatenate(y), "z": np.concatenate(zc),
             "cp": np.concatenate(cp),
             "z_actual": float(np.mean(zs)),
             "z_requested": target}
@@ -494,8 +503,8 @@ def shock_position(xc: np.ndarray, cp: np.ndarray) -> dict:
 def cmd_compare(args) -> int:
     """Computed cp against the seven measured stations."""
     exp = experiment()
-    surf = surface_cp(args.run)
     span, vert = args.span_axis, ("y" if args.span_axis == "z" else "z")
+    surf = surface_cp(args.run, span=span)
     report = {"case": CASE, "run": str(args.run), "stations": []}
     print(f"{'stn':>4}{'eta':>7}{'exp pts':>9}{'cfd pts':>9}{'z used':>9}"
           f"{'cp_min exp':>12}{'cp_min cfd':>12}{'rms dcp':>10}")
@@ -594,8 +603,8 @@ def cmd_plot(args) -> int:
     import matplotlib.pyplot as plt
 
     exp = experiment()
-    surf = surface_cp(args.run)
     span, vert = args.span_axis, ("y" if args.span_axis == "z" else "z")
+    surf = surface_cp(args.run, span=span)
     result = json.loads((args.run / "result.json").read_text()) \
         if (args.run / "result.json").exists() else {}
 

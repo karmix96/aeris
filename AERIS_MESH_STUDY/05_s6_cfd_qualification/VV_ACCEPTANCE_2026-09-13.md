@@ -1,5 +1,8 @@
 # Acceptance criteria for the S8 campaign, against published practice
 
+> **Read with [`S8_REPORT_2026-09-15.md`](../04_strategy_studies/S8_oh_structured/S8_REPORT_2026-09-15.md)**, the full account of S8 to 15 September.
+> Its §8.2 lists the statements in this document that later work superseded.
+
 **Written 2026-09-13, before the cloud batch is bought.** The question this answers is not
 "is the mesh what we asked for" — `audit_runs.py` and `mesh_guidelines.py` answer that — but
 "is what we asked for what the field asks for". Every criterion below is somebody else's

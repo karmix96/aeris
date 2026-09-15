@@ -35,18 +35,23 @@ guarded() {  # TIMEOUT_S LOGFILE CMD...
   wait "$pid"
 }
 
+finished() {  # LOGFILE -- SU2 prints "Exit Success" even after a signal (roe_wls, 15 Sept),
+              # so a skip test built on that string skips runs that were killed, not finished
+  [ -f "$1" ] && grep -q "All convergence criteria satisfied" "$1" && ! grep -q "Interrupt signal" "$1"
+}
+
 run_group() {  # CASE...  (side by side, two ranks each)
   local pids=() c d
   for c in "$@"; do
     d=$A/su2_validation/$c
-    if grep -q "Exit Success" "$d/run.log" 2>/dev/null; then log "  $c already done"; continue; fi
+    if finished "$d/run.log"; then log "  $c already done"; continue; fi
     $V "$S/su2_validation.py" config --case "$c" > /dev/null || { log "  $c config FAILED"; continue; }
     ( cd "$d" && guarded 18000 run.log "$M/mpirun" -np 2 "$SU2" case.cfg ) &
     pids+=($!)
   done
   for p in "${pids[@]}"; do wait "$p"; done
   for c in "$@"; do
-    grep -q "Exit Success" "$A/su2_validation/$c/run.log" 2>/dev/null || log "  $c did NOT finish cleanly"
+    finished "$A/su2_validation/$c/run.log" || log "  $c did NOT finish cleanly (killed, timed out, or still short of its convergence criteria)"
     $V "$S/su2_validation.py" compare --case "$c" 2>&1 | tail -2
   done
 }

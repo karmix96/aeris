@@ -275,7 +275,12 @@ def cmd_compare(args) -> int:
     for case in (CASES if args.all else [args.case]):
         directory = RUNS / case
         log = (directory / "run.log").read_text(errors="ignore") if (directory / "run.log").exists() else ""
-        entry = {"kind": CASES[case][3], "exit_success": "Exit Success" in log,
+        # SU2 prints "Exit Success" even when a signal stopped it: the roe_wls variant was
+        # killed at iteration 727 on 15 Sept and its log still said Exit Success, so the queue
+        # that tested for that string skipped the rerun. Ask for the real thing instead.
+        entry = {"kind": CASES[case][3],
+                 "finished": "All convergence criteria satisfied" in log and "Interrupt signal" not in log,
+                 "interrupted": "Interrupt signal" in log,
                  "time_limit_hit": "TIME LIMIT" in log, "memory_guard_hit": "MEMORY GUARD" in log,
                  "convergence": history(directory)}
         kind = CASES[case][3]
@@ -289,7 +294,7 @@ def cmd_compare(args) -> int:
         except Exception as exc:  # noqa: BLE001 - recorded, never silently passed
             entry["compare_error"] = repr(exc)
         report["cases"][case] = entry
-        short = {k: entry.get(k) for k in ("exit_success", "cf_error_pct", "cd_error_pct", "error_pct",
+        short = {k: entry.get(k) for k in ("finished", "interrupted", "cf_error_pct", "cd_error_pct", "error_pct",
                                           "transition_onset_Re_x", "upper_reversed_flow_x_over_c",
                                           "compare_error") if entry.get(k) is not None}
         print(f"  {case}: {json.dumps(short, default=lambda v: round(v, 3))}")

@@ -28,6 +28,19 @@ AREAS = HERE / "reference_areas.json"
 #: the governed contract every campaign row must satisfy
 X_REF, C_REF, L2, YPLUS_LIMIT = 0.40, 0.9, 1.0e-6, 1.0
 BOUNDS = {"CL": (-3.0, 3.0), "CD": (0.0, 0.5), "CDp": (-0.05, 0.5), "CDv": (0.0, 0.1)}
+#: Friction drag against a turbulent flat plate at the MAC Reynolds number
+#: (Prandtl-Schlichting, 0.455 / log10(Re)^2.58) on a wetted area of 2.04 x the planform
+#: (Raymer, 1.977 + 0.52 t/c at 12 %). A fully turbulent RANS wing sits near 1; a
+#: laminar plate is about 0.3. ADflow's SA-Edwards reached 0.33 -- a third of every
+#: other run's friction -- and the gate, the bounds and the residuals all called it
+#: converged. Wide on purpose: this catches a boundary layer that is not turbulent,
+#: not a few per cent of friction.
+WETTED_OVER_PLANFORM = 2.04
+FRICTION_RATIO = (0.6, 1.6)
+
+
+def turbulent_friction_estimate(reynolds: float) -> float:
+    return WETTED_OVER_PLANFORM * 0.455 / math.log10(reynolds) ** 2.58
 
 
 def checks(row: dict, areas: dict) -> list[str]:
@@ -85,6 +98,21 @@ def checks(row: dict, areas: dict) -> list[str]:
         bad.append(f"worst y+ {yplus[4]:.2f} above {YPLUS_LIMIT:g} "
                    f"(p99 {yplus[3]:.2f}; the tip cap is the usual culprit)")
 
+    re_mac, cdv = row.get("reynolds_mac"), row.get("CDv")
+    if not re_mac:
+        # rows written before dataset_row recorded it: computed the way dataset_row does
+        try:
+            import cg_limits
+            re_mac = (float(row["reynolds"]) / float(row["chord_ref"])
+                      * cg_limits.planform(int(row["geometry_index"]))["mac_m"])
+        except Exception:  # noqa: BLE001 - no AVL geometry or no fields: check not run
+            re_mac = None
+    if re_mac and re_mac > 1.0e4 and cdv is not None and math.isfinite(cdv):
+        ratio = cdv / turbulent_friction_estimate(re_mac)
+        if not FRICTION_RATIO[0] <= ratio <= FRICTION_RATIO[1]:
+            bad.append(f"friction drag {1e4 * cdv:.1f} counts is {ratio:.2f} x a turbulent flat "
+                       f"plate at Re_MAC {re_mac:.3g} (a laminar plate is about 0.3)")
+
     if row.get("iterations") is not None and row["iterations"] < 10:
         bad.append(f"converged in {row['iterations']} iterations")
 
@@ -122,6 +150,7 @@ def main() -> int:
                          "per-equation convergence", "residual against the stopping rule",
                          "reference area is this geometry's own", "moment reference and chord",
                          "no folded cells", "grid on the design surface", "y+ below 1",
+                         "friction drag 0.6-1.6 x a turbulent flat plate at Re_MAC",
                          "not converged in fewer than ten iterations", "freestream direction"],
               "findings": findings}
     args.out.write_text(json.dumps(report, indent=2) + "\n")

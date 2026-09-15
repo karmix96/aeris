@@ -771,6 +771,16 @@ LEVELS["gci_C_normal_s0"] = directional_level(
 #: built with it and the wall-resolved cap alone moves drag by 1.5 counts: a new
 #: cap here would put that into the "normal direction". Build with
 #: --allow-coarse-tip-cap.
+#: Trailing-edge spacing at 0.1 % of chord on the MEDIUM level. On gci_C, gci_C_te
+#: moved drag by -9.0 / -9.2 counts at alpha 0 / 4 -- and that number carries the new
+#: tip cap's +1.5 / +1.7, because gci_C_te was built after the default changed and
+#: compared with the old archive: about -10.5 counts of trailing edge alone. Whether it
+#: shrinks on a finer mesh says whether it is a coarse-mesh error or a setting every
+#: level needs. Old tip cap, to compare with the archived gci_M runs; build with
+#: --allow-coarse-tip-cap.
+LEVELS["gci_M_te"] = _dataclasses.replace(
+    LEVELS["gci_M"], ds_te_frac=0.001, tip_span_first_cell_in_s0=10.0)
+
 LEVELS["gci_C_normal_s0_2"] = _dataclasses.replace(
     directional_level(LEVELS["gci_C"], normal=GCI_RATIO ** 2, scale_first_cell=True),
     tip_span_first_cell_in_s0=10.0)

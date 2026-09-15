@@ -277,12 +277,15 @@ rerun_approval:
     far field 100 chords, trailing-edge spacing 0.1 %) moves drag by a count or more, or
     does not finish, the re-run does not start (artifacts/s8_checklist/queue19.sh).
   sequenced_behind: >-
-    Added the same day by the agent, after the approval: SU2 on the same mesh and freestream,
-    stopped unconverged by its 4 h limit, carried about 25 % more friction drag than ADflow.
-    Friction drag is mesh-converged in ADflow, so a gap that size would be a setup or model
-    difference under every re-run solve. The re-run waits for SU2 to settle and starts only if
-    friction agrees within 10 % and lift within 3 % at both angles (queue19.sh). A
-    precondition on when it starts, not a change to what was approved; the principal
-    investigator can override it.
+    Superseded the same day. SU2's friction drag came out 15 % high on the NACA 0012 TMR case,
+    where ADflow's is within 0.6 %, so the SU2 wing gate was withdrawn and queue19 stopped. The
+    tip-cap approval stands; but queue17 then showed drag moving -20.6 / +35.1 counts with vis4
+    halved / doubled, and about -10.5 counts with the trailing edge at 0.1 % of chord.
+  on_hold: >-
+    Agreed with the principal investigator on 2026-09-15 ("i agree with you"): the re-run waits
+    for the settings tests in queue20.sh -- matrix dissipation on gci_C and gci_M, vis4 halved on
+    gci_M, the trailing edge at 0.1 % on gci_M, far field 100 chords at 65 layers, NACA 4412
+    o1024 -- and a decision on dissipation, trailing-edge spacing and far field. Cut from the run
+    list: the SU2 wing continuation, SA-Edwards, and the gci_M re-run on geometries 29 and 65.
   does_not_add: >-
     cloud spend, a solve above gci_M, or geometries outside the ten.

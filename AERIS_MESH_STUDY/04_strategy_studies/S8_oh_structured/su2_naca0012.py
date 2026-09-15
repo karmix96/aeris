@@ -1,21 +1,19 @@
-"""SU2 on the NACA 0012 TMR case: whose friction drag is right?
+"""SU2 on the NACA 0012 TMR case: whose friction drag is right, and how to fix SU2's.
 
-On the AERIS wing's coarse mesh SU2 carried about 25 % more friction drag than ADflow
-(unconverged, stopped by a 4 h limit; see queue19.sh). ADflow's friction on the NACA
-0012 TMR case -- M 0.15, Re 6e6, alpha 10, SA, chi 3 -- is within 0.3 % of the answer
-CFL3D, FUN3D and TAU agree on. This puts SU2, with EXACTLY the numerics it ran the wing
-with, on the same grid against the same answer:
-  * SU2 lands on the TMR answer too: both codes' SA and setup are right, and the wing gap
-    is about the 3D mesh or the discretisation;
-  * SU2 does not: the gap is SU2's setup, and ADflow's wing friction stands.
+On the AERIS wing's coarse mesh SU2 carried about 25 % more friction drag than ADflow.
+ADflow's friction on the NACA 0012 TMR case -- M 0.15, Re 6e6, alpha 10, SA, chi 3 --
+is within 0.6 % of the answer CFL3D, FUN3D and TAU agree on. With exactly the numerics
+it ran the wing with, on ADflow's own o512 grid, SU2's is 15 % over (variant `wing`).
+So the gap is SU2's setup, and each other variant tests ONE idea about where it comes
+from, at about five minutes a run.
 
 The grid is ADflow's o512 (pyHyp, 500 chords), written as a 2D SU2 mesh from one of its
 two span planes. SU2 takes lift in y in 2D, which is how the airfoil lies.
 
     python su2_naca0012.py mesh
-    python su2_naca0012.py config
-    (cd artifacts/su2_naca0012 && mpirun -np 1 SU2_CFD case.cfg)
-    python su2_naca0012.py compare
+    python su2_naca0012.py config --variant wls
+    (cd artifacts/su2_naca0012/wls && mpirun -np 1 SU2_CFD case.cfg > run.log)
+    python su2_naca0012.py compare --variant wls
 """
 from __future__ import annotations
 
@@ -43,11 +41,27 @@ CASE = {"MACH_NUMBER": "0.15", "AOA": "10.0", "SIDESLIP_ANGLE": "0.0",
         "REF_ORIGIN_MOMENT_Z": "0.0", "FREESTREAM_NU_FACTOR": "3.0",
         "MARKER_HEATFLUX": "( wall, 0.0 )", "MARKER_FAR": "( far )",
         "MARKER_PLOTTING": "( wall )", "MARKER_MONITORING": "( wall )",
-        "MESH_FILENAME": "o512.su2", "MESH_FORMAT": "SU2",
+        "MESH_FILENAME": str(OUT / "o512.su2"), "MESH_FORMAT": "SU2",
         "ITER": "60000", "CONV_FIELD": "DRAG", "CONV_CAUCHY_ELEMS": "500",
         "CONV_CAUCHY_EPS": "1E-7", "CONV_STARTITER": "10",
         "VOLUME_OUTPUT": "( COORDINATES, SOLUTION, PRIMITIVE )"}
 DROP = {"MARKER_SYM"}                  # a 2D mesh has no symmetry planes
+#: one idea each about where +15 % friction comes from
+VARIANTS = {
+    "wing": {},
+    # friction is built from velocity gradients at the wall, and Green-Gauss gradients
+    # are the usual suspect on the very flat cells a wall-resolved mesh puts there
+    "wls": {"NUM_METHOD_GRAD": "WEIGHTED_LEAST_SQUARES"},
+    # second-order advection of the turbulence variable, as the TMR codes run it
+    "wls_muscl_turb": {"NUM_METHOD_GRAD": "WEIGHTED_LEAST_SQUARES", "MUSCL_TURB": "YES"},
+    # an upwind flux in place of JST's central flux with scalar dissipation
+    "roe_wls": {"CONV_NUM_METHOD_FLOW": "ROE", "MUSCL_FLOW": "YES",
+                "SLOPE_LIMITER_FLOW": "NONE", "NUM_METHOD_GRAD": "WEIGHTED_LEAST_SQUARES"},
+}
+
+
+def run_dir(variant: str) -> Path:
+    return OUT if variant == "wing" else OUT / variant
 
 
 def cmd_mesh(args) -> int:
@@ -101,25 +115,29 @@ def cmd_mesh(args) -> int:
 
 
 def cmd_config(args) -> int:
+    keys = {**CASE, **VARIANTS[args.variant]}
     out, seen = [], set()
     for line in WING_CFG.read_text().splitlines():
         key = line.split("=")[0].strip()
         if key in DROP:
             continue
-        if key in CASE:
-            out.append(f"{key}= {CASE[key]}")
+        if key in keys:
+            out.append(f"{key}= {keys[key]}")
             seen.add(key)
         else:
             out.append(line)
-    out += [f"{k}= {v}" for k, v in CASE.items() if k not in seen]
-    OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / "case.cfg").write_text("\n".join(out) + "\n")
-    print(f"  case.cfg: the wing's numerics, {len(CASE)} case keys replaced")
+    out += [f"{k}= {v}" for k, v in keys.items() if k not in seen]
+    directory = run_dir(args.variant)
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / "case.cfg").write_text("\n".join(out) + "\n")
+    print(f"  {directory / 'case.cfg'}: the wing's numerics, {len(CASE)} case keys, "
+          f"variant {args.variant!r} {VARIANTS[args.variant]}")
     return 0
 
 
 def cmd_compare(args) -> int:
-    text = (OUT / "forces_breakdown.dat").read_text()
+    directory = run_dir(args.variant)
+    text = (directory / "forces_breakdown.dat").read_text()
     number = r"([-\d.eE+]+)"
 
     def total(key: str) -> list[float]:
@@ -132,28 +150,39 @@ def cmd_compare(args) -> int:
     su2 = {"CL": cl, "CD": cd, "CDp": cdp, "CDv": cdv}
     adflow = json.loads(ADFLOW_RESULT.read_text())["coefficients"]
     tmr = {k: sum(v) / 2 for k, v in REFERENCE.items()}
-    log = (OUT / "run.log").read_text() if (OUT / "run.log").exists() else ""
-    report = {"schema": "aeris.s8.su2_naca0012.v1", "grid": str(GRID),
-              "su2_exit_success": "Exit Success" in log,
-              "tmr_sa_no_point_vortex_mid": tmr, "su2": su2, "adflow_o512_chi3": adflow,
-              "su2_vs_tmr_pct": {k: 100 * (su2[k] - tmr[k]) / tmr[k] for k in su2},
-              "adflow_vs_tmr_pct": {k: 100 * (adflow[k] - tmr[k]) / tmr[k] for k in su2}}
+    log = (directory / "run.log").read_text() if (directory / "run.log").exists() else ""
+    report = json.loads(REPORT.read_text()) if REPORT.exists() else {}
+    if report.get("schema") != "aeris.s8.su2_naca0012.v2":
+        # v1 held the one `wing` run; keep it as that variant
+        old = report if report.get("su2") else None
+        report = {"schema": "aeris.s8.su2_naca0012.v2", "grid": str(GRID),
+                  "tmr_sa_no_point_vortex_mid": tmr, "adflow_o512_chi3": adflow,
+                  "adflow_vs_tmr_pct": {k: 100 * (adflow[k] - tmr[k]) / tmr[k] for k in su2},
+                  "variants": {}}
+        if old:
+            report["variants"]["wing"] = {"changes": {}, "su2": old["su2"],
+                                          "su2_vs_tmr_pct": old["su2_vs_tmr_pct"],
+                                          "exit_success": old.get("su2_exit_success")}
+    report["variants"][args.variant] = {
+        "changes": VARIANTS[args.variant], "su2": su2, "exit_success": "Exit Success" in log,
+        "su2_vs_tmr_pct": {k: 100 * (su2[k] - tmr[k]) / tmr[k] for k in su2}}
     REPORT.write_text(json.dumps(report, indent=2) + "\n")
-    print(f"{'':>8}{'CL':>10}{'CD':>11}{'CDp':>11}{'CDv':>11}")
-    for name, row in (("TMR", tmr), ("ADflow", adflow), ("SU2", su2)):
-        print(f"{name:>8}" + "".join(f"{row[k]:>11.6f}" for k in ("CL", "CD", "CDp", "CDv")))
-    for name in ("adflow", "su2"):
-        pct = report[f"{name}_vs_tmr_pct"]
-        print(f"  {name} vs TMR: " + "  ".join(f"{k} {v:+.2f}%" for k, v in pct.items()))
-    print(f"  SU2 finished cleanly: {report['su2_exit_success']}\n  wrote {REPORT}")
+    print(f"{'':>16}{'CL':>9}{'CD':>9}{'CDp':>9}{'CDv':>9}   (% from TMR)")
+    print(f"{'ADflow':>16}" + "".join(f"{v:>+9.2f}" for v in report["adflow_vs_tmr_pct"].values()))
+    for name, v in report["variants"].items():
+        print(f"{'SU2 ' + name:>16}" + "".join(f"{x:>+9.2f}" for x in v["su2_vs_tmr_pct"].values())
+              + ("" if v.get("exit_success") else "   (did not finish cleanly)"))
+    print(f"  wrote {REPORT}")
     return 0
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
-    for name in ("mesh", "config", "compare"):
-        sub.add_parser(name)
+    sub.add_parser("mesh")
+    for name in ("config", "compare"):
+        p = sub.add_parser(name)
+        p.add_argument("--variant", default="wing", choices=list(VARIANTS))
     args = ap.parse_args()
     return {"mesh": cmd_mesh, "config": cmd_config, "compare": cmd_compare}[args.cmd](args)
 

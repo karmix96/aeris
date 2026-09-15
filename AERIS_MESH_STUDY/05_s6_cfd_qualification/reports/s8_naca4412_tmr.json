@@ -1,0 +1,161 @@
+{
+  "schema": "aeris.s8.naca4412_tmr.v1",
+  "case": {
+    "mach": 0.09,
+    "reynolds": 1520000.0,
+    "reynolds_length": 1.0,
+    "temperature_K": 297.77777777777777,
+    "alpha_deg": 13.87
+  },
+  "reference_sa_897": {
+    "CFL3D": {
+      "CL": 1.721,
+      "CD": 0.02861,
+      "CDp": 0.02156,
+      "CDv": 0.007042
+    },
+    "FUN3D": {
+      "CL": 1.717,
+      "CD": 0.02947,
+      "CDp": 0.02246,
+      "CDv": 0.007006
+    }
+  },
+  "unconverged_or_missing": [
+    "o1024"
+  ],
+  "levels": {
+    "o256": {
+      "CL": 1.7173677023536877,
+      "CD": 0.034090395480294466,
+      "CDp": 0.027145002418815654,
+      "CDv": 0.0069453930614787746,
+      "CM": -0.07485725038795443
+    },
+    "o512": {
+      "CL": 1.743856972891006,
+      "CD": 0.030230976988306204,
+      "CDp": 0.023214993005494605,
+      "CDv": 0.0070159839828115855,
+      "CM": -0.07389802677651656
+    }
+  },
+  "forces": {
+    "CL": {
+      "finest_grid": "o512",
+      "finest_value": 1.743856972891006,
+      "sa_band": [
+        1.717,
+        1.721
+      ],
+      "finest_inside_band": false,
+      "finest_vs_band_mid_pct": 1.4460135480515397
+    },
+    "CD": {
+      "finest_grid": "o512",
+      "finest_value": 0.030230976988306204,
+      "sa_band": [
+        0.02861,
+        0.02947
+      ],
+      "finest_inside_band": false,
+      "finest_vs_band_mid_pct": 4.101160428051667
+    },
+    "CDp": {
+      "finest_grid": "o512",
+      "finest_value": 0.023214993005494605,
+      "sa_band": [
+        0.02156,
+        0.02246
+      ],
+      "finest_inside_band": false,
+      "finest_vs_band_mid_pct": 5.474752410243537
+    },
+    "CDv": {
+      "finest_grid": "o512",
+      "finest_value": 0.0070159839828115855,
+      "sa_band": [
+        0.007006,
+        0.007042
+      ],
+      "finest_inside_band": true,
+      "finest_vs_band_mid_pct": -0.11412325154348424
+    }
+  },
+  "surface": {
+    "fields_in_file": [
+      "CoefPressure",
+      "SkinFrictionMagnitude",
+      "SkinFrictionX",
+      "YPlus"
+    ],
+    "yplus_max": 0.2750604450702667,
+    "cp_rms_vs_experiment": {
+      "upper": 0.19269556404454957,
+      "lower": 0.17819107843775134
+    },
+    "cp_rms_vs_cfl3d": {
+      "upper": 0.04481039731657076,
+      "lower": 0.0451489048961579
+    },
+    "cp_min": {
+      "cfd": -7.553280353546143,
+      "experiment": -6.209,
+      "cfl3d": -7.4492
+    },
+    "separation_x_over_c": {
+      "cfd": 0.789928377999476,
+      "cfl3d": 0.7892283937960362
+    },
+    "cf_upper_rms_vs_cfl3d": 0.014299279011131151
+  },
+  "profiles": {
+    "u_inf_from_far_field": 0.1064574122428894,
+    "u_inf_from_problem": 31.134017928223944,
+    "stations": {
+      "x=.6753": {
+        "points": 140,
+        "rms_u_vs_experiment": 0.04775334089194796,
+        "experiment_reversed_at_wall": false,
+        "rms_u_vs_cfl3d": 0.006439241316265922,
+        "rms_cfl3d_vs_experiment": 0.046022399268148224
+      },
+      "x=.7308": {
+        "points": 140,
+        "rms_u_vs_experiment": 0.05174412849346275,
+        "experiment_reversed_at_wall": false,
+        "rms_u_vs_cfl3d": 0.006656852051081766,
+        "rms_cfl3d_vs_experiment": 0.05152257029410232
+      },
+      "x=.7863": {
+        "points": 140,
+        "rms_u_vs_experiment": 0.06588294238324749,
+        "experiment_reversed_at_wall": false,
+        "rms_u_vs_cfl3d": 0.006662091319734376,
+        "rms_cfl3d_vs_experiment": 0.06638907160662849
+      },
+      "x=.8418": {
+        "points": 140,
+        "rms_u_vs_experiment": 0.09082073982119093,
+        "experiment_reversed_at_wall": false,
+        "rms_u_vs_cfl3d": 0.006605946815403379,
+        "rms_cfl3d_vs_experiment": 0.09031201524949718
+      },
+      "x=.8973": {
+        "points": 140,
+        "rms_u_vs_experiment": 0.11132689042981976,
+        "experiment_reversed_at_wall": true,
+        "rms_u_vs_cfl3d": 0.007143371643347854,
+        "rms_cfl3d_vs_experiment": 0.1085992781062327
+      },
+      "x=.9528": {
+        "points": 138,
+        "rms_u_vs_experiment": 0.11772099114270622,
+        "experiment_reversed_at_wall": true,
+        "rms_u_vs_cfl3d": 0.009742238793464976,
+        "rms_cfl3d_vs_experiment": 0.1113520164706772
+      }
+    },
+    "experiment_first_station_reversed_near_wall": "x=.8973"
+  }
+}

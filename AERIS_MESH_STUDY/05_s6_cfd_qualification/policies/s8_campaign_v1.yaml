@@ -258,3 +258,23 @@ convergence_acceptance:
     carried 20-40x further, no force moves by more than 0.073 per cent.
   evidence: reports/s8_equation_convergence.json
   recorded_in_every_row: equation_orders (dataset_row schema v2)
+
+rerun_approval:
+  decided_on: 2026-09-15
+  how_given: >-
+    Directed in session by the principal investigator: "ok approve the re-run with the
+    new tip cap".
+  approves: >-
+    The ten-wing gci_C re-run at alpha -2, 0, 4, 8 and the five-wing gci_M re-run (83, 29,
+    65, 47, 13) with the wall-resolved tip cap (tip_span_first_cell_in_s0 = 2) and SA
+    freestream chi 3 (eddyVisInfRatio 0.21), into artifacts/s8_v2 and dataset_v2.
+  why: >-
+    On index 83 the wall-resolved tip cap moved drag by +1.5 / +1.7 / +2.3 counts at alpha
+    0 / 4 / 8, above the one-count decision threshold; y+ <= 1 on every wall cell is
+    mandatory, so the old cap is not an option.
+  scope_limit: >-
+    The tip cap only. If any other pre-cloud wing test (low-speed preconditioner, vis4,
+    far field 100 chords, trailing-edge spacing 0.1 %) moves drag by a count or more, or
+    does not finish, the re-run does not start (artifacts/s8_checklist/queue19.sh).
+  does_not_add: >-
+    cloud spend, a solve above gci_M, or geometries outside the ten.

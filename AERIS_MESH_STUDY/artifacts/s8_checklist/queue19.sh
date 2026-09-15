@@ -67,7 +67,10 @@ change = {"RESTART_SOL": "YES", "SOLUTION_FILENAME": "restart.dat",
           "BREAKDOWN_FILENAME": "forces_breakdown_settled.dat",
           "SURFACE_FILENAME": "surface_settled", "ITER": "15000", "CONV_FIELD": "DRAG",
           "CONV_CAUCHY_ELEMS": "500", "CONV_CAUCHY_EPS": "1E-6", "CONV_STARTITER": "10",
-          "OUTPUT_WRT_FREQ": "250"}
+          "OUTPUT_WRT_FREQ": "250",
+          # without PRIMITIVE the surface file carries no skin friction and no y+, and
+          # the first run's could not say WHERE the friction differs
+          "VOLUME_OUTPUT": "( COORDINATES, SOLUTION, PRIMITIVE )"}
 out, seen = [], set()
 for line in (d / "case.cfg").read_text().splitlines():
     key = line.split("=")[0].strip()

@@ -124,10 +124,13 @@ against the TMR's agreed answer: lift within 0.5 %, drag within 2 % after extrap
 CFL3D–FUN3D SA band after extrapolation (the band itself is 0.23 % wide in lift and 3 % in drag),
 upper-surface separation within 0.05 x/c of CFL3D's 0.79; cp and the six velocity profiles are
 reported against experiment as trends, because TMR itself calls the case weak as validation.
-*Status (15 Sept):* M6 on our mesh converged — suction peak 2.6 % (**not met**), shock position
+*Status (16 Sept):* M6 on our mesh converged — suction peak 2.6 % (**not met**), shock position
 0.021 x/c (**marginal**), sectional loads not yet integrated on it. NACA 0012 at −0.19 % lift,
-+2.7 % drag on the finest converged grid. NACA 4412 grids built (3.6e-8 chord from TMR's wall
-points), queued in `queue18.sh`.
++2.7 % drag on the finest converged grid. **NACA 4412 complete on three grids**: extrapolated CD
++0.63 %, CDp +0.84 %, CDv +0.06 % of the CFL3D–FUN3D band's middle and **inside the band**
+(observed order 2.27–2.75, GCI ≤ 1.2 %); separation x/c 0.796 against CFL3D's 0.789 (**met**);
+profiles within 0.006–0.015 of CFL3D; y+ 0.167. **CL +1.34 %, outside the 1 % criterion, and not
+monotone across the three grids** — reported, not extrapolated.
 
 **G. Model form.** SA against a second turbulence model, reported as a band, not a number. The
 transition assumption carried as an explicit bound (fully turbulent section drag is 1.4–2.0×

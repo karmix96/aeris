@@ -21,9 +21,7 @@
       "CDv": 0.007006
     }
   },
-  "unconverged_or_missing": [
-    "o1024"
-  ],
+  "unconverged_or_missing": [],
   "levels": {
     "o256": {
       "CL": 1.7173677023536877,
@@ -38,48 +36,82 @@
       "CDp": 0.023214993005494605,
       "CDv": 0.0070159839828115855,
       "CM": -0.07389802677651656
+    },
+    "o1024": {
+      "CL": 1.741999254836131,
+      "CD": 0.029431452443324874,
+      "CDp": 0.022404969203263164,
+      "CDv": 0.007026483240061693,
+      "CM": -0.0722583185899897
     }
   },
   "forces": {
     "CL": {
-      "finest_grid": "o512",
-      "finest_value": 1.743856972891006,
+      "finest_grid": "o1024",
+      "finest_value": 1.741999254836131,
       "sa_band": [
         1.717,
         1.721
       ],
       "finest_inside_band": false,
-      "finest_vs_band_mid_pct": 1.4460135480515397
+      "finest_vs_band_mid_pct": 1.33794385317806,
+      "richardson": {
+        "monotone": false
+      }
     },
     "CD": {
-      "finest_grid": "o512",
-      "finest_value": 0.030230976988306204,
+      "finest_grid": "o1024",
+      "finest_value": 0.029431452443324874,
       "sa_band": [
         0.02861,
         0.02947
       ],
-      "finest_inside_band": false,
-      "finest_vs_band_mid_pct": 4.101160428051667
+      "finest_inside_band": true,
+      "finest_vs_band_mid_pct": 1.3479767332123753,
+      "richardson": {
+        "monotone": true,
+        "observed_order": 2.271169260007921,
+        "extrapolated": 0.029222543406247664,
+        "gci_fine_pct": 0.8872694844040547
+      },
+      "extrapolated_inside_band": true,
+      "extrapolated_vs_band_mid_pct": 0.628592996720607
     },
     "CDp": {
-      "finest_grid": "o512",
-      "finest_value": 0.023214993005494605,
+      "finest_grid": "o1024",
+      "finest_value": 0.022404969203263164,
       "sa_band": [
         0.02156,
         0.02246
       ],
-      "finest_inside_band": false,
-      "finest_vs_band_mid_pct": 5.474752410243537
+      "finest_inside_band": true,
+      "finest_vs_band_mid_pct": 1.7944988789784722,
+      "richardson": {
+        "monotone": true,
+        "observed_order": 2.2784965613306487,
+        "extrapolated": 0.022194667412816015,
+        "gci_fine_pct": 1.1732988145355145
+      },
+      "extrapolated_inside_band": true,
+      "extrapolated_vs_band_mid_pct": 0.8390159600909289
     },
     "CDv": {
-      "finest_grid": "o512",
-      "finest_value": 0.0070159839828115855,
+      "finest_grid": "o1024",
+      "finest_value": 0.007026483240061693,
       "sa_band": [
         0.007006,
         0.007042
       ],
       "finest_inside_band": true,
-      "finest_vs_band_mid_pct": -0.11412325154348424
+      "finest_vs_band_mid_pct": 0.03535364552524088,
+      "richardson": {
+        "monotone": true,
+        "observed_order": 2.749195380258106,
+        "extrapolated": 0.00702831767757456,
+        "gci_fine_pct": 0.03263434655348211
+      },
+      "extrapolated_inside_band": true,
+      "extrapolated_vs_band_mid_pct": 0.06147035271298459
     }
   },
   "surface": {
@@ -89,70 +121,70 @@
       "SkinFrictionX",
       "YPlus"
     ],
-    "yplus_max": 0.2750604450702667,
+    "yplus_max": 0.16697536408901215,
     "cp_rms_vs_experiment": {
-      "upper": 0.19269556404454957,
-      "lower": 0.17819107843775134
+      "upper": 0.19572189778051646,
+      "lower": 0.1756675890051935
     },
     "cp_rms_vs_cfl3d": {
-      "upper": 0.04481039731657076,
-      "lower": 0.0451489048961579
+      "upper": 0.04505511358685372,
+      "lower": 0.04321816894504283
     },
     "cp_min": {
-      "cfd": -7.553280353546143,
+      "cfd": -7.55131721496582,
       "experiment": -6.209,
       "cfl3d": -7.4492
     },
     "separation_x_over_c": {
-      "cfd": 0.789928377999476,
+      "cfd": 0.7962296819565338,
       "cfl3d": 0.7892283937960362
     },
-    "cf_upper_rms_vs_cfl3d": 0.014299279011131151
+    "cf_upper_rms_vs_cfl3d": 0.015155111328003193
   },
   "profiles": {
-    "u_inf_from_far_field": 0.1064574122428894,
+    "u_inf_from_far_field": 0.10647089034318924,
     "u_inf_from_problem": 31.134017928223944,
     "stations": {
       "x=.6753": {
         "points": 140,
-        "rms_u_vs_experiment": 0.04775334089194796,
+        "rms_u_vs_experiment": 0.050307192785170894,
         "experiment_reversed_at_wall": false,
-        "rms_u_vs_cfl3d": 0.006439241316265922,
+        "rms_u_vs_cfl3d": 0.005615949811499832,
         "rms_cfl3d_vs_experiment": 0.046022399268148224
       },
       "x=.7308": {
         "points": 140,
-        "rms_u_vs_experiment": 0.05174412849346275,
+        "rms_u_vs_experiment": 0.05605546439053371,
         "experiment_reversed_at_wall": false,
-        "rms_u_vs_cfl3d": 0.006656852051081766,
+        "rms_u_vs_cfl3d": 0.006065594604531507,
         "rms_cfl3d_vs_experiment": 0.05152257029410232
       },
       "x=.7863": {
         "points": 140,
-        "rms_u_vs_experiment": 0.06588294238324749,
+        "rms_u_vs_experiment": 0.07226352790771517,
         "experiment_reversed_at_wall": false,
-        "rms_u_vs_cfl3d": 0.006662091319734376,
+        "rms_u_vs_cfl3d": 0.007145114564177159,
         "rms_cfl3d_vs_experiment": 0.06638907160662849
       },
       "x=.8418": {
         "points": 140,
-        "rms_u_vs_experiment": 0.09082073982119093,
+        "rms_u_vs_experiment": 0.09854400674427542,
         "experiment_reversed_at_wall": false,
-        "rms_u_vs_cfl3d": 0.006605946815403379,
+        "rms_u_vs_cfl3d": 0.009199714017095625,
         "rms_cfl3d_vs_experiment": 0.09031201524949718
       },
       "x=.8973": {
         "points": 140,
-        "rms_u_vs_experiment": 0.11132689042981976,
+        "rms_u_vs_experiment": 0.11963556406635459,
         "experiment_reversed_at_wall": true,
-        "rms_u_vs_cfl3d": 0.007143371643347854,
+        "rms_u_vs_cfl3d": 0.01195991275640649,
         "rms_cfl3d_vs_experiment": 0.1085992781062327
       },
       "x=.9528": {
         "points": 138,
-        "rms_u_vs_experiment": 0.11772099114270622,
+        "rms_u_vs_experiment": 0.12558424671782162,
         "experiment_reversed_at_wall": true,
-        "rms_u_vs_cfl3d": 0.009742238793464976,
+        "rms_u_vs_cfl3d": 0.015127438837460367,
         "rms_cfl3d_vs_experiment": 0.1113520164706772
       }
     },

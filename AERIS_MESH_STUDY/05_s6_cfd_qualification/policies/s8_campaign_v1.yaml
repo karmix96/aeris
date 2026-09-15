@@ -276,5 +276,13 @@ rerun_approval:
     The tip cap only. If any other pre-cloud wing test (low-speed preconditioner, vis4,
     far field 100 chords, trailing-edge spacing 0.1 %) moves drag by a count or more, or
     does not finish, the re-run does not start (artifacts/s8_checklist/queue19.sh).
+  sequenced_behind: >-
+    Added the same day by the agent, after the approval: SU2 on the same mesh and freestream,
+    stopped unconverged by its 4 h limit, carried about 25 % more friction drag than ADflow.
+    Friction drag is mesh-converged in ADflow, so a gap that size would be a setup or model
+    difference under every re-run solve. The re-run waits for SU2 to settle and starts only if
+    friction agrees within 10 % and lift within 3 % at both angles (queue19.sh). A
+    precondition on when it starts, not a change to what was approved; the principal
+    investigator can override it.
   does_not_add: >-
     cloud spend, a solve above gci_M, or geometries outside the ten.

@@ -111,35 +111,35 @@
     },
     "fp_inc_545": {
       "kind": "flatplate_inc",
-      "finished": false,
+      "finished": true,
       "interrupted": false,
-      "time_limit_hit": true,
+      "time_limit_hit": false,
       "memory_guard_hit": false,
       "convergence": {
-        "iterations": 3451,
+        "iterations": 1657,
         "rms_first_last": {
           "rms[P]": [
-            -18.62089505,
-            -12.42240669
+            -12.02297914,
+            -14.00793472
           ],
           "rms[U]": [
-            -18.22729914,
-            -10.69179386
+            -10.18104109,
+            -12.18296521
           ],
           "rms[V]": [
-            -22.87422146,
-            -11.99001109
+            -11.56534933,
+            -13.52850671
           ],
           "rms[nu]": [
-            -8.882413492,
-            -14.73088759
+            -14.18869869,
+            -16.28108231
           ]
         },
         "orders_dropped": {
-          "rms[P]": -6.2,
-          "rms[U]": -7.54,
-          "rms[V]": -10.88,
-          "rms[nu]": 5.85
+          "rms[P]": 1.98,
+          "rms[U]": 2.0,
+          "rms[V]": 1.96,
+          "rms[nu]": 2.09
         }
       },
       "cells": 208896,
@@ -151,8 +151,11 @@
         "CFL3D": 0.00285985288,
         "FUN3D": 0.002852469
       },
-      "CD": 0.002873,
-      "cd_error_pct": 0.5895697180145759,
+      "cf_x0.97": 0.00272802097138646,
+      "cf_error_pct": -0.04430224193029535,
+      "cf_pass": true,
+      "CD": 0.002872,
+      "cd_error_pct": 0.5545576853943086,
       "cd_pass": true
     },
     "naca0012_inc_897": {

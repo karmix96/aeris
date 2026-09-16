@@ -1,19 +1,12 @@
 {
-  "schema": "aeris.s8.su2_naca0012.v1",
+  "schema": "aeris.s8.su2_naca0012.v2",
   "grid": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/tmr_naca0012/o512.cgns",
-  "su2_exit_success": true,
   "tmr_sa_no_point_vortex_mid": {
     "CL": 1.09094,
     "CD": 0.012272749999999999,
     "CM": 0.006784999999999999,
     "CDp": 0.0060669999999999995,
     "CDv": 0.0062059
-  },
-  "su2": {
-    "CL": 1.09478,
-    "CD": 0.013681,
-    "CDp": 0.006516,
-    "CDv": 0.007165
   },
   "adflow_o512_chi3": {
     "CL": 1.0987098197350047,
@@ -22,16 +15,86 @@
     "CDv": 0.006243463414862334,
     "CM": 0.0045059393752912855
   },
-  "su2_vs_tmr_pct": {
-    "CL": 0.3519900269492424,
-    "CD": 11.474608380354864,
-    "CDp": 7.400692269655525,
-    "CDv": 15.454647996261622
-  },
   "adflow_vs_tmr_pct": {
     "CL": 0.7122132963320329,
     "CD": 5.003903953872937,
     "CDp": 9.50062976160504,
     "CDv": 0.6052855325147638
+  },
+  "variants": {
+    "wing": {
+      "changes": {},
+      "su2": {
+        "CL": 1.09478,
+        "CD": 0.013681,
+        "CDp": 0.006516,
+        "CDv": 0.007165
+      },
+      "exit_success": true,
+      "su2_vs_tmr_pct": {
+        "CL": 0.3519900269492424,
+        "CD": 11.474608380354864,
+        "CDp": 7.400692269655525,
+        "CDv": 15.454647996261622
+      }
+    },
+    "wls": {
+      "changes": {
+        "NUM_METHOD_GRAD": "WEIGHTED_LEAST_SQUARES"
+      },
+      "su2": {
+        "CL": 1.094234,
+        "CD": 0.013731,
+        "CDp": 0.006551,
+        "CDv": 0.00718
+      },
+      "exit_success": true,
+      "su2_vs_tmr_pct": {
+        "CL": 0.30194144499238346,
+        "CD": 11.882015033305505,
+        "CDp": 7.977583649250057,
+        "CDv": 15.696353470084908
+      }
+    },
+    "wls_muscl_turb": {
+      "changes": {
+        "NUM_METHOD_GRAD": "WEIGHTED_LEAST_SQUARES",
+        "MUSCL_TURB": "YES"
+      },
+      "su2": {
+        "CL": 1.095484,
+        "CD": 0.013761,
+        "CDp": 0.006545,
+        "CDv": 0.007215
+      },
+      "exit_success": true,
+      "su2_vs_tmr_pct": {
+        "CL": 0.4165215318899189,
+        "CD": 12.126459025075896,
+        "CDp": 7.878687984176696,
+        "CDv": 16.26033290900594
+      }
+    },
+    "roe_wls": {
+      "changes": {
+        "CONV_NUM_METHOD_FLOW": "ROE",
+        "MUSCL_FLOW": "YES",
+        "SLOPE_LIMITER_FLOW": "NONE",
+        "NUM_METHOD_GRAD": "WEIGHTED_LEAST_SQUARES"
+      },
+      "su2": {
+        "CL": 1.089662,
+        "CD": 0.012209,
+        "CDp": 0.005999,
+        "CDv": 0.00621
+      },
+      "exit_success": false,
+      "su2_vs_tmr_pct": {
+        "CL": -0.11714668084405305,
+        "CD": -0.519443482512066,
+        "CDp": -1.1208175374979312,
+        "CDv": 0.06606616284503354
+      }
+    }
   }
 }

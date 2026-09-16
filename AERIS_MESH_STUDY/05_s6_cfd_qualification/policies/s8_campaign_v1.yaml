@@ -289,3 +289,33 @@ rerun_approval:
     list: the SU2 wing continuation, SA-Edwards, and the gci_M re-run on geometries 29 and 65.
   does_not_add: >-
     cloud spend, a solve above gci_M, or geometries outside the ten.
+
+settings_decision:
+  decided_on: 2026-09-16
+  how_given: >-
+    Directed in session by the principal investigator: "approve the dampoing, TE spacing and far
+    field", after the queue20 settings tests were reported with a recommendation for each.
+  dissipation: >-
+    KEEP ADflow's default central scheme with scalar dissipation (vis2 0.25, vis4 0.0156).
+    Evidence: halving vis4 moves drag -20.6 counts at gci_C but only -12.0 at gci_M, a factor of
+    0.58 per level and close to second order, so it is discretization error the grid family
+    removes rather than a setting to choose. The less dissipative matrix scheme was tried twice
+    and would not converge (ANK held CFL at 42-88; with NK allowed the density residual grew 27x
+    over 400 iterations), so it is not a candidate for production runs.
+  trailing_edge: >-
+    ADOPT 0.1 % of local chord at every level, the AIAA Drag Prediction Workshop guideline,
+    replacing the 0.4 % the hand-written ladder carried. Evidence: as a single change it moves
+    drag about -10.5 counts at gci_C and -3.8 at gci_M. It costs no cells -- the ring keeps its
+    point count and only redistributes -- and the spacing scales with the refinement ratio, so
+    the family stays self-similar. Implemented as LEVELS["gci_C"].ds_te_frac = 0.001, with
+    gci_M/F/FF refined from it.
+  far_field: >-
+    KEEP 40 root chords and state the offset. Evidence: 100 chords at the same 65 layers is worth
+    +1.50 counts at alpha 0 and +1.52 at alpha 8, inside the workshops' own 4-5 count code
+    scatter, and about half of that is friction because the longer march raises viscous-layer
+    growth to 1.273. Reaching 100 chords within the growth guideline needs about 30 more wall
+    layers, and extra layers at fixed chordwise resolution add drag of their own (AUDIT C8).
+  consequence: >-
+    The re-run and every level built from here carry: wall-resolved tip cap (2 x s0), SA
+    freestream chi 3, trailing edge 0.1 %, far field 40 chords, ADflow default dissipation. The
+    69-row archive predates all of these and is superseded.

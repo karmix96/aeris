@@ -232,10 +232,23 @@ LEVELS["legacy_L0"] = LEVELS["oh_L0"]
 #: measured; gci_C / gci_M / gci_F is the same family one rung up and needs 21 GiB
 #: at the top, which is a bigger machine.
 LEVELS["gci_CC"] = refined_level(LEVELS["oh_L3"], 1.0 / GCI_RATIO, name="gci_CC")
-LEVELS["gci_C"] = LEVELS["oh_L3"]
-LEVELS["gci_M"] = refined_level(LEVELS["oh_L3"], GCI_RATIO, name="gci_M")
-LEVELS["gci_F"] = refined_level(LEVELS["oh_L3"], GCI_RATIO ** 2, name="gci_F")
-LEVELS["gci_FF"] = refined_level(LEVELS["oh_L3"], GCI_RATIO ** 3, name="gci_FF")
+#: The campaign family. Approved by the principal investigator on 2026-09-16: the trailing
+#: edge sits at 0.1 % of local chord -- the DPW guideline -- instead of the 0.4 % the
+#: hand-written ladder carried. Measured as a single change it is worth about -10.5 counts of
+#: drag at gci_C and -3.8 at gci_M, and it costs no cells: it only moves points that are
+#: already on the ring. The spacing scales with the refinement ratio like every other spacing,
+#: so the family stays self-similar and a GCI over it remains legal.
+#:
+#: Unchanged by the same decision: the far field stays at 40 root chords (100 chords is worth
+#: +1.5 counts at alpha 0 and 8, carried as a stated offset, and reaching it within the growth
+#: guideline would need about 30 more wall layers, which themselves add drag), and ADflow's
+#: default dissipation stays (halving vis4 moves gci_C by -20.6 counts and gci_M by -12.0, so
+#: that error falls with refinement and the family removes it; the less dissipative matrix
+#: scheme would not converge at all).
+LEVELS["gci_C"] = _dataclasses.replace(LEVELS["oh_L3"], ds_te_frac=0.001)
+LEVELS["gci_M"] = refined_level(LEVELS["gci_C"], GCI_RATIO, name="gci_M")
+LEVELS["gci_F"] = refined_level(LEVELS["gci_C"], GCI_RATIO ** 2, name="gci_F")
+LEVELS["gci_FF"] = refined_level(LEVELS["gci_C"], GCI_RATIO ** 3, name="gci_FF")
 
 #: A half-step between `gci_M` and `gci_F`, for a host that can hold about 17 GiB
 #: but not the 22.5 GiB `gci_F` asks for.  PLAN_desktop_campaign.md 2.1 offers it

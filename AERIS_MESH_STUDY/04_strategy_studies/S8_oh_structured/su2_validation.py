@@ -51,6 +51,7 @@ STUDY = HERE.parents[1]
 TUTORIALS = STUDY / "artifacts/su2_tutorials"
 RUNS = STUDY / "artifacts/su2_validation"
 TMR_FP = STUDY / "05_s6_cfd_qualification/external/tmr_flatplate"
+E387 = STUDY / "05_s6_cfd_qualification/external/e387"
 REPORT = STUDY / "05_s6_cfd_qualification/reports/s8_su2_validation.json"
 
 CASES = {
@@ -90,6 +91,13 @@ OUTPUT_ONLY = {
 }
 X_CF = 0.970084071            # TMR's skin-friction station
 NACA_TMR = {"CL": 1.09094, "CD": 0.0122728, "CDp": 0.006067, "CDv": 0.0062059}
+# McGhee TM-4062 table A1, row 6 -- computed for this exact run condition (R = 200,000,
+# M = 0.06, q = 0.033 psi). This is what "agreement" can mean for the E387 cases. The report's
+# familiar "+/-2 drag counts" holds only above q = 0.08 psi and does NOT apply here.
+E387_UNCERTAINTY = {"CD": 0.00026, "CL": 0.001, "CM": 0.0004}
+# and repeating the same angle with decreasing alpha (run 11) moved the drag 3 counts, so 118
+# counts is 118 +/- 3 before any instrument uncertainty is counted
+E387_HYSTERESIS_CD = 0.0003
 PRANDTL_GLAUERT_TO_INCOMPRESSIBLE = math.sqrt(1.0 - 0.15 ** 2)
 
 
@@ -167,7 +175,15 @@ def forces(directory: Path) -> dict | None:
     cl, cd = total("CL"), total("CD")
     if not cl or not cd:
         return None
-    return {"CL": cl[0], "CD": cd[0], "CDp": cd[1], "CDv": cd[2]}
+    out = {"CL": cl[0], "CD": cd[0], "CDp": cd[1], "CDv": cd[2]}
+    cm = total("CMz")
+    if cm:
+        # Kept with SU2's sign, which is opposite to the NASA reports: their pitching moment is
+        # nose-down negative about the quarter chord, so E387's CMz = +0.0781 here is McGhee's
+        # -0.0794. Graders compare magnitudes; comparing signed values scores a correct run at
+        # roughly -200 %.
+        out["CMz"] = cm[0]
+    return out
 
 
 def surface(directory: Path) -> dict | None:
@@ -256,7 +272,10 @@ def judge_naca(directory: Path, entry: dict) -> None:
     if not f:
         return
     ref = dict(NACA_TMR, CL=NACA_TMR["CL"] * PRANDTL_GLAUERT_TO_INCOMPRESSIBLE)
-    err = {k: 100 * (f[k] - ref[k]) / ref[k] for k in f}
+    # over the reference's keys, not the run's. forces() also returns CMz now, and the TMR table
+    # carries no moment, so iterating the run's keys raised KeyError('CMz') and left this case
+    # ungraded -- the only thing that caught it was that compare records exceptions.
+    err = {k: 100 * (f[k] - ref[k]) / ref[k] for k in ref}
     entry.update({"forces": f, "reference": ref, "error_pct": err,
                   "reference_note": "TMR SA at M 0.15, lift taken to M 0 by Prandtl-Glauert",
                   "pass": {"CDv": abs(err["CDv"]) <= 1.0, "CD": abs(err["CD"]) <= 2.0,
@@ -275,12 +294,62 @@ def reynolds_per_length(lines: list[str]) -> float | None:
     return float(re_number) / length if re_number else None
 
 
+def read_table(path: Path) -> list[list[float]]:
+    """Whitespace columns, '#' comments, 'nan' where the report has no measurement."""
+    rows = []
+    for line in path.read_text().splitlines():
+        stripped = line.split("#")[0].strip()
+        if stripped:
+            rows.append([float(v) for v in stripped.split()])
+    return rows
+
+
+def e387_reference(alpha: float, re_number: float) -> dict | None:
+    """McGhee's measurement at the angle actually run, or None where he did not measure."""
+    if not abs(re_number - 200000.0) < 1000.0:
+        return None
+    rows = [r for r in read_table(E387 / "mcghee_TM4062_R200k.dat") if abs(r[0] - alpha) <= 0.1]
+    if not rows:
+        return None
+    a, cl, cd, cm = rows[0]
+    out = {"source": "NASA TM-4062 table B1, runs 9,10,13", "alpha_measured_deg": a,
+           "CL": cl, "CD": cd, "CM_nose_down_negative": cm}
+    bubble = [r for r in read_table(E387 / "mcghee_TM4062_bubble.dat")
+              if abs(r[0] - 200000.0) < 1.0 and abs(r[1] - alpha) <= 0.1]
+    if bubble and not math.isnan(bubble[0][2]):
+        out.update({"x_laminar_separation": bubble[0][2], "x_turbulent_reattachment": bubble[0][3],
+                    "bubble_source": "NASA TM-4062 table III, oil flow visualization"})
+    return out
+
+
 def judge_transition(case: str, directory: Path, entry: dict) -> None:
     surf, f = surface(directory), forces(directory)
     lines = (directory / "case.cfg").read_text().splitlines()
     if f:
         entry["forces"] = f
+    # Forces come from forces_breakdown.dat, so they are graded whether or not the case wrote a
+    # Tecplot surface file: fp_bc and t3a wrote SURFACE_CSV only and would otherwise report
+    # "finished": true while being judged on nothing at all.
+    ref = (e387_reference(float(cfg_value(lines, "AOA") or "nan"),
+                          float(cfg_value(lines, "REYNOLDS_NUMBER") or "nan"))
+           if case.startswith("e387") else None)
+    if ref:
+        entry["reference"] = ref
+        if f:
+            entry["error_vs_experiment"] = {
+                "CL_pct": 100.0 * (f["CL"] - ref["CL"]) / ref["CL"],
+                "CD_counts": 1e4 * (f["CD"] - ref["CD"]),
+                "CD_pct": 100.0 * (f["CD"] - ref["CD"]) / ref["CD"],
+                # magnitudes: SU2's CMz is signed opposite to the report's nose-down-negative
+                **({"CM_magnitude_pct":
+                    100.0 * (abs(f["CMz"]) - abs(ref["CM_nose_down_negative"]))
+                    / abs(ref["CM_nose_down_negative"])} if "CMz" in f else {})}
+            entry["within_measurement_uncertainty"] = {
+                "CD": bool(abs(f["CD"] - ref["CD"]) <= E387_UNCERTAINTY["CD"]),
+                "CL": bool(abs(f["CL"] - ref["CL"]) <= E387_UNCERTAINTY["CL"])}
     if surf is None or surf["cf"] is None:
+        entry.setdefault("note", "no skin friction on file: this run wrote SURFACE_CSV only, so "
+                                 "nothing needing cf could be judged")
         return
     order = np.argsort(surf["x"])
     x, cf = surf["x"][order], surf["cf"][order]
@@ -305,13 +374,27 @@ def judge_transition(case: str, directory: Path, entry: dict) -> None:
             entry.update({"cf_minimum_x": float(x[i]), "cf_minimum": float(cf[i]),
                           "transition_onset_Re_x": float(rex * x[i]) if rex else None})
     else:
-        chord = float(np.ptp(x))
+        # E387 at Re 200k is a separation-bubble flow: McGhee's oil flow puts the bubble between
+        # x/c 0.43 and 0.67 at alpha 2. Grade the bubble, not only the forces -- drag can land
+        # near the measurement with the bubble misplaced, or with no bubble at all.
+        chord = float(x.max() - x.min())
         upper = surf["y"][order] > 0
-        xs, cs = x[upper], cf[upper]
+        xs, cs = (x[upper] - x.min()) / chord, cf[upper]
         reversed_ = xs[cs < 0]
-        entry.update({"upper_reversed_flow_x_over_c": [float(reversed_.min() / chord), float(reversed_.max() / chord)]
-                      if reversed_.size else None,
-                      "reference": "NASA LTPT / UIUC data to be added before this is judged"})
+        got = [float(reversed_.min()), float(reversed_.max())] if reversed_.size else None
+        entry["upper_reversed_flow_x_over_c"] = got
+        if isinstance(entry.get("reference"), dict) and "x_laminar_separation" in entry["reference"]:
+            measured = [entry["reference"]["x_laminar_separation"],
+                        entry["reference"]["x_turbulent_reattachment"]]
+            entry["bubble"] = {
+                "measured_x_over_c": measured,
+                "computed_x_over_c": got,
+                "verdict": "no bubble: the only reversed flow is at the trailing edge"
+                           if got is None or got[0] > 0.95 else
+                           f"separation {got[0] - measured[0]:+.3f}c, "
+                           f"reattachment {got[1] - measured[1]:+.3f}c"}
+        elif not isinstance(entry.get("reference"), dict):
+            entry["reference"] = "no measurement on file for this case at this angle"
 
 
 def cmd_compare(args) -> int:
@@ -340,7 +423,12 @@ def cmd_compare(args) -> int:
         report["cases"][case] = entry
         short = {k: entry.get(k) for k in ("finished", "interrupted", "cf_error_pct", "cd_error_pct", "error_pct",
                                           "transition_onset_Re_x", "upper_reversed_flow_x_over_c",
-                                          "compare_error") if entry.get(k) is not None}
+                                          "error_vs_experiment", "within_measurement_uncertainty",
+                                          "note", "compare_error") if entry.get(k) is not None}
+        # the queues end on `compare --all | tail`, so a verdict missing from this line is a
+        # verdict nobody reads
+        if isinstance(entry.get("bubble"), dict):
+            short["bubble"] = entry["bubble"]["verdict"]
         print(f"  {case}: {json.dumps(short, default=lambda v: round(v, 3))}")
     REPORT.write_text(json.dumps(report, indent=2, default=float) + "\n")
     return 0

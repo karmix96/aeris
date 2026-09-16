@@ -1,0 +1,57 @@
+# Eppler 387, laminar separation and turbulent reattachment from oil flow visualization
+#
+# Source   NASA TM-4062, McGhee, Walker and Millard (1988), Table III, report page 11
+#          (PDF page index 14). Langley Low-Turbulence Pressure Tunnel, 6 in chord model.
+#
+# Columns  re          Reynolds number
+#          alpha_deg   angle of attack
+#          x_ls        upper-surface laminar separation, x/c   (nan if none: natural transition)
+#          x_tr        upper-surface turbulent reattachment, x/c (nan if none)
+#          x_nt        natural transition x/c, where the report reads "(NT at .32)" -- transition
+#                      without a separation bubble; nan when a bubble was observed instead
+#
+# Why this matters more than the force coefficients. At R = 200,000 and alpha = 2 -- the
+# condition of SU2's own E387 tutorial -- the measured bubble runs from x/c 0.43 to 0.67, a
+# quarter of the chord. A transition model either puts a bubble there or it does not, and that
+# is a direct test of the model rather than an integrated one. Drag can come out plausible with
+# the bubble in the wrong place.
+#
+# These are oil-flow readings, so treat them as locations to within roughly 0.02c, not exact
+# numbers; the report quotes no uncertainty for them. The report also notes (p8) that raising
+# tunnel turbulence at fixed Reynolds number moved the drag but not the lift or moment, and
+# that at some conditions the bubble was observed with and without turbulent reattachment.
+#
+# Transcribed from the scanned page image, not the PDF text layer.
+#
+#      re  alpha_deg    x_ls    x_tr    x_nt
+   100000       -2.9    0.51    0.97     nan
+   100000       -2.0    0.50    0.90     nan
+   100000        0.0    0.45    0.87     nan
+   100000        2.0    0.41    0.79     nan
+   100000        4.0    0.35    0.73     nan
+   100000        5.0    0.34    0.67     nan
+   100000        6.0    0.33    0.62     nan
+   100000        7.0    0.32    0.56     nan
+   100000        8.0    0.29    0.47     nan
+   100000        8.5    0.03    0.11     nan
+   100000        9.0    0.02    0.02     nan
+   200000       -2.0    0.53    0.80     nan
+   200000        0.0    0.48    0.74     nan
+   200000        2.0    0.43    0.67     nan
+   200000        4.0    0.40    0.62     nan
+   200000        5.0    0.38    0.59     nan
+   200000        6.0    0.37    0.55     nan
+   200000        7.0    0.33    0.48     nan
+   200000        8.0     nan     nan    0.32
+   200000        8.5    0.03    0.18     nan
+   300000       -2.0    0.53    0.74     nan
+   300000        0.0    0.48    0.69     nan
+   300000        2.0    0.45    0.62     nan
+   300000        4.0    0.40    0.58     nan
+   300000        5.0    0.39    0.55     nan
+   300000        6.0    0.38    0.50     nan
+   300000        6.5    0.38    0.44     nan
+   300000        7.0     nan     nan    0.40
+   300000        7.5     nan     nan    0.30
+   300000        8.0     nan     nan    0.20
+   300000        8.5    0.04    0.12     nan

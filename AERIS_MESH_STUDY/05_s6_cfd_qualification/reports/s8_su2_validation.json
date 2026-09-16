@@ -189,7 +189,8 @@
         "CL": 1.100358,
         "CD": 0.013029,
         "CDp": 0.006249,
-        "CDv": 0.00678
+        "CDv": 0.00678,
+        "CMz": -0.001321
       },
       "reference": {
         "CL": 1.0785971012009072,
@@ -247,8 +248,10 @@
         "CL": -0.000468,
         "CD": 0.001805,
         "CDp": 0.0,
-        "CDv": 0.001805
-      }
+        "CDv": 0.001805,
+        "CMz": -0.000535
+      },
+      "note": "no skin friction on file: this run wrote SURFACE_CSV only, so nothing needing cf could be judged"
     },
     "t3a": {
       "kind": "transition_plate",
@@ -307,8 +310,10 @@
         "CL": 0.0,
         "CD": 0.0,
         "CDp": 0.0,
-        "CDv": 0.0
-      }
+        "CDv": 0.0,
+        "CMz": 0.0
+      },
+      "note": "no skin friction on file: this run wrote SURFACE_CSV only, so nothing needing cf could be judged"
     },
     "t3a_minus": {
       "kind": "transition_plate",
@@ -367,7 +372,8 @@
         "CL": 0.0,
         "CD": 0.0,
         "CDp": 0.0,
-        "CDv": 0.0
+        "CDv": 0.0,
+        "CMz": 0.0
       },
       "reference": "experiment to be added before this is judged",
       "cf_minimum_x": null,
@@ -426,13 +432,44 @@
         "CL": 0.60521,
         "CD": 0.010769,
         "CDp": 0.003087,
-        "CDv": 0.007682
+        "CDv": 0.007682,
+        "CMz": 0.078147
+      },
+      "reference": {
+        "source": "NASA TM-4062 table B1, runs 9,10,13",
+        "alpha_measured_deg": 2.04,
+        "CL": 0.574,
+        "CD": 0.0118,
+        "CM_nose_down_negative": -0.0794,
+        "x_laminar_separation": 0.43,
+        "x_turbulent_reattachment": 0.67,
+        "bubble_source": "NASA TM-4062 table III, oil flow visualization"
+      },
+      "error_vs_experiment": {
+        "CL_pct": 5.437282229965169,
+        "CD_counts": -10.30999999999999,
+        "CD_pct": -8.73728813559321,
+        "CM_magnitude_pct": -1.5780856423173855
+      },
+      "within_measurement_uncertainty": {
+        "CD": false,
+        "CL": false
       },
       "upper_reversed_flow_x_over_c": [
-        1.0001586791508297,
-        1.0001916756693199
+        0.9999623759209897,
+        0.99999537243948
       ],
-      "reference": "NASA LTPT / UIUC data to be added before this is judged"
+      "bubble": {
+        "measured_x_over_c": [
+          0.43,
+          0.67
+        ],
+        "computed_x_over_c": [
+          0.9999623759209897,
+          0.99999537243948
+        ],
+        "verdict": "no bubble: the only reversed flow is at the trailing edge"
+      }
     },
     "e387_sst_lm": {
       "kind": "airfoil",
@@ -491,13 +528,110 @@
         "CL": 0.620843,
         "CD": 0.014434,
         "CDp": 0.006818,
-        "CDv": 0.007616
+        "CDv": 0.007616,
+        "CMz": 0.083247
+      },
+      "reference": {
+        "source": "NASA TM-4062 table B1, runs 9,10,13",
+        "alpha_measured_deg": 2.04,
+        "CL": 0.574,
+        "CD": 0.0118,
+        "CM_nose_down_negative": -0.0794,
+        "x_laminar_separation": 0.43,
+        "x_turbulent_reattachment": 0.67,
+        "bubble_source": "NASA TM-4062 table III, oil flow visualization"
+      },
+      "error_vs_experiment": {
+        "CL_pct": 8.160801393728237,
+        "CD_counts": 26.34000000000001,
+        "CD_pct": 22.322033898305094,
+        "CM_magnitude_pct": 4.845088161209072
+      },
+      "within_measurement_uncertainty": {
+        "CD": false,
+        "CL": false
       },
       "upper_reversed_flow_x_over_c": [
-        1.0001634073104912,
-        1.0001916756693199
+        0.9999671040806514,
+        0.99999537243948
       ],
-      "reference": "NASA LTPT / UIUC data to be added before this is judged"
+      "bubble": {
+        "measured_x_over_c": [
+          0.43,
+          0.67
+        ],
+        "computed_x_over_c": [
+          0.9999671040806514,
+          0.99999537243948
+        ],
+        "verdict": "no bubble: the only reversed flow is at the trailing edge"
+      }
+    },
+    "nlf_sst_lm": {
+      "kind": "airfoil",
+      "finished": false,
+      "interrupted": false,
+      "time_limit_hit": false,
+      "memory_guard_hit": false,
+      "convergence": {
+        "iterations": 1350,
+        "rms_first_last": {
+          "rms[Rho]": [
+            -2.57164039,
+            -5.030583085
+          ],
+          "rms[RhoU]": [
+            -9.527432062,
+            -1.423675334
+          ],
+          "rms[RhoV]": [
+            -9.664785083,
+            -1.803994072
+          ],
+          "rms[RhoE]": [
+            2.90836284,
+            0.5016244907
+          ],
+          "rms[k]": [
+            1.857479675,
+            -2.808650288
+          ],
+          "rms[w]": [
+            6.882729732,
+            2.527580727
+          ],
+          "rms[LM_1]": [
+            -1.637255961,
+            -0.6048827536
+          ],
+          "rms[LM_2]": [
+            0.01386758905,
+            4.720999813
+          ]
+        },
+        "orders_dropped": {
+          "rms[Rho]": 2.46,
+          "rms[RhoU]": -8.1,
+          "rms[RhoV]": -7.86,
+          "rms[RhoE]": 2.41,
+          "rms[k]": 4.67,
+          "rms[w]": 4.36,
+          "rms[LM_1]": -1.03,
+          "rms[LM_2]": -4.71
+        }
+      },
+      "forces": {
+        "CL": 0.0,
+        "CD": 0.0,
+        "CDp": 0.0,
+        "CDv": 0.0,
+        "CMz": 0.0
+      },
+      "upper_reversed_flow_x_over_c": [
+        0.0,
+        1.0
+      ],
+      "reference": "no measurement on file for this case at this angle"
     }
   }
 }

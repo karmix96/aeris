@@ -1,0 +1,80 @@
+# Eppler 387, Langley Low-Turbulence Pressure Tunnel, R = 200,000
+#
+# Source   NASA TM-4062, McGhee, Walker and Millard (1988), "Experimental Results for the
+#          Eppler 387 Airfoil at Low Reynolds Numbers in the Langley Low-Turbulence Pressure
+#          Tunnel". Table B1, report page 92 (PDF page index 95), RUNS 9,10,13.
+#
+# Condition   PTINF = 15 psi, M = 0.06, R = 200,000, q = 0.033 psi (Table A1, row 6).
+#             Model chord 6 in, span 36 in. Contour accuracy within +/-0.001 in.
+#
+# This is the condition of SU2's own E387 tutorial (Rausa, Politecnico di Milano, Dec 2022):
+# MACH_NUMBER 0.06, REYNOLDS_NUMBER 200000, AOA 2. The matching row is alpha = 2.04.
+#
+# Turbulence  The R = 200,000 data were taken where the tunnel's turbulence was lowest,
+#             0.06 percent (report p9). The SU2 tutorial sets FREESTREAM_TURBULENCEINTENSITY
+#             = 0.001, i.e. 0.1 percent. At Re 200k the answer here IS the laminar separation
+#             bubble and bubble length responds to freestream turbulence, so this mismatch is
+#             a known bias in any comparison, not a detail. The report states plainly that
+#             raising tunnel turbulence at fixed Reynolds number left lift and pitching moment
+#             alone but did move the drag (p8).
+#
+# Measurement Drag from wake surveys; lift and pitching moment from surface-pressure
+#             integration (p9). Corrections were applied to the free-stream dynamic pressure
+#             for solid and wake blockage, and to lift, pitching moment and angle of attack
+#             for floor and ceiling constraints on streamline curvature. No blockage
+#             correction was applied to the pressure-coefficient data (p6).
+#
+# Uncertainty Table A1 row 6, computed by Kline-McClintock at alpha = 4 deg for this exact
+#             run condition:  W_cd = 0.00026 (2.6 drag counts), W_cn = 0.001, W_cm = 0.0004.
+#             The report's often-quoted "+/-2 drag counts" applies only above q = 0.08 psi;
+#             this condition sits at q = 0.033 psi, so 2.6 counts is the number that applies.
+#
+# Hysteresis  RUN 11 repeated this condition with decreasing angle of attack and gives
+#             cd = 0.0121 at alpha 2.01 against 0.0118 at alpha 2.04 increasing: a 3-count
+#             spread at the tutorial's own angle. Treat 118 counts as 118 +/- 3, not exact.
+#
+# Sign        CM below is nose-down negative about the quarter chord, the report's convention.
+#             SU2 reports CMz for this case with the opposite sign: its +0.0775 is this
+#             table's -0.0794. Compare magnitudes, or a correct run will score a 200 % error.
+#
+# nan in the cd column is the report's "****": drag was not measured there, the wake rake
+# being invalid once the wake leaves its span.
+#
+# Transcribed from the scanned page image, NOT from the PDF text layer. That text layer
+# corrupts the drag column: it renders alpha -2.84 as .0153 where the scan reads .0163, and
+# alpha 2.99 as .0177 where the scan reads .0127, and it loses digits from several angles
+# (".52" for 5.52, "0,01" for 8.01). Anything re-derived from the text layer is suspect.
+#
+# alpha_deg        cl        cd         cm
+     -2.84     0.066    0.0163    -0.0813
+     -1.99     0.156    0.0133    -0.0814
+     -0.99     0.249    0.0105    -0.0804
+     -0.01     0.350    0.0106    -0.0780
+      0.01     0.352    0.0105    -0.0782
+      1.04     0.466    0.0113    -0.0796
+      2.04     0.574    0.0118    -0.0794
+      2.99     0.680    0.0127    -0.0807
+      3.99     0.785    0.0133    -0.0803
+      5.00     0.891    0.0138    -0.0809
+      5.03     0.895    0.0139    -0.0803
+      5.06     0.894    0.0137    -0.0785
+      5.06     0.897    0.0137    -0.0802
+      5.52     0.948    0.0142    -0.0805
+      6.03     1.004    0.0141    -0.0809
+      6.04     0.999    0.0144    -0.0790
+      6.51     1.052    0.0143    -0.0802
+      7.02     1.103    0.0145    -0.0789
+      7.06     1.107    0.0144    -0.0782
+      7.23     1.127    0.0145    -0.0791
+      7.57     1.155    0.0152    -0.0783
+      7.77     1.166    0.0160    -0.0777
+      8.01     1.180    0.0175    -0.0763
+      8.03     1.182    0.0174    -0.0751
+      9.01     1.219    0.0244    -0.0701
+     10.02     1.231    0.0357    -0.0643
+     11.04     1.214    0.0570    -0.0606
+     12.09     1.174       nan    -0.0593
+     13.02     1.170       nan    -0.0633
+     14.01     1.155       nan    -0.0727
+     14.99     0.882       nan    -0.1444
+     16.09     0.851       nan    -0.1463

@@ -1,0 +1,254 @@
+{
+  "schema": "aeris.s8.su2_validation.v1",
+  "cases": {
+    "fp_comp_137": {
+      "kind": "flatplate",
+      "finished": true,
+      "interrupted": false,
+      "time_limit_hit": false,
+      "memory_guard_hit": false,
+      "convergence": {
+        "iterations": 18748,
+        "rms_first_last": {
+          "rms[Rho]": [
+            -2.258584206,
+            -14.00018743
+          ],
+          "rms[RhoU]": [
+            0.09749584175,
+            -12.06311698
+          ],
+          "rms[RhoV]": [
+            0.1335926574,
+            -12.08533743
+          ],
+          "rms[RhoE]": [
+            3.210775544,
+            -8.896837738
+          ],
+          "rms[nu]": [
+            -4.90101498,
+            -17.29254524
+          ]
+        },
+        "orders_dropped": {
+          "rms[Rho]": 11.74,
+          "rms[RhoU]": 12.16,
+          "rms[RhoV]": 12.22,
+          "rms[RhoE]": 12.11,
+          "rms[nu]": 12.39
+        }
+      },
+      "cells": 13056,
+      "reference_cf_x0.97_same_grid": {
+        "CFL3D": 0.00271115173,
+        "FUN3D": 0.00270215403362043
+      },
+      "reference_cd_same_grid": {
+        "CFL3D": 0.00286620917,
+        "FUN3D": 0.002840045
+      },
+      "cf_x0.97": 0.002727386972036469,
+      "cf_error_pct": 0.7660417176356776,
+      "cf_pass": true,
+      "CD": 0.002859,
+      "cd_error_pct": 0.2058413391705028,
+      "cd_pass": true
+    },
+    "fp_comp_545": {
+      "kind": "flatplate",
+      "finished": false,
+      "interrupted": false,
+      "time_limit_hit": true,
+      "memory_guard_hit": false,
+      "convergence": {
+        "iterations": 7284,
+        "rms_first_last": {
+          "rms[Rho]": [
+            -3.157161772,
+            -8.360724299
+          ],
+          "rms[RhoU]": [
+            -0.7933058241,
+            -5.208139314
+          ],
+          "rms[RhoV]": [
+            -0.7644298486,
+            -6.681583873
+          ],
+          "rms[RhoE]": [
+            2.31195686,
+            -3.525307434
+          ],
+          "rms[nu]": [
+            -5.199138046,
+            -9.214320055
+          ]
+        },
+        "orders_dropped": {
+          "rms[Rho]": 5.2,
+          "rms[RhoU]": 4.41,
+          "rms[RhoV]": 5.92,
+          "rms[RhoE]": 5.84,
+          "rms[nu]": 4.02
+        }
+      },
+      "cells": 208896,
+      "reference_cf_x0.97_same_grid": {
+        "CFL3D": 0.00270562153,
+        "FUN3D": 0.00270540472596778
+      },
+      "reference_cd_same_grid": {
+        "CFL3D": 0.00285985288,
+        "FUN3D": 0.002852469
+      },
+      "CD": 0.002897,
+      "cd_error_pct": 1.4298585009008693,
+      "cd_pass": false
+    },
+    "fp_inc_545": {
+      "kind": "flatplate_inc",
+      "finished": false,
+      "interrupted": false,
+      "time_limit_hit": true,
+      "memory_guard_hit": false,
+      "convergence": {
+        "iterations": 3451,
+        "rms_first_last": {
+          "rms[P]": [
+            -18.62089505,
+            -12.42240669
+          ],
+          "rms[U]": [
+            -18.22729914,
+            -10.69179386
+          ],
+          "rms[V]": [
+            -22.87422146,
+            -11.99001109
+          ],
+          "rms[nu]": [
+            -8.882413492,
+            -14.73088759
+          ]
+        },
+        "orders_dropped": {
+          "rms[P]": -6.2,
+          "rms[U]": -7.54,
+          "rms[V]": -10.88,
+          "rms[nu]": 5.85
+        }
+      },
+      "cells": 208896,
+      "reference_cf_x0.97_same_grid": {
+        "FUN3D incompressible SA": 0.002729090163,
+        "SC/TETRA incompressible SA": 0.00272937
+      },
+      "reference_cd_same_grid": {
+        "CFL3D": 0.00285985288,
+        "FUN3D": 0.002852469
+      },
+      "CD": 0.002873,
+      "cd_error_pct": 0.5895697180145759,
+      "cd_pass": true
+    },
+    "naca0012_inc_897": {
+      "kind": "naca0012",
+      "finished": false,
+      "interrupted": false,
+      "time_limit_hit": true,
+      "memory_guard_hit": false,
+      "convergence": {
+        "iterations": 5711,
+        "rms_first_last": {
+          "rms[P]": [
+            -4.314090191,
+            -7.645526923
+          ],
+          "rms[U]": [
+            -15.16746856,
+            -5.867520634
+          ],
+          "rms[V]": [
+            -15.8856973,
+            -5.97266121
+          ],
+          "rms[nu]": [
+            -9.278435013,
+            -10.78260618
+          ]
+        },
+        "orders_dropped": {
+          "rms[P]": 3.33,
+          "rms[U]": -9.3,
+          "rms[V]": -9.91,
+          "rms[nu]": 1.5
+        }
+      },
+      "forces": {
+        "CL": 1.100358,
+        "CD": 0.013029,
+        "CDp": 0.006249,
+        "CDv": 0.00678
+      },
+      "reference": {
+        "CL": 1.0785971012009072,
+        "CD": 0.0122728,
+        "CDp": 0.006067,
+        "CDv": 0.0062059
+      },
+      "error_pct": {
+        "CL": 2.0175187542099065,
+        "CD": 6.161593116485237,
+        "CDp": 2.999835173891542,
+        "CDv": 9.250874168130315
+      },
+      "reference_note": "TMR SA at M 0.15, lift taken to M 0 by Prandtl-Glauert",
+      "pass": {
+        "CDv": false,
+        "CD": false,
+        "CL": false
+      }
+    },
+    "fp_bc": {
+      "kind": "transition_plate",
+      "finished": true,
+      "interrupted": false,
+      "time_limit_hit": false,
+      "memory_guard_hit": false,
+      "convergence": {
+        "iterations": 498,
+        "rms_first_last": {
+          "rms[P]": [
+            -22.02846805,
+            -12.00784421
+          ],
+          "rms[U]": [
+            -22.02846805,
+            -10.987557
+          ],
+          "rms[V]": [
+            -32.0,
+            -11.70511396
+          ],
+          "rms[nu]": [
+            -15.33076582,
+            -15.3042635
+          ]
+        },
+        "orders_dropped": {
+          "rms[P]": -10.02,
+          "rms[U]": -11.04,
+          "rms[V]": -20.29,
+          "rms[nu]": -0.03
+        }
+      },
+      "forces": {
+        "CL": -0.000468,
+        "CD": 0.001805,
+        "CDp": 0.0,
+        "CDv": 0.001805
+      }
+    }
+  }
+}

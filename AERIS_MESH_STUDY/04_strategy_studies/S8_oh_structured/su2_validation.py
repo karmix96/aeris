@@ -285,13 +285,25 @@ def judge_transition(case: str, directory: Path, entry: dict) -> None:
     order = np.argsort(surf["x"])
     x, cf = surf["x"][order], surf["cf"][order]
     if CASES[case][3] == "transition_plate":
-        wall = x > 1e-6
+        wall = (x > 1e-6) & (cf > 0)
         x, cf = x[wall], cf[wall]
-        i = int(np.argmin(cf[: max(3, int(0.9 * cf.size))]))   # laminar minimum before the rise
-        rex = reynolds_per_length(lines)
-        entry.update({"cf_minimum_x": float(x[i]), "cf_minimum": float(cf[i]),
-                      "transition_onset_Re_x": float(rex * x[i]) if rex else None,
-                      "reference": "experiment to be added before this is judged"})
+        # Onset is the FIRST local minimum of cf, not the smallest value on the plate. Downstream
+        # of the turbulent peak cf decays monotonically, so a global argmin over a fixed window
+        # lands on the window edge every time -- on 16 Sept it returned x = 9.915 on a plate of
+        # length 20 (the 90 % point) and called it an onset at Re_x = 2.6e8. Requiring a real
+        # rise after the minimum keeps noise from passing for transition.
+        rex, i = reynolds_per_length(lines), None
+        for k in range(1, cf.size - 1):
+            if cf[k] <= cf[k - 1] and cf[k] <= cf[k + 1] and cf[k:].max() >= 1.25 * cf[k]:
+                i = k
+                break
+        entry["reference"] = "experiment to be added before this is judged"
+        if i is None:
+            entry.update({"cf_minimum_x": None, "transition_onset_Re_x": None,
+                          "note": "no cf minimum with a 25 % rise after it: no transition on this plate"})
+        else:
+            entry.update({"cf_minimum_x": float(x[i]), "cf_minimum": float(cf[i]),
+                          "transition_onset_Re_x": float(rex * x[i]) if rex else None})
     else:
         chord = float(np.ptp(x))
         upper = surf["y"][order] > 0

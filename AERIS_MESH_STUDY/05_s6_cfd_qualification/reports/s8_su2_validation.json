@@ -249,6 +249,255 @@
         "CDp": 0.0,
         "CDv": 0.001805
       }
+    },
+    "t3a": {
+      "kind": "transition_plate",
+      "finished": false,
+      "interrupted": false,
+      "time_limit_hit": false,
+      "memory_guard_hit": false,
+      "convergence": {
+        "iterations": 9999,
+        "rms_first_last": {
+          "rms[Rho]": [
+            -16.477519,
+            -7.450435859
+          ],
+          "rms[RhoU]": [
+            -13.6610564,
+            -4.733790315
+          ],
+          "rms[RhoV]": [
+            -13.48683654,
+            -5.125364081
+          ],
+          "rms[RhoE]": [
+            -10.96588306,
+            -1.744768205
+          ],
+          "rms[k]": [
+            0.6639153539,
+            -2.317218068
+          ],
+          "rms[w]": [
+            4.088902624,
+            0.7045768824
+          ],
+          "rms[LM_1]": [
+            -6.733054791,
+            -7.287043573
+          ],
+          "rms[LM_2]": [
+            -4.697966009,
+            -2.820931655
+          ]
+        },
+        "orders_dropped": {
+          "rms[Rho]": -9.03,
+          "rms[RhoU]": -8.93,
+          "rms[RhoV]": -8.36,
+          "rms[RhoE]": -9.22,
+          "rms[k]": 2.98,
+          "rms[w]": 3.38,
+          "rms[LM_1]": 0.55,
+          "rms[LM_2]": -1.88
+        }
+      },
+      "forces": {
+        "CL": 0.0,
+        "CD": 0.0,
+        "CDp": 0.0,
+        "CDv": 0.0
+      }
+    },
+    "t3a_minus": {
+      "kind": "transition_plate",
+      "finished": false,
+      "interrupted": false,
+      "time_limit_hit": false,
+      "memory_guard_hit": false,
+      "convergence": {
+        "iterations": 5645,
+        "rms_first_last": {
+          "rms[Rho]": [
+            -15.56616033,
+            -7.918003788
+          ],
+          "rms[RhoU]": [
+            -12.63842515,
+            -3.533593454
+          ],
+          "rms[RhoV]": [
+            -12.02640371,
+            -6.797645506
+          ],
+          "rms[RhoE]": [
+            -10.09724456,
+            -2.433351392
+          ],
+          "rms[k]": [
+            -1.955813483,
+            -6.062917073
+          ],
+          "rms[w]": [
+            4.655100883,
+            0.06408194064
+          ],
+          "rms[LM_1]": [
+            -6.548565434,
+            -4.452308226
+          ],
+          "rms[LM_2]": [
+            -3.782122725,
+            -1.551838
+          ]
+        },
+        "orders_dropped": {
+          "rms[Rho]": -7.65,
+          "rms[RhoU]": -9.1,
+          "rms[RhoV]": -5.23,
+          "rms[RhoE]": -7.66,
+          "rms[k]": 4.11,
+          "rms[w]": 4.59,
+          "rms[LM_1]": -2.1,
+          "rms[LM_2]": -2.23
+        }
+      },
+      "forces": {
+        "CL": 0.0,
+        "CD": 0.0,
+        "CDp": 0.0,
+        "CDv": 0.0
+      },
+      "reference": "experiment to be added before this is judged",
+      "cf_minimum_x": null,
+      "transition_onset_Re_x": null,
+      "note": "no cf minimum with a 25 % rise after it: no transition on this plate"
+    },
+    "e387_sa_lm": {
+      "kind": "airfoil",
+      "finished": false,
+      "interrupted": false,
+      "time_limit_hit": false,
+      "memory_guard_hit": false,
+      "convergence": {
+        "iterations": 6813,
+        "rms_first_last": {
+          "rms[Rho]": [
+            -5.771600278,
+            -11.26953756
+          ],
+          "rms[RhoU]": [
+            -16.47365961,
+            -9.673677183
+          ],
+          "rms[RhoV]": [
+            -16.4335349,
+            -10.23726756
+          ],
+          "rms[RhoE]": [
+            -5.37334769,
+            -10.92644501
+          ],
+          "rms[nu]": [
+            -9.926175829,
+            -12.44547185
+          ],
+          "rms[LM_1]": [
+            -4.717100912,
+            -5.474624038
+          ],
+          "rms[LM_2]": [
+            -2.884898527,
+            -3.387676507
+          ]
+        },
+        "orders_dropped": {
+          "rms[Rho]": 5.5,
+          "rms[RhoU]": -6.8,
+          "rms[RhoV]": -6.2,
+          "rms[RhoE]": 5.55,
+          "rms[nu]": 2.52,
+          "rms[LM_1]": 0.76,
+          "rms[LM_2]": 0.5
+        }
+      },
+      "forces": {
+        "CL": 0.60521,
+        "CD": 0.010769,
+        "CDp": 0.003087,
+        "CDv": 0.007682
+      },
+      "upper_reversed_flow_x_over_c": [
+        1.0001586791508297,
+        1.0001916756693199
+      ],
+      "reference": "NASA LTPT / UIUC data to be added before this is judged"
+    },
+    "e387_sst_lm": {
+      "kind": "airfoil",
+      "finished": false,
+      "interrupted": false,
+      "time_limit_hit": false,
+      "memory_guard_hit": false,
+      "convergence": {
+        "iterations": 6406,
+        "rms_first_last": {
+          "rms[Rho]": [
+            -5.771600278,
+            -11.25275774
+          ],
+          "rms[RhoU]": [
+            -16.47366305,
+            -9.611930681
+          ],
+          "rms[RhoV]": [
+            -16.43353491,
+            -10.38685882
+          ],
+          "rms[RhoE]": [
+            -5.373347689,
+            -10.89889547
+          ],
+          "rms[k]": [
+            -11.18171261,
+            -11.88591951
+          ],
+          "rms[w]": [
+            -1.975327774,
+            -6.118961617
+          ],
+          "rms[LM_1]": [
+            -2.914232975,
+            -3.065830758
+          ],
+          "rms[LM_2]": [
+            0.1413468587,
+            -1.437731039
+          ]
+        },
+        "orders_dropped": {
+          "rms[Rho]": 5.48,
+          "rms[RhoU]": -6.86,
+          "rms[RhoV]": -6.05,
+          "rms[RhoE]": 5.53,
+          "rms[k]": 0.7,
+          "rms[w]": 4.14,
+          "rms[LM_1]": 0.15,
+          "rms[LM_2]": 1.58
+        }
+      },
+      "forces": {
+        "CL": 0.620843,
+        "CD": 0.014434,
+        "CDp": 0.006818,
+        "CDv": 0.007616
+      },
+      "upper_reversed_flow_x_over_c": [
+        1.0001634073104912,
+        1.0001916756693199
+      ],
+      "reference": "NASA LTPT / UIUC data to be added before this is judged"
     }
   }
 }

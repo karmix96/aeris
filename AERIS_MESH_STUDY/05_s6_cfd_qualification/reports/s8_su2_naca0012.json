@@ -95,6 +95,27 @@
         "CDp": -1.1208175374979312,
         "CDv": 0.06606616284503354
       }
+    },
+    "roe_wls_venk": {
+      "changes": {
+        "CONV_NUM_METHOD_FLOW": "ROE",
+        "MUSCL_FLOW": "YES",
+        "SLOPE_LIMITER_FLOW": "VENKATAKRISHNAN",
+        "NUM_METHOD_GRAD": "WEIGHTED_LEAST_SQUARES"
+      },
+      "su2": {
+        "CL": 1.101844,
+        "CD": 0.015053,
+        "CDp": 0.00872,
+        "CDv": 0.006333
+      },
+      "exit_success": true,
+      "su2_vs_tmr_pct": {
+        "CL": 0.9995050140246049,
+        "CD": 22.6538469373205,
+        "CDp": 43.72836657326523,
+        "CDv": 2.048051048196068
+      }
     }
   }
 }

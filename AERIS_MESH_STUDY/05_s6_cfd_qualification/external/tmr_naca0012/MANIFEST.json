@@ -1,0 +1,57 @@
+{
+  "schema": "aeris.external.manifest.v1",
+  "case": "NACA 0012, SA, no point vortex -- NASA Turbulence Modeling Resource numerics study",
+  "why": [
+    "The TMR page saved here (naca0012numerics_val_sa_withoutpv.html) contains no numeric data at",
+    "all: it links to the data files. Without them the only reference we hold for this case is the",
+    "three-code force table, which cannot say WHERE a drag discrepancy lives. The converged",
+    "roe_wls_venk variant (16 Sept) is +43.7 % on pressure drag while friction is +2.1 % and lift",
+    "+1.0 %, and localising that to the suction peak or the aft surface needs surface cp and cf."
+  ],
+  "fetched": "2026-09-16T12:37+03:00",
+  "source_host": "https://raw.githubusercontent.com/TMBWG/turbmodels/main/NACA0012numerics_val",
+  "source_note": [
+    "Taken from the TMBWG/turbmodels GitHub repository, which the saved HTML page links to",
+    "directly. The page carries no absolute turbmodels.larc.nasa.gov URL of its own, so the",
+    "GitHub links are the only provenance the file itself supports -- these were not fetched from",
+    "a guessed host."
+  ],
+  "files": [
+    {
+      "name": "cfl3d_cp_sa_nopv_corrected.dat",
+      "bytes": 984124,
+      "sha256": "f76a47f145b01e21d37dbefde5934bb734e2fead5080626ddbdb242b74aaa5e7",
+      "zones": 8,
+      "content": "surface cp, x/z/cp columns; zones are grid levels 0-3 lev dn on family II (7169x2049, 3585x1025, 1793x513, 897x257), each with 2nd and 1st order turbulence advection"
+    },
+    {
+      "name": "fun3d_cp_sa_nopv.dat",
+      "bytes": 560876,
+      "sha256": "6c263abf2561430f388d204e8d5ed69f25dfb2b3a8820c0dfdc773ad7c479a64",
+      "zones": 4,
+      "content": "surface cp, x/z/cp columns; zones are grid levels 0-3 lev dn on family II"
+    },
+    {
+      "name": "cfl3d_cf_sa_nopv.dat",
+      "bytes": 1260327,
+      "sha256": "5438e0942695632572ae8330e7b3443a741b51668b1d0f479730d312996516ea",
+      "content": "surface skin friction, same grid family and level structure"
+    },
+    {
+      "name": "fun3d_cf_sa_nopv.dat",
+      "bytes": 630664,
+      "sha256": "d7066da6da5eb578c785c22852eff6a6ce69053bab19cd746383cb1516e6eca2",
+      "content": "surface skin friction, same grid family and level structure"
+    }
+  ],
+  "how_to_compare": [
+    "Compare against BOTH the level nearest ours and the finest (0 lev dn). Comparing an o512",
+    "solution only against a 7169x2049 reference confounds our discretisation error with our",
+    "scheme error; comparing only against a near grid hides whether the scheme converges to the",
+    "right answer at all."
+  ],
+  "already_here": [
+    "naca0012numerics_val_sa_withoutpv.html -- the TMR page, links only, no numbers",
+    "n0012familyI.[4-7].nmf -- family I grid connectivity, not surface data"
+  ]
+}

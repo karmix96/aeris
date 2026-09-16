@@ -44,6 +44,12 @@ CASE = {"MACH_NUMBER": "0.15", "AOA": "10.0", "SIDESLIP_ANGLE": "0.0",
         "MESH_FILENAME": str(OUT / "o512.su2"), "MESH_FORMAT": "SU2",
         "ITER": "60000", "CONV_FIELD": "DRAG", "CONV_CAUCHY_ELEMS": "500",
         "CONV_CAUCHY_EPS": "1E-7", "CONV_STARTITER": "10",
+        # SURFACE_CSV carries the solution variables only: cp, skin friction and y+ reach a file
+        # only through the Tecplot or ParaView surface writer. su2_validation.py and su2_config.py
+        # were fixed for this on 16 Sept and THIS script was missed, so every variant through
+        # roe_wls_venk wrote 512 rows of conservative variables and no cp at all -- which is why
+        # its +43.7 % pressure drag could not be localised from its own output.
+        "OUTPUT_FILES": "( RESTART, SURFACE_CSV, SURFACE_TECPLOT_ASCII )",
         "VOLUME_OUTPUT": "( COORDINATES, SOLUTION, PRIMITIVE )"}
 DROP = {"MARKER_SYM"}                  # a 2D mesh has no symmetry planes
 #: one idea each about where +15 % friction comes from

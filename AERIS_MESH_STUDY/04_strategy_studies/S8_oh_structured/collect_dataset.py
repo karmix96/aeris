@@ -135,7 +135,14 @@ def find_runs(roots: list[Path]) -> list[Path]:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--roots", type=Path, nargs="+",
+    # `--runs` is an accepted spelling of the same flag. queue24.sh calls this
+    # script as `--runs artifacts/s8_v2`, which argparse rejected outright, so
+    # the re-run's final step -- building dataset_v2 from 52 solves -- would
+    # have failed after ~23 hours of solving, taking audit_runs.py with it
+    # because its --rows input would never have been written. Found 16 solves
+    # in, on 2026-09-16. The queue is left untouched: editing a running bash
+    # script is its own hazard.
+    ap.add_argument("--roots", "--runs", type=Path, nargs="+", dest="roots",
                     default=[ARTIFACTS / "s8_cfd", ARTIFACTS / "s8_pilot"])
     ap.add_argument("--gate", type=Path,
                     default=QUAL / "reports/s8_gci_gate.json")
@@ -249,8 +256,23 @@ def main() -> int:
         row["l2_target"] = result.get("l2_target")
         row["environment"] = {k: env[k] for k in ("git_commit", "adflow_version")}
 
-        # copy the small, essential per-run artefacts
-        dest = args.out / "runs" / name
+        # copy the small, essential per-run artefacts.
+        #
+        # The record directory carries the geometry, because `name` does not.
+        # The pilot layout is `<root>/g<index>/<level>_a<alpha>`, so run.name is
+        # `gci_C_a0` for EVERY wing: collecting ten geometries wrote four
+        # directories and the last wing silently overwrote the other nine. Found
+        # on 2026-09-16 while snapshotting the re-run: 17 solves had collapsed
+        # into 4 records. rows.json was unaffected (each row carries
+        # geometry_index), but the per-run result.json and gate.json -- the
+        # evidence this archive exists to keep -- were being destroyed for 48 of
+        # 52 runs. Same shape as defect 24: geometry read from a directory name
+        # that stopped carrying it when the layout changed.
+        #
+        # `name` itself is left alone: two lines above it keys the gate verdict
+        # lookup, and it populates row["run_name"].
+        record_name = f"g{index}_{name}" if index is not None else name
+        dest = args.out / "runs" / record_name
         dest.mkdir(exist_ok=True)
         for fname in ("result.json", "memory_watch.json", "cp_excess_locations.json"):
             src = run / fname

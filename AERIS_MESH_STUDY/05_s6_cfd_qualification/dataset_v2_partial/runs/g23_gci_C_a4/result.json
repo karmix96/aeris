@@ -1,0 +1,90 @@
+{
+  "converged": true,
+  "iterations_completed": 187,
+  "too_few_iterations": false,
+  "solver_options_effective": {
+    "equationType": "RANS",
+    "turbulenceModel": "SA",
+    "turbulenceOrder": "first order",
+    "useft2SA": true,
+    "eddyVisInfRatio": 0.21,
+    "liftIndex": 3,
+    "MGCycle": "sg",
+    "smoother": "DADI",
+    "useANKSolver": true,
+    "ANKSwitchTol": 1.0,
+    "useNKSolver": false,
+    "NKSwitchTol": 1e-06,
+    "ANKSubspaceSize": 10,
+    "NKSubspaceSize": 20,
+    "ANKPCILUFill": 1,
+    "NKPCILUFill": 1,
+    "L2Convergence": 1e-06,
+    "nCycles": 30000,
+    "useWallFunctions": false,
+    "useQCR": false
+  },
+  "implausible_forces": null,
+  "relative_residual": 9.77958157036938e-07,
+  "residual_source": "adflow.iteration.totalrfinal/totalr0",
+  "l2_target": 1e-06,
+  "n_cycles_budget": 30000,
+  "grid": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g23/gci_C_volume.cgns",
+  "alpha_deg": 4.0,
+  "mission": {
+    "mach": 0.0837,
+    "reynolds": 1530708.188575197,
+    "reynolds_length_m": 0.9,
+    "temperature_K": 278.4,
+    "chord_ref_m": 0.9
+  },
+  "area_ref_m2": 0.379885,
+  "moment_ref_xyz_m": [
+    0.4,
+    0.0,
+    0.0
+  ],
+  "routine_failed": false,
+  "flow_directions": {
+    "lift_index_requested": 3,
+    "lift_index_realised": 3,
+    "alpha_deg": 4.0,
+    "velocity_direction_expected": [
+      0.9975640502598242,
+      0.0,
+      0.0697564737441253
+    ],
+    "velocity_direction_realised": [
+      0.9975640502598242,
+      0.0,
+      0.0697564737441253
+    ],
+    "velocity_direction_error": 0.0,
+    "lift_direction_expected": [
+      -0.0697564737441253,
+      0.0,
+      0.9975640502598242
+    ],
+    "lift_direction_realised": [
+      -0.0697564737441253,
+      0.0,
+      0.9975640502598242
+    ],
+    "lift_direction_error": 0.0,
+    "tolerance": 1e-09
+  },
+  "solver_overrides": {
+    "eddyVisInfRatio": 0.21,
+    "useNKSolver": false
+  },
+  "solver_is_governed_configuration": false,
+  "functions": {
+    "s8_a4_cd": 0.01930848333023847,
+    "s8_a4_cdp": 0.009840800774238255,
+    "s8_a4_cdv": 0.009467682556000216,
+    "s8_a4_cl": 0.1399667739024848,
+    "s8_a4_cmx": 0.059842574357955175,
+    "s8_a4_cmy": 0.029472565826265444,
+    "s8_a4_cmz": -0.005946619746835578
+  }
+}

@@ -114,6 +114,56 @@ def fig_reference(z, out: Path, chords: float = 1.0):
     return out
 
 
+def fig_planes(z, out: Path, chords: float = 1.0, cut: str = "crown"):
+    """Two PERPENDICULAR cutting planes: one chordwise, one spanwise.
+
+    This is the structure of the classic figure and the thing the first version
+    of this script missed entirely -- it drew two parallel chordwise discs and
+    so had no right angle in it at all.
+
+    In a structured block the two planes fall out directly:
+      chordwise  constant k -> o_wing[:, :j, k] spans x-z at a fixed span station
+      spanwise   constant i -> o_wing[i, :j, :] spans y-z, emanating from one
+                 point on the aerofoil contour, outward and along the span
+
+    Taken at the crown, where the surface normal is vertical, the second sheet is
+    a y-z plane; the first is x-z. They are perpendicular and meet along a
+    vertical line through the aerofoil.
+    """
+    w, o = z["o_wing"], z["o_out"]
+    jmax = j_at_chords(w, chords) + 1
+    ring = w[:, 0, 0, :]
+    i_cut = int(np.argmax(ring[:, 2])) if cut == "crown" else ROOT_LE_I
+
+    fig = plt.figure(figsize=(12, 9), dpi=200)
+    ax = fig.add_subplot(111, projection="3d")
+
+    root = w[:, :jmax, 0, :]                       # chordwise plane, at the root
+    tip = w[:, :jmax, -1, :]                       # chordwise plane, at the tip
+    sheet = w[i_cut, :jmax, :, :]                  # spanwise plane, constant i
+    sheet_out = o[i_cut, :jmax, :12, :]            # continued a little outboard
+    add_patch(ax, root, color="#c0392b", lw=0.25, alpha=0.9)
+    add_patch(ax, tip, color="#2a52be", lw=0.25, alpha=0.9)
+    add_patch(ax, sheet, color="#1a7a3c", lw=0.30, alpha=0.95)
+    add_patch(ax, sheet_out, color="#1a7a3c", lw=0.22, alpha=0.55)
+    surf = wing_surface(ax, w)
+
+    set_proportional_3d(ax, np.concatenate([root.reshape(-1, 3), tip.reshape(-1, 3),
+                                            sheet.reshape(-1, 3), sheet_out.reshape(-1, 3),
+                                            surf.reshape(-1, 3)]))
+    ax.view_init(elev=22, azim=-58)
+    ax.set_axis_off()
+    where = "the crown" if cut == "crown" else "the leading edge"
+    ax.set_title("Two perpendicular cuts of the real grid — chordwise O-planes at the root (red)\n"
+                 f"and tip (blue), and a spanwise plane through {where} (green), continued\n"
+                 f"outboard of the tip. Both drawn to {chords:.1f} chords; every line is a grid line.",
+                 fontsize=10)
+    fig.tight_layout()
+    fig.savefig(out, bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+    return out
+
+
 def fig_root_section(z, out: Path, chords: float = 1.6):
     """The root plane in 2D: the O-grid wrapping the aerofoil."""
     w = z["o_wing"]
@@ -262,6 +312,8 @@ def main() -> int:
     z = np.load(args.blocks)
     print(f"loaded {args.blocks.name}: " + ", ".join(f"{k}{z[k].shape}" for k in z.files))
     made = [
+        fig_planes(z, args.out_dir / f"s8_mesh_planes_crown_{args.stamp}.png", cut="crown"),
+        fig_planes(z, args.out_dir / f"s8_mesh_planes_le_{args.stamp}.png", cut="le"),
         fig_reference(z, args.out_dir / f"s8_mesh_reference_view_{args.stamp}.png"),
         fig_root_section(z, args.out_dir / f"s8_mesh_root_section_{args.stamp}.png"),
         fig_boundary_layer(z, args.out_dir / f"s8_mesh_boundary_layer_{args.stamp}.png"),

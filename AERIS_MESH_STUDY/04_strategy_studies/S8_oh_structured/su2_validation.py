@@ -77,7 +77,11 @@ CASES = {
 }
 #: what SU2 writes and where -- nothing that changes the solution
 OUTPUT_ONLY = {
-    "OUTPUT_FILES": "( RESTART, SURFACE_CSV )",
+    # SURFACE_CSV carries only the solution variables; skin friction, y+ and the pressure
+    # coefficient reach a file only through the Tecplot or ParaView surface writers. The first
+    # stage-0 runs wrote CSV alone, so their flat-plate criterion -- cf at x = 0.97 -- could not
+    # be evaluated at all.
+    "OUTPUT_FILES": "( RESTART, SURFACE_CSV, SURFACE_TECPLOT_ASCII )",
     "VOLUME_OUTPUT": "( COORDINATES, SOLUTION, PRIMITIVE )",
     "HISTORY_OUTPUT": "( ITER, RMS_RES, AERO_COEFF, CFL_NUMBER )",
     "WRT_FORCES_BREAKDOWN": "YES", "BREAKDOWN_FILENAME": "forces_breakdown.dat",
@@ -102,6 +106,13 @@ def cmd_config(args) -> int:
     source = TUTORIALS / folder / cfg
     lines = source.read_text().splitlines()
     changes = {**OUTPUT_ONLY, "MESH_FILENAME": str(TUTORIALS / folder / mesh)}
+    if getattr(args, "restart", False):
+        # continue a run that was killed at its time limit rather than start again:
+        # the three cases of stage 0's first group each wrote a restart file before
+        # queue21's five-hour guard stopped them, two of them nearly settled
+        changes.update({"RESTART_SOL": "YES", "SOLUTION_FILENAME": "restart.dat",
+                        "RESTART_FILENAME": "restart_cont.dat", "CONV_FILENAME": "history_cont",
+                        "BREAKDOWN_FILENAME": "forces_breakdown.dat"})
     recorded, seen, out = {}, set(), []
     for line in lines:
         key = line.split("%")[0].split("=")[0].strip() if "=" in line.split("%")[0] else None
@@ -160,6 +171,27 @@ def forces(directory: Path) -> dict | None:
 
 
 def surface(directory: Path) -> dict | None:
+    """Wall values, preferring the Tecplot surface file: it is the only one that carries the
+    derived quantities (skin friction, y+, pressure coefficient)."""
+    tecplot = directory / "surface_flow.dat"
+    if tecplot.exists():
+        head, rows = None, []
+        for line in tecplot.read_text().splitlines():
+            s = line.strip()
+            if s.upper().startswith("VARIABLES"):
+                head = [p.strip().strip('"') for p in s.split("=", 1)[1].split(",")]
+            elif head and s and (s[0].isdigit() or s[0] in "-+."):
+                parts = s.split()
+                if len(parts) >= len(head):
+                    rows.append([float(v) for v in parts[:len(head)]])
+        if head and rows:
+            data = np.array(rows)
+            col = {h: data[:, i] for i, h in enumerate(head)}
+            cf = next((h for h in head if h.lower().startswith("skin_friction_coefficient_x")), None)
+            yplus = next((h for h in head if h.lower() == "y_plus"), None)
+            return {"x": col.get("x"), "y": col.get("y"),
+                    "cf": col.get(cf) if cf else None, "yplus": col.get(yplus) if yplus else None,
+                    "columns": head, "file": tecplot.name}
     path = directory / "surface_flow.csv"
     if not path.exists():
         return None
@@ -307,6 +339,8 @@ def main() -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     c = sub.add_parser("config")
     c.add_argument("--case", required=True, choices=list(CASES))
+    c.add_argument("--restart", action="store_true",
+                   help="continue from this case's restart file instead of starting again")
     k = sub.add_parser("compare")
     group = k.add_mutually_exclusive_group(required=True)
     group.add_argument("--case", choices=list(CASES))

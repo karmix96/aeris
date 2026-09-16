@@ -57,6 +57,14 @@ VARIANTS = {
     # an upwind flux in place of JST's central flux with scalar dissipation
     "roe_wls": {"CONV_NUM_METHOD_FLOW": "ROE", "MUSCL_FLOW": "YES",
                 "SLOPE_LIMITER_FLOW": "NONE", "NUM_METHOD_GRAD": "WEIGHTED_LEAST_SQUARES"},
+    # the same, limited. `roe_wls` never converged: over its last 3,000 iterations drag swung
+    # between 49 and 150 counts (the answer is 122.7) with the residual wandering between
+    # -2.4 and -6.1 -- a limit cycle, which is what unlimited second-order reconstruction does
+    # on an airfoil at alpha 10. SU2's own airfoil tutorials pair Roe with this limiter; only
+    # their flat-plate tutorial, where the flow is benign, leaves it off.
+    "roe_wls_venk": {"CONV_NUM_METHOD_FLOW": "ROE", "MUSCL_FLOW": "YES",
+                     "SLOPE_LIMITER_FLOW": "VENKATAKRISHNAN",
+                     "NUM_METHOD_GRAD": "WEIGHTED_LEAST_SQUARES"},
 }
 
 

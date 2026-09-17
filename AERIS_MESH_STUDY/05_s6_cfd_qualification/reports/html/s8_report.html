@@ -3644,8 +3644,12 @@ pressure drag:</p>
 </tr>
 </tbody>
 </table></div>
-<p>Skin friction is nearly inert because the first off-wall spacing is held at 4.6e-6 m on both
-levels, so y+ is unchanged; what refinement buys is in-plane resolution of the surface pressure.
+<p>Skin friction is nearly inert, and <strong>not</strong> because the wall spacing was held: <code>refined_level</code>
+refines all three directions including the wall-normal one, so <code>s0_frac</code> goes 3.6e-6 to 2.77e-6
+and the measured p99 y+ falls from 0.614 to 0.491 across the set. The boundary layer was
+genuinely refined by the family's ratio and friction drag moved about one count. That is the
+stronger reading -- <strong>skin friction is grid-converged</strong>, rather than merely untested -- and it
+localises the whole remaining error in the surface pressure field.
 Cdp is a ~100-count residual of contributions reaching +/-1,000 counts, which is why it stays
 grid-sensitive long after the pressure <em>distribution</em> — hence Cm — has converged. The two facts
 are not in conflict, and the same grid can be converged for moment and not for drag.</p>
@@ -3704,9 +3708,10 @@ written.</p>
 <h3 id="gci-m-is-not-the-answer-either">gci_M is not the answer either</h3>
 <p>Two grids cannot yield an observed order of convergence, only an assumed one. On wing 83 at
 alpha 0, Richardson gives 142.9 counts for p = 2 (gci_M high by 36.3) and 96.7 counts for p = 1
-(gci_M high by 82.5). Both are indicators rather than a GCI: r = 1.274 sits below the 1.3 that
-Celik and the ASME procedure ask for, which inflates the extrapolation, and an assumed p is an
-assumption. The honest statement is that gci_M is a second point on a curve that has not
+(gci_M high by 82.5). Both are indicators rather than a GCI. The family is <em>designed</em> at
+<code>GCI_RATIO = 1.3</code>, which is what Celik and the ASME procedure ask for, but interval counts are
+integers, so the realised ratio from cell counts is 1.274 -- marginal rather than wrong. The
+binding objection is the assumed p, not the ratio. The honest statement is that gci_M is a second point on a curve that has not
 flattened, and this campaign cannot say where it flattens.</p>
 <h3 id="consequence-for-the-cloud-batch">Consequence for the cloud batch</h3>
 <p>A requirement that did not exist this morning: <strong>a third grid level on at least a few wings</strong>, to

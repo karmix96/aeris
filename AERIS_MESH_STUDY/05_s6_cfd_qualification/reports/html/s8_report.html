@@ -3598,14 +3598,55 @@ rather than honouring the order given on the command line, so <code>--indices 83
 orders. <code>dataset_v2</code> holds 52 rows and 52 distinct per-run records; the archive audit ran and
 wrote <code>reports/s8_archive_audit_v2.json</code>.</p>
 <h3 id="the-audit-verdict-read-properly">The audit verdict, read properly</h3>
-<p><code>sound: 0</code> and 52 findings looks alarming and is not. Every one of the 52 findings is the same
-single check — maximum y+ on the <strong>tip cap</strong> above 1, ranging 1.12 to 2.00 across the set. The
-other eleven checks (force bounds, per-equation convergence, stopping rule, reference area,
-moment reference, folded cells, design-surface grid, friction against flat plate, minimum
-iterations, freestream direction) pass on every row, and no row carries a second problem.
-The 99th percentile y+ is <strong>0.41–0.78 everywhere</strong>, so 99 % of each surface is wall-resolved as
-intended and the exceedance is an isolated peak on the cap. Quote the finding as one systematic
-geometric feature, never as &quot;52 defective runs&quot;.</p>
+<p>Every one of the 52 findings is the same single check — maximum y+ on the <strong>tip cap</strong> above 1,
+ranging 1.12 to 2.00 across the set. No row carries a second problem.</p>
+<p><strong>Two things I first wrote here were wrong, and §Addendum 18 Sept 00:40 has the full account.</strong>
+I said the 99th percentile y+ was &quot;0.41–0.78 everywhere, so 99 % of each surface is
+wall-resolved&quot; and called the exceedance &quot;an isolated peak&quot;. That percentile was taken over
+<em>every</em> zone in the surface CGNS — four FarField zones and a Symmetry zone alongside the two
+wall zones — where y+ is written as zero. <strong>82.2 % of the sampled array was zeros.</strong> Masked to
+the wall, across all 52 runs:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>statistic</th>
+<th>range over 52 runs</th>
+<th>runs above 1.0</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>p50</td>
+<td>0.137 – 0.276</td>
+<td>0</td>
+</tr>
+<tr>
+<td>p95</td>
+<td>0.415 – 0.814</td>
+<td><strong>0 of 52</strong></td>
+</tr>
+<tr>
+<td>p99</td>
+<td>0.671 – 1.156</td>
+<td><strong>18 of 52</strong></td>
+</tr>
+<tr>
+<td>max</td>
+<td>1.125 – 2.000</td>
+<td>52 of 52</td>
+</tr>
+</tbody>
+</table></div>
+<p>So the defensible claim is <strong>95 % of each wall is below y+ 1</strong>, not 99 %, and on 18 of 52 runs
+the top percentile of wall area is outside the policy. That is more than an isolated cap cell.
+The number I originally quoted as a p99 is, near enough, the true p95: the dilution moved every
+statistic one band.</p>
+<p>I also said &quot;the other eleven checks pass on every row&quot;. That is not a safe statement either.
+Feeding <code>audit_runs.checks</code> a real row with one field removed at a time: deleting
+<code>inverted_cells</code>, <code>wall_layer_error_m</code>, <code>velocity_direction_error</code> or <code>reynolds_mac</code>, or setting
+the last three to NaN, produces <strong>no finding at all</strong>. An absent field reads as a pass, so a
+check whose input is missing has not passed — it has not run. <code>equation_orders</code>, <code>gate_verdict</code>
+and <code>relative_residual</code> are handled correctly and do fail closed.</p>
 <h3 id="cm-and-cl-are-converged-at-gci-c-cd-is-not">Cm and CL are converged at gci_C; Cd is not</h3>
 <p>Refining gci_C → gci_M (r = 1.274) moves Cm by at most 0.0006 and CL by at most 0.0015 on all
 three wings. Both are negligible. <strong>Every lift- and moment-dependent result in this campaign —

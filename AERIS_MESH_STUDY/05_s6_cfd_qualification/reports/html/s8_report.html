@@ -1,0 +1,3761 @@
+<title>AERIS S8 Campaign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+:root{
+  --ground:#f3f5f6; --surface:#ffffff; --sunk:#eceff1;
+  --ink:#141a1f; --ink-2:#5c6973; --ink-3:#8a959d;
+  --rule:#dce2e6; --rule-2:#c7d0d6;
+  --accent:#0e5e76; --accent-ink:#0b4b5f; --accent-wash:#e3eef2;
+  --good:#1c6e4c; --warn:#8a5a06; --bad:#9c3535;
+  --sans:"IBM Plex Sans",ui-sans-serif,system-ui,"Segoe UI",sans-serif;
+  --serif:"Source Serif 4",Charter,"Iowan Old Style",Georgia,serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --rail:17rem;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0f1419; --surface:#151c22; --sunk:#1b232a;
+    --ink:#e3e9ed; --ink-2:#8d9daa; --ink-3:#6b7a86;
+    --rule:#242e36; --rule-2:#313e48;
+    --accent:#56b8d6; --accent-ink:#7fcde4; --accent-wash:#15303a;
+    --good:#4cae83; --warn:#d0983c; --bad:#e07a7a;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0f1419; --surface:#151c22; --sunk:#1b232a;
+  --ink:#e3e9ed; --ink-2:#8d9daa; --ink-3:#6b7a86;
+  --rule:#242e36; --rule-2:#313e48;
+  --accent:#56b8d6; --accent-ink:#7fcde4; --accent-wash:#15303a;
+  --good:#4cae83; --warn:#d0983c; --bad:#e07a7a;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--serif);
+  font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:81rem;margin:0 auto;padding-inline:20px;padding-block:0 5rem}
+
+/* ---- masthead ---- */
+.mast{border-bottom:1px solid var(--rule);padding-block:3.25rem 2rem;margin-bottom:2.5rem}
+.eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 1rem}
+.mast h1{font-family:var(--sans);font-weight:600;font-size:clamp(1.9rem,1.2rem + 2.6vw,3.1rem);
+  line-height:1.1;letter-spacing:-.02em;margin:0;text-wrap:balance;max-width:20ch}
+.stand{color:var(--ink-2);font-size:1.08rem;max-width:56ch;margin:1.1rem 0 0}
+.meta{font-family:var(--mono);font-size:.76rem;color:var(--ink-3);margin:1.75rem 0 0;
+  display:flex;flex-wrap:wrap;gap:.5rem 1.5rem}
+.meta b{font-weight:500;color:var(--ink-2)}
+
+/* ---- layout ---- */
+.page{display:grid;grid-template-columns:minmax(0,1fr);gap:2rem}
+@media (min-width:1040px){
+  .page{grid-template-columns:var(--rail) minmax(0,1fr);gap:4rem;align-items:start}
+}
+
+/* ---- contents rail ---- */
+.rail{font-family:var(--sans);font-size:.83rem;line-height:1.45}
+@media (min-width:1040px){
+  .rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 1.5rem);
+    max-height:calc(100vh - 4rem);overflow-y:auto;padding-right:.5rem;
+    border-right:1px solid var(--rule)}
+}
+.rail summary{font-family:var(--sans);font-weight:600;cursor:pointer;padding:.7rem .9rem;
+  background:var(--surface);border:1px solid var(--rule);border-radius:7px;font-size:.9rem}
+@media (min-width:1040px){.rail summary{display:none}
+  .rail details{display:contents}}
+.rail-inner{display:flex;flex-direction:column;gap:1px;padding-top:.75rem}
+.rail a{text-decoration:none;color:var(--ink-2);padding:.3rem .7rem;border-left:2px solid transparent;
+  display:block;border-radius:0 3px 3px 0}
+.rail a:hover{color:var(--ink);background:var(--sunk)}
+.rail a.r2{font-weight:600;color:var(--ink);margin-top:.55rem}
+.rail a.r3{padding-left:1.45rem;font-size:.79rem}
+.rail a.on{border-left-color:var(--accent);color:var(--accent-ink);background:var(--accent-wash)}
+.rail-group{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-3);margin:1.75rem 0 .35rem;padding-left:.7rem}
+.rail a.r-add{font-weight:400;color:var(--ink-2);margin-top:0}
+.rdate{display:block;font-family:var(--mono);font-size:.68rem;color:var(--ink-3)}
+
+/* ---- article ---- */
+article{min-width:0;max-width:70ch}
+article h2{font-family:var(--sans);font-weight:600;font-size:1.6rem;letter-spacing:-.015em;
+  line-height:1.2;margin:3.5rem 0 1rem;padding-top:1.5rem;border-top:1px solid var(--rule);
+  text-wrap:balance;scroll-margin-top:1.5rem}
+article h2:first-child{margin-top:0;border-top:0;padding-top:0}
+article h3{font-family:var(--sans);font-weight:600;font-size:1.13rem;letter-spacing:-.005em;
+  margin:2.5rem 0 .65rem;text-wrap:balance;scroll-margin-top:1.5rem}
+article p{margin:0 0 1.15rem}
+article strong{font-weight:600}
+article a{color:var(--accent-ink);text-underline-offset:2px}
+article ul,article ol{margin:0 0 1.3rem;padding-left:1.35rem}
+article li{margin-bottom:.5rem}
+article li::marker{color:var(--ink-3)}
+article blockquote{margin:1.5rem 0;padding:.2rem 0 .2rem 1.25rem;border-left:2px solid var(--rule-2);
+  color:var(--ink-2);font-style:italic}
+code{font-family:var(--mono);font-size:.855em;background:var(--sunk);padding:.12em .36em;
+  border-radius:3px;word-break:break-word}
+
+/* ---- tables: the report is mostly measurements ---- */
+.tw{overflow-x:auto;margin:1.6rem 0;border:1px solid var(--rule);border-radius:7px;
+  background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-family:var(--sans);font-size:.85rem;
+  font-variant-numeric:tabular-nums;line-height:1.45}
+th,td{padding:.55rem .85rem;text-align:left;border-bottom:1px solid var(--rule);white-space:nowrap}
+th{font-weight:600;font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-2);background:var(--sunk);position:sticky;top:0}
+tbody tr:last-child td{border-bottom:0}
+td code{background:none;padding:0}
+
+/* ---- addenda: a dated sequence, so the date is structure ---- */
+.addendum{margin-top:3.5rem;padding-top:1.5rem;border-top:1px solid var(--rule)}
+.addendum .when{font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;color:var(--accent);
+  margin:0 0 .4rem;text-transform:uppercase}
+.addendum h2.h-add{margin:0 0 1rem;border-top:0;padding-top:0;font-size:1.45rem}
+.addendum h3{font-size:1.04rem}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <p class="eyebrow">Strategy study S8 · structured O-H meshing</p>
+    <h1>S8 — automated CFD for the AERIS flying wing: the whole story so far</h1>
+    <p class="stand">An automated mesh-and-solve pipeline for the AERIS flying wing: how it
+      was built, every setting in force, what each study asked and answered, and where the
+      results are still soft.</p>
+    <p class="meta">
+      <span><b>Started</b> 15 September 2026</span>
+      <span><b>Last entry</b> 17 September, 22:49</span>
+      <span><b>Solver</b> ADflow RANS-SA · SU2 8.5</span>
+      <span><b>Source</b> S8_REPORT_2026-09-15.md</span>
+    </p>
+  </header>
+
+  <div class="page">
+    <nav class="rail" aria-label="Contents">
+      <details>
+        <summary>Contents</summary>
+        <div class="rail-inner"><a class="r2" href="#0-the-one-page-summary">0. The one-page summary</a>
+<a class="r2" href="#1-background">1. Background</a>
+<a class="r3" href="#11-aeris-and-the-operating-point">1.1 AERIS and the operating point</a>
+<a class="r3" href="#12-cfd-in-twenty-minutes">1.2 CFD in twenty minutes</a>
+<a class="r3" href="#13-why-automated-meshing-of-a-bwb-is-hard-and-what-came-before-s8">1.3 Why automated meshing of a BWB is hard, and what came before S8</a>
+<a class="r2" href="#2-how-the-s8-pipeline-works">2. How the S8 pipeline works</a>
+<a class="r3" href="#21-geometry-from-20-numbers-to-a-wing-surface">2.1 Geometry: from 20 numbers to a wing surface</a>
+<a class="r3" href="#22-the-mesh-o-h-topology-explained">2.2 The mesh: O-H topology, explained</a>
+<a class="r3" href="#23-the-solver-adflow-and-every-setting-in-force">2.3 The solver: ADflow, and every setting in force</a>
+<a class="r3" href="#24-is-a-run-acceptable-the-layered-judgement">2.4 Is a run acceptable? The layered judgement</a>
+<a class="r3" href="#25-from-run-to-dataset">2.5 From run to dataset</a>
+<a class="r3" href="#26-orchestration-how-runs-are-launched-and-protected">2.6 Orchestration: how runs are launched and protected</a>
+<a class="r3" href="#27-the-multi-fidelity-idea-in-one-paragraph">2.7 The multi-fidelity idea, in one paragraph</a>
+<a class="r2" href="#3-chronology">3. Chronology</a>
+<a class="r3" href="#before-s8-30-august-to-3-september-the-s6-qualification">Before S8 — 30 August to 3 September: the S6 qualification</a>
+<a class="r3" href="#phase-1-45-september-s8-is-born-and-survives-its-first-defects">Phase 1 — 4–5 September: S8 is born and survives its first defects</a>
+<a class="r3" href="#phase-2-6-september-the-desktop-campaign-plan-and-the-first-refinement">Phase 2 — 6 September: the desktop campaign plan and the first refinement</a>
+<a class="r3" href="#phase-3-89-september-generalization-and-cloud-readiness">Phase 3 — 8–9 September: generalization and cloud readiness</a>
+<a class="r3" href="#phase-4-1011-september-where-the-drag-error-lives-and-a-big-defect">Phase 4 — 10–11 September: where the drag error lives, and a big defect</a>
+<a class="r3" href="#phase-5-1213-september-rigor-published-practice-and-the-tip-cap">Phase 5 — 12–13 September: rigor, published practice, and the tip cap</a>
+<a class="r3" href="#phase-6-1315-september-a-restart-corrections-results-and-a-challenged-run-list">Phase 6 — 13–15 September: a restart, corrections, results, and a challenged run list</a>
+<a class="r2" href="#4-study-catalogue">4. Study catalogue</a>
+<a class="r3" href="#a-mesh">A. Mesh</a>
+<a class="r3" href="#b-solver-configuration-and-convergence">B. Solver configuration and convergence</a>
+<a class="r3" href="#c-grid-refinement-design-83-unless-stated">C. Grid refinement (design 83 unless stated)</a>
+<a class="r3" href="#d-across-geometries">D. Across geometries</a>
+<a class="r3" href="#e-physics-checks">E. Physics checks</a>
+<a class="r3" href="#f-verification-and-validation-against-external-answers">F. Verification and validation against external answers</a>
+<a class="r3" href="#g-settings-on-trial-15-september-design-83-coarse-level-one-change-at-a-time">G. Settings on trial, 15 September (design 83, coarse level, one change at a time)</a>
+<a class="r3" href="#h-cross-code">H. Cross-code</a>
+<a class="r2" href="#5-the-rulebook">5. The rulebook</a>
+<a class="r3" href="#51-scales-to-keep-in-mind">5.1 Scales to keep in mind</a>
+<a class="r3" href="#52-operating-point-and-references">5.2 Operating point and references</a>
+<a class="r3" href="#53-mesh-guidelines-against-our-levels-design-83">5.3 Mesh guidelines against our levels (design 83)</a>
+<a class="r3" href="#54-convergence">5.4 Convergence</a>
+<a class="r3" href="#55-data-acceptance-every-archived-row">5.5 Data acceptance (every archived row)</a>
+<a class="r3" href="#56-grid-convergence">5.6 Grid convergence</a>
+<a class="r3" href="#57-validation-and-cross-code-criteria">5.7 Validation and cross-code criteria</a>
+<a class="r3" href="#58-governance">5.8 Governance</a>
+<a class="r2" href="#6-safeguards-and-fallbacks">6. Safeguards and fallbacks</a>
+<a class="r3" href="#61-checks-that-fail-closed-they-stop-the-run-rather-than-warn">6.1 Checks that fail closed — they stop the run rather than warn</a>
+<a class="r3" href="#62-fallbacks-what-happens-when-the-preferred-path-fails">6.2 Fallbacks — what happens when the preferred path fails</a>
+<a class="r3" href="#63-operational-traps-this-project-learned">6.3 Operational traps this project learned</a>
+<a class="r2" href="#7-where-we-are-now-and-what-is-left">7. Where we are now and what is left</a>
+<a class="r3" href="#71-running-tonight-queue20-started-2039">7.1 Running tonight (queue20, started 20:39)</a>
+<a class="r3" href="#72-decisions-waiting-for-the-pi-wednesday">7.2 Decisions waiting for the PI (Wednesday)</a>
+<a class="r3" href="#73-before-the-cloud-batch">7.3 Before the cloud batch</a>
+<a class="r3" href="#74-the-cloud-batch-and-after">7.4 The cloud batch and after</a>
+<a class="r3" href="#75-longer-term-gaps">7.5 Longer-term gaps</a>
+<a class="r2" href="#8-critical-review">8. Critical review</a>
+<a class="r3" href="#81-re-derived-while-writing-this-report">8.1 Re-derived while writing this report</a>
+<a class="r3" href="#82-statements-in-older-documents-that-are-stale-or-wrong">8.2 Statements in older documents that are stale or wrong</a>
+<a class="r3" href="#83-the-challenge-weaknesses-a-reviewer-should-press-on">8.3 The challenge: weaknesses a reviewer should press on</a>
+<a class="r3" href="#84-what-went-well-and-should-be-kept">8.4 What went well — and should be kept</a>
+<a class="r2" href="#appendix-a-glossary">Appendix A — glossary</a>
+<a class="r2" href="#appendix-b-the-defect-ledger">Appendix B — the defect ledger</a>
+<a class="r2" href="#appendix-c-file-map">Appendix C — file map</a>
+<a class="r2" href="#appendix-d-directions-that-shaped-the-work">Appendix D — directions that shaped the work</a>
+<p class="rail-group">Addenda</p>
+<a class="r2 r-add" href="#addendum-16-september-0030-the-settings-tests-of-queue20"><span class="rdate">16 September, 00:30</span><span>the settings tests of queue20</span></a>
+<a class="r2 r-add" href="#addendum-16-september-0145-naca-4412-is-complete-on-three-grids"><span class="rdate">16 September, 01:45</span><span>NACA 4412 is complete on three grids</span></a>
+<a class="r2 r-add" href="#addendum-16-september-0315-su2s-friction-error-is-the-flux-scheme"><span class="rdate">16 September, 03:15</span><span>SU2&#x27;s friction error is the flux scheme</span></a>
+<a class="r2 r-add" href="#addendum-16-september-0915-su2-passes-nasas-flat-plate-on-both-criteria"><span class="rdate">16 September, 09:15</span><span>SU2 passes NASA&#x27;s flat plate, on both criteria</span></a>
+<a class="r2 r-add" href="#addendum-16-september-1010-the-three-settings-are-decided"><span class="rdate">16 September, 10:10</span><span>the three settings are decided</span></a>
+<a class="r2 r-add" href="#addendum-16-september-1225-stage-0-closes-two-runs-stopped-eppler-387-becomes-gradeable"><span class="rdate">16 September, 12:25</span><span>stage 0 closes, two runs stopped, Eppler 387 becomes gradeable</span></a>
+<a class="r2 r-add" href="#addendum-16-september-1245-the-roe-variant-converges-and-where-its-drag-goes"><span class="rdate">16 September, 12:45</span><span>the Roe variant converges, and where its drag goes</span></a>
+<a class="r2 r-add" href="#addendum-16-september-1526-the-re-run-is-promoted-and-a-correction-that-matters"><span class="rdate">16 September, 15:26</span><span>the re-run is promoted, and a correction that matters</span></a>
+<a class="r2 r-add" href="#addendum-16-september-1644-stage-0-closes-and-the-re-run-starts"><span class="rdate">16 September, 16:44</span><span>stage 0 closes, and the re-run starts</span></a>
+<a class="r2 r-add" href="#addendum-16-september-1655-the-re-runs-meshes-are-63-larger-and-why"><span class="rdate">16 September, 16:55</span><span>the re-run&#x27;s meshes are 6.3 % larger, and why</span></a>
+<a class="r2 r-add" href="#addendum-16-september-1720-the-first-re-run-solve-decomposed-to-the-count"><span class="rdate">16 September, 17:20</span><span>the first re-run solve, decomposed to the count</span></a>
+<a class="r2 r-add" href="#addendum-17-september-0645-gci-c-is-complete-and-the-trailing-edge-credit-does-not-transfer"><span class="rdate">17 September, 06:45</span><span>gci_C is complete, and the trailing-edge credit does not transfer</span></a>
+<a class="r2 r-add" href="#addendum-17-september-2249-queue24-closed-and-what-the-two-grid-levels-say"><span class="rdate">17 September, 22:49</span><span>queue24 closed, and what the two grid levels say</span></a>
+<a class="r3" href="#the-audit-verdict-read-properly">The audit verdict, read properly</a>
+<a class="r3" href="#cm-and-cl-are-converged-at-gci-c-cd-is-not">Cm and CL are converged at gci_C; Cd is not</a>
+<a class="r3" href="#the-common-mode-test-which-is-what-three-wings-were-for">The common-mode test, which is what three wings were for</a>
+<a class="r3" href="#gci-m-is-not-the-answer-either">gci_M is not the answer either</a>
+<a class="r3" href="#consequence-for-the-cloud-batch">Consequence for the cloud batch</a></div>
+      </details>
+    </nav>
+    <article><p><strong>Written 2026-09-15, 21:00 (Athens time).</strong> Covers S8 from its first day (3–4 September 2026) to
+tonight. Written for a colleague who is new to CFD: every term is explained the first time
+it appears, and the glossary (Appendix A) collects them. Every number was checked against the
+committed reports, the run files or the chat record while writing. The checking found stale
+or conflicting statements in the older documents, listed in §8.2. <strong>Where this report and an
+older document disagree, this report is the later reading.</strong></p>
+<p>Companion documents, for depth: <code>AUDIT_2026-09-05.md</code> (the mesher), <code>AUDIT_2026-09-10.md</code> (the
+CFD campaign), <code>05_s6_cfd_qualification/VV_ACCEPTANCE_2026-09-13.md</code> (acceptance criteria),
+<code>STATE_2026-09-10.md</code> (operational state and traps), <code>PLAN_desktop_campaign.md</code> (the plan).</p>
+
+
+<h2 id="0-the-one-page-summary">0. The one-page summary</h2>
+<p><strong>What AERIS needs.</strong> AERIS designs a small blended-wing-body (BWB) drone: a flying wing, 1.5–2.5 m
+tip to tip, cruising at 28 m/s at 1,500 m. The design space has 20 variables (chords, span,
+sweeps, twist, dihedral, elevon). To explore it, the project needs aerodynamic forces for
+many designs. The fast tools it already has (AVL, a vortex-lattice code, and NeuralFoil, a
+learned airfoil model) are approximate. High-fidelity CFD is accurate but slow. The plan is
+<strong>multi-fidelity</strong>: run CFD on a well-chosen set of designs, learn how the fast tools are
+wrong, and correct them everywhere else.</p>
+<p><strong>What S8 is.</strong> S8 is the eighth strategy the project tried for turning a design into a
+trustworthy CFD result without a human in the loop. It is a chain:</p>
+<blockquote>
+<p>design vector → wing surface (pyGeo loft) → <strong>our own O-H structured mesh</strong> → ADflow RANS
+solve (Spalart–Allmaras turbulence model) → convergence judgement → dataset row → audit</p>
+</blockquote>
+<p><strong>What works, and is verified.</strong></p>
+<ul>
+<li>Meshing: <strong>100 of 100 designs</strong> mesh with zero folded cells, bit-identically on rebuild,
+with the wall exactly on the design surface (2.2e-16 m).</li>
+<li>The solver setup: friction drag within <strong>0.3–0.6 %</strong> of NASA's agreed answer (NACA 0012). On
+the one public case at our Reynolds number (NACA 4412) it matches NASA's reference code on
+friction, separation point and velocity profiles.</li>
+<li>The convergence rules: every equation is judged separately; iterative error sits hundreds of
+times below the effects being measured.</li>
+<li>The pilot: ten wings, four angles, at a coarse level (567k cells) and five wings at a
+medium level (1.1M cells) — 69 archived results.</li>
+<li>The multi-fidelity idea: AVL plus a learned offset predicts CFD lift on a wing it has not
+seen to rms 0.004, and the neutral point to 2.8 mm.</li>
+</ul>
+<p><strong>What is not established — the honest part.</strong></p>
+<ul>
+<li><strong>Drag is not grid-converged.</strong> Coarse → medium moves drag by −26 to −34 drag counts
+(13–16 %), almost all of it pressure drag. Halving or doubling the artificial dissipation
+moves coarse-mesh drag by −21 / +35 counts, and refining the trailing-edge spacing by about
+−10. The coarse mesh's drag is substantially a numerical artefact, and the fine levels that
+would show where it converges need the cloud.</li>
+<li><strong>The archive fails the rule we adopted on 13 September</strong> (y+ ≤ 1 on every wall cell): the old
+tip cap reached y+ 4.2. All 69 rows must be re-run. The re-run is approved, but on hold until
+the settings are decided (below).</li>
+<li><strong>Model-form error is only bounded, not measured</strong>: fully turbulent SA could overstate
+profile drag 1.4–2× if the real wing keeps laminar flow; no second turbulence model runs yet.</li>
+<li><strong>No experiment on an AERIS-like wing exists.</strong> Validation is a chain of evidence, not a
+number.</li>
+</ul>
+<p><strong>What happens next.</strong> Tonight's queue tests the settings that move drag most: matrix
+dissipation, whether the dissipation effect shrinks on a finer mesh, trailing-edge spacing on
+the medium mesh, and a clean far-field test. Tomorrow the PI decides the settings. Then the
+re-run (~17 h), then the cloud batch for the fine levels, then a real grid-convergence study
+and the multi-fidelity model.</p>
+
+
+<h2 id="1-background">1. Background</h2>
+<h3 id="11-aeris-and-the-operating-point">1.1 AERIS and the operating point</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Quantity</th>
+<th>Value</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Speed / altitude</td>
+<td>28 m/s at 1,500 m, ISA atmosphere</td>
+<td><code>mission_authority_v1.yaml</code></td>
+</tr>
+<tr>
+<td>Temperature, density, viscosity</td>
+<td>278.4 K, 1.0581 kg/m³, 1.7419e-5 Pa·s</td>
+<td>same</td>
+</tr>
+<tr>
+<td>Mach number</td>
+<td><strong>0.0837</strong> — essentially incompressible</td>
+<td>same</td>
+</tr>
+<tr>
+<td>Reynolds number</td>
+<td><strong>1.53 million on a 0.9 m reference chord</strong> (1.70 million per metre)</td>
+<td>same</td>
+</tr>
+<tr>
+<td>Angles of attack in the dataset</td>
+<td>−2°, 0°, 4°, 8°</td>
+<td>same</td>
+</tr>
+<tr>
+<td>Sideslip, rates, controls</td>
+<td>all zero</td>
+<td>same</td>
+</tr>
+</tbody>
+</table></div>
+<p>The Reynolds number, <code>Re = ρVL/μ</code>, says how much inertia dominates viscosity. It decides the
+boundary-layer thickness and whether the flow is laminar or turbulent. Each design's own
+Reynolds number on its mean aerodynamic chord runs <strong>0.78–1.21 million</strong>; since 13 September
+every dataset row records it.</p>
+<h3 id="12-cfd-in-twenty-minutes">1.2 CFD in twenty minutes</h3>
+<p><strong>The equations.</strong> Air obeys the Navier–Stokes equations: conservation of mass, momentum (three
+components) and energy. Solving them directly for turbulent flow at Re 1.5 million is far too
+expensive, so engineering CFD uses <strong>RANS</strong> (Reynolds-Averaged Navier–Stokes). It solves for the
+time-averaged flow and represents the effect of turbulence with a <strong>turbulence model</strong>. S8 uses
+<strong>Spalart–Allmaras (SA)</strong>, a one-equation model built for wings and the most-used model in
+external aerodynamics. So every S8 solve has six coupled equations: continuity, three momentum,
+energy, and SA's turbulence variable ν̃ (&quot;nu-tilde&quot;).</p>
+<p><strong>The mesh.</strong> The equations are solved on a <strong>mesh</strong> (or grid): the space around the wing is
+cut into small cells, and the solver balances the flow through each one. Two kinds matter:</p>
+<ul>
+<li><em>Structured</em> meshes are logically rectangular blocks, indexed (i, j, k). They are efficient
+and accurate, but hard to generate automatically around a complex shape.</li>
+<li><em>Unstructured</em> meshes use arbitrary cells. They are easy to generate and less efficient.</li>
+</ul>
+<p>S8 is structured.</p>
+<p><strong>The boundary layer and y+.</strong> Next to the wing surface the velocity drops to zero in a thin
+<strong>boundary layer</strong>, a few millimetres here. Friction drag is decided inside it. To resolve it
+without shortcuts (&quot;wall functions&quot;), the first cell must sit in the <em>viscous sublayer</em>:
+<strong>y+ ≤ 1</strong>. y+ is the wall distance scaled by the friction velocity and viscosity. Above about 5
+a cell sits in the <em>buffer layer</em>, where the turbulence model's wall behaviour is not
+calibrated. S8 is a <strong>wall-resolved</strong> mesh: y+ ≤ 1 on every wall cell is mandatory (PI
+decision, 13 September).</p>
+<p><strong>Drag, and its two parts.</strong> Force coefficients are forces divided by dynamic pressure and a
+reference area: CL (lift), CD (drag), CMy (pitching moment). Drag splits into</p>
+<ul>
+<li><strong>pressure drag CDp</strong> — pressure pushing on the surface; includes induced drag from the tip
+vortices and form drag from the boundary layer's displacement;</li>
+<li><strong>friction drag CDv</strong> — shear stress along the surface.</li>
+</ul>
+<p>A <strong>drag count</strong> is 0.0001 in CD. Our wings' CD is about 180–210 counts, so one count is about
+0.5 %. International drag-prediction workshops find codes scatter by 4–5 counts on the same
+case.</p>
+<p><strong>Convergence: are the equations solved?</strong> The solver iterates. After each iteration the
+<strong>residual</strong> measures how far the discrete equations are from balanced; convergence means the
+residuals have fallen by many orders of magnitude <em>and</em> the forces have stopped changing. The
+remaining <strong>iterative error</strong> must be far smaller than the effects being measured.</p>
+<p><strong>Three kinds of error.</strong> Every CFD number carries</p>
+<ol>
+<li><strong>iterative error</strong> — the equations were not fully solved (controlled by convergence rules);</li>
+<li><strong>discretization error</strong> — the mesh is too coarse to represent the flow (controlled by
+refining the mesh);</li>
+<li><strong>model error</strong> — RANS and SA are approximations of real turbulence, and transition from
+laminar to turbulent flow is not modelled at all (controlled only by comparing with
+experiment or other models).</li>
+</ol>
+<p><strong>Grid convergence (GCI).</strong> To measure discretization error, solve the same case on a
+<em>family</em> of systematically refined meshes: same topology, every cell spacing divided by a
+<strong>refinement ratio r</strong>, here r = 1.3. With three levels, <strong>Richardson extrapolation</strong> estimates
+the answer on an infinitely fine mesh and the <strong>observed order p</strong> at which the error shrinks.
+The <strong>Grid Convergence Index</strong> (Celik et al. 2008) turns that into an uncertainty band. With
+two levels you only get a <em>trend</em>, not a band. S8 has reached two levels on the desktop; the
+third and fourth need the cloud.</p>
+<p><strong>Verification and validation.</strong> <em>Verification</em>: are we solving the equations right? Compare
+with known answers — other codes, analytic solutions, grid families. <em>Validation</em>: are they the
+right equations? Compare with experiment. They are different questions, and a code can pass the
+first and fail the second.</p>
+<p><strong>Numerical (artificial) dissipation.</strong> ADflow's flux scheme is <em>central</em> differencing, which
+on its own is unstable. So it adds a small artificial smoothing term, controlled by
+coefficients <code>vis2</code> and <code>vis4</code> with &quot;scalar dissipation&quot; by default. That smoothing acts like
+extra viscosity. On a coarse mesh it can create spurious pressure drag, and it vanishes only
+as the mesh is refined. This became central on 15 September (§4, G5).</p>
+<h3 id="13-why-automated-meshing-of-a-bwb-is-hard-and-what-came-before-s8">1.3 Why automated meshing of a BWB is hard, and what came before S8</h3>
+<p>The project runs a governed &quot;tournament&quot; of meshing strategies (<code>ADR-0011</code>): each built
+independently, judged on frozen metrics, a hold-out set of ten designs locked until the end.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Strategy</th>
+<th>Idea</th>
+<th>Why it was not the answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S0–S5</td>
+<td>tip-first marching, cross-field layouts, station sweeps, multiblock, frozen RBF</td>
+<td>the Stage-02 versions shared one tip closure and &quot;compared one topology wearing four labels&quot;; rebuilt independently under ADR-0011</td>
+</tr>
+<tr>
+<td>S2</td>
+<td>cross-field quad layout</td>
+<td>excellent on one geometry; 27/31/37/39 blocks across six designs — <strong>not deterministic</strong></td>
+</tr>
+<tr>
+<td>S6 / S7</td>
+<td>the &quot;C family&quot;: six blocks per section with leading- and trailing-edge collars, pyHyp hyperbolic marching; S7 added an unstructured Gmsh/SU2 route</td>
+<td>reached CFD, but the nose collar starved leading-edge resolution: <strong>25.7–37.9° of surface turning per cell</strong> against a conventional 10°; surface cp rose to <strong>5.3</strong> on candidate C03, physically impossible (bound ~1.002); that strip carried ~80 % of pressure drag. Found in all 65 surface meshes of the study</td>
+</tr>
+<tr>
+<td>&quot;D family&quot;</td>
+<td>fix the collar inside that topology</td>
+<td>reached 10.6° per cell, then pyHyp <strong>segmentation-faulted 25 times</strong> — the collar size also set the trailing-edge and tip-cap point counts</td>
+</tr>
+</tbody>
+</table></div>
+<p>On 4 September the PI directed: <em>&quot;i want to debug why the cfd doesnt converge. is it because of
+the mesh or the solver? propably the mesh. so we shoudld change our meshing approach&quot;</em> and
+<em>&quot;i want to think like an anegineer and make it work with y+&lt;1&quot;</em>. <strong>S8 was the answer</strong>: an
+O-H structured grid after Zhang et al. (2026), with no collars, meshed by an algebraic march
+that cannot crash (<code>ADR-0018</code>).</p>
+
+
+<h2 id="2-how-the-s8-pipeline-works">2. How the S8 pipeline works</h2>
+<h3 id="21-geometry-from-20-numbers-to-a-wing-surface">2.1 Geometry: from 20 numbers to a wing surface</h3>
+<p><strong>The design vector</strong> (<code>configs/geometry/bwb.yaml</code>). Semi-span means root to one tip.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Variable</th>
+<th>Range</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Planform</td>
+<td><code>c1_m</code></td>
+<td>0.70–1.10 m</td>
+<td>root chord</td>
+</tr>
+<tr>
+<td></td>
+<td><code>c2_ratio</code>, <code>c3_ratio</code>, <code>c4_ratio</code></td>
+<td>0.55–0.80, 0.30–0.55, 0.08–0.20</td>
+<td>chords at span breaks b1, b2 and the tip, over root chord</td>
+</tr>
+<tr>
+<td></td>
+<td><code>b_total_m</code></td>
+<td>0.75–1.25 m</td>
+<td><strong>semi-span</strong></td>
+</tr>
+<tr>
+<td></td>
+<td><code>b3_ratio</code></td>
+<td>0.40–0.55</td>
+<td>outer-panel span fraction</td>
+</tr>
+<tr>
+<td></td>
+<td><code>split_ratio</code></td>
+<td>0.40–0.60</td>
+<td>inner/outer leading-edge spline split</td>
+</tr>
+<tr>
+<td></td>
+<td><code>sw1_deg</code>, <code>sw2_deg</code>, <code>sw3_deg</code></td>
+<td>20–40°, 15–35°, 5–25°</td>
+<td>leading-edge sweep, inner / mid / outer</td>
+</tr>
+<tr>
+<td>Twist</td>
+<td><code>twist_b0..b3_deg</code></td>
+<td>−1…1°, −3…0°, −5…−1°, −8…−2°</td>
+<td>incidence at root and span breaks; negative outboard is <strong>washout</strong></td>
+</tr>
+<tr>
+<td>Dihedral</td>
+<td><code>dihedral_b1..b3_deg</code></td>
+<td>0 (pinned), 0–6°, 0–10°</td>
+<td>root panel held flat</td>
+</tr>
+<tr>
+<td>Elevon</td>
+<td><code>elevon_start/end/hinge_frac</code></td>
+<td>0.50–0.70, 0.85–0.98, 0.65–0.82</td>
+<td>control surface (undeflected in all CFD)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Airfoils are fixed per span station: <strong>MH91</strong> at root and first break, <strong>E374</strong> at the second,
+<strong>NLF1015</strong> at the tip, blended in between. Twist and dihedral vary piecewise-linearly between
+the four stations.</p>
+<p><strong>Design sets.</strong> <code>lhs100_seed42</code>: 100 designs by Latin-hypercube sampling, for development.
+<code>round_c_lhs10_seed42</code>: <strong>the hold-out, never touched</strong>. The <strong>ten pilot geometries</strong>
+(12, 13, 16, 23, 29, 36, 47, 65, 81, 83) were chosen by maximin over the normalised design
+variables, seeded with the reference design 83 and former folding designs. Their coverage
+distance is 1.69, against a random-ten median of 1.78. Design <strong>83</strong> is the reference design
+behind most single-geometry studies.</p>
+<p><strong>The loft.</strong> The generator builds 17 section records; pyGeo lofts a smooth B-spline surface
+through them. The CFD surface opens the sharp trailing edge symmetrically to a blunt base of
+0.5 % of chord (1 mm minimum), which structured meshing needs. The low-fidelity AVL model is
+written from sections <em>extracted</em> from the same loft, so AVL and CFD fly the same wing. On 15
+September AVL's sections were measured within 0.03–0.13 % of chord of the loft.</p>
+<h3 id="22-the-mesh-o-h-topology-explained">2.2 The mesh: O-H topology, explained</h3>
+<p>Picture slicing the wing at one spanwise station: you see an airfoil. Around it S8 builds an
+<strong>O-grid</strong>: one closed ring of points hugging the airfoil (trailing edge → upper surface →
+leading edge → lower surface → trailing edge), then rings marching outwards like tree-trunk
+growth rings, to a circle 40 root chords away. Stack those O-slices along the span and you have
+the <strong>H</strong> direction: root symmetry plane → tip → beyond the tip. &quot;O-H&quot; = O around the section,
+H along the span.</p>
+<p><strong>Three volume blocks</strong> (sizes are cells at the coarse level <code>gci_C</code>):</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Block</th>
+<th>What</th>
+<th>Cells</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>o_wing</code></td>
+<td>the O-slices from root to tip, 92 around × 64 outwards × 48 spanwise</td>
+<td>282,624</td>
+</tr>
+<tr>
+<td><code>o_out</code></td>
+<td>the same O-slices continued beyond the tip to the spanwise far field</td>
+<td>276,736</td>
+</tr>
+<tr>
+<td><code>cap_out</code></td>
+<td>a thin H-block closing the space in front of the flat tip face</td>
+<td>7,896</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Two surface blocks</strong> make the whole wing wall: the wing skin, and the <strong>tip cap</strong>. The tip cap
+is a single H-patch whose outline <em>is</em> the airfoil-shaped tip section, node for node. The C
+family needed thirteen surface blocks. Block faces meet node-to-node (14 connections, none
+open), and the O-ring's first and last points are shared, so the ring closes without a seam
+gap.</p>
+<p><strong>How a mesh is built</strong> (<code>build_volume.py</code>, <code>march_o.py</code>, <code>strategy_s8.py</code>):</p>
+<ol>
+<li><strong>Section ring.</strong> Points around each section are spaced by two-sided hyperbolic (Vinokur)
+stretching and re-evaluated on the exact loft. Leading-edge spacing is <em>solved for</em>: the ring
+is refined until each cell turns the surface by at most <strong>10°</strong>. Trailing-edge spacing is
+<code>ds_te_frac</code> = 0.4 % of chord.</li>
+<li><strong>Spanwise smoothing.</strong> Leading-edge spacing may grow by at most 1.15× between neighbouring
+stations (defect 15 had a 2.6× jump).</li>
+<li><strong>Span law.</strong> Spanwise spacing clusters at the tip, so the tip cap's first cell is
+<code>tip_span_first_cell_in_s0</code> × s0 (2 since 13 September; it was 10).</li>
+<li><strong>Wall-normal march.</strong> An algebraic march in the section plane blends from the wall normal to
+a radial direction, with Laplacian smoothing that grows away from the wall. pyHyp was
+deliberately not used: it crashed 25 times on the D family. An algebraic march cannot crash,
+and every cell can be checked afterwards. First-cell height s0 is <code>s0_frac</code> 3.6e-6 of the
+bounding-box diagonal (4.73e-6 m on design 83); 65 layers; far field 40 root chords.</li>
+<li><strong>Marching frame.</strong> Each section marches in a plane square to the span (<code>span_normal</code>). An
+earlier best-fit (SVD) plane tilted up to 8°, and 40 m out that tilt folded cells on 15 % of
+designs (defect 20). Each node keeps its own out-of-plane offset, so the wall stays exactly
+on the loft (defect 21).</li>
+<li><strong>Validity.</strong> Every assembled hexahedron's volume is checked. If any is negative, the build
+climbs a smoothing ladder; if the ladder is exhausted, <strong>the build fails</strong> rather than writing
+a bad grid (defect 19).</li>
+<li><strong>Guards.</strong> The wall layer must equal the loft to 1e-9 m. The tip-cap cell must not exceed
+3× s0. The mesh is written to CGNS for ADflow.</li>
+</ol>
+<p>Meshing costs about <strong>12 seconds per design</strong>. Solving costs hours. So mesher speed is never the
+bottleneck.</p>
+<p><strong>The grid family</strong> (one refinement ratio, <code>refined_level</code>, r = 1.3 in each direction inside
+<code>o_wing</code>):</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Cells</th>
+<th>Where it runs</th>
+<th>Memory (ANK-only law)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gci_C</code> (coarse, = <code>oh_L3</code>)</td>
+<td>567,256</td>
+<td>desktop</td>
+<td>~6.8 GiB</td>
+</tr>
+<tr>
+<td><code>gci_M</code> (medium)</td>
+<td>1,111,152</td>
+<td>desktop, just</td>
+<td>~10.7 GiB</td>
+</tr>
+<tr>
+<td><code>gci_F</code> (fine)</td>
+<td>2,217,680</td>
+<td>cloud only</td>
+<td>~19.5 GiB</td>
+</tr>
+<tr>
+<td><code>gci_FF</code> (extra-fine)</td>
+<td><strong>4,504,420</strong> (built and measured)</td>
+<td>cloud only</td>
+<td>~35 GiB</td>
+</tr>
+</tbody>
+</table></div>
+<p>The outboard blocks refine less spanwise (a far-field growth law), so the <em>global</em> ratio is
+1.25 per level: cells grow ×1.96–2.03 rather than ×2.197. The desktop is a Windows PC with
+15.86 GiB of RAM running Linux in WSL with 13 GB, so it holds <code>gci_C</code> and <code>gci_M</code> only.</p>
+<p><strong>Directional variants</strong> refine one direction at a time, for diagnosis:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gci_C_chord</code>, <code>gci_C_chord2</code></td>
+<td>chordwise points 45 → 58 → 75</td>
+</tr>
+<tr>
+<td><code>gci_C_span</code></td>
+<td>spanwise 49 → 63</td>
+</tr>
+<tr>
+<td><code>gci_C_normal</code></td>
+<td>wall-normal layers 65 → 84 at fixed s0</td>
+</tr>
+<tr>
+<td><code>gci_C_s0</code></td>
+<td>first cell ÷ 1.3</td>
+</tr>
+<tr>
+<td><code>gci_C_normal_s0</code>, <code>gci_C_normal_s0_2</code></td>
+<td>layers and s0 together, two steps</td>
+</tr>
+<tr>
+<td><code>gci_C_te</code></td>
+<td>trailing edge at 0.1 % of chord</td>
+</tr>
+<tr>
+<td><code>gci_C_ff100</code></td>
+<td>far field 100 chords (with 95 layers)</td>
+</tr>
+<tr>
+<td><code>gci_M_te</code></td>
+<td>medium level with trailing edge at 0.1 %</td>
+</tr>
+<tr>
+<td><code>m6_oh</code></td>
+<td>the ONERA M6 wing through our mesher</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="23-the-solver-adflow-and-every-setting-in-force">2.3 The solver: ADflow, and every setting in force</h3>
+<p>ADflow is the University of Michigan MDO Lab's structured, cell-centred, finite-volume RANS code
+(part of the MACH-Aero framework).</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+<th>Why / evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Equations, model</td>
+<td>RANS, Spalart–Allmaras (with the ft2 term)</td>
+<td>standard for attached wing flow</td>
+</tr>
+<tr>
+<td>Lift direction</td>
+<td><code>liftIndex 3</code> (z up) on AERIS meshes; checked by reading the freestream direction back <strong>before</strong> every solve</td>
+<td>defect 14: the default of 2 applied angle of attack as sideslip</td>
+</tr>
+<tr>
+<td>Nonlinear solver</td>
+<td><strong>ANK only</strong> (approximate Newton–Krylov, <code>--no-nk</code>), <code>ANKSubspaceSize</code> 10, <code>ANKPCILUFill</code> 1</td>
+<td>full Newton–Krylov froze at 1.1M cells with lean Krylov settings; ANK reproduced NK results to 5 decimals</td>
+</tr>
+<tr>
+<td>Multigrid</td>
+<td>single grid (<code>sg</code>)</td>
+<td>2-level multigrid 1.8× slower; 3-level impossible on O-H topology (B5)</td>
+</tr>
+<tr>
+<td>Stopping rule</td>
+<td>total residual down to <strong>1e-6</strong> relative; cap 30,000 cycles; time limit</td>
+<td>1e-8 bought nothing measurable (B2)</td>
+</tr>
+<tr>
+<td>Spatial scheme</td>
+<td>central differencing with <strong>scalar</strong> artificial dissipation, <code>vis2</code> 0.25, <code>vis4</code> 0.0156 (ADflow defaults)</td>
+<td><strong>under test</strong>: vis4 moves coarse drag by −21/+35 counts</td>
+</tr>
+<tr>
+<td>Turbulence advection</td>
+<td>first order (ADflow default)</td>
+<td>second order changed CD −0.25 % (B8)</td>
+</tr>
+<tr>
+<td>Freestream turbulence</td>
+<td>archive: ADflow default <code>eddyVisInfRatio</code> 0.009 (SA χ ≈ 1.3). <strong>Adopted for the re-run: 0.21 (χ = 3)</strong>, NASA TMR's prescription</td>
+<td>CD +0.88 % mean (range +0.46…+1.19 %), CL unchanged</td>
+</tr>
+<tr>
+<td>Low-speed preconditioner</td>
+<td>off</td>
+<td>tested 15 Sept: no effect on the converged answer</td>
+</tr>
+<tr>
+<td>Reference area</td>
+<td>each geometry's <strong>own</strong> half-area (<code>reference_areas.json</code>)</td>
+<td>defect 23</td>
+</tr>
+<tr>
+<td>Moment reference, chord</td>
+<td>(0.40, 0, 0) m, 0.9 m, for every design</td>
+<td>convention; see stability caveat (§8.3)</td>
+</tr>
+<tr>
+<td>Half model</td>
+<td>symmetry plane at the root, β = 0</td>
+<td>root plane flat to 8e-18 m</td>
+</tr>
+<tr>
+<td>Ranks</td>
+<td>6 MPI ranks on the desktop</td>
+<td>time-to-answer 827 s at 6 ranks for <code>gci_C</code> α 0</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="24-is-a-run-acceptable-the-layered-judgement">2.4 Is a run acceptable? The layered judgement</h3>
+<p>A run is accepted only if all of these hold:</p>
+<ol>
+<li>
+<p><strong>Solver guards</strong> (<code>solve_s8.py</code>). At least 10 iterations; every force finite and inside
+physical bounds (e.g. 0 ≤ CD ≤ 0.5); the freestream direction and lift index read back
+and correct.</p>
+</li>
+<li>
+<p><strong>Convergence gate</strong> (<code>convergence_gate.py</code>), two routes:</p>
+<ul>
+<li><em>route 1</em>: the residual reached the target and the run was healthy;</li>
+<li><em>route 2</em>: ≥ 5 orders of residual drop, <strong>and</strong> forces settled over an adaptive tail
+window (CL &lt; 0.05 %, CD &lt; 0.1 %, |ΔCMy| &lt; 1e-4 absolute, because CMy crosses zero), <strong>and</strong>
+no divergence or growing oscillation.</li>
+</ul>
+<p>A <strong>frozen solver</strong> — forces flat because the solver stopped stepping — is reported separately
+(<code>ACCEPTED_SOLVER_FROZEN</code>) and excluded from grid-convergence work.</p>
+</li>
+<li>
+<p><strong>Per-equation convergence, Fluent's way</strong> (12 Sept, PI direction). Each of the six equations
+is normalised by its largest residual in the first five iterations. Continuity, momentum and
+turbulence must each fall by 3 orders, energy by 6 (Fluent's defaults).</p>
+</li>
+<li>
+<p><strong>Archive audit</strong> (<code>audit_runs.py</code>), on every dataset row:</p>
+<ul>
+<li>gate verdict and per-equation orders;</li>
+<li>residual ≤ 1e-6;</li>
+<li>the geometry's own reference area;</li>
+<li>moment reference and chord;</li>
+<li>zero folded cells, and the grid on the design surface;</li>
+<li><strong>worst-cell y+ ≤ 1</strong>;</li>
+<li>≥ 10 iterations;</li>
+<li>freestream direction;</li>
+<li>since 15 Sept, <strong>friction plausibility</strong>: CDv between 0.6 and 1.6 × a turbulent flat plate
+at the design's Reynolds number.</li>
+</ul>
+<p>That last check exists because a broken turbulence-model variant passed everything else.</p>
+</li>
+</ol>
+<h3 id="25-from-run-to-dataset">2.5 From run to dataset</h3>
+<p><code>dataset_row.py</code> writes one row per accepted solve with 53+ fields:</p>
+<ul>
+<li>identity and hashes;</li>
+<li>the design vector;</li>
+<li>mesher, level and cell count;</li>
+<li>git commit and solver options <em>as read back from the solver</em>;</li>
+<li>operating point and each design's own Reynolds numbers;</li>
+<li>CL, CD, CDp, CDv, CMx/y/z;</li>
+<li>every convergence measure;</li>
+<li>mesh state, y+ percentiles, cp-bound checks;</li>
+<li>paths to surface and volume fields (for future AI field prediction);</li>
+<li>the paired AVL result.</li>
+</ul>
+<p><code>collect_dataset.py</code> builds <code>05_s6_cfd_qualification/dataset/</code> (69 rows today) and refuses
+unjudged or rejected runs.</p>
+<h3 id="26-orchestration-how-runs-are-launched-and-protected">2.6 Orchestration: how runs are launched and protected</h3>
+<ul>
+<li><code>run_campaign.py</code> runs a pilot level over the ten geometries. It holds an exclusive lock (one
+measurement at a time), passes each geometry's own area, refuses a geometry without one, and
+runs a regression check first.</li>
+<li><strong>Queues</strong> (<code>artifacts/s8_checklist/queueNN.sh</code>) chain long test sequences overnight:
+<ul>
+<li>they skip any run that already has a result, so a crash loses nothing;</li>
+<li>they kill a run cleanly if free memory falls below ~2 GiB, or at a time limit;</li>
+<li>a <strong>decision gate</strong> stops before expensive steps if an earlier test moved drag by ≥ 1 count.</li>
+</ul>
+</li>
+<li><code>cloud_preflight.py</code> and <code>cloud_run.sh</code> are the cloud path. Preflight checks reference areas,
+memory, environment and authorization before anything is billed. The run builds meshes in the
+cloud (12 s each) rather than uploading them, and ends with the archive audit.</li>
+<li><code>select_levels.py</code> picks grid levels from <em>available</em> memory, not installed memory.</li>
+</ul>
+<h3 id="27-the-multi-fidelity-idea-in-one-paragraph">2.7 The multi-fidelity idea, in one paragraph</h3>
+<p>AVL, a vortex-lattice method, is inviscid and thin, but it takes seconds. CFD takes hours. On
+the ten pilot wings, AVL's lift differs from CFD's by a nearly <strong>constant offset at each angle of
+attack</strong>. So the plan: learn that offset from the CFD designs, add it to AVL everywhere. Tested
+by leaving one wing out, ten times (D6):</p>
+<ul>
+<li>lift error falls from rms 0.022 to <strong>0.004</strong>;</li>
+<li>the neutral point from 20 mm to <strong>2.8 mm</strong>.</li>
+</ul>
+<p>Drag needs its own model, since AVL gives only induced drag. The part AVL cannot supply varies
+only 3.8–4.7 % between wings at each angle, which a simple model can carry.</p>
+
+
+<h2 id="3-chronology">3. Chronology</h2>
+<p>Dates are 2026. Commit titles are in <code>git log</code>; this is the story they tell.</p>
+<h3 id="before-s8-30-august-to-3-september-the-s6-qualification">Before S8 — 30 August to 3 September: the S6 qualification</h3>
+<p>A governed qualification scaffold (M0–M2 gates, mission authority, classification thresholds)
+and one measured CFD &quot;canary&quot; on the C-family candidate C03. It ran out of memory twice and
+completed on 2 September. The postmortem found an interface defect traced to the leading-edge
+collar, starved wrap resolution in all 65 meshes, and a pyHyp marching envelope that failed at
+the tip cap. On 3 September the PI asked <em>&quot;in the general roadmap where are we? and why we
+failed?&quot;</em> and set the pace: <em>&quot;we must be able to produce the paper within this month.&quot;</em></p>
+<h3 id="phase-1-45-september-s8-is-born-and-survives-its-first-defects">Phase 1 — 4–5 September: S8 is born and survives its first defects</h3>
+<ul>
+<li><strong>First S8 grid and first CFD point</strong> (ADR-0018).</li>
+<li><strong>Defect 14 — the lift axis.</strong> <code>liftIndex</code> was omitted, so ADflow applied the angle of attack
+as <strong>sideslip</strong>; every early result was void. Caught because α 8 reported a stagnation cp of
+0.007. Fixed, and now checked before every solve (ADR-0019), together with defect 15
+(leading-edge spacing jumping 2.6× between stations).</li>
+<li><strong>The corrected α sweep</strong> on design 83: three angles converged, α 4 froze (Newton step 0,
+linear residual 1.000).</li>
+<li><strong>An output-based convergence gate</strong> replaced a bare 1e-8 residual cutoff: forces settled <em>and</em>
+residual drop <em>and</em> health, with frozen solvers flagged.</li>
+<li><strong>AVL on the identical loft.</strong> Lift agreed to 1.9 % at α 8. A &quot;stability disagreement&quot; was
+two sign errors of the assistant's own (defect 17), caught by the PI noticing mirror-image
+moment curves.</li>
+<li><strong>100-design robustness screen.</strong> 15 designs folded cells. Defect 19: the fold check had been
+2D per section, and folds were <em>between</em> sections. Mechanism found: the marching plane
+tilted up to 8° (defect 20). Fix: span-normal marching. Its first version moved the wing
+surface by 1.2 mm while every quality metric stayed unchanged (defect 21), so the wall offset
+was restored and guarded. <strong>Result: 100/100 designs clean.</strong></li>
+<li><strong>The grid family</strong> is generated from one ratio (r = 1.3) instead of by hand; its first
+audit for external review corrected two overclaims.</li>
+</ul>
+<h3 id="phase-2-6-september-the-desktop-campaign-plan-and-the-first-refinement">Phase 2 — 6 September: the desktop campaign plan and the first refinement</h3>
+<ul>
+<li><code>PLAN_desktop_campaign.md</code>, revised after an external review; authorized as ADR-0020 and policy
+<code>s8_campaign_v1</code> for <strong>two levels only</strong> (the host cannot hold a third — &quot;a trend, not a GCI.
+Say so&quot;).</li>
+<li>Four-angle sweep on <code>gci_C</code>; defect 22 (AVL moment arm applied twice).</li>
+<li><strong>Stopping rule 1e-8 → 1e-6</strong>, after the PI pointed out <em>&quot;we decided that 10^-6 is enough to
+accept... update the policy and follow it throughout.&quot;</em> It was measured: forces move ≤ 5e-5
+beyond 1e-6, and the sweep took 63 minutes instead of 308.</li>
+<li><strong>ONERA M6 validation</strong> on NASA's grid, following the PI's link to the NASA data.</li>
+<li><strong><code>gci_C</code> → <code>gci_M</code> on design 83</strong>: lift and neutral point converge; pressure drag does not.
+Far field 40 → 60 chords is worth only 0.33 % of drag.</li>
+<li>A trusted-results archive outside the wiped <code>artifacts/</code> tree. The PI's direction: save
+everything needed <em>&quot;for reproducability and validation.&quot;</em></li>
+</ul>
+<h3 id="phase-3-89-september-generalization-and-cloud-readiness">Phase 3 — 8–9 September: generalization and cloud readiness</h3>
+<ul>
+<li>The gate's two criteria had been wired as one hurdle; measured, then fixed.</li>
+<li><strong>Ten-geometry pilot</strong>: 10/10 meshes clean, 40/40 runs accepted. The coarse→medium
+pressure-drag offset looks constant.</li>
+<li><strong>Cloud-ready</strong>: signed policy <code>s8_cloud_hf_v1</code> for <code>gci_F</code> on ten wings and <code>gci_FF</code> on design
+83, a preflight that bills nothing, a bootstrap script.</li>
+<li>Edge refinement refuted as the cause of the drag offset (7 % of it). The 1e-6 rule revalidated
+on three other geometries (≤ 0.073 % movement).</li>
+<li>The PI asked whether to switch to SU2, and asked for <em>&quot;every metric, every refinement option&quot;</em>
+checked before the cloud, <em>&quot;a fluent meshing style option.&quot;</em></li>
+</ul>
+<h3 id="phase-4-1011-september-where-the-drag-error-lives-and-a-big-defect">Phase 4 — 10–11 September: where the drag error lives, and a big defect</h3>
+<ul>
+<li><strong>Directional refinement</strong>: chordwise resolution carries <strong>88 %</strong> of the pressure-drag offset,
+spanwise 11 %, edges 7 %, wall-normal the other way.</li>
+<li><strong>Chordwise three-level GCI</strong>: pressure drag converges monotonically, observed order ~3.25.</li>
+<li><strong>Defect 23</strong>: every pilot geometry had been normalised by design 83's area. Nine wings'
+coefficients were scaled by −25 to +31 %, and a published conclusion — that the CFD–AVL
+correction is geometry-specific — was an artefact. Retracted; the true agreement is ±2 %.</li>
+<li>First-cell height exonerated. Rank scaling measured.</li>
+<li><strong>Pre-cloud checklist</strong>: area preflight, <code>gci_FF</code> built (4,504,420 cells), per-design CG
+limits, surrogate check, transition bound. M6 re-run in the campaign configuration. NACA 0012
+verification set up.</li>
+<li><strong>Every setting on trial</strong>: multigrid rejected; the freestream-turbulence recommendation to
+keep the default withdrawn.</li>
+</ul>
+<h3 id="phase-5-1213-september-rigor-published-practice-and-the-tip-cap">Phase 5 — 12–13 September: rigor, published practice, and the tip cap</h3>
+<ul>
+<li>Time-to-answer scaling: 2.56× on 6 ranks, 43 % efficiency. A force sanity check added after
+Menter SST reported CL −1.17 as converged.</li>
+<li><strong>Per-equation convergence</strong>, Fluent's way, at the PI's direction: <em>&quot;lets follow fluent
+process... check that every passed run has all the variables indeed converged.&quot;</em> All 77 runs
+cleared it.</li>
+<li>χ = 3 freestream turbulence against the default. Archive audit; label defects 24 and 25.</li>
+<li><strong>Geometry audit</strong>, design vector → built mesh (its twist check was later found to be wrong;
+see Phase 6).</li>
+<li><strong>The ONERA M6 through our own mesher</strong> — the test that puts <em>our mesh</em>, not only our solver,
+in front of a measurement.</li>
+<li><strong>Tip cap wall-resolved.</strong> The PI asked how the mesh is built, established that the tip is
+airfoil-shaped, not square, and ruled: <em>&quot;read the cfd/meshing textbooks... we should mandatory
+achieve &lt;1.&quot;</em> Tip-cap cell 10 → 2 × s0; cap y+ 4.2 → 0.85; builds refuse above 3.</li>
+<li><strong>SU2 reads our mesh</strong> (a second, independent solver). Each design's own Reynolds number
+recorded. Two unchosen defaults put under test.</li>
+<li><strong>Acceptance criteria from published practice</strong>: AIAA Drag Prediction and High-Lift Prediction
+Workshops, NASA TMR, Celik 2008, ASME V&amp;V 20. The PI's condition: <em>&quot;make sure these data
+refer to similar cases and not supersonic.&quot;</em> Result: gridding rules apply at low speed, but
+our validation cases did not match our regime. <strong>NACA 4412</strong> is the one that does.</li>
+</ul>
+<h3 id="phase-6-1315-september-a-restart-corrections-results-and-a-challenged-run-list">Phase 6 — 13–15 September: a restart, corrections, results, and a challenged run list</h3>
+<ul>
+<li><strong>13 Sept 23:23: the WSL virtual machine restarted</strong> (most likely memory, during SU2 on six
+ranks) and killed every queued job. The chain was rebuilt resumable and memory-guarded.</li>
+<li><strong>15 Sept, early.</strong> Five measurements that had answered a different question than asked were
+found and corrected (all tools written by the assistant):
+<ul>
+<li>the M6 comparison sliced stations beside their true span position, and let tip-cap cells
+into every slice;</li>
+<li>its shock detector matched different legs of a lambda shock;</li>
+<li>the guideline checker read leading-edge spacing on one ring picked by index;</li>
+<li>wall-normal refinement had been judged on pressure drag alone;</li>
+<li>the twist audit measured from a trailing-edge corner on the tip closure. <strong>The wing has the
+twist it was asked for.</strong></li>
+</ul>
+</li>
+<li><strong>NACA 4412 case built</strong>; queue17 results arrive (§4, G1–G6). The wall-resolved tip cap moves
+drag +1.5 / +1.7 / +2.3 counts. <strong>Re-run approved</strong> by the PI with the new cap.</li>
+<li><strong>SU2 on the wing</strong> disagreed with ADflow on friction by +22–27 %. SU2 on NACA 0012, a case
+with a known answer, showed <strong>SU2's own friction is 15 % high</strong>, so the problem is SU2's setup,
+not ADflow.</li>
+<li>The PI: <em>&quot;why we qued all these runs? what is the purpose. i want you to challenge the run
+list.&quot;</em> The challenge cut ~17 h of runs that could not change a decision. The re-run went on
+hold, because dissipation (−21/+35 counts) and trailing-edge spacing (−10) move drag far
+more than the tip cap. The PI agreed.</li>
+<li><strong>NACA 4412 results</strong>: friction, separation point and velocity profiles match NASA's CFL3D.
+Finest grid stalled.</li>
+<li><strong>Third wall-normal level: drag rises faster with each refinement</strong> (not converging in that
+direction). Matrix dissipation stalled under ANK; retried with Newton–Krylov.</li>
+<li>A GitHub deploy key made pushing work from the desktop.</li>
+</ul>
+
+
+<h2 id="4-study-catalogue">4. Study catalogue</h2>
+<p>Format: <strong>question → method → result → decision → confidence.</strong> Confidence words:</p>
+<ul>
+<li><em>Trusted</em> — verified independently;</li>
+<li><em>Indicative</em> — real but with a stated weakness;</li>
+<li><em>Open</em> — not yet answered.</li>
+</ul>
+<h3 id="a-mesh">A. Mesh</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Question</th>
+<th>Result</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A1</td>
+<td>Is every mesh valid and repeatable?</td>
+<td>0 folded cells on every build; wall 2.2e-16 m from the loft; 37/37 metrics identical across two independent builds</td>
+<td>Trusted</td>
+</tr>
+<tr>
+<td>A2</td>
+<td>Does it work across the design space?</td>
+<td>100/100 designs at <code>gci_C</code> after the fold fix; o_wing block shape identical on all</td>
+<td>Trusted</td>
+</tr>
+<tr>
+<td>A3</td>
+<td>How much memory per level?</td>
+<td>ANK→NK: 1.51 + 9.46 GiB per million cells; ANK-only 2.69 + 7.23 (two-point fits, +6 % check error)</td>
+<td>Usable with margin</td>
+</tr>
+<tr>
+<td>A4</td>
+<td>Does the built wing match the design vector?</td>
+<td>root chord, span, tip ratio, sweep all within tolerance; twist within 0.2° at every station on 9 of 10 wings; g12 +0.25° where its twist has a sharp V at a span break, rounded by the loft spline (0.15°) and the mesh rows (0.09°). 49/50</td>
+<td>Trusted</td>
+</tr>
+<tr>
+<td>A5</td>
+<td>Does the mesh meet published gridding guidelines?</td>
+<td>coarse 3/10, medium 5/10 (§5.3): no constant-spacing wall layers, 20 boundary-layer cells at coarse, trailing edge 0.40 % vs 0.1 %, far field 40 vs ~100 chords, leading edge 0.17 % at the tip</td>
+<td>Measured; the gaps are being tested</td>
+</tr>
+<tr>
+<td>A6</td>
+<td>Is the tip cap wall-resolved?</td>
+<td>was y+ 2.9–4.5; since 13 Sept y+ ≤ 0.85; refused above 3 × s0</td>
+<td>Trusted</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="b-solver-configuration-and-convergence">B. Solver configuration and convergence</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Question</th>
+<th>Result</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B1</td>
+<td>Did the frame fix change forces?</td>
+<td>CL moved 2.75e-4, CD 1.5e-5 (regression check)</td>
+<td>Trusted</td>
+</tr>
+<tr>
+<td>B2</td>
+<td>Is 1e-6 enough?</td>
+<td>continuing 20–40× further moves forces ≤ 0.073 %; two paths to 1e-6 differ by 0.32 % in CDp — the &quot;path noise&quot; floor</td>
+<td>Trusted</td>
+</tr>
+<tr>
+<td>B3</td>
+<td>Does the gate catch frozen solvers?</td>
+<td>all three known frozen runs still caught after every gate change</td>
+<td>Trusted</td>
+</tr>
+<tr>
+<td>B4</td>
+<td>ANK-only instead of ANK→NK?</td>
+<td>reproduces NK results to 5 decimals; NK froze at 1.1M cells</td>
+<td>Trusted for wings</td>
+</tr>
+<tr>
+<td>B5</td>
+<td>Multigrid?</td>
+<td>2 levels 1.8× slower; 3 levels unsupported on this topology</td>
+<td>Rejected</td>
+</tr>
+<tr>
+<td>B6</td>
+<td>Freestream turbulence χ 1.3 vs 3?</td>
+<td>CD +0.88 % mean over 44 wing/angle pairs (+0.46…+1.19 %), CDv +1.8 %, CL −0.07 %; the same on <code>gci_M</code> for design 83</td>
+<td>Trusted; <strong>χ 3 adopted</strong></td>
+</tr>
+<tr>
+<td>B7</td>
+<td>Does every equation converge?</td>
+<td>over 77 runs the turbulence equation lags (3.3–5.3 orders) but all pass Fluent's limits; a 1e-4 turbulence limit would reject 48 runs that are demonstrably converged</td>
+<td>Trusted</td>
+</tr>
+<tr>
+<td>B8</td>
+<td>Time to an answer vs ranks</td>
+<td>2121 / 1121 / 849 / 827 s at 1 / 2 / 4 / 6 ranks; core-hours per point rise 0.59 → 1.38</td>
+<td>Trusted; cheapest cloud use is many small cases</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="c-grid-refinement-design-83-unless-stated">C. Grid refinement (design 83 unless stated)</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Question</th>
+<th>Result</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td>Coarse → medium, four angles</td>
+<td>α 0: CD 208.2 → 179.8 counts (−28.4), CDp 118.3 → 90.8, CDv 90.0 → 89.1, CL +0.14 %, CMy −0.8 %. Two levels = <strong>trend, not GCI</strong></td>
+<td>Trusted as a trend</td>
+</tr>
+<tr>
+<td>C2</td>
+<td>Neutral point</td>
+<td>0.3557 → 0.3552 m (0.05 % of chord)</td>
+<td>Trusted as a location</td>
+</tr>
+<tr>
+<td>C3</td>
+<td>Far field 40 → 60 chords</td>
+<td>CD +0.33 % (0.7 counts) at α 0, +0.23 % at α 8</td>
+<td>Trusted</td>
+</tr>
+<tr>
+<td>C4</td>
+<td>Leading/trailing-edge spacing together, same cells</td>
+<td>recovers 7 % of the drag offset</td>
+<td>Trusted, but see G4</td>
+</tr>
+<tr>
+<td>C5</td>
+<td>Which direction carries the drag error?</td>
+<td>of the CDp offset: chord <strong>88 %</strong>, span 11 %, edges 7 %, wall-normal −15 %. On <em>total</em> drag: layers 65 → 84 +1.7 counts, s0 ÷ 1.3 −0.8, both +0.9</td>
+<td>Trusted for design 83</td>
+</tr>
+<tr>
+<td>C6</td>
+<td>Chordwise three-level GCI</td>
+<td>CD extrapolates to 167.8 counts (α 0), 158.8 (α 4), GCI ~5.5 %; observed order ~3.25 — above the scheme's formal 2</td>
+<td><strong>Indicative</strong></td>
+</tr>
+<tr>
+<td>C7</td>
+<td>First-cell height alone</td>
+<td>recovers ~1 % of the offset</td>
+<td>Trusted: not the error</td>
+</tr>
+<tr>
+<td>C8</td>
+<td>Wall-normal third level (15 Sept)</td>
+<td>α 0: CD 208.2 → 209.1 → <strong>213.3</strong>; α 4: 198.6 → 199.4 → <strong>203.1</strong>. The step <em>grows</em>: CDp rises 118 → 122 → 129 while CDv falls 90 → 87 → 85. <strong>Not converging</strong> in that direction at fixed chordwise resolution</td>
+<td><strong>Open — important</strong></td>
+</tr>
+<tr>
+<td>C9</td>
+<td><code>gci_FF</code> real size</td>
+<td>4,504,420 cells, 0 folded, 1.6 GB to build</td>
+<td>Trusted</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="d-across-geometries">D. Across geometries</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Question</th>
+<th>Result</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D1</td>
+<td>Pilot robustness</td>
+<td>10/10 meshes, 40/40 <code>gci_C</code> runs accepted; 20/20 <code>gci_M</code> runs on five wings</td>
+<td>Trusted</td>
+</tr>
+<tr>
+<td>D2</td>
+<td>Is the coarse→medium CDp offset the same on every wing?</td>
+<td>re-derived for this report over <strong>five wings including the smallest (g47, 0.298 m²) and largest (g13, 0.516 m²)</strong>: mean −0.00284, sd 0.00020 (<strong>7 %</strong>), range −0.00244 (g65) … −0.00332 (g47 α 8); total drag −25.6 … −34.0 counts</td>
+<td>Trusted: near-constant, not exactly</td>
+</tr>
+<tr>
+<td>D3</td>
+<td>y+ on every planform</td>
+<td>wing p99 0.68–0.83 on all ten</td>
+<td>Trusted</td>
+</tr>
+<tr>
+<td>D4</td>
+<td>CFD vs AVL lift</td>
+<td>±2 % on every wing after defect 23</td>
+<td>Trusted as corrected</td>
+</tr>
+<tr>
+<td>D5</td>
+<td>Stability</td>
+<td>neutral points 0.24–0.39 m (22.7–29.4 % MAC), all forward of the 0.40 m reference, so every design would be unstable with its CG there; CFD neutral point 16–26 mm aft of AVL's</td>
+<td>Trusted as aerodynamics; no stability verdict without a mass model</td>
+</tr>
+<tr>
+<td>D6</td>
+<td>AVL + learned offset on an unseen wing</td>
+<td>CL rms 0.022 → 0.004; neutral point 20 → 2.8 mm</td>
+<td>Supported (one level, ten wings)</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="e-physics-checks">E. Physics checks</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Question</th>
+<th>Result</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E1</td>
+<td>Is mass conserved?</td>
+<td>far-field imbalance 7e-8 to 1.3e-7 of throughput</td>
+<td>Trusted</td>
+</tr>
+<tr>
+<td>E2</td>
+<td>Surface cp above its physical bound (1.0018)?</td>
+<td>a few cells at the blunt-TE corner (a geometric kink, 0.01–0.2 % of CDp) and at the leading edge at α 8; peak excess falls 33–72 % with refinement — discretization</td>
+<td>Trusted</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="f-verification-and-validation-against-external-answers">F. Verification and validation against external answers</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Case</th>
+<th>What it tests</th>
+<th>Result</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F1</td>
+<td><strong>ONERA M6</strong> on NASA's grid (295k), M 0.84, Re 11.7 M, α 3.06°</td>
+<td>solver setup vs measured wing pressures (transonic, <strong>not our regime</strong>)</td>
+<td>suction peak within 1.1 %, shock position 0.014 x/c, RMS Δcp 0.15; coarser NASA grids oscillate; integrated measured normal force +5.3 %</td>
+<td>Qualitative</td>
+</tr>
+<tr>
+<td>F1b</td>
+<td><strong>ONERA M6 through our mesher</strong> (955k)</td>
+<td>our <em>mesh</em> vs measurement</td>
+<td>RMS Δcp <strong>0.074</strong> (better than NASA's grid), suction peak 2.6 %, shock 0.021 x/c; shocks smeared at mid-chord; tip station suction 7 % high</td>
+<td>Against our pre-set criteria: suction peak <strong>not met</strong> (2 %), shock <strong>marginal</strong> (0.02)</td>
+</tr>
+<tr>
+<td>F2</td>
+<td>Transition, bounded</td>
+<td>how wrong &quot;fully turbulent&quot; could be</td>
+<td>NeuralFoil on 88 sections: turbulent/free-transition section drag median <strong>1.57</strong> (0.46–1.97; below 1 at tips with laminar bubbles)</td>
+<td>An estimate that sizes the question</td>
+</tr>
+<tr>
+<td>F3</td>
+<td><strong>NACA 0012</strong> (NASA TMR), M 0.15, Re 6 M, α 10°, our own pyHyp grids</td>
+<td>verification against an answer three codes agree on</td>
+<td>friction CDv +0.3–0.6 %; CDp +8.6–9.5 % on o512, converging; two-grid extrapolated CD within 0.41 %; CL +0.7 %; AERIS Mach 0.0837 vs 0.15: CL −0.45 %, CD +1.3 %; finest grid would not converge (pinched TE cell)</td>
+<td>Trusted for friction; pressure drag converging</td>
+</tr>
+<tr>
+<td>F4</td>
+<td><strong>NACA 4412</strong> (TMR 2DN44), M 0.09, <strong>Re 1.52 M on 0.90 m</strong>, α 13.87°, trailing-edge separation</td>
+<td>our regime, with experiment</td>
+<td>friction inside the CFL3D–FUN3D band; separation x/c <strong>0.790 vs CFL3D 0.789</strong>; velocity profiles within 0.006–0.010 of CFL3D (both 0.05–0.12 from the experiment — the SA model and tunnel); o512 CL +1.45 %, CD +4.1 % of the band (limits: 1 %, 3 % <em>after extrapolation</em>); o1024 stalled</td>
+<td>Friction/separation <strong>trusted</strong>; forces <strong>open</strong></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="g-settings-on-trial-15-september-design-83-coarse-level-one-change-at-a-time">G. Settings on trial, 15 September (design 83, coarse level, one change at a time)</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Change</th>
+<th>Drag effect</th>
+<th>Reading</th>
+<th>Decision</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G1</td>
+<td>Tip cap wall-resolved</td>
+<td>+1.5 / +1.7 / +2.3 counts (α 0/4/8)</td>
+<td>real and ≥ 1 count</td>
+<td><strong>adopted</strong></td>
+</tr>
+<tr>
+<td>G2</td>
+<td>Low-speed preconditioner</td>
+<td>0.00</td>
+<td>does not change the converged answer</td>
+<td>dropped</td>
+</tr>
+<tr>
+<td>G3</td>
+<td><strong>vis4 halved / doubled</strong></td>
+<td><strong>−20.6 / +35.1 counts</strong> (CDp −17 / +29 %)</td>
+<td>artificial dissipation is a large part of coarse drag</td>
+<td><strong>pending</strong></td>
+</tr>
+<tr>
+<td>G4</td>
+<td><strong>Trailing edge 0.1 % of chord</strong></td>
+<td>−9.0 / −9.2 counts; <strong>≈ −10.5 / −10.9 without the tip cap's share</strong> (the level carried the new cap)</td>
+<td>the trailing edge matters a lot</td>
+<td><strong>pending</strong> (medium-mesh test tonight)</td>
+</tr>
+<tr>
+<td>G5</td>
+<td>Far field 100 chords (with 95 layers)</td>
+<td>+5.7 / +6.9; ≈ +4.2 / +4.7 without the cap — still mixed with 30 extra wall layers</td>
+<td>cannot be attributed</td>
+<td>clean test tonight</td>
+</tr>
+<tr>
+<td>G6</td>
+<td>SA-Edwards model variant</td>
+<td>−60 counts, friction −66 %</td>
+<td>a laminar-like boundary layer that every check accepted</td>
+<td>dropped; friction check added</td>
+</tr>
+<tr>
+<td>G7</td>
+<td>Matrix dissipation (ANK)</td>
+<td>stalled: CFL stuck at 42–88, residual flat</td>
+<td>cannot converge with ANK</td>
+<td>retry with NK tonight</td>
+</tr>
+<tr>
+<td>earlier</td>
+<td>SA without ft2 / second-order turbulence advection / Menter SST</td>
+<td>+0.16 % / −0.25 % / aborts in this ADflow build</td>
+<td>negligible / negligible / unusable</td>
+<td>keep defaults; no second model yet</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="h-cross-code">H. Cross-code</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Question</th>
+<th>Result</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H1</td>
+<td>SU2 on the same wing mesh (unconverged, 4 h limit)</td>
+<td>friction +22 / +27 % above ADflow; pressure drag 67 vs 119 counts; lift within 1–4 %</td>
+<td>Not a result</td>
+</tr>
+<tr>
+<td>H2</td>
+<td>SU2 on NACA 0012 with the same numerics</td>
+<td>friction <strong>+15.5 %</strong> from NASA's answer, where ADflow is +0.6 %</td>
+<td>Trusted: <strong>SU2's setup is at fault</strong></td>
+</tr>
+<tr>
+<td>H3</td>
+<td>Which SU2 setting?</td>
+<td>least-squares gradients, second-order turbulence, Roe scheme: first runs unconverged after 1 h; re-queued to run to convergence</td>
+<td>Open</td>
+</tr>
+</tbody>
+</table></div>
+
+
+<h2 id="5-the-rulebook">5. The rulebook</h2>
+<h3 id="51-scales-to-keep-in-mind">5.1 Scales to keep in mind</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Quantity</th>
+<th>Size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>One drag count</td>
+<td>1e-4 CD ≈ <strong>0.5 %</strong> of our CD</td>
+</tr>
+<tr>
+<td>Cross-code scatter at drag workshops</td>
+<td>4–5 counts</td>
+</tr>
+<tr>
+<td>Path noise of the 1e-6 rule</td>
+<td>0.32 % of CDp ≈ 0.6 counts</td>
+</tr>
+<tr>
+<td>Decision threshold used by the queues</td>
+<td><strong>1 count</strong></td>
+</tr>
+<tr>
+<td>Coarse → medium drag change</td>
+<td>26–34 counts</td>
+</tr>
+<tr>
+<td>Dissipation sensitivity (vis4 ×½ / ×2)</td>
+<td>−21 / +35 counts</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="52-operating-point-and-references">5.2 Operating point and references</h3>
+<p>Given in §1.1. Areas: each geometry's own half-area from the loft, 0.298–0.516 m²; mesh-derived
+areas agree within 0.21 %. Moment reference x = 0.40 m, chord 0.9 m for all designs.</p>
+<h3 id="53-mesh-guidelines-against-our-levels-design-83">5.3 Mesh guidelines against our levels (design 83)</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Criterion</th>
+<th>Published</th>
+<th>Coarse <code>gci_C</code></th>
+<th>Medium <code>gci_M</code></th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>y+, every wall cell</td>
+<td>≤ 1</td>
+<td>0.86 wing, 0.85 cap</td>
+<td>0.73, 0.85</td>
+<td>met (since the cap fix)</td>
+</tr>
+<tr>
+<td>Growth in the viscous layer</td>
+<td>&lt; 1.25</td>
+<td>1.253</td>
+<td>1.190</td>
+<td>coarse marginal</td>
+</tr>
+<tr>
+<td>Constant-spacing layers at the wall</td>
+<td>≥ 2</td>
+<td>0</td>
+<td>0</td>
+<td><strong>not met</strong></td>
+</tr>
+<tr>
+<td>Cells inside the boundary layer</td>
+<td>≥ 30 (practice)</td>
+<td>20</td>
+<td>26</td>
+<td><strong>not met</strong>; F 33, FF 43</td>
+</tr>
+<tr>
+<td>Leading-edge spacing, worst span row</td>
+<td>~0.1 % chord (≤ 0.15 accepted)</td>
+<td>0.166 % at the tip; 0.05–0.07 % inboard</td>
+<td>0.140 %</td>
+<td>coarse <strong>not met</strong> outboard</td>
+</tr>
+<tr>
+<td>Trailing-edge spacing</td>
+<td>~0.1 % chord</td>
+<td>0.40 %</td>
+<td>0.31 %</td>
+<td><strong>not met</strong> — worth ~10 counts (G4)</td>
+</tr>
+<tr>
+<td>Spanwise at tip / root</td>
+<td>~0.1 % semispan</td>
+<td>0.005 % / 2.04 %</td>
+<td>0.004 % / 1.59 %</td>
+<td>tip met; root deviation (symmetry plane, not a wing-body junction)</td>
+</tr>
+<tr>
+<td>Far field</td>
+<td>~100 chords</td>
+<td>40</td>
+<td>40</td>
+<td>deviation, being measured</td>
+</tr>
+<tr>
+<td>Refinement ratio</td>
+<td>≥ 1.3 (Celik); ×3 cells per level (High-Lift Workshop)</td>
+<td>r = 1.3</td>
+<td></td>
+<td>at the minimum</td>
+</tr>
+<tr>
+<td>Folded cells</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>met</td>
+</tr>
+</tbody>
+</table></div>
+<p>Sources: AIAA Drag Prediction Workshop gridding guidelines (DPW 3–7), AIAA High-Lift
+Prediction Workshop (M 0.2, Re 4.3 M — the same numbers at low speed), NASA TMR, Celik et al.
+2008. <code>mesh_guidelines.py</code> measures these on any built mesh.</p>
+<h3 id="54-convergence">5.4 Convergence</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stopping</td>
+<td>total relative residual 1e-6 (strict mode <code>--l2 1e-7</code> or tighter for verification)</td>
+</tr>
+<tr>
+<td>Gate route 2</td>
+<td>≥ 5 orders; CL &lt; 0.05 %, CD &lt; 0.1 %, |ΔCMy| &lt; 1e-4 over the tail; no divergence or growing oscillation</td>
+</tr>
+<tr>
+<td>Per equation</td>
+<td>continuity, momentum ×3, turbulence ≥ 3 orders; energy ≥ 6 (normalised by max of first 5 iterations)</td>
+</tr>
+<tr>
+<td>Minimum iterations</td>
+<td>10</td>
+</tr>
+<tr>
+<td>Force bounds</td>
+<td>CL, CMx/y/z in ±3; 0 ≤ CD ≤ 0.5; −0.05 ≤ CDp ≤ 0.5; 0 ≤ CDv ≤ 0.1</td>
+</tr>
+<tr>
+<td>Frozen solver</td>
+<td>reported separately; excluded from grid convergence</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="55-data-acceptance-every-archived-row">5.5 Data acceptance (every archived row)</h3>
+<p>All of §5.4, plus:</p>
+<ul>
+<li>the geometry's own reference area within 0.5 %;</li>
+<li>moment reference (0.40, 0, 0) and chord 0.9;</li>
+<li>no folded cells, and the wall within 1e-9 m of the design surface;</li>
+<li><strong>worst-cell y+ ≤ 1</strong>;</li>
+<li>freestream direction error &lt; 1e-9;</li>
+<li><strong>friction 0.6–1.6 × a turbulent flat plate</strong> at the design's MAC Reynolds number, on 2.04 ×
+planform area. The 69 archived rows read 0.91–1.02; SA-Edwards read 0.33.</li>
+</ul>
+<h3 id="56-grid-convergence">5.6 Grid convergence</h3>
+<ul>
+<li>Three levels at r ≥ 1.3 and a GCI on the finest pair.</li>
+<li>Observed order reported; inside [1, 3] it is a band, outside it is <em>indicative</em>.</li>
+<li><code>gci.py</code> solves the unequal-ratio Richardson relation numerically (verified to 1e-10 on
+manufactured solutions).</li>
+<li>It refuses frozen runs, and refuses to emit a band from two levels.</li>
+</ul>
+<h3 id="57-validation-and-cross-code-criteria">5.7 Validation and cross-code criteria</h3>
+<p>These were set before results where possible:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Case</th>
+<th>Criterion</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ONERA M6, our mesh</td>
+<td>suction peak within 2 %; shock within 0.02 x/c; sectional load within 5 % at stations 2–6</td>
+<td>2.6 % (not met); 0.021 (marginal); loads not yet integrated</td>
+</tr>
+<tr>
+<td>NACA 0012</td>
+<td>lift within 0.5 %, drag within 2 % after extrapolation</td>
+<td>extrapolated drag within 0.41 %; lift +0.7–0.9 %</td>
+</tr>
+<tr>
+<td>NACA 4412</td>
+<td>CL within 1 %, CD within 3 % of the CFL3D–FUN3D band after extrapolation; separation within 0.05 x/c of 0.79</td>
+<td>separation met; forces await o1024</td>
+</tr>
+<tr>
+<td>Cross-code (SU2)</td>
+<td>within 5 drag counts on the same mesh</td>
+<td>not assessable until SU2 matches NACA 0012</td>
+</tr>
+<tr>
+<td>Model form</td>
+<td>SA against a second model, as a band; transition carried as a bound</td>
+<td>no second model; transition bound 1.4–2×</td>
+</tr>
+</tbody>
+</table></div>
+<p>What we will be able to say about drag is a <strong>chain</strong>, never a single number:</p>
+<ol>
+<li>the solver reproduces known low-speed friction and drag;</li>
+<li>our mesh reproduces measured pressures on a real wing;</li>
+<li>the grid error is bounded by the GCI (after the cloud);</li>
+<li>model-form error is bounded by the transition and turbulence-model bands.</li>
+</ol>
+<h3 id="58-governance">5.8 Governance</h3>
+<ul>
+<li>Heavy compute needs a signed policy with a scope limit: <code>s8_campaign_v1</code> (desktop) and
+<code>s8_cloud_hf_v1</code> (cloud). Authorizations given in chat are recorded as such — &quot;written into
+the record by the agent that was directed, not typed by the principal investigator.&quot;</li>
+<li>The hold-out set is locked.</li>
+<li>No paper claim is authorized by any current policy.</li>
+</ul>
+
+
+<h2 id="6-safeguards-and-fallbacks">6. Safeguards and fallbacks</h2>
+<h3 id="61-checks-that-fail-closed-they-stop-the-run-rather-than-warn">6.1 Checks that fail closed — they stop the run rather than warn</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Guard</th>
+<th>What it prevents</th>
+<th>Born from</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Freestream direction and lift index read back before solving</td>
+<td>angle of attack silently applied as sideslip</td>
+<td>defect 14</td>
+</tr>
+<tr>
+<td>Wall layer within 1e-9 m of the loft</td>
+<td>a wing silently deformed by a mesh &quot;fix&quot;</td>
+<td>defect 21</td>
+</tr>
+<tr>
+<td>Signed volume of every assembled hex, smoothing ladder, then raise</td>
+<td>writing a folded mesh and exiting 0</td>
+<td>defect 19</td>
+</tr>
+<tr>
+<td>Tip-cap cell ≤ 3 × s0</td>
+<td>a wall that is not wall-resolved</td>
+<td>tip cap, 13 Sept</td>
+</tr>
+<tr>
+<td>Own reference area, refusal if missing (campaign, preflight, AVL pairing)</td>
+<td>coefficients scaled by the wrong area</td>
+<td>defect 23</td>
+</tr>
+<tr>
+<td>Minimum 10 iterations and physical force bounds</td>
+<td>a crashed turbulence model reporting &quot;converged&quot;</td>
+<td>SST, 12 Sept</td>
+</tr>
+<tr>
+<td>Frozen-solver detection in the gate</td>
+<td>flat forces from a stopped solver counted as converged</td>
+<td>α 4, 5 Sept</td>
+</tr>
+<tr>
+<td>Per-equation limits</td>
+<td>one lagging equation hidden inside the total residual</td>
+<td>12 Sept</td>
+</tr>
+<tr>
+<td>Archive audit incl. worst-cell y+ and friction plausibility</td>
+<td>a defect surviving into training data</td>
+<td>13 and 15 Sept</td>
+</tr>
+<tr>
+<td>Exclusive run lock</td>
+<td>two measurements contaminating each other</td>
+<td>PLAN §0.2</td>
+</tr>
+<tr>
+<td>Level selection from available memory</td>
+<td>a job that cannot fit</td>
+<td>6 Sept</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="62-fallbacks-what-happens-when-the-preferred-path-fails">6.2 Fallbacks — what happens when the preferred path fails</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>If…</th>
+<th>then…</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Newton–Krylov freezes</td>
+<td>ANK only (the campaign default); verification cases use stronger NK settings</td>
+</tr>
+<tr>
+<td>ANK stalls (NACA cases, matrix dissipation)</td>
+<td>NK with stronger preconditioning (<code>NKADPC</code>, more subspace, outer preconditioner iterations)</td>
+</tr>
+<tr>
+<td>a mesh folds</td>
+<td>the smoothing ladder; the old SVD frame stays selectable; failure raises</td>
+</tr>
+<tr>
+<td>the host cannot hold a third level</td>
+<td><code>gci_MF</code> (a half-step) on 14–26 GiB hosts; below 14 GiB, two levels reported as a <strong>trend</strong>; otherwise the cloud</td>
+</tr>
+<tr>
+<td>a run crashes or the machine restarts</td>
+<td>queues are resumable; completed runs are never repeated</td>
+</tr>
+<tr>
+<td>memory runs low</td>
+<td>the queue kills the run cleanly below ~2 GiB free</td>
+</tr>
+<tr>
+<td>a test moves drag by ≥ 1 count</td>
+<td>the queue stops before the expensive step and waits for a decision</td>
+</tr>
+<tr>
+<td>a validation claim needs more rigor</td>
+<td>a strict residual mode, and NASA TMR cases with known answers</td>
+</tr>
+<tr>
+<td>a second opinion on the solver is needed</td>
+<td>SU2 (setup being fixed)</td>
+</tr>
+<tr>
+<td>S8 ever fails on a design</td>
+<td>the designated fallback mesher is <strong>deformation of a validated S8 mesh</strong>, not S6 (which carries the collar defect); both paths would be run on ~10 designs first to measure their offset</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="63-operational-traps-this-project-learned">6.3 Operational traps this project learned</h3>
+<ul>
+<li>Never change code or run a second job during a measurement.</li>
+<li>Exit code 0 is not success.</li>
+<li>A quality metric that passes is not the metric that matters (position vs shape).</li>
+<li>Solver defaults are not neutral choices.</li>
+<li><code>pkill -f</code> can kill your own shell.</li>
+<li>ADflow writes ADF-format CGNS, which h5py reads as nothing.</li>
+<li>The WSL VM can restart and take every job with it.</li>
+<li>Measure a mesh quantity on every span row, never one picked by index.</li>
+<li>Measure twist from the middle of the opened trailing edge.</li>
+</ul>
+<p>Each is recorded in <code>STATE_2026-09-10.md</code> with its cost.</p>
+
+
+<h2 id="7-where-we-are-now-and-what-is-left">7. Where we are now and what is left</h2>
+<h3 id="71-running-tonight-queue20-started-2039">7.1 Running tonight (queue20, started 20:39)</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test</th>
+<th>Question</th>
+<th>ETA</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Matrix dissipation, coarse α 0, NK allowed</td>
+<td>does a less dissipative scheme converge, and how much drag does it remove?</td>
+<td>~22:10</td>
+</tr>
+<tr>
+<td>2</td>
+<td>vis4 halved on the medium mesh</td>
+<td>does the dissipation effect shrink with refinement, as it should?</td>
+<td>~22:50</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Trailing edge 0.1 % on the medium mesh</td>
+<td>is the ~10-count effect a coarse-mesh artefact or a setting every level needs?</td>
+<td>~23:35</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Far field 100 chords at 65 layers, α 0 and 8</td>
+<td>the far-field effect alone</td>
+<td>~00:15</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Matrix dissipation α 4 and medium — only if #1 converges</td>
+<td>robustness and grid dependence</td>
+<td>~02:15</td>
+</tr>
+<tr>
+<td>6</td>
+<td>NACA 4412 finest grid, stronger NK</td>
+<td>the third level for extrapolation</td>
+<td>~03:00–06:00</td>
+</tr>
+<tr>
+<td>7</td>
+<td>SU2 numerics variants on NACA 0012, to convergence</td>
+<td>which setting fixes SU2's friction</td>
+<td>~05:00–10:00</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="72-decisions-waiting-for-the-pi-wednesday">7.2 Decisions waiting for the PI (Wednesday)</h3>
+<ol>
+<li><strong>Dissipation</strong>: ADflow defaults, a lower vis4, or matrix dissipation (if it converges).</li>
+<li><strong>Trailing-edge spacing</strong>: 0.1 % of chord at every level, or not.</li>
+<li><strong>Far field</strong>: 40 or 100 chords (100 needs ~30 more layers to keep growth under 1.25).</li>
+<li><strong>Wall-normal resolution</strong>: C8 shows no convergence at fixed chordwise resolution; whether
+to add constant-spacing wall layers and reach ≥ 30 boundary-layer cells.</li>
+<li>Then: <strong>the re-run</strong> (approved for the tip cap; ~17 h: ten wings coarse, three wings medium).</li>
+<li>Later: a <strong>mass model per design</strong> (stability verdicts), <strong>fixed angle vs fixed lift</strong>
+datasets, the <strong>cloud budget and concurrency</strong>.</li>
+</ol>
+<h3 id="73-before-the-cloud-batch">7.3 Before the cloud batch</h3>
+<ul>
+<li>Amend <code>s8_cloud_hf_v1</code>: it predates χ = 3, the wall-resolved cap and tonight's settings.</li>
+<li>Correct the cloud time estimate: it assumes 75 % efficiency on 24 ranks, but we measured 43 %
+on 6. Use many cases at 2–4 ranks each.</li>
+<li>Size <code>gci_FF</code> from the measured 4,504,420 cells, not the 4.7M estimate still in
+<code>s8_cloud_batch.json</code>.</li>
+<li>SU2 fixed on NACA 0012, so criterion E can be judged.</li>
+<li>The dataset v2 audit passing on the re-run.</li>
+</ul>
+<h3 id="74-the-cloud-batch-and-after">7.4 The cloud batch and after</h3>
+<ol>
+<li><code>gci_F</code> on the ten wings, <code>gci_FF</code> on design 83 — 44 cases.</li>
+<li>With <code>gci_C</code> / <code>gci_M</code> / <code>gci_F</code> / <code>gci_FF</code> on design 83: <strong>the first real GCI</strong> (observed
+order, extrapolated drag, uncertainty band).</li>
+<li>The fine-level offset across ten wings.</li>
+<li>The multi-fidelity model trained with stated uncertainty.</li>
+<li>A design-space campaign of 100–200 designs. At today's ~14 minutes per coarse point on six ranks a
+four-angle polar is about an hour, so 100 designs is about four days of desktop solving (the
+plan's original eight days assumed 30 minutes per point).</li>
+</ol>
+<h3 id="75-longer-term-gaps">7.5 Longer-term gaps</h3>
+<ul>
+<li>Transition: ADflow has none; SU2 has transition models.</li>
+<li>A working second turbulence model (SST in SU2).</li>
+<li>A low-speed 3D wing experiment — none public for a BWB.</li>
+<li>The alignment of dataset angles with trimmed flight.</li>
+</ul>
+
+
+<h2 id="8-critical-review">8. Critical review</h2>
+<h3 id="81-re-derived-while-writing-this-report">8.1 Re-derived while writing this report</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Re-derived</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Archive &quot;69/69 sound&quot; (AUDIT G2, 13 Sept)</td>
+<td>re-audited under the worst-cell y+ rule adopted the same day: <strong>0/69 sound</strong>, every row failing only on tip-cap y+ (up to 4.16)</td>
+<td>the archive <strong>cannot be training data</strong>; the re-run is required, not optional</td>
+</tr>
+<tr>
+<td>CDp offset &quot;provisional — three wings of the same size&quot; (AUDIT D2)</td>
+<td>five wings incl. smallest and largest: mean −0.00284, sd 7 %, range −0.00244…−0.00332</td>
+<td>holds across size, within ±7 %</td>
+</tr>
+<tr>
+<td>χ 3 effect &quot;+0.88 %&quot; (VV table) vs &quot;+1.19 %&quot; (AUDIT B6)</td>
+<td>0.88 % is the mean of 44 pairs (range 0.46–1.19 %); 1.19 % is design 83 α 0</td>
+<td>both right; now labelled</td>
+</tr>
+<tr>
+<td>Cloud batch 23.8 solver-hours</td>
+<td>assumes 75 % efficiency at 24 ranks</td>
+<td>contradicted by measurement (43 % at 6); <strong>optimistic, possibly 2–3×</strong></td>
+</tr>
+<tr>
+<td>Friction check band</td>
+<td>ADflow SA 0.91–1.02 on 69 rows; SA-Edwards 0.33; unconverged SU2 1.19</td>
+<td>band is safely wide and catches the known failure</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="82-statements-in-older-documents-that-are-stale-or-wrong">8.2 Statements in older documents that are stale or wrong</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Where</th>
+<th>Says</th>
+<th>Correct reading</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AUDIT_2026-09-10</code> verdict table / G2</td>
+<td>archive 69/69 sound</td>
+<td>0/69 under the adopted y+ rule (§8.1)</td>
+</tr>
+<tr>
+<td><code>AUDIT_2026-09-10</code> D2</td>
+<td>offset provisional, same-size wings</td>
+<td>holds on five wings incl. size extremes (§4 D2)</td>
+</tr>
+<tr>
+<td><code>AUDIT_2026-09-10</code> D3, <code>STATE</code></td>
+<td>tip cap y+ 2.9–4.5 &quot;by design&quot;</td>
+<td>superseded: y+ ≤ 1 mandatory, cap fixed 13 Sept</td>
+</tr>
+<tr>
+<td><code>AUDIT_2026-09-10</code> Settings table and Next steps (11 Sept)</td>
+<td>many items &quot;testing (queueN)&quot;</td>
+<td>results are in B8 and the 15 Sept section; list superseded by §7 here</td>
+</tr>
+<tr>
+<td><code>VV_ACCEPTANCE</code> final table, row 4</td>
+<td>wall-normal refinement &quot;moves CDp the wrong way (+3.3 %)&quot;</td>
+<td>on total drag +0.9 then +4.2 counts: <strong>not converging</strong> (C8)</td>
+</tr>
+<tr>
+<td><code>VV_ACCEPTANCE</code> final table, row 5</td>
+<td>leading edge 0.096 %, &quot;met, keep&quot;</td>
+<td>0.166 % at the tip on the coarse mesh (the upper table was corrected, the final table was not)</td>
+</tr>
+<tr>
+<td><code>VV_ACCEPTANCE</code> final table, row 6</td>
+<td>trailing edge &quot;recovered 7 % ≈ 2 counts&quot;</td>
+<td>trailing edge at 0.1 % ≈ −10.5 counts (G4)</td>
+</tr>
+<tr>
+<td><code>VV_ACCEPTANCE</code> row 9 and &quot;what is being done&quot;</td>
+<td>far field and TE tests in <code>queue16</code></td>
+<td>the far-field test was confounded; clean test in queue20</td>
+</tr>
+<tr>
+<td><code>VV_ACCEPTANCE</code> criterion E</td>
+<td>SU2 &quot;queued&quot;</td>
+<td>SU2's friction is 15 % off on NACA 0012; E cannot be judged until fixed</td>
+</tr>
+<tr>
+<td><code>VV_ACCEPTANCE</code> criterion G</td>
+<td>&quot;χ 3 adopted and re-running&quot;</td>
+<td>adopted; re-run on hold</td>
+</tr>
+<tr>
+<td><code>PLAN_desktop_campaign</code> §5</td>
+<td>&quot;validate the solver configuration, not the mesher&quot;</td>
+<td>the mesher was also put in front of measurement (M6 on our mesh)</td>
+</tr>
+<tr>
+<td><code>s8_cloud_batch.json</code></td>
+<td>24 ranks at 75 %; <code>gci_FF</code> 4.7M unmeasured</td>
+<td>43 % at 6 ranks; 4,504,420 measured</td>
+</tr>
+<tr>
+<td><code>s8_cloud_hf_v1</code> policy</td>
+<td>pre-dates χ 3, the cap and the settings decision</td>
+<td>must be amended before any cloud run</td>
+</tr>
+<tr>
+<td><code>viz/s8_onera_m6_validation_20260906.png</code></td>
+<td>M6 comparison figure</td>
+<td>drawn with the station-slicing bug; replaced by <code>viz/s8_onera_m6_nasa_grid_20260915.png</code> and <code>viz/s8_onera_m6_our_mesh_20260915.png</code></td>
+</tr>
+<tr>
+<td>queue18 printout</td>
+<td>&quot;gci_C is +0.24 counts from the extrapolated value&quot;</td>
+<td>meaningless: the observed order was negative (drag diverging)</td>
+</tr>
+<tr>
+<td>Chat, 15 Sept 08:50</td>
+<td>&quot;SU2's forces had stopped changing&quot;</td>
+<td>wrong: its drag was still falling ~3 counts per 500 iterations</td>
+</tr>
+<tr>
+<td>Chat, 15 Sept 18:30</td>
+<td>&quot;SU2 variants take about 5 minutes&quot;</td>
+<td>wrong: each needs 1–3 hours</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="83-the-challenge-weaknesses-a-reviewer-should-press-on">8.3 The challenge: weaknesses a reviewer should press on</h3>
+<ol>
+<li>
+<p><strong>The dataset's drag is mostly a numerical quantity at the coarse level.</strong> Three pieces of
+evidence:</p>
+<ul>
+<li>coarse → medium removes 26–34 counts;</li>
+<li>dissipation alone swings it by −21/+35;</li>
+<li>trailing-edge spacing by −10.</li>
+</ul>
+<p>The offset is near-constant (±7 %) across wings, which is what makes multi-fidelity
+correction possible. But ±7 % of 28 counts is ±2 counts of wing-to-wing noise that the coarse
+data cannot resolve. Any drag ranking of designs at the coarse level must carry that.</p>
+</li>
+<li>
+<p><strong>Grid convergence of drag is not demonstrated.</strong></p>
+<ul>
+<li>Two levels give a trend.</li>
+<li>The chordwise GCI's observed order (3.25) is too high to be trusted as asymptotic.</li>
+<li>The wall-normal direction <em>diverges</em> at fixed chordwise resolution. That is plausible if
+scalar dissipation grows with cell aspect ratio, but that is a hypothesis tonight tests.</li>
+<li><strong>Risk for the cloud:</strong> a family whose directions converge in opposite senses may converge
+non-monotonically, and then no GCI band can be quoted. Rechecking this on <code>gci_F</code> is the
+cloud batch's first job.</li>
+</ul>
+</li>
+<li>
+<p><strong>Model-form error dominates the unknowns.</strong></p>
+<ul>
+<li>Fully turbulent SA at Re ~1 million per MAC could overstate profile drag by a median factor
+of 1.57.</li>
+<li>No second turbulence model runs in ADflow.</li>
+<li>SU2 is not yet trustworthy.</li>
+<li>NACA 4412 shows ADflow reproduces CFL3D's SA solution, <em>including CFL3D's disagreement with
+the experiment</em>.</li>
+</ul>
+</li>
+<li>
+<p><strong>Validation is regime-limited.</strong></p>
+<ul>
+<li>The M6 is transonic.</li>
+<li>NACA 0012 and 4412 are 2D.</li>
+<li>No measurement exists for any BWB like AERIS.</li>
+</ul>
+<p>The honest claim is the chain in §5.7, never &quot;S8 predicts AERIS drag to X %&quot;.</p>
+</li>
+<li>
+<p><strong>Much rests on design 83 and two angles.</strong> The directional study, the settings trials and the
+third wall-normal level were each done on one wing, usually at α 0 and 4. The pilot confirms
+robustness on ten wings, not every diagnostic.</p>
+</li>
+<li>
+<p><strong>Stability verdicts are not available.</strong> Every design would be unstable with its CG at 0.40 m,
+but 0.40 m is a convention, not a mass model. Neutral points (0.24–0.39 m) are trustworthy;
+verdicts need per-design CGs.</p>
+</li>
+<li>
+<p><strong>Several thresholds are ours, not published.</strong> They are reasoned and measured, but a reviewer
+may disagree:</p>
+<ul>
+<li>the 1-count decision gate;</li>
+<li>the friction band 0.6–1.6;</li>
+<li>the 0.2° twist tolerance;</li>
+<li>the 0.15 % leading-edge acceptance.</li>
+</ul>
+</li>
+<li>
+<p><strong>The tools that measure have repeatedly been the source of error.</strong> Examples:</p>
+<ul>
+<li>defects 14–25;</li>
+<li>on 15 September alone, five measurements (slicing, shock matching, index-picked row,
+twist corner, pressure-drag-only reading);</li>
+<li>two confounded tests (tip cap inside the TE and far-field levels; layers inside the far-field
+level).</li>
+</ul>
+<p>All were caught by cross-checks, but the pattern says new analysis tools deserve an
+independent check before their numbers drive a decision. The rule now in the project's
+working notes: every run must differ from its baseline in exactly one setting, and must
+answer a question whose answer changes a decision.</p>
+</li>
+<li>
+<p><strong>Authorizations were given in conversation</strong> and written into policy by the assistant. This
+is recorded openly in each policy, but it is not a signature.</p>
+</li>
+<li>
+<p><strong>The cloud cost estimate is unreliable</strong> until a rented host is timed (the probe stage in
+<code>cloud_run.sh</code> exists for that).</p>
+</li>
+</ol>
+<h3 id="84-what-went-well-and-should-be-kept">8.4 What went well — and should be kept</h3>
+<ul>
+<li><strong>Measure, don't assume.</strong> The stopping rule, memory laws, rank scaling, directional
+attribution and the tip cap were each settled by a run designed for the question.</li>
+<li><strong>Retractions are recorded where the claim was made</strong> (defect 23, the twist audit, the M6
+numbers), not quietly overwritten.</li>
+<li><strong>Guards were added at the moment each failure was understood</strong>, so each class of failure can
+only happen once.</li>
+<li><strong>The run list is challenged against decisions</strong>, which on 15 September cut about 17 hours of
+runs that could not change anything.</li>
+</ul>
+
+
+<h2 id="appendix-a-glossary">Appendix A — glossary</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ADflow</td>
+<td>University of Michigan MDO Lab's structured finite-volume RANS solver (MACH-Aero framework)</td>
+</tr>
+<tr>
+<td>ANK / NK</td>
+<td>Approximate Newton–Krylov / Newton–Krylov: implicit nonlinear solvers; ANK is robust early, NK converges fast late but can freeze</td>
+</tr>
+<tr>
+<td>AVL</td>
+<td>Athena Vortex Lattice: fast inviscid lifting-surface method</td>
+</tr>
+<tr>
+<td>BWB</td>
+<td>blended-wing-body, a tailless flying wing</td>
+</tr>
+<tr>
+<td>CD, CDp, CDv</td>
+<td>drag coefficient; its pressure and viscous (friction) parts</td>
+</tr>
+<tr>
+<td>CGNS</td>
+<td>CFD General Notation System, the mesh/solution file format</td>
+</tr>
+<tr>
+<td>CL, CMy</td>
+<td>lift and pitching-moment coefficients</td>
+</tr>
+<tr>
+<td>Count</td>
+<td>0.0001 of CD</td>
+</tr>
+<tr>
+<td>χ (chi)</td>
+<td>SA freestream ratio ν̃/ν; χ = 3 is NASA TMR's prescription</td>
+</tr>
+<tr>
+<td>Dissipation (artificial)</td>
+<td>numerical smoothing that stabilises central schemes; scalar or matrix form; <code>vis2</code>, <code>vis4</code></td>
+</tr>
+<tr>
+<td>DPW / HiLiftPW</td>
+<td>AIAA Drag / High-Lift Prediction Workshops</td>
+</tr>
+<tr>
+<td>Far field</td>
+<td>the outer boundary of the computational domain</td>
+</tr>
+<tr>
+<td>GCI</td>
+<td>Grid Convergence Index, a numerical uncertainty band from three grid levels</td>
+</tr>
+<tr>
+<td><code>gci_C/M/F/FF</code></td>
+<td>S8's coarse / medium / fine / extra-fine grid levels</td>
+</tr>
+<tr>
+<td>Hold-out</td>
+<td>a geometry set locked until the method is frozen, so results cannot be tuned to it</td>
+</tr>
+<tr>
+<td>liftIndex</td>
+<td>which axis ADflow treats as &quot;up&quot;</td>
+</tr>
+<tr>
+<td>Loft</td>
+<td>a smooth surface through section curves (pyGeo)</td>
+</tr>
+<tr>
+<td>MAC</td>
+<td>mean aerodynamic chord</td>
+</tr>
+<tr>
+<td>Maximin</td>
+<td>choosing points that maximise the minimum distance between them</td>
+</tr>
+<tr>
+<td>Neutral point</td>
+<td>the CG position at which pitch stability is neutral</td>
+</tr>
+<tr>
+<td>O-H topology</td>
+<td>O-shaped rings around each section, stacked in an H arrangement along the span</td>
+</tr>
+<tr>
+<td>Observed order p</td>
+<td>how fast error shrinks with refinement, measured from three grids</td>
+</tr>
+<tr>
+<td>Path noise</td>
+<td>difference between two converged runs that took different solver paths</td>
+</tr>
+<tr>
+<td>RANS</td>
+<td>Reynolds-Averaged Navier–Stokes</td>
+</tr>
+<tr>
+<td>r</td>
+<td>refinement ratio between grid levels (1.3)</td>
+</tr>
+<tr>
+<td>Residual</td>
+<td>imbalance of the discrete equations; falls as the solver converges</td>
+</tr>
+<tr>
+<td>s0</td>
+<td>first cell height at the wall</td>
+</tr>
+<tr>
+<td>SA</td>
+<td>Spalart–Allmaras one-equation turbulence model (SA-Edwards is a variant)</td>
+</tr>
+<tr>
+<td>SST</td>
+<td>Menter's k-ω SST two-equation turbulence model</td>
+</tr>
+<tr>
+<td>SU2</td>
+<td>Stanford's open-source CFD code, the second solver</td>
+</tr>
+<tr>
+<td>TMR</td>
+<td>NASA Turbulence Modeling Resource: verification/validation cases with agreed answers</td>
+</tr>
+<tr>
+<td>Transition</td>
+<td>change from laminar to turbulent boundary layer; not modelled in ADflow</td>
+</tr>
+<tr>
+<td>V&amp;V</td>
+<td>verification (solving right) and validation (right equations)</td>
+</tr>
+<tr>
+<td>WSL</td>
+<td>Windows Subsystem for Linux, where the desktop runs</td>
+</tr>
+<tr>
+<td>y+</td>
+<td>dimensionless wall distance of the first cell; ≤ 1 for wall-resolved RANS</td>
+</tr>
+</tbody>
+</table></div>
+
+
+<h2 id="appendix-b-the-defect-ledger">Appendix B — the defect ledger</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Date</th>
+<th>Defect</th>
+<th>Consequence</th>
+<th>Now</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1–11</td>
+<td>4 Sept</td>
+<td>construction defects in the first build</td>
+<td>three looked like folded cells and were not</td>
+<td>fixed</td>
+</tr>
+<tr>
+<td>14</td>
+<td>4 Sept</td>
+<td><code>liftIndex</code> omitted: α applied as sideslip</td>
+<td>every early result void</td>
+<td>fixed; read back before every solve</td>
+</tr>
+<tr>
+<td>15</td>
+<td>4 Sept</td>
+<td>leading-edge spacing jumped 2.6× between stations</td>
+<td>invisible to the turning metric</td>
+<td>minimum envelope, ≤ 1.15×</td>
+</tr>
+<tr>
+<td>16</td>
+<td>4 Sept</td>
+<td>convergence readback read a non-existent attribute</td>
+<td>a converged run recorded as failed</td>
+<td>fixed</td>
+</tr>
+<tr>
+<td>17</td>
+<td>5 Sept</td>
+<td>two sign errors in a stability comparison (assistant's)</td>
+<td>a false CFD–AVL disagreement</td>
+<td>corrected; integrate the field when in doubt</td>
+</tr>
+<tr>
+<td>18</td>
+<td>5 Sept</td>
+<td>the mesher built an entire S6 surface to read the loft</td>
+<td>died on design 0</td>
+<td>fixed</td>
+</tr>
+<tr>
+<td>19</td>
+<td>5 Sept</td>
+<td>fold check in-plane per section</td>
+<td>folded meshes written, exit 0</td>
+<td>3D hex check; raises</td>
+</tr>
+<tr>
+<td>20</td>
+<td>5 Sept</td>
+<td>SVD-fitted marching plane tilted up to 8°</td>
+<td>15 % of designs folded</td>
+<td>span-normal frame</td>
+</tr>
+<tr>
+<td>21</td>
+<td>5 Sept</td>
+<td>span-normal fix projected the wall</td>
+<td>wing moved 1.2 mm, all quality metrics unchanged</td>
+<td>offset restored; 1e-9 m guard</td>
+</tr>
+<tr>
+<td>22</td>
+<td>6 Sept</td>
+<td>AVL moment arm applied twice</td>
+<td>wrong AVL moments on a plot</td>
+<td>fixed</td>
+</tr>
+<tr>
+<td>23</td>
+<td>10 Sept</td>
+<td>every pilot wing normalised by design 83's area</td>
+<td>nine wings' coefficients off −25…+31 %; a published conclusion retracted</td>
+<td>own areas; refusals</td>
+</tr>
+<tr>
+<td>24</td>
+<td>13 Sept</td>
+<td>geometry label read from directory name</td>
+<td>a correct run archived as the wrong wing</td>
+<td>read from grid path</td>
+</tr>
+<tr>
+<td>25</td>
+<td>13 Sept</td>
+<td>missing gate verdict passed the archive filter</td>
+<td>an unjudged run in the archive</td>
+<td>excluded</td>
+</tr>
+<tr>
+<td>—</td>
+<td>13 Sept</td>
+<td>tip cap at y+ 2.9–4.5</td>
+<td>archive fails the mandatory y+ rule</td>
+<td>cap fixed; re-run approved</td>
+</tr>
+<tr>
+<td>—</td>
+<td>15 Sept</td>
+<td>M6 slicer: nearest row + tip-cap cells</td>
+<td>pressure RMS doubled; fake suction spike</td>
+<td>interpolated at station; cap zones skipped</td>
+</tr>
+<tr>
+<td>—</td>
+<td>15 Sept</td>
+<td>shock detector matched different lambda legs</td>
+<td>a fake 0.34 x/c error</td>
+<td>nearest-rise matching</td>
+</tr>
+<tr>
+<td>—</td>
+<td>15 Sept</td>
+<td>guideline check on an index-picked ring</td>
+<td>a verdict flipped with span clustering</td>
+<td>worst of every span row</td>
+</tr>
+<tr>
+<td>—</td>
+<td>15 Sept</td>
+<td>twist measured at a trailing-edge corner on the tip closure</td>
+<td>false 0.19–0.76° washout deficit</td>
+<td>trailing-edge midpoint, generator stations</td>
+</tr>
+<tr>
+<td>—</td>
+<td>15 Sept</td>
+<td>TE and far-field test levels carried the new tip cap</td>
+<td>two confounded results</td>
+<td>recomputed; clean tests queued</td>
+</tr>
+<tr>
+<td>—</td>
+<td>16 Sept</td>
+<td>transition onset took a global argmin over a fixed window</td>
+<td>a plate with no transition at all reported onset at Re_x 2.6e8 — the window edge, x = 9.915 of 20</td>
+<td>first local minimum, with a 25 % rise required after it</td>
+</tr>
+<tr>
+<td>—</td>
+<td>16 Sept</td>
+<td><code>forces()</code> gained CMz; <code>judge_naca</code> indexed the TMR table by the <strong>run's</strong> keys</td>
+<td>NACA 0012 went ungraded on <code>KeyError('CMz')</code>; only compare's recording of exceptions made it visible</td>
+<td>iterate the reference's keys</td>
+</tr>
+<tr>
+<td>—</td>
+<td>16 Sept</td>
+<td>convergence rate measured by row offset instead of iteration</td>
+<td>history write frequency is per case — 1 row/iteration for most, 1 per 10 for the NLF case — so the &quot;rate&quot; silently became the total drop since iteration 0, and a stalled run was reported as accelerating three times</td>
+<td>rates computed from <code>Inner_Iter</code></td>
+</tr>
+<tr>
+<td>—</td>
+<td>16 Sept</td>
+<td><code>fp_bc</code> and <code>t3a</code> wrote <code>SURFACE_CSV</code> only, their configs written 11 minutes before the Tecplot fix</td>
+<td><code>fp_bc</code> reported <code>finished: true</code> with no verdict attached, which reads as a pass</td>
+<td>both now state they carry no cf</td>
+</tr>
+<tr>
+<td>—</td>
+<td>16 Sept</td>
+<td>a 14-byte file reading <code>404: Not Found</code> sat in <code>external/su2_transition/</code></td>
+<td>looked like the ERCOFTAC reference data it was named for</td>
+<td>deleted; T3A/T3A− remain unscoreable</td>
+</tr>
+<tr>
+<td>—</td>
+<td>16 Sept</td>
+<td><code>su2_naca0012.py</code> never received the Tecplot-output fix that <code>su2_validation.py</code> and <code>su2_config.py</code> got</td>
+<td>every NACA 0012 variant wrote 512 rows of conservative variables and no cp, cf or y+; the converged Roe variant's pressure-drag excess could not be localised from its own output</td>
+<td><code>OUTPUT_FILES</code> added; cp recovered meanwhile from the conservative variables</td>
+</tr>
+<tr>
+<td>—</td>
+<td>16 Sept</td>
+<td><strong>the assistant's own inference</strong>: &quot;cp matches the reference to 0.01, so the pressure drag cannot be 43 % high&quot;</td>
+<td>wrong, and nearly recorded as a contradiction in the data. CDp here is a 60-count residual of contributions reaching −1,145 counts, so a systematic 0.01 in cp is worth tens of counts</td>
+<td>integrate cp directly; the integration reproduces CFL3D's published CDp to 0.01 counts</td>
+</tr>
+<tr>
+<td>—</td>
+<td>16 Sept</td>
+<td><strong>the assistant's own attribution</strong>: <code>naca0012_inc_897</code>'s CDv +9.25 % called &quot;the JST friction signature&quot;</td>
+<td>wrong twice — that case runs <strong>FDS</strong>, not JST, and the +9.25 % was convergence error that fell to <strong>+1.24 %</strong> when the run continued, while CDp drifted 3.00 → 4.04 %. It had been used to argue SU2's friction is structurally bad</td>
+<td>component errors are read only from settled runs; an unconverged run misattributes error between CDp and CDv</td>
+</tr>
+<tr>
+<td>—</td>
+<td>16 Sept</td>
+<td>a process-group stop matched the solver name against a cmdline <strong>truncated to 46 characters for display</strong></td>
+<td>the pattern never matched <code>prterun</code>, nothing was signalled, and the run continued unnoticed. Worse, three of the listed PIDs carried queue23.sh's <strong>own</strong> process group — a looser match would have killed the queue and severed the chain to the re-run</td>
+<td>match the full cmdline, require pgid == pid, and refuse the queue's own group explicitly</td>
+</tr>
+<tr>
+<td>—</td>
+<td>16 Sept</td>
+<td>the wall-resolved tip cap silently <strong>added 6.3 % cells</strong>, and the family sizes in <code>strategy_s8.py</code> and the docs (299k / 567k / 1.11M) went stale without anyone noticing</td>
+<td>the cap's finer outboard first cell needs ~6 extra extrusion layers to reach the same far field; <code>gci_C</code> on g12 went 573,312 → 609,648. The level definitions cannot show this because the outboard layer count is produced by the extrusion, not stored as a level field</td>
+<td>measured from the meshes themselves; gci_M is now projected at ~1.18M cells and ~11.8 GiB on a 13 GiB host</td>
+</tr>
+</tbody>
+</table></div>
+
+
+<h2 id="appendix-c-file-map">Appendix C — file map</h2>
+<p><strong>Start here:</strong> this report; then <code>STATE_2026-09-10.md</code> for how to operate.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>What</th>
+<th>Where (under <code>AERIS_MESH_STUDY/</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>This report, audits, plan, state</td>
+<td><code>04_strategy_studies/S8_oh_structured/*.md</code></td>
+</tr>
+<tr>
+<td>Mesher</td>
+<td><code>strategy_s8.py</code> (levels), <code>build_volume.py</code>, <code>march_o.py</code>, <code>section_o.py</code>, <code>write_cgns.py</code>, <code>m6_loft.py</code></td>
+</tr>
+<tr>
+<td>Solver drivers</td>
+<td><code>solve_s8.py</code> (wings), <code>onera_m6.py</code>, <code>naca0012_tmr.py</code>, <code>naca4412_tmr.py</code>, <code>su2_mesh.py</code>, <code>su2_config.py</code>, <code>su2_naca0012.py</code></td>
+</tr>
+<tr>
+<td>Judgement</td>
+<td><code>convergence_gate.py</code>, <code>equation_convergence.py</code>, <code>audit_runs.py</code>, <code>mesh_guidelines.py</code>, <code>geometry_audit.py</code>, <code>compare_meshes.py</code>, <code>gci.py</code></td>
+</tr>
+<tr>
+<td>Data</td>
+<td><code>dataset_row.py</code>, <code>collect_dataset.py</code> → <code>05_s6_cfd_qualification/dataset/</code></td>
+</tr>
+<tr>
+<td>Aerodynamic analyses</td>
+<td><code>cg_limits.py</code>, <code>surrogate_check.py</code>, <code>transition_sensitivity.py</code>, <code>chi_offset.py</code>, <code>verify_against_avl.py</code>, <code>m6_loads.py</code></td>
+</tr>
+<tr>
+<td>Orchestration</td>
+<td><code>run_campaign.py</code>, <code>select_levels.py</code>, <code>cloud_batch.py</code>, <code>cloud_preflight.py</code>, <code>cloud_run.sh</code>, <code>artifacts/s8_checklist/queue*.sh</code> (queue scripts are committed with <code>git add -f</code>)</td>
+</tr>
+<tr>
+<td>Reports (evidence)</td>
+<td><code>05_s6_cfd_qualification/reports/s8_*.json</code></td>
+</tr>
+<tr>
+<td>Acceptance criteria</td>
+<td><code>05_s6_cfd_qualification/VV_ACCEPTANCE_2026-09-13.md</code></td>
+</tr>
+<tr>
+<td>Policies</td>
+<td><code>05_s6_cfd_qualification/policies/s8_campaign_v1.yaml</code>, <code>s8_cloud_hf_v1.yaml</code></td>
+</tr>
+<tr>
+<td>Decisions</td>
+<td><code>00_governance/decisions/ADR-0018</code>, <code>ADR-0019</code>, <code>ADR-0020</code></td>
+</tr>
+<tr>
+<td>External reference data</td>
+<td><code>05_s6_cfd_qualification/external/</code> (TMR NACA 0012, NACA 4412; ONERA M6)</td>
+</tr>
+<tr>
+<td>Figures</td>
+<td><code>05_s6_cfd_qualification/viz/s8_*.png</code></td>
+</tr>
+<tr>
+<td>Scratch outputs (not in git, wiped between campaigns)</td>
+<td><code>artifacts/</code></td>
+</tr>
+</tbody>
+</table></div>
+
+
+<h2 id="appendix-d-directions-that-shaped-the-work">Appendix D — directions that shaped the work</h2>
+<p>The principal investigator's own words (typos kept), in order:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Direction</th>
+<th>What it changed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3 Sept</td>
+<td>&quot;we must be able to produce the paper within this month&quot;</td>
+<td>pace</td>
+</tr>
+<tr>
+<td>4 Sept</td>
+<td>&quot;i want to debug why the cfd doesnt converge... propably the mesh. so we shoudld change our meshing approach&quot;</td>
+<td>S8</td>
+</tr>
+<tr>
+<td>4 Sept</td>
+<td>&quot;i want to think like an anegineer and make it work with y+&lt;1&quot;</td>
+<td>wall-resolved from the start</td>
+</tr>
+<tr>
+<td>5 Sept</td>
+<td>&quot;implement the PLAN_desktop_campaign.md&quot;</td>
+<td>the campaign</td>
+</tr>
+<tr>
+<td>6 Sept</td>
+<td>&quot;i thought we decided that 10^-6 is enough to accept... update the policy and follow it throughout every cfd from now on&quot;</td>
+<td>stopping rule 1e-6</td>
+</tr>
+<tr>
+<td>6 Sept</td>
+<td>(the NASA ONERA M6 archive link) &quot;make sure you set uo correct the M6 wing verification study&quot;</td>
+<td>M6 validation</td>
+</tr>
+<tr>
+<td>6 Sept</td>
+<td>&quot;verification/validation first, then generalization, then GCI&quot; (plan order)</td>
+<td>sequencing</td>
+</tr>
+<tr>
+<td>6 Sept</td>
+<td>&quot;save all the cfd results that we trust in the same folder with info... for reproducability&quot;</td>
+<td>the archive</td>
+</tr>
+<tr>
+<td>9 Sept</td>
+<td>&quot;maybe change the solver to su2?&quot;</td>
+<td>SU2 as second solver</td>
+</tr>
+<tr>
+<td>9 Sept</td>
+<td>&quot;i want tk make sure we dod everything, every setting checked before trying the cloud part&quot;</td>
+<td>settings on trial</td>
+</tr>
+<tr>
+<td>10 Sept</td>
+<td>&quot;make a full audit on the studies... can we trust our resluts so far?&quot;</td>
+<td>AUDIT_2026-09-10, defect 23</td>
+</tr>
+<tr>
+<td>11 Sept</td>
+<td>&quot;challenge each one of them, even the settings like the free stream tirnulence standard&quot;</td>
+<td>χ 3</td>
+</tr>
+<tr>
+<td>12 Sept</td>
+<td>&quot;lets follow fluent process... check that every passed run has all the variables indeed converged&quot;</td>
+<td>per-equation convergence</td>
+</tr>
+<tr>
+<td>12 Sept</td>
+<td>&quot;we make the runs and we comapre the cp's in all the stations, we compare our runs agaisnt the experimental data, nothing more&quot;</td>
+<td>M6 judged on measurement only</td>
+</tr>
+<tr>
+<td>12 Sept</td>
+<td>&quot;ok transition to NASA default incoming-air setting&quot;</td>
+<td>χ 3 adopted</td>
+</tr>
+<tr>
+<td>13 Sept</td>
+<td>&quot;the wings vary in terms of dihedral twist etc? the solvera and solutions are physically correct?&quot;</td>
+<td>geometry audit</td>
+</tr>
+<tr>
+<td>13 Sept</td>
+<td>&quot;nothing is sqare. the tip is airfoil shaped&quot; / &quot;we should mandatory achieve &lt;1&quot;</td>
+<td>wall-resolved tip cap</td>
+</tr>
+<tr>
+<td>13 Sept</td>
+<td>&quot;we should validate our runs against SU2 solver&quot;</td>
+<td>SU2 route</td>
+</tr>
+<tr>
+<td>13 Sept</td>
+<td>&quot;exhaustive search... TMR NASA and AGARD... acceptance criteria&quot; and &quot;make sure these data refer to similar cases&quot;</td>
+<td>VV_ACCEPTANCE, NACA 4412</td>
+</tr>
+<tr>
+<td>15 Sept</td>
+<td>&quot;ok approve the re-run with the new tip cap&quot;</td>
+<td>re-run approval</td>
+</tr>
+<tr>
+<td>15 Sept</td>
+<td>&quot;why we qued all these runs? what is the purpose. i want you to challenge the run list&quot; → &quot;i agree with you&quot;</td>
+<td>run list cut; settings first</td>
+</tr>
+<tr>
+<td>15 Sept</td>
+<td>&quot;i want everything from the start of the S8 to now to be defined and explained&quot;</td>
+<td>this report</td>
+</tr>
+</tbody>
+</table></div>
+
+<section class="addendum"><p class="when">16 September, 00:30</p><h2 id="addendum-16-september-0030-the-settings-tests-of-queue20" class="h-add">the settings tests of queue20</h2>
+<p>Each test is one change against a run with the same tip cap (design 83, α 0 unless stated).</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Coarse <code>gci_C</code></th>
+<th>Medium <code>gci_M</code></th>
+<th>Reading</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>vis4 halved</td>
+<td>−20.6 counts</td>
+<td><strong>−12.0</strong></td>
+<td>the dissipation effect shrinks with refinement by 0.58 per level, about second order: ordinary discretization error that the grid family removes. <strong>Keep ADflow's default dissipation</strong>, which is robust</td>
+</tr>
+<tr>
+<td>Matrix dissipation</td>
+<td>did not converge: ANK held CFL at 42–88; with NK allowed the density residual grew 27× over 400 iterations and NK never engaged</td>
+<td>skipped</td>
+<td><strong>not a candidate setting</strong></td>
+</tr>
+<tr>
+<td>Trailing edge at 0.1 % of chord</td>
+<td>≈ −10.5 (tip-cap share removed)</td>
+<td><strong>−3.8</strong></td>
+<td>shrinks faster than dissipation (0.36 per level): a coarse-mesh error. But it costs no cells and moves the coarse level ~10 counts toward the converged answer. <strong>Recommended: adopt at every level</strong> (a DPW guideline)</td>
+</tr>
+<tr>
+<td>Far field 100 chords, gci_C's own 65 layers</td>
+<td><strong>+1.5</strong> at α 0 and at α 8</td>
+<td>—</td>
+<td>agrees with the 1/R estimate from the 40 → 60 pair (~+1.3). Half is friction: the same 65 layers now march 100 chords and viscous-layer growth rose to 1.273. Keeping 40 chords carries a known ~1.5-count offset, inside the workshops' 4–5 count scatter; 100 chords with growth under 1.25 needs ~30 more layers, and extra layers add drag at fixed chordwise resolution (C8)</td>
+</tr>
+</tbody>
+</table></div>
+<p>With vis4 halved the medium mesh reads <strong>167.8 counts</strong> at α 0, the value the chordwise three-level
+extrapolation predicted (167.8). An indication, not a GCI, that design 83's converged drag at α 0 is
+around 165–170 counts, some 40 below the coarse level.</p>
+<p><strong>Decisions for the principal investigator:</strong> dissipation — keep the default (recommended); trailing
+edge — adopt 0.1 % at every level (recommended); far field — keep 40 chords for the desktop levels
+with the offset stated, or 100 chords for the cloud levels if the budget allows.</p>
+<p>Still running: NACA 4412 o1024 with a stronger NK; SU2 numerics variants on NACA 0012; then SU2
+validation stage 0 (<code>queue21.sh</code>, <code>su2_validation.py</code>).</p>
+</section><section class="addendum"><p class="when">16 September, 01:45</p><h2 id="addendum-16-september-0145-naca-4412-is-complete-on-three-grids" class="h-add">NACA 4412 is complete on three grids</h2>
+<p>The finest grid converged once NK was given an AD-built preconditioner and outer preconditioner
+iterations; it had stalled at line-search step 0.01 twice before. NK engaged at iteration 439 and
+reached a relative residual of 1.6e-9.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Quantity</th>
+<th>o256</th>
+<th>o512</th>
+<th>o1024</th>
+<th>Extrapolated (order)</th>
+<th>CFL3D-FUN3D band</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CL</td>
+<td>1.7174</td>
+<td>1.7439</td>
+<td>1.7420</td>
+<td>not monotone</td>
+<td>1.717-1.721</td>
+<td>+1.34 % of the band's middle — <strong>outside the 1 % criterion</strong></td>
+</tr>
+<tr>
+<td>CD</td>
+<td>0.03409</td>
+<td>0.03023</td>
+<td>0.02943</td>
+<td>0.02922 (p 2.27, GCI 0.89 %)</td>
+<td>0.02861-0.02947</td>
+<td><strong>+0.63 %, inside the band</strong></td>
+</tr>
+<tr>
+<td>CDp</td>
+<td>0.02715</td>
+<td>0.02321</td>
+<td>0.02240</td>
+<td>0.02219 (p 2.28)</td>
+<td>0.02156-0.02246</td>
+<td>+0.84 %, inside</td>
+</tr>
+<tr>
+<td>CDv</td>
+<td>0.00695</td>
+<td>0.00702</td>
+<td>0.00703</td>
+<td>0.00703 (p 2.75)</td>
+<td>0.007006-0.007042</td>
+<td><strong>+0.06 %, inside</strong></td>
+</tr>
+<tr>
+<td>Separation x/c</td>
+<td></td>
+<td></td>
+<td>0.796</td>
+<td></td>
+<td>CFL3D 0.789</td>
+<td>within the 0.05 criterion</td>
+</tr>
+<tr>
+<td>y+, worst cell</td>
+<td></td>
+<td></td>
+<td>0.167</td>
+<td></td>
+<td>&lt;= 1</td>
+<td>met</td>
+</tr>
+<tr>
+<td>Velocity profiles</td>
+<td></td>
+<td></td>
+<td>rms 0.006-0.015 from CFL3D; 0.05-0.13 from the experiment, as CFL3D itself is</td>
+<td></td>
+<td></td>
+<td>trend as expected</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Reading.</strong> In AERIS's own regime — M 0.09, Re 1.52e6 on a 0.9 m chord, with trailing-edge
+separation — the campaign's ADflow configuration reproduces drag, and its pressure and friction
+parts separately, inside the two reference codes' own band, at an observed order near 2.3 and a
+grid uncertainty under 1 %. Lift is 1.3 % above the band's middle, outside the 1 % set before the
+run, and does not converge monotonically (1.7174 -&gt; 1.7439 -&gt; 1.7420), so it is reported as it
+stands rather than extrapolated. Every other criterion for this case is met. The criteria were
+fixed on 13-15 September, before any of these results existed.</p>
+</section><section class="addendum"><p class="when">16 September, 03:15</p><h2 id="addendum-16-september-0315-su2s-friction-error-is-the-flux-scheme" class="h-add">SU2&#x27;s friction error is the flux scheme</h2>
+<p>Four single-change variants on ADflow's own o512 grid, NACA 0012 TMR case (M 0.15, Re 6e6,
+alpha 10), each against the answer CFL3D, FUN3D and TAU agree on:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>SU2 variant</th>
+<th>CL</th>
+<th>CD</th>
+<th>CDp</th>
+<th>CDv</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>the wing's numerics (JST, Green-Gauss)</td>
+<td>+0.35 %</td>
+<td>+11.47 %</td>
+<td>+7.40 %</td>
+<td><strong>+15.45 %</strong></td>
+</tr>
+<tr>
+<td>JST, least-squares gradients</td>
+<td>+0.30 %</td>
+<td>+11.88 %</td>
+<td>+7.98 %</td>
+<td>+15.70 %</td>
+</tr>
+<tr>
+<td>JST, least-squares, second-order turbulence</td>
+<td>+0.42 %</td>
+<td>+12.13 %</td>
+<td>+7.88 %</td>
+<td>+16.26 %</td>
+</tr>
+<tr>
+<td><strong>Roe with MUSCL, least-squares gradients</strong></td>
+<td><strong>−0.12 %</strong></td>
+<td><strong>−0.52 %</strong></td>
+<td><strong>−1.12 %</strong></td>
+<td><strong>+0.07 %</strong></td>
+</tr>
+<tr>
+<td>ADflow, for comparison</td>
+<td>+0.71 %</td>
+<td>+5.00 %</td>
+<td>+9.50 %</td>
+<td>+0.61 %</td>
+</tr>
+</tbody>
+</table></div>
+<p>The gradient method and the turbulence-advection order change nothing worth noticing; the
+central JST scheme with scalar dissipation is what puts 15 % on friction drag at this Reynolds
+number, and an upwind scheme removes it. That also explains the wing: su2_config.py took its
+numerics from SU2's ONERA M6 tutorial, which is transonic and coarse.</p>
+<p><strong>Indicative, not final</strong>: the Roe run was restarted at 02:20 after being killed, and these
+numbers come from a mid-run write while its drag was still moving. It is running to its
+convergence criterion now, and SU2's own validated setups (stage 0, queue21) test the same
+question on NASA's grids.</p>
+<p><strong>Correction, 04:55.</strong> The Roe line of that table does not stand as written. <code>roe_wls</code> never
+converged: over its last 3,000 iterations drag swung between <strong>49 and 150 counts</strong> against the
+three-code answer of 122.7, with the residual wandering between −2.4 and −6.1. It is a limit
+cycle, and the −0.52 % reading was one mid-run write inside it. The cause is most likely the
+unlimited second-order reconstruction this variant used (<code>SLOPE_LIMITER_FLOW= NONE</code>), which is
+what SU2's flat-plate tutorial uses; its airfoil tutorials pair Roe with the Venkatakrishnan
+limiter. The run was stopped at iteration 16,644 and kept as evidence, and <code>roe_wls_venk</code> --
+the same scheme, limited -- runs after stage 0 (<code>queue22.sh</code>).</p>
+<p>What still stands from that table: the three JST variants all converged, and all three sit
+11–16 % above the answer on drag and 15–16 % on friction, while the gradient method and the
+turbulence-advection order changed almost nothing. So the central scheme remains the suspect;
+which upwind scheme replaces it is what stage 0 and the limited Roe run will say.</p>
+</section><section class="addendum"><p class="when">16 September, 09:15</p><h2 id="addendum-16-september-0915-su2-passes-nasas-flat-plate-on-both-criteria" class="h-add">SU2 passes NASA&#x27;s flat plate, on both criteria</h2>
+<p>The first stage-0 case judged end to end, on TMR's 137x97 grid, with SU2's own tutorial
+configuration unchanged except for output, converged to a residual of -14.0:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Quantity</th>
+<th>SU2</th>
+<th>CFL3D</th>
+<th>FUN3D</th>
+<th>Error vs their mean</th>
+<th>Criterion</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Skin friction at x = 0.97</td>
+<td>0.0027274</td>
+<td>0.0027112</td>
+<td>0.0027022</td>
+<td><strong>+0.77 %</strong></td>
+<td>1 %</td>
+<td><strong>pass</strong></td>
+</tr>
+<tr>
+<td>Plate drag</td>
+<td>0.002859</td>
+<td>0.0028662</td>
+<td>0.0028400</td>
+<td><strong>+0.21 %</strong></td>
+<td>1 %</td>
+<td><strong>pass</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>So SU2 itself is sound at low speed when it is run the way its developers run it -- which
+sharpens the earlier finding: the 15 % friction error on NACA 0012 came from the numerics this
+project gave it (JST with scalar dissipation, copied from the transonic ONERA M6 tutorial), not
+from the code or this installation.</p>
+<p>This case also had to be run twice: the first pass wrote no skin friction at all, because SU2's
+SURFACE_CSV omits derived quantities. It is the verdict that the fixed output path produced.</p>
+</section><section class="addendum"><p class="when">16 September, 10:10</p><h2 id="addendum-16-september-1010-the-three-settings-are-decided" class="h-add">the three settings are decided</h2>
+<p>Approved by the principal investigator (&quot;approve the dampoing, TE spacing and far field&quot;):</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Decision</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Artificial dissipation</td>
+<td><strong>keep ADflow's default</strong> (central, scalar, vis4 0.0156)</td>
+<td>halving vis4 moves drag −20.6 counts at <code>gci_C</code> but −12.0 at <code>gci_M</code>: 0.58 per level, near second order, so the family removes it. Matrix dissipation would not converge in two attempts</td>
+</tr>
+<tr>
+<td>Trailing-edge spacing</td>
+<td><strong>0.1 % of local chord at every level</strong></td>
+<td>−10.5 counts at <code>gci_C</code>, −3.8 at <code>gci_M</code>, at no cost in cells</td>
+</tr>
+<tr>
+<td>Far field</td>
+<td><strong>keep 40 root chords</strong>, offset stated</td>
+<td>100 chords is +1.5 counts at α 0 and α 8, inside the workshops' 4–5 count scatter, and half of that is friction from the longer march's higher growth ratio</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>LEVELS[&quot;gci_C&quot;]</code> now carries <code>ds_te_frac</code> 0.001 and <code>gci_M/F/FF</code> refine from it, so the family
+stays self-similar and a GCI over it remains legal.</p>
+<p><strong>What the mesh actually delivers, measured on the rebuilt <code>gci_C</code> (index 83, 0 folded cells,
+y+ 0.40):</strong> trailing-edge spacing improves from about 0.40 % to a <strong>median of 0.159 %</strong>, worst
+span row 0.168 % at the tip. So the 0.1 % guideline is approached, not met: the ring has a fixed
+point count, and the leading-edge turning target competes for the same points. The −10.5 counts
+was measured with exactly this level definition, so the decision stands on its own evidence, and
+the guideline row should read &quot;improved, not met&quot; rather than &quot;met&quot;.</p>
+<p>The re-run configuration is now frozen: wall-resolved tip cap, SA freestream χ 3, trailing edge
+0.1 %, far field 40 chords, default dissipation. <code>queue24.sh</code> runs it after the SU2 validation.</p>
+</section><section class="addendum"><p class="when">16 September, 12:25</p><h2 id="addendum-16-september-1225-stage-0-closes-two-runs-stopped-eppler-387-becomes-gradeable" class="h-add">stage 0 closes, two runs stopped, Eppler 387 becomes gradeable</h2>
+<p>SU2 validation stage 0 finished at 12:24. Its verdict splits cleanly in two.</p>
+<p><strong>Where NASA data exists, SU2 verifies.</strong> The coarse flat plate (<code>fp_comp_137</code>) converged to
+rms −14.0 and lands at cf +0.77 % and CD +0.21 % against the TMR. The three cases that hit
+queue21's five-hour cap on their first pass are still short — CD +1.43 % (compressible plate),
++0.59 % (incompressible plate), +6.2 % (NACA 0012) — and <code>queue23.sh</code> continues them from their
+restart files.</p>
+<p><strong>Where it does not, stage 0 produced nothing.</strong> Five transition cases, no verdict from any:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>case</th>
+<th>why there is no verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>t3a</code>, <code>t3a_minus</code></td>
+<td>no ERCOFTAC reference on disk; the file that was there read <code>404: Not Found</code></td>
+</tr>
+<tr>
+<td><code>fp_bc</code></td>
+<td>wrote <code>SURFACE_CSV</code> only, so it carries no skin friction — and had been reporting <code>finished: true</code></td>
+</tr>
+<tr>
+<td><code>e387_sa_lm</code>, <code>e387_sst_lm</code></td>
+<td>reference recovered today (below), but both runs stopped unconverged</td>
+</tr>
+<tr>
+<td><code>nlf_sst_lm</code></td>
+<td>no NLF reference on disk, and stopped stalled</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Two groups were stopped rather than left to burn their caps.</strong> Group 3 at 11:49: <code>t3a_minus</code>
+needed roughly 63,000 further iterations to reach its target at its observed rate, and both
+Eppler runs had flat residuals at −11.3 while their drag walked apart, one falling and one
+rising. <code>nlf_sst_lm</code> at 12:24: rms[Rho] had oscillated between −4.99 and −5.42 for 600
+iterations against a −11 target; Min, Max and Avg CFL were pinned at 20 — the adaptation floor —
+since about iteration 540; and rms[ω] (+2.47) and rms[LM_2] (+4.70) had been positive and flat
+since iteration 90, meaning the turbulence and transition equations never converged at all. Every
+stopped run had a current restart file, so nothing is lost, and both stops were made by process
+group so the queue advanced on its own. Together they pulled everything downstream — including
+the approved re-run — about three hours earlier.</p>
+<p><strong>Eppler 387 is no longer unscoreable.</strong> NASA TM-4062 was already sitting in <code>external/e387</code> as
+an 8 MB scan, and it has a text layer. Three things came out of it, transcribed from the page
+images rather than that text layer, which corrupts the drag column:</p>
+<ul>
+<li><strong>Table B1, runs 9,10,13</strong> — forces at M 0.06, R = 200,000: SU2's own tutorial condition to
+the decimal. At α 2.04, CL 0.574, CD 0.0118, CM −0.0794.</li>
+<li><strong>Table III</strong> — laminar separation and turbulent reattachment from oil flow. At R = 200,000,
+α 2, the bubble runs x/c <strong>0.43 to 0.67</strong>.</li>
+<li><strong>Table A1, row 6</strong> — the uncertainty for this exact run: W_cd = 0.00026, i.e. <strong>2.6 drag
+counts</strong>. The report's familiar &quot;±2 counts&quot; holds only above q = 0.08 psi, and this condition
+sits at q = 0.033.</li>
+</ul>
+<p>Against that, on runs that are <strong>not converged</strong> and therefore provisional:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th></th>
+<th>CL</th>
+<th>CD</th>
+<th>|CM|</th>
+<th>bubble</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>e387_sa_lm</code></td>
+<td>+5.4 %</td>
+<td>−10.3 counts</td>
+<td>−1.6 %</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>e387_sst_lm</code></td>
+<td>+8.2 %</td>
+<td>+26.3 counts</td>
+<td>+4.8 %</td>
+<td>none</td>
+</tr>
+</tbody>
+</table></div>
+<p>Both sit far outside the 2.6-count band; they disagree with each other by 37 counts on the same
+grid at the same condition; and neither produces the separation bubble that <em>is</em> this flow at
+Re 200k — their only reversed flow is at the trailing edge. If that survives convergence it bears
+directly on the BWB question, because it says the Langtry-Menter models as configured are not yet
+trustworthy in the regime this aircraft flies in. Note also that the tutorial runs at
+<code>FREESTREAM_TURBULENCEINTENSITY</code> 0.1 % where the R = 200,000 measurements were taken at the
+tunnel's lowest turbulence, 0.06 %.</p>
+<p>Five entries went into appendix B, three of them the assistant's own: an onset test that reported
+a plate with no transition as transitioning at Re_x 2.6e8; a <code>judge_naca</code> regression caused by
+adding CMz to <code>forces()</code>; and a convergence-rate metric measured in history rows rather than
+iterations, which called a stalled run &quot;accelerating&quot; three times in a row. The shape is the one
+this project keeps meeting — the wrong answer looked exactly like the right one, and what caught
+each was a check that could not be satisfied by accident.</p>
+<p>Running now: <code>queue22.sh</code>, the limited Roe variant, at iteration 291 and converging. Then
+<code>queue23.sh</code>, then the re-run. On current rates the re-run should start this evening and finish
+Thursday afternoon; worst case Friday morning.</p>
+</section><section class="addendum"><p class="when">16 September, 12:45</p><h2 id="addendum-16-september-1245-the-roe-variant-converges-and-where-its-drag-goes" class="h-add">the Roe variant converges, and where its drag goes</h2>
+<p><code>roe_wls_venk</code> is the <strong>first</strong> NACA 0012 variant to converge on its own criterion: drag Cauchy
+satisfied at iteration 2,128, with CD varying 0.04 counts over the last 500 iterations. The
+unlimited <code>roe_wls</code> never did — its recorded −0.52 % is one sample of a 29-count swing, and that
+row of the table remains the least trustworthy thing in it despite looking the best.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>variant</th>
+<th>CD</th>
+<th>vs TMR</th>
+<th>CDp</th>
+<th>CDv</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TMR reference</td>
+<td>122.7</td>
+<td>—</td>
+<td>60.7</td>
+<td>62.1</td>
+</tr>
+<tr>
+<td>ADflow, χ 3</td>
+<td>128.9</td>
+<td>+5.0 %</td>
+<td>66.4</td>
+<td>62.4</td>
+</tr>
+<tr>
+<td>SU2 JST (<code>wing</code>)</td>
+<td>136.8</td>
+<td>+11.5 %</td>
+<td>65.2</td>
+<td>71.7</td>
+</tr>
+<tr>
+<td>SU2 <code>wls</code></td>
+<td>137.3</td>
+<td>+11.9 %</td>
+<td>65.5</td>
+<td>71.8</td>
+</tr>
+<tr>
+<td>SU2 <code>roe_wls_venk</code></td>
+<td><strong>150.5</strong></td>
+<td><strong>+22.7 %</strong></td>
+<td><strong>87.2</strong></td>
+<td><strong>63.4</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>So the Roe flux with MUSCL and the Venkatakrishnan limiter (constant 0.05, entropy fix 0.001,
+both read from the solver's own log) <strong>fixes the friction</strong>: CDv +2.1 % where every JST variant
+sits at +15.5 %, exactly as the flat-plate result predicted. And it spends that gain twice over
+on pressure drag.</p>
+<p><strong>Where the pressure drag goes.</strong> The surface cp was recovered from the conservative variables
+in <code>surface.csv</code> — p = (γ−1)[E − ½(mₓ²+m_y²)/ρ], cp = (p−p∞)/q∞ with the freestream the solver
+printed — and checked before use: stagnation cp +1.011 on the lower surface, suction peak −5.663
+at x/c 0.0024 against CFL3D's −5.666 at 0.0027, and cp +0.183 at the trailing edge against
+CFL3D's +0.188. Panel-integrating that distribution returns CL +1.1018 and CDp 87.20 counts
+against SU2's own +1.1020 and 87.19 — so SU2's number is right and the distribution is right.</p>
+<p>The same integration applied to CFL3D's and FUN3D's own published cp returns CDp 60.66 and 60.68
+against the TMR table's 60.67. The method is sound to 0.01 counts.</p>
+<p>Cumulative CDp along the chord, against <code>wls</code> on the identical mesh:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>x/c ≤</th>
+<th><code>roe_wls_venk</code></th>
+<th><code>wls</code></th>
+<th>CFL3D finest</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.001</td>
+<td>−389.5</td>
+<td>−392.7</td>
+<td>−404.5</td>
+</tr>
+<tr>
+<td>0.01</td>
+<td>−938.8</td>
+<td>−945.2</td>
+<td>−952.4</td>
+</tr>
+<tr>
+<td>0.05</td>
+<td>−1138.7</td>
+<td>−1146.7</td>
+<td>−1144.7</td>
+</tr>
+<tr>
+<td>0.3</td>
+<td>−586.1</td>
+<td>−596.7</td>
+<td>−589.6</td>
+</tr>
+<tr>
+<td>0.6</td>
+<td>−85.6</td>
+<td>−100.9</td>
+<td>−98.2</td>
+</tr>
+<tr>
+<td>TE</td>
+<td><strong>+87.2</strong></td>
+<td><strong>+65.5</strong></td>
+<td><strong>+60.7</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>The excess is <strong>not</strong> at the leading edge. It accumulates smoothly along the whole chord —
++2.8 counts by x/c 0.0005, +8.5 by 0.1, +15.3 by 0.6, +21.7 at the trailing edge. The ±20-count
+wobble near the nose is quadrature noise on a steep region, and <code>wls</code> lands within 4.9 counts of
+CFL3D through the same quadrature, so the mesh is not the limit. This is a small, systematic,
+distributed pressure error belonging to the scheme.</p>
+<p><strong>The lesson is bigger than the variant.</strong> I had argued that a cp matching the reference to 0.01
+<em>could not</em> produce a 43 % pressure-drag error, and treated the pair as a contradiction to be
+resolved. It is not a contradiction. That table shows CDp is a 60-count residual of contributions
+reaching −1,145 counts: better than 95 % of the pressure force cancels. A systematic cp offset of
+1 % is therefore worth tens of counts of drag. <strong>Matching cp is a weak test for pressure drag at
+this condition, and our own wing CDp rests on the same cancellation</strong> — which is worth remembering
+whenever a cp plot is offered as evidence that a drag number is sound.</p>
+<p>Exposed on the way: <code>su2_naca0012.py</code> never received the Tecplot-output fix that
+<code>su2_validation.py</code> and <code>su2_config.py</code> got this morning, so every variant through this one wrote
+no cp, cf or y+ at all. Fixed; the cp above was recovered from conservative variables instead.</p>
+<p>The CFL3D and FUN3D surface cp and cf files are now in <code>external/tmr_naca0012/</code> with a manifest
+recording their raw URLs and checksums. They were fetched from the TMBWG GitHub repository the
+saved TMR page links to — the page carries no absolute NASA URL of its own, so that is the only
+provenance the file itself supports.</p>
+</section><section class="addendum"><p class="when">16 September, 15:26</p><h2 id="addendum-16-september-1526-the-re-run-is-promoted-and-a-correction-that-matters" class="h-add">the re-run is promoted, and a correction that matters</h2>
+<p>Asked whether to continue the remaining SU2 work or go to the re-run, the PI chose the re-run.
+<code>fp_comp_545</code> and <code>naca0012_inc_897</code> were stopped by process group at 15:25 and queue23 advanced
+to <code>fp_inc_545</code>, the last stage-0 case, with the re-run behind it.</p>
+<p><strong>The flat plate passes, at two grid levels.</strong></p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>case</th>
+<th>cells</th>
+<th>cf at x/c 0.97</th>
+<th>CD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fp_comp_137</code></td>
+<td>13,056</td>
+<td>+0.77 %</td>
+<td>+0.21 %</td>
+</tr>
+<tr>
+<td><code>fp_comp_545</code></td>
+<td>208,896</td>
+<td><strong>+0.647 %</strong></td>
+<td><strong>+0.344 %</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>Both against TMR's same-grid CFL3D and FUN3D values, and <code>fp_comp_545</code> carries skin friction this
+time because the continuation was configured after the Tecplot-output fix. This is the strongest
+result SU2 has produced here.</p>
+<p><strong>NACA 0012, and the correction.</strong> <code>naca0012_inc_897</code> was stopped at CD <strong>+2.63 %</strong> while still
+improving about 0.27 counts per 500 iterations — deliberately short of the 0.10-count stop rule
+set for it, on the PI's instruction to promote the re-run. Its error is therefore an <strong>upper
+bound</strong>, not a converged value. It fails all three gates, but narrowly: CL +1.11 % (gate 1 %),
+CD +2.63 % (gate 2 %), CDv +1.24 % (gate 1 %).</p>
+<p>The trajectory is the part worth keeping:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th></th>
+<th>CL</th>
+<th>CD</th>
+<th>CDp</th>
+<th>CDv</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>at the 5-hour cap (it 5,711)</td>
+<td>+2.02 %</td>
+<td>+6.16 %</td>
+<td>+3.00 %</td>
+<td><strong>+9.25 %</strong></td>
+</tr>
+<tr>
+<td>when stopped (it 4,008 of the continuation)</td>
+<td>+1.11 %</td>
+<td>+2.63 %</td>
+<td>+4.04 %</td>
+<td><strong>+1.24 %</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>I had called that +9.25 % &quot;the same JST friction signature&quot; seen on our o512 grid, and used it to
+argue SU2's friction is structurally bad. It was wrong twice over. <strong>This case runs FDS, not
+JST.</strong> And the friction error was <em>convergence</em> error: it fell to +1.24 % once the run continued,
+while the pressure error drifted the other way. An unconverged run does not merely have a larger
+error — it distributes that error between components misleadingly, and reading a scheme's
+character off one is a mistake.</p>
+<p><strong>What this does to the solver comparison.</strong> The claim that SU2's <em>compressible JST</em> path is bad
+on friction stands — <code>wing</code>, <code>wls</code> and <code>wls_muscl_turb</code> all sit at CDv +15.5 % on our o512 grid,
+converged. But it does not generalise to SU2: the <strong>incompressible FDS</strong> path reached CD +2.63 %
+and was still improving, against ADflow's +5.0 %. That is not like-for-like — different grids
+(TMR family 897 versus our o512), different Mach treatment, and SU2's figure is an upper bound —
+so it settles nothing. It does mean the head-to-head that actually matters for a 25 kg BWB at
+M 0.084 has not been run yet, and the honest state is that SU2's incompressible path looks
+better than anything said about it so far.</p>
+<p><strong>Corrected estimate:</strong> <code>fp_inc_545</code> resumed from its restart with the usual transient
+(rms −12.023 → −11.642) and needs roughly 2.4 more orders to reach −14, so it should finish near
+16:45 rather than the 40 minutes first quoted. The re-run follows automatically.</p>
+</section><section class="addendum"><p class="when">16 September, 16:44</p><h2 id="addendum-16-september-1644-stage-0-closes-and-the-re-run-starts" class="h-add">stage 0 closes, and the re-run starts</h2>
+<p>queue23 wrote its done marker at 16:43:57; queue24 picked it up inside the minute and the approved
+re-run is building gci_C on index 12. Ten geometries [12, 13, 16, 23, 29, 36, 47, 65, 81, 83] at
+alphas (−2, 0, 4, 8), then gci_M on 83, 47 and 13. Disk is not a constraint: a gci_C run measures
+32 MB and a gci_M run 61 MB, so the whole job wants about 2 GB against 929 GB free.</p>
+<p><strong>Stage 0, complete.</strong> Ten cases, and they divide exactly along the line of whether a reference
+exists and whether the run could reach it.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>case</th>
+<th>verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fp_comp_137</code></td>
+<td><strong>converged</strong>, cf +0.77 %, CD +0.21 % — pass</td>
+</tr>
+<tr>
+<td><code>fp_comp_545</code></td>
+<td>stopped settled, cf +0.647 %, CD +0.344 % — pass</td>
+</tr>
+<tr>
+<td><code>fp_inc_545</code></td>
+<td><strong>converged</strong>, cf <strong>−0.044 %</strong>, CD +0.555 % — pass</td>
+</tr>
+<tr>
+<td><code>naca0012_inc_897</code></td>
+<td>stopped early: CL +1.11 %, CD +2.63 %, CDp +4.04 %, CDv +1.24 % — fails all three gates narrowly, and is an upper bound</td>
+</tr>
+<tr>
+<td><code>fp_bc</code></td>
+<td>finished, but wrote no skin friction — ungradeable</td>
+</tr>
+<tr>
+<td><code>t3a</code></td>
+<td>no skin friction, and no ERCOFTAC reference — ungradeable</td>
+</tr>
+<tr>
+<td><code>t3a_minus</code></td>
+<td>no transition found on the plate; no reference either — ungradeable</td>
+</tr>
+<tr>
+<td><code>e387_sa_lm</code></td>
+<td>CL +5.4 %, CD −10.3 counts, <strong>no separation bubble</strong> — fails</td>
+</tr>
+<tr>
+<td><code>e387_sst_lm</code></td>
+<td>CL +8.2 %, CD +26.3 counts, <strong>no separation bubble</strong> — fails</td>
+</tr>
+<tr>
+<td><code>nlf_sst_lm</code></td>
+<td>no reference on disk; stopped stalled — ungradeable</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>What SU2 has earned.</strong> On the flat plate it is excellent and now proven at three configurations
+spanning two grid levels and both the compressible and incompressible solvers, with skin friction
+between −0.04 % and +0.77 %. That is the strongest verification result this project holds for any
+code.</p>
+<p><strong>What it has not.</strong> Every transition case failed or could not be judged. The two that <em>could</em> be
+judged — Eppler 387 against McGhee, once the reference was recovered — miss the measured
+separation bubble (x/c 0.43 → 0.67) entirely, showing reversed flow only at the trailing edge.
+For a sub-25 kg BWB at Re ~1.5e6, where laminar running and bubbles are the physics that decides
+the drag, that is the finding with the most consequence, and it is a finding about <em>both</em>
+Langtry-Menter variants, not about one setting.</p>
+<p><strong>And one verdict that is still open.</strong> <code>naca0012_inc_897</code> was stopped deliberately short on the
+PI's instruction to promote the re-run. It was at CD +2.63 % and still improving ~0.27 counts per
+500 iterations, so its converged value is better than recorded. Its CDv had fallen from +9.25 %
+to +1.24 % over the continuation — the correction described in the 15:26 addendum — which means
+SU2's incompressible FDS path is materially better than the compressible JST path this project
+first measured, and the head-to-head against ADflow at the aircraft's own condition (M 0.084,
+Re 1.5e6) has still not been run. That is the obvious first task of a second SU2 campaign.</p>
+</section><section class="addendum"><p class="when">16 September, 16:55</p><h2 id="addendum-16-september-1655-the-re-runs-meshes-are-63-larger-and-why" class="h-add">the re-run&#x27;s meshes are 6.3 % larger, and why</h2>
+<p>The first mesh of the re-run reported <strong>609,648 cells</strong> for index 12, against the 567,256 this
+project has quoted for <code>gci_C</code> since the family was defined. Two separate things were wrong with
+that expectation.</p>
+<p><strong>The quoted number was never universal.</strong> Cell count varies by geometry: measured from the old
+pilot meshes, g29 and g83 built at 567,256 while g12 and g13 built at 573,312. Quoting one figure
+for a level is itself misleading, and 567,256 was g29/g83's.</p>
+<p><strong>The wall-resolved tip cap costs cells, and nobody wrote that down.</strong> The same-geometry
+comparison is unambiguous — g12 was 573,312 before today and is 609,648 now — and reading the
+blocks out of both meshes says exactly where it went:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>block</th>
+<th>old g12 (cap 10·s0)</th>
+<th>new g12 (cap 2·s0)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>o_wing</code></td>
+<td>92 × 64 × 48</td>
+<td>92 × 64 × 48 — <strong>unchanged</strong></td>
+</tr>
+<tr>
+<td><code>o_out</code></td>
+<td>92 × 64 × <strong>48</strong></td>
+<td>92 × 64 × <strong>54</strong></td>
+</tr>
+<tr>
+<td><code>cap_out</code></td>
+<td>42 × 4 × <strong>48</strong></td>
+<td>42 × 4 × <strong>54</strong></td>
+</tr>
+<tr>
+<td>total</td>
+<td>573,312</td>
+<td>609,648</td>
+</tr>
+</tbody>
+</table></div>
+<p>The wing block is untouched; the two <em>outboard</em> blocks each gained 6 spanwise layers. The
+mechanism is quantitative: the tip spanwise first cell went from 10·s0 to 2·s0, five times finer,
+while the extrusion still has to reach the same 40-chord far field under the same growth law.
+At a growth ratio near 1.3 that costs log(5)/log(1.3) ≈ 6.1 layers. Six were observed.</p>
+<p>Two earlier guesses of mine were wrong and are worth recording as such: the TE change was never a
+candidate (it only moves points already on the ring, exactly as its comment claims), and the cap
+<em>patch</em> was not either — <code>build_tip_cap</code> sizes it as <code>[n_side − half_nose, n_base]</code>, with no
+dependence on the spacing at all. The cost is entirely in the outboard extrusion, which is why
+the level definitions cannot show it: <strong>the outboard layer count is computed by the extrusion and
+is not a level field</strong>.</p>
+<p><strong>What this implies for gci_M, which the re-run reaches in about fifteen hours.</strong> Outboard layers
+grow logarithmically, not proportionally — measured across the old family, refining gci_C → gci_M
+at ratio 1.3 added just one layer (g83: 47 → 48), because only the first cell shrinks while the
+distance stays fixed. So the rebuilt gci_M should be about</p>
+<pre><code>o_wing 120×83×62 + o_out 120×83×55 + cap_out 54×6×55  ≈  1,183,140 cells
+</code></pre>
+<p>against 1,111,152 before: <strong>+6.5 %</strong>. Measured memory for the old gci_M was 11.3 GiB, so the
+rebuilt one wants roughly <strong>11.8 GiB on a 13 GiB host</strong>. The margin falls from about 1.7 GiB to
+about 1.2 GiB, which is at or under the memory guard's usual floor. Stage 2 of the re-run runs
+with <code>--watch-memory</code>, so it would be stopped cleanly rather than take the host down — but it may
+not fit, and that is worth knowing before it happens rather than after.</p>
+<p>Not changed today: <code>strategy_s8.py</code> still carries the stale comment &quot;gci_CC / gci_C / gci_M are
+299k / 567k / 1.11M cells at 4.3 / 6.5 / 11.3 GiB measured&quot;. The re-run imports that module for
+every mesh build, and PLAN §0.2 forbids mutating code during a measurement, so the correction is
+recorded here and belongs in the code once the campaign is done.</p>
+</section><section class="addendum"><p class="when">16 September, 17:20</p><h2 id="addendum-16-september-1720-the-first-re-run-solve-decomposed-to-the-count" class="h-add">the first re-run solve, decomposed to the count</h2>
+<p><code>g12/gci_C_a-2</code> converged in 19.7 minutes at relative residual 9.997e-07, 198 iterations, and the
+settings it was approved to carry are confirmed <em>in the solve</em>, not merely on the command line:
+<code>eddyVisInfRatio = 0.21</code> (χ 3), <code>useNKSolver = False</code> (ANK alone), <code>L2Convergence = 1e-06</code>,
+<code>MGCycle = sg</code>, <code>liftIndex = 3</code>, with <code>too_few_iterations</code> and <code>routine_failed</code> both false.</p>
+<p><strong>The drag delta decomposes exactly.</strong> Comparing against the old pilot run needed care: that run
+predates <code>reference_areas.json</code> and normalised g12 by index 83's area (0.39492 rather than g12's
+own 0.4004) — defect 23, still live in the raw run files. Rescaling by 0.98631 and reading the
+freestream-turbulence study, whose <em>first pair</em> is this exact case (geometry 12, gci_C, α −2.0):</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>g12, gci_C, α −2</th>
+<th>CD</th>
+<th>CDp</th>
+<th>CDv</th>
+<th>CL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>old mesh, χ 1.3</td>
+<td>231.46</td>
+<td>145.14</td>
+<td>86.32</td>
+<td>−0.2097</td>
+</tr>
+<tr>
+<td>old mesh, χ 3</td>
+<td>233.68</td>
+<td>145.63</td>
+<td>88.05</td>
+<td>−0.2096</td>
+</tr>
+<tr>
+<td><strong>new mesh, χ 3</strong></td>
+<td><strong>228.38</strong></td>
+<td><strong>141.56</strong></td>
+<td><strong>86.81</strong></td>
+<td><strong>−0.2093</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>χ 3 is worth <strong>+2.22 counts</strong> (+0.96 %) and the mesh change — trailing edge at 0.1 % of chord plus
+the wall-resolved tip cap — <strong>−5.30 counts</strong> (CDp −4.07, CDv −1.24). Together −3.08, which is the
+observed shift. Lift moves 0.0004.</p>
+<p><strong>And the finding that matters.</strong> The component tests, all run on index 83, predicted the mesh
+change at about −10.5 (TE) plus +1.5…+2.3 (cap), i.e. roughly <strong>−8.5 counts</strong>. On g12 at α −2 it
+is <strong>−5.30</strong>. The trailing-edge credit does not transfer uniformly across geometry and incidence,
+and the decision to adopt it rested on a single-geometry measurement. This is one geometry at one
+angle and proves nothing on its own — but index 83 is among the ten in this re-run, so the clean
+like-for-like comparison arrives without extra work, and it is worth making when it does.</p>
+<p><strong>Two flags checked and cleared, recorded so they are not misread later:</strong></p>
+<ul>
+<li><code>solver_is_governed_configuration</code> will be <strong>false on all 52 rows</strong> of dataset_v2, by
+construction: <code>solve_s8.py</code> sets it to <code>not (init_overrides or overrides)</code>, and the approved
+settings are passed as overrides. Nothing gates on it — <code>audit_runs.py</code> gates on
+<code>gate_verdict != &quot;ACCEPTED&quot;</code>, <code>collect_dataset.py</code> only copies the field, and the existing
+accepted archive already mixes true and false rows. Harmless, but it reads like a failure to
+anyone who meets it cold.</li>
+<li><code>implausible_forces: None</code> means <strong>evaluated and clean</strong>, not unevaluated: the field is written
+as <code>implausible or None</code>, so it carries the list of problems when there are any. Separately,
+<code>audit_runs.py</code> never reads that field at all; the archive's force plausibility is covered
+instead by its own friction check.</li>
+</ul>
+</section><section class="addendum"><p class="when">17 September, 06:45</p><h2 id="addendum-17-september-0645-gci-c-is-complete-and-the-trailing-edge-credit-does-not-transfer" class="h-add">gci_C is complete, and the trailing-edge credit does not transfer</h2>
+<p>The ten-wing re-run at gci_C finished at 06:25, 40 solves in 13 h 41 min, every one converged on
+the 1e-6 relative-residual rule. Mean solve 18.8 min, range 15.0–31.7. gci_M started immediately.</p>
+<p><strong>The finding this was run to settle.</strong> The 0.1 %-chord trailing edge was adopted on a single
+measurement — about −10.5 counts, made on geometry 83. Measured now on every wing, against the
+same χ 3 baseline, and with the wall-resolved cap's cost included (predicted −8.67 net):</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>wing</th>
+<th>α −2</th>
+<th>α 0</th>
+<th>α 4</th>
+<th>α 8</th>
+<th>mean (0/4/8)</th>
+<th>vs −8.67</th>
+<th>α spread</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>12</td>
+<td>−5.31</td>
+<td>−5.88</td>
+<td>−6.21</td>
+<td>−5.48</td>
+<td>−5.86</td>
+<td>+2.81</td>
+<td>0.91</td>
+</tr>
+<tr>
+<td>13</td>
+<td>−7.02</td>
+<td>−7.35</td>
+<td>−7.41</td>
+<td>−6.87</td>
+<td>−7.21</td>
+<td>+1.46</td>
+<td>0.54</td>
+</tr>
+<tr>
+<td>16</td>
+<td>−5.46</td>
+<td>−5.48</td>
+<td>−5.36</td>
+<td>−4.98</td>
+<td>−5.27</td>
+<td>+3.39</td>
+<td>0.51</td>
+</tr>
+<tr>
+<td>23</td>
+<td>−7.78</td>
+<td>−8.16</td>
+<td>−8.15</td>
+<td>−7.17</td>
+<td>−7.83</td>
+<td>+0.84</td>
+<td>0.99</td>
+</tr>
+<tr>
+<td>29</td>
+<td>−9.61</td>
+<td>−9.60</td>
+<td>−9.19</td>
+<td>−8.16</td>
+<td>−8.98</td>
+<td>−0.32</td>
+<td>1.45</td>
+</tr>
+<tr>
+<td>36</td>
+<td>−8.20</td>
+<td>−8.64</td>
+<td>−8.10</td>
+<td>−5.66</td>
+<td>−7.47</td>
+<td>+1.20</td>
+<td>2.97</td>
+</tr>
+<tr>
+<td>47</td>
+<td>−9.80</td>
+<td>−9.90</td>
+<td>−9.18</td>
+<td>−7.26</td>
+<td>−8.78</td>
+<td>−0.11</td>
+<td>2.64</td>
+</tr>
+<tr>
+<td>65</td>
+<td>−5.94</td>
+<td>−5.88</td>
+<td>−6.10</td>
+<td>−6.57</td>
+<td>−6.18</td>
+<td>+2.49</td>
+<td>0.68</td>
+</tr>
+<tr>
+<td>81</td>
+<td>−6.95</td>
+<td>−7.41</td>
+<td>−7.01</td>
+<td>−4.90</td>
+<td>−6.44</td>
+<td>+2.22</td>
+<td>2.51</td>
+</tr>
+<tr>
+<td><strong>83</strong></td>
+<td>−8.11</td>
+<td>−8.97</td>
+<td>−9.15</td>
+<td>−7.51</td>
+<td><strong>−8.54</strong></td>
+<td><strong>+0.12</strong></td>
+<td>1.64</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Wing 83 reproduces its own prediction to 0.12 counts.</strong> The original measurement was sound on
+the geometry it was made on. What it does not do is transfer: across ten planforms the credit
+spans <strong>−5.27 to −8.98, a 3.71-count spread</strong>, mean −7.26. The reference wing sits near the
+strong end of a wide distribution.</p>
+<p>That matters because the decision to adopt the trailing-edge change rested on that one number.
+The change itself stands on its own merits — 0.1 % of chord is the DPW guideline, and this is a
+mesh-quality improvement independent of what it is worth in counts — and the re-run measures
+every wing directly, so no row in dataset_v2 depends on the credit being uniform. But any future
+claim of the form &quot;this setting is worth X counts&quot;, made on one geometry, should now be assumed
+not to generalise until measured on several.</p>
+<p><strong>Two things I got wrong on the way to this, both from reading partial data:</strong></p>
+<ul>
+<li>At 19:43 with three wings, all of which happened to be weak, I called the credit
+&quot;systematically optimistic — every wing short, not scattered about the prediction&quot;. With seven
+wings, g29 (−8.98) exceeded the prediction and g47 (−8.78) matched it; with ten, the spread is
+three times the mean deficit. Withdrawn at 03:15 and corrected here.</li>
+<li>I also claimed the effect was tight across incidence within each wing. True for some planforms
+(16 spans 0.51 counts, 13 spans 0.54) and not others (36 spans 2.97, 47 spans 2.64), with α 8
+consistently the weakest. Incidence-independence is a property of some geometries here, not of
+the change.</li>
+</ul>
+<p><strong>gci_M fits.</strong> The stage built index 13 at 1,183,140 cells — within 0.2 % of the 1,183,140
+projected from the block dimensions last night — and runs six ranks at ~1.81 GiB each, 10.99 GiB
+resident, leaving ~1.8 GiB available with swap untouched. The memory ceiling flagged since 17:00
+is real but not binding: 1.18M cells at six ranks fits this 13 GiB host. No reduction in ranks
+and no deferral to the cloud is needed.</p>
+<p>Note for reading the stage log: <code>run_campaign.py</code> filters the fixed campaign selection order
+rather than honouring the order given on the command line, so <code>--indices 83 47 13</code> runs as
+[13, 47, 83]. Wing 83 is last at gci_M too.</p>
+</section><section class="addendum"><p class="when">17 September, 22:49</p><h2 id="addendum-17-september-2249-queue24-closed-and-what-the-two-grid-levels-say" class="h-add">queue24 closed, and what the two grid levels say</h2>
+<p>The re-run finished at 22:49. Forty gci_C solves on ten wings, twelve gci_M solves on wings
+13, 47 and 83, all four angles each, every one ACCEPTED by the convergence gate at 6.1–7.4
+orders. <code>dataset_v2</code> holds 52 rows and 52 distinct per-run records; the archive audit ran and
+wrote <code>reports/s8_archive_audit_v2.json</code>.</p>
+<h3 id="the-audit-verdict-read-properly">The audit verdict, read properly</h3>
+<p><code>sound: 0</code> and 52 findings looks alarming and is not. Every one of the 52 findings is the same
+single check — maximum y+ on the <strong>tip cap</strong> above 1, ranging 1.12 to 2.00 across the set. The
+other eleven checks (force bounds, per-equation convergence, stopping rule, reference area,
+moment reference, folded cells, design-surface grid, friction against flat plate, minimum
+iterations, freestream direction) pass on every row, and no row carries a second problem.
+The 99th percentile y+ is <strong>0.41–0.78 everywhere</strong>, so 99 % of each surface is wall-resolved as
+intended and the exceedance is an isolated peak on the cap. Quote the finding as one systematic
+geometric feature, never as &quot;52 defective runs&quot;.</p>
+<h3 id="cm-and-cl-are-converged-at-gci-c-cd-is-not">Cm and CL are converged at gci_C; Cd is not</h3>
+<p>Refining gci_C → gci_M (r = 1.274) moves Cm by at most 0.0006 and CL by at most 0.0015 on all
+three wings. Both are negligible. <strong>Every lift- and moment-dependent result in this campaign —
+trim, neutral point, stability, the AVL comparison — stands at the coarse grid and needs no
+re-run.</strong></p>
+<p>Drag does not. Averaged over the three wings, the change on refinement is almost entirely
+pressure drag:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th style="text-align:right">alpha</th>
+<th style="text-align:right">dCdp (ct)</th>
+<th style="text-align:right">dCdv (ct)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">-2</td>
+<td style="text-align:right">-24.50</td>
+<td style="text-align:right">-0.55</td>
+</tr>
+<tr>
+<td style="text-align:right">0</td>
+<td style="text-align:right">-22.91</td>
+<td style="text-align:right">-0.93</td>
+</tr>
+<tr>
+<td style="text-align:right">4</td>
+<td style="text-align:right">-22.68</td>
+<td style="text-align:right">-1.29</td>
+</tr>
+<tr>
+<td style="text-align:right">8</td>
+<td style="text-align:right">-25.72</td>
+<td style="text-align:right">-1.14</td>
+</tr>
+</tbody>
+</table></div>
+<p>Skin friction is nearly inert because the first off-wall spacing is held at 4.6e-6 m on both
+levels, so y+ is unchanged; what refinement buys is in-plane resolution of the surface pressure.
+Cdp is a ~100-count residual of contributions reaching +/-1,000 counts, which is why it stays
+grid-sensitive long after the pressure <em>distribution</em> — hence Cm — has converged. The two facts
+are not in conflict, and the same grid can be converged for moment and not for drag.</p>
+<h3 id="the-common-mode-test-which-is-what-three-wings-were-for">The common-mode test, which is what three wings were for</h3>
+<p>dCd from gci_C to gci_M, by wing:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th style="text-align:right">alpha</th>
+<th style="text-align:right">g13</th>
+<th style="text-align:right">g47</th>
+<th style="text-align:right">g83</th>
+<th style="text-align:right">spread</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">-2</td>
+<td style="text-align:right">-26.16</td>
+<td style="text-align:right">-24.92</td>
+<td style="text-align:right">-24.08</td>
+<td style="text-align:right">2.08</td>
+</tr>
+<tr>
+<td style="text-align:right">0</td>
+<td style="text-align:right">-24.78</td>
+<td style="text-align:right">-24.15</td>
+<td style="text-align:right">-22.59</td>
+<td style="text-align:right">2.19</td>
+</tr>
+<tr>
+<td style="text-align:right">4</td>
+<td style="text-align:right">-24.43</td>
+<td style="text-align:right">-25.12</td>
+<td style="text-align:right">-22.34</td>
+<td style="text-align:right">2.78</td>
+</tr>
+<tr>
+<td style="text-align:right">8</td>
+<td style="text-align:right">-26.68</td>
+<td style="text-align:right">-29.15</td>
+<td style="text-align:right">-24.76</td>
+<td style="text-align:right">4.39</td>
+</tr>
+</tbody>
+</table></div>
+<p>About 25 counts of the error is common-mode and cancels on differencing. <strong>0.85 to 4.39 counts
+does not.</strong> Wing-to-wing differences shift accordingly: g13 - g83 at alpha 4 moves from -6.69 to
+-8.79 counts, a 31 % change in a difference of exactly the magnitude the campaign exists to
+measure. Ordering survives — g47 &lt; g13 &lt; g83 at alpha 0 on both grids — but every margin carries
++/-2 to 4 counts.</p>
+<p>Set against the ten-wing trailing-edge credit of -5.27 to -8.98 counts, the grid uncertainty in a
+difference reaches half the effect size. <strong>The 1-count materiality gate is not supportable on
+gci_C.</strong> The gate is tighter than the mesh by a factor of several, and has been since it was
+written.</p>
+<h3 id="gci-m-is-not-the-answer-either">gci_M is not the answer either</h3>
+<p>Two grids cannot yield an observed order of convergence, only an assumed one. On wing 83 at
+alpha 0, Richardson gives 142.9 counts for p = 2 (gci_M high by 36.3) and 96.7 counts for p = 1
+(gci_M high by 82.5). Both are indicators rather than a GCI: r = 1.274 sits below the 1.3 that
+Celik and the ASME procedure ask for, which inflates the extrapolation, and an assumed p is an
+assumption. The honest statement is that gci_M is a second point on a curve that has not
+flattened, and this campaign cannot say where it flattens.</p>
+<h3 id="consequence-for-the-cloud-batch">Consequence for the cloud batch</h3>
+<p>A requirement that did not exist this morning: <strong>a third grid level on at least a few wings</strong>, to
+measure the observed order instead of assuming it. gci_F does not fit this host's 13 GiB, which
+is why the question is being handed to the cloud rather than answered here. Without that level,
+S8 delivers converged lift and moment, and drag <em>orderings</em> with +/-2 to 4 count margins — not
+absolute drag, and not 1-count resolution.</p>
+</section></article>
+  </div>
+</div>
+
+<script>
+(function(){
+  var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+  var byId = {};
+  links.forEach(function(a){ byId[a.getAttribute('href').slice(1)] = a; });
+  var heads = Object.keys(byId).map(function(id){ return document.getElementById(id); })
+                    .filter(Boolean);
+  var current = null;
+  function mark(el){
+    if (!el || el === current) return;
+    if (current) current.classList.remove('on');
+    current = el; el.classList.add('on');
+    if (window.innerWidth >= 1040) {
+      var rail = document.querySelector('.rail');
+      var t = el.offsetTop - rail.clientHeight / 2;
+      if (rail.scrollHeight > rail.clientHeight) rail.scrollTop = Math.max(0, t);
+    }
+  }
+  if ('IntersectionObserver' in window) {
+    var visible = new Set();
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting) visible.add(e.target); else visible.delete(e.target);
+      });
+      var first = heads.filter(function(h){ return visible.has(h); })[0];
+      if (first) mark(byId[first.id]);
+    }, { rootMargin: '0px 0px -72% 0px' });
+    heads.forEach(function(h){ io.observe(h); });
+  }
+  // the rail is a disclosure on phones; close it after a jump
+  document.querySelector('.rail-inner').addEventListener('click', function(e){
+    if (e.target.closest('a') && window.innerWidth < 1040) {
+      var d = document.querySelector('.rail details');
+      if (d) d.open = false;
+    }
+  });
+  if (window.innerWidth >= 1040) {
+    var d = document.querySelector('.rail details'); if (d) d.open = true;
+  }
+})();
+</script>

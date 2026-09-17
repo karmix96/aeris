@@ -1,0 +1,185 @@
+<title>AERIS S8 Campaign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+:root{
+  --ground:#f3f5f6; --surface:#ffffff; --sunk:#eceff1;
+  --ink:#141a1f; --ink-2:#5c6973; --ink-3:#8a959d;
+  --rule:#dce2e6; --rule-2:#c7d0d6;
+  --accent:#0e5e76; --accent-ink:#0b4b5f; --accent-wash:#e3eef2;
+  --good:#1c6e4c; --warn:#8a5a06; --bad:#9c3535;
+  --sans:"IBM Plex Sans",ui-sans-serif,system-ui,"Segoe UI",sans-serif;
+  --serif:"Source Serif 4",Charter,"Iowan Old Style",Georgia,serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --rail:17rem;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0f1419; --surface:#151c22; --sunk:#1b232a;
+    --ink:#e3e9ed; --ink-2:#8d9daa; --ink-3:#6b7a86;
+    --rule:#242e36; --rule-2:#313e48;
+    --accent:#56b8d6; --accent-ink:#7fcde4; --accent-wash:#15303a;
+    --good:#4cae83; --warn:#d0983c; --bad:#e07a7a;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0f1419; --surface:#151c22; --sunk:#1b232a;
+  --ink:#e3e9ed; --ink-2:#8d9daa; --ink-3:#6b7a86;
+  --rule:#242e36; --rule-2:#313e48;
+  --accent:#56b8d6; --accent-ink:#7fcde4; --accent-wash:#15303a;
+  --good:#4cae83; --warn:#d0983c; --bad:#e07a7a;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--serif);
+  font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:81rem;margin:0 auto;padding-inline:20px;padding-block:0 5rem}
+
+/* ---- masthead ---- */
+.mast{border-bottom:1px solid var(--rule);padding-block:3.25rem 2rem;margin-bottom:2.5rem}
+.eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 1rem}
+.mast h1{font-family:var(--sans);font-weight:600;font-size:clamp(1.9rem,1.2rem + 2.6vw,3.1rem);
+  line-height:1.1;letter-spacing:-.02em;margin:0;text-wrap:balance;max-width:20ch}
+.stand{color:var(--ink-2);font-size:1.08rem;max-width:56ch;margin:1.1rem 0 0}
+.meta{font-family:var(--mono);font-size:.76rem;color:var(--ink-3);margin:1.75rem 0 0;
+  display:flex;flex-wrap:wrap;gap:.5rem 1.5rem}
+.meta b{font-weight:500;color:var(--ink-2)}
+
+/* ---- layout ---- */
+.page{display:grid;grid-template-columns:minmax(0,1fr);gap:2rem}
+@media (min-width:1040px){
+  .page{grid-template-columns:var(--rail) minmax(0,1fr);gap:4rem;align-items:start}
+}
+
+/* ---- contents rail ---- */
+.rail{font-family:var(--sans);font-size:.83rem;line-height:1.45}
+@media (min-width:1040px){
+  .rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 1.5rem);
+    max-height:calc(100vh - 4rem);overflow-y:auto;padding-right:.5rem;
+    border-right:1px solid var(--rule)}
+}
+.rail summary{font-family:var(--sans);font-weight:600;cursor:pointer;padding:.7rem .9rem;
+  background:var(--surface);border:1px solid var(--rule);border-radius:7px;font-size:.9rem}
+@media (min-width:1040px){.rail summary{display:none}
+  .rail details{display:contents}}
+.rail-inner{display:flex;flex-direction:column;gap:1px;padding-top:.75rem}
+.rail a{text-decoration:none;color:var(--ink-2);padding:.3rem .7rem;border-left:2px solid transparent;
+  display:block;border-radius:0 3px 3px 0}
+.rail a:hover{color:var(--ink);background:var(--sunk)}
+.rail a.r2{font-weight:600;color:var(--ink);margin-top:.55rem}
+.rail a.r3{padding-left:1.45rem;font-size:.79rem}
+.rail a.on{border-left-color:var(--accent);color:var(--accent-ink);background:var(--accent-wash)}
+.rail-group{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-3);margin:1.75rem 0 .35rem;padding-left:.7rem}
+.rail a.r-add{font-weight:400;color:var(--ink-2);margin-top:0}
+.rdate{display:block;font-family:var(--mono);font-size:.68rem;color:var(--ink-3)}
+
+/* ---- article ---- */
+article{min-width:0;max-width:70ch}
+article h2{font-family:var(--sans);font-weight:600;font-size:1.6rem;letter-spacing:-.015em;
+  line-height:1.2;margin:3.5rem 0 1rem;padding-top:1.5rem;border-top:1px solid var(--rule);
+  text-wrap:balance;scroll-margin-top:1.5rem}
+article h2:first-child{margin-top:0;border-top:0;padding-top:0}
+article h3{font-family:var(--sans);font-weight:600;font-size:1.13rem;letter-spacing:-.005em;
+  margin:2.5rem 0 .65rem;text-wrap:balance;scroll-margin-top:1.5rem}
+article p{margin:0 0 1.15rem}
+article strong{font-weight:600}
+article a{color:var(--accent-ink);text-underline-offset:2px}
+article ul,article ol{margin:0 0 1.3rem;padding-left:1.35rem}
+article li{margin-bottom:.5rem}
+article li::marker{color:var(--ink-3)}
+article blockquote{margin:1.5rem 0;padding:.2rem 0 .2rem 1.25rem;border-left:2px solid var(--rule-2);
+  color:var(--ink-2);font-style:italic}
+code{font-family:var(--mono);font-size:.855em;background:var(--sunk);padding:.12em .36em;
+  border-radius:3px;word-break:break-word}
+
+/* ---- tables: the report is mostly measurements ---- */
+.tw{overflow-x:auto;margin:1.6rem 0;border:1px solid var(--rule);border-radius:7px;
+  background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-family:var(--sans);font-size:.85rem;
+  font-variant-numeric:tabular-nums;line-height:1.45}
+th,td{padding:.55rem .85rem;text-align:left;border-bottom:1px solid var(--rule);white-space:nowrap}
+th{font-weight:600;font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-2);background:var(--sunk);position:sticky;top:0}
+tbody tr:last-child td{border-bottom:0}
+td code{background:none;padding:0}
+
+/* ---- addenda: a dated sequence, so the date is structure ---- */
+.addendum{margin-top:3.5rem;padding-top:1.5rem;border-top:1px solid var(--rule)}
+.addendum .when{font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;color:var(--accent);
+  margin:0 0 .4rem;text-transform:uppercase}
+.addendum h2.h-add{margin:0 0 1rem;border-top:0;padding-top:0;font-size:1.45rem}
+.addendum h3{font-size:1.04rem}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <p class="eyebrow">Strategy study S8 · structured O-H meshing</p>
+    <h1>{{TITLE}}</h1>
+    <p class="stand">An automated mesh-and-solve pipeline for the AERIS flying wing: how it
+      was built, every setting in force, what each study asked and answered, and where the
+      results are still soft.</p>
+    <p class="meta">
+      <span><b>Started</b> 15 September 2026</span>
+      <span><b>Last entry</b> 17 September, 22:49</span>
+      <span><b>Solver</b> ADflow RANS-SA · SU2 8.5</span>
+      <span><b>Source</b> S8_REPORT_2026-09-15.md</span>
+    </p>
+  </header>
+
+  <div class="page">
+    <nav class="rail" aria-label="Contents">
+      <details>
+        <summary>Contents</summary>
+        <div class="rail-inner">{{RAIL}}</div>
+      </details>
+    </nav>
+    <article>{{BODY}}</article>
+  </div>
+</div>
+
+<script>
+(function(){
+  var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+  var byId = {};
+  links.forEach(function(a){ byId[a.getAttribute('href').slice(1)] = a; });
+  var heads = Object.keys(byId).map(function(id){ return document.getElementById(id); })
+                    .filter(Boolean);
+  var current = null;
+  function mark(el){
+    if (!el || el === current) return;
+    if (current) current.classList.remove('on');
+    current = el; el.classList.add('on');
+    if (window.innerWidth >= 1040) {
+      var rail = document.querySelector('.rail');
+      var t = el.offsetTop - rail.clientHeight / 2;
+      if (rail.scrollHeight > rail.clientHeight) rail.scrollTop = Math.max(0, t);
+    }
+  }
+  if ('IntersectionObserver' in window) {
+    var visible = new Set();
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting) visible.add(e.target); else visible.delete(e.target);
+      });
+      var first = heads.filter(function(h){ return visible.has(h); })[0];
+      if (first) mark(byId[first.id]);
+    }, { rootMargin: '0px 0px -72% 0px' });
+    heads.forEach(function(h){ io.observe(h); });
+  }
+  // the rail is a disclosure on phones; close it after a jump
+  document.querySelector('.rail-inner').addEventListener('click', function(e){
+    if (e.target.closest('a') && window.innerWidth < 1040) {
+      var d = document.querySelector('.rail details');
+      if (d) d.open = false;
+    }
+  });
+  if (window.innerWidth >= 1040) {
+    var d = document.querySelector('.rail details'); if (d) d.open = true;
+  }
+})();
+</script>

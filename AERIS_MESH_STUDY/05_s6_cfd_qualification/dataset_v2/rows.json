@@ -30,7 +30,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "da6946f2fe4f35f886928d5b6823698e1316a0ff4d0cde2865489a85a775e9c7",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -84,10 +84,10 @@
       0.01403502256283693
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.2653089463710785,
-      0.658043622970581,
+      0.01374804973602295,
+      0.20280982553958893,
+      0.6825724840164185,
+      1.0651401281356812,
       1.7247910499572754
     ],
     "cp_cells_over_bound": 19,
@@ -111,7 +111,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g12_gci_C_a-2_surf.cgns.gz",
@@ -152,7 +152,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "da6946f2fe4f35f886928d5b6823698e1316a0ff4d0cde2865489a85a775e9c7",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -206,10 +206,10 @@
       0.01403502256283693
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.27638694643974304,
-      0.6058933734893799,
+      0.03015391156077385,
+      0.21051731705665588,
+      0.6294138431549072,
+      1.0318467617034912,
       1.6942393779754639
     ],
     "cp_cells_over_bound": 39,
@@ -233,7 +233,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g12_gci_C_a0_surf.cgns.gz",
@@ -274,7 +274,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "da6946f2fe4f35f886928d5b6823698e1316a0ff4d0cde2865489a85a775e9c7",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -328,10 +328,10 @@
       0.01403502256283693
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.28867030143737793,
-      0.5872297286987305,
+      0.014879132620990276,
+      0.22286313772201538,
+      0.6113091111183167,
+      0.9695976972579956,
       1.6459035873413086
     ],
     "cp_cells_over_bound": 71,
@@ -355,7 +355,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g12_gci_C_a4_surf.cgns.gz",
@@ -396,7 +396,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "da6946f2fe4f35f886928d5b6823698e1316a0ff4d0cde2865489a85a775e9c7",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -450,10 +450,10 @@
       0.01403502256283693
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.3200097978115082,
-      0.615630567073822,
+      0.028757862746715546,
+      0.24545474350452423,
+      0.6428475975990295,
+      0.9085685610771179,
       1.6043859720230103
     ],
     "cp_cells_over_bound": 94,
@@ -477,7 +477,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g12_gci_C_a8_surf.cgns.gz",
@@ -518,7 +518,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "059e108935b3f24d93188868b0ab33bfc789568ba42ef247f1d9dc2129ef9e84",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -572,10 +572,10 @@
       0.022925712111414386
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.26288092136383057,
-      0.6932693719863892,
+      0.027703549712896347,
+      0.20273764431476593,
+      0.7284412384033203,
+      1.114508867263794,
       1.8515594005584717
     ],
     "cp_cells_over_bound": 94,
@@ -599,7 +599,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g13_gci_C_a-2_surf.cgns.gz",
@@ -640,7 +640,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "059e108935b3f24d93188868b0ab33bfc789568ba42ef247f1d9dc2129ef9e84",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -694,10 +694,10 @@
       0.022925712111414386
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.27029165625572205,
-      0.63716059923172,
+      0.03549889475107193,
+      0.20903326570987701,
+      0.6659051775932312,
+      1.1042290925979614,
       1.8367602825164795
     ],
     "cp_cells_over_bound": 63,
@@ -721,7 +721,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g13_gci_C_a0_surf.cgns.gz",
@@ -762,7 +762,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "059e108935b3f24d93188868b0ab33bfc789568ba42ef247f1d9dc2129ef9e84",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -816,10 +816,10 @@
       0.022925712111414386
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.28900429606437683,
-      0.5844610333442688,
+      0.03605460375547409,
+      0.2275271713733673,
+      0.6102954745292664,
+      1.0580967664718628,
       1.7725708484649658
     ],
     "cp_cells_over_bound": 87,
@@ -843,7 +843,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g13_gci_C_a4_surf.cgns.gz",
@@ -884,7 +884,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "059e108935b3f24d93188868b0ab33bfc789568ba42ef247f1d9dc2129ef9e84",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -938,10 +938,10 @@
       0.022925712111414386
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.3061164319515228,
-      0.6069479584693909,
+      0.03347659856081009,
+      0.24163603782653809,
+      0.6325497627258301,
+      0.9657543301582336,
       1.7090500593185425
     ],
     "cp_cells_over_bound": 89,
@@ -965,7 +965,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g13_gci_C_a8_surf.cgns.gz",
@@ -1006,7 +1006,7 @@
     "grid_level": "gci_M",
     "cells": 1183140,
     "mesh_hash": "234345bfb9fdd0f5b6b2f8c1b955f66373c648a4ad101ca9ddde5f6ca0a69843",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -1060,10 +1060,10 @@
       0.02460584476137764
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.2102515995502472,
-      0.5648677349090576,
+      0.026742028072476387,
+      0.15554258227348328,
+      0.579379677772522,
+      0.8444069027900696,
       1.5069822072982788
     ],
     "cp_cells_over_bound": 33,
@@ -1087,7 +1087,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g13_gci_M_a-2_surf.cgns.gz",
@@ -1128,7 +1128,7 @@
     "grid_level": "gci_M",
     "cells": 1183140,
     "mesh_hash": "234345bfb9fdd0f5b6b2f8c1b955f66373c648a4ad101ca9ddde5f6ca0a69843",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -1182,10 +1182,10 @@
       0.02460584476137764
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.21425040066242218,
-      0.5221572518348694,
+      0.03117179684340954,
+      0.16141371428966522,
+      0.533713698387146,
+      0.8276472091674805,
       1.5350072383880615
     ],
     "cp_cells_over_bound": 62,
@@ -1209,7 +1209,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g13_gci_M_a0_surf.cgns.gz",
@@ -1250,7 +1250,7 @@
     "grid_level": "gci_M",
     "cells": 1183140,
     "mesh_hash": "234345bfb9fdd0f5b6b2f8c1b955f66373c648a4ad101ca9ddde5f6ca0a69843",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -1304,10 +1304,10 @@
       0.02460584476137764
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.22579172253608704,
-      0.4770148694515228,
+      0.016996318474411964,
+      0.1724053919315338,
+      0.4926183223724365,
+      0.7849843502044678,
       1.5110162496566772
     ],
     "cp_cells_over_bound": 61,
@@ -1331,7 +1331,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g13_gci_M_a4_surf.cgns.gz",
@@ -1372,7 +1372,7 @@
     "grid_level": "gci_M",
     "cells": 1183140,
     "mesh_hash": "234345bfb9fdd0f5b6b2f8c1b955f66373c648a4ad101ca9ddde5f6ca0a69843",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -1426,10 +1426,10 @@
       0.02460584476137764
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.24243317544460297,
-      0.490461140871048,
+      0.026255812495946884,
+      0.1840442717075348,
+      0.5041670799255371,
+      0.7419707179069519,
       1.455594778060913
     ],
     "cp_cells_over_bound": 81,
@@ -1453,7 +1453,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g13_gci_M_a8_surf.cgns.gz",
@@ -1494,7 +1494,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "52997e0edbe4bb325408fd6d270c8b6b4d9d7df9321a5b97f1e048665ac8209d",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -1548,10 +1548,10 @@
       0.021388822761662304
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.24641361832618713,
-      0.7175179123878479,
+      0.033247172832489014,
+      0.18522247672080994,
+      0.7566003799438477,
+      1.079443097114563,
       1.6469650268554688
     ],
     "cp_cells_over_bound": 20,
@@ -1575,7 +1575,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g16_gci_C_a-2_surf.cgns.gz",
@@ -1616,7 +1616,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "52997e0edbe4bb325408fd6d270c8b6b4d9d7df9321a5b97f1e048665ac8209d",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -1670,10 +1670,10 @@
       0.021388822761662304
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.2534659802913666,
-      0.6660908460617065,
+      0.03874237835407257,
+      0.1900556981563568,
+      0.6974841952323914,
+      1.023410677909851,
       1.6204566955566406
     ],
     "cp_cells_over_bound": 29,
@@ -1697,7 +1697,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g16_gci_C_a0_surf.cgns.gz",
@@ -1738,7 +1738,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "52997e0edbe4bb325408fd6d270c8b6b4d9d7df9321a5b97f1e048665ac8209d",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -1792,10 +1792,10 @@
       0.021388822761662304
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.27527785301208496,
-      0.5682920813560486,
+      0.025441285222768784,
+      0.20606869459152222,
+      0.5875680446624756,
+      0.980277955532074,
       1.5288841724395752
     ],
     "cp_cells_over_bound": 66,
@@ -1819,7 +1819,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g16_gci_C_a4_surf.cgns.gz",
@@ -1860,7 +1860,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "52997e0edbe4bb325408fd6d270c8b6b4d9d7df9321a5b97f1e048665ac8209d",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -1914,10 +1914,10 @@
       0.021388822761662304
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.284519225358963,
-      0.5548958778381348,
+      0.0243740975856781,
+      0.21754077076911926,
+      0.5795720815658569,
+      0.9391553401947021,
       1.405440092086792
     ],
     "cp_cells_over_bound": 109,
@@ -1941,7 +1941,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g16_gci_C_a8_surf.cgns.gz",
@@ -1982,7 +1982,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "d6d99d22e5aa502e5ed55caa903ee2a3151a20454f91a3412231b2f31e969207",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -2036,10 +2036,10 @@
       0.023275988685350198
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.24758608639240265,
-      0.6062343716621399,
+      0.016198094934225082,
+      0.1912863552570343,
+      0.6368999481201172,
+      1.0222961902618408,
       1.6129182577133179
     ],
     "cp_cells_over_bound": 16,
@@ -2063,7 +2063,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g23_gci_C_a-2_surf.cgns.gz",
@@ -2104,7 +2104,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "d6d99d22e5aa502e5ed55caa903ee2a3151a20454f91a3412231b2f31e969207",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -2158,10 +2158,10 @@
       0.023275988685350198
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.2541715204715729,
-      0.5556118488311768,
+      0.018819287419319153,
+      0.1977510005235672,
+      0.5831435322761536,
+      0.9993024468421936,
       1.5726124048233032
     ],
     "cp_cells_over_bound": 45,
@@ -2185,7 +2185,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g23_gci_C_a0_surf.cgns.gz",
@@ -2226,7 +2226,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "d6d99d22e5aa502e5ed55caa903ee2a3151a20454f91a3412231b2f31e969207",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -2280,10 +2280,10 @@
       0.023275988685350198
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.2573874294757843,
-      0.5003582835197449,
+      0.03755626827478409,
+      0.20566150546073914,
+      0.5191988348960876,
+      0.9324461221694946,
       1.4730275869369507
     ],
     "cp_cells_over_bound": 73,
@@ -2307,7 +2307,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g23_gci_C_a4_surf.cgns.gz",
@@ -2348,7 +2348,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "d6d99d22e5aa502e5ed55caa903ee2a3151a20454f91a3412231b2f31e969207",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -2402,10 +2402,10 @@
       0.023275988685350198
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.2874528169631958,
-      0.5147769451141357,
+      0.027412766590714455,
+      0.22060798108577728,
+      0.5368484854698181,
+      0.8962709307670593,
       1.4100699424743652
     ],
     "cp_cells_over_bound": 112,
@@ -2429,7 +2429,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g23_gci_C_a8_surf.cgns.gz",
@@ -2470,7 +2470,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "8282fb72822dc1226d10e67778b96411ff2e45b090cf50cf8bc2b86b1d64bb95",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -2524,10 +2524,10 @@
       0.01665238920558691
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.23845858871936798,
-      0.6441487669944763,
+      0.019640928134322166,
+      0.1808178722858429,
+      0.6684415936470032,
+      1.0122487545013428,
       1.9999043941497803
     ],
     "cp_cells_over_bound": 16,
@@ -2551,7 +2551,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g29_gci_C_a-2_surf.cgns.gz",
@@ -2592,7 +2592,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "8282fb72822dc1226d10e67778b96411ff2e45b090cf50cf8bc2b86b1d64bb95",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -2646,10 +2646,10 @@
       0.01665238920558691
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.2487688809633255,
-      0.5801494121551514,
+      0.03316401317715645,
+      0.19067619740962982,
+      0.5999802947044373,
+      0.9792181253433228,
       1.9750804901123047
     ],
     "cp_cells_over_bound": 21,
@@ -2673,7 +2673,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g29_gci_C_a0_surf.cgns.gz",
@@ -2714,7 +2714,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "8282fb72822dc1226d10e67778b96411ff2e45b090cf50cf8bc2b86b1d64bb95",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -2768,10 +2768,10 @@
       0.01665238920558691
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.2736850380897522,
-      0.5560082197189331,
+      0.03382749855518341,
+      0.20438741147518158,
+      0.5787514448165894,
+      0.9217905402183533,
       1.8826417922973633
     ],
     "cp_cells_over_bound": 50,
@@ -2795,7 +2795,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g29_gci_C_a4_surf.cgns.gz",
@@ -2836,7 +2836,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "8282fb72822dc1226d10e67778b96411ff2e45b090cf50cf8bc2b86b1d64bb95",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -2890,10 +2890,10 @@
       0.01665238920558691
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.3042261600494385,
-      0.5868555307388306,
+      0.026392202824354172,
+      0.23028171062469482,
+      0.6137601733207703,
+      0.821022629737854,
       1.8291382789611816
     ],
     "cp_cells_over_bound": 82,
@@ -2917,7 +2917,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g29_gci_C_a8_surf.cgns.gz",
@@ -2958,7 +2958,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "c38e2b65b3246fcab1252b21b50da4c9ffcc478e42230369b105f3564d7a9a0e",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -3012,10 +3012,10 @@
       0.03029114554980886
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.2955551743507385,
-      0.6797609329223633,
+      0.024641243740916252,
+      0.22020523250102997,
+      0.707634687423706,
+      1.0721005201339722,
       1.6933728456497192
     ],
     "cp_cells_over_bound": 31,
@@ -3039,7 +3039,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g36_gci_C_a-2_surf.cgns.gz",
@@ -3080,7 +3080,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "c38e2b65b3246fcab1252b21b50da4c9ffcc478e42230369b105f3564d7a9a0e",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -3134,10 +3134,10 @@
       0.03029114554980886
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.3079618811607361,
-      0.6154034733772278,
+      0.03707040473818779,
+      0.22977952659130096,
+      0.6325508952140808,
+      1.0429284572601318,
       1.6338621377944946
     ],
     "cp_cells_over_bound": 47,
@@ -3161,7 +3161,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g36_gci_C_a0_surf.cgns.gz",
@@ -3202,7 +3202,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "c38e2b65b3246fcab1252b21b50da4c9ffcc478e42230369b105f3564d7a9a0e",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -3256,10 +3256,10 @@
       0.03029114554980886
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.3203708231449127,
-      0.5816186666488647,
+      0.03415840119123459,
+      0.24212387204170227,
+      0.5979799628257751,
+      0.9859889149665833,
       1.5157291889190674
     ],
     "cp_cells_over_bound": 90,
@@ -3283,7 +3283,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g36_gci_C_a4_surf.cgns.gz",
@@ -3324,7 +3324,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "c38e2b65b3246fcab1252b21b50da4c9ffcc478e42230369b105f3564d7a9a0e",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -3378,10 +3378,10 @@
       0.03029114554980886
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.35701194405555725,
-      0.6786481142044067,
+      0.015398279763758183,
+      0.2628805339336395,
+      0.6974161267280579,
+      0.9328224658966064,
       1.4473506212234497
     ],
     "cp_cells_over_bound": 98,
@@ -3405,7 +3405,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g36_gci_C_a8_surf.cgns.gz",
@@ -3446,7 +3446,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "4cfece51afb633e2aaa2ba164d9825fca0cbe1bb4736bd9dd70732dba36edac9",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -3500,10 +3500,10 @@
       0.02940875378786036
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.24549072980880737,
-      0.6585046648979187,
+      0.02834288589656353,
+      0.17782551050186157,
+      0.6868425607681274,
+      0.98883056640625,
       1.5347492694854736
     ],
     "cp_cells_over_bound": 23,
@@ -3527,7 +3527,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g47_gci_C_a-2_surf.cgns.gz",
@@ -3568,7 +3568,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "4cfece51afb633e2aaa2ba164d9825fca0cbe1bb4736bd9dd70732dba36edac9",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -3622,10 +3622,10 @@
       0.02940875378786036
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.25381290912628174,
-      0.6005920171737671,
+      0.029292438179254532,
+      0.18609896302223206,
+      0.6207016706466675,
+      0.949161171913147,
       1.5058106184005737
     ],
     "cp_cells_over_bound": 39,
@@ -3649,7 +3649,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g47_gci_C_a0_surf.cgns.gz",
@@ -3690,7 +3690,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "4cfece51afb633e2aaa2ba164d9825fca0cbe1bb4736bd9dd70732dba36edac9",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -3744,10 +3744,10 @@
       0.02940875378786036
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.2662418484687805,
-      0.5100199580192566,
+      0.01907433569431305,
+      0.19718602299690247,
+      0.5255643129348755,
+      0.9150424599647522,
       1.4009836912155151
     ],
     "cp_cells_over_bound": 73,
@@ -3771,7 +3771,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g47_gci_C_a4_surf.cgns.gz",
@@ -3812,7 +3812,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "4cfece51afb633e2aaa2ba164d9825fca0cbe1bb4736bd9dd70732dba36edac9",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -3866,10 +3866,10 @@
       0.02940875378786036
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.2939511239528656,
-      0.5574179887771606,
+      0.021131176501512527,
+      0.21687237918376923,
+      0.5765138864517212,
+      0.8545463681221008,
       1.3309605121612549
     ],
     "cp_cells_over_bound": 96,
@@ -3893,7 +3893,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g47_gci_C_a8_surf.cgns.gz",
@@ -3934,7 +3934,7 @@
     "grid_level": "gci_M",
     "cells": 1172856,
     "mesh_hash": "53e8a131f5500cf322f1c097159457369163667574464c994a508144ead4736e",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -3988,10 +3988,10 @@
       0.030523100280565492
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.19290214776992798,
-      0.53456711769104,
+      0.018200907856225967,
+      0.1373215764760971,
+      0.5503959655761719,
+      0.7888348698616028,
       1.2702513933181763
     ],
     "cp_cells_over_bound": 21,
@@ -4015,7 +4015,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g47_gci_M_a-2_surf.cgns.gz",
@@ -4056,7 +4056,7 @@
     "grid_level": "gci_M",
     "cells": 1172856,
     "mesh_hash": "53e8a131f5500cf322f1c097159457369163667574464c994a508144ead4736e",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -4110,10 +4110,10 @@
       0.030523100280565492
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.19958369433879852,
-      0.4871859550476074,
+      0.015968048945069313,
+      0.1431756317615509,
+      0.4991127550601959,
+      0.7616546750068665,
       1.255063772201538
     ],
     "cp_cells_over_bound": 45,
@@ -4137,7 +4137,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g47_gci_M_a0_surf.cgns.gz",
@@ -4178,7 +4178,7 @@
     "grid_level": "gci_M",
     "cells": 1172856,
     "mesh_hash": "53e8a131f5500cf322f1c097159457369163667574464c994a508144ead4736e",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -4232,10 +4232,10 @@
       0.030523100280565492
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.21103134751319885,
-      0.40671810507774353,
+      0.018798554316163063,
+      0.14941175282001495,
+      0.4152714014053345,
+      0.7226273417472839,
       1.1930148601531982
     ],
     "cp_cells_over_bound": 63,
@@ -4259,7 +4259,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g47_gci_M_a4_surf.cgns.gz",
@@ -4300,7 +4300,7 @@
     "grid_level": "gci_M",
     "cells": 1172856,
     "mesh_hash": "53e8a131f5500cf322f1c097159457369163667574464c994a508144ead4736e",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -4354,10 +4354,10 @@
       0.030523100280565492
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.2358909547328949,
-      0.4507974088191986,
+      0.016683250665664673,
+      0.16741114854812622,
+      0.4593043923377991,
+      0.6710367202758789,
       1.1247698068618774
     ],
     "cp_cells_over_bound": 107,
@@ -4381,7 +4381,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g47_gci_M_a8_surf.cgns.gz",
@@ -4422,7 +4422,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "25f8a56c5bca85c1dd01c95b0ecd885222960712eb6944ef28d5419b9506ad4d",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -4476,10 +4476,10 @@
       0.0144883657502111
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.27685776352882385,
-      0.6336067914962769,
+      0.0260717011988163,
+      0.21067258715629578,
+      0.6578300595283508,
+      1.0696699619293213,
       1.6587965488433838
     ],
     "cp_cells_over_bound": 25,
@@ -4503,7 +4503,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g65_gci_C_a-2_surf.cgns.gz",
@@ -4544,7 +4544,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "25f8a56c5bca85c1dd01c95b0ecd885222960712eb6944ef28d5419b9506ad4d",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -4598,10 +4598,10 @@
       0.0144883657502111
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.2891004979610443,
-      0.5981747508049011,
+      0.029571527615189552,
+      0.22021932899951935,
+      0.616191029548645,
+      1.0472023487091064,
       1.6286994218826294
     ],
     "cp_cells_over_bound": 38,
@@ -4625,7 +4625,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g65_gci_C_a0_surf.cgns.gz",
@@ -4666,7 +4666,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "25f8a56c5bca85c1dd01c95b0ecd885222960712eb6944ef28d5419b9506ad4d",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -4720,10 +4720,10 @@
       0.0144883657502111
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.298315167427063,
-      0.5964709520339966,
+      0.03255284205079079,
+      0.23283347487449646,
+      0.6154555082321167,
+      0.9769948124885559,
       1.620165467262268
     ],
     "cp_cells_over_bound": 69,
@@ -4747,7 +4747,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g65_gci_C_a4_surf.cgns.gz",
@@ -4788,7 +4788,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "25f8a56c5bca85c1dd01c95b0ecd885222960712eb6944ef28d5419b9506ad4d",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -4842,10 +4842,10 @@
       0.0144883657502111
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.33450862765312195,
-      0.6311560273170471,
+      0.028420737013220787,
+      0.25359591841697693,
+      0.6495263576507568,
+      0.914941668510437,
       1.5789376497268677
     ],
     "cp_cells_over_bound": 87,
@@ -4869,7 +4869,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g65_gci_C_a8_surf.cgns.gz",
@@ -4910,7 +4910,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "4981dbf232730418ae08eddd6fd73f746123a5c8c09d631b0cbc2774a6b91f3c",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -4964,10 +4964,10 @@
       0.03005984195629601
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.29608556628227234,
-      0.7782028317451477,
+      0.005620206706225872,
+      0.22389203310012817,
+      0.813691258430481,
+      1.1558666229248047,
       1.8056721687316895
     ],
     "cp_cells_over_bound": 12,
@@ -4991,7 +4991,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g81_gci_C_a-2_surf.cgns.gz",
@@ -5032,7 +5032,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "4981dbf232730418ae08eddd6fd73f746123a5c8c09d631b0cbc2774a6b91f3c",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -5086,10 +5086,10 @@
       0.03005984195629601
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.30521708726882935,
-      0.6951019763946533,
+      0.026193121448159218,
+      0.23651912808418274,
+      0.7302210330963135,
+      1.1286695003509521,
       1.7700461149215698
     ],
     "cp_cells_over_bound": 34,
@@ -5113,7 +5113,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g81_gci_C_a0_surf.cgns.gz",
@@ -5154,7 +5154,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "4981dbf232730418ae08eddd6fd73f746123a5c8c09d631b0cbc2774a6b91f3c",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -5208,10 +5208,10 @@
       0.03005984195629601
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.32433202862739563,
-      0.5952262878417969,
+      0.03829322010278702,
+      0.2502562701702118,
+      0.6142995357513428,
+      1.063498616218567,
       1.6980674266815186
     ],
     "cp_cells_over_bound": 65,
@@ -5235,7 +5235,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g81_gci_C_a4_surf.cgns.gz",
@@ -5276,7 +5276,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "4981dbf232730418ae08eddd6fd73f746123a5c8c09d631b0cbc2774a6b91f3c",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -5330,10 +5330,10 @@
       0.03005984195629601
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.3618607521057129,
-      0.6582107543945312,
+      0.029169678688049316,
+      0.2756723165512085,
+      0.6757819056510925,
+      0.996038019657135,
       1.6771783828735352
     ],
     "cp_cells_over_bound": 97,
@@ -5357,7 +5357,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g81_gci_C_a8_surf.cgns.gz",
@@ -5398,7 +5398,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "c53b58e7f59f577df50989e164ae75633b7f215c5a7e6757060e428918162e54",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -5452,10 +5452,10 @@
       0.029399119279317862
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.25260570645332336,
-      0.6984444260597229,
+      0.03296397998929024,
+      0.1930086761713028,
+      0.7329651713371277,
+      1.0636249780654907,
       1.7023223638534546
     ],
     "cp_cells_over_bound": 17,
@@ -5479,7 +5479,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g83_gci_C_a-2_surf.cgns.gz",
@@ -5520,7 +5520,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "c53b58e7f59f577df50989e164ae75633b7f215c5a7e6757060e428918162e54",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -5574,10 +5574,10 @@
       0.029399119279317862
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.2601119875907898,
-      0.632502555847168,
+      0.02356741577386856,
+      0.2006068080663681,
+      0.673936128616333,
+      1.0568721294403076,
       1.6732256412506104
     ],
     "cp_cells_over_bound": 26,
@@ -5601,7 +5601,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g83_gci_C_a0_surf.cgns.gz",
@@ -5642,7 +5642,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "c53b58e7f59f577df50989e164ae75633b7f215c5a7e6757060e428918162e54",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -5696,10 +5696,10 @@
       0.029399119279317862
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.28099524974823,
-      0.5366309881210327,
+      0.03934425115585327,
+      0.21578258275985718,
+      0.5515775680541992,
+      0.9969942569732666,
       1.566487193107605
     ],
     "cp_cells_over_bound": 52,
@@ -5723,7 +5723,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g83_gci_C_a4_surf.cgns.gz",
@@ -5764,7 +5764,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "c53b58e7f59f577df50989e164ae75633b7f215c5a7e6757060e428918162e54",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -5818,10 +5818,10 @@
       0.029399119279317862
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.29556456208229065,
-      0.5409956574440002,
+      0.024093057960271835,
+      0.22914844751358032,
+      0.5581369996070862,
+      0.948844850063324,
       1.4423984289169312
     ],
     "cp_cells_over_bound": 96,
@@ -5845,7 +5845,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g83_gci_C_a8_surf.cgns.gz",
@@ -5886,7 +5886,7 @@
     "grid_level": "gci_M",
     "cells": 1172856,
     "mesh_hash": "5c5dff22b29b53fbbd72f999d063323c3d809a4edb175fad823806e239f251a3",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -5940,10 +5940,10 @@
       0.02976918885923248
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.2025042325258255,
-      0.5681336522102356,
+      0.02057705819606781,
+      0.14857910573482513,
+      0.5853836536407471,
+      0.829715371131897,
       1.3477951288223267
     ],
     "cp_cells_over_bound": 35,
@@ -5967,7 +5967,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g83_gci_M_a-2_surf.cgns.gz",
@@ -6008,7 +6008,7 @@
     "grid_level": "gci_M",
     "cells": 1172856,
     "mesh_hash": "5c5dff22b29b53fbbd72f999d063323c3d809a4edb175fad823806e239f251a3",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -6062,10 +6062,10 @@
       0.02976918885923248
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.20513533055782318,
-      0.5217008590698242,
+      0.029243916273117065,
+      0.1551271677017212,
+      0.5402529239654541,
+      0.809473991394043,
       1.3509230613708496
     ],
     "cp_cells_over_bound": 57,
@@ -6089,7 +6089,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g83_gci_M_a0_surf.cgns.gz",
@@ -6130,7 +6130,7 @@
     "grid_level": "gci_M",
     "cells": 1172856,
     "mesh_hash": "5c5dff22b29b53fbbd72f999d063323c3d809a4edb175fad823806e239f251a3",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -6184,10 +6184,10 @@
       0.02976918885923248
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.2202761024236679,
-      0.4332476854324341,
+      0.03627404570579529,
+      0.1638774573802948,
+      0.44108766317367554,
+      0.7646178603172302,
       1.2943540811538696
     ],
     "cp_cells_over_bound": 56,
@@ -6211,7 +6211,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g83_gci_M_a4_surf.cgns.gz",
@@ -6252,7 +6252,7 @@
     "grid_level": "gci_M",
     "cells": 1172856,
     "mesh_hash": "5c5dff22b29b53fbbd72f999d063323c3d809a4edb175fad823806e239f251a3",
-    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+    "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -6306,10 +6306,10 @@
       0.02976918885923248
     ],
     "yplus_min_p50_p95_p99_max": [
-      0.0,
-      0.0,
-      0.2341696321964264,
-      0.4383677542209625,
+      0.03413256257772446,
+      0.17406508326530457,
+      0.45097506046295166,
+      0.7106347680091858,
       1.2161020040512085
     ],
     "cp_cells_over_bound": 94,
@@ -6333,7 +6333,7 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
+      "git_commit": "b43b3f2f47f9dcfc85fdd189e86d9e539363fbb6",
       "adflow_version": "2.13.1"
     },
     "surface_field_archive": "fields/g83_gci_M_a8_surf.cgns.gz",

@@ -161,7 +161,7 @@ def adflow_version(mach_python: str | None) -> str | None:
         return None
 
 
-def cgns_variable(path: Path, name: str) -> np.ndarray | None:
+def cgns_variable(path: Path, name: str, wall_only: bool = False) -> np.ndarray | None:
     """One field, whichever CGNS container the file uses.
 
     This was a private h5py reader -- the THIRD copy of one in this directory,
@@ -172,7 +172,7 @@ def cgns_variable(path: Path, name: str) -> np.ndarray | None:
     places, one cause, because the reader was copied instead of shared.
     """
     import cgns_read
-    return cgns_read.read_variable(path, name)
+    return cgns_read.read_variable(path, name, wall_only=wall_only)
 
 
 def surface_file(run: Path) -> Path | None:
@@ -353,7 +353,15 @@ def build_row(*, run: Path, level: str, index: int, set_name: str,
         else:
             absent("cp_cells_over_bound", "no CoefPressure in the surface solution")
             absent("cp_peak_excess", "no CoefPressure in the surface solution")
-        yplus = cgns_variable(surface, "YPlus")
+        # Wall zones only. The surface CGNS also holds four FarField zones and
+        # a Symmetry zone, where YPlus is written as zero: 82.2% of the array on
+        # g83/gci_C_a0. Quantiles over all of it are quantiles over mostly
+        # zeros, and that is how this row came to record a "p99" of 0.63 for a
+        # wall whose real p99 is 1.06. The recorded MIN of 0.0 and MEDIAN of 0.0
+        # were the tell -- no viscous wall has y+ = 0 over half its area -- and
+        # they sat in the dataset unremarked until an external review asked what
+        # the percentile was actually taken over.
+        yplus = cgns_variable(surface, "YPlus", wall_only=True)
         if yplus is not None and yplus.size:
             row["yplus_min_p50_p95_p99_max"] = [
                 float(yplus.min()), float(np.quantile(yplus, 0.50)),

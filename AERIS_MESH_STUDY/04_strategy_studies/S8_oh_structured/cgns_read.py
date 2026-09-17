@@ -32,6 +32,7 @@ from __future__ import annotations
 import argparse
 import ctypes
 import json
+import re
 from pathlib import Path
 
 import numpy as np
@@ -238,23 +239,40 @@ def surface_zones(path: Path) -> list[tuple[str, dict]]:
     return out
 
 
-def _h5_collect(path: Path, name: str) -> np.ndarray | None:
+#: A surface CGNS written by ADflow holds every boundary zone, not just the
+#: wall: a half-model carries four FarField zones and a Symmetry zone beside
+#: the two NSWallAdiabatic ones. Wall quantities are written as zero on the
+#: others, so a statistic taken over all zones is a statistic over mostly
+#: zeros. Measured on g83/gci_C_a0: 25,820 values, 21,236 of them zero --
+#: 82.2% -- so the "p99" the dataset recorded was 0.63 while the p99 of the
+#: actual wall was 1.06. Always pass `wall_only=True` for y+, cf or anything
+#: else defined only at a viscous wall.
+WALL_ZONE = re.compile(r"wall", re.I)
+
+
+def is_wall_zone(zone_name: str) -> bool:
+    """True for a viscous-wall boundary zone, by ADflow's BC family naming."""
+    return bool(WALL_ZONE.search(zone_name))
+
+
+def _h5_collect(path: Path, name: str, wall_only: bool = False) -> np.ndarray | None:
     try:
         import h5py
     except ImportError:
         return None
     found: list[np.ndarray] = []
 
-    def walk(node):
+    def walk(node, in_wall: bool):
         for key, item in node.items():
             if isinstance(item, h5py.Group):
-                if key == name and " data" in item:
+                here = in_wall or is_wall_zone(key)
+                if key == name and " data" in item and (here or not wall_only):
                     found.append(np.array(item[" data"]).ravel())
-                walk(item)
+                walk(item, here)
 
     try:
         with h5py.File(path, "r") as handle:
-            walk(handle)
+            walk(handle, False)
     except OSError:
         return None
     return np.concatenate(found) if found else None
@@ -265,14 +283,22 @@ def is_hdf5(path: Path) -> bool:
         return fh.read(8) == b"\x89HDF\r\n\x1a\n"
 
 
-def read_variable(path: Path, name: str) -> np.ndarray | None:
-    """Every value of one field, concatenated over zones.  Format-agnostic."""
+def read_variable(path: Path, name: str,
+                  wall_only: bool = False) -> np.ndarray | None:
+    """Every value of one field, concatenated over zones.  Format-agnostic.
+
+    `wall_only` restricts the concatenation to viscous-wall zones. Use it for
+    any quantity that is only defined at a wall -- see WALL_ZONE above for what
+    taking a percentile over the far field does to the answer.
+    """
     path = Path(path)
     if is_hdf5(path):
-        return _h5_collect(path, name)
+        return _h5_collect(path, name, wall_only)
     values: list[np.ndarray] = []
     with CGNSFile(path) as handle:
         for zone in handle.zones():
+            if wall_only and not is_wall_zone(zone["zone_name"]):
+                continue
             for field in handle.fields(zone["base"], zone["zone"]):
                 if field["name"] != name:
                     continue

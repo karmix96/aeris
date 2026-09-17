@@ -6,36 +6,36 @@
   "verdict": "ACCEPTED",
   "equations_short_of_limit": [],
   "equation_orders": {
-    "rho": 6.405,
-    "rhou": 5.117,
-    "rhov": 4.911,
-    "rhow": 5.158,
-    "rhoE": 6.51,
-    "nuturb": 3.635
+    "rho": 6.705,
+    "rhou": 5.297,
+    "rhov": 5.332,
+    "rhow": 5.481,
+    "rhoE": 6.836,
+    "nuturb": 4.262
   },
-  "iterations": 155,
-  "residual_initial": 1101.6036112254474,
-  "residual_final": 0.0004335520820286452,
-  "relative_residual": 3.935645068795232e-07,
-  "window": 39,
+  "iterations": 202,
+  "residual_initial": 1041.293132208563,
+  "residual_final": 0.00020553026403237118,
+  "relative_residual": 1.9737983251310356e-07,
+  "window": 50,
   "checks": {
     "residual_orders": {
-      "value": 6.404984074776811,
+      "value": 6.704697223883802,
       "limit": 5.0,
       "pass": true
     },
     "cl_percent": {
-      "value": 0.00419283894142275,
+      "value": 0.0036767781789097216,
       "limit": 0.05,
       "pass": true
     },
     "cd_percent": {
-      "value": 0.010602843056196425,
+      "value": 0.0014677703804983145,
       "limit": 0.1,
       "pass": true
     },
     "cmy_absolute": {
-      "value": 3.636980480652835e-07,
+      "value": 2.632802861106398e-07,
       "limit": 0.0001,
       "pass": true
     },
@@ -49,12 +49,12 @@
     },
     "every_equation": {
       "value": {
-        "rho": 6.4,
-        "rhou": 5.12,
-        "rhov": 4.91,
-        "rhow": 5.16,
-        "rhoE": 6.51,
-        "nuturb": 3.64
+        "rho": 6.7,
+        "rhou": 5.3,
+        "rhov": 5.33,
+        "rhow": 5.48,
+        "rhoE": 6.84,
+        "nuturb": 4.26
       },
       "limit": {
         "rho": 3.0,
@@ -68,19 +68,19 @@
       "note": "Fluent's per-equation test: continuity, each momentum component, energy and turbulence, each against its own limit"
     },
     "residual_target_met": {
-      "value": 3.935645068795232e-07,
+      "value": 1.9737983251310356e-07,
       "limit": 1e-06,
       "pass": true,
       "note": "the run reached the L2Convergence target it was given"
     }
   },
   "forces": {
-    "cl": 0.11982773267353636,
-    "cd": 0.01705026512482152,
-    "cdp": 0.007760356964489199,
-    "cdv": 0.009289908160332323,
-    "cmy": 0.015455272556967051
+    "cl": 0.11971183913518067,
+    "cd": 0.01690734507291726,
+    "cdp": 0.007548654611876057,
+    "cdv": 0.009358690461041205,
+    "cmy": 0.01543255618630034
   },
   "alpha_deg": 4.0,
-  "directory": "../../artifacts/s8_cfd/gci_M_a4"
+  "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_M_a4"
 }

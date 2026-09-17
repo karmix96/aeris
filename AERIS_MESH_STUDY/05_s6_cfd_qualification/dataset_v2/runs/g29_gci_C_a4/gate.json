@@ -6,36 +6,36 @@
   "verdict": "ACCEPTED",
   "equations_short_of_limit": [],
   "equation_orders": {
-    "rho": 6.468,
-    "rhou": 4.909,
-    "rhov": 5.0,
-    "rhow": 5.226,
-    "rhoE": 6.557,
-    "nuturb": 3.906
+    "rho": 6.19,
+    "rhou": 5.224,
+    "rhov": 4.811,
+    "rhow": 4.94,
+    "rhoE": 6.206,
+    "nuturb": 5.219
   },
-  "iterations": 158,
-  "residual_initial": 913.2197300794118,
-  "residual_final": 0.0003109301356385098,
-  "relative_residual": 3.404768046475211e-07,
-  "window": 39,
+  "iterations": 173,
+  "residual_initial": 941.6626048808856,
+  "residual_final": 0.0006083095370394344,
+  "relative_residual": 6.459952151507405e-07,
+  "window": 43,
   "checks": {
     "residual_orders": {
-      "value": 6.467912469527166,
+      "value": 6.189770698787155,
       "limit": 5.0,
       "pass": true
     },
     "cl_percent": {
-      "value": 0.021461173488479236,
+      "value": 0.0066215279232537455,
       "limit": 0.05,
       "pass": true
     },
     "cd_percent": {
-      "value": 0.016562546491619416,
+      "value": 0.00988191532710894,
       "limit": 0.1,
       "pass": true
     },
     "cmy_absolute": {
-      "value": 7.517934168671525e-07,
+      "value": 1.8453805336604567e-07,
       "limit": 0.0001,
       "pass": true
     },
@@ -49,12 +49,12 @@
     },
     "every_equation": {
       "value": {
-        "rho": 6.47,
-        "rhou": 4.91,
-        "rhov": 5.0,
-        "rhow": 5.23,
-        "rhoE": 6.56,
-        "nuturb": 3.91
+        "rho": 6.19,
+        "rhou": 5.22,
+        "rhov": 4.81,
+        "rhow": 4.94,
+        "rhoE": 6.21,
+        "nuturb": 5.22
       },
       "limit": {
         "rho": 3.0,
@@ -68,19 +68,19 @@
       "note": "Fluent's per-equation test: continuity, each momentum component, energy and turbulence, each against its own limit"
     },
     "residual_target_met": {
-      "value": 3.404768046475211e-07,
+      "value": 6.459952151507405e-07,
       "limit": 1e-06,
       "pass": true,
       "note": "the run reached the L2Convergence target it was given"
     }
   },
   "forces": {
-    "cl": 0.12053086367260252,
-    "cd": 0.01985843527839387,
-    "cdp": 0.010434435780243074,
-    "cdv": 0.0094239994981508,
-    "cmy": 0.015352414525625743
+    "cl": 0.16725482503405167,
+    "cd": 0.02018175726959162,
+    "cdp": 0.01103539984513316,
+    "cdv": 0.00914635742445846,
+    "cmy": 0.029978820235489825
   },
   "alpha_deg": 4.0,
-  "directory": "../../artifacts/s8_cfd/gci_C_a4"
+  "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g29/gci_C_a4"
 }

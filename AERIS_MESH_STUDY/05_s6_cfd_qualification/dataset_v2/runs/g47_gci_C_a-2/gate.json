@@ -6,36 +6,36 @@
   "verdict": "ACCEPTED",
   "equations_short_of_limit": [],
   "equation_orders": {
-    "rho": 6.751,
-    "rhou": 5.641,
-    "rhov": 5.263,
-    "rhow": 5.452,
-    "rhoE": 6.781,
-    "nuturb": 3.342
+    "rho": 6.552,
+    "rhou": 5.334,
+    "rhov": 5.123,
+    "rhow": 5.542,
+    "rhoE": 6.76,
+    "nuturb": 4.209
   },
-  "iterations": 187,
-  "residual_initial": 932.0421762018932,
-  "residual_final": 0.00016544407572128094,
-  "relative_residual": 1.7750706990049715e-07,
-  "window": 47,
+  "iterations": 178,
+  "residual_initial": 1007.7686549854026,
+  "residual_final": 0.0002827029049324796,
+  "relative_residual": 2.8052361376190503e-07,
+  "window": 44,
   "checks": {
     "residual_orders": {
-      "value": 6.750784344819438,
+      "value": 6.552030575067903,
       "limit": 5.0,
       "pass": true
     },
     "cl_percent": {
-      "value": 0.004841824495968407,
+      "value": 0.008605083308295921,
       "limit": 0.05,
       "pass": true
     },
     "cd_percent": {
-      "value": 0.0025781623129961274,
+      "value": 0.006474026605951401,
       "limit": 0.1,
       "pass": true
     },
     "cmy_absolute": {
-      "value": 1.1194277102118122e-06,
+      "value": 4.6157669895616205e-07,
       "limit": 0.0001,
       "pass": true
     },
@@ -49,12 +49,12 @@
     },
     "every_equation": {
       "value": {
-        "rho": 6.75,
-        "rhou": 5.64,
-        "rhov": 5.26,
-        "rhow": 5.45,
-        "rhoE": 6.78,
-        "nuturb": 3.34
+        "rho": 6.55,
+        "rhou": 5.33,
+        "rhov": 5.12,
+        "rhow": 5.54,
+        "rhoE": 6.76,
+        "nuturb": 4.21
       },
       "limit": {
         "rho": 3.0,
@@ -68,19 +68,19 @@
       "note": "Fluent's per-equation test: continuity, each momentum component, energy and turbulence, each against its own limit"
     },
     "residual_target_met": {
-      "value": 1.7750706990049715e-07,
+      "value": 2.8052361376190503e-07,
       "limit": 1e-06,
       "pass": true,
       "note": "the run reached the L2Convergence target it was given"
     }
   },
   "forces": {
-    "cl": -0.2981172177947994,
-    "cd": 0.025986623479308035,
-    "cdp": 0.017398802525807857,
-    "cdv": 0.008587820953500181,
-    "cmy": -0.005980389788585376
+    "cl": -0.1618268407093512,
+    "cd": 0.020286573075437103,
+    "cdp": 0.011130922992287292,
+    "cdv": 0.009155650083149804,
+    "cmy": -0.019757556615900923
   },
   "alpha_deg": -2.0,
-  "directory": "../../artifacts/s8_cfd/gci_C_a-2"
+  "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_C_a-2"
 }

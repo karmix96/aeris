@@ -30,7 +30,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "da6946f2fe4f35f886928d5b6823698e1316a0ff4d0cde2865489a85a775e9c7",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -103,7 +103,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a-2",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g12/gci_C_a-2",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g12/gci_C_a-2",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -111,12 +111,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a-2_surf.cgns.gz",
+    "surface_field_archive": "fields/g12_gci_C_a-2_surf.cgns.gz",
     "surface_field_sha256": "e4bc0c8e3ed0c3a7cad2b736cf174675ec9dde67ddb995c00cb211dd668c5b1c",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g12/gci_C_a-2/s8_a-2_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g12/gci_C_a-2/s8_a-2_000_vol.cgns",
     "volume_field_sha256": "c3f5d9531a2807ddcef3d5c29cd018929fa01877671deeb20402f4aaaeded2bc",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -151,7 +152,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "da6946f2fe4f35f886928d5b6823698e1316a0ff4d0cde2865489a85a775e9c7",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -224,7 +225,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a0",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g12/gci_C_a0",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g12/gci_C_a0",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -232,12 +233,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a0_surf.cgns.gz",
+    "surface_field_archive": "fields/g12_gci_C_a0_surf.cgns.gz",
     "surface_field_sha256": "31e35deb65a22cd27a4c71e97b53d0c88166d52da4d7125098ce838999c9a0dd",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g12/gci_C_a0/s8_a0_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g12/gci_C_a0/s8_a0_000_vol.cgns",
     "volume_field_sha256": "746eeabc97d91a8d225b0a97ebe29e364d08018069219565f1da659adcf67f37",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -272,7 +274,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "da6946f2fe4f35f886928d5b6823698e1316a0ff4d0cde2865489a85a775e9c7",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -345,7 +347,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a4",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g12/gci_C_a4",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g12/gci_C_a4",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -353,12 +355,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a4_surf.cgns.gz",
+    "surface_field_archive": "fields/g12_gci_C_a4_surf.cgns.gz",
     "surface_field_sha256": "7babe4de25197a63bb3dbef1b7adb148f2b6fbd991e30c330cb2bbf814649e39",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g12/gci_C_a4/s8_a4_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g12/gci_C_a4/s8_a4_000_vol.cgns",
     "volume_field_sha256": "21a58de964c4d34d1321ea407d399b36f0c27cec57c4223e816d090755895515",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -393,7 +396,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "da6946f2fe4f35f886928d5b6823698e1316a0ff4d0cde2865489a85a775e9c7",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -466,7 +469,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a8",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g12/gci_C_a8",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g12/gci_C_a8",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -474,12 +477,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a8_surf.cgns.gz",
+    "surface_field_archive": "fields/g12_gci_C_a8_surf.cgns.gz",
     "surface_field_sha256": "9a04cbacb677fd514016425732b2607137ea08ad36f526727f2ae359d28bc43f",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g12/gci_C_a8/s8_a8_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g12/gci_C_a8/s8_a8_000_vol.cgns",
     "volume_field_sha256": "355c53c21c9714392d34d0f37d3f5159c7232f56bd6195c6a59a1b457d45ffad",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -514,7 +518,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "059e108935b3f24d93188868b0ab33bfc789568ba42ef247f1d9dc2129ef9e84",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -587,7 +591,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a-2",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_C_a-2",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_C_a-2",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -595,12 +599,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a-2_surf.cgns.gz",
+    "surface_field_archive": "fields/g13_gci_C_a-2_surf.cgns.gz",
     "surface_field_sha256": "5403825e053e0aa2a1e1c5cfdb97d5c5d03090c659b8a27d90974b80ab33d10b",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_C_a-2/s8_a-2_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_C_a-2/s8_a-2_000_vol.cgns",
     "volume_field_sha256": "5278b8d74c6ffacd1a5af36161afdb23cb5512116a89c25ea66eefc68b5f4231",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -635,7 +640,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "059e108935b3f24d93188868b0ab33bfc789568ba42ef247f1d9dc2129ef9e84",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -708,7 +713,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a0",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_C_a0",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_C_a0",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -716,12 +721,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a0_surf.cgns.gz",
+    "surface_field_archive": "fields/g13_gci_C_a0_surf.cgns.gz",
     "surface_field_sha256": "f8e8ecf42966877db346f60cab4ae19e050ad161149e6a954d6b675f793abd4c",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_C_a0/s8_a0_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_C_a0/s8_a0_000_vol.cgns",
     "volume_field_sha256": "f4aa8f51c5b63904696e173066efcaa8370a635b33553ceccf51b2c76360c3d1",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -756,7 +762,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "059e108935b3f24d93188868b0ab33bfc789568ba42ef247f1d9dc2129ef9e84",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -829,7 +835,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a4",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_C_a4",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_C_a4",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -837,12 +843,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a4_surf.cgns.gz",
+    "surface_field_archive": "fields/g13_gci_C_a4_surf.cgns.gz",
     "surface_field_sha256": "3e2b2c464374af1312aa64659daa21caabd21dd720e1ab6e1f588f7f9d8e1c7b",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_C_a4/s8_a4_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_C_a4/s8_a4_000_vol.cgns",
     "volume_field_sha256": "5086c53cb1f76578ec65e1584a5dcaecfeff9d146550844516ea8feb3084b9d5",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -877,7 +884,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "059e108935b3f24d93188868b0ab33bfc789568ba42ef247f1d9dc2129ef9e84",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -950,7 +957,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a8",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_C_a8",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_C_a8",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -958,12 +965,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a8_surf.cgns.gz",
+    "surface_field_archive": "fields/g13_gci_C_a8_surf.cgns.gz",
     "surface_field_sha256": "5e65bc8a9b490be9b20aa4a044577e335cee11cdc62cb0215a722c8cd59cbb32",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_C_a8/s8_a8_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_C_a8/s8_a8_000_vol.cgns",
     "volume_field_sha256": "6f49105b6cbd911a86d32ba038e88658285f0f6c55759258f3171a5e61b49bc6",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -998,7 +1006,7 @@
     "grid_level": "gci_M",
     "cells": 1183140,
     "mesh_hash": "234345bfb9fdd0f5b6b2f8c1b955f66373c648a4ad101ca9ddde5f6ca0a69843",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -1071,7 +1079,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_M_a-2",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_M_a-2",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_M_a-2",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -1079,12 +1087,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_M_a-2_surf.cgns.gz",
+    "surface_field_archive": "fields/g13_gci_M_a-2_surf.cgns.gz",
     "surface_field_sha256": "2cca79a7735e0d3b6e4431533b70325f3be3ccb3da53bfd45374dafd9d704ad7",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_M_a-2/s8_a-2_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_M_a-2/s8_a-2_000_vol.cgns",
     "volume_field_sha256": "25b607ec2863f9ca5e5d2a1c840d5f351c286aa5c574449164beead64504068e",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -1119,7 +1128,7 @@
     "grid_level": "gci_M",
     "cells": 1183140,
     "mesh_hash": "234345bfb9fdd0f5b6b2f8c1b955f66373c648a4ad101ca9ddde5f6ca0a69843",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -1192,7 +1201,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_M_a0",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_M_a0",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_M_a0",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -1200,12 +1209,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_M_a0_surf.cgns.gz",
+    "surface_field_archive": "fields/g13_gci_M_a0_surf.cgns.gz",
     "surface_field_sha256": "45bc49686c9b63ceae72b4e519b69efac6ebff43685191d950f559541ad8d34b",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_M_a0/s8_a0_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_M_a0/s8_a0_000_vol.cgns",
     "volume_field_sha256": "c5a41ea893592bcb225d2d747b9460932f0eb40cbe5d108de413407ca28ea749",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -1240,7 +1250,7 @@
     "grid_level": "gci_M",
     "cells": 1183140,
     "mesh_hash": "234345bfb9fdd0f5b6b2f8c1b955f66373c648a4ad101ca9ddde5f6ca0a69843",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -1313,7 +1323,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_M_a4",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_M_a4",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_M_a4",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -1321,12 +1331,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_M_a4_surf.cgns.gz",
+    "surface_field_archive": "fields/g13_gci_M_a4_surf.cgns.gz",
     "surface_field_sha256": "d231c9744bda20a035d702f564b145650353116e50f1b62f39455ce9f9586a89",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_M_a4/s8_a4_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_M_a4/s8_a4_000_vol.cgns",
     "volume_field_sha256": "051621d5e4a26ff50bc2fdbe9889ef333b68ae5c82f8f5048e87de9270298e28",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -1361,7 +1372,7 @@
     "grid_level": "gci_M",
     "cells": 1183140,
     "mesh_hash": "234345bfb9fdd0f5b6b2f8c1b955f66373c648a4ad101ca9ddde5f6ca0a69843",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -1434,7 +1445,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_M_a8",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_M_a8",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_M_a8",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -1442,12 +1453,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_M_a8_surf.cgns.gz",
+    "surface_field_archive": "fields/g13_gci_M_a8_surf.cgns.gz",
     "surface_field_sha256": "28f9b1a1da9c46c358a5ab908bc1407b911961f646d1a49b9d68773d6d99993f",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_M_a8/s8_a8_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g13/gci_M_a8/s8_a8_000_vol.cgns",
     "volume_field_sha256": "6e2071ceed0263d5497b8d0f7c5da4d7f497f004b8c7144d9cdb8dfa135373e6",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -1482,7 +1494,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "52997e0edbe4bb325408fd6d270c8b6b4d9d7df9321a5b97f1e048665ac8209d",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -1555,7 +1567,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a-2",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g16/gci_C_a-2",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g16/gci_C_a-2",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -1563,12 +1575,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a-2_surf.cgns.gz",
+    "surface_field_archive": "fields/g16_gci_C_a-2_surf.cgns.gz",
     "surface_field_sha256": "828c1c9b873a3a67e6123c9d29372f3d7e62b8262c5a6f61012757cd11a4a841",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g16/gci_C_a-2/s8_a-2_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g16/gci_C_a-2/s8_a-2_000_vol.cgns",
     "volume_field_sha256": "df96c44ea04bde9aecba8878c3bf260be0f9310c65b28d3c7230b4ec3c784e13",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -1603,7 +1616,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "52997e0edbe4bb325408fd6d270c8b6b4d9d7df9321a5b97f1e048665ac8209d",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -1676,7 +1689,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a0",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g16/gci_C_a0",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g16/gci_C_a0",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -1684,12 +1697,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a0_surf.cgns.gz",
+    "surface_field_archive": "fields/g16_gci_C_a0_surf.cgns.gz",
     "surface_field_sha256": "5a3156f6d81a597bf0a694d0490a43feed73cd8ba435a31bf2a4b95c4dcae0f8",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g16/gci_C_a0/s8_a0_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g16/gci_C_a0/s8_a0_000_vol.cgns",
     "volume_field_sha256": "58478fe928b73d5a63f953e7a080cb425c25318211f429fc174b1ee30fc8bb04",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -1724,7 +1738,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "52997e0edbe4bb325408fd6d270c8b6b4d9d7df9321a5b97f1e048665ac8209d",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -1797,7 +1811,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a4",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g16/gci_C_a4",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g16/gci_C_a4",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -1805,12 +1819,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a4_surf.cgns.gz",
+    "surface_field_archive": "fields/g16_gci_C_a4_surf.cgns.gz",
     "surface_field_sha256": "b942f04987ddcc02791ec4c7ef53056fd5b5514b5eb5d507f3bfb6d9140a26a2",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g16/gci_C_a4/s8_a4_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g16/gci_C_a4/s8_a4_000_vol.cgns",
     "volume_field_sha256": "4cda93ce8859f2787ace7d38d90ebe30f7bdb3553114841fe187e279bd2bb712",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -1845,7 +1860,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "52997e0edbe4bb325408fd6d270c8b6b4d9d7df9321a5b97f1e048665ac8209d",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -1918,7 +1933,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a8",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g16/gci_C_a8",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g16/gci_C_a8",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -1926,12 +1941,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a8_surf.cgns.gz",
+    "surface_field_archive": "fields/g16_gci_C_a8_surf.cgns.gz",
     "surface_field_sha256": "6591eadfa6e047e2bf61e9fdaead9ba4c203f02c3df5693a0209e9b36d881d8f",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g16/gci_C_a8/s8_a8_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g16/gci_C_a8/s8_a8_000_vol.cgns",
     "volume_field_sha256": "608cadea83b5f37ccdd181870b0613220cfe8883b5fb603a58a96e0ecd35b10c",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -1966,7 +1982,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "d6d99d22e5aa502e5ed55caa903ee2a3151a20454f91a3412231b2f31e969207",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -2039,7 +2055,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a-2",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g23/gci_C_a-2",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g23/gci_C_a-2",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -2047,12 +2063,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a-2_surf.cgns.gz",
+    "surface_field_archive": "fields/g23_gci_C_a-2_surf.cgns.gz",
     "surface_field_sha256": "a77b6eda1982f7907c0aa94fe1c529964c2b893d9180450d79f5c9b1c17487e1",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g23/gci_C_a-2/s8_a-2_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g23/gci_C_a-2/s8_a-2_000_vol.cgns",
     "volume_field_sha256": "a19ab648103d8e2e4617b11f56dce6648244c7d913a7ef29d24f7526b1cdc74f",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -2087,7 +2104,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "d6d99d22e5aa502e5ed55caa903ee2a3151a20454f91a3412231b2f31e969207",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -2160,7 +2177,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a0",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g23/gci_C_a0",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g23/gci_C_a0",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -2168,12 +2185,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a0_surf.cgns.gz",
+    "surface_field_archive": "fields/g23_gci_C_a0_surf.cgns.gz",
     "surface_field_sha256": "e70d8428e558a9b1019f1a77eb3e8f028cb524528ef68c0bfcd8b7b60e447a91",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g23/gci_C_a0/s8_a0_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g23/gci_C_a0/s8_a0_000_vol.cgns",
     "volume_field_sha256": "d1aaf877df747b0c3299ca74cb455ac6bd657210ea38b11c4595ff32af191132",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -2208,7 +2226,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "d6d99d22e5aa502e5ed55caa903ee2a3151a20454f91a3412231b2f31e969207",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -2281,7 +2299,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a4",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g23/gci_C_a4",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g23/gci_C_a4",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -2289,12 +2307,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a4_surf.cgns.gz",
+    "surface_field_archive": "fields/g23_gci_C_a4_surf.cgns.gz",
     "surface_field_sha256": "751ae86f8328fd405adc6fee3aa59057d11e6c4ae4d1318e1749d3cdbcf8191c",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g23/gci_C_a4/s8_a4_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g23/gci_C_a4/s8_a4_000_vol.cgns",
     "volume_field_sha256": "f67e0e8f07ec1e99f895ff329d41542682685a17b7ea5ba98a110346add86d3e",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -2329,7 +2348,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "d6d99d22e5aa502e5ed55caa903ee2a3151a20454f91a3412231b2f31e969207",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -2402,7 +2421,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a8",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g23/gci_C_a8",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g23/gci_C_a8",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -2410,12 +2429,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a8_surf.cgns.gz",
+    "surface_field_archive": "fields/g23_gci_C_a8_surf.cgns.gz",
     "surface_field_sha256": "73efee2d65bae5c818e6c4a0558e5fbee3208d694767de12c14bace7f739220b",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g23/gci_C_a8/s8_a8_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g23/gci_C_a8/s8_a8_000_vol.cgns",
     "volume_field_sha256": "dbb15d1860d1a183d8b83b6f23da9efdeabe68f8d614e1a5c1a60096b552eb0f",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -2450,7 +2470,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "8282fb72822dc1226d10e67778b96411ff2e45b090cf50cf8bc2b86b1d64bb95",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -2523,7 +2543,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a-2",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g29/gci_C_a-2",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g29/gci_C_a-2",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -2531,12 +2551,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a-2_surf.cgns.gz",
+    "surface_field_archive": "fields/g29_gci_C_a-2_surf.cgns.gz",
     "surface_field_sha256": "bd7985dc21a8c0b2389c0e5d39e400c7e44e5a30cffc44cd5401c4c7c9a337b6",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g29/gci_C_a-2/s8_a-2_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g29/gci_C_a-2/s8_a-2_000_vol.cgns",
     "volume_field_sha256": "1e17fd834d3334231fe9b0beeaf7a3bb0d09a1493b7e592689b7a54756635d7e",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -2571,7 +2592,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "8282fb72822dc1226d10e67778b96411ff2e45b090cf50cf8bc2b86b1d64bb95",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -2644,7 +2665,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a0",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g29/gci_C_a0",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g29/gci_C_a0",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -2652,12 +2673,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a0_surf.cgns.gz",
+    "surface_field_archive": "fields/g29_gci_C_a0_surf.cgns.gz",
     "surface_field_sha256": "17183a945c819831926b5831431295d7a5c0cec866d0f051f87aff9f17f25a87",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g29/gci_C_a0/s8_a0_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g29/gci_C_a0/s8_a0_000_vol.cgns",
     "volume_field_sha256": "6c628e468d41c3cf73a30ec1506a6ef01653c60129316935069687a751ea096f",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -2692,7 +2714,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "8282fb72822dc1226d10e67778b96411ff2e45b090cf50cf8bc2b86b1d64bb95",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -2765,7 +2787,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a4",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g29/gci_C_a4",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g29/gci_C_a4",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -2773,12 +2795,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a4_surf.cgns.gz",
+    "surface_field_archive": "fields/g29_gci_C_a4_surf.cgns.gz",
     "surface_field_sha256": "6bf6a52d3cb6abf429632ce77a5e8c409fe569746b846461a6f22db379fe3d22",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g29/gci_C_a4/s8_a4_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g29/gci_C_a4/s8_a4_000_vol.cgns",
     "volume_field_sha256": "5eadc195ddc02a62ec7b034f5ad74e0966b14400b2802bae01354718e159421e",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -2813,7 +2836,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "8282fb72822dc1226d10e67778b96411ff2e45b090cf50cf8bc2b86b1d64bb95",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -2886,7 +2909,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a8",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g29/gci_C_a8",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g29/gci_C_a8",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -2894,12 +2917,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a8_surf.cgns.gz",
+    "surface_field_archive": "fields/g29_gci_C_a8_surf.cgns.gz",
     "surface_field_sha256": "5be06b2f75a3dbaf5c4e6d0807757a631d4500c40d2e3656a6443a64bcfee5e2",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g29/gci_C_a8/s8_a8_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g29/gci_C_a8/s8_a8_000_vol.cgns",
     "volume_field_sha256": "1e8aca372e948c15f931ebc3eb6c07220d036cc871794d0b926a33d8e55f71b6",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -2934,7 +2958,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "c38e2b65b3246fcab1252b21b50da4c9ffcc478e42230369b105f3564d7a9a0e",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -3007,7 +3031,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a-2",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g36/gci_C_a-2",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g36/gci_C_a-2",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -3015,12 +3039,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a-2_surf.cgns.gz",
+    "surface_field_archive": "fields/g36_gci_C_a-2_surf.cgns.gz",
     "surface_field_sha256": "dce96cbd2fbfc626725a68753e678d8099ab5c9d6d0c2d62abd5668cd2404575",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g36/gci_C_a-2/s8_a-2_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g36/gci_C_a-2/s8_a-2_000_vol.cgns",
     "volume_field_sha256": "b85411977c39a9f4b834f892cf1e37e3651dff0e86330dde671384fc792e2868",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -3055,7 +3080,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "c38e2b65b3246fcab1252b21b50da4c9ffcc478e42230369b105f3564d7a9a0e",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -3128,7 +3153,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a0",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g36/gci_C_a0",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g36/gci_C_a0",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -3136,12 +3161,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a0_surf.cgns.gz",
+    "surface_field_archive": "fields/g36_gci_C_a0_surf.cgns.gz",
     "surface_field_sha256": "208967b13fd4ca80612d3f13eb298cd470484d7d42729a7773d7f5b7d08a58d8",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g36/gci_C_a0/s8_a0_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g36/gci_C_a0/s8_a0_000_vol.cgns",
     "volume_field_sha256": "08ba9412e5a4fed097091b7b622872e923589c8b127276e8f9040cdca7abc0a8",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -3176,7 +3202,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "c38e2b65b3246fcab1252b21b50da4c9ffcc478e42230369b105f3564d7a9a0e",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -3249,7 +3275,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a4",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g36/gci_C_a4",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g36/gci_C_a4",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -3257,12 +3283,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a4_surf.cgns.gz",
+    "surface_field_archive": "fields/g36_gci_C_a4_surf.cgns.gz",
     "surface_field_sha256": "57530d757d435b2bcd53dea19ca44d1c5c6ff2bf03608b355aaa37c415fb593d",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g36/gci_C_a4/s8_a4_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g36/gci_C_a4/s8_a4_000_vol.cgns",
     "volume_field_sha256": "210711e737aa496dc8db7dd9474f49263366bbb800d9a4c7e283dedbb0d3df56",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -3297,7 +3324,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "c38e2b65b3246fcab1252b21b50da4c9ffcc478e42230369b105f3564d7a9a0e",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -3370,7 +3397,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a8",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g36/gci_C_a8",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g36/gci_C_a8",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -3378,12 +3405,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a8_surf.cgns.gz",
+    "surface_field_archive": "fields/g36_gci_C_a8_surf.cgns.gz",
     "surface_field_sha256": "0732f1b1b0168d92a7714e831d9c0ac990fe2894c7842ad7c225cf56f1153802",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g36/gci_C_a8/s8_a8_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g36/gci_C_a8/s8_a8_000_vol.cgns",
     "volume_field_sha256": "b9c78d833d2367c659a9c456547d8ce6e6966ba08f20b50cfa1da90673940b85",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -3418,7 +3446,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "4cfece51afb633e2aaa2ba164d9825fca0cbe1bb4736bd9dd70732dba36edac9",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -3491,7 +3519,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a-2",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_C_a-2",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_C_a-2",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -3499,12 +3527,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a-2_surf.cgns.gz",
+    "surface_field_archive": "fields/g47_gci_C_a-2_surf.cgns.gz",
     "surface_field_sha256": "59b8c1667663637bf0f42e2b88b400225c0b0a2a19e1682f771429164cfe5eba",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_C_a-2/s8_a-2_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_C_a-2/s8_a-2_000_vol.cgns",
     "volume_field_sha256": "62ae088cb14311fde4f376224fcaed147d9b4f9b5c8be16973527b1d4e179854",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -3539,7 +3568,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "4cfece51afb633e2aaa2ba164d9825fca0cbe1bb4736bd9dd70732dba36edac9",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -3612,7 +3641,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a0",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_C_a0",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_C_a0",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -3620,12 +3649,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a0_surf.cgns.gz",
+    "surface_field_archive": "fields/g47_gci_C_a0_surf.cgns.gz",
     "surface_field_sha256": "6a6e87977eaf54825683ebe60d960d7c81bed74fc66e68ffdbfb0fce788669fa",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_C_a0/s8_a0_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_C_a0/s8_a0_000_vol.cgns",
     "volume_field_sha256": "1d377b108d769ecb4e840f94356eb64de567908dd3248f58c4d3b5486d84217d",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -3660,7 +3690,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "4cfece51afb633e2aaa2ba164d9825fca0cbe1bb4736bd9dd70732dba36edac9",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -3733,7 +3763,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a4",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_C_a4",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_C_a4",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -3741,12 +3771,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a4_surf.cgns.gz",
+    "surface_field_archive": "fields/g47_gci_C_a4_surf.cgns.gz",
     "surface_field_sha256": "39c4dbc813d6eaf3590307f87e3521052e35ee4e0230d4e48e1b8e2616d409b2",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_C_a4/s8_a4_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_C_a4/s8_a4_000_vol.cgns",
     "volume_field_sha256": "50fb5d66853c2c99dd7631d2bbf7745442a910248e46e6d156f35373c6564c5f",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -3781,7 +3812,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "4cfece51afb633e2aaa2ba164d9825fca0cbe1bb4736bd9dd70732dba36edac9",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -3854,7 +3885,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a8",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_C_a8",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_C_a8",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -3862,12 +3893,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a8_surf.cgns.gz",
+    "surface_field_archive": "fields/g47_gci_C_a8_surf.cgns.gz",
     "surface_field_sha256": "759171e7fe5e6bbfa2fc593b4f89b0157d7054081586d545b189a7dfe9535c9f",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_C_a8/s8_a8_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_C_a8/s8_a8_000_vol.cgns",
     "volume_field_sha256": "a13613ab84339498ae96590b0bfc06da358447f730c1c0f931ac795ccdf10070",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -3902,7 +3934,7 @@
     "grid_level": "gci_M",
     "cells": 1172856,
     "mesh_hash": "53e8a131f5500cf322f1c097159457369163667574464c994a508144ead4736e",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -3975,7 +4007,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_M_a-2",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_M_a-2",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_M_a-2",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -3983,12 +4015,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_M_a-2_surf.cgns.gz",
+    "surface_field_archive": "fields/g47_gci_M_a-2_surf.cgns.gz",
     "surface_field_sha256": "b3b300e3b952b6bafb532237b10b18b1eb214269cbc20092581526b4a83df7b9",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_M_a-2/s8_a-2_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_M_a-2/s8_a-2_000_vol.cgns",
     "volume_field_sha256": "f1c8455f9544f99eda6bac4540350dfbaf67905d76f271e3531cde7d0a3d97c1",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -4023,7 +4056,7 @@
     "grid_level": "gci_M",
     "cells": 1172856,
     "mesh_hash": "53e8a131f5500cf322f1c097159457369163667574464c994a508144ead4736e",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -4096,7 +4129,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_M_a0",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_M_a0",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_M_a0",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -4104,12 +4137,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_M_a0_surf.cgns.gz",
+    "surface_field_archive": "fields/g47_gci_M_a0_surf.cgns.gz",
     "surface_field_sha256": "5374829a808b9a3d4b2beeb1542719f3b43fece95a224eeac3095897eca41e0c",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_M_a0/s8_a0_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_M_a0/s8_a0_000_vol.cgns",
     "volume_field_sha256": "b060784b202717827fa401420d7b5d76e5170c70357571286916ff429ead3027",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -4144,7 +4178,7 @@
     "grid_level": "gci_M",
     "cells": 1172856,
     "mesh_hash": "53e8a131f5500cf322f1c097159457369163667574464c994a508144ead4736e",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -4217,7 +4251,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_M_a4",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_M_a4",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_M_a4",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -4225,12 +4259,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_M_a4_surf.cgns.gz",
+    "surface_field_archive": "fields/g47_gci_M_a4_surf.cgns.gz",
     "surface_field_sha256": "c1cf5c2ec3790ed098ed094e978a4c63e5c20d5eb107cf22062dd17a0e7a7981",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_M_a4/s8_a4_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_M_a4/s8_a4_000_vol.cgns",
     "volume_field_sha256": "a71aa5f3e43d21164216279b84d34ae48f743cf738cebbfe47e541bdb54b62d2",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -4265,7 +4300,7 @@
     "grid_level": "gci_M",
     "cells": 1172856,
     "mesh_hash": "53e8a131f5500cf322f1c097159457369163667574464c994a508144ead4736e",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -4338,7 +4373,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_M_a8",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_M_a8",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_M_a8",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -4346,12 +4381,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_M_a8_surf.cgns.gz",
+    "surface_field_archive": "fields/g47_gci_M_a8_surf.cgns.gz",
     "surface_field_sha256": "847cdf316b2b772de79c7dbaaba0f9e985df163d631a5d7876a83f8a524750dd",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_M_a8/s8_a8_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_M_a8/s8_a8_000_vol.cgns",
     "volume_field_sha256": "e1fdf9053ddd2cdb0f0367322458f37d6067124445ef56e56f607992f91e45de",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -4386,7 +4422,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "25f8a56c5bca85c1dd01c95b0ecd885222960712eb6944ef28d5419b9506ad4d",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -4459,7 +4495,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a-2",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g65/gci_C_a-2",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g65/gci_C_a-2",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -4467,12 +4503,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a-2_surf.cgns.gz",
+    "surface_field_archive": "fields/g65_gci_C_a-2_surf.cgns.gz",
     "surface_field_sha256": "422897f2591f82e79feaa12a8107745b33ce5069ebf0a5628aae5cfe2ed2193f",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g65/gci_C_a-2/s8_a-2_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g65/gci_C_a-2/s8_a-2_000_vol.cgns",
     "volume_field_sha256": "7e3e1c5bf5c472aef2b0da3cb5e3d87f482c74a573dcebac20daa7d234b0b574",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -4507,7 +4544,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "25f8a56c5bca85c1dd01c95b0ecd885222960712eb6944ef28d5419b9506ad4d",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -4580,7 +4617,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a0",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g65/gci_C_a0",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g65/gci_C_a0",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -4588,12 +4625,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a0_surf.cgns.gz",
+    "surface_field_archive": "fields/g65_gci_C_a0_surf.cgns.gz",
     "surface_field_sha256": "7408680c33f6271fa24a65512af8b51fd7cfe1c4fcdc9ac50fd2dc0b05b48f98",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g65/gci_C_a0/s8_a0_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g65/gci_C_a0/s8_a0_000_vol.cgns",
     "volume_field_sha256": "376c744d9d3f29d7f3858b02d5bbc8c76b8b2c926c1cce72f238459a209c7dea",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -4628,7 +4666,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "25f8a56c5bca85c1dd01c95b0ecd885222960712eb6944ef28d5419b9506ad4d",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -4701,7 +4739,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a4",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g65/gci_C_a4",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g65/gci_C_a4",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -4709,12 +4747,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a4_surf.cgns.gz",
+    "surface_field_archive": "fields/g65_gci_C_a4_surf.cgns.gz",
     "surface_field_sha256": "f0879829b6e8df38df02bb3ec3c4a5a2f70865ada203e539dfb8abbfc57a846b",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g65/gci_C_a4/s8_a4_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g65/gci_C_a4/s8_a4_000_vol.cgns",
     "volume_field_sha256": "c0de60951fb2cbcd1de7ea313f731390049698f07a62dc9b58408f05d0bd3a03",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -4749,7 +4788,7 @@
     "grid_level": "gci_C",
     "cells": 609648,
     "mesh_hash": "25f8a56c5bca85c1dd01c95b0ecd885222960712eb6944ef28d5419b9506ad4d",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -4822,7 +4861,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a8",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g65/gci_C_a8",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g65/gci_C_a8",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -4830,12 +4869,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a8_surf.cgns.gz",
+    "surface_field_archive": "fields/g65_gci_C_a8_surf.cgns.gz",
     "surface_field_sha256": "7e1e7e8ffca66dd26863b6510a130302651077ac14782158b59376bbaf89b130",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g65/gci_C_a8/s8_a8_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g65/gci_C_a8/s8_a8_000_vol.cgns",
     "volume_field_sha256": "e924d27483563323e79958621b52afcd41a6e69af7a688ee9be85813c669dae1",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -4870,7 +4910,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "4981dbf232730418ae08eddd6fd73f746123a5c8c09d631b0cbc2774a6b91f3c",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -4943,7 +4983,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a-2",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g81/gci_C_a-2",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g81/gci_C_a-2",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -4951,12 +4991,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a-2_surf.cgns.gz",
+    "surface_field_archive": "fields/g81_gci_C_a-2_surf.cgns.gz",
     "surface_field_sha256": "89ecdbee57bf1b3455f362c67d19ea83f93743e40012ed8e6cdf5212f4a8c030",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g81/gci_C_a-2/s8_a-2_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g81/gci_C_a-2/s8_a-2_000_vol.cgns",
     "volume_field_sha256": "eec4a0c50b652f30337b169c3adf38f71b912c98ca97246b2bd953fcfda9d13f",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -4991,7 +5032,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "4981dbf232730418ae08eddd6fd73f746123a5c8c09d631b0cbc2774a6b91f3c",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -5064,7 +5105,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a0",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g81/gci_C_a0",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g81/gci_C_a0",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -5072,12 +5113,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a0_surf.cgns.gz",
+    "surface_field_archive": "fields/g81_gci_C_a0_surf.cgns.gz",
     "surface_field_sha256": "f2c43436db46331fb652275677ed0d2a852d181366c38ac5455d2747e031674b",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g81/gci_C_a0/s8_a0_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g81/gci_C_a0/s8_a0_000_vol.cgns",
     "volume_field_sha256": "12bb3cdda7404163fede739695d223d2c4d77419b63e0717bac9feabe02e22f7",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -5112,7 +5154,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "4981dbf232730418ae08eddd6fd73f746123a5c8c09d631b0cbc2774a6b91f3c",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -5185,7 +5227,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a4",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g81/gci_C_a4",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g81/gci_C_a4",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -5193,12 +5235,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a4_surf.cgns.gz",
+    "surface_field_archive": "fields/g81_gci_C_a4_surf.cgns.gz",
     "surface_field_sha256": "a0f1704aa6b2b8c4ebc6bbb50cce1619e1639889b5ca6758e901e81ef27856b8",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g81/gci_C_a4/s8_a4_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g81/gci_C_a4/s8_a4_000_vol.cgns",
     "volume_field_sha256": "5de386868f182521cb4f9153a4cbcb2f9dd0cc23ffef893f37bf62c9731a689f",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -5233,7 +5276,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "4981dbf232730418ae08eddd6fd73f746123a5c8c09d631b0cbc2774a6b91f3c",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -5306,7 +5349,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a8",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g81/gci_C_a8",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g81/gci_C_a8",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -5314,12 +5357,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a8_surf.cgns.gz",
+    "surface_field_archive": "fields/g81_gci_C_a8_surf.cgns.gz",
     "surface_field_sha256": "ff2cc4f4991d19b15850c880a8fa87dac6a53bbdcbaef7752ed4274ebe7970d8",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g81/gci_C_a8/s8_a8_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g81/gci_C_a8/s8_a8_000_vol.cgns",
     "volume_field_sha256": "07be0f3985de6bd0bbe305ab7090450cac0674c4939ecc53cfe68fcf0290b295",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -5354,7 +5398,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "c53b58e7f59f577df50989e164ae75633b7f215c5a7e6757060e428918162e54",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -5427,7 +5471,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a-2",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_C_a-2",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_C_a-2",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -5435,12 +5479,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a-2_surf.cgns.gz",
+    "surface_field_archive": "fields/g83_gci_C_a-2_surf.cgns.gz",
     "surface_field_sha256": "6f4796f3a9bc34ab187398ffc8ce5c1a33eb9c278277fb4b3bce3b541975895b",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_C_a-2/s8_a-2_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_C_a-2/s8_a-2_000_vol.cgns",
     "volume_field_sha256": "71d2a9bdb5c03cb35a69dec76c1c3990403e3480b40d5d6321f782ca5509dc34",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -5475,7 +5520,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "c53b58e7f59f577df50989e164ae75633b7f215c5a7e6757060e428918162e54",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -5548,7 +5593,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a0",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_C_a0",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_C_a0",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -5556,12 +5601,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a0_surf.cgns.gz",
+    "surface_field_archive": "fields/g83_gci_C_a0_surf.cgns.gz",
     "surface_field_sha256": "52764171bd02e59db8e60316372203b83f340af5748d917e51de64345950ebb6",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_C_a0/s8_a0_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_C_a0/s8_a0_000_vol.cgns",
     "volume_field_sha256": "6915f126952d5378aaf874787f72bf618a367b395f6beac71a074439bb709b65",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -5596,7 +5642,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "c53b58e7f59f577df50989e164ae75633b7f215c5a7e6757060e428918162e54",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -5669,7 +5715,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a4",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_C_a4",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_C_a4",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -5677,12 +5723,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a4_surf.cgns.gz",
+    "surface_field_archive": "fields/g83_gci_C_a4_surf.cgns.gz",
     "surface_field_sha256": "4afac982994d0bdbaeca08fbb522cc24d1b6cfed8e32a5f4162b4a65895b0f3c",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_C_a4/s8_a4_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_C_a4/s8_a4_000_vol.cgns",
     "volume_field_sha256": "c304ed1fb3d94e643763e9cff108f936a5b893112cf4b39aa1f583e02b6440bb",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -5717,7 +5764,7 @@
     "grid_level": "gci_C",
     "cells": 603592,
     "mesh_hash": "c53b58e7f59f577df50989e164ae75633b7f215c5a7e6757060e428918162e54",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -5790,7 +5837,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_C_a8",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_C_a8",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_C_a8",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -5798,12 +5845,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_C_a8_surf.cgns.gz",
+    "surface_field_archive": "fields/g83_gci_C_a8_surf.cgns.gz",
     "surface_field_sha256": "bc130c1a08965f7778dd2db42097d5292ac144bc02603c21c2e9ebf063390a91",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_C_a8/s8_a8_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_C_a8/s8_a8_000_vol.cgns",
     "volume_field_sha256": "66d4f281ea5a8ee70211bf2e8431dee799c4a5aa5bc0b83bd6d066c13866bc32",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -5838,7 +5886,7 @@
     "grid_level": "gci_M",
     "cells": 1172856,
     "mesh_hash": "5c5dff22b29b53fbbd72f999d063323c3d809a4edb175fad823806e239f251a3",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -5911,7 +5959,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_M_a-2",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_M_a-2",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_M_a-2",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -5919,12 +5967,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_M_a-2_surf.cgns.gz",
+    "surface_field_archive": "fields/g83_gci_M_a-2_surf.cgns.gz",
     "surface_field_sha256": "c3e43828a2331dca46bb5024a97ba221b984e7d75a59d4b838f6bce1606c48be",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_M_a-2/s8_a-2_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_M_a-2/s8_a-2_000_vol.cgns",
     "volume_field_sha256": "26c18c2d38e303545348997f902d8d238781803de8f8a20274bee44ed607170a",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -5959,7 +6008,7 @@
     "grid_level": "gci_M",
     "cells": 1172856,
     "mesh_hash": "5c5dff22b29b53fbbd72f999d063323c3d809a4edb175fad823806e239f251a3",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -6032,7 +6081,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_M_a0",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_M_a0",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_M_a0",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -6040,12 +6089,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_M_a0_surf.cgns.gz",
+    "surface_field_archive": "fields/g83_gci_M_a0_surf.cgns.gz",
     "surface_field_sha256": "1c3ff3924795ac6b1f1613beeaba7779eba7dcce2c769b614570bcb11faa230b",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_M_a0/s8_a0_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_M_a0/s8_a0_000_vol.cgns",
     "volume_field_sha256": "30fa9573d32d1efa3fbbb4f783741efcb81e089386e3df0fb04d19d2b8886041",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -6080,7 +6130,7 @@
     "grid_level": "gci_M",
     "cells": 1172856,
     "mesh_hash": "5c5dff22b29b53fbbd72f999d063323c3d809a4edb175fad823806e239f251a3",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -6153,7 +6203,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_M_a4",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_M_a4",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_M_a4",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -6161,12 +6211,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_M_a4_surf.cgns.gz",
+    "surface_field_archive": "fields/g83_gci_M_a4_surf.cgns.gz",
     "surface_field_sha256": "67236082b1759bf84bf473832d4c7258060e041a21175596f2cf256b81ffc304",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_M_a4/s8_a4_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_M_a4/s8_a4_000_vol.cgns",
     "volume_field_sha256": "faec37d24771486481c359a0c70ff3f720558dec82d1bb32c10fd79b2b1bec2c",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   },
@@ -6201,7 +6252,7 @@
     "grid_level": "gci_M",
     "cells": 1172856,
     "mesh_hash": "5c5dff22b29b53fbbd72f999d063323c3d809a4edb175fad823806e239f251a3",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "adflow_version": "2.13.1",
     "turbulence_model": "SA",
     "solver_options_hash": "9add3e2ff4383555",
@@ -6274,7 +6325,7 @@
     "missing_fields": {},
     "schema_version": "aeris.s8.dataset_row.v2",
     "run_name": "gci_M_a8",
-    "source_directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_M_a8",
+    "source_directory": "AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_M_a8",
     "solver_overrides": {
       "eddyVisInfRatio": 0.21,
       "useNKSolver": false
@@ -6282,12 +6333,13 @@
     "solver_is_governed_configuration": false,
     "l2_target": 1e-06,
     "environment": {
-      "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+      "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
       "adflow_version": "2.13.1"
     },
-    "surface_field_archive": "fields/gci_M_a8_surf.cgns.gz",
+    "surface_field_archive": "fields/g83_gci_M_a8_surf.cgns.gz",
     "surface_field_sha256": "2a10474aeaa144cf65558fdd7aed6c15b1782b0725a0d3097f0072246d23f4e6",
-    "volume_field_source": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_M_a8/s8_a8_000_vol.cgns",
+    "surface_field_sha256_source": "read back from the stored archive",
+    "volume_field_source": "AERIS_MESH_STUDY/artifacts/s8_v2/g83/gci_M_a8/s8_a8_000_vol.cgns",
     "volume_field_sha256": "64ea0df51d131f0c535ebf03c9369fceef2e129b61740381f2f275544828601f",
     "volume_field_note": "NOT copied: 32 MB per run. It lives under artifacts/, which is gitignored and WIPED. The hash is here so a regenerated file can be checked against the one that produced this row."
   }

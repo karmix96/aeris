@@ -2,10 +2,10 @@
   "schema_version": "aeris.s8.dataset.v1",
   "purpose": "Trusted S8 CFD results with the provenance needed to reproduce and to believe them. Surrogate-training dataset, NOT certification.",
   "environment": {
-    "collected_utc": "2026-09-17T19:47:51.259989+00:00",
-    "git_commit": "4347f94ea4889794efdadc637c0c19283eec6d82",
+    "collected_utc": "2026-09-17T20:29:09.920676+00:00",
+    "git_commit": "47c00b316432b73fec2c53460a19c03c9056dc1f",
     "git_dirty": true,
-    "git_describe": "checkpoint-geometry-stable-497-g4347f94-dirty",
+    "git_describe": "checkpoint-geometry-stable-502-g47c00b3-dirty",
     "adflow_version": "2.13.1",
     "mach_python": "/home/mike_kara/miniconda3/envs/mach-aero/bin/python",
     "mpirun": "/home/mike_kara/miniconda3/envs/mach-aero/bin/mpirun",

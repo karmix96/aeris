@@ -55,6 +55,18 @@ QUAL = REPO / "AERIS_MESH_STUDY/05_s6_cfd_qualification"
 ACCEPTABLE = ("ACCEPTED",)
 
 
+def run_key(path: Path) -> str:
+    """Identify a run by geometry AND run name, never by run name alone.
+
+    The campaign layout is `<root>/g<index>/<level>_a<alpha>`, so `path.name`
+    is `gci_C_a0` for every wing in the fleet. Anything keyed on that alone
+    silently merges ten geometries -- which is defect 25 (record directories),
+    defect 26 (surface field archives) and the verdict index below, three
+    instances of one mistake.
+    """
+    return f"{path.parent.name}/{path.name}"
+
+
 def sha256(path: Path) -> str | None:
     if not path.exists():
         return None
@@ -168,7 +180,7 @@ def main() -> int:
     verdicts = {}
     if gate:
         for record in gate["results"]:
-            verdicts[Path(record["directory"]).name] = record
+            verdicts[run_key(Path(record["directory"]))] = record
 
     runs = find_runs(args.roots)
     print(f"found {len(runs)} runs under {', '.join(str(r) for r in args.roots)}\n")
@@ -179,7 +191,7 @@ def main() -> int:
     for run in runs:
         result = json.loads((run / "result.json").read_text())
         name = run.name
-        record = verdicts.get(name)
+        record = verdicts.get(run_key(run))
         verdict = record["verdict"] if record else None
         # level and index: from the directory layout the campaign writes
         # Level, from the run's own recorded grid path first. The directory
@@ -227,8 +239,16 @@ def main() -> int:
         if local.exists():
             run_gate = json.loads(local.read_text())
             for r in run_gate["results"]:
-                verdicts.setdefault(Path(r["directory"]).name, r)
-            record = record or verdicts.get(name)
+                # Key by the geometry directory too. A bare
+                # `Path(r["directory"]).name` is `gci_C_a0` for every wing, and
+                # `setdefault` then pins the FIRST wing's verdict for all ten.
+                # The per-geometry gate file is reloaded just above, so
+                # `build_row` records the right block either way; it is the
+                # verdict deciding accept-or-exclude that came out of this
+                # shared index. Latent rather than live on the 2026-09-17 set,
+                # where every run was ACCEPTED and no wrong decision surfaced.
+                verdicts.setdefault(run_key(Path(r["directory"])), r)
+            record = record or verdicts.get(run_key(run))
             verdict = record["verdict"] if record else verdict
 
         # A MISSING verdict used to pass this filter, which is the wrong way round:
@@ -282,14 +302,46 @@ def main() -> int:
             (dest / "gate.json").write_text(json.dumps(record, indent=2) + "\n")
 
         # surface solution: the per-cell cp and y+ payload, gzipped
+        #
+        # Defect 26, the other half of the one above. The record DIRECTORY was
+        # made unique on 2026-09-16; this filename was not, and it has exactly
+        # the same cause. `name` is `gci_C_a0` for every wing, so ten wings
+        # wrote one file: the FIRST one, because `if not target.exists()` then
+        # skipped the other nine. Each row still recorded `sha256(surfaces[0])`
+        # -- the hash of ITS OWN source -- so ten rows claimed ten different
+        # hashes for one stored object. Measured on the dataset_v2 built at
+        # 22:49 on 2026-09-17: 52 rows, 8 field files, and exactly 1 of 10 rows
+        # per file whose recorded hash matched the bytes on disk. 44 of 52
+        # surface-field references pointed at another wing's flow.
+        #
+        # Three changes, and all three are needed:
+        #   - the archive name carries the geometry, like the record directory;
+        #   - the copy is unconditional, so a stale file from an earlier
+        #     collection cannot survive under a name that now means something
+        #     else;
+        #   - the recorded hash is read back OUT of the stored archive rather
+        #     than taken from the source, so the row cannot describe a file
+        #     that was never written. A mismatch is a hard failure: silently
+        #     recording the source hash is what produced the defect.
         surfaces = sorted(run.glob("*surf*.cgns"))
         if surfaces and not args.no_fields:
-            target = args.out / "fields" / f"{name}_surf.cgns.gz"
-            if not target.exists():
-                with open(surfaces[0], "rb") as fin, gzip.open(target, "wb") as fout:
-                    shutil.copyfileobj(fin, fout)
+            target = args.out / "fields" / f"{record_name}_surf.cgns.gz"
+            with open(surfaces[0], "rb") as fin, gzip.open(target, "wb") as fout:
+                shutil.copyfileobj(fin, fout)
+            source_digest = sha256(surfaces[0])
+            stored = hashlib.sha256()
+            with gzip.open(target, "rb") as fh:
+                for chunk in iter(lambda: fh.read(1 << 20), b""):
+                    stored.update(chunk)
+            stored_digest = stored.hexdigest()
+            if stored_digest != source_digest:
+                raise SystemExit(
+                    f"{record_name}: archived surface field does not match its "
+                    f"source. stored {stored_digest}, source {source_digest}. "
+                    f"Refusing to write a row that misdescribes its own bytes.")
             row["surface_field_archive"] = str(target.relative_to(args.out))
-            row["surface_field_sha256"] = sha256(surfaces[0])
+            row["surface_field_sha256"] = stored_digest
+            row["surface_field_sha256_source"] = "read back from the stored archive"
         volumes = sorted(run.glob("*vol*.cgns"))
         if volumes:
             row["volume_field_source"] = str(volumes[0])

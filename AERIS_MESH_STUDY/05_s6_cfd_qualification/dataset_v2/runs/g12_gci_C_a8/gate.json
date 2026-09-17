@@ -6,36 +6,36 @@
   "verdict": "ACCEPTED",
   "equations_short_of_limit": [],
   "equation_orders": {
-    "rho": 6.004,
-    "rhou": 5.138,
-    "rhov": 4.801,
-    "rhow": 5.142,
-    "rhoE": 6.162,
-    "nuturb": 4.273
+    "rho": 6.354,
+    "rhou": 5.238,
+    "rhov": 4.61,
+    "rhow": 5.12,
+    "rhoE": 6.351,
+    "nuturb": 5.031
   },
-  "iterations": 136,
-  "residual_initial": 913.0190934168579,
-  "residual_final": 0.000903801484853348,
-  "relative_residual": 9.899042543250502e-07,
-  "window": 34,
+  "iterations": 197,
+  "residual_initial": 885.326715977506,
+  "residual_final": 0.0003920197322743714,
+  "relative_residual": 4.4279668194756215e-07,
+  "window": 49,
   "checks": {
     "residual_orders": {
-      "value": 6.004406809270302,
+      "value": 6.353795642123178,
       "limit": 5.0,
       "pass": true
     },
     "cl_percent": {
-      "value": 0.03171788107782208,
+      "value": 0.0015285897225792327,
       "limit": 0.05,
       "pass": true
     },
     "cd_percent": {
-      "value": 0.022438877420051663,
+      "value": 0.004783047851038884,
       "limit": 0.1,
       "pass": true
     },
     "cmy_absolute": {
-      "value": 7.615905027631709e-06,
+      "value": 1.2199601860454767e-06,
       "limit": 0.0001,
       "pass": true
     },
@@ -49,12 +49,12 @@
     },
     "every_equation": {
       "value": {
-        "rho": 6.0,
-        "rhou": 5.14,
-        "rhov": 4.8,
-        "rhow": 5.14,
-        "rhoE": 6.16,
-        "nuturb": 4.27
+        "rho": 6.35,
+        "rhou": 5.24,
+        "rhov": 4.61,
+        "rhow": 5.12,
+        "rhoE": 6.35,
+        "nuturb": 5.03
       },
       "limit": {
         "rho": 3.0,
@@ -68,19 +68,19 @@
       "note": "Fluent's per-equation test: continuity, each momentum component, energy and turbulence, each against its own limit"
     },
     "residual_target_met": {
-      "value": 9.899042543250502e-07,
+      "value": 4.4279668194756215e-07,
       "limit": 1e-06,
       "pass": true,
       "note": "the run reached the L2Convergence target it was given"
     }
   },
   "forces": {
-    "cl": 0.40207716737450705,
-    "cd": 0.0309219738830231,
-    "cdp": 0.021511181678760392,
-    "cdv": 0.009410792204262703,
-    "cmy": 0.02850233473818596
+    "cl": 0.3667633466483624,
+    "cd": 0.031865938991846074,
+    "cdp": 0.022702830903300813,
+    "cdv": 0.009163108088545273,
+    "cmy": 0.04791466829610947
   },
   "alpha_deg": 8.0,
-  "directory": "../../artifacts/s8_cfd/gci_C_a8"
+  "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g12/gci_C_a8"
 }

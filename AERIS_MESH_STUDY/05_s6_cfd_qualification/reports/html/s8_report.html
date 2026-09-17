@@ -3708,10 +3708,23 @@ written.</p>
 <h3 id="gci-m-is-not-the-answer-either">gci_M is not the answer either</h3>
 <p>Two grids cannot yield an observed order of convergence, only an assumed one. On wing 83 at
 alpha 0, Richardson gives 142.9 counts for p = 2 (gci_M high by 36.3) and 96.7 counts for p = 1
-(gci_M high by 82.5). Both are indicators rather than a GCI. The family is <em>designed</em> at
-<code>GCI_RATIO = 1.3</code>, which is what Celik and the ASME procedure ask for, but interval counts are
-integers, so the realised ratio from cell counts is 1.274 -- marginal rather than wrong. The
-binding objection is the assumed p, not the ratio. The honest statement is that gci_M is a second point on a curve that has not
+(gci_M high by 82.5). Both are indicators rather than a GCI, but the <em>reason</em> is only the assumed p --
+the refinement ratio is sound, and an earlier draft of this addendum got that wrong. Measured on
+the archived node arrays of g83, the grid spacing refines by <strong>1.300</strong> in every block and every
+direction: <code>o_wing</code> intervals 92/64/48 to 120/83/62 (1.30/1.30/1.29), and in the outboard blocks
+the first spacing at the tip goes 9.664e-6 m to 7.434e-6 m, a ratio of <strong>1.300</strong> exactly, at a
+held growth rate of 1.2996.</p>
+<p>The cell-count proxy <code>(N_f/N_c)^(1/3) = 1.274</code> understates it, and a reviewer reading the
+outboard <em>interval counts</em> (53 to 54) concluded the outboard blocks &quot;do not follow the same
+spanwise densification&quot;. They do. <code>o_out</code> and <code>cap_out</code> are geometric extrusions crossing a fixed
+34.685 m at a fixed growth ratio, so the layer count needed is logarithmic in the first spacing:
+refining that spacing by 1.3 adds log(1.3)/log(1.2996) = 1.0 layer. <strong>53 to 54 is exactly the
+correct response to a 1.3 refinement</strong>, not a failure to refine -- the same mechanism recorded for
+the tip cap, where a 5x finer first cell added log(5)/log(1.3) = 6 layers.</p>
+<p>So the family meets the r &gt;= 1.3 that Celik and the ASME procedure ask for, and the near-tip
+region -- the cap boundary layer and the genesis of the tip vortex -- is refined at the family's
+full ratio. <strong>Read a geometric extrusion by its first spacing and growth rate, never by its layer
+count.</strong> With r = 1.300 the p = 2 extrapolate at alpha 0 is 146.4 counts rather than 142.9. The honest statement is that gci_M is a second point on a curve that has not
 flattened, and this campaign cannot say where it flattens.</p>
 <h3 id="consequence-for-the-cloud-batch">Consequence for the cloud batch</h3>
 <p>A requirement that did not exist this morning: <strong>a third grid level on at least a few wings</strong>, to

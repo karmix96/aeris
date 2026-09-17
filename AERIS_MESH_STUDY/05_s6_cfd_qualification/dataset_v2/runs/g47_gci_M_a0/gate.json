@@ -1,0 +1,86 @@
+{
+  "passes": true,
+  "solver_frozen": false,
+  "linear_solve_dead": false,
+  "accepted_via": "residual target",
+  "verdict": "ACCEPTED",
+  "equations_short_of_limit": [],
+  "equation_orders": {
+    "rho": 6.503,
+    "rhou": 5.467,
+    "rhov": 5.069,
+    "rhow": 5.378,
+    "rhoE": 6.621,
+    "nuturb": 3.478
+  },
+  "iterations": 186,
+  "residual_initial": 1113.896990702031,
+  "residual_final": 0.0003495118158424614,
+  "relative_residual": 3.137739115554863e-07,
+  "window": 46,
+  "checks": {
+    "residual_orders": {
+      "value": 6.503383168264999,
+      "limit": 5.0,
+      "pass": true
+    },
+    "cl_percent": {
+      "value": 0.007195256090232312,
+      "limit": 0.05,
+      "pass": true
+    },
+    "cd_percent": {
+      "value": 0.0015125988245128078,
+      "limit": 0.1,
+      "pass": true
+    },
+    "cmy_absolute": {
+      "value": 5.438373033815613e-07,
+      "limit": 0.0001,
+      "pass": true
+    },
+    "not_diverging": {
+      "value": false,
+      "pass": true
+    },
+    "no_growing_oscillation": {
+      "value": false,
+      "pass": true
+    },
+    "every_equation": {
+      "value": {
+        "rho": 6.5,
+        "rhou": 5.47,
+        "rhov": 5.07,
+        "rhow": 5.38,
+        "rhoE": 6.62,
+        "nuturb": 3.48
+      },
+      "limit": {
+        "rho": 3.0,
+        "rhou": 3.0,
+        "rhov": 3.0,
+        "rhow": 3.0,
+        "rhoE": 6.0,
+        "nuturb": 3.0
+      },
+      "pass": true,
+      "note": "Fluent's per-equation test: continuity, each momentum component, energy and turbulence, each against its own limit"
+    },
+    "residual_target_met": {
+      "value": 3.137739115554863e-07,
+      "limit": 1e-06,
+      "pass": true,
+      "note": "the run reached the L2Convergence target it was given"
+    }
+  },
+  "forces": {
+    "cl": -0.1599140473944947,
+    "cd": 0.017983864424676616,
+    "cdp": 0.009078645289163651,
+    "cdv": 0.00890521913551296,
+    "cmy": 0.0012439606035067625
+  },
+  "alpha_deg": 0.0,
+  "directory": "../../artifacts/s8_cfd/gci_M_a0"
+}

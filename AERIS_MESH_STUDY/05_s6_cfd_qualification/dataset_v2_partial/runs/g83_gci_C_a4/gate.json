@@ -1,0 +1,86 @@
+{
+  "passes": true,
+  "solver_frozen": false,
+  "linear_solve_dead": false,
+  "accepted_via": "residual target",
+  "verdict": "ACCEPTED",
+  "equations_short_of_limit": [],
+  "equation_orders": {
+    "rho": 6.468,
+    "rhou": 4.909,
+    "rhov": 5.0,
+    "rhow": 5.226,
+    "rhoE": 6.557,
+    "nuturb": 3.906
+  },
+  "iterations": 158,
+  "residual_initial": 913.2197300794118,
+  "residual_final": 0.0003109301356385098,
+  "relative_residual": 3.404768046475211e-07,
+  "window": 39,
+  "checks": {
+    "residual_orders": {
+      "value": 6.467912469527166,
+      "limit": 5.0,
+      "pass": true
+    },
+    "cl_percent": {
+      "value": 0.021461173488479236,
+      "limit": 0.05,
+      "pass": true
+    },
+    "cd_percent": {
+      "value": 0.016562546491619416,
+      "limit": 0.1,
+      "pass": true
+    },
+    "cmy_absolute": {
+      "value": 7.517934168671525e-07,
+      "limit": 0.0001,
+      "pass": true
+    },
+    "not_diverging": {
+      "value": false,
+      "pass": true
+    },
+    "no_growing_oscillation": {
+      "value": false,
+      "pass": true
+    },
+    "every_equation": {
+      "value": {
+        "rho": 6.47,
+        "rhou": 4.91,
+        "rhov": 5.0,
+        "rhow": 5.23,
+        "rhoE": 6.56,
+        "nuturb": 3.91
+      },
+      "limit": {
+        "rho": 3.0,
+        "rhou": 3.0,
+        "rhov": 3.0,
+        "rhow": 3.0,
+        "rhoE": 6.0,
+        "nuturb": 3.0
+      },
+      "pass": true,
+      "note": "Fluent's per-equation test: continuity, each momentum component, energy and turbulence, each against its own limit"
+    },
+    "residual_target_met": {
+      "value": 3.404768046475211e-07,
+      "limit": 1e-06,
+      "pass": true,
+      "note": "the run reached the L2Convergence target it was given"
+    }
+  },
+  "forces": {
+    "cl": 0.12053086367260252,
+    "cd": 0.01985843527839387,
+    "cdp": 0.010434435780243074,
+    "cdv": 0.0094239994981508,
+    "cmy": 0.015352414525625743
+  },
+  "alpha_deg": 4.0,
+  "directory": "../../artifacts/s8_cfd/gci_C_a4"
+}

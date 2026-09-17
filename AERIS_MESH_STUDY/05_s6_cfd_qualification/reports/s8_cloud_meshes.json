@@ -1,0 +1,316 @@
+{
+  "schema": "aeris.s8.cloud_mesh_manifest.v1",
+  "built_on": "development host, for verification only; the cloud rebuilds from the same commit",
+  "meshes": [
+    {
+      "level": "gci_F",
+      "index": 12,
+      "cells": 2339536,
+      "folded": 0,
+      "wall_layer_error_m": 2.671474153004283e-16,
+      "blocks": {
+        "o_wing": [
+          157,
+          109,
+          82
+        ],
+        "o_out": [
+          157,
+          109,
+          57
+        ],
+        "cap_out": [
+          71,
+          9,
+          57
+        ]
+      },
+      "build_seconds": 29.1,
+      "build_peak_gib": 0.81,
+      "clean": true,
+      "solve_gib_ank_only": 20.6
+    },
+    {
+      "level": "gci_F",
+      "index": 13,
+      "cells": 2339536,
+      "folded": 0,
+      "wall_layer_error_m": 2.3592239273284576e-16,
+      "blocks": {
+        "o_wing": [
+          157,
+          109,
+          82
+        ],
+        "o_out": [
+          157,
+          109,
+          57
+        ],
+        "cap_out": [
+          71,
+          9,
+          57
+        ]
+      },
+      "build_seconds": 25.3,
+      "build_peak_gib": 0.81,
+      "clean": true,
+      "solve_gib_ank_only": 20.6
+    },
+    {
+      "level": "gci_F",
+      "index": 16,
+      "cells": 2339536,
+      "folded": 0,
+      "wall_layer_error_m": 2.220446049250313e-16,
+      "blocks": {
+        "o_wing": [
+          157,
+          109,
+          82
+        ],
+        "o_out": [
+          157,
+          109,
+          57
+        ],
+        "cap_out": [
+          71,
+          9,
+          57
+        ]
+      },
+      "build_seconds": 25.4,
+      "build_peak_gib": 0.81,
+      "clean": true,
+      "solve_gib_ank_only": 20.6
+    },
+    {
+      "level": "gci_F",
+      "index": 23,
+      "cells": 2339536,
+      "folded": 0,
+      "wall_layer_error_m": 1.6219664500383146e-16,
+      "blocks": {
+        "o_wing": [
+          157,
+          109,
+          82
+        ],
+        "o_out": [
+          157,
+          109,
+          57
+        ],
+        "cap_out": [
+          71,
+          9,
+          57
+        ]
+      },
+      "build_seconds": 25.2,
+      "build_peak_gib": 0.81,
+      "clean": true,
+      "solve_gib_ank_only": 20.6
+    },
+    {
+      "level": "gci_F",
+      "index": 29,
+      "cells": 2339536,
+      "folded": 0,
+      "wall_layer_error_m": 2.220446049250313e-16,
+      "blocks": {
+        "o_wing": [
+          157,
+          109,
+          82
+        ],
+        "o_out": [
+          157,
+          109,
+          57
+        ],
+        "cap_out": [
+          71,
+          9,
+          57
+        ]
+      },
+      "build_seconds": 31.1,
+      "build_peak_gib": 0.81,
+      "clean": true,
+      "solve_gib_ank_only": 20.6
+    },
+    {
+      "level": "gci_F",
+      "index": 36,
+      "cells": 2322128,
+      "folded": 0,
+      "wall_layer_error_m": 2.220446049250313e-16,
+      "blocks": {
+        "o_wing": [
+          157,
+          109,
+          82
+        ],
+        "o_out": [
+          157,
+          109,
+          56
+        ],
+        "cap_out": [
+          71,
+          9,
+          56
+        ]
+      },
+      "build_seconds": 25.2,
+      "build_peak_gib": 0.81,
+      "clean": true,
+      "solve_gib_ank_only": 20.5
+    },
+    {
+      "level": "gci_F",
+      "index": 47,
+      "cells": 2322128,
+      "folded": 0,
+      "wall_layer_error_m": 2.220446049250313e-16,
+      "blocks": {
+        "o_wing": [
+          157,
+          109,
+          82
+        ],
+        "o_out": [
+          157,
+          109,
+          56
+        ],
+        "cap_out": [
+          71,
+          9,
+          56
+        ]
+      },
+      "build_seconds": 30.9,
+      "build_peak_gib": 0.81,
+      "clean": true,
+      "solve_gib_ank_only": 20.5
+    },
+    {
+      "level": "gci_F",
+      "index": 65,
+      "cells": 2339536,
+      "folded": 0,
+      "wall_layer_error_m": 2.983724378680108e-16,
+      "blocks": {
+        "o_wing": [
+          157,
+          109,
+          82
+        ],
+        "o_out": [
+          157,
+          109,
+          57
+        ],
+        "cap_out": [
+          71,
+          9,
+          57
+        ]
+      },
+      "build_seconds": 26.1,
+      "build_peak_gib": 0.81,
+      "clean": true,
+      "solve_gib_ank_only": 20.6
+    },
+    {
+      "level": "gci_F",
+      "index": 81,
+      "cells": 2322128,
+      "folded": 0,
+      "wall_layer_error_m": 2.220446049250313e-16,
+      "blocks": {
+        "o_wing": [
+          157,
+          109,
+          82
+        ],
+        "o_out": [
+          157,
+          109,
+          56
+        ],
+        "cap_out": [
+          71,
+          9,
+          56
+        ]
+      },
+      "build_seconds": 25.2,
+      "build_peak_gib": 0.81,
+      "clean": true,
+      "solve_gib_ank_only": 20.5
+    },
+    {
+      "level": "gci_F",
+      "index": 83,
+      "cells": 2322128,
+      "folded": 0,
+      "wall_layer_error_m": 2.220446049250313e-16,
+      "blocks": {
+        "o_wing": [
+          157,
+          109,
+          82
+        ],
+        "o_out": [
+          157,
+          109,
+          56
+        ],
+        "cap_out": [
+          71,
+          9,
+          56
+        ]
+      },
+      "build_seconds": 0.0,
+      "build_peak_gib": 0.81,
+      "clean": true,
+      "solve_gib_ank_only": 20.5
+    },
+    {
+      "level": "gci_FF",
+      "index": 83,
+      "cells": 4682524,
+      "folded": 0,
+      "wall_layer_error_m": 2.220446049250313e-16,
+      "blocks": {
+        "o_wing": [
+          205,
+          142,
+          106
+        ],
+        "o_out": [
+          205,
+          142,
+          57
+        ],
+        "cap_out": [
+          93,
+          11,
+          57
+        ]
+      },
+      "build_seconds": 0.0,
+      "build_peak_gib": 0.81,
+      "clean": true,
+      "solve_gib_ank_only": 38.4
+    }
+  ],
+  "all_clean": true,
+  "total_cells": 28008252
+}

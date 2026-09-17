@@ -123,15 +123,45 @@ def gci_triplet(f1: float, f2: float, f3: float,
     out["gci_21_percent"] = 100.0 * out["gci_21"]
     if f1 != 0:
         out["extrapolated_relative_error"] = abs((out["f_extrapolated"] - f1) / f1)
+    # Defect 28. Celik's order formula takes the absolute value of the log
+    # ratio, so it returns a POSITIVE p for a sequence that is running away.
+    # Fed f(h) = 1 + h^-2 at h = 1, 1.3, 1.69 -- a family with no finite limit,
+    # whose value goes to infinity as the grid refines -- this routine returned
+    # p = +2, condition "ok" and a GCI of 36.98 %. An external review found it
+    # with that exact counterexample on 2026-09-16.
+    #
+    # Monotonicity does not catch it: both successive differences have the same
+    # sign, so e32/e21 > 0. The test that does catch it is whether the
+    # differences SHRINK as the grid refines. The error model f = f0 + C h^p
+    # with p > 0 and r > 1 predicts |e21| / |e32| = r^-p < 1. A family where the
+    # fine-pair difference is the LARGER one is not approaching anything, and
+    # no safety factor rescues a band computed around a limit that does not
+    # exist.
+    out["difference_ratio"] = abs(e21) / abs(e32) if e32 != 0 else float("inf")
+    converging = out["difference_ratio"] < 1.0
+    out["differences_shrink_under_refinement"] = bool(converging)
     if not out["monotonic"]:
         out["condition"] = ("OSCILLATORY: e32/e21 is negative, so the three values do "
                             "not converge monotonically. The GCI below is reported but "
                             "the asymptotic assumption is not demonstrated.")
+    elif not converging:
+        out["condition"] = (
+            f"DIVERGENT: |f1-f2| = {abs(e21):.6g} is not smaller than "
+            f"|f2-f3| = {abs(e32):.6g}, so refining the grid is moving the answer "
+            f"FURTHER, not less far. This family has no demonstrated limit and the "
+            f"order formula's absolute value hides the sign. No GCI.")
     elif not (0.5 <= p <= 4.0):
         out["condition"] = (f"observed order {p:.3f} is outside a plausible range for a "
                             f"second-order scheme; treat as not in the asymptotic range")
     else:
         out["condition"] = "ok"
+
+    # The band is a DIAGNOSTIC on any family. It is a certified numerical
+    # uncertainty only on one that passed every condition above, and that
+    # distinction is structural here rather than left to whoever reads the
+    # number: an unacceptable family leaves the field empty.
+    out["certified_uncertainty_percent"] = (
+        out["gci_21_percent"] if out["condition"] == "ok" else None)
     return out
 
 

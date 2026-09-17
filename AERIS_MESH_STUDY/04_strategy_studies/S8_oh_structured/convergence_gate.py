@@ -163,10 +163,18 @@ def gate(history: np.ndarray, *, window: int, min_orders: float,
     # a drifting residual and is invisible to the test above.
     linear_dead = False
     if linres is not None and len(linres) >= window:
-        tail = linres[-window:]
-        tail = tail[np.isfinite(tail)]
-        if tail.size:
-            linear_dead = bool(np.median(tail) > 0.99)
+        # NOT `tail`. That name is the force history this function's `spread`
+        # and `rel` closures read, and rebinding it here to a 1-D linear-residual
+        # slice silently broke every call to either of them made after this
+        # point. Nothing called them after this point until the runaway guard
+        # below was added on 2026-09-18, which is the only reason it was never
+        # seen -- the failure is an IndexError, not a wrong number, so it would
+        # have surfaced loudly the first time. Shadowing is the defect; the fix
+        # is a name of its own.
+        linres_tail = linres[-window:]
+        linres_tail = linres_tail[np.isfinite(linres_tail)]
+        if linres_tail.size:
+            linear_dead = bool(np.median(linres_tail) > 0.99)
     frozen = frozen or linear_dead
 
     checks = {
@@ -214,9 +222,52 @@ def gate(history: np.ndarray, *, window: int, min_orders: float,
         "value": relative_residual, "limit": l2_target,
         "pass": bool(hit_target),
         "note": "the run reached the L2Convergence target it was given"}
+    # Defect 30. The OR above is deliberate and measured -- a short tail's
+    # spread is dominated by the approach, and on g12 alpha 0 it overstated the
+    # error sevenfold and refused 14 of 40 good runs. But it left the residual
+    # route with no force test AT ALL, and the health checks do not catch a
+    # monotonic ramp. A synthetic history whose residual falls cleanly to 1e-8
+    # while CL runs from -0.1 to 2.0 -- a 19 % spread over the final window --
+    # is ACCEPTED, "via residual target". An external review predicted this on
+    # 2026-09-16; it was reproduced against this function on 2026-09-18.
+    #
+    # The fix keeps the OR and adds a floor under BOTH routes. The separation is
+    # wide and not delicate: the legitimate short-tail case measured 0.107 %
+    # against a 0.05 % tolerance, or 2.1x, while the runaway is 380x. Twenty
+    # times the tolerance sits an order of magnitude clear of each.
+    RUNAWAY_MULTIPLE = 20.0
+    #: A relative test alone cannot be used here, and the first version of this
+    #: guard proved it by rejecting two good runs. At alpha 0 these wings carry
+    #: almost no lift -- g65 sits at CL = -0.0087 -- so a tail movement of
+    #: 1.8e-4 in ABSOLUTE CL reads as 2.07 % and trips a percentage test, while
+    #: the actual counterexample moves 0.35 in absolute CL. Percentages are
+    #: meaningless near zero, which is the same trap that made "AVL within 2 %"
+    #: look false at low incidence. So a runaway must be BOTH relatively large
+    #: AND absolutely material, and these floors sit between the two by more
+    #: than an order of magnitude at each end.
+    RUNAWAY_FLOOR = {"cl_percent": 0.01, "cd_percent": 5.0e-4, "cmy_absolute": 0.0}
+    ABSOLUTE = {"cl_percent": "cl", "cd_percent": "cd", "cmy_absolute": "cmy"}
+    runaway = {}
+    for name, column in ABSOLUTE.items():
+        value, limit = checks[name]["value"], checks[name]["limit"]
+        if not math.isfinite(value) or value <= RUNAWAY_MULTIPLE * limit:
+            continue
+        absolute = spread(column)
+        if absolute <= RUNAWAY_FLOOR[name]:
+            continue
+        runaway[name] = {"relative_or_absolute": round(value, 4),
+                         "absolute_span": absolute,
+                         "floor": RUNAWAY_FLOOR[name]}
+    checks["forces_not_running_away"] = {
+        "value": runaway,
+        "limit": f"{RUNAWAY_MULTIPLE:g} x each settling tolerance AND above {RUNAWAY_FLOOR}",
+        "pass": not runaway,
+        "note": "a floor under BOTH acceptance routes: meeting a residual target "
+                "says nothing about a force that is still travelling"}
+
     # Every equation must clear its own limit by EITHER route: a combined
     # residual or a settled force can both be reached with one equation lagging.
-    passed = healthy and not short and (hit_target or settled)
+    passed = healthy and not short and not runaway and (hit_target or settled)
     return {
         "passes": passed,
         "solver_frozen": frozen,

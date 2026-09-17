@@ -43,9 +43,57 @@ def turbulent_friction_estimate(reynolds: float) -> float:
     return WETTED_OVER_PLANFORM * 0.455 / math.log10(reynolds) ** 2.58
 
 
+#: Fields that must be PRESENT and finite before any physical check runs.
+#:
+#: Defect 29. Every check below was written as "if the field is there and it is
+#: bad, complain", which makes an absent field indistinguishable from a passing
+#: one. An external review demonstrated it on 2026-09-16 by deleting fields from
+#: a real row one at a time; it was reproduced here on 2026-09-18, and deleting
+#: `inverted_cells`, `wall_layer_error_m`, `velocity_direction_error` or
+#: `reynolds_mac`, or setting the last three to NaN, produced NO FINDING AT ALL.
+#: So "the audit passed" did not mean the checks passed -- it could mean they
+#: never ran. The state "I cannot check this" must be a finding, never silence.
+REQUIRED = {
+    "gate_verdict": "the gate's verdict",
+    "relative_residual": "the stopping-rule residual",
+    "equation_orders": "per-equation convergence",
+    "area_ref": "the reference area the forces were divided by",
+    "moment_ref_xyz": "the moment reference point",
+    "chord_ref": "the reference chord",
+    "inverted_cells": "the folded-cell count",
+    "wall_layer_error_m": "the wall-layer position error",
+    "yplus_min_p50_p95_p99_max": "wall y+ statistics",
+    "iterations": "the iteration count",
+    "velocity_direction_error": "the realised freestream direction error",
+    "reynolds_mac": "Reynolds on the MAC, which the friction check needs",
+    "CD": "drag", "CDv": "viscous drag", "CL": "lift", "CMy": "pitching moment",
+}
+
+
+def _unusable(value) -> bool:
+    """True when a value cannot be checked: absent, NaN, or an empty container."""
+    if value is None:
+        return True
+    if isinstance(value, float) and not math.isfinite(value):
+        return True
+    if isinstance(value, (list, tuple, dict)) and not value:
+        return True
+    if isinstance(value, (list, tuple)):
+        return any(isinstance(v, float) and not math.isfinite(v) for v in value)
+    if isinstance(value, dict):
+        return any(isinstance(v, float) and not math.isfinite(v) for v in value.values())
+    return False
+
+
+def schema_findings(row: dict) -> list[str]:
+    """INCOMPLETE is not PASS.  Runs before every physical check."""
+    return [f"{name} missing or unusable ({description}): {row.get(name, '<absent>')!r}"
+            for name, description in REQUIRED.items() if _unusable(row.get(name))]
+
+
 def checks(row: dict, areas: dict) -> list[str]:
     """Every way this row could be wrong. Empty list means sound."""
-    bad = []
+    bad = schema_findings(row)
     index = row.get("geometry_index")
 
     if row.get("gate_verdict") != "ACCEPTED":
@@ -78,8 +126,12 @@ def checks(row: dict, areas: dict) -> list[str]:
     elif row.get("area_ref") is None or abs(row["area_ref"] / own["half_area_m2"] - 1) > 0.005:
         bad.append(f"area {row.get('area_ref')} is not this geometry's {own['half_area_m2']}")
 
-    if list(row.get("moment_ref_xyz") or [None])[0] != X_REF:
-        bad.append(f"moment reference {row.get('moment_ref_xyz')}")
+    # All three components. Checking only x accepted [0.4, 3, 4] -- a moment
+    # taken about a point three metres out along the span and four metres up,
+    # on a wing whose half-span is under 1.25 m. The review found this by
+    # feeding exactly that vector to this function.
+    if list(row.get("moment_ref_xyz") or [None, None, None]) != [X_REF, 0.0, 0.0]:
+        bad.append(f"moment reference {row.get('moment_ref_xyz')}, want [{X_REF}, 0.0, 0.0]")
     if row.get("chord_ref") != C_REF:
         bad.append(f"reference chord {row.get('chord_ref')}")
 

@@ -1,0 +1,496 @@
+{
+  "schema": "aeris.s8.cloud_batch.v2",
+  "supersedes": "reports/s8_cloud_batch.json (2026-09-09, all figures estimated)",
+  "ranks_per_case": 4,
+  "why_these_ranks": "The measured probe gives 2121/1121/849/827 s at 1/2/4/6 ranks. Four ranks is 2.7 % slower than six and costs 32 % fewer core-hours. Six ranks was chosen for the development host to finish one case sooner; the cloud runs 44 INDEPENDENT cases, so throughput is what is being bought and latency per case is nearly irrelevant.",
+  "timing_model": {
+    "form": "minutes = Mcells * iterations * 9.7 s / 60, then scaled by the rank probe",
+    "sec_per_mcell_iteration_6rank": 9.7,
+    "fitted_on": "52 solves, 2026-09-17: gci_C 9.44, gci_M 9.97 s per Mcell-iteration",
+    "iterations_assumed": {
+      "gci_F": 338.0,
+      "gci_FF": 436.0
+    },
+    "iteration_growth_per_level": 1.291,
+    "WEAKEST_LINK": "Iteration growth is ONE measured ratio (203 -> 262, C to M) extrapolated two levels. The lo/hi band brackets it at flat and x1.5 per level. This is the dominant uncertainty in the bill."
+  },
+  "memory_law": {
+    "ank_only_gib": "(2.69 + 7.23 * Mcells) * 1.05",
+    "WEAKEST_LINK": "A two-point fit, extrapolated to 4x its largest input. Measure peak RSS on the pilot case before launching the other 42."
+  },
+  "core_hours": {
+    "low": 325.0,
+    "central": 439.0,
+    "high": 528.0,
+    "with_20pct_retry_margin": 527.0,
+    "note": "multiply by your confirmed $/core-hour; no rate is asserted here"
+  },
+  "per_level": {
+    "gci_F": {
+      "cases": 40,
+      "cells_each": [
+        2322128,
+        2339536
+      ],
+      "memory_gib_each": [
+        20.5,
+        20.6
+      ],
+      "minutes_each_at_4_ranks": 130.9,
+      "core_hours_total": 348.9
+    },
+    "gci_FF": {
+      "cases": 4,
+      "cells_each": [
+        4682524
+      ],
+      "memory_gib_each": [
+        38.4
+      ],
+      "minutes_each_at_4_ranks": 339.3,
+      "core_hours_total": 90.4
+    }
+  },
+  "cases": [
+    {
+      "index": 12,
+      "level": "gci_F",
+      "alpha_deg": -2.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 12,
+      "level": "gci_F",
+      "alpha_deg": 0.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 12,
+      "level": "gci_F",
+      "alpha_deg": 4.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 12,
+      "level": "gci_F",
+      "alpha_deg": 8.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 13,
+      "level": "gci_F",
+      "alpha_deg": -2.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 13,
+      "level": "gci_F",
+      "alpha_deg": 0.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 13,
+      "level": "gci_F",
+      "alpha_deg": 4.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 13,
+      "level": "gci_F",
+      "alpha_deg": 8.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 16,
+      "level": "gci_F",
+      "alpha_deg": -2.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 16,
+      "level": "gci_F",
+      "alpha_deg": 0.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 16,
+      "level": "gci_F",
+      "alpha_deg": 4.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 16,
+      "level": "gci_F",
+      "alpha_deg": 8.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 23,
+      "level": "gci_F",
+      "alpha_deg": -2.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 23,
+      "level": "gci_F",
+      "alpha_deg": 0.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 23,
+      "level": "gci_F",
+      "alpha_deg": 4.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 23,
+      "level": "gci_F",
+      "alpha_deg": 8.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 29,
+      "level": "gci_F",
+      "alpha_deg": -2.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 29,
+      "level": "gci_F",
+      "alpha_deg": 0.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 29,
+      "level": "gci_F",
+      "alpha_deg": 4.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 29,
+      "level": "gci_F",
+      "alpha_deg": 8.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 36,
+      "level": "gci_F",
+      "alpha_deg": -2.0,
+      "cells": 2322128,
+      "memory_gib": 20.5,
+      "ranks": 4,
+      "predicted_minutes": 130.4,
+      "predicted_core_hours": 8.68
+    },
+    {
+      "index": 36,
+      "level": "gci_F",
+      "alpha_deg": 0.0,
+      "cells": 2322128,
+      "memory_gib": 20.5,
+      "ranks": 4,
+      "predicted_minutes": 130.4,
+      "predicted_core_hours": 8.68
+    },
+    {
+      "index": 36,
+      "level": "gci_F",
+      "alpha_deg": 4.0,
+      "cells": 2322128,
+      "memory_gib": 20.5,
+      "ranks": 4,
+      "predicted_minutes": 130.4,
+      "predicted_core_hours": 8.68
+    },
+    {
+      "index": 36,
+      "level": "gci_F",
+      "alpha_deg": 8.0,
+      "cells": 2322128,
+      "memory_gib": 20.5,
+      "ranks": 4,
+      "predicted_minutes": 130.4,
+      "predicted_core_hours": 8.68
+    },
+    {
+      "index": 47,
+      "level": "gci_F",
+      "alpha_deg": -2.0,
+      "cells": 2322128,
+      "memory_gib": 20.5,
+      "ranks": 4,
+      "predicted_minutes": 130.4,
+      "predicted_core_hours": 8.68
+    },
+    {
+      "index": 47,
+      "level": "gci_F",
+      "alpha_deg": 0.0,
+      "cells": 2322128,
+      "memory_gib": 20.5,
+      "ranks": 4,
+      "predicted_minutes": 130.4,
+      "predicted_core_hours": 8.68
+    },
+    {
+      "index": 47,
+      "level": "gci_F",
+      "alpha_deg": 4.0,
+      "cells": 2322128,
+      "memory_gib": 20.5,
+      "ranks": 4,
+      "predicted_minutes": 130.4,
+      "predicted_core_hours": 8.68
+    },
+    {
+      "index": 47,
+      "level": "gci_F",
+      "alpha_deg": 8.0,
+      "cells": 2322128,
+      "memory_gib": 20.5,
+      "ranks": 4,
+      "predicted_minutes": 130.4,
+      "predicted_core_hours": 8.68
+    },
+    {
+      "index": 65,
+      "level": "gci_F",
+      "alpha_deg": -2.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 65,
+      "level": "gci_F",
+      "alpha_deg": 0.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 65,
+      "level": "gci_F",
+      "alpha_deg": 4.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 65,
+      "level": "gci_F",
+      "alpha_deg": 8.0,
+      "cells": 2339536,
+      "memory_gib": 20.6,
+      "ranks": 4,
+      "predicted_minutes": 131.3,
+      "predicted_core_hours": 8.75
+    },
+    {
+      "index": 81,
+      "level": "gci_F",
+      "alpha_deg": -2.0,
+      "cells": 2322128,
+      "memory_gib": 20.5,
+      "ranks": 4,
+      "predicted_minutes": 130.4,
+      "predicted_core_hours": 8.68
+    },
+    {
+      "index": 81,
+      "level": "gci_F",
+      "alpha_deg": 0.0,
+      "cells": 2322128,
+      "memory_gib": 20.5,
+      "ranks": 4,
+      "predicted_minutes": 130.4,
+      "predicted_core_hours": 8.68
+    },
+    {
+      "index": 81,
+      "level": "gci_F",
+      "alpha_deg": 4.0,
+      "cells": 2322128,
+      "memory_gib": 20.5,
+      "ranks": 4,
+      "predicted_minutes": 130.4,
+      "predicted_core_hours": 8.68
+    },
+    {
+      "index": 81,
+      "level": "gci_F",
+      "alpha_deg": 8.0,
+      "cells": 2322128,
+      "memory_gib": 20.5,
+      "ranks": 4,
+      "predicted_minutes": 130.4,
+      "predicted_core_hours": 8.68
+    },
+    {
+      "index": 83,
+      "level": "gci_F",
+      "alpha_deg": -2.0,
+      "cells": 2322128,
+      "memory_gib": 20.5,
+      "ranks": 4,
+      "predicted_minutes": 130.4,
+      "predicted_core_hours": 8.68
+    },
+    {
+      "index": 83,
+      "level": "gci_F",
+      "alpha_deg": 0.0,
+      "cells": 2322128,
+      "memory_gib": 20.5,
+      "ranks": 4,
+      "predicted_minutes": 130.4,
+      "predicted_core_hours": 8.68
+    },
+    {
+      "index": 83,
+      "level": "gci_F",
+      "alpha_deg": 4.0,
+      "cells": 2322128,
+      "memory_gib": 20.5,
+      "ranks": 4,
+      "predicted_minutes": 130.4,
+      "predicted_core_hours": 8.68
+    },
+    {
+      "index": 83,
+      "level": "gci_F",
+      "alpha_deg": 8.0,
+      "cells": 2322128,
+      "memory_gib": 20.5,
+      "ranks": 4,
+      "predicted_minutes": 130.4,
+      "predicted_core_hours": 8.68
+    },
+    {
+      "index": 83,
+      "level": "gci_FF",
+      "alpha_deg": -2.0,
+      "cells": 4682524,
+      "memory_gib": 38.4,
+      "ranks": 4,
+      "predicted_minutes": 339.3,
+      "predicted_core_hours": 22.6
+    },
+    {
+      "index": 83,
+      "level": "gci_FF",
+      "alpha_deg": 0.0,
+      "cells": 4682524,
+      "memory_gib": 38.4,
+      "ranks": 4,
+      "predicted_minutes": 339.3,
+      "predicted_core_hours": 22.6
+    },
+    {
+      "index": 83,
+      "level": "gci_FF",
+      "alpha_deg": 4.0,
+      "cells": 4682524,
+      "memory_gib": 38.4,
+      "ranks": 4,
+      "predicted_minutes": 339.3,
+      "predicted_core_hours": 22.6
+    },
+    {
+      "index": 83,
+      "level": "gci_FF",
+      "alpha_deg": 8.0,
+      "cells": 4682524,
+      "memory_gib": 38.4,
+      "ranks": 4,
+      "predicted_minutes": 339.3,
+      "predicted_core_hours": 22.6
+    }
+  ]
+}

@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import collections
 import shutil
 import subprocess
 import sys
@@ -50,7 +51,35 @@ sys.path.insert(0, str(HERE))
 QUAL = REPO / "AERIS_MESH_STUDY/05_s6_cfd_qualification"
 MEM_ANK = (2.69, 7.23)
 CELL_MARGIN = 1.05
-CELLS = {"gci_C": 567_256, "gci_M": 1_111_152, "gci_F": 2_217_680, "gci_FF": 4_504_420}  # gci_FF measured 2026-09-11
+#: Cell counts, from the meshes that were actually BUILT rather than from a
+#: level definition. Every figure in the old table was stale: the wall-resolved
+#: tip cap adds about 6 % and it landed after those numbers were taken, so
+#: gci_FF was carried at 4,504,420 when the built mesh is 4,682,524. Sizing a
+#: rented machine from a stale cell count is how you rent one that cannot hold
+#: the job.
+_FALLBACK_CELLS = {"gci_C": 567_256, "gci_M": 1_111_152,
+                   "gci_F": 2_217_680, "gci_FF": 4_504_420}
+_MESH_MANIFEST = (Path(__file__).resolve().parents[3]
+                  / "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_cloud_meshes.json")
+
+
+def _measured_cells() -> dict:
+    """Largest built mesh per level, from the manifest cloud_prep_build.py writes."""
+    out = dict(_FALLBACK_CELLS)
+    try:
+        import json
+        for m in json.loads(_MESH_MANIFEST.read_text())["meshes"]:
+            if m.get("clean"):
+                out[m["level"]] = max(out.get(m["level"], 0), m["cells"])
+    except (OSError, ValueError, KeyError):
+        pass
+    return out
+
+
+CELLS = _measured_cells()
+#: A gci_FF volume solution is about 1.2 GiB, a gci_F about 0.6. The old
+#: estimate of 0.3 GiB a run was taken at gci_C size.
+VOLUME_GIB = {"gci_C": 0.3, "gci_M": 0.45, "gci_F": 0.7, "gci_FF": 1.3}
 
 
 class Check:
@@ -112,13 +141,16 @@ def check_memory(c: Check, level: str, ranks: int) -> None:
           f"({CELLS[level]:,} cells x {CELL_MARGIN} margin, ANK-only law)")
 
 
-def check_disk(c: Check, out: Path, cases: int) -> None:
+def check_disk(c: Check, out: Path, cases: int, plan: list[tuple[str, int]] | None = None) -> None:
     out.mkdir(parents=True, exist_ok=True)
     free = shutil.disk_usage(out).free / 1024 ** 3
-    need = cases * 0.30
+    if plan:
+        need = sum(VOLUME_GIB.get(level, 0.5) * n for level, n in plan)
+    else:
+        need = cases * 0.30
     c.add("disk", free >= need,
           f"{free:.0f} GiB free at {out}, about {need:.0f} GiB needed "
-          f"({cases} runs x ~0.3 GiB of volume solution)")
+          f"({cases} runs of volume solution at the per-level sizes)")
 
 
 def check_authorization(c: Check, levels: list[str], indices: list[int]) -> None:
@@ -266,7 +298,9 @@ def main() -> int:
     if env:
         check_mpi_ranks(c, env, args.ranks)
     check_memory(c, finest, args.ranks)
-    check_disk(c, args.out_dir, len(batch.get("cases", [])) or 44)
+    by_level = collections.Counter(x.get("level") for x in batch.get("cases", []))
+    check_disk(c, args.out_dir, len(batch.get("cases", [])) or 44,
+               plan=[(lv, n) for lv, n in by_level.items() if lv])
     check_authorization(c, levels, indices)
     check_geometry(c, indices)
     check_reference_areas(c, indices)

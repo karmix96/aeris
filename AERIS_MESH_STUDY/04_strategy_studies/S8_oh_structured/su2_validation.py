@@ -393,7 +393,43 @@ def judge_naca(directory: Path, entry: dict) -> None:
                            "CL": abs(err["CL"]) <= 1.0}})
 
 
-def reynolds_per_length(lines: list[str]) -> float | None:
+def reynolds_from_log(directory: Path) -> float | None:
+    """The Reynolds number SU2 ITSELF computed, out of its own run log.
+
+    Defect: deriving it from the config got T3A and T3A- wrong by a factor of
+    twenty. Both carry REYNOLDS_NUMBER over the 20 m plate and no
+    REYNOLDS_LENGTH, so a reader that defaults the length to 1.0 m gets
+    2.656e7 per metre where SU2 used 1.32318e6 -- and every transition Reynolds
+    number graded from it would have been twenty times too large. The compressible
+    flat plates were right only because they set REYNOLDS_LENGTH= 1.0 explicitly.
+
+    SU2 prints the number it actually used. Ask it rather than re-deriving a
+    quantity from a convention that is not written down. Same principle as
+    reading the realised lift direction out of ADflow instead of assuming
+    liftIndex was honoured.
+    """
+    for name in ("run.log", *(q.name for q in sorted(directory.glob("run_cont*.log")))):
+        path = directory / name
+        if not path.exists():
+            continue
+        for line in path.read_text(errors="ignore").splitlines():
+            if line.startswith("|") and "Reynolds Number" in line:
+                parts = [c.strip() for c in line.split("|")]
+                for cell in reversed(parts):
+                    try:
+                        value = float(cell)
+                    except ValueError:
+                        continue
+                    if value > 1.0:
+                        return value
+    return None
+
+
+def reynolds_per_length(lines: list[str], directory: Path | None = None) -> float | None:
+    if directory is not None:
+        measured = reynolds_from_log(directory)
+        if measured:
+            return measured
     solver = (cfg_value(lines, "SOLVER") or "").upper()
     if solver.startswith("INC"):
         rho = float(cfg_value(lines, "INC_DENSITY_INIT") or "nan")
@@ -511,7 +547,7 @@ def judge_transition(case: str, directory: Path, entry: dict) -> None:
         # lands on the window edge every time -- on 16 Sept it returned x = 9.915 on a plate of
         # length 20 (the 90 % point) and called it an onset at Re_x = 2.6e8. Requiring a real
         # rise after the minimum keeps noise from passing for transition.
-        rex, i = reynolds_per_length(lines), None
+        rex, i = reynolds_per_length(lines, directory), None
         for k in range(1, cf.size - 1):
             if cf[k] <= cf[k - 1] and cf[k] <= cf[k + 1] and cf[k:].max() >= 1.25 * cf[k]:
                 i = k

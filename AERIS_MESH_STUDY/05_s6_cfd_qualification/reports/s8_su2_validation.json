@@ -224,30 +224,41 @@
       "time_limit_hit": false,
       "memory_guard_hit": false,
       "convergence": {
-        "iterations": 498,
+        "iterations": 10,
+        "iterations_all_legs": 510,
+        "legs": [
+          {
+            "file": "history.csv",
+            "rows": 499
+          },
+          {
+            "file": "history_cont1.csv",
+            "rows": 11
+          }
+        ],
         "rms_first_last": {
           "rms[P]": [
             -22.02846805,
-            -12.00784421
+            -12.13782089
           ],
           "rms[U]": [
             -22.02846805,
-            -10.987557
+            -11.11908847
           ],
           "rms[V]": [
             -32.0,
-            -11.70511396
+            -11.83525209
           ],
           "rms[nu]": [
             -15.33076582,
-            -15.3042635
+            -15.43627894
           ]
         },
         "orders_dropped": {
-          "rms[P]": -10.02,
-          "rms[U]": -11.04,
-          "rms[V]": -20.29,
-          "rms[nu]": -0.03
+          "rms[P]": -9.89,
+          "rms[U]": -10.91,
+          "rms[V]": -20.16,
+          "rms[nu]": 0.11
         }
       },
       "forces": {
@@ -257,7 +268,10 @@
         "CDv": 0.001805,
         "CMz": -0.000535
       },
-      "note": "no skin friction on file: this run wrote SURFACE_CSV only, so nothing needing cf could be judged"
+      "reference": "experiment to be added before this is judged",
+      "cf_minimum_x": 0.7743642,
+      "cf_minimum": 0.000419102,
+      "transition_onset_Re_x": 2586376.428
     },
     "t3a": {
       "kind": "transition_plate",

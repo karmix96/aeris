@@ -211,7 +211,14 @@ a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-of
 <a class="r3" href="#cm-and-cl-are-converged-at-gci-c-cd-is-not">Cm and CL are converged at gci_C; Cd is not</a>
 <a class="r3" href="#the-common-mode-test-which-is-what-three-wings-were-for">The common-mode test, which is what three wings were for</a>
 <a class="r3" href="#gci-m-is-not-the-answer-either">gci_M is not the answer either</a>
-<a class="r3" href="#consequence-for-the-cloud-batch">Consequence for the cloud batch</a></div>
+<a class="r3" href="#consequence-for-the-cloud-batch">Consequence for the cloud batch</a>
+<a class="r2 r-add" href="#addendum-18-september-1600-su2-works-better-than-we-had-judged-and-one-verdict-is-withdrawn"><span class="rdate">18 September, 16:00</span><span>SU2 works better than we had judged, and one verdict is withdrawn</span></a>
+<a class="r3" href="#su2-had-no-acceptance-rule-only-a-residual-target">SU2 had no acceptance rule, only a residual target</a>
+<a class="r3" href="#withdrawn-neither-lm-model-produces-the-separation-bubble">Withdrawn: &quot;neither LM model produces the separation bubble&quot;</a>
+<a class="r3" href="#the-pitching-moment-sign-is-unresolved-and-now-visible">The pitching moment sign is unresolved, and now visible</a>
+<a class="r3" href="#t3a-yields-a-transition-location-t3a-yields-something-wrong">T3A yields a transition location; T3A− yields something wrong</a>
+<a class="r3" href="#six-defects-one-of-them-twenty-fold">Six defects, one of them twenty-fold</a>
+<a class="r3" href="#a-probe-that-refuted-its-own-hypothesis">A probe that refuted its own hypothesis</a></div>
       </details>
     </nav>
     <article><p><strong>Written 2026-09-15, 21:00 (Athens time).</strong> Covers S8 from its first day (3–4 September 2026) to
@@ -3773,6 +3780,226 @@ measure the observed order instead of assuming it. gci_F does not fit this host'
 is why the question is being handed to the cloud rather than answered here. Without that level,
 S8 delivers converged lift and moment, and drag <em>orderings</em> with +/-2 to 4 count margins — not
 absolute drag, and not 1-count resolution.</p>
+</section><section class="addendum"><p class="when">18 September, 16:00</p><h2 id="addendum-18-september-1600-su2-works-better-than-we-had-judged-and-one-verdict-is-withdrawn" class="h-add">SU2 works better than we had judged, and one verdict is withdrawn</h2>
+<p>Ten stage-0 cases, six defects in the SU2 path fixed, and a full re-grade. <strong>Five of ten now pass
+the acceptance gate, against two this morning.</strong> The two that changed hands were never failing
+physics — they were failing a rule that did not exist.</p>
+<h3 id="su2-had-no-acceptance-rule-only-a-residual-target">SU2 had no acceptance rule, only a residual target</h3>
+<p><code>fp_comp_545</code> has been passing NASA's flat-plate criteria <strong>since 16 September</strong> — cf +0.65 %,
+CD +0.34 % — and was reported unfinished because rms sat at −8.63 rather than −14. Its CD had
+been settled to <strong>0.012 % over 500 iterations</strong> the whole time. The residual target was never the
+question.</p>
+<p>This project settled that argument for ADflow on 15 September: accept on the residual target
+<strong>or</strong> on settled quantities of interest, with health required either way, because a short tail's
+spread is dominated by the approach rather than by the remaining error. Nobody carried it to SU2.
+<code>su2_gate()</code> is that rule, carrying the two corrections its ADflow twin needed afterwards, and it
+says plainly when a case has no monitored force at all — true of <code>t3a</code>, <code>t3a_minus</code> and
+<code>nlf_sst_lm</code>, where SU2 writes CD identically zero.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>case</th>
+<th>verdict</th>
+<th>route</th>
+<th>residual</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fp_comp_137</code></td>
+<td>ACCEPTED</td>
+<td>residual target</td>
+<td>−14.00</td>
+</tr>
+<tr>
+<td><code>fp_inc_545</code></td>
+<td>ACCEPTED</td>
+<td>residual target</td>
+<td>−14.01</td>
+</tr>
+<tr>
+<td><code>fp_bc</code></td>
+<td>ACCEPTED</td>
+<td>residual target</td>
+<td>−12.14</td>
+</tr>
+<tr>
+<td><code>fp_comp_545</code></td>
+<td><strong>ACCEPTED</strong></td>
+<td><strong>settled forces</strong></td>
+<td>−8.63</td>
+</tr>
+<tr>
+<td><code>naca0012_inc_897</code></td>
+<td><strong>ACCEPTED</strong></td>
+<td><strong>settled forces</strong></td>
+<td>−9.20</td>
+</tr>
+<tr>
+<td><code>e387_sa_lm</code></td>
+<td>not accepted</td>
+<td>—</td>
+<td>−10.66</td>
+</tr>
+<tr>
+<td><code>e387_sst_lm</code></td>
+<td>not accepted</td>
+<td>—</td>
+<td>−11.16</td>
+</tr>
+<tr>
+<td><code>t3a</code>, <code>t3a_minus</code>, <code>nlf_sst_lm</code></td>
+<td>not accepted</td>
+<td>no monitored force</td>
+<td>−7.5 to −5.3</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="withdrawn-neither-lm-model-produces-the-separation-bubble">Withdrawn: &quot;neither LM model produces the separation bubble&quot;</h3>
+<p>The 16 September addendum says of the Eppler 387 runs that <em>neither produces the separation bubble
+that is this flow at Re 200k — their only reversed flow is at the trailing edge.</em> <strong>That is
+withdrawn for SA-LM.</strong> It rested on two things that were both wrong: runs stopped far short of
+convergence, and a bubble extractor that took the minimum and maximum over every reversed point on
+the surface, merging separate regions into one. Contiguous regions, and 17,668 iterations:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th></th>
+<th>x/c separation</th>
+<th>x/c reattachment</th>
+<th>length</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>McGhee oil flow, α 2, Re 200k</td>
+<td>0.430</td>
+<td>0.670</td>
+<td>0.240c</td>
+</tr>
+<tr>
+<td><code>e387_sa_lm</code></td>
+<td>0.516</td>
+<td>0.584</td>
+<td><strong>0.068c</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>So SA-LM <strong>does</strong> produce a laminar separation bubble, inside the measured region, and it is
+<strong>3.5 times too short</strong>. That is a far more useful statement than &quot;no bubble&quot;, and it points at
+the reattachment prediction rather than at separation onset. Its forces are good too: CL +0.66 %,
+CD <strong>+0.71 counts</strong>, which is <em>inside</em> the ±2.6-count measurement uncertainty of this condition.</p>
+<p>SST-LM is a different story and the original verdict holds for it: CD +31.1 %, CL +9.3 %, and no
+bubble anywhere but the trailing edge. <strong>The two models disagree with each other by 36 counts on
+the same grid at the same condition</strong>, and only one of them is near the measurement.</p>
+<p>Both runs are still short of the gate, so all of this is provisional — but the <em>direction</em> is
+opposite to what was recorded, and the earlier claim was resting on a broken instrument.</p>
+<h3 id="the-pitching-moment-sign-is-unresolved-and-now-visible">The pitching moment sign is unresolved, and now visible</h3>
+<p>Both E387 runs report <code>CMz</code> positive where McGhee measures −0.0794. The grader used to compare
+magnitudes, which returns zero error for either sign; it now reports both, and says so:</p>
+<ul>
+<li><code>e387_sa_lm</code>: signed error <strong>+198.0 %</strong>, magnitude error −2.0 %</li>
+<li><code>e387_sst_lm</code>: signed error <strong>+209.2 %</strong>, magnitude error +9.2 %</li>
+</ul>
+<p>The magnitudes are close. The signs are opposite. Until the axis convention is resolved against
+the measurement, no moment claim from this case is usable — and for a BWB, where the pitching
+moment decides whether the aircraft trims at all, that is not a detail.</p>
+<h3 id="t3a-yields-a-transition-location-t3a-yields-something-wrong">T3A yields a transition location; T3A− yields something wrong</h3>
+<p>With the Reynolds correction below, <code>t3a</code> puts transition onset at <strong>Re_x = 1.12e5</strong>, which is
+where bypass transition belongs at elevated free-stream turbulence. <code>fp_bc</code> gives Re_x = 2.59e6 at
+Tu 0.18 %, which is where <em>natural</em> transition belongs. Both are physically sensible.</p>
+<p><code>t3a_minus</code> is not. Its skin friction falls from the leading edge and then sits <strong>flat at about
+2.0e-3 across more than a decade of Re_x</strong>, where a turbulent plate should decay from roughly
+3.7e-3 to 2.1e-3 over the same span. A constant cf over that range is not a boundary layer of
+either kind. The run is also at −7.92 and not converged. <strong>This is flagged, not graded.</strong></p>
+<p>Neither T3A case can be <em>validated</em> today regardless: <code>cfd.mace.manchester.ac.uk</code> refuses
+connections, and it is the only source for Coupland's measurements.</p>
+<h3 id="six-defects-one-of-them-twenty-fold">Six defects, one of them twenty-fold</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>defect</th>
+<th>effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>history()</code> read <code>history.csv</code> alone</td>
+<td>Continuations invisible. Worse, <code>queue23</code> had copied each continuation <strong>over</strong> its original, so three cases' first legs no longer exist</td>
+</tr>
+<tr>
+<td><code>--restart</code> read <code>restart.dat</code> blindly</td>
+<td>A <em>second</em> continuation would have rewound the case and discarded the first — live on two cases</td>
+</tr>
+<tr>
+<td><code>abs(CMz)</code> vs <code>abs(CM_ref)</code></td>
+<td>Zero error for either sign</td>
+</tr>
+<tr>
+<td>Bubble min/max over all reversed points</td>
+<td>Merged separate regions; see the withdrawal above</td>
+</tr>
+<tr>
+<td><code>exit_success</code> from the string alone</td>
+<td>A killed run reported as clean</td>
+</tr>
+<tr>
+<td><strong>Re per metre derived from the config</strong></td>
+<td><strong>T3A and T3A− were 20.1× too high</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>The last one is the sharpest. Both T3A configs state their Reynolds number over the 20 m plate and
+set <code>REF_LENGTH= 20.0</code> without a <code>REYNOLDS_LENGTH</code>, so a reader defaulting that length to 1.0 m
+got 2.656e7 per metre where SU2 had used 1.32318e6. SU2 prints the number it actually used;
+it is read from there now. Measured across six cases the correction is exactly 20.1× on the two
+T3A cases and 1.0× on every other — the compressible plates were right only because they happen to
+set <code>REYNOLDS_LENGTH= 1.0</code> explicitly. <strong>Ask the solver what it did, rather than re-deriving a
+quantity from a convention nobody wrote down.</strong></p>
+<h3 id="a-probe-that-refuted-its-own-hypothesis">A probe that refuted its own hypothesis</h3>
+<p>Every stalled case has its CFL pinned at the adaptation floor, which looked like the cause — until
+two <em>converged</em> cases turned out to be pinned at theirs as well. A controlled probe, same restart
+and same budget with the floor as the only variable:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>case</th>
+<th>floor</th>
+<th>orders per 1,000 iterations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fp_comp_545</code></td>
+<td><strong>100 (control)</strong></td>
+<td><strong>0.067</strong></td>
+</tr>
+<tr>
+<td><code>fp_comp_545</code></td>
+<td>10</td>
+<td>0.026</td>
+</tr>
+<tr>
+<td><code>fp_comp_545</code></td>
+<td>1</td>
+<td>0.024</td>
+</tr>
+<tr>
+<td><code>e387_sa_lm</code></td>
+<td>40 (control)</td>
+<td><strong>−0.068</strong> (rising)</td>
+</tr>
+<tr>
+<td><code>e387_sa_lm</code></td>
+<td>1</td>
+<td>+0.022</td>
+</tr>
+</tbody>
+</table></div>
+<p>Lowering the floor makes the fine flat plate <strong>2.5 times worse</strong> and is the only thing that stops
+E387 diverging. The two cases disagree, so the CFL floor is a per-case setting and not a
+campaign-wide fix. Recorded because a refuted hypothesis that cost one hour is cheaper than a
+settings change applied to ten cases on a guess.</p>
 </section></article>
   </div>
 </div>

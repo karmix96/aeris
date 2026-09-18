@@ -271,6 +271,33 @@ def history(directory: Path) -> dict:
     return out
 
 
+def history_forces(directory: Path) -> dict | None:
+    """CL, CD and CMz from the LAST row of the run's own history.
+
+    forces_breakdown.dat is written when SU2 decides to write it, not when the
+    run ends. On e387_sa_lm the breakdown is stamped 14:19 and the history ran
+    to 14:20, and they disagree on CD by 0.011871 against 0.011644 -- 2.27
+    counts, against a measurement uncertainty of 2.6 for that case. Every force
+    graded from the breakdown alone is a snapshot of unknown age, and a run
+    killed at a time limit is exactly when the gap opens.
+    """
+    legs = [q for q in history_files(directory) if q.exists()]
+    if not legs:
+        return None
+    rows = list(csv.reader(open(legs[-1])))
+    if len(rows) < 2:
+        return None
+    head = [c.strip().strip('"') for c in rows[0]]
+    data = [r for r in rows[1:] if len(r) == len(head)]
+    if not data:
+        return None
+    out = {}
+    for key in ("CL", "CD", "CMz"):
+        if key in head:
+            out[key] = float(data[-1][head.index(key)])
+    return out or None
+
+
 def forces(directory: Path) -> dict | None:
     path = directory / "forces_breakdown.dat"
     if not path.exists():
@@ -287,13 +314,30 @@ def forces(directory: Path) -> dict | None:
     if not cl or not cd:
         return None
     out = {"CL": cl[0], "CD": cd[0], "CDp": cd[1], "CDv": cd[2]}
+    # Cross-check the breakdown against the run's own last iteration, and
+    # prefer the run's last iteration when they disagree. CDp and CDv exist only
+    # in the breakdown, so they stay -- flagged as belonging to the older state
+    # rather than silently mixed with fresher totals.
+    latest = history_forces(directory)
+    if latest:
+        drift = {k: latest[k] - out[k] for k in ("CL", "CD") if k in latest and k in out}
+        stale = any(abs(v) > 1.0e-6 for v in drift.values())
+        if stale:
+            out["forces_breakdown_stale"] = {
+                "breakdown": {k: out[k] for k in ("CL", "CD")},
+                "last_iteration": {k: latest[k] for k in ("CL", "CD") if k in latest},
+                "cd_counts_apart": round(1e4 * abs(drift.get("CD", 0.0)), 3),
+                "note": ("forces_breakdown.dat predates the run's last iteration. "
+                         "CL, CD and CMz below are the LAST ITERATION; CDp and CDv "
+                         "come from the breakdown and belong to the older state.")}
+            out.update({k: v for k, v in latest.items() if k in ("CL", "CD")})
     cm = total("CMz")
     if cm:
         # Kept with SU2's sign, which is opposite to the NASA reports: their pitching moment is
         # nose-down negative about the quarter chord, so E387's CMz = +0.0781 here is McGhee's
         # -0.0794. Graders compare magnitudes; comparing signed values scores a correct run at
         # roughly -200 %.
-        out["CMz"] = cm[0]
+        out["CMz"] = latest.get("CMz", cm[0]) if latest else cm[0]
     return out
 
 
@@ -487,19 +531,42 @@ def _contiguous(x: np.ndarray, mask: np.ndarray) -> list[list[float]]:
     return out
 
 
+#: SU2's CMz sign, established by measurement on 2026-09-18 rather than assumed.
+#:
+#: The surface pressure of e387_sa_lm was integrated independently --
+#: M_z = sum((x - x_ref) dFy - (y - y_ref) dFx) with z = x cross y, out of the
+#: page -- and reproduced SU2's own pressure components to 0.9 % on CL, 3 % on
+#: CDp and 2.5 % on CMz, so the integration and therefore its sign can be
+#: trusted. In that convention a positive M_z rotates counter-clockwise with x
+#: aft and y up; a point on the +x side, which is the TAIL, moves upward; tail
+#: up is nose DOWN. So SU2's CMz is positive nose-down.
+#:
+#: The NASA reports use the opposite sign for the same physical moment: McGhee's
+#: CM = -0.0794 is also nose-down. The two describe the same aerodynamics.
+#:
+#: Comparing raw signs therefore reports a correct run as ~200 % wrong, and
+#: comparing magnitudes hides a genuine flip. Neither is right. The reference is
+#: mapped into SU2's convention and compared SIGNED there, which scores this run
+#: at -2.03 % and would still catch a real sign error.
+CM_REFERENCE_IS_NOSE_DOWN_NEGATIVE = True
+
+
 def _cm_comparison(computed: float, reference: float) -> dict:
-    """Signed AND magnitude, with the sign convention stated, not assumed."""
-    same_sign = (computed >= 0) == (reference >= 0)
+    """Compare in ONE stated convention: SU2's, in which positive is nose-down."""
+    in_su2_convention = -reference if CM_REFERENCE_IS_NOSE_DOWN_NEGATIVE else reference
+    same_sign = (computed >= 0) == (in_su2_convention >= 0)
     return {
+        "convention": ("SU2 CMz positive = nose-down, established by independent "
+                       "surface-pressure integration, not assumed"),
         "computed_CMz": float(computed),
-        "reference_CM_nose_down_negative": float(reference),
-        "signs_agree": bool(same_sign),
-        "signed_error_pct": 100.0 * (computed - reference) / abs(reference),
-        "magnitude_error_pct": 100.0 * (abs(computed) - abs(reference)) / abs(reference),
-        "note": ("both conventions agree on the sign" if same_sign else
-                 "SIGNS DISAGREE: the computed moment and the measurement point "
-                 "opposite ways. Resolve the axis convention before reading the "
-                 "magnitude error, which is blind to this."),
+        "reference_as_published": float(reference),
+        "reference_in_su2_convention": float(in_su2_convention),
+        "signed_error_pct": 100.0 * (computed - in_su2_convention) / abs(in_su2_convention),
+        "signs_agree_after_mapping": bool(same_sign),
+        "note": ("both describe the same physical moment" if same_sign else
+                 "SIGNS DISAGREE EVEN AFTER MAPPING THE CONVENTION: this is a real "
+                 "disagreement about which way the aircraft pitches, not a bookkeeping "
+                 "difference. Do not use any moment from this case."),
     }
 
 

@@ -1,0 +1,9 @@
+{
+  "schema": "aeris.fea.visualization.v1",
+  "outputs": {
+    "mesh": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/docs/fea_visuals/mesh_topology.png",
+    "openaerostruct": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/docs/fea_visuals/oas_comparison.png",
+    "study_0": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/docs/fea_visuals/study_bwb_s8_mesh_convergence.png",
+    "study_1": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/docs/fea_visuals/study_bwb_skin_thickness.png"
+  }
+}

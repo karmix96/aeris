@@ -1,0 +1,22 @@
+schema: aeris.fea.study.v1
+study:
+  name: bwb_structural_dse_screening
+  base_case: bwb_baseline.yaml
+  baseline: baseline
+  # The first pass is intentionally input/mesh/validation-only. Promote to
+  # solve/physics after structural authorities and thresholds are released.
+  stages: [geometry, validate, mesh]
+  variants:
+    - name: shallow_light
+      description: Reduced box depth and thin skins for DSE envelope screening
+      patch:
+        wingbox: {depth_ratio: 0.10}
+        section: {skin_thickness_m: 0.0012}
+    - name: baseline
+      description: Governed conceptual baseline
+      patch: {}
+    - name: deep_reinforced
+      description: Increased box depth and reinforced skins for stiffness screening
+      patch:
+        wingbox: {depth_ratio: 0.14}
+        section: {skin_thickness_m: 0.0018}

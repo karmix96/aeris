@@ -70,6 +70,8 @@ aeris fea run configs/fea/bwb_baseline.yaml
 aeris fea study run configs/fea/study_skin_thickness.yaml
 aeris fea study run configs/fea/study_mesh_convergence.yaml
 aeris fea study run configs/fea/study_s8_pilot.yaml
+aeris fea study run configs/fea/study_structural_dse.yaml --dry-run
+aeris fea visualize data/fea_cases/bwb_baseline --study data/fea_cases/bwb_s8_mesh_convergence
 ```
 
 `--dry-run` generates the canonical station artifact, audited `.msh`, CalculiX
@@ -79,6 +81,14 @@ mesh include, decks, option manifests, and provenance chain without invoking
 The mesh-convergence study orders levels by actual element count and gates the
 medium-to-fine changes in displacement, von Mises stress, and mass. A pass is
 mesh-stability evidence; it is not validation of the wingbox idealization.
+
+The `visualize` command creates reproducible PNGs for shell topology, structural
+study responses, and the OpenAeroStruct-versus-S8 lift comparison. It also writes
+`FEA_VISUAL_REPORT.md`, carrying the evidence status and the next three DSE-
+hardening actions. Visualization files are diagnostic and do not bypass numerical
+gates. `study_structural_dse.yaml` is the next DSE scaffold: it varies box depth
+and skin thickness against the governed baseline and is intentionally dry-run-first
+until released structural authorities and validation thresholds are available.
 
 As exercised on 2026-09-17, the 546/1,332/2,392-element sequence passed with
 4.93% displacement change, 6.94% peak-stress change, and less than 0.001% mass

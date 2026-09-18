@@ -140,3 +140,26 @@ def fea_tools() -> None:
     typer.echo(json.dumps(tools, indent=2))
     if any(path is None for path in tools.values()):
         raise typer.Exit(code=1)
+
+
+@fea_app.command("visualize")
+def fea_visualize(
+    case_dir: Path = typer.Argument(..., help="Completed FEA case directory."),
+    study: list[Path] = typer.Option(
+        [], "--study", help="Completed study report directory (repeatable)."
+    ),
+    output_dir: Path = typer.Option(Path("docs/fea_visuals"), "--output-dir"),
+) -> None:
+    """Create mesh, study, and OpenAeroStruct comparison visualizations."""
+    from aeris.fea.visualize import generate_visualizations
+
+    try:
+        outputs = generate_visualizations(
+            case_dir.expanduser().resolve(),
+            output_dir.expanduser().resolve(),
+            tuple(path.expanduser().resolve() for path in study),
+        )
+    except (OSError, ValueError, KeyError) as exc:
+        typer.secho(f"[fea] visualization failed: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2) from exc
+    typer.echo(json.dumps(outputs, indent=2))

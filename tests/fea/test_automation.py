@@ -18,6 +18,7 @@ from aeris.fea.mesh import build_wingbox_mesh, write_mesh_artifacts
 from aeris.fea.mission import load_mission_authority
 from aeris.fea.openaerostruct import build_oas_mesh, run_oas_validation
 from aeris.fea.study.loader import load_study_spec
+from aeris.fea.visualize import plot_mesh
 
 
 def _stations() -> dict[str, object]:
@@ -252,6 +253,27 @@ def test_holdout_geometry_requires_a_frozen_authority(tmp_path: Path) -> None:
             design_set="round_c_lhs10_seed42",
             design_index=0,
         )
+
+
+def test_mesh_visualization_is_reproducible(tmp_path: Path) -> None:
+    mesh = build_wingbox_mesh(
+        _stations(),
+        WingboxSpec(),
+        MeshSpec(target_size_m=0.25, chordwise_elements=4, depth_elements=2,
+                 max_aspect_ratio=50.0, min_corner_angle_deg=10.0),
+        SectionSpec(skin_thickness_m=0.002, spar_thickness_m=0.0025),
+        2700.0,
+    )
+    artifacts = write_mesh_artifacts(mesh, tmp_path / "mesh")
+    case_dir = tmp_path / "case"
+    (case_dir / "mesh").mkdir(parents=True)
+    target = case_dir / "mesh" / "wingbox_mesh.inp"
+    target.write_text(
+        Path(artifacts["calculix_mesh"]).read_text(encoding="utf-8"), encoding="utf-8"
+    )
+    image = plot_mesh(case_dir, tmp_path / "visuals")
+    assert image.is_file()
+    assert image.stat().st_size > 1000
 
 
 @pytest.mark.integration

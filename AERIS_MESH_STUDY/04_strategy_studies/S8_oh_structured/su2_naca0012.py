@@ -177,8 +177,19 @@ def cmd_compare(args) -> int:
             report["variants"]["wing"] = {"changes": {}, "su2": old["su2"],
                                           "su2_vs_tmr_pct": old["su2_vs_tmr_pct"],
                                           "exit_success": old.get("su2_exit_success")}
+    # SU2 prints "Exit Success" on its way out of a SIGNAL too, so that string
+    # alone reports a killed run as a clean one. su2_validation.py was fixed for
+    # this on 15 Sept after the roe_wls variant was stopped at iteration 727 and
+    # still claimed success; this file was not, and an external review confirmed
+    # it on 2026-09-16 by feeding the real function a log containing both
+    # "Interrupt signal received" and "Exit Success", which returned true.
+    interrupted = "Interrupt signal" in log
+    converged = "All convergence criteria satisfied" in log
     report["variants"][args.variant] = {
-        "changes": VARIANTS[args.variant], "su2": su2, "exit_success": "Exit Success" in log,
+        "changes": VARIANTS[args.variant], "su2": su2,
+        "exit_success": bool(converged and not interrupted),
+        "converged_message": converged,
+        "interrupted": interrupted,
         "su2_vs_tmr_pct": {k: 100 * (su2[k] - tmr[k]) / tmr[k] for k in su2}}
     REPORT.write_text(json.dumps(report, indent=2) + "\n")
     print(f"{'':>16}{'CL':>9}{'CD':>9}{'CDp':>9}{'CDv':>9}   (% from TMR)")

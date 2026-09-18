@@ -39,6 +39,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import math
 import re
@@ -115,11 +116,24 @@ def cmd_config(args) -> int:
     lines = source.read_text().splitlines()
     changes = {**OUTPUT_ONLY, "MESH_FILENAME": str(TUTORIALS / folder / mesh)}
     if getattr(args, "restart", False):
-        # continue a run that was killed at its time limit rather than start again:
-        # the three cases of stage 0's first group each wrote a restart file before
-        # queue21's five-hour guard stopped them, two of them nearly settled
-        changes.update({"RESTART_SOL": "YES", "SOLUTION_FILENAME": "restart.dat",
-                        "RESTART_FILENAME": "restart_cont.dat", "CONV_FILENAME": "history_cont",
+        # Continue rather than start again. Two things this used to get wrong.
+        #
+        # It read `restart.dat` unconditionally. After one continuation the newest
+        # solution is `restart_cont.dat`, so a SECOND continuation would have
+        # silently rewound the case to where the first one started and thrown
+        # away everything it computed. fp_comp_545 and naca0012_inc_897 both have
+        # a restart_cont.dat today, so this was live.
+        #
+        # And it wrote `history_cont` every time, so each leg overwrote the last.
+        # Legs are numbered now, and nothing is ever written over a history that
+        # already exists -- see history(), which reassembles them.
+        existing = sorted((RUNS / args.case).glob("restart*.dat"),
+                          key=lambda q: q.stat().st_mtime)
+        newest = existing[-1].name if existing else "restart.dat"
+        generation = len(list((RUNS / args.case).glob("history_cont*.csv"))) + 1
+        changes.update({"RESTART_SOL": "YES", "SOLUTION_FILENAME": newest,
+                        "RESTART_FILENAME": f"restart_cont{generation}.dat",
+                        "CONV_FILENAME": f"history_cont{generation}",
                         "BREAKDOWN_FILENAME": "forces_breakdown.dat"})
     recorded, seen, out = {}, set(), []
     for line in lines:
@@ -145,19 +159,93 @@ def cmd_config(args) -> int:
 
 # ----------------------------------------------------------------------------- reading results
 
+#: A continuation writes its own history file, so a case's convergence story is
+#: spread across several. `cmd_config --restart` sets CONV_FILENAME to
+#: `history_cont`, and this reader used to open `history.csv` alone.
+#:
+#: The consequence, reproduced synthetically by an external review and confirmed
+#: here: `fp_comp_545`, `fp_inc_545` and `naca0012_inc_897` each have a
+#: `history_cont.csv` with thousands of iterations in it, and every verdict
+#: those cases received was computed from the FIRST leg only -- the one that was
+#: killed at its time limit. The forces came from `forces_breakdown.dat`, which
+#: the continuation DOES overwrite, so the reports combined up-to-date forces
+#: with a stale convergence history and no field said so.
+def history_files(directory: Path) -> list[Path]:
+    """history.csv then every numbered continuation, oldest first."""
+    out = [directory / "history.csv", directory / "history_cont.csv"]
+    out += sorted(directory.glob("history_cont[0-9]*.csv"),
+                  key=lambda q: int("".join(c for c in q.stem if c.isdigit()) or 0))
+    seen, ordered = set(), []
+    for q in out:
+        if q.name not in seen:
+            seen.add(q.name)
+            ordered.append(q)
+    return ordered
+
+
 def history(directory: Path) -> dict:
-    path = directory / "history.csv"
-    if not path.exists():
+    """Every DISTINCT leg of the run, in order, as one convergence history.
+
+    Deduplicated by content, because queue23 copied each continuation over the
+    original at the end of its group. `history.csv` and `history_cont.csv` are
+    byte-identical in `fp_comp_545`, `fp_inc_545` and `naca0012_inc_897`, and
+    concatenating them blindly counts the same iterations twice.
+
+    That copy also means the FIRST leg's history no longer exists for those
+    three cases: both files start at Inner_Iter 0 and end at the continuation's
+    last iteration, so the orders-dropped figure covers the continuation alone
+    and the drop achieved before the time limit is unrecoverable. It is reported
+    as `first_leg_overwritten` rather than quietly presented as the whole run.
+    A continuation must never be copied over the history it continues.
+    """
+    legs, head, seen_digests = [], None, {}
+    overwritten = False
+    for path in history_files(directory):
+        name = path.name
+        if not path.exists():
+            continue
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        if digest in seen_digests:
+            overwritten = True
+            continue
+        seen_digests[digest] = name
+        rows = list(csv.reader(open(path)))
+        if not rows:
+            continue
+        this_head = [c.strip().strip('"') for c in rows[0]]
+        data = [r for r in rows[1:] if len(r) == len(this_head)]
+        if not data:
+            continue
+        if head is None:
+            head = this_head
+        elif this_head != head:
+            legs.append((name, this_head, data, True))
+            continue
+        legs.append((name, this_head, data, False))
+    if not legs:
         return {}
-    rows = list(csv.reader(open(path)))
-    head = [c.strip().strip('"') for c in rows[0]]
-    data = [r for r in rows[1:] if len(r) == len(head)]
-    if not data:
+    mismatched = [name for name, _, _, bad in legs if bad]
+    usable = [(name, h, d) for name, h, d, bad in legs if not bad]
+    if not usable:
         return {}
-    rms = {h: (float(data[0][i]), float(data[-1][i])) for i, h in enumerate(head) if h.startswith("rms[")}
-    return {"iterations": int(float(data[-1][head.index("Inner_Iter")])) if "Inner_Iter" in head else len(data),
-            "rms_first_last": rms,
-            "orders_dropped": {h: round(a - b, 2) for h, (a, b) in rms.items()}}
+    first_data, last_data = usable[0][2], usable[-1][2]
+    rms = {h: (float(first_data[0][i]), float(last_data[-1][i]))
+           for i, h in enumerate(head) if h.startswith("rms[")}
+    total = sum(len(d) for _, _, d in usable)
+    out = {"iterations": (int(float(last_data[-1][head.index("Inner_Iter")]))
+                          if "Inner_Iter" in head else total),
+           "iterations_all_legs": total,
+           "legs": [{"file": name, "rows": len(d)} for name, _, d in usable],
+           "rms_first_last": rms,
+           "orders_dropped": {h: round(a - b, 2) for h, (a, b) in rms.items()}}
+    if mismatched:
+        out["legs_skipped_column_mismatch"] = mismatched
+    if overwritten:
+        out["first_leg_overwritten"] = (
+            "a continuation file is byte-identical to history.csv, so the queue "
+            "copied it over the original. The drop before the restart is gone; "
+            "orders_dropped covers the continuation only.")
+    return out
 
 
 def forces(directory: Path) -> dict | None:
@@ -322,6 +410,40 @@ def e387_reference(alpha: float, re_number: float) -> dict | None:
     return out
 
 
+def _contiguous(x: np.ndarray, mask: np.ndarray) -> list[list[float]]:
+    """Start and end of every run of True in `mask`, as x values.
+
+    Surface points arrive sorted by x, so a run of consecutive True entries is a
+    connected region of the surface. Separate regions stay separate.
+    """
+    out, start = [], None
+    for i, flag in enumerate(mask):
+        if flag and start is None:
+            start = i
+        elif not flag and start is not None:
+            out.append([float(x[start]), float(x[i - 1])])
+            start = None
+    if start is not None:
+        out.append([float(x[start]), float(x[-1])])
+    return out
+
+
+def _cm_comparison(computed: float, reference: float) -> dict:
+    """Signed AND magnitude, with the sign convention stated, not assumed."""
+    same_sign = (computed >= 0) == (reference >= 0)
+    return {
+        "computed_CMz": float(computed),
+        "reference_CM_nose_down_negative": float(reference),
+        "signs_agree": bool(same_sign),
+        "signed_error_pct": 100.0 * (computed - reference) / abs(reference),
+        "magnitude_error_pct": 100.0 * (abs(computed) - abs(reference)) / abs(reference),
+        "note": ("both conventions agree on the sign" if same_sign else
+                 "SIGNS DISAGREE: the computed moment and the measurement point "
+                 "opposite ways. Resolve the axis convention before reading the "
+                 "magnitude error, which is blind to this."),
+    }
+
+
 def judge_transition(case: str, directory: Path, entry: dict) -> None:
     surf, f = surface(directory), forces(directory)
     lines = (directory / "case.cfg").read_text().splitlines()
@@ -340,10 +462,15 @@ def judge_transition(case: str, directory: Path, entry: dict) -> None:
                 "CL_pct": 100.0 * (f["CL"] - ref["CL"]) / ref["CL"],
                 "CD_counts": 1e4 * (f["CD"] - ref["CD"]),
                 "CD_pct": 100.0 * (f["CD"] - ref["CD"]) / ref["CD"],
-                # magnitudes: SU2's CMz is signed opposite to the report's nose-down-negative
-                **({"CM_magnitude_pct":
-                    100.0 * (abs(f["CMz"]) - abs(ref["CM_nose_down_negative"]))
-                    / abs(ref["CM_nose_down_negative"])} if "CMz" in f else {})}
+                # Comparing |CMz| to |CM_ref| hides a sign error completely: an
+                # external review ran this grader with +0.0794 and with -0.0794
+                # and got zero magnitude error from BOTH. For a BWB, where the
+                # pitching moment decides whether the aircraft can be trimmed at
+                # all, that is not a detail. Both the signed and the magnitude
+                # comparison are recorded, and the convention is asserted rather
+                # than assumed -- if the signs disagree, the field says so.
+                **({"CM": _cm_comparison(f["CMz"], ref["CM_nose_down_negative"])}
+                   if "CMz" in f else {})}
             entry["within_measurement_uncertainty"] = {
                 "CD": bool(abs(f["CD"] - ref["CD"]) <= E387_UNCERTAINTY["CD"]),
                 "CL": bool(abs(f["CL"] - ref["CL"]) <= E387_UNCERTAINTY["CL"])}
@@ -380,8 +507,17 @@ def judge_transition(case: str, directory: Path, entry: dict) -> None:
         chord = float(x.max() - x.min())
         upper = surf["y"][order] > 0
         xs, cs = (x[upper] - x.min()) / chord, cf[upper]
-        reversed_ = xs[cs < 0]
-        got = [float(reversed_.min()), float(reversed_.max())] if reversed_.size else None
+        # CONTIGUOUS intervals, not the extremes of every reversed point. Taking
+        # min and max over all of them merges a laminar bubble at 0.2-0.3 with a
+        # trailing-edge separation at 0.7-0.8 into one fictitious region running
+        # 0.2-0.8. The review demonstrated exactly that with a synthetic field;
+        # here it would have reported a bubble four times its real length, and
+        # reported one at all on a flow that has only trailing-edge separation.
+        regions = _contiguous(xs, cs < 0)
+        entry["upper_reversed_flow_regions_x_over_c"] = regions
+        # the bubble is the reversed region that is NOT against the trailing edge
+        bubbles = [r for r in regions if r[1] <= 0.95]
+        got = max(bubbles, key=lambda r: r[1] - r[0]) if bubbles else None
         entry["upper_reversed_flow_x_over_c"] = got
         if isinstance(entry.get("reference"), dict) and "x_laminar_separation" in entry["reference"]:
             measured = [entry["reference"]["x_laminar_separation"],
@@ -389,10 +525,11 @@ def judge_transition(case: str, directory: Path, entry: dict) -> None:
             entry["bubble"] = {
                 "measured_x_over_c": measured,
                 "computed_x_over_c": got,
-                "verdict": "no bubble: the only reversed flow is at the trailing edge"
-                           if got is None or got[0] > 0.95 else
-                           f"separation {got[0] - measured[0]:+.3f}c, "
-                           f"reattachment {got[1] - measured[1]:+.3f}c"}
+                "all_reversed_regions": regions,
+                "verdict": ("no bubble: the only reversed flow is at the trailing edge"
+                            if got is None else
+                            f"separation {got[0] - measured[0]:+.3f}c, "
+                            f"reattachment {got[1] - measured[1]:+.3f}c")}
         elif not isinstance(entry.get("reference"), dict):
             entry["reference"] = "no measurement on file for this case at this angle"
 

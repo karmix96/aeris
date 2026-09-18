@@ -1,0 +1,8 @@
+{
+  "schema": "aeris.fea.visualization.v1",
+  "outputs": {
+    "mesh": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/docs/fea_visuals/s8_pilot_e2e/mesh_topology.png",
+    "openaerostruct": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/docs/fea_visuals/s8_pilot_e2e/oas_comparison.png",
+    "study_0": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/docs/fea_visuals/s8_pilot_e2e/study_bwb_s8_ten_wing_pilot.png"
+  }
+}

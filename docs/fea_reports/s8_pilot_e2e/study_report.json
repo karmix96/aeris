@@ -1,0 +1,346 @@
+{
+  "baseline": "index83",
+  "deltas_vs_baseline": {
+    "index12": {
+      "element_count": -180.0,
+      "full_structural_mass_kg": 0.3479162403932463,
+      "max_displacement_m": -9.550319319859957e-05,
+      "max_von_mises_pa": -803328.1459158608,
+      "minimum_safety_factor": 35.90751161635609,
+      "node_count": -180.0
+    },
+    "index13": {
+      "element_count": -392.0,
+      "full_structural_mass_kg": 2.1811162757151914,
+      "max_displacement_m": -0.00010709613126684016,
+      "max_von_mises_pa": -1775116.6967021415,
+      "minimum_safety_factor": 136.51751925380867,
+      "node_count": -396.0
+    },
+    "index16": {
+      "element_count": -180.0,
+      "full_structural_mass_kg": -0.5107993597455973,
+      "max_displacement_m": -0.00010250470273229754,
+      "max_von_mises_pa": -553031.052417066,
+      "minimum_safety_factor": 22.31283331173894,
+      "node_count": -180.0
+    },
+    "index23": {
+      "element_count": -184.0,
+      "full_structural_mass_kg": -0.15501949577590768,
+      "max_displacement_m": -3.3115071542787845e-05,
+      "max_von_mises_pa": 163751.36189251067,
+      "minimum_safety_factor": -5.166302724966769,
+      "node_count": -180.0
+    },
+    "index29": {
+      "element_count": -184.0,
+      "full_structural_mass_kg": 0.18287762257245443,
+      "max_displacement_m": -8.950548671707233e-05,
+      "max_von_mises_pa": -498313.8372033504,
+      "minimum_safety_factor": 19.68617712414442,
+      "node_count": -180.0
+    },
+    "index36": {
+      "element_count": -4.0,
+      "full_structural_mass_kg": 0.38894271824521454,
+      "max_displacement_m": 6.108813646029911e-05,
+      "max_von_mises_pa": -89700.372644105,
+      "minimum_safety_factor": 3.0664233836742056,
+      "node_count": 0.0
+    },
+    "index47": {
+      "element_count": -184.0,
+      "full_structural_mass_kg": -1.3536598801434705,
+      "max_displacement_m": -4.166806259590618e-05,
+      "max_von_mises_pa": 504204.6112362868,
+      "minimum_safety_factor": -14.41471961854684,
+      "node_count": -180.0
+    },
+    "index65": {
+      "element_count": -572.0,
+      "full_structural_mass_kg": 0.5780660370133965,
+      "max_displacement_m": -9.737771955286678e-05,
+      "max_von_mises_pa": -1325426.1782766907,
+      "minimum_safety_factor": 76.44434131033273,
+      "node_count": -576.0
+    },
+    "index81": {
+      "element_count": -4.0,
+      "full_structural_mass_kg": 0.9392530313253777,
+      "max_displacement_m": -4.996846064252516e-06,
+      "max_von_mises_pa": -187239.31344717648,
+      "minimum_safety_factor": 6.613416389975313,
+      "node_count": 0.0
+    }
+  },
+  "dse_summary": {
+    "pareto_front": [
+      "index12",
+      "index13",
+      "index16",
+      "index47",
+      "index65"
+    ],
+    "ranked": [
+      {
+        "name": "index65",
+        "score": 0.26718914841911334
+      },
+      {
+        "name": "index16",
+        "score": 0.26730337507610735
+      },
+      {
+        "name": "index12",
+        "score": 0.325553839083891
+      },
+      {
+        "name": "index13",
+        "score": 0.3333333333333333
+      },
+      {
+        "name": "index29",
+        "score": 0.3664836995748167
+      },
+      {
+        "name": "index47",
+        "score": 0.46300869785094667
+      },
+      {
+        "name": "index23",
+        "score": 0.5432047624728917
+      },
+      {
+        "name": "index83",
+        "score": 0.599508406945114
+      },
+      {
+        "name": "index81",
+        "score": 0.6507951810111258
+      },
+      {
+        "name": "index36",
+        "score": 0.7441419669349183
+      }
+    ],
+    "ranking_metrics": [
+      "full_structural_mass_kg",
+      "max_displacement_m",
+      "max_von_mises_pa"
+    ],
+    "status": "pass"
+  },
+  "generated_utc": "2026-09-18T04:46:53.306149+00:00",
+  "mesh_convergence": null,
+  "schema": "aeris.fea.study_report.v1",
+  "status": "pass",
+  "study": "bwb_s8_ten_wing_pilot",
+  "study_yaml": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/configs/fea/study_s8_pilot.yaml",
+  "study_yaml_sha256": "eceebd9cb76c43a3bfb990d57a2ef2a0d377dca1ac86e8ce0b04db3bde0047c5",
+  "variants": [
+    {
+      "cached": false,
+      "metrics": {
+        "element_count": 1476.0,
+        "full_structural_mass_kg": 5.89153055447853,
+        "max_displacement_m": 5.132773998816419e-05,
+        "max_von_mises_pa": 2320450.8795355656,
+        "minimum_safety_factor": 139.62803645507378,
+        "node_count": 1422.0
+      },
+      "name": "index12",
+      "patch": {
+        "geometry": {
+          "design_index": 12
+        },
+        "openaerostruct_validation": {
+          "geometry_index": 12
+        }
+      },
+      "status": "ok"
+    },
+    {
+      "cached": false,
+      "metrics": {
+        "element_count": 1264.0,
+        "full_structural_mass_kg": 7.724730589800475,
+        "max_displacement_m": 3.9734801919923596e-05,
+        "max_von_mises_pa": 1348662.3287492848,
+        "minimum_safety_factor": 240.23804409252637,
+        "node_count": 1206.0
+      },
+      "name": "index13",
+      "patch": {
+        "geometry": {
+          "design_index": 13
+        },
+        "openaerostruct_validation": {
+          "geometry_index": 13
+        }
+      },
+      "status": "ok"
+    },
+    {
+      "cached": false,
+      "metrics": {
+        "element_count": 1476.0,
+        "full_structural_mass_kg": 5.0328149543396865,
+        "max_displacement_m": 4.4326230454466215e-05,
+        "max_von_mises_pa": 2570747.9730343604,
+        "minimum_safety_factor": 126.03335815045664,
+        "node_count": 1422.0
+      },
+      "name": "index16",
+      "patch": {
+        "geometry": {
+          "design_index": 16
+        },
+        "openaerostruct_validation": {
+          "geometry_index": 16
+        }
+      },
+      "status": "ok"
+    },
+    {
+      "cached": false,
+      "metrics": {
+        "element_count": 1472.0,
+        "full_structural_mass_kg": 5.388594818309376,
+        "max_displacement_m": 0.00011371586164397591,
+        "max_von_mises_pa": 3287530.387343937,
+        "minimum_safety_factor": 98.55422211375092,
+        "node_count": 1422.0
+      },
+      "name": "index23",
+      "patch": {
+        "geometry": {
+          "design_index": 23
+        },
+        "openaerostruct_validation": {
+          "geometry_index": 23
+        }
+      },
+      "status": "ok"
+    },
+    {
+      "cached": false,
+      "metrics": {
+        "element_count": 1472.0,
+        "full_structural_mass_kg": 5.726491936657738,
+        "max_displacement_m": 5.732544646969143e-05,
+        "max_von_mises_pa": 2625465.188248076,
+        "minimum_safety_factor": 123.40670196286212,
+        "node_count": 1422.0
+      },
+      "name": "index29",
+      "patch": {
+        "geometry": {
+          "design_index": 29
+        },
+        "openaerostruct_validation": {
+          "geometry_index": 29
+        }
+      },
+      "status": "ok"
+    },
+    {
+      "cached": false,
+      "metrics": {
+        "element_count": 1652.0,
+        "full_structural_mass_kg": 5.932557032330498,
+        "max_displacement_m": 0.00020791906964706287,
+        "max_von_mises_pa": 3034078.6528073214,
+        "minimum_safety_factor": 106.7869482223919,
+        "node_count": 1602.0
+      },
+      "name": "index36",
+      "patch": {
+        "geometry": {
+          "design_index": 36
+        },
+        "openaerostruct_validation": {
+          "geometry_index": 36
+        }
+      },
+      "status": "ok"
+    },
+    {
+      "cached": false,
+      "metrics": {
+        "element_count": 1472.0,
+        "full_structural_mass_kg": 4.189954433941813,
+        "max_displacement_m": 0.00010516287059085758,
+        "max_von_mises_pa": 3627983.636687713,
+        "minimum_safety_factor": 89.30580522017085,
+        "node_count": 1422.0
+      },
+      "name": "index47",
+      "patch": {
+        "geometry": {
+          "design_index": 47
+        },
+        "openaerostruct_validation": {
+          "geometry_index": 47
+        }
+      },
+      "status": "ok"
+    },
+    {
+      "cached": false,
+      "metrics": {
+        "element_count": 1084.0,
+        "full_structural_mass_kg": 6.12168035109868,
+        "max_displacement_m": 4.945321363389698e-05,
+        "max_von_mises_pa": 1798352.8471747357,
+        "minimum_safety_factor": 180.16486614905043,
+        "node_count": 1026.0
+      },
+      "name": "index65",
+      "patch": {
+        "geometry": {
+          "design_index": 65
+        },
+        "openaerostruct_validation": {
+          "geometry_index": 65
+        }
+      },
+      "status": "ok"
+    },
+    {
+      "cached": false,
+      "metrics": {
+        "element_count": 1652.0,
+        "full_structural_mass_kg": 6.482867345410662,
+        "max_displacement_m": 0.00014183408712251124,
+        "max_von_mises_pa": 2936539.71200425,
+        "minimum_safety_factor": 110.333941228693,
+        "node_count": 1602.0
+      },
+      "name": "index81",
+      "patch": {
+        "geometry": {
+          "design_index": 81
+        },
+        "openaerostruct_validation": {
+          "geometry_index": 81
+        }
+      },
+      "status": "ok"
+    },
+    {
+      "cached": false,
+      "metrics": {
+        "element_count": 1656.0,
+        "full_structural_mass_kg": 5.543614314085284,
+        "max_displacement_m": 0.00014683093318676376,
+        "max_von_mises_pa": 3123779.0254514264,
+        "minimum_safety_factor": 103.7205248387177,
+        "node_count": 1602.0
+      },
+      "name": "index83",
+      "patch": {},
+      "status": "ok"
+    }
+  ]
+}

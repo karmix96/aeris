@@ -1,0 +1,81 @@
+{
+  "analyses": {
+    "buckling": {
+      "first_positive_load_factor": 15.41605,
+      "load_case": "positive_limit",
+      "load_factors": [
+        15.41605,
+        24.52817,
+        33.06331,
+        36.29605,
+        51.38037
+      ],
+      "minimum_load_factor": 1.0
+    },
+    "modal": {
+      "eigenvalues_rad2_s2": [
+        878134.5,
+        2140052.0,
+        2515587.0,
+        2809614.0,
+        3064901.0,
+        5018974.0,
+        6224173.0,
+        6278613.0
+      ],
+      "first_frequency_hz": 149.14223658740377,
+      "frequencies_hz": [
+        149.14223658740377,
+        232.82643841290462,
+        252.4293229773819,
+        266.77397551957876,
+        278.6303093108253,
+        356.55588143729966,
+        397.06440773339295,
+        398.79709778036545
+      ],
+      "minimum_first_frequency_hz": 5.0
+    },
+    "nonlinear": {
+      "negative_limit": {
+        "displacement_rows": 26136,
+        "linear_displacement_m": 8.255250852512399e-05,
+        "linear_relative_difference": 0.003980296988909899,
+        "max_displacement_m": 8.222522769890162e-05,
+        "max_von_mises_pa": 1539139.1173101144,
+        "maximum_linear_relative_difference": 0.1,
+        "reaction_force_n": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "reaction_rows": 0,
+        "stress_rows": 202752
+      },
+      "positive_limit": {
+        "displacement_rows": 26136,
+        "linear_displacement_m": 0.0002681245634728954,
+        "linear_relative_difference": 0.04385428156713544,
+        "max_displacement_m": 0.0002804222811480609,
+        "max_von_mises_pa": 4632391.490899559,
+        "maximum_linear_relative_difference": 0.1,
+        "reaction_force_n": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "reaction_rows": 0,
+        "stress_rows": 202752
+      }
+    }
+  },
+  "checks": {
+    "buckling_minimum_load_factor": true,
+    "modal_minimum_frequency": true,
+    "nonlinear_displacement:negative_limit": true,
+    "nonlinear_displacement:positive_limit": true
+  },
+  "schema": "aeris.fea.physics_report.v1",
+  "status": "pass",
+  "topology": "advanced analyses use a reduced closed-box topology because CalculiX 2.21 nonlinear/buckling shell MPCs are not qualified for intersecting rib/cut-out knots; primary static results remain on the rich mesh"
+}

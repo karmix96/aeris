@@ -1,0 +1,97 @@
+{
+  "failures": [],
+  "full_structural_mass_kg": 6.482867345410662,
+  "loads": {
+    "negative_limit": {
+      "applied_force_vector_half_model_n": [
+        2.156331128987368,
+        -4.402207349681929,
+        -91.68583941444186
+      ],
+      "applied_resultant_half_model_n": -91.93734375,
+      "checks": {
+        "maximum_displacement_m": true,
+        "minimum_safety_factor": true,
+        "solver_converged": true
+      },
+      "displacement_rows": 1602,
+      "load_authority": {
+        "aircraft_mass_kg": 12.5,
+        "alpha_deg": -2.0,
+        "direction": -1.0,
+        "gravity_m_s2": 9.80665,
+        "load_factor": 1.5,
+        "mapping": "absolute OAS sectional Fz shape, normalized onto top-skin shell area",
+        "source": "openaerostruct_spanwise_shape",
+        "target_resultant_half_model_n": -91.93734375,
+        "validation_report": "/tmp/aeris_fea_pilot_e2e.GebtSM/index81/validation/openaerostruct_validation.json",
+        "validation_report_sha256": "45111e35d2d6cfb553a588523061e46b4eae504beb50814bd2d8984addc2584d"
+      },
+      "load_case": "negative_limit",
+      "load_mapping_relative_error": 0.0,
+      "max_displacement_m": 0.00010977066336918043,
+      "max_von_mises_pa": 1250407.9403335527,
+      "reaction_force_n": [
+        -2.1206365040000072,
+        4.193850999999995,
+        65.79875080000001
+      ],
+      "reaction_force_note": "ROOT RF is diagnostic only for expanded S4 shells; it is not used as an equilibrium acceptance gate.",
+      "reaction_rows": 36,
+      "safety_factor_yield": 259.115437089732,
+      "schema": "aeris.fea.solve_report.v1",
+      "solver": "calculix",
+      "solver_returncode": 0,
+      "status": "converged",
+      "stress_rows": 13216,
+      "yield_strength_pa": 324000000.0
+    },
+    "positive_limit": {
+      "applied_force_vector_half_model_n": [
+        -3.9367580121091397,
+        13.787751364222462,
+        232.26080628530988
+      ],
+      "applied_resultant_half_model_n": 232.90793749999997,
+      "checks": {
+        "maximum_displacement_m": true,
+        "minimum_safety_factor": true,
+        "solver_converged": true
+      },
+      "displacement_rows": 1602,
+      "load_authority": {
+        "aircraft_mass_kg": 12.5,
+        "alpha_deg": 8.0,
+        "direction": 1.0,
+        "gravity_m_s2": 9.80665,
+        "load_factor": 3.8,
+        "mapping": "absolute OAS sectional Fz shape, normalized onto top-skin shell area",
+        "source": "openaerostruct_spanwise_shape",
+        "target_resultant_half_model_n": 232.90793749999997,
+        "validation_report": "/tmp/aeris_fea_pilot_e2e.GebtSM/index81/validation/openaerostruct_validation.json",
+        "validation_report_sha256": "45111e35d2d6cfb553a588523061e46b4eae504beb50814bd2d8984addc2584d"
+      },
+      "load_case": "positive_limit",
+      "load_mapping_relative_error": 0.0,
+      "max_displacement_m": 0.00014183408712251124,
+      "max_von_mises_pa": 2936539.71200425,
+      "reaction_force_n": [
+        3.828810400000007,
+        -13.159353999999944,
+        -171.8103348
+      ],
+      "reaction_force_note": "ROOT RF is diagnostic only for expanded S4 shells; it is not used as an equilibrium acceptance gate.",
+      "reaction_rows": 36,
+      "safety_factor_yield": 110.333941228693,
+      "schema": "aeris.fea.solve_report.v1",
+      "solver": "calculix",
+      "solver_returncode": 0,
+      "status": "converged",
+      "stress_rows": 13216,
+      "yield_strength_pa": 324000000.0
+    }
+  },
+  "mass_check": true,
+  "schema": "aeris.fea.verification.v1",
+  "status": "pass"
+}

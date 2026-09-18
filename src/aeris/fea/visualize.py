@@ -168,11 +168,19 @@ def generate_visualizations(
     outputs = {"mesh": str(plot_mesh(case_dir, output_dir))}
     if (case_dir / "validation" / "openaerostruct_validation.json").is_file():
         outputs["openaerostruct"] = str(plot_oas_comparison(case_dir, output_dir))
+    study_summaries: list[str] = []
     for index, study_dir in enumerate(study_dirs):
         report = json.loads((study_dir / "study_report.json").read_text(encoding="utf-8"))
         study_name = str(report.get("study", study_dir.name)).replace("/", "_")
         outputs[f"study_{index}"] = str(
             plot_study(study_dir, output_dir, filename=f"study_{study_name}.png")
+        )
+        variants = report.get("variants", [])
+        study_summaries.append(
+            f"### {report.get('study', study_dir.name)}\n\n"
+            f"Status: **{report.get('status', 'unknown')}**; variants: {len(variants)}.\n\n"
+            "Pareto candidates: `"
+            f"{', '.join(report.get('dse_summary', {}).get('pareto_front', []))}`.\n"
         )
     manifest = output_dir / "visualization_manifest.json"
     manifest.write_text(
@@ -188,6 +196,9 @@ def generate_visualizations(
         "- `mesh_topology.png`: audited shell elements colored by region.\n"
         "- `oas_comparison.png`: S8 CFD authority versus OpenAeroStruct global lift.\n"
         "- `study_comparison.png`: mass, displacement, and stress across each supplied study.\n\n"
+        "## Pilot/study execution summary\n\n"
+        + "\n".join(study_summaries)
+        + "\n"
         "## Next three steps toward robust FEA design-space exploration\n\n"
         "1. **Release structural authorities:** replace provisional box depth, spar locations, "
         "aircraft mass, and typical aluminum values with versioned released geometry, mass, "

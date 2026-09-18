@@ -1,0 +1,419 @@
+{
+  "case": "bwb_s8_ten_wing_pilot_index29",
+  "case_yaml": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/configs/fea/study_s8_pilot.yaml",
+  "case_yaml_sha256": "eceebd9cb76c43a3bfb990d57a2ef2a0d377dca1ac86e8ce0b04db3bde0047c5",
+  "generated_utc": "2026-09-18T04:44:23.199335+00:00",
+  "open_source_stack": {
+    "aerodynamic_comparison": "OpenAeroStruct",
+    "mesh_format": "Gmsh 2.2",
+    "solver": "CalculiX"
+  },
+  "schema": "aeris.fea.case_manifest.v1",
+  "stages": {
+    "geometry": {
+      "artifacts": {
+        "stations": "/tmp/aeris_fea_pilot_e2e.GebtSM/index29/geometry/stations.json"
+      },
+      "details": {
+        "design_index": 29,
+        "design_matrix_sha256": "1690b28a4d0623d3e1f48f6d70f0b5047d83eb9e2aa16adf12d6bba515e0bb7d",
+        "design_set": "lhs100_seed42",
+        "generator": "bwb_segmented",
+        "seed": null,
+        "source": "/tmp/aeris_fea_pilot_e2e.GebtSM/index29/inputs/stations.json",
+        "station_count": 17
+      },
+      "sha256": {
+        "stations": "415b1ae464a5e825699790683d931da3169e4778bce1606f52f9095efac7969e"
+      },
+      "status": "ok"
+    },
+    "mesh": {
+      "artifacts": {
+        "calculix_mesh": "/tmp/aeris_fea_pilot_e2e.GebtSM/index29/mesh/wingbox_mesh.inp",
+        "gmsh_mesh": "/tmp/aeris_fea_pilot_e2e.GebtSM/index29/mesh/wingbox.msh",
+        "mesh_report": "/tmp/aeris_fea_pilot_e2e.GebtSM/index29/mesh/mesh_report.json"
+      },
+      "details": {
+        "full_structural_mass_kg": 5.726491936657738,
+        "quality": {
+          "element_count": 1472.0,
+          "max_aspect_ratio": 13.69246985255342,
+          "min_corner_angle_deg": 62.32762253660721,
+          "node_count": 1422.0
+        }
+      },
+      "sha256": {
+        "calculix_mesh": "a067c0ec9ec6e3fd7751323f5d3a89b50ba79980e7d8c39d1a8962cda0a2f206",
+        "gmsh_mesh": "788dddd3c6c81a8b788eb9333b4707a02f557a90b23a825623521468e855e68c",
+        "mesh_report": "72cbad37ffa8a760365a829e20462692092aae5a8e765acd4b9ca3cf606068a9"
+      },
+      "status": "ok"
+    },
+    "physics": {
+      "artifacts": {
+        "physics_report": "/tmp/aeris_fea_pilot_e2e.GebtSM/index29/physics/physics_report.json"
+      },
+      "details": {
+        "analyses": {
+          "buckling": {
+            "first_positive_load_factor": 36.1823,
+            "load_case": "positive_limit",
+            "load_factors": [
+              36.1823,
+              46.96932,
+              92.40364,
+              109.4013,
+              117.0499
+            ],
+            "minimum_load_factor": 1.0
+          },
+          "modal": {
+            "eigenvalues_rad2_s2": [
+              514236.5,
+              558935.6,
+              1248944.0,
+              1300136.0,
+              2372190.0,
+              2464889.0,
+              2752520.0,
+              2865639.0
+            ],
+            "first_frequency_hz": 114.1304635626407,
+            "frequencies_hz": [
+              114.1304635626407,
+              118.9874116995578,
+              177.86545784875986,
+              181.47404664029403,
+              245.12909793847265,
+              249.87270310448994,
+              264.0495144850713,
+              269.42064479714855
+            ],
+            "minimum_first_frequency_hz": 5.0
+          },
+          "nonlinear": {
+            "negative_limit": {
+              "displacement_rows": 26136,
+              "linear_displacement_m": 0.00035280261797080136,
+              "linear_relative_difference": 0.02894081893051687,
+              "max_displacement_m": 0.0003633173187057864,
+              "max_von_mises_pa": 3412052.7156027914,
+              "maximum_linear_relative_difference": 0.1,
+              "reaction_force_n": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "reaction_rows": 0,
+              "stress_rows": 202752
+            },
+            "positive_limit": {
+              "displacement_rows": 26136,
+              "linear_displacement_m": 0.0009237908017325323,
+              "linear_relative_difference": 0.09858566957677442,
+              "max_displacement_m": 0.0008408909995052265,
+              "max_von_mises_pa": 8037603.515484886,
+              "maximum_linear_relative_difference": 0.1,
+              "reaction_force_n": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "reaction_rows": 0,
+              "stress_rows": 202752
+            }
+          }
+        },
+        "checks": {
+          "buckling_minimum_load_factor": true,
+          "modal_minimum_frequency": true,
+          "nonlinear_displacement:negative_limit": true,
+          "nonlinear_displacement:positive_limit": true
+        },
+        "schema": "aeris.fea.physics_report.v1",
+        "status": "pass",
+        "topology": "advanced analyses use a reduced closed-box topology because CalculiX 2.21 nonlinear/buckling shell MPCs are not qualified for intersecting rib/cut-out knots; primary static results remain on the rich mesh"
+      },
+      "sha256": {
+        "physics_report": "37208455abc9ca0b2b6056ca1af69026a740079895ee78bb5847ca03136b21a5"
+      },
+      "status": "ok"
+    },
+    "post": {
+      "artifacts": {
+        "verification": "/tmp/aeris_fea_pilot_e2e.GebtSM/index29/verification.json"
+      },
+      "details": {
+        "failures": [],
+        "full_structural_mass_kg": 5.726491936657738,
+        "loads": {
+          "negative_limit": {
+            "applied_force_vector_half_model_n": [
+              2.340150369058541,
+              -2.72060398898643,
+              -91.81245976507209
+            ],
+            "applied_resultant_half_model_n": -91.93734374999998,
+            "checks": {
+              "maximum_displacement_m": true,
+              "minimum_safety_factor": true,
+              "solver_converged": true
+            },
+            "displacement_rows": 1422,
+            "load_authority": {
+              "aircraft_mass_kg": 12.5,
+              "alpha_deg": -2.0,
+              "direction": -1.0,
+              "gravity_m_s2": 9.80665,
+              "load_factor": 1.5,
+              "mapping": "absolute OAS sectional Fz shape, normalized onto top-skin shell area",
+              "source": "openaerostruct_spanwise_shape",
+              "target_resultant_half_model_n": -91.93734375,
+              "validation_report": "/tmp/aeris_fea_pilot_e2e.GebtSM/index29/validation/openaerostruct_validation.json",
+              "validation_report_sha256": "9c00923c551818b4272cb64e082c1cf8e0289ea389c99513b1fca67c391b2e48"
+            },
+            "load_case": "negative_limit",
+            "load_mapping_relative_error": 1.545710821692301e-16,
+            "max_displacement_m": 2.5298763013296718e-05,
+            "max_von_mises_pa": 1109545.2439857586,
+            "reaction_force_n": [
+              -2.3654012200000016,
+              2.731093750000003,
+              79.40387419999999
+            ],
+            "reaction_force_note": "ROOT RF is diagnostic only for expanded S4 shells; it is not used as an equilibrium acceptance gate.",
+            "reaction_rows": 36,
+            "safety_factor_yield": 292.01152612408356,
+            "schema": "aeris.fea.solve_report.v1",
+            "solver": "calculix",
+            "solver_returncode": 0,
+            "status": "converged",
+            "stress_rows": 11776,
+            "yield_strength_pa": 324000000.0
+          },
+          "positive_limit": {
+            "applied_force_vector_half_model_n": [
+              -4.254317276819937,
+              6.201309461186072,
+              232.66272354928438
+            ],
+            "applied_resultant_half_model_n": 232.9079375,
+            "checks": {
+              "maximum_displacement_m": true,
+              "minimum_safety_factor": true,
+              "solver_converged": true
+            },
+            "displacement_rows": 1422,
+            "load_authority": {
+              "aircraft_mass_kg": 12.5,
+              "alpha_deg": 8.0,
+              "direction": 1.0,
+              "gravity_m_s2": 9.80665,
+              "load_factor": 3.8,
+              "mapping": "absolute OAS sectional Fz shape, normalized onto top-skin shell area",
+              "source": "openaerostruct_spanwise_shape",
+              "target_resultant_half_model_n": 232.90793749999997,
+              "validation_report": "/tmp/aeris_fea_pilot_e2e.GebtSM/index29/validation/openaerostruct_validation.json",
+              "validation_report_sha256": "9c00923c551818b4272cb64e082c1cf8e0289ea389c99513b1fca67c391b2e48"
+            },
+            "load_case": "positive_limit",
+            "load_mapping_relative_error": 1.220298017125501e-16,
+            "max_displacement_m": 5.732544646969143e-05,
+            "max_von_mises_pa": 2625465.188248076,
+            "reaction_force_n": [
+              4.3399484017400045,
+              -6.236979999999903,
+              -204.2492368
+            ],
+            "reaction_force_note": "ROOT RF is diagnostic only for expanded S4 shells; it is not used as an equilibrium acceptance gate.",
+            "reaction_rows": 36,
+            "safety_factor_yield": 123.40670196286212,
+            "schema": "aeris.fea.solve_report.v1",
+            "solver": "calculix",
+            "solver_returncode": 0,
+            "status": "converged",
+            "stress_rows": 11776,
+            "yield_strength_pa": 324000000.0
+          }
+        },
+        "mass_check": true,
+        "schema": "aeris.fea.verification.v1",
+        "status": "pass"
+      },
+      "sha256": {
+        "verification": "0a560a91607d48a9ab79bbf6bd864f98e0fd105386ac122bf6daae7e1dff869b"
+      },
+      "status": "ok"
+    },
+    "qualify": {
+      "artifacts": {
+        "qualification": "/tmp/aeris_fea_pilot_e2e.GebtSM/index29/qualification_report.json"
+      },
+      "details": {
+        "authority": {
+          "authority_id": "bwb_structural_concept_20260917",
+          "consistency": "pass",
+          "path": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/configs/fea/authorities/structural_concept_v1.yaml",
+          "status": "provisional_for_conceptual_screening"
+        },
+        "limitations": [
+          "The cantilever benchmark verifies the software evidence path, not the aircraft structure.",
+          "Coupon and representative-wing test evidence is required before detailed-design use.",
+          "Composite ply allowables and laminate schedule remain unavailable."
+        ],
+        "physical_validation": {
+          "detailed_design_gate": false,
+          "evidence_path": "/home/mike/Desktop/Start_Up/Code/v.0.1_Project/configs/fea/authorities/validation_evidence_v1.yaml",
+          "status": "missing"
+        },
+        "qualification_level": "conceptual_screening",
+        "schema": "aeris.fea.qualification_report.v1",
+        "software_verification": {
+          "cantilever_beam": {
+            "analytical_tip_displacement_m": 0.014285714285714282,
+            "benchmark_tip_displacement_m": 0.014285714285714284,
+            "depth_m": 0.02,
+            "length_m": 1.0,
+            "relative_error": 1.2143064331837652e-16,
+            "status": "pass",
+            "tip_load_n": 100.0,
+            "width_m": 0.05,
+            "youngs_modulus_pa": 70000000000.0
+          }
+        },
+        "status": "pass"
+      },
+      "sha256": {
+        "qualification": "58606d571dadb760207aff0bc6e52fb0779ad1598cfcbfe31d63b2978255fd73"
+      },
+      "status": "ok"
+    },
+    "solve": {
+      "artifacts": {
+        "deck:negative_limit": "/tmp/aeris_fea_pilot_e2e.GebtSM/index29/solve/negative_limit/model.inp",
+        "deck:positive_limit": "/tmp/aeris_fea_pilot_e2e.GebtSM/index29/solve/positive_limit/model.inp",
+        "input_manifest:negative_limit": "/tmp/aeris_fea_pilot_e2e.GebtSM/index29/solve/negative_limit/input_manifest.json",
+        "input_manifest:positive_limit": "/tmp/aeris_fea_pilot_e2e.GebtSM/index29/solve/positive_limit/input_manifest.json",
+        "solve_report:negative_limit": "/tmp/aeris_fea_pilot_e2e.GebtSM/index29/solve/negative_limit/solve_report.json",
+        "solve_report:positive_limit": "/tmp/aeris_fea_pilot_e2e.GebtSM/index29/solve/positive_limit/solve_report.json"
+      },
+      "details": {
+        "load_cases": {
+          "negative_limit": {
+            "applied_force_vector_half_model_n": [
+              2.340150369058541,
+              -2.72060398898643,
+              -91.81245976507209
+            ],
+            "applied_resultant_half_model_n": -91.93734374999998,
+            "displacement_rows": 1422,
+            "load_authority": {
+              "aircraft_mass_kg": 12.5,
+              "alpha_deg": -2.0,
+              "direction": -1.0,
+              "gravity_m_s2": 9.80665,
+              "load_factor": 1.5,
+              "mapping": "absolute OAS sectional Fz shape, normalized onto top-skin shell area",
+              "source": "openaerostruct_spanwise_shape",
+              "target_resultant_half_model_n": -91.93734375,
+              "validation_report": "/tmp/aeris_fea_pilot_e2e.GebtSM/index29/validation/openaerostruct_validation.json",
+              "validation_report_sha256": "9c00923c551818b4272cb64e082c1cf8e0289ea389c99513b1fca67c391b2e48"
+            },
+            "load_case": "negative_limit",
+            "load_mapping_relative_error": 1.545710821692301e-16,
+            "max_displacement_m": 2.5298763013296718e-05,
+            "max_von_mises_pa": 1109545.2439857586,
+            "reaction_force_n": [
+              -2.3654012200000016,
+              2.731093750000003,
+              79.40387419999999
+            ],
+            "reaction_force_note": "ROOT RF is diagnostic only for expanded S4 shells; it is not used as an equilibrium acceptance gate.",
+            "reaction_rows": 36,
+            "safety_factor_yield": 292.01152612408356,
+            "schema": "aeris.fea.solve_report.v1",
+            "solver": "calculix",
+            "solver_returncode": 0,
+            "status": "converged",
+            "stress_rows": 11776,
+            "yield_strength_pa": 324000000.0
+          },
+          "positive_limit": {
+            "applied_force_vector_half_model_n": [
+              -4.254317276819937,
+              6.201309461186072,
+              232.66272354928438
+            ],
+            "applied_resultant_half_model_n": 232.9079375,
+            "displacement_rows": 1422,
+            "load_authority": {
+              "aircraft_mass_kg": 12.5,
+              "alpha_deg": 8.0,
+              "direction": 1.0,
+              "gravity_m_s2": 9.80665,
+              "load_factor": 3.8,
+              "mapping": "absolute OAS sectional Fz shape, normalized onto top-skin shell area",
+              "source": "openaerostruct_spanwise_shape",
+              "target_resultant_half_model_n": 232.90793749999997,
+              "validation_report": "/tmp/aeris_fea_pilot_e2e.GebtSM/index29/validation/openaerostruct_validation.json",
+              "validation_report_sha256": "9c00923c551818b4272cb64e082c1cf8e0289ea389c99513b1fca67c391b2e48"
+            },
+            "load_case": "positive_limit",
+            "load_mapping_relative_error": 1.220298017125501e-16,
+            "max_displacement_m": 5.732544646969143e-05,
+            "max_von_mises_pa": 2625465.188248076,
+            "reaction_force_n": [
+              4.3399484017400045,
+              -6.236979999999903,
+              -204.2492368
+            ],
+            "reaction_force_note": "ROOT RF is diagnostic only for expanded S4 shells; it is not used as an equilibrium acceptance gate.",
+            "reaction_rows": 36,
+            "safety_factor_yield": 123.40670196286212,
+            "schema": "aeris.fea.solve_report.v1",
+            "solver": "calculix",
+            "solver_returncode": 0,
+            "status": "converged",
+            "stress_rows": 11776,
+            "yield_strength_pa": 324000000.0
+          }
+        },
+        "solver": "calculix"
+      },
+      "sha256": {
+        "deck:negative_limit": "e7469a982f18929c0558a2833a1aaa527dd9742be4efffb247e6c430444ed340",
+        "deck:positive_limit": "530fe2fc21e8909cf8ac7927fab97bea166fe0311ebc802cbcdbe736c0321d20",
+        "input_manifest:negative_limit": "56a722f633952e6b170db2994132344c86923f953fe9d3c3ea2a6200d0b09ceb",
+        "input_manifest:positive_limit": "7899707df0794f460f26aa345df5e6b8734f38738f9b366b1bf6a6de3f925981",
+        "solve_report:negative_limit": "d4dbdac561c0e0c304da71f90b7225c8bf0aef848b978374f99261d76fe88372",
+        "solve_report:positive_limit": "0d99a67a32acd54bb13f6f7319532d17f22677918a6478d3a3b192b82630cef3"
+      },
+      "status": "ok"
+    },
+    "validate": {
+      "artifacts": {
+        "openaerostruct_validation": "/tmp/aeris_fea_pilot_e2e.GebtSM/index29/validation/openaerostruct_validation.json"
+      },
+      "details": {
+        "checks": {
+          "cl_absolute_error": true,
+          "geometry_identity": true,
+          "lift_curve_slope": true,
+          "mission_identity": true,
+          "reference_area": true
+        },
+        "lift_curve": {
+          "cfd_dcl_dalpha_per_deg": 0.056698409181088996,
+          "oas_dcl_dalpha_per_deg": 0.057816878374115505,
+          "relative_error": 0.019726641526294515
+        },
+        "status": "pass"
+      },
+      "sha256": {
+        "openaerostruct_validation": "9c00923c551818b4272cb64e082c1cf8e0289ea389c99513b1fca67c391b2e48"
+      },
+      "status": "ok"
+    }
+  }
+}

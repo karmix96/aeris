@@ -48,6 +48,9 @@ geometry-mdolab = [
   "pyspline==1.5.4",
   "pygeo==1.17.0",
 ]
+fea-validation = [
+  "openaerostruct==2.12.0",
+]
 
 [project.scripts]
 aeris = "aeris.cli:main"

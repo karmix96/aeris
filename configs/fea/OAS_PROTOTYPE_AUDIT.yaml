@@ -1,0 +1,34 @@
+schema: aeris.fea.oas_prototype_audit.v1
+status: reviewed_not_runtime_authority
+reviewed_utc: 2026-09-17
+source_directory: /home/mike/Desktop/Start_Up/Code/5_OpenAeroStruct
+decision: >-
+  Reuse the OpenMDAO/OpenAeroStruct connection patterns only. Production FEA
+  must read canonical AERIS stations, the locked S8 design row, and the S8
+  mission authority; none of these standalone scripts is a geometry, flight,
+  material, or load authority.
+accepted_patterns:
+  - tip-to-root half-wing ordering for OpenAeroStruct symmetry
+  - AeroPoint plus Geometry connection topology
+  - sectional-force extraction from bwb_sec_forces
+  - direct consumption of AERIS station artifacts
+corrected_in_production:
+  - sea-level 25/30 m/s defaults replaced by the 28 m/s, 1500 m S8 authority
+  - random local planforms replaced by lhs100_seed42 locked design rows
+  - twist rotates the local chord about its own leading edge; z_le is not rotated about global z=0
+  - Reynolds is supplied per metre to OpenAeroStruct
+  - drag is informational because the comparison model is inviscid
+  - OAS beam stress is not used to validate local CalculiX shell stress
+files:
+  aero_only.py: 44946e9ab7c9adb052480f585f2e0fdb6ae6632e5b77d29157894f1e1d68a298
+  aero_only_2.py: 09e9b33823b00cf79b4bb55fe5cb07c2775e8b625e6b926e5e9b3852bfbe2760
+  aero_only_3.py: b0b7beb68acf8e0f69a74839c0183f42618c9df760f8017a76ce4b46d6a7cc90
+  approach_1.py: d875fbc15977e99ef39dc5ed5a1fec8210ab768736b6f0f28f0fc11e3ef1629d
+  approach_2.py: 4d8c037ba55e2a394598cf85fb0c815b4d7375a8ef8aaddca9524604e329259d
+  dummy.py: 689f963c7a90593bf58c53629f2a48fa33fd7065d91971cf6ef898d65deb2638
+  fv.py: 43888022421e16a4c4c405f26b3edf6fd086c09e20053bc07065d365c8340c2e
+  fv_plus_approach_v3.py: 9b726ffa6772b9322ae4864df1c77340ee96bf5b105b8756076678e620e7f00c
+  fv_plus_approach_v4.py: 4cabf0459189f3fc0a676205eb0af5bbbcfa2abdc973e683a987bfd921584999
+  fv_plus_approach_v5.py: b4ae860acab7eeab5fa2ee2b98e16debadaf75be94740eebf5482459ebf2f26d
+  fv_plus_approach_v6.py: 7c41800c31dc9af2630c2ec399409420dba929979deabe13e34037d134758ce5
+  oas_asb_crosscheck.py: c98d0c569323a737e133b3302dde6f376e3e464cf6ecbc70b8e5c5b60e0570b0

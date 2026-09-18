@@ -1,0 +1,37 @@
+schema: aeris.fea.structural_authority.v1
+authority_id: bwb_structural_concept_20260917
+status: provisional_for_conceptual_screening
+scope: linear_shell_screening_modal_buckling_and_geometric_nonlinearity
+geometry:
+  source: configs/geometry/bwb.yaml
+  source_sha256: f114b48e3c400a2832cc3763e7cf7505ecd0925fb81cb92f70e28bb5e6234614
+  wingbox:
+    front_spar_fraction: 0.15
+    rear_spar_fraction: 0.65
+    depth_ratio: 0.12
+    rib_span_fractions: [0.12, 0.28, 0.45, 0.62, 0.78, 0.92]
+    root_doubler_span_fraction: 0.08
+    hinge_bounds: design_vector_elevon_bounds
+    access_cutout: {surface: top, span: [0.25, 0.34], chord: [0.32, 0.46]}
+mass:
+  source: configs/mass/baseline_uav.yaml
+  source_sha256: 6b92ab550ba977d0c15129dff56fb226c0066a00f17c6c6ef4a5941d56c862a4
+  aircraft_mass_kg: 12.5
+material:
+  name: aluminum_2024_t3_screening
+  basis: provisional_public_typical_values_not_release_allowables
+  youngs_modulus_pa: 7.31e10
+  poisson_ratio: 0.33
+  density_kg_m3: 2780.0
+  yield_strength_pa: 3.24e8
+sections_m:
+  skin: 0.0015
+  spar: 0.0020
+  rib: 0.0015
+  root_doubler: 0.0030
+  hinge_reinforcement: 0.0025
+  cutout_reinforcement: 0.0020
+limitations:
+  - Values are frozen for reproducible conceptual comparison, not released design data.
+  - Fasteners, adhesive joints, local contact, and manufacturing knockdowns are not represented.
+  - Composite ply failure is not authorized because no laminate schedule or B-basis allowables exist.

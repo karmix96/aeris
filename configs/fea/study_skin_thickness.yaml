@@ -1,0 +1,18 @@
+schema: aeris.fea.study.v1
+study:
+  name: bwb_skin_thickness
+  base_case: bwb_baseline.yaml
+  baseline: nominal
+  stages: [geometry, validate, mesh, solve, physics, qualify, post]
+  variants:
+    - name: thin
+      description: 1.2 mm skins
+      patch:
+        section: {skin_thickness_m: 0.0012}
+    - name: nominal
+      description: 1.5 mm skins
+      patch: {}
+    - name: thick
+      description: 1.8 mm skins
+      patch:
+        section: {skin_thickness_m: 0.0018}

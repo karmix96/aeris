@@ -1,0 +1,94 @@
+# Open-source structural baseline for the canonical AERIS BWB design space.
+schema: aeris.fea.case.v1
+case:
+  name: bwb_s8_index83_structural_baseline
+  governance:
+    structural_authority_file: configs/fea/authorities/structural_concept_v1.yaml
+    validation_evidence_file: configs/fea/authorities/validation_evidence_v1.yaml
+  geometry:
+    aeris_config: configs/geometry/bwb.yaml
+    wing_index: 0
+    design_matrix_file: AERIS_MESH_STUDY/00_governance/lhs100_seed42_samples.csv
+    design_set: lhs100_seed42
+    design_index: 83
+  mission:
+    authority_file: AERIS_MESH_STUDY/05_s6_cfd_qualification/mission_authority_v1.yaml
+  openaerostruct_validation:
+    enabled: true
+    cfd_dataset: AERIS_MESH_STUDY/05_s6_cfd_qualification/dataset/rows.json
+    geometry_set: lhs100_seed42
+    geometry_index: 83
+    grid_level: gci_C
+    chordwise_nodes: 5
+    max_abs_cl_error: 0.08
+    max_lift_curve_slope_relative_error: 0.15
+    max_reference_area_relative_error: 0.01
+  wingbox:
+    front_spar_fraction: 0.15
+    rear_spar_fraction: 0.65
+    depth_ratio: 0.12
+    minimum_depth_m: 0.01
+    rib_span_fractions: [0.12, 0.28, 0.45, 0.62, 0.78, 0.92]
+    root_doubler_span_fraction: 0.08
+    hinge_from_design_vector: true
+    cutouts:
+      - surface: top
+        span_start_fraction: 0.25
+        span_end_fraction: 0.34
+        chord_start_fraction: 0.32
+        chord_end_fraction: 0.46
+  mesh:
+    target_size_m: 0.04
+    chordwise_elements: 14
+    depth_elements: 4
+    max_aspect_ratio: 25.0
+    min_corner_angle_deg: 15.0
+  material:
+    name: aluminum_2024_t3
+    youngs_modulus_pa: 7.31e10
+    poisson_ratio: 0.33
+    density_kg_m3: 2780.0
+    yield_strength_pa: 3.24e8
+  section:
+    skin_thickness_m: 0.0015
+    spar_thickness_m: 0.0020
+    rib_thickness_m: 0.0015
+    root_doubler_thickness_m: 0.0030
+    hinge_reinforcement_thickness_m: 0.0025
+    cutout_reinforcement_thickness_m: 0.0020
+  loads:
+    - name: positive_limit
+      source: openaerostruct
+      alpha_deg: 8.0
+      aircraft_mass_kg: 12.5
+      direction: 1
+      distribution: openaerostruct
+      load_factor: 3.8
+    - name: negative_limit
+      source: openaerostruct
+      alpha_deg: -2.0
+      aircraft_mass_kg: 12.5
+      direction: -1
+      distribution: openaerostruct
+      load_factor: 1.5
+  solver:
+    name: calculix
+    executable: ccx
+  analyses:
+    modal:
+      enabled: true
+      modes: 8
+      minimum_first_frequency_hz: 5.0
+    buckling:
+      enabled: true
+      modes: 5
+      load_case: positive_limit
+      minimum_load_factor: 1.0
+    nonlinear:
+      enabled: true
+      load_cases: [positive_limit, negative_limit]
+      maximum_linear_displacement_difference: 0.10
+  verification:
+    minimum_safety_factor: 1.0
+    maximum_displacement_m: 0.10
+    maximum_mass_kg: 25.0

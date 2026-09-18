@@ -1,0 +1,9 @@
+schema: aeris.fea.freeze_authority.v1
+authority_id: bwb_structural_strategy_freeze_20260917
+status: development
+development_set: lhs100_seed42
+holdout_set: round_c_lhs10_seed42
+holdout_access_authorized: false
+reason: >-
+  The structural strategy is implemented but physical validation evidence is
+  missing. The hold-out remains sealed until the user records a frozen strategy.

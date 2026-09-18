@@ -1,0 +1,18 @@
+schema: aeris.fea.validation_evidence.v1
+authority_id: bwb_structural_validation_evidence_20260917
+status: software_verification_only
+analytical:
+  cantilever_beam:
+    status: required_and_automated
+    maximum_relative_error: 0.05
+physical:
+  material_coupon:
+    status: missing
+    required_fields: [specimen_id, material_batch, modulus_pa, yield_strength_pa, report_sha256]
+  representative_wing_static_test:
+    status: missing
+    required_fields: [article_id, load_case, measured_deflection_m, measured_strain, report_sha256]
+qualification_policy:
+  conceptual_screening: permitted
+  detailed_design: blocked_until_physical_evidence_passes
+  certification: out_of_scope

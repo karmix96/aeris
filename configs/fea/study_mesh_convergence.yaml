@@ -1,0 +1,23 @@
+schema: aeris.fea.study.v1
+study:
+  name: bwb_s8_mesh_convergence
+  base_case: bwb_baseline.yaml
+  baseline: medium
+  stages: [geometry, validate, mesh, solve, physics, qualify, post]
+  convergence:
+    enabled: true
+    maximum_displacement_relative_change: 0.05
+    maximum_stress_relative_change: 0.10
+    maximum_mass_relative_change: 0.01
+  variants:
+    - name: coarse
+      description: Coarse shell mesh for three-level convergence evidence.
+      patch:
+        mesh: {target_size_m: 0.06, chordwise_elements: 10, depth_elements: 3}
+    - name: medium
+      description: Governed baseline mesh.
+      patch: {}
+    - name: fine
+      description: Fine shell mesh used for the acceptance comparison.
+      patch:
+        mesh: {target_size_m: 0.025, chordwise_elements: 20, depth_elements: 6}

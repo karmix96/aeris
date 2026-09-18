@@ -5,19 +5,19 @@ import logging
 import typer
 
 from aeris.commands.aero import aero_app
+from aeris.commands.airfoil import airfoil_app
+from aeris.commands.cfd import cfd_app
 from aeris.commands.dataset import dataset_app
 from aeris.commands.dynamics import dynamics_app
+from aeris.commands.fea import fea_app
 from aeris.commands.geometry import geometry_app
 from aeris.commands.gui import gui_app
 from aeris.commands.mesh import mesh_app
 from aeris.commands.ml import ml_app
 from aeris.commands.pipeline import pipeline_app
 from aeris.commands.version import version_app
-from aeris.commands.airfoil import airfoil_app
-from aeris.commands.cfd import cfd_app
 from aeris.commands.workflow import workflow_app
 from aeris.common.paths import ensure_output_directories_writable
-
 
 app = typer.Typer(
     help=(
@@ -29,6 +29,7 @@ app = typer.Typer(
         "- aero = run or inspect aerodynamic cases and sweeps\n"
         "- dynamics = mass / CG / trim / dynamics-foundation workflows\n"
         "- mesh = structured CFD mesh generation (surface + pyHyp volume)\n"
+        "- fea = open-source structural mesh, solve, and verification\n"
         "- ml = train, compare, and predict using promoted aero datasets\n"
         "- pipeline = minimal smoke workflows\n"
         "- workflow = guided workstation stage/status spine\n"
@@ -105,6 +106,7 @@ app.add_typer(mesh_app, name="mesh")
 app.add_typer(ml_app, name="ml")
 app.add_typer(airfoil_app, name="airfoil")
 app.add_typer(cfd_app, name="cfd")
+app.add_typer(fea_app, name="fea")
 
 
 def main() -> None:

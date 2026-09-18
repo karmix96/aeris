@@ -20,6 +20,7 @@ def test_root_help_lists_core_command_groups() -> None:
         "pipeline",
         "aero",
         "dynamics",
+        "fea",
         "ml",
     ]:
         assert command_group in output
@@ -32,6 +33,7 @@ def test_domain_help_commands_do_not_crash() -> None:
         "pipeline",
         "aero",
         "dynamics",
+        "fea",
         "ml",
         "version",
     ]:

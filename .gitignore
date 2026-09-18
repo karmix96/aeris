@@ -20,6 +20,7 @@ data/interim/
 data/processed/
 data/debug/
 data/cfd_cases/
+data/fea_cases/
 data/meshes/
 data/workflows/
 data/panelling_study/

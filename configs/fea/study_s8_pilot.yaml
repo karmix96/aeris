@@ -1,0 +1,45 @@
+schema: aeris.fea.study.v1
+study:
+  name: bwb_s8_ten_wing_pilot
+  base_case: bwb_baseline.yaml
+  baseline: index83
+  stages: [geometry, validate, mesh, solve, physics, qualify, post]
+  variants:
+    - name: index12
+      patch:
+        geometry: {design_index: 12}
+        openaerostruct_validation: {geometry_index: 12}
+    - name: index13
+      patch:
+        geometry: {design_index: 13}
+        openaerostruct_validation: {geometry_index: 13}
+    - name: index16
+      patch:
+        geometry: {design_index: 16}
+        openaerostruct_validation: {geometry_index: 16}
+    - name: index23
+      patch:
+        geometry: {design_index: 23}
+        openaerostruct_validation: {geometry_index: 23}
+    - name: index29
+      patch:
+        geometry: {design_index: 29}
+        openaerostruct_validation: {geometry_index: 29}
+    - name: index36
+      patch:
+        geometry: {design_index: 36}
+        openaerostruct_validation: {geometry_index: 36}
+    - name: index47
+      patch:
+        geometry: {design_index: 47}
+        openaerostruct_validation: {geometry_index: 47}
+    - name: index65
+      patch:
+        geometry: {design_index: 65}
+        openaerostruct_validation: {geometry_index: 65}
+    - name: index81
+      patch:
+        geometry: {design_index: 81}
+        openaerostruct_validation: {geometry_index: 81}
+    - name: index83
+      patch: {}

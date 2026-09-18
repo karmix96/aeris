@@ -13,7 +13,10 @@
 # MB, so uploading them trades gigabytes of transfer for seconds of compute.
 set -euo pipefail
 
-RANKS="${1:-24}"
+# 4, not 24. The measured rank probe gives 2121/1121/849/827 s at 1/2/4/6
+# ranks: four is 2.7 % slower than six and costs 32 % fewer core-hours, and the
+# batch buys throughput across 44 independent cases, not latency on one.
+RANKS="${1:-4}"
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 S="$REPO/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured"
 Q="$REPO/AERIS_MESH_STUDY/05_s6_cfd_qualification"

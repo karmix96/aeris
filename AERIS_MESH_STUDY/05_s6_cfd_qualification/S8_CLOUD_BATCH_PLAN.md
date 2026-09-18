@@ -191,26 +191,33 @@ own name now.
 
 **All 52 runs from 2026-09-17 were re-gated under the new rules and all 52 remain ACCEPTED.**
 
-### B. Identity of every paid run
+### B. Identity of every paid run — **implemented in `cloud_identity.py`**
 
-| # | item |
-|---|---|
-| B1 | Each run records geometry hash, mesh hash, mesher commit, solver commit and build, **fully resolved** solver options, physical inputs and force references |
-| B2 | `g83/C/α0` is a label, never an identity — unique case ID plus a separate execution ID per attempt |
-| B3 | Archive completion is atomic and hash-verified against the stored bytes after writing |
-| B4 | Reference area is each geometry's own (defect 23), verified per row |
-| B5 | The `gci_C` and `gci_M` results from 2026-09-17 are carried into the same analysis at the **same solver settings and commit**, or the four-level GCI is not computable |
+| # | item | state |
+|---|---|---|
+| B1 | Geometry, mesh **bytes**, mesher and solver commit, fully resolved options, physical inputs, force references | **done** — `run_manifest()` |
+| B2 | `g83/F/α0` is a label, never an identity — deterministic `case_id` from the inputs, separate `execution_id` per attempt | **done** — verified that a changed mesh, geometry or setting changes the id |
+| B3 | Archive copies to a `.part`, hashes the **stored** bytes, and only then renames into place | **done** — a killed job leaves a `.part`, never a plausible wrong answer |
+| B4 | Reference area is each geometry's own (defect 23) | **done** — the batch refuses to start if any geometry's area is missing |
+| B5 | The 17 Sept `gci_C`/`gci_M` results carried in at the same settings and commit | open — needs the analysis step, not the runner |
 
-### C. Operational
+### C. Operational — **implemented in `cloud_batch_run.py`**
 
-| # | item |
-|---|---|
-| C1 | Timing from a monotonic clock. `wall_seconds` was contaminated by a 344-minute host suspend on 17 Sept and read as a stalling solver |
-| C2 | Termination by process group. `pkill -f` matches the killing shell's own command line |
-| C3 | `/proc/PID/cwd` does not identify an ADflow run — every rank reports the launcher's directory |
-| C4 | Disk: 44 volume solutions at roughly 0.3–1.2 GiB each |
-| C5 | A spend cap and a kill switch that does not depend on this session being awake |
-| C6 | `--watch-memory` on every case, so a run that pages is stopped in minutes rather than finishing at disk speed |
+| # | item | state |
+|---|---|---|
+| C1 | Monotonic timing, with the wall-clock gap reported as the suspend signal | **done** — `Stopwatch` |
+| C2 | Termination by process group (`start_new_session`), never `pkill -f` | **done** |
+| C3 | `/proc/PID/cwd` does not identify an ADflow run | known; runs are identified by manifest |
+| C4 | Disk floor checked **before** each case | **done** — 25 GiB, tested |
+| C5 | Spend cap in core-hours, and a `STOP` file that works without this process | **done** — both tested |
+| C6 | `--watch-memory` on every case | **done** — passed to every solve |
+
+**And one rule that is neither B nor C:** a verdict comes from the **artefacts**, never the exit
+code. ADflow exits 0 on SIGTERM, which this project has known since PLAN 0.3. On 18 September SU2
+exited **1** having written its restart, surface and forces files, after 24 successful writes of
+that same restart during the run — the outputs were complete and only the final write failed. A
+non-zero exit disproves nothing either. `verdict_from_artefacts()` records the exit code and does
+not use it.
 
 ---
 

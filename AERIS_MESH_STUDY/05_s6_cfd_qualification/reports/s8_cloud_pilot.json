@@ -1,0 +1,34 @@
+{
+  "all_usable": false,
+  "checks": [
+    {
+      "case": "g12/gci_F/a-2",
+      "iterations": null,
+      "memory_peak_gib": null,
+      "memory_predicted_gib": 20.6,
+      "memory_within_prediction": false,
+      "model_said": 9.7,
+      "problems": [
+        "result.json was never written"
+      ],
+      "seconds_per_mcell_iteration_at_6_ranks": null,
+      "usable": false
+    },
+    {
+      "case": "g83/gci_FF/a-2",
+      "iterations": null,
+      "memory_peak_gib": null,
+      "memory_predicted_gib": 38.4,
+      "memory_within_prediction": false,
+      "model_said": 9.7,
+      "problems": [
+        "result.json was never written"
+      ],
+      "seconds_per_mcell_iteration_at_6_ranks": null,
+      "usable": false
+    }
+  ],
+  "note": "Release the remaining cases only when every case here is usable, peak memory is inside the prediction, and seconds per Mcell-iteration is near 9.7. ANK-only is unproven above 1.17M cells and this is the test.",
+  "release_the_rest": false,
+  "schema": "aeris.s8.cloud_pilot.v1"
+}

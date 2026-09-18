@@ -110,6 +110,20 @@ def cfg_value(lines: list[str], key: str) -> str | None:
     return None
 
 
+#: SU2 writes 535532 as the first 32-bit word of a binary restart file.
+SU2_BINARY_RESTART_MAGIC = 535532
+
+
+def is_binary_restart(path: Path) -> bool:
+    """Ask the file, not the config, which format it is."""
+    try:
+        with open(path, "rb") as fh:
+            head = fh.read(4)
+    except OSError:
+        return False
+    return len(head) == 4 and int.from_bytes(head, "little") == SU2_BINARY_RESTART_MAGIC
+
+
 def cmd_config(args) -> int:
     folder, cfg, mesh, _ = CASES[args.case]
     source = TUTORIALS / folder / cfg
@@ -129,12 +143,21 @@ def cmd_config(args) -> int:
         # already exists -- see history(), which reassembles them.
         existing = sorted((RUNS / args.case).glob("restart*.dat"),
                           key=lambda q: q.stat().st_mtime)
-        newest = existing[-1].name if existing else "restart.dat"
+        newest = existing[-1] if existing else (RUNS / args.case / "restart.dat")
         generation = len(list((RUNS / args.case).glob("history_cont*.csv"))) + 1
-        changes.update({"RESTART_SOL": "YES", "SOLUTION_FILENAME": newest,
+        changes.update({"RESTART_SOL": "YES", "SOLUTION_FILENAME": newest.name,
                         "RESTART_FILENAME": f"restart_cont{generation}.dat",
                         "CONV_FILENAME": f"history_cont{generation}",
-                        "BREAKDOWN_FILENAME": "forces_breakdown.dat"})
+                        "BREAKDOWN_FILENAME": "forces_breakdown.dat",
+                        # Read the format that was actually WRITTEN. The T3A
+                        # tutorial config carries READ_BINARY_RESTART= NO while
+                        # the run writes a binary restart, so SU2 swapped the
+                        # extension to .csv, could not find it, and aborted with
+                        # "restart file restart.csv not found" -- a failure that
+                        # only appears on a continuation, which is why it sat
+                        # unnoticed. Detected here from the file's own magic
+                        # number rather than trusted from the config.
+                        "READ_BINARY_RESTART": "YES" if is_binary_restart(newest) else "NO"})
     recorded, seen, out = {}, set(), []
     for line in lines:
         key = line.split("%")[0].split("=")[0].strip() if "=" in line.split("%")[0] else None
@@ -532,6 +555,105 @@ def judge_transition(case: str, directory: Path, entry: dict) -> None:
                             f"reattachment {got[1] - measured[1]:+.3f}c")}
         elif not isinstance(entry.get("reference"), dict):
             entry["reference"] = "no measurement on file for this case at this angle"
+
+
+# ----------------------------------------------------------------------------- acceptance
+
+#: SU2 had no acceptance rule, only a residual target, and that is why seven of
+#: ten stage-0 cases were called stalled. `fp_comp_545` sat at rms -8.63 and was
+#: reported unfinished for two days while its CD had been settled to 0.012 %
+#: over 500 iterations and its cf was 0.65 % from NASA's. The residual target was
+#: never the question; the quantity of interest was.
+#:
+#: This project already reasoned that out for ADflow on 15 Sept -- accept on the
+#: residual target OR on settled forces, with health required either way, because
+#: a short tail's spread is dominated by the approach rather than the remaining
+#: error. Nobody carried it across to SU2. This is that rule, with the two
+#: corrections its ADflow twin needed afterwards: a runaway must be relatively
+#: large AND absolutely material, because percentages are meaningless near zero.
+SU2_SETTLE_WINDOW = 500
+SU2_CD_PERCENT = 0.05
+SU2_CL_ABSOLUTE = 1.0e-4
+SU2_RESIDUAL_TARGET = -12.0
+SU2_RUNAWAY_MULTIPLE = 20.0
+SU2_CD_FLOOR = 5.0e-4          # absolute CD span below which a percentage means nothing
+
+
+def su2_gate(directory: Path) -> dict:
+    """Is this run's answer usable?  Residual target OR settled quantity of interest."""
+    rows, head = [], None
+    for path in history_files(directory):
+        if not path.exists():
+            continue
+        raw = list(csv.reader(open(path)))
+        if not raw:
+            continue
+        this = [c.strip().strip('"') for c in raw[0]]
+        data = [r for r in raw[1:] if len(r) == len(this)]
+        if not data:
+            continue
+        if head is None:
+            head, rows = this, data
+        elif this == head:
+            rows = data                      # a later leg supersedes; dedup is history()'s job
+    if head is None or not rows:
+        return {"verdict": "NO_HISTORY"}
+
+    def column(name):
+        return head.index(name) if name in head else None
+
+    res_key = next((h for h in head if h.startswith("rms[Rho]") or h.startswith("rms[P]")), None)
+    residual = float(rows[-1][column(res_key)]) if res_key else float("nan")
+    tail = rows[-SU2_SETTLE_WINDOW:]
+
+    def span(name):
+        i = column(name)
+        if i is None:
+            return None
+        v = [float(r[i]) for r in tail]
+        return {"last": v[-1], "absolute": max(v) - min(v), "mean": sum(v) / len(v)}
+
+    cd, cl = span("CD"), span("CL")
+    checks: dict = {"residual": {"value": residual, "limit": SU2_RESIDUAL_TARGET,
+                                 "pass": residual <= SU2_RESIDUAL_TARGET}}
+
+    # A case with no monitored force -- the transitional flat plates define no
+    # reference area, so SU2 writes CD identically zero -- cannot be judged on
+    # force settling at all, and saying so is the point.
+    has_force = bool(cd and (abs(cd["mean"]) > 1e-12 or cd["absolute"] > 0))
+    if has_force:
+        rel = 100.0 * cd["absolute"] / abs(cd["mean"]) if cd["mean"] else float("inf")
+        checks["cd_settled"] = {"percent": rel, "absolute": cd["absolute"],
+                                "limit_percent": SU2_CD_PERCENT, "pass": rel <= SU2_CD_PERCENT}
+        if cl:
+            checks["cl_settled"] = {"absolute": cl["absolute"], "limit": SU2_CL_ABSOLUTE,
+                                    "pass": cl["absolute"] <= SU2_CL_ABSOLUTE}
+        runaway = (rel > SU2_RUNAWAY_MULTIPLE * SU2_CD_PERCENT
+                   and cd["absolute"] > SU2_CD_FLOOR)
+        checks["not_running_away"] = {"pass": not runaway,
+                                      "note": "relatively large AND absolutely material"}
+    else:
+        checks["cd_settled"] = {"pass": False, "note": (
+            "no monitored force: SU2 writes CD identically zero for this case, so "
+            "the quantity of interest is cf and the transition location, not drag")}
+        checks["not_running_away"] = {"pass": True}
+
+    # health: the residual must not be climbing over the window
+    if res_key:
+        i = column(res_key)
+        early = float(tail[0][i])
+        checks["residual_not_rising"] = {"start": early, "end": residual,
+                                         "pass": residual <= early + 0.05}
+    settled = has_force and checks["cd_settled"]["pass"] and checks.get(
+        "cl_settled", {"pass": True})["pass"]
+    healthy = checks.get("residual_not_rising", {"pass": True})["pass"] \
+        and checks["not_running_away"]["pass"]
+    passed = healthy and (checks["residual"]["pass"] or settled)
+    return {"verdict": "ACCEPTED" if passed else "NOT_ACCEPTED",
+            "accepted_via": ("residual target" if passed and checks["residual"]["pass"]
+                             else "settled forces" if passed else None),
+            "iterations": int(float(rows[-1][column("Inner_Iter")])) if column("Inner_Iter") is not None else len(rows),
+            "checks": checks}
 
 
 def cmd_compare(args) -> int:

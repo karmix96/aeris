@@ -357,6 +357,15 @@ def test_custom_geometry_and_frd_contours_are_readable(tmp_path: Path) -> None:
     assert fields["stress"][1][0] == pytest.approx(1e6)
 
 
+def test_learning_cockpit_uses_static_only_post_gate() -> None:
+    from aeris.gui.fea_learning import _build_case
+
+    spec, _ = _build_case(83, {}, "locked")
+    assert not spec.analyses.modal.enabled
+    assert not spec.analyses.buckling.enabled
+    assert not spec.analyses.nonlinear.enabled
+
+
 @pytest.mark.integration
 @pytest.mark.skipif(shutil.which("ccx") is None, reason="CalculiX not installed")
 def test_real_calculix_smoke_case(tmp_path: Path) -> None:

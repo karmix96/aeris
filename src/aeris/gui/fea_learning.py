@@ -15,7 +15,7 @@ import streamlit as st
 from aeris.common.config import load_yaml_config
 from aeris.fea.case.loader import load_case_spec
 from aeris.fea.case.runner import run_case
-from aeris.fea.case.spec import GeometryInput, OpenAeroStructValidationSpec
+from aeris.fea.case.spec import AnalysisSpec, GeometryInput, OpenAeroStructValidationSpec
 from aeris.fea.fields import contour_data
 from aeris.fea.geometry import generate_aeris_stations, generate_custom_aeris_stations
 from aeris.fea.mission import load_mission_authority
@@ -66,7 +66,8 @@ def _figure_mesh(case_dir: Path, field: str, scale: float) -> object:
     values = np.asarray(data[field], dtype=float)
     faces = np.asarray(data["faces"], dtype=int)
     center = coordinates.mean(axis=0)
-    shown = center + (coordinates - center) * (1.0 + scale * values / max(float(values.max()), 1e-30))
+    scale_factor = 1.0 + scale * values / max(float(values.max()), 1e-30)
+    shown = center + (coordinates - center) * scale_factor[:, None]
     colorscale = "Turbo" if field == "stress_pa" else "Viridis"
     label = "von Mises proxy [Pa]" if field == "stress_pa" else "displacement [m]"
     return go.Figure(
@@ -97,6 +98,10 @@ def _build_case(index: int, custom_values: dict[str, float], source: str) -> tup
         spec,
         name=f"fea_learning_{source}_{index}",
         geometry=GeometryInput(stations_file=stations),
+        # The cockpit's interactive FEA mode is deliberately static-only.
+        # Modal/buckling/nonlinear analyses remain available through the
+        # governed CLI and should not be demanded by the static post gate.
+        analyses=AnalysisSpec(),
     )
     if source != "locked":
         # Custom geometry is not an S8 CFD identity, so use an explicit

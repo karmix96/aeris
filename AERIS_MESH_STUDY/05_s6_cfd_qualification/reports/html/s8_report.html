@@ -120,15 +120,8 @@ a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-of
   <header class="mast">
     <p class="eyebrow">Strategy study S8 · structured O-H meshing</p>
     <h1>S8 — automated CFD for the AERIS flying wing: the whole story so far</h1>
-    <p class="stand">An automated mesh-and-solve pipeline for the AERIS flying wing: how it
-      was built, every setting in force, what each study asked and answered, and where the
-      results are still soft.</p>
-    <p class="meta">
-      <span><b>Started</b> 15 September 2026</span>
-      <span><b>Last entry</b> 17 September, 22:49</span>
-      <span><b>Solver</b> ADflow RANS-SA · SU2 8.5</span>
-      <span><b>Source</b> S8_REPORT_2026-09-15.md</span>
-    </p>
+    <p class="stand">An automated mesh-and-solve pipeline for the AERIS flying wing: how it was built, every setting in force, what each study asked and answered, and where the results are still soft.</p>
+    <p class="meta"><span><b>Started</b> 15 September 2026</span><span><b>Solver</b> ADflow RANS-SA · SU2 8.5</span><span><b>Source</b> S8_REPORT_2026-09-15.md</span></p>
   </header>
 
   <div class="page">
@@ -215,7 +208,7 @@ a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-of
 <a class="r2 r-add" href="#addendum-18-september-1600-su2-works-better-than-we-had-judged-and-one-verdict-is-withdrawn"><span class="rdate">18 September, 16:00</span><span>SU2 works better than we had judged, and one verdict is withdrawn</span></a>
 <a class="r3" href="#su2-had-no-acceptance-rule-only-a-residual-target">SU2 had no acceptance rule, only a residual target</a>
 <a class="r3" href="#withdrawn-neither-lm-model-produces-the-separation-bubble">Withdrawn: &quot;neither LM model produces the separation bubble&quot;</a>
-<a class="r3" href="#the-pitching-moment-sign-is-unresolved-and-now-visible">The pitching moment sign is unresolved, and now visible</a>
+<a class="r3" href="#the-pitching-moment-sign-resolved-by-measurement">The pitching moment sign, resolved by measurement</a>
 <a class="r3" href="#t3a-yields-a-transition-location-t3a-yields-something-wrong">T3A yields a transition location; T3A− yields something wrong</a>
 <a class="r3" href="#six-defects-one-of-them-twenty-fold">Six defects, one of them twenty-fold</a>
 <a class="r3" href="#a-probe-that-refuted-its-own-hypothesis">A probe that refuted its own hypothesis</a></div>
@@ -3894,16 +3887,40 @@ bubble anywhere but the trailing edge. <strong>The two models disagree with each
 the same grid at the same condition</strong>, and only one of them is near the measurement.</p>
 <p>Both runs are still short of the gate, so all of this is provisional — but the <em>direction</em> is
 opposite to what was recorded, and the earlier claim was resting on a broken instrument.</p>
-<h3 id="the-pitching-moment-sign-is-unresolved-and-now-visible">The pitching moment sign is unresolved, and now visible</h3>
-<p>Both E387 runs report <code>CMz</code> positive where McGhee measures −0.0794. The grader used to compare
-magnitudes, which returns zero error for either sign; it now reports both, and says so:</p>
-<ul>
-<li><code>e387_sa_lm</code>: signed error <strong>+198.0 %</strong>, magnitude error −2.0 %</li>
-<li><code>e387_sst_lm</code>: signed error <strong>+209.2 %</strong>, magnitude error +9.2 %</li>
-</ul>
-<p>The magnitudes are close. The signs are opposite. Until the axis convention is resolved against
-the measurement, no moment claim from this case is usable — and for a BWB, where the pitching
-moment decides whether the aircraft trims at all, that is not a detail.</p>
+<h3 id="the-pitching-moment-sign-resolved-by-measurement">The pitching moment sign, resolved by measurement</h3>
+<p>Both E387 runs report <code>CMz</code> positive where McGhee measures −0.0794, and the first version of the
+signed check reported that as a ~200 % error. <strong>That framing was wrong, and it is corrected here.</strong></p>
+<p>The surface pressure of <code>e387_sa_lm</code> was integrated independently —
+<code>M_z = Σ (x − x_ref)·dF_y − (y − y_ref)·dF_x</code>, with z = x × y out of the page — and reproduced
+SU2's own pressure components to <strong>0.9 % on CL, 3 % on CDp and 2.5 % on CMz</strong>. An integration that
+close can be trusted for its sign. In that convention a positive <code>M_z</code> rotates counter-clockwise
+with x aft and y up, so a point on the +x side — the <strong>tail</strong> — moves upward, and tail-up is
+<strong>nose-down</strong>. SU2's <code>CMz</code> is therefore <em>positive nose-down</em>.</p>
+<p>McGhee's −0.0794 is <em>also</em> nose-down, in a convention where nose-down is negative. <strong>The two
+describe the same physical moment.</strong> The code comment that asserted this was right; what was
+missing was a measurement behind it, and now there is one.</p>
+<p>So neither raw-sign comparison nor magnitude comparison is correct: the first scores a good run at
+−198 %, the second hides a genuine flip. The reference is now mapped into SU2's convention and
+compared <em>signed</em> there:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th></th>
+<th>scored</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>e387_sa_lm</code> as run</td>
+<td><strong>−2.03 %</strong></td>
+</tr>
+<tr>
+<td>the same run with a genuinely flipped moment</td>
+<td>−197.97 %, with a loud warning</td>
+</tr>
+</tbody>
+</table></div>
+<p>Both failure modes are covered, and the E387 moment is usable.</p>
 <h3 id="t3a-yields-a-transition-location-t3a-yields-something-wrong">T3A yields a transition location; T3A− yields something wrong</h3>
 <p>With the Reynolds correction below, <code>t3a</code> puts transition onset at <strong>Re_x = 1.12e5</strong>, which is
 where bypass transition belongs at elevated free-stream turbulence. <code>fp_bc</code> gives Re_x = 2.59e6 at

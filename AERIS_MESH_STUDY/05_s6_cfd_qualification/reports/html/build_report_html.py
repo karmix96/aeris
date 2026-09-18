@@ -79,7 +79,40 @@ for lvl, when, label, sid, is_add in nav:
         items.append(f'<a class="r{lvl}" href="#{sid}">{html.escape(label)}</a>')
 rail = "\n".join(items)
 
+#: Per-document masthead. It used to be hardcoded for the S8 report, which
+#: meant the SU2 report published with S8's title, eyebrow, standfirst and
+#: "Source" line -- a different document wearing another one's identity.
+MASTHEADS = {
+    "S8_REPORT_2026-09-15.md": {
+        "page": "AERIS S8 Campaign",
+        "eyebrow": "Strategy study S8 · structured O-H meshing",
+        "stand": ("An automated mesh-and-solve pipeline for the AERIS flying wing: how it "
+                  "was built, every setting in force, what each study asked and answered, "
+                  "and where the results are still soft."),
+        "meta": [("Started", "15 September 2026"), ("Solver", "ADflow RANS-SA · SU2 8.5"),
+                 ("Source", "S8_REPORT_2026-09-15.md")],
+    },
+    "SU2_REPORT_2026-09-18.md": {
+        "page": "AERIS SU2 Track",
+        "eyebrow": "Second solver · verification, validation and transition",
+        "stand": ("Why a second solver exists in this project, every setting in force and the "
+                  "reason for it, the ten cases and what each one asks, and what the evidence "
+                  "does and does not support."),
+        "meta": [("Written", "18 September 2026"), ("Solver", "SU2 v8.5.0 “Harrier”"),
+                 ("Source", "SU2_REPORT_2026-09-18.md")],
+    },
+}
+head = MASTHEADS.get(SRC.name, {
+    "page": title, "eyebrow": SRC.stem.replace("_", " "), "stand": "",
+    "meta": [("Source", SRC.name)]})
+meta_html = "".join(f"<span><b>{html.escape(k)}</b> {html.escape(v)}</span>"
+                    for k, v in head["meta"])
+
 OUT.write_text(Path(__file__).with_name("shell.html").read_text()
+               .replace("{{PAGETITLE}}", html.escape(head["page"]))
+               .replace("{{EYEBROW}}", html.escape(head["eyebrow"]))
+               .replace("{{STAND}}", html.escape(head["stand"]))
+               .replace("{{META}}", meta_html)
                .replace("{{TITLE}}", html.escape(title))
                .replace("{{RAIL}}", rail)
                .replace("{{BODY}}", rendered))

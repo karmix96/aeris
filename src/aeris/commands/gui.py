@@ -104,3 +104,39 @@ def gui_mesh_tuner(
         )
         raise typer.Exit(code=1) from exc
 
+
+@gui_app.command("fea-learning")
+def gui_fea_learning(
+    host: str = typer.Option("localhost", "--host", help="Streamlit server host."),
+    port: int = typer.Option(8503, "--port", help="Streamlit server port."),
+    headless: bool = typer.Option(
+        True,
+        "--headless/--browser",
+        help="Run Streamlit without opening a browser automatically.",
+    ),
+) -> None:
+    """Launch the guided FEA/OpenAeroStruct learning cockpit."""
+    gui_pkg_dir = Path(aeris.gui.__file__).resolve().parent
+    app_path = gui_pkg_dir / "fea_learning.py"
+    command = [
+        sys.executable,
+        "-m",
+        "streamlit",
+        "run",
+        str(app_path),
+        "--server.address",
+        host,
+        "--server.port",
+        str(port),
+        "--server.headless",
+        "true" if headless else "false",
+    ]
+    try:
+        raise typer.Exit(code=subprocess.call(command))
+    except FileNotFoundError as exc:
+        typer.secho(
+            "[AERIS] Streamlit is not installed. Run: pip install -e '.[gui]'",
+            fg=typer.colors.RED,
+            err=True,
+        )
+        raise typer.Exit(code=1) from exc

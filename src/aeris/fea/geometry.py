@@ -120,6 +120,55 @@ def generate_aeris_stations(
     return payload
 
 
+def generate_custom_aeris_stations(
+    config_path: Path,
+    output_path: Path,
+    design_values: dict[str, float],
+) -> dict[str, object]:
+    """Generate stations from explicit bounded design variables for the learning GUI."""
+    from aeris.common.config import file_sha256, load_yaml_config
+    from aeris.generators.bwb_segmented_v1.params import BWBDesignSample
+    from aeris.generators.bwb_segmented_v1.planform import generate_bwb_planform_from_sample
+    from aeris.generators.bwb_segmented_v1.sections import build_section_geometry_from_sample
+    from aeris.geometry.config_resolver import resolve_generator_and_config
+
+    raw = load_yaml_config(config_path.expanduser().resolve())
+    generator_id, generator_config = resolve_generator_and_config(raw)
+    if generator_id not in {"bwb_segmented", "bwb_segmented_v1"}:
+        raise ValueError(f"custom FEA geometry requires bwb_segmented, got {generator_id!r}")
+    names = generator_config.active_design_variable_names()
+    missing = [name for name in names if name not in design_values]
+    if missing:
+        raise ValueError(f"custom design vector is missing variables: {missing}")
+    sample = BWBDesignSample(**{name: float(design_values[name]) for name in names})
+    planform = generate_bwb_planform_from_sample(sample, generator_config)
+    sections = build_section_geometry_from_sample(planform, sample, generator_config)
+    payload: dict[str, object] = {
+        "schema": "aeris.fea.stations.v1",
+        "source_config": str(config_path.expanduser().resolve()),
+        "source_config_sha256": file_sha256(config_path.expanduser().resolve()),
+        "generator": generator_id,
+        "design_source": "interactive_custom_values",
+        "design_vector": {name: float(design_values[name]) for name in names},
+        "symmetric": True,
+        "stations": [
+            {
+                "x_le_m": station.x_le_m,
+                "y_m": station.y_m,
+                "z_le_m": station.z_le_m,
+                "chord_m": station.chord_m,
+                "twist_deg": station.twist_deg,
+                "dihedral_deg": station.dihedral_deg,
+                "airfoil_name": station.airfoil_name,
+            }
+            for station in sections.sections
+        ],
+    }
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return payload
+
+
 def load_stations(path: Path) -> dict[str, object]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if payload.get("schema") != "aeris.fea.stations.v1":

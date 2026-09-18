@@ -76,6 +76,7 @@ aeris fea calibrate configs/fea/authorities/calibration_evidence_template.yaml
 aeris fea promote-holdout --study-report study_report.json \
   --freeze-authority configs/fea/authorities/structural_freeze_v1.yaml \
   --qualification-report qualification_report.json
+aeris gui fea-learning
 ```
 
 `--dry-run` generates the canonical station artifact, audited `.msh`, CalculiX
@@ -93,6 +94,12 @@ hardening actions. Visualization files are diagnostic and do not bypass numerica
 gates. `study_structural_dse.yaml` is the next DSE scaffold: it varies box depth
 and skin thickness against the governed baseline and is intentionally dry-run-first
 until released structural authorities and validation thresholds are available.
+
+The guided `aeris gui fea-learning` cockpit is designed for first-time users:
+choose a locked S8 wing or move bounded geometry-variable sliders, inspect the
+mesh, run FEA or OpenAeroStruct, and switch between displacement/stress contours.
+The explanatory panels distinguish aerodynamic lift from structural response;
+OpenAeroStruct is not presented as a local-stress validator.
 
 Completed studies now emit deterministic normalized rankings and a Pareto-front
 candidate list in `study_report.json`; completed variants are cached by their

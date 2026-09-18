@@ -118,6 +118,14 @@ def _run_oas_point(
     return result
 
 
+def run_oas_case(
+    stations: dict[str, object], mission: dict[str, object], alpha_deg: float
+) -> dict[str, object]:
+    """Run one educational OAS point without requiring a CFD comparison row."""
+    mesh = build_oas_mesh(stations, 5)
+    return _run_oas_point(mesh, mission, alpha_deg)
+
+
 def _selected_cfd_rows(
     dataset_path: Path,
     validation: OpenAeroStructValidationSpec,

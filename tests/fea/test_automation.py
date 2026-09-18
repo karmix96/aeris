@@ -13,6 +13,7 @@ from aeris.fea.calibration import run_calibration
 from aeris.fea.case.loader import load_case_spec
 from aeris.fea.case.runner import CASE_MANIFEST_SCHEMA_VERSION, run_case
 from aeris.fea.case.spec import LoadCaseSpec, MeshSpec, SectionSpec, WingboxSpec
+from aeris.fea.fields import read_frd_fields
 from aeris.fea.geometry import generate_aeris_stations
 from aeris.fea.governance import run_qualification
 from aeris.fea.holdout import promote_holdout
@@ -326,6 +327,34 @@ def test_holdout_promotion_fails_closed_without_freeze_and_evidence(tmp_path: Pa
     report = promote_holdout(study, authority, qualification, tmp_path / "promotion.json")
     assert report["status"] == "blocked"
     assert len(report["blocking_checks"]) == 3
+
+
+def test_custom_geometry_and_frd_contours_are_readable(tmp_path: Path) -> None:
+    from aeris.fea.geometry import generate_custom_aeris_stations
+    from aeris.gui.fea_learning import _locked_design_values
+
+    stations = tmp_path / "custom_stations.json"
+    generate_custom_aeris_stations(
+        Path("configs/geometry/bwb.yaml"), stations, _locked_design_values(83)
+    )
+    payload = json.loads(stations.read_text(encoding="utf-8"))
+    assert payload["design_source"] == "interactive_custom_values"
+    frd = tmp_path / "model.frd"
+    frd.write_text(
+        """ -4  DISP        4    1
+ -5  D1          1    2    1    0
+ -1         1 1.0E-03 2.0E-03 3.0E-03
+ -3
+ -4  STRESS      6    1
+ -5  SXX         1    4    1    1
+ -1         1 1.0E+06 2.0E+06 3.0E+06 0.0 0.0 0.0
+ -3
+""",
+        encoding="utf-8",
+    )
+    fields = read_frd_fields(frd)
+    assert fields["displacement"][1] == pytest.approx((1e-3, 2e-3, 3e-3))
+    assert fields["stress"][1][0] == pytest.approx(1e6)
 
 
 @pytest.mark.integration

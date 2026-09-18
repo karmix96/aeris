@@ -9,11 +9,13 @@ import pytest
 import yaml
 
 from aeris.fea.calculix import parse_calculix_dat, pressure_for_element
+from aeris.fea.calibration import run_calibration
 from aeris.fea.case.loader import load_case_spec
 from aeris.fea.case.runner import CASE_MANIFEST_SCHEMA_VERSION, run_case
 from aeris.fea.case.spec import LoadCaseSpec, MeshSpec, SectionSpec, WingboxSpec
 from aeris.fea.geometry import generate_aeris_stations
 from aeris.fea.governance import run_qualification
+from aeris.fea.holdout import promote_holdout
 from aeris.fea.mesh import build_wingbox_mesh, write_mesh_artifacts
 from aeris.fea.mission import load_mission_authority
 from aeris.fea.openaerostruct import build_oas_mesh, run_oas_validation
@@ -274,6 +276,56 @@ def test_mesh_visualization_is_reproducible(tmp_path: Path) -> None:
     image = plot_mesh(case_dir, tmp_path / "visuals")
     assert image.is_file()
     assert image.stat().st_size > 1000
+
+
+def test_calibration_requires_released_evidence(tmp_path: Path) -> None:
+    evidence = tmp_path / "evidence.yaml"
+    evidence.write_text(
+        yaml.safe_dump(
+            {
+                "schema": "aeris.fea.calibration_evidence.v1",
+                "status": "released",
+                "records": [
+                    {
+                        "name": "coupon_modulus",
+                        "quantity": "modulus_pa",
+                        "predicted": 70.0,
+                        "measured": 70.5,
+                        "tolerance": 0.01,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    report = run_calibration(evidence, tmp_path / "calibration.json")
+    assert report["status"] == "pass"
+    assert report["detailed_design_gate"] is True
+
+
+def test_holdout_promotion_fails_closed_without_freeze_and_evidence(tmp_path: Path) -> None:
+    study = tmp_path / "study.json"
+    study.write_text(json.dumps({"status": "pass"}), encoding="utf-8")
+    authority = tmp_path / "freeze.yaml"
+    authority.write_text(
+        yaml.safe_dump(
+            {
+                "schema": "aeris.fea.freeze_authority.v1",
+                "status": "development",
+                "holdout_set": "round_c",
+                "holdout_access_authorized": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    qualification = tmp_path / "qualification.json"
+    qualification.write_text(
+        json.dumps({"physical_validation": {"detailed_design_gate": False}}),
+        encoding="utf-8",
+    )
+    report = promote_holdout(study, authority, qualification, tmp_path / "promotion.json")
+    assert report["status"] == "blocked"
+    assert len(report["blocking_checks"]) == 3
 
 
 @pytest.mark.integration

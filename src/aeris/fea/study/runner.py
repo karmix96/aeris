@@ -7,6 +7,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
 
+import numpy as np
+
 from aeris.common.config import file_sha256
 from aeris.fea.case.runner import CaseError, run_case
 from aeris.fea.case.spec import CaseSpec
@@ -68,6 +70,57 @@ def _convergence(study: StudySpec, rows: list[dict[str, object]]) -> dict[str, o
     }
 
 
+def _dse_summary(study: StudySpec, rows: list[dict[str, object]]) -> dict[str, object]:
+    """Return deterministic normalized ranking and a Pareto-front flag."""
+    usable = [row for row in rows if row.get("status") == "ok" and row.get("metrics")]
+    if not usable:
+        return {"status": "not_ready", "reason": "no completed solver metrics"}
+    metrics = [row["metrics"] for row in usable]
+    assert all(isinstance(item, dict) for item in metrics)
+    values = {
+        name: np.asarray([float(item.get(name, np.nan)) for item in metrics], dtype=float)
+        for name in study.ranking_metrics
+    }
+    # Lower-is-better objectives are normalized to [0, 1]; missing values remain NaN.
+    scores: dict[str, np.ndarray] = {}
+    for name, array in values.items():
+        finite = array[np.isfinite(array)]
+        if len(finite) == 0:
+            continue
+        span = max(float(np.max(finite) - np.min(finite)), 1e-30)
+        scores[name] = (array - np.min(finite)) / span
+    total = (
+        np.nanmean(np.vstack(list(scores.values())), axis=0)
+        if scores
+        else np.zeros(len(usable))
+    )
+    order = np.argsort(total)
+    ranked = [{"name": usable[int(index)]["name"], "score": float(total[index])} for index in order]
+    pareto: list[str] = []
+    for index, row in enumerate(usable):
+        dominated = False
+        for other_index, other in enumerate(usable):
+            if index == other_index:
+                continue
+            if all(
+                float(other["metrics"].get(name, np.inf)) <= float(row["metrics"].get(name, np.inf))
+                for name in study.ranking_metrics
+            ) and any(
+                float(other["metrics"].get(name, np.inf)) < float(row["metrics"].get(name, np.inf))
+                for name in study.ranking_metrics
+            ):
+                dominated = True
+                break
+        if not dominated:
+            pareto.append(str(row["name"]))
+    return {
+        "status": "pass",
+        "ranking_metrics": list(study.ranking_metrics),
+        "ranked": ranked,
+        "pareto_front": pareto,
+    }
+
+
 def run_study(
     study: StudySpec,
     *,
@@ -86,13 +139,21 @@ def run_study(
             spec = build_variant_case_spec(study, variant)
             if prepare is not None:
                 spec = prepare(spec, variant_dir)
-            run_case(
-                spec,
-                workdir=variant_dir,
-                stages=study.stages,
-                dry_run=dry_run,
-                echo=say,
+            cached = (
+                study.cache_results
+                and not dry_run
+                and (variant_dir / "verification.json").is_file()
             )
+            if not cached:
+                run_case(
+                    spec,
+                    workdir=variant_dir,
+                    stages=study.stages,
+                    dry_run=dry_run,
+                    echo=say,
+                )
+            elif say:
+                say(f"[fea {spec.name}] cached verification")
             verification = variant_dir / "verification.json"
             status = (
                 "dry_run"
@@ -104,7 +165,13 @@ def run_study(
                     else "failed"
                 )
             )
-            rows.append({"name": variant.name, "status": status, "metrics": _metrics(variant_dir)})
+            rows.append({
+                "name": variant.name,
+                "status": status,
+                "metrics": _metrics(variant_dir),
+                "patch": variant.patch,
+                "cached": cached,
+            })
         except (ValueError, CaseError, OSError) as exc:
             rows.append(
                 {"name": variant.name, "status": "failed", "metrics": {}, "error": str(exc)}
@@ -140,6 +207,7 @@ def run_study(
         "variants": rows,
         "deltas_vs_baseline": deltas,
         "mesh_convergence": convergence,
+        "dse_summary": _dse_summary(study, rows),
     }
     (root / "study_report.json").write_text(
         json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"

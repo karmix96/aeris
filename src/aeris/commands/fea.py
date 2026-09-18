@@ -163,3 +163,46 @@ def fea_visualize(
         typer.secho(f"[fea] visualization failed: {exc}", fg=typer.colors.RED, err=True)
         raise typer.Exit(code=2) from exc
     typer.echo(json.dumps(outputs, indent=2))
+
+
+@fea_app.command("calibrate")
+def fea_calibrate(
+    evidence: Path = typer.Argument(..., help="Calibration evidence YAML."),
+    output: Path = typer.Option(Path("data/fea_cases/calibration_report.json"), "--output"),
+) -> None:
+    """Evaluate measured coupon/wing evidence against declared tolerances."""
+    from aeris.fea.calibration import run_calibration
+
+    try:
+        payload = run_calibration(evidence.expanduser().resolve(), output.expanduser().resolve())
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        typer.secho(f"[fea] calibration failed: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2) from exc
+    typer.echo(json.dumps(payload, indent=2))
+    if payload["status"] != "pass":
+        raise typer.Exit(code=1)
+
+
+@fea_app.command("promote-holdout")
+def fea_promote_holdout(
+    study_report: Path = typer.Option(..., "--study-report"),
+    freeze_authority: Path = typer.Option(..., "--freeze-authority"),
+    qualification_report: Path = typer.Option(..., "--qualification-report"),
+    output: Path = typer.Option(Path("data/fea_cases/holdout_promotion.json"), "--output"),
+) -> None:
+    """Attempt hold-out promotion; missing physical evidence blocks closed-loop access."""
+    from aeris.fea.holdout import promote_holdout
+
+    try:
+        payload = promote_holdout(
+            study_report.expanduser().resolve(),
+            freeze_authority.expanduser().resolve(),
+            qualification_report.expanduser().resolve(),
+            output.expanduser().resolve(),
+        )
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        typer.secho(f"[fea] hold-out promotion failed: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=2) from exc
+    typer.echo(json.dumps(payload, indent=2))
+    if payload["status"] != "pass":
+        raise typer.Exit(code=1)

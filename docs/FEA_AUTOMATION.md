@@ -72,6 +72,10 @@ aeris fea study run configs/fea/study_mesh_convergence.yaml
 aeris fea study run configs/fea/study_s8_pilot.yaml
 aeris fea study run configs/fea/study_structural_dse.yaml --dry-run
 aeris fea visualize data/fea_cases/bwb_baseline --study data/fea_cases/bwb_s8_mesh_convergence
+aeris fea calibrate configs/fea/authorities/calibration_evidence_template.yaml
+aeris fea promote-holdout --study-report study_report.json \
+  --freeze-authority configs/fea/authorities/structural_freeze_v1.yaml \
+  --qualification-report qualification_report.json
 ```
 
 `--dry-run` generates the canonical station artifact, audited `.msh`, CalculiX
@@ -89,6 +93,15 @@ hardening actions. Visualization files are diagnostic and do not bypass numerica
 gates. `study_structural_dse.yaml` is the next DSE scaffold: it varies box depth
 and skin thickness against the governed baseline and is intentionally dry-run-first
 until released structural authorities and validation thresholds are available.
+
+Completed studies now emit deterministic normalized rankings and a Pareto-front
+candidate list in `study_report.json`; completed variants are cached by their
+existing verification artifact so interrupted DSE campaigns can resume safely.
+The calibration command consumes only declared measured records and reports a
+blocked/failing result when evidence is absent or outside tolerance. Hold-out
+promotion requires a passing study, a `frozen` authority with explicit access,
+and a passing detailed-design physical-evidence gate; the supplied development
+authority therefore remains blocked by design.
 
 As exercised on 2026-09-17, the 546/1,332/2,392-element sequence passed with
 4.93% displacement change, 6.94% peak-stress change, and less than 0.001% mass
@@ -116,3 +129,8 @@ Still required before detailed design or certification use:
    wing test; OAS is not that structural experiment.
 5. Review the automated ten-wing S8 pilot report, freeze structural thresholds,
    then use the untouched hold-out only after the structural strategy is frozen.
+
+The software implementation now covers the orchestration, provenance, ranking,
+calibration ingestion, and promotion gates for all five steps. The remaining
+inputs are external engineering authorities and physical test evidence; the
+workflow will not synthesize either one.

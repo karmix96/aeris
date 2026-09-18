@@ -29,4 +29,10 @@ class StudySpec:
     baseline: str | None = None
     stages: tuple[str, ...] = ("geometry", "validate", "mesh", "solve", "physics", "post")
     convergence: ConvergenceSpec = field(default_factory=ConvergenceSpec)
+    cache_results: bool = True
+    ranking_metrics: tuple[str, ...] = (
+        "full_structural_mass_kg",
+        "max_displacement_m",
+        "max_von_mises_pa",
+    )
     source_path: Path | None = None

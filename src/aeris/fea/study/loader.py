@@ -105,6 +105,15 @@ def load_study_spec(path: str | Path) -> StudySpec:
             "convergence.maximum_mass_relative_change",
         ),
     )
+    cache_results = study.get("cache_results", True)
+    if not isinstance(cache_results, bool):
+        raise ValueError("study.cache_results must be a bool")
+    ranking_raw = study.get(
+        "ranking_metrics",
+        ["full_structural_mass_kg", "max_displacement_m", "max_von_mises_pa"],
+    )
+    if not isinstance(ranking_raw, list) or not all(isinstance(item, str) for item in ranking_raw):
+        raise ValueError("study.ranking_metrics must be a list of strings")
     return StudySpec(
         name=name,
         base_case=base_case,
@@ -112,6 +121,8 @@ def load_study_spec(path: str | Path) -> StudySpec:
         baseline=baseline,
         stages=tuple(stages),
         convergence=convergence,
+        cache_results=cache_results,
+        ranking_metrics=tuple(ranking_raw),
         source_path=source,
     )
 

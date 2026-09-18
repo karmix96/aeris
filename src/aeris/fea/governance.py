@@ -74,6 +74,15 @@ def run_qualification(spec: CaseSpec, output_path: Path) -> dict[str, object]:
                 actual = float(getattr(spec.wingbox, key))
                 if abs(expected - actual) > 1e-12:
                     consistency_errors.append(f"wingbox.{key}")
+            if "rib_span_fractions" in wingbox_authority:
+                expected_ribs = tuple(float(v) for v in wingbox_authority["rib_span_fractions"])
+                if expected_ribs != tuple(spec.wingbox.rib_span_fractions):
+                    consistency_errors.append("wingbox.rib_span_fractions")
+            if "root_doubler_span_fraction" in wingbox_authority and abs(
+                float(wingbox_authority["root_doubler_span_fraction"])
+                - spec.wingbox.root_doubler_span_fraction
+            ) > 1e-12:
+                consistency_errors.append("wingbox.root_doubler_span_fraction")
         material = authority.get("material", {})
         if isinstance(material, dict):
             for key, attr in (
@@ -89,9 +98,15 @@ def run_qualification(spec: CaseSpec, output_path: Path) -> dict[str, object]:
             section_map = {
                 "skin": spec.section.skin_thickness_m,
                 "spar": spec.section.spar_thickness_m,
+                "rib": spec.section.rib_thickness_m,
+                "root_doubler": spec.section.root_doubler_thickness_m,
+                "hinge_reinforcement": spec.section.hinge_reinforcement_thickness_m,
+                "cutout_reinforcement": spec.section.cutout_reinforcement_thickness_m,
             }
             for key, actual in section_map.items():
-                if abs(float(sections[key]) - actual) > 1e-12:
+                if key not in sections:
+                    continue
+                if actual is None or abs(float(sections[key]) - actual) > 1e-12:
                     consistency_errors.append(f"sections_m.{key}")
         mass = authority.get("mass", {})
         if isinstance(mass, dict):

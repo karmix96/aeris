@@ -1,0 +1,7 @@
+schema: aeris.fea.calibration_evidence.v1
+authority_id: replace_with_released_test_authority
+status: missing
+records: []
+# Each released record must include:
+# - name, quantity, predicted, measured, tolerance
+# - article_id, test_report, report_sha256, and load_case

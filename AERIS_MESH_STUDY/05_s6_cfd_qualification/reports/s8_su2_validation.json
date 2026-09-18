@@ -120,8 +120,8 @@
       "cf_x0.97": 0.002723009971595267,
       "cf_error_pct": 0.6467107267158384,
       "cf_pass": true,
-      "CD": 0.002866,
-      "cd_error_pct": 0.34448548967273523,
+      "CD": 0.002865394614,
+      "cd_error_pct": 0.3232896952928825,
       "cd_pass": true
     },
     "fp_inc_545": {
@@ -227,11 +227,23 @@
         "first_leg_overwritten": "a continuation file is byte-identical to history.csv, so the queue copied it over the original. The drop before the restart is gone; orders_dropped covers the continuation only."
       },
       "forces": {
-        "CL": 1.087875,
-        "CD": 0.012489,
+        "CL": 1.087846561,
+        "CD": 0.01248728891,
         "CDp": 0.006272,
         "CDv": 0.006217,
-        "CMz": -0.00362
+        "forces_breakdown_stale": {
+          "breakdown": {
+            "CL": 1.087875,
+            "CD": 0.012489
+          },
+          "last_iteration": {
+            "CL": 1.087846561,
+            "CD": 0.01248728891
+          },
+          "cd_counts_apart": 0.017,
+          "note": "forces_breakdown.dat predates the run's last iteration. CL, CD and CMz below are the LAST ITERATION; CDp and CDv come from the breakdown and belong to the older state."
+        },
+        "CMz": -0.003625124081
       },
       "reference": {
         "CL": 1.0785971012009072,
@@ -240,8 +252,8 @@
         "CDv": 0.0062059
       },
       "error_pct": {
-        "CL": 0.8601820632340564,
-        "CD": 1.7616191904047953,
+        "CL": 0.8575453975163235,
+        "CD": 1.7476770582100212,
         "CDp": 3.3789352233393677,
         "CDv": 0.17886205062923988
       },
@@ -301,7 +313,7 @@
         "CD": 0.001805,
         "CDp": 0.0,
         "CDv": 0.001805,
-        "CMz": -0.000535
+        "CMz": -0.0005349408476
       },
       "reference": "experiment to be added before this is judged",
       "cf_minimum_x": 0.7743642,
@@ -463,8 +475,8 @@
       "time_limit_hit": false,
       "memory_guard_hit": false,
       "convergence": {
-        "iterations": 17668,
-        "iterations_all_legs": 24483,
+        "iterations": 352,
+        "iterations_all_legs": 24836,
         "legs": [
           {
             "file": "history.csv",
@@ -473,54 +485,70 @@
           {
             "file": "history_cont1.csv",
             "rows": 17669
+          },
+          {
+            "file": "history_cont2.csv",
+            "rows": 353
           }
         ],
         "rms_first_last": {
           "rms[Rho]": [
             -5.771600278,
-            -10.66059916
+            -10.87082359
           ],
           "rms[RhoU]": [
             -16.47365961,
-            -9.067131917
+            -9.188458685
           ],
           "rms[RhoV]": [
             -16.4335349,
-            -9.691264877
+            -9.919313005
           ],
           "rms[RhoE]": [
             -5.37334769,
-            -10.26454172
+            -10.46119259
           ],
           "rms[nu]": [
             -9.926175829,
-            -11.60365
+            -11.70536316
           ],
           "rms[LM_1]": [
             -4.717100912,
-            -5.490302087
+            -5.535471875
           ],
           "rms[LM_2]": [
             -2.884898527,
-            -2.984060083
+            -3.440150368
           ]
         },
         "orders_dropped": {
-          "rms[Rho]": 4.89,
-          "rms[RhoU]": -7.41,
-          "rms[RhoV]": -6.74,
-          "rms[RhoE]": 4.89,
-          "rms[nu]": 1.68,
-          "rms[LM_1]": 0.77,
-          "rms[LM_2]": 0.1
+          "rms[Rho]": 5.1,
+          "rms[RhoU]": -7.29,
+          "rms[RhoV]": -6.51,
+          "rms[RhoE]": 5.09,
+          "rms[nu]": 1.78,
+          "rms[LM_1]": 0.82,
+          "rms[LM_2]": 0.56
         }
       },
       "forces": {
-        "CL": 0.577801,
-        "CD": 0.011871,
+        "CL": 0.5761492305,
+        "CD": 0.01183589062,
         "CDp": 0.006083,
         "CDv": 0.005788,
-        "CMz": 0.077789
+        "forces_breakdown_stale": {
+          "breakdown": {
+            "CL": 0.577801,
+            "CD": 0.011871
+          },
+          "last_iteration": {
+            "CL": 0.5761492305,
+            "CD": 0.01183589062
+          },
+          "cd_counts_apart": 0.351,
+          "note": "forces_breakdown.dat predates the run's last iteration. CL, CD and CMz below are the LAST ITERATION; CDp and CDv come from the breakdown and belong to the older state."
+        },
+        "CMz": 0.0774105829
       },
       "reference": {
         "source": "NASA TM-4062 table B1, runs 9,10,13",
@@ -533,16 +561,17 @@
         "bubble_source": "NASA TM-4062 table III, oil flow visualization"
       },
       "error_vs_experiment": {
-        "CL_pct": 0.662195121951229,
-        "CD_counts": 0.7099999999999989,
-        "CD_pct": 0.6016949152542364,
+        "CL_pct": 0.37443040069687167,
+        "CD_counts": 0.35890619999999485,
+        "CD_pct": 0.3041577966101651,
         "CM": {
-          "computed_CMz": 0.077789,
-          "reference_CM_nose_down_negative": -0.0794,
-          "signs_agree": false,
-          "signed_error_pct": 197.97103274559194,
-          "magnitude_error_pct": -2.0289672544080624,
-          "note": "SIGNS DISAGREE: the computed moment and the measurement point opposite ways. Resolve the axis convention before reading the magnitude error, which is blind to this."
+          "convention": "SU2 CMz positive = nose-down, established by independent surface-pressure integration, not assumed",
+          "computed_CMz": 0.0774105829,
+          "reference_as_published": -0.0794,
+          "reference_in_su2_convention": 0.0794,
+          "signed_error_pct": -2.505563098236778,
+          "signs_agree_after_mapping": true,
+          "note": "both describe the same physical moment"
         }
       },
       "within_measurement_uncertainty": {
@@ -1648,8 +1677,8 @@
       "time_limit_hit": false,
       "memory_guard_hit": false,
       "convergence": {
-        "iterations": 16527,
-        "iterations_all_legs": 22935,
+        "iterations": 341,
+        "iterations_all_legs": 23277,
         "legs": [
           {
             "file": "history.csv",
@@ -1658,59 +1687,75 @@
           {
             "file": "history_cont1.csv",
             "rows": 16528
+          },
+          {
+            "file": "history_cont2.csv",
+            "rows": 342
           }
         ],
         "rms_first_last": {
           "rms[Rho]": [
             -5.771600278,
-            -11.16197353
+            -11.16877569
           ],
           "rms[RhoU]": [
             -16.47366305,
-            -9.602909369
+            -9.603053323
           ],
           "rms[RhoV]": [
             -16.43353491,
-            -10.13110769
+            -10.1313304
           ],
           "rms[RhoE]": [
             -5.373347689,
-            -10.82130629
+            -10.82975674
           ],
           "rms[k]": [
             -11.18171261,
-            -11.86922998
+            -11.86932361
           ],
           "rms[w]": [
             -1.975327774,
-            -6.739764617
+            -6.736550618
           ],
           "rms[LM_1]": [
             -2.914232975,
-            -3.065835737
+            -3.065835858
           ],
           "rms[LM_2]": [
             0.1413468587,
-            -2.679807467
+            -2.66388365
           ]
         },
         "orders_dropped": {
-          "rms[Rho]": 5.39,
+          "rms[Rho]": 5.4,
           "rms[RhoU]": -6.87,
           "rms[RhoV]": -6.3,
-          "rms[RhoE]": 5.45,
+          "rms[RhoE]": 5.46,
           "rms[k]": 0.69,
           "rms[w]": 4.76,
           "rms[LM_1]": 0.15,
-          "rms[LM_2]": 2.82
+          "rms[LM_2]": 2.81
         }
       },
       "forces": {
-        "CL": 0.627223,
-        "CD": 0.015475,
+        "CL": 0.6276158675,
+        "CD": 0.01551715809,
         "CDp": 0.008543,
         "CDv": 0.006932,
-        "CMz": 0.086709
+        "forces_breakdown_stale": {
+          "breakdown": {
+            "CL": 0.627223,
+            "CD": 0.015475
+          },
+          "last_iteration": {
+            "CL": 0.6276158675,
+            "CD": 0.01551715809
+          },
+          "cd_counts_apart": 0.422,
+          "note": "forces_breakdown.dat predates the run's last iteration. CL, CD and CMz below are the LAST ITERATION; CDp and CDv come from the breakdown and belong to the older state."
+        },
+        "CMz": 0.08687249178
       },
       "reference": {
         "source": "NASA TM-4062 table B1, runs 9,10,13",
@@ -1723,16 +1768,17 @@
         "bubble_source": "NASA TM-4062 table III, oil flow visualization"
       },
       "error_vs_experiment": {
-        "CL_pct": 9.272299651567948,
-        "CD_counts": 36.74999999999999,
-        "CD_pct": 31.144067796610166,
+        "CL_pct": 9.34074346689896,
+        "CD_counts": 37.1715809,
+        "CD_pct": 31.501339745762717,
         "CM": {
-          "computed_CMz": 0.086709,
-          "reference_CM_nose_down_negative": -0.0794,
-          "signs_agree": false,
-          "signed_error_pct": 209.2052896725441,
-          "magnitude_error_pct": 9.205289672544076,
-          "note": "SIGNS DISAGREE: the computed moment and the measurement point opposite ways. Resolve the axis convention before reading the magnitude error, which is blind to this."
+          "convention": "SU2 CMz positive = nose-down, established by independent surface-pressure integration, not assumed",
+          "computed_CMz": 0.08687249178,
+          "reference_as_published": -0.0794,
+          "reference_in_su2_convention": 0.0794,
+          "signed_error_pct": 9.411198715365249,
+          "signs_agree_after_mapping": true,
+          "note": "both describe the same physical moment"
         }
       },
       "within_measurement_uncertainty": {

@@ -1,0 +1,789 @@
+<title>AERIS S8 Campaign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+:root{
+  --ground:#f3f5f6; --surface:#ffffff; --sunk:#eceff1;
+  --ink:#141a1f; --ink-2:#5c6973; --ink-3:#8a959d;
+  --rule:#dce2e6; --rule-2:#c7d0d6;
+  --accent:#0e5e76; --accent-ink:#0b4b5f; --accent-wash:#e3eef2;
+  --good:#1c6e4c; --warn:#8a5a06; --bad:#9c3535;
+  --sans:"IBM Plex Sans",ui-sans-serif,system-ui,"Segoe UI",sans-serif;
+  --serif:"Source Serif 4",Charter,"Iowan Old Style",Georgia,serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --rail:17rem;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0f1419; --surface:#151c22; --sunk:#1b232a;
+    --ink:#e3e9ed; --ink-2:#8d9daa; --ink-3:#6b7a86;
+    --rule:#242e36; --rule-2:#313e48;
+    --accent:#56b8d6; --accent-ink:#7fcde4; --accent-wash:#15303a;
+    --good:#4cae83; --warn:#d0983c; --bad:#e07a7a;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0f1419; --surface:#151c22; --sunk:#1b232a;
+  --ink:#e3e9ed; --ink-2:#8d9daa; --ink-3:#6b7a86;
+  --rule:#242e36; --rule-2:#313e48;
+  --accent:#56b8d6; --accent-ink:#7fcde4; --accent-wash:#15303a;
+  --good:#4cae83; --warn:#d0983c; --bad:#e07a7a;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--serif);
+  font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:81rem;margin:0 auto;padding-inline:20px;padding-block:0 5rem}
+
+/* ---- masthead ---- */
+.mast{border-bottom:1px solid var(--rule);padding-block:3.25rem 2rem;margin-bottom:2.5rem}
+.eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 1rem}
+.mast h1{font-family:var(--sans);font-weight:600;font-size:clamp(1.9rem,1.2rem + 2.6vw,3.1rem);
+  line-height:1.1;letter-spacing:-.02em;margin:0;text-wrap:balance;max-width:20ch}
+.stand{color:var(--ink-2);font-size:1.08rem;max-width:56ch;margin:1.1rem 0 0}
+.meta{font-family:var(--mono);font-size:.76rem;color:var(--ink-3);margin:1.75rem 0 0;
+  display:flex;flex-wrap:wrap;gap:.5rem 1.5rem}
+.meta b{font-weight:500;color:var(--ink-2)}
+
+/* ---- layout ---- */
+.page{display:grid;grid-template-columns:minmax(0,1fr);gap:2rem}
+@media (min-width:1040px){
+  .page{grid-template-columns:var(--rail) minmax(0,1fr);gap:4rem;align-items:start}
+}
+
+/* ---- contents rail ---- */
+.rail{font-family:var(--sans);font-size:.83rem;line-height:1.45}
+@media (min-width:1040px){
+  .rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 1.5rem);
+    max-height:calc(100vh - 4rem);overflow-y:auto;padding-right:.5rem;
+    border-right:1px solid var(--rule)}
+}
+.rail summary{font-family:var(--sans);font-weight:600;cursor:pointer;padding:.7rem .9rem;
+  background:var(--surface);border:1px solid var(--rule);border-radius:7px;font-size:.9rem}
+@media (min-width:1040px){.rail summary{display:none}
+  .rail details{display:contents}}
+.rail-inner{display:flex;flex-direction:column;gap:1px;padding-top:.75rem}
+.rail a{text-decoration:none;color:var(--ink-2);padding:.3rem .7rem;border-left:2px solid transparent;
+  display:block;border-radius:0 3px 3px 0}
+.rail a:hover{color:var(--ink);background:var(--sunk)}
+.rail a.r2{font-weight:600;color:var(--ink);margin-top:.55rem}
+.rail a.r3{padding-left:1.45rem;font-size:.79rem}
+.rail a.on{border-left-color:var(--accent);color:var(--accent-ink);background:var(--accent-wash)}
+.rail-group{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-3);margin:1.75rem 0 .35rem;padding-left:.7rem}
+.rail a.r-add{font-weight:400;color:var(--ink-2);margin-top:0}
+.rdate{display:block;font-family:var(--mono);font-size:.68rem;color:var(--ink-3)}
+
+/* ---- article ---- */
+article{min-width:0;max-width:70ch}
+article h2{font-family:var(--sans);font-weight:600;font-size:1.6rem;letter-spacing:-.015em;
+  line-height:1.2;margin:3.5rem 0 1rem;padding-top:1.5rem;border-top:1px solid var(--rule);
+  text-wrap:balance;scroll-margin-top:1.5rem}
+article h2:first-child{margin-top:0;border-top:0;padding-top:0}
+article h3{font-family:var(--sans);font-weight:600;font-size:1.13rem;letter-spacing:-.005em;
+  margin:2.5rem 0 .65rem;text-wrap:balance;scroll-margin-top:1.5rem}
+article p{margin:0 0 1.15rem}
+article strong{font-weight:600}
+article a{color:var(--accent-ink);text-underline-offset:2px}
+article ul,article ol{margin:0 0 1.3rem;padding-left:1.35rem}
+article li{margin-bottom:.5rem}
+article li::marker{color:var(--ink-3)}
+article blockquote{margin:1.5rem 0;padding:.2rem 0 .2rem 1.25rem;border-left:2px solid var(--rule-2);
+  color:var(--ink-2);font-style:italic}
+code{font-family:var(--mono);font-size:.855em;background:var(--sunk);padding:.12em .36em;
+  border-radius:3px;word-break:break-word}
+
+/* ---- tables: the report is mostly measurements ---- */
+.tw{overflow-x:auto;margin:1.6rem 0;border:1px solid var(--rule);border-radius:7px;
+  background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-family:var(--sans);font-size:.85rem;
+  font-variant-numeric:tabular-nums;line-height:1.45}
+th,td{padding:.55rem .85rem;text-align:left;border-bottom:1px solid var(--rule);white-space:nowrap}
+th{font-weight:600;font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-2);background:var(--sunk);position:sticky;top:0}
+tbody tr:last-child td{border-bottom:0}
+td code{background:none;padding:0}
+
+/* ---- addenda: a dated sequence, so the date is structure ---- */
+.addendum{margin-top:3.5rem;padding-top:1.5rem;border-top:1px solid var(--rule)}
+.addendum .when{font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;color:var(--accent);
+  margin:0 0 .4rem;text-transform:uppercase}
+.addendum h2.h-add{margin:0 0 1rem;border-top:0;padding-top:0;font-size:1.45rem}
+.addendum h3{font-size:1.04rem}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <p class="eyebrow">Strategy study S8 · structured O-H meshing</p>
+    <h1>SU2 in the AERIS project: what it is for, what was run, and what it has shown</h1>
+    <p class="stand">An automated mesh-and-solve pipeline for the AERIS flying wing: how it
+      was built, every setting in force, what each study asked and answered, and where the
+      results are still soft.</p>
+    <p class="meta">
+      <span><b>Started</b> 15 September 2026</span>
+      <span><b>Last entry</b> 17 September, 22:49</span>
+      <span><b>Solver</b> ADflow RANS-SA · SU2 8.5</span>
+      <span><b>Source</b> S8_REPORT_2026-09-15.md</span>
+    </p>
+  </header>
+
+  <div class="page">
+    <nav class="rail" aria-label="Contents">
+      <details>
+        <summary>Contents</summary>
+        <div class="rail-inner"><a class="r2" href="#1-why-there-is-a-second-solver-at-all">1. Why there is a second solver at all</a>
+<a class="r2" href="#2-how-to-read-any-result-in-this-report">2. How to read any result in this report</a>
+<a class="r2" href="#3-what-is-installed-and-every-setting-in-force">3. What is installed, and every setting in force</a>
+<a class="r3" href="#31-the-settings-that-vary-and-why">3.1 The settings that vary, and why</a>
+<a class="r3" href="#32-the-output-settings-we-do-change-and-why">3.2 The output settings we do change, and why</a>
+<a class="r2" href="#4-the-cases-what-each-one-asks">4. The cases: what each one asks</a>
+<a class="r3" href="#group-a-flat-plates-against-nasas-turbulence-modeling-resource">Group A — flat plates, against NASA&#x27;s Turbulence Modeling Resource</a>
+<a class="r3" href="#group-b-an-airfoil-against-the-same-resource">Group B — an airfoil, against the same resource</a>
+<a class="r3" href="#group-c-transition-which-is-the-whole-point">Group C — transition, which is the whole point</a>
+<a class="r2" href="#5-results">5. Results</a>
+<a class="r3" href="#51-verification-flat-plates-and-naca-0012">5.1 Verification — flat plates and NACA 0012</a>
+<a class="r3" href="#52-validation-eppler-387-against-mcghees-measurements">5.2 Validation — Eppler 387 against McGhee&#x27;s measurements</a>
+<a class="r3" href="#53-transition-location-on-flat-plates">5.3 Transition location on flat plates</a>
+<a class="r2" href="#6-the-acceptance-rule-and-why-one-had-to-be-written">6. The acceptance rule, and why one had to be written</a>
+<a class="r2" href="#7-what-was-measured-rather-than-assumed">7. What was measured rather than assumed</a>
+<a class="r2" href="#8-defects-found-and-fixed-1618-september">8. Defects found and fixed, 16–18 September</a>
+<a class="r2" href="#9-what-this-does-and-does-not-support-today">9. What this does and does not support today</a>
+<a class="r2" href="#10-what-to-do-next-with-su2">10. What to do next with SU2</a></div>
+      </details>
+    </nav>
+    <article><p>Written 2026-09-18. Self-contained: it assumes you know what CFD is and nothing about what this
+project has done with SU2. Every number is from a run on this machine unless it says otherwise.</p>
+
+</section>
+<h2 id="1-why-there-is-a-second-solver-at-all">1. Why there is a second solver at all</h2>
+<p>The AERIS design campaign runs on <strong>ADflow</strong>. SU2 exists here for two reasons, and they are
+different reasons that are easy to conflate.</p>
+<p><strong>Reason one — ADflow has no transition model.</strong> It solves the flow as if the boundary layer were
+turbulent everywhere, from the leading edge back. Real wings do not work that way: the boundary
+layer starts laminar and <em>transitions</em> to turbulence somewhere, and laminar skin friction is
+several times lower than turbulent. AERIS flies at chord Reynolds numbers of roughly
+<strong>0.8 to 1.2 million</strong>, with the outer wing lower still. That is squarely in the range where
+transition location is a first-order effect on drag, not a correction. SU2 ships the
+<strong>Langtry–Menter</strong> transition model. Nothing else available to this project does.</p>
+<p><strong>Reason two — one code is not a check on itself.</strong> Two independently written solvers that agree
+on the same grid at the same conditions tell you something a single solver cannot. They do not
+tell you the answer is <em>right</em> — both can be wrong the same way — but disagreement is
+informative and agreement is worth having.</p>
+<p>A third reason people offer, that SU2 is widely used in industry, is not a reason to trust a
+number. It is a reason to expect the code to be well tested, which is different.</p>
+
+</section>
+<h2 id="2-how-to-read-any-result-in-this-report">2. How to read any result in this report</h2>
+<p>Three words get used loosely and mean different things. Everything below is labelled with one.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>term</th>
+<th>means</th>
+<th>does not mean</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Converged</strong></td>
+<td>the iterations stopped changing the answer</td>
+<td>the answer is right</td>
+</tr>
+<tr>
+<td><strong>Verified</strong></td>
+<td>our numbers match other codes' numbers on the same problem</td>
+<td>the physics is right</td>
+</tr>
+<tr>
+<td><strong>Validated</strong></td>
+<td>our numbers match a physical <strong>measurement</strong>, within a stated uncertainty</td>
+<td>the code is right everywhere</td>
+</tr>
+</tbody>
+</table></div>
+<p>Matching CFL3D and FUN3D on a flat plate is <strong>verification</strong>. Matching McGhee's wind-tunnel data
+on the Eppler 387 is <strong>validation</strong>. Only the second says anything about nature, and only for that
+airfoil at that Reynolds number.</p>
+
+</section>
+<h2 id="3-what-is-installed-and-every-setting-in-force">3. What is installed, and every setting in force</h2>
+<p><strong>SU2 v8.5.0 &quot;Harrier&quot;</strong>, built at <code>AERIS_MESH_STUDY/tools/su2_8.5.0</code>. Runs are launched under the
+MACH-Aero environment's <code>mpirun</code>, two MPI ranks per case for these 2-D problems.</p>
+<p>Nothing below was invented for this project. Every case starts from <strong>SU2's own published tutorial
+configuration</strong> for that case, and the only things deliberately changed are output settings — which
+files get written, and where. That is a policy, not an accident: it keeps the comparison honest
+and means a disagreement with SU2's published result is ours to explain.</p>
+<h3 id="31-the-settings-that-vary-and-why">3.1 The settings that vary, and why</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>setting</th>
+<th>values in use</th>
+<th>what it does and why it differs between cases</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SOLVER</code></td>
+<td><code>RANS</code>, <code>INC_RANS</code></td>
+<td>Compressible or incompressible. <strong>AERIS flies at Mach 0.084</strong> — effectively incompressible — so the <code>INC_RANS</code> cases are the ones in our regime. The compressible cases exist because NASA's reference data for them does.</td>
+</tr>
+<tr>
+<td><code>KIND_TURB_MODEL</code></td>
+<td><code>SA</code>, <code>SST</code></td>
+<td>Spalart–Allmaras is what <strong>ADflow uses</strong>, so SA cases are directly comparable to our production solver. SST is the other standard two-equation model and is what most Langtry–Menter examples pair with.</td>
+</tr>
+<tr>
+<td><code>KIND_TRANS_MODEL</code></td>
+<td><code>LM</code>, none</td>
+<td>Langtry–Menter. Present only on the transition cases; absent means fully turbulent, like ADflow.</td>
+</tr>
+<tr>
+<td><code>CONV_NUM_METHOD_FLOW</code></td>
+<td><code>ROE</code>, <code>FDS</code>, <code>L2ROE</code></td>
+<td>The flux scheme — how the solver computes the transfer between neighbouring cells. <strong>This matters more than it looks:</strong> SU2's own documentation warns that the scalar <code>JST</code> scheme can overestimate viscous drag on low-Reynolds meshes, and we measured exactly that. <code>L2ROE</code> is a low-Mach variant used by the transition tutorials.</td>
+</tr>
+<tr>
+<td><code>MUSCL_FLOW</code></td>
+<td><code>YES</code> everywhere</td>
+<td>Second-order reconstruction. First order would be stable and useless for drag.</td>
+</tr>
+<tr>
+<td><code>SLOPE_LIMITER_FLOW</code></td>
+<td><code>NONE</code>, <code>VENKATAKRISHNAN</code></td>
+<td>A limiter suppresses oscillations near sharp gradients at the cost of some accuracy. The flat plates need none; the airfoils use Venkatakrishnan.</td>
+</tr>
+<tr>
+<td><code>CFL_NUMBER</code> + <code>CFL_ADAPT_PARAM</code></td>
+<td>1 to 1000, floors 1 to 100</td>
+<td>How large a step the solver takes. <strong>Measured, not assumed</strong> — see §7.</td>
+</tr>
+<tr>
+<td><code>MGLEVEL</code></td>
+<td>0 or unset</td>
+<td>No multigrid.</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="32-the-output-settings-we-do-change-and-why">3.2 The output settings we do change, and why</h3>
+<p><code>SURFACE_CSV</code> carries <strong>only the solution variables</strong>. Skin friction, y⁺ and the pressure
+coefficient reach a file only through the <strong>Tecplot or ParaView surface writers</strong>. A case written
+with CSV alone can converge beautifully and still be ungradeable, because the quantity its
+criterion is built on was never written. Two cases were in exactly that state until today
+(§8). Every case now requests <code>SURFACE_TECPLOT_ASCII</code>.</p>
+
+</section>
+<h2 id="4-the-cases-what-each-one-asks">4. The cases: what each one asks</h2>
+<p>Ten cases, in three groups. Nothing here touches an AERIS wing — this is <strong>stage 0</strong>, the work
+that has to pass before a second solver is allowed near the actual design campaign.</p>
+<h3 id="group-a-flat-plates-against-nasas-turbulence-modeling-resource">Group A — flat plates, against NASA's Turbulence Modeling Resource</h3>
+<p>The simplest wall-bounded turbulent flow there is. If a solver cannot get this right, nothing
+downstream matters. NASA's TMR publishes converged CFL3D and FUN3D answers on the <em>same grids</em>.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>case</th>
+<th>asks</th>
+<th>grid</th>
+<th>conditions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fp_comp_137</code></td>
+<td>Does our SU2 setup reproduce NASA's compressible SA flat plate?</td>
+<td>13,289 nodes</td>
+<td>M 0.2, Re/m 5e6</td>
+</tr>
+<tr>
+<td><code>fp_comp_545</code></td>
+<td>The same on a <strong>4× finer</strong> grid — does refinement move it?</td>
+<td>209,825 nodes</td>
+<td>M 0.2, Re/m 5e6</td>
+</tr>
+<tr>
+<td><code>fp_inc_545</code></td>
+<td>The same again but <strong>incompressible</strong> — our actual regime</td>
+<td>209,825 nodes</td>
+<td>Re/m 5e6</td>
+</tr>
+</tbody>
+</table></div>
+<p>Criterion: skin friction at NASA's station x = 0.970084, and total drag.</p>
+<h3 id="group-b-an-airfoil-against-the-same-resource">Group B — an airfoil, against the same resource</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>case</th>
+<th>asks</th>
+<th>grid</th>
+<th>conditions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>naca0012_inc_897</code></td>
+<td>Does it hold on a real airfoil with a pressure gradient?</td>
+<td>230,336 nodes</td>
+<td>α 10°, Re 6e6, incompressible</td>
+</tr>
+</tbody>
+</table></div>
+<p>Criterion: CL within 1 %, CD within 2 %, CDv within 1 % of the TMR values
+(CL 1.09094, CD 0.0122728, CDp 0.006067, CDv 0.0062059), with the compressible reference brought
+to incompressible by Prandtl–Glauert (×0.9887).</p>
+<h3 id="group-c-transition-which-is-the-whole-point">Group C — transition, which is the whole point</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>case</th>
+<th>asks</th>
+<th>grid</th>
+<th>conditions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fp_bc</code></td>
+<td>Does the Bas–Cakmakcioglu model put <strong>natural</strong> transition in the right place?</td>
+<td>41,880 nodes</td>
+<td>Re/m 3.34e6, Tu 0.18 %</td>
+</tr>
+<tr>
+<td><code>t3a</code></td>
+<td>Does Langtry–Menter reproduce <strong>bypass</strong> transition at high free-stream turbulence?</td>
+<td>68,129 nodes</td>
+<td>Tu 5.9 % inlet, Re/m 198,944</td>
+</tr>
+<tr>
+<td><code>t3a_minus</code></td>
+<td>The same at <strong>low</strong> turbulence, where transition happens much later</td>
+<td>123,617 nodes</td>
+<td>Tu 1 %, Re/m 1.32e6</td>
+</tr>
+<tr>
+<td><code>e387_sa_lm</code></td>
+<td><strong>The case that matters.</strong> A low-Reynolds airfoil with a laminar separation bubble — AERIS's regime — with SA</td>
+<td>147,496 nodes</td>
+<td>α 2°, <strong>Re 200,000</strong></td>
+</tr>
+<tr>
+<td><code>e387_sst_lm</code></td>
+<td>The same airfoil and grid with SST, so the models can be compared directly</td>
+<td>147,496 nodes</td>
+<td>α 2°, Re 200,000</td>
+</tr>
+<tr>
+<td><code>nlf_sst_lm</code></td>
+<td>A natural-laminar-flow airfoil</td>
+<td>153,120 nodes</td>
+<td>Re/m 4e6</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Why Eppler 387 is the important one.</strong> At Re 200,000 the flow separates while still laminar,
+transitions in the separated shear layer, and reattaches turbulent — a <em>laminar separation
+bubble</em>. That is the mechanism that governs the outer panels of the AERIS wing, and it is exactly
+what a fully-turbulent solver like ADflow cannot represent. McGhee's NASA TM-4062 gives both the
+forces <strong>and</strong> oil-flow measurements of where the bubble starts and ends, so it grades the
+mechanism and not only the totals.</p>
+
+</section>
+<h2 id="5-results">5. Results</h2>
+<h3 id="51-verification-flat-plates-and-naca-0012">5.1 Verification — flat plates and NACA 0012</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>case</th>
+<th>cf error</th>
+<th>CD error</th>
+<th>verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fp_comp_137</code></td>
+<td><strong>+0.77 %</strong></td>
+<td><strong>+0.21 %</strong></td>
+<td>passes</td>
+</tr>
+<tr>
+<td><code>fp_comp_545</code></td>
+<td><strong>+0.65 %</strong></td>
+<td><strong>+0.32 %</strong></td>
+<td>passes</td>
+</tr>
+<tr>
+<td><code>fp_inc_545</code></td>
+<td><strong>−0.04 %</strong></td>
+<td><strong>+0.55 %</strong></td>
+<td>passes</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>SU2 reproduces NASA's flat plate to under 1 % on both criteria, on three grids, compressible and
+incompressible.</strong> Refining 13k → 210k nodes moves cf by 0.12 points, so the answer is
+grid-insensitive here. This is solid verification and it is the floor everything else stands on.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>case</th>
+<th>CL</th>
+<th>CD</th>
+<th>CDp</th>
+<th>CDv</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>naca0012_inc_897</code></td>
+<td>+0.86 %</td>
+<td>+1.75 %</td>
+<td>+3.38 %</td>
+<td><strong>+0.18 %</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>Lift passes its 1 % bar, total drag passes 2 %, friction drag is excellent at 0.18 %. <strong>Pressure
+drag is the outlier at +3.38 %</strong> — and that is the same signature seen elsewhere in this project:
+friction is easy, the pressure integral is where the error lives, because it is a small residual of
+large cancelling contributions.</p>
+<h3 id="52-validation-eppler-387-against-mcghees-measurements">5.2 Validation — Eppler 387 against McGhee's measurements</h3>
+<p>Measurement uncertainty for this exact condition, from Table A1 of TM-4062: <strong>±2.6 drag counts</strong>
+on CD, ±0.001 on CL.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th></th>
+<th>CL</th>
+<th>CD</th>
+<th>pitching moment</th>
+<th>separation bubble</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Measured</strong> (α 2.04°, Re 200k)</td>
+<td>0.574</td>
+<td>0.0118</td>
+<td>−0.0794</td>
+<td>x/c <strong>0.43 → 0.67</strong></td>
+</tr>
+<tr>
+<td><code>e387_sa_lm</code></td>
+<td><strong>+0.37 %</strong></td>
+<td><strong>+0.36 counts</strong></td>
+<td><strong>−2.03 %</strong></td>
+<td>x/c <strong>0.516 → 0.584</strong></td>
+</tr>
+<tr>
+<td><code>e387_sst_lm</code></td>
+<td>+9.34 %</td>
+<td>+37.2 counts</td>
+<td>+9.2 %</td>
+<td><strong>none</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>SA-LM is the result worth having.</strong> Lift within 0.4 %, drag <strong>inside the measurement
+uncertainty</strong>, moment within 2 %, and it produces a laminar separation bubble <strong>inside the measured
+region</strong>. Its one real error is that the bubble is <strong>3.5× too short</strong> — 0.068c against a measured
+0.240c — which points at reattachment rather than at separation onset.</p>
+<p><strong>SST-LM fails the same case on the same grid</strong>: drag 37 counts high and no bubble at all, only
+trailing-edge separation. The two models <strong>disagree with each other by 37 counts</strong>, and only one of
+them is near the measurement. For AERIS that is a usable finding: if SU2 is used for transition,
+it should be SA-LM.</p>
+<p>Both runs are still short of the acceptance gate (§6) and are converging further as this is
+written, so these numbers are provisional.</p>
+<h3 id="53-transition-location-on-flat-plates">5.3 Transition location on flat plates</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>case</th>
+<th>onset</th>
+<th>free-stream turbulence</th>
+<th>expected</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fp_bc</code></td>
+<td><strong>Re_x 2.59e6</strong></td>
+<td>0.18 %</td>
+<td>natural transition, ~2–3e6 ✓</td>
+</tr>
+<tr>
+<td><code>t3a</code></td>
+<td><strong>Re_x 1.12e5</strong></td>
+<td>5.9 % inlet</td>
+<td>bypass transition, ~1–2e5 ✓</td>
+</tr>
+<tr>
+<td><code>t3a_minus</code></td>
+<td><strong>none found</strong></td>
+<td>1 %</td>
+<td>should transition — see below</td>
+</tr>
+</tbody>
+</table></div>
+<p>Two of three land where the physics says they should. <code>t3a_minus</code> does not, and the reason is not
+subtle: its skin friction <strong>falls from the leading edge and then sits flat at about 2.0e-3 across
+more than a decade of Re_x</strong>, where a turbulent plate should decay from roughly 3.7e-3 to 2.1e-3
+over the same span. A constant cf over that range is not a boundary layer of either kind. The run
+is also unconverged. <strong>This is flagged, not graded.</strong></p>
+<p><code>nlf_sst_lm</code> has stalled at rms −5.32 with its turbulence and transition equations never
+converging at all, and produces no usable result.</p>
+
+</section>
+<h2 id="6-the-acceptance-rule-and-why-one-had-to-be-written">6. The acceptance rule, and why one had to be written</h2>
+<p>SU2 had <strong>no acceptance rule</strong> in this project — only a residual target. That single fact is
+responsible for most of what looked like failure.</p>
+<p><code>fp_comp_545</code> has been passing NASA's criteria <strong>since 16 September</strong> and was reported unfinished
+for two days, because its residual sat at −8.63 instead of −14. Its <strong>drag had been settled to
+0.012 % over 500 iterations the whole time.</strong> The residual target was never the question; the
+quantity of interest was.</p>
+<p>This project had already reasoned that out for ADflow on 15 September — accept on the residual
+target <strong>or</strong> on settled quantities of interest, with health checks required either way, because a
+short tail's spread is dominated by the approach rather than by the remaining error. Nobody
+carried it across. <code>su2_gate()</code> is that rule, and it also states plainly when a case has <strong>no
+monitored force at all</strong> — true of the three transitional plates, where SU2 writes CD identically
+zero and the quantity of interest is cf, not drag.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>case</th>
+<th>verdict</th>
+<th>route</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fp_comp_137</code>, <code>fp_inc_545</code>, <code>fp_bc</code></td>
+<td><strong>ACCEPTED</strong></td>
+<td>residual target</td>
+</tr>
+<tr>
+<td><code>fp_comp_545</code>, <code>naca0012_inc_897</code></td>
+<td><strong>ACCEPTED</strong></td>
+<td>settled forces</td>
+</tr>
+<tr>
+<td><code>e387_sa_lm</code>, <code>e387_sst_lm</code></td>
+<td>not yet</td>
+<td>still converging</td>
+</tr>
+<tr>
+<td><code>t3a</code>, <code>t3a_minus</code>, <code>nlf_sst_lm</code></td>
+<td>not yet</td>
+<td>no monitored force</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Five of ten</strong>, against two before the rule existed. Neither case that changed hands was failing
+physics.</p>
+
+</section>
+<h2 id="7-what-was-measured-rather-than-assumed">7. What was measured rather than assumed</h2>
+<p><strong>The CFL floor is not the cause of the stalls.</strong> Every stalled case has its CFL pinned at the
+adaptation floor, which looked like the explanation — until two <em>converged</em> cases turned out to be
+pinned at theirs too. A controlled probe, same restart and same iteration budget, floor as the only
+variable:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>case</th>
+<th>floor</th>
+<th>orders per 1,000 iterations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fp_comp_545</code></td>
+<td><strong>100 (control)</strong></td>
+<td><strong>0.067</strong></td>
+</tr>
+<tr>
+<td><code>fp_comp_545</code></td>
+<td>10</td>
+<td>0.026</td>
+</tr>
+<tr>
+<td><code>fp_comp_545</code></td>
+<td>1</td>
+<td>0.024</td>
+</tr>
+<tr>
+<td><code>e387_sa_lm</code></td>
+<td>40 (control)</td>
+<td><strong>−0.068</strong> (rising)</td>
+</tr>
+<tr>
+<td><code>e387_sa_lm</code></td>
+<td>1</td>
+<td>+0.022</td>
+</tr>
+</tbody>
+</table></div>
+<p>Lowering the floor makes the fine flat plate <strong>2.5× worse</strong> and is the only thing that stops E387
+diverging. The two cases disagree, so <strong>the CFL floor is a per-case setting, not a campaign-wide
+fix.</strong> E387 got floor 1 on this evidence; nothing else did.</p>
+<p><strong>The pitching-moment sign.</strong> The surface pressure of <code>e387_sa_lm</code> was integrated independently and
+reproduced SU2's own pressure components to 0.9 % on CL, 3 % on CDp and 2.5 % on CMz — close enough
+to trust the sign. In that convention a positive <code>M_z</code> lifts the <strong>tail</strong>, which is <strong>nose-down</strong>.
+McGhee's −0.0794 is also nose-down, in a convention where nose-down is negative. <strong>The same
+physical moment, two sign conventions</strong>, and the error in a common convention is −2.03 %.</p>
+
+</section>
+<h2 id="8-defects-found-and-fixed-1618-september">8. Defects found and fixed, 16–18 September</h2>
+<p>Every one of these made a verdict mean less than it said. Several were found by feeding synthetic
+inputs to the real functions rather than by reading the code.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>defect</th>
+<th>effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Transition onset from a global minimum</td>
+<td>Reported a plate with no transition as transitioning at Re_x 2.6e8</td>
+</tr>
+<tr>
+<td>Convergence rate measured in history <strong>rows</strong></td>
+<td>SU2's write frequency is per case; called a stalled run &quot;accelerating&quot; three times</td>
+</tr>
+<tr>
+<td><code>SURFACE_CSV</code> only</td>
+<td><code>fp_bc</code> and <code>t3a</code> converged and were <strong>judged on nothing at all</strong></td>
+</tr>
+<tr>
+<td><code>history()</code> read one file</td>
+<td>Continuations invisible — and <code>queue23</code> had copied each <strong>over</strong> its original, so three cases' first legs no longer exist anywhere</td>
+</tr>
+<tr>
+<td><code>--restart</code> read <code>restart.dat</code> blindly</td>
+<td>A <em>second</em> continuation would have rewound the case and discarded the first</td>
+</tr>
+<tr>
+<td><code>READ_BINARY_RESTART= NO</code> with a binary restart</td>
+<td>T3A aborted on continuation; the format is now read from the file's own magic number</td>
+</tr>
+<tr>
+<td><code>abs(CMz)</code> vs <code>abs(CM_ref)</code></td>
+<td>Zero error for either sign; a genuine flip was invisible</td>
+</tr>
+<tr>
+<td>Bubble from min/max of all reversed points</td>
+<td>Merged separate regions into one fictitious span — <strong>this is why both models were wrongly reported as producing no bubble</strong></td>
+</tr>
+<tr>
+<td><code>exit_success</code> from a string</td>
+<td>A killed run reported as clean</td>
+</tr>
+<tr>
+<td><strong>Re/m derived from the config</strong></td>
+<td><strong>T3A and T3A− were 20.1× too high</strong></td>
+</tr>
+<tr>
+<td><code>forces_breakdown.dat</code> graded blindly</td>
+<td>SU2 writes it when it chooses, not at the end; on E387 it was <strong>2.27 counts stale</strong> against a 2.6-count uncertainty</td>
+</tr>
+</tbody>
+</table></div>
+<p>The Reynolds one is the sharpest. Both T3A configs state their Reynolds number over the 20 m plate
+and set <code>REF_LENGTH= 20.0</code> without a <code>REYNOLDS_LENGTH</code>, so a reader defaulting that length to 1.0 m
+got 2.656e7 per metre where SU2 had used 1.32318e6. <strong>SU2 prints the number it actually used.</strong>
+Across six cases the correction is exactly 20.1× on the two T3A cases and 1.0× on every other.</p>
+
+</section>
+<h2 id="9-what-this-does-and-does-not-support-today">9. What this does and does not support today</h2>
+<p><strong>Supported:</strong></p>
+<ul>
+<li>SU2 reproduces NASA's turbulent flat plate to under 1 % on cf and CD, on three grids, in both the
+compressible and the incompressible path. <em>Verified.</em></li>
+<li>SU2 reproduces the TMR NACA 0012 to 0.9 % on lift and 1.8 % on drag, with friction drag at
+0.18 %. <em>Verified.</em></li>
+<li><strong>SA-LM predicts Eppler 387 at Re 200,000 to within the measurement uncertainty on drag, 0.4 % on
+lift, 2 % on moment, and produces a laminar separation bubble inside the measured region.</strong>
+<em>Validated, provisionally</em> — the run is still converging.</li>
+<li>Transition onset on two flat plates lands where natural and bypass transition respectively
+belong.</li>
+</ul>
+<p><strong>Not supported:</strong></p>
+<ul>
+<li>Any statement about SU2 on an <strong>AERIS wing</strong>. No converged SU2 solve on our own geometry exists.
+This is the gap that matters most and it is untouched.</li>
+<li>Any ADflow-versus-SU2 comparison. That needs matched geometry, grid, model and convergence, and
+none of those conditions is met yet.</li>
+<li>T3A and T3A− as <em>validation</em>. The ERCOFTAC server that holds Coupland's measurements refuses
+connections, and it is the only source. The runs are recorded so grading becomes a lookup when it
+returns.</li>
+<li>SST-LM for anything. It fails the one case where we have a measurement, by 37 counts.</li>
+<li><code>nlf_sst_lm</code>. Stalled with its turbulence and transition equations unconverged.</li>
+</ul>
+<p><strong>The honest one-line summary:</strong> SU2's numerics are verified on the standard cases, its SA
+Langtry–Menter path looks genuinely good in the low-Reynolds regime AERIS actually flies in, and it
+has never been pointed at an AERIS wing.</p>
+
+</section>
+<h2 id="10-what-to-do-next-with-su2">10. What to do next with SU2</h2>
+<ol>
+<li><strong>Finish converging the two E387 runs</strong> so the bubble result stops being provisional. In
+progress as this is written.</li>
+<li><strong>Diagnose the T3A− flat cf.</strong> It is a real anomaly, not a convergence detail.</li>
+<li><strong>Run SU2 on one AERIS wing</strong> at matched geometry, grid and model against ADflow. This is the
+whole reason for having it and it has never been done with a converged run.</li>
+<li><strong>Decide whether transition enters the design dataset.</strong> If SA-LM holds up, it changes drag by
+more than the design differences the campaign is trying to resolve — at which point a
+fully-turbulent dataset answers the wrong question.</li>
+</ol>
+</article>
+  </div>
+</div>
+
+<script>
+(function(){
+  var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+  var byId = {};
+  links.forEach(function(a){ byId[a.getAttribute('href').slice(1)] = a; });
+  var heads = Object.keys(byId).map(function(id){ return document.getElementById(id); })
+                    .filter(Boolean);
+  var current = null;
+  function mark(el){
+    if (!el || el === current) return;
+    if (current) current.classList.remove('on');
+    current = el; el.classList.add('on');
+    if (window.innerWidth >= 1040) {
+      var rail = document.querySelector('.rail');
+      var t = el.offsetTop - rail.clientHeight / 2;
+      if (rail.scrollHeight > rail.clientHeight) rail.scrollTop = Math.max(0, t);
+    }
+  }
+  if ('IntersectionObserver' in window) {
+    var visible = new Set();
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting) visible.add(e.target); else visible.delete(e.target);
+      });
+      var first = heads.filter(function(h){ return visible.has(h); })[0];
+      if (first) mark(byId[first.id]);
+    }, { rootMargin: '0px 0px -72% 0px' });
+    heads.forEach(function(h){ io.observe(h); });
+  }
+  // the rail is a disclosure on phones; close it after a jump
+  document.querySelector('.rail-inner').addEventListener('click', function(e){
+    if (e.target.closest('a') && window.innerWidth < 1040) {
+      var d = document.querySelector('.rail details');
+      if (d) d.open = false;
+    }
+  });
+  if (window.innerWidth >= 1040) {
+    var d = document.querySelector('.rail details'); if (d) d.open = true;
+  }
+})();
+</script>

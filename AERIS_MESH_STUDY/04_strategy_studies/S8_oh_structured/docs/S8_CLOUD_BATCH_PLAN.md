@@ -129,8 +129,9 @@ Pin ranks to physical cores; do not let the scheduler put two ranks on one core'
 
 ## 3. The pilot gate — spend 2 % first
 
-**Run one `gci_F` case and one `gci_FF` case, end to end, and stop.** Cost: about 20 core-hours,
-under 5 % of the batch. It is the only way to test the three extrapolations this plan rests on:
+**Run one `gci_F` case and one `gci_FF` case, end to end, and stop.** Cost: **31.4 core-hours**
+(8.8 + 22.6), about **7 %** of the batch. An earlier draft of this section said 20 core-hours and
+under 5 %; that was wrong, and the runbook's figure is the correct one. It is the only way to test the three extrapolations this plan rests on:
 
 | what the pilot measures | what it is being checked against |
 |---|---|

@@ -57,6 +57,34 @@ LEDGER = OUT_ROOT / "ledger.json"
 #: Free space that must remain after a case writes. A gci_FF volume solution is
 #: about 1.2 GiB and the batch writes 44 of them.
 DISK_FLOOR_GIB = 25.0
+#: The wing every grid-convergence study is anchored on.
+REFERENCE_INDEX = 83
+
+
+def physical_cores() -> int:
+    """PHYSICAL cores, not threads.
+
+    `os.cpu_count()` counts logical CPUs. On a machine with 6 cores and SMT it
+    returns 12, and a scheduler that believes it puts two MPI ranks on every
+    core's two hyperthreads. For a memory-bandwidth-bound solver that is not
+    free parallelism -- the two threads contend for one core's cache and
+    floating-point units, and the case gets slower, not faster.
+
+    This bit the runbook before it bit anything else: it told the operator to
+    pass `--cores 48` for a Hetzner CCX63, whose 48 vCPUs are 24 physical EPYC
+    cores, in the same document that says not to share hyperthreads. Nine
+    concurrent cases at 4 ranks would have been 36 ranks on 24 cores.
+    """
+    try:
+        out = subprocess.run(["lscpu", "-p=Core,Socket"], capture_output=True,
+                             text=True, timeout=10).stdout
+        pairs = {line for line in out.splitlines() if line and not line.startswith("#")}
+        if pairs:
+            return len(pairs)
+    except (OSError, subprocess.SubprocessError):
+        pass
+    logical = os.cpu_count() or 4
+    return max(1, logical // 2)          # assume SMT rather than over-subscribe
 
 
 def disk_free_gib(path: Path) -> float:
@@ -179,15 +207,31 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--pilot", action="store_true",
                     help="one gci_F and one gci_FF, then stop and report")
+    ap.add_argument("--anchor-levels", action="store_true",
+                    help="ALSO queue gci_C and gci_M on the reference wing, so all four "
+                         "levels come from one solver. Needed when the rented machine's "
+                         "ADflow is not the 2.13.1 that solved them here -- otherwise "
+                         "gci_four_level.py correctly refuses to combine them. "
+                         "19.3 core-hours, about 4 %% of the batch.")
     ap.add_argument("--budget-core-hours", type=float, default=600.0)
     ap.add_argument("--ranks", type=int, default=4,
                     help="4 is measured: 2.7 %% slower than 6 for 32 %% fewer core-hours")
-    ap.add_argument("--cores", type=int, default=os.cpu_count() or 4,
-                    help="physical cores available to the batch")
+    ap.add_argument("--cores", type=int, default=None,
+                    help="PHYSICAL cores available to the batch; defaults to the "
+                         "machine's physical core count, not its thread count")
     ap.add_argument("--ram-gib", type=float, default=None,
                     help="RAM the batch may use; defaults to 85 %% of the machine's")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
+    available = physical_cores()
+    if args.cores is None:
+        args.cores = available
+    elif args.cores > available:
+        print(f"  WARNING: --cores {args.cores} exceeds the {available} physical cores this "
+              f"machine has.\n           os.cpu_count() reports {os.cpu_count()}, which counts "
+              f"threads. Two ranks\n           sharing one core contend for its cache and FPUs; "
+              f"the batch gets slower,\n           not faster. Capping at {available}.\n")
+        args.cores = available
     if args.ram_gib is None:
         total = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") / (1 << 30)
         args.ram_gib = round(total * 0.85, 1)
@@ -204,6 +248,26 @@ def main() -> int:
         raise SystemExit(f"no recorded reference area for geometries {missing}. "
                          f"Defect 23 was forces divided by the wrong geometry's area; "
                          f"the batch does not start without every area on file.")
+    if args.anchor_levels:
+        # Runbook section 0. The reference wing's coarse and medium levels exist
+        # on the development host; re-solving them here makes the four-level
+        # family self-consistent whatever ADflow the image ships. Sized from the
+        # measured development-host times, 19.4 and 51.2 min at 6 ranks, scaled
+        # to this rank count by the same probe the rest of the batch uses.
+        anchor = []
+        for level, mins6, cells, mem in (("gci_C", 19.4, 603592, 7.1),
+                                         ("gci_M", 51.2, 1172856, 11.7)):
+            for alpha in (-2.0, 0.0, 4.0, 8.0):
+                anchor.append({"index": REFERENCE_INDEX, "level": level,
+                               "alpha_deg": alpha, "cells": cells,
+                               "memory_gib": mem, "ranks": args.ranks,
+                               "predicted_minutes": round(mins6 * 1.027, 1),
+                               "predicted_core_hours": round(6 * mins6 / 60 * 0.684, 2)})
+        cases = anchor + cases
+        print(f"  ANCHOR LEVELS: +{len(anchor)} cases on g{REFERENCE_INDEX} "
+              f"({sum(c['predicted_core_hours'] for c in anchor):.1f} core-hours) so all "
+              f"four levels come from this machine's solver\n")
+
     for c in cases:
         c["area_ref_m2"] = areas[str(c["index"])]["half_area_m2"]
     if args.pilot:
@@ -284,6 +348,17 @@ def main() -> int:
             started_any = True
         if running and not started_any:
             time.sleep(5 if not args.dry_run else 0)
+        elif pending and not running and not started_any:
+            # Nothing running and nothing can start: the smallest pending case does
+            # not fit. Without this the loop spins at 100 % CPU forever, which is
+            # what "the machine is too small" used to look like from outside.
+            worst = min(pending, key=lambda c: c["memory_gib"])
+            print(f"\nCANNOT START: the smallest queued case needs "
+                  f"{worst['memory_gib']:.1f} GiB and {args.ranks} cores; this machine "
+                  f"offers {ram:.1f} GiB and {cores} physical cores.\n"
+                  f"              {len(pending)} case(s) never ran. Rent a larger machine "
+                  f"or lower --ranks.")
+            break
 
     if args.pilot and done:
         report = pilot_report(done)

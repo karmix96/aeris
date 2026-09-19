@@ -132,6 +132,7 @@ a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-of
 <a class="r2" href="#1-what-to-rent">1. What to rent</a>
 <a class="r3" href="#the-thing-that-actually-decides-the-bill">The thing that actually decides the bill</a>
 <a class="r3" href="#sizing">Sizing</a>
+<a class="r3" href="#count-physical-cores-not-vcpus">Count PHYSICAL cores, not vCPUs</a>
 <a class="r3" href="#pilot-sizing">Pilot sizing</a>
 <a class="r2" href="#2-getting-the-solver-there">2. Getting the solver there</a>
 <a class="r2" href="#3-build-the-meshes">3. Build the meshes</a>
@@ -176,6 +177,11 @@ grid-convergence study whose levels came from different solvers is not one.</p>
 </table></div>
 <p>At $0.10–0.15 per core-hour that is about <strong>$2–3</strong>. I would spend it. The alternative is
 discovering after the batch that the levels cannot be combined, which costs the whole batch.</p>
+<p><strong>The command</strong> — add <code>--anchor-levels</code> when you release the batch in §7:</p>
+<pre><code class="language-bash">cloud_batch_run.py --ranks 4 --cores &lt;PHYSICAL&gt; --ram-gib &lt;RAM&gt; --anchor-levels
+</code></pre>
+<p>It queues <code>gci_C</code> and <code>gci_M</code> on wing 83 at all four angles ahead of the 44, so every level in the
+four-level study comes from this machine's solver. Skip it only if §2 showed ADflow <strong>2.13.1</strong>.</p>
 
 </section>
 <h2 id="1-what-to-rent">1. What to rent</h2>
@@ -247,8 +253,18 @@ both limits; give it the real numbers for the machine.</p>
 <p><strong>More RAM buys more than more cores here.</strong> A 48-core box with 188 GiB uses only 36 of its cores,
 because RAM runs out first at nine concurrent cases.</p>
 <p><strong>Compute-optimised instances at 4 GiB per physical core will not hold <code>gci_FF</code> at all.</strong> Use a
-memory-optimised type. Pin ranks to physical cores; do not let two ranks share one core's
-hyperthreads.</p>
+memory-optimised type.</p>
+<blockquote>
+<h3 id="count-physical-cores-not-vcpus">Count PHYSICAL cores, not vCPUs</h3>
+<p>A provider's &quot;48 vCPU&quot; is usually <strong>24 physical cores with SMT</strong>. Hetzner's CCX63 is exactly
+that. Two MPI ranks on one core's two hyperthreads contend for its cache and floating-point
+units, so a memory-bandwidth-bound solver gets <strong>slower</strong>, not faster.</p>
+<p><code>cloud_batch_run.py</code> now defaults to the physical count and warns if you pass more. Check it
+yourself with <code>lscpu</code> — <code>Core(s) per socket × Socket(s)</code>, <strong>not</strong> the <code>CPU(s)</code> line.</p>
+<p>On a CCX63 that means <strong>24</strong>, so <strong>6 concurrent <code>gci_F</code> cases</strong>, not 9 — and the batch takes
+about <strong>25 h</strong>, not 16.6. The table above was written against vCPU counts and overstates
+concurrency by 2× on any SMT machine.</p>
+</blockquote>
 <blockquote>
 <p>Rates move. Hetzner repriced its dedicated-vCPU lines upward by 113–169 % in June 2026 on DRAM
 costs, so <strong>verify the current price before you commit</strong> rather than trusting the table above.</p>
@@ -271,12 +287,22 @@ OpenMPI, which is exactly the stack <code>env_s8.py</code> looks for:</p>
 and the official notes at
 <a href="https://mdolab-mach-aero.readthedocs-hosted.com/en/latest/installInstructions/dockerInstructions.html">MACH-Aero Docker instructions</a> —
 tags move, and this document will go stale before they do.</p>
+<p><strong>Start a detachable session first.</strong> The pilot's <code>gci_FF</code> case runs for about six hours, and a
+dropped SSH connection kills anything started directly from your shell:</p>
+<pre><code class="language-bash">apt update &amp;&amp; apt install -y tmux git
+tmux new -s s8
+</code></pre>
+<p>Detach with <code>Ctrl-b</code> then <code>d</code>; reattach later with <code>tmux attach -t s8</code>.</p>
 <pre><code class="language-bash">git clone &lt;your repo url&gt; aeris          # about 154 MB
 docker run -it --rm \
   -v &quot;$PWD/aeris:/aeris&quot; \
   --shm-size=2g \
   mdolab/public:u22-gcc-ompi-stable bash
 </code></pre>
+<p>If the repo is private, a <strong>git bundle</strong> avoids putting credentials on a rented machine. On your
+laptop: <code>git bundle create ../aeris.bundle --all</code> and <code>scp</code> it over; on the server:
+<code>git clone aeris.bundle aeris</code>. Check <code>git log -1 --format=%H</code> matches on both — that commit is
+what <code>cloud_identity.py</code> records against every run.</p>
 <p>Inside the container, the project's own venv still has to exist — it holds the mesher, the gates
 and the analysis, none of which are in the image:</p>
 <pre><code class="language-bash">cd /aeris
@@ -339,7 +365,7 @@ and every minute after that bills.</p>
 </section>
 <h2 id="5-the-pilot-do-not-skip-this">5. The pilot — do not skip this</h2>
 <pre><code class="language-bash">.venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/cloud_batch_run.py \
-    --pilot --ranks 4 --cores 48 --ram-gib 188        # your machine's real numbers
+    --pilot --ranks 4 --cores 24 --ram-gib 188    # PHYSICAL cores, from lscpu
 </code></pre>
 <p><strong>31.4 core-hours. $0.63–$1.57 on spot or bare metal, $3.14–$4.70 on mainstream on-demand.</strong>
 About 7 % of the batch. It runs one <code>gci_F</code> and one <code>gci_FF</code> and then <strong>stops on its own</strong>.</p>
@@ -394,7 +420,7 @@ restoring ADflow's NK defaults, which needs about 2 GiB more per case — <stron
 </section>
 <h2 id="7-releasing-the-rest">7. Releasing the rest</h2>
 <pre><code class="language-bash">.venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/cloud_batch_run.py \
-    --ranks 4 --cores 48 --ram-gib 188 --budget-core-hours 600
+    --ranks 4 --cores 24 --ram-gib 188 --budget-core-hours 600
 </code></pre>
 <p><strong>Give it the real core and RAM numbers.</strong> It defaults to every core and 85 % of RAM, which is
 usually right, but on a shared or containerised machine <code>os.cpu_count()</code> reports the host's cores

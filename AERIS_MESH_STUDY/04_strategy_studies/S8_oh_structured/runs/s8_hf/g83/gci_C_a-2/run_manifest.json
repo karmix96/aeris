@@ -1,8 +1,8 @@
 {
   "alpha_deg": -2.0,
-  "area_ref_m2": 0.4004,
-  "case_id": "427cb328a17ffe9fee1f5ae2e5dff240",
-  "cells": 2339536,
+  "area_ref_m2": 0.39492,
+  "case_id": "16cd39b9cdc7314291c63d49616ca016",
+  "cells": 603592,
   "environment": {
     "cpu_count": 12,
     "git": {
@@ -10,6 +10,7 @@
       "dirty": true,
       "dirty_paths": [
         "ERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/cloud_batch_run.py",
+        "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_hf/g12/gci_F_a-2/run_manifest.json",
         "AERIS_RESEARCH_PIPELINE/",
         "configs/aero/section_study/stage1_reference_subset.json",
         "configs/aero/section_study/stage1_summary_subset.txt"
@@ -20,16 +21,16 @@
     "python": "3.11.15",
     "solver_version": null
   },
-  "execution_id": "80323dd7f16dfdb8",
-  "geometry_index": 12,
-  "label": "g12/gci_F/a-2",
+  "execution_id": "299f126a41e1eeaf",
+  "geometry_index": 83,
+  "label": "g83/gci_C/a-2",
   "label_note": "human-readable only; case_id is the identity",
-  "level": "gci_F",
-  "memory_gib_predicted": 20.6,
+  "level": "gci_C",
+  "memory_gib_predicted": 7.1,
   "mesh": {
-    "bytes": 58007552,
-    "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cloud/g12/gci_F_volume.cgns",
-    "sha256": "a8a2a4c2074d3bedad5fb740c01baeae30606c0d8599cb3f842b88093f2d7d10"
+    "bytes": null,
+    "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cloud/g83/gci_C_volume.cgns",
+    "sha256": null
   },
   "numerics": {
     "L2Convergence": 1e-06,
@@ -47,8 +48,8 @@
     "reynolds_length_m": 0.9,
     "temperature_K": 278.4
   },
-  "predicted_core_hours": 8.75,
-  "predicted_minutes": 131.3,
+  "predicted_core_hours": 1.33,
+  "predicted_minutes": 19.9,
   "schema": "aeris.s8.run_manifest.v1",
   "timing": {
     "clock_skew_seconds": -0.0,

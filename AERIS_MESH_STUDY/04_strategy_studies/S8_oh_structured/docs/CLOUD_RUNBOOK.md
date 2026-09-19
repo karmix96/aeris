@@ -23,6 +23,15 @@ Re-running them removes the question entirely:
 At $0.10–0.15 per core-hour that is about **$2–3**. I would spend it. The alternative is
 discovering after the batch that the levels cannot be combined, which costs the whole batch.
 
+**The command** — add `--anchor-levels` when you release the batch in §7:
+
+```bash
+cloud_batch_run.py --ranks 4 --cores <PHYSICAL> --ram-gib <RAM> --anchor-levels
+```
+
+It queues `gci_C` and `gci_M` on wing 83 at all four angles ahead of the 44, so every level in the
+four-level study comes from this machine's solver. Skip it only if §2 showed ADflow **2.13.1**.
+
 ---
 
 ## 1. What to rent
@@ -56,8 +65,20 @@ Concurrency is bounded by whichever runs out first — cores at 4 per case, or R
 because RAM runs out first at nine concurrent cases.
 
 **Compute-optimised instances at 4 GiB per physical core will not hold `gci_FF` at all.** Use a
-memory-optimised type. Pin ranks to physical cores; do not let two ranks share one core's
-hyperthreads.
+memory-optimised type.
+
+> ### Count PHYSICAL cores, not vCPUs
+>
+> A provider's "48 vCPU" is usually **24 physical cores with SMT**. Hetzner's CCX63 is exactly
+> that. Two MPI ranks on one core's two hyperthreads contend for its cache and floating-point
+> units, so a memory-bandwidth-bound solver gets **slower**, not faster.
+>
+> `cloud_batch_run.py` now defaults to the physical count and warns if you pass more. Check it
+> yourself with `lscpu` — `Core(s) per socket × Socket(s)`, **not** the `CPU(s)` line.
+>
+> On a CCX63 that means **24**, so **6 concurrent `gci_F` cases**, not 9 — and the batch takes
+> about **25 h**, not 16.6. The table above was written against vCPU counts and overstates
+> concurrency by 2× on any SMT machine.
 
 > Rates move. Hetzner repriced its dedicated-vCPU lines upward by 113–169 % in June 2026 on DRAM
 > costs, so **verify the current price before you commit** rather than trusting the table above.
@@ -88,6 +109,16 @@ and the official notes at
 [MACH-Aero Docker instructions](https://mdolab-mach-aero.readthedocs-hosted.com/en/latest/installInstructions/dockerInstructions.html) —
 tags move, and this document will go stale before they do.
 
+**Start a detachable session first.** The pilot's `gci_FF` case runs for about six hours, and a
+dropped SSH connection kills anything started directly from your shell:
+
+```bash
+apt update && apt install -y tmux git
+tmux new -s s8
+```
+
+Detach with `Ctrl-b` then `d`; reattach later with `tmux attach -t s8`.
+
 ```bash
 git clone <your repo url> aeris          # about 154 MB
 docker run -it --rm \
@@ -95,6 +126,11 @@ docker run -it --rm \
   --shm-size=2g \
   mdolab/public:u22-gcc-ompi-stable bash
 ```
+
+If the repo is private, a **git bundle** avoids putting credentials on a rented machine. On your
+laptop: `git bundle create ../aeris.bundle --all` and `scp` it over; on the server:
+`git clone aeris.bundle aeris`. Check `git log -1 --format=%H` matches on both — that commit is
+what `cloud_identity.py` records against every run.
 
 Inside the container, the project's own venv still has to exist — it holds the mesher, the gates
 and the analysis, none of which are in the image:
@@ -167,7 +203,7 @@ and every minute after that bills.
 
 ```bash
 .venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/cloud_batch_run.py \
-    --pilot --ranks 4 --cores 48 --ram-gib 188        # your machine's real numbers
+    --pilot --ranks 4 --cores 24 --ram-gib 188    # PHYSICAL cores, from lscpu
 ```
 
 **31.4 core-hours. $0.63–$1.57 on spot or bare metal, $3.14–$4.70 on mainstream on-demand.**
@@ -214,7 +250,7 @@ restoring ADflow's NK defaults, which needs about 2 GiB more per case — **46.8
 
 ```bash
 .venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/cloud_batch_run.py \
-    --ranks 4 --cores 48 --ram-gib 188 --budget-core-hours 600
+    --ranks 4 --cores 24 --ram-gib 188 --budget-core-hours 600
 ```
 
 **Give it the real core and RAM numbers.** It defaults to every core and 85 % of RAM, which is

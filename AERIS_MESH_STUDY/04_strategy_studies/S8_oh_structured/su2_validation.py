@@ -680,14 +680,38 @@ SU2_CL_ABSOLUTE = 1.0e-4
 SU2_RESIDUAL_TARGET = -12.0
 SU2_RUNAWAY_MULTIPLE = 20.0
 SU2_CD_FLOOR = 5.0e-4          # absolute CD span below which a percentage means nothing
+#: How far the drag may wander across the WHOLE run and still count as settled.
+#: Half a drag count. The Eppler 387 measurement it is graded against carries
+#: +/-2.6 counts, so a solution wandering by more than a fraction of that is not
+#: delivering a number -- it is delivering a sample.
+SU2_SLOW_WANDER_COUNTS = 0.5
 
 
-def su2_gate(directory: Path) -> dict:
+#: What each case is actually GRADED on. A transitional plate is judged on the
+#: skin-friction curve and the transition location; SU2 gives it no meaningful
+#: drag, and on fp_bc the drag wanders by more than its own value. Vetoing such
+#: a case on force settling judges it against a quantity nobody reads.
+GRADED_ON_FORCE = {"flatplate", "flatplate_inc", "naca0012", "airfoil"}
+
+
+def su2_gate(directory: Path, category: str | None = None) -> dict:
     """Is this run's answer usable?  Residual target OR settled quantity of interest."""
-    rows, head = [], None
+    if category is None:
+        name = directory.name
+        category = CASES[name][3] if name in CASES else "airfoil"
+    # CONCATENATE the legs, deduplicated by content. Reading only the last leg
+    # is how the slow-wander check below came up blind: e387_sa_lm's last leg is
+    # 2,696 iterations and its oscillation lives across 40,000. A restart does
+    # not begin a new flow, it continues the same one, and the question "has this
+    # settled" is about the whole solution history.
+    rows, head, seen = [], None, set()
     for path in history_files(directory):
         if not path.exists():
             continue
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        if digest in seen:
+            continue
+        seen.add(digest)
         raw = list(csv.reader(open(path)))
         if not raw:
             continue
@@ -696,9 +720,9 @@ def su2_gate(directory: Path) -> dict:
         if not data:
             continue
         if head is None:
-            head, rows = this, data
+            head, rows = this, list(data)
         elif this == head:
-            rows = data                      # a later leg supersedes; dedup is history()'s job
+            rows.extend(data)
     if head is None or not rows:
         return {"verdict": "NO_HISTORY"}
 
@@ -707,7 +731,15 @@ def su2_gate(directory: Path) -> dict:
 
     res_key = next((h for h in head if h.startswith("rms[Rho]") or h.startswith("rms[P]")), None)
     residual = float(rows[-1][column(res_key)]) if res_key else float("nan")
-    tail = rows[-SU2_SETTLE_WINDOW:]
+    # Skip the startup transient before judging settling. Concatenating legs made
+    # this necessary: fp_bc's whole record is 508 rows, so "the last 500" spanned
+    # its own startup, where CD swings by more than its converged value, and the
+    # runaway guard read that as a force travelling. A third of the record, capped
+    # at 2000 rows, leaves a tail that is about the solution rather than about
+    # getting there.
+    skip = min(2000, len(rows) // 3)
+    settled_rows = rows[skip:] or rows
+    tail = settled_rows[-SU2_SETTLE_WINDOW:]
 
     def span(name):
         i = column(name)
@@ -715,6 +747,31 @@ def su2_gate(directory: Path) -> dict:
             return None
         v = [float(r[i]) for r in tail]
         return {"last": v[-1], "absolute": max(v) - min(v), "mean": sum(v) / len(v)}
+
+    # Defect 31. A settling window only detects behaviour faster than itself.
+    #
+    # e387_sa_lm oscillates with a period of roughly ten thousand iterations and
+    # a full amplitude of 85 drag counts. Inside any 500-iteration window it
+    # looks settled to 1.47 counts, and this gate would have accepted it on
+    # "settled forces" while the force was wandering between -13 and +71 counts
+    # against the measurement. Every E387 number reported on 18 September was a
+    # sample of that oscillation, quoted as if it were a converged value.
+    #
+    # So the short window is checked against a window ten times longer. If they
+    # disagree, the short one is not seeing the flow and the run is not settled
+    # whatever it looks like locally. A genuinely converged run passes both.
+    # Measured in COUNTS, not per cent, and over the WHOLE record rather than a
+    # multiple of the short window. Two corrections, both learned the hard way:
+    # a percentage on a small CD is meaningless (fp_comp_545's CD is 0.00286, so
+    # "1.1 % unsettled" is 0.31 counts and immaterial), and E387's oscillation
+    # has a period longer than 5,000 iterations, so any fixed multiple of 500
+    # can still be too short to see it.
+    def full_record_span(name):
+        i = column(name)
+        if i is None or len(settled_rows) < SU2_SETTLE_WINDOW:
+            return None
+        v = [float(r[i]) for r in settled_rows]
+        return {"counts": 1.0e4 * (max(v) - min(v)), "mean": sum(v) / len(v), "n": len(v)}
 
     cd, cl = span("CD"), span("CL")
     checks: dict = {"residual": {"value": residual, "limit": SU2_RESIDUAL_TARGET,
@@ -731,6 +788,20 @@ def su2_gate(directory: Path) -> dict:
         if cl:
             checks["cl_settled"] = {"absolute": cl["absolute"], "limit": SU2_CL_ABSOLUTE,
                                     "pass": cl["absolute"] <= SU2_CL_ABSOLUTE}
+        wide = full_record_span("CD")
+        if wide:
+            short_counts = 1.0e4 * cd["absolute"]
+            checks["settled_over_the_whole_record"] = {
+                "short_window_iterations": SU2_SETTLE_WINDOW,
+                "short_window_counts": round(short_counts, 3),
+                "whole_record_iterations": wide["n"],
+                "whole_record_counts": round(wide["counts"], 2),
+                "limit_counts": SU2_SLOW_WANDER_COUNTS,
+                "pass": wide["counts"] <= SU2_SLOW_WANDER_COUNTS,
+                "note": ("a force flat inside the settling window but wandering over the "
+                         "run is oscillating slower than the window can see")}
+            if not checks["settled_over_the_whole_record"]["pass"]:
+                checks["cd_settled"]["pass"] = False
         runaway = (rel > SU2_RUNAWAY_MULTIPLE * SU2_CD_PERCENT
                    and cd["absolute"] > SU2_CD_FLOOR)
         checks["not_running_away"] = {"pass": not runaway,
@@ -747,10 +818,21 @@ def su2_gate(directory: Path) -> dict:
         early = float(tail[0][i])
         checks["residual_not_rising"] = {"start": early, "end": residual,
                                          "pass": residual <= early + 0.05}
+    graded_on_force = category in GRADED_ON_FORCE
+    checks["graded_on"] = {"category": category,
+                           "quantity": "forces" if graded_on_force else
+                                       "skin friction and transition location",
+                           "pass": True}
     settled = has_force and checks["cd_settled"]["pass"] and checks.get(
         "cl_settled", {"pass": True})["pass"]
-    healthy = checks.get("residual_not_rising", {"pass": True})["pass"] \
-        and checks["not_running_away"]["pass"]
+    healthy = checks.get("residual_not_rising", {"pass": True})["pass"]
+    if graded_on_force:
+        healthy = healthy and checks["not_running_away"]["pass"]
+    else:
+        # informational only: it is not the quantity this case delivers
+        checks["not_running_away"]["note"] = (
+            "recorded, not enforced: this case is graded on cf and transition, "
+            "not on drag")
     passed = healthy and (checks["residual"]["pass"] or settled)
     return {"verdict": "ACCEPTED" if passed else "NOT_ACCEPTED",
             "accepted_via": ("residual target" if passed and checks["residual"]["pass"]

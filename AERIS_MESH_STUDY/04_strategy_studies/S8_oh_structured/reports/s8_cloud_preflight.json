@@ -21,7 +21,7 @@
     {
       "check": "memory for gci_FF",
       "pass": false,
-      "detail": "12.5 GiB available, 38.2 GiB needed (4,682,524 cells x 1.05 margin, ANK-only law)",
+      "detail": "12.4 GiB available, 38.2 GiB needed (4,682,524 cells x 1.05 margin, ANK-only law)",
       "fatal": true
     },
     {

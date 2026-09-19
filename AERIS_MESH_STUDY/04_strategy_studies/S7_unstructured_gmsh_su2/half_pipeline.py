@@ -19,7 +19,13 @@ import numpy as np
 
 from .common import sha256_file
 from .geometry import SurfaceMesh
-from .prism_layer import PrismLayer, march, prism_signed_volumes, top_boundary_loops
+from .prism_layer import (
+    PrismLayer,
+    hex_signed_volumes,
+    march,
+    prism_signed_volumes,
+    top_boundary_loops,
+)
 
 Array = np.ndarray
 
@@ -27,6 +33,8 @@ SU2_TRIANGLE = 5
 SU2_QUAD = 9
 SU2_TETRAHEDRON = 10
 SU2_PRISM = 13
+SU2_HEXAHEDRON = 12
+SU2_PYRAMID = 14
 
 WELD_TOLERANCE_M = 1.0e-9
 
@@ -61,6 +69,26 @@ def watertight_failures(triangles: Array) -> list[tuple[int, int, int]]:
     return [(a, b, c) for (a, b), c in counts.items() if c != 2]
 
 
+def _quad_split_mask(wall: Array, quads: Array) -> Array:
+    """True for wall triangles that are exactly the split of one of `quads`.
+
+    Membership by node set is not enough: the tip cap sits on the tip section,
+    whose nodes all belong to the quad grid, so a node-set test discards the cap
+    and leaves the capping surface with a second boundary loop.  build_surface
+    always emits a quad (q0, q1, q2, q3) as the triangles {q0, q1, q2} and
+    {q0, q2, q3}, whatever the winding, so match those exactly.
+    """
+    if not len(quads):
+        return np.zeros(len(wall), dtype=bool)
+    split = set()
+    for q0, q1, q2, q3 in np.asarray(quads, dtype=np.int64):
+        split.add(tuple(sorted((int(q0), int(q1), int(q2)))))
+        split.add(tuple(sorted((int(q0), int(q2), int(q3)))))
+    return np.array(
+        [tuple(sorted(int(n) for n in face)) in split for face in wall], dtype=bool
+    )
+
+
 def build_layer(
     surface: SurfaceMesh,
     spec: Mapping[str, Any],
@@ -73,19 +101,39 @@ def build_layer(
     wall = triangles[labels != "symmetry"]
     if not len(wall):
         raise ValueError("half surface carries no wall triangles")
+
+    # A quad wall carries both representations: the quads for the sweep and their
+    # split triangles for everything that reasons about the surface.  Sweep the
+    # quads as hexahedra and leave only the faces no quad covers, the tip cap, as
+    # prisms.  Node normals still come from the full triangulation, so the
+    # marching direction is identical either way.
+    quads = np.asarray(getattr(surface, "quads", np.zeros((0, 4)))).reshape(-1, 4)
+    quads = quads.astype(np.int64)
+    swept_triangles = wall[~_quad_split_mask(wall, quads)]
+
     layer = march(
         np.asarray(surface.points, dtype=float),
-        wall,
+        swept_triangles,
         list(spec["boundary_layer_cumulative_heights_m"]),
+        wall_quads=quads if len(quads) else None,
+        normal_faces=wall,
         symmetry_axis=symmetry_axis,
     )
-    volumes = prism_signed_volumes(layer.points, layer.prisms)
-    if (volumes <= 0.0).any():
-        raise ValueError(
-            f"{int((volumes <= 0.0).sum())} prisms are inverted or degenerate; "
-            f"worst signed volume {float(volumes.min()):.3e} m3"
-        )
-    return layer, wall
+    if len(layer.prisms):
+        volumes = prism_signed_volumes(layer.points, layer.prisms)
+        if (volumes <= 0.0).any():
+            raise ValueError(
+                f"{int((volumes <= 0.0).sum())} prisms are inverted or degenerate; "
+                f"worst signed volume {float(volumes.min()):.3e} m3"
+            )
+    if len(layer.hexes):
+        hex_volumes = hex_signed_volumes(layer.points, layer.hexes)
+        if (hex_volumes <= 0.0).any():
+            raise ValueError(
+                f"{int((hex_volumes <= 0.0).sum())} hexahedra are inverted or "
+                f"degenerate; worst signed volume {float(hex_volumes.min()):.3e} m3"
+            )
+    return layer, wall, swept_triangles, quads
 
 
 def boundary_planes(
@@ -327,7 +375,9 @@ def assemble(
     """
     from .prism_layer import symmetry_quads
 
-    layer, wall = build_layer(surface, spec, symmetry_axis=symmetry_axis)
+    layer, wall, cap_triangles, wall_quads = build_layer(
+        surface, spec, symmetry_axis=symmetry_axis
+    )
     labels = np.asarray(surface.labels)
     wall_labels = labels[labels != "symmetry"]
 
@@ -376,26 +426,53 @@ def assemble(
     quads = symmetry_quads(layer, axis=symmetry_axis)
     n_layer, n_plane = len(layer.points), len(plane_points)
     combined = np.vstack([layer.points, plane_points, core_points])
+    # A hexahedron meets the wall on a quadrilateral face, so the boundary marker
+    # has to be that quad.  Writing the two triangles it splits into would leave
+    # the wall non-conformal against its own cells.
+    quad_wall_labels = np.asarray(getattr(surface, "quad_labels", ()), dtype=object)
+    cap_labels = wall_labels[~_quad_split_mask(wall, wall_quads)]
+
     points, blocks = weld(
         combined,
         layer.prisms,
-        wall,
+        layer.hexes,
+        layer.pyramids,
+        cap_triangles,
+        wall_quads,
         quads,
         symmetry_tris + n_layer,
         farfield_tris + n_layer,
         tetrahedra + n_layer + n_plane,
     )
-    prisms, wall_faces, quad_faces, sym_faces, far_faces, tets = blocks
+    (
+        prisms,
+        hexes,
+        pyramids,
+        wall_faces,
+        wall_quad_faces,
+        quad_faces,
+        sym_faces,
+        far_faces,
+        tets,
+    ) = blocks
 
     volume_rows: list[tuple[int, Sequence[int]]] = [
         (SU2_TETRAHEDRON, row.tolist()) for row in tets
     ]
     volume_rows += [(SU2_PRISM, row.tolist()) for row in prisms]
+    volume_rows += [(SU2_HEXAHEDRON, row.tolist()) for row in hexes]
+    volume_rows += [(SU2_PYRAMID, row.tolist()) for row in pyramids]
 
     markers: dict[str, list[tuple[int, Sequence[int]]]] = {}
     for name in sorted(set(wall_labels.tolist())):
-        selected = wall_faces[wall_labels == name]
-        markers[name] = [(SU2_TRIANGLE, row.tolist()) for row in selected]
+        selected = wall_faces[cap_labels == name] if len(cap_labels) else wall_faces[:0]
+        rows: list[tuple[int, Sequence[int]]] = [
+            (SU2_TRIANGLE, row.tolist()) for row in selected
+        ]
+        if len(wall_quad_faces):
+            picked = wall_quad_faces[quad_wall_labels == name]
+            rows += [(SU2_QUAD, row.tolist()) for row in picked]
+        markers[name] = rows
     markers["symmetry"] = [(SU2_QUAD, row.tolist()) for row in quad_faces] + [
         (SU2_TRIANGLE, row.tolist()) for row in sym_faces
     ]
@@ -409,6 +486,8 @@ def assemble(
             **layer.diagnostics,
             "tetrahedra": int(len(tets)),
             "prisms": int(len(prisms)),
+            "hexes": int(len(hexes)),
+            "pyramids": int(len(pyramids)),
             "symmetry_quads": int(len(quad_faces)),
             "symmetry_triangles": int(len(sym_faces)),
             "farfield_triangles": int(len(far_faces)),
@@ -424,11 +503,15 @@ _GMSH_QUAD = 3
 _GMSH_TETRAHEDRON = 4
 _GMSH_PRISM = 6
 
+_GMSH_HEXAHEDRON = 5
+_GMSH_PYRAMID = 7
 _SU2_TO_GMSH = {
     SU2_TRIANGLE: _GMSH_TRIANGLE,
     SU2_QUAD: _GMSH_QUAD,
     SU2_TETRAHEDRON: _GMSH_TETRAHEDRON,
     SU2_PRISM: _GMSH_PRISM,
+    SU2_HEXAHEDRON: _GMSH_HEXAHEDRON,
+    SU2_PYRAMID: _GMSH_PYRAMID,
 }
 
 

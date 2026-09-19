@@ -19,7 +19,20 @@ AUDIT_SCHEMA = "aeris.s7.mesh_audit.v1"
 
 TET = 4
 PRISM = 6
-SUPPORTED_VOLUME_TYPES = {TET: ("tetrahedron", 4), PRISM: ("prism", 6)}
+# Gmsh element types. A quad wall sweeps to hexahedra and caps them with
+# pyramids, so both join the volume vocabulary; a triangle wall produces neither
+# and the counts stay zero.
+HEX = 5
+PYRAMID = 7
+SUPPORTED_VOLUME_TYPES = {
+    TET: ("tetrahedron", 4),
+    PRISM: ("prism", 6),
+    HEX: ("hexahedron", 8),
+    PYRAMID: ("pyramid", 5),
+}
+#: Types that must be present. Tetrahedra always are; a boundary layer is either
+#: prisms or hexahedra, so neither alone is required.
+REQUIRED_VOLUME_TYPES = (TET,)
 
 
 def _stats(values: Iterable[float]) -> dict[str, Any]:
@@ -106,6 +119,41 @@ def _sub_determinant(points: np.ndarray, i: int, j: int, k: int, fourth: int) ->
             axis=2,
         )
     ) / 6.0
+
+
+def _hex_signed_volume(cell_points: Array) -> Array:
+    """Signed volume of each hexahedron, decomposition-free about the centroid.
+
+    A trilinear hexahedron has bilinear faces, so each face is split about its
+    own centre before the divergence sum; treating a face as planar would
+    misreport exactly the warped cells the check exists to catch.
+    """
+    corners = np.asarray(cell_points, dtype=float)
+    centres = corners.mean(axis=1)
+    faces = ((0, 3, 2, 1), (4, 5, 6, 7), (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7))
+    total = np.zeros(len(corners), dtype=float)
+    for face in faces:
+        ring = corners[:, face, :]
+        face_centre = ring.mean(axis=1)
+        for k in range(4):
+            a = ring[:, k, :] - centres
+            b = ring[:, (k + 1) % 4, :] - centres
+            total += (np.cross(a, b) * (face_centre - centres)).sum(axis=1) / 6.0
+    return -total
+
+
+def _pyramid_signed_volume(cell_points: Array) -> Array:
+    """Signed volume of each pyramid: the quad base swept to the apex."""
+    corners = np.asarray(cell_points, dtype=float)
+    base = corners[:, :4, :]
+    apex = corners[:, 4, :]
+    centre = base.mean(axis=1)
+    total = np.zeros(len(corners), dtype=float)
+    for k in range(4):
+        a = base[:, k, :] - centre
+        b = base[:, (k + 1) % 4, :] - centre
+        total += (np.cross(a, b) * (apex - centre)).sum(axis=1) / 6.0
+    return np.abs(total)
 
 
 def _prism_signed_volume(points: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -254,6 +302,18 @@ def _su2_boundary_audit(
         raise ValueError("SU2 volume-element section is truncated")
     face_definitions = {
         10: (4, ((0, 2, 1), (0, 1, 3), (1, 2, 3), (2, 0, 3))),
+        12: (
+            8,
+            (
+                (0, 3, 2, 1),
+                (4, 5, 6, 7),
+                (0, 1, 5, 4),
+                (1, 2, 6, 5),
+                (2, 3, 7, 6),
+                (3, 0, 4, 7),
+            ),
+        ),
+        14: (5, ((0, 3, 2, 1), (0, 1, 4), (1, 2, 4), (2, 3, 4), (3, 0, 4))),
         13: (
             6,
             (
@@ -265,7 +325,12 @@ def _su2_boundary_audit(
             ),
         ),
     }
-    volume_type_counts: dict[str, int] = {"tetrahedra": 0, "prisms": 0}
+    volume_type_counts: dict[str, int] = {
+        "tetrahedra": 0,
+        "prisms": 0,
+        "hexahedra": 0,
+        "pyramids": 0,
+    }
     volume_face_owners: dict[tuple[int, ...], int] = defaultdict(int)
     for row in volume_rows:
         values = [int(value) for value in row.split()]
@@ -278,7 +343,9 @@ def _su2_boundary_audit(
         nodes = values[1 : width + 1]
         if any(node < 0 or node >= point_count for node in nodes):
             raise ValueError(f"native-SU2 volume row references an invalid point: {row!r}")
-        volume_type_counts["tetrahedra" if code == 10 else "prisms"] += 1
+        volume_type_counts[
+            {10: "tetrahedra", 13: "prisms", 12: "hexahedra", 14: "pyramids"}[code]
+        ] += 1
         for local_face in local_faces:
             key = tuple(sorted(nodes[index] for index in local_face))
             volume_face_owners[key] += 1
@@ -446,7 +513,21 @@ def _face_audit(
     face_definitions = {
         "tetrahedron": ((0, 2, 1), (0, 1, 3), (1, 2, 3), (2, 0, 3)),
         "prism": ((0, 2, 1), (3, 4, 5), (0, 1, 4, 3), (1, 2, 5, 4), (2, 0, 3, 5)),
+        "hexahedron": (
+            (0, 3, 2, 1),
+            (4, 5, 6, 7),
+            (0, 1, 5, 4),
+            (1, 2, 6, 5),
+            (2, 3, 7, 6),
+            (3, 0, 4, 7),
+        ),
+        "pyramid": ((0, 3, 2, 1), (0, 1, 4), (1, 2, 4), (2, 3, 4), (3, 0, 4)),
     }
+    # A boundary-layer cell is a prism on a triangle wall and a hexahedron on a
+    # quad wall; a pyramid only ever bridges the layer cap to the core. Grouping
+    # them lets the interface and in-layer statistics stay one population each
+    # instead of fragmenting by element type.
+    layer_families = {"prism", "hexahedron", "pyramid"}
     owners: dict[tuple[int, ...], list[tuple[int, tuple[int, ...]]]] = defaultdict(list)
     centers: list[np.ndarray] = []
     cell_families: list[str] = []
@@ -514,7 +595,7 @@ def _face_audit(
             core_volume_ratios.append(float(ratio))
             core_nonorthogonality.append(this_angle)
             core_skewness.append(this_skew)
-        elif families == {"tetrahedron", "prism"}:
+        elif "tetrahedron" in families and families & layer_families:
             prism_core_ratios.append(float(ratio))
             interface_nonorthogonality.append(this_angle)
             core_skewness.append(this_skew)
@@ -1445,9 +1526,15 @@ def audit_mesh(
         quality_report: dict[str, Any] = {}
         per_type: dict[int, dict[str, Any]] = {}
         volume_offset = 0
-        for element_type in (TET, PRISM):
+        present = [e for e in SUPPORTED_VOLUME_TYPES if e in loaded["elements"]]
+        for element_type in REQUIRED_VOLUME_TYPES:
             if element_type not in loaded["elements"]:
                 raise ValueError(f"required Gmsh element type {element_type} is absent")
+        if PRISM not in present and HEX not in present:
+            raise ValueError(
+                "the mesh carries no boundary layer: neither prisms nor hexahedra are present"
+            )
+        for element_type in present:
             record = loaded["elements"][element_type]
             indices = _node_indices(node_tags, record["node_tags"])
             cell_points = coordinates[indices]
@@ -1461,6 +1548,32 @@ def audit_mesh(
                 quality_report["tet_minSICN"] = _stats(distortion)
                 quality_report["tet_aspect_ratio"] = _stats(aspect)
                 family = "tetrahedron"
+            elif element_type == HEX:
+                volumes = _hex_signed_volume(cell_points)
+                subvolumes = volumes[:, None]
+                aspect = _aspect_ratio(
+                    cell_points,
+                    (
+                        (0, 1), (1, 2), (2, 3), (3, 0),
+                        (4, 5), (5, 6), (6, 7), (7, 4),
+                        (0, 4), (1, 5), (2, 6), (3, 7),
+                    ),
+                )
+                distortion = _quality(gmsh, record["element_tags"], "minSJ")
+                quality_report["hex_minSJ"] = _stats(distortion)
+                quality_report["hex_aspect_ratio"] = _stats(aspect)
+                family = "hexahedron"
+            elif element_type == PYRAMID:
+                volumes = _pyramid_signed_volume(cell_points)
+                subvolumes = volumes[:, None]
+                aspect = _aspect_ratio(
+                    cell_points,
+                    ((0, 1), (1, 2), (2, 3), (3, 0), (0, 4), (1, 4), (2, 4), (3, 4)),
+                )
+                distortion = _quality(gmsh, record["element_tags"], "minSJ")
+                quality_report["pyramid_minSJ"] = _stats(distortion)
+                quality_report["pyramid_aspect_ratio"] = _stats(aspect)
+                family = "pyramid"
             else:
                 volumes, subvolumes = _prism_signed_volume(cell_points)
                 aspect = _aspect_ratio(

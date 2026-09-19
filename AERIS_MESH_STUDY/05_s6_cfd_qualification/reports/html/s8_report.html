@@ -211,7 +211,12 @@ a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-of
 <a class="r3" href="#the-pitching-moment-sign-resolved-by-measurement">The pitching moment sign, resolved by measurement</a>
 <a class="r3" href="#t3a-yields-a-transition-location-t3a-yields-something-wrong">T3A yields a transition location; T3A− yields something wrong</a>
 <a class="r3" href="#six-defects-one-of-them-twenty-fold">Six defects, one of them twenty-fold</a>
-<a class="r3" href="#a-probe-that-refuted-its-own-hypothesis">A probe that refuted its own hypothesis</a></div>
+<a class="r3" href="#a-probe-that-refuted-its-own-hypothesis">A probe that refuted its own hypothesis</a>
+<a class="r2 r-add" href="#addendum-19-september-1915-the-cloud-batch-is-ready-and-the-acceptance-gate-was-wrong"><span class="rdate">19 September, 19:15</span><span>the cloud batch is ready, and the acceptance gate was wrong</span></a>
+<a class="r3" href="#the-batch-is-ready-to-launch">The batch is ready to launch</a>
+<a class="r3" href="#defect-31-the-acceptance-gate-i-wrote-was-fooled-by-a-window-shorter-than-the-flow">Defect 31: the acceptance gate I wrote was fooled by a window shorter than the flow</a>
+<a class="r3" href="#what-survives-on-eppler-387-and-what-it-raises">What survives on Eppler 387, and what it raises</a>
+<a class="r3" href="#correction-to-the-cost-of-the-pilot">Correction to the cost of the pilot</a></div>
       </details>
     </nav>
     <article><p><strong>Written 2026-09-15, 21:00 (Athens time).</strong> Covers S8 from its first day (3–4 September 2026) to
@@ -4017,6 +4022,201 @@ and same budget with the floor as the only variable:</p>
 E387 diverging. The two cases disagree, so the CFL floor is a per-case setting and not a
 campaign-wide fix. Recorded because a refuted hypothesis that cost one hour is cheaper than a
 settings change applied to ten cases on a guess.</p>
+</section><section class="addendum"><p class="when">19 September, 19:15</p><h2 id="addendum-19-september-1915-the-cloud-batch-is-ready-and-the-acceptance-gate-was-wrong" class="h-add">the cloud batch is ready, and the acceptance gate was wrong</h2>
+<p><strong>Names used below, in plain terms</strong>, because this entry uses several that only make sense
+if you have been following the work:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>name</th>
+<th>what it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>E387</strong></td>
+<td>The <strong>Eppler 387</strong> airfoil. A wind-tunnel case (NASA TM-4062, McGhee 1988) at Reynolds 200,000, where the flow separates while still laminar, becomes turbulent in the separated layer, and reattaches — a <em>laminar separation bubble</em>. It is the single most relevant external case to AERIS, because that is the mechanism governing the outer wing, and it is what a fully-turbulent solver like ADflow structurally cannot represent.</td>
+</tr>
+<tr>
+<td><strong>T3A / T3A−</strong></td>
+<td>Two <strong>flat-plate transition</strong> benchmarks from the ERCOFTAC database (Coupland's experiments). T3A is at high free-stream turbulence, where transition happens early by the <em>bypass</em> route; T3A− is at low turbulence, where it happens much later. They test whether the transition model puts the switch from laminar to turbulent in the right place on the simplest possible geometry.</td>
+</tr>
+<tr>
+<td><strong>B5</strong></td>
+<td>An item on the cloud batch's pre-launch checklist: <em>carry the 17 September <code>gci_C</code> and <code>gci_M</code> results into the same analysis as the cloud's <code>gci_F</code> and <code>gci_FF</code>, at the same settings and commit.</em> Without it the reference wing has only two of its four grid levels available at once, and <strong>the grid-convergence study the whole batch exists to produce cannot be computed.</strong> It is the one checklist item still open.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Two days of work sit between this and the previous entry: the high-fidelity batch was made
+launchable, and eleven defects were found and fixed across both solvers. The last of the eleven
+was in code written the day before, by me, and it is the most important thing here.</p>
+<h3 id="the-batch-is-ready-to-launch">The batch is ready to launch</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cases</td>
+<td>44 — 40 × <code>gci_F</code> on ten wings, 4 × <code>gci_FF</code> on g83</td>
+</tr>
+<tr>
+<td>Meshes</td>
+<td><strong>11 of 11 built and verified</strong>, zero folded cells, wall error ≤ 3.0e-16 m</td>
+</tr>
+<tr>
+<td>Cost</td>
+<td><strong>439 core-hours</strong> central (325–528; 527 with retry margin)</td>
+</tr>
+<tr>
+<td>Ranks</td>
+<td><strong>4 per case</strong> — measured: 2.7 % slower than six, 32 % fewer core-hours</td>
+</tr>
+<tr>
+<td>Memory</td>
+<td>20.6 GiB for <code>gci_F</code>, <strong>38.4 GiB</strong> for <code>gci_FF</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Three pieces of machinery, each rule bought with a defect already paid for:</p>
+<ul>
+<li><strong><code>cloud_identity.py</code></strong> — <code>case_id</code> derives from geometry, level, α, the <strong>mesh bytes</strong> and the
+resolved settings, so <code>g83/F/α0</code> is a label and carries no identity. <code>archive()</code> copies to a
+<code>.part</code>, hashes the <strong>stored</strong> bytes, and only then renames, so a killed job leaves a fragment
+and never a plausible wrong answer. <code>Stopwatch</code> reads monotonic time and reports the wall-clock
+gap as the suspend signal.</li>
+<li><strong><code>cloud_batch_run.py</code></strong> — budget cap in core-hours, a <code>STOP</code> file that works without this
+process, a disk floor checked <strong>before</strong> each case, <code>--watch-memory</code> on every solve, and
+children in their own process group. All four tested by making them fire.</li>
+<li><strong><code>cloud_preflight.py</code></strong> — now sized from the meshes that were <strong>built</strong> rather than from a
+level definition. Every figure in the old table was stale by the 6 % the wall-resolved tip cap
+adds: <code>gci_FF</code> was carried at 4,504,420 cells against a built <strong>4,682,524</strong>, moving the memory
+requirement 36.9 → <strong>38.2 GiB</strong>. That is the difference between renting a machine that holds the
+job and one that does not.</li>
+</ul>
+<p><strong>And one rule that is neither identity nor safety: a verdict comes from the artefacts, never the
+exit code.</strong> This project has held since PLAN 0.3 that a zero exit proves nothing. On 18 September
+SU2 exited <strong>1</strong> having written its restart, surface and forces files, after 24 successful writes
+of that same restart during the run. A non-zero exit disproves nothing either.</p>
+<h3 id="defect-31-the-acceptance-gate-i-wrote-was-fooled-by-a-window-shorter-than-the-flow">Defect 31: the acceptance gate I wrote was fooled by a window shorter than the flow</h3>
+<p><code>su2_gate()</code> was written on 18 September and reported five of ten cases accepted. It is <strong>four</strong>,
+and the error is the one this project keeps meeting.</p>
+<p><code>e387_sa_lm</code> is flat to <strong>0.10 drag counts inside any 500-iteration window</strong> and wanders
+<strong>84.70 counts across its 40,181-iteration record</strong> — from −13.3 to +71.4 against the measurement,
+mean −4.30, standard deviation 10.57, net drift essentially zero, and <strong>four mean crossings in
+forty thousand iterations</strong>. That is a very long-period oscillation. The gate's window was 500.</p>
+<p>Every Eppler 387 figure reported on 18 September — +0.71, +0.36, −1.56, −2.16, −2.35, −3.17 counts
+— was <strong>a sample of that oscillation quoted as a converged value</strong>, and &quot;inside the ±2.6-count
+measurement uncertainty&quot; was luck of the sampling.</p>
+<p>Four fixes, three of them corrections to the first attempt: concatenate <strong>deduplicated legs</strong>
+(reading only the last leg saw 2,696 iterations of 40,000, and a restart continues a flow rather
+than beginning one); measure settling in <strong>counts over the whole record</strong>, because a percentage on
+a small CD is meaningless; <strong>skip the startup transient</strong>, which concatenation made necessary; and
+judge each case on <strong>the quantity it delivers</strong> — the transitional plates are graded on skin
+friction and transition location, so vetoing them on drag judges them against a number nobody
+reads.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>case</th>
+<th>verdict</th>
+<th>graded on</th>
+<th>wander across the run</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fp_comp_137</code></td>
+<td>ACCEPTED</td>
+<td>forces</td>
+<td>0.01 ct</td>
+</tr>
+<tr>
+<td><code>fp_comp_545</code></td>
+<td>ACCEPTED</td>
+<td>forces</td>
+<td>0.08 ct</td>
+</tr>
+<tr>
+<td><code>fp_inc_545</code></td>
+<td>ACCEPTED</td>
+<td>forces</td>
+<td>0.00 ct</td>
+</tr>
+<tr>
+<td><code>fp_bc</code></td>
+<td>ACCEPTED</td>
+<td>cf and transition</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>naca0012_inc_897</code></td>
+<td>not accepted</td>
+<td>forces</td>
+<td><strong>2.30 ct</strong></td>
+</tr>
+<tr>
+<td><code>e387_sa_lm</code></td>
+<td>not accepted</td>
+<td>forces</td>
+<td><strong>84.70 ct</strong></td>
+</tr>
+<tr>
+<td><code>e387_sst_lm</code></td>
+<td>not accepted</td>
+<td>forces</td>
+<td><strong>50.18 ct</strong></td>
+</tr>
+<tr>
+<td><code>t3a</code>, <code>t3a_minus</code>, <code>nlf_sst_lm</code></td>
+<td>not accepted</td>
+<td>cf and transition</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>naca0012_inc_897</code> drops out on 2.30 counts of wander that the short window saw as 0.03.</p>
+<h3 id="what-survives-on-eppler-387-and-what-it-raises">What survives on Eppler 387, and what it raises</h3>
+<p>SA-LM's drag <strong>averages −4.3 counts with a 10.6-count spread</strong> — not a prediction inside
+experimental uncertainty, but a solution whose mean sits a few counts low. <strong>The bubble finding
+holds</strong>: it is present in every sample, inside the measured region, at roughly half the measured
+length. <strong>SST-LM's failure holds and hardened</strong>: it wanders 50 counts <em>and</em> marches monotonically
+away from the measurement, +39.5 → +44.6 → +49.5 → +54.4 counts across its final leg.</p>
+<p>The possibility this raises is that <strong>a steady RANS solver has no answer for this flow.</strong> A
+laminar separation bubble at Re 200,000 can be genuinely unsteady, and SU2's own Langtry–Menter
+V&amp;V page notes oscillations near separation. If that is what this is, the treatment is a
+time-accurate run reporting a mean and a band — not a steady solve run longer. That is a decision
+for the PI, because it only matters if transition enters the design dataset.</p>
+<h3 id="correction-to-the-cost-of-the-pilot">Correction to the cost of the pilot</h3>
+<p>The pilot was described in conversation as costing &quot;under $2&quot;. <strong>That is only true at the cheap
+end of the range this report itself quotes.</strong> The two pilot cases are 8.8 + 22.6 =
+<strong>31.4 core-hours</strong>:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>rate</th>
+<th>pilot cost</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$0.02–0.05 per physical core-hour (spot, bare metal)</td>
+<td><strong>$0.63 – $1.57</strong></td>
+</tr>
+<tr>
+<td>$0.10–0.15 per physical core-hour (mainstream on-demand)</td>
+<td><strong>$3.14 – $4.70</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>So: under $2 on spot or a bare-metal provider, and <strong>$3–5 on mainstream on-demand</strong>. The best
+case was stated as if it were the general one. The batch as a whole is $10–80 on the same spread,
+and neither figure changes the argument for running the pilot first — it is still about 7 % of the
+batch to test four extrapolations, the largest being whether <strong>ANK-only converges at all above
+1,172,856 cells</strong>, which it has never been asked to do.</p>
 </section></article>
   </div>
 </div>

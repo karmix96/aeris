@@ -715,20 +715,26 @@ def build_surface(
         quad_labels.append(label)
         quad_span.append(float(span_fraction))
 
-    def add_face(nodes: tuple[int, ...], label: str, span_fraction: float) -> None:
-        """One structured wall face.
+    def add_face(
+        quad: tuple[int, int, int, int],
+        first: tuple[int, int, int],
+        second: tuple[int, int, int],
+        label: str,
+        span_fraction: float,
+    ) -> None:
+        """One structured wall face, as a quad and as the triangles it splits into.
 
-        The two triangles are always emitted, so topology, orientation,
-        self-intersection, labelling and the audit all keep working unchanged.
+        The two triangles are always emitted, in the caller's original order, so
+        topology, orientation, self-intersection, labelling, the audit and the
+        tetrahedral core all see exactly the mesh they saw before; face order
+        perturbs the Delaunay core, so it is preserved rather than regenerated.
         When the level asks for a quad wall the undivided quad is recorded as
-        well, and the boundary-layer extrusion uses that instead, which is the
-        only place the distinction matters.
+        well, and only the boundary-layer sweep uses it.
         """
-        a, b, c, d = nodes
         if quad_wall:
-            add_quad((a, b, c, d), label, span_fraction)
-        add_triangle((a, b, c), label, span_fraction)
-        add_triangle((a, c, d), label, span_fraction)
+            add_quad(quad, label, span_fraction)
+        add_triangle(first, label, span_fraction)
+        add_triangle(second, label, span_fraction)
 
     # A half model is meshed for y >= 0 only and closed at the root by a symmetry
     # cap; the full model mirrors and needs no cap because the two halves meet.
@@ -760,17 +766,17 @@ def build_surface(
             for i in range(n_u - 1):
                 a, b = int(upper_grid[j, i]), int(upper_grid[j, i + 1])
                 c, d = int(upper_grid[j + 1, i]), int(upper_grid[j + 1, i + 1])
-                add_face((a, b, d, c), "wall_upper", span_mid)
+                add_face((a, b, d, c), (a, b, d), (a, d, c), "wall_upper", span_mid)
                 a, b = int(lower_grid[j, i]), int(lower_grid[j, i + 1])
                 c, d = int(lower_grid[j + 1, i]), int(lower_grid[j + 1, i + 1])
-                add_face((a, c, d, b), "wall_lower", span_mid)
+                add_face((a, c, d, b), (a, d, b), (a, c, d), "wall_lower", span_mid)
 
             # Numerical trailing-edge base between upper/lower u=0 curves.
             a = int(upper_grid[j, 0])
             b = int(lower_grid[j, 0])
             c = int(upper_grid[j + 1, 0])
             d = int(lower_grid[j + 1, 0])
-            add_face((a, c, d, b), "wall_te", span_mid)
+            add_face((a, c, d, b), (a, c, d), (a, d, b), "wall_te", span_mid)
 
         # Flat declared tip cap.  The tip section is a thin cambered airfoil and is
         # therefore NOT star-shaped about the mean of its boundary points, so a

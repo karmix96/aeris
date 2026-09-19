@@ -8,6 +8,7 @@ or holdout work, and it never mutates an existing attempt directory.
 from __future__ import annotations
 
 import math
+import os
 import re
 import resource
 import time
@@ -214,7 +215,20 @@ def _resource_preflight(attempt: Path, *, tier: str, estimated_cells: int) -> di
         )
         write_json(path, report)
     if not report.get("passed", False):
-        raise RuntimeError("resource preflight failed: " + ", ".join(report.get("failures", [])))
+        # S7_RESOURCE_PREFLIGHT_OVERRIDE runs the case anyway on an operator's
+        # explicit instruction, to measure what a machine below the floor actually
+        # does rather than assume it.  It moves no threshold: the written report
+        # still carries passed=false and the full failure list, and gains an
+        # explicit evidence_valid_for_campaign=false, so anything produced under
+        # it is self-evidently outside the declared resource scope and cannot be
+        # presented as campaign evidence.  Absent the variable, this still raises.
+        if os.environ.get("S7_RESOURCE_PREFLIGHT_OVERRIDE") != "1":
+            raise RuntimeError(
+                "resource preflight failed: " + ", ".join(report.get("failures", []))
+            )
+        report["override_acknowledged"] = True
+        report["evidence_valid_for_campaign"] = False
+        write_json(path, report)
     return report
 
 

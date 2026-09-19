@@ -13,7 +13,7 @@ from aeris.fea.calibration import run_calibration
 from aeris.fea.case.loader import load_case_spec
 from aeris.fea.case.runner import CASE_MANIFEST_SCHEMA_VERSION, run_case
 from aeris.fea.case.spec import LoadCaseSpec, MeshSpec, SectionSpec, WingboxSpec
-from aeris.fea.fields import read_frd_fields
+from aeris.fea.fields import read_dat_fields, read_frd_fields
 from aeris.fea.geometry import generate_aeris_stations
 from aeris.fea.governance import run_qualification
 from aeris.fea.holdout import promote_holdout
@@ -356,6 +356,20 @@ def test_custom_geometry_and_frd_contours_are_readable(tmp_path: Path) -> None:
     assert fields["displacement"][1] == pytest.approx((1e-3, 2e-3, 3e-3))
     assert fields["stress"][1][0] == pytest.approx(1e6)
 
+    dat = tmp_path / "model.dat"
+    dat.write_text(
+        """ displacements (vx,vy,vz) for set NALL and time 1.0
+ 1 1.0E-03 2.0E-03 3.0E-03
+ stresses (elem, integ.pnt.,sxx,syy,szz,sxy,sxz,syz) for set EALL and time 1.0
+ 7 1 1.0E+06 0.0 0.0 0.0 0.0 0.0
+""",
+        encoding="utf-8",
+    )
+    dat_fields = read_dat_fields(dat)
+    assert dat_fields["displacement"][1] == pytest.approx((1e-3, 2e-3, 3e-3))
+    assert dat_fields["stress"][7] == pytest.approx(1e6)
+
+
 
 def test_learning_cockpit_uses_static_only_post_gate() -> None:
     from aeris.gui.fea_learning import _build_case
@@ -364,6 +378,16 @@ def test_learning_cockpit_uses_static_only_post_gate() -> None:
     assert not spec.analyses.modal.enabled
     assert not spec.analyses.buckling.enabled
     assert not spec.analyses.nonlinear.enabled
+
+
+def test_learning_gui_accepts_fixed_custom_bounds() -> None:
+    from streamlit.testing.v1 import AppTest
+
+    app = AppTest.from_file("src/aeris/gui/fea_learning.py").run(timeout=30)
+    app.radio[0].set_value("Custom variable values").run(timeout=30)
+    assert not app.exception
+    assert any(item.label == "dihedral_b1_deg" for item in app.number_input)
+
 
 
 @pytest.mark.integration

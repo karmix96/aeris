@@ -43,46 +43,120 @@ def read_frd_fields(path: Path) -> dict[str, dict[int, tuple[float, ...]]]:
     return fields
 
 
-def contour_data(case_dir: Path, load_case: str) -> dict[str, object]:
-    """Return mesh connectivity and available displacement/stress contour arrays."""
-    mesh_path = case_dir / "mesh" / "wingbox_mesh.inp"
-    result_path = case_dir / "solve" / load_case / "model.frd"
-    nodes, elements, regions = _read_calculix_mesh(mesh_path)
-    fields = read_frd_fields(result_path)
+def read_dat_fields(path: Path) -> dict[str, dict[int, object]]:
+    """Read original mesh-node/element fields printed to CalculiX ``.dat``.
+
+    CalculiX expands shell nodes internally in FRD files. DAT print blocks retain
+    the original input IDs, so they map cleanly onto the audited shell mesh.
+    """
+    displacement: dict[int, tuple[float, float, float]] = {}
+    stress: dict[int, float] = {}
+    active: str | None = None
+    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        lower = raw.lower()
+        if "displacements (vx,vy,vz)" in lower:
+            active = "displacement"
+            continue
+        if "stresses (elem, integ.pnt." in lower:
+            active = "stress"
+            continue
+        if "forces (fx,fy,fz)" in lower:
+            active = None
+            continue
+        parts = raw.split()
+        if active == "displacement" and len(parts) == 4:
+            try:
+                node_id = int(parts[0])
+                displacement[node_id] = tuple(float(value) for value in parts[1:4])
+            except ValueError:
+                continue
+        elif active == "stress" and len(parts) >= 8:
+            try:
+                element_id = int(parts[0])
+                values = [float(value) for value in parts[2:8]]
+            except ValueError:
+                continue
+            sxx, syy, szz, sxy, sxz, syz = values
+            von_mises = float(
+                np.sqrt(
+                    0.5 * ((sxx - syy) ** 2 + (syy - szz) ** 2 + (szz - sxx) ** 2)
+                    + 3.0 * (sxy**2 + sxz**2 + syz**2)
+                )
+            )
+            stress[element_id] = max(stress.get(element_id, 0.0), von_mises)
+    return {"displacement": displacement, "stress": stress}
+
+
+def mesh_data(case_dir: Path) -> dict[str, object]:
+    """Return triangulated audited mesh coordinates and region intensities."""
+    nodes, elements, regions = _read_calculix_mesh(case_dir / "mesh" / "wingbox_mesh.inp")
     node_ids = sorted(nodes)
     node_index = {node_id: index for index, node_id in enumerate(node_ids)}
     coordinates = np.asarray([nodes[node_id] for node_id in node_ids], dtype=float)
+    region_names = sorted(set(regions.values()) | {"UNASSIGNED"})
+    region_number = {name: index for index, name in enumerate(region_names)}
+    node_regions = np.zeros(len(node_ids), dtype=float)
+    node_counts = np.zeros(len(node_ids), dtype=float)
     faces: list[tuple[int, int, int]] = []
-    face_element: list[int] = []
     for element_id, connectivity in elements.items():
         if len(connectivity) < 4 or not all(node in node_index for node in connectivity):
             continue
         indices = [node_index[node] for node in connectivity]
-        for triangle in ((indices[0], indices[1], indices[2]), (indices[0], indices[2], indices[3])):
-            faces.append(triangle)
-            face_element.append(element_id)
-    displacement = np.zeros(len(node_ids), dtype=float)
-    for node_id, values in fields.get("displacement", {}).items():
-        if node_id in node_index:
-            displacement[node_index[node_id]] = float(np.linalg.norm(values[:3]))
-    stress_by_element = {
-        element_id: float(np.linalg.norm(values[:3]))
-        for element_id, values in fields.get("stress", {}).items()
+        faces.extend(
+            ((indices[0], indices[1], indices[2]), (indices[0], indices[2], indices[3]))
+        )
+        value = float(region_number[regions.get(element_id, "UNASSIGNED")])
+        for index in indices:
+            node_regions[index] += value
+            node_counts[index] += 1.0
+    node_regions /= np.maximum(node_counts, 1.0)
+    return {
+        "coordinates": coordinates,
+        "faces": np.asarray(faces, dtype=int),
+        "region_values": node_regions,
+        "region_names": region_names,
+        "node_ids": node_ids,
+        "elements": elements,
+        "node_index": node_index,
     }
+
+
+def contour_data(case_dir: Path, load_case: str) -> dict[str, object]:
+    """Return audited mesh connectivity and real CalculiX contour arrays."""
+    result_path = case_dir / "solve" / load_case / "model.dat"
+    base = mesh_data(case_dir)
+    elements = base["elements"]
+    node_ids = base["node_ids"]
+    node_index = base["node_index"]
+    assert isinstance(elements, dict)
+    assert isinstance(node_ids, list)
+    assert isinstance(node_index, dict)
+    fields = read_dat_fields(result_path)
+    displacement_vectors = np.zeros((len(node_ids), 3), dtype=float)
+    for node_id, values in fields["displacement"].items():
+        if node_id in node_index:
+            displacement_vectors[node_index[node_id]] = np.asarray(values, dtype=float)
+    displacement = np.linalg.norm(displacement_vectors, axis=1)
+    stress_by_element = fields["stress"]
     stress = np.zeros(len(node_ids), dtype=float)
     counts = np.zeros(len(node_ids), dtype=float)
     for element_id, connectivity in elements.items():
-        value = stress_by_element.get(element_id, 0.0)
+        value = float(stress_by_element.get(element_id, 0.0))
         for node_id in connectivity:
             if node_id in node_index:
                 stress[node_index[node_id]] += value
                 counts[node_index[node_id]] += 1.0
     stress /= np.maximum(counts, 1.0)
+    if not np.any(displacement > 0.0):
+        raise ValueError(f"CalculiX displacement field is empty in {result_path}")
+    if not np.any(stress > 0.0):
+        raise ValueError(f"CalculiX stress field is empty in {result_path}")
     return {
-        "coordinates": coordinates,
-        "faces": np.asarray(faces, dtype=int),
+        "coordinates": base["coordinates"],
+        "faces": base["faces"],
         "displacement_m": displacement,
+        "displacement_vectors_m": displacement_vectors,
         "stress_pa": stress,
-        "regions": regions,
+        "regions": base["region_names"],
         "node_ids": node_ids,
     }

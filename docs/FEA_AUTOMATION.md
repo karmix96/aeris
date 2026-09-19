@@ -101,6 +101,22 @@ mesh, run FEA or OpenAeroStruct, and switch between displacement/stress contours
 The explanatory panels distinguish aerodynamic lift from structural response;
 OpenAeroStruct is not presented as a local-stress validator.
 
+Launch it from the repository environment and open the printed local URL
+(normally `http://localhost:8503`):
+
+```bash
+source .venv/bin/activate
+aeris gui fea-learning
+```
+
+Use **Generate fresh geometry + mesh** first, then **Run fresh selected
+analysis**. The cockpit shows separate mesh, OAS, and CalculiX timings and stores
+each custom geometry in a content-addressed run directory under
+`data/fea_learning/`. Run-level JSON reports are downloadable in the cockpit.
+The versioned ten-wing evidence package is
+`docs/fea_reports/s8_pilot_e2e/README.md`, with plots in
+`docs/fea_visuals/s8_pilot_e2e/FEA_VISUAL_REPORT.md`.
+
 Completed studies now emit deterministic normalized rankings and a Pareto-front
 candidate list in `study_report.json`; completed variants are cached by their
 existing verification artifact so interrupted DSE campaigns can resume safely.

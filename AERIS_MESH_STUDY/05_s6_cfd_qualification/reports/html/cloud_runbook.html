@@ -1,0 +1,423 @@
+<title>S8 Cloud Runbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+:root{
+  --ground:#f3f5f6; --surface:#ffffff; --sunk:#eceff1;
+  --ink:#141a1f; --ink-2:#5c6973; --ink-3:#8a959d;
+  --rule:#dce2e6; --rule-2:#c7d0d6;
+  --accent:#0e5e76; --accent-ink:#0b4b5f; --accent-wash:#e3eef2;
+  --good:#1c6e4c; --warn:#8a5a06; --bad:#9c3535;
+  --sans:"IBM Plex Sans",ui-sans-serif,system-ui,"Segoe UI",sans-serif;
+  --serif:"Source Serif 4",Charter,"Iowan Old Style",Georgia,serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --rail:17rem;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0f1419; --surface:#151c22; --sunk:#1b232a;
+    --ink:#e3e9ed; --ink-2:#8d9daa; --ink-3:#6b7a86;
+    --rule:#242e36; --rule-2:#313e48;
+    --accent:#56b8d6; --accent-ink:#7fcde4; --accent-wash:#15303a;
+    --good:#4cae83; --warn:#d0983c; --bad:#e07a7a;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0f1419; --surface:#151c22; --sunk:#1b232a;
+  --ink:#e3e9ed; --ink-2:#8d9daa; --ink-3:#6b7a86;
+  --rule:#242e36; --rule-2:#313e48;
+  --accent:#56b8d6; --accent-ink:#7fcde4; --accent-wash:#15303a;
+  --good:#4cae83; --warn:#d0983c; --bad:#e07a7a;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--serif);
+  font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:81rem;margin:0 auto;padding-inline:20px;padding-block:0 5rem}
+
+/* ---- masthead ---- */
+.mast{border-bottom:1px solid var(--rule);padding-block:3.25rem 2rem;margin-bottom:2.5rem}
+.eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 1rem}
+.mast h1{font-family:var(--sans);font-weight:600;font-size:clamp(1.9rem,1.2rem + 2.6vw,3.1rem);
+  line-height:1.1;letter-spacing:-.02em;margin:0;text-wrap:balance;max-width:20ch}
+.stand{color:var(--ink-2);font-size:1.08rem;max-width:56ch;margin:1.1rem 0 0}
+.meta{font-family:var(--mono);font-size:.76rem;color:var(--ink-3);margin:1.75rem 0 0;
+  display:flex;flex-wrap:wrap;gap:.5rem 1.5rem}
+.meta b{font-weight:500;color:var(--ink-2)}
+
+/* ---- layout ---- */
+.page{display:grid;grid-template-columns:minmax(0,1fr);gap:2rem}
+@media (min-width:1040px){
+  .page{grid-template-columns:var(--rail) minmax(0,1fr);gap:4rem;align-items:start}
+}
+
+/* ---- contents rail ---- */
+.rail{font-family:var(--sans);font-size:.83rem;line-height:1.45}
+@media (min-width:1040px){
+  .rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 1.5rem);
+    max-height:calc(100vh - 4rem);overflow-y:auto;padding-right:.5rem;
+    border-right:1px solid var(--rule)}
+}
+.rail summary{font-family:var(--sans);font-weight:600;cursor:pointer;padding:.7rem .9rem;
+  background:var(--surface);border:1px solid var(--rule);border-radius:7px;font-size:.9rem}
+@media (min-width:1040px){.rail summary{display:none}
+  .rail details{display:contents}}
+.rail-inner{display:flex;flex-direction:column;gap:1px;padding-top:.75rem}
+.rail a{text-decoration:none;color:var(--ink-2);padding:.3rem .7rem;border-left:2px solid transparent;
+  display:block;border-radius:0 3px 3px 0}
+.rail a:hover{color:var(--ink);background:var(--sunk)}
+.rail a.r2{font-weight:600;color:var(--ink);margin-top:.55rem}
+.rail a.r3{padding-left:1.45rem;font-size:.79rem}
+.rail a.on{border-left-color:var(--accent);color:var(--accent-ink);background:var(--accent-wash)}
+.rail-group{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-3);margin:1.75rem 0 .35rem;padding-left:.7rem}
+.rail a.r-add{font-weight:400;color:var(--ink-2);margin-top:0}
+.rdate{display:block;font-family:var(--mono);font-size:.68rem;color:var(--ink-3)}
+
+/* ---- article ---- */
+article{min-width:0;max-width:70ch}
+article h2{font-family:var(--sans);font-weight:600;font-size:1.6rem;letter-spacing:-.015em;
+  line-height:1.2;margin:3.5rem 0 1rem;padding-top:1.5rem;border-top:1px solid var(--rule);
+  text-wrap:balance;scroll-margin-top:1.5rem}
+article h2:first-child{margin-top:0;border-top:0;padding-top:0}
+article h3{font-family:var(--sans);font-weight:600;font-size:1.13rem;letter-spacing:-.005em;
+  margin:2.5rem 0 .65rem;text-wrap:balance;scroll-margin-top:1.5rem}
+article p{margin:0 0 1.15rem}
+article strong{font-weight:600}
+article a{color:var(--accent-ink);text-underline-offset:2px}
+article ul,article ol{margin:0 0 1.3rem;padding-left:1.35rem}
+article li{margin-bottom:.5rem}
+article li::marker{color:var(--ink-3)}
+article blockquote{margin:1.5rem 0;padding:.2rem 0 .2rem 1.25rem;border-left:2px solid var(--rule-2);
+  color:var(--ink-2);font-style:italic}
+code{font-family:var(--mono);font-size:.855em;background:var(--sunk);padding:.12em .36em;
+  border-radius:3px;word-break:break-word}
+
+/* ---- tables: the report is mostly measurements ---- */
+.tw{overflow-x:auto;margin:1.6rem 0;border:1px solid var(--rule);border-radius:7px;
+  background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-family:var(--sans);font-size:.85rem;
+  font-variant-numeric:tabular-nums;line-height:1.45}
+th,td{padding:.55rem .85rem;text-align:left;border-bottom:1px solid var(--rule);white-space:nowrap}
+th{font-weight:600;font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-2);background:var(--sunk);position:sticky;top:0}
+tbody tr:last-child td{border-bottom:0}
+td code{background:none;padding:0}
+
+/* ---- addenda: a dated sequence, so the date is structure ---- */
+.addendum{margin-top:3.5rem;padding-top:1.5rem;border-top:1px solid var(--rule)}
+.addendum .when{font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;color:var(--accent);
+  margin:0 0 .4rem;text-transform:uppercase}
+.addendum h2.h-add{margin:0 0 1rem;border-top:0;padding-top:0;font-size:1.45rem}
+.addendum h3{font-size:1.04rem}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <p class="eyebrow">Operational · preflight, pilot, release</p>
+    <h1>Running the batch: preflight and pilot, step by step</h1>
+    <p class="stand">How to run the high-fidelity batch on a rented machine, from an empty terminal to the grid-convergence study, with the decision points marked.</p>
+    <p class="meta"><span><b>Written</b> 19 September 2026</span><span><b>Pilot</b> 31.4 core-hours</span><span><b>Source</b> CLOUD_RUNBOOK.md</span></p>
+  </header>
+
+  <div class="page">
+    <nav class="rail" aria-label="Contents">
+      <details>
+        <summary>Contents</summary>
+        <div class="rail-inner"><a class="r2" href="#0-before-you-rent-anything-one-decision">0. Before you rent anything: one decision</a>
+<a class="r2" href="#1-what-to-rent">1. What to rent</a>
+<a class="r2" href="#2-getting-the-solver-there">2. Getting the solver there</a>
+<a class="r2" href="#3-build-the-meshes">3. Build the meshes</a>
+<a class="r2" href="#4-preflight">4. Preflight</a>
+<a class="r2" href="#5-the-pilot-do-not-skip-this">5. The pilot — do not skip this</a>
+<a class="r2" href="#6-reading-the-pilot">6. Reading the pilot</a>
+<a class="r2" href="#7-releasing-the-rest">7. Releasing the rest</a>
+<a class="r2" href="#8-when-it-is-done">8. When it is done</a></div>
+      </details>
+    </nav>
+    <article><p>Written 2026-09-19. Assumes you have a rented machine and a terminal on it, and nothing else.
+Read <code>S8_CLOUD_BATCH_PLAN.md</code> for <em>why</em>; this is <em>how</em>.</p>
+
+</section>
+<h2 id="0-before-you-rent-anything-one-decision">0. Before you rent anything: one decision</h2>
+<p><strong>Re-run <code>gci_C</code> and <code>gci_M</code> on the cloud as well, for wing 83 only.</strong> They already exist here,
+solved on 17 September with <strong>ADflow 2.13.1</strong>. If the rented machine's ADflow is a different
+build, the four-level analysis will <strong>refuse to combine them</strong> — correctly, because a
+grid-convergence study whose levels came from different solvers is not one.</p>
+<p>Re-running them removes the question entirely:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cost</td>
+<td><strong>19.3 core-hours</strong> — 5.3 for <code>gci_C</code>, 14.0 for <code>gci_M</code>, four angles each</td>
+</tr>
+<tr>
+<td>As a share of the batch</td>
+<td><strong>4.4 %</strong></td>
+</tr>
+<tr>
+<td>What it buys</td>
+<td>all four levels from one solver on one machine, so the study is computable whatever version the image ships</td>
+</tr>
+</tbody>
+</table></div>
+<p>At $0.10–0.15 per core-hour that is about <strong>$2–3</strong>. I would spend it. The alternative is
+discovering after the batch that the levels cannot be combined, which costs the whole batch.</p>
+
+</section>
+<h2 id="1-what-to-rent">1. What to rent</h2>
+<p>The pilot's binding constraint is <strong>one <code>gci_FF</code> case at 38.4 GiB</strong>.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th></th>
+<th>pilot</th>
+<th>full batch</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Physical cores</td>
+<td><strong>≥ 8</strong></td>
+<td>16–32</td>
+</tr>
+<tr>
+<td>RAM</td>
+<td><strong>≥ 48 GiB</strong></td>
+<td>128–256 GiB</td>
+</tr>
+<tr>
+<td>Disk</td>
+<td>50 GiB</td>
+<td>100 GiB</td>
+</tr>
+<tr>
+<td>Shape</td>
+<td>memory-heavy: ≥ 9.6 GiB per physical core</td>
+<td>same</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Compute-optimised instances at 4 GiB per physical core will not hold <code>gci_FF</code>.</strong> Use a
+memory-optimised type. Pin ranks to physical cores; do not let two ranks share one core's
+hyperthreads.</p>
+
+</section>
+<h2 id="2-getting-the-solver-there">2. Getting the solver there</h2>
+<p>This is the only hard part. ADflow is not pip-installable.</p>
+<p><strong>Use the MDO Lab's prebuilt image.</strong> It ships ADflow, pyGeo, cgnsutilities and a matching
+OpenMPI, which is exactly the stack <code>env_s8.py</code> looks for:</p>
+<pre><code class="language-bash">docker pull mdolab/public:u22-gcc-ompi-stable
+</code></pre>
+<p>Check the current tag at <a href="https://hub.docker.com/r/mdolab/public">hub.docker.com/r/mdolab/public</a>
+and the official notes at
+<a href="https://mdolab-mach-aero.readthedocs-hosted.com/en/latest/installInstructions/dockerInstructions.html">MACH-Aero Docker instructions</a> —
+tags move, and this document will go stale before they do.</p>
+<pre><code class="language-bash">git clone &lt;your repo url&gt; aeris          # about 154 MB
+docker run -it --rm \
+  -v &quot;$PWD/aeris:/aeris&quot; \
+  --shm-size=2g \
+  mdolab/public:u22-gcc-ompi-stable bash
+</code></pre>
+<p>Inside the container, the project's own venv still has to exist — it holds the mesher, the gates
+and the analysis, none of which are in the image:</p>
+<pre><code class="language-bash">cd /aeris
+python3 -m venv .venv
+.venv/bin/pip install numpy scipy pygeo pyspline aerosandbox neuralfoil pyyaml markdown-it-py
+</code></pre>
+<p>Then tell <code>env_s8.py</code> where the three things are. It resolves them automatically, but on an
+unfamiliar machine <strong>say it explicitly</strong> — a wrong <code>mpirun</code> gives you six one-rank runs that each
+think they are rank 0 and overwrite each other while reporting success:</p>
+<pre><code class="language-bash">export AERIS_MACH_PYTHON=$(which python3)      # the image's python, the one that imports adflow
+export AERIS_VENV_PYTHON=/aeris/.venv/bin/python
+export AERIS_MPIRUN=$(which mpirun)            # must be the one adflow's mpi4py was built against
+</code></pre>
+<p><strong>Verify before going further:</strong></p>
+<pre><code class="language-bash">$AERIS_MACH_PYTHON -c &quot;import adflow; print('ADflow', adflow.__version__)&quot;
+$AERIS_MACH_PYTHON -c &quot;import cgnsutilities; print('cgnsutilities ok')&quot;
+$AERIS_VENV_PYTHON  -c &quot;import pygeo, numpy; print('venv ok')&quot;
+$AERIS_MPIRUN --version | head -1
+</code></pre>
+<p><strong>Write down the ADflow version it prints.</strong> If it is not 2.13.1, §0's decision is no longer
+optional — re-run <code>gci_C</code> and <code>gci_M</code> on the cloud or the four-level study cannot be computed.</p>
+
+</section>
+<h2 id="3-build-the-meshes">3. Build the meshes</h2>
+<p>The cloud builds its own; nothing is uploaded. 25–45 s and 1.7 GiB peak per mesh.</p>
+<pre><code class="language-bash">cd /aeris
+.venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/cloud_prep_build.py
+</code></pre>
+<p><strong>Expect <code>11 of 11 clean</code>.</strong> Anything else — a folded cell, a wall-layer error above 1e-9 m —
+stop. A grid with inverted cells must never reach a solver, and finding out here costs nothing.</p>
+
+</section>
+<h2 id="4-preflight">4. Preflight</h2>
+<pre><code class="language-bash">.venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/cloud_preflight.py --ranks 4
+</code></pre>
+<p>It checks nine things and writes <code>reports/s8_cloud_preflight.json</code>. <strong>Read the verdict line.</strong></p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>verdict</th>
+<th>what to do</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>READY</code></td>
+<td>go to §5</td>
+</tr>
+<tr>
+<td><code>NOT READY</code></td>
+<td><strong>stop.</strong> Each fatal line names what is wrong</td>
+</tr>
+</tbody>
+</table></div>
+<p>The one most likely to fire is memory. On this development host it reads
+<em>&quot;11.0 GiB available, 38.2 GiB needed&quot;</em> — which is correct and is the entire reason for renting.
+If it fires on the rented machine too, the machine is too small; nothing downstream will work
+and every minute after that bills.</p>
+
+</section>
+<h2 id="5-the-pilot-do-not-skip-this">5. The pilot — do not skip this</h2>
+<pre><code class="language-bash">.venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/cloud_batch_run.py \
+    --pilot --ranks 4
+</code></pre>
+<p><strong>31.4 core-hours. $0.63–$1.57 on spot or bare metal, $3.14–$4.70 on mainstream on-demand.</strong>
+About 7 % of the batch. It runs one <code>gci_F</code> and one <code>gci_FF</code> and then <strong>stops on its own</strong>.</p>
+<p>It exists because four numbers in the estimate are extrapolations:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>what the pilot measures</th>
+<th>against what</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>peak resident memory</td>
+<td>a <strong>two-point</strong> memory law stretched to <strong>4×</strong> its largest input</td>
+</tr>
+<tr>
+<td>iterations to 1e-6</td>
+<td><strong>one</strong> measured growth ratio extrapolated two levels</td>
+</tr>
+<tr>
+<td>seconds per Mcell-iteration</td>
+<td>9.7 s, measured only to 1.17M cells</td>
+</tr>
+<tr>
+<td><strong>whether ANK-only converges at all</strong></td>
+<td>it is proven only to <strong>1,172,856 cells</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>That last one is the real risk. ANK-only was chosen <em>because</em> Newton–Krylov froze at gci_M with
+this project's lean preconditioner. At 2.3M and 4.7M cells nobody knows. <strong>Discover that on one
+case, not forty-four.</strong></p>
+
+</section>
+<h2 id="6-reading-the-pilot">6. Reading the pilot</h2>
+<p>It prints a verdict and writes <code>reports/s8_cloud_pilot.json</code>.</p>
+<pre><code>pilot: PASS -- release the rest
+</code></pre>
+<p>Release only when <strong>all four</strong> are true:</p>
+<ol>
+<li><strong>both cases <code>usable</code></strong> — judged on the artefacts, not the exit code</li>
+<li><strong>peak memory inside the prediction</strong> — 20.6 GiB for <code>gci_F</code>, 38.4 for <code>gci_FF</code></li>
+<li><strong>seconds per Mcell-iteration near 9.7</strong> — much above it and the batch costs more than 439 core-hours</li>
+<li><strong><code>gci_FF</code> actually converged</strong> — this is the ANK-only question</li>
+</ol>
+<p>If memory came in <strong>above</strong> prediction, re-size before continuing: the law is a two-point fit and
+the pilot is the first real measurement of it. If <code>gci_FF</code> did not converge, the fallback is
+restoring ADflow's NK defaults, which needs about 2 GiB more per case — <strong>46.8 GiB for
+<code>gci_FF</code></strong> — and is itself unproven here. That is a decision, not a retry.</p>
+
+</section>
+<h2 id="7-releasing-the-rest">7. Releasing the rest</h2>
+<pre><code class="language-bash">.venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/cloud_batch_run.py \
+    --ranks 4 --budget-core-hours 600
+</code></pre>
+<p>The ledger at <code>artifacts/s8_hf/ledger.json</code> carries forward, so the two pilot cases are not
+re-run and their core-hours are already counted.</p>
+<p><strong>To stop it at any point, from anywhere:</strong></p>
+<pre><code class="language-bash">echo &quot;why you stopped&quot; &gt; /aeris/AERIS_MESH_STUDY/artifacts/s8_hf/STOP
+</code></pre>
+<p>No process has to cooperate. The batch finishes the case it is on and stops before the next.</p>
+<p>It also stops on its own if the budget would be exceeded or free disk falls below 25 GiB, and any
+single case that starts paging is killed in minutes by the memory watch rather than being left to
+finish at disk speed.</p>
+
+</section>
+<h2 id="8-when-it-is-done">8. When it is done</h2>
+<pre><code class="language-bash">.venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/gci_four_level.py --index 83
+</code></pre>
+<p>This is what the batch was for. Look for two things:</p>
+<ul>
+<li><strong><code>compatibility.compatible: true</code>.</strong> If it is false it names the field that differs and refuses
+to combine the levels. If <code>unverifiable</code> is non-empty, a level's solver version is unknown —
+§0 again.</li>
+<li><strong><code>triplet_consistency.consistent</code>.</strong> C/M/F and M/F/FF should give the <strong>same observed order</strong>.
+If they do not, the solutions are not in the asymptotic range and the extrapolated drag is not
+quotable, whatever the formula returns.</li>
+</ul>
+<p>Then pull the whole tree back before you destroy the machine:</p>
+<pre><code class="language-bash">tar czf s8_hf.tgz AERIS_MESH_STUDY/artifacts/s8_hf AERIS_MESH_STUDY/05_s6_cfd_qualification/reports
+</code></pre>
+<p><code>artifacts/</code> is gitignored and gets wiped. <strong>Anything worth keeping goes in
+<code>05_s6_cfd_qualification/</code> and gets committed.</strong></p>
+</article>
+  </div>
+</div>
+
+<script>
+(function(){
+  var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+  var byId = {};
+  links.forEach(function(a){ byId[a.getAttribute('href').slice(1)] = a; });
+  var heads = Object.keys(byId).map(function(id){ return document.getElementById(id); })
+                    .filter(Boolean);
+  var current = null;
+  function mark(el){
+    if (!el || el === current) return;
+    if (current) current.classList.remove('on');
+    current = el; el.classList.add('on');
+    if (window.innerWidth >= 1040) {
+      var rail = document.querySelector('.rail');
+      var t = el.offsetTop - rail.clientHeight / 2;
+      if (rail.scrollHeight > rail.clientHeight) rail.scrollTop = Math.max(0, t);
+    }
+  }
+  if ('IntersectionObserver' in window) {
+    var visible = new Set();
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting) visible.add(e.target); else visible.delete(e.target);
+      });
+      var first = heads.filter(function(h){ return visible.has(h); })[0];
+      if (first) mark(byId[first.id]);
+    }, { rootMargin: '0px 0px -72% 0px' });
+    heads.forEach(function(h){ io.observe(h); });
+  }
+  // the rail is a disclosure on phones; close it after a jump
+  document.querySelector('.rail-inner').addEventListener('click', function(e){
+    if (e.target.closest('a') && window.innerWidth < 1040) {
+      var d = document.querySelector('.rail details');
+      if (d) d.open = false;
+    }
+  });
+  if (window.innerWidth >= 1040) {
+    var d = document.querySelector('.rail details'); if (d) d.open = true;
+  }
+})();
+</script>

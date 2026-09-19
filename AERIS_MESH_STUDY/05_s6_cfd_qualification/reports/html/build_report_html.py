@@ -92,6 +92,14 @@ MASTHEADS = {
         "meta": [("Started", "15 September 2026"), ("Solver", "ADflow RANS-SA · SU2 8.5"),
                  ("Source", "S8_REPORT_2026-09-15.md")],
     },
+    "CLOUD_RUNBOOK.md": {
+        "page": "S8 Cloud Runbook",
+        "eyebrow": "Operational · preflight, pilot, release",
+        "stand": ("How to run the high-fidelity batch on a rented machine, from an empty "
+                  "terminal to the grid-convergence study, with the decision points marked."),
+        "meta": [("Written", "19 September 2026"), ("Pilot", "31.4 core-hours"),
+                 ("Source", "CLOUD_RUNBOOK.md")],
+    },
     "SU2_REPORT_2026-09-18.md": {
         "page": "AERIS SU2 Track",
         "eyebrow": "Second solver · verification, validation and transition",

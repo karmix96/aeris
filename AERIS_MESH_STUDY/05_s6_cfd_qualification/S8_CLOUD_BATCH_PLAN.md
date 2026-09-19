@@ -199,7 +199,7 @@ own name now.
 | B2 | `g83/F/α0` is a label, never an identity — deterministic `case_id` from the inputs, separate `execution_id` per attempt | **done** — verified that a changed mesh, geometry or setting changes the id |
 | B3 | Archive copies to a `.part`, hashes the **stored** bytes, and only then renames into place | **done** — a killed job leaves a `.part`, never a plausible wrong answer |
 | B4 | Reference area is each geometry's own (defect 23) | **done** — the batch refuses to start if any geometry's area is missing |
-| B5 | The 17 Sept `gci_C`/`gci_M` results carried in at the same settings and commit | open — needs the analysis step, not the runner |
+| B5 | The 17 Sept `gci_C`/`gci_M` results carried in at the same settings and commit | **done** — `gci_four_level.py`; the compatibility check passes on the real pair and the four-level path is verified against a constructed answer |
 
 ### C. Operational — **implemented in `cloud_batch_run.py`**
 
@@ -211,6 +211,24 @@ own name now.
 | C4 | Disk floor checked **before** each case | **done** — 25 GiB, tested |
 | C5 | Spend cap in core-hours, and a `STOP` file that works without this process | **done** — both tested |
 | C6 | `--watch-memory` on every case | **done** — passed to every solve |
+
+**B5, the last item, is now closed.** `gci_four_level.py` combines the levels and computes the
+study the batch exists to produce. Two things it will not do:
+
+- **It refuses to combine runs that are not the same case.** Geometry, incidence, Mach, Reynolds,
+  turbulence model and variant, reference area and moment reference must all agree before any
+  level joins the family. Tested by changing one level's turbulence model to SST: it stops and
+  names the field. Picking the three meshes with the most cells is not a grid-convergence study.
+- **It refuses to quote a number it is not entitled to.** With two levels it reports
+  `TREND_ONLY` and no band. With three or more it reports the *observed* order, and
+  `certified_uncertainty_percent` stays empty for any quantity whose family fails a condition —
+  including the divergence test that once let `f(h) = 1 + h⁻²` through as p = +2, "ok", GCI 37 %.
+
+Verified against a constructed family, `CD = 0.0150 + 0.00080 h²` at r = 1.300 across four levels:
+both triplets return **p = 2.0000** and an extrapolate of **0.0150000**, the exact constructed
+answer, and agree with each other to a spread of 0.000. On the real `gci_C`/`gci_M` pair the
+compatibility check **passes** — the two are genuinely the same case — and the analysis correctly
+reports `TREND_ONLY`, because two levels cannot give an observed order.
 
 **And one rule that is neither B nor C:** a verdict comes from the **artefacts**, never the exit
 code. ADflow exits 0 on SIGTERM, which this project has known since PLAN 0.3. On 18 September SU2

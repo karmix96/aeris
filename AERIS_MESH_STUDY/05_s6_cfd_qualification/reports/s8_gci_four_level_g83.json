@@ -1,0 +1,774 @@
+{
+  "schema": "aeris.s8.gci_four_level.v1",
+  "geometry_index": 83,
+  "by_alpha": {
+    "-2": {
+      "geometry_index": 83,
+      "alpha_deg": -2.0,
+      "levels_present": [
+        "gci_C",
+        "gci_M"
+      ],
+      "levels_missing": [
+        "gci_F",
+        "gci_FF"
+      ],
+      "cells": {
+        "gci_C": 603592,
+        "gci_M": 1172856
+      },
+      "compatibility": {
+        "compatible": true,
+        "differences": [],
+        "levels_compared": [
+          "gci_C",
+          "gci_M"
+        ],
+        "note": "a grid-convergence study needs the SAME case at different resolutions. Any difference here means these runs answer different questions and must not be combined."
+      },
+      "refinement_ratio_from_cells": [
+        1.2479
+      ],
+      "refinement_ratio_measured_spacing": 1.3,
+      "ratio_note": "1.300 is measured on the node arrays in every direction at every step. The cell-count cube root understates it because o_out and cap_out are geometric extrusions crossing a fixed distance, so their layer count grows logarithmically.",
+      "quantities": {
+        "cd": {
+          "label": "drag",
+          "by_level": {
+            "gci_C": 0.025443858445278078,
+            "gci_M": 0.02303610464118398
+          },
+          "counts_by_level": {
+            "gci_C": 254.439,
+            "gci_M": 230.361
+          },
+          "triplets": {},
+          "two_level_only": {
+            "f1_fine": 0.02303610464118398,
+            "f2_coarse": 0.025443858445278078,
+            "r21": 1.3,
+            "change_fine_minus_coarse": -0.002407753804094099,
+            "relative_change": 0.10452087458352283,
+            "p_observed": null,
+            "p_observed_why_absent": "the observed order is what the THIRD grid measures; two points cannot separate the order from the coefficient",
+            "f_extrapolated": null,
+            "gci_21": null,
+            "gci_21_why_absent": "a GCI band requires an observed order. This is a refinement trend, not a grid-convergence index.",
+            "assumed_order_band": {
+              "assumed_p": 2.0,
+              "safety_factor": 3.0,
+              "band": 0.4544385851457513,
+              "band_percent": 45.443858514575126,
+              "extrapolated_if_p_assumed": 0.01954660637438094,
+              "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
+            },
+            "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
+          }
+        },
+        "cdp": {
+          "label": "pressure drag",
+          "by_level": {
+            "gci_C": 0.016755554214787482,
+            "gci_M": 0.01441401312878244
+          },
+          "counts_by_level": {
+            "gci_C": 167.556,
+            "gci_M": 144.14
+          },
+          "triplets": {},
+          "two_level_only": {
+            "f1_fine": 0.01441401312878244,
+            "f2_coarse": 0.016755554214787482,
+            "r21": 1.3,
+            "change_fine_minus_coarse": -0.0023415410860050424,
+            "relative_change": 0.1624489352884913,
+            "p_observed": null,
+            "p_observed_why_absent": "the observed order is what the THIRD grid measures; two points cannot separate the order from the coefficient",
+            "f_extrapolated": null,
+            "gci_21": null,
+            "gci_21_why_absent": "a GCI band requires an observed order. This is a refinement trend, not a grid-convergence index.",
+            "assumed_order_band": {
+              "assumed_p": 2.0,
+              "safety_factor": 3.0,
+              "band": 0.7062997186456141,
+              "band_percent": 70.62997186456141,
+              "extrapolated_if_p_assumed": 0.011020475322978032,
+              "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
+            },
+            "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
+          }
+        },
+        "cdv": {
+          "label": "viscous drag",
+          "by_level": {
+            "gci_C": 0.008688304230490593,
+            "gci_M": 0.00862209151240154
+          },
+          "counts_by_level": {
+            "gci_C": 86.883,
+            "gci_M": 86.221
+          },
+          "triplets": {},
+          "two_level_only": {
+            "f1_fine": 0.00862209151240154,
+            "f2_coarse": 0.008688304230490593,
+            "r21": 1.3,
+            "change_fine_minus_coarse": -6.621271808905302e-05,
+            "relative_change": 0.007679426505021004,
+            "p_observed": null,
+            "p_observed_why_absent": "the observed order is what the THIRD grid measures; two points cannot separate the order from the coefficient",
+            "f_extrapolated": null,
+            "gci_21": null,
+            "gci_21_why_absent": "a GCI band requires an observed order. This is a refinement trend, not a grid-convergence index.",
+            "assumed_order_band": {
+              "assumed_p": 2.0,
+              "safety_factor": 3.0,
+              "band": 0.033388810891395664,
+              "band_percent": 3.3388810891395657,
+              "extrapolated_if_p_assumed": 0.008526131051402912,
+              "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
+            },
+            "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
+          }
+        },
+        "cl": {
+          "label": "lift",
+          "by_level": {
+            "gci_C": -0.2982458914064708,
+            "gci_M": -0.29844321734024926
+          },
+          "counts_by_level": null,
+          "triplets": {},
+          "two_level_only": {
+            "f1_fine": -0.29844321734024926,
+            "f2_coarse": -0.2982458914064708,
+            "r21": 1.3,
+            "change_fine_minus_coarse": -0.0001973259337784694,
+            "relative_change": 0.0006611841794799511,
+            "p_observed": null,
+            "p_observed_why_absent": "the observed order is what the THIRD grid measures; two points cannot separate the order from the coefficient",
+            "f_extrapolated": null,
+            "gci_21": null,
+            "gci_21_why_absent": "a GCI band requires an observed order. This is a refinement trend, not a grid-convergence index.",
+            "assumed_order_band": {
+              "assumed_p": 2.0,
+              "safety_factor": 3.0,
+              "band": 0.002874713823825873,
+              "band_percent": 0.28747138238258735,
+              "extrapolated_if_p_assumed": -0.2987291969544209,
+              "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
+            },
+            "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
+          }
+        },
+        "cmy": {
+          "label": "pitching moment",
+          "by_level": {
+            "gci_C": -0.0060385185603979265,
+            "gci_M": -0.006081040288380315
+          },
+          "counts_by_level": null,
+          "triplets": {},
+          "two_level_only": {
+            "f1_fine": -0.006081040288380315,
+            "f2_coarse": -0.0060385185603979265,
+            "r21": 1.3,
+            "change_fine_minus_coarse": -4.252172798238814e-05,
+            "relative_change": 0.006992508841561022,
+            "p_observed": null,
+            "p_observed_why_absent": "the observed order is what the THIRD grid measures; two points cannot separate the order from the coefficient",
+            "f_extrapolated": null,
+            "gci_21": null,
+            "gci_21_why_absent": "a GCI band requires an observed order. This is a refinement trend, not a grid-convergence index.",
+            "assumed_order_band": {
+              "assumed_p": 2.0,
+              "safety_factor": 3.0,
+              "band": 0.03040221235461313,
+              "band_percent": 3.0402212354613134,
+              "extrapolated_if_p_assumed": -0.0061426659811084135,
+              "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
+            },
+            "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
+          }
+        }
+      },
+      "verdict": "2 levels present. TWO LEVELS ONLY: the order is assumed, not observed. This is a trend, not a GCI."
+    },
+    "0": {
+      "geometry_index": 83,
+      "alpha_deg": 0.0,
+      "levels_present": [
+        "gci_C",
+        "gci_M"
+      ],
+      "levels_missing": [
+        "gci_F",
+        "gci_FF"
+      ],
+      "cells": {
+        "gci_C": 603592,
+        "gci_M": 1172856
+      },
+      "compatibility": {
+        "compatible": true,
+        "differences": [],
+        "levels_compared": [
+          "gci_C",
+          "gci_M"
+        ],
+        "note": "a grid-convergence study needs the SAME case at different resolutions. Any difference here means these runs answer different questions and must not be combined."
+      },
+      "refinement_ratio_from_cells": [
+        1.2479
+      ],
+      "refinement_ratio_measured_spacing": 1.3,
+      "ratio_note": "1.300 is measured on the node arrays in every direction at every step. The cell-count cube root understates it because o_out and cap_out are geometric extrusions crossing a fixed distance, so their layer count grows logarithmically.",
+      "quantities": {
+        "cd": {
+          "label": "drag",
+          "by_level": {
+            "gci_C": 0.020173687608665856,
+            "gci_M": 0.0179145387773991
+          },
+          "counts_by_level": {
+            "gci_C": 201.737,
+            "gci_M": 179.145
+          },
+          "triplets": {},
+          "two_level_only": {
+            "f1_fine": 0.0179145387773991,
+            "f2_coarse": 0.020173687608665856,
+            "r21": 1.3,
+            "change_fine_minus_coarse": -0.002259148831266756,
+            "relative_change": 0.12610700500516864,
+            "p_observed": null,
+            "p_observed_why_absent": "the observed order is what the THIRD grid measures; two points cannot separate the order from the coefficient",
+            "f_extrapolated": null,
+            "gci_21": null,
+            "gci_21_why_absent": "a GCI band requires an observed order. This is a refinement trend, not a grid-convergence index.",
+            "assumed_order_band": {
+              "assumed_p": 2.0,
+              "safety_factor": 3.0,
+              "band": 0.5482913261094288,
+              "band_percent": 54.82913261094287,
+              "extrapolated_if_p_assumed": 0.014640410036432787,
+              "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
+            },
+            "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
+          }
+        },
+        "cdp": {
+          "label": "pressure drag",
+          "by_level": {
+            "gci_C": 0.01107943054048347,
+            "gci_M": 0.008928805964322543
+          },
+          "counts_by_level": {
+            "gci_C": 110.794,
+            "gci_M": 89.288
+          },
+          "triplets": {},
+          "two_level_only": {
+            "f1_fine": 0.008928805964322543,
+            "f2_coarse": 0.01107943054048347,
+            "r21": 1.3,
+            "change_fine_minus_coarse": -0.0021506245761609265,
+            "relative_change": 0.240863625523315,
+            "p_observed": null,
+            "p_observed_why_absent": "the observed order is what the THIRD grid measures; two points cannot separate the order from the coefficient",
+            "f_extrapolated": null,
+            "gci_21": null,
+            "gci_21_why_absent": "a GCI band requires an observed order. This is a refinement trend, not a grid-convergence index.",
+            "assumed_order_band": {
+              "assumed_p": 2.0,
+              "safety_factor": 3.0,
+              "band": 1.0472331544491955,
+              "band_percent": 104.72331544491954,
+              "extrapolated_if_p_assumed": 0.005811958752495115,
+              "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
+            },
+            "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
+          }
+        },
+        "cdv": {
+          "label": "viscous drag",
+          "by_level": {
+            "gci_C": 0.009094257068182385,
+            "gci_M": 0.008985732813076557
+          },
+          "counts_by_level": {
+            "gci_C": 90.943,
+            "gci_M": 89.857
+          },
+          "triplets": {},
+          "two_level_only": {
+            "f1_fine": 0.008985732813076557,
+            "f2_coarse": 0.009094257068182385,
+            "r21": 1.3,
+            "change_fine_minus_coarse": -0.00010852425510582756,
+            "relative_change": 0.012077396174956014,
+            "p_observed": null,
+            "p_observed_why_absent": "the observed order is what the THIRD grid measures; two points cannot separate the order from the coefficient",
+            "f_extrapolated": null,
+            "gci_21": null,
+            "gci_21_why_absent": "a GCI band requires an observed order. This is a refinement trend, not a grid-convergence index.",
+            "assumed_order_band": {
+              "assumed_p": 2.0,
+              "safety_factor": 3.0,
+              "band": 0.05251041815198266,
+              "band_percent": 5.251041815198266,
+              "extrapolated_if_p_assumed": 0.008828451283937677,
+              "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
+            },
+            "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
+          }
+        },
+        "cl": {
+          "label": "lift",
+          "by_level": {
+            "gci_C": -0.15990167125308777,
+            "gci_M": -0.16019515471659054
+          },
+          "counts_by_level": null,
+          "triplets": {},
+          "two_level_only": {
+            "f1_fine": -0.16019515471659054,
+            "f2_coarse": -0.15990167125308777,
+            "r21": 1.3,
+            "change_fine_minus_coarse": -0.000293483463502775,
+            "relative_change": 0.0018320370801600812,
+            "p_observed": null,
+            "p_observed_why_absent": "the observed order is what the THIRD grid measures; two points cannot separate the order from the coefficient",
+            "f_extrapolated": null,
+            "gci_21": null,
+            "gci_21_why_absent": "a GCI band requires an observed order. This is a refinement trend, not a grid-convergence index.",
+            "assumed_order_band": {
+              "assumed_p": 2.0,
+              "safety_factor": 3.0,
+              "band": 0.007965378609391654,
+              "band_percent": 0.7965378609391656,
+              "extrapolated_if_p_assumed": -0.16062049306949308,
+              "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
+            },
+            "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
+          }
+        },
+        "cmy": {
+          "label": "pitching moment",
+          "by_level": {
+            "gci_C": 0.0012087547481393545,
+            "gci_M": 0.001225668797418991
+          },
+          "counts_by_level": null,
+          "triplets": {},
+          "two_level_only": {
+            "f1_fine": 0.001225668797418991,
+            "f2_coarse": 0.0012087547481393545,
+            "r21": 1.3,
+            "change_fine_minus_coarse": 1.6914049279636396e-05,
+            "relative_change": 0.013799853039625339,
+            "p_observed": null,
+            "p_observed_why_absent": "the observed order is what the THIRD grid measures; two points cannot separate the order from the coefficient",
+            "f_extrapolated": null,
+            "gci_21": null,
+            "gci_21_why_absent": "a GCI band requires an observed order. This is a refinement trend, not a grid-convergence index.",
+            "assumed_order_band": {
+              "assumed_p": 2.0,
+              "safety_factor": 3.0,
+              "band": 0.05999936104184928,
+              "band_percent": 5.999936104184928,
+              "extrapolated_if_p_assumed": 0.0012501819123170144,
+              "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
+            },
+            "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
+          }
+        }
+      },
+      "verdict": "2 levels present. TWO LEVELS ONLY: the order is assumed, not observed. This is a trend, not a GCI."
+    },
+    "4": {
+      "geometry_index": 83,
+      "alpha_deg": 4.0,
+      "levels_present": [
+        "gci_C",
+        "gci_M"
+      ],
+      "levels_missing": [
+        "gci_F",
+        "gci_FF"
+      ],
+      "cells": {
+        "gci_C": 603592,
+        "gci_M": 1172856
+      },
+      "compatibility": {
+        "compatible": true,
+        "differences": [],
+        "levels_compared": [
+          "gci_C",
+          "gci_M"
+        ],
+        "note": "a grid-convergence study needs the SAME case at different resolutions. Any difference here means these runs answer different questions and must not be combined."
+      },
+      "refinement_ratio_from_cells": [
+        1.2479
+      ],
+      "refinement_ratio_measured_spacing": 1.3,
+      "ratio_note": "1.300 is measured on the node arrays in every direction at every step. The cell-count cube root understates it because o_out and cap_out are geometric extrusions crossing a fixed distance, so their layer count grows logarithmically.",
+      "quantities": {
+        "cd": {
+          "label": "drag",
+          "by_level": {
+            "gci_C": 0.019141183297877867,
+            "gci_M": 0.01690734507291726
+          },
+          "counts_by_level": {
+            "gci_C": 191.412,
+            "gci_M": 169.073
+          },
+          "triplets": {},
+          "two_level_only": {
+            "f1_fine": 0.01690734507291726,
+            "f2_coarse": 0.019141183297877867,
+            "r21": 1.3,
+            "change_fine_minus_coarse": -0.0022338382249606076,
+            "relative_change": 0.13212235364728214,
+            "p_observed": null,
+            "p_observed_why_absent": "the observed order is what the THIRD grid measures; two points cannot separate the order from the coefficient",
+            "f_extrapolated": null,
+            "gci_21": null,
+            "gci_21_why_absent": "a GCI band requires an observed order. This is a refinement trend, not a grid-convergence index.",
+            "assumed_order_band": {
+              "assumed_p": 2.0,
+              "safety_factor": 3.0,
+              "band": 0.5744450158577483,
+              "band_percent": 57.44450158577484,
+              "extrapolated_if_p_assumed": 0.013669898370075801,
+              "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
+            },
+            "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
+          }
+        },
+        "cdp": {
+          "label": "pressure drag",
+          "by_level": {
+            "gci_C": 0.00963095854878515,
+            "gci_M": 0.007548654611876055
+          },
+          "counts_by_level": {
+            "gci_C": 96.31,
+            "gci_M": 75.487
+          },
+          "triplets": {},
+          "two_level_only": {
+            "f1_fine": 0.007548654611876055,
+            "f2_coarse": 0.00963095854878515,
+            "r21": 1.3,
+            "change_fine_minus_coarse": -0.0020823039369090943,
+            "relative_change": 0.275851001797469,
+            "p_observed": null,
+            "p_observed_why_absent": "the observed order is what the THIRD grid measures; two points cannot separate the order from the coefficient",
+            "f_extrapolated": null,
+            "gci_21": null,
+            "gci_21_why_absent": "a GCI band requires an observed order. This is a refinement trend, not a grid-convergence index.",
+            "assumed_order_band": {
+              "assumed_p": 2.0,
+              "safety_factor": 3.0,
+              "band": 1.1993521817281259,
+              "band_percent": 119.9352181728126,
+              "extrapolated_if_p_assumed": 0.004530822819254181,
+              "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
+            },
+            "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
+          }
+        },
+        "cdv": {
+          "label": "viscous drag",
+          "by_level": {
+            "gci_C": 0.009510224749092716,
+            "gci_M": 0.009358690461041205
+          },
+          "counts_by_level": {
+            "gci_C": 95.102,
+            "gci_M": 93.587
+          },
+          "triplets": {},
+          "two_level_only": {
+            "f1_fine": 0.009358690461041205,
+            "f2_coarse": 0.009510224749092716,
+            "r21": 1.3,
+            "change_fine_minus_coarse": -0.0001515342880515115,
+            "relative_change": 0.016191826055400118,
+            "p_observed": null,
+            "p_observed_why_absent": "the observed order is what the THIRD grid measures; two points cannot separate the order from the coefficient",
+            "f_extrapolated": null,
+            "gci_21": null,
+            "gci_21_why_absent": "a GCI band requires an observed order. This is a refinement trend, not a grid-convergence index.",
+            "assumed_order_band": {
+              "assumed_p": 2.0,
+              "safety_factor": 3.0,
+              "band": 0.07039924371913092,
+              "band_percent": 7.039924371913092,
+              "extrapolated_if_p_assumed": 0.009139075550821623,
+              "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
+            },
+            "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
+          }
+        },
+        "cl": {
+          "label": "lift",
+          "by_level": {
+            "gci_C": 0.12037534533308065,
+            "gci_M": 0.11971183913518069
+          },
+          "counts_by_level": null,
+          "triplets": {},
+          "two_level_only": {
+            "f1_fine": 0.11971183913518069,
+            "f2_coarse": 0.12037534533308065,
+            "r21": 1.3,
+            "change_fine_minus_coarse": -0.0006635061978999685,
+            "relative_change": 0.005542527812564351,
+            "p_observed": null,
+            "p_observed_why_absent": "the observed order is what the THIRD grid measures; two points cannot separate the order from the coefficient",
+            "f_extrapolated": null,
+            "gci_21": null,
+            "gci_21_why_absent": "a GCI band requires an observed order. This is a refinement trend, not a grid-convergence index.",
+            "assumed_order_band": {
+              "assumed_p": 2.0,
+              "safety_factor": 3.0,
+              "band": 0.024097947011149347,
+              "band_percent": 2.4097947011149348,
+              "extrapolated_if_p_assumed": 0.1187502359498184,
+              "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
+            },
+            "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
+          }
+        },
+        "cmy": {
+          "label": "pitching moment",
+          "by_level": {
+            "gci_C": 0.015340707969940604,
+            "gci_M": 0.01543255618630034
+          },
+          "counts_by_level": null,
+          "triplets": {},
+          "two_level_only": {
+            "f1_fine": 0.01543255618630034,
+            "f2_coarse": 0.015340707969940604,
+            "r21": 1.3,
+            "change_fine_minus_coarse": 9.184821635973596e-05,
+            "relative_change": 0.005951588009850934,
+            "p_observed": null,
+            "p_observed_why_absent": "the observed order is what the THIRD grid measures; two points cannot separate the order from the coefficient",
+            "f_extrapolated": null,
+            "gci_21": null,
+            "gci_21_why_absent": "a GCI band requires an observed order. This is a refinement trend, not a grid-convergence index.",
+            "assumed_order_band": {
+              "assumed_p": 2.0,
+              "safety_factor": 3.0,
+              "band": 0.025876469608047535,
+              "band_percent": 2.5876469608047534,
+              "extrapolated_if_p_assumed": 0.015565669543343435,
+              "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
+            },
+            "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
+          }
+        }
+      },
+      "verdict": "2 levels present. TWO LEVELS ONLY: the order is assumed, not observed. This is a trend, not a GCI."
+    },
+    "8": {
+      "geometry_index": 83,
+      "alpha_deg": 8.0,
+      "levels_present": [
+        "gci_C",
+        "gci_M"
+      ],
+      "levels_missing": [
+        "gci_F",
+        "gci_FF"
+      ],
+      "cells": {
+        "gci_C": 603592,
+        "gci_M": 1172856
+      },
+      "compatibility": {
+        "compatible": true,
+        "differences": [],
+        "levels_compared": [
+          "gci_C",
+          "gci_M"
+        ],
+        "note": "a grid-convergence study needs the SAME case at different resolutions. Any difference here means these runs answer different questions and must not be combined."
+      },
+      "refinement_ratio_from_cells": [
+        1.2479
+      ],
+      "refinement_ratio_measured_spacing": 1.3,
+      "ratio_note": "1.300 is measured on the node arrays in every direction at every step. The cell-count cube root understates it because o_out and cap_out are geometric extrusions crossing a fixed distance, so their layer count grows logarithmically.",
+      "quantities": {
+        "cd": {
+          "label": "drag",
+          "by_level": {
+            "gci_C": 0.03036912846477917,
+            "gci_M": 0.027892755909697597
+          },
+          "counts_by_level": {
+            "gci_C": 303.691,
+            "gci_M": 278.928
+          },
+          "triplets": {},
+          "two_level_only": {
+            "f1_fine": 0.027892755909697597,
+            "f2_coarse": 0.03036912846477917,
+            "r21": 1.3,
+            "change_fine_minus_coarse": -0.002476372555081572,
+            "relative_change": 0.08878192470829319,
+            "p_observed": null,
+            "p_observed_why_absent": "the observed order is what the THIRD grid measures; two points cannot separate the order from the coefficient",
+            "f_extrapolated": null,
+            "gci_21": null,
+            "gci_21_why_absent": "a GCI band requires an observed order. This is a refinement trend, not a grid-convergence index.",
+            "assumed_order_band": {
+              "assumed_p": 2.0,
+              "safety_factor": 3.0,
+              "band": 0.38600836829692686,
+              "band_percent": 38.60083682969268,
+              "extrapolated_if_p_assumed": 0.024303810177695322,
+              "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
+            },
+            "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
+          }
+        },
+        "cdp": {
+          "label": "pressure drag",
+          "by_level": {
+            "gci_C": 0.02088041149813114,
+            "gci_M": 0.018544792576369318
+          },
+          "counts_by_level": {
+            "gci_C": 208.804,
+            "gci_M": 185.448
+          },
+          "triplets": {},
+          "two_level_only": {
+            "f1_fine": 0.018544792576369318,
+            "f2_coarse": 0.02088041149813114,
+            "r21": 1.3,
+            "change_fine_minus_coarse": -0.0023356189217618208,
+            "relative_change": 0.12594473150042026,
+            "p_observed": null,
+            "p_observed_why_absent": "the observed order is what the THIRD grid measures; two points cannot separate the order from the coefficient",
+            "f_extrapolated": null,
+            "gci_21": null,
+            "gci_21_why_absent": "a GCI band requires an observed order. This is a refinement trend, not a grid-convergence index.",
+            "assumed_order_band": {
+              "assumed_p": 2.0,
+              "safety_factor": 3.0,
+              "band": 0.5475857891322619,
+              "band_percent": 54.758578913226195,
+              "extrapolated_if_p_assumed": 0.015159837617294211,
+              "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
+            },
+            "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
+          }
+        },
+        "cdv": {
+          "label": "viscous drag",
+          "by_level": {
+            "gci_C": 0.009488716966648035,
+            "gci_M": 0.009347963333328286
+          },
+          "counts_by_level": {
+            "gci_C": 94.887,
+            "gci_M": 93.48
+          },
+          "triplets": {},
+          "two_level_only": {
+            "f1_fine": 0.009347963333328286,
+            "f2_coarse": 0.009488716966648035,
+            "r21": 1.3,
+            "change_fine_minus_coarse": -0.00014075363331974948,
+            "relative_change": 0.015057144353350283,
+            "p_observed": null,
+            "p_observed_why_absent": "the observed order is what the THIRD grid measures; two points cannot separate the order from the coefficient",
+            "f_extrapolated": null,
+            "gci_21": null,
+            "gci_21_why_absent": "a GCI band requires an observed order. This is a refinement trend, not a grid-convergence index.",
+            "assumed_order_band": {
+              "assumed_p": 2.0,
+              "safety_factor": 3.0,
+              "band": 0.06546584501456644,
+              "band_percent": 6.5465845014566435,
+              "extrapolated_if_p_assumed": 0.009143972560401113,
+              "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
+            },
+            "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
+          }
+        },
+        "cl": {
+          "label": "lift",
+          "by_level": {
+            "gci_C": 0.4019967395771817,
+            "gci_M": 0.4010446134778685
+          },
+          "counts_by_level": null,
+          "triplets": {},
+          "two_level_only": {
+            "f1_fine": 0.4010446134778685,
+            "f2_coarse": 0.4019967395771817,
+            "r21": 1.3,
+            "change_fine_minus_coarse": -0.0009521260993131664,
+            "relative_change": 0.0023741151665304916,
+            "p_observed": null,
+            "p_observed_why_absent": "the observed order is what the THIRD grid measures; two points cannot separate the order from the coefficient",
+            "f_extrapolated": null,
+            "gci_21": null,
+            "gci_21_why_absent": "a GCI band requires an observed order. This is a refinement trend, not a grid-convergence index.",
+            "assumed_order_band": {
+              "assumed_p": 2.0,
+              "safety_factor": 3.0,
+              "band": 0.010322239854480395,
+              "band_percent": 1.0322239854480395,
+              "extrapolated_if_p_assumed": 0.39966472058031316,
+              "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
+            },
+            "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
+          }
+        },
+        "cmy": {
+          "label": "pitching moment",
+          "by_level": {
+            "gci_C": 0.02852385870088064,
+            "gci_M": 0.028694527898378494
+          },
+          "counts_by_level": null,
+          "triplets": {},
+          "two_level_only": {
+            "f1_fine": 0.028694527898378494,
+            "f2_coarse": 0.02852385870088064,
+            "r21": 1.3,
+            "change_fine_minus_coarse": 0.00017066919749785317,
+            "relative_change": 0.005947795973583436,
+            "p_observed": null,
+            "p_observed_why_absent": "the observed order is what the THIRD grid measures; two points cannot separate the order from the coefficient",
+            "f_extrapolated": null,
+            "gci_21": null,
+            "gci_21_why_absent": "a GCI band requires an observed order. This is a refinement trend, not a grid-convergence index.",
+            "assumed_order_band": {
+              "assumed_p": 2.0,
+              "safety_factor": 3.0,
+              "band": 0.02585998249384102,
+              "band_percent": 2.585998249384102,
+              "extrapolated_if_p_assumed": 0.028941874561418866,
+              "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
+            },
+            "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
+          }
+        }
+      },
+      "verdict": "2 levels present. TWO LEVELS ONLY: the order is assumed, not observed. This is a trend, not a GCI."
+    }
+  }
+}

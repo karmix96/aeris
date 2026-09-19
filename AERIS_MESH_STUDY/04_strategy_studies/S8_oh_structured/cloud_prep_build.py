@@ -11,6 +11,9 @@ from __future__ import annotations
 import json, subprocess, sys, time, resource
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import env_s8
+
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 OUT = HERE / "runs/s8_cloud"
@@ -34,6 +37,22 @@ def build(level: str, index: int) -> dict:
         if rc != 0 or not summary.exists():
             return {"level": level, "index": index, "BUILD_FAILED": True,
                     "log": str(out / f"{level}_build.log")}
+    # Write the CGNS as well. build_volume.py produces block ARRAYS; the solver
+    # reads a CGNS, and nothing else in the cloud path creates one. Without this
+    # the batch builds eleven clean meshes on the rented machine and then fails
+    # on its first case with a missing grid -- after the meter has started.
+    # Found on 2026-09-19 by checking that the files the batch needs exist,
+    # rather than that the build reported success.
+    cgns = out / f"{level}_volume.cgns"
+    if not cgns.exists():
+        env = env_s8.resolve()
+        cmd = [env["mach_python"], str(HERE / "write_cgns.py"),
+               "--blocks", str(out / f"{level}_blocks.npz")]
+        with open(out / f"{level}_cgns.log", "w") as fh:
+            rc = subprocess.run(cmd, stdout=fh, stderr=subprocess.STDOUT).returncode
+        if rc != 0 or not cgns.exists():
+            return {"level": level, "index": index, "CGNS_FAILED": True,
+                    "log": str(out / f"{level}_cgns.log")}
     wall = time.time() - t0
     peak = max(resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss, before) / 1048576
     d = json.loads(summary.read_text())
@@ -45,7 +64,12 @@ def build(level: str, index: int) -> dict:
            "wall_layer_error_m": d["volume"]["wall_layer_error_m"],
            "blocks": {k: v["shape"] for k, v in d["blocks"].items()},
            "build_seconds": round(wall, 1), "build_peak_gib": round(peak, 2)}
-    rec["clean"] = rec["folded"] == 0 and rec["wall_layer_error_m"] <= 1e-9
+    rec["cgns"] = str(cgns)
+    rec["cgns_bytes"] = cgns.stat().st_size if cgns.exists() else None
+    # "clean" must mean the batch can actually USE this mesh, which requires the
+    # CGNS to exist, not only that the block arrays are valid.
+    rec["clean"] = (rec["folded"] == 0 and rec["wall_layer_error_m"] <= 1e-9
+                    and cgns.exists())
     # ANK-only memory law, fitted on this host, with the 5 % cell-variation margin
     rec["solve_gib_ank_only"] = round((2.69 + 7.23 * d["cells"] / 1e6) * 1.05, 1)
     return rec
@@ -57,8 +81,9 @@ def main() -> int:
     for level, index in WORK:
         r = build(level, index)
         records.append(r)
-        if r.get("BUILD_FAILED"):
-            print(f"  g{index:<3} {level:7s} BUILD FAILED -- see {r['log']}", flush=True)
+        if r.get("BUILD_FAILED") or r.get("CGNS_FAILED"):
+            what = "BUILD FAILED" if r.get("BUILD_FAILED") else "CGNS WRITE FAILED"
+            print(f"  g{index:<3} {level:7s} {what} -- see {r['log']}", flush=True)
             continue
         flag = "clean" if r["clean"] else "*** NOT CLEAN ***"
         print(f"  g{index:<3} {level:7s} {r['cells']:>9,} cells  {r['build_seconds']:>5.1f} s  "

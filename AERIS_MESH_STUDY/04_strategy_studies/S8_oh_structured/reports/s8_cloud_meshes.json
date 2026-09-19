@@ -25,8 +25,10 @@
           57
         ]
       },
-      "build_seconds": 29.1,
-      "build_peak_gib": 0.81,
+      "build_seconds": 2.0,
+      "build_peak_gib": 0.27,
+      "cgns": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cloud/g12/gci_F_volume.cgns",
+      "cgns_bytes": 58007552,
       "clean": true,
       "solve_gib_ank_only": 20.6
     },
@@ -53,8 +55,10 @@
           57
         ]
       },
-      "build_seconds": 25.3,
-      "build_peak_gib": 0.81,
+      "build_seconds": 2.0,
+      "build_peak_gib": 0.27,
+      "cgns": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cloud/g13/gci_F_volume.cgns",
+      "cgns_bytes": 58007552,
       "clean": true,
       "solve_gib_ank_only": 20.6
     },
@@ -81,8 +85,10 @@
           57
         ]
       },
-      "build_seconds": 25.4,
-      "build_peak_gib": 0.81,
+      "build_seconds": 1.7,
+      "build_peak_gib": 0.27,
+      "cgns": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cloud/g16/gci_F_volume.cgns",
+      "cgns_bytes": 58007552,
       "clean": true,
       "solve_gib_ank_only": 20.6
     },
@@ -109,8 +115,10 @@
           57
         ]
       },
-      "build_seconds": 25.2,
-      "build_peak_gib": 0.81,
+      "build_seconds": 9.7,
+      "build_peak_gib": 0.27,
+      "cgns": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cloud/g23/gci_F_volume.cgns",
+      "cgns_bytes": 58007552,
       "clean": true,
       "solve_gib_ank_only": 20.6
     },
@@ -137,8 +145,10 @@
           57
         ]
       },
-      "build_seconds": 31.1,
-      "build_peak_gib": 0.81,
+      "build_seconds": 1.6,
+      "build_peak_gib": 0.27,
+      "cgns": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cloud/g29/gci_F_volume.cgns",
+      "cgns_bytes": 58007552,
       "clean": true,
       "solve_gib_ank_only": 20.6
     },
@@ -165,8 +175,10 @@
           56
         ]
       },
-      "build_seconds": 25.2,
-      "build_peak_gib": 0.81,
+      "build_seconds": 1.6,
+      "build_peak_gib": 0.27,
+      "cgns": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cloud/g36/gci_F_volume.cgns",
+      "cgns_bytes": 57581568,
       "clean": true,
       "solve_gib_ank_only": 20.5
     },
@@ -193,8 +205,10 @@
           56
         ]
       },
-      "build_seconds": 30.9,
-      "build_peak_gib": 0.81,
+      "build_seconds": 1.6,
+      "build_peak_gib": 0.27,
+      "cgns": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cloud/g47/gci_F_volume.cgns",
+      "cgns_bytes": 57581568,
       "clean": true,
       "solve_gib_ank_only": 20.5
     },
@@ -221,8 +235,10 @@
           57
         ]
       },
-      "build_seconds": 26.1,
-      "build_peak_gib": 0.81,
+      "build_seconds": 1.5,
+      "build_peak_gib": 0.27,
+      "cgns": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cloud/g65/gci_F_volume.cgns",
+      "cgns_bytes": 58007552,
       "clean": true,
       "solve_gib_ank_only": 20.6
     },
@@ -249,8 +265,10 @@
           56
         ]
       },
-      "build_seconds": 25.2,
-      "build_peak_gib": 0.81,
+      "build_seconds": 2.6,
+      "build_peak_gib": 0.27,
+      "cgns": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cloud/g81/gci_F_volume.cgns",
+      "cgns_bytes": 57581568,
       "clean": true,
       "solve_gib_ank_only": 20.5
     },
@@ -277,8 +295,10 @@
           56
         ]
       },
-      "build_seconds": 0.0,
-      "build_peak_gib": 0.81,
+      "build_seconds": 1.9,
+      "build_peak_gib": 0.27,
+      "cgns": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cloud/g83/gci_F_volume.cgns",
+      "cgns_bytes": 57581568,
       "clean": true,
       "solve_gib_ank_only": 20.5
     },
@@ -306,7 +326,9 @@
         ]
       },
       "build_seconds": 0.0,
-      "build_peak_gib": 0.81,
+      "build_peak_gib": 0.27,
+      "cgns": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cloud/g83/gci_FF_volume.cgns",
+      "cgns_bytes": 115322880,
       "clean": true,
       "solve_gib_ank_only": 38.4
     }

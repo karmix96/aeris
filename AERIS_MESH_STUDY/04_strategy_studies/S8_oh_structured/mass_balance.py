@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Global mass conservation: does as much mass leave the domain as enters it?
 
-    .venv/bin/python .../mass_balance.py --runs 'AERIS_MESH_STUDY/artifacts/s8_cfd/gci_C_a*'
+    .venv/bin/python .../mass_balance.py --runs 'AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cfd/gci_C_a*'
 
 A residual is a statement about how well the discrete equations balance in each
 cell.  This is the INTEGRAL statement, over the whole domain boundary, and it

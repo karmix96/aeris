@@ -1,0 +1,45 @@
+# Run data lives here, beside the code that produced it, and is never wiped.
+#
+# What is committed and what is not follows one rule: EVIDENCE is kept, BULK is
+# rebuildable. Measured on 2026-09-19 the split is 12 MB of JSON against 17 GB
+# of meshes and volume solutions -- and the 12 MB is what every number in the
+# reports is derived from, so losing it would mean re-running to recover
+# figures that were already computed.
+#
+# Note for anyone editing this: a `#` only starts a comment at the START of a
+# line. An inline one becomes part of the pattern, which silently matches
+# nothing -- that mistake is why the first version of this file admitted 29
+# files instead of 923.
+
+# Ignore everything, then allow the evidence back in.
+*
+!*/
+!.gitignore
+
+# per-run evidence: forces, convergence, identity, and how it got there
+!result.json
+!run_manifest.json
+!memory_watch.json
+!changes.json
+!*_gate.json
+!*_summary.json
+!*_dataset_rows.json
+!forces_breakdown.dat
+!case.cfg
+!history*.csv
+!*.sh
+
+# never: hundreds of MB each and reproducible from the mesher at the recorded
+# commit. Their sha256 is in the evidence above, so a regenerated file can be
+# checked against the one that produced a published number.
+*.cgns
+*.cgns.gz
+*.xyz
+*.vtk
+*.npz
+restart*.dat
+run.log
+run_cont*.log
+*.pdf
+*.png
+*.tec

@@ -1,0 +1,64 @@
+{
+  "converged": true,
+  "relative_residual": 9.651818964925017e-07,
+  "residual_source": "adflow.iteration.totalrfinal/totalr0",
+  "l2_target": 1e-06,
+  "n_cycles_budget": 30000,
+  "grid": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_checklist/dir_g47/gci_C_chord_volume.cgns",
+  "alpha_deg": 0.0,
+  "mission": {
+    "mach": 0.0837,
+    "reynolds": 1530708.188575197,
+    "reynolds_length_m": 0.9,
+    "temperature_K": 278.4,
+    "chord_ref_m": 0.9
+  },
+  "area_ref_m2": 0.29775,
+  "moment_ref_xyz_m": [
+    0.4,
+    0.0,
+    0.0
+  ],
+  "routine_failed": false,
+  "flow_directions": {
+    "lift_index_requested": 3,
+    "lift_index_realised": 3,
+    "alpha_deg": 0.0,
+    "velocity_direction_expected": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "velocity_direction_realised": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "velocity_direction_error": 0.0,
+    "lift_direction_expected": [
+      -0.0,
+      0.0,
+      1.0
+    ],
+    "lift_direction_realised": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "lift_direction_error": 0.0,
+    "tolerance": 1e-09
+  },
+  "solver_overrides": {
+    "useNKSolver": false
+  },
+  "solver_is_governed_configuration": false,
+  "functions": {
+    "s8_a0_cd": 0.016575484778612523,
+    "s8_a0_cdp": 0.007087925075484984,
+    "s8_a0_cdv": 0.00948755970312754,
+    "s8_a0_cl": -0.027521552678086914,
+    "s8_a0_cmx": -0.01548356325334827,
+    "s8_a0_cmy": 0.005013334233745894,
+    "s8_a0_cmz": -0.008578819470800055
+  }
+}

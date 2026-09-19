@@ -85,7 +85,7 @@ def main() -> int:
                           "span_integrated_relative_difference":
                               (total["cn_cfd_at_measured_points"] - total["cn_experiment"])
                               / total["cn_experiment"]}}
-    out = args.out or (m6.HERE.parents[1] / "05_s6_cfd_qualification/reports"
+    out = args.out or (m6.HERE / "reports"
                        / f"s8_onera_m6_loads_{args.run.name}.json")
     out.write_text(json.dumps(report, indent=2) + "\n")
     s = report["summary"]

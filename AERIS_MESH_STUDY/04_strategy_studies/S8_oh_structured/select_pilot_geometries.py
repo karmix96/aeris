@@ -2,7 +2,7 @@
 """Choose the ten pilot geometries by maximin, and measure that the choice is good.
 
     .venv/bin/python .../select_pilot_geometries.py \
-        --out AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_pilot_geometries.json
+        --out AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/reports/s8_pilot_geometries.json
 
 PLAN_desktop_campaign.md 4.1.  The set is fixed BEFORE the first pilot case runs,
 and it is fixed by a script rather than by a list in a document, so that anyone

@@ -6,7 +6,7 @@ Runs under the MACH-Aero interpreter, not the project venv, because
 
     /home/mike/miniconda3/envs/mach-aero/bin/python \
         AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/write_cgns.py \
-        --blocks AERIS_MESH_STUDY/artifacts/paraview_inspection/s8_oh/oh_L3_blocks.npz
+        --blocks AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/paraview_inspection/s8_oh/oh_L3_blocks.npz
 
 Boundary conditions, with (i, j, k) = (xi around the ring, eta wall-normal,
 zeta spanwise):

@@ -19,7 +19,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import audit_runs, convergence_gate as G, gci  # noqa: E402
 
-ROWS = HERE.parents[1] / "05_s6_cfd_qualification/dataset_v2/rows.json"
+ROWS = HERE / "data/dataset_v2/rows.json"
 FAILURES: list[str] = []
 
 

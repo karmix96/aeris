@@ -18,8 +18,8 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 STUDY = HERE.parents[1]
-CHI3 = STUDY / "artifacts/s8_chi3"
-BASE = STUDY / "artifacts/s8_pilot"
+CHI3 = HERE / "runs/s8_chi3"
+BASE = HERE / "runs/s8_pilot"
 KEYS = ("cl", "cd", "cdp", "cdv")
 
 
@@ -49,7 +49,7 @@ def forces(path: Path, area: float | None = None) -> tuple[dict, float] | None:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--out", type=Path, default=STUDY /
-                    "05_s6_cfd_qualification/reports/s8_freestream_turbulence.json")
+                    "reports/s8_freestream_turbulence.json")
     args = ap.parse_args()
 
     pairs = []

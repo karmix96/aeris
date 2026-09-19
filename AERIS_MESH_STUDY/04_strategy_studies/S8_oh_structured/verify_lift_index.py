@@ -3,7 +3,7 @@
 
     /home/mike/miniconda3/envs/mach-aero/bin/python \
         AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/verify_lift_index.py \
-        --grid AERIS_MESH_STUDY/artifacts/paraview_inspection/s8_oh/oh_probe_volume.cgns
+        --grid AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/paraview_inspection/s8_oh/oh_probe_volume.cgns
 
 This is a measurement, not a solve: `nCycles` is zero and no solve call is made.
 It constructs the solver at each `liftIndex` and each angle of attack, calls
@@ -94,7 +94,7 @@ def probe(grid: Path, out: Path, lift_index: int, alphas: list[float]) -> list[d
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--grid", type=Path, required=True)
-    ap.add_argument("--out", type=Path, default=Path("AERIS_MESH_STUDY/artifacts/s8_cfd/lift_index_probe"))
+    ap.add_argument("--out", type=Path, default=Path("AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cfd/lift_index_probe"))
     ap.add_argument("--alphas", type=float, nargs="+", default=[0.0, 4.0, 8.0])
     ap.add_argument("--report", type=Path, default=None)
     args = ap.parse_args()

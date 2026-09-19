@@ -18,8 +18,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[3]
-REPORTS = ROOT / "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports"
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[2]
+REPORTS = HERE / "reports"
 INDICES = [12, 13, 16, 23, 29, 36, 47, 65, 81, 83]
 ALPHAS = [-2.0, 0.0, 4.0, 8.0]
 

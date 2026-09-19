@@ -109,10 +109,10 @@ def main() -> int:
                          "--all-geometry-level")
     ap.add_argument("--ranks", type=int, default=24)
     ap.add_argument("--ank-only", action="store_true", default=True)
-    ap.add_argument("--out", type=Path, default=QUAL / "reports/s8_cloud_batch.json")
+    ap.add_argument("--out", type=Path, default=HERE / "reports/s8_cloud_batch.json")
     args = ap.parse_args()
 
-    selection = QUAL / "reports/s8_pilot_geometries.json"
+    selection = HERE / "reports/s8_pilot_geometries.json"
     if not selection.exists():
         raise SystemExit(f"{selection} missing; run select_pilot_geometries.py")
     geometries = json.loads(selection.read_text())["selected"]
@@ -193,8 +193,8 @@ def main() -> int:
                 "AERIS_MESH_STUDY/04_strategy_studies/shared/",
                 "AERIS_MESH_STUDY/04_strategy_studies/S6_bounded_mesh_atlas/",
                 "AERIS_MESH_STUDY/05_s6_cfd_qualification/POLICY.yaml",
-                "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/",
-                "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_pilot_geometries.json",
+                "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/policies/",
+                "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/reports/s8_pilot_geometries.json",
                 "src/aeris/",
             ],
             "environment": ("MACH-Aero (ADflow + cgnsutilities) and the project "

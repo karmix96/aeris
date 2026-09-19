@@ -20,9 +20,10 @@ from __future__ import annotations
 import argparse, csv, json, re, subprocess, time
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[3]
-RUNS = ROOT / "AERIS_MESH_STUDY/artifacts/su2_validation"
-PROBE = ROOT / "AERIS_MESH_STUDY/artifacts/su2_cfl_probe"
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[2]
+RUNS = HERE / "runs/su2_validation"
+PROBE = HERE / "runs/su2_cfl_probe"
 SU2 = ROOT / "AERIS_MESH_STUDY/tools/su2_8.5.0/bin/SU2_CFD"
 MPIRUN = Path("/home/mike_kara/miniconda3/envs/mach-aero/bin/mpirun")
 
@@ -107,7 +108,7 @@ def main() -> int:
               f"{r.get('orders_per_1000')} orders/1000 iters  "
               f"minCFL {r.get('min_cfl_first_last')}  {r['wall_seconds']} s", flush=True)
 
-    report = ROOT / "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_su2_cfl_probe.json"
+    report = HERE / "reports/s8_su2_cfl_probe.json"
     report.write_text(json.dumps({"schema": "aeris.s8.su2_cfl_probe.v1",
                                   "case": args.case, "iterations_each": args.iters,
                                   "results": results}, indent=2) + "\n")

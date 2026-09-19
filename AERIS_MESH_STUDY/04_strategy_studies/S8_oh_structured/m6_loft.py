@@ -25,7 +25,7 @@ from pathlib import Path
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-SECTION_FILE = HERE.parents[1] / "05_s6_cfd_qualification/external/onera_m6/airfoil.txt"
+SECTION_FILE = HERE / "external/onera_m6/airfoil.txt"
 #: from onera_m6.GEOMETRY, semispan-normalised
 ROOT_CHORD, TIP_CHORD, SEMISPAN, LE_SWEEP_DEG = 0.6737, 0.3789, 1.0, 30.0
 

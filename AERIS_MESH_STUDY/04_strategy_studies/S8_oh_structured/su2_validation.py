@@ -49,11 +49,11 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 STUDY = HERE.parents[1]
-TUTORIALS = STUDY / "artifacts/su2_tutorials"
-RUNS = STUDY / "artifacts/su2_validation"
-TMR_FP = STUDY / "05_s6_cfd_qualification/external/tmr_flatplate"
-E387 = STUDY / "05_s6_cfd_qualification/external/e387"
-REPORT = STUDY / "05_s6_cfd_qualification/reports/s8_su2_validation.json"
+TUTORIALS = HERE / "runs/su2_tutorials"
+RUNS = HERE / "runs/su2_validation"
+TMR_FP = HERE / "external/tmr_flatplate"
+E387 = HERE / "external/e387"
+REPORT = HERE / "reports/s8_su2_validation.json"
 
 CASES = {
     "fp_comp_137": ("compressible_flow/Turbulent_Flat_Plate", "turb_SA_flatplate.cfg",

@@ -23,7 +23,7 @@ from convergence_gate import EQUATION_LIMITS
 
 HERE = Path(__file__).resolve().parent
 STUDY = HERE.parents[1]
-ROWS = STUDY / "05_s6_cfd_qualification/dataset/rows.json"
+ROWS = HERE / "data/dataset/rows.json"
 AREAS = HERE / "reference_areas.json"
 #: the governed contract every campaign row must satisfy
 X_REF, C_REF, L2, YPLUS_LIMIT = 0.40, 0.9, 1.0e-6, 1.0
@@ -179,7 +179,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--rows", type=Path, default=ROWS)
     ap.add_argument("--out", type=Path, default=STUDY /
-                    "05_s6_cfd_qualification/reports/s8_archive_audit.json")
+                    "reports/s8_archive_audit.json")
     args = ap.parse_args()
 
     data = json.loads(args.rows.read_text())

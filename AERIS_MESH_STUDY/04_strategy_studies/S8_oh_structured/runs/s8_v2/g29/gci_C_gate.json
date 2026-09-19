@@ -1,0 +1,355 @@
+{
+  "gate": {
+    "min_orders": 5.0,
+    "cl_pct": 0.05,
+    "cd_pct": 0.1,
+    "cmy_abs": 0.0001,
+    "window": 0
+  },
+  "results": [
+    {
+      "passes": true,
+      "solver_frozen": false,
+      "linear_solve_dead": false,
+      "accepted_via": "residual target",
+      "verdict": "ACCEPTED",
+      "equations_short_of_limit": [],
+      "equation_orders": {
+        "rho": 6.581,
+        "rhou": 5.419,
+        "rhov": 5.205,
+        "rhow": 5.453,
+        "rhoE": 6.593,
+        "nuturb": 4.207
+      },
+      "iterations": 179,
+      "residual_initial": 949.9637327226739,
+      "residual_final": 0.00024956196019131294,
+      "relative_residual": 2.6270682931868136e-07,
+      "window": 45,
+      "checks": {
+        "residual_orders": {
+          "value": 6.580528637161144,
+          "limit": 5.0,
+          "pass": true
+        },
+        "cl_percent": {
+          "value": 0.004765089215028396,
+          "limit": 0.05,
+          "pass": true
+        },
+        "cd_percent": {
+          "value": 0.0051755060003145,
+          "limit": 0.1,
+          "pass": true
+        },
+        "cmy_absolute": {
+          "value": 1.2708132762894592e-06,
+          "limit": 0.0001,
+          "pass": true
+        },
+        "not_diverging": {
+          "value": false,
+          "pass": true
+        },
+        "no_growing_oscillation": {
+          "value": false,
+          "pass": true
+        },
+        "every_equation": {
+          "value": {
+            "rho": 6.58,
+            "rhou": 5.42,
+            "rhov": 5.2,
+            "rhow": 5.45,
+            "rhoE": 6.59,
+            "nuturb": 4.21
+          },
+          "limit": {
+            "rho": 3.0,
+            "rhou": 3.0,
+            "rhov": 3.0,
+            "rhow": 3.0,
+            "rhoE": 6.0,
+            "nuturb": 3.0
+          },
+          "pass": true,
+          "note": "Fluent's per-equation test: continuity, each momentum component, energy and turbulence, each against its own limit"
+        },
+        "residual_target_met": {
+          "value": 2.6270682931868136e-07,
+          "limit": 1e-06,
+          "pass": true,
+          "note": "the run reached the L2Convergence target it was given"
+        }
+      },
+      "forces": {
+        "cl": -0.17114897393703618,
+        "cd": 0.020627434209358295,
+        "cdp": 0.011903686612408117,
+        "cdv": 0.008723747596950177,
+        "cmy": -0.008066190148053156
+      },
+      "alpha_deg": -2.0,
+      "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g29/gci_C_a-2"
+    },
+    {
+      "passes": true,
+      "solver_frozen": false,
+      "linear_solve_dead": false,
+      "accepted_via": "residual target",
+      "verdict": "ACCEPTED",
+      "equations_short_of_limit": [],
+      "equation_orders": {
+        "rho": 6.845,
+        "rhou": 5.564,
+        "rhov": 5.397,
+        "rhow": 5.63,
+        "rhoE": 6.958,
+        "nuturb": 4.185
+      },
+      "iterations": 191,
+      "residual_initial": 944.2769933204501,
+      "residual_final": 0.000135008056668423,
+      "relative_residual": 1.4297505670839386e-07,
+      "window": 48,
+      "checks": {
+        "residual_orders": {
+          "value": 6.844739722526437,
+          "limit": 5.0,
+          "pass": true
+        },
+        "cl_percent": {
+          "value": 0.0009965324010697508,
+          "limit": 0.05,
+          "pass": true
+        },
+        "cd_percent": {
+          "value": 0.003186796390822814,
+          "limit": 0.1,
+          "pass": true
+        },
+        "cmy_absolute": {
+          "value": 6.460427320600579e-07,
+          "limit": 0.0001,
+          "pass": true
+        },
+        "not_diverging": {
+          "value": false,
+          "pass": true
+        },
+        "no_growing_oscillation": {
+          "value": false,
+          "pass": true
+        },
+        "every_equation": {
+          "value": {
+            "rho": 6.84,
+            "rhou": 5.56,
+            "rhov": 5.4,
+            "rhow": 5.63,
+            "rhoE": 6.96,
+            "nuturb": 4.18
+          },
+          "limit": {
+            "rho": 3.0,
+            "rhou": 3.0,
+            "rhov": 3.0,
+            "rhow": 3.0,
+            "rhoE": 6.0,
+            "nuturb": 3.0
+          },
+          "pass": true,
+          "note": "Fluent's per-equation test: continuity, each momentum component, energy and turbulence, each against its own limit"
+        },
+        "residual_target_met": {
+          "value": 1.4297505670839386e-07,
+          "limit": 1e-06,
+          "pass": true,
+          "note": "the run reached the L2Convergence target it was given"
+        }
+      },
+      "forces": {
+        "cl": -0.05863478411148907,
+        "cd": 0.017483094166082302,
+        "cdp": 0.008537739218584221,
+        "cdv": 0.008945354947498079,
+        "cmy": 0.004679081604855422
+      },
+      "alpha_deg": 0.0,
+      "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g29/gci_C_a0"
+    },
+    {
+      "passes": true,
+      "solver_frozen": false,
+      "linear_solve_dead": false,
+      "accepted_via": "residual target",
+      "verdict": "ACCEPTED",
+      "equations_short_of_limit": [],
+      "equation_orders": {
+        "rho": 6.19,
+        "rhou": 5.224,
+        "rhov": 4.811,
+        "rhow": 4.94,
+        "rhoE": 6.206,
+        "nuturb": 5.219
+      },
+      "iterations": 173,
+      "residual_initial": 941.6626048808856,
+      "residual_final": 0.0006083095370394344,
+      "relative_residual": 6.459952151507405e-07,
+      "window": 43,
+      "checks": {
+        "residual_orders": {
+          "value": 6.189770698787155,
+          "limit": 5.0,
+          "pass": true
+        },
+        "cl_percent": {
+          "value": 0.0066215279232537455,
+          "limit": 0.05,
+          "pass": true
+        },
+        "cd_percent": {
+          "value": 0.00988191532710894,
+          "limit": 0.1,
+          "pass": true
+        },
+        "cmy_absolute": {
+          "value": 1.8453805336604567e-07,
+          "limit": 0.0001,
+          "pass": true
+        },
+        "not_diverging": {
+          "value": false,
+          "pass": true
+        },
+        "no_growing_oscillation": {
+          "value": false,
+          "pass": true
+        },
+        "every_equation": {
+          "value": {
+            "rho": 6.19,
+            "rhou": 5.22,
+            "rhov": 4.81,
+            "rhow": 4.94,
+            "rhoE": 6.21,
+            "nuturb": 5.22
+          },
+          "limit": {
+            "rho": 3.0,
+            "rhou": 3.0,
+            "rhov": 3.0,
+            "rhow": 3.0,
+            "rhoE": 6.0,
+            "nuturb": 3.0
+          },
+          "pass": true,
+          "note": "Fluent's per-equation test: continuity, each momentum component, energy and turbulence, each against its own limit"
+        },
+        "residual_target_met": {
+          "value": 6.459952151507405e-07,
+          "limit": 1e-06,
+          "pass": true,
+          "note": "the run reached the L2Convergence target it was given"
+        }
+      },
+      "forces": {
+        "cl": 0.16725482503405167,
+        "cd": 0.02018175726959162,
+        "cdp": 0.01103539984513316,
+        "cdv": 0.00914635742445846,
+        "cmy": 0.029978820235489825
+      },
+      "alpha_deg": 4.0,
+      "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g29/gci_C_a4"
+    },
+    {
+      "passes": true,
+      "solver_frozen": false,
+      "linear_solve_dead": false,
+      "accepted_via": "residual target",
+      "verdict": "ACCEPTED",
+      "equations_short_of_limit": [],
+      "equation_orders": {
+        "rho": 6.218,
+        "rhou": 5.26,
+        "rhov": 4.791,
+        "rhow": 5.088,
+        "rhoE": 6.208,
+        "nuturb": 5.347
+      },
+      "iterations": 180,
+      "residual_initial": 950.7808513196838,
+      "residual_final": 0.0005761661864546649,
+      "relative_residual": 6.05992627696431e-07,
+      "window": 45,
+      "checks": {
+        "residual_orders": {
+          "value": 6.217532659282946,
+          "limit": 5.0,
+          "pass": true
+        },
+        "cl_percent": {
+          "value": 0.003677273919305014,
+          "limit": 0.05,
+          "pass": true
+        },
+        "cd_percent": {
+          "value": 0.0069655892905161314,
+          "limit": 0.1,
+          "pass": true
+        },
+        "cmy_absolute": {
+          "value": 7.421847689551009e-07,
+          "limit": 0.0001,
+          "pass": true
+        },
+        "not_diverging": {
+          "value": false,
+          "pass": true
+        },
+        "no_growing_oscillation": {
+          "value": false,
+          "pass": true
+        },
+        "every_equation": {
+          "value": {
+            "rho": 6.22,
+            "rhou": 5.26,
+            "rhov": 4.79,
+            "rhow": 5.09,
+            "rhoE": 6.21,
+            "nuturb": 5.35
+          },
+          "limit": {
+            "rho": 3.0,
+            "rhou": 3.0,
+            "rhov": 3.0,
+            "rhow": 3.0,
+            "rhoE": 6.0,
+            "nuturb": 3.0
+          },
+          "pass": true,
+          "note": "Fluent's per-equation test: continuity, each momentum component, energy and turbulence, each against its own limit"
+        },
+        "residual_target_met": {
+          "value": 6.05992627696431e-07,
+          "limit": 1e-06,
+          "pass": true,
+          "note": "the run reached the L2Convergence target it was given"
+        }
+      },
+      "forces": {
+        "cl": 0.39489773665238415,
+        "cd": 0.0347121501277582,
+        "cdp": 0.025657500717709926,
+        "cdv": 0.009054649410048268,
+        "cmy": 0.05446595920482415
+      },
+      "alpha_deg": 8.0,
+      "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g29/gci_C_a8"
+    }
+  ]
+}

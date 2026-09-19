@@ -117,13 +117,13 @@ def main() -> int:
     ap.add_argument("--level", default="oh_L3")
     ap.add_argument("--set-name", default="lhs100_seed42")
     ap.add_argument("--out-root", type=Path,
-                    default=REPO / "AERIS_MESH_STUDY/artifacts/s8_robustness")
+                    default=HERE / "runs/s8_robustness")
     ap.add_argument("--python", default=str(REPO / ".venv/bin/python"))
     ap.add_argument("--timeout", type=int, default=3600)
     ap.add_argument("--frame-mode", default="span_normal",
                     choices=("svd", "span_normal"))
     ap.add_argument("--report", type=Path,
-                    default=REPO / "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports"
+                    default=HERE / "reports"
                                    "/s8_robustness_screen.json")
     args = ap.parse_args()
     args.out_root.mkdir(parents=True, exist_ok=True)

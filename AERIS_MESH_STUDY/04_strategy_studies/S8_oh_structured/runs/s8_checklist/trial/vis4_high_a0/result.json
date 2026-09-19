@@ -1,0 +1,90 @@
+{
+  "converged": true,
+  "iterations_completed": 283,
+  "too_few_iterations": false,
+  "solver_options_effective": {
+    "equationType": "RANS",
+    "turbulenceModel": "SA",
+    "turbulenceOrder": "first order",
+    "useft2SA": true,
+    "eddyVisInfRatio": 0.009,
+    "liftIndex": 3,
+    "MGCycle": "sg",
+    "smoother": "DADI",
+    "useANKSolver": true,
+    "ANKSwitchTol": 1.0,
+    "useNKSolver": false,
+    "NKSwitchTol": 1e-06,
+    "ANKSubspaceSize": 10,
+    "NKSubspaceSize": 20,
+    "ANKPCILUFill": 1,
+    "NKPCILUFill": 1,
+    "L2Convergence": 1e-06,
+    "nCycles": 30000,
+    "useWallFunctions": false,
+    "useQCR": false
+  },
+  "implausible_forces": null,
+  "relative_residual": 9.795251073068072e-07,
+  "residual_source": "adflow.iteration.totalrfinal/totalr0",
+  "l2_target": 1e-06,
+  "n_cycles_budget": 30000,
+  "grid": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_gci83/gci_C_volume.cgns",
+  "alpha_deg": 0.0,
+  "mission": {
+    "mach": 0.0837,
+    "reynolds": 1530708.188575197,
+    "reynolds_length_m": 0.9,
+    "temperature_K": 278.4,
+    "chord_ref_m": 0.9
+  },
+  "area_ref_m2": 0.39492,
+  "moment_ref_xyz_m": [
+    0.4,
+    0.0,
+    0.0
+  ],
+  "routine_failed": false,
+  "flow_directions": {
+    "lift_index_requested": 3,
+    "lift_index_realised": 3,
+    "alpha_deg": 0.0,
+    "velocity_direction_expected": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "velocity_direction_realised": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "velocity_direction_error": 0.0,
+    "lift_direction_expected": [
+      -0.0,
+      0.0,
+      1.0
+    ],
+    "lift_direction_realised": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "lift_direction_error": 0.0,
+    "tolerance": 1e-09
+  },
+  "solver_overrides": {
+    "vis4": 0.0312,
+    "useNKSolver": false
+  },
+  "solver_is_governed_configuration": false,
+  "functions": {
+    "s8_a0_cd": 0.024333888767517995,
+    "s8_a0_cdp": 0.015272969193459501,
+    "s8_a0_cdv": 0.009060919574058492,
+    "s8_a0_cl": -0.158401843993279,
+    "s8_a0_cmx": -0.07991594543593164,
+    "s8_a0_cmy": 0.0011116050581052505,
+    "s8_a0_cmz": -0.008972464033275415
+  }
+}

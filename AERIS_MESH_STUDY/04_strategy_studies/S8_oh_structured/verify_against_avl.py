@@ -63,7 +63,7 @@ def main() -> int:
     ap.add_argument("--index", type=int, default=83)
     ap.add_argument("--alphas", type=float, nargs="+", default=[-2.0, 0.0, 4.0, 8.0])
     ap.add_argument("--out", type=Path,
-                    default=REPO / "AERIS_MESH_STUDY/artifacts/s8_cfd/avl_verification")
+                    default=HERE / "runs/s8_cfd/avl_verification")
     # Lift is what this script exists to check, and AVL's lift is inviscid: the
     # viscous path only adds a NeuralFoil profile-drag correction on top. It is
     # also what made the first attempt time out, because it builds per-section

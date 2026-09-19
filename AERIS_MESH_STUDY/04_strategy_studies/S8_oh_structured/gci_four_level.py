@@ -34,13 +34,13 @@ ROOT = HERE.parents[2]
 sys.path.insert(0, str(HERE))
 import gci  # noqa: E402
 
-REPORTS = ROOT / "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports"
+REPORTS = HERE / "reports"
 #: Where each level's runs live. gci_C and gci_M were solved here; the cloud
 #: writes gci_F and gci_FF into s8_hf. Both are searched so the analysis works
 #: the same before and after the batch.
-SEARCH = [ROOT / "AERIS_MESH_STUDY/artifacts/s8_v2",
-          ROOT / "AERIS_MESH_STUDY/artifacts/s8_hf",
-          ROOT / "AERIS_MESH_STUDY/artifacts/s8_cloud"]
+SEARCH = [HERE / "runs/s8_v2",
+          HERE / "runs/s8_hf",
+          HERE / "runs/s8_cloud"]
 LEVELS = ["gci_C", "gci_M", "gci_F", "gci_FF"]          # coarse to fine
 
 #: Quantities the study reports. CL and CMy pass through zero on these wings, so
@@ -99,7 +99,7 @@ def solver_version(run: Path, index: int, level: str, alpha: float) -> str | Non
                 return str(env["solver_version"])
         except ValueError:
             pass
-    rows = ROOT / "AERIS_MESH_STUDY/05_s6_cfd_qualification/dataset_v2/rows.json"
+    rows = HERE / "data/dataset_v2/rows.json"
     if rows.exists():
         try:
             for r in json.loads(rows.read_text()):

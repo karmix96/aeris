@@ -2,7 +2,7 @@
 """Where does surface cp exceed its physical bound on an S8 O-H surface solution?
 
     .venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/locate_cp_excess.py \
-        --surface AERIS_MESH_STUDY/artifacts/s8_cfd/oh_L3_a0/s8_a0_000_surf.cgns
+        --surface AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cfd/oh_L3_a0/s8_a0_000_surf.cgns
 
 `check_cp_bound.py` answers whether the bound is exceeded.  It cannot answer
 where, because it concatenates every zone's cp array and throws the structure

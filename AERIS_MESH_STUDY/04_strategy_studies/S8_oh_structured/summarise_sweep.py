@@ -2,7 +2,7 @@
 """Read an S8 alpha sweep and report the lift curve, with the checks that matter.
 
     .venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/summarise_sweep.py \
-        --runs AERIS_MESH_STUDY/artifacts/s8_cfd/oh_L3_fixed_a*
+        --runs AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cfd/oh_L3_fixed_a*
 
 Three things this checks that a table of numbers would not:
 

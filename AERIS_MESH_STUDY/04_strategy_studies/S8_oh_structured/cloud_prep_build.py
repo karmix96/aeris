@@ -13,7 +13,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
-OUT = ROOT / "AERIS_MESH_STUDY/artifacts/s8_cloud"
+OUT = HERE / "runs/s8_cloud"
 VENV = ROOT / ".venv/bin/python"
 INDICES = [12, 13, 16, 23, 29, 36, 47, 65, 81, 83]
 
@@ -64,7 +64,7 @@ def main() -> int:
         print(f"  g{index:<3} {level:7s} {r['cells']:>9,} cells  {r['build_seconds']:>5.1f} s  "
               f"{r['solve_gib_ank_only']:>5.1f} GiB to solve  {flag}", flush=True)
     ok = [r for r in records if r.get("clean")]
-    report = ROOT / "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_cloud_meshes.json"
+    report = HERE / "reports/s8_cloud_meshes.json"
     report.write_text(json.dumps({
         "schema": "aeris.s8.cloud_mesh_manifest.v1",
         "built_on": "development host, for verification only; the cloud rebuilds from the same commit",

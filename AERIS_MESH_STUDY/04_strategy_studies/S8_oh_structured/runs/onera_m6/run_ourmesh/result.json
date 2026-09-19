@@ -1,0 +1,53 @@
+{
+  "case": {
+    "source": "NASA WIND validation archive, m6wing01",
+    "mach": 0.8395,
+    "alpha_deg": 3.06,
+    "reynolds": 11720000.0,
+    "reynolds_length": 0.540057,
+    "temperature_R": 460.0,
+    "temperature_K": 255.55555555555554,
+    "experiment": "Schmitt, V. and Charpin, F., AGARD AR-138, 1979 (test 2308)"
+  },
+  "geometry": {
+    "semispan": 1.0,
+    "root_chord": 0.6737,
+    "tip_chord": 0.3789,
+    "taper_ratio": 0.562,
+    "mac": 0.540057,
+    "half_area": 0.5263,
+    "le_sweep_deg": 30.0,
+    "nondimensionalised_by": "semispan"
+  },
+  "grid": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/m6_oh/m6_oh_volume.cgns",
+  "alpha_deg": 3.06,
+  "relative_residual": 9.993085592540755e-07,
+  "l2_target": 1e-06,
+  "converged": true,
+  "flow_directions": {
+    "lift_index_requested": 3,
+    "lift_index_realised": 3,
+    "velocity_direction_expected": [
+      0.9985741811195098,
+      0.0,
+      0.053381689758760474
+    ],
+    "velocity_direction_realised": [
+      0.9985741811195098,
+      0.0,
+      0.053381689758760474
+    ],
+    "velocity_direction_error": 0.0,
+    "lift_direction_error": 0.0
+  },
+  "solver_overrides": {
+    "useNKSolver": false
+  },
+  "functions": {
+    "m6_a3.06_cd": 0.01821630967439657,
+    "m6_a3.06_cdp": 0.013001356403805151,
+    "m6_a3.06_cdv": 0.005214953270591414,
+    "m6_a3.06_cl": 0.2793875914029548,
+    "m6_a3.06_cmy": -0.20265051573901288
+  }
+}

@@ -2,7 +2,7 @@
 """Output-based convergence gate for S8 CFD runs.
 
     .venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/convergence_gate.py \
-        --runs 'AERIS_MESH_STUDY/artifacts/s8_cfd/oh_L3_fixed_a*'
+        --runs 'AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cfd/oh_L3_fixed_a*'
 
 Why this replaces a single residual cutoff
 ------------------------------------------

@@ -41,7 +41,7 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 STUDY = HERE.parents[1]
-PILOT = STUDY / "artifacts/s8_pilot"
+PILOT = HERE / "runs/s8_pilot"
 SET_NAME = "lhs100_seed42"
 #: how close is close enough, and why
 TOLERANCE = {"root_chord_m": 0.01,          # 1 %: the mesh resolves the root exactly
@@ -121,7 +121,7 @@ def measure(wall: np.ndarray) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--out", type=Path, default=STUDY /
-                    "05_s6_cfd_qualification/reports/s8_geometry_audit.json")
+                    "reports/s8_geometry_audit.json")
     args = ap.parse_args()
 
     X, names = design_matrix()

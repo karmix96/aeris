@@ -1,0 +1,39 @@
+{
+  "case": {
+    "mach": 0.09,
+    "reynolds": 1520000.0,
+    "reynolds_length": 1.0,
+    "temperature_K": 297.77777777777777,
+    "alpha_deg": 13.87
+  },
+  "grid": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/tmr_naca4412/o512.cgns",
+  "relative_residual": 6.911867220483273e-09,
+  "l2_target": 1e-08,
+  "converged": true,
+  "solver_overrides": {
+    "eddyVisInfRatio": 0.21,
+    "ANKSubspaceSize": 50,
+    "ANKPCILUFill": 2,
+    "ANKCoupledSwitchTol": 0.0001,
+    "NKSwitchTol": 1e-05,
+    "NKSubspaceSize": 100,
+    "NKPCILUFill": 3,
+    "NKASMOverlap": 2,
+    "NKJacobianLag": 5
+  },
+  "functions": {
+    "n4412_cd": 0.030230976988306204,
+    "n4412_cdp": 0.023214993005494605,
+    "n4412_cdv": 0.0070159839828115855,
+    "n4412_cl": 1.743856972891006,
+    "n4412_cmz": 0.07389802677651656
+  },
+  "u_inf_m_s": 31.134017928223944,
+  "coefficients": {
+    "CL": 1.743856972891006,
+    "CD": 0.030230976988306204,
+    "CDp": 0.023214993005494605,
+    "CDv": 0.0070159839828115855,
+    "CM": -0.07389802677651656
+  }
+}

@@ -39,8 +39,8 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[2]
-OUT = REPO / "AERIS_MESH_STUDY/artifacts/tmr_naca0012"
-REPORT = REPO / "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_naca0012_tmr.json"
+OUT = HERE / "runs/tmr_naca0012"
+REPORT = HERE / "reports/s8_naca0012_tmr.json"
 
 #: TMR verification case, naca0012numerics_val.html. T ref 540 R.
 CASE = {"mach": 0.15, "reynolds": 6.0e6, "reynolds_length": 1.0,

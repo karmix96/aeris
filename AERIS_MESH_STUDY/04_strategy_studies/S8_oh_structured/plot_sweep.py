@@ -57,11 +57,11 @@ def read_history(log: Path):
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--runs", default="AERIS_MESH_STUDY/artifacts/s8_cfd/oh_L3_fixed_a*")
-    ap.add_argument("--avl", default="AERIS_MESH_STUDY/artifacts/s8_cfd/avl_verification_xref04")
-    ap.add_argument("--avl-fallback", default="AERIS_MESH_STUDY/artifacts/s8_cfd/avl_verification")
+    ap.add_argument("--runs", default="AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cfd/oh_L3_fixed_a*")
+    ap.add_argument("--avl", default="AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cfd/avl_verification_xref04")
+    ap.add_argument("--avl-fallback", default="AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cfd/avl_verification")
     ap.add_argument("--out", type=Path,
-                    default=Path("AERIS_MESH_STUDY/artifacts/s8_cfd/s8_sweep_polars.png"))
+                    default=Path("AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cfd/s8_sweep_polars.png"))
     args = ap.parse_args()
 
     import matplotlib
@@ -318,7 +318,7 @@ def main() -> int:
     # per-cell residual does not make. A solver can drive resrho to 1e-8 on a
     # domain whose boundary fluxes do not close.
     a7 = ax[0, 4]
-    mb_path = Path("AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_mass_balance.json")
+    mb_path = HERE / ("reports/s8_mass_balance.json")
     if mb_path.exists():
         mb = {r["alpha_deg"]: r for r in json.loads(mb_path.read_text())["runs"]}
         ks = sorted(k for k in mb if k in alphas)

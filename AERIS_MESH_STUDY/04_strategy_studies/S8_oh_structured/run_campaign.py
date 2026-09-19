@@ -64,8 +64,8 @@ sys.path.insert(0, str(HERE))
 
 import env_s8  # noqa: E402
 
-ARTIFACTS = REPO / "AERIS_MESH_STUDY/artifacts"
-REPORTS = REPO / "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports"
+ARTIFACTS = HERE / "runs"
+REPORTS = HERE / "reports"
 POLICY = REPO / "AERIS_MESH_STUDY/05_s6_cfd_qualification/POLICY.yaml"
 GCI83 = ARTIFACTS / "s8_gci83"
 CFD = ARTIFACTS / "s8_cfd"
@@ -129,7 +129,12 @@ def check_authorization() -> dict:
             f"This campaign needs its own signed entry (PLAN section 6). Not running."
         )
     entry = exceptions[POLICY_EXCEPTION]
-    detail = REPO / "AERIS_MESH_STUDY/05_s6_cfd_qualification" / entry["policy"]
+    # S8's policies moved beside the code on 2026-09-19; S6's did not. Look in
+    # both, S8 first, so a policy named in the shared POLICY.yaml resolves either
+    # way and an S6 entry is not broken by S8's consolidation.
+    detail = HERE / entry["policy"]
+    if not detail.exists():
+        detail = REPO / "AERIS_MESH_STUDY/05_s6_cfd_qualification" / entry["policy"]
     if not detail.exists():
         raise SystemExit(f"the policy file {detail} referenced by POLICY.yaml is missing.")
     signed = yaml.safe_load(detail.read_text()).get("authorization", {})

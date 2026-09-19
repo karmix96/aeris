@@ -64,8 +64,8 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[2]
-ARCHIVE = REPO / "AERIS_MESH_STUDY/05_s6_cfd_qualification/external/onera_m6"
-REPORTS = REPO / "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports"
+ARCHIVE = HERE / "external/onera_m6"
+REPORTS = HERE / "reports"
 
 #: TMR Case 2308.  See the module docstring for why this is not what PLAN 5 says.
 CASE = {
@@ -216,7 +216,7 @@ def cmd_fetch(args) -> int:
         "span stations (NASA WIND validation archive, upper and lower surface "
         "per station), the TMR case files, the section profiles, and the "
         "sharp-trailing-edge CAD. Archived into the repository because "
-        "artifacts/ is gitignored and wiped, and because experimental data "
+        "runs/ keeps its bulk out of git, and because experimental data "
         "gets harder to obtain with time, not easier.")
     manifest["what_is_missing"] = (
         "The GRID FAMILY. Run the `grids` subcommand: TMR publishes a grid "

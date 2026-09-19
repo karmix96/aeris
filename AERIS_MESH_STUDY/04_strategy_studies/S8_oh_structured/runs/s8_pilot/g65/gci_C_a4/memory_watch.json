@@ -1,0 +1,745 @@
+{
+  "peak_rank_rss_sum_gib": 5.78,
+  "peak_swap_used_gib": 0.07,
+  "aborted_reason": null,
+  "samples": [
+    {
+      "t": 5.0,
+      "available_gib": 10.2,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 2.72
+    },
+    {
+      "t": 10.0,
+      "available_gib": 7.35,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.58
+    },
+    {
+      "t": 15.0,
+      "available_gib": 7.35,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.58
+    },
+    {
+      "t": 20.0,
+      "available_gib": 7.14,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 23.4,
+      "available_gib": 7.15,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 28.5,
+      "available_gib": 7.16,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 33.5,
+      "available_gib": 7.17,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 38.5,
+      "available_gib": 7.2,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 43.5,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 48.5,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 51.9,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 56.9,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 61.9,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 66.9,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 71.9,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 76.9,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 81.9,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 85.3,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 90.3,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 95.3,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 100.3,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 105.3,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 110.3,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 113.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 118.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 123.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 128.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 133.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 138.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 142.1,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 147.2,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 152.2,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 157.2,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 162.2,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 167.2,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 172.2,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 175.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 180.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 185.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 190.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 195.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 200.8,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 204.2,
+      "available_gib": 7.19,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 209.2,
+      "available_gib": 7.2,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 214.2,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 219.3,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 224.3,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 229.3,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 234.3,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 237.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 242.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 247.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 252.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 257.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 262.8,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 266.1,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 271.1,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 276.2,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 281.2,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 286.2,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 291.2,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 296.2,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 299.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 304.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 309.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 314.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 319.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 324.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 328.1,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 333.1,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 338.2,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 343.2,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 348.2,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 353.2,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 356.6,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 361.6,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 366.6,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 371.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 376.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 381.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 386.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 390.1,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 395.1,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 400.1,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 405.1,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 410.1,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 415.1,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 418.5,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 423.5,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 428.5,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 433.5,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 438.5,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 443.5,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 448.5,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 451.9,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 456.9,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 462.0,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 467.0,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 472.0,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 477.0,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 480.4,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 485.4,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 490.4,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 495.4,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 500.4,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 505.4,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 510.4,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 513.8,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 518.8,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 523.8,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 528.8,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 533.8,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 538.9,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 542.3,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 547.3,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 552.3,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 557.3,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 562.3,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 567.3,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 572.3,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 575.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 580.7,
+      "available_gib": 7.21,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 5.78
+    },
+    {
+      "t": 585.7,
+      "available_gib": 12.75,
+      "swap_used_gib": 0.07,
+      "rank_rss_sum_gib": 0.02
+    }
+  ]
+}

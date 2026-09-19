@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """What does stopping the solver earlier actually cost the forces?
 
-    .venv/bin/python .../l2_sensitivity.py --runs 'AERIS_MESH_STUDY/artifacts/s8_cfd/gci_C_a*' \
-        --out AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_l2_sensitivity.json
+    .venv/bin/python .../l2_sensitivity.py --runs 'AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cfd/gci_C_a*' \
+        --out AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/reports/s8_l2_sensitivity.json
 
 The evidence behind `--l2 1e-6`, kept reproducible rather than quoted once in a
 commit message.

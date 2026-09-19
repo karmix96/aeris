@@ -38,9 +38,9 @@ from naca0012_tmr import richardson, write_surface
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[2]
-OUT = REPO / "AERIS_MESH_STUDY/artifacts/tmr_naca4412"
-EXTERNAL = REPO / "AERIS_MESH_STUDY/05_s6_cfd_qualification/external/naca4412"
-REPORT = REPO / "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_naca4412_tmr.json"
+OUT = HERE / "runs/tmr_naca4412"
+EXTERNAL = HERE / "external/naca4412"
+REPORT = HERE / "reports/s8_naca4412_tmr.json"
 
 #: n4412_cfl3d_typical_sa.inp: XMACH 0.09, ALPHA 13.87, REUE 1.52 million, TINF 536 R
 CASE = {"mach": 0.09, "reynolds": 1.52e6, "reynolds_length": 1.0,

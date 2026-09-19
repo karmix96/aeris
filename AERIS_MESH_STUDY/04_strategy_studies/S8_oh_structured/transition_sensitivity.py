@@ -57,7 +57,7 @@ def polar(nf, coords: np.ndarray, re: float, xtr: float) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--out", type=Path, default=STUDY /
-                    "05_s6_cfd_qualification/reports/s8_transition_sensitivity.json")
+                    "reports/s8_transition_sensitivity.json")
     args = ap.parse_args()
     import neuralfoil as nf
 

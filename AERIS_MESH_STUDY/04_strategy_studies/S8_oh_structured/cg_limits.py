@@ -23,8 +23,8 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 STUDY = HERE.parents[1]
-ROWS = STUDY / "05_s6_cfd_qualification/dataset/rows.json"
-PILOT = STUDY / "artifacts/s8_pilot"
+ROWS = HERE / "data/dataset/rows.json"
+PILOT = HERE / "runs/s8_pilot"
 #: the CFD moment reference and chordRef, identical for every design
 X_REF, C_REF = 0.40, 0.9
 MARGINS = (0.05, 0.10)
@@ -114,7 +114,7 @@ def avl_neutral_point(index: int) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--out", type=Path,
-                    default=STUDY / "05_s6_cfd_qualification/reports/s8_cg_limits.json")
+                    default=HERE / "reports/s8_cg_limits.json")
     args = ap.parse_args()
 
     nps = cfd_neutral_points(load_rows())

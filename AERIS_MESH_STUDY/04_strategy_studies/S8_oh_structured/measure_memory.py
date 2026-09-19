@@ -91,7 +91,7 @@ def main() -> int:
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
 
-    workdir = REPO / "AERIS_MESH_STUDY/artifacts/s8_memory"
+    workdir = HERE / "runs/s8_memory"
     workdir.mkdir(parents=True, exist_ok=True)
     options = {
         "gridFile": str(args.grid), "outputDirectory": str(workdir),

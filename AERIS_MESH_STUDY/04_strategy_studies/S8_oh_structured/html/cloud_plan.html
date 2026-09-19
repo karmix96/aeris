@@ -1,0 +1,721 @@
+<title>The high-fidelity cloud batch: what is ready, what it costs, and what must be true first</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+:root{
+  --ground:#f3f5f6; --surface:#ffffff; --sunk:#eceff1;
+  --ink:#141a1f; --ink-2:#5c6973; --ink-3:#8a959d;
+  --rule:#dce2e6; --rule-2:#c7d0d6;
+  --accent:#0e5e76; --accent-ink:#0b4b5f; --accent-wash:#e3eef2;
+  --good:#1c6e4c; --warn:#8a5a06; --bad:#9c3535;
+  --sans:"IBM Plex Sans",ui-sans-serif,system-ui,"Segoe UI",sans-serif;
+  --serif:"Source Serif 4",Charter,"Iowan Old Style",Georgia,serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --rail:17rem;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0f1419; --surface:#151c22; --sunk:#1b232a;
+    --ink:#e3e9ed; --ink-2:#8d9daa; --ink-3:#6b7a86;
+    --rule:#242e36; --rule-2:#313e48;
+    --accent:#56b8d6; --accent-ink:#7fcde4; --accent-wash:#15303a;
+    --good:#4cae83; --warn:#d0983c; --bad:#e07a7a;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0f1419; --surface:#151c22; --sunk:#1b232a;
+  --ink:#e3e9ed; --ink-2:#8d9daa; --ink-3:#6b7a86;
+  --rule:#242e36; --rule-2:#313e48;
+  --accent:#56b8d6; --accent-ink:#7fcde4; --accent-wash:#15303a;
+  --good:#4cae83; --warn:#d0983c; --bad:#e07a7a;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--serif);
+  font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:81rem;margin:0 auto;padding-inline:20px;padding-block:0 5rem}
+
+/* ---- masthead ---- */
+.mast{border-bottom:1px solid var(--rule);padding-block:3.25rem 2rem;margin-bottom:2.5rem}
+.eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 1rem}
+.mast h1{font-family:var(--sans);font-weight:600;font-size:clamp(1.9rem,1.2rem + 2.6vw,3.1rem);
+  line-height:1.1;letter-spacing:-.02em;margin:0;text-wrap:balance;max-width:20ch}
+.stand{color:var(--ink-2);font-size:1.08rem;max-width:56ch;margin:1.1rem 0 0}
+.meta{font-family:var(--mono);font-size:.76rem;color:var(--ink-3);margin:1.75rem 0 0;
+  display:flex;flex-wrap:wrap;gap:.5rem 1.5rem}
+.meta b{font-weight:500;color:var(--ink-2)}
+
+/* ---- layout ---- */
+.page{display:grid;grid-template-columns:minmax(0,1fr);gap:2rem}
+@media (min-width:1040px){
+  .page{grid-template-columns:var(--rail) minmax(0,1fr);gap:4rem;align-items:start}
+}
+
+/* ---- contents rail ---- */
+.rail{font-family:var(--sans);font-size:.83rem;line-height:1.45}
+@media (min-width:1040px){
+  .rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 1.5rem);
+    max-height:calc(100vh - 4rem);overflow-y:auto;padding-right:.5rem;
+    border-right:1px solid var(--rule)}
+}
+.rail summary{font-family:var(--sans);font-weight:600;cursor:pointer;padding:.7rem .9rem;
+  background:var(--surface);border:1px solid var(--rule);border-radius:7px;font-size:.9rem}
+@media (min-width:1040px){.rail summary{display:none}
+  .rail details{display:contents}}
+.rail-inner{display:flex;flex-direction:column;gap:1px;padding-top:.75rem}
+.rail a{text-decoration:none;color:var(--ink-2);padding:.3rem .7rem;border-left:2px solid transparent;
+  display:block;border-radius:0 3px 3px 0}
+.rail a:hover{color:var(--ink);background:var(--sunk)}
+.rail a.r2{font-weight:600;color:var(--ink);margin-top:.55rem}
+.rail a.r3{padding-left:1.45rem;font-size:.79rem}
+.rail a.on{border-left-color:var(--accent);color:var(--accent-ink);background:var(--accent-wash)}
+.rail-group{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-3);margin:1.75rem 0 .35rem;padding-left:.7rem}
+.rail a.r-add{font-weight:400;color:var(--ink-2);margin-top:0}
+.rdate{display:block;font-family:var(--mono);font-size:.68rem;color:var(--ink-3)}
+
+/* ---- article ---- */
+article{min-width:0;max-width:70ch}
+article h2{font-family:var(--sans);font-weight:600;font-size:1.6rem;letter-spacing:-.015em;
+  line-height:1.2;margin:3.5rem 0 1rem;padding-top:1.5rem;border-top:1px solid var(--rule);
+  text-wrap:balance;scroll-margin-top:1.5rem}
+article h2:first-child{margin-top:0;border-top:0;padding-top:0}
+article h3{font-family:var(--sans);font-weight:600;font-size:1.13rem;letter-spacing:-.005em;
+  margin:2.5rem 0 .65rem;text-wrap:balance;scroll-margin-top:1.5rem}
+article p{margin:0 0 1.15rem}
+article strong{font-weight:600}
+article a{color:var(--accent-ink);text-underline-offset:2px}
+article ul,article ol{margin:0 0 1.3rem;padding-left:1.35rem}
+article li{margin-bottom:.5rem}
+article li::marker{color:var(--ink-3)}
+article blockquote{margin:1.5rem 0;padding:.2rem 0 .2rem 1.25rem;border-left:2px solid var(--rule-2);
+  color:var(--ink-2);font-style:italic}
+code{font-family:var(--mono);font-size:.855em;background:var(--sunk);padding:.12em .36em;
+  border-radius:3px;word-break:break-word}
+
+/* ---- tables: the report is mostly measurements ---- */
+.tw{overflow-x:auto;margin:1.6rem 0;border:1px solid var(--rule);border-radius:7px;
+  background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-family:var(--sans);font-size:.85rem;
+  font-variant-numeric:tabular-nums;line-height:1.45}
+th,td{padding:.55rem .85rem;text-align:left;border-bottom:1px solid var(--rule);white-space:nowrap}
+th{font-weight:600;font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-2);background:var(--sunk);position:sticky;top:0}
+tbody tr:last-child td{border-bottom:0}
+td code{background:none;padding:0}
+
+/* ---- addenda: a dated sequence, so the date is structure ---- */
+.addendum{margin-top:3.5rem;padding-top:1.5rem;border-top:1px solid var(--rule)}
+.addendum .when{font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;color:var(--accent);
+  margin:0 0 .4rem;text-transform:uppercase}
+.addendum h2.h-add{margin:0 0 1rem;border-top:0;padding-top:0;font-size:1.45rem}
+.addendum h3{font-size:1.04rem}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <p class="eyebrow">S8 CLOUD BATCH PLAN</p>
+    <h1>The high-fidelity cloud batch: what is ready, what it costs, and what must be true first</h1>
+    <p class="stand"></p>
+    <p class="meta"><span><b>Source</b> S8_CLOUD_BATCH_PLAN.md</span></p>
+  </header>
+
+  <div class="page">
+    <nav class="rail" aria-label="Contents">
+      <details>
+        <summary>Contents</summary>
+        <div class="rail-inner"><a class="r2" href="#1-what-is-built-and-verified">1. What is built and verified</a>
+<a class="r2" href="#2-cost-and-time">2. Cost and time</a>
+<a class="r3" href="#the-timing-model-and-why-it-is-better-than-the-old-one">The timing model, and why it is better than the old one</a>
+<a class="r3" href="#ranks-four-not-six-or-twenty-four">Ranks: four, not six or twenty-four</a>
+<a class="r3" href="#the-bill">The bill</a>
+<a class="r3" href="#machine-shape">Machine shape</a>
+<a class="r2" href="#3-the-pilot-gate-spend-2-first">3. The pilot gate — spend 2 % first</a>
+<a class="r2" href="#4-the-checklist-everything-that-must-be-true-before-money-is-spent">4. The checklist — everything that must be true before money is spent</a>
+<a class="r3" href="#a-the-measuring-instruments-no-cfd-this-is-the-reviews-g0">A. The measuring instruments (no CFD; this is the review&#x27;s G0)</a>
+<a class="r3" href="#b-identity-of-every-paid-run-implemented-in-cloud-identitypy">B. Identity of every paid run — implemented in cloud_identity.py</a>
+<a class="r3" href="#c-operational-implemented-in-cloud-batch-runpy">C. Operational — implemented in cloud_batch_run.py</a>
+<a class="r2" href="#5-what-the-batch-must-deliver-stated-before-it-runs">5. What the batch must deliver, stated before it runs</a>
+<a class="r2" href="#6-what-this-batch-does-not-settle">6. What this batch does not settle</a></div>
+      </details>
+    </nav>
+    <article><p>Written 2026-09-18. Supersedes <code>reports/s8_cloud_batch.json</code> (2026-09-09), every figure in
+which was an estimate. Every number below is measured unless it says otherwise.</p>
+<p>The decision this batch exists to serve: <strong>can S8 rank BWB designs by drag?</strong> Tonight's two-grid
+result says the grid error in a wing-to-wing <em>difference</em> is 0.85–4.39 counts against a
+trailing-edge credit of 5.27–8.98 counts. That is the question a third and fourth level answers,
+and it cannot be answered on the development host: <code>gci_F</code> needs 20.6 GiB and <code>gci_FF</code> 38.4 GiB
+against 12.8 GiB available.</p>
+
+</section>
+<h2 id="1-what-is-built-and-verified">1. What is built and verified</h2>
+<p>All eleven meshes were built and checked here on 2026-09-18 before any machine is rented.
+<code>reports/s8_cloud_meshes.json</code> carries the full record.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>level</th>
+<th>geometries</th>
+<th>cells</th>
+<th>folded</th>
+<th>wall-layer error</th>
+<th>solve memory</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gci_F</code></td>
+<td>12, 13, 16, 23, 29, 36, 47, 65, 81, 83</td>
+<td>2,322,128 – 2,339,536</td>
+<td><strong>0 on all ten</strong></td>
+<td>≤ 3.0e-16 m</td>
+<td>20.5 – 20.6 GiB</td>
+</tr>
+<tr>
+<td><code>gci_FF</code></td>
+<td>83</td>
+<td>4,682,524</td>
+<td><strong>0</strong></td>
+<td>2.2e-16 m</td>
+<td>38.4 GiB</td>
+</tr>
+</tbody>
+</table></div>
+<p>Build cost is negligible — 25–45 s and 1.7 GiB peak per mesh — so <strong>the cloud rebuilds them from
+the same commit rather than having gigabytes shipped to it.</strong> Building them here is a preflight,
+not a delivery: the point is that a folded <code>gci_FF</code> is discovered now and not after the meter
+starts.</p>
+<p><strong>The CGNS writer is proven at full size.</strong> <code>gci_FF</code> wrote in 6.1 s at 0.45 GiB peak: a 115 MB
+file, 14 block-to-block connections, 7 boundary conditions, root plane at y = 4.8e-18 m. That
+was an open risk and it is closed.</p>
+<p><strong>The four-level family on the reference geometry is self-similar.</strong> Interval counts in the
+<code>o_wing</code> block, and the ratio at each step:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>level</th>
+<th>o_wing intervals</th>
+<th>cells</th>
+<th>ratio on the previous level</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gci_C</code></td>
+<td>92 / 64 / 48</td>
+<td>603,592</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>gci_M</code></td>
+<td>120 / 83 / 62</td>
+<td>1,172,856</td>
+<td>1.304 / 1.297 / 1.292</td>
+</tr>
+<tr>
+<td><code>gci_F</code></td>
+<td>156 / 108 / 81</td>
+<td>2,322,128</td>
+<td>1.300 / 1.301 / 1.306</td>
+</tr>
+<tr>
+<td><code>gci_FF</code></td>
+<td>204 / 141 / 105</td>
+<td>4,682,524</td>
+<td>1.308 / 1.306 / 1.296</td>
+</tr>
+</tbody>
+</table></div>
+<p>Every step is 1.29–1.31 in every direction, which is the r ≥ 1.3 that Celik and the ASME
+procedure ask for. <code>ds_te_frac</code> and <code>s0_frac</code> scale with it (0.001 → 0.000769 → 0.000592 →
+0.000455 and 3.60e-6 → 2.77e-6 → 2.13e-6 → 1.64e-6). <strong><code>gci_CC</code> and <code>gci_MF</code> are NOT in this
+family</strong> — both are generated from <code>oh_L3</code> and carry its old trailing-edge target, <code>gci_CC</code> at
+0.0052 against the 0.0013 the family wants and <code>gci_MF</code> off by exactly ×4. They must not be used
+as cheap substitute levels.</p>
+
+</section>
+<h2 id="2-cost-and-time">2. Cost and time</h2>
+<h3 id="the-timing-model-and-why-it-is-better-than-the-old-one">The timing model, and why it is better than the old one</h3>
+<p>52 solves on 2026-09-17 give a two-factor decomposition the old single figure did not have:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>level</th>
+<th>cells</th>
+<th>iterations (mean)</th>
+<th>minutes at 6 ranks</th>
+<th><strong>seconds per Mcell-iteration</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gci_C</code></td>
+<td>607,226</td>
+<td>203</td>
+<td>19.4</td>
+<td><strong>9.44</strong></td>
+</tr>
+<tr>
+<td><code>gci_M</code></td>
+<td>1,176,284</td>
+<td>262</td>
+<td>51.2</td>
+<td><strong>9.97</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>The cost of a cell is flat across the two levels — 9.44 vs 9.97 s, a 6 % spread. <strong>All of the
+superlinearity is iteration count</strong>, which rose ×1.29 from C to M. So the model is
+<code>minutes = Mcells × iterations × 9.7 s / 60</code>, with iterations extrapolated at ×1.29 per level.</p>
+<blockquote>
+<p><strong>Weakest link, stated plainly.</strong> That ×1.29 is one measured ratio extrapolated two levels. It
+is the dominant uncertainty in the bill, and the low/high band below brackets it at flat and at
+×1.5 per level.</p>
+</blockquote>
+<h3 id="ranks-four-not-six-or-twenty-four">Ranks: four, not six or twenty-four</h3>
+<p>The measured rank probe is 2121 / 1121 / 849 / 827 s at 1 / 2 / 4 / 6 ranks.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>ranks</th>
+<th>wall time vs 6</th>
+<th>core-hours vs 6</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2</td>
+<td>×1.355</td>
+<td>×0.452</td>
+</tr>
+<tr>
+<td><strong>4</strong></td>
+<td><strong>×1.027</strong></td>
+<td><strong>×0.684</strong></td>
+</tr>
+<tr>
+<td>6</td>
+<td>×1.000</td>
+<td>×1.000</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Four ranks is 2.7 % slower than six and costs 32 % less.</strong> Six was right for the development
+host, where finishing one case sooner mattered. The cloud runs 44 <em>independent</em> cases, so
+throughput is what is being bought and per-case latency is nearly irrelevant. The old plan's
+24 ranks per case is the worst of both.</p>
+<p>The old plan also assumed 75 % parallel efficiency at 24 ranks. Measured efficiency is 42.7 % at
+6. Nothing in the record supports 75 %.</p>
+<h3 id="the-bill">The bill</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>level</th>
+<th>cases</th>
+<th>minutes each (4 ranks)</th>
+<th>core-hours</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gci_F</code></td>
+<td>40</td>
+<td>131</td>
+<td>349</td>
+</tr>
+<tr>
+<td><code>gci_FF</code></td>
+<td>4</td>
+<td>339</td>
+<td>90</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>44</strong></td>
+<td></td>
+<td><strong>439</strong></td>
+</tr>
+</tbody>
+</table></div>
+<div class="tw"><table>
+<thead>
+<tr>
+<th></th>
+<th>core-hours</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>low (iterations flat)</td>
+<td>325</td>
+</tr>
+<tr>
+<td><strong>central</strong></td>
+<td><strong>439</strong></td>
+</tr>
+<tr>
+<td>high (iterations ×1.5/level)</td>
+<td>528</td>
+</tr>
+<tr>
+<td>central + 20 % retry margin</td>
+<td><strong>527</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Core-hours is the hard number. Money is core-hours times a rate, and no rate is asserted
+here — confirm it at purchase.</strong> For orientation only, mainstream on-demand memory-optimised
+instances land around $0.10–0.15 per <em>physical</em> core-hour, spot and bare-metal providers
+around $0.02–0.05. On that spread the batch is roughly <strong>$10–80</strong>, most likely $25–60. This is
+a small batch; the real financial risk is not the rate, it is paying twice because something in
+§4 was not true the first time.</p>
+<h3 id="machine-shape">Machine shape</h3>
+<p>Memory per core at 4 ranks is <strong>5.2 GiB for <code>gci_F</code> and 9.6 GiB for <code>gci_FF</code></strong>. Compute-optimised
+instances (4 GiB per physical core) <strong>will not hold <code>gci_FF</code></strong>. Use a memory-optimised type, or
+run the four FF cases at 8 ranks to halve the per-core requirement at a 30 % core-hour premium on
+those four cases only.</p>
+<p>Concurrency is <code>min(cores / 4, RAM / 20.6)</code> for F and <code>min(cores / 4, RAM / 38.4)</code> for FF:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>node</th>
+<th>concurrent F</th>
+<th>concurrent FF</th>
+<th>total wall time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>16 physical cores, 128 GiB</td>
+<td>4</td>
+<td>3</td>
+<td>≈ 33 h</td>
+</tr>
+<tr>
+<td>32 physical cores, 256 GiB</td>
+<td>8</td>
+<td>6</td>
+<td>≈ 17 h</td>
+</tr>
+<tr>
+<td>64 physical cores, 512 GiB</td>
+<td>10 (case-bound)</td>
+<td>4 (case-bound)</td>
+<td>≈ 14 h</td>
+</tr>
+</tbody>
+</table></div>
+<p>Pin ranks to physical cores; do not let the scheduler put two ranks on one core's hyperthreads.</p>
+
+</section>
+<h2 id="3-the-pilot-gate-spend-2-first">3. The pilot gate — spend 2 % first</h2>
+<p><strong>Run one <code>gci_F</code> case and one <code>gci_FF</code> case, end to end, and stop.</strong> Cost: about 20 core-hours,
+under 5 % of the batch. It is the only way to test the three extrapolations this plan rests on:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>what the pilot measures</th>
+<th>what it is being checked against</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>peak resident memory</td>
+<td>the ANK-only law <code>(2.69 + 7.23 × Mcells) × 1.05</code>, a <strong>two-point fit extrapolated to 4× its largest input</strong></td>
+</tr>
+<tr>
+<td>iterations to 1e-6</td>
+<td>the ×1.29-per-level growth assumption</td>
+</tr>
+<tr>
+<td>seconds per Mcell-iteration</td>
+<td>9.7 s, measured only up to 1.17M cells</td>
+</tr>
+<tr>
+<td><strong>does ANK-only converge at all</strong></td>
+<td>see below</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p><strong>The largest technical risk in this batch.</strong> ANK-only is proven to 1,172,856 cells. It was
+chosen <em>because</em> Newton-Krylov froze at that size with this project's lean preconditioner —
+NKSubspaceSize 20 and NKPCILUFill 1 against ADflow's defaults of 60 and 2 — at Step 0.01 and
+linear residual 1.000. At 2.3M and 4.7M cells ANK-only is <strong>unproven</strong>. If it stalls at
+<code>gci_FF</code>, the fallback is restoring ADflow's NK defaults, which needs about 2 GiB more per case
+on the <code>1.51 + 9.46 × Mcells</code> law — 46.8 GiB for <code>gci_FF</code> — and is itself unproven here.
+Discover this on one case, not forty-four.</p>
+</blockquote>
+<p>Proceed to the other 42 only when all four rows above are confirmed.</p>
+
+</section>
+<h2 id="4-the-checklist-everything-that-must-be-true-before-money-is-spent">4. The checklist — everything that must be true before money is spent</h2>
+<h3 id="a-the-measuring-instruments-no-cfd-this-is-the-reviews-g0">A. The measuring instruments (no CFD; this is the review's G0)</h3>
+<p>The 2026-09-16 external review demonstrated, with synthetic counterexamples fed to the real
+functions, that several checkers accept what they should reject. Two of its predictions were
+confirmed live in data generated on 2026-09-17 and are already fixed. Paying for 44 runs whose
+provenance or verdicts cannot be trusted is the single most expensive mistake available here.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>item</th>
+<th>state</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A1</td>
+<td>Per-run record directories carry the geometry (defect 25)</td>
+<td><strong>done</strong>, 16 Sept</td>
+</tr>
+<tr>
+<td>A2</td>
+<td>Surface-field archives carry the geometry, hash read back from the stored bytes (defect 26)</td>
+<td><strong>done</strong> 18 Sept — had been 44 of 52 rows pointing at another wing's flow</td>
+</tr>
+<tr>
+<td>A3</td>
+<td>y+ statistics masked to wall zones (defect 27)</td>
+<td><strong>done</strong> 18 Sept — 82.2 % of the sample had been far field</td>
+</tr>
+<tr>
+<td>A4</td>
+<td><code>gci.py</code> refuses a family whose successive differences grow under refinement (defect 28)</td>
+<td><strong>done</strong> 18 Sept — it had returned p = +2, &quot;ok&quot;, GCI 37 % on f(h) = 1 + h⁻²</td>
+</tr>
+<tr>
+<td>A5</td>
+<td><code>audit_runs.checks</code> fails closed on missing or NaN fields (defect 29)</td>
+<td><strong>done</strong> 18 Sept. A <code>REQUIRED</code> schema runs before every physical check; &quot;I cannot check this&quot; is now a finding. Deleting or NaN-ing any of sixteen fields had produced no finding at all</td>
+</tr>
+<tr>
+<td>A6</td>
+<td>A force still travelling cannot be accepted on the residual route (defect 30)</td>
+<td><strong>done</strong> 18 Sept. A history at residual 1e-8 with CL running −0.1 → 2.0 was ACCEPTED &quot;via residual target&quot;; it is now REJECTED</td>
+</tr>
+<tr>
+<td>A7</td>
+<td>Moment reference compared on all three components</td>
+<td><strong>done</strong> 18 Sept. <code>[0.4, 3, 4]</code> — a moment about a point 3 m out on a 1.25 m half-span — had passed, because only x was read</td>
+</tr>
+<tr>
+<td>A8</td>
+<td>Every counterexample committed as a regression test</td>
+<td><strong>done</strong> 18 Sept — <code>test_checkers_reject.py</code>, 25 assertions, all passing</td>
+</tr>
+<tr>
+<td>A9</td>
+<td><code>hex_volumes</code> checks the local Jacobian, not just summed signed volume</td>
+<td>OPEN, not blocking. A cell with a −1.4 corner Jacobian passes the present test. All eleven meshes cleared the weaker check; this strengthens it</td>
+</tr>
+<tr>
+<td>A10</td>
+<td>Cap-perimeter gap check compares whole vectors, not per-axis sorted coordinates</td>
+<td>OPEN, low</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>A5–A8 are closed.</strong> Two things are worth recording about how.</p>
+<p>The runaway guard in A6 had to be written twice. The first version was purely relative, and it
+rejected two real runs — <code>g36/gci_C_a0</code> and <code>g65/gci_C_a0</code> — whose CL sits at −0.032 and −0.0087
+at zero incidence, so an absolute tail movement of 1.8e-4 reads as 2.07 %. That is the near-zero
+percentage trap the review names, met in the act of fixing something else. The guard now requires
+a movement to be <em>both</em> relatively large and absolutely material, and the two tests are an order
+of magnitude clear of each other at both ends: the real runs move 1.8e-4 in CL, the counterexample
+moves 0.35.</p>
+<p>Writing it also surfaced a latent bug of the project's own. Inside <code>gate</code>, the name <code>tail</code> is the
+force history that the <code>spread</code> and <code>rel</code> closures read — and the linear-residual block rebinds
+it to a 1-D slice. Any check added after that point breaks. Nothing had been added after that
+point until now, which is the only reason it had never fired. The linear-residual slice has its
+own name now.</p>
+<p><strong>All 52 runs from 2026-09-17 were re-gated under the new rules and all 52 remain ACCEPTED.</strong></p>
+<h3 id="b-identity-of-every-paid-run-implemented-in-cloud-identitypy">B. Identity of every paid run — <strong>implemented in <code>cloud_identity.py</code></strong></h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>item</th>
+<th>state</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B1</td>
+<td>Geometry, mesh <strong>bytes</strong>, mesher and solver commit, fully resolved options, physical inputs, force references</td>
+<td><strong>done</strong> — <code>run_manifest()</code></td>
+</tr>
+<tr>
+<td>B2</td>
+<td><code>g83/F/α0</code> is a label, never an identity — deterministic <code>case_id</code> from the inputs, separate <code>execution_id</code> per attempt</td>
+<td><strong>done</strong> — verified that a changed mesh, geometry or setting changes the id</td>
+</tr>
+<tr>
+<td>B3</td>
+<td>Archive copies to a <code>.part</code>, hashes the <strong>stored</strong> bytes, and only then renames into place</td>
+<td><strong>done</strong> — a killed job leaves a <code>.part</code>, never a plausible wrong answer</td>
+</tr>
+<tr>
+<td>B4</td>
+<td>Reference area is each geometry's own (defect 23)</td>
+<td><strong>done</strong> — the batch refuses to start if any geometry's area is missing</td>
+</tr>
+<tr>
+<td>B5</td>
+<td>The 17 Sept <code>gci_C</code>/<code>gci_M</code> results carried in at the same settings and commit</td>
+<td><strong>done</strong> — <code>gci_four_level.py</code>; the compatibility check passes on the real pair and the four-level path is verified against a constructed answer</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="c-operational-implemented-in-cloud-batch-runpy">C. Operational — <strong>implemented in <code>cloud_batch_run.py</code></strong></h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>item</th>
+<th>state</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td>Monotonic timing, with the wall-clock gap reported as the suspend signal</td>
+<td><strong>done</strong> — <code>Stopwatch</code></td>
+</tr>
+<tr>
+<td>C2</td>
+<td>Termination by process group (<code>start_new_session</code>), never <code>pkill -f</code></td>
+<td><strong>done</strong></td>
+</tr>
+<tr>
+<td>C3</td>
+<td><code>/proc/PID/cwd</code> does not identify an ADflow run</td>
+<td>known; runs are identified by manifest</td>
+</tr>
+<tr>
+<td>C4</td>
+<td>Disk floor checked <strong>before</strong> each case</td>
+<td><strong>done</strong> — 25 GiB, tested</td>
+</tr>
+<tr>
+<td>C5</td>
+<td>Spend cap in core-hours, and a <code>STOP</code> file that works without this process</td>
+<td><strong>done</strong> — both tested</td>
+</tr>
+<tr>
+<td>C6</td>
+<td><code>--watch-memory</code> on every case</td>
+<td><strong>done</strong> — passed to every solve</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>B5, the last item, is now closed.</strong> <code>gci_four_level.py</code> combines the levels and computes the
+study the batch exists to produce. Two things it will not do:</p>
+<ul>
+<li><strong>It refuses to combine runs that are not the same case.</strong> Geometry, incidence, Mach, Reynolds,
+turbulence model and variant, reference area and moment reference must all agree before any
+level joins the family. Tested by changing one level's turbulence model to SST: it stops and
+names the field. Picking the three meshes with the most cells is not a grid-convergence study.</li>
+<li><strong>It refuses to quote a number it is not entitled to.</strong> With two levels it reports
+<code>TREND_ONLY</code> and no band. With three or more it reports the <em>observed</em> order, and
+<code>certified_uncertainty_percent</code> stays empty for any quantity whose family fails a condition —
+including the divergence test that once let <code>f(h) = 1 + h⁻²</code> through as p = +2, &quot;ok&quot;, GCI 37 %.</li>
+</ul>
+<p>Verified against a constructed family, <code>CD = 0.0150 + 0.00080 h²</code> at r = 1.300 across four levels:
+both triplets return <strong>p = 2.0000</strong> and an extrapolate of <strong>0.0150000</strong>, the exact constructed
+answer, and agree with each other to a spread of 0.000. On the real <code>gci_C</code>/<code>gci_M</code> pair the
+compatibility check <strong>passes</strong> — the two are genuinely the same case — and the analysis correctly
+reports <code>TREND_ONLY</code>, because two levels cannot give an observed order.</p>
+<p><strong>And one rule that is neither B nor C:</strong> a verdict comes from the <strong>artefacts</strong>, never the exit
+code. ADflow exits 0 on SIGTERM, which this project has known since PLAN 0.3. On 18 September SU2
+exited <strong>1</strong> having written its restart, surface and forces files, after 24 successful writes of
+that same restart during the run — the outputs were complete and only the final write failed. A
+non-zero exit disproves nothing either. <code>verdict_from_artefacts()</code> records the exit code and does
+not use it.</p>
+
+</section>
+<h2 id="5-what-the-batch-must-deliver-stated-before-it-runs">5. What the batch must deliver, stated before it runs</h2>
+<p>So that the result cannot be graded after the fact:</p>
+<ol>
+<li><strong>Observed order <code>p</code> per quantity</strong> — CL, CD, CDp, CDv, CMy — on g83 across four levels, with
+fit residual and monotonicity reported alongside, and the certified-uncertainty field left
+<strong>empty</strong> for any quantity whose family fails a condition.</li>
+<li><strong>Triplet consistency:</strong> C/M/F against M/F/FF. If those two disagree on <code>p</code>, the solutions are
+not in the asymptotic range and the extrapolated drag is not quotable, whatever the formula
+returns.</li>
+<li><strong>The fine-level offset across ten wings.</strong> Tonight the C→M correction was common-mode to
+within 0.85–4.39 counts. Does that survive at F? This is the number that decides whether the
+ten-wing dataset can be corrected at all.</li>
+<li><strong>The trailing-edge credit re-measured at F.</strong> It was −5.27 to −8.98 counts across the fleet
+at C, and wing 83 reproduced its own prediction to 0.12 counts. Grid-converged or not?</li>
+<li><strong>y+ at F and FF.</strong> <code>s0_frac</code> falls 3.60e-6 → 2.13e-6 → 1.64e-6, so the tip-cap exceedance
+should resolve. Confirm on wall-masked statistics: at <code>gci_C</code> the true wall p99 is 0.671–1.156
+with 18 of 52 runs above 1.0.</li>
+<li><strong>Iterative uncertainty</strong>, measured, not assumed. Continuing below 1e-6 moves forces 0.073 %
+and two paths to the same target differ 0.32 % in CDp — 0.15 to 0.6 counts. The GCI anchor
+cases should be run to a tighter L2 so that the iterative part is small against the spatial
+part being measured.</li>
+</ol>
+
+</section>
+<h2 id="6-what-this-batch-does-not-settle">6. What this batch does <em>not</em> settle</h2>
+<ul>
+<li><strong>Validation.</strong> Four levels give numerical uncertainty, not physical accuracy. There is still
+no low-speed 3D wing experiment in the record for a BWB.</li>
+<li><strong>Transition.</strong> ADflow has none. The Eppler 387 runs that would judge SU2's Langtry-Menter
+models stopped unconverged and disagree with each other by 37 counts. Fully turbulent is not a
+safe upper bound: of 88 NeuralFoil sections, the turbulent/free-transition drag ratio runs
+0.46–1.97, and values below 1 mean laminar bubbles can reverse the sign.</li>
+<li><strong>Whether same-α is the right comparison.</strong> A wing that must carry a given weight should be
+compared at the same lift and in trim, not the same incidence. That decision needs the mission
+mass and speed, and it changes which angles the <em>next</em> campaign runs — not this one.</li>
+</ul>
+</article>
+  </div>
+</div>
+
+<script>
+(function(){
+  var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+  var byId = {};
+  links.forEach(function(a){ byId[a.getAttribute('href').slice(1)] = a; });
+  var heads = Object.keys(byId).map(function(id){ return document.getElementById(id); })
+                    .filter(Boolean);
+  var current = null;
+  function mark(el){
+    if (!el || el === current) return;
+    if (current) current.classList.remove('on');
+    current = el; el.classList.add('on');
+    if (window.innerWidth >= 1040) {
+      var rail = document.querySelector('.rail');
+      var t = el.offsetTop - rail.clientHeight / 2;
+      if (rail.scrollHeight > rail.clientHeight) rail.scrollTop = Math.max(0, t);
+    }
+  }
+  if ('IntersectionObserver' in window) {
+    var visible = new Set();
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting) visible.add(e.target); else visible.delete(e.target);
+      });
+      var first = heads.filter(function(h){ return visible.has(h); })[0];
+      if (first) mark(byId[first.id]);
+    }, { rootMargin: '0px 0px -72% 0px' });
+    heads.forEach(function(h){ io.observe(h); });
+  }
+  // the rail is a disclosure on phones; close it after a jump
+  document.querySelector('.rail-inner').addEventListener('click', function(e){
+    if (e.target.closest('a') && window.innerWidth < 1040) {
+      var d = document.querySelector('.rail details');
+      if (d) d.open = false;
+    }
+  });
+  if (window.innerWidth >= 1040) {
+    var d = document.querySelector('.rail details'); if (d) d.open = true;
+  }
+})();
+</script>

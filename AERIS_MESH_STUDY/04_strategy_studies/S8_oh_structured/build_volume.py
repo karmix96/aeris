@@ -128,7 +128,7 @@ def main() -> int:
     ap.add_argument("--geometry", default="aeris", choices=("aeris", "m6"),
                     help="'m6' meshes the ONERA M6 wing instead of a design from the set")
     ap.add_argument("--out", type=Path,
-                    default=REPO / "AERIS_MESH_STUDY/artifacts/paraview_inspection/s8_oh")
+                    default=HERE / "runs/paraview_inspection/s8_oh")
     ap.add_argument("--no-plot3d", action="store_true")
     ap.add_argument("--frame-mode", default="span_normal",
                     choices=("svd", "span_normal"),

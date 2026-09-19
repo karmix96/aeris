@@ -19,7 +19,7 @@ set -euo pipefail
 RANKS="${1:-4}"
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 S="$REPO/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured"
-Q="$REPO/AERIS_MESH_STUDY/05_s6_cfd_qualification"
+Q="$REPO/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured"
 PY="$REPO/.venv/bin/python"
 cd "$REPO"
 
@@ -63,18 +63,18 @@ echo -e "\n=== 4b/5 audit the archive"
 echo -e "\n=== 5/5 grid convergence on the reference"
 C='{"gci_C":567256,"gci_M":1111152,"gci_F":2217680,"gci_FF":4504420}'
 "$PY" "$S/convergence_gate.py" \
-  --runs "$REPO/AERIS_MESH_STUDY/artifacts/s8_pilot/g83/*_a*" \
+  --runs "$S8/runs/s8_pilot/g83/*_a*" \
   --out "$Q/reports/s8_hf_gate.json"
 for A in -2 0 4 8; do
   "$PY" "$S/gci.py" \
-    --runs "$REPO/AERIS_MESH_STUDY/artifacts/s8_pilot/g83/*_a${A}" \
+    --runs "$S8/runs/s8_pilot/g83/*_a${A}" \
     --cells "$C" --gate "$Q/reports/s8_hf_gate.json" \
     --out "$Q/reports/s8_hf_gci_a${A}.json" || true
 done
 "$PY" "$S/stability_convergence.py" \
-  --runs "$REPO/AERIS_MESH_STUDY/artifacts/s8_pilot/g83/*_a*" \
+  --runs "$S8/runs/s8_pilot/g83/*_a*" \
   --gate "$Q/reports/s8_hf_gate.json" \
   --out "$Q/reports/s8_hf_stability.json" || true
 
 echo -e "\n=== done $(date -Is)"
-echo "Keep: $Q/dataset and $Q/reports. artifacts/ is gitignored and gets wiped."
+echo "Everything S8 lives under $S8. runs/ keeps its bulk out of git; the evidence is committed."

@@ -75,7 +75,7 @@ def main() -> int:
     ap.add_argument("--set-name", default="lhs100_seed42")
     ap.add_argument("--index", type=int, default=83)
     ap.add_argument("--out", type=Path,
-                    default=REPO / "AERIS_MESH_STUDY/artifacts/paraview_inspection/s8_oh")
+                    default=HERE / "runs/paraview_inspection/s8_oh")
     args = ap.parse_args()
 
     import strategy_s6

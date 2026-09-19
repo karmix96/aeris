@@ -28,12 +28,12 @@ from naca0012_tmr import OUT as TMR_OUT, REFERENCE
 
 HERE = Path(__file__).resolve().parent
 STUDY = HERE.parents[1]
-OUT = STUDY / "artifacts/su2_naca0012"
-REPORT = STUDY / "05_s6_cfd_qualification/reports/s8_su2_naca0012.json"
+OUT = HERE / "runs/su2_naca0012"
+REPORT = HERE / "reports/s8_su2_naca0012.json"
 GRID = TMR_OUT / "o512.cgns"
 ADFLOW_RESULT = TMR_OUT / "runs/o512_m0.15_chi3/result.json"
 #: the configuration SU2 ran the wing with; only the case changes
-WING_CFG = STUDY / "artifacts/su2_check/a0/case.cfg"
+WING_CFG = HERE / "runs/su2_check/a0/case.cfg"
 CASE = {"MACH_NUMBER": "0.15", "AOA": "10.0", "SIDESLIP_ANGLE": "0.0",
         "FREESTREAM_TEMPERATURE": "300.0", "REYNOLDS_NUMBER": "6000000.0",
         "REYNOLDS_LENGTH": "1.0", "REF_LENGTH": "1.0", "REF_AREA": "1.0",

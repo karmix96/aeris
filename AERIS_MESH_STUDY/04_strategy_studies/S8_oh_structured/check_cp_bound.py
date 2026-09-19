@@ -2,7 +2,7 @@
 """Does surface pressure stay inside its physical bound on the S8 O-H grid?
 
     .venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/check_cp_bound.py \
-        --surface AERIS_MESH_STUDY/artifacts/s8_cfd/oh_L3_a0/<name>_surf.cgns
+        --surface AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cfd/oh_L3_a0/<name>_surf.cgns
 
 This is the acceptance question for S8 and the only one the first CFD point is
 authorized to answer (policies/s8_oh_first_point_v1.yaml).

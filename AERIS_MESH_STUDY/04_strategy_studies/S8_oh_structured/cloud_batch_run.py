@@ -43,14 +43,14 @@ ROOT = HERE.parents[2]
 sys.path.insert(0, str(HERE))
 import cloud_identity as ident  # noqa: E402
 
-REPORTS = ROOT / "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports"
+REPORTS = HERE / "reports"
 #: Defect 23: forces for every non-reference geometry had been divided by index
 #: 83's area. The area is looked up per geometry here and written into the
 #: manifest, so a row that used the wrong one is visible rather than plausible.
 AREAS_FILE = HERE / "reference_areas.json"
 BATCH = REPORTS / "s8_cloud_batch_v2.json"
-MESHES = ROOT / "AERIS_MESH_STUDY/artifacts/s8_cloud"
-OUT_ROOT = ROOT / "AERIS_MESH_STUDY/artifacts/s8_hf"
+MESHES = HERE / "runs/s8_cloud"
+OUT_ROOT = HERE / "runs/s8_hf"
 KILLSWITCH = OUT_ROOT / "STOP"
 LEDGER = OUT_ROOT / "ledger.json"
 

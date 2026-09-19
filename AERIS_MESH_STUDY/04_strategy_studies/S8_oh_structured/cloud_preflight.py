@@ -60,7 +60,7 @@ CELL_MARGIN = 1.05
 _FALLBACK_CELLS = {"gci_C": 567_256, "gci_M": 1_111_152,
                    "gci_F": 2_217_680, "gci_FF": 4_504_420}
 _MESH_MANIFEST = (Path(__file__).resolve().parents[3]
-                  / "AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_cloud_meshes.json")
+                  / "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/reports/s8_cloud_meshes.json")
 
 
 def _measured_cells() -> dict:
@@ -161,7 +161,12 @@ def check_authorization(c: Check, levels: list[str], indices: list[int]) -> None
     covered_indices: set = set()
     signed = []
     for name, entry in exceptions.items():
-        detail = QUAL / entry.get("policy", "")
+        # S8 policies moved beside the code; S6 ones did not. Look in both,
+        # S8 first, so a policy named in POLICY.yaml resolves either way.
+        named = entry.get("policy", "")
+        detail = HERE / named.replace("policies/", "policies/", 1)
+        if not detail.exists():
+            detail = QUAL / named
         if not detail.exists():
             continue
         auth = yaml.safe_load(detail.read_text()).get("authorization", {})
@@ -218,7 +223,7 @@ def check_reference_areas(c: Check, indices: list[int]) -> None:
 def check_cgns_reader(c: Check) -> None:
     try:
         import cgns_read
-        found = sorted((REPO / "AERIS_MESH_STUDY/artifacts").rglob("*surf*.cgns"))
+        found = sorted((HERE / "runs").rglob("*surf*.cgns"))
         if not found:
             c.add("CGNS reader", True,
                   "cgns_read imports; no existing solution here to test against",
@@ -275,15 +280,15 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--batch", type=Path,
-                    default=QUAL / "reports/s8_cloud_batch.json")
+                    default=HERE / "reports/s8_cloud_batch.json")
     ap.add_argument("--level", default=None,
                     help="check memory for this level; default the finest in the batch")
     ap.add_argument("--ranks", type=int, default=6)
     ap.add_argument("--out-dir", type=Path,
-                    default=REPO / "AERIS_MESH_STUDY/artifacts")
+                    default=HERE / "runs")
     ap.add_argument("--smoke", action="store_true",
                     help="also build a mesh and run twenty solver iterations")
-    ap.add_argument("--out", type=Path, default=QUAL / "reports/s8_cloud_preflight.json")
+    ap.add_argument("--out", type=Path, default=HERE / "reports/s8_cloud_preflight.json")
     args = ap.parse_args()
 
     batch = json.loads(args.batch.read_text()) if args.batch.exists() else {}

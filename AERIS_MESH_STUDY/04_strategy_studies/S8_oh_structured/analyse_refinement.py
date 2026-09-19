@@ -2,8 +2,8 @@
 """PLAN 3.4 and 3.5: read the refinement study, and choose the campaign level.
 
     .venv/bin/python .../analyse_refinement.py \
-        --runs 'AERIS_MESH_STUDY/artifacts/s8_cfd/gci_*_a*' \
-        --out AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_refinement_analysis.json
+        --runs 'AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cfd/gci_*_a*' \
+        --out AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/reports/s8_refinement_analysis.json
 
 Runs after `convergence_gate.py`, `gci.py --two-level-trend` (one per angle) and
 `stability_convergence.py`, and pulls their separate verdicts into the one

@@ -3,7 +3,7 @@
 
     /home/mike/miniconda3/envs/mach-aero/bin/python \
         AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/preflight_adflow.py \
-        --grid AERIS_MESH_STUDY/artifacts/paraview_inspection/s8_oh/oh_probe_volume.cgns
+        --grid AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/paraview_inspection/s8_oh/oh_probe_volume.cgns
 
 This is NOT a solve and must not become one.  It constructs the solver, which
 reads and partitions the grid and resolves the boundary-condition families, then

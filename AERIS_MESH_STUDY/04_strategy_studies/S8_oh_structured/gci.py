@@ -2,7 +2,7 @@
 """Grid-convergence index, by the ASME procedure, for UNEQUAL refinement ratios.
 
     .venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/gci.py \
-        --runs 'AERIS_MESH_STUDY/artifacts/s8_cfd/gci_*_a0' --out report.json
+        --runs 'AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cfd/gci_*_a0' --out report.json
 
 Why this is a script and not three lines in a document.
 

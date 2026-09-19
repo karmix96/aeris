@@ -5,7 +5,8 @@
 
 Why this is not just a folder of result.json files
 ---------------------------------------------------
-`artifacts/` is globally gitignored and gets wiped. Every number this project
+`runs/` holds the raw output beside this code. Its bulk is gitignored, but the
+per-run evidence is committed. Every number this project
 has produced lives there, and a result whose mesh, geometry, solver
 configuration and acceptance verdict are gone is not a result -- it is a number
 somebody once saw. So the archive goes under 05_s6_cfd_qualification, and it
@@ -50,7 +51,9 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[2]
 sys.path.insert(0, str(HERE))
 
-ARTIFACTS = REPO / "AERIS_MESH_STUDY/artifacts"
+ARTIFACTS = HERE / "runs"
+#: S8 output now lives beside the code. POLICY.yaml stays under
+#: 05_s6_cfd_qualification, which is shared governance, not S8 material.
 QUAL = REPO / "AERIS_MESH_STUDY/05_s6_cfd_qualification"
 ACCEPTABLE = ("ACCEPTED",)
 
@@ -157,8 +160,8 @@ def main() -> int:
     ap.add_argument("--roots", "--runs", type=Path, nargs="+", dest="roots",
                     default=[ARTIFACTS / "s8_cfd", ARTIFACTS / "s8_pilot"])
     ap.add_argument("--gate", type=Path,
-                    default=QUAL / "reports/s8_gci_gate.json")
-    ap.add_argument("--out", type=Path, default=QUAL / "dataset")
+                    default=HERE / "reports/s8_gci_gate.json")
+    ap.add_argument("--out", type=Path, default=HERE / "data/dataset")
     ap.add_argument("--set-name", default="lhs100_seed42")
     ap.add_argument("--include-rejected", action="store_true",
                     help="write rows for runs the gate did not accept. Off by "
@@ -347,7 +350,7 @@ def main() -> int:
             row["volume_field_source"] = str(volumes[0])
             row["volume_field_sha256"] = sha256(volumes[0])
             row["volume_field_note"] = ("NOT copied: 32 MB per run. It lives under "
-                                        "artifacts/, which is gitignored and WIPED. "
+                                        "runs/, whose bulk is gitignored though its evidence is kept. "
                                         "The hash is here so a regenerated file can "
                                         "be checked against the one that produced "
                                         "this row.")
@@ -373,7 +376,7 @@ def main() -> int:
                     "reproduce and to believe them. Surrogate-training dataset, "
                     "NOT certification."),
         "environment": env,
-        "policy": "AERIS_MESH_STUDY/05_s6_cfd_qualification/policies/s8_campaign_v1.yaml",
+        "policy": "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/policies/s8_campaign_v1.yaml",
         "acceptance": {
             "authority": "convergence_gate.py",
             "criteria": ("at least five orders of residual drop, CL/CD/CMy settled "
@@ -389,7 +392,7 @@ def main() -> int:
         "row_schema": dataset_row.SCHEMA,
         "field_files": {
             "surface": "copied, gzipped, under fields/",
-            "volume": "referenced by path and sha256 only; artifacts/ is wiped",
+            "volume": "referenced by path and sha256 only; too large to commit",
         },
     }
     (args.out / "MANIFEST.json").write_text(json.dumps(manifest, indent=2) + "\n")

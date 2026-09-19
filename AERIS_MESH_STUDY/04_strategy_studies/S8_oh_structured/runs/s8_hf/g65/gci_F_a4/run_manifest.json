@@ -1,0 +1,70 @@
+{
+  "alpha_deg": 4.0,
+  "area_ref_m2": 0.39249,
+  "case_id": "0c5d8fa54e32e15015b1feff962f607e",
+  "cells": 2339536,
+  "environment": {
+    "cpu_count": 12,
+    "git": {
+      "commit": "3b6be597d4cbbad7c0b253612e58b7ee6d58340d",
+      "dirty": true,
+      "dirty_paths": [
+        "ERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/cloud_batch_run.py",
+        "AERIS_RESEARCH_PIPELINE/",
+        "configs/aero/section_study/stage1_reference_subset.json",
+        "configs/aero/section_study/stage1_summary_subset.txt"
+      ]
+    },
+    "host": "DESKTOP-ADGQCQ3",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.11.15",
+    "solver_version": null
+  },
+  "execution_id": "511ea273eb48f52b",
+  "geometry_index": 65,
+  "label": "g65/gci_F/a4",
+  "label_note": "human-readable only; case_id is the identity",
+  "level": "gci_F",
+  "memory_gib_predicted": 20.6,
+  "mesh": {
+    "bytes": null,
+    "path": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_cloud/g65/gci_F_volume.cgns",
+    "sha256": null
+  },
+  "numerics": {
+    "L2Convergence": 1e-06,
+    "MGCycle": "sg",
+    "eddyVisInfRatio": 0.21,
+    "equationType": "RANS",
+    "liftIndex": 3,
+    "ranks": 4,
+    "turbulenceModel": "SA",
+    "useNKSolver": false
+  },
+  "physics": {
+    "alpha_deg": 4.0,
+    "mach": 0.0837,
+    "reynolds_length_m": 0.9,
+    "temperature_K": 278.4
+  },
+  "predicted_core_hours": 8.75,
+  "predicted_minutes": 131.3,
+  "schema": "aeris.s8.run_manifest.v1",
+  "timing": {
+    "clock_skew_seconds": 0.0,
+    "note": null,
+    "seconds": 0.0,
+    "wall_clock_seconds": 0.0
+  },
+  "verdict": {
+    "artefacts_present": {
+      "result.json": false
+    },
+    "exit_code": null,
+    "exit_code_note": "recorded only. ADflow exits 0 on SIGTERM and SU2 has exited 1 with every output written; neither direction decides anything here.",
+    "problems": [
+      "result.json was never written"
+    ],
+    "usable": false
+  }
+}

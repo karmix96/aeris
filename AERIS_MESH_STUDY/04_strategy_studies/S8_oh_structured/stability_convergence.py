@@ -2,9 +2,9 @@
 """How the STABILITY result moves with grid refinement.  PLAN 3.4, last bullet.
 
     .venv/bin/python .../stability_convergence.py \
-        --runs 'AERIS_MESH_STUDY/artifacts/s8_cfd/gci_*_a*' \
-        --gate AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_gci_gate.json \
-        --out AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_stability_convergence.json
+        --runs 'AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_cfd/gci_*_a*' \
+        --gate AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/reports/s8_gci_gate.json \
+        --out AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/reports/s8_stability_convergence.json
 
 Why four angles and not two
 ----------------------------

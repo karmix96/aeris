@@ -68,7 +68,7 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[2]
 sys.path.insert(0, str(HERE))
 
-ARCHIVE = REPO / "AERIS_MESH_STUDY/05_s6_cfd_qualification/external/onera_m6"
+ARCHIVE = HERE / "external/onera_m6"
 PLOT3D_GZ = ARCHIVE / "m6wing.x.fmt.gz"
 
 #: NASA WIND case, from m6wing01/m6wing.txt.  Not the TMR variant, which
@@ -699,7 +699,7 @@ def main() -> int:
     g = sub.add_parser("grid", help="PLOT3D -> CGNS with boundary conditions")
     g.add_argument("--plot3d", type=Path, default=PLOT3D_GZ)
     g.add_argument("--out", type=Path,
-                   default=REPO / "AERIS_MESH_STUDY/artifacts/onera_m6")
+                   default=HERE / "runs/onera_m6")
     g.add_argument("--levels", type=int, default=3,
                    help="how many grid levels, coarsening from the delivered one")
     g.add_argument("--tol", type=float, default=1.0e-8)

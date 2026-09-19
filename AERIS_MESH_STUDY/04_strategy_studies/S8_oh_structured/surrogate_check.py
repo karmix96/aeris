@@ -44,7 +44,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--level", default="gci_C")
     ap.add_argument("--out", type=Path,
-                    default=STUDY / "05_s6_cfd_qualification/reports/s8_surrogate_check.json")
+                    default=HERE / "reports/s8_surrogate_check.json")
     args = ap.parse_args()
 
     rows = [r for r in load_rows() if r["grid_level"] == args.level

@@ -1,0 +1,64 @@
+{
+  "converged": false,
+  "relative_residual": 4.247989268369808e-08,
+  "residual_source": "adflow.iteration.totalrfinal/totalr0",
+  "l2_target": 1e-08,
+  "n_cycles_budget": 30000,
+  "grid": "AERIS_MESH_STUDY/artifacts/s8_pilot/g12/gci_C_volume.cgns",
+  "alpha_deg": 0.0,
+  "mission": {
+    "mach": 0.0837,
+    "reynolds": 1530708.188575197,
+    "reynolds_length_m": 0.9,
+    "temperature_K": 278.4,
+    "chord_ref_m": 0.9
+  },
+  "area_ref_m2": 0.394918242017589,
+  "moment_ref_xyz_m": [
+    0.4,
+    0.0,
+    0.0
+  ],
+  "routine_failed": false,
+  "flow_directions": {
+    "lift_index_requested": 3,
+    "lift_index_realised": 3,
+    "alpha_deg": 0.0,
+    "velocity_direction_expected": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "velocity_direction_realised": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "velocity_direction_error": 0.0,
+    "lift_direction_expected": [
+      -0.0,
+      0.0,
+      1.0
+    ],
+    "lift_direction_realised": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "lift_direction_error": 0.0,
+    "tolerance": 1e-09
+  },
+  "solver_overrides": {
+    "useNKSolver": false
+  },
+  "solver_is_governed_configuration": false,
+  "functions": {
+    "s8_a0_cd": 0.019343767896760324,
+    "s8_a0_cdp": 0.010324920627769534,
+    "s8_a0_cdv": 0.00901884726899079,
+    "s8_a0_cl": -0.09684322822757839,
+    "s8_a0_cmx": -0.036999908528363434,
+    "s8_a0_cmy": -0.0016379944601863884,
+    "s8_a0_cmz": -0.006260405453910809
+  }
+}

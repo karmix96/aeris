@@ -27,18 +27,48 @@ discovering after the batch that the levels cannot be combined, which costs the 
 
 ## 1. What to rent
 
-The pilot's binding constraint is **one `gci_FF` case at 38.4 GiB**.
+### The thing that actually decides the bill
 
-| | pilot | full batch |
+439 core-hours is the *work*. What you pay for is **machine-hours**, and those depend entirely on
+how many cases run at once. Running them one at a time is 110 hours of wall clock:
+
+| | wall time | cost on a 48-core / 188 GiB box at ~$1.59/h |
 |---|---|---|
-| Physical cores | **≥ 8** | 16–32 |
-| RAM | **≥ 48 GiB** | 128–256 GiB |
-| Disk | 50 GiB | 100 GiB |
-| Shape | memory-heavy: ≥ 9.6 GiB per physical core | same |
+| one case at a time | **110 h** | **$175** |
+| 9 concurrent (what fits) | **16.6 h** | **$26** |
 
-**Compute-optimised instances at 4 GiB per physical core will not hold `gci_FF`.** Use a
+Same computation, **6.5× the rent**. `cloud_batch_run.py --cores N --ram-gib M` schedules against
+both limits; give it the real numbers for the machine.
+
+### Sizing
+
+Concurrency is bounded by whichever runs out first — cores at 4 per case, or RAM at **20.6 GiB per
+`gci_F`** and **38.4 GiB per `gci_FF`**. On every sensible machine it is **RAM**.
+
+| machine | F / FF concurrent | batch wall time | ≈ cost |
+|---|---|---|---|
+| 48 cores, 188 GiB | 9 / 4 | **16.6 h** | **~$26** |
+| 32 cores, 256 GiB | 8 / 6 | 16.6 h | ~$27 |
+| 16 cores, 128 GiB | 4 / 3 | 33.2 h | ~$35 |
+| 8 cores, 48 GiB | 2 / 1 | — | pilot only |
+
+**More RAM buys more than more cores here.** A 48-core box with 188 GiB uses only 36 of its cores,
+because RAM runs out first at nine concurrent cases.
+
+**Compute-optimised instances at 4 GiB per physical core will not hold `gci_FF` at all.** Use a
 memory-optimised type. Pin ranks to physical cores; do not let two ranks share one core's
 hyperthreads.
+
+> Rates move. Hetzner repriced its dedicated-vCPU lines upward by 113–169 % in June 2026 on DRAM
+> costs, so **verify the current price before you commit** rather than trusting the table above.
+
+### Pilot sizing
+
+You do not need the big machine for the pilot. Its binding constraint is **one `gci_FF` at
+38.4 GiB**, so **8 cores and 48 GiB** is enough — and cheaper per hour while you wait 5.7 h for
+the `gci_FF` case. The trade-off: you then rent a second machine for the batch and rebuild the
+environment. On one machine, preflight → pilot → inspect → release is simpler and the pilot hours
+are not wasted, because you were going to rent it anyway.
 
 ---
 
@@ -137,7 +167,7 @@ and every minute after that bills.
 
 ```bash
 .venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/cloud_batch_run.py \
-    --pilot --ranks 4
+    --pilot --ranks 4 --cores 48 --ram-gib 188        # your machine's real numbers
 ```
 
 **31.4 core-hours. $0.63–$1.57 on spot or bare metal, $3.14–$4.70 on mainstream on-demand.**
@@ -184,8 +214,12 @@ restoring ADflow's NK defaults, which needs about 2 GiB more per case — **46.8
 
 ```bash
 .venv/bin/python AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/cloud_batch_run.py \
-    --ranks 4 --budget-core-hours 600
+    --ranks 4 --cores 48 --ram-gib 188 --budget-core-hours 600
 ```
+
+**Give it the real core and RAM numbers.** It defaults to every core and 85 % of RAM, which is
+usually right, but on a shared or containerised machine `os.cpu_count()` reports the host's cores
+rather than your share — and over-subscribing turns a 16-hour batch into a thrashing one.
 
 The ledger at `artifacts/s8_hf/ledger.json` carries forward, so the two pilot cases are not
 re-run and their core-hours are already counted.

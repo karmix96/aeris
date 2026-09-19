@@ -35,6 +35,7 @@ import shutil
 import subprocess
 import sys
 import time
+import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -97,7 +98,7 @@ def run_case(case: dict, *, ranks: int, env: dict, dry: bool) -> dict:
                 "eddyVisInfRatio": 0.21, "ranks": ranks}
 
     watch = ident.Stopwatch()
-    rc = None
+    proc = None
     if dry:
         print(f"    [dry run] would solve {out.relative_to(OUT_ROOT)} on {mesh.name}")
     else:
@@ -108,20 +109,24 @@ def run_case(case: dict, *, ranks: int, env: dict, dry: bool) -> dict:
         # be killed as one without a pattern match that could match this process.
         proc = subprocess.Popen(cmd, stdout=open(out / "run.log", "w"),
                                 stderr=subprocess.STDOUT, start_new_session=True)
-        try:
-            rc = proc.wait()
-        except KeyboardInterrupt:
-            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
-            raise
-    timing = watch.read()
+    return {"case": case, "out": out, "mesh": mesh, "physics": physics,
+            "numerics": numerics, "watch": watch, "proc": proc, "ranks": ranks}
+
+
+def reap(job: dict) -> dict:
+    """Turn a finished job into its manifest."""
+    rc = job["proc"].returncode if job["proc"] is not None else None
+    timing = job["watch"].read()
+    case = job["case"]
     manifest = ident.run_manifest(
-        out=out, geometry_index=index, level=level, alpha_deg=alpha, mesh=mesh,
-        physics=physics, numerics=numerics, repo=ROOT, timing=timing, exit_code=rc,
+        out=job["out"], geometry_index=case["index"], level=case["level"],
+        alpha_deg=case["alpha_deg"], mesh=job["mesh"], physics=job["physics"],
+        numerics=job["numerics"], repo=ROOT, timing=timing, exit_code=rc,
         area_ref_m2=case.get("area_ref_m2"),
         extra={"predicted_minutes": case.get("predicted_minutes"),
                "predicted_core_hours": case.get("predicted_core_hours"),
                "cells": case.get("cells"), "memory_gib_predicted": case.get("memory_gib")})
-    manifest["core_hours"] = round(ranks * timing["seconds"] / 3600.0, 3)
+    manifest["core_hours"] = round(job["ranks"] * timing["seconds"] / 3600.0, 3)
     return manifest
 
 
@@ -177,8 +182,15 @@ def main() -> int:
     ap.add_argument("--budget-core-hours", type=float, default=600.0)
     ap.add_argument("--ranks", type=int, default=4,
                     help="4 is measured: 2.7 %% slower than 6 for 32 %% fewer core-hours")
+    ap.add_argument("--cores", type=int, default=os.cpu_count() or 4,
+                    help="physical cores available to the batch")
+    ap.add_argument("--ram-gib", type=float, default=None,
+                    help="RAM the batch may use; defaults to 85 %% of the machine's")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
+    if args.ram_gib is None:
+        total = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") / (1 << 30)
+        args.ram_gib = round(total * 0.85, 1)
 
     if not BATCH.exists():
         raise SystemExit(f"{BATCH} not found; run cloud_batch_v2.py first")
@@ -207,38 +219,71 @@ def main() -> int:
     ledger = load_ledger()
     done: list[dict] = []
 
-    for case in cases:
-        why = stopped()
-        if why:
-            print(f"\nSTOPPED by killswitch: {why}")
-            break
-        spent = ledger["core_hours_spent"]
-        predicted = case.get("predicted_core_hours", 0.0)
-        if spent + predicted > args.budget_core_hours:
-            print(f"\nBUDGET: {spent:.1f} core-hours spent, this case needs "
-                  f"{predicted:.1f}, cap is {args.budget_core_hours:.0f}. Stopping.")
-            break
-        free = disk_free_gib(OUT_ROOT)
-        if free < DISK_FLOOR_GIB:
-            print(f"\nDISK: {free:.1f} GiB free, floor is {DISK_FLOOR_GIB}. Stopping.")
-            break
+    cores, ram = args.cores, args.ram_gib
+    print(f"  scheduling on {cores} cores / {ram:.0f} GiB, {args.ranks} ranks per case\n")
+    pending, running = list(cases), []
 
-        label = f"g{case['index']}/{case['level']}/a{case['alpha_deg']:g}"
-        print(f"  {label:24s} predicted {case.get('predicted_minutes', 0):.0f} min, "
-              f"{predicted:.1f} core-h   [spent {spent:.1f}/{args.budget_core_hours:.0f}]",
-              flush=True)
-        manifest = run_case(case, ranks=args.ranks, env=env, dry=args.dry_run)
-        done.append(manifest)
-        ledger["core_hours_spent"] = round(spent + manifest["core_hours"], 3)
-        ledger["runs"][manifest["case_id"]] = {
-            "label": label, "execution_id": manifest["execution_id"],
-            "usable": manifest["verdict"]["usable"],
-            "core_hours": manifest["core_hours"],
-            "seconds": manifest["timing"]["seconds"]}
-        save_ledger(ledger)
-        v = manifest["verdict"]
-        print(f"    -> {'usable' if v['usable'] else 'NOT USABLE: ' + '; '.join(v['problems'])}"
-              f"   {manifest['core_hours']:.2f} core-h", flush=True)
+    def can_start(case) -> bool:
+        used_cores = sum(j["ranks"] for j in running)
+        used_ram = sum(j["case"]["memory_gib"] for j in running)
+        return (used_cores + args.ranks <= cores
+                and used_ram + case["memory_gib"] <= ram)
+
+    while pending or running:
+        # reap anything that has finished
+        for job in list(running):
+            if job["proc"] is not None and job["proc"].poll() is None:
+                continue
+            running.remove(job)
+            manifest = reap(job)
+            done.append(manifest)
+            ledger["core_hours_spent"] = round(
+                ledger["core_hours_spent"] + manifest["core_hours"], 3)
+            label = manifest["label"]
+            ledger["runs"][manifest["case_id"]] = {
+                "label": label, "execution_id": manifest["execution_id"],
+                "usable": manifest["verdict"]["usable"],
+                "core_hours": manifest["core_hours"],
+                "seconds": manifest["timing"]["seconds"]}
+            save_ledger(ledger)
+            v = manifest["verdict"]
+            print(f"    done {label:24s} "
+                  f"{'usable' if v['usable'] else 'NOT USABLE: ' + '; '.join(v['problems'])}"
+                  f"   {manifest['core_hours']:.2f} core-h", flush=True)
+
+        why = stopped()
+        if why and pending:
+            print(f"\nSTOPPED by killswitch: {why} -- letting {len(running)} running case(s) finish")
+            pending = []
+
+        # start whatever fits
+        started_any = False
+        for case in list(pending):
+            if not can_start(case):
+                continue
+            spent = ledger["core_hours_spent"] + sum(
+                j["case"].get("predicted_core_hours", 0.0) for j in running)
+            predicted = case.get("predicted_core_hours", 0.0)
+            if spent + predicted > args.budget_core_hours:
+                if not running:
+                    print(f"\nBUDGET: {spent:.1f} core-hours committed, this case needs "
+                          f"{predicted:.1f}, cap is {args.budget_core_hours:.0f}. Stopping.")
+                    pending = []
+                break
+            free = disk_free_gib(OUT_ROOT)
+            if free < DISK_FLOOR_GIB:
+                print(f"\nDISK: {free:.1f} GiB free, floor is {DISK_FLOOR_GIB}. Stopping.")
+                pending = []
+                break
+            pending.remove(case)
+            label = f"g{case['index']}/{case['level']}/a{case['alpha_deg']:g}"
+            print(f"  start {label:24s} {case['memory_gib']:.1f} GiB, "
+                  f"predicted {case.get('predicted_minutes', 0):.0f} min   "
+                  f"[{len(running) + 1} running, {len(pending)} queued]", flush=True)
+            running.append(run_case(case, ranks=args.ranks, env=env, dry=args.dry_run))
+            started_any = True
+        if running and not started_any:
+            time.sleep(5 if not args.dry_run else 0)
 
     if args.pilot and done:
         report = pilot_report(done)

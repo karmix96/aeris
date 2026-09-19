@@ -20,6 +20,11 @@
       "compatibility": {
         "compatible": true,
         "differences": [],
+        "unverifiable": [],
+        "solver_versions": {
+          "gci_C": "2.13.1",
+          "gci_M": "2.13.1"
+        },
         "levels_compared": [
           "gci_C",
           "gci_M"
@@ -212,6 +217,11 @@
       "compatibility": {
         "compatible": true,
         "differences": [],
+        "unverifiable": [],
+        "solver_versions": {
+          "gci_C": "2.13.1",
+          "gci_M": "2.13.1"
+        },
         "levels_compared": [
           "gci_C",
           "gci_M"
@@ -404,6 +414,11 @@
       "compatibility": {
         "compatible": true,
         "differences": [],
+        "unverifiable": [],
+        "solver_versions": {
+          "gci_C": "2.13.1",
+          "gci_M": "2.13.1"
+        },
         "levels_compared": [
           "gci_C",
           "gci_M"
@@ -596,6 +611,11 @@
       "compatibility": {
         "compatible": true,
         "differences": [],
+        "unverifiable": [],
+        "solver_versions": {
+          "gci_C": "2.13.1",
+          "gci_M": "2.13.1"
+        },
         "levels_compared": [
           "gci_C",
           "gci_M"

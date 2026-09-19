@@ -81,6 +81,46 @@ def cells_for(index: int, level: str) -> int | None:
     return None
 
 
+def solver_version(run: Path, index: int, level: str, alpha: float) -> str | None:
+    """Which ADflow produced this run.
+
+    `result.json` does not record it -- the version only reaches the dataset row,
+    which is built later by the collector. That is a real gap for this analysis,
+    because the most likely difference between a run solved here and one solved
+    on a rented machine is the SOLVER, and a grid-convergence study across two
+    ADflow versions is not a grid-convergence study. Looked for in three places,
+    and its ABSENCE is reported rather than passed over.
+    """
+    manifest = run / "run_manifest.json"
+    if manifest.exists():
+        try:
+            env = json.loads(manifest.read_text()).get("environment") or {}
+            if env.get("solver_version"):
+                return str(env["solver_version"])
+        except ValueError:
+            pass
+    rows = ROOT / "AERIS_MESH_STUDY/05_s6_cfd_qualification/dataset_v2/rows.json"
+    if rows.exists():
+        try:
+            for r in json.loads(rows.read_text()):
+                # NOT `r.get("alpha_deg") or 1e9`. Zero is falsy, so alpha 0 --
+                # the point every comparison is anchored on -- falls through to
+                # the sentinel and never matches. That exact line is already in
+                # this project's defect ledger from the AVL lookup, and it was
+                # written again here. A guard that fails for precisely one value
+                # is worse than one that fails for all of them, because nothing
+                # looks wrong.
+                row_alpha = r.get("alpha_deg")
+                if (r.get("geometry_index") == index and r.get("grid_level") == level
+                        and row_alpha is not None and abs(row_alpha - alpha) < 1e-9):
+                    v = (r.get("environment") or {}).get("adflow_version")
+                    if v:
+                        return str(v)
+        except ValueError:
+            pass
+    return None
+
+
 def functions(result: dict) -> dict:
     """Strip the per-run prefix: `s8_a0_cd` is `cd`."""
     out = {}
@@ -117,7 +157,20 @@ def compatibility(levels: dict) -> dict:
     if len(set(moment)) > 1:
         differences.append({"field": "moment_ref_xyz_m",
                             **{n: list(m) for n, m in zip(names, moment)}})
+
+    versions = {n: levels[n].get("solver_version") for n in names}
+    known = {n: v for n, v in versions.items() if v}
+    unknown = [n for n, v in versions.items() if not v]
+    if len(set(known.values())) > 1:
+        differences.append({"field": "solver_version", **versions})
+    unverifiable = ([f"solver version unknown for {', '.join(unknown)}: "
+                     f"result.json does not record it, and no run_manifest.json or "
+                     f"dataset row was found. These levels may have been solved by "
+                     f"different ADflow builds and nothing here can tell."]
+                    if unknown else [])
     return {"compatible": not differences, "differences": differences,
+            "unverifiable": unverifiable,
+            "solver_versions": versions,
             "levels_compared": names,
             "note": ("a grid-convergence study needs the SAME case at different "
                      "resolutions. Any difference here means these runs answer "
@@ -133,7 +186,8 @@ def analyse(index: int, alpha: float) -> dict:
         result = json.loads((run / "result.json").read_text())
         cells = cells_for(index, level)
         levels[level] = {"run": str(run), "result": result, "cells": cells,
-                         "functions": functions(result)}
+                         "functions": functions(result),
+                         "solver_version": solver_version(run, index, level, alpha)}
 
     out = {"geometry_index": index, "alpha_deg": alpha,
            "levels_present": list(levels),

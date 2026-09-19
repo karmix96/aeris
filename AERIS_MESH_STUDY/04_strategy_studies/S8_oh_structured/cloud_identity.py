@@ -90,6 +90,20 @@ def git_commit(repo: Path) -> dict:
             "dirty_paths": [line[3:] for line in dirty.splitlines()[:40]] or None}
 
 
+def adflow_version() -> str | None:
+    """Ask ADflow its version, so the run records which solver produced it.
+
+    result.json does not carry this, and a grid-convergence study whose levels
+    were solved by different ADflow builds is not one. Recorded per run so the
+    four-level analysis can check it instead of assuming.
+    """
+    try:
+        import adflow
+        return str(getattr(adflow, "__version__", None) or "") or None
+    except Exception:  # noqa: BLE001 - not importable outside the MACH-Aero env
+        return None
+
+
 def environment(repo: Path, solver_version: str | None = None) -> dict:
     return {"host": socket.gethostname(), "platform": platform.platform(),
             "cpu_count": os.cpu_count(), "python": platform.python_version(),
@@ -220,7 +234,7 @@ def run_manifest(*, out: Path, geometry_index: int, level: str, alpha_deg: float
                  "bytes": mesh.stat().st_size if mesh.exists() else None},
         "physics": physics, "numerics": numerics,
         "area_ref_m2": area_ref_m2,
-        "environment": environment(repo),
+        "environment": environment(repo, solver_version=adflow_version()),
         "timing": timing,
         "verdict": verdict_from_artefacts(out, exit_code),
     }

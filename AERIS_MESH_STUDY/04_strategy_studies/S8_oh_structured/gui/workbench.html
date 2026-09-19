@@ -1,0 +1,182 @@
+<title>AERIS S8 Workbench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* A CAE viewport is dark in every tool that has one -- Fluent, ParaView, STAR-CCM+ --
+   because a bright surround wrecks your read of a contour band. This commits to that
+   single world rather than half-supporting two, and paints every colour explicitly so
+   the page holds on either host ground. */
+:root{
+  --void:#0b0e13; --panel:#12161d; --raise:#1a202a; --sunk:#0e1218;
+  --ink:#e6edf3; --ink-2:#97a3b4; --ink-3:#6b7684;
+  --rule:#242c38; --rule-2:#323c4c;
+  --accent:#4a9eff; --accent-dim:#1d3a5c; --accent-ink:#8fc3ff;
+  --good:#3fb950; --warn:#d29922; --bad:#f85149;
+  --sans:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --left:290px; --right:300px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--void);color:var(--ink);font-family:var(--sans);font-size:13px;
+  overflow:hidden;-webkit-font-smoothing:antialiased}
+button,input,select{font-family:inherit;font-size:inherit;color:inherit}
+
+/* ---------- frame ---------- */
+.app{display:flex;flex-direction:column;height:100%}
+.ribbon{background:var(--panel);border-bottom:1px solid var(--rule);flex:0 0 auto}
+.brand{display:flex;align-items:center;gap:.7rem;padding:.55rem .9rem .35rem}
+.brand b{font-weight:700;letter-spacing:-.01em}
+.brand .sub{font-family:var(--mono);font-size:.68rem;color:var(--ink-3);letter-spacing:.06em;text-transform:uppercase}
+.steps{display:flex;gap:2px;padding:0 .6rem}
+.step{background:none;border:0;border-bottom:2px solid transparent;padding:.5rem .85rem .55rem;
+  color:var(--ink-2);cursor:pointer;display:flex;align-items:center;gap:.5rem;white-space:nowrap}
+.step:hover{color:var(--ink);background:var(--raise)}
+.step[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);background:var(--raise)}
+.step .n{font-family:var(--mono);font-size:.65rem;color:var(--ink-3);
+  border:1px solid var(--rule-2);border-radius:3px;padding:.05rem .3rem}
+.step[aria-selected="true"] .n{color:var(--accent-ink);border-color:var(--accent-dim);background:var(--accent-dim)}
+
+.body{flex:1;display:grid;grid-template-columns:var(--left) minmax(0,1fr) var(--right);min-height:0}
+aside{background:var(--panel);overflow-y:auto;overflow-x:hidden}
+aside.left{border-right:1px solid var(--rule)}
+aside.right{border-left:1px solid var(--rule)}
+.viewport{position:relative;background:var(--void);min-width:0;overflow:hidden}
+canvas{display:block;width:100%;height:100%}
+
+.status{flex:0 0 auto;background:var(--panel);border-top:1px solid var(--rule);
+  padding:.35rem .9rem;font-family:var(--mono);font-size:.7rem;color:var(--ink-3);
+  display:flex;gap:1.4rem;flex-wrap:wrap}
+.status b{color:var(--ink-2);font-weight:500}
+
+/* ---------- panel widgets ---------- */
+.group{border-bottom:1px solid var(--rule)}
+.group>summary{padding:.5rem .85rem;font-weight:600;font-size:.76rem;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-2);cursor:pointer;list-style:none;
+  display:flex;justify-content:space-between;align-items:center;user-select:none}
+.group>summary::-webkit-details-marker{display:none}
+.group>summary::after{content:"−";font-family:var(--mono);color:var(--ink-3)}
+.group:not([open])>summary::after{content:"+"}
+.group>summary:hover{background:var(--raise);color:var(--ink)}
+.gbody{padding:.35rem .85rem .8rem}
+
+.row{margin:.5rem 0}
+.row>label{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;margin-bottom:.22rem}
+.row .nm{color:var(--ink-2);font-size:.75rem}
+.row .val{font-family:var(--mono);font-size:.74rem;color:var(--accent-ink);
+  font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;height:16px;-webkit-appearance:none;appearance:none;background:none;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:3px;background:var(--rule-2);border-radius:2px}
+input[type=range]::-moz-range-track{height:3px;background:var(--rule-2);border-radius:2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;
+  background:var(--accent);margin-top:-4.5px;border:0}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--accent);border:0}
+input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:3px}
+
+.seg{display:flex;gap:2px;background:var(--sunk);padding:2px;border-radius:5px;margin:.35rem 0}
+.seg button{flex:1;background:none;border:0;padding:.32rem .3rem;border-radius:3px;color:var(--ink-2);
+  cursor:pointer;font-size:.73rem;white-space:nowrap}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--accent-dim);color:var(--accent-ink)}
+
+.chk{display:flex;align-items:center;gap:.5rem;margin:.35rem 0;color:var(--ink-2);cursor:pointer;font-size:.76rem}
+.chk input{accent-color:var(--accent);width:13px;height:13px}
+select{width:100%;background:var(--sunk);border:1px solid var(--rule-2);border-radius:4px;
+  padding:.35rem .45rem;margin:.2rem 0}
+.btn{width:100%;background:var(--accent-dim);color:var(--accent-ink);border:1px solid var(--accent);
+  border-radius:4px;padding:.45rem;cursor:pointer;font-weight:600;margin-top:.5rem}
+.btn:hover{background:var(--accent);color:#04121f}
+.btn.ghost{background:none;border-color:var(--rule-2);color:var(--ink-2);font-weight:400}
+.btn.ghost:hover{background:var(--raise);color:var(--ink)}
+
+/* ---------- readouts ---------- */
+.kv{display:flex;justify-content:space-between;gap:.6rem;padding:.24rem 0;
+  border-bottom:1px solid var(--rule);font-size:.76rem}
+.kv:last-child{border-bottom:0}
+.kv .k{color:var(--ink-3)}
+.kv .v{font-family:var(--mono);color:var(--ink);font-variant-numeric:tabular-nums;text-align:right}
+.kv .v.g{color:var(--good)} .kv .v.w{color:var(--warn)} .kv .v.b{color:var(--bad)}
+.note{font-size:.72rem;color:var(--ink-3);line-height:1.5;margin:.5rem 0 0}
+.note b{color:var(--ink-2);font-weight:500}
+.warnbox{border-left:2px solid var(--warn);background:#221b0b;padding:.45rem .6rem;
+  font-size:.72rem;color:#e8d5a3;line-height:1.5;margin:.5rem 0;border-radius:0 4px 4px 0}
+
+/* ---------- viewport overlays ---------- */
+.hud{position:absolute;pointer-events:none;font-family:var(--mono);font-size:.68rem;color:var(--ink-3)}
+.hud.tl{top:.6rem;left:.75rem} .hud.bl{bottom:.6rem;left:.75rem;line-height:1.6}
+.vtools{position:absolute;top:.5rem;right:.6rem;display:flex;gap:3px;background:rgba(18,22,29,.9);
+  border:1px solid var(--rule);border-radius:5px;padding:3px}
+.vtools button{background:none;border:0;color:var(--ink-2);cursor:pointer;padding:.25rem .5rem;
+  border-radius:3px;font-size:.7rem}
+.vtools button:hover{background:var(--raise);color:var(--ink)}
+.legend{position:absolute;bottom:.7rem;right:.7rem;background:rgba(18,22,29,.92);
+  border:1px solid var(--rule);border-radius:5px;padding:.45rem .55rem;font-family:var(--mono);font-size:.66rem}
+.legend .bar{width:130px;height:9px;border-radius:2px;margin:.25rem 0}
+.legend .ends{display:flex;justify-content:space-between;color:var(--ink-2)}
+.legend .ttl{color:var(--ink-3);margin-bottom:.1rem}
+
+.plot{width:100%;height:108px;display:block;background:var(--sunk);border:1px solid var(--rule);border-radius:4px}
+[hidden]{display:none!important}
+@media (max-width:1100px){
+  :root{--left:250px;--right:0px}
+  .body{grid-template-columns:var(--left) minmax(0,1fr)}
+  aside.right{display:none}
+}
+@media (max-width:720px){
+  :root{--left:0px}
+  .body{grid-template-columns:minmax(0,1fr)}
+  aside.left{position:absolute;z-index:5;width:270px;height:calc(100% - 120px);display:none}
+  aside.left.open{display:block}
+}
+</style>
+
+<div class="app">
+  <header class="ribbon">
+    <div class="brand">
+      <b>AERIS S8 Workbench</b>
+      <span class="sub">O-H structured mesher · ADflow RANS-SA</span>
+      <span class="sub" id="provenance" style="margin-left:auto"></span>
+    </div>
+    <div class="steps" role="tablist">
+      <button class="step" role="tab" data-tab="geom"   aria-selected="true"><span class="n">1</span>Geometry</button>
+      <button class="step" role="tab" data-tab="mesh"   aria-selected="false"><span class="n">2</span>Mesh</button>
+      <button class="step" role="tab" data-tab="solver" aria-selected="false"><span class="n">3</span>Solver</button>
+      <button class="step" role="tab" data-tab="post"   aria-selected="false"><span class="n">4</span>Results</button>
+    </div>
+  </header>
+
+  <div class="body">
+    <aside class="left" id="left"></aside>
+    <div class="viewport" id="viewport">
+      <canvas id="gl"></canvas>
+      <div class="hud tl" id="hudTitle"></div>
+      <div class="hud bl" id="hudInfo"></div>
+      <div class="vtools">
+        <button data-view="iso">iso</button><button data-view="x">+X</button>
+        <button data-view="y">+Y</button><button data-view="z">+Z</button>
+        <button data-view="fit">fit</button>
+      </div>
+      <div class="legend" id="legend" hidden>
+        <div class="ttl" id="legendTitle"></div>
+        <div class="bar" id="legendBar"></div>
+        <div class="ends"><span id="legendLo"></span><span id="legendHi"></span></div>
+      </div>
+    </div>
+    <aside class="right" id="right"></aside>
+  </div>
+
+  <footer class="status">
+    <span><b>design</b> <span id="stDesign">83</span></span>
+    <span><b>level</b> <span id="stLevel">gci_C</span></span>
+    <span><b>cells</b> <span id="stCells">—</span></span>
+    <span><b>memory</b> <span id="stMem">—</span></span>
+    <span><b>draw</b> <span id="stDraw">—</span></span>
+    <span style="margin-left:auto;color:var(--ink-3)" id="stMsg"></span>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="s8_data.js"></script>
+<script src="workbench.js"></script>

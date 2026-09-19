@@ -15,19 +15,19 @@
     {
       "check": "mpi communicator",
       "pass": true,
-      "detail": "6 distinct ranks reporting size {'6'} (want 6 ranks each reporting 6)",
+      "detail": "4 distinct ranks reporting size {'4'} (want 4 ranks each reporting 4)",
       "fatal": true
     },
     {
       "check": "memory for gci_FF",
       "pass": false,
-      "detail": "12.7 GiB available, 38.4 GiB needed (4,700,000 cells x 1.05 margin, ANK-only law)",
+      "detail": "11.0 GiB available, 38.2 GiB needed (4,682,524 cells x 1.05 margin, ANK-only law)",
       "fatal": true
     },
     {
       "check": "disk",
       "pass": true,
-      "detail": "936 GiB free at /home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts, about 13 GiB needed (44 runs x ~0.3 GiB of volume solution)",
+      "detail": "923 GiB free at /home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts, about 33 GiB needed (44 runs of volume solution at the per-level sizes)",
       "fatal": true
     },
     {
@@ -40,6 +40,12 @@
       "check": "design set",
       "pass": true,
       "detail": "lhs100_seed42 loads, 100 designs, highest index requested 83",
+      "fatal": true
+    },
+    {
+      "check": "reference areas",
+      "pass": true,
+      "detail": "10/10 geometries have their own half-area (0.2978-0.5162 m2)",
       "fatal": true
     },
     {
@@ -68,5 +74,5 @@
     81,
     83
   ],
-  "ranks": 6
+  "ranks": 4
 }

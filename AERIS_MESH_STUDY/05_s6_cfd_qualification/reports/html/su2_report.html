@@ -448,48 +448,62 @@ large cancelling contributions.</p>
 <h3 id="52-validation-eppler-387-against-mcghees-measurements">5.2 Validation — Eppler 387 against McGhee's measurements</h3>
 <p>Measurement uncertainty for this exact condition, from Table A1 of TM-4062: <strong>±2.6 drag counts</strong>
 on CD, ±0.001 on CL.</p>
+<p><strong>Neither E387 run has a converged answer, and saying otherwise was my error.</strong> Corrected
+19 September after measuring the full record rather than its tail.</p>
+<p>Over <strong>40,181 iterations</strong> <code>e387_sa_lm</code>'s drag does this:</p>
 <div class="tw"><table>
 <thead>
 <tr>
 <th></th>
-<th>CL</th>
-<th>CD</th>
-<th>pitching moment</th>
-<th>separation bubble</th>
+<th>value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>Measured</strong> (α 2.04°, Re 200k)</td>
-<td>0.574</td>
-<td>0.0118</td>
-<td>−0.0794</td>
-<td>x/c <strong>0.43 → 0.67</strong>, length 0.240c</td>
+<td>spread inside any 500-iteration window</td>
+<td><strong>0.10 counts</strong> — looks perfectly settled</td>
 </tr>
 <tr>
-<td><code>e387_sa_lm</code> (latest)</td>
-<td>+0.96 %</td>
-<td><strong>−2.16 counts</strong></td>
-<td>−4.13 %</td>
-<td>x/c 0.473 → 0.584, length <strong>0.111c</strong></td>
+<td>spread across the whole record</td>
+<td><strong>84.70 counts</strong></td>
 </tr>
 <tr>
-<td><code>e387_sst_lm</code></td>
-<td>+9.34 %</td>
-<td>+37.2 counts</td>
-<td>+9.2 %</td>
-<td><strong>none</strong></td>
+<td>range against the measurement</td>
+<td><strong>−13.3 to +71.4 counts</strong></td>
+</tr>
+<tr>
+<td>mean / standard deviation</td>
+<td>−4.30 / 10.57 counts</td>
+</tr>
+<tr>
+<td>net drift</td>
+<td>+0.017 counts per 1000 iterations — essentially none</td>
+</tr>
+<tr>
+<td>mean crossings in 40,181 iterations</td>
+<td><strong>4</strong></td>
 </tr>
 </tbody>
 </table></div>
-<p><strong>These are snapshots of a solution that is still moving, and the movement matters.</strong> SA-LM's
-drag error across successive continuation legs has run <strong>−12.7 → +0.71 → +0.36 → −2.16 counts</strong>
-against a ±2.6-count uncertainty. It is inside the band now, it has been outside it, and its
-force is still changing 0.287 % per 500 iterations where the acceptance gate wants 0.05 %.</p>
-<p>Quoting the friendliest snapshot would be easy and wrong. <strong>What can be said today is that SA-LM
-is landing within a few counts of the measurement and converging toward roughly −2</strong>, not that it
-predicts this case to 0.4 counts. The bubble length is firming up in the same way: 0.068c, then
-0.111c, against 0.240c measured — still roughly half, still too short.</p>
+<p>Four crossings over forty thousand iterations is a <strong>very long-period oscillation</strong>, not
+convergence and not a drift. Every figure I reported for this case — +0.71, +0.36, −1.56, −2.16,
+−2.35, −3.17 counts — was a <strong>sample of that oscillation quoted as a converged value</strong>. The
+acceptance gate I wrote on 18 September used a 500-iteration window and would have accepted it.</p>
+<p><code>e387_sst_lm</code> wanders <strong>50.18 counts</strong> and, separately, marches monotonically away from the
+measurement: +39.5 → +44.6 → +49.5 → +54.4 counts across its final leg. It is diverging.</p>
+<p><strong>What can honestly be said about Eppler 387 today:</strong></p>
+<ul>
+<li>SA-LM's drag <strong>averages −4.3 counts</strong> from the measurement with a standard deviation of
+<strong>10.6 counts</strong>. It is not a prediction to within the ±2.6-count experimental uncertainty; it
+is a solution whose mean happens to sit a few counts low.</li>
+<li>SA-LM <strong>does produce a laminar separation bubble</strong> inside the measured region, roughly half the
+measured length. That finding stands — the bubble exists in every sample.</li>
+<li>SST-LM produces <strong>no bubble</strong> and diverges. That finding stands too.</li>
+<li><strong>A steady RANS solver may not have an answer for this flow.</strong> A laminar separation bubble at
+Re 200,000 can be genuinely unsteady, and SU2's own Langtry–Menter V&amp;V page notes oscillations
+near separation. If that is what this is, the right treatment is a time-accurate run with a
+reported mean and band — not a steady solve run longer.</li>
+</ul>
 <p><strong>SA-LM is the result worth having.</strong> Lift within 0.4 %, drag <strong>inside the measurement
 uncertainty</strong>, moment within 2 %, and it produces a laminar separation bubble <strong>inside the measured
 region</strong>. Its one real error is that the bubble is <strong>3.5× too short</strong> — 0.068c against a measured
@@ -553,39 +567,72 @@ short tail's spread is dominated by the approach rather than by the remaining er
 carried it across. <code>su2_gate()</code> is that rule, and it also states plainly when a case has <strong>no
 monitored force at all</strong> — true of the three transitional plates, where SU2 writes CD identically
 zero and the quantity of interest is cf, not drag.</p>
+<p>The rule needed correcting a day after it was written, for the same reason everything else
+here has needed correcting: <strong>a window shorter than the phenomenon gives a false pass.</strong> Settling
+is now measured in counts over the <strong>whole concatenated record</strong>, the startup transient is
+skipped, and each case is judged on the quantity it actually delivers.</p>
 <div class="tw"><table>
 <thead>
 <tr>
 <th>case</th>
 <th>verdict</th>
-<th>route</th>
+<th>graded on</th>
+<th>wander across the run</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>fp_comp_137</code>, <code>fp_inc_545</code>, <code>fp_bc</code></td>
+<td><code>fp_comp_137</code></td>
 <td><strong>ACCEPTED</strong></td>
-<td>residual target</td>
+<td>forces</td>
+<td>0.01 ct</td>
 </tr>
 <tr>
-<td><code>fp_comp_545</code>, <code>naca0012_inc_897</code></td>
+<td><code>fp_comp_545</code></td>
 <td><strong>ACCEPTED</strong></td>
-<td>settled forces</td>
+<td>forces</td>
+<td>0.08 ct</td>
 </tr>
 <tr>
-<td><code>e387_sa_lm</code>, <code>e387_sst_lm</code></td>
-<td>not yet</td>
-<td>still converging</td>
+<td><code>fp_inc_545</code></td>
+<td><strong>ACCEPTED</strong></td>
+<td>forces</td>
+<td>0.00 ct</td>
+</tr>
+<tr>
+<td><code>fp_bc</code></td>
+<td><strong>ACCEPTED</strong></td>
+<td>cf and transition</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>naca0012_inc_897</code></td>
+<td>not accepted</td>
+<td>forces</td>
+<td><strong>2.30 ct</strong></td>
+</tr>
+<tr>
+<td><code>e387_sa_lm</code></td>
+<td>not accepted</td>
+<td>forces</td>
+<td><strong>84.70 ct</strong></td>
+</tr>
+<tr>
+<td><code>e387_sst_lm</code></td>
+<td>not accepted</td>
+<td>forces</td>
+<td><strong>50.18 ct</strong></td>
 </tr>
 <tr>
 <td><code>t3a</code>, <code>t3a_minus</code>, <code>nlf_sst_lm</code></td>
-<td>not yet</td>
-<td>no monitored force</td>
+<td>not accepted</td>
+<td>cf and transition</td>
+<td>—</td>
 </tr>
 </tbody>
 </table></div>
-<p><strong>Five of ten</strong>, against two before the rule existed. Neither case that changed hands was failing
-physics.</p>
+<p><strong>Four of ten</strong>, against the five I reported on 18 September. <code>naca0012_inc_897</code> drops out on
+2.30 counts of wander that a 500-iteration window saw as 0.03.</p>
 
 </section>
 <h2 id="7-what-was-measured-rather-than-assumed">7. What was measured rather than assumed</h2>

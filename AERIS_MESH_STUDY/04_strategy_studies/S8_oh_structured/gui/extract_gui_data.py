@@ -70,9 +70,29 @@ def levels() -> dict:
             "note": "read from strategy_s8.LEVELS, not retyped"}
 
 
-def mesh(index: int, level: str, decim: int, volume: bool = False,
-         sj: int = 2, jcap: int = 40) -> dict | None:
-    """Wing surface plus the volume, decimated, with the decimation recorded."""
+def f32(a: np.ndarray) -> str:
+    """Float32, base64. Text JSON costs about seven bytes a number; this costs
+    5.33, it is exact to single precision, and the browser gets a typed array
+    without parsing a million strings."""
+    import base64
+    return base64.b64encode(np.ascontiguousarray(a, dtype="<f4").tobytes()).decode()
+
+
+def mesh(index: int, level: str, jcap: int | None) -> dict | None:
+    """The wing block at FULL resolution.
+
+    The first version of this strided the ring and the span to keep the payload
+    small. That was wrong in a way that matters: a structured mesh puts its
+    points where the geometry turns -- packed at the leading edge, at the
+    trailing edge and around the tip -- and a uniform stride throws away exactly
+    that packing. The mesh came out looking evenly spaced, which is the one
+    thing it is not, and the whole point of looking at it is to see the
+    clustering. Full surfaces cost 0.07-0.21 MB. There was never a reason.
+
+    `jcap` limits how far into the far field the volume is carried. Past the
+    boundary layer the cells are metres across and carry nothing you would look
+    at; the cap is recorded so the view can say what it is not showing.
+    """
     for root in (S8 / "runs/s8_v2", S8 / "runs/s8_cloud", S8 / "runs/s8_pilot"):
         f = root / f"g{index}" / f"{level}_blocks.npz"
         if f.exists():
@@ -80,37 +100,38 @@ def mesh(index: int, level: str, decim: int, volume: bool = False,
     else:
         return None
     d = np.load(f)
-    out = {"level": level, "index": index, "decimation": decim, "blocks": {}}
+    out = {"level": level, "index": index, "blocks": {}}
     for key in d.files:
         a = d[key]
-        if a.ndim < 4:
-            continue
-        ni, nj, nk = a.shape[:3]
-        out["blocks"][key] = {"full_shape": [ni, nj, nk],
-                              "cells": (ni - 1) * (nj - 1) * (nk - 1)}
-    w = d["o_wing"]                       # (i ring, j wall-normal, k span, 3)
+        if a.ndim >= 4:
+            ni, nj, nk = a.shape[:3]
+            out["blocks"][key] = {"shape": [ni, nj, nk],
+                                  "cells": (ni - 1) * (nj - 1) * (nk - 1)}
+    # the real total, from the build's own summary, not a formula
+    s = f.with_name(f"{level}_summary.json")
+    if s.exists():
+        sd = json.loads(s.read_text())
+        out["cells_total"] = int(sd["cells"])
+        out["folded"] = int(sd["negative_cells_all_blocks"])
+        out["wall_layer_error_m"] = float(sd["volume"]["wall_layer_error_m"])
+
+    w = d["o_wing"]
     ni, nj, nk = w.shape[:3]
-    si, sk = max(1, decim), max(1, decim // 2)
-    surf = w[::si, 0, ::sk, :]            # j = 0 is the wall
-    out["surface"] = {"shape": list(surf.shape[:2]),
-                      "xyz": [round(float(v), 6) for v in surf.reshape(-1)],
-                      "note": "j=0 of o_wing: the wall the solver sees"}
-    if not volume:
-        return out
-    # A cut plane the user drags has to exist at every position, not at five
-    # of them, so the whole block goes -- decimated in the ring and wall-normal
-    # directions but keeping EVERY span station, because span is the axis the
-    # chordwise cut slides along. jmax caps how far into the far field we carry:
-    # past the boundary layer the cells are metres across and show nothing.
-    jmax = min(nj, jcap)
-    vol = w[::si, :jmax:sj, :, :]
-    out["volume"] = {"shape": list(vol.shape[:3]),
-                     "stride": [si, sj, 1],
-                     "j_cap": jmax,
-                     "xyz": [round(float(v), 5) for v in vol.reshape(-1)],
-                     "note": ("o_wing decimated in i and j, every k kept. Cut planes "
-                              "index this block directly, so they move continuously "
-                              "rather than snapping between a few stored sheets.")}
+    out["surface"] = {"shape": [ni, nk], "f32": f32(w[:, 0, :, :].reshape(-1)),
+                      "note": "j=0 of o_wing at full resolution: the wall the solver sees"}
+    # the tip cap, so the tip clustering is actually visible
+    if "cap_out" in d.files:
+        c = d["cap_out"]
+        out["cap"] = {"shape": [c.shape[0], c.shape[1]],
+                      "f32": f32(c[:, :, 0, :].reshape(-1)),
+                      "note": "k=0 of cap_out: the tip cap face"}
+    if jcap:                       # 0 or None: no volume. -1: the whole block.
+        j = nj if jcap < 0 else min(nj, jcap)
+        out["volume"] = {"shape": [ni, j, nk], "j_cap": j, "j_full": nj,
+                         "f32": f32(w[:, :j, :, :].reshape(-1)),
+                         "note": ("full ring and span, wall-normal capped. Cut planes "
+                                  "index this directly, so the leading-edge, trailing-edge "
+                                  "and tip clustering is the mesh's own.")}
     return out
 
 
@@ -216,16 +237,17 @@ def main() -> int:
     except Exception:  # noqa: BLE001
         pass
 
-    # gci_C carries the volume: it is the level you inspect, and three volumes
-    # would not fit in a page. M and F carry the surface, which is what you
-    # compare between levels anyway.
-    for level, decim, vol in (("gci_C", 3, True), ("gci_M", 4, False), ("gci_F", 5, False)):
-        m = mesh(83, level, decim, volume=vol)
+    # Full surfaces for every level -- they are tiny and they are where the
+    # leading-edge, trailing-edge and tip clustering shows. Volumes for the two
+    # levels you would actually slice.
+    for level, jcap in (("gci_C", -1), ("gci_M", 40), ("gci_F", 0)):
+        m = mesh(83, level, jcap)
         if m:
             payload["meshes"][level] = m
             v = m.get("volume")
-            print(f"  mesh {level}: surface {m['surface']['shape']}"
-                  + (f", volume {v['shape']} (j capped at {v['j_cap']})" if v else ""))
+            print(f"  mesh {level}: surface {m['surface']['shape']} FULL"
+                  + (f", volume {v['shape']} (j {v['j_cap']}/{v['j_full']})" if v else ", surface only")
+                  + f", {m.get('cells_total', 0):,} cells")
     for level in ("gci_C", "gci_M"):
         r = results(83, level)
         if r:
@@ -233,7 +255,7 @@ def main() -> int:
             print(f"  results {level}: {len(r)} angles")
     payload["surface_fields"] = {}
     for alpha in (-2.0, 0.0, 4.0, 8.0):
-        sf = surface_field(83, "gci_C", alpha, si=3, sk=1)
+        sf = surface_field(83, "gci_C", alpha, si=1, sk=1)
         if sf:
             payload["surface_fields"][f"{alpha:g}"] = sf
     if payload["surface_fields"]:

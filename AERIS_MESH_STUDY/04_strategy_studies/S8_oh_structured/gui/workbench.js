@@ -16,6 +16,20 @@
 'use strict';
 const D = window.S8_DATA;
 const $ = (s, r) => (r || document).querySelector(s);
+/* The mesh arrives as base64 float32 rather than JSON numbers: exact to single
+   precision, 5.33 bytes a value instead of about seven, and the browser gets a
+   typed array without parsing a million strings. */
+function f32(b64) {
+  const bin = atob(b64), n = bin.length, bytes = new Uint8Array(n);
+  for (let i = 0; i < n; i++) bytes[i] = bin.charCodeAt(i);
+  return new Float32Array(bytes.buffer);
+}
+const XYZ = new Map();
+function xyz(o) {                    // decode once, keep it
+  if (!o) return null;
+  if (!XYZ.has(o)) XYZ.set(o, o.f32 ? f32(o.f32) : Float32Array.from(o.xyz || []));
+  return XYZ.get(o);
+}
 const fmt = (v, n) => (v === null || v === undefined || Number.isNaN(v)) ? '—' : (+v).toFixed(n === undefined ? 3 : n);
 const counts = v => (v === null || v === undefined) ? '—' : (1e4 * v).toFixed(2);
 
@@ -28,7 +42,8 @@ const S = {
   alpha: '0',
   display: 'surf-edges',        // surf | surf-edges | wire
   colour: 'none',               // none | cp | cf | yplus
-  cut: { i: false, j: false, k: false, iAt: 0, jAt: 0, kAt: 0 },
+  cut: { i: false, j: false, k: false, iAt: 0, jAt: 0, kAt: 0, solo: false, filled: true },
+  showCap: true,
   showFar: false,
   solver: {
     turbulenceModel: 'SA', useNKSolver: false, L2Convergence: 1e-6, MGCycle: 'sg',
@@ -140,7 +155,7 @@ function sheetWire(xyz, n, m) {
 }
 /* index into the decimated volume block: xyz[( i*nj + j )*nk + k] */
 function volSlice(vol, fix, at) {
-  const [ni, nj, nk] = vol.shape, x = vol.xyz;
+  const [ni, nj, nk] = vol.shape, x = xyz(vol);
   const P = (i, j, k) => { const o = ((i * nj + j) * nk + k) * 3; return [x[o], x[o + 1], x[o + 2]]; };
   const out = [];
   if (fix === 'k') { for (let i = 0; i < ni; i++) for (let j = 0; j < nj; j++) out.push(...P(i, j, at)); return { xyz: out, n: ni, m: nj }; }
@@ -264,50 +279,88 @@ function drawPreview() {
 function drawMesh() {
   const m = D.meshes[S.level];
   if (!m) { $('#hudTitle').textContent = 'no mesh stored for this level'; return new THREE.Box3(); }
-  const [n, mm] = m.surface.shape;
-  const field = fieldFor();
-  let colours = null;
-  if (field) {
-    colours = [];
-    const [fn, fm] = field.shape, lo = field.min, hi = field.max, kind = S.colour === 'cp' ? 'div' : 'seq';
-    for (let i = 0; i < n; i++) for (let k = 0; k < mm; k++) {
-      const fi = Math.min(fn - 1, Math.round(i * (fn - 1) / Math.max(1, n - 1)));
-      const fk = Math.min(fm - 1, Math.round(k * (fm - 1) / Math.max(1, mm - 1)));
-      const v = field.values[fi * fm + fk];
-      colours.push(...ramp((v - lo) / Math.max(1e-12, hi - lo), kind));
-    }
-  }
-  const surfMat = new THREE.MeshStandardMaterial({
-    color: 0x8fb4d8, metalness: 0.1, roughness: 0.68, side: THREE.DoubleSide,
-    vertexColors: !!colours, flatShading: false
-  });
-  if (S.display !== 'wire') root.add(new THREE.Mesh(sheetGeometry(m.surface.xyz, n, mm, colours), surfMat));
-  if (S.display !== 'surf') {
-    root.add(new THREE.LineSegments(sheetWire(m.surface.xyz, n, mm),
-      new THREE.LineBasicMaterial({
-        color: S.display === 'wire' ? 0x5c86ad : 0x16202c,
-        transparent: true, opacity: S.display === 'wire' ? 0.95 : 0.8
-      })));
-  }
   const vol = m.volume;
+  const solo = S.cut.solo && (S.cut.i || S.cut.j || S.cut.k) && vol;
+
+  /* Cut planes first, so "isolate" can simply skip everything else. A cut you
+     cannot look at on its own is a cut you cannot read: the surface sits in
+     front of it from most angles. */
   if (vol) {
-    const cutMat = () => new THREE.LineBasicMaterial({ color: 0x3f7fbf, transparent: true, opacity: 0.75 });
-    [['k', S.cut.k, S.cut.kAt], ['j', S.cut.j, S.cut.jAt], ['i', S.cut.i, S.cut.iAt]].forEach(([ax, on, at]) => {
+    const axes = [['k', S.cut.k, S.cut.kAt], ['j', S.cut.j, S.cut.jAt], ['i', S.cut.i, S.cut.iAt]];
+    axes.forEach(([ax, on, at]) => {
       if (!on) return;
-      const s = volSlice(vol, ax, at);
-      root.add(new THREE.LineSegments(sheetWire(s.xyz, s.n, s.m), cutMat()));
-      root.add(new THREE.Mesh(sheetGeometry(s.xyz, s.n, s.m, null),
-        new THREE.MeshBasicMaterial({ color: 0x0f1a26, transparent: true, opacity: 0.45, side: THREE.DoubleSide })));
+      const s = volSlice(vol, ax, Math.min(at, vol.shape[ax === 'i' ? 0 : ax === 'j' ? 1 : 2] - 1));
+      root.add(new THREE.LineSegments(sheetWire(s.xyz, s.n, s.m),
+        new THREE.LineBasicMaterial({ color: solo ? 0x8fc3ff : 0x4a86c4,
+          transparent: true, opacity: solo ? 0.95 : 0.7 })));
+      if (S.cut.filled) {
+        root.add(new THREE.Mesh(sheetGeometry(s.xyz, s.n, s.m, null),
+          new THREE.MeshBasicMaterial({ color: 0x0d1720, transparent: true,
+            opacity: solo ? 0.9 : 0.4, side: THREE.DoubleSide })));
+      }
     });
   }
+
+  if (!solo) {
+    const [n, mm] = m.surface.shape;
+    const P = xyz(m.surface);
+    const field = fieldFor();
+    let colours = null;
+    if (field) {
+      colours = [];
+      const [fn, fm] = field.shape, lo = field.min, hi = field.max;
+      const kind = S.colour === 'cp' ? 'div' : 'seq';
+      for (let i = 0; i < n; i++) for (let k = 0; k < mm; k++) {
+        /* the field is CELL data on an (n-1) x (mm-1) grid; a node takes the
+           cell it belongs to rather than being interpolated, so a band edge
+           lands where the solver put it */
+        const fi = Math.min(fn - 1, Math.max(0, i - (i === n - 1 ? 1 : 0)));
+        const fk = Math.min(fm - 1, Math.max(0, k - (k === mm - 1 ? 1 : 0)));
+        colours.push(...ramp((field.values[fi * fm + fk] - lo) / Math.max(1e-12, hi - lo), kind));
+      }
+    }
+    const mat = () => new THREE.MeshStandardMaterial({
+      color: 0x93b8dc, metalness: 0.08, roughness: 0.7, side: THREE.DoubleSide,
+      vertexColors: !!colours
+    });
+    if (S.display !== 'wire') root.add(new THREE.Mesh(sheetGeometry(P, n, mm, colours), mat()));
+    if (S.display !== 'surf') {
+      root.add(new THREE.LineSegments(sheetWire(P, n, mm),
+        new THREE.LineBasicMaterial({
+          color: S.display === 'wire' ? 0x5c86ad : 0x16202c,
+          transparent: true, opacity: S.display === 'wire' ? 0.95 : 0.85
+        })));
+    }
+    /* The tip cap. Without it the wing is an open tube: cap_out[:,:,0] is the
+       patch that closes the tip, and its edge matches the wing's tip ring to
+       2.5e-16 m -- they are the same points. */
+    if (m.cap && S.showCap !== false) {
+      const [cn, cm] = m.cap.shape, C = xyz(m.cap);
+      if (S.display !== 'wire') {
+        root.add(new THREE.Mesh(sheetGeometry(C, cn, cm, null),
+          new THREE.MeshStandardMaterial({ color: 0xb08a6a, metalness: 0.08,
+            roughness: 0.72, side: THREE.DoubleSide })));
+      }
+      if (S.display !== 'surf') {
+        root.add(new THREE.LineSegments(sheetWire(C, cn, cm),
+          new THREE.LineBasicMaterial({ color: S.display === 'wire' ? 0xc79a72 : 0x2a1f16,
+            transparent: true, opacity: 0.9 })));
+      }
+    }
+  }
+
   const box = new THREE.Box3().setFromObject(root);
-  const lv = D.levels.levels[S.level] || {};
-  $('#hudTitle').textContent = `${S.level} — wing block, drawn from the node array the solver was handed`;
+  const sh = m.blocks.o_wing.shape;
+  $('#hudTitle').textContent = solo
+    ? `${S.level} — cut plane isolated`
+    : `${S.level} — the node array the solver was handed, at full resolution`;
   $('#hudInfo').innerHTML =
-    `surface ${n}×${mm} drawn of ${m.blocks.o_wing.full_shape[0]}×${m.blocks.o_wing.full_shape[2]} (decimated ×${m.decimation})<br>` +
-    (vol ? `volume ${vol.shape.join('×')} sliceable, j capped at ${vol.j_cap}` : 'volume not carried for this level');
+    `wing block ${sh[0]}×${sh[1]}×${sh[2]} nodes · ${(m.cells_total || 0).toLocaleString()} cells all blocks<br>` +
+    (vol ? `volume sliceable, j ${vol.j_cap} of ${vol.j_full}` : 'volume not carried for this level') +
+    (m.folded === 0 ? ' · 0 folded' : '');
   return box;
 }
+
 function fieldFor() {
   if (S.colour === 'none' || S.tab !== 'post') return null;
   const sf = (D.surface_fields || {})[S.alpha];
@@ -373,6 +426,7 @@ function renderLeft() {
   if (S.tab === 'mesh') {
     const cur = S.custom || D.levels.levels[S.level];
     const c = levelCells(cur);
+    const vsh = (D.meshes[S.level] && D.meshes[S.level].volume || {}).shape;
     L.innerHTML =
       `<details class="group" open><summary>Level</summary><div class="gbody">
         <div class="seg" id="segLevel">
@@ -400,14 +454,26 @@ function renderLeft() {
         <div class="seg" id="segDisp">
           <button data-d="surf">surface</button><button data-d="surf-edges">+ edges</button><button data-d="wire">wireframe</button>
         </div>
-        <label class="chk"><input type="checkbox" id="cutK" ${S.cut.k ? 'checked' : ''}> chordwise cut (constant span)</label>
-        ${slider('cutKat', 'span station', 0, 48, S.cut.kAt, 1, '')}
-        <label class="chk"><input type="checkbox" id="cutJ" ${S.cut.j ? 'checked' : ''}> layer parallel to the wall</label>
-        ${slider('cutJat', 'wall-normal layer', 0, 19, S.cut.jAt, 1, '')}
-        <label class="chk"><input type="checkbox" id="cutI" ${S.cut.i ? 'checked' : ''}> spanwise cut (constant ring index)</label>
-        ${slider('cutIat', 'ring index', 0, 30, S.cut.iAt, 1, '')}
-        <div class="note">Cuts index the stored volume block directly, so they move continuously
-        rather than snapping between a few saved sheets.</div>
+        <label class="chk"><input type="checkbox" id="showCap" ${S.showCap ? 'checked' : ''}> tip cap</label>
+        <div class="note">Without it the wing is an open tube. The cap patch shares its edge with
+        the wing's tip ring to <b>2.5e-16 m</b> — the same points, not two surfaces that meet.</div>
+      </div></details>
+      <details class="group" open><summary>Cut planes</summary><div class="gbody">
+        ${vsh ? `
+        <label class="chk"><input type="checkbox" id="cutK" ${S.cut.k ? 'checked' : ''}> chordwise (constant span)</label>
+        ${slider('cutKat', 'span station k', 0, vsh[2] - 1, Math.min(S.cut.kAt, vsh[2] - 1), 1, '')}
+        <label class="chk"><input type="checkbox" id="cutJ" ${S.cut.j ? 'checked' : ''}> parallel to the wall</label>
+        ${slider('cutJat', 'wall-normal layer j', 0, vsh[1] - 1, Math.min(S.cut.jAt, vsh[1] - 1), 1, '')}
+        <label class="chk"><input type="checkbox" id="cutI" ${S.cut.i ? 'checked' : ''}> spanwise (constant ring index)</label>
+        ${slider('cutIat', 'ring index i', 0, vsh[0] - 1, Math.min(S.cut.iAt, vsh[0] - 1), 1, '')}
+        <div class="seg" id="segCut">
+          <button data-k="solo">isolate cut</button><button data-k="filled">shade plane</button>
+        </div>
+        <div class="note"><b>Isolate</b> hides the wing so the plane can be read on its own —
+        the surface sits in front of it from most angles. Ring index 0 is the trailing edge;
+        the clustering you see at <b>i ≈ 0</b>, <b>i ≈ ${Math.round(vsh[0] / 2)}</b> and at the
+        highest span stations is the mesh's own.</div>`
+        : '<div class="note">No volume is carried for this level — only the surface. Switch to <b>C</b> or <b>M</b> to slice.</div>'}
       </div></details>`;
     $$('#segLevel button').forEach(b => b.addEventListener('click', () => {
       S.level = b.dataset.l; S.custom = null; $('#stLevel').textContent = S.level;
@@ -425,6 +491,15 @@ function renderLeft() {
       const box = $('#cut' + ax.toUpperCase());
       if (box) box.addEventListener('change', () => { S.cut[ax] = box.checked; rebuild(); });
       wireSlider('cut' + ax.toUpperCase() + 'at', v => { S.cut[ax + 'At'] = v | 0; rebuild(); }, 0);
+    });
+    const cap = $('#showCap');
+    if (cap) cap.addEventListener('change', () => { S.showCap = cap.checked; rebuild(); });
+    $$('#segCut button').forEach(b => {
+      b.setAttribute('aria-pressed', String(!!S.cut[b.dataset.k]));
+      b.addEventListener('click', () => {
+        S.cut[b.dataset.k] = !S.cut[b.dataset.k];
+        b.setAttribute('aria-pressed', String(S.cut[b.dataset.k])); rebuild();
+      });
     });
   }
 
@@ -463,6 +538,18 @@ function renderLeft() {
         ${slider('s_ranks', 'MPI ranks per case', 1, 16, s.ranks, 1, '')}
         <div class="note">Four is the measured optimum: 2.7 % slower than six for <b>32 % fewer
         core-hours</b>. Count <b>physical</b> cores, not threads.</div>
+      </div></details>
+      <details class="group" open><summary>Run</summary><div class="gbody">
+        <label class="chk"><span style="flex:1">angles of attack</span></label>
+        <div class="seg" id="segRunA">${['-2', '0', '4', '8'].map(a =>
+          `<button data-a="${a}" aria-pressed="true">${a}°</button>`).join('')}</div>
+        <button class="btn" id="runBtn">Build run command</button>
+        <button class="btn ghost" id="copyBtn" hidden>Copy to clipboard</button>
+        <div class="warnbox" style="border-left-color:var(--accent);background:#0e1a26;color:#bcd8f5">
+        This page cannot start a solver. ADflow is an MPI Fortran code that needs the mesh, the
+        MACH-Aero environment and a machine; a browser has none of them. <b>Run</b> writes the exact
+        command for the host that does, so what executes is what you configured here rather than
+        something typed again from memory.</div>
       </div></details>`;
     $('#s_turb').value = s.turbulenceModel;
     $('#s_nk').checked = s.useNKSolver;
@@ -485,7 +572,59 @@ function renderLeft() {
     wireSlider('s_l2', v => { S.solver.L2Convergence = Math.pow(10, v); renderRight(); }, 1);
     wireSlider('s_chi', v => { S.solver.chi = v; S.solver.eddyVisInfRatio = Math.pow(v, 4) / (Math.pow(v, 3) + 357.911); renderRight(); }, 1);
     wireSlider('s_ranks', v => { S.solver.ranks = v; renderRight(); }, 0);
+    $$('#segRunA button').forEach(b => b.addEventListener('click', () => {
+      const on = b.getAttribute('aria-pressed') !== 'true';
+      b.setAttribute('aria-pressed', String(on));
+    }));
+    $('#runBtn').addEventListener('click', () => {
+      const alphas = $$('#segRunA button').filter(b => b.getAttribute('aria-pressed') === 'true')
+        .map(b => b.dataset.a);
+      if (!alphas.length) { $('#stMsg').textContent = 'pick at least one angle'; return; }
+      S.runCmd = buildCommand(alphas);
+      $('#copyBtn').hidden = false;
+      renderRight();
+      $('#stMsg').textContent = `command built for ${alphas.length} angle(s)`;
+    });
+    $('#copyBtn').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(S.runCmd || ''); $('#stMsg').textContent = 'copied'; }
+      catch (_) { $('#stMsg').textContent = 'clipboard blocked — select the text instead'; }
+    });
   }
+
+/* The command the configured case actually needs. Written from the same fields
+   that enter the case id, so a run started from it is the run this page
+   describes -- which is the whole point of not pretending to launch one. */
+function buildCommand(alphas) {
+  const s = S.solver, lvl = S.level, idx = 83;
+  const flags = [];
+  if (!s.useNKSolver) flags.push('--no-nk');
+  if (s.eddyVisInfRatio) flags.push(`--eddy-vis-inf-ratio ${(+s.eddyVisInfRatio).toPrecision(5)}`);
+  flags.push('--watch-memory');
+  const S8 = 'AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured';
+  const lines = [
+    '# built by the S8 Workbench — every flag below is a field of the case id',
+    `# level ${lvl} · ${s.turbulenceModel} · L2 ${s.L2Convergence.toExponential(0)} · ${s.ranks} ranks`,
+    '',
+    '# 1. the mesh, if it is not already built',
+    `.venv/bin/python ${S8}/build_volume.py \\`,
+    `    --level ${lvl} --index ${idx} --out ${S8}/runs/s8_v2/g${idx}`,
+    `$AERIS_MACH_PYTHON ${S8}/write_cgns.py \\`,
+    `    --blocks ${S8}/runs/s8_v2/g${idx}/${lvl}_blocks.npz`,
+    '',
+    '# 2. solve'
+  ];
+  alphas.forEach(a => {
+    lines.push(`$AERIS_MACH_PYTHON ${S8}/solve_s8.py \\`);
+    lines.push(`    --grid ${S8}/runs/s8_v2/g${idx}/${lvl}_volume.cgns \\`);
+    lines.push(`    --alpha ${a} --ranks ${s.ranks} \\`);
+    lines.push(`    --out ${S8}/runs/s8_v2/g${idx}/${lvl}_a${a} ${flags.join(' ')}`);
+  });
+  lines.push('', '# 3. judge it — exit status proves nothing either way',
+    `.venv/bin/python ${S8}/collect_dataset.py --runs ${S8}/runs/s8_v2 --out ${S8}/data/dataset_v2`,
+    `.venv/bin/python ${S8}/audit_runs.py --rows ${S8}/data/dataset_v2/rows.json \\`,
+    `    --out ${S8}/reports/s8_archive_audit_v2.json`);
+  return lines.join('\n');
+}
 
   if (S.tab === 'post') {
     L.innerHTML =
@@ -569,15 +708,21 @@ function renderRight() {
   if (S.tab === 'mesh') {
     const cur = S.custom || D.levels.levels[S.level];
     const c = levelCells(cur);
-    const stored = D.meshes[S.level] && D.meshes[S.level].blocks;
-    const total = stored ? Object.values(stored).reduce((a, b) => a + b.cells, 0) : Math.round(c.wing * 1.55);
+    const M = D.meshes[S.level];
+    /* the build's own summary, not a formula: my first version computed
+       2*(n_side-1) for the ring and got 88 where the mesh has 92 */
+    const total = (M && M.cells_total) || Math.round(c.wing * 1.55);
+    const stored = M && M.blocks;
     const mem = MEM(total);
     const fits = mem <= 12.8;
     R.innerHTML = `<details class="group" open><summary>Size</summary><div class="gbody">
-      ${kv('ring intervals (i)', c.i)}${kv('wall-normal (j)', c.j)}${kv('span (k)', c.k)}
-      ${kv('wing block cells', c.wing.toLocaleString())}
-      ${kv('all blocks', total.toLocaleString(), stored ? '' : 'w')}
-      ${stored ? '' : '<div class="note">Outboard blocks estimated at +55 %; a built mesh reports its real total.</div>'}
+      ${stored ? Object.entries(stored).map(([k, b]) =>
+        kv(k, b.shape.join('×') + '  ' + b.cells.toLocaleString() + ' cells')).join('')
+        : kv('wing block cells', c.wing.toLocaleString(), 'w')}
+      ${kv('all blocks', total.toLocaleString(), stored ? 'g' : 'w')}
+      ${M && M.folded === 0 ? kv('folded cells', '0', 'g') : ''}
+      ${M ? kv('wall-layer error', M.wall_layer_error_m.toExponential(1) + ' m', 'g') : ''}
+      ${stored ? '' : '<div class="note">No built mesh stored for these settings; the outboard blocks are estimated at +55 %.</div>'}
       </div></details>
       <details class="group" open><summary>Cost</summary><div class="gbody">
       ${kv('memory, ANK-only', fmt(mem, 1) + ' GiB', fits ? 'g' : 'b')}
@@ -627,7 +772,12 @@ function renderRight() {
       <div class="note">Every one of these fields enters the <b>case id</b>. Two runs that differ in
       any of them are different cases, and the four-level study refuses to combine them rather than
       averaging over the difference.</div>
-      </div></details>`;
+      </div></details>
+      ${S.runCmd ? `<details class="group" open><summary>Command</summary><div class="gbody">
+        <pre style="font-family:var(--mono);font-size:.66rem;line-height:1.5;color:var(--ink-2);
+          background:var(--sunk);border:1px solid var(--rule);border-radius:4px;padding:.55rem;
+          overflow-x:auto;white-space:pre;margin:0">${S.runCmd.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</pre>
+        </div></details>` : ''}`;
     return;
   }
 

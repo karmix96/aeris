@@ -1,0 +1,106 @@
+{
+  "schema": "aeris.s8.normal_direction.v1",
+  "question": "the wall-normal direction diverged on family A. Does it still diverge on family B, the meshes the production dataset uses?",
+  "why_it_matters": "a global refinement refines this direction too, so a third grid level cannot be read while any direction has no demonstrated limit.",
+  "refinement_ratios": {
+    "r21": 1.2976,
+    "r32": 1.2923,
+    "measured_on": "wall-normal layer count and first cell",
+    "note": "a DIRECTIONAL family: the global cell-count ratio describes nothing that was refined here."
+  },
+  "families": {
+    "A (tip cap 10.2 x s0, pre-fix)": {
+      "levels": [
+        {
+          "level": "gci_C",
+          "cells": 567256,
+          "tip_cap_first_cell_in_s0": 10.205,
+          "converged": true,
+          "cd": 208.237,
+          "cdp": 118.278,
+          "cdv": 89.959
+        },
+        {
+          "level": "gci_C_normal_s0",
+          "cells": 741120,
+          "tip_cap_first_cell_in_s0": 10.204,
+          "converged": true,
+          "cd": 209.134,
+          "cdp": 122.208,
+          "cdv": 86.926
+        },
+        {
+          "level": "gci_C_normal_s0_2",
+          "cells": 972024,
+          "tip_cap_first_cell_in_s0": 10.203,
+          "converged": true,
+          "cd": 213.33,
+          "cdp": 128.516,
+          "cdv": 84.813
+        }
+      ],
+      "missing": [],
+      "caps": [
+        10.203,
+        10.204,
+        10.205
+      ],
+      "cap_consistent": true,
+      "verdicts": {
+        "cd": {
+          "steps_counts": [
+            0.897,
+            4.196
+          ],
+          "p_observed": 5.8043,
+          "condition": "DIVERGENT: |f1-f2| = 0.0004196 is not smaller than |f2-f3| = 8.97e-05, so refining the grid is moving the answer FURTHER, not less far. This family has no demonstrated limit and the order formula's absolute value hides the sign. No GCI.",
+          "divergent": true,
+          "gci_21_percent": 0.6952,
+          "certified_uncertainty_percent": null,
+          "extrapolated_counts": 214.516
+        },
+        "cdp": {
+          "steps_counts": [
+            3.93,
+            6.308
+          ],
+          "p_observed": 1.7406,
+          "condition": "DIVERGENT: |f1-f2| = 0.0006308 is not smaller than |f2-f3| = 0.000393, so refining the grid is moving the answer FURTHER, not less far. This family has no demonstrated limit and the order formula's absolute value hides the sign. No GCI.",
+          "divergent": true,
+          "gci_21_percent": 10.6932,
+          "certified_uncertainty_percent": null,
+          "extrapolated_counts": 139.51
+        },
+        "cdv": {
+          "steps_counts": [
+            -3.033,
+            -2.113
+          ],
+          "p_observed": 1.4605,
+          "condition": "ok",
+          "divergent": false,
+          "gci_21_percent": 6.726,
+          "certified_uncertainty_percent": 6.726021236904528,
+          "extrapolated_counts": 80.249
+        }
+      }
+    },
+    "B (tip cap 2.04 x s0, rebuilt)": {
+      "levels": [
+        {
+          "level": "gci_C",
+          "cells": 603592,
+          "tip_cap_first_cell_in_s0": 2.042,
+          "converged": true,
+          "cd": 201.737,
+          "cdp": 110.794,
+          "cdv": 90.943
+        }
+      ],
+      "missing": [
+        "runs/s8_normalB/gci_C_normal_s0_b_a0",
+        "runs/s8_normalB/gci_C_normal_s0_2_b_a0"
+      ]
+    }
+  }
+}

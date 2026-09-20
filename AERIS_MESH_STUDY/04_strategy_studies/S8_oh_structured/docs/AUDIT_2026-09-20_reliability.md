@@ -255,8 +255,8 @@ matters; absolute figures are given for scale.
 | **Iterative** | ≤0.04 ct | ≤0.04 ct | all 52 runs gated in this audit; ≤0.017 % on C_D | **Closed** |
 | Geometry (twist) | ≤0.25° | small | `s8_geometry_audit.json` | Acceptable |
 | Reference area | 0 | 0 | defect 23 fixed | Closed |
-| c_p above physical bound | unquantified | unquantified | 12–123 cells per run, at the root LE | **Never costed in counts** |
-| y+ > 1 on the tip cap | unquantified | unquantified | 1.22–1.85 on all 52 runs | Open |
+| c_p above physical bound | **0.09–0.31 ct** (the unphysical excess) | small | measured 2026-09-21, `cp_drag_map.py` | **Closed — immaterial** |
+| y+ > 1 on the tip cap | — | — | max 4.16 on family A, **1.46 on family B**, 1.27 at `gci_M` | Marginal and converging |
 
 **Assembly.** Taking only the two components measured *on a difference* — the credit's grid drift
 (6.2 counts) and the χ spread (1.3 counts) — gives **≈6.3 counts** in quadrature. Against an effect
@@ -271,6 +271,32 @@ Two things this budget does *not* say. The 1-count materiality gate is indefensi
 margin — but the report already says so (`:1645`), so this is a matter of removing it from the
 queues, not a new finding. And drag *orderings* survive: `g47 < g13 < g83` at α 0 holds at both
 levels, so comparative conclusions with ≳10-count margins stand.
+
+### 4.1a Two flagged concerns, now costed and closed (21 September)
+
+Both had sat as "flagged, never quantified" since 4 and 13 September. `cp_drag_map.py` integrates the
+surface pressure directly and **reproduces ADflow's CDp to four decimal places** on every run tested,
+which is what licenses the regional breakdown. The normal orientation is chosen by matching the
+solver rather than assumed — the convention-free measurement PLAN §0.7 asks for.
+
+| run | family | cells over bound | drag they carry | **unphysical excess** | tip-cap y+ max |
+|---|---|---|---|---|---|
+| `gci_C` | A | 23 | 3.38 ct | **0.25 ct** | **4.16** |
+| `gci_C` | B | 4 | 4.70 ct | **0.31 ct** | 1.46 |
+| `gci_M` | B | 3 | 1.76 ct | **0.09 ct** | 1.27 |
+
+**The c_p bound violation costs 0.09–0.31 counts and it shrinks under refinement.** It is a converging
+resolution artifact at the root leading edge, not a defect in the physics, and it is immaterial against
+a 5–9 count effect. Closed.
+
+The distinction matters and I got it wrong first: the over-bound cells *carry* 1.8–4.7 counts, but a
+cell at c_p 1.23 against a bound of 1.0018 is 19 % unphysical, not 100 %. The error is what clipping
+c_p to the bound would remove. Reporting the contribution would have called this material by a factor
+of fifteen.
+
+**The tip-cap fix is independently confirmed here.** Family A's cap reaches y+ **4.16** — the
+"y+ 2.9–4.5" the ledger records — and family B's reaches 1.46, falling to 1.27 at `gci_M`. Still above
+the mandatory 1, on 4–8 cells, and converging. Marginal rather than open.
 
 ### 4.2 What this audit closed
 

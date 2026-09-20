@@ -771,8 +771,22 @@ LEVELS["gci_C_te"] = _dataclasses.replace(LEVELS["gci_C"], ds_te_frac=0.001)
 LEVELS["gci_C_coarse_cap"] = _dataclasses.replace(
     LEVELS["gci_C"], tip_span_first_cell_in_s0=10.0)
 
-LEVELS["gci_C_normal_s0"] = directional_level(
-    LEVELS["gci_C"], normal=GCI_RATIO, scale_first_cell=True)
+#: FAMILY A. Pinned to the OLD 10 x s0 cap explicitly, 2026-09-21.
+#:
+#: This used to inherit the default, which WAS 10.0 when the divergent wall-normal
+#: sequence was measured (208.24 -> 209.13 -> 213.33 counts). The default is now
+#: 2.0, so the inherited value silently changed under it and rebuilding this level
+#: today would no longer reproduce the runs in
+#: `runs/s8_checklist/dir_normal_s0*`. `gci_C_normal_s0_2` below was pinned to 10.0
+#: to MATCH these two -- so the pin now does the opposite of what its comment says,
+#: and the family it defines is mixed: 2.0, 2.0, 10.0.
+#:
+#: A level definition whose meaning depends on a default that has moved is not a
+#: record of anything. Both family-A levels now state the cap they were built with,
+#: and the family-B pair below states its own.
+LEVELS["gci_C_normal_s0"] = _dataclasses.replace(
+    directional_level(LEVELS["gci_C"], normal=GCI_RATIO, scale_first_cell=True),
+    tip_span_first_cell_in_s0=10.0)
 
 #: The wall-normal direction's THIRD level, as gci_F refines it: layers and first
 #: cell both at GCI_RATIO squared, ~960k cells, which fits the development host.
@@ -797,3 +811,33 @@ LEVELS["gci_M_te"] = _dataclasses.replace(
 LEVELS["gci_C_normal_s0_2"] = _dataclasses.replace(
     directional_level(LEVELS["gci_C"], normal=GCI_RATIO ** 2, scale_first_cell=True),
     tip_span_first_cell_in_s0=10.0)
+
+# ---------------------------------------------------------------------------
+# FAMILY B: the wall-normal direction on the mesh the production dataset uses.
+# ---------------------------------------------------------------------------
+#: The divergence above was measured on family A, whose tip cap was declared
+#: DEFECTIVE on 13 September (y+ 2.9-4.5 against a mandatory <= 1) and rebuilt.
+#: `data/dataset_v2` is family B. So the one result that says the grid family has
+#: no demonstrated limit was measured on a mesh the campaign has abandoned, and
+#: attaching it to the production numbers is not justified -- the 2026-09-20 audit
+#: records this as the reason the verification and the dataset come from different
+#: meshes.
+#:
+#: There is a specific reason to think the divergence may not survive the rebuild.
+#: Its signature is CDp RISING while CDv falls as layers are added at fixed first
+#: cell -- an outer-region effect, not a boundary-layer one. The cap fix changed
+#: the outboard extrusion from 48 to 54 layers because the finer cap first cell
+#: needs ~6 more layers to reach the same far field, which is exactly the region
+#: that signature points at. If the divergence is gone on family B, the go/no-go
+#: gate on a third grid level is clear. If it survives, no global refinement can be
+#: read until it is understood, and that is worth knowing before renting hardware.
+#:
+#: Same construction as the family-A pair, one difference: the wall-resolved cap at
+#: the current default. Build WITHOUT --allow-coarse-tip-cap.
+LEVELS["gci_C_normal_s0_b"] = _dataclasses.replace(
+    directional_level(LEVELS["gci_C"], normal=GCI_RATIO, scale_first_cell=True),
+    tip_span_first_cell_in_s0=2.0)
+
+LEVELS["gci_C_normal_s0_2_b"] = _dataclasses.replace(
+    directional_level(LEVELS["gci_C"], normal=GCI_RATIO ** 2, scale_first_cell=True),
+    tip_span_first_cell_in_s0=2.0)

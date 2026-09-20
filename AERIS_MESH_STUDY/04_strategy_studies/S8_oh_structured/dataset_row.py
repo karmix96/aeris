@@ -63,7 +63,8 @@ for extra in (HERE, HERE.parent, HERE.parent / "S6_bounded_mesh_atlas", REPO / "
 SCHEMA: dict[str, tuple[str, ...]] = {
     "identity_and_provenance": (
         "geometry_set", "geometry_index", "geometry_hash", "design_vector",
-        "mesher", "frame_mode", "grid_level", "cells", "mesh_hash",
+        "mesher", "frame_mode", "grid_level", "mesh_family",
+        "tip_cap_first_cell_in_s0", "cells", "mesh_hash",
         "git_commit", "adflow_version", "turbulence_model", "solver_options_hash"),
     "operating_point_and_references": (
         "alpha_deg", "beta_deg", "mach", "reynolds", "temperature_K",
@@ -245,6 +246,20 @@ def build_row(*, run: Path, level: str, index: int, set_name: str,
         row["inverted_cells"] = summary["negative_cells_all_blocks"]
         row["worst_le_turn_deg"] = summary["surface"]["worst_le_turn_per_cell_deg"]
         row["min_cell_over_s0"] = summary["surface"]["min_cell_over_s0"]
+        # WHICH MESH FAMILY. `gci_C` and `gci_M` each name two different meshes,
+        # because the tip cap was rebuilt on 13 September and the level names were
+        # not changed with it: family A has the cap's first cell at ~10.2 x s0 (the
+        # cap declared defective, y+ 2.9-4.5) and family B at ~2.04 x s0. They differ
+        # by 5.4-7.2 counts of C_D at `gci_C`, which is the size of the effect this
+        # campaign measures -- so a level name alone does not identify a mesh, and the
+        # whole grid-uncertainty evidence base sits on family A while the production
+        # dataset sits on family B. Identified by MEASUREMENT off the built mesh rather
+        # than by a level name or a build date, because the level definitions inherited
+        # a default that moved under them (see strategy_s8.py, gci_C_normal_s0).
+        cap = (summary.get("outboard") or {}).get("first_cell_in_s0")
+        row["tip_cap_first_cell_in_s0"] = cap
+        row["mesh_family"] = (None if cap is None else
+                              "A_coarse_cap" if cap > 5.0 else "B_wall_resolved_cap")
         blocks = mesh_dir / f"{level}_blocks.npz"
         row["mesh_hash"] = sha256_file(blocks)
         key = str(mesh_dir / level)

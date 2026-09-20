@@ -1,0 +1,72 @@
+{
+  "schema": "aeris.s8.cp_drag_map.v1",
+  "question": "the surface pressure exceeds its isentropic bound on every run. How many drag counts does that region carry?",
+  "run": "runs/s8_v2/g83/gci_M_a0",
+  "cp_physical_max": 1.0018,
+  "drag_direction": [
+    1.0,
+    0.0,
+    0.0
+  ],
+  "area_ref_m2": 0.39492,
+  "self_check": {
+    "cdp_solver_counts": 89.2881,
+    "cdp_integrated_counts": 89.288,
+    "disagreement_counts": -0.0,
+    "tolerance_counts": 2.0,
+    "normal_orientation": "as_stored",
+    "orientation_note": "chosen by matching the solver, not assumed. Both were tried; the rejected one gives -89.29 counts.",
+    "passes": true,
+    "method_note": "cell-centre cp over cell areas is first order, so a residual of a fraction of a count is the method's own error bar, not a finding about the solution."
+  },
+  "zones": [
+    {
+      "zone": "NSWallAdiabaticBCZone1",
+      "cell_dims": [
+        6,
+        54
+      ],
+      "cp_min": -10.1545,
+      "cp_max": 0.0576,
+      "cdp_counts": -0.0,
+      "cells_over_bound": 0,
+      "cdp_counts_from_over_bound_cells": 0.0,
+      "cdp_counts_of_unphysical_excess": 0.0,
+      "area_fraction_over_bound": 0.0,
+      "cdp_counts_leading_edge_strip": 0.0,
+      "leading_edge_strip_cells_each_side": 6,
+      "yplus": {
+        "max": 1.2689,
+        "p99": 1.0036,
+        "median": 0.3303,
+        "cells_above_1": 4
+      }
+    },
+    {
+      "zone": "NSWallAdiabaticBCZone5",
+      "cell_dims": [
+        62,
+        120
+      ],
+      "cp_min": -4.6465,
+      "cp_max": 1.0834,
+      "cdp_counts": 89.288,
+      "cells_over_bound": 3,
+      "cdp_counts_from_over_bound_cells": 1.7592,
+      "cdp_counts_of_unphysical_excess": 0.0884,
+      "area_fraction_over_bound": 9.4e-05,
+      "cdp_counts_leading_edge_strip": -30.656,
+      "leading_edge_strip_cells_each_side": 6,
+      "yplus": {
+        "max": 1.3509,
+        "p99": 0.7822,
+        "median": 0.1521,
+        "cells_above_1": 23
+      }
+    }
+  ],
+  "total_cells_over_bound": 3,
+  "total_cdp_counts_from_over_bound_cells": 1.7592,
+  "total_cdp_counts_of_unphysical_excess": 0.0884,
+  "verdict": "The over-bound cells carry 1.76 counts of pressure drag out of 89.3, of which 0.09 counts is the UNPHYSICAL EXCESS -- what clipping cp to its bound would remove. The second number is the error; the first is mostly legitimate stagnation pressure. Against a 5-9 count effect that is immaterial. The violation is real and confined to a few cells at the root leading edge; it belongs on the record and off the critical path. It is NOT what limits this study."
+}

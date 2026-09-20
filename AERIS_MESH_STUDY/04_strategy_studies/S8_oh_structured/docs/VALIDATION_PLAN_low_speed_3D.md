@@ -63,12 +63,24 @@ measured deformation is part of the deliverable. Three consequences:
    experiment's stated uncertainty, good; if it is wildly outside, that is a real finding. Do not read
    agreement as validation of a drag increment.
 
+**Provenance, for a data request.** RIBES = *"Radial basis functions at fluid Interface Boundaries to
+Envelope flow results for advanced Structural analysis"*, **Clean Sky JTI (FP7-JTI, JTI-CS-GRA), grant
+agreement 632556**, coordinated by Università degli Studi di Roma Tor Vergata, 1 December 2014 – 30
+November 2016, €292k total cost. The wind tunnel campaign ran at the University of Naples "Federico
+II". CORDIS lists **no public dataset**, so the project's own site is the only published route.
+
+**This provenance confirms the caveat above rather than softening it.** The project's stated objective
+is *load mapping between non-conforming CFD and structural meshes* — the experiment exists to validate
+a fluid–structure load-transfer method. Its pressure and deformation data are first-class; its drag is
+incidental. Treat the dataset as what it was built to be.
+
 **Access:** `ribes-project.eu` currently serves an **expired TLS certificate**, so automated fetching
 fails and a browser will warn. The database and the experimental test report are linked from
 `/experiments/` and `/Documents/RIBES-ExperimentalTestReport.pdf`. If the certificate blocks
-retrieval, the University of Naples Federico II Department of Industrial Engineering is the contact.
-Confirmed from the literature rather than from the site: Re 1.0–1.4e6, 30–40 m/s, M 0.1–0.12, 81 taps
-over 6 sections, 25 strain-gauge signals, 2 × 1.4 m closed-circuit section.
+retrieval, cite grant agreement 632556 to Roma Tor Vergata (coordinator) or the University of Naples
+Federico II Department of Industrial Engineering (tunnel). Everything quoted in the table above is
+confirmed from the peer-reviewed literature, not from the site: Re 1.0–1.4e6, 30–40 m/s, M 0.1–0.12,
+81 taps over 6 sections, 25 strain-gauge signals, 2 × 1.4 m closed-circuit section.
 
 ## 3. The rest of the ladder
 

@@ -47,6 +47,63 @@ against 12.8 GiB available.
 > Also note for §2 below: **r ≥ 1.3 is not met.** The global cell-derived ratio is 1.2479 and the
 > 1.300 in the level table is the near-wall spacing ratio, which is not what ASME V&V 20 defines r on.
 
+> ## STOP — a second, harder gate found 2026-09-21
+>
+> **The worst cells in this family get worse as it refines, and the preflight cannot see it.**
+> `reports/s8_mesh_quality_ladder.json`, geometry 83, family B:
+>
+> | | `gci_C` | `gci_M` | `gci_F` | `gci_FF` |
+> |---|---|---|---|---|
+> | scaled Jacobian **min** | 0.0090 | 0.0063 | **0.0043** | **0.0025** |
+> | scaled Jacobian p001 | 0.0142 | 0.0109 | 0.0084 | 0.0056 |
+> | min cell volume (m³) | 4.4e-15 | 2.0e-15 | 9.3e-16 | 4.2e-16 |
+> | *median* scaled Jacobian | 0.944 | 0.950 | 0.954 | **0.957** |
+> | *neighbour volume ratio p99* | 1.331 | 1.248 | 1.208 | **1.207** |
+> | folded cells | 0 | 0 | 0 | **0** |
+>
+> Every metric §1 records — folds, wall-layer error — and every bulk metric **improves** all the way
+> up the ladder. The worst-cell conditioning degrades by about 1.4× per level, and at `gci_F` roughly
+> 1,400 cells sit below a scaled Jacobian of 0.0084. Neither `s8_cloud_meshes.json` nor
+> `s8_robustness_screen_gciF.json` records a scaled Jacobian at all, so "0 folded, clean: True" and
+> "61/61 built cleanly" are true and do not speak to this. **That is PLAN §0.1 again, inverted: the
+> metrics measure the bulk and nothing measures the worst cell, which is what a linear solver feels.**
+>
+> **A stall happened, and the conditioning does NOT explain it.** Both halves matter.
+>
+> On 2026-09-21 a mesh from this family with a worst-cell scaled Jacobian of **0.0073** —
+> `gci_C_normal_s0_b`, 787,944 cells, wall-normal refined — **failed to converge under ANK-only**: 224
+> iterations, 3.55 orders dropped, then the residual rose monotonically over the last seventy
+> iterations while the adaptive CFL sat pinned at 3.12e+03 against the 1.00e+05 it had already
+> reached. Step length and linear residual were both normal. `reports/s8_normal_direction.json`
+> records it as `ATTEMPTED_AND_STALLED` with the history.
+>
+> `gci_F` (0.0043) and `gci_FF` (0.0025) are both worse conditioned than that mesh, which looked like
+> a reason to stop. **Then the bad cells were located, and the inference does not hold:**
+>
+> | mesh | worst cell is at | cells below 0.01 | converges? |
+> |---|---|---|---|
+> | `gci_C` | `o_wing` **outermost** normal layer (j 63/64), ring i 23–24, mid-span | 6 | **yes** |
+> | `gci_C_normal_s0_b` | `o_wing` **outermost** normal layer (j 82/83), ring i 23–24, mid-span | 18 | no |
+>
+> Same block, same ring index, same span station, same **outermost** layer — the O-block's far-field
+> edge, a low-gradient region. `o_out` (0.52) and `cap_out` (0.049) are healthy in both. So the
+> poorly-conditioned cells are a small, localised, **pre-existing** feature at every level, including
+> levels that converge perfectly well. Eighteen cells at the far-field boundary are unlikely to stall a
+> solver that tolerates six of them in the same place.
+>
+> **So: the scaled Jacobian degrading up the ladder is real, it is invisible to this plan's preflight,
+> and it should be recorded — but it is not evidence that `gci_F` will fail to converge.** The stall's
+> cause is not established. The other differences in that mesh are a 5× finer first spanwise cell at
+> the tip (cap 2.04 vs 10.2 × s0) and a 4× finer trailing edge, either of which is a better suspect
+> than 18 far-field cells.
+>
+> **What this does and does not change.** It does not block the batch on conditioning grounds. It does
+> leave this plan's own largest stated risk — "ANK-only is proven to 1,172,856 cells" — now
+> demonstrated to bite on an 788k-cell mesh of this family, which is a stronger warning than a cell
+> count. `gci_C_normal_s0_b` fits this host and is the free probe: if a solver setting converges it,
+> the batch needs a setting; if nothing does, find the cause before buying a level that cannot be
+> restarted cheaply.
+
 ---
 
 ## 1. What is built and verified

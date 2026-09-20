@@ -64,6 +64,65 @@ R21 = 109 / 84
 R32 = 84 / 65
 
 
+#: Rows of the ADflow iteration table, for reading a run that produced no result.
+ROW = __import__("re").compile(r"^\s*\d+\s+\d+\s+\d+\s")
+
+
+def stall_evidence(run: Path) -> dict | None:
+    """Why a run produced no result.json -- ATTEMPTED AND FAILED, or never started.
+
+    These are different facts and the difference is the whole lesson of this audit:
+    a missing verdict reads like an unasked question when it is really a broken
+    one. A run that stalled is a RESULT about the mesh, and reporting it as
+    "missing" throws that away.
+    """
+    log = run / "run.log"
+    if not log.exists():
+        return {"outcome": "NOT_ATTEMPTED", "why": "no run.log"}
+    rows = [line.split() for line in log.read_text().splitlines() if ROW.match(line)]
+    if len(rows) < 20:
+        return {"outcome": "ATTEMPTED_NO_HISTORY", "iterations": len(rows)}
+    # PER ROW, not per file. ADflow writes `----` in the CFL column whenever it has
+    # no step to report -- `convergence_gate.py` already documents this -- so one
+    # unparseable field made a comprehension over the whole log throw, and a 224
+    # iteration stall was reported as "unreadable history". The residual and the CFL
+    # are collected independently for the same reason: losing the CFL must not lose
+    # the residual, which is the series the verdict rests on.
+    resid, cfl = [], []
+    for r in rows:
+        if len(r) > 8:
+            try:
+                resid.append(float(r[8]))
+            except ValueError:
+                pass
+        if len(r) > 4:
+            try:
+                cfl.append(float(r[4]))
+            except ValueError:
+                pass
+    if len(resid) < 20:
+        return {"outcome": "ATTEMPTED_UNREADABLE_HISTORY", "iterations": len(rows),
+                "why": f"only {len(resid)} of {len(rows)} rows had a readable residual"}
+    tail = resid[-max(20, len(resid) // 5):]
+    rising = sum(b > a for a, b in zip(tail, tail[1:])) / max(1, len(tail) - 1)
+    return {
+        "outcome": "ATTEMPTED_AND_STALLED" if rising > 0.8 else "ATTEMPTED_INCOMPLETE",
+        "iterations": len(rows),
+        "residual_first": resid[0],
+        "residual_last": resid[-1],
+        "orders_dropped": round(__import__("math").log10(resid[0] / resid[-1]), 3)
+        if resid[-1] > 0 else None,
+        "fraction_of_tail_rising": round(rising, 3),
+        "cfl_last": cfl[-1] if cfl else None,
+        "cfl_max": max(cfl) if cfl else None,
+        "note": ("the adaptive CFL collapsed and the residual rose: the solver walked away "
+                 "from a solution rather than failing to reach one. That is a statement "
+                 "about this MESH, not a missing measurement."
+                 if rising > 0.8 else
+                 "stopped before converging, without a rising residual"),
+    }
+
+
 def forces(run: Path) -> dict | None:
     p = run / "result.json"
     if not p.exists():
@@ -108,7 +167,8 @@ def main() -> int:
         for name, run, summary in levels:
             f = forces(run)
             if f is None:
-                missing.append(str(run.relative_to(HERE)))
+                missing.append({"run": str(run.relative_to(HERE)),
+                                **(stall_evidence(run) or {})})
                 continue
             rows.append({"level": name, "cells": cells(summary),
                          "tip_cap_first_cell_in_s0": (round(cap(summary), 3)
@@ -178,7 +238,13 @@ def main() -> int:
     for family, entry in report["families"].items():
         print(f"\n  FAMILY {family}")
         if entry["missing"]:
-            print(f"    incomplete -- missing {', '.join(entry['missing'])}")
+            for m in entry["missing"]:
+                print(f"    {m['run']}: {m.get('outcome')}"
+                      + (f"\n      {m['iterations']} iterations, "
+                         f"{m['orders_dropped']} orders dropped, "
+                         f"{100 * m['fraction_of_tail_rising']:.0f} % of the tail rising, "
+                         f"CFL {m['cfl_last']:.2e} against a max of {m['cfl_max']:.2e}"
+                         if m.get("fraction_of_tail_rising") is not None else ""))
             continue
         print(f"    {'level':<24}{'cells':>10}{'cap':>7}{'CD':>10}{'CDp':>10}{'CDv':>10}")
         for r in entry["levels"]:

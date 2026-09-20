@@ -11,6 +11,16 @@ here rests on a number the brief provided.
 
 ---
 
+> **Followed up 21 September, 00:40 — both recommended tests are done, 16 solves.**
+> Item 2 of §6 (8 solves): the credit loses **65–69 %** at `gci_M` on **all three** wings
+> (g13 −2.473, g47 −3.068, g83 −2.612 against −7.209 / −8.780 / −8.544). Not a g83 quirk.
+> Item 3 of §6 (8 solves): the credit moves at most **0.63 counts** across a 4× range in vis4 while
+> absolute drag spans 57 (`reports/s8_vis4_credit.json`). **The error is genuine discretisation, not a
+> scheme parameter** — so a third grid level can measure it and the cloud batch is justified, though
+> not as written: its eleven meshes are the treatment configuration only, so the credit cannot be
+> formed at `gci_F` at all. Re-scoped to ~255 core-hours against 439. The wall-normal divergence
+> (§3.3) is the one gate still standing before any spend. Every one of the 16 runs ACCEPTED.
+
 ## 1. Verdict
 
 **S8 can answer questions about lift, pitching moment and neutral point, and it can rank wings

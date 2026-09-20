@@ -9,21 +9,40 @@ trailing-edge credit of 5.27–8.98 counts. That is the question a third and fou
 and it cannot be answered on the development host: `gci_F` needs 20.6 GiB and `gci_FF` 38.4 GiB
 against 12.8 GiB available.
 
-> **Do not launch this batch first. Revised 20 September** —
-> `docs/AUDIT_2026-09-20_reliability.md` §6. Three cheaper things come before it, and two of them
-> change what the batch should measure:
+> **This batch is superseded. Revised 21 September, after 16 desktop solves.**
+> `docs/AUDIT_2026-09-20_reliability.md` §6 and the 21 Sept 00:40 addendum in `S8_REPORT`.
 >
-> 1. **8 solves, ~6–8 h.** The χ-3 baseline at `gci_M` for g13 and g47. On wing 83 the credit
->    already measures −8.11…−9.15 counts at `gci_C` and **−2.05…−3.03 at `gci_M`** — it loses 67–74 %
->    on the refinement we own, so the premise above ("0.85–4.39 counts against 5.27–8.98") is wrong:
->    the credit's own grid sensitivity is 5.5–6.2 counts. Extend that to three wings before renting
->    anything.
-> 2. **4 solves, ~1.5 h.** vis4 halved and doubled on two wings. It moves absolute drag by
->    −20.6/+35.1 counts and its effect on a *difference* has never been measured. If differences are
->    vis4-sensitive, **no grid level rescues the claim**, and this is the cheapest way to find out.
-> 3. **~3–4 h.** Diagnose the wall-normal divergence (C_D 208.24 → 209.13 → 213.33, step growing
->    4.7×; `gci.py` returns p = −5.97 and refuses a GCI). A third *global* level refines that
->    direction too, so buying `gci_F` first buys a third point on a family with no demonstrated limit.
+> **The premise in the paragraph above is wrong.** "Grid error in a difference is 0.85–4.39 counts
+> against a credit of 5.27–8.98" was an estimate. Measured on three wings, the credit is
+> −7.21/−8.78/−8.54 counts at `gci_C` and **−2.47/−3.07/−2.61 at `gci_M`** — it loses **65–69 %** on
+> the refinement already owned, so its own grid sensitivity is 5.5–6.2 counts, larger than the
+> wing-to-wing spread it was being used to resolve.
+>
+> **The good news, and the reason to still buy compute:** vis4 halved and doubled moves absolute drag
+> by 57 counts and the credit by at most **0.63** (`reports/s8_vis4_credit.json`). The error is
+> genuine discretisation, not a free parameter of the scheme, so **a third grid level can measure it.**
+>
+> **But this batch cannot.** The eleven meshes in §1 are the **treatment configuration only**. The
+> credit needs both legs on the same grid, and the χ-3 baseline does not exist at `gci_F` or `gci_FF`.
+> As written the batch would refine absolute drag on ten wings — a quantity that is
+> dissipation-dominated and not the claim — and still not say where the credit settles.
+>
+> **Re-scope:**
+>
+> | | as written | re-scoped |
+> |---|---|---|
+> | `gci_F` treatment | 10 wings × 4α = 40 | 3 wings × 4α = **12** |
+> | `gci_F` baseline | **0 — not built** | 3 wings × 4α = **12 (new meshes needed)** |
+> | `gci_FF` | 1 wing × 4α = 4 | 1 wing × 2α = **2** |
+> | core-hours | **439** | **~255** |
+>
+> Cheaper and answerable. Build cost for the baseline meshes is 25–45 s each.
+>
+> **One gate remains before the meter starts:** the wall-normal direction diverges (C_D 208.24 →
+> 209.13 → 213.33, step growing 4.7×; `gci.py` returns p = −5.97 and refuses a GCI). A global
+> refinement refines that direction too, so `gci_F` bought now is a third point on a family with no
+> demonstrated limit. Two or three solves localise it — CDp rising while CDv falls at fixed s0 points
+> at the `o_wing`/`o_out` interface, not at the boundary layer.
 >
 > Also note for §2 below: **r ≥ 1.3 is not met.** The global cell-derived ratio is 1.2479 and the
 > 1.300 in the level table is the near-wall spacing ratio, which is not what ASME V&V 20 defines r on.

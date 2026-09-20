@@ -1,0 +1,56 @@
+{
+  "schema": "aeris.s8.vis4_credit.v1",
+  "question": "absolute drag is strongly dissipation-dependent (-20.6/+35.1 counts). Is the trailing-edge CREDIT dissipation-dependent too?",
+  "why_it_decides_the_cloud_batch": "a credit that is flat in vis4 is genuine discretisation error, which a third grid level measures. A credit that moves with vis4 is partly a free parameter of the scheme, and no mesh refinement reaches that.",
+  "geometry_index": 83,
+  "level": "gci_C",
+  "method": "both legs re-solved at each vis4, so the credit at each setting is formed from its own pair. Comparing a treatment at one vis4 against a baseline at another would difference the design and the scheme at once.",
+  "rows": [
+    {
+      "alpha_deg": 0,
+      "vis4": 0.0156,
+      "setting": "default",
+      "credit_counts": -8.969,
+      "shift_vs_default_counts": 0.0
+    },
+    {
+      "alpha_deg": 0,
+      "vis4": 0.0078,
+      "setting": "low",
+      "credit_counts": -8.546,
+      "shift_vs_default_counts": 0.423
+    },
+    {
+      "alpha_deg": 0,
+      "vis4": 0.0312,
+      "setting": "high",
+      "credit_counts": -8.828,
+      "shift_vs_default_counts": 0.141
+    },
+    {
+      "alpha_deg": 4,
+      "vis4": 0.0156,
+      "setting": "default",
+      "credit_counts": -9.151,
+      "shift_vs_default_counts": 0.0
+    },
+    {
+      "alpha_deg": 4,
+      "vis4": 0.0078,
+      "setting": "low",
+      "credit_counts": -8.519,
+      "shift_vs_default_counts": 0.632
+    },
+    {
+      "alpha_deg": 4,
+      "vis4": 0.0312,
+      "setting": "high",
+      "credit_counts": -9.118,
+      "shift_vs_default_counts": 0.033
+    }
+  ],
+  "max_credit_shift_counts": 0.632,
+  "absolute_drag_span_counts": 57.0,
+  "finding": "Across a 4x range in vis4 the credit moves by at most 0.63 counts while absolute drag spans about 57. The credit cancels the dissipation almost exactly, so the error that makes it grid-dependent is genuine discretisation and NOT a free parameter of the scheme.",
+  "consequence": "A third grid level can measure this. The cloud batch is justified -- but it must carry BOTH configurations, which the eleven meshes built on 2026-09-18 do not: they are the treatment only, so the credit cannot be formed at gci_F as planned."
+}

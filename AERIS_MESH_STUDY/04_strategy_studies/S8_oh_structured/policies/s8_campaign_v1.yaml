@@ -130,7 +130,7 @@ solver:
     because that run continued about 1180 iterations past the useful point.
     Diagnosing solver weak spots is now a deliberate investigation with --l2
     tightened, not something a campaign run surfaces for free.
-  l2_convergence_evidence: AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_l2_sensitivity.json
+  l2_convergence_evidence: AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/reports/s8_l2_sensitivity.json
   l2_convergence_evidence_summary: >-
     Worst relative force change against the final value, over the four gci_C
     runs, and the median fraction of the run each target needs:

@@ -68,7 +68,7 @@ heavy_work:
     run-s8-cloud-hf:
       policy: policies/s8_cloud_hf_v1.yaml
       decision: AERIS_MESH_STUDY/00_governance/decisions/ADR-0020-s8-desktop-campaign.md
-      plan: AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_cloud_batch.json
+      plan: AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/reports/s8_cloud_batch.json
       authorized_by: principal_investigator
       authorized_on: 2026-09-09
       authorization_note: >-

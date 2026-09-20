@@ -9,7 +9,7 @@ failing, without warning, and without any sign in the residual history.
 That is exactly what happened: `solve_s8.py` omitted it and every S8 CFD result
 was void until it was found by noticing that a wing at 8 degrees reported a
 maximum surface cp of 0.0072.  See
-`AERIS_MESH_STUDY/05_s6_cfd_qualification/reports/s8_lift_index_defect_20260904.json`.
+`AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/reports/s8_lift_index_defect_20260904.json`.
 
 These tests are cheap and static.  They do not need ADflow installed.
 """

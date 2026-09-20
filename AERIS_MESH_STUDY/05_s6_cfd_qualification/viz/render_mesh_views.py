@@ -303,7 +303,7 @@ def fig_planform(z, out: Path):
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--blocks", type=Path,
-                    default=Path("/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g12/gci_C_blocks.npz"))
+                    default=Path(__file__).resolve().parents[3] / "AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_v2/g12/gci_C_blocks.npz")
     ap.add_argument("--out-dir", type=Path,
                     default=Path("/home/mike_kara/aeris/AERIS_MESH_STUDY/05_s6_cfd_qualification/viz"))
     ap.add_argument("--stamp", default="20260916")

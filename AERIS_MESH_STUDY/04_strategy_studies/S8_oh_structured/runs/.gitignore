@@ -22,6 +22,16 @@
 !memory_watch.json
 !changes.json
 !*_gate.json
+# `*_gate.json` does NOT match a file named exactly `gate.json` -- the pattern
+# needs the underscore, so `*` cannot stand in for an empty prefix here. Same
+# class of mistake as the inline-comment one above.
+#
+# LATENT, not a live loss: the per-geometry verdicts are named `gci_C_gate.json`
+# and do match. But `convergence_gate.py --out <run>/gate.json` writes exactly
+# that name, and so does the release dataset (`runs/*/gate.json`), so the next
+# per-run verdict written in here would have been dropped without a word.
+# Found 2026-09-20 by the reliability audit.
+!gate.json
 !*_summary.json
 !*_dataset_rows.json
 !forces_breakdown.dat

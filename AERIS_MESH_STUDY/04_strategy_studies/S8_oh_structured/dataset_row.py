@@ -321,10 +321,29 @@ def build_row(*, run: Path, level: str, index: int, set_name: str,
         row["area_ref"] = own
 
     # ---- convergence, from the gate rather than from the run ---------------
+    # Matched on the resolved path FIRST and on `<geometry>/<run>` second.
+    # An exact path match alone is what lost all 52 production verdicts. They
+    # existed and were correct -- 13 committed gate reports, 52/52 ACCEPTED -- and
+    # they identified their runs by an absolute path under `artifacts/s8_v2/` that
+    # the 2026-09-19 consolidation moved to `runs/s8_v2/`. Every match failed and
+    # every row silently came out "not judged" -- a missing verdict reads like an
+    # unasked question, not like a broken lookup, so nothing complained while the
+    # MANIFEST went on asserting the gate as its acceptance authority.
+    # The identity fallback is `g83/gci_M_a0`, which survives the tree
+    # moving; it is deliberately NOT the run name alone, because `gci_C_a0` is the
+    # name of one run per wing and matching on it merges ten geometries (the same
+    # mistake as defects 24, 25 and 26). Found 2026-09-20 by the reliability audit.
     entry = None
     if gate:
-        entry = next((r for r in gate.get("results", [])
+        records = gate.get("results", [])
+        entry = next((r for r in records
                       if Path(r["directory"]).resolve() == run.resolve()), None)
+        if entry is None:
+            identity = f"{run.resolve().parent.name}/{run.name}"
+            entry = next((r for r in records
+                          if (r.get("run_identity")
+                              or f"{Path(r['directory']).parent.name}/"
+                                 f"{Path(r['directory']).name}") == identity), None)
     if entry:
         checks = entry["checks"]
         row.update(gate_verdict=entry["verdict"], iterations=entry["iterations"],

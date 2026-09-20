@@ -9,6 +9,25 @@ trailing-edge credit of 5.27–8.98 counts. That is the question a third and fou
 and it cannot be answered on the development host: `gci_F` needs 20.6 GiB and `gci_FF` 38.4 GiB
 against 12.8 GiB available.
 
+> **Do not launch this batch first. Revised 20 September** —
+> `docs/AUDIT_2026-09-20_reliability.md` §6. Three cheaper things come before it, and two of them
+> change what the batch should measure:
+>
+> 1. **8 solves, ~6–8 h.** The χ-3 baseline at `gci_M` for g13 and g47. On wing 83 the credit
+>    already measures −8.11…−9.15 counts at `gci_C` and **−2.05…−3.03 at `gci_M`** — it loses 67–74 %
+>    on the refinement we own, so the premise above ("0.85–4.39 counts against 5.27–8.98") is wrong:
+>    the credit's own grid sensitivity is 5.5–6.2 counts. Extend that to three wings before renting
+>    anything.
+> 2. **4 solves, ~1.5 h.** vis4 halved and doubled on two wings. It moves absolute drag by
+>    −20.6/+35.1 counts and its effect on a *difference* has never been measured. If differences are
+>    vis4-sensitive, **no grid level rescues the claim**, and this is the cheapest way to find out.
+> 3. **~3–4 h.** Diagnose the wall-normal divergence (C_D 208.24 → 209.13 → 213.33, step growing
+>    4.7×; `gci.py` returns p = −5.97 and refuses a GCI). A third *global* level refines that
+>    direction too, so buying `gci_F` first buys a third point on a family with no demonstrated limit.
+>
+> Also note for §2 below: **r ≥ 1.3 is not met.** The global cell-derived ratio is 1.2479 and the
+> 1.300 in the level table is the near-wall spacing ratio, which is not what ASME V&V 20 defines r on.
+
 ---
 
 ## 1. What is built and verified
@@ -230,6 +249,15 @@ both triplets return **p = 2.0000** and an extrapolate of **0.0150000**, the exa
 answer, and agree with each other to a spread of 0.000. On the real `gci_C`/`gci_M` pair the
 compatibility check **passes** — the two are genuinely the same case — and the analysis correctly
 reports `TREND_ONLY`, because two levels cannot give an observed order.
+
+> **What the unit test could not catch, 20 September.** All of the above is true and the tool does
+> refuse what it should. But it was passing the **near-wall spacing ratio 1.300** into the band while
+> recording the global cell-derived 1.2479 in the same file — and a unit test built at r = 1.300
+> cannot detect a wrong choice of r, because the constructed family and the assumed ratio agree by
+> construction. The α-0 C_D band was reported as 54.8 % where the correct ratio gives 67.9 %: the one
+> substitution that shrinks the reported uncertainty. Fixed; `asme_r_requirement` now reports
+> `met: false` explicitly. The lesson is narrow and worth keeping: **a verification case that
+> supplies its own r verifies the formula, not the input.** Defect 29.
 
 **And one rule that is neither B nor C:** a verdict comes from the **artefacts**, never the exit
 code. ADflow exits 0 on SIGTERM, which this project has known since PLAN 0.3. On 18 September SU2

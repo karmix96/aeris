@@ -357,7 +357,25 @@ def main() -> int:
                       cl_pct=args.cl_pct, cd_pct=args.cd_pct, cmy_abs=args.cmy_abs,
                       linres=read_linres(log), l2_target=target)
         record["alpha_deg"] = alpha
-        record["directory"] = str(directory)
+        # A path is a WEAK way to say which run a verdict belongs to, and this is
+        # where the 52 production verdicts were lost. They were all correct and all
+        # committed -- and they identified their runs as
+        # `/…/AERIS_MESH_STUDY/artifacts/s8_v2/g12/gci_C_a-2`, which was true when
+        # written. The 2026-09-19 consolidation moved that tree to `runs/s8_v2/`,
+        # `dataset_row.build_row` matches on `Path(directory).resolve()`, and every
+        # match failed. Every row then read "convergence_gate.py has not judged
+        # this run" while the dataset MANIFEST went on asserting the gate as its
+        # acceptance authority. Across the three gate reports there were three
+        # conventions -- that absolute path, `../../artifacts/s8_cfd/gci_C_a-2`,
+        # and `AERIS_MESH_STUDY/artifacts/s8_cfd/gci_M_a-2` -- and none of them
+        # survives a move. Found 2026-09-20 by the reliability audit.
+        #
+        # So: resolve the path, because a relative one means different runs from
+        # different working directories, AND record `run_identity`, which is what
+        # the reader should match on when the tree has moved. Not the run name
+        # alone: `gci_C_a0` is one run per wing.
+        record["directory"] = str(directory.resolve())
+        record["run_identity"] = f"{directory.resolve().parent.name}/{directory.name}"
         results.append(record)
     results.sort(key=lambda r: r["alpha_deg"])
 

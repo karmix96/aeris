@@ -2,10 +2,10 @@
   "schema_version": "aeris.s8.dataset.v1",
   "purpose": "Trusted S8 CFD results with the provenance needed to reproduce and to believe them. Surrogate-training dataset, NOT certification.",
   "environment": {
-    "collected_utc": "2026-09-19T18:02:31.590461+00:00",
-    "git_commit": "c82ef2854bc9e42fb4fbbc1fc774d5e77430f8ff",
+    "collected_utc": "2026-09-20T10:43:36.419306+00:00",
+    "git_commit": "732c36a0e417c866132b20ff19184d1bc304f97d",
     "git_dirty": true,
-    "git_describe": "s8-svd-frame-baseline-133-gc82ef28-dirty",
+    "git_describe": "s8-svd-frame-baseline-144-g732c36a-dirty",
     "adflow_version": "2.13.1",
     "mach_python": "/home/mike_kara/miniconda3/envs/mach-aero/bin/python",
     "mpirun": "/home/mike_kara/miniconda3/envs/mach-aero/bin/mpirun",
@@ -18,7 +18,9 @@
     "accepted_verdicts": [
       "ACCEPTED"
     ],
-    "stopping_rule": "L2Convergence 1e-6; see reports/s8_l2_sensitivity.json"
+    "stopping_rule": "L2Convergence 1e-6; see reports/s8_l2_sensitivity.json",
+    "acceptance_filter_enforced": true,
+    "rows_without_a_verdict": 0
   },
   "counts": {
     "runs_found": 52,

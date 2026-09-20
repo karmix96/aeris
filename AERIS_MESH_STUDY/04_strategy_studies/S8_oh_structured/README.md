@@ -21,14 +21,29 @@ S8_oh_structured/
 
 | you want | look in |
 |---|---|
+| **what S8 can and cannot claim** | **`docs/AUDIT_2026-09-20_reliability.md` — read this first** |
 | the full story of S8 | `docs/S8_REPORT_2026-09-15.md` — a running account with dated addenda |
 | the SU2 track alone | `docs/SU2_REPORT_2026-09-18.md` |
 | how to run the cloud batch | `docs/CLOUD_RUNBOOK.md`, then `docs/S8_CLOUD_BATCH_PLAN.md` for why |
 | what state the campaign is in | `docs/STATE_2026-09-10.md` — resume here |
 | a number quoted in a report | `reports/s8_*.json` — every figure has a file behind it |
 | a specific run's forces | `runs/<campaign>/g<index>/<level>_a<alpha>/result.json` |
-| whether a run was accepted | the same directory's `*_gate.json` |
+| whether a run was accepted | `runs/<campaign>/g<index>/<level>_gate.json`, per geometry and level; for the whole campaign, `reports/s8_v2_gate.json` |
 | a readable version of anything | `html/` |
+
+## Which `gci_C` do you mean?
+
+**`gci_C` and `gci_M` each name two different meshes**, and nothing in a filename distinguishes
+them. Check the tip cap in the mesh summary before combining anything across campaigns:
+
+| family | `gci_C` / `gci_M` cells | tip-cap first cell | where | what it holds |
+|---|---|---|---|---|
+| **A** | 567,256 / 1,111,152 | **10.20 × s0** (the cap declared defective 13 Sept) | `runs/s8_gci83`, `runs/s8_pilot`, `runs/s8_cfd`, `runs/s8_aniso`, `runs/s8_checklist`, `runs/s8_chi3` | the whole grid-convergence, directional and iterative evidence base |
+| **B** | 603,592 / 1,172,856 (g83) | **2.04 × s0** (rebuilt) | `runs/s8_v2` | the 52-run production campaign and `data/dataset_v2` |
+
+The production dataset was re-run after the cap fix; **the verification was not**. The difference is
+worth 5.4–7.2 counts of C_D at `gci_C`, so the error bar and the number it decorates currently come
+from different meshes. `docs/AUDIT_2026-09-20_reliability.md` §3.1.
 
 ## What is in git and what is not
 

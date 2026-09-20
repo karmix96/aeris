@@ -72,6 +72,12 @@
       "limit": 1e-06,
       "pass": true,
       "note": "the run reached the L2Convergence target it was given"
+    },
+    "forces_not_running_away": {
+      "value": {},
+      "limit": "20 x each settling tolerance AND above {'cl_percent': 0.01, 'cd_percent': 0.0005, 'cmy_absolute': 0.0}",
+      "pass": true,
+      "note": "a floor under BOTH acceptance routes: meeting a residual target says nothing about a force that is still travelling"
     }
   },
   "forces": {
@@ -82,5 +88,6 @@
     "cmy": 0.029472565826265448
   },
   "alpha_deg": 4.0,
-  "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g23/gci_C_a4"
+  "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_v2/g23/gci_C_a4",
+  "run_identity": "g23/gci_C_a4"
 }

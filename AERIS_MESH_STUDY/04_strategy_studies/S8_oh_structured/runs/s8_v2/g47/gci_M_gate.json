@@ -81,6 +81,12 @@
           "limit": 1e-06,
           "pass": true,
           "note": "the run reached the L2Convergence target it was given"
+        },
+        "forces_not_running_away": {
+          "value": {},
+          "limit": "20 x each settling tolerance AND above {'cl_percent': 0.01, 'cd_percent': 0.0005, 'cmy_absolute': 0.0}",
+          "pass": true,
+          "note": "a floor under BOTH acceptance routes: meeting a residual target says nothing about a force that is still travelling"
         }
       },
       "forces": {
@@ -91,7 +97,8 @@
         "cmy": -0.019649594963355405
       },
       "alpha_deg": -2.0,
-      "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_M_a-2"
+      "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_v2/g47/gci_M_a-2",
+      "run_identity": "g47/gci_M_a-2"
     },
     {
       "passes": true,
@@ -167,6 +174,12 @@
           "limit": 1e-06,
           "pass": true,
           "note": "the run reached the L2Convergence target it was given"
+        },
+        "forces_not_running_away": {
+          "value": {},
+          "limit": "20 x each settling tolerance AND above {'cl_percent': 0.01, 'cd_percent': 0.0005, 'cmy_absolute': 0.0}",
+          "pass": true,
+          "note": "a floor under BOTH acceptance routes: meeting a residual target says nothing about a force that is still travelling"
         }
       },
       "forces": {
@@ -177,7 +190,8 @@
         "cmy": 0.0049610930780193754
       },
       "alpha_deg": 0.0,
-      "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_M_a0"
+      "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_v2/g47/gci_M_a0",
+      "run_identity": "g47/gci_M_a0"
     },
     {
       "passes": true,
@@ -253,6 +267,12 @@
           "limit": 1e-06,
           "pass": true,
           "note": "the run reached the L2Convergence target it was given"
+        },
+        "forces_not_running_away": {
+          "value": {},
+          "limit": "20 x each settling tolerance AND above {'cl_percent': 0.01, 'cd_percent': 0.0005, 'cmy_absolute': 0.0}",
+          "pass": true,
+          "note": "a floor under BOTH acceptance routes: meeting a residual target says nothing about a force that is still travelling"
         }
       },
       "forces": {
@@ -263,7 +283,8 @@
         "cmy": 0.054120806470463516
       },
       "alpha_deg": 4.0,
-      "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_M_a4"
+      "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_v2/g47/gci_M_a4",
+      "run_identity": "g47/gci_M_a4"
     },
     {
       "passes": true,
@@ -339,6 +360,12 @@
           "limit": 1e-06,
           "pass": true,
           "note": "the run reached the L2Convergence target it was given"
+        },
+        "forces_not_running_away": {
+          "value": {},
+          "limit": "20 x each settling tolerance AND above {'cl_percent': 0.01, 'cd_percent': 0.0005, 'cmy_absolute': 0.0}",
+          "pass": true,
+          "note": "a floor under BOTH acceptance routes: meeting a residual target says nothing about a force that is still travelling"
         }
       },
       "forces": {
@@ -349,7 +376,8 @@
         "cmy": 0.1021888529188232
       },
       "alpha_deg": 8.0,
-      "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/artifacts/s8_v2/g47/gci_M_a8"
+      "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_v2/g47/gci_M_a8",
+      "run_identity": "g47/gci_M_a8"
     }
   ]
 }

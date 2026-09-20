@@ -1,7 +1,15 @@
 {
   "defect": 23,
   "finding": "All ten pilot geometries were solved with index 83s half-area (0.394918 m2). Their own areas range 0.2978-0.5162 m2 (-24.6 to +30.7 per cent). Every coefficient of nine geometries is mis-scaled by solver_area/own_area; forces are correct.",
-  "consequence_retracted": "The claim that the CFD-AVL correction is geometry-specific was a normalisation artifact. Corrected, CFD and AVL CL agree to about +/-2 per cent on every geometry.",
+  "consequence_retracted": "The claim that the CFD-AVL correction is geometry-specific was a normalisation artifact.",
+  "avl_agreement_claim_withdrawn_2026-09-20": {
+    "was": "Corrected, CFD and AVL CL agree to about +/-2 per cent on every geometry.",
+    "why_withdrawn": "Contradicted by the rows in this same file. Measured on CL_own_area against AVL_CL, the median absolute relative error is 16.16 / 33.12 / 6.12 / 0.74 per cent at alpha -2 / 0 / 4 / 8, the worst single pair is 250.73 per cent, and 8 of 40 pairs fall within 2 per cent -- all eight at alpha 8. The sentence was written from the alpha-8 column.",
+    "median_abs_relative_error_percent": {"-2": 16.16, "0": 33.12, "4": 6.12, "8": 0.74},
+    "within_2_percent": "8 of 40",
+    "what_the_rows_actually_support": "AVL and CFD agree to better than the ten per cent that verify_against_avl.py sets as a good result at alpha 4 and alpha 8. At alpha -2 and alpha 0 they do not, and a RELATIVE error is the wrong measure there because CL passes through zero on these wings -- the same near-zero trap gci_four_level.py records for CL and CMy. The absolute CL difference is the quantity to quote at low incidence.",
+    "found_by": "docs/AUDIT_2026-09-20_reliability.md section 5.1"
+  },
   "spread_as_run": {
     "across_geometries": 0.03304348983068273,
     "across_incidence": 0.00943229244983179

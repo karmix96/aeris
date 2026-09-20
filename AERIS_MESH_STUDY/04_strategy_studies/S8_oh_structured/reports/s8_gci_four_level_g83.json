@@ -35,7 +35,16 @@
         1.2479
       ],
       "refinement_ratio_measured_spacing": 1.3,
-      "ratio_note": "1.300 is measured on the node arrays in every direction at every step. The cell-count cube root understates it because o_out and cap_out are geometric extrusions crossing a fixed distance, so their layer count grows logarithmically.",
+      "refinement_ratio_used": 1.2479,
+      "ratio_note": "The band below uses the GLOBAL ratio from the cell counts, which is the quantity ASME V&V 20 / Celik define r on (the representative cell size over the whole domain). The near-wall node arrays do refine at 1.300, but o_out and cap_out are geometric extrusions crossing a fixed distance, so the domain refines more slowly and the global ratio is smaller. A smaller ratio WIDENS the band: that is the conservative direction, and it is why the procedure asks for this quantity rather than the local one. Passing 1.300 here understates the uncertainty. See `refinement_ratio_measured_spacing` for the near-wall value.",
+      "asme_r_requirement": {
+        "required": 1.3,
+        "global_r_per_step": [
+          1.2479
+        ],
+        "met": false,
+        "note": "Celik's r >= 1.3 is a requirement on the global ratio. This family does not meet it and cannot be said to, whatever the near-wall spacing does."
+      },
       "quantities": {
         "cd": {
           "label": "drag",
@@ -51,7 +60,7 @@
           "two_level_only": {
             "f1_fine": 0.02303610464118398,
             "f2_coarse": 0.025443858445278078,
-            "r21": 1.3,
+            "r21": 1.2479,
             "change_fine_minus_coarse": -0.002407753804094099,
             "relative_change": 0.10452087458352283,
             "p_observed": null,
@@ -62,9 +71,9 @@
             "assumed_order_band": {
               "assumed_p": 2.0,
               "safety_factor": 3.0,
-              "band": 0.4544385851457513,
-              "band_percent": 45.443858514575126,
-              "extrapolated_if_p_assumed": 0.01954660637438094,
+              "band": 0.5626920453632093,
+              "band_percent": 56.26920453632093,
+              "extrapolated_if_p_assumed": 0.0187153603619344,
               "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
             },
             "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
@@ -84,7 +93,7 @@
           "two_level_only": {
             "f1_fine": 0.01441401312878244,
             "f2_coarse": 0.016755554214787482,
-            "r21": 1.3,
+            "r21": 1.2479,
             "change_fine_minus_coarse": -0.0023415410860050424,
             "relative_change": 0.1624489352884913,
             "p_observed": null,
@@ -95,9 +104,9 @@
             "assumed_order_band": {
               "assumed_p": 2.0,
               "safety_factor": 3.0,
-              "band": 0.7062997186456141,
-              "band_percent": 70.62997186456141,
-              "extrapolated_if_p_assumed": 0.011020475322978032,
+              "band": 0.8745499310906734,
+              "band_percent": 87.45499310906733,
+              "extrapolated_if_p_assumed": 0.010212088399276856,
               "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
             },
             "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
@@ -117,7 +126,7 @@
           "two_level_only": {
             "f1_fine": 0.00862209151240154,
             "f2_coarse": 0.008688304230490593,
-            "r21": 1.3,
+            "r21": 1.2479,
             "change_fine_minus_coarse": -6.621271808905302e-05,
             "relative_change": 0.007679426505021004,
             "p_observed": null,
@@ -128,9 +137,9 @@
             "assumed_order_band": {
               "assumed_p": 2.0,
               "safety_factor": 3.0,
-              "band": 0.033388810891395664,
-              "band_percent": 3.3388810891395657,
-              "extrapolated_if_p_assumed": 0.008526131051402912,
+              "band": 0.04134248038532886,
+              "band_percent": 4.134248038532886,
+              "extrapolated_if_p_assumed": 0.008503271962657549,
               "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
             },
             "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
@@ -147,7 +156,7 @@
           "two_level_only": {
             "f1_fine": -0.29844321734024926,
             "f2_coarse": -0.2982458914064708,
-            "r21": 1.3,
+            "r21": 1.2479,
             "change_fine_minus_coarse": -0.0001973259337784694,
             "relative_change": 0.0006611841794799511,
             "p_observed": null,
@@ -158,9 +167,9 @@
             "assumed_order_band": {
               "assumed_p": 2.0,
               "safety_factor": 3.0,
-              "band": 0.002874713823825873,
-              "band_percent": 0.28747138238258735,
-              "extrapolated_if_p_assumed": -0.2987291969544209,
+              "band": 0.00355950980888577,
+              "band_percent": 0.3559509808885771,
+              "extrapolated_if_p_assumed": -0.29879732119342195,
               "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
             },
             "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
@@ -177,7 +186,7 @@
           "two_level_only": {
             "f1_fine": -0.006081040288380315,
             "f2_coarse": -0.0060385185603979265,
-            "r21": 1.3,
+            "r21": 1.2479,
             "change_fine_minus_coarse": -4.252172798238814e-05,
             "relative_change": 0.006992508841561022,
             "p_observed": null,
@@ -188,9 +197,9 @@
             "assumed_order_band": {
               "assumed_p": 2.0,
               "safety_factor": 3.0,
-              "band": 0.03040221235461313,
-              "band_percent": 3.0402212354613134,
-              "extrapolated_if_p_assumed": -0.0061426659811084135,
+              "band": 0.03764443340104399,
+              "band_percent": 3.7644433401043993,
+              "extrapolated_if_p_assumed": -0.006157346060428648,
               "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
             },
             "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
@@ -232,7 +241,16 @@
         1.2479
       ],
       "refinement_ratio_measured_spacing": 1.3,
-      "ratio_note": "1.300 is measured on the node arrays in every direction at every step. The cell-count cube root understates it because o_out and cap_out are geometric extrusions crossing a fixed distance, so their layer count grows logarithmically.",
+      "refinement_ratio_used": 1.2479,
+      "ratio_note": "The band below uses the GLOBAL ratio from the cell counts, which is the quantity ASME V&V 20 / Celik define r on (the representative cell size over the whole domain). The near-wall node arrays do refine at 1.300, but o_out and cap_out are geometric extrusions crossing a fixed distance, so the domain refines more slowly and the global ratio is smaller. A smaller ratio WIDENS the band: that is the conservative direction, and it is why the procedure asks for this quantity rather than the local one. Passing 1.300 here understates the uncertainty. See `refinement_ratio_measured_spacing` for the near-wall value.",
+      "asme_r_requirement": {
+        "required": 1.3,
+        "global_r_per_step": [
+          1.2479
+        ],
+        "met": false,
+        "note": "Celik's r >= 1.3 is a requirement on the global ratio. This family does not meet it and cannot be said to, whatever the near-wall spacing does."
+      },
       "quantities": {
         "cd": {
           "label": "drag",
@@ -248,7 +266,7 @@
           "two_level_only": {
             "f1_fine": 0.0179145387773991,
             "f2_coarse": 0.020173687608665856,
-            "r21": 1.3,
+            "r21": 1.2479,
             "change_fine_minus_coarse": -0.002259148831266756,
             "relative_change": 0.12610700500516864,
             "p_observed": null,
@@ -259,9 +277,9 @@
             "assumed_order_band": {
               "assumed_p": 2.0,
               "safety_factor": 3.0,
-              "band": 0.5482913261094288,
-              "band_percent": 54.82913261094287,
-              "extrapolated_if_p_assumed": 0.014640410036432787,
+              "band": 0.6789017874537877,
+              "band_percent": 67.89017874537876,
+              "extrapolated_if_p_assumed": 0.013860467978270286,
               "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
             },
             "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
@@ -281,7 +299,7 @@
           "two_level_only": {
             "f1_fine": 0.008928805964322543,
             "f2_coarse": 0.01107943054048347,
-            "r21": 1.3,
+            "r21": 1.2479,
             "change_fine_minus_coarse": -0.0021506245761609265,
             "relative_change": 0.240863625523315,
             "p_observed": null,
@@ -292,9 +310,9 @@
             "assumed_order_band": {
               "assumed_p": 2.0,
               "safety_factor": 3.0,
-              "band": 1.0472331544491955,
-              "band_percent": 104.72331544491954,
-              "extrapolated_if_p_assumed": 0.005811958752495115,
+              "band": 1.296698354652671,
+              "band_percent": 129.66983546526708,
+              "extrapolated_if_p_assumed": 0.005069483296672546,
               "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
             },
             "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
@@ -314,7 +332,7 @@
           "two_level_only": {
             "f1_fine": 0.008985732813076557,
             "f2_coarse": 0.009094257068182385,
-            "r21": 1.3,
+            "r21": 1.2479,
             "change_fine_minus_coarse": -0.00010852425510582756,
             "relative_change": 0.012077396174956014,
             "p_observed": null,
@@ -325,9 +343,9 @@
             "assumed_order_band": {
               "assumed_p": 2.0,
               "safety_factor": 3.0,
-              "band": 0.05251041815198266,
-              "band_percent": 5.251041815198266,
-              "extrapolated_if_p_assumed": 0.008828451283937677,
+              "band": 0.06501911492251454,
+              "band_percent": 6.5019114922514545,
+              "extrapolated_if_p_assumed": 0.008790984681597745,
               "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
             },
             "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
@@ -344,7 +362,7 @@
           "two_level_only": {
             "f1_fine": -0.16019515471659054,
             "f2_coarse": -0.15990167125308777,
-            "r21": 1.3,
+            "r21": 1.2479,
             "change_fine_minus_coarse": -0.000293483463502775,
             "relative_change": 0.0018320370801600812,
             "p_observed": null,
@@ -355,9 +373,9 @@
             "assumed_order_band": {
               "assumed_p": 2.0,
               "safety_factor": 3.0,
-              "band": 0.007965378609391654,
-              "band_percent": 0.7965378609391656,
-              "extrapolated_if_p_assumed": -0.16062049306949308,
+              "band": 0.009862840278787999,
+              "band_percent": 0.9862840278788001,
+              "extrapolated_if_p_assumed": -0.16072181445805903,
               "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
             },
             "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
@@ -374,7 +392,7 @@
           "two_level_only": {
             "f1_fine": 0.001225668797418991,
             "f2_coarse": 0.0012087547481393545,
-            "r21": 1.3,
+            "r21": 1.2479,
             "change_fine_minus_coarse": 1.6914049279636396e-05,
             "relative_change": 0.013799853039625339,
             "p_observed": null,
@@ -385,9 +403,9 @@
             "assumed_order_band": {
               "assumed_p": 2.0,
               "safety_factor": 3.0,
-              "band": 0.05999936104184928,
-              "band_percent": 5.999936104184928,
-              "extrapolated_if_p_assumed": 0.0012501819123170144,
+              "band": 0.07429202600456049,
+              "band_percent": 7.4292026004560485,
+              "extrapolated_if_p_assumed": 0.001256021270142601,
               "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
             },
             "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
@@ -429,7 +447,16 @@
         1.2479
       ],
       "refinement_ratio_measured_spacing": 1.3,
-      "ratio_note": "1.300 is measured on the node arrays in every direction at every step. The cell-count cube root understates it because o_out and cap_out are geometric extrusions crossing a fixed distance, so their layer count grows logarithmically.",
+      "refinement_ratio_used": 1.2479,
+      "ratio_note": "The band below uses the GLOBAL ratio from the cell counts, which is the quantity ASME V&V 20 / Celik define r on (the representative cell size over the whole domain). The near-wall node arrays do refine at 1.300, but o_out and cap_out are geometric extrusions crossing a fixed distance, so the domain refines more slowly and the global ratio is smaller. A smaller ratio WIDENS the band: that is the conservative direction, and it is why the procedure asks for this quantity rather than the local one. Passing 1.300 here understates the uncertainty. See `refinement_ratio_measured_spacing` for the near-wall value.",
+      "asme_r_requirement": {
+        "required": 1.3,
+        "global_r_per_step": [
+          1.2479
+        ],
+        "met": false,
+        "note": "Celik's r >= 1.3 is a requirement on the global ratio. This family does not meet it and cannot be said to, whatever the near-wall spacing does."
+      },
       "quantities": {
         "cd": {
           "label": "drag",
@@ -445,7 +472,7 @@
           "two_level_only": {
             "f1_fine": 0.01690734507291726,
             "f2_coarse": 0.019141183297877867,
-            "r21": 1.3,
+            "r21": 1.2479,
             "change_fine_minus_coarse": -0.0022338382249606076,
             "relative_change": 0.13212235364728214,
             "p_observed": null,
@@ -456,9 +483,9 @@
             "assumed_order_band": {
               "assumed_p": 2.0,
               "safety_factor": 3.0,
-              "band": 0.5744450158577483,
-              "band_percent": 57.44450158577484,
-              "extrapolated_if_p_assumed": 0.013669898370075801,
+              "band": 0.7112856423008772,
+              "band_percent": 71.12856423008772,
+              "extrapolated_if_p_assumed": 0.012898694472986416,
               "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
             },
             "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
@@ -478,7 +505,7 @@
           "two_level_only": {
             "f1_fine": 0.007548654611876055,
             "f2_coarse": 0.00963095854878515,
-            "r21": 1.3,
+            "r21": 1.2479,
             "change_fine_minus_coarse": -0.0020823039369090943,
             "relative_change": 0.275851001797469,
             "p_observed": null,
@@ -489,9 +516,9 @@
             "assumed_order_band": {
               "assumed_p": 2.0,
               "safety_factor": 3.0,
-              "band": 1.1993521817281259,
-              "band_percent": 119.9352181728126,
-              "extrapolated_if_p_assumed": 0.004530822819254181,
+              "band": 1.4850542060176912,
+              "band_percent": 148.50542060176912,
+              "extrapolated_if_p_assumed": 0.003811934184828928,
               "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
             },
             "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
@@ -511,7 +538,7 @@
           "two_level_only": {
             "f1_fine": 0.009358690461041205,
             "f2_coarse": 0.009510224749092716,
-            "r21": 1.3,
+            "r21": 1.2479,
             "change_fine_minus_coarse": -0.0001515342880515115,
             "relative_change": 0.016191826055400118,
             "p_observed": null,
@@ -522,9 +549,9 @@
             "assumed_order_band": {
               "assumed_p": 2.0,
               "safety_factor": 3.0,
-              "band": 0.07039924371913092,
-              "band_percent": 7.039924371913092,
-              "extrapolated_if_p_assumed": 0.009139075550821623,
+              "band": 0.08716930237698853,
+              "band_percent": 8.716930237698854,
+              "extrapolated_if_p_assumed": 0.00908676028815749,
               "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
             },
             "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
@@ -541,7 +568,7 @@
           "two_level_only": {
             "f1_fine": 0.11971183913518069,
             "f2_coarse": 0.12037534533308065,
-            "r21": 1.3,
+            "r21": 1.2479,
             "change_fine_minus_coarse": -0.0006635061978999685,
             "relative_change": 0.005542527812564351,
             "p_observed": null,
@@ -552,9 +579,9 @@
             "assumed_order_band": {
               "assumed_p": 2.0,
               "safety_factor": 3.0,
-              "band": 0.024097947011149347,
-              "band_percent": 2.4097947011149348,
-              "extrapolated_if_p_assumed": 0.1187502359498184,
+              "band": 0.029838406191694474,
+              "band_percent": 2.9838406191694475,
+              "extrapolated_if_p_assumed": 0.1185211689744906,
               "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
             },
             "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
@@ -571,7 +598,7 @@
           "two_level_only": {
             "f1_fine": 0.01543255618630034,
             "f2_coarse": 0.015340707969940604,
-            "r21": 1.3,
+            "r21": 1.2479,
             "change_fine_minus_coarse": 9.184821635973596e-05,
             "relative_change": 0.005951588009850934,
             "p_observed": null,
@@ -582,9 +609,9 @@
             "assumed_order_band": {
               "assumed_p": 2.0,
               "safety_factor": 3.0,
-              "band": 0.025876469608047535,
-              "band_percent": 2.5876469608047534,
-              "extrapolated_if_p_assumed": 0.015565669543343435,
+              "band": 0.03204059709379922,
+              "band_percent": 3.2040597093799223,
+              "extrapolated_if_p_assumed": 0.015597378957931231,
               "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
             },
             "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
@@ -626,7 +653,16 @@
         1.2479
       ],
       "refinement_ratio_measured_spacing": 1.3,
-      "ratio_note": "1.300 is measured on the node arrays in every direction at every step. The cell-count cube root understates it because o_out and cap_out are geometric extrusions crossing a fixed distance, so their layer count grows logarithmically.",
+      "refinement_ratio_used": 1.2479,
+      "ratio_note": "The band below uses the GLOBAL ratio from the cell counts, which is the quantity ASME V&V 20 / Celik define r on (the representative cell size over the whole domain). The near-wall node arrays do refine at 1.300, but o_out and cap_out are geometric extrusions crossing a fixed distance, so the domain refines more slowly and the global ratio is smaller. A smaller ratio WIDENS the band: that is the conservative direction, and it is why the procedure asks for this quantity rather than the local one. Passing 1.300 here understates the uncertainty. See `refinement_ratio_measured_spacing` for the near-wall value.",
+      "asme_r_requirement": {
+        "required": 1.3,
+        "global_r_per_step": [
+          1.2479
+        ],
+        "met": false,
+        "note": "Celik's r >= 1.3 is a requirement on the global ratio. This family does not meet it and cannot be said to, whatever the near-wall spacing does."
+      },
       "quantities": {
         "cd": {
           "label": "drag",
@@ -642,7 +678,7 @@
           "two_level_only": {
             "f1_fine": 0.027892755909697597,
             "f2_coarse": 0.03036912846477917,
-            "r21": 1.3,
+            "r21": 1.2479,
             "change_fine_minus_coarse": -0.002476372555081572,
             "relative_change": 0.08878192470829319,
             "p_observed": null,
@@ -653,9 +689,9 @@
             "assumed_order_band": {
               "assumed_p": 2.0,
               "safety_factor": 3.0,
-              "band": 0.38600836829692686,
-              "band_percent": 38.60083682969268,
-              "extrapolated_if_p_assumed": 0.024303810177695322,
+              "band": 0.4779608188742365,
+              "band_percent": 47.796081887423654,
+              "extrapolated_if_p_assumed": 0.02344887442461151,
               "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
             },
             "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
@@ -675,7 +711,7 @@
           "two_level_only": {
             "f1_fine": 0.018544792576369318,
             "f2_coarse": 0.02088041149813114,
-            "r21": 1.3,
+            "r21": 1.2479,
             "change_fine_minus_coarse": -0.0023356189217618208,
             "relative_change": 0.12594473150042026,
             "p_observed": null,
@@ -686,9 +722,9 @@
             "assumed_order_band": {
               "assumed_p": 2.0,
               "safety_factor": 3.0,
-              "band": 0.5475857891322619,
-              "band_percent": 54.758578913226195,
-              "extrapolated_if_p_assumed": 0.015159837617294211,
+              "band": 0.6780281819595841,
+              "band_percent": 67.80281819595842,
+              "extrapolated_if_p_assumed": 0.014353495244578223,
               "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
             },
             "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
@@ -708,7 +744,7 @@
           "two_level_only": {
             "f1_fine": 0.009347963333328286,
             "f2_coarse": 0.009488716966648035,
-            "r21": 1.3,
+            "r21": 1.2479,
             "change_fine_minus_coarse": -0.00014075363331974948,
             "relative_change": 0.015057144353350283,
             "p_observed": null,
@@ -719,9 +755,9 @@
             "assumed_order_band": {
               "assumed_p": 2.0,
               "safety_factor": 3.0,
-              "band": 0.06546584501456644,
-              "band_percent": 6.5465845014566435,
-              "extrapolated_if_p_assumed": 0.009143972560401113,
+              "band": 0.08106070091047075,
+              "band_percent": 8.106070091047076,
+              "extrapolated_if_p_assumed": 0.009095379180033296,
               "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
             },
             "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
@@ -738,7 +774,7 @@
           "two_level_only": {
             "f1_fine": 0.4010446134778685,
             "f2_coarse": 0.4019967395771817,
-            "r21": 1.3,
+            "r21": 1.2479,
             "change_fine_minus_coarse": -0.0009521260993131664,
             "relative_change": 0.0023741151665304916,
             "p_observed": null,
@@ -749,9 +785,9 @@
             "assumed_order_band": {
               "assumed_p": 2.0,
               "safety_factor": 3.0,
-              "band": 0.010322239854480395,
-              "band_percent": 1.0322239854480395,
-              "extrapolated_if_p_assumed": 0.39966472058031316,
+              "band": 0.01278113797177751,
+              "band_percent": 1.2781137971777512,
+              "extrapolated_if_p_assumed": 0.39933601129863555,
               "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
             },
             "condition": "TREND_ONLY: two levels. No observed order, no GCI band."
@@ -768,7 +804,7 @@
           "two_level_only": {
             "f1_fine": 0.028694527898378494,
             "f2_coarse": 0.02852385870088064,
-            "r21": 1.3,
+            "r21": 1.2479,
             "change_fine_minus_coarse": 0.00017066919749785317,
             "relative_change": 0.005947795973583436,
             "p_observed": null,
@@ -779,9 +815,9 @@
             "assumed_order_band": {
               "assumed_p": 2.0,
               "safety_factor": 3.0,
-              "band": 0.02585998249384102,
-              "band_percent": 2.585998249384102,
-              "extrapolated_if_p_assumed": 0.028941874561418866,
+              "band": 0.03202018252444212,
+              "band_percent": 3.202018252444212,
+              "extrapolated_if_p_assumed": 0.029000795905298093,
               "what_this_is": "an ASSUMPTION, not a measurement: p was set to 2.0, not observed, and the safety factor raised from 1.25 to 3.0 because of that. If the true order is lower -- which PLAN 3.4 warns is common for RANS on stretched grids -- this band is optimistic, and no two-level study can tell you whether it is. Do not report it as a GCI."
             },
             "condition": "TREND_ONLY: two levels. No observed order, no GCI band."

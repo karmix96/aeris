@@ -210,20 +210,49 @@ def analyse(index: int, alpha: float) -> dict:
         out["verdict"] = "a level has no recorded cell count; cannot form a refinement ratio"
         return out
 
-    #: The realised refinement ratio. Measured on the node arrays it is 1.300 in
-    #: every direction at every step; the cell-count cube root understates it at
-    #: 1.27 because the outboard blocks are geometric extrusions whose layer
-    #: count grows logarithmically. Both are reported; the spacing ratio is the
-    #: one the error model wants.
+    #: TWO honest ratios, and the error model gets the GLOBAL one.
+    #:
+    #: Near the wall (`o_wing`) the node arrays refine at 1.300 in every direction
+    #: at every step. Globally they do not: `o_out` and `cap_out` are geometric
+    #: extrusions crossing a fixed distance, so their layer count grows
+    #: logarithmically and the domain refines at about 1.25.
+    #:
+    #: ASME V&V 20 and Celik define r on the REPRESENTATIVE cell size,
+    #: h = (1/N * sum dV_i)^(1/3), which is a whole-domain quantity -- so the
+    #: cell-count cube root is the ratio the procedure asks for, and the local
+    #: near-wall spacing ratio is not a substitute for it.
+    #:
+    #: This function used to pass 1.300 into the band. That is the one substitution
+    #: which makes the reported uncertainty SMALLER: on g83 at alpha 0 it shrinks
+    #: the two-level CD band from 47.8 % to 38.6 %. `AUDIT_2026-09-05.md` had
+    #: already settled the question -- "Claiming r = 1.300 while the domain refines
+    #: at 1.25 would err the other way" -- and `PLAN_desktop_campaign.md` 2.2 says
+    #: plainly: `gci.py` takes the ratios from the cell counts, do not pass 1.300.
+    #: Restored 2026-09-20 by the reliability audit, with the alternative kept on
+    #: the record so the choice stays visible instead of buried in a note.
     ratios = [(counts[i + 1] / counts[i]) ** (1 / 3) for i in range(len(counts) - 1)]
     out["refinement_ratio_from_cells"] = [round(r, 4) for r in ratios]
     out["refinement_ratio_measured_spacing"] = 1.300
-    out["ratio_note"] = ("1.300 is measured on the node arrays in every direction at "
-                         "every step. The cell-count cube root understates it because "
-                         "o_out and cap_out are geometric extrusions crossing a fixed "
-                         "distance, so their layer count grows logarithmically.")
+    out["refinement_ratio_used"] = round(sum(ratios) / len(ratios), 4)
+    out["ratio_note"] = (
+        "The band below uses the GLOBAL ratio from the cell counts, which is the "
+        "quantity ASME V&V 20 / Celik define r on (the representative cell size "
+        "over the whole domain). The near-wall node arrays do refine at 1.300, but "
+        "o_out and cap_out are geometric extrusions crossing a fixed distance, so "
+        "the domain refines more slowly and the global ratio is smaller. A smaller "
+        "ratio WIDENS the band: that is the conservative direction, and it is why "
+        "the procedure asks for this quantity rather than the local one. Passing "
+        "1.300 here understates the uncertainty. See "
+        "`refinement_ratio_measured_spacing` for the near-wall value.")
+    out["asme_r_requirement"] = {
+        "required": 1.3,
+        "global_r_per_step": [round(x, 4) for x in ratios],
+        "met": bool(min(ratios) >= 1.3),
+        "note": ("Celik's r >= 1.3 is a requirement on the global ratio. This family "
+                 "does not meet it and cannot be said to, whatever the near-wall "
+                 "spacing does.")}
 
-    r = out["refinement_ratio_measured_spacing"]
+    r = out["refinement_ratio_used"]
     results: dict = {}
     for q, label in QUANTITIES.items():
         values = [levels[l]["functions"].get(q) for l in order]

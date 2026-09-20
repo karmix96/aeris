@@ -384,6 +384,16 @@ def main() -> int:
                          "growing in envelope, and the linear solve not dead"),
             "accepted_verdicts": list(ACCEPTABLE),
             "stopping_rule": "L2Convergence 1e-6; see reports/s8_l2_sensitivity.json",
+            # Whether the filter that enforces all of the above was actually ON.
+            # The dataset_v2 built on 2026-09-19 asserted this whole block while
+            # every one of its 52 rows carried `gate_verdict: null` -- which is
+            # only reachable with --include-rejected, because a missing verdict is
+            # not in ACCEPTABLE. The manifest did not say so, so the claim above
+            # read as though the gate had judged and passed every run. A
+            # provenance record that cannot express "this was collected with the
+            # acceptance filter off" is not a provenance record.
+            "acceptance_filter_enforced": not args.include_rejected,
+            "rows_without_a_verdict": sum(1 for r in rows if r.get("gate_verdict") is None),
         },
         "counts": {"runs_found": len(runs), "rows": len(rows),
                    "excluded": len(excluded)},

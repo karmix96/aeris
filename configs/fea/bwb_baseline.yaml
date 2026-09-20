@@ -15,7 +15,7 @@ case:
     authority_file: AERIS_MESH_STUDY/05_s6_cfd_qualification/mission_authority_v1.yaml
   openaerostruct_validation:
     enabled: true
-    cfd_dataset: AERIS_MESH_STUDY/05_s6_cfd_qualification/dataset/rows.json
+    cfd_dataset: AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/data/dataset/rows.json
     geometry_set: lhs100_seed42
     geometry_index: 83
     grid_level: gci_C

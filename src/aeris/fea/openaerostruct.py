@@ -126,6 +126,66 @@ def run_oas_case(
     return _run_oas_point(mesh, mission, alpha_deg)
 
 
+def run_oas_prediction(
+    stations: dict[str, object],
+    mission: dict[str, object],
+    output_path: Path,
+    *,
+    chordwise_nodes: int = 5,
+) -> dict[str, object]:
+    """Run governed-mission OAS points without claiming CFD validation.
+
+    This is used for design-space wings that have no accepted S8 CFD comparison
+    rows.  The resulting cases may supply a spanwise load *shape* to CalculiX,
+    but the report is explicitly prediction-only and never passes a CFD gate.
+    """
+    state = mission.get("state")
+    if not isinstance(state, dict) or not isinstance(state.get("alpha_deg"), list):
+        raise OpenAeroStructError("mission authority has no alpha_deg list")
+    alphas = [float(value) for value in state["alpha_deg"]]
+    if not alphas:
+        raise OpenAeroStructError("mission authority alpha_deg list is empty")
+    mesh = build_oas_mesh(stations, chordwise_nodes)
+    cases = [_run_oas_point(mesh, mission, alpha_deg) for alpha_deg in alphas]
+    payload = {
+        "schema": "aeris.fea.openaerostruct_prediction.v1",
+        "status": "prediction_only",
+        "scope": {
+            "usable_for": ["aerodynamic visualization", "normalized FEA load shape"],
+            "not_validated": [
+                "CFD agreement",
+                "viscous drag",
+                "local shell stress",
+                "buckling",
+                "composite failure",
+            ],
+        },
+        "solver": {
+            "name": "OpenAeroStruct",
+            "version": importlib.metadata.version("openaerostruct"),
+            "model": "inviscid VLM; rigid geometry",
+        },
+        "mission": mission,
+        "geometry": {
+            "design_set": stations.get("design_set"),
+            "design_index": stations.get("design_index"),
+            "design_matrix_sha256": stations.get("design_matrix_sha256"),
+            "chordwise_nodes": chordwise_nodes,
+            "spanwise_nodes": int(mesh.shape[1]),
+        },
+        "checks": {
+            "geometry_identity": True,
+            "mission_identity": True,
+            "cfd_validation": False,
+        },
+        "comparisons": [],
+        "cases": cases,
+    }
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return payload
+
+
 def _selected_cfd_rows(
     dataset_path: Path,
     validation: OpenAeroStructValidationSpec,

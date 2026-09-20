@@ -113,6 +113,12 @@ Use **Generate fresh geometry + mesh** first, then **Run fresh selected
 analysis**. The cockpit shows separate mesh, OAS, and CalculiX timings and stores
 each custom geometry in a content-addressed run directory under
 `data/fea_learning/`. Run-level JSON reports are downloadable in the cockpit.
+The structural view offers **Surface**, **Wireframe**, and **Surface + edges**;
+edge modes use the true CalculiX quadrilateral boundaries rather than the
+display-only triangles used by Plotly. Locked S8 indices with complete accepted
+CFD rows receive exact-index OAS validation. Other design-space indices remain
+available, but are explicitly marked **prediction-only**: OAS supplies the
+normalized spanwise FEA load shape without making a CFD-validation claim.
 The versioned ten-wing evidence package is
 `docs/fea_reports/s8_pilot_e2e/README.md`, with plots in
 `docs/fea_visuals/s8_pilot_e2e/FEA_VISUAL_REPORT.md`.

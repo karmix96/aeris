@@ -17,11 +17,21 @@ import streamlit as st
 from aeris.common.config import load_yaml_config
 from aeris.fea.case.loader import load_case_spec
 from aeris.fea.case.runner import run_case
-from aeris.fea.case.spec import AnalysisSpec, GeometryInput, OpenAeroStructValidationSpec
+from aeris.fea.case.spec import (
+    AnalysisSpec,
+    CaseSpec,
+    GeometryInput,
+    OpenAeroStructValidationSpec,
+)
 from aeris.fea.fields import contour_data, mesh_data
 from aeris.fea.geometry import generate_aeris_stations, generate_custom_aeris_stations
 from aeris.fea.mission import load_mission_authority
-from aeris.fea.openaerostruct import build_oas_mesh, run_oas_case, run_oas_validation
+from aeris.fea.openaerostruct import (
+    build_oas_mesh,
+    run_oas_case,
+    run_oas_prediction,
+    run_oas_validation,
+)
 
 try:
     import plotly.graph_objects as go
@@ -93,13 +103,18 @@ def _mesh_figure(
     title: str,
     label: str,
     colorscale: str,
+    edges: np.ndarray | None = None,
+    render_mode: str = "Surface",
 ) -> object:
     if go is None:
         raise RuntimeError("Plotly is not installed; install the FEA GUI extra")
     if len(faces) == 0:
         raise ValueError("the generated mesh has no plottable shell faces")
-    return go.Figure(
-        go.Mesh3d(
+    if render_mode not in {"Surface", "Wireframe", "Surface + edges"}:
+        raise ValueError(f"unknown mesh render mode: {render_mode}")
+    traces: list[object] = []
+    if render_mode != "Wireframe":
+        traces.append(go.Mesh3d(
             x=coordinates[:, 0],
             y=coordinates[:, 1],
             z=coordinates[:, 2],
@@ -111,8 +126,37 @@ def _mesh_figure(
             colorbar={"title": label},
             flatshading=True,
             hovertemplate=f"{label}: %{{intensity:.4g}}<extra></extra>",
-        )
-    ).update_layout(
+            name="shell surface",
+        ))
+    if render_mode != "Surface":
+        if edges is None or len(edges) == 0:
+            raise ValueError("wireframe rendering requires structural element edges")
+        x: list[float | None] = []
+        y: list[float | None] = []
+        z: list[float | None] = []
+        line_values: list[float] = []
+        for start, end in np.asarray(edges, dtype=int):
+            x.extend((float(coordinates[start, 0]), float(coordinates[end, 0]), None))
+            y.extend((float(coordinates[start, 1]), float(coordinates[end, 1]), None))
+            z.extend((float(coordinates[start, 2]), float(coordinates[end, 2]), None))
+            line_values.extend((float(values[start]), float(values[end]), float("nan")))
+        colored_wireframe = render_mode == "Wireframe"
+        traces.append(go.Scatter3d(
+            x=x,
+            y=y,
+            z=z,
+            mode="lines",
+            line={
+                "color": line_values if colored_wireframe else "rgba(20,20,20,0.72)",
+                "colorscale": colorscale,
+                "showscale": colored_wireframe,
+                "colorbar": {"title": label},
+                "width": 2.4 if colored_wireframe else 1.4,
+            },
+            hoverinfo="skip",
+            name="element edges",
+        ))
+    return go.Figure(data=traces).update_layout(
         title=title,
         scene={
             "aspectmode": "data",
@@ -120,11 +164,12 @@ def _mesh_figure(
             "yaxis_title": "span y [m]",
             "zaxis_title": "z [m]",
         },
+        showlegend=False,
         margin={"l": 0, "r": 0, "t": 45, "b": 0},
     )
 
 
-def _figure_geometry_mesh(case_dir: Path) -> object:
+def _figure_geometry_mesh(case_dir: Path, render_mode: str = "Surface + edges") -> object:
     data = mesh_data(case_dir)
     return _mesh_figure(
         np.asarray(data["coordinates"], dtype=float),
@@ -133,10 +178,18 @@ def _figure_geometry_mesh(case_dir: Path) -> object:
         title="Generated structural shell mesh — drag to rotate, wheel to zoom",
         label="region index",
         colorscale="Turbo",
+        edges=np.asarray(data["edges"], dtype=int),
+        render_mode=render_mode,
     )
 
 
-def _figure_fea(case_dir: Path, load_case: str, field: str, exaggeration: float) -> object:
+def _figure_fea(
+    case_dir: Path,
+    load_case: str,
+    field: str,
+    exaggeration: float,
+    render_mode: str = "Surface + edges",
+) -> object:
     data = contour_data(case_dir, load_case)
     coordinates = np.asarray(data["coordinates"], dtype=float)
     values = np.asarray(data[field], dtype=float)
@@ -159,6 +212,8 @@ def _figure_fea(case_dir: Path, load_case: str, field: str, exaggeration: float)
         title=f"CalculiX FEA contour — {load_case}",
         label=label,
         colorscale=colorscale,
+        edges=np.asarray(data["edges"], dtype=int),
+        render_mode=render_mode,
     )
 
 
@@ -193,8 +248,52 @@ def _figure_oas(case: dict[str, object], stations: dict[str, object]) -> object:
     )
 
 
+def _cfd_validated_indices(
+    validation: OpenAeroStructValidationSpec,
+    mission: dict[str, object],
+) -> set[int]:
+    """Return indices with a complete accepted CFD alpha set for this authority."""
+    if validation.cfd_dataset is None or validation.geometry_set is None:
+        return set()
+    rows = json.loads(validation.cfd_dataset.read_text(encoding="utf-8"))
+    state = mission.get("state")
+    if not isinstance(rows, list) or not isinstance(state, dict):
+        return set()
+    wanted = {float(value) for value in state.get("alpha_deg", [])}
+    accepted: dict[int, set[float]] = {}
+    for row in rows:
+        if (
+            isinstance(row, dict)
+            and row.get("geometry_set") == validation.geometry_set
+            and row.get("grid_level") == validation.grid_level
+            and row.get("gate_verdict") == "ACCEPTED"
+            and isinstance(row.get("geometry_index"), int)
+        ):
+            accepted.setdefault(int(row["geometry_index"]), set()).add(float(row["alpha_deg"]))
+    return {index for index, alphas in accepted.items() if wanted <= alphas}
 
-def _build_case(index: int, custom_values: dict[str, float], source: str) -> tuple[object, Path]:
+
+def _run_oas_report(
+    spec: CaseSpec,
+    stations: dict[str, object],
+    mission: dict[str, object],
+    output_path: Path,
+) -> dict[str, object]:
+    validation = spec.openaerostruct_validation
+    if validation.enabled:
+        return run_oas_validation(stations, mission, validation, output_path)
+    return run_oas_prediction(
+        stations,
+        mission,
+        output_path,
+        chordwise_nodes=validation.chordwise_nodes,
+    )
+
+
+
+def _build_case(
+    index: int, custom_values: dict[str, float], source: str
+) -> tuple[CaseSpec, Path]:
     if source == "locked":
         run_key = f"index{index}"
     else:
@@ -219,7 +318,18 @@ def _build_case(index: int, custom_values: dict[str, float], source: str) -> tup
         # governed CLI and should not be demanded by the static post gate.
         analyses=AnalysisSpec(),
     )
-    if source != "locked":
+    if source == "locked":
+        mission = load_mission_authority(MISSION)
+        validated_indices = _cfd_validated_indices(spec.openaerostruct_validation, mission)
+        spec = replace(
+            spec,
+            openaerostruct_validation=replace(
+                spec.openaerostruct_validation,
+                enabled=index in validated_indices,
+                geometry_index=index,
+            ),
+        )
+    else:
         # Custom geometry is not an S8 CFD identity, so use an explicit
         # educational pressure load and label the OAS comparison as unvalidated.
         loads = tuple(
@@ -406,6 +516,14 @@ def main() -> None:
         }
         contour_label = st.selectbox("FEA contour", list(contour_labels))
         contour = contour_labels[contour_label]
+        mesh_render_mode = st.selectbox(
+            "Mesh visualization",
+            ["Surface + edges", "Wireframe", "Surface"],
+            help=(
+                "Surface + edges exposes the real element boundaries; Wireframe hides the "
+                "shell faces; Surface gives the cleanest contour view."
+            ),
+        )
         exaggeration = st.slider(
             "Displayed deformation exaggeration", 0.0, 10.0, 2.0, 0.25,
             help="Changes the displayed shape only; contour values remain physical.",
@@ -443,35 +561,45 @@ def main() -> None:
                 st.session_state.pop("oas_case", None)
 
             if run_clicked:
-                if analysis == "OpenAeroStruct aerodynamics":
+                run_fea = analysis in {"FEA structure", "Compare both"}
+                run_oas = analysis in {"OpenAeroStruct aerodynamics", "Compare both"} or (
+                    run_fea and any(load.source == "openaerostruct" for load in spec.loads)
+                )
+                if not run_fea:
                     st.session_state["fea_complete"] = False
+                if not run_oas:
+                    st.session_state.pop("oas_report", None)
+                    st.session_state.pop("oas_case", None)
 
                 with st.status("Executing requested solvers…", expanded=True) as status:
-                    if analysis in {"OpenAeroStruct aerodynamics", "Compare both"}:
+                    if run_oas:
                         started = time.perf_counter()
-                        st.write("Running OpenAeroStruct aerodynamic model")
+                        validation_label = (
+                            "with accepted S8 CFD comparison"
+                            if spec.openaerostruct_validation.enabled
+                            else "as prediction-only load model (no CFD row for this wing)"
+                        )
+                        st.write(f"Running OpenAeroStruct {validation_label}")
                         mission = load_mission_authority(MISSION)
                         stations = json.loads(
                             (requested_workdir / "inputs" / "stations.json").read_text()
                         )
-                        if source == "locked":
-                            oas_path = requested_workdir / "validation" / "openaerostruct_validation.json"
-                            st.session_state["oas_report"] = run_oas_validation(
-                                stations, mission, spec.openaerostruct_validation, oas_path,
-                            )
-                        else:
-                            alpha_deg = 8.0 if load_case == "positive_limit" else -2.0
-                            st.session_state["oas_case"] = run_oas_case(
-                                stations, mission, alpha_deg,
-                            )
+                        oas_path = (
+                            requested_workdir
+                            / "validation"
+                            / "openaerostruct_validation.json"
+                        )
+                        st.session_state["oas_report"] = _run_oas_report(
+                            spec, stations, mission, oas_path,
+                        )
                         timings["oas_seconds"] = time.perf_counter() - started
 
-                    if analysis in {"FEA structure", "Compare both"}:
+                    if run_fea:
                         started = time.perf_counter()
                         st.write("Running fresh CalculiX static solves for both limit cases")
                         stages = (
                             ("geometry", "validate", "mesh", "solve", "post")
-                            if source == "locked"
+                            if spec.openaerostruct_validation.enabled
                             else ("geometry", "mesh", "solve", "post")
                         )
                         run_case(spec, workdir=requested_workdir, stages=stages)
@@ -479,8 +607,12 @@ def main() -> None:
                         if not result_file.is_file() or result_file.stat().st_size == 0:
                             raise ValueError("CalculiX returned without a non-empty model.dat result")
                         st.session_state["fea_complete"] = True
-                        if source == "locked":
-                            validation_file = requested_workdir / "validation" / "openaerostruct_validation.json"
+                        if run_oas:
+                            validation_file = (
+                                requested_workdir
+                                / "validation"
+                                / "openaerostruct_validation.json"
+                            )
                             st.session_state["oas_report"] = json.loads(validation_file.read_text())
 
                         timings["fea_seconds"] = time.perf_counter() - started
@@ -502,6 +634,19 @@ def main() -> None:
     workdir = Path(workdir_value)
     timings = st.session_state.get("timings", {})
     st.caption(f"Active run directory: {workdir}")
+    active_spec = st.session_state.get("spec")
+    if isinstance(active_spec, CaseSpec):
+        if active_spec.openaerostruct_validation.enabled:
+            st.success(
+                "This wing has a complete accepted S8 CFD comparison set. "
+                "OpenAeroStruct will be checked against the matching geometry index."
+            )
+        elif source == "locked":
+            st.warning(
+                "This S8 wing has no complete accepted CFD comparison set. "
+                "OpenAeroStruct is prediction-only here; its spanwise shape may drive the "
+                "FEA limit load, but no CFD-validation claim is made."
+            )
     if timings:
         timing_columns = st.columns(3)
         timing_columns[0].metric(
@@ -531,7 +676,10 @@ def main() -> None:
         metric_columns[2].metric(
             "Structural mass", f"{mesh_report['full_structural_mass_kg']:.3f} kg"
         )
-        st.plotly_chart(_figure_geometry_mesh(workdir), width="stretch")
+        st.plotly_chart(
+            _figure_geometry_mesh(workdir, mesh_render_mode),
+            width="stretch",
+        )
         st.caption(
             "This is the actual CalculiX shell mesh. Rotate it with the mouse. "
             "Colors distinguish structural regions; they are not solver results yet."
@@ -557,7 +705,13 @@ def main() -> None:
         )
         try:
             st.plotly_chart(
-                _figure_fea(workdir, load_case, contour, exaggeration),
+                _figure_fea(
+                    workdir,
+                    load_case,
+                    contour,
+                    exaggeration,
+                    mesh_render_mode,
+                ),
                 width="stretch",
             )
         except Exception as exc:
@@ -581,6 +735,11 @@ def main() -> None:
     )
     if selected_case and stations:
         st.subheader("5. OpenAeroStruct aerodynamic result")
+        if isinstance(oas_report, dict) and oas_report.get("status") == "prediction_only":
+            st.warning(
+                "Prediction-only result: useful for learning and load-shape screening, "
+                "but not validated against an accepted CFD row for this geometry."
+            )
         aero_columns = st.columns(3)
         aero_columns[0].metric("Lift coefficient CL", f"{float(selected_case['cl']):.4f}")
         aero_columns[1].metric(
@@ -607,10 +766,15 @@ def main() -> None:
         )
 
     st.subheader("7. Open or download this run's reports")
+    oas_report_label = (
+        "OAS prediction"
+        if isinstance(oas_report, dict) and oas_report.get("status") == "prediction_only"
+        else "OAS validation"
+    )
     report_candidates = {
         "FEA verification": verification_path,
         "Case manifest": workdir / "case_manifest.json",
-        "OAS validation": validation_path,
+        oas_report_label: validation_path,
     }
     for label, path in report_candidates.items():
         if path.is_file():

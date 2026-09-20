@@ -13,7 +13,7 @@ from aeris.fea.calibration import run_calibration
 from aeris.fea.case.loader import load_case_spec
 from aeris.fea.case.runner import CASE_MANIFEST_SCHEMA_VERSION, run_case
 from aeris.fea.case.spec import LoadCaseSpec, MeshSpec, SectionSpec, WingboxSpec
-from aeris.fea.fields import read_dat_fields, read_frd_fields
+from aeris.fea.fields import mesh_data, read_dat_fields, read_frd_fields
 from aeris.fea.geometry import generate_aeris_stations
 from aeris.fea.governance import run_qualification
 from aeris.fea.holdout import promote_holdout
@@ -378,6 +378,69 @@ def test_learning_cockpit_uses_static_only_post_gate() -> None:
     assert not spec.analyses.modal.enabled
     assert not spec.analyses.buckling.enabled
     assert not spec.analyses.nonlinear.enabled
+
+
+def test_learning_cockpit_matches_cfd_identity_or_marks_prediction_only() -> None:
+    from aeris.gui.fea_learning import _build_case
+
+    pilot_spec, _ = _build_case(36, {}, "locked")
+    assert pilot_spec.openaerostruct_validation.enabled
+    assert pilot_spec.openaerostruct_validation.geometry_index == 36
+
+    unvalidated_spec, _ = _build_case(35, {}, "locked")
+    assert not unvalidated_spec.openaerostruct_validation.enabled
+    assert unvalidated_spec.openaerostruct_validation.geometry_index == 35
+    assert all(load.source == "openaerostruct" for load in unvalidated_spec.loads)
+
+
+def test_mesh_data_exposes_real_quad_edges_without_plot_triangles(tmp_path: Path) -> None:
+    mesh = build_wingbox_mesh(
+        _stations(),
+        WingboxSpec(),
+        MeshSpec(chordwise_elements=4, depth_elements=2),
+        SectionSpec(skin_thickness_m=0.002, spar_thickness_m=0.0025),
+        2700.0,
+    )
+    write_mesh_artifacts(mesh, tmp_path / "mesh")
+    data = mesh_data(tmp_path)
+    node_ids = data["node_ids"]
+    observed = {
+        tuple(sorted((node_ids[int(start)], node_ids[int(end)])))
+        for start, end in data["edges"]
+    }
+    expected = {
+        tuple(sorted((start, end)))
+        for element in mesh.elements
+        for start, end in zip(element.nodes, element.nodes[1:] + element.nodes[:1], strict=True)
+    }
+    assert observed == expected
+
+
+def test_mesh_render_modes_use_surface_and_real_edge_traces() -> None:
+    import numpy as np
+
+    from aeris.gui.fea_learning import _mesh_figure
+
+    coordinates = np.asarray(
+        [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]]
+    )
+    faces = np.asarray([[0, 1, 2], [0, 2, 3]])
+    edges = np.asarray([[0, 1], [1, 2], [2, 3], [0, 3]])
+    values = np.arange(4, dtype=float)
+    common = {
+        "title": "mesh",
+        "label": "value",
+        "colorscale": "Viridis",
+        "edges": edges,
+    }
+    surface = _mesh_figure(coordinates, faces, values, render_mode="Surface", **common)
+    wireframe = _mesh_figure(coordinates, faces, values, render_mode="Wireframe", **common)
+    combined = _mesh_figure(
+        coordinates, faces, values, render_mode="Surface + edges", **common
+    )
+    assert [trace.type for trace in surface.data] == ["mesh3d"]
+    assert [trace.type for trace in wireframe.data] == ["scatter3d"]
+    assert [trace.type for trace in combined.data] == ["mesh3d", "scatter3d"]
 
 
 def test_learning_gui_accepts_fixed_custom_bounds() -> None:

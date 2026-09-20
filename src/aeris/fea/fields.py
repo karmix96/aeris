@@ -98,6 +98,7 @@ def mesh_data(case_dir: Path) -> dict[str, object]:
     node_regions = np.zeros(len(node_ids), dtype=float)
     node_counts = np.zeros(len(node_ids), dtype=float)
     faces: list[tuple[int, int, int]] = []
+    edges: set[tuple[int, int]] = set()
     for element_id, connectivity in elements.items():
         if len(connectivity) < 4 or not all(node in node_index for node in connectivity):
             continue
@@ -105,6 +106,8 @@ def mesh_data(case_dir: Path) -> dict[str, object]:
         faces.extend(
             ((indices[0], indices[1], indices[2]), (indices[0], indices[2], indices[3]))
         )
+        for start, end in zip(indices, indices[1:] + indices[:1], strict=True):
+            edges.add(tuple(sorted((start, end))))
         value = float(region_number[regions.get(element_id, "UNASSIGNED")])
         for index in indices:
             node_regions[index] += value
@@ -113,6 +116,7 @@ def mesh_data(case_dir: Path) -> dict[str, object]:
     return {
         "coordinates": coordinates,
         "faces": np.asarray(faces, dtype=int),
+        "edges": np.asarray(sorted(edges), dtype=int),
         "region_values": node_regions,
         "region_names": region_names,
         "node_ids": node_ids,
@@ -154,6 +158,7 @@ def contour_data(case_dir: Path, load_case: str) -> dict[str, object]:
     return {
         "coordinates": base["coordinates"],
         "faces": base["faces"],
+        "edges": base["edges"],
         "displacement_m": displacement,
         "displacement_vectors_m": displacement_vectors,
         "stress_pa": stress,

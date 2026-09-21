@@ -1,7 +1,7 @@
 {
   "schema": "aeris.s8.cp_drag_map.v1",
   "question": "the surface pressure exceeds its isentropic bound on every run. How many drag counts does that region carry?",
-  "run": "runs/s8_v2/g83/gci_C_a0",
+  "run": "runs/s8_normalB/gci_C_normal_s0_2_b_a0",
   "cp_physical_max": 1.0018,
   "drag_direction": [
     1.0,
@@ -10,12 +10,12 @@
   ],
   "area_ref_m2": 0.39492,
   "self_check": {
-    "cdp_solver_counts": 110.7943,
-    "cdp_integrated_counts": 110.7943,
+    "cdp_solver_counts": 121.4843,
+    "cdp_integrated_counts": 121.4843,
     "disagreement_counts": 0.0,
     "tolerance_counts": 2.0,
     "normal_orientation": "as_stored",
-    "orientation_note": "chosen by matching the solver, not assumed. Both were tried; the rejected one gives -110.79 counts.",
+    "orientation_note": "chosen by matching the solver, not assumed. Both were tried; the rejected one gives -121.48 counts.",
     "passes": true,
     "method_note": "cell-centre cp over cell areas is first order, so a residual of a fraction of a count is the method's own error bar, not a finding about the solution."
   },
@@ -26,8 +26,8 @@
         4,
         42
       ],
-      "cp_min": -10.5142,
-      "cp_max": 0.0404,
+      "cp_min": -11.5376,
+      "cp_max": 0.0264,
       "cdp_counts": 0.0,
       "cells_over_bound": 0,
       "cdp_counts_from_over_bound_cells": 0.0,
@@ -45,7 +45,7 @@
             0.25
           ],
           "cdp_counts": 0.0,
-          "cp_min": -10.5142
+          "cp_min": -11.5376
         },
         {
           "band": 1,
@@ -56,7 +56,7 @@
             0.5
           ],
           "cdp_counts": -0.0,
-          "cp_min": -4.869
+          "cp_min": -5.1669
         },
         {
           "band": 2,
@@ -67,7 +67,7 @@
             0.75
           ],
           "cdp_counts": -0.0,
-          "cp_min": -5.2081
+          "cp_min": -5.451
         },
         {
           "band": 3,
@@ -78,14 +78,14 @@
             1.0
           ],
           "cdp_counts": 0.0,
-          "cp_min": -9.3085
+          "cp_min": -9.9775
         }
       ],
       "yplus": {
-        "max": 1.4562,
-        "p99": 1.3347,
-        "median": 0.4021,
-        "cells_above_1": 8
+        "max": 1.0394,
+        "p99": 0.9106,
+        "median": 0.2354,
+        "cells_above_1": 2
       }
     },
     {
@@ -94,14 +94,14 @@
         48,
         92
       ],
-      "cp_min": -4.7306,
-      "cp_max": 1.2313,
-      "cdp_counts": 110.7943,
-      "cells_over_bound": 4,
-      "cdp_counts_from_over_bound_cells": 4.6986,
-      "cdp_counts_of_unphysical_excess": 0.3136,
-      "area_fraction_over_bound": 0.000257,
-      "cdp_counts_leading_edge_strip": -37.0496,
+      "cp_min": -5.7447,
+      "cp_max": 1.3323,
+      "cdp_counts": 121.4843,
+      "cells_over_bound": 7,
+      "cdp_counts_from_over_bound_cells": 8.416,
+      "cdp_counts_of_unphysical_excess": 0.6525,
+      "area_fraction_over_bound": 0.000457,
+      "cdp_counts_leading_edge_strip": -34.9887,
       "leading_edge_strip_cells_each_side": 6,
       "cdp_counts_by_span_band": [
         {
@@ -112,8 +112,8 @@
             0.0,
             0.167
           ],
-          "cdp_counts": 58.6381,
-          "cp_min": -1.1441
+          "cdp_counts": 58.8741,
+          "cp_min": -1.118
         },
         {
           "band": 1,
@@ -123,8 +123,8 @@
             0.167,
             0.333
           ],
-          "cdp_counts": 41.6692,
-          "cp_min": -3.1566
+          "cdp_counts": 52.8366,
+          "cp_min": -3.2955
         },
         {
           "band": 2,
@@ -134,8 +134,8 @@
             0.333,
             0.5
           ],
-          "cdp_counts": 8.3904,
-          "cp_min": -3.2863
+          "cdp_counts": 8.0804,
+          "cp_min": -3.3767
         },
         {
           "band": 3,
@@ -145,8 +145,8 @@
             0.5,
             0.667
           ],
-          "cdp_counts": 2.0842,
-          "cp_min": -3.187
+          "cdp_counts": 1.7497,
+          "cp_min": -3.1025
         },
         {
           "band": 4,
@@ -156,8 +156,8 @@
             0.667,
             0.833
           ],
-          "cdp_counts": 0.0685,
-          "cp_min": -2.2094
+          "cdp_counts": -0.0116,
+          "cp_min": -2.1112
         },
         {
           "band": 5,
@@ -167,20 +167,20 @@
             0.833,
             1.0
           ],
-          "cdp_counts": -0.056,
-          "cp_min": -4.7306
+          "cdp_counts": -0.0448,
+          "cp_min": -5.7447
         }
       ],
       "yplus": {
-        "max": 1.6732,
-        "p99": 0.997,
-        "median": 0.197,
-        "cells_above_1": 44
+        "max": 1.1894,
+        "p99": 0.692,
+        "median": 0.1138,
+        "cells_above_1": 9
       }
     }
   ],
-  "total_cells_over_bound": 4,
-  "total_cdp_counts_from_over_bound_cells": 4.6986,
-  "total_cdp_counts_of_unphysical_excess": 0.3136,
-  "verdict": "The over-bound cells carry 4.70 counts of pressure drag out of 110.8, of which 0.31 counts is the UNPHYSICAL EXCESS -- what clipping cp to its bound would remove. The second number is the error; the first is mostly legitimate stagnation pressure. Against a 5-9 count effect that is immaterial. The violation is real and confined to a few cells at the root leading edge; it belongs on the record and off the critical path. It is NOT what limits this study."
+  "total_cells_over_bound": 7,
+  "total_cdp_counts_from_over_bound_cells": 8.416,
+  "total_cdp_counts_of_unphysical_excess": 0.6525,
+  "verdict": "The over-bound cells carry 8.42 counts of pressure drag out of 121.5, of which 0.65 counts is the UNPHYSICAL EXCESS -- what clipping cp to its bound would remove. The second number is the error; the first is mostly legitimate stagnation pressure. Against a 5-9 count effect that is immaterial. The violation is real and confined to a few cells at the root leading edge; it belongs on the record and off the critical path. It is NOT what limits this study."
 }

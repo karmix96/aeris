@@ -47,7 +47,7 @@ against 12.8 GiB available.
 > Also note for §2 below: **r ≥ 1.3 is not met.** The global cell-derived ratio is 1.2479 and the
 > 1.300 in the level table is the near-wall spacing ratio, which is not what ASME V&V 20 defines r on.
 
-> ## STOP — the wall-normal direction diverges on the PRODUCTION meshes too
+> ## The wall-normal direction diverges on the production meshes — and it does not block this batch
 >
 > **Measured 2026-09-21 on three gate-ACCEPTED runs per family.** This was the one gate standing
 > between the audit and a recommendation to buy. It did not clear.
@@ -63,13 +63,38 @@ against 12.8 GiB available.
 > defective cap — it fixed the outboard extrusion in exactly the region the signature points at — is
 > **refuted**: the second step is +4.192 counts on family B against +4.196 on family A. Identical.
 >
-> So the wall-normal direction has no demonstrated limit on the meshes `data/dataset_v2` is built from,
-> `gci.py` refuses a GCI for C_D and CDp, and **a global refinement refines this direction along with
-> the others.** `gci_F` bought now is a third point on a family with nothing to extrapolate to.
-> Localise the cause first. CDp rising while CDv falls as layers are added at fixed first-cell height
-> is an outer-region signature, and the worst-conditioned cells sit at the O-block's outermost normal
-> layer — but those cells are equally bad in `gci_C`, which converges, so that correlation is not the
-> answer either (see below).
+> **And then it was diagnosed, and it does NOT block the batch.** Written after localising it, which
+> reverses the "do not rent" this box said an hour earlier. The chain of measurements:
+>
+> 1. **Where.** All of the C_D growth is in ONE spanwise band, 0.17–0.33 of the semi-span: +11.17
+>    counts out of a +10.69 total, with every other band flat or slightly falling. Within that band it
+>    concentrates on the leading edge and the first half-chord (ring segments i 23–69 carry +9.65).
+>    Not the tip, not the trailing-edge base (+0.75), not uniform.
+> 2. **What is held.** That family refines the wall-normal direction and **holds the chordwise count
+>    at 93** at every level. The directional decomposition puts **chord at 88 %** of the coarse→fine
+>    CDp error and **normal at −15 %** (`s8_directional_refinement.json`). So it refines the direction
+>    carrying about a tenth of the error while freezing the one carrying nearly all of it.
+> 3. **The confound, measured.** The leading-edge cell aspect ratio — chordwise spacing over first-cell
+>    height, at the station where the change lives:
+>
+> | family | nose aspect ratio | growth |
+> |---|---|---|
+> | wall-normal only, chord held | 25.1 → 32.1 → **41.1** | **1.63×** |
+> | **global, all directions at r = 1.3** | 25.1 → 23.5 → 28.3 → 26.3 | **1.20×** |
+>
+> The directional family's aspect ratio grows 64 % in exactly the region where the CDp change appears.
+> The global family holds it. **So the divergence is what happens when the non-limiting direction is
+> refined alone — not a demonstrated property of the grid family**, and it does not transfer to a
+> global refinement, whose two measured points move the OTHER way (CDp 110.794 → 89.288).
+>
+> **Consequence: this does not justify refusing the batch.** What it does justify is one cheap test
+> first — **wall-normal refinement on top of a chord-refined mesh, ~1.5 h on this host.** If the
+> divergence survives that, it is real and the batch waits. If it vanishes, the directional families
+> are diagnostics only and must never again be read as convergence studies.
+>
+> Recorded plainly because this box has now said both things: the divergence is a measurement, the
+> inference from it to the global family was wrong, and the correction came from asking *where* rather
+> than *how much*.
 >
 > ## A second thing, found the same night and NOT a reason to stop
 >

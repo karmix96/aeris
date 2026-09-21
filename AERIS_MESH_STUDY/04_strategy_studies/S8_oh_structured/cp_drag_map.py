@@ -71,6 +71,8 @@ def main() -> int:
     ap.add_argument("--le-strip-cells", type=int, default=6,
                     help="ring cells either side of the leading edge counted as "
                          "the leading-edge strip")
+    ap.add_argument("--span-bands", type=int, default=6,
+                    help="equal bands of the span index, root to tip")
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
 
@@ -191,6 +193,20 @@ def main() -> int:
             "cdp_counts_leading_edge_strip": round(1e4 * float(drag[strip].sum()), 4),
             "leading_edge_strip_cells_each_side": args.le_strip_cells,
         }
+        # SPANWISE, in equal bands of the span index. A total that moves tells you
+        # nothing about the mechanism; a total that moves ENTIRELY OUTBOARD tells you
+        # to look at the tip, and one that moves uniformly tells you to look at the
+        # boundary layer. The wall-normal direction raises CDp by 4 then 6.6 counts
+        # with the far-field radius held fixed, and this is the cheapest way to ask
+        # where those counts appear. j is the span index in the surface zone.
+        bands = min(args.span_bands, nj)
+        edges = [round(b * nj / bands) for b in range(bands + 1)]
+        entry["cdp_counts_by_span_band"] = [
+            {"band": b, "j_from": edges[b], "j_to": edges[b + 1],
+             "span_fraction": [round(edges[b] / nj, 3), round(edges[b + 1] / nj, 3)],
+             "cdp_counts": round(1e4 * float(drag[edges[b]:edges[b + 1], :].sum()), 4),
+             "cp_min": round(float(cp[edges[b]:edges[b + 1], :].min()), 4)}
+            for b in range(bands)]
         if z["yplus"] is not None:
             yp = z["yplus"]
             entry["yplus"] = {"max": round(float(yp.max()), 4),
@@ -245,6 +261,11 @@ def main() -> int:
               f"{100 * z['area_fraction_over_bound']:.4f} % of area, carrying "
               f"{z['cdp_counts_from_over_bound_cells']} counts")
         print(f"    leading-edge strip: {z['cdp_counts_leading_edge_strip']} counts")
+        if z.get("cdp_counts_by_span_band"):
+            print("    CDp by span band (root -> tip):")
+            for b in z["cdp_counts_by_span_band"]:
+                print(f"      {b['span_fraction'][0]:.2f}-{b['span_fraction'][1]:.2f}  "
+                      f"{b['cdp_counts']:>9.3f} ct   cp_min {b['cp_min']:>8.3f}")
         if "yplus" in z:
             y = z["yplus"]
             print(f"    y+ median {y['median']} p99 {y['p99']} max {y['max']}, "

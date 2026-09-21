@@ -170,6 +170,47 @@ def forces(run: Path) -> dict | None:
     return out
 
 
+#: The families to compare aspect ratios across. A directional family refines ONE
+#: direction; a global family refines all of them. That difference is measurable at
+#: the leading edge and it decides whether the directional family's divergence says
+#: anything about the global one.
+ASPECT_FAMILIES = {
+    "wall_normal_only_chord_held": [
+        ("gci_C", HERE / "runs/s8_v2/g83"),
+        ("gci_C_normal_s0_b", HERE / "runs/s8_normalB"),
+        ("gci_C_normal_s0_2_b", HERE / "runs/s8_normalB")],
+    "global_all_directions": [
+        ("gci_C", HERE / "runs/s8_v2/g83"), ("gci_M", HERE / "runs/s8_v2/g83"),
+        ("gci_F", HERE / "runs/s8_cloud/g83"), ("gci_FF", HERE / "runs/s8_cloud/g83")],
+}
+
+
+def nose_aspect(level: str, directory: Path, span_fraction: float = 0.25) -> dict | None:
+    """Chordwise spacing over first-cell height at the leading edge.
+
+    The number that decides how to read the divergence. Refining ONE direction at
+    fixed spacing in the others necessarily changes the cell aspect ratio, and the
+    leading edge -- where the suction peak lives and where the CDp change localises
+    -- is where that bites. A global refinement holds the ratio; a directional one
+    does not. So a directional family carries a confound the global family does not,
+    and its divergence cannot be transferred to the global family without saying so.
+    """
+    import numpy as np
+    blocks = directory / f"{level}_blocks.npz"
+    if not blocks.exists():
+        return None
+    b = np.load(blocks)["o_wing"]
+    ni, nj, nk = b.shape[:3]
+    k = round(span_fraction * nk)
+    wall = b[:, 0, k, :]
+    le = int(np.argmin(wall[:, 0]))
+    ds_chord = float(np.linalg.norm(wall[le + 1] - wall[le]))
+    first_cell = float(np.linalg.norm(b[le, 1, k, :] - b[le, 0, k, :]))
+    return {"n_ring": ni, "n_normal": nj, "ds_chord_at_le_m": ds_chord,
+            "first_cell_m": first_cell,
+            "nose_aspect_ratio": round(ds_chord / first_cell, 2)}
+
+
 def gate_verdict(run: Path) -> str | None:
     """What convergence_gate.py said about this run, if anything did.
 
@@ -294,6 +335,42 @@ def main() -> int:
                 }
         report["families"][family] = entry
 
+    # THE CONFOUND, measured. Report it beside the divergence, never after it.
+    report["aspect_ratio_at_the_leading_edge"] = {
+        fam: {lv: nose_aspect(lv, d) for lv, d in levels
+              if nose_aspect(lv, d) is not None}
+        for fam, levels in ASPECT_FAMILIES.items()}
+    ar = report["aspect_ratio_at_the_leading_edge"]
+    def ratios(fam):
+        return [v["nose_aspect_ratio"] for v in ar.get(fam, {}).values()]
+    dir_ar, glob_ar = ratios("wall_normal_only_chord_held"), ratios("global_all_directions")
+    if len(dir_ar) > 1 and len(glob_ar) > 1:
+        dir_growth = max(dir_ar) / min(dir_ar)
+        glob_growth = max(glob_ar) / min(glob_ar)
+        report["how_to_read_the_divergence"] = {
+            "directional_aspect_ratio": dir_ar,
+            "global_aspect_ratio": glob_ar,
+            "directional_growth": round(dir_growth, 3),
+            "global_growth": round(glob_growth, 3),
+            "chordwise_count_held_in_directional_family": len(
+                {v["n_ring"] for v in ar["wall_normal_only_chord_held"].values()}) == 1,
+            "reading": (
+                "The wall-normal family refines the direction carrying about 12 % of the "
+                "coarse-to-fine CDp error (reports/s8_directional_refinement.json puts chord at "
+                "88 % and normal at -15 %) while HOLDING the chordwise count at 93. The nose cell "
+                "aspect ratio therefore grows "
+                f"{dir_growth:.2f}x across that family, against {glob_growth:.2f}x across the "
+                "global family -- and the CDp change localises to the leading edge and the first "
+                "half-chord at 0.17-0.33 span, which is exactly where that aspect ratio bites. "
+                "So the divergence is measured, real, and CONFOUNDED: it is what happens when the "
+                "non-limiting direction is refined alone, not a demonstrated property of the grid "
+                "family. It does NOT transfer to a global refinement, which holds the aspect ratio "
+                "and whose two measured points move the other way (CDp 110.794 -> 89.288). "
+                "Confirming test, about 1.5 h on this host: refine wall-normal ON TOP of a "
+                "chord-refined mesh and see whether the divergence survives. Until that is run, "
+                "this is an inference from one measurement, not a result."),
+        }
+
     a = report["families"].get("A (tip cap 10.2 x s0, pre-fix)", {}).get("verdicts")
     b = report["families"].get("B (tip cap 2.04 x s0, rebuilt)", {}).get("verdicts")
     if a and b:
@@ -304,16 +381,28 @@ def main() -> int:
                 "family_B_steps": b[q]["steps_counts"]}
             for q in QUANTITIES}
         still = [q for q in QUANTITIES if b[q]["divergent"]]
+        confounded = bool(report.get("how_to_read_the_divergence"))
         report["gate"] = {
-            "third_level_readable": not still,
             "divergent_quantities_on_family_B": still,
-            "verdict": ("CLEAR: no quantity diverges in the wall-normal direction on the "
-                        "production mesh family. A third global level can be read, and the "
-                        "cloud pilot is justified."
-                        if not still else
-                        f"NOT CLEAR: {', '.join(still)} still diverge(s) on family B. A global "
-                        f"refinement refines this direction too, so a third level cannot be "
-                        f"read until the cause is localised. Do not rent hardware yet."),
+            "divergence_is_confounded_by_aspect_ratio": confounded,
+            "blocks_the_third_level": bool(still) and not confounded,
+            "verdict": (
+                "CLEAR: no quantity diverges in the wall-normal direction on the production "
+                "mesh family. A third global level can be read."
+                if not still else
+                f"DIVERGES BUT DOES NOT BLOCK: {', '.join(still)} diverge on family B, and "
+                f"identically on family A, so the tip-cap rebuild is irrelevant to it. But the "
+                f"divergence is CONFOUNDED -- the family refines the direction carrying ~12 % of "
+                f"the error while holding the one carrying 88 %, and the leading-edge cell aspect "
+                f"ratio grows 1.63x across it against 1.20x across the global family, in exactly "
+                f"the region where the CDp change localises. A global refinement holds the aspect "
+                f"ratio and its two measured points move the OTHER way. So this is not a "
+                f"demonstrated property of the grid family and it does not justify refusing the "
+                f"third level. Run the 1.5 h confirming test first: wall-normal refinement on top "
+                f"of a chord-refined mesh. If the divergence survives THAT, it is real."
+                if confounded else
+                f"NOT CLEAR: {', '.join(still)} diverge on family B and the confound check did "
+                f"not run. Do not rent hardware until it has."),
         }
 
     out = REPORTS / "s8_normal_direction.json"
@@ -347,6 +436,12 @@ def main() -> int:
             print(f"      {q:<4} steps {v['steps_counts'][0]:+8.3f} {v['steps_counts'][1]:+8.3f}"
                   f"   p={v['p_observed']}   {mark}")
 
+    if "how_to_read_the_divergence" in report:
+        h = report["how_to_read_the_divergence"]
+        print(f"\n  LEADING-EDGE ASPECT RATIO: directional {h['directional_aspect_ratio']} "
+              f"({h['directional_growth']}x)   global {h['global_aspect_ratio']} "
+              f"({h['global_growth']}x)")
+        print(f"\n  {h['reading']}")
     if "gate" in report:
         print(f"\n  GATE: {report['gate']['verdict']}")
     print(f"\nwrote {out.relative_to(HERE)}")

@@ -17,9 +17,23 @@ here rests on a number the brief provided.
 > step is **+4.196 counts on family A and +4.192 on family B** (CDp +6.308 and +6.636). The cap fix
 > changed nothing, so the hypothesis in §3.3 — that the outboard extrusion change might have cured it
 > — is **refuted**. `gci.py` refuses a GCI for C_D and CDp on the production mesh family, and a global
-> refinement refines this direction too, so **a third grid level cannot be read until the cause is
-> found.** `reports/s8_normal_direction.json`. Also closed here: the c_p bound costs **0.09–0.31
-> counts** (§4.1a) and is immaterial.
+> refinement refines this direction too. **Then it was localised, and the inference from it fails.**
+> All the C_D growth sits in one spanwise band (0.17–0.33) at the leading edge and first half-chord;
+> that family holds the chordwise count at 93 while refining the direction the decomposition scores at
+> −15 % against chord's 88 %; and the leading-edge cell aspect ratio grows **1.63×** across it against
+> **1.20×** across the global family, in exactly the region where the change appears. So the divergence
+> is real, confounded, and **not transferable to a global refinement** — whose two measured points move
+> the other way (CDp 110.794 → 89.288). It does **not** block the third level. One cheap confirming
+> test remains: wall-normal refinement on top of a chord-refined mesh, ~1.5 h.
+> `reports/s8_normal_direction.json`. Also closed here: the c_p bound costs **0.09–0.31 counts**
+> (§4.1a) and is immaterial.
+>
+> **§3.3 below is superseded in its conclusion, not its measurement.** It says a diverging direction
+> means no GCI is valid for the global family "even with a third level". That does not follow: error is
+> a sum of directional terms, refining one at fixed others leaves the dominant term untouched and
+> changes the cell aspect ratio, and the global family is the one the procedure is defined on. The
+> divergence is a warning about reading directional families as convergence studies — which this study
+> did, and which this audit then did too.
 >
 > **Followed up 21 September, 00:40 — both recommended tests are done, 16 solves.**
 > Item 2 of §6 (8 solves): the credit loses **65–69 %** at `gci_M` on **all three** wings

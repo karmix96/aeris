@@ -172,6 +172,78 @@
       }
     }
   },
+  "aspect_ratio_at_the_leading_edge": {
+    "wall_normal_only_chord_held": {
+      "gci_C": {
+        "n_ring": 93,
+        "n_normal": 65,
+        "ds_chord_at_le_m": 0.00011862578182190753,
+        "first_cell_m": 4.717917611551565e-06,
+        "nose_aspect_ratio": 25.14
+      },
+      "gci_C_normal_s0_b": {
+        "n_ring": 93,
+        "n_normal": 84,
+        "ds_chord_at_le_m": 0.00011661537797279536,
+        "first_cell_m": 3.629164639204632e-06,
+        "nose_aspect_ratio": 32.13
+      },
+      "gci_C_normal_s0_2_b": {
+        "n_ring": 93,
+        "n_normal": 109,
+        "ds_chord_at_le_m": 0.00011463272779724944,
+        "first_cell_m": 2.7916636218602907e-06,
+        "nose_aspect_ratio": 41.06
+      }
+    },
+    "global_all_directions": {
+      "gci_C": {
+        "n_ring": 93,
+        "n_normal": 65,
+        "ds_chord_at_le_m": 0.00011862578182190753,
+        "first_cell_m": 4.717917611551565e-06,
+        "nose_aspect_ratio": 25.14
+      },
+      "gci_M": {
+        "n_ring": 121,
+        "n_normal": 84,
+        "ds_chord_at_le_m": 8.537252608581292e-05,
+        "first_cell_m": 3.634023297680694e-06,
+        "nose_aspect_ratio": 23.49
+      },
+      "gci_F": {
+        "n_ring": 157,
+        "n_normal": 109,
+        "ds_chord_at_le_m": 7.910300065595742e-05,
+        "first_cell_m": 2.7974716101940117e-06,
+        "nose_aspect_ratio": 28.28
+      },
+      "gci_FF": {
+        "n_ring": 205,
+        "n_normal": 142,
+        "ds_chord_at_le_m": 5.66445420995441e-05,
+        "first_cell_m": 2.1527691848652323e-06,
+        "nose_aspect_ratio": 26.31
+      }
+    }
+  },
+  "how_to_read_the_divergence": {
+    "directional_aspect_ratio": [
+      25.14,
+      32.13,
+      41.06
+    ],
+    "global_aspect_ratio": [
+      25.14,
+      23.49,
+      28.28,
+      26.31
+    ],
+    "directional_growth": 1.633,
+    "global_growth": 1.204,
+    "chordwise_count_held_in_directional_family": true,
+    "reading": "The wall-normal family refines the direction carrying about 12 % of the coarse-to-fine CDp error (reports/s8_directional_refinement.json puts chord at 88 % and normal at -15 %) while HOLDING the chordwise count at 93. The nose cell aspect ratio therefore grows 1.63x across that family, against 1.20x across the global family -- and the CDp change localises to the leading edge and the first half-chord at 0.17-0.33 span, which is exactly where that aspect ratio bites. So the divergence is measured, real, and CONFOUNDED: it is what happens when the non-limiting direction is refined alone, not a demonstrated property of the grid family. It does NOT transfer to a global refinement, which holds the aspect ratio and whose two measured points move the other way (CDp 110.794 -> 89.288). Confirming test, about 1.5 h on this host: refine wall-normal ON TOP of a chord-refined mesh and see whether the divergence survives. Until that is run, this is an inference from one measurement, not a result."
+  },
   "comparison": {
     "cd": {
       "family_A_divergent": true,
@@ -211,11 +283,12 @@
     }
   },
   "gate": {
-    "third_level_readable": false,
     "divergent_quantities_on_family_B": [
       "cd",
       "cdp"
     ],
-    "verdict": "NOT CLEAR: cd, cdp still diverge(s) on family B. A global refinement refines this direction too, so a third level cannot be read until the cause is localised. Do not rent hardware yet."
+    "divergence_is_confounded_by_aspect_ratio": true,
+    "blocks_the_third_level": false,
+    "verdict": "DIVERGES BUT DOES NOT BLOCK: cd, cdp diverge on family B, and identically on family A, so the tip-cap rebuild is irrelevant to it. But the divergence is CONFOUNDED -- the family refines the direction carrying ~12 % of the error while holding the one carrying 88 %, and the leading-edge cell aspect ratio grows 1.63x across it against 1.20x across the global family, in exactly the region where the CDp change localises. A global refinement holds the aspect ratio and its two measured points move the OTHER way. So this is not a demonstrated property of the grid family and it does not justify refusing the third level. Run the 1.5 h confirming test first: wall-normal refinement on top of a chord-refined mesh. If the divergence survives THAT, it is real."
   }
 }

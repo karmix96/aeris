@@ -11,6 +11,30 @@ here rests on a number the brief provided.
 
 ---
 
+> **Followed up 22 September, 01:00 — the credit was never a well-posed quantity, and the reason is
+> worth more than the number.** The credit now has a third level (baseline built at `gci_CC`, 4 solves,
+> all gate-ACCEPTED), and the two legs behave completely differently:
+>
+> | α 0 | CC → C → M | successive differences | p | verdict |
+> |---|---|---|---|---|
+> | **treatment** (0.1 % TE, wall-resolved cap) | 233.5 → 201.7 → 179.1 | −31.7, **−22.6** | **1.801** | **ok** |
+> | **baseline** (0.4 % TE, old cap) | 236.4 → 210.7 → 181.9 | −25.7, **−28.8** | 0.287 | **DIVERGENT** |
+>
+> Same at α −2 and α 4. **The production configuration's grid family converges; the baseline's does
+> not** — its differences GROW under refinement and `gci.py` refuses it. A difference between a
+> convergent family and a divergent one cannot converge, which is why the credit reads −2.5, −8.7, −2.6
+> across CC, C, M instead of settling, and why **no extrapolation from two of those points means
+> anything.** In particular it kills the alarming one: extrapolating C and M with p = 1.8 predicted the
+> credit would change sign to about **+10 counts**, and the third level refutes that outright.
+>
+> **The engineering reading is the useful one, and it favours the change.** The 0.1 %-chord trailing
+> edge is the configuration whose grid family behaves; the 0.4 % edge is not. That argues *for* the
+> change on numerical grounds, independently of how many counts it is worth — and it means "the credit
+> in counts" was never a well-posed quantity. §1's verdict stands but its framing was wrong: the
+> problem was never that the credit fails to converge, it is that one of its two legs is ill-posed as a
+> refinement family. Stop quoting the credit in counts; justify the edge on resolvability and DPW
+> guidance instead. `reports/s8_te_credit_grid.json`, `leg_families`.
+>
 > **Followed up 21 September, 23:10 — S8 NOW HAS AN OBSERVED ORDER.** The study's central
 > limitation is gone, and it was never a hardware limit. A third level one rung BELOW the baseline
 > fits this host: `gci_CC`, 320,648 cells, ~4.3 GiB. `strategy_s8.py` has said so in a comment since

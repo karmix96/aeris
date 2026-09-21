@@ -4,279 +4,59 @@
   "baseline": "runs/s8_chi3",
   "treatment": "runs/s8_v2",
   "by_geometry": {
-    "13": {
-      "gci_C": {
-        "rows": [
-          {
-            "alpha_deg": -2.0,
-            "baseline_cd_counts": 236.578,
-            "treatment_cd_counts": 229.556,
-            "credit_counts": -7.023,
-            "credit_cdp_counts": -5.746,
-            "credit_cdv_counts": -1.277,
-            "delta_cl": 0.0001675388569312708,
-            "induced_drag_share_counts": -0.086
-          },
-          {
-            "alpha_deg": 0.0,
-            "baseline_cd_counts": 192.136,
-            "treatment_cd_counts": 184.787,
-            "credit_counts": -7.349,
-            "credit_cdp_counts": -6.248,
-            "credit_cdv_counts": -1.101,
-            "delta_cl": -1.7886870492395124e-05,
-            "induced_drag_share_counts": 0.004
-          },
-          {
-            "alpha_deg": 4.0,
-            "baseline_cd_counts": 192.13,
-            "treatment_cd_counts": 184.718,
-            "credit_counts": -7.411,
-            "credit_cdp_counts": -6.51,
-            "credit_cdv_counts": -0.901,
-            "delta_cl": -0.00030485708308074233,
-            "induced_drag_share_counts": -0.083
-          },
-          {
-            "alpha_deg": 8.0,
-            "baseline_cd_counts": 309.083,
-            "treatment_cd_counts": 302.216,
-            "credit_counts": -6.866,
-            "credit_cdp_counts": -5.931,
-            "credit_cdv_counts": -0.935,
-            "delta_cl": -0.0005702732931001653,
-            "induced_drag_share_counts": -0.456
-          }
-        ],
-        "pairing_problems": [],
-        "missing": [],
-        "aspect_ratio": 2.9255,
-        "mean_credit_counts_alpha_0_4_8": -7.209,
-        "range_counts": [
-          -7.411,
-          -6.866
-        ]
-      },
-      "gci_M": {
-        "rows": [
-          {
-            "alpha_deg": -2.0,
-            "baseline_cd_counts": 205.754,
-            "treatment_cd_counts": 203.396,
-            "credit_counts": -2.358,
-            "credit_cdp_counts": -1.409,
-            "credit_cdv_counts": -0.95,
-            "delta_cl": -0.00017084610233905617,
-            "induced_drag_share_counts": 0.087
-          },
-          {
-            "alpha_deg": 0.0,
-            "baseline_cd_counts": 162.676,
-            "treatment_cd_counts": 160.009,
-            "credit_counts": -2.666,
-            "credit_cdp_counts": -1.847,
-            "credit_cdv_counts": -0.819,
-            "delta_cl": -0.00014367933549386258,
-            "induced_drag_share_counts": 0.036
-          },
-          {
-            "alpha_deg": 4.0,
-            "baseline_cd_counts": 162.976,
-            "treatment_cd_counts": 160.285,
-            "credit_counts": -2.691,
-            "credit_cdp_counts": -2.025,
-            "credit_cdv_counts": -0.666,
-            "delta_cl": -8.209025248581692e-05,
-            "induced_drag_share_counts": -0.022
-          },
-          {
-            "alpha_deg": 8.0,
-            "baseline_cd_counts": 277.6,
-            "treatment_cd_counts": 275.536,
-            "credit_counts": -2.063,
-            "credit_cdp_counts": -1.373,
-            "credit_cdv_counts": -0.691,
-            "delta_cl": -1.5776834436709297e-05,
-            "induced_drag_share_counts": -0.013
-          }
-        ],
-        "pairing_problems": [],
-        "missing": [],
-        "aspect_ratio": 2.9255,
-        "mean_credit_counts_alpha_0_4_8": -2.473,
-        "range_counts": [
-          -2.691,
-          -2.063
-        ]
-      },
-      "grid_sensitivity": [
-        {
-          "alpha_deg": -2.0,
-          "gci_C": -7.023,
-          "gci_M": -2.358,
-          "change_counts": 4.665,
-          "fraction_of_credit_lost": 0.6642
-        },
-        {
-          "alpha_deg": 0.0,
-          "gci_C": -7.349,
-          "gci_M": -2.666,
-          "change_counts": 4.683,
-          "fraction_of_credit_lost": 0.6372
-        },
-        {
-          "alpha_deg": 4.0,
-          "gci_C": -7.411,
-          "gci_M": -2.691,
-          "change_counts": 4.72,
-          "fraction_of_credit_lost": 0.6369
-        },
-        {
-          "alpha_deg": 8.0,
-          "gci_C": -6.866,
-          "gci_M": -2.063,
-          "change_counts": 4.803,
-          "fraction_of_credit_lost": 0.6995
-        }
-      ]
-    },
-    "47": {
-      "gci_C": {
-        "rows": [
-          {
-            "alpha_deg": -2.0,
-            "baseline_cd_counts": 212.669,
-            "treatment_cd_counts": 202.866,
-            "credit_counts": -9.804,
-            "credit_cdp_counts": -8.958,
-            "credit_cdv_counts": -0.845,
-            "delta_cl": 0.00016847078589807274,
-            "induced_drag_share_counts": -0.038
-          },
-          {
-            "alpha_deg": 0.0,
-            "baseline_cd_counts": 191.835,
-            "treatment_cd_counts": 181.935,
-            "credit_counts": -9.901,
-            "credit_cdp_counts": -9.171,
-            "credit_cdv_counts": -0.73,
-            "delta_cl": -0.0002055271161130537,
-            "induced_drag_share_counts": 0.008
-          },
-          {
-            "alpha_deg": 4.0,
-            "baseline_cd_counts": 237.384,
-            "treatment_cd_counts": 228.203,
-            "credit_counts": -9.181,
-            "credit_cdp_counts": -8.494,
-            "credit_cdv_counts": -0.687,
-            "delta_cl": -0.0007321770576020903,
-            "induced_drag_share_counts": -0.248
-          },
-          {
-            "alpha_deg": 8.0,
-            "baseline_cd_counts": 397.049,
-            "treatment_cd_counts": 389.791,
-            "credit_counts": -7.258,
-            "credit_cdp_counts": -6.404,
-            "credit_cdv_counts": -0.853,
-            "delta_cl": -0.0013463108955773517,
-            "induced_drag_share_counts": -0.963
-          }
-        ],
-        "pairing_problems": [],
-        "missing": [],
-        "aspect_ratio": 5.1196,
-        "mean_credit_counts_alpha_0_4_8": -8.78,
-        "range_counts": [
-          -9.901,
-          -7.258
-        ]
-      },
-      "gci_M": {
-        "rows": [
-          {
-            "alpha_deg": -2.0,
-            "baseline_cd_counts": 181.696,
-            "treatment_cd_counts": 177.941,
-            "credit_counts": -3.754,
-            "credit_cdp_counts": -3.035,
-            "credit_cdv_counts": -0.72,
-            "delta_cl": 0.00014913536986640996,
-            "induced_drag_share_counts": -0.033
-          },
-          {
-            "alpha_deg": 0.0,
-            "baseline_cd_counts": 161.634,
-            "treatment_cd_counts": 157.789,
-            "credit_counts": -3.845,
-            "credit_cdp_counts": -3.228,
-            "credit_cdv_counts": -0.617,
-            "delta_cl": -7.570684303364467e-05,
-            "induced_drag_share_counts": 0.003
-          },
-          {
-            "alpha_deg": 4.0,
-            "baseline_cd_counts": 206.445,
-            "treatment_cd_counts": 203.082,
-            "credit_counts": -3.363,
-            "credit_cdp_counts": -2.806,
-            "credit_cdv_counts": -0.557,
-            "delta_cl": -0.00033414717245403014,
-            "induced_drag_share_counts": -0.113
-          },
-          {
-            "alpha_deg": 8.0,
-            "baseline_cd_counts": 362.633,
-            "treatment_cd_counts": 360.636,
-            "credit_counts": -1.997,
-            "credit_cdp_counts": -1.35,
-            "credit_cdv_counts": -0.647,
-            "delta_cl": -0.0005758795486143775,
-            "induced_drag_share_counts": -0.41
-          }
-        ],
-        "pairing_problems": [],
-        "missing": [],
-        "aspect_ratio": 5.1196,
-        "mean_credit_counts_alpha_0_4_8": -3.068,
-        "range_counts": [
-          -3.845,
-          -1.997
-        ]
-      },
-      "grid_sensitivity": [
-        {
-          "alpha_deg": -2.0,
-          "gci_C": -9.804,
-          "gci_M": -3.754,
-          "change_counts": 6.05,
-          "fraction_of_credit_lost": 0.6171
-        },
-        {
-          "alpha_deg": 0.0,
-          "gci_C": -9.901,
-          "gci_M": -3.845,
-          "change_counts": 6.056,
-          "fraction_of_credit_lost": 0.6117
-        },
-        {
-          "alpha_deg": 4.0,
-          "gci_C": -9.181,
-          "gci_M": -3.363,
-          "change_counts": 5.818,
-          "fraction_of_credit_lost": 0.6337
-        },
-        {
-          "alpha_deg": 8.0,
-          "gci_C": -7.258,
-          "gci_M": -1.997,
-          "change_counts": 5.261,
-          "fraction_of_credit_lost": 0.7249
-        }
-      ]
-    },
     "83": {
+      "gci_CC": {
+        "rows": [
+          {
+            "alpha_deg": -2.0,
+            "baseline_cd_counts": 290.502,
+            "treatment_cd_counts": 288.801,
+            "credit_counts": -1.701,
+            "credit_cdp_counts": 0.192,
+            "credit_cdv_counts": -1.893,
+            "delta_cl": -3.418298218632598e-05,
+            "induced_drag_share_counts": 0.015
+          },
+          {
+            "alpha_deg": 0.0,
+            "baseline_cd_counts": 236.433,
+            "treatment_cd_counts": 233.468,
+            "credit_counts": -2.965,
+            "credit_cdp_counts": -1.356,
+            "credit_cdv_counts": -1.609,
+            "delta_cl": 0.0002859826298533541,
+            "induced_drag_share_counts": -0.066
+          },
+          {
+            "alpha_deg": 4.0,
+            "baseline_cd_counts": 225.14,
+            "treatment_cd_counts": 222.439,
+            "credit_counts": -2.7,
+            "credit_cdp_counts": -1.418,
+            "credit_cdv_counts": -1.282,
+            "delta_cl": 0.0010903283292594268,
+            "induced_drag_share_counts": 0.193
+          },
+          {
+            "alpha_deg": 8.0,
+            "baseline_cd_counts": 337.812,
+            "treatment_cd_counts": 338.567,
+            "credit_counts": 0.755,
+            "credit_cdp_counts": 2.129,
+            "credit_cdv_counts": -1.374,
+            "delta_cl": 0.001793452058401368,
+            "induced_drag_share_counts": 1.053
+          }
+        ],
+        "pairing_problems": [],
+        "missing": [],
+        "aspect_ratio": 4.8364,
+        "mean_credit_counts_alpha_0_4_8": -1.637,
+        "range_counts": [
+          -2.965,
+          0.755
+        ]
+      },
       "gci_C": {
         "rows": [
           {
@@ -381,36 +161,133 @@
           -2.046
         ]
       },
-      "grid_sensitivity": [
-        {
-          "alpha_deg": -2.0,
-          "gci_C": -8.11,
-          "gci_M": -2.081,
-          "change_counts": 6.029,
-          "fraction_of_credit_lost": 0.7434
+      "leg_families": {
+        "baseline": {
+          "-2.0": {
+            "counts": {
+              "gci_CC": 290.502,
+              "gci_C": 262.549,
+              "gci_M": 232.442
+            },
+            "differences": [
+              -27.953,
+              -30.107
+            ],
+            "p_observed": 0.118,
+            "condition": "DIVERGENT: |f1-f2| = 0.0030107 is not smaller than |f2-f3| = 0.0027953, so refining the grid is moving the answer FURTHER, not less far. This family has no demonstrated limit and the order formula's absolute value hides the sign. No GCI.",
+            "converges": false,
+            "certified_uncertainty_percent": null
+          },
+          "0.0": {
+            "counts": {
+              "gci_CC": 236.433,
+              "gci_C": 210.706,
+              "gci_M": 181.902
+            },
+            "differences": [
+              -25.727,
+              -28.804
+            ],
+            "p_observed": 0.287,
+            "condition": "DIVERGENT: |f1-f2| = 0.0028804 is not smaller than |f2-f3| = 0.0025727, so refining the grid is moving the answer FURTHER, not less far. This family has no demonstrated limit and the order formula's absolute value hides the sign. No GCI.",
+            "converges": false,
+            "certified_uncertainty_percent": null
+          },
+          "4.0": {
+            "counts": {
+              "gci_CC": 225.14,
+              "gci_C": 200.563,
+              "gci_M": 172.108
+            },
+            "differences": [
+              -24.577,
+              -28.455
+            ],
+            "p_observed": 0.433,
+            "condition": "DIVERGENT: |f1-f2| = 0.0028455 is not smaller than |f2-f3| = 0.0024577, so refining the grid is moving the answer FURTHER, not less far. This family has no demonstrated limit and the order formula's absolute value hides the sign. No GCI.",
+            "converges": false,
+            "certified_uncertainty_percent": null
+          },
+          "8.0": {
+            "counts": {
+              "gci_CC": 337.812,
+              "gci_C": 311.205,
+              "gci_M": 280.974
+            },
+            "differences": [
+              -26.607,
+              -30.231
+            ],
+            "p_observed": 0.351,
+            "condition": "DIVERGENT: |f1-f2| = 0.0030231 is not smaller than |f2-f3| = 0.0026607, so refining the grid is moving the answer FURTHER, not less far. This family has no demonstrated limit and the order formula's absolute value hides the sign. No GCI.",
+            "converges": false,
+            "certified_uncertainty_percent": null
+          }
         },
-        {
-          "alpha_deg": 0.0,
-          "gci_C": -8.969,
-          "gci_M": -2.757,
-          "change_counts": 6.212,
-          "fraction_of_credit_lost": 0.6926
-        },
-        {
-          "alpha_deg": 4.0,
-          "gci_C": -9.151,
-          "gci_M": -3.034,
-          "change_counts": 6.117,
-          "fraction_of_credit_lost": 0.6685
-        },
-        {
-          "alpha_deg": 8.0,
-          "gci_C": -7.513,
-          "gci_M": -2.046,
-          "change_counts": 5.467,
-          "fraction_of_credit_lost": 0.7277
+        "treatment": {
+          "-2.0": {
+            "counts": {
+              "gci_CC": 288.801,
+              "gci_C": 254.439,
+              "gci_M": 230.361
+            },
+            "differences": [
+              -34.362,
+              -24.078
+            ],
+            "p_observed": 1.875,
+            "condition": "ok",
+            "converges": true,
+            "certified_uncertainty_percent": 25.385210231377126
+          },
+          "0.0": {
+            "counts": {
+              "gci_CC": 233.468,
+              "gci_C": 201.737,
+              "gci_M": 179.145
+            },
+            "differences": [
+              -31.731,
+              -22.592
+            ],
+            "p_observed": 1.801,
+            "condition": "ok",
+            "converges": true,
+            "certified_uncertainty_percent": 32.167738724205584
+          },
+          "4.0": {
+            "counts": {
+              "gci_CC": 222.439,
+              "gci_C": 191.412,
+              "gci_M": 169.073
+            },
+            "differences": [
+              -31.027,
+              -22.339
+            ],
+            "p_observed": 1.749,
+            "condition": "ok",
+            "converges": true,
+            "certified_uncertainty_percent": 34.91450010978863
+          },
+          "8.0": {
+            "counts": {
+              "gci_CC": 338.567,
+              "gci_C": 303.691,
+              "gci_M": 278.928
+            },
+            "differences": [
+              -34.876,
+              -24.763
+            ],
+            "p_observed": 1.814,
+            "condition": "ok",
+            "converges": true,
+            "certified_uncertainty_percent": 22.45226575218616
+          }
         }
-      ]
+      },
+      "why_the_credit_does_not_converge": "TREATMENT family converges (p ~ 1.75-1.88, condition ok at every incidence). BASELINE family does NOT: its successive differences GROW under refinement and gci.py returns DIVERGENT. A difference between a convergent family and a divergent one cannot converge, which is why the credit reads about -2.5, -8.7, -2.6 across CC, C, M rather than settling, and why extrapolating any two of those points is meaningless. The engineering reading is the useful one: the 0.1 %-chord trailing edge is the configuration whose grid family behaves. The 0.4 % edge is not. That argues FOR the change on numerical grounds, independently of how many counts it is worth -- and it means 'the credit in counts' was never a well-posed quantity to measure."
     }
   },
   "reproduces_published_gci_C": {
@@ -445,6 +322,5 @@
       }
     ],
     "all_agree": true
-  },
-  "finding": "Measured on 3 wing(s) (g13, g47, g83): the credit loses 61-74 % of its magnitude between gci_C and gci_M. The discretisation error does NOT cancel in this difference, which the campaign had assumed without testing."
+  }
 }

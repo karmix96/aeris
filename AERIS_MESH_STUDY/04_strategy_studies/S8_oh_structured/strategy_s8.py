@@ -269,6 +269,33 @@ LEVELS["gci_FF"] = refined_level(LEVELS["gci_C"], GCI_RATIO ** 3, name="gci_FF")
 #: level, whose reference then moved. Both are now pinned to what they must match.
 LEVELS["gci_CC"] = refined_level(LEVELS["gci_C"], 1.0 / GCI_RATIO, name="gci_CC")
 
+#: The BASELINE configuration at gci_CC, so the trailing-edge credit can be formed
+#: at three grid levels instead of two.
+#:
+#: The credit is CD(treatment) - CD(baseline) on the same grid. It is measured at
+#: gci_C (-8.11 to -9.15 counts) and gci_M (-2.05 to -3.03), and extrapolating those
+#: two points with the order measured on absolute drag (p = 1.75-1.88) sends the
+#: credit through ZERO to about +9 to +10 counts at all four incidences -- i.e. the
+#: change would ADD drag. A two-point extrapolation is not evidence, and this whole
+#: audit exists because of numbers like that one, so the third level gets measured.
+#:
+#: The baseline is the pre-change family: oh_L3's trailing edge at 0.4 % of chord and
+#: the OLD 10 x s0 tip cap, which is what runs/s8_chi3 used at gci_C and gci_M
+#: (artifacts/s8_gci83 and s8_pilot, cap measured 10.205 and 10.204). So this level is
+#: refined_level(oh_L3, 1/1.3) with the cap pinned -- deliberately NOT derived from
+#: gci_C, because gci_C carries the 0.1 % edge that is the thing under test.
+#: The baseline at the gci_C level, rebuilt with TODAY's mesher. Diagnostic only:
+#: the September baseline mesh lives in artifacts/s8_gci83 at 567,256 cells, and if
+#: the same level definition no longer reproduces that count then the baseline
+#: "family" mixes meshes built weeks apart by a mesher that has since changed, and
+#: no order computed across it means anything.
+LEVELS["gci_C_baseline"] = _dataclasses.replace(
+    LEVELS["oh_L3"], tip_span_first_cell_in_s0=10.0)
+
+LEVELS["gci_CC_baseline"] = _dataclasses.replace(
+    refined_level(LEVELS["oh_L3"], 1.0 / GCI_RATIO, name="gci_CC_baseline"),
+    tip_span_first_cell_in_s0=10.0)
+
 #: A half-step between `gci_M` and `gci_F`, for a host that can hold about 17 GiB
 #: but not the 22.5 GiB `gci_F` asks for.  PLAN_desktop_campaign.md 2.1 offers it
 #: as the fallback third level, and is explicit about the price: the ratio

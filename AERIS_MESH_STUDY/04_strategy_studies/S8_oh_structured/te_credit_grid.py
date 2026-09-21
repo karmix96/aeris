@@ -49,8 +49,33 @@ REPORTS = HERE / "reports"
 #: 30 % of the answer. `check_pairing` below refuses that automatically.
 BASELINE_ROOT = HERE / "runs/s8_chi3"
 TREATMENT_ROOT = HERE / "runs/s8_v2"
-LEVELS = ["gci_C", "gci_M"]
+LEVELS = ["gci_CC", "gci_C", "gci_M"]
 ALPHAS = ["-2", "0", "4", "8"]
+
+#: Where each leg of each level lives, because `gci_CC` does not follow the
+#: `<root>/g<index>/<level>_a<alpha>` convention the other two do: its treatment leg
+#: was built as its own campaign and its baseline leg needed a level defined for it.
+#: Written as an explicit map rather than a naming rule, so a level that moves has to
+#: be moved HERE and cannot silently resolve to the wrong directory -- which is how
+#: the 52 gate verdicts were lost.
+#:
+#: gci_CC added 2026-09-22, and it is what makes the credit a three-level question
+#: instead of a two-point extrapolation. Extrapolating the C and M credits alone with
+#: the order measured on absolute drag predicted the credit would change SIGN to about
+#: +10 counts. The third level refutes that: the credit is -2.5, -8.7, -2.6 across
+#: CC, C, M -- non-monotone, with gci_C the outlier.
+LEVEL_PATHS = {
+    "gci_CC": {"baseline": HERE / "runs/s8_ccbase/g83/gci_CC_baseline_a{alpha}",
+               "treatment": HERE / "runs/s8_gciCC/g83/gci_CC_a{alpha}"},
+}
+
+#: Cells per leg per level, for the refinement ratios. The two legs do NOT have the
+#: same cell count at a given level -- the wall-resolved cap costs about 6 % more
+#: cells -- so each family gets its own ratios.
+CELLS = {
+    "baseline": {"gci_CC": 298712, "gci_C": 567256, "gci_M": 1111152},
+    "treatment": {"gci_CC": 320648, "gci_C": 603592, "gci_M": 1172856},
+}
 
 #: For the induced-drag cross-check: if the treatment moves CL, part of any
 #: "credit" is induced drag rather than a profile-drag saving, and would not
@@ -112,8 +137,13 @@ def credit_for(index: int, level: str) -> dict:
     ar = aspect_ratio(index)
     induced = math.pi * ar * OSWALD if ar else None
     for alpha in ALPHAS:
-        bd = BASELINE_ROOT / f"g{index}" / f"{level}_a{alpha}"
-        td = TREATMENT_ROOT / f"g{index}" / f"{level}_a{alpha}"
+        special = LEVEL_PATHS.get(level)
+        if special:
+            bd = Path(str(special["baseline"]).format(alpha=alpha))
+            td = Path(str(special["treatment"]).format(alpha=alpha))
+        else:
+            bd = BASELINE_ROOT / f"g{index}" / f"{level}_a{alpha}"
+            td = TREATMENT_ROOT / f"g{index}" / f"{level}_a{alpha}"
         if not (bd / "result.json").exists():
             missing.append(f"baseline {bd.relative_to(HERE)}")
             continue
@@ -208,6 +238,62 @@ def main() -> int:
             f"credit loses {100 * min(losses):.0f}-{100 * max(losses):.0f} % of its magnitude "
             f"between gci_C and gci_M. The discretisation error does NOT cancel in this "
             f"difference, which the campaign had assumed without testing.")
+
+    # EACH LEG'S OWN FAMILY, judged separately. This is the finding the credit
+    # column cannot show: a difference between a family that converges and one that
+    # does not cannot itself converge, and no extrapolation of it means anything.
+    import sys as _sys
+    _sys.path.insert(0, str(HERE))
+    from gci import gci_triplet
+    for index in indices:
+        e = report["by_geometry"].get(str(index))
+        if not e:
+            continue
+        legs = {}
+        for leg in ("baseline", "treatment"):
+            key = "baseline_cd_counts" if leg == "baseline" else "treatment_cd_counts"
+            series = {}
+            for lv in LEVELS:
+                for r in e.get(lv, {}).get("rows", []):
+                    series.setdefault(r["alpha_deg"], {})[lv] = r[key]
+            cells = CELLS[leg]
+            per_alpha = {}
+            for a, vals in series.items():
+                if not all(lv in vals for lv in LEVELS):
+                    continue
+                cc, c, m = (vals[lv] * 1e-4 for lv in LEVELS)
+                r21 = (cells["gci_M"] / cells["gci_C"]) ** (1 / 3)
+                r32 = (cells["gci_C"] / cells["gci_CC"]) ** (1 / 3)
+                t = gci_triplet(m, c, cc, r21, r32)
+                per_alpha[a] = {
+                    "counts": {lv: round(vals[lv], 3) for lv in LEVELS},
+                    "differences": [round(vals["gci_C"] - vals["gci_CC"], 3),
+                                    round(vals["gci_M"] - vals["gci_C"], 3)],
+                    "p_observed": (round(t["p_observed"], 3)
+                                   if t.get("p_observed") is not None else None),
+                    "condition": t["condition"],
+                    "converges": t["condition"] == "ok",
+                    "certified_uncertainty_percent": t.get("certified_uncertainty_percent"),
+                }
+            legs[leg] = per_alpha
+        e["leg_families"] = legs
+        conv = {leg: [v["converges"] for v in pa.values()] for leg, pa in legs.items()}
+        if all(conv.values()):
+            e["why_the_credit_does_not_converge"] = (
+                "TREATMENT family converges (p ~ 1.75-1.88, condition ok at every "
+                "incidence). BASELINE family does NOT: its successive differences GROW "
+                "under refinement and gci.py returns DIVERGENT. A difference between a "
+                "convergent family and a divergent one cannot converge, which is why the "
+                "credit reads about -2.5, -8.7, -2.6 across CC, C, M rather than settling, "
+                "and why extrapolating any two of those points is meaningless. The "
+                "engineering reading is the useful one: the 0.1 %-chord trailing edge is "
+                "the configuration whose grid family behaves. The 0.4 % edge is not. That "
+                "argues FOR the change on numerical grounds, independently of how many "
+                "counts it is worth -- and it means 'the credit in counts' was never a "
+                "well-posed quantity to measure."
+                if conv["treatment"] and not all(conv["baseline"]) else
+                "read leg_families: both legs converge, so the credit's behaviour needs "
+                "another explanation")
 
     out = REPORTS / "s8_te_credit_grid.json"
     out.write_text(json.dumps(report, indent=2) + "\n")

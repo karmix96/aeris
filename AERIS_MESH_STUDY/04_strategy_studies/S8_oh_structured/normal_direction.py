@@ -82,44 +82,79 @@ def stall_evidence(run: Path) -> dict | None:
     rows = [line.split() for line in log.read_text().splitlines() if ROW.match(line)]
     if len(rows) < 20:
         return {"outcome": "ATTEMPTED_NO_HISTORY", "iterations": len(rows)}
-    # PER ROW, not per file. ADflow writes `----` in the CFL column whenever it has
-    # no step to report -- `convergence_gate.py` already documents this -- so one
-    # unparseable field made a comprehension over the whole log throw, and a 224
-    # iteration stall was reported as "unreadable history". The residual and the CFL
-    # are collected independently for the same reason: losing the CFL must not lose
-    # the residual, which is the series the verdict rests on.
-    resid, cfl = [], []
+    # EVERY equation, and each against its own limit -- not one column called "the
+    # residual". The ADflow table is
+    #   Grid | Iter | IterTot | IterType | CFL | Step | LinRes | rho | rhou | rhov | rhow | rhoE | nu
+    # so field 8 is rho and field 9 is rhou. Reading field 9 and calling it the total
+    # residual is what produced the first version of this analysis: rhou happened to
+    # drift up over the tail, which read as "the solver walked away from a solution"
+    # when continuity and energy were in fact FLAT. The real finding was better and
+    # more specific -- the transverse momentum equations are the laggards -- and it
+    # was invisible from one column. `convergence_gate.py` had this right all along
+    # with its per-equation test; this file did not.
+    #
+    # Parsed per row because ADflow writes `----` in the CFL column when it has no
+    # step to report, and a comprehension over the whole log throws on that.
+    import math
+    cols = {"rho": 7, "rhou": 8, "rhov": 9, "rhow": 10, "rhoE": 11, "nu": 12}
+    limits = {"rho": 3.0, "rhou": 3.0, "rhov": 3.0, "rhow": 3.0, "rhoE": 6.0, "nu": 3.0}
+    series: dict[str, list[float]] = {k: [] for k in cols}
+    cfl = []
     for r in rows:
-        if len(r) > 8:
-            try:
-                resid.append(float(r[8]))
-            except ValueError:
-                pass
+        for name, idx in cols.items():
+            if len(r) > idx:
+                try:
+                    series[name].append(float(r[idx]))
+                except ValueError:
+                    pass
         if len(r) > 4:
             try:
                 cfl.append(float(r[4]))
             except ValueError:
                 pass
-    if len(resid) < 20:
+    if len(series["rho"]) < 20:
         return {"outcome": "ATTEMPTED_UNREADABLE_HISTORY", "iterations": len(rows),
-                "why": f"only {len(resid)} of {len(rows)} rows had a readable residual"}
-    tail = resid[-max(20, len(resid) // 5):]
-    rising = sum(b > a for a, b in zip(tail, tail[1:])) / max(1, len(tail) - 1)
+                "why": f"only {len(series['rho'])} of {len(rows)} rows had a readable residual"}
+
+    equations, short = {}, []
+    for name, values in series.items():
+        if len(values) < 20 or values[-1] <= 0:
+            continue
+        # normalised on the largest of the first five, as Fluent and the gate do:
+        # iteration zero can start a quantity artificially small
+        reference = max(values[:5])
+        dropped = math.log10(reference / values[-1])
+        tail = values[-max(20, len(values) // 5):]
+        rising = sum(b > a for a, b in zip(tail, tail[1:])) / max(1, len(tail) - 1)
+        equations[name] = {"reference_first_five": reference, "final": values[-1],
+                           "orders_dropped": round(dropped, 3),
+                           "limit": limits[name],
+                           "meets_limit": bool(dropped >= limits[name]),
+                           "fraction_of_tail_rising": round(rising, 3)}
+        if dropped < limits[name]:
+            short.append(name)
+
+    flat_or_drifting = [n for n, e in equations.items()
+                        if 0.25 <= e["fraction_of_tail_rising"] <= 1.0]
     return {
-        "outcome": "ATTEMPTED_AND_STALLED" if rising > 0.8 else "ATTEMPTED_INCOMPLETE",
+        "outcome": "ATTEMPTED_AND_STALLED" if short else "ATTEMPTED_INCOMPLETE",
         "iterations": len(rows),
-        "residual_first": resid[0],
-        "residual_last": resid[-1],
-        "orders_dropped": round(__import__("math").log10(resid[0] / resid[-1]), 3)
-        if resid[-1] > 0 else None,
-        "fraction_of_tail_rising": round(rising, 3),
+        "equations": equations,
+        "equations_short_of_limit": short,
         "cfl_last": cfl[-1] if cfl else None,
         "cfl_max": max(cfl) if cfl else None,
-        "note": ("the adaptive CFL collapsed and the residual rose: the solver walked away "
-                 "from a solution rather than failing to reach one. That is a statement "
-                 "about this MESH, not a missing measurement."
-                 if rising > 0.8 else
-                 "stopped before converging, without a rising residual"),
+        "note": (
+            f"Short of the per-equation limit on: {', '.join(short)}. This says the run did not "
+            f"reach its stopping rule. It does NOT say the solve diverged, was frozen, or that "
+            f"the mesh is at fault -- those are separate tests and `convergence_gate.py` is the "
+            f"instrument for all of them (`not_diverging`, `no_growing_oscillation`, "
+            f"`solver_frozen`, `linear_solve_dead`, plus the force-settling tail). Run the gate "
+            f"before drawing any conclusion from the numbers above: on 2026-09-21 this file's "
+            f"predecessor read one residual column, called a mild drift in it a divergence, and "
+            f"a run was stopped at iteration 224 that the gate scored as not diverging, not "
+            f"frozen, forces settled to 0.001 %, and 4.46e-6 against a 1e-6 target."
+            if short else "reached every per-equation limit but wrote no result"),
+        "equations_with_drifting_tails": flat_or_drifting,
     }
 
 
@@ -239,12 +274,13 @@ def main() -> int:
         print(f"\n  FAMILY {family}")
         if entry["missing"]:
             for m in entry["missing"]:
-                print(f"    {m['run']}: {m.get('outcome')}"
-                      + (f"\n      {m['iterations']} iterations, "
-                         f"{m['orders_dropped']} orders dropped, "
-                         f"{100 * m['fraction_of_tail_rising']:.0f} % of the tail rising, "
-                         f"CFL {m['cfl_last']:.2e} against a max of {m['cfl_max']:.2e}"
-                         if m.get("fraction_of_tail_rising") is not None else ""))
+                print(f"    {m['run']}: {m.get('outcome')}")
+                for name, e in (m.get("equations") or {}).items():
+                    print(f"      {name:<5} {e['orders_dropped']:>6.2f} orders "
+                          f"(limit {e['limit']:.0f})  "
+                          f"{'ok' if e['meets_limit'] else 'SHORT'}")
+                if m.get("note"):
+                    print(f"      {m['note']}")
             continue
         print(f"    {'level':<24}{'cells':>10}{'cap':>7}{'CD':>10}{'CDp':>10}{'CDv':>10}")
         for r in entry["levels"]:

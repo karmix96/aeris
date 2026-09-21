@@ -87,10 +87,39 @@ guarded() {  # TIMEOUT_S LOGFILE CMD...
   wait "$pid"
 }
 
+# WAIT for memory before starting, rather than starting and being killed.
+#
+# On the first relaunch both solves died inside a second, "KILLED by the memory
+# guard: 459400 kB available", because a previous 9 GiB run had not finished
+# releasing its memory -- and in fact had not exited at all; a transient `pgrep`
+# miss had reported it gone. The guard did its job and the queue then recorded two
+# runs as FAILED that were never really attempted, which is a worse outcome than
+# waiting: a failure that means "the machine was busy" is indistinguishable in the
+# log from one that means "this mesh will not solve".
+preflight_memory() {  # NEEDED_GIB
+  local need=$1 waited=0
+  while :; do
+    local avail_kb=$(awk '/^MemAvailable:/{print $2}' /proc/meminfo)
+    if [ "$avail_kb" -ge $(( need * 1024 * 1024 )) ]; then
+      log "    memory ok: $(( avail_kb / 1048576 )) GiB available, need ${need}"
+      return 0
+    fi
+    if [ "$waited" -ge 900 ]; then
+      log "    REFUSING to start: only $(( avail_kb / 1048576 )) GiB available after 15 min, need ${need}"
+      return 1
+    fi
+    [ "$waited" = 0 ] && log "    waiting for memory: $(( avail_kb / 1048576 )) GiB available, need ${need}"
+    sleep 30; waited=$(( waited + 30 ))
+  done
+}
+
 for L in gci_C_normal_s0_b gci_C_normal_s0_2_b; do
   D=$OUT/${L}_a0
   mkdir -p "$D"
   if [ -f "$D/result.json" ]; then log "  $L a0 already done"; continue; fi
+  # 788k and 1.03M cells at 9.46 GiB per million plus 1.51 fixed, rounded down: the
+  # guard needs headroom above this, not equality with it.
+  preflight_memory 10 || { log "  skipping $L"; continue; }
   log "  $L a0 solving (6 ranks, ANK only, chi 3)"
   guarded 9000 "$D/run.log" "$M/mpirun" -np 6 "$M/python" "$S/solve_s8.py" \
     --grid "$OUT/${L}_volume.cgns" --alpha 0 --no-nk --eddy-vis-inf-ratio 0.21 \

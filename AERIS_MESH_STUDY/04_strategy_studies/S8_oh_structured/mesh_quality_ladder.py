@@ -45,16 +45,24 @@ LADDER = [
     ("gci_FF", HERE / "runs/s8_cloud/g83"),
 ]
 
-#: The mesh that stalled ANK, as the reference point for "how bad is too bad".
-#: 787,944 cells, family B, wall-normal refined at 1.3 with the first cell scaled.
+#: A reference point for "how bad is too bad" -- and a caution about how it was
+#: nearly misused. 787,944 cells, family B, wall-normal refined at 1.3 with the
+#: first cell scaled: the worst-conditioned mesh of this family that has been
+#: solved on this host.
 STALL_REFERENCE = {
     "level": "gci_C_normal_s0_b",
     "cells": 787944,
     "scaled_jacobian_min": 0.00729189,
-    "outcome": ("ANK-only did not converge: residual rose monotonically from 3.108e-2 "
-                "at iteration 139 to 5.048e-2 at 209, adaptive CFL pinned at 3.12e+03 "
-                "against a healthy 1.00e+05, step length and linear residual both "
-                "normal. Stopped at iteration 211."),
+    "outcome": ("2026-09-21, ANK-only, stopped by hand at iteration 224 on a misreading. "
+                "`convergence_gate.py` scored that run NOT diverging, NOT frozen, linear "
+                "solve alive, CL and CD settled to 0.0008 % and 0.0010 % over the tail, and "
+                "4.46e-6 relative against a 1e-6 target -- REJECTED only on the energy "
+                "equation's order (5.39 against 6.0) and the residual target. The comparable "
+                "family-A mesh needed 266 iterations. So this is NOT an example of a mesh "
+                "that cannot be solved, and must not be used as one."),
+    "why_it_is_here": ("to bound the conditioning question, not to condemn the fine levels. "
+                       "If a level is worse conditioned than this mesh that is worth knowing; "
+                       "it is not evidence that the level will fail to converge."),
 }
 
 #: Reported because they tell opposite stories and only one of them is the risk.
@@ -149,7 +157,7 @@ def main() -> int:
             "worst_cell_degrades_monotonically": bool(degrades),
             "bulk_improves_monotonically": bool(bulk_improves),
             "scaled_jacobian_min_by_level": dict(zip(levels, sj)),
-            "levels_worse_conditioned_than_the_mesh_that_stalled": worse_than_stall,
+            "levels_worse_conditioned_than_the_reference_mesh": worse_than_stall,
             "reading": (
                 "The worst cell degrades by about 1.4x per level while the median, the "
                 "neighbour volume ratio and the normal growth rate all IMPROVE. So every "
@@ -173,18 +181,18 @@ def main() -> int:
             same_place = (a.get("where") == b.get("where")
                           and a.get("span_position") == b.get("span_position")
                           and abs(a.get("i_ring", -99) - b.get("i_ring", 99)) <= 2)
-        report["conditioning_explains_the_stall"] = {
+        report["conditioning_is_localised_not_new"] = {
             "worst_cells_in_the_same_place_as_a_converging_level": same_place,
             "verdict": (
-                "NO. The stalled mesh's worst cells sit in the same block, at the same ring "
+                "The refined mesh's worst cells sit in the same block, at the same ring "
                 "index and span station, and in the same OUTERMOST normal layer as gci_C's -- "
                 "and gci_C converges. The far-field edge of the O-block is a low-gradient "
                 "region and this is a pre-existing feature of every level, so a handful of "
                 "cells there does not explain a stall. Look at the 5x finer first spanwise "
                 "cell at the tip and the 4x finer trailing edge instead."
                 if same_place else
-                "Possibly: the stalled mesh's worst cells are NOT where the converging level's "
-                "are, so conditioning remains a live suspect. Read the locations below."),
+                "The refined mesh's worst cells are NOT where a converging level's are, so "
+                "conditioning is a live suspect and deserves a controlled test."),
         }
         report["gate"] = {
             "blocks_renting_on_conditioning_grounds": bool(same_place is False),
@@ -235,7 +243,7 @@ def main() -> int:
                   f"below 0.01: {info['cells_below_0p01']:<5} "
                   f"i {w.get('i_ring')} j {w.get('j_normal')} k {w.get('k_span')} "
                   f"-- {w.get('where')}, {w.get('span_position')}")
-    if "conditioning_explains_the_stall" in report:
+    if "conditioning_is_localised_not_new" in report:
         print(f"\n  Does conditioning explain the stall? "
               f"{report['conditioning_explains_the_stall']['verdict']}")
     if failed:

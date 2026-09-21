@@ -68,17 +68,33 @@ against 12.8 GiB available.
 > "61/61 built cleanly" are true and do not speak to this. **That is PLAN §0.1 again, inverted: the
 > metrics measure the bulk and nothing measures the worst cell, which is what a linear solver feels.**
 >
-> **A stall happened, and the conditioning does NOT explain it.** Both halves matter.
+> **RETRACTED, same night.** This box first said a mesh of this family "failed to converge" and that
+> the batch should not be bought. **That was my misreading, not a finding.** I read column 9 of the
+> ADflow iteration table as the total residual; the header says it is `Res rhou`. Its mild upward drift
+> over the tail became "the residual rose monotonically, the solver walked away from a solution", and
+> on that basis I stopped the run at iteration 224 — where the comparable family-A run had needed 266.
 >
-> On 2026-09-21 a mesh from this family with a worst-cell scaled Jacobian of **0.0073** —
-> `gci_C_normal_s0_b`, 787,944 cells, wall-normal refined — **failed to converge under ANK-only**: 224
-> iterations, 3.55 orders dropped, then the residual rose monotonically over the last seventy
-> iterations while the adaptive CFL sat pinned at 3.12e+03 against the 1.00e+05 it had already
-> reached. Step length and linear residual were both normal. `reports/s8_normal_direction.json`
-> records it as `ATTEMPTED_AND_STALLED` with the history.
+> What `convergence_gate.py` says about that same run, which I should have run first:
 >
-> `gci_F` (0.0043) and `gci_FF` (0.0025) are both worse conditioned than that mesh, which looked like
-> a reason to stop. **Then the bad cells were located, and the inference does not hold:**
+> | | |
+> |---|---|
+> | verdict | REJECTED |
+> | `not_diverging` | **pass** |
+> | `no_growing_oscillation` | **pass** |
+> | `solver_frozen` / `linear_solve_dead` | **False / False** |
+> | relative residual | **4.46e-6** against a 1e-6 target |
+> | CL / CD settled over the tail | **0.0008 % / 0.0010 %** |
+> | equations short of limit | `rhoE` only — 5.39 orders against 6.0 |
+>
+> So it was not diverging and not frozen. It was a run four and a half times from its stopping rule
+> with settled forces, rejected on the energy equation's order and the residual target. Energy dropping
+> 5.39 orders is genuinely below this campaign's measured range of 6.12–7.48 over 77 runs, so it is
+> worth noting — but it is not a stall and it says nothing about whether `gci_F` converges. Re-running.
+>
+> **The conditioning trend below is real and stands. The stall it was attached to does not.**
+>
+> `gci_F` (0.0043) and `gci_FF` (0.0025) are worse conditioned than that mesh, which looked like a
+> second reason to stop. **That inference fails too, and for an independent reason:**
 >
 > | mesh | worst cell is at | cells below 0.01 | converges? |
 > |---|---|---|---|

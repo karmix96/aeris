@@ -100,20 +100,13 @@
       "missing": [
         {
           "run": "runs/s8_normalB/gci_C_normal_s0_b_a0",
-          "outcome": "ATTEMPTED_AND_STALLED",
-          "iterations": 224,
-          "residual_first": 185.98910241383783,
-          "residual_last": 0.05193313435317837,
-          "orders_dropped": 3.554,
-          "fraction_of_tail_rising": 1.0,
-          "cfl_last": 3120.0,
-          "cfl_max": 100000.0,
-          "note": "the adaptive CFL collapsed and the residual rose: the solver walked away from a solution rather than failing to reach one. That is a statement about this MESH, not a missing measurement."
+          "outcome": "ATTEMPTED_NO_HISTORY",
+          "iterations": 1
         },
         {
           "run": "runs/s8_normalB/gci_C_normal_s0_2_b_a0",
-          "outcome": "NOT_ATTEMPTED",
-          "why": "no run.log"
+          "outcome": "ATTEMPTED_NO_HISTORY",
+          "iterations": 1
         }
       ]
     }

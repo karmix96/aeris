@@ -57,6 +57,44 @@ def test_gate():
     v = gate(history(np.full(600, -0.16) + np.linspace(0, -1.7e-4, 600)))["verdict"]
     check("accepts the measured 0.107 % short-tail case", v == "ACCEPTED", v)
 
+    # Defect 34: a PLATEAU then a DESCENT is convergence, and the envelope test
+    # read it as a growing oscillation. Measured on gci_C_normal_s0_2_b: a hundred
+    # iterations flat near 1.5e-3, then a break through to 2.5e-4, so the late
+    # window's spread came out 6.5x the plateau's purely because it spanned the
+    # fall. Rejected while every equation passed and CD was settled to 0.0023 %,
+    # which made a three-level family unreadable and nearly inverted a conclusion.
+    def plateau_then_drop(n=600, plateau=1.5e-3, floor=2.5e-4):
+        h = history(np.full(n, -0.16), n=n)
+        r = np.concatenate([np.logspace(0, np.log10(plateau), n // 2),
+                            np.full(n // 4, plateau),
+                            np.logspace(np.log10(plateau), np.log10(floor),
+                                        n - n // 2 - n // 4)])
+        for key, col in G.COLUMNS.items():
+            if key.startswith("res"):
+                h[:, col] = r
+        return h
+    v = gate(plateau_then_drop())
+    check("accepts a plateau followed by a descent (not an oscillation)",
+          v["checks"]["no_growing_oscillation"]["pass"], v["verdict"])
+
+    # ...and the thing that test must NOT start letting through: an envelope that
+    # really does widen about a level that is not falling.
+    def widening_at_a_stable_level(n=600):
+        h = history(np.full(n, -0.16), n=n)
+        base = np.full(n, 1e-3)
+        # The amplitude has to grow FASTER than linearly to clear the 2x spread
+        # threshold between two adjacent windows: a linear ramp only reaches about
+        # 1.4x, which is why the first version of this test passed by accident and
+        # proved nothing. Quartic gives roughly 5x.
+        wobble = np.sin(np.arange(n) * 0.7) * (np.linspace(0, 1, n) ** 4) * 9e-4
+        for key, col in G.COLUMNS.items():
+            if key.startswith("res"):
+                h[:, col] = base + wobble
+        return h
+    v = gate(widening_at_a_stable_level())
+    check("still rejects an envelope widening about a stable level",
+          not v["checks"]["no_growing_oscillation"]["pass"], v["verdict"])
+
 
 def test_gci():
     print("\nGCI")

@@ -170,6 +170,44 @@ def forces(run: Path) -> dict | None:
     return out
 
 
+def gate_verdict(run: Path) -> str | None:
+    """What convergence_gate.py said about this run, if anything did.
+
+    Checked because this file formed a three-level family out of result.json alone
+    and computed an observed order from it. One of those runs was gate-REJECTED, and
+    an order built on a rejected run is not evidence -- it is the "unjudged run in
+    the archive" of defect 25, one level up. `gci.py` refuses frozen runs for the
+    same reason; it cannot refuse what it is not told about.
+    """
+    # Beside the run, then every gate report in reports/. The per-campaign reports
+    # are where the older families' verdicts live (`s8_gci_gate.json`,
+    # `s8_aniso_gate.json`), and looking only beside the run reported the whole of
+    # family A as ungated when it had been gated in September.
+    candidates = [run / "gate.json", run.parent / "gate.json",
+                  run.parent / f"{run.name.rsplit('_a', 1)[0]}_gate.json"]
+    candidates += sorted(REPORTS.glob("*gate*.json"))
+    identity = f"{run.resolve().parent.name}/{run.name}"
+    for candidate in candidates:
+        if not candidate.exists():
+            continue
+        try:
+            records = json.loads(candidate.read_text()).get("results", [])
+        except (ValueError, AttributeError):
+            continue
+        for r in records:
+            stored = str(r.get("directory", ""))
+            if not stored:
+                continue
+            # resolved path, then the identity the 2026-09-20 fix added, then
+            # <parent>/<name> -- never the run name alone, which is `gci_C_a0` for
+            # every wing and every campaign.
+            if (Path(stored).resolve() == run.resolve()
+                    or r.get("run_identity") == identity
+                    or f"{Path(stored).parent.name}/{Path(stored).name}" == identity):
+                return r.get("verdict")
+    return None
+
+
 def cells(summary: Path) -> int | None:
     if not summary.exists():
         return None
@@ -209,10 +247,21 @@ def main() -> int:
                          "tip_cap_first_cell_in_s0": (round(cap(summary), 3)
                                                       if cap(summary) else None),
                          "converged": f["converged"],
+                         "gate_verdict": gate_verdict(run),
                          **{q: round(1e4 * f[q], 3) for q in QUANTITIES}})
         entry = {"levels": rows, "missing": missing}
+        not_accepted = [r["level"] for r in rows if r["gate_verdict"] != "ACCEPTED"]
+        entry["levels_not_gate_accepted"] = not_accepted
+        entry["family_usable"] = not not_accepted
+        if not_accepted:
+            entry["refusal"] = (
+                f"NO ORDER REPORTED: {', '.join(not_accepted)} is not ACCEPTED by "
+                f"convergence_gate.py (verdict "
+                f"{[r['gate_verdict'] for r in rows if r['level'] in not_accepted]}). An "
+                f"observed order computed from a run the gate refuses is not evidence. Fix or "
+                f"re-run the level, do not average over it.")
 
-        if len(rows) == 3:
+        if len(rows) == 3 and entry["family_usable"]:
             # WITH A TOLERANCE. The cap's first cell is a measured spacing, not a
             # setting: the same `tip_span_first_cell_in_s0` gives 10.205, 10.204 and
             # 10.203 across three levels because s0 itself changes. Comparing them
@@ -288,7 +337,12 @@ def main() -> int:
                   f"{r['cd']:>10.3f}{r['cdp']:>10.3f}{r['cdv']:>10.3f}")
         if not entry.get("cap_consistent", True):
             print(f"    WARNING: {entry['warning']}")
-        for q, v in entry["verdicts"].items():
+        for r in entry["levels"]:
+            if r["gate_verdict"] != "ACCEPTED":
+                print(f"    gate: {r['level']} is {r['gate_verdict']}")
+        if entry.get("refusal"):
+            print(f"    {entry['refusal']}")
+        for q, v in (entry.get("verdicts") or {}).items():
             mark = "DIVERGENT" if v["divergent"] else "ok"
             print(f"      {q:<4} steps {v['steps_counts'][0]:+8.3f} {v['steps_counts'][1]:+8.3f}"
                   f"   p={v['p_observed']}   {mark}")

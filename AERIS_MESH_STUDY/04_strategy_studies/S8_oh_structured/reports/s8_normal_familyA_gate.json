@@ -15,36 +15,36 @@
       "verdict": "ACCEPTED",
       "equations_short_of_limit": [],
       "equation_orders": {
-        "rho": 6.643,
-        "rhou": 5.687,
-        "rhov": 5.743,
-        "rhow": 5.866,
-        "rhoE": 7.037,
-        "nuturb": 4.336
+        "rho": 6.181,
+        "rhou": 4.965,
+        "rhov": 4.945,
+        "rhow": 5.364,
+        "rhoE": 6.588,
+        "nuturb": 3.858
       },
-      "iterations": 551,
-      "residual_initial": 1117.6684362553406,
-      "residual_final": 0.0002543417218814808,
-      "relative_residual": 2.2756455638456835e-07,
-      "window": 100,
+      "iterations": 265,
+      "residual_initial": 1049.8680177695285,
+      "residual_final": 0.0006916193001074425,
+      "relative_residual": 6.587678531029123e-07,
+      "window": 66,
       "checks": {
         "residual_orders": {
-          "value": 6.642895379207021,
+          "value": 6.181267601913718,
           "limit": 5.0,
           "pass": true
         },
         "cl_percent": {
-          "value": 0.0014760545313226615,
+          "value": 0.00455440577958943,
           "limit": 0.05,
           "pass": true
         },
         "cd_percent": {
-          "value": 0.0018169021416633425,
+          "value": 0.005480855809879459,
           "limit": 0.1,
           "pass": true
         },
         "cmy_absolute": {
-          "value": 1.6915770358789939e-06,
+          "value": 1.206867285453864e-06,
           "limit": 0.0001,
           "pass": true
         },
@@ -58,12 +58,12 @@
         },
         "every_equation": {
           "value": {
-            "rho": 6.64,
-            "rhou": 5.69,
-            "rhov": 5.74,
-            "rhow": 5.87,
-            "rhoE": 7.04,
-            "nuturb": 4.34
+            "rho": 6.18,
+            "rhou": 4.97,
+            "rhov": 4.95,
+            "rhow": 5.36,
+            "rhoE": 6.59,
+            "nuturb": 3.86
           },
           "limit": {
             "rho": 3.0,
@@ -77,7 +77,7 @@
           "note": "Fluent's per-equation test: continuity, each momentum component, energy and turbulence, each against its own limit"
         },
         "residual_target_met": {
-          "value": 2.2756455638456835e-07,
+          "value": 6.587678531029123e-07,
           "limit": 1e-06,
           "pass": true,
           "note": "the run reached the L2Convergence target it was given"
@@ -90,15 +90,15 @@
         }
       },
       "forces": {
-        "cl": -0.15941065262324597,
-        "cd": 0.02064986538839969,
-        "cdp": 0.012148433604409896,
-        "cdv": 0.008501431783989793,
-        "cmy": 0.0011304314874440293
+        "cl": -0.15950842275964872,
+        "cd": 0.020913426311389947,
+        "cdp": 0.012220812907089042,
+        "cdv": 0.0086926134043009,
+        "cmy": 0.001216729878466697
       },
       "alpha_deg": 0.0,
-      "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_normalB/gci_C_normal_s0_2_b_a0",
-      "run_identity": "s8_normalB/gci_C_normal_s0_2_b_a0"
+      "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_checklist/dir_normal_s0/gci_C_normal_s0_a0",
+      "run_identity": "dir_normal_s0/gci_C_normal_s0_a0"
     },
     {
       "passes": true,
@@ -108,36 +108,36 @@
       "verdict": "ACCEPTED",
       "equations_short_of_limit": [],
       "equation_orders": {
-        "rho": 7.52,
-        "rhou": 6.315,
-        "rhov": 5.855,
-        "rhow": 6.376,
-        "rhoE": 7.68,
-        "nuturb": 4.213
+        "rho": 6.041,
+        "rhou": 5.01,
+        "rhov": 4.973,
+        "rhow": 5.351,
+        "rhoE": 6.493,
+        "nuturb": 4.103
       },
-      "iterations": 389,
-      "residual_initial": 984.2121323506825,
-      "residual_final": 2.974412724307825e-05,
-      "relative_residual": 3.0221256439948236e-08,
-      "window": 97,
+      "iterations": 412,
+      "residual_initial": 1191.518374013746,
+      "residual_final": 0.0010846642752549093,
+      "relative_residual": 9.103210650467031e-07,
+      "window": 100,
       "checks": {
         "residual_orders": {
-          "value": 7.5196874839548595,
+          "value": 6.04080540747457,
           "limit": 5.0,
           "pass": true
         },
         "cl_percent": {
-          "value": 0.0005928481945674215,
+          "value": 0.0032641628052103755,
           "limit": 0.05,
           "pass": true
         },
         "cd_percent": {
-          "value": 5.8900727046385005e-05,
+          "value": 0.004668813869109728,
           "limit": 0.1,
           "pass": true
         },
         "cmy_absolute": {
-          "value": 1.2055370213551186e-07,
+          "value": 1.5519904870372504e-06,
           "limit": 0.0001,
           "pass": true
         },
@@ -151,12 +151,12 @@
         },
         "every_equation": {
           "value": {
-            "rho": 7.52,
-            "rhou": 6.31,
-            "rhov": 5.86,
-            "rhow": 6.38,
-            "rhoE": 7.68,
-            "nuturb": 4.21
+            "rho": 6.04,
+            "rhou": 5.01,
+            "rhov": 4.97,
+            "rhow": 5.35,
+            "rhoE": 6.49,
+            "nuturb": 4.1
           },
           "limit": {
             "rho": 3.0,
@@ -170,7 +170,7 @@
           "note": "Fluent's per-equation test: continuity, each momentum component, energy and turbulence, each against its own limit"
         },
         "residual_target_met": {
-          "value": 3.0221256439948236e-08,
+          "value": 9.103210650467031e-07,
           "limit": 1e-06,
           "pass": true,
           "note": "the run reached the L2Convergence target it was given"
@@ -183,15 +183,15 @@
         }
       },
       "forces": {
-        "cl": -0.15956579096709855,
-        "cd": 0.02023066192777015,
-        "cdp": 0.011484831472042564,
-        "cdv": 0.008745830455727584,
-        "cmy": 0.001143665906405366
+        "cl": -0.15941572824873934,
+        "cd": 0.021332953722362238,
+        "cdp": 0.012851624679335897,
+        "cdv": 0.008481329043026337,
+        "cmy": 0.001216326244841127
       },
       "alpha_deg": 0.0,
-      "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_normalB/gci_C_normal_s0_b_a0",
-      "run_identity": "s8_normalB/gci_C_normal_s0_b_a0"
+      "directory": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_checklist/dir_normal_s0_2/gci_C_normal_s0_2_a0",
+      "run_identity": "dir_normal_s0_2/gci_C_normal_s0_2_a0"
     }
   ]
 }

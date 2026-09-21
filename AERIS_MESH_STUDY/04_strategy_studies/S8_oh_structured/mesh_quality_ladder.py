@@ -15,12 +15,22 @@ feels.
 
 It matters because the worst cells get WORSE as this family refines while the bulk
 gets better, so a median or a fold count improves all the way up the ladder and
-hides it. And because a mesh from this family with a worst-cell scaled Jacobian of
-0.0073 stalled ANK outright on 2026-09-21: residual rising monotonically from
-3.1e-2 to 5.0e-2 over seventy iterations with the adaptive CFL pinned 32x below its
-healthy value. `gci_F` and `gci_FF` are both worse conditioned than that mesh.
+hides it. `gci_F` (0.0043) and `gci_FF` (0.0025) are both worse conditioned than
+any mesh of this family yet solved.
 
-Run this before renting anything.
+**And then the obvious inference fails, which is the other half of the point.** The
+most poorly conditioned mesh solved on this host, `gci_C_normal_s0_b` at 0.0073,
+CONVERGES to the 1e-6 stopping rule and is gate-ACCEPTED. Its worst cells sit in the
+same block, at the same ring index and span station, and in the same outermost
+wall-normal layer as `gci_C`'s -- the far-field edge of the O-block, a low-gradient
+region, a pre-existing feature that refinement sharpens rather than creates. So the
+trend is real, invisible to the preflight, worth recording -- and NOT a reason to
+refuse the batch. What refuses the batch is the wall-normal divergence in
+`reports/s8_normal_direction.json`, which is a different finding.
+
+Run this before renting anything, and read the location as well as the number: on
+2026-09-21 the number alone produced a "do not rent" recommendation that the
+location retracted within the hour.
 
 Written 2026-09-21 by the reliability audit follow-up.
 """
@@ -49,7 +59,7 @@ LADDER = [
 #: nearly misused. 787,944 cells, family B, wall-normal refined at 1.3 with the
 #: first cell scaled: the worst-conditioned mesh of this family that has been
 #: solved on this host.
-STALL_REFERENCE = {
+REFERENCE_MESH = {
     "level": "gci_C_normal_s0_b",
     "cells": 787944,
     "scaled_jacobian_min": 0.00729189,
@@ -74,8 +84,9 @@ BULK = ("quality/o_wing/scaled_jacobian_median", "quality/o_wing/scaled_jacobian
 
 
 #: Meshes to locate the worst cells in, beyond the ladder itself. The point is the
-#: comparison: a level that CONVERGES and a level that STALLED, so "the worst cells
-#: are bad" can be checked against "the worst cells are bad in a mesh that works".
+#: comparison: the baseline level against the most poorly conditioned mesh solved
+#: here, so "the worst cells are bad" can be checked against "the worst cells are bad
+#: in the same place, in a mesh that converges".
 LOCATE = [("gci_C", HERE / "runs/s8_v2/g83"),
           ("gci_C_normal_s0_b", HERE / "runs/s8_normalB")]
 
@@ -87,9 +98,9 @@ def locate_worst(level: str, directory: Path, how_many: int = 3) -> dict:
     cells at the wall need the mesher fixed, cells at the far-field edge of the
     O-block are in a low-gradient region and probably harmless, and cells at a
     block interface are a topology question. This is what turned "gci_F is worse
-    conditioned than a mesh that stalled, do not rent" into "the same cells are bad
-    in gci_C, which converges fine, so conditioning is not the explanation" -- a
-    conclusion reversed within the hour by asking where rather than how much.
+    conditioned than a mesh that failed, do not rent" into "the same cells are bad in
+    the same place in gci_C, which converges fine" -- a recommendation reversed within
+    the hour by asking where rather than how much.
     """
     import numpy as np
     blocks = np.load(directory / f"{level}_blocks.npz")
@@ -143,7 +154,7 @@ def main() -> int:
         "worst_cell": {m: {lv: rows[lv].get(m) for lv in levels} for m in WORST_CELL},
         "bulk": {m: {lv: rows[lv].get(m) for lv in levels} for m in BULK},
         "folded": {lv: rows[lv].get("validity/inverted_cells_total") for lv in levels},
-        "stall_reference": STALL_REFERENCE,
+        "reference_mesh": REFERENCE_MESH,
     }
 
     sj = [rows[lv].get("quality/o_wing/scaled_jacobian_min") for lv in levels]
@@ -152,7 +163,7 @@ def main() -> int:
         degrades = all(b < a for a, b in zip(sj, sj[1:]))
         bulk_improves = all(b >= a for a, b in zip(med, med[1:]))
         worse_than_stall = [lv for lv, v in zip(levels, sj)
-                            if v < STALL_REFERENCE["scaled_jacobian_min"]]
+                            if v < REFERENCE_MESH["scaled_jacobian_min"]]
         report["finding"] = {
             "worst_cell_degrades_monotonically": bool(degrades),
             "bulk_improves_monotonically": bool(bulk_improves),
@@ -197,11 +208,13 @@ def main() -> int:
         report["gate"] = {
             "blocks_renting_on_conditioning_grounds": bool(same_place is False),
             "verdict": (
-                f"Worst-cell conditioning degrades up the ladder and the preflight cannot see "
-                f"it, which is worth recording. But it does NOT block the batch: "
-                f"{', '.join(worse_than_stall) or 'the fine levels'} are worse conditioned than "
-                f"the mesh that stalled, and yet the stalled mesh's bad cells are in the same "
-                f"place as a converging level's. The stall's cause is unestablished."
+                f"Worst-cell conditioning degrades about 1.4x per level and the preflight cannot "
+                f"see it -- it records folds, not conditioning -- so it is worth recording. It "
+                f"does NOT block the batch: {', '.join(worse_than_stall) or 'the fine levels'} "
+                f"are worse conditioned than the reference mesh, and that reference mesh "
+                f"converged to its stopping rule and is gate-ACCEPTED. What blocks the batch is "
+                f"the wall-normal divergence (reports/s8_normal_direction.json), which is a "
+                f"different finding entirely."
                 if same_place else
                 f"Conditioning is a live suspect for the stall: {', '.join(worse_than_stall)} "
                 f"are worse conditioned than the mesh that failed to converge, and the bad "
@@ -244,8 +257,7 @@ def main() -> int:
                   f"i {w.get('i_ring')} j {w.get('j_normal')} k {w.get('k_span')} "
                   f"-- {w.get('where')}, {w.get('span_position')}")
     if "conditioning_is_localised_not_new" in report:
-        print(f"\n  Does conditioning explain the stall? "
-              f"{report['conditioning_explains_the_stall']['verdict']}")
+        print(f"\n  {report['conditioning_is_localised_not_new']['verdict']}")
     if failed:
         print("\n  UNREADABLE: " + "; ".join(f"{k} ({v})" for k, v in failed.items()))
     if "gate" in report:

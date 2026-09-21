@@ -1,0 +1,421 @@
+{
+  "schema": "aeris.s8.mesh_quality_ladder.v1",
+  "question": "the cloud preflight calls eleven meshes clean on fold count alone. Does the WORST cell's conditioning hold up as the family refines?",
+  "geometry_index": 83,
+  "mesh_family": "B (wall-resolved tip cap)",
+  "levels": [
+    "gci_C",
+    "gci_M",
+    "gci_F",
+    "gci_FF"
+  ],
+  "unreadable": {},
+  "cells": {
+    "gci_C": 282624,
+    "gci_M": 617520,
+    "gci_F": 1364688,
+    "gci_FF": 3020220
+  },
+  "worst_cell": {
+    "quality/o_wing/scaled_jacobian_min": {
+      "gci_C": 0.009010509087632826,
+      "gci_M": 0.006338979838584407,
+      "gci_F": 0.004263878577278139,
+      "gci_FF": 0.0025329353591589466
+    },
+    "quality/o_wing/scaled_jacobian_p001": {
+      "gci_C": 0.014205785789407318,
+      "gci_M": 0.010905738682856112,
+      "gci_F": 0.008351121908775284,
+      "gci_FF": 0.005593057280810624
+    },
+    "validity/o_wing/min_cell_volume_m3": {
+      "gci_C": 4.361293313338808e-15,
+      "gci_M": 2.0412808126216717e-15,
+      "gci_F": 9.338264147350369e-16,
+      "gci_FF": 4.227810327696477e-16
+    },
+    "resolution/ds_span_min_m": {
+      "gci_C": 9.739183640941297e-06,
+      "gci_M": 7.490947404460397e-06,
+      "gci_F": 5.7618237704976014e-06,
+      "gci_FF": 4.431913981252175e-06
+    }
+  },
+  "bulk": {
+    "quality/o_wing/scaled_jacobian_median": {
+      "gci_C": 0.944214313783361,
+      "gci_M": 0.9499669843317924,
+      "gci_F": 0.9536912814043905,
+      "gci_FF": 0.9567558699381501
+    },
+    "quality/o_wing/scaled_jacobian_p01": {
+      "gci_C": 0.029399119279317862,
+      "gci_M": 0.02976918885923248,
+      "gci_F": 0.02790593703198977,
+      "gci_FF": 0.025316444019655222
+    },
+    "quality/o_wing/neighbour_volume_ratio_p99": {
+      "gci_C": 1.330645536088097,
+      "gci_M": 1.2484608501515242,
+      "gci_F": 1.2080931536285902,
+      "gci_FF": 1.2065283295498768
+    },
+    "resolution/normal_growth_max": {
+      "gci_C": 1.2784666322043918,
+      "gci_M": 1.2118807067520965,
+      "gci_F": 1.162531170037073,
+      "gci_FF": 1.1260853503588206
+    },
+    "quality/wall_nonorthogonality_max_deg": {
+      "gci_C": 47.809260481931,
+      "gci_M": 49.446111185032926,
+      "gci_F": 49.709785531139325,
+      "gci_FF": 49.3587128759355
+    }
+  },
+  "folded": {
+    "gci_C": 0,
+    "gci_M": 0,
+    "gci_F": 0,
+    "gci_FF": 0
+  },
+  "reference_mesh": {
+    "level": "gci_C_normal_s0_b",
+    "cells": 787944,
+    "scaled_jacobian_min": 0.00729189,
+    "outcome": "2026-09-21, ANK-only, stopped by hand at iteration 224 on a misreading. `convergence_gate.py` scored that run NOT diverging, NOT frozen, linear solve alive, CL and CD settled to 0.0008 % and 0.0010 % over the tail, and 4.46e-6 relative against a 1e-6 target -- REJECTED only on the energy equation's order (5.39 against 6.0) and the residual target. The comparable family-A mesh needed 266 iterations. So this is NOT an example of a mesh that cannot be solved, and must not be used as one.",
+    "why_it_is_here": "to bound the conditioning question, not to condemn the fine levels. If a level is worse conditioned than this mesh that is worth knowing; it is not evidence that the level will fail to converge."
+  },
+  "finding": {
+    "worst_cell_degrades_monotonically": true,
+    "bulk_improves_monotonically": true,
+    "scaled_jacobian_min_by_level": {
+      "gci_C": 0.009010509087632826,
+      "gci_M": 0.006338979838584407,
+      "gci_F": 0.004263878577278139,
+      "gci_FF": 0.0025329353591589466
+    },
+    "levels_worse_conditioned_than_the_reference_mesh": [
+      "gci_M",
+      "gci_F",
+      "gci_FF"
+    ],
+    "reading": "The worst cell degrades by about 1.4x per level while the median, the neighbour volume ratio and the normal growth rate all IMPROVE. So every metric the preflight records gets better all the way up the ladder, and the one a linear solver feels gets worse. A fold count cannot see this."
+  },
+  "where_the_worst_cells_are": {
+    "gci_C": {
+      "o_wing": {
+        "cells": [
+          92,
+          64,
+          48
+        ],
+        "scaled_jacobian_min": 0.009011,
+        "cells_below_0p01": 6,
+        "worst": [
+          {
+            "scaled_jacobian": 0.009011,
+            "i_ring": 23,
+            "j_normal": 63,
+            "k_span": 42,
+            "of": [
+              92,
+              64,
+              48
+            ],
+            "where": "at the OUTERMOST normal layer (far-field edge of the block)",
+            "span_position": "mid-span"
+          },
+          {
+            "scaled_jacobian": 0.009011,
+            "i_ring": 24,
+            "j_normal": 63,
+            "k_span": 42,
+            "of": [
+              92,
+              64,
+              48
+            ],
+            "where": "at the OUTERMOST normal layer (far-field edge of the block)",
+            "span_position": "mid-span"
+          },
+          {
+            "scaled_jacobian": 0.009123,
+            "i_ring": 22,
+            "j_normal": 63,
+            "k_span": 42,
+            "of": [
+              92,
+              64,
+              48
+            ],
+            "where": "at the OUTERMOST normal layer (far-field edge of the block)",
+            "span_position": "mid-span"
+          }
+        ]
+      },
+      "o_out": {
+        "cells": [
+          92,
+          64,
+          53
+        ],
+        "scaled_jacobian_min": 0.522469,
+        "cells_below_0p01": 0,
+        "worst": [
+          {
+            "scaled_jacobian": 0.522469,
+            "i_ring": 87,
+            "j_normal": 0,
+            "k_span": 45,
+            "of": [
+              92,
+              64,
+              53
+            ],
+            "where": "at the WALL",
+            "span_position": "mid-span"
+          },
+          {
+            "scaled_jacobian": 0.522469,
+            "i_ring": 87,
+            "j_normal": 0,
+            "k_span": 44,
+            "of": [
+              92,
+              64,
+              53
+            ],
+            "where": "at the WALL",
+            "span_position": "mid-span"
+          },
+          {
+            "scaled_jacobian": 0.522469,
+            "i_ring": 87,
+            "j_normal": 0,
+            "k_span": 46,
+            "of": [
+              92,
+              64,
+              53
+            ],
+            "where": "at the WALL",
+            "span_position": "mid-span"
+          }
+        ]
+      },
+      "cap_out": {
+        "cells": [
+          42,
+          4,
+          53
+        ],
+        "scaled_jacobian_min": 0.04891,
+        "cells_below_0p01": 0,
+        "worst": [
+          {
+            "scaled_jacobian": 0.04891,
+            "i_ring": 0,
+            "j_normal": 0,
+            "k_span": 38,
+            "of": [
+              42,
+              4,
+              53
+            ],
+            "where": "at the WALL",
+            "span_position": "mid-span"
+          },
+          {
+            "scaled_jacobian": 0.04891,
+            "i_ring": 0,
+            "j_normal": 0,
+            "k_span": 40,
+            "of": [
+              42,
+              4,
+              53
+            ],
+            "where": "at the WALL",
+            "span_position": "mid-span"
+          },
+          {
+            "scaled_jacobian": 0.04891,
+            "i_ring": 0,
+            "j_normal": 0,
+            "k_span": 32,
+            "of": [
+              42,
+              4,
+              53
+            ],
+            "where": "at the WALL",
+            "span_position": "mid-span"
+          }
+        ]
+      }
+    },
+    "gci_C_normal_s0_b": {
+      "o_wing": {
+        "cells": [
+          92,
+          83,
+          48
+        ],
+        "scaled_jacobian_min": 0.007292,
+        "cells_below_0p01": 18,
+        "worst": [
+          {
+            "scaled_jacobian": 0.007292,
+            "i_ring": 23,
+            "j_normal": 82,
+            "k_span": 42,
+            "of": [
+              92,
+              83,
+              48
+            ],
+            "where": "at the OUTERMOST normal layer (far-field edge of the block)",
+            "span_position": "mid-span"
+          },
+          {
+            "scaled_jacobian": 0.007292,
+            "i_ring": 24,
+            "j_normal": 82,
+            "k_span": 42,
+            "of": [
+              92,
+              83,
+              48
+            ],
+            "where": "at the OUTERMOST normal layer (far-field edge of the block)",
+            "span_position": "mid-span"
+          },
+          {
+            "scaled_jacobian": 0.007385,
+            "i_ring": 22,
+            "j_normal": 82,
+            "k_span": 42,
+            "of": [
+              92,
+              83,
+              48
+            ],
+            "where": "at the OUTERMOST normal layer (far-field edge of the block)",
+            "span_position": "mid-span"
+          }
+        ]
+      },
+      "o_out": {
+        "cells": [
+          92,
+          83,
+          54
+        ],
+        "scaled_jacobian_min": 0.522526,
+        "cells_below_0p01": 0,
+        "worst": [
+          {
+            "scaled_jacobian": 0.522526,
+            "i_ring": 87,
+            "j_normal": 0,
+            "k_span": 46,
+            "of": [
+              92,
+              83,
+              54
+            ],
+            "where": "at the WALL",
+            "span_position": "mid-span"
+          },
+          {
+            "scaled_jacobian": 0.522526,
+            "i_ring": 87,
+            "j_normal": 0,
+            "k_span": 45,
+            "of": [
+              92,
+              83,
+              54
+            ],
+            "where": "at the WALL",
+            "span_position": "mid-span"
+          },
+          {
+            "scaled_jacobian": 0.522526,
+            "i_ring": 87,
+            "j_normal": 0,
+            "k_span": 47,
+            "of": [
+              92,
+              83,
+              54
+            ],
+            "where": "at the WALL",
+            "span_position": "mid-span"
+          }
+        ]
+      },
+      "cap_out": {
+        "cells": [
+          42,
+          4,
+          54
+        ],
+        "scaled_jacobian_min": 0.04891,
+        "cells_below_0p01": 0,
+        "worst": [
+          {
+            "scaled_jacobian": 0.04891,
+            "i_ring": 0,
+            "j_normal": 0,
+            "k_span": 44,
+            "of": [
+              42,
+              4,
+              54
+            ],
+            "where": "at the WALL",
+            "span_position": "mid-span"
+          },
+          {
+            "scaled_jacobian": 0.04891,
+            "i_ring": 0,
+            "j_normal": 0,
+            "k_span": 40,
+            "of": [
+              42,
+              4,
+              54
+            ],
+            "where": "at the WALL",
+            "span_position": "mid-span"
+          },
+          {
+            "scaled_jacobian": 0.04891,
+            "i_ring": 0,
+            "j_normal": 0,
+            "k_span": 41,
+            "of": [
+              42,
+              4,
+              54
+            ],
+            "where": "at the WALL",
+            "span_position": "mid-span"
+          }
+        ]
+      }
+    }
+  },
+  "conditioning_is_localised_not_new": {
+    "worst_cells_in_the_same_place_as_a_converging_level": true,
+    "verdict": "The refined mesh's worst cells sit in the same block, at the same ring index and span station, and in the same OUTERMOST normal layer as gci_C's -- and gci_C converges. The far-field edge of the O-block is a low-gradient region and this is a pre-existing feature of every level, so a handful of cells there does not explain a stall. Look at the 5x finer first spanwise cell at the tip and the 4x finer trailing edge instead."
+  },
+  "gate": {
+    "blocks_renting_on_conditioning_grounds": false,
+    "verdict": "Worst-cell conditioning degrades about 1.4x per level and the preflight cannot see it -- it records folds, not conditioning -- so it is worth recording. It does NOT block the batch: gci_M, gci_F, gci_FF are worse conditioned than the reference mesh, and that reference mesh converged to its stopping rule and is gate-ACCEPTED. What blocks the batch is the wall-normal divergence (reports/s8_normal_direction.json), which is a different finding entirely.",
+    "cheap_test_available": "gci_C_normal_s0_b is 788k cells, fits this host, and stalls under ANK-only, so 'can the solver handle a mesh like gci_F' can be probed here rather than rented. NKSwitchTol matters: the governed 1e-6 never fires, because the stall begins at a relative residual of 1.7e-4, 170x above it."
+  }
+}

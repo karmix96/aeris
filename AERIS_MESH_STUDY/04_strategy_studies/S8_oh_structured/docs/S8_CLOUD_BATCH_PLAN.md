@@ -47,7 +47,31 @@ against 12.8 GiB available.
 > Also note for §2 below: **r ≥ 1.3 is not met.** The global cell-derived ratio is 1.2479 and the
 > 1.300 in the level table is the near-wall spacing ratio, which is not what ASME V&V 20 defines r on.
 
-> ## STOP — a second, harder gate found 2026-09-21
+> ## STOP — the wall-normal direction diverges on the PRODUCTION meshes too
+>
+> **Measured 2026-09-21 on three gate-ACCEPTED runs per family.** This was the one gate standing
+> between the audit and a recommendation to buy. It did not clear.
+>
+> | | `gci_C` | +normal | ++normal | steps on C_D | verdict |
+> |---|---|---|---|---|---|
+> | **Family A** (cap 10.2 × s0) | 208.237 | 209.134 | 213.330 | **+0.897, +4.196** | DIVERGENT, p = 5.80 |
+> | **Family B** (cap 2.04 × s0, production) | 201.737 | 202.307 | 206.499 | **+0.570, +4.192** | DIVERGENT, p = 7.52 |
+>
+> CDp: family A +3.930 then +6.308; family B +4.054 then +6.636. CDv converges in both (p ≈ 1.44).
+>
+> **The tip-cap rebuild changed nothing.** The hypothesis that the divergence was an artifact of the
+> defective cap — it fixed the outboard extrusion in exactly the region the signature points at — is
+> **refuted**: the second step is +4.192 counts on family B against +4.196 on family A. Identical.
+>
+> So the wall-normal direction has no demonstrated limit on the meshes `data/dataset_v2` is built from,
+> `gci.py` refuses a GCI for C_D and CDp, and **a global refinement refines this direction along with
+> the others.** `gci_F` bought now is a third point on a family with nothing to extrapolate to.
+> Localise the cause first. CDp rising while CDv falls as layers are added at fixed first-cell height
+> is an outer-region signature, and the worst-conditioned cells sit at the O-block's outermost normal
+> layer — but those cells are equally bad in `gci_C`, which converges, so that correlation is not the
+> answer either (see below).
+>
+> ## A second thing, found the same night and NOT a reason to stop
 >
 > **The worst cells in this family get worse as it refines, and the preflight cannot see it.**
 > `reports/s8_mesh_quality_ladder.json`, geometry 83, family B:

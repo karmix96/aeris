@@ -154,8 +154,31 @@ def gate(history: np.ndarray, *, window: int, min_orders: float,
     half = max(len(resid) // 10, window)
     diverging = bool(resid[-1] > resid[-half] * 1.5)
     early, late = resid[-2 * half:-half], resid[-half:]
+    # A wider spread while the residual FALLS is convergence, not oscillation.
+    #
+    # This test compared spreads alone, and that cannot tell a descent from a
+    # growing wobble: gci_C_normal_s0_2_b sat on a plateau near 1.5e-3 for a
+    # hundred iterations and then broke through to 2.5e-4, so its late window
+    # spanned a 6x FALL and its spread came out 6.5x the plateau's. The run was
+    # rejected as oscillating while every equation passed (rho 6.64, momentum
+    # 5.69-5.87, energy 7.04), `not_diverging` passed with the residual a sixth of
+    # its value a hundred iterations earlier, the linear solve was alive, and CD
+    # was settled to 0.0023 %. That rejection then propagated: it made a
+    # three-level family unreadable and nearly inverted a conclusion about whether
+    # the wall-normal direction diverges.
+    #
+    # It is the same mistake this file already documents for the FORCE tail thirty
+    # lines below -- "a short tail is still descending monotonically, so its SPREAD
+    # over the window is dominated by the approach rather than by the remaining
+    # error" -- and the fix was applied there and not here. So: require that the
+    # level has not dropped before calling a wider spread an oscillation. A real
+    # growing envelope oscillates about a stable mean; a descent does not.
+    dropped_through_the_window = bool(
+        early.size > 5 and late.mean() < 0.75 * early.mean())
     growing_envelope = bool(
-        len(early) > 5 and (late.max() - late.min()) > 2.0 * (early.max() - early.min())
+        len(early) > 5
+        and (late.max() - late.min()) > 2.0 * (early.max() - early.min())
+        and not dropped_through_the_window
     )
     # a frozen solver: the residual is not merely flat, it is IDENTICAL
     frozen = bool((late.max() - late.min()) / late.mean() < 1e-4)

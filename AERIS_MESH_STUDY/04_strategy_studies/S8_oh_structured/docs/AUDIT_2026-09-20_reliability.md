@@ -11,6 +11,16 @@ here rests on a number the brief provided.
 
 ---
 
+> **Followed up 21 September, 05:40 — the wall-normal gate did NOT clear.** §3.3 asked whether the
+> divergence survives the tip-cap rebuild, since the divergent family was measured on meshes the
+> campaign abandoned. It survives, unchanged. On three gate-ACCEPTED runs per family, the second C_D
+> step is **+4.196 counts on family A and +4.192 on family B** (CDp +6.308 and +6.636). The cap fix
+> changed nothing, so the hypothesis in §3.3 — that the outboard extrusion change might have cured it
+> — is **refuted**. `gci.py` refuses a GCI for C_D and CDp on the production mesh family, and a global
+> refinement refines this direction too, so **a third grid level cannot be read until the cause is
+> found.** `reports/s8_normal_direction.json`. Also closed here: the c_p bound costs **0.09–0.31
+> counts** (§4.1a) and is immaterial.
+>
 > **Followed up 21 September, 00:40 — both recommended tests are done, 16 solves.**
 > Item 2 of §6 (8 solves): the credit loses **65–69 %** at `gci_M` on **all three** wings
 > (g13 −2.473, g47 −3.068, g83 −2.612 against −7.209 / −8.780 / −8.544). Not a g83 quirk.

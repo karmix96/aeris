@@ -231,7 +231,6 @@ LEVELS["legacy_L0"] = LEVELS["oh_L0"]
 #: gci_CC / gci_C / gci_M are 299k / 567k / 1.11M cells at 4.3 / 6.5 / 11.3 GiB
 #: measured; gci_C / gci_M / gci_F is the same family one rung up and needs 21 GiB
 #: at the top, which is a bigger machine.
-LEVELS["gci_CC"] = refined_level(LEVELS["oh_L3"], 1.0 / GCI_RATIO, name="gci_CC")
 #: The campaign family. Approved by the principal investigator on 2026-09-16: the trailing
 #: edge sits at 0.1 % of local chord -- the DPW guideline -- instead of the 0.4 % the
 #: hand-written ladder carried. Measured as a single change it is worth about -10.5 counts of
@@ -249,6 +248,26 @@ LEVELS["gci_C"] = _dataclasses.replace(LEVELS["oh_L3"], ds_te_frac=0.001)
 LEVELS["gci_M"] = refined_level(LEVELS["gci_C"], GCI_RATIO, name="gci_M")
 LEVELS["gci_F"] = refined_level(LEVELS["gci_C"], GCI_RATIO ** 2, name="gci_F")
 LEVELS["gci_FF"] = refined_level(LEVELS["gci_C"], GCI_RATIO ** 3, name="gci_FF")
+
+#: DERIVED FROM gci_C, not from oh_L3. Corrected 2026-09-21.
+#:
+#: The comment above is what this level was meant to be and stopped being. It
+#: derived from `oh_L3` while `gci_C` is `oh_L3` with `ds_te_frac` changed to 0.001
+#: -- the 0.1 %-chord trailing edge, the design change worth about 8.5 counts at
+#: this resolution. `gci_M`, `gci_F` and `gci_FF` all derive from `gci_C` and
+#: inherit it; only `gci_CC` did not. So the ladder ran
+#:
+#:     ds_te_frac   0.0052  ->  0.0010  ->  0.00077
+#:     ratio                5.2x        1.3x
+#:
+#: and the CC -> C step bundled the design change with the refinement. A three-level
+#: family built on that measures the two together and calls the result an observed
+#: order. Measured before the fix, it gave p = 1.97-2.26 on C_D across four
+#: incidences -- plausible enough to be believed, which is what made it dangerous.
+#:
+#: Same failure as the tip-cap pin above: a level defined by reference to another
+#: level, whose reference then moved. Both are now pinned to what they must match.
+LEVELS["gci_CC"] = refined_level(LEVELS["gci_C"], 1.0 / GCI_RATIO, name="gci_CC")
 
 #: A half-step between `gci_M` and `gci_F`, for a host that can hold about 17 GiB
 #: but not the 22.5 GiB `gci_F` asks for.  PLAN_desktop_campaign.md 2.1 offers it
@@ -840,4 +859,37 @@ LEVELS["gci_C_normal_s0_b"] = _dataclasses.replace(
 
 LEVELS["gci_C_normal_s0_2_b"] = _dataclasses.replace(
     directional_level(LEVELS["gci_C"], normal=GCI_RATIO ** 2, scale_first_cell=True),
+    tip_span_first_cell_in_s0=2.0)
+
+# ---------------------------------------------------------------------------
+# Is the wall-normal divergence real, or an artifact of holding the chord?
+# ---------------------------------------------------------------------------
+#: The wall-normal family refines the direction carrying about -15 % of the
+#: coarse-to-fine CDp error while HOLDING the chordwise count at 93, and chord
+#: carries 88 % of it. Across that family the leading-edge cell aspect ratio grows
+#: 1.63x, against 1.20x across the global family, and the CDp change localises to
+#: the leading edge and first half-chord in one spanwise band -- exactly where that
+#: aspect ratio bites (reports/s8_normal_direction.json).
+#:
+#: So the divergence may be what happens when the NON-LIMITING direction is refined
+#: alone, rather than a property of the mesh family. This pair tests that directly
+#: by repeating the SAME wall-normal step at a finer chordwise resolution:
+#:
+#:   at chord 93:   normal 65 -> 84 moves CDp by +4.054 counts   (measured)
+#:   at chord ~121: normal 65 -> 84 moves CDp by ???             (this pair)
+#:
+#: If the step shrinks substantially, the "divergence" is chordwise error being
+#: re-expressed and a global refinement -- which refines both -- is unaffected. If
+#: the step is unchanged, it is a genuine wall-normal effect and the third grid
+#: level needs rethinking before it is bought.
+#:
+#: Sized to fit this host: ~785k and ~1.02M cells against a 12.8 GiB budget. Both
+#: carry the wall-resolved cap, so they are family B throughout.
+LEVELS["gci_C_chord_b"] = _dataclasses.replace(
+    directional_level(LEVELS["gci_C"], chord=GCI_RATIO),
+    tip_span_first_cell_in_s0=2.0)
+
+LEVELS["gci_C_chord_normal_b"] = _dataclasses.replace(
+    directional_level(LEVELS["gci_C"], chord=GCI_RATIO, normal=GCI_RATIO,
+                      scale_first_cell=True),
     tip_span_first_cell_in_s0=2.0)

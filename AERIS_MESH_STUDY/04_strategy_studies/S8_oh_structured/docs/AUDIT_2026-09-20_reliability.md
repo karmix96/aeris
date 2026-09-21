@@ -11,6 +11,37 @@ here rests on a number the brief provided.
 
 ---
 
+> **Followed up 21 September, 23:10 — S8 NOW HAS AN OBSERVED ORDER.** The study's central
+> limitation is gone, and it was never a hardware limit. A third level one rung BELOW the baseline
+> fits this host: `gci_CC`, 320,648 cells, ~4.3 GiB. `strategy_s8.py` has said so in a comment since
+> the family was written — "One level BELOW the baseline, so a complete three-level GCI fits a 16 GB
+> host" — and it was never built. One build and four solves, all gate-ACCEPTED:
+>
+> | α | C_D: CC → C → M | **p observed** | extrapolated | GCI on `gci_M` |
+> |---|---|---|---|---|
+> | −2 | 288.8 → 254.4 → 230.4 | **1.875** | 183.6 ct | 25.4 % |
+> | 0 | 233.5 → 201.7 → 179.1 | **1.801** | 133.1 ct | 32.2 % |
+> | 4 | 222.4 → 191.4 → 169.1 | **1.749** | 121.9 ct | 34.9 % |
+> | 8 | 338.6 → 303.7 → 278.9 | **1.814** | 228.8 ct | 22.5 % |
+>
+> Monotone, `condition: ok`, **certified** by `gci.py`, and consistent across four incidences. CDp
+> gives p = 1.62–1.85, CDv 2.79–3.27. So §3.4's "p can only be assumed" is superseded: **p is
+> measured at 1.75–1.88 for C_D**, close to the 2.0 the two-level band assumed, which is a point in
+> the study's favour.
+>
+> **The price of it:** the certified discretisation uncertainty on `gci_M`'s absolute C_D is
+> **22–35 %**, about **40–58 counts**, and the extrapolated C_D at α 0 is 133 counts against
+> `gci_M`'s 179 — so `gci_M` is 46 counts high. Absolute drag is confirmed unconverged, now with a
+> number instead of a trend. CDp is worse: 34–80 %.
+>
+> **Two defects found getting here, both the same shape as the tip-cap pin in §3.1.** `gci_CC`
+> derived from `oh_L3` while `gci_C` is `oh_L3` with the 0.1 %-chord trailing edge applied, so the
+> CC→C step bundled the design change (5.2× on `ds_te_frac`) with the refinement. Measured before
+> the fix it gave p = 1.97–2.26 — plausible enough to be believed. And `gci_four_level.py` passed one
+> AVERAGED refinement ratio for both steps, which PLAN §0.10 exists to forbid; with the true 1.2347
+> and 1.2479 the order moves from 1.572 to 1.801 at α 0. Both fixed, family now self-similar in every
+> field.
+>
 > **Followed up 21 September, 05:40 — the wall-normal gate did NOT clear.** §3.3 asked whether the
 > divergence survives the tip-cap rebuild, since the divergent family was measured on meshes the
 > campaign abandoned. It survives, unchanged. On three gate-ACCEPTED runs per family, the second C_D

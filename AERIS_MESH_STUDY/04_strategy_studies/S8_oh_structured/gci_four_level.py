@@ -38,10 +38,25 @@ REPORTS = HERE / "reports"
 #: Where each level's runs live. gci_C and gci_M were solved here; the cloud
 #: writes gci_F and gci_FF into s8_hf. Both are searched so the analysis works
 #: the same before and after the batch.
-SEARCH = [HERE / "runs/s8_v2",
+SEARCH = [HERE / "runs/s8_gciCC",
+          HERE / "runs/s8_v2",
           HERE / "runs/s8_hf",
           HERE / "runs/s8_cloud"]
-LEVELS = ["gci_C", "gci_M", "gci_F", "gci_FF"]          # coarse to fine
+#: coarse to fine. `gci_CC` added 2026-09-21, and it changes what this file can
+#: report from a trend into an observed order.
+#:
+#: This study has said since 2026-09-06 that it cannot have an order because a
+#: third level needs 22 GiB against 13.65 and so "needs a different machine"
+#: (reports/s8_level_selection.json). That is true only of refining UPWARD.
+#: `gci_CC` is one rung BELOW the baseline, 320,648 cells, about 4.3 GiB, and
+#: `strategy_s8.py` has said so in a comment since the family was written: "One
+#: level BELOW the baseline, so a complete three-level GCI fits a 16 GB host." It
+#: was never built. One build and four solves closed the study's central gap.
+#:
+#: Read the caveat with the number: CC -> C -> M sits further from the asymptotic
+#: range than C -> M -> F would, so a clean order here is evidence the family is
+#: well behaved, not a promise about where gci_F lands.
+LEVELS = ["gci_CC", "gci_C", "gci_M", "gci_F", "gci_FF"]
 
 #: Quantities the study reports. CL and CMy pass through zero on these wings, so
 #: a relative GCI on them is meaningless near alpha 0 and the absolute band is
@@ -267,7 +282,26 @@ def analyse(index: int, alpha: float) -> dict:
         for i in range(len(order) - 2):
             trio = order[i:i + 3]                      # coarse, medium, fine
             f3, f2, f1 = values[i], values[i + 1], values[i + 2]
-            t = gci.gci_triplet(f1, f2, f3, r, r)
+            # EACH STEP'S OWN RATIO, not one average for both.
+            #
+            # This passed the same `r` twice. PLAN 0.10 is about exactly that: "Use
+            # the right formula for unequal refinement ratios ... on a manufactured
+            # second-order solution that formula returns p = 1.852 against a true
+            # 2.000 -- a 7.4 % error in the observed order", and `gci.py` solves the
+            # generalised ASME relation numerically so that it can take two. This
+            # file then handed it one, averaged, and undid the fix.
+            #
+            # Measured on the family this tool now reports: the steps are 1.2347 and
+            # 1.2479, a 1.1 % difference, and averaging them moves the observed order
+            # on C_D from 1.801 to 1.572 at alpha 0 -- 13 %. Small input, large
+            # output, which is what makes an averaged ratio worth refusing.
+            #
+            # `ratios[i]` is the coarse->medium step of this trio, `ratios[i + 1]` the
+            # medium->fine one, in the same coarse-to-fine order as `values`.
+            r32_i = ratios[i] if i < len(ratios) else r
+            r21_i = ratios[i + 1] if i + 1 < len(ratios) else r
+            t = gci.gci_triplet(f1, f2, f3, r21_i, r32_i)
+            t["r21_used"], t["r32_used"] = round(r21_i, 4), round(r32_i, 4)
             if q in RELATIVE_IS_MEANINGLESS:
                 t["relative_gci_suppressed"] = (
                     "this quantity passes through zero on these wings, so a percentage "

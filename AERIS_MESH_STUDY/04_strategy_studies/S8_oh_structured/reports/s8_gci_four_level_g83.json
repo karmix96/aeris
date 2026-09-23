@@ -22,11 +22,9 @@
       "compatibility": {
         "compatible": true,
         "differences": [],
-        "unverifiable": [
-          "solver version unknown for gci_CC: result.json does not record it, and no run_manifest.json or dataset row was found. These levels may have been solved by different ADflow builds and nothing here can tell."
-        ],
+        "unverifiable": [],
         "solver_versions": {
-          "gci_CC": null,
+          "gci_CC": "2.13.1",
           "gci_C": "2.13.1",
           "gci_M": "2.13.1"
         },
@@ -273,11 +271,9 @@
       "compatibility": {
         "compatible": true,
         "differences": [],
-        "unverifiable": [
-          "solver version unknown for gci_CC: result.json does not record it, and no run_manifest.json or dataset row was found. These levels may have been solved by different ADflow builds and nothing here can tell."
-        ],
+        "unverifiable": [],
         "solver_versions": {
-          "gci_CC": null,
+          "gci_CC": "2.13.1",
           "gci_C": "2.13.1",
           "gci_M": "2.13.1"
         },
@@ -524,11 +520,9 @@
       "compatibility": {
         "compatible": true,
         "differences": [],
-        "unverifiable": [
-          "solver version unknown for gci_CC: result.json does not record it, and no run_manifest.json or dataset row was found. These levels may have been solved by different ADflow builds and nothing here can tell."
-        ],
+        "unverifiable": [],
         "solver_versions": {
-          "gci_CC": null,
+          "gci_CC": "2.13.1",
           "gci_C": "2.13.1",
           "gci_M": "2.13.1"
         },
@@ -775,11 +769,9 @@
       "compatibility": {
         "compatible": true,
         "differences": [],
-        "unverifiable": [
-          "solver version unknown for gci_CC: result.json does not record it, and no run_manifest.json or dataset row was found. These levels may have been solved by different ADflow builds and nothing here can tell."
-        ],
+        "unverifiable": [],
         "solver_versions": {
-          "gci_CC": null,
+          "gci_CC": "2.13.1",
           "gci_C": "2.13.1",
           "gci_M": "2.13.1"
         },

@@ -66,6 +66,45 @@ def build(level: str, index: int) -> dict:
            "build_seconds": round(wall, 1), "build_peak_gib": round(peak, 2)}
     rec["cgns"] = str(cgns)
     rec["cgns_bytes"] = cgns.stat().st_size if cgns.exists() else None
+
+    # CELL CONDITIONING, added 2026-09-22. A fold count cannot see it.
+    #
+    # This preflight declared eleven meshes clean on `folded == 0` and the wall layer,
+    # and the 100- and 61-design robustness screens record the same two things. None of
+    # them records a scaled Jacobian -- and measured across the family the WORST cell
+    # degrades about 1.4x per level while every metric here IMPROVES:
+    #
+    #     gci_C 0.0090   gci_M 0.0063   gci_F 0.0043   gci_FF 0.0025
+    #     median          0.944         0.950  0.954         0.957
+    #
+    # So "0 folded, clean: True" is true and silent about the one quantity a linear
+    # solver actually feels (reports/s8_mesh_quality_ladder.json). That is PLAN 0.1
+    # inverted: on defect 21 every metric being checked was unchanged while the wing
+    # MOVED, because the metrics measured shape and nothing measured position; here they
+    # measure the bulk and nothing measures the worst cell.
+    #
+    # Reported, NOT gated. The most poorly conditioned mesh of this family yet solved
+    # (0.0073) converges to the 1e-6 stopping rule and is gate-ACCEPTED, so there is no
+    # measured threshold to gate on and inventing one would refuse meshes that work.
+    # A trend to watch, with the number attached.
+    try:
+        import numpy as np
+        import compare_meshes
+        blocks = np.load(out / f"{level}_blocks.npz")
+        worst, below = float("inf"), 0
+        for name in blocks.files:
+            b = blocks[name]
+            if b.ndim != 4:
+                continue
+            sj = compare_meshes.scaled_jacobian(b)
+            worst = min(worst, float(sj.min()))
+            below += int((sj < 0.01).sum())
+        rec["scaled_jacobian_min"] = round(worst, 6)
+        rec["cells_below_scaled_jacobian_0p01"] = below
+    except Exception as exc:                        # noqa: BLE001 - report, never hide
+        rec["scaled_jacobian_min"] = None
+        rec["scaled_jacobian_why_absent"] = f"{type(exc).__name__}: {exc}"
+
     # "clean" must mean the batch can actually USE this mesh, which requires the
     # CGNS to exist, not only that the block arrays are valid.
     rec["clean"] = (rec["folded"] == 0 and rec["wall_layer_error_m"] <= 1e-9

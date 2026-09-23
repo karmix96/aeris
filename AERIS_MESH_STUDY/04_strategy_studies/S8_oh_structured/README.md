@@ -23,6 +23,7 @@ S8_oh_structured/
 |---|---|
 | **what S8 can and cannot claim** | **`docs/AUDIT_2026-09-20_reliability.md` — read this first** |
 | the full story of S8 | `docs/S8_REPORT_2026-09-15.md` — a running account with dated addenda |
+| **how the mesh is actually built** | **`html/S8_MESH_METHOD.html` — seven steps, a figure at every step, all drawn from the built mesh** |
 | the SU2 track alone | `docs/SU2_REPORT_2026-09-18.md` |
 | how to run the cloud batch | `docs/CLOUD_RUNBOOK.md`, then `docs/S8_CLOUD_BATCH_PLAN.md` for why |
 | what state the campaign is in | `docs/STATE_2026-09-10.md` — resume here |

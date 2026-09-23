@@ -751,6 +751,53 @@ LEVELS["gci_C_normal"] = directional_level(LEVELS["gci_C"], normal=GCI_RATIO)
 #: route to converged drag across the design space.
 LEVELS["gci_C_chord2"] = directional_level(LEVELS["gci_C"], chord=GCI_RATIO ** 2)
 
+#: The THIRD chordwise step, 98 points. Added 2026-09-24.
+#:
+#: The three-level chordwise family (45, 58, 75) is now the best-conditioned
+#: family in this study: p = 1.911 / 1.832 on CD / CDp at a0 with `ok` condition
+#: and GCI21 of 11.0 / 25.7 per cent, against 22-35 per cent for the GLOBAL
+#: family at more cells. But its extrapolation still sits 15.5 counts below the
+#: finest level, so the family is better posed, not converged.
+#:
+#: What this level decides: whether the observed order HOLDS on a fourth point.
+#: Three levels give one p and no way to check it; four give two independent
+#: triplets. If p is stable the chordwise extrapolation becomes the study's
+#: central number and the cloud batch can be re-scoped to chord-only ladders,
+#: which reach the same chordwise resolution as gci_F at roughly 55 per cent of
+#: the cells. If p moves, the chordwise family is no better founded than the
+#: global one and that has to be said before anything is bought.
+LEVELS["gci_C_chord3"] = directional_level(LEVELS["gci_C"], chord=GCI_RATIO ** 3)
+
+#: The chordwise family's COARSE end, 35 points. Added 2026-09-24.
+#:
+#: gci_C_chord3 (98 points, 1,367,416 cells) is built and clean but needs about
+#: 13.2 GiB to solve against 12 GiB free on this host, so the fourth chordwise
+#: point cannot be bought upward here. It is kept on disk for the cloud.
+#:
+#: This buys the same decision downward instead. With 35, 45, 58, 75 there are
+#: TWO independent triplets at r = 1.29, so the observed order can be checked
+#: against itself rather than taken on one estimate -- which is exactly why
+#: gci_CC was derived for the global family. Honest limit: testing order
+#: stability on the coarse side is weaker evidence than a finer level would be,
+#: because asymptotic behaviour is a claim about the fine end. If the two
+#: triplets disagree that is decisive; if they agree it is supporting, not
+#: conclusive, and the cloud still owes us gci_C_chord3.
+LEVELS["gci_C_chordC"] = directional_level(LEVELS["gci_C"], chord=1.0 / GCI_RATIO)
+
+#: FAR-FIELD PLACEMENT, on the production mesh family. Added 2026-09-24.
+#:
+#: 40 root chords has never been tested on FORCES. A 60-chord mesh was built on
+#: 2026-09-06 (runs/s8_farfield60) and never solved, and it is Family A anyway --
+#: its tip cap first cell is 10.205 x s0 against Family B's 2.04 -- so it cannot
+#: be differenced against anything current.
+#:
+#: Domain independence is a standard V&V requirement and its absence is a real
+#: hole in this study: every drag number quoted so far assumes, untested, that
+#: the outer boundary is far enough away. One variable, one difference from
+#: gci_C. If dCD is small the hole closes; if it is not, every number in the
+#: report inherits a domain error that no grid refinement would ever reveal.
+LEVELS["gci_C_ff60"] = _dataclasses.replace(LEVELS["gci_C"], farfield_chords=60.0)
+
 #: FIRST-CELL HEIGHT alone: gci_C with s0 divided by GCI_RATIO and every count
 #: held, n_normal included. The last untested mesh parameter.
 #:

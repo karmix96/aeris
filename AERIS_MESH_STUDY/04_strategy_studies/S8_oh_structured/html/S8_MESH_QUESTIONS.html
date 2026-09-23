@@ -122,6 +122,11 @@ svg.fig text{font-family:"JetBrains Mono",monospace}
 .sing{fill:var(--warn);stroke:none;opacity:.85}
 .prism{stroke:var(--ink);stroke-width:1}
 .prism.good{fill:var(--ok-f)} .prism.warn{fill:var(--warn-f)}
+.b-wake{fill:var(--cap)} .b-nowake{fill:var(--wing)}
+.vlbl{font-size:9.6px;fill:var(--ink);font-weight:700}
+.vnum{font-size:9.6px;fill:var(--ink2);font-weight:700}
+.mini .sw{fill:var(--cap);font-weight:700} .mini .sn{fill:var(--wing);font-weight:700}
+.pend{fill:var(--rule);opacity:.35;stroke:none}
 @media (max-width:640px){body{font-size:15px}header{padding-block:34px 22px}section{padding-block:32px 6px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -133,16 +138,18 @@ svg.fig text{font-family:"JetBrains Mono",monospace}
 <li><a href="#q4"><span class="n">04</span>why curved?</a></li>
 <li><a href="#q5"><span class="n">05</span>why no intersection?</a></li>
 <li><a href="#q6"><span class="n">06</span>other topologies</a></li>
-<li><a href="#do"><span class="n">&#8212;</span>what I'd change</a></li>
+<li><a href="#val"><span class="n">&#8212;</span>validation</a></li>
+<li><a href="#do"><span class="n">&#8212;</span>what changed</a></li>
 </ol></div></nav>
 
 <div class="wrap">
 <header>
   <p class="eyebrow">S8 &#183; companion to &#8220;Building the O-H Mesh&#8221;</p>
   <h1>Six Questions About the Mesh</h1>
-  <p class="lede">Straight answers, measured where they can be measured. One of them
-  (<b>the wake</b>) turned up a real weakness in this mesh that I had not looked at before, and
-  it is the only one of the six that should change what we do next.</p>
+  <p class="lede">Straight answers, measured where they can be measured.
+  <b>Updated 24 September:</b> Q3 originally proposed that the coarse wake was driving the
+  unexplained grid sensitivity. That has now been <b>tested and refuted</b> from meshes already on
+  disk. The real lever is chordwise resolution, and the section below has been rewritten to say so.</p>
 </header>
 
 <section id="q1">
@@ -235,7 +242,7 @@ le_refine_factor= base.le_refine_factor * ratio</pre>
 <section id="q3">
   <div class="q"><span class="num">03</span><span>what must the mesh capture?</span></div>
   <h2>It does the wing. It does not do the wake</h2>
-  <p class="verdict part">two of three</p>
+  <p class="verdict part">body yes, wake no &#8212; but the wake is not the problem</p>
   <div class="col">
   <p>At <span class="mono">Ma 0.0837</span> and <span class="mono">Re 1.53e6</span> the flow is
   easy in every way that usually hurts: incompressible, attached at these incidences, no shocks,
@@ -256,14 +263,42 @@ le_refine_factor= base.le_refine_factor * ratio</pre>
   being smeared by numerical diffusion.</figcaption>
 
   <div class="note w">
-    <span class="h">why this might matter for drag &#8212; a hypothesis, not a diagnosis</span>
-    <p>This is a half-wing at <b>AR 4.836</b>, so a large share of C_D is induced drag. Induced
-    drag reaches the force integral through the downwash on the wing, and the downwash is set by
-    the trailing vorticity &#8212; which is being convected through cells <b>2.9 per chord</b>
-    wide. That diffusion is grid-dependent and would get better on every refinement, which is
-    exactly the signature of the <b>22&#8211;35 % GCI band</b> we cannot currently explain.</p>
-    <p>I want to be careful here: this is a plausible mechanism, not a measured cause. The cheap
-    test is below.</p>
+    <span class="h">I proposed this as the cause of the GCI band. It is not.</span>
+    <p>The argument was reasonable: a half-wing at <b>AR 4.836</b> carries a lot of induced drag,
+    induced drag reaches the force integral through downwash set by trailing vorticity, and that
+    vorticity is being convected through cells 2.9 per chord wide. Grid-dependent diffusion there
+    would improve on every refinement &#8212; the signature of the unexplained
+    <b>22&#8211;35 % GCI band</b>.</p>
+    <p>It took no compute at all to kill. Six mesh variants were already built <em>and</em> solved.
+    Measuring wake resolution on each and lining it up against the drag they actually produced:</p>
+  </div>
+
+  <div class="figwrap"><svg class="fig" viewBox="0 0 760 300" role="img" aria-label="Drag change against wake resolution across six mesh variants" preserveAspectRatio="xMidYMid meet"><text x="16" y="22" class="ptitle">every mesh variant, against gci_C</text><text x="16" y="36" class="mini">bar = change in CD at alpha 0, counts &#183; colour = did this variant improve wake resolution?</text><rect x="502.6" y="62.0" width="94.4" height="19" class="b-wake"/><text x="166" y="76" class="vlbl" text-anchor="end">gci_C_normal</text><text x="603.9" y="76" class="vnum" text-anchor="start">+8.2</text><text x="628" y="76" class="mini">wake 2.9&#8594;4.1/chord</text><rect x="502.6" y="98.0" width="66.3" height="19" class="b-nowake"/><text x="166" y="112" class="vlbl" text-anchor="end">gci_C_s0</text><text x="575.9" y="112" class="vnum" text-anchor="start">+5.7</text><text x="628" y="112" class="mini">wake 2.9&#8594;3.1/chord</text><rect x="314.5" y="134.0" width="188.1" height="19" class="b-nowake"/><text x="166" y="148" class="vlbl" text-anchor="end">gci_C_chord</text><text x="307.5" y="148" class="vnum" text-anchor="end">-16.3</text><text x="628" y="148" class="mini">wake 2.9&#8594;2.9/chord</text><rect x="199.1" y="170.0" width="303.5" height="19" class="b-nowake"/><text x="166" y="184" class="vlbl" text-anchor="end">gci_C_chord2</text><text x="192.1" y="184" class="vnum" text-anchor="end">-26.3</text><text x="628" y="184" class="mini">wake 2.9&#8594;2.9/chord</text><rect x="502.6" y="206.0" width="43.0" height="19" class="b-nowake"/><text x="166" y="220" class="vlbl" text-anchor="end">gci_C_span</text><text x="552.6" y="220" class="vnum" text-anchor="start">+3.7</text><text x="628" y="220" class="mini">wake 2.9&#8594;2.9/chord</text><rect x="242.0" y="242.0" width="260.6" height="19" class="b-wake"/><text x="166" y="256" class="vlbl" text-anchor="end">gci_M</text><text x="235.0" y="256" class="vnum" text-anchor="end">-22.6</text><text x="628" y="256" class="mini">wake 2.9&#8594;4.3/chord</text><line x1="502.6" y1="54" x2="502.6" y2="278" class="ax"/><text x="503" y="52" class="mini" text-anchor="middle">gci_C</text><text x="16" y="278" class="mini"><tspan class="sw">orange</tspan> = wake resolution improved. <tspan class="sn">teal</tspan> = wake resolution unchanged (2.9 cells/chord).</text><text x="16" y="292" class="mini">The two largest moves changed the wake not at all. The one that improved it most moved drag the WRONG way. corr = <tspan class="em">+0.017</tspan>.</text></svg></div>
+  <figcaption>Correlation between wake resolution at one chord and &#916;C_D across the six
+  variants is <b>+0.017</b> &#8212; nothing. The two biggest movers (<b>&#8722;16.3</b> and
+  <b>&#8722;26.3</b> counts) left wake resolution <em>completely unchanged</em> at 2.9 cells per
+  chord. The one variant that genuinely improved the wake, <span class="mono">gci_C_normal</span>
+  (2.9 &#8594; 4.1), moved drag <b>+8.2 counts &#8212; the wrong way</b>.</figcaption>
+
+  <h3>What the lever actually is</h3>
+  <div class="col">
+  <p>Chordwise resolution, and it shows up entirely in <b>pressure</b> drag. Refining chordwise
+  alone recovers more of the coarse-to-fine offset than refining everything at once does, at fewer
+  cells.</p>
+  </div>
+
+  <div class="figwrap"><svg class="fig" viewBox="0 0 760 270" role="img" aria-label="The chordwise-only convergence family" preserveAspectRatio="xMidYMid meet"><line x1="64" y1="218" x2="620" y2="218" class="ax"/><line x1="64" y1="26" x2="64" y2="218" class="ax"/><line x1="64" y1="212.2" x2="620" y2="212.2" class="grid"/><text x="57" y="216.2" class="mini" text-anchor="end">60</text><line x1="64" y1="166.2" x2="620" y2="166.2" class="grid"/><text x="57" y="170.2" class="mini" text-anchor="end">100</text><line x1="64" y1="120.2" x2="620" y2="120.2" class="grid"/><text x="57" y="124.2" class="mini" text-anchor="end">140</text><line x1="64" y1="74.2" x2="620" y2="74.2" class="grid"/><text x="57" y="78.2" class="mini" text-anchor="end">180</text><polyline points="64.0,49.3 197.9,68.0 373.1,79.5" class="ln" style="stroke:var(--cap)"/><circle cx="64.0" cy="49.3" r="3.6" class="pt" style="fill:var(--cap)"/><circle cx="197.9" cy="68.0" r="3.6" class="pt" style="fill:var(--cap)"/><circle cx="373.1" cy="79.5" r="3.6" class="pt" style="fill:var(--cap)"/><text x="381.1" y="83.5" class="mini" style="fill:var(--cap)">CD</text><line x1="373.1" y1="79.5" x2="614" y2="97.3" class="ideal"/><circle cx="614" cy="97.3" r="3.4" class="pt" style="fill:var(--cap)" opacity=".55"/><text x="620" y="101.3" class="mini" style="fill:var(--cap)">160 extrap</text><polyline points="64.0,153.8 197.9,173.1 373.1,185.2" class="ln" style="stroke:var(--out)"/><circle cx="64.0" cy="153.8" r="3.6" class="pt" style="fill:var(--out)"/><circle cx="197.9" cy="173.1" r="3.6" class="pt" style="fill:var(--out)"/><circle cx="373.1" cy="185.2" r="3.6" class="pt" style="fill:var(--out)"/><text x="381.1" y="189.2" class="mini" style="fill:var(--out)">CDp</text><line x1="373.1" y1="185.2" x2="614" y2="205.0" class="ideal"/><circle cx="614" cy="205.0" r="3.4" class="pt" style="fill:var(--out)" opacity=".55"/><text x="620" y="209.0" class="mini" style="fill:var(--out)">66 extrap</text><polyline points="64.0,176.7 197.9,176.1 373.1,175.5" class="ln" style="stroke:var(--wing)"/><circle cx="64.0" cy="176.7" r="3.6" class="pt" style="fill:var(--wing)"/><circle cx="197.9" cy="176.1" r="3.6" class="pt" style="fill:var(--wing)"/><circle cx="373.1" cy="175.5" r="3.6" class="pt" style="fill:var(--wing)"/><text x="381.1" y="179.5" class="mini" style="fill:var(--wing)">CDv</text><text x="64.0" y="233" class="mini" text-anchor="middle">gci_C</text><text x="64.0" y="244" class="mini" text-anchor="middle">45</text><text x="197.9" y="233" class="mini" text-anchor="middle">chord</text><text x="197.9" y="244" class="mini" text-anchor="middle">58</text><text x="373.1" y="233" class="mini" text-anchor="middle">chord2</text><text x="373.1" y="244" class="mini" text-anchor="middle">75</text><text x="610.0" y="233" class="mini" text-anchor="middle">chord3</text><text x="610.0" y="244" class="mini" text-anchor="middle">98</text><rect x="507.0" y="26" width="103.0" height="192.0" class="pend"/><text x="558.5" y="40" class="mini" text-anchor="middle">built, 13.2 GiB</text><text x="558.5" y="51" class="mini" text-anchor="middle">cloud only</text><text x="64" y="20" class="ptitle">chordwise-only family, alpha 0, counts &#183; p = 1.911 (CD) / 1.832 (CDp), condition ok</text><text x="64" y="258" class="mini">CDv is flat and technically DIVERGENT, but by 0.5 counts &#183; all the grid sensitivity is pressure drag, and it is chordwise</text></svg></div>
+  <figcaption>The chordwise-only family at 45, 58 and 75 points. Observed order
+  <b>p = 1.911</b> on C_D and <b>1.832</b> on C_Dp, condition <span class="ok">ok</span>, with
+  <b>GCI21 of 11.0 %</b> against <b>22&#8211;35 %</b> for the global family <em>at more cells</em>.
+  C_Dv is flat &#8212; formally divergent, but by 0.5 counts. C_L moves 0.3 %. Every bit of the
+  grid sensitivity in this study is chordwise pressure drag.</figcaption>
+
+  <div class="note g">
+    <span class="h">why this is good news</span>
+    <p>The chordwise-only ladder reaches <span class="mono">gci_F</span>'s chordwise resolution at
+    <b>975k cells instead of 2.32M</b>, and it is better conditioned. If it holds up, the cloud
+    batch can be re-scoped around chord-only ladders rather than global ones.</p>
   </div>
 </section>
 
@@ -353,8 +388,8 @@ le_refine_factor= base.le_refine_factor * ratio</pre>
 
 <section id="q6">
   <div class="q"><span class="num">06</span><span>could we build it like the attached meshes?</span></div>
-  <h2>H, no. Bullet, not worth it. C, worth a test</h2>
-  <p class="verdict part">one of three</p>
+  <h2>No to all three, and now for measured reasons</h2>
+  <p class="verdict no">none of three</p>
   <div class="col">
   <p>Your attachment shows the standard C / H / O comparison. Here they are drawn on our actual
   aerofoil, at our actual scale:</p>
@@ -370,7 +405,7 @@ le_refine_factor= base.le_refine_factor * ratio</pre>
     <tbody>
       <tr><td class="m">H-type</td><td>simplest blocking</td><td>a singularity at the leading edge, which destroys the 10&#176;-per-cell control this whole strategy exists for. Known to capture curvature badly and to smear the boundary layer laterally.</td><td class="bad">no</td></tr>
       <tr><td class="m">bullet / reshaped far field</td><td>fewer cells far upstream</td><td>only <b>14.3 %</b> of cells lie beyond five chords at all, so the ceiling on the saving is 14 % and the realistic figure is a third of that. Needs a rewrite of the far-field target in <span class="mono">march_o.py</span>.</td><td class="bad">low payoff</td></tr>
-      <tr><td class="m">C-type with a wake block</td><td>resolution <em>in the wake</em>, which is the one measured deficiency in Q3</td><td>a branch cut (an extra interface), and our blunt base is something O handles natively and C does not. Breaks 52 run directories, every level name and the GCI family.</td><td class="cc">test first</td></tr>
+      <tr><td class="m">C-type with a wake block</td><td>resolution in the wake &#8212; which turns out not to affect drag</td><td>a branch cut, and our blunt base is something O handles natively and C does not. Breaks 52 run directories, every level name and the GCI family &#8212; and its whole justification was the wake, which Q3 has now refuted.</td><td class="bad">no longer justified</td></tr>
     </tbody>
   </table></div>
 
@@ -383,28 +418,93 @@ le_refine_factor= base.le_refine_factor * ratio</pre>
     <p>The four-panel figure shows a multiblock mesh with a clean orthogonal wrap at the nose and
     a visible block structure. Our mesh already matches it on the thing that matters &#8212; wall
     orthogonality, median <b>0.25&#176;</b> &#8212; using <b>three blocks</b> instead of its
-    dozen-plus. Where it is plainly better is aft of the trailing edge, and that is the same
-    finding as Q3, arrived at from a picture instead of a measurement.</p>
+    dozen-plus. It is plainly better aft of the trailing edge, and on 23 September I read that as
+    a reason to move. Q3 now says that region does not drive our drag, so it is not.</p>
+  </div>
+</section>
+
+<section id="val">
+  <div class="q"><span class="num">&#8212;</span><span>validating the method further</span></div>
+  <h2>BlendedNet++ can verify the pipeline. It cannot validate the drag</h2>
+  <div class="col">
+  <p><a href="https://arxiv.org/abs/2512.03280">BlendedNet++</a> is a 12,490-case RANS dataset of
+  blended wing bodies with integrated forces and dense surface C_p / C_f fields. It is a better
+  geometric match to S8 than anything in the current validation plan &#8212; S8's own geometry is
+  a BWB half wing, and RIBES is a conventional tapered wing. I checked how usable it actually is.</p>
+  </div>
+
+  <div class="tw"><table>
+    <thead><tr><th></th><th>BlendedNet++</th><th>S8</th><th>verdict</th></tr></thead>
+    <tbody>
+      <tr><td>solver</td><td class="m">FUN3D</td><td class="m">ADflow</td><td class="ok">different &#8212; good, that is the point</td></tr>
+      <tr><td>turbulence model</td><td class="m">Spalart&#8211;Allmaras</td><td class="m">Spalart&#8211;Allmaras</td><td class="bad">same &#8212; shared model error</td></tr>
+      <tr><td>mesh</td><td class="m">unstructured mixed-element, 6.5&#8211;11.6M</td><td class="m">structured O-H, 0.6&#8211;4.7M</td><td class="ok">different paradigm</td></tr>
+      <tr><td>wall treatment</td><td class="m">y+ &lt; 1</td><td class="m">y+ p99 0.77</td><td class="ok">comparable</td></tr>
+      <tr><td>Mach</td><td class="m">0.05 &#8211; 0.5</td><td class="m">0.0837</td><td class="ok">inside</td></tr>
+      <tr><td>incidence</td><td class="m">&#8722;8&#176; to +16&#176;</td><td class="m">&#8722;2&#176; to +8&#176;</td><td class="ok">inside</td></tr>
+      <tr><td>licence</td><td class="m">CC0 1.0</td><td class="m">&#8212;</td><td class="ok">no restrictions</td></tr>
+      <tr><td><b>C_D mesh-independence error</b></td><td class="m"><b>&lt; 8 %</b> (their figure)</td><td class="m">target effect 5&#8211;9 counts</td><td class="bad">&#177;18 counts &#8212; disqualifying</td></tr>
+      <tr><td>C_L mesh-independence error</td><td class="m">&lt; 5 %</td><td class="m">&#8212;</td><td class="cc">usable with care</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="col">
+  <p>I pulled the case index out of the archive to check the overlap concretely. Of 9,992 training
+  cases, <b>169</b> sit within &#177;0.02 in Mach of S8's point, within 3&#215; in Reynolds, and
+  inside our incidence range. <b>24 of those are in the first 1.9 GB</b> of the 26 GB split
+  archive, so a working subset costs one file, not the whole dataset.</p>
+  </div>
+
+  <div class="note w">
+    <span class="h">the one number that decides how to use it</span>
+    <p>Their own stated mesh-independence error on C_D is under 8 %. At the matching subset's
+    median C_D of <b>227 counts</b>, that is <b>&#177;18 counts</b>. S8 exists to resolve effects
+    of <b>5&#8211;9 counts</b>. Their drag is two to three times too uncertain to validate ours
+    &#8212; and because both codes run Spalart&#8211;Allmaras, agreement would not be evidence
+    about physics anyway. It would be evidence that two SA solvers agree.</p>
+  </div>
+
+  <div class="col">
+  <p>So it is <b>verification</b>, not validation, and that distinction is the whole answer:</p>
+  <ul class="tight">
+    <li><b>Use it for</b> cross-code, cross-paradigm checking of the pipeline &#8212; surface C_p
+    fields and C_L on the same geometry. Structured O-H + ADflow against unstructured + FUN3D
+    would catch a reference-area error, a lift-index error, a bad tip cap, a units slip. Those are
+    exactly the failures this project has actually had.</li>
+    <li><b>Use it for</b> a capability test: can our O-H mesher handle their BWB centrebody at all?
+    That is a question S8 needs answered regardless, and here it comes with an answer key.</li>
+    <li><b>Do not use it for</b> drag increments, and do not call agreement validation.</li>
+    <li><b>It does not replace RIBES.</b> An experiment at the right Reynolds number is still the
+    only thing that can test whether the physics is right rather than merely consistent.</li>
+  </ul>
   </div>
 </section>
 
 <section id="do">
-  <div class="q"><span class="num">&#8212;</span><span>the only thing here worth acting on</span></div>
-  <h2>Test the wake before rebuilding anything</h2>
+  <div class="q"><span class="num">&#8212;</span><span>what actually changed</span></div>
+  <h2>The compute went somewhere better</h2>
   <div class="col">
-  <p>Five of these six questions end in &#8220;what we have is fine, and here is the number that
-  says so&#8221;. The sixth does not. Before anyone rewrites a mesher, the cheap test:</p>
+  <p>Yesterday's plan was to spend a day of solves testing the wake. That test was run instead
+  against meshes already on disk, for free, and it failed. The authorised compute is now on the
+  three questions the data does support, all launched 24 September:</p>
   <ul class="tight">
-    <li><b>Hold everything, stretch the far field aft.</b> One <span class="mono">gci_C</span>
-    build with the downstream boundary pushed out and the streamwise growth ceiling tightened in
-    the wake only. Same topology, same blocks, same everything else &#8212; one difference.</li>
-    <li><b>Solve one wing at two incidences</b> and look at &#916;C_D. If the wake is diffusing
-    the trailing vorticity enough to matter, this moves drag; if it does not move, the
-    22&#8211;35 % GCI band is not coming from the wake and the C-topology question is closed.</li>
-    <li>Cost: two solves on the desktop, no cloud, well inside a day.</li>
+    <li><b>Chordwise order stability.</b> A fourth chordwise level at 35 points gives 35 / 45 / 58
+    / 75 and therefore <em>two</em> independent triplets, so <span class="mono">p</span> can be
+    checked against itself instead of taken on one estimate. The finer fourth level
+    (<span class="mono">chord3</span>, 98 points, 1,367,416 cells) is <b>built and clean</b> but
+    needs 13.2 GiB against 12 free &#8212; it is on disk waiting for the cloud.</li>
+    <li><b>Far-field independence.</b> 60 root chords against 40, one variable. Never tested on
+    forces in this study, which is a real hole: every drag number so far assumes, untested, that
+    the boundary is far enough away. A 60-chord mesh existed from 6 September but was never solved
+    and is Family A anyway (tip cap 10.205 &#215; s0 against Family B's 2.04), so it could not be
+    differenced against anything current.</li>
+    <li><b>Does chordwise dominance generalise?</b> The same two chordwise steps on <b>g47</b> and
+    <b>g13</b>, each with its own reference area (0.29775 and 0.5162 &#8212; not g83's 0.39492,
+    which would have voided the comparison silently). If it does not reproduce, the re-scoping
+    argument dies here rather than after the cloud invoice.</li>
   </ul>
-  <p>That is one decision, one difference from its baseline, and it is the only thing on this page
-  that changes what we build next.</p>
+  <p>Twelve solves, all meshes verified clean beforehand: zero folded cells, wall layer on the loft
+  to machine precision, tip cap 2.04&#8211;2.16 &#215; s0.</p>
   </div>
 </section>
 

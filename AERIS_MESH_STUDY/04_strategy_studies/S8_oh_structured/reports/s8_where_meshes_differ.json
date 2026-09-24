@@ -149,5 +149,102 @@
     "The spanwise distribution follows area, which is another independent line against the wake hypothesis retracted on 2026-09-24."
   ],
   "cheapest_next_test": "Hold every count fixed and refine ONLY ds_te_frac. If the trailing-edge band is the mechanism it should recover most of 10 counts for almost no cells.",
-  "artifact": "html/S8_MESH_DIFFERENCE_MAPS.html"
+  "artifact": "html/S8_MESH_DIFFERENCE_MAPS.html",
+  "correction_2026_09_24": {
+    "what_was_wrong": "Reported as 'the last 5 % of chord carries 10 of the 22 counts', which reads as a trailing-edge boundary-layer effect. Binning by chord fraction lumps the blunt base face in with the surface approaching it.",
+    "how_it_was_found": "Challenged on the grounds that the LEADING edge was believed to be the issue. Re-split the surface by GEOMETRY -- the base is every cell whose outward normal has n_x > 0.7 -- instead of by chord fraction.",
+    "direction_check": "Verified first that min-x IS the leading edge at every spanwise station, against the built planform: g83 LE x 0.0000 / TE x 0.8673, g47 0.0000 / 0.7057, g13 0.0000 / 1.0884. The chordwise sense was correct.",
+    "corrected_split_dCDp_counts": {
+      "order": "g83 a0, g83 a4, g47 a0, g47 a4, g13 a0, g13 a4",
+      "blunt_base_nx_gt_0.7": [
+        -9.77,
+        -9.95,
+        -10.89,
+        -10.98,
+        -9.81,
+        -9.92
+      ],
+      "LE_xc_lt_0.02": [
+        -11.33,
+        -2.9,
+        -7.51,
+        1.39,
+        -6.91,
+        -3.83
+      ],
+      "LE_0.02_0.05": [
+        6.85,
+        -3.87,
+        -2.76,
+        -16.86,
+        -1.71,
+        -3.61
+      ],
+      "body_0.05_0.95": [
+        -7.19,
+        -4.04,
+        -2.81,
+        1.86,
+        -6.21,
+        -6.41
+      ],
+      "TE_surface_0.95_1_excluding_base": [
+        -0.07,
+        -0.07,
+        0.8,
+        0.67,
+        0.57,
+        0.48
+      ]
+    },
+    "area_shares_pct": {
+      "blunt_base": 0.25,
+      "LE_lt_0.02": 3.61,
+      "LE_0.02_0.05": 3.23,
+      "body": 88.1,
+      "TE_surface": 4.81
+    },
+    "absolute_base_drag_counts": {
+      "gci_C": [
+        22.37,
+        22.71,
+        24.92,
+        25.15,
+        22.86,
+        23.06
+      ],
+      "gci_M": [
+        12.6,
+        12.77,
+        14.02,
+        14.17,
+        13.05,
+        13.15
+      ],
+      "mean_base_cp_gci_C": [
+        -0.5359,
+        -0.6423,
+        -0.5125,
+        -0.625,
+        -0.6009,
+        -0.7547
+      ],
+      "mean_base_cp_gci_M": [
+        -0.3661,
+        -0.4257,
+        -0.3622,
+        -0.4402,
+        -0.4328,
+        -0.5264
+      ]
+    },
+    "geometry_confound_tested_and_ruled_out": {
+      "worry": "ds_te_frac scales with the family (0.00100 -> 0.00077), so the base might be a different SHAPE between levels, making this a geometry sweep rather than a grid study.",
+      "measurement": "base height / chord at the root, measured on the built meshes: gci_C 0.002499, gci_M 0.002499, ratio 1.0000 on both g83 and g13.",
+      "conclusion": "Identical geometry. ds_te_frac sets the NODE SPACING at the trailing-edge corners, not the base opening. The -10 counts is pure resolution: 3 interior nodes across the base at gci_C against 5 at gci_M."
+    },
+    "corrected_finding": "Two distinct errors, not one. (1) The BLUNT BASE FACE, 0.25 % of the wetted area, gives -9.8 to -11.0 counts in every case -- a spread of 1.2 counts across three wings and two incidences. Base drag nearly halves, 22.4-25.2 -> 12.6-14.2, because the coarse mesh predicts a more negative base pressure. (2) The LEADING EDGE gives more in total, -4.5 to -15.5, but is highly variable: its two sub-bands partly cancel and the split between them swings 24 counts between cases. The trailing-edge SURFACE contributes essentially nothing.",
+    "relation_to_the_earlier_LE_finding": "The earlier '+11.17 counts in one spanwise band at the leading edge' came from the WALL-NORMAL refinement test, a different comparison. It does not conflict with this one.",
+    "revised_cheapest_test": "Hold every count fixed and raise ONLY n_base, the node count across the blunt face, from 5 to 7. That is a handful of cells on 0.25 % of the wetted area. If the base is the mechanism it should recover most of 10 counts for almost nothing."
+  }
 }

@@ -1,0 +1,153 @@
+{
+  "schema": "aeris.s8.where_meshes_differ.v1",
+  "written": "2026-09-24",
+  "question": "The coarse and medium meshes differ by 21-24 drag counts. WHERE?",
+  "method": "Per-cell pressure drag from the surface solutions, -cp*(areaVec . dragDir)/area_ref. Validated against each run's recorded CDp: exact to 0.000 counts at alpha 0 and 0.05 at alpha 4, the residual being the tip-cap zone which is excluded.",
+  "runs": "g83, g47, g13 at gci_C and gci_M, alpha 0/4/8",
+  "chordwise_dCDp_counts": {
+    "g83_a0": {
+      "first_5pct": -4.48,
+      "5_20": -5.69,
+      "20_60": -1.93,
+      "60_95": 0.43,
+      "last_5pct": -9.84,
+      "total": -21.51
+    },
+    "g83_a4": {
+      "first_5pct": -6.77,
+      "5_20": -2.44,
+      "20_60": 1.27,
+      "60_95": -2.87,
+      "last_5pct": -10.02,
+      "total": -20.82
+    },
+    "g47_a0": {
+      "first_5pct": -10.27,
+      "5_20": -1.74,
+      "20_60": 0.47,
+      "60_95": -1.53,
+      "last_5pct": -10.09,
+      "total": -23.17
+    },
+    "g47_a4": {
+      "first_5pct": -15.47,
+      "5_20": 3.54,
+      "20_60": 1.54,
+      "60_95": -3.22,
+      "last_5pct": -10.31,
+      "total": -23.92
+    },
+    "g13_a0": {
+      "first_5pct": -8.62,
+      "5_20": -4.1,
+      "20_60": -2.37,
+      "60_95": 0.26,
+      "last_5pct": -9.24,
+      "total": -24.07
+    },
+    "g13_a4": {
+      "first_5pct": -7.44,
+      "5_20": -4.22,
+      "20_60": -0.14,
+      "60_95": -2.05,
+      "last_5pct": -9.44,
+      "total": -23.29
+    }
+  },
+  "spanwise_dCDp_counts": {
+    "inboard_0_70pct": [
+      -16.7,
+      -16.81,
+      -18.71,
+      -19.83,
+      -18.98,
+      -18.87
+    ],
+    "outboard_70_100pct": [
+      -4.81,
+      -4.02,
+      -4.45,
+      -4.09,
+      -5.09,
+      -4.42
+    ],
+    "reading": "roughly in proportion to area, so this is a chordwise error spread over the wing, not a tip or wake effect"
+  },
+  "rms_dcp": {
+    "alpha0": {
+      "upper": [
+        0.021,
+        0.021,
+        0.019
+      ],
+      "lower": [
+        0.028,
+        0.023,
+        0.02
+      ]
+    },
+    "alpha4": {
+      "upper": [
+        0.024,
+        0.024,
+        0.02
+      ],
+      "lower": [
+        0.021,
+        0.018,
+        0.016
+      ]
+    },
+    "alpha8": {
+      "upper": [
+        0.029,
+        0.029,
+        0.022
+      ],
+      "lower": [
+        0.018,
+        0.017,
+        0.015
+      ]
+    },
+    "order": "g83, g47, g13",
+    "reading": "with incidence the disagreement migrates from the lower surface to the upper"
+  },
+  "cell_aspect_ratio": {
+    "g83": {
+      "gci_C": {
+        "median": 9.2,
+        "p99": 599.2,
+        "max": 1042.1
+      },
+      "gci_M": {
+        "median": 9.3,
+        "p99": 573.1,
+        "max": 1040.1
+      }
+    },
+    "g47": {
+      "gci_C": {
+        "median": 8.5,
+        "p99": 502.9,
+        "max": 707.6
+      },
+      "gci_M": {
+        "median": 8.6,
+        "p99": 496.5,
+        "max": 738.0
+      }
+    },
+    "reading": "uniform refinement preserves cell SHAPE and changes only cell SIZE, which is the control confirming the gci_C -> gci_M difference is resolution and not a shape artefact"
+  },
+  "findings": [
+    "The last 5 % of chord gives -9.2 to -10.3 counts in ALL SIX cases -- three wings, two incidences, a spread of barely one count. That band alone is 40-45 % of the total difference.",
+    "The first 5 % gives a further -4.5 to -15.5 counts, more variable between geometries.",
+    "The mid-chord 20-60 %, which is 40 % of the surface, contributes +/-2 counts.",
+    "So the error is an EDGE problem, not a chordwise-resolution problem. Refining the whole chord works because it also refines the edges.",
+    "This independently supports family 2's edges=True. It was added on a 7 % argument from gci_C_edge; this decomposition says the edges carry closer to 80 %.",
+    "The spanwise distribution follows area, which is another independent line against the wake hypothesis retracted on 2026-09-24."
+  ],
+  "cheapest_next_test": "Hold every count fixed and refine ONLY ds_te_frac. If the trailing-edge band is the mechanism it should recover most of 10 counts for almost no cells.",
+  "artifact": "html/S8_MESH_DIFFERENCE_MAPS.html"
+}

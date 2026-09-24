@@ -1,0 +1,380 @@
+<title>S8 Consolidated Report</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root{--paper:#F1F4F5;--panel:#E6ECEE;--sunk:#DCE4E7;--ink:#0F171A;--ink2:#44545A;--ink3:#778B92;--rule:#C8D3D7;
+ --wing:#0A6670;--out:#3A4A8C;--cap:#BC540E;--seg4:#8A356A;--mesh:#A2B3B9;--warn:#9E2A1C;--good:#136B56;
+ --l1:#9AA9AF;--l2:#0A6670;--l3:#3A4A8C;--l4:#8A356A;--l5:#BC540E;
+ --cap-f:rgba(188,84,14,.13);--ok-f:rgba(19,107,86,.10);--warn-f:rgba(158,42,28,.09);}
+:root:not([data-theme="light"]){@media (prefers-color-scheme:dark){
+ --paper:#0C1316;--panel:#131C20;--sunk:#0A1013;--ink:#E9F0F2;--ink2:#A6B8BF;--ink3:#7A8E96;--rule:#25333A;
+ --wing:#44B8C3;--out:#8B9CE8;--cap:#EF9549;--seg4:#DC8CBB;--mesh:#42555C;--warn:#F28271;--good:#4BC5A1;
+ --l1:#6D7F86;--l2:#44B8C3;--l3:#8B9CE8;--l4:#DC8CBB;--l5:#EF9549;
+ --cap-f:rgba(239,149,73,.13);--ok-f:rgba(75,197,161,.11);--warn-f:rgba(242,130,113,.10);}}
+:root[data-theme="dark"]{--paper:#0C1316;--panel:#131C20;--sunk:#0A1013;--ink:#E9F0F2;--ink2:#A6B8BF;--ink3:#7A8E96;
+ --rule:#25333A;--wing:#44B8C3;--out:#8B9CE8;--cap:#EF9549;--seg4:#DC8CBB;--mesh:#42555C;--warn:#F28271;--good:#4BC5A1;
+ --l1:#6D7F86;--l2:#44B8C3;--l3:#8B9CE8;--l4:#DC8CBB;--l5:#EF9549;
+ --cap-f:rgba(239,149,73,.13);--ok-f:rgba(75,197,161,.11);--warn-f:rgba(242,130,113,.10);}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:"Archivo",-apple-system,sans-serif;font-size:15.5px;line-height:1.62;margin:0;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1000px;margin:0 auto;padding-inline:16px;padding-block:0 72px}
+.col{max-width:68ch}
+h1,h2,h3{font-family:"Instrument Serif",Georgia,serif;font-weight:400;text-wrap:balance;letter-spacing:-.005em}
+h1{font-size:clamp(2.4rem,6.6vw,4rem);line-height:1.02;margin:0 0 .5rem}
+h2{font-size:clamp(1.6rem,4vw,2.35rem);line-height:1.12;margin:.1rem 0 .7rem}
+h3{font-size:1.24rem;margin:1.9rem 0 .5rem}
+p{margin:0 0 1rem} a{color:var(--cap)}
+code,.mono,pre{font-family:"JetBrains Mono",ui-monospace,monospace}
+code{font-size:.855em;background:var(--sunk);padding:.1em .34em;border-radius:3px}
+.eyebrow{font-family:"JetBrains Mono",monospace;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin:0 0 1.1rem}
+header{padding-block:56px 30px;border-bottom:1px solid var(--rule)}
+.lede{font-size:1.15rem;line-height:1.55;color:var(--ink2);max-width:62ch;margin:0 0 1.4rem}
+.lede b{color:var(--ink);font-weight:600}
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--paper);border-bottom:1px solid var(--rule)}
+nav ol{list-style:none;display:flex;gap:1.1rem;overflow-x:auto;margin:0;padding:.62rem 0;font-family:"JetBrains Mono",monospace;font-size:.7rem;scrollbar-width:none}
+nav ol::-webkit-scrollbar{display:none}
+nav a{color:var(--ink3);text-decoration:none;white-space:nowrap;border-bottom:1px solid transparent;padding-bottom:1px}
+nav a:hover,nav a:focus-visible{color:var(--cap);border-bottom-color:var(--cap)}
+nav .n{color:var(--rule);margin-right:.36rem}
+section{padding-block:44px 8px;border-bottom:1px solid var(--rule)}
+section:last-of-type{border-bottom:0}
+.sec{display:flex;align-items:baseline;gap:.7rem;font-family:"JetBrains Mono",monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:.5rem}
+.sec .num{font-family:"Instrument Serif",serif;font-size:2rem;letter-spacing:0;line-height:1;color:var(--cap);text-transform:none}
+.figwrap{overflow-x:auto;margin:1.5rem 0 .5rem;background:var(--panel);border:1px solid var(--rule);border-radius:2px;padding:6px}
+svg.fig{display:block;width:100%;min-width:620px;height:auto}
+figcaption{font-size:.83rem;line-height:1.5;color:var(--ink2);margin:.55rem 0 0;max-width:74ch}
+figcaption b{color:var(--ink);font-weight:600}
+figure{margin:0}
+.note{border-left:2px solid var(--cap);background:var(--cap-f);padding:.8rem 1rem;margin:1.4rem 0;font-size:.93rem;border-radius:0 2px 2px 0;max-width:74ch}
+.note .h{font-family:"JetBrains Mono",monospace;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--cap);display:block;margin-bottom:.3rem}
+.note p:last-child{margin-bottom:0}
+.note.w{border-left-color:var(--warn);background:var(--warn-f)} .note.w .h{color:var(--warn)}
+.note.g{border-left-color:var(--good);background:var(--ok-f)} .note.g .h{color:var(--good)}
+.tw{overflow-x:auto;margin:1.4rem 0}
+table{border-collapse:collapse;font-size:.83rem;width:100%;min-width:500px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:.44rem .8rem .44rem 0;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:"JetBrains Mono",monospace;font-size:.66rem;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);font-weight:500;white-space:nowrap}
+td.m{font-family:"JetBrains Mono",monospace;font-size:.79rem;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.ok{color:var(--good)} .bad{color:var(--warn)} .cc{color:var(--cap)}
+ul.tight{margin:.4rem 0 1.1rem;padding-left:1.15rem} ul.tight li{margin-bottom:.34rem}
+.verdict{display:inline-flex;align-items:center;gap:.5rem;font-family:"JetBrains Mono",monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;border:1px solid;border-radius:2px;padding:.3rem .62rem;margin:0 0 1.1rem}
+.verdict.no{color:var(--warn);border-color:var(--warn);background:var(--warn-f)}
+.verdict.yes{color:var(--good);border-color:var(--good);background:var(--ok-f)}
+.verdict.part{color:var(--cap);border-color:var(--cap);background:var(--cap-f)}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin:1.5rem 0}
+.kpi div{background:var(--paper);padding:.8rem .9rem}
+.kpi .v{font-family:"JetBrains Mono",monospace;font-size:1.2rem;font-weight:700;color:var(--ink);display:block;line-height:1.2}
+.kpi .k{font-size:.72rem;color:var(--ink3);display:block;margin-top:.2rem;line-height:1.35}
+footer{padding-block:34px 0;color:var(--ink3);font-size:.82rem;max-width:74ch}
+footer .mono{font-size:.7rem;line-height:1.85;display:block;margin-top:.7rem}
+svg.fig text{font-family:"JetBrains Mono",monospace}
+.panelbg{fill:var(--sunk)} .oml{fill:none;stroke:var(--ink);stroke-width:1.9;stroke-linejoin:round}
+.oml-thin{fill:none;stroke:var(--ink);stroke-width:1.1} .body{fill:var(--ink);opacity:.10}
+.nd{fill:var(--ink3)} .nd-hi{fill:var(--cap)} .ray{fill:none;stroke:var(--mesh);stroke-width:.55;opacity:.85}
+.rayhi{fill:none;stroke:var(--cap);stroke-width:2} .straight{stroke:var(--ink3);stroke-width:1;stroke-dasharray:4 3;fill:none}
+.lay{fill:none;stroke:var(--wing);stroke-width:.8;opacity:.85} .ff{fill:none;stroke:var(--out);stroke-width:1.5}
+.ax{stroke:var(--ink2);stroke-width:1;fill:none} .grid{stroke:var(--rule);stroke-width:.8;fill:none}
+.ln{fill:none;stroke-width:2;stroke-linejoin:round} .ideal{fill:none;stroke:var(--ink3);stroke-width:1;stroke-dasharray:4 3}
+.pt{stroke:var(--paper);stroke-width:1.2} .ptitle{font-size:10.2px;fill:var(--ink);font-weight:700}
+.ptitle.warn{fill:var(--warn)} .ptitle.good{fill:var(--good)} .ptitle.c{fill:var(--cap)} .ptitle.bad{fill:var(--warn)}
+.mini{font-size:8.7px;fill:var(--ink3)} .mini.warn{fill:var(--warn)} .mini.c{fill:var(--cap)} .mini.good{fill:var(--good)}
+.mini .em,.phen .em{fill:var(--ink);font-weight:700} .deg{font-size:8.8px;fill:var(--cap);font-weight:700}
+.lead{stroke:var(--ink3);stroke-width:.7;stroke-dasharray:2 2;fill:none}
+.phen{font-size:9.6px;fill:var(--ink);font-weight:700} .phen.warn{fill:var(--warn)}
+.pin{fill:var(--good);stroke:var(--paper);stroke-width:1.2} .pin.warn{fill:var(--warn)}
+.stick{stroke-width:1.5;fill:none} .stick.good{stroke:var(--good)} .stick.bad{stroke:var(--warn)}
+.okband{fill:var(--ok-f)} .band{stroke:var(--paper);stroke-width:1} .bandl{font-size:10px;fill:var(--paper);font-weight:700}
+.tline{fill:none;stroke:var(--mesh);stroke-width:.75} .cut{fill:none;stroke:var(--cap);stroke-width:2;stroke-dasharray:5 3}
+.sing{fill:var(--warn);opacity:.85} .prism{stroke:var(--ink);stroke-width:1}
+.prism.good{fill:var(--ok-f)} .prism.warn{fill:var(--warn-f)}
+.b-wake{fill:var(--cap)} .b-nowake{fill:var(--wing)} .b-full{fill:var(--mesh)}
+.mini .sf{fill:var(--mesh);font-weight:700} .mini .sw{fill:var(--cap);font-weight:700} .mini .sn{fill:var(--wing);font-weight:700}
+.vlbl{font-size:9.6px;fill:var(--ink);font-weight:700} .vnum{font-size:9.6px;fill:var(--ink2);font-weight:700}
+.pend{fill:var(--rule);opacity:.35} .nogo{fill:var(--warn-f)}
+.seg{fill:none;stroke-width:2.6;stroke-linecap:round} .segn{stroke:none}
+.s-nose{stroke:var(--cap);fill:var(--cap)} .s-upper{stroke:var(--wing);fill:var(--wing)}
+.s-base{stroke:var(--out);fill:var(--out)} .s-lower{stroke:var(--seg4);fill:var(--seg4)}
+.ispace{fill:none;stroke:var(--mesh);stroke-width:.6} .capgrid{fill:none;stroke:var(--mesh);stroke-width:.6}
+.elbl{font-size:9.6px;font-weight:700} .elbl.n{fill:var(--cap)} .elbl.u{fill:var(--wing)} .elbl.b{fill:var(--out)} .elbl.l{fill:var(--seg4)}
+.elbl .ct{fill:var(--ink3);font-weight:500}
+.sec-root{fill:none;stroke:var(--ink);stroke-width:1.9} .sec-tip{fill:none;stroke:var(--cap);stroke-width:1.9}
+.secl{fill:none;stroke:var(--mesh);stroke-width:1} .edge-le{fill:none;stroke:var(--wing);stroke-width:1.5}
+.edge-te{fill:none;stroke:var(--out);stroke-width:1.5} .cap-fill{fill:var(--cap-f)}
+.cap-disc{fill:var(--cap-f)} .cap-disc-solid{fill:var(--cap);opacity:.5} .cap-disc-f{fill:var(--cap-f);opacity:.5}
+.annu{fill:none;stroke:var(--out);stroke-width:.85;opacity:.9} .ring-shared{fill:none;stroke:var(--ink);stroke-width:2.2}
+.ring-ghost{fill:none;stroke:var(--out);stroke-width:1;opacity:.75} .sweep{stroke:var(--mesh);stroke-width:.5;fill:none;opacity:.75}
+.b-wing{fill:rgba(10,102,112,.10);stroke:var(--wing);stroke-width:1;stroke-dasharray:4 3}
+.b-out{fill:rgba(58,74,140,.09);stroke:var(--out);stroke-width:1;stroke-dasharray:4 3}
+.wall{fill:var(--ink);opacity:.82} .blk{font-size:11px;font-weight:700;fill:var(--ink)}
+.blk.w{fill:var(--wing)} .blk.o{fill:var(--out)} .blk.c{fill:var(--cap)}
+.iface{stroke:var(--ink2);stroke-width:1;stroke-dasharray:3 2;fill:none} .iface-hi{stroke:var(--cap);stroke-width:2.4;fill:none}
+.sym{stroke:var(--ink3);stroke-width:1;stroke-dasharray:5 3;fill:none} .arrow{fill:var(--cap)}
+.lbl{font-size:9.4px;fill:var(--ink2)} .lbl.hi{fill:var(--ink);font-weight:700} .lbl.c{fill:var(--cap);font-weight:700} .lbl.o{fill:var(--out);font-weight:700}
+.idx{font-size:9.6px;fill:var(--ink);font-weight:700} .bar{fill:var(--mesh)} .bar-le{fill:var(--cap)} .bar-te{fill:var(--out)}
+.cap-face{stroke:var(--cap);stroke-width:3;fill:none} .cap-line{stroke:var(--cap);stroke-width:1;stroke-dasharray:3 2;fill:none}
+.bad-line{fill:none;stroke:var(--warn);stroke-width:.7;opacity:.6} .collapse{fill:none;stroke:var(--warn);stroke-width:2.6} .collapse-pt{fill:var(--warn)}
+@media (max-width:640px){body{font-size:15px}header{padding-block:34px 22px}section{padding-block:32px 6px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<nav aria-label="Sections"><div class="wrap"><ol>
+<li><a href="#top"><span class="n">00</span>where it stands</a></li>
+<li><a href="#mesh"><span class="n">01</span>the mesh</a></li>
+<li><a href="#error"><span class="n">02</span>where the error is</a></li>
+<li><a href="#cancel"><span class="n">03</span>what it means for design</a></li>
+<li><a href="#fam2"><span class="n">04</span>family 2</a></li>
+<li><a href="#alpha"><span class="n">05</span>incidence range</a></li>
+<li><a href="#val"><span class="n">06</span>validation</a></li>
+<li><a href="#wrong"><span class="n">07</span>what I got wrong</a></li>
+<li><a href="#next"><span class="n">08</span>next</a></li>
+</ol></div></nav>
+<div class="wrap">
+<header id="top">
+  <p class="eyebrow">S8 O-H structured &#183; consolidated &#183; 24 September 2026</p>
+  <h1>S8 Consolidated Report</h1>
+  <p class="lede">Everything measured on S8 to date, in one place. The short version:
+  <b>the design-space study was never blocked</b> &#8212; grid error cancels 12&#8211;21&#215; when
+  designs are differenced. Absolute drag is <b>not</b> converged and should not be quoted as such.
+  The error is chordwise, in pressure drag, and confirmed on three geometries.</p>
+  <div class="kpi">
+    <div><span class="v">12&#8211;21&#215;</span><span class="k">grid error cancellation on design differences</span></div>
+    <div><span class="v">1&#8211;3 ct</span><span class="k">grid scatter on an increment, vs a 5&#8211;9 count target</span></div>
+    <div><span class="v">~15 ct</span><span class="k">absolute C_D from its own extrapolation</span></div>
+    <div><span class="v">&#8804; 15&#176;</span><span class="k">usable incidence range</span></div>
+  </div>
+</header>
+
+<section id="mesh">
+  <div class="sec"><span class="num">01</span><span>what the mesh is</span></div>
+  <h2>Three blocks, one ring, one H patch</h2>
+  <div class="col">
+  <p>O-H structured: an O-ring around each section, marched outward, stacked spanwise, and closed
+  at the tip by a single H patch. Three volume blocks close the domain. At
+  <span class="mono">gci_C</span> that is <b>603,592 cells</b>, zero folded, wall layer on the loft
+  to machine precision.</p>
+  <p>The tip closure is the part people get stuck on: the tip ring's 92 nodes cut into four pieces
+  &#8212; nose arc 5, upper 43, base 5, lower 43 &#8212; and those are exactly the four sides of a
+  43 &#215; 5 rectangle, because 2(43&#8722;1) + 2(5&#8722;1) = 92.</p>
+  </div>
+  <div class="figwrap"><svg class="fig" viewBox="0 0 760 300" role="img" aria-label="The three structured blocks in spanwise side view" preserveAspectRatio="xMidYMid meet"><rect x="0" y="0" width="760" height="300" fill="none"/><line x1="143.2" y1="274.2" x2="143.2" y2="25.8" class="sym"/><text x="139.2" y="288.2" class="lbl" text-anchor="end">root symmetry plane</text><rect x="143.2" y="56.8" width="152.0" height="209.6" class="b-wing"/><rect x="295.2" y="56.8" width="321.7" height="209.6" class="b-out"/><polygon points="143.18,85.20 146.28,87.17 150.16,90.04 154.96,94.54 160.82,100.94 167.79,107.28 175.93,111.29 185.14,112.28 195.26,113.10 206.02,114.38 217.10,115.93 228.03,118.44 238.45,120.68 248.05,122.65 256.60,124.42 264.01,125.96 270.27,127.25 275.44,128.31 279.66,129.18 283.03,129.87 285.72,130.42 287.82,130.85 289.46,131.19 290.74,131.46 291.73,131.66 292.48,131.82 293.07,131.92 293.50,132.02 293.84,132.09 294.11,132.14 294.31,132.19 294.45,132.22 294.57,132.23 294.67,132.25 294.73,132.27 294.77,132.28 294.82,132.30 294.85,132.30 294.87,132.30 294.88,132.30 294.90,132.31 294.91,132.31 294.91,132.31 294.91,132.31 294.93,132.31 294.93,132.31 294.93,132.31 294.93,132.31 294.93,132.31 295.12,155.37 295.12,155.37 295.12,155.37 295.12,155.37 295.10,155.37 295.10,155.37 295.10,155.37 295.09,155.37 295.09,155.37 295.07,155.37 295.05,155.39 295.02,155.39 294.99,155.39 294.96,155.40 294.90,155.40 294.84,155.42 294.76,155.44 294.63,155.47 294.48,155.50 294.29,155.54 294.03,155.59 293.69,155.65 293.25,155.75 292.66,155.87 291.92,156.01 290.94,156.21 289.67,156.48 288.02,156.80 285.92,157.22 283.25,157.76 279.88,158.43 275.67,159.27 270.49,160.31 264.23,161.54 256.82,163.01 248.28,164.71 238.68,166.60 228.25,168.68 217.28,171.54 206.18,177.44 195.36,184.51 185.18,190.75 175.93,196.50 167.79,201.74 160.82,206.92 154.96,211.95 150.16,215.66 146.28,218.11 143.18,219.85" class="wall"/><line x1="295.2" y1="227.6" x2="295.2" y2="188.8" class="cap-face"/><polyline points="295.12,155.34 295.12,155.34 295.12,155.34 295.12,155.34 295.12,155.34 295.13,155.34 295.13,155.34 295.13,155.34 295.15,155.34 295.16,155.34 295.18,155.34 295.19,155.34 295.22,155.34 295.26,155.34 295.30,155.34 295.36,155.34 295.44,155.34 295.54,155.34 295.66,155.34 295.83,155.34 296.05,155.34 296.34,155.34 296.70,155.34 297.18,155.34 297.80,155.34 298.61,155.34 299.67,155.34 301.03,155.34 302.80,155.34 305.10,155.34 308.10,155.34 312.00,155.34 317.06,155.34 323.63,155.34 332.18,155.34 343.29,155.34 357.72,155.34 376.47,155.34 400.86,155.34 432.54,155.34 473.70,155.34 527.20,155.34 596.74,155.34" class="cap-line"/><text x="219.2" y="46.0" class="blk w" text-anchor="middle">o_wing</text><text x="219.2" y="61.0" class="mini" text-anchor="middle">93 x 65 x 49 &#183; 282,624 cells</text><text x="456.0" y="46.0" class="blk o" text-anchor="middle">o_out</text><text x="456.0" y="61.0" class="mini" text-anchor="middle">93 x 65 x 54 &#183; 312,064 cells</text><text x="380.6" y="254.0" class="blk c" text-anchor="middle">cap_out</text><text x="380.6" y="268.0" class="mini" text-anchor="middle">43 x 5 x 54 &#183; 8,904 cells</text><path d="M 380.6 245.0 L 301.2 212.1" class="lead"/><line x1="295.2" y1="56.8" x2="295.2" y2="269.6" class="iface"/><text x="295.2" y="285.6" class="lbl" text-anchor="middle">tip plane, y = 0.9787 m</text><text x="740" y="292" class="mini" text-anchor="end">spanwise y, metres &#8594;   far field at 40 root chords</text></svg></div>
+  <figcaption>The three blocks. <b>o_wing</b> root to tip, <b>o_out</b> the same annulus continued
+  outboard, <b>cap_out</b> the tip cap swept with it. Far field 40 root chords (60 in family 2).</figcaption>
+  <div class="figwrap"><svg class="fig" viewBox="0 0 500 330" role="img" aria-label="The tip plane: an H patch inside the ring and an O annulus outside it" preserveAspectRatio="xMidYMid meet"><defs><clipPath id="tclip1"><rect x="0" y="0" width="500" height="330"/></clipPath></defs><rect x="0" y="0" width="500" height="330" class="panelbg"/><g clip-path="url(#tclip1)"><polygon points="374.69,66.88 374.44,66.81 374.11,66.71 373.68,66.59 373.14,66.42 372.45,66.19 371.57,65.90 370.43,65.52 368.99,65.03 367.14,64.42 364.78,63.71 361.78,62.89 357.97,61.98 353.21,60.93 347.30,59.74 340.05,58.36 331.30,56.82 320.89,55.13 308.73,53.39 294.86,51.74 279.41,50.43 262.70,49.88 245.21,50.47 227.56,52.11 210.32,54.56 194.06,57.63 179.19,61.12 165.99,64.83 154.60,68.59 145.01,72.26 137.10,75.72 130.70,78.91 125.63,81.77 121.65,84.30 118.59,86.50 116.25,88.37 114.49,89.96 113.17,91.28 112.19,92.38 111.48,93.27 110.95,93.99 110.56,94.58 110.29,95.04 110.09,95.42 109.95,95.71 109.80,96.01 109.62,96.39 109.43,96.90 109.30,97.58 109.42,98.45 110.00,99.43 111.21,100.22 112.95,100.86 115.24,101.43 118.17,101.93 121.88,102.32 126.54,102.58 132.30,102.67 139.35,102.54 147.86,102.16 157.95,101.47 169.71,100.44 183.11,99.04 198.01,97.25 214.11,95.07 230.99,92.50 248.12,89.46 264.91,85.88 280.87,82.11 295.67,78.57 309.05,75.50 320.86,72.99 331.06,71.07 339.70,69.68 346.91,68.73 352.83,68.14 357.64,67.81 361.51,67.68 364.60,67.67 367.04,67.75 368.96,67.87 370.47,68.00 371.65,68.14 372.57,68.27 373.29,68.38 373.85,68.46 374.28,68.54 374.62,68.60 374.88,68.65 374.83,68.21 374.79,67.77 374.74,67.32 374.69,66.88" class="cap-disc"/><polyline points="110.29,95.04 110.09,95.42 109.95,95.71 109.80,96.01 109.62,96.39" class="capgrid"/><polyline points="110.95,93.99 110.82,94.83 110.52,95.74 110.02,96.68 109.30,97.58" class="capgrid"/><polyline points="112.19,92.38 112.20,93.93 111.89,95.64 111.18,97.48 110.00,99.43" class="capgrid"/><polyline points="114.49,89.96 114.90,92.40 114.81,95.06 114.16,97.90 112.95,100.86" class="capgrid"/><polyline points="118.59,86.50 119.66,90.02 119.96,93.80 119.46,97.78 118.17,101.93" class="capgrid"/><polyline points="125.63,81.77 127.51,86.59 128.30,91.69 127.97,97.03 126.54,102.58" class="capgrid"/><polyline points="137.10,75.72 139.80,82.06 141.06,88.65 140.91,95.47 139.35,102.54" class="capgrid"/><polyline points="154.60,68.59 157.83,76.56 159.43,84.66 159.47,92.94 157.95,101.47" class="capgrid"/><polyline points="179.19,61.12 182.27,70.58 183.91,79.95 184.19,89.39 183.11,99.04" class="capgrid"/><polyline points="210.32,54.56 212.41,64.97 213.69,75.02 214.25,84.97 214.11,95.07" class="capgrid"/><polyline points="245.21,50.47 245.65,60.79 246.26,70.50 247.07,79.94 248.12,89.46" class="capgrid"/><polyline points="279.41,50.43 278.21,59.02 278.08,67.06 278.96,74.72 280.87,82.11" class="capgrid"/><polyline points="308.73,53.39 306.58,59.35 305.96,65.08 306.78,70.50 309.05,75.50" class="capgrid"/><polyline points="331.30,56.82 328.97,60.61 328.19,64.35 328.88,67.89 331.06,71.07" class="capgrid"/><polyline points="347.30,59.74 345.28,62.08 344.56,64.44 345.10,66.70 346.91,68.73" class="capgrid"/><polyline points="357.97,61.98 356.45,63.46 355.88,64.98 356.29,66.46 357.64,67.81" class="capgrid"/><polyline points="364.78,63.71 363.73,64.67 363.35,65.68 363.64,66.70 364.60,67.67" class="capgrid"/><polyline points="368.99,65.03 368.33,65.67 368.10,66.38 368.31,67.12 368.96,67.87" class="capgrid"/><polyline points="371.57,65.90 371.18,66.38 371.06,66.93 371.22,67.52 371.65,68.14" class="capgrid"/><polyline points="373.14,66.42 372.93,66.85 372.88,67.33 373.00,67.84 373.29,68.38" class="capgrid"/><polyline points="374.11,66.71 374.01,67.14 374.01,67.59 374.10,68.05 374.28,68.54" class="capgrid"/><polyline points="374.69,66.88 374.74,67.32 374.79,67.77 374.83,68.21 374.88,68.65" class="capgrid"/><polyline points="110.29,95.04 110.56,94.58 110.95,93.99 111.48,93.27 112.19,92.38 113.17,91.28 114.49,89.96 116.25,88.37 118.59,86.50 121.65,84.30 125.63,81.77 130.70,78.91 137.10,75.72 145.01,72.26 154.60,68.59 165.99,64.83 179.19,61.12 194.06,57.63 210.32,54.56 227.56,52.11 245.21,50.47 262.70,49.88 279.41,50.43 294.86,51.74 308.73,53.39 320.89,55.13 331.30,56.82 340.05,58.36 347.30,59.74 353.21,60.93 357.97,61.98 361.78,62.89 364.78,63.71 367.14,64.42 368.99,65.03 370.43,65.52 371.57,65.90 372.45,66.19 373.14,66.42 373.68,66.59 374.11,66.71 374.44,66.81 374.69,66.88" class="capgrid"/><polyline points="110.09,95.42 110.42,95.14 110.82,94.83 111.39,94.44 112.20,93.93 113.35,93.26 114.90,92.40 116.96,91.33 119.66,90.02 123.12,88.44 127.51,86.59 133.02,84.46 139.80,82.06 148.03,79.41 157.83,76.56 169.25,73.58 182.27,70.58 196.75,67.66 212.41,64.97 228.86,62.64 245.65,60.79 262.26,59.57 278.21,59.02 293.08,59.00 306.58,59.35 318.57,59.92 328.97,60.61 337.85,61.34 345.28,62.08 351.43,62.79 356.45,63.46 360.49,64.08 363.73,64.67 366.30,65.20 368.33,65.67 369.92,66.06 371.18,66.38 372.16,66.64 372.93,66.85 373.53,67.01 374.01,67.14 374.40,67.24 374.74,67.32" class="capgrid"/><polyline points="109.95,95.71 110.19,95.73 110.52,95.74 111.06,95.73 111.89,95.64 113.12,95.43 114.81,95.06 117.05,94.52 119.96,93.80 123.65,92.86 128.30,91.69 134.05,90.29 141.06,88.65 149.49,86.76 159.43,84.66 170.92,82.37 183.91,79.95 198.26,77.48 213.69,75.02 229.84,72.67 246.26,70.50 262.49,68.60 278.08,67.06 292.66,65.89 305.96,65.08 317.83,64.58 328.19,64.35 337.07,64.32 344.56,64.44 350.78,64.68 355.88,64.98 360.02,65.32 363.35,65.68 366.00,66.04 368.10,66.38 369.75,66.68 371.06,66.93 372.08,67.15 372.88,67.33 373.51,67.47 374.01,67.59 374.42,67.68 374.79,67.77" class="capgrid"/><polyline points="109.80,96.01 109.86,96.33 110.02,96.68 110.42,97.09 111.18,97.48 112.42,97.76 114.16,97.90 116.48,97.91 119.46,97.78 123.24,97.50 127.97,97.03 133.81,96.37 140.91,95.47 149.43,94.33 159.47,92.94 171.07,91.28 184.19,89.39 198.68,87.27 214.25,84.97 230.54,82.52 247.07,79.94 263.35,77.29 278.96,74.72 293.52,72.42 306.78,70.50 318.59,68.99 328.88,67.89 337.69,67.15 345.10,66.70 351.25,66.49 356.29,66.46 360.36,66.54 363.64,66.70 366.25,66.90 368.31,67.12 369.94,67.33 371.22,67.52 372.22,67.70 373.00,67.84 373.61,67.96 374.10,68.05 374.49,68.14 374.83,68.21" class="capgrid"/><polyline points="109.62,96.39 109.43,96.90 109.30,97.58 109.42,98.45 110.00,99.43 111.21,100.22 112.95,100.86 115.24,101.43 118.17,101.93 121.88,102.32 126.54,102.58 132.30,102.67 139.35,102.54 147.86,102.16 157.95,101.47 169.71,100.44 183.11,99.04 198.01,97.25 214.11,95.07 230.99,92.50 248.12,89.46 264.91,85.88 280.87,82.11 295.67,78.57 309.05,75.50 320.86,72.99 331.06,71.07 339.70,69.68 346.91,68.73 352.83,68.14 357.64,67.81 361.51,67.68 364.60,67.67 367.04,67.75 368.96,67.87 370.47,68.00 371.65,68.14 372.57,68.27 373.29,68.38 373.85,68.46 374.28,68.54 374.62,68.60 374.88,68.65" class="capgrid"/><polyline points="374.69,66.88 374.44,66.81 374.11,66.71 373.68,66.59 373.14,66.42 372.45,66.19 371.57,65.90 370.43,65.52 368.99,65.03 367.14,64.42 364.78,63.71 361.78,62.89 357.97,61.98 353.21,60.93 347.30,59.74 340.05,58.36 331.30,56.82 320.89,55.13 308.73,53.39 294.86,51.74 279.41,50.43 262.70,49.88 245.21,50.47 227.56,52.11 210.32,54.56 194.06,57.63 179.19,61.12 165.99,64.83 154.60,68.59 145.01,72.26 137.10,75.72 130.70,78.91 125.63,81.77 121.65,84.30 118.59,86.50 116.25,88.37 114.49,89.96 113.17,91.28 112.19,92.38 111.48,93.27 110.95,93.99 110.56,94.58 110.29,95.04 110.09,95.42 109.95,95.71 109.80,96.01 109.62,96.39 109.43,96.90 109.30,97.58 109.42,98.45 110.00,99.43 111.21,100.22 112.95,100.86 115.24,101.43 118.17,101.93 121.88,102.32 126.54,102.58 132.30,102.67 139.35,102.54 147.86,102.16 157.95,101.47 169.71,100.44 183.11,99.04 198.01,97.25 214.11,95.07 230.99,92.50 248.12,89.46 264.91,85.88 280.87,82.11 295.67,78.57 309.05,75.50 320.86,72.99 331.06,71.07 339.70,69.68 346.91,68.73 352.83,68.14 357.64,67.81 361.51,67.68 364.60,67.67 367.04,67.75 368.96,67.87 370.47,68.00 371.65,68.14 372.57,68.27 373.29,68.38 373.85,68.46 374.28,68.54 374.62,68.60 374.88,68.65 374.83,68.21 374.79,67.77 374.74,67.32 374.69,66.88" class="annu"/><polyline points="374.71,66.87 374.45,66.79 374.11,66.70 373.69,66.57 373.15,66.40 372.46,66.17 371.57,65.88 370.44,65.50 369.00,65.01 367.15,64.40 364.79,63.70 361.78,62.87 357.98,61.96 353.21,60.92 347.30,59.72 340.06,58.34 331.30,56.80 320.89,55.11 308.73,53.37 294.86,51.73 279.41,50.41 262.70,49.86 245.21,50.45 227.55,52.09 210.32,54.54 194.05,57.61 179.18,61.10 165.99,64.81 154.60,68.58 145.00,72.24 137.09,75.71 130.70,78.89 125.62,81.76 121.64,84.28 118.58,86.48 116.23,88.36 114.47,89.95 113.15,91.27 112.18,92.36 111.46,93.26 110.93,93.98 110.55,94.57 110.27,95.04 110.08,95.41 109.93,95.71 109.78,96.00 109.60,96.38 109.41,96.89 109.28,97.58 109.41,98.46 109.98,99.44 111.20,100.24 112.95,100.87 115.23,101.45 118.17,101.95 121.88,102.34 126.54,102.60 132.30,102.68 139.35,102.56 147.86,102.18 157.95,101.49 169.71,100.46 183.12,99.06 198.01,97.27 214.11,95.09 231.00,92.52 248.12,89.48 264.91,85.90 280.88,82.13 295.68,78.59 309.05,75.52 320.86,73.01 331.06,71.09 339.71,69.70 346.91,68.75 352.84,68.16 357.64,67.83 361.51,67.70 364.60,67.69 367.04,67.77 368.96,67.89 370.47,68.02 371.65,68.16 372.57,68.29 373.29,68.40 373.85,68.48 374.28,68.56 374.62,68.62 374.89,68.66 374.85,68.21 374.80,67.77 374.76,67.32 374.71,66.87" class="annu"/><polyline points="374.75,66.84 374.48,66.75 374.14,66.65 373.71,66.52 373.17,66.35 372.47,66.12 371.59,65.83 370.46,65.45 369.01,64.96 367.16,64.36 364.80,63.65 361.80,62.82 357.99,61.91 353.22,60.87 347.31,59.67 340.07,58.29 331.31,56.75 320.90,55.06 308.74,53.32 294.86,51.67 279.41,50.36 262.70,49.81 245.21,50.40 227.55,52.04 210.31,54.49 194.04,57.56 179.17,61.05 165.97,64.76 154.58,68.53 144.98,72.20 137.07,75.66 130.67,78.85 125.59,81.71 121.61,84.24 118.55,86.44 116.20,88.32 114.44,89.91 113.12,91.23 112.14,92.33 111.42,93.23 110.89,93.95 110.51,94.54 110.23,95.01 110.03,95.39 109.88,95.68 109.74,95.98 109.55,96.37 109.36,96.89 109.23,97.59 109.36,98.48 109.95,99.48 111.17,100.28 112.93,100.92 115.22,101.50 118.16,102.00 121.88,102.39 126.54,102.65 132.30,102.73 139.35,102.61 147.86,102.23 157.96,101.54 169.72,100.51 183.12,99.11 198.02,97.32 214.12,95.14 231.00,92.57 248.13,89.53 264.92,85.95 280.89,82.18 295.69,78.64 309.07,75.57 320.87,73.06 331.07,71.14 339.71,69.75 346.92,68.80 352.84,68.21 357.65,67.88 361.51,67.75 364.60,67.74 367.04,67.82 368.96,67.94 370.47,68.07 371.64,68.21 372.56,68.34 373.28,68.45 373.84,68.53 374.29,68.61 374.64,68.66 374.93,68.69 374.90,68.23 374.85,67.76 374.80,67.30 374.75,66.84" class="annu"/><polyline points="374.86,66.76 374.57,66.64 374.21,66.52 373.76,66.38 373.22,66.21 372.52,65.98 371.64,65.69 370.50,65.31 369.06,64.82 367.21,64.21 364.84,63.50 361.84,62.68 358.03,61.76 353.26,60.72 347.34,59.52 340.10,58.15 331.34,56.60 320.92,54.91 308.76,53.17 294.88,51.52 279.42,50.21 262.70,49.66 245.20,50.25 227.53,51.89 210.29,54.34 194.01,57.41 179.13,60.90 165.93,64.62 154.53,68.39 144.92,72.06 137.00,75.53 130.60,78.71 125.51,81.58 121.53,84.12 118.45,86.32 116.10,88.20 114.33,89.80 113.01,91.13 112.02,92.23 111.30,93.14 110.77,93.87 110.38,94.46 110.10,94.94 109.90,95.32 109.75,95.62 109.60,95.93 109.41,96.33 109.21,96.87 109.09,97.60 109.23,98.54 109.84,99.57 111.09,100.40 112.87,101.06 115.18,101.64 118.13,102.15 121.86,102.54 126.53,102.80 132.30,102.89 139.35,102.76 147.87,102.38 157.97,101.69 169.73,100.66 183.14,99.26 198.03,97.47 214.14,95.29 231.03,92.72 248.16,89.68 264.95,86.10 280.92,82.33 295.72,78.79 309.10,75.71 320.90,73.21 331.10,71.28 339.74,69.89 346.94,68.95 352.85,68.36 357.66,68.03 361.52,67.90 364.60,67.89 367.03,67.97 368.95,68.09 370.45,68.22 371.63,68.36 372.55,68.49 373.26,68.60 373.84,68.68 374.31,68.75 374.70,68.79 375.03,68.79 375.03,68.27 375.00,67.76 374.94,67.25 374.86,66.76" class="annu"/><polyline points="375.28,66.47 374.91,66.26 374.48,66.07 373.98,65.90 373.41,65.71 372.71,65.48 371.82,65.19 370.69,64.81 369.24,64.32 367.38,63.71 365.01,63.00 361.99,62.17 358.17,61.25 353.39,60.21 347.46,59.01 340.21,57.63 331.44,56.08 321.01,54.39 308.84,52.65 294.94,51.00 279.45,49.68 262.70,49.13 245.17,49.72 227.46,51.37 210.19,53.82 193.89,56.90 178.98,60.39 165.75,64.12 154.33,67.90 144.70,71.58 136.76,75.05 130.33,78.26 125.22,81.14 121.22,83.69 118.12,85.91 115.75,87.81 113.96,89.43 112.61,90.78 111.61,91.90 110.88,92.83 110.33,93.58 109.92,94.19 109.63,94.68 109.42,95.08 109.26,95.41 109.10,95.74 108.90,96.20 108.70,96.83 108.58,97.67 108.76,98.73 109.44,99.89 110.78,100.81 112.64,101.53 115.02,102.14 118.02,102.67 121.79,103.06 126.48,103.32 132.27,103.41 139.35,103.29 147.87,102.91 157.99,102.22 169.76,101.19 183.17,99.78 198.08,97.99 214.20,95.81 231.11,93.24 248.26,90.20 265.07,86.61 281.05,82.84 295.86,79.30 309.23,76.23 321.02,73.72 331.21,71.80 339.83,70.42 347.02,69.47 352.92,68.88 357.71,68.56 361.55,68.43 364.61,68.42 367.03,68.50 368.93,68.62 370.43,68.75 371.59,68.89 372.51,69.02 373.24,69.12 373.86,69.21 374.42,69.25 374.94,69.22 375.40,69.10 375.49,68.43 375.50,67.75 375.42,67.10 375.28,66.47" class="annu"/><polyline points="377.15,65.43 376.52,64.81 375.83,64.34 375.12,63.99 374.41,63.71 373.64,63.44 372.71,63.12 371.55,62.74 370.08,62.23 368.19,61.61 365.78,60.89 362.72,60.05 358.86,59.11 354.03,58.05 348.07,56.84 340.78,55.45 331.97,53.89 321.49,52.20 309.25,50.44 295.26,48.78 279.65,47.45 262.74,46.89 245.03,47.49 227.15,49.15 209.72,51.63 193.28,54.74 178.27,58.27 164.94,62.03 153.42,65.84 143.69,69.57 135.66,73.10 129.14,76.36 123.93,79.30 119.83,81.92 116.64,84.22 114.19,86.20 112.31,87.90 110.89,89.33 109.82,90.55 109.02,91.56 108.42,92.40 107.96,93.09 107.63,93.67 107.37,94.17 107.17,94.61 106.96,95.11 106.72,95.80 106.51,96.77 106.46,98.04 106.80,99.57 107.74,101.18 109.39,102.47 111.57,103.44 114.23,104.21 117.44,104.82 121.36,105.26 126.17,105.55 132.06,105.65 139.21,105.54 147.79,105.16 157.96,104.47 169.78,103.44 183.24,102.03 198.20,100.24 214.38,98.05 231.38,95.47 248.66,92.40 265.59,88.79 281.66,85.00 296.50,81.46 309.86,78.39 321.63,75.89 331.77,73.98 340.34,72.61 347.47,71.68 353.30,71.10 358.02,70.79 361.79,70.66 364.78,70.66 367.14,70.75 368.98,70.87 370.43,71.00 371.59,71.14 372.55,71.26 373.42,71.35 374.29,71.36 375.22,71.23 376.19,70.89 377.07,70.30 377.46,69.06 377.59,67.79 377.47,66.56 377.15,65.43" class="annu"/><polyline points="374.69,66.88 374.70,66.88 374.71,66.87 374.72,66.86 374.73,66.85 374.75,66.84 374.77,66.83 374.79,66.81 374.82,66.78 374.86,66.76 374.91,66.72 374.98,66.68 375.06,66.62 375.16,66.56 375.28,66.47 375.44,66.37 375.64,66.25 375.90,66.10 376.22,65.92 376.63,65.70 377.15,65.43" class="ray"/><polyline points="373.14,66.42 373.15,66.41 373.15,66.40 373.15,66.38 373.16,66.37 373.17,66.35 373.17,66.32 373.19,66.29 373.20,66.25 373.22,66.21 373.24,66.15 373.27,66.07 373.30,65.98 373.35,65.86 373.41,65.71 373.49,65.53 373.59,65.31 373.72,65.03 373.90,64.68 374.12,64.24 374.41,63.71" class="ray"/><polyline points="368.99,65.03 368.99,65.02 369.00,65.01 369.00,65.00 369.01,64.98 369.01,64.96 369.02,64.94 369.03,64.90 369.04,64.87 369.06,64.82 369.08,64.76 369.11,64.68 369.14,64.59 369.18,64.47 369.24,64.32 369.31,64.13 369.40,63.90 369.51,63.61 369.65,63.25 369.84,62.80 370.08,62.23" class="ray"/><polyline points="357.97,61.98 357.98,61.97 357.98,61.96 357.98,61.95 357.99,61.93 357.99,61.91 358.00,61.88 358.00,61.85 358.01,61.81 358.03,61.76 358.04,61.70 358.06,61.62 358.09,61.53 358.12,61.40 358.17,61.25 358.22,61.06 358.29,60.82 358.39,60.53 358.51,60.16 358.66,59.69 358.86,59.11" class="ray"/><polyline points="331.30,56.82 331.30,56.81 331.30,56.80 331.30,56.78 331.31,56.77 331.31,56.75 331.32,56.72 331.32,56.69 331.33,56.65 331.34,56.60 331.35,56.54 331.36,56.46 331.38,56.36 331.41,56.23 331.44,56.08 331.48,55.89 331.54,55.64 331.61,55.34 331.70,54.96 331.82,54.49 331.97,53.89" class="ray"/><polyline points="279.41,50.43 279.41,50.42 279.41,50.41 279.41,50.40 279.41,50.38 279.41,50.36 279.41,50.34 279.41,50.30 279.42,50.26 279.42,50.21 279.42,50.15 279.43,50.07 279.43,49.97 279.44,49.84 279.45,49.68 279.47,49.49 279.49,49.24 279.51,48.93 279.55,48.54 279.59,48.06 279.65,47.45" class="ray"/><polyline points="210.32,54.56 210.32,54.55 210.32,54.54 210.32,54.53 210.31,54.51 210.31,54.49 210.31,54.47 210.30,54.43 210.29,54.39 210.29,54.34 210.27,54.28 210.26,54.20 210.24,54.10 210.22,53.98 210.19,53.82 210.15,53.63 210.10,53.39 210.04,53.08 209.96,52.70 209.85,52.23 209.72,51.63" class="ray"/><polyline points="154.60,68.59 154.60,68.59 154.60,68.58 154.59,68.56 154.59,68.55 154.58,68.53 154.57,68.50 154.56,68.47 154.54,68.44 154.53,68.39 154.50,68.33 154.47,68.25 154.44,68.16 154.39,68.04 154.33,67.90 154.25,67.71 154.16,67.48 154.03,67.20 153.88,66.84 153.68,66.40 153.42,65.84" class="ray"/><polyline points="125.63,81.77 125.62,81.76 125.62,81.76 125.61,81.74 125.60,81.73 125.59,81.71 125.58,81.69 125.56,81.66 125.54,81.63 125.51,81.58 125.48,81.53 125.43,81.46 125.38,81.38 125.31,81.27 125.22,81.14 125.11,80.97 124.97,80.77 124.80,80.51 124.57,80.20 124.29,79.80 123.93,79.30" class="ray"/><polyline points="114.49,89.96 114.48,89.95 114.47,89.95 114.46,89.94 114.45,89.92 114.44,89.91 114.42,89.89 114.40,89.87 114.37,89.84 114.33,89.80 114.29,89.75 114.23,89.70 114.16,89.63 114.07,89.54 113.96,89.43 113.82,89.29 113.64,89.12 113.41,88.90 113.13,88.64 112.77,88.31 112.31,87.90" class="ray"/><polyline points="110.95,93.99 110.94,93.99 110.93,93.98 110.92,93.98 110.91,93.97 110.89,93.95 110.87,93.94 110.84,93.92 110.81,93.90 110.77,93.87 110.71,93.83 110.65,93.79 110.56,93.73 110.46,93.66 110.33,93.58 110.16,93.47 109.95,93.34 109.69,93.17 109.36,92.96 108.94,92.71 108.42,92.40" class="ray"/><polyline points="109.95,95.71 109.94,95.71 109.93,95.71 109.92,95.70 109.90,95.69 109.88,95.68 109.86,95.67 109.83,95.66 109.79,95.64 109.75,95.62 109.69,95.59 109.62,95.56 109.52,95.52 109.41,95.47 109.26,95.41 109.08,95.33 108.85,95.23 108.56,95.12 108.20,94.98 107.74,94.81 107.17,94.61" class="ray"/><polyline points="109.30,97.58 109.29,97.58 109.28,97.58 109.27,97.58 109.25,97.58 109.23,97.59 109.20,97.59 109.17,97.59 109.13,97.60 109.09,97.60 109.02,97.61 108.95,97.62 108.85,97.63 108.73,97.65 108.58,97.67 108.39,97.70 108.16,97.74 107.86,97.78 107.50,97.85 107.04,97.93 106.46,98.04" class="ray"/><polyline points="112.95,100.86 112.95,100.86 112.95,100.87 112.94,100.89 112.94,100.90 112.93,100.92 112.92,100.94 112.91,100.97 112.89,101.01 112.87,101.06 112.84,101.11 112.81,101.18 112.77,101.27 112.71,101.39 112.64,101.53 112.56,101.70 112.44,101.91 112.30,102.18 112.11,102.51 111.88,102.93 111.57,103.44" class="ray"/><polyline points="126.54,102.58 126.54,102.58 126.54,102.60 126.54,102.61 126.54,102.62 126.54,102.65 126.53,102.67 126.53,102.70 126.53,102.74 126.53,102.80 126.52,102.86 126.52,102.94 126.51,103.04 126.50,103.17 126.48,103.32 126.46,103.52 126.43,103.77 126.39,104.08 126.34,104.46 126.27,104.94 126.17,105.55" class="ray"/><polyline points="157.95,101.47 157.95,101.48 157.95,101.49 157.96,101.50 157.96,101.52 157.96,101.54 157.96,101.57 157.96,101.60 157.96,101.64 157.97,101.69 157.97,101.75 157.97,101.83 157.98,101.94 157.98,102.06 157.99,102.22 157.99,102.42 157.99,102.67 157.99,102.98 157.99,103.37 157.98,103.86 157.96,104.47" class="ray"/><polyline points="214.11,95.07 214.11,95.08 214.11,95.09 214.11,95.10 214.12,95.12 214.12,95.14 214.12,95.16 214.13,95.19 214.13,95.23 214.14,95.29 214.15,95.35 214.16,95.43 214.17,95.53 214.18,95.65 214.20,95.81 214.22,96.01 214.24,96.26 214.27,96.57 214.30,96.95 214.34,97.44 214.38,98.05" class="ray"/><polyline points="280.87,82.11 280.88,82.12 280.88,82.13 280.88,82.14 280.88,82.16 280.89,82.18 280.89,82.20 280.90,82.24 280.91,82.28 280.92,82.33 280.94,82.39 280.96,82.47 280.98,82.56 281.01,82.69 281.05,82.84 281.10,83.03 281.17,83.27 281.25,83.57 281.35,83.95 281.49,84.42 281.66,85.00" class="ray"/><polyline points="331.06,71.07 331.06,71.08 331.06,71.09 331.06,71.10 331.07,71.12 331.07,71.14 331.07,71.16 331.08,71.19 331.09,71.23 331.10,71.28 331.11,71.35 331.13,71.43 331.15,71.53 331.17,71.65 331.21,71.80 331.25,72.00 331.31,72.24 331.38,72.54 331.48,72.92 331.61,73.39 331.77,73.98" class="ray"/><polyline points="357.64,67.81 357.64,67.82 357.64,67.83 357.65,67.85 357.65,67.86 357.65,67.88 357.65,67.91 357.65,67.94 357.65,67.98 357.66,68.03 357.66,68.10 357.67,68.18 357.68,68.28 357.69,68.40 357.71,68.56 357.73,68.76 357.76,69.00 357.80,69.31 357.85,69.70 357.92,70.18 358.02,70.79" class="ray"/><polyline points="368.96,67.87 368.96,67.88 368.96,67.89 368.96,67.91 368.96,67.92 368.96,67.94 368.96,67.97 368.95,68.00 368.95,68.04 368.95,68.09 368.95,68.16 368.94,68.24 368.94,68.34 368.94,68.46 368.93,68.62 368.93,68.82 368.93,69.07 368.93,69.38 368.94,69.77 368.96,70.26 368.98,70.87" class="ray"/><polyline points="373.29,68.38 373.29,68.39 373.29,68.40 373.28,68.41 373.28,68.43 373.28,68.45 373.28,68.47 373.27,68.50 373.27,68.54 373.26,68.60 373.26,68.66 373.25,68.74 373.25,68.84 373.24,68.97 373.24,69.12 373.24,69.32 373.24,69.57 373.26,69.88 373.29,70.26 373.34,70.74 373.42,71.35" class="ray"/><polyline points="374.88,68.65 374.89,68.66 374.89,68.66 374.90,68.67 374.91,68.68 374.93,68.69 374.95,68.71 374.97,68.73 375.00,68.75 375.03,68.79 375.08,68.82 375.13,68.87 375.20,68.93 375.29,69.00 375.40,69.10 375.55,69.21 375.72,69.35 375.95,69.52 376.24,69.73 376.60,69.98 377.07,70.30" class="ray"/><polyline points="374.69,66.88 374.70,66.88 374.71,66.87 374.72,66.86 374.73,66.85 374.75,66.84 374.77,66.83 374.79,66.81 374.82,66.78 374.86,66.76 374.91,66.72 374.98,66.68 375.06,66.62 375.16,66.56 375.28,66.47 375.44,66.37 375.64,66.25 375.90,66.10 376.22,65.92 376.63,65.70 377.15,65.43" class="ray"/><polyline points="374.69,66.88 374.44,66.81 374.11,66.71 373.68,66.59 373.14,66.42 372.45,66.19 371.57,65.90 370.43,65.52 368.99,65.03 367.14,64.42 364.78,63.71 361.78,62.89 357.97,61.98 353.21,60.93 347.30,59.74 340.05,58.36 331.30,56.82 320.89,55.13 308.73,53.39 294.86,51.74 279.41,50.43 262.70,49.88 245.21,50.47 227.56,52.11 210.32,54.56 194.06,57.63 179.19,61.12 165.99,64.83 154.60,68.59 145.01,72.26 137.10,75.72 130.70,78.91 125.63,81.77 121.65,84.30 118.59,86.50 116.25,88.37 114.49,89.96 113.17,91.28 112.19,92.38 111.48,93.27 110.95,93.99 110.56,94.58 110.29,95.04 110.09,95.42 109.95,95.71 109.80,96.01 109.62,96.39 109.43,96.90 109.30,97.58 109.42,98.45 110.00,99.43 111.21,100.22 112.95,100.86 115.24,101.43 118.17,101.93 121.88,102.32 126.54,102.58 132.30,102.67 139.35,102.54 147.86,102.16 157.95,101.47 169.71,100.44 183.11,99.04 198.01,97.25 214.11,95.07 230.99,92.50 248.12,89.46 264.91,85.88 280.87,82.11 295.67,78.57 309.05,75.50 320.86,72.99 331.06,71.07 339.70,69.68 346.91,68.73 352.83,68.14 357.64,67.81 361.51,67.68 364.60,67.67 367.04,67.75 368.96,67.87 370.47,68.00 371.65,68.14 372.57,68.27 373.29,68.38 373.85,68.46 374.28,68.54 374.62,68.60 374.88,68.65 374.83,68.21 374.79,67.77 374.74,67.32 374.69,66.88" class="ring-shared"/></g><text x="12" y="17" class="ptitle">the tip plane, looking inboard</text><text x="12" y="31" class="mini">the H patch fills the inside of the ring; the O annulus grows outwards from it</text><line x1="262.5" y1="68.6" x2="358.5" y2="126.6" class="lead"/><text x="362.5" y="130.6" class="lbl c">cap_out  43 x 5   H patch</text><line x1="227.6" y1="52.1" x2="197.6" y2="0.1" class="lead"/><text x="195.6" y="-3.9" class="lbl hi" text-anchor="end">the shared ring, 92 nodes</text><line x1="227.5" y1="51.4" x2="273.5" y2="11.4" class="lead"/><text x="277.5" y="7.4" class="lbl o">o_out  93 x 65   O annulus</text></svg></div>
+  <figcaption>The tip plane face-on: the H patch fills the inside of the ring, the O annulus grows
+  from the outside, and they share the ring node-for-node &#8212; matched to <b>2.2e&#8722;16 m</b>.</figcaption>
+  <div class="note">
+    <span class="h">on novelty</span>
+    <p>The topology is <b>not novel</b>. NASA's WINGCAP has offered O-, C- and H-topology tip caps
+    for years, and O-H for a blunt trailing edge is published. What is specific here is a counting
+    constraint (nose arc = base, <span class="mono">n_base</span> odd) and verification-first
+    automation. Methods paragraph, not abstract. Full walkthrough:
+    <a href="https://claude.ai/artifact/HydFXspa6XWBQ8TNuKdzFp">Building the O-H Mesh</a>.</p>
+  </div>
+</section>
+
+<section id="error">
+  <div class="sec"><span class="num">02</span><span>where the discretisation error lives</span></div>
+  <h2>Chordwise, in pressure drag, on every geometry</h2>
+  <p class="verdict yes">measured on 3 geometries &#215; 2 incidences</p>
+  <div class="figwrap"><svg class="fig" viewBox="0 0 760 300" role="img" aria-label="Drag change against wake resolution across six mesh variants" preserveAspectRatio="xMidYMid meet"><text x="16" y="22" class="ptitle">every mesh variant, against gci_C</text><text x="16" y="36" class="mini">bar = change in CD at alpha 0, counts &#183; colour = did this variant improve wake resolution?</text><rect x="502.6" y="62.0" width="94.4" height="19" class="b-wake"/><text x="166" y="76" class="vlbl" text-anchor="end">gci_C_normal</text><text x="603.9" y="76" class="vnum" text-anchor="start">+8.2</text><text x="628" y="76" class="mini">wake 2.9&#8594;4.1/chord</text><rect x="502.6" y="98.0" width="66.3" height="19" class="b-nowake"/><text x="166" y="112" class="vlbl" text-anchor="end">gci_C_s0</text><text x="575.9" y="112" class="vnum" text-anchor="start">+5.7</text><text x="628" y="112" class="mini">wake 2.9&#8594;3.1/chord</text><rect x="314.5" y="134.0" width="188.1" height="19" class="b-nowake"/><text x="166" y="148" class="vlbl" text-anchor="end">gci_C_chord</text><text x="307.5" y="148" class="vnum" text-anchor="end">-16.3</text><text x="628" y="148" class="mini">wake 2.9&#8594;2.9/chord</text><rect x="199.1" y="170.0" width="303.5" height="19" class="b-nowake"/><text x="166" y="184" class="vlbl" text-anchor="end">gci_C_chord2</text><text x="192.1" y="184" class="vnum" text-anchor="end">-26.3</text><text x="628" y="184" class="mini">wake 2.9&#8594;2.9/chord</text><rect x="502.6" y="206.0" width="43.0" height="19" class="b-nowake"/><text x="166" y="220" class="vlbl" text-anchor="end">gci_C_span</text><text x="552.6" y="220" class="vnum" text-anchor="start">+3.7</text><text x="628" y="220" class="mini">wake 2.9&#8594;2.9/chord</text><rect x="242.0" y="242.0" width="260.6" height="19" class="b-wake"/><text x="166" y="256" class="vlbl" text-anchor="end">gci_M</text><text x="235.0" y="256" class="vnum" text-anchor="end">-22.6</text><text x="628" y="256" class="mini">wake 2.9&#8594;4.3/chord</text><line x1="502.6" y1="54" x2="502.6" y2="278" class="ax"/><text x="503" y="52" class="mini" text-anchor="middle">gci_C</text><text x="16" y="278" class="mini"><tspan class="sw">orange</tspan> = wake resolution improved. <tspan class="sn">teal</tspan> = wake resolution unchanged (2.9 cells/chord).</text><text x="16" y="292" class="mini">The two largest moves changed the wake not at all. The one that improved it most moved drag the WRONG way. corr = <tspan class="em">+0.017</tspan>.</text></svg></div>
+  <figcaption>Every variant against <span class="mono">gci_C</span>. The two largest movers
+  (<b>&#8722;16.3</b>, <b>&#8722;26.3</b> counts) are chordwise. Refining the wall-normal direction
+  moves drag <b>+8.2 counts the wrong way</b>.</figcaption>
+  <div class="figwrap"><svg class="fig" viewBox="0 0 760 250" role="img" aria-label="Chordwise-only refinement against full refinement on three geometries" preserveAspectRatio="xMidYMid meet"><text x="16" y="20" class="ptitle">chordwise-only refinement against full refinement, three geometries</text><text x="16" y="34" class="mini">bars = drop in pressure drag from gci_C, counts. Longer is more of the error removed.</text><text x="76" y="67" class="vlbl" text-anchor="end">g83 a0</text><rect x="84" y="50" width="478.8" height="10" class="b-nowake"/><rect x="84" y="62" width="377.1" height="10" class="b-full"/><text x="568.8" y="59" class="vnum">-27.3</text><text x="467.1" y="71" class="vnum">-21.5</text><text x="704" y="65" class="deg">1.27x</text><text x="76" y="99" class="vlbl" text-anchor="end">g83 a4</text><rect x="84" y="82" width="452.9" height="10" class="b-nowake"/><rect x="84" y="94" width="365.1" height="10" class="b-full"/><text x="542.9" y="91" class="vnum">-25.8</text><text x="455.1" y="103" class="vnum">-20.8</text><text x="704" y="97" class="deg">1.24x</text><text x="76" y="131" class="vlbl" text-anchor="end">g47 a0</text><rect x="84" y="114" width="493.6" height="10" class="b-nowake"/><rect x="84" y="126" width="406.2" height="10" class="b-full"/><text x="583.6" y="123" class="vnum">-28.2</text><text x="496.2" y="135" class="vnum">-23.2</text><text x="704" y="129" class="deg">1.22x</text><text x="76" y="163" class="vlbl" text-anchor="end">g47 a4</text><rect x="84" y="146" width="502.9" height="10" class="b-nowake"/><rect x="84" y="158" width="419.4" height="10" class="b-full"/><text x="592.9" y="155" class="vnum">-28.7</text><text x="509.4" y="167" class="vnum">-23.9</text><text x="704" y="161" class="deg">1.20x</text><text x="76" y="195" class="vlbl" text-anchor="end">g13 a0</text><rect x="84" y="178" width="460.1" height="10" class="b-nowake"/><rect x="84" y="190" width="422.0" height="10" class="b-full"/><text x="550.1" y="187" class="vnum">-26.2</text><text x="512.0" y="199" class="vnum">-24.1</text><text x="704" y="193" class="deg">1.09x</text><text x="76" y="227" class="vlbl" text-anchor="end">g13 a4</text><rect x="84" y="210" width="444.2" height="10" class="b-nowake"/><rect x="84" y="222" width="408.3" height="10" class="b-full"/><text x="534.2" y="219" class="vnum">-25.3</text><text x="498.3" y="231" class="vnum">-23.3</text><text x="704" y="225" class="deg">1.09x</text><text x="16" y="228" class="mini"><tspan class="sn">teal</tspan> = chord-only (gci_C_chord2, ~975k cells).  <tspan class="sf">grey</tspan> = full refinement (gci_M, ~1.17M cells).</text><text x="16" y="242" class="mini">Chord-only removes <tspan class="em">109 to 127 %</tspan> of what full refinement removes, on every geometry and both incidences, using fewer cells.</text></svg></div>
+  <figcaption>Chord-only refinement removes <b>109&#8211;127 %</b> of the error that <em>full</em>
+  refinement removes, on three geometries at both incidences, with fewer cells.</figcaption>
+  <div class="figwrap"><svg class="fig" viewBox="0 0 760 300" role="img" aria-label="Four-level chordwise family with both triplet extrapolations" preserveAspectRatio="xMidYMid meet"><line x1="66" y1="246" x2="584" y2="246" class="ax"/><line x1="66" y1="30" x2="66" y2="246" class="ax"/><line x1="66" y1="230.2" x2="584" y2="230.2" class="grid"/><text x="59" y="234.2" class="mini" text-anchor="end">60</text><line x1="66" y1="187.9" x2="584" y2="187.9" class="grid"/><text x="59" y="191.9" class="mini" text-anchor="end">100</text><line x1="66" y1="145.6" x2="584" y2="145.6" class="grid"/><text x="59" y="149.6" class="mini" text-anchor="end">140</text><line x1="66" y1="103.4" x2="584" y2="103.4" class="grid"/><text x="59" y="107.4" class="mini" text-anchor="end">180</text><line x1="66" y1="61.1" x2="584" y2="61.1" class="grid"/><text x="59" y="65.1" class="mini" text-anchor="end">220</text><rect x="494.5" y="30" width="75.5" height="216.0" class="pend"/><text x="533.7" y="44" class="mini" text-anchor="middle">chord3</text><text x="533.7" y="55" class="mini" text-anchor="middle">built,</text><text x="533.7" y="66" class="mini" text-anchor="middle">cloud</text><polyline points="66.0,54.5 189.0,80.4 313.2,97.6 439.1,108.2" class="ln" style="stroke:var(--cap)"/><circle cx="66.0" cy="54.5" r="3.6" class="pt" style="fill:var(--cap)"/><circle cx="189.0" cy="80.4" r="3.6" class="pt" style="fill:var(--cap)"/><circle cx="313.2" cy="97.6" r="3.6" class="pt" style="fill:var(--cap)"/><circle cx="439.1" cy="108.2" r="3.6" class="pt" style="fill:var(--cap)"/><rect x="588" y="131.1" width="16" height="6.6" style="fill:var(--cap)" opacity=".28"/><line x1="439.1" y1="108.2" x2="588" y2="127.8" class="ideal"/><text x="610" y="124.8" class="mini" style="fill:var(--cap)">CD extrapolates to</text><text x="610" y="136.8" class="mini" style="fill:var(--cap)">154 &#8211; 160  (spread 6.2)</text><polyline points="66.0,146.9 189.0,176.5 313.2,194.2 439.1,205.3" class="ln" style="stroke:var(--out)"/><circle cx="66.0" cy="146.9" r="3.6" class="pt" style="fill:var(--out)"/><circle cx="189.0" cy="176.5" r="3.6" class="pt" style="fill:var(--out)"/><circle cx="313.2" cy="194.2" r="3.6" class="pt" style="fill:var(--out)"/><circle cx="439.1" cy="205.3" r="3.6" class="pt" style="fill:var(--out)"/><rect x="588" y="223.5" width="16" height="3.1" style="fill:var(--out)" opacity=".28"/><line x1="439.1" y1="205.3" x2="588" y2="221.9" class="ideal"/><text x="610" y="218.9" class="mini" style="fill:var(--out)">CDp extrapolates to</text><text x="610" y="230.9" class="mini" style="fill:var(--out)">66 &#8211; 69  (spread 2.9)</text><text x="66.0" y="261" class="mini" text-anchor="middle">chordC</text><text x="66.0" y="272" class="mini" text-anchor="middle">35</text><text x="189.0" y="261" class="mini" text-anchor="middle">gci_C</text><text x="189.0" y="272" class="mini" text-anchor="middle">45</text><text x="313.2" y="261" class="mini" text-anchor="middle">chord</text><text x="313.2" y="272" class="mini" text-anchor="middle">58</text><text x="439.1" y="261" class="mini" text-anchor="middle">chord2</text><text x="439.1" y="272" class="mini" text-anchor="middle">75</text><text x="570.0" y="261" class="mini" text-anchor="middle">chord3</text><text x="570.0" y="272" class="mini" text-anchor="middle">98</text><text x="66" y="22" class="ptitle">four chordwise levels, alpha 0, counts &#183; two independent triplets</text><text x="66" y="286" class="mini">p across all eight estimates: <tspan class="em">1.604 to 2.046</tspan>. Both triplets converge with condition ok &#8212; but they extrapolate</text><text x="66" y="297" class="mini">to values up to <tspan class="em">6.4 counts apart</tspan>, which is the size of the effect this study exists to resolve.</text></svg></div>
+  <figcaption>Four chordwise levels. Both triplets converge with condition <span class="ok">ok</span>,
+  but <span class="mono">p</span> spans <b>1.604&#8211;2.046</b> and the extrapolations disagree by
+  up to <b>6.4 counts</b> &#8212; the size of the effect we are trying to resolve. Better
+  conditioned than the global family (<b>GCI 11.0&#8211;12.9 %</b> vs <b>22&#8211;35 %</b>), but
+  not asymptotic.</figcaption>
+  <div class="tw"><table>
+    <thead><tr><th>checked</th><th>result</th><th>status</th></tr></thead>
+    <tbody>
+      <tr><td>far field 40 vs 60 root chords</td><td class="m">+0.633 / +0.676 counts</td><td class="cc">systematic bias, budget it</td></tr>
+      <tr><td>C_Dv across the chordwise family</td><td class="m">+0.99 counts</td><td class="bad">half-frozen, see &#167;07</td></tr>
+      <tr><td>C_L across the chordwise family</td><td class="m">0.3 %</td><td class="ok">converged</td></tr>
+      <tr><td>wake resolution vs &#916;C_D</td><td class="m">corr +0.017</td><td class="ok">not a driver</td></tr>
+      <tr><td>wall orthogonality, median</td><td class="m">0.25&#176;</td><td class="ok">good</td></tr>
+      <tr><td>folded cells, every mesh built</td><td class="m">0</td><td class="ok">clean</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="cancel">
+  <div class="sec"><span class="num">03</span><span>what it means for the design study</span></div>
+  <h2>Ranking works today. Absolute drag does not</h2>
+  <p class="verdict yes">DSE unblocked</p>
+  <div class="figwrap"><svg class="fig" viewBox="0 0 760 290" role="img" aria-label="Absolute drag moves 25 counts under refinement; design differences move 1.6" preserveAspectRatio="xMidYMid meet"><rect x="96" y="34" width="286" height="214" class="panelbg"/><line x1="102" y1="232.0" x2="376" y2="232.0" class="grid"/><text x="374" y="235.0" class="mini" text-anchor="end">162</text><line x1="102" y1="185.0" x2="376" y2="185.0" class="grid"/><text x="374" y="188.0" class="mini" text-anchor="end">170</text><line x1="102" y1="138.0" x2="376" y2="138.0" class="grid"/><text x="374" y="141.0" class="mini" text-anchor="end">179</text><line x1="102" y1="91.0" x2="376" y2="91.0" class="grid"/><text x="374" y="94.0" class="mini" text-anchor="end">187</text><line x1="102" y1="44.0" x2="376" y2="44.0" class="grid"/><text x="374" y="47.0" class="mini" text-anchor="end">196</text><polyline points="122.0,12.2 236.0,102.4 350.0,157.7" class="ln" style="stroke:var(--cap)"/><circle cx="122.0" cy="12.2" r="3.4" class="pt" style="fill:var(--cap)"/><circle cx="236.0" cy="102.4" r="3.4" class="pt" style="fill:var(--cap)"/><circle cx="350.0" cy="157.7" r="3.4" class="pt" style="fill:var(--cap)"/><text x="114.0" y="15.2" class="vlbl" text-anchor="end" style="fill:var(--cap)">g83</text><polyline points="122.0,121.7 236.0,220.5 350.0,263.8" class="ln" style="stroke:var(--out)"/><circle cx="122.0" cy="121.7" r="3.4" class="pt" style="fill:var(--out)"/><circle cx="236.0" cy="220.5" r="3.4" class="pt" style="fill:var(--out)"/><circle cx="350.0" cy="263.8" r="3.4" class="pt" style="fill:var(--out)"/><text x="114.0" y="124.7" class="vlbl" text-anchor="end" style="fill:var(--out)">g47</text><polyline points="122.0,105.9 236.0,197.7 350.0,238.3" class="ln" style="stroke:var(--wing)"/><circle cx="122.0" cy="105.9" r="3.4" class="pt" style="fill:var(--wing)"/><circle cx="236.0" cy="197.7" r="3.4" class="pt" style="fill:var(--wing)"/><circle cx="350.0" cy="238.3" r="3.4" class="pt" style="fill:var(--wing)"/><text x="114.0" y="108.9" class="vlbl" text-anchor="end" style="fill:var(--wing)">g13</text><text x="122.0" y="257" class="mini" text-anchor="middle">45</text><text x="236.0" y="257" class="mini" text-anchor="middle">58</text><text x="350.0" y="257" class="mini" text-anchor="middle">75</text><text x="239" y="22" class="ptitle" text-anchor="middle">one design's drag</text><text x="239" y="270" class="mini" text-anchor="middle">moves 25.3 counts</text><rect x="402" y="34" width="286" height="214" class="panelbg"/><line x1="408" y1="232.0" x2="682" y2="232.0" class="grid"/><text x="680" y="235.0" class="mini" text-anchor="end">-5</text><line x1="408" y1="185.0" x2="682" y2="185.0" class="grid"/><text x="680" y="188.0" class="mini" text-anchor="end">4</text><line x1="408" y1="138.0" x2="682" y2="138.0" class="grid"/><text x="680" y="141.0" class="mini" text-anchor="end">12</text><line x1="408" y1="91.0" x2="682" y2="91.0" class="grid"/><text x="680" y="94.0" class="mini" text-anchor="end">21</text><line x1="408" y1="44.0" x2="682" y2="44.0" class="grid"/><text x="680" y="47.0" class="mini" text-anchor="end">29</text><polyline points="428.0,95.5 542.0,86.8 656.0,98.9" class="ln" style="stroke:var(--cap)"/><circle cx="428.0" cy="95.5" r="3.4" class="pt" style="fill:var(--cap)"/><circle cx="542.0" cy="86.8" r="3.4" class="pt" style="fill:var(--cap)"/><circle cx="656.0" cy="98.9" r="3.4" class="pt" style="fill:var(--cap)"/><text x="420.0" y="98.5" class="vlbl" text-anchor="end" style="fill:var(--cap)">g83&#8722;g47</text><polyline points="428.0,111.2 542.0,109.6 656.0,124.3" class="ln" style="stroke:var(--out)"/><circle cx="428.0" cy="111.2" r="3.4" class="pt" style="fill:var(--out)"/><circle cx="542.0" cy="109.6" r="3.4" class="pt" style="fill:var(--out)"/><circle cx="656.0" cy="124.3" r="3.4" class="pt" style="fill:var(--out)"/><text x="420.0" y="114.2" class="vlbl" text-anchor="end" style="fill:var(--out)">g83&#8722;g13</text><polyline points="428.0,189.2 542.0,182.2 656.0,179.5" class="ln" style="stroke:var(--wing)"/><circle cx="428.0" cy="189.2" r="3.4" class="pt" style="fill:var(--wing)"/><circle cx="542.0" cy="182.2" r="3.4" class="pt" style="fill:var(--wing)"/><circle cx="656.0" cy="179.5" r="3.4" class="pt" style="fill:var(--wing)"/><text x="420.0" y="192.2" class="vlbl" text-anchor="end" style="fill:var(--wing)">g13&#8722;g47</text><text x="428.0" y="257" class="mini" text-anchor="middle">45</text><text x="542.0" y="257" class="mini" text-anchor="middle">58</text><text x="656.0" y="257" class="mini" text-anchor="middle">75</text><text x="545" y="22" class="ptitle" text-anchor="middle">the difference between two designs</text><text x="545" y="270" class="mini" text-anchor="middle">moves 1.6 counts</text><text x="16" y="22" class="vlbl">C_D, counts &#183; both panels span the SAME 34 counts vertically</text><text x="16" y="280" class="mini">chordwise points &#8594; &#183; the grid error is common mode: it is nearly the same on every design, so it cancels when you subtract. <tspan class="em">16&#215;</tspan> here.</text></svg></div>
+  <figcaption>Both panels span the same 34 counts. One design's C_D moves <b>25.3 counts</b> under
+  chordwise refinement; the <em>difference</em> between two designs moves <b>1.6</b>. Cancellation
+  <b>16.0&#215;</b> and <b>12.2&#215;</b> on C_D, <b>21.4&#215;</b> and <b>11.9&#215;</b> on C_Dp.</figcaption>
+  <div class="note g">
+    <span class="h">what this licenses</span>
+    <p><b>Do:</b> rank designs, quote increments, run the design-space study at
+    <span class="mono">gci_C</span> &#8212; roughly <b>1&#8211;3 counts</b> of grid scatter against
+    a 5&#8211;9 count target. <b>Do not:</b> quote an absolute C_D as converged.
+    <b>Limits:</b> 1&#8211;3 counts is a scatter, not a bound (the differences are not monotone),
+    and it rests on three geometries all carrying nearly the same error.</p>
+  </div>
+</section>
+
+<section id="fam2">
+  <div class="sec"><span class="num">04</span><span>family 2</span></div>
+  <h2>The fine mesh rebased on where the error is</h2>
+  <p class="verdict part">better on pressure drag, mixed on total</p>
+  <div class="col">
+  <p>Same mesher, same topology, same uniform ratio 1.3 &#8212; only the <em>baseline</em> moves, so
+  Richardson extrapolation stays legal. Three changes, each with the measurement behind it:
+  chordwise baseline &#215;1.69; leading/trailing-edge spacing scaled with the chordwise count; far
+  field 40 &#8594; 60 chords.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>level</th><th>xi</th><th>eta</th><th>zeta</th><th>cells</th><th>GiB</th><th>LE turn</th><th>far field</th></tr></thead>
+    <tbody>
+      <tr><td class="m">gci_F</td><td class="m">157</td><td class="m">109</td><td class="m">82</td><td class="m">2,322,128</td><td class="m">20.5</td><td class="m">4.72&#176;</td><td class="m">34.7 m</td></tr>
+      <tr><td class="m">gci_FF</td><td class="m">205</td><td class="m">142</td><td class="m">106</td><td class="m">4,682,524</td><td class="m">38.4</td><td class="m">3.15&#176;</td><td class="m">34.7 m</td></tr>
+      <tr><td class="m cc">gci2_C</td><td class="m">157</td><td class="m">65</td><td class="m">49</td><td class="m">1,059,152</td><td class="m">10.9</td><td class="m">4.74&#176;</td><td class="m">52.0 m</td></tr>
+      <tr><td class="m cc">gci2_M</td><td class="m">203</td><td class="m">84</td><td class="m">63</td><td class="m">2,029,348</td><td class="m">18.2</td><td class="m">3.16&#176;</td><td class="m">52.0 m</td></tr>
+      <tr><td class="m cc">gci2_F</td><td class="m">265</td><td class="m">109</td><td class="m">82</td><td class="m">4,028,820</td><td class="m">33.4</td><td class="m">2.14&#176;</td><td class="m">52.0 m</td></tr>
+      <tr><td class="m cc">gci2_FF</td><td class="m">345</td><td class="m">142</td><td class="m">106</td><td class="m">8,066,928</td><td class="m">64.1</td><td class="m">1.49&#176;</td><td class="m">52.0 m</td></tr>
+    </tbody>
+  </table></div>
+  <div class="col">
+  <p><b>gci2_F beats family 1's finest level</b> &#8212; 1.29&#215; the chordwise points and
+  1.47&#215; finer leading-edge turning &#8212; for <b>14 % fewer cells</b>. And
+  <span class="mono">gci2_C</span> puts gci_F's chordwise <em>and</em> leading-edge resolution on
+  the desktop at 46 % of its cells.</p>
+  <p>Solved on g83 and g47 at &#945; 0 and 4, all four gate-accepted. Because
+  <span class="mono">gci2_C</span> shares <span class="mono">gci_C_chord2</span>'s chordwise count
+  exactly, the difference isolates the new changes:</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>geom</th><th>&#945;</th><th>&#916;C_D</th><th>&#916;C_Dp</th><th>&#916;C_Dv</th></tr></thead>
+    <tbody>
+      <tr><td class="m">g83</td><td class="m">0</td><td class="m">+1.416</td><td class="m ok">&#8722;0.434</td><td class="m">+1.850</td></tr>
+      <tr><td class="m">g83</td><td class="m">4</td><td class="m">+1.192</td><td class="m ok">&#8722;0.333</td><td class="m">+1.525</td></tr>
+      <tr><td class="m">g47</td><td class="m">0</td><td class="m">&#8722;0.716</td><td class="m ok">&#8722;1.171</td><td class="m">+0.455</td></tr>
+      <tr><td class="m">g47</td><td class="m">4</td><td class="m">&#8722;0.636</td><td class="m ok">&#8722;1.007</td><td class="m">+0.372</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note w">
+    <span class="h">honest reading</span>
+    <p>Pressure drag moves <b>down on all four</b> &#8212; the direction refinement moves it &#8212;
+    so the edge scaling does what it was added for. But C_Dv moves <b>up</b> by more than the far
+    field explains, and net C_D <b>changes sign between geometries</b>. Family 2 is a clear
+    improvement on pressure drag and is <em>not</em> unambiguously better on total drag at the
+    coarse level. Also: it was tuned for <b>attached flow</b>. Above stall the held directions are
+    exactly the ones that matter, so family 2 may be <em>worse</em> there.</p>
+  </div>
+</section>
+
+<section id="alpha">
+  <div class="sec"><span class="num">05</span><span>incidence range</span></div>
+  <h2>Usable to 15 degrees</h2>
+  <div class="figwrap"><svg class="fig" viewBox="0 0 760 320" role="img" aria-label="Alpha sweep lift and drag with the 15 degree cap" preserveAspectRatio="xMidYMid meet"><rect x="486.4" y="30" width="173.1" height="238.0" class="nogo"/><text x="572.9" y="46" class="mini warn" text-anchor="middle">not used</text><text x="572.9" y="58" class="mini warn" text-anchor="middle">above 15 deg</text><line x1="66" y1="268" x2="676" y2="268" class="ax"/><line x1="66" y1="30" x2="66" y2="268" class="ax"/><line x1="66" y1="212.9" x2="676" y2="212.9" class="grid"/><text x="59" y="216.9" class="mini" text-anchor="end">0.0</text><line x1="66" y1="157.9" x2="676" y2="157.9" class="grid"/><text x="59" y="161.9" class="mini" text-anchor="end">0.4</text><line x1="66" y1="102.8" x2="676" y2="102.8" class="grid"/><text x="59" y="106.8" class="mini" text-anchor="end">0.8</text><line x1="66" y1="47.8" x2="676" y2="47.8" class="grid"/><text x="59" y="51.8" class="mini" text-anchor="end">1.2</text><polyline points="66.0,228.3 115.5,236.5 214.4,238.1 313.3,220.6 362.7,204.8 412.2,184.2 461.6,158.9 511.1,128.9 560.5,93.6 610.0,49.9" class="ln" style="stroke:var(--out)" opacity=".5"/><polyline points="66.0,254.0 115.5,235.0 214.4,196.4 313.3,157.6 362.7,138.3 412.2,119.3 461.6,100.6 511.1,82.8 560.5,66.6 610.0,55.2" class="ln" style="stroke:var(--cap)"/><circle cx="66.0" cy="254.0" r="3.8" class="pt" style="fill:var(--cap)"/><circle cx="115.5" cy="235.0" r="3.8" class="pt" style="fill:var(--cap)"/><circle cx="214.4" cy="196.4" r="3.8" class="pt" style="fill:var(--cap)"/><circle cx="313.3" cy="157.6" r="3.8" class="pt" style="fill:var(--cap)"/><circle cx="362.7" cy="138.3" r="3.8" class="pt" style="fill:var(--cap)"/><circle cx="412.2" cy="119.3" r="3.8" class="pt" style="fill:var(--cap)"/><circle cx="461.6" cy="100.6" r="3.8" class="pt" style="fill:var(--cap)"/><circle cx="511.1" cy="82.8" r="3.8" class="pt" style="fill:var(--mesh)"/><circle cx="560.5" cy="66.6" r="3.8" class="pt" style="fill:var(--mesh)"/><circle cx="610.0" cy="55.2" r="3.8" class="pt" style="fill:var(--mesh)"/><text x="66.0" y="283" class="mini" text-anchor="middle">-2</text><text x="115.5" y="283" class="mini" text-anchor="middle">0</text><text x="214.4" y="283" class="mini" text-anchor="middle">4</text><text x="313.3" y="283" class="mini" text-anchor="middle">8</text><text x="412.2" y="283" class="mini" text-anchor="middle">12</text><text x="511.1" y="283" class="mini" text-anchor="middle">16</text><text x="610.0" y="283" class="mini" text-anchor="middle">20</text><text x="680" y="59.2" class="mini" style="fill:var(--cap)">C_L</text><text x="680" y="53.9" class="mini" style="fill:var(--out)">C_D (counts)</text><text x="66" y="22" class="ptitle">alpha sweep on gci_C, g83 &#183; every point converged to 1e-6</text><text x="66" y="306" class="mini">gate accepts all ten on RESIDUAL, but the settled-force check fails at 18 deg (C_L 9.5e-2 %) and 20 deg (1.3e-1 %)</text><text x="66" y="317" class="mini">against 1.3e-2 % at 14 deg. The forces move before the residual does. C_L_max was never bracketed.</text></svg></div>
+  <figcaption>Ten incidences on <span class="mono">gci_C</span>/g83, all converged to 1e-6 in
+  178&#8211;230 iterations. C_Dv turns over and falls from 95.1 to 64.9 counts &#8212; the
+  skin-friction collapse of a separating wing.</figcaption>
+  <div class="note">
+    <span class="h">why 15</span>
+    <p>The gate has two acceptance routes and they disagree up there. <b>All ten pass on
+    residual</b> (6.2&#8211;7.8 orders), but the <b>settled-force check fails at &#945; 18</b>
+    (C_L 9.5e&#8722;2 %) <b>and &#945; 20</b> (1.3e&#8722;1 %) against 1.3e&#8722;2 % at &#945; 14.
+    The forces start moving before the residual does &#8212; unsteadiness seen through a steady
+    solver. C_L_max was never bracketed; it is near 22&#8211;24&#176; and was not pursued.</p>
+  </div>
+  <div class="note w">
+    <span class="h">converging is not being correct</span>
+    <p>Spalart&#8211;Allmaras delays stall and over-predicts C_L_max, and there is no experiment
+    here to check against. This scan answers &#8220;can it be run&#8221;, not &#8220;is it
+    right&#8221;. Deep post-stall is a different study: URANS or DDES, and a mesh with a finer wake
+    and wall-normal direction &#8212; the opposite of family 2.</p>
+  </div>
+  <div class="col">
+  <p><b>Consequence for the fine-mesh matrix.</b> F and FF on both families, 2 geometries, through
+  post-stall was <b>112 solves, ~318 h</b> (nearer 800 with separated cases). Capped at 15&#176;
+  the ladder is &#8722;2, 0, 4, 8, 10, 12, 14 &#8212; so <b>56 solves, ~159 h</b>. F only halves it
+  again to <b>28 solves, ~53 h</b>.</p>
+  </div>
+</section>
+
+<section id="val">
+  <div class="sec"><span class="num">06</span><span>validation</span></div>
+  <h2>Nothing has validated the physics yet</h2>
+  <p class="verdict no">open</p>
+  <div class="col">
+  <p>Two separate questions, and conflating them is what made earlier conclusions useless.
+  <b>Verification</b> &#8212; are we solving the equations right? &#8212; is what every number above
+  addresses. <b>Validation</b> &#8212; are they the right equations? &#8212; needs an experiment,
+  and there has not been one.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>route</th><th>what it can do</th><th>what it cannot</th></tr></thead>
+    <tbody>
+      <tr><td class="m">BlendedNet++</td><td>Cross-code check of the pipeline: C_p fields and C_L against FUN3D on unstructured meshes. CC0, 169 cases at our operating point, 24 inside the first 1.9 GB.</td><td>Validate drag. Their own C_D mesh-independence error is <b>&lt;8 %</b> = <b>&#177;18 counts</b> at the matching median. And both codes run SA, so agreement is not evidence about physics.</td></tr>
+      <tr><td class="m">RIBES</td><td>The only experimental route at the right Reynolds and Mach: sectional C_p at six stations, C_L, C_m. Closes the physics question.</td><td>Validate drag increments &#8212; it is an aeroelastic database with a flexible model and balance corrections far above 5&#8211;9 counts.</td></tr>
+      <tr><td class="m">grid refinement</td><td>Bound the discretisation error.</td><td>Say anything about model form. No mesh fixes SA.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="wrong">
+  <div class="sec"><span class="num">07</span><span>corrections</span></div>
+  <h2>What I got wrong, and how it was caught</h2>
+  <div class="tw"><table>
+    <thead><tr><th>claim</th><th>what was actually true</th><th>caught by</th></tr></thead>
+    <tbody>
+      <tr><td>The coarse wake drives the GCI band; worth a day of solves to test.</td><td>Wake resolution correlates with &#916;C_D at <b>+0.017</b>. The two biggest movers change it not at all.</td><td>Measuring six meshes already on disk &#8212; zero compute.</td></tr>
+      <tr><td>C_Dv is converged to 0.5 counts, so n_normal can be held.</td><td>It was <b>half-frozen</b>: the chordwise family pins LE spacing (0.0914 mm at both 58 and 75 points). Unfreeze it and C_Dv jumps <b>+1.85</b>.</td><td>Chasing why gci2_C's C_Dv moved more than the far field explained.</td></tr>
+      <tr><td>Family 2 is better.</td><td>Better on <b>pressure</b> drag on all four cases. Net C_D changes sign between geometries. And it is tuned for attached flow only.</td><td>The controlled gci2_C vs chord2 comparison.</td></tr>
+      <tr><td>The GCI band is 40&#8211;58 counts.</td><td><b>58&#8211;63 counts.</b></td><td>External review.</td></tr>
+      <tr><td>No low-speed 3-D dataset exists.</td><td>SACCON, RIBES and BlendedNet++ all exist.</td><td>External review.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note">
+    <span class="h">the pattern</span>
+    <p>Four of these five are the same failure: <b>a quantity the acceptance metric could not see
+    had drifted</b>. That is PLAN &#167;0.4, and it keeps recurring in new places. The cheapest
+    defence has been to measure what is already on disk before buying new runs &#8212; which
+    refuted the wake hypothesis for free and would have caught the C_Dv claim sooner.</p>
+  </div>
+</section>
+
+<section id="next">
+  <div class="sec"><span class="num">08</span><span>next</span></div>
+  <h2>Ranked by value per hour</h2>
+  <div class="col">
+  <ul class="tight">
+    <li><b>Run the production DSE now</b> at <span class="mono">gci_C</span>. The cancellation
+    result says increments are usable today; there is no reason to hold the design study hostage to
+    the absolute-drag question.</li>
+    <li><b>Buy <span class="mono">gci_C_chord3</span> on the cloud</b> (98 chordwise, 1,367,416
+    cells, built and clean on disk). It needs 13.0 GiB &#8212; confirmed by probe, it does not fit
+    here even at 4 ranks. It is the only thing that settles whether <span class="mono">p</span>
+    stabilises, which is what blocks a defensible absolute number.</li>
+    <li><b>Re-scope the cloud batch.</b> <span class="mono">gci_F</span> and
+    <span class="mono">gci_C_chord2</span> are chordwise-identical (n_side 75), so gci_F's extra
+    1.35M cells buy refinement in directions measured not to carry the error. Keep a small global
+    family on one geometry for the formal ASME GCI &#8212; a chord-only ladder cannot carry that
+    claim &#8212; but do not buy gci_F ten times.</li>
+    <li><b>F/FF on two geometries, &#945; &#8804; 15&#176;:</b> 56 solves, ~159 h; 28 solves and
+    ~53 h if FF is dropped.</li>
+    <li><b>BlendedNet++ cross-check:</b> 1.9 GB, a handful of cases, half a day. Catches the
+    failure class this project actually has.</li>
+    <li><b>Start the RIBES data request</b> (grant 632556, Roma Tor Vergata). Long third-party lead
+    time, and it is the only route to validating physics.</li>
+  </ul>
+  </div>
+</section>
+
+<footer>
+  <p>Every number here was measured on built meshes and gate-accepted solves in this repository.
+  Where a claim is a reading rather than a measurement it is marked as one. Companion documents:
+  <a href="https://claude.ai/artifact/HydFXspa6XWBQ8TNuKdzFp">Building the O-H Mesh</a> (how it is
+  constructed) and <a href="https://claude.ai/artifact/Srg7p1fztoB714SPuLk8gd">Six Questions About
+  the Mesh</a> (design rationale).</p>
+  <span class="mono">reports/s8_increment_cancellation.json &#183; s8_family2_design.json &#183; s8_alpha_sweep_to_stall.json &#183; s8_gci_four_level_g83.json</span>
+</footer>
+</div>

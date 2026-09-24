@@ -21,7 +21,8 @@ S8_oh_structured/
 
 | you want | look in |
 |---|---|
-| **what S8 can and cannot claim** | **`docs/AUDIT_2026-09-20_reliability.md` — read this first** |
+| **everything, in one place** | **`html/S8_CONSOLIDATED_REPORT.html` — start here (24 Sep 2026)** |
+| what S8 can and cannot claim | `docs/AUDIT_2026-09-20_reliability.md` |
 | the full story of S8 | `docs/S8_REPORT_2026-09-15.md` — a running account with dated addenda |
 | **how the mesh is actually built** | **`html/S8_MESH_METHOD.html` — seven steps, a figure at every step, all drawn from the built mesh** |
 | why the mesh is built that way | `html/S8_MESH_QUESTIONS.html` — novelty, refinement, physics, topology alternatives, all measured |

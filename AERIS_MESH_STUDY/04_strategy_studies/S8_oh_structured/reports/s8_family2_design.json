@@ -1,0 +1,111 @@
+{
+  "schema": "aeris.s8.family2_design.v1",
+  "written": "2026-09-24",
+  "what": "Family 2: the S8 O-H strategy rebased on what the 2026-09-24 batch measured. Same mesher, same topology, same uniform refinement ratio 1.3 -- only the BASELINE moves.",
+  "changes": [
+    {
+      "change": "chordwise baseline x GCI_RATIO^2 (n_side 45 -> 75)",
+      "evidence": "chord-only refinement removed 109-127 % of the pressure-drag error that FULL refinement removed, on 3 geometries x 2 incidences, using fewer cells",
+      "report": "reports/s8_increment_cancellation.json, runs/s8_chordgen/"
+    },
+    {
+      "change": "edges=True: LE and TE spacing requests scale with the chordwise count",
+      "evidence": "gci_C_chord2 raises n_side 45->75 with LE spacing pinned by the 10-degree turning target, degrading nose cell aspect ratio 25.1 -> 32.1. gci_C_edge measured edge spacing alone worth ~7 % of the coarse-to-fine offset.",
+      "effect": "worst LE turn per cell at the fine level 3.15 deg (gci_FF) -> 2.14 deg (gci2_F)"
+    },
+    {
+      "change": "far field 40 -> 60 root chords",
+      "evidence": "measured +0.633 / +0.676 counts on CD at alpha 0 / 4, same sign both incidences, so systematic. No grid refinement removes a domain bias.",
+      "report": "runs/s8_chord3/g83/gci_C_ff60_a*"
+    }
+  ],
+  "deliberately_unchanged": {
+    "n_span": "CL converged to 0.3 % across the chordwise family",
+    "n_normal": "CDv converged to 0.5 counts; refining layers alone moved CD +8.2 counts the wrong way",
+    "s0_frac": "y+ p99 already 0.77; smaller s0 alone recovered 1 %",
+    "note": "baseline is anisotropic ON PURPOSE; the refinement on top of it is uniform, so Richardson extrapolation over family 2 remains legal"
+  },
+  "levels": {
+    "gci2_C": {
+      "cells": 1059152,
+      "o_wing_shape": [
+        157,
+        65,
+        49
+      ],
+      "worst_le_turn_deg": 4.739,
+      "min_surface_spacing_mm": 0.0451,
+      "farfield_m": 52.0,
+      "tip_cap_first_cell_in_s0": 2.042,
+      "folded": 0,
+      "solve_gib_ank_only": 10.9
+    },
+    "gci2_M": {
+      "cells": 2029348,
+      "o_wing_shape": [
+        203,
+        84,
+        63
+      ],
+      "worst_le_turn_deg": 3.156,
+      "min_surface_spacing_mm": 0.0338,
+      "farfield_m": 52.0,
+      "tip_cap_first_cell_in_s0": 2.042,
+      "folded": 0,
+      "solve_gib_ank_only": 18.2
+    },
+    "gci2_F": {
+      "cells": 4028820,
+      "o_wing_shape": [
+        265,
+        109,
+        82
+      ],
+      "worst_le_turn_deg": 2.139,
+      "min_surface_spacing_mm": 0.0254,
+      "farfield_m": 52.0,
+      "tip_cap_first_cell_in_s0": 2.042,
+      "folded": 0,
+      "solve_gib_ank_only": 33.4
+    },
+    "gci2_FF": {
+      "cells": 8066928,
+      "o_wing_shape": [
+        345,
+        142,
+        106
+      ],
+      "worst_le_turn_deg": 1.488,
+      "min_surface_spacing_mm": 0.019,
+      "farfield_m": 52.0,
+      "tip_cap_first_cell_in_s0": 2.042,
+      "folded": 0,
+      "solve_gib_ank_only": 64.1
+    }
+  },
+  "verification": {
+    "built_on": [
+      "g83",
+      "g47"
+    ],
+    "all_folded": 0,
+    "wall_layer_error_max_m": 2.22e-16,
+    "compare_meshes_37_metrics": "gci_F vs gci2_C: chord_extent, span_extent, interface gap, inverted_cells and cap_out shape all identical; worst_le_turn 4.722 vs 4.739 deg (0.35 %), confirming gci2_C matches gci_F's chordwise AND leading-edge resolution at 46 % of the cells",
+    "near_wall_growth_checked": "compare_meshes flagged normal_growth_MAX 1.163 -> 1.281, which is the far field where cells are kilometres wide. Measured NEAR-WALL growth over the first 20 layers: gci_C 1.2528 vs gci2_C 1.2615, gci_F 1.1424 vs gci2_F 1.1471. Boundary-layer cell counts inside the flat-plate delta at x/c 0.5: 29 vs 28, 48 vs 47, 62 vs 61. Not degraded.",
+    "chord3_rank_probe": "gci_C_chord3 (1,367,416 cells) at 4 MPI ranks peaked at 13.0 GiB and was aborted by the guard at 0.7 GiB available. Dropping ranks does NOT fit it on this host; the memory law was accurate. chord3 is cloud-only, and the mesh is built and clean on disk."
+  },
+  "key_comparison": {
+    "claim": "gci2_F beats family 1's FINEST level on the two things measured to matter",
+    "gci_FF": {
+      "chordwise_xi": 205,
+      "cells": 4682524,
+      "worst_le_turn_deg": 3.15
+    },
+    "gci2_F": {
+      "chordwise_xi": 265,
+      "cells": 4028820,
+      "worst_le_turn_deg": 2.14
+    },
+    "result": "1.29x the chordwise points and 1.47x finer LE turning, for 14 % FEWER cells"
+  }
+}

@@ -798,6 +798,48 @@ LEVELS["gci_C_chordC"] = directional_level(LEVELS["gci_C"], chord=1.0 / GCI_RATI
 #: report inherits a domain error that no grid refinement would ever reveal.
 LEVELS["gci_C_ff60"] = _dataclasses.replace(LEVELS["gci_C"], farfield_chords=60.0)
 
+# ---------------------------------------------------------------------------
+# FAMILY 2: the same strategy, rebased on what the 2026-09-24 batch measured.
+# ---------------------------------------------------------------------------
+#: Everything below is a CHANGE OF BASELINE, not a change of method. The family
+#: is still refined uniformly by one ratio, so a Richardson extrapolation over
+#: it is still legal; what moves is where the ladder STARTS.
+#:
+#: Three measured reasons, each with its number:
+#:
+#: 1. CHORDWISE. On three geometries and two incidences, chord-only refinement
+#:    removed 109-127 % of the pressure-drag error that FULL refinement removed,
+#:    using fewer cells. The other two directions contribute little and with the
+#:    opposite sign. gci_F carries n_side 75 -- the same chordwise resolution as
+#:    gci_C_chord2, which runs on the development host -- so the old family's
+#:    fine end bought 1.35M cells of refinement in directions measured not to
+#:    carry the error. Family 2 starts where that error is already small.
+#:
+#: 2. EDGE SPACING. gci_C_chord2 raises n_side 45 -> 75 while the leading-edge
+#:    spacing stays pinned by the 10-degree turning target, so the nose cell
+#:    aspect ratio degrades 25.1 -> 32.1. `edges=True` scales the leading- and
+#:    trailing-edge spacing requests with the chordwise count, which is what
+#:    refined_level already does for a global step. Measured worth about 7 % of
+#:    the coarse-to-fine offset on its own (gci_C_edge).
+#:
+#: 3. FAR FIELD. 40 root chords carries a consistent +0.633 / +0.676 count bias
+#:    on CD at alpha 0 / 4 against 60 chords, same sign at both incidences, so
+#:    it is systematic. Small against a 5-9 count target, but it is a bias that
+#:    no grid refinement would ever remove, and 60 chords costs about 2 % cells.
+#:
+#: What is deliberately NOT changed: n_span and n_normal at the baseline, and
+#: s0. CDv is converged to 0.5 counts across the chordwise family and CL to
+#: 0.3 %, so the wall-normal and spanwise resolution are already adequate at
+#: gci_C; refining them alone moved drag the WRONG way (+8.2 and +3.7 counts).
+#: The baseline is therefore anisotropic on purpose -- more chordwise per
+#: spanwise cell than family 1 -- and the refinement on top of it is uniform.
+LEVELS["gci2_C"] = _dataclasses.replace(
+    directional_level(LEVELS["gci_C"], chord=GCI_RATIO ** 2, edges=True),
+    farfield_chords=60.0)
+LEVELS["gci2_M"] = refined_level(LEVELS["gci2_C"], GCI_RATIO, name="gci2_M")
+LEVELS["gci2_F"] = refined_level(LEVELS["gci2_C"], GCI_RATIO ** 2, name="gci2_F")
+LEVELS["gci2_FF"] = refined_level(LEVELS["gci2_C"], GCI_RATIO ** 3, name="gci2_FF")
+
 #: FIRST-CELL HEIGHT alone: gci_C with s0 divided by GCI_RATIO and every count
 #: held, n_normal included. The last untested mesh parameter.
 #:

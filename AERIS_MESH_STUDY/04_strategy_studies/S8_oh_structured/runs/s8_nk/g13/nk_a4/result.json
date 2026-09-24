@@ -1,0 +1,89 @@
+{
+  "converged": true,
+  "iterations_completed": 195,
+  "too_few_iterations": false,
+  "solver_options_effective": {
+    "equationType": "RANS",
+    "turbulenceModel": "SA",
+    "turbulenceOrder": "first order",
+    "useft2SA": true,
+    "eddyVisInfRatio": 0.21,
+    "liftIndex": 3,
+    "MGCycle": "sg",
+    "smoother": "DADI",
+    "useANKSolver": true,
+    "ANKSwitchTol": 1.0,
+    "useNKSolver": true,
+    "NKSwitchTol": 1e-06,
+    "ANKSubspaceSize": 10,
+    "NKSubspaceSize": 20,
+    "ANKPCILUFill": 1,
+    "NKPCILUFill": 1,
+    "L2Convergence": 1e-06,
+    "nCycles": 30000,
+    "useWallFunctions": false,
+    "useQCR": false
+  },
+  "implausible_forces": null,
+  "relative_residual": 9.960209705602682e-07,
+  "residual_source": "adflow.iteration.totalrfinal/totalr0",
+  "l2_target": 1e-06,
+  "n_cycles_budget": 30000,
+  "grid": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_v2/g13/gci_C_volume.cgns",
+  "alpha_deg": 4.0,
+  "mission": {
+    "mach": 0.0837,
+    "reynolds": 1530708.188575197,
+    "reynolds_length_m": 0.9,
+    "temperature_K": 278.4,
+    "chord_ref_m": 0.9
+  },
+  "area_ref_m2": 0.5162,
+  "moment_ref_xyz_m": [
+    0.4,
+    0.0,
+    0.0
+  ],
+  "routine_failed": false,
+  "flow_directions": {
+    "lift_index_requested": 3,
+    "lift_index_realised": 3,
+    "alpha_deg": 4.0,
+    "velocity_direction_expected": [
+      0.9975640502598242,
+      0.0,
+      0.0697564737441253
+    ],
+    "velocity_direction_realised": [
+      0.9975640502598242,
+      0.0,
+      0.0697564737441253
+    ],
+    "velocity_direction_error": 0.0,
+    "lift_direction_expected": [
+      -0.0697564737441253,
+      0.0,
+      0.9975640502598242
+    ],
+    "lift_direction_realised": [
+      -0.0697564737441253,
+      0.0,
+      0.9975640502598242
+    ],
+    "lift_direction_error": 0.0,
+    "tolerance": 1e-09
+  },
+  "solver_overrides": {
+    "eddyVisInfRatio": 0.21
+  },
+  "solver_is_governed_configuration": false,
+  "functions": {
+    "s8_a4_cd": 0.018471844692646348,
+    "s8_a4_cdp": 0.009546970125258566,
+    "s8_a4_cdv": 0.00892487456738778,
+    "s8_a4_cl": 0.11207237275355557,
+    "s8_a4_cmx": 0.041224989685519034,
+    "s8_a4_cmy": 0.011144661409763586,
+    "s8_a4_cmz": 0.0005441599890924192
+  }
+}

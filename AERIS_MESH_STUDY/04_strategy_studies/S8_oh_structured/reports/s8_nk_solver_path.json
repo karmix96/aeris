@@ -1,0 +1,27 @@
+{
+  "schema": "aeris.s8.nk_solver_path.v1",
+  "written": "2026-09-24",
+  "question": "Does the answer depend on the solver path (ANK-only vs ANK+NK)?",
+  "mesh": "gci_C, 603,592 cells -- COARSE, not gci_M. The historical freeze recorded in solve_s8.py was on gci_M (1,111,152 cells) on 2026-09-11 and was NOT re-run here.",
+  "attempt_1": {
+    "arms": "NK enabled on g83/g47/g13 at alpha 0 and 4; plus g83 with ADflow's full preconditioner (NKSubspaceSize 60, NKPCILUFill 2)",
+    "result": "ALL bit-identical to the ANK-only production runs -- same forces to every printed digit, same iteration counts (286/196/190/159/307/195). Peak 6.9 GiB throughout.",
+    "why": "All 286 iterations carry IterType = ANK. NKSwitchTol is 1.0e-6 and the L2 stopping target is also 1e-6, so the run terminates before the NK switch can fire.",
+    "finding": "--no-nk has been a NO-OP on every production run at this tolerance. The campaign was ANK-only whether or not the flag was passed.",
+    "gated": "all 8 ACCEPTED"
+  },
+  "attempt_2": {
+    "change": "--nk-switch-tol 1e-4, so NK takes over at 1e-4 and drives to 1e-6",
+    "status": "ABANDONED on instruction after ~77 min on the first case (alpha 0), against a ~28 min ANK-only norm.",
+    "observed_before_abandon": {
+      "total_iterations": 622,
+      "nk_iterations": 543,
+      "last_lines": "Step 0.00-0.01, LinRes 1.000, rho frozen at 5.4642352155e-03 and changing only in the 11th significant figure across iterations 673-675",
+      "reading": "This is the gci_M freeze signature REPRODUCING ON THE COARSE MESH: NK engages, the Krylov solve achieves no reduction at all (LinRes 1.000), the step collapses, and the residual stops moving."
+    },
+    "consequence": "The freeze is NOT a mesh-size or memory effect. solve_s8.py attributes it to a lean preconditioner forced by memory at gci_M (12.7 GiB against 12.8 available). gci_C peaks at 6.9 GiB with room to spare and freezes anyway. That hypothesis is therefore not supported -- though the full-preconditioner arm at 1e-4 was never reached, so it is not yet formally refuted either.",
+    "data_loss": "The run.log carrying this evidence was deleted while cleaning directories that had no result.json. The numbers above were extracted before deletion and are all that survives. Re-running arm C to ~700 iterations would recover it."
+  },
+  "still_open": "Whether ANK-only and a CONVERGED ANK+NK reach the same forces. Attempt 1 compared ANK against ANK. Attempt 2 never converged. The iterative-convergence verification this study lacks is still missing.",
+  "note_for_the_cloud": "The documented fallback if ANK-only stalls at gci_F or gci_FF is 'restore ADflow's NK defaults'. On this evidence that fallback may not work, because NK stalls here at 6.9 GiB where memory is not the constraint."
+}

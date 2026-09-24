@@ -1,0 +1,177 @@
+{
+  "schema": "aeris.s8.increment_cancellation.v1",
+  "question": "Does the chordwise grid error cancel when designs are differenced?",
+  "levels_chordwise_points": [
+    45,
+    58,
+    75
+  ],
+  "geometries": [
+    83,
+    47,
+    13
+  ],
+  "units": "drag counts",
+  "method": "Same three chordwise levels on three geometries. Compare how far an ABSOLUTE value moves under refinement against how far a DESIGN DIFFERENCE moves.",
+  "results": {
+    "cd_a0": {
+      "absolute": {
+        "g83": [
+          201.73687608665855,
+          185.42890923698656,
+          175.42239985221013
+        ],
+        "g47": [
+          181.93460508970577,
+          164.06233331201986,
+          156.2354992003388
+        ],
+        "g13": [
+          184.78710290657133,
+          168.18342522337954,
+          160.84106258776927
+        ]
+      },
+      "differences": {
+        "g83-g47": [
+          19.802270996952785,
+          21.366575924966696,
+          19.186900651871326
+        ],
+        "g83-g13": [
+          16.94977318008722,
+          17.24548401360701,
+          14.581337264440862
+        ],
+        "g13-g47": [
+          2.852497816865565,
+          4.1210919113596844,
+          4.605563387430465
+        ]
+      },
+      "mean_abs_grid_move": 25.32,
+      "mean_difference_grid_move": 1.579,
+      "cancellation_factor": 16.0
+    },
+    "cd_a4": {
+      "absolute": {
+        "g83": [
+          191.41183297877868,
+          176.0806230268012,
+          166.24878260913349
+        ],
+        "g47": [
+          228.2031617494272,
+          209.578999523515,
+          201.55630890753167
+        ],
+        "g13": [
+          184.71844692646349,
+          168.29446691493087,
+          161.16726430864824
+        ]
+      },
+      "differences": {
+        "g83-g47": [
+          -36.79132877064853,
+          -33.4983764967138,
+          -35.30752629839819
+        ],
+        "g83-g13": [
+          6.693386052315191,
+          7.786156111870326,
+          5.081518300485243
+        ],
+        "g13-g47": [
+          -43.484714822963724,
+          -41.28453260858413,
+          -40.38904459888343
+        ]
+      },
+      "mean_abs_grid_move": 25.12,
+      "mean_difference_grid_move": 2.064,
+      "cancellation_factor": 12.2
+    },
+    "cdp_a0": {
+      "absolute": {
+        "g83": [
+          110.7943054048347,
+          94.00451715388854,
+          83.48751166221328
+        ],
+        "g47": [
+          87.54768574179617,
+          67.93762867356224,
+          59.39608344056443
+        ],
+        "g13": [
+          98.32795489678921,
+          80.09221904765766,
+          72.08578399963176
+        ]
+      },
+      "differences": {
+        "g83-g47": [
+          23.24661966303853,
+          26.0668884803263,
+          24.091428221648847
+        ],
+        "g83-g13": [
+          12.466350508045494,
+          13.912298106230878,
+          11.401727662581521
+        ],
+        "g13-g47": [
+          10.780269154993036,
+          12.15459037409542,
+          12.689700559067326
+        ]
+      },
+      "mean_abs_grid_move": 27.234,
+      "mean_difference_grid_move": 1.273,
+      "cancellation_factor": 21.4
+    },
+    "cdp_a4": {
+      "absolute": {
+        "g83": [
+          96.30958548785149,
+          80.67784163154593,
+          70.47837928164535
+        ],
+        "g47": [
+          131.85065812022012,
+          111.73919902960435,
+          103.16994683594761
+        ],
+        "g13": [
+          95.46970125258565,
+          77.75357527715497,
+          70.13816105178746
+        ]
+      },
+      "differences": {
+        "g83-g47": [
+          -35.541072632368625,
+          -31.06135739805842,
+          -32.69156755430227
+        ],
+        "g83-g13": [
+          0.839884235265842,
+          2.9242663543909657,
+          0.3402182298578822
+        ],
+        "g13-g47": [
+          -36.38095686763447,
+          -33.985623752449385,
+          -33.03178578416015
+        ]
+      },
+      "mean_abs_grid_move": 26.614,
+      "mean_difference_grid_move": 2.233,
+      "cancellation_factor": 11.9
+    }
+  },
+  "finding": "The chordwise grid error is COMMON MODE across designs. Absolute CD moves 25.1-25.3 counts from 45 to 75 chordwise points; a difference between two designs moves 1.6-2.1 counts. Cancellation 12.2-21.4x on CD and CDp, at both incidences, over three geometries whose absolute moves span only 23.9-28.7 counts -- that uniformity is why it cancels.",
+  "consequence": "Design RANKING and design INCREMENTS are usable at gci_C today, with roughly 1-3 counts of grid noise on an increment against a 5-9 count target effect. Absolute drag is NOT converged and must not be quoted as such. The differences are not monotone under refinement (g83-g47 CD a0 goes 19.802, 21.367, 19.187), so 1-3 counts is a scatter, not a bound.",
+  "limit": "Three geometries. Cancellation holds because every design uses the same topology and carries nearly the same chordwise error. It would degrade for designs whose nose curvature differs enough to change that error materially, which this test cannot rule out."
+}

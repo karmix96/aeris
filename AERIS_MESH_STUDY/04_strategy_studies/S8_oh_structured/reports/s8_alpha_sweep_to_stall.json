@@ -1,0 +1,132 @@
+{
+  "schema": "aeris.s8.alpha_sweep_to_stall.v1",
+  "written": "2026-09-24",
+  "mesh": "gci_C, 603,592 cells, geometry lhs100_seed42[83]",
+  "solver": "ADflow ANK-only, SA, L2 1e-6, chi 3",
+  "note": "Only alpha moves. Same mesh, same settings, same area_ref as the production sweep.",
+  "sweep": [
+    {
+      "alpha": -2.0,
+      "cl": -0.2982458914064708,
+      "cd": 254.4385844527808,
+      "cdp": 167.55554214787483,
+      "cdv": 86.88304230490593,
+      "cmy": -0.0060385185603979265,
+      "iters": 266,
+      "relres": 9.954906687298481e-07
+    },
+    {
+      "alpha": 0.0,
+      "cl": -0.15990167125308777,
+      "cd": 201.73687608665855,
+      "cdp": 110.7943054048347,
+      "cdv": 90.94257068182385,
+      "cmy": 0.0012087547481393545,
+      "iters": 286,
+      "relres": 9.982170353064875e-07
+    },
+    {
+      "alpha": 4.0,
+      "cl": 0.12037534533308065,
+      "cd": 191.41183297877868,
+      "cdp": 96.30958548785149,
+      "cdv": 95.10224749092716,
+      "cmy": 0.015340707969940604,
+      "iters": 196,
+      "relres": 9.697893716434656e-07
+    },
+    {
+      "alpha": 8.0,
+      "cl": 0.4019967395771817,
+      "cd": 303.6912846477917,
+      "cdp": 208.8041149813114,
+      "cdv": 94.88716966648036,
+      "cmy": 0.02852385870088064,
+      "iters": 179,
+      "relres": 9.973009418071266e-07
+    },
+    {
+      "alpha": 10.0,
+      "cl": 0.5420936920113958,
+      "cd": 405.17244256259653,
+      "cdp": 311.8897537448706,
+      "cdv": 93.28268881772601,
+      "cmy": 0.03459936699867434,
+      "iters": 178,
+      "relres": 9.792207346536504e-07
+    },
+    {
+      "alpha": 12.0,
+      "cl": 0.6805261847369625,
+      "cd": 536.9701385239902,
+      "cdp": 446.38420308947593,
+      "cdv": 90.58593543451403,
+      "cmy": 0.040263214736104974,
+      "iters": 188,
+      "relres": 9.58172296631025e-07
+    },
+    {
+      "alpha": 14.0,
+      "cl": 0.8158359620975972,
+      "cd": 699.1446072495856,
+      "cdp": 612.4927809603735,
+      "cdv": 86.65182628921235,
+      "cmy": 0.04545403652551104,
+      "iters": 195,
+      "relres": 9.689975945367272e-07
+    },
+    {
+      "alpha": 16.0,
+      "cl": 0.9453954177852345,
+      "cd": 891.9512875224843,
+      "cdp": 810.6489376015312,
+      "cdv": 81.30234992095318,
+      "cmy": 0.050067598403032154,
+      "iters": 188,
+      "relres": 9.959539668100684e-07
+    },
+    {
+      "alpha": 18.0,
+      "cl": 1.063071571157361,
+      "cd": 1117.6285916293655,
+      "cdp": 1043.3714915817618,
+      "cdv": 74.25710004760406,
+      "cmy": 0.053810591618365586,
+      "iters": 186,
+      "relres": 9.647679013142215e-07
+    },
+    {
+      "alpha": 20.0,
+      "cl": 1.1458322810552346,
+      "cd": 1397.9588143304823,
+      "cdp": 1333.0569268583606,
+      "cdv": 64.90188747212152,
+      "cmy": 0.055106993019887196,
+      "iters": 230,
+      "relres": 9.722292725046394e-07
+    }
+  ],
+  "usable_range": {
+    "cap_deg": 15,
+    "why": "Set by the user on 2026-09-24 and independently supported by the gate: every alpha converged on the RESIDUAL route (6.2-7.8 orders), but the settled-force check fails at alpha 18 (CL 9.5e-2 %) and alpha 20 (CL 1.3e-1 %) against 1.3e-2 % at alpha 14. The forces start to wobble before the residual does, which is what unsteadiness looks like through a steady solver."
+  },
+  "stall": {
+    "found": false,
+    "cl_max_seen": 1.1458322810552346,
+    "at_alpha": 20.0,
+    "dcl_per_2deg_trend": [
+      0.138,
+      0.135,
+      0.13,
+      0.118,
+      0.083
+    ],
+    "reading": "CL is still rising at alpha 20 (1.1458) but the increment per 2 degrees is collapsing 0.138 -> 0.083, so CL_max is near 22-24 deg on this geometry. It was not bracketed: alpha 22 was abandoned at ~50 min against a ~21 min norm and alpha 24 was never started, both cancelled on instruction because the range above 15 deg is not wanted."
+  },
+  "caveat": "Converging is not being correct. Spalart-Allmaras is known to delay stall and over-predict CL_max, and there is no experimental data here to check it against. This scan answers 'can it be run', not 'is it right'.",
+  "consequence_for_the_F_FF_matrix": {
+    "asked": "F and FF on both families, 2 geometries, alpha ladder through post-stall = 112 solves, ~318 h at the attached rate and nearer 800 h with separated cases",
+    "now": "With the ladder capped at 15 deg the alphas are -2, 0, 4, 8, 10, 12, 14 = 7, so the matrix is 4 levels x 2 geometries x 7 alphas = 56 solves, ~159 h at 6 ranks. Dropping the FF levels halves it again to 28 solves, ~53 h.",
+    "recommendation": "Deep post-stall is a different study: it needs URANS or DDES and a mesh with a finer wake and wall-normal direction -- the opposite of what family 2 does."
+  }
+}

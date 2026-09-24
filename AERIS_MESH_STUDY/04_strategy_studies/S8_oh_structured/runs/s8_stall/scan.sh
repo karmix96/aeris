@@ -29,8 +29,19 @@ G=$S/runs/s8_v2/g83/gci_C_volume.cgns
 O=$S/runs/s8_stall
 log(){ echo "$(date +%H:%M:%S) $*"; }
 
-# wait for the fam2 batch: one measurement at a time, PLAN 0.2
-while pgrep -f "mach-aero/bin/python.*solve_s8" > /dev/null 2>&1; do sleep 60; done
+# Wait for any running solve to clear -- one measurement at a time, PLAN 0.2.
+#
+# NOT with `pgrep -f "mach-aero/bin/python.*solve_s8"`. That pattern matched the
+# very shell that wrote this file, because the whole script text sits in that
+# process's command line, so the loop waited on itself for 90 minutes on
+# 2026-09-24. Match the PROCESS NAME (-x mpirun), which no wrapper can carry,
+# and cross-check free memory, which no command line can fake.
+# `pgrep -c` prints 0 AND exits non-zero when nothing matches, so `|| echo 0`
+# emits "0\n0" and breaks the numeric test. wc -l always yields one integer.
+while [ "$(pgrep -x mpirun 2>/dev/null | wc -l)" -gt 0 ] \
+   || [ "$(awk '/^MemAvailable:/{print $2}' /proc/meminfo)" -lt 8388608 ]; do
+  sleep 60
+done
 log "machine idle -- starting stall scan"
 
 for AL in 10 12 14 16 18 20 22 24; do

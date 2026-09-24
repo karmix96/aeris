@@ -107,5 +107,40 @@
       "worst_le_turn_deg": 2.14
     },
     "result": "1.29x the chordwise points and 1.47x finer LE turning, for 14 % FEWER cells"
+  },
+  "measured_2026_09_24_evening": {
+    "runs": "gci2_C on g83 and g47 at alpha 0 and 4, all converged and gate-ACCEPTED",
+    "controlled_comparison": "gci2_C and gci_C_chord2 carry the SAME chordwise count (xi 157), so the difference is exactly edge-spacing scaling plus far field 40->60 chords.",
+    "delta_CDp_counts": {
+      "g83_a0": -0.434,
+      "g83_a4": -0.333,
+      "g47_a0": -1.171,
+      "g47_a4": -1.007
+    },
+    "delta_CDv_counts": {
+      "g83_a0": 1.85,
+      "g83_a4": 1.525,
+      "g47_a0": 0.455,
+      "g47_a4": 0.372
+    },
+    "delta_CD_counts": {
+      "g83_a0": 1.416,
+      "g83_a4": 1.192,
+      "g47_a0": -0.716,
+      "g47_a4": -0.636
+    },
+    "reading": "CDp moves DOWN on all four cases, the same direction refinement moves it, so the edge scaling is doing what it was added to do. CDv moves UP, and by more than the far field explains (+0.361 of it). Net CD therefore changes SIGN between geometries: +1.4 on g83, -0.7 on g47. Family 2 is a clear improvement on pressure drag and is NOT unambiguously better on total drag at the coarse level."
+  },
+  "correction_to_this_documents_own_justification": {
+    "what_was_claimed": "n_span and n_normal were held at the baseline on the grounds that 'CDv is converged to 0.5 counts across the chordwise family'.",
+    "why_that_was_incomplete": "That measurement was taken on the chordwise family, where the leading-edge spacing is PINNED by the 10-degree turning target and does not refine -- delivered min surface spacing is 0.0914 mm at both 58 and 75 chordwise points. CDv has two competing discretisation errors and that test suppressed one of them.",
+    "evidence": {
+      "chordwise family, edges pinned": "CDv 90.943 -> 91.424 -> 91.935, total +0.992 counts",
+      "global family, edges scaled AND s0/n_normal refined": "CDv 90.943 -> 89.857, one step -1.085",
+      "chord2 -> gci2_C, edges scaled but s0/n_normal HELD": "CDv 91.935 -> 93.785, +1.850"
+    },
+    "interpretation": "Finer surface spacing resolves the skin-friction peak and pushes CDv UP; finer s0 and more layers improve the wall gradient and pull CDv DOWN. In the chordwise family the first was frozen, so CDv looked settled when it was only partially exercised.",
+    "does_it_break_family_2": "No. refined_level scales s0 and n_normal uniformly from gci2_C, so gci2_M/F/FF exercise both errors and the family remains a legal uniform-refinement ladder. What is weakened is the ARGUMENT for putting the baseline where it is, not the ladder built on top of it. gci2_C's CDv should not be treated as near-converged.",
+    "geometry_dependence": "The CDv jump is 1.850 on g83 and 0.455 on g47 at alpha 0 -- a factor of four. Sensitivity of viscous drag to surface spacing is geometry-dependent, which two geometries cannot characterise."
   }
 }

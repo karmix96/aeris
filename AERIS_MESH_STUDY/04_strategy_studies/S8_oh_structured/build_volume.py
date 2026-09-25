@@ -189,7 +189,8 @@ def main() -> int:
         pygeo = case.pygeo_result.pygeo.geometry
         geometry_note = {"set_name": args.set_name, "index": args.index}
 
-    ring_xyz, surface_report = strategy_s8.build_oml_ring(pygeo, level)
+    ring_xyz, surface_report = strategy_s8.build_oml_ring(
+        pygeo, level, te_abs_m=level.te_abs_m, te_floor_frac=level.te_floor_frac)
     root_chord = surface_report["stations"][0]["chord_m"]
     diagonal = float(np.linalg.norm(np.ptp(ring_xyz.reshape(-1, 3), axis=0)))
     s0 = level.s0_frac * diagonal

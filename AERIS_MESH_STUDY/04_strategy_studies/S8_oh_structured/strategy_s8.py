@@ -127,6 +127,26 @@ class OHLevel:
     #: only one available to us.
     tip_span_first_cell_in_s0: float = 2.0
 
+    #: THE TRAILING-EDGE OPENING LAW, added 2026-09-25 so it can be swept.
+    #:
+    #: The base height is max(te_abs_m, te_floor_frac * local_chord). Until today
+    #: neither was reachable from a level: build_volume called build_oml_ring
+    #: without them, so every mesh ever built used 0.001 m and 0.005.
+    #:
+    #: Those values have no recorded justification anywhere in this project, and
+    #: they are not small. At 0.005 the base is 0.50 % of chord -- 4.34 mm at
+    #: g83's root -- against the 0.1-0.25 % that is usual for a CFD blunt edge.
+    #: Measured, that face carries 22.4 counts, about a fifth of total pressure
+    #: drag, and it is the one place where refinement DIVERGES: adding wall-normal
+    #: layers moves base drag +23.1 counts and doubles the base suction.
+    #:
+    #: Note this is a GEOMETRY parameter, not a mesh one. The opening is created
+    #: by ADDING thickness to the loft (half_added * x/c along the thickness
+    #: axis), so two levels with different values are different wings and their
+    #: drag is not comparable as the same design.
+    te_abs_m: float = 0.001
+    te_floor_frac: float = 0.005
+
 
 def refined_level(base: OHLevel, ratio: float, *, scale_first_cell: bool = True,
                   name: str = "") -> OHLevel:
@@ -194,6 +214,8 @@ def refined_level(base: OHLevel, ratio: float, *, scale_first_cell: bool = True,
         dense_points=int(round(base.dense_points * ratio)),
         n_normal=intervals(base.n_normal),
         s0_frac=base.s0_frac / ratio if scale_first_cell else base.s0_frac,
+        te_abs_m=base.te_abs_m,
+        te_floor_frac=base.te_floor_frac,
     )
 
 
@@ -470,8 +492,8 @@ def build_oml_ring(
     pygeo: Any,
     level: OHLevel,
     *,
-    te_abs_m: float = 0.001,
-    te_floor_frac: float = 0.005,
+    te_abs_m: float | None = None,
+    te_floor_frac: float | None = None,
 ) -> tuple[Array, dict[str, Any]]:
     """The O-ring OML surface: (n_ring, n_span, 3), root to tip.
 
@@ -479,6 +501,12 @@ def build_oml_ring(
     turning at every station, which is the acceptance number for this strategy.
     """
     import strategy_s6
+
+    # Fall back to the level's own opening law when the caller does not override.
+    if te_abs_m is None:
+        te_abs_m = level.te_abs_m
+    if te_floor_frac is None:
+        te_floor_frac = level.te_floor_frac
 
     # s0 is needed to size the tip spanwise cell, and s0 is a fraction of the
     # bounding-box diagonal, so the diagonal is estimated from the root and tip
@@ -783,6 +811,17 @@ LEVELS["gci_C_chord3"] = directional_level(LEVELS["gci_C"], chord=GCI_RATIO ** 3
 #: triplets disagree that is decisive; if they agree it is supporting, not
 #: conclusive, and the cloud still owes us gci_C_chord3.
 LEVELS["gci_C_chordC"] = directional_level(LEVELS["gci_C"], chord=1.0 / GCI_RATIO)
+
+#: n_base ALONE: cells across the blunt base face, everything else held.
+#: Decides whether the base term is GRID-limited (converges on this ladder) or
+#: MODEL-limited (does not). n_base must stay odd for build_tip_cap.
+LEVELS["gci_C_nb7"] = _dataclasses.replace(LEVELS["gci_C"], n_base=7)
+LEVELS["gci_C_nb9"] = _dataclasses.replace(LEVELS["gci_C"], n_base=9)
+
+#: THE OPENING LAW, scaled. Both terms move together so the law keeps its shape
+#: and only its size changes. GEOMETRY change: these are different wings.
+LEVELS["gci_C_te60"] = _dataclasses.replace(LEVELS["gci_C"], te_abs_m=0.0006, te_floor_frac=0.003)
+LEVELS["gci_C_te40"] = _dataclasses.replace(LEVELS["gci_C"], te_abs_m=0.0004, te_floor_frac=0.002)
 
 #: FAR-FIELD PLACEMENT, on the production mesh family. Added 2026-09-24.
 #:

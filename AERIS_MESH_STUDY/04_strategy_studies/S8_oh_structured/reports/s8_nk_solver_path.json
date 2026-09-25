@@ -61,6 +61,43 @@
     "finding_1_preconditioner": "CONFIRMED. With the project's lean preconditioner, 96 % of NK iterations achieve essentially nothing -- median LinRes 0.996, only 4 % below 0.9. With ADflow's defaults every NK iteration makes progress -- median LinRes 0.796, 100 % below 0.9 -- and the run finishes in HALF the iterations, 141 against 277. The hypothesis recorded in solve_s8.py, that the lean preconditioner forced by memory is why NK stalls, is supported. Cost of the fix: 8.0 -> 10.8 GiB, about +2.8 GiB, matching the '~2 GiB more' in CLOUD_RUNBOOK.",
     "finding_2_solver_path": "The answer does NOT depend on the solver path. Against the ANK-only production run (CD 201.7369, CDp 110.7943, CL -1599.0167): pc_lean differs by +0.018 counts on CD, pc_stock by -0.058. CDp differs by +0.039 and -0.046. CL by 1.1 and 0.1 counts. Part of even that is different stopping points -- the ANK-only run reached relres 9.98e-07 against 9.22e-06 and 1.17e-05 here. This is the iterative-convergence verification the study lacked, and it passes.",
     "retraction": "My earlier claim that 'the NK freeze reproduces on the coarse mesh' is now doubtful. That was read off a partial arm-C run showing 543 NK iterations with LinRes 1.000 and rho frozen at 5.4642e-03. pc_lean here uses the SAME settings and CONVERGED at rho 5.46e-03 -- the same value. So what I called a freeze was very likely a converged solution grinding at its floor with a useless Krylov solve, not a stall. The log that would settle it was deleted when I cleared partial directories, so this cannot be reconciled without re-running.",
-    "consequence_for_the_cloud": "The documented fallback -- 'restore ADflow's NK defaults if ANK-only stalls at gci_F or gci_FF' -- now looks SOUND rather than doubtful, which reverses what I said earlier today. It costs about +2.8 GiB per case and halves the iteration count."
+    "consequence_for_the_cloud": "The documented fallback -- 'restore ADflow's NK defaults if ANK-only stalls at gci_F or gci_FF' -- now looks SOUND rather than doubtful, which reverses what I said earlier today. It costs about +2.8 GiB per case and halves the iteration count.",
+    "CORRECTION": {
+      "what_was_wrong": "I reported both arms as CONVERGED and pc_stock as 'finishing in HALF the iterations'. Both statements are false. My summary script printed the word CONVERGED whenever a result.json existed, without reading the converged flag -- PLAN 0.3, exit code 0 is not success, in my own reporting code this time.",
+      "truth": {
+        "pc_lean": {
+          "converged": false,
+          "iterations": 312,
+          "relative_residual": 9.218e-06
+        },
+        "pc_stock": {
+          "converged": false,
+          "iterations": 159,
+          "relative_residual": 1.17e-05
+        },
+        "l2_target": 1e-06,
+        "note": "Neither reached the target. BOTH hit the 35 minute cap: 35:06 and 35:20."
+      },
+      "cost_per_iteration": {
+        "pc_lean_s": 7.6,
+        "pc_stock_s": 15.04,
+        "ratio": 1.98,
+        "meaning": "pc_stock did half the iterations because each costs twice as much, not because it needed fewer. In equal wall time pc_lean got FURTHER: 9.22e-06 against 1.17e-05."
+      },
+      "what_survives": "The preconditioner QUALITY finding is per-iteration and stands: lean gives median LinRes 0.996 with only 4 % of Krylov solves below 0.9, stock gives 0.796 with 100 % below 0.9. The lean preconditioner really is doing nothing. It just does not follow that fixing it pays, because a working Krylov solve here costs 2x per iteration and still lost the race.",
+      "what_falls": "'pc_stock halves the iteration count' and 'the NK defaults fallback now looks sound' were both over-read from a run that never converged."
+    },
+    "recommendation": {
+      "verdict": "Keep ANK-only.",
+      "why": [
+        "ANK-only REACHES the target: the production gci_C alpha 0 run converges at relres 9.98e-07 in 286 iterations, about 28 minutes on this mesh.",
+        "NK with the project preconditioner: 96 % of Krylov solves achieve nothing, and after 35 minutes it is at 9.22e-06 -- an order of magnitude short.",
+        "NK with ADflow's preconditioner: the Krylov solve works, but at 1.98x the cost per iteration, and after 35 minutes it is at 1.17e-05 -- further short still, plus 2.8 GiB.",
+        "There is no accuracy argument either way: the forces agree to within 0.06 counts on CD.",
+        "At the production setting the question is moot anyway -- NKSwitchTol 1e-6 equals the L2 target, so NK never fires and --no-nk is a no-op."
+      ],
+      "still_open": "Whether ANK-only converges at 2.3M and 4.7M cells. It is proven to 1,172,856. If it stalls there, NK with ADflow's preconditioner remains the fallback to try -- but on this evidence it should be treated as unproven, not as a known-good escape hatch.",
+      "caveat": "One mesh, one geometry, one incidence, switch forced to 1e-4, and both arms truncated by a 35 minute cap rather than run to convergence. A clean answer needs them run out."
+    }
   }
 }

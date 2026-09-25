@@ -1,0 +1,108 @@
+{
+  "schema": "aeris.s8.base_ladders.v1",
+  "written": "2026-09-25",
+  "geometry": "g83",
+  "levels": "from gci_C",
+  "regression_guard": "gci_C rebuilt through the new te-opening code path: 603,592 cells, max node difference 0.000e+00 m against the mesh on disk. Bit-identical.",
+  "gating": "all eight solves ACCEPTED, residuals 6.36-7.65 orders",
+  "ladder_A_n_base": {
+    "what": "n_base 5 -> 7 -> 9, i.e. 4 -> 6 -> 8 cells ACROSS the blunt face. Everything else held. A pure mesh test: the base geometry is unchanged at 4.336 mm, 0.500 % of chord.",
+    "cells": {
+      "gci_C": 603592,
+      "nb7": 620654,
+      "nb9": 637504,
+      "gci_M_for_reference": 1172856
+    },
+    "CDp": {
+      "a0": [
+        110.794,
+        102.284,
+        97.251
+      ],
+      "a4": [
+        96.31,
+        87.689,
+        82.635
+      ]
+    },
+    "CD": {
+      "a0": [
+        201.737,
+        193.534,
+        188.682
+      ],
+      "a4": [
+        191.412,
+        183.095,
+        178.219
+      ]
+    },
+    "verdict": "CONVERGES. Differences shrink -8.510 -> -5.033 at a0 and -8.621 -> -5.053 at a4, condition ok on both. So the base face is GRID-LIMITED, not model-limited: more cells across it do fix it.",
+    "but": "p = 0.52 on CDp and CD at both incidences. That is below first order -- convergence is SLOW, and the extrapolation sits 31 counts below the finest level tried. Grid-limited does not mean cheaply fixable.",
+    "extrapolated_CDp": {
+      "a0": 66.23,
+      "a4": 53.05
+    },
+    "efficiency": "nb9 recovers 63 % (a0) and 66 % (a4) of the whole gci_C -> gci_M CDp shift for +5.6 % cells, against gci_M's +94 %. About twelve times more drag-error removed per cell added."
+  },
+  "the_agreement_worth_noting": {
+    "claim": "Two orthogonal refinement directions extrapolate to the same pressure drag.",
+    "chordwise_family_45_58_75": {
+      "a0": 66.33,
+      "a4": 51.88
+    },
+    "n_base_ladder_5_7_9": {
+      "a0": 66.23,
+      "a4": 53.05
+    },
+    "difference_counts": {
+      "a0": 0.1,
+      "a4": 1.17
+    },
+    "caveat": "Both are Richardson extrapolations at low observed order (1.83 chordwise, 0.52 n_base), and Richardson is fragile there. Agreement between two independent directions is nevertheless a real convergence indicator and is better evidence for a limit near CDp 66 at alpha 0 than either estimate alone."
+  },
+  "ladder_B_opening_law": {
+    "what": "The opening law scaled: base 0.500 % -> 0.300 % -> 0.200 % of chord, at fixed n_base and every count held. THIS IS A GEOMETRY CHANGE -- the opening is made by adding thickness to the loft, so these are different wings.",
+    "cells": "603,592 on all three -- the mesh does not change size, only the wing does",
+    "CDp": {
+      "a0": [
+        110.794,
+        100.843,
+        95.746
+      ],
+      "a4": [
+        96.31,
+        86.492,
+        81.528
+      ]
+    },
+    "CDv": {
+      "a0": [
+        90.943,
+        90.849,
+        90.854
+      ],
+      "a4": [
+        95.102,
+        95.006,
+        95.006
+      ]
+    },
+    "CL": {
+      "a0": [
+        -1599.017,
+        -1582.574,
+        -1571.067
+      ],
+      "a4": [
+        1203.753,
+        1196.572,
+        1191.346
+      ]
+    },
+    "verdict": "Shrinking the base from 0.500 % to 0.200 % of chord removes 15.0 counts of pressure drag at a0 and 14.8 at a4, while viscous drag moves 0.09 counts. C_L moves 28 counts, confirming these really are different wings rather than the same wing meshed better.",
+    "reading": "About 15 of the 22.4 counts of base drag are a consequence of choosing 0.500 % rather than the 0.2 % that is ordinary practice. That choice was never justified in this repository."
+  },
+  "combined_conclusion": "The base is grid-limited, so it CAN be fixed with cells -- but at p = 0.52 it is expensive to fix, and it is 0.5 % of chord when 0.2 % is normal. The cheapest route to a smaller, better-converged base term is to do BOTH: raise n_base, which is nearly free at +2.8 % cells per step, and shrink the opening, which costs nothing at all. Shrinking it also shrinks the poorly-converging term itself.",
+  "still_open": "Whether raising n_base removes the DIVERGENCE seen under wall-normal refinement (gci_C_normal moved base drag +23.1 counts). Ladder A did not test that -- it held eta fixed. If the divergence survives a well-resolved base face, the near-wake reading stands; if it does not, the divergence was an under-resolved base face all along."
+}

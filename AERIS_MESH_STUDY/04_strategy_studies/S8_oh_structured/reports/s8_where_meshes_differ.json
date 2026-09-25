@@ -240,11 +240,30 @@
     },
     "geometry_confound_tested_and_ruled_out": {
       "worry": "ds_te_frac scales with the family (0.00100 -> 0.00077), so the base might be a different SHAPE between levels, making this a geometry sweep rather than a grid study.",
-      "measurement": "base height / chord at the root, measured on the built meshes: gci_C 0.002499, gci_M 0.002499, ratio 1.0000 on both g83 and g13.",
+      "measurement": "CORRECTED. Base height / chord measured between the two trailing-edge corners (ring index 0 and 2*n_side-2): 0.004999 on gci_C and 0.004999 on gci_M, ratio 1.0000, on all three geometries. The earlier figure of 0.002499 was wrong -- a tolerance that caught only part of the base run. The base is 0.50 % of chord, not 0.25 %.",
       "conclusion": "Identical geometry. ds_te_frac sets the NODE SPACING at the trailing-edge corners, not the base opening. The -10 counts is pure resolution: 3 interior nodes across the base at gci_C against 5 at gci_M."
     },
     "corrected_finding": "Two distinct errors, not one. (1) The BLUNT BASE FACE, 0.25 % of the wetted area, gives -9.8 to -11.0 counts in every case -- a spread of 1.2 counts across three wings and two incidences. Base drag nearly halves, 22.4-25.2 -> 12.6-14.2, because the coarse mesh predicts a more negative base pressure. (2) The LEADING EDGE gives more in total, -4.5 to -15.5, but is highly variable: its two sub-bands partly cancel and the split between them swings 24 counts between cases. The trailing-edge SURFACE contributes essentially nothing.",
     "relation_to_the_earlier_LE_finding": "The earlier '+11.17 counts in one spanwise band at the leading edge' came from the WALL-NORMAL refinement test, a different comparison. It does not conflict with this one.",
-    "revised_cheapest_test": "Hold every count fixed and raise ONLY n_base, the node count across the blunt face, from 5 to 7. That is a handful of cells on 0.25 % of the wetted area. If the base is the mechanism it should recover most of 10 counts for almost nothing."
+    "revised_cheapest_test": "Hold every count fixed and raise ONLY n_base, the node count across the blunt face, from 5 to 7. That is a handful of cells on 0.25 % of the wetted area. If the base is the mechanism it should recover most of 10 counts for almost nothing.",
+    "blunt_base_definition": {
+      "what_it_is": "The trailing edge is cut off flat instead of tapering to a point, leaving a small vertical face between the upper and lower surfaces. That face is the blunt base.",
+      "why_it_exists": "A true sharp trailing edge makes structured cells degenerate there. Opening it keeps the O-ring well formed and lets the ring close across the base with no separate block.",
+      "size_on_these_wings": {
+        "fraction_of_chord": 0.004999,
+        "root_height_mm": {
+          "g83": 4.3357,
+          "g47": 3.528,
+          "g13": 5.4405
+        },
+        "identical_on_all_three_geometries_and_both_levels": true
+      },
+      "how_it_is_meshed": {
+        "gci_C": "n_base 5 points, 4 cells across the face",
+        "gci_M": "n_base 7 points, 6 cells across the face"
+      },
+      "why_it_makes_drag": "It is a bluff aft-facing face. The flow separates off it and the pressure behind sits below freestream -- measured mean base cp -0.51 to -0.75 -- which pulls the wing backwards. That is base drag, and it is 22.4-25.2 counts at gci_C, roughly a fifth of total CDp.",
+      "area_share_note": "0.50 % of CHORD but 0.25 % of WETTED AREA, because wetted area counts the upper and lower surfaces both, roughly 2 chords per unit span."
+    }
   }
 }

@@ -1,0 +1,76 @@
+{
+  "schema": "aeris.s8.base_and_near_wake.v1",
+  "written": "2026-09-25",
+  "question": "Do we refine the wake, and should we?",
+  "answer_part_1": "We never refine it deliberately. Wake resolution is whatever the geometric wall-normal growth (1.253 per layer at gci_C) leaves behind the trailing edge.",
+  "near_wake_resolution_g83_root": {
+    "base_height_mm": 4.3357,
+    "cells_across_the_base_height_at_various_distances_downstream": {
+      "0.005c": {
+        "gci_C": 2.16,
+        "gci_M": 3.17
+      },
+      "0.02c": {
+        "gci_C": 1.04,
+        "gci_M": 1.38
+      },
+      "0.05c": {
+        "gci_C": 0.46,
+        "gci_M": 0.71
+      },
+      "0.1c": {
+        "gci_C": 0.25,
+        "gci_M": 0.33
+      },
+      "0.5c": {
+        "gci_C": 0.05,
+        "gci_M": 0.06
+      }
+    },
+    "reading": "The recirculation behind a 4.34 mm base is being resolved by cells LARGER than the base itself from 0.05c downstream. My earlier wake test looked at ONE CHORD downstream, which is irrelevant to base pressure. The near wake was never measured."
+  },
+  "the_discriminator": {
+    "setup": "g83, alpha 0. gci_C_normal adds eta layers 65 -> 84, which refines the NEAR WAKE while leaving the base face at the same 188 cells. gci_C_chord2 scales n_base with the chordwise count, doubling base cells 188 -> 376, at unchanged eta.",
+    "results_counts": {
+      "gci_C": {
+        "CDp": 110.794,
+        "base": 22.366,
+        "mean_base_cp": -0.5359,
+        "base_cells": 188
+      },
+      "gci_C_normal": {
+        "CDp": 122.52,
+        "base": 45.511,
+        "mean_base_cp": -1.0487,
+        "base_cells": 188
+      },
+      "gci_C_chord2": {
+        "CDp": 83.487,
+        "base": 11.299,
+        "mean_base_cp": -0.3482,
+        "base_cells": 376
+      },
+      "gci_M": {
+        "CDp": 89.288,
+        "base": 12.598,
+        "mean_base_cp": -0.3661,
+        "base_cells": 366
+      }
+    },
+    "delta_base_drag_vs_gci_C": {
+      "normal": 23.146,
+      "chord2": -11.066,
+      "M": -9.768
+    }
+  },
+  "finding": "Refining the NEAR WAKE makes base drag dramatically WORSE: +23.1 counts, with mean base cp going -0.536 to -1.049, nearly doubling in magnitude, on an unchanged base face. Refining the BASE FACE (more cells across it) moves it the other way, -11.1 counts. The +23 on base drag is also what drives gci_C_normal's whole +11.7 count CDp shift -- the single largest directional effect measured in this study.",
+  "interpretation": "A coarse mesh SMEARS the separated recirculation behind the blunt base and returns a mild base pressure. A finer wake resolves more of that separation and returns a much stronger suction. Neither is necessarily right: this is a separated bluff-body flow and steady RANS with Spalart-Allmaras is not a reliable model for it. Refining does not converge here, it DIVERGES -- which is consistent with the wall-normal family already being flagged DIVERGENT, and now localises that divergence to the base.",
+  "consequence": "The ~10 count gci_C -> gci_M base-drag difference should not be read as converging toward a right answer. It is plausibly two wrong answers from a model-limited region. That reframes it from a MESH problem to a MODEL problem, and no amount of refinement fixes a model problem.",
+  "correction_to_my_earlier_retraction": "On 2026-09-24 I retracted the wake hypothesis on a correlation of +0.017 between wake cells-per-chord AT ONE CHORD and dCD. That retraction was correct for the FAR wake and the induced-drag mechanism. I over-generalised it to 'the wake does not matter'. The NEAR wake matters a great deal -- it sets base pressure, which carries about a fifth of total pressure drag -- and I had not measured it.",
+  "limits": "One geometry, one incidence, no experimental check. The interpretation that this is model-limited is an inference from the divergence, not a measurement of the true base pressure.",
+  "what_would_settle_it": [
+    "Raise n_base alone, 5 -> 7 -> 9, at fixed eta and chordwise counts. If base drag converges on that ladder the base FACE is grid-limited and fixable.",
+    "An experiment with a measured base pressure at this Reynolds number. RIBES does not provide one. Without it, whether either answer is right is untestable here.",
+    "A sharp trailing edge variant, if the loft allows it, which removes the base term entirely and would show how much of the study's grid sensitivity it accounts for."
+  ]
+}

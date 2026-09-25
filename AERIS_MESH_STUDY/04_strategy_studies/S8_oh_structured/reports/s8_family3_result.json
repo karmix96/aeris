@@ -1,0 +1,87 @@
+{
+  "schema": "aeris.s8.family3_result.v1",
+  "written": "2026-09-25",
+  "runs": "gci3_C on g83 and g47 at alpha 0 and 4, all four gate-ACCEPTED",
+  "base_drag_counts_and_share_of_CDp": {
+    "g83_a0": {
+      "gci_C": [
+        22.366,
+        "20.2%"
+      ],
+      "gci2_C": [
+        6.438,
+        "7.8%"
+      ],
+      "gci3_C": [
+        1.692,
+        "2.3%"
+      ]
+    },
+    "g83_a4": {
+      "gci_C": [
+        22.714,
+        "23.6%"
+      ],
+      "gci2_C": [
+        6.541,
+        "9.3%"
+      ],
+      "gci3_C": [
+        1.696,
+        "2.7%"
+      ]
+    },
+    "g47_a0": {
+      "gci_C": [
+        24.917,
+        "28.5%"
+      ],
+      "gci2_C": [
+        7.132,
+        "12.2%"
+      ],
+      "gci3_C": [
+        1.894,
+        "3.8%"
+      ]
+    },
+    "g47_a4": {
+      "gci_C": [
+        25.151,
+        "19.1%"
+      ],
+      "gci2_C": [
+        7.263,
+        "7.1%"
+      ],
+      "gci3_C": [
+        1.947,
+        "2.1%"
+      ]
+    }
+  },
+  "headline": "The base term is no longer significant. It was 19-28 % of pressure drag at gci_C and is now 2.1-3.8 %, a thirteenfold reduction in absolute counts.",
+  "the_split_is_not_what_i_predicted": {
+    "predicted": "The opening ladder at gci_C measured -15.0 counts of CDp for 0.500 % -> 0.200 %, and I carried that number into the family 3 proposal.",
+    "measured": "From gci2_C the same opening change gives -7.7 to -8.6 counts of CDp and -4.7 to -5.3 counts of base drag.",
+    "why": "The two fixes are NOT additive. n_base does most of the work and the opening change then has much less left to take. Splitting the 22.4 -> 1.7 count fall on g83 a0: n_base 4 -> 8 cells accounts for -15.9 counts and the opening for the remaining -4.7. Roughly 77 % of the win came from the fix that was already free in family 2.",
+    "correction": "My estimate of what family 3 would buy over family 2 was about twice the truth. The ladder measured the opening on a BADLY RESOLVED base, where it had more to remove."
+  },
+  "cost_of_the_geometry_change": {
+    "CL_shift_counts": {
+      "g83_a0": 28.19,
+      "g83_a4": -10.83,
+      "g47_a0": 11.48,
+      "g47_a4": -30.06
+    },
+    "reading": "C_L moves by 11-30 counts and changes sign between incidences, because the opening is made by adding thickness scaled by x/c, which acts like aft camber. Removing it reduces |C_L|. These are different wings and nothing may compare them to family 1 or 2 as the same design.",
+    "CDv_shift": "-0.24 to -0.28 counts, a slightly smaller wetted area."
+  },
+  "the_decision_this_leaves": {
+    "question": "Is the geometry change worth keeping, now that its marginal value is measured?",
+    "for": "It takes the slowest-converging term in the study (p = 0.52) from 7.8 % of pressure drag to 2.3 %, and 0.200 % of chord is closer to ordinary CFD practice than 0.500 %.",
+    "against": "It buys about 8 counts of CDp over family 2, and costs comparability with 52 existing run directories. Family 2 alone already reduces the base term to 7-12 % of CDp using a change that is purely mesh and fully comparable.",
+    "what_would_settle_it": "The real wing's trailing-edge thickness. It is recorded nowhere in this repository. If the true TE is near 0.2 % of chord, family 3 is the more faithful model and the comparability cost is worth paying. If it is nearer 0.5 %, family 2 is already right and family 3 is a fiction."
+  },
+  "meshes_built_and_verified": "gci3_C/M/F/FF on g83 and g47, 1,059,152 to 8,066,928 cells, all with 0 folded cells, wall layer 1-2e-16, cap 2.04-2.07 x s0"
+}

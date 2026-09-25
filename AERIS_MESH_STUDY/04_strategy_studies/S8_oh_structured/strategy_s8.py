@@ -879,6 +879,39 @@ LEVELS["gci2_M"] = refined_level(LEVELS["gci2_C"], GCI_RATIO, name="gci2_M")
 LEVELS["gci2_F"] = refined_level(LEVELS["gci2_C"], GCI_RATIO ** 2, name="gci2_F")
 LEVELS["gci2_FF"] = refined_level(LEVELS["gci2_C"], GCI_RATIO ** 3, name="gci2_FF")
 
+# ---------------------------------------------------------------------------
+# FAMILY 3: family 2 with the blunt base brought down to ordinary practice.
+# ---------------------------------------------------------------------------
+#: Family 2 already carries the first of the two 2026-09-25 base findings, and
+#: it got it for free: the chordwise rebase scales n_base with n_side, so gci2_C
+#: has n_base 9 -- eight cells across the blunt face, exactly the gci_C_nb9
+#: configuration that the n_base ladder showed to be the best tested. gci2_F
+#: carries 14 and gci2_FF 18. Nothing to do there.
+#:
+#: What remains is the OPENING itself. Measured on the ladder, shrinking the base
+#: from 0.500 % to 0.200 % of chord removes 15.0 counts of pressure drag at
+#: alpha 0 and 14.8 at alpha 4, while viscous drag moves 0.09 counts. 0.500 % was
+#: a function default that had never been reachable from a level and is justified
+#: nowhere in this repository; 0.1-0.25 % is ordinary practice for a CFD blunt
+#: edge. The base face is also where refinement converges SLOWEST (p = 0.52), so
+#: shrinking it shrinks the worst-converging term in the study.
+#:
+#: WHY A NEW FAMILY RATHER THAN EDITING FAMILY 2. The opening is created by
+#: ADDING thickness to the loft, so this changes the WING, not the mesh: C_L
+#: moves 28 counts across the ladder. Folding a geometry change into gci2_* would
+#: put two different aircraft under one name -- which is precisely the defect this
+#: project already hit when gci_C and gci_M each referred to two different meshes.
+#: A different wing gets a different name.
+#:
+#: Family 3 is therefore NOT comparable to families 1 or 2 as the same design. It
+#: is comparable to itself, and it is the family to carry forward if the smaller
+#: base is accepted as the better model of the real wing.
+LEVELS["gci3_C"] = _dataclasses.replace(
+    LEVELS["gci2_C"], te_abs_m=0.0004, te_floor_frac=0.002)
+LEVELS["gci3_M"] = refined_level(LEVELS["gci3_C"], GCI_RATIO, name="gci3_M")
+LEVELS["gci3_F"] = refined_level(LEVELS["gci3_C"], GCI_RATIO ** 2, name="gci3_F")
+LEVELS["gci3_FF"] = refined_level(LEVELS["gci3_C"], GCI_RATIO ** 3, name="gci3_FF")
+
 #: FIRST-CELL HEIGHT alone: gci_C with s0 divided by GCI_RATIO and every count
 #: held, n_normal included. The last untested mesh parameter.
 #:

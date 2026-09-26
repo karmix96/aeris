@@ -70,45 +70,51 @@ def numbers(line: str) -> list[float]:
     return out
 
 
-def cp_table(text: str) -> dict | None:
-    """A Cp page: a header row of corrected alphas, then rows of x/c [z/c] Cp..."""
-    lines = [l for l in text.split("\n") if l.strip()]
-    sec = re.search(r'SECTION\s+([A-F])\s*\(y=(\d+)\s*mm\)', text)
-    if not sec:
-        return None
-    # the alpha header is the line carrying 'alpha_c' or the x/c line itself
-    alphas, has_z = None, False
-    for l in lines:
-        if re.match(r'\s*x/c', l):
-            has_z = "z/c" in l
-            tail = l.split("z/c")[-1] if has_z else l.split("x/c")[-1]
-            tail = tail.replace("Cp", " ")
-            a = [float(x) for x in tail.split() if NUM.match(x)]
-            if len(a) >= 5:
-                alphas = a
-                break
-    if alphas is None:
-        return None
-    rows = []
-    for l in lines:
-        v = numbers(l)
+def cp_tables(text: str) -> list[dict]:
+    """Every Cp table on a page.
+
+    A page can carry MORE THAN ONE section: file page 128 holds SECTION C and
+    SECTION E one after the other, and an earlier version of this parser took
+    the first header and filed all 63 rows under C. The design report's tap
+    counts are what caught it -- section 3 has 38 taps and section 5 has 26, so
+    63 rows under one section was impossible. Split on the section markers.
+    """
+    marks = list(re.finditer(r'SECTION\s+([A-F])\s*\(y=(\d+)\s*mm\)', text))
+    if not marks:
+        return []
+    out = []
+    for i, m in enumerate(marks):
+        block = text[m.start(): marks[i + 1].start() if i + 1 < len(marks) else len(text)]
+        lines = [l for l in block.split("\n") if l.strip()]
+        alphas, has_z = None, False
+        for l in lines:
+            if re.match(r'\s*x/c', l):
+                has_z = "z/c" in l
+                tail = l.split("z/c")[-1] if has_z else l.split("x/c")[-1]
+                a = [float(x) for x in tail.replace("Cp", " ").split() if NUM.match(x)]
+                if len(a) >= 5:
+                    alphas = a
+                    break
+        if alphas is None:
+            continue
         need = len(alphas) + (2 if has_z else 1)
-        if len(v) == need and 0.0 <= v[0] <= 1.0001:
-            rows.append(v)
-    if not rows:
-        return None
-    # A data row starts with an x/c in [0,1] AND carries a value per alpha. The
-    # sectional Cl/Cm table shares some of these pages and its rows also start
-    # with a decimal -- it has five values, a Cp row has at least eleven -- so a
-    # looser test over-counts and makes a complete parse look short.
-    candidates = sum(1 for l in lines
-                     if re.match(r'\s*[01]?\.\d', l.strip()) and len(numbers(l)) >= 8)
-    return {"section": sec.group(1), "y_mm": int(sec.group(2)),
-            "rows_parsed": len(rows), "rows_that_looked_like_data": candidates,
-            "alpha_corrected_deg": alphas, "has_z_over_c": has_z,
-            "x_over_c": [r[0] for r in rows],
-            "z_over_c": [r[1] for r in rows] if has_z else None,
-            "cp": [r[(2 if has_z else 1):] for r in rows]}
+        rows = [v for v in (numbers(l) for l in lines)
+                if len(v) == need and 0.0 <= v[0] <= 1.0001]
+        if not rows:
+            continue
+        # A data row starts with an x/c in [0,1] AND carries a value per alpha.
+        # The sectional Cl/Cm table shares some of these pages and its rows also
+        # start with a decimal -- it has five values, a Cp row has at least
+        # eleven -- so a looser test over-counts and hides an incomplete parse.
+        cand = sum(1 for l in lines
+                   if re.match(r'\s*[01]?\.\d', l.strip()) and len(numbers(l)) >= 8)
+        out.append({"section": m.group(1), "y_mm": int(m.group(2)),
+                    "rows_parsed": len(rows), "rows_that_looked_like_data": cand,
+                    "alpha_corrected_deg": alphas, "has_z_over_c": has_z,
+                    "x_over_c": [r[0] for r in rows],
+                    "z_over_c": [r[1] for r in rows] if has_z else None,
+                    "cp": [r[(2 if has_z else 1):] for r in rows]})
+    return out
 
 
 def sectional(text: str) -> dict | None:
@@ -140,8 +146,7 @@ def main() -> int:
         if current is None:
             continue
         got = False
-        c = cp_table(txt)
-        if c:
+        for c in cp_tables(txt):
             data[current]["cp"].append(c); got = True
         s = sectional(txt)
         if s and data[current]["sectional"] is None:

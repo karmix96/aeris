@@ -1,0 +1,4 @@
+
+# The RIBES report is a 13 MB PDF and the repo excludes *.pdf. It is kept in
+# external/ribes with its SHA256; extract_ribes.py re-derives data/ribes from it.
+external/ribes/*.pdf

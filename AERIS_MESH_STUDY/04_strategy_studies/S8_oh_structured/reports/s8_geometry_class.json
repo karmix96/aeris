@@ -1,0 +1,64 @@
+{
+  "schema": "aeris.s8.geometry_class.v1",
+  "written": "2026-09-26",
+  "why": "I asserted in this session that the demonstrated geometry is 'a tapered swept wing, not a BWB' and that the mesher had not been shown to handle a blended centrebody. Challenged on it, because the geometry generator produces BWB wings. Measured rather than argued.",
+  "measured_g83_gci_C": {
+    "root_chord_over_semispan": 0.888,
+    "note_on_that": "A conventional wing sits well under 0.5. Approaching 1 is a stubby flying-wing planform.",
+    "taper_ratio": 0.172,
+    "aspect_ratio": 4.836,
+    "LE_sweep_m": 0.415,
+    "t_over_c_by_span": {
+      "0.00": 15.16,
+      "0.12": 15.12,
+      "0.34": 15.11,
+      "0.63": 11.03,
+      "0.84": 11.02,
+      "0.94": 12.4,
+      "1.00": 15.25
+    },
+    "absolute_max_thickness_mm": {
+      "root": 131.5,
+      "y/b 0.63": 32.6,
+      "y/b 0.84": 23.5,
+      "tip": 22.7
+    },
+    "apparent_tip_thickening_is_an_artefact": "t/c rises from 11.0 % to 15.3 % over the last 15 % of span only because absolute thickness holds near 22-23 mm while the chord runs out from 0.173 m to 0.149 m. The wing does not thicken."
+  },
+  "verdict": "This IS a blended-wing-body planform and thickness distribution: root chord almost equal to semispan, and a genuine 15.2 % -> 11.0 % thickness blend from centrebody to outer wing. My earlier characterisation was wrong, and wrong because I read the planform outline and never measured t/c.",
+  "the_caveat_that_does_survive": "It is a SINGLE LOFTED SURFACE -- pyGeo surfs[0] upper and surfs[1] lower -- so there is no wing-body junction, no nacelle, no control surface. That is a legitimate and common class of BWB conceptual geometry, but it is the tractable end. The hard part of BWB meshing is the junction, which is why NASA Juncture Flow exists as a benchmark, and there isn't one here. The honest scope is 'blended lofted half-wings', which covers a great deal of BWB UAV conceptual design and does not cover a junction.",
+  "robustness_actually_demonstrated": {
+    "lhs100_seed42_at_oh_L3": {
+      "designs": 100,
+      "built": 100,
+      "returncode_0": 100,
+      "with_folded_cells": 0,
+      "cells": "561,200 to 573,312",
+      "worst_LE_turn_deg": "10.019 to 10.020 against a 10.0 target",
+      "build_time_s": "6 to 7"
+    },
+    "lhs100_seed42_at_gci_F": {
+      "designs": 61,
+      "built": 61,
+      "returncode_0": 61,
+      "with_folded_cells": 0,
+      "cells": "2,200,272 to 2,235,088",
+      "worst_LE_turn_deg": "5.061 to 5.158",
+      "build_time_s": "25 to 28"
+    },
+    "reading": "Zero failures and zero folded cells across a whole design space at two resolutions, with the leading-edge turning target delivered to within 0.02 degrees on every one of 100 designs. I under-sold this when assessing novelty."
+  },
+  "revised_publication_view": {
+    "what_i_got_wrong": "I advised caution on the BWB framing on a false premise. The geometry class is right and 'BWB UAV' is defensible.",
+    "what_still_stands": [
+      "The O-H topology is not novel -- published for blunt-TE aerofoils, and H-topology tip caps are a documented option in NASA's WINGCAP.",
+      "There is no experimental validation of the physics. RIBES is not obtained; BlendedNet++ is FUN3D+SA against ADflow+SA and cannot settle model form.",
+      "The method was still moving this week: the trailing-edge opening default was found unreachable, undefended, and worth 20 % of pressure drag."
+    ],
+    "the_claim_i_would_now_defend": "Not a new topology. An AUTOMATED structured mesher that produces verification-passing meshes across a 100-design blended-wing space with zero failures and zero folded cells, carrying a leading-edge resolution law that is both curvature-driven and systematically refinable -- the second half being what makes the grid-convergence family mean anything. That is a robustness and automation result at a scale most meshing papers do not attempt.",
+    "still_required_before_submitting": [
+      "experimental validation",
+      "a proper systematic literature search, not the two or three web searches done in this session"
+    ]
+  }
+}

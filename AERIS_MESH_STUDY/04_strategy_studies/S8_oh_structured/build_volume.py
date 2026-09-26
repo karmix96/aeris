@@ -125,8 +125,9 @@ def main() -> int:
     ap.add_argument("--level", default="oh_L3", choices=sorted(strategy_s8.LEVELS))
     ap.add_argument("--set-name", default="lhs100_seed42")
     ap.add_argument("--index", type=int, default=83)
-    ap.add_argument("--geometry", default="aeris", choices=("aeris", "m6"),
-                    help="'m6' meshes the ONERA M6 wing instead of a design from the set")
+    ap.add_argument("--geometry", default="aeris", choices=("aeris", "m6", "ribes"),
+                    help="'m6' meshes the ONERA M6 wing, 'ribes' the RIBES wind-tunnel "
+                         "wing, instead of a design from the set")
     ap.add_argument("--out", type=Path,
                     default=HERE / "runs/paraview_inspection/s8_oh")
     ap.add_argument("--no-plot3d", action="store_true")
@@ -172,6 +173,16 @@ def main() -> int:
         # -- not just our solver -- in front of a measurement.
         import m6_loft
         pygeo = m6_loft.M6Loft()
+        geometry_note = pygeo.description
+    elif args.geometry == "ribes":
+        # The RIBES wind-tunnel wing, from the project's own laser scan of the
+        # manufactured model. This is the first case that puts OUR mesh, at OUR
+        # operating point, in front of a measurement: Re 1.43e6 tripped against
+        # S8's 1.53e6 fully turbulent, with 3,814 published pressure
+        # coefficients over three spanwise sections. See ribes_loft.py for how
+        # the section was taken and the four ways it is checked.
+        import ribes_loft
+        pygeo = ribes_loft.RibesLoft()
         geometry_note = pygeo.description
     else:
         with tempfile.TemporaryDirectory() as tmp:

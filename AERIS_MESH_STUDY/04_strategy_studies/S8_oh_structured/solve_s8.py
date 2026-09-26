@@ -222,6 +222,20 @@ def main() -> int:
     ap.add_argument("--turbulence-order", default=None,
                     choices=["first order", "second order"],
                     help="advection order of the SA variable (ADflow default first)")
+    # OPERATING POINT. The mission is governed and these default to it, so a run
+    # that does not pass them is bit-identical to before. They exist because a
+    # validation case is flown at the EXPERIMENT's condition, not at ours: RIBES
+    # T40 measures 39.83 m/s at 25.7 C, which is Mach 0.11494 and Re 1.329e6 on
+    # its 0.5153 m mean aerodynamic chord. Every override is recorded in
+    # result.json under solver_overrides, exactly as --no-nk is.
+    ap.add_argument("--mach", type=float, default=None,
+                    help="free-stream Mach; default is the governed mission value")
+    ap.add_argument("--reynolds", type=float, default=None)
+    ap.add_argument("--reynolds-length", type=float, default=None,
+                    help="length the Reynolds number is formed on, metres")
+    ap.add_argument("--temperature", type=float, default=None, help="free-stream T, kelvin")
+    ap.add_argument("--chord-ref", type=float, default=None,
+                    help="moment reference chord, metres")
     ap.add_argument("--i-have-authorization", action="store_true")
     args = ap.parse_args()
 
@@ -301,6 +315,12 @@ def main() -> int:
     # governed values remain the literal defaults in this file and a reader can
     # see exactly what was changed and why.
     overrides: dict = {}
+    for flag, key in (("mach", "mach"), ("reynolds", "reynolds"),
+                      ("reynolds_length", "reynoldsLength"), ("temperature", "T"),
+                      ("chord_ref", "chordRef")):
+        v = getattr(args, flag)
+        if v is not None:
+            overrides[key] = v
     if args.no_nk:
         overrides["useNKSolver"] = False
     if args.nk_switch_tol is not None:
@@ -312,12 +332,13 @@ def main() -> int:
         name=f"s8_a{args.alpha:g}",
         alpha=args.alpha,
         beta=0.0,
-        mach=MISSION["mach"],
-        reynolds=MISSION["reynolds"],
-        reynoldsLength=MISSION["reynolds_length_m"],
-        T=MISSION["temperature_K"],
+        mach=args.mach if args.mach is not None else MISSION["mach"],
+        reynolds=args.reynolds if args.reynolds is not None else MISSION["reynolds"],
+        reynoldsLength=(args.reynolds_length if args.reynolds_length is not None
+                        else MISSION["reynolds_length_m"]),
+        T=args.temperature if args.temperature is not None else MISSION["temperature_K"],
         areaRef=args.area_ref,
-        chordRef=MISSION["chord_ref_m"],
+        chordRef=args.chord_ref if args.chord_ref is not None else MISSION["chord_ref_m"],
         xRef=MOMENT_REF_XYZ[0],
         yRef=MOMENT_REF_XYZ[1],
         zRef=MOMENT_REF_XYZ[2],

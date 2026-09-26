@@ -1,0 +1,27 @@
+{
+  "schema": "aeris.s8.ribes_status.v1",
+  "written": "2026-09-26",
+  "status": "UNRESOLVED",
+  "what_works": {
+    "experiment_data": "3,814 Cp values plus sectional Cl/Cm and integrated forces, extracted from the public test report and validated section by section against the design report's own tap table: section C 36 of 38 installed, E 26/26, A 4/4, zero disagreements.",
+    "geometry": "Measured laser scan (MeasuredCADmodel.stp) through gmsh OCC, 17 sections, reduced to a smoothing spline. Chords match the design report to 0.15 %, quarter-chord sweep -0.325 deg against a reported -0.3, t/c 11.64 % against 11, nose radius 1.509 % against 1.81 % for a scaled Goettingen 398.",
+    "mesh": "1,038,064 cells at the gci2_C level, 0 folded, wall layer 1e-16, turning target met at all 49 stations, and BETTER conditioned than the AERIS mesh that solves fine: scaled Jacobian minimum 0.417 against 0.0075, median 0.995 against 0.946.",
+    "solver_plumbing": "solve_s8 gained --mach/--reynolds/--reynolds-length/--temperature/--chord-ref, defaulting to the governed mission so unflagged runs are bit-identical, recorded in result.json under mission_overrides and mission_effective."
+  },
+  "the_bug": {
+    "symptom": "Every RIBES solve converges cleanly to a physically impossible answer. At alpha 0.36: CD 2647 counts, CDp 2643, CDv 3.95. Surface cp reaches +2.158 where stagnation is 1.0, on 102 of 7,488 cells spread across every spanwise station.",
+    "the_sharpest_clue": "CDv is about 4 counts against the AERIS mesh's 93.8, and it does NOT move when the Reynolds number changes (15.31 at Re 1.33e6, 15.44 at Re 1.53e6 on the earlier section; 4.10 vs 3.95 when the SA freestream is changed). A viscous force that ignores both Reynolds number and the turbulence model is not a physics result.",
+    "ruled_out_by_measurement": [
+      "operating point -- the governed S8 mission on the same mesh gives the same nonsense",
+      "mesh quality -- better than the mesh that works on every quality metric, 0 inverted cells",
+      "boundary conditions -- identical structure to the working mesh",
+      "geometry orientation -- camber +2.04 % of chord, correct sign, larger than AERIS's +0.60 %",
+      "wall spacing -- y+ about 0.7, roughly 25 cells inside the boundary layer at mid-chord",
+      "SA relaminarisation -- ADflow's default freestream eddy viscosity changes CDv by 0.15 counts",
+      "section corrugation -- REAL and fixed, but CD got WORSE afterwards, so not the cause"
+    ],
+    "the_corrugation_that_was_real": "The first section resampled ~250 scattered scan points per section onto a 2000-point grid and medianed 17 of them. Between data points the curve was linear segments and the median oscillated: the delivered section dented and bumped by 1.5 % of chord between x/c 0.1 and 0.3, with 250 curvature sign changes. It agreed with the 30 pressure taps to 0.074 % of chord, my best number of the day, because the waviness lives BETWEEN the taps. Agreement at 30 discrete stations is not a geometry check; nose radius, thickness and curvature are."
+  },
+  "next_step_i_would_take": "Run the ONERA M6 loft, which already has a known answer through this solver, through the SAME path at RIBES-like conditions. That separates 'our mesher on an external wing' from 'our solver at this Reynolds number and Mach', which is the one split the evidence so far does not make.",
+  "do_not_use": "No RIBES CFD number from this session is usable. The runs are kept only as evidence of the failure."
+}

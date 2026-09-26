@@ -315,12 +315,15 @@ def main() -> int:
     # governed values remain the literal defaults in this file and a reader can
     # see exactly what was changed and why.
     overrides: dict = {}
-    for flag, key in (("mach", "mach"), ("reynolds", "reynolds"),
-                      ("reynolds_length", "reynoldsLength"), ("temperature", "T"),
-                      ("chord_ref", "chordRef")):
-        v = getattr(args, flag)
-        if v is not None:
-            overrides[key] = v
+    # NOT into `overrides`: that dict is handed to ADflow as SOLVER options, and
+    # mach, reynolds and the rest are AeroProblem parameters. Putting them there
+    # got "Option mach is not a valid ADFLOW option" on all four RIBES runs.
+    # They are already wired into the AeroProblem above; this only records them.
+    mission_overrides = {k: v for k, v in (
+        ("mach", args.mach), ("reynolds", args.reynolds),
+        ("reynolds_length_m", args.reynolds_length),
+        ("temperature_K", args.temperature), ("chord_ref_m", args.chord_ref))
+        if v is not None}
     if args.no_nk:
         overrides["useNKSolver"] = False
     if args.nk_switch_tol is not None:
@@ -442,6 +445,16 @@ def main() -> int:
         "grid": str(args.grid),
         "alpha_deg": args.alpha,
         "mission": MISSION,
+        "mission_overrides": mission_overrides,
+        "mission_effective": {**MISSION, **{
+            "mach": args.mach if args.mach is not None else MISSION["mach"],
+            "reynolds": args.reynolds if args.reynolds is not None else MISSION["reynolds"],
+            "reynolds_length_m": (args.reynolds_length if args.reynolds_length is not None
+                                  else MISSION["reynolds_length_m"]),
+            "temperature_K": (args.temperature if args.temperature is not None
+                              else MISSION["temperature_K"]),
+            "chord_ref_m": (args.chord_ref if args.chord_ref is not None
+                            else MISSION["chord_ref_m"])}},
         "area_ref_m2": args.area_ref,
         "moment_ref_xyz_m": list(MOMENT_REF_XYZ),
         "routine_failed": failed,

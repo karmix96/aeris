@@ -1,0 +1,158 @@
+{
+  "source": "RIBES laser scan, 17 sections",
+  "method": "interior rejection then CST n=8 per surface",
+  "pooled_residual_pct_chord": {
+    "upper": 0.3125663871636793,
+    "lower": 0.3428717160654467
+  },
+  "thickness_max_pct_chord": 11.43651331741713,
+  "thickness_max_at_xc": 0.24999999999999994,
+  "camber_max_pct_chord": 3.179870676314711,
+  "camber_max_at_xc": 0.38490489315685766,
+  "trailing_edge_thickness_pct_chord": 0.2568009828009828,
+  "cst_coefficients": {
+    "upper": [
+      0.21132840526579533,
+      0.22714036765544116,
+      0.33685037486113234,
+      -0.05710756034787391,
+      0.6692507676608763,
+      -0.2800551816189275,
+      0.5557521149073553,
+      0.032238728376994194,
+      0.20864887431316828
+    ],
+    "lower": [
+      -0.25673899575298587,
+      0.1292509884076546,
+      -0.38737367113150295,
+      0.30677575684345254,
+      -0.3337119007626343,
+      0.11345395750577905,
+      -0.10609225130525558,
+      -0.005281813313553465,
+      -0.05130818354260399
+    ]
+  },
+  "per_section": {
+    "0": {
+      "n_raw": 402,
+      "n_surface": 339,
+      "interior_fraction": 0.15671641791044777,
+      "cst_residual_upper_pct_chord": 0.04767316218216014,
+      "cst_residual_lower_pct_chord": 0.04687458983644175
+    },
+    "100": {
+      "n_raw": 402,
+      "n_surface": 335,
+      "interior_fraction": 0.16666666666666663,
+      "cst_residual_upper_pct_chord": 0.03730034837387915,
+      "cst_residual_lower_pct_chord": 0.023225574681063222
+    },
+    "200": {
+      "n_raw": 392,
+      "n_surface": 330,
+      "interior_fraction": 0.15816326530612246,
+      "cst_residual_upper_pct_chord": 0.03329591972169323,
+      "cst_residual_lower_pct_chord": 0.024585296837144513
+    },
+    "300": {
+      "n_raw": 284,
+      "n_surface": 239,
+      "interior_fraction": 0.15845070422535212,
+      "cst_residual_upper_pct_chord": 0.03474059146210282,
+      "cst_residual_lower_pct_chord": 0.0263656192183951
+    },
+    "400": {
+      "n_raw": 342,
+      "n_surface": 295,
+      "interior_fraction": 0.13742690058479534,
+      "cst_residual_upper_pct_chord": 0.032097155860402404,
+      "cst_residual_lower_pct_chord": 0.028609201042811856
+    },
+    "500": {
+      "n_raw": 327,
+      "n_surface": 274,
+      "interior_fraction": 0.1620795107033639,
+      "cst_residual_upper_pct_chord": 0.03311419197544903,
+      "cst_residual_lower_pct_chord": 0.016601221375755284
+    },
+    "600": {
+      "n_raw": 278,
+      "n_surface": 252,
+      "interior_fraction": 0.09352517985611508,
+      "cst_residual_upper_pct_chord": 0.04423273787641173,
+      "cst_residual_lower_pct_chord": 0.03810030061479078
+    },
+    "700": {
+      "n_raw": 319,
+      "n_surface": 290,
+      "interior_fraction": 0.09090909090909094,
+      "cst_residual_upper_pct_chord": 0.045640877996830524,
+      "cst_residual_lower_pct_chord": 0.02950782775867102
+    },
+    "800": {
+      "n_raw": 307,
+      "n_surface": 277,
+      "interior_fraction": 0.09771986970684043,
+      "cst_residual_upper_pct_chord": 0.02678431018159735,
+      "cst_residual_lower_pct_chord": 0.025090252216715
+    },
+    "900": {
+      "n_raw": 216,
+      "n_surface": 193,
+      "interior_fraction": 0.10648148148148151,
+      "cst_residual_upper_pct_chord": 0.03829972440596125,
+      "cst_residual_lower_pct_chord": 0.024426055899313768
+    },
+    "1000": {
+      "n_raw": 260,
+      "n_surface": 238,
+      "interior_fraction": 0.08461538461538465,
+      "cst_residual_upper_pct_chord": 0.04073779764557317,
+      "cst_residual_lower_pct_chord": 0.015128368312317054
+    },
+    "1100": {
+      "n_raw": 672,
+      "n_surface": 223,
+      "interior_fraction": 0.6681547619047619,
+      "cst_residual_upper_pct_chord": 0.025328132438049416,
+      "cst_residual_lower_pct_chord": 0.029876345651294264
+    },
+    "1200": {
+      "n_raw": 229,
+      "n_surface": 203,
+      "interior_fraction": 0.11353711790393017,
+      "cst_residual_upper_pct_chord": 0.05047031390313856,
+      "cst_residual_lower_pct_chord": 0.03694033487229848
+    },
+    "1300": {
+      "n_raw": 255,
+      "n_surface": 226,
+      "interior_fraction": 0.11372549019607847,
+      "cst_residual_upper_pct_chord": 0.02477805176042125,
+      "cst_residual_lower_pct_chord": 0.03510769140061652
+    },
+    "1400": {
+      "n_raw": 241,
+      "n_surface": 219,
+      "interior_fraction": 0.09128630705394192,
+      "cst_residual_upper_pct_chord": 0.016406375867097023,
+      "cst_residual_lower_pct_chord": 0.03322217668133024
+    },
+    "1500": {
+      "n_raw": 195,
+      "n_surface": 166,
+      "interior_fraction": 0.14871794871794874,
+      "cst_residual_upper_pct_chord": 0.026050297889037226,
+      "cst_residual_lower_pct_chord": 0.9992745340343879
+    },
+    "1580": {
+      "n_raw": 214,
+      "n_surface": 196,
+      "interior_fraction": 0.08411214953271029,
+      "cst_residual_upper_pct_chord": 0.03227220090268072,
+      "cst_residual_lower_pct_chord": 0.013944833468944042
+    }
+  }
+}

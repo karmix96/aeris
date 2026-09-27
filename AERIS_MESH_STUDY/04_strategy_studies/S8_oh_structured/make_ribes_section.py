@@ -1,96 +1,151 @@
-#!/usr/bin/env python3
-"""Build the RIBES section table that ribes_loft.py reads, from the laser scan.
+#!/usr/bin/env python
+"""Build external/ribes/ribes_section.dat from the RIBES laser scan.
 
-The section is the MEDIAN CAMBER and MEDIAN THICKNESS of 17 sections sliced out
-of MeasuredCADmodel.stp, then lightly smoothed. Each choice here was forced by a
-failure, so they are recorded rather than tuned:
+THE DEFECT THIS FIXES
+---------------------
+19.5% of the scan points are not on the wetted surface.  The RIBES model is an
+aeroelastic article with a load-bearing structure, and the scan captured its
+spar web: 15 of 17 sections carry a vertical column of points at x/c 0.19-0.21,
+and section 1100 is 66.8% interior.  Sorting the raw cloud by polar angle
+interleaves those interior points into the surface ring, and any fit through
+them rattles.  The old smoothing spline still agreed with the 30 pressure taps
+to 0.074% of chord, because the rattle lives *between* the taps -- so tap
+agreement alone could not detect this.  The rattle then tripped separation over
+the whole wing (C_L -0.153 against a measured +0.264).
 
-  median camber and thickness, not median upper and lower
-      Medianing the two surfaces independently let them cross, and the mesher
-      refused the grid. Thickness is non-negative on every input section, so its
-      median is too, and the reconstruction cannot cross.
-
-  interpolation in sqrt(x), not x
-      Near the nose z ~ sqrt(x). A linear interpolant in x cuts that corner, and
-      the mesher measures the result as kinks: a 160-point table read as 19.47
-      degrees of leading-edge turning against a 10 degree target.
-
-  a SMOOTHING SPLINE, not an interpolant through a median
-      The first version resampled each scanned section onto a 2000-point grid
-      and medianed them. It agreed with the pressure taps to 0.074 % of chord
-      and it was WRONG: each section only carries ~250 scattered points, so
-      between them the curve is linear segments, and the median of 17 different
-      segmentations oscillates. The delivered section dented and bumped by 1.5 %
-      of chord between x/c 0.1 and 0.3 and had 250 curvature sign changes on the
-      upper surface -- a corrugated wing. It meshed cleanly and solved to a
-      converged, physically impossible answer: CD 1834 counts, cp reaching
-      +2.158 where stagnation is 1.0.
-
-      The tap check did not catch it because the taps are 30 points and the
-      waviness lives between them. Fitting with far fewer degrees of freedom
-      than data points is the fix, and the honest acceptance numbers are the
-      nose radius and the curvature, not agreement at 30 stations:
-
-          lam     tap %c   curvature flips   nose radius %c
-          1e-10    0.113               456            1.882
-          1e-08    0.289               250            1.525
-          1e-06    0.241                84            1.509
-          1e-05    0.273                48            1.538
-
-      A scaled Goettingen 398, which is what the design report says the section
-      started from, has a 1.81 % nose radius. lam = 1e-6 sits at 1.51 %.
+Two measurements decide this file:
+  * interior rejection: per-section CST residual 0.85% -> 0.032% of chord (26x).
+  * CST rather than a smoothing spline: the nose is structural (the sqrt(x)
+    class function), not fitted, so smoothness does not trade against fit.
+Both metrics improve together, which is why this is a fix and not a taste call.
 """
-from __future__ import annotations
 import json
-from pathlib import Path
 import numpy as np
-from scipy.interpolate import make_smoothing_spline
+from math import comb
+from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 SECTIONS = HERE / "data/ribes/ribes_measured_sections.json"
 OUT = HERE / "external/ribes/ribes_section.dat"
-N_POINTS, LAM = 1200, 1.0e-6
+
+N_CST = 8          # 8 coefficients reach 0.03%c; more only refits scan noise
+X_WIN = 0.01       # half-width of the x-neighbourhood used to test interiority
+Z_TOL = 0.004      # a point needs material above AND below to count as interior
+N_OUT = 400        # output points per surface, cosine-clustered
 
 
-def main() -> int:
-    D = json.loads(SECTIONS.read_text())["sections"]
-    ux, uz, lx, lz = [], [], [], []
-    for _, s in sorted(D.items(), key=lambda t: int(t[0])):
-        if s["n_points"] < 150:
+def reject_interior(x, z):
+    """Drop points that have scan material both above and below them nearby.
+
+    The wetted surface is the z-envelope of the cloud.  A spar-web point sits
+    strictly inside it; a surface point cannot.
+    """
+    keep = np.ones(len(x), bool)
+    for i in range(len(x)):
+        near = np.abs(x - x[i]) < X_WIN
+        if (z[near] > z[i] + Z_TOL).any() and (z[near] < z[i] - Z_TOL).any():
+            keep[i] = False
+    return x[keep], z[keep]
+
+
+def split_surfaces(x, z):
+    """Assign cleaned points to upper/lower against the local mid-line."""
+    order = np.argsort(x)
+    x, z = x[order], z[order]
+    probe = np.linspace(0.0, 1.0, 60)
+    mids = []
+    for xx in probe:
+        near = np.abs(x - xx) < 0.02
+        mids.append(0.5 * (z[near].max() + z[near].min()) if near.any() else 0.0)
+    mid = np.interp(x, probe, mids)
+    return (x[z >= mid], z[z >= mid]), (x[z < mid], z[z < mid])
+
+
+def cst_fit(x, z, n=N_CST):
+    """Kulfan CST: z = x^0.5 (1-x) * sum A_i B_i(x) + x*z_te, linear in A_i."""
+    z_te = z[x > 0.995].mean() if (x > 0.995).any() else 0.0
+    cls = np.sqrt(np.clip(x, 0.0, 1.0)) * (1.0 - x)
+    basis = np.column_stack(
+        [cls * comb(n, i) * x**i * (1.0 - x) ** (n - i) for i in range(n + 1)])
+    coeff, *_ = np.linalg.lstsq(basis, z - x * z_te, rcond=None)
+    resid = float(np.sqrt(np.mean((basis @ coeff - (z - x * z_te)) ** 2)))
+
+    def evaluate(g):
+        cls_g = np.sqrt(np.clip(g, 0.0, 1.0)) * (1.0 - g)
+        bg = np.column_stack(
+            [cls_g * comb(n, i) * g**i * (1.0 - g) ** (n - i) for i in range(n + 1)])
+        return bg @ coeff + g * z_te
+
+    return evaluate, resid, coeff
+
+
+def main():
+    sections = json.loads(SECTIONS.read_text())["sections"]
+    up_x, up_z, lo_x, lo_z = [], [], [], []
+    per_section = {}
+    for key, sec in sorted(sections.items(), key=lambda t: int(t[0])):
+        x = np.asarray(sec["xc"], float)
+        z = np.asarray(sec["zc"], float)
+        if len(x) < 150:
             continue
-        P = np.column_stack([s["xc"], s["zc"]])
-        c = P.mean(axis=0)
-        P = P[np.argsort(np.arctan2(P[:, 1] - c[1], (P[:, 0] - c[0]) * 0.25))]
-        P = np.roll(P, -int(np.argmin(P[:, 0])), axis=0)
-        z_le = P[0, 1]
-        half = int(np.argmax(P[:, 0]))
-        a, b = P[:half + 1], np.vstack([P[half:], P[:1]])[::-1]
-        upper, lower = (a, b) if a[:, 1].mean() > b[:, 1].mean() else (b, a)
-        for curve, X, Z in ((upper, ux, uz), (lower, lx, lz)):
-            X.extend(curve[:, 0]); Z.extend(curve[:, 1])
-            X.append(0.0); Z.append(z_le)
+        n_raw = len(x)
+        x, z = reject_interior(x, z)
+        (ux, uz), (lx, lz) = split_surfaces(x, z)
+        _, r_up, _ = cst_fit(ux, uz)
+        _, r_lo, _ = cst_fit(lx, lz)
+        per_section[key] = {"n_raw": n_raw, "n_surface": int(len(x)),
+                            "interior_fraction": 1.0 - len(x) / n_raw,
+                            "cst_residual_upper_pct_chord": 100 * r_up,
+                            "cst_residual_lower_pct_chord": 100 * r_lo}
+        up_x.extend(ux); up_z.extend(uz)
+        lo_x.extend(lx); lo_z.extend(lz)
 
-    grid = np.linspace(0.0, 1.0, N_POINTS) ** 2
-    out = []
-    for X, Z in ((ux, uz), (lx, lz)):
-        X, Z = np.asarray(X), np.asarray(Z)
-        xs, idx = np.unique(np.round(X, 5), return_inverse=True)
-        zs = np.bincount(idx, weights=Z) / np.bincount(idx)
-        out.append(make_smoothing_spline(np.sqrt(xs), zs, lam=LAM)(np.sqrt(grid)))
-    up, lo = out
-    mid = 0.5 * (up[0] + lo[0])
-    up[0] = lo[0] = mid
+    f_up, r_up, c_up = cst_fit(np.asarray(up_x), np.asarray(up_z))
+    f_lo, r_lo, c_lo = cst_fit(np.asarray(lo_x), np.asarray(lo_z))
 
-    thk = up - lo
-    m = (grid > 1e-5) & (grid < 0.01)
-    nose_r = float(np.polyfit(np.sqrt(grid[m]), 0.5 * thk[m], 1)[0] ** 2 / 2)
-    np.savetxt(OUT, np.column_stack([grid, up, lo]), fmt="%.7f",
-               header=f"x/c  z/c_upper  z/c_lower   smoothing spline, lam={LAM:g}")
-    print(f"  t/c max {100 * thk.max():.2f} % (design 11), nose radius {100 * nose_r:.3f} % "
-          f"(scaled Goe 398 gives 1.81), min thickness {100 * thk.min():+.5f} %")
-    print(f"  wrote {OUT}")
-    return 0
+    # cosine clustering: dense at both edges, which is where curvature lives
+    grid = 0.5 * (1.0 - np.cos(np.linspace(0.0, np.pi, N_OUT)))
+    zu, zl = f_up(grid), f_lo(grid)
+    zle = 0.5 * (zu[0] + zl[0])
+    zu[0] = zl[0] = zle
+
+    if np.any((zu - zl)[1:-1] <= 0.0):
+        raise SystemExit("upper and lower surfaces cross -- refusing to write")
+
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    # three columns on a shared x/c grid: this is what ribes_loft reads
+    with OUT.open("w") as fh:
+        fh.write("# RIBES wing section, from the laser scan, interior points rejected\n")
+        fh.write(f"# CST n={N_CST}; pooled residual upper {100*r_up:.3f}%c "
+                 f"lower {100*r_lo:.3f}%c\n")
+        fh.write("# x/c   z/c upper   z/c lower\n")
+        for xx, zzu, zzl in zip(grid, zu, zl):
+            fh.write(f"{xx:.8f} {zzu:.8f} {zzl:.8f}\n")
+
+    thick, camber = zu - zl, 0.5 * (zu + zl)
+    report = {
+        "source": "RIBES laser scan, 17 sections",
+        "method": f"interior rejection then CST n={N_CST} per surface",
+        "pooled_residual_pct_chord": {"upper": 100 * r_up, "lower": 100 * r_lo},
+        "thickness_max_pct_chord": 100 * float(thick.max()),
+        "thickness_max_at_xc": float(grid[thick.argmax()]),
+        "camber_max_pct_chord": 100 * float(camber.max()),
+        "camber_max_at_xc": float(grid[camber.argmax()]),
+        "trailing_edge_thickness_pct_chord": 100 * float(thick[-1]),
+        "cst_coefficients": {"upper": c_up.tolist(), "lower": c_lo.tolist()},
+        "per_section": per_section,
+    }
+    out_json = HERE / "reports/s8_ribes_section_fit.json"
+    out_json.write_text(json.dumps(report, indent=2))
+
+    print(f"wrote {OUT}  ({N_OUT} stations, 3 columns)")
+    print(f"  pooled CST residual  upper {100*r_up:.3f} %c   lower {100*r_lo:.3f} %c")
+    print(f"  interior rejected    {100*np.mean([v['interior_fraction'] for v in per_section.values()]):.1f} % of scan points")
+    print(f"  t/c max {100*thick.max():.2f} % at x/c {grid[thick.argmax()]:.3f}"
+          f"   camber max {100*camber.max():+.2f} % at x/c {grid[camber.argmax()]:.3f}")
+    print(f"  TE thickness {100*thick[-1]:.3f} %c")
+    print(f"  wrote {out_json}")
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()

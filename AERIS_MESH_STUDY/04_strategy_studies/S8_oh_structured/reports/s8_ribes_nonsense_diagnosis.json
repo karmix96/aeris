@@ -68,22 +68,24 @@
       "cdp_counts": 2643.94,
       "cdv_counts": 4.1
     },
-    "after_iter27": {
-      "cl": 0.2521,
-      "cd_counts": 159.4,
-      "cdp_counts": 80.2,
-      "cdv_counts": 79.2,
-      "converged": false,
-      "note": "still iterating when this was written"
-    },
     "measured": {
       "sectional_cl_SEC_C": 0.2638,
       "sectional_cl_SEC_E": 0.226
     },
-    "decisive_quantity": "C_Dv. Skin friction cannot nearly vanish on a wing at Re 1.3e6. 4.10 counts was the impossible number; 79.2 is physical, against about 93.8 counts for the AERIS g83 wing at comparable Reynolds."
+    "decisive_quantity": "C_Dv. Skin friction cannot nearly vanish on a wing at Re 1.3e6. 4.10 counts was the impossible number; 79.2 is physical, against about 93.8 counts for the AERIS g83 wing at comparable Reynolds.",
+    "after_converged": {
+      "cl": 0.2487,
+      "cd_counts": 167.05,
+      "cdp_counts": 78.27,
+      "cdv_counts": 88.78,
+      "cmy": 0.06364,
+      "converged": true,
+      "iterations": 345,
+      "note": "alpha 0.36 at the RIBES T40 measured condition, gci2_C on the cleaned section"
+    }
   },
   "unverified": [
-    "the run had not converged when this record was written, so the after-fix coefficients are an iteration-27 reading, not a converged result",
-    "the three other incidences (-1.94, 4.75, 8.12) are queued"
+    "the three other incidences (-1.94, 4.75, 8.12) were still solving when this was written",
+    "C_L 0.2487 is a wing coefficient; the 0.2638 and 0.2260 it is held against are SECTIONAL values at two spanwise stations, so this is a consistency check, not a like-for-like validation"
   ]
 }

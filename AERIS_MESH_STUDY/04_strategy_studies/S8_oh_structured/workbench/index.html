@@ -1,0 +1,1993 @@
+<title>S8 Aero Workbench</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#e9ecf0; --panel:#fff; --panel2:#f5f7f9; --panel3:#eceff3;
+  --line:#ccd2da; --line2:#dde2e8;
+  --ink:#1c2128; --ink2:#5a6472; --ink3:#8a94a1;
+  --accent:#1a6ba8; --accent2:#0d4a78; --accentbg:#e4eef7;
+  --good:#1f7a4d; --warn:#9c6410; --bad:#a82e28;
+  --goodbg:#e3f2ea; --warnbg:#fbf0dc; --badbg:#f9e5e3;
+  --vp:#12161b; --vpgrid:#2a323b; --vpink:#c9d3de;
+  --r:3px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#15191e; --panel:#1e2329; --panel2:#191e24; --panel3:#232931;
+  --line:#2f3740; --line2:#272e36;
+  --ink:#dce3ea; --ink2:#8e99a6; --ink3:#69737f;
+  --accent:#4b9fd8; --accent2:#6fb6e4; --accentbg:#1a2c3b;
+  --good:#4caf7d; --warn:#d69a3c; --bad:#e0675f;
+  --goodbg:#16281f; --warnbg:#2b2214; --badbg:#2d1a18;
+}}
+:root[data-theme="dark"]{
+  --bg:#15191e; --panel:#1e2329; --panel2:#191e24; --panel3:#232931;
+  --line:#2f3740; --line2:#272e36;
+  --ink:#dce3ea; --ink2:#8e99a6; --ink3:#69737f;
+  --accent:#4b9fd8; --accent2:#6fb6e4; --accentbg:#1a2c3b;
+  --good:#4caf7d; --warn:#d69a3c; --bad:#e0675f;
+  --goodbg:#16281f; --warnbg:#2b2214; --badbg:#2d1a18;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:13px/1.45 "IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+/* ---------- frame ---------- */
+#app{display:flex;flex-direction:column;height:100%;min-height:0}
+#top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--line)}
+#top h1{margin:0;font-size:14px;font-weight:600;letter-spacing:-.1px;white-space:nowrap}
+#top h1 span{color:var(--ink3);font-weight:400}
+.crumb{display:flex;gap:6px;align-items:center;font-size:11px;color:var(--ink2);
+  font-family:"IBM Plex Mono",monospace}
+.crumb b{color:var(--ink);font-weight:500}
+.spacer{flex:1 1 auto}
+.tbtn{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r);
+  padding:4px 9px;font-size:11.5px;cursor:pointer;color:var(--ink2)}
+.tbtn:hover{border-color:var(--accent);color:var(--ink)}
+
+/* stage tabs */
+#stages{display:flex;gap:0;background:var(--panel2);border-bottom:1px solid var(--line);
+  overflow-x:auto;scrollbar-width:thin}
+#stages button{flex:0 0 auto;background:none;border:none;border-right:1px solid var(--line2);
+  border-bottom:2px solid transparent;padding:8px 16px;cursor:pointer;
+  font-size:12px;font-weight:500;color:var(--ink2);white-space:nowrap;
+  display:flex;align-items:center;gap:7px}
+#stages button .n{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--ink3);
+  background:var(--panel3);border-radius:2px;padding:1px 4px}
+#stages button:hover{color:var(--ink);background:var(--panel3)}
+#stages button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);
+  background:var(--panel)}
+#stages button[aria-selected="true"] .n{background:var(--accentbg);color:var(--accent)}
+
+/* three panes */
+#main{flex:1 1 auto;display:grid;grid-template-columns:232px minmax(0,1fr) 330px;
+  min-height:0;gap:1px;background:var(--line)}
+.pane{background:var(--panel);min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.pane>header{flex:0 0 auto;padding:6px 10px;background:var(--panel2);
+  border-bottom:1px solid var(--line);font-size:10.5px;font-weight:600;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--ink2);
+  display:flex;align-items:center;gap:8px}
+.pane>.body{flex:1 1 auto;overflow:auto;min-height:0}
+#viewpane{background:var(--vp)}
+#viewpane>header{background:#1a1f25;border-color:#2a323b;color:#8d99a6}
+
+/* outline tree */
+.tree{padding:6px 0;font-size:12px}
+.tree .grp{padding:6px 10px 3px;font-size:10px;font-weight:600;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink3)}
+.tree a{display:flex;align-items:center;gap:7px;padding:4px 10px 4px 16px;
+  cursor:pointer;color:var(--ink2);text-decoration:none;border-left:2px solid transparent}
+.tree a:hover{background:var(--panel3);color:var(--ink)}
+.tree a.on{background:var(--accentbg);color:var(--accent);border-left-color:var(--accent);
+  font-weight:500}
+.tree a .dot{width:6px;height:6px;border-radius:50%;flex:0 0 auto;background:var(--ink3)}
+.tree a .dot.ok{background:var(--good)} .tree a .dot.no{background:var(--bad)}
+.tree a .dot.wa{background:var(--warn)}
+.tree a small{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:10px;
+  color:var(--ink3)}
+
+/* details panel */
+.grp-h{padding:7px 11px;background:var(--panel2);border-top:1px solid var(--line2);
+  border-bottom:1px solid var(--line2);font-size:10.5px;font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);
+  display:flex;align-items:center;gap:6px;cursor:pointer;position:sticky;top:0;z-index:2}
+.grp-h .tw{font-size:9px;color:var(--ink3);transition:transform .12s}
+.grp-h.closed .tw{transform:rotate(-90deg)}
+.rows{display:block}
+.rows.hid{display:none}
+.row{display:grid;grid-template-columns:1fr 104px;gap:8px;align-items:center;
+  padding:3px 11px;min-height:25px}
+.row:hover{background:var(--panel2)}
+.row>label{font-size:11.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+.row>label .u{color:var(--ink3);font-size:10px}
+.row input[type=number],.row input[type=text],.row select{width:100%;padding:2px 5px;
+  background:var(--panel);border:1px solid var(--line);border-radius:2px;
+  font-family:"IBM Plex Mono",monospace;font-size:11px;text-align:right}
+.row select{text-align:left}
+.row input:disabled{background:var(--panel3);color:var(--ink3)}
+.row .val{font-family:"IBM Plex Mono",monospace;font-size:11px;text-align:right;
+  color:var(--ink);padding-right:5px}
+.row .val.d{color:var(--ink2)}
+.row input[type=checkbox]{width:auto;justify-self:end;margin:0;accent-color:var(--accent)}
+.row input[type=range]{width:100%;accent-color:var(--accent);margin:0}
+.wide{grid-template-columns:1fr}
+.note{padding:5px 11px 8px;font-size:11px;color:var(--ink2);line-height:1.5}
+.note b{color:var(--ink);font-weight:500}
+.pill{display:inline-block;padding:1px 6px;border-radius:9px;font-size:10px;
+  font-weight:500;font-family:"IBM Plex Mono",monospace}
+.pill.ok{background:var(--goodbg);color:var(--good)}
+.pill.no{background:var(--badbg);color:var(--bad)}
+.pill.wa{background:var(--warnbg);color:var(--warn)}
+.pill.i{background:var(--accentbg);color:var(--accent)}
+
+/* viewport */
+#vpwrap{position:relative;flex:1 1 auto;min-height:0;overflow:hidden}
+#vpwrap canvas{display:block;width:100%;height:100%}
+.vptools{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.vptools button,.vptools select{background:#252c34;border:1px solid #333c46;
+  color:#c2ccd8;border-radius:2px;padding:2px 7px;font-size:10.5px;cursor:pointer}
+.vptools button:hover{border-color:#4b9fd8;color:#fff}
+.vptools button.on{background:#17364e;border-color:#4b9fd8;color:#8ec7ee}
+.vplegend{position:absolute;left:10px;bottom:10px;background:rgba(18,22,27,.86);
+  border:1px solid #2d353e;border-radius:3px;padding:7px 9px;font-size:10px;
+  color:#aeb9c5;font-family:"IBM Plex Mono",monospace;pointer-events:none;max-width:62%}
+.vplegend .sw{display:inline-block;width:9px;height:9px;border-radius:2px;
+  margin-right:5px;vertical-align:-1px}
+.vpstat{position:absolute;right:10px;top:10px;background:rgba(18,22,27,.86);
+  border:1px solid #2d353e;border-radius:3px;padding:7px 9px;font-size:10px;
+  color:#aeb9c5;font-family:"IBM Plex Mono",monospace;pointer-events:none;text-align:right}
+.vpstat b{color:#e4ebf2;font-weight:500}
+
+/* console */
+#console{flex:0 0 auto;max-height:118px;overflow:auto;background:var(--panel2);
+  border-top:1px solid var(--line);padding:5px 12px;
+  font-family:"IBM Plex Mono",monospace;font-size:10.5px;line-height:1.65;color:var(--ink2)}
+#console div{white-space:pre-wrap;word-break:break-word}
+#console .t{color:var(--ink3)}
+#console .ok{color:var(--good)} #console .no{color:var(--bad)}
+#console .wa{color:var(--warn)} #console .hi{color:var(--accent)}
+
+/* tables */
+table{border-collapse:collapse;width:100%;font-size:11px}
+th,td{padding:3px 7px;text-align:right;border-bottom:1px solid var(--line2);
+  white-space:nowrap}
+th{position:sticky;top:0;background:var(--panel2);font-size:10px;font-weight:600;
+  color:var(--ink2);text-transform:uppercase;letter-spacing:.04em;cursor:pointer;z-index:1}
+th:hover{color:var(--accent)}
+th.l,td.l{text-align:left}
+td{font-family:"IBM Plex Mono",monospace}
+td.s{font-family:"IBM Plex Sans",sans-serif}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--panel2)}
+tbody tr.sel{background:var(--accentbg)}
+.tbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:6px 10px;
+  border-bottom:1px solid var(--line2);background:var(--panel)}
+.tbar select,.tbar input{padding:2px 5px;background:var(--panel);border:1px solid var(--line);
+  border-radius:2px;font-size:11px}
+.tbar .ct{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:10.5px;
+  color:var(--ink3)}
+
+/* misc */
+.msg{padding:14px;color:var(--ink2);font-size:12px;line-height:1.6}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;padding:8px 11px;
+  font-size:11px}
+.kv dt{color:var(--ink2)} .kv dd{margin:0;font-family:"IBM Plex Mono",monospace}
+hr.sep{border:none;border-top:1px solid var(--line2);margin:0}
+.warnbox{margin:8px 11px;padding:7px 9px;border-radius:var(--r);font-size:11px;
+  line-height:1.5;background:var(--warnbg);color:var(--warn);
+  border:1px solid color-mix(in srgb,var(--warn) 28%,transparent)}
+.warnbox.bad{background:var(--badbg);color:var(--bad);
+  border-color:color-mix(in srgb,var(--bad) 28%,transparent)}
+.warnbox.good{background:var(--goodbg);color:var(--good);
+  border-color:color-mix(in srgb,var(--good) 28%,transparent)}
+.warnbox b{font-weight:600}
+.btnrow{display:flex;gap:6px;padding:8px 11px;flex-wrap:wrap}
+.btn{flex:1 1 auto;background:var(--accent);color:#fff;border:1px solid var(--accent);
+  border-radius:var(--r);padding:5px 10px;font-size:11.5px;font-weight:500;cursor:pointer}
+.btn:hover{background:var(--accent2);border-color:var(--accent2)}
+.btn.sec{background:var(--panel2);color:var(--ink2);border-color:var(--line)}
+.btn.sec:hover{background:var(--panel3);color:var(--ink);border-color:var(--accent)}
+.drop{margin:8px 11px;padding:14px 10px;border:1.5px dashed var(--line);border-radius:var(--r);
+  text-align:center;font-size:11px;color:var(--ink3);cursor:pointer}
+.drop.over{border-color:var(--accent);color:var(--accent);background:var(--accentbg)}
+
+@media (max-width:980px){
+  #main{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(320px,1fr) auto}
+  #treepane{max-height:150px}
+  #detailpane{max-height:46vh}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div id="app">
+  <div id="top">
+    <h1>S8 Aero Workbench <span>&middot; O&ndash;H structured</span></h1>
+    <div class="crumb" id="crumb"></div>
+    <div class="spacer"></div>
+    <button class="tbtn" id="themebtn" type="button">Theme</button>
+  </div>
+
+  <div id="stages" role="tablist">
+    <button role="tab" data-stage="geom"  aria-selected="true"><span class="n">1</span>Geometry</button>
+    <button role="tab" data-stage="mesh"  aria-selected="false"><span class="n">2</span>Mesh</button>
+    <button role="tab" data-stage="solve" aria-selected="false"><span class="n">3</span>Solver</button>
+    <button role="tab" data-stage="post"  aria-selected="false"><span class="n">4</span>Results</button>
+    <button role="tab" data-stage="valid" aria-selected="false"><span class="n">5</span>Validation</button>
+    <button role="tab" data-stage="gci"   aria-selected="false"><span class="n">6</span>Convergence</button>
+  </div>
+
+  <div id="main">
+    <div class="pane" id="treepane">
+      <header>Outline</header>
+      <div class="body"><div class="tree" id="tree"></div></div>
+    </div>
+
+    <div class="pane" id="viewpane">
+      <header><span id="vptitle">View</span><div class="spacer"></div>
+        <div class="vptools" id="vptools"></div></header>
+      <div id="vpwrap">
+        <canvas id="vp"></canvas>
+        <div class="vplegend" id="vplegend" hidden></div>
+        <div class="vpstat" id="vpstat" hidden></div>
+      </div>
+    </div>
+
+    <div class="pane" id="detailpane">
+      <header><span id="dtitle">Details</span></header>
+      <div class="body" id="details"></div>
+    </div>
+  </div>
+
+  <div id="console"></div>
+</div>
+
+<script src="s8data.js"></script>
+<script>
+"use strict";
+const D = window.S8 || {};
+const $ = s => document.querySelector(s);
+const E = (t, c, x) => { const e = document.createElement(t);
+  if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const fx = (v, n = 3) => (v == null || !isFinite(v)) ? "—" : (+v).toFixed(n);
+const ct = (v, n = 2) => (v == null || !isFinite(v)) ? "—" : (1e4 * v).toFixed(n);
+const sci = (v, n = 3) => (v == null || !isFinite(v)) ? "—" : (+v).toExponential(n);
+const cm = v => (v == null) ? "—" : (+v).toLocaleString("en-US");
+
+/* ------------------------------------------------------------------ console */
+const LOG = [];
+function log(msg, cls) {
+  const t = new Date().toTimeString().slice(0, 8);
+  LOG.push([t, msg, cls]);
+  const c = $("#console"); const d = E("div");
+  d.appendChild(E("span", "t", t + "  "));
+  const s = E("span", cls || "", msg); d.appendChild(s);
+  c.appendChild(d); c.scrollTop = c.scrollHeight;
+  while (c.children.length > 260) c.removeChild(c.firstChild);
+}
+
+/* ------------------------------------------------------ geometry definitions */
+const GEOM = {
+  ribes: {
+    label: "RIBES wind-tunnel wing", span: 1.600, root: 0.5998, tip: 0.4199,
+    sweep: 1.286, dihedral: -0.138, twist: 0.0, sref: 0.815, mac: 0.5153,
+    section: "ribes", measured: true,
+    note: "Planform fitted to 17 laser-scanned sections; residual 0.72 mm on the " +
+          "leading edge against a 600 mm root chord. Reference area is the value " +
+          "the RIBES report forms its own coefficients with."
+  },
+  m6: {
+    label: "ONERA M6", span: 1.1963, root: 0.8059, tip: 0.4530,
+    sweep: 30.0, dihedral: 0.0, twist: 0.0, sref: 0.7532, mac: 0.6460,
+    section: "n0012", measured: false,
+    note: "Canonical validation wing. The section here is a NACA 0012 stand-in: " +
+          "the true ONERA D section is not carried in this bundle."
+  },
+  aeris: {
+    label: "AERIS g83 (design set)", span: 2.400, root: 0.900, tip: 0.360,
+    sweep: 22.0, dihedral: 2.0, twist: -2.0, sref: 1.512, mac: 0.900,
+    section: "n4412", measured: false,
+    note: "Reference chord 0.900 m and the mission condition are the governed " +
+          "values. The planform numbers here are editable placeholders — the " +
+          "g83 loft itself is not carried in this bundle, so treat the span, " +
+          "sweep and twist shown as a starting point, not as the design record."
+  }
+};
+
+/* ---------------------------------------------------------- section sources */
+function naca4(m, p, t, n = 240) {
+  const xs = [], zu = [], zl = [];
+  for (let i = 0; i < n; i++) {
+    const x = 0.5 * (1 - Math.cos(Math.PI * i / (n - 1)));
+    const yt = 5 * t * (0.2969 * Math.sqrt(x) - 0.1260 * x - 0.3516 * x * x
+                        + 0.2843 * x ** 3 - 0.1015 * x ** 4);
+    let yc = 0, dy = 0;
+    if (m > 0) {
+      if (x < p) { yc = m / (p * p) * (2 * p * x - x * x); dy = 2 * m / (p * p) * (p - x); }
+      else { yc = m / ((1 - p) ** 2) * ((1 - 2 * p) + 2 * p * x - x * x);
+             dy = 2 * m / ((1 - p) ** 2) * (p - x); }
+    }
+    const th = Math.atan(dy);
+    xs.push(x); zu.push(yc + yt * Math.cos(th)); zl.push(yc - yt * Math.cos(th));
+  }
+  return { x: xs, zu, zl };
+}
+const SECTIONS = {
+  ribes: () => ({ x: D.section.x.slice(), zu: D.section.zu.slice(),
+                  zl: D.section.zl.slice(),
+                  label: "RIBES measured (CST n=8 on the cleaned scan)" }),
+  n0012: () => Object.assign(naca4(0, 0.4, 0.12), { label: "NACA 0012 (stand-in)" }),
+  n4412: () => Object.assign(naca4(0.04, 0.4, 0.12), { label: "NACA 4412 (stand-in)" })
+};
+
+/* --------------------------------------------------------------- mesh maths */
+// geometric spacing: n cells, first cell s0, total length L -> growth ratio
+function growthRatio(n, s0, L) {
+  if (n < 2) return 1;
+  if (s0 * n >= L) return 1;
+  let lo = 1.0000001, hi = 3;
+  const f = g => s0 * (Math.pow(g, n) - 1) / (g - 1) - L;
+  if (f(hi) < 0) return hi;
+  for (let k = 0; k < 80; k++) { const m = 0.5 * (lo + hi);
+    if (f(m) > 0) hi = m; else lo = m; }
+  return 0.5 * (lo + hi);
+}
+// spacing graded geometrically between two end spacings, normalised to length 1
+function gradedT(n, ds0, ds1) {
+  const h = [];
+  for (let i = 0; i < n - 1; i++) {
+    const u = (n === 2) ? 0 : i / (n - 2);
+    h.push(Math.pow(ds0, 1 - u) * Math.pow(ds1, u));
+  }
+  const tot = h.reduce((a, b) => a + b, 0);
+  const t = [0];
+  for (const v of h) t.push(t[t.length - 1] + v / tot);
+  t[t.length - 1] = 1;
+  return t;
+}
+function arclen(px, pz) {
+  const s = [0];
+  for (let i = 1; i < px.length; i++)
+    s.push(s[i - 1] + Math.hypot(px[i] - px[i - 1], pz[i] - pz[i - 1]));
+  return s;
+}
+function resample(px, pz, s, targets) {
+  const out = [];
+  let j = 0;
+  for (const st of targets) {
+    const q = st * s[s.length - 1];
+    while (j < s.length - 2 && s[j + 1] < q) j++;
+    const f = (s[j + 1] - s[j]) < 1e-15 ? 0 : (q - s[j]) / (s[j + 1] - s[j]);
+    out.push([px[j] + f * (px[j + 1] - px[j]), pz[j] + f * (pz[j + 1] - pz[j])]);
+  }
+  return out;
+}
+// nose radius from z ~ sqrt(2 R x)
+function noseRadius(sec) {
+  let num = 0, den = 0;
+  for (let i = 1; i < sec.x.length; i++) {
+    const x = sec.x[i]; if (x <= 1e-6 || x > 0.01) continue;
+    const r = Math.sqrt(x), h = 0.5 * (sec.zu[i] - sec.zl[i]);
+    num += r * h; den += r * r;
+  }
+  return den > 0 ? 0.5 * (num / den) ** 2 : 0.01;
+}
+
+/* build the closed ring: base face + upper + lower, with the blunt base */
+function buildRing(sec, L, chord) {
+  const teAbs = +L.te_abs_m || 0, teFrac = +L.te_floor_frac || 0;
+  const tb = Math.max(teAbs / chord, teFrac);          // base opening, fraction of chord
+  const have = sec.zu[sec.zu.length - 1] - sec.zl[sec.zl.length - 1];
+  const add = Math.max(0, (tb - have) / 2);
+  const zu = sec.zu.map((z, i) => z + add * sec.x[i]);
+  const zl = sec.zl.map((z, i) => z - add * sec.x[i]);
+
+  const R = noseRadius({ x: sec.x, zu, zl });
+  const dsLE = clamp(R * (+L.target_le_turn_deg) * Math.PI / 180, 2e-6, 0.05)
+               / (+L.le_refine_factor || 1);
+  const dsTE = Math.max(+L.ds_te_frac, 1e-6);
+
+  const nSide = Math.max(4, Math.round(+L.n_side));
+  const nBase = Math.max(2, Math.round(+L.n_base));
+
+  // upper surface, TE -> LE  (reverse the LE->TE arrays)
+  const ux = sec.x.slice().reverse(), uz = zu.slice().reverse();
+  const lx = sec.x.slice(), lz = zl.slice();
+  const su = arclen(ux, uz), sl = arclen(lx, lz);
+  const tu = gradedT(nSide, dsTE, dsLE);
+  const tl = gradedT(nSide, dsLE, dsTE);
+  const up = resample(ux, uz, su, tu);      // TE -> LE
+  const lo = resample(lx, lz, sl, tl);      // LE -> TE
+
+  // base face, from lower TE up to upper TE
+  const z0 = lz[lz.length - 1], z1 = uz[0];
+  const base = [];
+  for (let i = 1; i < nBase - 1; i++)
+    base.push([1, z0 + (z1 - z0) * i / (nBase - 1)]);
+
+  const ring = up.concat(lo.slice(1), base);   // closed, first == wrap of last
+  return { ring, tb, R, dsLE, dsTE, nRing: ring.length,
+           achievedTE: Math.hypot(ring[1][0] - ring[0][0], ring[1][1] - ring[0][1]),
+           achievedLE: Math.hypot(up[nSide - 1][0] - up[nSide - 2][0],
+                                  up[nSide - 1][1] - up[nSide - 2][1]) };
+}
+
+/* march the ring outward with smoothed normals -> the O-block cross-section */
+function marchNormal(ring, L, chord, smoothIters) {
+  const n = ring.length;
+  const s0 = (+L.s0_frac) ;                       // fraction of chord
+  const nLayer = Math.max(3, Math.round(+L.n_normal));
+  const far = (+L.farfield_chords);
+  const g = growthRatio(nLayer - 1, s0, far);
+  const layers = [ring.map(p => p.slice())];
+  let h = s0;
+  const spac = [];
+  for (let k = 1; k < nLayer; k++) {
+    const prev = layers[k - 1];
+    // outward normals
+    let nx = new Float64Array(n), nz = new Float64Array(n);
+    for (let i = 0; i < n; i++) {
+      const a = prev[(i - 1 + n) % n], b = prev[(i + 1) % n];
+      let tx = b[0] - a[0], tz = b[1] - a[1];
+      const m = Math.hypot(tx, tz) || 1; tx /= m; tz /= m;
+      nx[i] = tz; nz[i] = -tx;                    // ring runs TE->LE on top
+    }
+    // smoothing is what makes the marching lines curve rather than cross
+    const it = smoothIters == null ? 12 : smoothIters;
+    for (let p = 0; p < it; p++) {
+      const ax = new Float64Array(n), az = new Float64Array(n);
+      for (let i = 0; i < n; i++) {
+        const im = (i - 1 + n) % n, ip = (i + 1) % n;
+        ax[i] = 0.25 * nx[im] + 0.5 * nx[i] + 0.25 * nx[ip];
+        az[i] = 0.25 * nz[im] + 0.5 * nz[i] + 0.25 * nz[ip];
+      }
+      nx = ax; nz = az;
+    }
+    const layer = [];
+    for (let i = 0; i < n; i++) {
+      const m = Math.hypot(nx[i], nz[i]) || 1;
+      layer.push([prev[i][0] + h * nx[i] / m, prev[i][1] + h * nz[i] / m]);
+    }
+    layers.push(layer); spac.push(h); h *= g;
+  }
+  return { layers, growth: g, spacings: spac, nLayer };
+}
+
+/* quality: signed quad areas, folded count, aspect ratios */
+function quality(layers) {
+  const nk = layers.length, n = layers[0].length;
+  let neg = 0, amin = Infinity, amax = -Infinity, arMax = 0, tot = 0;
+  const cellA = [];
+  for (let k = 0; k < nk - 1; k++) {
+    const row = new Float64Array(n);
+    for (let i = 0; i < n; i++) {
+      const ip = (i + 1) % n;
+      const p = [layers[k][i], layers[k][ip], layers[k + 1][ip], layers[k + 1][i]];
+      let a = 0;
+      for (let q = 0; q < 4; q++) {
+        const u = p[q], v = p[(q + 1) % 4];
+        a += u[0] * v[1] - v[0] * u[1];
+      }
+      a *= 0.5;
+      row[i] = a;
+      if (a <= 0) neg++;
+      const aa = Math.abs(a);
+      amin = Math.min(amin, aa); amax = Math.max(amax, aa); tot++;
+      const w = Math.hypot(p[1][0] - p[0][0], p[1][1] - p[0][1]);
+      const hh = Math.hypot(p[3][0] - p[0][0], p[3][1] - p[0][1]);
+      if (w > 0 && hh > 0) arMax = Math.max(arMax, Math.max(w / hh, hh / w));
+    }
+    cellA.push(row);
+  }
+  return { neg, amin, amax, arMax, tot, cellA };
+}
+
+/* cell counts, matching how the blocks are actually dimensioned */
+function blockCounts(L, nRing) {
+  const nS = Math.round(+L.n_span), nN = Math.round(+L.n_normal);
+  const nCap = Math.max(3, Math.round(+L.n_side) - Math.round(+L.n_cap_collar));
+  const nBase = Math.round(+L.n_base);
+  const g = growthRatio(60, (+L.s0_frac) * (+L.tip_span_first_cell_in_s0 || 2),
+                        +L.farfield_chords);
+  let nOut = 3, acc = 0, hh = (+L.s0_frac) * (+L.tip_span_first_cell_in_s0 || 2);
+  while (acc < +L.farfield_chords && nOut < 400) { acc += hh; hh *= 1.28; nOut++; }
+  const oWing = (nRing - 1) * (nN - 1) * (nS - 1);
+  const oOut  = (nRing - 1) * (nN - 1) * (nOut - 1);
+  const capOut = (nCap - 1) * (nBase - 1) * (nOut - 1);
+  return { nRing, nN, nS, nOut, nCap, nBase,
+           oWing, oOut, capOut, total: oWing + oOut + capOut,
+           shapes: { o_wing: [nRing, nN, nS], o_out: [nRing, nN, nOut],
+                     cap_out: [nCap, nBase, nOut] } };
+}
+
+/* y+ of the first cell, from a flat-plate skin friction estimate */
+function yPlusEstimate(s0Frac, chord, Re) {
+  if (!Re || !chord) return null;
+  const cf = 0.026 / Math.pow(Re, 1 / 7);
+  return s0Frac * chord * Re / chord * Math.sqrt(cf / 2);
+}
+</script>
+
+<script>
+/* ============================================================== app state */
+const S = {
+  stage: "geom", node: "planform",
+  geom: "ribes",
+  level: "gci2_C",
+  L: Object.assign({}, D.levels ? D.levels.gci2_C : {}),
+  geomP: Object.assign({}, GEOM.ribes),
+  sectionSrc: "ribes",
+  scanSec: "500",
+  showScan: true, showRejected: true, showFit: true,
+  solver: {
+    turbulenceModel: "SA", equationType: "RANS", MGCycle: "sg", smoother: "DADI",
+    useANKSolver: true, ANKSwitchTol: 1.0, useNKSolver: false, NKSwitchTol: 1e-6,
+    ANKSubspaceSize: 10, NKSubspaceSize: 20, ANKPCILUFill: 1, NKPCILUFill: 1,
+    L2Convergence: 1e-6, nCycles: 30000, timeLimit: 2100,
+    eddyVisInfRatio: 0.21, lowSpeedPreconditioner: false, turbResScale: 1e-2,
+    turbulenceOrder: "first order", useFT2SA: true, useWallFunctions: false,
+    useQCR: false, liftIndex: 3
+  },
+  cond: {
+    name: "RIBES T40 measured", alpha: 0.36, mach: 0.11494, reynolds: 1.3286e6,
+    reynoldsLength: 0.5153, temperature: 298.85, chordRef: 0.5153, areaRef: 0.815
+  },
+  view: { mode: "grid", every: 1, colour: "none", zoom: 1, cx: 0.35, cy: 0,
+          lines: true, blocks: { o_wing: true, o_out: true, cap_out: true } },
+  post: { famF: "all", geoF: "all", convF: "all", search: "", sort: "p", dir: 1,
+          selected: new Set(), plot: "polar" },
+  valid: { test: "T40", sec: "C", alphaIdx: 1, imported: null },
+  gci: { levels: ["gci2_C", "gci2_M", "gci2_F"], qty: "cd", set: "s8_fam2" },
+  mesh: null, cache: null
+};
+
+const CONDS = {
+  "RIBES T40 measured": { alpha: 0.36, mach: 0.11494, reynolds: 1.3286e6,
+    reynoldsLength: 0.5153, temperature: 298.85, chordRef: 0.5153, areaRef: 0.815 },
+  "Governed mission (AERIS)": { alpha: 0, mach: 0.0837, reynolds: 1530708.19,
+    reynoldsLength: 0.9, temperature: 278.4, chordRef: 0.9, areaRef: 1.0 },
+  "ONERA M6 validation": { alpha: 3.06, mach: 0.8395, reynolds: 11.72e6,
+    reynoldsLength: 0.6460, temperature: 288.15, chordRef: 0.6460, areaRef: 0.7532 }
+};
+
+/* ============================================================== mesh rebuild */
+function rebuild(smooth) {
+  const sec = SECTIONS[S.sectionSrc]();
+  const chord = S.geomP.root;
+  const r = buildRing(sec, S.L, chord);
+  const m = marchNormal(r.ring, S.L, chord, smooth);
+  const q = quality(m.layers);
+  const bc = blockCounts(S.L, r.nRing);
+  const yp = yPlusEstimate(+S.L.s0_frac, chord, +S.cond.reynolds);
+  S.mesh = { sec, chord, ...r, ...m, q, bc, yp };
+  return S.mesh;
+}
+
+/* ============================================================== canvas base */
+let CV, CX, DPR = 1;
+function fitCanvas() {
+  CV = $("#vp"); const w = CV.parentElement.clientWidth, h = CV.parentElement.clientHeight;
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  CV.width = Math.max(1, Math.round(w * DPR)); CV.height = Math.max(1, Math.round(h * DPR));
+  CX = CV.getContext("2d"); CX.setTransform(DPR, 0, 0, DPR, 0, 0);
+  return { w, h };
+}
+const VPC = { ink: "#c9d3de", ink2: "#7c8794", ink3: "#525c68",
+              grid: "#232a32", accent: "#4b9fd8", warm: "#e0a33a",
+              bad: "#e0675f", good: "#59b87f", wall: "#e8eef4" };
+function clearVP(w, h) { CX.fillStyle = "#12161b"; CX.fillRect(0, 0, w, h); }
+
+/* a mapping from model coords to pixels, preserving aspect */
+function mapper(w, h, xmin, xmax, ymin, ymax, pad) {
+  pad = pad || 34;
+  const sx = (w - 2 * pad) / Math.max(1e-9, xmax - xmin);
+  const sy = (h - 2 * pad) / Math.max(1e-9, ymax - ymin);
+  const s = Math.min(sx, sy);
+  const ox = pad + ((w - 2 * pad) - s * (xmax - xmin)) / 2;
+  const oy = pad + ((h - 2 * pad) - s * (ymax - ymin)) / 2;
+  return { s, X: x => ox + (x - xmin) * s, Y: y => h - oy - (y - ymin) * s,
+           inv: (px, py) => [xmin + (px - ox) / s, ymin + (h - oy - py) / s] };
+}
+function axes(M, w, h, xl, yl, xr, yr) {
+  CX.strokeStyle = VPC.grid; CX.lineWidth = 1; CX.font = '10px "IBM Plex Mono", monospace';
+  CX.fillStyle = VPC.ink3;
+  const tk = (a, b) => { const sp = (b - a) / 5, p = Math.pow(10, Math.floor(Math.log10(sp)));
+    const st = [1, 2, 2.5, 5, 10].map(m => m * p).find(v => v >= sp) || p;
+    const out = []; for (let v = Math.ceil(a / st) * st; v <= b + 1e-12; v += st) out.push(v);
+    return out; };
+  CX.textAlign = "center"; CX.textBaseline = "top";
+  for (const v of tk(xr[0], xr[1])) { const x = M.X(v);
+    CX.beginPath(); CX.moveTo(x, h - 26); CX.lineTo(x, h - 22); CX.stroke();
+    CX.fillText(String(+v.toFixed(6)), x, h - 20); }
+  CX.textAlign = "right"; CX.textBaseline = "middle";
+  for (const v of tk(yr[0], yr[1])) { const y = M.Y(v);
+    CX.beginPath(); CX.moveTo(30, y); CX.lineTo(34, y); CX.stroke();
+    CX.fillText(String(+v.toFixed(6)), 27, y); }
+  CX.fillStyle = VPC.ink2; CX.textAlign = "center"; CX.textBaseline = "bottom";
+  CX.fillText(xl, w / 2, h - 4);
+  CX.save(); CX.translate(11, h / 2); CX.rotate(-Math.PI / 2);
+  CX.textBaseline = "top"; CX.fillText(yl, 0, 0); CX.restore();
+}
+const RAMPS = {
+  viridis: [[68,1,84],[59,82,139],[33,145,140],[94,201,98],[253,231,37]],
+  coolwarm: [[59,76,192],[144,178,238],[221,221,221],[238,150,120],[180,4,38]],
+  grey: [[30,30,30],[90,90,90],[150,150,150],[205,205,205],[250,250,250]],
+  plasma: [[13,8,135],[126,3,168],[204,71,120],[248,149,64],[240,249,33]]
+};
+function ramp(t, name) {
+  const c = RAMPS[name] || RAMPS.viridis;
+  t = clamp(t, 0, 1) * (c.length - 1);
+  const i = Math.min(c.length - 2, Math.floor(t)), f = t - i;
+  const a = c[i], b = c[i + 1];
+  return `rgb(${Math.round(a[0]+(b[0]-a[0])*f)},${Math.round(a[1]+(b[1]-a[1])*f)},${Math.round(a[2]+(b[2]-a[2])*f)})`;
+}
+function legend(html) { const l = $("#vplegend"); l.hidden = !html; l.innerHTML = html || ""; }
+function vstat(html) { const l = $("#vpstat"); l.hidden = !html; l.innerHTML = html || ""; }
+
+/* ====================================================== view: mesh section */
+function drawMeshSection(w, h, zoom) {
+  const m = S.mesh; if (!m) return;
+  const R = m.ring;
+  let xs = R.map(p => p[0]), ys = R.map(p => p[1]);
+  let xmin = Math.min(...xs), xmax = Math.max(...xs);
+  let ymin = Math.min(...ys), ymax = Math.max(...ys);
+  const pad = 0.16 * (xmax - xmin);
+  xmin -= pad; xmax += pad; ymin -= pad; ymax += pad;
+  const cw = (xmax - xmin) / zoom, ch = (ymax - ymin) / zoom;
+  const cx = S.view.cx * (xmax - xmin) + xmin, cy = S.view.cy;
+  const M = mapper(w, h, cx - cw / 2, cx + cw / 2, cy - ch / 2, cy + ch / 2);
+
+  const nk = m.layers.length, n = R.length;
+  const ev = Math.max(1, Math.round(S.view.every));
+  const colour = S.view.colour;
+  // filled quads when colouring
+  if (colour !== "none") {
+    let lo = Infinity, hi = -Infinity;
+    const val = (k, i) => {
+      if (colour === "area") return Math.log10(Math.abs(m.q.cellA[k][i]) + 1e-30);
+      if (colour === "growth") return Math.log10(m.spacings[k] / m.spacings[0]);
+      return k / (nk - 2);
+    };
+    for (let k = 0; k < nk - 1; k++) for (let i = 0; i < n; i++) {
+      const v = val(k, i); if (isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); } }
+    for (let k = 0; k < nk - 1; k++) for (let i = 0; i < n; i++) {
+      const ip = (i + 1) % n;
+      const a = m.layers[k][i], b = m.layers[k][ip],
+            c = m.layers[k + 1][ip], d = m.layers[k + 1][i];
+      const neg = m.q.cellA[k][i] <= 0;
+      CX.fillStyle = neg ? "#e0675f" : ramp((val(k, i) - lo) / (hi - lo || 1), S.view.cmap || "viridis");
+      CX.beginPath(); CX.moveTo(M.X(a[0]), M.Y(a[1])); CX.lineTo(M.X(b[0]), M.Y(b[1]));
+      CX.lineTo(M.X(c[0]), M.Y(c[1])); CX.lineTo(M.X(d[0]), M.Y(d[1])); CX.closePath(); CX.fill();
+    }
+    const lab = colour === "area" ? "log₁₀ cell area (m²)"
+              : colour === "growth" ? "log₁₀ spacing / first spacing"
+              : "layer index / n_normal";
+    let sw = "";
+    for (let i = 0; i <= 8; i++) sw += `<span class="sw" style="background:${ramp(i/8,S.view.cmap||"viridis")}"></span>`;
+    legend(`${lab}<br>${sw}<br>${fx(lo,3)} &nbsp;&rarr;&nbsp; ${fx(hi,3)}` +
+           (m.q.neg ? `<br><span class="sw" style="background:#e0675f"></span>folded cell (${m.q.neg})` : ""));
+  } else legend("");
+
+  if (S.view.lines) {
+    // marching lines (eta), every ev-th
+    CX.strokeStyle = colour === "none" ? "#38424e" : "rgba(255,255,255,.14)";
+    CX.lineWidth = 1;
+    for (let i = 0; i < n; i += ev) {
+      CX.beginPath();
+      for (let k = 0; k < nk; k++) { const p = m.layers[k][i];
+        k ? CX.lineTo(M.X(p[0]), M.Y(p[1])) : CX.moveTo(M.X(p[0]), M.Y(p[1])); }
+      CX.stroke();
+    }
+    // ring lines (xi)
+    for (let k = 0; k < nk; k += ev) {
+      CX.beginPath();
+      for (let i = 0; i <= n; i++) { const p = m.layers[k][i % n];
+        i ? CX.lineTo(M.X(p[0]), M.Y(p[1])) : CX.moveTo(M.X(p[0]), M.Y(p[1])); }
+      CX.stroke();
+    }
+  }
+  // the wall
+  CX.strokeStyle = VPC.wall; CX.lineWidth = 1.7; CX.beginPath();
+  for (let i = 0; i <= n; i++) { const p = m.layers[0][i % n];
+    i ? CX.lineTo(M.X(p[0]), M.Y(p[1])) : CX.moveTo(M.X(p[0]), M.Y(p[1])); }
+  CX.stroke();
+  // the blunt base face: the last (n_base - 2) ring points plus the two corners
+  const nb = Math.max(2, Math.round(+S.L.n_base));
+  CX.strokeStyle = VPC.warm; CX.lineWidth = 2.6; CX.beginPath();
+  CX.moveTo(M.X(m.layers[0][n - nb + 1][0]), M.Y(m.layers[0][n - nb + 1][1]));
+  for (let i = n - nb + 2; i <= n; i++) { const p = m.layers[0][i % n];
+    CX.lineTo(M.X(p[0]), M.Y(p[1])); }
+  CX.stroke();
+
+  axes(M, w, h, "x (m)", "z (m)",
+       [M.inv(34, 0)[0], M.inv(w - 34, 0)[0]], [M.inv(0, h - 34)[1], M.inv(0, 34)[1]]);
+  vstat(`<b>${cm(m.bc.total)}</b> cells total<br>` +
+        `ring <b>${m.nRing}</b> × normal <b>${m.nLayer}</b> × span <b>${m.bc.nS}</b><br>` +
+        `growth <b>${fx(m.growth,4)}</b> &nbsp; folded <b>${m.q.neg}</b><br>` +
+        `y+ first cell <b>${m.yp ? fx(m.yp,2) : "—"}</b>`);
+}
+
+/* ====================================================== view: near-wall zoom */
+function drawWallZoom(w, h) {
+  const m = S.mesh; if (!m) return;
+  // spacing profile through the boundary layer
+  const M = mapper(w, h, 0, m.nLayer - 1, Math.log10(m.spacings[0] * m.chord) - 0.3,
+                   Math.log10(m.spacings[m.spacings.length - 1] * m.chord) + 0.3);
+  CX.strokeStyle = VPC.accent; CX.lineWidth = 1.8; CX.beginPath();
+  m.spacings.forEach((s, k) => { const x = M.X(k), y = M.Y(Math.log10(s * m.chord));
+    k ? CX.lineTo(x, y) : CX.moveTo(x, y); });
+  CX.stroke();
+  CX.fillStyle = VPC.accent;
+  m.spacings.forEach((s, k) => { if (k % Math.max(1, Math.round(m.nLayer / 40))) return;
+    CX.beginPath(); CX.arc(M.X(k), M.Y(Math.log10(s * m.chord)), 2, 0, 7); CX.fill(); });
+  // cumulative height, on the same axis for reference
+  let acc = 0; const cum = m.spacings.map(s => (acc += s));
+  CX.strokeStyle = VPC.warm; CX.lineWidth = 1.2; CX.setLineDash([4, 3]); CX.beginPath();
+  cum.forEach((c, k) => { const y = M.Y(Math.log10(c * m.chord));
+    k ? CX.lineTo(M.X(k), y) : CX.moveTo(M.X(k), y); });
+  CX.stroke(); CX.setLineDash([]);
+  axes(M, w, h, "wall-normal layer index", "log₁₀ spacing (m)",
+       [0, m.nLayer - 1], [Math.log10(m.spacings[0] * m.chord) - 0.3,
+        Math.log10(m.spacings[m.spacings.length - 1] * m.chord) + 0.3]);
+  legend(`<span class="sw" style="background:${VPC.accent}"></span>cell height<br>` +
+         `<span class="sw" style="background:${VPC.warm}"></span>cumulative height`);
+  const bl = m.chord * 0.37 / Math.pow(+S.cond.reynolds, 0.2);
+  let inBL = 0; acc = 0;
+  for (const s of m.spacings) { acc += s * m.chord; if (acc < bl) inBL++; }
+  vstat(`first cell <b>${sci(m.spacings[0]*m.chord,3)}</b> m<br>` +
+        `growth ratio <b>${fx(m.growth,4)}</b><br>` +
+        `total extent <b>${fx(cum[cum.length-1],2)}</b> chords<br>` +
+        `δ₉₉ estimate <b>${sci(bl,2)}</b> m<br>` +
+        `cells inside δ <b>${inBL}</b>`);
+}
+
+/* ====================================================== view: block topology */
+function drawTopology(w, h) {
+  const bc = S.mesh ? S.mesh.bc : null; if (!bc) return;
+  const M = mapper(w, h, -0.2, 2.6, -1.1, 1.1);
+  const box = (x0, y0, x1, y1, name, dims, cells, on, col) => {
+    CX.globalAlpha = on ? 1 : 0.22;
+    CX.fillStyle = col + "22"; CX.strokeStyle = col; CX.lineWidth = 1.4;
+    const X0 = M.X(x0), Y0 = M.Y(y1), X1 = M.X(x1), Y1 = M.Y(y0);
+    CX.fillRect(X0, Y0, X1 - X0, Y1 - Y0); CX.strokeRect(X0, Y0, X1 - X0, Y1 - Y0);
+    CX.fillStyle = col; CX.font = '600 11px "IBM Plex Sans", sans-serif';
+    CX.textAlign = "left"; CX.textBaseline = "top";
+    CX.fillText(name, X0 + 7, Y0 + 6);
+    CX.font = '10px "IBM Plex Mono", monospace'; CX.fillStyle = VPC.ink2;
+    CX.fillText(dims, X0 + 7, Y0 + 21);
+    CX.fillText(cells, X0 + 7, Y0 + 34);
+    CX.globalAlpha = 1;
+  };
+  const B = bc.shapes;
+  box(0, -0.95, 1.25, 0.95, "o_wing", B.o_wing.join(" × "),
+      cm(bc.oWing) + " cells", S.view.blocks.o_wing, "#4b9fd8");
+  box(1.32, -0.95, 2.55, 0.95, "o_out", B.o_out.join(" × "),
+      cm(bc.oOut) + " cells", S.view.blocks.o_out, "#59b87f");
+  box(1.32, -0.55, 2.0, -0.05, "cap_out", B.cap_out.join(" × "),
+      cm(bc.capOut) + " cells", S.view.blocks.cap_out, "#e0a33a");
+  CX.fillStyle = VPC.ink2; CX.font = '10px "IBM Plex Mono", monospace';
+  CX.textAlign = "center"; CX.textBaseline = "middle";
+  CX.fillText("ζ = 0  root symmetry", M.X(0.1), M.Y(-1.03));
+  CX.fillText("tip plane: o_out ζ=0 IS o_wing's last plane", M.X(1.3), M.Y(1.03));
+  CX.strokeStyle = VPC.ink3; CX.setLineDash([3, 3]); CX.lineWidth = 1;
+  CX.beginPath(); CX.moveTo(M.X(1.285), M.Y(-1.0)); CX.lineTo(M.X(1.285), M.Y(1.0));
+  CX.stroke(); CX.setLineDash([]);
+  legend("ξ around the section &middot; η wall-normal &middot; ζ root → tip<br>" +
+         "o_out and cap_out together fill the disc outboard of the tip,<br>" +
+         "which is what closes the domain.");
+  vstat(`total <b>${cm(bc.total)}</b> cells<br>` +
+        `n_out estimate <b>${bc.nOut}</b><br>cap chordwise <b>${bc.nCap}</b>`);
+}
+</script>
+
+<script>
+/* ==================================================== view: section + scan */
+function drawSection(w, h) {
+  const sec = SECTIONS[S.sectionSrc]();
+  const sc = (S.sectionSrc === "ribes" && D.scan) ? D.scan[S.scanSec] : null;
+  let ymin = -0.1, ymax = 0.14;
+  if (sc) { ymin = Math.min(ymin, ...sc.z) - 0.02; ymax = Math.max(ymax, ...sc.z) + 0.02; }
+  const M = mapper(w, h, -0.05, 1.05, ymin, ymax);
+  // chord line
+  CX.strokeStyle = VPC.grid; CX.lineWidth = 1; CX.setLineDash([4, 4]);
+  CX.beginPath(); CX.moveTo(M.X(0), M.Y(0)); CX.lineTo(M.X(1), M.Y(0)); CX.stroke();
+  CX.setLineDash([]);
+  // scan cloud
+  if (sc && S.showScan) {
+    for (let i = 0; i < sc.x.length; i++) {
+      const bad = sc.i[i] === 1;
+      if (bad && !S.showRejected) continue;
+      CX.fillStyle = bad ? "#e0675f" : "#6d7a88";
+      CX.beginPath(); CX.arc(M.X(sc.x[i]), M.Y(sc.z[i]), bad ? 2.6 : 1.7, 0, 7); CX.fill();
+    }
+  }
+  // the fit
+  if (S.showFit) {
+    CX.strokeStyle = VPC.accent; CX.lineWidth = 1.9;
+    for (const zz of [sec.zu, sec.zl]) {
+      CX.beginPath();
+      sec.x.forEach((x, i) => { const px = M.X(x), py = M.Y(zz[i]);
+        i ? CX.lineTo(px, py) : CX.moveTo(px, py); });
+      CX.stroke();
+    }
+    // camber
+    CX.strokeStyle = VPC.warm; CX.lineWidth = 1; CX.setLineDash([5, 3]); CX.beginPath();
+    sec.x.forEach((x, i) => { const py = M.Y(0.5 * (sec.zu[i] + sec.zl[i]));
+      i ? CX.lineTo(M.X(x), py) : CX.moveTo(M.X(x), py); });
+    CX.stroke(); CX.setLineDash([]);
+  }
+  // the pressure taps of the matching RIBES section
+  if (S.sectionSrc === "ribes" && D.ribes) {
+    const t = (D.ribes.tests[S.valid.test] || {}).cp || [];
+    for (const c of t) if (c.z && c.z.length) {
+      CX.fillStyle = "#59b87f";
+      for (let i = 0; i < c.x.length; i++) {
+        CX.beginPath(); CX.arc(M.X(c.x[i]), M.Y(c.z[i]), 2.1, 0, 7); CX.fill(); }
+      break;
+    }
+  }
+  axes(M, w, h, "x/c", "z/c", [-0.05, 1.05], [ymin, ymax]);
+  let th = 0, thx = 0, cb = 0, cbx = 0;
+  sec.x.forEach((x, i) => { const t = sec.zu[i] - sec.zl[i];
+    if (t > th) { th = t; thx = x; }
+    const c = 0.5 * (sec.zu[i] + sec.zl[i]); if (Math.abs(c) > Math.abs(cb)) { cb = c; cbx = x; } });
+  const ps = (D.section && D.section.per_section) ? D.section.per_section[S.scanSec] : null;
+  legend(`<span class="sw" style="background:${VPC.accent}"></span>${sec.label}<br>` +
+    (sc ? `<span class="sw" style="background:#6d7a88"></span>scan, surface (${sc.x.length - sc.i.reduce((a,b)=>a+b,0)} pts)<br>` +
+          `<span class="sw" style="background:#e0675f"></span>scan, <b>interior</b> — rejected (${sc.i.reduce((a,b)=>a+b,0)} pts)<br>` : "") +
+    `<span class="sw" style="background:#59b87f"></span>pressure taps<br>` +
+    `<span class="sw" style="background:${VPC.warm}"></span>camber line`);
+  vstat(`t/c max <b>${fx(100*th,2)}</b> % at x/c ${fx(thx,3)}<br>` +
+    `camber max <b>${fx(100*cb,2)}</b> % at x/c ${fx(cbx,3)}<br>` +
+    `nose radius <b>${fx(100*noseRadius(sec),3)}</b> % c<br>` +
+    `TE gap <b>${fx(100*(sec.zu[sec.zu.length-1]-sec.zl[sec.zl.length-1]),3)}</b> % c` +
+    (ps ? `<br>CST residual <b>${fx(ps.ru,3)}</b> / ${fx(ps.rl,3)} % c<br>interior <b>${fx(100*ps.ifrac,1)}</b> %` : ""));
+}
+
+/* ==================================================== view: planform */
+function drawPlanform(w, h) {
+  const g = S.geomP;
+  const tan = d => Math.tan(d * Math.PI / 180);
+  const M = mapper(w, h, -0.12 * g.root, g.root + g.span * tan(g.sweep) + 0.12 * g.root,
+                   -0.12 * g.span, g.span * 1.12);
+  // spanwise stations, as the mesh will place them
+  const nS = Math.round(+S.L.n_span);
+  const s0 = (+S.L.s0_frac) * (+S.L.tip_span_first_cell_in_s0 || 2) * g.root;
+  const tS = gradedT(nS, 1 / nS, s0 / g.span).map(v => 1 - v).reverse();
+  CX.strokeStyle = "#2f3944"; CX.lineWidth = 1;
+  for (let i = 0; i < nS; i++) {
+    const v = tS[i], y = v * g.span, c = g.root + (g.tip - g.root) * v;
+    const xle = y * tan(g.sweep);
+    CX.beginPath(); CX.moveTo(M.X(xle), M.Y(y)); CX.lineTo(M.X(xle + c), M.Y(y)); CX.stroke();
+  }
+  // outline
+  CX.strokeStyle = VPC.wall; CX.lineWidth = 1.8; CX.beginPath();
+  CX.moveTo(M.X(0), M.Y(0)); CX.lineTo(M.X(g.span * tan(g.sweep)), M.Y(g.span));
+  CX.lineTo(M.X(g.span * tan(g.sweep) + g.tip), M.Y(g.span));
+  CX.lineTo(M.X(g.root), M.Y(0)); CX.closePath(); CX.stroke();
+  // the tip plane and the pressure sections
+  CX.strokeStyle = VPC.warm; CX.lineWidth = 1.4; CX.setLineDash([5, 3]);
+  CX.beginPath(); CX.moveTo(M.X(g.span*tan(g.sweep)-0.05*g.root), M.Y(g.span));
+  CX.lineTo(M.X(g.span*tan(g.sweep)+g.tip+0.05*g.root), M.Y(g.span)); CX.stroke();
+  CX.setLineDash([]);
+  if (S.geom === "ribes" && D.ribes && D.ribes.sections_y_mm) {
+    CX.strokeStyle = "#59b87f"; CX.lineWidth = 1.3;
+    CX.font = '9px "IBM Plex Mono", monospace'; CX.fillStyle = "#59b87f";
+    CX.textAlign = "left"; CX.textBaseline = "middle";
+    const secs = D.ribes.sections_y_mm;
+    const list = Array.isArray(secs) ? secs : Object.entries(secs);
+    for (const it of list) {
+      const ymm = Array.isArray(it) ? it[1] : it;
+      const nm = Array.isArray(it) ? it[0] : "";
+      const y = (+ymm) / 1000; if (!isFinite(y) || y > g.span) continue;
+      const xle = y * tan(g.sweep), c = g.root + (g.tip - g.root) * (y / g.span);
+      CX.beginPath(); CX.moveTo(M.X(xle), M.Y(y)); CX.lineTo(M.X(xle + c), M.Y(y)); CX.stroke();
+      if (nm) CX.fillText(nm, M.X(xle + c) + 4, M.Y(y));
+    }
+  }
+  axes(M, w, h, "x, chordwise (m)", "y, spanwise (m)",
+       [M.inv(34,0)[0], M.inv(w-34,0)[0]], [M.inv(0,h-34)[1], M.inv(0,34)[1]]);
+  const ar = g.span * g.span / (g.sref / 2 || 1);
+  legend(`<span class="sw" style="background:${VPC.wall}"></span>${g.label}<br>` +
+    `<span class="sw" style="background:#2f3944"></span>spanwise stations (n_span = ${nS})<br>` +
+    `<span class="sw" style="background:${VPC.warm}"></span>tip plane<br>` +
+    (S.geom === "ribes" ? `<span class="sw" style="background:#59b87f"></span>instrumented sections` : ""));
+  vstat(`semispan <b>${fx(g.span,4)}</b> m<br>root <b>${fx(g.root,4)}</b> m &nbsp; tip <b>${fx(g.tip,4)}</b> m<br>` +
+    `taper <b>${fx(g.tip/g.root,4)}</b><br>LE sweep <b>${fx(g.sweep,3)}</b>°<br>` +
+    `S_ref <b>${fx(g.sref,4)}</b> m² &nbsp; MAC <b>${fx(g.mac,4)}</b> m<br>` +
+    `root chord / semispan <b>${fx(g.root/g.span,3)}</b><br>aspect ratio <b>${fx(ar,3)}</b>`);
+}
+
+/* ==================================================== view: polars */
+function runsFiltered() {
+  const p = S.post;
+  return (D.runs || []).filter(r => {
+    if (p.famF !== "all" && r.fam !== p.famF) return false;
+    if (p.geoF !== "all" && r.g !== p.geoF) return false;
+    if (p.convF === "yes" && !r.cv) return false;
+    if (p.convF === "no" && r.cv) return false;
+    if (p.search) { const q = p.search.toLowerCase();
+      if (!((r.p || "") + (r.lv || "") + (r.s || "")).toLowerCase().includes(q)) return false; }
+    return true;
+  });
+}
+function drawPolar(w, h) {
+  const rs = runsFiltered().filter(r => r.a != null && r.cl != null);
+  if (!rs.length) { CX.fillStyle = VPC.ink2; CX.font = '12px "IBM Plex Sans"';
+    CX.textAlign = "center"; CX.fillText("No runs match the current filter.", w/2, h/2); return; }
+  const mode = S.post.plot;
+  const groups = {};
+  for (const r of rs) { const k = (r.lv || "?") + " / " + r.g;
+    (groups[k] = groups[k] || []).push(r); }
+  const keys = Object.keys(groups).sort();
+  const pick = (r) => mode === "cdalpha" ? [r.a, 1e4 * r.cd]
+    : mode === "clcd" ? [1e4 * r.cd, r.cl]
+    : mode === "cdvalpha" ? [r.a, 1e4 * r.cdv]
+    : mode === "cmy" ? [r.a, r.cmy] : [r.a, r.cl];
+  let xs = [], ys = [];
+  for (const r of rs) { const [x, y] = pick(r); if (isFinite(x) && isFinite(y)) { xs.push(x); ys.push(y); } }
+  const xr = [Math.min(...xs), Math.max(...xs)], yr = [Math.min(...ys), Math.max(...ys)];
+  const px = 0.06 * (xr[1] - xr[0] || 1), py = 0.08 * (yr[1] - yr[0] || 1);
+  const M = mapper(w, h, xr[0] - px, xr[1] + px, yr[0] - py, yr[1] + py);
+  // zero lines
+  CX.strokeStyle = VPC.grid; CX.lineWidth = 1;
+  if (xr[0] < 0 && xr[1] > 0) { CX.beginPath(); CX.moveTo(M.X(0), 34); CX.lineTo(M.X(0), h-34); CX.stroke(); }
+  if (yr[0] < 0 && yr[1] > 0) { CX.beginPath(); CX.moveTo(34, M.Y(0)); CX.lineTo(w-34, M.Y(0)); CX.stroke(); }
+  const PAL = ["#4b9fd8","#e0a33a","#59b87f","#c98bd8","#e0675f","#6fd3c8","#b5c24a","#8f9bb3"];
+  let li = "";
+  keys.slice(0, 8).forEach((k, gi) => {
+    const col = PAL[gi % PAL.length];
+    const g = groups[k].slice().sort((a, b) => pick(a)[0] - pick(b)[0]);
+    CX.strokeStyle = col; CX.lineWidth = 1.5; CX.beginPath();
+    g.forEach((r, i) => { const [x, y] = pick(r); if (!isFinite(x) || !isFinite(y)) return;
+      i ? CX.lineTo(M.X(x), M.Y(y)) : CX.moveTo(M.X(x), M.Y(y)); });
+    CX.stroke();
+    for (const r of g) { const [x, y] = pick(r); if (!isFinite(x) || !isFinite(y)) continue;
+      CX.fillStyle = r.cv ? col : "#12161b"; CX.strokeStyle = col; CX.lineWidth = 1.3;
+      CX.beginPath(); CX.arc(M.X(x), M.Y(y), S.post.selected.has(r.p) ? 4.5 : 3, 0, 7);
+      CX.fill(); CX.stroke(); }
+    li += `<span class="sw" style="background:${col}"></span>${k} <span style="color:#69737f">(${g.length})</span><br>`;
+  });
+  // the RIBES measurement, when the axes admit it
+  if (mode === "polar" && S.geom === "ribes" && D.ribes) {
+    const t = D.ribes.tests[S.valid.test];
+    const sect = t && t.sectional;
+    if (sect && typeof sect === "object") {
+      const arr = Array.isArray(sect) ? sect : [];
+      CX.fillStyle = "#fff";
+      for (const e of arr) { const a = +e.alpha_corrected_deg, c = +e.cl;
+        if (!isFinite(a) || !isFinite(c)) continue;
+        CX.beginPath(); CX.arc(M.X(a), M.Y(c), 3.4, 0, 7); CX.fill(); }
+    }
+  }
+  const lab = { polar: ["α (deg)", "C_L"], cdalpha: ["α (deg)", "C_D (counts)"],
+    clcd: ["C_D (counts)", "C_L"], cdvalpha: ["α (deg)", "C_Dv (counts)"],
+    cmy: ["α (deg)", "C_My"] }[mode];
+  axes(M, w, h, lab[0], lab[1], [xr[0]-px, xr[1]+px], [yr[0]-py, yr[1]+py]);
+  legend(li + (keys.length > 8 ? `<span style="color:#69737f">+${keys.length-8} more series hidden</span><br>` : "") +
+    `<span style="color:#69737f">hollow marker = not converged</span>`);
+  vstat(`<b>${rs.length}</b> runs plotted<br><b>${keys.length}</b> mesh/geometry series`);
+}
+
+/* ==================================================== view: cp distribution */
+function drawCp(w, h) {
+  const t = (D.ribes && D.ribes.tests[S.valid.test]) || null;
+  if (!t) { CX.fillStyle = VPC.ink2; CX.textAlign = "center";
+    CX.fillText("No experimental data loaded.", w/2, h/2); return; }
+  const c = (t.cp || []).find(e => e.sec === S.valid.sec) || (t.cp || [])[0];
+  if (!c) { CX.fillStyle = VPC.ink2; CX.textAlign = "center";
+    CX.fillText("That section carries no tapped data.", w/2, h/2); return; }
+  const ai = clamp(S.valid.alphaIdx, 0, (c.alphas || []).length - 1);
+  const vals = (c.cp || []).map(row => Array.isArray(row) ? row[ai] : row);
+  const pairs = c.x.map((x, i) => [x, vals[i], c.z ? c.z[i] : 0])
+                   .filter(p => isFinite(p[0]) && isFinite(p[1]));
+  const imported = S.valid.imported;
+  let all = pairs.map(p => -p[1]);
+  if (imported) all = all.concat(imported.map(p => -p[1]));
+  const yr = [Math.min(...all) - 0.15, Math.max(...all) + 0.15];
+  const M = mapper(w, h, -0.04, 1.04, yr[0], yr[1]);
+  CX.strokeStyle = VPC.grid; CX.lineWidth = 1;
+  CX.beginPath(); CX.moveTo(34, M.Y(0)); CX.lineTo(w - 34, M.Y(0)); CX.stroke();
+  // upper / lower split by the tap's own z
+  const up = pairs.filter(p => p[2] >= 0), lo = pairs.filter(p => p[2] < 0);
+  const series = (arr, col, r) => {
+    arr = arr.slice().sort((a, b) => a[0] - b[0]);
+    CX.strokeStyle = col; CX.lineWidth = 1.4; CX.beginPath();
+    arr.forEach((p, i) => { i ? CX.lineTo(M.X(p[0]), M.Y(-p[1])) : CX.moveTo(M.X(p[0]), M.Y(-p[1])); });
+    CX.stroke(); CX.fillStyle = col;
+    for (const p of arr) { CX.beginPath(); CX.arc(M.X(p[0]), M.Y(-p[1]), r, 0, 7); CX.fill(); }
+  };
+  series(up, "#4b9fd8", 3); series(lo, "#e0a33a", 3);
+  if (imported) series(imported.map(p => [p[0], p[1], 1]), "#59b87f", 2.4);
+  axes(M, w, h, "x/c", "−c_p", [-0.04, 1.04], yr);
+  legend(`<span class="sw" style="background:#4b9fd8"></span>upper surface taps (z/c ≥ 0)<br>` +
+    `<span class="sw" style="background:#e0a33a"></span>lower surface taps<br>` +
+    (imported ? `<span class="sw" style="background:#59b87f"></span>imported series<br>` : "") +
+    `RIBES ${S.valid.test}, section ${c.sec}${c.y != null ? ", y = " + c.y + " mm" : ""}`);
+  vstat(`α corrected <b>${fx((c.alphas||[])[ai], 2)}°</b><br>` +
+    `<b>${pairs.length}</b> taps &nbsp; min c_p <b>${fx(Math.min(...pairs.map(p=>p[1])),3)}</b><br>` +
+    (t.speed_m_s ? `V <b>${t.speed_m_s}</b> m/s` : ""));
+}
+
+/* ==================================================== view: GCI */
+function gciTriple() {
+  const set = S.gci.set, q = S.gci.qty;
+  const out = [];
+  for (const lv of S.gci.levels) {
+    const cand = (D.runs || []).filter(r => r.lv === lv && (set === "any" || r.s === set));
+    // prefer a converged run at the lowest |alpha|
+    cand.sort((a, b) => (b.cv - a.cv) || (Math.abs(a.a) - Math.abs(b.a)));
+    const r = cand[0];
+    const mh = (D.meshes || []).find(m => m.lv === lv && (set === "any" || m.s === set));
+    out.push(r ? { lv, r, n: r.n || (mh && mh.cells), v: r[q] } : { lv, r: null, n: null, v: null });
+  }
+  return out;
+}
+function drawGCI(w, h) {
+  const T = gciTriple();
+  const ok = T.every(t => t.v != null && t.n);
+  const M = mapper(w, h, 0, 1, 0, 1, 40);
+  CX.fillStyle = VPC.ink; CX.font = '600 12px "IBM Plex Sans"';
+  CX.textAlign = "left"; CX.textBaseline = "top";
+  if (!ok) {
+    CX.fillStyle = VPC.ink2; CX.font = '12px "IBM Plex Sans"';
+    CX.fillText("Pick three levels that all have a solved run in the chosen set.", 44, 44);
+    let y = 70;
+    for (const t of T) { CX.fillStyle = t.v == null ? "#e0675f" : "#59b87f";
+      CX.font = '11px "IBM Plex Mono", monospace';
+      CX.fillText(`${t.lv.padEnd(16)} ${t.v == null ? "no run in this set" : "cells " + cm(t.n)}`, 44, y);
+      y += 18; }
+    legend(""); vstat(""); return;
+  }
+  // h ~ N^(-1/3); r = ratio of representative sizes
+  const hh = T.map(t => Math.pow(1 / t.n, 1 / 3));
+  const [h1, h2, h3] = hh, [f1, f2, f3] = T.map(t => t.v);
+  const r21 = h2 / h1, r32 = h3 / h2;
+  const e21 = f2 - f1, e32 = f3 - f2;
+  let p = Math.log(Math.abs(e32 / e21)) / Math.log(r21);
+  const s = Math.sign(e32 / e21) || 1;
+  for (let k = 0; k < 60; k++) {
+    const qq = Math.log((Math.pow(r21, p) - s) / (Math.pow(r32, p) - s));
+    p = Math.abs(Math.log(Math.abs(e32 / e21)) + qq) / Math.log(r21);
+  }
+  const fext = (Math.pow(r21, p) * f1 - f2) / (Math.pow(r21, p) - 1);
+  const ea = Math.abs((f1 - f2) / (f1 || 1));
+  const gci = 1.25 * ea / (Math.pow(r21, p) - 1);
+  // draw f against h
+  const xr = [0, Math.max(...hh) * 1.15], yr0 = [Math.min(f1,f2,f3,fext), Math.max(f1,f2,f3,fext)];
+  const sp = 0.22 * (yr0[1] - yr0[0] || Math.abs(yr0[0]) * 0.02 || 1);
+  const M2 = mapper(w, h, xr[0], xr[1], yr0[0] - sp, yr0[1] + sp);
+  CX.strokeStyle = VPC.accent; CX.lineWidth = 1.6; CX.beginPath();
+  hh.forEach((x, i) => { const y = M2.Y(T[i].v);
+    i ? CX.lineTo(M2.X(x), y) : CX.moveTo(M2.X(x), y); });
+  CX.stroke();
+  CX.fillStyle = VPC.accent;
+  hh.forEach((x, i) => { CX.beginPath(); CX.arc(M2.X(x), M2.Y(T[i].v), 4, 0, 7); CX.fill();
+    CX.fillStyle = VPC.ink2; CX.font = '10px "IBM Plex Mono", monospace';
+    CX.textAlign = "center"; CX.textBaseline = "bottom";
+    CX.fillText(T[i].lv, M2.X(x), M2.Y(T[i].v) - 8); CX.fillStyle = VPC.accent; });
+  // extrapolated value at h = 0
+  CX.strokeStyle = VPC.warm; CX.setLineDash([5, 4]); CX.lineWidth = 1.3;
+  CX.beginPath(); CX.moveTo(M2.X(0), M2.Y(fext)); CX.lineTo(M2.X(h1), M2.Y(f1)); CX.stroke();
+  CX.setLineDash([]);
+  CX.fillStyle = VPC.warm; CX.beginPath(); CX.arc(M2.X(0), M2.Y(fext), 4.5, 0, 7); CX.fill();
+  // the GCI band on the finest
+  const band = Math.abs(gci * f1);
+  CX.fillStyle = "rgba(75,159,216,.18)";
+  CX.fillRect(M2.X(0) - 3, M2.Y(f1 + band), 8, Math.abs(M2.Y(f1 - band) - M2.Y(f1 + band)));
+  const qn = { cd: "C_D", cl: "C_L", cdp: "C_Dp", cdv: "C_Dv", cmy: "C_My" }[S.gci.qty];
+  axes(M2, w, h, "representative cell size  h = N^(−1/3)", qn, xr, [yr0[0]-sp, yr0[1]+sp]);
+  legend(`<span class="sw" style="background:${VPC.accent}"></span>solved levels<br>` +
+    `<span class="sw" style="background:${VPC.warm}"></span>Richardson extrapolation to h = 0<br>` +
+    `shaded: GCI band on the finest level`);
+  const cts = S.gci.qty.startsWith("c") && S.gci.qty !== "cl" && S.gci.qty !== "cmy";
+  vstat(`observed order p <b>${fx(p,3)}</b><br>` +
+    `r₂₁ <b>${fx(r21,4)}</b> &nbsp; r₃₂ <b>${fx(r32,4)}</b><br>` +
+    `f extrapolated <b>${cts ? ct(fext) + " ct" : fx(fext,5)}</b><br>` +
+    `GCI fine <b>${fx(100*gci,3)} %</b><br>` +
+    `band <b>±${cts ? ct(band) + " ct" : fx(band,5)}</b>`);
+  return { p, gci, fext, r21, r32, T };
+}
+</script>
+
+<script>
+/* ============================================ details-panel row primitives */
+const OPEN = {};
+function group(host, title, build, id) {
+  const gid = id || title;
+  if (OPEN[gid] === undefined) OPEN[gid] = true;
+  const hdr = E("div", "grp-h" + (OPEN[gid] ? "" : " closed"));
+  hdr.appendChild(E("span", "tw", "▾"));
+  hdr.appendChild(E("span", null, title));
+  const box = E("div", "rows" + (OPEN[gid] ? "" : " hid"));
+  hdr.onclick = () => { OPEN[gid] = !OPEN[gid];
+    hdr.classList.toggle("closed"); box.classList.toggle("hid"); };
+  host.appendChild(hdr); host.appendChild(box);
+  build(box);
+  return box;
+}
+function rowNum(host, label, obj, key, o) {
+  o = o || {};
+  const r = E("div", "row");
+  const l = E("label"); l.appendChild(E("span", null, label));
+  if (o.unit) { l.appendChild(document.createTextNode(" ")); l.appendChild(E("span", "u", o.unit)); }
+  const inp = E("input"); inp.type = "number"; inp.id = "f_" + key + (o.sfx || "");
+  inp.value = obj[key]; if (o.step) inp.step = o.step;
+  if (o.min != null) inp.min = o.min; if (o.max != null) inp.max = o.max;
+  inp.onchange = () => { const v = parseFloat(inp.value);
+    if (!isFinite(v)) { inp.value = obj[key]; return; }
+    obj[key] = v; (o.on || render)(); };
+  r.appendChild(l); r.appendChild(inp); host.appendChild(r); return inp;
+}
+function rowSel(host, label, obj, key, opts, on) {
+  const r = E("div", "row"); r.appendChild(E("label", null, label));
+  const s = E("select"); s.id = "f_" + key;
+  for (const o of opts) { const op = E("option", null, Array.isArray(o) ? o[1] : o);
+    op.value = Array.isArray(o) ? o[0] : o; s.appendChild(op); }
+  s.value = obj[key];
+  s.onchange = () => { obj[key] = s.value; (on || render)(); };
+  r.appendChild(s); host.appendChild(r); return s;
+}
+function rowChk(host, label, obj, key, on) {
+  const r = E("div", "row"); r.appendChild(E("label", null, label));
+  const c = E("input"); c.type = "checkbox"; c.id = "f_" + key; c.checked = !!obj[key];
+  c.onchange = () => { obj[key] = c.checked; (on || render)(); };
+  r.appendChild(c); host.appendChild(r); return c;
+}
+function rowVal(host, label, value, cls) {
+  const r = E("div", "row"); r.appendChild(E("label", null, label));
+  const v = E("div", "val" + (cls ? " " + cls : ""));
+  if (value instanceof Node) v.appendChild(value); else v.textContent = value;
+  r.appendChild(v); host.appendChild(r); return r;
+}
+function note(host, html) { const n = E("div", "note"); n.innerHTML = html; host.appendChild(n); }
+function box(host, html, kind) { const b = E("div", "warnbox" + (kind ? " " + kind : ""));
+  b.innerHTML = html; host.appendChild(b); return b; }
+
+/* ============================================================ outline tree */
+const TREE = {
+  geom: [["Geometry", [["planform", "Planform"], ["section", "Section"],
+          ["te", "Trailing edge"], ["scan", "Scan diagnosis"]]]],
+  mesh: [["Mesh", [["level", "Level & family"], ["ring", "Chordwise (ξ)"],
+          ["normal", "Wall-normal (η)"], ["span", "Spanwise (ζ)"],
+          ["tip", "Tip cap"], ["farfield", "Far field"],
+          ["quality", "Quality"], ["topology", "Block topology"]]]],
+  solve: [["Solver", [["cond", "Operating point"], ["turb", "Turbulence"],
+          ["path", "Solver path"], ["conv", "Convergence"], ["out", "Monitors"]]]],
+  post: [["Results", [["table", "Run database"], ["plot", "Polars"],
+          ["find", "Measured findings"]]]],
+  valid: [["Validation", [["exp", "Experiment"], ["cp", "Pressure"],
+          ["import", "Import data"]]]],
+  gci: [["Convergence", [["gci", "Grid convergence"], ["ladder", "Refinement ladder"]]]]
+};
+function renderTree() {
+  const t = $("#tree"); t.innerHTML = "";
+  for (const [grp, items] of TREE[S.stage]) {
+    t.appendChild(E("div", "grp", grp));
+    for (const [id, label] of items) {
+      const a = E("a", S.node === id ? "on" : ""); a.href = "javascript:void 0";
+      const d = E("span", "dot"); 
+      if (S.stage === "mesh" && id === "quality" && S.mesh)
+        d.className = "dot " + (S.mesh.q.neg ? "no" : "ok");
+      if (S.stage === "geom" && id === "scan") d.className = "dot ok";
+      a.appendChild(d); a.appendChild(E("span", null, label));
+      if (S.stage === "mesh" && id === "level")
+        a.appendChild(E("small", null, S.level));
+      if (S.stage === "post" && id === "table")
+        a.appendChild(E("small", null, String((D.runs || []).length)));
+      a.onclick = () => { S.node = id; render(); };
+      t.appendChild(a);
+    }
+  }
+}
+
+/* ============================================================= run table */
+let TABLE;
+function ensureTable() {
+  if (TABLE) return TABLE;
+  TABLE = E("div"); TABLE.id = "vptable";
+  Object.assign(TABLE.style, { position: "absolute", inset: "0",
+    overflow: "auto", background: "var(--panel)", display: "none" });
+  $("#vpwrap").appendChild(TABLE);
+  return TABLE;
+}
+const COLS = [
+  ["p", "run", "l"], ["lv", "level", "l"], ["fam", "fam", "l"], ["g", "geom", "l"],
+  ["a", "α", "", v => fx(v, 2)], ["cl", "C_L", "", v => fx(v, 5)],
+  ["cd", "C_D ct", "", v => ct(v)], ["cdp", "C_Dp ct", "", v => ct(v)],
+  ["cdv", "C_Dv ct", "", v => ct(v)], ["cmy", "C_My", "", v => fx(v, 5)],
+  ["n", "cells", "", v => cm(v)], ["it", "iters", "", v => v == null ? "—" : v],
+  ["cv", "conv", "", null]
+];
+function renderTable() {
+  const host = ensureTable(); host.style.display = "block"; host.innerHTML = "";
+  const bar = E("div", "tbar");
+  const mk = (label, obj, key, opts) => {
+    bar.appendChild(E("span", null, label));
+    const s = E("select");
+    for (const o of opts) { const op = E("option", null, Array.isArray(o) ? o[1] : o);
+      op.value = Array.isArray(o) ? o[0] : o; s.appendChild(op); }
+    s.value = obj[key]; s.onchange = () => { obj[key] = s.value; render(); };
+    bar.appendChild(s);
+  };
+  mk("family", S.post, "famF", [["all", "all"], "B/A", "2", "3", "M6", "legacy", "other"]);
+  mk("geometry", S.post, "geoF", [["all", "all"], "aeris", "ribes", "m6"]);
+  mk("converged", S.post, "convF", [["all", "all"], ["yes", "yes"], ["no", "no"]]);
+  const inp = E("input"); inp.type = "search"; inp.placeholder = "filter by path or level";
+  inp.value = S.post.search; inp.oninput = () => { S.post.search = inp.value; renderTable(); };
+  bar.appendChild(inp);
+  const rows = runsFiltered();
+  const ct2 = E("span", "ct", `${rows.length} of ${(D.runs || []).length} runs`);
+  bar.appendChild(ct2);
+  host.appendChild(bar);
+
+  rows.sort((a, b) => {
+    const k = S.post.sort; let x = a[k], y = b[k];
+    if (x == null) return 1; if (y == null) return -1;
+    if (typeof x === "string") return S.post.dir * x.localeCompare(y);
+    return S.post.dir * (x - y);
+  });
+  const tw = E("div"); tw.style.overflowX = "auto";
+  const tb = E("table"); const th = E("thead"); const tr = E("tr");
+  for (const [k, label, cls] of COLS) {
+    const h = E("th", cls || "", label);
+    if (S.post.sort === k) h.textContent = label + (S.post.dir > 0 ? " ↑" : " ↓");
+    h.onclick = () => { if (S.post.sort === k) S.post.dir *= -1;
+      else { S.post.sort = k; S.post.dir = 1; } renderTable(); };
+    tr.appendChild(h);
+  }
+  th.appendChild(tr); tb.appendChild(th);
+  const tbody = E("tbody");
+  for (const r of rows.slice(0, 600)) {
+    const t = E("tr"); if (S.post.selected.has(r.p)) t.className = "sel";
+    for (const [k, , cls, f] of COLS) {
+      const td = E("td", cls || "");
+      if (k === "cv") { const p = E("span", "pill " + (r.cv ? "ok" : "no"), r.cv ? "yes" : "no");
+        td.appendChild(p); }
+      else td.textContent = f ? f(r[k]) : (r[k] == null ? "—" : r[k]);
+      t.appendChild(td);
+    }
+    t.onclick = () => { S.post.selected.has(r.p) ? S.post.selected.delete(r.p)
+      : S.post.selected.add(r.p); render(); };
+    tbody.appendChild(t);
+  }
+  tb.appendChild(tbody); tw.appendChild(tb); host.appendChild(tw);
+  if (rows.length > 600)
+    host.appendChild(E("div", "msg", `Showing the first 600 of ${rows.length}. Narrow the filter to see the rest.`));
+  $("#vp").style.display = "none";
+  legend(""); vstat("");
+}
+function hideTable() { if (TABLE) TABLE.style.display = "none"; $("#vp").style.display = "block"; }
+</script>
+
+<script>
+/* ==================================================== details: GEOMETRY */
+function panelGeom(h) {
+  group(h, "Geometry source", b => {
+    rowSel(b, "Wing", S, "geom", Object.keys(GEOM).map(k => [k, GEOM[k].label]), () => {
+      S.geomP = Object.assign({}, GEOM[S.geom]);
+      S.sectionSrc = GEOM[S.geom].section;
+      log("geometry → " + GEOM[S.geom].label, "hi"); render();
+    });
+    rowSel(b, "Section", S, "sectionSrc",
+      [["ribes", "RIBES measured (CST)"], ["n0012", "NACA 0012"], ["n4412", "NACA 4412"]]);
+    rowVal(b, "Measured geometry", GEOM[S.geom].measured ? "yes" : "no");
+  });
+  group(h, "Planform", b => {
+    rowNum(b, "Semispan", S.geomP, "span", { unit: "m", step: 0.01 });
+    rowNum(b, "Root chord", S.geomP, "root", { unit: "m", step: 0.001 });
+    rowNum(b, "Tip chord", S.geomP, "tip", { unit: "m", step: 0.001 });
+    rowNum(b, "LE sweep", S.geomP, "sweep", { unit: "deg", step: 0.1 });
+    rowNum(b, "Dihedral", S.geomP, "dihedral", { unit: "deg", step: 0.1 });
+    rowNum(b, "Twist (tip)", S.geomP, "twist", { unit: "deg", step: 0.1 });
+    rowNum(b, "Reference area", S.geomP, "sref", { unit: "m²", step: 0.001 });
+    rowNum(b, "Mean aero chord", S.geomP, "mac", { unit: "m", step: 0.0001 });
+    rowVal(b, "Taper ratio", fx(S.geomP.tip / S.geomP.root, 4), "d");
+    rowVal(b, "Root chord / semispan", fx(S.geomP.root / S.geomP.span, 3), "d");
+  });
+  group(h, "Trailing edge", b => {
+    rowNum(b, "te_abs_m", S.L, "te_abs_m", { unit: "m", step: 0.0001 });
+    rowNum(b, "te_floor_frac", S.L, "te_floor_frac", { unit: "frac c", step: 0.0005 });
+    const m = S.mesh;
+    rowVal(b, "Base opening applied", m ? fx(100 * m.tb, 3) + " % c" : "—", "d");
+    rowVal(b, "Absolute at root", m ? sci(m.tb * S.geomP.root, 3) + " m" : "—", "d");
+    note(b, "The base is created by <b>adding</b> thickness to the loft, so " +
+      "<code>target_te = max(te_abs_m, te_floor_frac &times; chord)</code>. " +
+      "RIBES's real manufactured trailing edge measures 0.38&ndash;0.66 % of chord, " +
+      "mean <b>0.517 %</b> &mdash; which is what family 2's 0.500 % was set to match.");
+  });
+  if (S.node === "scan" || S.node === "section") {
+    group(h, "Scan diagnosis", b => {
+      if (S.sectionSrc !== "ribes") { note(b, "Scan data exists only for the RIBES wing."); return; }
+      rowSel(b, "Section station", S, "scanSec",
+        Object.keys(D.scan || {}).map(k => [k, "y = " + k + " mm"]));
+      rowChk(b, "Show scan cloud", S, "showScan");
+      rowChk(b, "Show rejected points", S, "showRejected");
+      rowChk(b, "Show fitted section", S, "showFit");
+      const ps = (D.section.per_section || {})[S.scanSec];
+      if (ps) {
+        rowVal(b, "Interior fraction", fx(100 * ps.ifrac, 1) + " %",
+               ps.ifrac > 0.3 ? "" : "d");
+        rowVal(b, "CST residual, upper", fx(ps.ru, 3) + " % c", "d");
+        rowVal(b, "CST residual, lower", fx(ps.rl, 3) + " % c", "d");
+      }
+      box(b, "<b>19.5 %</b> of the laser-scan points are not on the wetted surface. " +
+        "RIBES is an aeroelastic model with a load-bearing structure, and the scan " +
+        "captured its spar web: 15 of 17 sections carry a vertical column of points " +
+        "at x/c 0.19&ndash;0.21. Sorting the cloud by polar angle interleaved them " +
+        "into the surface ring, and the fit rattled.", "bad");
+      box(b, "It survived validation because the old section matched the 30 pressure " +
+        "taps to 0.074 % of chord. The corrugation lives <b>between</b> the taps. " +
+        "Agreement at sparse points is not a smoothness test.", "warn");
+      box(b, "After rejecting interior points and fitting CST: per-section residual " +
+        "0.845 % &rarr; <b>0.032 %</b> of chord, slope rattle 34.5&times; &rarr; " +
+        "<b>1.75&times;</b> the analytic floor, tap agreement 0.074 % &rarr; " +
+        "<b>0.058 %</b>. Both metrics improved together.", "good");
+    }, "scandiag");
+  }
+}
+
+/* ==================================================== details: MESH */
+const LEVEL_DOC = {
+  n_side: ["points per side, TE→LE", "count"],
+  n_base: ["points across the blunt base (must be odd)", "count"],
+  n_span: ["spanwise stations, root→tip", "count"],
+  n_cap_collar: ["rings folded into the tip cap collar", "count"],
+  target_le_turn_deg: ["surface turning per cell at the nose", "deg"],
+  ds_te_frac: ["chordwise spacing at the trailing edge", "frac c"],
+  dense_points: ["points on the dense section used for arc length", "count"],
+  n_normal: ["wall-normal layers", "count"],
+  farfield_chords: ["far-field radius", "chords"],
+  s0_frac: ["first wall-normal cell height", "frac c"],
+  le_span_growth_max: ["cap on spanwise growth at the LE", "ratio"],
+  le_refine_factor: ["extra LE clustering multiplier", "×"],
+  le_baseline_n_side: ["n_side the LE spacing is pinned from", "count"],
+  tip_span_first_cell_in_s0: ["first tip-plane span cell, in units of s0", "× s0"],
+  te_abs_m: ["absolute trailing-edge thickness floor", "m"],
+  te_floor_frac: ["trailing-edge thickness floor", "frac c"]
+};
+const NODE_FIELDS = {
+  ring: ["n_side", "n_base", "target_le_turn_deg", "ds_te_frac", "dense_points",
+         "le_refine_factor", "le_baseline_n_side"],
+  normal: ["n_normal", "s0_frac"],
+  span: ["n_span", "le_span_growth_max", "tip_span_first_cell_in_s0"],
+  tip: ["n_cap_collar", "n_base", "tip_span_first_cell_in_s0"],
+  farfield: ["farfield_chords"]
+};
+function panelMesh(h) {
+  group(h, "Level", b => {
+    const names = Object.keys(D.levels || {}).sort();
+    const fam = n => n.startsWith("gci3_") ? "3  " : n.startsWith("gci2_") ? "2  "
+      : n.startsWith("gci") ? "B  " : n.startsWith("m6") ? "M6 " : "   ";
+    rowSel(b, "Preset", S, "level", names.map(n => [n, fam(n) + n]), () => {
+      S.L = Object.assign({}, D.levels[S.level]);
+      log("level → " + S.level, "hi"); render();
+    });
+    const built = (D.meshes || []).filter(m => m.lv === S.level);
+    rowVal(b, "Built meshes on disk", String(built.length), "d");
+    if (built.length) {
+      const m0 = built[0];
+      rowVal(b, "Built cells", cm(m0.cells), "d");
+      const pred = S.mesh ? S.mesh.bc.total : null;
+      const dev = pred && m0.cells ? Math.abs(pred - m0.cells) / m0.cells : null;
+      rowVal(b, "Predicted here", pred ? cm(pred) : "—", "d");
+      const p = E("span", "pill " + (dev == null ? "i" : dev < 0.06 ? "ok" : "wa"),
+        dev == null ? "—" : fx(100 * dev, 1) + " % off");
+      rowVal(b, "Prediction vs built", p);
+      rowVal(b, "Negative cells (built)", m0.neg == null ? "—" : String(m0.neg),
+             m0.neg ? "" : "d");
+      rowVal(b, "Wall orthogonality", m0.orth == null ? "—" : fx(m0.orth, 3) + "°", "d");
+    }
+  });
+  const fields = NODE_FIELDS[S.node] || Object.keys(LEVEL_DOC);
+  group(h, S.node === "ring" ? "Chordwise distribution (ξ)"
+    : S.node === "normal" ? "Wall-normal distribution (η)"
+    : S.node === "span" ? "Spanwise distribution (ζ)"
+    : S.node === "tip" ? "Tip cap" : S.node === "farfield" ? "Far field"
+    : "All level parameters", b => {
+    for (const k of fields) {
+      if (S.L[k] === undefined) continue;
+      const d = LEVEL_DOC[k] || [k, ""];
+      const step = /frac|_m$|deg|growth|factor/.test(k)
+        ? (Math.abs(+S.L[k]) < 1e-3 ? 1e-7 : 1e-4) : 1;
+      rowNum(b, k, S.L, k, { unit: d[1], step });
+    }
+    if (!NODE_FIELDS[S.node]) note(b, "Every field of the <code>OHLevel</code> " +
+      "dataclass is here. Pick a node in the outline to see one stage at a time.");
+    else note(b, fields.map(k => `<b>${k}</b> — ${(LEVEL_DOC[k]||["",""])[0]}`).join("<br>"));
+  }, "lvfields_" + S.node);
+  const m = S.mesh;
+  group(h, "Derived", b => {
+    if (!m) return;
+    rowVal(b, "Ring nodes (n_ring)", String(m.nRing), "d");
+    rowVal(b, "Achieved TE spacing", fx(100 * m.achievedTE, 4) + " % c", "d");
+    rowVal(b, "Achieved LE spacing", fx(100 * m.achievedLE, 4) + " % c", "d");
+    rowVal(b, "Nose radius", fx(100 * m.R, 3) + " % c", "d");
+    rowVal(b, "First cell height", sci(m.spacings[0] * m.chord, 3) + " m", "d");
+    rowVal(b, "Normal growth ratio", fx(m.growth, 4), "d");
+    rowVal(b, "y+ of first cell", m.yp ? fx(m.yp, 2) : "—",
+           m.yp && m.yp > 1 ? "" : "d");
+    rowVal(b, "o_wing", m.bc.shapes.o_wing.join(" × ") + "  = " + cm(m.bc.oWing), "d");
+    rowVal(b, "o_out", m.bc.shapes.o_out.join(" × ") + "  = " + cm(m.bc.oOut), "d");
+    rowVal(b, "cap_out", m.bc.shapes.cap_out.join(" × ") + "  = " + cm(m.bc.capOut), "d");
+    rowVal(b, "Total cells", cm(m.bc.total));
+    if (m.yp && m.yp > 1) box(b, `y+ of the first cell is <b>${fx(m.yp,2)}</b>. ` +
+      "A wall-resolved SA run wants y+ below about 1; raise n_normal or cut s0_frac.", "warn");
+    if (Math.round(+S.L.n_base) % 2 === 0)
+      box(b, "<b>n_base is even.</b> The tip cap needs an odd count so the H patch " +
+        "perimeter closes on a node rather than a cell centre.", "bad");
+  });
+  group(h, "Quality", b => {
+    if (!m) return;
+    rowVal(b, "Folded cells (section)", String(m.q.neg), m.q.neg ? "" : "d");
+    rowVal(b, "Min cell area", sci(m.q.amin, 3), "d");
+    rowVal(b, "Max cell area", sci(m.q.amax, 3), "d");
+    rowVal(b, "Max aspect ratio", fx(m.q.arMax, 1), "d");
+    if (m.q.neg) box(b, `<b>${m.q.neg} folded cells</b> in this cross-section. ` +
+      "The marching normals cross. More normal smoothing, a larger base opening or " +
+      "fewer chordwise points all relieve it.", "bad");
+    else box(b, "No folded cells in this cross-section.", "good");
+    rowNum(b, "Normal smoothing passes", S.view, "smooth",
+      { step: 1, min: 0, max: 60, on: () => { rebuild(S.view.smooth); render(); } });
+  });
+  group(h, "Refinement ladder", b => {
+    const fam = S.level.startsWith("gci2_") ? "gci2_" : S.level.startsWith("gci3_")
+      ? "gci3_" : "gci_";
+    const rungs = ["C", "M", "F", "FF"].map(r => fam + r).filter(n => D.levels[n]);
+    if (!rungs.length) { note(b, "This level is not part of a C/M/F/FF ladder."); return; }
+    for (const n of rungs) {
+      const L = D.levels[n];
+      const nr = 2 * L.n_side + L.n_base - 2;
+      const bc = blockCounts(L, nr);
+      const cur = n === S.level;
+      const v = E("span"); v.textContent = cm(bc.total);
+      if (cur) { v.style.color = "var(--accent)"; v.style.fontWeight = "600"; }
+      const r = rowVal(b, n, v, "d");
+      r.style.cursor = "pointer";
+      r.onclick = () => { S.level = n; S.L = Object.assign({}, D.levels[n]);
+        log("level → " + n, "hi"); render(); };
+    }
+    const c = D.levels[fam + "C"], f = D.levels[fam + "F"];
+    if (c && f) {
+      const rc = 2 * c.n_side + c.n_base - 2, rf = 2 * f.n_side + f.n_base - 2;
+      note(b, `Refinement ratio C→F: ring ×<b>${fx(rf/rc,3)}</b>, ` +
+        `normal ×<b>${fx(f.n_normal/c.n_normal,3)}</b>, ` +
+        `span ×<b>${fx(f.n_span/c.n_span,3)}</b>. ` +
+        `Cell count ×<b>${fx(blockCounts(f,rf).total/blockCounts(c,rc).total,2)}</b>.`);
+    }
+  });
+  group(h, "Family differences", b => {
+    note(b,
+      "<b>A</b> — tip cap 10.2&times;s0. Superseded; 155 runs.<br>" +
+      "<b>B</b> — tip cap 2.04&times;s0. Production baseline; 107 runs.<br>" +
+      "<b>2</b> — B plus chordwise ×1.69, <code>edges=True</code>, far field " +
+      "60c. This is the cloud family.<br>" +
+      "<b>3</b> — family 2 with the base opening cut 0.500 %&rarr;0.200 % of chord. " +
+      "It cuts the base term from 20 % to 2 %, but <b>77 % of that was free</b> " +
+      "— and RIBES's real trailing edge measures 0.517 %, which reverses the lean " +
+      "back to family 2.");
+    box(b, "Far field 40 &rarr; 60 chords is a <b>+0.65 count</b> systematic bias, " +
+      "not noise. Do not mix families in one comparison.", "warn");
+  }, "famdiff");
+}
+
+/* ==================================================== details: SOLVER */
+function panelSolve(h) {
+  const sv = S.solver, cd = S.cond;
+  group(h, "Operating point", b => {
+    const names = Object.keys(CONDS);
+    const r = E("div", "row"); r.appendChild(E("label", null, "Preset"));
+    const s = E("select");
+    for (const n of names) { const o = E("option", null, n); o.value = n; s.appendChild(o); }
+    s.value = cd.name;
+    s.onchange = () => { Object.assign(cd, CONDS[s.value], { name: s.value });
+      log("condition → " + s.value, "hi"); render(); };
+    r.appendChild(s); b.appendChild(r);
+    rowNum(b, "alpha", cd, "alpha", { unit: "deg", step: 0.01 });
+    rowNum(b, "Mach", cd, "mach", { step: 0.0001 });
+    rowNum(b, "Reynolds", cd, "reynolds", { step: 1000 });
+    rowNum(b, "Reynolds length", cd, "reynoldsLength", { unit: "m", step: 0.0001 });
+    rowNum(b, "Temperature", cd, "temperature", { unit: "K", step: 0.01 });
+    rowNum(b, "Chord ref", cd, "chordRef", { unit: "m", step: 0.0001 });
+    rowNum(b, "Area ref", cd, "areaRef", { unit: "m²", step: 0.001 });
+    const a = 20.05 * Math.sqrt(cd.temperature), V = cd.mach * a;
+    const nu = V * cd.reynoldsLength / cd.reynolds;
+    rowVal(b, "Speed of sound", fx(a, 2) + " m/s", "d");
+    rowVal(b, "Freestream speed", fx(V, 3) + " m/s", "d");
+    rowVal(b, "Kinematic viscosity", sci(nu, 3) + " m²/s", "d");
+    rowVal(b, "Reynolds per metre", sci(cd.reynolds / cd.reynoldsLength, 3), "d");
+    note(b, "These are <b>AeroProblem</b> parameters, not ADflow options. " +
+      "Passing them as solver options is what killed the first four RIBES runs " +
+      "(<code>Option mach is not a valid ADFLOW option</code>).");
+  });
+  group(h, "Turbulence", b => {
+    rowSel(b, "equationType", sv, "equationType", ["RANS", "laminar NS", "Euler"]);
+    rowSel(b, "turbulenceModel", sv, "turbulenceModel",
+      ["SA", "SA-noft2", "SST", "k-w Wilcox", "v2f"]);
+    rowSel(b, "turbulenceOrder", sv, "turbulenceOrder", ["first order", "second order"]);
+    rowNum(b, "eddyVisInfRatio", sv, "eddyVisInfRatio", { step: 0.01 });
+    rowNum(b, "turbResScale", sv, "turbResScale", { step: 1e-3 });
+    rowChk(b, "useFT2SA", sv, "useFT2SA");
+    rowChk(b, "useWallFunctions", sv, "useWallFunctions");
+    rowChk(b, "useQCR", sv, "useQCR");
+    const chi = sv.eddyVisInfRatio;
+    note(b, `eddyVisInfRatio ${fx(chi,3)} corresponds to χ ≈ ` +
+      `<b>${fx(chi/0.07,1)}</b>. The governed value 0.21 is χ = 3. ` +
+      "Measured effect of moving to the ADflow default: C_Dv 4.10 &rarr; 3.95 counts " +
+      "on the old RIBES mesh — far too small to explain that mesh's nonsense, " +
+      "which is how SA relaminarisation was ruled out.");
+  });
+  group(h, "Solver path", b => {
+    rowChk(b, "useANKSolver", sv, "useANKSolver");
+    rowNum(b, "ANKSwitchTol", sv, "ANKSwitchTol", { step: 0.1 });
+    rowNum(b, "ANKSubspaceSize", sv, "ANKSubspaceSize", { step: 1 });
+    rowNum(b, "ANKPCILUFill", sv, "ANKPCILUFill", { step: 1 });
+    rowChk(b, "useNKSolver", sv, "useNKSolver");
+    rowNum(b, "NKSwitchTol", sv, "NKSwitchTol", { step: 1e-7 });
+    rowNum(b, "NKSubspaceSize", sv, "NKSubspaceSize", { step: 1 });
+    rowNum(b, "NKPCILUFill", sv, "NKPCILUFill", { step: 1 });
+    rowSel(b, "MGCycle", sv, "MGCycle", ["sg", "2w", "3w", "4w"]);
+    rowSel(b, "smoother", sv, "smoother", ["DADI", "Runge-Kutta"]);
+    rowChk(b, "lowSpeedPreconditioner", sv, "lowSpeedPreconditioner");
+    rowNum(b, "liftIndex", sv, "liftIndex", { step: 1 });
+    if (sv.useNKSolver) box(b, "NK is on. Measured on this study: <b>neither NK arm " +
+      "converged</b> — both hit the 35-minute cap. ANK-only is the governed path.", "warn");
+    else box(b, "ANK-only, which is the governed path (<code>--no-nk</code>).", "good");
+  });
+  group(h, "Convergence", b => {
+    rowNum(b, "L2Convergence", sv, "L2Convergence", { step: 1e-7 });
+    rowNum(b, "nCycles", sv, "nCycles", { step: 1000 });
+    rowNum(b, "timeLimit", sv, "timeLimit", { unit: "s", step: 60 });
+    note(b, "The gate this study uses: residual ≥ 5 orders, C_L drift &lt; 0.05 %, " +
+      "C_D &lt; 0.1 %, |dC_My| &lt; 1e-4, over an adaptive tail of " +
+      "min(100, max(20, 25 %)) iterations.");
+  });
+  group(h, "Command", b => {
+    const g = $("#vp");
+    const cmd = `mpirun -np 6 python solve_s8.py \\\n` +
+      `  --grid runs/<set>/${S.level}_volume.cgns \\\n` +
+      `  --alpha ${cd.alpha} ${sv.useNKSolver ? "" : "--no-nk "}\\\n` +
+      `  --eddy-vis-inf-ratio ${sv.eddyVisInfRatio} --area-ref ${cd.areaRef} \\\n` +
+      `  --mach ${cd.mach} --reynolds ${cd.reynolds} \\\n` +
+      `  --reynolds-length ${cd.reynoldsLength} --temperature ${cd.temperature} \\\n` +
+      `  --chord-ref ${cd.chordRef} --l2 ${sv.L2Convergence} \\\n` +
+      `  --turbulence-model ${sv.turbulenceModel} --mg-cycle ${sv.MGCycle} \\\n` +
+      `  --out runs/<set>/a${cd.alpha} --i-have-authorization`;
+    const pre = E("div"); pre.className = "mono";
+    Object.assign(pre.style, { whiteSpace: "pre-wrap", fontSize: "10px",
+      padding: "8px 11px", color: "var(--ink2)", lineHeight: "1.6",
+      wordBreak: "break-all" });
+    pre.textContent = cmd; b.appendChild(pre);
+    const row = E("div", "btnrow");
+    const cp = E("button", "btn sec", "Copy command");
+    cp.onclick = async () => {
+      try { await navigator.clipboard.writeText(cmd); cp.textContent = "Copied";
+        setTimeout(() => cp.textContent = "Copy command", 1400); }
+      catch (e) { cp.textContent = "Select it manually"; }
+    };
+    row.appendChild(cp); b.appendChild(row);
+    note(b, "This workbench composes the command; it does not run the solver. " +
+      "Heavy runs stay behind <code>--i-have-authorization</code>.");
+  });
+}
+</script>
+
+<script>
+/* ==================================================== details: RESULTS */
+function panelPost(h) {
+  group(h, "View", b => {
+    rowSel(b, "Plot", S.post, "plot", [["polar", "C_L vs α"],
+      ["cdalpha", "C_D vs α"], ["clcd", "C_L vs C_D"],
+      ["cdvalpha", "C_Dv vs α"], ["cmy", "C_My vs α"]]);
+    rowSel(b, "Family", S.post, "famF",
+      [["all", "all"], "B/A", "2", "3", "M6", "legacy", "other"]);
+    rowSel(b, "Geometry", S.post, "geoF", [["all", "all"], "aeris", "ribes", "m6"]);
+    rowSel(b, "Converged", S.post, "convF", [["all", "all"], ["yes", "yes"], ["no", "no"]]);
+  });
+  group(h, "Database", b => {
+    const rs = runsFiltered();
+    const all = D.runs || [];
+    rowVal(b, "Runs in bundle", String(all.length), "d");
+    rowVal(b, "Matching filter", String(rs.length), "d");
+    rowVal(b, "Converged", String(rs.filter(r => r.cv).length), "d");
+    rowVal(b, "Not converged", String(rs.filter(r => !r.cv).length), "d");
+    const byFam = {};
+    for (const r of all) byFam[r.fam] = (byFam[r.fam] || 0) + 1;
+    for (const k of Object.keys(byFam).sort()) rowVal(b, "family " + k, String(byFam[k]), "d");
+    const withCells = rs.filter(r => r.n).length;
+    note(b, `<b>${withCells}</b> of the matching runs carry a cell count, because a ` +
+      "mesh summary has to exist beside the run for that join to be made. " +
+      "The rest are honest blanks, not zeros.");
+  });
+  if (S.post.selected.size) group(h, "Selected runs", b => {
+    const sel = (D.runs || []).filter(r => S.post.selected.has(r.p));
+    for (const r of sel) {
+      const w = E("div"); w.style.padding = "5px 11px";
+      w.style.borderBottom = "1px solid var(--line2)";
+      const t = E("div", "mono"); t.style.fontSize = "10.5px"; t.style.color = "var(--ink)";
+      t.textContent = r.p; w.appendChild(t);
+      const s = E("div", "mono"); s.style.fontSize = "10px"; s.style.color = "var(--ink2)";
+      s.textContent = `α ${fx(r.a,2)}  C_L ${fx(r.cl,5)}  C_D ${ct(r.cd)} ct  ` +
+        `C_Dp ${ct(r.cdp)}  C_Dv ${ct(r.cdv)}  iters ${r.it ?? "—"}`;
+      w.appendChild(s); b.appendChild(w);
+    }
+    if (sel.length === 2) {
+      const [a, c] = sel;
+      box(b, `ΔC_D = <b>${ct(c.cd - a.cd)} counts</b>, ` +
+        `ΔC_Dp = ${ct(c.cdp - a.cdp)}, ΔC_Dv = ${ct(c.cdv - a.cdv)}, ` +
+        `ΔC_L = ${fx(c.cl - a.cl, 5)}`, "i");
+    }
+    const r2 = E("div", "btnrow");
+    const cl = E("button", "btn sec", "Clear selection");
+    cl.onclick = () => { S.post.selected.clear(); render(); };
+    r2.appendChild(cl); b.appendChild(r2);
+  }, "selruns");
+  group(h, "Measured findings", b => {
+    const R = D.reports || {};
+    const items = [
+      ["Increment cancellation", "Design increments survive at <code>gci_C</code>: " +
+       "the absolute error cancels <b>12–21×</b> when two designs are compared " +
+       "on the same mesh. That is what makes the coarse level usable for ranking."],
+      ["Where the error lives", "The grid error is <b>chordwise</b>, and it sits in " +
+       "<b>pressure drag</b>. Chordwise refinement alone recovers <b>109–127 %</b> " +
+       "of full refinement on three geometries."],
+      ["The blunt base", "The base face is 0.25 % of wetted area and carries " +
+       "<b>−9.8 to −11.0 counts</b>."],
+      ["Near wake", "Refining the near wake makes base drag <b>+23.1 counts worse</b>. " +
+       "That is a model limit, not a grid limit."],
+      ["Far field", "40 → 60 chords is a <b>+0.65 count</b> systematic bias."],
+      ["Alpha range", "Usable to <b>15°</b>. Past that the O-ring cannot hold the " +
+       "separated shear layer."],
+      ["Solver path", "ANK-only is correct. <b>Neither NK arm converged</b>; both hit " +
+       "the 35-minute cap."],
+      ["gci_F", "Chordwise-identical to <code>gci_C_chord2</code>, so it adds nothing " +
+       "in the direction that matters."],
+      ["RIBES trailing edge", "The real manufactured TE is 0.38–0.66 % of chord, " +
+       "mean <b>0.517 %</b> — matching family 2's 0.500 % and reversing the " +
+       "family-3 lean."],
+      ["RIBES nonsense", "The laser scan contained the wing's <b>spar web</b>: 19.5 % " +
+       "of points were interior. C_L went −0.153 &rarr; <b>+0.252</b> and " +
+       "C_Dv 4.10 &rarr; <b>79.2 counts</b> once they were rejected."]
+    ];
+    for (const [t, d] of items) {
+      const w = E("div"); w.style.padding = "6px 11px";
+      w.style.borderBottom = "1px solid var(--line2)";
+      const hh = E("div", null, t); hh.style.fontWeight = "600";
+      hh.style.fontSize = "11.5px"; hh.style.marginBottom = "2px";
+      const dd = E("div"); dd.innerHTML = d; dd.style.fontSize = "11px";
+      dd.style.color = "var(--ink2)"; dd.style.lineHeight = "1.5";
+      w.appendChild(hh); w.appendChild(dd); b.appendChild(w);
+    }
+    note(b, `${Object.keys(R).length} report files are carried in this bundle. ` +
+      "Each claim above is the JSON's number, not the prose's.");
+  }, "findings");
+}
+
+/* ==================================================== details: VALIDATION */
+function panelValid(h) {
+  const R = D.ribes;
+  group(h, "Experiment", b => {
+    if (!R) { note(b, "No experimental data in this bundle."); return; }
+    rowVal(b, "Source", "RIBES experimental test report", "d");
+    rowVal(b, "Programme", "Clean Sky JTI grant 632556", "d");
+    rowSel(b, "Test", S.valid, "test", Object.keys(R.tests));
+    const t = R.tests[S.valid.test];
+    const secs = (t.cp || []).map(c => c.sec);
+    rowSel(b, "Section", S.valid, "sec", secs.length ? secs : ["—"]);
+    const c = (t.cp || []).find(e => e.sec === S.valid.sec) || (t.cp || [])[0];
+    if (c) {
+      const al = c.alphas || [];
+      const r = E("div", "row"); r.appendChild(E("label", null, "Incidence"));
+      const s = E("select");
+      al.forEach((a, i) => { const o = E("option", null, fx(a, 2) + "°"); o.value = i;
+        s.appendChild(o); });
+      s.value = clamp(S.valid.alphaIdx, 0, al.length - 1);
+      s.onchange = () => { S.valid.alphaIdx = +s.value; render(); };
+      r.appendChild(s); b.appendChild(r);
+      rowVal(b, "Taps in section", String(c.x.length), "d");
+      rowVal(b, "Spanwise station", c.y != null ? c.y + " mm" : "—", "d");
+    }
+    if (t.speed_m_s) rowVal(b, "Nominal speed", t.speed_m_s + " m/s", "d");
+    box(b, "The condition used for CFD is the <b>measured</b> one, not the test " +
+      "matrix's nominal: 39.83 m/s, 25.7 °C, Re <b>1.329e6</b> averaged over 22 " +
+      "runs above 38 m/s. The matrix rounds that to “40 m/s, 1.43 million”.", "i");
+  });
+  group(h, "Comparison", b => {
+    const rrun = (D.runs || []).filter(r => r.g === "ribes");
+    rowVal(b, "RIBES runs in bundle", String(rrun.length), "d");
+    for (const r of rrun) rowVal(b, r.p, fx(r.cl, 4) + " / " + ct(r.cd) + " ct", "d");
+    note(b, "C_L / C_D counts. The bundle was written while the corrected runs were " +
+      "still solving, so the rows here are whatever had a <code>result.json</code> " +
+      "at that moment.");
+    box(b, "Before the scan fix, the solver returned C_L <b>−0.153</b> against a " +
+      "measured <b>+0.264</b>, and C_Dv <b>4.10 counts</b>. Skin friction cannot " +
+      "nearly vanish on a wing at Re 1.3e6 — that was the number that gave the " +
+      "defect away.", "bad");
+  });
+  group(h, "Import data", b => {
+    note(b, "Drop a CSV or whitespace-separated file with <b>x/c</b> in the first " +
+      "column and <b>c_p</b> in the second. It is parsed in your browser and drawn " +
+      "on the pressure plot; nothing is uploaded.");
+    const dz = E("div", "drop", "Drop a file here, or click to choose");
+    const fi = E("input"); fi.type = "file"; fi.accept = ".csv,.txt,.dat"; fi.hidden = true;
+    const parse = txt => {
+      const out = [];
+      for (const ln of txt.split(/\r?\n/)) {
+        const t = ln.trim(); if (!t || /^[#%]/.test(t)) continue;
+        const p = t.split(/[,;\s]+/).map(Number);
+        if (p.length >= 2 && isFinite(p[0]) && isFinite(p[1])) out.push([p[0], p[1]]);
+      }
+      return out;
+    };
+    const take = f => { const rd = new FileReader();
+      rd.onload = () => { const pts = parse(String(rd.result));
+        if (!pts.length) { log("imported " + f.name + ": no usable rows", "no"); return; }
+        S.valid.imported = pts; S.stage = "valid"; S.node = "cp";
+        log(`imported ${f.name}: ${pts.length} points`, "ok"); render(); };
+      rd.readAsText(f); };
+    dz.onclick = () => fi.click();
+    fi.onchange = () => { if (fi.files[0]) take(fi.files[0]); };
+    dz.ondragover = e => { e.preventDefault(); dz.classList.add("over"); };
+    dz.ondragleave = () => dz.classList.remove("over");
+    dz.ondrop = e => { e.preventDefault(); dz.classList.remove("over");
+      if (e.dataTransfer.files[0]) take(e.dataTransfer.files[0]); };
+    b.appendChild(dz); b.appendChild(fi);
+    if (S.valid.imported) {
+      rowVal(b, "Imported points", String(S.valid.imported.length), "d");
+      const r = E("div", "btnrow"); const c = E("button", "btn sec", "Clear imported");
+      c.onclick = () => { S.valid.imported = null; render(); };
+      r.appendChild(c); b.appendChild(r);
+    }
+  });
+}
+
+/* ==================================================== details: CONVERGENCE */
+function panelGci(h) {
+  group(h, "Grid triple", b => {
+    const names = Object.keys(D.levels || {}).sort();
+    const sets = ["any"].concat([...new Set((D.runs || []).map(r => r.s))].sort());
+    rowSel(b, "Run set", S.gci, "set", sets);
+    ["0", "1", "2"].forEach((i, k) => {
+      const r = E("div", "row");
+      r.appendChild(E("label", null, ["coarse", "medium", "fine"][k]));
+      const s = E("select");
+      for (const n of names) { const o = E("option", null, n); o.value = n; s.appendChild(o); }
+      s.value = S.gci.levels[k];
+      s.onchange = () => { S.gci.levels[k] = s.value; render(); };
+      r.appendChild(s); b.appendChild(r);
+    });
+    rowSel(b, "Quantity", S.gci, "qty", [["cd", "C_D"], ["cl", "C_L"],
+      ["cdp", "C_Dp"], ["cdv", "C_Dv"], ["cmy", "C_My"]]);
+    const T = gciTriple();
+    for (const t of T) {
+      const p = E("span", "pill " + (t.v == null ? "no" : "ok"),
+        t.v == null ? "no run" : cm(t.n) + " cells");
+      rowVal(b, t.lv, p);
+    }
+    note(b, "ASME V&amp;V 20 / Celik. The representative cell size is " +
+      "h = N<sup>−1/3</sup>, the observed order p is solved by fixed-point " +
+      "iteration, and the band is 1.25 &times; the extrapolated relative error.");
+  });
+  group(h, "Reading it", b => {
+    box(b, "An observed order p far from the scheme's formal order means the triple " +
+      "is <b>not in the asymptotic range</b>. Report it; do not quietly accept the " +
+      "band it produces.", "warn");
+    note(b, "On this study the usable finding was not the band itself but that " +
+      "<b>increments cancel 12–21×</b>, which is what licenses ranking " +
+      "designs at <code>gci_C</code> instead of at the fine level.");
+  });
+  group(h, "Refinement ladder", b => {
+    for (const fam of ["gci_", "gci2_", "gci3_"]) {
+      const rungs = ["C", "M", "F", "FF"].map(r => fam + r).filter(n => D.levels[n]);
+      if (!rungs.length) continue;
+      const hh = E("div"); hh.style.cssText =
+        "padding:5px 11px 2px;font-size:10.5px;font-weight:600;color:var(--ink2)";
+      hh.textContent = "family " + (fam === "gci_" ? "B" : fam === "gci2_" ? "2" : "3");
+      b.appendChild(hh);
+      for (const n of rungs) {
+        const L = D.levels[n], nr = 2 * L.n_side + L.n_base - 2;
+        const built = (D.meshes || []).find(m => m.lv === n);
+        rowVal(b, n, cm(blockCounts(L, nr).total) +
+          (built ? "  (built " + cm(built.cells) + ")" : ""), "d");
+      }
+    }
+    box(b, "<code>gci_F</code> is chordwise-identical to <code>gci_C_chord2</code>. " +
+      "It costs 4× the cells and adds nothing in the direction the error " +
+      "actually lives.", "warn");
+  });
+}
+</script>
+
+<script>
+/* ============================================== viewport mode per stage/node */
+function viewModeFor() {
+  if (S.stage === "geom") return (S.node === "planform") ? "planform" : "section";
+  if (S.stage === "mesh") return S.node === "normal" ? "wall"
+    : S.node === "topology" ? "topology" : S.node === "span" ? "planform" : "grid";
+  if (S.stage === "solve") return "polar";
+  if (S.stage === "post") return S.node === "table" ? "table" : "polar";
+  if (S.stage === "valid") return "cp";
+  if (S.stage === "gci") return "gci";
+  return "grid";
+}
+const VIEW_TITLES = { planform: "Planform · spanwise stations",
+  section: "Section · scan, fit and taps", grid: "Mesh · O-block cross-section",
+  wall: "Wall-normal spacing", topology: "Block topology", polar: "Polars",
+  table: "Run database", cp: "Pressure distribution", gci: "Grid convergence" };
+
+function renderTools() {
+  const t = $("#vptools"); t.innerHTML = "";
+  const mode = viewModeFor();
+  const btn = (label, on, fn, title) => {
+    const b = E("button", on ? "on" : "", label); if (title) b.title = title;
+    b.onclick = fn; t.appendChild(b); return b; };
+  const sel = (obj, key, opts, fn) => {
+    const s = E("select");
+    for (const o of opts) { const op = E("option", null, Array.isArray(o) ? o[1] : o);
+      op.value = Array.isArray(o) ? o[0] : o; s.appendChild(op); }
+    s.value = obj[key];
+    s.onchange = () => { obj[key] = s.value; (fn || render)(); };
+    t.appendChild(s); return s; };
+
+  if (mode === "grid") {
+    btn("grid lines", S.view.lines, () => { S.view.lines = !S.view.lines; render(); });
+    sel(S.view, "colour", [["none", "no colour"], ["area", "cell area"],
+      ["growth", "spacing growth"], ["layer", "layer index"]]);
+    if (S.view.colour !== "none")
+      sel(S.view, "cmap", [["viridis", "viridis"], ["coolwarm", "coolwarm"],
+        ["plasma", "plasma"], ["grey", "greyscale"]]);
+    const es = sel(S.view, "every", [[1, "every line"], [2, "every 2nd"],
+      [4, "every 4th"], [8, "every 8th"]]);
+    es.onchange = () => { S.view.every = +es.value; render(); };
+    btn("−", false, () => { S.view.zoom = clamp(S.view.zoom / 1.6, 1, 4000); render(); }, "zoom out");
+    btn("+", false, () => { S.view.zoom = clamp(S.view.zoom * 1.6, 1, 4000); render(); }, "zoom in");
+    btn("LE", false, () => { S.view.zoom = 60; S.view.cx = 0.0; S.view.cy = 0; render(); },
+        "zoom to the leading edge");
+    btn("base", false, () => { S.view.zoom = 60; S.view.cx = 1.0; S.view.cy = 0; render(); },
+        "zoom to the blunt base");
+    btn("fit", false, () => { S.view.zoom = 1; S.view.cx = 0.35; S.view.cy = 0; render(); });
+  } else if (mode === "section") {
+    btn("scan", S.showScan, () => { S.showScan = !S.showScan; render(); });
+    btn("rejected", S.showRejected, () => { S.showRejected = !S.showRejected; render(); });
+    btn("fit", S.showFit, () => { S.showFit = !S.showFit; render(); });
+    if (S.sectionSrc === "ribes" && D.scan) {
+      const s = sel(S, "scanSec", Object.keys(D.scan).map(k => [k, "y " + k + " mm"]));
+    }
+  } else if (mode === "topology") {
+    for (const k of ["o_wing", "o_out", "cap_out"])
+      btn(k, S.view.blocks[k], () => { S.view.blocks[k] = !S.view.blocks[k]; render(); });
+  } else if (mode === "polar") {
+    sel(S.post, "plot", [["polar", "C_L vs α"], ["cdalpha", "C_D vs α"],
+      ["clcd", "C_L vs C_D"], ["cdvalpha", "C_Dv vs α"], ["cmy", "C_My vs α"]]);
+    sel(S.post, "famF", [["all", "all families"], ["B/A", "family B/A"],
+      ["2", "family 2"], ["3", "family 3"], ["M6", "M6"], ["legacy", "legacy"]]);
+    sel(S.post, "geoF", [["all", "all geometry"], ["aeris", "aeris"],
+      ["ribes", "ribes"], ["m6", "m6"]]);
+  } else if (mode === "cp") {
+    sel(S.valid, "test", Object.keys((D.ribes || { tests: {} }).tests));
+    const t = (D.ribes || { tests: {} }).tests[S.valid.test];
+    if (t) sel(S.valid, "sec", (t.cp || []).map(c => c.sec));
+  } else if (mode === "gci") {
+    sel(S.gci, "qty", [["cd", "C_D"], ["cl", "C_L"], ["cdp", "C_Dp"],
+      ["cdv", "C_Dv"], ["cmy", "C_My"]]);
+  } else if (mode === "table") {
+    btn("clear selection", false, () => { S.post.selected.clear(); render(); });
+  }
+}
+
+/* ============================================================== main render */
+let RAF = 0;
+function render() {
+  cancelAnimationFrame(RAF);
+  RAF = requestAnimationFrame(() => {
+    // crumb
+    $("#crumb").innerHTML =
+      `<b>${GEOM[S.geom].label}</b> &nbsp;/&nbsp; <b>${S.level}</b> &nbsp;/&nbsp; ` +
+      `<b>${S.cond.name}</b> &nbsp;/&nbsp; α <b>${fx(S.cond.alpha, 2)}°</b>`;
+    renderTree();
+    const mode = viewModeFor();
+    $("#vptitle").textContent = VIEW_TITLES[mode] || "View";
+    renderTools();
+    // details
+    const d = $("#details"); d.innerHTML = "";
+    $("#dtitle").textContent = { geom: "Geometry", mesh: "Mesh", solve: "Solver",
+      post: "Results", valid: "Validation", gci: "Convergence" }[S.stage];
+    if (S.stage === "mesh" || S.stage === "geom") { try { rebuild(S.view.smooth); }
+      catch (e) { log("mesh build failed: " + e.message, "no"); } }
+    ({ geom: panelGeom, mesh: panelMesh, solve: panelSolve, post: panelPost,
+       valid: panelValid, gci: panelGci }[S.stage] || panelGeom)(d);
+    // viewport
+    if (mode === "table") { renderTable(); return; }
+    hideTable();
+    const { w, h } = fitCanvas();
+    clearVP(w, h);
+    try {
+      if (mode === "grid") drawMeshSection(w, h, S.view.zoom);
+      else if (mode === "wall") drawWallZoom(w, h);
+      else if (mode === "topology") drawTopology(w, h);
+      else if (mode === "section") drawSection(w, h);
+      else if (mode === "planform") drawPlanform(w, h);
+      else if (mode === "polar") drawPolar(w, h);
+      else if (mode === "cp") drawCp(w, h);
+      else if (mode === "gci") drawGCI(w, h);
+    } catch (e) {
+      CX.fillStyle = "#e0675f"; CX.font = '12px "IBM Plex Mono", monospace';
+      CX.textAlign = "left"; CX.fillText("draw failed: " + e.message, 20, 30);
+      log("draw failed in " + mode + ": " + e.message, "no");
+    }
+  });
+}
+
+/* ================================================================= wiring */
+$("#stages").addEventListener("click", e => {
+  const b = e.target.closest("button[data-stage]"); if (!b) return;
+  for (const x of $("#stages").children) x.setAttribute("aria-selected", String(x === b));
+  S.stage = b.dataset.stage;
+  S.node = TREE[S.stage][0][1][0][0];
+  log("stage → " + b.textContent.trim(), "hi");
+  render();
+});
+$("#themebtn").onclick = () => {
+  const r = document.documentElement;
+  const cur = r.getAttribute("data-theme");
+  const dark = cur ? cur === "dark"
+    : matchMedia("(prefers-color-scheme: dark)").matches;
+  r.setAttribute("data-theme", dark ? "light" : "dark");
+  try { localStorage.setItem("s8theme", dark ? "light" : "dark"); } catch (e) {}
+  render();
+};
+try { const t = localStorage.getItem("s8theme");
+  if (t) document.documentElement.setAttribute("data-theme", t); } catch (e) {}
+
+// pan and zoom in the mesh view
+(function () {
+  const wrap = $("#vpwrap"); let drag = null;
+  wrap.addEventListener("pointerdown", e => {
+    if (viewModeFor() !== "grid") return;
+    drag = { x: e.clientX, y: e.clientY, cx: S.view.cx, cy: S.view.cy };
+    wrap.setPointerCapture(e.pointerId);
+  });
+  wrap.addEventListener("pointermove", e => {
+    if (!drag) return;
+    const sc = 1 / (S.view.zoom * wrap.clientWidth) * 1.4;
+    S.view.cx = drag.cx - (e.clientX - drag.x) * sc;
+    S.view.cy = drag.cy + (e.clientY - drag.y) * sc;
+    render();
+  });
+  wrap.addEventListener("pointerup", () => { drag = null; });
+  wrap.addEventListener("wheel", e => {
+    if (viewModeFor() !== "grid") return;
+    e.preventDefault();
+    S.view.zoom = clamp(S.view.zoom * (e.deltaY < 0 ? 1.18 : 1 / 1.18), 1, 4000);
+    render();
+  }, { passive: false });
+})();
+
+let RT; addEventListener("resize", () => { clearTimeout(RT); RT = setTimeout(render, 90); });
+
+/* =================================================================== init */
+(function init() {
+  if (!D.levels) {
+    document.body.innerHTML =
+      '<div class="msg">The data payload did not load, so this page has nothing to ' +
+      'show. <code>s8data.js</code> must sit beside the page.</div>';
+    return;
+  }
+  S.view.smooth = 12;
+  S.L = Object.assign({}, D.levels[S.level]);
+  S.geomP = Object.assign({}, GEOM[S.geom]);
+  log("S8 Aero Workbench", "hi");
+  log(`${Object.keys(D.levels).length} mesh levels · ${(D.runs||[]).length} solved runs · ` +
+      `${(D.meshes||[]).length} built meshes · ${Object.keys(D.reports||{}).length} reports`);
+  log(`RIBES experiment: ${Object.keys((D.ribes||{tests:{}}).tests).length} tests, ` +
+      `${Object.keys(D.scan||{}).length} scanned sections`);
+  log("read the JSON before the prose; where they disagree the JSON wins", "wa");
+  render();
+})();
+</script>

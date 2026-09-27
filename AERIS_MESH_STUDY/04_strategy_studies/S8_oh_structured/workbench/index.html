@@ -975,6 +975,29 @@ function drawPolar(w, h) {
   vstat(`<b>${rs.length}</b> runs plotted<br><b>${keys.length}</b> mesh/geometry series`);
 }
 
+/* the CFD taps for the current test/section/incidence, if the bundle has them */
+function cfdTaps() {
+  const C = D.cpcmp; if (!C || S.valid.test !== "T40") return null;
+  const sec = (C.sections || {})[S.valid.sec]; if (!sec) return null;
+  const t = (D.ribes.tests[S.valid.test].cp || []).find(e => e.sec === S.valid.sec);
+  const a = t && (t.alphas || [])[clamp(S.valid.alphaIdx, 0, (t.alphas||[]).length - 1)];
+  if (a == null) return null;
+  let best = null, bd = 1e9;
+  for (const [k, v] of Object.entries(sec.alphas || {})) {
+    const d = Math.abs(parseFloat(k) - a); if (d < bd) { bd = d; best = v; } }
+  return (best && bd < 0.15) ? best.taps : null;
+}
+function cfdStats() {
+  const C = D.cpcmp; if (!C) return null;
+  const sec = (C.sections || {})[S.valid.sec]; if (!sec) return null;
+  const t = (D.ribes.tests[S.valid.test].cp || []).find(e => e.sec === S.valid.sec);
+  const a = t && (t.alphas || [])[clamp(S.valid.alphaIdx, 0, (t.alphas||[]).length - 1)];
+  let best = null, bd = 1e9;
+  for (const [k, v] of Object.entries(sec.alphas || {})) {
+    const d = Math.abs(parseFloat(k) - a); if (d < bd) { bd = d; best = v; } }
+  return (best && bd < 0.15) ? best : null;
+}
+
 /* ==================================================== view: cp distribution */
 function drawCp(w, h) {
   const t = (D.ribes && D.ribes.tests[S.valid.test]) || null;
@@ -1005,14 +1028,33 @@ function drawCp(w, h) {
   };
   series(up, "#4b9fd8", 3); series(lo, "#e0a33a", 3);
   if (imported) series(imported.map(p => [p[0], p[1], 1]), "#59b87f", 2.4);
+  // the solved CFD at the same station and incidence, where it exists
+  const cc = cfdTaps();
+  if (cc) {
+    for (const [arr, col] of [[cc.filter(p => p.z >= 0), "#8ec7ee"],
+                              [cc.filter(p => p.z < 0), "#f0c877"]]) {
+      const a2 = arr.slice().sort((x, y) => x.x - y.x);
+      CX.strokeStyle = col; CX.lineWidth = 1.2; CX.setLineDash([4, 3]);
+      CX.beginPath();
+      a2.forEach((p, i) => { i ? CX.lineTo(M.X(p.x), M.Y(-p.c))
+                               : CX.moveTo(M.X(p.x), M.Y(-p.c)); });
+      CX.stroke(); CX.setLineDash([]);
+      CX.strokeStyle = col; CX.lineWidth = 1.1;
+      for (const p of a2) { CX.beginPath();
+        CX.arc(M.X(p.x), M.Y(-p.c), 2.6, 0, 7); CX.stroke(); }
+    }
+  }
   axes(M, w, h, "x/c", "−c_p", [-0.04, 1.04], yr);
   legend(`<span class="sw" style="background:#4b9fd8"></span>upper surface taps (z/c ≥ 0)<br>` +
     `<span class="sw" style="background:#e0a33a"></span>lower surface taps<br>` +
     (imported ? `<span class="sw" style="background:#59b87f"></span>imported series<br>` : "") +
+    (cfdTaps() ? `<span class="sw" style="background:#8ec7ee"></span>CFD, gci2_C on the cleaned section<br>` : "") +
     `RIBES ${S.valid.test}, section ${c.sec}${c.y != null ? ", y = " + c.y + " mm" : ""}`);
   vstat(`α corrected <b>${fx((c.alphas||[])[ai], 2)}°</b><br>` +
     `<b>${pairs.length}</b> taps &nbsp; min c_p <b>${fx(Math.min(...pairs.map(p=>p[1])),3)}</b><br>` +
-    (t.speed_m_s ? `V <b>${t.speed_m_s}</b> m/s` : ""));
+    (t.speed_m_s ? `V <b>${t.speed_m_s}</b> m/s<br>` : "") +
+    (() => { const st = cfdStats(); return st ? `CFD vs taps: RMS <b>${fx(st.cp_rms_difference,4)}</b><br>` +
+      `max |\u0394| <b>${fx(st.cp_max_abs_difference,4)}</b> &nbsp; bias ${fx(st.cp_mean_bias,4)}` : ""; })());
 }
 
 /* ==================================================== view: GCI */

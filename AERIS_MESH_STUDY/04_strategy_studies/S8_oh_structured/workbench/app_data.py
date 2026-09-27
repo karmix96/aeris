@@ -82,13 +82,24 @@ section = {"x": [R(v, 6) for v in d[:, 0]],
                            for k, v in fit["per_section"].items()}}
 
 # ---- the measured findings the workbench should state, not re-derive -------
-keep = ["s8_ribes_nonsense_diagnosis", "s8_increment_cancellation", "s8_family2_design",
+keep = ["s8_ribes_nonsense_diagnosis", "s8_ribes_cp_comparison", "s8_increment_cancellation", "s8_family2_design",
         "s8_where_meshes_differ", "s8_base_and_near_wake", "s8_base_ladders",
         "s8_family3_result", "s8_geometry_class", "s8_alpha_sweep_to_stall",
         "s8_nk_solver_path", "s8_ribes_status", "s8_ribes_section_fit"]
 reports = {k: b["reports"][k] for k in keep if k in b["reports"]}
 
+# the tap-by-tap CFD/experiment comparison, so the page can overlay it
+cmp_path = HERE / "reports/s8_ribes_cp_comparison.json"
+cpcmp = json.loads(cmp_path.read_text()) if cmp_path.exists() else None
+if cpcmp:
+    for sec in cpcmp.get("sections", {}).values():
+        for al in sec.get("alphas", {}).values():
+            al["taps"] = [{"x": R(t["x_over_c"], 5), "z": R(t["z_over_c"], 5),
+                           "e": R(t["cp_exp"], 5), "c": R(t["cp_cfd"], 5)}
+                          for t in al.get("taps", [])]
+
 out = {"fields": b["ohlevel_fields"], "levels": levels, "runs": runs,
+       "cpcmp": cpcmp,
        "meshes": meshes, "ribes": ribes, "scan": scan, "section": section,
        "reports": reports}
 js = "window.S8=" + json.dumps(out, separators=(",", ":")) + ";"

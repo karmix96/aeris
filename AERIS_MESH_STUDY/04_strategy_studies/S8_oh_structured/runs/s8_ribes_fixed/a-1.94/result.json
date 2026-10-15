@@ -1,0 +1,104 @@
+{
+  "converged": true,
+  "iterations_completed": 524,
+  "too_few_iterations": false,
+  "solver_options_effective": {
+    "equationType": "RANS",
+    "turbulenceModel": "SA",
+    "turbulenceOrder": "first order",
+    "useft2SA": true,
+    "eddyVisInfRatio": 0.21,
+    "liftIndex": 3,
+    "MGCycle": "sg",
+    "smoother": "DADI",
+    "useANKSolver": true,
+    "ANKSwitchTol": 1.0,
+    "useNKSolver": false,
+    "NKSwitchTol": 1e-06,
+    "ANKSubspaceSize": 10,
+    "NKSubspaceSize": 20,
+    "ANKPCILUFill": 1,
+    "NKPCILUFill": 1,
+    "L2Convergence": 1e-06,
+    "nCycles": 30000,
+    "useWallFunctions": false,
+    "useQCR": false
+  },
+  "implausible_forces": null,
+  "relative_residual": 9.982918783823414e-07,
+  "residual_source": "adflow.iteration.totalrfinal/totalr0",
+  "l2_target": 1e-06,
+  "n_cycles_budget": 30000,
+  "grid": "/home/mike_kara/aeris/AERIS_MESH_STUDY/04_strategy_studies/S8_oh_structured/runs/s8_ribes_fixed/gci2_C_volume.cgns",
+  "alpha_deg": -1.94,
+  "mission": {
+    "mach": 0.0837,
+    "reynolds": 1530708.188575197,
+    "reynolds_length_m": 0.9,
+    "temperature_K": 278.4,
+    "chord_ref_m": 0.9
+  },
+  "mission_overrides": {
+    "mach": 0.11494,
+    "reynolds": 1328600.0,
+    "reynolds_length_m": 0.5153,
+    "temperature_K": 298.85,
+    "chord_ref_m": 0.5153
+  },
+  "mission_effective": {
+    "mach": 0.11494,
+    "reynolds": 1328600.0,
+    "reynolds_length_m": 0.5153,
+    "temperature_K": 298.85,
+    "chord_ref_m": 0.5153
+  },
+  "area_ref_m2": 0.815,
+  "moment_ref_xyz_m": [
+    0.4,
+    0.0,
+    0.0
+  ],
+  "routine_failed": false,
+  "flow_directions": {
+    "lift_index_requested": 3,
+    "lift_index_realised": 3,
+    "alpha_deg": -1.94,
+    "velocity_direction_expected": [
+      0.9994268257026119,
+      0.0,
+      -0.03385291813124979
+    ],
+    "velocity_direction_realised": [
+      0.9994268257026119,
+      0.0,
+      -0.03385291813124979
+    ],
+    "velocity_direction_error": 0.0,
+    "lift_direction_expected": [
+      0.03385291813124979,
+      0.0,
+      0.9994268257026119
+    ],
+    "lift_direction_realised": [
+      0.03385291813124979,
+      0.0,
+      0.9994268257026119
+    ],
+    "lift_direction_error": 0.0,
+    "tolerance": 1e-09
+  },
+  "solver_overrides": {
+    "eddyVisInfRatio": 0.21,
+    "useNKSolver": false
+  },
+  "solver_is_governed_configuration": false,
+  "functions": {
+    "s8_a-1.94_cd": 0.014042372631043614,
+    "s8_a-1.94_cdp": 0.005372090387008827,
+    "s8_a-1.94_cdv": 0.00867028224403479,
+    "s8_a-1.94_cl": 0.06534871848460329,
+    "s8_a-1.94_cmx": 0.08845482505454431,
+    "s8_a-1.94_cmy": -0.02815822772243276,
+    "s8_a-1.94_cmz": -0.02661865220387795
+  }
+}

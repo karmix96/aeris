@@ -1,0 +1,139 @@
+{
+  "which": "subset",
+  "N_ref": 89,
+  "neutrality": {
+    "lhs30s2000:00": {
+      "worst_pct": 11.92,
+      "where": [
+        0.0,
+        "cd_ind"
+      ],
+      "pass": false
+    },
+    "lhs30s2000:01": {
+      "worst_pct": 9.618,
+      "where": [
+        -2.0,
+        "cd_ind"
+      ],
+      "pass": false
+    },
+    "lhs30s2000:02": {
+      "worst_pct": 7.712,
+      "where": [
+        -2.0,
+        "cd_ind"
+      ],
+      "pass": false
+    },
+    "lhs30s2000:03": {
+      "worst_pct": 8.474,
+      "where": [
+        -2.0,
+        "cd_ind"
+      ],
+      "pass": false
+    },
+    "lhs30s2000:04": {
+      "worst_pct": 8.529,
+      "where": [
+        -2.0,
+        "cd_ind"
+      ],
+      "pass": false
+    },
+    "lhs30s2000:05": {
+      "worst_pct": 10.573,
+      "where": [
+        0.0,
+        "cd_ind"
+      ],
+      "pass": false
+    },
+    "lhs30s2000:06": {
+      "worst_pct": 7.107,
+      "where": [
+        0.0,
+        "cd_ind"
+      ],
+      "pass": false
+    },
+    "lhs30s2000:07": {
+      "worst_pct": 8.662,
+      "where": [
+        -2.0,
+        "cd_ind"
+      ],
+      "pass": false
+    }
+  },
+  "richardson": {
+    "lhs30s2000:00": {
+      "worst_pct": 0.686,
+      "where": [
+        -2.0,
+        "hinge_moments.elevon_sym"
+      ],
+      "pass": false
+    },
+    "lhs30s2000:01": {
+      "worst_pct": 0.192,
+      "where": [
+        0.0,
+        "cd_total"
+      ],
+      "pass": true
+    },
+    "lhs30s2000:02": {
+      "worst_pct": 1.475,
+      "where": [
+        0.0,
+        "cl"
+      ],
+      "pass": false
+    },
+    "lhs30s2000:03": {
+      "worst_pct": 1.476,
+      "where": [
+        4.0,
+        "cm"
+      ],
+      "pass": false
+    },
+    "lhs30s2000:04": {
+      "worst_pct": 1.163,
+      "where": [
+        4.0,
+        "cd_ind"
+      ],
+      "pass": false
+    },
+    "lhs30s2000:05": {
+      "worst_pct": 0.376,
+      "where": [
+        4.0,
+        "elevon_sym.Cm"
+      ],
+      "pass": true
+    },
+    "lhs30s2000:06": {
+      "worst_pct": 0.632,
+      "where": [
+        0.0,
+        "cd_ind"
+      ],
+      "pass": false
+    },
+    "lhs30s2000:07": {
+      "worst_pct": 0.204,
+      "where": [
+        4.0,
+        "elevon_sym.Cm"
+      ],
+      "pass": true
+    }
+  },
+  "G1a_pass": false,
+  "G1b_pass": false,
+  "n_designs": 8
+}

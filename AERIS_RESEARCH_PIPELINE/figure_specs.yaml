@@ -1,0 +1,23 @@
+schema_version: aeris.research_pipeline.figure_specs.v1
+figures:
+  - id: convergence_histories
+    source: trusted run.log files for FINAL_ACCEPTED dataset rows
+    outputs: [PNG, SVG]
+  - id: grid_refinement_trend
+    source: paired gci_C and gci_M FINAL_ACCEPTED rows
+    outputs: [PNG, SVG]
+    claim_guard: two levels imply TREND_NOT_GCI
+  - id: mesh_quality_distributions
+    source: reports/s8_robustness_screen_final.json
+    outputs: [PNG, SVG]
+  - id: onera_m6_cp
+    source: reports/s8_onera_m6_comparison.json
+    outputs: [PNG, SVG]
+  - id: s6_vs_s8_failure_evidence
+    source:
+      - reports/s8_robustness_screen.json
+      - reports/s8_robustness_screen_final.json
+      - reports/m2_grid_screen_terminal_report.json
+    outputs: [PNG, SVG]
+    claim_guard: no S6 failure percentage without a cohort matched to S8
+

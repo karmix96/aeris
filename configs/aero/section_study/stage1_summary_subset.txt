@@ -1,0 +1,16 @@
+STAGE 1 — REFERENCE LEGITIMACY (subset, 8 designs, N_ref=89)
+================================================================
+G1a placement-neutrality (<0.5%): FAIL
+G1b Richardson band     (<0.5%): FAIL
+
+                  design  neutral%   rich%  worst-cell
+           lhs30s2000:00    11.920   0.686  neu@(0.0, 'cd_ind') rich@(-2.0, 'hinge_moments.elevon_sym')
+           lhs30s2000:01     9.618   0.192  neu@(-2.0, 'cd_ind') rich@(0.0, 'cd_total')
+           lhs30s2000:02     7.712   1.475  neu@(-2.0, 'cd_ind') rich@(0.0, 'cl')
+           lhs30s2000:03     8.474   1.476  neu@(-2.0, 'cd_ind') rich@(4.0, 'cm')
+           lhs30s2000:04     8.529   1.163  neu@(-2.0, 'cd_ind') rich@(4.0, 'cd_ind')
+           lhs30s2000:05    10.573   0.376  neu@(0.0, 'cd_ind') rich@(4.0, 'elevon_sym.Cm')
+           lhs30s2000:06     7.107   0.632  neu@(0.0, 'cd_ind') rich@(0.0, 'cd_ind')
+           lhs30s2000:07     8.662   0.204  neu@(-2.0, 'cd_ind') rich@(4.0, 'elevon_sym.Cm')
+
+=> STOP per §10: reference not yet truth; raise N_ref or mark quantities unresolvable.

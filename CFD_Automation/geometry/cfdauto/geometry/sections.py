@@ -211,6 +211,23 @@ def build_wing_sections(spec: TypeSpec, vec: dict[str, float], te: TERule) -> tu
     return pf, opened
 
 
+def insert_sections(stations: list[Station], per_panel: int, te: TERule) -> list[Station]:
+    """Add per_panel evenly spaced sections inside each panel, on the straight
+    panel (used to test the loft, not in normal builds)."""
+    out = [stations[0]]
+    for a, b in zip(stations[:-1], stations[1:]):
+        for k in range(1, per_panel + 1):
+            s = k / (per_panel + 1)
+            chord = a.chord + s * (b.chord - a.chord)
+            shape = a.airfoil.blend(b.airfoil, s)
+            out.append(Station(
+                f"{a.name}+{k}", a.y + s * (b.y - a.y), a.x_le + s * (b.x_le - a.x_le),
+                a.z_le + s * (b.z_le - a.z_le), chord, a.twist_deg + s * (b.twist_deg - a.twist_deg),
+                open_te(shape, te.thickness_m(chord) / chord, te.open_from_xc)))
+        out.append(b)
+    return out
+
+
 def panel_dihedral_deg(y: np.ndarray, z: np.ndarray) -> np.ndarray:
     """Dihedral of the straight lines between consecutive points (+ tip up)."""
     return np.degrees(np.arctan2(np.diff(z), np.diff(y)))

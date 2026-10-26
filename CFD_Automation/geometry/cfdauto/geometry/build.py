@@ -2,6 +2,7 @@
 
     python -m cfdauto.geometry.build --type bwb --set training --index 7
     python -m cfdauto.geometry.build --type conventional --vector my_wing.json --out somewhere/
+    python -m cfdauto.geometry.build --all      # every training, corner and reference wing
 """
 
 from __future__ import annotations
@@ -127,9 +128,41 @@ def wing_dir(wing_type: str, set_name: str, index: int) -> Path:
     return WINGS_DIR / wing_type / set_name / f"{index:03d}"
 
 
+BUILT_SETS = ("training", "corner1", "corner2", "reference")
+
+
+def build_all(cfg: Config, iges: bool = False) -> dict:
+    """Build every training, corner and reference wing of both types and write a
+    manifest per set. Failures stay in the manifest. The hold-out manifest holds
+    vectors and input hashes only: its wings are not built."""
+    totals = {}
+    for t in ("bwb", "conventional"):
+        for name in BUILT_SETS:
+            rows = []
+            for i, vec in enumerate(load_set(t, name)["vectors"]):
+                s = build(vec, t, cfg, wing_dir(t, name, i), iges=iges)
+                rows.append({"index": i, "passed": s["passed"], "gate": s["gate"], "reason": s["reason"],
+                             "input_hash": s["input_hash"], "surface_hash": s.get("surface_hash"),
+                             "labels": s.get("labels"), "vector": s["vector"]})
+            _write_manifest(t, name, rows)
+            totals[f"{t}/{name}"] = (sum(r["passed"] for r in rows), len(rows))
+        hold = load_set(t, "holdout")["vectors"]
+        _write_manifest(t, "holdout", [
+            {"index": i, "built": False, "input_hash": input_hash(cfg, t, v), "vector": v}
+            for i, v in enumerate(hold)])
+    return totals
+
+
+def _write_manifest(wing_type: str, set_name: str, rows: list[dict]) -> None:
+    (SETS_DIR / wing_type / f"{set_name}_manifest.json").write_text(json.dumps(
+        {"wing_type": wing_type, "set": set_name, "code_version": __version__, "wings": rows}, indent=1))
+
+
 def main(argv=None) -> None:
     p = argparse.ArgumentParser(description="Build one wing from a design vector.")
-    p.add_argument("--type", required=True, choices=["bwb", "conventional"])
+    p.add_argument("--all", action="store_true",
+                   help="build every training, corner and reference wing of both types, write manifests")
+    p.add_argument("--type", choices=["bwb", "conventional"])
     p.add_argument("--set", help="set name in data/sets/<type>/ (training, corner1, corner2, reference)")
     p.add_argument("--index", type=int)
     p.add_argument("--vector", help="JSON file with one design vector (instead of --set/--index)")
@@ -137,6 +170,12 @@ def main(argv=None) -> None:
     p.add_argument("--config", default=None)
     a = p.parse_args(argv)
     cfg = load_config(a.config) if a.config else load_config()
+    if a.all:
+        for key, (ok, n) in build_all(cfg).items():
+            print(f"{key:24s} {ok}/{n} built")
+        return
+    if a.type is None:
+        p.error("give --type (or --all)")
     if a.vector:
         vec = json.loads(Path(a.vector).read_text())
         out = Path(a.out) if a.out else WINGS_DIR / a.type / "single" / Path(a.vector).stem

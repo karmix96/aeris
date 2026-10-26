@@ -39,3 +39,14 @@
 18. **Hand-labelled set:** 20 wings in `geometry/tests/geometry/hand_labelled.yaml`. Two of my
     first vectors were wrong (aspect ratio 8.75, not < 8; outer sweep −7°, not 0); I fixed the
     vectors, not the labeller.
+19. **Every conventional training wing is "cranked"** (100/100). The three chord ratios and three
+    sweeps vary independently, so a straight taper almost never comes out. If straight-tapered
+    and rectangular wings must be in the training set: use `chord_law: linear_taper` for part of
+    the set, or pin sweep2 = sweep3 = sweep1. Decide.
+20. **3 BWB training wings are "forward swept"** (outer quarter-chord sweep ≤ −5°): leading edge
+    aft, but the strong outer taper pulls the quarter-chord line forward. Real geometry, not a bug.
+21. **Reference wing 5 = strongest washout** (Stage 1 brief); Stage 0 said "strongest twist".
+    Same idea; Stage 0 text could be aligned.
+22. **Set builds skip IGES** (46 MB instead of ~550 MB for 298 wings). Single builds write it.
+    Built wing folders are not tracked; vectors and manifests are.
+23. **Seeds:** training 1001 (BWB) / 1002 (conventional); hold-out 2001 / 2002; coverage 3001.

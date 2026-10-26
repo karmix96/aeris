@@ -6,11 +6,15 @@ Open-source tools: pyGeo, ADflow, SU2.
 
 Standalone; merged into AERIS when finished.
 
-**Stage 0** (Grand Roadmap): starting values, no code. Next: Stage 1, the wing generator.
+- **Stage 0** (done): starting values — `decisions/`.
+- **Stage 1** (done): the wing generator — `geometry/` (see `geometry/README.md`).
+- Next: Stage 2, the mesher.
 
 ```
-decisions/stage0_values.yaml   values
+decisions/stage0_values.yaml   Stage 0 values
 decisions/STAGE0_DECISIONS.md  value, why, source
+decisions/*.md                 Stage 1 notes: trailing_edge, loft, root_section, conventional_ranges
 decisions/OPEN_DECISIONS.md    still to decide
+geometry/                      Stage 1: config, code, tests, sets
 references/                    sources (REFERENCES.md, references.bib)
 ```

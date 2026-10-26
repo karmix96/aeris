@@ -1,4 +1,4 @@
-"""Station sections: airfoils, twist, dihedral, vertical position."""
+"""Station sections: airfoils, twist, dihedral, vertical position, trailing edge."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 from scipy.interpolate import PchipInterpolator
 
-from .params import AIRFOIL_DIR, TypeSpec, resolve
+from .params import AIRFOIL_DIR, TERule, TypeSpec, resolve
 from .planform import Planform, build_planform
 
 N_SIDE = 100  # points per surface; a section has 2 * N_SIDE + 1 points
@@ -161,6 +161,54 @@ def build_stations(spec: TypeSpec, vec: dict[str, float]) -> tuple[Planform, lis
         for i in range(4)
     ]
     return pf, stations
+
+
+# --- trailing edge ------------------------------------------------------------
+
+def open_te(airfoil: Airfoil, te_over_c: float, x_start: float) -> Airfoil:
+    """Set the trailing-edge thickness to te_over_c (of chord).
+
+    The change ramps in from x_start (zero, with zero slope) to the edge, half
+    on the upper side, half on the lower, so the camber line does not move and
+    the section ahead of x_start is untouched.
+    """
+    x = airfoil.x
+    r = np.where(x > x_start, ((x - x_start) / (1.0 - x_start)) ** 2, 0.0)
+    half = 0.5 * (te_over_c - airfoil.te_thickness) * r
+    return Airfoil(airfoil.name, x, airfoil.yu + half, airfoil.yl - half)
+
+
+def build_wing_sections(spec: TypeSpec, vec: dict[str, float], te: TERule) -> tuple[Planform, list[Station]]:
+    """Station sections with the trailing-edge rule built in.
+
+    The loft interpolates thickness linearly between sections. Where the rule
+    switches from the floor to the chord fraction inside a panel, a section is
+    added at the switch point, so the rule holds there too. The added section
+    lies on the straight panel (position, chord, twist and shape interpolated).
+    """
+    pf, stations = build_stations(spec, vec)
+    c_sw = te.switch_chord_m()
+    out = [stations[0]]
+    for i, (a, b) in enumerate(zip(stations[:-1], stations[1:]), start=1):
+        lo, hi = sorted((a.chord, b.chord))
+        if lo < c_sw < hi:
+            s = (c_sw - a.chord) / (b.chord - a.chord)
+            out.append(Station(
+                f"te_switch_p{i}",
+                a.y + s * (b.y - a.y),
+                a.x_le + s * (b.x_le - a.x_le),
+                a.z_le + s * (b.z_le - a.z_le),
+                c_sw,
+                a.twist_deg + s * (b.twist_deg - a.twist_deg),
+                a.airfoil.blend(b.airfoil, s),
+            ))
+        out.append(b)
+    opened = [
+        Station(st.name, st.y, st.x_le, st.z_le, st.chord, st.twist_deg,
+                open_te(st.airfoil, te.thickness_m(st.chord) / st.chord, te.open_from_xc))
+        for st in out
+    ]
+    return pf, opened
 
 
 def panel_dihedral_deg(y: np.ndarray, z: np.ndarray) -> np.ndarray:

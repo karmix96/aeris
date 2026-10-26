@@ -1,0 +1,121 @@
+# Stage 0 starting values. Explained in STAGE0_DECISIONS.md.
+drag_count: 0.0001
+
+D1_accuracy:
+  increment_target:
+    value: {dCD: 2, dCL: 0.005}
+    unit: {dCD: drag counts, dCL: "-"}
+    reason: Wings differ by a few drag counts, so the target must sit below that. Shared mesh errors cancel in the difference.
+    sources: [morrison2014dpw]
+  absolute_budget_CD:
+    value: "max(0.03*CD, 3 counts)"
+    reason: Cannot be tighter than the ~5-count spread between expert CFD groups.
+    sources: [levy2013dpw]
+  absolute_budget_CL:
+    value: "max(0.01*CL, 0.005)"
+    reason: Lift converges with refinement much faster than drag.
+    sources: []   # our choice
+  absolute_budget_CM:
+    value: 0.002
+    reason: Starting value.
+    sources: []   # our choice
+  grid_split_by_direction:
+    value: {chordwise: 35, spanwise: 15, wall_normal: 20, edges_and_base: 15, wake: 15}
+    unit: percent of the grid part
+    reason: Gives each mesh study a share to stop against. A plan, revised after the first error map.
+    sources: []   # our choice
+  other_error_terms:
+    value: {iterative_max: 10, domain_max: 10, numerical_settings_max: 15}
+    unit: percent of the total
+    reason: Keeps every error source bounded. Celik asks iterative error >= 1 order below grid error; Eca & Hoekstra ask 2-3 orders.
+    sources: [celik2008, eca2006iterative]
+  grid_share_of_total:
+    value: 65
+    unit: percent of the total
+    reason: "100 - 10 - 10 - 15."
+    sources: []
+  turbulence_model_error:
+    value: own band, never inside the grid budget
+    reason: Mesh error and model error are different things.
+    sources: [asme2009vv20]
+
+D2_wings_and_sets:
+  reference_wings:
+    value: [all mid-range, smallest area, largest area, most sweep + smallest tip chord, strongest twist]
+    unit: 5 per wing type
+    reason: Few enough to study in depth, spread enough to show how mesh needs change. Fixed before any mesh.
+    sources: []
+  reference_coverage_check:
+    value: coverage <= median of 1000 random sets of five
+    unit: "coverage = largest distance from a training wing to its nearest reference wing, variables in [0, 1]"
+    reason: Shows the five are spread out, not clustered.
+    sources: [johnson1990minimax]
+  training_set:
+    value: {wings_per_type: 100, design: latin_hypercube, seed: fixed}
+    reason: Spreads wings evenly over all variables at once.
+    sources: [mckay1979lhs]
+  corner_set_part1:
+    value: "2 * n_variables (each variable at each bound, others mid-range)"
+    reason: Shows where each variable alone breaks the mesh rules.
+    sources: []
+  corner_set_part2:
+    value: "smallest N with C(N-1, ceil(N/2)) >= n_variables; N = 8 for 17 variables"
+    reason: Every pair of variables at all four low/high combinations, at the lowest cost.
+    sources: [katona1973, kleitman1973]
+  holdout_set:
+    value: {wings_per_type: 10, design: latin_hypercube, seed: different, opened: once at the end}
+    reason: The only honest test on wings the rules were not tuned on.
+    sources: [dwork2015science, dwork2017cacm]
+  robustness_claim:
+    value: {failures: 0, min_wings: 150, success_rate: ">= 0.98", confidence: 0.95}
+    reason: "1 - 0.05^(1/150) = 1.98 % upper bound on failure rate."
+    sources: [hanley1983]
+
+D3_conditions_and_measurement:
+  mach_max:
+    value: 0.3
+    reason: Class I-II wings fly subsonic. Transonic later.
+    sources: []
+  reynolds_levels:
+    value: [3.0e5, 1.5e6, 5.0e6]
+    unit: on mean aerodynamic chord
+    reason: Covers small Class I and Class II. Mini/micro Class I sit below 3e5 (see OPEN_DECISIONS.md).
+    sources: [nato2009jcguav, icao1993isa, sutherland1893]
+  angles_of_attack:
+    value: {all: [0, 4, 8], leading_edge_and_wake: [0, 4, 8, 12]}
+    unit: deg
+    reason: Cruise, climb, high lift. The nose needs finer cells at high angle.
+    sources: []
+  quantities_watched:
+    value: [CL, CD_pressure, CD_friction, CD, CM, neutral_point, cp_at_sections, y_plus]
+    reason: A study passes only if it passes on all of them at every angle.
+    sources: []
+  mesh_family:
+    value: {min_levels: 3, min_refinement_ratio: 1.3}
+    reason: Fewer than three meshes give a trend, not an error estimate.
+    sources: [celik2008]
+  error_estimate:
+    value: {method: GCI, safety_factor: 1.25, if_scatter: least_squares}
+    reason: Standard published procedure.
+    sources: [celik2008, roache1994, eca2014]
+  oscillating_results:
+    value: no error estimate; investigate
+    reason: Oscillation means the meshes are not yet where the estimate holds.
+    sources: [celik2008]
+  one_change_per_run:
+    value: one setting changes between compared runs; the wing never changes in a mesh study
+    reason: Otherwise the cause of a difference cannot be named.
+    sources: []
+  turbulence_model:
+    value: Spalart-Allmaras, no transition model; low-Re drag carries a model band
+    reason: At low Re transition sets the drag; fully turbulent RANS tests the mesh, not the flow.
+    sources: [crivellini2014]
+
+D4_working_rules:
+  mesh_name: {value: "<family>_<level>_<wing_hash8>", reason: One name means one mesh.}
+  run_outcomes: {value: [accepted, rejected, needs_review], reason: Countable results.}
+  failures_counted: {value: failures stay in every count, reason: Otherwise success rates inflate.}
+  thresholds_first: {value: thresholds written before results, reason: No tuning the test to the answer., sources: [nosek2018]}
+  holdout_once: {value: hold-out opened once at the end, reason: See D2., sources: [dwork2015science]}
+  trial_vs_final: {value: trial-mesh results kept apart from final results, reason: Only the frozen setup is evidence.}
+  figures_from_scripts: {value: every figure and table built by a script from stored data, reason: Anyone can rebuild it.}

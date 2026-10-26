@@ -1,0 +1,113 @@
+# Hand-labelled test wings. Each: the YAML type it is built with, a base vector,
+# overrides, and the labels a person would give it (the full set).
+#
+# Bases:
+#   rect  conventional, root chord 0.5 m, semi-span 3.5 root chords (1.75 m),
+#         no taper, no sweep, no twist, no dihedral, crank at 70 % / 35 % of span
+#   bwb   the BWB mid-range vector
+
+bases:
+  rect:
+    type: conventional
+    vector: {root_chord_m: 0.5, c2_ratio: 1.0, c3_ratio: 1.0, c4_ratio: 1.0, semi_span_m: 3.5,
+             b3_ratio: 0.3, split_ratio: 0.5, sweep1_deg: 0.0, sweep2_deg: 0.0, sweep3_deg: 0.0,
+             twist0_deg: 0.0, twist1_deg: 0.0, twist2_deg: 0.0, twist3_deg: 0.0,
+             dihedral0_deg: 0.0, dihedral1_deg: 0.0, dihedral2_deg: 0.0, dihedral3_deg: 0.0}
+  bwb:
+    type: bwb
+    vector: mid
+
+# straight taper to 0.5 on a 0.35 / 0.70 station layout: c2 = 0.825, c3 = 0.65
+wings:
+  rectangular:
+    base: rect
+    labels: [conventional, rectangular]
+  rectangular_dihedral:
+    base: rect
+    set: {dihedral0_deg: 5, dihedral1_deg: 5, dihedral2_deg: 5, dihedral3_deg: 5}
+    labels: [conventional, rectangular, dihedral]
+  tapered:
+    base: rect
+    set: {c2_ratio: 0.825, c3_ratio: 0.65, c4_ratio: 0.5, semi_span_m: 2.6}
+    labels: [conventional, straight_tapered]
+  tapered_washout:
+    base: rect
+    set: {c2_ratio: 0.825, c3_ratio: 0.65, c4_ratio: 0.5, semi_span_m: 2.6,
+          twist1_deg: -1.05, twist2_deg: -2.1, twist3_deg: -3.0}
+    labels: [conventional, straight_tapered, washout]
+  aft_swept:
+    base: rect
+    set: {sweep1_deg: 20, sweep2_deg: 20, sweep3_deg: 20}
+    labels: [conventional, aft_swept]
+  forward_swept:
+    base: rect
+    set: {c2_ratio: 0.86, c3_ratio: 0.72, c4_ratio: 0.6, semi_span_m: 3.0,
+          sweep1_deg: -15, sweep2_deg: -15, sweep3_deg: -15}
+    labels: [conventional, forward_swept]
+  cranked_chord:
+    base: rect
+    set: {c4_ratio: 0.4}
+    labels: [conventional, cranked]
+  cranked_sweep:
+    base: rect
+    set: {sweep3_deg: 25}
+    labels: [conventional, cranked, aft_swept]
+  low_aspect_ratio:
+    base: rect
+    set: {semi_span_m: 1.5}
+    labels: [conventional, rectangular, low_aspect_ratio]
+  high_aspect_ratio:
+    base: rect
+    set: {c2_ratio: 0.825, c3_ratio: 0.65, c4_ratio: 0.5, semi_span_m: 5.0}
+    labels: [conventional, straight_tapered, high_aspect_ratio]
+  anhedral:
+    base: rect
+    set: {dihedral0_deg: -3, dihedral1_deg: -3, dihedral2_deg: -3, dihedral3_deg: -3}
+    labels: [conventional, rectangular, anhedral]
+  polyhedral:
+    base: rect
+    set: {dihedral2_deg: 8, dihedral3_deg: 8}
+    labels: [conventional, rectangular, dihedral, varying_dihedral]
+  gull:
+    base: rect
+    set: {dihedral0_deg: 8, dihedral1_deg: 8}
+    labels: [conventional, rectangular, dihedral, varying_dihedral]
+  wash_in:
+    base: rect
+    set: {twist1_deg: 0.7, twist2_deg: 1.4, twist3_deg: 2.0}
+    labels: [conventional, rectangular, wash_in]
+  swept_tapered_dihedral_washout:
+    base: rect
+    set: {c2_ratio: 0.825, c3_ratio: 0.65, c4_ratio: 0.5, semi_span_m: 2.6, sweep1_deg: 10,
+          sweep2_deg: 10, sweep3_deg: 10, twist3_deg: -2,
+          dihedral0_deg: 3, dihedral1_deg: 3, dihedral2_deg: 3, dihedral3_deg: 3}
+    labels: [conventional, aft_swept, washout, dihedral]
+  conventional_mid_range:
+    base: rect
+    set: {root_chord_m: 0.75, c2_ratio: 0.925, c3_ratio: 0.825, c4_ratio: 0.7, semi_span_m: 4.0,
+          b3_ratio: 0.35, sweep1_deg: 5, sweep2_deg: 5, sweep3_deg: 5,
+          twist0_deg: 1.5, twist1_deg: 0.5, twist2_deg: -0.5, twist3_deg: -2.0,
+          dihedral0_deg: 1.5, dihedral1_deg: 1.5, dihedral2_deg: 1.5, dihedral3_deg: 1.5}
+    labels: [conventional, straight_tapered, washout, dihedral, high_aspect_ratio]
+  bwb_mid:
+    base: bwb
+    labels: [bwb, aft_swept, cranked, washout, dihedral, varying_dihedral]
+  bwb_slim:
+    base: bwb
+    set: {root_chord_m: 0.7, c2_ratio: 0.55, c3_ratio: 0.30, c4_ratio: 0.08, semi_span_m: 1.25,
+          b3_ratio: 0.5, split_ratio: 0.5, sweep1_deg: 25, sweep2_deg: 20, sweep3_deg: 10,
+          twist0_deg: 0, twist1_deg: -1, twist2_deg: -2, twist3_deg: -4,
+          dihedral0_deg: 0, dihedral1_deg: 0, dihedral2_deg: 0, dihedral3_deg: 0}
+    labels: [bwb, aft_swept, cranked, washout, high_aspect_ratio]
+  bwb_wide:
+    base: bwb
+    set: {root_chord_m: 1.1, c2_ratio: 0.8, c3_ratio: 0.55, c4_ratio: 0.2, semi_span_m: 0.75,
+          b3_ratio: 0.4, split_ratio: 0.5, sweep1_deg: 40, sweep2_deg: 35, sweep3_deg: 25,
+          twist0_deg: 1, twist1_deg: 0, twist2_deg: -1, twist3_deg: -2,
+          dihedral0_deg: 0, dihedral1_deg: 0, dihedral2_deg: 0, dihedral3_deg: 0}
+    labels: [bwb, aft_swept, cranked, washout, low_aspect_ratio]
+  bwb_unswept_outer:
+    base: bwb
+    set: {sweep2_deg: 15, sweep3_deg: 10,
+          dihedral0_deg: 0, dihedral1_deg: 0, dihedral2_deg: 0, dihedral3_deg: 0}
+    labels: [bwb, unswept_outer, cranked, washout]

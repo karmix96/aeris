@@ -22,3 +22,20 @@
     variable list). Conventional uses this mode so the aspect ratio stays in 4–16.5.
 12. **Dihedral on straight panels:** each panel gets one dihedral (the mean of the linear law).
     Checks compare panel dihedral. See `root_section.md`.
+13. **Loft built with pySpline, not `liftingSurface` itself.** Same construction, but one section
+    parameter, so the nose split is exact (`liftingSurface` missed it by 0.2–0.5 % chord). The
+    surfaces sit in a pyGeo object (IGES works). See `loft.md`.
+14. **Twist between stations is not exactly linear** on straight panels (trailing edge differs by
+    0.1–0.3 % chord from a linear-twist section). Straight panels win. See `loft.md`.
+15. **Tip left open** (no cap surface), as `tip='none'`. **No STEP export** (pyGeo has none).
+16. **BWB label threshold** root / outer-half mean chord lowered from **2.5 to 2.2**. Why: 2 of 1,500
+    random BWB-range wings (the wide corner, root 1.1 m on 0.75 m semi-span) measure 2.39–2.5 with
+    only 17–20 % root loss, so they failed both tests. Conventional wings reach at most 1.84;
+    2.2 sits in the gap.
+17. **Label rule details I fixed:** "sweep" for rectangular / straight tapered = quarter-chord
+    sweep root to tip; a chord-slope kink also needs |dc/dy| · S / c_root ≥ 0.1 (else a flat
+    chord counts as no slope); local dihedral from 200 even span steps; area = 2 ∫ c dy with the
+    3-D chord.
+18. **Hand-labelled set:** 20 wings in `geometry/tests/geometry/hand_labelled.yaml`. Two of my
+    first vectors were wrong (aspect ratio 8.75, not < 8; outer sweep −7°, not 0); I fixed the
+    vectors, not the labeller.

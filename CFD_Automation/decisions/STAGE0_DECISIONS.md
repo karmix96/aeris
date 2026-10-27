@@ -57,21 +57,24 @@ from one place. It comes from **four sources**. We give each source a **share** 
 like splitting a budget. A study of one source **stops when that source's error is smaller than its
 share**: not before (the answer is not good enough yet) and not long after (we are wasting computer time).
 
-**The split has two levels.**
+**Summary.** The mesh share is split again into five directions. So there are two "%" columns:
+"% of mesh" says how the mesh share is divided; "% of total" is each part's share of the whole
+3 counts. Each column adds up to 100 %.
 
-- **Level 1, the four sources (they add up to 100 %):**
-  - mesh 65 % = 1.95 counts;
-  - iterations 10 % = 0.30 counts;
-  - outer boundary 10 % = 0.30 counts;
-  - numerical settings 15 % = 0.45 counts;
-  - total 65 + 10 + 10 + 15 = 100 %, which is 1.95 + 0.30 + 0.30 + 0.45 = 3.00 counts.
-- **Level 2, the mesh's 1.95 counts split again by direction (they add up to 100 % of the mesh share):**
-  - along the chord 35 % = 0.68 counts;
-  - along the span 15 % = 0.29 counts;
-  - away from the wall 20 % = 0.39 counts;
-  - edges and blunt trailing edge 15 % = 0.29 counts;
-  - wake 15 % = 0.29 counts;
-  - total 35 + 15 + 20 + 15 + 15 = 100 %, which is 1.95 counts (rounded).
+| # | part | what it is | % of mesh | % of total | allowed error | starting value (source) | warning from earlier AERIS tests |
+|---|---|---|---|---|---|---|---|
+| 1a | Mesh: along the chord | points around the airfoil | 35 % | 22.75 % | 0.68 counts | edge cells ≈ 0.1 % of local chord (DPW) | carried about 88 % of the drag error |
+| 1b | Mesh: along the span | sections from root to tip | 15 % | 9.75 % | 0.29 counts | root and tip spacing ≈ 0.1 % of semi-span (DPW) | — |
+| 1c | Mesh: away from the wall | thin layers through the boundary layer | 20 % | 13 % | 0.39 counts | first cell y+ ≈ 1; each layer ≤ 1.25 × the previous (DPW) | — |
+| 1d | Mesh: edges and blunt trailing edge | cells at nose, trailing edge and across the base | 15 % | 9.75 % | 0.29 counts | 0.1 % of chord at edges (DPW); 8 cells across the base (our choice) | base was the slowest part to settle |
+| 1e | Mesh: wake | cells behind the wing and around the tip vortex | 15 % | 9.75 % | 0.29 counts | set in the mesh stage (our choice) | refining the near wake moved drag 23 counts |
+| **1** | **Mesh, all directions** | cells too big | **100 %** | **65 %** | **1.95 counts** | error bar from 3 meshes (Celik 2008) | — |
+| 2 | Iterations | solver stopped too early | — | 10 % | 0.30 counts | stopping rule in D3 (Celik 2008: < 1/10 of mesh error = 0.195) | measured 0.12 counts at 10⁻⁶: OK |
+| 3 | Outer boundary | domain edge too close to the wing | — | 10 % | 0.30 counts | ≈ 100 reference chords (DPW) | 40 → 60 chords moved drag 0.6–0.7 counts: 40 is too close |
+| 4 | Numerical settings | artificial smoothing in the solver | — | 15 % | 0.45 counts | our choice | halving it moved drag 12–21 counts: biggest risk |
+| | **Total** | | | **100 %** | **3.00 counts** | | |
+
+DPW = Drag Prediction Workshop gridding guidelines (Levy et al. 2013).
 
 We simply add the errors. That is the safe way: in practice some of them partly cancel.
 

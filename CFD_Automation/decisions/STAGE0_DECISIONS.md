@@ -8,11 +8,11 @@ Each value: what we chose, why, and the source. Values in `stage0_values.yaml`.
 | value | choice | why | source |
 |---|---|---|---|
 | Increment target | ΔCD ≤ 2 counts, ΔCL ≤ 0.005 | We mostly rank wings, and wings differ by a few counts. Shared mesh errors cancel in the difference. | Morrison et al.: "Industry's goal is ±1 drag count." |
-| Absolute drag | max(3 % of CD, 3 counts) | Can't be tighter than expert groups agree. | Levy et al. 2013: DPW-V spread σ = 0.00053 (≈ 5 counts) |
-| Absolute lift | max(1 % of CL, 0.005) | Lift converges faster than drag. | our choice |
+| Absolute drag | max(3 % of CD, 3 counts) | Independent expert codes on the same wing spread by about 5 counts. One verified workflow must do better than that, or its error band is too wide to use. Example: CD = 0.0200 → 6 counts; CD = 0.0080 → the 3-count floor applies. | Levy et al. 2013: DPW spread σ = 0.00053 (≈ 5 counts) |
+| Absolute lift | max(1 % of CL, 0.005) | Set to about the same relative size as the drag budget. | our choice |
 | Pitching moment | 0.002 | Starting value. | our choice |
 | Grid split | chordwise 35 %, spanwise 15 %, wall-normal 20 %, edges/base 15 %, wake 15 % | Each mesh study gets a share to stop against. Revised after the first error map. | our choice |
-| Other errors | iterative ≤ 10 %, domain ≤ 10 %, numerics ≤ 15 % of total | Every error source stays bounded. | Celik 2008 (iterative ≥ 1 order below grid error); Eça & Hoekstra 2006 (2–3 orders) |
+| Other errors | iterative ≤ 10 %, domain ≤ 10 %, numerics ≤ 15 % of total | Every error source stays bounded. The stopping rule (D3) is how the iterative share is met. | Celik 2008 (iterative ≥ 1 order below grid error); Eça & Hoekstra 2006 (2–3 orders) |
 | Grid share | 65 % of total | 100 − 10 − 10 − 15 = 65 | — |
 | Turbulence-model error | own band, never in the grid budget | Mesh error and model error are different. | ASME V&V 20-2009 |
 
@@ -45,8 +45,11 @@ Corner sets together: 2 × 17 + 8 = 42 wings.
 | Mesh family | ≥ 3 meshes, refinement ratio r ≥ 1.3 | Fewer than three give a trend, not an error. | Celik 2008 |
 | Error estimate | GCI, safety factor 1.25; least squares if results scatter | Standard procedure. | Celik 2008; Roache 1994; Eça & Hoekstra 2014 |
 | Oscillating results | no estimate; investigate | Meshes not yet where the estimate holds. | Celik 2008 |
+| Stopping rule | (1) residual ≤ 10⁻⁶ relative to the freestream residual (ADflow `L2Convergence`); (2) forces settled over the last window: CL < 0.05 %, CD < 0.1 %, \|ΔCM\| < 10⁻⁴; (3) every equation drops ≥ 3 orders, turbulence included. Fallback: residual down 5 orders + forces settled → accepted. Otherwise needs review. Caps: 30,000 iterations or 6 h. The solver's exit code is never used. | A low residual alone does not prove the forces stopped moving, and the turbulence equation can stall while the flow equations fall. Note: Fluent's "10⁻⁶" is a scaled residual (default 10⁻³, energy 10⁻⁶); ADflow's is a drop from freestream, which is stricter. | Celik 2008, App. A (iterative error ≥ 1 order below grid error); ADflow options docs |
 | One change per run | one setting at a time; wing fixed in a mesh study | Otherwise the cause can't be named. | our choice |
 | Turbulence model | Spalart–Allmaras, no transition; low-Re drag carries a model band | At low Re transition sets drag. | Crivellini et al. 2014 |
+
+**Stopping rule meets the budget.** Iterative share = 10 % × 3 counts = 0.3 counts. Earlier AERIS runs past 10⁻⁶ moved CD by at most 1.2 × 10⁻⁵ = 0.12 counts and CL by at most 5 × 10⁻⁵. 0.12 < 0.3. Re-check once the mesh family is frozen.
 
 **Reynolds check.** Re = ρVc/μ, ISA atmosphere, Sutherland viscosity.
 

@@ -24,5 +24,6 @@ BibTeX: `references.bib`.
 | roache1994 | Roache. A Method for Uniform Reporting of Grid Refinement Studies. J. Fluids Eng. 116, 1994. | 10.1115/1.2910291 |
 | eca2014 | Eça, Hoekstra. A procedure for the estimation of the numerical uncertainty of CFD calculations… J. Comput. Phys. 262, 2014. | 10.1016/j.jcp.2014.01.006 |
 | crivellini2014 | Crivellini et al. Study of laminar separation bubble on low Re airfoils: RANS modelling… J. Phys. Conf. Ser. 501, 2014. | 10.1088/1742-6596/501/1/012024 |
+| adflow_options | MDO Lab. ADflow options documentation (L2Convergence: relative to the freestream residual for the NK solver, to the initial fine-grid residual for multigrid). | https://mdolab-adflow.readthedocs-hosted.com/en/latest/options.html |
 | nosek2018 | Nosek et al. The preregistration revolution. PNAS 115, 2018. | 10.1073/pnas.1708274114 |
 | wiki_raven / wiki_scaneagle / wiki_shadow / wiki_hermes450 | Aircraft specs (speed, span), Wikipedia. | en.wikipedia.org |

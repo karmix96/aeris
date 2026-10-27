@@ -9,11 +9,11 @@ D1_accuracy:
     sources: [morrison2014dpw]
   absolute_budget_CD:
     value: "max(0.03*CD, 3 counts)"
-    reason: Cannot be tighter than the ~5-count spread between expert CFD groups.
+    reason: Independent expert codes spread by about 5 counts on the same wing; one verified workflow must do better, or its band is too wide to use.
     sources: [levy2013dpw]
   absolute_budget_CL:
     value: "max(0.01*CL, 0.005)"
-    reason: Lift converges with refinement much faster than drag.
+    reason: About the same relative size as the drag budget.
     sources: []   # our choice
   absolute_budget_CM:
     value: 0.002
@@ -27,7 +27,7 @@ D1_accuracy:
   other_error_terms:
     value: {iterative_max: 10, domain_max: 10, numerical_settings_max: 15}
     unit: percent of the total
-    reason: Keeps every error source bounded. Celik asks iterative error >= 1 order below grid error; Eca & Hoekstra ask 2-3 orders.
+    reason: Keeps every error source bounded. Celik asks iterative error >= 1 order below grid error; Eca & Hoekstra ask 2-3 orders. The D3 stopping rule meets the iterative share (0.12 counts measured < 0.3 allowed).
     sources: [celik2008, eca2006iterative]
   grid_share_of_total:
     value: 65
@@ -102,6 +102,17 @@ D3_conditions_and_measurement:
     value: no error estimate; investigate
     reason: Oscillation means the meshes are not yet where the estimate holds.
     sources: [celik2008]
+  stopping_rule:
+    value:
+      residual_target: 1.0e-6          # ADflow L2Convergence, relative to the freestream residual
+      forces_settled: {CL_rel: 0.0005, CD_rel: 0.001, CM_abs: 1.0e-4}
+      min_orders_drop_every_equation: 3
+      fallback: {residual_orders_drop: 5, forces_settled: true, outcome: accepted}
+      otherwise: needs_review
+      caps: {iterations: 30000, wall_time_h: 6}
+      solver_exit_code_used: false
+    reason: A low residual alone does not prove the forces stopped moving; the turbulence equation can stall while the flow equations fall. Measured past 1e-6, CD moves at most 0.12 counts, inside the 0.3-count iterative share.
+    sources: [celik2008, adflow_options]
   one_change_per_run:
     value: one setting changes between compared runs; the wing never changes in a mesh study
     reason: Otherwise the cause of a difference cannot be named.

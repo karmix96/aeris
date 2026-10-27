@@ -50,29 +50,119 @@ program can read, are in `stage0_values.yaml`.
 - **Why:** a starting value, to be checked when stability is studied.
 - **Source:** our choice.
 
-### How the total error is shared out
-The total allowed error is cut into pieces, one per source of error. Each study then knows when to
-stop: **a study stops when its own piece is used up, not before and not long after.**
+### How the 3 counts of drag error are shared out
 
-| piece | share | with a 3-count drag budget | what it means in practice |
-|---|---|---|---|
-| Mesh (all directions) | 65 % of the total | 1.95 counts | error from cells that are too big |
-| · along the chord | 35 % of the mesh piece | 0.68 counts | points around the airfoil |
-| · along the span | 15 % | 0.29 counts | sections from root to tip |
-| · away from the wall | 20 % | 0.39 counts | layers in the boundary layer |
-| · edges and blunt trailing edge | 15 % | 0.29 counts | cells at the nose, the trailing edge and its base |
-| · wake | 15 % | 0.29 counts | cells behind the wing and around the tip vortex |
-| Iterations | 10 % of the total | 0.30 counts | stopping the solver too early (see the stopping rule in D3) |
-| Outer boundary | 10 % | 0.30 counts | the domain edge being too close to the wing |
-| Numerical settings | 15 % | 0.45 counts | solver settings such as artificial dissipation |
-| **Total** | 100 % | **3.00 counts** | |
+The drag of one wing may be wrong by 3 counts (see "Absolute drag" above). That error does not come
+from one place. It comes from **four sources**. We give each source a **share** of the 3 counts,
+like splitting a budget. A study of one source **stops when that source's error is smaller than its
+share**: not before (the answer is not good enough yet) and not long after (we are wasting computer time).
 
-- **Why this split:** it is a plan, not a measurement. The chord gets the largest piece because
-  it is the most expensive direction to refine. The split is revised once the first error map shows
-  where the error really sits.
-- **Sources:** the split is our choice. For iterations, Celik et al. 2008 (Appendix A) ask for an
-  iterative error at least 10 times smaller than the mesh error; Eça & Hoekstra 2006 ask for 100 to
-  1,000 times smaller.
+**The split has two levels.**
+
+- **Level 1, the four sources (they add up to 100 %):**
+  - mesh 65 % = 1.95 counts;
+  - iterations 10 % = 0.30 counts;
+  - outer boundary 10 % = 0.30 counts;
+  - numerical settings 15 % = 0.45 counts;
+  - total 65 + 10 + 10 + 15 = 100 %, which is 1.95 + 0.30 + 0.30 + 0.45 = 3.00 counts.
+- **Level 2, the mesh's 1.95 counts split again by direction (they add up to 100 % of the mesh share):**
+  - along the chord 35 % = 0.68 counts;
+  - along the span 15 % = 0.29 counts;
+  - away from the wall 20 % = 0.39 counts;
+  - edges and blunt trailing edge 15 % = 0.29 counts;
+  - wake 15 % = 0.29 counts;
+  - total 35 + 15 + 20 + 15 + 15 = 100 %, which is 1.95 counts (rounded).
+
+We simply add the errors. That is the safe way: in practice some of them partly cancel.
+
+The percentages are **our plan**, not measured. Once the first mesh study shows where the error
+really sits, the split can change, but only by a written decision and before the next results.
+
+#### 1. Mesh error: 1.95 counts (65 % of 3)
+- **What it is:** the error that comes from the cells being too big. On an infinitely fine mesh it
+  would be zero.
+- **How we measure it:** build the same mesh at three sizes and compute the error bar (GCI, see D3).
+- **When it is good enough:** the drag error bar is at most 1.95 counts.
+- **Why it gets the biggest share:** in almost every CFD study the mesh is the largest source of error.
+- **Source:** the share is our choice. The method is Celik et al. 2008.
+
+The mesh error is then split by direction, because each direction is refined separately and costs
+a different amount.
+
+**1a. Along the chord: 0.68 counts.**
+- **What it is:** the number of points around the airfoil, from the trailing edge, round the nose
+  and back.
+- **What goes wrong if there are too few:** the sharp pressure peak at the nose and the pressure
+  rise towards the trailing edge are smoothed out, so the pressure drag is wrong.
+- **Starting mesh from the source:** cells at the leading and trailing edge about 0.1 % of the
+  local chord long.
+- **Why it gets the largest part:** it is the most expensive direction to refine, and in earlier
+  AERIS tests it carried most of the drag error (about 88 %).
+- **Source:** Drag Prediction Workshop gridding guidelines (Levy et al. 2013).
+
+**1b. Along the span: 0.29 counts.**
+- **What it is:** the number of sections from the root to the tip.
+- **What goes wrong if there are too few:** the lift is spread wrongly along the span, mostly near
+  the tip, which changes the induced drag.
+- **Starting mesh from the source:** spacing at the root and at the tip about 0.1 % of the semi-span.
+- **Source:** DPW gridding guidelines (Levy et al. 2013).
+
+**1c. Away from the wall: 0.39 counts.**
+- **What it is:** the layers of thin cells from the wing surface out through the boundary layer
+  (the thin slow layer of air on the surface).
+- **What goes wrong if they are too coarse:** the friction drag is wrong.
+- **Starting mesh from the source:**
+  - first cell at y+ ≈ 1 (small enough to sit inside the very thin layer next to the wall);
+  - each layer at most 1.25 times thicker than the one before.
+- **Source:** DPW gridding guidelines (Levy et al. 2013).
+
+**1d. Edges and blunt trailing edge: 0.29 counts.**
+- **What it is:** the cells at the nose, at the trailing edge, and across the flat back face of the
+  thick trailing edge (the "base").
+- **What goes wrong:** air leaves the base with low pressure, which pulls the wing back (extra drag).
+  Too few cells across the base get that pressure wrong.
+- **Starting mesh:** 0.1 % of chord at the edges (DPW); 8 cells across the base.
+- **Why a separate part:** in earlier AERIS tests the base was the slowest part to settle with
+  refinement.
+- **Source:** DPW guidelines for the edges. The base cell count is from earlier AERIS tests (our choice).
+
+**1e. Wake: 0.29 counts.**
+- **What it is:** the cells behind the wing and around the tip vortex (the swirl that leaves the
+  wing tip).
+- **What goes wrong if they are too coarse:** the wake and the vortex smear out, which changes the
+  pressure at the trailing edge and the induced drag.
+- **Why it matters:** in earlier AERIS tests, refining only the near wake moved drag by 23 counts.
+- **Source:** the share is our choice; the wake-mesh rules are set in the mesh stage.
+
+#### 2. Iterations: 0.30 counts (10 % of 3)
+- **What it is:** the error from stopping the solver before it has finished.
+- **How we measure it:** let a few runs continue past the stopping point and see how much the forces
+  still change.
+- **When it is good enough:** the stopping rule in D3.
+- **Check:**
+  - earlier AERIS runs continued past 10⁻⁶ moved drag by at most 0.12 counts, inside 0.30;
+  - Celik's stricter rule asks for less than one tenth of the mesh error, i.e. 1.95 ÷ 10 = 0.195
+    counts. Our share of 0.30 is looser than that, but the measured 0.12 meets both.
+- **Source:** Celik et al. 2008 (Appendix A); Eça & Hoekstra 2006.
+
+#### 3. Outer boundary: 0.30 counts (10 % of 3)
+- **What it is:** the computer domain has to end somewhere. If its outer edge is too close to the
+  wing, the edge disturbs the flow around the wing.
+- **How we measure it:** move the outer edge further out (for example 40, 80, 160 chords), keeping
+  the mesh near the wing the same, and see how much the drag changes.
+- **Starting value from the source:** about 100 reference chords.
+- **Check:** in earlier AERIS tests, going from 40 to 60 chords moved drag by 0.6–0.7 counts. That is
+  more than 0.30, so 40 chords is too close; expect about 80–100.
+- **Source:** DPW gridding guidelines (Levy et al. 2013).
+
+#### 4. Numerical settings: 0.45 counts (15 % of 3)
+- **What it is:** the solver adds a little artificial smoothing ("dissipation") to stay stable. Too
+  much smoothing behaves like extra friction and adds false drag.
+- **How we measure it:** halve and double the smoothing setting on two mesh sizes. The effect must
+  shrink as the mesh gets finer, and be at most 0.45 counts on the mesh we use.
+- **Warning:** in earlier AERIS tests, halving the smoothing moved drag by 20.6 counts on the coarse
+  mesh and 12.0 on the medium mesh. That is far above 0.45 counts, so this is a real risk.
+- **Source:** our choice.
 
 ### Turbulence-model error: its own band, never inside the mesh budget
 - **In practice:** every drag number is reported as "value ± mesh error", and separately

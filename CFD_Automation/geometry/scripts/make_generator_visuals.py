@@ -192,7 +192,7 @@ def build_steps() -> list[tuple[Image.Image, int]]:
         a0, a1 = raw[0].airfoil, st[0].airfoil
         c = raw[0].chord * 1000
         x = a0.x * c
-        sel = a0.x > 0.6
+        sel = a0.x > 0.8
         ax.plot(x[sel], a0.yu[sel] * c, color=MUTED, lw=1.2, ls="--", label="as read")
         ax.plot(x[sel], a0.yl[sel] * c, color=MUTED, lw=1.2, ls="--")
         ax.plot(x[sel], a1.yu[sel] * c, color=ACCENT, lw=2, label="opened")
@@ -205,9 +205,10 @@ def build_steps() -> list[tuple[Image.Image, int]]:
             ax.spines[sp].set_visible(False)
     frames.append((frame("5 · Trailing edge",
                          ["The edge is opened to", f"max({cfg.te.floor_m * 1e3:.1f} mm, {cfg.te.chord_fraction * 100:.1f} % of chord),",
-                          f"only behind {cfg.te.open_from_xc * 100:.0f} % chord, half up,", "half down: the camber line",
-                          "does not move.", "", "Published wings keep their", "own edge ('as_is')."],
-                         f5, foot="Root section, aft part, true scale"), 2500))
+                          f"growing linearly from {cfg.te.open_from_xc * 100:.0f} % chord", "to the edge, half up, half down",
+                          "(pyGeo's blunt-edge method):", "the camber line does not move.", "",
+                          "Published wings keep their", "own edge ('as_is')."],
+                         f5, foot="Root section, aft part (height stretched)"), 2500))
 
     frames.append((frame("6 · Loft",
                          ["The sections are joined by", "straight panels (pyGeo,", "kSpan = 2). This surface is",

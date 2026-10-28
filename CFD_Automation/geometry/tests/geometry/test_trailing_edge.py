@@ -34,10 +34,15 @@ def test_camber_line_does_not_move(wing_type):
             assert np.max(np.abs(a.airfoil.camber - b.airfoil.camber)) < 1e-6
 
 
-def test_nose_untouched_and_ramp_smooth():
+def test_nose_untouched_and_ramp_linear():
     a = load_airfoil("mh91")
-    b = open_te(a, 0.004, 0.65)
-    ahead = a.x <= 0.65
+    b = open_te(a, 0.004, 0.9)
+    ahead = a.x <= 0.9
+    aft = ~ahead
+    # pyGeo's ramp: the added thickness is linear in x from 0.9 to the edge
+    added = (b.thickness - a.thickness)[aft]
+    want = (0.004 - a.te_thickness) * (a.x[aft] - 0.9) / 0.1
+    assert np.allclose(added, want, atol=1e-15)
     assert np.array_equal(a.yu[ahead], b.yu[ahead]) and np.array_equal(a.yl[ahead], b.yl[ahead])
     assert b.te_thickness == pytest.approx(0.004)
     assert np.all(b.thickness[1:] > 0)
@@ -46,7 +51,7 @@ def test_nose_untouched_and_ramp_smooth():
 def test_already_thick_edge_is_thinned_to_rule():
     a = load_airfoil("naca4415")          # file has a 0.3 % chord blunt edge
     assert a.te_thickness > 0.002
-    assert open_te(a, 0.002, 0.65).te_thickness == pytest.approx(0.002)
+    assert open_te(a, 0.002, 0.9).te_thickness == pytest.approx(0.002)
 
 
 def test_switch_section_added_where_rule_changes():

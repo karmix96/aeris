@@ -73,3 +73,6 @@
     build exactly what its parameters say (errors < 0.003 % chord), and the M6 matches its CATIA
     model (max 0.011 % chord). For the others we need their own surface (one BlendedNet++ case
     STEP/VTK, CRM IGES, RIBES STEP) and run `verify.compare_points`.
+32. **TE opening now follows pyGeo** (linear ramp over the last 10 % of chord, half up, half down,
+    as `readAirfoilFile(bluntTe=True, bluntTaperRange=0.1)`). Replaces the uncited 65 % start.
+    The sample sets in `data/sets/` must be rebuilt with pyGeo (`--all`): surfaces changed aft of 90 %.

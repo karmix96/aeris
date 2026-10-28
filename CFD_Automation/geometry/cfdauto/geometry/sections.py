@@ -173,14 +173,17 @@ def build_stations(spec: TypeSpec, vec: dict[str, float]) -> tuple[Planform, lis
 # --- trailing edge ------------------------------------------------------------
 
 def open_te(airfoil: Airfoil, te_over_c: float, x_start: float) -> Airfoil:
-    """Set the trailing-edge thickness to te_over_c (of chord).
+    """Set the trailing-edge thickness to te_over_c (of chord), the pyGeo way.
 
-    The change ramps in from x_start (zero, with zero slope) to the edge, half
-    on the upper side, half on the lower, so the camber line does not move and
-    the section ahead of x_start is untouched.
+    Same method as pyGeo's readAirfoilFile(bluntTe=True, bluntThickness,
+    bluntTaperRange) (MDO Lab, MACH-Aero): the change grows linearly from zero
+    at x_start to the full amount at the edge, half on the upper side, half on
+    the lower. So the camber line does not move and the section ahead of
+    x_start is untouched. pyGeo's default range is the last 10 % of chord
+    (x_start = 0.9).
     """
     x = airfoil.x
-    r = np.where(x > x_start, ((x - x_start) / (1.0 - x_start)) ** 2, 0.0)
+    r = np.where(x > x_start, (x - x_start) / (1.0 - x_start), 0.0)
     half = 0.5 * (te_over_c - airfoil.te_thickness) * r
     return Airfoil(airfoil.name, x, airfoil.yu + half, airfoil.yl - half)
 

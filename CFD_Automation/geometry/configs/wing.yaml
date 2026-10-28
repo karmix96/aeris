@@ -13,7 +13,7 @@ wing_class: I                         # I | II  (sets the trailing-edge floor)
 trailing_edge:
   floor_m: {I: 0.0005, II: 0.0010}    # minimum thickness, by class
   chord_fraction: 0.002               # 0.2 % of local chord
-  open_from_xc: 0.65                  # opening ramps in from here to the edge
+  open_from_xc: 0.90                  # linear ramp over the last 10 % of chord (pyGeo bluntTaperRange 0.1)
 
 types:
   bwb:

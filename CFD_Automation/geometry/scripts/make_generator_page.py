@@ -23,7 +23,7 @@ sys.path.insert(0, str(ROOT))
 
 from cfdauto import __version__  # noqa: E402
 from cfdauto.geometry import airfoils, published_wings  # noqa: E402
-from cfdauto.geometry.params import VARIABLES, load_config  # noqa: E402
+from cfdauto.geometry.params import VARIABLES, WING_TYPES, load_config  # noqa: E402
 from cfdauto.geometry.planform import aspect_ratio, mean_aero_chord  # noqa: E402
 from cfdauto.geometry.sections import build_wing_sections  # noqa: E402
 
@@ -199,25 +199,32 @@ def fmt(lo: float, hi: float) -> str:
 
 def variables_table() -> str:
     cfg = load_config()
-    b, c = cfg.types["bwb"], cfg.types["conventional"]
+    specs = [cfg.types[t] for t in WING_TYPES]
     out = []
     for v in VARIABLES:
         def cell(spec):
             if v in spec.pinned:
                 return f"{spec.pinned[v]:g} (pinned)"
-            if spec.chord_law == "linear_taper" and v in ("c2_ratio", "c3_ratio"):
-                return "from taper"
-            return fmt(*spec.ranges[v])
+            if v in spec.derived:
+                return "from taper" if v.startswith("c") else "= sweep1"
+            note = ""
+            if spec.chord_law == "per_panel" and v in ("c2_ratio", "c3_ratio", "c4_ratio"):
+                note = "<span class='muted'> of inboard</span>"
+            elif spec.chord_law == "linear_taper" and v == "c4_ratio":
+                note = "<span class='muted'> taper</span>"
+            return fmt(*spec.ranges[v]) + note
         out.append(f"<tr><td><code>{v}</code></td><td>{html.escape(MEANING[v])}</td>"
-                   f"<td class='num'>{cell(b)}</td><td class='num'>{cell(c)}</td></tr>")
-    air = (f"<tr><td><code>airfoils</code></td><td>section at b0, b1, b2, b3</td>"
-           f"<td>{', '.join('/'.join(x) for x in b.choices)}</td><td>{', '.join('/'.join(x) for x in c.choices)}</td></tr>")
-    return "\n".join(out) + "\n" + air
+                   + "".join(f"<td class='num'>{cell(sp)}</td>" for sp in specs) + "</tr>")
+    laws = ("<tr><td><code>chord_law</code><br><code>sweep_law</code></td><td>how chords and sweeps are read</td>"
+            + "".join(f"<td>{sp.chord_law}<br>{sp.sweep_law}</td>" for sp in specs) + "</tr>")
+    air = ("<tr><td><code>airfoils</code></td><td>section at b0, b1, b2, b3</td>"
+           + "".join(f"<td>{', '.join('/'.join(x) for x in sp.choices)}</td>" for sp in specs) + "</tr>")
+    return "\n".join(out) + "\n" + laws + "\n" + air
 
 
 def manifests() -> list[dict]:
     rows = []
-    for t in ("bwb", "conventional"):
+    for t in WING_TYPES:
         for s in ("training", "corner1", "corner2", "reference", "holdout"):
             f = SETS / t / f"{s}_manifest.json"
             if f.is_file():
@@ -226,6 +233,7 @@ def manifests() -> list[dict]:
     return rows
 
 
+TYPE_NAME = {"bwb": "BWB", "conventional": "Cranked", "tapered": "Tapered"}
 SET_NAME = {"training": "training", "corner1": "corner 1", "corner2": "corner 2", "reference": "reference", "holdout": "hold-out"}
 
 
@@ -243,7 +251,7 @@ def sets_table(rows: list[dict]) -> str:
             lab = Counter(l for x in w for l in (x.get("labels") or []) if l not in ("bwb", "conventional"))
             labels = ", ".join(f"{k.replace('_', ' ')} {v}" for k, v in lab.most_common(5))
         stale = "" if r["version"] == __version__ or r["set"] == "holdout" else f" <span class='flag open'>built with {r['version']}</span>"
-        out.append(f"<tr><td><span class='tag {r['type']}'>{'BWB' if r['type'] == 'bwb' else 'Conv.'}</span></td>"
+        out.append(f"<tr><td><span class='tag {r['type']}'>{TYPE_NAME[r['type']]}</span></td>"
                    f"<td>{SET_NAME[r['set']]}</td><td class='num'>{n}</td><td>{res}{stale}</td><td class='muted'>{labels}</td></tr>")
     return "\n".join(out)
 
@@ -373,7 +381,7 @@ td.num { font-family: var(--mono); font-size: 13px; white-space: nowrap; font-va
 td.src { font-size: 12.5px; color: var(--muted); width: 22%; }
 .muted { color: var(--muted); font-size: 13px; }
 .tag, .basis, .flag { font-family: var(--mono); font-size: 11px; text-transform: uppercase; padding: 1px 6px; border-radius: 3px; border: 1px solid currentColor; white-space: nowrap; font-weight: 500; }
-.tag.conventional { color: var(--accent); } .tag.bwb { color: var(--bwb); }
+.tag.conventional, .tag.tapered { color: var(--accent); } .tag.bwb { color: var(--bwb); }
 .basis.req { color: var(--violet); } .basis.src { color: var(--accent); } .basis.meas { color: var(--bwb); } .basis.own { color: var(--amber); }
 .flag.fix { color: var(--warn); } .flag.open { color: var(--amber); } .flag.ok { color: var(--bwb); }
 .legend { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; }
@@ -433,7 +441,7 @@ __DECISIONS__
   <h2>The 18 numbers</h2>
   <p>Four stations: root b0, breaks b1 and b2, tip b3. Three straight panels between them. Ranges as in <code>configs/wing.yaml</code> now.</p>
   <div class="tbl"><table class="mid">
-    <thead><tr><th>Variable</th><th>Meaning</th><th>BWB</th><th>Conventional</th></tr></thead>
+    <thead><tr><th>Variable</th><th>Meaning</th><th>BWB</th><th>Conventional, cranked</th><th>Conventional, tapered</th></tr></thead>
     <tbody>
 __VARS__
     </tbody>

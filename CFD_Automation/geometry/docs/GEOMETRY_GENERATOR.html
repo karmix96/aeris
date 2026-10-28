@@ -58,7 +58,7 @@ td.num { font-family: var(--mono); font-size: 13px; white-space: nowrap; font-va
 td.src { font-size: 12.5px; color: var(--muted); width: 22%; }
 .muted { color: var(--muted); font-size: 13px; }
 .tag, .basis, .flag { font-family: var(--mono); font-size: 11px; text-transform: uppercase; padding: 1px 6px; border-radius: 3px; border: 1px solid currentColor; white-space: nowrap; font-weight: 500; }
-.tag.conventional { color: var(--accent); } .tag.bwb { color: var(--bwb); }
+.tag.conventional, .tag.tapered { color: var(--accent); } .tag.bwb { color: var(--bwb); }
 .basis.req { color: var(--violet); } .basis.src { color: var(--accent); } .basis.meas { color: var(--bwb); } .basis.own { color: var(--amber); }
 .flag.fix { color: var(--warn); } .flag.open { color: var(--amber); } .flag.ok { color: var(--bwb); }
 .legend { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; }
@@ -162,27 +162,28 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <h2>The 18 numbers</h2>
   <p>Four stations: root b0, breaks b1 and b2, tip b3. Three straight panels between them. Ranges as in <code>configs/wing.yaml</code> now.</p>
   <div class="tbl"><table class="mid">
-    <thead><tr><th>Variable</th><th>Meaning</th><th>BWB</th><th>Conventional</th></tr></thead>
+    <thead><tr><th>Variable</th><th>Meaning</th><th>BWB</th><th>Conventional, cranked</th><th>Conventional, tapered</th></tr></thead>
     <tbody>
-<tr><td><code>root_chord_m</code></td><td>root chord (m)</td><td class='num'>0.7 – 1.1</td><td class='num'>0.15 – 1.35</td></tr>
-<tr><td><code>c2_ratio</code></td><td>chord at b1 / root chord</td><td class='num'>0.55 – 0.8</td><td class='num'>0.85 – 1</td></tr>
-<tr><td><code>c3_ratio</code></td><td>chord at b2 / root chord</td><td class='num'>0.3 – 0.55</td><td class='num'>0.65 – 1</td></tr>
-<tr><td><code>c4_ratio</code></td><td>tip chord / root chord</td><td class='num'>0.08 – 0.2</td><td class='num'>0.4 – 1</td></tr>
-<tr><td><code>semi_span_m</code></td><td>semi-span (m); conventional: in root chords</td><td class='num'>0.75 – 1.25</td><td class='num'>2 – 6</td></tr>
-<tr><td><code>b3_ratio</code></td><td>outer panel span / semi-span</td><td class='num'>0.4 – 0.55</td><td class='num'>0.2 – 0.5</td></tr>
-<tr><td><code>split_ratio</code></td><td>inner panel / (inner + middle)</td><td class='num'>0.4 – 0.6</td><td class='num'>0.3 – 0.7</td></tr>
-<tr><td><code>sweep1_deg</code></td><td>LE sweep, panel 1 (+ aft)</td><td class='num'>20 – 40</td><td class='num'>-10 – 20</td></tr>
-<tr><td><code>sweep2_deg</code></td><td>LE sweep, panel 2</td><td class='num'>15 – 35</td><td class='num'>-10 – 20</td></tr>
-<tr><td><code>sweep3_deg</code></td><td>LE sweep, panel 3</td><td class='num'>5 – 25</td><td class='num'>-10 – 20</td></tr>
-<tr><td><code>twist0_deg</code></td><td>twist at b0 (+ nose up)</td><td class='num'>-1 – 1</td><td class='num'>0 – 3</td></tr>
-<tr><td><code>twist1_deg</code></td><td>twist at b1</td><td class='num'>-3 – 0</td><td class='num'>-1 – 2</td></tr>
-<tr><td><code>twist2_deg</code></td><td>twist at b2</td><td class='num'>-5 – -1</td><td class='num'>-2 – 1</td></tr>
-<tr><td><code>twist3_deg</code></td><td>twist at b3 (tip)</td><td class='num'>-8 – -2</td><td class='num'>-4 – 0</td></tr>
-<tr><td><code>dihedral0_deg</code></td><td>dihedral at b0 (+ tip up)</td><td class='num'>0 – 3</td><td class='num'>-3 – 6</td></tr>
-<tr><td><code>dihedral1_deg</code></td><td>dihedral at b1</td><td class='num'>0 – 3</td><td class='num'>-3 – 6</td></tr>
-<tr><td><code>dihedral2_deg</code></td><td>dihedral at b2</td><td class='num'>0 – 6</td><td class='num'>-3 – 6</td></tr>
-<tr><td><code>dihedral3_deg</code></td><td>dihedral at b3</td><td class='num'>0 – 10</td><td class='num'>-3 – 6</td></tr>
-<tr><td><code>airfoils</code></td><td>section at b0, b1, b2, b3</td><td>mh91, mh91, e374, nlf1015</td><td>naca4415, naca4415, naca4412, naca4412</td></tr>
+<tr><td><code>root_chord_m</code></td><td>root chord (m)</td><td class='num'>0.7 – 1.1</td><td class='num'>0.15 – 1.35</td><td class='num'>0.15 – 1.35</td></tr>
+<tr><td><code>c2_ratio</code></td><td>chord at b1 / root chord</td><td class='num'>0.55 – 0.8</td><td class='num'>0.8 – 1<span class='muted'> of inboard</span></td><td class='num'>from taper</td></tr>
+<tr><td><code>c3_ratio</code></td><td>chord at b2 / root chord</td><td class='num'>0.3 – 0.55</td><td class='num'>0.7 – 1<span class='muted'> of inboard</span></td><td class='num'>from taper</td></tr>
+<tr><td><code>c4_ratio</code></td><td>tip chord / root chord</td><td class='num'>0.08 – 0.2</td><td class='num'>0.5 – 1<span class='muted'> of inboard</span></td><td class='num'>0.4 – 1<span class='muted'> taper</span></td></tr>
+<tr><td><code>semi_span_m</code></td><td>semi-span (m); conventional: in root chords</td><td class='num'>0.75 – 1.25</td><td class='num'>2 – 6</td><td class='num'>2 – 6</td></tr>
+<tr><td><code>b3_ratio</code></td><td>outer panel span / semi-span</td><td class='num'>0.4 – 0.55</td><td class='num'>0.2 – 0.5</td><td class='num'>0.2 – 0.5</td></tr>
+<tr><td><code>split_ratio</code></td><td>inner panel / (inner + middle)</td><td class='num'>0.4 – 0.6</td><td class='num'>0.3 – 0.7</td><td class='num'>0.3 – 0.7</td></tr>
+<tr><td><code>sweep1_deg</code></td><td>LE sweep, panel 1 (+ aft)</td><td class='num'>20 – 40</td><td class='num'>-10 – 20</td><td class='num'>-10 – 20</td></tr>
+<tr><td><code>sweep2_deg</code></td><td>LE sweep, panel 2</td><td class='num'>15 – 35</td><td class='num'>-10 – 20</td><td class='num'>= sweep1</td></tr>
+<tr><td><code>sweep3_deg</code></td><td>LE sweep, panel 3</td><td class='num'>5 – 25</td><td class='num'>-10 – 20</td><td class='num'>= sweep1</td></tr>
+<tr><td><code>twist0_deg</code></td><td>twist at b0 (+ nose up)</td><td class='num'>-1 – 1</td><td class='num'>0 – 3</td><td class='num'>0 – 3</td></tr>
+<tr><td><code>twist1_deg</code></td><td>twist at b1</td><td class='num'>-3 – 0</td><td class='num'>-1 – 2</td><td class='num'>-1 – 2</td></tr>
+<tr><td><code>twist2_deg</code></td><td>twist at b2</td><td class='num'>-5 – -1</td><td class='num'>-2 – 1</td><td class='num'>-2 – 1</td></tr>
+<tr><td><code>twist3_deg</code></td><td>twist at b3 (tip)</td><td class='num'>-8 – -2</td><td class='num'>-4 – 0</td><td class='num'>-4 – 0</td></tr>
+<tr><td><code>dihedral0_deg</code></td><td>dihedral at b0 (+ tip up)</td><td class='num'>0 – 3</td><td class='num'>-3 – 6</td><td class='num'>-3 – 6</td></tr>
+<tr><td><code>dihedral1_deg</code></td><td>dihedral at b1</td><td class='num'>0 – 3</td><td class='num'>-3 – 6</td><td class='num'>-3 – 6</td></tr>
+<tr><td><code>dihedral2_deg</code></td><td>dihedral at b2</td><td class='num'>0 – 6</td><td class='num'>-3 – 6</td><td class='num'>-3 – 6</td></tr>
+<tr><td><code>dihedral3_deg</code></td><td>dihedral at b3</td><td class='num'>0 – 10</td><td class='num'>-3 – 6</td><td class='num'>-3 – 6</td></tr>
+<tr><td><code>chord_law</code><br><code>sweep_law</code></td><td>how chords and sweeps are read</td><td>stations<br>panels</td><td>per_panel<br>panels</td><td>linear_taper<br>one</td></tr>
+<tr><td><code>airfoils</code></td><td>section at b0, b1, b2, b3</td><td>mh91, mh91, e374, nlf1015</td><td>naca4415, naca4415, naca4412, naca4412</td><td>naca4415, naca4415, naca4412, naca4412</td></tr>
     </tbody>
   </table></div>
 </section>
@@ -205,11 +206,11 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
 <tr><td><span class='tag bwb'>BWB</span></td><td>corner 2</td><td class='num'>8</td><td>8 built, 0 refused <span class='flag open'>built with 0.1.0</span></td><td class='muted'>cranked 8, washout 8, aft swept 5, dihedral 5, varying dihedral 5</td></tr>
 <tr><td><span class='tag bwb'>BWB</span></td><td>reference</td><td class='num'>5</td><td>5 built, 0 refused <span class='flag open'>built with 0.1.0</span></td><td class='muted'>cranked 5, washout 5, dihedral 5, aft swept 4, varying dihedral 4</td></tr>
 <tr><td><span class='tag bwb'>BWB</span></td><td>hold-out</td><td class='num'>10</td><td>vectors only, not built</td><td class='muted'>—</td></tr>
-<tr><td><span class='tag conventional'>Conv.</span></td><td>training</td><td class='num'>100</td><td>100 built, 0 refused <span class='flag open'>built with 0.1.0</span></td><td class='muted'>cranked 100, washout 94, high aspect ratio 64, dihedral 61, varying dihedral 57</td></tr>
-<tr><td><span class='tag conventional'>Conv.</span></td><td>corner 1</td><td class='num'>36</td><td>36 built, 0 refused <span class='flag open'>built with 0.1.0</span></td><td class='muted'>washout 36, high aspect ratio 35, dihedral 33, straight tapered 20, cranked 16</td></tr>
-<tr><td><span class='tag conventional'>Conv.</span></td><td>corner 2</td><td class='num'>8</td><td>8 built, 0 refused <span class='flag open'>built with 0.1.0</span></td><td class='muted'>washout 7, cranked 5, aft swept 5, dihedral 5, varying dihedral 5</td></tr>
-<tr><td><span class='tag conventional'>Conv.</span></td><td>reference</td><td class='num'>5</td><td>5 built, 0 refused <span class='flag open'>built with 0.1.0</span></td><td class='muted'>washout 5, high aspect ratio 4, cranked 4, dihedral 3, varying dihedral 3</td></tr>
-<tr><td><span class='tag conventional'>Conv.</span></td><td>hold-out</td><td class='num'>10</td><td>vectors only, not built</td><td class='muted'>—</td></tr>
+<tr><td><span class='tag conventional'>Cranked</span></td><td>training</td><td class='num'>100</td><td>100 built, 0 refused <span class='flag open'>built with 0.1.0</span></td><td class='muted'>cranked 100, washout 94, high aspect ratio 64, dihedral 61, varying dihedral 57</td></tr>
+<tr><td><span class='tag conventional'>Cranked</span></td><td>corner 1</td><td class='num'>36</td><td>36 built, 0 refused <span class='flag open'>built with 0.1.0</span></td><td class='muted'>washout 36, high aspect ratio 35, dihedral 33, straight tapered 20, cranked 16</td></tr>
+<tr><td><span class='tag conventional'>Cranked</span></td><td>corner 2</td><td class='num'>8</td><td>8 built, 0 refused <span class='flag open'>built with 0.1.0</span></td><td class='muted'>washout 7, cranked 5, aft swept 5, dihedral 5, varying dihedral 5</td></tr>
+<tr><td><span class='tag conventional'>Cranked</span></td><td>reference</td><td class='num'>5</td><td>5 built, 0 refused <span class='flag open'>built with 0.1.0</span></td><td class='muted'>washout 5, high aspect ratio 4, cranked 4, dihedral 3, varying dihedral 3</td></tr>
+<tr><td><span class='tag conventional'>Cranked</span></td><td>hold-out</td><td class='num'>10</td><td>vectors only, not built</td><td class='muted'>—</td></tr>
     </tbody>
   </table></div>
   <h2 style="font-size:22px">Is the surface the intended wing?</h2>

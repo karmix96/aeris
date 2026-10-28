@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
-TYPES = ("bwb", "conventional")
+TYPES = ("bwb", "conventional", "tapered")
 
 
 def load(wing_type):

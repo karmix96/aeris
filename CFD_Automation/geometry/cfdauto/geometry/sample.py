@@ -13,7 +13,7 @@ from pathlib import Path
 import numpy as np
 from scipy.stats import qmc
 
-from .params import Config, TypeSpec, from_unit, load_config, mid_vector, to_unit
+from .params import WING_TYPES, Config, TypeSpec, from_unit, load_config, mid_vector, to_unit
 from .planform import build_planform
 
 SETS_DIR = Path(__file__).resolve().parents[2] / "data" / "sets"
@@ -80,8 +80,9 @@ def reference(spec: TypeSpec, training: list[dict]) -> list[dict]:
     area = np.array([build_planform(spec, v).area() for v in training])
     unit = np.array([to_unit(spec, v) for v in training])
     names = list(spec.free_variables)
-    sweep = np.mean([unit[:, names.index(f"sweep{i}_deg")] for i in (1, 2, 3)], axis=0)
-    tip = np.array([v["root_chord_m"] * v["c4_ratio"] for v in training])
+    sweep = np.mean([unit[:, names.index(f"sweep{i}_deg")] for i in (1, 2, 3)
+                     if f"sweep{i}_deg" in names], axis=0)
+    tip = np.array([build_planform(spec, v).chord[-1] for v in training])
     tip_u = (tip - tip.min()) / max(np.ptp(tip), 1e-12)
     washout = np.array([v["twist3_deg"] - v["twist0_deg"] for v in training])
 
@@ -116,9 +117,10 @@ def coverage_check(spec: TypeSpec, ref: list[dict], training: list[dict], n_rand
 
 def draw_mixed(cfg: Config, n: int, seed: int) -> list[tuple[str, dict]]:
     """For wing_type = mixed: n wings split between the types by the shares."""
-    n_bwb = round(n * cfg.shares["bwb"])
-    return ([("bwb", v) for v in lhs(cfg.types["bwb"], n_bwb, seed)]
-            + [("conventional", v) for v in lhs(cfg.types["conventional"], n - n_bwb, seed + 1)])
+    types = [t for t in WING_TYPES if cfg.shares.get(t, 0.0) > 0]
+    counts = [round(n * cfg.shares[t]) for t in types]
+    counts[-1] = n - sum(counts[:-1])
+    return [(t, v) for k, (t, m) in enumerate(zip(types, counts)) for v in lhs(cfg.types[t], m, seed + k)]
 
 
 def make_sets(cfg: Config, wing_type: str) -> dict[str, dict]:
@@ -148,7 +150,7 @@ def make_sets(cfg: Config, wing_type: str) -> dict[str, dict]:
 
 
 def write_sets(cfg: Config, out: Path = SETS_DIR) -> None:
-    for t in ("bwb", "conventional"):
+    for t in WING_TYPES:
         (out / t).mkdir(parents=True, exist_ok=True)
         for name, data in make_sets(cfg, t).items():
             (out / t / f"{name}.json").write_text(json.dumps(data, indent=1))
@@ -157,7 +159,7 @@ def write_sets(cfg: Config, out: Path = SETS_DIR) -> None:
 if __name__ == "__main__":
     c = load_config()
     write_sets(c)
-    for t in ("bwb", "conventional"):
+    for t in WING_TYPES:
         cov = json.loads((SETS_DIR / t / "reference.json").read_text())["coverage"]
         print(f"{t}: sets written; reference coverage {cov['coverage']:.3f} vs random median "
               f"{cov['random_median']:.3f} -> {'pass' if cov['passed'] else 'FAIL'}")

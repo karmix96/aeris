@@ -52,7 +52,8 @@ def build_planform(spec: TypeSpec, vec: dict[str, float]) -> Planform:
         raise ValueError(f"every panel needs a positive span, got {spans.tolist()}")
 
     c0 = vec["root_chord_m"]
-    chord = c0 * np.array([1.0, vec["c2_ratio"], vec["c3_ratio"], vec["c4_ratio"]])
+    r = np.array([1.0, vec["c2_ratio"], vec["c3_ratio"], vec["c4_ratio"]])
+    chord = c0 * (np.cumprod(r) if spec.chord_law == "per_panel" else r)
     if np.any(chord <= 0):
         raise ValueError(f"every chord must be positive, got {chord.tolist()}")
 

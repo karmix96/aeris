@@ -9,6 +9,7 @@
 bases:
   rect:
     type: conventional
+    chord_law: stations     # chords below are fractions of the root chord
     vector: {root_chord_m: 0.5, c2_ratio: 1.0, c3_ratio: 1.0, c4_ratio: 1.0, semi_span_m: 3.5,
              b3_ratio: 0.3, split_ratio: 0.5, sweep1_deg: 0.0, sweep2_deg: 0.0, sweep3_deg: 0.0,
              twist0_deg: 0.0, twist1_deg: 0.0, twist2_deg: 0.0, twist3_deg: 0.0,

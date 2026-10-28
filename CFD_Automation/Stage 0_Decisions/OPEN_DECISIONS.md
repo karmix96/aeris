@@ -39,10 +39,12 @@
 18. **Hand-labelled set:** 20 wings in `geometry/tests/geometry/hand_labelled.yaml`. Two of my
     first vectors were wrong (aspect ratio 8.75, not < 8; outer sweep −7°, not 0); I fixed the
     vectors, not the labeller.
-19. **Every conventional training wing is "cranked"** (100/100). The three chord ratios and three
-    sweeps vary independently, so a straight taper almost never comes out. If straight-tapered
-    and rectangular wings must be in the training set: use `chord_law: linear_taper` for part of
-    the set, or pin sweep2 = sweep3 = sweep1. Decide.
+19. ~~**Every conventional training wing is "cranked"** (100/100).~~ **Decided 29 Oct 2026:** the
+    generator must make tapered wings. New wing type `tapered` (one taper ratio, one sweep: straight
+    edges, rectangular at taper 1). The cranked `conventional` type now reads its chord ratios per
+    panel (`chord_law: per_panel`), so no chord is wider than the one inboard of it.
+    See `geometry/decisions/planform_laws.md`. Open: the mixed shares (now BWB 0.5, cranked 0.25,
+    tapered 0.25).
 20. **3 BWB training wings are "forward swept"** (outer quarter-chord sweep ≤ −5°): leading edge
     aft, but the strong outer taper pulls the quarter-chord line forward. Real geometry, not a bug.
 21. **Reference wing 5 = strongest washout** (Stage 1 brief); Stage 0 said "strongest twist".
@@ -67,8 +69,9 @@
     in-regime case (40 m/s, Re 1.43e6). Which wings to validate against first?
 29. **RIBES section trailing edge** is 0.26 % chord after the fit, thinner than the 0.38–0.66 %
     measured on the model. Rebuild the section with the measured edge before a drag comparison?
-30. **Typo points in airfoil files are dropped** (one point off a smooth line; 18 database files,
-    e.g. sc20412 lower x/c 0.73, about 0.09 % chord off). Keep dropping, or fix the files?
+30. ~~**Typo points in airfoil files are dropped**~~ **Decided 29 Oct 2026:** keep the automatic
+    delete (one point off a smooth line; 18 database files, e.g. sc20412 lower x/c 0.73, about
+    0.09 % chord off). Each dropped point is logged.
 31. **Exact match to BlendedNet / CRM / RIBES is not proven yet.** The generator is proven to
     build exactly what its parameters say (errors < 0.003 % chord), and the M6 matches its CATIA
     model (max 0.011 % chord). For the others we need their own surface (one BlendedNet++ case

@@ -20,7 +20,7 @@ from . import gates
 from .labels import label
 from .measure import measure, table_from_loft
 from . import airfoils as _airfoils
-from .params import GEOMETRY_ROOT, Config, TERule, TypeSpec, canonical, load_config, resolve, station_airfoils
+from .params import GEOMETRY_ROOT, WING_TYPES, Config, TERule, TypeSpec, canonical, load_config, resolve, station_airfoils
 from .sections import build_wing_sections
 
 SETS_DIR = GEOMETRY_ROOT / "data" / "sets"
@@ -147,7 +147,7 @@ def build_all(cfg: Config, iges: bool = False) -> dict:
     manifest per set. Failures stay in the manifest. The hold-out manifest holds
     vectors and input hashes only: its wings are not built."""
     totals = {}
-    for t in ("bwb", "conventional"):
+    for t in WING_TYPES:
         for name in BUILT_SETS:
             rows = []
             for i, vec in enumerate(load_set(t, name)["vectors"]):
@@ -173,7 +173,7 @@ def main(argv=None) -> None:
     p = argparse.ArgumentParser(description="Build one wing from a design vector.")
     p.add_argument("--all", action="store_true",
                    help="build every training, corner and reference wing of both types, write manifests")
-    p.add_argument("--type", choices=["bwb", "conventional"])
+    p.add_argument("--type", choices=list(WING_TYPES))
     p.add_argument("--set", help="set name in data/sets/<type>/ (training, corner1, corner2, reference)")
     p.add_argument("--index", type=int)
     p.add_argument("--vector", help="JSON file with one design vector (instead of --set/--index)")

@@ -1,3 +1,4 @@
+import dataclasses
 from pathlib import Path
 
 import numpy as np
@@ -18,6 +19,8 @@ def hand_wing(name):
     w = HAND["wings"][name]
     base = HAND["bases"][w["base"]]
     spec = CFG.types[base["type"]]
+    if "chord_law" in base:      # the vectors are written as fractions of the root chord
+        spec = dataclasses.replace(spec, chord_law=base["chord_law"])
     vec = params.mid_vector(spec) if base["vector"] == "mid" else dict(base["vector"])
     vec |= {k: float(v) for k, v in (w.get("set") or {}).items()}
     return spec, vec, w["labels"]
@@ -39,7 +42,7 @@ def test_hand_labelled(name):
     assert set(got) == set(want)
 
 
-@pytest.mark.parametrize("wing_type", ["bwb", "conventional"])
+@pytest.mark.parametrize("wing_type", params.WING_TYPES)
 def test_measured_matches_planform(wing_type):
     from cfdauto.geometry.planform import build_planform
     spec = CFG.types[wing_type]
@@ -58,7 +61,7 @@ def test_measured_matches_planform(wing_type):
 def test_every_wing_has_exactly_one_type_label():
     for name in HAND["wings"]:
         got, _ = label(exact_measure(*hand_wing(name)[:2])[0])
-        assert sum(t in got for t in ("bwb", "conventional")) == 1
+        assert sum(t in got for t in ("bwb", "conventional")) == 1   # labels: two configurations only
 
 
 @pytest.mark.pygeo

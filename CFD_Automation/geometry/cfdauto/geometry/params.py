@@ -24,11 +24,18 @@ VARIABLES = (
     "twist0_deg", "twist1_deg", "twist2_deg", "twist3_deg",
     "dihedral0_deg", "dihedral1_deg", "dihedral2_deg", "dihedral3_deg",
 )
-WING_TYPES = ("bwb", "conventional")
-CHORD_LAWS = ("stations", "linear_taper")
+WING_TYPES = ("bwb", "conventional", "tapered")
+# stations:     c2, c3, c4 are chords as fractions of the root chord.
+# per_panel:    c2 = c(b1)/c(b0), c3 = c(b2)/c(b1), c4 = c(b3)/c(b2): each panel's own taper,
+#               so with ratios <= 1 no chord is wider than the one inboard of it.
+# linear_taper: one taper; c4 = tip/root and c2, c3 follow (straight trailing edge with one sweep).
+CHORD_LAWS = ("stations", "per_panel", "linear_taper")
+# panels: one leading-edge sweep per panel.  one: sweep2 = sweep3 = sweep1 (straight leading edge).
+SWEEP_LAWS = ("panels", "one")
 SPAN_MODES = ("semi_span", "root_chord_fractions")
 # Variables that linear_taper computes instead of sampling.
 TAPER_DERIVED = ("c2_ratio", "c3_ratio")
+SWEEP_DERIVED = ("sweep2_deg", "sweep3_deg")
 
 
 @dataclass(frozen=True)
@@ -41,12 +48,18 @@ class TypeSpec:
     pinned: dict[str, float] = field(default_factory=dict)
     #: candidate sections per station; a station with more than one is drawn by the sampler
     airfoil_choices: tuple[tuple[str, ...], ...] = ()
+    sweep_law: str = "panels"
 
     @property
     def free_variables(self) -> tuple[str, ...]:
         """Variables the sampler varies: not pinned, not derived."""
-        derived = TAPER_DERIVED if self.chord_law == "linear_taper" else ()
-        return tuple(v for v in VARIABLES if v not in self.pinned and v not in derived)
+        return tuple(v for v in VARIABLES if v not in self.pinned and v not in self.derived)
+
+    @property
+    def derived(self) -> tuple[str, ...]:
+        """Variables computed from others (taper or one sweep), never sampled."""
+        return ((TAPER_DERIVED if self.chord_law == "linear_taper" else ())
+                + (SWEEP_DERIVED if self.sweep_law == "one" else ()))
 
     @property
     def choices(self) -> tuple[tuple[str, ...], ...]:
@@ -61,6 +74,7 @@ class TypeSpec:
         """The type's YAML block as plain data (for hashing)."""
         return {
             "chord_law": self.chord_law,
+            "sweep_law": self.sweep_law,
             "span_mode": self.span_mode,
             "airfoils": [list(c) for c in self.choices],
             "pinned": dict(sorted(self.pinned.items())),
@@ -106,11 +120,11 @@ def load_config(path: str | Path = DEFAULT_CONFIG) -> Config:
     raw = yaml.safe_load(Path(path).read_text())
     wing_type = raw["wing_type"]
     if wing_type not in (*WING_TYPES, "mixed"):
-        raise ValueError(f"wing_type must be bwb, conventional or mixed, got {wing_type!r}")
+        raise ValueError(f"wing_type must be one of {WING_TYPES} or mixed, got {wing_type!r}")
     shares = {k: float(v) for k, v in raw.get("shares", {}).items()}
     if wing_type == "mixed":
-        if set(shares) != set(WING_TYPES) or not math.isclose(sum(shares.values()), 1.0):
-            raise ValueError("mixed needs shares for bwb and conventional that sum to 1")
+        if not set(shares) <= set(WING_TYPES) or not math.isclose(sum(shares.values()), 1.0):
+            raise ValueError(f"mixed needs shares for {', '.join(WING_TYPES)} (any subset) that sum to 1")
 
     wing_class = str(raw["wing_class"])
     te_raw = raw["trailing_edge"]
@@ -134,6 +148,11 @@ def load_config(path: str | Path = DEFAULT_CONFIG) -> Config:
 def _read_type(name: str, block: dict) -> TypeSpec:
     if block["chord_law"] not in CHORD_LAWS:
         raise ValueError(f"{name}: chord_law must be one of {CHORD_LAWS}")
+    sweep_law = block.get("sweep_law", "panels")
+    if sweep_law not in SWEEP_LAWS:
+        raise ValueError(f"{name}: sweep_law must be one of {SWEEP_LAWS}")
+    derived = ((TAPER_DERIVED if block["chord_law"] == "linear_taper" else ())
+               + (SWEEP_DERIVED if sweep_law == "one" else ()))
     if block["span_mode"] not in SPAN_MODES:
         raise ValueError(f"{name}: span_mode must be one of {SPAN_MODES}")
     choices = read_airfoil_choices(name, block["airfoils"])
@@ -141,6 +160,9 @@ def _read_type(name: str, block: dict) -> TypeSpec:
     ranges = {}
     for v in VARIABLES:
         if v not in block["ranges"]:
+            if v in derived:          # computed from other variables; no range needed
+                ranges[v] = (0.0, 0.0)
+                continue
             raise ValueError(f"{name}: missing range for {v}")
         lo, hi = (float(x) for x in block["ranges"][v])
         if lo > hi:
@@ -155,7 +177,7 @@ def _read_type(name: str, block: dict) -> TypeSpec:
         raise ValueError(f"{name}: cannot pin unknown variables {sorted(unknown)}")
     multi = any(len(c) > 1 for c in choices)
     return TypeSpec(name, block["chord_law"], block["span_mode"], airfoils, ranges, pinned,
-                    choices if multi else ())
+                    choices if multi else (), sweep_law)
 
 
 def read_airfoil_choices(where: str, raw) -> tuple[tuple[str, ...], ...]:
@@ -217,7 +239,10 @@ def mid_vector(spec: TypeSpec) -> dict[str, float]:
 
 
 def resolve(spec: TypeSpec, vec: dict[str, float]) -> dict[str, float]:
-    """Apply pinned values and the chord law. Returns a new full vector."""
+    """Apply pinned values, the chord law and the sweep law. Returns a new full vector.
+
+    Idempotent: resolving a resolved vector changes nothing.
+    """
     check_vector(vec)
     out = {v: float(vec[v]) for v in VARIABLES}
     out.update(spec.pinned)
@@ -236,6 +261,9 @@ def resolve(spec: TypeSpec, vec: dict[str, float]) -> dict[str, float]:
         y2 = 1.0 - p3
         out["c2_ratio"] = 1.0 + (out["c4_ratio"] - 1.0) * y1
         out["c3_ratio"] = 1.0 + (out["c4_ratio"] - 1.0) * y2
+    if spec.sweep_law == "one":
+        out["sweep2_deg"] = out["sweep1_deg"]
+        out["sweep3_deg"] = out["sweep1_deg"]
     return out
 
 

@@ -6,10 +6,11 @@ from cfdauto.geometry import params
 
 def test_config_loads_both_types():
     cfg = params.load_config()
-    assert set(cfg.types) == {"bwb", "conventional"}
+    assert set(cfg.types) == {"bwb", "conventional", "tapered"}
     for spec in cfg.types.values():
         assert set(spec.ranges) == set(params.VARIABLES)
-        assert spec.free_variables == params.VARIABLES  # everything varies by default
+        # everything varies by default, except what a law computes
+        assert spec.free_variables == tuple(v for v in params.VARIABLES if v not in spec.derived)
 
 
 def test_same_variable_list_for_every_type():

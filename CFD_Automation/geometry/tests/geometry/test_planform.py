@@ -13,12 +13,13 @@ def _random_vectors(spec, n=200, seed=0):
             for _ in range(n)]
 
 
-@pytest.mark.parametrize("wing_type", ["bwb", "conventional"])
+@pytest.mark.parametrize("wing_type", params.WING_TYPES)
 def test_chords_and_sweeps_exact(wing_type):
     spec = params.load_config().types[wing_type]
     for vec in _random_vectors(spec):
         pf = build_planform(spec, vec)
-        want_c = vec["root_chord_m"] * np.array([1, vec["c2_ratio"], vec["c3_ratio"], vec["c4_ratio"]])
+        r = np.array([1, vec["c2_ratio"], vec["c3_ratio"], vec["c4_ratio"]])
+        want_c = vec["root_chord_m"] * (np.cumprod(r) if spec.chord_law == "per_panel" else r)
         assert np.max(np.abs(pf.chord / want_c - 1)) < 1e-3          # 0.1 %
         want_sw = [vec["sweep1_deg"], vec["sweep2_deg"], vec["sweep3_deg"]]
         assert np.max(np.abs(panel_sweep_deg(pf.y, pf.x_le) - want_sw)) < 0.1  # 0.1 deg
@@ -64,7 +65,7 @@ def test_rectangle_area_mac_ar():
 
 def test_mac_of_straight_taper():
     # MAC of a straight taper: (2/3) c_r (1 + l + l^2) / (1 + l)
-    spec = params.load_config().types["conventional"]
+    spec = params.load_config().types["tapered"]
     lam = 0.4
     vec = params.mid_vector(spec) | {"root_chord_m": 1.0, "c4_ratio": lam}
     vec = params.resolve(spec, vec)
@@ -79,3 +80,31 @@ def test_negative_chord_refused():
     vec = params.mid_vector(spec) | {"c4_ratio": -0.1}
     with pytest.raises(ValueError):
         build_planform(spec, vec)
+
+
+def test_per_panel_never_wider_outboard():
+    spec = params.load_config().types["conventional"]
+    assert spec.chord_law == "per_panel"
+    for vec in _random_vectors(spec, n=500, seed=3):
+        c = build_planform(spec, vec).chord
+        assert np.all(np.diff(c) <= 1e-12)
+
+
+def test_tapered_has_straight_edges():
+    spec = params.load_config().types["tapered"]
+    assert set(spec.derived) == {"c2_ratio", "c3_ratio", "sweep2_deg", "sweep3_deg"}
+    for vec in _random_vectors(spec, n=200, seed=4):
+        pf = build_planform(spec, vec)
+        x_te = pf.x_le + pf.chord
+        for x in (pf.x_le, x_te):           # leading and trailing edge: one straight line each
+            slope = np.diff(x) / np.diff(pf.y)
+            assert np.ptp(slope) < 1e-9
+        assert pf.chord[-1] / pf.chord[0] == pytest.approx(vec["c4_ratio"])
+
+
+def test_resolve_is_idempotent():
+    cfg = params.load_config()
+    for spec in cfg.types.values():
+        for vec in _random_vectors(spec, n=20, seed=5):
+            once = params.resolve(spec, vec)
+            assert params.resolve(spec, once) == once

@@ -7,7 +7,7 @@ s = sqrt(x/c). So all sections share one knot vector, the upper and lower
 surfaces split exactly at the nose, and u in upper(u, v) / lower(u, v) is the
 chord fraction x/c on every station. liftingSurface instead merges each
 section's own knots and splits at a knot that is only near the nose (see
-decisions/loft.md).
+geometry/decisions/loft.md).
 
 The mesher only asks the loft for points; it never interpolates between
 stored sections.

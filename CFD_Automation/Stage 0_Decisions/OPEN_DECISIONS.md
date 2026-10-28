@@ -13,7 +13,7 @@
 
 7. **Folder.** Stage 1 lives in `CFD_Automation/geometry/` (config, `cfdauto` package, tests,
    data). Run from there: `python -m cfdauto.geometry.build …`. No `src/` level.
-8. **Conventional ranges** proposed in `conventional_ranges.md`. Root chord up to 1.35 m so the
+8. **Conventional ranges** proposed in `geometry/decisions/conventional_ranges.md`. Root chord up to 1.35 m so the
    mean chord reaches Re 5 × 10⁶. Keep?
 9. **BWB stops at Re ≈ 3 × 10⁶** with the AERIS ranges (MAC ≤ 0.79 m). Widen the BWB size range,
    or run 5 × 10⁶ on BWB as a flow condition only (any wing can be solved at any Re)?
@@ -21,12 +21,12 @@
 11. **`root_chord_fractions` mode:** `semi_span_m` is read as semi-span / root chord (keeps one
     variable list). Conventional uses this mode so the aspect ratio stays in 4–16.5.
 12. **Dihedral on straight panels:** each panel gets one dihedral (the mean of the linear law).
-    Checks compare panel dihedral. See `root_section.md`.
+    Checks compare panel dihedral. See `geometry/decisions/root_section.md`.
 13. **Loft built with pySpline, not `liftingSurface` itself.** Same construction, but one section
     parameter, so the nose split is exact (`liftingSurface` missed it by 0.2–0.5 % chord). The
-    surfaces sit in a pyGeo object (IGES works). See `loft.md`.
+    surfaces sit in a pyGeo object (IGES works). See `geometry/decisions/loft.md`.
 14. **Twist between stations is not exactly linear** on straight panels (trailing edge differs by
-    0.1–0.3 % chord from a linear-twist section). Straight panels win. See `loft.md`.
+    0.1–0.3 % chord from a linear-twist section). Straight panels win. See `geometry/decisions/loft.md`.
 15. **Tip left open** (no cap surface), as `tip='none'`. **No STEP export** (pyGeo has none).
 16. **BWB label threshold** root / outer-half mean chord lowered from **2.5 to 2.2**. Why: 2 of 1,500
     random BWB-range wings (the wide corner, root 1.1 m on 0.75 m semi-span) measure 2.39–2.5 with

@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import numpy as np
 
-# Starting thresholds (Stage 1 brief). Changes are recorded in decisions/OPEN_DECISIONS.md.
+# Starting thresholds (Stage 1 brief). Changes are recorded in Stage 0_Decisions/OPEN_DECISIONS.md.
 T = {
     "bwb_root_over_semispan": 0.5,
-    "bwb_root_over_outer": 2.2,     # brief: 2.5; lowered, see decisions/OPEN_DECISIONS.md
+    "bwb_root_over_outer": 2.2,     # brief: 2.5; lowered, see Stage 0_Decisions/OPEN_DECISIONS.md
     "bwb_root_over_outer_with_loss": 2.0,
     "bwb_root_loss": 0.25,          # share of root chord lost ...
     "bwb_loss_span": 0.30,          # ... within this share of the span

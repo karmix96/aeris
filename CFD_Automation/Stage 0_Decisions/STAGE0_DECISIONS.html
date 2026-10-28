@@ -1,0 +1,372 @@
+<title>CFD Automation Stage 0</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: an engineering data sheet. Header, plain-word key, then one table per decision group; values in mono, source shown as a tag. */
+:root {
+  --bg: #F3F6F9;
+  --surface: #FFFFFF;
+  --ink: #142230;
+  --muted: #566573;
+  --line: #D6DEE6;
+  --accent: #0C5EA8;
+  --pub: #1E7A4C;
+  --own: #9A5A00;
+  --warn: #B02A20;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E141A; --surface: #151E27; --ink: #E4ECF3; --muted: #98A7B5; --line: #26333F;
+    --accent: #62AEF2; --pub: #5FC48F; --own: #E6A653; --warn: #F08A80; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E141A; --surface: #151E27; --ink: #E4ECF3; --muted: #98A7B5; --line: #26333F;
+  --accent: #62AEF2; --pub: #5FC48F; --own: #E6A653; --warn: #F08A80; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--body); font-size: 15.5px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 56px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 36px; }
+
+header { display: flex; flex-direction: column; gap: 10px; border-bottom: 2px solid var(--ink); padding-bottom: 18px; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(32px, 5vw, 46px); line-height: 1.05; margin: 0; text-wrap: balance; letter-spacing: .01em; }
+.lede { margin: 0; max-width: 68ch; color: var(--muted); font-size: 16.5px; }
+
+.key { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 24px; margin: 0; padding: 0; list-style: none; }
+.key li { min-width: 0; font-size: 14.5px; }
+.key b { font-family: var(--mono); font-weight: 500; color: var(--ink); }
+.key span { color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 14px; color: var(--muted); }
+
+.tag { display: inline-block; font-family: var(--mono); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; padding: 2px 7px; border-radius: 3px; border: 1px solid currentColor; white-space: nowrap; }
+.tag.pub { color: var(--pub); }
+.tag.own { color: var(--own); }
+
+section { display: flex; flex-direction: column; gap: 12px; }
+.sec-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.sec-id { font-family: var(--mono); font-size: 13px; color: var(--surface); background: var(--ink); padding: 2px 8px; border-radius: 3px; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 28px; margin: 0; letter-spacing: .01em; text-wrap: balance; }
+.sec-note { margin: 0; color: var(--muted); max-width: 72ch; }
+
+.tbl { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+table { width: 100%; border-collapse: collapse; min-width: 860px; font-size: 14.5px; }
+th, td { text-align: left; vertical-align: top; padding: 11px 14px; border-bottom: 1px solid var(--line); }
+tr:last-child td { border-bottom: 0; }
+th { font-family: var(--mono); font-weight: 500; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: color-mix(in srgb, var(--bg) 60%, var(--surface)); }
+td.what { font-weight: 700; width: 15%; }
+td.val { font-family: var(--mono); font-weight: 500; color: var(--accent); width: 17%; font-variant-numeric: tabular-nums; }
+td.src { width: 16%; }
+td.src .ref { display: block; margin-top: 5px; color: var(--muted); font-size: 13px; }
+td p { margin: 0; }
+td p + p { margin-top: 6px; }
+.warn { color: var(--warn); font-weight: 600; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* budget bar, drawn to scale: widths are each part's % of the 3 counts */
+.budget { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.budget h3 { margin: 0; font-family: var(--display); font-weight: 600; font-size: 21px; }
+.bar { display: flex; height: 38px; border-radius: 4px; overflow: hidden; border: 1px solid var(--line); }
+.bar div { height: 100%; border-right: 1px solid var(--surface); }
+.bar div:last-child { border-right: 0; }
+.m1 { background: color-mix(in srgb, var(--accent) 100%, var(--surface)); }
+.m2 { background: color-mix(in srgb, var(--accent) 82%, var(--surface)); }
+.m3 { background: color-mix(in srgb, var(--accent) 66%, var(--surface)); }
+.m4 { background: color-mix(in srgb, var(--accent) 50%, var(--surface)); }
+.m5 { background: color-mix(in srgb, var(--accent) 36%, var(--surface)); }
+.o1 { background: color-mix(in srgb, var(--muted) 55%, var(--surface)); }
+.o2 { background: color-mix(in srgb, var(--muted) 38%, var(--surface)); }
+.o3 { background: color-mix(in srgb, var(--warn) 55%, var(--surface)); }
+.brace { display: flex; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.brace span { border-top: 2px solid var(--muted); padding-top: 4px; text-align: center; }
+.brace .mesh { flex: 0 0 65%; border-color: var(--accent); color: var(--accent); }
+.brace .rest { flex: 0 0 35%; }
+.blegend { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 6px 22px; margin: 0; padding: 0; list-style: none; font-size: 14px; }
+.blegend li { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+.sw { flex: 0 0 12px; height: 12px; border-radius: 2px; transform: translateY(1px); }
+.blegend .amt { margin-left: auto; font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); white-space: nowrap; }
+.budget p { margin: 0; color: var(--muted); font-size: 14px; max-width: 80ch; }
+
+.weak { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--warn); border-radius: 6px; padding: 16px 18px; }
+.weak h2 { font-size: 24px; margin-bottom: 8px; }
+.weak ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; max-width: 90ch; }
+
+.refs ol { margin: 0; padding-left: 22px; columns: 2 340px; column-gap: 32px; font-size: 14px; }
+.refs li { break-inside: avoid; margin-bottom: 5px; }
+a { color: var(--accent); text-underline-offset: 2px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 14px; }
+</style>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">CFD_Automation · Stage 0 · decisions</div>
+  <h1>The starting numbers, and why we chose them</h1>
+  <p class="lede">Every later study in the project is judged against these values: the meshes, the solver runs, the wing sets. Each row says what the value means in practice, why it was chosen, and where it comes from.</p>
+  <ul class="key">
+    <li><b>CD, CL, CM</b> <span>drag, lift and pitching-moment coefficients</span></li>
+    <li><b>1 drag count</b> <span>= 0.0001 of CD. A wing is typically 100–300 counts</span></li>
+    <li><b>Mesh</b> <span>the grid of cells around the wing; finer = more accurate, slower</span></li>
+    <li><b>Residual</b> <span>how far the solver still is from a finished answer on one mesh</span></li>
+  </ul>
+  <div class="legend">Source of each value:
+    <span class="tag pub">published</span> from a paper or standard
+    <span class="tag own">our choice</span> no outside source; a starting value we may revise
+  </div>
+</header>
+
+<!-- D1 -->
+<section>
+  <div class="sec-head"><span class="sec-id">D1</span><h2>How accurate the answers must be</h2></div>
+  <div class="tbl"><table>
+    <thead><tr><th>What</th><th>Value</th><th>What it means in practice</th><th>Why</th><th>Source</th></tr></thead>
+    <tbody>
+    <tr><td class="what">Comparing two wings</td><td class="val">ΔCD ≤ 2 counts<br>ΔCL ≤ 0.005</td>
+      <td><p>The error on the <em>difference</em> between two wings is at most 2 counts. Wing A 0.0210, wing B 0.0205: 5 counts apart, so B is really better. Less than 2 counts apart is a tie.</p></td>
+      <td><p>We mostly pick the better wing. Two wings meshed the same way share much of their error, and it cancels in the difference.</p></td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">Industry goal ±1 count (Morrison et al.). We start at 2.</span></td></tr>
+    <tr><td class="what">Drag of one wing</td><td class="val">max(3 % of CD, 3 counts)</td>
+      <td><p>CD 0.0200 → may be off by 6 counts. CD 0.0080 → 3 % is 2.4, so the 3-count floor applies. Used against wind-tunnel data.</p></td>
+      <td><p>Expert teams with different codes disagree by about 5 counts on the same wing. One checked workflow must do better.</p></td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">DPW spread σ = 0.00053 (Levy et al. 2013)</span></td></tr>
+    <tr><td class="what">Lift of one wing</td><td class="val">max(1 % of CL, 0.005)</td>
+      <td><p>CL 0.8 → up to 0.008. CL 0.3 → the floor 0.005 applies.</p></td>
+      <td><p>About the same relative size as the drag budget.</p></td>
+      <td class="src"><span class="tag own">our choice</span></td></tr>
+    <tr><td class="what">Pitching moment</td><td class="val">0.002</td>
+      <td><p>CM may be off by up to 0.002. It decides pitch stability.</p></td>
+      <td><p>A starting value; checked when stability is studied.</p></td>
+      <td class="src"><span class="tag own">our choice</span></td></tr>
+    <tr><td class="what">Turbulence-model error</td><td class="val">own band</td>
+      <td><p>Every drag number is reported as "± mesh error" and, separately, "± model error". A finer mesh cannot remove model error.</p></td>
+      <td><p>Mesh error is how well we solve the equations; model error is whether the equations describe real air.</p></td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">ASME V&amp;V 20-2009</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="budget">
+    <h3>How the 3 counts of drag error are shared out</h3>
+    <p>The error of one wing comes from four sources. Each gets a share of the 3 counts. A study of one source stops when its error is below its share. The mesh share is split again by direction. Bar drawn to scale.</p>
+    <div class="bar" role="img" aria-label="Stacked bar of the 3-count budget: mesh 65 % in five parts, iterations 10 %, outer boundary 10 %, numerical settings 15 %">
+      <div class="m1" style="width:22.75%"></div><div class="m2" style="width:9.75%"></div><div class="m3" style="width:13%"></div><div class="m4" style="width:9.75%"></div><div class="m5" style="width:9.75%"></div><div class="o1" style="width:10%"></div><div class="o2" style="width:10%"></div><div class="o3" style="width:15%"></div>
+    </div>
+    <div class="brace"><span class="mesh">mesh · 65 % · 1.95 counts</span><span class="rest">other · 35 % · 1.05</span></div>
+    <ul class="blegend">
+      <li><i class="sw m1"></i>Mesh: along the chord<span class="amt">35 % of mesh · 0.68</span></li>
+      <li><i class="sw m2"></i>Mesh: along the span<span class="amt">15 % · 0.29</span></li>
+      <li><i class="sw m3"></i>Mesh: away from the wall<span class="amt">20 % · 0.39</span></li>
+      <li><i class="sw m4"></i>Mesh: edges and blunt base<span class="amt">15 % · 0.29</span></li>
+      <li><i class="sw m5"></i>Mesh: wake and tip vortex<span class="amt">15 % · 0.29</span></li>
+      <li><i class="sw o1"></i>Iterations<span class="amt">10 % of total · 0.30</span></li>
+      <li><i class="sw o2"></i>Outer boundary<span class="amt">10 % · 0.30</span></li>
+      <li><i class="sw o3"></i>Numerical settings<span class="amt">15 % · 0.45</span></li>
+    </ul>
+  </div>
+
+  <div class="tbl"><table>
+    <thead><tr><th>Share</th><th>Allowed error</th><th>What it is · starting value</th><th>Warning from earlier AERIS tests</th><th>Source</th></tr></thead>
+    <tbody>
+    <tr><td class="what">Mesh, all directions</td><td class="val">1.95 counts<br>65 % of 3</td>
+      <td><p>Error from cells that are too big. Measured with 3 meshes and an error bar (GCI, D3).</p></td><td>—</td>
+      <td class="src"><span class="tag own">our choice</span><span class="ref">split; method from Celik 2008</span></td></tr>
+    <tr><td class="what">· Along the chord</td><td class="val">0.68 counts</td>
+      <td><p>Points around the airfoil. Start: cells at the leading and trailing edge ≈ 0.1 % of chord.</p></td>
+      <td><p>Carried about 88 % of the drag error.</p></td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">DPW gridding guidelines</span></td></tr>
+    <tr><td class="what">· Along the span</td><td class="val">0.29 counts</td>
+      <td><p>Sections root to tip. Start: spacing ≈ 0.1 % of semi-span at root and tip.</p></td><td>—</td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">DPW gridding guidelines</span></td></tr>
+    <tr><td class="what">· Away from the wall</td><td class="val">0.39 counts</td>
+      <td><p>Thin layers through the boundary layer. Start: first cell y+ ≈ 1; each layer ≤ 1.25 × the one before.</p></td><td>—</td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">DPW gridding guidelines</span></td></tr>
+    <tr><td class="what">· Edges and blunt base</td><td class="val">0.29 counts</td>
+      <td><p>Cells at nose, trailing edge and across its flat back face. Start: 0.1 % of chord; 8 cells across the base.</p></td>
+      <td><p>The base was the slowest part to settle.</p></td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">DPW (edges); base count is our choice</span></td></tr>
+    <tr><td class="what">· Wake</td><td class="val">0.29 counts</td>
+      <td><p>Cells behind the wing and round the tip vortex. Rules set in the mesh stage.</p></td>
+      <td><p>Refining the near wake alone moved drag 23 counts.</p></td>
+      <td class="src"><span class="tag own">our choice</span></td></tr>
+    <tr><td class="what">Iterations</td><td class="val">0.30 counts<br>10 % of 3</td>
+      <td><p>Error from stopping the solver too early. Controlled by the stopping rule (D3).</p></td>
+      <td><p>Measured 0.12 counts past 10⁻⁶: inside 0.30, and inside Celik's stricter 1/10 of mesh error (0.195).</p></td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">Celik 2008 App. A; Eça &amp; Hoekstra 2006</span></td></tr>
+    <tr><td class="what">Outer boundary</td><td class="val">0.30 counts<br>10 % of 3</td>
+      <td><p>The domain edge must be far enough not to disturb the wing. Start: ≈ 100 reference chords.</p></td>
+      <td><p>40 → 60 chords moved drag 0.6–0.7 counts: 40 is too close.</p></td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">DPW gridding guidelines</span></td></tr>
+    <tr><td class="what">Numerical settings</td><td class="val">0.45 counts<br>15 % of 3</td>
+      <td><p>Artificial smoothing the solver adds to stay stable. Too much acts like false drag. Tested by halving and doubling it on two meshes.</p></td>
+      <td><p class="warn">Halving it moved drag 12–21 counts. Biggest risk in the budget.</p></td>
+      <td class="src"><span class="tag own">our choice</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- D2 -->
+<section>
+  <div class="sec-head"><span class="sec-id">D2</span><h2>Which wings we test</h2></div>
+  <p class="sec-note">The wing generator is new, so wings are defined by rules, not by name. Counts are per wing type (BWB, conventional).</p>
+  <div class="tbl"><table>
+    <thead><tr><th>What</th><th>Value</th><th>What it means in practice</th><th>Why</th><th>Source</th></tr></thead>
+    <tbody>
+    <tr><td class="what">Reference wings</td><td class="val">5</td>
+      <td><p>Studied in depth: all mid-range; smallest area; largest area; most swept with smallest tip; most twisted. Fixed before any mesh, never swapped after a result.</p></td>
+      <td><p>A rule that works on one wing is true for one wing.</p></td>
+      <td class="src"><span class="tag own">our choice</span></td></tr>
+    <tr><td class="what">Coverage check</td><td class="val">≤ median of 1,000 random fives</td>
+      <td><p>The five must cover the training set at least as well as five picked at random: no training wing far from all five.</p></td>
+      <td><p>Proves the five are spread out, not bunched.</p></td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">Johnson, Moore &amp; Ylvisaker 1990</span></td></tr>
+    <tr><td class="what">Training set</td><td class="val">100</td>
+      <td><p>Spread evenly over all variables. The mesher must build all of them.</p></td>
+      <td><p>Latin hypercube: each range cut into 100 slices, each used once.</p></td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">McKay et al. 1979</span></td></tr>
+    <tr><td class="what">Corner set</td><td class="val">42<br><span class="num">= 34 + 8</span></td>
+      <td><p>34: each of 17 variables at its low and high end, the rest mid-range. 8: every pair of variables at all four low/high combinations. Failures stay in the list.</p></td>
+      <td><p>Shows where the rules break. 8 is the proven minimum: C(7,4) = 35 ≥ 17, while C(6,4) = 15 &lt; 17.</p></td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">Katona 1973; Kleitman &amp; Spencer 1973</span></td></tr>
+    <tr><td class="what">Hold-out set</td><td class="val">10, opened once</td>
+      <td><p>Drawn now, locked away, run once at the very end.</p></td>
+      <td><p>Looking at test wings while tuning turns them into training wings.</p></td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">Dwork et al. 2015, 2017</span></td></tr>
+    <tr><td class="what">Robustness claim</td><td class="val">0 failures in ≥ 150 → ≥ 98 %</td>
+      <td><p>If all 150 wings work, at least ~98 % of all wings in the design space will, with 95 % confidence.</p></td>
+      <td><p><span class="num">1 − 0.05<sup>1/150</sup> = 1.98 %</span> worst failure rate. Quick rule: 3 ÷ 150.</p></td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">Hanley &amp; Lippman-Hand 1983</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- D3 -->
+<section>
+  <div class="sec-head"><span class="sec-id">D3</span><h2>Flow conditions and how we measure</h2></div>
+  <div class="tbl"><table>
+    <thead><tr><th>What</th><th>Value</th><th>What it means in practice</th><th>Why</th><th>Source</th></tr></thead>
+    <tbody>
+    <tr><td class="what">Speed</td><td class="val">Mach ≤ 0.3</td>
+      <td><p>Up to ~100 m/s at sea level. Air nearly incompressible. Transonic is a later stage.</p></td>
+      <td><p>Class I and II UAVs fly well below this.</p></td>
+      <td class="src"><span class="tag own">our choice</span></td></tr>
+    <tr><td class="what">Reynolds number (mean chord)</td><td class="val">3×10⁵<br>1.5×10⁶<br>5×10⁶</td>
+      <td><p>How "big and fast" the wing is to the air: Re = ρ·V·c ÷ μ. A 0.2 m chord at 25 m/s, 1,500 m ≈ 3×10⁵. Wall cells must shrink as Re grows, so every mesh study runs at all three.</p></td>
+      <td><p>Low, middle, high end of small Class I and Class II. Mini/micro Class I (e.g. Raven) sit below 3×10⁵ and are left out.</p></td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">ISA atmosphere; Sutherland's law; aircraft data</span></td></tr>
+    <tr><td class="what">Angles of attack</td><td class="val">0°, 4°, 8°<br>+12° nose &amp; wake</td>
+      <td><p>Every study at 0, 4, 8. Nose and wake studies also at 12.</p></td>
+      <td><p>Cruise, climb, high lift. The nose needs finer cells as the angle grows.</p></td>
+      <td class="src"><span class="tag own">our choice</span></td></tr>
+    <tr><td class="what">What we watch</td><td class="val">CL, CD (pressure + friction), CM, neutral point, cp, y+</td>
+      <td><p>A study passes only if <strong>every</strong> one passes at <strong>every</strong> angle. Good lift with bad drag is a fail.</p></td>
+      <td><p>Forces can look right while the pressure is wrong; y+ checks the first wall cell.</p></td>
+      <td class="src"><span class="tag own">our choice</span></td></tr>
+    <tr><td class="what">Mesh family</td><td class="val">≥ 3 meshes<br>r ≥ 1.3</td>
+      <td><p>The same mesh at three sizes, each 1.3× finer in every direction: about 2.2× more cells per step.</p></td>
+      <td><p>Two meshes only show the answer moved; three show where it is heading.</p></td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">Celik et al. 2008</span></td></tr>
+    <tr><td class="what">Error bar</td><td class="val">GCI × 1.25</td>
+      <td><p>Grid Convergence Index from the three meshes, times 1.25 to stay safe. Least-squares version if results scatter.</p></td>
+      <td><p>Standard published procedure.</p></td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">Celik 2008; Roache 1994; Eça &amp; Hoekstra 2014</span></td></tr>
+    <tr><td class="what">Up-and-down results</td><td class="val">no error bar</td>
+      <td><p>If the answer goes up then down as the mesh gets finer, we do not quote an error bar; we find the cause.</p></td>
+      <td><p>The meshes are not yet fine enough for the method to hold.</p></td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">Celik et al. 2008</span></td></tr>
+    <tr><td class="what">Stopping rule</td><td class="val">residual 10⁻⁶<br>+ forces still<br>+ every equation ↓ 3 orders</td>
+      <td><p>A run is finished only when the residual has fallen to 10⁻⁶ of the free-stream value (ADflow <code>L2Convergence</code>), CL moves &lt; 0.05 %, CD &lt; 0.1 %, CM &lt; 0.0001, and every equation, turbulence included, has fallen 1,000×.</p>
+        <p>Stalls before 10⁻⁶ but fell 5 orders with forces still: accepted. Otherwise: needs review. Cap 30,000 iterations or 6 h.</p></td>
+      <td><p>A low residual alone does not prove the forces stopped. Measured past 10⁻⁶: 0.12 counts, inside the 0.30 share.</p><p>Fluent's 10⁻⁶ is a scaled residual (default 10⁻³); ADflow's is a fall from free stream, stricter.</p></td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">Celik 2008 App. A; ADflow docs</span></td></tr>
+    <tr><td class="what">One change per run</td><td class="val">1</td>
+      <td><p>Between two compared runs only one setting changes. In a mesh study the wing never changes.</p></td>
+      <td><p>With two changes, nobody can say which moved the result.</p></td>
+      <td class="src"><span class="tag own">our choice</span></td></tr>
+    <tr><td class="what">Turbulence model</td><td class="val">Spalart–Allmaras, no transition</td>
+      <td><p>Boundary layer treated as turbulent from the nose. At low Re, drag carries a model band.</p></td>
+      <td><p>At low Re, where the flow turns turbulent sets much of the drag, and this model does not predict it.</p></td>
+      <td class="src"><span class="tag own">our choice</span><span class="ref">current source (Crivellini 2014) does not support it</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- D4 -->
+<section>
+  <div class="sec-head"><span class="sec-id">D4</span><h2>Working rules</h2></div>
+  <div class="tbl"><table>
+    <thead><tr><th>Rule</th><th>Value</th><th>What it means in practice</th><th>Why</th><th>Source</th></tr></thead>
+    <tbody>
+    <tr><td class="what">Mesh names</td><td class="val">&lt;family&gt;_&lt;level&gt;_&lt;wing_hash8&gt;</td>
+      <td><p>Every name says which family, which size, which exact wing.</p></td>
+      <td><p>One name, one mesh. In AERIS one name once meant two meshes.</p></td>
+      <td class="src"><span class="tag own">our choice</span></td></tr>
+    <tr><td class="what">Run outcomes</td><td class="val">accepted · rejected · needs review</td>
+      <td><p>No "almost converged" or "probably fine".</p></td>
+      <td><p>Results can be counted.</p></td>
+      <td class="src"><span class="tag own">our choice</span></td></tr>
+    <tr><td class="what">Failures</td><td class="val">always counted</td>
+      <td><p>A failed wing is never removed from the list.</p></td>
+      <td><p>Otherwise success rates look better than they are.</p></td>
+      <td class="src"><span class="tag own">our choice</span></td></tr>
+    <tr><td class="what">Pass/fail limits</td><td class="val">written first</td>
+      <td><p>"A study passes if …" is written before the study runs.</p></td>
+      <td><p>Stops us adjusting the test to fit the answer.</p></td>
+      <td class="src"><span class="tag pub">published</span><span class="ref">Nosek et al. 2018</span></td></tr>
+    <tr><td class="what">Trial vs final</td><td class="val">kept apart</td>
+      <td><p>Numbers from trial meshes guide the work but never go in the paper.</p></td>
+      <td><p>Only the frozen setup is evidence.</p></td>
+      <td class="src"><span class="tag own">our choice</span></td></tr>
+    <tr><td class="what">Figures and tables</td><td class="val">made by script</td>
+      <td><p>From stored data, never by hand.</p></td>
+      <td><p>Anyone can rebuild them.</p></td>
+      <td class="src"><span class="tag own">our choice</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="weak">
+  <h2>Weak points still open</h2>
+  <ul>
+    <li><strong>Reynolds levels.</strong> The check gives Re per metre of chord, not each aircraft's real Re from its own mean chord, and mixes cruise with maximum speed. No example aircraft reaches 5×10⁶; for now it is a safety margin.</li>
+    <li><strong>Numerical settings.</strong> Earlier tests moved drag 12–21 counts against a 0.45-count share. Expect this to drive the solver settings.</li>
+    <li><strong>Iteration share.</strong> 0.30 counts is looser than Celik's 1/10-of-mesh-error rule (0.195). The measured 0.12 meets both; re-check once the mesh family is frozen.</li>
+    <li><strong>Turbulence-model source.</strong> Crivellini 2014 found Spalart–Allmaras did fairly well at low Re, so it does not back the rule. Treat the rule as our choice until a better source is found.</li>
+    <li><strong>Split of the mesh share.</strong> A plan, not a measurement. Change it only by a written decision, before new results.</li>
+  </ul>
+</section>
+
+<section class="refs">
+  <div class="sec-head"><h2>Sources</h2></div>
+  <ol>
+    <li>Morrison, Kleb, Vassberg. Observations on CFD V&amp;V from the AIAA Drag Prediction Workshops. NASA, 2014. <a href="https://ntrs.nasa.gov/citations/20140007308">NTRS</a></li>
+    <li>Levy et al. The CFD Drag Prediction Workshop Series: Summary and Retrospective, 2013. <a href="https://cfd.ku.edu/JRV/Levy.pdf">PDF</a></li>
+    <li>Celik et al. Procedure for estimation and reporting of uncertainty due to discretization in CFD. J. Fluids Eng. 130, 2008. <a href="https://qa12.asme.org/wwwasmeorg/media/ResourceFiles/Shop/Journals/JFENumAccuracy.pdf">PDF</a></li>
+    <li>Roache. A method for uniform reporting of grid refinement studies. J. Fluids Eng. 116, 1994. <a href="https://doi.org/10.1115/1.2910291">DOI</a></li>
+    <li>Eça, Hoekstra. Influence of the iterative error on numerical uncertainty, 2006. <a href="https://www.marin.nl/en/publications/on-the-influence-of-the-iterative-error-in-the-numerical-uncertainty-of-ship-viscous-flow-calculations">MARIN</a></li>
+    <li>Eça, Hoekstra. Estimation of the numerical uncertainty of CFD calculations. J. Comput. Phys. 262, 2014. <a href="https://doi.org/10.1016/j.jcp.2014.01.006">DOI</a></li>
+    <li>ASME V&amp;V 20-2009. Verification and validation in CFD and heat transfer. <a href="https://maretec.tecnico.ulisboa.pt/~maretec.daemon/html_files/VV2010_files/ValidationProcedure.pdf">summary</a></li>
+    <li>MDO Lab. ADflow options documentation. <a href="https://mdolab-adflow.readthedocs-hosted.com/en/latest/options.html">docs</a></li>
+    <li>Johnson, Moore, Ylvisaker. Minimax and maximin distance designs. JSPI 26, 1990. <a href="https://doi.org/10.1016/0378-3758(90)90122-B">DOI</a></li>
+    <li>McKay, Beckman, Conover. Latin hypercube sampling. Technometrics 21, 1979. <a href="https://doi.org/10.1080/00401706.1979.10489755">DOI</a></li>
+    <li>Katona 1973; Kleitman &amp; Spencer 1973. Binary covering arrays. <a href="https://doi.org/10.1007/BF02018457">DOI</a> · <a href="https://doi.org/10.1016/0012-365X(73)90098-8">DOI</a></li>
+    <li>Dwork et al. The reusable holdout. Science 349, 2015. <a href="https://doi.org/10.1126/science.aaa9375">DOI</a></li>
+    <li>Hanley, Lippman-Hand. If nothing goes wrong, is everything all right? JAMA 249, 1983. <a href="https://doi.org/10.1001/jama.1983.03330370053031">DOI</a></li>
+    <li>Nosek et al. The preregistration revolution. PNAS 115, 2018. <a href="https://doi.org/10.1073/pnas.1708274114">DOI</a></li>
+    <li>Crivellini et al. Laminar separation bubble on low-Re airfoils: RANS modelling. J. Phys. Conf. Ser. 501, 2014. <a href="https://doi.org/10.1088/1742-6596/501/1/012024">DOI</a></li>
+  </ol>
+</section>
+
+<footer>Mirrors <span class="num">CFD_Automation/Stage 0_Decisions/STAGE0_DECISIONS.md</span> in the aeris repository (commit 5441b1e). If the two ever differ, the repository file wins.</footer>
+</div>

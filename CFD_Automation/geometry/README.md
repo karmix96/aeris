@@ -37,5 +37,5 @@ A wing folder: `vector.json`, `stations.json`, `sections/*.dat`, `measured.json`
 `gates.json`, `span_table.csv`, `summary.json`, and `wing.igs` for single builds. A refused wing
 has only `refusal.json`. The hold-out set is never built here.
 
-Decision notes: `../decisions/` (trailing_edge, loft, root_section, conventional_ranges,
-OPEN_DECISIONS).
+Decision notes: `decisions/` (trailing_edge, loft, root_section, conventional_ranges).
+Open decisions: `../Stage 0_Decisions/OPEN_DECISIONS.md`.

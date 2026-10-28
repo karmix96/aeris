@@ -1,15 +1,16 @@
 {
  "wing_type": "conventional",
  "set": "corner2",
- "code_version": "0.1.0",
+ "code_version": "0.5.0",
+ "loft_backend": "numpy",
  "wings": [
   {
    "index": 0,
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "4e146101f0ff66ecfefc5db8653de9d7d31a86d01f14d32527cb96df36ab97c2",
-   "surface_hash": "fb9ec7b7bb0204d4002005846ce493da83f63051d6568ad112c7674d7785e5e7",
+   "input_hash": "55e1d8c75c0ca8517d800f7a976a4c2aec4438ee3d4b0e93709a693d93533bc2",
+   "surface_hash": "98d2f17eebbcc1d1e9b93f38f10984af8ad2672ef8c1d627ed2c5019e9280741",
    "labels": [
     "conventional",
     "forward_swept",
@@ -18,10 +19,10 @@
     "anhedral"
    ],
    "vector": {
-    "root_chord_m": 0.15,
-    "c2_ratio": 0.85,
-    "c3_ratio": 0.65,
-    "c4_ratio": 0.4,
+    "root_chord_m": 0.13,
+    "c2_ratio": 0.8,
+    "c3_ratio": 0.7,
+    "c4_ratio": 0.5,
     "semi_span_m": 2.0,
     "b3_ratio": 0.2,
     "split_ratio": 0.3,
@@ -43,8 +44,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "3fddff9bb8aed232c55ee3b96a70098baea2ddebccd2f2e9cbf2a5df0021494a",
-   "surface_hash": "fb2afdd3ef66ebee2443ddaa4194010a1e9f9e4dd9e9b19e22c3435ae74c7679",
+   "input_hash": "877f536a97719deed3cb997344c944369e4879e4149898b1072814d1ea265a6b",
+   "surface_hash": "6918f79675c83c71ea9629139736b73a681e393e6617dcc8ae75ea316b1e64f5",
    "labels": [
     "conventional",
     "aft_swept",
@@ -53,7 +54,7 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 1.35,
+    "root_chord_m": 0.6,
     "c2_ratio": 1.0,
     "c3_ratio": 1.0,
     "c4_ratio": 1.0,
@@ -78,8 +79,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "d88cd76a3a0197479cb8efd6b62a8d772b7e483baf6985159ff53b3b0d9f6234",
-   "surface_hash": "dc946eef915dc98225648f1f3f86ff8f0d21366ca8d33408f749ddc52ce3ec66",
+   "input_hash": "3679ae428c58d132802fda654cc1736ee7734c20a638a319b79a3962072e388d",
+   "surface_hash": "41a82483cbf46fb6fc8482ec280572fc2c235f7c7873bd47daaf299ac147f630",
    "labels": [
     "conventional",
     "aft_swept",
@@ -88,7 +89,7 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 1.35,
+    "root_chord_m": 0.6,
     "c2_ratio": 1.0,
     "c3_ratio": 1.0,
     "c4_ratio": 1.0,
@@ -113,8 +114,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "76c68ca44d3e6127b45b3605817af79d93420027f75f5612815be7ccd714ebf0",
-   "surface_hash": "85653a2fcafa031a111d01e6051fbd71bfdd97b2363a5996327d96a7d47a6ec7",
+   "input_hash": "ad737cbd449be596fc29d00721206a1941b39194c34fb9879c02bc6b67809fa0",
+   "surface_hash": "95c9f6615bc7bf04e92a15ffbfe45724493e5c6ca8ee50d6b5a61d5f2af9a3dd",
    "labels": [
     "conventional",
     "forward_swept",
@@ -122,7 +123,7 @@
     "varying_dihedral"
    ],
    "vector": {
-    "root_chord_m": 1.35,
+    "root_chord_m": 0.6,
     "c2_ratio": 1.0,
     "c3_ratio": 1.0,
     "c4_ratio": 1.0,
@@ -147,8 +148,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "cf52ff4edef10c473f176e8a6f70463a88a7927c594268a9291e90971a207c5b",
-   "surface_hash": "61ba37c5cd32a2ff678e8495949559d0cb6d3c0946488974e60a1184c126e06c",
+   "input_hash": "b67a65aa24d6e1b987ea2c7f44ad8320f3ecb0858320621b9bcb6a8c1dd74379",
+   "surface_hash": "8614497a7c7248cb501b3dd2dd37a89021272f357e160b5abf4f59122346de3d",
    "labels": [
     "conventional",
     "forward_swept",
@@ -159,10 +160,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 1.35,
-    "c2_ratio": 0.85,
-    "c3_ratio": 0.65,
-    "c4_ratio": 0.4,
+    "root_chord_m": 0.6,
+    "c2_ratio": 0.8,
+    "c3_ratio": 0.7,
+    "c4_ratio": 0.5,
     "semi_span_m": 6.0,
     "b3_ratio": 0.5,
     "split_ratio": 0.7,
@@ -184,8 +185,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "72bb202526b1687c81b2e9272ca875771417d8b95a113ebfefd8ba329cc5555a",
-   "surface_hash": "25bdcb9d9e110fc6a93ee9684e8d545d2c685e432c2517d7ed489916c93aa40f",
+   "input_hash": "832b151e30f592805edfd53c3b84a43a7b43e635f672663698bb6d74cc21ede4",
+   "surface_hash": "d73001135ae5b7c249582e8bd2698b0131b64016dad4653f93c2e17d4576d272",
    "labels": [
     "conventional",
     "aft_swept",
@@ -196,10 +197,10 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.15,
+    "root_chord_m": 0.13,
     "c2_ratio": 1.0,
-    "c3_ratio": 0.65,
-    "c4_ratio": 0.4,
+    "c3_ratio": 0.7,
+    "c4_ratio": 0.5,
     "semi_span_m": 6.0,
     "b3_ratio": 0.2,
     "split_ratio": 0.3,
@@ -221,8 +222,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "62ca736ca0eae43829227546b17144f9b0ffb7a5f2a8859aa235d6c52df23ea8",
-   "surface_hash": "5cf846ed91651e121ee06d97620b2b19edf1a5f36962244d251d4a368eb60c64",
+   "input_hash": "d819b075acff6606a5bc5d75fd8ec683015f10ce812db397702706cc470b8cd4",
+   "surface_hash": "e7d3c5cb98d6fc25901f5b32e937f67429db4f7317d7b9027c31c45c9bcf62ee",
    "labels": [
     "conventional",
     "aft_swept",
@@ -231,10 +232,10 @@
     "varying_dihedral"
    ],
    "vector": {
-    "root_chord_m": 0.15,
-    "c2_ratio": 0.85,
+    "root_chord_m": 0.13,
+    "c2_ratio": 0.8,
     "c3_ratio": 1.0,
-    "c4_ratio": 0.4,
+    "c4_ratio": 0.5,
     "semi_span_m": 2.0,
     "b3_ratio": 0.5,
     "split_ratio": 0.3,
@@ -256,21 +257,20 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "4d4cdd625d0d0bcee21dc2dd758da4fc19fd7cd26245c8a9f35b229f784e891b",
-   "surface_hash": "3a2f643ad3f37c70b02daeeea551a15e40bb1b7a789c4bdb2fd424303651c8bc",
+   "input_hash": "51c0cf3ea5936bca912b707627074495e9c1990c05e7bd4baecbcc3e15a04f40",
+   "surface_hash": "34354a8973045ac96a11a7b6341aace7ebed7b4228440928ae18d72415026a42",
    "labels": [
     "conventional",
     "aft_swept",
-    "rectangular",
     "cranked",
     "washout",
     "dihedral",
     "varying_dihedral"
    ],
    "vector": {
-    "root_chord_m": 0.15,
-    "c2_ratio": 0.85,
-    "c3_ratio": 0.65,
+    "root_chord_m": 0.13,
+    "c2_ratio": 0.8,
+    "c3_ratio": 0.7,
     "c4_ratio": 1.0,
     "semi_span_m": 2.0,
     "b3_ratio": 0.2,

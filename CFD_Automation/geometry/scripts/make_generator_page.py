@@ -60,17 +60,23 @@ MEANING = {
 
 DECISIONS = [
     ("Inputs", [
-        ("One generator, one YAML", "<code>wing_type: bwb | conventional | mixed</code>; <code>mixed</code> draws both with stated shares (50/50).",
-         "One design space and one contract. Two generators would mean two of each.", "req", ""),
+        ("One generator, one YAML", "<code>wing_type: bwb | conventional | tapered | mixed</code>; <code>mixed</code> draws the types with stated shares (now 0.5 / 0.25 / 0.25).",
+         "One design space and one contract. Two generators would mean two of each. The shares are our choice.", "req", ""),
+        ("Three wing types", "<code>bwb</code> (tailless); <code>conventional</code> (cranked: chord and sweep may change at b1, b2); <code>tapered</code> (straight edges root to tip, rectangular at taper 1).",
+         "Drawn freely, a straight taper has zero chance: 100 of 100 conventional wings came out cranked. Tapered wings are the most common real wings. Decided 29 Oct 2026.", "req", ""),
         ("Same 18 variables for every type", "Each type has its own range block in <code>configs/wing.yaml</code>.",
          "One vector shape for sampling, hashing and ML.", "own", ""),
         ("Everything varies", "A value is fixed only through <code>pinned:</code>.", "A study may pin; the default never does.", "req", ""),
-        ("Chord law", "<code>stations</code>: c2, c3, c4 drawn freely. <code>linear_taper</code>: c2, c3 follow from the tip chord.",
-         "Straight-tapered wings need the second option.", "req", ""),
+        ("Chord law", "<code>stations</code>: c2, c3, c4 as fractions of the root (BWB). <code>per_panel</code>: each panel's own taper, at most 1 (cranked). <code>linear_taper</code>: one taper, c2 and c3 follow (tapered).",
+         "Before, 46 of 100 conventional wings got wider toward the tip. With per-panel ratios no chord grows outboard, and the Latin hypercube stays intact.", "req", ""),
+        ("Sweep law", "<code>panels</code>: one sweep per panel. <code>one</code>: sweep2 = sweep3 = sweep1 (tapered).",
+         "Straight leading edge for tapered wings. Variables a law computes need no range.", "req", ""),
         ("Span mode", "<code>semi_span</code> (metres) or <code>root_chord_fractions</code> (semi-span read in root chords).",
          "BlendedNet gives spans in root chords. Conventional uses it so the aspect ratio stays 4–16.5.", "own", "open"),
-        ("Ranges", "BWB: AERIS <code>bwb.yaml</code>, sweeps signed, dihedral 0–3° now allowed at b0 and b1. Conventional: proposed (root chord 0.15–1.35 m, AR 4–16.5, taper ≥ 0.4, sweep −10° to +20°, dihedral −3° to +6°).",
-         "BWB keeps the AERIS space. Conventional covers Raven to Hermes-450 size and reaches Re 5 × 10⁶.", "own", "open"),
+        ("Size ranges from real wings", "BWB root chord 0.40–0.80 m, semi-span 0.45–1.40 m. Conventional and tapered root chord 0.13–0.60 m, semi-span 2–6 root chords.",
+         "Every real Class I–II wing with a published area has a generated wing within 10 % in span and mean chord (see <a href='#real'>Real wings</a>). Before, the root chord was stretched to 1.35 m only to reach Re 5 × 10⁶. Decided 29 Oct 2026.", "meas", ""),
+        ("Shape ranges", "BWB chord ratios and sweeps from AERIS; dihedral 0–3° now allowed at b0, b1. Conventional and tapered: sweep −10° to +20°, dihedral −3° to +6°, taper down to 0.28 (cranked) or 0.40 (tapered).",
+         "No source for these yet.", "own", "open"),
         ("Wing class", "<code>wing_class: I | II</code> sets the trailing-edge floor.", "Manufacturing differs by size.", "req", ""),
     ]),
     ("Planform", [
@@ -95,7 +101,7 @@ DECISIONS = [
         ("One way to read every file", "Leading edge = the point farthest from the trailing-edge midpoint; unit chord; both sides resampled on cosine x, in √x.",
          "The nose tangent is square to the chord, and every section has the same points, so the loft can join them.", "own", ""),
         ("Typo points dropped", "A single point that spikes off a smooth line is removed (18 database files, e.g. sc20412 at x/c 0.73).",
-         "One bad point would put a bump in the surface.", "own", "open"),
+         "One bad point would put a bump in the surface. Kept by your decision on 29 Oct 2026; each dropped point is logged.", "req", ""),
     ]),
     ("Trailing edge", [
         ("Thickness rule", "Class I: max(0.5 mm, 0.2 % of local chord). Class II: max(1.0 mm, 0.2 %).",
@@ -111,7 +117,7 @@ DECISIONS = [
     ]),
     ("Loft (the surface the mesher reads)", [
         ("Straight panels: kSpan = 2", "Sections only at b0–b3 plus switch points.",
-         "kSpan 3 cut the corners at panel breaks by up to 4.8 % of chord; kSpan 2 is exact. It leaves a sharp kink at b1 and b2: see fix 4.", "meas", "fix"),
+         "kSpan 3 cut the corners at panel breaks by up to 4.8 % of chord; kSpan 2 is exact. It leaves a sharp kink at b1 and b2: see fix 3.", "meas", "fix"),
         ("Built with pySpline, one parameter s = √(x/c)", "Same construction as pyGeo's <code>liftingSurface</code>, held in a pyGeo object.",
          "<code>liftingSurface</code> split upper and lower 0.2–0.5 % of chord away from the nose. Here the split is exact and u = x/c on every station.", "meas", ""),
         ("Ask, never interpolate", "The mesher asks <code>upper(u, v)</code> and <code>lower(u, v)</code>; a 401-point table maps v to span.",
@@ -126,15 +132,15 @@ DECISIONS = [
         ("Labels by rule", "BWB or conventional; swept, cranked, rectangular, washout, dihedral, aspect ratio. BWB threshold lowered from 2.5 to 2.2.",
          "Two wide BWB corners measured 2.39–2.5; conventional wings reach at most 1.84. Checked on 20 hand-labelled wings.", "meas", ""),
         ("Hash", "sha256 of the vector, the type's YAML block, the trailing-edge rule, the airfoil file contents and the code version.",
-         "Content, never file names. Weak: the code version is a string set by hand: see fix 3.", "own", "fix"),
+         "Content, never file names. Weak: the code version is a string set by hand: see fix 2.", "own", "fix"),
     ]),
     ("Sets", [
-        ("Five sets per type", "Training 100 (Latin hypercube, seeds 1001/1002); corner 1: 36 (each variable at each bound); corner 2: 8 (every pair at all four low/high combinations); reference 5 (by rule); hold-out 10 (seeds 2001/2002).",
+        ("Five sets per type", "Training 100 (Latin hypercube, seeds 1001/1002/1003); corner 1: each free variable at each bound (36, or 28 for tapered); corner 2: every pair at all four low/high combinations (8 or 7); reference 5 (by rule); hold-out 10 (seeds 2001/2002/2003).",
          "Training fills the inside, corners test the edges, the hold-out is the one honest test.", "req", ""),
         ("Failures stay in the list", "A refused wing keeps its row with the gate and the reason. Corners are never nudged inside.",
          "A failure marks the edge of the space.", "req", ""),
         ("Hold-out is never built here", "Only the vectors are saved.", "It is opened once, after the workflow is frozen.", "req", ""),
-        ("Reference wings spread well", "Coverage distance BWB 1.49, conventional 1.50, against a median of 1.84 for 1,000 random sets of five (lower is better).",
+        ("Reference wings spread well", "Coverage distance BWB 1.49, conventional 1.50, tapered 1.37, against a median of 1.84 / 1.84 / 1.65 for 1,000 random sets of five (lower is better).",
          "Five wings must stand for the whole set.", "meas", ""),
     ]),
 ]
@@ -144,11 +150,8 @@ FIXES = [
      "Four station dihedrals become three panel angles. [0, 3, 3, 6], [3, 0, 6, 3] and [1.5, 1.5, 4.5, 4.5] give the same wing to 0.003°. "
      "The gate compares with the derived angle, so it passes anyway.",
      "Use three panel dihedrals."),
-    ("The conventional training set is not realistic.",
-     "46 of 100 wings get wider toward the tip on at least one panel. 100 of 100 are labelled cranked; none is straight tapered and one is rectangular.",
-     "Force c2 ≥ c3 ≥ c4 and draw part of the set with <code>linear_taper</code>."),
     ("The hash ignores code changes.",
-     "It uses <code>__version__</code>, a string bumped by hand. The manifests were built with 0.1.0; the code is now __VERSION__ and the hash did not notice.",
+     "It uses <code>__version__</code>, a string bumped by hand. Code changes between bumps leave the hash the same.",
      "Hash the source files (or the git commit)."),
     ("The loft has sharp kinks at b1, b2 and the switch sections.",
      "Correct for straight panels, but the S8 mesher does not place stations at the breaks. Flat mesh faces would then cut the corner, about 0.5 % of chord (a rough estimate).",
@@ -156,12 +159,13 @@ FIXES = [
 ]
 
 OPEN = [
-    ("Conventional ranges", "Keep the proposed ranges (root chord up to 1.35 m so the mean chord reaches Re 5 × 10⁶)?"),
-    ("BWB Reynolds number", "BWB stops at Re ≈ 3 × 10⁶. Widen the size range, or run 5 × 10⁶ as a flow condition only?"),
-    ("Straight-tapered wings in training", "Use <code>linear_taper</code> for part of the set, or pin the sweeps equal? (Linked to fix 2.)"),
+    ("Class II wing areas", "Hermes 450, Watchkeeper, Aerostar, Shadow and Ranger publish a span (4.3–10.9 m) but no wing area. Until they are found (Jane's, papers), the ranges stop at the Pioneer (5.15 m): Class I and small Class II only."),
+    ("Re levels", "Now 3 × 10⁵, 1.5 × 10⁶, 2 × 10⁶: the upper two are close. Move the middle to about 6 × 10⁵? Mini Class I wings fly at 1.2–2 × 10⁵, below the lowest level."),
+    ("Label for slim tailless wings", "About a quarter of the bwb-type wings are slim flying wings without a centre body; the rule labels them \"conventional\", which reads like \"has a tail\". Rename to \"flying wing\"?"),
+    ("Mixed shares", "BWB 0.5, cranked 0.25, tapered 0.25. Keep?"),
+    ("Shape ranges", "Sweeps, twists, dihedrals and tapers have no source yet. Take them from real wings too?"),
     ("Trailing-edge floor", "Confirm 0.5 mm / 1.0 mm with the builder. Run the 0.1 / 0.2 / 0.3 % sensitivity once CFD works."),
     ("Airfoil search order", "Project folder → AERIS database → NACA formula. Keep? 22 database files are refused."),
-    ("Typo points", "Keep dropping single spikes, or fix the 18 files?"),
     ("NACA 25118 trailing edge", "Made from the formula (open edge, 0.38 %). OpenVSP may close it differently. Check with a BlendedNet STEP file."),
     ("NASA CRM", "Four stations and stand-in sections: a shape check only, or add a many-station mode for drag validation?"),
     ("BlendedNet twist and dihedral", "Set to zero because neither paper states them. Accept?"),
@@ -174,6 +178,7 @@ LIMITS = [
     "<strong>Straight edges only, three panels at most.</strong> No curved BWB centre body, no elliptic planform, no fourth panel.",
     "<strong>Airfoil shape is not a variable.</strong> Any named file can be used, and a station can draw from a list, but thickness and camber are not sampled continuously. The default sets use one section per station (t/c 11–15 %).",
     "<strong>No winglets, rounded or raked tips, fuselage, gaps.</strong> Dihedral is at most 10° (BWB) and 6° (conventional).",
+    "<strong>Class I and small Class II only.</strong> Sizes stop at the largest real wing with a published area (Pioneer, 5.15 m span). Wings like the Hermes 450 (10.5 m) are outside until their areas are found.",
     "<strong>0 refusals at the corners.</strong> The space is too safe to show where anything breaks. Robustness must be shown on the mesher, with lofts it has never seen (primer Track 5).",
     "<strong>Published wings:</strong> M6 and CRM are transonic (phase 1 stops at Mach 0.3). CRM is approximate. BlendedNet twist and dihedral are guessed as zero. Every tip is a flat cut, including the M6's rounded one.",
 ]
@@ -268,6 +273,26 @@ def verification_table() -> str:
                    f"<td class='num'>{r['edges_max_pct']:.0e}</td><td class='num'>{cad_s}</td>"
                    f"<td>{'<span class=\"flag ok\">pass</span>' if r['pass'] else '<span class=\"flag fix\">fail</span>'}</td></tr>")
     return "\n".join(out)
+
+
+def real_table() -> tuple[str, dict]:
+    """Rows of the real-UAV table and its summary, from docs/real_uavs.json."""
+    d = json.loads((DOCS / "real_uavs.json").read_text())
+    fam = {"tailless": "Tailless", "tailed": "With tail", "delta": "Delta + tail"}
+    use = {"ranges": "<span class='flag ok'>sets range</span>", "span": "<span class='muted'>span only</span>",
+           "none": "<span class='flag open'>not used</span>"}
+    out = []
+    for r in sorted(d["rows"], key=lambda r: (r["family"], r["span"])):
+        num = lambda x, f: "—" if x in (None, "") else f.format(x)  # noqa: E731
+        re_ = (f"{r['re_low']:.1e} – {r['re_high']:.1e}".replace("e+0", "e") if r.get("re_low") and r.get("re_high") else "—")
+        out.append(
+            f"<tr><td class='what'>{html.escape(r['name'])}</td><td>{fam[r['family']]}</td><td>{r['class']}</td>"
+            f"<td class='num'>{num(r['span'], '{:.2f}')}</td><td class='num'>{num(r['area'], '{:.3g}')}</td>"
+            f"<td class='num'>{num(r.get('mean_chord'), '{:.3f}')}</td><td class='num'>{num(r.get('aspect_ratio'), '{:.1f}')}</td>"
+            f"<td class='num'>{num(r['cruise'], '{:.1f}')} / {num(r['max'], '{:.1f}')}</td><td class='num'>{re_}</td>"
+            f"<td>{use[r['use']]}{'<br><span class=muted>' + html.escape(r['note']) + '</span>' if r.get('note') else ''}</td>"
+            f"<td class='src'><a href='{html.escape(r['source'])}'>source</a></td></tr>")
+    return "\n".join(out), d["summary"]
 
 
 def decisions_html() -> str:
@@ -397,23 +422,23 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
 <header>
   <div class="eyebrow">CFD_Automation · Stage 1 · geometry · code __VERSION__</div>
   <h1>Wing Generator</h1>
-  <p class="lede">Eighteen numbers go in; one exact wing surface comes out, measured, labelled and checked. One generator and one YAML file make BWB and conventional wings. Every later stage (mesh, solver, data) reads only this surface.</p>
-  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#fix">Fix before Stage 2</a><a href="#decisions">Design decisions</a><a href="#variables">The 18 numbers</a><a href="#checks">Checks and results</a><a href="#open">Open decisions</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
+  <p class="lede">Eighteen numbers go in; one exact wing surface comes out, measured, labelled and checked. One generator and one YAML file make BWB, cranked and tapered wings, sized like real Class I and II UAVs. Every later stage (mesh, solver, data) reads only this surface.</p>
+  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#fix">Fix before Stage 2</a><a href="#decisions">Design decisions</a><a href="#real">Real wings and Re</a><a href="#variables">The 18 numbers</a><a href="#checks">Checks and results</a><a href="#open">Open decisions</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
 </header>
 
 <section id="glance">
   <h2>At a glance</h2>
   <div class="three">
-    <div class="box"><h3>In</h3><div class="big">18 numbers + a wing type</div><p>From <code>configs/wing.yaml</code>: chords, spans, sweeps, twists, dihedrals, and an airfoil per station.</p></div>
+    <div class="box"><h3>In</h3><div class="big">18 numbers + a wing type</div><p>From <code>configs/wing.yaml</code>: chords, spans, sweeps, twists, dihedrals, and an airfoil per station. Types: BWB, conventional (cranked), tapered.</p></div>
     <div class="box"><h3>Out</h3><div class="big">One surface, checked</div><p>Upper, lower and trailing-edge base, read as <code>upper(u, v)</code>. Plus measured values, labels, four refusing checks, a hash, IGES.</p></div>
     <div class="box"><h3>Evidence</h3><div class="big">__OK__ of __BUILT__ wings pass</div><p>Sampled wings, both types, 0 refused (built with __SETVER__). __PUBOK__ of __PUB__ published wings verified. Tests: __TESTS__.</p></div>
-    <div class="box verdict"><h3>Verdict</h3><div class="big">Ready for Stage 2 after four fixes</div><p>Not yet "any wing": straight panels only, no airfoil shape variable. Sets must be rebuilt: __STALE__</p></div>
+    <div class="box verdict"><h3>Verdict</h3><div class="big">Ready for Stage 2 after three fixes</div><p>Not yet "any wing": straight panels only, no airfoil shape variable. Sets must be rebuilt: __STALE__</p></div>
   </div>
 </section>
 
 <section id="fix" class="weak">
   <h2>Fix before Stage 2</h2>
-  <p class="muted">Each fix changes the hashes, so do all four before one rebuild.</p>
+  <p class="muted">Each fix changes the hashes, so do all three before one rebuild. Done on 29 Oct 2026: the unrealistic conventional set (tapered type and per-panel chords).</p>
   <ol>
 __FIXES__
   </ol>
@@ -435,6 +460,26 @@ __FIXES__
 __DECISIONS__
     </tbody>
   </table></div>
+</section>
+
+<section id="real">
+  <h2>Real wings and the Reynolds number</h2>
+  <p>Your rule (29 Oct 2026): take the sizes from real Class I and II UAVs, compute the Re they fly at, and if it does not reach 5 × 10⁶, lower the top Re level instead of stretching the wings. Data and links: <code>configs/real_uavs.yaml</code>; check: <code>scripts/real_uav_check.py</code>.</p>
+  <div class="three">
+    <div class="box"><h3>Real wings fly at</h3><div class="big">Re __RE_LO__ – __RE_HI__</div><p>Lowest: Black Swift S0 cruising at 3,048 m. Highest: AAI Pioneer at top speed, sea level. Mean chord = wing area / span.</p></div>
+    <div class="box verdict"><h3>So the top Re level</h3><div class="big">5 × 10⁶ → 2 × 10⁶</div><p>No wing of our families reaches 5 × 10⁶. Only the Sperwer does: a delta wing, outside our families, area from a secondary site. Levels now 3 × 10⁵, 1.5 × 10⁶, 2 × 10⁶.</p></div>
+    <div class="box"><h3>Generator covers them</h3><div class="big">__COVER__</div><p>Each real wing with a published area has a generated wing within 10 % in span and mean chord. BWB __ENV_BWB__; conventional __ENV_CONV__.</p></div>
+    <div class="box"><h3>Gap</h3><div class="big">Big Class II unknown</div><p>Hermes 450 (10.5 m), Watchkeeper (10.9 m) and others publish no wing area. The sizes stop at the Pioneer (5.15 m span) until those are found.</p></div>
+  </div>
+  <div class="card">__PNG_REAL__</div>
+  <p class="cap">Clouds: 2,000 generated wings per type (green BWB, blue conventional and tapered). Red: real wings with a published area. Dotted lines: real wings with a published span only.</p>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>Aircraft</th><th>Family</th><th>Class</th><th>Span m</th><th>Area m²</th><th>Mean chord m</th><th>AR</th><th>Cruise / max m/s</th><th>Re low – high</th><th>Use</th><th>Source</th></tr></thead>
+    <tbody>
+__REAL__
+    </tbody>
+  </table></div>
+  <p class="muted">Re low = cruise at 3,048 m; Re high = top speed (cruise if none) at sea level; air from Stage 0. Family from a text source or, where none says it, from photos (marked K in the YAML). Only wings with a published area set the ranges.</p>
 </section>
 
 <section id="variables">
@@ -528,7 +573,16 @@ def main() -> None:
     fixes = "\n".join(
         f"<li class='fixrow'><strong>{t}</strong>{e.replace('__VERSION__', __version__)} <span class='do'>Do: {d}</span></li>"
         for t, e, d in FIXES)
-    page = (PAGE.replace("__GIF_BUILD__", img("how_a_wing_is_built.gif", "Seven-step animation of one wing being built"))
+    real_rows, real = real_table()
+    env = real["envelope"]
+    page = (PAGE.replace("__REAL__", real_rows)
+                .replace("__PNG_REAL__", img("real_uavs.png", "Real wings against generated wings: span and mean chord"))
+                .replace("__RE_LO__", f"{real['re_low_min']:.1e}".replace("e+0", " × 10^").replace(" × 10^5", " × 10⁵"))
+                .replace("__RE_HI__", f"{real['re_high_max']:.1e}".replace("e+0", " × 10^").replace(" × 10^6", " × 10⁶"))
+                .replace("__COVER__", "all real wings" if real["all_covered"] else "NOT all real wings")
+                .replace("__ENV_BWB__", f"span {env['bwb']['span_m'][0]:.1f}–{env['bwb']['span_m'][1]:.1f} m, mean chord {env['bwb']['mean_chord_m'][0]:.2f}–{env['bwb']['mean_chord_m'][1]:.2f} m")
+                .replace("__ENV_CONV__", f"span {env['conventional']['span_m'][0]:.1f}–{env['conventional']['span_m'][1]:.1f} m, mean chord {env['conventional']['mean_chord_m'][0]:.2f}–{env['conventional']['mean_chord_m'][1]:.2f} m")
+                .replace("__GIF_BUILD__", img("how_a_wing_is_built.gif", "Seven-step animation of one wing being built"))
                 .replace("__GIF_REF__", img("published_wings.gif", "Animation of the published wings rebuilt by the generator"))
                 .replace("__PNG_TOP__", img("published_wings_topviews.png", "Top views of all published wings"))
                 .replace("__PNG_CRM__", img("crm_check.png", "CRM chord and twist against the published table"))

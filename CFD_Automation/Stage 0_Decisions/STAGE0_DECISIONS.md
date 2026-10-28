@@ -239,7 +239,7 @@ The wing generator is new, so the wings are defined by **rules**, not by name.
 - **Why:** Class I and II UAVs fly well below this.
 - **Source:** our choice.
 
-### Reynolds numbers: 3 × 10⁵, 1.5 × 10⁶, 5 × 10⁶ (on the mean chord)
+### Reynolds numbers: 3 × 10⁵, 1.5 × 10⁶, 2 × 10⁶ (on the mean chord; top was 5 × 10⁶ until 29 Oct 2026)
 - **In practice:** the Reynolds number says how "big and fast" a wing is for the air:
   Re = air density × speed × chord ÷ air viscosity. A small, slow wing has low Re; a large, fast
   wing has high Re. Example: a 0.2 m chord at 25 m/s and 1,500 m gives about 3 × 10⁵.
@@ -267,6 +267,14 @@ Example: 6.06e4 × 24.7 = 1.50e6 per metre. Reaching 3 × 10⁵ needs 3e5 / 1.50
 
 Result: small Class I and Class II sit between 3 × 10⁵ and about 3 × 10⁶. Mini/micro Class I
 (Raven, 1.4 m span) sit below 3 × 10⁵. 5 × 10⁶ is a safe upper end.
+
+**Update 29 Oct 2026: top level lowered to 2 × 10⁶.** The check above used chords guessed per
+aircraft. A sourced table of real Class I–II wings with a published wing area
+(`geometry/configs/real_uavs.yaml`) gives Re 1.2 × 10⁵ to 2.1 × 10⁶ (mean chord = area / span;
+cruise at 3,048 m to top speed at sea level). The highest is the AAI Pioneer (Class II, 5.15 m span,
+mean chord 0.549 m, 56.7 m/s). No wing of our families reaches 5 × 10⁶, so the levels are now
+**3 × 10⁵, 1.5 × 10⁶, 2 × 10⁶**. Open: the largest Class II wings (Hermes 450, Watchkeeper) have
+no published wing area; the middle and top levels are now close (see OPEN_DECISIONS.md).
 
 ### Angles of attack: 0°, 4°, 8°; plus 12° for the nose and the wake
 - **In practice:** every study runs at 0°, 4° and 8°. Studies of the leading edge and the wake

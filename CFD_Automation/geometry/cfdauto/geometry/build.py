@@ -18,6 +18,7 @@ import numpy as np
 from .. import __version__
 from . import gates
 from .labels import label
+from .loft import pygeo_available
 from .measure import measure, table_from_loft
 from . import airfoils as _airfoils
 from .params import GEOMETRY_ROOT, WING_TYPES, Config, TERule, TypeSpec, canonical, load_config, resolve, station_airfoils
@@ -166,13 +167,14 @@ def build_all(cfg: Config, iges: bool = False) -> dict:
 
 def _write_manifest(wing_type: str, set_name: str, rows: list[dict]) -> None:
     (SETS_DIR / wing_type / f"{set_name}_manifest.json").write_text(json.dumps(
-        {"wing_type": wing_type, "set": set_name, "code_version": __version__, "wings": rows}, indent=1))
+        {"wing_type": wing_type, "set": set_name, "code_version": __version__,
+         "loft_backend": "pygeo" if pygeo_available() else "numpy", "wings": rows}, indent=1))
 
 
 def main(argv=None) -> None:
     p = argparse.ArgumentParser(description="Build one wing from a design vector.")
     p.add_argument("--all", action="store_true",
-                   help="build every training, corner and reference wing of both types, write manifests")
+                   help="build every training, corner and reference wing of every type, write manifests")
     p.add_argument("--type", choices=list(WING_TYPES))
     p.add_argument("--set", help="set name in data/sets/<type>/ (training, corner1, corner2, reference)")
     p.add_argument("--index", type=int)

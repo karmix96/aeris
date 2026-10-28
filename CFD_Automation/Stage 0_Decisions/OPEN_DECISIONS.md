@@ -13,10 +13,12 @@
 
 7. **Folder.** Stage 1 lives in `CFD_Automation/geometry/` (config, `cfdauto` package, tests,
    data). Run from there: `python -m cfdauto.geometry.build …`. No `src/` level.
-8. **Conventional ranges** proposed in `geometry/decisions/conventional_ranges.md`. Root chord up to 1.35 m so the
-   mean chord reaches Re 5 × 10⁶. Keep?
-9. **BWB stops at Re ≈ 3 × 10⁶** with the AERIS ranges (MAC ≤ 0.79 m). Widen the BWB size range,
-   or run 5 × 10⁶ on BWB as a flow condition only (any wing can be solved at any Re)?
+8. ~~**Conventional ranges**~~ **Decided 29 Oct 2026:** size ranges come from a sourced table of
+   real Class I–II wings (`geometry/configs/real_uavs.yaml`), not from a target Re. Root chord
+   0.13–0.60 m for conventional and tapered; see `geometry/decisions/conventional_ranges.md`.
+9. ~~**BWB stops at Re ≈ 3 × 10⁶**~~ **Decided 29 Oct 2026:** BWB sizes come from real tailless
+   wings too (root chord 0.40–0.80 m, semi-span 0.45–1.40 m). The top Re level is lowered to
+   2 × 10⁶ for every type, because no real wing of our families reaches 5 × 10⁶.
 10. **BWB root dihedral** now 0–3° at b0 and b1 (was pinned 0 in AERIS).
 11. **`root_chord_fractions` mode:** `semi_span_m` is read as semi-span / root chord (keeps one
     variable list). Conventional uses this mode so the aspect ratio stays in 4–16.5.
@@ -79,3 +81,12 @@
 32. **TE opening now follows pyGeo** (linear ramp over the last 10 % of chord, half up, half down,
     as `readAirfoilFile(bluntTe=True, bluntTaperRange=0.1)`). Replaces the uncited 65 % start.
     The sample sets in `data/sets/` must be rebuilt with pyGeo (`--all`): surfaces changed aft of 90 %.
+33. **The two upper Re levels are now close** (1.5 × 10⁶ and 2 × 10⁶). Move the middle level to
+    about 6 × 10⁵ (between 3 × 10⁵ and 2 × 10⁶ on a log scale)? Mini Class I wings fly at
+    1.2–2 × 10⁵ (eBee, Black Swift S0), below the low level: this is item 2 with numbers now.
+34. **Class II wing areas missing.** Hermes 450, Watchkeeper, Aerostar, Shadow and Ranger have
+    published spans (4.3–10.9 m) but no wing area. Until they are found (Jane's, papers), the size
+    ranges stop at the Pioneer (5.15 m span); the generator covers Class I and small Class II only.
+35. **Slim tailless wings are labelled "conventional".** With real flying-wing sizes, about a quarter
+    of the bwb-type wings have no centre body; the label rule calls them "conventional", which
+    reads like "has a tail". Rename that label to "flying wing" for tailless types?

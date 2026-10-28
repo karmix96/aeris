@@ -1,0 +1,147 @@
+# Published wings the generator can rebuild, for validating the CFD later.
+#
+# Each wing is written in the generator's own variables (four stations, three
+# straight panels), so it goes through exactly the same loft, checks and mesher
+# as the sampled wings. `fidelity` says how close the copy is; read it before
+# using a wing for validation.
+#
+# trailing_edge: as_is keeps each section's own blunt edge (the real model's),
+# instead of the project rule max(floor, 0.2 % chord).
+
+wings:
+
+  onera_m6:
+    title: ONERA M6 wing (wind-tunnel model)
+    kind: conventional
+    use: >-
+      Classic transonic validation case (M 0.84, alpha 3.06 deg, Re 11.72e6 on the
+      mean chord). Outside phase 1 (Mach <= 0.3); kept for the transonic stage and
+      as a planform and mesher check.
+    sources:
+      - Schmitt & Charpin, Pressure distributions on the ONERA-M6-wing at transonic Mach numbers, AGARD AR-138, 1979
+      - NASA GRC WIND validation archive, m6wing (geometry and streamwise section)
+    chord_law: linear_taper
+    span_mode: semi_span
+    airfoils: [onera_m6, onera_m6, onera_m6, onera_m6]
+    trailing_edge: as_is
+    vector:
+      root_chord_m: 0.80595        # 0.6737 x semi-span 1.1963 m
+      c4_ratio: 0.56242            # 0.3789 / 0.6737 (taper 0.562)
+      semi_span_m: 1.1963
+      b3_ratio: 0.333333333333
+      split_ratio: 0.5
+      sweep1_deg: 30.0             # leading edge, one straight edge
+      sweep2_deg: 30.0
+      sweep3_deg: 30.0
+      twist0_deg: 0.0
+      twist1_deg: 0.0
+      twist2_deg: 0.0
+      twist3_deg: 0.0
+      dihedral0_deg: 0.0
+      dihedral1_deg: 0.0
+      dihedral2_deg: 0.0
+      dihedral3_deg: 0.0
+    fidelity: >-
+      Planform exact (root 0.806 m, tip 0.453 m, semi-span 1.196 m, LE sweep 30 deg).
+      Section: the published streamwise profile, scaled with the local chord at
+      every station (the wing is conical, so streamwise sections are similar).
+      Trailing edge 0.141 % chord as published. Tip: flat cut, not the model's
+      rounded tip. Check: mean aerodynamic chord 0.6461 m against the published
+      646.07 mm; aspect ratio 3.80.
+
+  ribes:
+    title: RIBES wind-tunnel wing (half model)
+    kind: conventional
+    use: >-
+      In-regime validation: 40 m/s, Re 1.43e6, boundary layer tripped at 1.4 %
+      chord, 3,814 pressure taps over three spanwise sections.
+    sources:
+      - RIBES test report, Clean Sky JTI grant 632556
+      - AERIS ribes_loft.py and external/ribes/ribes_section.dat (laser scan of the manufactured model)
+    chord_law: linear_taper
+    span_mode: semi_span
+    airfoils: [ribes, ribes, ribes, ribes]
+    trailing_edge: as_is
+    vector:
+      root_chord_m: 0.5998
+      c4_ratio: 0.70007            # 0.4199 / 0.5998
+      semi_span_m: 1.600
+      b3_ratio: 0.333333333333
+      split_ratio: 0.5
+      sweep1_deg: 1.286
+      sweep2_deg: 1.286
+      sweep3_deg: 1.286
+      twist0_deg: 0.0
+      twist1_deg: 0.0
+      twist2_deg: 0.0
+      twist3_deg: 0.0
+      dihedral0_deg: -0.138
+      dihedral1_deg: -0.138
+      dihedral2_deg: -0.138
+      dihedral3_deg: -0.138
+    fidelity: >-
+      Planform as fitted to the laser scan (root 599.8 mm, tip 419.9 mm, span
+      1.600 m). Section: median of 17 scanned sections (t/c 11.4 %). Its fitted
+      trailing edge is 0.26 % chord, thinner than the 0.38-0.66 % measured on the
+      model: check this before validating drag.
+
+  nasa_crm:
+    title: NASA Common Research Model wing (approximate)
+    kind: conventional
+    use: >-
+      Drag Prediction Workshop transonic airliner wing (M 0.85, CL 0.5). Outside
+      phase 1 (Mach <= 0.3). Approximate copy; see fidelity.
+    sources:
+      - Vassberg et al., Development of a Common Research Model for applied CFD validation studies, AIAA 2008-6919
+      - Characterization of the Common Research Model wing, Utah State University (digitalcommons.usu.edu, mae_stures 1029), Table A1
+      - Brooks et al., Benchmark aerostructural models for the study of transonic aircraft wings (uCRM), AIAA J. 2018, doi 10.2514/1.J056603
+    chord_law: stations
+    span_mode: semi_span
+    airfoils: [sc20414, sc20412, sc20412, sc20410]     # stand-ins, not the CRM sections
+    trailing_edge: as_is
+    vector:
+      root_chord_m: 13.6161        # at 2y/b = 0
+      c2_ratio: 0.873789           # 11.8976 m at 2y/b = 0.10 (side of body)
+      c3_ratio: 0.532994           # 7.2573 m at 2y/b = 0.37 (Yehudi break)
+      c4_ratio: 0.200307           # 2.7274 m at the tip
+      semi_span_m: 29.38
+      b3_ratio: 0.63               # break at 37 % of the semi-span
+      split_ratio: 0.270270270270  # side of body at 10 % (0.10 / 0.37)
+      sweep1_deg: 37.285           # straight leading edge; from 35 deg quarter-chord sweep outboard
+      sweep2_deg: 37.285
+      sweep3_deg: 37.285
+      twist0_deg: 6.7166
+      twist1_deg: 4.4402
+      twist2_deg: 0.7635
+      twist3_deg: -3.75
+      dihedral0_deg: 0.0
+      dihedral1_deg: 3.6709
+      dihedral2_deg: 2.5002
+      dihedral3_deg: 9.839
+    fidelity: >-
+      Chords exact at root, side of body, Yehudi break and tip (chord is linear
+      between them on the real wing too). Leading edge taken as one straight line,
+      37.3 deg (derived). Twist and dihedral are linear between the four stations:
+      twist within 0.51 deg of the published 21-station table, vertical position
+      within 0.09 m (0.3 % of the semi-span). Sections are NASA SC(2) stand-ins:
+      a validation run needs the real CRM sections and more stations.
+      Check: full planform area 411.7 m2 against the published gross area 412.1 m2 (0.1 %).
+
+# BlendedNet / BlendedNet++ blended-wing-body family. Written in their own
+# parameters (lengths as fractions of the centreline chord C1); the module
+# converts them. Airfoils as in BlendedNet++ Table 4. Twist and dihedral are not
+# stated in the papers and are set to zero.
+blendednet:
+  sources:
+    - "BlendedNet: a blended wing body aircraft dataset and surrogate model for aerodynamic predictions, arXiv 2509.07209 (Table 2)"
+    - "BlendedNet++: a large-scale blended wing body aerodynamics dataset and benchmark, arXiv 2512.03280 (Tables 3 and 4)"
+  airfoils: [naca25118, naca25118, sc20412, naca0012]
+  c1_m: 1.0                     # all BlendedNet++ simulations ran at C1 = 1 m
+  trailing_edge: as_is
+  # BlendedNet (v1) Table 2 ranges: low corner, mid-range, high corner.
+  cases:
+    blendednet_low:  {C2: 0.55, C3: 0.18, C4: 0.060, B1: 0.10, B2: 0.050, B3: 0.20, S1: 40, S2: 40, S3: 24}
+    blendednet_mid:  {C2: 0.70, C3: 0.23, C4: 0.075, B1: 0.15, B2: 0.125, B3: 0.45, S1: 50, S2: 50, S3: 32}
+    blendednet_high: {C2: 0.85, C3: 0.28, C4: 0.090, B1: 0.20, B2: 0.200, B3: 0.70, S1: 60, S2: 60, S3: 40}
+    # BlendedNet++ gives X3 (leading edge of station 3) instead of S2. Mid-range of Table 3.
+    blendednetpp_mid: {C2: 0.70, C3: 0.23, C4: 0.075, B1: 0.15, B2: 0.125, B3: 0.525, X3: 0.575, S1: 50, S3: 30}

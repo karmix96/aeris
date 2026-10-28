@@ -20,7 +20,9 @@ SETS_DIR = Path(__file__).resolve().parents[2] / "data" / "sets"
 
 
 def lhs(spec: TypeSpec, n: int, seed: int) -> list[dict]:
-    names = spec.free_variables
+    # Section choices (if any) get their own hypercube columns, so each candidate
+    # is used about equally often. Without choices the draw is unchanged.
+    names = spec.free_variables + spec.choice_variables
     unit = qmc.LatinHypercube(d=len(names), rng=np.random.default_rng(seed)).random(n)
     return [from_unit(spec, dict(zip(names, row))) for row in unit]
 

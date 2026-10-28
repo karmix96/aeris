@@ -50,3 +50,20 @@
 22. **Set builds skip IGES** (46 MB instead of ~550 MB for 298 wings). Single builds write it.
     Built wing folders are not tracked; vectors and manifests are.
 23. **Seeds:** training 1001 (BWB) / 1002 (conventional); hold-out 2001 / 2002; coverage 3001.
+
+## Stage 1 additions — airfoil database and published wings
+
+24. **Airfoil search order:** `geometry/airfoils/`, then the AERIS database, then the NACA
+    4/5-digit formula. 2,159 of the 2,181 database files load; 22 are refused with a reason
+    (odd formats). Keep this order?
+25. **NACA 25118 is made from the formula** (classic open trailing edge, 0.38 % chord). BlendedNet
+    built it in OpenVSP, which may close the edge differently. Confirm when the BlendedNet STEP
+    files are available.
+26. **NASA CRM is approximate:** four stations give chords exactly but twist only within 0.51°,
+    and the sections are SC(2) stand-ins. A drag validation needs the real CRM sections and a
+    mode with more stations. Add that mode, or leave CRM as a shape check only?
+27. **BlendedNet twist and dihedral set to zero** (not stated in either paper).
+28. **ONERA M6 and CRM are transonic** (Mach 0.84–0.85), outside phase 1. RIBES is the
+    in-regime case (40 m/s, Re 1.43e6). Which wings to validate against first?
+29. **RIBES section trailing edge** is 0.26 % chord after the fit, thinner than the 0.38–0.66 %
+    measured on the model. Rebuild the section with the measured edge before a drag comparison?

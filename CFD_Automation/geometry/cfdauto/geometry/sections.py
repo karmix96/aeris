@@ -8,7 +8,8 @@ from pathlib import Path
 import numpy as np
 from scipy.interpolate import PchipInterpolator
 
-from .params import AIRFOIL_DIR, TERule, TypeSpec, resolve
+from . import airfoils as _airfoils
+from .params import TERule, TypeSpec, resolve, station_airfoils
 from .planform import Planform, build_planform
 
 N_SIDE = 100  # points per surface; a section has 2 * N_SIDE + 1 points
@@ -61,24 +62,22 @@ def cosine_x(n_side: int = N_SIDE) -> np.ndarray:
 
 
 def read_dat(path: Path) -> np.ndarray:
-    rows = []
-    for line in Path(path).read_text().splitlines():
-        parts = line.split()
-        if len(parts) < 2:
-            continue
-        try:
-            rows.append([float(parts[0]), float(parts[1])])
-        except ValueError:
-            continue
-    pts = np.asarray(rows, dtype=float)
-    if len(pts) < 10 or pts[0, 0] > 1.5:
-        raise ValueError(f"{path}: expected a Selig-format airfoil (TE -> upper -> LE -> lower -> TE)")
-    return pts
+    """Selig-ordered points from a Selig or Lednicer file."""
+    return _airfoils.read_dat(path)
 
 
-def load_airfoil(name: str, n_side: int = N_SIDE, folder: Path = AIRFOIL_DIR) -> Airfoil:
-    """Read a .dat file, put it on unit chord, and resample both surfaces on cosine x."""
-    pts = read_dat(folder / f"{name}.dat")
+def load_airfoil(name: str, n_side: int = N_SIDE, folder: Path | None = None) -> Airfoil:
+    """Load a section by name, put it on unit chord, and resample both surfaces on cosine x.
+
+    The name is looked up locally, then in the AERIS airfoil database, then as a
+    NACA 4/5-digit formula (see airfoils.py). With folder, only that folder is read.
+    """
+    pts = read_dat(Path(folder) / f"{name}.dat") if folder is not None else _airfoils.raw_points(name)
+    return airfoil_from_points(name, pts, n_side)
+
+
+def airfoil_from_points(name: str, pts: np.ndarray, n_side: int = N_SIDE) -> Airfoil:
+    """Selig-ordered points -> unit-chord Airfoil on cosine x."""
     te_mid = 0.5 * (pts[0] + pts[-1])
     i_le = int(np.argmax(np.linalg.norm(pts - te_mid, axis=1)))
     le = pts[i_le]
@@ -103,8 +102,10 @@ def _resample(side: np.ndarray, x: np.ndarray) -> np.ndarray:
     Interpolates in sqrt(x), where the round nose becomes smooth.
     """
     xs = np.clip(side[:, 0], 0.0, None)
-    keep = np.concatenate([[True], np.diff(xs) > 1e-12])
-    xs, ys = xs[keep], side[keep, 1]
+    ys = side[:, 1]
+    # Some files repeat or step back a point near an edge: keep x increasing.
+    keep = np.concatenate([[True], xs[1:] > np.maximum.accumulate(xs)[:-1] + 1e-12])
+    xs, ys = xs[keep], ys[keep]
     xs[0], ys[0] = 0.0, 0.0
     xs[-1] = 1.0
     return PchipInterpolator(np.sqrt(xs), ys)(np.sqrt(x))
@@ -155,9 +156,10 @@ def build_stations(spec: TypeSpec, vec: dict[str, float]) -> tuple[Planform, lis
     if np.any(np.abs(dihedral) >= 89.0):
         raise ValueError("dihedral must be within +/-89 deg")
     z = station_z(pf.y, dihedral)
+    names = station_airfoils(spec, vec)
     stations = [
         Station(STATION_NAMES[i], float(pf.y[i]), float(pf.x_le[i]), float(z[i]),
-                float(pf.chord[i]), float(twist[i]), load_airfoil(spec.airfoils[i]))
+                float(pf.chord[i]), float(twist[i]), load_airfoil(names[i]))
         for i in range(4)
     ]
     return pf, stations
@@ -187,6 +189,12 @@ def build_wing_sections(spec: TypeSpec, vec: dict[str, float], te: TERule) -> tu
     lies on the straight panel (position, chord, twist and shape interpolated).
     """
     pf, stations = build_stations(spec, vec)
+    if te.mode == "as_is":
+        for st in stations:
+            if st.airfoil.te_thickness <= 1e-6:
+                raise ValueError(f"{st.name}: section {st.airfoil.name!r} has a closed trailing edge; "
+                                 f"trailing_edge mode 'as_is' needs a blunt one")
+        return pf, stations
     c_sw = te.switch_chord_m()
     out = [stations[0]]
     for i, (a, b) in enumerate(zip(stations[:-1], stations[1:]), start=1):
@@ -205,7 +213,7 @@ def build_wing_sections(spec: TypeSpec, vec: dict[str, float], te: TERule) -> tu
         out.append(b)
     opened = [
         Station(st.name, st.y, st.x_le, st.z_le, st.chord, st.twist_deg,
-                open_te(st.airfoil, te.thickness_m(st.chord) / st.chord, te.open_from_xc))
+                open_te(st.airfoil, te.target_m(st.chord, st.airfoil.te_thickness) / st.chord, te.open_from_xc))
         for st in out
     ]
     return pf, opened
@@ -223,7 +231,7 @@ def insert_sections(stations: list[Station], per_panel: int, te: TERule) -> list
             out.append(Station(
                 f"{a.name}+{k}", a.y + s * (b.y - a.y), a.x_le + s * (b.x_le - a.x_le),
                 a.z_le + s * (b.z_le - a.z_le), chord, a.twist_deg + s * (b.twist_deg - a.twist_deg),
-                open_te(shape, te.thickness_m(chord) / chord, te.open_from_xc)))
+                open_te(shape, te.target_m(chord, shape.te_thickness) / chord, te.open_from_xc)))
         out.append(b)
     return out
 

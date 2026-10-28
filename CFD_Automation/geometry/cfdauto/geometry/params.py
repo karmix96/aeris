@@ -9,9 +9,13 @@ from pathlib import Path
 
 import yaml
 
+from . import airfoils as _airfoils
+
 GEOMETRY_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONFIG = GEOMETRY_ROOT / "configs" / "wing.yaml"
-AIRFOIL_DIR = GEOMETRY_ROOT / "airfoils"
+AIRFOIL_DIR = _airfoils.LOCAL_DIR   # project sections; the AERIS database is searched too
+STATIONS = ("b0", "b1", "b2", "b3")
+TE_MODES = ("rule", "as_is")
 
 VARIABLES = (
     "root_chord_m", "c2_ratio", "c3_ratio", "c4_ratio",
@@ -32,9 +36,11 @@ class TypeSpec:
     name: str
     chord_law: str
     span_mode: str
-    airfoils: tuple[str, str, str, str]
+    airfoils: tuple[str, str, str, str]          # default section per station (first choice)
     ranges: dict[str, tuple[float, float]]
     pinned: dict[str, float] = field(default_factory=dict)
+    #: candidate sections per station; a station with more than one is drawn by the sampler
+    airfoil_choices: tuple[tuple[str, ...], ...] = ()
 
     @property
     def free_variables(self) -> tuple[str, ...]:
@@ -42,12 +48,21 @@ class TypeSpec:
         derived = TAPER_DERIVED if self.chord_law == "linear_taper" else ()
         return tuple(v for v in VARIABLES if v not in self.pinned and v not in derived)
 
+    @property
+    def choices(self) -> tuple[tuple[str, ...], ...]:
+        return self.airfoil_choices or tuple((a,) for a in self.airfoils)
+
+    @property
+    def choice_variables(self) -> tuple[str, ...]:
+        """One sampling variable per station that has more than one candidate section."""
+        return tuple(f"airfoil_{STATIONS[i]}" for i, c in enumerate(self.choices) if len(c) > 1)
+
     def block(self) -> dict:
         """The type's YAML block as plain data (for hashing)."""
         return {
             "chord_law": self.chord_law,
             "span_mode": self.span_mode,
-            "airfoils": list(self.airfoils),
+            "airfoils": [list(c) for c in self.choices],
             "pinned": dict(sorted(self.pinned.items())),
             "ranges": {k: list(self.ranges[k]) for k in VARIABLES},
         }
@@ -58,9 +73,18 @@ class TERule:
     floor_m: float
     chord_fraction: float
     open_from_xc: float
+    #: "rule": thickness = max(floor, fraction x chord). "as_is": keep each section's own
+    #: blunt trailing edge (for published wings whose real edge must not change).
+    mode: str = "rule"
 
     def thickness_m(self, chord_m: float) -> float:
         return max(self.floor_m, self.chord_fraction * chord_m)
+
+    def target_m(self, chord_m: float, own_te_over_c: float) -> float:
+        """Built trailing-edge thickness for a section of this chord."""
+        if self.mode == "as_is":
+            return own_te_over_c * chord_m
+        return self.thickness_m(chord_m)
 
     def switch_chord_m(self) -> float:
         """Chord at which the rule changes from the floor to the fraction."""
@@ -96,9 +120,12 @@ def load_config(path: str | Path = DEFAULT_CONFIG) -> Config:
         floor_m=float(te_raw["floor_m"][wing_class]),
         chord_fraction=float(te_raw["chord_fraction"]),
         open_from_xc=float(te_raw["open_from_xc"]),
+        mode=str(te_raw.get("mode", "rule")),
     )
     if not 0.0 < te.open_from_xc < 1.0:
         raise ValueError("open_from_xc must be between 0 and 1")
+    if te.mode not in TE_MODES:
+        raise ValueError(f"trailing_edge.mode must be one of {TE_MODES}")
 
     types = {name: _read_type(name, raw["types"][name]) for name in WING_TYPES}
     return Config(wing_type, shares, wing_class, te, types, raw.get("sets", {}), raw)
@@ -109,12 +136,8 @@ def _read_type(name: str, block: dict) -> TypeSpec:
         raise ValueError(f"{name}: chord_law must be one of {CHORD_LAWS}")
     if block["span_mode"] not in SPAN_MODES:
         raise ValueError(f"{name}: span_mode must be one of {SPAN_MODES}")
-    airfoils = tuple(block["airfoils"])
-    if len(airfoils) != 4:
-        raise ValueError(f"{name}: need four airfoils (b0..b3)")
-    for a in airfoils:
-        if not (AIRFOIL_DIR / f"{a}.dat").is_file():
-            raise ValueError(f"{name}: airfoil {a!r} not found in {AIRFOIL_DIR}")
+    choices = read_airfoil_choices(name, block["airfoils"])
+    airfoils = tuple(c[0] for c in choices)
     ranges = {}
     for v in VARIABLES:
         if v not in block["ranges"]:
@@ -130,7 +153,37 @@ def _read_type(name: str, block: dict) -> TypeSpec:
     unknown = set(pinned) - set(VARIABLES)
     if unknown:
         raise ValueError(f"{name}: cannot pin unknown variables {sorted(unknown)}")
-    return TypeSpec(name, block["chord_law"], block["span_mode"], airfoils, ranges, pinned)
+    multi = any(len(c) > 1 for c in choices)
+    return TypeSpec(name, block["chord_law"], block["span_mode"], airfoils, ranges, pinned,
+                    choices if multi else ())
+
+
+def read_airfoil_choices(where: str, raw) -> tuple[tuple[str, ...], ...]:
+    """Four entries (b0..b3). Each is one section name or a list of candidates.
+
+    Names come from geometry/airfoils, the AERIS airfoil database, or a NACA
+    4/5-digit formula (see airfoils.py).
+    """
+    if isinstance(raw, dict):
+        raw = [raw.get(s) for s in STATIONS]
+    if not isinstance(raw, (list, tuple)) or len(raw) != 4:
+        raise ValueError(f"{where}: need four airfoil entries (b0..b3)")
+    out = []
+    for s, entry in zip(STATIONS, raw):
+        names = (entry,) if isinstance(entry, str) else tuple(entry or ())
+        if not names or not all(isinstance(n, str) and n for n in names):
+            raise ValueError(f"{where}: station {s} needs a section name or a list of names")
+        for n in names:
+            if not _airfoils.exists(n):
+                raise ValueError(f"{where}: airfoil {n!r} not found (local, AERIS database, or NACA formula)")
+        out.append(names)
+    return tuple(out)
+
+
+def station_airfoils(spec: TypeSpec, vec: dict) -> tuple[str, str, str, str]:
+    """The section at each station: the vector's own list if it has one, else the type default."""
+    names = vec.get("airfoils")
+    return tuple(names) if names else spec.airfoils
 
 
 def from_unit(spec: TypeSpec, unit: dict[str, float]) -> dict[str, float]:
@@ -139,6 +192,14 @@ def from_unit(spec: TypeSpec, unit: dict[str, float]) -> dict[str, float]:
     for v in VARIABLES:
         lo, hi = spec.ranges[v]
         vec[v] = lo + float(unit.get(v, 0.5)) * (hi - lo)
+    if spec.airfoil_choices:
+        # A station with candidates takes the one its unit value falls on (default: the first).
+        picks = []
+        for s, cands in zip(STATIONS, spec.choices):
+            u = unit.get(f"airfoil_{s}")
+            k = 0 if u is None else min(int(float(u) * len(cands)), len(cands) - 1)
+            picks.append(cands[k])
+        vec["airfoils"] = picks
     return resolve(spec, vec)
 
 
@@ -160,6 +221,14 @@ def resolve(spec: TypeSpec, vec: dict[str, float]) -> dict[str, float]:
     check_vector(vec)
     out = {v: float(vec[v]) for v in VARIABLES}
     out.update(spec.pinned)
+    if vec.get("airfoils"):
+        names = list(vec["airfoils"])
+        if len(names) != 4:
+            raise ValueError("vector 'airfoils' needs four names (b0..b3)")
+        for n in names:
+            if not _airfoils.exists(n):
+                raise ValueError(f"airfoil {n!r} not found (local, AERIS database, or NACA formula)")
+        out["airfoils"] = names
     if spec.chord_law == "linear_taper":
         # Chord linear from root to tip: c(y) = c_root * (1 + (c4 - 1) * y / S).
         p3 = out["b3_ratio"]
@@ -188,5 +257,9 @@ def in_ranges(spec: TypeSpec, vec: dict[str, float], tol: float = 1e-12) -> bool
 
 
 def canonical(vec: dict[str, float]) -> str:
-    """One string per vector: fixed key order, values rounded to 12 digits."""
-    return json.dumps({v: round(float(vec[v]), 12) for v in VARIABLES}, separators=(",", ":"))
+    """One string per vector: fixed key order, values rounded to 12 digits (plus the
+    vector's own airfoil list when it has one)."""
+    out = {v: round(float(vec[v]), 12) for v in VARIABLES}
+    if vec.get("airfoils"):
+        out["airfoils"] = list(vec["airfoils"])
+    return json.dumps(out, separators=(",", ":"))

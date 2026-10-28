@@ -19,58 +19,68 @@ from .. import __version__
 from . import gates
 from .labels import label
 from .measure import measure, table_from_loft
-from .params import AIRFOIL_DIR, GEOMETRY_ROOT, Config, canonical, load_config, resolve
+from . import airfoils as _airfoils
+from .params import GEOMETRY_ROOT, Config, TERule, TypeSpec, canonical, load_config, resolve, station_airfoils
 from .sections import build_wing_sections
 
 SETS_DIR = GEOMETRY_ROOT / "data" / "sets"
 WINGS_DIR = GEOMETRY_ROOT / "data" / "wings"
 
 
-def input_hash(cfg: Config, wing_type: str, vec: dict[str, float]) -> str:
-    """sha256 of the content that defines the wing: vector, the type's YAML block,
-    the trailing-edge rule, the airfoil files and the code version."""
-    spec = cfg.types[wing_type]
+def spec_hash(spec: TypeSpec, vec: dict[str, float], te: TERule, type_name: str) -> str:
+    """sha256 of the content that defines the wing: vector, the type's block, the
+    trailing-edge rule, the section coordinates and the code version."""
     payload = {
         "vector": canonical(resolve(spec, vec)),
-        "type": wing_type,
+        "type": type_name,
         "type_block": spec.block(),
-        "te_rule": {"floor_m": cfg.te.floor_m, "chord_fraction": cfg.te.chord_fraction,
-                    "open_from_xc": cfg.te.open_from_xc},
-        "airfoils": [hashlib.sha256((AIRFOIL_DIR / f"{a}.dat").read_bytes()).hexdigest() for a in spec.airfoils],
+        "te_rule": {"floor_m": te.floor_m, "chord_fraction": te.chord_fraction,
+                    "open_from_xc": te.open_from_xc, "mode": te.mode},
+        "airfoils": [_airfoils.digest(a) for a in station_airfoils(spec, resolve(spec, vec))],
         "code_version": __version__,
     }
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
 
-def _make(cfg: Config, wing_type: str, vec: dict[str, float]):
+def input_hash(cfg: Config, wing_type: str, vec: dict[str, float]) -> str:
+    return spec_hash(cfg.types[wing_type], vec, cfg.te, wing_type)
+
+
+def _make(spec: TypeSpec, vec: dict[str, float], te: TERule):
     from .loft import build_loft
-    pf, stations = build_wing_sections(cfg.types[wing_type], vec, cfg.te)
+    pf, stations = build_wing_sections(spec, vec, te)
     return pf, stations, build_loft(stations, k_span=2)
 
 
 def build(vec: dict[str, float], wing_type: str, cfg: Config | None = None,
           out_dir: str | Path | None = None, iges: bool = True) -> dict:
-    """Build, measure, label and check one wing. Returns a summary.
+    """Build, measure, label and check one wing of a configured type. Returns a summary.
 
     With out_dir: a passed wing writes its full folder; a refused wing writes
     only refusal.json (the gate and the reason).
     """
     cfg = cfg or load_config()
-    vec = resolve(cfg.types[wing_type], vec)
-    h = input_hash(cfg, wing_type, vec)
-    summary = {"wing_type": wing_type, "input_hash": h, "vector": vec}
+    return build_spec(cfg.types[wing_type], vec, cfg.te, wing_type, out_dir, iges)
+
+
+def build_spec(spec: TypeSpec, vec: dict[str, float], te: TERule, type_name: str,
+               out_dir: str | Path | None = None, iges: bool = True, extra: dict | None = None) -> dict:
+    """The same build for any type block (configured types and published wings)."""
+    vec = resolve(spec, vec)
+    h = spec_hash(spec, vec, te, type_name)
+    summary = {"wing_type": type_name, "input_hash": h, "vector": vec} | (extra or {})
 
     try:
-        pf, stations, loft = _make(cfg, wing_type, vec)
+        pf, stations, loft = _make(spec, vec, te)
     except ValueError as exc:      # impossible vector (negative chord, zero span, ...)
         return _refuse(summary, gates.GateResult("validity", False, str(exc)), out_dir)
 
     measured = measure(table_from_loft(loft), stations)
     checks = [
         gates.vector_to_loft(measured, pf, stations),
-        gates.trailing_edge(measured, stations, cfg.te),
+        gates.trailing_edge(measured, stations, te),
         gates.validity(loft, stations),
-        gates.repeatability(loft.surface_hash(), _make(cfg, wing_type, vec)[2].surface_hash()),
+        gates.repeatability(loft.surface_hash(), _make(spec, vec, te)[2].surface_hash()),
     ]
     for g in checks:
         if not g.passed:
@@ -106,7 +116,8 @@ def _write(out: Path, summary, vec, stations, loft, measured, labels, label_valu
     (out / "vector.json").write_text(json.dumps(vec, indent=2))
     (out / "stations.json").write_text(json.dumps([
         {"name": s.name, "y_m": s.y, "x_le_m": s.x_le, "z_le_m": s.z_le, "chord_m": s.chord,
-         "twist_deg": s.twist_deg, "airfoil": s.airfoil.name, "v": float(v)}
+         "twist_deg": s.twist_deg, "airfoil": s.airfoil.name,
+         "airfoil_source": _airfoils.source(s.airfoil.name.split("|")[0]), "v": float(v)}
         for s, v in zip(stations, loft.station_v)], indent=2))
     for i, s in enumerate(stations):
         np.savetxt(out / "sections" / f"{i:02d}_{s.name}.dat", s.airfoil.selig(), fmt="%.12f",

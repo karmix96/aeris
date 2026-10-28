@@ -51,9 +51,10 @@ def vector_to_loft(measured: dict, pf: Planform, stations: list[Station]) -> Gat
 
 
 def trailing_edge(measured: dict, stations: list[Station], te: TERule) -> GateResult:
-    """Built trailing-edge thickness equals the rule at every section."""
+    """Built trailing-edge thickness equals the rule (or, in 'as_is' mode, the
+    section's own edge) at every section."""
     for sec, st in zip(measured["sections"], stations):
-        want = te.thickness_m(st.chord)
+        want = te.target_m(st.chord, st.airfoil.te_thickness)
         if abs(sec["te_thickness_m"] - want) > TOL["te_m"]:
             return GateResult("trailing_edge", False,
                               f"{sec['name']}: {sec['te_thickness_m'] * 1e3:.4f} mm, rule {want * 1e3:.4f} mm")

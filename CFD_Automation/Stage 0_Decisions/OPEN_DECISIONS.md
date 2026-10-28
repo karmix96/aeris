@@ -67,3 +67,9 @@
     in-regime case (40 m/s, Re 1.43e6). Which wings to validate against first?
 29. **RIBES section trailing edge** is 0.26 % chord after the fit, thinner than the 0.38–0.66 %
     measured on the model. Rebuild the section with the measured edge before a drag comparison?
+30. **Typo points in airfoil files are dropped** (one point off a smooth line; 18 database files,
+    e.g. sc20412 lower x/c 0.73, about 0.09 % chord off). Keep dropping, or fix the files?
+31. **Exact match to BlendedNet / CRM / RIBES is not proven yet.** The generator is proven to
+    build exactly what its parameters say (errors < 0.003 % chord), and the M6 matches its CATIA
+    model (max 0.011 % chord). For the others we need their own surface (one BlendedNet++ case
+    STEP/VTK, CRM IGES, RIBES STEP) and run `verify.compare_points`.

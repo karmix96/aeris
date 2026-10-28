@@ -1,0 +1,343 @@
+[
+ {
+  "wing": "onera_m6",
+  "backend": "numpy",
+  "te_mode": "as_is",
+  "sections_max_pct": 0.0002637685536863166,
+  "sections": [
+   {
+    "station": "b0",
+    "airfoil": "onera_m6",
+    "max_pct_chord": 0.0002637685536863166,
+    "rms_pct_chord": 7.525174027414462e-05,
+    "points": 136,
+    "suspect_points": []
+   },
+   {
+    "station": "b1",
+    "airfoil": "onera_m6",
+    "max_pct_chord": 0.0002637685536863166,
+    "rms_pct_chord": 7.525174027477402e-05,
+    "points": 136,
+    "suspect_points": []
+   },
+   {
+    "station": "b2",
+    "airfoil": "onera_m6",
+    "max_pct_chord": 0.0002637685536856227,
+    "rms_pct_chord": 7.525174027503824e-05,
+    "points": 136,
+    "suspect_points": []
+   },
+   {
+    "station": "b3",
+    "airfoil": "onera_m6",
+    "max_pct_chord": 0.0002637685536856227,
+    "rms_pct_chord": 7.525174027569329e-05,
+    "points": 136,
+    "suspect_points": []
+   }
+  ],
+  "edges_max_pct": 4.879610704332156e-14,
+  "ruled_max_pct": 4.837236279541997e-14,
+  "cad": {
+   "points": 177436,
+   "max_pct_chord": 0.011297367210546114,
+   "p99_pct_chord": 0.004518331566976102,
+   "rms_pct_chord": 0.0017110347529458204,
+   "at_max": {
+    "y_m": 1.1842969899665547,
+    "x_over_c": 0.00031325054525853494
+   }
+  },
+  "pass": true
+ },
+ {
+  "wing": "ribes",
+  "backend": "numpy",
+  "te_mode": "as_is",
+  "sections_max_pct": 0.0004939481769651328,
+  "sections": [
+   {
+    "station": "b0",
+    "airfoil": "ribes",
+    "max_pct_chord": 0.0004939481769646991,
+    "rms_pct_chord": 1.992550268411436e-05,
+    "points": 788,
+    "suspect_points": []
+   },
+   {
+    "station": "b1",
+    "airfoil": "ribes",
+    "max_pct_chord": 0.0004939481769651328,
+    "rms_pct_chord": 1.9925502684100376e-05,
+    "points": 788,
+    "suspect_points": []
+   },
+   {
+    "station": "b2",
+    "airfoil": "ribes",
+    "max_pct_chord": 0.0004939481769584975,
+    "rms_pct_chord": 1.9925502683828783e-05,
+    "points": 788,
+    "suspect_points": []
+   },
+   {
+    "station": "b3",
+    "airfoil": "ribes",
+    "max_pct_chord": 0.0004939481769535535,
+    "rms_pct_chord": 1.9925502683576147e-05,
+    "points": 788,
+    "suspect_points": []
+   }
+  ],
+  "edges_max_pct": 2.3362265135537995e-14,
+  "ruled_max_pct": 5.324647443405157e-14,
+  "pass": true
+ },
+ {
+  "wing": "nasa_crm",
+  "backend": "numpy",
+  "te_mode": "as_is",
+  "sections_max_pct": 0.00279434715919763,
+  "sections": [
+   {
+    "station": "b0",
+    "airfoil": "sc20414",
+    "max_pct_chord": 0.0027675655730696747,
+    "rms_pct_chord": 0.0009733726234316363,
+    "points": 202,
+    "suspect_points": []
+   },
+   {
+    "station": "b1",
+    "airfoil": "sc20412",
+    "max_pct_chord": 0.0026785925231698204,
+    "rms_pct_chord": 0.0009383279557689335,
+    "points": 201,
+    "suspect_points": [
+     [
+      0.72999,
+      "lower"
+     ]
+    ]
+   },
+   {
+    "station": "b2",
+    "airfoil": "sc20412",
+    "max_pct_chord": 0.0026785925231712082,
+    "rms_pct_chord": 0.0009383279557689983,
+    "points": 201,
+    "suspect_points": [
+     [
+      0.72999,
+      "lower"
+     ]
+    ]
+   },
+   {
+    "station": "b3",
+    "airfoil": "sc20410",
+    "max_pct_chord": 0.00279434715919763,
+    "rms_pct_chord": 0.0008554833370074819,
+    "points": 202,
+    "suspect_points": []
+   }
+  ],
+  "edges_max_pct": 2.1560534967397792e-13,
+  "ruled_max_pct": 2.29544105025684e-13,
+  "pass": true
+ },
+ {
+  "wing": "blendednet_low",
+  "backend": "numpy",
+  "te_mode": "as_is",
+  "sections_max_pct": 0.0026785925231691265,
+  "sections": [
+   {
+    "station": "b0",
+    "airfoil": "naca25118",
+    "max_pct_chord": 0.001216446653125921,
+    "rms_pct_chord": 0.00010005708634845837,
+    "points": 394,
+    "suspect_points": []
+   },
+   {
+    "station": "b1",
+    "airfoil": "naca25118",
+    "max_pct_chord": 0.0012164466531198494,
+    "rms_pct_chord": 0.0001000570863480611,
+    "points": 394,
+    "suspect_points": []
+   },
+   {
+    "station": "b2",
+    "airfoil": "sc20412",
+    "max_pct_chord": 0.0026785925231691265,
+    "rms_pct_chord": 0.0009383279557690441,
+    "points": 201,
+    "suspect_points": [
+     [
+      0.72999,
+      "lower"
+     ]
+    ]
+   },
+   {
+    "station": "b3",
+    "airfoil": "naca0012",
+    "max_pct_chord": 0.0005533490717898881,
+    "rms_pct_chord": 0.00014609605986876798,
+    "points": 66,
+    "suspect_points": []
+   }
+  ],
+  "edges_max_pct": 9.81826021266997e-14,
+  "ruled_max_pct": 7.850582081053153e-14,
+  "pass": true
+ },
+ {
+  "wing": "blendednet_mid",
+  "backend": "numpy",
+  "te_mode": "as_is",
+  "sections_max_pct": 0.0026785925231712082,
+  "sections": [
+   {
+    "station": "b0",
+    "airfoil": "naca25118",
+    "max_pct_chord": 0.001216446653125921,
+    "rms_pct_chord": 0.00010005708634845837,
+    "points": 394,
+    "suspect_points": []
+   },
+   {
+    "station": "b1",
+    "airfoil": "naca25118",
+    "max_pct_chord": 0.0012164466531069257,
+    "rms_pct_chord": 0.00010005708634778889,
+    "points": 394,
+    "suspect_points": []
+   },
+   {
+    "station": "b2",
+    "airfoil": "sc20412",
+    "max_pct_chord": 0.0026785925231712082,
+    "rms_pct_chord": 0.0009383279557691617,
+    "points": 201,
+    "suspect_points": [
+     [
+      0.72999,
+      "lower"
+     ]
+    ]
+   },
+   {
+    "station": "b3",
+    "airfoil": "naca0012",
+    "max_pct_chord": 0.0005533490717898881,
+    "rms_pct_chord": 0.00014609605986787424,
+    "points": 66,
+    "suspect_points": []
+   }
+  ],
+  "edges_max_pct": 1.4666104810201962e-13,
+  "ruled_max_pct": 8.804794130455913e-14,
+  "pass": true
+ },
+ {
+  "wing": "blendednet_high",
+  "backend": "numpy",
+  "te_mode": "as_is",
+  "sections_max_pct": 0.0026785925231712082,
+  "sections": [
+   {
+    "station": "b0",
+    "airfoil": "naca25118",
+    "max_pct_chord": 0.001216446653125921,
+    "rms_pct_chord": 0.00010005708634845837,
+    "points": 394,
+    "suspect_points": []
+   },
+   {
+    "station": "b1",
+    "airfoil": "naca25118",
+    "max_pct_chord": 0.0012164466531149054,
+    "rms_pct_chord": 0.00010005708634776292,
+    "points": 394,
+    "suspect_points": []
+   },
+   {
+    "station": "b2",
+    "airfoil": "sc20412",
+    "max_pct_chord": 0.0026785925231712082,
+    "rms_pct_chord": 0.0009383279557688052,
+    "points": 201,
+    "suspect_points": [
+     [
+      0.72999,
+      "lower"
+     ]
+    ]
+   },
+   {
+    "station": "b3",
+    "airfoil": "naca0012",
+    "max_pct_chord": 0.0005533490717898881,
+    "rms_pct_chord": 0.00014609605986539985,
+    "points": 66,
+    "suspect_points": []
+   }
+  ],
+  "edges_max_pct": 2.442980765771459e-13,
+  "ruled_max_pct": 1.4493382303482743e-13,
+  "pass": true
+ },
+ {
+  "wing": "blendednetpp_mid",
+  "backend": "numpy",
+  "te_mode": "as_is",
+  "sections_max_pct": 0.0026785925231698204,
+  "sections": [
+   {
+    "station": "b0",
+    "airfoil": "naca25118",
+    "max_pct_chord": 0.001216446653125921,
+    "rms_pct_chord": 0.00010005708634845837,
+    "points": 394,
+    "suspect_points": []
+   },
+   {
+    "station": "b1",
+    "airfoil": "naca25118",
+    "max_pct_chord": 0.0012164466531295638,
+    "rms_pct_chord": 0.0001000570863488031,
+    "points": 394,
+    "suspect_points": []
+   },
+   {
+    "station": "b2",
+    "airfoil": "sc20412",
+    "max_pct_chord": 0.0026785925231698204,
+    "rms_pct_chord": 0.0009383279557691196,
+    "points": 201,
+    "suspect_points": [
+     [
+      0.72999,
+      "lower"
+     ]
+    ]
+   },
+   {
+    "station": "b3",
+    "airfoil": "naca0012",
+    "max_pct_chord": 0.000553349071790582,
+    "rms_pct_chord": 0.00014609605986906478,
+    "points": 66,
+    "suspect_points": []
+   }
+  ],
+  "edges_max_pct": 1.4646307475999292e-13,
+  "ruled_max_pct": 1.3921092119166808e-13,
+  "pass": true
+ }
+]

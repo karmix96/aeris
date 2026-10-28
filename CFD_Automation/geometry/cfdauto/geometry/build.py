@@ -88,7 +88,7 @@ def build_spec(spec: TypeSpec, vec: dict[str, float], te: TERule, type_name: str
 
     labels, label_values = label(measured)
     summary |= {
-        "passed": True, "gate": None, "reason": "",
+        "passed": True, "gate": None, "reason": "", "loft_backend": loft.backend,
         "surface_hash": loft.surface_hash(), "labels": labels,
         "area_m2": measured["area_m2"], "mac_m": measured["mac_m"],
         "aspect_ratio": measured["aspect_ratio"], "span_m": measured["span_m"],
@@ -126,7 +126,7 @@ def _write(out: Path, summary, vec, stations, loft, measured, labels, label_valu
     (out / "labels.json").write_text(json.dumps({"labels": labels, "values": label_values}, indent=2))
     (out / "gates.json").write_text(json.dumps([g.__dict__ for g in checks], indent=2))
     np.savetxt(out / "span_table.csv", loft.span_table(401), delimiter=",", header="v,y_m", comments="", fmt="%.12f")
-    if iges:
+    if iges and loft.backend == "pygeo":
         loft.write_iges(out / "wing.igs")
     (out / "summary.json").write_text(json.dumps(summary, indent=2))
 

@@ -63,3 +63,27 @@ its own four names in its vector (`"airfoils": [...]`).
 approximate NASA CRM wing, and BlendedNet designs (any BlendedNet or BlendedNet++ design via
 `published_wings.blendednet(...)`). They keep their own blunt trailing edge
 (`trailing_edge: as_is`). Read each wing's `fidelity` before using it for validation.
+
+## Is the surface the intended wing? (verification)
+
+Pictures are not proof. `python scripts/verify_geometry.py` measures every published wing and
+writes `docs/verification.md` / `.json` (exit code 1 on a fail):
+
+| check | what it compares | limit (% local chord) |
+|---|---|---|
+| sections | the loft cut at each station vs the ORIGINAL airfoil file/formula points | 0.01 |
+| edges | leading and trailing edge vs the exact straight lines through the stations | 1e-6 |
+| ruled | each panel vs the straight blend of its two sections | 1e-6 |
+| outside CAD | ONERA M6 loft vs the CATIA model `AileM6_with_sharp_TE.igs` (needs gmsh) | 0.05 |
+
+`verify.compare_points(loft, pts)` compares any outside surface (STEP/IGES via
+`verify.cad_points`, scan, VTK points) the same way; use it for BlendedNet, CRM and RIBES once
+their surface files are in the repo.
+
+Two lofts: `build_loft(..., backend="pygeo")` (production, writes IGES) and `backend="numpy"`
+(same construction with scipy; runs where pyGeo is not installed). On a machine with pyGeo,
+`pytest -m pygeo tests/geometry/test_verify.py` checks that both give the same points (1e-6 chord).
+
+Typo points: a single point off a smooth line in an airfoil file is dropped before building
+(`airfoils.suspect_points`). 18 of the ~2,180 database files have one, e.g. `sc20412`
+(lower surface, x/c 0.73).

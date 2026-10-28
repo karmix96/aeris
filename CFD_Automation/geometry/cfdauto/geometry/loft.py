@@ -85,13 +85,19 @@ class Loft:
         tab = self.span_table(2001)
         return np.interp(y, tab[:, 1], tab[:, 0])
 
+    @property
+    def backend(self) -> str:
+        return getattr(self.geo, "backend", "pygeo")
+
     def write_iges(self, path: str | Path) -> None:
+        if self.backend != "pygeo":
+            raise RuntimeError("IGES export needs the pyGeo loft")
         with contextlib.redirect_stdout(io.StringIO()):
             self.geo.writeIGES(str(path))
 
     def surface_hash(self) -> str:
         """sha256 of every control point and knot, rounded to 1e-12 m."""
-        h = hashlib.sha256()
+        h = hashlib.sha256(self.backend.encode())
         for surf in self.geo.surfs:
             for arr in (surf.coef, surf.tu, surf.tv):
                 h.update(np.round(np.asarray(arr, dtype=float), 12).tobytes())
@@ -129,8 +135,31 @@ def edge_error_pct(loft: Loft, exact: list[Station], n: int = 401) -> dict[str, 
     }
 
 
-def build_loft(stations: list[Station], k_span: int = 2) -> Loft:
-    """Loft the stations. k_span = 2 gives straight (ruled) panels between sections."""
+def pygeo_available() -> bool:
+    try:
+        import pygeo  # noqa: F401
+        import pyspline  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
+def build_loft(stations: list[Station], k_span: int = 2, backend: str | None = None) -> Loft:
+    """Loft the stations. k_span = 2 gives straight (ruled) panels between sections.
+
+    backend "pygeo" (the production loft) or "numpy" (the same construction with
+    scipy splines: each section a cubic interpolating spline in s = sqrt(x/c),
+    straight lines between sections). Default: pyGeo when installed, else numpy.
+    The numpy loft is a second, independent implementation: the two must agree
+    (tests/geometry/test_loft_backends.py), and it lets every check run where
+    pyGeo is not installed. It cannot write IGES.
+    """
+    if backend is None:
+        backend = "pygeo" if pygeo_available() else "numpy"
+    if backend == "numpy":
+        return _build_numpy(stations, k_span)
+    if backend != "pygeo":
+        raise ValueError("backend must be 'pygeo' or 'numpy'")
     from pygeo import pyGeo
     from pyspline import Curve, Surface
 
@@ -166,3 +195,67 @@ def build_loft(stations: list[Station], k_span: int = 2) -> Loft:
     geo.surfs = [top, bot, te]
     geo.nSurf = 3
     return Loft(geo=geo, stations=list(stations), k_span=k_span, station_v=np.asarray(span.s, dtype=float))
+
+
+# --- numpy backend -------------------------------------------------------------------
+
+class _RuledSurface:
+    """Sections (cubic splines in s) joined by straight lines in v; called like a pySpline surface."""
+
+    def __init__(self, curves, station_v: np.ndarray):
+        self.curves = curves
+        self.v = np.asarray(station_v, dtype=float)
+        self.coef = np.concatenate([c.c for c in curves])
+        self.tu = curves[0].t
+        self.tv = self.v
+
+    def __call__(self, s, v):
+        s, v = np.broadcast_arrays(np.asarray(s, dtype=float), np.asarray(v, dtype=float))
+        shape = s.shape
+        s, v = s.ravel(), np.clip(v.ravel(), 0.0, 1.0)
+        j = np.clip(np.searchsorted(self.v, v, side="right") - 1, 0, len(self.v) - 2)
+        t = (v - self.v[j]) / (self.v[j + 1] - self.v[j])
+        out = np.empty((len(s), 3))
+        for k in np.unique(j):
+            m = j == k
+            a, b = self.curves[k](s[m]), self.curves[k + 1](s[m])
+            out[m] = (1.0 - t[m, None]) * a + t[m, None] * b
+        return out.reshape(*shape, 3) if shape else out[0]
+
+
+class _RuledBase:
+    """Trailing-edge base: straight lines between the upper and lower edge, called as base(v, w)."""
+
+    def __init__(self, upper: _RuledSurface, lower: _RuledSurface):
+        self.upper, self.lower = upper, lower
+        self.coef = np.concatenate([upper.coef[-1:], lower.coef[-1:]])
+        self.tu, self.tv = upper.v, np.array([0.0, 0.0, 1.0, 1.0])
+
+    def __call__(self, v, w):
+        a, b = self.upper(1.0, v), self.lower(1.0, v)
+        w = np.asarray(w, dtype=float)
+        return (1.0 - w)[..., None] * a + w[..., None] * b if w.ndim else (1.0 - w) * a + w * b
+
+
+def _build_numpy(stations: list[Station], k_span: int) -> Loft:
+    from types import SimpleNamespace
+
+    from scipy.interpolate import make_interp_spline
+
+    if k_span != 2:
+        raise ValueError("the numpy loft supports k_span = 2 (straight panels) only")
+    x = stations[0].airfoil.x
+    if any(not np.array_equal(st.airfoil.x, x) for st in stations):
+        raise ValueError("all sections must share the same chordwise points")
+    s = np.sqrt(x)
+    tops, bots = [], []
+    for st in stations:
+        up, lo = section_points(st)
+        tops.append(make_interp_spline(s, up, k=3))
+        bots.append(make_interp_spline(s, lo, k=3))
+    le = np.array([[st.x_le, st.y, st.z_le] for st in stations])
+    d = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(le, axis=0), axis=1))])
+    station_v = d / d[-1]                        # chord-length parameter, as pySpline uses
+    top, bot = _RuledSurface(tops, station_v), _RuledSurface(bots, station_v)
+    geo = SimpleNamespace(surfs=[top, bot, _RuledBase(top, bot)], nSurf=3, backend="numpy")
+    return Loft(geo=geo, stations=list(stations), k_span=k_span, station_v=station_v)

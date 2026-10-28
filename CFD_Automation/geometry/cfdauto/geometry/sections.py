@@ -106,6 +106,11 @@ def _resample(side: np.ndarray, x: np.ndarray) -> np.ndarray:
     # Some files repeat or step back a point near an edge: keep x increasing.
     keep = np.concatenate([[True], xs[1:] > np.maximum.accumulate(xs)[:-1] + 1e-12])
     xs, ys = xs[keep], ys[keep]
+    # A single point off a smooth line is a typo in the file (e.g. sc20412, lower
+    # surface at x/c 0.73): drop it rather than build a bump into the wing.
+    bad = _airfoils.suspect_points(np.column_stack([xs, ys]))
+    if len(bad):
+        xs, ys = np.delete(xs, bad), np.delete(ys, bad)
     xs[0], ys[0] = 0.0, 0.0
     xs[-1] = 1.0
     return PchipInterpolator(np.sqrt(xs), ys)(np.sqrt(x))

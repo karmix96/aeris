@@ -132,6 +132,29 @@ def read_dat(path: Path) -> np.ndarray:
     return pts
 
 
+# --- typos in files ------------------------------------------------------------
+
+def suspect_points(side: np.ndarray, x_min: float = 0.05, limit: float = 6e-4) -> np.ndarray:
+    """Indices of single points that jump off a smooth line (likely typos in a .dat file).
+
+    A point is suspect when its second difference is a sharp -1/+2/-1 spike: |d2| > limit
+    (chord units), both neighbours' d2 of the other sign and about half its size, and
+    the curve two points further on each side calm (< 1/4 of the spike). Only aft of
+    x_min, where the curve is gentle.
+    """
+    d2 = side[:-2, 1] - 2 * side[1:-1, 1] + side[2:, 1]
+    out = []
+    for i in range(2, len(d2) - 2):
+        c = d2[i]
+        if side[i + 1, 0] <= x_min or abs(c) <= limit:
+            continue
+        halves = all(-0.8 < d2[j] / c < -0.2 for j in (i - 1, i + 1))
+        calm = max(abs(d2[i - 2]), abs(d2[i + 2])) < 0.25 * abs(c)
+        if halves and calm:
+            out.append(i + 1)
+    return np.array(out, dtype=int)
+
+
 # --- NACA formulas -------------------------------------------------------------
 # Thickness: the standard 4/5-digit distribution with the classic open trailing
 # edge (last coefficient -0.1015), applied normal to the camber line.

@@ -23,7 +23,7 @@
    "c2_ratio": 0.9025,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,
@@ -39,11 +39,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.6,
+   "root_chord_m": 0.75,
    "c2_ratio": 0.9025,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,
@@ -59,11 +59,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.8049999999999999,
    "c3_ratio": 0.61,
    "c4_ratio": 0.4,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,
@@ -79,11 +79,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 1.0,
    "c3_ratio": 1.0,
    "c4_ratio": 1.0,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,
@@ -99,7 +99,7 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.9025,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
@@ -119,11 +119,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.9025,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 6.0,
+   "semi_span_m": 7.5,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,
@@ -139,11 +139,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.88,
    "c3_ratio": 0.76,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.2,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,
@@ -159,11 +159,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.925,
    "c3_ratio": 0.85,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.5,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,
@@ -179,11 +179,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.9415,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.3,
    "sweep1_deg": 5.0,
@@ -199,11 +199,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.8634999999999999,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.7,
    "sweep1_deg": 5.0,
@@ -219,11 +219,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.9025,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": -10.0,
@@ -239,11 +239,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.9025,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": 20.0,
@@ -259,11 +259,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.9025,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,
@@ -279,11 +279,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.9025,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,
@@ -299,11 +299,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.9025,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,
@@ -319,11 +319,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.9025,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,
@@ -339,11 +339,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.9025,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,
@@ -359,11 +359,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.9025,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,
@@ -379,11 +379,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.9025,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,
@@ -399,11 +399,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.9025,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,
@@ -419,11 +419,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.9025,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,
@@ -439,11 +439,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.9025,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,
@@ -459,11 +459,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.9025,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,
@@ -479,11 +479,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.9025,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,
@@ -499,11 +499,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.9025,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,
@@ -519,11 +519,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.9025,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,
@@ -539,11 +539,11 @@
    "dihedral3_deg": 1.5
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.9025,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,
@@ -559,11 +559,11 @@
    "dihedral3_deg": -3.0
   },
   {
-   "root_chord_m": 0.365,
+   "root_chord_m": 0.44,
    "c2_ratio": 0.9025,
    "c3_ratio": 0.8049999999999999,
    "c4_ratio": 0.7,
-   "semi_span_m": 4.0,
+   "semi_span_m": 4.75,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
    "sweep1_deg": 5.0,

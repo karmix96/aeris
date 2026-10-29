@@ -8,50 +8,8 @@
   "re_low_min": 123277.57750540736,
   "re_high_max": 2131270.4271844663,
   "all_covered": true,
-  "spans_checked": 43,
+  "spans_checked": 52,
   "spans_outside": [
-   {
-    "name": "Vestel Karayel",
-    "family": "tailed",
-    "class": "II",
-    "span": 8.0
-   },
-   {
-    "name": "Ababil-3",
-    "family": "tailed",
-    "class": "II",
-    "span": 8.0
-   },
-   {
-    "name": "Aeronautics Aerostar",
-    "family": "tailed",
-    "class": "II",
-    "span": 8.7
-   },
-   {
-    "name": "Hamaseh",
-    "family": "tailed",
-    "class": "II",
-    "span": 9.0
-   },
-   {
-    "name": "Mohajer-6",
-    "family": "tailed",
-    "class": "II",
-    "span": 10.0
-   },
-   {
-    "name": "Elbit Hermes 450",
-    "family": "tailed",
-    "class": "II",
-    "span": 10.5
-   },
-   {
-    "name": "Thales Watchkeeper WK450",
-    "family": "tailed",
-    "class": "II",
-    "span": 10.9
-   },
    {
     "name": "Lockheed Martin Fury",
     "family": "tailless",
@@ -59,15 +17,15 @@
     "span": 5.2
    },
    {
-    "name": "Shahed 197",
-    "family": "tailless",
-    "class": "I",
-    "span": 7.0
-   },
-   {
     "name": "Albatroz",
     "family": "tailless",
     "class": "II",
+    "span": 7.0
+   },
+   {
+    "name": "Shahed 197",
+    "family": "tailless",
+    "class": "I",
     "span": 7.0
    },
    {
@@ -80,32 +38,32 @@
   "envelope": {
    "bwb": {
     "span_m": [
-     0.9012987509941999,
-     3.499460216388793
+     0.6227950986439371,
+     3.4567485308449073
     ],
     "mean_chord_m": [
-     0.1687393565287039,
-     0.47352432366942593
+     0.16873935652870387,
+     0.4735243236694259
     ]
    },
    "conventional": {
     "span_m": [
-     0.5612476697666224,
-     7.042387983075729
+     0.5754158190715082,
+     10.984518653178677
     ],
     "mean_chord_m": [
-     0.09084337795600832,
-     0.5755823850963565
+     0.09094031596225244,
+     0.7191593562733232
     ]
    },
    "tapered": {
     "span_m": [
-     0.5470125249138371,
-     6.88228388486886
+     0.5568209527886866,
+     10.717865435343148
     ],
     "mean_chord_m": [
-     0.0938536189061526,
-     0.5960290708981316
+     0.09409252656146083,
+     0.7448671757077269
     ]
    }
   }
@@ -121,6 +79,7 @@
    "mtow": 0.69,
    "cruise": 11.1,
    "max": null,
+   "stype": "manufacturer",
    "use": "ranges",
    "note": "cruise 40-90 km/h (lowest given)",
    "source": "https://www.manualslib.com/manual/944170/Sensefly-Ebee.html",
@@ -141,6 +100,7 @@
    "mtow": 2.5,
    "cruise": 22.2,
    "max": null,
+   "stype": "manufacturer",
    "use": "ranges",
    "note": "34 dm2; 80 km/h 'flight speed'",
    "source": "https://www.taketani.co.jp/sys/dat/pdf/to_img0_20160615092951.pdf",
@@ -161,6 +121,7 @@
    "mtow": 2.0,
    "cruise": 22.2,
    "max": null,
+   "stype": "manufacturer",
    "use": "ranges",
    "note": "23 dm2; 80 km/h 'flight speed'",
    "source": "https://www.taketani.co.jp/sys/dat/pdf/to_img0_20160615092951.pdf",
@@ -181,6 +142,7 @@
    "mtow": null,
    "cruise": 18.0,
    "max": null,
+   "stype": "paper",
    "use": "ranges",
    "note": "peer-reviewed; mean chord 0.36 m; 18 m/s is the test speed",
    "source": "https://elib.dlr.de/212985/1/s13272-025-00816-3.pdf",
@@ -201,6 +163,7 @@
    "mtow": 6.2,
    "cruise": 18.0,
    "max": 28.0,
+   "stype": "manufacturer",
    "use": "ranges",
    "note": "90 dm2",
    "source": "https://www.deltaquad.com/map",
@@ -221,6 +184,7 @@
    "mtow": 11.0,
    "cruise": 16.73,
    "max": null,
+   "stype": "manufacturer",
    "use": "ranges",
    "note": "84 dm2",
    "source": "https://docs.deltaquad.com/tac/vehicle-specifications",
@@ -241,6 +205,7 @@
    "mtow": 4.5,
    "cruise": 16.0,
    "max": 22.0,
+   "stype": "manufacturer",
    "use": "span",
    "note": "manufacturer calls it a BWB",
    "source": "https://www.c-astral.com/en/unmanned-systems/bramor-c4eye",
@@ -256,6 +221,7 @@
    "mtow": 19.0,
    "cruise": 16.7,
    "max": 41.7,
+   "stype": "secondary",
    "use": "span",
    "note": "60-150 km/h range; paper gives no source",
    "source": "https://acta-avionica.tuke.sk/ojs/index.php/aavionica/article/download/591/589",
@@ -271,6 +237,7 @@
    "mtow": 195,
    "cruise": null,
    "max": null,
+   "stype": "secondary",
    "use": "span",
    "note": "'blended' wing; no speeds published",
    "source": "https://newatlas.com/lockheed-martin-fury-drone-uas/49263/",
@@ -286,6 +253,7 @@
    "mtow": 1.59,
    "cruise": 17.0,
    "max": null,
+   "stype": "manufacturer",
    "use": "ranges",
    "note": "54.6 in; 292 in2",
    "source": "https://techpartnerships.noaa.gov/wp-content/uploads/2024/01/VTOL-S0-Data-Sheet.pdf",
@@ -306,6 +274,7 @@
    "mtow": 1.3,
    "cruise": 11.9,
    "max": 23.1,
+   "stype": "manufacturer",
    "use": "span",
    "note": "",
    "source": "https://www.avinc.com/images/uploads/product_docs/Wasp_Datasheet_07192021.pdf",
@@ -321,6 +290,7 @@
    "mtow": 1.9,
    "cruise": 8.9,
    "max": 22.5,
+   "stype": "manufacturer",
    "use": "span",
    "note": "",
    "source": "https://www.avinc.com/images/uploads/product_docs/Raven_Datasheet_07122021.pdf",
@@ -336,6 +306,7 @@
    "mtow": 5.0,
    "cruise": 17.0,
    "max": null,
+   "stype": "manufacturer",
    "use": "span",
    "note": "",
    "source": "https://quantum-systems.com/wp-content/uploads/2023/01/QS_TrinityF90_Overview_220912.pdf",
@@ -351,6 +322,7 @@
    "mtow": 6.3,
    "cruise": 10.3,
    "max": 23.1,
+   "stype": "manufacturer",
    "use": "span",
    "note": "37-83 km/h envelope",
    "hcdi": {
@@ -373,6 +345,7 @@
    "mtow": 21.5,
    "cruise": 22.0,
    "max": 36.0,
+   "stype": "manufacturer",
    "use": "ranges",
    "note": "datasheet prints '0.79 m' (m2)",
    "source": "https://www.unmannedsystemstechnology.com/wp-content/uploads/2014/11/Penguin-B-Datasheet.pdf",
@@ -393,6 +366,7 @@
    "mtow": 11.0,
    "cruise": 25.0,
    "max": null,
+   "stype": "model",
    "use": "none",
    "note": "textbook simulation model, not manufacturer data",
    "source": "https://raw.githubusercontent.com/byu-magicc/mavsim_public/main/mavsim_python/parameters/aerosonde_parameters.py",
@@ -411,6 +385,7 @@
    "mtow": 61,
    "cruise": 30.9,
    "max": 46.3,
+   "stype": "manufacturer",
    "use": "span",
    "note": "",
    "hcdi": {
@@ -433,6 +408,7 @@
    "mtow": 170,
    "cruise": 30.8,
    "max": 53.9,
+   "stype": "secondary",
    "use": "span",
    "note": "",
    "source": "https://designation-systems.net/dusrm/app2/q-7.html",
@@ -448,6 +424,7 @@
    "mtow": 190.5,
    "cruise": 33.3,
    "max": 56.7,
+   "stype": "thesis_report",
    "use": "ranges",
    "note": "30.42 ft2, 16.9 ft, mean chord 1.80 ft (Bray 1991, NPS wind-tunnel thesis); speeds designation-systems",
    "source": "https://de3mirror.flightgear.org/fgdata/fgdata_2020_3/Aircraft-uiuc/models/pioneer/linear.html",
@@ -468,6 +445,7 @@
    "mtow": 285,
    "cruise": null,
    "max": 61.1,
+   "stype": "secondary",
    "use": "span",
    "note": "Wikipedia, citing Swiss Ruestungsprogramm 1995",
    "source": "https://en.wikipedia.org/wiki/RUAG_Ranger",
@@ -483,6 +461,7 @@
    "mtow": 212,
    "cruise": null,
    "max": null,
+   "stype": "manufacturer",
    "use": "span",
    "note": "",
    "hcdi": {
@@ -505,6 +484,7 @@
    "mtow": 240,
    "cruise": null,
    "max": 51.4,
+   "stype": "manufacturer",
    "use": "span",
    "note": "",
    "hcdi": {
@@ -515,7 +495,7 @@
     "payload": 40.0
    },
    "source": "https://aeronautics-sys.com/wp-content/uploads/2025/10/AEROSTAR_PRINT_22.10.25-1.pdf",
-   "span_covered": false
+   "span_covered": true
   },
   {
    "name": "Elbit Hermes 450",
@@ -527,6 +507,7 @@
    "mtow": 450,
    "cruise": 36.0,
    "max": null,
+   "stype": "government",
    "use": "span",
    "note": "",
    "hcdi": {
@@ -537,7 +518,7 @@
     "payload": 50.0
    },
    "source": "https://www.mindef.gov.sg/news-and-events/latest-releases/2015mar30-news-releases-01655/",
-   "span_covered": false
+   "span_covered": true
   },
   {
    "name": "Thales Watchkeeper WK450",
@@ -549,10 +530,219 @@
    "mtow": 485,
    "cruise": 39.6,
    "max": null,
+   "stype": "government",
    "use": "span",
    "note": "",
    "source": "https://www.army.mod.uk/learn-and-explore/equipment/aircraft/watchkeeper",
-   "span_covered": false
+   "span_covered": true
+  },
+  {
+   "name": "Goetten UAV 1",
+   "class": "I",
+   "family": "tailed",
+   "family_src": "K",
+   "span": 3.3,
+   "area": 1.0,
+   "mtow": 25,
+   "cruise": 22.2,
+   "max": null,
+   "stype": "paper",
+   "use": "ranges",
+   "note": "MTOM 25 kg, payload 5 kg, loiter 22.2 m/s, AR 10.9, paper Re 0.5e6",
+   "source": "https://link.springer.com/article/10.1007/s13272-021-00522-w",
+   "mean_chord": 0.30303030303030304,
+   "aspect_ratio": 10.889999999999999,
+   "re_low": 359909.09090909094,
+   "re_high": 460818.1818181818,
+   "covered": true,
+   "span_covered": true
+  },
+  {
+   "name": "Goetten UAV 2",
+   "class": "I",
+   "family": "tailed",
+   "family_src": "K",
+   "span": 3.6,
+   "area": 1.32,
+   "mtow": 50,
+   "cruise": 27.8,
+   "max": null,
+   "stype": "paper",
+   "use": "ranges",
+   "note": "MTOM 50 kg, payload 8-10 kg, loiter 27.8 m/s, AR 9.8, paper Re 0.6e6",
+   "source": "https://link.springer.com/article/10.1007/s13272-021-00522-w",
+   "mean_chord": 0.3666666666666667,
+   "aspect_ratio": 9.818181818181818,
+   "re_low": 545343.3333333334,
+   "re_high": 698243.3333333335,
+   "covered": true,
+   "span_covered": true
+  },
+  {
+   "name": "Goetten UAV 3",
+   "class": "I",
+   "family": "tailed",
+   "family_src": "K",
+   "span": 4.2,
+   "area": 2.34,
+   "mtow": 75,
+   "cruise": 36.1,
+   "max": null,
+   "stype": "paper",
+   "use": "ranges",
+   "note": "MTOM 75 kg, payload 15-20 kg, loiter 36.1 m/s, AR 7.5, paper Re 1.4e6",
+   "source": "https://link.springer.com/article/10.1007/s13272-021-00522-w",
+   "mean_chord": 0.557142857142857,
+   "aspect_ratio": 7.538461538461539,
+   "re_low": 1076037.857142857,
+   "re_high": 1377730.714285714,
+   "covered": true,
+   "span_covered": true
+  },
+  {
+   "name": "Goetten UAV 4",
+   "class": "I",
+   "family": "tailed",
+   "family_src": "K",
+   "span": 6.0,
+   "area": 2.63,
+   "mtow": 130,
+   "cruise": 37.5,
+   "max": null,
+   "stype": "paper",
+   "use": "ranges",
+   "note": "MTOM 130 kg, payload 18 kg, loiter 37.5 m/s, AR 13.5, paper Re 1.1e6",
+   "source": "https://link.springer.com/article/10.1007/s13272-021-00522-w",
+   "mean_chord": 0.4383333333333333,
+   "aspect_ratio": 13.688212927756654,
+   "re_low": 879406.25,
+   "re_high": 1125968.75,
+   "covered": true,
+   "span_covered": true
+  },
+  {
+   "name": "Goetten UAV 5",
+   "class": "II",
+   "family": "tailed",
+   "family_src": "K",
+   "span": 4.9,
+   "area": 3.04,
+   "mtow": 150,
+   "cruise": 34.7,
+   "max": null,
+   "stype": "paper",
+   "use": "ranges",
+   "note": "MTOM 150 kg, payload 30 kg, loiter 34.7 m/s, AR 7.9, paper Re 1.5e6",
+   "source": "https://link.springer.com/article/10.1007/s13272-021-00522-w",
+   "mean_chord": 0.6204081632653061,
+   "aspect_ratio": 7.898026315789475,
+   "re_low": 1151756.7346938776,
+   "re_high": 1474679.1836734693,
+   "covered": true,
+   "span_covered": true
+  },
+  {
+   "name": "Goetten UAV 6",
+   "class": "II",
+   "family": "tailed",
+   "family_src": "K",
+   "span": 4.3,
+   "area": 2.37,
+   "mtow": 170,
+   "cruise": 36.1,
+   "max": null,
+   "stype": "paper",
+   "use": "ranges",
+   "note": "MTOM 170 kg, payload 25 kg, loiter 36.1 m/s, AR 7.8, paper Re 1.2e6",
+   "source": "https://link.springer.com/article/10.1007/s13272-021-00522-w",
+   "mean_chord": 0.5511627906976745,
+   "aspect_ratio": 7.801687763713079,
+   "re_low": 1064488.2558139537,
+   "re_high": 1362942.9069767443,
+   "covered": true,
+   "span_covered": true
+  },
+  {
+   "name": "Goetten UAV 7",
+   "class": "II",
+   "family": "tailed",
+   "family_src": "K",
+   "span": 5.2,
+   "area": 3.13,
+   "mtow": 182,
+   "cruise": 34.7,
+   "max": null,
+   "stype": "paper",
+   "use": "ranges",
+   "note": "MTOM 182 kg, payload 40 kg, loiter 34.7 m/s, AR 8.6, paper Re 1.4e6",
+   "source": "https://link.springer.com/article/10.1007/s13272-021-00522-w",
+   "mean_chord": 0.6019230769230769,
+   "aspect_ratio": 8.638977635782748,
+   "re_low": 1117440.0961538462,
+   "re_high": 1430741.0576923077,
+   "covered": true,
+   "span_covered": true
+  },
+  {
+   "name": "Goetten UAV 8",
+   "class": "II",
+   "family": "tailed",
+   "family_src": "K",
+   "span": 5.1,
+   "area": 2.82,
+   "mtow": 205,
+   "cruise": 30.6,
+   "max": null,
+   "stype": "paper",
+   "use": "ranges",
+   "note": "MTOM 205 kg, payload 34 kg, loiter 30.6 m/s, AR 9.4, paper Re 1.1e6",
+   "source": "https://link.springer.com/article/10.1007/s13272-021-00522-w",
+   "mean_chord": 0.5529411764705883,
+   "aspect_ratio": 9.22340425531915,
+   "re_low": 905220.0000000001,
+   "re_high": 1159020.0000000002,
+   "covered": true,
+   "span_covered": true
+  },
+  {
+   "name": "Goetten UAV 9",
+   "class": "II",
+   "family": "tailed",
+   "family_src": "K",
+   "span": 8.7,
+   "area": 4.74,
+   "mtow": 230,
+   "cruise": 33.3,
+   "max": null,
+   "stype": "paper",
+   "use": "ranges",
+   "note": "MTOM 230 kg, payload 50 kg, loiter 33.3 m/s, AR 16.0, paper Re 1.2e6",
+   "source": "https://link.springer.com/article/10.1007/s13272-021-00522-w",
+   "mean_chord": 0.5448275862068966,
+   "aspect_ratio": 15.968354430379742,
+   "re_low": 970637.5862068966,
+   "re_high": 1242778.9655172413,
+   "covered": true,
+   "span_covered": true
+  },
+  {
+   "name": "Goetten UAV 10",
+   "class": "III",
+   "family": "tailed",
+   "family_src": "K",
+   "span": 12.0,
+   "area": 8.7,
+   "mtow": 630,
+   "cruise": 36.1,
+   "max": null,
+   "stype": "paper",
+   "use": "none",
+   "note": "MTOM 630 kg, payload 55 kg, loiter 36.1 m/s, AR 16.5, paper Re 1.8e6; 630 kg is above Class II",
+   "source": "https://link.springer.com/article/10.1007/s13272-021-00522-w",
+   "mean_chord": 0.725,
+   "aspect_ratio": 16.551724137931036,
+   "re_low": 1400228.75,
+   "re_high": 1792816.25
   },
   {
    "name": "Sagem Sperwer",
@@ -564,6 +754,7 @@
    "mtow": 330,
    "cruise": 41.7,
    "max": 55.6,
+   "stype": "secondary",
    "use": "none",
    "note": "delta wing with V-tail: neither of our families; area from a secondary site only; speeds disagree between sources",
    "source": "https://www.redstar.gr/en/greek-aviation/hellenic-aerial-means-af/army-aviation/unmanned-aerial-vehicle-uav/tactical-uav-system-sperwer.html",
@@ -804,7 +995,7 @@
    "payload": 50.0,
    "role": null,
    "use": "span",
-   "span_covered": false
+   "span_covered": true
   },
   {
    "model": "Ababil-3",
@@ -816,7 +1007,7 @@
    "payload": 40.0,
    "role": null,
    "use": "span",
-   "span_covered": false
+   "span_covered": true
   },
   {
    "model": "Hamaseh",
@@ -828,7 +1019,7 @@
    "payload": 50.0,
    "role": null,
    "use": "span",
-   "span_covered": false
+   "span_covered": true
   },
   {
    "model": "Mohajer-6",
@@ -841,7 +1032,7 @@
    "role": null,
    "use": "span",
    "check": "payload 150 kg; class to verify against MTOW",
-   "span_covered": false
+   "span_covered": true
   }
  ]
 }

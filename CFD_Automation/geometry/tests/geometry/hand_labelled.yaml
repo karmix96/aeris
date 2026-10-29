@@ -16,6 +16,7 @@ bases:
              dihedral0_deg: 0.0, dihedral1_deg: 0.0, dihedral2_deg: 0.0, dihedral3_deg: 0.0}
   bwb:
     type: bwb
+    span_mode: semi_span    # the vector below gives the semi-span in metres
     # fixed numbers (the mid-range of the old AERIS space), so the test checks the labeller,
     # not the current ranges
     vector: {root_chord_m: 0.9, c2_ratio: 0.675, c3_ratio: 0.425, c4_ratio: 0.14, semi_span_m: 1.0,

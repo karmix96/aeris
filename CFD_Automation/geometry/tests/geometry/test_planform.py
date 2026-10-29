@@ -30,7 +30,7 @@ def test_panel_spans_follow_ratios():
     spec = params.load_config().types["bwb"]
     vec = params.mid_vector(spec)
     pf = build_planform(spec, vec)
-    s = vec["semi_span_m"]
+    s = semi_span_m(spec, vec)
     p1, p2, p3 = pf.panel_span
     assert p3 == pytest.approx(vec["b3_ratio"] * s)
     assert p1 == pytest.approx(vec["split_ratio"] * (s - p3))

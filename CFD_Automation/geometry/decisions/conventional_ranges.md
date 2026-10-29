@@ -4,64 +4,73 @@ Ranges live in `geometry/configs/wing.yaml`. Same 18 variables for every type.
 
 ## Size: from real wings, not from a target Reynolds number
 
-Decided 29 Oct 2026 (Mike): take the size ranges from a short, sourced table of real Class I and II
-UAVs; compute the Re those wings fly at; if it does not reach 5 × 10⁶, lower the top Re level and do
-not stretch the wings.
+Decided 29 Oct 2026 (Mike): take the size ranges from real Class I and II UAVs; compute the Re those
+wings fly at; if it does not reach 5 × 10⁶, lower the top Re level and do not stretch the wings.
 
 Before, the conventional root chord went up to 1.35 m only so that the mean chord would reach
-Re 5 × 10⁶ at 56.6 m/s. Neither number had a source (Stage 0's fastest aircraft was 48.9 m/s), and
-the BWB sizes were the old AERIS design space.
+Re 5 × 10⁶ at 56.6 m/s. Neither number had a source, and the BWB sizes were the old AERIS space.
 
-Evidence: `configs/real_uavs.yaml` (every number with its link). A real wing counts for the ranges
-only if its wing area is published, because only then is its mean chord (area / span) known.
+Evidence: `configs/real_uavs.yaml`, every number with its link and its source type (`stype`).
+A real wing sets the ranges only if its wing area is published (then mean chord = area / span).
 
 | family | real wings with a published area | span | mean chord | aspect ratio |
 |---|---|---|---|---|
-| tailless (our `bwb` type) | eBee, Trimble UX5, Gatewing X100, Skywalker X8, DeltaQuad Pro, DeltaQuad Evo | 0.96–2.69 m | 0.23–0.38 m | 2.9–8.6 |
-| with a tail (our `conventional` and `tapered` types) | Black Swift S0, Penguin B, AAI Pioneer | 1.39–5.15 m | 0.14–0.55 m | 9.4–13.8 |
+| tailless (`bwb`) | eBee, Trimble UX5, Gatewing X100, Skywalker X8, DeltaQuad Pro, DeltaQuad Evo | 0.96–2.69 m | 0.23–0.38 m | 2.9–8.6 |
+| with a tail (`conventional`, `tapered`) | Black Swift S0, Penguin B, AAI Pioneer, Götten UAVs 1–9 | 1.39–8.7 m | 0.14–0.62 m | 7.5–16.0 |
 
-New size ranges (`python scripts/real_uav_check.py` checks that every real wing above has a
-generated wing within 10 % in span and in mean chord):
+Götten UAVs 1–9: Götten et al. 2021, CEAS Aeronaut. J., Table 2 (open access). Anonymised, 25–230 kg
+(five of them Class II, 150–230 kg). Their geometry was "derived from drawings and images" and
+remodelled in OpenVSP; stated accuracy of the wetted area about 10–15 %. UAV 10 (630 kg) is above
+Class II and is shown but not used.
 
-| type | root chord | semi-span | generated span | generated mean chord |
-|---|---|---|---|---|
-| bwb | 0.40–0.80 m (was 0.70–1.10) | 0.45–1.75 m (was 0.75–1.25) | 0.90–3.50 m | 0.17–0.47 m |
-| conventional | 0.13–0.60 m (was 0.15–1.35) | 2–6 root chords (unchanged) | 0.56–7.0 m | 0.09–0.58 m |
-| tapered | 0.13–0.60 m | 2–6 root chords | 0.55–6.9 m | 0.09–0.60 m |
+Wings with a span only (sourced, or from the HCDI UAS database v13) are checked on span alone.
 
-All nine real wings are covered.
+New size ranges (`python scripts/real_uav_check.py` checks that every real wing with an area has a
+generated wing within 10 % in span and in mean chord, and that every span-only wing is inside the span
+range):
 
-**Spans from the HCDI UAS database v13 (Mike's dashboard), added 29 Oct 2026.** It lists 794
-aircraft, 76 of them fixed-wing Class I–II; 18 give a span and none gives a wing area, so they test
-the span range only (rows in `real_uavs.yaml` under `hcdi_db`). It also adds class, MTOW and payload
-for five aircraft already in the table. Its weak points: no source per row; 28 rows share the same
-cruise 35 m/s, endurance 6 h and range 100 km (defaults); on 8 rows cruise is above top speed; Orlan-10
-is listed as Class II at 18 kg; Puma LE as a flying wing; XQ-58 Valkyrie (a jet) as Class II.
-Result: four Class I flying wings (Supercam S350, SKAT-350M 3.2 m; Gerbera 3.5 m; Fulmar 3.1 m from
-the sourced table) were longer than the BWB range, so the BWB semi-span now goes to 1.75 m (span 3.5 m).
-Cost: 42 % of bwb-type wings are now slim flying wings that the label rule calls "conventional"
-(was about 25 %).
+| type | root chord | semi-span | generated span | generated mean chord | generated AR |
+|---|---|---|---|---|---|
+| bwb | 0.40–0.80 m | 0.75–2.2 root chords | 0.62–3.46 m | 0.17–0.47 m | 2.7–10.2 |
+| conventional | 0.13–0.75 m | 2–7.5 root chords | 0.58–11.0 m | 0.09–0.72 m | 4.5–21 |
+| tapered | 0.13–0.75 m | 2–7.5 root chords | 0.56–10.7 m | 0.09–0.75 m | 4.1–21 |
+
+History: BWB root chord was 0.70–1.10 m and semi-span 0.75–1.25 m (AERIS). Conventional root chord was
+0.15–1.35 m. On 29 Oct 2026 the BWB span was briefly set in metres (0.45–1.75 m), which gave flying
+wings an aspect ratio up to 19 (real: at most 8.6); it is now set in root chords, like the other types.
+
+Result: every real wing with an area is covered; every span-only wing with a tail (Class I and II, up to
+the Watchkeeper's 10.9 m) and every Class I tailless wing is inside the span range.
+
+## HCDI UAS database v13 (Mike's dashboard)
+
+794 entries; 76 fixed-wing Class I–II; 18 give a span; none gives a wing area. Weak points: no source
+per row; 28 rows share cruise 35 m/s, endurance 6 h and range 100 km (defaults); on 8 rows cruise is
+above top speed; Orlan-10 listed as Class II at 18 kg; Puma LE as a flying wing; XQ-58 Valkyrie (a jet)
+as Class II. Only span, class, MTOW and payload are used.
 
 ## Reynolds number
 
 Re = (ρ/μ) · V · mean chord, with Stage 0's air (ρ/μ 6.85 × 10⁴ s/m² at sea level, 5.35 × 10⁴ at 3,048 m).
-Low: cruise speed at 3,048 m. High: top speed (cruise if none published) at sea level.
+Low: cruise speed at 3,048 m. High: top speed (cruise or loiter if none) at sea level.
 
-- Real wings in our families: **1.2 × 10⁵ (Black Swift S0) to 2.1 × 10⁶ (AAI Pioneer)**.
-- None reaches 5 × 10⁶. The only one that does is the Sperwer (delta wing with a V-tail, outside our
-  families, area from a secondary site).
-- So the Stage 0 top level is lowered from 5 × 10⁶ to **2 × 10⁶** (`Stage 0_Decisions/stage0_values.yaml`).
+- Real wings in our families: **1.2 × 10⁵ (Black Swift S0) to 2.13 × 10⁶ (AAI Pioneer at top speed)**.
+- Class II wings from Götten et al.: Re ≤ 1.5 × 10⁶ at loiter speed (no top speeds given).
+- None reaches 5 × 10⁶ (only the Sperwer does: a delta wing outside our families, area from a
+  secondary site). So the Stage 0 top level is lowered from 5 × 10⁶ to **2.5 × 10⁶** (2.13 × 10⁶
+  rounded up).
 
 ## What the evidence cannot cover yet
 
-- Class II wings are outside the span range: with a tail, Karayel and Ababil-3 (8 m), Aerostar
-  (8.7 m), Hamaseh (9 m), Mohajer-6 (10 m), Hermes 450 (10.5 m), Watchkeeper (10.9 m); tailless,
-  Fury (5.2 m), Albatroz (7 m), Shahed 191 (7.3 m). None has a published wing area, so their chord and
-  Re are unknown. At their cruise speeds (36–40 m/s) a mean chord above about 0.8 m would put them
-  above Re 2 × 10⁶ at sea level. Find those areas before widening or settling the top Re level.
+- Tailless Class II wings (Fury 5.2 m, Albatroz 7 m, Shahed 191 7.3 m) have no published area and stay
+  outside the BWB span range.
+- Generated wings with a tail reach AR 21; real ones with a known area reach 16.5.
 - Mini Class I wings fly at 1.2–2 × 10⁵, below the lowest Re level (3 × 10⁵).
-- With real flying-wing sizes, 42 % of the bwb-type wings are slim flying wings without a
-  centre body; the label rule calls them "conventional".
+- 14 % of bwb-type wings are slim flying wings without a centre body; the label rule calls them
+  "conventional".
+- The NTNU UAV database (93 UAVs, span, AR, estimated chord; DataverseNO, CC0) is blocked from the
+  cloud workspace.
+- The Verstraete et al. 2018 sizing correlations (856 UAVs) could not be read (paywall).
 
 ## Shape ranges (unchanged, our choice)
 

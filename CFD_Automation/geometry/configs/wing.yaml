@@ -24,7 +24,7 @@ trailing_edge:
 types:
   bwb:
     chord_law: stations               # stations | linear_taper
-    span_mode: semi_span              # semi_span | root_chord_fractions
+    span_mode: root_chord_fractions   # semi_span_m is read in root chords (keeps the aspect ratio real)
     airfoils: [mh91, mh91, e374, nlf1015]   # b0, b1, b2, b3
     pinned: {}
     ranges:
@@ -32,7 +32,7 @@ types:
       c2_ratio:      [0.55, 0.80]
       c3_ratio:      [0.30, 0.55]
       c4_ratio:      [0.08, 0.20]
-      semi_span_m:   [0.45, 1.75]     # span 0.9-3.5 m (real Class I tailless: 0.96-3.5 m)
+      semi_span_m:   [0.75, 2.2]      # semi-span / root chord: span 0.6-3.5 m, AR about 3-10
       b3_ratio:      [0.40, 0.55]
       split_ratio:   [0.40, 0.60]
       sweep1_deg:    [20.0, 40.0]
@@ -54,11 +54,11 @@ types:
     airfoils: [naca4415, naca4415, naca4412, naca4412]
     pinned: {}
     ranges:
-      root_chord_m:  [0.13, 0.60]     # sizes from real wings with a tail: configs/real_uavs.yaml
+      root_chord_m:  [0.13, 0.75]     # sizes from real wings with a tail: configs/real_uavs.yaml
       c2_ratio:      [0.80, 1.00]     # c(b1) / c(b0)
       c3_ratio:      [0.70, 1.00]     # c(b2) / c(b1)
       c4_ratio:      [0.50, 1.00]     # c(b3) / c(b2); overall taper 0.28-1
-      semi_span_m:   [2.0, 6.0]       # semi-span / root chord
+      semi_span_m:   [2.0, 7.5]       # semi-span / root chord
       b3_ratio:      [0.20, 0.50]
       split_ratio:   [0.30, 0.70]
       sweep1_deg:    [-10.0, 20.0]
@@ -80,9 +80,9 @@ types:
     airfoils: [naca4415, naca4415, naca4412, naca4412]
     pinned: {}
     ranges:                           # c2, c3, sweep2, sweep3 follow from the laws
-      root_chord_m:  [0.13, 0.60]
+      root_chord_m:  [0.13, 0.75]
       c4_ratio:      [0.40, 1.00]     # taper ratio tip / root
-      semi_span_m:   [2.0, 6.0]       # semi-span / root chord
+      semi_span_m:   [2.0, 7.5]       # semi-span / root chord
       b3_ratio:      [0.20, 0.50]     # stations still set where twist and dihedral may change
       split_ratio:   [0.30, 0.70]
       sweep1_deg:    [-10.0, 20.0]    # the one leading-edge sweep

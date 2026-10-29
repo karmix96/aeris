@@ -17,8 +17,8 @@
    real Class I–II wings (`geometry/configs/real_uavs.yaml`), not from a target Re. Root chord
    0.13–0.60 m for conventional and tapered; see `geometry/decisions/conventional_ranges.md`.
 9. ~~**BWB stops at Re ≈ 3 × 10⁶**~~ **Decided 29 Oct 2026:** BWB sizes come from real tailless
-   wings too (root chord 0.40–0.80 m, semi-span 0.45–1.40 m). The top Re level is lowered to
-   2 × 10⁶ for every type, because no real wing of our families reaches 5 × 10⁶.
+   wings too (root chord 0.40–0.80 m, semi-span 0.75–2.2 root chords). The top Re level is lowered
+   to 2.5 × 10⁶ for every type, because no real wing of our families reaches 5 × 10⁶ (highest 2.13 × 10⁶).
 10. **BWB root dihedral** now 0–3° at b0 and b1 (was pinned 0 in AERIS).
 11. **`root_chord_fractions` mode:** `semi_span_m` is read as semi-span / root chord (keeps one
     variable list). Conventional uses this mode so the aspect ratio stays in 4–16.5.
@@ -81,14 +81,19 @@
 32. **TE opening now follows pyGeo** (linear ramp over the last 10 % of chord, half up, half down,
     as `readAirfoilFile(bluntTe=True, bluntTaperRange=0.1)`). Replaces the uncited 65 % start.
     The sample sets in `data/sets/` must be rebuilt with pyGeo (`--all`): surfaces changed aft of 90 %.
-33. **The two upper Re levels are now close** (1.5 × 10⁶ and 2 × 10⁶). Move the middle level to
-    about 6 × 10⁵ (between 3 × 10⁵ and 2 × 10⁶ on a log scale)? Mini Class I wings fly at
-    1.2–2 × 10⁵ (eBee, Black Swift S0), below the low level: this is item 2 with numbers now.
-34. **Class II wing areas missing.** Ten Class II wings (5.2–10.9 m span; Hermes 450, Watchkeeper,
-    Aerostar, Karayel, Mohajer-6, Shahed 191 and others, from the sourced table and the HCDI UAS
-    database) are outside the span range and have no published wing area. At 36–40 m/s cruise, a mean
-    chord above about 0.8 m puts them above Re 2 × 10⁶, so the top Re level may have to rise again.
-    Until the areas are found (Jane's, papers), the generator covers Class I and small Class II.
-35. **Slim tailless wings are labelled "conventional".** With real flying-wing sizes (span now up to
-    3.5 m), 42 % of the bwb-type wings have no centre body; the label rule calls them "conventional", which
-    reads like "has a tail". Rename that label to "flying wing" for tailless types?
+33. **The two upper Re levels are close** (1.5 × 10⁶ and 2.5 × 10⁶). Move the middle level to about
+    6 × 10⁵ (log-middle of 3 × 10⁵ and 2.5 × 10⁶)? Mini Class I wings fly at 1.2–2 × 10⁵ (eBee,
+    Black Swift S0), below the low level: this is item 2 with numbers now.
+34. **Class II, partly closed (29 Oct 2026).** Götten et al. 2021 (CEAS Aeronaut. J., Table 2) give
+    wing areas for five Class II wings (150–230 kg; anonymised; from images and three-views, about
+    10–15 % accuracy): mean chord 0.55–0.62 m, AR 7.8–16, Re ≤ 1.5 × 10⁶ at loiter. Conventional and
+    tapered sizes widened to root chord 0.13–0.75 m, semi-span 2–7.5 root chords: every real wing with
+    a tail, Class I and II, is now inside (span up to 11 m). Still open: tailless Class II (Fury 5.2 m,
+    Albatroz 7 m, Shahed 191 7.3 m) have no area and stay outside.
+35. **Label for slim tailless wings.** With the BWB span set in root chords (0.75–2.2), 14 % of
+    bwb-type wings are slim flying wings that the label rule calls "conventional". Rename to
+    "flying wing" for tailless types?
+36. **Aspect ratio of wings with a tail.** Generated AR reaches 21 (99 % below 20); real wings with a
+    known area reach 16.5. Cap AR (a gate, or narrower span ratio with taper), or accept?
+37. **NTNU UAV database** (Hann & Wallisch, DataverseNO doi:10.18710/L41IGQ, CC0): 93 UAVs with span,
+    AR and estimated chord. Blocked from the cloud workspace; attach 02_Database.csv to add it.

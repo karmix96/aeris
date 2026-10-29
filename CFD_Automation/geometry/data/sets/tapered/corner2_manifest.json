@@ -9,7 +9,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "924cfe53329a4e38200e04f9f68c7b6413fe974cff6420987c1b23ad49484f64",
+   "input_hash": "13e3e31230bea3e50030b3c8dfc84b94bae6ceb3aea5fb0de325eea334baade2",
    "surface_hash": "bc238de1b98e223018904a249bf4ad969d6b0e018198c76640d9bae4bde575a8",
    "labels": [
     "conventional",
@@ -43,8 +43,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "ef322c2f74a8d593af4c8bcb50cd200db389a31e87f5b84707b99e7ce47dff57",
-   "surface_hash": "625ae30eb33d9d601944be894942094de47c2ed1a133a52b7b5b011321b65901",
+   "input_hash": "09774d3898f43842b20c5a3c678bbb9b23f667b38886c5e3cf1bc336112ea521",
+   "surface_hash": "1e3d4e5237edc84f30758aa23eea569e863066226abd74a14080b9fc2eb9accd",
    "labels": [
     "conventional",
     "aft_swept",
@@ -53,11 +53,11 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.6,
+    "root_chord_m": 0.75,
     "c2_ratio": 1.0,
     "c3_ratio": 1.0,
     "c4_ratio": 1.0,
-    "semi_span_m": 6.0,
+    "semi_span_m": 7.5,
     "b3_ratio": 0.5,
     "split_ratio": 0.7,
     "sweep1_deg": 20.0,
@@ -78,8 +78,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "2331311a4b20a4df9e10bf540fca50245e7e65c6da4787e27f97abf91ce2a45e",
-   "surface_hash": "14f7844f3dfa7d4656a5347a83693adb6605820d6cbf0ea2dea21ccc7ca3d7cd",
+   "input_hash": "6813031bf2096db2082f7ea221d733ee2d805f2e458096b045d2bf31a1154b5a",
+   "surface_hash": "c60a8537fb62b3c836c0cf004afb25b7cc3bb83e1620c48a0acae5deee76ee15",
    "labels": [
     "conventional",
     "aft_swept",
@@ -88,11 +88,11 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.6,
+    "root_chord_m": 0.75,
     "c2_ratio": 1.0,
     "c3_ratio": 1.0,
     "c4_ratio": 1.0,
-    "semi_span_m": 6.0,
+    "semi_span_m": 7.5,
     "b3_ratio": 0.5,
     "split_ratio": 0.7,
     "sweep1_deg": 20.0,
@@ -113,8 +113,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "9e052f9af8834503cbd27774ff62b6148a028c1126a002e24a2b944f984849ac",
-   "surface_hash": "e30586a3336818de37911383502ff9dfa7a6a33b5617ce6b719acde16d42789d",
+   "input_hash": "9e39b94905ff9ca264ba2b725fba2b62855974a348c637bf9045cdc2b19c7b25",
+   "surface_hash": "3f2370d6621aee593438d97730e609457a72ce58f1e9dfd02b0a5fa0c88c2a25",
    "labels": [
     "conventional",
     "forward_swept",
@@ -124,11 +124,11 @@
     "high_aspect_ratio"
    ],
    "vector": {
-    "root_chord_m": 0.6,
+    "root_chord_m": 0.75,
     "c2_ratio": 1.0,
     "c3_ratio": 1.0,
     "c4_ratio": 1.0,
-    "semi_span_m": 6.0,
+    "semi_span_m": 7.5,
     "b3_ratio": 0.2,
     "split_ratio": 0.3,
     "sweep1_deg": -10.0,
@@ -149,8 +149,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "b451a42382c6dcb10dd991904ee5dc5baf34c73b87cb55625a337328564abc8e",
-   "surface_hash": "4de47053f133a8665c17470dd9ffa3f1567952844b036a7489413626c8aa423d",
+   "input_hash": "a2aa71404948df25945e4a0248c0d3b0218df8319a3ee31c81f948f493576ab2",
+   "surface_hash": "d1639bab0ef2a6c650103ca7fae4b67b99b7dfb1cd9cd2bc2bfce8d9f1f53049",
    "labels": [
     "conventional",
     "forward_swept",
@@ -159,7 +159,7 @@
     "varying_dihedral"
    ],
    "vector": {
-    "root_chord_m": 0.6,
+    "root_chord_m": 0.75,
     "c2_ratio": 0.79,
     "c3_ratio": 0.7,
     "c4_ratio": 0.4,
@@ -184,7 +184,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "7d4acdb20f5daa856ce369b413d2dfdcba754ecf678a8317e3928ddc3b7fe885",
+   "input_hash": "aededfc31907a1457516f94d9ec4e4f529e5e97d65808f455dff826ea8e4c2ad",
    "surface_hash": "bec34acb5a71a3259da7a6302f58d6d13d633ecc2f943bd7cdeaa58d69f0ef5c",
    "labels": [
     "conventional",
@@ -219,8 +219,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "a4d9da2b7e0d582937f0d3503c37ca827d70e904e63df0d631ec93b79cbbb0a3",
-   "surface_hash": "21f4a150f0c2bf898140e72b81a24ef8c972dcd17ecfad1afde0a74b71989c67",
+   "input_hash": "b6d0d378a233d45cbef13499ce6513fbf60e5e623052f7393faf955539d94ded",
+   "surface_hash": "7a402289e6d19058b16380c8947d1a5e6744184198666d07fe71bafe63202b34",
    "labels": [
     "conventional",
     "aft_swept",
@@ -233,7 +233,7 @@
     "c2_ratio": 0.664,
     "c3_ratio": 0.52,
     "c4_ratio": 0.4,
-    "semi_span_m": 6.0,
+    "semi_span_m": 7.5,
     "b3_ratio": 0.2,
     "split_ratio": 0.7,
     "sweep1_deg": 20.0,

@@ -77,13 +77,14 @@ D3_conditions_and_measurement:
     reason: Class I-II wings fly subsonic. Transonic later.
     sources: []
   reynolds_levels:
-    value: [3.0e5, 1.5e6, 2.0e6]
+    value: [3.0e5, 1.5e6, 2.5e6]
     unit: on mean aerodynamic chord
     reason: >-
-      Top level lowered from 5e6 to 2e6 on 29 Oct 2026. Real Class I-II wings with a published
+      Top level lowered from 5e6 to 2.5e6 on 29 Oct 2026 (the highest real value, 2.13e6, rounded up). Real Class I-II wings with a published
       wing area fly at Re 1.2e5 to 2.1e6 (highest: AAI Pioneer at top speed, sea level); none in our
       families reaches 5e6 (geometry/configs/real_uavs.yaml, geometry/docs/real_uavs.json). The
-      largest Class II wings (Hermes 450, Watchkeeper) have no published area, so this may rise again.
+      Class II wings with a published area (Goetten et al. 2021, 150-230 kg) have mean chords 0.55-0.62 m
+      and fly at Re up to 1.5e6 at loiter speed.
       Mini Class I sit below 3e5 (see OPEN_DECISIONS.md).
     sources: [nato2009jcguav, icao1993isa, sutherland1893]
   angles_of_attack:

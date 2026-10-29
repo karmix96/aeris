@@ -6,6 +6,10 @@
 #   'conventional' and 'tapered' types). family_src: S = a source says so; K = known from
 #   photos, not stated in a text source.
 # use: ranges = has a wing area, so a mean chord; span = span only; none = shown, not used (why in note).
+# stype (where the number comes from): manufacturer (datasheet, manual, brochure); paper (peer-reviewed);
+#   thesis_report (thesis, technical report: DTIC, NPS, NASA); government (ministry or armed-forces page);
+#   secondary (trade press, Wikipedia, enthusiast sites); model (simulation or textbook model, not the
+#   real aircraft); measured_drawing (measured on a three-view, last resort); hcdi_db (Mike's database).
 # hcdi: the same aircraft in the HCDI UAS database v13 (Mike's dashboard), where it is listed.
 # Compiled 29 Oct 2026. Re-check a row before quoting it in the paper.
 
@@ -17,86 +21,120 @@ air:   # Stage 0 values (ISA, Sutherland): rho/mu in s/m2
 aircraft:
   # --- tailless -------------------------------------------------------------------------
   - {name: senseFly eBee, class: I, family: tailless, family_src: K, span: 0.96, area: 0.25, mtow: 0.69,
-     cruise: 11.1, max: null, use: ranges, note: "cruise 40-90 km/h (lowest given)",
+     cruise: 11.1, max: null, stype: manufacturer, use: ranges, note: "cruise 40-90 km/h (lowest given)",
      source: "https://www.manualslib.com/manual/944170/Sensefly-Ebee.html"}
   - {name: Trimble UX5, class: I, family: tailless, family_src: K, span: 1.0, area: 0.34, mtow: 2.5,
-     cruise: 22.2, max: null, use: ranges, note: "34 dm2; 80 km/h 'flight speed'",
+     cruise: 22.2, max: null, stype: manufacturer, use: ranges, note: "34 dm2; 80 km/h 'flight speed'",
      source: "https://www.taketani.co.jp/sys/dat/pdf/to_img0_20160615092951.pdf"}
   - {name: Gatewing X100, class: I, family: tailless, family_src: K, span: 1.0, area: 0.23, mtow: 2.0,
-     cruise: 22.2, max: null, use: ranges, note: "23 dm2; 80 km/h 'flight speed'",
+     cruise: 22.2, max: null, stype: manufacturer, use: ranges, note: "23 dm2; 80 km/h 'flight speed'",
      source: "https://www.taketani.co.jp/sys/dat/pdf/to_img0_20160615092951.pdf"}
   - {name: Skywalker X8, class: I, family: tailless, family_src: S, span: 2.10, area: 0.75, mtow: null,
-     cruise: 18.0, max: null, use: ranges, note: "peer-reviewed; mean chord 0.36 m; 18 m/s is the test speed",
+     cruise: 18.0, max: null, stype: paper, use: ranges, note: "peer-reviewed; mean chord 0.36 m; 18 m/s is the test speed",
      source: "https://elib.dlr.de/212985/1/s13272-025-00816-3.pdf"}
   - {name: DeltaQuad Pro, class: I, family: tailless, family_src: K, span: 2.35, area: 0.90, mtow: 6.2,
-     cruise: 18.0, max: 28.0, use: ranges, note: "90 dm2",
+     cruise: 18.0, max: 28.0, stype: manufacturer, use: ranges, note: "90 dm2",
      source: "https://www.deltaquad.com/map"}
   - {name: DeltaQuad Evo TAC, class: I, family: tailless, family_src: S, span: 2.69, area: 0.84, mtow: 11.0,
-     cruise: 16.73, max: null, use: ranges, note: "84 dm2",
+     cruise: 16.73, max: null, stype: manufacturer, use: ranges, note: "84 dm2",
      source: "https://docs.deltaquad.com/tac/vehicle-specifications"}
   - {name: C-Astral Bramor C4EYE, class: I, family: tailless, family_src: S, span: 2.30, area: null, mtow: 4.5,
-     cruise: 16.0, max: 22.0, use: span, note: "manufacturer calls it a BWB",
+     cruise: 16.0, max: 22.0, stype: manufacturer, use: span, note: "manufacturer calls it a BWB",
      source: "https://www.c-astral.com/en/unmanned-systems/bramor-c4eye"}
   - {name: Aerovision Fulmar, class: I, family: tailless, family_src: S, span: 3.1, area: null, mtow: 19.0,
-     cruise: 16.7, max: 41.7, use: span, note: "60-150 km/h range; paper gives no source",
+     cruise: 16.7, max: 41.7, stype: secondary, use: span, note: "60-150 km/h range; paper gives no source",
      source: "https://acta-avionica.tuke.sk/ojs/index.php/aavionica/article/download/591/589"}
   - {name: Lockheed Martin Fury, class: II, family: tailless, family_src: S, span: 5.2, area: null, mtow: 195,
-     cruise: null, max: null, use: span, note: "'blended' wing; no speeds published",
+     cruise: null, max: null, stype: secondary, use: span, note: "'blended' wing; no speeds published",
      source: "https://newatlas.com/lockheed-martin-fury-drone-uas/49263/"}
   # --- tailed ---------------------------------------------------------------------------
   - {name: Black Swift S0, class: I, family: tailed, family_src: S, span: 1.387, area: 0.188, mtow: 1.59,
-     cruise: 17.0, max: null, use: ranges, note: "54.6 in; 292 in2",
+     cruise: 17.0, max: null, stype: manufacturer, use: ranges, note: "54.6 in; 292 in2",
      source: "https://techpartnerships.noaa.gov/wp-content/uploads/2024/01/VTOL-S0-Data-Sheet.pdf"}
   - {name: AV RQ-12A Wasp AE, class: I, family: tailed, family_src: K, span: 1.0, area: null, mtow: 1.3,
-     cruise: 11.9, max: 23.1, use: span, note: "",
+     cruise: 11.9, max: 23.1, stype: manufacturer, use: span, note: "",
      source: "https://www.avinc.com/images/uploads/product_docs/Wasp_Datasheet_07192021.pdf"}
   - {name: AV RQ-11B Raven, class: I, family: tailed, family_src: K, span: 1.4, area: null, mtow: 1.9,
-     cruise: 8.9, max: 22.5, use: span, note: "",
+     cruise: 8.9, max: 22.5, stype: manufacturer, use: span, note: "",
      source: "https://www.avinc.com/images/uploads/product_docs/Raven_Datasheet_07122021.pdf"}
   - {name: Quantum Trinity F90+, class: I, family: tailed, family_src: S, span: 2.394, area: null, mtow: 5.0,
-     cruise: 17.0, max: null, use: span, note: "",
+     cruise: 17.0, max: null, stype: manufacturer, use: span, note: "",
      source: "https://quantum-systems.com/wp-content/uploads/2023/01/QS_TrinityF90_Overview_220912.pdf"}
   - {name: AV RQ-20B Puma AE, class: I, family: tailed, family_src: K, span: 2.8, area: null, mtow: 6.3,
-     cruise: 10.3, max: 23.1, use: span, note: "37-83 km/h envelope",
+     cruise: 10.3, max: 23.1, stype: manufacturer, use: span, note: "37-83 km/h envelope",
      hcdi: {model: "Puma 3 AE", class: "I (Mini)", span: 2.8, mtow: null, payload: null}, 
      source: "https://www.avinc.com/images/uploads/product_docs/PumaAE_Datasheet_Web_v1.2.pdf"}
   - {name: Penguin B, class: I, family: tailed, family_src: K, span: 3.3, area: 0.79, mtow: 21.5,
-     cruise: 22.0, max: 36.0, use: ranges, note: "datasheet prints '0.79 m' (m2)",
+     cruise: 22.0, max: 36.0, stype: manufacturer, use: ranges, note: "datasheet prints '0.79 m' (m2)",
      source: "https://www.unmannedsystemstechnology.com/wp-content/uploads/2014/11/Penguin-B-Datasheet.pdf"}
   - {name: Aerosonde (Beard & McLain model), class: I, family: tailed, family_src: K, span: 2.8956, area: 0.55, mtow: 11.0,
-     cruise: 25.0, max: null, use: none, note: "textbook simulation model, not manufacturer data",
+     cruise: 25.0, max: null, stype: model, use: none, note: "textbook simulation model, not manufacturer data",
      source: "https://raw.githubusercontent.com/byu-magicc/mavsim_public/main/mavsim_python/parameters/aerosonde_parameters.py"}
   - {name: Insitu RQ-21A Blackjack, class: I, family: tailed, family_src: K, span: 4.8, area: null, mtow: 61,
-     cruise: 30.9, max: 46.3, use: span, note: "",
+     cruise: 30.9, max: 46.3, stype: manufacturer, use: span, note: "",
      hcdi: {model: "RQ-21A Blackjack", class: "I (Small)", span: 4.9, mtow: null, payload: 18.0}, 
      source: "https://c-853-20151211-www-insitu-com.i.icims.com/wp-content/uploads/2021/01/RQ-21A_Blackjack_ProductCard_DU011221.pdf"}
   - {name: AAI RQ-7B Shadow, class: II, family: tailed, family_src: K, span: 4.27, area: null, mtow: 170,
-     cruise: 30.8, max: 53.9, use: span, note: "",
+     cruise: 30.8, max: 53.9, stype: secondary, use: span, note: "",
      source: "https://designation-systems.net/dusrm/app2/q-7.html"}
   - {name: AAI RQ-2A Pioneer, class: II, family: tailed, family_src: K, span: 5.15, area: 2.826, mtow: 190.5,
-     cruise: 33.3, max: 56.7, use: ranges, note: "30.42 ft2, 16.9 ft, mean chord 1.80 ft (Bray 1991, NPS wind-tunnel thesis); speeds designation-systems",
+     cruise: 33.3, max: 56.7, stype: thesis_report, use: ranges, note: "30.42 ft2, 16.9 ft, mean chord 1.80 ft (Bray 1991, NPS wind-tunnel thesis); speeds designation-systems",
      source: "https://de3mirror.flightgear.org/fgdata/fgdata_2020_3/Aircraft-uiuc/models/pioneer/linear.html"}
   - {name: RUAG Ranger, class: II, family: tailed, family_src: K, span: 5.71, area: null, mtow: 285,
-     cruise: null, max: 61.1, use: span, note: "Wikipedia, citing Swiss Ruestungsprogramm 1995",
+     cruise: null, max: 61.1, stype: secondary, use: span, note: "Wikipedia, citing Swiss Ruestungsprogramm 1995",
      source: "https://en.wikipedia.org/wiki/RUAG_Ranger"}
   - {name: Shadow V2, class: II, family: tailed, family_src: K, span: 6.2, area: null, mtow: 212,
-     cruise: null, max: null, use: span, note: "",
+     cruise: null, max: null, stype: manufacturer, use: span, note: "",
      hcdi: {model: "RQ-7B Shadow v2 Block III", class: "II", span: null, mtow: 243.0, payload: 19.5}, 
      source: "https://www.textronsystems.com/sites/default/files/_documents/TS%20US%20Shadow%20V2%20Datasheet_061119.pdf"}
   - {name: Aeronautics Aerostar, class: II, family: tailed, family_src: K, span: 8.7, area: null, mtow: 240,
-     cruise: null, max: 51.4, use: span, note: "",
+     cruise: null, max: 51.4, stype: manufacturer, use: span, note: "",
      hcdi: {model: "Aeronautics Aerostar", class: "II", span: null, mtow: 240.0, payload: 40.0}, 
      source: "https://aeronautics-sys.com/wp-content/uploads/2025/10/AEROSTAR_PRINT_22.10.25-1.pdf"}
   - {name: Elbit Hermes 450, class: II, family: tailed, family_src: K, span: 10.5, area: null, mtow: 450,
-     cruise: 36.0, max: null, use: span, note: "",
+     cruise: 36.0, max: null, stype: government, use: span, note: "",
      hcdi: {model: "Hermes 450", class: "II", span: 10.0, mtow: null, payload: 50.0}, 
      source: "https://www.mindef.gov.sg/news-and-events/latest-releases/2015mar30-news-releases-01655/"}
   - {name: Thales Watchkeeper WK450, class: II, family: tailed, family_src: K, span: 10.9, area: null, mtow: 485,
-     cruise: 39.6, max: null, use: span, note: "",
+     cruise: 39.6, max: null, stype: government, use: span, note: "",
      source: "https://www.army.mod.uk/learn-and-explore/equipment/aircraft/watchkeeper"}
+  # --- Goetten et al. 2021, CEAS Aeronaut. J. 12:589-603, Table 2 (open access) ---------------
+  # Anonymised in the paper. Geometry 'derived from drawings and images' and remodelled in OpenVSP;
+  # stated accuracy of the wetted area about 10-15 %. Speeds are loiter speeds. Family not stated per
+  # aircraft; the paper's database is about 88 % tail-boom or standard layout (Goetten et al. APISAT 2018).
+  - {name: Goetten UAV 1, class: I, family: tailed, family_src: K, span: 3.3, area: 1.0, mtow: 25,
+     cruise: 22.2, max: null, stype: paper, use: ranges, note: "MTOM 25 kg, payload 5 kg, loiter 22.2 m/s, AR 10.9, paper Re 0.5e6",
+     source: "https://link.springer.com/article/10.1007/s13272-021-00522-w"}
+  - {name: Goetten UAV 2, class: I, family: tailed, family_src: K, span: 3.6, area: 1.32, mtow: 50,
+     cruise: 27.8, max: null, stype: paper, use: ranges, note: "MTOM 50 kg, payload 8-10 kg, loiter 27.8 m/s, AR 9.8, paper Re 0.6e6",
+     source: "https://link.springer.com/article/10.1007/s13272-021-00522-w"}
+  - {name: Goetten UAV 3, class: I, family: tailed, family_src: K, span: 4.2, area: 2.34, mtow: 75,
+     cruise: 36.1, max: null, stype: paper, use: ranges, note: "MTOM 75 kg, payload 15-20 kg, loiter 36.1 m/s, AR 7.5, paper Re 1.4e6",
+     source: "https://link.springer.com/article/10.1007/s13272-021-00522-w"}
+  - {name: Goetten UAV 4, class: I, family: tailed, family_src: K, span: 6.0, area: 2.63, mtow: 130,
+     cruise: 37.5, max: null, stype: paper, use: ranges, note: "MTOM 130 kg, payload 18 kg, loiter 37.5 m/s, AR 13.5, paper Re 1.1e6",
+     source: "https://link.springer.com/article/10.1007/s13272-021-00522-w"}
+  - {name: Goetten UAV 5, class: II, family: tailed, family_src: K, span: 4.9, area: 3.04, mtow: 150,
+     cruise: 34.7, max: null, stype: paper, use: ranges, note: "MTOM 150 kg, payload 30 kg, loiter 34.7 m/s, AR 7.9, paper Re 1.5e6",
+     source: "https://link.springer.com/article/10.1007/s13272-021-00522-w"}
+  - {name: Goetten UAV 6, class: II, family: tailed, family_src: K, span: 4.3, area: 2.37, mtow: 170,
+     cruise: 36.1, max: null, stype: paper, use: ranges, note: "MTOM 170 kg, payload 25 kg, loiter 36.1 m/s, AR 7.8, paper Re 1.2e6",
+     source: "https://link.springer.com/article/10.1007/s13272-021-00522-w"}
+  - {name: Goetten UAV 7, class: II, family: tailed, family_src: K, span: 5.2, area: 3.13, mtow: 182,
+     cruise: 34.7, max: null, stype: paper, use: ranges, note: "MTOM 182 kg, payload 40 kg, loiter 34.7 m/s, AR 8.6, paper Re 1.4e6",
+     source: "https://link.springer.com/article/10.1007/s13272-021-00522-w"}
+  - {name: Goetten UAV 8, class: II, family: tailed, family_src: K, span: 5.1, area: 2.82, mtow: 205,
+     cruise: 30.6, max: null, stype: paper, use: ranges, note: "MTOM 205 kg, payload 34 kg, loiter 30.6 m/s, AR 9.4, paper Re 1.1e6",
+     source: "https://link.springer.com/article/10.1007/s13272-021-00522-w"}
+  - {name: Goetten UAV 9, class: II, family: tailed, family_src: K, span: 8.7, area: 4.74, mtow: 230,
+     cruise: 33.3, max: null, stype: paper, use: ranges, note: "MTOM 230 kg, payload 50 kg, loiter 33.3 m/s, AR 16.0, paper Re 1.2e6",
+     source: "https://link.springer.com/article/10.1007/s13272-021-00522-w"}
+  - {name: Goetten UAV 10, class: III, family: tailed, family_src: K, span: 12.0, area: 8.7, mtow: 630,
+     cruise: 36.1, max: null, stype: paper, use: none, note: "MTOM 630 kg, payload 55 kg, loiter 36.1 m/s, AR 16.5, paper Re 1.8e6; 630 kg is above Class II",
+     source: "https://link.springer.com/article/10.1007/s13272-021-00522-w"}
   # --- outside both families --------------------------------------------------------------
   - {name: Sagem Sperwer, class: II, family: delta, family_src: S, span: 4.2, area: 6.6, mtow: 330,
-     cruise: 41.7, max: 55.6, use: none, note: "delta wing with V-tail: neither of our families; area from a secondary site only; speeds disagree between sources",
+     cruise: 41.7, max: 55.6, stype: secondary, use: none, note: "delta wing with V-tail: neither of our families; area from a secondary site only; speeds disagree between sources",
      source: "https://www.redstar.gr/en/greek-aviation/hellenic-aerial-means-af/army-aviation/unmanned-aerial-vehicle-uav/tactical-uav-system-sperwer.html"}
 
 # ------------------------------------------------------------------------------------------

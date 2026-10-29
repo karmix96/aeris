@@ -6,6 +6,7 @@
 #   'conventional' and 'tapered' types). family_src: S = a source says so; K = known from
 #   photos, not stated in a text source.
 # use: ranges = has a wing area, so a mean chord; span = span only; none = shown, not used (why in note).
+# hcdi: the same aircraft in the HCDI UAS database v13 (Mike's dashboard), where it is listed.
 # Compiled 29 Oct 2026. Re-check a row before quoting it in the paper.
 
 air:   # Stage 0 values (ISA, Sutherland): rho/mu in s/m2
@@ -57,6 +58,7 @@ aircraft:
      source: "https://quantum-systems.com/wp-content/uploads/2023/01/QS_TrinityF90_Overview_220912.pdf"}
   - {name: AV RQ-20B Puma AE, class: I, family: tailed, family_src: K, span: 2.8, area: null, mtow: 6.3,
      cruise: 10.3, max: 23.1, use: span, note: "37-83 km/h envelope",
+     hcdi: {model: "Puma 3 AE", class: "I (Mini)", span: 2.8, mtow: null, payload: null}, 
      source: "https://www.avinc.com/images/uploads/product_docs/PumaAE_Datasheet_Web_v1.2.pdf"}
   - {name: Penguin B, class: I, family: tailed, family_src: K, span: 3.3, area: 0.79, mtow: 21.5,
      cruise: 22.0, max: 36.0, use: ranges, note: "datasheet prints '0.79 m' (m2)",
@@ -66,6 +68,7 @@ aircraft:
      source: "https://raw.githubusercontent.com/byu-magicc/mavsim_public/main/mavsim_python/parameters/aerosonde_parameters.py"}
   - {name: Insitu RQ-21A Blackjack, class: I, family: tailed, family_src: K, span: 4.8, area: null, mtow: 61,
      cruise: 30.9, max: 46.3, use: span, note: "",
+     hcdi: {model: "RQ-21A Blackjack", class: "I (Small)", span: 4.9, mtow: null, payload: 18.0}, 
      source: "https://c-853-20151211-www-insitu-com.i.icims.com/wp-content/uploads/2021/01/RQ-21A_Blackjack_ProductCard_DU011221.pdf"}
   - {name: AAI RQ-7B Shadow, class: II, family: tailed, family_src: K, span: 4.27, area: null, mtow: 170,
      cruise: 30.8, max: 53.9, use: span, note: "",
@@ -78,12 +81,15 @@ aircraft:
      source: "https://en.wikipedia.org/wiki/RUAG_Ranger"}
   - {name: Shadow V2, class: II, family: tailed, family_src: K, span: 6.2, area: null, mtow: 212,
      cruise: null, max: null, use: span, note: "",
+     hcdi: {model: "RQ-7B Shadow v2 Block III", class: "II", span: null, mtow: 243.0, payload: 19.5}, 
      source: "https://www.textronsystems.com/sites/default/files/_documents/TS%20US%20Shadow%20V2%20Datasheet_061119.pdf"}
   - {name: Aeronautics Aerostar, class: II, family: tailed, family_src: K, span: 8.7, area: null, mtow: 240,
      cruise: null, max: 51.4, use: span, note: "",
+     hcdi: {model: "Aeronautics Aerostar", class: "II", span: null, mtow: 240.0, payload: 40.0}, 
      source: "https://aeronautics-sys.com/wp-content/uploads/2025/10/AEROSTAR_PRINT_22.10.25-1.pdf"}
   - {name: Elbit Hermes 450, class: II, family: tailed, family_src: K, span: 10.5, area: null, mtow: 450,
      cruise: 36.0, max: null, use: span, note: "",
+     hcdi: {model: "Hermes 450", class: "II", span: 10.0, mtow: null, payload: 50.0}, 
      source: "https://www.mindef.gov.sg/news-and-events/latest-releases/2015mar30-news-releases-01655/"}
   - {name: Thales Watchkeeper WK450, class: II, family: tailed, family_src: K, span: 10.9, area: null, mtow: 485,
      cruise: 39.6, max: null, use: span, note: "",
@@ -92,3 +98,41 @@ aircraft:
   - {name: Sagem Sperwer, class: II, family: delta, family_src: S, span: 4.2, area: 6.6, mtow: 330,
      cruise: 41.7, max: 55.6, use: none, note: "delta wing with V-tail: neither of our families; area from a secondary site only; speeds disagree between sources",
      source: "https://www.redstar.gr/en/greek-aviation/hellenic-aerial-means-af/army-aviation/unmanned-aerial-vehicle-uav/tactical-uav-system-sperwer.html"}
+
+# ------------------------------------------------------------------------------------------
+# HCDI UAS database v13 (Mike's dashboard, 29 Oct 2026): fixed-wing Class I-II aircraft with a span.
+# 794 entries; 76 fixed-wing Class I-II; 18 give a span; NONE gives a wing area, so these rows
+# only test the span range. The database has no source per row, and some values look like
+# defaults (cruise 35 m/s + endurance 6 h + range 100 km on 28 rows; cruise above top speed on 8).
+# So only span, class, MTOW and payload are taken. family_src D = the database's layout field.
+# check: a correction or doubt about the database row (our knowledge; verify before use).
+hcdi_db:
+  - {model: Interceptor-mr, class: I, family: tailless, family_src: D, span: 0.9, mtow: null, payload: 1.0, role: Interceptor, use: span}
+  - {model: Zala Z-16, class: I, family: tailless, family_src: D, span: 2.815, mtow: 10.5, payload: 1.8, role: ISTAR, use: span,
+     check: "manufacturer field reads Nanjing Qinheng Microelectronics (WCH); ZALA Aero is the maker"}
+  - {model: Supercam S350, class: I, family: tailless, family_src: D, span: 3.2, mtow: 15.5, payload: 2.5, role: ISTAR, use: span}
+  - {model: SKAT-350M, class: I, family: tailless, family_src: D, span: 3.2, mtow: 15.0, payload: 2.5, role: ISTAR, use: span}
+  - {model: Gerbera, class: I, family: tailless, family_src: D, span: 3.5, mtow: 18.0, payload: 4.6, role: Loitering Munition, use: span}
+  - {model: Shahed 197, class: I, family: tailless, family_src: D, span: 7.0, mtow: null, payload: null, role: null, use: span,
+     check: "7 m span listed as Class I (Small) with no MTOW: class doubtful"}
+  - {model: Albatroz, class: II, family: tailless, family_src: D, span: 7.0, mtow: null, payload: 30.0, role: null, use: span}
+  - {model: Shahed 191 (Saegheh), class: II, family: tailless, family_src: D, span: 7.31, mtow: null, payload: 50.0, role: null, use: span}
+  - {model: CPJ 100-LE, class: I, family: tailless, family_src: D, span: 3.05, mtow: null, payload: 4.54, role: One-Way Attack, use: none,
+     check: "top speed 380 km/h (106 m/s) is above Mach 0.3, outside phase 1"}
+  - {model: XQ-58 Valkyrie, class: II, family: tailless, family_src: D, span: 8.229, mtow: null, payload: 272.2, role: ISR, use: none,
+     check: "jet, top 1,050 km/h; listed as Class II but it is far heavier than 600 kg (Class III)"}
+  - {model: Puma LE, class: I, family: tailed, family_src: K, span: 4.6, mtow: null, payload: 2.5, role: ISR, use: span,
+     check: "database says Flying Wing; the Puma family has a tail"}
+  - {model: V2U, class: I, family: tailed, family_src: D, span: 1.2, mtow: 15.0, payload: 3.5, role: Barrage Munition, use: span}
+  - {model: Shahed 107, class: I, family: tailed, family_src: D, span: 3.0, mtow: 26.0, payload: 20.0, role: ISR, use: span}
+  - {model: Orlan-10, class: I, family: tailed, family_src: D, span: 3.05, mtow: 18.0, payload: 5.5, role: ISR, use: span,
+     check: "database says Class II, but MTOW 18 kg is Class I"}
+  - {model: Orlan-30, class: I, family: tailed, family_src: D, span: 3.05, mtow: 30.0, payload: 12.0, role: ISTAR, use: span}
+  - {model: Granat-4, class: I, family: tailed, family_src: D, span: 3.35, mtow: 30.0, payload: 20.0, role: ISTAR, use: span}
+  - {model: Merlin-VR, class: I, family: tailed, family_src: D, span: 4.9, mtow: 20.0, payload: 7.0, role: ISTAR, use: span}
+  - {model: Corsair, class: II, family: tailed, family_src: K, span: 6.5, mtow: null, payload: 40.0, role: null, use: span}
+  - {model: Vestel Karayel, class: II, family: tailed, family_src: K, span: 8.0, mtow: null, payload: 50.0, role: null, use: span}
+  - {model: Ababil-3, class: II, family: tailed, family_src: K, span: 8.0, mtow: null, payload: 40.0, role: null, use: span}
+  - {model: Hamaseh, class: II, family: tailed, family_src: K, span: 9.0, mtow: null, payload: 50.0, role: null, use: span}
+  - {model: Mohajer-6, class: II, family: tailed, family_src: K, span: 10.0, mtow: null, payload: 150.0, role: null, use: span,
+     check: "payload 150 kg; class to verify against MTOW"}

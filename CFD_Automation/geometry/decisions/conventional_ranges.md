@@ -25,11 +25,22 @@ generated wing within 10 % in span and in mean chord):
 
 | type | root chord | semi-span | generated span | generated mean chord |
 |---|---|---|---|---|
-| bwb | 0.40–0.80 m (was 0.70–1.10) | 0.45–1.40 m (was 0.75–1.25) | 0.90–2.80 m | 0.17–0.47 m |
+| bwb | 0.40–0.80 m (was 0.70–1.10) | 0.45–1.75 m (was 0.75–1.25) | 0.90–3.50 m | 0.17–0.47 m |
 | conventional | 0.13–0.60 m (was 0.15–1.35) | 2–6 root chords (unchanged) | 0.56–7.0 m | 0.09–0.58 m |
 | tapered | 0.13–0.60 m | 2–6 root chords | 0.55–6.9 m | 0.09–0.60 m |
 
 All nine real wings are covered.
+
+**Spans from the HCDI UAS database v13 (Mike's dashboard), added 29 Oct 2026.** It lists 794
+aircraft, 76 of them fixed-wing Class I–II; 18 give a span and none gives a wing area, so they test
+the span range only (rows in `real_uavs.yaml` under `hcdi_db`). It also adds class, MTOW and payload
+for five aircraft already in the table. Its weak points: no source per row; 28 rows share the same
+cruise 35 m/s, endurance 6 h and range 100 km (defaults); on 8 rows cruise is above top speed; Orlan-10
+is listed as Class II at 18 kg; Puma LE as a flying wing; XQ-58 Valkyrie (a jet) as Class II.
+Result: four Class I flying wings (Supercam S350, SKAT-350M 3.2 m; Gerbera 3.5 m; Fulmar 3.1 m from
+the sourced table) were longer than the BWB range, so the BWB semi-span now goes to 1.75 m (span 3.5 m).
+Cost: 42 % of bwb-type wings are now slim flying wings that the label rule calls "conventional"
+(was about 25 %).
 
 ## Reynolds number
 
@@ -43,11 +54,13 @@ Low: cruise speed at 3,048 m. High: top speed (cruise if none published) at sea 
 
 ## What the evidence cannot cover yet
 
-- Hermes 450 (10.5 m), Watchkeeper (10.9 m), Aerostar (8.7 m), Shadow V2 (6.2 m) and Ranger (5.71 m)
-  have published spans but no published wing area. The ranges stop at the Pioneer (5.15 m span), so
-  the generator covers Class I and small Class II. Find those areas before widening.
+- Class II wings are outside the span range: with a tail, Karayel and Ababil-3 (8 m), Aerostar
+  (8.7 m), Hamaseh (9 m), Mohajer-6 (10 m), Hermes 450 (10.5 m), Watchkeeper (10.9 m); tailless,
+  Fury (5.2 m), Albatroz (7 m), Shahed 191 (7.3 m). None has a published wing area, so their chord and
+  Re are unknown. At their cruise speeds (36–40 m/s) a mean chord above about 0.8 m would put them
+  above Re 2 × 10⁶ at sea level. Find those areas before widening or settling the top Re level.
 - Mini Class I wings fly at 1.2–2 × 10⁵, below the lowest Re level (3 × 10⁵).
-- With real flying-wing sizes, about a quarter of the bwb-type wings are slim flying wings without a
+- With real flying-wing sizes, 42 % of the bwb-type wings are slim flying wings without a
   centre body; the label rule calls them "conventional".
 
 ## Shape ranges (unchanged, our choice)

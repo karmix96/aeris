@@ -84,9 +84,11 @@
 33. **The two upper Re levels are now close** (1.5 × 10⁶ and 2 × 10⁶). Move the middle level to
     about 6 × 10⁵ (between 3 × 10⁵ and 2 × 10⁶ on a log scale)? Mini Class I wings fly at
     1.2–2 × 10⁵ (eBee, Black Swift S0), below the low level: this is item 2 with numbers now.
-34. **Class II wing areas missing.** Hermes 450, Watchkeeper, Aerostar, Shadow and Ranger have
-    published spans (4.3–10.9 m) but no wing area. Until they are found (Jane's, papers), the size
-    ranges stop at the Pioneer (5.15 m span); the generator covers Class I and small Class II only.
-35. **Slim tailless wings are labelled "conventional".** With real flying-wing sizes, about a quarter
-    of the bwb-type wings have no centre body; the label rule calls them "conventional", which
+34. **Class II wing areas missing.** Ten Class II wings (5.2–10.9 m span; Hermes 450, Watchkeeper,
+    Aerostar, Karayel, Mohajer-6, Shahed 191 and others, from the sourced table and the HCDI UAS
+    database) are outside the span range and have no published wing area. At 36–40 m/s cruise, a mean
+    chord above about 0.8 m puts them above Re 2 × 10⁶, so the top Re level may have to rise again.
+    Until the areas are found (Jane's, papers), the generator covers Class I and small Class II.
+35. **Slim tailless wings are labelled "conventional".** With real flying-wing sizes (span now up to
+    3.5 m), 42 % of the bwb-type wings have no centre body; the label rule calls them "conventional", which
     reads like "has a tail". Rename that label to "flying wing" for tailless types?

@@ -4,7 +4,7 @@
 # Bases:
 #   rect  conventional, root chord 0.5 m, semi-span 3.5 root chords (1.75 m),
 #         no taper, no sweep, no twist, no dihedral, crank at 70 % / 35 % of span
-#   bwb   the BWB mid-range vector
+#   bwb   a fixed BWB vector (the old AERIS mid-range wing)
 
 bases:
   rect:
@@ -16,7 +16,12 @@ bases:
              dihedral0_deg: 0.0, dihedral1_deg: 0.0, dihedral2_deg: 0.0, dihedral3_deg: 0.0}
   bwb:
     type: bwb
-    vector: mid
+    # fixed numbers (the mid-range of the old AERIS space), so the test checks the labeller,
+    # not the current ranges
+    vector: {root_chord_m: 0.9, c2_ratio: 0.675, c3_ratio: 0.425, c4_ratio: 0.14, semi_span_m: 1.0,
+             b3_ratio: 0.475, split_ratio: 0.5, sweep1_deg: 30.0, sweep2_deg: 25.0, sweep3_deg: 15.0,
+             twist0_deg: 0.0, twist1_deg: -1.5, twist2_deg: -3.0, twist3_deg: -5.0,
+             dihedral0_deg: 1.5, dihedral1_deg: 1.5, dihedral2_deg: 3.0, dihedral3_deg: 5.0}
 
 # straight taper to 0.5 on a 0.35 / 0.70 station layout: c2 = 0.825, c3 = 0.65
 wings:

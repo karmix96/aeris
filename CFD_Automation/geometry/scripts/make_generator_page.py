@@ -73,7 +73,7 @@ DECISIONS = [
          "Straight leading edge for tapered wings. Variables a law computes need no range.", "req", ""),
         ("Span mode", "<code>semi_span</code> (metres) or <code>root_chord_fractions</code> (semi-span read in root chords).",
          "BlendedNet gives spans in root chords. Conventional uses it so the aspect ratio stays 4–16.5.", "own", "open"),
-        ("Size ranges from real wings", "BWB root chord 0.40–0.80 m, semi-span 0.45–1.40 m. Conventional and tapered root chord 0.13–0.60 m, semi-span 2–6 root chords.",
+        ("Size ranges from real wings", "BWB root chord 0.40–0.80 m, semi-span 0.45–1.75 m. Conventional and tapered root chord 0.13–0.60 m, semi-span 2–6 root chords.",
          "Every real Class I–II wing with a published area has a generated wing within 10 % in span and mean chord (see <a href='#real'>Real wings</a>). Before, the root chord was stretched to 1.35 m only to reach Re 5 × 10⁶. Decided 29 Oct 2026.", "meas", ""),
         ("Shape ranges", "BWB chord ratios and sweeps from AERIS; dihedral 0–3° now allowed at b0, b1. Conventional and tapered: sweep −10° to +20°, dihedral −3° to +6°, taper down to 0.28 (cranked) or 0.40 (tapered).",
          "No source for these yet.", "own", "open"),
@@ -159,9 +159,9 @@ FIXES = [
 ]
 
 OPEN = [
-    ("Class II wing areas", "Hermes 450, Watchkeeper, Aerostar, Shadow and Ranger publish a span (4.3–10.9 m) but no wing area. Until they are found (Jane's, papers), the ranges stop at the Pioneer (5.15 m): Class I and small Class II only."),
+    ("Class II wing areas", "Ten Class II wings (5.2–10.9 m span, from the sourced table and your HCDI database) are outside the span range and have no published wing area. A mean chord above about 0.8 m would put them above Re 2 × 10⁶. Find the areas (Jane's, papers), then widen and settle the top Re level."),
     ("Re levels", "Now 3 × 10⁵, 1.5 × 10⁶, 2 × 10⁶: the upper two are close. Move the middle to about 6 × 10⁵? Mini Class I wings fly at 1.2–2 × 10⁵, below the lowest level."),
-    ("Label for slim tailless wings", "About a quarter of the bwb-type wings are slim flying wings without a centre body; the rule labels them \"conventional\", which reads like \"has a tail\". Rename to \"flying wing\"?"),
+    ("Label for slim tailless wings", "42 % of the bwb-type wings are now slim flying wings without a centre body; the rule labels them \"conventional\", which reads like \"has a tail\". Rename to \"flying wing\"?"),
     ("Mixed shares", "BWB 0.5, cranked 0.25, tapered 0.25. Keep?"),
     ("Shape ranges", "Sweeps, twists, dihedrals and tapers have no source yet. Take them from real wings too?"),
     ("Trailing-edge floor", "Confirm 0.5 mm / 1.0 mm with the builder. Run the 0.1 / 0.2 / 0.3 % sensitivity once CFD works."),
@@ -178,7 +178,7 @@ LIMITS = [
     "<strong>Straight edges only, three panels at most.</strong> No curved BWB centre body, no elliptic planform, no fourth panel.",
     "<strong>Airfoil shape is not a variable.</strong> Any named file can be used, and a station can draw from a list, but thickness and camber are not sampled continuously. The default sets use one section per station (t/c 11–15 %).",
     "<strong>No winglets, rounded or raked tips, fuselage, gaps.</strong> Dihedral is at most 10° (BWB) and 6° (conventional).",
-    "<strong>Class I and small Class II only.</strong> Sizes stop at the largest real wing with a published area (Pioneer, 5.15 m span). Wings like the Hermes 450 (10.5 m) are outside until their areas are found.",
+    "<strong>Class I and small Class II only.</strong> Spans reach 3.5 m (tailless) and 7 m (with tail). Class II wings of 5–11 m (Hermes 450, Watchkeeper, Shahed 191) are outside until their areas are found.",
     "<strong>0 refusals at the corners.</strong> The space is too safe to show where anything breaks. Robustness must be shown on the mesher, with lofts it has never seen (primer Track 5).",
     "<strong>Published wings:</strong> M6 and CRM are transonic (phase 1 stops at Mach 0.3). CRM is approximate. BlendedNet twist and dihedral are guessed as zero. Every tip is a flat cut, including the M6's rounded one.",
 ]
@@ -290,9 +290,33 @@ def real_table() -> tuple[str, dict]:
             f"<td class='num'>{num(r['span'], '{:.2f}')}</td><td class='num'>{num(r['area'], '{:.3g}')}</td>"
             f"<td class='num'>{num(r.get('mean_chord'), '{:.3f}')}</td><td class='num'>{num(r.get('aspect_ratio'), '{:.1f}')}</td>"
             f"<td class='num'>{num(r['cruise'], '{:.1f}')} / {num(r['max'], '{:.1f}')}</td><td class='num'>{re_}</td>"
+            f"<td class='num'>{num(r.get('mtow'), '{:g}')}</td><td class='num'>{hcdi_cell(r.get('hcdi'))}</td>"
             f"<td>{use[r['use']]}{'<br><span class=muted>' + html.escape(r['note']) + '</span>' if r.get('note') else ''}</td>"
             f"<td class='src'><a href='{html.escape(r['source'])}'>source</a></td></tr>")
     return "\n".join(out), d["summary"]
+
+
+def hcdi_cell(h: dict | None) -> str:
+    """Class, MTOW, payload and span of the same aircraft in the HCDI UAS database."""
+    if not h:
+        return "—"
+    parts = [f"Class {h['class']}"]
+    parts += [f"{k} {h[k]:g}{u}" for k, u in (("mtow", " kg"), ("payload", " kg pl"), ("span", " m")) if h.get(k)]
+    return "<br>".join(parts)
+
+
+def hcdi_table(d: dict) -> str:
+    fam = {"tailless": "Tailless", "tailed": "With tail"}
+    out = []
+    for r in sorted(d["hcdi_db"], key=lambda r: (r["family"], r["span"])):
+        inside = ("<span class='flag ok'>inside</span>" if r.get("span_covered")
+                  else "<span class='flag fix'>outside</span>" if r["use"] == "span" else "<span class='flag open'>not used</span>")
+        g = lambda k, u="": "—" if r.get(k) in (None, "") else f"{r[k]:g}{u}"  # noqa: E731
+        out.append(f"<tr><td class='what'>{html.escape(r['model'])}</td><td>{fam[r['family']]}</td><td>{r['class']}</td>"
+                   f"<td class='num'>{g('span')}</td><td class='num'>{g('mtow')}</td><td class='num'>{g('payload')}</td>"
+                   f"<td>{html.escape(r.get('role') or '—')}</td><td>{inside}</td>"
+                   f"<td class='muted'>{html.escape(r.get('check') or '')}</td></tr>")
+    return "\n".join(out)
 
 
 def decisions_html() -> str:
@@ -468,18 +492,27 @@ __DECISIONS__
   <div class="three">
     <div class="box"><h3>Real wings fly at</h3><div class="big">Re __RE_LO__ – __RE_HI__</div><p>Lowest: Black Swift S0 cruising at 3,048 m. Highest: AAI Pioneer at top speed, sea level. Mean chord = wing area / span.</p></div>
     <div class="box verdict"><h3>So the top Re level</h3><div class="big">5 × 10⁶ → 2 × 10⁶</div><p>No wing of our families reaches 5 × 10⁶. Only the Sperwer does: a delta wing, outside our families, area from a secondary site. Levels now 3 × 10⁵, 1.5 × 10⁶, 2 × 10⁶.</p></div>
-    <div class="box"><h3>Generator covers them</h3><div class="big">__COVER__</div><p>Each real wing with a published area has a generated wing within 10 % in span and mean chord. BWB __ENV_BWB__; conventional __ENV_CONV__.</p></div>
-    <div class="box"><h3>Gap</h3><div class="big">Big Class II unknown</div><p>Hermes 450 (10.5 m), Watchkeeper (10.9 m) and others publish no wing area. The sizes stop at the Pioneer (5.15 m span) until those are found.</p></div>
+    <div class="box"><h3>Generator covers them</h3><div class="big">__COVER__</div><p>Each real wing with a published area has a generated wing within 10 % in span and mean chord. Every Class I span is inside too (sourced and HCDI database). BWB __ENV_BWB__; conventional __ENV_CONV__.</p></div>
+    <div class="box"><h3>Gap</h3><div class="big">Class II: 10 wings outside</div><p>Spans 5.2–10.9 m (Hermes 450, Watchkeeper, Karayel, Mohajer-6, Shahed 191, …), none with a published area. At 36–40 m/s cruise, a mean chord above about 0.8 m puts them above Re 2 × 10⁶, so the top level may rise again.</p></div>
   </div>
   <div class="card">__PNG_REAL__</div>
   <p class="cap">Clouds: 2,000 generated wings per type (green BWB, blue conventional and tapered). Red: real wings with a published area. Dotted lines: real wings with a published span only.</p>
   <div class="tbl"><table class="wide">
-    <thead><tr><th>Aircraft</th><th>Family</th><th>Class</th><th>Span m</th><th>Area m²</th><th>Mean chord m</th><th>AR</th><th>Cruise / max m/s</th><th>Re low – high</th><th>Use</th><th>Source</th></tr></thead>
+    <thead><tr><th>Aircraft</th><th>Family</th><th>Class</th><th>Span m</th><th>Area m²</th><th>Mean chord m</th><th>AR</th><th>Cruise / max m/s</th><th>Re low – high</th><th>MTOW kg</th><th>HCDI database</th><th>Use</th><th>Source</th></tr></thead>
     <tbody>
 __REAL__
     </tbody>
   </table></div>
-  <p class="muted">Re low = cruise at 3,048 m; Re high = top speed (cruise if none) at sea level; air from Stage 0. Family from a text source or, where none says it, from photos (marked K in the YAML). Only wings with a published area set the ranges.</p>
+  <p class="muted">Re low = cruise at 3,048 m; Re high = top speed (cruise if none) at sea level; air from Stage 0. Family from a text source or, where none says it, from photos (marked K in the YAML). Only wings with a published area set the ranges. HCDI database column: the same aircraft in your UAS dashboard, where listed.</p>
+  <h2 style="font-size:22px">Spans from the HCDI UAS database (v13)</h2>
+  <p>794 entries; 76 fixed-wing Class I–II; 18 give a span; <strong>none gives a wing area</strong>, so these rows test the span range only. Four Class I flying wings (3.1–3.5 m) were longer than the BWB range, so the BWB semi-span now goes to 1.75 m. Class II wings (5–11 m) stay outside until their areas are found.</p>
+  <div class="weak amber"><strong>Database weak points.</strong> No source per row. 28 rows share cruise 35 m/s, endurance 6 h and range 100 km (look like defaults); on 8 rows cruise is above top speed. Orlan-10 is listed as Class II at 18 kg, Puma LE as a flying wing, XQ-58 Valkyrie (a jet) as Class II; Zala Z-16's maker field names a microchip company. Only span, class, MTOW and payload are used here.</div>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>Aircraft</th><th>Family</th><th>Class</th><th>Span m</th><th>MTOW kg</th><th>Payload kg</th><th>Role</th><th>Span vs generator</th><th>Check</th></tr></thead>
+    <tbody>
+__HCDI__
+    </tbody>
+  </table></div>
 </section>
 
 <section id="variables">
@@ -576,6 +609,7 @@ def main() -> None:
     real_rows, real = real_table()
     env = real["envelope"]
     page = (PAGE.replace("__REAL__", real_rows)
+                .replace("__HCDI__", hcdi_table(json.loads((DOCS / "real_uavs.json").read_text())))
                 .replace("__PNG_REAL__", img("real_uavs.png", "Real wings against generated wings: span and mean chord"))
                 .replace("__RE_LO__", f"{real['re_low_min']:.1e}".replace("e+0", " × 10^").replace(" × 10^5", " × 10⁵"))
                 .replace("__RE_HI__", f"{real['re_high_max']:.1e}".replace("e+0", " × 10^").replace(" × 10^6", " × 10⁶"))

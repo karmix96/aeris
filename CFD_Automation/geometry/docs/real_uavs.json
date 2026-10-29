@@ -8,15 +8,84 @@
   "re_low_min": 123277.57750540736,
   "re_high_max": 2131270.4271844663,
   "all_covered": true,
+  "spans_checked": 43,
+  "spans_outside": [
+   {
+    "name": "Vestel Karayel",
+    "family": "tailed",
+    "class": "II",
+    "span": 8.0
+   },
+   {
+    "name": "Ababil-3",
+    "family": "tailed",
+    "class": "II",
+    "span": 8.0
+   },
+   {
+    "name": "Aeronautics Aerostar",
+    "family": "tailed",
+    "class": "II",
+    "span": 8.7
+   },
+   {
+    "name": "Hamaseh",
+    "family": "tailed",
+    "class": "II",
+    "span": 9.0
+   },
+   {
+    "name": "Mohajer-6",
+    "family": "tailed",
+    "class": "II",
+    "span": 10.0
+   },
+   {
+    "name": "Elbit Hermes 450",
+    "family": "tailed",
+    "class": "II",
+    "span": 10.5
+   },
+   {
+    "name": "Thales Watchkeeper WK450",
+    "family": "tailed",
+    "class": "II",
+    "span": 10.9
+   },
+   {
+    "name": "Lockheed Martin Fury",
+    "family": "tailless",
+    "class": "II",
+    "span": 5.2
+   },
+   {
+    "name": "Shahed 197",
+    "family": "tailless",
+    "class": "I",
+    "span": 7.0
+   },
+   {
+    "name": "Albatroz",
+    "family": "tailless",
+    "class": "II",
+    "span": 7.0
+   },
+   {
+    "name": "Shahed 191 (Saegheh)",
+    "family": "tailless",
+    "class": "II",
+    "span": 7.31
+   }
+  ],
   "envelope": {
    "bwb": {
     "span_m": [
-     0.9009490872649922,
-     2.799605542745656
+     0.9012987509941999,
+     3.499460216388793
     ],
     "mean_chord_m": [
-     0.16873935652870384,
-     0.4735243236694259
+     0.1687393565287039,
+     0.47352432366942593
     ]
    },
    "conventional": {
@@ -59,7 +128,8 @@
    "aspect_ratio": 3.6864,
    "re_low": 154648.4375,
    "re_high": 198007.8125,
-   "covered": true
+   "covered": true,
+   "span_covered": true
   },
   {
    "name": "Trimble UX5",
@@ -78,7 +148,8 @@
    "aspect_ratio": 2.941176470588235,
    "re_low": 403818.0,
    "re_high": 517038.0,
-   "covered": true
+   "covered": true,
+   "span_covered": true
   },
   {
    "name": "Gatewing X100",
@@ -97,7 +168,8 @@
    "aspect_ratio": 4.3478260869565215,
    "re_low": 273171.0,
    "re_high": 349761.0,
-   "covered": true
+   "covered": true,
+   "span_covered": true
   },
   {
    "name": "Skywalker X8",
@@ -116,7 +188,8 @@
    "aspect_ratio": 5.88,
    "re_low": 343928.5714285714,
    "re_high": 440357.1428571429,
-   "covered": true
+   "covered": true,
+   "span_covered": true
   },
   {
    "name": "DeltaQuad Pro",
@@ -135,7 +208,8 @@
    "aspect_ratio": 6.136111111111112,
    "re_low": 368808.5106382979,
    "re_high": 734553.1914893617,
-   "covered": true
+   "covered": true,
+   "span_covered": true
   },
   {
    "name": "DeltaQuad Evo TAC",
@@ -154,7 +228,8 @@
    "aspect_ratio": 8.614404761904762,
    "re_low": 279496.7286245353,
    "re_high": 357860.2973977695,
-   "covered": true
+   "covered": true,
+   "span_covered": true
   },
   {
    "name": "C-Astral Bramor C4EYE",
@@ -168,7 +243,8 @@
    "max": 22.0,
    "use": "span",
    "note": "manufacturer calls it a BWB",
-   "source": "https://www.c-astral.com/en/unmanned-systems/bramor-c4eye"
+   "source": "https://www.c-astral.com/en/unmanned-systems/bramor-c4eye",
+   "span_covered": true
   },
   {
    "name": "Aerovision Fulmar",
@@ -182,7 +258,8 @@
    "max": 41.7,
    "use": "span",
    "note": "60-150 km/h range; paper gives no source",
-   "source": "https://acta-avionica.tuke.sk/ojs/index.php/aavionica/article/download/591/589"
+   "source": "https://acta-avionica.tuke.sk/ojs/index.php/aavionica/article/download/591/589",
+   "span_covered": true
   },
   {
    "name": "Lockheed Martin Fury",
@@ -196,7 +273,8 @@
    "max": null,
    "use": "span",
    "note": "'blended' wing; no speeds published",
-   "source": "https://newatlas.com/lockheed-martin-fury-drone-uas/49263/"
+   "source": "https://newatlas.com/lockheed-martin-fury-drone-uas/49263/",
+   "span_covered": false
   },
   {
    "name": "Black Swift S0",
@@ -215,7 +293,8 @@
    "aspect_ratio": 10.232813829787235,
    "re_low": 123277.57750540736,
    "re_high": 157841.38428262438,
-   "covered": true
+   "covered": true,
+   "span_covered": true
   },
   {
    "name": "AV RQ-12A Wasp AE",
@@ -229,7 +308,8 @@
    "max": 23.1,
    "use": "span",
    "note": "",
-   "source": "https://www.avinc.com/images/uploads/product_docs/Wasp_Datasheet_07192021.pdf"
+   "source": "https://www.avinc.com/images/uploads/product_docs/Wasp_Datasheet_07192021.pdf",
+   "span_covered": true
   },
   {
    "name": "AV RQ-11B Raven",
@@ -243,7 +323,8 @@
    "max": 22.5,
    "use": "span",
    "note": "",
-   "source": "https://www.avinc.com/images/uploads/product_docs/Raven_Datasheet_07122021.pdf"
+   "source": "https://www.avinc.com/images/uploads/product_docs/Raven_Datasheet_07122021.pdf",
+   "span_covered": true
   },
   {
    "name": "Quantum Trinity F90+",
@@ -257,7 +338,8 @@
    "max": null,
    "use": "span",
    "note": "",
-   "source": "https://quantum-systems.com/wp-content/uploads/2023/01/QS_TrinityF90_Overview_220912.pdf"
+   "source": "https://quantum-systems.com/wp-content/uploads/2023/01/QS_TrinityF90_Overview_220912.pdf",
+   "span_covered": true
   },
   {
    "name": "AV RQ-20B Puma AE",
@@ -271,7 +353,15 @@
    "max": 23.1,
    "use": "span",
    "note": "37-83 km/h envelope",
-   "source": "https://www.avinc.com/images/uploads/product_docs/PumaAE_Datasheet_Web_v1.2.pdf"
+   "hcdi": {
+    "model": "Puma 3 AE",
+    "class": "I (Mini)",
+    "span": 2.8,
+    "mtow": null,
+    "payload": null
+   },
+   "source": "https://www.avinc.com/images/uploads/product_docs/PumaAE_Datasheet_Web_v1.2.pdf",
+   "span_covered": true
   },
   {
    "name": "Penguin B",
@@ -290,7 +380,8 @@
    "aspect_ratio": 13.784810126582276,
    "re_low": 281766.6666666667,
    "re_high": 590345.4545454546,
-   "covered": true
+   "covered": true,
+   "span_covered": true
   },
   {
    "name": "Aerosonde (Beard & McLain model)",
@@ -322,7 +413,15 @@
    "max": 46.3,
    "use": "span",
    "note": "",
-   "source": "https://c-853-20151211-www-insitu-com.i.icims.com/wp-content/uploads/2021/01/RQ-21A_Blackjack_ProductCard_DU011221.pdf"
+   "hcdi": {
+    "model": "RQ-21A Blackjack",
+    "class": "I (Small)",
+    "span": 4.9,
+    "mtow": null,
+    "payload": 18.0
+   },
+   "source": "https://c-853-20151211-www-insitu-com.i.icims.com/wp-content/uploads/2021/01/RQ-21A_Blackjack_ProductCard_DU011221.pdf",
+   "span_covered": true
   },
   {
    "name": "AAI RQ-7B Shadow",
@@ -336,7 +435,8 @@
    "max": 53.9,
    "use": "span",
    "note": "",
-   "source": "https://designation-systems.net/dusrm/app2/q-7.html"
+   "source": "https://designation-systems.net/dusrm/app2/q-7.html",
+   "span_covered": true
   },
   {
    "name": "AAI RQ-2A Pioneer",
@@ -355,7 +455,8 @@
    "aspect_ratio": 9.385173389950461,
    "re_low": 977603.9417475727,
    "re_high": 2131270.4271844663,
-   "covered": true
+   "covered": true,
+   "span_covered": true
   },
   {
    "name": "RUAG Ranger",
@@ -369,7 +470,8 @@
    "max": 61.1,
    "use": "span",
    "note": "Wikipedia, citing Swiss Ruestungsprogramm 1995",
-   "source": "https://en.wikipedia.org/wiki/RUAG_Ranger"
+   "source": "https://en.wikipedia.org/wiki/RUAG_Ranger",
+   "span_covered": true
   },
   {
    "name": "Shadow V2",
@@ -383,7 +485,15 @@
    "max": null,
    "use": "span",
    "note": "",
-   "source": "https://www.textronsystems.com/sites/default/files/_documents/TS%20US%20Shadow%20V2%20Datasheet_061119.pdf"
+   "hcdi": {
+    "model": "RQ-7B Shadow v2 Block III",
+    "class": "II",
+    "span": null,
+    "mtow": 243.0,
+    "payload": 19.5
+   },
+   "source": "https://www.textronsystems.com/sites/default/files/_documents/TS%20US%20Shadow%20V2%20Datasheet_061119.pdf",
+   "span_covered": true
   },
   {
    "name": "Aeronautics Aerostar",
@@ -397,7 +507,15 @@
    "max": 51.4,
    "use": "span",
    "note": "",
-   "source": "https://aeronautics-sys.com/wp-content/uploads/2025/10/AEROSTAR_PRINT_22.10.25-1.pdf"
+   "hcdi": {
+    "model": "Aeronautics Aerostar",
+    "class": "II",
+    "span": null,
+    "mtow": 240.0,
+    "payload": 40.0
+   },
+   "source": "https://aeronautics-sys.com/wp-content/uploads/2025/10/AEROSTAR_PRINT_22.10.25-1.pdf",
+   "span_covered": false
   },
   {
    "name": "Elbit Hermes 450",
@@ -411,7 +529,15 @@
    "max": null,
    "use": "span",
    "note": "",
-   "source": "https://www.mindef.gov.sg/news-and-events/latest-releases/2015mar30-news-releases-01655/"
+   "hcdi": {
+    "model": "Hermes 450",
+    "class": "II",
+    "span": 10.0,
+    "mtow": null,
+    "payload": 50.0
+   },
+   "source": "https://www.mindef.gov.sg/news-and-events/latest-releases/2015mar30-news-releases-01655/",
+   "span_covered": false
   },
   {
    "name": "Thales Watchkeeper WK450",
@@ -425,7 +551,8 @@
    "max": null,
    "use": "span",
    "note": "",
-   "source": "https://www.army.mod.uk/learn-and-explore/equipment/aircraft/watchkeeper"
+   "source": "https://www.army.mod.uk/learn-and-explore/equipment/aircraft/watchkeeper",
+   "span_covered": false
   },
   {
    "name": "Sagem Sperwer",
@@ -444,6 +571,277 @@
    "aspect_ratio": 2.672727272727273,
    "re_low": 3505778.5714285714,
    "re_high": 5984942.857142856
+  }
+ ],
+ "hcdi_db": [
+  {
+   "model": "Interceptor-mr",
+   "class": "I",
+   "family": "tailless",
+   "family_src": "D",
+   "span": 0.9,
+   "mtow": null,
+   "payload": 1.0,
+   "role": "Interceptor",
+   "use": "span",
+   "span_covered": true
+  },
+  {
+   "model": "Zala Z-16",
+   "class": "I",
+   "family": "tailless",
+   "family_src": "D",
+   "span": 2.815,
+   "mtow": 10.5,
+   "payload": 1.8,
+   "role": "ISTAR",
+   "use": "span",
+   "check": "manufacturer field reads Nanjing Qinheng Microelectronics (WCH); ZALA Aero is the maker",
+   "span_covered": true
+  },
+  {
+   "model": "Supercam S350",
+   "class": "I",
+   "family": "tailless",
+   "family_src": "D",
+   "span": 3.2,
+   "mtow": 15.5,
+   "payload": 2.5,
+   "role": "ISTAR",
+   "use": "span",
+   "span_covered": true
+  },
+  {
+   "model": "SKAT-350M",
+   "class": "I",
+   "family": "tailless",
+   "family_src": "D",
+   "span": 3.2,
+   "mtow": 15.0,
+   "payload": 2.5,
+   "role": "ISTAR",
+   "use": "span",
+   "span_covered": true
+  },
+  {
+   "model": "Gerbera",
+   "class": "I",
+   "family": "tailless",
+   "family_src": "D",
+   "span": 3.5,
+   "mtow": 18.0,
+   "payload": 4.6,
+   "role": "Loitering Munition",
+   "use": "span",
+   "span_covered": true
+  },
+  {
+   "model": "Shahed 197",
+   "class": "I",
+   "family": "tailless",
+   "family_src": "D",
+   "span": 7.0,
+   "mtow": null,
+   "payload": null,
+   "role": null,
+   "use": "span",
+   "check": "7 m span listed as Class I (Small) with no MTOW: class doubtful",
+   "span_covered": false
+  },
+  {
+   "model": "Albatroz",
+   "class": "II",
+   "family": "tailless",
+   "family_src": "D",
+   "span": 7.0,
+   "mtow": null,
+   "payload": 30.0,
+   "role": null,
+   "use": "span",
+   "span_covered": false
+  },
+  {
+   "model": "Shahed 191 (Saegheh)",
+   "class": "II",
+   "family": "tailless",
+   "family_src": "D",
+   "span": 7.31,
+   "mtow": null,
+   "payload": 50.0,
+   "role": null,
+   "use": "span",
+   "span_covered": false
+  },
+  {
+   "model": "CPJ 100-LE",
+   "class": "I",
+   "family": "tailless",
+   "family_src": "D",
+   "span": 3.05,
+   "mtow": null,
+   "payload": 4.54,
+   "role": "One-Way Attack",
+   "use": "none",
+   "check": "top speed 380 km/h (106 m/s) is above Mach 0.3, outside phase 1"
+  },
+  {
+   "model": "XQ-58 Valkyrie",
+   "class": "II",
+   "family": "tailless",
+   "family_src": "D",
+   "span": 8.229,
+   "mtow": null,
+   "payload": 272.2,
+   "role": "ISR",
+   "use": "none",
+   "check": "jet, top 1,050 km/h; listed as Class II but it is far heavier than 600 kg (Class III)"
+  },
+  {
+   "model": "Puma LE",
+   "class": "I",
+   "family": "tailed",
+   "family_src": "K",
+   "span": 4.6,
+   "mtow": null,
+   "payload": 2.5,
+   "role": "ISR",
+   "use": "span",
+   "check": "database says Flying Wing; the Puma family has a tail",
+   "span_covered": true
+  },
+  {
+   "model": "V2U",
+   "class": "I",
+   "family": "tailed",
+   "family_src": "D",
+   "span": 1.2,
+   "mtow": 15.0,
+   "payload": 3.5,
+   "role": "Barrage Munition",
+   "use": "span",
+   "span_covered": true
+  },
+  {
+   "model": "Shahed 107",
+   "class": "I",
+   "family": "tailed",
+   "family_src": "D",
+   "span": 3.0,
+   "mtow": 26.0,
+   "payload": 20.0,
+   "role": "ISR",
+   "use": "span",
+   "span_covered": true
+  },
+  {
+   "model": "Orlan-10",
+   "class": "I",
+   "family": "tailed",
+   "family_src": "D",
+   "span": 3.05,
+   "mtow": 18.0,
+   "payload": 5.5,
+   "role": "ISR",
+   "use": "span",
+   "check": "database says Class II, but MTOW 18 kg is Class I",
+   "span_covered": true
+  },
+  {
+   "model": "Orlan-30",
+   "class": "I",
+   "family": "tailed",
+   "family_src": "D",
+   "span": 3.05,
+   "mtow": 30.0,
+   "payload": 12.0,
+   "role": "ISTAR",
+   "use": "span",
+   "span_covered": true
+  },
+  {
+   "model": "Granat-4",
+   "class": "I",
+   "family": "tailed",
+   "family_src": "D",
+   "span": 3.35,
+   "mtow": 30.0,
+   "payload": 20.0,
+   "role": "ISTAR",
+   "use": "span",
+   "span_covered": true
+  },
+  {
+   "model": "Merlin-VR",
+   "class": "I",
+   "family": "tailed",
+   "family_src": "D",
+   "span": 4.9,
+   "mtow": 20.0,
+   "payload": 7.0,
+   "role": "ISTAR",
+   "use": "span",
+   "span_covered": true
+  },
+  {
+   "model": "Corsair",
+   "class": "II",
+   "family": "tailed",
+   "family_src": "K",
+   "span": 6.5,
+   "mtow": null,
+   "payload": 40.0,
+   "role": null,
+   "use": "span",
+   "span_covered": true
+  },
+  {
+   "model": "Vestel Karayel",
+   "class": "II",
+   "family": "tailed",
+   "family_src": "K",
+   "span": 8.0,
+   "mtow": null,
+   "payload": 50.0,
+   "role": null,
+   "use": "span",
+   "span_covered": false
+  },
+  {
+   "model": "Ababil-3",
+   "class": "II",
+   "family": "tailed",
+   "family_src": "K",
+   "span": 8.0,
+   "mtow": null,
+   "payload": 40.0,
+   "role": null,
+   "use": "span",
+   "span_covered": false
+  },
+  {
+   "model": "Hamaseh",
+   "class": "II",
+   "family": "tailed",
+   "family_src": "K",
+   "span": 9.0,
+   "mtow": null,
+   "payload": 50.0,
+   "role": null,
+   "use": "span",
+   "span_covered": false
+  },
+  {
+   "model": "Mohajer-6",
+   "class": "II",
+   "family": "tailed",
+   "family_src": "K",
+   "span": 10.0,
+   "mtow": null,
+   "payload": 150.0,
+   "role": null,
+   "use": "span",
+   "check": "payload 150 kg; class to verify against MTOW",
+   "span_covered": false
   }
  ]
 }

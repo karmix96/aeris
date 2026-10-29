@@ -67,6 +67,33 @@ td.src { font-size: 12.5px; color: var(--muted); width: 22%; }
 .weak.amber { border-left-color: var(--amber); }
 .fixrow strong { display: block; }
 .fixrow .do { color: var(--ink); font-weight: 600; }
+figure.fig { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+figure.fig .svgwrap { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 8px; overflow-x: auto; }
+svg.dg { display: block; width: 100%; min-width: 640px; height: auto; color: var(--ink); }
+svg.dg .lab { fill: currentColor; font: 13px var(--body); }
+svg.dg .lab.head { font: 700 16px var(--display); }
+svg.dg .muted, svg.dg .lab.muted { fill: var(--muted); font-size: 12px; }
+svg.dg .acc { fill: var(--accent); } svg.dg .warn { fill: var(--warn); } svg.dg .amber { fill: var(--amber); } svg.dg .bwbc { fill: var(--bwb); }
+svg.dg .zone-low { fill: var(--amber); opacity: .10; } svg.dg .zone-mid { fill: var(--accent); opacity: .06; }
+svg.dg .bar.bwb { fill: var(--bwb); } svg.dg .bar.conv { fill: var(--accent); } svg.dg .bar.tipbar { opacity: .5; }
+svg.dg .real { stroke: var(--ink); stroke-width: 1.4; opacity: .55; }
+svg.dg .level { stroke: var(--warn); stroke-width: 1.4; stroke-dasharray: 5 4; }
+svg.dg .axis, svg.dg .stroke { stroke: currentColor; stroke-width: 1.4; fill: none; }
+svg.dg .fillc { fill: currentColor; }
+svg.dg .dash { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 4; fill: none; }
+svg.dg .wing { fill: var(--grp); stroke: currentColor; stroke-width: 1.6; }
+svg.dg .outline { fill: none; stroke: currentColor; stroke-width: 1.6; }
+svg.dg .laminar { fill: var(--bwb); opacity: .30; }
+svg.dg .stall { fill: var(--warn); opacity: .25; }
+svg.dg .base { stroke: var(--warn); stroke-width: 4; fill: none; stroke-linecap: round; }
+svg.dg .kink { fill: none; stroke: var(--amber); stroke-width: 2.5; }
+svg.dg .drift { stroke: var(--accent); stroke-width: 2; }
+svg.dg .wake { stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 3 3; fill: none; }
+svg.dg .vortex { fill: none; stroke: var(--accent); stroke-width: 1.8; }
+svg.dg .leader { stroke: var(--muted); stroke-width: .8; }
+svg.dg .lam { stroke: var(--bwb); stroke-width: 3; fill: none; }
+svg.dg .turb { stroke: var(--accent); stroke-width: 7; opacity: .55; fill: none; stroke-linejoin: round; }
+svg.dg .bubble { stroke: var(--amber); stroke-width: 2.5; fill: none; }
 footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 12px; }
 @media (prefers-reduced-motion: reduce) { .card img[src^="data:image/gif"] { animation: none; } }
 </style>
@@ -126,6 +153,125 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
 <section id="phenomena">
   <h2>Flow phenomena you will meet</h2>
   <p>What the flow does on these wings, at these Re and angles, and whether the planned CFD (ADflow, steady RANS, Spalart–Allmaras, fully turbulent) can see it.</p>
+  <figure class="fig"><div class="svgwrap"><svg class="dg" viewBox="0 0 900 360" role="img" aria-label="Reynolds number map: mean-chord and tip Reynolds ranges of the three wing types and of 26 real wings, against the low-Re regime below 5 times 10 to the 5 and the three study levels">
+<rect class="zone-low" x="170.0" y="34" width="390.8" height="236"/>
+<rect class="zone-mid" x="560.8" y="34" width="299.2" height="236"/>
+<text class="lab amber" x="365.4" y="26" text-anchor="middle">low-Re regime: laminar bubbles, early transition</text>
+<text class="lab acc" x="710.4" y="26" text-anchor="middle">transition position still sets the drag</text>
+<text class="lab" x="160" y="74" text-anchor="end">Real wings (26)</text>
+<text class="lab" x="160" y="139" text-anchor="end">BWB</text>
+<text class="lab" x="160" y="189" text-anchor="end">Cranked</text>
+<text class="lab" x="160" y="239" text-anchor="end">Tapered</text>
+<line class="real" x1="420.9" y1="52.0" x2="445.6" y2="52.0"/>
+<line class="real" x1="443.5" y1="53.6" x2="468.2" y2="53.6"/>
+<line class="real" x1="500.4" y1="55.3" x2="525.1" y2="55.3"/>
+<line class="real" x1="502.7" y1="56.9" x2="527.4" y2="56.9"/>
+<line class="real" x1="503.5" y1="58.5" x2="577.4" y2="58.5"/>
+<line class="real" x1="523.4" y1="60.2" x2="548.1" y2="60.2"/>
+<line class="real" x1="527.9" y1="61.8" x2="552.6" y2="61.8"/>
+<line class="real" x1="530.4" y1="63.5" x2="599.2" y2="63.5"/>
+<line class="real" x1="539.4" y1="65.1" x2="564.1" y2="65.1"/>
+<line class="real" x1="569.4" y1="66.7" x2="594.1" y2="66.7"/>
+<line class="real" x1="617.2" y1="68.4" x2="641.9" y2="68.4"/>
+<line class="real" x1="620.1" y1="70.0" x2="644.7" y2="70.0"/>
+<line class="real" x1="627.0" y1="71.6" x2="651.7" y2="71.6"/>
+<line class="real" x1="627.7" y1="73.3" x2="705.6" y2="73.3"/>
+<line class="real" x1="630.6" y1="74.9" x2="695.4" y2="74.9"/>
+<line class="real" x1="636.2" y1="76.5" x2="660.9" y2="76.5"/>
+<line class="real" x1="637.3" y1="78.2" x2="662.0" y2="78.2"/>
+<line class="real" x1="641.1" y1="79.8" x2="665.8" y2="79.8"/>
+<line class="real" x1="642.2" y1="81.5" x2="705.0" y2="81.5"/>
+<line class="real" x1="642.7" y1="83.1" x2="699.9" y2="83.1"/>
+<line class="real" x1="644.1" y1="84.7" x2="668.8" y2="84.7"/>
+<line class="real" x1="653.4" y1="86.4" x2="708.7" y2="86.4"/>
+<line class="real" x1="676.6" y1="88.0" x2="730.6" y2="88.0"/>
+<rect class="bar bwb" x="400.2" y="128" width="260.0" height="14" rx="2"/>
+<rect class="bar bwb tipbar" x="242.3" y="146" width="308.0" height="5" rx="1"/>
+<rect class="bar conv" x="316.4" y="178" width="432.7" height="14" rx="2"/>
+<rect class="bar conv tipbar" x="247.5" y="196" width="497.9" height="5" rx="1"/>
+<rect class="bar conv" x="319.8" y="228" width="432.8" height="14" rx="2"/>
+<rect class="bar conv tipbar" x="266.4" y="246" width="486.0" height="5" rx="1"/>
+<line class="level" x1="509.7" y1="40" x2="509.7" y2="270"/>
+<text class="lab warn" x="509.7" y="284" text-anchor="middle">3 × 10⁵</text>
+<line class="level" x1="670.5" y1="40" x2="670.5" y2="270"/>
+<text class="lab warn" x="670.5" y="284" text-anchor="middle">1.5 × 10⁶</text>
+<line class="level" x1="739.7" y1="40" x2="739.7" y2="270"/>
+<text class="lab warn" x="739.7" y="284" text-anchor="middle">3 × 10⁶</text>
+<text class="lab warn" x="501.7" y="300" text-anchor="end">study levels</text>
+<line class="axis" x1="170.0" y1="315" x2="860.0" y2="315"/>
+<line class="axis" x1="170.0" y1="311" x2="170.0" y2="321"/>
+<text class="lab" x="170.0" y="336" text-anchor="middle">10⁴</text>
+<line class="axis" x1="239.2" y1="313" x2="239.2" y2="317"/>
+<line class="axis" x1="330.8" y1="313" x2="330.8" y2="317"/>
+<line class="axis" x1="400.0" y1="311" x2="400.0" y2="321"/>
+<text class="lab" x="400.0" y="336" text-anchor="middle">10⁵</text>
+<line class="axis" x1="469.2" y1="313" x2="469.2" y2="317"/>
+<line class="axis" x1="560.8" y1="313" x2="560.8" y2="317"/>
+<line class="axis" x1="630.0" y1="311" x2="630.0" y2="321"/>
+<text class="lab" x="630.0" y="336" text-anchor="middle">10⁶</text>
+<line class="axis" x1="699.2" y1="313" x2="699.2" y2="317"/>
+<line class="axis" x1="790.8" y1="313" x2="790.8" y2="317"/>
+<line class="axis" x1="860.0" y1="311" x2="860.0" y2="321"/>
+<text class="lab" x="860.0" y="336" text-anchor="middle">10⁷</text>
+<text class="lab muted" x="860.0" y="354" text-anchor="end">Reynolds number (log scale)</text>
+<text class="lab muted" x="170.0" y="354">thick bar: mean chord · thin bar: tip chord</text>
+</svg></div>
+    <figcaption class="cap">Where the wings fly. Most of every type sits in or near the low-Re regime, and the tips go furthest into it, down to 2 × 10⁴. The three study levels miss the lowest decade entirely. From the generated envelope and the 26 real wings with a published area (low-Re limit: below 5 × 10⁵, Univ. Waterloo Fluid Mechanics Research Lab; Carmichael 1981).</figcaption></figure>
+  <figure class="fig"><div class="svgwrap"><svg class="dg" viewBox="0 0 1000 470" role="img" aria-label="Top view of a half wing showing where each flow phenomenon sits: symmetry plane at the root, laminar region behind the leading edge, kinks at b1 and b2, outboard drift of the boundary layer, tip stall region, blunt trailing-edge base, wake rolling up into the tip vortex, and the smallest chord and Reynolds number at the tip">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="fillc"/></marker></defs>
+<line class="stroke" x1="40" y1="40" x2="40" y2="110" marker-end="url(#ah)"/><text class="lab" x="50" y="70">V∞</text>
+<line class="dash" x1="90" y1="50" x2="90" y2="440"/><text class="lab muted" x="96" y="452">symmetry plane (root)</text>
+<polygon class="wing" points="90,80 270,160 430,215 600,262 600,292 430,290 270,285 90,300"/>
+<polygon class="laminar" points="90,80 270,160 430,215 600,262 600,272.5 430,241.2 270,203.8 90,157.0"/>
+<polygon class="outline" points="90,80 270,160 430,215 600,262 600,292 430,290 270,285 90,300"/>
+<polygon class="stall" points="490,262.2 600,274.0 600,292 490,294.0"/>
+<polyline class="base" points="600,292 430,290 270,285 90,300"/>
+<circle class="kink" cx="270" cy="160" r="6"/>
+<circle class="kink" cx="430" cy="215" r="6"/>
+<line class="drift" x1="170" y1="225" x2="225" y2="239" marker-end="url(#ah)"/>
+<line class="drift" x1="230" y1="245" x2="285" y2="259" marker-end="url(#ah)"/>
+<line class="drift" x1="330" y1="245" x2="385" y2="259" marker-end="url(#ah)"/>
+<path class="wake" d="M90,304 C130,370 560,380 620,392"/>
+<path class="wake" d="M270,289 C310,355 530,374 620,392"/>
+<path class="wake" d="M430,294 C470,360 500,368 620,392"/>
+<circle class="vortex" cx="628" cy="392" r="14"/><circle class="vortex" cx="628" cy="392" r="7"/>
+<line class="leader" x1="276" y1="158" x2="676" y2="116"/><text class="lab" x="682" y="120">kinks b1, b2: suction peak, loading jump</text>
+<line class="leader" x1="380" y1="212" x2="676" y2="161"/><text class="lab" x="682" y="165">laminar region behind the leading edge</text>
+<line class="leader" x1="285" y1="259" x2="676" y2="206"/><text class="lab" x="682" y="210">boundary layer drifts outboard (aft sweep)</text>
+<line class="leader" x1="560" y1="282" x2="676" y2="251"/><text class="lab" x="682" y="255">tip stalls first at high angle</text>
+<line class="leader" x1="602" y1="268" x2="676" y2="296"/><text class="lab" x="682" y="300">smallest chord: Re down to 2 × 10⁴</text>
+<line class="leader" x1="470" y1="292" x2="676" y2="341"/><text class="lab" x="682" y="345">blunt base: base drag, shedding</text>
+<line class="leader" x1="644" y1="392" x2="676" y2="388"/><text class="lab" x="682" y="392">wake rolls up into the tip vortex</text>
+<text class="lab muted" x="300" y="458">schematic: cranked, aft-swept half wing; forward sweep stalls at the root instead</text>
+</svg></div>
+    <figcaption class="cap">Where each phenomenon sits on a wing. The tip carries three at once (smallest chord, first to stall on aft sweep, vortex roll-up), so it is where mesh and model are tested hardest. Schematic, not to scale.</figcaption></figure>
+  <figure class="fig"><div class="svgwrap"><svg class="dg" viewBox="0 0 1000 400" role="img" aria-label="One wing section. Real flow: laminar boundary layer from the nose, a laminar separation bubble where it turns turbulent, a turbulent boundary layer to the blunt trailing edge, and vortex shedding behind the base. Planned CFD: turbulent from the nose, no bubble, steady wake.">
+<text class="lab head" x="20" y="40">Real flow</text>
+<polygon class="wing" points="150.0,130.0 150.4,127.3 151.5,124.6 153.4,121.8 156.1,118.8 159.5,115.9 163.7,112.8 168.6,109.8 174.2,106.7 180.5,103.7 187.5,100.6 195.2,97.7 203.5,94.8 212.4,92.0 221.9,89.4 232.0,86.9 242.6,84.6 253.8,82.4 265.4,80.5 277.5,78.9 290.0,77.5 302.9,76.3 316.1,75.5 329.7,74.9 343.5,74.7 357.5,74.7 371.8,75.0 386.2,75.6 400.7,76.5 415.3,77.4 430.0,78.6 444.7,80.0 459.3,81.5 473.8,83.1 488.2,84.9 502.5,86.8 516.5,88.8 530.3,91.0 543.9,93.2 557.1,95.4 570.0,97.7 582.5,100.1 594.6,102.5 606.2,104.8 617.4,107.2 628.0,109.5 638.1,111.8 647.6,114.0 656.5,116.1 664.8,118.1 672.5,120.1 679.5,121.8 685.8,123.5 691.4,124.9 696.3,126.2 700.5,127.4 703.9,128.3 706.6,129.0 708.5,129.6 709.6,129.9 710.0,130.0 710.0,130.0 709.6,130.0 708.5,130.0 706.6,130.0 703.9,130.1 700.5,130.1 696.3,130.2 691.4,130.2 685.8,130.3 679.5,130.4 672.5,130.5 664.8,130.6 656.5,130.8 647.6,130.9 638.1,131.1 628.0,131.3 617.4,131.5 606.2,131.8 594.6,132.0 582.5,132.4 570.0,132.7 557.1,133.1 543.9,133.5 530.3,133.9 516.5,134.4 502.5,134.9 488.2,135.5 473.8,136.0 459.3,136.6 444.7,137.2 430.0,137.8 415.3,138.4 400.7,139.0 386.2,139.6 371.8,140.2 357.5,140.7 343.5,141.4 329.7,142.0 316.1,142.7 302.9,143.4 290.0,144.0 277.5,144.6 265.4,145.2 253.8,145.7 242.6,146.0 232.0,146.3 221.9,146.5 212.4,146.5 203.5,146.4 195.2,146.1 187.5,145.6 180.5,145.0 174.2,144.1 168.6,143.1 163.7,141.8 159.5,140.4 156.1,138.7 153.4,136.9 151.5,134.8 150.4,132.5 150.0,130.0"/>
+<circle class="fillc" cx="148" cy="130.0" r="3"/>
+<polyline class="lam" points="150.0,126.0 150.4,123.3 151.5,120.6 153.4,117.8 156.1,114.8 159.5,111.9 163.7,108.8 168.6,105.8 174.2,102.7 180.5,99.7 187.5,96.6 195.2,93.7 203.5,90.8 212.4,88.0 221.9,85.4 232.0,82.9 242.6,80.6 253.8,78.4 265.4,76.5 277.5,74.9 290.0,73.5 302.9,72.3 316.1,71.5 329.7,70.9 343.5,70.7 357.5,70.7 371.8,71.0"/>
+<path class="bubble" d="M385.2,77.6 Q421.6,55.6 458.0,79.6"/>
+<polyline class="turb" points="459.3,77.5 473.8,79.1 488.2,80.9 502.5,82.8 516.5,84.8 530.3,87.0 543.9,89.2 557.1,91.4 570.0,93.7 582.5,96.1 594.6,98.5 606.2,100.8 617.4,103.2 628.0,105.5 638.1,107.8 647.6,110.0 656.5,112.1 664.8,114.1 672.5,116.1 679.5,117.8 685.8,119.5 691.4,120.9 696.3,122.2 700.5,123.4 703.9,124.3 706.6,125.0 708.5,125.6 709.6,125.9 710.0,126.0"/>
+<text class="lab bwbc" x="178.0" y="60">laminar boundary layer</text>
+<text class="lab amber" x="375.2" y="47.6">separation bubble → transition</text>
+<text class="lab acc" x="530.8" y="78">turbulent boundary layer</text>
+<line class="base" x1="710.0" y1="130.0" x2="710.0" y2="130.0"/>
+<circle class="vortex" cx="728.0" cy="124.0" r="6"/>
+<circle class="vortex" cx="758.0" cy="136.0" r="5"/>
+<circle class="vortex" cx="788.0" cy="124.0" r="4"/>
+<text class="lab" x="722.0" y="160.0">base flow, shedding</text>
+<line class="dash" x1="20" y1="205" x2="980" y2="205"/>
+<text class="lab head" x="20" y="250">Planned CFD</text><text class="lab muted" x="20" y="266">SA, no transition</text>
+<polygon class="wing" points="150.0,330.0 150.4,327.3 151.5,324.6 153.4,321.8 156.1,318.8 159.5,315.9 163.7,312.8 168.6,309.8 174.2,306.7 180.5,303.7 187.5,300.6 195.2,297.7 203.5,294.8 212.4,292.0 221.9,289.4 232.0,286.9 242.6,284.6 253.8,282.4 265.4,280.5 277.5,278.9 290.0,277.5 302.9,276.3 316.1,275.5 329.7,274.9 343.5,274.7 357.5,274.7 371.8,275.0 386.2,275.6 400.7,276.5 415.3,277.4 430.0,278.6 444.7,280.0 459.3,281.5 473.8,283.1 488.2,284.9 502.5,286.8 516.5,288.8 530.3,291.0 543.9,293.2 557.1,295.4 570.0,297.7 582.5,300.1 594.6,302.5 606.2,304.8 617.4,307.2 628.0,309.5 638.1,311.8 647.6,314.0 656.5,316.1 664.8,318.1 672.5,320.1 679.5,321.8 685.8,323.5 691.4,324.9 696.3,326.2 700.5,327.4 703.9,328.3 706.6,329.0 708.5,329.6 709.6,329.9 710.0,330.0 710.0,330.0 709.6,330.0 708.5,330.0 706.6,330.0 703.9,330.1 700.5,330.1 696.3,330.2 691.4,330.2 685.8,330.3 679.5,330.4 672.5,330.5 664.8,330.6 656.5,330.8 647.6,330.9 638.1,331.1 628.0,331.3 617.4,331.5 606.2,331.8 594.6,332.0 582.5,332.4 570.0,332.7 557.1,333.1 543.9,333.5 530.3,333.9 516.5,334.4 502.5,334.9 488.2,335.5 473.8,336.0 459.3,336.6 444.7,337.2 430.0,337.8 415.3,338.4 400.7,339.0 386.2,339.6 371.8,340.2 357.5,340.7 343.5,341.4 329.7,342.0 316.1,342.7 302.9,343.4 290.0,344.0 277.5,344.6 265.4,345.2 253.8,345.7 242.6,346.0 232.0,346.3 221.9,346.5 212.4,346.5 203.5,346.4 195.2,346.1 187.5,345.6 180.5,345.0 174.2,344.1 168.6,343.1 163.7,341.8 159.5,340.4 156.1,338.7 153.4,336.9 151.5,334.8 150.4,332.5 150.0,330.0"/>
+<circle class="fillc" cx="148" cy="330.0" r="3"/>
+<polyline class="turb" points="150.0,326.0 150.4,323.3 151.5,320.6 153.4,317.8 156.1,314.8 159.5,311.9 163.7,308.8 168.6,305.8 174.2,302.7 180.5,299.7 187.5,296.6 195.2,293.7 203.5,290.8 212.4,288.0 221.9,285.4 232.0,282.9 242.6,280.6 253.8,278.4 265.4,276.5 277.5,274.9 290.0,273.5 302.9,272.3 316.1,271.5 329.7,270.9 343.5,270.7 357.5,270.7 371.8,271.0 386.2,271.6 400.7,272.5 415.3,273.4 430.0,274.6 444.7,276.0 459.3,277.5 473.8,279.1 488.2,280.9 502.5,282.8 516.5,284.8 530.3,287.0 543.9,289.2 557.1,291.4 570.0,293.7 582.5,296.1 594.6,298.5 606.2,300.8 617.4,303.2 628.0,305.5 638.1,307.8 647.6,310.0 656.5,312.1 664.8,314.1 672.5,316.1 679.5,317.8 685.8,319.5 691.4,320.9 696.3,322.2 700.5,323.4 703.9,324.3 706.6,325.0 708.5,325.6 709.6,325.9 710.0,326.0"/>
+<text class="lab warn" x="161.2" y="260">turbulent from the nose: no laminar run, no bubble</text>
+<line class="base" x1="710.0" y1="330.0" x2="710.0" y2="330.0"/>
+<line class="wake" x1="714.0" y1="330.0" x2="820.0" y2="334.0"/>
+<text class="lab" x="722.0" y="356.0">steady wake (shedding damped)</text>
+<text class="lab muted" x="150" y="392">schematic NACA 4412 section; the difference between the two panels is the model band on every drag number</text>
+</svg></div>
+    <figcaption class="cap">What the planned CFD misses on one section. Real flow runs laminar, separates in a bubble and turns turbulent; fully turbulent SA skips the laminar run and the bubble, so skin friction and pressure drag differ. That gap is the model band, and a finer mesh cannot close it.</figcaption></figure>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Phenomenon</th><th>Where in our ranges</th><th>What it does</th><th>Does our CFD capture it?</th><th>Source</th></tr></thead>
     <tbody><tr><td class='what'>Laminar flow, transition and laminar separation bubbles</td><td>Every type. Mean-chord Re 4 × 10⁴ – 3.4 × 10⁶; most BWB and mini Class I wings sit below 10⁶. Our sections (NLF1015, MH91, E374) are designed for long laminar runs.</td><td>Drag and lift depend on where the boundary layer turns turbulent. A bubble adds drag; at high angle it can burst, giving abrupt stall and hysteresis. Small changes in turbulence or roughness move the result.</td><td>No. Spalart–Allmaras without transition makes the wall flow turbulent from the nose, so drag is biased. Carried as a model band (Stage 0); SU2 γ-Reθ is the planned check.</td><td class='src'>Carmichael 1981 (NASA CR-165803); Lissaman 1983 (Annu. Rev. Fluid Mech. 15); Mueller & DeLaurier 2003 (Annu. Rev. Fluid Mech. 35)</td></tr><tr><td class='what'>Very low Re at the tips</td><td>BWB tip chords 3.5–16 cm: tip Re down to 2 × 10⁴. Tapered and cranked tips down to 2–3 × 10⁴ on the smallest wings.</td><td>Thick laminar boundary layers and early separation at the tip, where the vortex forms.</td><td>Weakly. Same model limit as above, at its worst. The first-cell law must use the local chord, not the mean chord.</td><td class='src'>Same as above; first-cell law: Grand Roadmap R-V.1</td></tr><tr><td class='what'>Tip vortex, induced drag and wake roll-up</td><td>Every wing; strongest at low aspect ratio (BWB down to 2.7) and high lift.</td><td>Induced drag is a large share of the total; the wake and vortex move the pressure at the trailing edge and tip.</td><td>Yes, if the wake has its own cells. The O-mesh had no designed wake: overset wake box and vortex tube planned (primer, section 05).</td><td class='src'>Primer section 05; refining the near wake moved base drag by 23 counts</td></tr><tr><td class='what'>Sweep: spanwise flow, tip or root stall, pitch-up</td><td>BWB 5–40° (aft); cranked and tapered −10° to +20° (forward to aft).</td><td>Aft sweep pushes the boundary layer outboard, so the tip stalls first and the nose can pitch up. Forward sweep stalls the root first.</td><td>Spanwise flow: yes. Stall onset and pitch-up: less reliable with steady RANS near maximum lift.</td><td class='src'>Standard swept-wing aerodynamics</td></tr><tr><td class='what'>Panel breaks (kinks) at b1 and b2</td><td>Every BWB and cranked wing; tapered wings have no break in the edges.</td><td>Local suction peaks and a jump in the span loading at the break; a ruled loft has a slope break there.</td><td>Yes, if a mesh station sits exactly on each break (fix 3). Otherwise flat faces cut the corner.</td><td class='src'>Loft decision (kSpan 2)</td></tr><tr><td class='what'>Separation and stall at high angle</td><td>The 12° study angle, and 8° on thin or strongly cambered sections at low Re.</td><td>Trailing-edge or leading-edge separation, unsteady flow, maximum lift.</td><td>Steady RANS gives a number but is not reliable near maximum lift; convergence is harder. Keep 12° for the nose and wake studies only.</td><td class='src'>Stage 0 angles 0 / 4 / 8 / 12°</td></tr><tr><td class='what'>Blunt trailing edge: base flow</td><td>Every wing: thickness max(0.5 mm, 0.2 % of chord) (Class I).</td><td>A base pressure drag and, in reality, vortex shedding behind the base.</td><td>Partly. Steady RANS damps the shedding. At 0.2 % with 8 cells the base was 2–4 % of pressure drag (measured in AERIS).</td><td class='src'>Primer section 03; Papadakis & Manolesos 2020 (flatback, RANS damps shedding)</td></tr><tr><td class='what'>Low Mach number</td><td>Top speed 67 m/s: Mach ≤ 0.20 (BWB ≤ 0.12).</td><td>The air is nearly incompressible.</td><td>The compressible solver needs low-speed preconditioning; without it ADflow did not converge in AERIS.</td><td class='src'>Primer track 3</td></tr><tr><td class='what'>Slender, flexible wings</td><td>Cranked and tapered aspect ratio up to 21.</td><td>Long thin wings bend and twist in flight, which changes the span loading.</td><td>No. The CFD wing is rigid. Many span stations are needed.</td><td class='src'>Outside this study (no aeroelasticity)</td></tr></tbody>

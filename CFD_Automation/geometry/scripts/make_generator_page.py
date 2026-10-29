@@ -451,6 +451,170 @@ def final_ranges_html() -> dict:
             "__REAL_RE__": f"{sci(d['re_low_min'])} – {sci(d['re_high_max'])}"}
 
 
+# --------------------------------------------------------------------------------------
+# Figures for the flow-phenomena section (inline SVG, theme-aware through CSS classes)
+# --------------------------------------------------------------------------------------
+
+def _x_re(re_: float, x0: float = 170, px_per_decade: float = 230) -> float:
+    import math
+    return x0 + (math.log10(re_) - 4.0) * px_per_decade
+
+
+def fig_re_map() -> str:
+    """Where each wing type flies on the Reynolds axis, against the regimes and the study levels."""
+    d = json.loads((DOCS / "real_uavs.json").read_text())
+    rey = d["summary"]["reynolds"]
+    W, H = 900, 360
+    X = _x_re
+    out = [f'<svg class="dg" viewBox="0 0 {W} {H}" role="img" aria-label="Reynolds number map: mean-chord and tip Reynolds ranges of the three wing types and of 26 real wings, against the low-Re regime below 5 times 10 to the 5 and the three study levels">']
+    # regimes
+    out.append(f'<rect class="zone-low" x="{X(1e4):.1f}" y="34" width="{X(5e5) - X(1e4):.1f}" height="236"/>')
+    out.append(f'<rect class="zone-mid" x="{X(5e5):.1f}" y="34" width="{X(1e7) - X(5e5):.1f}" height="236"/>')
+    out.append(f'<text class="lab amber" x="{(X(1e4) + X(5e5)) / 2:.1f}" y="26" text-anchor="middle">low-Re regime: laminar bubbles, early transition</text>')
+    out.append(f'<text class="lab acc" x="{(X(5e5) + X(1e7)) / 2:.1f}" y="26" text-anchor="middle">transition position still sets the drag</text>')
+    # rows
+    rows = [("Real wings (26)", 70), ("BWB", 135), ("Cranked", 185), ("Tapered", 235)]
+    for name, y in rows:
+        out.append(f'<text class="lab" x="160" y="{y + 4}" text-anchor="end">{name}</text>')
+    # real wings: one thin line each, spread over the band
+    used = [r for r in d["rows"] if r["use"] == "ranges" and r.get("re_low") and r.get("re_high")]
+    for k, r in enumerate(sorted(used, key=lambda r: r["re_low"])):
+        y = 52 + 36 * k / max(len(used) - 1, 1)
+        out.append(f'<line class="real" x1="{X(r["re_low"]):.1f}" y1="{y:.1f}" x2="{X(r["re_high"]):.1f}" y2="{y:.1f}"/>')
+    # types: mean chord (thick) and tip (thin, below)
+    for (name, y), t in zip(rows[1:], ("bwb", "conventional", "tapered")):
+        m, tip = rey[t]["mean_chord"], rey[t]["tip"]
+        cls = "bwb" if t == "bwb" else "conv"
+        out.append(f'<rect class="bar {cls}" x="{X(m[0]):.1f}" y="{y - 7}" width="{X(m[1]) - X(m[0]):.1f}" height="14" rx="2"/>')
+        out.append(f'<rect class="bar {cls} tipbar" x="{X(tip[0]):.1f}" y="{y + 11}" width="{X(tip[1]) - X(tip[0]):.1f}" height="5" rx="1"/>')
+    # study levels
+    for lv, txt in ((3e5, "3 × 10⁵"), (1.5e6, "1.5 × 10⁶"), (3e6, "3 × 10⁶")):
+        out.append(f'<line class="level" x1="{X(lv):.1f}" y1="40" x2="{X(lv):.1f}" y2="270"/>')
+        out.append(f'<text class="lab warn" x="{X(lv):.1f}" y="284" text-anchor="middle">{txt}</text>')
+    out.append(f'<text class="lab warn" x="{X(3e5) - 8:.1f}" y="300" text-anchor="end">study levels</text>')
+    # axis
+    out.append(f'<line class="axis" x1="{X(1e4)}" y1="315" x2="{X(1e7)}" y2="315"/>')
+    for e in range(4, 8):
+        out.append(f'<line class="axis" x1="{X(10**e):.1f}" y1="311" x2="{X(10**e):.1f}" y2="321"/>')
+        out.append(f'<text class="lab" x="{X(10**e):.1f}" y="336" text-anchor="middle">10{"⁴⁵⁶⁷"[e - 4]}</text>')
+        if e < 7:
+            for k in (2, 5):
+                out.append(f'<line class="axis" x1="{X(k * 10**e):.1f}" y1="313" x2="{X(k * 10**e):.1f}" y2="317"/>')
+    out.append(f'<text class="lab muted" x="{X(1e7)}" y="354" text-anchor="end">Reynolds number (log scale)</text>')
+    out.append(f'<text class="lab muted" x="{X(1e4)}" y="354">thick bar: mean chord · thin bar: tip chord</text>')
+    out.append("</svg>")
+    return "\n".join(out)
+
+
+def fig_planform() -> str:
+    """Top view of a half wing (a cranked, aft-swept BWB-like planform) with where each phenomenon sits."""
+    # stations: (y_px, x_le, chord); flow goes down the page
+    st = [(90, 80, 220), (270, 160, 125), (430, 215, 75), (600, 262, 30)]
+    le = " ".join(f"{y},{x}" for y, x, c in st)
+    te = " ".join(f"{y},{x + c}" for y, x, c in reversed(st))
+    o = ['<svg class="dg" viewBox="0 0 1000 470" role="img" aria-label="Top view of a half wing showing where each flow phenomenon sits: '
+         'symmetry plane at the root, laminar region behind the leading edge, kinks at b1 and b2, outboard drift of the boundary layer, '
+         'tip stall region, blunt trailing-edge base, wake rolling up into the tip vortex, and the smallest chord and Reynolds number at the tip">',
+         '<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
+         '<path d="M0,0 L10,5 L0,10 z" class="fillc"/></marker></defs>']
+    # free stream
+    o.append('<line class="stroke" x1="40" y1="40" x2="40" y2="110" marker-end="url(#ah)"/><text class="lab" x="50" y="70">V∞</text>')
+    # symmetry plane
+    o.append('<line class="dash" x1="90" y1="50" x2="90" y2="440"/><text class="lab muted" x="96" y="452">symmetry plane (root)</text>')
+    # laminar region band behind LE (to ~35 % chord)
+    lam = " ".join(f"{y},{x}" for y, x, c in st) + " " + " ".join(f"{y},{x + 0.35 * c:.1f}" for y, x, c in reversed(st))
+    o.append(f'<polygon class="wing" points="{le} {te}"/>')
+    o.append(f'<polygon class="laminar" points="{lam}"/>')
+    o.append(f'<polygon class="outline" points="{le} {te}"/>')
+    # tip stall region (outer panel, aft part)
+    (y2, x2, c2), (y3, x3, c3) = st[2], st[3]
+    o.append(f'<polygon class="stall" points="{y2 + 60},{x2 + 0.55 * c2 + 6:.1f} {y3},{x3 + 0.4 * c3:.1f} {y3},{x3 + c3} {y2 + 60},{x2 + c2 + 4:.1f}"/>')
+    # blunt base along the TE
+    o.append(f'<polyline class="base" points="{te}"/>')
+    # kinks
+    for y, x, c in st[1:3]:
+        o.append(f'<circle class="kink" cx="{y}" cy="{x}" r="6"/>')
+    # outboard drift arrows on the inner and middle panels
+    for y0, x0 in ((170, 225), (230, 245), (330, 245)):
+        o.append(f'<line class="drift" x1="{y0}" y1="{x0}" x2="{y0 + 55}" y2="{x0 + 14}" marker-end="url(#ah)"/>')
+    # wake sheet rolling into the tip vortex
+    for k, (y, x, c) in enumerate(st[:3]):
+        o.append(f'<path class="wake" d="M{y},{x + c + 4} C{y + 40},{x + c + 70} {560 - 30 * k},{380 - 6 * k} 620,392"/>')
+    o.append('<circle class="vortex" cx="628" cy="392" r="14"/><circle class="vortex" cx="628" cy="392" r="7"/>')
+    # labels (right column, leader lines)
+    labels = [
+        (120, "kinks b1, b2: suction peak, loading jump", (276, 158)),
+        (165, "laminar region behind the leading edge", (380, 212)),
+        (210, "boundary layer drifts outboard (aft sweep)", (285, 259)),
+        (255, "tip stalls first at high angle", (560, 282)),
+        (300, "smallest chord: Re down to 2 × 10⁴", (602, 268)),
+        (345, "blunt base: base drag, shedding", (470, 292)),
+        (392, "wake rolls up into the tip vortex", (644, 392)),
+    ]
+    for ly, txt, (px, py) in labels:
+        o.append(f'<line class="leader" x1="{px}" y1="{py}" x2="676" y2="{ly - 4}"/><text class="lab" x="682" y="{ly}">{txt}</text>')
+    o.append('<text class="lab muted" x="300" y="458">schematic: cranked, aft-swept half wing; forward sweep stalls at the root instead</text>')
+    o.append("</svg>")
+    return "\n".join(o)
+
+
+def _naca4(m=0.04, p=0.4, t=0.12, n=60):
+    import math
+    pts = []
+    for i in range(n + 1):
+        x = 0.5 * (1 - math.cos(math.pi * i / n))
+        yt = 5 * t * (0.2969 * math.sqrt(x) - 0.1260 * x - 0.3516 * x**2 + 0.2843 * x**3 - 0.1036 * x**4)
+        yc = m / p**2 * (2 * p * x - x**2) if x < p else m / (1 - p)**2 * ((1 - 2 * p) + 2 * p * x - x**2)
+        pts.append((x, yc + yt, yc - yt))
+    return pts
+
+
+def fig_section() -> str:
+    """One section: the real boundary layer against what the planned CFD assumes."""
+    pts = _naca4()
+    C, X0 = 560, 150
+
+    def panel(yc, cfd):
+        up = [(X0 + C * x, yc - C * yu) for x, yu, yl in pts]
+        lo = [(X0 + C * x, yc - C * yl) for x, yu, yl in pts]
+        poly = " ".join(f"{a:.1f},{b:.1f}" for a, b in up + lo[::-1])
+        s = [f'<polygon class="wing" points="{poly}"/>']
+        seg = lambda a, b: " ".join(f"{x:.1f},{y - 4:.1f}" for x, y in up if a <= (x - X0) / C <= b)  # noqa: E731
+        s.append(f'<circle class="fillc" cx="{X0 - 2}" cy="{yc - C * pts[0][1]:.1f}" r="3"/>')
+        if cfd:
+            s.append(f'<polyline class="turb" points="{seg(0.0, 1.0)}"/>')
+            s.append(f'<text class="lab warn" x="{X0 + 0.02 * C:.1f}" y="{yc - 70}">turbulent from the nose: no laminar run, no bubble</text>')
+        else:
+            s.append(f'<polyline class="lam" points="{seg(0.0, 0.42)}"/>')
+            bx0, bx1 = X0 + 0.42 * C, X0 + 0.55 * C
+            by = min(y for x, y in up if bx0 <= x <= bx1) - 6
+            s.append(f'<path class="bubble" d="M{bx0:.1f},{by + 8:.1f} Q{(bx0 + bx1) / 2:.1f},{by - 14:.1f} {bx1:.1f},{by + 10:.1f}"/>')
+            s.append(f'<polyline class="turb" points="{seg(0.55, 1.0)}"/>')
+            s.append(f'<text class="lab bwbc" x="{X0 + 0.05 * C:.1f}" y="{yc - 70}">laminar boundary layer</text>')
+            s.append(f'<text class="lab amber" x="{bx0 - 10:.1f}" y="{by - 22:.1f}">separation bubble → transition</text>')
+            s.append(f'<text class="lab acc" x="{X0 + 0.68 * C:.1f}" y="{yc - 52}">turbulent boundary layer</text>')
+        # blunt base, shedding and wake
+        te_u, te_l = up[-1], lo[-1]
+        s.append(f'<line class="base" x1="{te_u[0]:.1f}" y1="{te_u[1]:.1f}" x2="{te_l[0]:.1f}" y2="{te_l[1]:.1f}"/>')
+        if cfd:
+            s.append(f'<line class="wake" x1="{te_u[0] + 4:.1f}" y1="{yc:.1f}" x2="{te_u[0] + 110:.1f}" y2="{yc + 4:.1f}"/>')
+            s.append(f'<text class="lab" x="{te_u[0] + 12:.1f}" y="{yc + 26:.1f}">steady wake (shedding damped)</text>')
+        else:
+            for k in range(3):
+                cx = te_u[0] + 18 + 30 * k
+                s.append(f'<circle class="vortex" cx="{cx:.1f}" cy="{yc + (6 if k % 2 else -6):.1f}" r="{6 - k}"/>')
+            s.append(f'<text class="lab" x="{te_u[0] + 12:.1f}" y="{yc + 30:.1f}">base flow, shedding</text>')
+        return "\n".join(s)
+
+    o = ['<svg class="dg" viewBox="0 0 1000 400" role="img" aria-label="One wing section. Real flow: laminar boundary layer from the nose, a laminar separation bubble where it turns turbulent, a turbulent boundary layer to the blunt trailing edge, and vortex shedding behind the base. Planned CFD: turbulent from the nose, no bubble, steady wake.">',
+         '<text class="lab head" x="20" y="40">Real flow</text>', panel(130, False),
+         '<line class="dash" x1="20" y1="205" x2="980" y2="205"/>',
+         '<text class="lab head" x="20" y="250">Planned CFD</text><text class="lab muted" x="20" y="266">SA, no transition</text>', panel(330, True),
+         '<text class="lab muted" x="150" y="392">schematic NACA 4412 section; the difference between the two panels is the model band on every drag number</text>',
+         "</svg>"]
+    return "\n".join(o)
+
+
 def decisions_html() -> str:
     out = []
     n = 0
@@ -571,6 +735,33 @@ td.src { font-size: 12.5px; color: var(--muted); width: 22%; }
 .weak.amber { border-left-color: var(--amber); }
 .fixrow strong { display: block; }
 .fixrow .do { color: var(--ink); font-weight: 600; }
+figure.fig { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+figure.fig .svgwrap { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 8px; overflow-x: auto; }
+svg.dg { display: block; width: 100%; min-width: 640px; height: auto; color: var(--ink); }
+svg.dg .lab { fill: currentColor; font: 13px var(--body); }
+svg.dg .lab.head { font: 700 16px var(--display); }
+svg.dg .muted, svg.dg .lab.muted { fill: var(--muted); font-size: 12px; }
+svg.dg .acc { fill: var(--accent); } svg.dg .warn { fill: var(--warn); } svg.dg .amber { fill: var(--amber); } svg.dg .bwbc { fill: var(--bwb); }
+svg.dg .zone-low { fill: var(--amber); opacity: .10; } svg.dg .zone-mid { fill: var(--accent); opacity: .06; }
+svg.dg .bar.bwb { fill: var(--bwb); } svg.dg .bar.conv { fill: var(--accent); } svg.dg .bar.tipbar { opacity: .5; }
+svg.dg .real { stroke: var(--ink); stroke-width: 1.4; opacity: .55; }
+svg.dg .level { stroke: var(--warn); stroke-width: 1.4; stroke-dasharray: 5 4; }
+svg.dg .axis, svg.dg .stroke { stroke: currentColor; stroke-width: 1.4; fill: none; }
+svg.dg .fillc { fill: currentColor; }
+svg.dg .dash { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 4; fill: none; }
+svg.dg .wing { fill: var(--grp); stroke: currentColor; stroke-width: 1.6; }
+svg.dg .outline { fill: none; stroke: currentColor; stroke-width: 1.6; }
+svg.dg .laminar { fill: var(--bwb); opacity: .30; }
+svg.dg .stall { fill: var(--warn); opacity: .25; }
+svg.dg .base { stroke: var(--warn); stroke-width: 4; fill: none; stroke-linecap: round; }
+svg.dg .kink { fill: none; stroke: var(--amber); stroke-width: 2.5; }
+svg.dg .drift { stroke: var(--accent); stroke-width: 2; }
+svg.dg .wake { stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 3 3; fill: none; }
+svg.dg .vortex { fill: none; stroke: var(--accent); stroke-width: 1.8; }
+svg.dg .leader { stroke: var(--muted); stroke-width: .8; }
+svg.dg .lam { stroke: var(--bwb); stroke-width: 3; fill: none; }
+svg.dg .turb { stroke: var(--accent); stroke-width: 7; opacity: .55; fill: none; stroke-linejoin: round; }
+svg.dg .bubble { stroke: var(--amber); stroke-width: 2.5; fill: none; }
 footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 12px; }
 @media (prefers-reduced-motion: reduce) { .card img[src^="data:image/gif"] { animation: none; } }
 </style>
@@ -630,6 +821,12 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
 <section id="phenomena">
   <h2>Flow phenomena you will meet</h2>
   <p>What the flow does on these wings, at these Re and angles, and whether the planned CFD (ADflow, steady RANS, Spalart–Allmaras, fully turbulent) can see it.</p>
+  <figure class="fig"><div class="svgwrap">__FIG_RE__</div>
+    <figcaption class="cap">Where the wings fly. Most of every type sits in or near the low-Re regime, and the tips go furthest into it, down to 2 × 10⁴. The three study levels miss the lowest decade entirely. From the generated envelope and the 26 real wings with a published area (low-Re limit: below 5 × 10⁵, Univ. Waterloo Fluid Mechanics Research Lab; Carmichael 1981).</figcaption></figure>
+  <figure class="fig"><div class="svgwrap">__FIG_PLAN__</div>
+    <figcaption class="cap">Where each phenomenon sits on a wing. The tip carries three at once (smallest chord, first to stall on aft sweep, vortex roll-up), so it is where mesh and model are tested hardest. Schematic, not to scale.</figcaption></figure>
+  <figure class="fig"><div class="svgwrap">__FIG_SEC__</div>
+    <figcaption class="cap">What the planned CFD misses on one section. Real flow runs laminar, separates in a bubble and turns turbulent; fully turbulent SA skips the laminar run and the bubble, so skin friction and pressure drag differ. That gap is the model band, and a finer mesh cannot close it.</figcaption></figure>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Phenomenon</th><th>Where in our ranges</th><th>What it does</th><th>Does our CFD capture it?</th><th>Source</th></tr></thead>
     <tbody>__PHEN__</tbody>
@@ -785,7 +982,7 @@ def main() -> None:
         for t, e, d in FIXES)
     real_rows, real = real_table()
     env = real["envelope"]
-    fr = final_ranges_html()
+    fr = final_ranges_html() | {"__FIG_RE__": fig_re_map(), "__FIG_PLAN__": fig_planform(), "__FIG_SEC__": fig_section()}
     page = PAGE
     for k, v in fr.items():
         page = page.replace(k, v)

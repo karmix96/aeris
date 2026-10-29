@@ -63,16 +63,37 @@ def span_covered(r: dict, gen: dict[str, np.ndarray]) -> bool:
     return bool(pts[:, 0].min() * (1 - TOL) <= r["span"] <= pts[:, 0].max() * (1 + TOL))
 
 
+TYPE_FAMILY = {"bwb": "tailless", "conventional": "tailed", "tapered": "tailed"}
+
+
 def generated() -> dict[str, np.ndarray]:
+    """Columns: span, mean chord, area, aspect ratio, overall taper, root chord, tip chord."""
     cfg = load_config()
     out = {}
     for t, spec in cfg.types.items():
         pts = []
         for v in lhs(spec, N_SAMPLE, 7):
             pf = build_planform(spec, v)
-            span = 2 * pf.semi_span
-            pts.append((span, pf.area() / span))
+            span, area = 2 * pf.semi_span, pf.area()
+            pts.append((span, area / span, area, span ** 2 / area, pf.chord[-1] / pf.chord[0], pf.chord[0], pf.chord[-1]))
         out[t] = np.array(pts)
+    return out
+
+
+def reynolds_by_type(rows: list[dict], gen: dict[str, np.ndarray], air: dict) -> dict:
+    """Re range each type reaches over the speed range of the real wings of its family:
+    lowest = smallest chord x lowest cruise at 3,048 m; highest = largest chord x highest top speed at sea level."""
+    out = {}
+    for t, g in gen.items():
+        fam = [r for r in rows if r["family"] == TYPE_FAMILY[t] and r["use"] in ("ranges", "span")]
+        v_lo = min(r["cruise"] for r in fam if r.get("cruise"))
+        v_hi = max((r["max"] or r["cruise"]) for r in fam if (r.get("max") or r.get("cruise")))
+        lo, hi = air["3048_m"] * v_lo, air["sea_level"] * v_hi
+        out[t] = {"speed_m_s": [v_lo, v_hi],
+                  "mean_chord": [float(g[:, 1].min() * lo), float(g[:, 1].max() * hi)],
+                  "tip": [float(g[:, 6].min() * lo), float(g[:, 6].max() * hi)],
+                  "root_max": float(g[:, 5].max() * hi),
+                  "mach_max": v_hi / 340.3}
     return out
 
 
@@ -142,12 +163,14 @@ def main() -> None:
     outside = sorted({(r.get("name") or r.get("model"), r["family"], r["class"], r["span"])
                       for r in spans if not r["span_covered"]}, key=lambda x: (x[1], x[3]))
     used = [r for r in rows if r["use"] == "ranges"]
-    envelope = {t: {"span_m": [float(g[:, 0].min()), float(g[:, 0].max())],
-                    "mean_chord_m": [float(g[:, 1].min()), float(g[:, 1].max())]} for t, g in gen.items()}
+    names = ("span_m", "mean_chord_m", "area_m2", "aspect_ratio", "taper", "root_chord_m", "tip_chord_m")
+    envelope = {t: {n: [float(g[:, k].min()), float(g[:, k].max())] for k, n in enumerate(names)}
+                for t, g in gen.items()}
     summary = {
         "re_low_min": min(r["re_low"] for r in used if r.get("re_low")),
         "re_high_max": max(r["re_high"] for r in used if r.get("re_high")),
         "all_covered": all(r["covered"] for r in used),
+        "reynolds": reynolds_by_type(rows, gen, air),
         "spans_checked": len(spans),
         "spans_outside": [{"name": n, "family": f, "class": c, "span": s} for n, f, c, s in outside],
         "envelope": envelope,

@@ -183,6 +183,10 @@ LIMITS = [
     "<strong>Airfoil shape is not a variable.</strong> Any named file can be used, and a station can draw from a list, but thickness and camber are not sampled continuously. The default sets use one section per station (t/c 11–15 %).",
     "<strong>No winglets, rounded or raked tips, fuselage, gaps.</strong> Dihedral is at most 10° (BWB) and 6° (conventional).",
     "<strong>Tailless Class II not covered.</strong> Flying wings stop at 3.5 m span. Fury, Albatroz and Shahed 191 (5–7.3 m) have no published area. Wings with a tail cover Class I and II up to 11 m.",
+    "<strong>Shape ranges have no source.</strong> Sweeps, twists, dihedrals, tapers and airfoils are AERIS values or our choice; only sizes come from real aircraft.",
+    "<strong>Swept, moderately tapered flying wings.</strong> The Aquila (taper 0.58, sweep 28°) fits no type.",
+    "<strong>Slender wings with a tail.</strong> Generated aspect ratio reaches 21; real wings with a known area reach 16.5.",
+    "<strong>Class II areas are uncertain.</strong> They rest on Götten et al. (from photos, about 10–15 %) and a thesis citing unread Jane's-style data.",
     "<strong>0 refusals at the corners.</strong> The space is too safe to show where anything breaks. Robustness must be shown on the mesher, with lofts it has never seen (primer Track 5).",
     "<strong>Published wings:</strong> M6 and CRM are transonic (phase 1 stops at Mach 0.3). CRM is approximate. BlendedNet twist and dihedral are guessed as zero. Every tip is a flat cut, including the M6's rounded one.",
 ]
@@ -339,6 +343,114 @@ def hcdi_table(d: dict) -> str:
     return "\n".join(out)
 
 
+PHENOMENA = [
+    ("Laminar flow, transition and laminar separation bubbles",
+     "Every type. Mean-chord Re 4 × 10⁴ – 3.4 × 10⁶; most BWB and mini Class I wings sit below 10⁶. Our sections (NLF1015, MH91, E374) are designed for long laminar runs.",
+     "Drag and lift depend on where the boundary layer turns turbulent. A bubble adds drag; at high angle it can burst, giving abrupt stall and hysteresis. Small changes in turbulence or roughness move the result.",
+     "No. Spalart–Allmaras without transition makes the wall flow turbulent from the nose, so drag is biased. Carried as a model band (Stage 0); SU2 γ-Reθ is the planned check.",
+     "Carmichael 1981 (NASA CR-165803); Lissaman 1983 (Annu. Rev. Fluid Mech. 15); Mueller & DeLaurier 2003 (Annu. Rev. Fluid Mech. 35)"),
+    ("Very low Re at the tips",
+     "BWB tip chords 3.5–16 cm: tip Re down to 2 × 10⁴. Tapered and cranked tips down to 2–3 × 10⁴ on the smallest wings.",
+     "Thick laminar boundary layers and early separation at the tip, where the vortex forms.",
+     "Weakly. Same model limit as above, at its worst. The first-cell law must use the local chord, not the mean chord.",
+     "Same as above; first-cell law: Grand Roadmap R-V.1"),
+    ("Tip vortex, induced drag and wake roll-up",
+     "Every wing; strongest at low aspect ratio (BWB down to 2.7) and high lift.",
+     "Induced drag is a large share of the total; the wake and vortex move the pressure at the trailing edge and tip.",
+     "Yes, if the wake has its own cells. The O-mesh had no designed wake: overset wake box and vortex tube planned (primer, section 05).",
+     "Primer section 05; refining the near wake moved base drag by 23 counts"),
+    ("Sweep: spanwise flow, tip or root stall, pitch-up",
+     "BWB 5–40° (aft); cranked and tapered −10° to +20° (forward to aft).",
+     "Aft sweep pushes the boundary layer outboard, so the tip stalls first and the nose can pitch up. Forward sweep stalls the root first.",
+     "Spanwise flow: yes. Stall onset and pitch-up: less reliable with steady RANS near maximum lift.",
+     "Standard swept-wing aerodynamics"),
+    ("Panel breaks (kinks) at b1 and b2",
+     "Every BWB and cranked wing; tapered wings have no break in the edges.",
+     "Local suction peaks and a jump in the span loading at the break; a ruled loft has a slope break there.",
+     "Yes, if a mesh station sits exactly on each break (fix 3). Otherwise flat faces cut the corner.",
+     "Loft decision (kSpan 2)"),
+    ("Separation and stall at high angle",
+     "The 12° study angle, and 8° on thin or strongly cambered sections at low Re.",
+     "Trailing-edge or leading-edge separation, unsteady flow, maximum lift.",
+     "Steady RANS gives a number but is not reliable near maximum lift; convergence is harder. Keep 12° for the nose and wake studies only.",
+     "Stage 0 angles 0 / 4 / 8 / 12°"),
+    ("Blunt trailing edge: base flow",
+     "Every wing: thickness max(0.5 mm, 0.2 % of chord) (Class I).",
+     "A base pressure drag and, in reality, vortex shedding behind the base.",
+     "Partly. Steady RANS damps the shedding. At 0.2 % with 8 cells the base was 2–4 % of pressure drag (measured in AERIS).",
+     "Primer section 03; Papadakis & Manolesos 2020 (flatback, RANS damps shedding)"),
+    ("Low Mach number",
+     "Top speed 67 m/s: Mach ≤ 0.20 (BWB ≤ 0.12).",
+     "The air is nearly incompressible.",
+     "The compressible solver needs low-speed preconditioning; without it ADflow did not converge in AERIS.",
+     "Primer track 3"),
+    ("Slender, flexible wings",
+     "Cranked and tapered aspect ratio up to 21.",
+     "Long thin wings bend and twist in flight, which changes the span loading.",
+     "No. The CFD wing is rigid. Many span stations are needed.",
+     "Outside this study (no aeroelasticity)"),
+]
+
+
+def final_ranges_html() -> dict:
+    cfg = load_config()
+    d = json.loads((DOCS / "real_uavs.json").read_text())["summary"]
+    env, rey = d["envelope"], d["reynolds"]
+    specs = {t: cfg.types[t] for t in WING_TYPES}
+    def rng(sp, v, f="{:g}"):
+        lo, hi = sp.ranges[v]
+        m = lambda x: f.format(x).replace("-", "−")  # noqa: E731
+        return f"{m(lo)} to {m(hi)}" if min(lo, hi) < 0 else f"{m(lo)}–{m(hi)}"
+
+    size = "".join(
+        f"<tr><td class='what'>{TYPE_NAME[t]}</td><td class='num'>{rng(sp, 'root_chord_m')} m</td>"
+        f"<td class='num'>{rng(sp, 'semi_span_m')} {'root chords' if sp.span_mode == 'root_chord_fractions' else 'm'}</td></tr>"
+        for t, sp in specs.items())
+
+    def chords(sp):
+        if sp.chord_law == "linear_taper":
+            return f"one taper {rng(sp, 'c4_ratio')}"
+        if sp.chord_law == "per_panel":
+            return f"per panel {rng(sp, 'c2_ratio')}, {rng(sp, 'c3_ratio')}, {rng(sp, 'c4_ratio')} of the chord inboard"
+        return f"b1 {rng(sp, 'c2_ratio')}, b2 {rng(sp, 'c3_ratio')}, tip {rng(sp, 'c4_ratio')} of the root"
+
+    def sweeps(sp):
+        if sp.sweep_law == "one":
+            return f"one sweep {rng(sp, 'sweep1_deg')}°"
+        return " / ".join(rng(sp, f"sweep{i}_deg") for i in (1, 2, 3)) + "°"
+
+    shape_rows = [
+        ("Chords", chords),
+        ("Panel spans", lambda sp: f"outer {rng(sp, 'b3_ratio')}, split {rng(sp, 'split_ratio')}"),
+        ("LE sweep", sweeps),
+        ("Twist b0 / b1 / b2 / b3", lambda sp: " / ".join(rng(sp, f"twist{i}_deg") for i in range(4)) + "°"),
+        ("Dihedral b0 / b1 / b2 / b3", lambda sp: " / ".join(rng(sp, f"dihedral{i}_deg") for i in range(4)) + "°"),
+        ("Airfoils b0–b3", lambda sp: ", ".join("/".join(c) for c in sp.choices)),
+    ]
+    shape = "".join(f"<tr><td class='what'>{n}</td>" + "".join(f"<td>{f(sp)}</td>" for sp in specs.values()) + "</tr>"
+                    for n, f in shape_rows)
+
+    def mm(a, f="{:.2f}"):
+        return f"{f.format(a[0])}–{f.format(a[1])}"
+    gen_rows = [("Span", "span_m", " m", "{:.1f}"), ("Mean chord", "mean_chord_m", " m", "{:.2f}"),
+                ("Wing area", "area_m2", " m²", "{:.2f}"), ("Aspect ratio", "aspect_ratio", "", "{:.1f}"),
+                ("Overall taper", "taper", "", "{:.2f}"), ("Tip chord", "tip_chord_m", " m", "{:.3f}")]
+    gen = "".join(f"<tr><td class='what'>{n}</td>" + "".join(f"<td class='num'>{mm(env[t][k], f)}{u}</td>" for t in WING_TYPES) + "</tr>"
+                  for n, k, u, f in gen_rows)
+
+    sci = lambda x: f"{x:.1e}".replace("e+0", " × 10^").replace("^4", "⁴").replace("^5", "⁵").replace("^6", "⁶")  # noqa: E731
+    re_rows = "".join(
+        f"<tr><td class='what'>{TYPE_NAME[t]}</td><td class='num'>{r['speed_m_s'][0]:g}–{r['speed_m_s'][1]:g} m/s</td>"
+        f"<td class='num'>{sci(r['mean_chord'][0])} – {sci(r['mean_chord'][1])}</td>"
+        f"<td class='num'>{sci(r['tip'][0])} – {sci(r['tip'][1])}</td><td class='num'>{sci(r['root_max'])}</td>"
+        f"<td class='num'>{r['mach_max']:.2f}</td></tr>" for t, r in rey.items())
+
+    phen = "".join(f"<tr><td class='what'>{a}</td><td>{b}</td><td>{c}</td><td>{e}</td><td class='src'>{f}</td></tr>"
+                   for a, b, c, e, f in PHENOMENA)
+    return {"__SIZE__": size, "__SHAPE__": shape, "__GEN__": gen, "__RE_TYPES__": re_rows, "__PHEN__": phen,
+            "__REAL_RE__": f"{sci(d['re_low_min'])} – {sci(d['re_high_max'])}"}
+
+
 def decisions_html() -> str:
     out = []
     n = 0
@@ -467,7 +579,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <div class="eyebrow">CFD_Automation · Stage 1 · geometry · code __VERSION__</div>
   <h1>Wing Generator</h1>
   <p class="lede">Eighteen numbers go in; one exact wing surface comes out, measured, labelled and checked. One generator and one YAML file make BWB, cranked and tapered wings, sized like real Class I and II UAVs. Every later stage (mesh, solver, data) reads only this surface.</p>
-  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#fix">Fix before Stage 2</a><a href="#decisions">Design decisions</a><a href="#real">Real wings and Re</a><a href="#variables">The 18 numbers</a><a href="#checks">Checks and results</a><a href="#open">Open decisions</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
+  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#ranges">Final ranges</a><a href="#reynolds">Reynolds range</a><a href="#phenomena">Flow phenomena</a><a href="#fix">Fix before Stage 2</a><a href="#decisions">Design decisions</a><a href="#real">Real wings and Re</a><a href="#variables">The 18 numbers</a><a href="#checks">Checks and results</a><a href="#open">Open decisions</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
 </header>
 
 <section id="glance">
@@ -478,6 +590,51 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <div class="box"><h3>Evidence</h3><div class="big">__OK__ of __BUILT__ wings pass</div><p>Sampled wings, both types, 0 refused (built with __SETVER__). __PUBOK__ of __PUB__ published wings verified. Tests: __TESTS__.</p></div>
     <div class="box verdict"><h3>Verdict</h3><div class="big">Ready for Stage 2 after three fixes</div><p>Not yet "any wing": straight panels only, no airfoil shape variable. Sets must be rebuilt: __STALE__</p></div>
   </div>
+</section>
+
+<section id="ranges">
+  <h2>Final ranges</h2>
+  <p>Size from real Class I–II UAVs (see <a href="#real">Real wings</a>); shape from AERIS or our own choice (no source yet). Every variable per type: <a href="#variables">The 18 numbers</a>.</p>
+  <div class="three">
+    <div class="tbl"><table>
+      <thead><tr><th>Size</th><th>Root chord</th><th>Semi-span</th></tr></thead>
+      <tbody>__SIZE__</tbody>
+    </table></div>
+  </div>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>Shape</th><th>BWB</th><th>Cranked</th><th>Tapered</th></tr></thead>
+    <tbody>__SHAPE__</tbody>
+  </table></div>
+  <h2 style="font-size:22px">What the generator makes</h2>
+  <p class="muted">2,000 Latin-hypercube wings per type.</p>
+  <div class="tbl"><table class="mid">
+    <thead><tr><th></th><th>BWB</th><th>Cranked</th><th>Tapered</th></tr></thead>
+    <tbody>__GEN__</tbody>
+  </table></div>
+</section>
+
+<section id="reynolds">
+  <h2>Reynolds number range</h2>
+  <div class="three">
+    <div class="box"><h3>Study levels (Stage 0)</h3><div class="big">3 × 10⁵ · 1.5 × 10⁶ · 3 × 10⁶</div><p>On the mean chord. Every mesh study runs at these three.</p></div>
+    <div class="box"><h3>Real wings fly at</h3><div class="big">__REAL_RE__</div><p>Mean chord, cruise at 3,048 m to top speed at sea level, for the real wings with a published area.</p></div>
+    <div class="box"><h3>Below the lowest level</h3><div class="big">Tips and mini wings</div><p>Tips reach 2 × 10⁴ and mini Class I wings 1.2–2 × 10⁵: under 3 × 10⁵, where transition matters most.</p></div>
+  </div>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>Type</th><th>Speeds (real wings of the family)</th><th>Re, mean chord</th><th>Re, tip</th><th>Re, root max</th><th>Mach max</th></tr></thead>
+    <tbody>__RE_TYPES__</tbody>
+  </table></div>
+  <p class="muted">Range a type can reach: smallest chord at the lowest cruise speed and 3,048 m, to largest chord at the highest top speed and sea level. Air from Stage 0 (ISA, Sutherland). A single wing spans a much narrower band. The largest generated wings at the top speed reach about 3.4 × 10⁶, a little above the top study level; the smallest at the lowest speed fall to 4 × 10⁴.</p>
+</section>
+
+<section id="phenomena">
+  <h2>Flow phenomena you will meet</h2>
+  <p>What the flow does on these wings, at these Re and angles, and whether the planned CFD (ADflow, steady RANS, Spalart–Allmaras, fully turbulent) can see it.</p>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>Phenomenon</th><th>Where in our ranges</th><th>What it does</th><th>Does our CFD capture it?</th><th>Source</th></tr></thead>
+    <tbody>__PHEN__</tbody>
+  </table></div>
+  <div class="weak"><strong>The biggest one.</strong> Most of these wings fly where transition and laminar bubbles set the drag, and the planned model cannot see them. Mesh error can be made small; this model error cannot. Every drag number needs its model band, and differences between wings are safer than absolute drag.</div>
 </section>
 
 <section id="fix" class="weak">
@@ -628,7 +785,11 @@ def main() -> None:
         for t, e, d in FIXES)
     real_rows, real = real_table()
     env = real["envelope"]
-    page = (PAGE.replace("__REAL__", real_rows)
+    fr = final_ranges_html()
+    page = PAGE
+    for k, v in fr.items():
+        page = page.replace(k, v)
+    page = (page.replace("__REAL__", real_rows)
                 .replace("__STYPES__", stype_counts(json.loads((DOCS / "real_uavs.json").read_text())["rows"]))
                 .replace("__HCDI__", hcdi_table(json.loads((DOCS / "real_uavs.json").read_text())))
                 .replace("__PNG_REAL__", img("real_uavs.png", "Real wings against generated wings: span and mean chord"))

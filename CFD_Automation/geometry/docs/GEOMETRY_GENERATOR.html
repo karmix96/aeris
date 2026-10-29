@@ -75,7 +75,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <div class="eyebrow">CFD_Automation · Stage 1 · geometry · code 0.5.0</div>
   <h1>Wing Generator</h1>
   <p class="lede">Eighteen numbers go in; one exact wing surface comes out, measured, labelled and checked. One generator and one YAML file make BWB, cranked and tapered wings, sized like real Class I and II UAVs. Every later stage (mesh, solver, data) reads only this surface.</p>
-  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#fix">Fix before Stage 2</a><a href="#decisions">Design decisions</a><a href="#real">Real wings and Re</a><a href="#variables">The 18 numbers</a><a href="#checks">Checks and results</a><a href="#open">Open decisions</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
+  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#ranges">Final ranges</a><a href="#reynolds">Reynolds range</a><a href="#phenomena">Flow phenomena</a><a href="#fix">Fix before Stage 2</a><a href="#decisions">Design decisions</a><a href="#real">Real wings and Re</a><a href="#variables">The 18 numbers</a><a href="#checks">Checks and results</a><a href="#open">Open decisions</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
 </header>
 
 <section id="glance">
@@ -86,6 +86,51 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <div class="box"><h3>Evidence</h3><div class="big">438 of 438 wings pass</div><p>Sampled wings, both types, 0 refused (built with code 0.5.0). 7 of 7 published wings verified. Tests: 122 pass without pyGeo, 11 more need pyGeo (run 28 Oct 2026).</p></div>
     <div class="box verdict"><h3>Verdict</h3><div class="big">Ready for Stage 2 after three fixes</div><p>Not yet "any wing": straight panels only, no airfoil shape variable. Sets must be rebuilt: no, they match the current code.</p></div>
   </div>
+</section>
+
+<section id="ranges">
+  <h2>Final ranges</h2>
+  <p>Size from real Class I–II UAVs (see <a href="#real">Real wings</a>); shape from AERIS or our own choice (no source yet). Every variable per type: <a href="#variables">The 18 numbers</a>.</p>
+  <div class="three">
+    <div class="tbl"><table>
+      <thead><tr><th>Size</th><th>Root chord</th><th>Semi-span</th></tr></thead>
+      <tbody><tr><td class='what'>BWB</td><td class='num'>0.4–0.8 m</td><td class='num'>0.75–2.2 root chords</td></tr><tr><td class='what'>Cranked</td><td class='num'>0.13–0.75 m</td><td class='num'>2–7.5 root chords</td></tr><tr><td class='what'>Tapered</td><td class='num'>0.13–0.75 m</td><td class='num'>2–7.5 root chords</td></tr></tbody>
+    </table></div>
+  </div>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>Shape</th><th>BWB</th><th>Cranked</th><th>Tapered</th></tr></thead>
+    <tbody><tr><td class='what'>Chords</td><td>b1 0.55–0.8, b2 0.3–0.55, tip 0.08–0.2 of the root</td><td>per panel 0.8–1, 0.7–1, 0.5–1 of the chord inboard</td><td>one taper 0.4–1</td></tr><tr><td class='what'>Panel spans</td><td>outer 0.4–0.55, split 0.4–0.6</td><td>outer 0.2–0.5, split 0.3–0.7</td><td>outer 0.2–0.5, split 0.3–0.7</td></tr><tr><td class='what'>LE sweep</td><td>20–40 / 15–35 / 5–25°</td><td>−10 to 20 / −10 to 20 / −10 to 20°</td><td>one sweep −10 to 20°</td></tr><tr><td class='what'>Twist b0 / b1 / b2 / b3</td><td>−1 to 1 / −3 to 0 / −5 to −1 / −8 to −2°</td><td>0–3 / −1 to 2 / −2 to 1 / −4 to 0°</td><td>0–3 / −1 to 2 / −2 to 1 / −4 to 0°</td></tr><tr><td class='what'>Dihedral b0 / b1 / b2 / b3</td><td>0–3 / 0–3 / 0–6 / 0–10°</td><td>−3 to 6 / −3 to 6 / −3 to 6 / −3 to 6°</td><td>−3 to 6 / −3 to 6 / −3 to 6 / −3 to 6°</td></tr><tr><td class='what'>Airfoils b0–b3</td><td>mh91, mh91, e374, nlf1015</td><td>naca4415, naca4415, naca4412, naca4412</td><td>naca4415, naca4415, naca4412, naca4412</td></tr></tbody>
+  </table></div>
+  <h2 style="font-size:22px">What the generator makes</h2>
+  <p class="muted">2,000 Latin-hypercube wings per type.</p>
+  <div class="tbl"><table class="mid">
+    <thead><tr><th></th><th>BWB</th><th>Cranked</th><th>Tapered</th></tr></thead>
+    <tbody><tr><td class='what'>Span</td><td class='num'>0.6–3.5 m</td><td class='num'>0.6–11.0 m</td><td class='num'>0.6–10.7 m</td></tr><tr><td class='what'>Mean chord</td><td class='num'>0.17–0.47 m</td><td class='num'>0.09–0.72 m</td><td class='num'>0.09–0.74 m</td></tr><tr><td class='what'>Wing area</td><td class='num'>0.12–1.56 m²</td><td class='num'>0.06–7.26 m²</td><td class='num'>0.06–7.88 m²</td></tr><tr><td class='what'>Aspect ratio</td><td class='num'>2.7–10.2</td><td class='num'>4.5–21.1</td><td class='num'>4.1–21.0</td></tr><tr><td class='what'>Overall taper</td><td class='num'>0.08–0.20</td><td class='num'>0.30–0.98</td><td class='num'>0.40–1.00</td></tr><tr><td class='what'>Tip chord</td><td class='num'>0.035–0.158 m</td><td class='num'>0.046–0.693 m</td><td class='num'>0.055–0.743 m</td></tr></tbody>
+  </table></div>
+</section>
+
+<section id="reynolds">
+  <h2>Reynolds number range</h2>
+  <div class="three">
+    <div class="box"><h3>Study levels (Stage 0)</h3><div class="big">3 × 10⁵ · 1.5 × 10⁶ · 3 × 10⁶</div><p>On the mean chord. Every mesh study runs at these three.</p></div>
+    <div class="box"><h3>Real wings fly at</h3><div class="big">1.2 × 10⁵ – 2.7 × 10⁶</div><p>Mean chord, cruise at 3,048 m to top speed at sea level, for the real wings with a published area.</p></div>
+    <div class="box"><h3>Below the lowest level</h3><div class="big">Tips and mini wings</div><p>Tips reach 2 × 10⁴ and mini Class I wings 1.2–2 × 10⁵: under 3 × 10⁵, where transition matters most.</p></div>
+  </div>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>Type</th><th>Speeds (real wings of the family)</th><th>Re, mean chord</th><th>Re, tip</th><th>Re, root max</th><th>Mach max</th></tr></thead>
+    <tbody><tr><td class='what'>BWB</td><td class='num'>11.1–41.7 m/s</td><td class='num'>1.0 × 10⁵ – 1.4 × 10⁶</td><td class='num'>2.1 × 10⁴ – 4.5 × 10⁵</td><td class='num'>2.3 × 10⁶</td><td class='num'>0.12</td></tr><tr><td class='what'>Cranked</td><td class='num'>8.9–66.9 m/s</td><td class='num'>4.3 × 10⁴ – 3.3 × 10⁶</td><td class='num'>2.2 × 10⁴ – 3.2 × 10⁶</td><td class='num'>3.4 × 10⁶</td><td class='num'>0.20</td></tr><tr><td class='what'>Tapered</td><td class='num'>8.9–66.9 m/s</td><td class='num'>4.5 × 10⁴ – 3.4 × 10⁶</td><td class='num'>2.6 × 10⁴ – 3.4 × 10⁶</td><td class='num'>3.4 × 10⁶</td><td class='num'>0.20</td></tr></tbody>
+  </table></div>
+  <p class="muted">Range a type can reach: smallest chord at the lowest cruise speed and 3,048 m, to largest chord at the highest top speed and sea level. Air from Stage 0 (ISA, Sutherland). A single wing spans a much narrower band. The largest generated wings at the top speed reach about 3.4 × 10⁶, a little above the top study level; the smallest at the lowest speed fall to 4 × 10⁴.</p>
+</section>
+
+<section id="phenomena">
+  <h2>Flow phenomena you will meet</h2>
+  <p>What the flow does on these wings, at these Re and angles, and whether the planned CFD (ADflow, steady RANS, Spalart–Allmaras, fully turbulent) can see it.</p>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>Phenomenon</th><th>Where in our ranges</th><th>What it does</th><th>Does our CFD capture it?</th><th>Source</th></tr></thead>
+    <tbody><tr><td class='what'>Laminar flow, transition and laminar separation bubbles</td><td>Every type. Mean-chord Re 4 × 10⁴ – 3.4 × 10⁶; most BWB and mini Class I wings sit below 10⁶. Our sections (NLF1015, MH91, E374) are designed for long laminar runs.</td><td>Drag and lift depend on where the boundary layer turns turbulent. A bubble adds drag; at high angle it can burst, giving abrupt stall and hysteresis. Small changes in turbulence or roughness move the result.</td><td>No. Spalart–Allmaras without transition makes the wall flow turbulent from the nose, so drag is biased. Carried as a model band (Stage 0); SU2 γ-Reθ is the planned check.</td><td class='src'>Carmichael 1981 (NASA CR-165803); Lissaman 1983 (Annu. Rev. Fluid Mech. 15); Mueller & DeLaurier 2003 (Annu. Rev. Fluid Mech. 35)</td></tr><tr><td class='what'>Very low Re at the tips</td><td>BWB tip chords 3.5–16 cm: tip Re down to 2 × 10⁴. Tapered and cranked tips down to 2–3 × 10⁴ on the smallest wings.</td><td>Thick laminar boundary layers and early separation at the tip, where the vortex forms.</td><td>Weakly. Same model limit as above, at its worst. The first-cell law must use the local chord, not the mean chord.</td><td class='src'>Same as above; first-cell law: Grand Roadmap R-V.1</td></tr><tr><td class='what'>Tip vortex, induced drag and wake roll-up</td><td>Every wing; strongest at low aspect ratio (BWB down to 2.7) and high lift.</td><td>Induced drag is a large share of the total; the wake and vortex move the pressure at the trailing edge and tip.</td><td>Yes, if the wake has its own cells. The O-mesh had no designed wake: overset wake box and vortex tube planned (primer, section 05).</td><td class='src'>Primer section 05; refining the near wake moved base drag by 23 counts</td></tr><tr><td class='what'>Sweep: spanwise flow, tip or root stall, pitch-up</td><td>BWB 5–40° (aft); cranked and tapered −10° to +20° (forward to aft).</td><td>Aft sweep pushes the boundary layer outboard, so the tip stalls first and the nose can pitch up. Forward sweep stalls the root first.</td><td>Spanwise flow: yes. Stall onset and pitch-up: less reliable with steady RANS near maximum lift.</td><td class='src'>Standard swept-wing aerodynamics</td></tr><tr><td class='what'>Panel breaks (kinks) at b1 and b2</td><td>Every BWB and cranked wing; tapered wings have no break in the edges.</td><td>Local suction peaks and a jump in the span loading at the break; a ruled loft has a slope break there.</td><td>Yes, if a mesh station sits exactly on each break (fix 3). Otherwise flat faces cut the corner.</td><td class='src'>Loft decision (kSpan 2)</td></tr><tr><td class='what'>Separation and stall at high angle</td><td>The 12° study angle, and 8° on thin or strongly cambered sections at low Re.</td><td>Trailing-edge or leading-edge separation, unsteady flow, maximum lift.</td><td>Steady RANS gives a number but is not reliable near maximum lift; convergence is harder. Keep 12° for the nose and wake studies only.</td><td class='src'>Stage 0 angles 0 / 4 / 8 / 12°</td></tr><tr><td class='what'>Blunt trailing edge: base flow</td><td>Every wing: thickness max(0.5 mm, 0.2 % of chord) (Class I).</td><td>A base pressure drag and, in reality, vortex shedding behind the base.</td><td>Partly. Steady RANS damps the shedding. At 0.2 % with 8 cells the base was 2–4 % of pressure drag (measured in AERIS).</td><td class='src'>Primer section 03; Papadakis & Manolesos 2020 (flatback, RANS damps shedding)</td></tr><tr><td class='what'>Low Mach number</td><td>Top speed 67 m/s: Mach ≤ 0.20 (BWB ≤ 0.12).</td><td>The air is nearly incompressible.</td><td>The compressible solver needs low-speed preconditioning; without it ADflow did not converge in AERIS.</td><td class='src'>Primer track 3</td></tr><tr><td class='what'>Slender, flexible wings</td><td>Cranked and tapered aspect ratio up to 21.</td><td>Long thin wings bend and twist in flight, which changes the span loading.</td><td>No. The CFD wing is rigid. Many span stations are needed.</td><td class='src'>Outside this study (no aeroelasticity)</td></tr></tbody>
+  </table></div>
+  <div class="weak"><strong>The biggest one.</strong> Most of these wings fly where transition and laminar bubbles set the drag, and the planned model cannot see them. Mesh error can be made small; this model error cannot. Every drag number needs its model band, and differences between wings are safer than absolute drag.</div>
 </section>
 
 <section id="fix" class="weak">
@@ -360,6 +405,10 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
 <li><strong>Airfoil shape is not a variable.</strong> Any named file can be used, and a station can draw from a list, but thickness and camber are not sampled continuously. The default sets use one section per station (t/c 11–15 %).</li>
 <li><strong>No winglets, rounded or raked tips, fuselage, gaps.</strong> Dihedral is at most 10° (BWB) and 6° (conventional).</li>
 <li><strong>Tailless Class II not covered.</strong> Flying wings stop at 3.5 m span. Fury, Albatroz and Shahed 191 (5–7.3 m) have no published area. Wings with a tail cover Class I and II up to 11 m.</li>
+<li><strong>Shape ranges have no source.</strong> Sweeps, twists, dihedrals, tapers and airfoils are AERIS values or our choice; only sizes come from real aircraft.</li>
+<li><strong>Swept, moderately tapered flying wings.</strong> The Aquila (taper 0.58, sweep 28°) fits no type.</li>
+<li><strong>Slender wings with a tail.</strong> Generated aspect ratio reaches 21; real wings with a known area reach 16.5.</li>
+<li><strong>Class II areas are uncertain.</strong> They rest on Götten et al. (from photos, about 10–15 %) and a thesis citing unread Jane's-style data.</li>
 <li><strong>0 refusals at the corners.</strong> The space is too safe to show where anything breaks. Robustness must be shown on the mesher, with lofts it has never seen (primer Track 5).</li>
 <li><strong>Published wings:</strong> M6 and CRM are transonic (phase 1 stops at Mach 0.3). CRM is approximate. BlendedNet twist and dihedral are guessed as zero. Every tip is a flat cut, including the M6's rounded one.</li>
   </ul>

@@ -74,7 +74,7 @@ DECISIONS = [
         ("Span mode", "<code>semi_span</code> (metres) or <code>root_chord_fractions</code> (semi-span read in root chords).",
          "BlendedNet gives spans in root chords. Conventional uses it so the aspect ratio stays 4–16.5.", "own", "open"),
         ("Size ranges from real wings", "BWB root chord 0.40–0.80 m, semi-span 0.75–2.2 root chords. Conventional and tapered root chord 0.13–0.75 m, semi-span 2–7.5 root chords.",
-         "Every real wing with a published area (21: makers, papers, Götten et al. 2021 for Class II) has a generated wing within 10 % in span and mean chord; every span-only wing with a tail is inside the span range (see <a href='#real'>Real wings</a>). Spans in root chords keep the aspect ratio real (BWB 2.7–10.2; real flying wings 2.9–8.6). Decided 29 Oct 2026.", "meas", ""),
+         "Every real wing with a published area but one (26: makers, papers, theses; Class II from Götten et al. 2021 and Essari 2015) has a generated wing within 10 % in span and mean chord (not the Aquila, a swept moderately tapered flying wing); every span-only wing with a tail is inside the span range (see <a href='#real'>Real wings</a>). Spans in root chords keep the aspect ratio real (BWB 2.7–10.2; real flying wings 2.9–8.6). Decided 29 Oct 2026.", "meas", ""),
         ("Shape ranges", "BWB chord ratios and sweeps from AERIS; dihedral 0–3° now allowed at b0, b1. Conventional and tapered: sweep −10° to +20°, dihedral −3° to +6°, taper down to 0.28 (cranked) or 0.40 (tapered).",
          "No source for these yet.", "own", "open"),
         ("Wing class", "<code>wing_class: I | II</code> sets the trailing-edge floor.", "Manufacturing differs by size.", "req", ""),
@@ -162,7 +162,9 @@ OPEN = [
     ("Tailless Class II", "Fury (5.2 m), Albatroz (7 m) and Shahed 191 (7.3 m) have no published wing area and stay outside the BWB span range. Find areas, or leave tailless Class II out of scope?"),
     ("Aspect ratio of wings with a tail", "Generated AR reaches 21 (99 % below 20); real wings with a known area reach 16.5. Cap it (a gate, or a narrower span ratio), or accept?"),
     ("NTNU UAV database", "93 UAVs with span, AR and estimated chord (DataverseNO, CC0). Blocked from the cloud workspace: attach 02_Database.csv to add it."),
-    ("Re levels", "Now 3 × 10⁵, 1.5 × 10⁶, 2.5 × 10⁶: the upper two are close. Move the middle to about 6 × 10⁵? Mini Class I wings fly at 1.2–2 × 10⁵, below the lowest level."),
+    ("Swept flying wings", "The Lockheed Aquila (3.76 m, mean chord 0.78 m, taper 0.58, sweep 28°) fits no type: bwb always tapers strongly, tapered sweeps at most 20°. Add a swept flying-wing option, or leave it out?"),
+    ("Essari 2015 data", "Hermes 450, Ranger, Seeker, Shadow 600 areas come from a PhD thesis citing unread (Jane's-style) references; its Hermes 450 is internally inconsistent (0.69 m × 10.51 m = 7.25 m², listed 6.90). Confirm with Jane's before the paper."),
+    ("Re levels", "Now 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶. Move the middle to about 9.5 × 10⁵ (log-middle)? Mini Class I wings fly at 1.2–2 × 10⁵, below the lowest level."),
     ("Label for slim tailless wings", "14 % of the bwb-type wings are slim flying wings without a centre body; the rule labels them \"conventional\", which reads like \"has a tail\". Rename to \"flying wing\"?"),
     ("Mixed shares", "BWB 0.5, cranked 0.25, tapered 0.25. Keep?"),
     ("Shape ranges", "Sweeps, twists, dihedrals and tapers have no source yet. Take them from real wings too?"),
@@ -306,6 +308,12 @@ def stype_counts(rows: list[dict]) -> str:
     """How many range-setting wings rest on each kind of source."""
     c = Counter(r.get("stype") for r in rows if r["use"] == "ranges")
     return ", ".join(f"{STYPE.get(k, k)} {v}" for k, v in c.most_common())
+
+
+def cover_text() -> str:
+    rows = [r for r in json.loads((DOCS / "real_uavs.json").read_text())["rows"] if r["use"] == "ranges"]
+    miss = [r["name"] for r in rows if not r.get("covered")]
+    return f"{len(rows) - len(miss)} of {len(rows)} real wings" + (f" (not: {', '.join(miss)})" if miss else "")
 
 
 def hcdi_cell(h: dict | None) -> str:
@@ -502,10 +510,10 @@ __DECISIONS__
   <h2>Real wings and the Reynolds number</h2>
   <p>Your rule (29 Oct 2026): take the sizes from real Class I and II UAVs, compute the Re they fly at, and if it does not reach 5 × 10⁶, lower the top Re level instead of stretching the wings. Data and links: <code>configs/real_uavs.yaml</code>; check: <code>scripts/real_uav_check.py</code>.</p>
   <div class="three">
-    <div class="box"><h3>Real wings fly at</h3><div class="big">Re __RE_LO__ – __RE_HI__</div><p>Lowest: Black Swift S0 cruising at 3,048 m. Highest: AAI Pioneer at top speed, sea level. Mean chord = wing area / span.</p></div>
-    <div class="box verdict"><h3>So the top Re level</h3><div class="big">5 × 10⁶ → 2.5 × 10⁶</div><p>No wing of our families reaches 5 × 10⁶. Only the Sperwer does: a delta wing, outside our families, area from a secondary site. Levels now 3 × 10⁵, 1.5 × 10⁶, 2.5 × 10⁶ (the highest real value, 2.13 × 10⁶, rounded up).</p></div>
+    <div class="box"><h3>Real wings fly at</h3><div class="big">Re __RE_LO__ – __RE_HI__</div><p>Lowest: Black Swift S0 cruising at 3,048 m. Highest: RUAG Ranger at top speed, sea level. Mean chord = wing area / span.</p></div>
+    <div class="box verdict"><h3>So the top Re level</h3><div class="big">5 × 10⁶ → 3 × 10⁶</div><p>No wing of our families reaches 5 × 10⁶. Only the Sperwer (a delta) and the Vindicator (a target drone above Mach 0.3) do. Levels now 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶ (the highest real value, 2.74 × 10⁶ for the RUAG Ranger at top speed, rounded up).</p></div>
     <div class="box"><h3>Generator covers them</h3><div class="big">__COVER__</div><p>Each real wing with a published area has a generated wing within 10 % in span and mean chord. Every Class I span is inside too (sourced and HCDI database). BWB __ENV_BWB__; conventional __ENV_CONV__.</p></div>
-    <div class="box"><h3>Class II</h3><div class="big">Chords 0.55–0.62 m</div><p>Five Class II wings with an area (Götten et al. 2021, 150–230 kg; from images and three-views, about 10–15 %): AR 7.8–16, Re ≤ 1.5 × 10⁶ at loiter. Gap: tailless Class II (5–7.3 m) has no area.</p></div>
+    <div class="box"><h3>Class II</h3><div class="big">Chords 0.55–0.66 m</div><p>Nine Class II wings with an area: Götten et al. 2021 (from images and three-views, about 10–15 %) and Essari 2015 (Jane's-style: Hermes 450, Ranger, Seeker, Shadow 600). AR 7.8–16. At top speed, Re 2.1–2.7 × 10⁶. Gap: tailless Class II has no area.</p></div>
   </div>
   <div class="card">__PNG_REAL__</div>
   <p class="cap">Clouds: 2,000 generated wings per type (green BWB, blue conventional and tapered). Red: real wings with a published area. Dotted lines: real wings with a published span only.</p>
@@ -626,7 +634,7 @@ def main() -> None:
                 .replace("__PNG_REAL__", img("real_uavs.png", "Real wings against generated wings: span and mean chord"))
                 .replace("__RE_LO__", f"{real['re_low_min']:.1e}".replace("e+0", " × 10^").replace(" × 10^5", " × 10⁵"))
                 .replace("__RE_HI__", f"{real['re_high_max']:.1e}".replace("e+0", " × 10^").replace(" × 10^6", " × 10⁶"))
-                .replace("__COVER__", "all real wings" if real["all_covered"] else "NOT all real wings")
+                .replace("__COVER__", cover_text())
                 .replace("__ENV_BWB__", f"span {env['bwb']['span_m'][0]:.1f}–{env['bwb']['span_m'][1]:.1f} m, mean chord {env['bwb']['mean_chord_m'][0]:.2f}–{env['bwb']['mean_chord_m'][1]:.2f} m")
                 .replace("__ENV_CONV__", f"span {env['conventional']['span_m'][0]:.1f}–{env['conventional']['span_m'][1]:.1f} m, mean chord {env['conventional']['mean_chord_m'][0]:.2f}–{env['conventional']['mean_chord_m'][1]:.2f} m")
                 .replace("__GIF_BUILD__", img("how_a_wing_is_built.gif", "Seven-step animation of one wing being built"))

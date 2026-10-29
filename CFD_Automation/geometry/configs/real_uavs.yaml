@@ -80,9 +80,9 @@ aircraft:
   - {name: AAI RQ-2A Pioneer, class: II, family: tailed, family_src: K, span: 5.15, area: 2.826, mtow: 190.5,
      cruise: 33.3, max: 56.7, stype: thesis_report, use: ranges, note: "30.42 ft2, 16.9 ft, mean chord 1.80 ft (Bray 1991, NPS wind-tunnel thesis); speeds designation-systems",
      source: "https://de3mirror.flightgear.org/fgdata/fgdata_2020_3/Aircraft-uiuc/models/pioneer/linear.html"}
-  - {name: RUAG Ranger, class: II, family: tailed, family_src: K, span: 5.71, area: null, mtow: 285,
-     cruise: null, max: 61.1, stype: secondary, use: span, note: "Wikipedia, citing Swiss Ruestungsprogramm 1995",
-     source: "https://en.wikipedia.org/wiki/RUAG_Ranger"}
+  - {name: RUAG Ranger, class: II, family: tailed, family_src: K, span: 5.708, area: 3.41, mtow: 275,
+     cruise: 49.9, max: 66.9, stype: thesis_report, use: ranges, note: "Essari 2015 PhD (Univ. Belgrade) ch. 2, data 'from (1) & (20)' (Jane's-style; refs not identified) §2.11; 97 / 130 kt",
+     source: "https://phaidrabg.bg.ac.rs/open/o:11738"}
   - {name: Shadow V2, class: II, family: tailed, family_src: K, span: 6.2, area: null, mtow: 212,
      cruise: null, max: null, stype: manufacturer, use: span, note: "",
      hcdi: {model: "RQ-7B Shadow v2 Block III", class: "II", span: null, mtow: 243.0, payload: 19.5}, 
@@ -91,10 +91,10 @@ aircraft:
      cruise: null, max: 51.4, stype: manufacturer, use: span, note: "",
      hcdi: {model: "Aeronautics Aerostar", class: "II", span: null, mtow: 240.0, payload: 40.0}, 
      source: "https://aeronautics-sys.com/wp-content/uploads/2025/10/AEROSTAR_PRINT_22.10.25-1.pdf"}
-  - {name: Elbit Hermes 450, class: II, family: tailed, family_src: K, span: 10.5, area: null, mtow: 450,
-     cruise: 36.0, max: null, stype: government, use: span, note: "",
-     hcdi: {model: "Hermes 450", class: "II", span: 10.0, mtow: null, payload: 50.0}, 
-     source: "https://www.mindef.gov.sg/news-and-events/latest-releases/2015mar30-news-releases-01655/"}
+  - {name: Elbit Hermes 450, class: II, family: tailed, family_src: K, span: 10.51, area: 6.90, mtow: 450,
+     cruise: 36.0, max: 48.9, stype: thesis_report, use: ranges, note: "Essari 2015 PhD (Univ. Belgrade) ch. 2, data 'from (1) & (20)' (Jane's-style; refs not identified) §2.17; constant chord 0.69 m printed (x span = 7.25 m2, not 6.90: inconsistent); 70 / 95 kt",
+     hcdi: {model: "Hermes 450", class: "II", span: 10.0, mtow: null, payload: 50.0},
+     source: "https://phaidrabg.bg.ac.rs/open/o:11738"}
   - {name: Thales Watchkeeper WK450, class: II, family: tailed, family_src: K, span: 10.9, area: null, mtow: 485,
      cruise: 39.6, max: null, stype: government, use: span, note: "",
      source: "https://www.army.mod.uk/learn-and-explore/equipment/aircraft/watchkeeper"}
@@ -132,6 +132,34 @@ aircraft:
   - {name: Goetten UAV 10, class: III, family: tailed, family_src: K, span: 12.0, area: 8.7, mtow: 630,
      cruise: 36.1, max: null, stype: paper, use: none, note: "MTOM 630 kg, payload 55 kg, loiter 36.1 m/s, AR 16.5, paper Re 1.8e6; 630 kg is above Class II",
      source: "https://link.springer.com/article/10.1007/s13272-021-00522-w"}
+  # --- papers, theses, reports (29 Oct 2026) ---------------------------------------------------
+  - {name: Kentron Seeker, class: II, family: tailed, family_src: K, span: 7.00, area: 4.427, mtow: 240,
+     cruise: 33.4, max: 48.9, stype: thesis_report, use: ranges, note: "Essari 2015 PhD (Univ. Belgrade) ch. 2, data 'from (1) & (20)' (Jane's-style; refs not identified) §2.13; 65 / 95 kt",
+     source: "https://phaidrabg.bg.ac.rs/open/o:11738"}
+  - {name: AAI Shadow 600, class: II, family: tailed, family_src: K, span: 6.83, area: 3.754, mtow: 265,
+     cruise: 38.6, max: 53.5, stype: thesis_report, use: ranges, note: "Essari 2015 PhD (Univ. Belgrade) ch. 2, data 'from (1) & (20)' (Jane's-style; refs not identified) §2.15; 75 / 104 kt",
+     source: "https://phaidrabg.bg.ac.rs/open/o:11738"}
+  - {name: KAI Doyosae, class: I, family: tailed, family_src: K, span: 4.80, area: 2.84, mtow: 130,
+     cruise: null, max: null, stype: thesis_report, use: ranges, note: "Essari 2015 PhD (Univ. Belgrade) ch. 2, data 'from (1) & (20)' (Jane's-style; refs not identified) §2.19; no speeds",
+     source: "https://phaidrabg.bg.ac.rs/open/o:11738"}
+  - {name: Yakovlev Pchela, class: I, family: tailed, family_src: K, span: 3.25, area: 1.83, mtow: 138,
+     cruise: 33.4, max: 49.9, stype: thesis_report, use: ranges, note: "Essari 2015 PhD (Univ. Belgrade) ch. 2, data 'from (1) & (20)' (Jane's-style; refs not identified) §2.16; area printed '1.83 m3 (19.7 sq ft)': unit typo; 65 / 97 kt",
+     source: "https://phaidrabg.bg.ac.rs/open/o:11738"}
+  - {name: GSE Vindicator, class: II, family: tailed, family_src: K, span: 7.04, area: 4.83, mtow: 476,
+     cruise: 43.7, max: 102.9, stype: thesis_report, use: none, note: "Essari 2015 PhD (Univ. Belgrade) ch. 2, data 'from (1) & (20)' (Jane's-style; refs not identified) §2.18; target drone, top speed 200 kt is above Mach 0.3 (phase 1)",
+     source: "https://phaidrabg.bg.ac.rs/open/o:11738"}
+  - {name: Developmental Sciences R-4D Sky Eye, class: I, family: tailed, family_src: K, span: 3.71, area: 2.805, mtow: null,
+     cruise: null, max: null, stype: thesis_report, use: ranges, note: "full-scale vehicle in the tunnel; mean aerodynamic chord 0.81 m; modified, armed",
+     source: "https://ntrs.nasa.gov/api/citations/19790022980/downloads/19790022980.pdf"}
+  - {name: Lockheed MQM-105 Aquila, class: I, family: tailless, family_src: S, span: 3.764, area: 2.917, mtow: 66.5,
+     cruise: null, max: null, stype: manufacturer, use: ranges, note: "Lockheed final report Table 1(A) p. 39: overall span 12.35 ft, projected area 31.4 ft2 (reference 11.5 ft, 30.2 ft2), MAC 32.26 in, root 40 in, tip 23 in, taper 0.58, AR 4.86, LE sweep 28 deg, NACA 23015 mod.; gross 146.5 lb",
+     source: "https://apps.dtic.mil/sti/pdfs/ADA068345.pdf"}
+  - {name: USMC Exdrone (BQM-147), class: I, family: delta, family_src: S, span: 2.489, area: 1.973, mtow: 29.5,
+     cruise: null, max: null, stype: thesis_report, use: none, note: "delta wing: neither of our families; NASA TM-4200, figures furnished by the USMC; NACA 63(1)A012",
+     source: "https://ntrs.nasa.gov/api/citations/19900014922/downloads/19900014922.pdf"}
+  - {name: IAI Scout, class: II, family: tailed, family_src: K, span: 4.0, area: null, mtow: 159,
+     cruise: null, max: null, stype: paper, use: span, note: "final design span (first design 3.2 m), IAI authors; other sources give 3.6 or 4.96 m",
+     source: "https://icas.org/ICAS_ARCHIVE/ICAS2004/PAPERS/519.PDF"}
   # --- outside both families --------------------------------------------------------------
   - {name: Sagem Sperwer, class: II, family: delta, family_src: S, span: 4.2, area: 6.6, mtow: 330,
      cruise: 41.7, max: 55.6, stype: secondary, use: none, note: "delta wing with V-tail: neither of our families; area from a secondary site only; speeds disagree between sources",

@@ -18,7 +18,7 @@
    0.13–0.60 m for conventional and tapered; see `geometry/decisions/conventional_ranges.md`.
 9. ~~**BWB stops at Re ≈ 3 × 10⁶**~~ **Decided 29 Oct 2026:** BWB sizes come from real tailless
    wings too (root chord 0.40–0.80 m, semi-span 0.75–2.2 root chords). The top Re level is lowered
-   to 2.5 × 10⁶ for every type, because no real wing of our families reaches 5 × 10⁶ (highest 2.13 × 10⁶).
+   to 3 × 10⁶ for every type, because no real wing of our families reaches 5 × 10⁶ (highest 2.74 × 10⁶, RUAG Ranger).
 10. **BWB root dihedral** now 0–3° at b0 and b1 (was pinned 0 in AERIS).
 11. **`root_chord_fractions` mode:** `semi_span_m` is read as semi-span / root chord (keeps one
     variable list). Conventional uses this mode so the aspect ratio stays in 4–16.5.
@@ -81,8 +81,8 @@
 32. **TE opening now follows pyGeo** (linear ramp over the last 10 % of chord, half up, half down,
     as `readAirfoilFile(bluntTe=True, bluntTaperRange=0.1)`). Replaces the uncited 65 % start.
     The sample sets in `data/sets/` must be rebuilt with pyGeo (`--all`): surfaces changed aft of 90 %.
-33. **The two upper Re levels are close** (1.5 × 10⁶ and 2.5 × 10⁶). Move the middle level to about
-    6 × 10⁵ (log-middle of 3 × 10⁵ and 2.5 × 10⁶)? Mini Class I wings fly at 1.2–2 × 10⁵ (eBee,
+33. **Middle Re level.** Levels now 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶. Move the middle level to about
+    9.5 × 10⁵ (log-middle of 3 × 10⁵ and 3 × 10⁶), or keep 1.5 × 10⁶? Mini Class I wings fly at 1.2–2 × 10⁵ (eBee,
     Black Swift S0), below the low level: this is item 2 with numbers now.
 34. **Class II, partly closed (29 Oct 2026).** Götten et al. 2021 (CEAS Aeronaut. J., Table 2) give
     wing areas for five Class II wings (150–230 kg; anonymised; from images and three-views, about
@@ -97,3 +97,13 @@
     known area reach 16.5. Cap AR (a gate, or narrower span ratio with taper), or accept?
 37. **NTNU UAV database** (Hann & Wallisch, DataverseNO doi:10.18710/L41IGQ, CC0): 93 UAVs with span,
     AR and estimated chord. Blocked from the cloud workspace; attach 02_Database.csv to add it.
+38. **Moderate-taper swept flying wings are not covered.** The Lockheed Aquila (3.76 m span, mean
+    chord 0.78 m, taper 0.58, LE sweep 28°, AR 4.9) fits neither type: the bwb type always tapers
+    strongly (tip 8–20 % of the root), and the tapered type sweeps at most 20°. Add a swept flying-wing
+    option (tapered type with sweep to about 30°, used with reflexed sections), or leave it out?
+39. **Essari 2015 data source.** Hermes 450, Ranger, Seeker, Shadow 600, Doyosae and Pchela areas come
+    from a PhD thesis whose chapter 2 data is "from (1) & (20)"; those references could not be read
+    (Jane's-style). Hermes 450 is internally inconsistent (constant chord 0.69 m × 10.51 m = 7.25 m²,
+    listed 6.90 m²). Confirm with Jane's before quoting in the paper.
+40. **Unread leads.** Gundlach 2004 Virginia Tech dissertation, Table 10-7 "Shadow 200 Geometry
+    Characteristics" (p. 166); Bray 1991 NPS thesis (Pioneer). Both need a manual download.

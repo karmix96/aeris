@@ -122,6 +122,10 @@ def plot(rows: list[dict], gen: dict[str, np.ndarray], path: Path, db: list[dict
     plt.close(fig)
 
 
+def fmt_re(x) -> str:
+    return "   n/a  " if x is None else f"{x:.2e}"
+
+
 def main() -> None:
     air, rows = real_wings()
     db = hcdi_wings()
@@ -153,7 +157,7 @@ def main() -> None:
     plot(rows, gen, DOCS / "real_uavs.png", db)
     for r in used:
         print(f"{r['name'][:30]:30s} span {r['span']:5.2f}  c {r['mean_chord']:.3f}  AR {r['aspect_ratio']:4.1f}  "
-              f"Re {r['re_low']:.2e} - {r['re_high']:.2e}  covered {r['covered']}")
+              f"Re {fmt_re(r.get('re_low'))} - {fmt_re(r.get('re_high'))}  covered {r['covered']}")
     for t, e in envelope.items():
         print(f"{t:13s} span {e['span_m'][0]:.2f}-{e['span_m'][1]:.2f} m, mean chord "
               f"{e['mean_chord_m'][0]:.3f}-{e['mean_chord_m'][1]:.3f} m")

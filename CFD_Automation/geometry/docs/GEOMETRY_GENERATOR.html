@@ -120,7 +120,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <div class="three">
     <div class="box"><h3>In</h3><div class="big">18 numbers + a wing type</div><p>From <code>configs/wing.yaml</code>: chords, spans, sweeps, twists, dihedrals, and an airfoil per station. Types: BWB, cranked, tapered, flying wing.</p></div>
     <div class="box"><h3>Out</h3><div class="big">One surface, checked</div><p>Upper, lower and trailing-edge base, read as <code>upper(u, v)</code>. Plus measured values, labels, four refusing checks, a hash, IGES.</p></div>
-    <div class="box"><h3>Evidence</h3><div class="big">570 of 570 wings pass</div><p>Sampled wings of all four types, 0 refused (code 0.6.0, numpy loft). 7 of 7 published wings verified. Tests: 137 pass without pyGeo, 11 more need pyGeo (run 29 Oct 2026).</p></div>
+    <div class="box"><h3>Evidence</h3><div class="big">570 of 570 wings pass</div><p>Sampled wings of all four types, 0 refused (code 0.6.0, numpy loft). 7 of 7 published wings verified. Tests: 138 pass without pyGeo, 11 more need pyGeo (run 29 Oct 2026).</p></div>
     <div class="box verdict"><h3>Verdict</h3><div class="big">Ready for Stage 2 after the pyGeo run</div><p>Fixes 1 and 2 done (panel dihedrals, code hash). Left: run the pyGeo tests and rebuild the sets with pyGeo on your machine; fix 3 belongs to the mesher. Not yet "any wing": straight panels only, no airfoil shape variable. Sets: built with the current code, loft backend: numpy.</p></div>
   </div>
 </section>

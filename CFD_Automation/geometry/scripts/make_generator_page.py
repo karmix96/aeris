@@ -29,7 +29,7 @@ from cfdauto.geometry.sections import build_wing_sections  # noqa: E402
 
 DOCS = ROOT / "docs"
 SETS = ROOT / "data" / "sets"
-TESTS_LINE = "137 pass without pyGeo, 11 more need pyGeo (run 29 Oct 2026)"
+TESTS_LINE = "138 pass without pyGeo, 11 more need pyGeo (run 29 Oct 2026)"
 
 # --------------------------------------------------------------------------------------
 # Content written by hand. Keep it short and plain.

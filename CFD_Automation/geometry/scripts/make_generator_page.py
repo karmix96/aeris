@@ -354,11 +354,16 @@ PHENOMENA = [
      "Thick laminar boundary layers and early separation at the tip, where the vortex forms.",
      "Weakly. Same model limit as above, at its worst. The first-cell law must use the local chord, not the mean chord.",
      "Same as above; first-cell law: Grand Roadmap R-V.1"),
-    ("Tip vortex, induced drag and wake roll-up",
+    ("Wake behind the trailing edge",
+     "Every wing, the whole span. At 12° the wake leaves the edge at an angle; behind a blunt base it starts wide.",
+     "A thin sheet of slow air: the boundary layers of both surfaces leave the edge and carry the profile drag downstream. It sets the pressure at the trailing edge and base, and it rolls up toward the tips.",
+     "Only if the wake has its own cells. The S8 O-mesh has none: its cells grow fast behind the edge, so the wake smears. In AERIS, refining the near wake alone moved base drag by 23 counts. Plan: an overset wake box.",
+     "Primer section 05; Chan et al. 2002"),
+    ("Tip vortex, roll-up and induced drag",
      "Every wing; strongest at low aspect ratio (BWB down to 2.7) and high lift.",
-     "Induced drag is a large share of the total; the wake and vortex move the pressure at the trailing edge and tip.",
-     "Yes, if the wake has its own cells. The O-mesh had no designed wake: overset wake box and vortex tube planned (primer, section 05).",
-     "Primer section 05; refining the near wake moved base drag by 23 counts"),
+     "The wake sheet rolls up into one vortex per tip within about one chord. It causes the downwash and the induced drag, a large share of the total.",
+     "Yes, if the vortex keeps fine cells along its path. Plan: the roll-up inside the near-body mesh, then a vortex tube from about 2 chords behind the tip.",
+     "Primer section 05"),
     ("Sweep: spanwise flow, tip or root stall, pitch-up",
      "BWB 5–40° (aft); cranked and tapered −10° to +20° (forward to aft).",
      "Aft sweep pushes the boundary layer outboard, so the tip stalls first and the nose can pitch up. Forward sweep stalls the root first.",
@@ -615,6 +620,137 @@ def fig_section() -> str:
     return "\n".join(o)
 
 
+# zone | phenomena it captures | rule (starting value) | budget share (Stage 0) | where the rule comes from | today in S8
+REFINE = [
+    ("Wall-normal, every wall", "Boundary layer, skin friction, separation; transition if a transition model is run",
+     "First cell from y⁺ ≤ 1 at each station's own Re (local chord), so small tips get their own; growth ≤ 1.25 inside the boundary layer, ≤ 1.3 outside; ≥ 30 cells across the boundary layer",
+     "wall-normal 20 %", "Roadmap R-V.1, R-V.2 (laws 13, 14); DPW gridding guidelines",
+     "One first cell (4.71 µm) for every station; growth 1.253; 29 cells across the boundary layer"),
+    ("Leading edge (nose)", "Suction peak, start of the laminar run, stall at 12°",
+     "Chordwise spacing solved so no cell turns the surface by more than 10° (ladder 12 / 10 / 8 / 6°); nose cells of neighbouring stations differ by at most 15 %",
+     "chordwise 35 %", "Roadmap R-S.5, R-S.6 (laws 1, 2)", "In place"),
+    ("Upper surface, about 30–60 % chord", "Laminar separation bubble and transition",
+     "Only with a transition model: fine chordwise cells over the bubble and a cap on growth along the ring (≤ 1.25). With fully turbulent SA there is no bubble to resolve",
+     "chordwise 35 %", "Our choice; depends on the transition route (Stage 0 D5)", "Not done"),
+    ("Trailing edge and blunt base", "Base drag, base flow, start of the wake",
+     "Chordwise spacing 0.1 % of local chord at the edge; 8 cells (9 points) across the base at the coarse level",
+     "edges and base 15 %", "Roadmap R-S.3, R-S.4 (laws 3, 6); DPW (8/12/16/24 cells), SPICES (≥ 8 at the fine level)", "In place (family 3)"),
+    ("Panel breaks b1, b2 (and switch sections)", "Local suction peak, jump in the span loading, slope break of the loft",
+     "A mesh station exactly on every break; spanwise growth ≤ 1.3 away from it",
+     "spanwise 15 %", "Fix 3 on this page; primer Track 2 (spanwise law with anchors)", "Not done: stations ignore the breaks"),
+    ("Tip and tip cap", "Smallest chord and Re, first stall on aft sweep, birth of the vortex",
+     "Stations squeezed toward the tip so the last gap equals the cap's first cell; cap first cell = the tip station's first cell (refuse above 3×); outboard blocks 1.5 root chords beyond the tip, growth ≤ 1.15",
+     "spanwise 15 %", "Roadmap R-S.1, R-V.3, R-V.5 (laws 9–12)", "Squeeze in place; cap first cell to be tied to the tip"),
+    ("Near wake, trailing edge to 2 chords", "Wake sheet (velocity deficit), base flow, start of roll-up",
+     "Overset wake box with cells of 0.0075 c (about 20 across the wake), tall and tilted to hold the wake at 0–12°; starts inside the near-body mesh",
+     "wake 15 %", "Roadmap R-V.6 (laws 17, 18); Chan et al. 2002", "No designed wake (O-mesh)"),
+    ("Far wake, 2 to 10 chords", "Downwash, induced drag, wake convection",
+     "Wake-box cells grow from 0.0075 c to the background size",
+     "wake 15 %", "Roadmap R-V.6", "No designed wake"),
+    ("Tip vortex core", "Roll-up and path of the tip vortex",
+     "Tube with 15–20 near-cubic cells across the core, starting about 2 chords behind the tip (the vortex forms within about 1 chord, inside the near-body mesh)",
+     "wake 15 %", "Roadmap R-V.6 (law 19); primer section 05", "None"),
+    ("Overlap between meshes", "Nothing leaks: the wake and the boundary layer pass between grids cleanly",
+     "≥ 5 cells from each mesh, cell-size ratio ≤ 1.5, no overlap inside the boundary layer or at the tip, 0 orphan cells",
+     "—", "Roadmap R-V.7 (law 21); Chan et al. 2002; Kenway et al. 2017", "Not built yet (Stage 2, M3)"),
+    ("Background and far field", "Domain error",
+     "Background 0.03 c around the wing, coarsening outward; far field from 80 chords (ladder 40 / 80 / 160)",
+     "domain 10 % (of the total)", "Roadmap R-V.6 (laws 15, 16); DPW about 100 chords", "40 chords; 40 → 60 moved drag 0.6–0.7 counts"),
+    ("Every zone together", "Grid convergence (the error bar)",
+     "Every spacing in every mesh refined by one ratio r ≥ 1.3; distances fixed",
+     "—", "Roadmap R-V.8 (law 23); Celik et al. 2008", "Outboard blocks did not refine with the family"),
+]
+
+
+def refine_html() -> str:
+    return "".join(f"<tr><td class='what'>{z}</td><td>{p}</td><td>{r}</td><td class='num'>{b}</td><td class='src'>{s}</td><td class='muted'>{t}</td></tr>"
+                   for z, p, r, b, s, t in REFINE)
+
+
+def fig_refine_side() -> str:
+    """Side view (a cut along the flow): which zones get fine cells around one section."""
+    pts = _naca4()
+    C, X0, YC = 220, 150, 190
+    up = [(X0 + C * x, YC - C * yu) for x, yu, yl in pts]
+    lo = [(X0 + C * x, YC - C * yl) for x, yu, yl in pts]
+    poly = " ".join(f"{a:.1f},{b:.1f}" for a, b in up + lo[::-1])
+    o = ['<svg class="dg" viewBox="0 0 1000 380" role="img" aria-label="Side view of the mesh zones around one section: wall layers on the whole surface, fine cells at the nose, at the trailing edge and across the blunt base, the near-body mesh reaching about two chords, a tilted wake box with cells of 0.0075 chord to two chords behind the trailing edge then growing to ten chords, and the background box of 0.03 chord">',
+         '<defs><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="fillc"/></marker></defs>']
+    # background box
+    o.append('<rect class="zone-bg" x="40" y="40" width="930" height="300"/>')
+    o.append('<text class="lab muted" x="960" y="330" text-anchor="end">background: 0.03 c, coarsening to the far field (80 c)</text>')
+    # near-body reach ~2c (ellipse around section)
+    o.append(f'<ellipse class="nearbody" cx="{X0 + 0.5 * C}" cy="{YC}" rx="{0.5 * C + 150:.0f}" ry="125"/>')
+    o.append(f'<text class="lab acc" x="{X0 + 0.5 * C}" y="{YC - 132}" text-anchor="middle">near-body mesh, reach about 2 c</text>')
+    # wake box: fine to 2c, then growing to 10c (compressed), tilted for 0–12°
+    te = X0 + C
+    x2 = te + 190
+    o.append(f'<polygon class="wakebox" points="{te},{YC - 16} {x2:.0f},{YC - 16 + 30} {x2:.0f},{YC + 22} {te},{YC + 14}"/>')
+    o.append(f'<polygon class="wakebox far" points="{x2:.0f},{YC + 14} 960,{YC + 40} 960,{YC + 110} {x2:.0f},{YC + 22}"/>')
+    o.append(f'<text class="lab acc" x="{te + 10}" y="{YC - 26}">wake box 0.0075 c, to 2 c</text>')
+    o.append(f'<text class="lab acc" x="{x2 + 30:.0f}" y="{YC - 14}">then cells grow to the background, to 10 c</text>')
+    o.append(f'<text class="lab muted" x="{x2 + 30:.0f}" y="{YC + 2}">tall and tilted: holds the wake at 0–12°</text>')
+    # wall layers (offset outlines)
+    for k, d in enumerate((3, 6, 10)):
+        offs = " ".join(f"{a:.1f},{b - d:.1f}" for a, b in up) + " " + " ".join(f"{a:.1f},{b + d:.1f}" for a, b in lo[::-1])
+        o.append(f'<polygon class="layer" points="{offs}"/>')
+    o.append(f'<polygon class="wing" points="{poly}"/>')
+    # nose and TE clusters
+    o.append(f'<circle class="hot" cx="{X0}" cy="{YC - C * pts[0][1]:.1f}" r="14"/>')
+    o.append(f'<circle class="hot" cx="{te}" cy="{YC:.1f}" r="11"/>')
+    # labels
+    o.append(f'<line class="leader" x1="{X0 - 12}" y1="{YC - 8}" x2="{X0 - 60}" y2="{YC + 70}"/><text class="lab" x="{X0 - 110}" y="{YC + 88}">nose: ≤ 10° turning per cell</text>')
+    o.append(f'<line class="leader" x1="{te + 6}" y1="{YC + 10}" x2="{te + 40}" y2="{YC + 80}"/><text class="lab" x="{te + 20}" y="{YC + 98}">edge 0.1 % c · 8 cells across the base</text>')
+    o.append(f'<line class="leader" x1="{X0 + 0.5 * C}" y1="{YC - 30}" x2="{X0 + 0.45 * C}" y2="{YC - 70}"/><text class="lab" x="{X0 + 0.1 * C:.0f}" y="{YC - 76}">wall layers: y⁺ ≤ 1, growth ≤ 1.25, ≥ 30 cells</text>')
+    o.append(f'<text class="lab muted" x="{X0 + 0.05 * C:.0f}" y="{YC + 50}">bubble zone 30–60 % c (with a transition model)</text>')
+    o.append('<text class="lab muted" x="50" y="372">schematic, not to scale (the far wake is compressed)</text>')
+    o.append("</svg>")
+    return "\n".join(o)
+
+
+def fig_refine_top() -> str:
+    """Top view: spanwise stations, breaks, tip, outboard blocks, wake box and vortex tube."""
+    st = [(90, 80, 220), (270, 160, 125), (430, 215, 75), (600, 262, 30)]
+    le = " ".join(f"{y},{x}" for y, x, c in st)
+    te = " ".join(f"{y},{x + c}" for y, x, c in reversed(st))
+    o = ['<svg class="dg" viewBox="0 0 1000 470" role="img" aria-label="Top view of the mesh zones: span stations nearly even from the root and squeezed toward the tip, a station on each break b1 and b2, outboard blocks reaching 1.5 root chords beyond the tip, the wake box behind the whole trailing edge, and a vortex tube starting about two chords behind the tip">']
+    # wake box behind TE
+    o.append('<polygon class="wakebox" points="90,300 610,292 640,440 90,440"/>')
+    o.append('<text class="lab acc" x="110" y="430">wake box behind the whole trailing edge</text>')
+    # outboard blocks beyond tip
+    o.append('<rect class="outboard" x="600" y="230" width="90" height="110"/>')
+    o.append('<text class="lab" x="612" y="224">outboard blocks: 1.5 root c, growth ≤ 1.15</text>')
+    # vortex tube starting ~2c behind tip (tip at x 262..292)
+    o.append('<rect class="tube" x="585" y="370" width="40" height="80" rx="18"/>')
+    o.append('<text class="lab acc" x="636" y="410">vortex tube: 15–20 cells across the core,</text>')
+    o.append('<text class="lab acc" x="636" y="426">from about 2 c behind the tip</text>')
+    # wing
+    o.append(f'<polygon class="wing" points="{le} {te}"/>')
+    # span stations: nearly even, squeezed toward the tip, plus breaks
+    import math
+    n = 26
+    ys = [90 + 510 * (1 - math.cos(0.5 * math.pi * k / n)) ** 0.9 if False else 90 + 510 * (math.sin(0.5 * math.pi * k / n)) for k in range(n + 1)]
+    def x_at(y):
+        for (y0, x0, c0), (y1, x1, c1) in zip(st[:-1], st[1:]):
+            if y0 <= y <= y1:
+                s = (y - y0) / (y1 - y0)
+                return x0 + s * (x1 - x0), c0 + s * (c1 - c0)
+        return st[-1][1], st[-1][2]
+    for y in ys:
+        x, c = x_at(y)
+        o.append(f'<line class="station" x1="{y:.1f}" y1="{x:.1f}" x2="{y:.1f}" y2="{x + c:.1f}"/>')
+    for y, x, c in st[1:3]:
+        o.append(f'<line class="station brk" x1="{y}" y1="{x}" x2="{y}" y2="{x + c}"/>')
+        o.append(f'<line class="leader" x1="{y}" y1="{x - 2}" x2="350" y2="102"/>')
+    o.append('<text class="lab amber" x="350" y="96" text-anchor="middle">a station exactly on each break (b1, b2)</text>')
+    o.append('<line class="leader" x1="560" y1="268" x2="720" y2="120"/><text class="lab" x="726" y="118">stations squeezed toward the tip:</text>')
+    o.append('<text class="lab" x="726" y="134">last gap = the cap\'s first cell</text>')
+    o.append('<text class="lab muted" x="96" y="60">stations nearly even from the root</text>')
+    o.append('<line class="dash" x1="90" y1="40" x2="90" y2="450"/>')
+    o.append("</svg>")
+    return "\n".join(o)
+
+
 def decisions_html() -> str:
     out = []
     n = 0
@@ -762,6 +898,16 @@ svg.dg .leader { stroke: var(--muted); stroke-width: .8; }
 svg.dg .lam { stroke: var(--bwb); stroke-width: 3; fill: none; }
 svg.dg .turb { stroke: var(--accent); stroke-width: 7; opacity: .55; fill: none; stroke-linejoin: round; }
 svg.dg .bubble { stroke: var(--amber); stroke-width: 2.5; fill: none; }
+svg.dg .zone-bg { fill: none; stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 4; }
+svg.dg .nearbody { fill: var(--accent); opacity: .07; stroke: var(--accent); stroke-width: 1.2; }
+svg.dg .wakebox { fill: var(--accent); opacity: .22; stroke: var(--accent); stroke-width: 1; }
+svg.dg .wakebox.far { opacity: .10; }
+svg.dg .layer { fill: none; stroke: var(--accent); stroke-width: .8; opacity: .7; }
+svg.dg .hot { fill: var(--warn); opacity: .28; }
+svg.dg .outboard { fill: var(--amber); opacity: .18; stroke: var(--amber); stroke-width: 1; }
+svg.dg .tube { fill: var(--accent); opacity: .30; stroke: var(--accent); stroke-width: 1.2; }
+svg.dg .station { stroke: var(--muted); stroke-width: .9; }
+svg.dg .station.brk { stroke: var(--amber); stroke-width: 2.4; }
 footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 12px; }
 @media (prefers-reduced-motion: reduce) { .card img[src^="data:image/gif"] { animation: none; } }
 </style>
@@ -770,7 +916,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <div class="eyebrow">CFD_Automation · Stage 1 · geometry · code __VERSION__</div>
   <h1>Wing Generator</h1>
   <p class="lede">Eighteen numbers go in; one exact wing surface comes out, measured, labelled and checked. One generator and one YAML file make BWB, cranked and tapered wings, sized like real Class I and II UAVs. Every later stage (mesh, solver, data) reads only this surface.</p>
-  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#ranges">Final ranges</a><a href="#reynolds">Reynolds range</a><a href="#phenomena">Flow phenomena</a><a href="#fix">Fix before Stage 2</a><a href="#decisions">Design decisions</a><a href="#real">Real wings and Re</a><a href="#variables">The 18 numbers</a><a href="#checks">Checks and results</a><a href="#open">Open decisions</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
+  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#ranges">Final ranges</a><a href="#reynolds">Reynolds range</a><a href="#phenomena">Flow phenomena</a><a href="#refine">Where to refine</a><a href="#fix">Fix before Stage 2</a><a href="#decisions">Design decisions</a><a href="#real">Real wings and Re</a><a href="#variables">The 18 numbers</a><a href="#checks">Checks and results</a><a href="#open">Open decisions</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
 </header>
 
 <section id="glance">
@@ -832,6 +978,20 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <tbody>__PHEN__</tbody>
   </table></div>
   <div class="weak"><strong>The biggest one.</strong> Most of these wings fly where transition and laminar bubbles set the drag, and the planned model cannot see them. Mesh error can be made small; this model error cannot. Every drag number needs its model band, and differences between wings are safer than absolute drag.</div>
+</section>
+
+<section id="refine">
+  <h2>Where the mesh must be fine</h2>
+  <p>Each phenomenon above lives in one region of the flow; each region gets its own rule. The rules are the Grand Roadmap recipes (R-S, R-V) and the Stage 0 error budget: the share is how much of the 65 % grid error each direction may use. The last column says where S8 stands today.</p>
+  <figure class="fig"><div class="svgwrap">__FIG_RSIDE__</div>
+    <figcaption class="cap">Side view: fine cells at the wall (all around), at the nose and at the trailing edge, then a wake box that stays fine for 2 chords and coarsens to 10 chords, all inside the background box.</figcaption></figure>
+  <figure class="fig"><div class="svgwrap">__FIG_RTOP__</div>
+    <figcaption class="cap">Top view: stations nearly even from the root, squeezed toward the tip, and one exactly on each break; outboard blocks past the tip; the wake box behind the whole trailing edge; the vortex tube from about 2 chords behind the tip.</figcaption></figure>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>Zone</th><th>Captures</th><th>Rule (starting value)</th><th>Budget share</th><th>Source</th><th>S8 today</th></tr></thead>
+    <tbody>__REFINE__</tbody>
+  </table></div>
+  <p class="muted">Budget shares from Stage 0: chordwise 35 %, spanwise 15 %, wall-normal 20 %, edges and base 15 %, wake 15 % of the grid error; domain 10 % of the total. All values are starting values; the mesh studies (Grand Roadmap stage 4) confirm or replace them.</p>
 </section>
 
 <section id="fix" class="weak">
@@ -982,7 +1142,8 @@ def main() -> None:
         for t, e, d in FIXES)
     real_rows, real = real_table()
     env = real["envelope"]
-    fr = final_ranges_html() | {"__FIG_RE__": fig_re_map(), "__FIG_PLAN__": fig_planform(), "__FIG_SEC__": fig_section()}
+    fr = final_ranges_html() | {"__FIG_RE__": fig_re_map(), "__FIG_PLAN__": fig_planform(), "__FIG_SEC__": fig_section(),
+                                "__FIG_RSIDE__": fig_refine_side(), "__FIG_RTOP__": fig_refine_top(), "__REFINE__": refine_html()}
     page = PAGE
     for k, v in fr.items():
         page = page.replace(k, v)

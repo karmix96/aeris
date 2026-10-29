@@ -31,21 +31,29 @@ class GateResult:
     reason: str = ""
 
 
-def vector_to_loft(measured: dict, pf: Planform, stations: list[Station]) -> GateResult:
-    """Measured chords, sweeps, twist and dihedral equal the design."""
+def vector_to_loft(measured: dict, pf: Planform, stations: list[Station], vec: dict | None = None) -> GateResult:
+    """Measured chords, sweeps, twist, dihedral and aspect ratio equal the design.
+
+    With the design vector, panel dihedrals and the aspect ratio are compared with the vector
+    itself (not with values derived from the built stations)."""
     main = [s for s in stations if s.name in ("b0", "b1", "b2", "b3")]
     m_st, m_pa = measured["stations"], measured["panels"]
+    if vec is not None:
+        want_dih = np.array([vec[f"dihedral_p{i}_deg"] for i in (1, 2, 3)])
+    else:
+        want_dih = panel_dihedral_deg(np.array([s.y for s in main]), np.array([s.z_le for s in main]))
     checks = [
         ("chord", np.abs(np.array(m_st["chord_m"]) / pf.chord - 1.0), TOL["chord_rel"]),
         ("sweep", np.abs(np.array(m_pa["sweep_le_deg"]) - pf.sweep_le_deg), TOL["sweep_deg"]),
         ("twist", np.abs(np.array(m_st["twist_deg"]) - [s.twist_deg for s in main]), TOL["twist_deg"]),
-        ("dihedral", np.abs(np.array(m_pa["dihedral_deg"])
-                            - panel_dihedral_deg(np.array([s.y for s in main]), np.array([s.z_le for s in main]))),
-         TOL["dihedral_deg"]),
+        ("dihedral", np.abs(np.array(m_pa["dihedral_deg"]) - want_dih), TOL["dihedral_deg"]),
     ]
+    if vec is not None:
+        checks.append(("aspect ratio", np.abs(np.array([measured["aspect_ratio"] / vec["aspect_ratio"] - 1.0])),
+                       TOL["chord_rel"]))
     for name, err, tol in checks:
         if np.max(err) > tol:
-            unit = "" if name == "chord" else " deg"
+            unit = "" if name in ("chord", "aspect ratio") else " deg"
             return GateResult("vector_to_loft", False, f"{name} off by {np.max(err):.4g}{unit} (limit {tol}{unit})")
     return GateResult("vector_to_loft", True)
 
@@ -90,6 +98,10 @@ def validity(loft, stations: list[Station], n_span: int = 101, n_chord: int = 20
     root = np.concatenate([up[0], lo[0]])
     if np.max(np.abs(root[:, 1])) > TOL["flat_root_m"]:
         return GateResult("validity", False, f"root section leaves y = 0 by {np.max(np.abs(root[:, 1])):.3g} m")
+    # the half wing must stay on its own side, so the mirrored halves meet only in y = 0
+    y_min = min(float(np.min(up[:, :, 1])), float(np.min(lo[:, :, 1])))
+    if y_min < -TOL["flat_root_m"]:
+        return GateResult("validity", False, f"the half wing crosses the symmetry plane (y = {y_min:.3g} m)")
     return GateResult("validity", True)
 
 

@@ -29,7 +29,7 @@ from cfdauto.geometry.planform import build_planform  # noqa: E402
 from cfdauto.geometry.sample import lhs  # noqa: E402
 
 DOCS = ROOT / "docs"
-FAMILY_TYPES = {"tailless": ("bwb",), "tailed": ("conventional", "tapered")}
+FAMILY_TYPES = {"tailless": ("bwb", "flying_wing"), "tailed": ("conventional", "tapered")}
 N_SAMPLE = 2000
 TOL = 0.10
 
@@ -63,7 +63,7 @@ def span_covered(r: dict, gen: dict[str, np.ndarray]) -> bool:
     return bool(pts[:, 0].min() * (1 - TOL) <= r["span"] <= pts[:, 0].max() * (1 + TOL))
 
 
-TYPE_FAMILY = {"bwb": "tailless", "conventional": "tailed", "tapered": "tailed"}
+TYPE_FAMILY = {"bwb": "tailless", "flying_wing": "tailless", "conventional": "tailed", "tapered": "tailed"}
 
 
 def generated() -> dict[str, np.ndarray]:
@@ -109,7 +109,7 @@ def plot(rows: list[dict], gen: dict[str, np.ndarray], path: Path, db: list[dict
     import matplotlib.pyplot as plt
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 4.8), dpi=110)
-    style = {"bwb": "#2E8B57", "conventional": "#0C5EA8", "tapered": "#6A9FD8"}
+    style = {"bwb": "#2E8B57", "flying_wing": "#9A6200", "conventional": "#0C5EA8", "tapered": "#6A9FD8"}
     for ax, (fam, types) in zip(axes, FAMILY_TYPES.items()):
         for t in types:
             ax.scatter(gen[t][:, 0], gen[t][:, 1], s=4, alpha=0.25, color=style[t], label=f"generated: {t}")
@@ -129,7 +129,7 @@ def plot(rows: list[dict], gen: dict[str, np.ndarray], path: Path, db: list[dict
                 ax.axvline(r["span"], color="#6A4BB0", lw=0.9, ls="--", alpha=0.7, zorder=1)
                 ax.annotate(r["model"], (r["span"], 0), fontsize=6.5, rotation=90, xytext=(2, 60),
                             textcoords="offset points", color="#6A4BB0", va="bottom")
-        ax.set_title({"tailless": "Tailless (flying wing / BWB) vs the bwb type",
+        ax.set_title({"tailless": "Tailless vs the bwb and flying-wing types",
                       "tailed": "Wing + tail vs the conventional and tapered types"}[fam], fontsize=10)
         ax.set_xlabel("full span [m]")
         ax.set_ylabel("mean chord = area / span [m]")

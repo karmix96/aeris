@@ -2,9 +2,7 @@ import numpy as np
 import pytest
 
 from cfdauto.geometry import params
-from cfdauto.geometry.sections import (
-    build_stations, load_airfoil, panel_dihedral_deg, segment_z_integral, station_z,
-)
+from cfdauto.geometry.sections import build_stations, load_airfoil, panel_dihedral_deg, panel_z
 
 AIRFOILS = ["mh91", "e374", "nlf1015", "naca4415", "naca4412"]
 
@@ -24,32 +22,37 @@ def test_airfoil_thickness_matches_name():
     assert load_airfoil("naca4412").thickness.max() == pytest.approx(0.12, abs=0.003)
 
 
-def test_z_integral_constant_and_linear():
-    d = np.radians(5.0)
-    assert segment_z_integral(0, 2, d, d) == pytest.approx(2 * np.tan(d))
-    # linear dihedral: compare with a fine numerical integral
-    d0, d1 = np.radians(0.0), np.radians(10.0)
-    s = np.linspace(0, 1.5, 200001)
-    num = np.trapezoid(np.tan(d0 + (d1 - d0) * s / 1.5), s)
-    assert segment_z_integral(0, 1.5, d0, d1) == pytest.approx(num, rel=1e-9)
+def test_panel_z_gives_the_panel_dihedral_exactly():
+    y = np.array([0.0, 0.4, 1.1, 1.5])
+    d = np.array([2.0, -3.0, 7.5])
+    z = panel_z(y, d)
+    assert z[0] == 0.0
+    assert panel_dihedral_deg(y, z) == pytest.approx(d, abs=1e-12)
 
 
-def test_z_independent_of_station_split():
-    # adding a station on the linear dihedral line must not move the tip
-    y = np.array([0.0, 1.0, 2.0])
-    d = np.array([0.0, 4.0, 8.0])
-    z2 = station_z(np.array([0.0, 2.0]), np.array([0.0, 8.0]))
-    assert station_z(y, d)[-1] == pytest.approx(z2[-1], rel=1e-12)
+@pytest.mark.parametrize("wing_type", params.WING_TYPES)
+def test_dihedral_is_three_panel_values_and_each_matters(wing_type):
+    spec = params.load_config().types[wing_type]
+    vec = params.mid_vector(spec)
+    assert [k for k in params.VARIABLES if k.startswith("dihedral")] == \
+        ["dihedral_p1_deg", "dihedral_p2_deg", "dihedral_p3_deg"]
+    _, st0 = build_stations(spec, vec)
+    for k in ("dihedral_p1_deg", "dihedral_p2_deg", "dihedral_p3_deg"):
+        _, st1 = build_stations(spec, vec | {k: vec[k] + 1.0})
+        assert st1[-1].z_le != pytest.approx(st0[-1].z_le)      # no input is without effect
 
 
 def test_root_section_stays_in_symmetry_plane_with_root_dihedral():
     spec = params.load_config().types["conventional"]
-    vec = params.mid_vector(spec) | {"dihedral0_deg": 6.0, "dihedral1_deg": 6.0}
+    vec = params.mid_vector(spec) | {"dihedral_p1_deg": 6.0}
     _, st = build_stations(spec, vec)
     assert st[0].y == 0.0 and st[0].z_le == 0.0
-    # with constant 6 deg dihedral, the first panel rises at 6 deg
     y = np.array([s.y for s in st]); z = np.array([s.z_le for s in st])
     assert panel_dihedral_deg(y, z)[0] == pytest.approx(6.0)
+    # sections are vertical: every point of the root section lies in y = 0
+    from cfdauto.geometry.loft import section_points
+    up, lo = section_points(st[0])
+    assert np.max(np.abs(np.concatenate([up, lo])[:, 1])) == 0.0
 
 
 def test_stations_carry_vector_twist_and_airfoils():

@@ -38,8 +38,9 @@ def test_panel_spans_follow_ratios():
 
 
 def test_root_chord_fraction_span_mode():
-    spec = params.load_config().types["conventional"]
-    vec = params.mid_vector(spec)
+    import dataclasses
+    spec = dataclasses.replace(params.load_config().types["conventional"], span_mode="root_chord_fractions")
+    vec = params.mid_vector(spec) | {"semi_span_m": 4.0}
     pf = build_planform(spec, vec)
     assert pf.semi_span == pytest.approx(vec["semi_span_m"] * vec["root_chord_m"])
 
@@ -52,7 +53,8 @@ def test_forward_sweep_builds():
 
 
 def test_rectangle_area_mac_ar():
-    spec = params.load_config().types["conventional"]
+    import dataclasses
+    spec = dataclasses.replace(params.load_config().types["conventional"], span_mode="root_chord_fractions")
     vec = params.mid_vector(spec) | {
         "root_chord_m": 0.5, "c2_ratio": 1.0, "c3_ratio": 1.0, "c4_ratio": 1.0,
         "semi_span_m": 4.0, "sweep1_deg": 0.0, "sweep2_deg": 0.0, "sweep3_deg": 0.0,
@@ -92,7 +94,7 @@ def test_per_panel_never_wider_outboard():
 
 def test_tapered_has_straight_edges():
     spec = params.load_config().types["tapered"]
-    assert set(spec.derived) == {"c2_ratio", "c3_ratio", "sweep2_deg", "sweep3_deg"}
+    assert set(spec.derived) == {"c2_ratio", "c3_ratio", "sweep2_deg", "sweep3_deg", "semi_span_m"}
     for vec in _random_vectors(spec, n=200, seed=4):
         pf = build_planform(spec, vec)
         x_te = pf.x_le + pf.chord

@@ -75,7 +75,7 @@ def blendednet(C2: float, C3: float, C4: float, B1: float, B2: float, B3: float,
         "split_ratio": B1 / (B1 + B2),
         "sweep1_deg": S1, "sweep2_deg": S2, "sweep3_deg": S3,
         **{f"twist{i}_deg": 0.0 for i in range(4)},
-        **{f"dihedral{i}_deg": 0.0 for i in range(4)},
+        **{f"dihedral_p{i}_deg": 0.0 for i in (1, 2, 3)},
     }
     af = airfoils or bn["airfoils"]
     spec = _spec(name, "stations", "root_chord_fractions", af, vec)

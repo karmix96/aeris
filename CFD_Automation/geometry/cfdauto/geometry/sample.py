@@ -118,8 +118,11 @@ def coverage_check(spec: TypeSpec, ref: list[dict], training: list[dict], n_rand
 def draw_mixed(cfg: Config, n: int, seed: int) -> list[tuple[str, dict]]:
     """For wing_type = mixed: n wings split between the types by the shares."""
     types = [t for t in WING_TYPES if cfg.shares.get(t, 0.0) > 0]
-    counts = [round(n * cfg.shares[t]) for t in types]
-    counts[-1] = n - sum(counts[:-1])
+    exact = [n * cfg.shares[t] for t in types]
+    counts = [math.floor(x) for x in exact]
+    # largest remainder: the wings left over go to the types with the biggest fractions
+    for k in sorted(range(len(types)), key=lambda k: exact[k] - counts[k], reverse=True)[: n - sum(counts)]:
+        counts[k] += 1
     return [(t, v) for k, (t, m) in enumerate(zip(types, counts)) for v in lhs(cfg.types[t], m, seed + k)]
 
 

@@ -6,7 +6,7 @@ Numbers, not pictures. All errors in % of local chord. Limits: sections 0.01, ed
 |---|---|---|---|---|---|---|
 | onera_m6 | numpy | 0.00026 | 4.9e-14 | 4.8e-14 | CATIA IGES: max 0.0113, rms 0.0017 | yes |
 | ribes | numpy | 0.00049 | 2.3e-14 | 5.3e-14 | none in repo | yes |
-| nasa_crm | numpy | 0.00279 | 2.2e-13 | 2.3e-13 | none in repo | yes |
+| nasa_crm | numpy | 0.00279 | 2.4e-13 | 1.2e-13 | none in repo | yes |
 | blendednet_low | numpy | 0.00268 | 9.8e-14 | 7.9e-14 | none in repo | yes |
 | blendednet_mid | numpy | 0.00268 | 1.5e-13 | 8.8e-14 | none in repo | yes |
 | blendednet_high | numpy | 0.00268 | 2.4e-13 | 1.4e-13 | none in repo | yes |

@@ -6,7 +6,7 @@ from cfdauto.geometry import params
 
 def test_config_loads_both_types():
     cfg = params.load_config()
-    assert set(cfg.types) == {"bwb", "conventional", "tapered"}
+    assert set(cfg.types) == set(params.WING_TYPES) == {"bwb", "conventional", "tapered", "flying_wing"}
     for spec in cfg.types.values():
         assert set(spec.ranges) == set(params.VARIABLES)
         # everything varies by default, except what a law computes
@@ -42,14 +42,14 @@ def _write(tmp_path, raw):
 
 def test_pinned_and_linear_taper(tmp_path):
     raw = yaml.safe_load(params.DEFAULT_CONFIG.read_text())
-    raw["types"]["conventional"]["pinned"] = {"dihedral0_deg": 2.0}
+    raw["types"]["conventional"]["pinned"] = {"dihedral_p1_deg": 2.0}
     raw["types"]["conventional"]["chord_law"] = "linear_taper"
     cfg = params.load_config(_write(tmp_path, raw))
     spec = cfg.types["conventional"]
-    assert "dihedral0_deg" not in spec.free_variables
+    assert "dihedral_p1_deg" not in spec.free_variables
     assert "c2_ratio" not in spec.free_variables
     vec = params.mid_vector(spec)
-    assert vec["dihedral0_deg"] == 2.0
+    assert vec["dihedral_p1_deg"] == 2.0
     # chord linear in span: c3 sits on the line from 1 to c4
     y2 = 1.0 - vec["b3_ratio"]
     assert vec["c3_ratio"] == pytest.approx(1.0 + (vec["c4_ratio"] - 1.0) * y2)
@@ -93,3 +93,13 @@ def test_missing_variable_refused():
     del vec["sweep1_deg"]
     with pytest.raises(ValueError):
         params.resolve(spec, vec)
+
+
+@pytest.mark.parametrize("wing_type", params.WING_TYPES)
+def test_aspect_ratio_is_an_input_and_the_span_follows(wing_type):
+    from cfdauto.geometry.planform import aspect_ratio, build_planform
+    spec = params.load_config().types[wing_type]
+    assert spec.span_mode == "aspect_ratio" and "semi_span_m" in spec.derived
+    for u in (0.0, 0.5, 1.0):
+        vec = params.from_unit(spec, {"aspect_ratio": u})
+        assert aspect_ratio(build_planform(spec, vec)) == pytest.approx(vec["aspect_ratio"], rel=1e-12)

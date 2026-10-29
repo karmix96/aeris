@@ -14,3 +14,26 @@ Check: `tests/geometry/test_planform.py` (no chord grows outboard on 500 cranked
 trailing edges straight on 200 tapered wings; resolve is idempotent).
 
 Open: the mixed shares (BWB 0.5, cranked 0.25, tapered 0.25) are our choice.
+
+
+## Aspect ratio as the size input (29 Oct 2026, Mike)
+
+| choice | value | why |
+|---|---|---|
+| `span_mode: aspect_ratio` for every type | `root_chord_m` and `aspect_ratio` are sampled; semi-span S = AR · c_root · K / 2, K = mean chord / root chord = Σ f_i (r_i + r_i+1) / 2 | Drawing the span in root chords and the taper separately let wings with a tail reach AR 21 (13 % of cranked, 11 % of tapered above 16.5, the highest real value). Drawing AR keeps every wing inside the real range by construction: no refusals, Latin hypercube intact. |
+| AR ranges | tailless (bwb, flying_wing) 3–9 (real 2.9–8.6); with a tail (conventional, tapered) 4.5–16.5 (real 4.9–16.0; 16.5 at 630 kg) | from the real wings with a published area (`configs/real_uavs.yaml`) |
+| Variables | still 18 names: `semi_span_m` and `aspect_ratio` are both in the vector, one sampled and one derived | one vector shape for every type; `semi_span` and `root_chord_fractions` modes stay for published wings |
+
+Check: the vector gate measures the aspect ratio on the loft and compares it with the vector (0.1 %).
+
+## Flying-wing type (29 Oct 2026, Mike)
+
+`flying_wing`: tailless, `linear_taper` (taper 0.3–0.8) and `sweep_law: one` (10–35°), AR 3–9, root chord
+0.25–1.05 m, washout, panel dihedral 0–5°, reflexed sections MH 45 / MH 60. Why: the Lockheed Aquila
+(taper 0.58, LE sweep 28°, mean chord 0.78 m) fitted no type, and plain swept flying wings are the most
+common small tailless UAVs. Sizes from the real tailless wings; taper, sweep, twist, dihedral and
+sections are our choice.
+
+## Shares (29 Oct 2026, Mike)
+
+`mixed` draws the four types with equal shares (1/4 each), split by largest remainder.

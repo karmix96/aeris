@@ -19,9 +19,10 @@ def _wing(wing_type="bwb"):
 
 
 def test_exact_wing_passes_vector_and_te_gates():
-    for t in ("bwb", "conventional"):
+    for t in params.WING_TYPES:
         pf, st, m = _wing(t)
         assert gates.vector_to_loft(m, pf, st).passed
+        assert gates.vector_to_loft(m, pf, st, params.resolve(CFG.types[t], params.mid_vector(CFG.types[t]))).passed
         assert gates.trailing_edge(m, st, CFG.te).passed
 
 
@@ -72,3 +73,12 @@ def test_validity_gate():
     off = [Station(r.name, 1e-6, r.x_le, r.z_le, r.chord, r.twist_deg, r.airfoil)] + st[1:]
     g = gates.validity(build_loft(off), off)
     assert not g.passed and "root" in g.reason
+
+
+def test_vector_gate_refuses_wrong_aspect_ratio():
+    spec = CFG.types["tapered"]
+    vec = params.mid_vector(spec)
+    pf, st = build_wing_sections(spec, vec, CFG.te)
+    m = measure(table_from_stations(st), st)
+    g = gates.vector_to_loft(m, pf, st, vec | {"aspect_ratio": vec["aspect_ratio"] * 1.01})
+    assert not g.passed and "aspect ratio" in g.reason

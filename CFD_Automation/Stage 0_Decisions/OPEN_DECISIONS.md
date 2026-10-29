@@ -22,8 +22,9 @@
 10. **BWB root dihedral** now 0–3° at b0 and b1 (was pinned 0 in AERIS).
 11. **`root_chord_fractions` mode:** `semi_span_m` is read as semi-span / root chord (keeps one
     variable list). Conventional uses this mode so the aspect ratio stays in 4–16.5.
-12. **Dihedral on straight panels:** each panel gets one dihedral (the mean of the linear law).
-    Checks compare panel dihedral. See `geometry/decisions/root_section.md`.
+12. ~~**Dihedral on straight panels**~~ **Decided 29 Oct 2026:** one dihedral per panel
+    (`dihedral_p1..p3_deg`); the root section stays vertical in y = 0. See
+    `geometry/decisions/root_section.md`.
 13. **Loft built with pySpline, not `liftingSurface` itself.** Same construction, but one section
     parameter, so the nose split is exact (`liftingSurface` missed it by 0.2–0.5 % chord). The
     surfaces sit in a pyGeo object (IGES works). See `geometry/decisions/loft.md`.
@@ -90,14 +91,17 @@
     tapered sizes widened to root chord 0.13–0.75 m, semi-span 2–7.5 root chords: every real wing with
     a tail, Class I and II, is now inside (span up to 11 m). Still open: tailless Class II (Fury 5.2 m,
     Albatroz 7 m, Shahed 191 7.3 m) have no area and stay outside.
-35. **Label for slim tailless wings.** With the BWB span set in root chords (0.75–2.2), 14 % of
+35. **Label for tailless wings without a centre body.** All flying-wing-type wings and 17 % of
+    bwb-type wings are labelled "conventional" (= no centre body). Previously: With the BWB span set in root chords (0.75–2.2), 14 % of
     bwb-type wings are slim flying wings that the label rule calls "conventional". Rename to
     "flying wing" for tailless types?
-36. **Aspect ratio of wings with a tail.** Generated AR reaches 21 (99 % below 20); real wings with a
+36. ~~**Aspect ratio of wings with a tail.**~~ **Decided 29 Oct 2026:** the aspect ratio is
+    sampled (4.5–16.5 with a tail, 3–9 tailless); the semi-span is derived. Previously: Generated AR reaches 21 (99 % below 20); real wings with a
     known area reach 16.5. Cap AR (a gate, or narrower span ratio with taper), or accept?
 37. **NTNU UAV database** (Hann & Wallisch, DataverseNO doi:10.18710/L41IGQ, CC0): 93 UAVs with span,
     AR and estimated chord. Blocked from the cloud workspace; attach 02_Database.csv to add it.
-38. **Moderate-taper swept flying wings are not covered.** The Lockheed Aquila (3.76 m span, mean
+38. ~~**Moderate-taper swept flying wings are not covered.**~~ **Decided 29 Oct 2026:** new type
+    `flying_wing`; the Aquila is now covered. Previously: The Lockheed Aquila (3.76 m span, mean
     chord 0.78 m, taper 0.58, LE sweep 28°, AR 4.9) fits neither type: the bwb type always tapers
     strongly (tip 8–20 % of the root), and the tapered type sweeps at most 20°. Add a swept flying-wing
     option (tapered type with sweep to about 30°, used with reflexed sections), or leave it out?
@@ -107,3 +111,10 @@
     listed 6.90 m²). Confirm with Jane's before quoting in the paper.
 40. **Unread leads.** Gundlach 2004 Virginia Tech dissertation, Table 10-7 "Shadow 200 Geometry
     Characteristics" (p. 166); Bray 1991 NPS thesis (Pioneer). Both need a manual download.
+41. **Hash from the code (decided 29 Oct 2026).** The input hash uses the content of every geometry
+    source file instead of the hand-set version string.
+42. **Mixed shares (decided 29 Oct 2026).** Equal, 1/4 per type.
+43. **Smallest generated wings.** Spans start at 0.4–0.6 m (small root chord with low AR); the
+    smallest real wing in the table is 0.96 m. Accept as micro Class I, or raise the lower root chord?
+44. **pyGeo run pending.** Sets built with the numpy loft in the cloud; run `pytest` and
+    `build --all` with pyGeo locally before Stage 2.

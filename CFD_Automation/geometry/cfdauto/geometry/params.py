@@ -17,14 +17,17 @@ AIRFOIL_DIR = _airfoils.LOCAL_DIR   # project sections; the AERIS database is se
 STATIONS = ("b0", "b1", "b2", "b3")
 TE_MODES = ("rule", "as_is")
 
+# The 18 variables. Each type samples some and derives the rest (see TypeSpec.derived):
+# a chord law may derive c2, c3; a sweep law may derive sweep2, sweep3; the span mode derives
+# either the semi-span (from the aspect ratio) or the aspect ratio (from the semi-span).
 VARIABLES = (
     "root_chord_m", "c2_ratio", "c3_ratio", "c4_ratio",
-    "semi_span_m", "b3_ratio", "split_ratio",
+    "semi_span_m", "aspect_ratio", "b3_ratio", "split_ratio",
     "sweep1_deg", "sweep2_deg", "sweep3_deg",
     "twist0_deg", "twist1_deg", "twist2_deg", "twist3_deg",
-    "dihedral0_deg", "dihedral1_deg", "dihedral2_deg", "dihedral3_deg",
+    "dihedral_p1_deg", "dihedral_p2_deg", "dihedral_p3_deg",   # one dihedral per straight panel
 )
-WING_TYPES = ("bwb", "conventional", "tapered")
+WING_TYPES = ("bwb", "conventional", "tapered", "flying_wing")
 # stations:     c2, c3, c4 are chords as fractions of the root chord.
 # per_panel:    c2 = c(b1)/c(b0), c3 = c(b2)/c(b1), c4 = c(b3)/c(b2): each panel's own taper,
 #               so with ratios <= 1 no chord is wider than the one inboard of it.
@@ -32,7 +35,10 @@ WING_TYPES = ("bwb", "conventional", "tapered")
 CHORD_LAWS = ("stations", "per_panel", "linear_taper")
 # panels: one leading-edge sweep per panel.  one: sweep2 = sweep3 = sweep1 (straight leading edge).
 SWEEP_LAWS = ("panels", "one")
-SPAN_MODES = ("semi_span", "root_chord_fractions")
+# aspect_ratio:          aspect_ratio is sampled; semi_span_m [m] = AR * c_root * K / 2 (K = mean chord / root chord)
+# semi_span:             semi_span_m [m] is given; aspect_ratio follows
+# root_chord_fractions:  semi_span_m is given in root chords (published BlendedNet wings); aspect_ratio follows
+SPAN_MODES = ("aspect_ratio", "semi_span", "root_chord_fractions")
 # Variables that linear_taper computes instead of sampling.
 TAPER_DERIVED = ("c2_ratio", "c3_ratio")
 SWEEP_DERIVED = ("sweep2_deg", "sweep3_deg")
@@ -58,8 +64,7 @@ class TypeSpec:
     @property
     def derived(self) -> tuple[str, ...]:
         """Variables computed from others (taper or one sweep), never sampled."""
-        return ((TAPER_DERIVED if self.chord_law == "linear_taper" else ())
-                + (SWEEP_DERIVED if self.sweep_law == "one" else ()))
+        return derived_variables(self.chord_law, self.sweep_law, self.span_mode)
 
     @property
     def choices(self) -> tuple[tuple[str, ...], ...]:
@@ -151,10 +156,9 @@ def _read_type(name: str, block: dict) -> TypeSpec:
     sweep_law = block.get("sweep_law", "panels")
     if sweep_law not in SWEEP_LAWS:
         raise ValueError(f"{name}: sweep_law must be one of {SWEEP_LAWS}")
-    derived = ((TAPER_DERIVED if block["chord_law"] == "linear_taper" else ())
-               + (SWEEP_DERIVED if sweep_law == "one" else ()))
     if block["span_mode"] not in SPAN_MODES:
         raise ValueError(f"{name}: span_mode must be one of {SPAN_MODES}")
+    derived = derived_variables(block["chord_law"], sweep_law, block["span_mode"])
     choices = read_airfoil_choices(name, block["airfoils"])
     airfoils = tuple(c[0] for c in choices)
     ranges = {}
@@ -239,10 +243,11 @@ def mid_vector(spec: TypeSpec) -> dict[str, float]:
 
 
 def resolve(spec: TypeSpec, vec: dict[str, float]) -> dict[str, float]:
-    """Apply pinned values, the chord law and the sweep law. Returns a new full vector.
+    """Apply pinned values, the chord law, the sweep law and the span mode. Returns a new full vector.
 
     Idempotent: resolving a resolved vector changes nothing.
     """
+    vec = {**{v: 0.0 for v in spec.derived}, **vec}     # derived values may be absent from the input
     check_vector(vec)
     out = {v: float(vec[v]) for v in VARIABLES}
     out.update(spec.pinned)
@@ -264,7 +269,43 @@ def resolve(spec: TypeSpec, vec: dict[str, float]) -> dict[str, float]:
     if spec.sweep_law == "one":
         out["sweep2_deg"] = out["sweep1_deg"]
         out["sweep3_deg"] = out["sweep1_deg"]
+    # span and aspect ratio: AR = (2 S)^2 / (2 S c_root K) = 2 S / (c_root K)
+    c0, k = out["root_chord_m"], mean_chord_ratio(spec.chord_law, out)
+    if spec.span_mode == "aspect_ratio":
+        out["semi_span_m"] = out["aspect_ratio"] * c0 * k / 2.0
+    else:
+        s = out["semi_span_m"] * (c0 if spec.span_mode == "root_chord_fractions" else 1.0)
+        out["aspect_ratio"] = 2.0 * s / (c0 * k)
     return out
+
+
+def derived_variables(chord_law: str, sweep_law: str, span_mode: str) -> tuple[str, ...]:
+    """Variables a type computes from the others instead of sampling them."""
+    return ((TAPER_DERIVED if chord_law == "linear_taper" else ())
+            + (SWEEP_DERIVED if sweep_law == "one" else ())
+            + (("semi_span_m",) if span_mode == "aspect_ratio" else ("aspect_ratio",)))
+
+
+def chord_ratios(chord_law: str, vec: dict[str, float]) -> list[float]:
+    """Station chords b0..b3 as fractions of the root chord."""
+    r = [1.0, vec["c2_ratio"], vec["c3_ratio"], vec["c4_ratio"]]
+    if chord_law == "per_panel":
+        r = [1.0, r[1], r[1] * r[2], r[1] * r[2] * r[3]]
+    return r
+
+
+def span_fractions(vec: dict[str, float]) -> tuple[float, float, float]:
+    """Panel spans as fractions of the semi-span: inner, middle, outer."""
+    f3 = vec["b3_ratio"]
+    f1 = (1.0 - f3) * vec["split_ratio"]
+    return f1, 1.0 - f3 - f1, f3
+
+
+def mean_chord_ratio(chord_law: str, vec: dict[str, float]) -> float:
+    """K = mean chord / root chord = sum over panels of f_i (r_i + r_i+1) / 2 (straight panels)."""
+    r = chord_ratios(chord_law, vec)
+    f = span_fractions(vec)
+    return sum(fi * 0.5 * (a + b) for fi, a, b in zip(f, r[:-1], r[1:]))
 
 
 def check_vector(vec: dict[str, float]) -> None:

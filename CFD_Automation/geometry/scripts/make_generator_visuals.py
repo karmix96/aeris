@@ -143,7 +143,7 @@ def build_steps() -> list[tuple[Image.Image, int]]:
     frames.append((frame("1 · The design vector",
                          ["18 numbers describe one wing:", "chords, spans, sweeps,",
                           "twist and dihedral at the", "four stations b0 (root) to b3 (tip).",
-                          "", "One YAML file holds the ranges", "for BWB and conventional wings."],
+                          "", "One YAML file holds the ranges", "for all four wing types."],
                          f1, foot="Example: BWB, every variable at mid-range"), 2500))
 
     frames.append((frame("2 · Planform",
@@ -183,9 +183,9 @@ def build_steps() -> list[tuple[Image.Image, int]]:
         for sp in ("top", "right"):
             ax.spines[sp].set_visible(False)
     frames.append((frame("4 · Twist and dihedral",
-                         ["Front view. Each station gets", "its twist (orange, nose up +)",
-                          "and the dihedral sets its", "height. Both vary linearly", "between stations.",
-                          "", "The root section stays in the", "symmetry plane, so dihedral", "from the root is allowed."],
+                         ["Front view. Each station gets", "its twist (orange, nose up +);",
+                          "each straight panel gets one", "dihedral, which sets the", "station heights.",
+                          "", "Sections stay vertical: the root", "section lies in the symmetry", "plane, so the halves never cross."],
                          f4), 2500))
 
     def f5(ax):

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .params import TypeSpec, resolve
+from .params import TypeSpec, chord_ratios, resolve
 
 
 @dataclass(frozen=True)
@@ -35,6 +35,7 @@ class Planform:
 
 
 def semi_span_m(spec: TypeSpec, vec: dict[str, float]) -> float:
+    """Semi-span in metres of a resolved vector."""
     if spec.span_mode == "root_chord_fractions":
         return vec["semi_span_m"] * vec["root_chord_m"]
     return vec["semi_span_m"]
@@ -52,8 +53,7 @@ def build_planform(spec: TypeSpec, vec: dict[str, float]) -> Planform:
         raise ValueError(f"every panel needs a positive span, got {spans.tolist()}")
 
     c0 = vec["root_chord_m"]
-    r = np.array([1.0, vec["c2_ratio"], vec["c3_ratio"], vec["c4_ratio"]])
-    chord = c0 * (np.cumprod(r) if spec.chord_law == "per_panel" else r)
+    chord = c0 * np.array(chord_ratios(spec.chord_law, vec))
     if np.any(chord <= 0):
         raise ValueError(f"every chord must be positive, got {chord.tolist()}")
 

@@ -117,25 +117,17 @@ def _resample(side: np.ndarray, x: np.ndarray) -> np.ndarray:
 
 
 # --- vertical position -------------------------------------------------------
-# Copied from AERIS (sections.py, _segment_z_integral): exact for dihedral
-# varying linearly in y, independent of how the span is cut.
+# One dihedral per straight panel. The height of station i is the sum of
+# tan(panel dihedral) x panel span over the panels inboard of it. Sections stay
+# vertical (parallel to the symmetry plane), so the root section lies exactly in
+# y = 0 whatever the dihedral, and the two mirrored halves meet there without
+# crossing. (AERIS rolled the root section with the first panel, which made the
+# halves cross; that is why it had to pin the root dihedral at zero.)
 
-def segment_z_integral(y0: float, y1: float, d0: float, d1: float) -> float:
-    """Integral of tan(dihedral) over one segment; d0, d1 in radians."""
-    if y1 <= y0:
-        return 0.0
-    m = (d1 - d0) / (y1 - y0)
-    if abs(m) < 1e-14:
-        return float(np.tan(d0) * (y1 - y0))
-    return float((np.log(abs(np.cos(d0))) - np.log(abs(np.cos(d1)))) / m)
-
-
-def station_z(y: np.ndarray, dihedral_deg: np.ndarray) -> np.ndarray:
-    d = np.radians(dihedral_deg)
-    z = np.zeros(len(y))
-    for i in range(1, len(y)):
-        z[i] = z[i - 1] + segment_z_integral(y[i - 1], y[i], d[i - 1], d[i])
-    return z
+def panel_z(y: np.ndarray, panel_dihedral_deg: np.ndarray) -> np.ndarray:
+    """Station heights from the panel dihedrals (len(y) - 1 values)."""
+    dz = np.tan(np.radians(panel_dihedral_deg)) * np.diff(y)
+    return np.concatenate([[0.0], np.cumsum(dz)])
 
 
 @dataclass(frozen=True)
@@ -157,10 +149,10 @@ def build_stations(spec: TypeSpec, vec: dict[str, float]) -> tuple[Planform, lis
     vec = resolve(spec, vec)
     pf = build_planform(spec, vec)
     twist = np.array([vec[f"twist{i}_deg"] for i in range(4)])
-    dihedral = np.array([vec[f"dihedral{i}_deg"] for i in range(4)])
+    dihedral = np.array([vec[f"dihedral_p{i}_deg"] for i in (1, 2, 3)])
     if np.any(np.abs(dihedral) >= 89.0):
         raise ValueError("dihedral must be within +/-89 deg")
-    z = station_z(pf.y, dihedral)
+    z = panel_z(pf.y, dihedral)
     names = station_airfoils(spec, vec)
     stations = [
         Station(STATION_NAMES[i], float(pf.y[i]), float(pf.x_le[i]), float(z[i]),

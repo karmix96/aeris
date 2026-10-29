@@ -76,4 +76,6 @@ def test_coverage_definition():
 
 def test_mixed_shares():
     drawn = sample.draw_mixed(CFG, 10, 7)
-    assert sum(t == "bwb" for t, _ in drawn) == 5
+    counts = {t: sum(k == t for k, _ in drawn) for t in params.WING_TYPES}
+    assert sum(counts.values()) == 10
+    assert all(abs(counts[t] - 10 * CFG.shares[t]) <= 1 for t in params.WING_TYPES)

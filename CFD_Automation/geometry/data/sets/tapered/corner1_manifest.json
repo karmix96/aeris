@@ -1,7 +1,8 @@
 {
  "wing_type": "tapered",
  "set": "corner1",
- "code_version": "0.5.0",
+ "code_version": "0.6.0",
+ "code_hash": "fd3f49dbd416b5115dc03876db4acdb24f23ec558b96796bacfa6d476c4b44b2",
  "loft_backend": "numpy",
  "wings": [
   {
@@ -9,8 +10,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "25dadc28771d67e3f4270847c6f7737cec025cb409d0825c0d98909719d70886",
-   "surface_hash": "a712427a970736c12bb434dee46a4af9847152f6b77c263040f4f90fef89e3b6",
+   "input_hash": "a113eff2d101ccfe8b79b8517a62a164b6fa5419dd8f5c0786b7d9d12de70f3d",
+   "surface_hash": "970fcc3c88c36a0e93e9861e7f077d694a4e158f0758c7095a66f2043421cdfe",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -23,7 +24,8 @@
     "c2_ratio": 0.9025,
     "c3_ratio": 0.8049999999999999,
     "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
+    "semi_span_m": 0.5801249999999999,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
     "sweep1_deg": 5.0,
@@ -33,10 +35,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -44,8 +45,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "45ecc2fbb7095593caaad7504ec941c819343ef695036023fec934c0c65894b5",
-   "surface_hash": "b8cd7647c5a840cb6716fc8b30d865e44b287c2099fb688d50f4269b42916040",
+   "input_hash": "b4385d52614a9ecbd01bd39414ba3125e30df317a8f590dbe9ac91c567d6b062",
+   "surface_hash": "6463184db01ee1b79c5547f6406e7e7317931e9ac3f16f7af2109a27bb29b7fb",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -58,7 +59,8 @@
     "c2_ratio": 0.9025,
     "c3_ratio": 0.8049999999999999,
     "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
+    "semi_span_m": 3.3468749999999994,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
     "sweep1_deg": 5.0,
@@ -68,10 +70,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -79,8 +80,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "f07fd69e29058d50fbeefceb5f69da8757fbc2c045519de02fbbc81755f0b0ca",
-   "surface_hash": "80223aa3ea1ff7f0fe9b4a17fde0c5324ee10bb92cf58f74038dc519a6cb10f0",
+   "input_hash": "2776ba89e0f11a68ff74bf0daf2c8bb36841bf02633a6f3beab7969b0ea894d0",
+   "surface_hash": "a04586031cbd476eb5d2b7fadfb7c8aa45594d3de4146baba0f6125acda1daff",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -93,7 +94,8 @@
     "c2_ratio": 0.8049999999999999,
     "c3_ratio": 0.61,
     "c4_ratio": 0.4,
-    "semi_span_m": 4.75,
+    "semi_span_m": 1.617,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
     "sweep1_deg": 5.0,
@@ -103,10 +105,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -114,8 +115,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "6fdef6d043d1a077ee7efce169bc0232efe40adc1a6d481e6a1d99274c06a297",
-   "surface_hash": "b0a5c836e1d5bfb345c37dfee34798083db78c42fd000fd150e3e904c580da80",
+   "input_hash": "c95e16ee1bac0675bccdbdb22f051047edde949612e949b1b54c96b2335e4cbd",
+   "surface_hash": "5a3056983d5877cac7b9adfd44b7a4b6fbffe64553e2aa34f9323366e6c49aba",
    "labels": [
     "conventional",
     "rectangular",
@@ -128,7 +129,8 @@
     "c2_ratio": 1.0,
     "c3_ratio": 1.0,
     "c4_ratio": 1.0,
-    "semi_span_m": 4.75,
+    "semi_span_m": 2.31,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
     "sweep1_deg": 5.0,
@@ -138,10 +140,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -149,8 +150,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "ad605acfba4d5bf60a85e93ea877500ba9d2bcd101253c8832ef6630ef7af84b",
-   "surface_hash": "4a9feead9c39b49cb80748a0d712e3ce58bdb27db52902725f2b856571387c46",
+   "input_hash": "257be3734b4b3acae977d5ad6466bdb65ad6cc2123819f6e3544368086b8f367",
+   "surface_hash": "9ededa4c9e55019ced73432dfa1b1f65056657b3ed1e37ba4c93837cb871cb58",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -162,7 +163,8 @@
     "c2_ratio": 0.9025,
     "c3_ratio": 0.8049999999999999,
     "c4_ratio": 0.7,
-    "semi_span_m": 2.0,
+    "semi_span_m": 0.8414999999999999,
+    "aspect_ratio": 4.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
     "sweep1_deg": 5.0,
@@ -172,10 +174,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -183,8 +184,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "32bc67f6061b4e274d757d37700b9970ea2e561a1e184bb858330d360139f6dd",
-   "surface_hash": "d1bac0670a73c72179fc21461c315cf0bd4656417c43aa9192e3750cb65c225f",
+   "input_hash": "7124e889b4eed2090f53afd0e3afaad3853ad4a361934558262060fcd0f3c8dd",
+   "surface_hash": "2f0058d9e850af2f4bb2774a0bcf5cf7625e3ff29c74af4c427bf3e6be0b5e12",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -197,7 +198,8 @@
     "c2_ratio": 0.9025,
     "c3_ratio": 0.8049999999999999,
     "c4_ratio": 0.7,
-    "semi_span_m": 7.5,
+    "semi_span_m": 3.0854999999999992,
+    "aspect_ratio": 16.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
     "sweep1_deg": 5.0,
@@ -207,10 +209,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -218,8 +219,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "14bfbb08b376ffe8804c69e91e67f32c62bd26c6a30df67961fd5ed448295d1f",
-   "surface_hash": "25880a121cb7cc52cdc7be0e068a5c5e1ef34af77fe7d85eeccc4fedfbf08bd7",
+   "input_hash": "8b4bab781c58c79837119f9340c42837b83be3f878c2eb16ced18cb572fe7447",
+   "surface_hash": "c0aec1f0bf00f640a1e0d601c85fd55f4735330eb6d911ba459aafeda137a758",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -232,7 +233,8 @@
     "c2_ratio": 0.88,
     "c3_ratio": 0.76,
     "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
+    "semi_span_m": 1.9635000000000002,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.2,
     "split_ratio": 0.5,
     "sweep1_deg": 5.0,
@@ -242,10 +244,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -253,8 +254,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "f762225ffdc88e6eeaf4fd993bcbb4a346f239b8bc8a469072488f13a32ee57e",
-   "surface_hash": "d65618b133ad73b6be570a91d68fa11849247a210526efb90e30cfa91555d46f",
+   "input_hash": "e2969463f479004209068a95ecfbded16602e32bfaa3d27e34edb0a01d238120",
+   "surface_hash": "ebde8de8bebc9065eeaf6c2aa94bec5adc77a2e289538d3244e1519c744663c4",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -267,7 +268,8 @@
     "c2_ratio": 0.925,
     "c3_ratio": 0.85,
     "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
+    "semi_span_m": 1.9635,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.5,
     "split_ratio": 0.5,
     "sweep1_deg": 5.0,
@@ -277,10 +279,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -288,8 +289,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "1c533123270b0e81b4e273d1603dd449b08c45df59aad994a5a823139e7d1551",
-   "surface_hash": "3b86e74d1ee8c4fbc67b975fa70f16e66088b995909bdfaf61dd7511ba24ded3",
+   "input_hash": "4d0a1d8988a9b15578cb0f1a3a79948fb8507d42fcae6523b73c2ee9e5cca0c2",
+   "surface_hash": "20186162981e3c4e3317f468edc0e229fb2266a3ca715710d09ec4251ed19798",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -302,7 +303,8 @@
     "c2_ratio": 0.9415,
     "c3_ratio": 0.8049999999999999,
     "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
+    "semi_span_m": 1.9635,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.3,
     "sweep1_deg": 5.0,
@@ -312,10 +314,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -323,8 +324,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "48f506bd09099051af90f7c2a24fa881f3699b2f3caa7d5a6e0e3637b5e06d77",
-   "surface_hash": "4dba9840e6f539fd8775fee6f9553180ad31fce27791fc3cbb429112ef7fc4f5",
+   "input_hash": "1ae6b5f4eac42dfa0ac810d9819d849b511b471b5032226d1df984a03907872b",
+   "surface_hash": "4064eec265dfb199aa2f292e9250d8ac4b528318a29ff936bac082f415ca06cb",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -337,7 +338,8 @@
     "c2_ratio": 0.8634999999999999,
     "c3_ratio": 0.8049999999999999,
     "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
+    "semi_span_m": 1.9635,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.7,
     "sweep1_deg": 5.0,
@@ -347,10 +349,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -358,8 +359,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "3bed1b3a43f21b33db564e2c3f0fddcb00951340b18adde92ec6a8d861b45d05",
-   "surface_hash": "cdcad5104f76b3703e52a58cec6476ed684f2af05dc3c92be6a39ec1a766a8bb",
+   "input_hash": "180007b927bee65bcdbadcbd9399a4834101053d9201f58d15a58c398581dc70",
+   "surface_hash": "1a39ae21fc7e67d228239f206fb3982d851de8280b33130aa9b4c45f3fc26e82",
    "labels": [
     "conventional",
     "forward_swept",
@@ -372,7 +373,8 @@
     "c2_ratio": 0.9025,
     "c3_ratio": 0.8049999999999999,
     "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
+    "semi_span_m": 1.9634999999999998,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
     "sweep1_deg": -10.0,
@@ -382,10 +384,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -393,8 +394,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "b33c00e36fb953950e735eae4e039fe222dbe846673989a6f38b9ee0e591280d",
-   "surface_hash": "c041de55e7259765f2addeeb51689212876a83414fca91bdc76ead280e86c33b",
+   "input_hash": "e66dc81e7a258e7f46eddb6037be2481260fc4ed425d283ab30d0b3ede49229c",
+   "surface_hash": "de64b11f0aabc8b204abf9de35fbc82095c9f326b9f70012aa89a736b039d4f5",
    "labels": [
     "conventional",
     "aft_swept",
@@ -407,7 +408,8 @@
     "c2_ratio": 0.9025,
     "c3_ratio": 0.8049999999999999,
     "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
+    "semi_span_m": 1.9634999999999998,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
     "sweep1_deg": 20.0,
@@ -417,10 +419,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -428,8 +429,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "b2ba6b357e74027387198e1cda1621c046b4fcbfcf9180b333d9c4d31ca16003",
-   "surface_hash": "1210ae0b0452971a624e75cc4152634615e6d169958508aa40e065fd2a25c0c7",
+   "input_hash": "8e7a0569e3f1906b22049896ec852400181181622f5ba367171250be5f7e97f2",
+   "surface_hash": "c1e57b8820e04b5354eabb353c62d69c0fd18c86c23c398766a9a0607b8034b9",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -442,7 +443,8 @@
     "c2_ratio": 0.9025,
     "c3_ratio": 0.8049999999999999,
     "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
+    "semi_span_m": 1.9634999999999998,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
     "sweep1_deg": 5.0,
@@ -452,10 +454,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -463,8 +464,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "9742449deedeaaa8dd1348024ae34f71cb10e66f0f7b2b0e65608900bc0024a2",
-   "surface_hash": "faa6b0d18143e8c0306b3afc6b8c9bd931adce2ec4008aef3c2ce60537beabe4",
+   "input_hash": "884555a6e4860a0e03ad1564d7ce0c264f2125777164ce44e78bea3f1d9b3033",
+   "surface_hash": "3ba5b9302e94b2ffe40a21e6a83786689a722dc979d3a07d890da59fccbcbabb",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -477,7 +478,8 @@
     "c2_ratio": 0.9025,
     "c3_ratio": 0.8049999999999999,
     "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
+    "semi_span_m": 1.9634999999999998,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
     "sweep1_deg": 5.0,
@@ -487,10 +489,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -498,8 +499,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "465f2e76acb6f62f8b78087bd725fc1a3c2c0e60d788d6f0884a26d0cc590130",
-   "surface_hash": "35c7c26fffefd726d10bfd77fefeab45ff5235954a9775d6d206bcd230203c16",
+   "input_hash": "7835258072583383b05e3a236a04f68773fd171a6377d2138ce5bc6b1f74279c",
+   "surface_hash": "011bae87d3fc25ddf363813363c4f63c2dc3da4b71313f720ac70abba279c924",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -512,7 +513,8 @@
     "c2_ratio": 0.9025,
     "c3_ratio": 0.8049999999999999,
     "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
+    "semi_span_m": 1.9634999999999998,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
     "sweep1_deg": 5.0,
@@ -522,10 +524,9 @@
     "twist1_deg": -1.0,
     "twist2_deg": -0.5,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -533,8 +534,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "f85b7be57b3970e410e06242908e3ac704370d3fffc40d6f858a7b678a164efe",
-   "surface_hash": "ca52135c79ede708f0619828280c5d0ffb8cc5e0eea705228b26d276c388ee22",
+   "input_hash": "9dbb906908735f9848c7ccf25d4441493a9957946ac54ea6411f58827ee2b085",
+   "surface_hash": "3057632a2fc3a7ecbdc337ebf660e917c3b48ab904133269c6fcdec802918a61",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -547,7 +548,8 @@
     "c2_ratio": 0.9025,
     "c3_ratio": 0.8049999999999999,
     "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
+    "semi_span_m": 1.9634999999999998,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
     "sweep1_deg": 5.0,
@@ -557,10 +559,9 @@
     "twist1_deg": 2.0,
     "twist2_deg": -0.5,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -568,8 +569,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "ca5b2791b3aeeaa151fe3949f1ec385e8418edf5bcc9f79829cc2056934e5551",
-   "surface_hash": "4e6c0b819894fb224ee8bdf64a542c95e34beca2aee0ad0e02d2c7f4184c37d6",
+   "input_hash": "73718b7731c9f579523cd256fa8c4591f81720c3ca27b2d8bd550098ce7d3981",
+   "surface_hash": "59fbd3534cd0f6867c257de360b1226c73ede052f102b3209ab119e21c6fc74b",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -582,7 +583,8 @@
     "c2_ratio": 0.9025,
     "c3_ratio": 0.8049999999999999,
     "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
+    "semi_span_m": 1.9634999999999998,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
     "sweep1_deg": 5.0,
@@ -592,10 +594,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -2.0,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -603,8 +604,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "0c10e4519fdb676777de513d05b22245e0c277a234f0544337bf570c60d3d91a",
-   "surface_hash": "ec8de6ea2aaa02bb1e4d09d330c88bffc1053aae4a3a9972ede671bc45f31f0d",
+   "input_hash": "9c90513c5c763ba85ea9626178f723843997980089509b711895d9502e1e2669",
+   "surface_hash": "6bfbb4fac0f04987aa0e6d2604dfbc5a4d2fedcc0aafe551e31a057050be31a9",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -617,7 +618,8 @@
     "c2_ratio": 0.9025,
     "c3_ratio": 0.8049999999999999,
     "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
+    "semi_span_m": 1.9634999999999998,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
     "sweep1_deg": 5.0,
@@ -627,10 +629,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": 1.0,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -638,8 +639,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "caf8bdb319415fd76fb7bf57991e865fa6fa1f8ef7b43fdcb1bc6230c222cdb1",
-   "surface_hash": "907ef9153d2b1c5f0f01a27b2c865e9086fa41da993ba73d42869b28306e02bc",
+   "input_hash": "aa92cb7d428fefd97bd1b7adfe778e46d7460fe01aaa2401ae029de3912c7f54",
+   "surface_hash": "4bc5a5c01000826b088802d3e15dcfd58cf9ac185ca4e943e00ab80377989691",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -652,7 +653,8 @@
     "c2_ratio": 0.9025,
     "c3_ratio": 0.8049999999999999,
     "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
+    "semi_span_m": 1.9634999999999998,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
     "sweep1_deg": 5.0,
@@ -662,10 +664,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": -4.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -673,8 +674,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "1851f4f0eb37642f5d8ff4ad5ded98ee69cdf5fcab5ab6db9d42fc3fac168709",
-   "surface_hash": "9d75ac422a580ce2b949f5eb37a367e6bbcc685506c88d0a519ce212c9ba9a72",
+   "input_hash": "70be2e7261a0caed921d794a87d254ff2e7dd442a2055186e2800b6c33f01c9a",
+   "surface_hash": "d560e090335a25e20c3e8120b71e759ce227b927befed458092a2c9b37a21b25",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -687,7 +688,8 @@
     "c2_ratio": 0.9025,
     "c3_ratio": 0.8049999999999999,
     "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
+    "semi_span_m": 1.9634999999999998,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
     "sweep1_deg": 5.0,
@@ -697,10 +699,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": 0.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -708,13 +709,12 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "942cac95d4ee624455fc2a13e68a1fa5730b0255d0c87e32797cbfa9cbd83d94",
-   "surface_hash": "f98e6141db2cfb00ea3280a38e65e9b0adf46400f1251556e147c1f2dbf90795",
+   "input_hash": "46d8bf00568b506bd82adc631fec5e666caa15a8fb60039702ebc0f3bcf5f8cf",
+   "surface_hash": "7879a5ccda294e4d2133177fe398f3a9d7047f1da269d2f3e41f4f2ab351dd2b",
    "labels": [
     "conventional",
     "straight_tapered",
     "washout",
-    "dihedral",
     "varying_dihedral",
     "high_aspect_ratio"
    ],
@@ -723,7 +723,8 @@
     "c2_ratio": 0.9025,
     "c3_ratio": 0.8049999999999999,
     "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
+    "semi_span_m": 1.9634999999999998,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
     "sweep1_deg": 5.0,
@@ -733,10 +734,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": -2.0,
-    "dihedral0_deg": -3.0,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": -3.0,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -744,8 +744,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "9fc56cdd8947a4ce7ea426da46c8471ce78c3dd3807067d82ba1f95c2339dfbe",
-   "surface_hash": "f6cee5d6e6fd2b1a22b299d6d10592b7eec62100e4e30a0477db4ba0ab57ec38",
+   "input_hash": "22c0db10a73ffaba33ce5f41359dd6a0f4361267eb78832145be14fe3c2fdf91",
+   "surface_hash": "928b4bbaae99a8ca6f375d3482a32a508efce5fb47f82b23849d3a860e5d115d",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -759,7 +759,8 @@
     "c2_ratio": 0.9025,
     "c3_ratio": 0.8049999999999999,
     "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
+    "semi_span_m": 1.9634999999999998,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
     "sweep1_deg": 5.0,
@@ -769,10 +770,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 6.0,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 6.0,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -780,8 +780,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "d656220d7538291afac1b8cfb7c1796d66ece853ae401defdc51b4bddcd7cbf1",
-   "surface_hash": "73cbf0bbee351b5b86acc367e6f638f1e65ebcdf9733cffdef916168470e78fe",
+   "input_hash": "b15e4d69df6628a72612d7cbfe13d6006ba2dcff1bf140d52f4846a366e11dd9",
+   "surface_hash": "088a6f0d8e56e803eba3c84114623ad0bb0ce60a7013532582bdb50135370b0a",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -794,7 +794,8 @@
     "c2_ratio": 0.9025,
     "c3_ratio": 0.8049999999999999,
     "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
+    "semi_span_m": 1.9634999999999998,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
     "sweep1_deg": 5.0,
@@ -804,10 +805,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": -3.0,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": -3.0,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -815,8 +815,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "ea3657517ed6f7bd3737cc688f65fb4db989b80cc24eacebd9c5950438e623d1",
-   "surface_hash": "05237581fd670f85735545a8ec782f90ed95a3bcfb215963627fe9a66eb71209",
+   "input_hash": "44932330b4e2a9c4705fbdd92f1bb457c3d183282d14bf38f148abd46a85e130",
+   "surface_hash": "9c8c422784a92e19347dcc1adb218daf508285f8ce7d00bf774b9933630d47aa",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -830,7 +830,8 @@
     "c2_ratio": 0.9025,
     "c3_ratio": 0.8049999999999999,
     "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
+    "semi_span_m": 1.9634999999999998,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
     "sweep1_deg": 5.0,
@@ -840,10 +841,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 6.0,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 6.0,
+    "dihedral_p3_deg": 1.5
    }
   },
   {
@@ -851,8 +851,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "86d137ba1c18a6c42da4e3ec655652d64d2a6facc7901b73321b6f8ffc355818",
-   "surface_hash": "c6b59e2b357ffe9c42a98946fe85045268cb7cb807c78eec4d9b3805dbbed725",
+   "input_hash": "37604230030f6a7b1ac7378e87b0f921b4028d4268bc9618d4fb9583153e30ea",
+   "surface_hash": "8706ba4182bbf14676c692155ed6c7acb62791a44fb130e0a7c14d5b4a1a0139",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -865,7 +865,8 @@
     "c2_ratio": 0.9025,
     "c3_ratio": 0.8049999999999999,
     "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
+    "semi_span_m": 1.9634999999999998,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
     "sweep1_deg": 5.0,
@@ -875,10 +876,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": -3.0,
-    "dihedral3_deg": 1.5
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": -3.0
    }
   },
   {
@@ -886,8 +886,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "3b8ee2cb35ec63a445e2c94d66cc2ecbc1f488485b80e28c435fb7683cc70c8e",
-   "surface_hash": "94b4d6bfa42050e3892d1f5a74c7e6f36d306fcb9c1c8627813b61b64461f43f",
+   "input_hash": "44653987d393550536cc40f922806d8edbcaecec3de4144afd28286047f328d0",
+   "surface_hash": "7fbdea8287f610e71e941722cf6b89cfc9f52ad262a4c9b8c5862baf3e83c85b",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -901,7 +901,8 @@
     "c2_ratio": 0.9025,
     "c3_ratio": 0.8049999999999999,
     "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
+    "semi_span_m": 1.9634999999999998,
+    "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
     "sweep1_deg": 5.0,
@@ -911,81 +912,9 @@
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 6.0,
-    "dihedral3_deg": 1.5
-   }
-  },
-  {
-   "index": 26,
-   "passed": true,
-   "gate": null,
-   "reason": "",
-   "input_hash": "9b9c544d7739ca337e436682c980885740b013ae4cc6c89b11df645bd066d647",
-   "surface_hash": "c2c4250eb503105af21c7564fd1c977e2a5bead6753034dad1d4db95f7398822",
-   "labels": [
-    "conventional",
-    "straight_tapered",
-    "washout",
-    "varying_dihedral",
-    "high_aspect_ratio"
-   ],
-   "vector": {
-    "root_chord_m": 0.44,
-    "c2_ratio": 0.9025,
-    "c3_ratio": 0.8049999999999999,
-    "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
-    "b3_ratio": 0.35,
-    "split_ratio": 0.5,
-    "sweep1_deg": 5.0,
-    "sweep2_deg": 5.0,
-    "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
-    "twist1_deg": 0.5,
-    "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": -3.0
-   }
-  },
-  {
-   "index": 27,
-   "passed": true,
-   "gate": null,
-   "reason": "",
-   "input_hash": "dea48f9f03d77cb9060461d4967ba29afb1d886ecb49d7bd9749169d541c6e67",
-   "surface_hash": "67142f12e2a0e445bf8f8d917791f89c217b7629c0ea74dd574a6cae5c0eb231",
-   "labels": [
-    "conventional",
-    "straight_tapered",
-    "washout",
-    "dihedral",
-    "varying_dihedral",
-    "high_aspect_ratio"
-   ],
-   "vector": {
-    "root_chord_m": 0.44,
-    "c2_ratio": 0.9025,
-    "c3_ratio": 0.8049999999999999,
-    "c4_ratio": 0.7,
-    "semi_span_m": 4.75,
-    "b3_ratio": 0.35,
-    "split_ratio": 0.5,
-    "sweep1_deg": 5.0,
-    "sweep2_deg": 5.0,
-    "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
-    "twist1_deg": 0.5,
-    "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral0_deg": 1.5,
-    "dihedral1_deg": 1.5,
-    "dihedral2_deg": 1.5,
-    "dihedral3_deg": 6.0
+    "dihedral_p1_deg": 1.5,
+    "dihedral_p2_deg": 1.5,
+    "dihedral_p3_deg": 6.0
    }
   }
  ]

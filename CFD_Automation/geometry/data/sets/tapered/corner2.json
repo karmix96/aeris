@@ -3,7 +3,7 @@
  "variables": [
   "root_chord_m",
   "c4_ratio",
-  "semi_span_m",
+  "aspect_ratio",
   "b3_ratio",
   "split_ratio",
   "sweep1_deg",
@@ -11,10 +11,9 @@
   "twist1_deg",
   "twist2_deg",
   "twist3_deg",
-  "dihedral0_deg",
-  "dihedral1_deg",
-  "dihedral2_deg",
-  "dihedral3_deg"
+  "dihedral_p1_deg",
+  "dihedral_p2_deg",
+  "dihedral_p3_deg"
  ],
  "how": "binary covering array of strength 2",
  "size_rule": "smallest N with C(N-1, ceil(N/2)) >= n_variables",
@@ -32,7 +31,6 @@
    0,
    0,
    0,
-   0,
    0
   ],
   [
@@ -48,7 +46,6 @@
    1,
    0,
    0,
-   0,
    0
   ],
   [
@@ -62,7 +59,6 @@
    0,
    0,
    0,
-   1,
    1,
    1,
    1
@@ -80,26 +76,24 @@
    0,
    1,
    1,
+   1
+  ],
+  [
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   1,
+   1,
+   0,
+   1,
+   1,
    1,
    0
   ],
   [
-   1,
-   0,
-   0,
-   1,
-   1,
-   0,
-   1,
-   1,
-   0,
-   1,
-   1,
-   1,
-   0,
-   1
-  ],
-  [
    0,
    1,
    0,
@@ -112,7 +106,6 @@
    1,
    1,
    0,
-   1,
    1
   ],
   [
@@ -127,7 +120,6 @@
    1,
    1,
    0,
-   1,
    1,
    1
   ]
@@ -138,7 +130,8 @@
    "c2_ratio": 0.856,
    "c3_ratio": 0.52,
    "c4_ratio": 0.4,
-   "semi_span_m": 2.0,
+   "semi_span_m": 0.20475,
+   "aspect_ratio": 4.5,
    "b3_ratio": 0.2,
    "split_ratio": 0.3,
    "sweep1_deg": -10.0,
@@ -148,17 +141,17 @@
    "twist1_deg": -1.0,
    "twist2_deg": -2.0,
    "twist3_deg": -4.0,
-   "dihedral0_deg": -3.0,
-   "dihedral1_deg": -3.0,
-   "dihedral2_deg": -3.0,
-   "dihedral3_deg": -3.0
+   "dihedral_p1_deg": -3.0,
+   "dihedral_p2_deg": -3.0,
+   "dihedral_p3_deg": -3.0
   },
   {
    "root_chord_m": 0.75,
    "c2_ratio": 1.0,
    "c3_ratio": 1.0,
    "c4_ratio": 1.0,
-   "semi_span_m": 7.5,
+   "semi_span_m": 6.1875,
+   "aspect_ratio": 16.5,
    "b3_ratio": 0.5,
    "split_ratio": 0.7,
    "sweep1_deg": 20.0,
@@ -168,17 +161,17 @@
    "twist1_deg": 2.0,
    "twist2_deg": 1.0,
    "twist3_deg": 0.0,
-   "dihedral0_deg": -3.0,
-   "dihedral1_deg": -3.0,
-   "dihedral2_deg": -3.0,
-   "dihedral3_deg": -3.0
+   "dihedral_p1_deg": -3.0,
+   "dihedral_p2_deg": -3.0,
+   "dihedral_p3_deg": -3.0
   },
   {
    "root_chord_m": 0.75,
    "c2_ratio": 1.0,
    "c3_ratio": 1.0,
    "c4_ratio": 1.0,
-   "semi_span_m": 7.5,
+   "semi_span_m": 6.1875,
+   "aspect_ratio": 16.5,
    "b3_ratio": 0.5,
    "split_ratio": 0.7,
    "sweep1_deg": 20.0,
@@ -188,17 +181,17 @@
    "twist1_deg": -1.0,
    "twist2_deg": -2.0,
    "twist3_deg": -4.0,
-   "dihedral0_deg": 6.0,
-   "dihedral1_deg": 6.0,
-   "dihedral2_deg": 6.0,
-   "dihedral3_deg": 6.0
+   "dihedral_p1_deg": 6.0,
+   "dihedral_p2_deg": 6.0,
+   "dihedral_p3_deg": 6.0
   },
   {
    "root_chord_m": 0.75,
    "c2_ratio": 1.0,
    "c3_ratio": 1.0,
    "c4_ratio": 1.0,
-   "semi_span_m": 7.5,
+   "semi_span_m": 6.1875,
+   "aspect_ratio": 16.5,
    "b3_ratio": 0.2,
    "split_ratio": 0.3,
    "sweep1_deg": -10.0,
@@ -208,17 +201,17 @@
    "twist1_deg": 2.0,
    "twist2_deg": 1.0,
    "twist3_deg": -4.0,
-   "dihedral0_deg": 6.0,
-   "dihedral1_deg": 6.0,
-   "dihedral2_deg": 6.0,
-   "dihedral3_deg": -3.0
+   "dihedral_p1_deg": 6.0,
+   "dihedral_p2_deg": 6.0,
+   "dihedral_p3_deg": 6.0
   },
   {
    "root_chord_m": 0.75,
    "c2_ratio": 0.79,
    "c3_ratio": 0.7,
    "c4_ratio": 0.4,
-   "semi_span_m": 2.0,
+   "semi_span_m": 1.18125,
+   "aspect_ratio": 4.5,
    "b3_ratio": 0.5,
    "split_ratio": 0.7,
    "sweep1_deg": -10.0,
@@ -228,17 +221,17 @@
    "twist1_deg": 2.0,
    "twist2_deg": -2.0,
    "twist3_deg": 0.0,
-   "dihedral0_deg": 6.0,
-   "dihedral1_deg": 6.0,
-   "dihedral2_deg": -3.0,
-   "dihedral3_deg": 6.0
+   "dihedral_p1_deg": 6.0,
+   "dihedral_p2_deg": 6.0,
+   "dihedral_p3_deg": -3.0
   },
   {
    "root_chord_m": 0.13,
    "c2_ratio": 1.0,
    "c3_ratio": 1.0,
    "c4_ratio": 1.0,
-   "semi_span_m": 2.0,
+   "semi_span_m": 0.2925,
+   "aspect_ratio": 4.5,
    "b3_ratio": 0.5,
    "split_ratio": 0.3,
    "sweep1_deg": 20.0,
@@ -248,17 +241,17 @@
    "twist1_deg": -1.0,
    "twist2_deg": 1.0,
    "twist3_deg": 0.0,
-   "dihedral0_deg": 6.0,
-   "dihedral1_deg": -3.0,
-   "dihedral2_deg": 6.0,
-   "dihedral3_deg": 6.0
+   "dihedral_p1_deg": 6.0,
+   "dihedral_p2_deg": -3.0,
+   "dihedral_p3_deg": 6.0
   },
   {
    "root_chord_m": 0.13,
    "c2_ratio": 0.664,
    "c3_ratio": 0.52,
    "c4_ratio": 0.4,
-   "semi_span_m": 7.5,
+   "semi_span_m": 0.75075,
+   "aspect_ratio": 16.5,
    "b3_ratio": 0.2,
    "split_ratio": 0.7,
    "sweep1_deg": 20.0,
@@ -268,10 +261,9 @@
    "twist1_deg": 2.0,
    "twist2_deg": 1.0,
    "twist3_deg": 0.0,
-   "dihedral0_deg": -3.0,
-   "dihedral1_deg": 6.0,
-   "dihedral2_deg": 6.0,
-   "dihedral3_deg": 6.0
+   "dihedral_p1_deg": -3.0,
+   "dihedral_p2_deg": 6.0,
+   "dihedral_p3_deg": 6.0
   }
  ]
 }

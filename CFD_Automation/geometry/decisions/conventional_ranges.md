@@ -33,11 +33,16 @@ New size ranges (`python scripts/real_uav_check.py` checks that every real wing 
 generated wing within 10 % in span and in mean chord, and that every span-only wing is inside the span
 range):
 
-| type | root chord | semi-span | generated span | generated mean chord | generated AR |
-|---|---|---|---|---|---|
-| bwb | 0.40–0.80 m | 0.75–2.2 root chords | 0.62–3.46 m | 0.17–0.47 m | 2.7–10.2 |
-| conventional | 0.13–0.75 m | 2–7.5 root chords | 0.58–11.0 m | 0.09–0.72 m | 4.5–21 |
-| tapered | 0.13–0.75 m | 2–7.5 root chords | 0.56–10.7 m | 0.09–0.75 m | 4.1–21 |
+| type | root chord | aspect ratio (sampled) | generated span | generated mean chord |
+|---|---|---|---|---|
+| bwb | 0.40–0.80 m | 3–9 | 0.6–3.8 m | 0.17–0.47 m |
+| flying_wing | 0.25–1.05 m | 3–9 | 0.5–7.6 m | 0.16–0.92 m |
+| conventional | 0.13–0.75 m | 4.5–16.5 | 0.5–10.2 m | 0.09–0.71 m |
+| tapered | 0.13–0.75 m | 4.5–16.5 | 0.4–11.0 m | 0.09–0.73 m |
+
+Since 29 Oct 2026 the aspect ratio is sampled and the semi-span derived (`planform_laws.md`). All 26
+real wings with an area are covered (the Aquila by the flying-wing type), and all 59 real spans are
+inside a generated range.
 
 History: BWB root chord was 0.70–1.10 m and semi-span 0.75–1.25 m (AERIS). Conventional root chord was
 0.15–1.35 m. On 29 Oct 2026 the BWB span was briefly set in metres (0.45–1.75 m), which gave flying

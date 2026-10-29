@@ -5,6 +5,9 @@
 # as the sampled wings. `fidelity` says how close the copy is; read it before
 # using a wing for validation.
 #
+# Dihedral: one per straight panel (p1, p2, p3). Converted on 29 Oct 2026 from the former four
+# station values so that the station heights are unchanged.
+#
 # trailing_edge: as_is keeps each section's own blunt edge (the real model's),
 # instead of the project rule max(floor, 0.2 % chord).
 
@@ -37,10 +40,9 @@ wings:
       twist1_deg: 0.0
       twist2_deg: 0.0
       twist3_deg: 0.0
-      dihedral0_deg: 0.0
-      dihedral1_deg: 0.0
-      dihedral2_deg: 0.0
-      dihedral3_deg: 0.0
+      dihedral_p1_deg: 0.0000
+      dihedral_p2_deg: 0.0000
+      dihedral_p3_deg: 0.0000
     fidelity: >-
       Planform exact (root 0.806 m, tip 0.453 m, semi-span 1.196 m, LE sweep 30 deg).
       Section: the published streamwise profile, scaled with the local chord at
@@ -75,10 +77,9 @@ wings:
       twist1_deg: 0.0
       twist2_deg: 0.0
       twist3_deg: 0.0
-      dihedral0_deg: -0.138
-      dihedral1_deg: -0.138
-      dihedral2_deg: -0.138
-      dihedral3_deg: -0.138
+      dihedral_p1_deg: -0.1380
+      dihedral_p2_deg: -0.1380
+      dihedral_p3_deg: -0.1380
     fidelity: >-
       Planform as fitted to the laser scan (root 599.8 mm, tip 419.9 mm, span
       1.600 m). Section: median of 17 scanned sections (t/c 11.4 %). Its fitted
@@ -114,10 +115,9 @@ wings:
       twist1_deg: 4.4402
       twist2_deg: 0.7635
       twist3_deg: -3.75
-      dihedral0_deg: 0.0
-      dihedral1_deg: 3.6709
-      dihedral2_deg: 2.5002
-      dihedral3_deg: 9.839
+      dihedral_p1_deg: 1.8361
+      dihedral_p2_deg: 3.0857
+      dihedral_p3_deg: 6.1781
     fidelity: >-
       Chords exact at root, side of body, Yehudi break and tip (chord is linear
       between them on the real wing too). Leading edge taken as one straight line,

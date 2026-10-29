@@ -20,9 +20,9 @@ def three_wings():
         "bwb_mid": (bwb, params.mid_vector(bwb)),
         # biggest sweep change between panels the BWB ranges allow: 40 -> 15 -> 25 deg
         "sweep_change": (bwb, params.mid_vector(bwb) | {"sweep1_deg": 40.0, "sweep2_deg": 15.0, "sweep3_deg": 25.0}),
-        # biggest panel-dihedral change: stations -3 / -3 / +6 / +6 deg -> panels -3, ~1.5, +6 deg
+        # biggest panel-dihedral change: panels -3, 1.5, +6 deg
         "dihedral_change": (conv, params.mid_vector(conv) | {
-            "dihedral0_deg": -3.0, "dihedral1_deg": -3.0, "dihedral2_deg": 6.0, "dihedral3_deg": 6.0}),
+            "dihedral_p1_deg": -3.0, "dihedral_p2_deg": 1.5, "dihedral_p3_deg": 6.0}),
     }
 
 

@@ -30,7 +30,7 @@ WINGS_DIR = GEOMETRY_ROOT / "data" / "wings"
 
 def spec_hash(spec: TypeSpec, vec: dict[str, float], te: TERule, type_name: str) -> str:
     """sha256 of the content that defines the wing: vector, the type's block, the
-    trailing-edge rule, the section coordinates and the code version."""
+    trailing-edge rule, the section coordinates and the geometry code itself."""
     payload = {
         "vector": canonical(resolve(spec, vec)),
         "type": type_name,
@@ -38,9 +38,22 @@ def spec_hash(spec: TypeSpec, vec: dict[str, float], te: TERule, type_name: str)
         "te_rule": {"floor_m": te.floor_m, "chord_fraction": te.chord_fraction,
                     "open_from_xc": te.open_from_xc, "mode": te.mode},
         "airfoils": [_airfoils.digest(a) for a in station_airfoils(spec, resolve(spec, vec))],
-        "code_version": __version__,
+        "code": code_hash(),
     }
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
+
+
+def code_hash() -> str:
+    """sha256 of every geometry source file (content, sorted by name).
+
+    Any change to the code that builds the wing changes every input hash, so stored meshes and
+    results can never be reused for a wing the code now builds differently. A version string
+    set by hand could be forgotten."""
+    h = hashlib.sha256()
+    for f in sorted(Path(__file__).resolve().parent.glob("*.py")):
+        h.update(f.name.encode())
+        h.update(f.read_bytes())
+    return h.hexdigest()
 
 
 def input_hash(cfg: Config, wing_type: str, vec: dict[str, float]) -> str:
@@ -78,7 +91,7 @@ def build_spec(spec: TypeSpec, vec: dict[str, float], te: TERule, type_name: str
 
     measured = measure(table_from_loft(loft), stations)
     checks = [
-        gates.vector_to_loft(measured, pf, stations),
+        gates.vector_to_loft(measured, pf, stations, vec),
         gates.trailing_edge(measured, stations, te),
         gates.validity(loft, stations),
         gates.repeatability(loft.surface_hash(), _make(spec, vec, te)[2].surface_hash()),
@@ -167,7 +180,7 @@ def build_all(cfg: Config, iges: bool = False) -> dict:
 
 def _write_manifest(wing_type: str, set_name: str, rows: list[dict]) -> None:
     (SETS_DIR / wing_type / f"{set_name}_manifest.json").write_text(json.dumps(
-        {"wing_type": wing_type, "set": set_name, "code_version": __version__,
+        {"wing_type": wing_type, "set": set_name, "code_version": __version__, "code_hash": code_hash(),
          "loft_backend": "pygeo" if pygeo_available() else "numpy", "wings": rows}, indent=1))
 
 

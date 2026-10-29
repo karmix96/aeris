@@ -113,7 +113,7 @@
     "station": "b1",
     "airfoil": "sc20412",
     "max_pct_chord": 0.0026785925231698204,
-    "rms_pct_chord": 0.0009383279557689335,
+    "rms_pct_chord": 0.0009383279557689429,
     "points": 201,
     "suspect_points": [
      [
@@ -126,7 +126,7 @@
     "station": "b2",
     "airfoil": "sc20412",
     "max_pct_chord": 0.0026785925231712082,
-    "rms_pct_chord": 0.0009383279557689983,
+    "rms_pct_chord": 0.0009383279557690173,
     "points": 201,
     "suspect_points": [
      [
@@ -139,13 +139,13 @@
     "station": "b3",
     "airfoil": "sc20410",
     "max_pct_chord": 0.00279434715919763,
-    "rms_pct_chord": 0.0008554833370074819,
+    "rms_pct_chord": 0.0008554833370070518,
     "points": 202,
     "suspect_points": []
    }
   ],
-  "edges_max_pct": 2.1560534967397792e-13,
-  "ruled_max_pct": 2.29544105025684e-13,
+  "edges_max_pct": 2.4191615861533e-13,
+  "ruled_max_pct": 1.1903345358319566e-13,
   "pass": true
  },
  {

@@ -29,7 +29,7 @@ from cfdauto.geometry.sections import build_wing_sections  # noqa: E402
 
 DOCS = ROOT / "docs"
 SETS = ROOT / "data" / "sets"
-TESTS_LINE = "138 pass without pyGeo, 11 more need pyGeo (run 29 Oct 2026)"
+TESTS_LINE = "139 pass without pyGeo, 11 more need pyGeo (run 29 Oct 2026)"
 
 # --------------------------------------------------------------------------------------
 # Content written by hand. Keep it short and plain.
@@ -75,8 +75,8 @@ DECISIONS = [
          "Straight leading edge for straight-edged wings. Variables a law computes need no range.", "req", ""),
         ("Size ranges from real wings", "Root chord: BWB 0.40–0.80 m; cranked and tapered 0.13–0.75 m; flying wing 0.25–1.05 m. AR: tailless 3–9; with a tail 4.5–16.5.",
          "All 26 real wings with a published area (makers, papers, theses; Class II from Götten et al. 2021 and Essari 2015) have a generated wing within 10 % in span and mean chord, and all 59 real spans are inside (see <a href='#real'>Real wings</a>). Decided 29 Oct 2026.", "meas", ""),
-        ("Shape ranges", "BWB chord ratios and sweeps from AERIS. Cranked and tapered: sweep −10° to +20°, dihedral −3° to +6°. Flying wing: taper 0.3–0.8, sweep 10–35°, dihedral 0–5°, washout.",
-         "No source for these yet.", "own", "open"),
+        ("Shape ranges from sources", "Every range has its basis in the <a href='#inputs'>Why this range</a> column and in <code>decisions/shape_ranges.md</code>. Changed on 29 Oct 2026: tailed sweep −5° to +15° (was −10° to +20°); tailed washout at most 5° (was 7°); dihedral 0–5° for every type (Raymer); flying-wing taper 0.3–0.9 and sweep 10–40°; BWB tip down to 0.06, first sweep from 15°.",
+         "Each range now rests on a design rule (Raymer) or on a published small UAV (BWB: Wang &amp; Zhou 2022, Suewatanakul 2022, Lehmkuehler 2012, Hainline 2017; flying wing: Milenković-Babić 2024, Panknin, PUL-10, a flying-wing MAV). Layout shares (b3, split) remain our choice. BlendedNet is a larger Group 3 BWB and is not used for the ranges.", "src", ""),
         ("Wing class", "<code>wing_class: I | II</code> sets the trailing-edge floor.", "Manufacturing differs by size.", "req", ""),
     ]),
     ("Planform", [
@@ -97,7 +97,8 @@ DECISIONS = [
     ("Airfoils", [
         ("Any airfoil by name", "Search order: <code>geometry/airfoils/</code> → AERIS database (2,159 of 2,181 files load) → NACA 4/5-digit formula. A station may list candidates; the sampler draws them evenly. One wing may carry its own four names.",
          "BlendedNet (NACA 25118), M6, RIBES and CRM need sections outside the default list.", "own", "open"),
-        ("Default sections", "BWB: MH91, MH91, E374, NLF1015 (from AERIS). Cranked and tapered: NACA 4415, 4415, 4412, 4412. Flying wing: MH 45, MH 45, MH 60, MH 60 (reflexed).", "Common choices for these wing types; reflexed sections let a wing without a tail trim. No source per type yet.", "own", ""),
+        ("Default sections", "BWB: MH 104 body (15 %), MH 61 wing (10 %). Cranked and tapered: NACA 4415, 4415, 4412, 4412. Flying wing: MH 60 inboard, MH 45 outboard.",
+         "BWB pair from a small BWB UAV (Suewatanakul et al. 2022). The old AERIS MH 91 is a paraglider section and NLF(1)-1015 a HALE section (Re 0.7–2 × 10⁶), so both were dropped. NACA 4415 flies on the Pioneer and the Shadow 200 (Lednicer). MH 45 and MH 60 are Hepperle's tailless sections; MH 60 suits Re ≥ 1.5 × 10⁵ (root), MH 45 lower Re (tip). Changed 29 Oct 2026.", "src", ""),
         ("One way to read every file", "Leading edge = the point farthest from the trailing-edge midpoint; unit chord; both sides resampled on cosine x, in √x.",
          "The nose tangent is square to the chord, and every section has the same points, so the loft can join them.", "own", ""),
         ("Typo points dropped", "A single point that spikes off a smooth line is removed (18 database files, e.g. sc20412 at x/c 0.73).",
@@ -157,7 +158,7 @@ OPEN = [
     ("NTNU UAV database", "93 UAVs with span, AR and estimated chord (DataverseNO, CC0). Blocked from the cloud workspace: attach 02_Database.csv to add it."),
     ("Essari 2015 data", "Hermes 450, Ranger, Seeker, Shadow 600 areas come from a PhD thesis citing unread (Jane's-style) references; its Hermes 450 is internally inconsistent (0.69 m × 10.51 m = 7.25 m², listed 6.90). Confirm with Jane's before the paper."),
     ("Re levels", "Now 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶. Move the middle to about 9.5 × 10⁵ (log-middle)? Mini Class I wings fly at 1.2–2 × 10⁵, below the lowest level."),
-    ("Shape ranges", "Sweeps, twists, dihedrals, tapers and the flying-wing sections have no source yet. Take them from real wings too?"),
+    ("Second-hand sources", "Raymer's taper 0.4 and washout −3° are quoted from a course page; PUL-10 and the flying-wing MAV were read by the research agent only. Check them in print before the paper."),
     ("Trailing-edge floor", "Confirm 0.5 mm / 1.0 mm with the builder. Run the 0.1 / 0.2 / 0.3 % sensitivity once CFD works."),
     ("Airfoil search order", "Project folder → AERIS database → NACA formula. Keep? 22 database files are refused."),
     ("NACA 25118 trailing edge", "Made from the formula (open edge, 0.38 %). OpenVSP may close it differently. Check with a BlendedNet STEP file."),
@@ -171,8 +172,8 @@ OPEN = [
 LIMITS = [
     "<strong>Straight edges only, three panels at most.</strong> No curved BWB centre body, no elliptic planform, no fourth panel.",
     "<strong>Airfoil shape is not a variable.</strong> Any named file can be used, and a station can draw from a list, but thickness and camber are not sampled continuously. The default sets use one section per station (t/c 10–15 %).",
-    "<strong>No winglets, rounded or raked tips, fuselage, gaps.</strong> Panel dihedral at most 8° (BWB), 6° (with a tail), 5° (flying wing).",
-    "<strong>Shape ranges have no source.</strong> Sweeps, twists, dihedrals, tapers and airfoils are AERIS values or our choice; only sizes come from real aircraft.",
+    "<strong>No winglets, rounded or raked tips, fuselage, gaps.</strong> Panel dihedral 0–5° for every type: no anhedral.",
+    "<strong>Some shape sources are thin.</strong> The layout shares (where b1 and b2 sit) are our choice. A few rules are second-hand (Raymer via a course page). BWB shapes rest on four small-UAV papers, two of them larger than Class I.",
     "<strong>Class II areas are uncertain.</strong> They rest on Götten et al. (from photos, about 10–15 %) and a thesis citing unread Jane's-style data. Tailless Class II have no area at all.",
     "<strong>0 refusals at the corners.</strong> The space is too safe to show where anything breaks. Robustness must be shown on the mesher, with lofts it has never seen (primer Track 5).",
     "<strong>Published wings:</strong> M6 and CRM are transonic (phase 1 stops at Mach 0.3). CRM is approximate. BlendedNet twist and dihedral are guessed as zero. Every tip is a flat cut, including the M6's rounded one.",
@@ -335,7 +336,7 @@ def hcdi_table(d: dict) -> str:
 
 PHENOMENA = [
     ("Laminar flow, transition and laminar separation bubbles",
-     "Every type. Mean-chord Re 4 × 10⁴ – 3.4 × 10⁶; most BWB and mini Class I wings sit below 10⁶. Our sections (NLF1015, MH91, E374) are designed for long laminar runs.",
+     "Every type. Mean-chord Re 4 × 10⁴ – 3.4 × 10⁶; most BWB and mini Class I wings sit below 10⁶. Our low-Re sections (MH 45, MH 60, MH 61, MH 104) are designed for long laminar runs.",
      "Drag and lift depend on where the boundary layer turns turbulent. A bubble adds drag; at high angle it can burst, giving abrupt stall and hysteresis. Small changes in turbulence or roughness move the result.",
      "No. Spalart–Allmaras without transition makes the wall flow turbulent from the nose, so drag is biased. Carried as a model band (Stage 0); SU2 γ-Reθ is the planned check.",
      "Carmichael 1981 (NASA CR-165803); Lissaman 1983 (Annu. Rev. Fluid Mech. 15); Mueller & DeLaurier 2003 (Annu. Rev. Fluid Mech. 35)"),
@@ -355,7 +356,7 @@ PHENOMENA = [
      "Yes, if the vortex keeps fine cells along its path. Plan: the roll-up inside the near-body mesh, then a vortex tube from about 2 chords behind the tip.",
      "Primer section 05"),
     ("Sweep: spanwise flow, tip or root stall, pitch-up",
-     "BWB 5–40° and flying wing 10–35° (aft); cranked and tapered −10° to +20° (forward to aft).",
+     "BWB 5–40° and flying wing 10–40° (aft); cranked and tapered −5° to +15° (forward to aft).",
      "Aft sweep pushes the boundary layer outboard, so the tip stalls first and the nose can pitch up. Forward sweep stalls the root first.",
      "Spanwise flow: yes. Stall onset and pitch-up: less reliable with steady RANS near maximum lift.",
      "Standard swept-wing aerodynamics"),
@@ -742,7 +743,44 @@ def fig_refine_top() -> str:
 
 
 # Where each input range comes from (filled from the source review; key -> text)
-RANGE_BASIS = {}
+RANGE_BASIS = {
+    'root_chord_m':
+        "Real Class I–II wings with a published area (<a href='#real'>Real wings</a>). <span class='flag ok'>checked</span>",
+    'aspect_ratio':
+        "Real wings: tailless 2.9–8.6, with a tail 4.9–16.0 (<a href='#real'>Real wings</a>); flying wing 4.29 (<a href='https://www.mas.bg.ac.rs/_media/istrazivanje/fme/vol52/4/4_m._milenkovic_babic_et_al.pdf'>Milenković-Babić 2024</a>). <span class='flag ok'>checked</span> Panknin's example has AR 10 (a model glider), just above.",
+    'b3_ratio':
+        "Our choice: breaks anywhere in 25–80 % of the span. BWB: outer panel 0.50 (<a href='https://www.mdpi.com/2226-4310/9/1/36'>Wang &amp; Zhou 2022</a>). <span class='flag ok'>checked</span>",
+    'split_ratio':
+        "Our choice. BWB: 0.48 (<a href='https://www.mdpi.com/2226-4310/9/1/36'>Wang &amp; Zhou 2022</a>). <span class='flag ok'>checked</span>",
+    'c2_ratio':
+        "BWB 0.61 (<a href='https://www.mdpi.com/2226-4310/9/1/36'>Wang &amp; Zhou 2022</a>), 0.67 (<a href='https://core.ac.uk/download/233235722.pdf'>Hainline &amp; Agarwal 2017</a>). <span class='flag ok'>checked</span> Cranked: per-panel ratios keep overall taper ≥ 0.41 (Raymer: about 0.4 unswept, <a href='https://computationaldesignlab.github.io/aircraft-design/wing_layout.html'>via course page</a>). <span class='flag open'>second-hand</span>",
+    'c3_ratio':
+        "BWB 0.39 (<a href='https://www.mdpi.com/2226-4310/9/1/36'>Wang &amp; Zhou</a>), 0.42 (<a href='https://core.ac.uk/download/233235722.pdf'>Hainline</a>). <span class='flag ok'>checked</span>",
+    'c4_ratio':
+        "BWB 0.14 (<a href='https://www.mdpi.com/2226-4310/9/1/36'>Wang &amp; Zhou</a>), 0.13 (<a href='https://core.ac.uk/download/233235722.pdf'>Hainline</a>). Tapered: about 0.4 (Raymer, <a href='https://computationaldesignlab.github.io/aircraft-design/wing_layout.html'>via course page</a>) to 1 (Pioneer, Shadow: <a href='https://m-selig.ae.illinois.edu/ads/aircraft.html'>Lednicer</a>). Flying wing: 0.667 (<a href='https://www.mas.bg.ac.rs/_media/istrazivanje/fme/vol52/4/4_m._milenkovic_babic_et_al.pdf'>Milenković-Babić</a>), 0.85 (<a href='https://www.b2streamlines.com/Panknin/Panknin.html'>Panknin</a>), Aquila 0.58. <span class='flag ok'>checked</span>",
+    'sweep1_deg':
+        "BWB 15° (<a href='https://www.icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/675.PDF'>Lehmkuehler 2012</a>), 30° c/4 (<a href='https://www.mdpi.com/2226-4310/9/5/275'>Suewatanakul 2022</a>). Flying wing 25° (<a href='https://www.mas.bg.ac.rs/_media/istrazivanje/fme/vol52/4/4_m._milenkovic_babic_et_al.pdf'>Milenković-Babić</a>), Aquila 28°, 35° (<a href='https://www.icas.org/ICAS_ARCHIVE/ICAS2008/PAPERS/335.PDF'>PUL-10</a>), 40° (<a href='https://www.mdpi.com/2072-666X/11/6/553'>MAV, Shams 2020</a>) <span class='flag open'>agent only</span>. Tailed: near 0° c/4 at low speed (Raymer, <a href='https://computationaldesignlab.github.io/aircraft-design/wing_layout.html'>via course page</a>); −5° keeps a small forward-sweep edge case. <span class='flag ok'>checked</span> <span class='flag open'>second-hand</span>",
+    'sweep2_deg':
+        'As panel 1, a little less outboard on the BWB (sweep falls toward the tip on the BWB papers).',
+    'sweep3_deg':
+        'As panel 2.',
+    'twist0_deg':
+        "Washout (tip below root). Tailed: at most 5°, Raymer about 3° (<a href='https://computationaldesignlab.github.io/aircraft-design/wing_layout.html'>via course page</a>) <span class='flag open'>second-hand</span>. BWB 3° (<a href='https://www.mdpi.com/2226-4310/9/5/275'>Suewatanakul</a>), 7° (<a href='https://core.ac.uk/download/233235722.pdf'>Hainline</a>) <span class='flag ok'>checked</span>. Flying wing 3.2° (<a href='https://www.b2streamlines.com/Panknin/Panknin.html'>Panknin</a>) <span class='flag ok'>checked</span>.",
+    'twist1_deg':
+        'Between root and tip twist (see twist at the root).',
+    'twist2_deg':
+        'Between root and tip twist (see twist at the root).',
+    'twist3_deg':
+        'Total washout: tailed 0–5°, flying wing 0–8°, BWB 1–9° (see twist at the root).',
+    'dihedral_p1_deg':
+        '"Normally the dihedral is about 0 to 5 degrees or so" (<a href=\'https://aircraftdesign.com/?p=132\'>Raymer</a>). BWB 5° (<a href=\'https://www.mdpi.com/2226-4310/9/5/275\'>Suewatanakul</a>). Flying wing 4° (<a href=\'https://www.icas.org/ICAS_ARCHIVE/ICAS2008/PAPERS/335.PDF\'>PUL-10</a>), 2° (<a href=\'https://www.mdpi.com/2072-666X/11/6/553\'>MAV</a>) <span class=\'flag open\'>agent only</span>. <span class=\'flag ok\'>checked</span>',
+    'dihedral_p2_deg':
+        'Same as panel 1.',
+    'dihedral_p3_deg':
+        'Same as panel 1.',
+    'airfoils':
+        "BWB: MH 104 body, MH 61 wing (<a href='https://www.mdpi.com/2226-4310/9/5/275'>Suewatanakul 2022</a>). Tailed: NACA 4415 on Pioneer and Shadow 200 (<a href='https://m-selig.ae.illinois.edu/ads/aircraft.html'>Lednicer</a>). Flying wing: Hepperle tailless sections (<a href='https://www.mh-aerotools.de/airfoils/mh60koo.htm'>MH 60</a>: Re ≥ 1.5 × 10⁵, root; <a href='https://www.mh-aerotools.de/airfoils/mh45koo.htm'>MH 45</a>: lower Re, tip); MH 60 on <a href='https://www.mas.bg.ac.rs/_media/istrazivanje/fme/vol52/4/4_m._milenkovic_babic_et_al.pdf'>Milenković-Babić</a>. <span class='flag ok'>checked</span>",
+}
 
 INPUT_ROWS = [
     # (group, label, symbol, unit, variables per type: one name, or None when the type derives it)
@@ -794,7 +832,7 @@ def params_tables_html() -> dict:
         lo, hi = sp.ranges[v]
         f = lambda x: f"{x:g}".replace("-", "−")  # noqa: E731
         txt = f"{f(lo)} to {f(hi)}" if min(lo, hi) < 0 else f"{f(lo)}–{f(hi)}"
-        note = f" <span class='muted'>{CHORD_NOTE[sp.chord_law]}</span>" if v in ("c2_ratio", "c3_ratio", "c4_ratio") else ""
+        note = f"<br><span class='muted'>{CHORD_NOTE[sp.chord_law]}</span>" if v in ("c2_ratio", "c3_ratio", "c4_ratio") else ""
         return f"{txt}{(' ' + unit) if unit and unit != '°' else unit}{note}"
 
     rows, last = [], None
@@ -927,6 +965,7 @@ nav a:hover, nav a:focus-visible { border-bottom-color: currentColor; outline: n
 .box.verdict { border-color: var(--amber); }
 .box.verdict .big { color: var(--amber); }
 code, pre { font-family: var(--mono); font-size: 13px; }
+p code, li code, td code, footer code { overflow-wrap: anywhere; white-space: normal; }
 pre { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; overflow-x: auto; margin: 0; }
 .tbl { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -939,7 +978,9 @@ tr.grp td { background: var(--grp); font-family: var(--display); font-size: 18px
 td.what { font-weight: 700; width: 19%; }
 td.what .id { display: block; font-family: var(--mono); font-weight: 500; font-size: 11px; color: var(--muted); }
 td.num { font-family: var(--mono); font-size: 13px; white-space: nowrap; font-variant-numeric: tabular-nums; }
-td.src { font-size: 12.5px; color: var(--muted); width: 22%; }
+td.src { font-size: 12.5px; color: var(--muted); width: 36%; min-width: 260px; line-height: 1.45; }
+table.inp td.num { white-space: normal; font-size: 12.5px; }
+table.inp td.what { min-width: 120px; }
 .muted { color: var(--muted); font-size: 13px; }
 .tag, .basis, .flag { font-family: var(--mono); font-size: 11px; text-transform: uppercase; padding: 1px 6px; border-radius: 3px; border: 1px solid currentColor; white-space: nowrap; font-weight: 500; }
 .tag.conventional, .tag.tapered { color: var(--accent); } .tag.bwb { color: var(--bwb); } .tag.flying_wing { color: var(--amber); }
@@ -1013,7 +1054,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <h2>Parameters: inputs and derived</h2>
   <p>The generator samples only the <strong>inputs</strong> below. Everything else is <strong>derived</strong> from them by fixed formulas. Four stations: root b0, breaks b1 and b2, tip b3; three straight panels between them.</p>
   <h2 style="font-size:22px">Inputs (sampled), by wing type</h2>
-  <div class="tbl"><table class="wide">
+  <div class="tbl"><table class="wide inp">
     <thead><tr><th>Input</th><th>Symbol</th><th>BWB</th><th>Cranked</th><th>Tapered</th><th>Flying wing</th><th>Why this range</th></tr></thead>
     <tbody>
 __INPUTS__

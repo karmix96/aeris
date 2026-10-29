@@ -116,6 +116,10 @@
     source file instead of the hand-set version string.
 42. **Mixed shares (decided 29 Oct 2026).** Equal, 1/4 per type.
 43. ~~**Smallest generated wings.**~~ **Decided 29 Oct 2026:** kept (micro Class I). Spans start at 0.4–0.6 m (small root chord with low AR); the
-    smallest real wing in the table is 0.96 m. Accept as micro Class I, or raise the lower root chord?
+    smallest real wing with an area is 0.96 m; the Wasp (0.33 m, designation-systems.net) and Black Widow (0.15 m, AIAA 2001-0127) are smaller.
 44. **pyGeo run pending.** Sets built with the numpy loft in the cloud; run `pytest` and
     `build --all` with pyGeo locally before Stage 2.
+45. **Shape ranges from sources (decided 29 Oct 2026).** Every shape range and airfoil now has its source
+    (`geometry/decisions/shape_ranges.md`). BWB airfoils MH 104 / MH 61 (was MH 91 / E374 / NLF1015);
+    tailed sweep −5…15°, washout ≤ 5°, dihedral 0–5°. Open: check Raymer's taper and washout values
+    in print; read PUL-10 and the flying-wing MAV papers directly. Layout shares remain our choice.

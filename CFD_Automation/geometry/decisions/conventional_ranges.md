@@ -15,7 +15,7 @@ A real wing sets the ranges only if its wing area is published (then mean chord 
 
 | family | real wings with a published area | span | mean chord | aspect ratio |
 |---|---|---|---|---|
-| tailless (`bwb`) | eBee, Trimble UX5, Gatewing X100, Skywalker X8, DeltaQuad Pro, DeltaQuad Evo, Aquila (not covered) | 0.96–3.76 m | 0.23–0.78 m | 2.9–8.6 |
+| tailless (`bwb`, `flying_wing`) | eBee, Trimble UX5, Gatewing X100, Skywalker X8, DeltaQuad Pro, DeltaQuad Evo, Aquila | 0.96–3.76 m | 0.23–0.78 m | 2.9–8.6 |
 | with a tail (`conventional`, `tapered`) | Black Swift S0, Penguin B, Pioneer, Götten UAVs 1–9, Hermes 450, Ranger, Seeker, Shadow 600, Doyosae, Pchela, Sky Eye | 1.39–10.5 m | 0.14–0.76 m | 4.9–16.0 |
 
 Götten UAVs 1–9: Götten et al. 2021, CEAS Aeronaut. J., Table 2 (open access). Anonymised, 25–230 kg
@@ -48,8 +48,7 @@ History: BWB root chord was 0.70–1.10 m and semi-span 0.75–1.25 m (AERIS). C
 0.15–1.35 m. On 29 Oct 2026 the BWB span was briefly set in metres (0.45–1.75 m), which gave flying
 wings an aspect ratio up to 19 (real: at most 8.6); it is now set in root chords, like the other types.
 
-Result: every real wing with an area is covered except the Aquila (a swept, moderately tapered flying
-wing: neither type makes it); every span-only wing with a tail (Class I and II, up to
+Result: every real wing with an area is covered (the Aquila by the flying-wing type); every span-only wing with a tail (Class I and II, up to
 the Watchkeeper's 10.9 m) and every Class I tailless wing is inside the span range.
 
 ## HCDI UAS database v13 (Mike's dashboard)
@@ -76,20 +75,11 @@ Low: cruise speed at 3,048 m. High: top speed (cruise or loiter if none) at sea 
 - Tailless Class II wings (Fury 5.2 m, Albatroz 7 m, Shahed 191 7.3 m) have no published area and stay
   outside the BWB span range.
 - Generated wings with a tail reach AR 21; real ones with a known area reach 16.5.
-- Swept, moderately tapered flying wings (Aquila: taper 0.58, LE sweep 28°) are not made by any type.
 - Mini Class I wings fly at 1.2–2 × 10⁵, below the lowest Re level (3 × 10⁵).
-- 14 % of bwb-type wings are slim flying wings without a centre body; the label rule calls them
-  "conventional".
 - The NTNU UAV database (93 UAVs, span, AR, estimated chord; DataverseNO, CC0) is blocked from the
   cloud workspace.
 - The Verstraete et al. 2018 sizing correlations (856 UAVs) could not be read (paywall).
 
-## Shape ranges (unchanged, our choice)
+## Shape ranges
 
-| variable | BWB | conventional (cranked) | tapered |
-|---|---|---|---|
-| chord ratios | c2 0.55–0.80, c3 0.30–0.55, c4 0.08–0.20 of the root (AERIS) | per panel: 0.80–1, 0.70–1, 0.50–1 | taper 0.40–1 |
-| sweeps | 20–40°, 15–35°, 5–25° (AERIS, signed) | −10° to +20° each panel | one sweep, −10° to +20° |
-| twist b0 / b1 / b2 / b3 | −1–1 / −3–0 / −5 to −1 / −8 to −2° | 0–3 / −1–2 / −2–1 / −4–0° | same as conventional |
-| dihedral | b0, b1 0–3°; b2 0–6°; b3 0–10° | −3° to +6° each station | same as conventional |
-| airfoils | MH91, MH91, E374, NLF1015 | NACA 4415, 4415, 4412, 4412 | same as conventional |
+Since 29 Oct 2026 every shape range and airfoil has its source in `shape_ranges.md`.

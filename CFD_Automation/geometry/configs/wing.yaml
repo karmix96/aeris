@@ -16,7 +16,7 @@
 #           linear_taper: c4 = tip / root; c2, c3 follow (straight edges) (tapered, flying wing)
 #   sweeps  panels: one per panel.   one: sweep2 = sweep3 = sweep1 (straight leading edge)
 # Sizes come from real Class I-II UAVs (configs/real_uavs.yaml, scripts/real_uav_check.py);
-# shapes are AERIS values or our choice (no source yet).
+# shapes from design guidance and published UAV geometry (geometry/decisions/shape_ranges.md).
 
 wing_type: mixed                      # bwb | conventional | tapered | flying_wing | mixed
 shares: {bwb: 0.25, conventional: 0.25, tapered: 0.25, flying_wing: 0.25}   # used only when wing_type = mixed
@@ -28,55 +28,56 @@ trailing_edge:
   open_from_xc: 0.90                  # linear ramp over the last 10 % of chord (pyGeo bluntTaperRange 0.1)
 
 types:
+  # Every range below has its basis in geometry/decisions/shape_ranges.md (source or "our choice").
   bwb:                                # blended wing body: big root chord, strong taper, cranked
     chord_law: stations
     sweep_law: panels
     span_mode: aspect_ratio
-    airfoils: [mh91, mh91, e374, nlf1015]   # b0, b1, b2, b3
+    airfoils: [mh104, mh104, mh61, mh61]   # body MH 104 (15 %), wing MH 61 (10 %), reflexed: Suewatanakul et al. 2022
     pinned: {}
     ranges:
-      root_chord_m:    [0.40, 0.80]   # real tailless wings: configs/real_uavs.yaml
-      aspect_ratio:    [3.0, 9.0]     # real tailless wings: 2.9-8.6
-      c2_ratio:        [0.55, 0.80]
-      c3_ratio:        [0.30, 0.55]
-      c4_ratio:        [0.08, 0.20]
-      b3_ratio:        [0.40, 0.55]
-      split_ratio:     [0.40, 0.60]
-      sweep1_deg:      [20.0, 40.0]
+      root_chord_m:    [0.40, 0.80]   # real tailless wings (configs/real_uavs.yaml)
+      aspect_ratio:    [3.0, 9.0]     # real tailless wings 2.9-8.6
+      c2_ratio:        [0.55, 0.80]   # BlendedNet 0.55-0.85; Wang & Zhou 2022 0.61
+      c3_ratio:        [0.30, 0.55]   # Wang & Zhou 2022 0.39 (BlendedNet, a Group 3 vehicle: 0.18-0.28)
+      c4_ratio:        [0.06, 0.20]   # Wang & Zhou 2022 0.14; BlendedNet 0.06-0.09
+      b3_ratio:        [0.40, 0.55]   # Wang & Zhou 2022: outer panel 0.50 of the semi-span
+      split_ratio:     [0.40, 0.60]   # Wang & Zhou 2022: 0.48
+      sweep1_deg:      [15.0, 40.0]   # Lehmkuehler et al. 2012: 15; Suewatanakul et al. 2022: 30 (c/4)
       sweep2_deg:      [15.0, 35.0]
       sweep3_deg:      [5.0, 25.0]
-      twist0_deg:      [-1.0, 1.0]
+      twist0_deg:      [-1.0, 1.0]    # washout 1-9 deg; Suewatanakul 2022 about 3, Hainline & Agarwal 2017 about 7
       twist1_deg:      [-3.0, 0.0]
       twist2_deg:      [-5.0, -1.0]
       twist3_deg:      [-8.0, -2.0]
-      dihedral_p1_deg: [0.0, 3.0]
+      dihedral_p1_deg: [0.0, 3.0]     # Raymer: "normally about 0 to 5 degrees"; Suewatanakul 2022: 5
       dihedral_p2_deg: [0.0, 5.0]
-      dihedral_p3_deg: [0.0, 8.0]
+      dihedral_p3_deg: [0.0, 5.0]
 
   conventional:                       # cranked wing with a tail: chord and sweep may change at b1 and b2
     chord_law: per_panel              # each panel's own taper, so no chord grows outboard
     sweep_law: panels
     span_mode: aspect_ratio
-    airfoils: [naca4415, naca4415, naca4412, naca4412]
+    airfoils: [naca4415, naca4415, naca4412, naca4412]   # NACA 4415 on Pioneer and Shadow 200 (Lednicer)
     pinned: {}
     ranges:
-      root_chord_m:    [0.13, 0.75]   # real wings with a tail: configs/real_uavs.yaml
-      aspect_ratio:    [4.5, 16.5]    # real wings with a tail: 4.9-16.0 (16.5 at 630 kg)
-      c2_ratio:        [0.80, 1.00]   # c(b1) / c(b0)
-      c3_ratio:        [0.70, 1.00]   # c(b2) / c(b1)
-      c4_ratio:        [0.50, 1.00]   # c(b3) / c(b2); overall taper 0.28-1
-      b3_ratio:        [0.20, 0.50]
+      root_chord_m:    [0.13, 0.75]   # real wings with a tail (configs/real_uavs.yaml)
+      aspect_ratio:    [4.5, 16.5]    # real wings with a tail 4.9-16.0
+      c2_ratio:        [0.85, 1.00]   # per panel; overall taper >= 0.41 (Raymer: about 0.4 for unswept wings)
+      c3_ratio:        [0.75, 1.00]
+      c4_ratio:        [0.65, 1.00]
+      b3_ratio:        [0.20, 0.50]   # our choice: break anywhere from 25 % to 80 % of the span
       split_ratio:     [0.30, 0.70]
-      sweep1_deg:      [-10.0, 20.0]
-      sweep2_deg:      [-10.0, 20.0]
-      sweep3_deg:      [-10.0, 20.0]
-      twist0_deg:      [0.0, 3.0]
+      sweep1_deg:      [-5.0, 15.0]   # low-speed wings near 0 deg c/4 (Raymer); small forward sweep as an edge case
+      sweep2_deg:      [-5.0, 15.0]
+      sweep3_deg:      [-5.0, 15.0]
+      twist0_deg:      [0.0, 2.0]     # washout 0-5 deg: Raymer about 3 deg for good stall behaviour
       twist1_deg:      [-1.0, 2.0]
       twist2_deg:      [-2.0, 1.0]
-      twist3_deg:      [-4.0, 0.0]
-      dihedral_p1_deg: [-3.0, 6.0]
-      dihedral_p2_deg: [-3.0, 6.0]
-      dihedral_p3_deg: [-3.0, 6.0]
+      twist3_deg:      [-3.0, 0.0]
+      dihedral_p1_deg: [0.0, 5.0]     # Raymer: "normally about 0 to 5 degrees"
+      dihedral_p2_deg: [0.0, 5.0]
+      dihedral_p3_deg: [0.0, 5.0]
 
   tapered:                            # wing with a tail and straight edges root to tip (rectangular when c4 = 1)
     chord_law: linear_taper
@@ -87,36 +88,36 @@ types:
     ranges:                           # c2, c3, sweep2, sweep3 and the semi-span follow from the laws
       root_chord_m:    [0.13, 0.75]
       aspect_ratio:    [4.5, 16.5]
-      c4_ratio:        [0.40, 1.00]   # taper ratio tip / root
-      b3_ratio:        [0.20, 0.50]   # stations still set where twist and dihedral may change
+      c4_ratio:        [0.40, 1.00]   # Raymer: about 0.4 for unswept wings; rectangular on Pioneer and Shadow
+      b3_ratio:        [0.20, 0.50]   # stations still set where twist and dihedral may change (our choice)
       split_ratio:     [0.30, 0.70]
-      sweep1_deg:      [-10.0, 20.0]  # the one leading-edge sweep
-      twist0_deg:      [0.0, 3.0]
+      sweep1_deg:      [-5.0, 15.0]   # the one leading-edge sweep
+      twist0_deg:      [0.0, 2.0]
       twist1_deg:      [-1.0, 2.0]
       twist2_deg:      [-2.0, 1.0]
-      twist3_deg:      [-4.0, 0.0]
-      dihedral_p1_deg: [-3.0, 6.0]
-      dihedral_p2_deg: [-3.0, 6.0]
-      dihedral_p3_deg: [-3.0, 6.0]
+      twist3_deg:      [-3.0, 0.0]
+      dihedral_p1_deg: [0.0, 5.0]
+      dihedral_p2_deg: [0.0, 5.0]
+      dihedral_p3_deg: [0.0, 5.0]
 
-  flying_wing:                        # tailless, straight edges, moderate taper, swept (Aquila, X8 style)
+  flying_wing:                        # tailless, straight edges, moderate taper, swept
     chord_law: linear_taper
     sweep_law: one
     span_mode: aspect_ratio
-    airfoils: [mh45, mh45, mh60, mh60]   # reflexed flying-wing sections (our choice)
+    airfoils: [mh60, mh60, mh45, mh45]   # Hepperle tailless sections: MH 60 for Re >= 1.5e5 (root), MH 45 below (tip)
     pinned: {}
     ranges:
-      root_chord_m:    [0.25, 1.05]   # real tailless wings: mean chord 0.23-0.78 m (Aquila root 1.02 m)
-      aspect_ratio:    [3.0, 9.0]     # real tailless wings: 2.9-8.6 (Aquila 4.9)
-      c4_ratio:        [0.30, 0.80]   # taper (Aquila 0.58); our choice
-      b3_ratio:        [0.20, 0.50]
+      root_chord_m:    [0.25, 1.05]   # real tailless wings (Aquila root 1.02 m)
+      aspect_ratio:    [3.0, 9.0]     # real tailless wings; Milenkovic-Babic et al. 2024: 4.29
+      c4_ratio:        [0.30, 0.90]   # Milenkovic-Babic 2024: 0.667; Panknin example 0.85; Aquila 0.58
+      b3_ratio:        [0.20, 0.50]   # our choice
       split_ratio:     [0.30, 0.70]
-      sweep1_deg:      [10.0, 35.0]   # leading edge (Aquila 28 deg); our choice
-      twist0_deg:      [-1.0, 2.0]    # washout toward the tip
+      sweep1_deg:      [10.0, 40.0]   # Milenkovic-Babic 25; Aquila 28; Horten-Panek PUL-10 35; flying-wing MAV 40
+      twist0_deg:      [-1.0, 2.0]    # washout 0-8 deg: Panknin example 3.2; Prandtl-D (bell loading) about 10
       twist1_deg:      [-2.0, 1.0]
       twist2_deg:      [-4.0, 0.0]
       twist3_deg:      [-6.0, -1.0]
-      dihedral_p1_deg: [0.0, 5.0]     # Aquila 4 deg
+      dihedral_p1_deg: [0.0, 5.0]     # Horten-Panek PUL-10 4; flying-wing MAV 2
       dihedral_p2_deg: [0.0, 5.0]
       dihedral_p3_deg: [0.0, 5.0]
 

@@ -29,13 +29,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 1.5,
+   "twist0_deg": 1.0,
    "twist1_deg": 0.5,
    "twist2_deg": -0.5,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.75,
@@ -49,13 +49,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 1.5,
+   "twist0_deg": 1.0,
    "twist1_deg": 0.5,
    "twist2_deg": -0.5,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -69,13 +69,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 1.5,
+   "twist0_deg": 1.0,
    "twist1_deg": 0.5,
    "twist2_deg": -0.5,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -89,13 +89,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 1.5,
+   "twist0_deg": 1.0,
    "twist1_deg": 0.5,
    "twist2_deg": -0.5,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -109,13 +109,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 1.5,
+   "twist0_deg": 1.0,
    "twist1_deg": 0.5,
    "twist2_deg": -0.5,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -129,13 +129,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 1.5,
+   "twist0_deg": 1.0,
    "twist1_deg": 0.5,
    "twist2_deg": -0.5,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -149,13 +149,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 1.5,
+   "twist0_deg": 1.0,
    "twist1_deg": 0.5,
    "twist2_deg": -0.5,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -169,13 +169,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 1.5,
+   "twist0_deg": 1.0,
    "twist1_deg": 0.5,
    "twist2_deg": -0.5,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -189,13 +189,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 1.5,
+   "twist0_deg": 1.0,
    "twist1_deg": 0.5,
    "twist2_deg": -0.5,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -209,13 +209,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 1.5,
+   "twist0_deg": 1.0,
    "twist1_deg": 0.5,
    "twist2_deg": -0.5,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -226,16 +226,16 @@
    "aspect_ratio": 10.5,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
-   "sweep1_deg": -10.0,
-   "sweep2_deg": -10.0,
-   "sweep3_deg": -10.0,
-   "twist0_deg": 1.5,
+   "sweep1_deg": -5.0,
+   "sweep2_deg": -5.0,
+   "sweep3_deg": -5.0,
+   "twist0_deg": 1.0,
    "twist1_deg": 0.5,
    "twist2_deg": -0.5,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -246,16 +246,16 @@
    "aspect_ratio": 10.5,
    "b3_ratio": 0.35,
    "split_ratio": 0.5,
-   "sweep1_deg": 20.0,
-   "sweep2_deg": 20.0,
-   "sweep3_deg": 20.0,
-   "twist0_deg": 1.5,
+   "sweep1_deg": 15.0,
+   "sweep2_deg": 15.0,
+   "sweep3_deg": 15.0,
+   "twist0_deg": 1.0,
    "twist1_deg": 0.5,
    "twist2_deg": -0.5,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -272,10 +272,10 @@
    "twist0_deg": 0.0,
    "twist1_deg": 0.5,
    "twist2_deg": -0.5,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -289,13 +289,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 3.0,
+   "twist0_deg": 2.0,
    "twist1_deg": 0.5,
    "twist2_deg": -0.5,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -309,13 +309,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 1.5,
+   "twist0_deg": 1.0,
    "twist1_deg": -1.0,
    "twist2_deg": -0.5,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -329,13 +329,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 1.5,
+   "twist0_deg": 1.0,
    "twist1_deg": 2.0,
    "twist2_deg": -0.5,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -349,13 +349,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 1.5,
+   "twist0_deg": 1.0,
    "twist1_deg": 0.5,
    "twist2_deg": -2.0,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -369,13 +369,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 1.5,
+   "twist0_deg": 1.0,
    "twist1_deg": 0.5,
    "twist2_deg": 1.0,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -389,13 +389,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 1.5,
+   "twist0_deg": 1.0,
    "twist1_deg": 0.5,
    "twist2_deg": -0.5,
-   "twist3_deg": -4.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -3.0,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -409,13 +409,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 1.5,
+   "twist0_deg": 1.0,
    "twist1_deg": 0.5,
    "twist2_deg": -0.5,
    "twist3_deg": 0.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 1.5
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -429,13 +429,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 1.5,
+   "twist0_deg": 1.0,
    "twist1_deg": 0.5,
    "twist2_deg": -0.5,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": -3.0,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 0.0,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -449,13 +449,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 1.5,
+   "twist0_deg": 1.0,
    "twist1_deg": 0.5,
    "twist2_deg": -0.5,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 6.0,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 5.0,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -469,13 +469,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 1.5,
+   "twist0_deg": 1.0,
    "twist1_deg": 0.5,
    "twist2_deg": -0.5,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": -3.0,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 0.0,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -489,13 +489,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 1.5,
+   "twist0_deg": 1.0,
    "twist1_deg": 0.5,
    "twist2_deg": -0.5,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 6.0,
-   "dihedral_p3_deg": 1.5
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 5.0,
+   "dihedral_p3_deg": 2.5
   },
   {
    "root_chord_m": 0.44,
@@ -509,13 +509,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 1.5,
+   "twist0_deg": 1.0,
    "twist1_deg": 0.5,
    "twist2_deg": -0.5,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": -3.0
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 0.0
   },
   {
    "root_chord_m": 0.44,
@@ -529,13 +529,13 @@
    "sweep1_deg": 5.0,
    "sweep2_deg": 5.0,
    "sweep3_deg": 5.0,
-   "twist0_deg": 1.5,
+   "twist0_deg": 1.0,
    "twist1_deg": 0.5,
    "twist2_deg": -0.5,
-   "twist3_deg": -2.0,
-   "dihedral_p1_deg": 1.5,
-   "dihedral_p2_deg": 1.5,
-   "dihedral_p3_deg": 6.0
+   "twist3_deg": -1.5,
+   "dihedral_p1_deg": 2.5,
+   "dihedral_p2_deg": 2.5,
+   "dihedral_p3_deg": 5.0
   }
  ]
 }

@@ -10,8 +10,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "18c81e3ca37cd82985ad1b800da2490d9f497687b9654cd7ef45e58f601a9a78",
-   "surface_hash": "970fcc3c88c36a0e93e9861e7f077d694a4e158f0758c7095a66f2043421cdfe",
+   "input_hash": "4272ea3d68049dcc4716c36cc43dbf4b2acfc2f8106a7c41fdfd6dc3903a04ec",
+   "surface_hash": "49c0a87adb259c500a6e4cd1ad2b4521c0bc4f24e567c79fc6fb8bd5344a9147",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -31,13 +31,13 @@
     "sweep1_deg": 5.0,
     "sweep2_deg": 5.0,
     "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
+    "twist0_deg": 1.0,
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -45,8 +45,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "cf94699e152c4a1ce892717a9c764429b6d587fc7b7843ed7f1914f042435399",
-   "surface_hash": "6463184db01ee1b79c5547f6406e7e7317931e9ac3f16f7af2109a27bb29b7fb",
+   "input_hash": "0c2b57adba361f27c08655f02a0a809e3cf528bc8b01823f0de9d83541e6a67a",
+   "surface_hash": "5bd0c1abad4a9375847c41f96ead7c1d10bf28788dd00b9f7425420fb69ef305",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -66,13 +66,13 @@
     "sweep1_deg": 5.0,
     "sweep2_deg": 5.0,
     "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
+    "twist0_deg": 1.0,
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -80,8 +80,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "375f71094e028878768758cdc52db789575664325f2650ab0febb84b13a544ae",
-   "surface_hash": "a04586031cbd476eb5d2b7fadfb7c8aa45594d3de4146baba0f6125acda1daff",
+   "input_hash": "c67851d6cba85012f820f013ff36b01bd10311c1eed58250a30774d3a87ae8b2",
+   "surface_hash": "5e66913e8e78f638c2eb6104f5441d21d7f950f75b029ea8e2e1939ce076331d",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -101,13 +101,13 @@
     "sweep1_deg": 5.0,
     "sweep2_deg": 5.0,
     "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
+    "twist0_deg": 1.0,
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -115,8 +115,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "46d15dec249603fc96fc404dc1fbaf08d1b2f5cf20fae7c5ace681f730cb3063",
-   "surface_hash": "5a3056983d5877cac7b9adfd44b7a4b6fbffe64553e2aa34f9323366e6c49aba",
+   "input_hash": "b46807d2326359787224f7e1daff96e73a067cb6066d5a97484c9ab8a908140b",
+   "surface_hash": "53cf45679c72be643a0c2af1fbbee978a26a71ad7de267b3482a20194d28edf7",
    "labels": [
     "conventional",
     "rectangular",
@@ -136,13 +136,13 @@
     "sweep1_deg": 5.0,
     "sweep2_deg": 5.0,
     "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
+    "twist0_deg": 1.0,
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -150,8 +150,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "a2cb19e93706b1130217bf5f95f070666d530769941f0eeff6f8a8f9dfc8e6a6",
-   "surface_hash": "9ededa4c9e55019ced73432dfa1b1f65056657b3ed1e37ba4c93837cb871cb58",
+   "input_hash": "097a2e2a5cba2c24b9737ef30faddbad0579f6128dc16ae3417fc7db45ff5a5f",
+   "surface_hash": "63b1a80d3e099a63ad6ca4d82320540955cd17987b7cbe2a7abea730401751df",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -170,13 +170,13 @@
     "sweep1_deg": 5.0,
     "sweep2_deg": 5.0,
     "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
+    "twist0_deg": 1.0,
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -184,8 +184,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "70502aaaa38df99ca6405ecaaea708dad007993ac6cb3884ccab7b9bbca847c8",
-   "surface_hash": "2f0058d9e850af2f4bb2774a0bcf5cf7625e3ff29c74af4c427bf3e6be0b5e12",
+   "input_hash": "460bdc3c6c00075f2dec2923478e0cfa864bfde1e1a0b35d2f0154e86e4dc443",
+   "surface_hash": "3de1cb04e13ba676a4612416d74df40951f3d0310fdaffb62ae2e99216cc5a50",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -205,13 +205,13 @@
     "sweep1_deg": 5.0,
     "sweep2_deg": 5.0,
     "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
+    "twist0_deg": 1.0,
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -219,8 +219,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "c909c821e1af44082f4aefeaf5abb5c8f2e671e8d42acc30e7f1a3186ec7c7f4",
-   "surface_hash": "c0aec1f0bf00f640a1e0d601c85fd55f4735330eb6d911ba459aafeda137a758",
+   "input_hash": "cc7d95442ccd5cf04750b257fa281571c9cb9ee5ac004c3426c144663b8530ea",
+   "surface_hash": "0a2411999f53e41bd16c0cd1bf59d4486defcb87ff3ebdac88298634050245eb",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -240,13 +240,13 @@
     "sweep1_deg": 5.0,
     "sweep2_deg": 5.0,
     "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
+    "twist0_deg": 1.0,
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -254,8 +254,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "f1c2d58f49fd36ae3a8e792a2e930bc93ca7131367344532aa7fb2460b2de340",
-   "surface_hash": "ebde8de8bebc9065eeaf6c2aa94bec5adc77a2e289538d3244e1519c744663c4",
+   "input_hash": "1f8d3b13beb361863e4a2f19a226ef56d74a6b5fc9fb08e1dd4c6fc4e4ee54ab",
+   "surface_hash": "c64bebc6a1b0009abe60d70799c0ced4eac4c8ef75ba1a27629c6ade39be7e29",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -275,13 +275,13 @@
     "sweep1_deg": 5.0,
     "sweep2_deg": 5.0,
     "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
+    "twist0_deg": 1.0,
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -289,8 +289,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "f0c44a37860491780d98647fe5a20c391f1f53fb3f50b411508742cc5d0a600b",
-   "surface_hash": "20186162981e3c4e3317f468edc0e229fb2266a3ca715710d09ec4251ed19798",
+   "input_hash": "a6caf9ece915fc3dbf0576f9f8b719c21eb7a2862cdaec5c8a61d578282691ff",
+   "surface_hash": "60a9819e09854456429a7853fe021f907ad9fde3fda28c6547392477575d3f8b",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -310,13 +310,13 @@
     "sweep1_deg": 5.0,
     "sweep2_deg": 5.0,
     "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
+    "twist0_deg": 1.0,
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -324,8 +324,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "c716a5e84ec943e8b56c8b833af58f86c782ae6be4d527fd4fcb65a38446bac3",
-   "surface_hash": "4064eec265dfb199aa2f292e9250d8ac4b528318a29ff936bac082f415ca06cb",
+   "input_hash": "cc4473dc340dc7b89cea6fa2d6e82ab5f681c3fbc0e0e81f089dd71b18bcd2fa",
+   "surface_hash": "e79d67985d8a5f021482d3269cacd8bdc353c5537697cdd7cbf417929c493a9c",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -345,13 +345,13 @@
     "sweep1_deg": 5.0,
     "sweep2_deg": 5.0,
     "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
+    "twist0_deg": 1.0,
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -359,8 +359,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "85c8f3f20212bffa5f65ada618b732aacf746d57b31cc2b631579d94900a0d28",
-   "surface_hash": "1a39ae21fc7e67d228239f206fb3982d851de8280b33130aa9b4c45f3fc26e82",
+   "input_hash": "3e627689504eca62ebc5b809741e5647df92b19502016c6c0fa0be2cb4afd04a",
+   "surface_hash": "9af3b8ce8706a46f4df53a6ddf662c742182062a2cd5d4c55e7fa8c5e3875a4b",
    "labels": [
     "conventional",
     "forward_swept",
@@ -377,16 +377,16 @@
     "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
-    "sweep1_deg": -10.0,
-    "sweep2_deg": -10.0,
-    "sweep3_deg": -10.0,
-    "twist0_deg": 1.5,
+    "sweep1_deg": -5.0,
+    "sweep2_deg": -5.0,
+    "sweep3_deg": -5.0,
+    "twist0_deg": 1.0,
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -394,8 +394,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "4d715535d13bf72fb153fd3c3c242e19c0898760df091506998e63f675673ecc",
-   "surface_hash": "de64b11f0aabc8b204abf9de35fbc82095c9f326b9f70012aa89a736b039d4f5",
+   "input_hash": "2843f3e329f6af3534d2584cf3d6b6a738f66429cd3d011fe2fdd93033bd73a8",
+   "surface_hash": "086d16464d8bfb05550a591dc4e216df494dfd35c19dbccc631bd9b88404b99a",
    "labels": [
     "conventional",
     "aft_swept",
@@ -412,16 +412,16 @@
     "aspect_ratio": 10.5,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
-    "sweep1_deg": 20.0,
-    "sweep2_deg": 20.0,
-    "sweep3_deg": 20.0,
-    "twist0_deg": 1.5,
+    "sweep1_deg": 15.0,
+    "sweep2_deg": 15.0,
+    "sweep3_deg": 15.0,
+    "twist0_deg": 1.0,
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -429,8 +429,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "ac59278eec28d6c08f33e0ed0ded1e772efc8423ab7611b30bbeaa8e33ea1611",
-   "surface_hash": "c1e57b8820e04b5354eabb353c62d69c0fd18c86c23c398766a9a0607b8034b9",
+   "input_hash": "c8cff7c4ca1827ba6ddfbffa6007511a697015ed0653b70d5aec717066ad8c4d",
+   "surface_hash": "5d51cf2ba0d58c74c9f5f487559363a25888634df13b148d382dc634fd44ca2d",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -453,10 +453,10 @@
     "twist0_deg": 0.0,
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -464,8 +464,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "7b15d31e0629c0f8189da6f52f4bdaf09567f8684a19709ed9c7ddbe827370a0",
-   "surface_hash": "3ba5b9302e94b2ffe40a21e6a83786689a722dc979d3a07d890da59fccbcbabb",
+   "input_hash": "eedb57daef409913984877856ff2c42937abf2fcaf4acb4744c6d5cd08bd93f3",
+   "surface_hash": "b93f456c74729d296df8afc3978712bdfd6f61f74d5fddb817d41b758f1ff71b",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -485,13 +485,13 @@
     "sweep1_deg": 5.0,
     "sweep2_deg": 5.0,
     "sweep3_deg": 5.0,
-    "twist0_deg": 3.0,
+    "twist0_deg": 2.0,
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -499,8 +499,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "468fbae5693ab0093cbb873ee3375e26cb5dc850c7e25ee25a6862b41b957e7b",
-   "surface_hash": "011bae87d3fc25ddf363813363c4f63c2dc3da4b71313f720ac70abba279c924",
+   "input_hash": "05c479451b2e633b77c5860582f89747ec5c5aaa425aa28f7e3745932c3f948d",
+   "surface_hash": "54d70a8cd1288c00fa1740cce36a036e90593c5cfac302233606a0270b7f97c7",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -520,13 +520,13 @@
     "sweep1_deg": 5.0,
     "sweep2_deg": 5.0,
     "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
+    "twist0_deg": 1.0,
     "twist1_deg": -1.0,
     "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -534,8 +534,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "2e24435aa866f2b6c02ec57c15106db6874d2f7d2347394aadc2b788b271e479",
-   "surface_hash": "3057632a2fc3a7ecbdc337ebf660e917c3b48ab904133269c6fcdec802918a61",
+   "input_hash": "ad38d6b3c6fcb30f2c2e39272f46b615c2a765d086bf3de0bc4a03cc63529703",
+   "surface_hash": "80da595892f2592521a5b9b67f7aa0ece718626872ccc887b0288e0f2834a699",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -555,13 +555,13 @@
     "sweep1_deg": 5.0,
     "sweep2_deg": 5.0,
     "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
+    "twist0_deg": 1.0,
     "twist1_deg": 2.0,
     "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -569,8 +569,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "c44b42f7cad2af4a16be8b7d12fd6a72c052a6759712f5bf23d7a871c7a04287",
-   "surface_hash": "59fbd3534cd0f6867c257de360b1226c73ede052f102b3209ab119e21c6fc74b",
+   "input_hash": "0ad354d1467c5f707ac152b6ba75d4923950ac3d05471738b9517d9f5d7b990b",
+   "surface_hash": "7108b5223241db49b83f2322e9f0b0469e1d4cd7cbc765e2b3331e457934e4b0",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -590,13 +590,13 @@
     "sweep1_deg": 5.0,
     "sweep2_deg": 5.0,
     "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
+    "twist0_deg": 1.0,
     "twist1_deg": 0.5,
     "twist2_deg": -2.0,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -604,8 +604,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "e6c495720298bb0542823a0bc79ba4359fcf0bc8c39620eb1eac39e147c0373d",
-   "surface_hash": "6bfbb4fac0f04987aa0e6d2604dfbc5a4d2fedcc0aafe551e31a057050be31a9",
+   "input_hash": "c5237610b50dd3125ad1a0fb9b3302b0ec71ed8cc92fa760339f067afcac496b",
+   "surface_hash": "2334b5d957e0fdd110da1d06d7f8783a20a70081ddff786f665b4d91b1433ff2",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -625,13 +625,13 @@
     "sweep1_deg": 5.0,
     "sweep2_deg": 5.0,
     "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
+    "twist0_deg": 1.0,
     "twist1_deg": 0.5,
     "twist2_deg": 1.0,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -639,8 +639,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "0823cddbc70d667689174c565fff73d8b91718921e44e3e56e0199495014b163",
-   "surface_hash": "4bc5a5c01000826b088802d3e15dcfd58cf9ac185ca4e943e00ab80377989691",
+   "input_hash": "b283a2c09ff6bba685717a8a1b2a99e9bc5f04855b14290fea288d48b6dbcbf6",
+   "surface_hash": "fe308769b6b53648a0658f4a7178f1c59d4290e389335dc88e81ab37c54e23cb",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -660,13 +660,13 @@
     "sweep1_deg": 5.0,
     "sweep2_deg": 5.0,
     "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
+    "twist0_deg": 1.0,
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
-    "twist3_deg": -4.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -3.0,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -674,12 +674,11 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "7b59d64458d99e3bfc5ac74e6132a285899694a30446243f35e2480ef4fd40c6",
-   "surface_hash": "d560e090335a25e20c3e8120b71e759ce227b927befed458092a2c9b37a21b25",
+   "input_hash": "6949ff48dae39c2af22f37c51f707232cc93eb33405d1709b2dece58f45ad713",
+   "surface_hash": "ae2233f3f1341bcaa34139d57866e8424c53cdb3a8dab31f1682ca5c8813f6e7",
    "labels": [
     "conventional",
     "straight_tapered",
-    "washout",
     "dihedral",
     "high_aspect_ratio"
    ],
@@ -695,13 +694,13 @@
     "sweep1_deg": 5.0,
     "sweep2_deg": 5.0,
     "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
+    "twist0_deg": 1.0,
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
     "twist3_deg": 0.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 1.5
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -709,12 +708,13 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "f8a0825d0e66995e965204c2d5b261b3875b05054eee494b165587a53d9f23ca",
-   "surface_hash": "7879a5ccda294e4d2133177fe398f3a9d7047f1da269d2f3e41f4f2ab351dd2b",
+   "input_hash": "8fe6037fbb2042f9bdc9b50d4c05b23123693e85ecd6ab3d477d019fa86bd56c",
+   "surface_hash": "50ac0975fe6d26e4988c144288c9833afeebd9ad85a395a06515f10134e47015",
    "labels": [
     "conventional",
     "straight_tapered",
     "washout",
+    "dihedral",
     "varying_dihedral",
     "high_aspect_ratio"
    ],
@@ -730,13 +730,13 @@
     "sweep1_deg": 5.0,
     "sweep2_deg": 5.0,
     "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
+    "twist0_deg": 1.0,
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": -3.0,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 0.0,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -744,8 +744,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "e933f3271e7a372f9bbf0a60659937b29c4b693d9e9064f5afaccfcf55ab3329",
-   "surface_hash": "928b4bbaae99a8ca6f375d3482a32a508efce5fb47f82b23849d3a860e5d115d",
+   "input_hash": "d4c280a429a76e08ede112dd93cc1755861afccbd00894c5d4c6807304fd4125",
+   "surface_hash": "ae384dcfefebacbfd1f0b4f60cc33e548d0d1b0c3ef91bf03b5332101522b564",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -766,13 +766,13 @@
     "sweep1_deg": 5.0,
     "sweep2_deg": 5.0,
     "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
+    "twist0_deg": 1.0,
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 6.0,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 5.0,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -780,12 +780,13 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "22732bca23660c758e6e4cf65e5163110c9566a0ce035c9561b176ac9ca683e0",
-   "surface_hash": "088a6f0d8e56e803eba3c84114623ad0bb0ce60a7013532582bdb50135370b0a",
+   "input_hash": "d7d81ffeb3fc5e21e3e2b627a9c5c962b3d3d4bb4620ae444ff6233a469396ed",
+   "surface_hash": "3b79f0cd51e83a2359ef4e4d0986b6971eb7d2a7d050e17bb7300c254758c184",
    "labels": [
     "conventional",
     "straight_tapered",
     "washout",
+    "dihedral",
     "varying_dihedral",
     "high_aspect_ratio"
    ],
@@ -801,13 +802,13 @@
     "sweep1_deg": 5.0,
     "sweep2_deg": 5.0,
     "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
+    "twist0_deg": 1.0,
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": -3.0,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 0.0,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -815,8 +816,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "3d4d3e1d9fb1b0055a7149df43ef8abca93784196124dc844236d795566f5f66",
-   "surface_hash": "9c8c422784a92e19347dcc1adb218daf508285f8ce7d00bf774b9933630d47aa",
+   "input_hash": "8441f1672dc472b00bc1425c9ccfdae5f4b97ec38a6ea2036afffb5a40d30a26",
+   "surface_hash": "f44aff67b256f3975e63b6d716c2261924a886d92b0ba7d5b50a9aa835aa713a",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -837,13 +838,13 @@
     "sweep1_deg": 5.0,
     "sweep2_deg": 5.0,
     "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
+    "twist0_deg": 1.0,
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 6.0,
-    "dihedral_p3_deg": 1.5
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 5.0,
+    "dihedral_p3_deg": 2.5
    }
   },
   {
@@ -851,43 +852,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "ff1c9ac62662361a1b1be86c1c142d18f1f21d7792bfcbb9b7c025b83dfcdacc",
-   "surface_hash": "8706ba4182bbf14676c692155ed6c7acb62791a44fb130e0a7c14d5b4a1a0139",
-   "labels": [
-    "conventional",
-    "straight_tapered",
-    "washout",
-    "varying_dihedral",
-    "high_aspect_ratio"
-   ],
-   "vector": {
-    "root_chord_m": 0.44,
-    "c2_ratio": 0.9025,
-    "c3_ratio": 0.8049999999999999,
-    "c4_ratio": 0.7,
-    "semi_span_m": 1.9634999999999998,
-    "aspect_ratio": 10.5,
-    "b3_ratio": 0.35,
-    "split_ratio": 0.5,
-    "sweep1_deg": 5.0,
-    "sweep2_deg": 5.0,
-    "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
-    "twist1_deg": 0.5,
-    "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": -3.0
-   }
-  },
-  {
-   "index": 25,
-   "passed": true,
-   "gate": null,
-   "reason": "",
-   "input_hash": "541ab15c6729bc73e09ebb30206803b234328518bc94f2c391490bb124be8fca",
-   "surface_hash": "7fbdea8287f610e71e941722cf6b89cfc9f52ad262a4c9b8c5862baf3e83c85b",
+   "input_hash": "c9355db05b0093685068beb75ee6d2fb2019b840910f582dc16a1ad9b571ca14",
+   "surface_hash": "8f814ecaa094ecd692fa8be20249ada54189d66134eba2d2d3fee7627b0db78f",
    "labels": [
     "conventional",
     "straight_tapered",
@@ -908,13 +874,49 @@
     "sweep1_deg": 5.0,
     "sweep2_deg": 5.0,
     "sweep3_deg": 5.0,
-    "twist0_deg": 1.5,
+    "twist0_deg": 1.0,
     "twist1_deg": 0.5,
     "twist2_deg": -0.5,
-    "twist3_deg": -2.0,
-    "dihedral_p1_deg": 1.5,
-    "dihedral_p2_deg": 1.5,
-    "dihedral_p3_deg": 6.0
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 0.0
+   }
+  },
+  {
+   "index": 25,
+   "passed": true,
+   "gate": null,
+   "reason": "",
+   "input_hash": "9435aaede268087d2e72ee5d0d6d1e0441b07928c8736a65ecf77f35d6b0d6dd",
+   "surface_hash": "85683291103090f12cbc8ede146dba5299474cc0593fadfc9331cc78d6cee0f9",
+   "labels": [
+    "conventional",
+    "straight_tapered",
+    "washout",
+    "dihedral",
+    "varying_dihedral",
+    "high_aspect_ratio"
+   ],
+   "vector": {
+    "root_chord_m": 0.44,
+    "c2_ratio": 0.9025,
+    "c3_ratio": 0.8049999999999999,
+    "c4_ratio": 0.7,
+    "semi_span_m": 1.9634999999999998,
+    "aspect_ratio": 10.5,
+    "b3_ratio": 0.35,
+    "split_ratio": 0.5,
+    "sweep1_deg": 5.0,
+    "sweep2_deg": 5.0,
+    "sweep3_deg": 5.0,
+    "twist0_deg": 1.0,
+    "twist1_deg": 0.5,
+    "twist2_deg": -0.5,
+    "twist3_deg": -1.5,
+    "dihedral_p1_deg": 2.5,
+    "dihedral_p2_deg": 2.5,
+    "dihedral_p3_deg": 5.0
    }
   }
  ]

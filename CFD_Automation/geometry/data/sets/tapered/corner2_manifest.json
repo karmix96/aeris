@@ -10,13 +10,12 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "7d306ee9bdf05411927d2b4214676452bc41cf896ffc080f013b3dcfe516b685",
-   "surface_hash": "2ac106f744e3a3e30621051bb0f188cb163977e257c808fd607cca0ea326099d",
+   "input_hash": "a6a984b4d9e699f41ce170e61c0426a40a86879b168f0e16e7f8d79741b8680f",
+   "surface_hash": "4b5a11be96feaa4ef64b6b78f97580d3422c6d83425e6931e97d46453b65315f",
    "labels": [
     "conventional",
     "forward_swept",
-    "washout",
-    "anhedral"
+    "washout"
    ],
    "vector": {
     "root_chord_m": 0.13,
@@ -27,16 +26,16 @@
     "aspect_ratio": 4.5,
     "b3_ratio": 0.2,
     "split_ratio": 0.3,
-    "sweep1_deg": -10.0,
-    "sweep2_deg": -10.0,
-    "sweep3_deg": -10.0,
+    "sweep1_deg": -5.0,
+    "sweep2_deg": -5.0,
+    "sweep3_deg": -5.0,
     "twist0_deg": 0.0,
     "twist1_deg": -1.0,
     "twist2_deg": -2.0,
-    "twist3_deg": -4.0,
-    "dihedral_p1_deg": -3.0,
-    "dihedral_p2_deg": -3.0,
-    "dihedral_p3_deg": -3.0
+    "twist3_deg": -3.0,
+    "dihedral_p1_deg": 0.0,
+    "dihedral_p2_deg": 0.0,
+    "dihedral_p3_deg": 0.0
    }
   },
   {
@@ -44,13 +43,12 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "812170a4b9d356b0f384b33487dbd5907fdca7166cb9fd06b4eb9e2f45955d68",
-   "surface_hash": "4af4fdf949e0a7f44fc9c1de2d537acf6ab13adbe82a2d0562bfb7513fbd8e26",
+   "input_hash": "938ad55880e26ae7d497068961098aa7ea729fc9c713583326b95b66955d03ed",
+   "surface_hash": "6d9cb448adaf2e7c961bfa04fc48f73b47a726dd0edc4abbae9b24adc4853cf2",
    "labels": [
     "conventional",
     "aft_swept",
     "washout",
-    "anhedral",
     "high_aspect_ratio"
    ],
    "vector": {
@@ -62,16 +60,16 @@
     "aspect_ratio": 16.5,
     "b3_ratio": 0.5,
     "split_ratio": 0.7,
-    "sweep1_deg": 20.0,
-    "sweep2_deg": 20.0,
-    "sweep3_deg": 20.0,
-    "twist0_deg": 3.0,
+    "sweep1_deg": 15.0,
+    "sweep2_deg": 15.0,
+    "sweep3_deg": 15.0,
+    "twist0_deg": 2.0,
     "twist1_deg": 2.0,
     "twist2_deg": 1.0,
     "twist3_deg": 0.0,
-    "dihedral_p1_deg": -3.0,
-    "dihedral_p2_deg": -3.0,
-    "dihedral_p3_deg": -3.0
+    "dihedral_p1_deg": 0.0,
+    "dihedral_p2_deg": 0.0,
+    "dihedral_p3_deg": 0.0
    }
   },
   {
@@ -79,8 +77,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "f389c27054c3423226424bf71b6e6a2d60cc1dd3ae3abb17cf0b26f13c9f924b",
-   "surface_hash": "4122343588a1d70f93003e911bf28609a024ff094339a89d4f0414dca1220772",
+   "input_hash": "305169023913dc0b039d94285e385e5a8c5d0d4063e4022e9ea907745fd731d1",
+   "surface_hash": "d0052a5dca940b7f743f916e68183e5642e3ab3765b3903439b1af62544f8b5c",
    "labels": [
     "conventional",
     "aft_swept",
@@ -97,16 +95,16 @@
     "aspect_ratio": 16.5,
     "b3_ratio": 0.5,
     "split_ratio": 0.7,
-    "sweep1_deg": 20.0,
-    "sweep2_deg": 20.0,
-    "sweep3_deg": 20.0,
+    "sweep1_deg": 15.0,
+    "sweep2_deg": 15.0,
+    "sweep3_deg": 15.0,
     "twist0_deg": 0.0,
     "twist1_deg": -1.0,
     "twist2_deg": -2.0,
-    "twist3_deg": -4.0,
-    "dihedral_p1_deg": 6.0,
-    "dihedral_p2_deg": 6.0,
-    "dihedral_p3_deg": 6.0
+    "twist3_deg": -3.0,
+    "dihedral_p1_deg": 5.0,
+    "dihedral_p2_deg": 5.0,
+    "dihedral_p3_deg": 5.0
    }
   },
   {
@@ -114,8 +112,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "5956a59bd800609bb4ca5c6d941e603e429feb3bd69f34c1417bba6f82376405",
-   "surface_hash": "ddb98e3ba80b47a31c5d6e53c700eb17f944dfab9b289c4f02e7ffb0d3e3796d",
+   "input_hash": "0bd2a58bb21fc645c39e7d55e29cb3db563d1d3a600f8830171a70bdd740ce72",
+   "surface_hash": "048432fa388c66460ffe2af1fa84365105050bf5a5b09d5c564ebbe251942e15",
    "labels": [
     "conventional",
     "forward_swept",
@@ -132,16 +130,16 @@
     "aspect_ratio": 16.5,
     "b3_ratio": 0.2,
     "split_ratio": 0.3,
-    "sweep1_deg": -10.0,
-    "sweep2_deg": -10.0,
-    "sweep3_deg": -10.0,
-    "twist0_deg": 3.0,
+    "sweep1_deg": -5.0,
+    "sweep2_deg": -5.0,
+    "sweep3_deg": -5.0,
+    "twist0_deg": 2.0,
     "twist1_deg": 2.0,
     "twist2_deg": 1.0,
-    "twist3_deg": -4.0,
-    "dihedral_p1_deg": 6.0,
-    "dihedral_p2_deg": 6.0,
-    "dihedral_p3_deg": 6.0
+    "twist3_deg": -3.0,
+    "dihedral_p1_deg": 5.0,
+    "dihedral_p2_deg": 5.0,
+    "dihedral_p3_deg": 5.0
    }
   },
   {
@@ -149,12 +147,13 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "5586cda58a882b4d8374a1c7c88ab0a71b2f1c01bca44166a5ee65f2f33c372b",
-   "surface_hash": "849a8afa4dc007d2fd8870bd26c9f7d91c90e092d8b3c1845fbfd51995788250",
+   "input_hash": "8f14b5eb159970de294dab6ba2cc9ed22ae57bc8699cd9eba7b8ec65e3e9ca4f",
+   "surface_hash": "84b0aeaa4244beaf5b71910a896777b2a651fe7fb3bb426204e3747fc9668b16",
    "labels": [
     "conventional",
     "forward_swept",
     "washout",
+    "dihedral",
     "varying_dihedral"
    ],
    "vector": {
@@ -166,16 +165,16 @@
     "aspect_ratio": 4.5,
     "b3_ratio": 0.5,
     "split_ratio": 0.7,
-    "sweep1_deg": -10.0,
-    "sweep2_deg": -10.0,
-    "sweep3_deg": -10.0,
-    "twist0_deg": 3.0,
+    "sweep1_deg": -5.0,
+    "sweep2_deg": -5.0,
+    "sweep3_deg": -5.0,
+    "twist0_deg": 2.0,
     "twist1_deg": 2.0,
     "twist2_deg": -2.0,
     "twist3_deg": 0.0,
-    "dihedral_p1_deg": 6.0,
-    "dihedral_p2_deg": 6.0,
-    "dihedral_p3_deg": -3.0
+    "dihedral_p1_deg": 5.0,
+    "dihedral_p2_deg": 5.0,
+    "dihedral_p3_deg": 0.0
    }
   },
   {
@@ -183,8 +182,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "4bcae6a98e6f77826841c1ee54b289f2961a3b5cd313477d502f553cb9a6acc5",
-   "surface_hash": "8551942c447ce15807d9649ebd1a292788fa6d6e91cfd34da8e36881b2b2107a",
+   "input_hash": "3f238192e97c4d2ee193936391396f807e931e2bdcb1936536c04e0b4461c147",
+   "surface_hash": "5c80e6c155caba5472e15baff86baa28d206e71eb3d882060b560926cc60b2b6",
    "labels": [
     "conventional",
     "aft_swept",
@@ -201,16 +200,16 @@
     "aspect_ratio": 4.5,
     "b3_ratio": 0.5,
     "split_ratio": 0.3,
-    "sweep1_deg": 20.0,
-    "sweep2_deg": 20.0,
-    "sweep3_deg": 20.0,
-    "twist0_deg": 3.0,
+    "sweep1_deg": 15.0,
+    "sweep2_deg": 15.0,
+    "sweep3_deg": 15.0,
+    "twist0_deg": 2.0,
     "twist1_deg": -1.0,
     "twist2_deg": 1.0,
     "twist3_deg": 0.0,
-    "dihedral_p1_deg": 6.0,
-    "dihedral_p2_deg": -3.0,
-    "dihedral_p3_deg": 6.0
+    "dihedral_p1_deg": 5.0,
+    "dihedral_p2_deg": 0.0,
+    "dihedral_p3_deg": 5.0
    }
   },
   {
@@ -218,8 +217,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "7ccc4ce3a12e5665e9dd8be6eee063963c5246bc2764abd512e0e04bad452647",
-   "surface_hash": "f5ee45b5184b950bcb58148cbf99836ff1016156a1d858c210686896bbcf7240",
+   "input_hash": "1577ba97351cff387845531996643c604b26eeff1922f6bb536a57547a1360d6",
+   "surface_hash": "c6e43eede2aebdc028ffb5a445178cb48d2030839d8fbc5602e32d14843000d7",
    "labels": [
     "conventional",
     "aft_swept",
@@ -236,16 +235,16 @@
     "aspect_ratio": 16.5,
     "b3_ratio": 0.2,
     "split_ratio": 0.7,
-    "sweep1_deg": 20.0,
-    "sweep2_deg": 20.0,
-    "sweep3_deg": 20.0,
+    "sweep1_deg": 15.0,
+    "sweep2_deg": 15.0,
+    "sweep3_deg": 15.0,
     "twist0_deg": 0.0,
     "twist1_deg": 2.0,
     "twist2_deg": 1.0,
     "twist3_deg": 0.0,
-    "dihedral_p1_deg": -3.0,
-    "dihedral_p2_deg": 6.0,
-    "dihedral_p3_deg": 6.0
+    "dihedral_p1_deg": 0.0,
+    "dihedral_p2_deg": 5.0,
+    "dihedral_p3_deg": 5.0
    }
   }
  ]

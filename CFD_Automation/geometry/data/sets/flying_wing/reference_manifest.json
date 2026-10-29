@@ -2,7 +2,7 @@
  "wing_type": "flying_wing",
  "set": "reference",
  "code_version": "0.6.0",
- "code_hash": "fd3f49dbd416b5115dc03876db4acdb24f23ec558b96796bacfa6d476c4b44b2",
+ "code_hash": "9fa3bb9e552b9ac4738bdae35c2917a13a6904fab8f04ae358c0ba3dd1ac4252",
  "loft_backend": "numpy",
  "wings": [
   {
@@ -10,10 +10,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "c16828ec65faf330161d75e29aa21e32c42a172b6f492daa41eef02b962377d4",
+   "input_hash": "0248851fcf0a3b5b62dfec7f87c3f68ea369679ae095dd8bbddd2ad4b94e8360",
    "surface_hash": "333009f0cfdc50ca2da8a938948941044e2ccd5e5e383ba6c48bdab755961094",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral"
@@ -44,10 +44,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "605f445106cb57b044331bd00f2bdd28e07e16d933e2dbafbf265d29680472af",
+   "input_hash": "2912b0578c0624db466a3ea65c11d10ccaf8c1f6afca9b006780c2fd5f8e5fa8",
    "surface_hash": "b7b2d553225349ec6a7a465f6f83043e6ee43a8c0dc779767b6d550f131bca24",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral",
@@ -80,10 +80,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "b529a23d3b103a501479f1b83f8162579899464278b525ad759832b30b755e41",
+   "input_hash": "851b01ac0154a71ff755738bb9c5e1631197bc40890e00a5c50cd2f87cacc6d2",
    "surface_hash": "1cd8e426a087be56fd9e849d863932aaee09ee68cde8b5babd49b8c40965535a",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral",
@@ -116,10 +116,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "46cdb9a36e77ee5899555798b03a32687d85fc270c74cf25453b3effef23859f",
+   "input_hash": "b0cd438e48f96feb4d20c7d57352db0ba0ba12665225576776e900a811b4a466",
    "surface_hash": "e5c7ff13e5f1094f33bcd5d6dbbd44db8b705fbee9dd9a267562296432e7ff3b",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral",
@@ -152,10 +152,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "1931d8952e02fb7f49415f9963aa595772a68ecd76d30ec8f136e70ed00d1bab",
+   "input_hash": "c4482255cc7d59c89eb29902ac23dd7fc0572634da82af582ae5ab9ba06c8f65",
    "surface_hash": "f272d559d01a010f95a564dfb7e7acf6872dcca96b80768970051331576d89a9",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral"

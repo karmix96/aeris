@@ -2,7 +2,7 @@
  "wing_type": "bwb",
  "set": "reference",
  "code_version": "0.6.0",
- "code_hash": "fd3f49dbd416b5115dc03876db4acdb24f23ec558b96796bacfa6d476c4b44b2",
+ "code_hash": "9fa3bb9e552b9ac4738bdae35c2917a13a6904fab8f04ae358c0ba3dd1ac4252",
  "loft_backend": "numpy",
  "wings": [
   {
@@ -10,7 +10,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "5264f02bbf9929ad04a3f4620a8ee839129837db56b98410e24022fb46bffafd",
+   "input_hash": "e3d5774eb13e209f657cc85d49db9f381f230db9826767002193fbbd792a47e8",
    "surface_hash": "7203cfc96b01222ea1e852f8311778f2fb8196e334c842d1c7066d92f606d78f",
    "labels": [
     "bwb",
@@ -46,7 +46,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "1055bb608b423ec31fbc5ce75eadaa4474106034c21f53847576fdcbaf8fa689",
+   "input_hash": "f2442c2799e194b81d8af768c61f67648fe27876bb1bd553fac94baae750e6b5",
    "surface_hash": "59b8b1ae9e303b2785197ecd5973254bee2e0a7c03c7caba632dcc39312c3375",
    "labels": [
     "bwb",
@@ -83,10 +83,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "63b97ec084395f04e48c5c5b97fa5aea14e93719f72963c4e1f3645f2b43e284",
+   "input_hash": "5096d7609e11f06726575f9e7e98270b2fd4d6f992f1e8b03201f64a2d92966c",
    "surface_hash": "7228f353aaac04f5b53ed6aaa8a6baccfcc77a55cdaa174b0b840c3b54c77397",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "cranked",
     "washout",
@@ -120,7 +120,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "45ba0f6f04a4ad17997ab04ffb5d2a598abca8116d820ffc54d8c0026f84cc5a",
+   "input_hash": "645c7990264b83bca6eabe57e6fcf1e349ed8748dbe08ee464fceeb0613923df",
    "surface_hash": "d254233b367b68c1c7c475702e7a0e1b4726a487e993a461baa3aff6d879557b",
    "labels": [
     "bwb",
@@ -156,7 +156,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "2eb74d70e5ea6a8ee5199304d09ce6f5d311364dcda31fca1107843197c0a90e",
+   "input_hash": "efb35c496ca479f5b1bbbc821b69f1cf918524074693edf68bc6b0c9f6ff3b16",
    "surface_hash": "172e20b3c1fc4c90244256cf54ae5f0e2f7bb7b0979945477810c9fd5ae0c831",
    "labels": [
     "bwb",

@@ -129,7 +129,7 @@ def build_steps() -> list[tuple[Image.Image, int]]:
     pf, raw = build_stations(spec, vec)
     _, st = build_wing_sections(spec, vec, cfg.te)
     m = measure(table_from_stations(st), st)
-    labels, _ = label(m)
+    labels, _ = label(m, tailless=True)
     frames = []
 
     def f1(ax):

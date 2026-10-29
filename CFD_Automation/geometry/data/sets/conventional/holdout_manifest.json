@@ -2,13 +2,13 @@
  "wing_type": "conventional",
  "set": "holdout",
  "code_version": "0.6.0",
- "code_hash": "fd3f49dbd416b5115dc03876db4acdb24f23ec558b96796bacfa6d476c4b44b2",
+ "code_hash": "9fa3bb9e552b9ac4738bdae35c2917a13a6904fab8f04ae358c0ba3dd1ac4252",
  "loft_backend": "numpy",
  "wings": [
   {
    "index": 0,
    "built": false,
-   "input_hash": "1f2c946533561a3f50b53953a5957220a707b1f3cfaaf943e876fcf23e211676",
+   "input_hash": "3a21f24ff81a0b6aef61d781a9512ac6dffa3af978a139a5097351294e113a91",
    "vector": {
     "root_chord_m": 0.2940742398372085,
     "c2_ratio": 0.8183507140141918,
@@ -33,7 +33,7 @@
   {
    "index": 1,
    "built": false,
-   "input_hash": "2efb819d39e8a8bab035af5c16eb8fc3cc651bd2fbe0ee2c2b79827252c6be1c",
+   "input_hash": "e4802ccba205e439d01f77588d9ee8289bd2806e731b1769a270620515fb463c",
    "vector": {
     "root_chord_m": 0.6381958913236103,
     "c2_ratio": 0.82477257258669,
@@ -58,7 +58,7 @@
   {
    "index": 2,
    "built": false,
-   "input_hash": "385f30d1e197a9cd82e0cd127d91d1affd0e4b2a478a623c6edfb7b859530c56",
+   "input_hash": "20f29d3ea81e5d0afd8213de76be1da572b0ff69422e37af5e1abba118998b15",
    "vector": {
     "root_chord_m": 0.45578575476550515,
     "c2_ratio": 0.8667728102300821,
@@ -83,7 +83,7 @@
   {
    "index": 3,
    "built": false,
-   "input_hash": "6da705cfdaf04ea68a2da645f4d5953e5bf964e8de1443e727974c3a0599b154",
+   "input_hash": "4d1aca5623600bc386b93d57610a463fc57012cc09b42a6a9b683363c51d9cf5",
    "vector": {
     "root_chord_m": 0.18641076585003485,
     "c2_ratio": 0.925080091452808,
@@ -108,7 +108,7 @@
   {
    "index": 4,
    "built": false,
-   "input_hash": "c2029a682b520a84b4e40960d99f76934887f6b2af2bb399595b552de64edffd",
+   "input_hash": "8fb039d212ab7b01abb484b2fd5d3de2ebb03c933ae2fbc9c9a955240d522242",
    "vector": {
     "root_chord_m": 0.3457906356547958,
     "c2_ratio": 0.8599745230426947,
@@ -133,7 +133,7 @@
   {
    "index": 5,
    "built": false,
-   "input_hash": "21b49daaac43b1b4297e933948187ab0417d5f3985e0423a9450b5dd74b0e458",
+   "input_hash": "1257d79ec3dc79e28d255b4d41ab56dcaaf860fb675a5e284c4abaf9d2e70a75",
    "vector": {
     "root_chord_m": 0.4192111999400035,
     "c2_ratio": 0.9642998505880446,
@@ -158,7 +158,7 @@
   {
    "index": 6,
    "built": false,
-   "input_hash": "2ddc107ed7422a84d0167aba18d199afddc7321846f9a81351e3c8d20ae37673",
+   "input_hash": "d2227b22da3aeef4600e19a4f3d77258fed89383021f5777b7cd90b76513a1cc",
    "vector": {
     "root_chord_m": 0.6156664043799687,
     "c2_ratio": 0.8844128021663413,
@@ -183,7 +183,7 @@
   {
    "index": 7,
    "built": false,
-   "input_hash": "c2d2ee5921f442b351da6f832442a796a62807be4832f1ea48bc4ab14b331a17",
+   "input_hash": "bfceb8ebba9215cecd8cfb0e6f95911b09a334b5e433f47dc47e41b4437bd2a9",
    "vector": {
     "root_chord_m": 0.7074154910508045,
     "c2_ratio": 0.9807020039788997,
@@ -208,7 +208,7 @@
   {
    "index": 8,
    "built": false,
-   "input_hash": "1c56c82d2a84dc2ce081daa0946ea3a69e8e6122cb7d9ff295d6c4114cd824dc",
+   "input_hash": "78195b2d1042840708e0af76bb9d4700f82fb6fad402b2c0dd9ee4d99b6c46f9",
    "vector": {
     "root_chord_m": 0.21439156999824566,
     "c2_ratio": 0.9107008852229763,
@@ -233,7 +233,7 @@
   {
    "index": 9,
    "built": false,
-   "input_hash": "93203761d1cce4e3aa8b331d2888d3c9a9267313fe4451a9089285be6a200fe6",
+   "input_hash": "847129bd291740340a3f425735fb90c115e4b5f9822c9645dbe8e0362a9b11c4",
    "vector": {
     "root_chord_m": 0.5610953369264078,
     "c2_ratio": 0.9423973414592798,

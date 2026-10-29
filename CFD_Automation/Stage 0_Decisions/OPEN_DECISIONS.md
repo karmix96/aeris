@@ -91,7 +91,8 @@
     tapered sizes widened to root chord 0.13–0.75 m, semi-span 2–7.5 root chords: every real wing with
     a tail, Class I and II, is now inside (span up to 11 m). Still open: tailless Class II (Fury 5.2 m,
     Albatroz 7 m, Shahed 191 7.3 m) have no area and stay outside.
-35. **Label for tailless wings without a centre body.** All flying-wing-type wings and 17 % of
+35. ~~**Label for tailless wings without a centre body.**~~ **Decided 29 Oct 2026:** labelled
+    `flying_wing` (tailless type, no measured centre body). Previously: All flying-wing-type wings and 17 % of
     bwb-type wings are labelled "conventional" (= no centre body). Previously: With the BWB span set in root chords (0.75–2.2), 14 % of
     bwb-type wings are slim flying wings that the label rule calls "conventional". Rename to
     "flying wing" for tailless types?
@@ -114,7 +115,7 @@
 41. **Hash from the code (decided 29 Oct 2026).** The input hash uses the content of every geometry
     source file instead of the hand-set version string.
 42. **Mixed shares (decided 29 Oct 2026).** Equal, 1/4 per type.
-43. **Smallest generated wings.** Spans start at 0.4–0.6 m (small root chord with low AR); the
+43. ~~**Smallest generated wings.**~~ **Decided 29 Oct 2026:** kept (micro Class I). Spans start at 0.4–0.6 m (small root chord with low AR); the
     smallest real wing in the table is 0.96 m. Accept as micro Class I, or raise the lower root chord?
 44. **pyGeo run pending.** Sets built with the numpy loft in the cloud; run `pytest` and
     `build --all` with pyGeo locally before Stage 2.

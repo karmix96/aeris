@@ -129,8 +129,8 @@ DECISIONS = [
     ("Measure, label, hash", [
         ("Measured on the loft", "Chord, twist, LE position, sweep, dihedral, area, span, MAC, AR, thickness, trailing-edge thickness → <code>measured.json</code>. The gate checks chords, sweeps, twists, panel dihedrals and the aspect ratio against the vector.",
          "Later stages and any ML model use the measured wing; the vector is only its label.", "req", ""),
-        ("Labels by rule", "BWB or conventional (planform: with or without a centre body); swept, cranked, rectangular, washout, dihedral, aspect ratio. BWB threshold lowered from 2.5 to 2.2.",
-         "Two wide BWB corners measured 2.39–2.5; other wings reach at most 1.84. Checked on 20 hand-labelled wings. The word 'conventional' is also given to flying wings: see open decisions.", "meas", "open"),
+        ("Labels by rule", "Configuration: <code>bwb</code> (measured centre body), else <code>flying_wing</code> for a tailless type or <code>conventional</code> for a type with a tail. Then swept, cranked, rectangular, washout, dihedral, aspect ratio. BWB threshold 2.2.",
+         "A tail is not part of the wing surface, so it cannot be measured; the family comes from the type. Before 29 Oct 2026 every tailless wing without a centre body was called 'conventional'. Checked on 20 hand-labelled wings and a flying-wing test.", "req", ""),
         ("Hash from the code itself", "sha256 of the vector, the type's YAML block, the trailing-edge rule, the airfoil coordinates and the content of every geometry source file.",
          "Any code change now changes every input hash, so stored meshes and results are never reused for a wing the code builds differently. A version string set by hand could be forgotten. Fixed 29 Oct 2026.", "req", ""),
     ]),
@@ -152,9 +152,8 @@ FIXES = [
 ]
 
 OPEN = [
-    ("Label 'conventional' on tailless wings", "The planform rule says BWB (centre body) or 'conventional' (no centre body). All 100 flying wings and 17 % of bwb-type wings get 'conventional', which reads like 'has a tail'. Rename the second label to 'no centre body', or label by type?"),
     ("Tailless Class II chords", "Flying-wing spans now reach 7.7 m, so Fury (5.2 m), Albatroz (7 m) and Shahed 191 (7.3 m) are inside by span. Their areas are unknown, so the chord is unchecked."),
-    ("Smallest wings", "Generated spans start at 0.4–0.6 m (small root chord with low AR); the smallest real wing in the table is 0.96 m. Accept as micro Class I, or raise the lower root chord?"),
+    ("Smallest wings", "Kept by your decision (29 Oct 2026): generated spans start at 0.4–0.6 m (micro Class I)."),
     ("NTNU UAV database", "93 UAVs with span, AR and estimated chord (DataverseNO, CC0). Blocked from the cloud workspace: attach 02_Database.csv to add it."),
     ("Essari 2015 data", "Hermes 450, Ranger, Seeker, Shadow 600 areas come from a PhD thesis citing unread (Jane's-style) references; its Hermes 450 is internally inconsistent (0.69 m × 10.51 m = 7.25 m², listed 6.90). Confirm with Jane's before the paper."),
     ("Re levels", "Now 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶. Move the middle to about 9.5 × 10⁵ (log-middle)? Mini Class I wings fly at 1.2–2 × 10⁵, below the lowest level."),
@@ -742,6 +741,93 @@ def fig_refine_top() -> str:
     return "\n".join(o)
 
 
+# Where each input range comes from (filled from the source review; key -> text)
+RANGE_BASIS = {}
+
+INPUT_ROWS = [
+    # (group, label, symbol, unit, variables per type: one name, or None when the type derives it)
+    ("Size", "Root chord", "c<sub>r</sub>", "m", "root_chord_m"),
+    ("Size", "Aspect ratio", "AR", "", "aspect_ratio"),
+    ("Layout", "Outer panel, share of the semi-span", "f<sub>3</sub>", "", "b3_ratio"),
+    ("Layout", "Inner panel, share of the rest", "s", "", "split_ratio"),
+    ("Chords", "Chord at b1", "r<sub>1</sub>", "", "c2_ratio"),
+    ("Chords", "Chord at b2", "r<sub>2</sub>", "", "c3_ratio"),
+    ("Chords", "Tip chord / taper", "r<sub>3</sub>, λ", "", "c4_ratio"),
+    ("Sweep", "Leading-edge sweep, panel 1", "Λ<sub>1</sub>", "°", "sweep1_deg"),
+    ("Sweep", "Leading-edge sweep, panel 2", "Λ<sub>2</sub>", "°", "sweep2_deg"),
+    ("Sweep", "Leading-edge sweep, panel 3", "Λ<sub>3</sub>", "°", "sweep3_deg"),
+    ("Twist", "Twist at the root b0", "θ<sub>0</sub>", "°", "twist0_deg"),
+    ("Twist", "Twist at b1", "θ<sub>1</sub>", "°", "twist1_deg"),
+    ("Twist", "Twist at b2", "θ<sub>2</sub>", "°", "twist2_deg"),
+    ("Twist", "Twist at the tip b3", "θ<sub>3</sub>", "°", "twist3_deg"),
+    ("Dihedral", "Dihedral, panel 1 (b0–b1)", "Γ<sub>1</sub>", "°", "dihedral_p1_deg"),
+    ("Dihedral", "Dihedral, panel 2 (b1–b2)", "Γ<sub>2</sub>", "°", "dihedral_p2_deg"),
+    ("Dihedral", "Dihedral, panel 3 (b2–b3)", "Γ<sub>3</sub>", "°", "dihedral_p3_deg"),
+]
+
+CHORD_NOTE = {"stations": "× root", "per_panel": "× chord inboard", "linear_taper": "tip / root (taper λ)"}
+
+DERIVED_ROWS = [
+    ("Panel span shares", "f<sub>1</sub> = (1 − f<sub>3</sub>) · s,  f<sub>2</sub> = 1 − f<sub>1</sub> − f<sub>3</sub>", "all"),
+    ("Chord ratios r<sub>i</sub> = c<sub>i</sub> / c<sub>r</sub>",
+     "BWB: (1, r<sub>1</sub>, r<sub>2</sub>, r<sub>3</sub>). Cranked: (1, r<sub>1</sub>, r<sub>1</sub>r<sub>2</sub>, r<sub>1</sub>r<sub>2</sub>r<sub>3</sub>). Tapered, flying wing: r(y) = 1 + (λ − 1) · y / S, so r<sub>1</sub>, r<sub>2</sub> follow", "all"),
+    ("Mean chord ratio", "K = Σ f<sub>i</sub> (r<sub>i−1</sub> + r<sub>i</sub>) / 2  (straight panels)", "all"),
+    ("Semi-span", "S = AR · c<sub>r</sub> · K / 2", "all"),
+    ("Span, area, mean chord", "b = 2S,  A = 2 S c<sub>r</sub> K = b² / AR,  c̄ = A / b = c<sub>r</sub> K", "all"),
+    ("Mean aerodynamic chord", "MAC = ∫c² dy / ∫c dy (exact for straight panels)", "all"),
+    ("Station span positions", "y<sub>0</sub> = 0,  y<sub>i</sub> = y<sub>i−1</sub> + f<sub>i</sub> S", "all"),
+    ("Sweeps 2 and 3", "Λ<sub>2</sub> = Λ<sub>3</sub> = Λ<sub>1</sub> (one straight leading edge)", "tapered, flying wing"),
+    ("Leading-edge positions", "x<sub>i</sub> = x<sub>i−1</sub> + tan Λ<sub>i</sub> · f<sub>i</sub> S", "all"),
+    ("Station heights", "z<sub>i</sub> = z<sub>i−1</sub> + tan Γ<sub>i</sub> · f<sub>i</sub> S  (sections vertical, root in y = 0)", "all"),
+    ("Overall taper", "λ = c<sub>tip</sub> / c<sub>r</sub>", "all"),
+    ("Trailing-edge thickness", "t = max(floor, 0.2 % · c), floor 0.5 mm (Class I) or 1.0 mm (Class II); opened over the last 10 % of chord", "all"),
+]
+
+
+def params_tables_html() -> dict:
+    cfg = load_config()
+    specs = [cfg.types[t] for t in WING_TYPES]
+
+    def cell(sp, v, unit):
+        if v in sp.derived:
+            return "<span class='muted'>derived</span>"
+        lo, hi = sp.ranges[v]
+        f = lambda x: f"{x:g}".replace("-", "−")  # noqa: E731
+        txt = f"{f(lo)} to {f(hi)}" if min(lo, hi) < 0 else f"{f(lo)}–{f(hi)}"
+        note = f" <span class='muted'>{CHORD_NOTE[sp.chord_law]}</span>" if v in ("c2_ratio", "c3_ratio", "c4_ratio") else ""
+        return f"{txt}{(' ' + unit) if unit and unit != '°' else unit}{note}"
+
+    rows, last = [], None
+    for grp, lab, sym, unit, v in INPUT_ROWS:
+        if grp != last:
+            rows.append(f"<tr class='grp'><td colspan='{len(specs) + 3}'>{grp}</td></tr>")
+            last = grp
+        basis = RANGE_BASIS.get(v, "<span class='flag open'>no source yet</span>")
+        rows.append(f"<tr><td class='what'>{lab}<span class='id'>{v}</span></td><td>{sym}</td>"
+                    + "".join(f"<td class='num'>{cell(sp, v, unit)}</td>" for sp in specs)
+                    + f"<td class='src'>{basis}</td></tr>")
+    rows.append(f"<tr class='grp'><td colspan='{len(specs) + 3}'>Fixed per type (not sampled)</td></tr>")
+    rows.append("<tr><td class='what'>Airfoils b0, b1, b2, b3</td><td></td>"
+                + "".join(f"<td>{', '.join('/'.join(c) for c in sp.choices)}</td>" for sp in specs)
+                + f"<td class='src'>{RANGE_BASIS.get('airfoils', '')}</td></tr>")
+    free = "".join(f"<td class='num'>{len(sp.free_variables)}</td>" for sp in specs)
+    rows.append(f"<tr><td class='what'>Sampled variables</td><td></td>{free}<td></td></tr>")
+    derived = "".join(f"<tr><td class='what'>{a}</td><td>{b}</td><td>{c}</td></tr>" for a, b, c in DERIVED_ROWS)
+    return {"__INPUTS__": "\n".join(rows), "__DERIVED__": derived}
+
+
+def verification_sets_html() -> str:
+    f = DOCS / "verification_sets.json"
+    if not f.is_file():
+        return "<tr><td colspan='12'>Run <code>python scripts/verify_sets.py</code>.</td></tr>"
+    sm = json.loads(f.read_text())["summary"]
+    keys = ("stations_pct", "chord_pct", "twist_deg", "sweep_deg", "dihedral_deg", "straight_pct", "ar_pct",
+            "sections_pct", "ruled_pct", "root_y_m", "min_y_m")
+    g = lambda x: "0" if x == 0 else f"{x:.1g}" if abs(x) < 1e-6 else f"{x:.2g}"  # noqa: E731
+    return "\n".join(f"<tr><td>{TYPE_NAME[t]}</td><td class='num'>{r['wings']}</td>"
+                     + "".join(f"<td class='num'>{g(r[k])}</td>" for k in keys) + "</tr>" for t, r in sm.items())
+
+
 def decisions_html() -> str:
     out = []
     n = 0
@@ -910,7 +996,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <div class="eyebrow">CFD_Automation · Stage 1 · geometry · code __VERSION__</div>
   <h1>Wing Generator</h1>
   <p class="lede">Eighteen numbers go in; one exact wing surface comes out, measured, labelled and checked. One generator and one YAML file make BWB, cranked, tapered and flying wings, sized like real Class I and II UAVs. Every later stage (mesh, solver, data) reads only this surface.</p>
-  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#inputs">Inputs and derived</a><a href="#ranges">Final ranges</a><a href="#reynolds">Reynolds range</a><a href="#phenomena">Flow phenomena</a><a href="#refine">Where to refine</a><a href="#fix">Fix before Stage 2</a><a href="#decisions">Design decisions</a><a href="#real">Real wings and Re</a><a href="#variables">The 18 numbers</a><a href="#checks">Checks and results</a><a href="#open">Open decisions</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
+  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#inputs">Parameters</a><a href="#ranges">Final ranges</a><a href="#reynolds">Reynolds range</a><a href="#phenomena">Flow phenomena</a><a href="#refine">Where to refine</a><a href="#fix">Fix before Stage 2</a><a href="#decisions">Design decisions</a><a href="#real">Real wings and Re</a><a href="#checks">Checks and results</a><a href="#open">Open decisions</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
 </header>
 
 <section id="glance">
@@ -924,36 +1010,29 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
 </section>
 
 <section id="inputs">
-  <h2>Inputs and derived quantities</h2>
-  <p>What you set, and how everything else follows. Same 18 variable names for every type; each type samples some of them and derives the rest.</p>
+  <h2>Parameters: inputs and derived</h2>
+  <p>The generator samples only the <strong>inputs</strong> below. Everything else is <strong>derived</strong> from them by fixed formulas. Four stations: root b0, breaks b1 and b2, tip b3; three straight panels between them.</p>
+  <h2 style="font-size:22px">Inputs (sampled), by wing type</h2>
   <div class="tbl"><table class="wide">
-    <thead><tr><th>Group</th><th>Sampled (the parameters that matter)</th><th>Derived from them</th></tr></thead>
+    <thead><tr><th>Input</th><th>Symbol</th><th>BWB</th><th>Cranked</th><th>Tapered</th><th>Flying wing</th><th>Why this range</th></tr></thead>
     <tbody>
-      <tr><td class='what'>Size</td><td><code>root_chord_m</code>, <code>aspect_ratio</code></td><td>semi-span S = AR · c<sub>root</sub> · K / 2, with K = mean chord / root chord = Σ f<sub>i</sub> (r<sub>i</sub> + r<sub>i+1</sub>) / 2 over the three panels (f = panel span fractions, r = chord ratios); area = 2 · S · c<sub>root</sub> · K; span = 2 S</td></tr>
-      <tr><td class='what'>Layout</td><td><code>b3_ratio</code>, <code>split_ratio</code></td><td>panel spans: outer f<sub>3</sub> = b3_ratio; inner f<sub>1</sub> = (1 − f<sub>3</sub>) · split_ratio; middle f<sub>2</sub> = 1 − f<sub>1</sub> − f<sub>3</sub> (times S)</td></tr>
-      <tr><td class='what'>Chords</td><td>BWB: c2, c3, c4 (of the root). Cranked: c2, c3, c4 (each of the chord inboard). Tapered and flying wing: c4 (the taper)</td><td>station chords; for straight-edged wings c2 = 1 + (c4 − 1)·y<sub>1</sub>/S and c3 = 1 + (c4 − 1)·y<sub>2</sub>/S; mean aerodynamic chord</td></tr>
-      <tr><td class='what'>Sweep</td><td>BWB and cranked: sweep1, sweep2, sweep3. Tapered and flying wing: sweep1</td><td>sweep2 = sweep3 = sweep1 for straight-edged wings; leading-edge positions x<sub>i</sub> = Σ tan(sweep) · panel span</td></tr>
-      <tr><td class='what'>Twist</td><td>twist0–twist3 (at the stations)</td><td>between stations: follows the straight panel</td></tr>
-      <tr><td class='what'>Dihedral</td><td><code>dihedral_p1</code>, <code>p2</code>, <code>p3</code> (one per panel)</td><td>station heights z<sub>i</sub> = Σ tan(Γ<sub>panel</sub>) · panel span; sections stay vertical, root section in y = 0</td></tr>
-      <tr><td class='what'>Not varied by the sampler</td><td colspan='2'>airfoil names per station (per type), trailing-edge rule (by wing class), tip (flat, open)</td></tr>
+__INPUTS__
     </tbody>
   </table></div>
-  <p class="muted">Free variables per type: BWB 17, cranked 17, tapered 13, flying wing 13. Checked on every built wing: chords (0.1 %), sweeps (0.1°), twists and panel dihedrals (0.2°) and the aspect ratio (0.1 %) measured on the loft against the vector.</p>
+  <p class="muted">"derived": that type computes the value (see below). Sweep positive aft; twist positive nose up; dihedral positive tip up.</p>
+  <h2 style="font-size:22px">Derived (computed, never sampled)</h2>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>Quantity</th><th>Formula</th><th>Types</th></tr></thead>
+    <tbody>
+__DERIVED__
+    </tbody>
+  </table></div>
+  <p class="muted">Checked on every built wing: chords (0.1 %), sweeps (0.1°), twists and panel dihedrals (0.2°) and the aspect ratio (0.1 %), measured on the loft against the inputs.</p>
 </section>
 
 <section id="ranges">
   <h2>Final ranges</h2>
-  <p>Size from real Class I–II UAVs (see <a href="#real">Real wings</a>); shape from AERIS or our own choice (no source yet). Every variable per type: <a href="#variables">The 18 numbers</a>.</p>
-  <div class="three">
-    <div class="tbl"><table>
-      <thead><tr><th>Size (sampled)</th><th>Root chord</th><th>Aspect ratio</th><th>Span (derived)</th></tr></thead>
-      <tbody>__SIZE__</tbody>
-    </table></div>
-  </div>
-  <div class="tbl"><table class="wide">
-    <thead><tr><th>Shape</th><th>BWB</th><th>Cranked</th><th>Tapered</th><th>Flying wing</th></tr></thead>
-    <tbody>__SHAPE__</tbody>
-  </table></div>
+  <p>The input ranges are in <a href="#inputs">Parameters</a>. This is what they produce.</p>
   <h2 style="font-size:22px">What the generator makes</h2>
   <p class="muted">2,000 Latin-hypercube wings per type.</p>
   <div class="tbl"><table class="mid">
@@ -1061,17 +1140,6 @@ __HCDI__
   </table></div>
 </section>
 
-<section id="variables">
-  <h2>The 18 numbers</h2>
-  <p>Four stations: root b0, breaks b1 and b2, tip b3. Three straight panels between them. Ranges as in <code>configs/wing.yaml</code> now.</p>
-  <div class="tbl"><table class="mid">
-    <thead><tr><th>Variable</th><th>Meaning</th><th>BWB</th><th>Cranked</th><th>Tapered</th><th>Flying wing</th></tr></thead>
-    <tbody>
-__VARS__
-    </tbody>
-  </table></div>
-</section>
-
 <section id="checks">
   <h2>Checks and results</h2>
   <div class="three">
@@ -1088,7 +1156,15 @@ __VARS__
 __SETS__
     </tbody>
   </table></div>
-  <h2 style="font-size:22px">Is the surface the intended wing?</h2>
+  <h2 style="font-size:22px">Is the loft the designed wing? (every sampled wing)</h2>
+  <p class="muted">Worst value over every training, corner and reference wing (<code>scripts/verify_sets.py</code>, numpy loft). Stations, chords, twists, sweeps, panel dihedrals and the straightness of each panel match the inputs to machine precision. AR: the loft measures the true chord, which is a little shorter between two stations of different twist (up to 0.035 %; 0 without twist). Sections: up to 0.012 % of chord, at the smallest tips, where the 0.5 mm trailing-edge floor is a large share of a 3 cm chord. Root: every point of the root section at y = 0, and no point of a half wing below y = 0, so the mirrored halves meet only there.</p>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>Type</th><th>Wings</th><th>Stations % c</th><th>Chord %</th><th>Twist °</th><th>Sweep °</th><th>Dihedral °</th><th>Straight panels % c</th><th>AR %</th><th>Sections % c</th><th>Ruled % c</th><th>Root |y| m</th><th>Min y m</th></tr></thead>
+    <tbody>
+__VSETS__
+    </tbody>
+  </table></div>
+  <h2 style="font-size:22px">Is the surface the intended wing? (published wings)</h2>
   <p class="muted">Errors in % of local chord. Sections: the loft cut at each station against the original airfoil points (limit 0.01). Edges: against the exact straight lines (limit 1e-6). Outside CAD: only the M6 has one (limit 0.05).</p>
   <div class="tbl"><table class="mid">
     <thead><tr><th>Wing</th><th>Sections max</th><th>Edges max</th><th>Outside CAD</th><th>Result</th></tr></thead>
@@ -1155,7 +1231,8 @@ def main() -> None:
     real_rows, real = real_table()
     env = real["envelope"]
     fr = final_ranges_html() | {"__FIG_RE__": fig_re_map(), "__FIG_PLAN__": fig_planform(), "__FIG_SEC__": fig_section(),
-                                "__FIG_RSIDE__": fig_refine_side(), "__FIG_RTOP__": fig_refine_top(), "__REFINE__": refine_html()}
+                                "__FIG_RSIDE__": fig_refine_side(), "__FIG_RTOP__": fig_refine_top(), "__REFINE__": refine_html(),
+                                "__VSETS__": verification_sets_html()} | params_tables_html()
     page = PAGE
     for k, v in fr.items():
         page = page.replace(k, v)

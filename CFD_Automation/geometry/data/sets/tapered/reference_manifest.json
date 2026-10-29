@@ -2,7 +2,7 @@
  "wing_type": "tapered",
  "set": "reference",
  "code_version": "0.6.0",
- "code_hash": "fd3f49dbd416b5115dc03876db4acdb24f23ec558b96796bacfa6d476c4b44b2",
+ "code_hash": "9fa3bb9e552b9ac4738bdae35c2917a13a6904fab8f04ae358c0ba3dd1ac4252",
  "loft_backend": "numpy",
  "wings": [
   {
@@ -10,7 +10,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "1173ef9cd355a74e2d90265476b4f0e96896b8c888dfd647fcc4b18758fe8705",
+   "input_hash": "f8e75dd1f798fa55f7a51a4740bf93651ca24131c6b0b657549a1ebe8d5f87a9",
    "surface_hash": "af80020f30e5f1cbd0332c2a9c17e7ab9df467ce13495f7dcf2468b69eac073f",
    "labels": [
     "conventional",
@@ -45,7 +45,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "1aad64b2de4c633a3bdb36e14aed8eb79e1d3709b5a16ec09a46d22abe4594eb",
+   "input_hash": "95ef6e939a81be79bdadec1299e9f982f59a1c6be6457c801590786b01087dba",
    "surface_hash": "ec79944f08a1fdc98e856998c056d2ef8a1578b68698ba1a491c30418ab45014",
    "labels": [
     "conventional",
@@ -79,7 +79,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "bbeb401b516022ebc7f79ddb2b3a1025884a486bfa7b679eac833fc68e50d777",
+   "input_hash": "92290cd4d10b2bcf62e657041e51f5b8016393f7d3320fc14283aae4b81b6ad1",
    "surface_hash": "c92ad28375bf47baa306ac417cb290b4e05a4149f0b692aa9cf7508bfab0588c",
    "labels": [
     "conventional",
@@ -115,7 +115,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "35fe811998a082b428daf0d91257e85175f954eef1d4ed664f835e05a80b8c61",
+   "input_hash": "a05d8dc82e3ff012a65a1d72678ca66ef46fba695e500dab9841f805ab523938",
    "surface_hash": "3783ae459456a77b747004952d343213a5b3bf745d5db176f2b9c3f5c91659d3",
    "labels": [
     "conventional",
@@ -149,7 +149,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "757cc111be66ab76495134db6337f2b9aec120a4ebbc7f275ebcb4cfe3bf7c6d",
+   "input_hash": "e51c28667a9ad9300694a30308a16463fb0a36349b25dd6d467ec97ea9e6ed69",
    "surface_hash": "e812f18d10a9ff1936393e4c15a610bef5df55cc1f971ef0ef2115187083f49a",
    "labels": [
     "conventional",

@@ -2,7 +2,7 @@
  "wing_type": "bwb",
  "set": "training",
  "code_version": "0.6.0",
- "code_hash": "fd3f49dbd416b5115dc03876db4acdb24f23ec558b96796bacfa6d476c4b44b2",
+ "code_hash": "9fa3bb9e552b9ac4738bdae35c2917a13a6904fab8f04ae358c0ba3dd1ac4252",
  "loft_backend": "numpy",
  "wings": [
   {
@@ -10,7 +10,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "1510dc5f191db057569bcd82316df8005ea83bfd0a41801de7a01d75c2d7a6cb",
+   "input_hash": "1def4397e1c7dd54d0dce5ce9a6b8f18eef34c7c2a3da6a6de933607bc6800fa",
    "surface_hash": "1a39ec4cafe212d98ad68aee366acaf2346c82868a5c9489326d199e5850d750",
    "labels": [
     "bwb",
@@ -46,7 +46,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "8ac3fb3958934fa0073e0ad528edfb8fcd0687b8ca27f641abbaa9688c3f1a1f",
+   "input_hash": "0f8fe38ee49e5e633fa8a8a84c0761a8b55b77e8ac309497ff33545551be6b49",
    "surface_hash": "f8f2eb76da4ec28ce61493361324827842994d0bd86e6183bc48280933fd04e6",
    "labels": [
     "bwb",
@@ -82,10 +82,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "49095d73710c809b10bc834eb78e91513f4878eaf639a80a9590e2b7b4b9b442",
+   "input_hash": "8cf139af57c23b62900e9129bf92f1d39a4b7e7221c00881194511c4647b97cc",
    "surface_hash": "b3e88b4e362102bd90ad532985e0025d4d1047500e5b1b4288a353a6f1617f28",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "cranked",
     "washout",
@@ -119,7 +119,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "ecbdf07b02f55ca88d1ebed3c72e3f84567a6c6d7456eacb55ed6d625d23743e",
+   "input_hash": "72dc91259488d25d058c39e82bdefa6e93689f78b761da6f8fa5f00299973921",
    "surface_hash": "d2dc64e92ba4ac80100f4a192fe3a4ce7d9119905c8dc0704955ba68e5ea5e80",
    "labels": [
     "bwb",
@@ -155,7 +155,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "a133479e2ce2bb40a97e5e471103c99ca57f48969dc984c40478e81ecac6944f",
+   "input_hash": "487e13772c524c84578ce8a06b81fc588fbde4af03aeeb77390df70ab78e9aad",
    "surface_hash": "a6df77705aa26b0d357e33769656dc668dc2f6bc3ea5a41bf2793a3a33087132",
    "labels": [
     "bwb",
@@ -190,10 +190,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "90cc5477530233a0399e71ab3ad4b2ad3d2caa825ec44bd47db413947c8e16ee",
+   "input_hash": "501d369ce65b14692b1e60823766d14c661d023f7edca31e33323c2f19f91d28",
    "surface_hash": "356f9d92b3595060fb97951720e796c2a5f7430456bf6f1629f9d8fca70c2b21",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "cranked",
     "washout",
@@ -226,10 +226,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "f2bbebb3db6e6a5e14ea5aecdc2510ca03836b558c139a5e058023541d886649",
+   "input_hash": "4817d01943d900950efac6ec4dfc4bf4819d59942288b805c267f73f3f5c43e8",
    "surface_hash": "a60775a8ec08aac2b4321bc1ed3cfd7ceac2ca742cca8730575abecb58422ce0",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "cranked",
     "washout",
@@ -262,7 +262,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "fc2a5796ee54195ec494fb1552ed480f754bbe4655404cf40d6c66b373173e8c",
+   "input_hash": "3019cf87e11d807dc7d1dab7863174dcc728310618a25dd7928d425c75e3599c",
    "surface_hash": "078f35649f213a505ca6421256b59e1c5f86e46891c3ae0d4a7f9f0a9e17119a",
    "labels": [
     "bwb",
@@ -298,10 +298,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "bd959830e373fa58628dec75ac3e41b1b3d92185183b5b14c2b3f25c591a44f2",
+   "input_hash": "713cda77deef8e904433a082bdec57fdeb4d8677fb2bb07feb8d9c694cea06e5",
    "surface_hash": "8788aa0530ece893b4a9df92b166e87186db56fc04d1cb484ea1e3f17e02f830",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "cranked",
     "washout",
@@ -335,7 +335,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "56a49536f7f9e5b30a42474ce02ef0ae0ed7433c7b600398d53892e234e980b9",
+   "input_hash": "b27d1171a290b0d793cd51112a7a90d5dd636a0bbb1dc0b159511ea9a63d244c",
    "surface_hash": "c9d6d9977e141b440d371b2977303242e22f4f3c591b38ebe9e8cb4f9d1969e0",
    "labels": [
     "bwb",
@@ -370,7 +370,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "dda6fdf307d97ae9506a10e0f2ace5ba85d999338981e917ac0179043113dbf4",
+   "input_hash": "536cbac25bcb39f48283546c799cf7839705273044aaa8ae4e2a94938885858c",
    "surface_hash": "153a7938f263525ad2c90ddf6498f121c1b3b2397df569547d1c19283748b3b0",
    "labels": [
     "bwb",
@@ -406,7 +406,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "9f167064ede1b1216cf1fe33d719aaeb4daa2b5278fc2ed63e3983518f0df7b1",
+   "input_hash": "35fd2d633e4bd61a9cd07c5ad8e4fe8780db982b8aa3a561bc5e31cd0b82c131",
    "surface_hash": "ff29639a9be0087480758c1f9db6fae210253a29be6a61815b0f665f9fb030e7",
    "labels": [
     "bwb",
@@ -441,7 +441,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "108d3bc5f90d7db05fd4e93e3011c1d481c71e7d99e68ddf9cf1891018274eaf",
+   "input_hash": "80a5d8cc5645bb19edcae68b65f2b9b75c54e88b2304f6e9565fee1c3e1d8fd5",
    "surface_hash": "64e4b2f600b01a3b90e1d2d578d0b16c99962e13a952287da9303bc5145fd995",
    "labels": [
     "bwb",
@@ -477,7 +477,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "96eef2192dbb21601340f5bec7a5295d3eb3052ed65abcdf7afaadc30280ad72",
+   "input_hash": "1ef5bc60a5df7d8070c76ef18966f2262466232ca019010dc0653f3d40d26c7f",
    "surface_hash": "5e70da0f1802d216337aab23091a117bca8b847199658c2ec613dab25aaf82c3",
    "labels": [
     "bwb",
@@ -513,7 +513,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "2b631bdc70ff9c374ff4be7b95a159c8b089bd45d4a792561bf10db3282daa9a",
+   "input_hash": "830b88930fcb6b98eebb5d1a559efcd246fd6e8a47a36f6d05fd072c3a0dbb0a",
    "surface_hash": "295b4fc65a66b5b393671e453291b4cc0034950d4bfa519653bd5033f4aa7bd5",
    "labels": [
     "bwb",
@@ -549,7 +549,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "fe6371f3b5f6ec38893d76eee8c521aa6d3e8e4a20bc64cd00bfcb0cdc0ed3aa",
+   "input_hash": "a29300782e84d8fcf9bfe7e45b92769a74fc5c872133a714b2f5376a00dce618",
    "surface_hash": "a06161e8a1f7523b040811c3c3ee11b1264cffcb69092c482154b0172f610b0e",
    "labels": [
     "bwb",
@@ -586,7 +586,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "c88facfb131a79303e6bb246a89f9cf1c69e2b3c47623ab89e13b36e2e69d26b",
+   "input_hash": "aad023e36c6aec9bc46bc543146fa66fbc0f02ebc5609afe6de6ed07f30bc0c1",
    "surface_hash": "5f77d190053e647783b412b29ad46405d91b32a61b84578622b142793666eeb6",
    "labels": [
     "bwb",
@@ -622,7 +622,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "6ea228a22a8de0d749686e1df873814f406efe17ae11658269c861de1749e1a4",
+   "input_hash": "53e9308ffa70be94c5ff30c5cc35a2d12aeed3af50bfcd6db180c0dd95dc60f1",
    "surface_hash": "fe7cf8dc7145e87579b1b240c1a9068c05873b8db78293f530277e9d82df5fe6",
    "labels": [
     "bwb",
@@ -658,7 +658,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "69a9377d178488f484e6e93fcaec39fe58c5c518b09b8d30b3b743e49aadc64a",
+   "input_hash": "931356df5c8d7676c39534d46ee1c8ce85b08d34c1369cdf34f4b1005027f37a",
    "surface_hash": "49204f33cff220f5d2e32063b978d5ec987a130e2e35fea40c0fb61daa148e0d",
    "labels": [
     "bwb",
@@ -695,7 +695,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "9bd10d984a8af6626fac501aac4c5fa72984152bfbeb532a59d673e17b7b2559",
+   "input_hash": "230cdcc4484e85483eca1bbc0de1e23df82d599fabd96acc9405ce54a4c1b28f",
    "surface_hash": "8561f7bb1e054789a2f57905de88d47e3a60fc52431dd85c891dfffa70c32c2f",
    "labels": [
     "bwb",
@@ -732,7 +732,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "48dd7e1cd088f40f0407c68dfcca88993dcf46b2bac62233b314e7cde6b955ec",
+   "input_hash": "5ae80773f5c8f5ece82cc8329e6e6b15b2bbdf64e49e87baea6e2670ff0d62a6",
    "surface_hash": "448ccb5e34f0f0ed41b97f8055894dca384a2c9133db5110de3007b52e61e508",
    "labels": [
     "bwb",
@@ -768,7 +768,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "72b0719264b09e5d6cb738897dbeb9f20fca32b5df3add76014351f014f9d914",
+   "input_hash": "bb0fe40b7098257189fff806dabe57a50111232636a833627d13b36752601e7c",
    "surface_hash": "68983fe1d61a39919afb729d82e73e63f62068a000332a9164cabc9496799ee1",
    "labels": [
     "bwb",
@@ -804,7 +804,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "236d7f3124956b95173dee7e787f0f62656754691cac3011911407d7157b435d",
+   "input_hash": "1315cd16c8e38ed0513acd5980cf607151cfe89899404e0e1aca5eaa1aca8321",
    "surface_hash": "ecb8ca45390269f8b5062340b720e00f89ef91037ad3c561f0385d367c0b2dc9",
    "labels": [
     "bwb",
@@ -839,7 +839,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "22c103ea4c3bc22eed20b4e5ed3e20e2e0aadd54cf6406fad4482a7216a35cd0",
+   "input_hash": "be4e994c32c6a5796ae6986159f01e5512092a3c30f19487d63a99eb929a5e4f",
    "surface_hash": "3b0516c6f12dd6001b60008573fb380bd7b5c4cb0d27c88c2dfea19303705069",
    "labels": [
     "bwb",
@@ -875,10 +875,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "6d3d2a6f44b2aa67122f54bcc18a59fa9762d70d25c5064027777f7e441e1e6e",
+   "input_hash": "7edf9f279bfcfed974c25b99095c95a9bbfa09060b41628cbf20fdf8b6dfdb5e",
    "surface_hash": "cdb0ec51115bc615980d256a74a67513f1f887d4cd9ef76144bd11279ee3923b",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "cranked",
     "washout",
@@ -910,7 +910,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "2eb74d70e5ea6a8ee5199304d09ce6f5d311364dcda31fca1107843197c0a90e",
+   "input_hash": "efb35c496ca479f5b1bbbc821b69f1cf918524074693edf68bc6b0c9f6ff3b16",
    "surface_hash": "172e20b3c1fc4c90244256cf54ae5f0e2f7bb7b0979945477810c9fd5ae0c831",
    "labels": [
     "bwb",
@@ -946,7 +946,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "908f4e3fadca5393ee2a486595ca050e8b2f6960ad69bbcdf6805ca44e2a4422",
+   "input_hash": "cb286491ff808a50de7d6f7b0285aa057da6efa67c0eacaf30e1f2cb04ea9b03",
    "surface_hash": "af1dd047bbac2b5966526bdde72b72a58d67b29030ef1334268029d77d93d505",
    "labels": [
     "bwb",
@@ -982,7 +982,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "010f30b6f61e7e7a0c45804d5dd5226aef8f98042ef972a29cd67c9dc9aa6137",
+   "input_hash": "73ee2dbccff3f9cb4ad681721207f8e68d33647d9031608e20c550dfe09cb9b4",
    "surface_hash": "d91d26de4672e489be1deb16a187e36e6d028487a8822c5224f7a1c7fe957543",
    "labels": [
     "bwb",
@@ -1017,7 +1017,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "de2f9ea3f221e9155058acd09a9e2b0c4594f030dc2331ea4f0f2ffc99c5543d",
+   "input_hash": "f79bf6d1d15d6d27ba8d21abf9cf7e5c179eaa58a7a472ded50b3049b2d27241",
    "surface_hash": "46a241c4a117ed29c193723b7930c89173d1af3487cd57a8ad309dbfe150dc69",
    "labels": [
     "bwb",
@@ -1053,7 +1053,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "cf849aca8e301088451a9184cfb127811d91b3bcf3419175ad6e00b3fecc08b8",
+   "input_hash": "8bc4a50b74dda32dff3851f2c1eb87f5d91f3ff7d70b33cc628a58fba7076d16",
    "surface_hash": "42d7d1430fa7bd3125f550260ce4055eb2c6d174cde3c7fe1cc19ccab2b2b553",
    "labels": [
     "bwb",
@@ -1089,7 +1089,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "92abf5bdaac770164991e9e608edf9b0ae3d499280573c07fe8511bfad0671ad",
+   "input_hash": "b41efb12d281b2244f1c5f0121de0347d366be312c68f9a4782c6cb051142b86",
    "surface_hash": "61283c01261e3622a71a08b07ba465f0585b163095b5b8472bfab225c19380c8",
    "labels": [
     "bwb",
@@ -1125,7 +1125,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "2a6de6cf8c5b4e091bd4e38f394981330a23bd00ae384713684944bfa504e72d",
+   "input_hash": "06446534f232345af6a85ceb4987500fe92db14e47231d94672e5b1ae5c833cf",
    "surface_hash": "013a4e00fcfaa2a590292b402354ac44f810bf69eaa755767093172b0d51c531",
    "labels": [
     "bwb",
@@ -1162,7 +1162,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "3ab7c121a584a428512815703e22e7a02e63796bccb4009a2a9db2b20259fdd7",
+   "input_hash": "7a359653062a91a48ac9e02db912bd8f17fc73a1766eef2b925bea3b784f5a3b",
    "surface_hash": "73d7cb9764920c7b9f58a8e11a6f80b0426db309117b37c0efa283b225432eb7",
    "labels": [
     "bwb",
@@ -1198,7 +1198,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "8fe4d4c9c78652e9a3023b1f3d1eede245ceaede098b41bdf54c80cf50438632",
+   "input_hash": "ea8f8c098bd95c2cfc9c14e5dfa47a042fc6e71aca30ae5a9648479b7664f492",
    "surface_hash": "9a21297dd786d4323058e4b7f26a799cd55cef032d80272728489fbc030d286f",
    "labels": [
     "bwb",
@@ -1234,7 +1234,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "685b57195881a0dbdbd18458049eabf40f355773cc8d225558d4ebd571b78c89",
+   "input_hash": "b10c4797d7aceedfc8ad52de0112b86c09afe1ec92e79c89f4be05b22a444ffb",
    "surface_hash": "06d43665e14a614b2aed30ff605a242e825df97e8395f1f79acfffe67e50b18f",
    "labels": [
     "bwb",
@@ -1270,10 +1270,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "cf753a2903ea05fabc766eddf101b7fb8fbde729b53c395bec4726a0fd57c597",
+   "input_hash": "58aba9c2953c6fbf8a4419a2cdd5384f6c56f1092166ca2f0f3963a319daa587",
    "surface_hash": "005a5aa04818845fad8ff9249b0228c07b6a0bdc2f84368c20fa5731f904f05e",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "cranked",
     "washout",
@@ -1306,7 +1306,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "d7283c5d80c42fe98dfd72cf04a8a77d1918e9ef9f56ea04fcb298bed86d607c",
+   "input_hash": "0b0aa6117cdda33c9833a08ed3c391fad81b9b0c0e66c9a5808ca144176a5d03",
    "surface_hash": "a45907f9f074412cf1cadf2c29c1d3589c24aa54d2b65c611a94744653b005b5",
    "labels": [
     "bwb",
@@ -1342,10 +1342,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "6e03cabdf2665463e4be56b5981785f0646c660be4a6a877b982ca8e56bcca78",
+   "input_hash": "d1f678d22a8fef0ff4bf843dbd046de7ca58955c978364ce05877e84af469678",
    "surface_hash": "85163e462fee145e86be91784b53936ccfee5e50aaa6bcf6b53b7c22639899f2",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "cranked",
     "washout",
@@ -1379,7 +1379,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "9f57918435c950868d01302982d38a4147f061ed8c1e20fc24c4a9a71c49192d",
+   "input_hash": "a04be51fd154b1c0a3d1d09c4d45f23abf8a78ae8e1e326ab2f09e75533f1479",
    "surface_hash": "76d551f19c20ae27064ec8caab1848cf608f281868bb748bf517b5f1212546a2",
    "labels": [
     "bwb",
@@ -1415,7 +1415,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "7e0fcab5a80f22ddbd66f09270e235f07b1dc2a00015c393493fbcf70b15a06a",
+   "input_hash": "29efe3801705e9e7c5a181d69168d38b34a230898cd0cc5bbcbe927693856539",
    "surface_hash": "53cb5538af111bfeb2817ffb7b4697f1ef5e86ca2558395a813e7dd62b85cf1b",
    "labels": [
     "bwb",
@@ -1451,7 +1451,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "d4cd0c71288cf1f23184686f418adb3ea88afd95043db39cca959e478d1132ed",
+   "input_hash": "5f5be2a114a5f8bc5b52083845f87ded3f1b4f0dda54fe84069b34eb6121002c",
    "surface_hash": "b7fd5231d63762d6f5af4e325ca8d992e8aa9366db280b36f7630c08248f8b58",
    "labels": [
     "bwb",
@@ -1487,7 +1487,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "12405df07de3e4de2747dca75cd136187eaa5b1e2ea9d24a448f4eb6cf6c8572",
+   "input_hash": "6ccc9c4793faf0ffd871e9af32a1a591d8faf68f42685d714b6f69bbe426fa17",
    "surface_hash": "8f9bac07e2f8560e8f4f33dfc6472a1419b031a2108e835e72098f1337e53a5f",
    "labels": [
     "bwb",
@@ -1523,7 +1523,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "fc004029f8f00e837928d612ffc04fb67f6a7c78c8fe5de923d6fdd01ae12310",
+   "input_hash": "5b5b3ac8ab450e02871b72125967ae1e0633a8a5e89ee9ebead506645cb6f6c7",
    "surface_hash": "fbab83fa8dc00312bfa77dffaaef76200754130ba2b87f5507bb67930017b265",
    "labels": [
     "bwb",
@@ -1559,7 +1559,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "f2defbc44de31e9aa66dd0e24ef62b76ba97c84538b319541ef5edcbb7021327",
+   "input_hash": "7a906bc4f50ebb6b65dd258573b91ee8ba028704b3f316bc72a410de4682a0f0",
    "surface_hash": "fcbb30ad39756bf4f84ab2a71ca9e53837e2afc786107a0e3669468d0c25b7de",
    "labels": [
     "bwb",
@@ -1595,7 +1595,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "a1eb35b51c4a03adc9b04667a40023795013c337c95ff274ed3aae0abc0c419e",
+   "input_hash": "67b4c13d63fb6bd9099ab12aa61c53434db171bd7a392b8e50127652172c4c81",
    "surface_hash": "02ab43d72dbe669a7830a05a7b13d53c246b540ca30a4a93a8057b35c5ef46d9",
    "labels": [
     "bwb",
@@ -1631,7 +1631,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "52055b708a0d6a4587d3d4b77531e53156c4f2f1296a41b0c02bd09304ff2981",
+   "input_hash": "752b64a4feec64d060ce1c7ad60e5378a056c1114cbbf09aaacc72a5a2f58d40",
    "surface_hash": "c18be769856f832db6da8fda51ddc93882cf085183b72f20fed8b464e7936db7",
    "labels": [
     "bwb",
@@ -1666,10 +1666,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "49ef20b89de16cf184483207f65afa11bbbc77312a75b4d5b6df97829916421b",
+   "input_hash": "b4ff92b37298805b86890a8c158fd8c18cb0ce17d42cea6d8aefcd8571138703",
    "surface_hash": "6f4ebc9ecb486311b627d09438b482e88b4d55b6cfe7351ceef27a46d37a02ee",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "cranked",
     "washout",
@@ -1703,7 +1703,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "a674b95a0bfe353de6e0afc99f011cfe6db80362f7a8fb3c912e8fcd02e314e7",
+   "input_hash": "85ce57cd7f2bace82df6aa9db4de0aea8b287fea85177b8ec4396214c6413af5",
    "surface_hash": "5e627b9e38814a13a30f33d94e7e7c1ebd9fba9c451c7069f4c83caefc8b6192",
    "labels": [
     "bwb",
@@ -1739,10 +1739,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "d19d681ca52bdfc6aca83c0a920e03d093f019e8a88ea25201994400e85821fe",
+   "input_hash": "fbe0bb151c1f24028ddfc442ba723a1ee36416ec09587f6607a4ed138adf46a0",
    "surface_hash": "da02d7a2a42384528236c79e21e37e725b762bd08b076e0503733402bc0f0dcd",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "cranked",
     "washout",
@@ -1776,7 +1776,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "81ae87e700807de0d93936b315f3bf164ec88d9378cde643c2173af4600fb57a",
+   "input_hash": "558aff8d01784a17ea07b1537fc17f4609d64a67a2aa9689af69bcb1b787aad7",
    "surface_hash": "c4f93bd12db62883d0e77d1af5dd7b6d703ab59d1c9343e494fd909e10175b46",
    "labels": [
     "bwb",
@@ -1811,7 +1811,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "ac50fa595504bbae8530167aa8072dd198e70bd735be465de54e6d11ef4ee622",
+   "input_hash": "e06d85bced8defee5b943005c6d545999d8aab84dfb30d5d23901b0a8324b86a",
    "surface_hash": "5323dbe1eab65673c7e1baca430ac571998fb115f736bfd17605d8279dfb0154",
    "labels": [
     "bwb",
@@ -1847,10 +1847,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "3102f85cd60c3bf5040bb6095d0f45e1b2d5cd564b5aefceacdfdb1c30761a6d",
+   "input_hash": "59e77dbfff93784985bee2e210a78b1143d7e44aadd0696df758221798ba49ac",
    "surface_hash": "99e257b54dcf6e0db7dd679d29134f4ec44a0abb5fedb1219918dccfc14b90aa",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "cranked",
     "washout",
@@ -1884,7 +1884,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "6225736308a7f7b7c7dcaba3ac56fc87fb1ae0ce1064041477aafc19506b8bb6",
+   "input_hash": "a99b43c798f53e3de4a7e016118a07f2e1ec18630e7aced9324eb113c4af8e32",
    "surface_hash": "37b8c9c32453dab30b9ff4f92e003eb842316aa415bb770b736ee05a18e2e5e3",
    "labels": [
     "bwb",
@@ -1920,10 +1920,11 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "66b0b5df4d020b5b04b015b2e9201147e82e796ca358b6051ce890163e9540ae",
+   "input_hash": "a619f5c678d63d104b611021a2e0344b5a3b46cdee33ed4122305c88c1b0e462",
    "surface_hash": "6f6e6c7bb6bb5cfcb263430a3bd6628c879b99c3206d2a66bcb365a99d00945f",
    "labels": [
-    "conventional",
+    "flying_wing",
+    "unswept_outer",
     "cranked",
     "washout",
     "dihedral",
@@ -1956,7 +1957,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "333934ff26abba679b2df6f9738dc936f99e50b84bdce9fbe71dd33ca907e52d",
+   "input_hash": "28a12661e9cd2d39ba188174bd638e18230a409fa6eaea036b135a81efbef58f",
    "surface_hash": "9bf304a81bf19e4b9bdba51ca25df0a3c1f507cf9e63df3d310512cbcb09c65b",
    "labels": [
     "bwb",
@@ -1993,7 +1994,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "45721d95d87f2eea5ebbac3570337d7f44ec965eb12dcf7f73f4593f96392c01",
+   "input_hash": "7b2bd8c72584a244014a7fc2496f2649e1a849179222d5acfa817f268e1d46ac",
    "surface_hash": "e1807cefc4eac0adfa0edb99aff646853943be2316a21100bd06bc2cf5f8901e",
    "labels": [
     "bwb",
@@ -2030,7 +2031,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "61c158cf17811eab6ac91589616fefcd9026d1e37d6fb62514cd25c33743a966",
+   "input_hash": "fb7f94bedd82c5da6906e7b17241b81e28cad84ae5a426b7915f6ffda424b9fd",
    "surface_hash": "41434e3e1adc3ae20d2b561137fbfd0477452144abc7af8e70b8ab02f6a4a782",
    "labels": [
     "bwb",
@@ -2067,10 +2068,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "63b97ec084395f04e48c5c5b97fa5aea14e93719f72963c4e1f3645f2b43e284",
+   "input_hash": "5096d7609e11f06726575f9e7e98270b2fd4d6f992f1e8b03201f64a2d92966c",
    "surface_hash": "7228f353aaac04f5b53ed6aaa8a6baccfcc77a55cdaa174b0b840c3b54c77397",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "cranked",
     "washout",
@@ -2104,7 +2105,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "31df4dbe6572e3270add3aade46834267a5cf9b2cf375d3ba7b415df7ed9de11",
+   "input_hash": "ad68ea9fa61ad9100ab284f8ebf9a7ceebb3a967b2f6e20f127c6ff035156e7c",
    "surface_hash": "2e73c3faa0bdf7585c954094877bc894b3de2231ccef48f20d808964d78ba7a6",
    "labels": [
     "bwb",
@@ -2139,10 +2140,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "dd8b60bd2e7040bb1d9f07cae3c56b2c875195585563a09d969ab6a8db9f5770",
+   "input_hash": "339b94d866edf12e9fbd05d0f4e4663115a54a0255c029df356cf287b3a7038d",
    "surface_hash": "0a64669ccf3d0d26da3cfadb2bb9cd1a18d66b5c55929f4f0070f457242000c8",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "cranked",
     "washout",
@@ -2176,7 +2177,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "966e676d2511abfef46971a4f67a45b7c85c2e198911ccb5075ccfbe6ff8cd07",
+   "input_hash": "034ce8a7701d4295d5f08ae83a5013423a55a3a3c419e99303b158649b6db3fc",
    "surface_hash": "f50512ee8653ced21270deb9439f7e75328f354b0321b7c587d25e6322a25c3e",
    "labels": [
     "bwb",
@@ -2213,7 +2214,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "6e9a24c921f4ca94e05a0aa5fbd5ee62a433df96ab57b6ee351011a05aa8a191",
+   "input_hash": "9b58d041dea76565cd36590a2f9fc84122316ad45f69855533ca4a5aaf9edc45",
    "surface_hash": "832b7d20603fd0ed722b35e9a55af25b61e491453abbf42c864c70bdf82a5bf3",
    "labels": [
     "bwb",
@@ -2247,7 +2248,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "089f7296c858d421660552ce2bf7e1200ec643c7e2204bcb69f9148ea4157866",
+   "input_hash": "460908042a49a55a31defe9fba667ec5ea591af0ad5fc6918c06122beaf4ac2e",
    "surface_hash": "76895f497dfae1a02728715bb50ac11c54c5577683d8f728233b0fd229dc2c39",
    "labels": [
     "bwb",
@@ -2282,7 +2283,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "5e40bbc677413bc9e154cc651279a4078c2ec6e871889dd9226ccbbf529c194d",
+   "input_hash": "799b8ff44b14822e7f75534bc763f27d97cc4d83b90792c538e6e1bb0fc2998f",
    "surface_hash": "d64f24e4815ebf00d2067171970750bbc168c233bd713dde8db0eb5334035e4e",
    "labels": [
     "bwb",
@@ -2318,7 +2319,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "aeb7a92b66cdb5ed994d55309266658d030b770a5e8c30a72209fdc610c632c6",
+   "input_hash": "64e706088654a682fafe4917207d85a76595a9fd9e7ce92eb6cc49d28d647273",
    "surface_hash": "0a501c485e4a60931b0617441320cb794f23fc7ff2cd72133510406db7a6a847",
    "labels": [
     "bwb",
@@ -2355,7 +2356,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "b3b1f3b0b2561d873806445d8dfab0b3fefd13c8d10cc298d727bd57ef003614",
+   "input_hash": "c088cf5372a609dcc7d2bd26c9506ed8b389deacb007c7d0dafe85c05d6c426d",
    "surface_hash": "0f88c08ace7a15e0b28c896fb0155f4f501d19826865b76897b4768aa87e27a3",
    "labels": [
     "bwb",
@@ -2391,10 +2392,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "8e7b212ae751431dbac1e3d9417baf8c6b869ed992e24eade34743073e7d98df",
+   "input_hash": "ccb84167f4f1fe976f168b8a3f7dd41e8f41b1b72577b7b1cac51497df92c99d",
    "surface_hash": "b811f961ad1928840ae7ed2e405be534e03939be6603bfdd6fef164778581e1b",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "cranked",
     "washout",
@@ -2427,10 +2428,11 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "bb0c3977e8f4d1c8aad54a69ad13f2f56570c2ee5998d32147f0bcd82103233e",
+   "input_hash": "2fb311527e874fada2e5a3d401804bf01e364bf2af6757a441cbf5d1254b715d",
    "surface_hash": "cfd6bf2b6244c60558e5d51cb947d0d86d3d77791c27ed9f8fcee4486cbee2c8",
    "labels": [
-    "conventional",
+    "flying_wing",
+    "unswept_outer",
     "cranked",
     "washout",
     "dihedral",
@@ -2462,7 +2464,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "67014176e7e66d9371f4efa5c5abf07e3aa7a8ee7c94b4cdbe470c8ddb6ccc3b",
+   "input_hash": "1d82032b97abb7474299a5b9f45b5714af006e956c6724db085b8b001bbd553d",
    "surface_hash": "669e1ddcab8112ae5c3a1ff35efeea63c624da5c886b578592d241c2575a4f2e",
    "labels": [
     "bwb",
@@ -2499,10 +2501,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "a860bdde3801bdce735bfe626e6a802be66394f30a63ad1e21995f81dbdb1390",
+   "input_hash": "20e365dcb351b42984f9e6ca4223adf0dbbb8809557c6da19786c9bd5bbfb518",
    "surface_hash": "6eb56af74d03ac6125adc5f00f0fbd981dc03155db0af56fba42b0ead2538c5b",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "cranked",
     "washout",
@@ -2536,7 +2538,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "88da0c918ce1104f7fd53182c3d154f103f6b39b086b060645dc0711ccc6b5ca",
+   "input_hash": "0056de3a2badf0b44f9a8a7a508a7902651381d06ecaef689b32c6f4201b854a",
    "surface_hash": "6c5ab931721a455fab3b391c463b900385dce5a1027a80e30866a1fe590d0a1d",
    "labels": [
     "bwb",
@@ -2572,7 +2574,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "d689115275d35b5b7f70e94a1156dc3ace4eb589447dc53e0de86a5938ca6df2",
+   "input_hash": "9dd5c7cff14f388a6187c49cd7fded790ab17ab2594fc1b52e6883b578bf7796",
    "surface_hash": "ac370cef06e9f5f0e8eb6b6bc90b1d2e33864f79014c0b771c3ebf03c4e230f2",
    "labels": [
     "bwb",
@@ -2608,7 +2610,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "1055bb608b423ec31fbc5ce75eadaa4474106034c21f53847576fdcbaf8fa689",
+   "input_hash": "f2442c2799e194b81d8af768c61f67648fe27876bb1bd553fac94baae750e6b5",
    "surface_hash": "59b8b1ae9e303b2785197ecd5973254bee2e0a7c03c7caba632dcc39312c3375",
    "labels": [
     "bwb",
@@ -2645,7 +2647,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "8720c265841095c268e19d136f5e5c650be92bcbfea32de030d2556f034a4aa4",
+   "input_hash": "53014b332ec6bd62cf898a9e874030510b8078a3697fbfdb5698dc2e069a1812",
    "surface_hash": "3eef05513a56e16355646559445fb1bf6b02cc21a579d6e121315dd25af984c1",
    "labels": [
     "bwb",
@@ -2682,7 +2684,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "a7813d790c7cf3b4795ee86f7d47952f8d18eafd129c595fcb27545a03cb7520",
+   "input_hash": "2196f2f7b2019c6a5fe540f8ba7359538551c9ab7c1204840feb4d92e7a7c79e",
    "surface_hash": "9ea98c4f905e23f3e408c74e71c5235124293564ba30816d96f01f2719b4b7be",
    "labels": [
     "bwb",
@@ -2718,7 +2720,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "3f31e40ab2940fd41ffd79ed47700c4d2c6aba41e30d4d32919244f02130fdb3",
+   "input_hash": "d8a4f422a3490b09ab3f86d43bbbb0994fdf38f0c2834dcb9497a0d365d231eb",
    "surface_hash": "80c117284596de874ebe670cac0849e288d83a47ad0299b208b1cbc3d19d0f3c",
    "labels": [
     "bwb",
@@ -2754,7 +2756,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "45ba0f6f04a4ad17997ab04ffb5d2a598abca8116d820ffc54d8c0026f84cc5a",
+   "input_hash": "645c7990264b83bca6eabe57e6fcf1e349ed8748dbe08ee464fceeb0613923df",
    "surface_hash": "d254233b367b68c1c7c475702e7a0e1b4726a487e993a461baa3aff6d879557b",
    "labels": [
     "bwb",
@@ -2790,7 +2792,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "dedb42929e9ab718366f28566439ed9c840e71ae9bd2ee237019a78f49f6fbe3",
+   "input_hash": "2f9590b37be2ec1738ef40a2ac64c76b83d9e1eeedc8d691335185bb8042f29e",
    "surface_hash": "ac8d1b453cd1bf252b260126f996a04479b5922eb0caea98a03f68d51af85237",
    "labels": [
     "bwb",
@@ -2826,7 +2828,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "4159a36ee9d53bd7393100d5afca6808bede43cb0a90af1be1e5f57f23daa37e",
+   "input_hash": "62eaf48ad99e2f834be15c50f158acffc386b4325435570f0dbb46f5f72e4989",
    "surface_hash": "7924c5e00efdcc00982612674a58598ddf7d83116954602f439101de5075c623",
    "labels": [
     "bwb",
@@ -2862,7 +2864,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "0cecec243be3a91b7df000f60eabfcdc9123d85be5209688293670da7a1656e3",
+   "input_hash": "2bd7d4a3bf69746e90d79f36d56aa89ecb764a189969bbb5fee3b5f15d06e42f",
    "surface_hash": "174487bf48ab80936dc71d2095f8a18f40f57ed69fb866e2a433e1dc6e622039",
    "labels": [
     "bwb",
@@ -2897,7 +2899,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "04720236c1af49b11c0e4676670d632305bd26312cd54db939f67c422d0930eb",
+   "input_hash": "996c228205e0c95831422c954b61928262e5441e0725499316f1307827e5f6da",
    "surface_hash": "f91683d014c397f35b2d812e8ebf92e67b2f9bbffdbad15c4a8c85b7b4ecb98c",
    "labels": [
     "bwb",
@@ -2934,7 +2936,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "9e9b1ec462558e5d30cc655c38f874068290c3acbba3397bd23687d7bdb12575",
+   "input_hash": "e0a0027a8be58ee2b1791609c5b8ecc7ab90283f4343fd6d996a8d1f190cadfc",
    "surface_hash": "cb9daa006fbbc3bd401c58ebdde122c6589b53b122f62569dabf6d298e118e46",
    "labels": [
     "bwb",
@@ -2971,7 +2973,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "7420723e013a5f1fef79100a5fb63c703077973c7fe549ffc368d0c3e45630f8",
+   "input_hash": "23aee802d87bd47a364d261314df3367a89824f48e4822a448efdc9a6e371f4d",
    "surface_hash": "bc6a9d2fb2eea25d2967f71af30048afb4cb2d3173e170a3d1567a422655e9e4",
    "labels": [
     "bwb",
@@ -3006,7 +3008,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "94bffaae993ac1f21b6f42eb889e7363107864ff0a3473cdb5dacb79a6124b20",
+   "input_hash": "7dc0933804d16f397218682e209600c8c819dde2545b4a7227466cc9f16d179d",
    "surface_hash": "00860dc3835c9340bcff7c5f0026671066e97cfdb2a23cdd4debbbcfec369019",
    "labels": [
     "bwb",
@@ -3042,7 +3044,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "102e07975347d47b48f0f12d6b76488246ae36fdd301200a11b183789b47f2c6",
+   "input_hash": "c5a813e8579cb8d4a4302e214375e4c0bf127a4346d16cb1c8a6332e972b4ee6",
    "surface_hash": "0c7596d729895438dc24e010afe2dae7e8822c39c52002806eebb236bff0ba39",
    "labels": [
     "bwb",
@@ -3077,7 +3079,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "9aa2738e00041ee20dd4c9a66dd066718581af0c32b29f1c02d167428930aa2e",
+   "input_hash": "9a238c6c71aee995d4dff41c339a5b431005a995b4cdc7cac66ffb4941474f41",
    "surface_hash": "2bdc7a760ba2d8b654c337ed617f7f878320397a967351715a6dbb1acc8bac9d",
    "labels": [
     "bwb",
@@ -3112,7 +3114,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "d50a9163495f52392568e40d8156b4ec883a7d19b0762dd61c5dc1c6e1cec7e0",
+   "input_hash": "08b249703aae991746aaad275d97fd82551f2fedf4ee230c42c94d3f14373dd5",
    "surface_hash": "9df242c881155e5e4bb1127877ce58da36227708d891a0af6027c68b8df1bf4e",
    "labels": [
     "bwb",
@@ -3147,7 +3149,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "7dd061a1b9b71cb57d27082d7337ac37b44a588c7cda79abd44ad98b7beba36f",
+   "input_hash": "932746af5d3b3e4bf8999594664d21ce06e428e047c4d61d1786827e15dc7b20",
    "surface_hash": "54451c26f622677714e0e9c68c3976b327e7d020580a92250a0226b209b16eab",
    "labels": [
     "bwb",
@@ -3183,7 +3185,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "c077ee6f4055a4c084ef8bf27d879bd44f3da8822b98f487c2599257388584d0",
+   "input_hash": "6e3db278282f395909baec40e9758be015019b6a79c265057c2b482f03334d46",
    "surface_hash": "c6ca1546d9596b29b5495cf2a2d35710aaa67dfec82c4e0c1adbf95f07911206",
    "labels": [
     "bwb",
@@ -3219,7 +3221,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "4863523e7d1d496bf1a6cdd5277d633234a457ea0f4e3044620a70798c68d5a8",
+   "input_hash": "1345f425abc638206affd92e08498bc2fedfb4e439ba1505ac7286da30c1f6b3",
    "surface_hash": "0bf925931370755fcc284181e6ee48b5d362dea82da7a150c20faf36f9faaaab",
    "labels": [
     "bwb",
@@ -3255,7 +3257,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "2831a4605eaff17779cc129b2af8cace7245eae9066784455cb595a5db2cf421",
+   "input_hash": "319b7f4d99852c8d264e2789be9d8f7fadf3c614f45730f5f827919b2428ae1c",
    "surface_hash": "df4a3b3c245ff2d8fb7813e3f9036588f0e1dba4a9058f51f7aab91a996b9ecd",
    "labels": [
     "bwb",
@@ -3290,7 +3292,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "0e3f1aa628a411247bee6b52b569e4119a54fe3e28adcf7cfb0d0e180a8a8dca",
+   "input_hash": "e287781e26bd2e89f52788af557d096853f62a3258cf91070c7e60afeec30cff",
    "surface_hash": "c75eb8b1a31bffa422d288648a643a8e1ce2965e9d6dcd2e8755e3ae68096947",
    "labels": [
     "bwb",
@@ -3326,10 +3328,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "9c921b3c0f5cb7df98a650e96333a65cc3a7df530f95e50da6ca77143655eb5b",
+   "input_hash": "1349ca8fc5cb588e48a03e610e2dcb39af46735a036dcad0cd0d25a94ed2094b",
    "surface_hash": "f7e6b3ba02fd1fde8723a4d5cf2ffefab33a0c9b2210578e579478cb01f20e27",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "cranked",
     "washout",
@@ -3363,7 +3365,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "f4e2b7e4ddf1546a35dd05a1d9e21831c79b30ea67b5f7dce4523de82392a87a",
+   "input_hash": "7c3dd00dc74658e7bfb14c892197462013a164eb632b1c89d65f4aec67992b17",
    "surface_hash": "4be23358672a8010019de813ee2f1441a43344036e3e038b65a9783dbde03011",
    "labels": [
     "bwb",
@@ -3399,7 +3401,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "d23c8ba74c4d467310fe4e002d274166e8b89d3287ddc1bd46a38fe3d964e1b7",
+   "input_hash": "9718aa03b701407ec436eb52ad5f36352aee1bcd4c3f00cf7f1595850e2dbeb4",
    "surface_hash": "cdd2e035e21f280f04f79356fd74b1c9ffff02a4600c65805b0dc6584723946f",
    "labels": [
     "bwb",
@@ -3435,7 +3437,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "a74829b8fe48667d87fd8b7bcefb363cfed428359336c147668799c51fa81efc",
+   "input_hash": "a598c41428040bd21f2ed579a010827ecc3eb6256948d53ff8263681060eb9e0",
    "surface_hash": "006c363caee92fbce19caa15030e2efb3d4fcf34057eb474588e9a839a92a6af",
    "labels": [
     "bwb",
@@ -3471,7 +3473,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "beaf413d9eaf212c462323f30cd915c57cc52a061a6932c7a24d1eba9864dc3b",
+   "input_hash": "182e90b9efd2ebc9b583b72613f181551e1e7a415e808ed0666b86bd040d30fc",
    "surface_hash": "a0ce7c0374fd4f8093d21c89b67c247bf8d9dde7cbcd9a5314fcb41c2c077d3d",
    "labels": [
     "bwb",
@@ -3507,7 +3509,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "6a135961b753062540f7e45daea64a5b3014b6a3178730aa9eea00f2b5072476",
+   "input_hash": "4b14300926f28fcdf5a485f6b196bd40db94ccd1417fc7ae7d8c34c39ae2d497",
    "surface_hash": "89e92223621b44683c93597dfe722e228ce9efa72c3d68e9d34f3380d9397a1a",
    "labels": [
     "bwb",
@@ -3543,7 +3545,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "d82bf1763c3c6df7c245d1d3b478e571a38c4011e891af8bcca0b49eca107196",
+   "input_hash": "96c5ae74232324654decabc7d71b1534e73b160f43bdff182daf00bc5199388e",
    "surface_hash": "a1b3fe4a22fc58f9963c54d522987bd222ee67edcba7753a93c96da8a2b6b10a",
    "labels": [
     "bwb",
@@ -3579,7 +3581,7 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "3f8ad188d50456e0a12ec5499c3051cf39249c95939a9a0c30d955a7c201351a",
+   "input_hash": "fa01391d234f6522293bb97bd5b00497a08e51eae540d6c4e658cc34d534cc19",
    "surface_hash": "4177223afbaa03c9892b875e306e4b13bed6bb62b7f49ede89d1e6da6aa14c7a",
    "labels": [
     "bwb",

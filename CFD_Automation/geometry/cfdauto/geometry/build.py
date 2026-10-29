@@ -21,7 +21,7 @@ from .labels import label
 from .loft import pygeo_available
 from .measure import measure, table_from_loft
 from . import airfoils as _airfoils
-from .params import GEOMETRY_ROOT, WING_TYPES, Config, TERule, TypeSpec, canonical, load_config, resolve, station_airfoils
+from .params import GEOMETRY_ROOT, TAILLESS_TYPES, WING_TYPES, Config, TERule, TypeSpec, canonical, load_config, resolve, station_airfoils
 from .sections import build_wing_sections
 
 SETS_DIR = GEOMETRY_ROOT / "data" / "sets"
@@ -78,7 +78,8 @@ def build(vec: dict[str, float], wing_type: str, cfg: Config | None = None,
 
 
 def build_spec(spec: TypeSpec, vec: dict[str, float], te: TERule, type_name: str,
-               out_dir: str | Path | None = None, iges: bool = True, extra: dict | None = None) -> dict:
+               out_dir: str | Path | None = None, iges: bool = True, extra: dict | None = None,
+               tailless: bool | None = None) -> dict:
     """The same build for any type block (configured types and published wings)."""
     vec = resolve(spec, vec)
     h = spec_hash(spec, vec, te, type_name)
@@ -100,7 +101,9 @@ def build_spec(spec: TypeSpec, vec: dict[str, float], te: TERule, type_name: str
         if not g.passed:
             return _refuse(summary, g, out_dir)
 
-    labels, label_values = label(measured)
+    if tailless is None:
+        tailless = type_name in TAILLESS_TYPES
+    labels, label_values = label(measured, tailless)
     summary |= {
         "passed": True, "gate": None, "reason": "", "loft_backend": loft.backend,
         "surface_hash": loft.surface_hash(), "labels": labels,

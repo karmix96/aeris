@@ -28,6 +28,9 @@ VARIABLES = (
     "dihedral_p1_deg", "dihedral_p2_deg", "dihedral_p3_deg",   # one dihedral per straight panel
 )
 WING_TYPES = ("bwb", "conventional", "tapered", "flying_wing")
+# Types designed without a horizontal tail. A tail is not part of the wing surface, so the
+# labeller cannot measure it; it takes the family from the type.
+TAILLESS_TYPES = ("bwb", "flying_wing")
 # stations:     c2, c3, c4 are chords as fractions of the root chord.
 # per_panel:    c2 = c(b1)/c(b0), c3 = c(b2)/c(b1), c4 = c(b3)/c(b2): each panel's own taper,
 #               so with ratios <= 1 no chord is wider than the one inboard of it.

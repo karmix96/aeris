@@ -2,7 +2,7 @@
  "wing_type": "flying_wing",
  "set": "corner1",
  "code_version": "0.6.0",
- "code_hash": "fd3f49dbd416b5115dc03876db4acdb24f23ec558b96796bacfa6d476c4b44b2",
+ "code_hash": "9fa3bb9e552b9ac4738bdae35c2917a13a6904fab8f04ae358c0ba3dd1ac4252",
  "loft_backend": "numpy",
  "wings": [
   {
@@ -10,10 +10,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "0f9f24a1c36839ad3d79eb33186cdb5d5eeaa15ee29a7270db2c99a6ed929d63",
+   "input_hash": "d1e7e80b5ed60a9e3528b788d771c5e6e374460d62a7f6c17ca959ddfd95dde4",
    "surface_hash": "354db00d1fba6a54b6edc1e5f0dfdefd93970a1d9e4a173202c39a70cae83c61",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral"
@@ -44,10 +44,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "537ed5337ca3660b800eaaa8b0b6bb658b652570a5b041f3c57adc1b8a121f36",
+   "input_hash": "c87c1a8d2d50a27ebf26588455dc9961f108870f5e2300c3b329c177a5c767ef",
    "surface_hash": "24dad9269ac768db53fd3816dfacc2fcda78bd8a246f7d98ab7092b5ca64366e",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral"
@@ -78,10 +78,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "4366bca537f0b01415a54ab6183af8dffee794a94a406f00ca31caf1780c5fb8",
+   "input_hash": "67cc3beea4a65616d9b78149762969257b8600cf332557d1e3b6909d0737ae39",
    "surface_hash": "f4f577278475f2383b9d449e21f61474552c889c934e7eea6b56114dca3c7bb9",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral"
@@ -112,10 +112,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "07885bf026ff4a1587f783017cc0fc20df0acd237ba9b2afadc1e0e563a6dd0a",
+   "input_hash": "729ae4432e13ee806b67e3aa21c73fc4890660a9a3163b5d86d8cdeb6e769606",
    "surface_hash": "3b3e11569ff3ffef1ae8d06d12d2c4b18602ca89fad958e7157106883996b04a",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral"
@@ -146,10 +146,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "c9619e3b31f049ac015dc7e912328c96f58156462d4a4e803c8213e29b6928bd",
+   "input_hash": "3582fbf37ffd87f5b4fdbea33682778e3ff3c26d205e88abe49472ddbc91f4ac",
    "surface_hash": "b825d6d66e858d8916e33ee83758af2210f755df6ff77a6cd03987435593c02b",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral",
@@ -181,10 +181,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "f70931c9412070c9e5c8eefcf58c288c15c4a82905955e604f5b60eee11843fd",
+   "input_hash": "fa3791cd53cb59c2cd48e908dda36a396230e3b776b998325df7817ca576101f",
    "surface_hash": "6be1cfc91b06f4fc341b02556ce01024103d9afd1f20eb7557fa01688635e00d",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral",
@@ -216,10 +216,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "ed10ce0de639804b50b6c1a50daef4dc7efab386f46f70bd2163eb9b162c3d19",
+   "input_hash": "3a6e00f57de6493e6bdecb967a4b64dbfd689e6ad47c7e051133cd5a342230a3",
    "surface_hash": "99f455fab6b756208697a63ed7413f3bfeedcdde09328bf67c3c53f53d19ce40",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral"
@@ -250,10 +250,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "7e4e2c95d9cdf7665729469cd4b0a0a9346e9e3aff2150b227fb3eb2fc09f443",
+   "input_hash": "9cc8fdff2d3ff432fd53de4520f8a08477bc2490733394431b6e92b17f75138b",
    "surface_hash": "78a8e354fa45fa7ba8d43050c59e207b924420958c5877eac6782a65e9c009d4",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral"
@@ -284,10 +284,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "343f162cc6696e48995fd1ad5585555d413af53ce1f140f90c7013c1d22b0cca",
+   "input_hash": "7361465d3ac62ff3590c11eaee81fdf9ee8d0afdb61ef3df1c4cb10c94f1021f",
    "surface_hash": "da4db7968d917146f23c98edeeca0026a6ae2ede0542397e766db94b8bdb40ad",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral"
@@ -318,10 +318,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "fc05d823aa7062a4d57d41b73c4af2860f6b109d66c67704061866c027d29390",
+   "input_hash": "789b1de1b216f462cf708549f89e74c33ef00231086eb73e1e5689905a8c5be1",
    "surface_hash": "b082a01f6c340916734d4411cff07382761cbb1fb5e6e62a66725df9ee8c8e8c",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral"
@@ -352,10 +352,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "69e12d173d56890f07f580dc84406665d364a016dcbcb00405bfa04ae1ed24ce",
+   "input_hash": "4e6f20ce61528ce9071e96a213399727b294a79fa192d5e2ee43b0840f7d82f7",
    "surface_hash": "d725b2e3a083b2820a03a91ce1daaf566c16e3f3bd17473df11ae0e12395a17e",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral"
@@ -386,10 +386,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "5f4544548557514b08da67099daa66796bf0870cf21cb4f147f45c53c0ca747c",
+   "input_hash": "932b0c6f4472cdacd4e427edc2df007f232100cb02999f984d8debbb09d4abe5",
    "surface_hash": "3f3175ae12dba5f07ac1479429c441257e819c579a64a492aa191d10ebefd181",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral"
@@ -420,10 +420,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "50a076b7f6667c57a907e77282a2e8a7313d3c8d6501656ce9397c71af7a095f",
+   "input_hash": "a7948f82ec296bb8e6c71d1f31f1d37a9a0e9b793770e0a0d1323de7502b25bd",
    "surface_hash": "d2cd143585a5ee99d4637e1ff39a9a23107bdc0156a0e28877102daea5534e78",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral"
@@ -454,10 +454,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "13a83ee26ad66c2631797048056095857e1f8b5d20eedf4dc55feb3fbdb11da1",
+   "input_hash": "534af34c653d45a276a629fe9c11aa840e7a7e3c65a003d30722d551c94ac290",
    "surface_hash": "5b9882a7ad0a3498deac9dfb380bab2ffc2f5e78204aa3c0e9d343aced784eb1",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral"
@@ -488,10 +488,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "45229fd74d943bf2136a27c904e7a922202b4cc46583b7bdc91197f088efa30f",
+   "input_hash": "2555f74bc87ac620afd8d16d30e1a442f7aa91e02e80f51fb45fb8811061a078",
    "surface_hash": "7129a1752e83531d21272d1214d9d90306deebd6191bfd815d29322b24c3bef1",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral"
@@ -522,10 +522,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "13838c053fff5a6583559ad069d1209d7ad4798dded3cf04b41f75b375ad8256",
+   "input_hash": "4a5337d630ab58a4c1f24afd34a7262a17dc1472c269eb13134890f6e089a522",
    "surface_hash": "3a87a2be9bf25c3c11eac4f0f0df0035450b92d00f8c5d9442097dabdd1f851f",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral"
@@ -556,10 +556,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "719e5d6c71cc8154cb3471e3c1e1ca587f59969b7e8b3df6c5b927f8b80ade94",
+   "input_hash": "01e0f2f92295e03c9da3be71d14d79927ba972db82f90d617d9c2d18d2b821fd",
    "surface_hash": "3030e4a4522a407762ca872365d65164ae7928f13d9e9552d6b68b5b204afcee",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral"
@@ -590,10 +590,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "b597d30a518d0de3efa4ffd919555c61a5416338facd0435715237fc2b6eaf31",
+   "input_hash": "a9d5a7cae7a26f572acb121672e293f9c9faf8d5e2e953f39857487ce59a3310",
    "surface_hash": "8b7d2ff142a9f42810f0139f97db09f55c713db01833c1bb19269e62a1e81bfd",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral"
@@ -624,10 +624,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "e92ae9bdca755f4ea9b51dbef73b3df22f25ee97f9d88f33b576dc4e5b7739c7",
+   "input_hash": "89d5b8657d29c22c243a1efbd0a737cfc1eb79cd70a4d7e2de9d9ff5172e3cbe",
    "surface_hash": "c18b69c13cd83e14a36a8882d55dceee726464a433d8dfa9f45ae47a0dd734b5",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral"
@@ -658,10 +658,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "e2b5e8a20a9c649fa51776ec9038552e44ba9ae005c782d85ee0bde27b952327",
+   "input_hash": "0f2b15fe4515e72eb6ee4144f9f0567f16120e0b7d557ddd14330a44c50c02a0",
    "surface_hash": "9730a1a469fd3fdc7e1c4d00a83a948f3a6d96d202f30cc45cc7e0da89be3977",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral"
@@ -692,10 +692,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "07a70ad0d90d2f4ea0219f3396aa8d0654284e802537cab10d2326ca15c07897",
+   "input_hash": "389cda32478c3241cbbd2bc51bb7d009c7839c10a03410ae93d32f596f271889",
    "surface_hash": "8ae0b1c6aee098e567587b8bbf32dd01ec81dc1a58824341a7f611b5f0081c1b",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral",
@@ -727,10 +727,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "d0c6702bbb6d577db19922843478b6870a1982c078c7c73053bc1503fda7c128",
+   "input_hash": "c3a6fdde96f2d3bc4bd4b4f9a8a5eb637400ef60df45e11b07f453ce71718651",
    "surface_hash": "180b5ad8e97cdeb62efc14ca97f80fc4f91f7938da643ce6b00efd31c3eef5f5",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral",
@@ -762,10 +762,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "29306e0529df8dfbaa83d49b9d73a034cb3cbfe7989f3f090d16c7aea8812817",
+   "input_hash": "a8035c6604a0f02bac8d63457329521dbce5574cbc45fdf14d28ab11ff9f4590",
    "surface_hash": "35fc84a9abe6f2e7dfadbc2f9df69f706750ad2aa633853f88ab473aa7a15122",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral",
@@ -797,10 +797,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "898e1631df53936731a14805be551f1aada8599726ed122a3de061bba9714e8f",
+   "input_hash": "35aeaca7b3e3e9e31ab449e942fba1dfb8a6d0a33a5a74c362f0de6cd7391a45",
    "surface_hash": "0929abc6f91e327ba7d1a9b6b59a581ea368a7663629c16ae49c5a12caf56744",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral",
@@ -832,10 +832,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "fcaa0a5fd228d1df0a4c56d42d9196af9872e8935ac8ee753d56a03ad7e4cae8",
+   "input_hash": "c0b8b05005e6d844a2dde9c88f37596a2d275f0db27285bde3a24cef2812ffde",
    "surface_hash": "7b36e64f3b93af6c625478ede6f4f8b4cfc65820ebbd65d1ebe6721399755d81",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral",
@@ -867,10 +867,10 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "c748d663357cbca0540b1c1d42dcfb12066c8e8e4fd3838bce80037196a49fd7",
+   "input_hash": "f1449f563a8868f3fac8419c5a46f8178cd1824da485be52b4156841da705bf9",
    "surface_hash": "7e2aa89343330195566803316be7635f426743cf91b8845a3b8f662c55b3131a",
    "labels": [
-    "conventional",
+    "flying_wing",
     "aft_swept",
     "washout",
     "dihedral",

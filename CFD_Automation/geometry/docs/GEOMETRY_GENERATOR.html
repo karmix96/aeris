@@ -112,7 +112,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <div class="eyebrow">CFD_Automation · Stage 1 · geometry · code 0.6.0</div>
   <h1>Wing Generator</h1>
   <p class="lede">Eighteen numbers go in; one exact wing surface comes out, measured, labelled and checked. One generator and one YAML file make BWB, cranked, tapered and flying wings, sized like real Class I and II UAVs. Every later stage (mesh, solver, data) reads only this surface.</p>
-  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#inputs">Inputs and derived</a><a href="#ranges">Final ranges</a><a href="#reynolds">Reynolds range</a><a href="#phenomena">Flow phenomena</a><a href="#refine">Where to refine</a><a href="#fix">Fix before Stage 2</a><a href="#decisions">Design decisions</a><a href="#real">Real wings and Re</a><a href="#variables">The 18 numbers</a><a href="#checks">Checks and results</a><a href="#open">Open decisions</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
+  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#inputs">Parameters</a><a href="#ranges">Final ranges</a><a href="#reynolds">Reynolds range</a><a href="#phenomena">Flow phenomena</a><a href="#refine">Where to refine</a><a href="#fix">Fix before Stage 2</a><a href="#decisions">Design decisions</a><a href="#real">Real wings and Re</a><a href="#checks">Checks and results</a><a href="#open">Open decisions</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
 </header>
 
 <section id="glance">
@@ -126,36 +126,54 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
 </section>
 
 <section id="inputs">
-  <h2>Inputs and derived quantities</h2>
-  <p>What you set, and how everything else follows. Same 18 variable names for every type; each type samples some of them and derives the rest.</p>
+  <h2>Parameters: inputs and derived</h2>
+  <p>The generator samples only the <strong>inputs</strong> below. Everything else is <strong>derived</strong> from them by fixed formulas. Four stations: root b0, breaks b1 and b2, tip b3; three straight panels between them.</p>
+  <h2 style="font-size:22px">Inputs (sampled), by wing type</h2>
   <div class="tbl"><table class="wide">
-    <thead><tr><th>Group</th><th>Sampled (the parameters that matter)</th><th>Derived from them</th></tr></thead>
+    <thead><tr><th>Input</th><th>Symbol</th><th>BWB</th><th>Cranked</th><th>Tapered</th><th>Flying wing</th><th>Why this range</th></tr></thead>
     <tbody>
-      <tr><td class='what'>Size</td><td><code>root_chord_m</code>, <code>aspect_ratio</code></td><td>semi-span S = AR · c<sub>root</sub> · K / 2, with K = mean chord / root chord = Σ f<sub>i</sub> (r<sub>i</sub> + r<sub>i+1</sub>) / 2 over the three panels (f = panel span fractions, r = chord ratios); area = 2 · S · c<sub>root</sub> · K; span = 2 S</td></tr>
-      <tr><td class='what'>Layout</td><td><code>b3_ratio</code>, <code>split_ratio</code></td><td>panel spans: outer f<sub>3</sub> = b3_ratio; inner f<sub>1</sub> = (1 − f<sub>3</sub>) · split_ratio; middle f<sub>2</sub> = 1 − f<sub>1</sub> − f<sub>3</sub> (times S)</td></tr>
-      <tr><td class='what'>Chords</td><td>BWB: c2, c3, c4 (of the root). Cranked: c2, c3, c4 (each of the chord inboard). Tapered and flying wing: c4 (the taper)</td><td>station chords; for straight-edged wings c2 = 1 + (c4 − 1)·y<sub>1</sub>/S and c3 = 1 + (c4 − 1)·y<sub>2</sub>/S; mean aerodynamic chord</td></tr>
-      <tr><td class='what'>Sweep</td><td>BWB and cranked: sweep1, sweep2, sweep3. Tapered and flying wing: sweep1</td><td>sweep2 = sweep3 = sweep1 for straight-edged wings; leading-edge positions x<sub>i</sub> = Σ tan(sweep) · panel span</td></tr>
-      <tr><td class='what'>Twist</td><td>twist0–twist3 (at the stations)</td><td>between stations: follows the straight panel</td></tr>
-      <tr><td class='what'>Dihedral</td><td><code>dihedral_p1</code>, <code>p2</code>, <code>p3</code> (one per panel)</td><td>station heights z<sub>i</sub> = Σ tan(Γ<sub>panel</sub>) · panel span; sections stay vertical, root section in y = 0</td></tr>
-      <tr><td class='what'>Not varied by the sampler</td><td colspan='2'>airfoil names per station (per type), trailing-edge rule (by wing class), tip (flat, open)</td></tr>
+<tr class='grp'><td colspan='7'>Size</td></tr>
+<tr><td class='what'>Root chord<span class='id'>root_chord_m</span></td><td>c<sub>r</sub></td><td class='num'>0.4–0.8 m</td><td class='num'>0.13–0.75 m</td><td class='num'>0.13–0.75 m</td><td class='num'>0.25–1.05 m</td><td class='src'><span class='flag open'>no source yet</span></td></tr>
+<tr><td class='what'>Aspect ratio<span class='id'>aspect_ratio</span></td><td>AR</td><td class='num'>3–9</td><td class='num'>4.5–16.5</td><td class='num'>4.5–16.5</td><td class='num'>3–9</td><td class='src'><span class='flag open'>no source yet</span></td></tr>
+<tr class='grp'><td colspan='7'>Layout</td></tr>
+<tr><td class='what'>Outer panel, share of the semi-span<span class='id'>b3_ratio</span></td><td>f<sub>3</sub></td><td class='num'>0.4–0.55</td><td class='num'>0.2–0.5</td><td class='num'>0.2–0.5</td><td class='num'>0.2–0.5</td><td class='src'><span class='flag open'>no source yet</span></td></tr>
+<tr><td class='what'>Inner panel, share of the rest<span class='id'>split_ratio</span></td><td>s</td><td class='num'>0.4–0.6</td><td class='num'>0.3–0.7</td><td class='num'>0.3–0.7</td><td class='num'>0.3–0.7</td><td class='src'><span class='flag open'>no source yet</span></td></tr>
+<tr class='grp'><td colspan='7'>Chords</td></tr>
+<tr><td class='what'>Chord at b1<span class='id'>c2_ratio</span></td><td>r<sub>1</sub></td><td class='num'>0.55–0.8 <span class='muted'>× root</span></td><td class='num'>0.8–1 <span class='muted'>× chord inboard</span></td><td class='num'><span class='muted'>derived</span></td><td class='num'><span class='muted'>derived</span></td><td class='src'><span class='flag open'>no source yet</span></td></tr>
+<tr><td class='what'>Chord at b2<span class='id'>c3_ratio</span></td><td>r<sub>2</sub></td><td class='num'>0.3–0.55 <span class='muted'>× root</span></td><td class='num'>0.7–1 <span class='muted'>× chord inboard</span></td><td class='num'><span class='muted'>derived</span></td><td class='num'><span class='muted'>derived</span></td><td class='src'><span class='flag open'>no source yet</span></td></tr>
+<tr><td class='what'>Tip chord / taper<span class='id'>c4_ratio</span></td><td>r<sub>3</sub>, λ</td><td class='num'>0.08–0.2 <span class='muted'>× root</span></td><td class='num'>0.5–1 <span class='muted'>× chord inboard</span></td><td class='num'>0.4–1 <span class='muted'>tip / root (taper λ)</span></td><td class='num'>0.3–0.8 <span class='muted'>tip / root (taper λ)</span></td><td class='src'><span class='flag open'>no source yet</span></td></tr>
+<tr class='grp'><td colspan='7'>Sweep</td></tr>
+<tr><td class='what'>Leading-edge sweep, panel 1<span class='id'>sweep1_deg</span></td><td>Λ<sub>1</sub></td><td class='num'>20–40°</td><td class='num'>−10 to 20°</td><td class='num'>−10 to 20°</td><td class='num'>10–35°</td><td class='src'><span class='flag open'>no source yet</span></td></tr>
+<tr><td class='what'>Leading-edge sweep, panel 2<span class='id'>sweep2_deg</span></td><td>Λ<sub>2</sub></td><td class='num'>15–35°</td><td class='num'>−10 to 20°</td><td class='num'><span class='muted'>derived</span></td><td class='num'><span class='muted'>derived</span></td><td class='src'><span class='flag open'>no source yet</span></td></tr>
+<tr><td class='what'>Leading-edge sweep, panel 3<span class='id'>sweep3_deg</span></td><td>Λ<sub>3</sub></td><td class='num'>5–25°</td><td class='num'>−10 to 20°</td><td class='num'><span class='muted'>derived</span></td><td class='num'><span class='muted'>derived</span></td><td class='src'><span class='flag open'>no source yet</span></td></tr>
+<tr class='grp'><td colspan='7'>Twist</td></tr>
+<tr><td class='what'>Twist at the root b0<span class='id'>twist0_deg</span></td><td>θ<sub>0</sub></td><td class='num'>−1 to 1°</td><td class='num'>0–3°</td><td class='num'>0–3°</td><td class='num'>−1 to 2°</td><td class='src'><span class='flag open'>no source yet</span></td></tr>
+<tr><td class='what'>Twist at b1<span class='id'>twist1_deg</span></td><td>θ<sub>1</sub></td><td class='num'>−3 to 0°</td><td class='num'>−1 to 2°</td><td class='num'>−1 to 2°</td><td class='num'>−2 to 1°</td><td class='src'><span class='flag open'>no source yet</span></td></tr>
+<tr><td class='what'>Twist at b2<span class='id'>twist2_deg</span></td><td>θ<sub>2</sub></td><td class='num'>−5 to −1°</td><td class='num'>−2 to 1°</td><td class='num'>−2 to 1°</td><td class='num'>−4 to 0°</td><td class='src'><span class='flag open'>no source yet</span></td></tr>
+<tr><td class='what'>Twist at the tip b3<span class='id'>twist3_deg</span></td><td>θ<sub>3</sub></td><td class='num'>−8 to −2°</td><td class='num'>−4 to 0°</td><td class='num'>−4 to 0°</td><td class='num'>−6 to −1°</td><td class='src'><span class='flag open'>no source yet</span></td></tr>
+<tr class='grp'><td colspan='7'>Dihedral</td></tr>
+<tr><td class='what'>Dihedral, panel 1 (b0–b1)<span class='id'>dihedral_p1_deg</span></td><td>Γ<sub>1</sub></td><td class='num'>0–3°</td><td class='num'>−3 to 6°</td><td class='num'>−3 to 6°</td><td class='num'>0–5°</td><td class='src'><span class='flag open'>no source yet</span></td></tr>
+<tr><td class='what'>Dihedral, panel 2 (b1–b2)<span class='id'>dihedral_p2_deg</span></td><td>Γ<sub>2</sub></td><td class='num'>0–5°</td><td class='num'>−3 to 6°</td><td class='num'>−3 to 6°</td><td class='num'>0–5°</td><td class='src'><span class='flag open'>no source yet</span></td></tr>
+<tr><td class='what'>Dihedral, panel 3 (b2–b3)<span class='id'>dihedral_p3_deg</span></td><td>Γ<sub>3</sub></td><td class='num'>0–8°</td><td class='num'>−3 to 6°</td><td class='num'>−3 to 6°</td><td class='num'>0–5°</td><td class='src'><span class='flag open'>no source yet</span></td></tr>
+<tr class='grp'><td colspan='7'>Fixed per type (not sampled)</td></tr>
+<tr><td class='what'>Airfoils b0, b1, b2, b3</td><td></td><td>mh91, mh91, e374, nlf1015</td><td>naca4415, naca4415, naca4412, naca4412</td><td>naca4415, naca4415, naca4412, naca4412</td><td>mh45, mh45, mh60, mh60</td><td class='src'></td></tr>
+<tr><td class='what'>Sampled variables</td><td></td><td class='num'>17</td><td class='num'>17</td><td class='num'>13</td><td class='num'>13</td><td></td></tr>
     </tbody>
   </table></div>
-  <p class="muted">Free variables per type: BWB 17, cranked 17, tapered 13, flying wing 13. Checked on every built wing: chords (0.1 %), sweeps (0.1°), twists and panel dihedrals (0.2°) and the aspect ratio (0.1 %) measured on the loft against the vector.</p>
+  <p class="muted">"derived": that type computes the value (see below). Sweep positive aft; twist positive nose up; dihedral positive tip up.</p>
+  <h2 style="font-size:22px">Derived (computed, never sampled)</h2>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>Quantity</th><th>Formula</th><th>Types</th></tr></thead>
+    <tbody>
+<tr><td class='what'>Panel span shares</td><td>f<sub>1</sub> = (1 − f<sub>3</sub>) · s,  f<sub>2</sub> = 1 − f<sub>1</sub> − f<sub>3</sub></td><td>all</td></tr><tr><td class='what'>Chord ratios r<sub>i</sub> = c<sub>i</sub> / c<sub>r</sub></td><td>BWB: (1, r<sub>1</sub>, r<sub>2</sub>, r<sub>3</sub>). Cranked: (1, r<sub>1</sub>, r<sub>1</sub>r<sub>2</sub>, r<sub>1</sub>r<sub>2</sub>r<sub>3</sub>). Tapered, flying wing: r(y) = 1 + (λ − 1) · y / S, so r<sub>1</sub>, r<sub>2</sub> follow</td><td>all</td></tr><tr><td class='what'>Mean chord ratio</td><td>K = Σ f<sub>i</sub> (r<sub>i−1</sub> + r<sub>i</sub>) / 2  (straight panels)</td><td>all</td></tr><tr><td class='what'>Semi-span</td><td>S = AR · c<sub>r</sub> · K / 2</td><td>all</td></tr><tr><td class='what'>Span, area, mean chord</td><td>b = 2S,  A = 2 S c<sub>r</sub> K = b² / AR,  c̄ = A / b = c<sub>r</sub> K</td><td>all</td></tr><tr><td class='what'>Mean aerodynamic chord</td><td>MAC = ∫c² dy / ∫c dy (exact for straight panels)</td><td>all</td></tr><tr><td class='what'>Station span positions</td><td>y<sub>0</sub> = 0,  y<sub>i</sub> = y<sub>i−1</sub> + f<sub>i</sub> S</td><td>all</td></tr><tr><td class='what'>Sweeps 2 and 3</td><td>Λ<sub>2</sub> = Λ<sub>3</sub> = Λ<sub>1</sub> (one straight leading edge)</td><td>tapered, flying wing</td></tr><tr><td class='what'>Leading-edge positions</td><td>x<sub>i</sub> = x<sub>i−1</sub> + tan Λ<sub>i</sub> · f<sub>i</sub> S</td><td>all</td></tr><tr><td class='what'>Station heights</td><td>z<sub>i</sub> = z<sub>i−1</sub> + tan Γ<sub>i</sub> · f<sub>i</sub> S  (sections vertical, root in y = 0)</td><td>all</td></tr><tr><td class='what'>Overall taper</td><td>λ = c<sub>tip</sub> / c<sub>r</sub></td><td>all</td></tr><tr><td class='what'>Trailing-edge thickness</td><td>t = max(floor, 0.2 % · c), floor 0.5 mm (Class I) or 1.0 mm (Class II); opened over the last 10 % of chord</td><td>all</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Checked on every built wing: chords (0.1 %), sweeps (0.1°), twists and panel dihedrals (0.2°) and the aspect ratio (0.1 %), measured on the loft against the inputs.</p>
 </section>
 
 <section id="ranges">
   <h2>Final ranges</h2>
-  <p>Size from real Class I–II UAVs (see <a href="#real">Real wings</a>); shape from AERIS or our own choice (no source yet). Every variable per type: <a href="#variables">The 18 numbers</a>.</p>
-  <div class="three">
-    <div class="tbl"><table>
-      <thead><tr><th>Size (sampled)</th><th>Root chord</th><th>Aspect ratio</th><th>Span (derived)</th></tr></thead>
-      <tbody><tr><td class='what'>BWB</td><td class='num'>0.4–0.8 m</td><td class='num'>3–9</td><td class='num'>0.6–3.8 m</td></tr><tr><td class='what'>Cranked</td><td class='num'>0.13–0.75 m</td><td class='num'>4.5–16.5</td><td class='num'>0.5–10.2 m</td></tr><tr><td class='what'>Tapered</td><td class='num'>0.13–0.75 m</td><td class='num'>4.5–16.5</td><td class='num'>0.4–11.0 m</td></tr><tr><td class='what'>Flying wing</td><td class='num'>0.25–1.05 m</td><td class='num'>3–9</td><td class='num'>0.5–7.6 m</td></tr></tbody>
-    </table></div>
-  </div>
-  <div class="tbl"><table class="wide">
-    <thead><tr><th>Shape</th><th>BWB</th><th>Cranked</th><th>Tapered</th><th>Flying wing</th></tr></thead>
-    <tbody><tr><td class='what'>Chords</td><td>b1 0.55–0.8, b2 0.3–0.55, tip 0.08–0.2 of the root</td><td>per panel 0.8–1, 0.7–1, 0.5–1 of the chord inboard</td><td>one taper 0.4–1</td><td>one taper 0.3–0.8</td></tr><tr><td class='what'>Panel spans</td><td>outer 0.4–0.55, split 0.4–0.6</td><td>outer 0.2–0.5, split 0.3–0.7</td><td>outer 0.2–0.5, split 0.3–0.7</td><td>outer 0.2–0.5, split 0.3–0.7</td></tr><tr><td class='what'>LE sweep</td><td>20–40 / 15–35 / 5–25°</td><td>−10 to 20 / −10 to 20 / −10 to 20°</td><td>one sweep −10 to 20°</td><td>one sweep 10–35°</td></tr><tr><td class='what'>Twist b0 / b1 / b2 / b3</td><td>−1 to 1 / −3 to 0 / −5 to −1 / −8 to −2°</td><td>0–3 / −1 to 2 / −2 to 1 / −4 to 0°</td><td>0–3 / −1 to 2 / −2 to 1 / −4 to 0°</td><td>−1 to 2 / −2 to 1 / −4 to 0 / −6 to −1°</td></tr><tr><td class='what'>Dihedral panel 1 / 2 / 3</td><td>0–3 / 0–5 / 0–8°</td><td>−3 to 6 / −3 to 6 / −3 to 6°</td><td>−3 to 6 / −3 to 6 / −3 to 6°</td><td>0–5 / 0–5 / 0–5°</td></tr><tr><td class='what'>Airfoils b0–b3</td><td>mh91, mh91, e374, nlf1015</td><td>naca4415, naca4415, naca4412, naca4412</td><td>naca4415, naca4415, naca4412, naca4412</td><td>mh45, mh45, mh60, mh60</td></tr></tbody>
-  </table></div>
+  <p>The input ranges are in <a href="#inputs">Parameters</a>. This is what they produce.</p>
   <h2 style="font-size:22px">What the generator makes</h2>
   <p class="muted">2,000 Latin-hypercube wings per type.</p>
   <div class="tbl"><table class="mid">
@@ -408,7 +426,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
 <section id="decisions">
   <h2>Design decisions</h2>
   <p>Every choice behind the generator, with its reason and what it rests on. Details: <code>geometry/decisions/</code> and <code>Stage 0_Decisions/OPEN_DECISIONS.md</code>.</p>
-  <div class="legend">Basis: <span class='basis req'>Your rule</span> 16 · <span class='basis src'>Source</span> 1 · <span class='basis meas'>Measured</span> 10 · <span class='basis own'>Our choice</span> 10 · <span class="flag fix">Fix</span> needs a change · <span class="flag open">Open</span> needs your call</div>
+  <div class="legend">Basis: <span class='basis req'>Your rule</span> 17 · <span class='basis src'>Source</span> 1 · <span class='basis meas'>Measured</span> 9 · <span class='basis own'>Our choice</span> 10 · <span class="flag fix">Fix</span> needs a change · <span class="flag open">Open</span> needs your call</div>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Decision</th><th>What we do</th><th>Why</th><th>Basis</th></tr></thead>
     <tbody>
@@ -450,7 +468,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
 <tr><td class='what'><span class='id'>D30</span>Two backends, one export</td><td>pyGeo (production, IGES) and numpy (same surface, no pyGeo). No STEP: pyGeo has no STEP writer.</td><td>Tests and pictures run anywhere.</td><td><span class='basis own'>Our choice</span></td></tr>
 <tr class='grp'><td colspan='4'>Measure, label, hash</td></tr>
 <tr><td class='what'><span class='id'>D31</span>Measured on the loft</td><td>Chord, twist, LE position, sweep, dihedral, area, span, MAC, AR, thickness, trailing-edge thickness → <code>measured.json</code>. The gate checks chords, sweeps, twists, panel dihedrals and the aspect ratio against the vector.</td><td>Later stages and any ML model use the measured wing; the vector is only its label.</td><td><span class='basis req'>Your rule</span></td></tr>
-<tr><td class='what'><span class='id'>D32</span>Labels by rule <span class='flag open'>Open</span></td><td>BWB or conventional (planform: with or without a centre body); swept, cranked, rectangular, washout, dihedral, aspect ratio. BWB threshold lowered from 2.5 to 2.2.</td><td>Two wide BWB corners measured 2.39–2.5; other wings reach at most 1.84. Checked on 20 hand-labelled wings. The word 'conventional' is also given to flying wings: see open decisions.</td><td><span class='basis meas'>Measured</span></td></tr>
+<tr><td class='what'><span class='id'>D32</span>Labels by rule</td><td>Configuration: <code>bwb</code> (measured centre body), else <code>flying_wing</code> for a tailless type or <code>conventional</code> for a type with a tail. Then swept, cranked, rectangular, washout, dihedral, aspect ratio. BWB threshold 2.2.</td><td>A tail is not part of the wing surface, so it cannot be measured; the family comes from the type. Before 29 Oct 2026 every tailless wing without a centre body was called 'conventional'. Checked on 20 hand-labelled wings and a flying-wing test.</td><td><span class='basis req'>Your rule</span></td></tr>
 <tr><td class='what'><span class='id'>D33</span>Hash from the code itself</td><td>sha256 of the vector, the type's YAML block, the trailing-edge rule, the airfoil coordinates and the content of every geometry source file.</td><td>Any code change now changes every input hash, so stored meshes and results are never reused for a wing the code builds differently. A version string set by hand could be forgotten. Fixed 29 Oct 2026.</td><td><span class='basis req'>Your rule</span></td></tr>
 <tr class='grp'><td colspan='4'>Sets</td></tr>
 <tr><td class='what'><span class='id'>D34</span>Five sets per type</td><td>Training 100 (Latin hypercube, seeds 1001–1004); corner 1: each free variable at each bound (34 for BWB and cranked, 26 for tapered and flying wing); corner 2: every pair at all four low/high combinations (8 or 7); reference 5 (by rule); hold-out 10 (seeds 2001–2004).</td><td>Training fills the inside, corners test the edges, the hold-out is the one honest test.</td><td><span class='basis req'>Your rule</span></td></tr>
@@ -554,36 +572,6 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   </table></div>
 </section>
 
-<section id="variables">
-  <h2>The 18 numbers</h2>
-  <p>Four stations: root b0, breaks b1 and b2, tip b3. Three straight panels between them. Ranges as in <code>configs/wing.yaml</code> now.</p>
-  <div class="tbl"><table class="mid">
-    <thead><tr><th>Variable</th><th>Meaning</th><th>BWB</th><th>Cranked</th><th>Tapered</th><th>Flying wing</th></tr></thead>
-    <tbody>
-<tr><td><code>root_chord_m</code></td><td>root chord (m) — sampled</td><td class='num'>0.4 – 0.8</td><td class='num'>0.13 – 0.75</td><td class='num'>0.13 – 0.75</td><td class='num'>0.25 – 1.05</td></tr>
-<tr><td><code>c2_ratio</code></td><td>chord at b1 (BWB: / root; cranked: / chord at b0)</td><td class='num'>0.55 – 0.8</td><td class='num'>0.8 – 1<span class='muted'> of inboard</span></td><td class='num'>from taper</td><td class='num'>from taper</td></tr>
-<tr><td><code>c3_ratio</code></td><td>chord at b2 (BWB: / root; cranked: / chord at b1)</td><td class='num'>0.3 – 0.55</td><td class='num'>0.7 – 1<span class='muted'> of inboard</span></td><td class='num'>from taper</td><td class='num'>from taper</td></tr>
-<tr><td><code>c4_ratio</code></td><td>tip chord (BWB: / root; cranked: / chord at b2; tapered, flying wing: taper)</td><td class='num'>0.08 – 0.2</td><td class='num'>0.5 – 1<span class='muted'> of inboard</span></td><td class='num'>0.4 – 1<span class='muted'> taper</span></td><td class='num'>0.3 – 0.8<span class='muted'> taper</span></td></tr>
-<tr><td><code>semi_span_m</code></td><td>semi-span (m) — derived: AR · c_root · K / 2</td><td class='num'>from AR</td><td class='num'>from AR</td><td class='num'>from AR</td><td class='num'>from AR</td></tr>
-<tr><td><code>aspect_ratio</code></td><td>aspect ratio span² / area — sampled</td><td class='num'>3 – 9</td><td class='num'>4.5 – 16.5</td><td class='num'>4.5 – 16.5</td><td class='num'>3 – 9</td></tr>
-<tr><td><code>b3_ratio</code></td><td>outer panel span / semi-span</td><td class='num'>0.4 – 0.55</td><td class='num'>0.2 – 0.5</td><td class='num'>0.2 – 0.5</td><td class='num'>0.2 – 0.5</td></tr>
-<tr><td><code>split_ratio</code></td><td>inner panel / (inner + middle)</td><td class='num'>0.4 – 0.6</td><td class='num'>0.3 – 0.7</td><td class='num'>0.3 – 0.7</td><td class='num'>0.3 – 0.7</td></tr>
-<tr><td><code>sweep1_deg</code></td><td>LE sweep, panel 1 (+ aft); the one sweep of tapered and flying wings</td><td class='num'>20 – 40</td><td class='num'>-10 – 20</td><td class='num'>-10 – 20</td><td class='num'>10 – 35</td></tr>
-<tr><td><code>sweep2_deg</code></td><td>LE sweep, panel 2</td><td class='num'>15 – 35</td><td class='num'>-10 – 20</td><td class='num'>= sweep1</td><td class='num'>= sweep1</td></tr>
-<tr><td><code>sweep3_deg</code></td><td>LE sweep, panel 3</td><td class='num'>5 – 25</td><td class='num'>-10 – 20</td><td class='num'>= sweep1</td><td class='num'>= sweep1</td></tr>
-<tr><td><code>twist0_deg</code></td><td>twist at b0 (+ nose up)</td><td class='num'>-1 – 1</td><td class='num'>0 – 3</td><td class='num'>0 – 3</td><td class='num'>-1 – 2</td></tr>
-<tr><td><code>twist1_deg</code></td><td>twist at b1</td><td class='num'>-3 – 0</td><td class='num'>-1 – 2</td><td class='num'>-1 – 2</td><td class='num'>-2 – 1</td></tr>
-<tr><td><code>twist2_deg</code></td><td>twist at b2</td><td class='num'>-5 – -1</td><td class='num'>-2 – 1</td><td class='num'>-2 – 1</td><td class='num'>-4 – 0</td></tr>
-<tr><td><code>twist3_deg</code></td><td>twist at b3 (tip)</td><td class='num'>-8 – -2</td><td class='num'>-4 – 0</td><td class='num'>-4 – 0</td><td class='num'>-6 – -1</td></tr>
-<tr><td><code>dihedral_p1_deg</code></td><td>dihedral of panel 1, b0–b1 (+ tip up)</td><td class='num'>0 – 3</td><td class='num'>-3 – 6</td><td class='num'>-3 – 6</td><td class='num'>0 – 5</td></tr>
-<tr><td><code>dihedral_p2_deg</code></td><td>dihedral of panel 2, b1–b2</td><td class='num'>0 – 5</td><td class='num'>-3 – 6</td><td class='num'>-3 – 6</td><td class='num'>0 – 5</td></tr>
-<tr><td><code>dihedral_p3_deg</code></td><td>dihedral of panel 3, b2–b3</td><td class='num'>0 – 8</td><td class='num'>-3 – 6</td><td class='num'>-3 – 6</td><td class='num'>0 – 5</td></tr>
-<tr><td><code>chord_law</code><br><code>sweep_law</code></td><td>how chords and sweeps are read</td><td>stations<br>panels</td><td>per_panel<br>panels</td><td>linear_taper<br>one</td><td>linear_taper<br>one</td></tr>
-<tr><td><code>airfoils</code></td><td>section at b0, b1, b2, b3</td><td>mh91, mh91, e374, nlf1015</td><td>naca4415, naca4415, naca4412, naca4412</td><td>naca4415, naca4415, naca4412, naca4412</td><td>mh45, mh45, mh60, mh60</td></tr>
-    </tbody>
-  </table></div>
-</section>
-
 <section id="checks">
   <h2>Checks and results</h2>
   <div class="three">
@@ -612,14 +600,25 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
 <tr><td><span class='tag tapered'>Tapered</span></td><td>corner 2</td><td class='num'>7</td><td>7 built, 0 refused <span class='flag open'>numpy loft</span></td><td class='muted'>washout 6, aft swept 4, high aspect ratio 4, dihedral 4, forward swept 3</td></tr>
 <tr><td><span class='tag tapered'>Tapered</span></td><td>reference</td><td class='num'>5</td><td>5 built, 0 refused <span class='flag open'>numpy loft</span></td><td class='muted'>washout 5, dihedral 4, high aspect ratio 3, aft swept 3, varying dihedral 3</td></tr>
 <tr><td><span class='tag tapered'>Tapered</span></td><td>hold-out</td><td class='num'>10</td><td>vectors only, not built</td><td class='muted'>—</td></tr>
-<tr><td><span class='tag flying_wing'>Flying wing</span></td><td>training</td><td class='num'>100</td><td>100 built, 0 refused <span class='flag open'>numpy loft</span></td><td class='muted'>aft swept 100, washout 98, dihedral 94, varying dihedral 57, low aspect ratio 16</td></tr>
-<tr><td><span class='tag flying_wing'>Flying wing</span></td><td>corner 1</td><td class='num'>26</td><td>26 built, 0 refused <span class='flag open'>numpy loft</span></td><td class='muted'>aft swept 26, washout 26, dihedral 26, varying dihedral 6, low aspect ratio 1</td></tr>
-<tr><td><span class='tag flying_wing'>Flying wing</span></td><td>corner 2</td><td class='num'>7</td><td>7 built, 0 refused <span class='flag open'>numpy loft</span></td><td class='muted'>washout 6, aft swept 5, dihedral 5, high aspect ratio 4, low aspect ratio 3</td></tr>
-<tr><td><span class='tag flying_wing'>Flying wing</span></td><td>reference</td><td class='num'>5</td><td>5 built, 0 refused <span class='flag open'>numpy loft</span></td><td class='muted'>aft swept 5, washout 5, dihedral 5, varying dihedral 3, high aspect ratio 2</td></tr>
+<tr><td><span class='tag flying_wing'>Flying wing</span></td><td>training</td><td class='num'>100</td><td>100 built, 0 refused <span class='flag open'>numpy loft</span></td><td class='muted'>flying wing 100, aft swept 100, washout 98, dihedral 94, varying dihedral 57</td></tr>
+<tr><td><span class='tag flying_wing'>Flying wing</span></td><td>corner 1</td><td class='num'>26</td><td>26 built, 0 refused <span class='flag open'>numpy loft</span></td><td class='muted'>flying wing 26, aft swept 26, washout 26, dihedral 26, varying dihedral 6</td></tr>
+<tr><td><span class='tag flying_wing'>Flying wing</span></td><td>corner 2</td><td class='num'>7</td><td>7 built, 0 refused <span class='flag open'>numpy loft</span></td><td class='muted'>flying wing 7, washout 6, aft swept 5, dihedral 5, high aspect ratio 4</td></tr>
+<tr><td><span class='tag flying_wing'>Flying wing</span></td><td>reference</td><td class='num'>5</td><td>5 built, 0 refused <span class='flag open'>numpy loft</span></td><td class='muted'>flying wing 5, aft swept 5, washout 5, dihedral 5, varying dihedral 3</td></tr>
 <tr><td><span class='tag flying_wing'>Flying wing</span></td><td>hold-out</td><td class='num'>10</td><td>vectors only, not built</td><td class='muted'>—</td></tr>
     </tbody>
   </table></div>
-  <h2 style="font-size:22px">Is the surface the intended wing?</h2>
+  <h2 style="font-size:22px">Is the loft the designed wing? (every sampled wing)</h2>
+  <p class="muted">Worst value over every training, corner and reference wing (<code>scripts/verify_sets.py</code>, numpy loft). Stations, chords, twists, sweeps, panel dihedrals and the straightness of each panel match the inputs to machine precision. AR: the loft measures the true chord, which is a little shorter between two stations of different twist (up to 0.035 %; 0 without twist). Sections: up to 0.012 % of chord, at the smallest tips, where the 0.5 mm trailing-edge floor is a large share of a 3 cm chord. Root: every point of the root section at y = 0, and no point of a half wing below y = 0, so the mirrored halves meet only there.</p>
+  <div class="tbl"><table class="wide">
+    <thead><tr><th>Type</th><th>Wings</th><th>Stations % c</th><th>Chord %</th><th>Twist °</th><th>Sweep °</th><th>Dihedral °</th><th>Straight panels % c</th><th>AR %</th><th>Sections % c</th><th>Ruled % c</th><th>Root |y| m</th><th>Min y m</th></tr></thead>
+    <tbody>
+<tr><td>BWB</td><td class='num'>147</td><td class='num'>0</td><td class='num'>1e-13</td><td class='num'>8e-15</td><td class='num'>1e-14</td><td class='num'>3e-15</td><td class='num'>1e-13</td><td class='num'>0.03</td><td class='num'>0.012</td><td class='num'>3e-13</td><td class='num'>0</td><td class='num'>0</td></tr>
+<tr><td>Cranked</td><td class='num'>147</td><td class='num'>0</td><td class='num'>4e-14</td><td class='num'>4e-15</td><td class='num'>7e-15</td><td class='num'>2e-15</td><td class='num'>6e-14</td><td class='num'>0.022</td><td class='num'>0.0065</td><td class='num'>4e-13</td><td class='num'>0</td><td class='num'>0</td></tr>
+<tr><td>Tapered</td><td class='num'>138</td><td class='num'>0</td><td class='num'>4e-14</td><td class='num'>3e-15</td><td class='num'>9e-15</td><td class='num'>3e-15</td><td class='num'>1e-13</td><td class='num'>0.018</td><td class='num'>0.0041</td><td class='num'>4e-13</td><td class='num'>0</td><td class='num'>0</td></tr>
+<tr><td>Flying wing</td><td class='num'>138</td><td class='num'>0</td><td class='num'>4e-14</td><td class='num'>3e-15</td><td class='num'>1e-14</td><td class='num'>2e-15</td><td class='num'>7e-14</td><td class='num'>0.035</td><td class='num'>0.0063</td><td class='num'>3e-13</td><td class='num'>0</td><td class='num'>0</td></tr>
+    </tbody>
+  </table></div>
+  <h2 style="font-size:22px">Is the surface the intended wing? (published wings)</h2>
   <p class="muted">Errors in % of local chord. Sections: the loft cut at each station against the original airfoil points (limit 0.01). Edges: against the exact straight lines (limit 1e-6). Outside CAD: only the M6 has one (limit 0.05).</p>
   <div class="tbl"><table class="mid">
     <thead><tr><th>Wing</th><th>Sections max</th><th>Edges max</th><th>Outside CAD</th><th>Result</th></tr></thead>
@@ -639,9 +638,8 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <h2>Open decisions</h2>
   <p class="muted">Choices made to keep going that still need your call.</p>
   <ul>
-<li><strong>Label 'conventional' on tailless wings.</strong> The planform rule says BWB (centre body) or 'conventional' (no centre body). All 100 flying wings and 17 % of bwb-type wings get 'conventional', which reads like 'has a tail'. Rename the second label to 'no centre body', or label by type?</li>
 <li><strong>Tailless Class II chords.</strong> Flying-wing spans now reach 7.7 m, so Fury (5.2 m), Albatroz (7 m) and Shahed 191 (7.3 m) are inside by span. Their areas are unknown, so the chord is unchecked.</li>
-<li><strong>Smallest wings.</strong> Generated spans start at 0.4–0.6 m (small root chord with low AR); the smallest real wing in the table is 0.96 m. Accept as micro Class I, or raise the lower root chord?</li>
+<li><strong>Smallest wings.</strong> Kept by your decision (29 Oct 2026): generated spans start at 0.4–0.6 m (micro Class I).</li>
 <li><strong>NTNU UAV database.</strong> 93 UAVs with span, AR and estimated chord (DataverseNO, CC0). Blocked from the cloud workspace: attach 02_Database.csv to add it.</li>
 <li><strong>Essari 2015 data.</strong> Hermes 450, Ranger, Seeker, Shadow 600 areas come from a PhD thesis citing unread (Jane's-style) references; its Hermes 450 is internally inconsistent (0.69 m × 10.51 m = 7.25 m², listed 6.90). Confirm with Jane's before the paper.</li>
 <li><strong>Re levels.</strong> Now 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶. Move the middle to about 9.5 × 10⁵ (log-middle)? Mini Class I wings fly at 1.2–2 × 10⁵, below the lowest level.</li>

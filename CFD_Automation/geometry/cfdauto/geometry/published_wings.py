@@ -110,7 +110,8 @@ def build_published(name: str, out_dir: str | Path | None = None, iges: bool = T
 
     spec, vec, te, meta = get(name)
     out = Path(out_dir) if out_dir else OUT_DIR / name
-    return build_spec(spec, vec, te, f"published:{name}", out, iges, extra={"published": meta})
+    return build_spec(spec, vec, te, f"published:{name}", out, iges, extra={"published": meta},
+                      tailless=meta["kind"] == "bwb")
 
 
 def main(argv=None) -> None:

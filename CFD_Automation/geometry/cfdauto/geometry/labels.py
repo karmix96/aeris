@@ -79,22 +79,27 @@ def shape_values(m: dict) -> dict:
     }
 
 
-def label(m: dict) -> tuple[list[str], dict]:
-    """Labels and the values behind them."""
+def label(m: dict, tailless: bool = False) -> tuple[list[str], dict]:
+    """Labels and the values behind them.
+
+    Configuration label: 'bwb' when the measured planform has a centre body (rule below);
+    otherwise 'flying_wing' for a tailless type and 'conventional' for a type with a tail.
+    The tail is not part of the wing surface, so `tailless` comes from the wing type.
+    """
     v = shape_values(m)
     out = []
     ratio = v["root_over_outer"]
     bwb = v["root_chord_m"] >= T["bwb_root_over_semispan"] * v["semi_span_m"] and (
         ratio >= T["bwb_root_over_outer"]
         or (ratio >= T["bwb_root_over_outer_with_loss"] and v["root_loss"] >= T["bwb_root_loss"]))
-    out.append("bwb" if bwb else "conventional")
+    out.append("bwb" if bwb else ("flying_wing" if tailless else "conventional"))
 
     sw = v["qc_sweep_outer_deg"]
     if sw >= T["sweep_deg"]:
         out.append("aft_swept")
     elif sw <= -T["sweep_deg"]:
         out.append("forward_swept")
-    elif bwb:
+    elif bwb or tailless:
         out.append("unswept_outer")
 
     kinked = bool(v["kinks_at_span_fraction"])

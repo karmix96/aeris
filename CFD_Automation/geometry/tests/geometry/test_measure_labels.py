@@ -28,6 +28,10 @@ def hand_wing(name):
     return spec, vec, w["labels"]
 
 
+def base_type(name):
+    return HAND["bases"][HAND["wings"][name]["base"]]["type"]
+
+
 def exact_measure(spec, vec):
     _, st = build_wing_sections(spec, vec, CFG.te)
     return measure(table_from_stations(st), st), st
@@ -40,7 +44,7 @@ def test_hand_set_has_about_20_wings():
 @pytest.mark.parametrize("name", list(HAND["wings"]))
 def test_hand_labelled(name):
     spec, vec, want = hand_wing(name)
-    got, _ = label(exact_measure(spec, vec)[0])
+    got, _ = label(exact_measure(spec, vec)[0], tailless=base_type(name) in params.TAILLESS_TYPES)
     assert set(got) == set(want)
 
 
@@ -62,8 +66,8 @@ def test_measured_matches_planform(wing_type):
 
 def test_every_wing_has_exactly_one_type_label():
     for name in HAND["wings"]:
-        got, _ = label(exact_measure(*hand_wing(name)[:2])[0])
-        assert sum(t in got for t in ("bwb", "conventional")) == 1   # labels: two configurations only
+        got, _ = label(exact_measure(*hand_wing(name)[:2])[0], tailless=base_type(name) in params.TAILLESS_TYPES)
+        assert sum(t in got for t in ("bwb", "flying_wing", "conventional")) == 1
 
 
 @pytest.mark.pygeo
@@ -78,3 +82,12 @@ def test_hand_labelled_on_the_loft():
         assert set(label(m_loft)[0]) == set(want), name
         assert m_loft["area_m2"] == pytest.approx(m_exact["area_m2"], rel=1e-9)
         assert m_loft["max_thickness_c"] == pytest.approx(m_exact["max_thickness_c"], rel=2e-3)
+
+
+def test_tailless_without_centre_body_is_a_flying_wing():
+    spec = CFG.types["flying_wing"]
+    got, _ = label(exact_measure(spec, params.mid_vector(spec))[0], tailless=True)
+    assert got[0] == "flying_wing"
+    # the same planform on a type with a tail is 'conventional'
+    got, _ = label(exact_measure(spec, params.mid_vector(spec))[0], tailless=False)
+    assert got[0] == "conventional"

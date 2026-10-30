@@ -50,3 +50,41 @@ Ranges live in `configs/wing.yaml`. Tags: **checked** = I read the source myself
 
 - Check Raymer (taper 0.4, washout −3°, Table 4.2 dihedral) in print.
 - Read Guiler & Huebsch 2008 and Shams 2020 directly.
+
+## Two spaces: full and focus (decided 30 Oct 2026)
+
+Mike: design everything, but make the wings and the simulations dense where the real wings are.
+
+- **Focus** (`ranges`, `airfoils`): the ranges above, from real wings and papers. Sets: training 100,
+  reference 5, hold-out 10 per type.
+- **Full** (`full_ranges`, `full_airfoils`): everything the generator supports. Sets: training 40,
+  hold-out 5, corner 1 and corner 2 per type. The corners now test the edges of the full space.
+- The focus box must lie inside the full box, and each suggested section must be a full candidate
+  (the YAML is refused otherwise).
+- Airfoils: **supported** = any database file, local file or NACA formula; **suggested** = the
+  per-type list with a source (focus). The full space draws every sourced section on any type.
+- Full bounds (our choice, the widest value in any source): Pliakos et al. 2025 design-space bounds
+  (twist ±5° at the breaks, ±7° at the tip; dihedral ±10°; c/4 sweep 0–60°), BlendedNet (sweep 60°,
+  tip 0.06), Wang & Zhou (root 1.8 m), Hainline (root twist 6°), Prandtl-D (washout about 10°).
+
+## AUTh (Panagiotou, Yakinthos) BWB work, read 30 Oct 2026
+
+| source | what it gives | tag |
+|---|---|---|
+| Antoniou et al. 2025, Eng. Proc. 90(1):18 | RX-3 tactical BWB: MTOW 260 kg, S 4.9 m², c/4 sweep 33°, AR 8, cruise 160 km/h | checked |
+| Panagiotou et al. 2021, Aerospace 8(1):13 | tactical BWB 200–600 kg; kink at y/b 0.32; Re 1.8–2.9 × 10⁶ on the MAC; SA, y+ < 5, 8 M nodes | checked |
+| Pliakos et al. 2025, Eng. Proc. 90(1):52 | automated CFD preprocessing for UAV wings; planform bounds (Table 2); TE 1 % chord; first TE cell ¼ of TE thickness | checked |
+| Kapsalis et al. 2026, Eng. Proc. 133(1):95 | RX-3 1:3 subscale: span 2.4 m, 6 kg, 70 km/h | agent |
+| AST 2018 (MALE BWB), AST 2021, AIAA 2020/2022, ICUAS 2020 | airfoils and station chords | paywalled, not read |
+
+Effect: BWB focus root chord 0.40–0.80 → 0.40–1.80 m (the old range was sized on small flying wings);
+RX-3 added to `configs/real_uavs.yaml` (span from √(AR·S) = 6.26 m; Wikipedia gives 7.2 m).
+No AUTh paper names its BWB airfoils in an open text, so the suggested BWB pair stays MH 104 / MH 61.
+
+## Aspect-ratio fix found by the full space (30 Oct 2026)
+
+With large washout, 4 full-space wings missed their aspect ratio by 0.11–0.24 %. Causes: the mean
+chord assumed a linear chord (the true chord of a twisted ruled panel is shorter mid-panel), and the
+extra section at the trailing-edge switch used the linear chord and twist, so it sat off the panel.
+Now K integrates the true chord and the switch section sits on the ruled panel. Worst error on 730
+built wings: 0.00004 %.

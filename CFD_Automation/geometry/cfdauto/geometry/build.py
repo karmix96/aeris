@@ -156,7 +156,8 @@ def wing_dir(wing_type: str, set_name: str, index: int) -> Path:
     return WINGS_DIR / wing_type / set_name / f"{index:03d}"
 
 
-BUILT_SETS = ("training", "corner1", "corner2", "reference")
+BUILT_SETS = ("training", "training_full", "corner1", "corner2", "reference")
+SEALED_SETS = ("holdout", "holdout_full")
 
 
 def build_all(cfg: Config, iges: bool = False) -> dict:
@@ -174,10 +175,10 @@ def build_all(cfg: Config, iges: bool = False) -> dict:
                              "labels": s.get("labels"), "vector": s["vector"]})
             _write_manifest(t, name, rows)
             totals[f"{t}/{name}"] = (sum(r["passed"] for r in rows), len(rows))
-        hold = load_set(t, "holdout")["vectors"]
-        _write_manifest(t, "holdout", [
-            {"index": i, "built": False, "input_hash": input_hash(cfg, t, v), "vector": v}
-            for i, v in enumerate(hold)])
+        for name in SEALED_SETS:
+            _write_manifest(t, name, [
+                {"index": i, "built": False, "input_hash": input_hash(cfg, t, v), "vector": v}
+                for i, v in enumerate(load_set(t, name)["vectors"])])
     return totals
 
 
@@ -192,7 +193,7 @@ def main(argv=None) -> None:
     p.add_argument("--all", action="store_true",
                    help="build every training, corner and reference wing of every type, write manifests")
     p.add_argument("--type", choices=list(WING_TYPES))
-    p.add_argument("--set", help="set name in data/sets/<type>/ (training, corner1, corner2, reference)")
+    p.add_argument("--set", help="set name in data/sets/<type>/ (training, training_full, corner1, corner2, reference)")
     p.add_argument("--index", type=int)
     p.add_argument("--vector", help="JSON file with one design vector (instead of --set/--index)")
     p.add_argument("--out", help="output folder (default data/wings/<type>/<set>/<index>)")
@@ -211,7 +212,7 @@ def main(argv=None) -> None:
     else:
         if a.set is None or a.index is None:
             p.error("give --set and --index, or --vector")
-        if a.set == "holdout":
+        if a.set in SEALED_SETS:
             p.error("the hold-out set is sealed: its wings are never built in Stage 1")
         vec = load_set(a.type, a.set)["vectors"][a.index]
         out = Path(a.out) if a.out else wing_dir(a.type, a.set, a.index)

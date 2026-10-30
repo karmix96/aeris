@@ -2,19 +2,19 @@
  "wing_type": "bwb",
  "set": "holdout",
  "code_version": "0.6.0",
- "code_hash": "9fa3bb9e552b9ac4738bdae35c2917a13a6904fab8f04ae358c0ba3dd1ac4252",
+ "code_hash": "5eca7e9fcd8f8d414a59614c334d13b67c066a77f0e3a98f4e6529a0fb5731b0",
  "loft_backend": "numpy",
  "wings": [
   {
    "index": 0,
    "built": false,
-   "input_hash": "693ff9cc10d7b3c4a907b1b274af19721ef99e4da218e274229d5216dc3ebece",
+   "input_hash": "00e56a281ae5e7d160f5a86a7a6967ce2dc0299608e65ad21f7e75f7870ab107",
    "vector": {
-    "root_chord_m": 0.6053164537816105,
+    "root_chord_m": 1.1186075882356366,
     "c2_ratio": 0.6639858271709906,
     "c3_ratio": 0.5049571945360896,
     "c4_ratio": 0.14851808472420086,
-    "semi_span_m": 0.7396316997243971,
+    "semi_span_m": 1.366591368072252,
     "aspect_ratio": 4.331077364077754,
     "b3_ratio": 0.4003641836406233,
     "split_ratio": 0.5589447244745658,
@@ -27,19 +27,25 @@
     "twist3_deg": -3.6708985030681482,
     "dihedral_p1_deg": 0.8382428635356954,
     "dihedral_p2_deg": 1.4208476870382594,
-    "dihedral_p3_deg": 4.656978883122162
+    "dihedral_p3_deg": 4.656978883122162,
+    "airfoils": [
+     "mh104",
+     "mh104",
+     "mh61",
+     "mh61"
+    ]
    }
   },
   {
    "index": 1,
    "built": false,
-   "input_hash": "7214985bc453f6063ca1a898cb21212e74d2ed08a37859b8675aca5b2b1647c1",
+   "input_hash": "9c26c258cd1bbdf37b85dd90edf7855d65d61b035facb97323dcfc6d896d9d5a",
    "vector": {
-    "root_chord_m": 0.45450084611063846,
+    "root_chord_m": 0.5907529613872344,
     "c2_ratio": 0.5756778315103117,
     "c3_ratio": 0.45829454126941355,
     "c4_ratio": 0.09660486591595108,
-    "semi_span_m": 0.9181862513711626,
+    "semi_span_m": 1.1933347027882963,
     "aspect_ratio": 8.952469289533223,
     "b3_ratio": 0.5123557673780547,
     "split_ratio": 0.4320141148080574,
@@ -52,19 +58,25 @@
     "twist3_deg": -2.2611017351586202,
     "dihedral_p1_deg": 2.6613622104575745,
     "dihedral_p2_deg": 0.3197395214054729,
-    "dihedral_p3_deg": 0.7505131654665882
+    "dihedral_p3_deg": 0.7505131654665882,
+    "airfoils": [
+     "mh104",
+     "mh104",
+     "mh61",
+     "mh61"
+    ]
    }
   },
   {
    "index": 2,
    "built": false,
-   "input_hash": "27c37cd71a75ce678fde34472721cce62576505b3261deb3424a9c41b52f63bb",
+   "input_hash": "818ed330db35676a3fc077447f3bc8ae8278a1916775a839c279e52aefe4981e",
    "vector": {
-    "root_chord_m": 0.6850300943934311,
+    "root_chord_m": 1.3976053303770088,
     "c2_ratio": 0.7204064629847147,
     "c3_ratio": 0.36897754075461714,
     "c4_ratio": 0.07467679424513018,
-    "semi_span_m": 1.094096647851054,
+    "semi_span_m": 2.2319104318992595,
     "aspect_ratio": 6.947838967107023,
     "b3_ratio": 0.4764579569099133,
     "split_ratio": 0.41707784664331826,
@@ -77,19 +89,25 @@
     "twist3_deg": -4.808787447997073,
     "dihedral_p1_deg": 2.8489742337125623,
     "dihedral_p2_deg": 0.8924853947223741,
-    "dihedral_p3_deg": 2.730645690259095
+    "dihedral_p3_deg": 2.730645690259095,
+    "airfoils": [
+     "mh104",
+     "mh104",
+     "mh61",
+     "mh61"
+    ]
    }
   },
   {
    "index": 3,
    "built": false,
-   "input_hash": "b2eed99c03091aacb44f5e95ed0c52659300aca28700ade25780c7b1de24201f",
+   "input_hash": "b66617187c6f81e1a13b3b1dd36da95300f367de8b8fc1e49a44bc48e94a2462",
    "vector": {
-    "root_chord_m": 0.6489427496703463,
+    "root_chord_m": 1.271299623846212,
     "c2_ratio": 0.7254206143445083,
     "c3_ratio": 0.5415648021362593,
     "c4_ratio": 0.18826365041630952,
-    "semi_span_m": 0.9051198173395045,
+    "semi_span_m": 1.7729558528725495,
     "aspect_ratio": 4.939498084518652,
     "b3_ratio": 0.46010905181095324,
     "split_ratio": 0.44298488453877477,
@@ -102,19 +120,25 @@
     "twist3_deg": -5.846282934500621,
     "dihedral_p1_deg": 2.2088104580767842,
     "dihedral_p2_deg": 2.540722707474312,
-    "dihedral_p3_deg": 3.9531796033924
+    "dihedral_p3_deg": 3.9531796033924,
+    "airfoils": [
+     "mh104",
+     "mh104",
+     "mh61",
+     "mh61"
+    ]
    }
   },
   {
    "index": 4,
    "built": false,
-   "input_hash": "9d4ebfdf1f5a87075c9fba013b37d7571c9c26b2fdbb0617b8cc49867b63f5bc",
+   "input_hash": "6d84d74ae8ce7f768295da9a52137103e6eef3b74657b8d47671f357046dd875",
    "vector": {
-    "root_chord_m": 0.48119770118488725,
+    "root_chord_m": 0.6841919541471052,
     "c2_ratio": 0.6009931968622261,
     "c3_ratio": 0.3318951750882007,
     "c4_ratio": 0.11660509015075037,
-    "semi_span_m": 0.38718468780694676,
+    "semi_span_m": 0.5504901741499681,
     "aspect_ratio": 3.8172591962330475,
     "b3_ratio": 0.5463392284218118,
     "split_ratio": 0.5770448157707992,
@@ -127,19 +151,25 @@
     "twist3_deg": -4.357766056731265,
     "dihedral_p1_deg": 1.0819120589195892,
     "dihedral_p2_deg": 4.084444404647412,
-    "dihedral_p3_deg": 4.18960342326295
+    "dihedral_p3_deg": 4.18960342326295,
+    "airfoils": [
+     "mh104",
+     "mh104",
+     "mh61",
+     "mh61"
+    ]
    }
   },
   {
    "index": 5,
    "built": false,
-   "input_hash": "c9743943bf9244bc411c5588a5e5b12d21d25a740f95e16d8f8c31d3cb315c46",
+   "input_hash": "fd9894f82af3a750446424c094e9bf5d114ce05becd26d11c223c9d02a5a5824",
    "vector": {
-    "root_chord_m": 0.7366642013126707,
+    "root_chord_m": 1.5783247045943476,
     "c2_ratio": 0.756210587632686,
     "c3_ratio": 0.4022712388346791,
     "c4_ratio": 0.06096990150558145,
-    "semi_span_m": 1.5049746261703214,
+    "semi_span_m": 3.2240335857066507,
     "aspect_ratio": 8.089542878527228,
     "b3_ratio": 0.4502756779234986,
     "split_ratio": 0.5013628504702563,
@@ -152,19 +182,25 @@
     "twist3_deg": -2.8356570156794394,
     "dihedral_p1_deg": 1.7019320046279822,
     "dihedral_p2_deg": 4.698815909311606,
-    "dihedral_p3_deg": 1.4883735557944417
+    "dihedral_p3_deg": 1.4883735557944417,
+    "airfoils": [
+     "mh104",
+     "mh104",
+     "mh61",
+     "mh61"
+    ]
    }
   },
   {
    "index": 6,
    "built": false,
-   "input_hash": "ffacb54d5a2739a84682e8e76d6de179ddf5f860db6f1888804e4aa9e9d16d2e",
+   "input_hash": "62cb4abb0e7e12ec13661145d3669328817ccb3dfaa55bed3394b689f61a82dd",
    "vector": {
-    "root_chord_m": 0.4303228256931129,
+    "root_chord_m": 0.506129889925895,
     "c2_ratio": 0.644903362376096,
     "c3_ratio": 0.31114647509782684,
     "c4_ratio": 0.15996986394149554,
-    "semi_span_m": 0.5494333099420439,
+    "semi_span_m": 0.6461398252276832,
     "aspect_ratio": 5.477111916321496,
     "b3_ratio": 0.42742263606529646,
     "split_ratio": 0.46569182500304573,
@@ -177,19 +213,25 @@
     "twist3_deg": -6.649603891491038,
     "dihedral_p1_deg": 1.8499912428036618,
     "dihedral_p2_deg": 3.8401430718301084,
-    "dihedral_p3_deg": 3.3785464358937833
+    "dihedral_p3_deg": 3.3785464358937833,
+    "airfoils": [
+     "mh104",
+     "mh104",
+     "mh61",
+     "mh61"
+    ]
    }
   },
   {
    "index": 7,
    "built": false,
-   "input_hash": "5482f23789213de971d946e1f36c120e2fd1f339365b1930f123d577a2fb593c",
+   "input_hash": "dacc5119169a33c3a98b8b7563d60bd86e7e9870f90abcba40f7d1c4a57340b2",
    "vector": {
-    "root_chord_m": 0.5925132207877646,
+    "root_chord_m": 1.0737962727571757,
     "c2_ratio": 0.5560442842840704,
     "c3_ratio": 0.3983685504429351,
     "c4_ratio": 0.18430003488994456,
-    "semi_span_m": 0.4772234846525635,
+    "semi_span_m": 0.8648093943426342,
     "aspect_ratio": 3.366725385222856,
     "b3_ratio": 0.4344958820904842,
     "split_ratio": 0.4821204349787013,
@@ -202,19 +244,25 @@
     "twist3_deg": -5.441959711424104,
     "dihedral_p1_deg": 0.4501879305143793,
     "dihedral_p2_deg": 3.0228020476862616,
-    "dihedral_p3_deg": 2.0063826247567107
+    "dihedral_p3_deg": 2.0063826247567107,
+    "airfoils": [
+     "mh104",
+     "mh104",
+     "mh61",
+     "mh61"
+    ]
    }
   },
   {
    "index": 8,
    "built": false,
-   "input_hash": "9a63c20f40beefd02b1dab4113e8cf10925ab067a9e728a9b0a021b9144b54c3",
+   "input_hash": "96a197c45ce0a5d120e1481ab59e987026c264605813512ef3ad08719478e04f",
    "vector": {
-    "root_chord_m": 0.7729625733963805,
+    "root_chord_m": 1.7053690068873317,
     "c2_ratio": 0.796641213778502,
     "c3_ratio": 0.49104821644497865,
     "c4_ratio": 0.13933761523035337,
-    "semi_span_m": 1.5431928735934102,
+    "semi_span_m": 3.4040013641576907,
     "aspect_ratio": 7.214708176487857,
     "b3_ratio": 0.5026991742637126,
     "split_ratio": 0.5911555103479675,
@@ -227,19 +275,25 @@
     "twist3_deg": -7.963763479986463,
     "dihedral_p1_deg": 0.27411789614958326,
     "dihedral_p2_deg": 1.7510350224106341,
-    "dihedral_p3_deg": 1.5321720371996892
+    "dihedral_p3_deg": 1.5321720371996892,
+    "airfoils": [
+     "mh104",
+     "mh104",
+     "mh61",
+     "mh61"
+    ]
    }
   },
   {
    "index": 9,
    "built": false,
-   "input_hash": "42ddf1ec3edf030e0514a10d684eee5bd9e8bc14ee478bb4796d089dc02f6dc2",
+   "input_hash": "0b1fae5df46ebe0bd1e3e02c1983c90f8789dda0885b27c60f8515503e68f935",
    "vector": {
-    "root_chord_m": 0.5360647504643227,
+    "root_chord_m": 0.8762266266251292,
     "c2_ratio": 0.6912135287752268,
     "c3_ratio": 0.4375148360145229,
     "c4_ratio": 0.11229974745477475,
-    "semi_span_m": 0.8273969130120745,
+    "semi_span_m": 1.3522289508460281,
     "aspect_ratio": 6.4147694046212465,
     "b3_ratio": 0.5300752316204259,
     "split_ratio": 0.5318580397748336,
@@ -252,7 +306,13 @@
     "twist3_deg": -6.835235751198737,
     "dihedral_p1_deg": 1.2092114561661869,
     "dihedral_p2_deg": 2.04526069874392,
-    "dihedral_p3_deg": 0.4643032370874782
+    "dihedral_p3_deg": 0.4643032370874782,
+    "airfoils": [
+     "mh104",
+     "mh104",
+     "mh61",
+     "mh61"
+    ]
    }
   }
  ]

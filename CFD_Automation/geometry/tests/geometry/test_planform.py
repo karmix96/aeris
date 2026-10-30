@@ -58,6 +58,7 @@ def test_rectangle_area_mac_ar():
     vec = params.mid_vector(spec) | {
         "root_chord_m": 0.5, "c2_ratio": 1.0, "c3_ratio": 1.0, "c4_ratio": 1.0,
         "semi_span_m": 4.0, "sweep1_deg": 0.0, "sweep2_deg": 0.0, "sweep3_deg": 0.0,
+        "twist0_deg": 0.0, "twist1_deg": 0.0, "twist2_deg": 0.0, "twist3_deg": 0.0,
     }
     pf = build_planform(spec, vec)
     assert pf.area() == pytest.approx(2 * 2.0 * 0.5)
@@ -110,3 +111,16 @@ def test_resolve_is_idempotent():
         for vec in _random_vectors(spec, n=20, seed=5):
             once = params.resolve(spec, vec)
             assert params.resolve(spec, once) == once
+
+
+def test_twist_change_shortens_mid_panel_chord():
+    """With a twist change the chord turns along a straight panel; area and aspect ratio account for it."""
+    from cfdauto.geometry.params import panel_mean_chord
+    import math
+    assert panel_mean_chord(1.0, 1.0, 0.0, 0.0) == 1.0
+    # equal chords, 13 deg apart: |chord|(t) = sqrt((1-t)^2 + t^2 + 2 t (1-t) cos d)
+    from scipy.integrate import quad
+    d = math.radians(13.0)
+    exact = quad(lambda t: math.sqrt((1 - t) ** 2 + t * t + 2 * t * (1 - t) * math.cos(d)), 0, 1, epsabs=1e-14)[0]
+    m = panel_mean_chord(1.0, 1.0, 0.0, d)
+    assert m == pytest.approx(exact, abs=1e-13) and math.cos(d / 2) < m < 1.0

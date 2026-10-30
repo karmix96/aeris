@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .params import TypeSpec, chord_ratios, resolve
+from .params import TypeSpec, chord_ratios, panel_mean_chord, resolve
 
 
 @dataclass(frozen=True)
@@ -15,6 +15,7 @@ class Planform:
     x_le: np.ndarray        # station leading-edge x [m]
     chord: np.ndarray       # station chords [m]
     sweep_le_deg: np.ndarray  # panel leading-edge sweeps (signed, + aft)
+    twist_deg: np.ndarray | None = None  # station twists (for the exact ruled-panel area)
 
     @property
     def semi_span(self) -> float:
@@ -30,8 +31,11 @@ class Planform:
         return np.interp(y, self.y, self.x_le), np.interp(y, self.y, self.chord)
 
     def area(self) -> float:
-        """Full-wing planform area (both halves), from the straight panels."""
-        return float(2.0 * np.sum(0.5 * (self.chord[:-1] + self.chord[1:]) * self.panel_span))
+        """Full-wing area (both halves) = 2 x integral of the true chord over y, exact for straight
+        (ruled) panels, including the small chord loss where the twist changes along a panel."""
+        tw = np.radians(self.twist_deg) if self.twist_deg is not None else np.zeros_like(self.chord)
+        return float(2.0 * sum(h * panel_mean_chord(a, b, ta, tb) for a, b, ta, tb, h in
+                               zip(self.chord[:-1], self.chord[1:], tw[:-1], tw[1:], self.panel_span)))
 
 
 def semi_span_m(spec: TypeSpec, vec: dict[str, float]) -> float:
@@ -62,7 +66,8 @@ def build_planform(spec: TypeSpec, vec: dict[str, float]) -> Planform:
         raise ValueError("sweep must be within +/-89 deg")
     y = np.concatenate([[0.0], np.cumsum(spans)])
     x_le = np.concatenate([[0.0], np.cumsum(spans * np.tan(np.radians(sweep)))])
-    return Planform(y=y, x_le=x_le, chord=chord, sweep_le_deg=sweep)
+    twist = np.array([vec[f"twist{i}_deg"] for i in range(4)])
+    return Planform(y=y, x_le=x_le, chord=chord, sweep_le_deg=sweep, twist_deg=twist)
 
 
 def panel_sweep_deg(y: np.ndarray, x: np.ndarray) -> np.ndarray:

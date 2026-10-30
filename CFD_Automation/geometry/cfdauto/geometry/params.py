@@ -79,14 +79,15 @@ class TypeSpec:
         return tuple(f"airfoil_{STATIONS[i]}" for i, c in enumerate(self.choices) if len(c) > 1)
 
     def block(self) -> dict:
-        """The type's YAML block as plain data (for hashing)."""
+        """What in the type's YAML block shapes a wing (for hashing): the laws, the pinned values and
+        the default sections. Not the ranges: they only say where the sampler draws, so the same
+        vector gives the same hash in the focus and in the full space."""
         return {
             "chord_law": self.chord_law,
             "sweep_law": self.sweep_law,
             "span_mode": self.span_mode,
-            "airfoils": [list(c) for c in self.choices],
+            "airfoils": list(self.airfoils),
             "pinned": dict(sorted(self.pinned.items())),
-            "ranges": {k: list(self.ranges[k]) for k in VARIABLES},
         }
 
 
@@ -119,9 +120,11 @@ class Config:
     shares: dict[str, float]
     wing_class: str
     te: TERule
-    types: dict[str, TypeSpec]
+    types: dict[str, TypeSpec]     # focus space: realistic ranges and suggested sections
     sets: dict
     raw: dict
+    #: full space per type: the wider ranges and sections the generator supports (focus inside it)
+    full: dict[str, TypeSpec] = field(default_factory=dict)
 
 
 def load_config(path: str | Path = DEFAULT_CONFIG) -> Config:
@@ -150,7 +153,37 @@ def load_config(path: str | Path = DEFAULT_CONFIG) -> Config:
         raise ValueError(f"trailing_edge.mode must be one of {TE_MODES}")
 
     types = {name: _read_type(name, raw["types"][name]) for name in WING_TYPES}
-    return Config(wing_type, shares, wing_class, te, types, raw.get("sets", {}), raw)
+    full = {name: _read_full(types[name], raw["types"][name]) for name in WING_TYPES}
+    return Config(wing_type, shares, wing_class, te, types, raw.get("sets", {}), raw, full)
+
+
+def _read_full(focus: TypeSpec, block: dict) -> TypeSpec:
+    """The full space of a type: full_ranges (a variable not listed keeps its focus range) and
+    full_airfoils (candidate sections per station; default: the suggested ones). The focus box
+    must lie inside the full box, and each focus section must be a full candidate."""
+    extra = set(block.get("full_ranges") or {}) - set(VARIABLES)
+    if extra:
+        raise ValueError(f"{focus.name}: unknown variables in full_ranges {sorted(extra)}")
+    ranges = dict(focus.ranges)
+    for v, (lo, hi) in (block.get("full_ranges") or {}).items():
+        lo, hi = float(lo), float(hi)
+        flo, fhi = focus.ranges[v]
+        if v in focus.derived:      # a law computes it (e.g. a study switched the chord law): ignore
+            continue
+        if not lo <= flo <= fhi <= hi:
+            raise ValueError(f"{focus.name}: focus range of {v} {[flo, fhi]} is not inside full range {[lo, hi]}")
+        ranges[v] = (lo, hi)
+    choices = focus.choices
+    if block.get("full_airfoils"):
+        choices = read_airfoil_choices(f"{focus.name} full_airfoils", block["full_airfoils"])
+        for s, f, c in zip(STATIONS, focus.choices, choices):
+            if not set(f) <= set(c):
+                raise ValueError(f"{focus.name}: suggested sections at {s} {list(f)} are not all full candidates")
+            if c[0] != f[0]:
+                raise ValueError(f"{focus.name}: full_airfoils at {s} must start with the suggested section {f[0]}")
+    multi = any(len(c) > 1 for c in choices)
+    return TypeSpec(focus.name, focus.chord_law, focus.span_mode, focus.airfoils, ranges, focus.pinned,
+                    choices if multi else (), focus.sweep_law)
 
 
 def _read_type(name: str, block: dict) -> TypeSpec:
@@ -221,14 +254,15 @@ def from_unit(spec: TypeSpec, unit: dict[str, float]) -> dict[str, float]:
     for v in VARIABLES:
         lo, hi = spec.ranges[v]
         vec[v] = lo + float(unit.get(v, 0.5)) * (hi - lo)
-    if spec.airfoil_choices:
-        # A station with candidates takes the one its unit value falls on (default: the first).
-        picks = []
-        for s, cands in zip(STATIONS, spec.choices):
-            u = unit.get(f"airfoil_{s}")
-            k = 0 if u is None else min(int(float(u) * len(cands)), len(cands) - 1)
-            picks.append(cands[k])
-        vec["airfoils"] = picks
+    # Every sampled vector names its four sections, so it builds the same wing whichever space
+    # (focus or full) it is read with. A station with candidates takes the one its unit value
+    # falls on (default: the first).
+    picks = []
+    for s, cands in zip(STATIONS, spec.choices):
+        u = unit.get(f"airfoil_{s}")
+        k = 0 if u is None else min(int(float(u) * len(cands)), len(cands) - 1)
+        picks.append(cands[k])
+    vec["airfoils"] = picks
     return resolve(spec, vec)
 
 
@@ -305,10 +339,28 @@ def span_fractions(vec: dict[str, float]) -> tuple[float, float, float]:
 
 
 def mean_chord_ratio(chord_law: str, vec: dict[str, float]) -> float:
-    """K = mean chord / root chord = sum over panels of f_i (r_i + r_i+1) / 2 (straight panels)."""
+    """K = mean chord / root chord of the built (ruled) wing.
+
+    Inside a straight panel the chord line runs from the straight leading edge to the straight
+    trailing edge, so the chord VECTOR is linear in y. Without a twist change its length is linear
+    too and K = sum f_i (r_i + r_i+1) / 2. With a twist change the chord turns along the panel and
+    is a little shorter in the middle (0.6 % at mid-panel for a 13 deg change); the integral below
+    is exact for both cases, so the built wing has exactly the aspect ratio asked for."""
     r = chord_ratios(chord_law, vec)
     f = span_fractions(vec)
-    return sum(fi * 0.5 * (a + b) for fi, a, b in zip(f, r[:-1], r[1:]))
+    th = [math.radians(vec[f"twist{i}_deg"]) for i in range(4)]
+    return sum(fi * panel_mean_chord(a, b, ta, tb) for fi, a, b, ta, tb in zip(f, r[:-1], r[1:], th[:-1], th[1:]))
+
+
+_GL_T, _GL_W = (lambda x, w: ((x + 1.0) / 2.0, w / 2.0))(*__import__("numpy").polynomial.legendre.leggauss(32))
+
+
+def panel_mean_chord(a: float, b: float, ta: float, tb: float) -> float:
+    """Mean over a straight panel of |chord vector|; chords a, b and twists ta, tb [rad] at its ends."""
+    if ta == tb:
+        return 0.5 * (a + b)
+    ax, az, bx, bz = a * math.cos(ta), a * math.sin(ta), b * math.cos(tb), b * math.sin(tb)
+    return float(sum(w * math.hypot(ax + t * (bx - ax), az + t * (bz - az)) for t, w in zip(_GL_T, _GL_W)))
 
 
 def check_vector(vec: dict[str, float]) -> None:

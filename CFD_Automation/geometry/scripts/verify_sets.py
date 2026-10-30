@@ -38,7 +38,7 @@ from cfdauto.geometry.params import WING_TYPES, load_config, resolve  # noqa: E4
 from cfdauto.geometry.sections import build_wing_sections  # noqa: E402
 
 DOCS = ROOT / "docs"
-SETS = ("training", "corner1", "corner2", "reference")
+SETS = ("training", "training_full", "corner1", "corner2", "reference")
 
 
 def check(spec, vec, te) -> dict:

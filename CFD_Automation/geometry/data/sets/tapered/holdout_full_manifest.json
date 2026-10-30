@@ -1,0 +1,164 @@
+{
+ "wing_type": "tapered",
+ "set": "holdout_full",
+ "code_version": "0.6.0",
+ "code_hash": "5eca7e9fcd8f8d414a59614c334d13b67c066a77f0e3a98f4e6529a0fb5731b0",
+ "loft_backend": "numpy",
+ "wings": [
+  {
+   "index": 0,
+   "built": false,
+   "input_hash": "fca75ae44e907e4de7d745007795b71b3110a30b031f5692a05080e6d1d97cba",
+   "vector": {
+    "root_chord_m": 0.22774698805494592,
+    "c2_ratio": 0.8838883066875539,
+    "c3_ratio": 0.8309639022868089,
+    "c4_ratio": 0.7881811038474964,
+    "semi_span_m": 0.36095672474965823,
+    "aspect_ratio": 3.546934996387921,
+    "b3_ratio": 0.20197819560210578,
+    "split_ratio": 0.6869047196620481,
+    "sweep1_deg": 34.40513284709406,
+    "sweep2_deg": 34.40513284709406,
+    "sweep3_deg": 34.40513284709406,
+    "twist0_deg": 1.2047201335421502,
+    "twist1_deg": -0.5541336802931349,
+    "twist2_deg": 2.760172718507137,
+    "twist3_deg": -5.973062357227775,
+    "dihedral_p1_deg": -8.999260419913341,
+    "dihedral_p2_deg": 4.520802220520096,
+    "dihedral_p3_deg": -8.349436390813,
+    "airfoils": [
+     "naca4415",
+     "naca4415",
+     "mh45",
+     "naca4412"
+    ]
+   }
+  },
+  {
+   "index": 1,
+   "built": false,
+   "input_hash": "d5f0f8eb2cbdd976937bc8f1c6795df74158bdb4fbb581923bf6771d3a795a41",
+   "vector": {
+    "root_chord_m": 0.27861703248894093,
+    "c2_ratio": 0.869784908129251,
+    "c3_ratio": 0.7300957617606042,
+    "c4_ratio": 0.48879220413025537,
+    "semi_span_m": 1.1975268193082786,
+    "aspect_ratio": 11.565689178083721,
+    "b3_ratio": 0.4720263649731836,
+    "split_ratio": 0.48244922984593036,
+    "sweep1_deg": -7.0496883496764635,
+    "sweep2_deg": -7.0496883496764635,
+    "sweep3_deg": -7.0496883496764635,
+    "twist0_deg": 3.1877920118368603,
+    "twist1_deg": -1.8877312322272601,
+    "twist2_deg": -4.776236651994759,
+    "twist3_deg": 6.779252516549921,
+    "dihedral_p1_deg": -5.768834279387802,
+    "dihedral_p2_deg": 7.128213768158158,
+    "dihedral_p3_deg": -5.801885217259953,
+    "airfoils": [
+     "naca4412",
+     "mh104",
+     "s5010",
+     "s5010"
+    ]
+   }
+  },
+  {
+   "index": 2,
+   "built": false,
+   "input_hash": "46f98caac772b8c27e4c759609c9a41d87e97fc87fbc61423db7d70e6a7dddb3",
+   "vector": {
+    "root_chord_m": 0.9234743785359023,
+    "c2_ratio": 0.968538203436802,
+    "c3_ratio": 0.9524524190305117,
+    "c4_ratio": 0.8935121811970332,
+    "semi_span_m": 5.938960122909333,
+    "aspect_ratio": 13.594471991026463,
+    "b3_ratio": 0.5534927703095778,
+    "split_ratio": 0.6616907931317753,
+    "sweep1_deg": 8.663371013242948,
+    "sweep2_deg": 8.663371013242948,
+    "sweep3_deg": 8.663371013242948,
+    "twist0_deg": -0.23588981774194306,
+    "twist1_deg": -3.14298844132968,
+    "twist2_deg": 3.040952760180005,
+    "twist3_deg": -2.6377715651925158,
+    "dihedral_p1_deg": -0.7365017733591657,
+    "dihedral_p2_deg": -7.9711117621700645,
+    "dihedral_p3_deg": 1.6962849983013957,
+    "airfoils": [
+     "mh60",
+     "mh60",
+     "mh61",
+     "mh45"
+    ]
+   }
+  },
+  {
+   "index": 3,
+   "built": false,
+   "input_hash": "8123d0fe4311f5c3339b0ffd2565f846dc76962b8054eda2ccbdc615efa8d9a5",
+   "vector": {
+    "root_chord_m": 0.534376946108859,
+    "c2_ratio": 0.9484196201873333,
+    "c3_ratio": 0.7817414488868557,
+    "c4_ratio": 0.6669966181879154,
+    "semi_span_m": 1.627337903632829,
+    "aspect_ratio": 7.310108742152764,
+    "b3_ratio": 0.34457557179912174,
+    "split_ratio": 0.23632695969803105,
+    "sweep1_deg": 21.063622994589636,
+    "sweep2_deg": 21.063622994589636,
+    "sweep3_deg": 21.063622994589636,
+    "twist0_deg": -1.1813746784560766,
+    "twist1_deg": 4.7344790414215225,
+    "twist2_deg": 0.5717890487588466,
+    "twist3_deg": 0.8382060842066048,
+    "dihedral_p1_deg": 5.323581010818092,
+    "dihedral_p2_deg": -5.835643892251195,
+    "dihedral_p3_deg": 5.886205187363824,
+    "airfoils": [
+     "s5010",
+     "naca4412",
+     "naca4415",
+     "naca4415"
+    ]
+   }
+  },
+  {
+   "index": 4,
+   "built": false,
+   "input_hash": "ab16513eaf7abbe878a7c837cc827daa1abf3251e21a131eb2132d4f58f726cc",
+   "vector": {
+    "root_chord_m": 0.7126935911288593,
+    "c2_ratio": 0.8259223103620592,
+    "c3_ratio": 0.5615328633442946,
+    "c4_ratio": 0.3580216819632603,
+    "semi_span_m": 4.333506088935072,
+    "aspect_ratio": 17.916219899283206,
+    "b3_ratio": 0.3170063157325941,
+    "split_ratio": 0.39701422315403906,
+    "sweep1_deg": -4.155148279653423,
+    "sweep2_deg": -4.155148279653423,
+    "sweep3_deg": -4.155148279653423,
+    "twist0_deg": 1.6032567204191288,
+    "twist1_deg": 2.1572777727716232,
+    "twist2_deg": -2.3950978488275054,
+    "twist3_deg": 2.827489999526451,
+    "dihedral_p1_deg": 8.150790384929962,
+    "dihedral_p2_deg": 1.2693151337511317,
+    "dihedral_p3_deg": 8.72395143743654,
+    "airfoils": [
+     "mh104",
+     "s5010",
+     "naca4412",
+     "mh61"
+    ]
+   }
+  }
+ ]
+}

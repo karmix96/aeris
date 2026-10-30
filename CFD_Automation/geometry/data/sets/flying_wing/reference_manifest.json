@@ -2,7 +2,7 @@
  "wing_type": "flying_wing",
  "set": "reference",
  "code_version": "0.6.0",
- "code_hash": "9fa3bb9e552b9ac4738bdae35c2917a13a6904fab8f04ae358c0ba3dd1ac4252",
+ "code_hash": "5eca7e9fcd8f8d414a59614c334d13b67c066a77f0e3a98f4e6529a0fb5731b0",
  "loft_backend": "numpy",
  "wings": [
   {
@@ -10,8 +10,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "ec62fb24ede33f9916d1bb8c43c283a8f5e7cc37aba7671608484e76f1d20c70",
-   "surface_hash": "1589cab0dfc40f0172b9789e8ddf095a8b387e7be2215b714122d2e534b05a4e",
+   "input_hash": "122cefa1d8a6bbea100e5db46d73e68ffa1d285c998f357ee33eab5dc8226c74",
+   "surface_hash": "7afe252e10bc3c6b9c6dd8c89da7984f5faf953ee2edff7e79d50ada13674f8d",
    "labels": [
     "flying_wing",
     "aft_swept",
@@ -23,7 +23,7 @@
     "c2_ratio": 0.87,
     "c3_ratio": 0.74,
     "c4_ratio": 0.6000000000000001,
-    "semi_span_m": 1.5600000000000003,
+    "semi_span_m": 1.5599301419569098,
     "aspect_ratio": 6.0,
     "b3_ratio": 0.35,
     "split_ratio": 0.5,
@@ -36,7 +36,13 @@
     "twist3_deg": -3.5,
     "dihedral_p1_deg": 2.5,
     "dihedral_p2_deg": 2.5,
-    "dihedral_p3_deg": 2.5
+    "dihedral_p3_deg": 2.5,
+    "airfoils": [
+     "mh60",
+     "mh60",
+     "mh45",
+     "mh45"
+    ]
    }
   },
   {
@@ -44,8 +50,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "7da95150603170882aabf3c77d0f59dc984e86e71748cf9c6808730dba3c0d72",
-   "surface_hash": "8956c1c069a1953be82b8d919628621ecd2d08022e071ad68894768de294ba84",
+   "input_hash": "5114525484537414890f5a8f824e51e145ddd234c9f640fd7cde45354268f881",
+   "surface_hash": "a4885e15f8c98e7e94c73a2ee2252fcbd0a195a699294816329163d33d6c07ff",
    "labels": [
     "flying_wing",
     "aft_swept",
@@ -59,7 +65,7 @@
     "c2_ratio": 0.8508988962784693,
     "c3_ratio": 0.7489287779944924,
     "c4_ratio": 0.5660691527204418,
-    "semi_span_m": 0.3143155654344638,
+    "semi_span_m": 0.31427904907502907,
     "aspect_ratio": 3.1454414955720407,
     "b3_ratio": 0.42140268759515975,
     "split_ratio": 0.593859792175863,
@@ -72,7 +78,13 @@
     "twist3_deg": -4.78784314065642,
     "dihedral_p1_deg": 1.4165157041934375,
     "dihedral_p2_deg": 4.685304379813012,
-    "dihedral_p3_deg": 1.5702310045253118
+    "dihedral_p3_deg": 1.5702310045253118,
+    "airfoils": [
+     "mh60",
+     "mh60",
+     "mh45",
+     "mh45"
+    ]
    }
   },
   {
@@ -80,8 +92,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "d0b75ab4e3de52dee85f7e97cc77653a2354e88fc9e4d31f053887f9d4b9ab90",
-   "surface_hash": "bbfc7f64c2311ef07947a03a44d820d642f4fd45eeaae1db734b5f513720df6b",
+   "input_hash": "8a8564654627ae82964be831d8a4857429e05f084bf038922277e4f353c01e74",
+   "surface_hash": "03d1483d34e060569f0f7f5429e314c10b59bf6c2d20de947599dc7ac0406177",
    "labels": [
     "flying_wing",
     "aft_swept",
@@ -95,7 +107,7 @@
     "c2_ratio": 0.9441789400998032,
     "c3_ratio": 0.8766057732940372,
     "c4_ratio": 0.7587164484489701,
-    "semi_span_m": 3.360403952887273,
+    "semi_span_m": 3.360042368930256,
     "aspect_ratio": 8.445999281103209,
     "b3_ratio": 0.4885924634615398,
     "split_ratio": 0.4523798348622362,
@@ -108,7 +120,13 @@
     "twist3_deg": -2.3574140507364434,
     "dihedral_p1_deg": 0.8835353504901748,
     "dihedral_p2_deg": 3.6388097478084913,
-    "dihedral_p3_deg": 4.367979622209529
+    "dihedral_p3_deg": 4.367979622209529,
+    "airfoils": [
+     "mh60",
+     "mh60",
+     "mh45",
+     "mh45"
+    ]
    }
   },
   {
@@ -116,8 +134,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "012d12c68103f28cdd84d6f98aab37ed3bebf0301265499bbe11d78690eedbd1",
-   "surface_hash": "1fa3ec12fbf824617a1e19bab8126c3dd620dc6474d4b0cdbe297433ffbd8d0f",
+   "input_hash": "6719443f609ee66d05ba6b3221942c271a673b73c1aab15952f60254dc3c2c40",
+   "surface_hash": "97bbf0ac90eb0975db36a8ca80f64084dc1cf3eff46cfb53aa1064090ece3752",
    "labels": [
     "flying_wing",
     "aft_swept",
@@ -131,7 +149,7 @@
     "c2_ratio": 0.8680414359099234,
     "c3_ratio": 0.7039047092361741,
     "c4_ratio": 0.597664141155047,
-    "semi_span_m": 0.8912254399767262,
+    "semi_span_m": 0.8911087293647604,
     "aspect_ratio": 8.341221901862763,
     "b3_ratio": 0.2640594064524303,
     "split_ratio": 0.4456624884160365,
@@ -144,7 +162,13 @@
     "twist3_deg": -5.538497230567087,
     "dihedral_p1_deg": 4.923248279905939,
     "dihedral_p2_deg": 0.5767854551001594,
-    "dihedral_p3_deg": 4.165531053404631
+    "dihedral_p3_deg": 4.165531053404631,
+    "airfoils": [
+     "mh60",
+     "mh60",
+     "mh45",
+     "mh45"
+    ]
    }
   },
   {
@@ -152,8 +176,8 @@
    "passed": true,
    "gate": null,
    "reason": "",
-   "input_hash": "639c95b10fa15aa336123dbb6f1523a3befdf1c566ae218051f2e9c55d091736",
-   "surface_hash": "7d0b18c09dc035da546e9626edc9601f9374a709744fb920db3708c1da00aae0",
+   "input_hash": "4ac1966cf2e6c313d6131259b0d95c16b0d7ad9f0a44ec78d7bb9c05865ed273",
+   "surface_hash": "9b719599bd88ba0b2c6517772a23602f51e3c3ccf2078a88574319e806ee97a2",
    "labels": [
     "flying_wing",
     "aft_swept",
@@ -165,7 +189,7 @@
     "c2_ratio": 0.9599087136185946,
     "c3_ratio": 0.8714959690397748,
     "c4_ratio": 0.7520914423379899,
-    "semi_span_m": 2.1950659174102283,
+    "semi_span_m": 2.194285098090319,
     "aspect_ratio": 7.373415270124641,
     "b3_ratio": 0.48164745835267586,
     "split_ratio": 0.31198465979494805,
@@ -178,7 +202,13 @@
     "twist3_deg": -5.657494488502673,
     "dihedral_p1_deg": 4.421058673069832,
     "dihedral_p2_deg": 3.1351882232833237,
-    "dihedral_p3_deg": 2.4968365891830606
+    "dihedral_p3_deg": 2.4968365891830606,
+    "airfoils": [
+     "mh60",
+     "mh60",
+     "mh45",
+     "mh45"
+    ]
    }
   }
  ]

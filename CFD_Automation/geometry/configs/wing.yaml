@@ -28,7 +28,11 @@ trailing_edge:
   open_from_xc: 0.90                  # linear ramp over the last 10 % of chord (pyGeo bluntTaperRange 0.1)
 
 types:
-  # Every range below has its basis in geometry/decisions/shape_ranges.md (source or "our choice").
+  # Two spaces per type (decided 30 Oct 2026):
+  #   ranges + airfoils:            the FOCUS space: realistic Class I-II wings, sampled densely
+  #   full_ranges + full_airfoils:  the FULL space: everything the generator supports, sampled sparsely;
+  #                                 a variable not in full_ranges keeps its focus range
+  # The focus box lies inside the full box. Bases: geometry/decisions/shape_ranges.md.
   bwb:                                # blended wing body: big root chord, strong taper, cranked
     chord_law: stations
     sweep_law: panels
@@ -36,7 +40,7 @@ types:
     airfoils: [mh104, mh104, mh61, mh61]   # body MH 104 (15 %), wing MH 61 (10 %), reflexed: Suewatanakul et al. 2022
     pinned: {}
     ranges:
-      root_chord_m:    [0.40, 0.80]   # real tailless wings (configs/real_uavs.yaml)
+      root_chord_m:    [0.40, 1.80]   # real tailless wings; Wang & Zhou 2022 root 1.80 m; AUTh RX-3 (S 4.9 m2, AR 8)
       aspect_ratio:    [3.0, 9.0]     # real tailless wings 2.9-8.6
       c2_ratio:        [0.55, 0.80]   # BlendedNet 0.55-0.85; Wang & Zhou 2022 0.61
       c3_ratio:        [0.30, 0.55]   # Wang & Zhou 2022 0.39 (BlendedNet, a Group 3 vehicle: 0.18-0.28)
@@ -53,6 +57,29 @@ types:
       dihedral_p1_deg: [0.0, 3.0]     # Raymer: "normally about 0 to 5 degrees"; Suewatanakul 2022: 5
       dihedral_p2_deg: [0.0, 5.0]
       dihedral_p3_deg: [0.0, 5.0]
+    full_airfoils:                    # full space: every sourced section is a candidate (first = suggested)
+      - [mh104, s5010, mh60, naca4415]
+      - [mh104, s5010, mh60, naca4415]
+      - [mh61, s5010, mh45, naca4412]
+      - [mh61, s5010, mh45, naca4412]
+    full_ranges:                      # full space: what the generator supports (sampled sparsely, corners here)
+      root_chord_m:    [0.30, 2.50]
+      aspect_ratio:    [2.5, 10.0]
+      c2_ratio:        [0.45, 0.90]   # BlendedNet 0.55-0.85
+      c3_ratio:        [0.15, 0.60]   # BlendedNet 0.18-0.28
+      c4_ratio:        [0.04, 0.25]   # BlendedNet 0.06-0.09
+      b3_ratio:        [0.30, 0.65]
+      split_ratio:     [0.25, 0.75]
+      sweep1_deg:      [10.0, 60.0]   # BlendedNet 40-60
+      sweep2_deg:      [10.0, 60.0]
+      sweep3_deg:      [0.0, 60.0]    # BlendedNet 24-40; Pliakos 0-60
+      twist0_deg:      [-2.0, 6.0]    # Hainline & Agarwal 2017: root 6
+      twist1_deg:      [-5.0, 5.0]   # Pliakos et al. 2025 design-space bound
+      twist2_deg:      [-5.0, 5.0]
+      twist3_deg:      [-10.0, 7.0]    # Pliakos +-7; Hainline washout 7
+      dihedral_p1_deg: [-10.0, 10.0]   # Pliakos et al. 2025 design-space bound
+      dihedral_p2_deg: [-10.0, 10.0]
+      dihedral_p3_deg: [-10.0, 10.0]
 
   conventional:                       # cranked wing with a tail: chord and sweep may change at b1 and b2
     chord_law: per_panel              # each panel's own taper, so no chord grows outboard
@@ -78,6 +105,29 @@ types:
       dihedral_p1_deg: [0.0, 5.0]     # Raymer: "normally about 0 to 5 degrees"
       dihedral_p2_deg: [0.0, 5.0]
       dihedral_p3_deg: [0.0, 5.0]
+    full_airfoils:
+      - [naca4415, naca4412, mh104, mh60, s5010]
+      - [naca4415, naca4412, mh104, mh60, s5010]
+      - [naca4412, naca4415, mh61, mh45, s5010]
+      - [naca4412, naca4415, mh61, mh45, s5010]
+    full_ranges:
+      root_chord_m:    [0.08, 1.00]
+      aspect_ratio:    [3.0, 20.0]
+      c2_ratio:        [0.70, 1.00]
+      c3_ratio:        [0.60, 1.00]
+      c4_ratio:        [0.40, 1.00]
+      b3_ratio:        [0.15, 0.60]
+      split_ratio:     [0.20, 0.80]
+      sweep1_deg:      [-15.0, 35.0]
+      sweep2_deg:      [-15.0, 35.0]
+      sweep3_deg:      [-15.0, 35.0]
+      twist0_deg:      [-2.0, 4.0]
+      twist1_deg:      [-5.0, 5.0]   # Pliakos et al. 2025 design-space bound
+      twist2_deg:      [-5.0, 5.0]
+      twist3_deg:      [-7.0, 7.0]    # Pliakos et al. 2025
+      dihedral_p1_deg: [-10.0, 10.0]   # Pliakos et al. 2025 design-space bound
+      dihedral_p2_deg: [-10.0, 10.0]
+      dihedral_p3_deg: [-10.0, 10.0]
 
   tapered:                            # wing with a tail and straight edges root to tip (rectangular when c4 = 1)
     chord_law: linear_taper
@@ -99,6 +149,25 @@ types:
       dihedral_p1_deg: [0.0, 5.0]
       dihedral_p2_deg: [0.0, 5.0]
       dihedral_p3_deg: [0.0, 5.0]
+    full_airfoils:
+      - [naca4415, naca4412, mh104, mh60, s5010]
+      - [naca4415, naca4412, mh104, mh60, s5010]
+      - [naca4412, naca4415, mh61, mh45, s5010]
+      - [naca4412, naca4415, mh61, mh45, s5010]
+    full_ranges:
+      root_chord_m:    [0.08, 1.00]
+      aspect_ratio:    [3.0, 20.0]
+      c4_ratio:        [0.25, 1.00]
+      b3_ratio:        [0.15, 0.60]
+      split_ratio:     [0.20, 0.80]
+      sweep1_deg:      [-15.0, 35.0]
+      twist0_deg:      [-2.0, 4.0]
+      twist1_deg:      [-5.0, 5.0]   # Pliakos et al. 2025 design-space bound
+      twist2_deg:      [-5.0, 5.0]
+      twist3_deg:      [-7.0, 7.0]    # Pliakos et al. 2025
+      dihedral_p1_deg: [-10.0, 10.0]   # Pliakos et al. 2025 design-space bound
+      dihedral_p2_deg: [-10.0, 10.0]
+      dihedral_p3_deg: [-10.0, 10.0]
 
   flying_wing:                        # tailless, straight edges, moderate taper, swept
     chord_law: linear_taper
@@ -120,14 +189,35 @@ types:
       dihedral_p1_deg: [0.0, 5.0]     # Horten-Panek PUL-10 4; flying-wing MAV 2
       dihedral_p2_deg: [0.0, 5.0]
       dihedral_p3_deg: [0.0, 5.0]
+    full_airfoils:
+      - [mh60, mh45, mh104, s5010, naca4415]
+      - [mh60, mh45, mh104, s5010, naca4415]
+      - [mh45, mh60, mh61, s5010, naca4412]
+      - [mh45, mh60, mh61, s5010, naca4412]
+    full_ranges:
+      root_chord_m:    [0.15, 1.20]
+      aspect_ratio:    [2.5, 12.0]    # Panknin example 10
+      c4_ratio:        [0.20, 1.00]
+      b3_ratio:        [0.15, 0.60]
+      split_ratio:     [0.20, 0.80]
+      sweep1_deg:      [0.0, 60.0]    # Pliakos et al. 2025: c/4 sweep 0-60
+      twist0_deg:      [-2.0, 4.0]
+      twist1_deg:      [-5.0, 5.0]   # Pliakos et al. 2025 design-space bound
+      twist2_deg:      [-5.0, 5.0]
+      twist3_deg:      [-12.0, 7.0]   # Prandtl-D about 10 washout; Pliakos +7
+      dihedral_p1_deg: [-10.0, 10.0]   # Pliakos et al. 2025 design-space bound
+      dihedral_p2_deg: [-10.0, 10.0]
+      dihedral_p3_deg: [-10.0, 10.0]
 
 sets:
   seeds:
-    bwb:          {training: 1001, holdout: 2001}
-    conventional: {training: 1002, holdout: 2002}
-    tapered:      {training: 1003, holdout: 2003}
-    flying_wing:  {training: 1004, holdout: 2004}
-  training_size: 100
+    bwb:          {training: 1001, holdout: 2001, training_full: 1101, holdout_full: 2101}
+    conventional: {training: 1002, holdout: 2002, training_full: 1102, holdout_full: 2102}
+    tapered:      {training: 1003, holdout: 2003, training_full: 1103, holdout_full: 2103}
+    flying_wing:  {training: 1004, holdout: 2004, training_full: 1104, holdout_full: 2104}
+  training_size: 100                  # focus space (dense)
   holdout_size: 10
+  training_full_size: 40              # full space (sparse)
+  holdout_full_size: 5
   coverage_random_sets: 1000
   coverage_seed: 3001

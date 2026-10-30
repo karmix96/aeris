@@ -151,6 +151,16 @@ aircraft:
   - {name: Developmental Sciences R-4D Sky Eye, class: I, family: tailed, family_src: K, span: 3.71, area: 2.805, mtow: null,
      cruise: null, max: null, stype: thesis_report, use: ranges, note: "full-scale vehicle in the tunnel; mean aerodynamic chord 0.81 m; modified, armed",
      source: "https://ntrs.nasa.gov/api/citations/19790022980/downloads/19790022980.pdf"}
+  # --- AUTh BWB UAVs (Panagiotou, Yakinthos et al.) -------------------------------------
+  - {name: AUTh RX-3 tactical BWB, class: II, family: tailless, family_src: S, span: 6.26, area: 4.9, mtow: 260,
+     cruise: 44.4, max: null, stype: paper, use: ranges, note: "Antoniou et al. 2025 Table 1: S 4.9 m2, c/4 sweep 33 deg, AR 8, cruise 160 km/h, take-off 108 km/h. Span = sqrt(AR S) (our calculation); Wikipedia gives 7.2 m, so the AR may refer to part of the planform",
+     source: "https://www.mdpi.com/2673-4591/90/1/18"}
+  - {name: AUTh RX-3 1:3 subscale BWB, class: I, family: tailless, family_src: S, span: 2.4, area: null, mtow: 6,
+     cruise: 19.4, max: null, stype: paper, use: span, note: "Kapsalis et al. 2026: span 2.4 m, 6 kg, 70 km/h",
+     source: "https://www.mdpi.com/2673-4591/133/1/95"}
+  - {name: Lehmkuehler BWB UAV, class: I, family: tailless, family_src: S, span: 3.0, area: null, mtow: 16,
+     cruise: null, max: null, stype: paper, use: span, note: "ICAS2012-675: 16 kg, 3 m span, sweep limited to 15 deg",
+     source: "https://www.icas.org/ICAS_ARCHIVE/ICAS2012/PAPERS/675.PDF"}
   - {name: Lockheed MQM-105 Aquila, class: I, family: tailless, family_src: S, span: 3.764, area: 2.917, mtow: 66.5,
      cruise: null, max: null, stype: manufacturer, use: ranges, note: "Lockheed final report Table 1(A) p. 39: overall span 12.35 ft, projected area 31.4 ft2 (reference 11.5 ft, 30.2 ft2), MAC 32.26 in, root 40 in, tip 23 in, taper 0.58, AR 4.86, LE sweep 28 deg, NACA 23015 mod.; gross 146.5 lb",
      source: "https://apps.dtic.mil/sti/pdfs/ADA068345.pdf"}

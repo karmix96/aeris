@@ -123,3 +123,9 @@
     (`geometry/decisions/shape_ranges.md`). BWB airfoils MH 104 / MH 61 (was MH 91 / E374 / NLF1015);
     tailed sweep −5…15°, washout ≤ 5°, dihedral 0–5°. Open: check Raymer's taper and washout values
     in print; read PUL-10 and the flying-wing MAV papers directly. Layout shares remain our choice.
+46. **Two spaces (decided 30 Oct 2026).** Full space = everything supported (sparse: 40 + 5 + corners
+    per type); focus space = realistic (dense: 100 + 5 + 10). Full bounds from Pliakos et al. 2025 and
+    the widest sourced values. Open: the full space reaches 20 m span and Re 7.6 × 10⁶ (BWB root):
+    keep or cap?
+47. **Closest prior work.** Pliakos et al. 2025 (AUTh) automate OpenVSP → ANSA → Fluent for UAV wings.
+    The paper must state our difference. Their BWB airfoils and chords are paywalled.

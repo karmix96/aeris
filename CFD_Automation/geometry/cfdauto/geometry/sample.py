@@ -127,20 +127,29 @@ def draw_mixed(cfg: Config, n: int, seed: int) -> list[tuple[str, dict]]:
 
 
 def make_sets(cfg: Config, wing_type: str) -> dict[str, dict]:
-    spec = cfg.types[wing_type]
+    """Dense in the focus space (realistic wings), sparse in the full space (everything supported).
+
+    focus: training, reference, holdout.  full: training_full, holdout_full, and both corner
+    sets (the corners test the edges of what we claim to support)."""
+    spec, full = cfg.types[wing_type], cfg.full[wing_type]
     seeds = cfg.sets["seeds"][wing_type]
-    if seeds["training"] == seeds["holdout"]:
-        raise ValueError("training and hold-out need different seeds")
+    used = [seeds[k] for k in ("training", "holdout", "training_full", "holdout_full")]
+    if len(set(used)) != len(used):
+        raise ValueError("training, hold-out and their full versions need different seeds")
     training = lhs(spec, cfg.sets["training_size"], seeds["training"])
     ref = reference(spec, training)
-    head = {"wing_type": wing_type, "variables": list(spec.free_variables)}
+    head = {"wing_type": wing_type, "space": "focus", "variables": list(spec.free_variables)}
+    head_f = head | {"space": "full", "variables": list(full.free_variables)}
     return {
         "training": head | {"how": "latin hypercube", "seed": seeds["training"], "vectors": training},
-        "corner1": head | {"how": "each variable at each bound, others mid-range", "vectors": corner1(spec)},
-        "corner2": head | {"how": "binary covering array of strength 2",
-                           "size_rule": "smallest N with C(N-1, ceil(N/2)) >= n_variables",
-                           "matrix": corner2_matrix(len(spec.free_variables)).astype(int).tolist(),
-                           "vectors": corner2(spec)},
+        "training_full": head_f | {"how": "latin hypercube over the full space", "seed": seeds["training_full"],
+                                   "vectors": lhs(full, cfg.sets["training_full_size"], seeds["training_full"])},
+        "corner1": head_f | {"how": "each variable at each bound of the full space, others mid-range",
+                             "vectors": corner1(full)},
+        "corner2": head_f | {"how": "binary covering array of strength 2 on the full space",
+                             "size_rule": "smallest N with C(N-1, ceil(N/2)) >= n_variables",
+                             "matrix": corner2_matrix(len(full.free_variables)).astype(int).tolist(),
+                             "vectors": corner2(full)},
         "reference": head | {"how": "five wings by rule", "rules": [r["rule"] for r in ref],
                              "training_index": [r["training_index"] for r in ref],
                              "coverage": coverage_check(spec, ref, training, cfg.sets["coverage_random_sets"],
@@ -149,6 +158,9 @@ def make_sets(cfg: Config, wing_type: str) -> dict[str, dict]:
         "holdout": head | {"how": "latin hypercube, other seed; sealed: never built in Stage 1",
                            "seed": seeds["holdout"], "sealed": True,
                            "vectors": lhs(spec, cfg.sets["holdout_size"], seeds["holdout"])},
+        "holdout_full": head_f | {"how": "latin hypercube over the full space, other seed; sealed",
+                                  "seed": seeds["holdout_full"], "sealed": True,
+                                  "vectors": lhs(full, cfg.sets["holdout_full_size"], seeds["holdout_full"])},
     }
 
 

@@ -24,7 +24,8 @@ sys.path.insert(0, str(ROOT))
 from cfdauto import __version__  # noqa: E402
 from cfdauto.geometry import airfoils, published_wings  # noqa: E402
 from cfdauto.geometry.params import VARIABLES, WING_TYPES, load_config  # noqa: E402
-from cfdauto.geometry.planform import aspect_ratio, mean_aero_chord  # noqa: E402
+from cfdauto.geometry.planform import aspect_ratio, build_planform, mean_aero_chord  # noqa: E402
+from cfdauto.geometry.sample import lhs  # noqa: E402
 from cfdauto.geometry.sections import build_wing_sections  # noqa: E402
 
 DOCS = ROOT / "docs"
@@ -75,6 +76,8 @@ DECISIONS = [
          "Straight leading edge for straight-edged wings. Variables a law computes need no range.", "req", ""),
         ("Size ranges from real wings", "Root chord: BWB 0.40–1.80 m; cranked and tapered 0.13–0.75 m; flying wing 0.25–1.05 m. AR: tailless 3–9; with a tail 4.5–16.5.",
          "All 27 real wings with a published area (makers, papers, theses; Class II from Götten et al. 2021, Essari 2015 and the AUTh RX-3 BWB) have a generated wing within 10 % in span and mean chord, and all 62 real spans are inside (see <a href='#real'>Real wings</a>). BWB root raised from 0.80 to 1.80 m on 30 Oct 2026: the old range was sized on small flying wings and missed real BWBs (RX-3: 4.9 m², 260 kg; Wang &amp; Zhou: root 1.80 m).", "meas", ""),
+        ("Cranked differs from tapered", "Cranked focus = constant-chord centre and tapered outer panels: inner chord 0.95–1, middle 0.80–1, outer 0.50–0.85 of the chord inboard; sweep −3–3° inner, −5–10° middle, 0–15° outer. Full space unchanged.",
+         "Your remark (30 Oct 2026): the two types looked alike, because the old per-panel ratios (0.85/0.75/0.65–1) made mostly straight-tapered wings with faint breaks. The layout follows Class II UAVs like Hermes 450 and Heron (from photos; no published chord table), so it is our choice.", "own", ""),
         ("Shape ranges from sources", "Every range has its basis in the <a href='#inputs'>Why this range</a> column and in <code>decisions/shape_ranges.md</code>. Changed on 29 Oct 2026: tailed sweep −5° to +15° (was −10° to +20°); tailed washout at most 5° (was 7°); dihedral 0–5° for every type (Raymer); flying-wing taper 0.3–0.9 and sweep 10–40°; BWB tip down to 0.06, first sweep from 15°.",
          "Each range now rests on a design rule (Raymer) or on a published small UAV (BWB: Wang &amp; Zhou 2022, Suewatanakul 2022, Lehmkuehler 2012, Hainline 2017; flying wing: Milenković-Babić 2024, Panknin, PUL-10, a flying-wing MAV). Layout shares (b3, split) remain our choice. BlendedNet is a larger Group 3 BWB and is not used for the ranges.", "src", ""),
         ("Two spaces: full and focus", "Per type, <code>ranges</code> + <code>airfoils</code> = the focus space (realistic, suggested); <code>full_ranges</code> + <code>full_airfoils</code> = the full space (everything supported). The focus box must lie inside the full box, and each suggested section must be a full candidate; the YAML is refused otherwise.",
@@ -160,7 +163,7 @@ FIXES = [
 
 OPEN = [  # (group, title, text, kind)  kind: decide = needs your call; act = a task, no choice left
     ("Study plan (Stage 0)", "Middle Re level", "Levels are now 1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶. Keep 1.5 × 10⁶, or move it to 1 × 10⁶ (log-middle of 3 × 10⁵ and 3 × 10⁶)?", "decide"),
-    ("Study plan (Stage 0)", "Transition check", "ADflow has no transition model (SA is its only differentiated, tested model). Run SU2 γ-Reθ on a few reference wings at 1 × 10⁵ and 3 × 10⁵ on a y+ ≤ 1 mesh to size the model band? Needs a transition-ready mesh option.", "decide"),
+    ("Study plan (Stage 0)", "Transition check", "ADflow has no transition model (SA is its only differentiated, tested model). In 2-D, tripped vs free transition changes profile drag by +37–128 % (median 76 %) at Re ≥ 3 × 10⁵ (XFOIL, <a href='#phenomena'>Flow phenomena</a>): tens of counts, far above the 3-count mesh budget. Run SU2 γ-Reθ on a few reference wings at 1 × 10⁵ and 3 × 10⁵ on a y+ ≤ 1 mesh? Needs a transition-ready mesh option.", "decide"),
     ("Study plan (Stage 0)", "Grid share 65 %", "Of the 3-count drag budget, 65 % goes to the mesh. Keep?", "decide"),
     ("Study plan (Stage 0)", "Iterative error", "≤ 10 % of the budget is loose; Eça &amp; Hoekstra ask 0.1–1 %. Tighten to 1 %?", "decide"),
     ("Study plan (Stage 0)", "Pitching-moment tolerance 0.002", "Our choice, no source. Keep?", "decide"),
@@ -355,8 +358,8 @@ PHENOMENA = [
     ("Laminar flow, transition and laminar separation bubbles",
      "Every type. Mean-chord Re 4 × 10⁴ – 3.4 × 10⁶; most BWB and mini Class I wings sit below 10⁶. Our low-Re sections (MH 45, MH 60, MH 61, MH 104) are designed for long laminar runs.",
      "Drag and lift depend on where the boundary layer turns turbulent. A bubble adds drag; at high angle it can burst, giving abrupt stall and hysteresis. Small changes in turbulence or roughness move the result.",
-     "No. Spalart–Allmaras without transition makes the wall flow turbulent from the nose, so drag is biased. Carried as a model band (Stage 0); SU2 γ-Reθ is the planned check.",
-     "Carmichael 1981 (NASA CR-165803); Lissaman 1983 (Annu. Rev. Fluid Mech. 15); Mueller & DeLaurier 2003 (Annu. Rev. Fluid Mech. 35)"),
+     "No. Spalart–Allmaras without transition makes the wall flow turbulent from the nose. In 2-D (XFOIL) that raises profile drag by 37–128 % (median 76 %) at Re ≥ 3 × 10⁵. Carried as a model band (Stage 0); SU2 γ-Reθ is the proposed check.",
+     "Carmichael 1981 (NASA CR-165803); Lissaman 1983 (Annu. Rev. Fluid Mech. 15); Mueller & DeLaurier 2003 (Annu. Rev. Fluid Mech. 35); our XFOIL runs (Drela 1989)"),
     ("Very low Re at the tips",
      "BWB tip chords 3.5–16 cm: tip Re down to 2 × 10⁴. Tapered and cranked tips down to 2–3 × 10⁴ on the smallest wings.",
      "Thick laminar boundary layers and early separation at the tip, where the vortex forms.",
@@ -403,6 +406,106 @@ PHENOMENA = [
      "No. The CFD wing is rigid. Many span stations are needed.",
      "Outside this study (no aeroelasticity)"),
 ]
+
+
+SUMMARY_TEXT = {
+    "what": {"bwb": "Tailless; long centre body, strong taper, cranked", "conventional": "With a tail; constant-chord centre, tapered outer panels",
+             "tapered": "With a tail; straight edges root to tip (rectangular at taper 1)", "flying_wing": "Tailless; straight edges, moderate taper, swept"},
+    "flow": {"bwb": "Two regimes on one wing (centre body ~10× the tip Re); spanwise flow and tip stall from sweep; kinks at b1, b2; thick 15 % centre body",
+             "conventional": "Kinks at the breaks (suction peaks, loading jump); low sweep; small wings fly almost wholly below 10⁵",
+             "tapered": "Smooth loading; low sweep; tips at lower Re as taper grows; strong tip vortex at high AR",
+             "flying_wing": "Trim by sweep and washout with reflexed sections; spanwise flow; tip stalls first at high angle"},
+    "mesh": {"bwb": "LE and TE everywhere; a station on each kink; tip; wake and tip vortex; fine first cell at the centre-body Re",
+             "conventional": "LE and TE; a station on each break; tip vortex; wake",
+             "tapered": "LE and TE; tip vortex; wake",
+             "flying_wing": "LE and TE; tip (stall, vortex); wake behind a swept TE"},
+}
+
+
+def summary_html() -> str:
+    """One table: final ranges and flows per type (focus bold, full grey)."""
+    cfg = load_config()
+    ext = json.loads((DOCS / "size_extremes.json").read_text())
+    f = lambda x: f"{x:g}".replace("-", "−")  # noqa: E731
+
+    def r(lo, hi, unit=""):
+        return (f"{f(lo)} to {f(hi)}" if min(lo, hi) < 0 else f"{f(lo)}–{f(hi)}") + unit
+
+    def both(fn):
+        return [f"<strong>{fn(cfg.types[t], 'focus')}</strong><br><span class='fullr'>full {fn(cfg.full[t], 'full')}</span>"
+                for t in WING_TYPES]
+
+    def taper(sp, space):
+        pts = [build_planform(sp, v) for v in lhs(sp, 400, 5)]
+        tp = [q.chord[-1] / q.chord[0] for q in pts]
+        return r(round(min(tp), 2), round(max(tp), 2))
+
+    def sweeps(sp, space):
+        if sp.sweep_law == "one":
+            return r(*sp.ranges["sweep1_deg"], "°")
+        return " / ".join(r(*sp.ranges[f"sweep{i}_deg"]) for i in (1, 2, 3)) + "°"
+
+    def washout(sp, space):
+        a0, b0 = sp.ranges["twist0_deg"]; a3, b3 = sp.ranges["twist3_deg"]
+        return r(a0 - b3, b0 - a3, "°")
+
+    def dih(sp, space):
+        rr = [sp.ranges[f"dihedral_p{i}_deg"] for i in (1, 2, 3)]
+        return (r(*rr[0], "°") if len(set(rr)) == 1 else " / ".join(r(*x) for x in rr) + "°")
+
+    def span(sp, space):
+        e = ext[f"{sp.name}/{space}"]
+        return f"{e['span_m'][0]:.2f}–{e['span_m'][1]:.1f} m"
+
+    def re_mc(sp, space):
+        e = ext[f"{sp.name}/{space}"]
+        return f"{sci(e['re_mean_chord'][0])} – {sci(e['re_mean_chord'][1])}"
+
+    rows = [
+        ("Shape", [SUMMARY_TEXT["what"][t] for t in WING_TYPES]),
+        ("Span", both(span)),
+        ("Root chord", both(lambda sp, s_: r(*sp.ranges["root_chord_m"], " m"))),
+        ("Aspect ratio", both(lambda sp, s_: r(*sp.ranges["aspect_ratio"]))),
+        ("Overall taper (tip / root)", both(taper)),
+        ("LE sweep (per panel)", both(sweeps)),
+        ("Washout (root − tip)", both(washout)),
+        ("Dihedral (per panel)", both(dih)),
+        ("Suggested sections b0–b3", [", ".join(cfg.types[t].airfoils) for t in WING_TYPES]),
+        ("Speed · Mach", [f"{ext[t + '/focus']['speed_m_s'][0]:g}–{ext[t + '/focus']['speed_m_s'][1]:g} m/s · "
+                          f"{ext[t + '/focus']['mach'][0]:.2f}–{ext[t + '/focus']['mach'][1]:.2f}" for t in WING_TYPES]),
+        ("Re on the mean chord", both(re_mc)),
+        ("Re, smallest tip · largest root (focus)", [f"{sci(ext[t + '/focus']['re_tip_min'])} · {sci(ext[t + '/focus']['re_root_max'])}" for t in WING_TYPES]),
+        ("Main flow features", [SUMMARY_TEXT["flow"][t] for t in WING_TYPES]),
+        ("Mesh must resolve", [SUMMARY_TEXT["mesh"][t] for t in WING_TYPES]),
+    ]
+    head = "".join(f"<th><span class='tag {t}'>{TYPE_NAME[t]}</span></th>" for t in WING_TYPES)
+    body = "".join(f"<tr><td class='what'>{a}</td>" + "".join(f"<td>{c}</td>" for c in cells) + "</tr>" for a, cells in rows)
+    return f"<thead><tr><th></th>{head}</tr></thead><tbody>{body}</tbody>"
+
+
+def xfoil_note() -> str:
+    f = DOCS / "xfoil_band.json"
+    if not f.is_file():
+        return "Run scripts/xfoil_band.py."
+    d = json.loads(f.read_text())
+    runs, re_of = d["runs"], {f"{r:.0e}": r for r in d["re"]}   # keys were written with one digit
+    by_re = {}
+    for k, v in runs.items():
+        name, re_, mode = k.split("|")
+        if mode != "free":
+            continue
+        t = runs[f"{name}|{re_}|trip"]["polar"]
+        for al in ("0", "2", "4"):
+            if al in v["polar"] and al in t:
+                by_re.setdefault(re_of[re_], []).append(100 * (t[al]["cd"] / v["polar"][al]["cd"] - 1))
+    parts = [f"{sci(r)}: {min(x):+.0f} to {max(x):+.0f} %" for r, x in sorted(by_re.items())]
+    hi = [y for r, x in by_re.items() if r >= 2.9e5 for y in x]
+    import statistics
+    return ("Profile drag, tripped against free transition, at 0–4° for the four suggested sections — "
+            + "; ".join(parts) + f". From 3 × 10⁵ up, turbulent-from-the-nose raises 2-D profile drag by {min(hi):.0f}–{max(hi):.0f} % "
+            f"(median {statistics.median(hi):.0f} %): 30–60 drag counts, ten times the 3-count mesh budget. So the model band, "
+            "not the mesh, sets the error on absolute drag. At 10⁵ the two stay close, because the free flow separates in a long bubble "
+            "and is draggy too. Left: drag increase; right: where the free upper surface turns turbulent.")
 
 
 def sci(x: float) -> str:
@@ -805,7 +908,7 @@ RANGE_BASIS = {
     'split_ratio':
         "Our choice. BWB: 0.48 (<a href='https://www.mdpi.com/2226-4310/9/1/36'>Wang &amp; Zhou 2022</a>). <span class='flag ok'>checked</span>",
     'c2_ratio':
-        "BWB 0.61 (<a href='https://www.mdpi.com/2226-4310/9/1/36'>Wang &amp; Zhou 2022</a>), 0.67 (<a href='https://core.ac.uk/download/233235722.pdf'>Hainline &amp; Agarwal 2017</a>). <span class='flag ok'>checked</span> Cranked: per-panel ratios keep overall taper ≥ 0.41 (Raymer: about 0.4 unswept, <a href='https://computationaldesignlab.github.io/aircraft-design/wing_layout.html'>via course page</a>). <span class='flag open'>second-hand</span>",
+        "BWB 0.61 (<a href='https://www.mdpi.com/2226-4310/9/1/36'>Wang &amp; Zhou 2022</a>), 0.67 (<a href='https://core.ac.uk/download/233235722.pdf'>Hainline &amp; Agarwal 2017</a>). <span class='flag ok'>checked</span> Cranked: constant-chord centre (0.95–1), tapered outer panels; overall taper 0.38–0.85 (Raymer about 0.4 unswept, <a href='https://computationaldesignlab.github.io/aircraft-design/wing_layout.html'>via course page</a>; layout as on Hermes 450 and Heron, from photos). <span class='flag open'>second-hand</span>",
     'c3_ratio':
         "BWB 0.39 (<a href='https://www.mdpi.com/2226-4310/9/1/36'>Wang &amp; Zhou</a>), 0.42 (<a href='https://core.ac.uk/download/233235722.pdf'>Hainline</a>). <span class='flag ok'>checked</span>",
     'c4_ratio':
@@ -981,7 +1084,8 @@ def glance(rows_: list[dict]) -> dict:
 # Page
 # --------------------------------------------------------------------------------------
 
-PAGE = """<title>Wing Generator</title>
+PAGE = """<meta charset="utf-8">
+<title>Wing Generator</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1042,6 +1146,7 @@ td.num { font-family: var(--mono); font-size: 13px; white-space: nowrap; font-va
 td.src { font-size: 12.5px; color: var(--muted); width: 36%; min-width: 260px; line-height: 1.45; }
 table.inp td.num { white-space: normal; font-size: 12.5px; }
 .fullr { color: var(--muted); font-size: 11.5px; }
+table.summ td { font-size: 13px; vertical-align: top; } table.summ td.what { white-space: nowrap; }
 table.inp td.what { min-width: 120px; }
 .muted { color: var(--muted); font-size: 13px; }
 .tag, .basis, .flag { font-family: var(--mono); font-size: 11px; text-transform: uppercase; padding: 1px 6px; border-radius: 3px; border: 1px solid currentColor; white-space: nowrap; font-weight: 500; }
@@ -1099,7 +1204,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <div class="eyebrow">CFD_Automation · Stage 1 · geometry · code __VERSION__</div>
   <h1>Wing Generator</h1>
   <p class="lede">Eighteen numbers go in; one exact wing surface comes out, measured, labelled and checked. One generator and one YAML file make BWB, cranked, tapered and flying wings, sized like real Class I and II UAVs. Every later stage (mesh, solver, data) reads only this surface.</p>
-  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#design">Design space</a><a href="#pairs">Key pairs</a><a href="#family">Wing families</a><a href="#ranges">Sizes</a><a href="#inputs">Parameters</a><a href="#reynolds">Re and Mach</a><a href="#phenomena">Flow phenomena</a><a href="#refine">Where to refine</a><a href="#open">Open decisions</a><a href="#decisions">Design decisions</a><a href="#fix">Fix before Stage 2</a><a href="#real">Real wings</a><a href="#checks">Checks and results</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
+  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#summary">Final ranges and flows</a><a href="#design">Design space</a><a href="#pairs">Key pairs</a><a href="#family">Wing families</a><a href="#ranges">Sizes</a><a href="#inputs">Parameters</a><a href="#reynolds">Re and Mach</a><a href="#phenomena">Flow phenomena</a><a href="#refine">Where to refine</a><a href="#open">Open decisions</a><a href="#decisions">Design decisions</a><a href="#fix">Fix before Stage 2</a><a href="#real">Real wings</a><a href="#checks">Checks and results</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
 </header>
 
 <section id="glance">
@@ -1110,6 +1215,13 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <div class="box"><h3>Evidence</h3><div class="big">__OK__ of __BUILT__ wings pass</div><p>Sampled wings of all four types, focus and full space, 0 refused (__SETVER__). __PUBOK__ of __PUB__ published wings verified. Tests: __TESTS__.</p></div>
     <div class="box verdict"><h3>Verdict</h3><div class="big">Ready for Stage 2 after the pyGeo run</div><p>Fixes 1 and 2 done (panel dihedrals, code hash). Left: run the pyGeo tests and rebuild the sets with pyGeo on your machine; fix 3 belongs to the mesher. Not yet "any wing": straight panels only, no airfoil shape variable. Sets: __STALE__</p></div>
   </div>
+</section>
+
+<section id="summary">
+  <h2>Final ranges and flows</h2>
+  <p>Everything in one table. <strong>Bold</strong>: the focus space (realistic, sampled densely). <span class="fullr">Grey</span>: the full space (supported, sampled sparsely). Speeds come from the real wings of each family; study Re levels: 1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶.</p>
+  <div class="tbl"><table class="wide summ">__SUMMARY__</table></div>
+  <p class="muted">Details: <a href="#design">Design space</a>, <a href="#ranges">Sizes</a>, <a href="#reynolds">Re and Mach</a>, <a href="#phenomena">Flow phenomena</a>, <a href="#refine">Where to refine</a>.</p>
 </section>
 
 <section id="design">
@@ -1211,10 +1323,14 @@ __DERIVED__
   <p>What the flow does on these wings, at these Re and angles, and whether the planned CFD (ADflow, steady RANS, Spalart–Allmaras, fully turbulent) can see it.</p>
   <figure class="fig"><div class="svgwrap">__FIG_RE__</div>
     <figcaption class="cap">Where the wings fly. Most of every type sits in or near the low-Re regime, and the tips go furthest into it, down to 2 × 10⁴. The study level 1 × 10⁵ (added 30 Oct 2026) now reaches the mini Class I wings; only the tips stay below every level. From the generated envelope and the real wings with a published area and speeds (low-Re limit: below 5 × 10⁵, Univ. Waterloo Fluid Mechanics Research Lab; Carmichael 1981).</figcaption></figure>
-  <figure class="fig"><div class="svgwrap">__FIG_PLAN__</div>
-    <figcaption class="cap">Where each phenomenon sits on a wing. The tip carries three at once (smallest chord, first to stall on aft sweep, vortex roll-up), so it is where mesh and model are tested hardest. Schematic, not to scale.</figcaption></figure>
-  <figure class="fig"><div class="svgwrap">__FIG_SEC__</div>
-    <figcaption class="cap">What the planned CFD misses on one section. Real flow runs laminar, separates in a bubble and turns turbulent; fully turbulent SA skips the laminar run and the bubble, so skin friction and pressure drag differ. That gap is the model band, and a finer mesh cannot close it.</figcaption></figure>
+  <figure class="fig card">__PNG_LOCALRE__
+    <figcaption class="cap">Real geometry, real speeds: local chord Reynolds number along the span. The smallest wings at their slowest speed sit almost wholly below 10⁵ (red); the BWB carries two regimes at once, its centre body an order of magnitude above its tips. The largest wings at top speed are turbulent except near the BWB and flying-wing tips.</figcaption></figure>
+  <h2 style="font-size:22px">What the planned CFD misses: measured in 2-D</h2>
+  <p>Each suggested section was run in XFOIL (Drela 1989; e<sup>N</sup> transition, N<sub>crit</sub> 9) twice: free transition, and tripped at 1 % chord, which is what fully turbulent SA does. The gap is the 2-D size of the model band. It is a proxy: no sweep, no crossflow, no 3-D relief.</p>
+  <figure class="fig card">__PNG_XFCF__
+    <figcaption class="cap">Upper surface at 4°. At 10⁵ and 3 × 10⁵ the free flow runs laminar to mid-chord, separates (shaded, Cf &lt; 0) and turns turbulent on the bubble. At 1.5–3 × 10⁶ transition moves forward to 30–45 % chord with no bubble. Tripped: turbulent from the nose, with much higher friction everywhere.</figcaption></figure>
+  <figure class="fig card">__PNG_XFBAND__
+    <figcaption class="cap">__XF_NOTE__</figcaption></figure>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Phenomenon</th><th>Where in our ranges</th><th>What it does</th><th>Does our CFD capture it?</th><th>Source</th></tr></thead>
     <tbody>__PHEN__</tbody>
@@ -1371,7 +1487,7 @@ python scripts/make_generator_page.py                                # this page
 """
 
 
-SECTION_ORDER = ("glance", "design", "pairs", "family", "ranges", "inputs", "reynolds", "phenomena", "refine",
+SECTION_ORDER = ("glance", "summary", "design", "pairs", "family", "ranges", "inputs", "reynolds", "phenomena", "refine",
                  "open", "decisions", "fix", "real", "checks", "limits", "published", "commands")
 
 
@@ -1411,7 +1527,7 @@ def main() -> None:
         for t, e, d in FIXES)
     real_rows, real = real_table()
     env = real["envelope"]
-    fr = final_ranges_html() | extremes_html() | {"__FIG_RE__": fig_re_map(), "__FIG_PLAN__": fig_planform(), "__FIG_SEC__": fig_section(),
+    fr = final_ranges_html() | extremes_html() | {"__FIG_RE__": fig_re_map(), "__XF_NOTE__": xfoil_note(), "__SUMMARY__": summary_html(),
                                 "__FIG_RSIDE__": fig_refine_side(), "__FIG_RTOP__": fig_refine_top(), "__REFINE__": refine_html(),
                                 "__VSETS__": verification_sets_html()} | params_tables_html()
     page = PAGE
@@ -1427,6 +1543,9 @@ def main() -> None:
                 .replace("__ENV_BWB__", f"span {env['bwb']['span_m'][0]:.1f}–{env['bwb']['span_m'][1]:.1f} m, mean chord {env['bwb']['mean_chord_m'][0]:.2f}–{env['bwb']['mean_chord_m'][1]:.2f} m")
                 .replace("__ENV_CONV__", f"span {env['conventional']['span_m'][0]:.1f}–{env['conventional']['span_m'][1]:.1f} m, mean chord {env['conventional']['mean_chord_m'][0]:.2f}–{env['conventional']['mean_chord_m'][1]:.2f} m")
                 .replace("__GIF_BUILD__", img("how_a_wing_is_built.gif", "Seven-step animation of one wing being built"))
+                .replace("__PNG_LOCALRE__", img("local_re.png", "Local chord Reynolds number along the span of the smallest and largest wing of each type"))
+                .replace("__PNG_XFCF__", img("xfoil_cf.png", "XFOIL upper-surface skin friction, free transition vs tripped, at the four study Re levels"))
+                .replace("__PNG_XFBAND__", img("xfoil_band.png", "XFOIL profile-drag increase when tripped, and transition position, against Re"))
                 .replace("__PNG_DESIGN__", img("design_space.png", "Every variable: full range, focus range and published values per wing type"))
                 .replace("__PNG_PAIR_SIZE__", img("pair_size.png", "Span against mean chord per type"))
                 .replace("__PNG_PAIR_PLANFORM__", img("pair_planform.png", "Aspect ratio against taper per type"))

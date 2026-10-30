@@ -344,8 +344,59 @@ def draw_view(ax, spec, vec, view, color, dashed) -> None:
         ax.set_xlim(-0.1, 2.35); ax.set_ylim(-0.32, 0.28); ax.set_aspect("equal")
 
 
+BANDS = [(0, 1e5, "#C0392B", "below 10⁵: laminar separation, RANS poor"),
+         (1e5, 5e5, "#E0A030", "10⁵ – 5 × 10⁵: laminar bubbles, RANS biased"),
+         (5e5, 3e6, "#5B8FD0", "5 × 10⁵ – 3 × 10⁶: transitional to turbulent, RANS good"),
+         (3e6, 1e9, "#1F3F7A", "above 3 × 10⁶: turbulent")]
+
+
+def fig_local_re(cfg) -> None:
+    """Each type's smallest focus wing at its slowest and largest at its fastest: local chord Re along the span."""
+    ext = json.loads((DOCS / "size_extremes.json").read_text())
+    air = yaml.safe_load((ROOT / "configs" / "real_uavs.yaml").read_text())["air"]
+    import matplotlib.patches as mp
+    fig, axes = plt.subplots(2, 4, figsize=(13.5, 5.6), dpi=110)
+    for c, t in enumerate(WING_TYPES):
+        r = ext[f"{t}/focus"]
+        lo, hi = r["speed_m_s"]
+        for row, (key, v, rho_mu, txt) in enumerate((("smallest", lo, air["3048_m"], f"smallest focus wing, {lo:g} m/s at 3,048 m"),
+                                                    ("largest", hi, air["sea_level"], f"largest focus wing, {hi:g} m/s at sea level"))):
+            ax = axes[row, c]
+            spec = cfg.types[t]
+            pf = build_planform(spec, r[key]["vector"])
+            S = pf.semi_span
+            ys = np.linspace(0, S, 120)
+            xl, ch = pf.at(ys)
+            for y0, y1, x0, x1, c0, c1 in zip(ys[:-1], ys[1:], xl[:-1], xl[1:], ch[:-1], ch[1:]):
+                re_ = rho_mu * v * 0.5 * (c0 + c1)
+                colr = next(cc for a, b, cc, _ in BANDS if a <= re_ < b)
+                for sg in (1, -1):
+                    poly = [(sg * y0 / S, -x0 / S), (sg * y1 / S, -x1 / S), (sg * y1 / S, -(x1 + c1) / S), (sg * y0 / S, -(x0 + c0) / S)]
+                    ax.add_patch(mp.Polygon(poly, closed=True, fc=colr, ec=colr, lw=0.3))
+            re_root, re_tip = rho_mu * v * pf.chord[0], rho_mu * v * pf.chord[-1]
+            ax.set_xlim(-1.05, 1.05)
+            ax.set_ylim(min(-1.0, -(pf.x_le + pf.chord).max() / S - 0.05), 0.12)
+            ax.set_aspect("equal", adjustable="datalim")
+            ax.set_xticks([]); ax.set_yticks([])
+            for sp_ in ax.spines.values():
+                sp_.set_visible(False)
+            sci = lambda x: f"{x:.1e}".replace("e+0", "e")  # noqa: E731
+            ax.set_title(f"{NAME[t]}: span {2 * S:.2f} m" if row == 0 else f"span {2 * S:.1f} m", fontsize=9.5,
+                         color=COL[t], fontweight="bold" if row == 0 else "normal")
+            ax.text(0.5, -0.04, f"{txt}\nroot Re {sci(re_root)}, tip Re {sci(re_tip)}", transform=ax.transAxes,
+                    ha="center", va="top", fontsize=7.5, color=MUTED)
+    h = [mp.Patch(color=cc, label=lab) for _, _, cc, lab in BANDS]
+    fig.legend(handles=h, loc="lower center", ncol=2, fontsize=8, frameon=False)
+    fig.suptitle("Local Reynolds number along the span (chord-based). Top: the worst low-Re case. Bottom: the highest-Re case.",
+                 x=0.01, ha="left", fontsize=10.5, color=INK)
+    fig.tight_layout(rect=(0, 0.1, 1, 0.95), h_pad=2.2)
+    fig.savefig(DOCS / "local_re.png")
+    plt.close(fig)
+
+
 def main() -> None:
     cfg = load_config()
+    fig_local_re(cfg)
     smp = samples(cfg)
     ev, real = evidence()
     fig_design_space(cfg, smp, ev, real)

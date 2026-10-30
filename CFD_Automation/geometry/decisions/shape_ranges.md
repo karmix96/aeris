@@ -88,3 +88,15 @@ chord assumed a linear chord (the true chord of a twisted ruled panel is shorter
 extra section at the trailing-edge switch used the linear chord and twist, so it sat off the panel.
 Now K integrates the true chord and the switch section sits on the ruled panel. Worst error on 730
 built wings: 0.00004 %.
+
+## Cranked made distinct from tapered (30 Oct 2026)
+
+Mike: the two looked alike. The old cranked focus (per-panel chords 0.85/0.75/0.65–1, sweeps −5–15°
+each) gave mostly straight-tapered wings with faint breaks. Now: constant-chord centre (inner 0.95–1,
+sweep −3–3°), mildly tapered middle (0.80–1, sweep −5–10°), clearly tapered outer panel (0.50–0.85,
+sweep 0–15°); overall taper 0.38–0.85. Layout as on Hermes 450 and Heron (from photos; our choice).
+
+## XFOIL model-band proxy (30 Oct 2026)
+
+`scripts/xfoil_band.py`: each suggested section, free transition (Ncrit 9) vs tripped at 1 % chord,
+Re 1e5 / 3e5 / 1.5e6 / 3e6, 0–8°. Tripped profile drag is +37–128 % (median 76 %) at Re ≥ 3e5, 0–4° (2-D proxy); close at 1e5 (long bubble).

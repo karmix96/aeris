@@ -81,7 +81,7 @@ types:
       dihedral_p2_deg: [-10.0, 10.0]
       dihedral_p3_deg: [-10.0, 10.0]
 
-  conventional:                       # cranked wing with a tail: chord and sweep may change at b1 and b2
+  conventional:                       # cranked wing with a tail: constant-chord centre, tapered outer panels (e.g. Hermes 450, Heron; from photos)
     chord_law: per_panel              # each panel's own taper, so no chord grows outboard
     sweep_law: panels
     span_mode: aspect_ratio
@@ -90,14 +90,14 @@ types:
     ranges:
       root_chord_m:    [0.13, 0.75]   # real wings with a tail (configs/real_uavs.yaml)
       aspect_ratio:    [4.5, 16.5]    # real wings with a tail 4.9-16.0
-      c2_ratio:        [0.85, 1.00]   # per panel; overall taper >= 0.41 (Raymer: about 0.4 for unswept wings)
-      c3_ratio:        [0.75, 1.00]
-      c4_ratio:        [0.65, 1.00]
+      c2_ratio:        [0.95, 1.00]   # inner panel nearly constant chord (cranked = constant-chord centre + tapered outer panels)
+      c3_ratio:        [0.80, 1.00]   # middle panel: mild taper
+      c4_ratio:        [0.50, 0.85]   # outer panel: clear taper, so the break is always visible; overall taper 0.38-0.85
       b3_ratio:        [0.20, 0.50]   # our choice: break anywhere from 25 % to 80 % of the span
       split_ratio:     [0.30, 0.70]
-      sweep1_deg:      [-5.0, 15.0]   # low-speed wings near 0 deg c/4 (Raymer); small forward sweep as an edge case
-      sweep2_deg:      [-5.0, 15.0]
-      sweep3_deg:      [-5.0, 15.0]
+      sweep1_deg:      [-3.0, 3.0]    # constant-chord centre: leading edge about straight
+      sweep2_deg:      [-5.0, 10.0]
+      sweep3_deg:      [0.0, 15.0]    # tapered outer panel: leading edge swept back by the taper
       twist0_deg:      [0.0, 2.0]     # washout 0-5 deg: Raymer about 3 deg for good stall behaviour
       twist1_deg:      [-1.0, 2.0]
       twist2_deg:      [-2.0, 1.0]

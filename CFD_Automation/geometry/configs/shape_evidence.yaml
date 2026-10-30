@@ -1,0 +1,62 @@
+# Published shape values of real or designed UAV wings: the dots in the design-space figures.
+#
+# One row = one value (or a range) of one quantity for one wing type, with its source and tag.
+#   types:  which generator types it informs (bwb, conventional, tapered, flying_wing)
+#   var:    an input name from wing.yaml, or a derived quantity:
+#           taper (tip / root chord), washout_deg (root twist - tip twist, + = tip nose down),
+#           span_m, mean_chord_m
+#   value:  one number;  range: [lo, hi] (a design-space or family range)
+#   tag:    checked (read by us) | agent (read by the research agent only) | second_hand (quoted by another page)
+#   note:   c/4 = quarter-chord sweep (the generator uses leading-edge sweep, a few degrees more)
+# Size values of whole aircraft (span, mean chord, AR) come from configs/real_uavs.yaml, not from here.
+# Compiled 30 Oct 2026. Bases: geometry/decisions/shape_ranges.md.
+
+points:
+  # --- BWB ------------------------------------------------------------------------------------------
+  - {types: [bwb], var: root_chord_m, value: 1.80, src: "Wang & Zhou 2022", tag: checked}
+  - {types: [bwb], var: aspect_ratio, value: 8.0, src: "AUTh RX-3 (Antoniou 2025)", tag: checked}
+  - {types: [bwb], var: c2_ratio, value: 0.61, src: "Wang & Zhou 2022", tag: checked}
+  - {types: [bwb], var: c2_ratio, value: 0.667, src: "Hainline & Agarwal 2017", tag: checked}
+  - {types: [bwb], var: c2_ratio, range: [0.55, 0.85], src: "BlendedNet (Group 3)", tag: agent}
+  - {types: [bwb], var: c3_ratio, value: 0.39, src: "Wang & Zhou 2022", tag: checked}
+  - {types: [bwb], var: c3_ratio, value: 0.42, src: "Hainline & Agarwal 2017", tag: checked}
+  - {types: [bwb], var: c3_ratio, range: [0.18, 0.28], src: "BlendedNet (Group 3)", tag: agent}
+  - {types: [bwb], var: c4_ratio, value: 0.14, src: "Wang & Zhou 2022", tag: checked}
+  - {types: [bwb], var: c4_ratio, value: 0.13, src: "Hainline & Agarwal 2017", tag: checked}
+  - {types: [bwb], var: c4_ratio, range: [0.06, 0.09], src: "BlendedNet (Group 3)", tag: agent}
+  - {types: [bwb], var: b3_ratio, value: 0.50, src: "Wang & Zhou 2022", tag: checked}
+  - {types: [bwb], var: split_ratio, value: 0.48, src: "Wang & Zhou 2022", tag: checked}
+  - {types: [bwb], var: sweep1_deg, value: 15.0, src: "Lehmkuehler 2012", tag: checked}
+  - {types: [bwb], var: sweep1_deg, value: 30.0, src: "Suewatanakul 2022 (c/4)", tag: checked}
+  - {types: [bwb], var: sweep1_deg, value: 33.0, src: "AUTh RX-3 (c/4)", tag: checked}
+  - {types: [bwb], var: sweep1_deg, range: [40.0, 60.0], src: "BlendedNet (Group 3)", tag: agent}
+  - {types: [bwb], var: washout_deg, value: 3.0, src: "Suewatanakul 2022", tag: checked}
+  - {types: [bwb], var: washout_deg, value: 7.0, src: "Hainline & Agarwal 2017", tag: checked}
+  - {types: [bwb], var: dihedral_p3_deg, value: 5.0, src: "Suewatanakul 2022", tag: checked}
+  - {types: [bwb], var: dihedral_p3_deg, value: 3.0, src: "BlendedNet outer wing", tag: agent}
+  # --- flying wing ----------------------------------------------------------------------------------
+  - {types: [flying_wing], var: root_chord_m, value: 1.016, src: "Lockheed Aquila", tag: checked}
+  - {types: [flying_wing], var: root_chord_m, value: 0.42, src: "Milenkovic-Babic 2024", tag: checked}
+  - {types: [flying_wing], var: aspect_ratio, value: 4.29, src: "Milenkovic-Babic 2024", tag: checked}
+  - {types: [flying_wing], var: aspect_ratio, value: 4.86, src: "Lockheed Aquila", tag: checked}
+  - {types: [flying_wing], var: aspect_ratio, value: 10.0, src: "Panknin example", tag: checked}
+  - {types: [flying_wing], var: c4_ratio, value: 0.667, src: "Milenkovic-Babic 2024", tag: checked}
+  - {types: [flying_wing], var: c4_ratio, value: 0.85, src: "Panknin example", tag: checked}
+  - {types: [flying_wing], var: c4_ratio, value: 0.58, src: "Lockheed Aquila", tag: checked}
+  - {types: [flying_wing], var: sweep1_deg, value: 25.0, src: "Milenkovic-Babic 2024", tag: checked}
+  - {types: [flying_wing], var: sweep1_deg, value: 28.0, src: "Lockheed Aquila", tag: checked}
+  - {types: [flying_wing], var: sweep1_deg, value: 17.0, src: "Panknin example (c/4)", tag: checked}
+  - {types: [flying_wing], var: sweep1_deg, value: 35.0, src: "Horten-Panek PUL-10", tag: agent}
+  - {types: [flying_wing], var: sweep1_deg, value: 40.0, src: "flying-wing MAV (Shams 2020)", tag: agent}
+  - {types: [flying_wing], var: washout_deg, value: 3.2, src: "Panknin example", tag: checked}
+  - {types: [flying_wing], var: washout_deg, value: 10.0, src: "Prandtl-D (bell loading)", tag: second_hand}
+  - {types: [flying_wing], var: dihedral_p1_deg, value: 4.0, src: "Horten-Panek PUL-10", tag: agent}
+  - {types: [flying_wing], var: dihedral_p1_deg, value: 2.0, src: "flying-wing MAV (Shams 2020)", tag: agent}
+  # --- wings with a tail ----------------------------------------------------------------------------
+  - {types: [tapered], var: c4_ratio, value: 0.4, src: "Raymer (unswept wings)", tag: second_hand}
+  - {types: [conventional, tapered], var: sweep1_deg, value: 0.0, src: "Raymer (low speed, c/4)", tag: second_hand}
+  - {types: [conventional, tapered], var: washout_deg, value: 3.0, src: "Raymer (good stall)", tag: second_hand}
+  - {types: [conventional, tapered], var: dihedral_p1_deg, range: [0.0, 5.0], src: "Raymer: about 0 to 5", tag: checked}
+  # --- design-space bounds of another automated wing study (full-space anchors) ------------------------
+  - {types: [bwb, conventional, tapered, flying_wing], var: dihedral_p1_deg, range: [-10.0, 10.0], src: "Pliakos 2025 bounds", tag: checked, bound: true}
+  - {types: [bwb, conventional, tapered, flying_wing], var: sweep1_deg, range: [0.0, 60.0], src: "Pliakos 2025 bounds (c/4)", tag: checked, bound: true}

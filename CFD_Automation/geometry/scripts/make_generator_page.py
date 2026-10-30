@@ -158,31 +158,36 @@ FIXES = [
      "Stage 2 must put a mesh station exactly at every <code>station_v</code>. No change here; put it in the Stage 2 prompt."),
 ]
 
-OPEN = [
-    ("Tailless Class II chords", "Flying-wing spans now reach 7.7 m, so Fury (5.2 m), Albatroz (7 m) and Shahed 191 (7.3 m) are inside by span. Their areas are unknown, so the chord is unchecked."),
-    ("Smallest wings", "Kept by your decision (29 Oct 2026): generated spans start at 0.4–0.6 m (micro Class I)."),
-    ("NTNU UAV database", "93 UAVs with span, AR and estimated chord (DataverseNO, CC0). Blocked from the cloud workspace: attach 02_Database.csv to add it."),
-    ("Essari 2015 data", "Hermes 450, Ranger, Seeker, Shadow 600 areas come from a PhD thesis citing unread (Jane's-style) references; its Hermes 450 is internally inconsistent (0.69 m × 10.51 m = 7.25 m², listed 6.90). Confirm with Jane's before the paper."),
-    ("Re levels", "Now 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶. Move the middle to about 9.5 × 10⁵ (log-middle)? Mini Class I wings fly at 1.2–2 × 10⁵, below the lowest level."),
-    ("Closest prior work", "Pliakos et al. 2025 (AUTh: Eng. Proc. 90:52 and Algorithms 18:186) automate the same chain for UAV wings: OpenVSP → ANSA → Fluent, 2 panels, ONERA M6 only, no transition model. The paper must state what we add (4 stations / 3 panels, two spaces, refusing gates, transition-aware Re bands, open tools)."),
-    ("AUTh BWB airfoils and chords", "Their BWB airfoils and station chords sit in paywalled papers (AST 2018, AST 2021, AIAA 2020/2022, ICUAS 2020). Get them through the Patras library or ask the authors."),
-    ("Full-space edges", "The full space reaches 20 m span and Re 7.6 × 10⁶ on the largest BWB root: beyond Class II and above the top study level. Keep, or cap the span?"),
-    ("Transition check", "ADflow (MACH-Aero) has no transition model; SA is its only differentiated and tested model (Menter SST runs, no adjoint). Plan: SU2 γ-Reθ on a few reference wings at 1 × 10⁵ and 3 × 10⁵, on a y+ ≤ 1 mesh, to size the model band."),
-    ("Second-hand sources", "Raymer's taper 0.4 and washout −3° are quoted from a course page; PUL-10 and the flying-wing MAV were read by the research agent only. Check them in print before the paper."),
-    ("Trailing-edge floor", "Confirm 0.5 mm / 1.0 mm with the builder. Run the 0.1 / 0.2 / 0.3 % sensitivity once CFD works."),
-    ("Airfoil search order", "Project folder → AERIS database → NACA formula. Keep? 22 database files are refused."),
-    ("NACA 25118 trailing edge", "Made from the formula (open edge, 0.38 %). OpenVSP may close it differently. Check with a BlendedNet STEP file."),
-    ("NASA CRM", "Four stations and stand-in sections: a shape check only, or add a many-station mode for drag validation?"),
-    ("BlendedNet twist and dihedral", "Set to zero because neither paper states them. Accept?"),
-    ("Which published wing first", "RIBES is the only in-regime case; M6 and CRM are transonic."),
-    ("RIBES trailing edge", "The fitted section has 0.26 %; the model measures 0.38–0.66 %. Rebuild before any drag comparison?"),
-    ("Outside proof", "Only the M6 is checked against its own CAD (max 0.011 % of chord). BlendedNet, CRM and RIBES need their surface files."),
+OPEN = [  # (group, title, text, kind)  kind: decide = needs your call; act = a task, no choice left
+    ("Study plan (Stage 0)", "Middle Re level", "Levels are now 1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶. Keep 1.5 × 10⁶, or move it to 1 × 10⁶ (log-middle of 3 × 10⁵ and 3 × 10⁶)?", "decide"),
+    ("Study plan (Stage 0)", "Transition check", "ADflow has no transition model (SA is its only differentiated, tested model). Run SU2 γ-Reθ on a few reference wings at 1 × 10⁵ and 3 × 10⁵ on a y+ ≤ 1 mesh to size the model band? Needs a transition-ready mesh option.", "decide"),
+    ("Study plan (Stage 0)", "Grid share 65 %", "Of the 3-count drag budget, 65 % goes to the mesh. Keep?", "decide"),
+    ("Study plan (Stage 0)", "Iterative error", "≤ 10 % of the budget is loose; Eça &amp; Hoekstra ask 0.1–1 %. Tighten to 1 %?", "decide"),
+    ("Study plan (Stage 0)", "Pitching-moment tolerance 0.002", "Our choice, no source. Keep?", "decide"),
+    ("Study plan (Stage 0)", "Turbulence-model source", "Crivellini 2014 is weak support. Find a better source or call it our choice.", "decide"),
+    ("Study plan (Stage 0)", "Stage 0 D5", "The Grand Roadmap lists a D5 (prior work, transition route, tunnel, cloud budget). Add it?", "decide"),
+    ("Geometry", "Full-space edges", "The full space reaches 20 m span (beyond Class II) and Re 7.6 × 10⁶ on the largest BWB root (above the top level). Keep, or cap the span?", "decide"),
+    ("Geometry", "BWB focus top size", "With root up to 1.80 m and AR up to 9 the focus BWB reaches 10.3 m span and 11.8 m²; the largest real BWB (RX-3) has 6–7 m and 4.9 m². Lower the top root chord or AR?", "decide"),
+    ("Geometry", "Trailing-edge floor", "Confirm 0.5 mm (Class I) / 1.0 mm (Class II) with a builder; run the 0.1 / 0.2 / 0.3 % sensitivity once CFD works.", "decide"),
+    ("Geometry", "Airfoil search order", "Project folder → AERIS database → NACA formula; 22 database files are refused. Keep?", "decide"),
+    ("Geometry", "pyGeo run", "Run the 11 pyGeo tests and <code>build --all</code> on your machine; manifests must then say pygeo.", "act"),
+    ("Sources", "Second-hand values", "Raymer's taper 0.4, washout 3° and 0° c/4 sweep come from a course page; PUL-10 and the flying-wing MAV were read by the agent only. Check in print.", "act"),
+    ("Sources", "AUTh BWB papers", "Airfoils and station chords of their BWBs are in paywalled papers (AST 2018, AST 2021, AIAA 2020/2022, ICUAS 2020). Patras library or the authors.", "act"),
+    ("Sources", "Essari 2015 data", "Hermes 450, Ranger, Seeker, Shadow 600 areas cite unread Jane's-style data; the Hermes 450 entry is inconsistent. Confirm with Jane's.", "act"),
+    ("Sources", "NTNU UAV database", "93 UAVs (span, AR, chord), blocked from the cloud: attach 02_Database.csv.", "act"),
+    ("Sources", "Tailless Class II areas", "Fury, Albatroz, Shahed 191 have spans only; the RX-3 is the one tailless Class II with an area.", "act"),
+    ("Published wings", "BlendedNet twist and dihedral", "Set to zero because neither paper states them. Accept?", "decide"),
+    ("Published wings", "Which published wing first", "RIBES is the only in-regime case; M6 and CRM are transonic.", "decide"),
+    ("Published wings", "NASA CRM", "Four stations and stand-in sections: a shape check only, or add a many-station mode?", "decide"),
+    ("Published wings", "RIBES trailing edge", "Fitted section 0.26 %, model 0.38–0.66 %. Rebuild before any drag comparison?", "decide"),
+    ("Published wings", "Outside proof", "Only the M6 is checked against its own CAD. BlendedNet, CRM, RIBES need their surface files; NACA 25118 edge needs a BlendedNet STEP.", "act"),
+    ("Paper", "Closest prior work", "Pliakos et al. 2025 (AUTh) automate OpenVSP → ANSA → Fluent for UAV wings (2 panels, M6 only, no transition). State what we add: 4 stations / 3 panels, full and focus spaces, refusing gates, Re bands with a transition check, open tools.", "decide"),
 ]
 
 LIMITS = [
     "<strong>Straight edges only, three panels at most.</strong> No curved BWB centre body, no elliptic planform, no fourth panel.",
     "<strong>Airfoil shape is not a variable.</strong> Any named file can be used, and a station can draw from a list, but thickness and camber are not sampled continuously. The default sets use one section per station (t/c 10–15 %).",
-    "<strong>No winglets, rounded or raked tips, fuselage, gaps.</strong> Panel dihedral 0–5° for every type: no anhedral.",
+    "<strong>No winglets, rounded or raked tips, fuselage, gaps.</strong> Panel dihedral: focus 0–5°, full ±10°.",
     "<strong>Some shape sources are thin.</strong> The layout shares (where b1 and b2 sit) are our choice. A few rules are second-hand (Raymer via a course page). BWB shapes rest on four small-UAV papers, two of them larger than Class I.",
     "<strong>Class II areas are uncertain.</strong> They rest on Götten et al. (from photos, about 10–15 %) and a thesis citing unread Jane's-style data. Tailless Class II have no area at all.",
     "<strong>0 refusals at the corners.</strong> The space is too safe to show where anything breaks. Robustness must be shown on the mesher, with lofts it has never seen (primer Track 5).",
@@ -1094,7 +1099,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <div class="eyebrow">CFD_Automation · Stage 1 · geometry · code __VERSION__</div>
   <h1>Wing Generator</h1>
   <p class="lede">Eighteen numbers go in; one exact wing surface comes out, measured, labelled and checked. One generator and one YAML file make BWB, cranked, tapered and flying wings, sized like real Class I and II UAVs. Every later stage (mesh, solver, data) reads only this surface.</p>
-  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#inputs">Parameters</a><a href="#ranges">Sizes</a><a href="#reynolds">Re and Mach</a><a href="#phenomena">Flow phenomena</a><a href="#refine">Where to refine</a><a href="#fix">Fix before Stage 2</a><a href="#decisions">Design decisions</a><a href="#real">Real wings and Re</a><a href="#checks">Checks and results</a><a href="#open">Open decisions</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
+  <nav aria-label="On this page"><a href="#glance">At a glance</a><a href="#design">Design space</a><a href="#pairs">Key pairs</a><a href="#family">Wing families</a><a href="#ranges">Sizes</a><a href="#inputs">Parameters</a><a href="#reynolds">Re and Mach</a><a href="#phenomena">Flow phenomena</a><a href="#refine">Where to refine</a><a href="#open">Open decisions</a><a href="#decisions">Design decisions</a><a href="#fix">Fix before Stage 2</a><a href="#real">Real wings</a><a href="#checks">Checks and results</a><a href="#limits">What it cannot make</a><a href="#published">Published wings</a><a href="#commands">Commands</a></nav>
 </header>
 
 <section id="glance">
@@ -1102,9 +1107,34 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   <div class="three">
     <div class="box"><h3>In</h3><div class="big">18 numbers + a wing type</div><p>From <code>configs/wing.yaml</code>: chords, spans, sweeps, twists, dihedrals, and an airfoil per station. Types: BWB, cranked, tapered, flying wing.</p></div>
     <div class="box"><h3>Out</h3><div class="big">One surface, checked</div><p>Upper, lower and trailing-edge base, read as <code>upper(u, v)</code>. Plus measured values, labels, four refusing checks, a hash, IGES.</p></div>
-    <div class="box"><h3>Evidence</h3><div class="big">__OK__ of __BUILT__ wings pass</div><p>Sampled wings of all four types, 0 refused (__SETVER__). __PUBOK__ of __PUB__ published wings verified. Tests: __TESTS__.</p></div>
+    <div class="box"><h3>Evidence</h3><div class="big">__OK__ of __BUILT__ wings pass</div><p>Sampled wings of all four types, focus and full space, 0 refused (__SETVER__). __PUBOK__ of __PUB__ published wings verified. Tests: __TESTS__.</p></div>
     <div class="box verdict"><h3>Verdict</h3><div class="big">Ready for Stage 2 after the pyGeo run</div><p>Fixes 1 and 2 done (panel dihedrals, code hash). Left: run the pyGeo tests and rebuild the sets with pyGeo on your machine; fix 3 belongs to the mesher. Not yet "any wing": straight panels only, no airfoil shape variable. Sets: __STALE__</p></div>
   </div>
+</section>
+
+<section id="design">
+  <h2>Design space: what we support, where real wings are, where we focus</h2>
+  <p>One row per variable, one lane per wing type. <strong>Light bar</strong>: the full space (everything the generator supports; 40 wings + 5 hold-out per type, both corner sets at its edges). <strong>Dark bar</strong>: the focus space (where real wings are; 100 wings + 5 reference + 10 hold-out per type). <strong>Black marks</strong>: real wings and published designs. Rows marked "derived" are computed from the inputs.</p>
+  <figure class="fig card">__PNG_DESIGN__<figcaption>Read a row left to right: if the black marks sit inside the dark bar, the focus space covers the real wings; the light bar shows how far beyond them we still promise to work. Root twist only sets the incidence; washout is what changes the wing. Sources: <code>configs/shape_evidence.yaml</code>, <code>configs/real_uavs.yaml</code>.</figcaption></figure>
+  <div class="weak amber"><strong>What the figure shows honestly.</strong> Shape evidence is thin for wings with a tail (Raymer rules, partly second-hand) and for the layout shares (one BWB paper). Sizes are well covered. The full space is our choice, set to the widest value in any source; nothing real sits at its far edges.</div>
+</section>
+
+<section id="pairs">
+  <h2>Key pairs</h2>
+  <p>The same three layers in two dimensions, one panel per type. Faint dots: full space. Strong dots: focus space. Black diamonds: real or published wings that give both values.</p>
+  <figure class="fig card">__PNG_PAIR_SIZE__<figcaption><strong>Size</strong>: span against mean chord. Every real Class I–II wing with a published area, against its family (tailless: BWB and flying wing; with a tail: cranked and tapered).</figcaption></figure>
+  <figure class="fig card">__PNG_PAIR_PLANFORM__<figcaption><strong>Planform</strong>: aspect ratio against overall taper. The BWB lives at very low taper (big centre body), the others at 0.3–1.</figcaption></figure>
+  <figure class="fig card">__PNG_PAIR_SWEEP__<figcaption><strong>Sweep</strong>: aspect ratio against inner-panel leading-edge sweep. Published sweeps given at the quarter chord (marked c/4 in the sources) sit a few degrees below their leading-edge value.</figcaption></figure>
+  <figure class="fig card">__PNG_PAIR_TWIST__<figcaption><strong>Trim</strong>: sweep against washout. Tailless wings trim with sweep and washout together; the published tailless wings sit inside the focus space.</figcaption></figure>
+</section>
+
+<section id="family">
+  <h2>Wing families</h2>
+  <p>For each type, one variable group at a time goes from the full minimum to the full maximum; all others stay at the focus mid-range. Columns 2–4 (solid) are the focus space; columns 1 and 5 (dashed) are the edges of the full space. Top views are scaled to equal span so the shape is visible; true sizes are in <a href="#ranges">Sizes</a>.</p>
+  <figure class="fig card">__PNG_FAM_BWB__</figure>
+  <figure class="fig card">__PNG_FAM_CONV__</figure>
+  <figure class="fig card">__PNG_FAM_TAP__</figure>
+  <figure class="fig card">__PNG_FAM_FW__</figure>
 </section>
 
 <section id="inputs">
@@ -1297,10 +1327,8 @@ __VERIFY__
 
 <section id="open" class="weak amber">
   <h2>Open decisions</h2>
-  <p class="muted">Choices made to keep going that still need your call.</p>
-  <ul>
+  <p class="muted"><span class="flag open">decide</span> needs your call. <span class="flag ok">act</span> a task with no choice left. Full history: <code>Stage 0_Decisions/OPEN_DECISIONS.md</code>.</p>
 __OPEN__
-  </ul>
 </section>
 
 <section id="limits" class="weak">
@@ -1343,6 +1371,38 @@ python scripts/make_generator_page.py                                # this page
 """
 
 
+SECTION_ORDER = ("glance", "design", "pairs", "family", "ranges", "inputs", "reynolds", "phenomena", "refine",
+                 "open", "decisions", "fix", "real", "checks", "limits", "published", "commands")
+
+
+def open_html() -> str:
+    out, last = [], None
+    for g, t, q, k in OPEN:
+        if g != last:
+            if last is not None:
+                out.append("</ul>")
+            n_dec = sum(1 for x in OPEN if x[0] == g and x[3] == "decide")
+            out.append(f"<h3>{g} <span class='muted'>({n_dec} to decide)</span></h3><ul>")
+            last = g
+        flag = "<span class='flag open'>decide</span>" if k == "decide" else "<span class='flag ok'>act</span>"
+        out.append(f"<li>{flag} <strong>{t}.</strong> {q}</li>")
+    out.append("</ul>")
+    return "\n".join(out)
+
+
+def reorder_sections(page: str) -> str:
+    """Put the sections in reading order: overview and pictures first, details and evidence after."""
+    import re
+    blocks = {m.group(1): m.group(0) for m in re.finditer(r'<section id="([a-z]+)"[^>]*>.*?</section>', page, re.S)}
+    missing = [k for k in blocks if k not in SECTION_ORDER]
+    if missing:
+        raise ValueError(f"sections without a place in SECTION_ORDER: {missing}")
+    first = page.index(blocks[SECTION_ORDER[0]])
+    end = max(page.index(b) + len(b) for b in blocks.values())
+    body = "\n\n".join(blocks[k] for k in SECTION_ORDER if k in blocks)
+    return page[:first] + body + page[end:]
+
+
 def main() -> None:
     m = manifests()
     g = glance(m)
@@ -1367,6 +1427,15 @@ def main() -> None:
                 .replace("__ENV_BWB__", f"span {env['bwb']['span_m'][0]:.1f}–{env['bwb']['span_m'][1]:.1f} m, mean chord {env['bwb']['mean_chord_m'][0]:.2f}–{env['bwb']['mean_chord_m'][1]:.2f} m")
                 .replace("__ENV_CONV__", f"span {env['conventional']['span_m'][0]:.1f}–{env['conventional']['span_m'][1]:.1f} m, mean chord {env['conventional']['mean_chord_m'][0]:.2f}–{env['conventional']['mean_chord_m'][1]:.2f} m")
                 .replace("__GIF_BUILD__", img("how_a_wing_is_built.gif", "Seven-step animation of one wing being built"))
+                .replace("__PNG_DESIGN__", img("design_space.png", "Every variable: full range, focus range and published values per wing type"))
+                .replace("__PNG_PAIR_SIZE__", img("pair_size.png", "Span against mean chord per type"))
+                .replace("__PNG_PAIR_PLANFORM__", img("pair_planform.png", "Aspect ratio against taper per type"))
+                .replace("__PNG_PAIR_SWEEP__", img("pair_sweep.png", "Aspect ratio against sweep per type"))
+                .replace("__PNG_PAIR_TWIST__", img("pair_twist.png", "Sweep against washout per type"))
+                .replace("__PNG_FAM_BWB__", img("family_bwb.png", "BWB family: one variable group at a time"))
+                .replace("__PNG_FAM_CONV__", img("family_conventional.png", "Cranked family: one variable group at a time"))
+                .replace("__PNG_FAM_TAP__", img("family_tapered.png", "Tapered family: one variable group at a time"))
+                .replace("__PNG_FAM_FW__", img("family_flying_wing.png", "Flying-wing family: one variable group at a time"))
                 .replace("__GIF_SIZES__", img("size_extremes.gif", "Smallest and largest wing of each type, focus and full space, true scale"))
                 .replace("__GIF_REF__", img("published_wings.gif", "Animation of the published wings rebuilt by the generator"))
                 .replace("__PNG_TOP__", img("published_wings_topviews.png", "Top views of all published wings"))
@@ -1377,7 +1446,7 @@ def main() -> None:
                 .replace("__VARS__", variables_table())
                 .replace("__SETS__", sets_table(m))
                 .replace("__VERIFY__", verification_table())
-                .replace("__OPEN__", "\n".join(f"<li><strong>{t}.</strong> {q}</li>" for t, q in OPEN))
+                .replace("__OPEN__", open_html())
                 .replace("__LIMITS__", "\n".join(f"<li>{x}</li>" for x in LIMITS))
                 .replace("__ROWS__", rows())
                 .replace("__OK__", str(g["ok"])).replace("__BUILT__", str(g["built"]))
@@ -1389,6 +1458,7 @@ def main() -> None:
                 .replace("__VERSION__", __version__)
                 .replace("__N_AIRFOILS__", f"{len(airfoils.available()):,}"))
     out = DOCS / "GEOMETRY_GENERATOR.html"
+    page = reorder_sections(page)
     out.write_text(page)
     print(f"{out}  {out.stat().st_size / 1e3:.0f} kB")
 

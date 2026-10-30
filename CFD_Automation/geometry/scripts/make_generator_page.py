@@ -167,6 +167,7 @@ OPEN = [
     ("Closest prior work", "Pliakos et al. 2025 (AUTh: Eng. Proc. 90:52 and Algorithms 18:186) automate the same chain for UAV wings: OpenVSP → ANSA → Fluent, 2 panels, ONERA M6 only, no transition model. The paper must state what we add (4 stations / 3 panels, two spaces, refusing gates, transition-aware Re bands, open tools)."),
     ("AUTh BWB airfoils and chords", "Their BWB airfoils and station chords sit in paywalled papers (AST 2018, AST 2021, AIAA 2020/2022, ICUAS 2020). Get them through the Patras library or ask the authors."),
     ("Full-space edges", "The full space reaches 20 m span and Re 7.6 × 10⁶ on the largest BWB root: beyond Class II and above the top study level. Keep, or cap the span?"),
+    ("Transition check", "ADflow (MACH-Aero) has no transition model; SA is its only differentiated and tested model (Menter SST runs, no adjoint). Plan: SU2 γ-Reθ on a few reference wings at 1 × 10⁵ and 3 × 10⁵, on a y+ ≤ 1 mesh, to size the model band."),
     ("Second-hand sources", "Raymer's taper 0.4 and washout −3° are quoted from a course page; PUL-10 and the flying-wing MAV were read by the research agent only. Check them in print before the paper."),
     ("Trailing-edge floor", "Confirm 0.5 mm / 1.0 mm with the builder. Run the 0.1 / 0.2 / 0.3 % sensitivity once CFD works."),
     ("Airfoil search order", "Project folder → AERIS database → NACA formula. Keep? 22 database files are refused."),
@@ -507,14 +508,15 @@ def fig_re_map() -> str:
     rey = d["summary"]["reynolds"]
     W, H = 900, 390
     X = _x_re
-    out = [f'<svg class="dg" viewBox="0 0 {W} {H}" role="img" aria-label="Reynolds number map: mean-chord and tip Reynolds ranges of the three wing types and of 26 real wings, against the low-Re regime below 5 times 10 to the 5 and the three study levels">']
+    out = [f'<svg class="dg" viewBox="0 0 {W} {H}" role="img" aria-label="Reynolds number map: mean-chord and tip Reynolds ranges of the four wing types and of the real wings with speeds, against the low-Re regime below 5 times 10 to the 5 and the four study levels">']
     # regimes
     out.append(f'<rect class="zone-low" x="{X(1e4):.1f}" y="34" width="{X(5e5) - X(1e4):.1f}" height="256"/>')
     out.append(f'<rect class="zone-mid" x="{X(5e5):.1f}" y="34" width="{X(1e7) - X(5e5):.1f}" height="256"/>')
     out.append(f'<text class="lab amber" x="{(X(1e4) + X(5e5)) / 2:.1f}" y="26" text-anchor="middle">low-Re regime: laminar bubbles, early transition</text>')
     out.append(f'<text class="lab acc" x="{(X(5e5) + X(1e7)) / 2:.1f}" y="26" text-anchor="middle">transition position still sets the drag</text>')
     # rows
-    rows = [("Real wings (26)", 70), ("BWB", 125), ("Cranked", 170), ("Tapered", 215), ("Flying wing", 260)]
+    n_real = sum(1 for r in d["rows"] if r["use"] == "ranges" and r.get("re_low") and r.get("re_high"))
+    rows = [(f"Real wings ({n_real})", 70), ("BWB", 125), ("Cranked", 170), ("Tapered", 215), ("Flying wing", 260)]
     for name, y in rows:
         out.append(f'<text class="lab" x="160" y="{y + 4}" text-anchor="end">{name}</text>')
     # real wings: one thin line each, spread over the band
@@ -529,7 +531,7 @@ def fig_re_map() -> str:
         out.append(f'<rect class="bar {cls}" x="{X(m[0]):.1f}" y="{y - 7}" width="{X(m[1]) - X(m[0]):.1f}" height="14" rx="2"/>')
         out.append(f'<rect class="bar {cls} tipbar" x="{X(tip[0]):.1f}" y="{y + 11}" width="{X(tip[1]) - X(tip[0]):.1f}" height="5" rx="1"/>')
     # study levels
-    for lv, txt in ((3e5, "3 × 10⁵"), (1.5e6, "1.5 × 10⁶"), (3e6, "3 × 10⁶")):
+    for lv, txt in ((1e5, "1 × 10⁵"), (3e5, "3 × 10⁵"), (1.5e6, "1.5 × 10⁶"), (3e6, "3 × 10⁶")):
         out.append(f'<line class="level" x1="{X(lv):.1f}" y1="40" x2="{X(lv):.1f}" y2="290"/>')
         out.append(f'<text class="lab warn" x="{X(lv):.1f}" y="304" text-anchor="middle">{txt}</text>')
     out.append(f'<text class="lab warn" x="{X(3e5) - 8:.1f}" y="320" text-anchor="end">study levels</text>')
@@ -1151,7 +1153,7 @@ __DERIVED__
 <section id="reynolds">
   <h2>Reynolds and Mach numbers</h2>
   <div class="three">
-    <div class="box"><h3>Study levels (Stage 0)</h3><div class="big">3 × 10⁵ · 1.5 × 10⁶ · 3 × 10⁶</div><p>On the mean chord. Every mesh study runs at these three.</p></div>
+    <div class="box"><h3>Study levels (Stage 0)</h3><div class="big">1 × 10⁵ · 3 × 10⁵ · 1.5 × 10⁶ · 3 × 10⁶</div><p>On the mean chord. Every mesh study runs at these four. 1 × 10⁵ added 30 Oct 2026 for mini Class I wings.</p></div>
     <div class="box"><h3>Real wings fly at</h3><div class="big">__REAL_RE__</div><p>Mean chord, cruise at 3,048 m to top speed at sea level, for the real wings with a published area.</p></div>
     <div class="box"><h3>Mach</h3><div class="big">0.03 – 0.20</div><p>Every type, both spaces: below 0.3, so the flow is incompressible to a good approximation. Speed comes from the real wings, not from the wing size.</p></div>
   </div>
@@ -1160,7 +1162,7 @@ __DERIVED__
     <thead><tr><th>Type</th><th>Space</th><th>Speed</th><th>Mach</th><th>Re, mean chord</th><th>Re, smallest tip</th><th>Re, largest root</th></tr></thead>
     <tbody>__RE_MACH__</tbody>
   </table></div>
-  <p class="muted">Lowest: smallest chord at the family's lowest cruise speed at 3,048 m. Highest: largest chord at its highest top speed at sea level. Air from Stage 0 (ISA, Sutherland); a = 328.6 m/s at 3,048 m, 340.3 m/s at sea level. One wing covers a much narrower band than its row. Every row reaches below the lowest study level (3 × 10⁵); only the largest wings pass the top one (3 × 10⁶).</p>
+  <p class="muted">Lowest: smallest chord at the family's lowest cruise speed at 3,048 m. Highest: largest chord at its highest top speed at sea level. Air from Stage 0 (ISA, Sutherland); a = 328.6 m/s at 3,048 m, 340.3 m/s at sea level. One wing covers a much narrower band than its row. Below the lowest study level (1 × 10⁵): only tips and the smallest wings at their slowest speed. Above the top one (3 × 10⁶): only the largest wings.</p>
   <h2 style="font-size:22px">What each Re band means</h2>
   <div class="tbl"><table class="wide">
     <thead><tr><th>Re (on the local chord)</th><th>Flow</th><th>Who is there</th><th>RANS (SA, fully turbulent)</th></tr></thead>
@@ -1178,7 +1180,7 @@ __DERIVED__
   <h2>Flow phenomena you will meet</h2>
   <p>What the flow does on these wings, at these Re and angles, and whether the planned CFD (ADflow, steady RANS, Spalart–Allmaras, fully turbulent) can see it.</p>
   <figure class="fig"><div class="svgwrap">__FIG_RE__</div>
-    <figcaption class="cap">Where the wings fly. Most of every type sits in or near the low-Re regime, and the tips go furthest into it, down to 2 × 10⁴. The three study levels miss the lowest decade entirely. From the generated envelope and the 26 real wings with a published area (low-Re limit: below 5 × 10⁵, Univ. Waterloo Fluid Mechanics Research Lab; Carmichael 1981).</figcaption></figure>
+    <figcaption class="cap">Where the wings fly. Most of every type sits in or near the low-Re regime, and the tips go furthest into it, down to 2 × 10⁴. The study level 1 × 10⁵ (added 30 Oct 2026) now reaches the mini Class I wings; only the tips stay below every level. From the generated envelope and the real wings with a published area and speeds (low-Re limit: below 5 × 10⁵, Univ. Waterloo Fluid Mechanics Research Lab; Carmichael 1981).</figcaption></figure>
   <figure class="fig"><div class="svgwrap">__FIG_PLAN__</div>
     <figcaption class="cap">Where each phenomenon sits on a wing. The tip carries three at once (smallest chord, first to stall on aft sweep, vortex roll-up), so it is where mesh and model are tested hardest. Schematic, not to scale.</figcaption></figure>
   <figure class="fig"><div class="svgwrap">__FIG_SEC__</div>

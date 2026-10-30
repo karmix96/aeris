@@ -129,3 +129,6 @@
     keep or cap?
 47. **Closest prior work.** Pliakos et al. 2025 (AUTh) automate OpenVSP → ANSA → Fluent for UAV wings.
     The paper must state our difference. Their BWB airfoils and chords are paywalled.
+48. **Re level 1 × 10⁵ (decided 30 Oct 2026).** Added below 3 × 10⁵ for mini Class I wings and outer
+    panels. Open: the transition check (SU2 γ-Reθ on a few reference wings at 1 × 10⁵ and 3 × 10⁵)
+    and the stricter mesh it needs (y+ ≤ 1, finer chordwise cells over the bubble).

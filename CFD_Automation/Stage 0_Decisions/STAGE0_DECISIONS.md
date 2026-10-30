@@ -239,11 +239,11 @@ The wing generator is new, so the wings are defined by **rules**, not by name.
 - **Why:** Class I and II UAVs fly well below this.
 - **Source:** our choice.
 
-### Reynolds numbers: 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶ (on the mean chord; top was 5 × 10⁶ until 29 Oct 2026)
+### Reynolds numbers: 1 × 10⁵, 3 × 10⁵, 1.5 × 10⁶, 3 × 10⁶ (on the mean chord; top was 5 × 10⁶ until 29 Oct 2026; 1 × 10⁵ added 30 Oct 2026)
 - **In practice:** the Reynolds number says how "big and fast" a wing is for the air:
   Re = air density × speed × chord ÷ air viscosity. A small, slow wing has low Re; a large, fast
   wing has high Re. Example: a 0.2 m chord at 25 m/s and 1,500 m gives about 3 × 10⁵.
-  Every mesh study is run at these three levels, because the cells next to the wall must be smaller
+  Every mesh study is run at these four levels, because the cells next to the wall must be smaller
   at higher Re.
 - **Why these three:** low, middle and high end of small Class I and Class II wings (check below).
 - **Source:** NATO UAS class table; ISA atmosphere; Sutherland's law.
@@ -268,7 +268,7 @@ Example: 6.06e4 × 24.7 = 1.50e6 per metre. Reaching 3 × 10⁵ needs 3e5 / 1.50
 Result: small Class I and Class II sit between 3 × 10⁵ and about 3 × 10⁶. Mini/micro Class I
 (Raven, 1.4 m span) sit below 3 × 10⁵. 5 × 10⁶ is a safe upper end.
 
-**Update 29 Oct 2026: top level lowered to 2 × 10⁶.** The check above used chords guessed per
+**Update 29 Oct 2026: top level lowered to 3 × 10⁶.** The check above used chords guessed per
 aircraft. A sourced table of real Class I–II wings with a published wing area
 (`geometry/configs/real_uavs.yaml`) gives Re 1.2 × 10⁵ to 2.1 × 10⁶ (mean chord = area / span;
 cruise at 3,048 m to top speed at sea level). The highest is the AAI Pioneer (Class II, 5.15 m span,
@@ -277,6 +277,12 @@ mean chord 0.549 m, 56.7 m/s). No wing of our families reaches 5 × 10⁶, so th
 2015 thesis with Jane's-style data for Hermes 450, Ranger, Seeker, Shadow 600) have mean chords of
 0.55–0.66 m and reach Re 2.1–2.7 × 10⁶ at top speed and sea level; the highest is the RUAG Ranger
 (2.74 × 10⁶), rounded up to 3 × 10⁶.
+
+**Update 30 Oct 2026: level 1 × 10⁵ added (Mike).** Real Class I wings fly at 1.2–3 × 10⁵ (Black Swift
+S0, eBee) and the geometry focus space reaches 8 × 10⁴; the lowest level, 3 × 10⁵, missed that whole
+decade. Cost: about a third more runs. Wing tips reach 1–2 × 10⁴; no level there, because no RANS model
+is reliable at those values (stated as a limit). At 1 × 10⁵ the SA result tests the mesh, not the
+flow: the model band is largest there (see the turbulence-model decision).
 
 ### Angles of attack: 0°, 4°, 8°; plus 12° for the nose and the wake
 - **In practice:** every study runs at 0°, 4° and 8°. Studies of the leading edge and the wake
